@@ -1,40 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:58378 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752688Ab1FXTFH (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:34800 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755017Ab1FTAeB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2011 15:05:07 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id DE8AA5401D1
-	for <linux-wireless@vger.kernel.org>; Fri, 24 Jun 2011 15:12:21 -0400 (EDT)
-Subject: Compat-wireless release for 2011-06-24 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110624190505.61D1140EC9@repository3.orbit-lab.org> (sfid-20110624_210511_128148_72D77361)
-Date: Fri, 24 Jun 2011 15:05:05 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Sun, 19 Jun 2011 20:34:01 -0400
+Received: by eyx24 with SMTP id 24so371333eyx.19
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2011 17:34:00 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: HT-PHY: calibrate radio after switching channel
+Date: Mon, 20 Jun 2011 03:12:19 +0200
+Message-Id: <1308532339-3643-1-git-send-email-zajec5@gmail.com> (sfid-20110620_023506_604547_5E104279)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   32a56d5..f831af6  linux-3.0.y -> origin/linux-3.0.y
-   53583b5..3afe4bf  master     -> origin/master
- * [new tag]         compat-wireless-2011-06-23 -> compat-wireless-2011-06-23
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
- * [new tag]         compat-wireless-v3.0-rc4-1 -> compat-wireless-v3.0-rc4-1
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + d75c141...d5e519b akpm-end   -> origin/akpm-end  (forced update)
-   1bd58f8..be7cf21  akpm-start -> origin/akpm-start
-   71c90ac..91121d1  history    -> origin/history
- + f0598df...2555a35 master     -> origin/master  (forced update)
-   2992c4b..bccaeaf  stable     -> origin/stable
- * [new tag]         next-20110624 -> next-20110624
+After uploading radio values calibration goes in. In MMIO dump it is:
+ radio_read(0x002b) -> 0x0008
+radio_write(0x002b) <- 0x0008
+ radio_read(0x002e) -> 0x0004
+radio_write(0x002e) <- 0x0000
+ radio_read(0x002e) -> 0x0000
+radio_write(0x002e) <- 0x0004
+ radio_read(0x002b) -> 0x0008
+radio_write(0x002b) <- 0x0009
+To find masks and sets, MMIO hacks were used to fool closed driver.
 
-compat-wireless code metrics
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+First I fooled ndiswrapper to get all reads 0xFFFF:
+ radio_read(0x002b) -> 0xffff
+radio_write(0x002b) <- 0xfffe
+ radio_read(0x002e) -> 0xffff
+radio_write(0x002e) <- 0xfffb
+ radio_read(0x002e) -> 0xffff
+radio_write(0x002e) <- 0xffff
+ radio_read(0x002b) -> 0xffff
+radio_write(0x002b) <- 0xffff
+This has shown two first ops are pure masking ones.
 
-    823408 - Total upstream lines of code being pulled
-      2385 - backport code changes
-      2078 - backport code additions
-       307 - backport code deletions
-      8123 - backport from compat module
-     10508 - total backport code
-    1.2762 - % of code consists of backport work
+Next I fooled ndis to get 0x0000:
+ radio_read(0x002b) -> 0x0000
+radio_write(0x002b) <- 0x0000
+ radio_read(0x002e) -> 0x0000
+radio_write(0x002e) <- 0x0000
+ radio_read(0x002e) -> 0x0000
+radio_write(0x002e) <- 0x0004
+ radio_read(0x002b) -> 0x0000
+radio_write(0x002b) <- 0x0001
+Which has discovered bits setting by 2 later ops.
+---
+ drivers/net/wireless/b43/phy_ht.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
+index 0b13f6f..72f01ce 100644
+--- a/drivers/net/wireless/b43/phy_ht.c
++++ b/drivers/net/wireless/b43/phy_ht.c
+@@ -69,7 +69,13 @@ static void b43_radio_2059_channel_setup(struct b43_wldev *dev,
+ 
+ 	udelay(50);
+ 
+-	/* TODO */
++	/* Calibration */
++	b43_radio_mask(dev, 0x2b, ~0x1);
++	b43_radio_mask(dev, 0x2e, ~0x4);
++	b43_radio_set(dev, 0x2e, 0x4);
++	b43_radio_set(dev, 0x2b, 0x1);
++
++	udelay(300);
+ }
+ 
+ static void b43_phy_ht_channel_setup(struct b43_wldev *dev,
+-- 
+1.7.3.4
+
