@@ -1,158 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:34210 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753989Ab1FFON1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 10:13:27 -0400
-Received: by pwi15 with SMTP id 15so2108882pwi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 07:13:26 -0700 (PDT)
-Message-ID: <4DECE072.10702@ring3k.org> (sfid-20110606_161330_388578_F7F8CCDA)
-Date: Mon, 06 Jun 2011 23:13:06 +0900
-From: Mike McCormack <mikem@ring3k.org>
+Received: from mx1.calamp.com ([207.71.209.228]:52310 "EHLO MX1.Calamp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753249Ab1FTNDO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jun 2011 09:03:14 -0400
+Received: from oxn-mx1.PD.CalAmpCorp.com ([10.6.0.30]) by MX1.Calamp.com with ESMTP id C0Nfg7JCIlR70Rbc (version=TLSv1 cipher=RC4-MD5 bits=128 verify=NO) for <linux-wireless@vger.kernel.org>; Mon, 20 Jun 2011 06:03:13 -0700 (PDT)
+From: =?utf-8?B?RnLDqWTDqXJpYyBMYW1vcmNl?= <FLamorce@CalAmp.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 20 Jun 2011 06:03:11 -0700
+Subject: RE: nl80211: set_key failed; err=-67 Link has been severed
+Message-ID: <8BFC9A1FBD4CFA4FA7496C9F6DBCF4CA0D4193EA50@oxn-mx01.PD.CalAmpCorp.com> (sfid-20110620_150321_104553_6C7B2E3E)
+References: <8BFC9A1FBD4CFA4FA7496C9F6DBCF4CA0D4065B927@oxn-mx01.PD.CalAmpCorp.com>
+ (sfid-20110617_172355_144137_7070136A)
+ <39e83b34879f7b3d79534665e9dd0ae6@secure.sipsolutions.net>
+In-Reply-To: <39e83b34879f7b3d79534665e9dd0ae6@secure.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 5/5] rtlwifi: Factor out code to receive one packet
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Mike McCormack <mikem@ring3k.org>
----
- drivers/net/wireless/rtlwifi/pci.c |   99 ++++++++++++++++++-----------------
- 1 files changed, 51 insertions(+), 48 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index b60c1ab..cb4e5e8 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -626,6 +626,56 @@ tx_status_ok:
- 	}
- }
- 
-+static void _rtl_receive_one(struct ieee80211_hw *hw, struct sk_buff *skb,
-+			     struct ieee80211_rx_status rx_status)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct ieee80211_hdr *hdr = rtl_get_hdr(skb);
-+	__le16 fc = rtl_get_fc(skb);
-+	bool unicast = false;
-+	struct sk_buff *uskb = NULL;
-+	u8 *pdata;
-+
-+
-+	memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
-+
-+	if (is_broadcast_ether_addr(hdr->addr1)) {
-+		;/*TODO*/
-+	} else if (is_multicast_ether_addr(hdr->addr1)) {
-+		;/*TODO*/
-+	} else {
-+		unicast = true;
-+		rtlpriv->stats.rxbytesunicast += skb->len;
-+	}
-+
-+	rtl_is_special_data(hw, skb, false);
-+
-+	if (ieee80211_is_data(fc)) {
-+		rtlpriv->cfg->ops->led_control(hw, LED_CTL_RX);
-+
-+		if (unicast)
-+			rtlpriv->link_info.num_rx_inperiod++;
-+	}
-+
-+	/* for sw lps */
-+	rtl_swlps_beacon(hw, (void *)skb->data, skb->len);
-+	rtl_recognize_peer(hw, (void *)skb->data, skb->len);
-+	if ((rtlpriv->mac80211.opmode == NL80211_IFTYPE_AP) &&
-+	    (rtlpriv->rtlhal.current_bandtype == BAND_ON_2_4G) &&
-+	     (ieee80211_is_beacon(fc) || ieee80211_is_probe_resp(fc)))
-+		return;
-+
-+	if (unlikely(!rtl_action_proc(hw, skb, false)))
-+		return;
-+
-+	uskb = dev_alloc_skb(skb->len + 128);
-+	memcpy(IEEE80211_SKB_RXCB(uskb), &rx_status, sizeof(rx_status));
-+	pdata = (u8 *)skb_put(uskb, skb->len);
-+	memcpy(pdata, skb->data, skb->len);
-+
-+	ieee80211_rx_irqsafe(hw, uskb);
-+}
-+
- static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -637,7 +687,6 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 	u8 own;
- 	u8 tmp_one;
- 	u32 bufferaddress;
--	bool unicast = false;
- 
- 	struct rtl_stats stats = {
- 		.signal = 0,
-@@ -654,8 +703,6 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 		/*rx pkt */
- 		struct sk_buff *skb = rtlpci->rx_ring[rx_queue_idx].rx_buf[
- 				index];
--		struct ieee80211_hdr *hdr;
--		__le16 fc;
- 		struct sk_buff *new_skb = NULL;
- 
- 		own = (u8) rtlpriv->cfg->ops->get_desc((u8 *) pdesc,
-@@ -696,51 +743,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 		 * skb_trim(skb, skb->len - 4);
- 		 */
- 
--		hdr = rtl_get_hdr(skb);
--		fc = rtl_get_fc(skb);
--
--		memcpy(IEEE80211_SKB_RXCB(skb), &rx_status,
--		       sizeof(rx_status));
--
--		if (is_broadcast_ether_addr(hdr->addr1)) {
--			;/*TODO*/
--		} else if (is_multicast_ether_addr(hdr->addr1)) {
--			;/*TODO*/
--		} else {
--			unicast = true;
--			rtlpriv->stats.rxbytesunicast += skb->len;
--		}
--
--		rtl_is_special_data(hw, skb, false);
--
--		if (ieee80211_is_data(fc)) {
--			rtlpriv->cfg->ops->led_control(hw, LED_CTL_RX);
--
--			if (unicast)
--				rtlpriv->link_info.num_rx_inperiod++;
--		}
--
--		/* for sw lps */
--		rtl_swlps_beacon(hw, (void *)skb->data, skb->len);
--		rtl_recognize_peer(hw, (void *)skb->data, skb->len);
--		if ((rtlpriv->mac80211.opmode == NL80211_IFTYPE_AP) &&
--		    (rtlpriv->rtlhal.current_bandtype == BAND_ON_2_4G) &&
--		     (ieee80211_is_beacon(fc) ||
--		     ieee80211_is_probe_resp(fc))) {
--			;
--		} else {
--			if (likely(rtl_action_proc(hw, skb, false))) {
--				struct sk_buff *uskb = NULL;
--				u8 *pdata;
--				uskb = dev_alloc_skb(skb->len + 128);
--				memcpy(IEEE80211_SKB_RXCB(uskb),
--				       &rx_status, sizeof(rx_status));
--				pdata = (u8 *)skb_put(uskb, skb->len);
--				memcpy(pdata, skb->data, skb->len);
--
--				ieee80211_rx_irqsafe(hw, uskb);
--			}
--		}
-+		_rtl_receive_one(hw, skb, rx_status);
- 
- 		if (((rtlpriv->link_info.num_rx_inperiod +
- 			rtlpriv->link_info.num_tx_inperiod) > 8) ||
--- 
-1.7.4.1
-
+V2hhdCBJIHNlZSBpcyB0aGF0IHdwYV9zdXBwbGljYW50IG9ubHkgd29ya3Mgd2l0aCB3ZXh0IGJ1
+dCBpdCBkb2VzIG5vdCB3b3JrIHdpdGggbmw4MDIxMS4NCk15IGRldmljZSBpcyBhbiBhdGg5a19o
+dGMuDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBsaW51eC13aXJlbGVzcy1v
+d25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtl
+cm5lbC5vcmddIE9uIEJlaGFsZiBPZiBKb2hhbm5lcyBCZXJnDQpTZW50OiBKdW5lIDE4LCAyMDEx
+IDA0OjAyDQpUbzogRnLDqWTDqXJpYyBMYW1vcmNlDQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5r
+ZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogbmw4MDIxMTogc2V0X2tleSBmYWlsZWQ7IGVycj0tNjcg
+TGluayBoYXMgYmVlbiBzZXZlcmVkDQoNCk9uIEZyaSwgMTcgSnVuIDIwMTEgMDg6MjM6NDcgLTA3
+MDAsIEZyw6lkw6lyaWMgTGFtb3JjZSB3cm90ZToNCg0KPiBJIGVuYWJsZWQgLWRkIHdpdGggd3Bh
+X3N1cHBsaWNhbnQsIGhlcmUgaXQgaXMsIHRoZSBvbmx5IGVycm9yIGlzDQo+ICJubDgwMjExOiBz
+ZXRfa2V5IGZhaWxlZDsgZXJyPS02NyBMaW5rIGhhcyBiZWVuIHNldmVyZWQpIiwgZmF0YWw/IFdo
+eQ0KPiB0aGlzIGVycm9yPyBJdCBtZWFucyB0aGUgbGluayBpcyBkb3duPw0KDQpZb3UgY2FuIGln
+bm9yZSB0aGF0IGVycm9yLiBCZWxvdyBpcyB0aGUgc3VjY2Vzc2Z1bCBrZXkgc2V0dGluZzogUHJv
+YmxlbSANCm11c3QgYmUgc29tZXRoaW5nIGVsc2UsIG1heWJlIGNyeXB0byBjb2RlIGZvciB5b3Vy
+IGRldmljZSBvciB3aGF0ZXZlci4NCg0KPiAxNDUzMi45MTQ3NDU6IHdwYV9kcml2ZXJfbmw4MDIx
+MV9zZXRfa2V5OiBpZmluZGV4PTUgYWxnPTENCj4gYWRkcj0weGMzYWVjIGtleV9pZHg9MCBzZXRf
+dHg9MSBzZXFfbGVuPTAga2V5X2xlbj01DQoNCi0tDQpUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMg
+bGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtd2lyZWxlc3MiIGluDQp0aGUg
+Ym9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KTW9yZSBtYWpv
+cmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1s
+DQo=
