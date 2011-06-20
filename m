@@ -1,86 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4837 "EHLO MMS3.broadcom.com"
+Received: from purkki.adurom.net ([80.68.90.206]:37727 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758890Ab1FALqv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:51 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 03/83] staging: brcm80211: cleanup struct wl_info
-Date: Wed, 1 Jun 2011 13:44:48 +0200
-Message-ID: <1306928768-7501-3-git-send-email-rvossen@broadcom.com> (sfid-20110601_134816_409722_9F81DAFA)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+	id S1754378Ab1FTOmE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jun 2011 10:42:04 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: dynamic PS - don't enter PS when TX frames are pending
+References: <1308425533-20854-1-git-send-email-arik@wizery.com>
+	<1308471076.4145.6.camel@jlt3.sipsolutions.net>
+	<20110620133535.GA2251@tuxdriver.com>
+	<1308578353.4322.8.camel@jlt3.sipsolutions.net>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Mon, 20 Jun 2011 17:42:00 +0300
+In-Reply-To: <1308578353.4322.8.camel@jlt3.sipsolutions.net> (Johannes Berg's message of "Mon\, 20 Jun 2011 15\:59\:13 +0200")
+Message-ID: <87aadc1s5j.fsf@purkki.adurom.net> (sfid-20110620_164208_125453_CC4A264E)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-removed unused field piomode from struct wl_info definition.
+>> > FWIW, I don't really consider myself maintaining the PS
+>> > implementation ;-) I don't understand it and think the code is way too
+>> > complex.
+>> 
+>> Perhaps Kalle can comment?  Or...?
+>
+> Yeah he's a good candidate :)
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/wl_mac80211.c |    7 ++-----
- drivers/staging/brcm80211/brcmsmac/wl_mac80211.h |    6 +++++-
- 2 files changed, 7 insertions(+), 6 deletions(-)
+Hehe :)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-index 3deb903..f951f22 100644
---- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.c
-@@ -739,7 +739,6 @@ static struct wl_info *wl_attach(u16 vendor, u16 device, unsigned long regs,
- {
- 	struct wl_info *wl = NULL;
- 	int unit, err;
--
- 	unsigned long base_addr;
- 	struct ieee80211_hw *hw;
- 	u8 perm[ETH_ALEN];
-@@ -768,9 +767,7 @@ static struct wl_info *wl_attach(u16 vendor, u16 device, unsigned long regs,
- 
- 	base_addr = regs;
- 
--	if (bustype == PCI_BUS) {
--		wl->piomode = false;
--	} else if (bustype == RPC_BUS) {
-+	if (bustype == PCI_BUS || bustype == RPC_BUS) {
- 		/* Do nothing */
- 	} else {
- 		bustype = PCI_BUS;
-@@ -796,7 +793,7 @@ static struct wl_info *wl_attach(u16 vendor, u16 device, unsigned long regs,
- 	}
- 
- 	/* common load-time initialization */
--	wl->wlc = wlc_attach((void *)wl, vendor, device, unit, wl->piomode,
-+	wl->wlc = wlc_attach((void *)wl, vendor, device, unit, false,
- 			     wl->regsva, wl->bcm_bustype, btparam, &err);
- 	wl_release_fw(wl);
- 	if (!wl->wlc) {
-diff --git a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h
-index e703d8b..c878690 100644
---- a/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h
-+++ b/drivers/staging/brcm80211/brcmsmac/wl_mac80211.h
-@@ -57,11 +57,15 @@ struct wl_info {
- 
- 	spinlock_t lock;	/* per-device perimeter lock */
- 	spinlock_t isr_lock;	/* per-device ISR synchronization lock */
-+
-+	/* bus type and regsva for unmap in wl_free() */
- 	uint bcm_bustype;	/* bus type */
--	bool piomode;		/* set from insmod argument */
- 	void *regsva;		/* opaque chip registers virtual address */
-+
-+	/* timer related fields */
- 	atomic_t callbacks;	/* # outstanding callback functions */
- 	struct wl_timer *timers;	/* timer cleanup queue */
-+
- 	struct tasklet_struct tasklet;	/* dpc tasklet */
- 	bool resched;		/* dpc needs to be and is rescheduled */
- #ifdef LINUXSTA_PS
+But I agree with Johannes, the powersave in mac80211 is pretty
+complex. I lost track of it a long time ago so it's pretty difficult
+for me to comment about the patch.
+
 -- 
-1.7.4.1
-
-
+Kalle Valo
