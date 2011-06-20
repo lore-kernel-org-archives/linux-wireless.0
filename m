@@ -1,145 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:37086 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753519Ab1FBHSO (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:35448 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750878Ab1FTBqz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 03:18:14 -0400
-Received: by eyx24 with SMTP id 24so188693eyx.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Jun 2011 00:18:13 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: add an option to register BROKEN bcma driver
-Date: Thu,  2 Jun 2011 09:56:04 +0200
-Message-Id: <1307001364-9006-1-git-send-email-zajec5@gmail.com> (sfid-20110602_091818_280197_26BA2AF2)
+	Sun, 19 Jun 2011 21:46:55 -0400
+Received: by pvg12 with SMTP id 12so343471pvg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2011 18:46:55 -0700 (PDT)
+Message-ID: <4DFEA65D.5060801@ring3k.org> (sfid-20110620_034658_632013_BC88742D)
+Date: Mon, 20 Jun 2011 10:46:05 +0900
+From: Mike McCormack <mikem@ring3k.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: linville@tuxdriver.com
+CC: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 2/3] rtlwifi: rtl8192cu: Remove unused parameter
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It does nothing useful yet, so it is matched as BROKEN.
-For now this is just an option for b43, in future we may want to make
-b43 support SSB or BCMA (note: or, not xor).
+rtl_ps_set_rf_state's protect_or_not parameter is not set to
+true anywhere, except for commented out code.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+It enables some legacy locking code, which is no longer used,
+so delete the parameter and the old locking code.
+
+Signed-off-by: Mike McCormack <mikem@ring3k.org>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/b43/Kconfig |    5 ++++
- drivers/net/wireless/b43/b43.h   |    1 +
- drivers/net/wireless/b43/main.c  |   44 +++++++++++++++++++++++++++++++++++++-
- 3 files changed, 49 insertions(+), 1 deletions(-)
+ drivers/net/wireless/rtlwifi/ps.c           |   63 ++-------------------------
+ drivers/net/wireless/rtlwifi/ps.h           |    3 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c |    3 +-
+ 3 files changed, 7 insertions(+), 62 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
-index 480595f..fe26bf4 100644
---- a/drivers/net/wireless/b43/Kconfig
-+++ b/drivers/net/wireless/b43/Kconfig
-@@ -26,6 +26,11 @@ config B43
- 	  This driver can be built as a module (recommended) that will be called "b43".
- 	  If unsure, say M.
+diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
+index d14c13d..3eb039a 100644
+--- a/drivers/net/wireless/rtlwifi/ps.c
++++ b/drivers/net/wireless/rtlwifi/ps.c
+@@ -79,53 +79,12 @@ EXPORT_SYMBOL(rtl_ps_disable_nic);
  
-+config B43_BCMA
-+	bool "Support for BCMA bus"
-+	depends on B43 && BCMA && BROKEN
-+	default y
-+
- # Auto-select SSB PCI-HOST support, if possible
- config B43_PCI_AUTOSELECT
- 	bool
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index 0a3c701..81d78bf 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -5,6 +5,7 @@
- #include <linux/spinlock.h>
- #include <linux/interrupt.h>
- #include <linux/hw_random.h>
-+#include <linux/bcma/bcma.h>
- #include <linux/ssb/ssb.h>
- #include <net/mac80211.h>
+ bool rtl_ps_set_rf_state(struct ieee80211_hw *hw,
+ 			 enum rf_pwrstate state_toset,
+-			 u32 changesource, bool protect_or_not)
++			 u32 changesource)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+ 	bool actionallowed = false;
+-	u16 rfwait_cnt = 0;
  
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 1b9d3cc..b0ccd0f 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -113,6 +113,16 @@ static int b43_modparam_pio = B43_PIO_DEFAULT;
- module_param_named(pio, b43_modparam_pio, int, 0644);
- MODULE_PARM_DESC(pio, "Use PIO accesses by default: 0=DMA, 1=PIO");
+-	/*protect_or_not = true; */
+-
+-	if (protect_or_not)
+-		goto no_protect;
+-
+-	/*
+-	 *Only one thread can change
+-	 *the RF state at one time, and others
+-	 *should wait to be executed.
+-	 */
+-	while (true) {
+-		spin_lock(&rtlpriv->locks.rf_ps_lock);
+-		if (ppsc->rfchange_inprogress) {
+-			spin_unlock(&rtlpriv->locks.rf_ps_lock);
+-
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+-				 ("RF Change in progress!"
+-				  "Wait to set..state_toset(%d).\n",
+-				  state_toset));
+-
+-			/* Set RF after the previous action is done.  */
+-			while (ppsc->rfchange_inprogress) {
+-				rfwait_cnt++;
+-				mdelay(1);
+-
+-				/*
+-				 *Wait too long, return false to avoid
+-				 *to be stuck here.
+-				 */
+-				if (rfwait_cnt > 100)
+-					return false;
+-			}
+-		} else {
+-			ppsc->rfchange_inprogress = true;
+-			spin_unlock(&rtlpriv->locks.rf_ps_lock);
+-			break;
+-		}
+-	}
+-
+-no_protect:
+ 	switch (state_toset) {
+ 	case ERFON:
+ 		ppsc->rfoff_reason &= (~changesource);
+@@ -167,12 +126,6 @@ no_protect:
+ 	if (actionallowed)
+ 		rtlpriv->cfg->ops->set_rf_power_state(hw, state_toset);
  
-+#ifdef CONFIG_B43_BCMA
-+static const struct bcma_device_id b43_bcma_tbl[] = {
-+	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x17, BCMA_ANY_CLASS),
-+	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x18, BCMA_ANY_CLASS),
-+	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x1D, BCMA_ANY_CLASS),
-+	BCMA_CORETABLE_END
-+};
-+MODULE_DEVICE_TABLE(bcma, b43_bcma_tbl);
-+#endif
-+
- static const struct ssb_device_id b43_ssb_tbl[] = {
- 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 5),
- 	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_80211, 6),
-@@ -4986,6 +4996,26 @@ static struct b43_wl *b43_wireless_init(struct ssb_device *dev)
- 	return wl;
+-	if (!protect_or_not) {
+-		spin_lock(&rtlpriv->locks.rf_ps_lock);
+-		ppsc->rfchange_inprogress = false;
+-		spin_unlock(&rtlpriv->locks.rf_ps_lock);
+-	}
+-
+ 	return actionallowed;
+ }
+ EXPORT_SYMBOL(rtl_ps_set_rf_state);
+@@ -195,8 +148,7 @@ static void _rtl_ps_inactive_ps(struct ieee80211_hw *hw)
+ 		}
+ 	}
+ 
+-	rtl_ps_set_rf_state(hw, ppsc->inactive_pwrstate,
+-			    RF_CHANGE_BY_IPS, false);
++	rtl_ps_set_rf_state(hw, ppsc->inactive_pwrstate, RF_CHANGE_BY_IPS);
+ 
+ 	if (ppsc->inactive_pwrstate == ERFOFF &&
+ 	    rtlhal->interface == INTF_PCI) {
+@@ -587,7 +539,7 @@ void rtl_swlps_rf_awake(struct ieee80211_hw *hw)
+ 	}
+ 
+ 	spin_lock(&rtlpriv->locks.lps_lock);
+-	rtl_ps_set_rf_state(hw, ERFON, RF_CHANGE_BY_PS, false);
++	rtl_ps_set_rf_state(hw, ERFON, RF_CHANGE_BY_PS);
+ 	spin_unlock(&rtlpriv->locks.lps_lock);
  }
  
-+#ifdef CONFIG_B43_BCMA
-+static int b43_bcma_probe(struct bcma_device *core)
-+{
-+	b43err(NULL, "BCMA is not supported yet!");
-+	return -EOPNOTSUPP;
-+}
-+
-+static void b43_bcma_remove(struct bcma_device *core)
-+{
-+	/* TODO */
-+}
-+
-+static struct bcma_driver b43_bcma_driver = {
-+	.name		= KBUILD_MODNAME,
-+	.id_table	= b43_bcma_tbl,
-+	.probe		= b43_bcma_probe,
-+	.remove		= b43_bcma_remove,
-+};
-+#endif
-+
- static
- int b43_ssb_probe(struct ssb_device *sdev, const struct ssb_device_id *id)
- {
-@@ -5116,13 +5146,22 @@ static int __init b43_init(void)
- 	err = b43_sdio_init();
- 	if (err)
- 		goto err_pcmcia_exit;
--	err = ssb_driver_register(&b43_ssb_driver);
-+#ifdef CONFIG_B43_BCMA
-+	err = bcma_driver_register(&b43_bcma_driver);
- 	if (err)
- 		goto err_sdio_exit;
-+#endif
-+	err = ssb_driver_register(&b43_ssb_driver);
-+	if (err)
-+		goto err_bcma_driver_exit;
- 	b43_print_driverinfo();
+@@ -621,15 +573,8 @@ void rtl_swlps_rf_sleep(struct ieee80211_hw *hw)
+ 	if (rtlpriv->link_info.busytraffic)
+ 		return;
  
- 	return err;
+-	spin_lock(&rtlpriv->locks.rf_ps_lock);
+-	if (rtlpriv->psc.rfchange_inprogress) {
+-		spin_unlock(&rtlpriv->locks.rf_ps_lock);
+-		return;
+-	}
+-	spin_unlock(&rtlpriv->locks.rf_ps_lock);
+-
+ 	spin_lock(&rtlpriv->locks.lps_lock);
+-	rtl_ps_set_rf_state(hw, ERFSLEEP, RF_CHANGE_BY_PS, false);
++	rtl_ps_set_rf_state(hw, ERFSLEEP, RF_CHANGE_BY_PS);
+ 	spin_unlock(&rtlpriv->locks.lps_lock);
  
-+err_bcma_driver_exit:
-+#ifdef CONFIG_B43_BCMA
-+	bcma_driver_unregister(&b43_bcma_driver);
-+#endif
- err_sdio_exit:
- 	b43_sdio_exit();
- err_pcmcia_exit:
-@@ -5135,6 +5174,9 @@ err_dfs_exit:
- static void __exit b43_exit(void)
- {
- 	ssb_driver_unregister(&b43_ssb_driver);
-+#ifdef CONFIG_B43_BCMA
-+	bcma_driver_unregister(&b43_bcma_driver);
-+#endif
- 	b43_sdio_exit();
- 	b43_pcmcia_exit();
- 	b43_debugfs_exit();
+ 	if (ppsc->reg_rfps_level & RT_RF_OFF_LEVL_ASPM &&
+diff --git a/drivers/net/wireless/rtlwifi/ps.h b/drivers/net/wireless/rtlwifi/ps.h
+index e3bf898..84628e60 100644
+--- a/drivers/net/wireless/rtlwifi/ps.h
++++ b/drivers/net/wireless/rtlwifi/ps.h
+@@ -33,8 +33,7 @@
+ #define MAX_SW_LPS_SLEEP_INTV	5
+ 
+ bool rtl_ps_set_rf_state(struct ieee80211_hw *hw,
+-			 enum rf_pwrstate state_toset, u32 changesource,
+-			 bool protect_or_not);
++			 enum rf_pwrstate state_toset, u32 changesource);
+ bool rtl_ps_enable_nic(struct ieee80211_hw *hw);
+ bool rtl_ps_disable_nic(struct ieee80211_hw *hw);
+ void rtl_ips_nic_off(struct ieee80211_hw *hw);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+index 5fab47b..9ed5e24 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+@@ -994,7 +994,8 @@ int rtl92se_hw_init(struct ieee80211_hw *hw)
+ 
+ 		rtlpriv->psc.rfoff_reason = RF_CHANGE_BY_INIT;
+ 		rtlpriv->psc.rfpwr_state = ERFON;
+-		rtl_ps_set_rf_state(hw, ERFOFF, rfoffreason, true);
++		/* FIXME: check spinlocks if this block is uncommented */
++		rtl_ps_set_rf_state(hw, ERFOFF, rfoffreason);
+ 	} else {
+ 		/* gpio radio on/off is out of adapter start */
+ 		if (rtlpriv->psc.hwradiooff == false) {
 -- 
-1.7.3.4
+1.7.4.1
+
 
