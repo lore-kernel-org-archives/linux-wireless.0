@@ -1,129 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:53333 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756550Ab1FIXCu convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39127 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751597Ab1FTPaA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 19:02:50 -0400
-Received: by iyb14 with SMTP id 14so1736435iyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jun 2011 16:02:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
-References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 10 Jun 2011 09:02:29 +1000
-Message-ID: <BANLkTim7RQjhEVu3ePVD+1EcEOvRd_tn7w@mail.gmail.com> (sfid-20110610_010255_107269_1866C833)
-Subject: Re: [PATCH 00/21] staging: brcm80211: code cleanup and fullmac bugfix
-To: Roland Vossen <rvossen@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 20 Jun 2011 11:30:00 -0400
+Subject: Re: [PATCH 2/2] mac80211: Fixing Races for skipping tailroom
+ reservation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yogesh Ashok Powar <yogeshp@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Andreas Hartmann <andihartmann@01019freenet.de>
+In-Reply-To: <20110620143051.GA31035@hertz.marvell.com>
+References: <20110616102138.GA24447@hertz.marvell.com>
+	 <20110616102707.GB24458@hertz.marvell.com>
+	 <d38dc36c1ab9a4bd819b9bcbbda181da@secure.sipsolutions.net>
+	 <20110617132527.GA27436@hertz.marvell.com>
+	 <1308331485.7329.2.camel@Nokia-N900-51-1>
+	 <20110620143051.GA31035@hertz.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 20 Jun 2011 17:29:59 +0200
+Message-ID: <1308583799.4322.9.camel@jlt3.sipsolutions.net> (sfid-20110620_173006_016244_227BAF36)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 10, 2011 at 00:44, Roland Vossen <rvossen@broadcom.com> wrote:
-> Arend van Spriel (9):
->  staging: brcm80211: remove 'used' keyword from function ai_ispcie()
->  staging: brcm80211: remove regs variable from brcms_ioctl function
->  staging: brcm80211: remove d11regs_t parameter from wlc_tbtt function
->  staging: brcm80211: remove device id parameter from ai_attach()
->  staging: brcm80211: remove unused fields from struct si_info
->  staging: brcm80211: use __BIG_ENDIAN macro in dma.c
->  staging: brcm80211: remove checkpatch errors found in fullmac
->  staging: brcm80211: fix checkpatch errors from main.c
->  staging: brcm80211: fix checkpatch errors in brcmsmac driver
->
-> Franky Lin (1):
->  staging: brcm80211: Remove flags from wl_is_nonetwork
->
-> Roland Vossen (10):
->  staging: brcm80211: moved typedefs to decrease header file
->    dependencies
->  staging: brcm80211: cleaned brcmu_utils.h
->  staging: brcm80211: #include reduction
->  staging: brcm80211: fixed double #include problem
->  staging: brcm80211: replaced bmac acronym by brcms_b_
->  staging: brcm80211: replaced wlc_ by brcms_c_
->  staging: brcm80211: removed superfluous forward struct declarations
->  staging: brcm80211: further replaced wlc_ by brcmsmac_c_
->  staging: brcm80211: replaced wlc_ by brcms_c_, part 2
->  staging: brcm80211: change wl_cfg80211_suspend corresponding to
->    cfg80211
->
-> Sukesh Srikakula (1):
->  staging: brcm80211: Fix for suspend issue in brcmfmac driver
->
->  drivers/staging/brcm80211/brcmfmac/bcmsdh.c        |    7 +-
->  drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c  |   20 +-
->  .../brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c        |   19 +-
->  drivers/staging/brcm80211/brcmfmac/dhd_cdc.c       |   10 +-
->  drivers/staging/brcm80211/brcmfmac/dhd_common.c    |   14 +-
->  .../staging/brcm80211/brcmfmac/dhd_custom_gpio.c   |    4 +-
->  drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |   24 +-
->  drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |   15 +-
->  drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c   |   76 +-
->  drivers/staging/brcm80211/brcmfmac/wl_iw.c         |   22 +-
->  drivers/staging/brcm80211/brcmsmac/aiutils.c       |   45 +-
->  drivers/staging/brcm80211/brcmsmac/aiutils.h       |   18 +-
->  drivers/staging/brcm80211/brcmsmac/alloc.c         |   94 +-
->  drivers/staging/brcm80211/brcmsmac/alloc.h         |    5 +-
->  drivers/staging/brcm80211/brcmsmac/ampdu.c         |  199 ++--
->  drivers/staging/brcm80211/brcmsmac/ampdu.h         |   15 +-
->  drivers/staging/brcm80211/brcmsmac/antsel.c        |   77 +-
->  drivers/staging/brcm80211/brcmsmac/antsel.h        |   10 +-
->  drivers/staging/brcm80211/brcmsmac/bmac.c          |  846 ++++++------
->  drivers/staging/brcm80211/brcmsmac/bmac.h          |  127 +-
->  drivers/staging/brcm80211/brcmsmac/channel.c       |  254 ++--
->  drivers/staging/brcm80211/brcmsmac/channel.h       |   26 +-
->  drivers/staging/brcm80211/brcmsmac/d11.h           |   55 +-
->  drivers/staging/brcm80211/brcmsmac/dma.c           |   28 +-
->  drivers/staging/brcm80211/brcmsmac/dma.h           |   21 +-
->  drivers/staging/brcm80211/brcmsmac/mac80211_if.c   |  118 +-
->  drivers/staging/brcm80211/brcmsmac/mac80211_if.h   |    7 +-
->  drivers/staging/brcm80211/brcmsmac/main.c          | 1384 ++++++++++----------
->  drivers/staging/brcm80211/brcmsmac/main.h          |  321 +++---
->  drivers/staging/brcm80211/brcmsmac/nicpci.c        |   13 +-
->  drivers/staging/brcm80211/brcmsmac/nicpci.h        |    4 +-
->  drivers/staging/brcm80211/brcmsmac/otp.c           |   14 +-
->  drivers/staging/brcm80211/brcmsmac/otp.h           |    2 +
->  drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c   |   23 +-
->  drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h   |   33 +-
->  drivers/staging/brcm80211/brcmsmac/phy/phy_int.h   |   98 +-
->  drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c   |   21 +-
->  drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.h   |    2 +
->  drivers/staging/brcm80211/brcmsmac/phy/phy_n.c     |   24 +-
->  drivers/staging/brcm80211/brcmsmac/phy/phy_qmath.c |    2 -
->  drivers/staging/brcm80211/brcmsmac/phy/phy_qmath.h |    2 +
->  .../staging/brcm80211/brcmsmac/phy/phytbl_lcn.c    |    6 +-
->  .../staging/brcm80211/brcmsmac/phy/phytbl_lcn.h    |    7 +-
->  drivers/staging/brcm80211/brcmsmac/phy/phytbl_n.c  |    7 +-
->  drivers/staging/brcm80211/brcmsmac/phy/phytbl_n.h  |    3 +-
->  drivers/staging/brcm80211/brcmsmac/phy_shim.c      |   73 +-
->  drivers/staging/brcm80211/brcmsmac/phy_shim.h      |    9 +-
->  drivers/staging/brcm80211/brcmsmac/pmu.c           |    6 +-
->  drivers/staging/brcm80211/brcmsmac/pmu.h           |    5 +-
->  drivers/staging/brcm80211/brcmsmac/pub.h           |  155 ++--
->  drivers/staging/brcm80211/brcmsmac/rate.c          |   46 +-
->  drivers/staging/brcm80211/brcmsmac/rate.h          |   38 +-
->  drivers/staging/brcm80211/brcmsmac/scb.h           |   12 +-
->  drivers/staging/brcm80211/brcmsmac/srom.c          |   21 +-
->  drivers/staging/brcm80211/brcmsmac/srom.h          |    2 +
->  drivers/staging/brcm80211/brcmsmac/stf.c           |  108 +-
->  drivers/staging/brcm80211/brcmsmac/stf.h           |   30 +-
->  drivers/staging/brcm80211/brcmsmac/types.h         |  105 ++-
->  drivers/staging/brcm80211/brcmsmac/ucode_loader.c  |    2 +-
->  drivers/staging/brcm80211/brcmutil/utils.c         |   10 -
->  drivers/staging/brcm80211/brcmutil/wifi.c          |    5 -
->  drivers/staging/brcm80211/include/brcmu_utils.h    |  114 +--
->  drivers/staging/brcm80211/include/defs.h           |    2 +
->  63 files changed, 2384 insertions(+), 2481 deletions(-)
+On Mon, 2011-06-20 at 20:00 +0530, Yogesh Ashok Powar wrote:
+> On Fri, Jun 17, 2011 at 10:24:45AM -0700, Johannes Berg wrote:
+> > > Using spinlocks in TX/RX path is not allowed because spinlocks will make
+> > > TX/RX path to block and its illegal to block while in an RCU read-side
+> > > critical section. I think, I got the joke here :(.
+> > 
+> > No, that'd be allowed, but you can't spinlock all the TX path because of performance.
+> > 
+> > I think the way to solve it would be to use synchronize_net() somehow maybe; not really sure.
+> 
+> Following patch avoids tailroom skip check for RCU readside
+> critical sections that begin inside the synchronize_rcu's grace
+> period, without grabbing any lock in the TX patch and there by avoiding
+> the race conditions.
+> 
+> I will request Andreas to test this patch on his testbed if the changes
+> are fine with you.
 
-Looks good, I particularly like patch #15.
+No, they're not, the mutex trickery seems completely pointless, and the
+conditional (on _is_locked no less) locking is horrible.
 
-Thanks,
+johannes
 
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
