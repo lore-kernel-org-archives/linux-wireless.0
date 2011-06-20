@@ -1,175 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:59319 "EHLO ogre.sisk.pl"
+Received: from purkki.adurom.net ([80.68.90.206]:48690 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754932Ab1FZVku convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jun 2011 17:40:50 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 3.0-rc4: Reported regressions from 2.6.39
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
+	id S1750887Ab1FTT4A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jun 2011 15:56:00 -0400
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 00/27] mac80211: create mac80211_ prefix
+References: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
+	<1f42877e8c429b956640a6e9d97127fc@secure.sipsolutions.net>
+	<87mxhg1zmb.fsf@purkki.adurom.net>
+	<20110620192418.GB2251@tuxdriver.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Mon, 20 Jun 2011 22:55:58 +0300
+In-Reply-To: <20110620192418.GB2251@tuxdriver.com> (John W. Linville's message of "Mon\, 20 Jun 2011 15\:24\:18 -0400")
+Message-ID: <8762o01dm9.fsf@purkki.adurom.net> (sfid-20110620_215604_410214_9D10395A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <VDRaLpg_NZ.A.tnC.JZ6BOB@chimera> (sfid-20110626_234912_543436_90A4B7A9)
-Date: Sun, 26 Jun 2011 23:18:39 +0200 (CEST)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some regressions from 2.6.39,
-for which there are no fixes in the mainline known to the tracking team.
-If any of them have been fixed already, please let us know.
+"John W. Linville" <linville@tuxdriver.com> writes:
 
-If you know of any other unresolved regressions from 2.6.39, please let us
-know either and we'll add them to the list.  Also, please let us know
-if any of the entries below are invalid.
+> On Fri, Jun 17, 2011 at 02:11:40PM +0300, Kalle Valo wrote:
+>
+>> What do you suggest here? So that we should rename everything (both
+>> mac80211 and 19 drivers) in one go? If we do that, we would have to do
+>> everything in one patch to not break bisect, and it would be huge.
+>> 
+>> With mac80211-compat.h it's possible to break down the patches into
+>> small pieces. This makes it easier to create the patches and, most
+>> importantly, review them.
+>> 
+>> I'm willing to work on that huge patch if we so decide, but I'm not
+>> sure if that's the correct way.
+>> 
+>> Ah, while writing this I realised that I could instead rename symbols
+>> in mac80211.h one at a time and that way the patches would be smaller.
+>> Did you mean that?
+>
+> Is there going to be another spin of this?
 
-Each entry from the list will be sent additionally in an automatic reply
-to this message with CCs to the people involved in reporting and handling
-the issue.
+Yes, based on Johannes' feedback I'll drop this patchset and will
+rework it. Instead I will send patches which rename mac80211.h symbols
+one at a time (both from mac80211 and drivers at the same). Again this
+won't happen all in once, instead I will send few patchsets to make it
+easier for me. But this way we get to avoid the ugly mac80211-compat.h
+file.
 
+> I had trouble applying patch 5 -- maybe this is something that is
+> best handled with a pull request?
 
-Listed regressions statistics:
+Sure, if it's easier for you I can do that.
 
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2011-06-26       22       14          12
-  2011-06-12        8        7           7
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38302
-Subject		: NFS crash in un-modified 3.0.0-rc3+, list corruption.
-Submitter	: Ben Greear <greearb@candelatech.com>
-Date		: 2011-06-20 22:42 (7 days old)
-Message-ID	: <4DFFCCDC.2070106@candelatech.com>
-References	: http://marc.info/?l=linux-kernel&m=130860979610651&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38292
-Subject		: slab vs lockdep vs debugobjects
-Submitter	: Peter Zijlstra <peterz@infradead.org>
-Date		: 2011-06-20 17:48 (7 days old)
-Message-ID	: <1308592080.26237.114.camel@twins>
-References	: http://marc.info/?l=linux-kernel&m=130859214215636&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38152
-Subject		: acpi_power_off lockdep splat
-Submitter	: Borislav Petkov <bp@alien8.de>
-Date		: 2011-06-19 13:30 (8 days old)
-Message-ID	: <20110619133049.GA18168@liondog.tnic>
-References	: http://marc.info/?l=linux-kernel&m=130849028317365&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38142
-Subject		: i915, framebuffer: wrong xoffset?
-Submitter	: Lucas De Marchi <lucas.de.marchi@gmail.com>
-Date		: 2011-06-18 16:29 (9 days old)
-Message-ID	: <BANLkTikAJEma_NNi0NYnjBEB6RkFJK3Dpg@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=130841462202826&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38122
-Subject		: 3.0-rc3 WARNING: at drivers/gpu/drm/i915/i915_drv.c:340 gen6_gt_force_wake_put+0x29/0x52 [i915]()
-Submitter	: Jens Axboe <jaxboe@fusionio.com>
-Date		: 2011-06-14 12:12 (13 days old)
-Message-ID	: <<4DE3E2C9.6060207@fusionio.com>>
-References	: http://marc.info/?l=linux-kernel&m=130805412314680&w=2
-		  https://lkml.org/lkml/2011/5/30/261
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37562
-Subject		: /scripts/depmod.sh ends up -rw-r--r-- 1 depmod.sh
-Submitter	: Andrew <atswartz@gmail.com>
-Date		: 2011-06-15 23:49 (12 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37482
-Subject		: Driver: i915 - Starting with kernel 3.0.0-rc3, dual monitor freezes a Dell Latitude E6410 when a second monitor is connected at boot time
-Submitter	: David Hill <hilld@binarystorm.net>
-Date		: 2011-06-14 18:42 (13 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37432
-Subject		: sdhci-pci fails on 3.0.0-rc1 on Dell E6510
-Submitter	: Oliver Hartkopp <socketcan@hartkopp.net>
-Date		: 2011-06-07 20:06 (20 days old)
-First-Bad-Commit: http://git.kernel.org/linus/da7822e5ad71ec9b745b412639f1e5e0ba795a20
-References	: http://article.gmane.org/gmane.linux.kernel.mmc/8442
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37232
-Subject		: [3.0-rc1][NMI/DMAR][iwlagn] errors - PCI system error (SERR) for reason a1 on CPU 0
-Submitter	: Shawn Starr <shawn.starr@rogers.com>
-Date		: 2011-06-03 4:56 (24 days old)
-Message-ID	: <4478124.OuFNgaPiHS@segfault.sh0n.net>
-References	: http://marc.info/?l=linux-kernel&m=130707737616116&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36972
-Subject		: 3.0-rc1: DMAR errors from iwlagn
-Submitter	: Jeremy Fitzhardinge <jeremy@goop.org>
-Date		: 2011-05-31 21:14 (27 days old)
-Message-ID	: <4DE55A26.6040702@goop.org>
-References	: http://marc.info/?l=linux-kernel&m=130687723213857&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36452
-Subject		: Artifacts with 3.0-rc1 on SandyBridge
-Submitter	: Alex Zhavnerchik <alex.vizor@gmail.com>
-Date		: 2011-06-01 13:55 (26 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36302
-Subject		: SandyBridge can't do s2disk with linux 3.0-rc1
-Submitter	: Alex Zhavnerchik <alex.vizor@gmail.com>
-Date		: 2011-05-30 23:10 (28 days old)
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38012
-Subject		: Missing code to load firmware
-Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
-Date		: 2011-06-20 21:44 (7 days old)
-Handled-By	: Larry Finger <Larry.Finger@lwfinger.net>
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=63002
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37542
-Subject		: [OOPS] 3.0-rc1 cifs
-Submitter	: Martijn Uffing <mp3project@sarijopen.student.utwente.nl>
-Date		: 2011-06-09 20:15 (18 days old)
-Message-ID	: <Pine.LNX.4.64.1106092211500.19687@sarijopen.student.utwente.nl>
-References	: http://marc.info/?l=linux-kernel&m=130765235926144&w=2
-Handled-By	: Jeff Layton <jlayton@redhat.com>
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=63202
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions from 2.6.39,
-unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=36912
-
-Please let the tracking team know if there are any Bugzilla entries that
-should be added to the list in there.
-
-Thanks!
-
+-- 
+Kalle Valo
