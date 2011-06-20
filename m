@@ -1,50 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1596 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753561Ab1FFKJ5 convert rfc822-to-8bit (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:58802 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755373Ab1FTVw7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 06:09:57 -0400
-Message-ID: <4DECA76C.90000@broadcom.com> (sfid-20110606_121004_824717_E0FF15BD)
-Date: Mon, 6 Jun 2011 12:09:48 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	Mon, 20 Jun 2011 17:52:59 -0400
+Received: by mail-gy0-f174.google.com with SMTP id 3so1580080gyh.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jun 2011 14:52:59 -0700 (PDT)
+Message-ID: <4DFFC133.7050408@lwfinger.net> (sfid-20110620_235303_713184_B0AD1082)
+Date: Mon, 20 Jun 2011 16:52:51 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "Hauke Mehrtens" <hauke@hauke-m.de>,
-	"Arnd Bergmann" <arnd@arndb.de>, "Greg KH" <greg@kroah.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	"mb@bu3sch.de" <mb@bu3sch.de>,
-	"george@znau.edu.ua" <george@znau.edu.ua>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"bernhardloos@googlemail.com" <bernhardloos@googlemail.com>
-Subject: Re: [RFC][PATCH 01/10] bcma: Use array to store cores.
-References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
- <1307311658-15853-2-git-send-email-hauke@hauke-m.de>
- <BANLkTimAPHPcqKKJ+Rphef_+1RB0aHR4ug@mail.gmail.com>
-In-Reply-To: <BANLkTimAPHPcqKKJ+Rphef_+1RB0aHR4ug@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+To: Peter Chubb <peter@chubb.wattle.id.au>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: State of rtl8192CU driver?
+References: <w4hb7ohfo5.wl%peter@chubb.wattle.id.au>	<4DFB6004.1060006@lwfinger.net> <w44o3l9w74.wl%peter@chubb.wattle.id.au>
+In-Reply-To: <w44o3l9w74.wl%peter@chubb.wattle.id.au>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/06/2011 11:42 AM, Rafał Miłecki wrote:
-> Greg, Arnd: could you take a look at this patch, please?
->
-> With proposed patch we are going back to this ugly array and wrappers hacks.
->
-> I was really happy with our final solution, but it seems it's not
-> doable for embedded systems...? Is there something better we can do
-> about this?
+Peter,
 
-I do agree with Rafał that we should look for another alternative. I 
-posted a suggestion earlier regarding this patch. Can anyone tell me 
-whether that could prevent need for the array/wrapper hack.
+I found a problem with rtl8192cu since the 3.0-rcX merge. Please go to 
+https://bugzilla.kernel.org/show_bug.cgi?id=38012 and try the patch found there.
 
-Gr. AvS
+Please let me know if it fixes your problem.
 
--- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
-
-
+Larry
