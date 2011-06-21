@@ -1,49 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:35193 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757784Ab1FVCef (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:41645 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751662Ab1FUJYy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 22:34:35 -0400
-Received: by iwn6 with SMTP id 6so332288iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 19:34:34 -0700 (PDT)
-Message-ID: <4E0154B7.2000204@lwfinger.net> (sfid-20110622_043450_884340_ABC0A14E)
-Date: Tue, 21 Jun 2011 21:34:31 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: ali@internetdog.org
-CC: linux-wireless@vger.kernel.org
-Subject: Re: r8712u driver for the rtl8192su chip.
-References: <776913.88107.qm@web161609.mail.bf1.yahoo.com> <4DC0312A.4040303@lwfinger.net> <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com> <4DC0669E.4040100@lwfinger.net> <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com> <4DC06BF3.6070208@lwfinger.net> <20110621124954.GA8462@internetdog.org> <4E011644.3070906@lwfinger.net> <20110622010057.GA12123@internetdog.org>
-In-Reply-To: <20110622010057.GA12123@internetdog.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 21 Jun 2011 05:24:54 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 00/32] ath9k: add initial support for AR9330
+Date: Tue, 21 Jun 2011 11:23:20 +0200
+Message-Id: <1308648232-9906-1-git-send-email-juhosg@openwrt.org> (sfid-20110621_112458_447924_4CFE72CF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/21/2011 08:00 PM, Ali Bahar wrote:
-> On Tue, Jun 21, 2011 at 05:08:04PM -0500, Larry Finger wrote:
->> On 06/21/2011 07:49 AM, Ali Bahar wrote:
->
->>> this is more of a quick FYI, regarding Staging's r8712u driver.
->
->>> root@hashbang Tue Jun 21 18:30:06 ~$ iwconfig wlan2 essid "h55m"
->>> Error for wireless request "Set ESSID" (8B1A) :
->>>      SET failed on device wlan2 ; Operation not permitted.
->>> root@hashbang Tue Jun 21 18:30:47 ~$ uname -r
->
->> is implemented. Your command failed because you ran the command as
->> an unprivileged user. Notice the differences in the error messages.
->
-> How is root unprivileged? The shell-prompt shows the user.
->
-> Right after the failure, I ran the exact same steps, in the same
-> shell, on a different card of the same box. It worked, as it always
-> has.
+The patch set adds initial support for the AR9330 wireless MAC 
+which can be found in the Atheros AR933{0,1} SoCs. 
+It is a 1x1 chip and supports 2.4GHz only.
 
-I have no idea what you are doing wrong, but I get the following:
+Gabor Juhos (32):
+  ath9k: define mac version for AR9330
+  ath9k: define device id for AR9330
+  ath9k: add MAC revision detection for AR9330
+  ath9k: add platform device id for AR9330
+  ath9k: add AR9330 initvals
+  ath9k: initialize mode registers for AR9330
+  ath9k: initialize tx gain table for AR9330
+  ath9k: initialize rx gain table for AR9330
+  ath9k: add AR9330 specific PLL initialization
+  ath9k: use different BB watchdog timeout value for AR9330
+  ath9k: don't enable LDPC for AR9330
+  ath9k: read spur frequency information from eeprom for AR9330
+  ath9k: fix channel frequency calculation for AR9340
+  ath9k: configure RF channel frequency for AR9330
+  ath9k: enable TX/RX data byte swap for AR9330
+  ath9k: skip internal regulator configuration for AR9330
+  ath9k: enable tuning capacitance configuration for AR9330
+  ath9k: use correct EEPROM base for AR9330
+  ath9k: configure xpa bias level for AR9330
+  ath9k: set NF limits for AR9330
+  ath9k: enable antenna diversity for AR9330
+  ath9k: use correct max_streams for AR9330
+  ath9k: add a missing case statement to ath_ant_div_comb_alt_check
+  ath9k: fix antenna diversity configuration for non AR9485 chips
+  ath9k: remove superfluous parentheses
+  ath9k: add fast_div_bias configuration for diversity group 1
+  ath9k: set diversity group for AR9330
+  ath9k: fix few register offsets for AR9330
+  ath9k: configure diversity based on eeprom contents for AR9330
+  ath9k: configure internal regulator for AR9330
+  ath9k: add external_reset callback to ath9k_platfom_data for AR9330
+  ath9k: enable support for AR9330
 
-finger@larrylap:~/wireless-testing-new> sudo iwconfig wlan9 essid junk
-finger@larrylap:~/wireless-testing-new>
+ drivers/net/wireless/ath/ath9k/ahb.c               |    4 +
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c     |   35 +-
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c         |  182 +++-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c        |   41 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h        |    6 +-
+ .../net/wireless/ath/ath9k/ar9330_1p1_initvals.h   | 1147 ++++++++++++++++++++
+ .../net/wireless/ath/ath9k/ar9330_1p2_initvals.h   | 1080 ++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c                |   96 ++-
+ drivers/net/wireless/ath/ath9k/hw.h                |    3 +
+ drivers/net/wireless/ath/ath9k/init.c              |    4 +-
+ drivers/net/wireless/ath/ath9k/recv.c              |  146 ++-
+ drivers/net/wireless/ath/ath9k/reg.h               |   16 +
+ include/linux/ath9k_platform.h                     |    2 +
+ 13 files changed, 2698 insertions(+), 64 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9330_1p2_initvals.h
 
-The above is with r8712u running on wireless-testing 3.0-rc4.
+-- 
+1.7.2.1
 
-Larry
