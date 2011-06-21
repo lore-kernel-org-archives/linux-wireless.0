@@ -1,92 +1,278 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:42963 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754190Ab1FXPZc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2011 11:25:32 -0400
-Subject: Re: [PATCH 1/2] iwlwifi: use pci_dev->revision, again
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-In-Reply-To: <4E04A143.1090204@mvista.com>
-References: <201106231841.40691.sshtylyov@ru.mvista.com>
-	 <1308841365.13397.274.camel@wwguy-huron>  <4E046A9F.9020909@mvista.com>
-	 <1308924515.19001.2.camel@wwguy-ubuntu>  <4E04A143.1090204@mvista.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 24 Jun 2011 08:21:40 -0700
-Message-ID: <1308928900.19001.3.camel@wwguy-ubuntu> (sfid-20110624_172543_070246_DCEE9D6A)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39889 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757289Ab1FUS5a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 14:57:30 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mb@bu3sch.de, linville@tuxdriver.com
+Cc: ralf@linux-mips.org, linux-mips@linux-mips.org,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2] ssb: add __devinit to some functions
+Date: Tue, 21 Jun 2011 20:57:16 +0200
+Message-Id: <1308682636-26487-1-git-send-email-hauke@hauke-m.de> (sfid-20110621_205734_382158_DE047FE2)
+In-Reply-To: <1308680889-4217-1-git-send-email-hauke@hauke-m.de>
+References: <1308680889-4217-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-06-24 at 07:37 -0700, Sergei Shtylyov wrote:
-> Hello.
-> 
-> wwguy wrote:
-> 
-> >>>> Commit ff938e43d39e926de74b32a3656c190f979ab642 (net: use pci_dev->revision,
-> >>>> again) already converted this driver to using the 'revision' field of 'struct
-> >>>> pci_dev' but commit c2974a1d18832a9fffb2eb389c3878f5c4ed92f1 (iwlagn: remove
-> >>>> rev_id) later reverted that change for no reason. Now restore the change...
-> >>>> Signed-off-by: Sergei Shtylyov<sshtylyov@ru.mvista.com>
-> >>>> ---
-> >>>> The patch is against the recent Linus' tree.
-> >>>>   drivers/net/wireless/iwlwifi/iwl-agn.c |    5 ++---
-> >>>>   1 file changed, 2 insertions(+), 3 deletions(-)
-> >>>> Index: linux-2.6/drivers/net/wireless/iwlwifi/iwl-agn.c
-> >>>> ===================================================================
-> >>>> --- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl-agn.c
-> >>>> +++ linux-2.6/drivers/net/wireless/iwlwifi/iwl-agn.c
-> >>>> @@ -3275,10 +3275,9 @@ struct ieee80211_ops iwlagn_hw_ops = {
-> >>>>
-> >>>>   static u32 iwl_hw_detect(struct iwl_priv *priv)
-> >>>>   {
-> >>>> -	u8 rev_id;
-> >>>> +	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n",
-> >>>> +		       priv->pci_dev->revision);
-> >>>>
-> >>>> -	pci_read_config_byte(priv->pci_dev, PCI_REVISION_ID,&rev_id);
-> >>>> -	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n", rev_id);
-> >>>>   	return iwl_read32(priv, CSR_HW_REV);
-> >>>>   }
-> 
-> >>> hmm, I believe it is merge sequence issue, the IWL_DEBUG_INFO line has
-> >>> benn remove all together in later patch. the information is being log in
-> >>> the calling function, no need to log in "iwl_hw_detect"
-> 
-> >>     Hm, you probably mean this patch in the iwlwifi-2.6.git (of which I wasn't 
-> >> aware):
-> 
-> >> author	Emmanuel Grumbach <emmanuel.grumbach@intel.com>	
-> >> 	Tue, 31 May 2011 06:58:18 +0000 (09:58 +0300)
-> >> committer	Wey-Yi Guy <wey-yi.w.guy@intel.com>	
-> >> 	Sat, 18 Jun 2011 15:18:01 +0000 (08:18 -0700)
-> >> commit	85aed7c48113dfcdc913008481c46346af0db69e
-> >> tree	75831a2ec540039470c295a81c2059a24a4531f5
-> >> parent	19707bac16129ccebc398dbff9d2b44b17b24fea
-> 
-> >> iwlagn: don't read the PCI_REVISION_ID from iwl-agn.c
-> 
-> >> The PCI_REVISION_ID is read and printed in iwl_pci_probe anyway using pr_info
-> 
-> >> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> >> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> 
-> >>     Since iwl_pci_probe() still reads the PCI config. register, my patch 
-> >> should be recast to modify iwl-pci.c instead...
-> 
-> > I don't believe this patch is needed since the "log" statement is move
-> > to outside the function.
-> 
->     That's what I'm talking about -- it's not needed in its current form, but I 
-> will redo the patch to modify iwl-pci,c where iwl_pci_probe() still reads 
-> PCI_REVISION_ID.
-> 
+Two functions in ssb are using register_pci_controller() which is
+__devinit. The functions ssb_pcicore_init_hostmode() and
+ssb_gige_probe() should also be __devinit.
 
-ok, thanks
-Wey
-> 
+This fixes the following warning:
+WARNING: vmlinux.o(.text+0x2727b8): Section mismatch in reference from the function ssb_pcicore_init_hostmode() to the function .devinit.text:register_pci_controller()
+The function ssb_pcicore_init_hostmode() references
+the function __devinit register_pci_controller().
+This is often because ssb_pcicore_init_hostmode lacks a __devinit
+annotation or the annotation of register_pci_controller is wrong.
 
+WARNING: vmlinux.o(.text+0x273398): Section mismatch in reference from the function ssb_gige_probe() to the function .devinit.text:register_pci_controller()
+The function ssb_gige_probe() references
+the function __devinit register_pci_controller().
+This is often because ssb_gige_probe lacks a __devinit
+annotation or the annotation of register_pci_controller is wrong.
+
+Reported-by: Ralf Baechle <ralf@linux-mips.org>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/b44.c               |    4 ++--
+ drivers/net/wireless/b43/sdio.c |    6 +++---
+ drivers/ssb/driver_gige.c       |   13 ++++++++-----
+ drivers/ssb/driver_pcicore.c    |   10 +++++-----
+ drivers/ssb/main.c              |   29 +++++++++++++++--------------
+ drivers/ssb/pcihost_wrapper.c   |    6 +++---
+ 6 files changed, 36 insertions(+), 32 deletions(-)
+
+diff --git a/drivers/net/b44.c b/drivers/net/b44.c
+index 085560e..cced4fd 100644
+--- a/drivers/net/b44.c
++++ b/drivers/net/b44.c
+@@ -2336,7 +2336,7 @@ static struct ssb_driver b44_ssb_driver = {
+ 	.resume		= b44_resume,
+ };
+ 
+-static inline int b44_pci_init(void)
++static inline int __init b44_pci_init(void)
+ {
+ 	int err = 0;
+ #ifdef CONFIG_B44_PCI
+@@ -2345,7 +2345,7 @@ static inline int b44_pci_init(void)
+ 	return err;
+ }
+ 
+-static inline void b44_pci_exit(void)
++static inline void __exit b44_pci_exit(void)
+ {
+ #ifdef CONFIG_B44_PCI
+ 	ssb_pcihost_unregister(&b44_pci_driver);
+diff --git a/drivers/net/wireless/b43/sdio.c b/drivers/net/wireless/b43/sdio.c
+index e6c733d..4fd6775 100644
+--- a/drivers/net/wireless/b43/sdio.c
++++ b/drivers/net/wireless/b43/sdio.c
+@@ -93,8 +93,8 @@ void b43_sdio_free_irq(struct b43_wldev *dev)
+ 	sdio->irq_handler = NULL;
+ }
+ 
+-static int b43_sdio_probe(struct sdio_func *func,
+-			  const struct sdio_device_id *id)
++static int __devinit b43_sdio_probe(struct sdio_func *func,
++				    const struct sdio_device_id *id)
+ {
+ 	struct b43_sdio *sdio;
+ 	struct sdio_func_tuple *tuple;
+@@ -171,7 +171,7 @@ out:
+ 	return error;
+ }
+ 
+-static void b43_sdio_remove(struct sdio_func *func)
++static void __devexit b43_sdio_remove(struct sdio_func *func)
+ {
+ 	struct b43_sdio *sdio = sdio_get_drvdata(func);
+ 
+diff --git a/drivers/ssb/driver_gige.c b/drivers/ssb/driver_gige.c
+index 5ba92a2..d758909 100644
+--- a/drivers/ssb/driver_gige.c
++++ b/drivers/ssb/driver_gige.c
+@@ -106,8 +106,9 @@ void gige_pcicfg_write32(struct ssb_gige *dev,
+ 	gige_write32(dev, SSB_GIGE_PCICFG + offset, value);
+ }
+ 
+-static int ssb_gige_pci_read_config(struct pci_bus *bus, unsigned int devfn,
+-				    int reg, int size, u32 *val)
++static int __devinit ssb_gige_pci_read_config(struct pci_bus *bus,
++					      unsigned int devfn, int reg,
++					      int size, u32 *val)
+ {
+ 	struct ssb_gige *dev = container_of(bus->ops, struct ssb_gige, pci_ops);
+ 	unsigned long flags;
+@@ -136,8 +137,9 @@ static int ssb_gige_pci_read_config(struct pci_bus *bus, unsigned int devfn,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-static int ssb_gige_pci_write_config(struct pci_bus *bus, unsigned int devfn,
+-				     int reg, int size, u32 val)
++static int __devinit ssb_gige_pci_write_config(struct pci_bus *bus,
++					       unsigned int devfn, int reg,
++					       int size, u32 val)
+ {
+ 	struct ssb_gige *dev = container_of(bus->ops, struct ssb_gige, pci_ops);
+ 	unsigned long flags;
+@@ -166,7 +168,8 @@ static int ssb_gige_pci_write_config(struct pci_bus *bus, unsigned int devfn,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-static int ssb_gige_probe(struct ssb_device *sdev, const struct ssb_device_id *id)
++static int __devinit ssb_gige_probe(struct ssb_device *sdev,
++				    const struct ssb_device_id *id)
+ {
+ 	struct ssb_gige *dev;
+ 	u32 base, tmslow, tmshigh;
+diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
+index 2a20dab..21b9465 100644
+--- a/drivers/ssb/driver_pcicore.c
++++ b/drivers/ssb/driver_pcicore.c
+@@ -314,7 +314,7 @@ int ssb_pcicore_pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return ssb_mips_irq(extpci_core->dev) + 2;
+ }
+ 
+-static void ssb_pcicore_init_hostmode(struct ssb_pcicore *pc)
++static void __devinit ssb_pcicore_init_hostmode(struct ssb_pcicore *pc)
+ {
+ 	u32 val;
+ 
+@@ -379,7 +379,7 @@ static void ssb_pcicore_init_hostmode(struct ssb_pcicore *pc)
+ 	register_pci_controller(&ssb_pcicore_controller);
+ }
+ 
+-static int pcicore_is_in_hostmode(struct ssb_pcicore *pc)
++static int __devinit pcicore_is_in_hostmode(struct ssb_pcicore *pc)
+ {
+ 	struct ssb_bus *bus = pc->dev->bus;
+ 	u16 chipid_top;
+@@ -412,7 +412,7 @@ static int pcicore_is_in_hostmode(struct ssb_pcicore *pc)
+  * Workarounds.
+  **************************************************/
+ 
+-static void ssb_pcicore_fix_sprom_core_index(struct ssb_pcicore *pc)
++static void __devinit ssb_pcicore_fix_sprom_core_index(struct ssb_pcicore *pc)
+ {
+ 	u16 tmp = pcicore_read16(pc, SSB_PCICORE_SPROM(0));
+ 	if (((tmp & 0xF000) >> 12) != pc->dev->core_index) {
+@@ -514,13 +514,13 @@ static void ssb_pcicore_pcie_setup_workarounds(struct ssb_pcicore *pc)
+  * Generic and Clientmode operation code.
+  **************************************************/
+ 
+-static void ssb_pcicore_init_clientmode(struct ssb_pcicore *pc)
++static void __devinit ssb_pcicore_init_clientmode(struct ssb_pcicore *pc)
+ {
+ 	/* Disable PCI interrupts. */
+ 	ssb_write32(pc->dev, SSB_INTVEC, 0);
+ }
+ 
+-void ssb_pcicore_init(struct ssb_pcicore *pc)
++void __devinit ssb_pcicore_init(struct ssb_pcicore *pc)
+ {
+ 	struct ssb_device *dev = pc->dev;
+ 
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index f8a13f8..e568664 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -557,7 +557,7 @@ error:
+ }
+ 
+ /* Needs ssb_buses_lock() */
+-static int ssb_attach_queued_buses(void)
++static int __devinit ssb_attach_queued_buses(void)
+ {
+ 	struct ssb_bus *bus, *n;
+ 	int err = 0;
+@@ -768,9 +768,9 @@ out:
+ 	return err;
+ }
+ 
+-static int ssb_bus_register(struct ssb_bus *bus,
+-			    ssb_invariants_func_t get_invariants,
+-			    unsigned long baseaddr)
++static int __devinit ssb_bus_register(struct ssb_bus *bus,
++				      ssb_invariants_func_t get_invariants,
++				      unsigned long baseaddr)
+ {
+ 	int err;
+ 
+@@ -851,8 +851,8 @@ err_disable_xtal:
+ }
+ 
+ #ifdef CONFIG_SSB_PCIHOST
+-int ssb_bus_pcibus_register(struct ssb_bus *bus,
+-			    struct pci_dev *host_pci)
++int __devinit ssb_bus_pcibus_register(struct ssb_bus *bus,
++				      struct pci_dev *host_pci)
+ {
+ 	int err;
+ 
+@@ -875,9 +875,9 @@ EXPORT_SYMBOL(ssb_bus_pcibus_register);
+ #endif /* CONFIG_SSB_PCIHOST */
+ 
+ #ifdef CONFIG_SSB_PCMCIAHOST
+-int ssb_bus_pcmciabus_register(struct ssb_bus *bus,
+-			       struct pcmcia_device *pcmcia_dev,
+-			       unsigned long baseaddr)
++int __devinit ssb_bus_pcmciabus_register(struct ssb_bus *bus,
++					 struct pcmcia_device *pcmcia_dev,
++					 unsigned long baseaddr)
+ {
+ 	int err;
+ 
+@@ -897,8 +897,9 @@ EXPORT_SYMBOL(ssb_bus_pcmciabus_register);
+ #endif /* CONFIG_SSB_PCMCIAHOST */
+ 
+ #ifdef CONFIG_SSB_SDIOHOST
+-int ssb_bus_sdiobus_register(struct ssb_bus *bus, struct sdio_func *func,
+-			     unsigned int quirks)
++int __devinit ssb_bus_sdiobus_register(struct ssb_bus *bus,
++				       struct sdio_func *func,
++				       unsigned int quirks)
+ {
+ 	int err;
+ 
+@@ -918,9 +919,9 @@ int ssb_bus_sdiobus_register(struct ssb_bus *bus, struct sdio_func *func,
+ EXPORT_SYMBOL(ssb_bus_sdiobus_register);
+ #endif /* CONFIG_SSB_PCMCIAHOST */
+ 
+-int ssb_bus_ssbbus_register(struct ssb_bus *bus,
+-			    unsigned long baseaddr,
+-			    ssb_invariants_func_t get_invariants)
++int __devinit ssb_bus_ssbbus_register(struct ssb_bus *bus,
++				      unsigned long baseaddr,
++				      ssb_invariants_func_t get_invariants)
+ {
+ 	int err;
+ 
+diff --git a/drivers/ssb/pcihost_wrapper.c b/drivers/ssb/pcihost_wrapper.c
+index f6c8c81..d7a9813 100644
+--- a/drivers/ssb/pcihost_wrapper.c
++++ b/drivers/ssb/pcihost_wrapper.c
+@@ -53,8 +53,8 @@ static int ssb_pcihost_resume(struct pci_dev *dev)
+ # define ssb_pcihost_resume	NULL
+ #endif /* CONFIG_PM */
+ 
+-static int ssb_pcihost_probe(struct pci_dev *dev,
+-			     const struct pci_device_id *id)
++static int __devinit ssb_pcihost_probe(struct pci_dev *dev,
++				       const struct pci_device_id *id)
+ {
+ 	struct ssb_bus *ssb;
+ 	int err = -ENOMEM;
+@@ -110,7 +110,7 @@ static void ssb_pcihost_remove(struct pci_dev *dev)
+ 	pci_set_drvdata(dev, NULL);
+ }
+ 
+-int ssb_pcihost_register(struct pci_driver *driver)
++int __devinit ssb_pcihost_register(struct pci_driver *driver)
+ {
+ 	driver->probe = ssb_pcihost_probe;
+ 	driver->remove = ssb_pcihost_remove;
+-- 
+1.7.4.1
 
