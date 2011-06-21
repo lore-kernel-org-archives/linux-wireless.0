@@ -1,62 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:57141 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752717Ab1F0RuU (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:41719 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755899Ab1FUJZA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 13:50:20 -0400
-Received: by pvg12 with SMTP id 12so2995075pvg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 10:50:20 -0700 (PDT)
-From: Jon Mason <jdmason@kudzu.us>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 19/19] rtlwifi: remove unnecessary read of PCI_CAP_ID_EXP
-Date: Mon, 27 Jun 2011 12:50:14 -0500
-Message-Id: <1309197014-16391-1-git-send-email-jdmason@kudzu.us> (sfid-20110627_195027_208499_DAFCA287)
+	Tue, 21 Jun 2011 05:25:00 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 30/32] ath9k: configure internal regulator for AR9330
+Date: Tue, 21 Jun 2011 11:23:50 +0200
+Message-Id: <1308648232-9906-31-git-send-email-juhosg@openwrt.org> (sfid-20110621_112536_854273_A3CFB395)
+In-Reply-To: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
+References: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The PCIE capability offset is saved during PCI bus walking.  It will
-remove an unnecessary search in the PCI configuration space if this
-value is referenced instead of reacquiring it.
-
-Also, remove unnecessary and unused #defines for PCI.
-
-Signed-off-by: Jon Mason <jdmason@kudzu.us>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/rtlwifi/pci.c |    2 +-
- drivers/net/wireless/rtlwifi/pci.h |    5 -----
- 2 files changed, 1 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   25 +++++++++++++++++++----
+ 1 files changed, 20 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index ad39af4..63501a1 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -390,7 +390,7 @@ static void rtl_pci_parse_configuration(struct pci_dev *pdev,
- 	u8 linkctrl_reg;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 666a174..1d09f22 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3712,7 +3712,7 @@ static void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
+ 		ath9k_hw_ar9300_get_eeprom(ah, EEP_INTERNAL_REGULATOR);
  
- 	/*Link Control Register */
--	pos = pci_find_capability(pdev, PCI_CAP_ID_EXP);
-+	pos = pci_pcie_cap(pdev);
- 	pci_read_config_byte(pdev, pos + PCI_EXP_LNKCTL, &linkctrl_reg);
- 	pcipriv->ndis_adapter.linkctrl_reg = linkctrl_reg;
+ 	if (internal_regulator) {
+-		if (AR_SREV_9485(ah)) {
++		if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
+ 			int reg_pmu_set;
  
-diff --git a/drivers/net/wireless/rtlwifi/pci.h b/drivers/net/wireless/rtlwifi/pci.h
-index 671b1f5..76f4200 100644
---- a/drivers/net/wireless/rtlwifi/pci.h
-+++ b/drivers/net/wireless/rtlwifi/pci.h
-@@ -75,11 +75,6 @@
- #define PCI_CONF_ADDRESS	0x0CF8	/*PCI Configuration Space Address */
- #define PCI_CONF_DATA		0x0CFC	/*PCI Configuration Space Data */
+ 			reg_pmu_set = REG_READ(ah, AR_PHY_PMU2) & ~AR_PHY_PMU2_PGM;
+@@ -3720,9 +3720,24 @@ static void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
+ 			if (!is_pmu_set(ah, AR_PHY_PMU2, reg_pmu_set))
+ 				return;
  
--#define PCI_CLASS_BRIDGE_DEV		0x06
--#define PCI_SUBCLASS_BR_PCI_TO_PCI	0x04
--#define PCI_CAPABILITY_ID_PCI_EXPRESS	0x10
--#define PCI_CAP_ID_EXP			0x10
--
- #define U1DONTCARE			0xFF
- #define U2DONTCARE			0xFFFF
- #define U4DONTCARE			0xFFFFFFFF
+-			reg_pmu_set = (5 << 1) | (7 << 4) | (1 << 8) |
+-				      (2 << 14) | (6 << 17) | (1 << 20) |
+-				      (3 << 24) | (1 << 28);
++			if (AR_SREV_9330(ah)) {
++				if (ah->is_clk_25mhz) {
++					reg_pmu_set = (3 << 1) | (8 << 4) |
++						      (3 << 8) | (1 << 14) |
++						      (6 << 17) | (1 << 20) |
++						      (3 << 24);
++				} else {
++					reg_pmu_set = (4 << 1)  | (7 << 4) |
++						      (3 << 8)  | (1 << 14) |
++						      (6 << 17) | (1 << 20) |
++						      (3 << 24);
++				}
++			} else {
++				reg_pmu_set = (5 << 1) | (7 << 4) |
++					      (1 << 8) | (2 << 14) |
++					      (6 << 17) | (1 << 20) |
++					      (3 << 24) | (1 << 28);
++			}
+ 
+ 			REG_WRITE(ah, AR_PHY_PMU1, reg_pmu_set);
+ 			if (!is_pmu_set(ah, AR_PHY_PMU1, reg_pmu_set))
+@@ -3753,7 +3768,7 @@ static void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
+ 					   AR_RTC_REG_CONTROL1_SWREG_PROGRAM);
+ 		}
+ 	} else {
+-		if (AR_SREV_9485(ah)) {
++		if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
+ 			REG_RMW_FIELD(ah, AR_PHY_PMU2, AR_PHY_PMU2_PGM, 0);
+ 			while (REG_READ_FIELD(ah, AR_PHY_PMU2,
+ 					      AR_PHY_PMU2_PGM))
 -- 
-1.7.5.4
+1.7.2.1
 
