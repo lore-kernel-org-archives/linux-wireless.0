@@ -1,149 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:44952 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755046Ab1F0WIL (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:58070 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752088Ab1FUPw1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 18:08:11 -0400
-Received: by mail-fx0-f52.google.com with SMTP id 18so2183704fxd.11
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 15:08:10 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/2] b43: HT-PHY: init radio when enabling it
-Date: Tue, 28 Jun 2011 00:08:53 +0200
-Message-Id: <1309212533-4473-2-git-send-email-zajec5@gmail.com> (sfid-20110628_001438_388005_CB815DA1)
-In-Reply-To: <1309212533-4473-1-git-send-email-zajec5@gmail.com>
-References: <1309212533-4473-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 21 Jun 2011 11:52:27 -0400
+Received: by fxm17 with SMTP id 17so34677fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 08:52:26 -0700 (PDT)
+Subject: [RFC v3 2/3] nl80211: channel type attribute for IBSS
+From: Alexander Simon <alexander.simon@saxnet.de>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1308671129.2656.4.camel@alex-2>
+References: <1308671129.2656.4.camel@alex-2>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 21 Jun 2011 17:52:24 +0200
+Message-ID: <1308671544.2656.8.camel@alex-2> (sfid-20110621_175230_715106_4D770237)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Masks and sets were found in MMIO dumps by using MMIO hacks. Shortly:
-radio_write(0x0c51) <- 0x0070
-radio_write(0x0c5a) <- 0x0003
-radio_write(0x0146) <- 0x0003
-radio_write(0x0546) <- 0x0003
-radio_write(0x0946) <- 0x0003
-radio_write(0x002e) <- 0x0078
-radio_write(0x00c0) <- 0x0080
-radio_write(0x002e) <- 0xff87
-radio_write(0x00c0) <- 0xff7f
-radio_write(0x0011) <- 0xfff7
+Allow nl80211 to set a ht channel for ibss.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Alexander Simon <alexander.simon@saxnet.de>
 ---
-The long versions of the dumps that were used to write it:
+ include/net/cfg80211.h |    1 +
+ net/wireless/nl80211.c |   33 +++++++++++++++++++++++++++++----
+ 2 files changed, 30 insertions(+), 4 deletions(-)
 
-radio_write(0x0c51) <- 0x0070
-radio_write(0x0c5a) <- 0x0003
-
- radio_read(0x0146) -> 0x0000
-radio_write(0x0146) <- 0x0003
- radio_read(0x0546) -> 0x0000
-radio_write(0x0546) <- 0x0003
- radio_read(0x0946) -> 0x0000
-radio_write(0x0946) <- 0x0003
-
- radio_read(0x002e) -> 0x0000
-radio_write(0x002e) <- 0x0078
- radio_read(0x00c0) -> 0x0000
-radio_write(0x00c0) <- 0x0080
- radio_read(0x002e) -> 0x0000
-radio_write(0x002e) <- 0x0000
- radio_read(0x00c0) -> 0x0000
-radio_write(0x00c0) <- 0x0000
-
- radio_read(0x0011) -> 0x0000
-radio_write(0x0011) <- 0x0000
-
-*****
-
-radio_write(0x0c51) <- 0x0070
-radio_write(0x0c5a) <- 0x0003
-
- radio_read(0x0146) -> 0xffff
-radio_write(0x0146) <- 0xffff
- radio_read(0x0546) -> 0xffff
-radio_write(0x0546) <- 0xffff
- radio_read(0x0946) -> 0xffff
-radio_write(0x0946) <- 0xffff
-
- radio_read(0x002e) -> 0xffff
-radio_write(0x002e) <- 0xffff
- radio_read(0x00c0) -> 0xffff
-radio_write(0x00c0) <- 0xffff
- radio_read(0x002e) -> 0xffff
-radio_write(0x002e) <- 0xff87
- radio_read(0x00c0) -> 0xffff
-radio_write(0x00c0) <- 0xff7f
-
- radio_read(0x0011) -> 0xffff
-radio_write(0x0011) <- 0xfff7
----
- drivers/net/wireless/b43/phy_ht.c |   33 +++++++++++++++++++++++++++++++++
- 1 files changed, 33 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 8df92e1..28fb746 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -28,6 +28,10 @@
- #include "radio_2059.h"
- #include "main.h"
- 
-+/**************************************************
-+ * Radio 2059.
-+ **************************************************/
-+
- static void b43_radio_2059_channel_setup(struct b43_wldev *dev,
- 			const struct b43_phy_ht_channeltab_e_radio2059 *e)
- {
-@@ -79,6 +83,30 @@ static void b43_radio_2059_channel_setup(struct b43_wldev *dev,
- 	udelay(300);
- }
- 
-+static void b43_radio_2059_init(struct b43_wldev *dev)
-+{
-+	const u16 routing[] = { R2059_SYN, R2059_TXRX0, R2059_RXRX1 };
-+	u8 i;
-+
-+	b43_radio_write(dev, R2059_ALL | 0x51, 0x0070);
-+	b43_radio_write(dev, R2059_ALL | 0x5a, 0x0003);
-+
-+	for (i = 0; i < ARRAY_SIZE(routing); i++)
-+		b43_radio_set(dev, routing[i] | 0x146, 0x3);
-+
-+	b43_radio_set(dev, 0x2e, 0x0078);
-+	b43_radio_set(dev, 0xc0, 0x0080);
-+	msleep(2);
-+	b43_radio_mask(dev, 0x2e, ~0x0078);
-+	b43_radio_mask(dev, 0xc0, ~0x0080);
-+
-+	b43_radio_mask(dev, 0x11, 0x0008);
-+}
-+
-+/**************************************************
-+ * Channel switching ops.
-+ **************************************************/
-+
- static void b43_phy_ht_channel_setup(struct b43_wldev *dev,
- 				const struct b43_phy_ht_channeltab_e_phy *e,
- 				struct ieee80211_channel *new_channel)
-@@ -200,6 +228,11 @@ static void b43_phy_ht_op_software_rfkill(struct b43_wldev *dev,
- 		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, ~0, 0x1);
- 		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, ~0);
- 		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, ~0, 0x2);
-+
-+		if (dev->phy.radio_ver == 0x2059)
-+			b43_radio_2059_init(dev);
-+		else
-+			B43_WARN_ON(1);
+diff -Nrup a/include/net/cfg80211.h b/include/net/cfg80211.h
+--- a/include/net/cfg80211.h	2011-06-01 21:04:33.000000000 +0200
++++ b/include/net/cfg80211.h	2011-06-21 13:21:38.000000000 +0200
+@@ -1038,6 +1038,7 @@ struct cfg80211_ibss_params {
+ 	u8 *ssid;
+ 	u8 *bssid;
+ 	struct ieee80211_channel *channel;
++	enum nl80211_channel_type channel_type;
+ 	u8 *ie;
+ 	u8 ssid_len, ie_len;
+ 	u16 beacon_interval;
+diff -Nrup a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+--- a/net/wireless/nl80211.c	2011-06-01 21:04:33.000000000 +0200
++++ b/net/wireless/nl80211.c	2011-06-21 13:21:38.000000000 +0200
+@@ -4266,12 +4266,37 @@ static int nl80211_join_ibss(struct sk_b
+ 		ibss.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
  	}
- }
  
--- 
-1.7.1
+-	ibss.channel = ieee80211_get_channel(wiphy,
+-		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]));
+-	if (!ibss.channel ||
++	if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]) {
++		enum nl80211_channel_type channel_type;
++
++		channel_type = nla_get_u32(
++			info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
++		if (channel_type != NL80211_CHAN_NO_HT &&
++		    channel_type != NL80211_CHAN_HT20 &&
++		    channel_type != NL80211_CHAN_HT40PLUS &&
++		    channel_type != NL80211_CHAN_HT40MINUS)
++			return -EINVAL;
++		ibss.channel_type = channel_type;
++	} else {
++		ibss.channel_type = NL80211_CHAN_NO_HT;
++	}
++
++	ibss.channel = rdev_freq_to_chan(rdev,
++		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]),
++		ibss.channel_type);
++	/*if (!ibss.channel ||
++	    ibss.channel->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
+ 	    ibss.channel->flags & IEEE80211_CHAN_NO_IBSS ||
+-	    ibss.channel->flags & IEEE80211_CHAN_DISABLED)
++	    ibss.channel->flags & IEEE80211_CHAN_RADAR)
++		return -EINVAL;
++	if ((ibss.channel_type == NL80211_CHAN_HT40PLUS ||
++	     ibss.channel_type == NL80211_CHAN_HT40MINUS) &&
++	    !can_beacon_sec_chan(&rdev->wiphy, ibss.chan, ibss.channel_type)) {
++		printk(KERN_DEBUG
++		       "cfg80211: Secondary channel not "
++		       "allowed to initiate communication\n");
+ 		return -EINVAL;
++	}*/
+ 
+ 	ibss.channel_fixed = !!info->attrs[NL80211_ATTR_FREQ_FIXED];
+ 	ibss.privacy = !!info->attrs[NL80211_ATTR_PRIVACY];
+
+
 
