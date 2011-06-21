@@ -1,76 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from msr7.hinet.net ([168.95.4.107]:63809 "EHLO msr7.hinet.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755221Ab1FUNJ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 09:09:28 -0400
-Date: Tue, 21 Jun 2011 21:07:52 +0800
-From: Ali Bahar <ali@internetdog.org>
-To: Fred Plissonneau <cohomewp4@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Makefile deletes previous driver install when two WiFi
- interfaces are from the same chip vendor
-Message-ID: <20110621130752.GB8462@internetdog.org> (sfid-20110621_150931_925248_A2CFB7CF)
-Reply-To: ali@internetdog.org
-References: <BANLkTimvMcb5yRHSE91VPTLdy7k5WEDo0Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BANLkTimvMcb5yRHSE91VPTLdy7k5WEDo0Q@mail.gmail.com>
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:41662 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755262Ab1FUJYz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 05:24:55 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 03/32] ath9k: add MAC revision detection for AR9330
+Date: Tue, 21 Jun 2011 11:23:23 +0200
+Message-Id: <1308648232-9906-4-git-send-email-juhosg@openwrt.org> (sfid-20110621_112509_116889_4E0451E1)
+In-Reply-To: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
+References: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 21, 2011 at 11:59:17AM +0200, Fred Plissonneau wrote:
-> From: Fred Plissonneau <cohomewp4@gmail.com>
-> To: linux-wireless@vger.kernel.org
-> 
-> 
-> Anyone can help ?
+The AR9330 1.0 and 1.1 are using the same revision,
+thus it is not possible to distinguish the two chips.
+The platform setup code can distinguish the chips based
+on the SoC revision.
 
-Not me!
-But let me see if I at least understand your problem:
+Add a callback function to ath9k_platform_data in order
+to allow getting the revision number from the platform code.
 
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c   |    9 +++++++++
+ drivers/net/wireless/ath/ath9k/hw.h   |    1 +
+ drivers/net/wireless/ath/ath9k/init.c |    1 +
+ include/linux/ath9k_platform.h        |    1 +
+ 4 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index a3881b6..9840e00 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -251,6 +251,15 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
+ 	case AR5416_AR9100_DEVID:
+ 		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
+ 		break;
++	case AR9300_DEVID_AR9330:
++		ah->hw_version.macVersion = AR_SREV_VERSION_9330;
++		if (ah->get_mac_revision) {
++			ah->hw_version.macRev = ah->get_mac_revision();
++		} else {
++			val = REG_READ(ah, AR_SREV);
++			ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
++		}
++		return;
+ 	case AR9300_DEVID_AR9340:
+ 		ah->hw_version.macVersion = AR_SREV_VERSION_9340;
+ 		val = REG_READ(ah, AR_SREV);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 14c5857..0749fa8 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -862,6 +862,7 @@ struct ath_hw {
+ 	u32 ent_mode;
  
-> On Tue, Jun 14, 2011 at 4:19 PM, ch wp4 <cohomewp4@gmail.com> wrote:
-> > Hello,
-> >
-> > I am facing an issue during installation of an external USB-WiFi stick
-> > on my Linux box (Ubuntu 10.04).
-> > Actually, I have already successfully compiled and installed ath9k
-> > driver using compat-wireless-2.6.38.2-2.
-> > The internal WiFi NIC is fully operational.
-> > Now, I want to add temporarily an external USB-WiFi stick (D-Link DWA
-> > 160). I've found that this hardware
-> > is using an ar9170 chipset and therefore I've recompiled
-> > compat-wireless targeting now the carl9170 driver.
-> > Once again, this working perfectly.
+ 	bool is_clk_25mhz;
++	int (*get_mac_revision)(void);
+ };
+ 
+ struct ath_bus_ops {
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index d4b166c..6612112 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -574,6 +574,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
+ 		sc->sc_ah->gpio_val = pdata->gpio_val;
+ 		sc->sc_ah->led_pin = pdata->led_pin;
+ 		ah->is_clk_25mhz = pdata->is_clk_25mhz;
++		ah->get_mac_revision = pdata->get_mac_revision;
+ 	}
+ 
+ 	common = ath9k_hw_common(ah);
+diff --git a/include/linux/ath9k_platform.h b/include/linux/ath9k_platform.h
+index 60a7c49..c207607 100644
+--- a/include/linux/ath9k_platform.h
++++ b/include/linux/ath9k_platform.h
+@@ -30,6 +30,7 @@ struct ath9k_platform_data {
+ 	u32 gpio_val;
+ 
+ 	bool is_clk_25mhz;
++	int (*get_mac_revision)(void);
+ };
+ 
+ #endif /* _LINUX_ATH9K_PLATFORM_H */
+-- 
+1.7.2.1
 
-So you have an on-board ath9k, which does work, and an ar9170 USB
-stick, which does work.
-
-
-> > But when I switch-off and back on my PC, only the latest installed
-> > WiFi interface is working.
-
-So only the on-board ath9k fails?
-
-
-> > Digging into the system, I've found that ath9k has disappeared from the
-> > /lib/modules/2.6.32-27-generic/updates/drivers/net/wireless/ath directory.
-> > It looks like the 'make install' command is doing some cleaning which
-
-Ha? Why does 'make install' run after a power-cycle?!! That ran only
-after you compiled the driver.
-
-
-> > has, in my particular use case, an undesirable
-> > side-effect.
-> > Can someone point me to the line in the Makefile causing this problem
-> > or is it the desired behaviour ?
-
-Again, the makefile does not come into this. After you've installed
-the drivers, you can forget about the makefile.
-
-So are you saying that the ath9k module somehow got deleted from your
-file system?
-
-later,
-ali
