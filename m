@@ -1,316 +1,274 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:60479 "EHLO
+Received: from server19320154104.serverpool.info ([193.201.54.104]:46727 "EHLO
 	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753338Ab1FBQfk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 12:35:40 -0400
+	id S1756419Ab1FUS3O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 14:29:14 -0400
 From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/9] compat-wireless: rename CONFIG_COMPAT_KERNEL_
-Date: Thu,  2 Jun 2011 18:35:18 +0200
-Message-Id: <1307032525-18916-3-git-send-email-hauke@hauke-m.de> (sfid-20110602_183603_834175_5D50D9CE)
-In-Reply-To: <1307032525-18916-1-git-send-email-hauke@hauke-m.de>
-References: <1307032525-18916-1-git-send-email-hauke@hauke-m.de>
+To: mb@bu3sch.de, linville@tuxdriver.com
+Cc: ralf@linux-mips.org, linux-mips@linux-mips.org,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] ssb: add __devinit to some functions
+Date: Tue, 21 Jun 2011 20:28:09 +0200
+Message-Id: <1308680889-4217-1-git-send-email-hauke@hauke-m.de> (sfid-20110621_202918_387342_DD62E1CF)
+In-Reply-To: <20110621150227.GB14197@linux-mips.org>
+References: <20110621150227.GB14197@linux-mips.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename CONFIG_COMPAT_KERNEL_XX to CONFIG_COMPAT_KERNEL_26XX.
-This is needed to support kernel version 3.XX. It will get
-CONFIG_COMPAT_KERNEL_3XX. This patch needs a additional change in
-compat.git.
+Two functions in ssb are using register_pci_controller() which is
+__devinit. The functions ssb_pcicore_init_hostmode() and
+ssb_gige_probe() should also be __devinit.
 
-Add to compat-3.0-stable
+This fixes the following warning:
+WARNING: vmlinux.o(.text+0x2727b8): Section mismatch in reference from the function ssb_pcicore_init_hostmode() to the function .devinit.text:register_pci_controller()
+The function ssb_pcicore_init_hostmode() references
+the function __devinit register_pci_controller().
+This is often because ssb_pcicore_init_hostmode lacks a __devinit
+annotation or the annotation of register_pci_controller is wrong.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+WARNING: vmlinux.o(.text+0x273398): Section mismatch in reference from the function ssb_gige_probe() to the function .devinit.text:register_pci_controller()
+The function ssb_gige_probe() references
+the function __devinit register_pci_controller().
+This is often because ssb_gige_probe lacks a __devinit
+annotation or the annotation of register_pci_controller is wrong.
+
+Reported-by: Ralf Baechle <ralf@linux-mips.org>
 ---
- config.mk                      |   86 ++++++++++++++++++++--------------------
- scripts/gen-compat-autoconf.sh |    4 +-
- 2 files changed, 45 insertions(+), 45 deletions(-)
+ drivers/net/b44.c               |    4 ++--
+ drivers/net/wireless/b43/sdio.c |    6 +++---
+ drivers/ssb/driver_gige.c       |   10 +++++-----
+ drivers/ssb/driver_pcicore.c    |   10 +++++-----
+ drivers/ssb/main.c              |   29 +++++++++++++++--------------
+ drivers/ssb/pcihost_wrapper.c   |    6 +++---
+ 6 files changed, 33 insertions(+), 32 deletions(-)
 
-diff --git a/config.mk b/config.mk
-index 9a18441..57903e0 100644
---- a/config.mk
-+++ b/config.mk
-@@ -18,11 +18,11 @@ ifneq ($(wildcard $(KLIB_BUILD)/Makefile),)
- COMPAT_LATEST_VERSION = 39
- KERNEL_SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
- COMPAT_VERSIONS := $(shell I=$(COMPAT_LATEST_VERSION); while [ "$$I" -gt $(KERNEL_SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
--$(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_$(ver)=y))
-+$(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_26$(ver)=y))
+diff --git a/drivers/net/b44.c b/drivers/net/b44.c
+index 085560e..cced4fd 100644
+--- a/drivers/net/b44.c
++++ b/drivers/net/b44.c
+@@ -2336,7 +2336,7 @@ static struct ssb_driver b44_ssb_driver = {
+ 	.resume		= b44_resume,
+ };
  
--ifdef CONFIG_COMPAT_KERNEL_24
-+ifdef CONFIG_COMPAT_KERNEL_2624
- $(error "ERROR: compat-wireless by default supports kernels >= 2.6.24, try enabling only one driver though")
--endif #CONFIG_COMPAT_KERNEL_24
-+endif #CONFIG_COMPAT_KERNEL_2624
+-static inline int b44_pci_init(void)
++static inline int __init b44_pci_init(void)
+ {
+ 	int err = 0;
+ #ifdef CONFIG_B44_PCI
+@@ -2345,7 +2345,7 @@ static inline int b44_pci_init(void)
+ 	return err;
+ }
  
- ifeq ($(CONFIG_CFG80211),y)
- $(error "ERROR: your kernel has CONFIG_CFG80211=y, you should have it CONFIG_CFG80211=m if you want to use this thing.")
-@@ -92,20 +92,20 @@ else
- endif
+-static inline void b44_pci_exit(void)
++static inline void __exit b44_pci_exit(void)
+ {
+ #ifdef CONFIG_B44_PCI
+ 	ssb_pcihost_unregister(&b44_pci_driver);
+diff --git a/drivers/net/wireless/b43/sdio.c b/drivers/net/wireless/b43/sdio.c
+index e6c733d..4fd6775 100644
+--- a/drivers/net/wireless/b43/sdio.c
++++ b/drivers/net/wireless/b43/sdio.c
+@@ -93,8 +93,8 @@ void b43_sdio_free_irq(struct b43_wldev *dev)
+ 	sdio->irq_handler = NULL;
+ }
  
- # The Bluetooth compatibility only builds on kernels >= 2.6.27 for now
--ifndef CONFIG_COMPAT_KERNEL_27
-+ifndef CONFIG_COMPAT_KERNEL_2627
- ifeq ($(CONFIG_BT),y)
- # we'll ignore compiling bluetooth
- else
-  CONFIG_COMPAT_BLUETOOTH=y
-  CONFIG_COMPAT_BLUETOOTH_MODULES=m
- endif
--endif #CONFIG_COMPAT_KERNEL_27
-+endif #CONFIG_COMPAT_KERNEL_2627
+-static int b43_sdio_probe(struct sdio_func *func,
+-			  const struct sdio_device_id *id)
++static int __devinit b43_sdio_probe(struct sdio_func *func,
++				    const struct sdio_device_id *id)
+ {
+ 	struct b43_sdio *sdio;
+ 	struct sdio_func_tuple *tuple;
+@@ -171,7 +171,7 @@ out:
+ 	return error;
+ }
  
--ifdef CONFIG_COMPAT_KERNEL_33
-+ifdef CONFIG_COMPAT_KERNEL_2633
- ifdef CONFIG_FW_LOADER
-  CONFIG_COMPAT_FIRMWARE_CLASS=m
- endif #CONFIG_FW_LOADER
--endif #CONFIG_COMPAT_KERNEL_33
-+endif #CONFIG_COMPAT_KERNEL_2633
+-static void b43_sdio_remove(struct sdio_func *func)
++static void __devexit b43_sdio_remove(struct sdio_func *func)
+ {
+ 	struct b43_sdio *sdio = sdio_get_drvdata(func);
  
- # Wireless subsystem stuff
- CONFIG_MAC80211=m
-@@ -165,9 +165,9 @@ CONFIG_BT_BNEP_PROTO_FILTER=y
- ifdef CONFIG_ISDN_CAPI
- CONFIG_BT_CMTP=m
- endif #CONFIG_ISDN_CAPI
--ifndef CONFIG_COMPAT_KERNEL_28
-+ifndef CONFIG_COMPAT_KERNEL_2628
- CONFIG_COMPAT_BT_HIDP=m
--endif #CONFIG_COMPAT_KERNEL_28
-+endif #CONFIG_COMPAT_KERNEL_2628
+diff --git a/drivers/ssb/driver_gige.c b/drivers/ssb/driver_gige.c
+index 5ba92a2..0de23df 100644
+--- a/drivers/ssb/driver_gige.c
++++ b/drivers/ssb/driver_gige.c
+@@ -106,8 +106,8 @@ void gige_pcicfg_write32(struct ssb_gige *dev,
+ 	gige_write32(dev, SSB_GIGE_PCICFG + offset, value);
+ }
  
- CONFIG_BT_HCIUART=M
- CONFIG_BT_HCIUART_H4=y
-@@ -345,11 +345,11 @@ CONFIG_MWL8K=m
- CONFIG_ATL1=m
- CONFIG_ATL2=m
- CONFIG_ATL1E=m
--ifdef CONFIG_COMPAT_KERNEL_27
-+ifdef CONFIG_COMPAT_KERNEL_2627
- CONFIG_ATL1C=n
--else #CONFIG_COMPAT_KERNEL_27
-+else #CONFIG_COMPAT_KERNEL_2627
- CONFIG_ATL1C=m
--endif #CONFIG_COMPAT_KERNEL_27
-+endif #CONFIG_COMPAT_KERNEL_2627
+-static int ssb_gige_pci_read_config(struct pci_bus *bus, unsigned int devfn,
+-				    int reg, int size, u32 *val)
++static int __devinit ssb_gige_pci_read_config(struct pci_bus *bus, unsigned int devfn,
++					      int reg, int size, u32 *val)
+ {
+ 	struct ssb_gige *dev = container_of(bus->ops, struct ssb_gige, pci_ops);
+ 	unsigned long flags;
+@@ -136,8 +136,8 @@ static int ssb_gige_pci_read_config(struct pci_bus *bus, unsigned int devfn,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
  
- ifdef CONFIG_WIRELESS_EXT
- CONFIG_HERMES=m
-@@ -379,13 +379,13 @@ endif #CONFIG_PCI
+-static int ssb_gige_pci_write_config(struct pci_bus *bus, unsigned int devfn,
+-				     int reg, int size, u32 val)
++static int __devinit ssb_gige_pci_write_config(struct pci_bus *bus, unsigned int devfn,
++					       int reg, int size, u32 val)
+ {
+ 	struct ssb_gige *dev = container_of(bus->ops, struct ssb_gige, pci_ops);
+ 	unsigned long flags;
+@@ -166,7 +166,7 @@ static int ssb_gige_pci_write_config(struct pci_bus *bus, unsigned int devfn,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
  
- ifdef CONFIG_PCMCIA
+-static int ssb_gige_probe(struct ssb_device *sdev, const struct ssb_device_id *id)
++static int __devinit ssb_gige_probe(struct ssb_device *sdev, const struct ssb_device_id *id)
+ {
+ 	struct ssb_gige *dev;
+ 	u32 base, tmslow, tmshigh;
+diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
+index 2a20dab..21b9465 100644
+--- a/drivers/ssb/driver_pcicore.c
++++ b/drivers/ssb/driver_pcicore.c
+@@ -314,7 +314,7 @@ int ssb_pcicore_pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return ssb_mips_irq(extpci_core->dev) + 2;
+ }
  
--ifdef CONFIG_COMPAT_KERNEL_27
-+ifdef CONFIG_COMPAT_KERNEL_2627
- CONFIG_LIBERTAS=n
- CONFIG_LIBERTAS_CS=n
--else #CONFIG_COMPAT_KERNEL_27
-+else #CONFIG_COMPAT_KERNEL_2627
- CONFIG_LIBERTAS_CS=m
- NEED_LIBERTAS=y
--endif #CONFIG_COMPAT_KERNEL_27
-+endif #CONFIG_COMPAT_KERNEL_2627
+-static void ssb_pcicore_init_hostmode(struct ssb_pcicore *pc)
++static void __devinit ssb_pcicore_init_hostmode(struct ssb_pcicore *pc)
+ {
+ 	u32 val;
  
- endif #CONFIG_PCMCIA
- ## end of PCMCIA
-@@ -395,10 +395,10 @@ CONFIG_EEPROM_93CX6=m
+@@ -379,7 +379,7 @@ static void ssb_pcicore_init_hostmode(struct ssb_pcicore *pc)
+ 	register_pci_controller(&ssb_pcicore_controller);
+ }
  
- # USB Drivers
- ifdef CONFIG_USB
--ifndef CONFIG_COMPAT_KERNEL_29
-+ifndef CONFIG_COMPAT_KERNEL_2629
- CONFIG_COMPAT_ZD1211RW=m
- # CONFIG_ZD1211RW_DEBUG=y
--endif #CONFIG_COMPAT_KERNEL_29
-+endif #CONFIG_COMPAT_KERNEL_2629
+-static int pcicore_is_in_hostmode(struct ssb_pcicore *pc)
++static int __devinit pcicore_is_in_hostmode(struct ssb_pcicore *pc)
+ {
+ 	struct ssb_bus *bus = pc->dev->bus;
+ 	u16 chipid_top;
+@@ -412,7 +412,7 @@ static int pcicore_is_in_hostmode(struct ssb_pcicore *pc)
+  * Workarounds.
+  **************************************************/
  
- # Sorry, rndis_wlan uses cancel_work_sync which is new and can't be done in compat...
+-static void ssb_pcicore_fix_sprom_core_index(struct ssb_pcicore *pc)
++static void __devinit ssb_pcicore_fix_sprom_core_index(struct ssb_pcicore *pc)
+ {
+ 	u16 tmp = pcicore_read16(pc, SSB_PCICORE_SPROM(0));
+ 	if (((tmp & 0xF000) >> 12) != pc->dev->core_index) {
+@@ -514,13 +514,13 @@ static void ssb_pcicore_pcie_setup_workarounds(struct ssb_pcicore *pc)
+  * Generic and Clientmode operation code.
+  **************************************************/
  
-@@ -407,12 +407,12 @@ endif #CONFIG_COMPAT_KERNEL_29
- # is only wireless RNDIS chip known to date.
- # Note: this depends on CONFIG_USB_NET_RNDIS_HOST and CONFIG_USB_NET_CDCETHER
- # it also requires new RNDIS_HOST and CDC_ETHER modules which we add
--ifdef CONFIG_COMPAT_KERNEL_29
-+ifdef CONFIG_COMPAT_KERNEL_2629
- CONFIG_USB_COMPAT_USBNET=n
- CONFIG_USB_NET_COMPAT_RNDIS_HOST=n
- CONFIG_USB_NET_COMPAT_RNDIS_WLAN=n
- CONFIG_USB_NET_COMPAT_CDCETHER=n
--else #CONFIG_COMPAT_KERNEL_29
-+else #CONFIG_COMPAT_KERNEL_2629
- CONFIG_USB_COMPAT_USBNET=m
- ifdef CONFIG_USB_NET_CDCETHER
- CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
-@@ -423,7 +423,7 @@ CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
- CONFIG_USB_NET_COMPAT_RNDIS_WLAN=m
- endif #CONFIG_USB_NET_CDCETHER
- CONFIG_USB_NET_COMPAT_CDCETHER=m
--endif #CONFIG_COMPAT_KERNEL_29
-+endif #CONFIG_COMPAT_KERNEL_2629
+-static void ssb_pcicore_init_clientmode(struct ssb_pcicore *pc)
++static void __devinit ssb_pcicore_init_clientmode(struct ssb_pcicore *pc)
+ {
+ 	/* Disable PCI interrupts. */
+ 	ssb_write32(pc->dev, SSB_INTVEC, 0);
+ }
  
+-void ssb_pcicore_init(struct ssb_pcicore *pc)
++void __devinit ssb_pcicore_init(struct ssb_pcicore *pc)
+ {
+ 	struct ssb_device *dev = pc->dev;
  
- CONFIG_P54_USB=m
-@@ -434,14 +434,14 @@ endif #CONFIG_MAC80211_LEDS
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index f8a13f8..e568664 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -557,7 +557,7 @@ error:
+ }
  
- CONFIG_AT76C50X_USB=m
+ /* Needs ssb_buses_lock() */
+-static int ssb_attach_queued_buses(void)
++static int __devinit ssb_attach_queued_buses(void)
+ {
+ 	struct ssb_bus *bus, *n;
+ 	int err = 0;
+@@ -768,9 +768,9 @@ out:
+ 	return err;
+ }
  
--ifndef CONFIG_COMPAT_KERNEL_29
-+ifndef CONFIG_COMPAT_KERNEL_2629
- CONFIG_CARL9170=m
- ifdef CONFIG_MAC80211_LEDS
- CONFIG_CARL9170_LEDS=y
- endif #CONFIG_MAC80211_LEDS
- # CONFIG_CARL9170_DEBUGFS=y
- # CONFIG_CARL9170_WPC=y
--endif #CONFIG_COMPAT_KERNEL_29
-+endif #CONFIG_COMPAT_KERNEL_2629
+-static int ssb_bus_register(struct ssb_bus *bus,
+-			    ssb_invariants_func_t get_invariants,
+-			    unsigned long baseaddr)
++static int __devinit ssb_bus_register(struct ssb_bus *bus,
++				      ssb_invariants_func_t get_invariants,
++				      unsigned long baseaddr)
+ {
+ 	int err;
  
- # This activates a threading fix for usb urb.
- # this is mainline commit: b3e670443b7fb8a2d29831b62b44a039c283e351
-@@ -467,15 +467,15 @@ ifdef CONFIG_CRC_ITU_T
- CONFIG_RT73USB=m
- endif #CONFIG_CRC_ITU_T
+@@ -851,8 +851,8 @@ err_disable_xtal:
+ }
  
--ifdef CONFIG_COMPAT_KERNEL_27
-+ifdef CONFIG_COMPAT_KERNEL_2627
- CONFIG_LIBERTAS_THINFIRM_USB=n
- CONFIG_LIBERTAS_USB=n
- NEED_LIBERTAS=n
--else #CONFIG_COMPAT_KERNEL_27
-+else #CONFIG_COMPAT_KERNEL_2627
- CONFIG_LIBERTAS_THINFIRM_USB=m
- CONFIG_LIBERTAS_USB=m
- NEED_LIBERTAS=y
--endif #CONFIG_COMPAT_KERNEL_27
-+endif #CONFIG_COMPAT_KERNEL_2627
+ #ifdef CONFIG_SSB_PCIHOST
+-int ssb_bus_pcibus_register(struct ssb_bus *bus,
+-			    struct pci_dev *host_pci)
++int __devinit ssb_bus_pcibus_register(struct ssb_bus *bus,
++				      struct pci_dev *host_pci)
+ {
+ 	int err;
  
- CONFIG_ORINOCO_USB=m
+@@ -875,9 +875,9 @@ EXPORT_SYMBOL(ssb_bus_pcibus_register);
+ #endif /* CONFIG_SSB_PCIHOST */
  
-@@ -490,7 +490,7 @@ CONFIG_RTL8192CU=m
- endif #CONFIG_USB end of USB driver list
+ #ifdef CONFIG_SSB_PCMCIAHOST
+-int ssb_bus_pcmciabus_register(struct ssb_bus *bus,
+-			       struct pcmcia_device *pcmcia_dev,
+-			       unsigned long baseaddr)
++int __devinit ssb_bus_pcmciabus_register(struct ssb_bus *bus,
++					 struct pcmcia_device *pcmcia_dev,
++					 unsigned long baseaddr)
+ {
+ 	int err;
  
- ifdef CONFIG_SPI_MASTER
--ifndef CONFIG_COMPAT_KERNEL_25
-+ifndef CONFIG_COMPAT_KERNEL_2625
+@@ -897,8 +897,9 @@ EXPORT_SYMBOL(ssb_bus_pcmciabus_register);
+ #endif /* CONFIG_SSB_PCMCIAHOST */
  
- ifdef CONFIG_CRC7
- CONFIG_WL1251_SPI=m
-@@ -498,15 +498,15 @@ CONFIG_WL12XX_SPI=m
- endif #CONFIG_CRC7
- CONFIG_P54_SPI=m
+ #ifdef CONFIG_SSB_SDIOHOST
+-int ssb_bus_sdiobus_register(struct ssb_bus *bus, struct sdio_func *func,
+-			     unsigned int quirks)
++int __devinit ssb_bus_sdiobus_register(struct ssb_bus *bus,
++				       struct sdio_func *func,
++				       unsigned int quirks)
+ {
+ 	int err;
  
--ifdef CONFIG_COMPAT_KERNEL_27
-+ifdef CONFIG_COMPAT_KERNEL_2627
- CONFIG_LIBERTAS_SPI=n
- NEED_LIBERTAS=n
--else #CONFIG_COMPAT_KERNEL_27
-+else #CONFIG_COMPAT_KERNEL_2627
- CONFIG_LIBERTAS_SPI=m
- NEED_LIBERTAS=y
--endif #CONFIG_COMPAT_KERNEL_27
-+endif #CONFIG_COMPAT_KERNEL_2627
+@@ -918,9 +919,9 @@ int ssb_bus_sdiobus_register(struct ssb_bus *bus, struct sdio_func *func,
+ EXPORT_SYMBOL(ssb_bus_sdiobus_register);
+ #endif /* CONFIG_SSB_PCMCIAHOST */
  
--endif #CONFIG_COMPAT_KERNEL_25
-+endif #CONFIG_COMPAT_KERNEL_2625
- endif #CONFIG_SPI_MASTER end of SPI driver list
+-int ssb_bus_ssbbus_register(struct ssb_bus *bus,
+-			    unsigned long baseaddr,
+-			    ssb_invariants_func_t get_invariants)
++int __devinit ssb_bus_ssbbus_register(struct ssb_bus *bus,
++				      unsigned long baseaddr,
++				      ssb_invariants_func_t get_invariants)
+ {
+ 	int err;
  
- ifdef CONFIG_MMC
-@@ -519,23 +519,23 @@ ifdef CONFIG_WL12XX_PLATFORM_DATA
- CONFIG_COMPAT_WL1251_SDIO=m
- endif #CONFIG_WL12XX_PLATFORM_DATA
+diff --git a/drivers/ssb/pcihost_wrapper.c b/drivers/ssb/pcihost_wrapper.c
+index f6c8c81..d7a9813 100644
+--- a/drivers/ssb/pcihost_wrapper.c
++++ b/drivers/ssb/pcihost_wrapper.c
+@@ -53,8 +53,8 @@ static int ssb_pcihost_resume(struct pci_dev *dev)
+ # define ssb_pcihost_resume	NULL
+ #endif /* CONFIG_PM */
  
--ifndef CONFIG_COMPAT_KERNEL_32
-+ifndef CONFIG_COMPAT_KERNEL_2632
- ifdef CONFIG_WL12XX_PLATFORM_DATA
- CONFIG_COMPAT_WL12XX_SDIO=m
- endif #CONFIG_WL12XX_PLATFORM_DATA
--endif #CONFIG_COMPAT_KERNEL_32
-+endif #CONFIG_COMPAT_KERNEL_2632
+-static int ssb_pcihost_probe(struct pci_dev *dev,
+-			     const struct pci_device_id *id)
++static int __devinit ssb_pcihost_probe(struct pci_dev *dev,
++				       const struct pci_device_id *id)
+ {
+ 	struct ssb_bus *ssb;
+ 	int err = -ENOMEM;
+@@ -110,7 +110,7 @@ static void ssb_pcihost_remove(struct pci_dev *dev)
+ 	pci_set_drvdata(dev, NULL);
+ }
  
- endif #CONFIG_CRC7
- 
- CONFIG_MWIFIEX_SDIO=m
- 
--ifdef CONFIG_COMPAT_KERNEL_27
-+ifdef CONFIG_COMPAT_KERNEL_2627
- CONFIG_LIBERTAS_SDIO=n
- NEED_LIBERTAS=n
--else #CONFIG_COMPAT_KERNEL_27
-+else #CONFIG_COMPAT_KERNEL_2627
- CONFIG_LIBERTAS_SDIO=m
- NEED_LIBERTAS=y
--endif #CONFIG_COMPAT_KERNEL_27
-+endif #CONFIG_COMPAT_KERNEL_2627
- 
- CONFIG_IWM=m
- # CONFIG_IWM_DEBUG=y
-@@ -574,13 +574,13 @@ CONFIG_RT2800_LIB=m
- CONFIG_RT2X00_LIB_FIRMWARE=y
- CONFIG_RT2X00_LIB_CRYPTO=y
- # CONFIG_RT2X00_LIB_SOC=y
--ifdef CONFIG_COMPAT_KERNEL_25
-+ifdef CONFIG_COMPAT_KERNEL_2625
- CONFIG_RT2X00_LIB_LEDS=n
--else #CONFIG_COMPAT_KERNEL_25
-+else #CONFIG_COMPAT_KERNEL_2625
- ifdef CONFIG_LEDS_CLASS
- CONFIG_RT2X00_LIB_LEDS=y
- endif #CONFIG_LEDS_CLASS
--endif #CONFIG_COMPAT_KERNEL_25
-+endif #CONFIG_COMPAT_KERNEL_2625
- # CONFIG_RT2X00_DEBUG=y
- # CONFIG_RT2X00_LIB_DEBUGFS
- endif
-@@ -608,24 +608,24 @@ endif #CONFIG_CRC7
- 
- CONFIG_MWIFIEX=m
- 
--ifdef CONFIG_COMPAT_KERNEL_27
-+ifdef CONFIG_COMPAT_KERNEL_2627
- CONFIG_LIBERTAS=n
--else #CONFIG_COMPAT_KERNEL_27
-+else #CONFIG_COMPAT_KERNEL_2627
- ifeq ($(NEED_LIBERTAS),y)
- CONFIG_LIBERTAS_THINFIRM=m
- CONFIG_LIBERTAS=m
- CONFIG_LIBERTAS_MESH=y
- # CONFIG_LIBERTAS_DEBUG=y
- endif
--endif #CONFIG_COMPAT_KERNEL_27
-+endif #CONFIG_COMPAT_KERNEL_2627
- 
- # We need the backported rfkill module on kernel < 2.6.31.
- # In more recent kernel versions use the in kernel rfkill module.
--ifdef CONFIG_COMPAT_KERNEL_31
-+ifdef CONFIG_COMPAT_KERNEL_2631
- CONFIG_RFKILL_BACKPORT=m
- ifdef CONFIG_LEDS_TRIGGERS
- CONFIG_RFKILL_BACKPORT_LEDS=y
- endif #CONFIG_LEDS_TRIGGERS
- CONFIG_RFKILL_BACKPORT_INPUT=y
--endif #CONFIG_COMPAT_KERNEL_31
-+endif #CONFIG_COMPAT_KERNEL_2631
- 
-diff --git a/scripts/gen-compat-autoconf.sh b/scripts/gen-compat-autoconf.sh
-index 9f6e6d2..0dc091c 100755
---- a/scripts/gen-compat-autoconf.sh
-+++ b/scripts/gen-compat-autoconf.sh
-@@ -148,11 +148,11 @@ kernel_version_req $OLDEST_KERNEL_SUPPORTED
- for i in $(egrep '^CONFIG_|^ifdef CONFIG_|^ifndef CONFIG_|^endif #CONFIG_|^else #CONFIG_' $COMPAT_CONFIG | sed 's/ /+/'); do
- 	case $i in
- 	'ifdef+CONFIG_'* )
--		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifdef CONFIG_COMPAT_KERNEL_\)\([0-9]*\)/if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,\2))/' -e 's/\(#ifdef \)\(CONFIG_[^:space:]*\)/#if defined(\2) || defined(\2_MODULE)/'
-+		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifdef CONFIG_COMPAT_KERNEL_26\)\([0-9]*\)/if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,\2))/' -e 's/\(#ifdef \)\(CONFIG_[^:space:]*\)/#if defined(\2) || defined(\2_MODULE)/'
- 		continue
- 		;;
- 	'ifndef+CONFIG_'* )
--		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,\2))/' -e 's/\(#ifndef \)\(CONFIG_[^:space:]*\)/#if !defined(\2) && !defined(\2_MODULE)/'
-+		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_26\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,\2))/' -e 's/\(#ifndef \)\(CONFIG_[^:space:]*\)/#if !defined(\2) && !defined(\2_MODULE)/'
- 		continue
- 		;;
- 	'else+#CONFIG_'* | 'endif+#CONFIG_'* )
+-int ssb_pcihost_register(struct pci_driver *driver)
++int __devinit ssb_pcihost_register(struct pci_driver *driver)
+ {
+ 	driver->probe = ssb_pcihost_probe;
+ 	driver->remove = ssb_pcihost_remove;
 -- 
 1.7.4.1
 
