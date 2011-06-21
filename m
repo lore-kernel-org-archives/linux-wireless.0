@@ -1,60 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:44952 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754158Ab1F0WIE (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:41712 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754007Ab1FUJZA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 18:08:04 -0400
-Received: by fxd18 with SMTP id 18so2183704fxd.11
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 15:08:02 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] b43: HT-PHY: replace radio routing magic numbers
-Date: Tue, 28 Jun 2011 00:08:52 +0200
-Message-Id: <1309212533-4473-1-git-send-email-zajec5@gmail.com> (sfid-20110628_001012_371730_77910CFD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 21 Jun 2011 05:25:00 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 28/32] ath9k: fix few register offsets for AR9330
+Date: Tue, 21 Jun 2011 11:23:48 +0200
+Message-Id: <1308648232-9906-29-git-send-email-juhosg@openwrt.org> (sfid-20110621_112542_039091_FD986449)
+In-Reply-To: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
+References: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/b43/phy_ht.c     |    2 +-
- drivers/net/wireless/b43/radio_2059.h |    5 +++++
- 2 files changed, 6 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index f09bb6e..8df92e1 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -57,7 +57,7 @@ static void b43_radio_2059_channel_setup(struct b43_wldev *dev,
- 	b43_radio_write(dev, 0x98, e->radio_syn98);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index d259278..9eb3aa2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -625,11 +625,11 @@
+ #define AR_PHY_65NM_CH2_RXTX1       0x16900
+ #define AR_PHY_65NM_CH2_RXTX2       0x16904
  
- 	for (i = 0; i < 2; i++) {
--		routing = i ? 0x800 : 0x400;
-+		routing = i ? R2059_RXRX1 : R2059_TXRX0;
- 		b43_radio_write(dev, routing | 0x4a, e->radio_rxtx4a);
- 		b43_radio_write(dev, routing | 0x58, e->radio_rxtx58);
- 		b43_radio_write(dev, routing | 0x5a, e->radio_rxtx5a);
-diff --git a/drivers/net/wireless/b43/radio_2059.h b/drivers/net/wireless/b43/radio_2059.h
-index c2874b1..e4d69e5 100644
---- a/drivers/net/wireless/b43/radio_2059.h
-+++ b/drivers/net/wireless/b43/radio_2059.h
-@@ -5,6 +5,11 @@
+-#define AR_CH0_TOP2 (AR_SREV_9485(ah) ? 0x00016284 : 0x0001628c)
++#define AR_CH0_TOP2		(AR_SREV_9300(ah) ? 0x1628c : 0x16284)
+ #define AR_CH0_TOP2_XPABIASLVL		0xf000
+ #define AR_CH0_TOP2_XPABIASLVL_S	12
  
- #include "phy_ht.h"
- 
-+#define R2059_SYN			0x000
-+#define R2059_TXRX0			0x400
-+#define R2059_RXRX1			0x800
-+#define R2059_ALL			0xC00
-+
- /* Values for various registers uploaded on channel switching */
- struct b43_phy_ht_channeltab_e_radio2059 {
- 	/* The channel frequency in MHz */
+-#define AR_CH0_XTAL		(AR_SREV_9485(ah) ? 0x16290 : 0x16294)
++#define AR_CH0_XTAL		(AR_SREV_9300(ah) ? 0x16294 : 0x16290)
+ #define AR_CH0_XTAL_CAPINDAC	0x7f000000
+ #define AR_CH0_XTAL_CAPINDAC_S	24
+ #define AR_CH0_XTAL_CAPOUTDAC	0x00fe0000
 -- 
-1.7.1
+1.7.2.1
 
