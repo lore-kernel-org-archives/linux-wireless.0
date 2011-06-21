@@ -1,73 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:19443 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752041Ab1FCPWw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2011 11:22:52 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 4/5] iwlagn: direct call to post_scan function
-Date: Fri,  3 Jun 2011 07:54:15 -0700
-Message-Id: <1307112856-20231-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110603_172302_306141_E039129A)
-In-Reply-To: <1307112856-20231-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1307112856-20231-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:42058 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752388Ab1FUIzi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 04:55:38 -0400
+MIME-Version: 1.0
+In-Reply-To: <BLU158-w185CA0272A5A3CC187AF1E876E0@phx.gbl>
+References: <BLU158-w185CA0272A5A3CC187AF1E876E0@phx.gbl>
+Date: Tue, 21 Jun 2011 14:25:36 +0530
+Message-ID: <BANLkTi=B3uZ1qmL6oPyXXQ1n-BCAftND-A@mail.gmail.com> (sfid-20110621_105545_351112_FE8BB652)
+Subject: Re: [ath9k-devel] Disabling the third antenna for AR9380 in ath9k
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Fred Matthews <fredmm@hotmail.co.uk>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath9k-devel@venema.h4ckr.net, ath9k-devel@lists.ath9k.org,
+	susinder@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After driver split, no need to use function "ops" for post_scan.
+On Tue, Jun 21, 2011 at 2:07 AM, Fred Matthews <fredmm@hotmail.co.uk> wrote:
+> Hi all,
+> I am installing the AR9380 NIC on laptops, but some only have two UFL
+> connectors, and thus I was wondering if using only two of the UFL antenna
+> ports will have any negative effect or difference than installing a 2x2 NIC
+> (AR9280 for example which has only 2 ports anyway). Please kindly explain
+> with references if possible.
+> Also for example is there anyway to disable transmission on the third UFL
+> port (antenna) from ath9k or otherwise.
+> Thank you all very much
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |    1 -
- drivers/net/wireless/iwlwifi/iwl-core.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-scan.c     |    3 ++-
- 3 files changed, 2 insertions(+), 3 deletions(-)
+you can change the tx/rx chainmask for 3x3 AR9380 to disable
+transmission on the third antenna
+cd /sys/kernel/debug/ieee80211/phy0/ath9k# echo 0x3 > tx_chainmask
+cd /sys/kernel/debug/ieee80211/phy0/ath9k# echo 0x3 > rx_chainmask
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-index b12c72d..938230d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-@@ -332,5 +332,4 @@ struct iwl_hcmd_utils_ops iwlagn_hcmd_utils = {
- 	.tx_cmd_protection = iwlagn_tx_cmd_protection,
- 	.calc_rssi = iwlagn_calc_rssi,
- 	.request_scan = iwlagn_request_scan,
--	.post_scan = iwlagn_post_scan,
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index e430a4f..4ca0336 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -112,7 +112,6 @@ struct iwl_hcmd_utils_ops {
- 	int  (*calc_rssi)(struct iwl_priv *priv,
- 			  struct iwl_rx_phy_res *rx_resp);
- 	int (*request_scan)(struct iwl_priv *priv, struct ieee80211_vif *vif);
--	void (*post_scan)(struct iwl_priv *priv);
- };
- 
- struct iwl_apm_ops {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 8c9af45..438eecd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -36,6 +36,7 @@
- #include "iwl-sta.h"
- #include "iwl-io.h"
- #include "iwl-helpers.h"
-+#include "iwl-agn.h"
- 
- /* For active scan, listen ACTIVE_DWELL_TIME (msec) on each channel after
-  * sending probe req.  This should be set long enough to hear probe responses
-@@ -600,7 +601,7 @@ out_settings:
- 	if (!iwl_is_ready_rf(priv))
- 		goto out;
- 
--	priv->cfg->ops->utils->post_scan(priv);
-+	iwlagn_post_scan(priv);
- 
- out:
- 	mutex_unlock(&priv->mutex);
+after this, ideally it should operate as 2x2 device as per Susinders
+comments. but if you got AR9280 please try to use that if 2 antenna is
+the constraint.
+
+
+> _______________________________________________
+> ath9k-devel mailing list
+> ath9k-devel@lists.ath9k.org
+> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+>
+>
+
+
+
 -- 
-1.7.0.4
-
+shafi
