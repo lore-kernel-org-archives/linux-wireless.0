@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:37236 "EHLO purkki.adurom.net"
+Received: from lo.gmane.org ([80.91.229.12]:54386 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757584Ab1FINto (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 09:49:44 -0400
-To: Ido Yariv <ido@wizery.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/3] wl12xx: Support routing FW logs to the host
-References: <1307361426-7573-1-git-send-email-ido@wizery.com>
-	<1307361426-7573-3-git-send-email-ido@wizery.com>
-	<87aadv864m.fsf@purkki.adurom.net>
-	<20110606200601.GK31554@WorkStation>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Thu, 09 Jun 2011 16:49:42 +0300
-In-Reply-To: <20110606200601.GK31554@WorkStation> (Ido Yariv's message of "Mon\, 6 Jun 2011 23\:06\:01 +0300")
-Message-ID: <87oc276rnt.fsf@purkki.adurom.net> (sfid-20110609_154947_590534_2A33BD33)
-MIME-Version: 1.0
+	id S1750863Ab1FUUJt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 16:09:49 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1QZ7Gd-0006Qo-R5
+	for linux-wireless@vger.kernel.org; Tue, 21 Jun 2011 22:09:47 +0200
+Received: from f052160044.adsl.alicedsl.de ([78.52.160.44])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 22:09:47 +0200
+Received: from pommnitz by f052160044.adsl.alicedsl.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 22:09:47 +0200
+To: linux-wireless@vger.kernel.org
+From: jpo <pommnitz@yahoo.com>
+Subject: Performance regression between Madwifi/net80211 and ath5k/mac80211
+Date: Tue, 21 Jun 2011 20:09:37 +0000 (UTC)
+Message-ID: <loom.20110621T215346-191@post.gmane.org> (sfid-20110621_220951_882138_F18FA43E)
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ido Yariv <ido@wizery.com> writes:
+Hello all,
+there seems to be a significant performance loss when moving from Madwifi 
+to ath5k. For an embedded project we have been using Madwifi with Linux kernel
+2.6.23. We have tested ath5k for some time and by now it seems to be stable
+enough for production use. Unfortunately it doesn't match Madwifi's performance.
+Running iperf (both, UDP and TCP) between two machines equipped with an AR5413
+with the Fedora 15 kernel and the stock Fedora 15 wireless subsystem shows a
+performance loss of about 10% relative to 2.6.23 and Madwifi-0.9.4.
+The tests where done under close to ideal lab conditions (cards connected with
+an antenna cable) running an IBSS network on channel 40 (5200MHz).
 
-> On Mon, Jun 06, 2011 at 04:02:49PM +0300, Kalle Valo wrote:
->> Ido Yariv <ido@wizery.com> writes:
->> > A sysfs binary file named "fwlog" was added to support this feature,
->> > letting a monitor process read the FW messages. The log is transferred
->> > from the FW only when available, so the reading process might block.
->> 
->> Using a sysfs file sounds ugly, isn't there a better way to do this?
->> For example, does ftrace&co provide anything which wireless drivers
->> could use?
->
-> A sysfs entry is indeed sub-optimal. However, we had two requirements
-> for this feature:
-> 1. Retrieving logs should be simple and require no non-standard usermode
-> applications.
-> 2. The on-demand mode could be used on production platforms.
-> ftrace/debugfs/etc. might not be enabled on such systems.
->
-> For now, we chose to stick with a single sysfs entry, as it accomplishes
-> the above. I agree it looks a bit odd though.
+Can anybody confirm this observation?
+Is there an explanation?
+Are there some tuning knobs I could try to improve the performance with
+mac80211/ath5k?
+Is the problem outside the wireless subsystem (Maybe it's the TCP/IP stack or
+something Fedora specific)?
 
-So basically the user can just do 'cp /sys/.../fwlog
-kvalos-fw-crash-log' and send it for analysis? Makes sense.
+Thanks in advance.
+  Joerg
 
--- 
-Kalle Valo
