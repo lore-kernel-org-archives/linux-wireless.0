@@ -1,199 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:48518 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755165Ab1FUOTW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 10:19:22 -0400
-Date: Tue, 21 Jun 2011 19:40:18 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Andreas Hartmann <andihartmann@01019freenet.de>
-Subject: Re: [PATCH 2/2] mac80211: Fixing Races for skipping tailroom
- reservation
-Message-ID: <20110621141017.GC32464@hertz.marvell.com> (sfid-20110621_161926_221719_4FB1C831)
-References: <20110616102707.GB24458@hertz.marvell.com>
- <d38dc36c1ab9a4bd819b9bcbbda181da@secure.sipsolutions.net>
- <20110617132527.GA27436@hertz.marvell.com>
- <1308331485.7329.2.camel@Nokia-N900-51-1>
- <20110620143051.GA31035@hertz.marvell.com>
- <1308583799.4322.9.camel@jlt3.sipsolutions.net>
- <7DDF37406E10F0438561DBB78326DF3902F5D190E2@SC-VEXCH1.marvell.com>
- <1308590980.4322.19.camel@jlt3.sipsolutions.net>
- <20110621130305.GB32464@hertz.marvell.com>
- <1308663814.4276.3.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1308663814.4276.3.camel@jlt3.sipsolutions.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:40322 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751603Ab1FUPZ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 11:25:29 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat-wireless: make patches apply again
+Date: Tue, 21 Jun 2011 17:25:21 +0200
+Message-Id: <1308669921-28413-1-git-send-email-hauke@hauke-m.de> (sfid-20110621_172533_111341_552AF8C7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 21, 2011 at 06:43:34AM -0700, Johannes Berg wrote:
-> On Tue, 2011-06-21 at 18:33 +0530, Yogesh Ashok Powar wrote:
-> 
-> > Following is the implementation based on your design.
-> > 
-> > Let me know if I miss anything here.
-> 
-> Since your original code was reverted you should send a full patch. But
-> overall it looks fine.
-Thanks
 
->Came to think of it yesterday though, for the
-> 0->1 case it's of course necessary to do the adjustment before the key
-> can be found, but also for the 1->0 case it'll be necessary to do the
-> counter adjustment after the key adjustments.
-Right.
-I reconfirmed that the current code handles these cases.
-
-Following is the complete patch.
-
-Andreas will it be possible for you to test this patch on your setup?
-
-Will send an official patch once Andreas confirms things are working.
-
-Thanks
-Yogesh
-
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- net/mac80211/ieee80211_i.h |    3 ++
- net/mac80211/key.c         |   51 ++++++++++++++++++++++++++++++++++++++++++-
- net/mac80211/tx.c          |    7 +-----
- 3 files changed, 53 insertions(+), 8 deletions(-)
+ patches/11-dev-pm-ops.patch       |   59 +++++++++++++-----------------------
+ patches/99-change-makefiles.patch |    3 +-
+ 2 files changed, 23 insertions(+), 39 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 090b0ec..2025af5 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -775,6 +775,9 @@ struct ieee80211_local {
- 
- 	int tx_headroom; /* required headroom for hardware/radiotap */
- 
-+	/* count for keys needing tailroom space allocation */
-+	int crypto_tx_tailroom_needed_cnt;
-+
- 	/* Tasklet and skb queue to process calls from IRQ mode. All frames
- 	 * added to skb_queue will be processed, but frames in
- 	 * skb_queue_unreliable may be dropped if the total length of these
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index f825e2f..edf9f40 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -61,6 +61,36 @@ static struct ieee80211_sta *get_sta_for_key(struct ieee80211_key *key)
- 	return NULL;
- }
- 
-+static void increment_tailroom_need_count(struct ieee80211_local *local)
-+{
-+	/*
-+	 * When this count is zero, SKB resizing for allocating tailroom
-+	 * for IV or MMIC is skipped. But, this check has created two race
-+	 * cases in xmit path while transiting from zero count to one:
-+	 *
-+	 * 1. SKB resize was skipped because no key was added but just before
-+	 * the xmit key is added and SW encryption kicks off.
-+	 *
-+	 * 2. SKB resize was skipped because all the keys were hw planted but
-+	 * just before xmit one of the key is deleted and SW encryption kicks
-+	 * off.
-+	 *
-+	 * In both the above case SW encryption will find not enough space for
-+	 * tailroom and exits with WARN_ON. (See WARN_ONs at wpa.c)
-+	 *
-+	 * Solution has been explained at
-+	 * http://markmail.org/message/c3ykchyv6azzmdum
-+	 */
-+
-+	if (!local->crypto_tx_tailroom_needed_cnt++) {
-+		/*
-+		 * Flush all XMIT packets currently using HW encryption or no
-+		 * encryption at all if the count transition is from 0 -> 1.
-+		 */
-+		synchronize_net();
-+	}
-+}
-+
- static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- {
- 	struct ieee80211_sub_if_data *sdata;
-@@ -101,6 +131,11 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- 
- 	if (!ret) {
- 		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
-+
-+		if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
-+		      (key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)))
-+			key->local->crypto_tx_tailroom_needed_cnt--;
-+
- 		return 0;
- 	}
- 
-@@ -139,6 +174,10 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
- 	if (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
- 		return;
- 
-+	if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
-+	      (key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)))
-+		increment_tailroom_need_count(key->local);
-+
- 	sta = get_sta_for_key(key);
- 	sdata = key->sdata;
- 
-@@ -394,8 +433,10 @@ static void __ieee80211_key_destroy(struct ieee80211_key *key)
- 		ieee80211_aes_key_free(key->u.ccmp.tfm);
- 	if (key->conf.cipher == WLAN_CIPHER_SUITE_AES_CMAC)
- 		ieee80211_aes_cmac_key_free(key->u.aes_cmac.tfm);
--	if (key->local)
-+	if (key->local) {
- 		ieee80211_debugfs_key_remove(key);
-+		key->local->crypto_tx_tailroom_needed_cnt--;
-+	}
- 
- 	kfree(key);
- }
-@@ -455,6 +496,8 @@ int ieee80211_key_link(struct ieee80211_key *key,
- 	__ieee80211_key_replace(sdata, sta, pairwise, old_key, key);
- 	__ieee80211_key_destroy(old_key);
- 
-+	increment_tailroom_need_count(key->local);
-+
- 	ieee80211_debugfs_key_add(key);
- 
- 	ret = ieee80211_key_enable_hw_accel(key);
-@@ -498,8 +541,12 @@ void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
- 
- 	mutex_lock(&sdata->local->key_mtx);
- 
--	list_for_each_entry(key, &sdata->key_list, list)
-+	sdata->local->crypto_tx_tailroom_needed_cnt = 0;
-+
-+	list_for_each_entry(key, &sdata->key_list, list) {
-+		increment_tailroom_need_count(sdata->local);
- 		ieee80211_key_enable_hw_accel(key);
-+	}
- 
- 	mutex_unlock(&sdata->local->key_mtx);
- }
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 3104c84..64e0f75 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1480,12 +1480,7 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
- {
- 	int tail_need = 0;
- 
--	/*
--	 * This could be optimised, devices that do full hardware
--	 * crypto (including TKIP MMIC) need no tailroom... But we
--	 * have no drivers for such devices currently.
--	 */
--	if (may_encrypt) {
-+	if (may_encrypt && local->crypto_tx_tailroom_needed_cnt) {
- 		tail_need = IEEE80211_ENCRYPT_TAILROOM;
- 		tail_need -= skb_tailroom(skb);
- 		tail_need = max_t(int, tail_need, 0);
+diff --git a/patches/11-dev-pm-ops.patch b/patches/11-dev-pm-ops.patch
+index acf2dc8..b36c48b 100644
+--- a/patches/11-dev-pm-ops.patch
++++ b/patches/11-dev-pm-ops.patch
+@@ -84,7 +84,7 @@ calls on compat code with only slight modifications.
+  /*
+ --- a/drivers/net/wireless/ath/ath9k/pci.c
+ +++ b/drivers/net/wireless/ath/ath9k/pci.c
+-@@ -316,14 +316,11 @@ static int ath_pci_resume(struct device
++@@ -316,14 +316,10 @@ static int ath_pci_resume(struct device
+  	return 0;
+  }
+  
+@@ -96,7 +96,6 @@ calls on compat code with only slight modifications.
+ -	.poweroff = ath_pci_suspend,
+ -	.restore = ath_pci_resume,
+ -};
+-+
+ +compat_pci_suspend(ath_pci_suspend)
+ +compat_pci_resume(ath_pci_resume)
+ +
+@@ -104,7 +103,7 @@ calls on compat code with only slight modifications.
+  
+  #define ATH9K_PM_OPS	(&ath9k_pm_ops)
+  
+-@@ -341,7 +338,12 @@ static struct pci_driver ath_pci_driver
++@@ -341,7 +337,12 @@ static struct pci_driver ath_pci_driver
+  	.id_table   = ath_pci_id_table,
+  	.probe      = ath_pci_probe,
+  	.remove     = ath_pci_remove,
+@@ -218,28 +217,13 @@ calls on compat code with only slight modifications.
+  };
+  
+  static int __init iwl4965_init(void)
+---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+-@@ -4001,7 +4001,12 @@ static struct pci_driver iwl_driver = {
+- 	.id_table = iwl_hw_card_ids,
+- 	.probe = iwl_pci_probe,
+- 	.remove = __devexit_p(iwl_pci_remove),
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
+- 	.driver.pm = IWL_PM_OPS,
+-+#elif defined(CONFIG_PM)
+-+	.suspend = iwl_pci_suspend_compat,
+-+	.resume = iwl_pci_resume_compat,
+-+#endif
+- };
+- 
+- static int __init iwl_init(void)
+---- a/drivers/net/wireless/iwlwifi/iwl-core.c
+-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+-@@ -2014,13 +2014,9 @@ int iwl_pci_resume(struct device *device
+- 	return 0;
++--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
+++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
++@@ -530,14 +530,10 @@ static int iwl_pci_resume(struct device
++ 	return iwl_resume(priv);
+  }
+  
+--const struct dev_pm_ops iwl_pm_ops = {
++-static const struct dev_pm_ops iwl_dev_pm_ops = {
+ -	.suspend = iwl_pci_suspend,
+ -	.resume = iwl_pci_resume,
+ -	.freeze = iwl_pci_suspend,
+@@ -247,24 +231,23 @@ calls on compat code with only slight modifications.
+ -	.poweroff = iwl_pci_suspend,
+ -	.restore = iwl_pci_resume,
+ -};
+-+const SIMPLE_DEV_PM_OPS(iwl_pm_ops, iwl_pci_suspend, iwl_pci_resume);
+++const SIMPLE_DEV_PM_OPS(iwl_dev_pm_ops, iwl_pci_suspend, iwl_pci_resume);
+ +
+ +compat_pci_suspend(iwl_pci_suspend)
+ +compat_pci_resume(iwl_pci_resume)
+  
+- #endif /* CONFIG_PM */
+---- a/drivers/net/wireless/iwlwifi/iwl-core.h
+-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+-@@ -502,7 +502,12 @@ __le32 iwl_add_beacon_time(struct iwl_pr
+- #ifdef CONFIG_PM
+- int iwl_pci_suspend(struct device *device);
+- int iwl_pci_resume(struct device *device);
+-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+-+int iwl_pci_suspend_compat(struct pci_dev *pdev, pm_message_t state);
+-+int iwl_pci_resume_compat(struct pci_dev *pdev);
+-+#else
+- extern const struct dev_pm_ops iwl_pm_ops;
+-+#endif
++ #define IWL_PM_OPS	(&iwl_dev_pm_ops)
+  
+- #define IWL_PM_OPS	(&iwl_pm_ops)
++@@ -552,7 +548,12 @@ static struct pci_driver iwl_pci_driver
++ 	.id_table = iwl_hw_card_ids,
++ 	.probe = iwl_pci_probe,
++ 	.remove = __devexit_p(iwl_pci_remove),
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
++ 	.driver.pm = IWL_PM_OPS,
+++#elif defined(CONFIG_PM)
+++	.suspend = iwl_pci_suspend_compat,
+++	.resume = iwl_pci_resume_compat,
+++#endif
++ };
+  
++ int __must_check iwl_pci_register_driver(void)
+diff --git a/patches/99-change-makefiles.patch b/patches/99-change-makefiles.patch
+index be62e28..2d5af48 100644
+--- a/patches/99-change-makefiles.patch
++++ b/patches/99-change-makefiles.patch
+@@ -13,7 +13,7 @@ only the wireless stuff.
+  obj-$(CONFIG_EEPROM_93CX6)	+= eeprom_93cx6.o
+ --- a/drivers/net/usb/Makefile
+ +++ b/drivers/net/usb/Makefile
+-@@ -2,30 +2,7 @@
++@@ -2,31 +2,7 @@
+  # Makefile for USB Network drivers
+  #
+  
+@@ -38,6 +38,7 @@ only the wireless stuff.
+  obj-$(CONFIG_USB_COMPAT_USBNET)	+= usbnet.o
+ -obj-$(CONFIG_USB_NET_INT51X1)	+= int51x1.o
+ -obj-$(CONFIG_USB_CDC_PHONET)	+= cdc-phonet.o
++-obj-$(CONFIG_USB_NET_KALMIA)	+= kalmia.o
+ -obj-$(CONFIG_USB_IPHETH)	+= ipheth.o
+ -obj-$(CONFIG_USB_SIERRA_NET)	+= sierra_net.o
+ -obj-$(CONFIG_USB_NET_CX82310_ETH)	+= cx82310_eth.o
 -- 
-1.5.4.1
-
+1.7.4.1
 
