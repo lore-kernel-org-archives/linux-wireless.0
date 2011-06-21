@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:48362 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752523Ab1F3VG4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2011 17:06:56 -0400
-Date: Thu, 30 Jun 2011 18:07:17 -0300
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-2.6 2011-06-30
-Message-ID: <20110630210717.GD25602@joana> (sfid-20110630_230714_871214_5B066188)
+Received: from msr6.hinet.net ([168.95.4.106]:65076 "EHLO msr6.hinet.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752752Ab1FUHUz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 03:20:55 -0400
+Date: Tue, 21 Jun 2011 13:43:10 +0800
+From: Ali Bahar <ali@internetdog.org>
+To: =?iso-8859-1?Q?Fr=E9d=E9ric?= Lamorce <FLamorce@CalAmp.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: nl80211: set_key failed; err=-67 Link has been severed
+Message-ID: <20110621054310.GA5538@internetdog.org> (sfid-20110621_092059_032646_8E02DFDF)
+Reply-To: ali@internetdog.org
+References: <8BFC9A1FBD4CFA4FA7496C9F6DBCF4CA0D4065B927@oxn-mx01.PD.CalAmpCorp.com>
+ <39e83b34879f7b3d79534665e9dd0ae6@secure.sipsolutions.net>
+ <8BFC9A1FBD4CFA4FA7496C9F6DBCF4CA0D4193EA50@oxn-mx01.PD.CalAmpCorp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <8BFC9A1FBD4CFA4FA7496C9F6DBCF4CA0D4193EA50@oxn-mx01.PD.CalAmpCorp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
 
-A lot of new code, a lot of new bugs. This pull request has really important
-fixes for 3.0. There are here two regression fixes, a hidp deadlock hang up
-of the system fix from Peter Hurley. As the commit messages says it is a
-partial revert from a commit that adds kthread to hidp. And L2CAP incoming
-connection request fix that was breaking one test in the PTS suit,
-that is, breaking interop. Patch is based on code from Ilia Kolomisnky.
-Also, a buffer overflow fix by Dan Rosenberg and finally Tomas Targownik fixed
-a memory leak on failed connections attempts that seems to be around since
-2006!!
+Hi Frederic,
 
-Please pull, or let me know any concerns you have.
 
-	Gustavo
+On Mon, Jun 20, 2011 at 06:03:11AM -0700, Frédéric Lamorce wrote:
+> What I see is that wpa_supplicant only works with wext but it does not work with nl80211.
+> My device is an ath9k_htc.
 
-The following changes since commit fa7ccfb17033bfb5bca86f6b909cab0b807efbc0:
+are you suggesting that wpa_supplicant's CONFIG_DRIVER_NL80211
+build-option does not fully work?
 
-  rtlwifi: rtl8192se: Handle duplicate PCI ID 0x10ec:0x8192 conflict with r8192e_pci (2011-06-20 14:56:56 -0400)
+Just an FYI:
+Till yesterday, I had some problems which, while not similar to yours,
+involved failures under encryption. You can see my posts in 
+http://lists.shmoo.com/pipermail/hostap/2011-June/thread.html
+for comparison. Unfortunately, the -dd trace has not been accepted by
+that mailing list, yet, due to its size. Perhaps you can check it in a
+few days, if it remains of interest to you.
 
-are available in the git repository at:
-  master.kernel.org:/pub/scm/linux/kernel/git/padovan/bluetooth-2.6.git master
-
-Dan Rosenberg (1):
-      Bluetooth: Prevent buffer overflow in l2cap config request
-
-Gustavo F. Padovan (1):
-      Bluetooth: Fix regression with incoming L2CAP connections
-
-Peter Hurley (1):
-      Bluetooth: Fix hidp disconnect deadlocks and lost wakeup
-
-Tomas Targownik (1):
-      Bluetooth: Fix memory leak under page timeouts
-
- net/bluetooth/hci_conn.c   |    3 +++
- net/bluetooth/hidp/core.c  |   18 +++++++++++-------
- net/bluetooth/hidp/hidp.h  |    1 +
- net/bluetooth/l2cap_core.c |    5 +++--
- 4 files changed, 18 insertions(+), 9 deletions(-)
-
+later,
+ali
