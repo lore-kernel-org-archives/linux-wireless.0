@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:12202 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752638Ab1FSRqL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2011 13:46:11 -0400
-Date: Sun, 19 Jun 2011 19:47:39 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 2/2] rt2x00: reset usb devices at probe
-Message-ID: <20110619174739.GC19934@localhost.localdomain> (sfid-20110619_194613_920749_EB48281E)
-References: <20110604144854.GA4865@localhost.localdomain>
- <20110604172940.GA10984@localhost.localdomain>
- <20110619174602.GB19934@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110619174602.GB19934@localhost.localdomain>
+Received: from he.sipsolutions.net ([78.46.109.217]:37886 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752247Ab1FUNnj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 09:43:39 -0400
+Subject: Re: [PATCH 2/2] mac80211: Fixing Races for skipping tailroom
+ reservation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yogesh Ashok Powar <yogeshp@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Andreas Hartmann <andihartmann@01019freenet.de>
+In-Reply-To: <20110621130305.GB32464@hertz.marvell.com>
+References: <20110616102138.GA24447@hertz.marvell.com>
+	 <20110616102707.GB24458@hertz.marvell.com>
+	 <d38dc36c1ab9a4bd819b9bcbbda181da@secure.sipsolutions.net>
+	 <20110617132527.GA27436@hertz.marvell.com>
+	 <1308331485.7329.2.camel@Nokia-N900-51-1>
+	 <20110620143051.GA31035@hertz.marvell.com>
+	 <1308583799.4322.9.camel@jlt3.sipsolutions.net>
+	 <7DDF37406E10F0438561DBB78326DF3902F5D190E2@SC-VEXCH1.marvell.com>
+	 <1308590980.4322.19.camel@jlt3.sipsolutions.net>
+	 <20110621130305.GB32464@hertz.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 21 Jun 2011 15:43:34 +0200
+Message-ID: <1308663814.4276.3.camel@jlt3.sipsolutions.net> (sfid-20110621_154345_878567_17CAF3A8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When module is reloaded, device may fail to work, with messages:
+On Tue, 2011-06-21 at 18:33 +0530, Yogesh Ashok Powar wrote:
 
-[  342.211926] phy40 -> rt2x00lib_rxdone_read_signal: Warning - Frame received with unrecognized signal, mode=0x0000, signal=0x0059, type=2.
-[  342.314254] phy40 -> rt2x00lib_rxdone_read_signal: Warning - Frame received with unrecognized signal, mode=0x0000, signal=0x004a, type=2.
-[  342.416458] phy40 -> rt2x00lib_rxdone: Warning - Wrong frame size 3183 max 2432.
-[  342.518605] phy40 -> rt2x00lib_rxdone_read_signal: Warning - Frame received with unrecognized signal, mode=0x0000, signal=0x00c9, type=2.
-[  342.620836] phy40 -> rt2x00lib_rxdone_read_signal: Warning - Frame received with unrecognized signal, mode=0x0000, signal=0x00ae, type=1.
-[  342.723201] phy40 -> rt2x00lib_rxdone: Warning - Wrong frame size 0 max 2432.
-[  342.825399] phy40 -> rt2x00lib_rxdone: Warning - Wrong frame size 0 max 2432.
-[  342.927624] phy40 -> rt2x00lib_rxdone: Warning - Wrong frame size 0 max 2432.
-[  343.029804] phy40 -> rt2x00lib_rxdone: Warning - Wrong frame size 2491 max 2432.
-[  343.132008] phy40 -> rt2x00lib_rxdone: Warning - Wrong frame size 2576 max 2432.
-[  343.234326] phy40 -> rt2x00lib_rxdone_read_signal: Warning - Frame received with unrecognized signal, mode=0x0000, signal=0x004c, type=1.
-[  343.438723] phy40 -> rt2x00lib_rxdone_read_signal: Warning - Frame received with unrecognized signal, mode=0x0000, signal=0x00e6, type=1.
+> Following is the implementation based on your design.
+> 
+> Let me know if I miss anything here.
 
-Whereas replugging device make it functional. To solve that problem
-force reset device during probe.
+Since your original code was reverted you should send a full patch. But
+overall it looks fine. Came to think of it yesterday though, for the
+0->1 case it's of course necessary to do the adjustment before the key
+can be found, but also for the 1->0 case it'll be necessary to do the
+counter adjustment after the key adjustments.
 
-With patch messages are gone. Unfortunately device may sometimes
-still does not operate correctly after module reload (fail to receive
-data after associate), but such cases are rarer than without the patch.
-
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
- drivers/net/wireless/rt2x00/rt2x00usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 8f90f62..b6b4542 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -802,6 +802,7 @@ int rt2x00usb_probe(struct usb_interface *usb_intf,
- 	int retval;
- 
- 	usb_dev = usb_get_dev(usb_dev);
-+	usb_reset_device(usb_dev);
- 
- 	hw = ieee80211_alloc_hw(sizeof(struct rt2x00_dev), ops->hw);
- 	if (!hw) {
--- 
-1.7.4
+johannes
 
