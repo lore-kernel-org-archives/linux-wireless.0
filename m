@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:64219 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751975Ab1FWOoh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2011 10:44:37 -0400
-Received: from mail.atheros.com ([10.234.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2011 07:44:00 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
-	<senthilb@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH] ath9k_hw: make use of the gain_table_entry macro
-Date: Thu, 23 Jun 2011 20:14:29 +0530
-Message-ID: <1308840270-15920-1-git-send-email-mshajakhan@atheros.com> (sfid-20110623_164440_273395_E9B12275)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:40267 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751737Ab1FUNiv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 09:38:51 -0400
+Subject: Re: [3.0 regression] DMAR faults in iwlagn
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrew Lutomirski <luto@mit.edu>
+Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <BANLkTikKia-UXL8LJ60sLDV1uZBFEP8Kwg@mail.gmail.com> (sfid-20110620_204449_827132_DD43A304)
+References: <BANLkTikKia-UXL8LJ60sLDV1uZBFEP8Kwg@mail.gmail.com>
+	 (sfid-20110620_204449_827132_DD43A304)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 21 Jun 2011 15:38:46 +0200
+Message-ID: <1308663526.4276.2.camel@jlt3.sipsolutions.net> (sfid-20110621_153854_193280_A04737D8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Mon, 2011-06-20 at 14:44 -0400, Andrew Lutomirski wrote:
+> On 3.0-git today, I get:
+> 
+> [   40.142872] DRHD: handling fault status reg 2
+> [   40.142892] DMAR:[DMA Write] Request device [03:00.0] fault addr ffe38000
+> [   40.142896] DMAR:[fault reason 05] PTE Write access is not set
+> 
+> lspci says:
+> 
+> 03:00.0 Network controller: Intel Corporation Centrino Ultimate-N 6300 (rev 35)
+> 
+> This seems to be triggered by interface state changes.  The driver
+> still works.  I don't see this on 2.6.39.1.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Thanks Andy. Do you happen to know if there's any way to figure out what
+ffe38000 was? Clearly the device is attempting to write something that
+we haven't mapped properly, but I'm not sure _what_?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index 8f6d11d..38b4cdc 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -236,7 +236,7 @@ static void ar9003_paprd_get_gain_table(struct ath_hw *ah)
- 	memset(entry, 0, sizeof(ah->paprd_gain_table_entries));
- 	memset(index, 0, sizeof(ah->paprd_gain_table_index));
- 
--	for (i = 0; i < 32; i++) {
-+	for (i = 0; i < PAPRD_GAIN_TABLE_ENTRIES; i++) {
- 		entry[i] = REG_READ(ah, reg);
- 		index[i] = (entry[i] >> 24) & 0xff;
- 		reg += 4;
-@@ -727,7 +727,7 @@ int ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain)
- 	desired_gain = ar9003_get_desired_gain(ah, chain, train_power);
- 
- 	gain_index = 0;
--	for (i = 0; i < 32; i++) {
-+	for (i = 0; i < PAPRD_GAIN_TABLE_ENTRIES; i++) {
- 		if (ah->paprd_gain_table_index[i] >= desired_gain)
- 			break;
- 		gain_index++;
--- 
-1.7.0.4
+johannes
 
