@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from que31.charter.net ([209.225.8.23]:54154 "EHLO que31.charter.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752195Ab1FCClk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 22:41:40 -0400
-From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
-To: sgruszka@redhat.com, linville@tuxdriver.com
-Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Greg Dietsche <Gregory.Dietsche@cuw.edu>
-Subject: [PATCH 4/5] iwlegacy: propagate error return value
-Date: Thu,  2 Jun 2011 21:06:09 -0500
-Message-Id: <1307066770-27309-4-git-send-email-Gregory.Dietsche@cuw.edu> (sfid-20110603_044154_723231_2F2C1981)
-In-Reply-To: <1307066770-27309-1-git-send-email-Gregory.Dietsche@cuw.edu>
-References: <1307066770-27309-1-git-send-email-Gregory.Dietsche@cuw.edu>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54977 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755153Ab1FUSxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 14:53:46 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mb@bu3sch.de, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2] ssb: fix ssb clock rate according to broadcom source
+Date: Tue, 21 Jun 2011 20:53:20 +0200
+Message-Id: <1308682400-25953-1-git-send-email-hauke@hauke-m.de> (sfid-20110621_205349_005261_D03FE1FE)
+In-Reply-To: <1308681113-4706-1-git-send-email-hauke@hauke-m.de>
+References: <1308681113-4706-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-propogate the return value from iwl4965_get_tx_atten_grp instead
-of implicitly returning -EINVAL in the error case.
+This fix was done according to si_clock_rate function in broadcom siutils.c
 
-Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/iwlegacy/iwl-4965.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/ssb/main.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965.c b/drivers/net/wireless/iwlegacy/iwl-4965.c
-index 06dcee5..79e7ce6 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965.c
-@@ -915,7 +915,7 @@ static int iwl4965_fill_txpower_tbl(struct iwl_priv *priv, u8 band, u16 channel,
- 	if (txatten_grp < 0) {
- 		IWL_ERR(priv, "Can't find txatten group for channel %d.\n",
- 			  channel);
--		return -EINVAL;
-+		return txatten_grp;
- 	}
- 
- 	IWL_DEBUG_TXPOWER(priv, "channel %d belongs to txatten group %d\n",
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index e568664..57b7b64 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -1002,8 +1002,8 @@ u32 ssb_calc_clock_rate(u32 plltype, u32 n, u32 m)
+ 	switch (plltype) {
+ 	case SSB_PLLTYPE_6: /* 100/200 or 120/240 only */
+ 		if (m & SSB_CHIPCO_CLK_T6_MMASK)
+-			return SSB_CHIPCO_CLK_T6_M0;
+-		return SSB_CHIPCO_CLK_T6_M1;
++			return SSB_CHIPCO_CLK_T6_M1;
++		return SSB_CHIPCO_CLK_T6_M0;
+ 	case SSB_PLLTYPE_1: /* 48Mhz base, 3 dividers */
+ 	case SSB_PLLTYPE_3: /* 25Mhz, 2 dividers */
+ 	case SSB_PLLTYPE_4: /* 48Mhz, 4 dividers */
 -- 
-1.7.2.5
+1.7.4.1
 
