@@ -1,47 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:51781 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750998Ab1FFKkL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 06:40:11 -0400
-Received: by qwk3 with SMTP id 3so1578982qwk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 03:40:10 -0700 (PDT)
+Received: from msr7.hinet.net ([168.95.4.107]:63809 "EHLO msr7.hinet.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755221Ab1FUNJ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 09:09:28 -0400
+Date: Tue, 21 Jun 2011 21:07:52 +0800
+From: Ali Bahar <ali@internetdog.org>
+To: Fred Plissonneau <cohomewp4@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Makefile deletes previous driver install when two WiFi
+ interfaces are from the same chip vendor
+Message-ID: <20110621130752.GB8462@internetdog.org> (sfid-20110621_150931_925248_A2CFB7CF)
+Reply-To: ali@internetdog.org
+References: <BANLkTimvMcb5yRHSE91VPTLdy7k5WEDo0Q@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTim74Km0T3XRo+W8jCrb2n-dv3XxNg@mail.gmail.com>
-References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
-	<1307311658-15853-7-git-send-email-hauke@hauke-m.de>
-	<BANLkTim74Km0T3XRo+W8jCrb2n-dv3XxNg@mail.gmail.com>
-Date: Mon, 6 Jun 2011 12:40:10 +0200
-Message-ID: <BANLkTimdAoB=ye27qfxzdj2K-VBS6ch+ow@mail.gmail.com> (sfid-20110606_124016_213233_5F5312A7)
-Subject: Re: [RFC][PATCH 06/10] bcma: get CPU clock
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
-	mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BANLkTimvMcb5yRHSE91VPTLdy7k5WEDo0Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 6 czerwca 2011 12:34 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
-> 2011/6/6 Hauke Mehrtens <hauke@hauke-m.de>:
->> +u32 bcma_cpu_clock(struct bcma_drv_mips *mcore)
->> +{
->> +       struct bcma_bus *bus = mcore->core->bus;
->> +
->> +       if (bus->drv_cc.capabilities & BCMA_CC_CAP_PMU)
->> +               return bcma_pmu_get_clockcpu(&bus->drv_cc);
->> +
->> +       pr_err("No PMU available, need this to get the cpu clock\n");
->> +       return 0;
->> +}
->> +EXPORT_SYMBOL(bcma_cpu_clock);
->
-> Are you really going to use this in some separated driver? If you're,
-> I heard that exporting symbol should go in pair with patch enabling
-> usage of such a symbol.
+On Tue, Jun 21, 2011 at 11:59:17AM +0200, Fred Plissonneau wrote:
+> From: Fred Plissonneau <cohomewp4@gmail.com>
+> To: linux-wireless@vger.kernel.org
+> 
+> 
+> Anyone can help ?
 
-I've just read patch 09/10, sorry for the noise :)
+Not me!
+But let me see if I at least understand your problem:
 
--- 
-Rafał
+ 
+> On Tue, Jun 14, 2011 at 4:19 PM, ch wp4 <cohomewp4@gmail.com> wrote:
+> > Hello,
+> >
+> > I am facing an issue during installation of an external USB-WiFi stick
+> > on my Linux box (Ubuntu 10.04).
+> > Actually, I have already successfully compiled and installed ath9k
+> > driver using compat-wireless-2.6.38.2-2.
+> > The internal WiFi NIC is fully operational.
+> > Now, I want to add temporarily an external USB-WiFi stick (D-Link DWA
+> > 160). I've found that this hardware
+> > is using an ar9170 chipset and therefore I've recompiled
+> > compat-wireless targeting now the carl9170 driver.
+> > Once again, this working perfectly.
+
+So you have an on-board ath9k, which does work, and an ar9170 USB
+stick, which does work.
+
+
+> > But when I switch-off and back on my PC, only the latest installed
+> > WiFi interface is working.
+
+So only the on-board ath9k fails?
+
+
+> > Digging into the system, I've found that ath9k has disappeared from the
+> > /lib/modules/2.6.32-27-generic/updates/drivers/net/wireless/ath directory.
+> > It looks like the 'make install' command is doing some cleaning which
+
+Ha? Why does 'make install' run after a power-cycle?!! That ran only
+after you compiled the driver.
+
+
+> > has, in my particular use case, an undesirable
+> > side-effect.
+> > Can someone point me to the line in the Makefile causing this problem
+> > or is it the desired behaviour ?
+
+Again, the makefile does not come into this. After you've installed
+the drivers, you can forget about the makefile.
+
+So are you saying that the ath9k module somehow got deleted from your
+file system?
+
+later,
+ali
