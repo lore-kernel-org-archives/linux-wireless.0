@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:10687 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755421Ab1FJPC4 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:63518 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754907Ab1FUVgm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 11:02:56 -0400
-From: Paul Stewart <pstew@chromium.org>
-Date: Fri, 10 Jun 2011 07:00:19 -0800
-Subject: [PATCH/Resend] mac80211: Start monitor work on restart
-To: linux-wireless@vger.kernel.org
-Cc: nbd@nbd.name, johannes@sipsolutions.net
-Message-Id: <20110610150249.1483C204D2@glenhelen.mtv.corp.google.com> (sfid-20110610_170259_820560_B4EEE5D2)
+	Tue, 21 Jun 2011 17:36:42 -0400
+Received: by iwn6 with SMTP id 6so176568iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 14:36:41 -0700 (PDT)
+Message-ID: <4E010EE6.9060605@lwfinger.net> (sfid-20110621_233654_928273_6B3D06DE)
+Date: Tue, 21 Jun 2011 16:36:38 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: mb@bu3sch.de, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] ssb: fix ssb clock rate according to broadcom source
+References: <1308681113-4706-1-git-send-email-hauke@hauke-m.de> <1308682400-25953-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1308682400-25953-1-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Trigger connection monitor on resume from suspend.  Since we
-have been sleeping, there is reason to suspect that we might
-not still be associated.  The speed of detecting loss of
-{connection,authentication} is worth the cost of the small
-additional traffic at resume.
+On 06/21/2011 01:53 PM, Hauke Mehrtens wrote:
+> This fix was done according to si_clock_rate function in broadcom siutils.c
+>
+> Signed-off-by: Hauke Mehrtens<hauke@hauke-m.de>
+> ---
+>   drivers/ssb/main.c |    4 ++--
+>   1 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+> index e568664..57b7b64 100644
+> --- a/drivers/ssb/main.c
+> +++ b/drivers/ssb/main.c
+> @@ -1002,8 +1002,8 @@ u32 ssb_calc_clock_rate(u32 plltype, u32 n, u32 m)
+>   	switch (plltype) {
+>   	case SSB_PLLTYPE_6: /* 100/200 or 120/240 only */
+>   		if (m&  SSB_CHIPCO_CLK_T6_MMASK)
+> -			return SSB_CHIPCO_CLK_T6_M0;
+> -		return SSB_CHIPCO_CLK_T6_M1;
+> +			return SSB_CHIPCO_CLK_T6_M1;
+> +		return SSB_CHIPCO_CLK_T6_M0;
+>   	case SSB_PLLTYPE_1: /* 48Mhz base, 3 dividers */
+>   	case SSB_PLLTYPE_3: /* 25Mhz, 2 dividers */
+>   	case SSB_PLLTYPE_4: /* 48Mhz, 4 dividers */
 
-Signed-off-by: Paul Stewart <pstew@chromium.org>
----
- net/mac80211/mlme.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+This patch sent me looking to find the public source for this routine. After 
+finding it in the source section of Broadcom-wl, I noticed there is some 
+additional code that is not implemented in the ssb version. Should this 
+additional material be implemented, or is it not applicable?
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index d595265..c188238 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2206,6 +2206,7 @@ void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
- 		add_timer(&ifmgd->chswitch_timer);
- 	ieee80211_sta_reset_beacon_monitor(sdata);
- 	ieee80211_restart_sta_timer(sdata);
-+	ieee80211_queue_work(&sdata->local->hw, &sdata->u.mgd.monitor_work);
- }
- #endif
- 
--- 
-1.7.3.1
-
+Larry
