@@ -1,62 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:54949 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757661Ab1F0KGl (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:41813 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755898Ab1FUJZA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 06:06:41 -0400
-Received: by wwg11 with SMTP id 11so1965449wwg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 03:06:40 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 1/3] wl12xx: configure suspend/resume only if associated/started
-Date: Mon, 27 Jun 2011 13:06:43 +0300
-Message-Id: <1309169205-27966-1-git-send-email-eliad@wizery.com> (sfid-20110627_121213_948673_5CFE203F)
+	Tue, 21 Jun 2011 05:25:00 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 25/32] ath9k: remove superfluous parentheses
+Date: Tue, 21 Jun 2011 11:23:45 +0200
+Message-Id: <1308648232-9906-26-git-send-email-juhosg@openwrt.org> (sfid-20110621_112537_408522_BAF8BF9D)
+In-Reply-To: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
+References: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Configure the device (to wowlan) only if the sta/ap
-is associated/started.
+Also remove two empty lines.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/wl12xx/main.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/recv.c |   62 ++++++++++++++++-----------------
+ 1 files changed, 30 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 2c2251a..7017c23 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1469,10 +1469,13 @@ static struct notifier_block wl1271_dev_notifier = {
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index d0af2f2..99f55b3 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1076,39 +1076,39 @@ static void ath_lnaconf_alt_good_scan(struct ath_ant_comb *antcomb,
+ 		antcomb->rssi_lna1 = main_rssi_avg;
  
- static int wl1271_configure_suspend_sta(struct wl1271 *wl)
- {
--	int ret;
-+	int ret = 0;
+ 	switch ((ant_conf.main_lna_conf << 4) | ant_conf.alt_lna_conf) {
+-	case (0x10): /* LNA2 A-B */
++	case 0x10: /* LNA2 A-B */
+ 		antcomb->main_conf = ATH_ANT_DIV_COMB_LNA1_MINUS_LNA2;
+ 		antcomb->first_quick_scan_conf =
+ 			ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2;
+ 		antcomb->second_quick_scan_conf = ATH_ANT_DIV_COMB_LNA1;
+ 		break;
+-	case (0x20): /* LNA1 A-B */
++	case 0x20: /* LNA1 A-B */
+ 		antcomb->main_conf = ATH_ANT_DIV_COMB_LNA1_MINUS_LNA2;
+ 		antcomb->first_quick_scan_conf =
+ 			ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2;
+ 		antcomb->second_quick_scan_conf = ATH_ANT_DIV_COMB_LNA2;
+ 		break;
+-	case (0x21): /* LNA1 LNA2 */
++	case 0x21: /* LNA1 LNA2 */
+ 		antcomb->main_conf = ATH_ANT_DIV_COMB_LNA2;
+ 		antcomb->first_quick_scan_conf =
+ 			ATH_ANT_DIV_COMB_LNA1_MINUS_LNA2;
+ 		antcomb->second_quick_scan_conf =
+ 			ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2;
+ 		break;
+-	case (0x12): /* LNA2 LNA1 */
++	case 0x12: /* LNA2 LNA1 */
+ 		antcomb->main_conf = ATH_ANT_DIV_COMB_LNA1;
+ 		antcomb->first_quick_scan_conf =
+ 			ATH_ANT_DIV_COMB_LNA1_MINUS_LNA2;
+ 		antcomb->second_quick_scan_conf =
+ 			ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2;
+ 		break;
+-	case (0x13): /* LNA2 A+B */
++	case 0x13: /* LNA2 A+B */
+ 		antcomb->main_conf = ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2;
+ 		antcomb->first_quick_scan_conf =
+ 			ATH_ANT_DIV_COMB_LNA1_MINUS_LNA2;
+ 		antcomb->second_quick_scan_conf = ATH_ANT_DIV_COMB_LNA1;
+ 		break;
+-	case (0x23): /* LNA1 A+B */
++	case 0x23: /* LNA1 A+B */
+ 		antcomb->main_conf = ATH_ANT_DIV_COMB_LNA1_PLUS_LNA2;
+ 		antcomb->first_quick_scan_conf =
+ 			ATH_ANT_DIV_COMB_LNA1_MINUS_LNA2;
+@@ -1325,40 +1325,40 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
+ 		/* Adjust the fast_div_bias based on main and alt lna conf */
+ 		switch ((ant_conf->main_lna_conf << 4) |
+ 				ant_conf->alt_lna_conf) {
+-		case (0x01): /* A-B LNA2 */
++		case 0x01: /* A-B LNA2 */
+ 			ant_conf->fast_div_bias = 0x3b;
+ 			break;
+-		case (0x02): /* A-B LNA1 */
++		case 0x02: /* A-B LNA1 */
+ 			ant_conf->fast_div_bias = 0x3d;
+ 			break;
+-		case (0x03): /* A-B A+B */
++		case 0x03: /* A-B A+B */
+ 			ant_conf->fast_div_bias = 0x1;
+ 			break;
+-		case (0x10): /* LNA2 A-B */
++		case 0x10: /* LNA2 A-B */
+ 			ant_conf->fast_div_bias = 0x7;
+ 			break;
+-		case (0x12): /* LNA2 LNA1 */
++		case 0x12: /* LNA2 LNA1 */
+ 			ant_conf->fast_div_bias = 0x2;
+ 			break;
+-		case (0x13): /* LNA2 A+B */
++		case 0x13: /* LNA2 A+B */
+ 			ant_conf->fast_div_bias = 0x7;
+ 			break;
+-		case (0x20): /* LNA1 A-B */
++		case 0x20: /* LNA1 A-B */
+ 			ant_conf->fast_div_bias = 0x6;
+ 			break;
+-		case (0x21): /* LNA1 LNA2 */
++		case 0x21: /* LNA1 LNA2 */
+ 			ant_conf->fast_div_bias = 0x0;
+ 			break;
+-		case (0x23): /* LNA1 A+B */
++		case 0x23: /* LNA1 A+B */
+ 			ant_conf->fast_div_bias = 0x6;
+ 			break;
+-		case (0x30): /* A+B A-B */
++		case 0x30: /* A+B A-B */
+ 			ant_conf->fast_div_bias = 0x1;
+ 			break;
+-		case (0x31): /* A+B LNA2 */
++		case 0x31: /* A+B LNA2 */
+ 			ant_conf->fast_div_bias = 0x3b;
+ 			break;
+-		case (0x32): /* A+B LNA1 */
++		case 0x32: /* A+B LNA1 */
+ 			ant_conf->fast_div_bias = 0x3d;
+ 			break;
+ 		default:
+@@ -1368,22 +1368,22 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
+ 		/* Adjust the fast_div_bias based on main and alt_lna_conf */
+ 		switch ((ant_conf->main_lna_conf << 4) |
+ 				ant_conf->alt_lna_conf) {
+-		case (0x01): /* A-B LNA2 */
++		case 0x01: /* A-B LNA2 */
+ 			ant_conf->fast_div_bias = 0x1;
+ 			ant_conf->main_gaintb = 0;
+ 			ant_conf->alt_gaintb = 0;
+ 			break;
+-		case (0x02): /* A-B LNA1 */
++		case 0x02: /* A-B LNA1 */
+ 			ant_conf->fast_div_bias = 0x1;
+ 			ant_conf->main_gaintb = 0;
+ 			ant_conf->alt_gaintb = 0;
+ 			break;
+-		case (0x03): /* A-B A+B */
++		case 0x03: /* A-B A+B */
+ 			ant_conf->fast_div_bias = 0x1;
+ 			ant_conf->main_gaintb = 0;
+ 			ant_conf->alt_gaintb = 0;
+ 			break;
+-		case (0x10): /* LNA2 A-B */
++		case 0x10: /* LNA2 A-B */
+ 			if (!(antcomb->scan) &&
+ 				(alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO))
+ 				ant_conf->fast_div_bias = 0x1;
+@@ -1392,12 +1392,12 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
+ 			ant_conf->main_gaintb = 0;
+ 			ant_conf->alt_gaintb = 0;
+ 			break;
+-		case (0x12): /* LNA2 LNA1 */
++		case 0x12: /* LNA2 LNA1 */
+ 			ant_conf->fast_div_bias = 0x1;
+ 			ant_conf->main_gaintb = 0;
+ 			ant_conf->alt_gaintb = 0;
+ 			break;
+-		case (0x13): /* LNA2 A+B */
++		case 0x13: /* LNA2 A+B */
+ 			if (!(antcomb->scan) &&
+ 				(alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO))
+ 				ant_conf->fast_div_bias = 0x1;
+@@ -1406,7 +1406,7 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
+ 			ant_conf->main_gaintb = 0;
+ 			ant_conf->alt_gaintb = 0;
+ 			break;
+-		case (0x20): /* LNA1 A-B */
++		case 0x20: /* LNA1 A-B */
+ 			if (!(antcomb->scan) &&
+ 				(alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO))
+ 				ant_conf->fast_div_bias = 0x1;
+@@ -1415,12 +1415,12 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
+ 			ant_conf->main_gaintb = 0;
+ 			ant_conf->alt_gaintb = 0;
+ 			break;
+-		case (0x21): /* LNA1 LNA2 */
++		case 0x21: /* LNA1 LNA2 */
+ 			ant_conf->fast_div_bias = 0x1;
+ 			ant_conf->main_gaintb = 0;
+ 			ant_conf->alt_gaintb = 0;
+ 			break;
+-		case (0x23): /* LNA1 A+B */
++		case 0x23: /* LNA1 A+B */
+ 			if (!(antcomb->scan) &&
+ 				(alt_ratio > ATH_ANT_DIV_COMB_ALT_ANT_RATIO))
+ 				ant_conf->fast_div_bias = 0x1;
+@@ -1429,17 +1429,17 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
+ 			ant_conf->main_gaintb = 0;
+ 			ant_conf->alt_gaintb = 0;
+ 			break;
+-		case (0x30): /* A+B A-B */
++		case 0x30: /* A+B A-B */
+ 			ant_conf->fast_div_bias = 0x1;
+ 			ant_conf->main_gaintb = 0;
+ 			ant_conf->alt_gaintb = 0;
+ 			break;
+-		case (0x31): /* A+B LNA2 */
++		case 0x31: /* A+B LNA2 */
+ 			ant_conf->fast_div_bias = 0x1;
+ 			ant_conf->main_gaintb = 0;
+ 			ant_conf->alt_gaintb = 0;
+ 			break;
+-		case (0x32): /* A+B LNA1 */
++		case 0x32: /* A+B LNA1 */
+ 			ant_conf->fast_div_bias = 0x1;
+ 			ant_conf->main_gaintb = 0;
+ 			ant_conf->alt_gaintb = 0;
+@@ -1447,9 +1447,7 @@ static void ath_ant_div_conf_fast_divbias(struct ath_hw_antcomb_conf *ant_conf,
+ 		default:
+ 			break;
+ 		}
+-
+ 	}
+-
+ }
  
- 	mutex_lock(&wl->mutex);
- 
-+	if (!test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
-+		goto out_unlock;
-+
- 	ret = wl1271_ps_elp_wakeup(wl);
- 	if (ret < 0)
- 		goto out_unlock;
-@@ -1517,10 +1520,13 @@ out:
- 
- static int wl1271_configure_suspend_ap(struct wl1271 *wl)
- {
--	int ret;
-+	int ret = 0;
- 
- 	mutex_lock(&wl->mutex);
- 
-+	if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags))
-+		goto out_unlock;
-+
- 	ret = wl1271_ps_elp_wakeup(wl);
- 	if (ret < 0)
- 		goto out_unlock;
+ /* Antenna diversity and combining */
 -- 
-1.7.0.4
+1.7.2.1
 
