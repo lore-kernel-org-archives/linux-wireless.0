@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:38537 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754704Ab1F3A5g convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 20:57:36 -0400
-Received: by gwaa18 with SMTP id a18so679396gwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2011 17:57:35 -0700 (PDT)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:49351 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752396Ab1FUSvh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 14:51:37 -0400
+Message-ID: <4E00E832.5040502@hauke-m.de> (sfid-20110621_205140_443226_B59BA43A)
+Date: Tue, 21 Jun 2011 20:51:30 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <BLU158-w3443764A60DE4B497231DB87570@phx.gbl>
-References: <BLU158-w3443764A60DE4B497231DB87570@phx.gbl>
-Date: Thu, 30 Jun 2011 08:57:35 +0800
-Message-ID: <BANLkTinhc2QAgWTk9tur9Y-m2i3tDhvXOQ@mail.gmail.com> (sfid-20110630_025744_670002_680611CA)
-Subject: Re: [ath9k-devel] STBC functionality details request
-From: Adrian Chadd <adrian@freebsd.org>
-To: Fred Matthews <fredmm@hotmail.co.uk>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: mb@bu3sch.de, ralf@linux-mips.org, linux-mips@linux-mips.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ssb: add __devinit to some functions
+References: <20110621150227.GB14197@linux-mips.org> <1308680889-4217-1-git-send-email-hauke@hauke-m.de> <20110621183800.GB2273@tuxdriver.com>
+In-Reply-To: <20110621183800.GB2273@tuxdriver.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I think things are a bit confusing, but here goes.
+On 06/21/2011 08:38 PM, John W. Linville wrote:
+> On Tue, Jun 21, 2011 at 08:28:09PM +0200, Hauke Mehrtens wrote:
+>> Two functions in ssb are using register_pci_controller() which is
+>> __devinit. The functions ssb_pcicore_init_hostmode() and
+>> ssb_gige_probe() should also be __devinit.
+>>
+>> This fixes the following warning:
+>> WARNING: vmlinux.o(.text+0x2727b8): Section mismatch in reference from the function ssb_pcicore_init_hostmode() to the function .devinit.text:register_pci_controller()
+>> The function ssb_pcicore_init_hostmode() references
+>> the function __devinit register_pci_controller().
+>> This is often because ssb_pcicore_init_hostmode lacks a __devinit
+>> annotation or the annotation of register_pci_controller is wrong.
+>>
+>> WARNING: vmlinux.o(.text+0x273398): Section mismatch in reference from the function ssb_gige_probe() to the function .devinit.text:register_pci_controller()
+>> The function ssb_gige_probe() references
+>> the function __devinit register_pci_controller().
+>> This is often because ssb_gige_probe lacks a __devinit
+>> annotation or the annotation of register_pci_controller is wrong.
+>>
+>> Reported-by: Ralf Baechle <ralf@linux-mips.org>
+> 
+> Signed-off-by??
+> 
 
-The earlier NICs only support either RX STBC (pre ar9280?) or TX
-1-stream STBC (ar9280 or above). Multi-stream STBC isn't in any of the
-AR9xxx NICs. It may be in the AR9287; it may be in the AR9300/AR9400.
-I've not looked.
+Ops missing, will resend both patches.
 
-I bet what you're finding is:
-
-* with STBC enabled, for single stream rates, it's tx'ing using STBC.
-It just sets a bit in the TX descriptor.
-* with STBC enabled, for multi-stream rates, it's not setting the STBC
-TX bit and it's instead sending it as a 2 stream packet w/out STBC.
-
-The AR9280 is not a one stream NIC - it's a two stream TX/RX NIC.
-(Unless you're using the AR9281 - which is an AR9280 1T2R stream
-device.) The AR9285 is a 1x1 stream device. The AR9287 is a 2x2 stream
-device.
-
-HTH,
-
-
-Adrian
-
-> I am using STBC (Space Time Block Coding) 1 stream NICs like the AR9280.I would be very grateful someone can kindly advise on how exactly STBC(transmits multiple copies of a data across each of the antennas) works in ath9k.
-> I ask this because when I enable STBC 1-stream, the driver seems to uses Space division multiplexing (can this be disabled/enabled?), since the rate is over 150Mbps.
-> When is STBC activated ?, ...Does Minstrel/ath9k rate adaptation mechanism find first check if Spatial multiplexing is better, if not uses STBC ?
-> Thank you for your time
-> _______________________________________________
-> ath9k-devel mailing list
-> ath9k-devel@lists.ath9k.org
-> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
->
+Hauke
