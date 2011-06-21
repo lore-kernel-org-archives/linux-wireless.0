@@ -1,95 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:43657 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755361Ab1FNAC4 convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:49840 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751559Ab1FUQBc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2011 20:02:56 -0400
-Received: by yxi11 with SMTP id 11so1099421yxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2011 17:02:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20110613132009.GA7133@redhat.com>
-References: <BANLkTikFvkUj=JFrCsffz6Z78KdAEw-t0A@mail.gmail.com>
-	<20110613132009.GA7133@redhat.com>
-Date: Tue, 14 Jun 2011 08:02:54 +0800
-Message-ID: <BANLkTi=epV40yWe0piXoaDes_F5jOV_DJQ@mail.gmail.com> (sfid-20110614_020303_693847_4DBAD1B9)
-Subject: Re: APSM, AR9285 and bus hangs
-From: Adrian Chadd <adrian@freebsd.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Jonathan Nieder <jrnieder@gmail.com>, ath9k-devel@venema.h4ckr.net,
-	Tony Houghton <h@realh.co.uk>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	camilo@mesias.co.uk, Rajkumar Manoharan <rmanoharan@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 21 Jun 2011 12:01:32 -0400
+Received: by fxm17 with SMTP id 17so40780fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 09:01:31 -0700 (PDT)
+Subject: patch for iw
+From: Alexander Simon <alexander.simon@saxnet.de>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1308671129.2656.4.camel@alex-2>
+References: <1308671129.2656.4.camel@alex-2>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 21 Jun 2011 18:01:27 +0200
+Message-ID: <1308672087.2656.13.camel@alex-2> (sfid-20110621_180135_800515_518FC79B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I think the problem on these laptops is that -disabling- the APSM bits
-causes some systems to hang.
+Here is a patch for iw to set a ht channel type when joining an IBSS.
 
-That's what the commit earlier in the year did - it disabled those
-bits by default. Later code then enabled those bits only on poweron,
-and disabled them on suspend. My dirty patch just has them enabled by
-default again as per the previous behaviour.
+diff -Nrup iw-0.9.22/ibss.c iw-0.9.22_ibss_n//ibss.c
+--- iw-0.9.22/ibss.c	2011-02-04 13:29:39.000000000 +0100
++++ iw-0.9.22_ibss_n//ibss.c	2011-05-03 21:31:00.000000000 +0200
+@@ -27,6 +27,7 @@ static int join_ibss(struct nl80211_stat
+ 	char *value = NULL, *sptr = NULL;
+ 	float rate;
+ 	int bintval;
++	unsigned int htval;
+ 
+ 	if (argc < 2)
+ 		return 1;
+@@ -44,6 +45,12 @@ static int join_ibss(struct nl80211_stat
+ 	argv++;
+ 	argc--;
+ 
++	if (argc && parse_channel_type(argv[0], &htval)) {
++		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE, htval);
++		argv++;
++		argc--;
++	}
++
+ 	if (argc && strcmp(argv[0], "fixed-freq") == 0) {
+ 		NLA_PUT_FLAG(msg, NL80211_ATTR_FREQ_FIXED);
+ 		argv++;
+@@ -134,7 +141,7 @@ COMMAND(ibss, leave, NULL,
+ 	NL80211_CMD_LEAVE_IBSS, 0, CIB_NETDEV, leave_ibss,
+ 	"Leave the current IBSS cell.");
+ COMMAND(ibss, join,
+-	"<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] [beacon-interval <TU>]"
++	"<SSID> <freq in MHz> [HT20|HT40+|HT40-] [fixed-freq] [<fixed bssid>] [beacon-interval <TU>]"
+ 	" [basic-rates <rate in Mbps,rate2,...>] [mcast-rate <rate in Mbps>] "
+ 	"[key d:0:abcde]",
+ 	NL80211_CMD_JOIN_IBSS, 0, CIB_NETDEV, join_ibss,
+diff -Nrup iw-0.9.22/iw.h iw-0.9.22_ibss_n//iw.h
+--- iw-0.9.22/iw.h	2011-02-04 13:29:39.000000000 +0100
++++ iw-0.9.22_ibss_n//iw.h	2011-05-03 14:52:02.000000000 +0200
+@@ -130,6 +130,7 @@ void mac_addr_n2a(char *mac_addr, unsign
+ unsigned char *parse_hex(char *hex, size_t *outlen);
+ 
+ int parse_keys(struct nl_msg *msg, char **argv, int argc);
++int parse_channel_type(const char *str, unsigned int *htval);
+ 
+ void print_ht_mcs(const __u8 *mcs);
+ void print_ampdu_length(__u8 exponent);
+diff -Nrup iw-0.9.22/phy.c iw-0.9.22_ibss_n//phy.c
+--- iw-0.9.22/phy.c	2011-02-04 13:29:39.000000000 +0100
++++ iw-0.9.22_ibss_n//phy.c	2011-05-03 14:52:02.000000000 +0200
+@@ -33,30 +33,14 @@ static int handle_freqchan(struct nl_msg
+ 			   int argc, char **argv)
+ {
+ 	char *end;
+-	static const struct {
+-		const char *name;
+-		unsigned int val;
+-	} htmap[] = {
+-		{ .name = "HT20", .val = NL80211_CHAN_HT20, },
+-		{ .name = "HT40+", .val = NL80211_CHAN_HT40PLUS, },
+-		{ .name = "HT40-", .val = NL80211_CHAN_HT40MINUS, },
+-	};
+ 	unsigned int htval = NL80211_CHAN_NO_HT;
+ 	unsigned int freq;
+-	int i;
+ 
+ 	if (!argc || argc > 2)
+ 		return 1;
+ 
+-	if (argc == 2) {
+-		for (i = 0; i < ARRAY_SIZE(htmap); i++) {
+-			if (strcasecmp(htmap[i].name, argv[1]) == 0) {
+-				htval = htmap[i].val;
+-				break;
+-			}
+-		}
+-		if (htval == NL80211_CHAN_NO_HT)
+-			return 1;
++	if (argc == 2 && !parse_channel_type(argv[1], &htval)) {
++		return 1;
+ 	}
+ 
+ 	if (!*argv[0])
+diff -Nrup iw-0.9.22/util.c iw-0.9.22_ibss_n//util.c
+--- iw-0.9.22/util.c	2011-02-04 13:29:39.000000000 +0100
++++ iw-0.9.22_ibss_n//util.c	2011-05-03 14:52:02.000000000 +0200
+@@ -345,6 +345,33 @@ int parse_keys(struct nl_msg *msg, char
+ 	return 2;
+ }
+ 
++/*
++ * Convert a string "HT20", "HT40+" or "HT40-" into nl80211
++ * value. Conversion is case insensitive. Returns 1 on success, 0 on error.
++ */
++
++int parse_channel_type(const char *str, unsigned int *htval)
++{
++	static const struct {
++		const char *name;
++		unsigned int val;
++	} htmap[] = {
++		{ .name = "HT20", .val = NL80211_CHAN_HT20, },
++		{ .name = "HT40+", .val = NL80211_CHAN_HT40PLUS, },
++		{ .name = "HT40-", .val = NL80211_CHAN_HT40MINUS, },
++	};
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(htmap); i++) {
++		if (strcasecmp(htmap[i].name, str) == 0) {
++			*htval = htmap[i].val;
++			return 1;
++		}
++	}
++
++	return 0;
++}
++
+ static void print_mcs_index(const __u8 *mcs)
+ {
+ 	unsigned int mcs_bit, prev_bit = -2, prev_cont = 0;
 
-I guess someone should establish whether APSM is even supported on those boards?
 
-Adrian
-
-On 13 June 2011 21:20, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Mon, Jun 13, 2011 at 09:01:57PM +0800, Adrian Chadd wrote:
->> On 13 June 2011 19:00, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->>
->> > cam a fedora user, confirms that patch fixes the locks-ups
->> > https://bugzilla.redhat.com/show_bug.cgi?id=697157#c26
->> >
->> > We are waiting for fix now :-)
->>
->> Cool.
->>
->> The problem is, the initial modification and subsequent changes to the
->> powersave function were documented to fix an APSM hang, not cause it.
->>
->> I'm happy to submit a patch to undo that particular change but I'm not
->> sure if it'll -break- things for other people. :)
->>
->> Someone with PCIe/APCI/APSM/general clue in the area of CPU + bus
->> sleep states needs to step in and help. I'm just not equipped to fix
->> the problem at the moment.
->
-> I see this commit in 2.6.39, missed in 2.6.38 and 2.6.35 currently.
-> Is possible this is the fix which do not break other things?
->
-> commit 5b64aa72ead6f8be488d2be7af579f0d69fb7a6e
-> Author: Rajkumar Manoharan <rmanoharan@atheros.com>
-> Date:   Thu Jan 27 18:39:37 2011 +0530
->
->    ath9k_hw: Fix system hang when resuming from S3/S4
->
->    The bit 6 & 7 of AR_WA (0x4004) should be enabled only
->    for the chips that are supporting L0s functionality
->    while resuming back from S3/S4.
->
->    Enabling these bits for AR9280 is causing system hang
->    within a few S3/S4-resume cycles.
->
->    Cc: stable@kernel.org
->    Cc: Jack Lee <jlee@atheros.com>
->    Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
->    Signed-off-by: John W. Linville <linville@tuxdriver.com>
->
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-> index f8a7771..f44c84a 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-> @@ -426,9 +426,8 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
->                }
->
->                /* WAR for ASPM system hang */
-> -               if (AR_SREV_9280(ah) || AR_SREV_9285(ah) || AR_SREV_9287(ah)) {
-> +               if (AR_SREV_9285(ah) || AR_SREV_9287(ah))
->                        val |= (AR_WA_BIT6 | AR_WA_BIT7);
-> -               }
->
->                if (AR_SREV_9285E_20(ah))
->                        val |= AR_WA_BIT23;
->
