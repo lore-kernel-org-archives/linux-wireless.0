@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:42205 "EHLO
-	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753293Ab1FTLmg (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:41770 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755824Ab1FUJY7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2011 07:42:36 -0400
-Subject: [PATCH 2/6] zd1211rw: make 'handle_rx_packet: invalid,
-	small RX packet' message debug-only
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Daniel Drake <dsd@gentoo.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ulrich Kunitz <kune@deine-taler.de>
-Date: Mon, 20 Jun 2011 14:42:33 +0300
-Message-ID: <20110620114233.964.66390.stgit@localhost6.localdomain6> (sfid-20110620_134239_373732_13C586B5)
-In-Reply-To: <20110620114228.964.35459.stgit@localhost6.localdomain6>
-References: <20110620114228.964.35459.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 21 Jun 2011 05:24:59 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 21/32] ath9k: enable antenna diversity for AR9330
+Date: Tue, 21 Jun 2011 11:23:41 +0200
+Message-Id: <1308648232-9906-22-git-send-email-juhosg@openwrt.org> (sfid-20110621_112548_614887_901F6603)
+In-Reply-To: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
+References: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message is should be debug-only as it tells almost nothing useful. It also
-happens very often and just floods logs.
-
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/zd1211rw/zd_usb.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index 631194d..621c2cc 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -579,8 +579,8 @@ static void handle_rx_packet(struct zd_usb *usb, const u8 *buffer,
- 
- 	if (length < sizeof(struct rx_length_info)) {
- 		/* It's not a complete packet anyhow. */
--		printk("%s: invalid, small RX packet : %d\n",
--		       __func__, length);
-+		dev_dbg_f(zd_usb_dev(usb), "invalid, small RX packet : %d\n",
-+					   length);
- 		return;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 2df369f..4da5284 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2072,7 +2072,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
  	}
- 	length_info = (struct rx_length_info *)
+ 
+ 
+-	if (AR_SREV_9485(ah)) {
++	if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
+ 		ant_div_ctl1 = ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
+ 		/*
+ 		 * enable the diversity-combining algorithm only when
+-- 
+1.7.2.1
 
