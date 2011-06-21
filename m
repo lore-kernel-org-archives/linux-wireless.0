@@ -1,66 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:64822 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751220Ab1FPFPX (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:63271 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751794Ab1FUEzO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2011 01:15:23 -0400
-Date: Thu, 16 Jun 2011 08:14:52 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: Greg Dietsche <Gregory.Dietsche@cuw.edu>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	Dowan Kim <dowan@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] staging: brcm80211: return false if not a broadcom board
-Message-ID: <20110616051452.GF23739@shale.localdomain> (sfid-20110616_071528_842604_3B7D6A12)
-References: <1308176709-14765-1-git-send-email-Gregory.Dietsche@cuw.edu>
- <20110616013615.GA14700@broadcom.com>
+	Tue, 21 Jun 2011 00:55:14 -0400
+Received: by gwaa18 with SMTP id a18so620415gwa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jun 2011 21:55:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110616013615.GA14700@broadcom.com>
+In-Reply-To: <1308425533-20854-1-git-send-email-arik@wizery.com>
+References: <1308425533-20854-1-git-send-email-arik@wizery.com>
+Date: Tue, 21 Jun 2011 10:25:13 +0530
+Message-ID: <BANLkTikB3egX4YikC1JdgEr-E-7Dm13_CA@mail.gmail.com> (sfid-20110621_065518_510146_474A03D3)
+Subject: Re: [RFC] mac80211: dynamic PS - don't enter PS when TX frames are pending
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 15, 2011 at 06:36:16PM -0700, Henry Ptasinski wrote:
-> On Wed, Jun 15, 2011 at 03:25:09PM -0700, Greg Dietsche wrote:
-> > This code looks wrong to me. I think it meant to return false
-> > if the board's vendor id isn't Broadcom's.
-> > 
-> > Compile tested only.
-> > 
-> > Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
-> > ---
-> >  drivers/staging/brcm80211/brcmsmac/wlc_bmac.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-> > index 4534926..ee13238 100644
-> > --- a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-> > +++ b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-> > @@ -1943,7 +1943,7 @@ static bool wlc_validboardtype(struct wlc_hw_info *wlc_hw)
-> >  	}
-> >  
-> >  	if (wlc_hw->sih->boardvendor != PCI_VENDOR_ID_BROADCOM)
-> > -		return goodboard;
-> > +		goodboard = false; 
-> >  
-> >  	return goodboard;
-> >  }
-> 
-> Actually, the original code is correct.
-> 
-> For boards with the Broadcom ID, this function checks that the boardrev is
-> sane. Dev boards that aren't properly configured may have invalid info, so this
-> check is mainly to catch that problem.
-> 
-> For boards with any other vendor, we don't have any sanity checks that we know
-> should be done, so the board info is always considered good.
+On Sun, Jun 19, 2011 at 1:02 AM, Arik Nemtsov <arik@wizery.com> wrote:
+> Use the tx_frames_pending() driver callback to determine if Tx frames are
+> pending for its internal queues. If so postpone the dynamic PS timeout
+> to avoid interrupting Tx traffic.
 >
+> The commit e8306f989483e4b97a8b37dd268de6c8c6f35e75 enabled this
+> behavior for drivers with IEEE80211_HW_PS_NULLFUNC_STACK. We enable this
+> for all drivers supporting dynamic PS.
+>
+> This patch helps improve performance in noisy environments.
+>
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
+>  net/mac80211/mlme.c |   22 +++++++++++++---------
+>  1 files changed, 13 insertions(+), 9 deletions(-)
+>
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index a41f234..3a1699b 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -758,19 +758,23 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+>        if (local->hw.conf.flags & IEEE80211_CONF_PS)
+>                return;
+>
+> +       /* don't enter PS if dynamic PS is enabled and TX frames are pending */
+> +       if (local->hw.conf.dynamic_ps_timeout > 0 &&
+> +           !local->disable_dynamic_ps && drv_tx_frames_pending(local)) {
 
-Sounds like it should be "goodboard = true;" then.
+netif_tx_stop_all_queues has to be called before checking
+frames_pending(), so that we can make sure no data is transmitted in
+the time between checking frames_pending and transmitting null data
+frames. If it is not done, this might cause some power save states
+mismatch between the AP and the station in some corner cases.
 
-regards,
-dan carpenter
-
+Vivek.
