@@ -1,98 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:65503 "EHLO mga09.intel.com"
+Received: from mout2.freenet.de ([195.4.92.92]:41916 "EHLO mout2.freenet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752002Ab1FRQF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2011 12:05:26 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 06/25] iwlagn: remove uneeded include to pci.h and dma_mapping.h from a few files
-Date: Sat, 18 Jun 2011 08:34:12 -0700
-Message-Id: <1308411271-26093-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180531_755413_C2FE9140)
-In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1756977Ab1FURnv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 13:43:51 -0400
+Received: from [195.4.92.23] (helo=13.mx.freenet.de)
+	by mout2.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #5)
+	id 1QZ4zN-00076T-D6
+	for linux-wireless@vger.kernel.org; Tue, 21 Jun 2011 19:43:49 +0200
+Received: from p54a1944b.dip0.t-ipconnect.de ([84.161.148.75]:34582 helo=mail.maya.org)
+	by 13.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.72 #5)
+	id 1QZ4zM-0006Hs-U0
+	for linux-wireless@vger.kernel.org; Tue, 21 Jun 2011 19:43:49 +0200
+Message-ID: <4E00D879.1060005@01019freenet.de> (sfid-20110621_194354_458460_04ED719F)
+Date: Tue, 21 Jun 2011 19:44:25 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+MIME-Version: 1.0
+To: Yogesh Ashok Powar <yogeshp@marvell.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 2/2] mac80211: Fixing Races for skipping tailroom reservation
+References: <20110617132527.GA27436@hertz.marvell.com> <1308331485.7329.2.camel@Nokia-N900-51-1> <20110620143051.GA31035@hertz.marvell.com> <1308583799.4322.9.camel@jlt3.sipsolutions.net> <7DDF37406E10F0438561DBB78326DF3902F5D190E2@SC-VEXCH1.marvell.com> <1308590980.4322.19.camel@jlt3.sipsolutions.net> <20110621130305.GB32464@hertz.marvell.com> <1308663814.4276.3.camel@jlt3.sipsolutions.net> <20110621141017.GC32464@hertz.marvell.com> <1308667215.4276.7.camel@jlt3.sipsolutions.net> <20110621163351.GD32464@hertz.marvell.com>
+In-Reply-To: <20110621163351.GD32464@hertz.marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Hi,
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-1000.c |    2 --
- drivers/net/wireless/iwlwifi/iwl-2000.c |    2 --
- drivers/net/wireless/iwlwifi/iwl-5000.c |    2 --
- drivers/net/wireless/iwlwifi/iwl-6000.c |    2 --
- drivers/net/wireless/iwlwifi/iwl-led.c  |    2 --
- 5 files changed, 0 insertions(+), 10 deletions(-)
+I'll test the patch as far as it is ready :-). Could you please create a
+complete patch, which runs against a clean compat-wireless-3.0-rc1-1 (or
+compat-wireless-2011-06-15)? And maybe, for testing purpose, a log
+entry, which makes it possible to check, whether the code is really used
+(if it doesn't flood messages)?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 454b541..2daca80 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -27,8 +27,6 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/init.h>
--#include <linux/pci.h>
--#include <linux/dma-mapping.h>
- #include <linux/delay.h>
- #include <linux/skbuff.h>
- #include <linux/netdevice.h>
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index a6a259b..406eb2f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -27,8 +27,6 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/init.h>
--#include <linux/pci.h>
--#include <linux/dma-mapping.h>
- #include <linux/delay.h>
- #include <linux/skbuff.h>
- #include <linux/netdevice.h>
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index c71fa44..06fe9ad 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -27,8 +27,6 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/init.h>
--#include <linux/pci.h>
--#include <linux/dma-mapping.h>
- #include <linux/delay.h>
- #include <linux/sched.h>
- #include <linux/skbuff.h>
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index b3785ec..c66bbc6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -27,8 +27,6 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/init.h>
--#include <linux/pci.h>
--#include <linux/dma-mapping.h>
- #include <linux/delay.h>
- #include <linux/skbuff.h>
- #include <linux/netdevice.h>
-diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
-index 1a8ce4a..7ef2b23 100644
---- a/drivers/net/wireless/iwlwifi/iwl-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-led.c
-@@ -28,8 +28,6 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/init.h>
--#include <linux/pci.h>
--#include <linux/dma-mapping.h>
- #include <linux/delay.h>
- #include <linux/skbuff.h>
- #include <linux/netdevice.h>
--- 
-1.7.0.4
 
+Thanks,
+Andreas
