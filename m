@@ -1,92 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4862 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758889Ab1FALqv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:51 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 20/83] staging: brcm80211: remove iovars IOV_HISPEED
-Date: Wed, 1 Jun 2011 13:45:05 +0200
-Message-ID: <1306928768-7501-20-git-send-email-rvossen@broadcom.com> (sfid-20110601_134814_273823_CA1A5F02)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:37292 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755128Ab1FVMvy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jun 2011 08:51:54 -0400
+Received: by qyk29 with SMTP id 29so2670358qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 05:51:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1308744205.29571.0.camel@jlt3.sipsolutions.net>
+References: <BANLkTimW6oLjQoEbHGOAnXwbWMYUvK00fw@mail.gmail.com>
+	<BANLkTimUc7Gz0AEKKDZinYpGABnDEBMHDA@mail.gmail.com>
+	<1308736869.3883.13.camel@jlt3.sipsolutions.net>
+	<BANLkTikbn2ABhJm75OZg8EC4LeaukzR=Vw@mail.gmail.com>
+	<1308744205.29571.0.camel@jlt3.sipsolutions.net>
+Date: Wed, 22 Jun 2011 14:51:53 +0200
+Message-ID: <BANLkTimoUEs1L2yMmXER1woXPaz6f3sqgg@mail.gmail.com> (sfid-20110622_145157_867307_D05B375D)
+Subject: Re: about RCU programming
+From: =?ISO-8859-1?Q?Manuel_S=E1ez?= <manuelsaezr@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+Yes, I probably need some kind of mutex, but I was wondering if it
+would be enough with some memory barrier, since read and write
+operations in modern computers are usually atomics.
 
-Remove unused sdio related iovars IOV_HISPEED for fullmac driver
+What I pretend to do is that everytime I read one element from the
+list, the function changes the "head pointer" with the next element ,
+so the next time the function is called, it will return the next
+element. When the list reach the last element, it starts again from
+the beggining. The function should somehow remember the last extracted
+element each time and consecutively return the next one. I could
+probably use a counter and iterate the list looking for the next
+element, but it would be hard to maintain when some elements are added
+or deleted.
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |    3 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   13 -------------
- 2 files changed, 0 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-index 789922b..e57dd00 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-@@ -365,8 +365,5 @@ void bcmsdh_unregister_oob_intr(void)
- extern uint sd_msglevel;	/* Debug message level */
- module_param(sd_msglevel, uint, 0);
- 
--extern uint sd_hiok;		/* Ok to use hi-speed mode */
--module_param(sd_hiok, uint, 0);
--
- extern uint sd_f2_blocksize;
- module_param(sd_f2_blocksize, int, 0);
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 2422890..cc4738a 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -47,7 +47,6 @@ extern PBCMSDH_SDMMC_INSTANCE gInstance;
- 
- uint sd_f2_blocksize = 512;	/* Default blocksize */
- 
--uint sd_hiok = false;		/* Don't use hi-speed mode by default */
- uint sd_msglevel = 0x01;
- DHD_PM_RESUME_WAIT_INIT(sdioh_request_byte_wait);
- DHD_PM_RESUME_WAIT_INIT(sdioh_request_word_wait);
-@@ -349,7 +348,6 @@ enum {
- 	IOV_USEINTS,
- 	IOV_NUMINTS,
- 	IOV_DEVREG,
--	IOV_HISPEED,
- 	IOV_HCIREGS,
- 	IOV_RXCHAIN
- };
-@@ -362,8 +360,6 @@ const bcm_iovar_t sdioh_iovars[] = {
- 	{"sd_numints", IOV_NUMINTS, 0, IOVT_UINT32, 0},
- 	{"sd_devreg", IOV_DEVREG, 0, IOVT_BUFFER, sizeof(sdreg_t)}
- 	,
--	{"sd_highspeed", IOV_HISPEED, 0, IOVT_UINT32, 0}
--	,
- 	{"sd_rxchain", IOV_RXCHAIN, 0, IOVT_BOOL, 0}
- 	,
- 	{NULL, 0, 0, 0, 0}
-@@ -494,15 +490,6 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
- 
- 		break;
- 
--	case IOV_GVAL(IOV_HISPEED):
--		int_val = (u32) sd_hiok;
--		memcpy(arg, &int_val, val_size);
--		break;
--
--	case IOV_SVAL(IOV_HISPEED):
--		sd_hiok = int_val;
--		break;
--
- 	case IOV_GVAL(IOV_NUMINTS):
- 		int_val = (s32) si->intrcount;
- 		memcpy(arg, &int_val, val_size);
--- 
-1.7.4.1
+Best regards
 
 
+2011/6/22 Johannes Berg <johannes@sipsolutions.net>:
+> On Wed, 2011-06-22 at 13:54 +0200, Manuel Sáez wrote:
+>> Thank you for your answer. I have actually read some articles like this ones:
+>>
+>> http://lwn.net/Articles/262464/
+>> http://lwn.net/Articles/263130/
+>>
+>> I think I understood how I should normally use it, but not how it
+>> really works. I found lots of code snippets in internet and it seems
+>> to be very easy to use, but when I try to get more information it gets
+>> more complicated. Although the code is wrong, do you think it could be
+>> possible what I want to do? I mean, could it be possible in theory to
+>> "shift" the header in order to make a ring buffer.
+>
+> I haven't understood what you want to do, but "shifting" anything would
+> seem to me to be a write operation.
+>
+> johannes
+>
+>
