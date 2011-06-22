@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46535 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752132Ab1FFS5V (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:55923 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758081Ab1FVVTl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 14:57:21 -0400
-Subject: Re: [PATCH 6/6] mac80211: stop queues before rate control updation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110606184447.GG2604@tuxdriver.com>
-References: <1305894135-14036-1-git-send-email-rmanoharan@atheros.com>
-	 <1305894135-14036-6-git-send-email-rmanoharan@atheros.com>
-	 <1306823717.9366.3.camel@jlt3.sipsolutions.net>
-	 <8F3AF1C9F856774F8C8D67AA7EDFEC88012CC51B@nasanexd02b.na.qualcomm.com>
-	 <20110606184447.GG2604@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 06 Jun 2011 20:57:14 +0200
-Message-ID: <1307386634.3894.14.camel@jlt3.sipsolutions.net> (sfid-20110606_205725_143382_8804AF71)
-Mime-Version: 1.0
+	Wed, 22 Jun 2011 17:19:41 -0400
+Received: by wwe5 with SMTP id 5so1260556wwe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 14:19:40 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 2/2] wl12xx: AP-mode - use mac80211 indication about STA WME support
+Date: Thu, 23 Jun 2011 00:19:33 +0300
+Message-Id: <1308777573-12257-2-git-send-email-arik@wizery.com> (sfid-20110622_231945_576536_144053C3)
+In-Reply-To: <1308777573-12257-1-git-send-email-arik@wizery.com>
+References: <1308777573-12257-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-06-06 at 14:44 -0400, John W. Linville wrote:
+When adding a station, use the information given in the mac80211
+populated ieee80211_sta structure to determine if it supports WME.
+Provide this information to the FW.
 
-> > During the channel type change, the pending tx frames in hw queues are dropped by hw config.
-> > But before updating rate control, the packets can be queued again with older HT rates.
-> > This contradicts with hw config mode and sometimes is causing baseband issues. This issue
-> > was observed only on flooding uplink traffic. To ensure that the frames are always xmitted with
-> > updated rates, the queues are stopped before hw config and waken up after rc updation.
-> 
-> Johannes, do you find this explanation satisfactory (perhaps with
-> some new queue stop reason definition)?
+This patch depends on "mac80211: propagate information about
+STA WME support down".
 
-No, it doesn't address the fact that any packet that is pending will
-still be processed -- as I said before, the stop doesn't include a
-flush.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/cmd.c |    9 +--------
+ 1 files changed, 1 insertions(+), 8 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index b3a4f58..c7f6f60 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -1166,14 +1166,7 @@ int wl1271_cmd_add_sta(struct wl1271 *wl, struct ieee80211_sta *sta, u8 hlid)
+ 	cmd->bss_index = WL1271_AP_BSS_INDEX;
+ 	cmd->aid = sta->aid;
+ 	cmd->hlid = hlid;
+-
+-	/*
+-	 * FIXME: Does STA support QOS? We need to propagate this info from
+-	 * hostapd. Currently not that important since this is only used for
+-	 * sending the correct flavor of null-data packet in response to a
+-	 * trigger.
+-	 */
+-	cmd->wmm = 0;
++	cmd->wmm = sta->wme ? 1 : 0;
+ 
+ 	cmd->supported_rates = cpu_to_le32(wl1271_tx_enabled_rates_get(wl,
+ 						sta->supp_rates[wl->band]));
+-- 
+1.7.4.1
 
