@@ -1,55 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:48359 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751017Ab1F3UQY (ORCPT
+Received: from mail.3eti.com ([65.220.88.139]:58559 "EHLO 3eSpam.3eti.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757942Ab1FVN4k convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2011 16:16:24 -0400
-Received: by mail-bw0-f45.google.com with SMTP id 12so3427386bwd.18
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2011 13:16:23 -0700 (PDT)
-Subject: Re: [PATCH 000/119] staging: brcm80211: more code cleanup and bug
- fixed
-From: Luciano Coelho <coelho@ti.com>
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>
-In-Reply-To: <4E0CB587.3000209@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-	 <BANLkTikPBWvYiNc1rZEwPJTck=AzUsLncA@mail.gmail.com>
-	 <4E0CB587.3000209@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 30 Jun 2011 23:16:19 +0300
-Message-ID: <1309464979.1514.177.camel@cumari> (sfid-20110630_221627_640018_3F0E9330)
-Mime-Version: 1.0
+	Wed, 22 Jun 2011 09:56:40 -0400
+From: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
+To: 'Emmanuel Grumbach' <egrumbach@gmail.com>
+CC: Ben Greear <greearb@candelatech.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: Help on AMPDU stuck in transmit queue
+Date: Wed, 22 Jun 2011 13:56:32 +0000
+Message-ID: <BD54DDEB2546894FAB0731EA7B0EDF8D058350CB@RockMX01.rock.corp> (sfid-20110622_155645_552178_DA183BF3)
+References: <BD54DDEB2546894FAB0731EA7B0EDF8D05822A57@RockMX01.rock.corp>
+	<4DFA2989.10503@candelatech.com>
+	<BD54DDEB2546894FAB0731EA7B0EDF8D05833EC1@RockMX01.rock.corp>
+ <BANLkTikK2Ju4cCzs5Y5scfGVRyu+ZRs63g@mail.gmail.com>
+In-Reply-To: <BANLkTikK2Ju4cCzs5Y5scfGVRyu+ZRs63g@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Henry,
+Thanks Emmanuel
 
-On Thu, 2011-06-30 at 10:42 -0700, Henry Ptasinski wrote: 
-> On 06/29/2011 11:29 PM, Rafał Miłecki wrote:
-> > 2011/6/30 Franky Lin<frankyl@broadcom.com>:
-> >> Most of these patches are brcmfmac cleanup.
-> >
-> >
-> > Hm, interesting improvement in your "Release early, release often" strategy.
-> >
-> 
-> Yea, we were waiting for the previous series to get applied.  Not sure 
-> how to make this work better.  Any process suggestions would be appreciated.
+Yes. The problem here seems to be the same as you saw.
+There is no ping packet loss when I use AC==BK.
 
-Keep sending them in small batches, I think it is just normal to apply
-the batches one after the other, no need to keep waiting.  If there are
-no conflicts, everything should go smoothly.  And if it doesn't, someone
-will ping you. ;)
+Would you please point me to the code, e.g file/function, etc
+I would like to fix this problem (if I can).
+
+Thanks again
 
 
--- 
-Cheers,
-Luca.
+-----Original Message-----
+From: Emmanuel Grumbach [mailto:egrumbach@gmail.com] 
+Sent: Tuesday, June 21, 2011 4:11 PM
+To: Chaoxing Lin
+Cc: Ben Greear; ath9k-devel@lists.ath9k.org; linux-wireless@vger.kernel.org
+Subject: Re: Help on AMPDU stuck in transmit queue
 
+On Tue, Jun 21, 2011 at 19:16, Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com> wrote:
+>
+> Anybody,any ideas/comments?
+>
+> Here is my update.
+>
+> I tried 2.6.39.1. The situation gets better, but not fixed completely. The ping packets still lose (about 62 seconds) once a while.
+> I say "gets better" because it recovers.
+>
+> The ping session recovers after about 62 seconds which matches to 2 NULL data packet interval. I sniffed the air, it looks like every 31 seconds, a NULL data packet is sent out from client.
+>
+>
+> Again, the symptom does not happen when 802.11n is disabled on AP.
+>
+> Can anyone explain or help?
+>
+> Below is my ping session info (message on console)
+>
+
+Can you please try to send the pings with AC != BE. I saw once a bug
+related to ampdu reordering buffer. NULL packets would enter the
+reordering buffer and mess up the counters there. Since the reordering
+buffer is tid-wise, trying with another AC may help to understand. I
+assume that QoS NULL data packets are sent as BE. The fact that the
+ping recovers after a while may be explained by the wrap around of the
+sequence.
+This is a really wild guess... but sometimes it can hit....
