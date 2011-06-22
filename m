@@ -1,59 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52180 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757999Ab1F2WMe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 18:12:34 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	linux-mips@linux-mips.org
-Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC v3 09/13] bcma: add check if sprom is available before accessing it.
-Date: Thu, 30 Jun 2011 00:11:54 +0200
-Message-Id: <1309385518-12097-10-git-send-email-hauke@hauke-m.de> (sfid-20110630_001239_277837_248570A0)
-In-Reply-To: <1309385518-12097-1-git-send-email-hauke@hauke-m.de>
-References: <1309385518-12097-1-git-send-email-hauke@hauke-m.de>
+Received: from nm30.bullet.mail.bf1.yahoo.com ([98.139.212.189]:22257 "HELO
+	nm30.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757913Ab1FVNln convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jun 2011 09:41:43 -0400
+References: <loom.20110621T215346-191@post.gmane.org> <BANLkTik0umam7S+E1oog0LTEErMz-dZamg@mail.gmail.com>
+Message-ID: <1308750102.64154.YahooMailRC@web161214.mail.bf1.yahoo.com> (sfid-20110622_154146_913504_76736765)
+Date: Wed, 22 Jun 2011 06:41:42 -0700 (PDT)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: Re: Performance regression between Madwifi/net80211 and ath5k/mac80211
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+In-Reply-To: <BANLkTik0umam7S+E1oog0LTEErMz-dZamg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Adrian,
+thanks for taking an interest. Today I built the current Madwifi driver for
+Fedora Kernel 2.6.38.8-32.fc15.i686. The ath5k problem seems to be at the
+tx side. If I run the iperf server on the ath5k node and the iperf client
+at the madwifi node (identical hardware config), I consistently get a 
+significant
+speedup compared to ath5k-ath5k. The only difference is, which module is
+blacklisted.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/main.c  |    4 +++-
- drivers/bcma/sprom.c |    3 +++
- 2 files changed, 6 insertions(+), 1 deletions(-)
+I have experimented with the RTS and fragmentation threshold setting without
+success. 
 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 7dd0b16..2750aa5 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -160,7 +160,9 @@ int bcma_bus_register(struct bcma_bus *bus)
- 
- 	/* Try to get SPROM */
- 	err = bcma_sprom_get(bus);
--	if (err) {
-+	if (err == -ENOENT) {
-+		pr_err("No SPROM available\n");
-+	} else if (err) {
- 		pr_err("Failed to get SPROM: %d\n", err);
- 		return -ENOENT;
- 	}
-diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
-index ffbb0e3..8e8d5cf 100644
---- a/drivers/bcma/sprom.c
-+++ b/drivers/bcma/sprom.c
-@@ -143,6 +143,9 @@ int bcma_sprom_get(struct bcma_bus *bus)
- 	if (!bus->drv_cc.core)
- 		return -EOPNOTSUPP;
- 
-+	if (!(bus->drv_cc.capabilities & BCMA_CC_CAP_SPROM))
-+		return -ENOENT;
-+
- 	sprom = kcalloc(SSB_SPROMSIZE_WORDS_R4, sizeof(u16),
- 			GFP_KERNEL);
- 	if (!sprom)
+Now I'm somewhat lost. The problem is either ath5k or mac80211. 
+
 -- 
-1.7.4.1
+Regards 
+Joerg 
 
+
+
+
+----- Orifinal Mail ----
+> Von: Adrian Chadd <adrian@freebsd.org>
+> An: jpo <pommnitz@yahoo.com>
+> CC: linux-wireless@vger.kernel.org
+> Gesendet: Mittwoch, den 22. Juni 2011, 4:17:05 Uhr
+> Betreff: Re: Performance regression between Madwifi/net80211 and 
+ath5k/mac80211
+> 
+> Have you eliminated the kernel version as being the  problem?
+> 
+> 
+> Adrian
