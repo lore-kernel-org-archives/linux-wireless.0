@@ -1,72 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:56635 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752646Ab1FOS37 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53522 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752837Ab1FVKBL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2011 14:29:59 -0400
-Received: by pvg12 with SMTP id 12so507680pvg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jun 2011 11:29:58 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4DF8A0EF.5030702@broadcom.com>
-References: <1308138814-12235-1-git-send-email-zajec5@gmail.com>
-	<4DF8A0EF.5030702@broadcom.com>
-Date: Wed, 15 Jun 2011 20:29:58 +0200
-Message-ID: <BANLkTim3-sxkHmfiiwR-mLWfyUKxpSVBQA@mail.gmail.com> (sfid-20110615_203002_535848_DF37EB3B)
-Subject: Re: [RFC][WORTH IT?][PATCH] bcma: make use of crc8 lib
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 22 Jun 2011 06:01:11 -0400
+Subject: Re: about RCU programming
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Manuel =?ISO-8859-1?Q?S=E1ez?= <manuelsaezr@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <BANLkTimUc7Gz0AEKKDZinYpGABnDEBMHDA@mail.gmail.com> (sfid-20110622_111508_380689_0D0EB9C4)
+References: <BANLkTimW6oLjQoEbHGOAnXwbWMYUvK00fw@mail.gmail.com>
+	 <BANLkTimUc7Gz0AEKKDZinYpGABnDEBMHDA@mail.gmail.com>
+	 (sfid-20110622_111508_380689_0D0EB9C4)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 22 Jun 2011 12:01:09 +0200
+Message-ID: <1308736869.3883.13.camel@jlt3.sipsolutions.net> (sfid-20110622_120117_369379_3255B4F3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 15 czerwca 2011 14:09 użytkownik Arend van Spriel
-<arend@broadcom.com> napisał:
-> On 06/15/2011 01:53 PM, Rafał Miłecki wrote:
->>
->>  static u8 bcma_sprom_crc(const u16 *sprom)
->>  {
->> -       int word;
->> -       u8 crc = 0xFF;
->> +       u8 crc;
->> +       u8 sprom2[SSB_SPROMSIZE_WORDS_R4 * 2 - 1];
->> +       u8 table[CRC8_TABLE_SIZE];
->> +       u16 word;
->>
->> +       /* u16 to u8 */
->>        for (word = 0; word<  SSB_SPROMSIZE_WORDS_R4 - 1; word++) {
->> -               crc = bcma_crc8(crc, sprom[word]&  0x00FF);
->> -               crc = bcma_crc8(crc, (sprom[word]&  0xFF00)>>  8);
->> +               sprom2[word * 2] = sprom[word]&  0x00FF;
->> +               sprom2[(word * 2) + 1] = (sprom[word]&  0xFF00)>>  8;
->>        }
->> -       crc = bcma_crc8(crc, sprom[SSB_SPROMSIZE_WORDS_R4 - 1]&  0x00FF);
->> +       /* 127th byte */
->> +       sprom2[(SSB_SPROMSIZE_WORDS_R4 * 2) - 2] =
->> +                               sprom[SSB_SPROMSIZE_WORDS_R4 - 1]&
->>  0x00FF;
->> +
->> +       /* Prepare table, 0xAB is x^8 + x^7 + x^6 + x^4 + x^2 + 1 */
->> +       crc8_populate_lsb(table, 0xAB);
->> +
->> +       /* Calculate */
->> +       crc = crc8(table, sprom2, (SSB_SPROMSIZE_WORDS_R4 * 2) - 1, 0xFF);
->>        crc ^= 0xFF;
->>
->>        return crc;
->
-> You could do (I think):
->
-> crc8_populate_lsb(table, 0xAB);
-> for (word = 0; word<  SSB_SPROMSIZE_WORDS_R4; word++) {
->        u16 val = cpu_to_le16(sprom[word]);
->        crc = crc8(table,&val, sizeof(u16), crc);
-> }
+On Wed, 2011-06-22 at 11:15 +0200, Manuel Sáez wrote:
 
-Maybe not a perfect/optimal solution (crc8 focuses on tables, we do
-double loop instead) but should work. Thanks for the tip.
+> and the read side:
+> rcu_read_lock();
+> rcu_derreference(sdata->u.ap.polling_list->sta);
+> copy_sta(sdata->u.ap.polling_list->sta);
+> rcu_read_unlock();
+> 
+> sdata->u.ap.polling_list = sdata.u.ap.polling_list->next;
 
--- 
-Rafał
+This code snippet makes no sense at all. I suggest you read up on how
+RCU works first.
+
+johannes
+
