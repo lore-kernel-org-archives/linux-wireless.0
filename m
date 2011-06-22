@@ -1,62 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:42636 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752353Ab1FQSfv (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:48044 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758127Ab1FVWPd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2011 14:35:51 -0400
-Received: by qyk29 with SMTP id 29so617162qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jun 2011 11:35:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4DFA8DBF.9080301@openwrt.org>
-References: <4DF93116.700@gnu.org>
-	<4DF96668.3040007@openwrt.org>
-	<4DFA7BAD.7060405@gnu.org>
-	<4DFA8DBF.9080301@openwrt.org>
-Date: Fri, 17 Jun 2011 14:35:50 -0400
-Message-ID: <BANLkTinT6M6mkYPPHbdvXECCPDcqv99LeQ@mail.gmail.com> (sfid-20110617_203555_228267_28578FD2)
-Subject: Re: ath9k WDS panic without CONFIG_ATH9K_RATE_CONTROL
-From: Bill Jordan <bjordan@rajant.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 22 Jun 2011 18:15:33 -0400
+Received: by wyb38 with SMTP id 38so889109wyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 15:15:31 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] mac80211: reestablish mis-configured existing Rx BA sessions
+Date: Thu, 23 Jun 2011 01:15:27 +0300
+Message-Id: <1308780927-20987-1-git-send-email-arik@wizery.com> (sfid-20110623_001536_206292_3B0DFE44)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix,
+When forming a Rx BA session, sometimes the ADDBA response gets lost.
+This leads to a situation where the session is configured locally, but
+doesn't exist on the remote side. Subsequent ADDBA requests are declined
+by mac80211.
 
-On Thu, Jun 16, 2011 at 7:11 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> For 802.11n you need proper HT capabilites anyway. I think it usually
-> doesn't make much sense to use WDS without AP interfaces, but if you
-> consider it worth adding support for, then please build your patches on top
-> of my patch series.
+Fix this by assuming the session state of the initiator is the correct
+one. When receiving an unexpected ADDBA request on a TID with an active
+Rx BA session, delete the existing one and establish a new session.
 
-I've got your patches and I'm seeing a problem with (an admittedly) odd case.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ net/mac80211/agg-rx.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-I've got 2 APs, both using ath9k cards/drivers. One of them is
-configured to use WEP, the other has no security. I'm establishing a
-WDS connection between them.
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 9c0d76c..f0a4d90 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -247,7 +247,11 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+ 				"%pM on tid %u\n",
+ 				mgmt->sa, tid);
+ #endif /* CONFIG_MAC80211_HT_DEBUG */
+-		goto end;
++
++		/* delete existing Rx BA session on the same tid */
++		___ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_RECIPIENT,
++						WLAN_STATUS_UNSPECIFIED_QOS,
++						false);
+ 	}
+ 
+ 	/* prepare A-MPDU MLME for Rx aggregation */
+-- 
+1.7.4.1
 
-Since WEP is incompatible with HT, that AP's beacons only include
-a/b/g rates. The open AP happily sends lower rate packets to the WEP
-AP.
-
-However, since beacon from the open AP contains HT rates. In
-ieee80211_wds_rx_queued_mgmt, the WEP ap calls
-ieee80211_ht_cap_ie_to_sta_ht_cap, and adds HT rates to the station.
-"iw wlan0wds0 station dump" reports that the tx bitrate is an HT rate
-(58.5 MBit/s MCS 6). However, the actual behavior of the radio is
-horrible. Packets take a long time (frequently well over a second) to
-be transmitted by the radio.
-
-I believe this is an issue with transmitting HT rates while WEP is
-configured. If I comment out the call to
-ieee80211_ht_cap_ie_to_sta_ht_cap in  ieee80211_wds_rx_queued_mgmt on
-the WEP AP, I get decent transmit performance (at 54.0 Mbit/s). If I
-turn off WEP on the AP, I get good transmit performance at HT rates.
-
-I believe the call to ieee80211_ht_cap_ie_to_sta_ht_cap in
-ieee80211_wds_rx_queued_mgmt needs to be conditioned on the radio not
-being in WEP. But I haven't figured out a convenient way to determine
-this.
-
--- Bill Jordan --
