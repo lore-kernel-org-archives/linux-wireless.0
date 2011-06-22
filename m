@@ -1,81 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:46124 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901Ab1FASCD convert rfc822-to-8bit (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:26576 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757377Ab1FVRJ6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 14:02:03 -0400
-MIME-Version: 1.0
-In-Reply-To: <20110601144313.GA9695@redhat.com>
-References: <20110513203448.GA3523@gandalf>
-	<20110516172513.GA2546@tuxdriver.com>
-	<BANLkTi=JU2VkyArY4jrt1iE-sdwKp+JaAQ@mail.gmail.com>
-	<20110601144313.GA9695@redhat.com>
-Date: Wed, 1 Jun 2011 19:02:02 +0100
-Message-ID: <BANLkTi=pmOMFqX+h9sRQ_NDeC7EVMB665Q@mail.gmail.com> (sfid-20110601_200223_988448_71A867B9)
-Subject: Re: BUG: scheduling while atomic 2.6.39-rc7 (iwl3945_irq_tasklet)
-From: James Hogan <james@albanarts.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 22 Jun 2011 13:09:58 -0400
+Date: Wed, 22 Jun 2011 10:08:11 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Gustavo F. Padovan" <padovan@profusion.mobi>
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH -next] bluetooth: uses crypto interfaces, select CRYPTO
+Message-Id: <20110622100811.258091ff.randy.dunlap@oracle.com> (sfid-20110622_191026_619266_8061D933)
+In-Reply-To: <20110622163651.7ebc407c.sfr@canb.auug.org.au>
+References: <20110622163651.7ebc407c.sfr@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 June 2011 15:43, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Tue, May 17, 2011 at 09:41:42AM +0100, James Hogan wrote:
->> On 16 May 2011 18:25, John W. Linville <linville@tuxdriver.com> wrote:
->> > On Fri, May 13, 2011 at 09:34:49PM +0100, James Hogan wrote:
->> >> On 2.6.39-rc7 I've seen a panic due to "BUG: scheduling while atomic"
->> >> with the backtrace below (not much detail as it was written in a text
->> >> message while it was displayed on the screen!). All worked fine in
->> >> 2.6.38.
->> >>
->> >> This was soon after resuming from suspend (enough time to unlock the
->> >> screen, but not much else). I think it was the same bug I saw in rc2 but
->> >> didn't have time to track down. I can probably get it to happen again if
->> >> more detail is needed. It doesn't happen every suspend (I think it had
->> >> survived a couple of suspend/resume cycles at this point).
->> >>
->> >> I could bisect if necessary, but hopefully the backtrace will be enough
->> >> to see what's going on?
->> >
->> > A bisect might be very helpful -- time is short for 2.6.39 already.
->>
->> Hmm, it won't reproduce. I'll have to try and bisect this evening, as
->> it was in my home network that it hit the BUG before.
->
-> We use mutex in atomic contex when changing channel. I'm not sure if
-> this is the particular problem you have. If you found a way to
-> reproduce, you may try this patch:
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Thanks, I haven't managed to reproduce the problem at all
-unfortunately so cannot bisect it (although I have had several failed
-suspends, where it just boots up again from scratch instead of
-resuming).
+Recent changes to hci_core.c use crypto interfaces, so select CRYPTO
+to make sure that those interfaces are present.
 
-I'll try the patch when i get a chance
+Fixes these build errors when CRYPTO is not enabled:
 
-Cheers
-James
+net/built-in.o: In function `hci_register_dev':
+(.text+0x4cf86): undefined reference to `crypto_alloc_base'
+net/built-in.o: In function `hci_unregister_dev':
+(.text+0x4f912): undefined reference to `crypto_destroy_tfm'
 
->
-> diff --git a/drivers/net/wireless/iwlegacy/iwl-core.c b/drivers/net/wireless/iwlegacy/iwl-core.c
-> index 42df832..01244b2 100644
-> --- a/drivers/net/wireless/iwlegacy/iwl-core.c
-> +++ b/drivers/net/wireless/iwlegacy/iwl-core.c
-> @@ -861,9 +861,7 @@ void iwl_legacy_chswitch_done(struct iwl_priv *priv, bool is_success)
->
->        if (priv->switch_rxon.switch_in_progress) {
->                ieee80211_chswitch_done(ctx->vif, is_success);
-> -               mutex_lock(&priv->mutex);
->                priv->switch_rxon.switch_in_progress = false;
-> -               mutex_unlock(&priv->mutex);
->        }
->  }
->  EXPORT_SYMBOL(iwl_legacy_chswitch_done);
->
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ net/bluetooth/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
 
-
-
--- 
-James Hogan
+--- linux-next-20110622.orig/net/bluetooth/Kconfig
++++ linux-next-20110622/net/bluetooth/Kconfig
+@@ -6,6 +6,7 @@ menuconfig BT
+ 	tristate "Bluetooth subsystem support"
+ 	depends on NET && !S390
+ 	depends on RFKILL || !RFKILL
++	select CRYPTO
+ 	help
+ 	  Bluetooth is low-cost, low-power, short-range wireless technology.
+ 	  It was designed as a replacement for cables and other short-range
