@@ -1,84 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:37155 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161071Ab1FAK4X convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 06:56:23 -0400
-Received: by qwk3 with SMTP id 3so2515532qwk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jun 2011 03:56:22 -0700 (PDT)
+Received: from mga11.intel.com ([192.55.52.93]:54497 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754337Ab1FVM5D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jun 2011 08:57:03 -0400
+Date: Wed, 22 Jun 2011 14:57:10 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	lauro.venancio@openbossa.org, marcio.macedo@openbossa.org,
+	Waldemar.Rymarkiewicz@tieto.com
+Subject: Re: [RFC][PATCH v2 3/7] NFC: add nfc generic netlink interface
+Message-ID: <20110622125710.GD22420@sortiz-mobl> (sfid-20110622_145707_407773_47BB918C)
+References: <1308592212-5755-1-git-send-email-aloisio.almeida@openbossa.org>
+ <1308592212-5755-4-git-send-email-aloisio.almeida@openbossa.org>
+ <1308728084.3883.9.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <20110601114839.433ae42d@boulder.homenet>
-References: <4CEAB969.20702@lwfinger.net>
-	<1290451982.20888.2.camel@maggie>
-	<4CEAC095.7020706@lwfinger.net>
-	<BANLkTimjRA5CsSDp_+LrGq8PNgaR4JFD=w@mail.gmail.com>
-	<4DC9853A.1090508@lwfinger.net>
-	<BANLkTimBpGRxfidpE4hYCVscmX-Hy5q5jw@mail.gmail.com>
-	<BANLkTi=TohOdjurvgqZT8=GXKbWfNe4v+w@mail.gmail.com>
-	<20110601114839.433ae42d@boulder.homenet>
-Date: Wed, 1 Jun 2011 12:56:22 +0200
-Message-ID: <BANLkTin_RnMV3KnGS4qYPtMVxCuW=Vj7mg@mail.gmail.com> (sfid-20110601_125627_469028_6CB5E680)
-Subject: Re: b43 error under heavy load
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Chris Vine <chris@cvine.freeserve.co.uk>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1308728084.3883.9.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/6/1 Chris Vine <chris@cvine.freeserve.co.uk>:
-> On Wed, 1 Jun 2011 11:23:45 +0200
-> Rafał Miłecki <zajec5@gmail.com> wrote:
->> W dniu 1 czerwca 2011 01:29 użytkownik Chris Vine
->> <chris@cvine.freeserve.co.uk> napisał:
->> > However, fixing this bug reveals something else.  After about 2
->> > hours of streaming on MLB.TV I got this, apparently at random (but
->> > this is not a hard error: by disassociating from the AP and
->> > reassociating, the rest of the game played fine, and there was no
->> > need to load or unload modules):
->> >
->> > b43-phy0 debug: TX-status contains invalid cookie: 0x0DCE
->> > b43-phy0 debug: Out of order TX status report on DMA ring 1.
->> > Expected 74, but got 76
->>
->> Chris, my first suspicion for this issue is filling the whole TX
->> buffer. This could explain what does it happen on high traffic.
->>
->> Below there is an idea how we can easily test it. Can you take a look
->> at this, and perform some testing?
->>
->>
->> 2011/5/10 Rafał Miłecki <zajec5@gmail.com>:
->> > It seems to happen only under heavy load... maybe it has something
->> > to do with reaching end of the ring (not whole ring, just end of
->> > free slots)?
->> >
->> > Did you try verbose debugging? I wonder if there is any relation
->> > between Out of order and:
->> > if (b43_debug(dev, B43_DBG_DMAVERBOSE)) {
->> >        b43dbg(dev->wl, "Stopped TX ring %d\n", ring->index);
->> > }
->> >
->> > Could you try it?
->>
->> AFAIK to enable this debugging you only need to:
->> echo 1 > /sys/kernel/debug/b43/phy0/debug_dmaverbose
->
-> I don't have a /sys/kernel/debug directory with a running 3.0.0-rc1
-> kernel, so it appears that b43 debugging (which I do have enabled)
-> doesn't use it.
+Hi Johannes,
 
-mount -t debugfs none /sys/kernel/debug/
+On Wed, Jun 22, 2011 at 09:34:44AM +0200, Johannes Berg wrote:
+> 
+> > + * @NFC_ATTR_TARGET_SENS_RES: extra information for NFC-A targets
+> > + * @NFC_ATTR_TARGET_SEL_RES: extra information for NFC-A targets
+> 
+> Those descriptions aren't very useful to me, but hopefully if I knew
+> anything about NFC I'd understand :)
+You might, yes :)
 
 
-> On the question of whether it is a firmware problem, I have not
-> experienced a similar issue with the wl driver, but the firmware that
-> b43 uses from broadcom-wl-4.178.10.4 seems to be an earlier version, so
-> that does not rule out the firmware: the earliest hybrid-portsrc wl
-> driver I have used is v5.10.91.9.3.
+> > +struct nfc_target {
+> > +	u32 idx;
+> > +	u32 supported_protocols;
+> > +	u16 sens_res;
+> > +	u8 sel_res;
+> > +};
+> 
+> There's no list_head here.
+> 
+> >  struct nfc_dev {
+> >  	unsigned idx;
+> > +	unsigned target_idx;
+> > +	struct nfc_target *targets;
+> 
+> And this looks like an array. Do you really want to do that? That means
+> lots of reallocations.
+So NFC polling is a bit weird. Whenever you start polling for passive targets,
+the polling results are minimal: You only know that there is _a_ target on a
+particular frequency/modulation. It could be the same as the one you got 5
+minutes ago, or not. To verify it, you'd need to select the target (and put
+all other ones on standby) and start sending specific commands to it (Of
+course, you have a different set of commands per target family...). Only then
+you _may_ read some sort of UID that could help you matching targets from your
+previous poll cycle.
+My point is, when we start polling, we will invalidate all existing targets
+anyway. So a linked list or an array won't make a big difference in that area.
+
+
+> > +/**
+> > + * nfc_targets_found - inform that targets were found
+> > + *
+> > + * @dev: The nfc device that found the targets
+> > + * @targets: array of nfc targets found
+> > + * @ntargets: targets array size
+> > + *
+> > + * The device driver must call this function when one or many nfc targets
+> > + * are found. After calling this function, the device driver must stop
+> > + * polling for targets.
+> > + */
+> > +int nfc_targets_found(struct nfc_dev *dev, struct nfc_target *targets,
+> > +							int n_targets)
+> 
+> I haven't looked at the API users, but do you really expect them to
+> build an array? That seems rather odd since I'd typically expect targets
+> to be discovered one by one, not en bloc.
+That's a typical use case, yes. But the HCI specs clearly leaves some room for
+detecting one target per frequency/modulation. So for example if you have a
+Felica card and a Mifare one next to your NFC dongle, the dongle itself will
+send an event to the host saying "I found several targets". You then read some
+sort of pseudo registry for each rf family to check if there is a target for
+it or not. So, the driver gets one single event for several targets found.
+
+> > @@ -298,7 +353,10 @@ int nfc_register_device(struct nfc_dev *dev)
+> >  	rc = device_add(&dev->dev);
+> >  	mutex_unlock(&nfc_devlist_mutex);
+> >  
+> > -	return rc;
+> > +	if (rc < 0)
+> > +		return rc;
+> > +
+> > +	return nfc_genl_device_added(dev);
+> 
+> No rollback if nfc_genl_device_added() fails? Either you need to ignore
+> the error or roll back I think.
+True.
+
+Cheers,
+Samuel.
 
 -- 
-Rafał
+Intel Open Source Technology Centre
+http://oss.intel.com/
