@@ -1,49 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4868 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161374Ab1FALq1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:27 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 41/83] staging: brcm80211: add braces to SI_INFO macro
- definition
-Date: Wed, 1 Jun 2011 13:45:26 +0200
-Message-ID: <1306928768-7501-41-git-send-email-rvossen@broadcom.com> (sfid-20110601_134654_507659_5216AE11)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:53820 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756726Ab1FVQtj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jun 2011 12:49:39 -0400
+Received: by iwn6 with SMTP id 6so844306iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 09:49:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1308728084.3883.9.camel@jlt3.sipsolutions.net>
+References: <1308592212-5755-1-git-send-email-aloisio.almeida@openbossa.org>
+ <1308592212-5755-4-git-send-email-aloisio.almeida@openbossa.org> <1308728084.3883.9.camel@jlt3.sipsolutions.net>
+From: Aloisio Almeida <aloisio.almeida@openbossa.org>
+Date: Wed, 22 Jun 2011 13:49:18 -0300
+Message-ID: <BANLkTinBNRGJomeif=DHB0Q93__u+=PTUA@mail.gmail.com> (sfid-20110622_184944_894859_757E9A4D)
+Subject: Re: [RFC][PATCH v2 3/7] NFC: add nfc generic netlink interface
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	sameo@linux.intel.com, lauro.venancio@openbossa.org,
+	marcio.macedo@openbossa.org, Waldemar.Rymarkiewicz@tieto.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+Hi Johannes,
 
-The additional braces allow the casted parameter to be indirected
-immediately. Here is an example to clarify:
-	x = SI_INFO(y);    => z = SI_INFO(y)->field_a;
-	z = x->field_a;
+On Wed, Jun 22, 2011 at 4:34 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> + * @NFC_ATTR_TARGET_SENS_RES: extra information for NFC-A targets
+>> + * @NFC_ATTR_TARGET_SEL_RES: extra information for NFC-A targets
+>
+> Those descriptions aren't very useful to me, but hopefully if I knew
+> anything about NFC I'd understand :)
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/aiutils.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Yes. But I can change a little bit:
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
-index 2941537..a0fec83 100644
---- a/drivers/staging/brcm80211/brcmsmac/aiutils.h
-+++ b/drivers/staging/brcm80211/brcmsmac/aiutils.h
-@@ -271,7 +271,7 @@
- #define	CST4330_CBUCK_POWER_OK		0x00004000
- #define	CST4330_BB_PLL_LOCKED		0x00008000
- 
--#define	SI_INFO(sih)	(si_info_t *)sih
-+#define	SI_INFO(sih)	((si_info_t *)sih)
- 
- #define	GOODCOREADDR(x, b) \
- 	(((x) >= (b)) && ((x) < ((b) + SI_MAXCORES * SI_CORE_SIZE)) && \
--- 
-1.7.4.1
+@NFC_ATTR_TARGET_SENS_RES: NFC-A targets extra information such as NFCID
+@NFC_ATTR_TARGET_SEL_RES: NFC-A targets extra information (useful if
+the target is not NFC-Forum compliant)
 
+>> +     dev->targets_generation++;
+>> +
+>> +     kfree(dev->targets);
+>> +     dev->targets = kzalloc(n_targets * sizeof(struct nfc_target),
+>> +                                                     GFP_ATOMIC);
+>> +     if (!dev->targets) {
+>> +             dev->n_targets = 0;
+>> +             spin_unlock_bh(&dev->targets_lock);
+>> +             return -ENOMEM;
+>> +     }
+>> +
+>> +     memcpy(dev->targets, targets, n_targets * sizeof(struct nfc_target));
+>> +     dev->n_targets = n_targets;
+>
+> If you really want to keep the array thing at least you should use
+> kmemdup(). I'd argue that the overhead won't be huge even if you don't,
+> since as you said yourself you don't expect tons of targets (and if you
+> do have tons of targets, this approach breaks down anyway).
 
+Ok, I will change kmalloc()/memcpy() by kmemdup().
+
+>> @@ -298,7 +353,10 @@ int nfc_register_device(struct nfc_dev *dev)
+>>       rc = device_add(&dev->dev);
+>>       mutex_unlock(&nfc_devlist_mutex);
+>>
+>> -     return rc;
+>> +     if (rc < 0)
+>> +             return rc;
+>> +
+>> +     return nfc_genl_device_added(dev);
+>
+> No rollback if nfc_genl_device_added() fails? Either you need to ignore
+> the error or roll back I think.
+>
+>> +int nfc_genl_device_added(struct nfc_dev *dev)
+>> +{
+>> +     struct sk_buff *msg;
+>> +     void *hdr;
+>> +
+>> +     pr_debug("%s\n", __func__);
+>> +
+>> +     msg = nlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
+>> +     if (!msg)
+>> +             return -ENOMEM;
+>
+> I'd probably ignore the errors since any error just means userspace
+> wasn't notified, but it can still later look up the devices.
+
+Yes, you're right. I'll fix that.
+
+Aloisio
