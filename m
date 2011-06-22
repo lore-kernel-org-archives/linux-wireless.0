@@ -1,56 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:41798 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752852Ab1FRQFZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2011 12:05:25 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 04/25] iwlagn: don't disable interrupts after the NIC has been reset
-Date: Sat, 18 Jun 2011 08:34:10 -0700
-Message-Id: <1308411271-26093-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180620_215251_D9E95681)
-In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:54661 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757429Ab1FVLyD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jun 2011 07:54:03 -0400
+Received: by qyk29 with SMTP id 29so2643339qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 04:54:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1308736869.3883.13.camel@jlt3.sipsolutions.net>
+References: <BANLkTimW6oLjQoEbHGOAnXwbWMYUvK00fw@mail.gmail.com>
+	<BANLkTimUc7Gz0AEKKDZinYpGABnDEBMHDA@mail.gmail.com>
+	<1308736869.3883.13.camel@jlt3.sipsolutions.net>
+Date: Wed, 22 Jun 2011 13:54:02 +0200
+Message-ID: <BANLkTikbn2ABhJm75OZg8EC4LeaukzR=Vw@mail.gmail.com> (sfid-20110622_135408_414922_FA4B1621)
+Subject: Re: about RCU programming
+From: =?ISO-8859-1?Q?Manuel_S=E1ez?= <manuelsaezr@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Thank you for your answer. I have actually read some articles like this ones:
 
-It is superfluous to disable the interrupts after we reset the NIC. The only
-entity that could enable the interrupts after the NIC is reset is the driver.
-So remove this pointless action.
+http://lwn.net/Articles/262464/
+http://lwn.net/Articles/263130/
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
+I think I understood how I should normally use it, but not how it
+really works. I found lots of code snippets in internet and it seems
+to be very easy to use, but when I try to get more information it gets
+more complicated. Although the code is wrong, do you think it could be
+possible what I want to do? I mean, could it be possible in theory to
+"shift" the header in order to make a ring buffer.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index d66f1c2..0c747c3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3485,7 +3485,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	struct iwl_priv *priv;
- 	struct ieee80211_hw *hw;
- 	struct iwl_cfg *cfg = (struct iwl_cfg *)(ent->driver_data);
--	unsigned long flags;
- 	u16 pci_cmd, num_mac;
- 	u32 hw_rev;
- 
-@@ -3646,10 +3645,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	/********************
- 	 * 7. Setup services
- 	 ********************/
--	spin_lock_irqsave(&priv->lock, flags);
--	iwl_disable_interrupts(priv);
--	spin_unlock_irqrestore(&priv->lock, flags);
--
- 	pci_enable_msi(priv->pci_dev);
- 
- 	iwl_alloc_isr_ict(priv);
--- 
-1.7.0.4
+Anyway I will try to get more information about the linked list and
+RCU. I have a lot of things to learn!! :)
 
+Best regards and thank you again
+
+
+
+2011/6/22 Johannes Berg <johannes@sipsolutions.net>:
+> On Wed, 2011-06-22 at 11:15 +0200, Manuel Sáez wrote:
+>
+>> and the read side:
+>> rcu_read_lock();
+>> rcu_derreference(sdata->u.ap.polling_list->sta);
+>> copy_sta(sdata->u.ap.polling_list->sta);
+>> rcu_read_unlock();
+>>
+>> sdata->u.ap.polling_list = sdata.u.ap.polling_list->next;
+>
+> This code snippet makes no sense at all. I suggest you read up on how
+> RCU works first.
+>
+> johannes
+>
+>
