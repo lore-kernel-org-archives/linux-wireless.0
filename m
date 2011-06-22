@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:47855 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932384Ab1FPUNV (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:38624 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757626Ab1FVDJc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2011 16:13:21 -0400
-Received: by bwz15 with SMTP id 15so262313bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2011 13:13:20 -0700 (PDT)
-Subject: Status of carl9170
-From: Thomas Novin <thomas@xyz.pp.se>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="ISO-8859-15"
-Date: Thu, 16 Jun 2011 22:13:16 +0200
-Message-ID: <1308255196.4264.7.camel@thnov-desktop.xyz.lan> (sfid-20110616_221337_352799_AC1D4E69)
-Mime-Version: 1.0
+	Tue, 21 Jun 2011 23:09:32 -0400
+Received: by iyb12 with SMTP id 12so336668iyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 20:09:32 -0700 (PDT)
+Message-ID: <4E015CE8.3000304@lwfinger.net> (sfid-20110622_050936_485481_7C7B11E6)
+Date: Tue, 21 Jun 2011 22:09:28 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: ali@internetdog.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: r8712u driver for the rtl8192su chip.
+References: <776913.88107.qm@web161609.mail.bf1.yahoo.com> <4DC0312A.4040303@lwfinger.net> <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com> <4DC0669E.4040100@lwfinger.net> <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com> <4DC06BF3.6070208@lwfinger.net> <20110621124954.GA8462@internetdog.org> <4E011644.3070906@lwfinger.net> <20110622010057.GA12123@internetdog.org> <4E0154B7.2000204@lwfinger.net> <20110622025623.GC12547@internetdog.org>
+In-Reply-To: <20110622025623.GC12547@internetdog.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello
+On 06/21/2011 09:56 PM, Ali Bahar wrote:
+>
+>>>>> this is more of a quick FYI, regarding Staging's r8712u driver.
+>>>
+>>>>> root@hashbang Tue Jun 21 18:30:06 ~$ iwconfig wlan2 essid "h55m"
+>>>>> Error for wireless request "Set ESSID" (8B1A) :
+>>>>>      SET failed on device wlan2 ; Operation not permitted.
+>
+>> I have no idea what you are doing wrong, but I get the following:
+>
+> Again, the test procedure was identical, and deliberately so.
+>
+> This was all just FYI; I was just providing some data. Thank you for
+> your reply, and for your ongoing work.
+>
+>
+>> finger@larrylap:~/wireless-testing-new>  sudo iwconfig wlan9 essid junk
+>> finger@larrylap:~/wireless-testing-new>
+>>
+>> The above is with r8712u running on wireless-testing 3.0-rc4.
+>
+> I'd tried 3.0.0-rc3-wl_m_Sun19jun2011 (ie wireless rc3, built on
+> Sunday) as well. Same wext and OS, on a different box.
+>
+> Since you are rewriting this driver, I won't try to dig into this on
+> my end.
 
-I accidentally bought two TP-Link TL-WN821N v2 (accidentally because I
-was going for v3). I've tried using them with compat-wireless (just now
-tested with 2011-06-15) & the carl9170-driver.
+I am not rewriting this driver in the immediate future, thus you need to find 
+out what is wrong.
 
-When using these to connect to my Ubiquiti Power AP-N I get terrible
-performance. Using another computer with some Broadcom 802.11g chip (b43
-driver) it works OK.
+As I said earlier, your error certainly looks like a privilege problem. Adding 
+to what I posted earlier, I get
 
-For example, doing a 100 packet ping towards my LAN gateway and at the
-same time trying to load a webpage.
+finger@larrylap:~> iwconfig wlan9 essid test
+Error for wireless request "Set ESSID" (8B1A) :
+     SET failed on device wlan9 ; Operation not permitted.
+finger@larrylap:~> sudo iwconfig wlan9 essid test
+finger@larrylap:~>
 
---- 10.0.0.254 ping statistics ---
-100 packets transmitted, 60 received, 40% packet loss, time 99229ms
-rtt min/avg/max/mdev = 0.832/93.193/1264.009/292.193 ms, pipe 2
+As you can see, my unprivileged version gets exactly the error message that you 
+reported and the one as root works.
 
-wlan0     IEEE 802.11bgn  ESSID:"POWERAPN"  
-          Mode:Managed  Frequency:2.427 GHz  Access Point:
-00:15:6D:9E:D2:A0
-          Bit Rate=58.5 Mb/s   Tx-Power=20 dBm   
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:off
-          Link Quality=64/70  Signal level=-46 dBm  
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:4  Invalid misc:0   Missed beacon:0
-
-Being closer to the AP with better link quality  doesn't help at all.
-
-Should I just get some other USB adapter or is there hope for the ones
-that I have? If other, which ones are best supported? I really don't
-care about GPL firmware, I just want stable & fast 802.11n performance.
-
-Rgds//Thomas
+Larry
 
