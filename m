@@ -1,51 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42631 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751259Ab1FTExe convert rfc822-to-8bit (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:53522 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751216Ab1FVH0r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2011 00:53:34 -0400
-From: "Shajakhan, Mohammed Shafi" <mohammed@qca.qualcomm.com>
+	Wed, 22 Jun 2011 03:26:47 -0400
+Date: Wed, 22 Jun 2011 12:47:46 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [RFC] cfg80211: skip checking of SSID for maintaining scan list
-Date: Mon, 20 Jun 2011 04:50:45 +0000
-Message-ID: <D106CD05FEFBA74BA17F929FD27C8AB3099BAFB2@nasanexd02a.na.qualcomm.com> (sfid-20110620_065338_792821_5CD5D204)
-References: <1307979580-11360-1-git-send-email-mshajakhan@atheros.com>,<1308470929.4145.3.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1308470929.4145.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Andreas Hartmann <andihartmann@01019freenet.de>
+Subject: Re: [PATCH 2/2] mac80211: Fixing Races for skipping tailroom
+ reservation
+Message-ID: <20110622071743.GA4087@hertz.marvell.com> (sfid-20110622_092652_155529_DDF63036)
+References: <1308331485.7329.2.camel@Nokia-N900-51-1>
+ <20110620143051.GA31035@hertz.marvell.com>
+ <1308583799.4322.9.camel@jlt3.sipsolutions.net>
+ <7DDF37406E10F0438561DBB78326DF3902F5D190E2@SC-VEXCH1.marvell.com>
+ <1308590980.4322.19.camel@jlt3.sipsolutions.net>
+ <20110621130305.GB32464@hertz.marvell.com>
+ <1308663814.4276.3.camel@jlt3.sipsolutions.net>
+ <20110621141017.GC32464@hertz.marvell.com>
+ <1308667215.4276.7.camel@jlt3.sipsolutions.net>
+ <20110621163351.GD32464@hertz.marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110621163351.GD32464@hertz.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> > > @@ -498,8 +541,12 @@ void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
+> > >  
+> > >  	mutex_lock(&sdata->local->key_mtx);
+> > >  
+> > > -	list_for_each_entry(key, &sdata->key_list, list)
+> > > +	sdata->local->crypto_tx_tailroom_needed_cnt = 0;
+> > > +
+> > 
+> > That doesn't seem right either -- only if you have a single sdata that
+> > will work, I think?
+> Right. For multiple sdata count will be over written to 0.
+> 
+> I think, following should fix this
+> 
+> Thanks
+> Yogesh
+> 
+> diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+> index edf9f40..0bf450d 100644
+> --- a/net/mac80211/key.c
+> +++ b/net/mac80211/key.c
+> @@ -541,8 +541,6 @@ void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
+>  
+>  	mutex_lock(&sdata->local->key_mtx);
+>  
+> -	sdata->local->crypto_tx_tailroom_needed_cnt = 0;
+> -
+>  	list_for_each_entry(key, &sdata->key_list, list) {
+>  		increment_tailroom_need_count(sdata->local);
+>  		ieee80211_key_enable_hw_accel(key);
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index 05e3fb8..bef3bdd 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -1271,6 +1271,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+>  		mutex_unlock(&local->sta_mtx);
+>  	}
+>  
+> +	/* Reset tailroom skip count */
+> +	local->crypto_tx_tailroom_needed_cnt = 0;
+> +
+>  	/* add back keys */
+>  	list_for_each_entry(sdata, &local->interfaces, list)
+>  		if (ieee80211_sdata_running(sdata))
+> 
+> 
+Above logic will not work if one the sdatas fails to enable keys may be
+because of sdata not running.
 
-________________________________________
-From: Johannes Berg [johannes@sipsolutions.net]
-Sent: 19 June 2011 13:38:49
-To: Shajakhan, Mohammed Shafi
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] cfg80211: skip checking of SSID for maintaining scan list
+Will work on some other logic.
 
-On Mon, 2011-06-13 at 21:09 +0530, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
->
-> when we connect to hidden SSID AP's we maintain two entries
-> for the same AP and we update all the parameters for the hidden
-> SSID entry rather than the associated entry, this is because we
-> have the SSID check in updating/adding new entries in scanlist.
-> by skipping the SSID check we will maintain a single entry for
-> the hidden SSID and also update the associated entry for the
-> same.
->   will this break something if I skip SSID check for the sake
-> of hidden SSID AP's or is there someother IE's I can check for.
-
-I think this will break the case where there are multiple SSIDs all
-hidden on the same BSSID, which is a configuration that some people use.
-
-thanks for your kind review, let me try to find if there is some other way to fix this. if you have any ideas please tell me.
-
-thanks,
-shafi
-
-
-johannes
-
+Thanks
+Yogesh
