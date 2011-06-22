@@ -1,48 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:55858 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751781Ab1FLTHs convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:53318 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755582Ab1FVOSk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jun 2011 15:07:48 -0400
-Received: by qwk3 with SMTP id 3so1928346qwk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Jun 2011 12:07:48 -0700 (PDT)
+	Wed, 22 Jun 2011 10:18:40 -0400
+Received: by iyb12 with SMTP id 12so700038iyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 07:18:40 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20110612204859.37e7aed5@maggie>
-References: <1307891513-6812-1-git-send-email-zajec5@gmail.com>
-	<20110612182916.6afc781a@maggie>
-	<BANLkTikVLH8xApD4e5uNW-3Eg6kaMXipBg@mail.gmail.com>
-	<20110612204859.37e7aed5@maggie>
-Date: Sun, 12 Jun 2011 21:07:47 +0200
-Message-ID: <BANLkTi=uMqA0LTVnRKtqmgBapokj3GiFdQ@mail.gmail.com> (sfid-20110612_210751_690747_CD5D3CF9)
-Subject: Re: [RFC][PATCH] b43: do not try sending packets when ring can be full
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	francesco.gringoli@ing.unibs.it
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1308709475.2196.67.camel@aeonflux>
+References: <1308592212-5755-1-git-send-email-aloisio.almeida@openbossa.org>
+ <1308592212-5755-3-git-send-email-aloisio.almeida@openbossa.org>
+ <20110621215551.GF2628@joana> <1308709475.2196.67.camel@aeonflux>
+From: Aloisio Almeida <aloisio.almeida@openbossa.org>
+Date: Wed, 22 Jun 2011 11:18:20 -0300
+Message-ID: <BANLkTi=s=BUUp=rHdPR57-sjQV-=5eLLmQ@mail.gmail.com> (sfid-20110622_161844_012651_B2EF4EF2)
+Subject: Re: [RFC][PATCH v2 2/7] NFC: add nfc subsystem core
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: "Gustavo F. Padovan" <padovan@profusion.mobi>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	sameo@linux.intel.com, johannes@sipsolutions.net,
+	lauro.venancio@openbossa.org, marcio.macedo@openbossa.org,
+	Waldemar.Rymarkiewicz@tieto.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 12 czerwca 2011 20:48 u≈ºytkownik Michael B√ºsch <m@bues.ch> napisa≈Ç:
-> On Sun, 12 Jun 2011 20:15:53 +0200
-> Rafa≈Ç Mi≈Çecki <zajec5@gmail.com> wrote:
->> Well, as I said, we may be unable to transmit the first element of the
->> queue, but 2nd/3rd/... may be for different ring (qos) (we can
->> transmit).
+Hi Marcel and Gustavo,
+
+On Tue, Jun 21, 2011 at 11:24 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+>> > +config NFC_DEBUG
+>> > + † bool "NFC verbose debug messages"
+>> > + † † † †depends on NFC
+>> > + † † † †help
+>> > + † † Say Y here if you want the NFC core and drivers to produce a bunch
+>> > + † † of debug messages to the system log. Select this if you are having a
+>> > + † † problem with NFC support and want to see more of what is going on.
 >>
->> Looping through the whole queue every time, just to find packets we
->> may transmit, sounds surely as a bad idea.
+>> I think that use only dynamic debug is a lot nicer. I don't see a point to
+>> have a NFC debug option in Kconfig. We've been using dynamic debug in the
+>> Bluetooth subsystem for a while and it works fine. If we have dynamic debug
+>> there is no need to recompile a module to add debug support to it.
+>>
+>> Also it's a good idea use macros for pr_debug, instead of calling it every
+>> time with the same paramenters (__func__, for example). In the Bluetooth
+>> subsystem we do like this:
+>>
+>> #define BT_INFO(fmt, arg...) printk(KERN_INFO "Bluetooth: " fmt "\n" , ## arg)
+>> #define BT_ERR(fmt, arg...) †printk(KERN_ERR "%s: " fmt "\n" , __func__ , ##
+>> arg)
+>> #define BT_DBG(fmt, arg...) †pr_debug("%s: " fmt "\n" , __func__ , ## arg)
 >
-> I don't think so. It's not that this is an actual queue anyway. It just acts
-> as a buffer to queue up one or two packets in the small race window of
-> actually filling up the DMA rings and stopping the mac80211 queue.
-> (It also acts as a context dispatcher in the first place, though).
->
-> So the "looping through the queue" just means checking if one or two packets
-> can be transmitted now.
+> I would clearly second this. Switching the Bluetooth subsystem to
+> dynamic debug made so many things so much easier. And using a macro like
+> NFC_DBG makes it pretty nice and clean.
 
-Ouch, I didn't though about stopping queue. Yeah, length of that queue
-should not reach big sizes...
+That's definitively a good idea. I'll change that.
 
--- 
-Rafa≈Ç
+Aloisio
