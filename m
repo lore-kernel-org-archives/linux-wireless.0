@@ -1,81 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:34800 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755017Ab1FTAeB (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:50080 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758023Ab1FVV0k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2011 20:34:01 -0400
-Received: by eyx24 with SMTP id 24so371333eyx.19
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2011 17:34:00 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: HT-PHY: calibrate radio after switching channel
-Date: Mon, 20 Jun 2011 03:12:19 +0200
-Message-Id: <1308532339-3643-1-git-send-email-zajec5@gmail.com> (sfid-20110620_023506_604547_5E104279)
+	Wed, 22 Jun 2011 17:26:40 -0400
+Received: by iwn6 with SMTP id 6so1041536iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 14:26:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1308777866.29571.32.camel@jlt3.sipsolutions.net>
+References: <1308777573-12257-1-git-send-email-arik@wizery.com> <1308777866.29571.32.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 23 Jun 2011 00:26:24 +0300
+Message-ID: <BANLkTi=W_yPZ+tKY7Vquwsm4DdUrYZfG+A@mail.gmail.com> (sfid-20110622_232643_037591_0E5A797B)
+Subject: Re: [PATCH 1/2] mac80211: propagate information about STA WME support down
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After uploading radio values calibration goes in. In MMIO dump it is:
- radio_read(0x002b) -> 0x0008
-radio_write(0x002b) <- 0x0008
- radio_read(0x002e) -> 0x0004
-radio_write(0x002e) <- 0x0000
- radio_read(0x002e) -> 0x0000
-radio_write(0x002e) <- 0x0004
- radio_read(0x002b) -> 0x0008
-radio_write(0x002b) <- 0x0009
-To find masks and sets, MMIO hacks were used to fool closed driver.
+On Thu, Jun 23, 2011 at 00:24, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2011-06-23 at 00:19 +0300, Arik Nemtsov wrote:
+>> Add a memeber to the ieee80211_sta structure to indicate whether the STA
+>> supports WME.
+>
+>> + * @wme: indicates whether the STA supports WME
+>
+> You should probably update that also in other modes (when this is a
+> station representing an AP) for consistency. If that's really tough you
+> could document that it's only valid if the interface is in AP mode, but
+> I guess I'd prefer just having it valid.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-First I fooled ndiswrapper to get all reads 0xFFFF:
- radio_read(0x002b) -> 0xffff
-radio_write(0x002b) <- 0xfffe
- radio_read(0x002e) -> 0xffff
-radio_write(0x002e) <- 0xfffb
- radio_read(0x002e) -> 0xffff
-radio_write(0x002e) <- 0xffff
- radio_read(0x002b) -> 0xffff
-radio_write(0x002b) <- 0xffff
-This has shown two first ops are pure masking ones.
+Sure I'll take a look. It'll take a couple of days though.
 
-Next I fooled ndis to get 0x0000:
- radio_read(0x002b) -> 0x0000
-radio_write(0x002b) <- 0x0000
- radio_read(0x002e) -> 0x0000
-radio_write(0x002e) <- 0x0000
- radio_read(0x002e) -> 0x0000
-radio_write(0x002e) <- 0x0004
- radio_read(0x002b) -> 0x0000
-radio_write(0x002b) <- 0x0001
-Which has discovered bits setting by 2 later ops.
----
- drivers/net/wireless/b43/phy_ht.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 0b13f6f..72f01ce 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -69,7 +69,13 @@ static void b43_radio_2059_channel_setup(struct b43_wldev *dev,
- 
- 	udelay(50);
- 
--	/* TODO */
-+	/* Calibration */
-+	b43_radio_mask(dev, 0x2b, ~0x1);
-+	b43_radio_mask(dev, 0x2e, ~0x4);
-+	b43_radio_set(dev, 0x2e, 0x4);
-+	b43_radio_set(dev, 0x2b, 0x1);
-+
-+	udelay(300);
- }
- 
- static void b43_phy_ht_channel_setup(struct b43_wldev *dev,
--- 
-1.7.3.4
-
+Arik
