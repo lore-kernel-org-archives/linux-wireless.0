@@ -1,37 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:35895 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933039Ab1FPVy5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2011 17:54:57 -0400
-Message-ID: <4DFA7BAD.7060405@gnu.org> (sfid-20110616_235500_460032_E2A27A31)
-Date: Thu, 16 Jun 2011 17:54:53 -0400
-From: Pavel Roskin <proski@gnu.org>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ath9k WDS panic without CONFIG_ATH9K_RATE_CONTROL
-References: <4DF93116.700@gnu.org> <4DF96668.3040007@openwrt.org>
-In-Reply-To: <4DF96668.3040007@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from senator.holtmann.net ([87.106.208.187]:33369 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757755Ab1FVCYp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 22:24:45 -0400
+Subject: Re: [RFC][PATCH v2 2/7] NFC: add nfc subsystem core
+From: Marcel Holtmann <marcel@holtmann.org>
+To: "Gustavo F. Padovan" <padovan@profusion.mobi>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	sameo@linux.intel.com, johannes@sipsolutions.net,
+	lauro.venancio@openbossa.org, marcio.macedo@openbossa.org,
+	Waldemar.Rymarkiewicz@tieto.com
+Date: Tue, 21 Jun 2011 19:24:32 -0700
+In-Reply-To: <20110621215551.GF2628@joana>
+References: <1308592212-5755-1-git-send-email-aloisio.almeida@openbossa.org>
+	 <1308592212-5755-3-git-send-email-aloisio.almeida@openbossa.org>
+	 <20110621215551.GF2628@joana>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1308709475.2196.67.camel@aeonflux> (sfid-20110622_042448_579340_5CC491E8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/15/2011 10:11 PM, Felix Fietkau wrote:
+Hi Gustavo,
 
-> Some time ago I sent some patches to fix the issues with WDS (and add
-> support for HT, including aggregation).
->
-> These patches assume that you set up an AP on both sides alongside the
-> WDS interface (beacons of the APs are used to exchange rates and
-> capabilities).
+> > The NFC subsystem core is responsible for providing the device driver
+> > interface. It is also responsible for providing an interface to the control
+> > operations and data exchange.
 
-I think WDS should work without beacons.  At least the basic rates 
-should be available when the interface is brought up.  Further changes 
-to the set of supported rates can be made with iw.
+<snip>
 
-WDS is somewhat orthogonal to the beacons.  The beacons are primarily 
-meant for the stations.
+> > +config NFC_DEBUG
+> > +	bool "NFC verbose debug messages"
+> > +        depends on NFC
+> > +        help
+> > +	  Say Y here if you want the NFC core and drivers to produce a bunch
+> > +	  of debug messages to the system log. Select this if you are having a
+> > +	  problem with NFC support and want to see more of what is going on.
+> 
+> I think that use only dynamic debug is a lot nicer. I don't see a point to
+> have a NFC debug option in Kconfig. We've been using dynamic debug in the
+> Bluetooth subsystem for a while and it works fine. If we have dynamic debug
+> there is no need to recompile a module to add debug support to it.
+> 
+> Also it's a good idea use macros for pr_debug, instead of calling it every
+> time with the same paramenters (__func__, for example). In the Bluetooth
+> subsystem we do like this:
+> 
+> #define BT_INFO(fmt, arg...) printk(KERN_INFO "Bluetooth: " fmt "\n" , ## arg)
+> #define BT_ERR(fmt, arg...)  printk(KERN_ERR "%s: " fmt "\n" , __func__ , ##
+> arg)
+> #define BT_DBG(fmt, arg...)  pr_debug("%s: " fmt "\n" , __func__ , ## arg)
 
--- 
-Regards,
-Pavel Roskin
+I would clearly second this. Switching the Bluetooth subsystem to
+dynamic debug made so many things so much easier. And using a macro like
+NFC_DBG makes it pretty nice and clean.
+
+Regards
+
+Marcel
+
+
