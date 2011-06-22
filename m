@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:37546 "EHLO
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:35193 "EHLO
 	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753823Ab1FCVgG (ORCPT
+	with ESMTP id S1757784Ab1FVCef (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2011 17:36:06 -0400
-Received: by iwn34 with SMTP id 34so1711112iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2011 14:36:05 -0700 (PDT)
+	Tue, 21 Jun 2011 22:34:35 -0400
+Received: by iwn6 with SMTP id 6so332288iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 19:34:34 -0700 (PDT)
+Message-ID: <4E0154B7.2000204@lwfinger.net> (sfid-20110622_043450_884340_ABC0A14E)
+Date: Tue, 21 Jun 2011 21:34:31 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1307133509.3800.10.camel@jlt3.sipsolutions.net>
-References: <1307051170-17374-1-git-send-email-lauro.venancio@openbossa.org>
- <1307051170-17374-3-git-send-email-lauro.venancio@openbossa.org>
- <1307108661.3800.6.camel@jlt3.sipsolutions.net> <BANLkTikS+cssYccjg_SfOhR15N=M9erw6Q@mail.gmail.com>
- <1307133509.3800.10.camel@jlt3.sipsolutions.net>
-From: Aloisio Almeida <aloisio.almeida@openbossa.org>
-Date: Fri, 3 Jun 2011 18:35:45 -0300
-Message-ID: <BANLkTim_d839pWW4DPeH+6o03wN8HbgBxQ@mail.gmail.com> (sfid-20110603_233609_953251_5761CA50)
-Subject: Re: [PATCH 2/6] NFC: add nfc generic netlink interface
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, marcio.macedo@openbossa.org,
-	sameo@linux.intel.com, Waldemar.Rymarkiewicz@tieto.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: ali@internetdog.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: r8712u driver for the rtl8192su chip.
+References: <776913.88107.qm@web161609.mail.bf1.yahoo.com> <4DC0312A.4040303@lwfinger.net> <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com> <4DC0669E.4040100@lwfinger.net> <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com> <4DC06BF3.6070208@lwfinger.net> <20110621124954.GA8462@internetdog.org> <4E011644.3070906@lwfinger.net> <20110622010057.GA12123@internetdog.org>
+In-Reply-To: <20110622010057.GA12123@internetdog.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 3, 2011 at 5:38 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2011-06-03 at 17:18 -0300, Lauro Ramos Venancio wrote:
->> We don't need a generation counter here because we have the events
->> NFC_EVENT_DEVICE_ADDED and NFC_EVENT_DEVICE_REMOVED. So, it is
->> possible to keep the device list consistency listening for these
->> events.
+On 06/21/2011 08:00 PM, Ali Bahar wrote:
+> On Tue, Jun 21, 2011 at 05:08:04PM -0500, Larry Finger wrote:
+>> On 06/21/2011 07:49 AM, Ali Bahar wrote:
 >
-> That may be true, but it complicates coding in userspace. Much easier to
-> check a generation counter (in both cases) to see if data is consistent
-> than to listen to multiple events concurrently with receiving a dump.
+>>> this is more of a quick FYI, regarding Staging's r8712u driver.
+>
+>>> root@hashbang Tue Jun 21 18:30:06 ~$ iwconfig wlan2 essid "h55m"
+>>> Error for wireless request "Set ESSID" (8B1A) :
+>>>      SET failed on device wlan2 ; Operation not permitted.
+>>> root@hashbang Tue Jun 21 18:30:47 ~$ uname -r
+>
+>> is implemented. Your command failed because you ran the command as
+>> an unprivileged user. Notice the differences in the error messages.
+>
+> How is root unprivileged? The shell-prompt shows the user.
+>
+> Right after the failure, I ran the exact same steps, in the same
+> shell, on a different card of the same box. It worked, as it always
+> has.
 
-The userspace must listen to these events anyway. In addition, the
-application needs to get the list of devices only once (on its
-initialization).
+I have no idea what you are doing wrong, but I get the following:
 
-In the target list case, the userspace application would have to
-orderly call start_poll before receive the dump in order to create the
-"invalid list" situation.
+finger@larrylap:~/wireless-testing-new> sudo iwconfig wlan9 essid junk
+finger@larrylap:~/wireless-testing-new>
 
-I understand the benefits of the generation counters, but IMO they are
-'too much' in these cases.
+The above is with r8712u running on wireless-testing 3.0-rc4.
 
-Aloisio
+Larry
