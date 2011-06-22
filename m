@@ -1,39 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout01.t-online.de ([194.25.134.80]:60721 "EHLO
-	mailout01.t-online.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751324Ab1FJTT1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 15:19:27 -0400
-Message-ID: <4DF26E39.80701@t-online.de> (sfid-20110610_211937_551945_546761FA)
-Date: Fri, 10 Jun 2011 21:19:21 +0200
-From: =?ISO-8859-1?Q?Richard_Sch=FCtz?= <r.schtz@t-online.de>
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:49277 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757714Ab1FVCQR convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 22:16:17 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Joe Perches <joe@perches.com>
+Date: Tue, 21 Jun 2011 19:13:09 -0700
+Subject: RE: [PATCH] mwifiex: remove casts of void pointers
+Message-ID: <477F20668A386D41ADCC57781B1F704307FF88DF38@SC-VEXCH1.marvell.com> (sfid-20110622_041631_329752_464C6C06)
+References: <1308352468-8926-1-git-send-email-bzhao@marvell.com>
+ <BANLkTi=3cQkhEOkSb08A=8VLrqzkwXJEhw@mail.gmail.com>
+ <477F20668A386D41ADCC57781B1F704307FF88DF06@SC-VEXCH1.marvell.com>
+ <BANLkTimkmJGyS3FSE4isARPJtc-v3tkNuw@mail.gmail.com>
+In-Reply-To: <BANLkTimkmJGyS3FSE4isARPJtc-v3tkNuw@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-CC: linux-wireless@vger.kernel.org, wwguy <wey-yi.w.guy@intel.com>,
-	Stevie Trujillo <stevie.trujillo@gmail.com>
-Subject: Re: Fwd: iwlagn: is tx_power_device_lmt a regulatory limit or a hardware
- limit?
-References: <201105251813.36804.stevie.trujillo@gmail.com> <1306352560.20732.0.camel@wwguy-ubuntu> <201105252154.06204.stevie.trujillo@gmail.com> <1306376938.20732.2.camel@wwguy-ubuntu> <4DDE1458.9090004@t-online.de> <1306419109.20732.6.camel@wwguy-ubuntu> <4DF246D1.9000107@t-online.de> <1307727083.13397.57.camel@wwguy-huron> <4DF26175.2010506@t-online.de> <BANLkTimjLdr2Qb+yfUx84p4k2Oq8iumDhg@mail.gmail.com> <BANLkTimwn=sXSofPdQGg49Wsn6CxUbrOyw@mail.gmail.com>
-In-Reply-To: <BANLkTimwn=sXSofPdQGg49Wsn6CxUbrOyw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 10.06.2011 20:42, schrieb Daniel Halperin:
-> On Fri, Jun 10, 2011 at 11:24 AM, Richard Schütz<r.schtz@t-online.de>  wrote:
->>
->> According to [1] there are no countries that forbid tx power values lower than 20dBm in the 2.4 GHz band. The lowest value for the 5 GHz band listed is 17 dBm. So why are the Intel cards limited to 15dBm then for both bands? This value absolutely makes no sense in my view.
->>
->> [1] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-regdb.git;a=blob;f=db.txt;hb=HEAD
->>
->
-> Are you forgetting to account for the 3 dBi--7 dBi antenna gain?
-> Dan
+Hi Julian,
 
-We are talking about wireless devices that are primarily used in 
-portable computers. These do not have directional antennas usually. So 
-there should be almost no antenna gain in most cases.
+> >> Also, there are a number of functions touched by this patch that
+> >> return a value through the former *data_buf parameter. Is it possible
+> >> to refactor them to return the value directly? This would make the
+> >> function flow a lot cleaner and easier to follow.
+> >
+> > We have separate parser routines to handle command responses of the commands. In case of GET
+> command we parse the information from response buffer and fill data_buff accordingly. In the patch we
+> submitted, some of the data_buf have been changed to corresponding structure specific to that command.
+> >
+> > Yes, we do have some parser functions that only fill an u16/u32 value in data_buf. But in order to
+> have consistency in the code, we used the data_buf pointers (or specific command struct pointers) for
+> all parser functions. Of course we can change the code to return the value directly for this type of
+> functions, if the consistency is less concerned here. Please let me know your preference on this.
+> 
+> I have no preference, and am not aware of any particular general
+> preferences for how such things are handled.
+> 
+> If it makes things easier for you, then keep it as it is, it just
+> seemed like a useful cleanup you might want to consider working on in
+> the future.
 
--- 
+Thanks for your comments. I will keep it as-is for now.
+
 Regards,
-Richard Schütz
+Bing 
+
