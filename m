@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37142 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751407Ab1F3Vil (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:54345 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757751Ab1FVCDr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2011 17:38:41 -0400
-Message-ID: <4E0CECDD.7040409@candelatech.com> (sfid-20110630_233851_711623_0877A416)
-Date: Thu, 30 Jun 2011 14:38:37 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 21 Jun 2011 22:03:47 -0400
+Received: by vxb39 with SMTP id 39so282456vxb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 19:03:46 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Crash in mlme.c, wireless-testing 2.6.39-wl + hacks
-References: <4E0CE929.7040300@candelatech.com>	 (sfid-20110630_232253_480125_B86CAA5E) <1309469454.3873.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1309469454.3873.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20110622010057.GA12123@internetdog.org>
+References: <776913.88107.qm@web161609.mail.bf1.yahoo.com> <4DC0312A.4040303@lwfinger.net>
+ <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com> <4DC0669E.4040100@lwfinger.net>
+ <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com> <4DC06BF3.6070208@lwfinger.net>
+ <20110621124954.GA8462@internetdog.org> <4E011644.3070906@lwfinger.net> <20110622010057.GA12123@internetdog.org>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 22 Jun 2011 12:03:26 +1000
+Message-ID: <BANLkTinD=zRLioxjruqPCMa1hkG4nUxBEw@mail.gmail.com> (sfid-20110622_040351_206681_F65E3722)
+Subject: Re: r8712u driver for the rtl8192su chip.
+To: ali@internetdog.org
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/30/2011 02:30 PM, Johannes Berg wrote:
-> On Thu, 2011-06-30 at 14:22 -0700, Ben Greear wrote:
->> We see occasional crashes in mlme.c when testing a certain
->> configuration:  30 stations, configured for in-kernel authentication,
->> re-configure them for supplicant, let them associate, delete one of
->> them.
->>
->> I added a BUG_ON in __cfg80211_mlme_deauth to check for null
->> bssid and it hit.
->>
->> Please note this is hacked code, so it's possible it's something
->> I am doing.  I'm going to add some extra checks in this method to
->> keep from crashing, but it may be a while until I can test against
->> clean upstream kernels for this particular config.
+Ali,
+
+On Wed, Jun 22, 2011 at 11:00, Ali Bahar <ali@internetdog.org> wrote:
+> On Tue, Jun 21, 2011 at 05:08:04PM -0500, Larry Finger wrote:
+>> On 06/21/2011 07:49 AM, Ali Bahar wrote:
 >
-> It'd help if you at least said what you changed, since you say you
-> changed things in this area but don't say what I don't think I'll bother
-> looking at this.
+>> >this is more of a quick FYI, regarding Staging's r8712u driver.
+>
+>> >root@hashbang Tue Jun 21 18:30:06 ~$ iwconfig wlan2 essid "h55m"
+>> >Error for wireless request "Set ESSID" (8B1A) :
+>> >     SET failed on device wlan2 ; Operation not permitted.
+>> >root@hashbang Tue Jun 21 18:30:47 ~$ uname -r
+>
+> How is root unprivileged? The shell-prompt shows the user.
 
-Very little significant changes in this area, but I've a non-related
-proprietary module loaded, and patches to various other parts of the
-networking code.
-
-The full tree is here if you want to take a look, or I can send
-you a full unified diff:
-
-http://dmz2.candelatech.com/git/gitweb.cgi?p=linux.wireless-testing-ct.ct/.git;a=summary
-
-Seems a tricky timing related bug, possibly we're only hitting it because
-we're testing on an older C3 processor system that is significantly slower
-than our normal test systems.
-
-Anyway, no worries if you don't care to look at it.  Looks like we're
-the only ones hitting it, and I think I have a proper enough work-around.
-
-If/when I get a chance, will try un-tainted kernel, and will re-post if
-we can reproduce the bug.
+In general, root prompts have a '#' at the end of the prompt, this one
+has a '$' which is indicative of a non-privileged user.
 
 Thanks,
-Ben
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
