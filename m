@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:54086 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754768Ab1FQOJN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2011 10:09:13 -0400
-Received: by iwn34 with SMTP id 34so2021466iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jun 2011 07:09:12 -0700 (PDT)
-Message-ID: <4DFB6004.1060006@lwfinger.net> (sfid-20110617_160917_429469_F9D98751)
-Date: Fri, 17 Jun 2011 09:09:08 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:42495 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757484Ab1FVBKZ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 21:10:25 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Joe Perches <joe@perches.com>
+Date: Tue, 21 Jun 2011 18:09:38 -0700
+Subject: RE: [PATCH] mwifiex: remove casts of void pointers
+Message-ID: <477F20668A386D41ADCC57781B1F704307FF88DF06@SC-VEXCH1.marvell.com> (sfid-20110622_031030_160356_71FC28D8)
+References: <1308352468-8926-1-git-send-email-bzhao@marvell.com>
+ <BANLkTi=3cQkhEOkSb08A=8VLrqzkwXJEhw@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-To: peter@chubb.wattle.id.au
-CC: linux-wireless@vger.kernel.org
-Subject: Re: State of rtl8192CU driver?
-References: <w4hb7ohfo5.wl%peter@chubb.wattle.id.au>
-In-Reply-To: <w4hb7ohfo5.wl%peter@chubb.wattle.id.au>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/17/2011 06:15 AM, peter@chubb.wattle.id.au wrote:
->
-> Hi.
-> 	I'm trying out the rtl8192CU driver with an edimax wireless N
-> 	dongle.  The driver loads correctly, and wpa_supplicant can
-> 	trigger an association with an access point, using WPA2/PEAP.
-> 	I'm using the tip of Linus's kernel tree (3.0.0-rc2)
->
-> 	But the interface then does nothing:  it doesn't pick up an
-> 	ipv6 address from radvd broadcasts, nor does it appear to send
-> 	any dhcp requests, even though the TX packet counter increases.
->
-> 	
-> 	Do you have any ideas about how I could debug this?
+Hi Julian,
 
-You should inspect the output from dmesg to see if anything is reported. In 
-addition, use wireshark to see what is on the air.
+> Also, there are a number of functions touched by this patch that
+> return a value through the former *data_buf parameter. Is it possible
+> to refactor them to return the value directly? This would make the
+> function flow a lot cleaner and easier to follow.
 
-What kind of connection is being tried?
+We have separate parser routines to handle command responses of the commands. In case of GET command we parse the information from response buffer and fill data_buff accordingly. In the patch we submitted, some of the data_buf have been changed to corresponding structure specific to that command.
 
-Larry
+Yes, we do have some parser functions that only fill an u16/u32 value in data_buf. But in order to have consistency in the code, we used the data_buf pointers (or specific command struct pointers) for all parser functions. Of course we can change the code to return the value directly for this type of functions, if the consistency is less concerned here. Please let me know your preference on this.
+
+Thanks,
+Bing
