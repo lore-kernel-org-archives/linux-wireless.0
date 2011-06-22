@@ -1,62 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48723 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:60437 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758733Ab1FALCO (ORCPT
+	with ESMTP id S1753411Ab1FVOuJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:02:14 -0400
-Subject: Re: [PATCH 2/3] mac80211: create a STA entry for a WDS interface
- after receiving a beacon
+	Wed, 22 Jun 2011 10:50:09 -0400
+Subject: Re: Performance regression between Madwifi/net80211 and
+ ath5k/mac80211
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <4DE61A11.1070708@openwrt.org>
-References: <1306869394-83047-1-git-send-email-nbd@openwrt.org>
-	 <1306869394-83047-2-git-send-email-nbd@openwrt.org>
-	 <1306870354.29989.1.camel@jlt3.sipsolutions.net>
-	 <4DE543E2.9070600@openwrt.org>
-	 <1306872395.29989.3.camel@jlt3.sipsolutions.net>
-	 <4DE54E16.7000709@openwrt.org>
-	 <1306901843.3867.2.camel@jlt3.sipsolutions.net>
-	 <4DE61A11.1070708@openwrt.org>
+To: Joerg Pommnitz <pommnitz@yahoo.com>
+Cc: Adrian Chadd <adrian@freebsd.org>, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+In-Reply-To: <1308753669.17439.YahooMailRC@web161208.mail.bf1.yahoo.com>
+References: <loom.20110621T215346-191@post.gmane.org>
+	 <BANLkTik0umam7S+E1oog0LTEErMz-dZamg@mail.gmail.com>
+	 <1308750102.64154.YahooMailRC@web161214.mail.bf1.yahoo.com>
+	 (sfid-20110622_154146_913504_76736765) <1308750416.29571.10.camel@jlt3.sipsolutions.net>
+	 <1308753669.17439.YahooMailRC@web161208.mail.bf1.yahoo.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 01 Jun 2011 13:02:11 +0200
-Message-ID: <1306926131.3867.8.camel@jlt3.sipsolutions.net> (sfid-20110601_130218_126167_5FBE6CAC)
+Date: Wed, 22 Jun 2011 16:50:04 +0200
+Message-ID: <1308754204.29571.15.camel@jlt3.sipsolutions.net> (sfid-20110622_165013_676735_B307F0DB)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-06-01 at 12:53 +0200, Felix Fietkau wrote:
-> On 2011-06-01 6:17 AM, Johannes Berg wrote:
-> > On Tue, 2011-05-31 at 22:22 +0200, Felix Fietkau wrote:
-> >>  On 2011-05-31 10:06 PM, Johannes Berg wrote:
-> >>  >  On Tue, 2011-05-31 at 21:39 +0200, Felix Fietkau wrote:
-> >>  >>   On 2011-05-31 9:32 PM, Johannes Berg wrote:
-> >>  >>   >   On Tue, 2011-05-31 at 21:16 +0200, Felix Fietkau wrote:
-> >>  >>   >>    When a STA entry is created too early, a lot of essential information
-> >>  >>   >>    required for rate control is missing.
-> >>  >>   >
-> >>  >>   >   I don't understand how you can rely on beacons for WDS.
-> >>  >>   You usually set up WDS links between APs on the same channel, each
-> >>  >>   running both a normal AP vif and a WDS vif. The remote AP's beacons are
-> >>  >>   then used to detect the capabilities of the peer.
-> >>  >
-> >>  >  I don't think we can rely on "usually" unless we also enforce that
-> >>  >  somehow. Otherwise this link will basically be dead. There's nothing
-> >>  >  that requires you to add WDS to an AP interface only after all.
-> >>  I don't think using WDS without APs makes any sense. Since WDS alone
-> >>  does not use beacons or probe requests, there's nothing else that would
-> >>  ensure that rate information, HT capabilities, etc. get exchanged.
-> >
-> > I just don't like the fact that you can create a non-functional WDS
-> > interface by adding it when there's no AP interface.
+On Wed, 2011-06-22 at 07:41 -0700, Joerg Pommnitz wrote:
 
-> Actually, I just noticed that ieee80211_assign_perm_addr forces you to 
-> use the MAC address of an existing AP interface for a WDS interface, 
-> same as for an AP VLAN interface. So the requirement to also have an AP 
-> mode interface is not new.
+> To answer your actual question: No, there doesn't seem to be a
+> difference in CPU usage as shown by top. If anything, madwifi 
+> seems to use a little bit more:
+> 
+> madwifi: 85,5% idle, 10% si
+> ath5k  : 89% idle,   10% si
 
-No, it just uses that since it can use the same address -- there's no
-requirement anywhere that the AP must exist.
+That seems insignificant with so much idle.
+
+> The CPU is:
+> 
+> processor    : 0
+> vendor_id    : GenuineIntel
+> cpu family    : 6
+> model        : 13
+> model name    : Intel(R) Celeron(R) M processor         1.00GHz
+
+So it should be a fairly capable system.
+
+I guess you'll need more help from the HW people here.
 
 johannes
 
