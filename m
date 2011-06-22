@@ -1,114 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:37896 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756406Ab1FQWbd (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:60955 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758471Ab1FVWGg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2011 18:31:33 -0400
+	Wed, 22 Jun 2011 18:06:36 -0400
+Received: by iyb12 with SMTP id 12so1045157iyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 15:06:35 -0700 (PDT)
+Message-ID: <4E026768.1070306@lwfinger.net> (sfid-20110623_000639_592217_4E915353)
+Date: Wed, 22 Jun 2011 17:06:32 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Date: Sat, 18 Jun 2011 00:31:32 +0200
-Message-ID: <BANLkTi=o06eHLtFvmmz7c4TEjahy=EOrJQ@mail.gmail.com> (sfid-20110618_003153_091401_21D528D7)
-Subject: Lock up when faking MMIO read[bwl] on some machines [WAS: Faking MMIO
- ops? Fooling a driver]
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, Pekka Paalanen <pq@iki.fi>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: multipart/mixed; boundary=bcaec544e9e69906a004a5eff2b1
+To: =?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>
+CC: Hauke Mehrtens <hauke@hauke-m.de>, mb@bu3sch.de,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] ssb: fix ssb clock rate according to broadcom source
+References: <1308681113-4706-1-git-send-email-hauke@hauke-m.de>	<1308682400-25953-1-git-send-email-hauke@hauke-m.de>	<4E010EE6.9060605@lwfinger.net> <20110622070212.076777c0@Nokia-N900>
+In-Reply-To: <20110622070212.076777c0@Nokia-N900>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---bcaec544e9e69906a004a5eff2b1
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On 06/22/2011 02:02 AM, Michael Büsch wrote:
+> On Tue, 21 Jun 2011 16:36:38 -0500
+> Larry Finger<Larry.Finger@lwfinger.net>  wrote:
+>> This patch sent me looking to find the public source for this routine. After
+>> finding it in the source section of Broadcom-wl, I noticed there is some
+>> additional code that is not implemented in the ssb version. Should this
+>> additional material be implemented, or is it not applicable?
+>
+> could you quote that function here? That would be way easier to get what were talking about.
 
-I use attached patch to fake result of read[bwl] performed by closed
-source driver (ndiswrapper+bcmwl and wl).
+The file in question is found from the Broadcom wl driver. When you untar it 
+into directory "broadcom", the file is broadcom/src/shared/siutils.c.
 
-1) It works great on my Sony VAIO with Intel(R) Core(TM)2 Duo CPU P8400
-2) It locks up Macbook Pro 8,1 with some 8-cores Intel
+My initial conclusion that the clock_rate routine from the above file and 
+drivers/ssb/main.c were different was wrong. When I checked them again, they do 
+exactly the same thing after this patch is applied. Sorry for the noise.
 
-Do you have any idea why it causes the lockup? Function causing
-problem is "set_ins_reg_val". I've created it as copy of
-get_ins_reg_val, it just sets values in struct pt_regs, instead of
-reading them).
-
---=20
-Rafa=C5=82
-
---bcaec544e9e69906a004a5eff2b1
-Content-Type: application/octet-stream; name="mmio.debugging.patch"
-Content-Disposition: attachment; filename="mmio.debugging.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gp1plyq31
-
-ZGlmZiAtLWdpdCBhL2FyY2gveDg2L21tL21taW8tbW9kLmMgYi9hcmNoL3g4Ni9tbS9tbWlvLW1v
-ZC5jCmluZGV4IDNhZGZmN2QuLmY4NTEzYmIgMTAwNjQ0Ci0tLSBhL2FyY2gveDg2L21tL21taW8t
-bW9kLmMKKysrIGIvYXJjaC94ODYvbW0vbW1pby1tb2QuYwpAQCAtMjA2LDYgKzIwNiwxMiBAQCBz
-dGF0aWMgdm9pZCBwcmUoc3RydWN0IGttbWlvX3Byb2JlICpwLCBzdHJ1Y3QgcHRfcmVncyAqcmVn
-cywKIAlwdXRfY3B1X3ZhcihwZl9yZWFzb24pOwogfQogCisjZGVmaW5lIE1NSU9fQkFTRQkJCTB4
-ZmFhZmMwMDAKKyNkZWZpbmUgQjQzX01NSU9fUEhZX0NPTlRST0wJCTB4M0ZDCisjZGVmaW5lIEI0
-M19NTUlPX1BIWV9EQVRBCQkweDNGRQorCitzdGF0aWMgdTE2IGJyb2FkY29tX3BoeV9hZGRyOwor
-CiBzdGF0aWMgdm9pZCBwb3N0KHN0cnVjdCBrbW1pb19wcm9iZSAqcCwgdW5zaWduZWQgbG9uZyBj
-b25kaXRpb24sCiAJCQkJCQkJc3RydWN0IHB0X3JlZ3MgKnJlZ3MpCiB7CkBAIC0yMTksNiArMjI1
-LDE4IEBAIHN0YXRpYyB2b2lkIHBvc3Qoc3RydWN0IGttbWlvX3Byb2JlICpwLCB1bnNpZ25lZCBs
-b25nIGNvbmRpdGlvbiwKIAkJQlVHKCk7CiAJfQogCisJaWYgKG15X3JlYXNvbi0+dHlwZSA9PSBS
-RUdfUkVBRCAmJiBteV90cmFjZS0+cGh5cyA9PSBNTUlPX0JBU0UgKyBCNDNfTU1JT19QSFlfREFU
-QSkgeworCQlwcl9pbmZvKCJaQUpFQzogcmVhZCBQSFkgMHglWFxuIiwgYnJvYWRjb21fcGh5X2Fk
-ZHIpOworCQlzd2l0Y2ggKGJyb2FkY29tX3BoeV9hZGRyKXsKKwkJY2FzZSAweDIwOgorCQljYXNl
-IDB4MjI6CisJCWNhc2UgMHgyNzoKKwkJCXByX2luZm8oIlpBSkVDOiBvdmVyd3JpdGluZyAweCVY
-IHdpdGggMHhGRkZGXG4iLCBicm9hZGNvbV9waHlfYWRkcik7CisJCQlzZXRfaW5zX3JlZ192YWwo
-bXlfcmVhc29uLT5pcCwgcmVncywgMHhGRkZGKTsKKwkJCWJyZWFrOworCQl9CisJfQorCiAJc3dp
-dGNoIChteV9yZWFzb24tPnR5cGUpIHsKIAljYXNlIFJFR19SRUFEOgogCQlteV90cmFjZS0+dmFs
-dWUgPSBnZXRfaW5zX3JlZ192YWwobXlfcmVhc29uLT5pcCwgcmVncyk7CkBAIC0yMjcsNiArMjQ1
-LDExIEBAIHN0YXRpYyB2b2lkIHBvc3Qoc3RydWN0IGttbWlvX3Byb2JlICpwLCB1bnNpZ25lZCBs
-b25nIGNvbmRpdGlvbiwKIAkJYnJlYWs7CiAJfQogCisJaWYgKG15X3JlYXNvbi0+dHlwZSA9PSBS
-RUdfV1JJVEUgJiYgbXlfdHJhY2UtPnBoeXMgPT0gTU1JT19CQVNFICsgQjQzX01NSU9fUEhZX0NP
-TlRST0wpIHsKKwkJYnJvYWRjb21fcGh5X2FkZHIgPSBteV90cmFjZS0+dmFsdWU7CisJCS8vcHJf
-aW5mbygiWkFKRUM6IHNldHRpbmcgUEhZIGFkZHIgdG8gMHglWFxuIiwgYnJvYWRjb21fcGh5X2Fk
-ZHIpOworCX0KKwogCW1taW9fdHJhY2VfcncobXlfdHJhY2UpOwogCXB1dF9jcHVfdmFyKGNwdV90
-cmFjZSk7CiAJcHV0X2NwdV92YXIocGZfcmVhc29uKTsKZGlmZiAtLWdpdCBhL2FyY2gveDg2L21t
-L3BmX2luLmMgYi9hcmNoL3g4Ni9tbS9wZl9pbi5jCmluZGV4IDlmMDYxNGQuLjg2NDQ5ZWQgMTAw
-NjQ0Ci0tLSBhL2FyY2gveDg2L21tL3BmX2luLmMKKysrIGIvYXJjaC94ODYvbW0vcGZfaW4uYwpA
-QCAtNDYxLDYgKzQ2MSw5OSBAQCBlcnI6CiAJcmV0dXJuIDA7CiB9CiAKK3N0YXRpYyB2b2lkIHNl
-dF9yZWdfdzMyKGludCBubywgc3RydWN0IHB0X3JlZ3MgKnJlZ3MsIHUzMiB2YWwpCit7CisJc3dp
-dGNoIChubykgeworCWNhc2UgYXJnX0FYOgorCQlyZWdzLT5heCA9IHZhbDsKKwkJYnJlYWs7CisJ
-Y2FzZSBhcmdfQlg6CisJCXJlZ3MtPmJ4ID0gdmFsOworCQlicmVhazsKKwljYXNlIGFyZ19DWDoK
-KwkJcmVncy0+Y3ggPSB2YWw7CisJCWJyZWFrOworCWNhc2UgYXJnX0RYOgorCQlyZWdzLT5keCA9
-IHZhbDsKKwkJYnJlYWs7CisJY2FzZSBhcmdfU1A6CisJCXJlZ3MtPnNwID0gdmFsOworCQlicmVh
-azsKKwljYXNlIGFyZ19CUDoKKwkJcmVncy0+YnAgPSB2YWw7CisJCWJyZWFrOworCWNhc2UgYXJn
-X1NJOgorCQlyZWdzLT5zaSA9IHZhbDsKKwkJYnJlYWs7CisJY2FzZSBhcmdfREk6CisJCXJlZ3Mt
-PmRpID0gdmFsOworCQlicmVhazsKKyNpZmRlZiBfX2FtZDY0X18KKwljYXNlIGFyZ19SODoKKwkJ
-cmVncy0+cjggPSB2YWw7CisJCWJyZWFrOworCWNhc2UgYXJnX1I5OgorCQlyZWdzLT5yOSA9IHZh
-bDsKKwkJYnJlYWs7CisJY2FzZSBhcmdfUjEwOgorCQlyZWdzLT5yMTAgPSB2YWw7CisJCWJyZWFr
-OworCWNhc2UgYXJnX1IxMToKKwkJcmVncy0+cjExID0gdmFsOworCQlicmVhazsKKwljYXNlIGFy
-Z19SMTI6CisJCXJlZ3MtPnIxMiA9IHZhbDsKKwkJYnJlYWs7CisJY2FzZSBhcmdfUjEzOgorCQly
-ZWdzLT5yMTMgPSB2YWw7CisJCWJyZWFrOworCWNhc2UgYXJnX1IxNDoKKwkJcmVncy0+cjE0ID0g
-dmFsOworCQlicmVhazsKKwljYXNlIGFyZ19SMTU6CisJCXJlZ3MtPnIxNSA9IHZhbDsKKwkJYnJl
-YWs7CisjZW5kaWYKKwlkZWZhdWx0OgorCQlwcmludGsoS0VSTl9FUlIgIm1taW90cmFjZTogRXJy
-b3IgcmVnIG5vIyAlZFxuIiwgbm8pOworCX0KK30KKwordm9pZCBzZXRfaW5zX3JlZ192YWwodW5z
-aWduZWQgbG9uZyBpbnNfYWRkciwgc3RydWN0IHB0X3JlZ3MgKnJlZ3MsIHUzMiB2YWwpCit7CisJ
-dW5zaWduZWQgaW50IG9wY29kZTsKKwlpbnQgcmVnOworCXVuc2lnbmVkIGNoYXIgKnA7CisJc3Ry
-dWN0IHByZWZpeF9iaXRzIHByZjsKKwlpbnQgaTsKKworCXAgPSAodW5zaWduZWQgY2hhciAqKWlu
-c19hZGRyOworCXAgKz0gc2tpcF9wcmVmaXgocCwgJnByZik7CisJcCArPSBnZXRfb3Bjb2RlKHAs
-ICZvcGNvZGUpOworCWZvciAoaSA9IDA7IGkgPCBBUlJBWV9TSVpFKHJlZ19yb3ApOyBpKyspCisJ
-CWlmIChyZWdfcm9wW2ldID09IG9wY29kZSkKKwkJCWdvdG8gZG9fd29yazsKKworCWZvciAoaSA9
-IDA7IGkgPCBBUlJBWV9TSVpFKHJlZ193b3ApOyBpKyspCisJCWlmIChyZWdfd29wW2ldID09IG9w
-Y29kZSkKKwkJCWdvdG8gZG9fd29yazsKKworCXByaW50ayhLRVJOX0VSUiAibW1pb3RyYWNlOiBO
-b3QgYSByZWdpc3RlciBpbnN0cnVjdGlvbiwgb3Bjb2RlICIKKwkJCQkJCQkiMHglMDJ4XG4iLCBv
-cGNvZGUpOworCXJldHVybjsKKworZG9fd29yazoKKwkvKiBmb3IgU1RPUywgc291cmNlIHJlZ2lz
-dGVyIGlzIGZpeGVkICovCisJaWYgKG9wY29kZSA9PSAweEFBIHx8IG9wY29kZSA9PSAweEFCKSB7
-CisJCXJlZyA9IGFyZ19BWDsKKwl9IGVsc2UgeworCQl1bnNpZ25lZCBjaGFyIG1vZF9ybSA9ICpw
-OworCQlyZWcgPSAoKG1vZF9ybSA+PiAzKSAmIDB4NykgfCAocHJmLnJleHIgPDwgMyk7CisJfQor
-CisJc2V0X3JlZ193MzIocmVnLCByZWdzLCB2YWwpOworfQorCiB1bnNpZ25lZCBsb25nIGdldF9p
-bnNfaW1tX3ZhbCh1bnNpZ25lZCBsb25nIGluc19hZGRyKQogewogCXVuc2lnbmVkIGludCBvcGNv
-ZGU7CmRpZmYgLS1naXQgYS9hcmNoL3g4Ni9tbS9wZl9pbi5oIGIvYXJjaC94ODYvbW0vcGZfaW4u
-aAppbmRleCBlMDUzNDFhLi45MGI0M2ZmIDEwMDY0NAotLS0gYS9hcmNoL3g4Ni9tbS9wZl9pbi5o
-CisrKyBiL2FyY2gveDg2L21tL3BmX2luLmgKQEAgLTM0LDYgKzM0LDcgQEAgZW51bSByZWFzb25f
-dHlwZSB7CiBlbnVtIHJlYXNvbl90eXBlIGdldF9pbnNfdHlwZSh1bnNpZ25lZCBsb25nIGluc19h
-ZGRyKTsKIHVuc2lnbmVkIGludCBnZXRfaW5zX21lbV93aWR0aCh1bnNpZ25lZCBsb25nIGluc19h
-ZGRyKTsKIHVuc2lnbmVkIGxvbmcgZ2V0X2luc19yZWdfdmFsKHVuc2lnbmVkIGxvbmcgaW5zX2Fk
-ZHIsIHN0cnVjdCBwdF9yZWdzICpyZWdzKTsKK3ZvaWQgc2V0X2luc19yZWdfdmFsKHVuc2lnbmVk
-IGxvbmcgaW5zX2FkZHIsIHN0cnVjdCBwdF9yZWdzICpyZWdzLCB1MzIgdmFsKTsKIHVuc2lnbmVk
-IGxvbmcgZ2V0X2luc19pbW1fdmFsKHVuc2lnbmVkIGxvbmcgaW5zX2FkZHIpOwogCiAjZW5kaWYg
-LyogX19QRl9IXyAqLwo=
---bcaec544e9e69906a004a5eff2b1--
+Larry
