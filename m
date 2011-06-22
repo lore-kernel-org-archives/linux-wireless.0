@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:33539 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751104Ab1FHWnP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2011 18:43:15 -0400
-Date: Wed, 08 Jun 2011 15:42:06 -0700 (PDT)
-Message-Id: <20110608.154206.659954143604324997.davem@davemloft.net> (sfid-20110609_004512_114861_56457D5F)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2011-06-08
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110608191246.GD27028@tuxdriver.com>
-References: <20110608191246.GD27028@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=euc-kr
+Received: from msr17.hinet.net ([168.95.4.117]:52082 "EHLO msr17.hinet.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757737Ab1FVCsQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2011 22:48:16 -0400
+Date: Wed, 22 Jun 2011 10:46:40 +0800
+From: Ali Bahar <ali@internetdog.org>
+To: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: r8712u driver for the rtl8192su chip.
+Message-ID: <20110622024640.GB12547@internetdog.org> (sfid-20110622_044820_485896_E7768C65)
+Reply-To: ali@internetdog.org
+References: <4DC0312A.4040303@lwfinger.net>
+ <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com>
+ <4DC0669E.4040100@lwfinger.net>
+ <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com>
+ <4DC06BF3.6070208@lwfinger.net>
+ <20110621124954.GA8462@internetdog.org>
+ <4E011644.3070906@lwfinger.net>
+ <20110622010057.GA12123@internetdog.org>
+ <BANLkTinD=zRLioxjruqPCMa1hkG4nUxBEw@mail.gmail.com>
+ <BANLkTim_i+qrhHsZwUKQ=DcXuk+uJ3k3Wg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <BANLkTim_i+qrhHsZwUKQ=DcXuk+uJ3k3Wg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 8 Jun 2011 15:12:47 -0400
+Hi Gábor,
 
-> Dave,
-> 
-> Here is the first big wireless pull request for the 3.1 cycle.
-> As usual, this covers a lot of ground -- mostly driver updates.
-> 
-> Some highlights include some math algorithm additions to lib/ from
-> the Broadcom team, sizeable update series for rt2x00 and rtlwifi,
-> the usual iwlagn and ath9k updates from the Intel and Atheros teams
-> (and a few other folks), some more mwifiex updates from the Marvell
-> folks, and a bunch of bcma, ssb and b43 updates from Rafa©© Mi©©ecki.
- ...
-> The following changes since commit ffbc03bc75b39c7bd412e7cc6d2185c11b0ffedd:
-> 
->   net: add needed interrupt.h (2011-06-08 00:15:34 -0700)
-> 
-> are available in the git repository at:
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git for-davem
 
-Pulled, thanks!
+> > In general, root prompts have a '#' at the end of the prompt, this one
+> > has a '$' which is indicative of a non-privileged user.
+> 
+> I'm pretty sure that is not true for Bash. Perhaps for csh or Dash.
+
+Of course, $PS1 sets this prompt to anything you want, but we're
+getting sidetracked. :-)
+
+thanks,
+ali
