@@ -1,77 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51716 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751160Ab1FMNTs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2011 09:19:48 -0400
-Date: Mon, 13 Jun 2011 15:20:10 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Jonathan Nieder <jrnieder@gmail.com>, ath9k-devel@venema.h4ckr.net,
-	Tony Houghton <h@realh.co.uk>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	camilo@mesias.co.uk, Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: Re: APSM, AR9285 and bus hangs
-Message-ID: <20110613132009.GA7133@redhat.com> (sfid-20110613_151951_125484_6C2E234F)
-References: <BANLkTikFvkUj=JFrCsffz6Z78KdAEw-t0A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BANLkTikFvkUj=JFrCsffz6Z78KdAEw-t0A@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:42703 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757712Ab1FVNIL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jun 2011 09:08:11 -0400
+Subject: Re: [RFC][PATCH v2 3/7] NFC: add nfc generic netlink interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	lauro.venancio@openbossa.org, marcio.macedo@openbossa.org,
+	Waldemar.Rymarkiewicz@tieto.com
+In-Reply-To: <20110622125710.GD22420@sortiz-mobl>
+References: <1308592212-5755-1-git-send-email-aloisio.almeida@openbossa.org>
+	 <1308592212-5755-4-git-send-email-aloisio.almeida@openbossa.org>
+	 <1308728084.3883.9.camel@jlt3.sipsolutions.net>
+	 <20110622125710.GD22420@sortiz-mobl>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 22 Jun 2011 15:08:06 +0200
+Message-ID: <1308748086.29571.4.camel@jlt3.sipsolutions.net> (sfid-20110622_150814_957049_67AEB1F9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 13, 2011 at 09:01:57PM +0800, Adrian Chadd wrote:
-> On 13 June 2011 19:00, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> 
-> > cam a fedora user, confirms that patch fixes the locks-ups
-> > https://bugzilla.redhat.com/show_bug.cgi?id=697157#c26
-> >
-> > We are waiting for fix now :-)
-> 
-> Cool.
-> 
-> The problem is, the initial modification and subsequent changes to the
-> powersave function were documented to fix an APSM hang, not cause it.
-> 
-> I'm happy to submit a patch to undo that particular change but I'm not
-> sure if it'll -break- things for other people. :)
-> 
-> Someone with PCIe/APCI/APSM/general clue in the area of CPU + bus
-> sleep states needs to step in and help. I'm just not equipped to fix
-> the problem at the moment.
+On Wed, 2011-06-22 at 14:57 +0200, Samuel Ortiz wrote:
 
-I see this commit in 2.6.39, missed in 2.6.38 and 2.6.35 currently.
-Is possible this is the fix which do not break other things?
+> > And this looks like an array. Do you really want to do that? That means
+> > lots of reallocations.
 
-commit 5b64aa72ead6f8be488d2be7af579f0d69fb7a6e
-Author: Rajkumar Manoharan <rmanoharan@atheros.com>
-Date:   Thu Jan 27 18:39:37 2011 +0530
+> So NFC polling is a bit weird. Whenever you start polling for passive targets,
+> the polling results are minimal: You only know that there is _a_ target on a
+> particular frequency/modulation. It could be the same as the one you got 5
+> minutes ago, or not. To verify it, you'd need to select the target (and put
+> all other ones on standby) and start sending specific commands to it (Of
+> course, you have a different set of commands per target family...). Only then
+> you _may_ read some sort of UID that could help you matching targets from your
+> previous poll cycle.
+> My point is, when we start polling, we will invalidate all existing targets
+> anyway. So a linked list or an array won't make a big difference in that area.
 
-    ath9k_hw: Fix system hang when resuming from S3/S4
-    
-    The bit 6 & 7 of AR_WA (0x4004) should be enabled only
-    for the chips that are supporting L0s functionality
-    while resuming back from S3/S4.
-    
-    Enabling these bits for AR9280 is causing system hang
-    within a few S3/S4-resume cycles.
-    
-    Cc: stable@kernel.org
-    Cc: Jack Lee <jlee@atheros.com>
-    Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+So basically you're saying that you basically get everything at the same
+time so you really throw away the old list/array and re-create it.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index f8a7771..f44c84a 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -426,9 +426,8 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
- 		}
- 
- 		/* WAR for ASPM system hang */
--		if (AR_SREV_9280(ah) || AR_SREV_9285(ah) || AR_SREV_9287(ah)) {
-+		if (AR_SREV_9285(ah) || AR_SREV_9287(ah))
- 			val |= (AR_WA_BIT6 | AR_WA_BIT7);
--		}
- 
- 		if (AR_SREV_9285E_20(ah))
- 			val |= AR_WA_BIT23;
+But from a driver POV, does it really know the number of targets?
+Otherwise it'll have to reallocate.
+
+Anyway, all this doesn't matter since it's purely internal, and the
+userspace APIs no longer have this limitation, so if this turns out an
+issue at some point internal refactoring can easily fix it :-)
+
+johannes
+
