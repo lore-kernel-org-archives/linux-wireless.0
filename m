@@ -1,115 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33049 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756640Ab1FIWED (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 18:04:03 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, jonas.gorski@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 03/11] compat-wireless: add support for kernel 3.XX
-Date: Fri, 10 Jun 2011 00:03:34 +0200
-Message-Id: <1307657022-23808-4-git-send-email-hauke@hauke-m.de> (sfid-20110610_000406_105434_AA9165EA)
-In-Reply-To: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
-References: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.atheros.com ([12.19.149.2]:41027 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932170Ab1FWDvE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jun 2011 23:51:04 -0400
+Received: from mail.atheros.com ([10.234.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 20:50:28 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <hostap@lists.shmoo.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/4] hostapd: split up channel checking into helpers
+Date: Wed, 22 Jun 2011 20:50:45 -0700
+Message-ID: <1308801048-2415-2-git-send-email-lrodriguez@atheros.com> (sfid-20110623_055110_200366_13EEB85A)
+In-Reply-To: <1308801048-2415-1-git-send-email-lrodriguez@atheros.com>
+References: <1308801048-2415-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now we are also generating CONFIG_COMPAT_KERNEL_3XX entries for kernel
-3.XX kernels. This is the final patch needed to add support for kernel
-3.0.
-When using a 2.6.XX kernel it generates CONFIG_COMPAT_KERNEL_26XX
-entries and all CONFIG_COMPAT_KERNEL_3XX entries and when using 3.XX
-kernel it will generate only the needed CONFIG_COMPAT_KERNEL_3XX
-entries.
+This splits up the channel checking upon initialization
+into a few helpers. This should make this a bit easier
+to follow. This also paves the way for some initial
+ACS entry code.
 
-Add to compat-3.0-stable
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- config.mk                      |   23 ++++++++++++++++++-----
- scripts/gen-compat-autoconf.sh |    9 +++++----
- 2 files changed, 23 insertions(+), 9 deletions(-)
+ src/ap/hostapd.h     |    6 ++
+ src/ap/hw_features.c |  148 +++++++++++++++++++++++++++-----------------------
+ 2 files changed, 86 insertions(+), 68 deletions(-)
 
-diff --git a/config.mk b/config.mk
-index 58747ba..2a0c229 100644
---- a/config.mk
-+++ b/config.mk
-@@ -15,10 +15,23 @@ include $(KLIB_BUILD)/.config
- endif
+diff --git a/src/ap/hostapd.h b/src/ap/hostapd.h
+index d4501a1..6e4cc4f 100644
+--- a/src/ap/hostapd.h
++++ b/src/ap/hostapd.h
+@@ -30,6 +30,12 @@ struct full_dynamic_vlan;
+ enum wps_event;
+ union wps_event_data;
  
- ifneq ($(wildcard $(KLIB_BUILD)/Makefile),)
--COMPAT_LATEST_VERSION = 39
--KERNEL_SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
++enum hostapd_chan_status {
++	HOSTAPD_CHAN_VALID = 0, /* channel is ready */
++	HOSTAPD_CHAN_INVALID = 1, /* no usable channel found */
++	HOSTAPD_CHAN_ACS = 2, /* ACS work being performed */
++};
 +
-+COMPAT_LATEST_VERSION = 1
-+
-+KERNEL_VERSION := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^\([0-9]\)\..*/\1/p')
-+
-+ifneq ($(KERNEL_VERSION),2)
-+KERNEL_SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^3\.\([0-9]\+\).*/\1/p')
-+else
-+COMPAT_26LATEST_VERSION = 39
-+KERNEL_26SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
-+COMPAT_26VERSIONS := $(shell I=$(COMPAT_26LATEST_VERSION); while [ "$$I" -gt $(KERNEL_26SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
-+$(foreach ver,$(COMPAT_26VERSIONS),$(eval CONFIG_COMPAT_KERNEL_2_6_$(ver)=y))
-+KERNEL_SUBLEVEL := -1
-+endif
-+
- COMPAT_VERSIONS := $(shell I=$(COMPAT_LATEST_VERSION); while [ "$$I" -gt $(KERNEL_SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
--$(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_2_6_$(ver)=y))
-+$(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_3_$(ver)=y))
+ struct hostapd_probereq_cb {
+ 	int (*cb)(void *ctx, const u8 *sa, const u8 *ie, size_t ie_len);
+ 	void *ctx;
+diff --git a/src/ap/hw_features.c b/src/ap/hw_features.c
+index 86f6811..887744b 100644
+--- a/src/ap/hw_features.c
++++ b/src/ap/hw_features.c
+@@ -599,6 +599,77 @@ int hostapd_check_ht_capab(struct hostapd_iface *iface)
+ 	return 0;
+ }
  
- ifdef CONFIG_COMPAT_KERNEL_2_6_24
- $(error "ERROR: compat-wireless by default supports kernels >= 2.6.24, try enabling only one driver though")
-@@ -32,7 +45,7 @@ endif
- # 2.6.27 has FTRACE_DYNAMIC borked, so we will complain if
- # you have it enabled, otherwise you will very likely run into
- # a kernel panic.
--ifeq ($(KERNEL_SUBLEVEL),27)
-+ifeq ($(shell test $(KERNEL_VERSION) -eq 2 -a $(KERNEL_SUBLEVEL) -eq 27 && echo yes),yes)
- ifeq ($(CONFIG_DYNAMIC_FTRACE),y)
- $(error "ERROR: Your 2.6.27 kernel has CONFIG_DYNAMIC_FTRACE, please upgrade your distribution kernel as newer ones should not have this enabled (and if so report a bug) or remove this warning if you know what you are doing")
- endif
-@@ -49,7 +62,7 @@ endif
- #
- # In kernel 2.6.32 both attributes were removed.
- #
--ifeq ($(shell test $(KERNEL_SUBLEVEL) -ge 27 -a $(KERNEL_SUBLEVEL) -le 31 && echo yes),yes)
-+ifeq ($(shell test $(KERNEL_VERSION) -eq 2 -a $(KERNEL_SUBLEVEL) -ge 27 -a $(KERNEL_SUBLEVEL) -le 31 && echo yes),yes)
- ifeq ($(CONFIG_MAC80211),)
- $(error "ERROR: Your >=2.6.27 and <= 2.6.31 kernel has CONFIG_MAC80211 disabled, you should have it CONFIG_MAC80211=m if you want to use this thing.")
- endif
-diff --git a/scripts/gen-compat-autoconf.sh b/scripts/gen-compat-autoconf.sh
-index 827e1ec..fd38c99 100755
---- a/scripts/gen-compat-autoconf.sh
-+++ b/scripts/gen-compat-autoconf.sh
-@@ -148,11 +148,11 @@ kernel_version_req $OLDEST_KERNEL_SUPPORTED
- for i in $(egrep '^CONFIG_|^ifdef CONFIG_|^ifndef CONFIG_|^endif #CONFIG_|^else #CONFIG_' $COMPAT_CONFIG | sed 's/ /+/'); do
- 	case $i in
- 	'ifdef+CONFIG_'* )
--		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifdef CONFIG_COMPAT_KERNEL_2_6_\)\([0-9]*\)/if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,\2))/' -e 's/\(#ifdef \)\(CONFIG_[^:space:]*\)/#if defined(\2) || defined(\2_MODULE)/'
-+		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifdef CONFIG_COMPAT_KERNEL_3_\)\([0-9]*\)/if (LINUX_VERSION_CODE < KERNEL_VERSION(3,\2,0))/' -e 's/\(ifdef CONFIG_COMPAT_KERNEL_2_6_\)\([0-9]*\)/if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,\2))/' -e 's/\(#ifdef \)\(CONFIG_[^:space:]*\)/#if defined(\2) || defined(\2_MODULE)/'
- 		continue
- 		;;
- 	'ifndef+CONFIG_'* )
--		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_2_6_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,\2))/' -e 's/\(#ifndef \)\(CONFIG_[^:space:]*\)/#if !defined(\2) && !defined(\2_MODULE)/'
-+		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_3_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,\2,0))/' -e 's/\(ifndef CONFIG_COMPAT_KERNEL_2_6_\)\([0-9]*\)/if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,\2))/' -e 's/\(#ifndef \)\(CONFIG_[^:space:]*\)/#if !defined(\2) && !defined(\2_MODULE)/'
- 		continue
- 		;;
- 	'else+#CONFIG_'* | 'endif+#CONFIG_'* )
-@@ -184,8 +184,9 @@ done
- # Deal with special cases. CONFIG_MAC80211_QOS is such a case.
- # We handle this specially for different kernels we support.
- if [ -f $KLIB_BUILD/Makefile ]; then
--	SUBLEVEL=$(make -C $KLIB_BUILD kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
--	if [ $SUBLEVEL -le 22 ]; then
-+	MAJORLEVEL=$(make -C $KLIB_BUILD kernelversion | sed -n 's/^\([0-9]\)\..*/\1/p')
-+	SUBLEVEL=$(make -C $KLIB_BUILD kernelversion | sed -n 's/^\(2\.6\|[3-9]\)\.\([0-9]\+\).*/\2/p')
-+	if [ $MAJORLEVEL -eq 2 -a $SUBLEVEL -le 22 ]; then
- 		define_config CONFIG_MAC80211_QOS y
- 	else # kernel >= 2.6.23
- 		# CONFIG_MAC80211_QOS on these kernels requires
++static int hostapd_is_usable_chan(struct hostapd_iface *iface,
++				  int channel,
++				  int primary)
++{
++	unsigned int i;
++	struct hostapd_channel_data *chan;
++
++	for (i = 0; i < iface->current_mode->num_channels; i++) {
++		chan = &iface->current_mode->channels[i];
++		if (chan->chan == channel) {
++			if (chan->flag & HOSTAPD_CHAN_DISABLED) {
++				wpa_printf(MSG_ERROR,
++					   "%schannel [%i] (%i) is disabled for "
++					   "use in AP mode, flags: 0x%x",
++					   primary ? "" : "Configured HT40 secondary ",
++					   i, chan->chan, chan->flag);
++			} else {
++				return 1;
++			}
++		}
++	}
++
++	return 0;
++}
++
++static int hostapd_is_usable_chans(struct hostapd_iface *iface)
++{
++	if (!hostapd_is_usable_chan(iface, iface->conf->channel, 1))
++		return 0;
++
++	if (!iface->conf->secondary_channel)
++		return 1;
++
++	if (!hostapd_is_usable_chan(iface, iface->conf->secondary_channel, 0))
++		return 0;
++
++	return 1;
++}
++
++static enum hostapd_chan_status hostapd_check_chans(struct hostapd_iface *iface)
++{
++	if (iface->conf->channel) {
++		if (hostapd_is_usable_chans(iface))
++			return HOSTAPD_CHAN_VALID;
++		else
++			return HOSTAPD_CHAN_INVALID;
++	}
++
++	/*
++	 * The user set channel=0 which is used to trigger ACS,
++	 * which we do not yet support.
++	 */
++	return HOSTAPD_CHAN_INVALID;
++}
++
++static void hostapd_notify_bad_chans(struct hostapd_iface *iface)
++{
++	iface->current_mode = NULL;
++
++	hostapd_logger(iface->bss[0], NULL,
++		       HOSTAPD_MODULE_IEEE80211,
++		       HOSTAPD_LEVEL_WARNING,
++		       "Configured channel (%d) not found from the "
++		       "channel list of current mode (%d) %s",
++		       iface->conf->channel,
++		       iface->current_mode->mode,
++		       hostapd_hw_mode_txt(iface->current_mode->mode));
++	hostapd_logger(iface->bss[0], NULL, HOSTAPD_MODULE_IEEE80211,
++		       HOSTAPD_LEVEL_WARNING,
++		       "Hardware does not support configured channel");
++}
+ 
+ /**
+  * hostapd_select_hw_mode - Select the hardware mode
+@@ -610,7 +681,7 @@ int hostapd_check_ht_capab(struct hostapd_iface *iface)
+  */
+ int hostapd_select_hw_mode(struct hostapd_iface *iface)
+ {
+-	int i, j, ok;
++	int i;
+ 
+ 	if (iface->num_hw_features < 1)
+ 		return -1;
+@@ -634,75 +705,16 @@ int hostapd_select_hw_mode(struct hostapd_iface *iface)
+ 		return -2;
+ 	}
+ 
+-	ok = 0;
+-	for (j = 0; j < iface->current_mode->num_channels; j++) {
+-		struct hostapd_channel_data *chan =
+-			&iface->current_mode->channels[j];
+-		if (chan->chan == iface->conf->channel) {
+-			if (chan->flag & HOSTAPD_CHAN_DISABLED) {
+-				wpa_printf(MSG_ERROR,
+-					   "channel [%i] (%i) is disabled for "
+-					   "use in AP mode, flags: 0x%x",
+-					   j, chan->chan, chan->flag);
+-			} else {
+-				ok = 1;
+-				break;
+-			}
+-		}
+-	}
+-	if (ok && iface->conf->secondary_channel) {
+-		int sec_ok = 0;
+-		int sec_chan = iface->conf->channel +
+-			iface->conf->secondary_channel * 4;
+-		for (j = 0; j < iface->current_mode->num_channels; j++) {
+-			struct hostapd_channel_data *chan =
+-				&iface->current_mode->channels[j];
+-			if (!(chan->flag & HOSTAPD_CHAN_DISABLED) &&
+-			    (chan->chan == sec_chan)) {
+-				sec_ok = 1;
+-				break;
+-			}
+-		}
+-		if (!sec_ok) {
+-			hostapd_logger(iface->bss[0], NULL,
+-				       HOSTAPD_MODULE_IEEE80211,
+-				       HOSTAPD_LEVEL_WARNING,
+-				       "Configured HT40 secondary channel "
+-				       "(%d) not found from the channel list "
+-				       "of current mode (%d) %s",
+-				       sec_chan, iface->current_mode->mode,
+-				       hostapd_hw_mode_txt(
+-					       iface->current_mode->mode));
+-			ok = 0;
+-		}
+-	}
+-	if (iface->conf->channel == 0) {
+-		/* TODO: could request a scan of neighboring BSSes and select
+-		 * the channel automatically */
+-		wpa_printf(MSG_ERROR, "Channel not configured "
+-			   "(hw_mode/channel in hostapd.conf)");
+-		return -3;
+-	}
+-	if (ok == 0 && iface->conf->channel != 0) {
+-		hostapd_logger(iface->bss[0], NULL,
+-			       HOSTAPD_MODULE_IEEE80211,
+-			       HOSTAPD_LEVEL_WARNING,
+-			       "Configured channel (%d) not found from the "
+-			       "channel list of current mode (%d) %s",
+-			       iface->conf->channel,
+-			       iface->current_mode->mode,
+-			       hostapd_hw_mode_txt(iface->current_mode->mode));
+-		iface->current_mode = NULL;
+-	}
+-
+-	if (iface->current_mode == NULL) {
+-		hostapd_logger(iface->bss[0], NULL, HOSTAPD_MODULE_IEEE80211,
+-			       HOSTAPD_LEVEL_WARNING,
+-			       "Hardware does not support configured channel");
++	switch (hostapd_check_chans(iface)) {
++	case HOSTAPD_CHAN_VALID:
++		return 0;
++	case HOSTAPD_CHAN_ACS: /* ACS not supported yet */
++	case HOSTAPD_CHAN_INVALID:
++	default:
++		hostapd_notify_bad_chans(iface);
+ 		return -4;
++		return HOSTAPD_CHAN_INVALID;
+ 	}
+-
+-	return 0;
+ }
+ 
+ 
 -- 
-1.7.4.1
+1.7.4.15.g7811d
 
