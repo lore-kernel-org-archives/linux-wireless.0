@@ -1,114 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59031 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752987Ab1F2WMM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 18:12:12 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	linux-mips@linux-mips.org
-Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC v3 00/13] bcma: add support for embedded devices like bcm4716
-Date: Thu, 30 Jun 2011 00:11:45 +0200
-Message-Id: <1309385518-12097-1-git-send-email-hauke@hauke-m.de> (sfid-20110630_001225_630732_1503C12A)
+Received: from mail.atheros.com ([12.19.149.2]:64063 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932668Ab1FWSpA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jun 2011 14:45:00 -0400
+Received: from mail.atheros.com ([10.234.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2011 11:44:24 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <hostap@lists.shmoo.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 0/4] hostapd: add ACS support
+Date: Thu, 23 Jun 2011 11:44:47 -0700
+Message-ID: <1308854691-5958-1-git-send-email-lrodriguez@atheros.com> (sfid-20110623_204504_564591_ED48E0C9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series adds support for embedded devices like bcm47xx to 
-bcma. Bcma is used on bcm4716 and bcm4718 SoCs. With these patches my 
-bcm4716 device boots up till it tries to access the flash, because the 
-serial flash chip is unsupported for now, this will be my next task. 
-This adds support for MIPS cores, interrupt configuration and the 
-serial console.
+This series is rebased on top of hostapd.git as of today but also
+fixes a typo I made on patch 2 where I put the event within an ifdef,
+this means patch 3 would not apply as well.
 
-This patch series adds support for embedded devices like bcm47xx to 
-bcma. Bcma is used on bcm4716 and bcm4718 SoCs. With these patches my 
-bcm4716 device boots up till it tries to access the flash, because the 
-serial flash chip is unsupported for now, this will be my next task. 
-This adds support for MIPS cores, interrupt configuration and the 
-serial console.
+All in one patch:
 
-The ifdef and switch case statements in the bcm47xx code do not look 
-good got me, but I do not know how to do it in an other way. Does 
-someone have a idea how to do it in a better way?
-Everything in bcma looks good to me and this should be the last RFC 
-patch. With the bcm47xx code I have the problem mentioned above, but if 
-no one has a better idea this also works.
-The pci(e) host code is not implemented, it is just done that far as it
-does not do client mode initialization on hostmode devices, which will
-break on an controller in host mode.
-These patches are not containing all functions needed to get the SoC to 
-fully work and support every feature, but it is a good start.
-These patches are now integrated in OpenWrt for everyone how wants to
-test them.
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/hostapd/acs-all-in-one-v2.patch
 
-v3:
- * make bcm47xx built either with bcma, ssb or both and use mips MIPS 74K optimizations if possible
- * add block io support
- * some minor fixes for code and doku
-v2:
- * use list and no arry to store cores
- * rename bcma_host_bcma_ to bcma_host_soc_
- * use core->io_addr and core->io_wrap to access cores
- * checkpatch fixes
- * some minor fixes
+Luis R. Rodriguez (4):
+  hostapd: split up channel checking into helpers
+  hostapd: add offchannel support
+  hostapd: add survey dump support
+  hostapd: add Automatic Channel Selection (ACS) support
 
-Hauke Mehrtens (13):
-  bcma: move parsing of EEPROM into own function.
-  bcma: move initializing of struct bcma_bus to own function.
-  bcma: add functions to scan cores needed on SoCs
-  bcma: add SOC bus
-  bcma: add mips driver
-  bcma: add serial console support
-  bcma: get CPU clock
-  bcma: add pci(e) host mode
-  bcma: add check if sprom is available before accessing it.
-  bcm47xx: prepare to support different buses
-  bcm47xx: make it possible to build bcm47xx without ssb.
-  bcm47xx: add support for bcma bus
-  bcm47xx: fix irq assignment for new SoCs.
-
- arch/mips/Kconfig                            |    8 +-
- arch/mips/bcm47xx/Kconfig                    |   31 +++
- arch/mips/bcm47xx/Makefile                   |    3 +-
- arch/mips/bcm47xx/gpio.c                     |   82 +++++--
- arch/mips/bcm47xx/irq.c                      |   12 +
- arch/mips/bcm47xx/nvram.c                    |   29 ++-
- arch/mips/bcm47xx/serial.c                   |   46 ++++-
- arch/mips/bcm47xx/setup.c                    |   90 +++++++-
- arch/mips/bcm47xx/time.c                     |   16 +-
- arch/mips/bcm47xx/wgt634u.c                  |   13 +-
- arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |   26 ++-
- arch/mips/include/asm/mach-bcm47xx/gpio.h    |  108 +++++++--
- arch/mips/pci/pci-bcm47xx.c                  |    6 +
- drivers/bcma/Kconfig                         |   20 ++
- drivers/bcma/Makefile                        |    3 +
- drivers/bcma/bcma_private.h                  |   22 ++
- drivers/bcma/driver_chipcommon.c             |   69 ++++++
- drivers/bcma/driver_chipcommon_pmu.c         |   87 +++++++
- drivers/bcma/driver_mips.c                   |  254 +++++++++++++++++++
- drivers/bcma/driver_pci.c                    |   17 ++-
- drivers/bcma/driver_pci_host.c               |   43 ++++
- drivers/bcma/host_soc.c                      |  178 ++++++++++++++
- drivers/bcma/main.c                          |   69 ++++++-
- drivers/bcma/scan.c                          |  336 +++++++++++++++++---------
- drivers/bcma/sprom.c                         |    3 +
- drivers/watchdog/bcm47xx_wdt.c               |   27 ++-
- include/linux/bcma/bcma.h                    |    7 +
- include/linux/bcma/bcma_driver_chipcommon.h  |   36 +++
- include/linux/bcma/bcma_driver_mips.h        |   61 +++++
- include/linux/bcma/bcma_driver_pci.h         |    1 +
- include/linux/bcma/bcma_soc.h                |   16 ++
- 31 files changed, 1538 insertions(+), 181 deletions(-)
- create mode 100644 arch/mips/bcm47xx/Kconfig
- create mode 100644 drivers/bcma/driver_mips.c
- create mode 100644 drivers/bcma/driver_pci_host.c
- create mode 100644 drivers/bcma/host_soc.c
- create mode 100644 include/linux/bcma/bcma_driver_mips.h
- create mode 100644 include/linux/bcma/bcma_soc.h
+ hostapd/Makefile             |    5 +
+ hostapd/config_file.c        |   47 ++++-
+ hostapd/defconfig            |   25 +++
+ hostapd/hostapd.conf         |   17 ++
+ src/ap/acs.c                 |  464 ++++++++++++++++++++++++++++++++++++++++++
+ src/ap/acs.h                 |   40 ++++
+ src/ap/ap_config.c           |   15 ++
+ src/ap/ap_config.h           |    4 +
+ src/ap/ap_drv_ops.h          |   27 +++
+ src/ap/drv_callbacks.c       |  139 +++++++++++++-
+ src/ap/hostapd.c             |    2 +
+ src/ap/hostapd.h             |   24 +++
+ src/ap/hw_features.c         |  188 +++++++++++------
+ src/drivers/driver.h         |  171 +++++++++++++++-
+ src/drivers/driver_nl80211.c |  193 ++++++++++++++++++
+ 15 files changed, 1290 insertions(+), 71 deletions(-)
+ create mode 100644 src/ap/acs.c
+ create mode 100644 src/ap/acs.h
 
 -- 
-1.7.4.1
+1.7.4.15.g7811d
 
