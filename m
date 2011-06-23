@@ -1,73 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:52704 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752737Ab1FRXkE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2011 19:40:04 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 4so874472ewy.19
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Jun 2011 16:40:04 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/2] b43: HT-PHY: enable radio
-Date: Sun, 19 Jun 2011 02:18:12 +0200
-Message-Id: <1308442692-4205-2-git-send-email-zajec5@gmail.com> (sfid-20110619_014009_039466_47EE3AF5)
-In-Reply-To: <1308442692-4205-1-git-send-email-zajec5@gmail.com>
-References: <1308442692-4205-1-git-send-email-zajec5@gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:36899 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755342Ab1FWOeN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jun 2011 10:34:13 -0400
+Received: from mail.atheros.com ([10.234.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2011 07:33:37 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
+	<senthilb@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	<muddin@qca.qualcomm.com>
+Subject: [PATCH] ath9k_hw: Add carrier leak correction in desired gain calculation
+Date: Thu, 23 Jun 2011 20:03:38 +0530
+Message-ID: <1308839618-15190-1-git-send-email-mshajakhan@atheros.com> (sfid-20110623_163417_020048_A143CAC0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The trick was to find 0x810 PHY reg ops close to analog enabling code.
-To find out proper masks and sets, MMIO hacks were used.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Cc: muddin@qca.qualcomm.com
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
-Bigger part of MMIO dump, showing where implemented OPS were found:
->>> analog(ON) start
-phy_write(0x0911) <- 0x00cd
-phy_write(0x0910) <- 0x0000
-phy_write(0x0915) <- 0x00cd
-phy_write(0x0914) <- 0x0000
-phy_write(0x0919) <- 0x00cd
-phy_write(0x0918) <- 0x0000
->>> analog(ON) end
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c |   34 +++++++++++++++++-------
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h   |    3 ++
+ 2 files changed, 27 insertions(+), 10 deletions(-)
 
- read16 0xb06003e0 -> 0x9701
- read32 0xb0600120 -> 0xc4020402
-
- phy_read(0x0810) -> 0x0000
-phy_write(0x0810) <- 0x0000
- phy_read(0x0810) -> 0x0000
-phy_write(0x0810) <- 0x0001
- phy_read(0x0810) -> 0x0001
-phy_write(0x0810) <- 0x0000
- phy_read(0x0810) -> 0x0000
-phy_write(0x0810) <- 0x0002
-
-radio_write(0x0c51) <- 0x0070
----
- drivers/net/wireless/b43/phy_ht.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index e84d4c1..008c1a9 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -69,6 +69,10 @@ static void b43_phy_ht_op_software_rfkill(struct b43_wldev *dev,
- 	if (blocked) {
- 		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, ~0);
- 	} else {
-+		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, ~0);
-+		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, ~0, 0x1);
-+		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, ~0);
-+		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, ~0, 0x2);
- 	}
- }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index 8f6d11d..6e9e892 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -246,13 +246,13 @@ static void ar9003_paprd_get_gain_table(struct ath_hw *ah)
+ static unsigned int ar9003_get_desired_gain(struct ath_hw *ah, int chain,
+ 					    int target_power)
+ {
+-	int olpc_gain_delta = 0;
++	int olpc_gain_delta = 0, cl_gain_mod;
+ 	int alpha_therm, alpha_volt;
+ 	int therm_cal_value, volt_cal_value;
+ 	int therm_value, volt_value;
+ 	int thermal_gain_corr, voltage_gain_corr;
+ 	int desired_scale, desired_gain = 0;
+-	u32 reg;
++	u32 reg_olpc  = 0, reg_cl_gain  = 0;
  
+ 	REG_CLR_BIT(ah, AR_PHY_PAPRD_TRAINER_STAT1,
+ 		    AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_TRAIN_DONE);
+@@ -271,15 +271,29 @@ static unsigned int ar9003_get_desired_gain(struct ath_hw *ah, int chain,
+ 	volt_value = REG_READ_FIELD(ah, AR_PHY_BB_THERM_ADC_4,
+ 				    AR_PHY_BB_THERM_ADC_4_LATEST_VOLT_VALUE);
+ 
+-	if (chain == 0)
+-		reg = AR_PHY_TPC_11_B0;
+-	else if (chain == 1)
+-		reg = AR_PHY_TPC_11_B1;
+-	else
+-		reg = AR_PHY_TPC_11_B2;
++	switch (chain) {
++	case 0:
++		reg_olpc = AR_PHY_TPC_11_B0;
++		reg_cl_gain = AR_PHY_CL_TAB_0;
++		break;
++	case 1:
++		reg_olpc = AR_PHY_TPC_11_B1;
++		reg_cl_gain = AR_PHY_CL_TAB_1;
++		break;
++	case 2:
++		reg_olpc = AR_PHY_TPC_11_B2;
++		reg_cl_gain = AR_PHY_CL_TAB_2;
++		break;
++	default:
++		ath_dbg(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
++		"Invalid chainmask: %d\n", chain);
++		break;
++	}
+ 
+-	olpc_gain_delta = REG_READ_FIELD(ah, reg,
++	olpc_gain_delta = REG_READ_FIELD(ah, reg_olpc,
+ 					 AR_PHY_TPC_11_OLPC_GAIN_DELTA);
++	cl_gain_mod = REG_READ_FIELD(ah, reg_cl_gain,
++					 AR_PHY_CL_TAB_CL_GAIN_MOD);
+ 
+ 	if (olpc_gain_delta >= 128)
+ 		olpc_gain_delta = olpc_gain_delta - 256;
+@@ -289,7 +303,7 @@ static unsigned int ar9003_get_desired_gain(struct ath_hw *ah, int chain,
+ 	voltage_gain_corr = (alpha_volt * (volt_value - volt_cal_value) +
+ 			     (128 / 2)) / 128;
+ 	desired_gain = target_power - olpc_gain_delta - thermal_gain_corr -
+-	    voltage_gain_corr + desired_scale;
++	    voltage_gain_corr + desired_scale + cl_gain_mod;
+ 
+ 	return desired_gain;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 9eb3aa2..6de3f0b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -1121,6 +1121,9 @@
+ #define AR_PHY_POWERTX_RATE8_POWERTXHT40_5	0x3F00
+ #define AR_PHY_POWERTX_RATE8_POWERTXHT40_5_S	8
+ 
++#define AR_PHY_CL_TAB_CL_GAIN_MOD		0x1f
++#define AR_PHY_CL_TAB_CL_GAIN_MOD_S		0
++
+ void ar9003_hw_set_chain_masks(struct ath_hw *ah, u8 rx, u8 tx);
+ 
+ #endif  /* AR9003_PHY_H */
 -- 
-1.7.3.4
+1.7.0.4
 
