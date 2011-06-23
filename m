@@ -1,83 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:44449 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756904Ab1F1MAu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2011 08:00:50 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2011 05:00:13 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
-	<senthilb@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 1/2] ath9k: minor cleanup in tx_form_aggregation
-Date: Tue, 28 Jun 2011 17:30:42 +0530
-Message-ID: <1309262442-21383-1-git-send-email-mshajakhan@atheros.com> (sfid-20110628_141458_395029_95647F24)
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:47006 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932718Ab1FWUa1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jun 2011 16:30:27 -0400
+Received: by iwn6 with SMTP id 6so1869012iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2011 13:30:27 -0700 (PDT)
+Message-ID: <4E03A25F.7080103@lwfinger.net> (sfid-20110623_223032_078365_60CD331A)
+Date: Thu, 23 Jun 2011 15:30:23 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	John Linville <linville@tuxdriver.com>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Improvement in b43 on BCM4312 (14e4:4315)
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Rafał and John,
 
-moves a macro to the main header file ath9k.h and removes a redundant
-variable/if check
+I was doing routine testing today on 3.0-rc4 kernels built from wireless-testing 
+and Linus's mainline git tree. To my surprise, I noticed an important difference 
+on the netbook with a 14e4:4315 BCM4312 802.11b/g LP PHY device. Although b43 
+would work OK with light loads, it would always fail at heavy loads. Sometimes, 
+it would get the "Out of order TX status" failure, and sometimes it would just 
+lose the connection. As that machine is quite slow, I maintain its kernel source 
+on an NFS volume exported by an x86_64 machine with fast CPUs and relatively 
+fast disks.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 ++
- drivers/net/wireless/ath/ath9k/xmit.c  |    9 ++-------
- 2 files changed, 4 insertions(+), 7 deletions(-)
+Until today, the BCM4312 had never been able to complete the "make 
+modules_install" step needed to get a new kernel on the netbook, and would fail 
+in the middle of copying the modules from the NFS volume to the local 
+/lib/modules tree. After installing the wireless-testing 3.0-rc4 kernel using 
+rtl8187 as the network driver, I was quite surprised to find that the new kernel 
+could use b43 to install the new kernel from Linus's tree. After booting that 
+kernel, the failure returned.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 56a0ac4..ac9ec3c 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -129,6 +129,8 @@ void ath_descdma_cleanup(struct ath_softc *sc, struct ath_descdma *dd,
- 	 (((_tid) == 4) || ((_tid) == 5)) ? WME_AC_VI :	\
- 	 WME_AC_VO)
- 
-+#define PADBYTES(_len) ((4 - ((_len) % 4)) % 4)
-+
- #define ATH_AGGR_DELIM_SZ          4
- #define ATH_AGGR_MINPLEN           256 /* in bytes, minimum packet length */
- /* number of delimiters for encryption padding */
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index a1fed6c..18f02c0 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -708,9 +708,8 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
- 					     struct list_head *bf_q,
- 					     int *aggr_len)
- {
--#define PADBYTES(_len) ((4 - ((_len) % 4)) % 4)
- 	struct ath_buf *bf, *bf_first, *bf_prev = NULL;
--	int rl = 0, nframes = 0, ndelim, prev_al = 0;
-+	int nframes = 0, ndelim, prev_al = 0;
- 	u16 aggr_limit = 0, al = 0, bpad = 0,
- 		al_delta, h_baw = tid->baw_size / 2;
- 	enum ATH_AGGR_STATUS status = ATH_AGGR_DONE;
-@@ -729,10 +728,7 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
- 			break;
- 		}
- 
--		if (!rl) {
--			aggr_limit = ath_lookup_rate(sc, bf, tid);
--			rl = 1;
--		}
-+		aggr_limit = ath_lookup_rate(sc, bf, tid);
- 
- 		/* do not exceed aggregation limit */
- 		al_delta = ATH_AGGR_DELIM_SZ + fi->framelen;
-@@ -785,7 +781,6 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
- 	*aggr_len = al;
- 
- 	return status;
--#undef PADBYTES
- }
- 
- static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
--- 
-1.7.0.4
+I then made other load tests on the w-t kernel without failures.
 
+There are no real differences between the b43 sources in the two kernels. There 
+are lots of changes associated with the bus reorganization; however these do not 
+seem to cause the problem.
+
+Only one of the patches to ssb seems to be the "fix", namely commit eb40e3e8 
+entitled "drivers/ssb/driver_chipcommon_pmu.c: uninitilized warning" by Connor 
+Hansen. I need to do more tests on this patch, but the kernel from Linus's tree 
+could reinstall itself when I added this patch. I see no indication in the 
+commit message regarding pushing this one to stable, but I think it should go 
+upstream to mainline and the stable trees.
+
+Larry
