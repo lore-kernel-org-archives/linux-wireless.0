@@ -1,83 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33154 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756591Ab1FIWFI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 18:05:08 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, jonas.gorski@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>, Ignacy Gawedzki <i@lri.fr>
-Subject: [PATCH 2/5] compat: add device name in register_netdevice(dev)
-Date: Fri, 10 Jun 2011 00:04:44 +0200
-Message-Id: <1307657087-23900-2-git-send-email-hauke@hauke-m.de> (sfid-20110610_000517_510103_CC077FED)
-In-Reply-To: <1307657087-23900-1-git-send-email-hauke@hauke-m.de>
-References: <1307657087-23900-1-git-send-email-hauke@hauke-m.de>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:14012 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757992Ab1FWAVh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jun 2011 20:21:37 -0400
+From: "Green, Michael" <green@qca.qualcomm.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+CC: "ext John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>
+Subject: wireless-regdb US and CA settings incorrect?
+Date: Thu, 23 Jun 2011 00:18:24 +0000
+Message-ID: <237CF5B631AA3446BAC55A2F73815CEB01185DC6@nasanexd02b.na.qualcomm.com> (sfid-20110623_022145_463200_2D7F6245)
+References: <1304594478.3749.61.camel@wimaxnb>
+ <BANLkTimGs+hAX=5wE7PiTuVzD=4iLShBHQ@mail.gmail.com>
+In-Reply-To: <BANLkTimGs+hAX=5wE7PiTuVzD=4iLShBHQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dev_alloc_name() is not called explicitly in the driver code any more,
-but it is done in register_netdevice(). This causes devices getting
-wrong names like "wlan%d". With this patch they get names like wlan0
-again.
-
-Add to compat-3.0-stable
-
-CC: Ignacy Gawedzki <i@lri.fr>
----
- include/linux/compat-2.6.h |    1 +
- include/linux/compat-3.0.h |   31 +++++++++++++++++++++++++++++++
- 2 files changed, 32 insertions(+), 0 deletions(-)
- create mode 100644 include/linux/compat-3.0.h
-
-diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
-index 893a159..e4ca6aa 100644
---- a/include/linux/compat-2.6.h
-+++ b/include/linux/compat-2.6.h
-@@ -32,6 +32,7 @@
- #include <linux/compat-2.6.37.h>
- #include <linux/compat-2.6.38.h>
- #include <linux/compat-2.6.39.h>
-+#include <linux/compat-3.0.h>
- #include <linux/compat-3.1.h>
- 
- #endif /* LINUX_26_COMPAT_H */
-diff --git a/include/linux/compat-3.0.h b/include/linux/compat-3.0.h
-new file mode 100644
-index 0000000..5d05093
---- /dev/null
-+++ b/include/linux/compat-3.0.h
-@@ -0,0 +1,31 @@
-+#ifndef LINUX_3_0_COMPAT_H
-+#define LINUX_3_0_COMPAT_H
-+
-+#include <linux/version.h>
-+
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0))
-+
-+/*
-+ * since commit 1c5cae815d19ffe02bdfda1260949ef2b1806171
-+ * "net: call dev_alloc_name from register_netdevice" dev_alloc_name is
-+ * called automatically. This is not implemented in older kernel
-+ * versions so it will result in device wrong names.
-+ */
-+static inline int register_netdevice_name(struct net_device *dev)
-+{
-+	int err;
-+
-+	if (strchr(dev->name, '%')) {
-+		err = dev_alloc_name(dev, dev->name);
-+		if (err < 0)
-+			return err;
-+	}
-+
-+	return register_netdevice(dev);
-+}
-+
-+#define register_netdevice(dev) register_netdevice_name(dev)
-+
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)) */
-+
-+#endif /* LINUX_3_0_COMPAT_H */
--- 
-1.7.4.1
-
+V2VsbCwgdGhlIEZDQyAmIENhbmFkYSByZWdkb21haW5zIHNob3VsZCBkaXNhYmxlIHRob3NlIFRE
+V1IgY2hhbm5lbHMgZm9yIGFuIEFQLg0KQnV0IHJlZ2RvbWFpbnMgZm9yIGNsaWVudCBkZXZpY2Vz
+IHNob3VsZCBub3QgZGlzYWJsZSB0aG9zZSBjaGFubmVscy4NCg0KSW4gb3VyIGxpY2Vuc2VkIHN3
+LCB3ZSB1c2UgZGlmZmVyZW50IHJlZ2RvbWFpbnMgZm9yIEFQIHZzLiBTVEEgdG8gYWNjb21wbGlz
+aCB0aGlzLiBOb3Qgc3VyZSBob3cgbGludXggaGFuZGxlcyB0aGlzLg0KDQpNaWNoYWVsIEdyZWVu
+DQpncmVlbkBxdWFsY29tbS5jb20NCg0KUXVhbGNvbW0gQXRoZXJvcywgSW5jLg0KNzgxLTQwMC0x
+NDkxIChvZmZpY2UpDQo1MDgtMzgwLTQ5MjEgKGNlbGwpDQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNz
+YWdlLS0tLS0NCkZyb206IEx1aXMgUi4gUm9kcmlndWV6IFttYWlsdG86bWNncm9mQGdtYWlsLmNv
+bV0gDQpTZW50OiBUaHVyc2RheSwgTWF5IDA1LCAyMDExIDExOjU3IEFNDQpUbzogSnV1c28gT2lr
+YXJpbmVuOyBNaWNoYWVsIEdyZWVuDQpDYzogZXh0IEpvaG4gVy4gTGludmlsbGU7IGxpbnV4LXdp
+cmVsZXNzQHZnZXIua2VybmVsLm9yZzsgd2lyZWxlc3MtcmVnZGJAbGlzdHMuaW5mcmFkZWFkLm9y
+Zw0KU3ViamVjdDogUmU6IHdpcmVsZXNzLXJlZ2RiIFVTIGFuZCBDQSBzZXR0aW5ncyBpbmNvcnJl
+Y3Q/DQoNCk9uIFRodSwgTWF5IDUsIDIwMTEgYXQgNDoyMSBBTSwgSnV1c28gT2lrYXJpbmVuIDxq
+dXVzby5vaWthcmluZW5Abm9raWEuY29tPiB3cm90ZToNCj4gSGkgSm9obiwgYWxsLA0KPg0KPiBU
+aGUgZm9sbG93aW5nIGlzIGFuIGV4Y2VycHQgb2YgdGhlIGRiLnR4dCBmcm9tIG1vc3QgcmVjZW50
+IA0KPiB3aXJlbGVzcy1yZWdkYi4NCj4NCj4gY291bnRyeSBVUzoNCj4gwqAgwqAgwqAgwqAgKDI0
+MDIgLSAyNDcyIEAgNDApLCAoMywgMjcpDQo+IMKgIMKgIMKgIMKgICg1MTcwIC0gNTI1MCBAIDQw
+KSwgKDMsIDE3KQ0KPiDCoCDCoCDCoCDCoCAoNTI1MCAtIDUzMzAgQCA0MCksICgzLCAyMCksIERG
+Uw0KPiDCoCDCoCDCoCDCoCAoNTQ5MCAtIDU2MDAgQCA0MCksICgzLCAyMCksIERGUw0KPiDCoCDC
+oCDCoCDCoCAoNTY1MCAtIDU3MTAgQCA0MCksICgzLCAyMCksIERGUw0KPiDCoCDCoCDCoCDCoCAo
+NTczNSAtIDU4MzUgQCA0MCksICgzLCAzMCkNCj4NCj4gY291bnRyeSBDQToNCj4gwqAgwqAgwqAg
+wqAgKDI0MDIgLSAyNDcyIEAgNDApLCAoMywgMjcpDQo+IMKgIMKgIMKgIMKgICg1MTcwIC0gNTI1
+MCBAIDQwKSwgKDMsIDE3KQ0KPiDCoCDCoCDCoCDCoCAoNTI1MCAtIDUzMzAgQCA0MCksICgzLCAy
+MCksIERGUw0KPiDCoCDCoCDCoCDCoCAoNTQ5MCAtIDU3MTAgQCA0MCksICgzLCAyMCksIERGUw0K
+PiDCoCDCoCDCoCDCoCAoNTczNSAtIDU4MzUgQCA0MCksICgzLCAzMCkNCj4NCj4gV2UgYXJlIHVu
+ZGVyIHRoZSB1bmRlcnN0YW5kaW5nIHRoYXQgdGhlIENhbmFkaWFuIG5hdGlvbmFsIHJ1bGVzIGRl
+bnkgDQo+IHRoZSB1c2FnZSBvZiB0aGUgNTQ5MC01NzEwIHJhbmdlIG9mIGZyZXF1ZW5jaWVzIChy
+ZWYgZnJvbSBSU1MtMjEwKSwgDQo+IGJ1dCB0aGUgcmFuZ2UgaXMgcHJlc2VudCBpbiB0aGUgYWxs
+b3dlZCByYW5nZSBvZiBmcmVxdWVuY2llcyBmb3IgdGhlIENBIHJlZ2lvbjoNCj4NCj4gIkFkZGl0
+aW9uYWwgcmVxdWlyZW1lbnRzIGZvciB0aGUgYmFuZCA1NjAwLTU2NTAgTUh6OiBVbnRpbCBmdXJ0
+aGVyIA0KPiBub3RpY2UsIGRldmljZXMgc3ViamVjdCB0byB0aGlzIFNlY3Rpb24gc2hhbGwgbm90
+IGJlIGNhcGFibGUgb2YgDQo+IHRyYW5zbWl0dGluZyBpbiB0aGUgYmFuZCA1NjAwLTU2NTAgTUh6
+LCBzbyB0aGF0IEVudmlyb25tZW50IENhbmFkYSANCj4gd2VhdGhlciByYWRhcnMgb3BlcmF0aW5n
+IGluIHRoaXMgYmFuZCBhcmUgcHJvdGVjdGVkLiINCj4NCj4gVGhlbiBhZ2FpbiwgdGhlIEZDQyBy
+dWxlcyAoMTUuNDA3KSBkbyBub3QgcHJvaGliaXQgdGhlIG1lbnRpb25lZCByYW5nZSANCj4gb2Yg
+ZnJlcXVlbmNpZXMgd2l0aGluIHRoZSBVUyAod2l0aCBERlMgYW5kIGxpbWl0ZWQgcG93ZXIgbGV2
+ZWwpIGJ1dCBpbiANCj4gdGhlIHJlZ3VsYXRvcnkgZGF0YWJhc2UgdGhhdCByYW5nZSBpcyBtaXNz
+aW5nLg0KPg0KPg0KPiBJcyB0aGVyZSBhIGJ1ZyBpbiB0aGUgcmVndWxhdG9yeSBkYiwgb3IgYW0g
+SSBtaXN1bmRlcnN0YW5kaW5nIHNvbWV0aGluZz8NCg0KDQpNaWNoYWVsLCBhbnkgb3BpbmlvbiBv
+biB0aGlzPw0KDQogIEx1aXMNCg==
