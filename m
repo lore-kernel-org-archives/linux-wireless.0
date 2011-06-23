@@ -1,109 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from que21.charter.net ([209.225.8.22]:35308 "EHLO que21.charter.net"
+Received: from c60.cesmail.net ([216.154.195.49]:18423 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753697Ab1FCDAG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 23:00:06 -0400
-From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
-To: sgruszka@redhat.com, linville@tuxdriver.com
-Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Greg Dietsche <Gregory.Dietsche@cuw.edu>
-Subject: [PATCH 5/5] iwlegacy: add missing null check
-Date: Thu,  2 Jun 2011 21:06:10 -0500
-Message-Id: <1307066770-27309-5-git-send-email-Gregory.Dietsche@cuw.edu> (sfid-20110603_050025_180255_16B385F6)
-In-Reply-To: <1307066770-27309-1-git-send-email-Gregory.Dietsche@cuw.edu>
-References: <1307066770-27309-1-git-send-email-Gregory.Dietsche@cuw.edu>
+	id S1759575Ab1FWPov (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jun 2011 11:44:51 -0400
+Message-ID: <4E035F71.20602@gnu.org> (sfid-20110623_174455_010179_169C80E6)
+Date: Thu, 23 Jun 2011 11:44:49 -0400
+From: Pavel Roskin <proski@gnu.org>
+MIME-Version: 1.0
+To: Maya it <maya1625it@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [ath9k-devel] dev_base list head in the linux kernel code
+References: <BANLkTinvscyX=xh_auh96nf2UPV=njkYXg@mail.gmail.com>
+In-Reply-To: <BANLkTinvscyX=xh_auh96nf2UPV=njkYXg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-lq_sta has other null checks in this funcion.
-assuming they are correct, this additional null check
-should be added too.
+On 06/22/2011 10:12 PM, Maya it wrote:
+> Hi all,
+>
+> I have two wireless cards (wlan0 and wlan1) and want to access them
+> separately. I plan to keep both in adhoc mode and communicate with wlan0 and
+> wlan1 respectively at the other end of this communication. But since I am
+> working at the kernel level, and I want to access these devices from the
+> dev_base list. As far as I know, dev_base saves the net_devices which are
+> initialized at boot up time. So I want to open the device and change its
+> configuration after the kernel has loaded.
+>
+> Please guide and let me know if I am wrong in understanding the basics of
+> the dev_base list.
 
-Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
----
- drivers/net/wireless/iwlegacy/iwl-4965-rs.c |   66 ++++++++++++++-------------
- 1 files changed, 34 insertions(+), 32 deletions(-)
+Please don't cross-post.  Cross-posting should be reserved for really 
+important topics, such as announcements by lead developers.  I'm 
+trimming the cc list.  Actually, your question would be suitable for the 
+netdev list, as there it nothing specific in your question about 
+wireless devices, let alone ath9k.  Or better yet, maybe you could find 
+some forum or list for the newbies in kernel programming?
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-index 24d1499..a475aac 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-@@ -2275,40 +2275,42 @@ iwl4965_rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
- 	if (rate_control_send_low(sta, priv_sta, txrc))
- 		return;
- 
--	rate_idx  = lq_sta->last_txrate_idx;
--
--	if (lq_sta->last_rate_n_flags & RATE_MCS_HT_MSK) {
--		rate_idx -= IWL_FIRST_OFDM_RATE;
--		/* 6M and 9M shared same MCS index */
--		rate_idx = (rate_idx > 0) ? (rate_idx - 1) : 0;
--		if (iwl4965_rs_extract_rate(lq_sta->last_rate_n_flags) >=
--			 IWL_RATE_MIMO2_6M_PLCP)
--			rate_idx = rate_idx + MCS_INDEX_PER_STREAM;
--		info->control.rates[0].flags = IEEE80211_TX_RC_MCS;
--		if (lq_sta->last_rate_n_flags & RATE_MCS_SGI_MSK)
--			info->control.rates[0].flags |=
--					IEEE80211_TX_RC_SHORT_GI;
--		if (lq_sta->last_rate_n_flags & RATE_MCS_DUP_MSK)
--			info->control.rates[0].flags |=
--					IEEE80211_TX_RC_DUP_DATA;
--		if (lq_sta->last_rate_n_flags & RATE_MCS_HT40_MSK)
--			info->control.rates[0].flags |=
--					IEEE80211_TX_RC_40_MHZ_WIDTH;
--		if (lq_sta->last_rate_n_flags & RATE_MCS_GF_MSK)
--			info->control.rates[0].flags |=
--					IEEE80211_TX_RC_GREEN_FIELD;
--	} else {
--		/* Check for invalid rates */
--		if ((rate_idx < 0) || (rate_idx >= IWL_RATE_COUNT_LEGACY) ||
--				((sband->band == IEEE80211_BAND_5GHZ) &&
--				 (rate_idx < IWL_FIRST_OFDM_RATE)))
--			rate_idx = rate_lowest_index(sband, sta);
--		/* On valid 5 GHz rate, adjust index */
--		else if (sband->band == IEEE80211_BAND_5GHZ)
-+	if (lq_sta) {
-+		rate_idx  = lq_sta->last_txrate_idx;
-+
-+		if (lq_sta->last_rate_n_flags & RATE_MCS_HT_MSK) {
- 			rate_idx -= IWL_FIRST_OFDM_RATE;
--		info->control.rates[0].flags = 0;
-+			/* 6M and 9M shared same MCS index */
-+			rate_idx = (rate_idx > 0) ? (rate_idx - 1) : 0;
-+			if (iwl4965_rs_extract_rate(lq_sta->last_rate_n_flags) >=
-+				 IWL_RATE_MIMO2_6M_PLCP)
-+				rate_idx = rate_idx + MCS_INDEX_PER_STREAM;
-+			info->control.rates[0].flags = IEEE80211_TX_RC_MCS;
-+			if (lq_sta->last_rate_n_flags & RATE_MCS_SGI_MSK)
-+				info->control.rates[0].flags |=
-+						IEEE80211_TX_RC_SHORT_GI;
-+			if (lq_sta->last_rate_n_flags & RATE_MCS_DUP_MSK)
-+				info->control.rates[0].flags |=
-+						IEEE80211_TX_RC_DUP_DATA;
-+			if (lq_sta->last_rate_n_flags & RATE_MCS_HT40_MSK)
-+				info->control.rates[0].flags |=
-+						IEEE80211_TX_RC_40_MHZ_WIDTH;
-+			if (lq_sta->last_rate_n_flags & RATE_MCS_GF_MSK)
-+				info->control.rates[0].flags |=
-+						IEEE80211_TX_RC_GREEN_FIELD;
-+		} else {
-+			/* Check for invalid rates */
-+			if ((rate_idx < 0) || (rate_idx >= IWL_RATE_COUNT_LEGACY) ||
-+					((sband->band == IEEE80211_BAND_5GHZ) &&
-+					 (rate_idx < IWL_FIRST_OFDM_RATE)))
-+				rate_idx = rate_lowest_index(sband, sta);
-+			/* On valid 5 GHz rate, adjust index */
-+			else if (sband->band == IEEE80211_BAND_5GHZ)
-+				rate_idx -= IWL_FIRST_OFDM_RATE;
-+			info->control.rates[0].flags = 0;
-+		}
-+		info->control.rates[0].idx = rate_idx;
- 	}
--	info->control.rates[0].idx = rate_idx;
- 
- }
- 
+I suggest that you check the latest kernel source for examples before 
+asking questions.  You can easily find that access to dev_base is 
+encapsulated by macros defined in netdevice.h, such as for_each_netdev.
+
+Now you can look for examples of for_each_netdev in the code and see if 
+they do what you need.
+
 -- 
-1.7.2.5
-
+Regards,
+Pavel Roskin
