@@ -1,65 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53752 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751588Ab1FBQXb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 12:23:31 -0400
-Date: Thu, 2 Jun 2011 18:22:41 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 07/10] iwlagn: advertise interface combinations
-Message-ID: <20110602162241.GE4580@redhat.com> (sfid-20110602_182334_892232_4236B0F8)
-References: <1306510833-32049-1-git-send-email-wey-yi.w.guy@intel.com>
- <1306510833-32049-8-git-send-email-wey-yi.w.guy@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1306510833-32049-8-git-send-email-wey-yi.w.guy@intel.com>
+Received: from smtp-out.google.com ([216.239.44.51]:50729 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933048Ab1FWR0e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jun 2011 13:26:34 -0400
+Received: from hpaq11.eem.corp.google.com (hpaq11.eem.corp.google.com [172.25.149.11])
+	by smtp-out.google.com with ESMTP id p5NHQWRB016958
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2011 10:26:33 -0700
+Received: from glenhelen.mtv.corp.google.com (glenhelen.mtv.corp.google.com [172.22.72.223])
+	by hpaq11.eem.corp.google.com with ESMTP id p5NHQV01019944
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2011 10:26:31 -0700
+From: Paul Stewart <pstew@chromium.org>
+Date: Thu, 23 Jun 2011 09:00:11 -0800
+Subject: [PATCH] mac80211: Drop DS Channel PARAM in directed probe
+To: linux-wireless@vger.kernel.org
+Message-Id: <20110623172630.F038820191@glenhelen.mtv.corp.google.com> (sfid-20110623_192641_605567_2DA48ECC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 27, 2011 at 08:40:30AM -0700, Wey-Yi Guy wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> With this, iwlwifi will advertise the limits on
-> concurrency of virtual interfaces.
+Do not send DS Channel parameter for directed probe requests
+in order to maximize the chance that we get a response.  Some
+badly-behaved APs don't respond when this parameter is included.
 
-John, please revert this patch, it disallow to register new device
-with below error. I believe, Wey already asked you to not a apply it.
+Signed-off-by: Paul Stewart <pstew@chromium.org>
+---
+ net/mac80211/ieee80211_i.h |    6 ++++--
+ net/mac80211/mlme.c        |    5 +++--
+ net/mac80211/scan.c        |    3 ++-
+ net/mac80211/util.c        |   21 ++++++++++++++++-----
+ net/mac80211/work.c        |    2 +-
+ 5 files changed, 26 insertions(+), 11 deletions(-)
 
-WARNING: at net/wireless/core.c:468 wiphy_register+0x46e/0x5c0
-[cfg80211]()
-Hardware name: HP xw8600 Workstation
-Modules linked in: iwlagn(+) mac80211 cfg80211 fuse cpufreq_ondemand
-acpi_cpufreq freq_table mperf xt_physdev ipt_REJECT nf_conntrack_ipv4
-nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6
-nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6
-ext3 jbd dm_mirror dm_region_hash dm_log dm_mod uinput sg hp_wmi
-sparse_keymap rfkill microcode serio_raw shpchp ext4 mbcache jbd2 sr_mod
-cdrom sd_mod crc_t10dif firewire_ohci firewire_core crc_itu_t mptsas
-mptscsih mptbase scsi_transport_sas ahci libahci pata_acpi ata_generic
-ata_piix floppy nouveau ttm drm_kms_helper drm i2c_algo_bit i2c_core
-mxm_wmi wmi video [last unloaded: scsi_wait_scan]
-Pid: 7333, comm: firmware/iwlwif Not tainted 3.0.0-rc1-wl+ #82
-Call Trace:
- [<ffffffff8106438f>] warn_slowpath_common+0x7f/0xc0
- [<ffffffff810643ea>] warn_slowpath_null+0x1a/0x20
- [<ffffffffa03ea65e>] wiphy_register+0x46e/0x5c0 [cfg80211]
- [<ffffffff8115ce73>] ? __kmalloc+0x1b3/0x2d0
- [<ffffffffa042732e>] ? ieee80211_register_hw+0xde/0x670 [mac80211]
- [<ffffffffa04274dc>] ieee80211_register_hw+0x28c/0x670 [mac80211]
- [<ffffffffa047b9ca>] iwl_ucode_callback+0xd3a/0x11d0 [iwlagn]
- [<ffffffff81220607>] ? kobject_release+0xa7/0x1d0
- [<ffffffff8130f160>] ? _request_firmware+0x4e0/0x4e0
- [<ffffffff8130f1a1>] request_firmware_work_func+0x41/0x80
- [<ffffffff81088376>] kthread+0xb6/0xc0
- [<ffffffff810a1575>] ? trace_hardirqs_on_caller+0x155/0x1a0
- [<ffffffff814ba404>] kernel_thread_helper+0x4/0x10
- [<ffffffff814b1454>] ? retint_restore_args+0x13/0x13
- [<ffffffff810882c0>] ? __init_kthread_worker+0x70/0x70
- [<ffffffff814ba400>] ? gs_change+0x13/0x13
----[ end trace 971e83aec02c096b ]---
-iwlagn 0000:80:00.0: Failed to register hw (error -22)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 090b0ec..25c15cc 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1350,10 +1350,12 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
+ 					  u8 *dst,
+ 					  const u8 *ssid, size_t ssid_len,
+-					  const u8 *ie, size_t ie_len);
++					  const u8 *ie, size_t ie_len,
++					  bool directed);
+ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 			      const u8 *ssid, size_t ssid_len,
+-			      const u8 *ie, size_t ie_len);
++			      const u8 *ie, size_t ie_len,
++			      bool directed);
+ 
+ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+ 				  const size_t supp_rates_len,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index faca503..0f6052f 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1204,7 +1204,8 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 		ieee80211_send_nullfunc(sdata->local, sdata, 0);
+ 	} else {
+ 		ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
+-		ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0);
++		ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0,
++					 true);
+ 	}
+ 
+ 	ifmgd->probe_send_count++;
+@@ -1289,7 +1290,7 @@ struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
+ 
+ 	ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
+ 	skb = ieee80211_build_probe_req(sdata, ifmgd->associated->bssid,
+-					ssid + 2, ssid[1], NULL, 0);
++					ssid + 2, ssid[1], NULL, 0, true);
+ 
+ 	return skb;
+ }
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 1758b46..a97eed0 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -658,7 +658,8 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
+ 			sdata, NULL,
+ 			local->scan_req->ssids[i].ssid,
+ 			local->scan_req->ssids[i].ssid_len,
+-			local->scan_req->ie, local->scan_req->ie_len);
++			local->scan_req->ie, local->scan_req->ie_len,
++			false);
+ 
+ 	/*
+ 	 * After sending probe requests, wait for probe responses
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 05e3fb8..652e569 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1018,7 +1018,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
+ 					  u8 *dst,
+ 					  const u8 *ssid, size_t ssid_len,
+-					  const u8 *ie, size_t ie_len)
++					  const u8 *ie, size_t ie_len,
++					  bool directed)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+@@ -1035,8 +1036,16 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
+ 		return NULL;
+ 	}
+ 
+-	chan = ieee80211_frequency_to_channel(
+-		local->hw.conf.channel->center_freq);
++	/*
++	 * Do not send DS Channel parameter for directed probe requests
++	 * in order to maximize the chance that we get a response.  Some
++	 * badly-behaved APs don't respond when this parameter is included.
++	 */
++	if (directed)
++		chan = 0;
++	else
++		chan = ieee80211_frequency_to_channel(
++			local->hw.conf.channel->center_freq);
+ 
+ 	buf_len = ieee80211_build_preq_ies(local, buf, ie, ie_len,
+ 					   local->hw.conf.channel->band,
+@@ -1062,11 +1071,13 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
+ 
+ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 			      const u8 *ssid, size_t ssid_len,
+-			      const u8 *ie, size_t ie_len)
++			      const u8 *ie, size_t ie_len,
++			      bool directed)
+ {
+ 	struct sk_buff *skb;
+ 
+-	skb = ieee80211_build_probe_req(sdata, dst, ssid, ssid_len, ie, ie_len);
++	skb = ieee80211_build_probe_req(sdata, dst, ssid, ssid_len, ie, ie_len,
++					directed);
+ 	if (skb)
+ 		ieee80211_tx_skb(sdata, skb);
+ }
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index d2e7f0e..edf8583 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -450,7 +450,7 @@ ieee80211_direct_probe(struct ieee80211_work *wk)
+ 	 * will not answer to direct packet in unassociated state.
+ 	 */
+ 	ieee80211_send_probe_req(sdata, NULL, wk->probe_auth.ssid,
+-				 wk->probe_auth.ssid_len, NULL, 0);
++				 wk->probe_auth.ssid_len, NULL, 0, true);
+ 
+ 	wk->timeout = jiffies + IEEE80211_AUTH_TIMEOUT;
+ 	run_again(local, wk->timeout);
+-- 
+1.7.3.1
 
-Stanislaw
