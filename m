@@ -1,211 +1,517 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:52691 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753920Ab1FTKeL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2011 06:34:11 -0400
-Message-ID: <4DFF221E.6010901@googlemail.com> (sfid-20110620_123429_613653_20B34D56)
-Date: Mon, 20 Jun 2011 11:34:06 +0100
-From: Alan Jenkins <alan.christopher.jenkins@googlemail.com>
+Received: from mail.atheros.com ([12.19.149.2]:16591 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932170Ab1FWDvI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jun 2011 23:51:08 -0400
+Received: from mail.atheros.com ([10.234.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 20:50:32 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <hostap@lists.shmoo.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 3/4] hostapd: add survey dump support
+Date: Wed, 22 Jun 2011 20:50:47 -0700
+Message-ID: <1308801048-2415-4-git-send-email-lrodriguez@atheros.com> (sfid-20110623_055114_848381_6739C25C)
+In-Reply-To: <1308801048-2415-1-git-send-email-lrodriguez@atheros.com>
+References: <1308801048-2415-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>
-Subject: Re: [ath5k] OOPS bisected - ath5k_eeprom_init_header() - "XX: This
- value is likely too big still, waiting on a better value"
-References: <4DFF2156.4000100@googlemail.com>
-In-Reply-To: <4DFF2156.4000100@googlemail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[Removed "XXX" from subject in order to get past VGER spam filter]
+This adds survey dump support for all frequencies
+and for specific desired frequencies. This will later
+be used by ACS code for spectrum heuristics.
 
-On 20/06/11 11:30, Alan Jenkins wrote:
-> ## Summary of bug report ##
-> Confidence: high.
-> (Bisected.  Crash message captured, see end of message).
->
-> Severity: low.
-> (Users can easily avoid the trigger for this crash).
->
->
-> ## Scenario: ##
-> Asus EeePC 701.
-> Wireless-toggle button, implemented in firmware, disables / enables 
-> the entire PCI slot.  (See platform driver eeepc-laptop).
->
-> ## Expected results: ##
-> Ath5k (like any other PCI driver), must tolerate removal of PCI 
-> devices without warning, and *never crash*.
->
-> ## Actual results: ##
-> Ath5k generally handles removal very well, but crashes in a corner 
-> case.  This is a regression introduced by v2.6.33 (commit commit 
-> 359207c687cc8f4f9845c8dadd0d6dabad44e584 "ath5k: Fix eeprom checksum 
-> check for custom sized eeproms").
->
-> ## How to reproduce: ##
-> Repeatedly press the wireless-toggle button as fast as you can.  It 
-> shouldn't take more than about 20 presses before the OOPS occurs.
->
->
-> ## Results of git-bisect ##
->
-> commit 359207c687cc8f4f9845c8dadd0d6dabad44e584
-> Author: Luis R. Rodriguez <lrodriguez@atheros.com>
-> Date:   Mon Jan 4 10:40:39 2010 -0500
->
->     ath5k: Fix eeprom checksum check for custom sized eeproms
->
->     Commit 8bf3d79bc401ca417ccf9fc076d3295d1a71dbf5 enabled EEPROM
->     checksum checks to avoid bogus bug reports but failed to address
->     updating the code to consider devices with custom EEPROM sizes.
->     Devices with custom sized EEPROMs have the upper limit size stuffed
->     in the EEPROM. Use this as the upper limit instead of the static
->     default size. In case of a checksum error also provide back the
->     max size and whether or not this was the default size or a custom
->     one. If the EEPROM is busted we add a failsafe check to ensure
->     we don't loop forever or try to read bogus areas of hardware.
->
->     This closes bug 14874
->
->     http://bugzilla.kernel.org/show_bug.cgi?id=14874
->
->     Cc: stable@kernel.org
->     Cc: David Quan <david.quan@atheros.com>
->     Cc: Stephen Beahm <stephenbeahm@comcast.net>
->     Reported-by: Joshua Covington <joshuacov@googlemail.com>
->     Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
->
-> ...
->
-> -       for (cksum = 0, offset = 0; offset < AR5K_EEPROM_INFO_MAX; 
-> offset++) {
-> +       AR5K_EEPROM_READ(AR5K_EEPROM_SIZE_UPPER, val);
-> +       if (val) {
-> +               eep_max = (val & AR5K_EEPROM_SIZE_UPPER_MASK) <<
-> +                          AR5K_EEPROM_SIZE_ENDLOC_SHIFT;
-> +               AR5K_EEPROM_READ(AR5K_EEPROM_SIZE_LOWER, val);
-> +               eep_max = (eep_max | val) - AR5K_EEPROM_INFO_BASE;
-> +
-> +               /*
-> +                * Fail safe check to prevent stupid loops due
-> +                * to busted EEPROMs. XXX: This value is likely too
-> +                * big still, waiting on a better value.
-> +                */
-> +               if (eep_max > (3 * AR5K_EEPROM_INFO_MAX)) {
-> +                       ATH5K_ERR(ah->ah_sc, "Invalid max custom 
-> EEPROM size: "
-> +                                 "%d (0x%04x) max expected: %d 
-> (0x%04x)\n",
-> +                                 eep_max, eep_max,
-> +                                 3 * AR5K_EEPROM_INFO_MAX,
-> +                                 3 * AR5K_EEPROM_INFO_MAX);
-> +                       return -EIO;
-> +               }
-> +       }
-> +
-> +       for (cksum = 0, offset = 0; offset < eep_max; offset++) {
->
->
-> ### Example OOPS message ###
->
-> pci 0000:01:00.0: reg 10: [mem 0x00000000-0x0000ffff 64bit]
-> pci 0000:01:00.0: BAR 0: assigned [mem 0xf8000000-0xf800ffff 64bit]
-> pci 0000:01:00.0: BAR 0: set to [mem 0xf8000000-0xf800ffff 64bit] (PCI 
-> address [0xf8000000-0xf800ffff]
-> ath5k 0000:01:00.0: enabling device (0000 -> 0002)
-> ath5k 0000:01:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-> ath5k 0000:01:00.0: setting latency timer to 64
-> ath5k 0000:01:00.0: registered as 'phy9'
-> BUG: unable to handle kernel paging request at 1ef700e0
-> IP: [<c05a098c>] iowrite32+0xd/0x30
-> *pde = 00000000
-> Oops: 0002 [#1] SMP
-> last sysfs file: /sys/devices/platform/eeepc/rfkill/rfkill0/uevent
-> Modules linked in: aes_i586 aes_generic snd_hda_codec_realtek arc4 ecb 
-> snd_hda_intel snd_hda_codec snd_hwdep snd_seq snd_seq_device 
-> ip6t_REJECT ath5k snd_pcm nf_conntrack_ipv6 mac80211 uvcvideo iTCO_wdt 
-> ip6table_filter ath iTCO_vendor_support videodev snd_timer 
-> eeepc_laptop microcode ip6_tables v4l1_compat joydev i2c_i801 cfg80211 
-> snd sparse_keymap atl2 rfkill soundcore snd_page_alloc ipv6 autofs4 
-> i915 drm_kms_helper drm usb_storage i2c_algo_bit i2c_core video output
->
-> Pid: 17, comm: kacpi_notify Not tainted 2.6.33.3-85.fc13.i686 #1 701/701
-> EIP: 0060:[<c05a098c>] EFLAGS: 00010216 CPU: 0
-> EIP is at iowrite32+0xd/0x30
-> EAX: 00000020 EBX: de324000 ECX: 1ef700e0 EDX: 1ef700e0
-> ESI: 00000020 EDI: decabdba EBP: decabd90 ESP: decabd90
->  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-> Process kacpi_notify (pid: 17, ti=decaa000 task=dec84c80 
-> task.ti=decaa000)
-> Stack:
->  decabda4 e08af61e de0e0a40 00000007 decabdba decabdc8 e08af6df decabe3a
-> <0> de324000 00000000 00000000 de0e0a40 00000007 decabe38 decabe54 
-> e08c041c
-> <0> 0000000c decabe1c 0000000c e09a0000 de325680 def6a500 1ef6a500 
-> de324000
-> Call Trace:
->  [<e08af61e>] ? ath5k_hw_eeprom_read+0x80/0x116 [ath5k]
->  [<e08af6df>] ? ath5k_eeprom_read_mac+0x2b/0x8f [ath5k]
->  [<e08c041c>] ? ath5k_pci_probe+0xbd4/0x1115 [ath5k]
->  [<c05ab416>] ? local_pci_probe+0xe/0x10
->  [<c05abdef>] ? pci_device_probe+0x43/0x66
->  [<c062e3f6>] ? driver_probe_device+0xc5/0x1cd
->  [<c062e587>] ? __device_attach+0x2a/0x2e
->  [<c062d832>] ? bus_for_each_drv+0x3d/0x67
->  [<c062e5f6>] ? device_attach+0x4c/0x6c
->  [<c062e55d>] ? __device_attach+0x0/0x2e
->  [<c062d697>] ? bus_probe_device+0x18/0x2d
->  [<c062c31f>] ? device_add+0x30d/0x49c
->  [<c075f8ea>] ? pci_bus_assign_resources+0xac/0x3a7
->  [<c05a723d>] ? pci_device_add+0xca/0xce
->  [<c05a6f26>] ? pci_bus_add_device+0xf/0x30
->  [<e07480df>] ? eeepc_rfkill_hotplug+0x87/0xc0 [eeepc_laptop]
->  [<e0748126>] ? eeepc_rfkill_notify+0xe/0x10 [eeepc_laptop]
->  [<c05df721>] ? acpi_ev_notify_dispatch+0x4f/0x5a
->  [<c05d205d>] ? acpi_os_execute_deferred+0x1d/0x28
->  [<c0448d63>] ? worker_thread+0x13b/0x1b4
->  [<c05d2040>] ? acpi_os_execute_deferred+0x0/0x28
->  [<c044bd89>] ? autoremove_wake_function+0x0/0x2f
->  [<c0448c28>] ? worker_thread+0x0/0x1b4
->  [<c044ba47>] ? kthread+0x5f/0x64
->  [<c044b9e8>] ? kthread+0x0/0x64
->  [<c040383e>] ? kernel_thread_helper+0x6/0x10
-> Code: 00 76 0d 25 ff ff 00 00 89 d7 89 c2 f3 6c eb 0a ba ad 60 8b c0 
-> e8 4e fe ff ff 5b 5f 5d c3 55 81 fa ff ff 03 00 89 e5 89 d1 76 04 <89> 
-> 02 eb 1d 81 fa 00 00 01 00 76 09 81 e2 ff ff 00 00 ef eb 0c
-> EIP: [<c05a098c>] iowrite32+0xd/0x30 SS:ESP 0068:decabd90
-> CR2: 000000001ef700e0
-> ---[ end trace 2761b2bae95de764 ]---
->
-> ## Analysis ##
->
-> When the card is disabled, reads will return with all bits set.  So we 
-> think the EEPROM is of maximum size, and we end up reading outside the 
-> memory mapping for the device?
->
-> There are two obvious solutions -
->
-> 1. Bounds-check the size read from the EEPROM against the appropriate 
-> memory mapping.
-> 2. Check for "all ones" when reading the size of the EEPROM.
->
->
-> I have a feeling the bounds-checking is more annoying than it sounds.  
-> When I looked at ath5k_hw_eeprom_read(), I saw two types of hardware.  
-> In one, the EEPROM was mapped directly into PCI space, which is what 
-> seems to be happening here.  In other hardware, the access was 
-> indirected through just a couple of registers at fixed addresses - in 
-> this case the ROM could be bigger than the PCI space.
->
-> The second option is a bit of a hack though, especially considering 
-> the "XXX:" comment.
->
->
-> Best wishes
-> Alan
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ src/ap/ap_drv_ops.h          |   15 +++
+ src/ap/drv_callbacks.c       |   72 +++++++++++++++-
+ src/ap/hostapd.h             |    8 ++
+ src/drivers/driver.h         |   89 +++++++++++++++++++-
+ src/drivers/driver_nl80211.c |  193 ++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 375 insertions(+), 2 deletions(-)
+
+diff --git a/src/ap/ap_drv_ops.h b/src/ap/ap_drv_ops.h
+index a62e1e5..24c7e95 100644
+--- a/src/ap/ap_drv_ops.h
++++ b/src/ap/ap_drv_ops.h
+@@ -213,4 +213,19 @@ static inline int hostapd_drv_remain_on_channel(struct hostapd_data *hapd,
+ 	return hapd->driver->remain_on_channel(hapd->drv_priv, freq, duration);
+ }
+ 
++static inline int hostapd_drv_survey_freq(struct hostapd_data *hapd,
++					  unsigned int freq)
++{
++	if (hapd->driver == NULL)
++		return -1;
++        if (!hapd->driver->get_survey)
++		return -1;
++	return hapd->driver->get_survey(hapd->drv_priv, freq);
++}
++
++static inline int hostapd_drv_survey(struct hostapd_data *hapd)
++{
++	return hostapd_drv_survey_freq(hapd, 0);
++}
++
+ #endif /* AP_DRV_OPS */
+diff --git a/src/ap/drv_callbacks.c b/src/ap/drv_callbacks.c
+index 676fac1..6953b71 100644
+--- a/src/ap/drv_callbacks.c
++++ b/src/ap/drv_callbacks.c
+@@ -545,6 +545,73 @@ static void hostapd_event_roc_cancel(struct hostapd_data *hapd,
+ 	/* XXX: pass err to listeners, no one yet */
+ }
+ 
++struct hostapd_channel_data *hostapd_get_mode_channel(struct hostapd_iface *iface,
++						      unsigned int freq)
++{
++	unsigned int i;
++	struct hostapd_channel_data *chan;
++
++	for (i = 0; i < iface->current_mode->num_channels; i++) {
++		chan = &iface->current_mode->channels[i];
++		if (!chan)
++			return NULL;
++		if (chan->freq == freq)
++			return chan;
++	}
++
++	return NULL;
++}
++
++static void hostapd_update_nf(struct hostapd_iface *iface,
++			      struct hostapd_channel_data *chan,
++			      struct freq_survey *survey)
++{
++	if (!iface->chans_surveyed) {
++		chan->min_nf = survey->nf;
++		iface->lowest_nf = survey->nf;
++	} else {
++		if (!chan->survey_count)
++			chan->min_nf = survey->nf;
++		else if (survey->nf < chan->min_nf)
++			chan->min_nf = survey->nf;
++		if (survey->nf < iface->lowest_nf)
++			iface->lowest_nf = survey->nf;
++	}
++}
++
++static void hostapd_event_get_survey(struct hostapd_data *hapd,
++				     struct survey_results *survey_results)
++{
++	struct hostapd_iface *iface = hapd->iface;
++	struct freq_survey *survey, *tmp;
++	struct hostapd_channel_data *chan;
++
++	if (dl_list_empty(&survey_results->survey_list)) {
++		wpa_printf(MSG_DEBUG, "ACS: no survey data received");
++                return;
++	}
++
++	dl_list_for_each_safe(survey, tmp, &survey_results->survey_list, struct freq_survey, list_member) {
++		chan = hostapd_get_mode_channel(iface, survey->freq);
++		if (!chan)
++			goto fail;
++		if (chan->flag & HOSTAPD_CHAN_DISABLED)
++			continue;
++
++		dl_list_del(&survey->list_member);
++		dl_list_add_tail(&chan->survey_list, &survey->list_member);
++
++		hostapd_update_nf(iface, chan, survey);
++
++		chan->survey_count++;
++		iface->chans_surveyed++;
++	}
++
++	return;
++fail:
++	iface->chans_surveyed = 0;
++}
++
+ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
+ 			  union wpa_event_data *data)
+ {
+@@ -633,6 +700,7 @@ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
+ 		    data->rx_action.bssid == NULL)
+ 			break;
+ 		hostapd_rx_action(hapd, &data->rx_action);
++#endif /* NEED_AP_MLME */
+ 	case EVENT_REMAIN_ON_CHANNEL:
+ 		hostapd_event_roc(hapd,
+ 				  data->remain_on_channel.freq,
+@@ -643,7 +711,9 @@ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
+ 					 data->remain_on_channel.freq,
+ 					 data->remain_on_channel.duration);
+ 		break;
+-#endif /* NEED_AP_MLME */
++	case EVENT_SURVEY:
++		hostapd_event_get_survey(hapd, &data->survey_results);
++		break;
+ 	default:
+ 		wpa_printf(MSG_DEBUG, "Unknown event %d", event);
+ 		break;
+diff --git a/src/ap/hostapd.h b/src/ap/hostapd.h
+index d8318ee..1095d2b 100644
+--- a/src/ap/hostapd.h
++++ b/src/ap/hostapd.h
+@@ -231,6 +231,14 @@ struct hostapd_iface {
+ 	/* Offchannel operation helper */
+ 	unsigned int off_channel_freq_idx;
+ 
++	/* surveying helpers */
++
++	/* number of channels surveyed */
++	unsigned int chans_surveyed;
++
++	/* lowest observed noise floor in dBm */
++	s8 lowest_nf;
++
+ 	void (*scan_cb)(struct hostapd_iface *iface);
+ 
+ 	int (*ctrl_iface_init)(struct hostapd_data *hapd);
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index 513580a..0e1c5c1 100644
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -26,6 +26,7 @@
+ #define WPA_SUPPLICANT_DRIVER_VERSION 4
+ 
+ #include "common/defs.h"
++#include "list.h"
+ 
+ #define HOSTAPD_CHAN_DISABLED 0x00000001
+ #define HOSTAPD_CHAN_PASSIVE_SCAN 0x00000002
+@@ -58,6 +59,22 @@ struct hostapd_channel_data {
+ 	 * max_tx_power - maximum transmit power in dBm
+ 	 */
+ 	u8 max_tx_power;
++
++	/*
++	 * survey_count - number of surveys XXX: can we remove this and use the count of the linked list?
++	 */
++        unsigned int survey_count;
++
++	/*
++	 * survey_list - linked list of surveys
++	 */
++	struct dl_list survey_list;
++
++	/**
++	 * min_nf - minimum observed noise floor, in dBm, based on all surveyed channel data
++	 */
++	s8 min_nf;
++
+ };
+ 
+ /**
+@@ -2253,6 +2270,30 @@ struct wpa_driver_ops {
+ 	 * implementation, there is no need to implement this function.
+ 	 */
+ 	int (*set_authmode)(void *priv, int authmode);
++
++	/**
++	 * get_survey - Retrieve survey data
++	 * @priv: Private driver interface data
++	 * @freq: if set survey data for the specified frequency is only
++	 *	being requested. If not set all survey data is requested.
++	 * Returns: 0 on success, -1 on failure
++	 *
++	 * Use this to retreieve:
++	 *
++	 * - the observed channel noise floor
++	 * - the amount of time we have spent on the channel
++	 * - the amount of time during which we have spent on the channel that
++	 *   the radio has determined the the medium is busy and we cannot transmit
++	 * - the amount of time we have spent RX'ing data
++	 * - the amount of time we have spent TX'ing data
++	 *
++	 * This data can be use for spectrum heuristics, one example is
++	 * Automatic Channel Selection (ACS). The channel survey data is
++	 * kept on a linked list on the channel data, one entry is added
++	 * for each survey. The min_nf of the channel is updated for
++	 * each survey.
++	 */
++	int (*get_survey)(void *priv, unsigned int freq);
+ };
+ 
+ 
+@@ -2655,9 +2696,44 @@ enum wpa_event_type {
+ 	/**
+ 	 * EVENT_IBSS_PEER_LOST - IBSS peer not reachable anymore
+ 	 */
+-	EVENT_IBSS_PEER_LOST
++	EVENT_IBSS_PEER_LOST,
++
++	/**
++	 * EVENT_SURVEY - Received survey data
++	 *
++	 * This event gets triggered when a driver query is issued for survey
++	 * data and its returned. The returned data is stored in
++	 * struct survey_results. The results provide at most one survey
++	 * entry for each frequency and at minimum will provide survey
++	 * one survey entry for one frequency. The survey data can be
++	 * os_malloc()'d and then os_free()'d, so the event callback must
++	 * only copy data.
++	 */
++	EVENT_SURVEY,
+ };
+ 
++/**
++ * struct survey_info - channel survey info
++ *
++ * @ifidx: interface index in which this survey was observed
++ * @freq: center of frequency of the surveyed channel
++ * @nf: channel noise floor in dBm
++ * @channel_time: amount of time in ms the radio spent on the channel
++ * @channel_time_busy: amount of time in ms the radio detected some signal
++ *	that indicated to the radio the channel was not clear
++ * @channel_time_rx: amount of time the radio spent receiving data
++ * @channel_time_tx: amount of time the radio spent transmitting data
++ */
++struct freq_survey {
++	u32 ifidx;
++	unsigned int freq;
++	s8 nf;
++	u64 channel_time;
++	u64 channel_time_busy;
++	u64 channel_time_rx;
++	u64 channel_time_tx;
++	struct dl_list list_member;
++};
+ 
+ /**
+  * union wpa_event_data - Additional data for wpa_supplicant_event() calls
+@@ -3187,6 +3263,17 @@ union wpa_event_data {
+ 	struct ibss_peer_lost {
+ 		u8 peer[ETH_ALEN];
+ 	} ibss_peer_lost;
++
++	/**
++	 * survey_results - survey result data for EVENT_SURVEY
++	 * @freq_filter: requested frequency survey filter, 0 if request
++	 *	was for all survey data
++	 * @survey_list: linked list of survey data
++	 */
++	struct survey_results {
++		unsigned int freq_filter;
++		struct dl_list survey_list;
++	} survey_results;
+ };
+ 
+ /**
+diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
+index cfc9372..e5c4962 100644
+--- a/src/drivers/driver_nl80211.c
++++ b/src/drivers/driver_nl80211.c
+@@ -6603,6 +6603,198 @@ static int nl80211_flush_pmkid(void *priv)
+ 	return nl80211_pmkid(bss, NL80211_CMD_FLUSH_PMKSA, NULL, NULL);
+ }
+ 
++static void clean_survey_results(struct survey_results *survey_results)
++{
++	struct freq_survey *survey, *tmp;
++
++	if (dl_list_empty(&survey_results->survey_list))
++		return;
++
++	dl_list_for_each_safe(survey, tmp, &survey_results->survey_list, struct freq_survey, list_member) {
++		dl_list_del(&survey->list_member);
++		os_free(survey);
++	}
++}
++
++static void add_survey(struct nlattr **sinfo, u32 ifidx, struct dl_list *survey_list)
++{
++	struct freq_survey *survey;
++
++	survey = (struct freq_survey*) os_malloc(sizeof(struct freq_survey));
++	if  (!survey)
++		return;
++	os_memset(survey, 0, sizeof(struct freq_survey));
++
++	survey->ifidx = ifidx;
++	survey->freq = nla_get_u32(sinfo[NL80211_SURVEY_INFO_FREQUENCY]);
++	survey->nf = (int8_t) nla_get_u8(sinfo[NL80211_SURVEY_INFO_NOISE]);
++	survey->channel_time = nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME]);
++	survey->channel_time_busy = nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_BUSY]);
++	survey->channel_time_rx = nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_RX]);
++	survey->channel_time_tx = nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_TX]);
++
++	wpa_printf(MSG_DEBUG, "nl80211: Freq survey dump event  (freq=%d MHz noise=%d "
++		   "channel_time=%ld busy_time=%ld tx_time=%ld rx_time=%ld)",
++		   survey->freq,
++		   survey->nf,
++		   survey->channel_time,
++		   survey->channel_time_busy,
++		   survey->channel_time_rx,
++		   survey->channel_time_tx);
++
++	dl_list_add_tail(survey_list, &survey->list_member);
++}
++
++static int survey_check(struct nlattr **sinfo)
++{
++	if (!sinfo[NL80211_SURVEY_INFO_NOISE] ||
++	    !sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME] ||
++	    !sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_BUSY] ||
++	    !sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_TX])
++		return 0;
++	return 1;
++}
++
++static void survey_fail_reason(struct nlattr **sinfo, u32 surveyed_freq)
++{
++	wpa_printf(MSG_ERROR,
++		   "nl80211: Following survey data missing "
++		   "for freq %d MHz:",
++		   surveyed_freq);
++
++	if (!sinfo[NL80211_SURVEY_INFO_NOISE])
++		wpa_printf(MSG_ERROR, "\tnoise");
++
++	if (!sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME])
++		wpa_printf(MSG_ERROR, "\tchannel time");
++
++	if (!sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_BUSY])
++		wpa_printf(MSG_ERROR, "\tchannel busy time");
++
++	if (!sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_TX])
++		wpa_printf(MSG_ERROR, "\tchannel tx time");
++}
++
++static int check_survey_ok(struct nlattr **sinfo,
++			   u32 surveyed_freq,
++			   unsigned int freq_filter)
++{
++	int good_survey = survey_check(sinfo);
++
++	/* If no filter is specified we just drop data for any bogus survey */
++	if (!freq_filter) {
++		if (good_survey)
++			return 1;
++		/* No filter used but no usable survey data found */
++		survey_fail_reason(sinfo, surveyed_freq);
++		return 0;
++	}
++
++	if (freq_filter != surveyed_freq)
++		return 0;
++
++	if (good_survey)
++		return 1;
++	/* Filter matches now, lets be verbose why this is a bad survey */
++
++	survey_fail_reason(sinfo, surveyed_freq);
++	return 0;
++}
++
++static int survey_handler(struct nl_msg *msg, void *arg)
++{
++	struct nlattr *tb[NL80211_ATTR_MAX + 1];
++	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
++	struct nlattr *sinfo[NL80211_SURVEY_INFO_MAX + 1];
++	struct survey_results *survey_results;
++	u32 surveyed_freq = 0;
++	u32 ifidx;
++
++	static struct nla_policy survey_policy[NL80211_SURVEY_INFO_MAX + 1] = {
++		[NL80211_SURVEY_INFO_FREQUENCY] = { .type = NLA_U32 },
++		[NL80211_SURVEY_INFO_NOISE] = { .type = NLA_U8 },
++	};
++
++	survey_results = (struct survey_results *) arg;
++
++	nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
++		  genlmsg_attrlen(gnlh, 0), NULL);
++
++	ifidx = nla_get_u32(tb[NL80211_ATTR_IFINDEX]);
++
++	if (!tb[NL80211_ATTR_SURVEY_INFO])
++		return NL_SKIP;
++
++	if (nla_parse_nested(sinfo, NL80211_SURVEY_INFO_MAX,
++			     tb[NL80211_ATTR_SURVEY_INFO],
++			     survey_policy))
++		return NL_SKIP;
++
++	if (!sinfo[NL80211_SURVEY_INFO_FREQUENCY]) {
++		wpa_printf(MSG_ERROR, "nl80211: invalid survey data");
++		return NL_SKIP;
++	}
++
++	surveyed_freq = nla_get_u32(sinfo[NL80211_SURVEY_INFO_FREQUENCY]);
++
++	if (!check_survey_ok(sinfo, surveyed_freq, survey_results->freq_filter))
++		return NL_SKIP;
++
++	if (survey_results->freq_filter &&
++	    survey_results->freq_filter != surveyed_freq) {
++		wpa_printf(MSG_EXCESSIVE, "nl80211: ignoring survey data "
++			   "for freq %d MHz", surveyed_freq);
++		return NL_SKIP;
++	}
++
++	add_survey(sinfo, ifidx, &survey_results->survey_list);
++
++	return NL_SKIP;
++}
++
++static int wpa_driver_nl80211_get_survey(void *priv, unsigned int freq)
++{
++	struct i802_bss *bss = priv;
++	struct wpa_driver_nl80211_data *drv = bss->drv;
++	struct nl_msg *msg;
++	int err = -ENOBUFS;
++	union wpa_event_data data;
++	struct survey_results *survey_results;
++
++	os_memset(&data, 0, sizeof(data));
++	survey_results = &data.survey_results;
++
++	dl_list_init(&survey_results->survey_list);
++
++	msg = nlmsg_alloc();
++	if (!msg)
++		goto nla_put_failure;
++
++	genlmsg_put(msg, 0, 0, genl_family_get_id(drv->nl80211), 0, NLM_F_DUMP,
++		    NL80211_CMD_GET_SURVEY, 0);
++
++	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, drv->ifindex);
++
++	if (freq)
++		data.survey_results.freq_filter = freq;
++
++	do {
++		err = send_and_recv_msgs(drv, msg, survey_handler, survey_results);
++	} while (err > 0);
++
++	if (err) {
++		wpa_printf(MSG_ERROR, "nl80211: failed to process survey data");
++		goto out_clean;
++	}
++
++	wpa_supplicant_event(drv->ctx, EVENT_SURVEY, &data);
++
++out_clean:
++	clean_survey_results(survey_results);
++nla_put_failure:
++	return err;
++}
++
+ 
+ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
+ 	.name = "nl80211",
+@@ -6676,4 +6868,5 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
+ 	.add_pmkid = nl80211_add_pmkid,
+ 	.remove_pmkid = nl80211_remove_pmkid,
+ 	.flush_pmkid = nl80211_flush_pmkid,
++	.get_survey = wpa_driver_nl80211_get_survey,
+ };
+-- 
+1.7.4.15.g7811d
 
