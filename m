@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:37140 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754364Ab1FFJVh (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59319 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750913Ab1FWIDs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 05:21:37 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 36so3582178wwa.1
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 02:21:36 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 2/4] wl12xx: clear wl->wow_enabled on resume
-Date: Mon,  6 Jun 2011 12:21:53 +0300
-Message-Id: <1307352115-28969-2-git-send-email-eliad@wizery.com> (sfid-20110606_112140_572728_3152E3FE)
-In-Reply-To: <1307352115-28969-1-git-send-email-eliad@wizery.com>
-References: <1307352115-28969-1-git-send-email-eliad@wizery.com>
+	Thu, 23 Jun 2011 04:03:48 -0400
+Subject: Re: [PATCH] mac80211: reestablish mis-configured existing Rx BA
+ sessions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1308780927-20987-1-git-send-email-arik@wizery.com> (sfid-20110623_001553_707877_07396B5D)
+References: <1308780927-20987-1-git-send-email-arik@wizery.com>
+	 (sfid-20110623_001553_707877_07396B5D)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 23 Jun 2011 10:03:45 +0200
+Message-ID: <1308816225.3865.1.camel@jlt3.sipsolutions.net> (sfid-20110623_100355_648029_84CDD6C1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We set wl->wow_enabled on every suspend(), so we need to clear it
-on every resume().
-(we can't rely on setting wl->wow_enabled=false in suspend(),
-as it being called only when wowlan triggers are configured)
+On Thu, 2011-06-23 at 01:15 +0300, Arik Nemtsov wrote:
+> When forming a Rx BA session, sometimes the ADDBA response gets lost.
+> This leads to a situation where the session is configured locally, but
+> doesn't exist on the remote side. Subsequent ADDBA requests are declined
+> by mac80211.
+> 
+> Fix this by assuming the session state of the initiator is the correct
+> one. When receiving an unexpected ADDBA request on a TID with an active
+> Rx BA session, delete the existing one and establish a new session.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+It all does seem a little strange, but we might as well do this.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 8eb52b7..4f20711 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1606,6 +1606,7 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
- 		wl1271_enable_interrupts(wl);
- 	}
- 	wl1271_configure_resume(wl);
-+	wl->wow_enabled = false;
- 
- 	return 0;
- }
--- 
-1.7.0.4
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
 
