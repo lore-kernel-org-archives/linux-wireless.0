@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from defaultvalue.org ([70.85.129.156]:57978 "EHLO defaultvalue.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751160Ab1FLSGK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jun 2011 14:06:10 -0400
-From: Rob Browning <rlb@defaultvalue.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Slow receive with rtl8192cu (usb ew-7811Un)
-References: <87pqnl5i81.fsf@raven.defaultvalue.org>
-	<4DD074E3.3090502@lwfinger.net>
-	<87vcxbe5xz.fsf@trouble.defaultvalue.org>
-	<4DD09C78.2010304@lwfinger.net>
-	<8762pbkytq.fsf@trouble.defaultvalue.org>
-	<4DD13EF0.2070803@lwfinger.net>
-	<87iptaj8nf.fsf@trouble.defaultvalue.org>
-	<87fwoehtd7.fsf@trouble.defaultvalue.org>
-	<874o45z6b8.fsf@raven.defaultvalue.org>
-	<874o41rqrg.fsf@trouble.defaultvalue.org>
-Date: Sun, 12 Jun 2011 13:06:08 -0500
-In-Reply-To: <874o41rqrg.fsf@trouble.defaultvalue.org> (Rob Browning's message
-	of "Tue, 07 Jun 2011 21:38:59 -0500")
-Message-ID: <87oc222acu.fsf@raven.defaultvalue.org> (sfid-20110612_200615_217100_D2325024)
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:56113 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752130Ab1FWOnY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jun 2011 10:43:24 -0400
+To: netdev@vger.kernel.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] iwlwifi: use pci_dev->revision, again
+Cc: wey-yi.w.guy@intel.com, ilw@linux.intel.com
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Date: Thu, 23 Jun 2011 18:41:40 +0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201106231841.40691.sshtylyov@ru.mvista.com> (sfid-20110623_164328_660191_9EBE3E2D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rob Browning <rlb@defaultvalue.org> writes:
+Commit ff938e43d39e926de74b32a3656c190f979ab642 (net: use pci_dev->revision,
+again) already converted this driver to using the 'revision' field of 'struct
+pci_dev' but commit c2974a1d18832a9fffb2eb389c3878f5c4ed92f1 (iwlagn: remove
+rev_id) later reverted that change for no reason. Now restore the change...
 
-> Next I'll try a different access point -- I'll let you know what I find.
-> And if there's anything else I can do to help test, please let me know.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Instead, I was able to test an ath9k_htc based adapter (netgear n150),
-which doesn't appear to have trouble in the same environment, but I'd
-still prefer to use the much smaller rtl8192cu device if we can figure
-out what's wrong.
+---
+The patch is against the recent Linus' tree.
 
-Thanks
--- 
-Rob Browning
-rlb @defaultvalue.org and @debian.org
-GPG as of 2002-11-03 14DD 432F AE39 534D B592 F9A0 25C8 D377 8C7E 73A4
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+Index: linux-2.6/drivers/net/wireless/iwlwifi/iwl-agn.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ linux-2.6/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3275,10 +3275,9 @@ struct ieee80211_ops iwlagn_hw_ops = {
+ 
+ static u32 iwl_hw_detect(struct iwl_priv *priv)
+ {
+-	u8 rev_id;
++	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n",
++		       priv->pci_dev->revision);
+ 
+-	pci_read_config_byte(priv->pci_dev, PCI_REVISION_ID, &rev_id);
+-	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n", rev_id);
+ 	return iwl_read32(priv, CSR_HW_REV);
+ }
+ 
