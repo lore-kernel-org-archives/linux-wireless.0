@@ -1,62 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60219 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753300Ab1FFSbU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 14:31:20 -0400
-Date: Mon, 6 Jun 2011 14:24:18 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/3] mac80211: create a STA entry for a WDS interface
- after receiving a beacon
-Message-ID: <20110606182417.GF2604@tuxdriver.com> (sfid-20110606_203124_093950_734047BA)
-References: <1306872395.29989.3.camel@jlt3.sipsolutions.net>
- <4DE54E16.7000709@openwrt.org>
- <1306901843.3867.2.camel@jlt3.sipsolutions.net>
- <4DE61A11.1070708@openwrt.org>
- <1306926131.3867.8.camel@jlt3.sipsolutions.net>
- <4DE61FEA.60903@openwrt.org>
- <1306927838.3867.10.camel@jlt3.sipsolutions.net>
- <4DE6256B.80106@openwrt.org>
- <1306931187.3867.11.camel@jlt3.sipsolutions.net>
- <4DE63533.9090709@openwrt.org>
+Received: from mail.atheros.com ([12.19.149.2]:14391 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758703Ab1FWDvB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jun 2011 23:51:01 -0400
+Received: from mail.atheros.com ([10.234.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 20:50:25 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <hostap@lists.shmoo.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 0/4] hostapd: add ACS support
+Date: Wed, 22 Jun 2011 20:50:44 -0700
+Message-ID: <1308801048-2415-1-git-send-email-lrodriguez@atheros.com> (sfid-20110623_055105_581814_B757DB24)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4DE63533.9090709@openwrt.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 01, 2011 at 02:48:51PM +0200, Felix Fietkau wrote:
-> On 2011-06-01 2:26 PM, Johannes Berg wrote:
-> >On Wed, 2011-06-01 at 13:41 +0200, Felix Fietkau wrote:
-> >> On 2011-06-01 1:30 PM, Johannes Berg wrote:
-> >> >  On Wed, 2011-06-01 at 13:18 +0200, Felix Fietkau wrote:
-> >> >
-> >> >>   >>    >>     >>      >      I don't understand how you can rely on beacons for WDS.
-> >> >
-> >> >>   Oh, right. I'll send a follow-up patch that forces a WDS to also have an
-> >> >>   active AP interface before it's brought up.
-> >> >
-> >> >  Hm, that might be sufficient, but what if the peer isn't sending
-> >> >  beacons?
-> >> >
-> >> >  Can't we add a station entry and then update it if we receive
-> >> >  information from the peer? That'd be more compatible with others devices
-> >> >  that don't necessarily have beacons with WDS, and then we wouldn't have
-> >> >  to require it locally either (since realistically we might have to
-> >> >  interoperate with those anyway?)
-> >> What other devices use WDS without beacons? So far I haven't seen any.
-> >
-> >I don't know, at least older mac80211 could do that?
-> In older mac80211 (at least the versions that I tested), WDS was
-> completely broken. It also created the station entry without any
-> valid rates, and it had no means of updating the supported rates
-> list.
+This series adds ACS support to hostapd. I've completed
+a few of my own TODOs and splitted up the patches as
+best as possible. I'm pretty satisfied with this code now
+as an initial start for ACS code. At this point we need
+to start finding ideal values for the metrics for offchannel
+operation so that we can consistently always find the same
+channel, even if it means surveying longer or doing more
+scans.
 
-Is this settled?  Do we want these patches?
+Other algorithms for ACS shoudl be easy to plug in, for example,
+spectral scan ;)
+
+Anyway, to enable and test this thing just set CONFIG_ACS=1
+on your build config and then something like this on your
+hostapd.conf:
+
+channel=acs_survey
+acs_num_req_surveys=10
+acs_roc_duration_ms=100
+
+Test results, rants are appreciated.
+
+Luis R. Rodriguez (4):
+  hostapd: split up channel checking into helpers
+  hostapd: add offchannel support
+  hostapd: add survey dump support
+  hostapd: add Automatic Channel Selection (ACS) support
+
+ hostapd/Makefile             |    5 +
+ hostapd/config_file.c        |   47 ++++-
+ hostapd/defconfig            |   25 +++
+ hostapd/hostapd.conf         |   17 ++
+ src/ap/acs.c                 |  464 ++++++++++++++++++++++++++++++++++++++++++
+ src/ap/acs.h                 |   40 ++++
+ src/ap/ap_config.c           |   15 ++
+ src/ap/ap_config.h           |    4 +
+ src/ap/ap_drv_ops.h          |   27 +++
+ src/ap/drv_callbacks.c       |  139 +++++++++++++-
+ src/ap/hostapd.c             |    2 +
+ src/ap/hostapd.h             |   24 +++
+ src/ap/hw_features.c         |  188 +++++++++++------
+ src/drivers/driver.h         |  171 +++++++++++++++-
+ src/drivers/driver_nl80211.c |  193 ++++++++++++++++++
+ 15 files changed, 1290 insertions(+), 71 deletions(-)
+ create mode 100644 src/ap/acs.c
+ create mode 100644 src/ap/acs.h
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.15.g7811d
+
