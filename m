@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:14917 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932167Ab1FJP3R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 11:29:17 -0400
-Subject: Re: iwlagn module ignores parameter "led_mode=1" under certain
- conditions
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Toralf =?ISO-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <201106100937.23295.toralf.foerster@gmx.de>
-References: <201106100937.23295.toralf.foerster@gmx.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 10 Jun 2011 08:25:40 -0700
-Message-ID: <1307719540.5115.25.camel@wwguy-ubuntu> (sfid-20110610_172920_786395_9BBC4048)
-Mime-Version: 1.0
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:49240 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756156Ab1FXWDO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jun 2011 18:03:14 -0400
+Date: Fri, 24 Jun 2011 17:03:12 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 3/3] staging: rtl8192u: Fix big-endian warning
+Message-ID: <4e0509a0.ol+hDilyyLRjLXuo%Larry.Finger@lwfinger.net> (sfid-20110625_000335_006879_26992FBB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-06-10 at 00:37 -0700, Toralf Förster wrote:
-> Hello,
-> 
-> Since years this worked at my Gentoo system :
-> 
-> $ cat /etc/modprobe.d/iwlagn.conf 
-> options iwlcore led_mode=1
-> 
-> However nowadays this doesn't work when I do the following :
-> 
-> 1. dock the ThinkPad T400 (no WLAN, only DSL)
-> 2. boot it
-> 3. s2ram it
-> 4. undock it
-> 5. go into the office
-> 6. resume the undocked notebook (WLAN, no DSL)
-> 
-> The led is blinking ...
-> 
-> Putting however this line into the config file :
-> $ options iwlagn  led_mode=1
-> 
-> works always.
+When compiling the rtl8192u driver from staging on a big-endian
+architecture, the following warning results:
 
-what kernel version you are using?
-the newer kernel (after .38), the iwlwifi driver split into 2 separate
-driver (iwlagn and iwlegacy). so there is no longer using iwlcore.ko
+  CC [M]  drivers/staging/rtl8192u/ieee80211/ieee80211_softmac.o
+drivers/staging/rtl8192u/ieee80211/ieee80211_softmac.c: In function 'ieee80211_probe_resp':
+drivers/staging/rtl8192u/ieee80211/ieee80211_softmac.c:780: warning: value computed is not used
 
-putting options "iwlagn led_mode=1" in config file should do the job.
+The warning is due to misuse of cpu_to_le16().
 
-Thanks
-Wey
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-
+Index: wireless-testing-new/drivers/staging/rtl8192u/ieee80211/ieee80211_softmac.c
+===================================================================
+--- wireless-testing-new.orig/drivers/staging/rtl8192u/ieee80211/ieee80211_softmac.c
++++ wireless-testing-new/drivers/staging/rtl8192u/ieee80211/ieee80211_softmac.c
+@@ -776,7 +776,7 @@ static struct sk_buff* ieee80211_probe_r
+ 		cpu_to_le16(ieee->current_network.capability & WLAN_CAPABILITY_SHORT_PREAMBLE); //add short preamble here
+ 
+ 	if(ieee->short_slot && (ieee->current_network.capability & WLAN_CAPABILITY_SHORT_SLOT))
+-		cpu_to_le16((beacon_buf->capability |= WLAN_CAPABILITY_SHORT_SLOT));
++		beacon_buf->capability |= cpu_to_le16(WLAN_CAPABILITY_SHORT_SLOT);
+ 
+ 	crypt = ieee->crypt[ieee->tx_keyidx];
+ 	if (encrypt)
