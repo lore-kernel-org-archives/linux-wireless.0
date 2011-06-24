@@ -1,73 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2511 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752509Ab1FIOpS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 10:45:18 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 19/21] staging: brcm80211: fix checkpatch errors from
- main.c
-Date: Thu, 9 Jun 2011 16:44:59 +0200
-Message-ID: <1307630701-9170-20-git-send-email-rvossen@broadcom.com> (sfid-20110609_164529_428795_73290FAB)
-In-Reply-To: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
-References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:49069 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755997Ab1FXWCz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jun 2011 18:02:55 -0400
+Date: Fri, 24 Jun 2011 17:02:54 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] staging: rtl8192e: Fix big-endian warning
+Message-ID: <4e05098e./WqOSkms6GCvUI9E%Larry.Finger@lwfinger.net> (sfid-20110625_000342_290568_C6555B61)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+When compiling the rtl8192e driver from staging on a big-endian
+architecture, the following warning results:
 
-The softmac source file main.c was passed through checkpatch to see
-what issues against coding style are still present. This patch removes
-the checkpatch errors listed below.
+  CC [M]  drivers/staging/rtl8192e/ieee80211/ieee80211_softmac.o
+drivers/staging/rtl8192e/ieee80211/ieee80211_softmac.c: In function 'ieee80211_probe_resp':
+drivers/staging/rtl8192e/ieee80211/ieee80211_softmac.c:781: warning: value computed is not used
 
-ERROR: trailing whitespace
-+^Imemcpy(wlc->default_bss->rateset.rates, rs.rates, $
---
-ERROR: spaces required around that ':' (ctx:VxV)
-+       pval = arg ? (int *)arg:NULL;
---
+The warning is due to misuse of cpu_to_le16().
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/staging/brcm80211/brcmsmac/main.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index e2d8d23..611873c 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -278,7 +278,7 @@ const u8 wme_fifo2ac[] = { AC_BK, AC_BE, AC_VI, AC_VO, AC_BE, AC_BE };
- /* WME/802.1E Access Category to TX FIFO number */
- static const u8 wme_ac2fifo[] = { 1, 0, 2, 3 };
+Index: wireless-testing-new/drivers/staging/rtl8192e/ieee80211/ieee80211_softmac.c
+===================================================================
+--- wireless-testing-new.orig/drivers/staging/rtl8192e/ieee80211/ieee80211_softmac.c
++++ wireless-testing-new/drivers/staging/rtl8192e/ieee80211/ieee80211_softmac.c
+@@ -777,7 +777,7 @@ static struct sk_buff* ieee80211_probe_r
+ 		cpu_to_le16(ieee->current_network.capability & WLAN_CAPABILITY_SHORT_PREAMBLE); //add short preamble here
  
--static bool in_send_q = false;
-+static bool in_send_q;
+ 	if(ieee->short_slot && (ieee->current_network.capability & WLAN_CAPABILITY_SHORT_SLOT))
+-		cpu_to_le16((beacon_buf->capability |= WLAN_CAPABILITY_SHORT_SLOT));
++		beacon_buf->capability |= cpu_to_le16(WLAN_CAPABILITY_SHORT_SLOT);
  
- /* Shared memory location index for various AC params */
- #define wme_shmemacindex(ac)	wme_ac2fifo[ac]
-@@ -2363,7 +2363,7 @@ int brcms_c_set_gmode(struct brcms_c_info *wlc, u8 gmode, bool config)
- 
- 	/* Set default bss rateset */
- 	wlc->default_bss->rateset.count = rs.count;
--	memcpy(wlc->default_bss->rateset.rates, rs.rates, 
-+	memcpy(wlc->default_bss->rateset.rates, rs.rates,
- 	       sizeof(wlc->default_bss->rateset.rates));
- 
- 	return ret;
-@@ -2556,7 +2556,7 @@ _brcms_c_ioctl(struct brcms_c_info *wlc, int cmd, void *arg, int len,
- 	}
- 
- 	/* default argument is generic integer */
--	pval = arg ? (int *)arg:NULL;
-+	pval = arg ? (int *)arg : NULL;
- 
- 	/* This will prevent the misaligned access */
- 	if (pval && (u32) len >= sizeof(val))
--- 
-1.7.4.1
-
-
+ 	crypt = ieee->crypt[ieee->tx_keyidx];
+ 	if (encrypt)
