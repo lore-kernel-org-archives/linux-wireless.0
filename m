@@ -1,59 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:48694 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758644Ab1FAJAy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 05:00:54 -0400
-Received: by eyx24 with SMTP id 24so1941983eyx.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jun 2011 02:00:53 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Andreas Schwab <schwab@linux-m68k.org>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>
-Cc: b43-dev@lists.infradead.org, linuxppc-dev@ozlabs.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [RFT][PATCH 3.0] ssb: fix PCI(e) driver regression causing oops on PCI cards
-Date: Wed,  1 Jun 2011 11:01:11 +0200
-Message-Id: <1306918871-16965-1-git-send-email-zajec5@gmail.com> (sfid-20110601_110106_886498_B43F3D46)
+Received: from nm28.bullet.mail.bf1.yahoo.com ([98.139.212.187]:21871 "HELO
+	nm28.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753701Ab1FXVi2 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jun 2011 17:38:28 -0400
+References: <loom.20110624T123237-71@post.gmane.org> <201106241307.44609.chunkeey@googlemail.com> <1308918895.17410.YahooMailRC@web161205.mail.bf1.yahoo.com> <201106241804.49749.chunkeey@googlemail.com>
+Message-ID: <1308951449.24867.YahooMailRC@web161203.mail.bf1.yahoo.com> (sfid-20110624_233832_630417_D9DF4F31)
+Date: Fri, 24 Jun 2011 14:37:29 -0700 (PDT)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: Re: Configuring the multicast data rate with iw/nl80211
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <201106241804.49749.chunkeey@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were incorrectly executing PCIe specific workarounds on PCI cards.
-This resulted in:
-Machine check in kernel mode.
-Caused by (from SRR1=149030): Transfer error ack signal
-Oops: Machine check, sig: 7 [#1]
+----- Original Mail ----
 
-Reported-by: Andreas Schwab <schwab@linux-m68k.org>
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/ssb/driver_pcicore.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+> From: Christian Lamparter <chunkeey@googlemail.com>
+>
+> But there's more, I found it very  difficult to "fine-tune" the multicast
+> setup properly, since there's no  automatic feedback for
+> multicast link quality. 
 
-diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
-index 82feb34..2a20dab 100644
---- a/drivers/ssb/driver_pcicore.c
-+++ b/drivers/ssb/driver_pcicore.c
-@@ -539,10 +539,12 @@ void ssb_pcicore_init(struct ssb_pcicore *pc)
- 	if (!pc->hostmode)
- 		ssb_pcicore_init_clientmode(pc);
- 
--	/* Additional always once-executed workarounds */
--	ssb_pcicore_serdes_workaround(pc);
--	/* TODO: ASPM */
--	/* TODO: Clock Request Update */
-+	/* Additional PCIe always once-executed workarounds */
-+	if (dev->id.coreid == SSB_DEV_PCIE) {
-+		ssb_pcicore_serdes_workaround(pc);
-+		/* TODO: ASPM */
-+		/* TODO: Clock Request Update */
-+	}
- }
- 
- static u32 ssb_pcie_read(struct ssb_pcicore *pc, u32 address)
--- 
-1.7.1
+Just how did you do this "fine-tuning"?
+
+Regards
+  Joerg
 
