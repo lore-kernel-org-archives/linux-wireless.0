@@ -1,128 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:46825 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751775Ab1FLHeu (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:54215 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752672Ab1FXKDt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jun 2011 03:34:50 -0400
-Received: by wwf26 with SMTP id 26so3552015wwf.8
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Jun 2011 00:34:48 -0700 (PDT)
-From: Shahar Levi <shahar_levi@ti.com>
+	Fri, 24 Jun 2011 06:03:49 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 5so2727527wwe.1
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jun 2011 03:03:48 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
 To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Eliad Peller <eliad@wizery.com>
-Subject: [PATCH v2] wl12xx: Add Support for Low Power DRPw (LPD) Mode
-Date: Sun, 12 Jun 2011 10:34:43 +0300
-Message-Id: <1307864083-32551-1-git-send-email-shahar_levi@ti.com> (sfid-20110612_093457_690389_FB654684)
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 3/3] wl12xx: implement Tx watermarks per AC
+Date: Fri, 24 Jun 2011 13:03:37 +0300
+Message-Id: <1308909817-25689-3-git-send-email-arik@wizery.com> (sfid-20110624_120354_416926_EFF7FFCD)
+In-Reply-To: <1308909817-25689-1-git-send-email-arik@wizery.com>
+References: <1308909817-25689-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Low Power DRPw (LPD) mode contains several optimizations
-that designed to reduce power consumption. The purpose
-is to save current consumption in RX and Listen mode.
+Each AC is stopped when its queue is filled up to the high watermark,
+and restarted when its queue it lower than the low watermark. This
+ensures congested ACs are not able to starve other ACs.
 
-LPD setting apply only for wl127x AP mode (not wl128x)
-
-Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
-Changes from v1:
-- Remove from configuration parameters and set it as a quirk flag
-- DRPW_SET_INI_FILE & DRPW_SET_SCRATCH to
-  GENERAL_SETTINGS_DRPW_LPD&SCRATCH_ENABLE_LPD
-- Move defines to ini.h
+ drivers/net/wireless/wl12xx/main.c   |   13 +++++++------
+ drivers/net/wireless/wl12xx/tx.c     |   20 +++++++++++++-------
+ drivers/net/wireless/wl12xx/tx.h     |   16 ++++++++++++++++
+ drivers/net/wireless/wl12xx/wl12xx.h |    1 +
+ 4 files changed, 37 insertions(+), 13 deletions(-)
 
- drivers/net/wireless/wl12xx/boot.c   |    3 +++
- drivers/net/wireless/wl12xx/cmd.c    |    5 +++++
- drivers/net/wireless/wl12xx/ini.h    |    3 +++
- drivers/net/wireless/wl12xx/main.c   |    9 +++++++--
- drivers/net/wireless/wl12xx/wl12xx.h |    6 ++++++
- 5 files changed, 24 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
-index b07f8b7..fd35c21 100644
---- a/drivers/net/wireless/wl12xx/boot.c
-+++ b/drivers/net/wireless/wl12xx/boot.c
-@@ -748,6 +748,9 @@ int wl1271_load_firmware(struct wl1271 *wl)label:mcs.pst-utiles-cisco
- 		clk |= (wl->ref_clock << 1) << 4;
- 	}
- 
-+	if (wl->quirks & WL12XX_QUIRK_LPD_MODE)
-+		clk |= SCRATCH_ENABLE_LPD;
-+
- 	wl1271_write32(wl, DRPW_SCRATCH_START, clk);
- 
- 	wl1271_set_partition(wl, &part_table[PART_WORK]);
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index b3a4f58..cdcb324 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -134,6 +134,11 @@ int wl1271_cmd_general_parms(struct wl1271 *wl)
- 	/* Override the REF CLK from the NVS with the one from platform data */
- 	gen_parms->general_params.ref_clock = wl->ref_clock;
- 
-+	/* LPD mode enable (bits 6-7) in WL1271 AP mode only */
-+	if (wl->quirks & WL12XX_QUIRK_LPD_MODE)
-+		gen_parms->general_params.general_settings |=
-+			GENERAL_SETTINGS_DRPW_LPD;
-+
- 	ret = wl1271_cmd_test(wl, gen_parms, sizeof(*gen_parms), answer);
- 	if (ret < 0) {
- 		wl1271_warning("CMD_INI_FILE_GENERAL_PARAM failed");
-diff --git a/drivers/net/wireless/wl12xx/ini.h b/drivers/net/wireless/wl12xx/ini.h
-index 1420c84..4cf9ecc 100644
---- a/drivers/net/wireless/wl12xx/ini.h
-+++ b/drivers/net/wireless/wl12xx/ini.h
-@@ -24,6 +24,9 @@
- #ifndef __INI_H__
- #define __INI_H__
- 
-+#define GENERAL_SETTINGS_DRPW_LPD 0xc0
-+#define SCRATCH_ENABLE_LPD        BIT(25)
-+
- #define WL1271_INI_MAX_SMART_REFLEX_PARAM 16
- 
- struct wl1271_ini_general_params {
 diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index fb0f764..4897191 100644
+index d3e1eb6..166287f 100644
 --- a/drivers/net/wireless/wl12xx/main.c
 +++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1190,9 +1190,13 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 		wl1271_debug(DEBUG_BOOT, "chip id 0x%x (1271 PG20)",
- 			     wl->chip.id);
+@@ -1371,10 +1371,11 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ {
+ 	struct wl1271 *wl = hw->priv;
+ 	unsigned long flags;
+-	int q;
++	int q, mapping;
+ 	u8 hlid = 0;
  
--		/* end-of-transaction flag should be set in wl127x AP mode */
-+		/*
-+		 * 'end-of-transaction flag' and 'LPD mode flag'
-+		 * should be set in wl127x AP mode only
-+		 */
- 		if (wl->bss_type == BSS_TYPE_AP_BSS)
--			wl->quirks |= WL12XX_QUIRK_END_OF_TRANSACTION;
-+			wl->quirks |= (WL12XX_QUIRK_END_OF_TRANSACTION |
-+				       WL12XX_QUIRK_LPD_MODE);
+-	q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
++	mapping = skb_get_queue_mapping(skb);
++	q = wl1271_tx_get_queue(mapping);
  
- 		ret = wl1271_setup(wl);
- 		if (ret < 0)
-@@ -1205,6 +1209,7 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 		ret = wl1271_setup(wl);
- 		if (ret < 0)
- 			goto out;
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS)
+ 		hlid = wl1271_tx_get_hlid(skb);
+@@ -1387,10 +1388,10 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	 * The workqueue is slow to process the tx_queue and we need stop
+ 	 * the queue here, otherwise the queue will get too long.
+ 	 */
+-	if (wl->tx_queue_count >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
+-		wl1271_debug(DEBUG_TX, "op_tx: stopping queues");
+-		ieee80211_stop_queues(wl->hw);
+-		set_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
++	if (skb_queue_len(&wl->tx_queue[q]) >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
++		wl1271_debug(DEBUG_TX, "op_tx: stopping queues for q %d", q);
++		ieee80211_stop_queue(wl->hw, mapping);
++		set_bit(q, &wl->stopped_queues_map);
+ 	}
+ 
+ 	/* queue the packet */
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index ce33590..ef54cee 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -444,14 +444,19 @@ u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set)
+ void wl1271_handle_tx_low_watermark(struct wl1271 *wl)
+ {
+ 	unsigned long flags;
++	int i;
+ 
+-	if (test_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags) &&
+-	    wl->tx_queue_count <= WL1271_TX_QUEUE_LOW_WATERMARK) {
+-		/* firmware buffer has space, restart queues */
+-		spin_lock_irqsave(&wl->wl_lock, flags);
+-		ieee80211_wake_queues(wl->hw);
+-		clear_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
+-		spin_unlock_irqrestore(&wl->wl_lock, flags);
++	for (i = 0; i < NUM_TX_QUEUES; i++) {
++		if (test_bit(i, &wl->stopped_queues_map) &&
++		    skb_queue_len(&wl->tx_queue[i]) <=
++						WL1271_TX_QUEUE_LOW_WATERMARK) {
++			/* firmware buffer has space, restart queues */
++			spin_lock_irqsave(&wl->wl_lock, flags);
++			ieee80211_wake_queue(wl->hw,
++					     wl1271_tx_get_mac80211_queue(i));
++			clear_bit(i, &wl->stopped_queues_map);
++			spin_unlock_irqrestore(&wl->wl_lock, flags);
++		}
+ 	}
+ }
+ 
+@@ -849,6 +854,7 @@ void wl1271_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
+ 	}
+ 
+ 	wl->tx_queue_count = 0;
++	wl->stopped_queues_map = 0;
+ 
+ 	/*
+ 	 * Make sure the driver is at a consistent state, in case this
+diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
+index 832f925..f79d3c0 100644
+--- a/drivers/net/wireless/wl12xx/tx.h
++++ b/drivers/net/wireless/wl12xx/tx.h
+@@ -182,6 +182,22 @@ static inline int wl1271_tx_get_queue(int queue)
+ 	}
+ }
+ 
++static inline int wl1271_tx_get_mac80211_queue(int queue)
++{
++	switch (queue) {
++	case CONF_TX_AC_VO:
++		return 0;
++	case CONF_TX_AC_VI:
++		return 1;
++	case CONF_TX_AC_BE:
++		return 2;
++	case CONF_TX_AC_BK:
++		return 3;
++	default:
++		return 2;
++	}
++}
 +
- 		if (wl1271_set_block_size(wl))
- 			wl->quirks |= WL12XX_QUIRK_BLOCKSIZE_ALIGNMENT;
- 		break;
+ void wl1271_tx_work(struct work_struct *work);
+ void wl1271_tx_work_locked(struct wl1271 *wl);
+ void wl1271_tx_complete(struct wl1271 *wl);
 diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 1cafb08..bb59cf8 100644
+index 89ba1fc..49aee9f 100644
 --- a/drivers/net/wireless/wl12xx/wl12xx.h
 +++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -644,4 +644,10 @@ int wl1271_recalc_rx_streaming(struct wl1271 *wl);
- /* WL128X requires aggregated packets to be aligned to the SDIO block size */
- #define WL12XX_QUIRK_BLOCKSIZE_ALIGNMENT	BIT(2)
+@@ -437,6 +437,7 @@ struct wl1271 {
+ 	/* Frames scheduled for transmission, not handled yet */
+ 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
+ 	int tx_queue_count;
++	long stopped_queues_map;
  
-+/*
-+ * WL127X AP mode requires Low Power DRPw (LPD) enable to reduce power
-+ * consumption
-+ */
-+#define WL12XX_QUIRK_LPD_MODE                   BIT(3)
-+
- #endif
+ 	/* Frames received, not handled yet by mac80211 */
+ 	struct sk_buff_head deferred_rx_queue;
 -- 
-1.7.1
+1.7.4.1
 
