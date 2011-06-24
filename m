@@ -1,88 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:36093 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756118Ab1FPXpl convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:38979 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754238Ab1FXQOA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2011 19:45:41 -0400
+	Fri, 24 Jun 2011 12:14:00 -0400
+Received: by wwg11 with SMTP id 11so626056wwg.1
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jun 2011 09:13:58 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20110616233736.GA2344@broadcom.com>
-References: <1308176709-14765-1-git-send-email-Gregory.Dietsche@cuw.edu>
- <20110616013615.GA14700@broadcom.com> <4DF96F22.5070508@cuw.edu> <20110616233736.GA2344@broadcom.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 17 Jun 2011 09:45:21 +1000
-Message-ID: <BANLkTi=tLWXn7mMf-6pf-3gM6x8zX=WNtw@mail.gmail.com> (sfid-20110617_014558_958528_46867135)
-Subject: Re: [PATCH] staging: brcm80211: return false if not a broadcom board
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: Greg Dietsche <gregory.dietsche@cuw.edu>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	Brett Rudley <brudley@broadcom.com>,
-	Dowan Kim <dowan@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <BANLkTikB3OS+=w5qO6sb2jABhUSeGh86Tg@mail.gmail.com>
+References: <BANLkTikB3OS+=w5qO6sb2jABhUSeGh86Tg@mail.gmail.com>
+Date: Fri, 24 Jun 2011 21:43:57 +0530
+Message-ID: <BANLkTikkYuENv4CSNxb_NcT2ga0PqHwR2Q@mail.gmail.com> (sfid-20110624_181403_520459_82D3F47B)
+Subject: Re: cfg80211 'iw reg set' no longer works after trying to set invalid
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Laura Nayman <lnayman@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henry,
-
-On Fri, Jun 17, 2011 at 09:37, Henry Ptasinski <henryp@broadcom.com> wrote:
-> How's this for a somewhat clearer implementation:
+On Fri, Jun 24, 2011 at 8:13 PM, Laura Nayman <lnayman@gmail.com> wrote:
+> cfg80211 'iw reg set' no longer works after trying to set invalid country
+> code
 >
-> static bool brcms_c_validboardtype(struct brcms_c_hw_info *wlc_hw)
-> {
->        bool goodboard = true;
->        uint boardrev = wlc_hw->boardrev;
+> You can change the wireless region by using 'iw set reg'. Normally you can
+> switch back and forth just fine...
 >
->        if (wlc_hw->sih->boardvendor == PCI_VENDOR_ID_BROADCOM) {
-
-You could reduce indentation by having this be:
-
-if (wlc_hw->sih->boardvendor != PCI_VENDOR_ID_BROADCOM)
-    return true;
-
->                /* validate boardrev */
->                if (boardrev == 0)
->                        goodboard = false;
-
-and remove the goodboard variable by having this return false immediately.
-
->                else if (boardrev > 0xff) {
-
-You could also drop the else and have this as
-
-if (boardrev <= 0xff)
-    return true;
-
->                        /* 4 bits each for board type, major, minor, and tiny
->                        version numbers */
->                        uint brt = (boardrev & 0xf000) >> 12;
->                        uint b0 = (boardrev & 0xf00) >> 8;
->                        uint b1 = (boardrev & 0xf0) >> 4;
->                        uint b2 = boardrev & 0xf;
+> # iw reg set US
+> # iw reg get | grep country
+> country US:
+> # iw reg set JP
+> # iw reg get | grep country
+> country JP:
+> # iw reg set US
+> # iw reg get | grep country
+> country US:
 >
->                        if ((brt > 2) || (brt == 0) || (b0 > 9) || (b0 == 0)
->                                || (b1 > 9) || (b2 > 9))
->                                goodboard = false;
-
-and return false here too.
-
->                }
->        }
 >
->        return goodboard;
+> However, if we try to use an invalid country code, such as XX:
+> # iw reg set XX
+> # iw reg get | grep country
+> country US:
+> ... it doesn't take. Okay, no big deal. Let's try setting it back to JP:
+> # iw reg set JP
+> # iw reg get | grep country
+> country US:
+>
+> We're now stuck at the country code we were at before we put the invalid one
+> in.
+>
+> In dmesg, this exchange looks like:
+> # dmesg | grep cfg80211
+> cfg80211: Calling CRDA to update world regulatory domain
+> cfg80211: World regulatory domain updated:
+> cfg80211: Calling CRDA for country: US
+> cfg80211: Regulatory domain changed to country: US
+> cfg80211: Calling CRDA for country: JP
+> cfg80211: Regulatory domain changed to country: JP
+> cfg80211: Calling CRDA for country: US
+> cfg80211: Regulatory domain changed to country: US
+> cfg80211: Calling CRDA for country: XX
+> ... and we're stuck there.
+>
+> What looks to be happening is that the kernel uses udev to call /sbin/crda
+> with a new COUNTRY= setting, but /sbin/crda bails out with -1 because of 'No
+> country match in regulatory database', and never sends a netlink message
+> back to the kernel to give it the regulatory information for that country.
+> The kernel then seems to be stuck waiting for a message that will never
+> come.
+>
+> The only way I can figure to unstick it is to reboot.
 
-then just return true here.
+true you may be using old wireless-testing/compat wireless, i too got
+this issue in Jan compat wireless
 
-> }
+does this happens with the latest compat wireless. please check?
+http://wireless.kernel.org/download/compat-wireless-2.6/
 
-Thanks,
+
+this would have fixed it
+
+commit c989bb15e95a93e20fc86783264f6298116e8651
+Author: Luis R. Rodriguez <lrodriguez@atheros.com>
+Date:   Mon Apr 25 18:35:48 2011 -0700
+
+    cfg80211: fix regresion on reg user timeout
+
+    The patch "cfg80211: add a timer for invalid user reg hints"
+    introduced a regression for the case where a secondary identical
+    regulatory hint from a user is sent. What would happen is the
+    second hint would schedule delayed work in to catch a timeout
+    but since we are never processing it given that the hint was already
+    applied we'd always hit the timeout and and restore regulatory
+    settings back to world regulatory domain. This is fixed by simply
+    avoiding sheduling work if the hint was already applied.
+
+    Tested-by: Felix Fietkau <nbd@openwrt.org>
+    Reported-by: Felix Fietkau <nbd@openwrt.org>
+    Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 2714379..8982053 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1455,7 +1455,8 @@ static void reg_process_hint(struct
+regulatory_request *reg_request)
+         * We only time out user hints, given that they should be the only
+         * source of bogus requests.
+         */
+-       if (reg_request->initiator == NL80211_REGDOM_SET_BY_USER)
++       if (r != -EALREADY &&
++           reg_request->initiator == NL80211_REGDOM_SET_BY_USER)
+                schedule_delayed_work(&reg_timeout, msecs_to_jiffies(3142));
+ }
+
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+shafi
