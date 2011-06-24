@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33068 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756640Ab1FIWEM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 18:04:12 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, jonas.gorski@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 06/11] compat-wireless: activate CARL9170_WPC by default
-Date: Fri, 10 Jun 2011 00:03:37 +0200
-Message-Id: <1307657022-23808-7-git-send-email-hauke@hauke-m.de> (sfid-20110610_000418_371552_999FEAFC)
-In-Reply-To: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
-References: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
+Received: from nm16-vm0.bullet.mail.bf1.yahoo.com ([98.139.212.253]:29075 "HELO
+	nm16-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752948Ab1FXMe4 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jun 2011 08:34:56 -0400
+References: <loom.20110624T123237-71@post.gmane.org> <201106241307.44609.chunkeey@googlemail.com>
+Message-ID: <1308918895.17410.YahooMailRC@web161205.mail.bf1.yahoo.com> (sfid-20110624_143459_921009_FF987A39)
+Date: Fri, 24 Jun 2011 05:34:55 -0700 (PDT)
+From: Joerg Pommnitz <pommnitz@yahoo.com>
+Subject: AW: Configuring the multicast data rate with iw/nl80211
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <201106241307.44609.chunkeey@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add to compat-3.0-stable
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+>Not a good idea... I tried it too, but as soon as a STA goes into PSM [or does 
+a
+>background scan], it'll affect the stream badly [So, you'll probably need a
+>dedicated AP just for your video clients]. The reason is that the AP
+>[in my case it was mac80211] will now buffer the transmissions, so you only get
+>about 128 frames every 300ms until the STA comes back or disappears.
 
-diff --git a/config.mk b/config.mk
-index 2a0c229..29e6e06 100644
---- a/config.mk
-+++ b/config.mk
-@@ -453,7 +453,7 @@ ifdef CONFIG_MAC80211_LEDS
- CONFIG_CARL9170_LEDS=y
- endif #CONFIG_MAC80211_LEDS
- # CONFIG_CARL9170_DEBUGFS=y
--# CONFIG_CARL9170_WPC=y
-+CONFIG_CARL9170_WPC=y
- endif #CONFIG_COMPAT_KERNEL_2_6_29
- 
- # This activates a threading fix for usb urb.
--- 
-1.7.4.1
+An interesting and good point. However, I'm in full control of the clients
+so I can actually disable PS-Mode. So, while your note of caution is 
+appreciated,
+it doesn't get me off the hook. As I wrote earlier I'm evaluating a transition
+from Madwifi to ath5k. Madwifi with net80211 had an iwpriv call to configure the 
+
+multicast data rate. I'm looking for an equivalent solution with ath5k/mac80211.
+
+>As an alternative, It's worth a try to look into multicast-to-unicast proxies
+>such as http://sourceforge.net/projects/udpxy/ .
+
+But then you duplicate the multicast traffic for every STA, no?
+
+Regards
+  Joerg
 
