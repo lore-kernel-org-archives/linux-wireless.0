@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51490 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752843Ab1FBQbZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 12:31:25 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 4/4] compat: add KEY_WPS_BUTTON
-Date: Thu,  2 Jun 2011 18:31:04 +0200
-Message-Id: <1307032264-14663-5-git-send-email-hauke@hauke-m.de> (sfid-20110602_183128_286038_FD39DFD8)
-In-Reply-To: <1307032264-14663-1-git-send-email-hauke@hauke-m.de>
-References: <1307032264-14663-1-git-send-email-hauke@hauke-m.de>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:48161 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755479Ab1FXWC3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jun 2011 18:02:29 -0400
+Date: Fri, 24 Jun 2011 17:02:27 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/3] staging: rtl8187se: Fix big-endian warning
+Message-ID: <4e050973.T019j2fmhZvo/1Jn%Larry.Finger@lwfinger.net> (sfid-20110625_000249_251412_D445ADB7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed for carl9170.
+When compiling the rtl8187se driver from staging on a big-endian
+architecture, the following warning results:
 
-Add to compat-3.0-stable
+  CC [M]  drivers/staging/rtl8187se/ieee80211/ieee80211_softmac.o
+drivers/staging/rtl8187se/ieee80211/ieee80211_softmac.c: In function 'ieee80211_probe_resp':
+drivers/staging/rtl8187se/ieee80211/ieee80211_softmac.c:824: warning: value computed is not used
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+The warning is due to misuse of cpu_to_le16().
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- include/linux/compat-2.6.34.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/compat-2.6.34.h b/include/linux/compat-2.6.34.h
-index 663a67e..9743d6c 100644
---- a/include/linux/compat-2.6.34.h
-+++ b/include/linux/compat-2.6.34.h
-@@ -251,6 +251,8 @@ static inline int usb_disable_autosuspend(struct usb_device *udev)
+Index: wireless-testing-new/drivers/staging/rtl8187se/ieee80211/ieee80211_softmac.c
+===================================================================
+--- wireless-testing-new.orig/drivers/staging/rtl8187se/ieee80211/ieee80211_softmac.c
++++ wireless-testing-new/drivers/staging/rtl8187se/ieee80211/ieee80211_softmac.c
+@@ -820,7 +820,7 @@ static struct sk_buff* ieee80211_probe_r
+ 		cpu_to_le16(ieee->current_network.capability & WLAN_CAPABILITY_IBSS);
  
- #define rcu_dereference_raw(p)	rcu_dereference(p)
+ 	if(ieee->short_slot && (ieee->current_network.capability & WLAN_CAPABILITY_SHORT_SLOT))
+-		cpu_to_le16((beacon_buf->capability |= WLAN_CAPABILITY_SHORT_SLOT));
++		beacon_buf->capability |= cpu_to_le16(WLAN_CAPABILITY_SHORT_SLOT);
  
-+#define KEY_WPS_BUTTON		0x211	/* WiFi Protected Setup key */
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)) */
+ 	crypt = ieee->crypt[ieee->tx_keyidx];
  
- #endif /* LINUX_26_34_COMPAT_H */
--- 
-1.7.4.1
-
