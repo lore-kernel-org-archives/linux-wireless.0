@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:38937 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755977Ab1F0Kkk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 06:40:40 -0400
-Received: by fxe23 with SMTP id 23so1703565fxe.15
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 03:40:37 -0700 (PDT)
-Subject: Re: [PATCH v2 1/4] wl12xx: don't check wow param on suspend/resume
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1307352115-28969-1-git-send-email-eliad@wizery.com>
-References: <1307352115-28969-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 27 Jun 2011 13:40:34 +0300
-Message-ID: <1309171234.30221.27.camel@cumari> (sfid-20110627_124538_788949_DBE7C5A9)
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:49635 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752015Ab1FXTjI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jun 2011 15:39:08 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/5] update for 3.1
+Date: Fri, 24 Jun 2011 12:07:12 -0700
+Message-Id: <1308942437-6039-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110624_213923_581421_B57895EF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-06-06 at 12:21 +0300, Eliad Peller wrote: 
-> Since mac80211 calls suspend/resume only when wowlan triggers
-> exist, there is no need to check for triggers existance in the
-> callbacks as well.
-> Add a WARN_ON() to verify it.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+We add more support for P2P functions
+We also utilize the existing PM ops macro
 
-Applied the series, thanks!
+Johannes Berg (5):
+  iwlagn: use PM ops macro
+  iwlagn: fix cmd queue unmap
+  iwlagn: extend host command timeout
+  iwlagn: fill beacon TX rate properly
+  iwlagn: don't use CCK rates for P2P interfaces
 
--- 
-Cheers,
-Luca.
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |   17 +++++++++++------
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   26 ++++++++++++++++++++++----
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   13 -------------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    7 -------
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-pci.c      |    9 +--------
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |    5 +----
+ 9 files changed, 40 insertions(+), 43 deletions(-)
 
