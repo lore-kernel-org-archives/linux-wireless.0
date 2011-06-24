@@ -1,55 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:58749 "EHLO purkki.adurom.net"
+Received: from lo.gmane.org ([80.91.229.12]:57902 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754678Ab1FQLLm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2011 07:11:42 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 00/27] mac80211: create mac80211_ prefix
-References: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
-	<1f42877e8c429b956640a6e9d97127fc@secure.sipsolutions.net>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Fri, 17 Jun 2011 14:11:40 +0300
-In-Reply-To: <1f42877e8c429b956640a6e9d97127fc@secure.sipsolutions.net> (Johannes Berg's message of "Thu\, 16 Jun 2011 17\:34\:41 +0200")
-Message-ID: <87mxhg1zmb.fsf@purkki.adurom.net> (sfid-20110617_131145_063825_6E95FD96)
-MIME-Version: 1.0
+	id S1752174Ab1FXNtV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jun 2011 09:49:21 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Qa6l6-0006Ul-Fl
+	for linux-wireless@vger.kernel.org; Fri, 24 Jun 2011 15:49:20 +0200
+Received: from proxyext.iabg.de ([proxyext.iabg.de])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jun 2011 15:49:20 +0200
+Received: from pommnitz by proxyext.iabg.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jun 2011 15:49:20 +0200
+To: linux-wireless@vger.kernel.org
+From: jpo <pommnitz@yahoo.com>
+Subject: Restricting a interface to 802.11b features
+Date: Fri, 24 Jun 2011 13:49:09 +0000 (UTC)
+Message-ID: <loom.20110624T154421-95@post.gmane.org> (sfid-20110624_154924_968686_8D67A1D0)
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Hello all,
+is there a way to restrict an interface to the 802.11b feature set? I know I can
+restrict the data rates, but this still leaves the capability information in the
+IBSS beacons to indicate enhancements from the later standards. So, is there a
+way to say: this interface must behave as if it were only 802.11b compatible
+even if the underlying hardware supports more?
 
-> On Tue, 14 Jun 2011 01:34:28 +0300, Kalle Valo wrote:
->
->> In this patchset I first fix some issues I found from the drivers,
->> then create mac80211-compat.h to make the transition as smooth as
->> possible and then start changing mac80211 itself.
->
-> FWIW, I don't mind the rename, but I don't like the compat.h thing.
-> The transition won't be smoothed by this, it just means the transition
-> will drag out as things conflict etc.
+Regards
+  Joerg
 
-My plan was that I will finish the transition and remove
-mac80211-compat.h before the next merge window. That way the file
-would not be in any of the official releases.
-
-> If we want to rename, we'll need to bite the bullet eventually
-> anyway.
-
-What do you suggest here? So that we should rename everything (both
-mac80211 and 19 drivers) in one go? If we do that, we would have to do
-everything in one patch to not break bisect, and it would be huge.
-
-With mac80211-compat.h it's possible to break down the patches into
-small pieces. This makes it easier to create the patches and, most
-importantly, review them.
-
-I'm willing to work on that huge patch if we so decide, but I'm not
-sure if that's the correct way.
-
-Ah, while writing this I realised that I could instead rename symbols
-in mac80211.h one at a time and that way the patches would be smaller.
-Did you mean that?
-
--- 
-Kalle Valo
