@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:49635 "EHLO mga01.intel.com"
+Received: from lo.gmane.org ([80.91.229.12]:35648 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752191Ab1FXTjI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2011 15:39:08 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 1/5] iwlagn: use PM ops macro
-Date: Fri, 24 Jun 2011 12:07:13 -0700
-Message-Id: <1308942437-6039-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110624_213924_822858_A455A60B)
-In-Reply-To: <1308942437-6039-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1308942437-6039-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1751660Ab1FXKi0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jun 2011 06:38:26 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Qa3mK-0002r9-M1
+	for linux-wireless@vger.kernel.org; Fri, 24 Jun 2011 12:38:24 +0200
+Received: from proxyext.iabg.de ([proxyext.iabg.de])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jun 2011 12:38:24 +0200
+Received: from pommnitz by proxyext.iabg.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jun 2011 12:38:24 +0200
+To: linux-wireless@vger.kernel.org
+From: jpo <pommnitz@yahoo.com>
+Subject: Configuring the multicast data rate with iw/nl80211
+Date: Fri, 24 Jun 2011 10:38:06 +0000 (UTC)
+Message-ID: <loom.20110624T123237-71@post.gmane.org> (sfid-20110624_123830_578948_CB98BCB4)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hello all,
+I know that it is now possible to configure the data rate bitmask that the RC
+algorithm uses to select data rates for individual peer nodes. However, I could
+not figure out, how to specifically assign a broadcast/multicast data rate. Is
+this supported? If so, how?
 
-Simplify the code and use SIMPLE_DEV_PM_OPS
-to define iwl_dev_pm_ops instead of doing the
-same thing manually.
+The scenario I'm facing is that I'm perfectly happy to let the RC figure out the
+best data rate for the peer nodes up to the supported maximum. However, I need
+to multicast video streams as well. For this I have to balance the required data
+rate with the distance I can achieve. 
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-pci.c |    9 +--------
- 1 files changed, 1 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
-index 7328fbf..3927c80 100644
---- a/drivers/net/wireless/iwlwifi/iwl-pci.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
-@@ -530,14 +530,7 @@ static int iwl_pci_resume(struct device *device)
- 	return iwl_resume(priv);
- }
- 
--static const struct dev_pm_ops iwl_dev_pm_ops = {
--	.suspend = iwl_pci_suspend,
--	.resume = iwl_pci_resume,
--	.freeze = iwl_pci_suspend,
--	.thaw = iwl_pci_resume,
--	.poweroff = iwl_pci_suspend,
--	.restore = iwl_pci_resume,
--};
-+static SIMPLE_DEV_PM_OPS(iwl_dev_pm_ops, iwl_pci_suspend, iwl_pci_resume);
- 
- #define IWL_PM_OPS	(&iwl_dev_pm_ops)
- 
--- 
-1.7.0.4
+Kind regards
+  Joerg
 
