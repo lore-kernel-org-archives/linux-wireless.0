@@ -1,40 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55416 "EHLO nbd.name"
+Received: from mx1.redhat.com ([209.132.183.28]:65116 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758582Ab1FPXMC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2011 19:12:02 -0400
-Message-ID: <4DFA8DBF.9080301@openwrt.org> (sfid-20110617_011207_790459_4133D119)
-Date: Fri, 17 Jun 2011 01:11:59 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1751414Ab1FXU4I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jun 2011 16:56:08 -0400
+Date: Fri, 24 Jun 2011 16:55:57 -0400
+From: Kyle McMartin <kmcmartin@redhat.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [3.0 regression] DMAR faults in iwlagn
+Message-ID: <20110624205557.GH22060@ihatethathostname.lab.bos.redhat.com> (sfid-20110624_225619_025169_47DA29DC)
 MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ath9k WDS panic without CONFIG_ATH9K_RATE_CONTROL
-References: <4DF93116.700@gnu.org> <4DF96668.3040007@openwrt.org> <4DFA7BAD.7060405@gnu.org>
-In-Reply-To: <4DFA7BAD.7060405@gnu.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1308774416.29571.26.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-06-16 11:54 PM, Pavel Roskin wrote:
-> On 06/15/2011 10:11 PM, Felix Fietkau wrote:
->
->>  Some time ago I sent some patches to fix the issues with WDS (and add
->>  support for HT, including aggregation).
->>
->>  These patches assume that you set up an AP on both sides alongside the
->>  WDS interface (beacons of the APs are used to exchange rates and
->>  capabilities).
->
-> I think WDS should work without beacons.  At least the basic rates
-> should be available when the interface is brought up.  Further changes
-> to the set of supported rates can be made with iw.
->
-> WDS is somewhat orthogonal to the beacons.  The beacons are primarily
-> meant for the stations.
-For 802.11n you need proper HT capabilites anyway. I think it usually 
-doesn't make much sense to use WDS without AP interfaces, but if you 
-consider it worth adding support for, then please build your patches on 
-top of my patch series.
+Fixing it up to make it apply against 3.0-rc4 kills the warning for me
+as well. Thanks for being so quick to post a fix, Johannes!
 
-- Felix
+Tested-by: Kyle McMartin <kyle@redhat.com>
+
+---
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 686e176..11da90a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -126,7 +126,7 @@ static inline u8 iwl_tfd_get_num_tbs(struct iwl_tfd *tfd)
+ }
+ 
+ static void iwlagn_unmap_tfd(struct iwl_priv *priv, struct iwl_cmd_meta *meta,
+-			     struct iwl_tfd *tfd)
++			     struct iwl_tfd *tfd, enum dma_data_direction dma_dir)
+ {
+ 	struct pci_dev *dev = priv->pci_dev;
+ 	int i;
+@@ -151,7 +151,7 @@ static void iwlagn_unmap_tfd(struct iwl_priv *priv, struct iwl_cmd_meta *meta,
+ 	/* Unmap chunks, if any. */
+ 	for (i = 1; i < num_tbs; i++)
+ 		pci_unmap_single(dev, iwl_tfd_tb_get_addr(tfd, i),
+-				iwl_tfd_tb_get_len(tfd, i), PCI_DMA_TODEVICE);
++				iwl_tfd_tb_get_len(tfd, i), dma_dir);
+ }
+ 
+ /**
+@@ -167,7 +167,8 @@ void iwlagn_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+ 	struct iwl_tfd *tfd_tmp = txq->tfds;
+ 	int index = txq->q.read_ptr;
+ 
+-	iwlagn_unmap_tfd(priv, &txq->meta[index], &tfd_tmp[index]);
++	iwlagn_unmap_tfd(priv, &txq->meta[index], &tfd_tmp[index],
++		PCI_DMA_TODEVICE);
+ 
+ 	/* free SKB */
+ 	if (txq->txb) {
+@@ -700,10 +701,11 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 		if (!(cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY))
+ 			continue;
+ 		phys_addr = pci_map_single(priv->pci_dev, (void *)cmd->data[i],
+-					   cmd->len[i], PCI_DMA_TODEVICE);
++					   cmd->len[i], PCI_DMA_BIDIRECTIONAL);
+ 		if (pci_dma_mapping_error(priv->pci_dev, phys_addr)) {
+ 			iwlagn_unmap_tfd(priv, out_meta,
+-					 &txq->tfds[q->write_ptr]);
++					 &txq->tfds[q->write_ptr],
++					 PCI_DMA_BIDIRECTIONAL);
+ 			idx = -ENOMEM;
+ 			goto out;
+ 		}
+@@ -807,7 +809,7 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+ 	cmd = txq->cmd[cmd_index];
+ 	meta = &txq->meta[cmd_index];
+ 
+-	iwlagn_unmap_tfd(priv, meta, &txq->tfds[index]);
++	iwlagn_unmap_tfd(priv, meta, &txq->tfds[index], PCI_DMA_BIDIRECTIONAL);
+ 
+ 	/* Input error checking is done when commands are added to queue. */
+ 	if (meta->flags & CMD_WANT_SKB) {
