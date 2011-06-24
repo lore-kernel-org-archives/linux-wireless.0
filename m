@@ -1,56 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35646 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750775Ab1FHLIF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2011 07:08:05 -0400
-Subject: Re: iwlagn aggregation problem when stations are removed/re-added
- quickly
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Cc: ipw3945-devel@lists.sourceforge.net,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Wey-Yi W Guy <wey-yi.w.guy@intel.com>
-In-Reply-To: <BANLkTiki+y2uoeyqX7BE0W+7RA9hHhgTLA@mail.gmail.com> (sfid-20110514_005657_579238_E23F3390)
-References: <BANLkTiki+y2uoeyqX7BE0W+7RA9hHhgTLA@mail.gmail.com>
-	 (sfid-20110514_005657_579238_E23F3390)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 08 Jun 2011 13:07:56 +0200
-Message-ID: <1307531276.3961.8.camel@jlt3.sipsolutions.net> (sfid-20110608_130809_625668_38B83AD2)
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:41412 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752044Ab1FXTVZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jun 2011 15:21:25 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/2] iwlwifi fix for 3.0
+Date: Fri, 24 Jun 2011 11:49:32 -0700
+Message-Id: <1308941374-29323-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110624_212128_360729_8AA69737)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-05-13 at 15:56 -0700, Daniel Halperin wrote:
+Fix the incorrect type due to interface changes type to a P2P type,
 
-> I'm running an experiment where a client connects to the AP (both HT
-> iwlagn devices), starts a large transfer that gets aggregation going,
-> disassociates, and then reassociates and restarts the transfer.
-> 
-> When mac80211 stops the queue (as part of the client's disassocation
-> process), it goes into the following code:
-> 
->                IWL_DEBUG_HT(priv, "Stopping a non empty AGG HW QUEUE\n");
->                 priv->stations[sta_id].tid[tid].agg.state =
->                                 IWL_EMPTYING_HW_QUEUE_DELBA;
->                 spin_unlock_irqrestore(&priv->sta_lock, flags);
-> 
-> but if the station is removed right away the packets stay in the
-> queue. Indeed, when the client reconnects, the packets are then
-> delivered! But then the queue gets stuck and the AP issues a firmware
-> reset, which doesn't actually get traffic flowing again. Below,
-> there's a log with IWL_DL_HT set. It may be something racy; adding
-> DL_INFO and DL_MAC80211 I haven't been able to reproduce the bug yet
-> in a few tries.
-> 
-> I suspect this will also be a problem with P2P, and not just my klugey
-> use of AP mode. Any suggestions as to how to fix?
+ALso fix the bug introduced by 4ce7cc2b09553a91d4aea014c39674685715173a
+iwlagn: support multiple TBs per command
 
-Sorry I'm replying this late. I'm not sure what the best way to fix it
-would be, but it makes sense that this would happen. Maybe we can flush
-the aggregation queue (asking the ucode to drop all frames) when the
-station is removed, but I'm not sure how we'd do that -- Wey-Yi do you
-know if that's possible?
 
-johannes
+Emmanuel Grumbach (1):
+  iwlagn: Fix a bug introduced by the HUGE command removal
+
+Johannes Berg (1):
+  iwlagn: fix change_interface for P2P types
+
+these patches are also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+ drivers/net/wireless/iwlwifi/iwl-core.c |    3 ++-
+ drivers/net/wireless/iwlwifi/iwl-tx.c   |    7 +------
+ 2 files changed, 3 insertions(+), 7 deletions(-)
 
