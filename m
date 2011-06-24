@@ -1,79 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4409 "EHLO mms1.broadcom.com"
+Received: from mail.atheros.com ([12.19.149.2]:12607 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753658Ab1FOT0w convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2011 15:26:52 -0400
-Message-ID: <4DF9076F.3090304@broadcom.com> (sfid-20110615_212655_657627_F5EC89BF)
-Date: Wed, 15 Jun 2011 21:26:39 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1755101Ab1FXLcl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jun 2011 07:32:41 -0400
+Received: from mail.atheros.com ([10.234.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 24 Jun 2011 04:32:05 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k: Fix locking issue during tx completion
+Date: Fri, 24 Jun 2011 17:02:25 +0530
+Message-ID: <1308915145-6282-1-git-send-email-rmanoharan@atheros.com> (sfid-20110624_133245_299776_21502314)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
-Subject: Re: [RFC][WORTH IT?][PATCH] bcma: make use of crc8 lib
-References: <1308138814-12235-1-git-send-email-zajec5@gmail.com>
- <4DF8A0EF.5030702@broadcom.com>
- <BANLkTim3-sxkHmfiiwR-mLWfyUKxpSVBQA@mail.gmail.com>
-In-Reply-To: <BANLkTim3-sxkHmfiiwR-mLWfyUKxpSVBQA@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/15/2011 08:29 PM, Rafał Miłecki wrote:
-> W dniu 15 czerwca 2011 14:09 użytkownik Arend van Spriel
-> <arend@broadcom.com>  napisał:
->> On 06/15/2011 01:53 PM, Rafał Miłecki wrote:
->>>   static u8 bcma_sprom_crc(const u16 *sprom)
->>>   {
->>> -       int word;
->>> -       u8 crc = 0xFF;
->>> +       u8 crc;
->>> +       u8 sprom2[SSB_SPROMSIZE_WORDS_R4 * 2 - 1];
->>> +       u8 table[CRC8_TABLE_SIZE];
->>> +       u16 word;
->>>
->>> +       /* u16 to u8 */
->>>         for (word = 0; word<    SSB_SPROMSIZE_WORDS_R4 - 1; word++) {
->>> -               crc = bcma_crc8(crc, sprom[word]&    0x00FF);
->>> -               crc = bcma_crc8(crc, (sprom[word]&    0xFF00)>>    8);
->>> +               sprom2[word * 2] = sprom[word]&    0x00FF;
->>> +               sprom2[(word * 2) + 1] = (sprom[word]&    0xFF00)>>    8;
->>>         }
->>> -       crc = bcma_crc8(crc, sprom[SSB_SPROMSIZE_WORDS_R4 - 1]&    0x00FF);
->>> +       /* 127th byte */
->>> +       sprom2[(SSB_SPROMSIZE_WORDS_R4 * 2) - 2] =
->>> +                               sprom[SSB_SPROMSIZE_WORDS_R4 - 1]&
->>>   0x00FF;
->>> +
->>> +       /* Prepare table, 0xAB is x^8 + x^7 + x^6 + x^4 + x^2 + 1 */
->>> +       crc8_populate_lsb(table, 0xAB);
->>> +
->>> +       /* Calculate */
->>> +       crc = crc8(table, sprom2, (SSB_SPROMSIZE_WORDS_R4 * 2) - 1, 0xFF);
->>>         crc ^= 0xFF;
->>>
->>>         return crc;
->> You could do (I think):
->>
->> crc8_populate_lsb(table, 0xAB);
->> for (word = 0; word<    SSB_SPROMSIZE_WORDS_R4; word++) {
->>         u16 val = cpu_to_le16(sprom[word]);
->>         crc = crc8(table,&val, sizeof(u16), crc);
->> }
-> Maybe not a perfect/optimal solution (crc8 focuses on tables, we do
-> double loop instead) but should work. Thanks for the tip.
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-Agree. In brcm80211 we convert the entire sprom, calculate, and convert 
-it back. Also not perfect I think as it loops over de sprom data twice.
+The received tx status of aggregated frame without BlockAck may
+cause deaf state in AR5416 cards. So the driver does a reset to
+recover. When this happens, we release the pcu_lock before doing
+a reset as ath_rest acquires pcu_lock. This is ugly and also not
+atomic. Fixing this addresses the TX DMA failure also.
 
-Gr. AvS
+ath_tx_complete_aggr can be called from different paths which
+takes different variants of spin_lock. This patch also addresses
+the following warning.
 
+WARNING: at kernel/timer.c:1011 del_timer_sync+0x4e/0x50()
+Call Trace:
+ <IRQ>  [<ffffffff8104be3a>] warn_slowpath_common+0x7a/0xb0
+ [<ffffffff8104be85>] warn_slowpath_null+0x15/0x20
+ [<ffffffff8105915e>] del_timer_sync+0x4e/0x50
+ [<ffffffffa03726be>] ath_reset+0x3e/0x210 [ath9k]
+ [<ffffffff8135cdaf>] ? _raw_spin_unlock_bh+0x1f/0x30
+ [<ffffffffa037760a>] ath_tx_complete_aggr.isra.26+0x54a/0xa40 [ath9k]
+
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |    2 ++
+ drivers/net/wireless/ath/ath9k/main.c   |   13 +++++++++----
+ drivers/net/wireless/ath/ath9k/xmit.c   |    7 +++----
+ 3 files changed, 14 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 0b6e3b6..9c085d1 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -385,7 +385,9 @@ void ath_beacon_tasklet(unsigned long data)
+ 			ath_dbg(common, ATH_DBG_BSTUCK,
+ 				"beacon is officially stuck\n");
+ 			sc->sc_flags |= SC_OP_TSF_RESET;
++			spin_lock_bh(&sc->sc_pcu_lock);
+ 			ath_reset(sc, true);
++			spin_unlock_bh(&sc->sc_pcu_lock);
+ 		}
+ 
+ 		return;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 5ae303b..c7c48a7 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -617,8 +617,11 @@ void ath_hw_check(struct work_struct *work)
+ 	ath_dbg(common, ATH_DBG_RESET, "Possible baseband hang, "
+ 		"busy=%d (try %d)\n", busy, sc->hw_busy_count + 1);
+ 	if (busy >= 99) {
+-		if (++sc->hw_busy_count >= 3)
++		if (++sc->hw_busy_count >= 3) {
++			spin_lock_bh(&sc->sc_pcu_lock);
+ 			ath_reset(sc, true);
++			spin_unlock_bh(&sc->sc_pcu_lock);
++		}
+ 	} else if (busy >= 0)
+ 		sc->hw_busy_count = 0;
+ 
+@@ -637,7 +640,9 @@ static void ath_hw_pll_rx_hang_check(struct ath_softc *sc, u32 pll_sqsum)
+ 			/* Rx is hung for more than 500ms. Reset it */
+ 			ath_dbg(common, ATH_DBG_RESET,
+ 				"Possible RX hang, resetting");
++			spin_lock_bh(&sc->sc_pcu_lock);
+ 			ath_reset(sc, true);
++			spin_unlock_bh(&sc->sc_pcu_lock);
+ 			count = 0;
+ 		}
+ 	} else
+@@ -674,7 +679,9 @@ void ath9k_tasklet(unsigned long data)
+ 
+ 	if ((status & ATH9K_INT_FATAL) ||
+ 	    (status & ATH9K_INT_BB_WATCHDOG)) {
++		spin_lock_bh(&sc->sc_pcu_lock);
+ 		ath_reset(sc, true);
++		spin_unlock_bh(&sc->sc_pcu_lock);
+ 		return;
+ 	}
+ 
+@@ -980,7 +987,6 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	del_timer_sync(&common->ani.timer);
+ 
+ 	ath9k_ps_wakeup(sc);
+-	spin_lock_bh(&sc->sc_pcu_lock);
+ 
+ 	ieee80211_stop_queues(hw);
+ 
+@@ -1023,7 +1029,6 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	}
+ 
+ 	ieee80211_wake_queues(hw);
+-	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 	/* Start ANI */
+ 	if (!common->disable_ani)
+@@ -2326,9 +2331,9 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
+ 	ath9k_ps_wakeup(sc);
+ 	spin_lock_bh(&sc->sc_pcu_lock);
+ 	drain_txq = ath_drain_all_txq(sc, false);
+-	spin_unlock_bh(&sc->sc_pcu_lock);
+ 	if (!drain_txq)
+ 		ath_reset(sc, false);
++	spin_unlock_bh(&sc->sc_pcu_lock);
+ 	ath9k_ps_restore(sc);
+ 	ieee80211_wake_queues(hw);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index ec012b4..a1fed6c 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -565,11 +565,8 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 	rcu_read_unlock();
+ 
+-	if (needreset) {
+-		spin_unlock_bh(&sc->sc_pcu_lock);
++	if (needreset)
+ 		ath_reset(sc, false);
+-		spin_lock_bh(&sc->sc_pcu_lock);
+-	}
+ }
+ 
+ static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
+@@ -2169,7 +2166,9 @@ static void ath_tx_complete_poll_work(struct work_struct *work)
+ 	if (needreset) {
+ 		ath_dbg(ath9k_hw_common(sc->sc_ah), ATH_DBG_RESET,
+ 			"tx hung, resetting the chip\n");
++		spin_lock_bh(&sc->sc_pcu_lock);
+ 		ath_reset(sc, true);
++		spin_unlock_bh(&sc->sc_pcu_lock);
+ 	}
+ 
+ 	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work,
 -- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
-
+1.7.5.2
 
