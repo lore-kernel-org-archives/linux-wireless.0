@@ -1,113 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4623 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758129Ab1F2XtF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:49:05 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 097/119] staging: brcm80211: removed brcmf_sdioh_reset()
-Date: Wed, 29 Jun 2011 16:48:01 -0700
-Message-ID: <1309391303-22741-98-git-send-email-frankyl@broadcom.com> (sfid-20110630_015142_197387_D3B923A6)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:55560 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751772Ab1FXKpw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jun 2011 06:45:52 -0400
+Message-ID: <4E046A9F.9020909@mvista.com> (sfid-20110624_124557_639001_597796EB)
+Date: Fri, 24 Jun 2011 14:44:47 +0400
+From: Sergei Shtylyov <sshtylyov@mvista.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: Re: [PATCH 1/2] iwlwifi: use pci_dev->revision, again
+References: <201106231841.40691.sshtylyov@ru.mvista.com> <1308841365.13397.274.camel@wwguy-huron>
+In-Reply-To: <1308841365.13397.274.camel@wwguy-huron>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Hello.
 
-Code cleanup. This function did not perform a reset, hence it was removed.
+On 23-06-2011 19:02, Guy, Wey-Yi wrote:
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/bcmsdbus.h     |    3 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |    5 -----
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    8 --------
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |    2 --
- drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    3 ---
- 5 files changed, 0 insertions(+), 21 deletions(-)
+>> Commit ff938e43d39e926de74b32a3656c190f979ab642 (net: use pci_dev->revision,
+>> again) already converted this driver to using the 'revision' field of 'struct
+>> pci_dev' but commit c2974a1d18832a9fffb2eb389c3878f5c4ed92f1 (iwlagn: remove
+>> rev_id) later reverted that change for no reason. Now restore the change...
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
-index 656caeb..eb08152 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
-@@ -97,9 +97,6 @@ extern int brcmf_sdioh_abort(struct sdioh_info *si, uint fnc);
- extern int brcmf_sdioh_start(struct sdioh_info *si, int stage);
- extern int brcmf_sdioh_stop(struct sdioh_info *si);
- 
--/* Reset and re-initialize the device */
--extern int brcmf_sdioh_reset(struct sdioh_info *si);
--
- /* Helper function */
- void *brcmf_sdcard_get_sdioh(struct brcmf_sdio_card *card);
- 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-index 132b18f..11abd55 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-@@ -545,11 +545,6 @@ uint brcmf_sdcard_query_iofnum(struct brcmf_sdio_card *card)
- 	return brcmf_sdioh_query_iofnum(card->sdioh);
- }
- 
--int brcmf_sdcard_reset(struct brcmf_sdio_card *card)
--{
--	return brcmf_sdioh_reset(card->sdioh);
--}
--
- void *brcmf_sdcard_get_sdioh(struct brcmf_sdio_card *card)
- {
- 	ASSERT(card);
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 092d044..0f0dc42 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -846,14 +846,6 @@ extern int brcmf_sdioh_abort(struct sdioh_info *sd, uint func)
- 	return 0;
- }
- 
--/* Reset and re-initialize the device */
--int brcmf_sdioh_reset(struct sdioh_info *si)
--{
--	sd_trace(("%s: Enter\n", __func__));
--	sd_trace(("%s: Exit\n", __func__));
--	return 0;
--}
--
- /* Disable device interrupt */
- void brcmf_sdioh_dev_intr_off(struct sdioh_info *sd)
- {
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index e43c53a..4b0352f 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -6013,8 +6013,6 @@ int brcmf_bus_devreset(struct brcmf_pub *dhdp, u8 flag)
- 
- 		if (bus->dhd->dongle_reset) {
- 			/* Turn on WLAN */
--			/* Reset SD client */
--			brcmf_sdcard_reset(bus->card);
- 
- 			/* Attempt to re-attach & download */
- 			if (brcmf_sdbrcm_probe_attach(bus, bus->card,
-diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-index f05067a..df4063c 100644
---- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-@@ -207,9 +207,6 @@ extern int brcmf_sdcard_iovar_op(struct brcmf_sdio_card *card, const char *name,
- 				 void *params, int plen, void *arg, int len,
- 				 bool set);
- 
--/* Reset and reinitialize the device */
--extern int brcmf_sdcard_reset(struct brcmf_sdio_card *card);
--
- /* helper functions */
- 
- extern void *brcmf_sdcard_get_sdioh(struct brcmf_sdio_card *card);
--- 
-1.7.1
+>> Signed-off-by: Sergei Shtylyov<sshtylyov@ru.mvista.com>
 
+>> ---
+>> The patch is against the recent Linus' tree.
 
+>>   drivers/net/wireless/iwlwifi/iwl-agn.c |    5 ++---
+>>   1 file changed, 2 insertions(+), 3 deletions(-)
+
+>> Index: linux-2.6/drivers/net/wireless/iwlwifi/iwl-agn.c
+>> ===================================================================
+>> --- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl-agn.c
+>> +++ linux-2.6/drivers/net/wireless/iwlwifi/iwl-agn.c
+>> @@ -3275,10 +3275,9 @@ struct ieee80211_ops iwlagn_hw_ops = {
+>>
+>>   static u32 iwl_hw_detect(struct iwl_priv *priv)
+>>   {
+>> -	u8 rev_id;
+>> +	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n",
+>> +		       priv->pci_dev->revision);
+>>
+>> -	pci_read_config_byte(priv->pci_dev, PCI_REVISION_ID,&rev_id);
+>> -	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n", rev_id);
+>>   	return iwl_read32(priv, CSR_HW_REV);
+>>   }
+
+> hmm, I believe it is merge sequence issue, the IWL_DEBUG_INFO line has
+> benn remove all together in later patch. the information is being log in
+> the calling function, no need to log in "iwl_hw_detect"
+
+    Hm, you probably mean this patch in the iwlwifi-2.6.git (of which I wasn't 
+aware):
+
+author	Emmanuel Grumbach <emmanuel.grumbach@intel.com>	
+	Tue, 31 May 2011 06:58:18 +0000 (09:58 +0300)
+committer	Wey-Yi Guy <wey-yi.w.guy@intel.com>	
+	Sat, 18 Jun 2011 15:18:01 +0000 (08:18 -0700)
+commit	85aed7c48113dfcdc913008481c46346af0db69e
+tree	75831a2ec540039470c295a81c2059a24a4531f5
+parent	19707bac16129ccebc398dbff9d2b44b17b24fea
+
+iwlagn: don't read the PCI_REVISION_ID from iwl-agn.c
+
+The PCI_REVISION_ID is read and printed in iwl_pci_probe anyway using pr_info
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+
+    Since iwl_pci_probe() still reads the PCI config. register, my patch 
+should be recast to modify iwl-pci.c instead...
+
+> Wey
+
+WBR, Sergei
