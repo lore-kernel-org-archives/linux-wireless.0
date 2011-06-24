@@ -1,40 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:34137 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758595Ab1FVSxQ convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:42872 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759387Ab1FXOjm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 14:53:16 -0400
-Received: by iyb12 with SMTP id 12so906877iyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 11:53:15 -0700 (PDT)
+	Fri, 24 Jun 2011 10:39:42 -0400
+Message-ID: <4E04A143.1090204@mvista.com> (sfid-20110624_163952_048002_247210AD)
+Date: Fri, 24 Jun 2011 18:37:55 +0400
+From: Sergei Shtylyov <sshtylyov@mvista.com>
 MIME-Version: 1.0
-In-Reply-To: <1308755270.21489.YahooMailRC@web161204.mail.bf1.yahoo.com>
-References: <loom.20110621T215346-191@post.gmane.org> <BANLkTik0umam7S+E1oog0LTEErMz-dZamg@mail.gmail.com>
- <1308750102.64154.YahooMailRC@web161214.mail.bf1.yahoo.com>
- <1308750416.29571.10.camel@jlt3.sipsolutions.net> <1308753669.17439.YahooMailRC@web161208.mail.bf1.yahoo.com>
- <1308754204.29571.15.camel@jlt3.sipsolutions.net> <1308755270.21489.YahooMailRC@web161204.mail.bf1.yahoo.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 22 Jun 2011 11:52:55 -0700
-Message-ID: <BANLkTim=NOgrpPh_iW5pkBi925yhH+NSrw@mail.gmail.com> (sfid-20110622_205319_898381_84E3CCC8)
-Subject: Re: Performance regression between Madwifi/net80211 and ath5k/mac80211
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=UTF-8
+To: wwguy <wey-yi.w.guy@intel.com>
+CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: Re: [PATCH 1/2] iwlwifi: use pci_dev->revision, again
+References: <201106231841.40691.sshtylyov@ru.mvista.com>	 <1308841365.13397.274.camel@wwguy-huron>  <4E046A9F.9020909@mvista.com> <1308924515.19001.2.camel@wwguy-ubuntu>
+In-Reply-To: <1308924515.19001.2.camel@wwguy-ubuntu>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 22, 2011 at 8:07 AM, Joerg Pommnitz <pommnitz@yahoo.com> wrote:
->> I guess you'll  need more help from the HW people here.
->
-> Bob, Bruno, Felix, Luis, Nick: Do you read?
+Hello.
 
-I read but I do not have time to work on this, my focus is on newer
-hardware and other things. Only thing I can recommend is to stay with
-the latest drivers [1] for your metrics, and if you choose a stable
-release instead of bleeding edge pick the latest stable [2]. You may
-want to try Oprofile to see where ath5k spends its time doing most
-work.
+wwguy wrote:
 
-[1] http://wireless.kernel.org/en/users/Download
-[2] http://wireless.kernel.org/en/users/Download/stable
+>>>> Commit ff938e43d39e926de74b32a3656c190f979ab642 (net: use pci_dev->revision,
+>>>> again) already converted this driver to using the 'revision' field of 'struct
+>>>> pci_dev' but commit c2974a1d18832a9fffb2eb389c3878f5c4ed92f1 (iwlagn: remove
+>>>> rev_id) later reverted that change for no reason. Now restore the change...
+>>>> Signed-off-by: Sergei Shtylyov<sshtylyov@ru.mvista.com>
+>>>> ---
+>>>> The patch is against the recent Linus' tree.
+>>>>   drivers/net/wireless/iwlwifi/iwl-agn.c |    5 ++---
+>>>>   1 file changed, 2 insertions(+), 3 deletions(-)
+>>>> Index: linux-2.6/drivers/net/wireless/iwlwifi/iwl-agn.c
+>>>> ===================================================================
+>>>> --- linux-2.6.orig/drivers/net/wireless/iwlwifi/iwl-agn.c
+>>>> +++ linux-2.6/drivers/net/wireless/iwlwifi/iwl-agn.c
+>>>> @@ -3275,10 +3275,9 @@ struct ieee80211_ops iwlagn_hw_ops = {
+>>>>
+>>>>   static u32 iwl_hw_detect(struct iwl_priv *priv)
+>>>>   {
+>>>> -	u8 rev_id;
+>>>> +	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n",
+>>>> +		       priv->pci_dev->revision);
+>>>>
+>>>> -	pci_read_config_byte(priv->pci_dev, PCI_REVISION_ID,&rev_id);
+>>>> -	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n", rev_id);
+>>>>   	return iwl_read32(priv, CSR_HW_REV);
+>>>>   }
 
-  Luis
+>>> hmm, I believe it is merge sequence issue, the IWL_DEBUG_INFO line has
+>>> benn remove all together in later patch. the information is being log in
+>>> the calling function, no need to log in "iwl_hw_detect"
+
+>>     Hm, you probably mean this patch in the iwlwifi-2.6.git (of which I wasn't 
+>> aware):
+
+>> author	Emmanuel Grumbach <emmanuel.grumbach@intel.com>	
+>> 	Tue, 31 May 2011 06:58:18 +0000 (09:58 +0300)
+>> committer	Wey-Yi Guy <wey-yi.w.guy@intel.com>	
+>> 	Sat, 18 Jun 2011 15:18:01 +0000 (08:18 -0700)
+>> commit	85aed7c48113dfcdc913008481c46346af0db69e
+>> tree	75831a2ec540039470c295a81c2059a24a4531f5
+>> parent	19707bac16129ccebc398dbff9d2b44b17b24fea
+
+>> iwlagn: don't read the PCI_REVISION_ID from iwl-agn.c
+
+>> The PCI_REVISION_ID is read and printed in iwl_pci_probe anyway using pr_info
+
+>> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+
+>>     Since iwl_pci_probe() still reads the PCI config. register, my patch 
+>> should be recast to modify iwl-pci.c instead...
+
+> I don't believe this patch is needed since the "log" statement is move
+> to outside the function.
+
+    That's what I'm talking about -- it's not needed in its current form, but I 
+will redo the patch to modify iwl-pci,c where iwl_pci_probe() still reads 
+PCI_REVISION_ID.
+
+> Thanks
+> Wey
+
+WBR, Sergei
+
