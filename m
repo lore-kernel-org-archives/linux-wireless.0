@@ -1,76 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:65018 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751398Ab1FVI7O convert rfc822-to-8bit (ORCPT
+Received: from forward20.mail.yandex.net ([95.108.253.145]:34140 "EHLO
+	forward20.mail.yandex.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750841Ab1FYOQP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 04:59:14 -0400
-Received: by iyb12 with SMTP id 12so500814iyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 01:59:13 -0700 (PDT)
+	Sat, 25 Jun 2011 10:16:15 -0400
+From: Misha Shnurapet <shnurapet@fedoraproject.org>
+To: Community support for Fedora users <users@lists.fedoraproject.org>
+Subject: AR9280 won't initialize
 MIME-Version: 1.0
-In-Reply-To: <BANLkTimmn3o-+rexOYy2CjrOX_Xo06R+uw@mail.gmail.com>
-References: <1308425533-20854-1-git-send-email-arik@wizery.com>
- <BANLkTikB3egX4YikC1JdgEr-E-7Dm13_CA@mail.gmail.com> <BANLkTikba=gw=1itPywfUaK28pVL2Z6=2g@mail.gmail.com>
- <BANLkTimmn3o-+rexOYy2CjrOX_Xo06R+uw@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 22 Jun 2011 11:58:58 +0300
-Message-ID: <BANLkTik4udr8ciy9WZxwuwTQivRSpaePxA@mail.gmail.com> (sfid-20110622_105917_547486_3711115A)
-Subject: Re: [RFC] mac80211: dynamic PS - don't enter PS when TX frames are pending
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Sam Leffler <sleffler@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Message-Id: <152381309010939@web35.yandex.ru> (sfid-20110625_161632_321778_A13E668E)
+Date: Sat, 25 Jun 2011 23:08:58 +0900
+Content-Type: text/plain; charset=koi8-r
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 21, 2011 at 09:33, Vivek Natarajan <vivek.natraj@gmail.com> wrote:
->
-> Well, I can't find any way to stop this race. :)
-> Atleast the other race could be fixed with stop_queues.
+Hi.
 
-Sure I'll add a stop_queues for for the IEEE80211_HW_PS_NULLFUNC_STACK
-case. If you can't hit the other race I guess it doesn't matter. It's
-a corner case anyway.
+I have a little problem. I replaced the old BCM4312 card on my Dell mini 1011 (10v) with:
+03:00.0 Network controller: Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express) (rev 01)
 
-> How about the below patch? I am not sure about the disable_dynamic_ps
-> and its BT/WLAN antenna sharing. Please add that if you see it as
-> appropriate.
+But it won't work.
 
-I think the disable_dynamic_ps and peers are needed. Otherwise we risk
-getting inconsistent PS notifications from mac80211 when dyn_ps is
-disabled.
+First it crashed Linux:
+http://pastebin.com/YmEGcPK8
 
->
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index faca503..67ecad1 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -778,15 +778,14 @@ void ieee80211_dynamic_ps_enable_work(struct
-> work_struct *work)
->        }
->        spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
->
-> -       if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
-> -           (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
-> +       if (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
->                netif_tx_stop_all_queues(sdata->dev);
->
->                if (drv_tx_frames_pending(local))
->                        mod_timer(&local->dynamic_ps_timer, jiffies +
->                                  msecs_to_jiffies(
->                                  local->hw.conf.dynamic_ps_timeout));
-> -               else {
-> +               else if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) {
->                        ieee80211_send_nullfunc(local, sdata, 1);
->                        /* Flush to get the tx status of nullfunc frame */
->                        drv_flush(local, false);
->
+Then I installed a system update:
+http://funkyimg.com/u2/879/849/2.png
+http://pastebin.com/hWG6u7VJ
 
-Well drivers without IEEE80211_HW_PS_NULLFUNC_STACK need to leave the
-function after mod_timer(). Otherwise we end up changing the PS state
-anyway.
-But yea, basically its very similar to my patch.
+And now it is:
 
-I'll submit a v2 with the stop_queues pending Sam's review.
+[ šš30.589243] ath9k 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[ šš30.589269] ath9k 0000:03:00.0: setting latency timer to 64
+[ šš30.594884] ath: address test failed addr: 0x00008000 - wr:0xaaaaaaaa != rd:0xaaaa2aaa
+[ šš30.594898] ath: Unable to initialize hardware; initialization status: -19
+[ šš30.594913] ath9k 0000:03:00.0: Failed to initialize device
+[ šš30.594991] ath9k 0000:03:00.0: PCI INT A disabled
 
-Arik
+lsusb:
+http://pastebin.com/JHYZiDhr
+
+Installing the latest stable compat-wireless from source didn't help (bleeding edge won't build).
+
+I would appreciate if you help me.
+
+--
+Best regards,
+Misha Shnurapet, Fedora Project Contributor
+Email: shnurapet AT fedoraproject.org, IRC: misha on freenode
+https://fedoraproject.org/wiki/shnurapet, GPG: 00217306
