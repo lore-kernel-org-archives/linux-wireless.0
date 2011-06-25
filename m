@@ -1,56 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm20-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.165]:37270 "HELO
-	nm20-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752697Ab1FDIQY convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2011 04:16:24 -0400
-Message-ID: <682328.58578.qm@web161616.mail.bf1.yahoo.com> (sfid-20110604_101711_600998_E5C971FE)
-Date: Sat, 4 Jun 2011 01:16:23 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: [RFC PATCH 03/27] zd1211rw: include mac80211.h from zd_chip.h
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>
-In-Reply-To: <20110531222451.620004sd89q8uzr7@www.81.fi>
+Received: from mout2.freenet.de ([195.4.92.92]:48791 "EHLO mout2.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751077Ab1FYMek (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Jun 2011 08:34:40 -0400
+Received: from [195.4.92.18] (helo=8.mx.freenet.de)
+	by mout2.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #5)
+	id 1QaS4M-0001bw-0L
+	for linux-wireless@vger.kernel.org; Sat, 25 Jun 2011 14:34:38 +0200
+Received: from p54a19652.dip0.t-ipconnect.de ([84.161.150.82]:59146 helo=mail.maya.org)
+	by 8.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.72 #5)
+	id 1QaS4L-0003Qu-J8
+	for linux-wireless@vger.kernel.org; Sat, 25 Jun 2011 14:34:37 +0200
+Received: from [192.168.1.6] (dualc.maya.org [192.168.1.6])
+	by mail.maya.org (8.14.4/8.13.8) with ESMTP id p5PCYXL3003889
+	for <linux-wireless@vger.kernel.org>; Sat, 25 Jun 2011 14:34:34 +0200
+Message-ID: <4E05D60B.5020007@dualc.maya.org> (sfid-20110625_143448_555968_F6C9DA42)
+Date: Sat, 25 Jun 2011 14:35:23 +0200
+From: Andreas Hartmann <andihartmann@freenet.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: AP: mon.wlan0 vs wlan0
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello,
 
-> > 
-> >> >> Date: Sunday, May 29, 2011, 11:04 PM
-> >> >> zd_chip.h contains one function with
-> >> >> a pointer to ieee80211_hw but doesn't
-> >> >> include mac80211.h. As a temporary
-> solution
-> >> include
-> >> >> mac80211.h to avoid
-> >> >> a warning.
-> >> >
-> >> > I'm still getting a warning with this patch.
-> I think
-> >> this happened when Jussi fixed some stuff awhile
-> back.
-> >> >
-> >> > In function ‘zd_mac_alloc_hw’:
-> >> >
-> drivers/net/wireless/zd1211rw/zd_mac.c:1340:7:
-> >> warning: statement with no effect
-> >> 
-> >> Hm.. I'm not getting this with wireless-testing.
-> >> 
-> > 
-> > Ubuntu's default kernels 2.6.35 and .38 exhibit this
-> warning when compiling compat-wireless. If my memory serves
-> me right, the warning began to occur right after you've
-> submitted a patch to rename CR* marcos to ZD_CR*.
-> 
-> Compiled compat-wireless-2011-05-30 on Ubuntu 11.04, 64bit:
-> 2.6.38-8-generic & 2.6.38-8-server and 32bit:
-> 2.6.38-8-generic & 2.6.38-8-generic-pae. No warnings at
-> zd1211rw at all. (?)
-> 
+I traced mon.wlan0 and wlan0 on an accesspoint, because I wanted to see,
+which data is sent through which device (WPA2 TLS).
 
-Apologies for the delay. It appears I may have applied an injection patch to the zd1211rw which resulted in the warning reported above. Unfortunately, the zd1211rw does monitor, but will not inject outright.
+That's what I saw:
 
-Walter
+
+				mon.wlan0		wlan0
+---------------------------------------------------------------------------------
+initial authentication
+
+probe request			x
+probe response			x (2 times)
+authentication requ		x
+authentication resp		x (2 times)
+association request		x
+association response		x (2 times)
+
+request identity		x (2 times)
+response identity					x
+request eaptls			x (2 times)
+
+Server Hello			x
+Client Hello						x
+IEEE 802.11			x
+
+request eap-tls			x (2 times)
+response eap-tls					x (2 times)
+Change Cipher Spec		x (2 times)
+Certificate Client					x
+EAP Success			x (2 times)
+Response eap-tls					x
+EAPOL Key msg 1/4		x (2 times)
+EAPOL Key msg 2/4					x
+EAPOL Key msg 3/4		x (2 times)
+EAPOL Key msg 4/4					x
+IEEE 802.11 action success	x
+
+
+GTK - rekeying
+
+QoS Data			2 times (WEP and CCMP)
+EAPOL Key msg 2/2					x
+
+
+Reauthentication
+
+QoS (request identity?)		x
+response identity					x
+QoS (server hello?)		x
+client hello						x
+QoS (Change Cipher Spec?)	x
+QoS (EAPOL Key msg 1/4?)	x
+EAPOL Key msg 2/4					x
+QoS (EAPOL Key msg 3/4?)	x
+EAPOL Key msg 4/4					x
+QoS (IEEE 802.11 success)	x
+
+
+I'm surprised, that not all of the management packages went through the
+mon-device.
+At the beginning (initial connection), all data went through the
+mon-device. After the association, all management data from the client
+(supplicant) goes through the normal wlan0 device - I would have
+expected, that all management and authorization data went through the
+mon device.
+
+Could anybody please shed some light on this?
+
+
+Thank you,
+Andreas
