@@ -1,92 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:51344 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758006Ab1FJUML (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55824 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103Ab1FYNHM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 16:12:11 -0400
-Date: Fri, 10 Jun 2011 15:12:10 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [PATCH 13/13] rtlwifi: rtl8192de: Modify Kconfig and Makefile
- routines for new driver
-Message-ID: <4df27a9a.i9QQpVu5kNVxD31J%Larry.Finger@lwfinger.net> (sfid-20110610_221214_951216_E50DB994)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 25 Jun 2011 09:07:12 -0400
+Subject: Re: [PATCH 2/2] mac80211: Fixing Races for skipping tailroom
+ reservation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: yogeshp <yogeshp@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Andreas Hartmann <andihartmann@01019freenet.de>
+In-Reply-To: <4E045317.4040208@marvell.com>
+References: <7DDF37406E10F0438561DBB78326DF3902F5D190E2@SC-VEXCH1.marvell.com>
+	 <1308590980.4322.19.camel@jlt3.sipsolutions.net>
+	 <20110621130305.GB32464@hertz.marvell.com>
+	 <1308663814.4276.3.camel@jlt3.sipsolutions.net>
+	 <20110621141017.GC32464@hertz.marvell.com>
+	 <1308667215.4276.7.camel@jlt3.sipsolutions.net>
+	 <20110621163351.GD32464@hertz.marvell.com>
+	 <20110622071743.GA4087@hertz.marvell.com>
+	 <20110622123118.GA4800@hertz.marvell.com>
+	 <1308746965.29571.1.camel@jlt3.sipsolutions.net>
+	 <20110622125853.GA4982@hertz.marvell.com>
+	 <1308748326.29571.6.camel@jlt3.sipsolutions.net>
+	 <4E045317.4040208@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 25 Jun 2011 15:07:07 +0200
+Message-ID: <1309007227.4317.0.camel@jlt3.sipsolutions.net> (sfid-20110625_150722_768653_54BB7B97)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaoming Li <chaoming_li@realsil.com.cn>
+On Fri, 2011-06-24 at 14:34 +0530, yogeshp wrote:
 
-Set up Kconfig and Makefile for new driver for RTL8192DE.
+>  Andreas has tested the current implementation on his setup and haven't
+> seen any WARN_ONs being hit. Should I send the final patch? 
 
-Signed-off-by: Chaoming_Li <chaoming_li@realsil.com.cn>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Yeah, sure, thanks everyone. I'll ask around about the memory barrier
+things independently.
 
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/Kconfig
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/Kconfig
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/Kconfig
-@@ -21,6 +21,17 @@ config RTL8192SE
- 
- 	If you choose to build it as a module, it will be called rtl8192se
- 
-+config RTL8192DE
-+	tristate "Realtek RTL8192DE/RTL8188DE PCIe Wireless Network Adapter"
-+	depends on MAC80211 && EXPERIMENTAL
-+	select FW_LOADER
-+	select RTLWIFI
-+	---help---
-+	This is the driver for Realtek RTL8192DE/RTL8188DE 802.11n PCIe
-+	wireless network adapters.
-+
-+	If you choose to build it as a module, it will be called rtl8192de
-+
- config RTL8192CU
- 	tristate "Realtek RTL8192CU/RTL8188CU USB Wireless Network Adapter"
- 	depends on MAC80211 && USB && EXPERIMENTAL
-@@ -35,10 +46,10 @@ config RTL8192CU
- 
- config RTLWIFI
- 	tristate
--	depends on RTL8192CE || RTL8192CU || RTL8192SE
-+	depends on RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE
- 	default m
- 
- config RTL8192C_COMMON
- 	tristate
--	depends on RTL8192CE || RTL8192CU || RTL8192SE
-+	depends on RTL8192CE || RTL8192CU
- 	default m
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/Makefile
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/Makefile
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/Makefile
-@@ -23,5 +23,6 @@ obj-$(CONFIG_RTL8192C_COMMON)	+= rtl8192
- obj-$(CONFIG_RTL8192CE)		+= rtl8192ce/
- obj-$(CONFIG_RTL8192CU)		+= rtl8192cu/
- obj-$(CONFIG_RTL8192SE)		+= rtl8192se/
-+obj-$(CONFIG_RTL8192DE)		+= rtl8192de/
- 
- ccflags-y += -D__CHECK_ENDIAN__
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/Makefile
-===================================================================
---- /dev/null
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/Makefile
-@@ -0,0 +1,15 @@
-+rtl8192de-objs :=		\
-+		dm.o		\
-+		fw.o		\
-+		hw.o		\
-+		led.o		\
-+		phy.o		\
-+		rf.o		\
-+		sw.o		\
-+		table.o		\
-+		trx.o
-+
-+obj-$(CONFIG_RTL8192DE) += rtl8192de.o
-+
-+ccflags-y += -D__CHECK_ENDIAN__
-+
+johannes
+
