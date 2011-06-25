@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:4060 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422631Ab1FPWId (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2011 18:08:33 -0400
-Message-ID: <4DFA7EDF.70608@gnu.org> (sfid-20110617_000835_904838_25ED0E0D)
-Date: Thu, 16 Jun 2011 18:08:31 -0400
-From: Pavel Roskin <proski@gnu.org>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] mac80211: use BUG_ON and return -EINVAL if rate_lowest_index()
- fails
-References: <20110615220252.1918.73638.stgit@mj.roinet.com> <20110616102224.GB2178@redhat.com>
-In-Reply-To: <20110616102224.GB2178@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:55832 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103Ab1FYNI4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Jun 2011 09:08:56 -0400
+Subject: Re: [3.0 regression] DMAR faults in iwlagn
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrew Lutomirski <luto@mit.edu>,
+	Kyle McMartin <kmcmartin@redhat.com>
+Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <BANLkTi=-=EbuijX-RLeyD-GKv+fFYf+B2g@mail.gmail.com> (sfid-20110624_171411_462603_69EC6B86)
+References: <BANLkTikKia-UXL8LJ60sLDV1uZBFEP8Kwg@mail.gmail.com>
+	 <1308774283.29571.24.camel@jlt3.sipsolutions.net>
+	 <BANLkTi=-=EbuijX-RLeyD-GKv+fFYf+B2g@mail.gmail.com>
+	 (sfid-20110624_171411_462603_69EC6B86)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 25 Jun 2011 15:08:51 +0200
+Message-ID: <1309007331.4317.1.camel@jlt3.sipsolutions.net> (sfid-20110625_150858_988329_FE02490B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/16/2011 06:22 AM, Stanislaw Gruszka wrote:
-> Hi Pavel
->
-> On Wed, Jun 15, 2011 at 06:02:52PM -0400, Pavel Roskin wrote:
->> WARN_ON is not enough, as we cannot return a valid index, and the
->> callers will use whatever we return, causing a cascade of oopses and
->> eventually a panic.
->
-> We have fedora bug (https://bugzilla.redhat.com/show_bug.cgi?id=702627)
-> where only that warning is generated, and system works further (at least
-> bug reporter did not mention about it's hang). When moving to BUG(),
-> system from user perspective will simply hang, what is much worse.
-> I think, we should rather fix callers to be prepared and recover itself
-> when rate_lowest_index fail. Of course fixing real bug(s) that cause
-> rate index is not found would be best.
+On Fri, 2011-06-24 at 09:13 -0600, Andrew Lutomirski wrote:
+> On Wed, Jun 22, 2011 at 2:24 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > Andy, could you try this patch?
+> >
+> > I haven't tested it at all yet, it's kinda late here.
 
-In my case, I was able to restart the system by sysrq when using BUG_ON, 
-but the system would hang hard with WARN_ON.  I think continuing after 
-returning an invalid index is wrong.  It will lead to memory corruption 
-that could in turn lead to corruption of the filesystem.
+> Works for me.
+> 
+> Tested-by: Andy Lutomirski <luto@mit.edu>
 
--- 
-Regards,
-Pavel Roskin
+Thanks Andrew, Kyle.
+
+I don't pretend to understand what the device is doing, but for now I
+guess we'll keep this and I'll try to figure out independently why this
+happens.
+
+johannes
+
