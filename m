@@ -1,62 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:55256 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757509Ab1FVNHy (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56028 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751767Ab1FYPyk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 09:07:54 -0400
-Date: Wed, 22 Jun 2011 18:28:54 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Andreas Hartmann <andihartmann@01019freenet.de>
-Subject: Re: [PATCH 2/2] mac80211: Fixing Races for skipping tailroom
- reservation
-Message-ID: <20110622125853.GA4982@hertz.marvell.com> (sfid-20110622_150758_033437_858E12D2)
-References: <7DDF37406E10F0438561DBB78326DF3902F5D190E2@SC-VEXCH1.marvell.com>
- <1308590980.4322.19.camel@jlt3.sipsolutions.net>
- <20110621130305.GB32464@hertz.marvell.com>
- <1308663814.4276.3.camel@jlt3.sipsolutions.net>
- <20110621141017.GC32464@hertz.marvell.com>
- <1308667215.4276.7.camel@jlt3.sipsolutions.net>
- <20110621163351.GD32464@hertz.marvell.com>
- <20110622071743.GA4087@hertz.marvell.com>
- <20110622123118.GA4800@hertz.marvell.com>
- <1308746965.29571.1.camel@jlt3.sipsolutions.net>
+	Sat, 25 Jun 2011 11:54:40 -0400
+Message-ID: <4E0604BC.3060002@lwfinger.net> (sfid-20110625_175501_452559_47E790B0)
+Date: Sat, 25 Jun 2011 10:54:36 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1308746965.29571.1.camel@jlt3.sipsolutions.net>
+To: LKML <linux-kernel@vger.kernel.org>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	Chuck Ebbert <cebbert@redhat.com>
+Subject: Possible regression in 3.0-rc4 with RTL8187B
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 22, 2011 at 05:49:25AM -0700, Johannes Berg wrote:
-> On Wed, 2011-06-22 at 18:01 +0530, Yogesh Ashok Powar wrote:
-> > > Will work on some other logic.
-> > 
-> > Following is the complete V2-patch
-> > 
-> > v2 changes: a) Moved counter++ before __ieee80211_key_replace in
-> > 		key_link()
-> > 	    b) Moved crypto_tx_tailroom_needed_cnt to sdata resolve
-> > 	        issue with multiple sdata instances in hw reset.
-> 
-> Looks good. Now I'm just worried about memory and compiler barriers that
-> may be needed so the counter update doesn't move after anything else...
-> Hmm.
+While running tests on 3.0-rc4 from the wireless-testing git tree, I tested an 
+RTL8187B dongle that had not been used for some time. With it, I got the 
+following WARNING:
 
-I some how feel that synchronize_net may be replaced with
-synchronize_rcu and still the race wont happen.
+[291533.186383] ------------[ cut here ]------------
+[291533.186438] WARNING: at arch/x86/kernel/dumpstack_64.c:129 
+dump_trace+0x292/0x3a0()
+[291533.186465] Hardware name: HP Pavilion dv2700 Notebook PC
+[291533.186487] Perf: bad frame pointer = 00000000000000cf in callchain
+[291533.186511] Modules linked in: loop aes_x86_64 aes_generic arc4 rtl8187 
+mac80211 cfg80211 rfkill eeprom_93cx6 vboxnetadp vboxnetflt vboxdrv fuse 
+af_packet snd_pcm_oss snd_mixer_oss snd_seq snd_seq_device edd nfs lockd 
+auth_rpcgss nfs_acl sunrpc ipv6 cpufreq_conservative cpufreq_userspace 
+cpufreq_powersave powernow_k8 mperf ext4 jbd2 crc16 dm_mod ide_cd_mod cdrom 
+snd_hda_codec_conexant ide_pci_generic snd_hda_intel snd_hda_codec snd_pcm 
+amd74xx snd_timer snd ide_core forcedeth sg k8temp joydev serio_raw soundcore 
+snd_page_alloc battery hwmon i2c_nforce2 ac i2c_core video button ext3 jbd 
+mbcache sd_mod ohci_hcd ahci libahci libata ehci_hcd scsi_mod usbcore fan 
+processor thermal [last unloaded: r8712u]
+[291533.186859] Pid: 0, comm: kworker/0:0 Tainted: G         C  3.0.0-rc4-wl+ #22
+[291533.186885] Call Trace:
+[291533.186900]  <IRQ>  [<ffffffff81048f4a>] warn_slowpath_common+0x7a/0xb0
+[291533.186940]  [<ffffffff81049021>] warn_slowpath_fmt+0x41/0x50
+[291533.186970]  [<ffffffff8136e9a8>] ? bad_to_user+0x82/0x668
+[291533.186997]  [<ffffffff81004be2>] dump_trace+0x292/0x3a0
+[291533.187028]  [<ffffffff8100fd3a>] save_stack_trace+0x2a/0x50
+[291533.187054]  [<ffffffff811e3a54>] dma_entry_alloc+0x54/0x90
+[291533.187080]  [<ffffffff811e3d06>] debug_dma_map_page+0x86/0x160
+[291533.187142]  [<ffffffffa00201ed>] usb_hcd_map_urb_for_dma+0x4ed/0x590 [usbcore]
+[291533.187195]  [<ffffffffa0020536>] usb_hcd_submit_urb+0xe6/0x6a0 [usbcore]
+[291533.187229]  [<ffffffff8107f87d>] ? trace_hardirqs_off+0xd/0x10
+[291533.187259]  [<ffffffff8136a9b7>] ? _raw_spin_unlock_irqrestore+0x57/0x70
+[291533.187308]  [<ffffffffa00216e9>] usb_submit_urb+0xe9/0x2c0 [usbcore]
+[291533.187339]  [<ffffffffa0726315>] rtl8187b_status_cb+0x65/0x150 [rtl8187]
+[291533.187386]  [<ffffffffa001f48f>] usb_hcd_giveback_urb+0x5f/0xe0 [usbcore]
+[291533.187426]  [<ffffffffa012ff33>] ehci_urb_done+0x83/0xe0 [ehci_hcd]
+[291533.187460]  [<ffffffffa0130325>] qh_completions+0x395/0x4c0 [ehci_hcd]
+[291533.187495]  [<ffffffffa0132783>] ehci_work+0xe3/0xb40 [ehci_hcd]
+[291533.187530]  [<ffffffffa01349cc>] ehci_irq+0x1cc/0x220 [ehci_hcd]
+[291533.187560]  [<ffffffff811139cd>] ? dma_pool_alloc+0x1ed/0x330
+[291533.187603]  [<ffffffffa001ed30>] usb_hcd_irq+0x40/0xb0 [usbcore]
+[291533.187635]  [<ffffffff810afb4d>] handle_irq_event_percpu+0x5d/0x210
+[291533.187665]  [<ffffffff810afd43>] handle_irq_event+0x43/0x70
+[291533.187693]  [<ffffffff810b22f9>] ? handle_fasteoi_irq+0x19/0xd0
+[291533.187722]  [<ffffffff810b2335>] handle_fasteoi_irq+0x55/0xd0
+[291533.187750]  [<ffffffff81004834>] handle_irq+0x44/0xa0
+[291533.187776]  [<ffffffff81004448>] do_IRQ+0x58/0xe0
+[291533.187802]  [<ffffffff8136ac93>] common_interrupt+0x13/0x13
+[291533.187829]  [<ffffffff8136a9b7>] _raw_spin_unlock_irqrestore+0x57/0x70
+[291533.187861]  [<ffffffffa01af6c4>] ? enc128+0x34f/0x80b [aes_x86_64]
+[291533.187974]  [<ffffffffa06bc5ae>] ? ieee80211_aes_ccm_decrypt+0xbe/0x170 
+[mac80211]
+[291533.188031]  [<ffffffffa06aaf65>] ? 
+ieee80211_crypto_ccmp_decrypt+0x1a5/0x230 [mac80211]
+[291533.188094]  [<ffffffffa06c18b8>] ? ieee80211_rx_handlers+0x998/0x1fc0 
+[mac80211]
+[291533.188128]  [<ffffffff812b6036>] ? skb_queue_tail+0x26/0x60
+[291533.188156]  [<ffffffff810856fd>] ? trace_hardirqs_on+0xd/0x10
+[291533.188211]  [<ffffffffa06c312e>] ? 
+ieee80211_prepare_and_rx_handle+0x24e/0x890 [mac80211]
+[291533.188274]  [<ffffffffa06c3ad0>] ? ieee80211_rx+0x360/0xb70 [mac80211]
+[291533.188330]  [<ffffffffa06c3815>] ? ieee80211_rx+0xa5/0xb70 [mac80211]
+[291533.188382]  [<ffffffffa06a5e41>] ? ieee80211_tasklet_handler+0xc1/0xd0 
+[mac80211]
+[291533.188418]  [<ffffffff8104fb73>] ? tasklet_action+0x73/0x120
+[291533.188445]  [<ffffffff810505bd>] ? __do_softirq+0xbd/0x210
+[291533.188472]  [<ffffffff8136c6cc>] ? call_softirq+0x1c/0x30
+[291533.188499]  [<ffffffff81004915>] ? do_softirq+0x85/0xc0
+[291533.188525]  [<ffffffff810509a6>] ? irq_exit+0x96/0xb0
+[291533.188550]  [<ffffffff81004451>] ? do_IRQ+0x61/0xe0
+[291533.188576]  [<ffffffff8136ac93>] ? common_interrupt+0x13/0x13
+[291533.188602] ------------[ cut here ]------------
 
-So the new logic would be 
-- counter++		<-- Here keys are not added or deleted
-			    so rcu readers wont have problem
-			    with extra space allocated.
+This problem may be related to
+https://bugzilla.kernel.org/show_bug.cgi?id=31012 and its corresponding report 
+at http://marc.info/?l=linux-kernel&m=129995721014931&w=2. AFAICT, this 
+regression has not been resolved.
 
-- synchronize_rcu	<-- This will flush existing readers. Again
-			    new readers will have no problem with extra
-			    space allocated.
+As this dongle has not been used in some time, I do not know when the regression 
+occurred, but I will do some tests to determine that, and then do a bisection. 
+In the meantime, any suggestions regarding this problem would be appreciated.
 
-Let me know your opinion on this.
+The problem does not occur for an RTL8187L, thus only part of rtl8187 is affected.
 
-Thanks
-Yogesh
+Larry
