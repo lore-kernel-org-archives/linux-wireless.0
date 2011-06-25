@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:49040 "EHLO mga01.intel.com"
+Received: from nbd.name ([46.4.11.11]:46567 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757748Ab1FVN05 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 09:26:57 -0400
-Date: Wed, 22 Jun 2011 15:27:05 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	lauro.venancio@openbossa.org, marcio.macedo@openbossa.org,
-	Waldemar.Rymarkiewicz@tieto.com
-Subject: Re: [RFC][PATCH v2 3/7] NFC: add nfc generic netlink interface
-Message-ID: <20110622132705.GE22420@sortiz-mobl> (sfid-20110622_152700_506991_ECCD1B34)
-References: <1308592212-5755-1-git-send-email-aloisio.almeida@openbossa.org>
- <1308592212-5755-4-git-send-email-aloisio.almeida@openbossa.org>
- <1308728084.3883.9.camel@jlt3.sipsolutions.net>
- <20110622125710.GD22420@sortiz-mobl>
- <1308748086.29571.4.camel@jlt3.sipsolutions.net>
+	id S1751740Ab1FYObL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Jun 2011 10:31:11 -0400
+Message-ID: <4E05F12B.4020302@openwrt.org> (sfid-20110625_163123_122941_AED3FB88)
+Date: Sat, 25 Jun 2011 16:31:07 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1308748086.29571.4.camel@jlt3.sipsolutions.net>
+To: Misha Shnurapet <shnurapet@fedoraproject.org>
+CC: Community support for Fedora users
+	<users@lists.fedoraproject.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: AR9280 won't initialize
+References: <152381309010939@web35.yandex.ru>
+In-Reply-To: <152381309010939@web35.yandex.ru>
+Content-Type: text/plain; charset=KOI8-R; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 22, 2011 at 03:08:06PM +0200, Johannes Berg wrote:
-> On Wed, 2011-06-22 at 14:57 +0200, Samuel Ortiz wrote:
-> 
-> > > And this looks like an array. Do you really want to do that? That means
-> > > lots of reallocations.
-> 
-> > So NFC polling is a bit weird. Whenever you start polling for passive targets,
-> > the polling results are minimal: You only know that there is _a_ target on a
-> > particular frequency/modulation. It could be the same as the one you got 5
-> > minutes ago, or not. To verify it, you'd need to select the target (and put
-> > all other ones on standby) and start sending specific commands to it (Of
-> > course, you have a different set of commands per target family...). Only then
-> > you _may_ read some sort of UID that could help you matching targets from your
-> > previous poll cycle.
-> > My point is, when we start polling, we will invalidate all existing targets
-> > anyway. So a linked list or an array won't make a big difference in that area.
-> 
-> So basically you're saying that you basically get everything at the same
-> time so you really throw away the old list/array and re-create it.
-Basically, yes. And trying to check which parts of the old list is still there
-is quite expensive.
+On 2011-06-25 4:08 PM, Misha Shnurapet wrote:
+> Hi.
+>
+> I have a little problem. I replaced the old BCM4312 card on my Dell mini 1011 (10v) with:
+> 03:00.0 Network controller: Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express) (rev 01)
+>
+> But it won't work.
+>
+> First it crashed Linux:
+> http://pastebin.com/YmEGcPK8
+>
+> Then I installed a system update:
+> http://funkyimg.com/u2/879/849/2.png
+> http://pastebin.com/hWG6u7VJ
+>
+> And now it is:
+>
+> [   30.589243] ath9k 0000:03:00.0: PCI INT A ->  GSI 17 (level, low) ->  IRQ 17
+> [   30.589269] ath9k 0000:03:00.0: setting latency timer to 64
+> [   30.594884] ath: address test failed addr: 0x00008000 - wr:0xaaaaaaaa != rd:0xaaaa2aaa
+> [   30.594898] ath: Unable to initialize hardware; initialization status: -19
+> [   30.594913] ath9k 0000:03:00.0: Failed to initialize device
+> [   30.594991] ath9k 0000:03:00.0: PCI INT A disabled
+>
+> lsusb:
+> http://pastebin.com/JHYZiDhr
+>
+> Installing the latest stable compat-wireless from source didn't help (bleeding edge won't build).
+>
+> I would appreciate if you help me.
+Looks like a hardware issue to me. Try removing the card and plugging it 
+back in.
 
- 
-> But from a driver POV, does it really know the number of targets?
-It does. From the NFC HW I got access to, it's either one single target, or
-at most one per rf band. And in that case the driver can know if there is or
-not a target on a specific band.
-
-> Anyway, all this doesn't matter since it's purely internal, and the
-> userspace APIs no longer have this limitation, so if this turns out an
-> issue at some point internal refactoring can easily fix it :-)
-That's certainly true.
-
-Cheers,
-Samuel.
-
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+- Felix
