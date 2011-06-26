@@ -1,141 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:40421 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753681Ab1FMWgx (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:38307 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751084Ab1FZHcY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2011 18:36:53 -0400
-Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
-	by emh02-2.mail.saunalahti.fi (Postfix) with SMTP id A78D5EF652
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:36:51 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
-	by emh01.mail.saunalahti.fi (Postfix) with ESMTP id 81AB4402E
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 01:36:50 +0300 (EEST)
-Subject: [PATCH v2 14/27] mac80211: rename ieee80211_if_ap to mac80211_if_ap
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 14 Jun 2011 01:36:44 +0300
-Message-ID: <20110613223644.10517.36742.stgit@localhost6.localdomain6> (sfid-20110614_005722_600137_A1B749DF)
-In-Reply-To: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
-References: <20110613223029.10517.52197.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Sun, 26 Jun 2011 03:32:24 -0400
+Received: by wyg8 with SMTP id 8so542079wyg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Jun 2011 00:32:23 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 1/2] mac80211: propagate information about STA WME support down
+Date: Sun, 26 Jun 2011 10:32:17 +0300
+Message-Id: <1309073538-24071-1-git-send-email-arik@wizery.com> (sfid-20110626_093235_082298_49A85F61)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@adurom.com>
----
- net/mac80211/mac80211_i.h |    6 +++---
- net/mac80211/sta_info.c   |    8 ++++----
- net/mac80211/tx.c         |    8 ++++----
- 3 files changed, 11 insertions(+), 11 deletions(-)
+Add a memeber to the ieee80211_sta structure to indicate whether the STA
+supports WME.
 
-diff --git a/net/mac80211/mac80211_i.h b/net/mac80211/mac80211_i.h
-index 035905e..54d0751 100644
---- a/net/mac80211/mac80211_i.h
-+++ b/net/mac80211/mac80211_i.h
-@@ -213,7 +213,7 @@ struct beacon_data {
- 	int dtim_period;
- };
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+v1->2: made member valid for drivers operating as STA or IBSS, in addition
+to AP mode.
+
+ include/net/mac80211.h     |    2 ++
+ net/mac80211/cfg.c         |    5 ++++-
+ net/mac80211/ibss.c        |   15 ++++++++++++---
+ net/mac80211/ieee80211_i.h |    2 +-
+ net/mac80211/mlme.c        |    4 +++-
+ net/mac80211/rx.c          |    3 ++-
+ 6 files changed, 24 insertions(+), 7 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 8c7189c..c07c328 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -933,6 +933,7 @@ enum set_key_cmd {
+  * @aid: AID we assigned to the station if we're an AP
+  * @supp_rates: Bitmap of supported rates (per band)
+  * @ht_cap: HT capabilities of this STA; restricted to our own TX capabilities
++ * @wme: indicates whether the STA supports WME
+  * @drv_priv: data area for driver use, will always be aligned to
+  *	sizeof(void *), size is determined in hw information.
+  */
+@@ -941,6 +942,7 @@ struct ieee80211_sta {
+ 	u8 addr[ETH_ALEN];
+ 	u16 aid;
+ 	struct ieee80211_sta_ht_cap ht_cap;
++	bool wme;
  
--struct ieee80211_if_ap {
-+struct mac80211_if_ap {
- 	struct beacon_data __rcu *beacon;
+ 	/* must be last */
+ 	u8 drv_priv[0] __attribute__((__aligned__(sizeof(void *))));
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index be70c70..e6e6b35 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -674,8 +674,11 @@ static void sta_apply_parameters(struct ieee80211_local *local,
  
- 	struct list_head vlans;
-@@ -587,13 +587,13 @@ struct ieee80211_sub_if_data {
- 	 * corresponding AP in VLAN mode, NULL for
- 	 * all others (might be needed later in IBSS)
- 	 */
--	struct ieee80211_if_ap *bss;
-+	struct mac80211_if_ap *bss;
+ 	if (mask & BIT(NL80211_STA_FLAG_WME)) {
+ 		sta->flags &= ~WLAN_STA_WME;
+-		if (set & BIT(NL80211_STA_FLAG_WME))
++		sta->sta.wme = false;
++		if (set & BIT(NL80211_STA_FLAG_WME)) {
+ 			sta->flags |= WLAN_STA_WME;
++			sta->sta.wme = true;
++		}
+ 	}
  
- 	/* bitmap of allowed (non-MCS) rate indexes for rate control */
- 	u32 rc_rateidx_mask[IEEE80211_NUM_BANDS];
+ 	if (mask & BIT(NL80211_STA_FLAG_MFP)) {
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 421eaa6..efa1d86 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -310,11 +310,14 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 			} else
+ 				sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid,
+ 						mgmt->sa, supp_rates,
++						elems->wmm_info != NULL,
+ 						GFP_ATOMIC);
+ 		}
  
- 	union {
--		struct ieee80211_if_ap ap;
-+		struct mac80211_if_ap ap;
- 		struct ieee80211_if_wds wds;
- 		struct ieee80211_if_vlan vlan;
- 		struct ieee80211_if_managed mgd;
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 5f649aa..d148159 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -496,7 +496,7 @@ int sta_info_insert(struct sta_info *sta)
- 	return err;
- }
+-		if (sta && elems->wmm_info)
++		if (sta && elems->wmm_info) {
+ 			set_sta_flags(sta, WLAN_STA_WME);
++			sta->sta.wme = true;
++		}
  
--static inline void __bss_tim_set(struct ieee80211_if_ap *bss, u16 aid)
-+static inline void __bss_tim_set(struct mac80211_if_ap *bss, u16 aid)
+ 		rcu_read_unlock();
+ 	}
+@@ -404,7 +407,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_sta_join_ibss(sdata, bss);
+ 		supp_rates = ieee80211_sta_get_rates(local, elems, band);
+ 		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
+-				       supp_rates, GFP_KERNEL);
++				       supp_rates, elems->wmm_info != NULL,
++				       GFP_KERNEL);
+ 	}
+ 
+  put_bss:
+@@ -418,7 +422,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+  */
+ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 					u8 *bssid,u8 *addr, u32 supp_rates,
+-					gfp_t gfp)
++					bool wme, gfp_t gfp)
  {
- 	/*
- 	 * This format has been mandated by the IEEE specifications,
-@@ -505,7 +505,7 @@ static inline void __bss_tim_set(struct ieee80211_if_ap *bss, u16 aid)
- 	bss->tim[aid / 8] |= (1 << (aid % 8));
- }
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+ 	struct ieee80211_local *local = sdata->local;
+@@ -454,6 +458,11 @@ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 	sta->last_rx = jiffies;
+ 	set_sta_flags(sta, WLAN_STA_AUTHORIZED);
  
--static inline void __bss_tim_clear(struct ieee80211_if_ap *bss, u16 aid)
-+static inline void __bss_tim_clear(struct mac80211_if_ap *bss, u16 aid)
- {
- 	/*
- 	 * This format has been mandated by the IEEE specifications,
-@@ -514,7 +514,7 @@ static inline void __bss_tim_clear(struct ieee80211_if_ap *bss, u16 aid)
- 	bss->tim[aid / 8] &= ~(1 << (aid % 8));
- }
++	if (wme) {
++		set_sta_flags(sta, WLAN_STA_WME);
++		sta->sta.wme = true;
++	}
++
+ 	/* make sure mandatory rates are always added */
+ 	sta->sta.supp_rates[band] = supp_rates |
+ 			ieee80211_mandatory_rates(local, band);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 2025af5..8e4eb95 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1119,7 +1119,7 @@ void ieee80211_ibss_notify_scan_completed(struct ieee80211_local *local);
+ void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata);
+ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 					u8 *bssid, u8 *addr, u32 supp_rates,
+-					gfp_t gfp);
++					bool wme, gfp_t gfp);
+ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+ 			struct cfg80211_ibss_params *params);
+ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 4f6b267..749e649 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1535,8 +1535,10 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+ 	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED)
+ 		set_sta_flags(sta, WLAN_STA_MFP);
  
--static void __sta_info_set_tim_bit(struct ieee80211_if_ap *bss,
-+static void __sta_info_set_tim_bit(struct mac80211_if_ap *bss,
- 				   struct sta_info *sta)
- {
- 	BUG_ON(!bss);
-@@ -539,7 +539,7 @@ void sta_info_set_tim_bit(struct sta_info *sta)
- 	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
- }
+-	if (elems.wmm_param)
++	if (elems.wmm_param) {
+ 		set_sta_flags(sta, WLAN_STA_WME);
++		sta->sta.wme = true;
++	}
  
--static void __sta_info_clear_tim_bit(struct ieee80211_if_ap *bss,
-+static void __sta_info_clear_tim_bit(struct mac80211_if_ap *bss,
- 				     struct sta_info *sta)
- {
- 	BUG_ON(!bss);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 28811f4..fa682fe 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -331,7 +331,7 @@ static void purge_old_ps_buffers(struct mac80211_local *local)
- 	rcu_read_lock();
- 
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
--		struct ieee80211_if_ap *ap;
-+		struct mac80211_if_ap *ap;
- 		if (sdata->vif.type != NL80211_IFTYPE_AP)
- 			continue;
- 		ap = &sdata->u.ap;
-@@ -2098,7 +2098,7 @@ void ieee80211_tx_pending(unsigned long data)
- 
- /* functions for drivers to get certain frames */
- 
--static void ieee80211_beacon_add_tim(struct ieee80211_if_ap *bss,
-+static void ieee80211_beacon_add_tim(struct mac80211_if_ap *bss,
- 				     struct sk_buff *skb,
- 				     struct beacon_data *beacon)
- {
-@@ -2170,7 +2170,7 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 	struct sk_buff *skb = NULL;
- 	struct ieee80211_tx_info *info;
- 	struct ieee80211_sub_if_data *sdata = NULL;
--	struct ieee80211_if_ap *ap = NULL;
-+	struct mac80211_if_ap *ap = NULL;
- 	struct beacon_data *beacon;
- 	struct ieee80211_supported_band *sband;
- 	enum ieee80211_band band = local->hw.conf.channel->band;
-@@ -2486,7 +2486,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- 	struct sk_buff *skb = NULL;
- 	struct mac80211_tx_data tx;
- 	struct ieee80211_sub_if_data *sdata;
--	struct ieee80211_if_ap *bss = NULL;
-+	struct mac80211_if_ap *bss = NULL;
- 	struct beacon_data *beacon;
- 	struct ieee80211_tx_info *info;
- 
+ 	err = sta_info_insert(sta);
+ 	sta = NULL;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 7fa8c6b..999f6be 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2652,7 +2652,8 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
+ 			else
+ 				rate_idx = status->rate_idx;
+ 			rx->sta = ieee80211_ibss_add_sta(sdata, bssid,
+-					hdr->addr2, BIT(rate_idx), GFP_ATOMIC);
++					hdr->addr2, BIT(rate_idx), false,
++					GFP_ATOMIC);
+ 		}
+ 		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
+-- 
+1.7.4.1
 
