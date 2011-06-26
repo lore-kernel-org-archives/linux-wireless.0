@@ -1,54 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4696 "EHLO MMS3.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:55803 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752676Ab1FIOpT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 10:45:19 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 21/21] staging: brcm80211: change wl_cfg80211_suspend
- corresponding to cfg80211
-Date: Thu, 9 Jun 2011 16:45:01 +0200
-Message-ID: <1307630701-9170-22-git-send-email-rvossen@broadcom.com> (sfid-20110609_164603_144386_9DB1B344)
-In-Reply-To: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
-References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+	id S1753960Ab1FZOpc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Jun 2011 10:45:32 -0400
+Message-ID: <4E074609.5080500@openwrt.org> (sfid-20110626_165041_497979_A9307605)
+Date: Sun, 26 Jun 2011 16:45:29 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Joerg Pommnitz <pommnitz@yahoo.com>
+CC: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: Re: [ath5k-devel] Performance regression between Madwifi/net80211
+ and ath5k/mac80211
+References: <loom.20110621T215346-191@post.gmane.org>	<BANLkTik0umam7S+E1oog0LTEErMz-dZamg@mail.gmail.com>	<1308750102.64154.YahooMailRC@web161214.mail.bf1.yahoo.com>	(sfid-20110622_154146_913504_76736765)	<1308750416.29571.10.camel@jlt3.sipsolutions.net>	<1308753669.17439.YahooMailRC@web161208.mail.bf1.yahoo.com>	<1308754204.29571.15.camel@jlt3.sipsolutions.net> <1308755270.21489.YahooMailRC@web161204.mail.bf1.yahoo.com>
+In-Reply-To: <1308755270.21489.YahooMailRC@web161204.mail.bf1.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change wl_cfg80211_suspend in fullmac to meet cfg80211 interface update.
+On 2011-06-22 5:07 PM, Joerg Pommnitz wrote:
+>>  I guess you'll  need more help from the HW people here.
+>
+> Bob, Bruno, Felix, Luis, Nick: Do you read?
+What mac80211/ath5k version did you use? If you're using the in-kernel 
+ath5k from 2.6.38, then I'd suggest testing with a recent 
+compat-wireless version. I made some bug fixes and performance 
+improvements in April - and I think those went into 2.6.39.
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 235cc59..63e2173 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -101,7 +101,8 @@ static s32 wl_cfg80211_config_default_mgmt_key(struct wiphy *wiphy,
- 						 struct net_device *dev,
- 						 u8 key_idx);
- static s32 wl_cfg80211_resume(struct wiphy *wiphy);
--static s32 wl_cfg80211_suspend(struct wiphy *wiphy);
-+static s32 wl_cfg80211_suspend(struct wiphy *wiphy,
-+				 struct cfg80211_wowlan *wow);
- static s32 wl_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *dev,
- 				   struct cfg80211_pmksa *pmksa);
- static s32 wl_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *dev,
-@@ -2092,7 +2093,7 @@ static s32 wl_cfg80211_resume(struct wiphy *wiphy)
- 	return 0;
- }
- 
--static s32 wl_cfg80211_suspend(struct wiphy *wiphy)
-+static s32 wl_cfg80211_suspend(struct wiphy *wiphy, struct cfg80211_wowlan *wow)
- {
- 	struct wl_priv *wl = wiphy_to_wl(wiphy);
- 	struct net_device *ndev = wl_to_ndev(wl);
--- 
-1.7.4.1
-
-
+- Felix
