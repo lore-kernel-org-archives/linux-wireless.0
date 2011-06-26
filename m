@@ -1,105 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:52570 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750851Ab1FTIPh convert rfc822-to-8bit (ORCPT
+Received: from averell.mail.tiscali.it ([213.205.33.55]:43164 "EHLO
+	averell.mail.tiscali.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755046Ab1FZU4s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2011 04:15:37 -0400
+	Sun, 26 Jun 2011 16:56:48 -0400
+Received: from e6550.localnet (84.220.145.52) by averell.mail.tiscali.it (8.5.137)
+        id 4DE4FA2800B8944E for linux-wireless@vger.kernel.org; Sun, 26 Jun 2011 22:51:32 +0200
+From: "dj_def@webmail.it" <dj_def@webmail.it>
+To: linux-wireless@vger.kernel.org
+Subject: Can't correctly capture EAPOL packets when in monitor mode
+Date: Sun, 26 Jun 2011 22:51:31 +0200
 MIME-Version: 1.0
-In-Reply-To: <BLU158-w332CD7657F92343D3D2D1C876A0@phx.gbl>
-References: <BLU158-w332CD7657F92343D3D2D1C876A0@phx.gbl>
-Date: Mon, 20 Jun 2011 13:45:35 +0530
-Message-ID: <BANLkTinr-5k3grHM-gfjVi2PA67VvvTiNg@mail.gmail.com> (sfid-20110620_101551_266646_8363C9E0)
-Subject: Re: [ath9k-devel] Patching ath9k/mac80211 to change MAC layer features
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Fred Matthews <fredmm@hotmail.co.uk>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath9k-devel@venema.h4ckr.net, ath9k-devel@lists.ath9k
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201106262251.31720.dj_def@webmail.it> (sfid-20110626_230301_618653_5C7A07D9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 17, 2011 at 2:09 AM, Fred Matthews <fredmm@hotmail.co.uk> wrote:
-> Hello all,
->
->
-> I have a query regarding patching ath9k/mac80211 to change MAC layer
-> features and I would be most grateful if someone can assist.
->
->
-> I need to patch ath9k so that I can be able to modify/fix the A-MPDU
-> aggregation frame length and other parameters such that they can be
-> configured at runtime via debugfs. I made a newbie attempt at trying to
-> change the aggregate length (attached), but I am unsure of the
-> correctness/efficiency  - when applied throughput varies with different
-> frame lengths entered but I can't be sure if its actually changing the
-> aggregation length (passes the framelen/aggr_limit). Hence I would be very
-> grateful if someone can assist in the correct way of doing this (possibly
-> directly via mac80211).
->
->
->
-> Also if the ampdu aggregate length is changed I believe the number/length of
-> the subframes of the aggregate stays constant (at the default which is
-> 32). I try to change this in my patch as well as the maximum software
-> retries by just changing the default definition in ath9k.h, thus is there a
-> (more) correct/better way of changing these. Finally, how can I patch the
-> driver to be able to disable Block-Acks/aggregation via debugfs or
-> otherwise.
+This is the bugzilla link:
+https://bugzilla.kernel.org/show_bug.cgi?id=38282
 
+The network card doesn't work as expected in monitor mode (rt61pci driver).
+It should be able to capture every EAPOL packet but with newer kernels it
+can't.
+To reproduce:
 
-to disable aggregation in the driver, please try this
-diff --git a/drivers/net/wireless/ath/ath9k/init.c
-b/drivers/net/wireless/ath/ath9k/init.c
-index d4b166c..e0175d0 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -524,8 +524,6 @@ static void ath9k_init_misc(struct ath_softc *sc)
-        sc->config.txpowlimit = ATH_TXPOWER_MAX;
+1) stop all network managers
+2) sudo ifconfig wlan0 192.168.0.77
+3) sudo route add default gw 192.168.0.1
+4) wpa_passphrase myEssid
+   ----> myWPA
+   insert the output into /etc/wpa_supplicant.conf
+5) sudo airmon-ng start wlan0 11
+6) open wireshark with the correct privileges, start capturing from mon0,
+select "eapol" filter, enable decryption inserting the correct wpa in the
+preferences of the IEEE 802.11 protocol.
+7) sudo wpa_supplicant -Dwext -iwlan0 -c/etc/wpa_supplicant.conf
 
-        if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
--               sc->sc_flags |= SC_OP_TXAGGR;
--               sc->sc_flags |= SC_OP_RXAGGR;
-        }
+With a 2.6.35 kernel (I tried with Ubuntu 10.10 and Backtrack 4) I can see all
+the six EAPOL packets that I need to decrypt the traffic.
 
-        common->tx_chainmask = sc->sc_ah->caps.tx_chainmask;
-
-if you want only tx-aggregation to be disabled , please comment out only that.
-also you can completely disable HT by
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c
-b/drivers/net/wireless/ath/ath9k/hw.c
-index 6de2655..696b4cc 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1915,10 +1915,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
-
-        common->crypt_caps |= ATH_CRYPT_CAP_CIPHER_AESCCM;
-
--       if (ah->hw_version.devid != AR2427_DEVID_PCIE)
--               pCap->hw_caps |= ATH9K_HW_CAP_HT;
--       else
--               pCap->hw_caps &= ~ATH9K_HW_CAP_HT;
-+       pCap->hw_caps &= ~ATH9K_HW_CAP_HT;
-
-        if (AR_SREV_9271(ah))
-                pCap->num_gpio_pins = AR9271_NUM_GPIO;
-
-
-
-
->
->
->
-> I highly appreciate, help in any of the above, as well as other advice,
-> Many thanks
->
-> _______________________________________________
-> ath9k-devel mailing list
-> ath9k-devel@lists.ath9k.org
-> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
->
->
-
-
-
--- 
-shafi
+With a 2.6.38 kernel (I tried with Ubuntu 11.04 and Backtrack 5) I can see 
+four
+EAPOL packets (or five if I select "ignore the protection bit" + "with IV
+detection" in the preferences of the IEEE 802.11 protocol). In particular the
+"key" "(group msg 2/2)" packet is missing.
