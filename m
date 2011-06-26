@@ -1,196 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2291 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758814Ab1FALq3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:29 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 42/83] staging: brcm80211: remove dependency on pci core
- difinitions from aiutils.c
-Date: Wed, 1 Jun 2011 13:45:27 +0200
-Message-ID: <1306928768-7501-42-git-send-email-rvossen@broadcom.com> (sfid-20110601_134937_612924_0F3028F5)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:61675 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752309Ab1FZJHB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Jun 2011 05:07:01 -0400
+Received: by wyg8 with SMTP id 8so563347wyg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Jun 2011 02:07:00 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Vivek Natarajan <vivek.natraj@gmail.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] mac80211: dynamic PS - don't enter PS when TX frames are pending
+Date: Sun, 26 Jun 2011 12:06:54 +0300
+Message-Id: <1309079214-30919-1-git-send-email-arik@wizery.com> (sfid-20110626_110957_125928_F6301E9D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+Use the tx_frames_pending() driver callback to determine if Tx frames are
+pending for its internal queues. If so postpone the dynamic PS timeout
+to avoid interrupting Tx traffic.
 
-The file aiutils.c included the register definition includes for the
-PCI and PCIe core. This was for two functions which have been partly
-moved to nicpci.c. This means that nicpci.h is the only include file
-to provide interface to aiutils.c for PCI core related functions.
+The commit e8306f989483e4b97a8b37dd268de6c8c6f35e75 enabled this
+behavior for drivers with IEEE80211_HW_PS_NULLFUNC_STACK. We enable this
+for all drivers supporting dynamic PS.
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+This patch helps improve performance in noisy environments.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/staging/brcm80211/brcmsmac/aiutils.c |   41 +++------------------
- drivers/staging/brcm80211/brcmsmac/nicpci.c  |   50 ++++++++++++++++++++++++++
- drivers/staging/brcm80211/brcmsmac/nicpci.h  |    2 +
- 3 files changed, 58 insertions(+), 35 deletions(-)
+v1->2: Reverted Vivek's code for the HW_PS_NULLFUNC case to its original
+state. Fixed the code so ieee80211_disable_dyn_ps() functions correctly
+when HW_PS_NULLFUNC is not used.
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
-index bae40fe..43320b4 100644
---- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
-@@ -27,8 +27,6 @@
- #include <bcmdevs.h>
+net/mac80211/mlme.c |   36 ++++++++++++++++++++++++------------
+ 1 files changed, 24 insertions(+), 12 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 4f6b267..ac1f6ce 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -760,23 +760,34 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 	if (local->hw.conf.flags & IEEE80211_CONF_PS)
+ 		return;
  
- /* ********** from siutils.c *********** */
--#include <pci_core.h>
--#include <pcie_core.h>
- #include <nicpci.h>
- #include <bcmnvram.h>
- #include <bcmsrom.h>
-@@ -1915,7 +1913,7 @@ void ai_pci_down(si_t *sih)
- void ai_pci_setup(si_t *sih, uint coremask)
- {
- 	si_info_t *sii;
--	struct sbpciregs *pciregs = NULL;
-+	void *regs = NULL;
- 	u32 siflag = 0, w;
- 	uint idx = 0;
+-	/*
+-	 * transmission can be stopped by others which leads to
+-	 * dynamic_ps_timer expiry. Postpond the ps timer if it
+-	 * is not the actual idle state.
+-	 */
+-	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+-	for (q = 0; q < local->hw.queues; q++) {
+-		if (local->queue_stop_reasons[q]) {
+-			spin_unlock_irqrestore(&local->queue_stop_reason_lock,
+-					       flags);
++	if (!local->disable_dynamic_ps &&
++	    local->hw.conf.dynamic_ps_timeout > 0) {
++		/* don't enter PS if TX frames are pending */
++		if (drv_tx_frames_pending(local)) {
+ 			mod_timer(&local->dynamic_ps_timer, jiffies +
+ 				  msecs_to_jiffies(
+ 				  local->hw.conf.dynamic_ps_timeout));
+ 			return;
+ 		}
++
++		/*
++		 * transmission can be stopped by others which leads to
++		 * dynamic_ps_timer expiry. Postpone the ps timer if it
++		 * is not the actual idle state.
++		 */
++		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
++		for (q = 0; q < local->hw.queues; q++) {
++			if (local->queue_stop_reasons[q]) {
++				spin_unlock_irqrestore(&local->queue_stop_reason_lock,
++						       flags);
++				mod_timer(&local->dynamic_ps_timer, jiffies +
++					  msecs_to_jiffies(
++					  local->hw.conf.dynamic_ps_timeout));
++				return;
++			}
++		}
++		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ 	}
+-	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
  
-@@ -1932,7 +1930,7 @@ void ai_pci_setup(si_t *sih, uint coremask)
- 		siflag = ai_flag(sih);
- 
- 		/* switch over to pci core */
--		pciregs = ai_setcoreidx(sih, sii->pub.buscoreidx);
-+		regs = ai_setcoreidx(sih, sii->pub.buscoreidx);
+ 	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
+ 	    (!(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED))) {
+@@ -801,7 +812,8 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_PS);
  	}
  
- 	/*
-@@ -1950,16 +1948,7 @@ void ai_pci_setup(si_t *sih, uint coremask)
- 	}
- 
- 	if (PCI(sii)) {
--		OR_REG(&pciregs->sbtopci2,
--		       (SBTOPCI_PREF | SBTOPCI_BURST));
--		if (sii->pub.buscorerev >= 11) {
--			OR_REG(&pciregs->sbtopci2,
--			       SBTOPCI_RC_READMULTI);
--			w = R_REG(&pciregs->clkrun);
--			W_REG(&pciregs->clkrun,
--			      (w | PCI_CLKRUN_DSBL));
--			w = R_REG(&pciregs->clkrun);
--		}
-+		pcicore_pci_setup(sii->pch, regs);
- 
- 		/* switch back to previous core */
- 		ai_setcoreidx(sih, idx);
-@@ -1972,11 +1961,8 @@ void ai_pci_setup(si_t *sih, uint coremask)
-  */
- int ai_pci_fixcfg(si_t *sih)
- {
--	uint origidx, pciidx;
--	struct sbpciregs *pciregs = NULL;
--	sbpcieregs_t *pcieregs = NULL;
-+	uint origidx;
- 	void *regs = NULL;
--	u16 val16, *reg16 = NULL;
- 
- 	si_info_t *sii = SI_INFO(sih);
- 
-@@ -1985,23 +1971,8 @@ int ai_pci_fixcfg(si_t *sih)
- 	origidx = ai_coreidx(&sii->pub);
- 
- 	/* check 'pi' is correct and fix it if not */
--	if (sii->pub.buscoretype == PCIE_CORE_ID) {
--		pcieregs = ai_setcore(&sii->pub, PCIE_CORE_ID, 0);
--		regs = pcieregs;
--		reg16 = &pcieregs->sprom[SRSH_PI_OFFSET];
--	} else if (sii->pub.buscoretype == PCI_CORE_ID) {
--		pciregs = ai_setcore(&sii->pub, PCI_CORE_ID, 0);
--		regs = pciregs;
--		reg16 = &pciregs->sprom[SRSH_PI_OFFSET];
--	}
--	pciidx = ai_coreidx(&sii->pub);
--	val16 = R_REG(reg16);
--	if (((val16 & SRSH_PI_MASK) >> SRSH_PI_SHIFT) != (u16) pciidx) {
--		val16 =
--		    (u16) (pciidx << SRSH_PI_SHIFT) | (val16 &
--							  ~SRSH_PI_MASK);
--		W_REG(reg16, val16);
--	}
-+	regs = ai_setcore(&sii->pub, sii->pub.buscoretype, 0);
-+	pcicore_fixcfg(sii->pch, regs);
- 
- 	/* restore the original index */
- 	ai_setcoreidx(&sii->pub, origidx);
-diff --git a/drivers/staging/brcm80211/brcmsmac/nicpci.c b/drivers/staging/brcm80211/brcmsmac/nicpci.c
-index 196cdf1..c509c9a 100644
---- a/drivers/staging/brcm80211/brcmsmac/nicpci.c
-+++ b/drivers/staging/brcm80211/brcmsmac/nicpci.c
-@@ -654,3 +654,53 @@ void pcicore_down(void *pch, int state)
- 	/* Reduce L1 timer for better power savings */
- 	pcie_extendL1timer(pi, false);
+-	netif_tx_wake_all_queues(sdata->dev);
++	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
++		netif_tx_wake_all_queues(sdata->dev);
  }
-+
-+/*
-+ * precondition: current core is sii->buscoretype
-+ */
-+void pcicore_fixcfg(void *pch, void *regs)
-+{
-+	pcicore_info_t *pi = (pcicore_info_t *) pch;
-+	struct si_info *sii = SI_INFO(pi->sih);
-+	struct sbpciregs *pciregs = regs;
-+	sbpcieregs_t *pcieregs = regs;
-+	u16 val16, *reg16 = NULL;
-+	uint pciidx;
-+
-+	/* check 'pi' is correct and fix it if not */
-+	if (sii->pub.buscoretype == PCIE_CORE_ID) {
-+		reg16 = &pcieregs->sprom[SRSH_PI_OFFSET];
-+	} else if (sii->pub.buscoretype == PCI_CORE_ID) {
-+		reg16 = &pciregs->sprom[SRSH_PI_OFFSET];
-+	}
-+	pciidx = ai_coreidx(&sii->pub);
-+	val16 = R_REG(reg16);
-+	if (((val16 & SRSH_PI_MASK) >> SRSH_PI_SHIFT) != (u16) pciidx) {
-+		val16 =
-+		    (u16) (pciidx << SRSH_PI_SHIFT) | (val16 &
-+							  ~SRSH_PI_MASK);
-+		W_REG(reg16, val16);
-+	}
-+}
-+
-+/*
-+ * precondition: current core is pci core
-+ */
-+void pcicore_pci_setup(void *pch, void *regs)
-+{
-+	pcicore_info_t *pi = (pcicore_info_t *) pch;
-+	struct sbpciregs *pciregs = regs;
-+	u32 w;
-+
-+	OR_REG(&pciregs->sbtopci2,
-+	       (SBTOPCI_PREF | SBTOPCI_BURST));
-+
-+	if (SI_INFO(pi->sih)->pub.buscorerev >= 11) {
-+		OR_REG(&pciregs->sbtopci2,
-+		       SBTOPCI_RC_READMULTI);
-+		w = R_REG(&pciregs->clkrun);
-+		W_REG(&pciregs->clkrun,
-+		      (w | PCI_CLKRUN_DSBL));
-+		w = R_REG(&pciregs->clkrun);
-+	}
-+}
-diff --git a/drivers/staging/brcm80211/brcmsmac/nicpci.h b/drivers/staging/brcm80211/brcmsmac/nicpci.h
-index b32f1af..f1441c5 100644
---- a/drivers/staging/brcm80211/brcmsmac/nicpci.h
-+++ b/drivers/staging/brcm80211/brcmsmac/nicpci.h
-@@ -67,5 +67,7 @@ extern void pcicore_sleep(void *pch);
- extern void pcicore_down(void *pch, int state);
- extern u8 pcicore_find_pci_capability(void *dev, u8 req_cap_id,
- 					 unsigned char *buf, u32 *buflen);
-+extern void pcicore_fixcfg(void *pch, void *regs);
-+extern void pcicore_pci_setup(void *pch, void *regs);
  
- #endif /* _NICPCI_H */
+ void ieee80211_dynamic_ps_timer(unsigned long data)
 -- 
 1.7.4.1
-
 
