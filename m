@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:62696 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751490Ab1FSGFF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2011 02:05:05 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 38so1034760wyb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Jun 2011 23:05:04 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 3/3] wl12xx: use 802.11 header location after relocation to frame start
-Date: Sun, 19 Jun 2011 09:04:56 +0300
-Message-Id: <1308463496-15522-3-git-send-email-arik@wizery.com> (sfid-20110619_080520_820544_DC513354)
-In-Reply-To: <1308463496-15522-1-git-send-email-arik@wizery.com>
-References: <1308463496-15522-1-git-send-email-arik@wizery.com>
+Received: from void.printf.net ([89.145.121.20]:46012 "EHLO void.printf.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753165Ab1FZPJt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Jun 2011 11:09:49 -0400
+From: Chris Ball <cjb@laptop.org>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mmc: sdio: fix runtime PM path during driver removal
+References: <1307662827-16618-1-git-send-email-ohad@wizery.com>
+	<BANLkTi=JcXG04coTJCA=fvwxXzuRsYzT4Q@mail.gmail.com>
+Date: Sun, 26 Jun 2011 11:09:43 -0400
+In-Reply-To: <BANLkTi=JcXG04coTJCA=fvwxXzuRsYzT4Q@mail.gmail.com> (Ohad
+	Ben-Cohen's message of "Sun, 26 Jun 2011 14:50:50 +0300")
+Message-ID: <m2tybceiiw.fsf@bob.laptop.org> (sfid-20110626_171306_454055_F7DA6E46)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When operating with TKIP encryption, the function wl1271_tx_fill_hdr()
-relocates the 802.11 header to the start of the frame, and leaves room
-for the security header.
+Hi Ohad,
 
-Some functions in the Tx path rely on the location of the header,
-namely, for purposes of roaming in STA mode and connecting new stations
-in AP mode. Call these functions only after the header is relocated.
+On Sun, Jun 26 2011, Ohad Ben-Cohen wrote:
+> On Fri, Jun 10, 2011 at 2:40 AM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
+>> After commit e1866b3 "PM / Runtime: Rework runtime PM handling
+>> during driver removal" was introduced, the driver core stopped
+>> incrementing the runtime PM usage counter of the device during
+>> the invocation of the ->remove() callback.
+>>
+>> This indirectly broke SDIO's runtime PM path during driver removal,
+>> because no one calls _put_sync() anymore after ->remove() completes.
+>>
+>> This means that the power of runtime-PM-managed SDIO cards is kept
+>> high after their driver is removed (even if it was powered down
+>> beforehand).
+>>
+>> Fix that by directly calling _put_sync() when the last usage
+>> counter is downref'ed by the SDIO bus.
+>
+> Can you please take this 1-liner into 3.0-rc ?
+>
+> It fixes SDIO runtime PM after a breakage was introduced in 3.0.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/tx.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Merged, thanks.  I'll be sending a pull request on my for-linus branch
+shortly:
 
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 6dab9c9..39f4292 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -383,6 +383,8 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
- 	if (ret < 0)
- 		return ret;
- 
-+	wl1271_tx_fill_hdr(wl, skb, extra, info, hlid);
-+
- 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
- 		wl1271_tx_ap_update_inconnection_sta(wl, skb);
- 		wl1271_tx_regulate_link(wl, hlid);
-@@ -390,8 +392,6 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
- 		wl1271_tx_update_filters(wl, skb);
- 	}
- 
--	wl1271_tx_fill_hdr(wl, skb, extra, info, hlid);
--
- 	/*
- 	 * The length of each packet is stored in terms of
- 	 * words. Thus, we must pad the skb data to make sure its
+http://git.kernel.org/?p=linux/kernel/git/cjb/mmc.git;a=shortlog;h=refs/heads/for-linus
+
+- Chris.
 -- 
-1.7.4.1
-
+Chris Ball   <cjb@laptop.org>   <http://printf.net/>
+One Laptop Per Child
