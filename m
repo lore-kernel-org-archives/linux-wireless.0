@@ -1,12 +1,12 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:49916 "EHLO ogre.sisk.pl"
+Received: from ogre.sisk.pl ([217.79.144.158]:59319 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751208Ab1FLUl0 convert rfc822-to-8bit (ORCPT
+	id S1754932Ab1FZVku convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jun 2011 16:41:26 -0400
+	Sun, 26 Jun 2011 17:40:50 -0400
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
 To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 3.0-rc2: Reported regressions from 2.6.39
+Subject: 3.0-rc4: Reported regressions from 2.6.39
 Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
 	Florian Mickler <florian@mickler.org>,
 	Andrew Morton <akpm@linux-foundation.org>,
@@ -20,8 +20,8 @@ Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
 	DRI <dri-devel@lists.freedesktop.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-ID: <vv0uv79EvLN.A.jiC.pNS9NB@chimera> (sfid-20110612_224136_901793_64DB45AD)
-Date: Sun, 12 Jun 2011 22:23:10 +0200 (CEST)
+Message-ID: <VDRaLpg_NZ.A.tnC.JZ6BOB@chimera> (sfid-20110626_234912_543436_90A4B7A9)
+Date: Sun, 26 Jun 2011 23:18:39 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
@@ -42,48 +42,86 @@ Listed regressions statistics:
 
   Date          Total  Pending  Unresolved
   ----------------------------------------
+  2011-06-26       22       14          12
   2011-06-12        8        7           7
 
 
 Unresolved regressions
 ----------------------
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37242
-Subject		: lockdep deadlock warning in shutdown
-Submitter	: Shaohua Li <shaohua.li@intel.com>
-Date		: 2011-06-03 3:24 (10 days old)
-Message-ID	: <1307071472.15392.60.camel@sli10-conroe>
-References	: http://marc.info/?l=linux-acpi&m=130707148811930&w=2
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38302
+Subject		: NFS crash in un-modified 3.0.0-rc3+, list corruption.
+Submitter	: Ben Greear <greearb@candelatech.com>
+Date		: 2011-06-20 22:42 (7 days old)
+Message-ID	: <4DFFCCDC.2070106@candelatech.com>
+References	: http://marc.info/?l=linux-kernel&m=130860979610651&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38292
+Subject		: slab vs lockdep vs debugobjects
+Submitter	: Peter Zijlstra <peterz@infradead.org>
+Date		: 2011-06-20 17:48 (7 days old)
+Message-ID	: <1308592080.26237.114.camel@twins>
+References	: http://marc.info/?l=linux-kernel&m=130859214215636&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38152
+Subject		: acpi_power_off lockdep splat
+Submitter	: Borislav Petkov <bp@alien8.de>
+Date		: 2011-06-19 13:30 (8 days old)
+Message-ID	: <20110619133049.GA18168@liondog.tnic>
+References	: http://marc.info/?l=linux-kernel&m=130849028317365&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38142
+Subject		: i915, framebuffer: wrong xoffset?
+Submitter	: Lucas De Marchi <lucas.de.marchi@gmail.com>
+Date		: 2011-06-18 16:29 (9 days old)
+Message-ID	: <BANLkTikAJEma_NNi0NYnjBEB6RkFJK3Dpg@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=130841462202826&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38122
+Subject		: 3.0-rc3 WARNING: at drivers/gpu/drm/i915/i915_drv.c:340 gen6_gt_force_wake_put+0x29/0x52 [i915]()
+Submitter	: Jens Axboe <jaxboe@fusionio.com>
+Date		: 2011-06-14 12:12 (13 days old)
+Message-ID	: <<4DE3E2C9.6060207@fusionio.com>>
+References	: http://marc.info/?l=linux-kernel&m=130805412314680&w=2
+		  https://lkml.org/lkml/2011/5/30/261
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37562
+Subject		: /scripts/depmod.sh ends up -rw-r--r-- 1 depmod.sh
+Submitter	: Andrew <atswartz@gmail.com>
+Date		: 2011-06-15 23:49 (12 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37482
+Subject		: Driver: i915 - Starting with kernel 3.0.0-rc3, dual monitor freezes a Dell Latitude E6410 when a second monitor is connected at boot time
+Submitter	: David Hill <hilld@binarystorm.net>
+Date		: 2011-06-14 18:42 (13 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37432
+Subject		: sdhci-pci fails on 3.0.0-rc1 on Dell E6510
+Submitter	: Oliver Hartkopp <socketcan@hartkopp.net>
+Date		: 2011-06-07 20:06 (20 days old)
+First-Bad-Commit: http://git.kernel.org/linus/da7822e5ad71ec9b745b412639f1e5e0ba795a20
+References	: http://article.gmane.org/gmane.linux.kernel.mmc/8442
 
 
 Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37232
 Subject		: [3.0-rc1][NMI/DMAR][iwlagn] errors - PCI system error (SERR) for reason a1 on CPU 0
 Submitter	: Shawn Starr <shawn.starr@rogers.com>
-Date		: 2011-06-03 4:56 (10 days old)
+Date		: 2011-06-03 4:56 (24 days old)
 Message-ID	: <4478124.OuFNgaPiHS@segfault.sh0n.net>
 References	: http://marc.info/?l=linux-kernel&m=130707737616116&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37222
-Subject		: 3.0.0-rc1-git3 -- kernel/sched.c:619 invoked rcu_dereference_check() without protection!
-Submitter	: Miles Lane <miles.lane@gmail.com>
-Date		: 2011-06-04 3:22 (9 days old)
-Message-ID	: <BANLkTikHS7TuFhm3cfJ+Y=erWDaAwuE_TA@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=130715775803343&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36982
-Subject		: 3.0-rc1 problem with usb, cdrom
-Submitter	: werner <w.landgraf@ru.ru>
-Date		: 2011-06-01 16:43 (12 days old)
-Message-ID	: <web-538043386@zbackend1.aha.ru>
-References	: http://marc.info/?l=linux-kernel&m=130694663410114&w=2
 
 
 Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36972
 Subject		: 3.0-rc1: DMAR errors from iwlagn
 Submitter	: Jeremy Fitzhardinge <jeremy@goop.org>
-Date		: 2011-05-31 21:14 (13 days old)
+Date		: 2011-05-31 21:14 (27 days old)
 Message-ID	: <4DE55A26.6040702@goop.org>
 References	: http://marc.info/?l=linux-kernel&m=130687723213857&w=2
 
@@ -91,17 +129,35 @@ References	: http://marc.info/?l=linux-kernel&m=130687723213857&w=2
 Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36452
 Subject		: Artifacts with 3.0-rc1 on SandyBridge
 Submitter	: Alex Zhavnerchik <alex.vizor@gmail.com>
-Date		: 2011-06-01 13:55 (12 days old)
+Date		: 2011-06-01 13:55 (26 days old)
 
 
 Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36302
 Subject		: SandyBridge can't do s2disk with linux 3.0-rc1
 Submitter	: Alex Zhavnerchik <alex.vizor@gmail.com>
-Date		: 2011-05-30 23:10 (14 days old)
+Date		: 2011-05-30 23:10 (28 days old)
 
 
 Regressions with patches
 ------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38012
+Subject		: Missing code to load firmware
+Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
+Date		: 2011-06-20 21:44 (7 days old)
+Handled-By	: Larry Finger <Larry.Finger@lwfinger.net>
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=63002
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37542
+Subject		: [OOPS] 3.0-rc1 cifs
+Submitter	: Martijn Uffing <mp3project@sarijopen.student.utwente.nl>
+Date		: 2011-06-09 20:15 (18 days old)
+Message-ID	: <Pine.LNX.4.64.1106092211500.19687@sarijopen.student.utwente.nl>
+References	: http://marc.info/?l=linux-kernel&m=130765235926144&w=2
+Handled-By	: Jeff Layton <jlayton@redhat.com>
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=63202
+
 
 For details, please visit the bug entries and follow the links given in
 references.
