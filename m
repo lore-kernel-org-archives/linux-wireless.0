@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:19443 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751674Ab1FCPWv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2011 11:22:51 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 0/5] update for 3.0.1
-Date: Fri,  3 Jun 2011 07:54:11 -0700
-Message-Id: <1307112856-20231-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110603_172254_165327_35A03CF4)
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:52943 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750897Ab1F0N7x convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2011 09:59:53 -0400
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.00.1106261016100.25900@ayla.of.borg>
+References: <alpine.DEB.2.00.1106261016100.25900@ayla.of.borg>
+Date: Mon, 27 Jun 2011 15:59:53 +0200
+Message-ID: <BANLkTikSLx6FKvF518s99Q8eRU_WF+cn9A@mail.gmail.com> (sfid-20110627_155959_690183_2ACF08D1)
+Subject: Re: [PATCH -next] bcma: main.c needs to include <linux/slab.h>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+	Linux Kernel Development <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We do more cleanup works for iwlagn driver
+2011/6/26 Geert Uytterhoeven <geert@linux-m68k.org>:
+> m68k allmodconfig:
+>
+> drivers/bcma/main.c: In function ‘bcma_release_core_dev’:
+> drivers/bcma/main.c:68: error: implicit declaration of function ‘kfree’
 
-Wey-Yi Guy (5):
-  iwlagn: save the latest smps mode
-  iwlagn: set smps mode after assoc for 1000 device
-  iwlagn: move all post scan functions in one place
-  iwlagn: direct call to post_scan function
-  iwlagn: call commit_rxon function directly
+We already include slab.h in:
+host_pci.c
+scan.c
+sprom.c
 
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+Maybe we can just include this in bcma.h as a better solution? We
+could drop other includes then.
+Can you submit patch for this?
 
- drivers/net/wireless/iwlwifi/iwl-1000.c     |    1 +
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |    3 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    1 +
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   17 +++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   10 +++++-----
- drivers/net/wireless/iwlwifi/iwl-core.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.h     |   13 ++++---------
- drivers/net/wireless/iwlwifi/iwl-scan.c     |   10 ++--------
- 8 files changed, 31 insertions(+), 26 deletions(-)
-
+-- 
+Rafał
