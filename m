@@ -1,136 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:58305 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750808Ab1FRNLZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2011 09:11:25 -0400
+Received: from blu0-omc4-s23.blu0.hotmail.com ([65.55.111.162]:5524 "EHLO
+	blu0-omc4-s23.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757260Ab1F0LS3 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2011 07:18:29 -0400
+Message-ID: <BLU158-w3443764A60DE4B497231DB87570@phx.gbl> (sfid-20110627_132951_027154_EB684448)
+From: Fred Matthews <fredmm@hotmail.co.uk>
+To: <ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
+Subject: STBC functionality details request
+Date: Mon, 27 Jun 2011 12:18:28 +0100
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <20110618150356.1b9e31cb@farn.lan>
-References: <BANLkTi=o06eHLtFvmmz7c4TEjahy=EOrJQ@mail.gmail.com>
-	<20110618133957.378b5266@farn.lan>
-	<BANLkTikT3qoZhTrd0uF-JNehNhTCRjF6kw@mail.gmail.com>
-	<BANLkTinf8X1AUEHteMnU3MMBEPEO1WNtzA@mail.gmail.com>
-	<20110618150356.1b9e31cb@farn.lan>
-Date: Sat, 18 Jun 2011 15:05:23 +0200
-Message-ID: <BANLkTi=eU-XPJmZ=a3ZGFhJZxHVezzZ4VA@mail.gmail.com> (sfid-20110618_151155_599820_A4D9C30B)
-Subject: Re: Lock up when faking MMIO read[bwl] on some machines [WAS: Faking
- MMIO ops? Fooling a driver]
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Pekka Paalanen <pq@iki.fi>, David Woodhouse <dwmw2@infradead.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 18 czerwca 2011 14:03 użytkownik Pekka Paalanen <pq@iki.fi> napisał:
-> On Sat, 18 Jun 2011 13:26:14 +0200
-> Rafał Miłecki <zajec5@gmail.com> wrote:
->
->> W dniu 18 czerwca 2011 12:57 użytkownik Rafał Miłecki
->> <zajec5@gmail.com> napisał:
->> > Not modified MMIO tracing works great on this machine, I've
->> > grabbed dumps 10-20 times without a lock up or anything.
->> >
->> > I'm using different drivers on both machines, because Macbook
->> > Pro 8,1 has unique BCM4331 card that I can not buy and that is
->> > not available with PCI(e) slot. Is uses some vendor specific,
->> > PCIe compatible slot. Simple commenting out "set_ins_reg_val"
->> > work fine on this Macbook, PHY reads are tracked correctly.
->> >
->> > As for differences in struct pt_regs... yeah, I think that
->> > happens. I'm using x86 kernel, while on Macbook we use x86_64
->> > as it's required to use 64bit driver in ndiswrapper.
->> >
->> > I can try to find out, which register we try to overwrite on
->> > Macbook.
->>
->> This is what does happen on my machine (working):
->> [  122.550991] mmiotrace: ZAJEC: read PHY 0x20
->> [  122.550994] mmiotrace: ZAJEC: overwriting 0x20 with 0xFFFF
->> [  122.550997] [ZAJEC] setting AX with 0xFFFF
->> (...)
->> [  122.551071] mmiotrace: ZAJEC: read PHY 0x22
->> [  122.551074] mmiotrace: ZAJEC: overwriting 0x22 with 0xFFFF
->> [  122.551077] [ZAJEC] setting AX with 0xFFFF
->> (...)
->> [  122.551198] mmiotrace: ZAJEC: read PHY 0x27
->> [  122.551201] mmiotrace: ZAJEC: overwriting 0x27 with 0xFFFF
->> [  122.551204] [ZAJEC] setting AX with 0xFFFF
->>
->>
->> This is what does happen on Macbook:
->> [  166.886438] mmiotrace: ZAJEC: read PHY 0x810
->> [  166.886649] mmiotrace: ZAJEC: overwriting 0x810 with 0xFFFF
->> [  166.886860] [ZAJEC] setting AX with 0xFFFF
->> LOCK UP
->>
->>
->> So on both machines we modify AX register in the same place. My
->> function set_ins_reg_val is a copy of get_ins_reg_val which works
->> fine... So no idea what may we be doing wrong on this Macbook
->> x86_64...
->
-> Ok, so it is a 32 vs. 64 bit arch difference, or difference in
-> driver binary. AX on 64-bit is actually RAX... well, depending
-> on data width.
->
-> I actually missed you patch attachment before, sorry.
->
-> I have minor notes, but I cannot see them being a reason for a
-> lockup:
 
-Thanks for answer!
-
-
-> - instead of set_reg_w32(), you should be able to simply
-> *get_reg_w32() = (unsigned long)value; or equivalent since
-> it returns a pointer.
-
-Agree.
-
-
-> - you are not checking the data access width, but you assume
-> it is 32 bits. Maybe you should verify that? get_reg_w8() is
-> very different. I think you should reproduce the switch on
-> get_ins_reg_width() statement from get_ins_reg_val() in
-> your set_ins_reg_val(), and use unsigned long instead of u32
-> to account for 64-bitness.
->
-> Yes, get_reg_w32() is a little badly named.
->
-> Maybe the driver is doing a 16-bit wide access, and happens to
-> store something else in the other 16/48 bits of RAX?
-
-Nice comment, thanks! I've decided to print info about planned
-overwrite, instead of really doing it. Plus few more debugging
-messages suggested by David:
-[  293.682242] mmiotrace: ZAJEC: overwriting 0x810 with 0xFFFF
-[  293.687929] mmiotrace: [ZAJEC] ins at ffffc90010503b60: 0f b7 81 fe 03 00
-[  293.693651] mmiotrace: [ZAJEC] p = (unsigned char *)ins_addr;
-         p == 0xf
-[  293.699379] mmiotrace: [ZAJEC] p += skip_prefix(p, &prf);
-         p == 0xf
-[  293.705116] mmiotrace: [ZAJEC] p += get_opcode(p, &opcode);
-         p == 0x81
-[  293.710815] mmiotrace: [ZAJEC] opcode is 0xb70f
-[  293.716411] mmiotrace: [ZAJEC] prf info: shorted:0; enlarged:0, rexr:0, rex:0
-[  293.722062] mmiotrace: [ZAJEC] after checing opcode we decided to use reg 0x0
-[  293.727698] mmiotrace: [ZAJEC] width is 4
-[  293.733219] [ZAJEC] (not) setting AX with 0xFFFF
-
-So the read's width is 4, that's 32bit. If this is 64bit arch we could
-be overwritting another 32bits in AX register, right? Can this be our
-issue?
-
-
-> I assume the lockup is silent, since you have not shown
-> anything. Have you tried a serial console, if you have one?
-
-I think David has some USB debugging (what ever it means...). Using
-console mode just printed commands done right before overwritting
-register.
-
--- 
-Rafał
+Hi,
+I am using STBC (Space Time Block Coding) 1 stream NICs like the AR9280.I would be very grateful someone can kindly advise on how exactly STBC(transmits multiple copies of a data across each of the antennas)�works in ath9k.
+I ask this because when I enable STBC 1-stream, the driver seems to uses Space division multiplexing (can this be disabled/enabled?), since the rate is over 150Mbps.
+When is STBC activated ?, ...Does Minstrel/ath9k rate adaptation�mechanism�find first check if Spatial multiplexing is better, if not uses STBC ?
+Thank you for your time 		 	   		  
