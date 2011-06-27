@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:51425 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754247Ab1FCXBa (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48060 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752956Ab1F0Q5b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2011 19:01:30 -0400
-Received: by iyb14 with SMTP id 14so1737246iyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2011 16:01:29 -0700 (PDT)
-Message-ID: <4DE967C6.4050207@lwfinger.net> (sfid-20110604_010137_554655_FF64F724)
-Date: Fri, 03 Jun 2011 18:01:26 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Arif Ali <mail@arif-ali.co.uk>
-CC: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: r8192se_pci or rtlwifi/rtl8192ce
-References: <4DE7D5FD.2050707@arif-ali.co.uk>	<20110603130308.GB2379@nautilus.holoscopio.com>	<4DE8E4F5.7010009@arif-ali.co.uk> <BANLkTimLuM4rpfYmTtxA3-6LXyEE4JqqdQ@mail.gmail.com>
-In-Reply-To: <BANLkTimLuM4rpfYmTtxA3-6LXyEE4JqqdQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 27 Jun 2011 12:57:31 -0400
+Subject: Re: [PATCH -next] bcma: main.c needs to include <linux/slab.h>
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Alexey Dobriyan <adobriyan@gmail.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	Linux Kernel Development <linux-kernel@vger.kernel.org>
+In-Reply-To: <4E08B4AA.409@broadcom.com> (sfid-20110627_185027_507290_BCE834F5)
+References: <alpine.DEB.2.00.1106261016100.25900@ayla.of.borg>
+	 <BANLkTikSLx6FKvF518s99Q8eRU_WF+cn9A@mail.gmail.com>
+	 <BANLkTinGvM79fza-=bFwcbtfFzGHAVKJag@mail.gmail.com>
+	 <BANLkTikVtWe0jB_jLeP1YZTEKSYA97gdqQ@mail.gmail.com>
+	 <4E08B4AA.409@broadcom.com> (sfid-20110627_185027_507290_BCE834F5)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Jun 2011 18:57:24 +0200
+Message-ID: <1309193844.3911.27.camel@jlt3.sipsolutions.net> (sfid-20110627_185807_456889_072B942D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/03/2011 12:29 PM, Arif Ali wrote:
-> For some reason the rc1 kernel didn't work from the mainline kernels from
-> ubuntu, I downloaded the latest kernel from mainline, (although it says it is
-> for oneiric)
->
-> i.e. The kernel below for me works
->
-> http://kernel.ubuntu.com/~kernel-ppa/mainline/daily/2011-06-02-oneiric/
->
-> i.e. 3.0.0-999-generic
->
-> The driver being used here is rtl8192se, and the stability issues I had are now
-> gone, will test for a few more days and see how it goes.
->
-> Thanks for all those people who replied
+On Mon, 2011-06-27 at 18:49 +0200, Arend van Spriel wrote:
 
-Sorry that I did not reply earlier, but I was traveling without access to Email.
+> > That's why I think it's safe to include linux/slab.h in bcma_private.h.
+> > But if that's just my opinion, everybody think it's wrong idea, I'm OK with it.
+> 
+> My rule of thumb is: Header file a.h may only include header b.h when 
+> a.h needs some definition from b.h. Convenience is never a good reason 
+> for nested includes.
 
-The driver rtl8192se in kernel 3.0-rc1 is the correct one as you noted. For me, 
-it has been very stable. There is one fix that is in the pipeline, in 
-wireless-testing, but not yet in the mainline tree. The symptoms are kernel 
-panics due to excessive fragmentation causing buffer allocation failures. This 
-problem affects both rtl8192ce and rtl8192se. As it took a long time for me to 
-have problems with the drivers, you will likely not see the problem. The fix 
-should be in 3.0-rc2. If you want, I can send you the patches.
+Yeah, good rule. Consider if you have a.h, b.h and z.c, z.c needs b.h
+but not a.h, and now b.h includes a.h ("for convenience") -- changing
+a.h would needlessly recompile z.c. Now, changing slab.h will probably
+recompile everything anyway, but still...
 
-Larry
+johannes
 
