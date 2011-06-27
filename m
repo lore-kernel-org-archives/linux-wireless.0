@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:40361 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751315Ab1F3FeY (ORCPT
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:36004 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756786Ab1F0ImX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2011 01:34:24 -0400
-Received: by mail-bw0-f41.google.com with SMTP id 14so2031996bwd.0
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2011 22:34:23 -0700 (PDT)
-Subject: Re: [3.0-rc4] lockdep: netdev notifier vs rfkill
+	Mon, 27 Jun 2011 04:42:23 -0400
+Received: by bwd5 with SMTP id 5so1502771bwd.5
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 01:42:21 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: don't bail if mmc isn't MMC_CAP_POWER_OFF_CARD
 From: Luciano Coelho <coelho@ti.com>
-To: Daniel J Blueman <daniel.blueman@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <BANLkTimPMypvBWp-xv4WH_mD+WAOQQgRdA@mail.gmail.com>
-References: <BANLkTimPMypvBWp-xv4WH_mD+WAOQQgRdA@mail.gmail.com>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: linux-wireless@vger.kernel.org, tim@kangatronix.co.uk
+In-Reply-To: <1306676163-17325-1-git-send-email-ohad@wizery.com>
+References: <1306676163-17325-1-git-send-email-ohad@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 30 Jun 2011 08:34:17 +0300
-Message-ID: <1309412057.1514.123.camel@cumari> (sfid-20110630_073427_640474_5054F296)
+Date: Mon, 27 Jun 2011 11:42:18 +0300
+Message-ID: <1309164138.30221.5.camel@cumari> (sfid-20110627_105823_058760_9DE8527A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-06-21 at 21:10 +0800, Daniel J Blueman wrote: 
-> When hitting the hard rfkill in 3.0-rc4, lockdep spots some likely lock misuse:
+On Sun, 2011-05-29 at 16:36 +0300, Ohad Ben-Cohen wrote:
+> If our SDIO function has its runtime PM disabled, don't try to
+> manipulate its runtime PM status at all. This way we can still
+> power on cards plugged to mmc hosts that are not
+> MMC_CAP_POWER_OFF_CARD.
 > 
-> =======================================================
-> [ INFO: possible circular locking dependency detected ]
-> 3.0.0-rc4-340c #1
-> -------------------------------------------------------
-> kworker/0:0/4 is trying to acquire lock:
->  (&rdev->mtx){+.+.+.}, at: [<ffffffff816cefce>]
-> cfg80211_netdev_notifier_call+0x11e/0x650
-> 
-> but task is already holding lock:
->  (&rdev->devlist_mtx){+.+.+.}, at: [<ffffffff816cff16>]
-> cfg80211_rfkill_set_block+0x46/0xa0
-> 
-> which lock already depends on the new lock.
+> Reported-and-tested-by: Tim Yamin <tim@kangatronix.co.uk>
+> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+> --- 
 
-This should be fixed with the patch for 3.0 that I have just sent,
-"cfg80211: fix deadlock with rfkill/sched_scan by adding new mutex".
+Applied, thank you!
 
 -- 
 Cheers,
