@@ -1,82 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:3305 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751390Ab1F2Bt0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2011 21:49:26 -0400
-Subject: Re: [PATCH v4 1/6] NFC: add nfc subsystem core
-From: Joe Perches <joe@perches.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	sameo@linux.intel.com, johannes@sipsolutions.net,
-	lauro.venancio@openbossa.org, marcio.macedo@openbossa.org,
-	Waldemar.Rymarkiewicz@tieto.com, padovan@profusion.mobi,
-	rdunlap@xenotime.net
-In-Reply-To: <1309311096.2208.33.camel@aeonflux>
-References: <1309285246-8495-1-git-send-email-aloisio.almeida@openbossa.org>
-	 <1309285246-8495-2-git-send-email-aloisio.almeida@openbossa.org>
-	 <1309292325.29598.9.camel@Joe-Laptop>  <1309311096.2208.33.camel@aeonflux>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Jun 2011 18:49:24 -0700
-Message-ID: <1309312164.29598.53.camel@Joe-Laptop> (sfid-20110629_034929_452032_99C856E0)
-Mime-Version: 1.0
+Received: from nm7-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.151]:26930 "HELO
+	nm7-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757684Ab1F0LbS convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2011 07:31:18 -0400
+Message-ID: <1309173961.49279.YahooMailClassic@web161605.mail.bf1.yahoo.com> (sfid-20110627_133626_275303_27D01FFC)
+Date: Mon, 27 Jun 2011 04:26:01 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: Compat-wireless release for 2011-06-26 is baked
+To: linux-wireless@vger.kernel.org,
+	Fred Matthews <fredmm@hotmail.co.uk>
+In-Reply-To: <blu158-w716EEAA2F0043B4BEAFB387570@phx.gbl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-06-28 at 18:31 -0700, Marcel Holtmann wrote:
-> Hi Joe,
 
-Hello Marcel.
+> Hi all,
+> I have had compiler errors when making compat-2011-06-23 -
+> compat-2011-06-26. 
+>   CC [M]
+>  /home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.o/home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.c:
+> In function
+> ‘nl80211_send_bss’:/home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.c:3641:
+> error: implicit declaration of function
+> ‘genl_dump_check_consistent’/home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.c:
+> In function
+> ‘nl80211_dump_scan’:/home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.c:3731:
+> error: ‘struct netlink_callback’ has no member named
+> ‘seq’make[3]: ***
+> [/home/wimo/new/compat-wireless-2011-06-26/net/wireless/nl80211.o]
+> Error 1make[2]: ***
+> [/home/wimo/new/compat-wireless-2011-06-26/net/wireless]
+> Error 2make[1]: ***
+> [_module_/home/wimo/new/compat-wireless-2011-06-26] Error
+> 2make[1]: Leaving directory
+> `/usr/src/linux-headers-2.6.32-25-generic'make: ***
+> [modules] Error 2
+> There appears to be a problem with nl80211.c as you see in
+> the error messages. However when I copied compat-2011-06-22
+> version's nl80211.c and nl80211.h to compat-2011-06-26
+> (replacing its original), it compiled and worked just fine.
+> Thanks!
 
-> > > The NFC subsystem core is responsible for providing the device driver
-> > > interface. It is also responsible for providing an interface to the control
-> > > operations and data exchange.
-> > []
-> > > diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
-> > []
-> > > +#define NFC_INFO(fmt, arg...) printk(KERN_INFO "NFC: " fmt "\n", ## arg)
-> > > +#define NFC_ERR(fmt, arg...) printk(KERN_ERR "%s: " fmt "\n", __func__, ## arg)
-> > > +#define NFC_DBG(fmt, arg...) pr_debug("%s: " fmt "\n", __func__, ## arg)
-> > I think these #defines and their uses would be
-> > better lower case.
-> > #define nfc_info(etc...)
-> > #define nfc_err(etc...)
-> > #define nfc_dbg(etc...)
-> > And because these don't really take any nfc specific
-> > struct as an argument, may be better removed altogether
-> > and replaced with the pr_<level> equivalents.
-> 
-> it is similar to what we do in the Bluetooth subsystem, but in the end
-> upper-case vs lower-case is a bit more personal taste.
+This patch: nl80211: use netlink consistent dump feature for BSS dumps, submitted by Johannes appears to be the culprit and I already notified him.
 
-And a bit of of coding style agreement too.
+In the mean time you can reverse it to complete c/w compilation.
 
-> The pr_<level> ones are nice and I wished we had them all back in the
-> days, but the NFC ones actually could take the controller as argument
-> and then us the dev_* versions of these commands.
-
-I do think that if there's a controller struct that's always
-or mostly used with nfc_<level>, then it should be added and
-passed to the functions arguments, maybe with NULL used where
-necessary.
-
-> At this stage of the project it is a bit too early to tell I guess.
-> > I think emitting __func__ rarely adds useful information.
-> Depends on how you are using your debug statements. I find it really
-> helpful since then you can keep the text detail to a minimum.
-
-I don't disagree that while debugging function names
-and tracing function entries/exits are useful.
-
-Today, dynamic_debug can add __func__ to the output as
-desired so I think that it's not really necessary
-to add to any <foo>_dbg callsite.
-
-I don't think they're ever useful on <foo>_err.
-If they are, then the message probably isn't
-descriptive enough and adding %s/__func__ as
-necessary is OK.
-
-cheers, Joe
-
-
+Walter
