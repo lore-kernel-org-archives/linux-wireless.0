@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:55574 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753581Ab1FBTQA (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:58191 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753180Ab1F0SHI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 15:16:00 -0400
-Received: by qwk3 with SMTP id 3so516478qwk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Jun 2011 12:16:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1307042072.3738.4.camel@jlt3.sipsolutions.net>
-References: <1305586296-23147-1-git-send-email-greearb@candelatech.com>
- <1305759738.8827.6.camel@jlt3.sipsolutions.net> <4DD4569C.7080303@candelatech.com>
- <BANLkTinozbG2SfOCRd1U__8-Pz9-8HCkPQ@mail.gmail.com> <1307042072.3738.4.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 2 Jun 2011 12:15:40 -0700
-Message-ID: <BANLkTinhYwNjSKwS1YhZxq3_HxJTn1dkNg@mail.gmail.com> (sfid-20110602_211606_578028_B149C900)
-Subject: Re: [PATCH v2] wireless: Support can-scan-one logic.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ben Greear <greearb@candelatech.com>,
+	Mon, 27 Jun 2011 14:07:08 -0400
+Received: by pvg12 with SMTP id 12so3003730pvg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 11:07:07 -0700 (PDT)
+Date: Mon, 27 Jun 2011 21:06:09 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH] ath6kl: implement testmode rx command
+Message-ID: <20110627180609.GZ14591@shale.localdomain> (sfid-20110627_200906_139045_99C80489)
+References: <20110627153610.16774.65919.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110627153610.16774.65919.stgit@localhost6.localdomain6>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 2, 2011 at 12:14 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2011-06-02 at 12:12 -0700, Luis R. Rodriguez wrote:
->
->> Since this shit was merged can you add a respective documentation
->> extension for the command for nl80211.h?
->
-> You're kidding, right? The -1 crap was merged? Breaking all drivers
-> other than mac80211?
-commit 718ab883ccd1258c1e5c150edfb407880df9eeaa
-Author: Ben Greear <greearb@candelatech.com>
-Date:   Mon May 16 15:51:36 2011 -0700
+On Mon, Jun 27, 2011 at 06:36:10PM +0300, Kalle Valo wrote:
+>  #define AR6K_TM_DATA_MAX_LEN 5000
+> @@ -1482,11 +1483,83 @@ static const struct nla_policy ar6k_testmode_policy[AR6K_TM_ATTR_MAX + 1] = {
+>  				.len = AR6K_TM_DATA_MAX_LEN },
+>  };
+>  
+> +void ar6000_testmode_rx_report_event(struct ar6_softc *ar, void *buf,
+> +				     int buf_len)
+> +{
+> +	kfree(ar->tcmd_rx_report);
+> +
+> +	ar->tcmd_rx_report = kmemdup(buf, buf_len, GFP_KERNEL);
+> +	ar->tcmd_rx_report_len = buf_len;
+> +
 
-    wireless: Support can-scan-one logic.
+Can this race?  When we use tcmd_rx_report_len we are under lock,
+but it seems like when we set it here, we're not under lock.
 
-    Enable this by passing a -1 for a scan frequency.
+regards,
+dan carpenter
 
-    When enabled, the system will only scan the current active
-    channel if at least one VIF is actively using it.  If no
-    VIFS are active or this flag is disabled, then default
-    behaviour is used.
-
-    This helps when using multiple STA interfaces that otherwise might
-    constantly be trying to scan all channels.
-
-    Signed-off-by: Ben Greear <greearb@candelatech.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-My baby just turned.
-
-  Luis
+> +	wake_up(&arEvent);
+> +}
+> +
