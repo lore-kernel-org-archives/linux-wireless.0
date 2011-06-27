@@ -1,62 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:36168 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752977Ab1F0SD3 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:45710 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753567Ab1F0TGT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 14:03:29 -0400
-Date: Mon, 27 Jun 2011 11:03:08 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: linux-bluetooth@vger.kernel.org
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	"Gustavo F. Padovan" <padovan@profusion.mobi>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, davem@davemloft.net
-Subject: Re: [PATCH -next] bluetooth: uses crypto interfaces, select CRYPTO
-Message-Id: <20110627110308.dc64e3a7.randy.dunlap@oracle.com> (sfid-20110627_200401_160699_C9572DBB)
-In-Reply-To: <20110622100811.258091ff.randy.dunlap@oracle.com>
-References: <20110622163651.7ebc407c.sfr@canb.auug.org.au>
-	<20110622100811.258091ff.randy.dunlap@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 27 Jun 2011 15:06:19 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 06ED554004E
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 15:13:40 -0400 (EDT)
+Subject: Compat-wireless release for 2011-06-27 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110627190617.2BCB140EA9@repository3.orbit-lab.org> (sfid-20110627_210624_783840_971A6A6D)
+Date: Mon, 27 Jun 2011 15:06:17 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 22 Jun 2011 10:08:11 -0700 Randy Dunlap wrote:
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + d5e519b...23e7a52 akpm-end   -> origin/akpm-end  (forced update)
+ + be7cf21...8e81dad akpm-start -> origin/akpm-start  (forced update)
+   91121d1..07a621c  history    -> origin/history
+ + 2555a35...fe984da master     -> origin/master  (forced update)
+   bccaeaf..8abf558  stable     -> origin/stable
+ * [new tag]         next-20110627 -> next-20110627
 
-> From: Randy Dunlap <randy.dunlap@oracle.com>
+compat-wireless code metrics
 
-ping.  still need this patch in linux-next....
-
-
-> Recent changes to hci_core.c use crypto interfaces, so select CRYPTO
-> to make sure that those interfaces are present.
-> 
-> Fixes these build errors when CRYPTO is not enabled:
-> 
-> net/built-in.o: In function `hci_register_dev':
-> (.text+0x4cf86): undefined reference to `crypto_alloc_base'
-> net/built-in.o: In function `hci_unregister_dev':
-> (.text+0x4f912): undefined reference to `crypto_destroy_tfm'
-> 
-> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-> ---
->  net/bluetooth/Kconfig |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> --- linux-next-20110622.orig/net/bluetooth/Kconfig
-> +++ linux-next-20110622/net/bluetooth/Kconfig
-> @@ -6,6 +6,7 @@ menuconfig BT
->  	tristate "Bluetooth subsystem support"
->  	depends on NET && !S390
->  	depends on RFKILL || !RFKILL
-> +	select CRYPTO
->  	help
->  	  Bluetooth is low-cost, low-power, short-range wireless technology.
->  	  It was designed as a replacement for cables and other short-range
-> --
-
-
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+    823405 - Total upstream lines of code being pulled
+      2385 - backport code changes
+      2078 - backport code additions
+       307 - backport code deletions
+      8123 - backport from compat module
+     10508 - total backport code
+    1.2762 - % of code consists of backport work
