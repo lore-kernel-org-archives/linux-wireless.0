@@ -1,52 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:59876 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750836Ab1FME2z (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:44743 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750698Ab1F0Oxn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2011 00:28:55 -0400
-Date: Mon, 13 Jun 2011 09:49:27 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: Fixing NULL pointer dereference
-Message-ID: <20110613041915.GA17715@hertz.marvell.com> (sfid-20110613_062901_677225_8D4B8521)
+	Mon, 27 Jun 2011 10:53:43 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BANLkTi=XYQYee_AoKOXXmO4krwscP_qo4g@mail.gmail.com>
+References: <alpine.DEB.2.00.1106261016100.25900@ayla.of.borg>
+	<BANLkTikSLx6FKvF518s99Q8eRU_WF+cn9A@mail.gmail.com>
+	<BANLkTinGvM79fza-=bFwcbtfFzGHAVKJag@mail.gmail.com>
+	<4E089730.1080306@gnu.org>
+	<BANLkTi=XYQYee_AoKOXXmO4krwscP_qo4g@mail.gmail.com>
+Date: Mon, 27 Jun 2011 16:53:42 +0200
+Message-ID: <BANLkTi=NNP+-jsR34CdzJ=ygJ=-izRbSXg@mail.gmail.com> (sfid-20110627_165403_593903_27A52EC4)
+Subject: Re: [PATCH -next] bcma: main.c needs to include <linux/slab.h>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Pavel Roskin <proski@gnu.org>,
+	Alexey Dobriyan <adobriyan@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+	Linux Kernel Development <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Following OOPS was seen when booting with card inserted
+2011/6/27 Rafał Miłecki <zajec5@gmail.com>:
+> 2011/6/27 Pavel Roskin <proski@gnu.org>:
+>> On 06/27/2011 10:24 AM, Alexey Dobriyan wrote:
+>>> 2011/6/27 Rafał Miłecki<zajec5@gmail.com>:
+>>>> 2011/6/26 Geert Uytterhoeven<geert@linux-m68k.org>:
+>>>>>
+>>>>> m68k allmodconfig:
+>>>>>
+>>>>> drivers/bcma/main.c: In function ‘bcma_release_core_dev’:
+>>>>> drivers/bcma/main.c:68: error: implicit declaration of function ‘kfree’
+>>>>
+>>>> We already include slab.h in:
+>>>> host_pci.c
+>>>> scan.c
+>>>> sprom.c
+>>>>
+>>>> Maybe we can just include this in bcma.h as a better solution?
+>>>
+>>> It isn't better solution.
+>>> It results in situation where unnecessary inclusion will be done.
+>>> Maybe it's not the case now, but it will be in future.
+>>
+>> I agree.  kfree() is used in main.c, not in bcma.h.  There is no need for
+>> all files that include bcma.h to include linux/slab.h, especially (but not
+>> only) because bcma.h is not a private header.
+>
+> You ignore the fact I clarified my idea to use bcma_private.h instead of bcma.h.
 
- BUG: unable to handle kernel NULL pointer dereference at 0000004c
- IP: [<f8b7718c>] cfg80211_get_drvinfo+0x21/0x115 [cfg80211]
- *pde = 00000000
- Oops: 0000 [#1] SMP
- Modules linked in: iwl3945 iwl_legacy mwifiex_sdio mac80211 11 sdhci_pci sdhci pl2303
+One day A Cleaner will remove it again, seeing bcma_private.h doesn't
+use any slab
+interface, and it still seems to compile on his platform of choice
+(which implicitly
+pulls in slab.h).
 
-'ethtool' on the mwifiex device returned this OOPS as
-wiphy_dev() returned NULL.
+If it's put in main.c, The Cleaner will notice main.c uses kfree(),
+and won't touch it.
 
-Adding missing set_wiphy_dev() call to fix the problem.
+Gr{oetje,eeting}s,
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+                        Geert
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 660831c..687c1f2 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1288,6 +1288,8 @@ int mwifiex_register_cfg80211(struct net_device *dev, u8 *mac,
- 
- 	*(unsigned long *) wdev_priv = (unsigned long) priv;
- 
-+	set_wiphy_dev(wdev->wiphy, (struct device *) priv->adapter->dev);
-+
- 	ret = wiphy_register(wdev->wiphy);
- 	if (ret < 0) {
- 		dev_err(priv->adapter->dev, "%s: registering cfg80211 device\n",
--- 
-1.5.4.1
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
