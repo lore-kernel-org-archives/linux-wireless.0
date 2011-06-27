@@ -1,74 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:51323 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750959Ab1F0Pdy (ORCPT
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:44952 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754158Ab1F0WIE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 11:33:54 -0400
-Subject: [PATCH] ath6kl: Add PMKSA cache management commands
-To: gregkh@suse.de
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Date: Mon, 27 Jun 2011 18:33:40 +0300
-Message-ID: <20110627153340.16672.61729.stgit@localhost6.localdomain6> (sfid-20110627_173358_396119_5405EDB1)
+	Mon, 27 Jun 2011 18:08:04 -0400
+Received: by fxd18 with SMTP id 18so2183704fxd.11
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 15:08:02 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/2] b43: HT-PHY: replace radio routing magic numbers
+Date: Tue, 28 Jun 2011 00:08:52 +0200
+Message-Id: <1309212533-4473-1-git-send-email-zajec5@gmail.com> (sfid-20110628_001012_371730_77910CFD)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jouni Malinen <jouni@qca.qualcomm.com>
 
-Implement cfg80211_ops set_pmksa, del_pmksa, and flush_pmksa to enable
-PMKSA caching support.
-
-kvalo: backported from ath6kl-cleanup tree
-
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/staging/ath6kl/os/linux/cfg80211.c |   25 +++++++++++++++++++++++++
- 1 files changed, 25 insertions(+), 0 deletions(-)
+ drivers/net/wireless/b43/phy_ht.c     |    2 +-
+ drivers/net/wireless/b43/radio_2059.h |    5 +++++
+ 2 files changed, 6 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
-index b098c22..441ae04 100644
---- a/drivers/staging/ath6kl/os/linux/cfg80211.c
-+++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
-@@ -1669,6 +1669,28 @@ static int ar6k_get_station(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
- }
+diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
+index f09bb6e..8df92e1 100644
+--- a/drivers/net/wireless/b43/phy_ht.c
++++ b/drivers/net/wireless/b43/phy_ht.c
+@@ -57,7 +57,7 @@ static void b43_radio_2059_channel_setup(struct b43_wldev *dev,
+ 	b43_radio_write(dev, 0x98, e->radio_syn98);
  
-+static int ar6k_set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
-+			  struct cfg80211_pmksa *pmksa)
-+{
-+	struct ar6_softc *ar = ar6k_priv(netdev);
-+	return wmi_setPmkid_cmd(ar->arWmi, pmksa->bssid, pmksa->pmkid, true);
-+}
-+
-+static int ar6k_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
-+			  struct cfg80211_pmksa *pmksa)
-+{
-+	struct ar6_softc *ar = ar6k_priv(netdev);
-+	return wmi_setPmkid_cmd(ar->arWmi, pmksa->bssid, pmksa->pmkid, false);
-+}
-+
-+static int ar6k_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
-+{
-+	struct ar6_softc *ar = ar6k_priv(netdev);
-+	if (ar->arConnected)
-+		return wmi_setPmkid_cmd(ar->arWmi, ar->arBssid, NULL, false);
-+	return 0;
-+}
-+
- static struct
- cfg80211_ops ar6k_cfg80211_ops = {
-     .change_virtual_intf = ar6k_cfg80211_change_iface,
-@@ -1690,6 +1712,9 @@ cfg80211_ops ar6k_cfg80211_ops = {
-     .join_ibss = ar6k_cfg80211_join_ibss,
-     .leave_ibss = ar6k_cfg80211_leave_ibss,
-     .get_station = ar6k_get_station,
-+    .set_pmksa = ar6k_set_pmksa,
-+    .del_pmksa = ar6k_del_pmksa,
-+    .flush_pmksa = ar6k_flush_pmksa,
-     CFG80211_TESTMODE_CMD(ar6k_testmode_cmd)
- };
+ 	for (i = 0; i < 2; i++) {
+-		routing = i ? 0x800 : 0x400;
++		routing = i ? R2059_RXRX1 : R2059_TXRX0;
+ 		b43_radio_write(dev, routing | 0x4a, e->radio_rxtx4a);
+ 		b43_radio_write(dev, routing | 0x58, e->radio_rxtx58);
+ 		b43_radio_write(dev, routing | 0x5a, e->radio_rxtx5a);
+diff --git a/drivers/net/wireless/b43/radio_2059.h b/drivers/net/wireless/b43/radio_2059.h
+index c2874b1..e4d69e5 100644
+--- a/drivers/net/wireless/b43/radio_2059.h
++++ b/drivers/net/wireless/b43/radio_2059.h
+@@ -5,6 +5,11 @@
  
+ #include "phy_ht.h"
+ 
++#define R2059_SYN			0x000
++#define R2059_TXRX0			0x400
++#define R2059_RXRX1			0x800
++#define R2059_ALL			0xC00
++
+ /* Values for various registers uploaded on channel switching */
+ struct b43_phy_ht_channeltab_e_radio2059 {
+ 	/* The channel frequency in MHz */
+-- 
+1.7.1
 
