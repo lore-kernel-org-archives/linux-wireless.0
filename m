@@ -1,41 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:41770 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755824Ab1FUJY7 (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:51323 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750959Ab1F0Pdy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 05:24:59 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 21/32] ath9k: enable antenna diversity for AR9330
-Date: Tue, 21 Jun 2011 11:23:41 +0200
-Message-Id: <1308648232-9906-22-git-send-email-juhosg@openwrt.org> (sfid-20110621_112548_614887_901F6603)
-In-Reply-To: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
-References: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
+	Mon, 27 Jun 2011 11:33:54 -0400
+Subject: [PATCH] ath6kl: Add PMKSA cache management commands
+To: gregkh@suse.de
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Date: Mon, 27 Jun 2011 18:33:40 +0300
+Message-ID: <20110627153340.16672.61729.stgit@localhost6.localdomain6> (sfid-20110627_173358_396119_5405EDB1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+From: Jouni Malinen <jouni@qca.qualcomm.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 2df369f..4da5284 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2072,7 +2072,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	}
+Implement cfg80211_ops set_pmksa, del_pmksa, and flush_pmksa to enable
+PMKSA caching support.
+
+kvalo: backported from ath6kl-cleanup tree
+
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/staging/ath6kl/os/linux/cfg80211.c |   25 +++++++++++++++++++++++++
+ 1 files changed, 25 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
+index b098c22..441ae04 100644
+--- a/drivers/staging/ath6kl/os/linux/cfg80211.c
++++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
+@@ -1669,6 +1669,28 @@ static int ar6k_get_station(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
+ }
  
++static int ar6k_set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
++			  struct cfg80211_pmksa *pmksa)
++{
++	struct ar6_softc *ar = ar6k_priv(netdev);
++	return wmi_setPmkid_cmd(ar->arWmi, pmksa->bssid, pmksa->pmkid, true);
++}
++
++static int ar6k_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
++			  struct cfg80211_pmksa *pmksa)
++{
++	struct ar6_softc *ar = ar6k_priv(netdev);
++	return wmi_setPmkid_cmd(ar->arWmi, pmksa->bssid, pmksa->pmkid, false);
++}
++
++static int ar6k_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
++{
++	struct ar6_softc *ar = ar6k_priv(netdev);
++	if (ar->arConnected)
++		return wmi_setPmkid_cmd(ar->arWmi, ar->arBssid, NULL, false);
++	return 0;
++}
++
+ static struct
+ cfg80211_ops ar6k_cfg80211_ops = {
+     .change_virtual_intf = ar6k_cfg80211_change_iface,
+@@ -1690,6 +1712,9 @@ cfg80211_ops ar6k_cfg80211_ops = {
+     .join_ibss = ar6k_cfg80211_join_ibss,
+     .leave_ibss = ar6k_cfg80211_leave_ibss,
+     .get_station = ar6k_get_station,
++    .set_pmksa = ar6k_set_pmksa,
++    .del_pmksa = ar6k_del_pmksa,
++    .flush_pmksa = ar6k_flush_pmksa,
+     CFG80211_TESTMODE_CMD(ar6k_testmode_cmd)
+ };
  
--	if (AR_SREV_9485(ah)) {
-+	if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
- 		ant_div_ctl1 = ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
- 		/*
- 		 * enable the diversity-combining algorithm only when
--- 
-1.7.2.1
 
