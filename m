@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2044 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751595Ab1FIOpP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 10:45:15 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 04/21] staging: brcm80211: Remove flags from
- wl_is_nonetwork
-Date: Thu, 9 Jun 2011 16:44:44 +0200
-Message-ID: <1307630701-9170-5-git-send-email-rvossen@broadcom.com> (sfid-20110609_164523_776452_C52684CD)
-In-Reply-To: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
-References: <1307630701-9170-1-git-send-email-rvossen@broadcom.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:43934 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753210Ab1F0SNh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2011 14:13:37 -0400
+Date: Mon, 27 Jun 2011 15:13:56 -0300
+From: "Gustavo F. Padovan" <padovan@profusion.mobi>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: linux-bluetooth@vger.kernel.org,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, davem@davemloft.net
+Subject: Re: [PATCH -next] bluetooth: uses crypto interfaces, select CRYPTO
+Message-ID: <20110627181355.GA5964@joana> (sfid-20110627_201407_707076_FDBFAD1C)
+References: <20110622163651.7ebc407c.sfr@canb.auug.org.au>
+ <20110622100811.258091ff.randy.dunlap@oracle.com>
+ <20110627110308.dc64e3a7.randy.dunlap@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110627110308.dc64e3a7.randy.dunlap@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+* Randy Dunlap <randy.dunlap@oracle.com> [2011-06-27 11:03:08 -0700]:
 
-Remove this debug only variable in fullmace driver to avoid compile
-warning when BCMDBG is off
+> On Wed, 22 Jun 2011 10:08:11 -0700 Randy Dunlap wrote:
+> 
+> > From: Randy Dunlap <randy.dunlap@oracle.com>
+> 
+> ping.  still need this patch in linux-next....
+> 
+> 
+> > Recent changes to hci_core.c use crypto interfaces, so select CRYPTO
+> > to make sure that those interfaces are present.
+> > 
+> > Fixes these build errors when CRYPTO is not enabled:
+> > 
+> > net/built-in.o: In function `hci_register_dev':
+> > (.text+0x4cf86): undefined reference to `crypto_alloc_base'
+> > net/built-in.o: In function `hci_unregister_dev':
+> > (.text+0x4f912): undefined reference to `crypto_destroy_tfm'
+> > 
+> > Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> > ---
+> >  net/bluetooth/Kconfig |    1 +
+> >  1 file changed, 1 insertion(+)
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Applied. Thanks.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 0a7a9b2..457f5b1 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -2588,11 +2588,11 @@ static bool wl_is_nonetwork(struct wl_priv *wl, const wl_event_msg_t *e)
- {
- 	u32 event = be32_to_cpu(e->event_type);
- 	u32 status = be32_to_cpu(e->status);
--	u16 flags = be16_to_cpu(e->flags);
- 
- 	if (event == WLC_E_LINK && status == WLC_E_STATUS_NO_NETWORKS) {
- 		WL_CONN("Processing Link %s & no network found\n",
--				flags & WLC_EVENT_MSG_LINK ? "up" : "down");
-+				be16_to_cpu(e->flags) & WLC_EVENT_MSG_LINK ?
-+				"up" : "down");
- 		return true;
- 	}
- 
--- 
-1.7.4.1
-
-
+	Gustavo
