@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41717 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750801Ab1FGGeO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jun 2011 02:34:14 -0400
-Received: by bwz15 with SMTP id 15so3907933bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 23:34:13 -0700 (PDT)
-From: Bernhard Schmidt <bschmidt@freebsd.org>
-Reply-To: bschmidt@freebsd.org
-To: Paul Bolle <pebolle@tiscali.nl>
-Subject: Re: [iwl4965] Microcode SW error detected
-Date: Tue, 7 Jun 2011 08:32:48 +0200
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org
-References: <1306151106.2066.60.camel@x61.thuisdomein>
-In-Reply-To: <1306151106.2066.60.camel@x61.thuisdomein>
+Received: from mga09.intel.com ([134.134.136.24]:43356 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757062Ab1F0Ioq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2011 04:44:46 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 27 Jun 2011 11:43:27 +0300
+Subject: RE: [PATCH 18/25] iwlagn: warn about nested SYNC commands
+Message-ID: <4825B8A2C4E264489E57869F0DCFB2234455F7035C@hasmsx502.ger.corp.intel.com> (sfid-20110627_105906_712905_8D5E5231)
+References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1308411271-26093-19-git-send-email-wey-yi.w.guy@intel.com>
+	 (sfid-20110618_180558_166798_E27083E7)
+  <1309164053.3911.3.camel@jlt3.sipsolutions.net>
+	 (sfid-20110627_104220_919345_63C0C0BA)
+ <1309164172.3911.4.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1309164172.3911.4.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201106070832.49048.bschmidt@freebsd.org> (sfid-20110607_083418_701268_FE7C7FCE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, May 23, 2011 13:45:06 Paul Bolle wrote:
-> 0) Since I started running (release candidates of) kernel v2.6.39 errors
-> like these show up in my log, every now and then:
-> 
-> iwl4965 0000:03:00.0: Microcode SW error detected.  Restarting 0x82000000.
-> iwl4965 0000:03:00.0: Loaded firmware version: 228.61.2.24
-> iwl4965 0000:03:00.0: Start IWL Error Log Dump:
-> iwl4965 0000:03:00.0: Status: 0x000213E4, count: 5
-> iwl4965 0000:03:00.0: Desc                                  Time       data1      data2      line
-> iwl4965 0000:03:00.0: FH_ERROR                     (0x000C) 1821446380 0x00000008 0x03130000 208 
+QWdncmVlZCBhZ2FpbiA6LSkNCg0KVGhhbmtzLA0KICAgICAgIEVtbWFudWVsDQoNCg0KPiAtLS0t
+LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9o
+YW5uZXNAc2lwc29sdXRpb25zLm5ldF0NCj4gU2VudDogTW9uZGF5LCBKdW5lIDI3LCAyMDExIDEx
+OjQzIEFNDQo+IFRvOiBHdXksIFdleS1ZaSBXDQo+IENjOiBsaW52aWxsZUB0dXhkcml2ZXIuY29t
+OyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEdydW1iYWNoLA0KPiBFbW1hbnVlbA0K
+PiBTdWJqZWN0OiBSZTogW1BBVENIIDE4LzI1XSBpd2xhZ246IHdhcm4gYWJvdXQgbmVzdGVkIFNZ
+TkMgY29tbWFuZHMNCj4gDQo+IE9uIE1vbiwgMjAxMS0wNi0yNyBhdCAxMDo0MCArMDIwMCwgSm9o
+YW5uZXMgQmVyZyB3cm90ZToNCj4gPiBPbiBTYXQsIDIwMTEtMDYtMTggYXQgMDg6MzQgLTA3MDAs
+IFdleS1ZaSBHdXkgd3JvdGU6DQo+ID4gPiBGcm9tOiBFbW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51
+ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPg0KPiA+ID4NCj4gPiA+IFNpbmNlIHRoZXJlIGlzIG5vIHBy
+b3RlY3Rpb24gYXJvdW5kIFNZTkMgaG9zdCBjb21tYW5kIG1lY2hhbmlzbSwgYXQNCj4gbGVhc3Qg
+V0FSTg0KPiA+ID4gd2hlbiBjb2xsaXNpb24gaGFwcGVucyBiZXR3ZWVuIHR3byBTWU5DIGhvc3Qg
+Y29tYW1uZHMuIEkgYW0gbm90IHN1cmUNCj4gdGhlcmUgaXMgYQ0KPiA+ID4gcmVhbCAgaXNzdWUg
+KGJleW9uZCB0aGUgSENNRF9BQ1RJVkUgZmxhZyBtYWludGVuYW5jZSkgd2l0aCBoYXZpbmcgdHdv
+DQo+IFNZTkMgaG9zdA0KPiA+ID4gY29tbWFuZHMgYXQgdGhlIHNhbWUgdGltZSwgYnV0IGF0IGxl
+YXN0IG5vdywgd2Ugd2lsbCBrbm93IGFib3V0IGl0Lg0KPiA+DQo+ID4gUGxlYXNlIGRyb3AgdGhp
+cyBwYXJ0aWN1bGFyIHBhdGNoLiBXZSBkaXNjdXNzZWQgdGhpcyBidXQgdGhlbiBmb3Jnb3QNCj4g
+PiBhYm91dCBpdCAtLSB0aGlzIHBhdGNoIG9ubHkgd2FybnMgd2hlbiBjb2xsaXNpb25zIGFjdHVh
+bGx5IGhhcHBlbiwgYnV0DQo+ID4gd2UgY2FuIHVzZSBsb2NrZGVwIHRvIHdhcm4gd2hlbiBjb2xs
+aXNpb25zIF9jb3VsZF8gaGFwcGVuIGFzIHdlbGwuDQo+IA0KPiBPb3BzLCBuL20sIEkgc2VlIGl0
+J3MgYWxyZWFkeSBpbi4gV2lsbCBzdWJtaXQgYSBmb2xsb3ctdXAgdGhhdCBwdXRzDQo+IGJldHRl
+ciBjb2RlIGluIHBsYWNlIGluc3RlYWQuDQo+IA0KPiBqb2hhbm5lcw0KDQotLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0K
+SW50ZWwgSXNyYWVsICg3NCkgTGltaXRlZAoKVGhpcyBlLW1haWwgYW5kIGFueSBhdHRhY2htZW50
+cyBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgbWF0ZXJpYWwgZm9yCnRoZSBzb2xlIHVzZSBvZiB0
+aGUgaW50ZW5kZWQgcmVjaXBpZW50KHMpLiBBbnkgcmV2aWV3IG9yIGRpc3RyaWJ1dGlvbgpieSBv
+dGhlcnMgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVk
+CnJlY2lwaWVudCwgcGxlYXNlIGNvbnRhY3QgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3Bp
+ZXMuCg==
 
-On a unrelated site note, I have a case where I can trigger a
-FH_ERROR at this line 100% reliably. Not on Linux though..
-While being associated to a 5GHz BSS doing a scan chan by chan
-(instead of all at once) is enough to trigger it. A workaround
-is too not send probe requests for 2GHz channels at 1Mbps (CCK
-flag) but at 6Mbps instead.
-
-Maybe this bug report [1] is related too?
-
-[1] http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1965
-
--- 
-Bernhard
