@@ -1,56 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:64063 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932668Ab1FWSpA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2011 14:45:00 -0400
-Received: from mail.atheros.com ([10.234.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2011 11:44:24 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <hostap@lists.shmoo.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 0/4] hostapd: add ACS support
-Date: Thu, 23 Jun 2011 11:44:47 -0700
-Message-ID: <1308854691-5958-1-git-send-email-lrodriguez@atheros.com> (sfid-20110623_204504_564591_ED48E0C9)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50702 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754040Ab1F0UBm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2011 16:01:42 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes.berg@intel.com, wey-yi.w.guy@intel.com,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iwlagn: use PCI_DMA_* for pci_* operations
+Date: Mon, 27 Jun 2011 15:50:19 -0400
+Message-Id: <1309204219-9579-1-git-send-email-linville@tuxdriver.com> (sfid-20110627_220400_516650_45ED904C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series is rebased on top of hostapd.git as of today but also
-fixes a typo I made on patch 2 where I put the event within an ifdef,
-this means patch 3 would not apply as well.
+"iwlagn: map command buffers BIDI" uses the DMA_* enumerations for DMA
+directions, even though the pci_* DMA API is still in use.  That patch
+was undoubtedly developed on top of "iwlagn: don't use the PCI wrappers
+for DMA operation", which is due in the next release.
 
-All in one patch:
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-tx.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/hostapd/acs-all-in-one-v2.patch
-
-Luis R. Rodriguez (4):
-  hostapd: split up channel checking into helpers
-  hostapd: add offchannel support
-  hostapd: add survey dump support
-  hostapd: add Automatic Channel Selection (ACS) support
-
- hostapd/Makefile             |    5 +
- hostapd/config_file.c        |   47 ++++-
- hostapd/defconfig            |   25 +++
- hostapd/hostapd.conf         |   17 ++
- src/ap/acs.c                 |  464 ++++++++++++++++++++++++++++++++++++++++++
- src/ap/acs.h                 |   40 ++++
- src/ap/ap_config.c           |   15 ++
- src/ap/ap_config.h           |    4 +
- src/ap/ap_drv_ops.h          |   27 +++
- src/ap/drv_callbacks.c       |  139 +++++++++++++-
- src/ap/hostapd.c             |    2 +
- src/ap/hostapd.h             |   24 +++
- src/ap/hw_features.c         |  188 +++++++++++------
- src/drivers/driver.h         |  171 +++++++++++++++-
- src/drivers/driver_nl80211.c |  193 ++++++++++++++++++
- 15 files changed, 1290 insertions(+), 71 deletions(-)
- create mode 100644 src/ap/acs.c
- create mode 100644 src/ap/acs.h
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 4707431..9eee978 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -168,7 +168,7 @@ void iwlagn_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+ 	int index = txq->q.read_ptr;
+ 
+ 	iwlagn_unmap_tfd(priv, &txq->meta[index], &tfd_tmp[index],
+-			 DMA_TO_DEVICE);
++			 PCI_DMA_TODEVICE);
+ 
+ 	/* free SKB */
+ 	if (txq->txb) {
+@@ -312,7 +312,7 @@ void iwl_cmd_queue_unmap(struct iwl_priv *priv)
+ 
+ 		if (txq->meta[i].flags & CMD_MAPPED) {
+ 			iwlagn_unmap_tfd(priv, &txq->meta[i], &txq->tfds[i],
+-					 DMA_BIDIRECTIONAL);
++					 PCI_DMA_BIDIRECTIONAL);
+ 			txq->meta[i].flags = 0;
+ 		}
+ 
+@@ -694,11 +694,11 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 		if (!(cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY))
+ 			continue;
+ 		phys_addr = pci_map_single(priv->pci_dev, (void *)cmd->data[i],
+-					   cmd->len[i], DMA_BIDIRECTIONAL);
++					   cmd->len[i], PCI_DMA_BIDIRECTIONAL);
+ 		if (pci_dma_mapping_error(priv->pci_dev, phys_addr)) {
+ 			iwlagn_unmap_tfd(priv, out_meta,
+ 					 &txq->tfds[q->write_ptr],
+-					 DMA_BIDIRECTIONAL);
++					 PCI_DMA_BIDIRECTIONAL);
+ 			idx = -ENOMEM;
+ 			goto out;
+ 		}
+@@ -802,7 +802,7 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+ 	cmd = txq->cmd[cmd_index];
+ 	meta = &txq->meta[cmd_index];
+ 
+-	iwlagn_unmap_tfd(priv, meta, &txq->tfds[index], DMA_BIDIRECTIONAL);
++	iwlagn_unmap_tfd(priv, meta, &txq->tfds[index], PCI_DMA_BIDIRECTIONAL);
+ 
+ 	/* Input error checking is done when commands are added to queue. */
+ 	if (meta->flags & CMD_WANT_SKB) {
 -- 
-1.7.4.15.g7811d
+1.7.4.4
 
