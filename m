@@ -1,36 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37992 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757123Ab1F0Ikw (ORCPT
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:49562 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756805Ab1F0Imh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 04:40:52 -0400
-Subject: Re: [PATCH 18/25] iwlagn: warn about nested SYNC commands
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-In-Reply-To: <1308411271-26093-19-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180558_166798_E27083E7)
-References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1308411271-26093-19-git-send-email-wey-yi.w.guy@intel.com>
-	 (sfid-20110618_180558_166798_E27083E7)
+	Mon, 27 Jun 2011 04:42:37 -0400
+Received: by bwd14 with SMTP id 14so1535226bwd.28
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 01:42:35 -0700 (PDT)
+Subject: Re: [PATCH v2] wl12xx: split channel array per band in sched_scan
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1306849136-21535-1-git-send-email-coelho@ti.com>
+References: <1306849136-21535-1-git-send-email-coelho@ti.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 27 Jun 2011 10:40:53 +0200
-Message-ID: <1309164053.3911.3.camel@jlt3.sipsolutions.net> (sfid-20110627_104220_919345_63C0C0BA)
+Date: Mon, 27 Jun 2011 11:42:32 +0300
+Message-ID: <1309164152.30221.6.camel@cumari> (sfid-20110627_105905_034252_3AD8B4D2)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-06-18 at 08:34 -0700, Wey-Yi Guy wrote:
-> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Tue, 2011-05-31 at 16:38 +0300, Luciano Coelho wrote: 
+> The firmware, in practice, treats the channels in three separate
+> blocks, one for each band (bg, a and j).  Instead of using a single
+> array and doing some magic with indices, split the array in 3 to make
+> it more readable.
 > 
-> Since there is no protection around SYNC host command mechanism, at least WARN
-> when collision happens between two SYNC host comamnds. I am not sure there is a
-> real  issue (beyond the HCMD_ACTIVE flag maintenance) with having two SYNC host
-> commands at the same time, but at least now, we will know about it.
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
 
-Please drop this particular patch. We discussed this but then forgot
-about it -- this patch only warns when collisions actually happen, but
-we can use lockdep to warn when collisions _could_ happen as well.
+Applied.
 
-johannes
+-- 
+Cheers,
+Luca.
 
