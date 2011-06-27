@@ -1,51 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:62648 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759279Ab1F1RMo (ORCPT
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:42178 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757318Ab1F0M6M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2011 13:12:44 -0400
-Received: by yia27 with SMTP id 27so165121yia.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2011 10:12:43 -0700 (PDT)
+	Mon, 27 Jun 2011 08:58:12 -0400
+Received: by mail-fx0-f52.google.com with SMTP id 18so1789080fxd.11
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 05:58:11 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/5] b43: HT-PHY: perform some tables ops on channel switching
+Date: Mon, 27 Jun 2011 14:58:52 +0200
+Message-Id: <1309179534-8081-3-git-send-email-zajec5@gmail.com> (sfid-20110627_150220_562675_74E927E8)
+In-Reply-To: <1309179534-8081-1-git-send-email-zajec5@gmail.com>
+References: <1309179534-8081-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTi=Smty80ARN5JLfUAXwHjAXWykZTg@mail.gmail.com>
-References: <BANLkTim0mV230taAmbTm_Rm0wfPBGAznhw@mail.gmail.com>
-	<201106141612.11117.chunkeey@googlemail.com>
-	<BANLkTi=6=KHkPLeZawhoK3=9Ysk2C-PQHA@mail.gmail.com>
-	<BANLkTi=Smty80ARN5JLfUAXwHjAXWykZTg@mail.gmail.com>
-Date: Tue, 28 Jun 2011 19:12:43 +0200
-Message-ID: <BANLkTimDKeLjqOhdcn9J3jNtKHygmBy3Rw@mail.gmail.com> (sfid-20110628_193608_436976_92AC36F2)
-Subject: Re: DWA-160
-From: Thomas Novin <thomas@xyz.pp.se>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 28, 2011 at 11:48 AM, Thomas Novin <thomas@xyz.pp.se> wrote:
-> I didn't get the UWA-BR100 with Atheros chip but instead with Ralink
-> chip. There are (at least) two versions of it.
->
-> http://www.wikidevi.com/wiki/Talk:Sony_UWA-BR100
-> http://www.wikidevi.com/wiki/Buffalo_WLI-UC-AG300N
->
-> Maybe TP-Link TL-WN821Nv3 is a better choice.
->
-> http://linuxwireless.org/en/users/Drivers/ath9k_htc/devices
+Starring at MMIO dumps around PHY channel switching has led to finding
+serie of 3 similar ops this patch implements.
 
-Actually, I got the one with Atheros (if there even is one with
-Ralink, I think that might just be a mixup with USB IDs). Some
-confusing info on wikidevi.com lead me wrong.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+The interesting part of MMIO dump:
+phy_write(0x01ce) <- 0x03dd
+phy_write(0x01cf) <- 0x03d9
+phy_write(0x01d0) <- 0x03d5
+phy_write(0x01d1) <- 0x0424
+phy_write(0x01d2) <- 0x0429
+phy_write(0x01d3) <- 0x042d
+>>> Uploading PHY tables end
 
-It doesn't work out-of-the-box with compat-wireless but I think it
-will soon. I subscribed to the ath9k-devel mailinglist and got help
-with a patch to the source of ath9k_htc. After a little fix, the
-driver works with UWA-BR100.
+>>> Some magic ops start
+ phy_read(0x00b0) -> 0x0df7
+ phy_read(0x00b0) -> 0x0df7
+phy_write(0x00b0) <- 0x0df7
+ phy_read(0x0c0a) -> 0x0100
+phy_write(0x0c0a) <- 0x0100
+>>> Some magic ops end
 
-Discussion + patch here:
+phy_write(0x0072) <- 0x68e8
+ phy_read(0x0073) -> 0x0033
+ phy_read(0x0074) -> 0x1019
+ phy_read(0x0908) -> 0x0000
+phy_write(0x0908) <- 0x0000
+phy_write(0x0072) <- 0x1d10
+phy_write(0x0073) <- 0x1019
+phy_write(0x0072) <- 0x3463
+phy_write(0x0073) <- 0x0033
+phy_write(0x0072) <- 0x3473
+phy_write(0x0073) <- 0x0033
 
-https://lists.ath9k.org/pipermail/ath9k-devel/2011-June/006441.html
+phy_write(0x0072) <- 0x68e8
+ phy_read(0x0073) -> 0x0033
+ phy_read(0x0074) -> 0x1019
+ phy_read(0x0908) -> 0x0000
+phy_write(0x0908) <- 0x0000
+phy_write(0x0072) <- 0x1d11
+phy_write(0x0073) <- 0x1019
+phy_write(0x0072) <- 0x3467
+phy_write(0x0073) <- 0x0033
+phy_write(0x0072) <- 0x3477
+phy_write(0x0073) <- 0x0033
 
-Rgds//Thomas
+phy_write(0x0072) <- 0x68e8
+ phy_read(0x0073) -> 0x0033
+ phy_read(0x0074) -> 0x1019
+ phy_read(0x0908) -> 0x0000
+phy_write(0x0908) <- 0x0000
+phy_write(0x0072) <- 0x1d12
+phy_write(0x0073) <- 0x1019
+phy_write(0x0072) <- 0x346b
+phy_write(0x0073) <- 0x0033
+phy_write(0x0072) <- 0x347b
+phy_write(0x0073) <- 0x0033
+---
+ drivers/net/wireless/b43/phy_ht.c |   19 +++++++++++++++++++
+ 1 files changed, 19 insertions(+), 0 deletions(-)
 
-Ps. I get about 60-80Mbps upstream and 50Mbps downstream connected to
-my Ubiquiti Power AP-N w/ 20MHz channel width.
+diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
+index c48bcf6..42bea30 100644
+--- a/drivers/net/wireless/b43/phy_ht.c
++++ b/drivers/net/wireless/b43/phy_ht.c
+@@ -24,6 +24,7 @@
+ 
+ #include "b43.h"
+ #include "phy_ht.h"
++#include "tables_phy_ht.h"
+ #include "radio_2059.h"
+ #include "main.h"
+ 
+@@ -83,6 +84,7 @@ static void b43_phy_ht_channel_setup(struct b43_wldev *dev,
+ 				struct ieee80211_channel *new_channel)
+ {
+ 	bool old_band_5ghz;
++	u8 i;
+ 
+ 	old_band_5ghz = b43_phy_read(dev, B43_PHY_HT_BANDCTL) & 0; /* FIXME */
+ 	if (new_channel->band == IEEE80211_BAND_5GHZ && !old_band_5ghz) {
+@@ -97,6 +99,23 @@ static void b43_phy_ht_channel_setup(struct b43_wldev *dev,
+ 	b43_phy_write(dev, B43_PHY_HT_BW4, e->bw4);
+ 	b43_phy_write(dev, B43_PHY_HT_BW5, e->bw5);
+ 	b43_phy_write(dev, B43_PHY_HT_BW6, e->bw6);
++
++	/* TODO: some ops on PHY regs 0x0B0 and 0xC0A */
++
++	/* TODO: separated function? */
++	for (i = 0; i < 3; i++) {
++		u32 tmp = b43_httab_read(dev, B43_HTTAB32(26, 0xE8));
++
++		/* TODO: some op on PHY reg 0x908 */
++
++		b43_httab_write(dev, B43_HTTAB16(7, 0x110 + i), tmp >> 16);
++		b43_httab_write(dev, B43_HTTAB8(13, 0x63 + (i * 4)),
++				tmp & 0xFF);
++		b43_httab_write(dev, B43_HTTAB8(13, 0x73 + (i * 4)),
++				tmp & 0xFF);
++	}
++
++	b43_phy_write(dev, 0x017e, 0x3830);
+ }
+ 
+ static int b43_phy_ht_set_channel(struct b43_wldev *dev,
+-- 
+1.7.1
+
