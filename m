@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46582 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752552Ab1FVMDa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 08:03:30 -0400
-Subject: Re: about RCU programming
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Manuel =?ISO-8859-1?Q?S=E1ez?= <manuelsaezr@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <BANLkTikbn2ABhJm75OZg8EC4LeaukzR=Vw@mail.gmail.com> (sfid-20110622_135425_778622_D5EF9D82)
-References: <BANLkTimW6oLjQoEbHGOAnXwbWMYUvK00fw@mail.gmail.com>
-	 <BANLkTimUc7Gz0AEKKDZinYpGABnDEBMHDA@mail.gmail.com>
-	 <1308736869.3883.13.camel@jlt3.sipsolutions.net>
-	 <BANLkTikbn2ABhJm75OZg8EC4LeaukzR=Vw@mail.gmail.com>
-	 (sfid-20110622_135425_778622_D5EF9D82)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Jun 2011 14:03:25 +0200
-Message-ID: <1308744205.29571.0.camel@jlt3.sipsolutions.net> (sfid-20110622_140349_442407_48945FF3)
-Mime-Version: 1.0
+Received: from c60.cesmail.net ([216.154.195.49]:61589 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752474Ab1F0RWO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2011 13:22:14 -0400
+Message-ID: <4E08BC44.3020105@gnu.org> (sfid-20110627_192220_079800_3CF48BA1)
+Date: Mon, 27 Jun 2011 13:22:12 -0400
+From: Pavel Roskin <proski@gnu.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Arend van Spriel <arend@broadcom.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Alexey Dobriyan <adobriyan@gmail.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	Linux Kernel Development <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH -next] bcma: main.c needs to include <linux/slab.h>
+References: <alpine.DEB.2.00.1106261016100.25900@ayla.of.borg>	 <BANLkTikSLx6FKvF518s99Q8eRU_WF+cn9A@mail.gmail.com>	 <BANLkTinGvM79fza-=bFwcbtfFzGHAVKJag@mail.gmail.com>	 <BANLkTikVtWe0jB_jLeP1YZTEKSYA97gdqQ@mail.gmail.com>	 <4E08B4AA.409@broadcom.com> (sfid-20110627_185027_507290_BCE834F5) <1309193844.3911.27.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1309193844.3911.27.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-06-22 at 13:54 +0200, Manuel Sáez wrote:
-> Thank you for your answer. I have actually read some articles like this ones:
-> 
-> http://lwn.net/Articles/262464/
-> http://lwn.net/Articles/263130/
-> 
-> I think I understood how I should normally use it, but not how it
-> really works. I found lots of code snippets in internet and it seems
-> to be very easy to use, but when I try to get more information it gets
-> more complicated. Although the code is wrong, do you think it could be
-> possible what I want to do? I mean, could it be possible in theory to
-> "shift" the header in order to make a ring buffer.
+On 06/27/2011 12:57 PM, Johannes Berg wrote:
 
-I haven't understood what you want to do, but "shifting" anything would
-seem to me to be a write operation.
+> Yeah, good rule. Consider if you have a.h, b.h and z.c, z.c needs b.h
+> but not a.h, and now b.h includes a.h ("for convenience") -- changing
+> a.h would needlessly recompile z.c. Now, changing slab.h will probably
+> recompile everything anyway, but still...
 
-johannes
+In my configuration after touching slab.h and recompilation:
 
+$ find -name '*.o' -newer ../linux3/include/linux/slab.h |wc -l
+1508
+$ find -name '*.o' |wc -l
+1928
+
+78% object files were recompiled, 22% were no recompiled.  Careful use 
+of includes does save time.
+
+-- 
+Regards,
+Pavel Roskin
