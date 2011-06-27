@@ -1,42 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:48161 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755479Ab1FXWC3 (ORCPT
+Received: from mms1.broadcom.com ([216.31.210.17]:3656 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752735Ab1F0QuG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2011 18:02:29 -0400
-Date: Fri, 24 Jun 2011 17:02:27 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: Greg Kroah-Hartman <gregkh@suse.de>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3] staging: rtl8187se: Fix big-endian warning
-Message-ID: <4e050973.T019j2fmhZvo/1Jn%Larry.Finger@lwfinger.net> (sfid-20110625_000249_251412_D445ADB7)
+	Mon, 27 Jun 2011 12:50:06 -0400
+Message-ID: <4E08B4AA.409@broadcom.com> (sfid-20110627_185027_507290_BCE834F5)
+Date: Mon, 27 Jun 2011 18:49:46 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "Alexey Dobriyan" <adobriyan@gmail.com>,
+	"Geert Uytterhoeven" <geert@linux-m68k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	"Linux Kernel Development" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH -next] bcma: main.c needs to include <linux/slab.h>
+References: <alpine.DEB.2.00.1106261016100.25900@ayla.of.borg>
+ <BANLkTikSLx6FKvF518s99Q8eRU_WF+cn9A@mail.gmail.com>
+ <BANLkTinGvM79fza-=bFwcbtfFzGHAVKJag@mail.gmail.com>
+ <BANLkTikVtWe0jB_jLeP1YZTEKSYA97gdqQ@mail.gmail.com>
+In-Reply-To: <BANLkTikVtWe0jB_jLeP1YZTEKSYA97gdqQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When compiling the rtl8187se driver from staging on a big-endian
-architecture, the following warning results:
+On 06/27/2011 04:43 PM, Rafał Miłecki wrote:
+> W dniu 27 czerwca 2011 16:24 użytkownik Alexey Dobriyan
+> <adobriyan@gmail.com>  napisał:
+>> 2011/6/27 Rafał Miłecki<zajec5@gmail.com>:
+>>> 2011/6/26 Geert Uytterhoeven<geert@linux-m68k.org>:
+>>>> m68k allmodconfig:
+>>>>
+>>>> drivers/bcma/main.c: In function ‘bcma_release_core_dev’:
+>>>> drivers/bcma/main.c:68: error: implicit declaration of function ‘kfree’
+>>> We already include slab.h in:
+>>> host_pci.c
+>>> scan.c
+>>> sprom.c
+>>>
+>>> Maybe we can just include this in bcma.h as a better solution?
+>> It isn't better solution.
+>> It results in situation where unnecessary inclusion will be done.
+>> Maybe it's not the case now, but it will be in future.
+> Scanning code is required for every BCMA board, so we already include
+> linux/slab.h on every configuration. No matter if this is PCI host
+> board, or SoC, or whatever we will support in the future.
+> Now we discovered this is also needed in main.c, which will be always compiled.
+>
+> That's why I think it's safe to include linux/slab.h in bcma_private.h.
+> But if that's just my opinion, everybody think it's wrong idea, I'm OK with it.
 
-  CC [M]  drivers/staging/rtl8187se/ieee80211/ieee80211_softmac.o
-drivers/staging/rtl8187se/ieee80211/ieee80211_softmac.c: In function 'ieee80211_probe_resp':
-drivers/staging/rtl8187se/ieee80211/ieee80211_softmac.c:824: warning: value computed is not used
+My rule of thumb is: Header file a.h may only include header b.h when 
+a.h needs some definition from b.h. Convenience is never a good reason 
+for nested includes.
 
-The warning is due to misuse of cpu_to_le16().
+Gr. AvS
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+-- 
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
 
-Index: wireless-testing-new/drivers/staging/rtl8187se/ieee80211/ieee80211_softmac.c
-===================================================================
---- wireless-testing-new.orig/drivers/staging/rtl8187se/ieee80211/ieee80211_softmac.c
-+++ wireless-testing-new/drivers/staging/rtl8187se/ieee80211/ieee80211_softmac.c
-@@ -820,7 +820,7 @@ static struct sk_buff* ieee80211_probe_r
- 		cpu_to_le16(ieee->current_network.capability & WLAN_CAPABILITY_IBSS);
- 
- 	if(ieee->short_slot && (ieee->current_network.capability & WLAN_CAPABILITY_SHORT_SLOT))
--		cpu_to_le16((beacon_buf->capability |= WLAN_CAPABILITY_SHORT_SLOT));
-+		beacon_buf->capability |= cpu_to_le16(WLAN_CAPABILITY_SHORT_SLOT);
- 
- 	crypt = ieee->crypt[ieee->tx_keyidx];
- 
+
