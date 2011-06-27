@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:54229 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756294Ab1FCVfK (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:36168 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752977Ab1F0SD3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2011 17:35:10 -0400
-Received: by bwz15 with SMTP id 15so2081894bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2011 14:35:09 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: mmendez@srtrl.com
-Subject: Re: carl9170 noise floor calculation
-Date: Fri, 3 Jun 2011 23:35:06 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <1307047613.15440.8.camel@localhost.localdomain>
-In-Reply-To: <1307047613.15440.8.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201106032335.07352.chunkeey@googlemail.com> (sfid-20110603_233515_154493_94543DF7)
+	Mon, 27 Jun 2011 14:03:29 -0400
+Date: Mon, 27 Jun 2011 11:03:08 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: linux-bluetooth@vger.kernel.org
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Gustavo F. Padovan" <padovan@profusion.mobi>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, davem@davemloft.net
+Subject: Re: [PATCH -next] bluetooth: uses crypto interfaces, select CRYPTO
+Message-Id: <20110627110308.dc64e3a7.randy.dunlap@oracle.com> (sfid-20110627_200401_160699_C9572DBB)
+In-Reply-To: <20110622100811.258091ff.randy.dunlap@oracle.com>
+References: <20110622163651.7ebc407c.sfr@canb.auug.org.au>
+	<20110622100811.258091ff.randy.dunlap@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 02 June 2011 22:46:53 Manuel Mendez wrote:
-> We are developing a product that uses a board similar to the DLink
-> DWA-160.
-Uh, there are at least two DWA-160 AR9170 revision and mysteriously
-users have reported strange problems with both?!
+On Wed, 22 Jun 2011 10:08:11 -0700 Randy Dunlap wrote:
 
-So, my question: why not base your product on ath9k_htc instead?
-> We are sticking an amplifier before the usb radios. I am pumping
-> beacons at say -80dBm from a siggen and a program reading the
-> radiotap header prints them out.
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+
+ping.  still need this patch in linux-next....
+
+
+> Recent changes to hci_core.c use crypto interfaces, so select CRYPTO
+> to make sure that those interfaces are present.
 > 
-> I am seeing ~20dBm gain which looks right, when taking into account my
-> PA and the one that looks to be on the actual USB cards.
+> Fixes these build errors when CRYPTO is not enabled:
 > 
-> Is there a way to use the pre-gain values for noise floor calculations,
-> and reporting of signal strength?
-probably not, in fact the whole noise floor and signal strength calculations
-are not as straight forward as you might think?!
+> net/built-in.o: In function `hci_register_dev':
+> (.text+0x4cf86): undefined reference to `crypto_alloc_base'
+> net/built-in.o: In function `hci_unregister_dev':
+> (.text+0x4f912): undefined reference to `crypto_destroy_tfm'
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> ---
+>  net/bluetooth/Kconfig |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> --- linux-next-20110622.orig/net/bluetooth/Kconfig
+> +++ linux-next-20110622/net/bluetooth/Kconfig
+> @@ -6,6 +6,7 @@ menuconfig BT
+>  	tristate "Bluetooth subsystem support"
+>  	depends on NET && !S390
+>  	depends on RFKILL || !RFKILL
+> +	select CRYPTO
+>  	help
+>  	  Bluetooth is low-cost, low-power, short-range wireless technology.
+>  	  It was designed as a replacement for cables and other short-range
+> --
 
-http://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg05777.html
-http://www.spinics.net/lists/linux-wireless/msg50060.html
-[there's more, just ask google about ath9k and noise]
 
-Also, since you are adding an extra amplifier: Are you thinking about
-long-range links? Because you'll need to tinker with the round trip time
-MAC registers then.
-
-Regards,
-	Chr
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
