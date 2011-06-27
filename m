@@ -1,69 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:41798 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754488Ab1FRQFb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2011 12:05:31 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 18/25] iwlagn: warn about nested SYNC commands
-Date: Sat, 18 Jun 2011 08:34:24 -0700
-Message-Id: <1308411271-26093-19-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180558_166798_E27083E7)
-In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:54949 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757661Ab1F0KGl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2011 06:06:41 -0400
+Received: by wwg11 with SMTP id 11so1965449wwg.1
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 03:06:40 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 1/3] wl12xx: configure suspend/resume only if associated/started
+Date: Mon, 27 Jun 2011 13:06:43 +0300
+Message-Id: <1309169205-27966-1-git-send-email-eliad@wizery.com> (sfid-20110627_121213_948673_5CFE203F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Configure the device (to wowlan) only if the sta/ap
+is associated/started.
 
-Since there is no protection around SYNC host command mechanism, at least WARN
-when collision happens between two SYNC host comamnds. I am not sure there is a
-real  issue (beyond the HCMD_ACTIVE flag maintenance) with having two SYNC host
-commands at the same time, but at least now, we will know about it.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 +
- drivers/net/wireless/iwlwifi/iwl-hcmd.c |   11 ++++++++++-
- 2 files changed, 11 insertions(+), 1 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 34f9d0f..2d13d89 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1300,6 +1300,7 @@ struct iwl_priv {
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 2c2251a..7017c23 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1469,10 +1469,13 @@ static struct notifier_block wl1271_dev_notifier = {
  
- 	/* command queue number */
- 	u8 cmd_queue;
-+	u8 last_sync_cmd_id;
+ static int wl1271_configure_suspend_sta(struct wl1271 *wl)
+ {
+-	int ret;
++	int ret = 0;
  
- 	/* max number of station keys */
- 	u8 sta_key_max_num;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-index 76f9966..7cdb1ec 100644
---- a/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-@@ -181,7 +181,16 @@ int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 	IWL_DEBUG_INFO(priv, "Attempting to send sync command %s\n",
- 			get_cmd_string(cmd->id));
+ 	mutex_lock(&wl->mutex);
  
--	set_bit(STATUS_HCMD_ACTIVE, &priv->status);
-+	if (test_and_set_bit(STATUS_HCMD_ACTIVE, &priv->status)) {
-+		IWL_ERR(priv, "STATUS_HCMD_ACTIVE already set while sending %s"
-+			      ". Previous SYNC cmdn is %s\n",
-+			get_cmd_string(cmd->id),
-+			get_cmd_string(priv->last_sync_cmd_id));
-+		WARN_ON(1);
-+	} else {
-+		priv->last_sync_cmd_id = cmd->id;
-+	}
++	if (!test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
++		goto out_unlock;
 +
- 	IWL_DEBUG_INFO(priv, "Setting HCMD_ACTIVE for command %s\n",
- 			get_cmd_string(cmd->id));
+ 	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out_unlock;
+@@ -1517,10 +1520,13 @@ out:
  
+ static int wl1271_configure_suspend_ap(struct wl1271 *wl)
+ {
+-	int ret;
++	int ret = 0;
+ 
+ 	mutex_lock(&wl->mutex);
+ 
++	if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags))
++		goto out_unlock;
++
+ 	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out_unlock;
 -- 
 1.7.0.4
 
