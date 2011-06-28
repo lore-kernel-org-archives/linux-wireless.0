@@ -1,294 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47443 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754170Ab1FSVvp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2011 17:51:45 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	linux-mips@linux-mips.org
-Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC v2 01/12] bcma: move parsing of EEPROM into own function.
-Date: Sun, 19 Jun 2011 23:49:58 +0200
-Message-Id: <1308520209-668-2-git-send-email-hauke@hauke-m.de> (sfid-20110619_235150_005646_E8491073)
-In-Reply-To: <1308520209-668-1-git-send-email-hauke@hauke-m.de>
-References: <1308520209-668-1-git-send-email-hauke@hauke-m.de>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:45127 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753169Ab1F1WHb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jun 2011 18:07:31 -0400
+Date: Tue, 28 Jun 2011 15:07:16 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-wireless@vger.kernel.org
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next: Tree for June 28 ( net/wireless)
+Message-Id: <20110628150716.cd10cc04.randy.dunlap@oracle.com> (sfid-20110629_001058_180794_75368319)
+In-Reply-To: <20110628170927.5a226855.sfr@canb.auug.org.au>
+References: <20110628170927.5a226855.sfr@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move the parsing of the EEPROM data in scan function for one core into
-an own function. Now we are able to use it in some other scan function
-as well.
+On Tue, 28 Jun 2011 17:09:27 +1000 Stephen Rothwell wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> Hi all,
+> 
+> Changes since 20110627:
+> 
+> The net tree still has its 2 build failures and gained a conflict against
+> the wireless-current tree.
+
+
+  LD      drivers/net/wireless/rtlwifi/built-in.o
+drivers/net/wireless/rtlwifi/rtl8192de/built-in.o: In function `rtl92ce_sw_led_on':
+(.text+0x11fb6): multiple definition of `rtl92ce_sw_led_on'
+drivers/net/wireless/rtlwifi/rtl8192ce/built-in.o:(.text+0xa326): first defined here
+drivers/net/wireless/rtlwifi/rtl8192de/built-in.o:(.bss+0x0): multiple definition of `dm_digtable'
+drivers/net/wireless/rtlwifi/rtl8192c/built-in.o:(.bss+0x0): first defined here
+ld: Warning: size of symbol `dm_digtable' changed from 40 in drivers/net/wireless/rtlwifi/rtl8192c/built-in.o to 48 in drivers/net/wireless/rtlwifi/rtl8192de/built-in.o
+drivers/net/wireless/rtlwifi/rtl8192de/built-in.o: In function `rtl92ce_sw_led_off':
+(.text+0x11cfe): multiple definition of `rtl92ce_sw_led_off'
+drivers/net/wireless/rtlwifi/rtl8192ce/built-in.o:(.text+0xa06e): first defined here
+
+config file excerpt:
+
+CONFIG_RTL8192CE=y
+# CONFIG_RTL8192SE is not set
+CONFIG_RTL8192DE=y
+# CONFIG_RTL8192CU is not set
+CONFIG_RTLWIFI=y
+CONFIG_RTL8192C_COMMON=y
+
 ---
- drivers/bcma/scan.c |  230 ++++++++++++++++++++++++++-------------------------
- 1 files changed, 118 insertions(+), 112 deletions(-)
-
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 40d7dcc..4012d8d 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -200,16 +200,124 @@ static s32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 **eromptr,
- 	return addrl;
- }
- 
-+static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
-+			      struct bcma_device *core)
-+{
-+	s32 tmp;
-+	u8 i, j;
-+	s32 cia, cib;
-+	u8 ports[2], wrappers[2];
-+
-+	/* get CIs */
-+	cia = bcma_erom_get_ci(bus, eromptr);
-+	if (cia < 0) {
-+		bcma_erom_push_ent(eromptr);
-+		if (bcma_erom_is_end(bus, eromptr))
-+			return -ESPIPE;
-+		return -EILSEQ;
-+	}
-+	cib = bcma_erom_get_ci(bus, eromptr);
-+	if (cib < 0)
-+		return -EILSEQ;
-+
-+	/* parse CIs */
-+	core->id.class = (cia & SCAN_CIA_CLASS) >> SCAN_CIA_CLASS_SHIFT;
-+	core->id.id = (cia & SCAN_CIA_ID) >> SCAN_CIA_ID_SHIFT;
-+	core->id.manuf = (cia & SCAN_CIA_MANUF) >> SCAN_CIA_MANUF_SHIFT;
-+	ports[0] = (cib & SCAN_CIB_NMP) >> SCAN_CIB_NMP_SHIFT;
-+	ports[1] = (cib & SCAN_CIB_NSP) >> SCAN_CIB_NSP_SHIFT;
-+	wrappers[0] = (cib & SCAN_CIB_NMW) >> SCAN_CIB_NMW_SHIFT;
-+	wrappers[1] = (cib & SCAN_CIB_NSW) >> SCAN_CIB_NSW_SHIFT;
-+	core->id.rev = (cib & SCAN_CIB_REV) >> SCAN_CIB_REV_SHIFT;
-+
-+	if (((core->id.manuf == BCMA_MANUF_ARM) &&
-+	     (core->id.id == 0xFFF)) ||
-+	    (ports[1] == 0)) {
-+		bcma_erom_skip_component(bus, eromptr);
-+		return -ENXIO;
-+	}
-+
-+	/* check if component is a core at all */
-+	if (wrappers[0] + wrappers[1] == 0) {
-+		/* we could save addrl of the router
-+		if (cid == BCMA_CORE_OOB_ROUTER)
-+		 */
-+		bcma_erom_skip_component(bus, eromptr);
-+		return -ENXIO;
-+	}
-+
-+	if (bcma_erom_is_bridge(bus, eromptr)) {
-+		bcma_erom_skip_component(bus, eromptr);
-+		return -ENXIO;
-+	}
-+
-+	/* get & parse master ports */
-+	for (i = 0; i < ports[0]; i++) {
-+		u32 mst_port_d = bcma_erom_get_mst_port(bus, eromptr);
-+		if (mst_port_d < 0)
-+			return -EILSEQ;
-+	}
-+
-+	/* get & parse slave ports */
-+	for (i = 0; i < ports[1]; i++) {
-+		for (j = 0; ; j++) {
-+			tmp = bcma_erom_get_addr_desc(bus, eromptr,
-+				SCAN_ADDR_TYPE_SLAVE, i);
-+			if (tmp < 0) {
-+				/* no more entries for port _i_ */
-+				/* pr_debug("erom: slave port %d "
-+				 * "has %d descriptors\n", i, j); */
-+				break;
-+			} else {
-+				if (i == 0 && j == 0)
-+					core->addr = tmp;
-+			}
-+		}
-+	}
-+
-+	/* get & parse master wrappers */
-+	for (i = 0; i < wrappers[0]; i++) {
-+		for (j = 0; ; j++) {
-+			tmp = bcma_erom_get_addr_desc(bus, eromptr,
-+				SCAN_ADDR_TYPE_MWRAP, i);
-+			if (tmp < 0) {
-+				/* no more entries for port _i_ */
-+				/* pr_debug("erom: master wrapper %d "
-+				 * "has %d descriptors\n", i, j); */
-+				break;
-+			} else {
-+				if (i == 0 && j == 0)
-+					core->wrap = tmp;
-+			}
-+		}
-+	}
-+
-+	/* get & parse slave wrappers */
-+	for (i = 0; i < wrappers[1]; i++) {
-+		u8 hack = (ports[1] == 1) ? 0 : 1;
-+		for (j = 0; ; j++) {
-+			tmp = bcma_erom_get_addr_desc(bus, eromptr,
-+				SCAN_ADDR_TYPE_SWRAP, i + hack);
-+			if (tmp < 0) {
-+				/* no more entries for port _i_ */
-+				/* pr_debug("erom: master wrapper %d "
-+				 * has %d descriptors\n", i, j); */
-+				break;
-+			} else {
-+				if (wrappers[0] == 0 && !i && !j)
-+					core->wrap = tmp;
-+			}
-+		}
-+	}
-+	return 0;
-+}
-+
- int bcma_bus_scan(struct bcma_bus *bus)
- {
- 	u32 erombase;
- 	u32 __iomem *eromptr, *eromend;
- 
--	s32 cia, cib;
--	u8 ports[2], wrappers[2];
--
- 	s32 tmp;
--	u8 i, j;
- 
- 	int err;
- 
-@@ -236,112 +344,13 @@ int bcma_bus_scan(struct bcma_bus *bus)
- 		INIT_LIST_HEAD(&core->list);
- 		core->bus = bus;
- 
--		/* get CIs */
--		cia = bcma_erom_get_ci(bus, &eromptr);
--		if (cia < 0) {
--			bcma_erom_push_ent(&eromptr);
--			if (bcma_erom_is_end(bus, &eromptr))
--				break;
--			err= -EILSEQ;
--			goto out;
--		}
--		cib = bcma_erom_get_ci(bus, &eromptr);
--		if (cib < 0) {
--			err= -EILSEQ;
--			goto out;
--		}
--
--		/* parse CIs */
--		core->id.class = (cia & SCAN_CIA_CLASS) >> SCAN_CIA_CLASS_SHIFT;
--		core->id.id = (cia & SCAN_CIA_ID) >> SCAN_CIA_ID_SHIFT;
--		core->id.manuf = (cia & SCAN_CIA_MANUF) >> SCAN_CIA_MANUF_SHIFT;
--		ports[0] = (cib & SCAN_CIB_NMP) >> SCAN_CIB_NMP_SHIFT;
--		ports[1] = (cib & SCAN_CIB_NSP) >> SCAN_CIB_NSP_SHIFT;
--		wrappers[0] = (cib & SCAN_CIB_NMW) >> SCAN_CIB_NMW_SHIFT;
--		wrappers[1] = (cib & SCAN_CIB_NSW) >> SCAN_CIB_NSW_SHIFT;
--		core->id.rev = (cib & SCAN_CIB_REV) >> SCAN_CIB_REV_SHIFT;
--
--		if (((core->id.manuf == BCMA_MANUF_ARM) &&
--		     (core->id.id == 0xFFF)) ||
--		    (ports[1] == 0)) {
--			bcma_erom_skip_component(bus, &eromptr);
--			continue;
--		}
--
--		/* check if component is a core at all */
--		if (wrappers[0] + wrappers[1] == 0) {
--			/* we could save addrl of the router
--			if (cid == BCMA_CORE_OOB_ROUTER)
--			 */
--			bcma_erom_skip_component(bus, &eromptr);
--			continue;
--		}
--
--		if (bcma_erom_is_bridge(bus, &eromptr)) {
--			bcma_erom_skip_component(bus, &eromptr);
-+		err = bcma_get_next_core(bus, &eromptr, core);
-+		if (err == -ENXIO)
- 			continue;
--		}
--
--		/* get & parse master ports */
--		for (i = 0; i < ports[0]; i++) {
--			u32 mst_port_d = bcma_erom_get_mst_port(bus, &eromptr);
--			if (mst_port_d < 0) {
--				err= -EILSEQ;
--				goto out;
--			}
--		}
--
--		/* get & parse slave ports */
--		for (i = 0; i < ports[1]; i++) {
--			for (j = 0; ; j++) {
--				tmp = bcma_erom_get_addr_desc(bus, &eromptr,
--					SCAN_ADDR_TYPE_SLAVE, i);
--				if (tmp < 0) {
--					/* no more entries for port _i_ */
--					/* pr_debug("erom: slave port %d "
--					 * "has %d descriptors\n", i, j); */
--					break;
--				} else {
--					if (i == 0 && j == 0)
--						core->addr = tmp;
--				}
--			}
--		}
--
--		/* get & parse master wrappers */
--		for (i = 0; i < wrappers[0]; i++) {
--			for (j = 0; ; j++) {
--				tmp = bcma_erom_get_addr_desc(bus, &eromptr,
--					SCAN_ADDR_TYPE_MWRAP, i);
--				if (tmp < 0) {
--					/* no more entries for port _i_ */
--					/* pr_debug("erom: master wrapper %d "
--					 * "has %d descriptors\n", i, j); */
--					break;
--				} else {
--					if (i == 0 && j == 0)
--						core->wrap = tmp;
--				}
--			}
--		}
--
--		/* get & parse slave wrappers */
--		for (i = 0; i < wrappers[1]; i++) {
--			u8 hack = (ports[1] == 1) ? 0 : 1;
--			for (j = 0; ; j++) {
--				tmp = bcma_erom_get_addr_desc(bus, &eromptr,
--					SCAN_ADDR_TYPE_SWRAP, i + hack);
--				if (tmp < 0) {
--					/* no more entries for port _i_ */
--					/* pr_debug("erom: master wrapper %d "
--					 * has %d descriptors\n", i, j); */
--					break;
--				} else {
--					if (wrappers[0] == 0 && !i && !j)
--						core->wrap = tmp;
--				}
--			}
--		}
-+		else if (err == -ESPIPE)
-+			break;
-+		else if (err < 0)
-+			return err;
- 
- 		pr_info("Core %d found: %s "
- 			"(manuf 0x%03X, id 0x%03X, rev 0x%02X, class 0x%X)\n",
-@@ -351,9 +360,6 @@ int bcma_bus_scan(struct bcma_bus *bus)
- 
- 		core->core_index = bus->nr_cores++;
- 		list_add(&core->list, &bus->cores);
--		continue;
--out:
--		return err;
- 	}
- 
- 	return 0;
--- 
-1.7.4.1
-
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
