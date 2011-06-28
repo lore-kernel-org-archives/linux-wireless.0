@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2329 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758841Ab1FALqe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:34 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 65/83] staging: brcm80211: removed lmac remnants
-Date: Wed, 1 Jun 2011 13:45:50 +0200
-Message-ID: <1306928768-7501-65-git-send-email-rvossen@broadcom.com> (sfid-20110601_134716_878165_59399C14)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from external1.orbit-lab.org ([128.6.192.131]:32822 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1760422Ab1F1TFC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jun 2011 15:05:02 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 0C50754004E
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2011 15:12:25 -0400 (EDT)
+Subject: Compat-wireless release for 2011-06-28 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110628190500.1A70140EC7@repository3.orbit-lab.org> (sfid-20110628_211154_795201_B94E83EA)
+Date: Tue, 28 Jun 2011 15:05:00 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code cleanup. LMAC (a Broadcom specific acronym) was not used.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   3afe4bf..ce3bc79  master     -> origin/master
+ * [new tag]         compat-wireless-2011-06-28 -> compat-wireless-2011-06-28
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   1099a7e..50d796c  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 23e7a52...7b31fe9 akpm-end   -> origin/akpm-end  (forced update)
+ + 8e81dad...04c93b7 akpm-start -> origin/akpm-start  (forced update)
+   07a621c..de335a4  history    -> origin/history
+ + fe984da...ff28b39 master     -> origin/master  (forced update)
+   8abf558..4d258b2  stable     -> origin/stable
+ * [new tag]         next-20110628 -> next-20110628
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/wlc_pub.h |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_pub.h b/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
-index 4f0fa20..a0c170b 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_pub.h
-@@ -319,9 +319,6 @@ struct wlc_pub {
- 	u32 boardflags;	/* Board specific flags from srom */
- 	u32 boardflags2;	/* More board flags if sromrev >= 4 */
- 	bool tempsense_disable;	/* disable periodic tempsense check */
--
--	bool _lmac;		/* lmac module included and enabled */
--	bool _lmacproto;	/* lmac protocol module included and enabled */
- 	bool phy_11ncapable;	/* the PHY/HW is capable of 802.11N */
- 	bool _ampdumac;		/* mac assist ampdu enabled or not */
- 
--- 
-1.7.4.1
-
-
+    823480 - Total upstream lines of code being pulled
+      2376 - backport code changes
+      2077 - backport code additions
+       299 - backport code deletions
+      8125 - backport from compat module
+     10501 - total backport code
+    1.2752 - % of code consists of backport work
