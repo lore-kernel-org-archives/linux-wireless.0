@@ -1,79 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:34067 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752139Ab1F3V3H (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:40763 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757847Ab1F1NHd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2011 17:29:07 -0400
-Date: Thu, 30 Jun 2011 16:28:50 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: akpm@linux-foundation.org, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192de/phy.c: fix udelay() usage
-Message-ID: <4e0cea92.d87Od1Tkbar3iIK/%Larry.Finger@lwfinger.net> (sfid-20110630_232914_748049_DF3C8FA6)
+	Tue, 28 Jun 2011 09:07:33 -0400
+From: "Shajakhan, Mohammed Shafi" <mohammed@qca.qualcomm.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
+	"Balasubramanian, senthilkumar" <senthilb@qca.qualcomm.com>
+Subject: RE: [PATCH 1/2] ath9k: minor cleanup in tx_form_aggregation
+Date: Tue, 28 Jun 2011 13:04:20 +0000
+Message-ID: <D106CD05FEFBA74BA17F929FD27C8AB3099BC798@nasanexd02a.na.qualcomm.com> (sfid-20110628_152052_804929_CDEFAB25)
+References: <1309262442-21383-1-git-send-email-mshajakhan@atheros.com>
+In-Reply-To: <1309262442-21383-1-git-send-email-mshajakhan@atheros.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Subject: drivers/net/wireless/rtlwifi/rtl8192de/phy.c: fix udelay() usage
-From: Andrew Morton <akpm@linux-foundation.org>
 
-ERROR: "__bad_udelay" [drivers/net/wireless/rtlwifi/rtl8192de/rtl8192de.ko] undefined!
+________________________________________
+From: Mohammed Shafi Shajakhan [mohammed@qca.qualcomm.com]
+Sent: 28 June 2011 17:30:42
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org; Rodriguez, Luis; Balasubramanian, senthilkumar; Shajakhan, Mohammed Shafi
+Subject: [PATCH 1/2] ath9k: minor cleanup in tx_form_aggregation
 
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+
+moves a macro to the main header file ath9k.h and removes a redundant
+variable/if check
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 ++
+ drivers/net/wireless/ath/ath9k/xmit.c  |    9 ++-------
+ 2 files changed, 4 insertions(+), 7 deletions(-)
 
- drivers/net/wireless/rtlwifi/rtl8192de/phy.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 56a0ac4..ac9ec3c 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -129,6 +129,8 @@ void ath_descdma_cleanup(struct ath_softc *sc, struct ath_descdma *dd,
+         (((_tid) == 4) || ((_tid) == 5)) ? WME_AC_VI : \
+         WME_AC_VO)
 
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-@@ -1684,7 +1684,7 @@ static u8 _rtl92d_phy_patha_iqk(struct i
- 	RTPRINT(rtlpriv, FINIT, INIT_IQK,
- 		("Delay %d ms for One shot, path A LOK & IQK.\n",
- 		IQK_DELAY_TIME));
--	udelay(IQK_DELAY_TIME * 1000);
-+	mdelay(IQK_DELAY_TIME);
- 	/* Check failed */
- 	regeac = rtl_get_bbreg(hw, 0xeac, BMASKDWORD);
- 	RTPRINT(rtlpriv, FINIT, INIT_IQK, ("0xeac = 0x%x\n", regeac));
-@@ -1755,7 +1755,7 @@ static u8 _rtl92d_phy_patha_iqk_5g_norma
- 		RTPRINT(rtlpriv, FINIT, INIT_IQK,
- 			("Delay %d ms for One shot, path A LOK & IQK.\n",
- 			IQK_DELAY_TIME));
--		udelay(IQK_DELAY_TIME * 1000 * 10);
-+		mdelay(IQK_DELAY_TIME * 10);
- 		/* Check failed */
- 		regeac = rtl_get_bbreg(hw, 0xeac, BMASKDWORD);
- 		RTPRINT(rtlpriv, FINIT, INIT_IQK, ("0xeac = 0x%x\n", regeac));
-@@ -1808,7 +1808,7 @@ static u8 _rtl92d_phy_pathb_iqk(struct i
- 	RTPRINT(rtlpriv, FINIT, INIT_IQK,
- 		("Delay %d ms for One shot, path B LOK & IQK.\n",
- 		IQK_DELAY_TIME));
--	udelay(IQK_DELAY_TIME * 1000);
-+	mdelay(IQK_DELAY_TIME);
- 	/* Check failed */
- 	regeac = rtl_get_bbreg(hw, 0xeac, BMASKDWORD);
- 	RTPRINT(rtlpriv, FINIT, INIT_IQK, ("0xeac = 0x%x\n", regeac));
-@@ -1875,7 +1875,7 @@ static u8 _rtl92d_phy_pathb_iqk_5g_norma
- 		/* delay x ms */
- 		RTPRINT(rtlpriv, FINIT, INIT_IQK,
- 			("Delay %d ms for One shot, path B LOK & IQK.\n", 10));
--		udelay(IQK_DELAY_TIME * 1000 * 10);
-+		mdelay(IQK_DELAY_TIME * 10);
- 
- 		/* Check failed */
- 		regeac = rtl_get_bbreg(hw, 0xeac, BMASKDWORD);
-@@ -2206,7 +2206,7 @@ static void _rtl92d_phy_iq_calibrate_5g_
- 	 * PHY_REG.txt , and radio_a, radio_b.txt */
- 
- 	RTPRINT(rtlpriv, FINIT, INIT_IQK, ("IQK for 5G NORMAL:Start!!!\n"));
--	udelay(IQK_DELAY_TIME * 1000 * 20);
-+	mdelay(IQK_DELAY_TIME * 20);
- 	if (t == 0) {
- 		bbvalue = rtl_get_bbreg(hw, RFPGA0_RFMOD, BMASKDWORD);
- 		RTPRINT(rtlpriv, FINIT, INIT_IQK, ("==>0x%08x\n", bbvalue));
++#define PADBYTES(_len) ((4 - ((_len) % 4)) % 4)
++
+ #define ATH_AGGR_DELIM_SZ          4
+ #define ATH_AGGR_MINPLEN           256 /* in bytes, minimum packet length */
+ /* number of delimiters for encryption padding */
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index a1fed6c..18f02c0 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -708,9 +708,8 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+                                             struct list_head *bf_q,
+                                             int *aggr_len)
+ {
+-#define PADBYTES(_len) ((4 - ((_len) % 4)) % 4)
+        struct ath_buf *bf, *bf_first, *bf_prev = NULL;
+-       int rl = 0, nframes = 0, ndelim, prev_al = 0;
++       int nframes = 0, ndelim, prev_al = 0;
+        u16 aggr_limit = 0, al = 0, bpad = 0,
+                al_delta, h_baw = tid->baw_size / 2;
+        enum ATH_AGGR_STATUS status = ATH_AGGR_DONE;
+@@ -729,10 +728,7 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+                        break;
+                }
+
+-               if (!rl) {
+-                       aggr_limit = ath_lookup_rate(sc, bf, tid);
+-                       rl = 1;
+-               }
++               aggr_limit = ath_lookup_rate(sc, bf, tid);
+
+                /* do not exceed aggregation limit */
+                al_delta = ATH_AGGR_DELIM_SZ + fi->framelen;
+@@ -785,7 +781,6 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+        *aggr_len = al;
+
+        return status;
+-#undef PADBYTES
+ }
+
+ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
+--
+1.7.0.4
+
+John please drop this patch, as it is completely wrong and the variable 'rl'  is not redundant , I over looked the code even though testing. thanks to Raj for pointing it out.
