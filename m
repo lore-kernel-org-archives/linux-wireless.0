@@ -1,40 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33054 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756640Ab1FIWEH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 18:04:07 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, jonas.gorski@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 05/11] compat-wireless: add missing header
-Date: Fri, 10 Jun 2011 00:03:36 +0200
-Message-Id: <1307657022-23808-6-git-send-email-hauke@hauke-m.de> (sfid-20110610_000412_186917_84B8088F)
-In-Reply-To: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
-References: <1307657022-23808-1-git-send-email-hauke@hauke-m.de>
+Received: from dakia2.marvell.com ([65.219.4.35]:33591 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753578Ab1F1NUW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jun 2011 09:20:22 -0400
+Date: Tue, 28 Jun 2011 18:41:37 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Andreas Hartmann <andihartmann@01019freenet.de>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH v4] mac80211: Skip tailroom reservation for full HW-crypto
+ devices with race fix
+Message-ID: <20110628131130.GA15883@hertz.marvell.com> (sfid-20110628_153224_809342_6810AA0C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds mac80211_hwsim.h
+Based on inputs from Johannes Berg <johannes@sipsolutions.net>
+from http://article.gmane.org/gmane.linux.kernel.wireless.general/68193
+and http://article.gmane.org/gmane.linux.kernel.wireless.general/71702
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+In xmit path, devices that do full hardware crypto (including
+MMIC and ICV) need no tailroom. For such devices, tailroom
+reservation can be skipped if all the keys are programmed into
+the hardware (i.e software crypto is not used for any of the
+keys) and none of the keys wants software to generate Michael
+MIC and IV.
+
+v2: Added check for IV along with MMIC.
+Reported-by: Fabio Rossi <rossi.f@inwind.it>
+Tested-by: Fabio Rossi <rossi.f@inwind.it>
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Cc: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+
+v3: Fixing races to avoid WARNING: at net/mac80211/wpa.c:397
+    ccmp_encrypt_skb+0xc4/0x1f0
+Reported-by: Andreas Hartmann <andihartmann@01019freenet.de>
+Tested-by: Andreas Hartmann <andihartmann@01019freenet.de>
+
+v4: Added links with message ID
+
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
 ---
- scripts/admin-update.sh |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ net/mac80211/ieee80211_i.h |    3 ++
+ net/mac80211/key.c         |   51 ++++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/tx.c          |   14 ++++-------
+ 3 files changed, 57 insertions(+), 11 deletions(-)
 
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index ea123ca..de810b5 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -259,7 +259,7 @@ DRIVERS_BT="drivers/bluetooth"
- # Drivers that belong the the wireless directory
- DRIVER_FILES="adm8211.c  adm8211.h"
- DRIVER_FILES="$DRIVER_FILES rndis_wlan.c"
--DRIVER_FILES="$DRIVER_FILES mac80211_hwsim.c"
-+DRIVER_FILES="$DRIVER_FILES mac80211_hwsim.c mac80211_hwsim.h"
- DRIVER_FILES="$DRIVER_FILES at76c50x-usb.c at76c50x-usb.h"
- DRIVER_FILES="$DRIVER_FILES mwl8k.c"
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 25c15cc..4f2e424 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -544,6 +544,9 @@ struct ieee80211_sub_if_data {
+ 	/* keys */
+ 	struct list_head key_list;
+ 
++	/* count for keys needing tailroom space allocation */
++	int crypto_tx_tailroom_needed_cnt;
++
+ 	struct net_device *dev;
+ 	struct ieee80211_local *local;
+ 
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index f825e2f..0af958c 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -61,6 +61,36 @@ static struct ieee80211_sta *get_sta_for_key(struct ieee80211_key *key)
+ 	return NULL;
+ }
+ 
++static void increment_tailroom_need_count(struct ieee80211_sub_if_data *sdata)
++{
++	/*
++	 * When this count is zero, SKB resizing for allocating tailroom
++	 * for IV or MMIC is skipped. But, this check has created two race
++	 * cases in xmit path while transiting from zero count to one:
++	 *
++	 * 1. SKB resize was skipped because no key was added but just before
++	 * the xmit key is added and SW encryption kicks off.
++	 *
++	 * 2. SKB resize was skipped because all the keys were hw planted but
++	 * just before xmit one of the key is deleted and SW encryption kicks
++	 * off.
++	 *
++	 * In both the above case SW encryption will find not enough space for
++	 * tailroom and exits with WARN_ON. (See WARN_ONs at wpa.c)
++	 *
++	 * Solution has been explained at
++	 * http://mid.gmane.org/1308590980.4322.19.camel@jlt3.sipsolutions.net
++	 */
++
++	if (!sdata->crypto_tx_tailroom_needed_cnt++) {
++		/*
++		 * Flush all XMIT packets currently using HW encryption or no
++		 * encryption at all if the count transition is from 0 -> 1.
++		 */
++		synchronize_net();
++	}
++}
++
+ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -101,6 +131,11 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 
+ 	if (!ret) {
+ 		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
++
++		if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
++		      (key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)))
++			sdata->crypto_tx_tailroom_needed_cnt--;
++
+ 		return 0;
+ 	}
+ 
+@@ -142,6 +177,10 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+ 	sta = get_sta_for_key(key);
+ 	sdata = key->sdata;
+ 
++	if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
++	      (key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV)))
++		increment_tailroom_need_count(sdata);
++
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 		sdata = container_of(sdata->bss,
+ 				     struct ieee80211_sub_if_data,
+@@ -394,8 +433,10 @@ static void __ieee80211_key_destroy(struct ieee80211_key *key)
+ 		ieee80211_aes_key_free(key->u.ccmp.tfm);
+ 	if (key->conf.cipher == WLAN_CIPHER_SUITE_AES_CMAC)
+ 		ieee80211_aes_cmac_key_free(key->u.aes_cmac.tfm);
+-	if (key->local)
++	if (key->local) {
+ 		ieee80211_debugfs_key_remove(key);
++		key->sdata->crypto_tx_tailroom_needed_cnt--;
++	}
+ 
+ 	kfree(key);
+ }
+@@ -452,6 +493,8 @@ int ieee80211_key_link(struct ieee80211_key *key,
+ 	else
+ 		old_key = key_mtx_dereference(sdata->local, sdata->keys[idx]);
+ 
++	increment_tailroom_need_count(sdata);
++
+ 	__ieee80211_key_replace(sdata, sta, pairwise, old_key, key);
+ 	__ieee80211_key_destroy(old_key);
+ 
+@@ -498,8 +541,12 @@ void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
+ 
+ 	mutex_lock(&sdata->local->key_mtx);
+ 
+-	list_for_each_entry(key, &sdata->key_list, list)
++	sdata->crypto_tx_tailroom_needed_cnt = 0;
++
++	list_for_each_entry(key, &sdata->key_list, list) {
++		increment_tailroom_need_count(sdata);
+ 		ieee80211_key_enable_hw_accel(key);
++	}
+ 
+ 	mutex_unlock(&sdata->local->key_mtx);
+ }
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 3104c84..e8d0d2d 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1474,18 +1474,14 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
+ 
+ /* device xmit handlers */
+ 
+-static int ieee80211_skb_resize(struct ieee80211_local *local,
++static int ieee80211_skb_resize(struct ieee80211_sub_if_data *sdata,
+ 				struct sk_buff *skb,
+ 				int head_need, bool may_encrypt)
+ {
++	struct ieee80211_local *local = sdata->local;
+ 	int tail_need = 0;
+ 
+-	/*
+-	 * This could be optimised, devices that do full hardware
+-	 * crypto (including TKIP MMIC) need no tailroom... But we
+-	 * have no drivers for such devices currently.
+-	 */
+-	if (may_encrypt) {
++	if (may_encrypt && sdata->crypto_tx_tailroom_needed_cnt) {
+ 		tail_need = IEEE80211_ENCRYPT_TAILROOM;
+ 		tail_need -= skb_tailroom(skb);
+ 		tail_need = max_t(int, tail_need, 0);
+@@ -1578,7 +1574,7 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
+ 	headroom -= skb_headroom(skb);
+ 	headroom = max_t(int, 0, headroom);
+ 
+-	if (ieee80211_skb_resize(local, skb, headroom, may_encrypt)) {
++	if (ieee80211_skb_resize(sdata, skb, headroom, may_encrypt)) {
+ 		dev_kfree_skb(skb);
+ 		rcu_read_unlock();
+ 		return;
+@@ -1945,7 +1941,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		head_need += IEEE80211_ENCRYPT_HEADROOM;
+ 		head_need += local->tx_headroom;
+ 		head_need = max_t(int, 0, head_need);
+-		if (ieee80211_skb_resize(local, skb, head_need, true))
++		if (ieee80211_skb_resize(sdata, skb, head_need, true))
+ 			goto fail;
+ 	}
  
 -- 
-1.7.4.1
+1.5.4.1
 
