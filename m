@@ -1,42 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:44788 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753863Ab1F3I1l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2011 04:27:41 -0400
-To: Dan Carpenter <error27@gmail.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath6kl: implement testmode rx command
-References: <20110627153610.16774.65919.stgit@localhost6.localdomain6>
-	<20110627180609.GZ14591@shale.localdomain>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Thu, 30 Jun 2011 11:27:39 +0300
-In-Reply-To: <20110627180609.GZ14591@shale.localdomain> (Dan Carpenter's message of "Mon\, 27 Jun 2011 21\:06\:09 +0300")
-Message-ID: <87wrg3zptw.fsf@purkki.adurom.net> (sfid-20110630_102744_835599_16EDE013)
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:33552 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756300Ab1F1Jtc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jun 2011 05:49:32 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BANLkTin_axWbYNKox+R59VmEq7tggaKvHQ@mail.gmail.com>
+References: <alpine.DEB.2.00.1106261016100.25900@ayla.of.borg>
+	<BANLkTin_axWbYNKox+R59VmEq7tggaKvHQ@mail.gmail.com>
+Date: Tue, 28 Jun 2011 11:49:31 +0200
+Message-ID: <BANLkTin4w2QWGNxqbyZyzO+wCmkBH6eUVg@mail.gmail.com> (sfid-20110628_115349_804180_2BFE0701)
+Subject: Re: [PATCH -next] bcma: main.c needs to include <linux/slab.h>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+	Linux Kernel Development <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <error27@gmail.com> writes:
-
-> On Mon, Jun 27, 2011 at 06:36:10PM +0300, Kalle Valo wrote:
+2011/6/28 Rafał Miłecki <zajec5@gmail.com>:
+> Hopefully last thing ;)
 >
->> +void ar6000_testmode_rx_report_event(struct ar6_softc *ar, void *buf,
->> +				     int buf_len)
->> +{
->> +	kfree(ar->tcmd_rx_report);
->> +
->> +	ar->tcmd_rx_report = kmemdup(buf, buf_len, GFP_KERNEL);
->> +	ar->tcmd_rx_report_len = buf_len;
->> +
+> 2011/6/26 Geert Uytterhoeven <geert@linux-m68k.org>:
+>> m68k allmodconfig:
+>>
+>> drivers/bcma/main.c: In function ‘bcma_release_core_dev’:
+>> drivers/bcma/main.c:68: error: implicit declaration of function ‘kfree’
+>>
+>> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+>> --
 >
-> Can this race?  When we use tcmd_rx_report_len we are under lock,
-> but it seems like when we set it here, we're not under lock.
+>
+> If this is not manual mistake, you may want to fix your script or
+> whatever you use. You typed "--" instead of "---", which resulted in
+> the following commit message:
 
-Yes, it can. I'll fix it in v2.
+It's a manual mistake :-)
 
-Thanks again for good comments.
+> m68k allmodconfig:
+>
+>  drivers/bcma/main.c: In function â€˜bcma_release_core_devâ€™:
+>  drivers/bcma/main.c:68: error: implicit declaration of function â€˜kfreeâ€™
+>
+> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+>  --
+>  http://kisskb.ellerman.id.au/kisskb/buildresult/4243344/
+>
+>  drivers/bcma/main.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
--- 
-Kalle Valo
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
