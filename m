@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4153 "EHLO MMS3.broadcom.com"
+Received: from mail.perches.com ([173.55.12.10]:3259 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755663Ab1FJLrG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 07:47:06 -0400
-Message-ID: <4DF2042C.6060605@broadcom.com> (sfid-20110610_134716_465980_19525A39)
-Date: Fri, 10 Jun 2011 13:46:52 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "Michael Buesch" <mb@bu3sch.de>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] drivers: bcma: export bcma_core_disable() function
-References: <1307642840-3043-1-git-send-email-arend@broadcom.com>
- <BANLkTim4p+jjm3iT63Lum146K38iGgvhWw@mail.gmail.com>
-In-Reply-To: <BANLkTim4p+jjm3iT63Lum146K38iGgvhWw@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	id S1752892Ab1F1USq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jun 2011 16:18:46 -0400
+Subject: Re: [PATCH v4 1/6] NFC: add nfc subsystem core
+From: Joe Perches <joe@perches.com>
+To: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	sameo@linux.intel.com, johannes@sipsolutions.net,
+	lauro.venancio@openbossa.org, marcio.macedo@openbossa.org,
+	Waldemar.Rymarkiewicz@tieto.com, padovan@profusion.mobi,
+	rdunlap@xenotime.net
+In-Reply-To: <1309285246-8495-2-git-send-email-aloisio.almeida@openbossa.org>
+References: <1309285246-8495-1-git-send-email-aloisio.almeida@openbossa.org>
+	 <1309285246-8495-2-git-send-email-aloisio.almeida@openbossa.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 28 Jun 2011 13:18:44 -0700
+Message-ID: <1309292325.29598.9.camel@Joe-Laptop> (sfid-20110628_221851_163205_A66F7684)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/10/2011 01:40 PM, Rafał Miłecki wrote:
-> 2011/6/9 Arend van Spriel<arend@broadcom.com>:
->> In the brcm80211 driver we disable the 80211 core when the driver is
->> 'down'. The bcma_core_disable() function exactly does the same as
->> our implementation so exporting this function makes sense.
-> Michael said we should not do do such a exporting without getting
-> users within the same patch serie.
+On Tue, 2011-06-28 at 15:20 -0300, Aloisio Almeida Jr wrote:
+> From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+> The NFC subsystem core is responsible for providing the device driver
+> interface. It is also responsible for providing an interface to the control
+> operations and data exchange.
+[]
+> diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
+[]
+> +#define NFC_INFO(fmt, arg...) printk(KERN_INFO "NFC: " fmt "\n", ## arg)
+> +#define NFC_ERR(fmt, arg...) printk(KERN_ERR "%s: " fmt "\n", __func__, ## arg)
+> +#define NFC_DBG(fmt, arg...) pr_debug("%s: " fmt "\n", __func__, ## arg)
 
-Hi Rafał,
+I think these #defines and their uses would be
+better lower case.
 
-That is going to be hard for me despite my willingness to comply. Our 
-driver is still in staging so we submit our brcm80211 patches to Greg 
-KH. I figured it would be better to do submit patches for bcma on 
-wireless repository.
+#define nfc_info(etc...)
+#define nfc_err(etc...)
+#define nfc_dbg(etc...)
 
-Gr. AvS
+And because these don't really take any nfc specific
+struct as an argument, may be better removed altogether
+and replaced with the pr_<level> equivalents.
 
--- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
-
+I think emitting __func__ rarely adds useful information.
 
