@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm30.bullet.mail.bf1.yahoo.com ([98.139.212.189]:22257 "HELO
-	nm30.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757913Ab1FVNln convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 09:41:43 -0400
-References: <loom.20110621T215346-191@post.gmane.org> <BANLkTik0umam7S+E1oog0LTEErMz-dZamg@mail.gmail.com>
-Message-ID: <1308750102.64154.YahooMailRC@web161214.mail.bf1.yahoo.com> (sfid-20110622_154146_913504_76736765)
-Date: Wed, 22 Jun 2011 06:41:42 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Re: Performance regression between Madwifi/net80211 and ath5k/mac80211
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-In-Reply-To: <BANLkTik0umam7S+E1oog0LTEErMz-dZamg@mail.gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:44815 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758286Ab1F1Ons (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jun 2011 10:43:48 -0400
+Received: from mail.atheros.com ([10.234.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2011 07:43:11 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
+	<senthilb@qca.qualcomm.com>, <thomas@xyz.pp.se>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k_htc: Add device ID for Sony UWA-BR100
+Date: Tue, 28 Jun 2011 20:13:41 +0530
+Message-ID: <1309272221-25787-1-git-send-email-mshajakhan@atheros.com> (sfid-20110628_165534_181499_0295361F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adrian,
-thanks for taking an interest. Today I built the current Madwifi driver for
-Fedora Kernel 2.6.38.8-32.fc15.i686. The ath5k problem seems to be at the
-tx side. If I run the iperf server on the ath5k node and the iperf client
-at the madwifi node (identical hardware config), I consistently get a 
-significant
-speedup compared to ath5k-ath5k. The only difference is, which module is
-blacklisted.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-I have experimented with the RTS and fragmentation threshold setting without
-success. 
+for more details please take a look at:
+http://comments.gmane.org/gmane.linux.drivers.ath9k.devel/6541
+http://www.wikidevi.com/wiki/Sony_UWA-BR100
 
-Now I'm somewhat lost. The problem is either ath5k or mac80211. 
+Reported-by: Thomas Novin <thomas@xyz.pp.se>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 260f1f3..8028fe9 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -49,6 +49,8 @@ static struct usb_device_id ath9k_hif_usb_ids[] = {
+ 	  .driver_info = AR9280_USB },  /* Netgear WNDA3200 */
+ 	{ USB_DEVICE(0x083A, 0xA704),
+ 	  .driver_info = AR9280_USB },  /* SMC Networks */
++	{ USB_DEVICE(0x0411, 0x017f),
++	  .driver_info = AR9280_USB },  /* Sony UWA-BR100 */
+ 
+ 	{ USB_DEVICE(0x0cf3, 0x20ff),
+ 	  .driver_info = STORAGE_DEVICE },
 -- 
-Regards 
-Joerg 
+1.7.0.4
 
-
-
-
------ Orifinal Mail ----
-> Von: Adrian Chadd <adrian@freebsd.org>
-> An: jpo <pommnitz@yahoo.com>
-> CC: linux-wireless@vger.kernel.org
-> Gesendet: Mittwoch, den 22. Juni 2011, 4:17:05 Uhr
-> Betreff: Re: Performance regression between Madwifi/net80211 and 
-ath5k/mac80211
-> 
-> Have you eliminated the kernel version as being the  problem?
-> 
-> 
-> Adrian
