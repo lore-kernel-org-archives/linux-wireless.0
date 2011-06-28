@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40978 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754273Ab1FCUic (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2011 16:38:32 -0400
-Subject: Re: [PATCH 2/6] NFC: add nfc generic netlink interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, marcio.macedo@openbossa.org,
-	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-	Waldemar.Rymarkiewicz@tieto.com
-In-Reply-To: <BANLkTikS+cssYccjg_SfOhR15N=M9erw6Q@mail.gmail.com> (sfid-20110603_221849_457984_ABB91EDC)
-References: <1307051170-17374-1-git-send-email-lauro.venancio@openbossa.org>
-	 <1307051170-17374-3-git-send-email-lauro.venancio@openbossa.org>
-	 <1307108661.3800.6.camel@jlt3.sipsolutions.net>
-	 <BANLkTikS+cssYccjg_SfOhR15N=M9erw6Q@mail.gmail.com>
-	 (sfid-20110603_221849_457984_ABB91EDC)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 03 Jun 2011 22:38:29 +0200
-Message-ID: <1307133509.3800.10.camel@jlt3.sipsolutions.net> (sfid-20110603_223835_958013_827D8EF6)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:34433 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760816Ab1F1SkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jun 2011 14:40:04 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat: replace genl_dump_check_consistent
+Date: Tue, 28 Jun 2011 20:39:57 +0200
+Message-Id: <1309286397-12541-1-git-send-email-hauke@hauke-m.de> (sfid-20110628_205756_721901_4179CFBB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-06-03 at 17:18 -0300, Lauro Ramos Venancio wrote:
+remove the usage of genl_dump_check_consistent from the code.
 
-> Actually, we don't expect more than a couple of targets because of NFC
-> short range.
+This was introduced in:
+commit 9720bb3ab0b80659c63ed337eab66104a4156db0
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Tue Jun 21 09:45:33 2011 +0200
 
-I know.
+    nl80211: use netlink consistent dump feature for BSS dumps
 
-> I agree that this can be a problem if we start supporting vicinity cards.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-3.1.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-I have no idea what that is, but I think that you'll start adding
-attributes at some point, and somebody will also build "scanners" with
-better RX sensitivity ... I'd rather not design something that _right
-now_ limits you to around 100 targets.
-
-> I agree that this is a better solution. But I think we don't need a
-> generation counter because only a new polling operation (start_poll
-> call) can change the targets list (i.e. there is no passive polling).
-
-
-> We don't need a generation counter here because we have the events
-> NFC_EVENT_DEVICE_ADDED and NFC_EVENT_DEVICE_REMOVED. So, it is
-> possible to keep the device list consistency listening for these
-> events.
-
-That may be true, but it complicates coding in userspace. Much easier to
-check a generation counter (in both cases) to see if data is consistent
-than to listen to multiple events concurrently with receiving a dump.
-
-johannes
+diff --git a/include/linux/compat-3.1.h b/include/linux/compat-3.1.h
+index 855490e..be68c81 100644
+--- a/include/linux/compat-3.1.h
++++ b/include/linux/compat-3.1.h
+@@ -22,6 +22,8 @@
+ #define br_port_exists(dev)	(dev->br_port)
+ #endif
+ 
++#define genl_dump_check_consistent(cb, user_hdr, family)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,1,0)) */
+ 
+ #endif /* LINUX_3_1_COMPAT_H */
+-- 
+1.7.4.1
 
