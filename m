@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64396 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753067Ab1FAOoG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 10:44:06 -0400
-Date: Wed, 1 Jun 2011 16:43:14 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: James Hogan <james@albanarts.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: BUG: scheduling while atomic 2.6.39-rc7 (iwl3945_irq_tasklet)
-Message-ID: <20110601144313.GA9695@redhat.com> (sfid-20110601_164428_874331_6EBF673D)
-References: <20110513203448.GA3523@gandalf>
- <20110516172513.GA2546@tuxdriver.com>
- <BANLkTi=JU2VkyArY4jrt1iE-sdwKp+JaAQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BANLkTi=JU2VkyArY4jrt1iE-sdwKp+JaAQ@mail.gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:34419 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760649Ab1F1SjT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jun 2011 14:39:19 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/3] compat-wireless: add rtl8192de
+Date: Tue, 28 Jun 2011 20:38:52 +0200
+Message-Id: <1309286332-12470-3-git-send-email-hauke@hauke-m.de> (sfid-20110628_205755_610613_D0ADB025)
+In-Reply-To: <1309286332-12470-1-git-send-email-hauke@hauke-m.de>
+References: <1309286332-12470-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 17, 2011 at 09:41:42AM +0100, James Hogan wrote:
-> On 16 May 2011 18:25, John W. Linville <linville@tuxdriver.com> wrote:
-> > On Fri, May 13, 2011 at 09:34:49PM +0100, James Hogan wrote:
-> >> On 2.6.39-rc7 I've seen a panic due to "BUG: scheduling while atomic"
-> >> with the backtrace below (not much detail as it was written in a text
-> >> message while it was displayed on the screen!). All worked fine in
-> >> 2.6.38.
-> >>
-> >> This was soon after resuming from suspend (enough time to unlock the
-> >> screen, but not much else). I think it was the same bug I saw in rc2 but
-> >> didn't have time to track down. I can probably get it to happen again if
-> >> more detail is needed. It doesn't happen every suspend (I think it had
-> >> survived a couple of suspend/resume cycles at this point).
-> >>
-> >> I could bisect if necessary, but hopefully the backtrace will be enough
-> >> to see what's going on?
-> >
-> > A bisect might be very helpful -- time is short for 2.6.39 already.
-> 
-> Hmm, it won't reproduce. I'll have to try and bisect this evening, as
-> it was in my home network that it hit the BUG before.
 
-We use mutex in atomic contex when changing channel. I'm not sure if
-this is the particular problem you have. If you found a way to
-reproduce, you may try this patch:
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ config.mk               |    1 +
+ scripts/admin-update.sh |    1 +
+ 2 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-core.c b/drivers/net/wireless/iwlegacy/iwl-core.c
-index 42df832..01244b2 100644
---- a/drivers/net/wireless/iwlegacy/iwl-core.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-core.c
-@@ -861,9 +861,7 @@ void iwl_legacy_chswitch_done(struct iwl_priv *priv, bool is_success)
+diff --git a/config.mk b/config.mk
+index d0e93bf..3cae526 100644
+--- a/config.mk
++++ b/config.mk
+@@ -392,6 +392,7 @@ endif #CONFIG_WIRELESS_EXT
  
- 	if (priv->switch_rxon.switch_in_progress) {
- 		ieee80211_chswitch_done(ctx->vif, is_success);
--		mutex_lock(&priv->mutex);
- 		priv->switch_rxon.switch_in_progress = false;
--		mutex_unlock(&priv->mutex);
- 	}
- }
- EXPORT_SYMBOL(iwl_legacy_chswitch_done);
+ CONFIG_RTL8192CE=m
+ CONFIG_RTL8192SE=m
++CONFIG_RTL8192DE=m
+ 
+ ifdef CONFIG_COMPAT_STAGING
+ CONFIG_BRCMSMAC=m
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 7b2d1f8..74c177f 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -237,6 +237,7 @@ DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192c"
+ DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192ce"
+ DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192cu"
+ DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192se"
++DRIVERS="$DRIVERS drivers/net/wireless/rtlwifi/rtl8192de"
+ DRIVERS="$DRIVERS drivers/net/wireless/libertas_tf"
+ DRIVERS="$DRIVERS drivers/net/wireless/ipw2x00"
+ DRIVERS="$DRIVERS drivers/net/wireless/wl12xx"
+-- 
+1.7.4.1
+
