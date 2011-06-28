@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:16158 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751434Ab1FMPjr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2011 11:39:47 -0400
-Received: from mail.atheros.com ([10.234.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2011 08:39:13 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <johannes@sipsolutions.net>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [RFC] cfg80211: skip checking of SSID for maintaining scan list
-Date: Mon, 13 Jun 2011 21:09:40 +0530
-Message-ID: <1307979580-11360-1-git-send-email-mshajakhan@atheros.com> (sfid-20110613_173950_964758_FD24D5AA)
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:64825 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751118Ab1F1TtC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jun 2011 15:49:02 -0400
+Received: by fxd18 with SMTP id 18so542113fxd.11
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2011 12:49:00 -0700 (PDT)
+Message-ID: <4E0A2F8A.8010102@fedoraproject.org> (sfid-20110628_214907_826293_D4E80570)
+Date: Tue, 28 Jun 2011 21:46:18 +0200
+From: Michel Alexandre Salim <salimma@fedoraproject.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH] ath9k: add module option for disabling 11n functionality
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Some wireless base stations implement 802.11n mode in ways that 
+open-source drivers cannot handle properly, resulting in very unstable 
+connections. This patch introduces an '11n_disable' option to the ath9k 
+driver, similar to the same option for the iwlagn driver.
 
-when we connect to hidden SSID AP's we maintain two entries
-for the same AP and we update all the parameters for the hidden
-SSID entry rather than the associated entry, this is because we
-have the SSID check in updating/adding new entries in scanlist.
-by skipping the SSID check we will maintain a single entry for
-the hidden SSID and also update the associated entry for the
-same.
-  will this break something if I skip SSID check for the sake
-of hidden SSID AP's or is there someother IE's I can check for.
+Tested at the internal wireless network of www.cs.fau.de, where 802.11n 
+currently only works reliably with Windows clients.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 ---
- net/wireless/scan.c |   11 ++---------
- 1 files changed, 2 insertions(+), 9 deletions(-)
+  drivers/net/wireless/ath/ath9k/init.c |   10 +++++++++-
+  1 files changed, 9 insertions(+), 1 deletions(-)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 7a6c676..eace508 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -348,15 +348,8 @@ static int cmp_bss(struct cfg80211_bss *a,
- 			       b->len_information_elements);
- 	}
- 
--	r = memcmp(a->bssid, b->bssid, ETH_ALEN);
--	if (r)
--		return r;
--
--	return cmp_ies(WLAN_EID_SSID,
--		       a->information_elements,
--		       a->len_information_elements,
--		       b->information_elements,
--		       b->len_information_elements);
-+	return memcmp(a->bssid, b->bssid, ETH_ALEN);
+diff --git a/drivers/net/wireless/ath/ath9k/init.c 
+b/drivers/net/wireless/ath/ath9k/init.c
+index 616e30b..9521ca3 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -43,6 +43,10 @@ static int ath9k_btcoex_enable;
+  module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
+  MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
+
++int ath9k_modparam_disable_11n;
++module_param_named(11n_disable, ath9k_modparam_disable_11n, int, 0444);
++MODULE_PARM_DESC(11n_disable, "disable 11n functionality");
 +
- }
- 
- struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
--- 
-1.7.0.4
+  bool is_ath9k_unloaded;
+  /* We use the hw_value as an index into our private channel structure */
 
+@@ -231,7 +235,11 @@ static void setup_ht_cap(struct ath_softc *sc,
+         u8 tx_streams, rx_streams;
+         int i, max_streams;
+
+-       ht_info->ht_supported = true;
++       if (ath9k_modparam_disable_11n)
++               ht_info->ht_supported = false;
++       else
++               ht_info->ht_supported = true;
++
+         ht_info->cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
+                        IEEE80211_HT_CAP_SM_PS |
+                        IEEE80211_HT_CAP_SGI_40 |
+-- 
+1.7.5.4
