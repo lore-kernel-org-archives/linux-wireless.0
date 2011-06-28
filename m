@@ -1,48 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:41342 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752487Ab1FOHF3 convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:38622 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237Ab1F1XQu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2011 03:05:29 -0400
-Received: by wya21 with SMTP id 21so74926wya.19
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jun 2011 00:05:28 -0700 (PDT)
+	Tue, 28 Jun 2011 19:16:50 -0400
+Received: by pwj7 with SMTP id 7so463673pwj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2011 16:16:49 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <580b0ce8e524bbdee36d8d713e32c97a.squirrel@mail.errtech.com>
-References: <580b0ce8e524bbdee36d8d713e32c97a.squirrel@mail.errtech.com>
-Date: Wed, 15 Jun 2011 12:35:28 +0530
-Message-ID: <BANLkTi==q4BFtRVRXOW8fcp+4vbctNzQEg@mail.gmail.com> (sfid-20110615_090532_453358_4ACDACB3)
-Subject: Re: GPL firmware for AR9002 chipsets
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: tmail133@kglug.org
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4E07B2B2.4060204@hauke-m.de>
+References: <4E07B2B2.4060204@hauke-m.de>
+Date: Wed, 29 Jun 2011 01:16:49 +0200
+Message-ID: <BANLkTik_HdOn6Cw8VBROrKwo7csL9mTGAQ@mail.gmail.com> (sfid-20110629_011653_025516_AC137F66)
+Subject: Re: Regression in ssb pcicore with SoC
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 15, 2011 at 12:31 PM, chris <tmail133@kglug.org> wrote:
-> I was reading on the mailing list that the AR9002 chipset supposedly has
-> GPL firmware somewhere. Does anybody know where? And is it free software
-> compliant or are they including the bad stuff within the GPL firmware'd.
+Thanks for reporting this and sorry for the problem.
 
-only for USB based AR9002
+W dniu 27 czerwca 2011 00:29 użytkownik Hauke Mehrtens
+<hauke@hauke-m.de> napisał:
+> I tried linux-3.0-rc4 on my Asus WL-500GP and got a kernel panic because
+> of a data bus error. This was caused by this commit you made:
 >
-> http://linuxwireless.org/en/users/Drivers/ath9k_htc
+> commit af335a6cbc3dfcba64ad31561c0da563d1c43a2d
+> Author: Rafał Miłecki <zajec5@gmail.com>
+> Date:   Wed Apr 27 18:21:34 2011 +0200
 >
-> http://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg03035.html
+>    ssb: pci: early fix for SPROM core index
 >
-> I have gotten the card to work in Ubuntu. I am working on getting it
-> working in Trisquel (a free software distribution, if there is free
-> firmware for it).
+>    Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 >
-> Chris
+> My device has an PCI controller, in host mode and this device does not
+> have a sprom in its address space, so ssb_pcicore_fix_sprom_core_index()
+> should be be called. I tried to find the same function in Broadcom
+> source, but did not had success.
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at �http://vger.kernel.org/majordomo-info.html
+> In the Broadcom open source code the pci init is done in
+> ./driver/nicpci.c and all calls to sporm are done through
+> pcie_war_pci_setup() which is our ssb_pcicore_pcie_setup_workarounds()
+> in ssb. I think ssb_pcicore_fix_sprom_core_index() should be called from
+> somewhere in ssb_pcicore_pcie_setup_workarounds().
 >
+> Could you please explain what you want to fix in
+> ssb_pcicore_fix_sprom_core_index() ?.
+>
+> I will have a closer look at it tomorrow evening.
+
+I don't think we will find the same workaround in brcm80211 code.
+Broadcom stripped a lot from their driver and we can not use it as
+reference for old (especially SSB) devices.
+
+When I was looking for fix for DMA errors I've noticed closed source
+driver performing a read than could be translated to the following ssb
+code:
+pcicore_read16(pc, SSB_PCICORE_SPROM(0));
+
+So I've found documentation of such a operation in Larry's e-mail
+Message-ID: <4BB81CAD.10602@lwfinger.net> [0] and implemented it in
+ssb.
+
+Larry documented this single workaround without really telling when it
+should be called. I've analyzed MMIO dumps of closed wl driver and put
+proper call in the same place wl does it. That's it.
 
 
+Unfortunately it appears that hostmode PCI(e) cores does not have
+SPROM shadowed in PCI(e) core. This results in the problem you've
+experienced.
+
+I believe all we need to do is to stop executing various workarounds
+for hostmode PCI(e) core. I'll offer a patch later today.
+
+
+[0] http://www.mail-archive.com/b43-dev@lists.infradead.org/msg00049.html
 
 -- 
-shafi
+Rafał
