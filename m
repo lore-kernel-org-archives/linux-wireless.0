@@ -1,38 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:65503 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754635Ab1FRQFc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2011 12:05:32 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 22/25] iwlagn: add offset define for subsystem id
-Date: Sat, 18 Jun 2011 08:34:28 -0700
-Message-Id: <1308411271-26093-23-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180551_433568_17C6A5C6)
-In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:34619 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751118Ab1F1UVg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jun 2011 16:21:36 -0400
+Date: Tue, 28 Jun 2011 13:18:36 -0700
+From: Greg KH <greg@kroah.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath6kl: implement testmode rx command
+Message-ID: <20110628201836.GA18749@kroah.com> (sfid-20110628_222148_486926_57BACF93)
+References: <20110627153610.16774.65919.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110627153610.16774.65919.stgit@localhost6.localdomain6>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add offset define for subsystem id in EEPROM
+On Mon, Jun 27, 2011 at 06:36:10PM +0300, Kalle Valo wrote:
+> Add new testmode command for retrieving rx reports from firmware.
+> 
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+This patch breaks the build.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index 19058a6..c1a17f9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -268,6 +268,7 @@ extern const u8 iwl_eeprom_band_1[14];
- 
- /* General */
- #define EEPROM_DEVICE_ID                    (2*0x08)	/* 2 bytes */
-+#define EEPROM_SUBSYSTEM_ID		    (2*0x0A)	/* 2 bytes */
- #define EEPROM_MAC_ADDRESS                  (2*0x15)	/* 6  bytes */
- #define EEPROM_BOARD_REVISION               (2*0x35)	/* 2  bytes */
- #define EEPROM_BOARD_PBA_NUMBER             (2*0x3B+1)	/* 9  bytes */
--- 
-1.7.0.4
+Please test your patches before sending them out, it causes lots of
+problems and annoys me when you don't.
 
+greg k-h
