@@ -1,58 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35686 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750866Ab1FUOkU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 10:40:20 -0400
-Subject: Re: [PATCH 2/2] mac80211: Fixing Races for skipping tailroom
- reservation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yogesh Ashok Powar <yogeshp@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Andreas Hartmann <andihartmann@01019freenet.de>
-In-Reply-To: <20110621141017.GC32464@hertz.marvell.com>
-References: <20110616102707.GB24458@hertz.marvell.com>
-	 <d38dc36c1ab9a4bd819b9bcbbda181da@secure.sipsolutions.net>
-	 <20110617132527.GA27436@hertz.marvell.com>
-	 <1308331485.7329.2.camel@Nokia-N900-51-1>
-	 <20110620143051.GA31035@hertz.marvell.com>
-	 <1308583799.4322.9.camel@jlt3.sipsolutions.net>
-	 <7DDF37406E10F0438561DBB78326DF3902F5D190E2@SC-VEXCH1.marvell.com>
-	 <1308590980.4322.19.camel@jlt3.sipsolutions.net>
-	 <20110621130305.GB32464@hertz.marvell.com>
-	 <1308663814.4276.3.camel@jlt3.sipsolutions.net>
-	 <20110621141017.GC32464@hertz.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 21 Jun 2011 16:40:15 +0200
-Message-ID: <1308667215.4276.7.camel@jlt3.sipsolutions.net> (sfid-20110621_164105_750882_9D97577B)
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:4701 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757898Ab1F2Xso (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:44 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 078/119] staging: brcm80211: move waitqueue code to
+ dhd_sdio.c
+Date: Wed, 29 Jun 2011 16:47:42 -0700
+Message-ID: <1309391303-22741-79-git-send-email-frankyl@broadcom.com> (sfid-20110630_014956_103260_CA3E04EE)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-06-21 at 19:40 +0530, Yogesh Ashok Powar wrote:
+In fullmac waitqueue for tx control is used by bus interface layer
+only. So move the related code to dhd_sdio.c
 
-> @@ -455,6 +496,8 @@ int ieee80211_key_link(struct ieee80211_key *key,
->  	__ieee80211_key_replace(sdata, sta, pairwise, old_key, key);
->  	__ieee80211_key_destroy(old_key);
->  
-> +	increment_tailroom_need_count(key->local);
-> +
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd.h       |    3 --
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |   20 ------------------
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |   26 ++++++++++++++++++++++-
+ 3 files changed, 24 insertions(+), 25 deletions(-)
 
-This doesn't seem right -- it links the key in first and then does the
-update, the mechanism I described relies on doing it the other way
-around.
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index 7e19d80..ffdee84 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -963,9 +963,6 @@ extern int brcmf_sendpkt(dhd_pub_t *dhdp, int ifidx, struct sk_buff *pkt);
+ extern int brcmf_bus_devreset(dhd_pub_t *dhdp, u8 flag);
+ extern int brcmf_bus_start(dhd_pub_t *dhdp);
+ 
+-extern void brcmf_wait_for_event(dhd_pub_t *dhd, bool * lockvar);
+-extern void brcmf_wait_event_wakeup(dhd_pub_t *dhd);
+-
+ extern void brcmf_c_pktfilter_offload_set(dhd_pub_t *dhd, char *arg);
+ extern void brcmf_c_pktfilter_offload_enable(dhd_pub_t *dhd, char *arg,
+ 					     int enable, int master_mode);
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 6f351eb..6516cc6 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -100,7 +100,6 @@ typedef struct dhd_info {
+ 	bool set_multicast;
+ 	bool set_macaddress;
+ 	u8 macvalue[ETH_ALEN];
+-	wait_queue_head_t ctrl_wait;
+ 	atomic_t pend_8021x_cnt;
+ 
+ #ifdef CONFIG_HAS_EARLYSUSPEND
+@@ -1641,7 +1640,6 @@ dhd_pub_t *brcmf_attach(struct dhd_bus *bus, uint bus_hdrlen)
+ 	sema_init(&dhd->proto_sem, 1);
+ 	/* Initialize other structure content */
+ 	init_waitqueue_head(&dhd->ioctl_resp_wait);
+-	init_waitqueue_head(&dhd->ctrl_wait);
+ 
+ 	/* Initialize the spinlocks */
+ 	spin_lock_init(&dhd->sdlock);
+@@ -2255,24 +2253,6 @@ static int brcmf_host_event(dhd_info_t *dhd, int *ifidx, void *pktdata,
+ 	return bcmerror;
+ }
+ 
+-void brcmf_wait_for_event(dhd_pub_t *dhd, bool *lockvar)
+-{
+-	struct dhd_info *dhdinfo = dhd->info;
+-	brcmf_os_sdunlock(dhd);
+-	wait_event_interruptible_timeout(dhdinfo->ctrl_wait,
+-					 (*lockvar == false), HZ * 2);
+-	brcmf_os_sdlock(dhd);
+-	return;
+-}
+-
+-void brcmf_wait_event_wakeup(dhd_pub_t *dhd)
+-{
+-	struct dhd_info *dhdinfo = dhd->info;
+-	if (waitqueue_active(&dhdinfo->ctrl_wait))
+-		wake_up_interruptible(&dhdinfo->ctrl_wait);
+-	return;
+-}
+-
+ int brcmf_netdev_reset(struct net_device *dev, u8 flag)
+ {
+ 	dhd_info_t *dhd = *(dhd_info_t **)netdev_priv(dev);
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index a97fd7c..ec2c744 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -586,6 +586,7 @@ typedef struct dhd_bus {
+ 	bool ctrl_frame_stat;
+ 
+ 	spinlock_t txqlock;
++	wait_queue_head_t ctrl_wait;
+ } dhd_bus_t;
+ 
+ typedef volatile struct _sbconfig {
+@@ -777,6 +778,8 @@ static void brcmf_sdbrcm_chip_resetcore(struct brcmf_sdio *sdh, u32 corebase);
+ static void brcmf_sdbrcm_sdiod_drive_strength_init(struct dhd_bus *bus,
+ 					u32 drivestrength);
+ static void brcmf_sdbrcm_chip_detach(struct dhd_bus *bus);
++static void brcmf_sdbrcm_wait_for_event(dhd_pub_t *dhd, bool *lockvar);
++static void brcmf_sdbrcm_wait_event_wakeup(dhd_bus_t *bus);
+ 
+ /* Packet free applicable unconditionally for sdio and sdspi.
+  * Conditional if bufpool was present for gspi bus.
+@@ -1501,7 +1504,7 @@ brcmf_sdbrcm_bus_txctl(struct dhd_bus *bus, unsigned char *msg, uint msglen)
+ 		bus->ctrl_frame_buf = frame;
+ 		bus->ctrl_frame_len = len;
+ 
+-		brcmf_wait_for_event(bus->dhd, &bus->ctrl_frame_stat);
++		brcmf_sdbrcm_wait_for_event(bus->dhd, &bus->ctrl_frame_stat);
+ 
+ 		if (bus->ctrl_frame_stat == false) {
+ 			DHD_INFO(("%s: ctrl_frame_stat == false\n", __func__));
+@@ -4577,7 +4580,7 @@ clkwait:
+ 
+ 		DHD_INFO(("Return_dpc value is : %d\n", ret));
+ 		bus->ctrl_frame_stat = false;
+-		brcmf_wait_event_wakeup(bus->dhd);
++		brcmf_sdbrcm_wait_event_wakeup(bus);
+ 	}
+ 	/* Send queued frames (limit 1 if rx may still be pending) */
+ 	else if ((bus->clkstate == CLK_AVAIL) && !bus->fcstate &&
+@@ -5213,6 +5216,7 @@ static void *brcmf_sdbrcm_probe(u16 venid, u16 devid, u16 bus_no,
+ 	}
+ 
+ 	spin_lock_init(&bus->txqlock);
++	init_waitqueue_head(&bus->ctrl_wait);
+ 
+ 	/* Attach to the dhd/OS/network interface */
+ 	bus->dhd = brcmf_attach(bus, SDPCM_RESERVE);
+@@ -6317,3 +6321,21 @@ brcmf_sdbrcm_chip_detach(struct dhd_bus *bus)
+ 	kfree(bus->ci);
+ 	bus->ci = NULL;
+ }
++
++static void
++brcmf_sdbrcm_wait_for_event(dhd_pub_t *dhd, bool *lockvar)
++{
++	brcmf_os_sdunlock(dhd);
++	wait_event_interruptible_timeout(dhd->bus->ctrl_wait,
++					 (*lockvar == false), HZ * 2);
++	brcmf_os_sdlock(dhd);
++	return;
++}
++
++static void
++brcmf_sdbrcm_wait_event_wakeup(dhd_bus_t *bus)
++{
++	if (waitqueue_active(&bus->ctrl_wait))
++		wake_up_interruptible(&bus->ctrl_wait);
++	return;
++}
+-- 
+1.7.1
 
-> @@ -498,8 +541,12 @@ void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata)
->  
->  	mutex_lock(&sdata->local->key_mtx);
->  
-> -	list_for_each_entry(key, &sdata->key_list, list)
-> +	sdata->local->crypto_tx_tailroom_needed_cnt = 0;
-> +
-
-That doesn't seem right either -- only if you have a single sdata that
-will work, I think?
-
-johannes
 
