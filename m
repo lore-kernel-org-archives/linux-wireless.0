@@ -1,84 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:37757 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752008Ab1FISeT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 14:34:19 -0400
-Date: Thu, 9 Jun 2011 15:34:31 -0300
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: Re: pull request: bluetooth-2.6 2011-06-08
-Message-ID: <20110609183430.GA2533@joana> (sfid-20110609_203425_685069_67BF430E)
-References: <20110608194658.GD13036@joana>
- <20110609175933.GA16802@tuxdriver.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:4614 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758102Ab1F2Xth (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:49:37 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 098/119] staging: brcm80211: removed brcmf_sdioh_start()
+ and brcmf_sdioh_stop()
+Date: Wed, 29 Jun 2011 16:48:02 -0700
+Message-ID: <1309391303-22741-99-git-send-email-frankyl@broadcom.com> (sfid-20110630_015245_508688_452AFAB3)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110609175933.GA16802@tuxdriver.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* John W. Linville <linville@tuxdriver.com> [2011-06-09 13:59:34 -0400]:
+From: Roland Vossen <rvossen@broadcom.com>
 
-> On Wed, Jun 08, 2011 at 04:46:58PM -0300, Gustavo F. Padovan wrote:
-> > Hi John,
-> > 
-> > First round of fixed for 3.0! There are here a regression fix for 1.1 and
-> > earlier devices and a fix in the shutdown of SCO sockets.  Other 3 patches are
-> > warning shut up. And one byte leak to userspace fix.
- > 
-> > Please pull, thanks!
-> > 
-> > 
-> > The following changes since commit 51e65257142a87fe46a1ce5c35c86c5baf012614:
-> > 
-> >   iwlegacy: fix channel switch locking (2011-06-08 14:19:05 -0400)
-> > 
-> > are available in the git repository at:
-> >   master.kernel.org:/pub/scm/linux/kernel/git/padovan/bluetooth-2.6.git master
-> > 
-> > David Miller (2):
-> 
-> ...
-> 
-> >       Bluetooth: Kill set but unused variable 'cmd' in cmtp_recv_capimsg()
-> 
-> Well, the patch submitter sounds familiar.  :-)  But killing an unused
-> variable isn't a bug fix.  It doesn't do any damage, but I suspect that
-> Dave expects to be held to the same standards as everyone else.
-> 
-> Can you drop that one (and reapply it for 3.1)?  Sorry for the trouble...
+Code cleanup. These functions were empty.
 
-Sorry for that, I tough it was not that bad fix this for 3.0. New pull request
-follows. Thanks a lot!
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdbus.h     |    4 ----
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |   10 ----------
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   10 ----------
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    6 ------
+ 4 files changed, 0 insertions(+), 30 deletions(-)
 
-The following changes since commit 51e65257142a87fe46a1ce5c35c86c5baf012614:
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
+index eb08152..761ec20 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
+@@ -93,10 +93,6 @@ extern int brcmf_sdioh_iovar_op(struct sdioh_info *si, const char *name,
+ /* Issue abort to the specified function and clear controller as needed */
+ extern int brcmf_sdioh_abort(struct sdioh_info *si, uint fnc);
+ 
+-/* Start and Stop SDIO without re-enumerating the SD card. */
+-extern int brcmf_sdioh_start(struct sdioh_info *si, int stage);
+-extern int brcmf_sdioh_stop(struct sdioh_info *si);
+-
+ /* Helper function */
+ void *brcmf_sdcard_get_sdioh(struct brcmf_sdio_card *card);
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 11abd55..09bad40 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -521,16 +521,6 @@ int brcmf_sdcard_abort(struct brcmf_sdio_card *card, uint fn)
+ 	return brcmf_sdioh_abort(card->sdioh, fn);
+ }
+ 
+-int brcmf_sdcard_start(struct brcmf_sdio_card *card, int stage)
+-{
+-	return brcmf_sdioh_start(card->sdioh, stage);
+-}
+-
+-int brcmf_sdcard_stop(struct brcmf_sdio_card *card)
+-{
+-	return brcmf_sdioh_stop(card->sdioh);
+-}
+-
+ int brcmf_sdcard_query_device(struct brcmf_sdio_card *card)
+ {
+ 	card->vendevid = (PCI_VENDOR_ID_BROADCOM << 16) | 0;
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 0f0dc42..7da200f 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -921,13 +921,3 @@ static void brcmf_sdioh_irqhandler_f2(struct sdio_func *func)
+ 
+ 	ASSERT(sd != NULL);
+ }
+-
+-int brcmf_sdioh_start(struct sdioh_info *si, int stage)
+-{
+-	return 0;
+-}
+-
+-int brcmf_sdioh_stop(struct sdioh_info *si)
+-{
+-	return 0;
+-}
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index df4063c..712d0df 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -190,12 +190,6 @@ extern int brcmf_sdcard_rwdata(struct brcmf_sdio_card *card, uint rw, u32 addr,
+ /* Issue an abort to the specified function */
+ extern int brcmf_sdcard_abort(struct brcmf_sdio_card *card, uint fn);
+ 
+-/* Start SDIO Host Controller communication */
+-extern int brcmf_sdcard_start(struct brcmf_sdio_card *card, int stage);
+-
+-/* Stop SDIO Host Controller communication */
+-extern int brcmf_sdcard_stop(struct brcmf_sdio_card *card);
+-
+ /* Returns the "Device ID" of target device on the SDIO bus. */
+ extern int brcmf_sdcard_query_device(struct brcmf_sdio_card *card);
+ 
+-- 
+1.7.1
 
-  iwlegacy: fix channel switch locking (2011-06-08 14:19:05 -0400)
 
-are available in the git repository at:
-  master.kernel.org:/pub/scm/linux/kernel/git/padovan/bluetooth-2.6.git master
-
-David Miller (1):
-      Bluetooth: Do not ignore errors returned from strict_strtol()
-
-Filip Palian (1):
-      Bluetooth: l2cap and rfcomm: fix 1 byte infoleak to userspace.
-
-Luiz Augusto von Dentz (1):
-      Bluetooth: fix shutdown on SCO sockets
-
-Stephen Boyd (1):
-      Bluetooth: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-
-Ville Tervo (1):
-      Bluetooth: Do not send SET_EVENT_MASK for 1.1 and earlier devices
-
- drivers/bluetooth/btmrvl_debugfs.c |   12 ++++++++++++
- net/bluetooth/hci_event.c          |   18 ++++++++++--------
- net/bluetooth/l2cap_sock.c         |    1 +
- net/bluetooth/rfcomm/sock.c        |    4 +++-
- net/bluetooth/sco.c                |   13 ++++++++++++-
- 5 files changed, 38 insertions(+), 10 deletions(-)
-
-	Gustavo
