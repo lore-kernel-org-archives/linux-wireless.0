@@ -1,67 +1,357 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43459 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755177Ab1FHLol (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2011 07:44:41 -0400
-Subject: Re: [RFC] cfg80211: Fix handling of previous_auth deauth
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@chromium.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <BANLkTimdAHt9VUUmNB2uzgm8ymeo6J+EeA@mail.gmail.com> (sfid-20110608_134252_247174_F1F51856)
-References: <a194a41b3f1376f035113d4f443038eb2e64264f.1307403076.git.pstew@chromium.org>
-	 <1307530922.3961.4.camel@jlt3.sipsolutions.net>
-	 <BANLkTimdAHt9VUUmNB2uzgm8ymeo6J+EeA@mail.gmail.com>
-	 (sfid-20110608_134252_247174_F1F51856)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 08 Jun 2011 13:44:39 +0200
-Message-ID: <1307533479.3961.13.camel@jlt3.sipsolutions.net> (sfid-20110608_134444_823851_30327B09)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52128 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757810Ab1F2WMV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 18:12:21 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	linux-mips@linux-mips.org
+Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
+	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC v3 04/13] bcma: add SOC bus
+Date: Thu, 30 Jun 2011 00:11:49 +0200
+Message-Id: <1309385518-12097-5-git-send-email-hauke@hauke-m.de> (sfid-20110630_001231_560652_9DFE00A4)
+In-Reply-To: <1309385518-12097-1-git-send-email-hauke@hauke-m.de>
+References: <1309385518-12097-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[you should send as text, the list won't accept html]
+This patch adds support for using bcma on an embedded bus. An embedded
+system like the bcm4716 could register this bus and it searches for the
+bcma cores then.
 
->         Maybe I'm confused -- what's "this issue"?
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/Kconfig          |    5 +
+ drivers/bcma/Makefile         |    1 +
+ drivers/bcma/host_soc.c       |  178 +++++++++++++++++++++++++++++++++++++++++
+ drivers/bcma/main.c           |    1 +
+ drivers/bcma/scan.c           |   24 +++++-
+ include/linux/bcma/bcma.h     |    4 +
+ include/linux/bcma/bcma_soc.h |   16 ++++
+ 7 files changed, 227 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/bcma/host_soc.c
+ create mode 100644 include/linux/bcma/bcma_soc.h
 
-> Sorry.  I covered the issue in a previous post but it wasn't threaded
-> in.   Here's a summary:
-> 
-> 
-> If you read the IEEE docs just right, they say that if an AP believes
-> a STA is authenticated, but it receives an AUTH request, it should
-> send a DEAUTH downstream with PREV_AUTH_NOT_VALID.  Some APs actually
-> do this.  The STA and AP can fall out of sync, eg, if the STA reboots
-> unexpectedly.  What happens then is that the a mac80211 STA will send
-> an AUTH, and get a DEAUTH  which will clear authtry_bssess[].
->  mac80211 keeps retrying, though, and the second time the AP sends a
-> successful AUTH response and marks the STA authenticated again.
->  Meanwhile cfg80211 doesn't have any state in authtry_bsses[] for the
-> AP so it drops the successful reply on the floor.  Thus the state
-> mismatch perpetuates.
-
-
-Right, makes sense.
-
->         It seems mac80211 shouldn't pass such up since it isn't
->         actually
->         connected. But then we just pass them up and rely on cfg80211
->         to sort it
->         out. Why do we even attempt to remove something from
->         authtry_bsses when
->         receiving a deauth frame? This only makes sense when we sent
->         it
->         ourselves and want to abort the authentication that way I
->         guess?
->         
-> It's a little confusing to me that the same function is in charge of
-> outgoing and incoming packets, but yes, I see no point in removing
-> anything from authtry_bsses[] for a received DEAUTH since it is not
-> applicable.
-
-Yeah, indeed. Would not modifying authtry_bsses for a _received_ DEAUTH
-fix it?
-
-johannes
-
+diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+index 83e9adf..fc5c02f 100644
+--- a/drivers/bcma/Kconfig
++++ b/drivers/bcma/Kconfig
+@@ -27,6 +27,11 @@ config BCMA_HOST_PCI
+ 	bool "Support for BCMA on PCI-host bus"
+ 	depends on BCMA_HOST_PCI_POSSIBLE
+ 
++config BCMA_HOST_SOC
++	bool
++	depends on BCMA && MIPS
++	default n
++
+ config BCMA_DEBUG
+ 	bool "BCMA debugging"
+ 	depends on BCMA
+diff --git a/drivers/bcma/Makefile b/drivers/bcma/Makefile
+index cde0182..e2aaa41 100644
+--- a/drivers/bcma/Makefile
++++ b/drivers/bcma/Makefile
+@@ -2,6 +2,7 @@ bcma-y					+= main.o scan.o core.o sprom.o
+ bcma-y					+= driver_chipcommon.o driver_chipcommon_pmu.o
+ bcma-y					+= driver_pci.o
+ bcma-$(CONFIG_BCMA_HOST_PCI)		+= host_pci.o
++bcma-$(CONFIG_BCMA_HOST_SOC)		+= host_soc.o
+ obj-$(CONFIG_BCMA)			+= bcma.o
+ 
+ ccflags-$(CONFIG_BCMA_DEBUG)		:= -DDEBUG
+diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
+new file mode 100644
+index 0000000..a6fe724
+--- /dev/null
++++ b/drivers/bcma/host_soc.c
+@@ -0,0 +1,178 @@
++/*
++ * Broadcom specific AMBA
++ * System on Chip (SoC) Host
++ *
++ * Licensed under the GNU/GPL. See COPYING for details.
++ */
++
++#include "bcma_private.h"
++#include "scan.h"
++#include <linux/bcma/bcma.h>
++#include <linux/bcma/bcma_soc.h>
++
++static u8 bcma_host_soc_read8(struct bcma_device *core, u16 offset)
++{
++	return readb(core->io_addr + offset);
++}
++
++static u16 bcma_host_soc_read16(struct bcma_device *core, u16 offset)
++{
++	return readw(core->io_addr + offset);
++}
++
++static u32 bcma_host_soc_read32(struct bcma_device *core, u16 offset)
++{
++	return readl(core->io_addr + offset);
++}
++
++static void bcma_host_soc_write8(struct bcma_device *core, u16 offset,
++				 u8 value)
++{
++	writeb(value, core->io_addr + offset);
++}
++
++static void bcma_host_soc_write16(struct bcma_device *core, u16 offset,
++				 u16 value)
++{
++	writew(value, core->io_addr + offset);
++}
++
++static void bcma_host_soc_write32(struct bcma_device *core, u16 offset,
++				 u32 value)
++{
++	writel(value, core->io_addr + offset);
++}
++
++#ifdef CONFIG_BCMA_BLOCKIO
++static void bcma_host_soc_block_read(struct bcma_device *core, void *buffer,
++				     size_t count, u16 offset, u8 reg_width)
++{
++	void __iomem *addr = core->io_addr + offset;
++
++	switch (reg_width) {
++	case sizeof(u8): {
++		u8 *buf = buffer;
++
++		while (count) {
++			*buf = __raw_readb(addr);
++			buf++;
++			count--;
++		}
++		break;
++	}
++	case sizeof(u16): {
++		__le16 *buf = buffer;
++
++		WARN_ON(count & 1);
++		while (count) {
++			*buf = (__force __le16)__raw_readw(addr);
++			buf++;
++			count -= 2;
++		}
++		break;
++	}
++	case sizeof(u32): {
++		__le32 *buf = buffer;
++
++		WARN_ON(count & 3);
++		while (count) {
++			*buf = (__force __le32)__raw_readl(addr);
++			buf++;
++			count -= 4;
++		}
++		break;
++	}
++	default:
++		WARN_ON(1);
++	}
++}
++
++static void bcma_host_soc_block_write(struct bcma_device *core,
++				      const void *buffer,
++				      size_t count, u16 offset, u8 reg_width)
++{
++	void __iomem *addr = core->io_addr + offset;
++
++	switch (reg_width) {
++	case sizeof(u8): {
++		const u8 *buf = buffer;
++
++		while (count) {
++			__raw_writeb(*buf, addr);
++			buf++;
++			count--;
++		}
++		break;
++	}
++	case sizeof(u16): {
++		const __le16 *buf = buffer;
++
++		WARN_ON(count & 1);
++		while (count) {
++			__raw_writew((__force u16)(*buf), addr);
++			buf++;
++			count -= 2;
++		}
++		break;
++	}
++	case sizeof(u32): {
++		const __le32 *buf = buffer;
++
++		WARN_ON(count & 3);
++		while (count) {
++			__raw_writel((__force u32)(*buf), addr);
++			buf++;
++			count -= 4;
++		}
++		break;
++	}
++	default:
++		WARN_ON(1);
++	}
++}
++#endif /* CONFIG_BCMA_BLOCKIO */
++
++static u32 bcma_host_soc_aread32(struct bcma_device *core, u16 offset)
++{
++	return readl(core->io_wrap + offset);
++}
++
++static void bcma_host_soc_awrite32(struct bcma_device *core, u16 offset,
++				  u32 value)
++{
++	writel(value, core->io_wrap + offset);
++}
++
++const struct bcma_host_ops bcma_host_soc_ops = {
++	.read8		= bcma_host_soc_read8,
++	.read16		= bcma_host_soc_read16,
++	.read32		= bcma_host_soc_read32,
++	.write8		= bcma_host_soc_write8,
++	.write16	= bcma_host_soc_write16,
++	.write32	= bcma_host_soc_write32,
++#ifdef CONFIG_BCMA_BLOCKIO
++	.block_read	= bcma_host_soc_block_read,
++	.block_write	= bcma_host_soc_block_write,
++#endif
++	.aread32	= bcma_host_soc_aread32,
++	.awrite32	= bcma_host_soc_awrite32,
++};
++
++int __init bcma_host_soc_register(struct bcma_soc *soc)
++{
++	struct bcma_bus *bus = &soc->bus;
++
++	/* iomap only first core. We have to read some register on this core
++	 * to scan the bus.
++	 */
++	bus->mmio = ioremap(BCMA_ADDR_BASE, BCMA_CORE_SIZE * 1);
++	if (!bus->mmio)
++		return -ENOMEM;
++
++	/* Host specific */
++	bus->hosttype = BCMA_HOSTTYPE_SOC;
++	bus->ops = &bcma_host_soc_ops;
++
++	/* Register */
++	return bcma_bus_early_register(bus, &soc->core_cc, &soc->core_mips);
++}
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index bc4c974..58ded75 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -95,6 +95,7 @@ static int bcma_register_cores(struct bcma_bus *bus)
+ 			break;
+ 		case BCMA_HOSTTYPE_NONE:
+ 		case BCMA_HOSTTYPE_SDIO:
++		case BCMA_HOSTTYPE_SOC:
+ 			break;
+ 		}
+ 
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index bf9f806..202edc8 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -337,6 +337,14 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 			}
+ 		}
+ 	}
++	if (bus->hosttype == BCMA_HOSTTYPE_SOC) {
++		core->io_addr = ioremap(core->addr, BCMA_CORE_SIZE);
++		if (!core->io_addr)
++			return -ENOMEM;
++		core->io_wrap = ioremap(core->wrap, BCMA_CORE_SIZE);
++		if (!core->io_wrap)
++			return -ENOMEM;
++	}
+ 	return 0;
+ }
+ 
+@@ -369,7 +377,13 @@ int bcma_bus_scan(struct bcma_bus *bus)
+ 	bcma_init_bus(bus);
+ 
+ 	erombase = bcma_scan_read32(bus, 0, BCMA_CC_EROM);
+-	eromptr = bus->mmio;
++	if (bus->hosttype == BCMA_HOSTTYPE_SOC) {
++		eromptr = ioremap(erombase, BCMA_CORE_SIZE);
++		if (!eromptr)
++			return -ENOMEM;
++	} else
++		eromptr = bus->mmio;
++
+ 	eromend = eromptr + BCMA_CORE_SIZE / sizeof(u32);
+ 
+ 	bcma_scan_switch_core(bus, erombase);
+@@ -417,7 +431,13 @@ int __init bcma_bus_scan_early(struct bcma_bus *bus,
+ 	int err, core_num = 0;
+ 
+ 	erombase = bcma_scan_read32(bus, 0, BCMA_CC_EROM);
+-	eromptr = bus->mmio;
++	if (bus->hosttype == BCMA_HOSTTYPE_SOC) {
++		eromptr = ioremap(erombase, BCMA_CORE_SIZE);
++		if (!eromptr)
++			return -ENOMEM;
++	} else
++		eromptr = bus->mmio;
++
+ 	eromend = eromptr + BCMA_CORE_SIZE / sizeof(u32);
+ 
+ 	bcma_scan_switch_core(bus, erombase);
+diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+index c473448..db4ec30 100644
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -17,6 +17,7 @@ enum bcma_hosttype {
+ 	BCMA_HOSTTYPE_NONE,
+ 	BCMA_HOSTTYPE_PCI,
+ 	BCMA_HOSTTYPE_SDIO,
++	BCMA_HOSTTYPE_SOC,
+ };
+ 
+ struct bcma_chipinfo {
+@@ -133,6 +134,9 @@ struct bcma_device {
+ 	u32 addr;
+ 	u32 wrap;
+ 
++	void __iomem *io_addr;
++	void __iomem *io_wrap;
++
+ 	void *drvdata;
+ 	struct list_head list;
+ };
+diff --git a/include/linux/bcma/bcma_soc.h b/include/linux/bcma/bcma_soc.h
+new file mode 100644
+index 0000000..4203c55
+--- /dev/null
++++ b/include/linux/bcma/bcma_soc.h
+@@ -0,0 +1,16 @@
++#ifndef LINUX_BCMA_SOC_H_
++#define LINUX_BCMA_SOC_H_
++
++#include <linux/bcma/bcma.h>
++
++struct bcma_soc {
++	struct bcma_bus bus;
++	struct bcma_device core_cc;
++	struct bcma_device core_mips;
++};
++
++int __init bcma_host_soc_register(struct bcma_soc *soc);
++
++int bcma_bus_register(struct bcma_bus *bus);
++
++#endif /* LINUX_BCMA_SOC_H_ */
+-- 
+1.7.4.1
 
