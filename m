@@ -1,51 +1,239 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:54345 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757751Ab1FVCDr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 22:03:47 -0400
-Received: by vxb39 with SMTP id 39so282456vxb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 19:03:46 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:2003 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758037Ab1F2Xsy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:54 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 019/119] staging: brcm80211: get rid on
+ IS_CFG80211_FAVORITE macro
+Date: Wed, 29 Jun 2011 16:46:43 -0700
+Message-ID: <1309391303-22741-20-git-send-email-frankyl@broadcom.com> (sfid-20110630_015115_472160_3CA25FA5)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20110622010057.GA12123@internetdog.org>
-References: <776913.88107.qm@web161609.mail.bf1.yahoo.com> <4DC0312A.4040303@lwfinger.net>
- <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com> <4DC0669E.4040100@lwfinger.net>
- <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com> <4DC06BF3.6070208@lwfinger.net>
- <20110621124954.GA8462@internetdog.org> <4E011644.3070906@lwfinger.net> <20110622010057.GA12123@internetdog.org>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 22 Jun 2011 12:03:26 +1000
-Message-ID: <BANLkTinD=zRLioxjruqPCMa1hkG4nUxBEw@mail.gmail.com> (sfid-20110622_040351_206681_F65E3722)
-Subject: Re: r8712u driver for the rtl8192su chip.
-To: ali@internetdog.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ali,
+From: Arend van Spriel <arend@broadcom.com>
 
-On Wed, Jun 22, 2011 at 11:00, Ali Bahar <ali@internetdog.org> wrote:
-> On Tue, Jun 21, 2011 at 05:08:04PM -0500, Larry Finger wrote:
->> On 06/21/2011 07:49 AM, Ali Bahar wrote:
->
->> >this is more of a quick FYI, regarding Staging's r8712u driver.
->
->> >root@hashbang Tue Jun 21 18:30:06 ~$ iwconfig wlan2 essid "h55m"
->> >Error for wireless request "Set ESSID" (8B1A) :
->> >     SET failed on device wlan2 ; Operation not permitted.
->> >root@hashbang Tue Jun 21 18:30:47 ~$ uname -r
->
-> How is root unprivileged? The shell-prompt shows the user.
+cfg80211 module is always favorite for the brcmfmac driver so the
+macro is not needed to know the answer.
 
-In general, root prompts have a '#' at the end of the prompt, this one
-has a '$' which is indicative of a non-privileged user.
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |  108 +++++------------------
+ 1 files changed, 24 insertions(+), 84 deletions(-)
 
-Thanks,
-
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index d09706b..386955e 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -262,6 +262,10 @@ char nvram_path[MOD_PARAM_PATHLEN];
+ module_param_string(firmware_path, firmware_path, MOD_PARAM_PATHLEN, 0);
+ module_param_string(nvram_path, nvram_path, MOD_PARAM_PATHLEN, 0);
+ 
++/* No firmware required */
++bool dhd_no_fw_req;
++module_param(dhd_no_fw_req, bool, 0);
++
+ /* Error bits */
+ module_param(dhd_msg_level, int, 0);
+ 
+@@ -339,10 +343,6 @@ module_param(dhd_idletime, int, 0);
+ uint dhd_poll;
+ module_param(dhd_poll, uint, 0);
+ 
+-/* Use cfg80211 */
+-uint dhd_cfg80211 = true;
+-module_param(dhd_cfg80211, uint, 0);
+-
+ /* Use interrupts */
+ uint dhd_intr = true;
+ module_param(dhd_intr, uint, 0);
+@@ -371,11 +371,6 @@ uint dhd_pktgen_len;
+ module_param(dhd_pktgen_len, uint, 0);
+ #endif
+ 
+-#define FAVORITE_WIFI_CP	(!!dhd_cfg80211)
+-#define IS_CFG80211_FAVORITE() FAVORITE_WIFI_CP
+-#define DBG_CFG80211_GET() ((dhd_cfg80211 & WL_DBG_MASK) >> 1)
+-#define NO_FW_REQ() (dhd_cfg80211 & 0x80)
+-
+ /* Version string to report */
+ #ifdef DHD_DEBUG
+ #define DHD_COMPILED "\nCompiled in " SRCBASE
+@@ -398,32 +393,6 @@ static int dhd_toe_set(dhd_info_t *dhd, int idx, u32 toe_ol);
+ static int dhd_wl_host_event(dhd_info_t *dhd, int *ifidx, void *pktdata,
+ 			     wl_event_msg_t *event_ptr, void **data_ptr);
+ 
+-#if defined(CONFIG_PM_SLEEP)
+-static int dhd_sleep_pm_callback(struct notifier_block *nfb,
+-				 unsigned long action, void *ignored)
+-{
+-	switch (action) {
+-	case PM_HIBERNATION_PREPARE:
+-	case PM_SUSPEND_PREPARE:
+-		atomic_set(&dhd_mmc_suspend, true);
+-		return NOTIFY_OK;
+-	case PM_POST_HIBERNATION:
+-	case PM_POST_SUSPEND:
+-		atomic_set(&dhd_mmc_suspend, false);
+-		return NOTIFY_OK;
+-	}
+-	return 0;
+-}
+-
+-static struct notifier_block dhd_sleep_pm_notifier = {
+-	.notifier_call = dhd_sleep_pm_callback,
+-	.priority = 0
+-};
+-
+-extern int register_pm_notifier(struct notifier_block *nb);
+-extern int unregister_pm_notifier(struct notifier_block *nb);
+-#endif	/* defined(CONFIG_PM_SLEEP) */
+-	/* && defined(DHD_GPL) */
+ static void dhd_set_packet_filter(int value, dhd_pub_t *dhd)
+ {
+ #ifdef PKT_FILTER_SUPPORT
+@@ -1740,9 +1709,7 @@ static int dhd_stop(struct net_device *net)
+ 	dhd_info_t *dhd = *(dhd_info_t **) netdev_priv(net);
+ 
+ 	DHD_TRACE(("%s: Enter\n", __func__));
+-	if (IS_CFG80211_FAVORITE()) {
+-		wl_cfg80211_down();
+-	}
++	wl_cfg80211_down();
+ 	if (dhd->pub.up == 0)
+ 		return 0;
+ 
+@@ -1792,12 +1759,10 @@ static int dhd_open(struct net_device *net)
+ 	/* Allow transmit calls */
+ 	netif_start_queue(net);
+ 	dhd->pub.up = 1;
+-	if (IS_CFG80211_FAVORITE()) {
+-		if (unlikely(wl_cfg80211_up())) {
+-			DHD_ERROR(("%s: failed to bring up cfg80211\n",
+-				   __func__));
+-			return -1;
+-		}
++	if (unlikely(wl_cfg80211_up())) {
++		DHD_ERROR(("%s: failed to bring up cfg80211\n",
++			   __func__));
++		return -1;
+ 	}
+ 
+ 	return ret;
+@@ -1937,15 +1902,13 @@ dhd_pub_t *dhd_attach(struct dhd_bus *bus, uint bus_hdrlen)
+ #endif	/* defined(CONFIG_WIRELESS_EXT) */
+ 
+ 	/* Attach and link in the cfg80211 */
+-	if (IS_CFG80211_FAVORITE()) {
+-		if (unlikely(wl_cfg80211_attach(net, &dhd->pub))) {
+-			DHD_ERROR(("wl_cfg80211_attach failed\n"));
+-			goto fail;
+-		}
+-		if (!NO_FW_REQ()) {
+-			strcpy(fw_path, wl_cfg80211_get_fwname());
+-			strcpy(nv_path, wl_cfg80211_get_nvramname());
+-		}
++	if (unlikely(wl_cfg80211_attach(net, &dhd->pub))) {
++		DHD_ERROR(("wl_cfg80211_attach failed\n"));
++		goto fail;
++	}
++	if (!dhd_no_fw_req) {
++		strcpy(fw_path, wl_cfg80211_get_fwname());
++		strcpy(nv_path, wl_cfg80211_get_nvramname());
+ 	}
+ 
+ 	/* Set up the watchdog timer */
+@@ -2011,8 +1974,6 @@ dhd_pub_t *dhd_attach(struct dhd_bus *bus, uint bus_hdrlen)
+ #endif
+ #if defined(CONFIG_PM_SLEEP)
+ 	atomic_set(&dhd_mmc_suspend, false);
+-	if (!IS_CFG80211_FAVORITE())
+-		register_pm_notifier(&dhd_sleep_pm_notifier);
+ #endif	/* defined(CONFIG_PM_SLEEP) */
+ 	/* && defined(DHD_GPL) */
+ 	/* Init lock suspend to prevent kernel going to suspend */
+@@ -2302,13 +2263,8 @@ void dhd_detach(dhd_pub_t *dhdp)
+ 			wl_iw_detach();
+ #endif				/* (CONFIG_WIRELESS_EXT) */
+ 
+-			if (IS_CFG80211_FAVORITE())
+-				wl_cfg80211_detach();
++			wl_cfg80211_detach();
+ 
+-#if defined(CONFIG_PM_SLEEP)
+-			if (!IS_CFG80211_FAVORITE())
+-				unregister_pm_notifier(&dhd_sleep_pm_notifier);
+-#endif	/* defined(CONFIG_PM_SLEEP) */
+ 			/* && defined(DHD_GPL) */
+ 			free_netdev(ifp->net);
+ 			kfree(ifp);
+@@ -2509,7 +2465,7 @@ void *dhd_os_open_image(char *filename)
+ {
+ 	struct file *fp;
+ 
+-	if (IS_CFG80211_FAVORITE() && !NO_FW_REQ())
++	if (!dhd_no_fw_req)
+ 		return wl_cfg80211_request_fw(filename);
+ 
+ 	fp = filp_open(filename, O_RDONLY, 0);
+@@ -2530,7 +2486,7 @@ int dhd_os_get_image_block(char *buf, int len, void *image)
+ 	struct file *fp = (struct file *)image;
+ 	int rdlen;
+ 
+-	if (IS_CFG80211_FAVORITE() && !NO_FW_REQ())
++	if (!dhd_no_fw_req)
+ 		return wl_cfg80211_read_fw(buf, len);
+ 
+ 	if (!image)
+@@ -2545,7 +2501,7 @@ int dhd_os_get_image_block(char *buf, int len, void *image)
+ 
+ void dhd_os_close_image(void *image)
+ {
+-	if (IS_CFG80211_FAVORITE() && !NO_FW_REQ())
++	if (!dhd_no_fw_req)
+ 		return wl_cfg80211_release_fw();
+ 	if (image)
+ 		filp_close((struct file *)image, NULL);
+@@ -2587,26 +2543,10 @@ dhd_wl_host_event(dhd_info_t *dhd, int *ifidx, void *pktdata,
+ 	if (bcmerror != 0)
+ 		return bcmerror;
+ 
+-#if defined(CONFIG_WIRELESS_EXT)
+-	if (!IS_CFG80211_FAVORITE()) {
+-		if ((dhd->iflist[*ifidx] == NULL)
+-		    || (dhd->iflist[*ifidx]->net == NULL)) {
+-			DHD_ERROR(("%s Exit null pointer\n", __func__));
+-			return bcmerror;
+-		}
+-
+-		if (dhd->iflist[*ifidx]->net)
+-			wl_iw_event(dhd->iflist[*ifidx]->net, event, *data);
+-	}
+-#endif				/* defined(CONFIG_WIRELESS_EXT)  */
+-
+-	if (IS_CFG80211_FAVORITE()) {
+-		ASSERT(dhd->iflist[*ifidx] != NULL);
+-		ASSERT(dhd->iflist[*ifidx]->net != NULL);
+-		if (dhd->iflist[*ifidx]->net)
+-			wl_cfg80211_event(dhd->iflist[*ifidx]->net, event,
+-					  *data);
+-	}
++	ASSERT(dhd->iflist[*ifidx] != NULL);
++	ASSERT(dhd->iflist[*ifidx]->net != NULL);
++	if (dhd->iflist[*ifidx]->net)
++		wl_cfg80211_event(dhd->iflist[*ifidx]->net, event, *data);
+ 
+ 	return bcmerror;
+ }
 -- 
-Julian Calaby
+1.7.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+
