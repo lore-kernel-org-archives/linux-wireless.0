@@ -1,43 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:50597 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751831Ab1FMSSk (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:41833 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752348Ab1F2XXu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2011 14:18:40 -0400
-Message-ID: <4DF65472.9070601@candelatech.com> (sfid-20110613_201844_581048_F9A562F7)
-Date: Mon, 13 Jun 2011 11:18:26 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 29 Jun 2011 19:23:50 -0400
+Received: by iyb12 with SMTP id 12so1450249iyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2011 16:23:50 -0700 (PDT)
 MIME-Version: 1.0
-To: Fred Matthews <fredmm@hotmail.co.uk>
-CC: ionic@ionic.de, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [ath9k-devel] AR9380 current driver supported features
-References: <BLU158-w3633DDF37956A9F5672C1F87690@phx.gbl> <BLU158-w58841DE4774E18813C30CA87690@phx.gbl>
-In-Reply-To: <BLU158-w58841DE4774E18813C30CA87690@phx.gbl>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1309370457.2208.48.camel@aeonflux>
+References: <1309285246-8495-1-git-send-email-aloisio.almeida@openbossa.org>
+ <1309285246-8495-2-git-send-email-aloisio.almeida@openbossa.org>
+ <1309292325.29598.9.camel@Joe-Laptop> <1309311096.2208.33.camel@aeonflux>
+ <1309312164.29598.53.camel@Joe-Laptop> <1309370457.2208.48.camel@aeonflux>
+From: Aloisio Almeida <aloisio.almeida@openbossa.org>
+Date: Wed, 29 Jun 2011 20:23:30 -0300
+Message-ID: <BANLkTinospg_dhTC8Tcok3kqk9gOryG6eA@mail.gmail.com> (sfid-20110630_012359_919917_BFF44393)
+Subject: Re: [PATCH v4 1/6] NFC: add nfc subsystem core
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Joe Perches <joe@perches.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, sameo@linux.intel.com,
+	johannes@sipsolutions.net, lauro.venancio@openbossa.org,
+	marcio.macedo@openbossa.org, Waldemar.Rymarkiewicz@tieto.com,
+	padovan@profusion.mobi, rdunlap@xenotime.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/13/2011 11:09 AM, Fred Matthews wrote:
+Hi Joe and Marcel,
+
+On Wed, Jun 29, 2011 at 3:00 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi Joe,
 >
-> Hi,I am looking to upgrade my current nodes and AP from the AR9280 2x2 MIMO NIC to the AR9380 3x3 NIC.
-> Thus I was wondering if someone can kindly comment on the current chipset stability with ath9k, also the current supported features (e.g.  "iw list" output) such as setting the NIC as an AP/Master using hostapd, Greenfield mode, TxBF, CSI info, and LPDC as well as rates achieved.
-> Thanks in advance 		 	   		
+>> > The pr_<level> ones are nice and I wished we had them all back in the
+>> > days, but the NFC ones actually could take the controller as argument
+>> > and then us the dev_* versions of these commands.
+>>
+>> I do think that if there's a controller struct that's always
+>> or mostly used with nfc_<level>, then it should be added and
+>> passed to the functions arguments, maybe with NULL used where
+>> necessary.
+>>
+>> > At this stage of the project it is a bit too early to tell I guess.
+>> > > I think emitting __func__ rarely adds useful information.
+>> > Depends on how you are using your debug statements. I find it really
+>> > helpful since then you can keep the text detail to a minimum.
+>>
+>> I don't disagree that while debugging function names
+>> and tracing function entries/exits are useful.
+>>
+>> Today, dynamic_debug can add __func__ to the output as
+>> desired so I think that it's not really necessary
+>> to add to any <foo>_dbg callsite.
+>
+> I did not know that. Then we might should go ahead and also cleanup the
+> Bluetooth subsystem.
 
-Both are stable in our testing (virtual stations, AP mode), but we're having
-a hard time sourcing AR9380 3x3 NICs..getting ship-times in August, etc....
+That's true only for pr_debug() function. You cannot add __func__ info
+on dev_dbg() calls dynamically.
 
-I don't have details on the other things you ask about.
+So, for net/nfc/* I propose to use directly pr_*() functions.
 
-I'd suggest getting a few NICs and trying them out in your environment.
-Even if they have problems, there are folks actively working on it and
-likely it can be fixed.  And at least for our use with virtual stations & APs,
-there is no other NIC that comes close to the features that Atheros offers.
+For device drivers the following macros would be provided:
 
-Thanks,
-Ben
+#define nfc_dev_info(dev, fmt, arg...) dev_info((dev), "NFC: " fmt, ## arg)
+#define nfc_dev_err(dev, fmt, arg...) dev_err((dev), "%s: " fmt,
+__func__, ## arg)
+#define nfc_dev_dbg(dev, fmt, arg...) dev_dbg((dev), "%s: " fmt,
+__func__, ## arg)
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+What do you think?
 
+Aloisio
