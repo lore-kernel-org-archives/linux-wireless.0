@@ -1,94 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1142 "EHLO MMS3.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4628 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758894Ab1FALqv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:51 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
+	id S1757866Ab1F2Xso (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:44 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
 To: gregkh@suse.de
 cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 17/83] staging: brcm80211: remove iovars IOV_POWER
-Date: Wed, 1 Jun 2011 13:45:02 +0200
-Message-ID: <1306928768-7501-17-git-send-email-rvossen@broadcom.com> (sfid-20110601_134808_464848_86C566E4)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+Subject: [PATCH 088/119] staging: brcm80211: remove unused macro
+ definitions from dhd.h
+Date: Wed, 29 Jun 2011 16:47:52 -0700
+Message-ID: <1309391303-22741-89-git-send-email-frankyl@broadcom.com> (sfid-20110630_014942_122441_7D453AB4)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+From: Arend van Spriel <arend@broadcom.com>
 
-Remove unused sdio related iovars IOV_POWER for fullmac driver
+Several unused macro definitions have been removed.
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |    4 ----
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   13 -------------
- 2 files changed, 0 insertions(+), 17 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/dhd.h |   12 ------------
+ 1 files changed, 0 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-index ab4d0cc..5b8529c 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-@@ -365,10 +365,6 @@ void bcmsdh_unregister_oob_intr(void)
- extern uint sd_msglevel;	/* Debug message level */
- module_param(sd_msglevel, uint, 0);
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index 9b1a7f4..77b381c 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -624,13 +624,8 @@ extern atomic_t brcmf_mmc_suspend;
+ 		} \
+ 	}	while (0)
+ #define BRCMF_PM_RESUME_WAIT(a)	_BRCMF_PM_RESUME_WAIT(a, 30)
+-#define DHD_PM_RESUME_WAIT_FOREVER(a)	_BRCMF_PM_RESUME_WAIT(a, ~0)
+ #define BRCMF_PM_RESUME_RETURN_ERROR(a)	\
+ 	do { if (atomic_read(&brcmf_mmc_suspend)) return a; } while (0)
+-#define DHD_PM_RESUME_RETURN	do { \
+-	if (atomic_read(&brcmf_mmc_suspend)) \
+-		return; \
+-	} while (0)
  
--extern uint sd_power;		/* 0 = SD Power OFF,
--					 1 = SD Power ON. */
--module_param(sd_power, uint, 0);
+ #define BRCMF_SPINWAIT_SLEEP_INIT(a) DECLARE_WAIT_QUEUE_HEAD(a);
+ #define BRCMF_SPINWAIT_SLEEP(a, exp, us) do { \
+@@ -645,9 +640,7 @@ extern atomic_t brcmf_mmc_suspend;
+ 
+ #define BRCMF_PM_RESUME_WAIT_INIT(a)
+ #define BRCMF_PM_RESUME_WAIT(a)
+-#define DHD_PM_RESUME_WAIT_FOREVER(a)
+ #define BRCMF_PM_RESUME_RETURN_ERROR(a)
+-#define DHD_PM_RESUME_RETURN
+ 
+ #define BRCMF_SPINWAIT_SLEEP_INIT(a)
+ #define BRCMF_SPINWAIT_SLEEP(a, exp, us)  do { \
+@@ -865,9 +858,7 @@ typedef struct dhd_ioctl {
+ 
+ /* bump this number if you change the ioctl interface */
+ #define BRCMF_IOCTL_VERSION	1
 -
- extern uint sd_clock;		/* SD Clock Control, 0 = SD Clock OFF,
- 				 1 = SD Clock ON */
- module_param(sd_clock, uint, 0);
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 02fa5b4..a2d0ad8 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -48,7 +48,6 @@ extern PBCMSDH_SDMMC_INSTANCE gInstance;
- uint sd_sdmode = SDIOH_MODE_SD4;	/* Use SD4 mode by default */
- uint sd_f2_blocksize = 512;	/* Default blocksize */
+ #define	BRCMF_IOCTL_MAXLEN	8192	/* max length ioctl buffer required */
+-#define	DHD_IOCTL_SMLEN	256	/* "small" length ioctl buffer required */
  
--uint sd_power = 1;		/* Default to SD Slot powered ON */
- uint sd_clock = 1;		/* Default to SD Clock turned ON */
- uint sd_hiok = false;		/* Don't use hi-speed mode by default */
- uint sd_msglevel = 0x01;
-@@ -355,7 +354,6 @@ enum {
- 	IOV_SDMODE,
- 	IOV_HISPEED,
- 	IOV_HCIREGS,
--	IOV_POWER,
- 	IOV_CLOCK,
- 	IOV_RXCHAIN
- };
-@@ -368,8 +366,6 @@ const bcm_iovar_t sdioh_iovars[] = {
- 	{"sd_numints", IOV_NUMINTS, 0, IOVT_UINT32, 0},
- 	{"sd_devreg", IOV_DEVREG, 0, IOVT_BUFFER, sizeof(sdreg_t)}
- 	,
--	{"sd_power", IOV_POWER, 0, IOVT_UINT32, 0}
--	,
- 	{"sd_clock", IOV_CLOCK, 0, IOVT_UINT32, 0}
- 	,
- 	{"sd_mode", IOV_SDMODE, 0, IOVT_UINT32, 100}
-@@ -506,15 +502,6 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
+ /* common ioctl definitions */
+ #define BRCMF_GET_MAGIC				0
+@@ -885,7 +876,6 @@ typedef struct dhd_ioctl {
+ #define BRCMF_HDRS_VAL	0x0040
+ #define BRCMF_BYTES_VAL	0x0080
+ #define BRCMF_INTR_VAL	0x0100
+-#define DHD_LOG_VAL	0x0200
+ #define BRCMF_GLOM_VAL	0x0400
+ #define BRCMF_EVENT_VAL	0x0800
+ #define BRCMF_BTA_VAL	0x1000
+@@ -926,7 +916,5 @@ typedef struct brcmf_pktgen {
+ 	 when idle */
+ #define BRCMF_IDLE_ACTIVE	0	/* Do not request any SD clock change
+ 				 when idle */
+-#define DHD_IDLE_STOP   (-1)	/* Request SD clock be stopped
+-				 (and use SD1 mode) */
  
- 		break;
- 
--	case IOV_GVAL(IOV_POWER):
--		int_val = (u32) sd_power;
--		memcpy(arg, &int_val, val_size);
--		break;
--
--	case IOV_SVAL(IOV_POWER):
--		sd_power = int_val;
--		break;
--
- 	case IOV_GVAL(IOV_CLOCK):
- 		int_val = (u32) sd_clock;
- 		memcpy(arg, &int_val, val_size);
+ #endif				/* _dhd_h_ */
 -- 
-1.7.4.1
+1.7.1
 
 
