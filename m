@@ -1,72 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:44739 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754736Ab1FJSFk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 14:05:40 -0400
-Date: Fri, 10 Jun 2011 15:05:55 -0300
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: Re: pull request: bluetooth-2.6 2011-06-08
-Message-ID: <20110610180555.GC2663@joana> (sfid-20110610_200546_264748_3DFFFACC)
-References: <20110608194658.GD13036@joana>
- <20110609175933.GA16802@tuxdriver.com>
- <20110609183430.GA2533@joana>
- <20110610175302.GD2665@tuxdriver.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:1997 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757601Ab1F2Xsm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:42 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 020/119] staging: brcm80211: move assert function to
+ dhd_linux.c
+Date: Wed, 29 Jun 2011 16:46:44 -0700
+Message-ID: <1309391303-22741-21-git-send-email-frankyl@broadcom.com> (sfid-20110630_014907_940795_85D0EF2A)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110610175302.GD2665@tuxdriver.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* John W. Linville <linville@tuxdriver.com> [2011-06-10 13:53:03 -0400]:
+From: Arend van Spriel <arend@broadcom.com>
 
-> On Thu, Jun 09, 2011 at 03:34:31PM -0300, Gustavo F. Padovan wrote:
-> > * John W. Linville <linville@tuxdriver.com> [2011-06-09 13:59:34 -0400]:
-> > 
-> > > On Wed, Jun 08, 2011 at 04:46:58PM -0300, Gustavo F. Padovan wrote:
-> 
-> > > >       Bluetooth: Kill set but unused variable 'cmd' in cmtp_recv_capimsg()
-> > > 
-> > > Well, the patch submitter sounds familiar.  :-)  But killing an unused
-> > > variable isn't a bug fix.  It doesn't do any damage, but I suspect that
-> > > Dave expects to be held to the same standards as everyone else.
-> > > 
-> > > Can you drop that one (and reapply it for 3.1)?  Sorry for the trouble...
-> > 
-> > Sorry for that, I tough it was not that bad fix this for 3.0. New pull request
-> > follows. Thanks a lot!
-> 
-> > Stephen Boyd (1):
-> >       Bluetooth: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-> 
-> Sorry, I missed this one too -- can you redirect it for 3.1 as well?
+The source file wl_iw.c is primarily intended to provide wireless
+extensions functionality, which is to be removed from the driver.
+The assert function is moved to another source file.
 
-The following changes since commit 51e65257142a87fe46a1ce5c35c86c5baf012614:            
-                                                                                        
-  iwlegacy: fix channel switch locking (2011-06-08 14:19:05 -0400)                      
-                                                                                        
-are available in the git repository at:                                                 
-  master.kernel.org:/pub/scm/linux/kernel/git/padovan/bluetooth-2.6.git master          
-                                                                                        
-David Miller (1):                                                                       
-      Bluetooth: Do not ignore errors returned from strict_strtol()                     
-                                                                                        
-Filip Palian (1):                                                                       
-      Bluetooth: l2cap and rfcomm: fix 1 byte infoleak to userspace.                    
-                                                                                        
-Luiz Augusto von Dentz (1):                                                             
-      Bluetooth: fix shutdown on SCO sockets                                            
-                                                                                        
-Ville Tervo (1):                                                                        
-      Bluetooth: Do not send SET_EVENT_MASK for 1.1 and earlier devices                 
-                                                                                        
- drivers/bluetooth/btmrvl_debugfs.c |   12 ++++++++++++
- net/bluetooth/hci_event.c          |   18 ++++++++++--------
- net/bluetooth/l2cap_sock.c         |    1 +
- net/bluetooth/rfcomm/sock.c        |    1 +
- net/bluetooth/sco.c                |   13 ++++++++++++-
- 5 files changed, 36 insertions(+), 9 deletions(-)
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |   50 +++++++++++++++++++++++
+ drivers/staging/brcm80211/brcmfmac/wl_iw.c     |   51 ------------------------
+ 2 files changed, 50 insertions(+), 51 deletions(-)
 
-	Gustavo
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 386955e..e0cd8e1 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -46,6 +46,9 @@
+ #define EPI_VERSION_STR		"4.218.248.5"
+ #define ETH_P_BRCM			0x886c
+ 
++/* Global ASSERT type flag */
++u32 g_assert_type;
++
+ #if defined(CUSTOMER_HW2) && defined(CONFIG_WIFI_CONTROL_FUNC)
+ #include <linux/wifi_tiwlan.h>
+ 
+@@ -2766,3 +2769,50 @@ exit:
+ 	return ret;
+ }
+ #endif				/* DHD_DEBUG */
++
++#if defined(BCMDBG)
++void osl_assert(char *exp, char *file, int line)
++{
++	char tempbuf[256];
++	char *basename;
++
++	basename = strrchr(file, '/');
++	/* skip the '/' */
++	if (basename)
++		basename++;
++
++	if (!basename)
++		basename = file;
++
++	snprintf(tempbuf, 256,
++		 "assertion \"%s\" failed: file \"%s\", line %d\n", exp,
++		 basename, line);
++
++	/*
++	 * Print assert message and give it time to
++	 * be written to /var/log/messages
++	 */
++	if (!in_interrupt()) {
++		const int delay = 3;
++		printk(KERN_ERR "%s", tempbuf);
++		printk(KERN_ERR "panic in %d seconds\n", delay);
++		set_current_state(TASK_INTERRUPTIBLE);
++		schedule_timeout(delay * HZ);
++	}
++
++	switch (g_assert_type) {
++	case 0:
++		panic(KERN_ERR "%s", tempbuf);
++		break;
++	case 1:
++		printk(KERN_ERR "%s", tempbuf);
++		BUG();
++		break;
++	case 2:
++		printk(KERN_ERR "%s", tempbuf);
++		break;
++	default:
++		break;
++	}
++}
++#endif				/* defined(BCMDBG) */
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_iw.c b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+index e8b45ae..ef407ec 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_iw.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
+@@ -130,9 +130,6 @@ typedef enum sup_auth_status {
+ 
+ static const u8 ether_bcast[ETH_ALEN] = {255, 255, 255, 255, 255, 255};
+ 
+-/* Global ASSERT type flag */
+-u32 g_assert_type;
+-
+ static void wl_iw_timerfunc(unsigned long data);
+ static void wl_iw_set_event_mask(struct net_device *dev);
+ static int wl_iw_iscan(iscan_info_t *iscan, wlc_ssid_t *ssid, u16 action);
+@@ -3659,53 +3656,5 @@ void wl_iw_detach(void)
+ #endif				/* WL_IW_USE_ISCAN */
+ 
+ 	kfree(g_scan);
+-
+ 	g_scan = NULL;
+ }
+-
+-#if defined(BCMDBG)
+-void osl_assert(char *exp, char *file, int line)
+-{
+-	char tempbuf[256];
+-	char *basename;
+-
+-	basename = strrchr(file, '/');
+-	/* skip the '/' */
+-	if (basename)
+-		basename++;
+-
+-	if (!basename)
+-		basename = file;
+-
+-	snprintf(tempbuf, 256,
+-		 "assertion \"%s\" failed: file \"%s\", line %d\n", exp,
+-		 basename, line);
+-
+-	/*
+-	 * Print assert message and give it time to
+-	 * be written to /var/log/messages
+-	 */
+-	if (!in_interrupt()) {
+-		const int delay = 3;
+-		printk(KERN_ERR "%s", tempbuf);
+-		printk(KERN_ERR "panic in %d seconds\n", delay);
+-		set_current_state(TASK_INTERRUPTIBLE);
+-		schedule_timeout(delay * HZ);
+-	}
+-
+-	switch (g_assert_type) {
+-	case 0:
+-		panic(KERN_ERR "%s", tempbuf);
+-		break;
+-	case 1:
+-		printk(KERN_ERR "%s", tempbuf);
+-		BUG();
+-		break;
+-	case 2:
+-		printk(KERN_ERR "%s", tempbuf);
+-		break;
+-	default:
+-		break;
+-	}
+-}
+-#endif				/* defined(BCMDBG) */
+-- 
+1.7.1
+
+
