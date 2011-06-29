@@ -1,34 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:45710 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753567Ab1F0TGT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 15:06:19 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 06ED554004E
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2011 15:13:40 -0400 (EDT)
-Subject: Compat-wireless release for 2011-06-27 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110627190617.2BCB140EA9@repository3.orbit-lab.org> (sfid-20110627_210624_783840_971A6A6D)
-Date: Mon, 27 Jun 2011 15:06:17 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mms1.broadcom.com ([216.31.210.17]:2003 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757604Ab1F2Xsm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:42 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 119/119] staging: brcm80211: updated TODO file
+Date: Wed, 29 Jun 2011 16:48:23 -0700
+Message-ID: <1309391303-22741-120-git-send-email-frankyl@broadcom.com> (sfid-20110630_014910_875407_C4BFE19D)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + d5e519b...23e7a52 akpm-end   -> origin/akpm-end  (forced update)
- + be7cf21...8e81dad akpm-start -> origin/akpm-start  (forced update)
-   91121d1..07a621c  history    -> origin/history
- + 2555a35...fe984da master     -> origin/master  (forced update)
-   bccaeaf..8abf558  stable     -> origin/stable
- * [new tag]         next-20110627 -> next-20110627
+From: Henry Ptasinski <henryp@broadcom.com>
 
-compat-wireless code metrics
+Updated TODO file to reflect current driver state, results of recent
+cleanup and fixes.
 
-    823405 - Total upstream lines of code being pulled
-      2385 - backport code changes
-      2078 - backport code additions
-       307 - backport code deletions
-      8123 - backport from compat module
-     10508 - total backport code
-    1.2762 - % of code consists of backport work
+Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
+---
+ drivers/staging/brcm80211/TODO |   12 +-----------
+ 1 files changed, 1 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/TODO b/drivers/staging/brcm80211/TODO
+index 94c792b..e2e2ef9 100644
+--- a/drivers/staging/brcm80211/TODO
++++ b/drivers/staging/brcm80211/TODO
+@@ -4,19 +4,9 @@ Bugs
+ ====
+ - none known at this moment
+ 
+-brcmfmac and brcmsmac
+-=====================
+-- replace company specific acronym wlc_
+-- Resolve all XXX, TODO, FIXME in code
+-
+ brcmfmac
+ =====================
+-- Remove unnecessary includes, move #includes from .h files into .c files.
+-- Absorb and delete header files that are included in only one .c file
+-- ASSERTS not allowed in mainline, replace by warning + error handling
+-- Replace printk and WL_ERROR() with proper routines
+-- Replace driver's proprietary ssb interface with generic kernel ssb module
+-- Build and test on 64 bit linux kernel
++- ASSERTS deprecated in mainline, replace by warning + error handling
+ 
+ brcm80211 info page
+ =====================
+-- 
+1.7.1
+
+
