@@ -1,145 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:54215 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752672Ab1FXKDt (ORCPT
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:49059 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751814Ab1F2DhP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2011 06:03:49 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 5so2727527wwe.1
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jun 2011 03:03:48 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 3/3] wl12xx: implement Tx watermarks per AC
-Date: Fri, 24 Jun 2011 13:03:37 +0300
-Message-Id: <1308909817-25689-3-git-send-email-arik@wizery.com> (sfid-20110624_120354_416926_EFF7FFCD)
-In-Reply-To: <1308909817-25689-1-git-send-email-arik@wizery.com>
-References: <1308909817-25689-1-git-send-email-arik@wizery.com>
+	Tue, 28 Jun 2011 23:37:15 -0400
+Received: by fxd18 with SMTP id 18so803016fxd.11
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2011 20:37:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <BANLkTiktJ3L3Nw+wHbJt9mkVSRBU8JGwoA@mail.gmail.com>
+References: <BANLkTimfrcrqVxNXj_5qDYYJoz6Exnzw+w@mail.gmail.com>
+	<1309009093.4317.9.camel@jlt3.sipsolutions.net>
+	<BANLkTinUO9PA4dN8JWUox2nXRu25R3J4ew@mail.gmail.com>
+	<BANLkTiktJ3L3Nw+wHbJt9mkVSRBU8JGwoA@mail.gmail.com>
+Date: Tue, 28 Jun 2011 23:37:13 -0400
+Message-ID: <BANLkTi=_zXSdO20Q3ZhRJ_XDLkWbo6G6+w@mail.gmail.com> (sfid-20110629_053721_483230_70DE3251)
+Subject: Re: [PATCH] chan.c: fix chan.c to return channel number when in
+ monitor mode and on a fixed channel.
+From: Nicholas Hockey <nhockey@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Each AC is stopped when its queue is filled up to the high watermark,
-and restarted when its queue it lower than the low watermark. This
-ensures congested ACs are not able to starve other ACs.
+thank you very much, that is very helpful information. im sure it will
+be a resource for not only me, but a host of others frustrated by the
+current state. in order that they will/should be able to research and
+modify their software accordingly. i originally wrote my software in
+the madwifi days, and didnt pay enough attention to the changes, all i
+knew was that the patch i posted solved my problem. i still dont see
+whats wrong with my method, but im hoping the direction you have
+pointed me in will help answer that,
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c   |   13 +++++++------
- drivers/net/wireless/wl12xx/tx.c     |   20 +++++++++++++-------
- drivers/net/wireless/wl12xx/tx.h     |   16 ++++++++++++++++
- drivers/net/wireless/wl12xx/wl12xx.h |    1 +
- 4 files changed, 37 insertions(+), 13 deletions(-)
+On Tue, Jun 28, 2011 at 10:53 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+> Take a look at how monitor mode is used by other bits of software, eg
+> I think hostapd in Linux uses a monitor mode interface.
+>
+> If I understand the Linux wifi stack use of monitor mode correctly,
+> it's not designed like the "classic" monitor mode from days gone by
+> (eg madwifi) (And this is what BSD still does..); it's a slave device
+> to a currently configured, non-monitor interface. The normal interface
+> gets the 'normal' traffic; the slave monitor mode interface sees the
+> management traffic so hostapd can do MLME, etc.
+>
+> So you likely need to look at what hostapd does and create/use a
+> monitor mode interface in the same way. Ie, as a slave to a normal
+> interface, rather than a stand-alone interface.
+>
+> Adrian
+>
+> On 29 June 2011 00:12, Nicholas Hockey <nhockey@gmail.com> wrote:
+>> If this has been discussed before, could you please point me to a
+>> resource? if this solution is not correct, then id like to read why
+>> its not correct, and formulate another solution for the problem. i am
+>> an amateur radio tech and i have to apply this patch every single
+>> build in order to use some custom software i have developed over the
+>> years.
+>>
+>> On Sat, Jun 25, 2011 at 9:38 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>>> On Thu, 2011-06-23 at 16:49 -0400, Nicholas Hockey wrote:
+>>>> (sorry if this is not right, its been nearly 10 years since i
+>>>> submitted a kernel patch)
+>>>
+>>> Listing cfg80211 isntead of "chan.c" would have been useful :-)
+>>>
+>>>> Fixes: When monitoring a fixed channel, chan.c does not report what
+>>>> channel it is on.
+>>>>
+>>>> Signed-off-by: Nicholas Hockey <nhockey@gmail.com>
+>>>> ---
+>>>> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+>>>> index 17cd0c0..261ee32 100644
+>>>> --- a/net/wireless/chan.c
+>>>> +++ b/net/wireless/chan.c
+>>>> @@ -82,10 +82,12 @@ int cfg80211_set_freq(struct
+>>>> cfg80211_registered_device *rdev,
+>>>>  {
+>>>>         struct ieee80211_channel *chan;
+>>>>         int result;
+>>>> +    struct wireless_dev *mon_dev = NULL;
+>>>>
+>>>> -       if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR)
+>>>> +       if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR) {
+>>>> +        mon_dev = wdev;
+>>>>                 wdev = NULL;
+>>>> -
+>>>> +    }
+>>>>         if (wdev) {
+>>>>                 ASSERT_WDEV_LOCK(wdev);
+>>>>
+>>>> @@ -131,5 +133,8 @@ int cfg80211_set_freq(struct
+>>>> cfg80211_registered_device *rdev,
+>>>>         if (wdev)
+>>>>                 wdev->channel = chan;
+>>>>
+>>>> +    if (mon_dev)
+>>>> +        mon_dev->channel = chan;
+>>>> +
+>>>
+>>> This has been discussed numerous times, this change still isn't right
+>>> because monitors are slaved to others.
+>>>
+>>> johannes
+>>>
+>>>
+>>
+>>
+>>
+>> --
+>> Nicholas (Tilt) Hockey
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index d3e1eb6..166287f 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1371,10 +1371,11 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
- 	struct wl1271 *wl = hw->priv;
- 	unsigned long flags;
--	int q;
-+	int q, mapping;
- 	u8 hlid = 0;
- 
--	q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
-+	mapping = skb_get_queue_mapping(skb);
-+	q = wl1271_tx_get_queue(mapping);
- 
- 	if (wl->bss_type == BSS_TYPE_AP_BSS)
- 		hlid = wl1271_tx_get_hlid(skb);
-@@ -1387,10 +1388,10 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	 * The workqueue is slow to process the tx_queue and we need stop
- 	 * the queue here, otherwise the queue will get too long.
- 	 */
--	if (wl->tx_queue_count >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
--		wl1271_debug(DEBUG_TX, "op_tx: stopping queues");
--		ieee80211_stop_queues(wl->hw);
--		set_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
-+	if (skb_queue_len(&wl->tx_queue[q]) >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
-+		wl1271_debug(DEBUG_TX, "op_tx: stopping queues for q %d", q);
-+		ieee80211_stop_queue(wl->hw, mapping);
-+		set_bit(q, &wl->stopped_queues_map);
- 	}
- 
- 	/* queue the packet */
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index ce33590..ef54cee 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -444,14 +444,19 @@ u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set)
- void wl1271_handle_tx_low_watermark(struct wl1271 *wl)
- {
- 	unsigned long flags;
-+	int i;
- 
--	if (test_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags) &&
--	    wl->tx_queue_count <= WL1271_TX_QUEUE_LOW_WATERMARK) {
--		/* firmware buffer has space, restart queues */
--		spin_lock_irqsave(&wl->wl_lock, flags);
--		ieee80211_wake_queues(wl->hw);
--		clear_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
--		spin_unlock_irqrestore(&wl->wl_lock, flags);
-+	for (i = 0; i < NUM_TX_QUEUES; i++) {
-+		if (test_bit(i, &wl->stopped_queues_map) &&
-+		    skb_queue_len(&wl->tx_queue[i]) <=
-+						WL1271_TX_QUEUE_LOW_WATERMARK) {
-+			/* firmware buffer has space, restart queues */
-+			spin_lock_irqsave(&wl->wl_lock, flags);
-+			ieee80211_wake_queue(wl->hw,
-+					     wl1271_tx_get_mac80211_queue(i));
-+			clear_bit(i, &wl->stopped_queues_map);
-+			spin_unlock_irqrestore(&wl->wl_lock, flags);
-+		}
- 	}
- }
- 
-@@ -849,6 +854,7 @@ void wl1271_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
- 	}
- 
- 	wl->tx_queue_count = 0;
-+	wl->stopped_queues_map = 0;
- 
- 	/*
- 	 * Make sure the driver is at a consistent state, in case this
-diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
-index 832f925..f79d3c0 100644
---- a/drivers/net/wireless/wl12xx/tx.h
-+++ b/drivers/net/wireless/wl12xx/tx.h
-@@ -182,6 +182,22 @@ static inline int wl1271_tx_get_queue(int queue)
- 	}
- }
- 
-+static inline int wl1271_tx_get_mac80211_queue(int queue)
-+{
-+	switch (queue) {
-+	case CONF_TX_AC_VO:
-+		return 0;
-+	case CONF_TX_AC_VI:
-+		return 1;
-+	case CONF_TX_AC_BE:
-+		return 2;
-+	case CONF_TX_AC_BK:
-+		return 3;
-+	default:
-+		return 2;
-+	}
-+}
-+
- void wl1271_tx_work(struct work_struct *work);
- void wl1271_tx_work_locked(struct wl1271 *wl);
- void wl1271_tx_complete(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 89ba1fc..49aee9f 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -437,6 +437,7 @@ struct wl1271 {
- 	/* Frames scheduled for transmission, not handled yet */
- 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
- 	int tx_queue_count;
-+	long stopped_queues_map;
- 
- 	/* Frames received, not handled yet by mac80211 */
- 	struct sk_buff_head deferred_rx_queue;
+
+
 -- 
-1.7.4.1
-
+Nicholas (Tilt) Hockey
