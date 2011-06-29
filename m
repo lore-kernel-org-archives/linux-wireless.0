@@ -1,59 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:33307 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752608Ab1FFVZI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 17:25:08 -0400
-MIME-Version: 1.0
-In-Reply-To: <20110606203252.1854e4d7@sf>
-References: <20110605201042.21c86763@sf>
-	<BANLkTimLXr1+OLtGGXE2kzccRRG5T-G2mw@mail.gmail.com>
-	<20110606203252.1854e4d7@sf>
-Date: Mon, 6 Jun 2011 22:25:07 +0100
-Message-ID: <BANLkTinEecGCZPCUeLrXu4o+hN9cKGa39w@mail.gmail.com> (sfid-20110606_232534_382951_3CC36587)
-Subject: Re: 3.0.0-rc1: dmesg shows 'wlan%d' instead of 'wlan0'
-From: julie Sullivan <kernelmail.jms@gmail.com>
-To: Sergei Trofimovich <slyich@gmail.com>
-Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:59031 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752987Ab1F2WMM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 18:12:12 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	linux-mips@linux-mips.org
+Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
+	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC v3 00/13] bcma: add support for embedded devices like bcm4716
+Date: Thu, 30 Jun 2011 00:11:45 +0200
+Message-Id: <1309385518-12097-1-git-send-email-hauke@hauke-m.de> (sfid-20110630_001225_630732_1503C12A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> Applied this commit on top of 3.0-rc2 and wlan%d switched to wlan0 back.
->
-> Thanks!
->
-> --
->
->  Sergei
->
+This patch series adds support for embedded devices like bcm47xx to 
+bcma. Bcma is used on bcm4716 and bcm4718 SoCs. With these patches my 
+bcm4716 device boots up till it tries to access the flash, because the 
+serial flash chip is unsupported for now, this will be my next task. 
+This adds support for MIPS cores, interrupt configuration and the 
+serial console.
 
-Yes, with me too:
+This patch series adds support for embedded devices like bcm47xx to 
+bcma. Bcma is used on bcm4716 and bcm4718 SoCs. With these patches my 
+bcm4716 device boots up till it tries to access the flash, because the 
+serial flash chip is unsupported for now, this will be my next task. 
+This adds support for MIPS cores, interrupt configuration and the 
+serial console.
 
+The ifdef and switch case statements in the bcm47xx code do not look 
+good got me, but I do not know how to do it in an other way. Does 
+someone have a idea how to do it in a better way?
+Everything in bcma looks good to me and this should be the last RFC 
+patch. With the bcm47xx code I have the problem mentioned above, but if 
+no one has a better idea this also works.
+The pci(e) host code is not implemented, it is just done that far as it
+does not do client mode initialization on hostmode devices, which will
+break on an controller in host mode.
+These patches are not containing all functions needed to get the SoC to 
+fully work and support every feature, but it is a good start.
+These patches are now integrated in OpenWrt for everyone how wants to
+test them.
 
-before patch application (3.0-rc2):
+v3:
+ * make bcm47xx built either with bcma, ssb or both and use mips MIPS 74K optimizations if possible
+ * add block io support
+ * some minor fixes for code and doku
+v2:
+ * use list and no arry to store cores
+ * rename bcma_host_bcma_ to bcma_host_soc_
+ * use core->io_addr and core->io_wrap to access cores
+ * checkpatch fixes
+ * some minor fixes
 
-[   63.837522] wlan%d: authenticate with 00:18:f6:aa:6e:25 (try 1)
-[   63.843805] wlan%d: authenticated
-[   63.844282] wlan%d: associate with 00:18:f6:aa:6e:25 (try 1)
-[   63.846887] wlan%d: RX AssocResp from 00:18:f6:aa:6e:25
-(capab=0x411 status=0 aid=2)
-[   63.846891] wlan%d: associated
+Hauke Mehrtens (13):
+  bcma: move parsing of EEPROM into own function.
+  bcma: move initializing of struct bcma_bus to own function.
+  bcma: add functions to scan cores needed on SoCs
+  bcma: add SOC bus
+  bcma: add mips driver
+  bcma: add serial console support
+  bcma: get CPU clock
+  bcma: add pci(e) host mode
+  bcma: add check if sprom is available before accessing it.
+  bcm47xx: prepare to support different buses
+  bcm47xx: make it possible to build bcm47xx without ssb.
+  bcm47xx: add support for bcma bus
+  bcm47xx: fix irq assignment for new SoCs.
 
-after patch application:
+ arch/mips/Kconfig                            |    8 +-
+ arch/mips/bcm47xx/Kconfig                    |   31 +++
+ arch/mips/bcm47xx/Makefile                   |    3 +-
+ arch/mips/bcm47xx/gpio.c                     |   82 +++++--
+ arch/mips/bcm47xx/irq.c                      |   12 +
+ arch/mips/bcm47xx/nvram.c                    |   29 ++-
+ arch/mips/bcm47xx/serial.c                   |   46 ++++-
+ arch/mips/bcm47xx/setup.c                    |   90 +++++++-
+ arch/mips/bcm47xx/time.c                     |   16 +-
+ arch/mips/bcm47xx/wgt634u.c                  |   13 +-
+ arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |   26 ++-
+ arch/mips/include/asm/mach-bcm47xx/gpio.h    |  108 +++++++--
+ arch/mips/pci/pci-bcm47xx.c                  |    6 +
+ drivers/bcma/Kconfig                         |   20 ++
+ drivers/bcma/Makefile                        |    3 +
+ drivers/bcma/bcma_private.h                  |   22 ++
+ drivers/bcma/driver_chipcommon.c             |   69 ++++++
+ drivers/bcma/driver_chipcommon_pmu.c         |   87 +++++++
+ drivers/bcma/driver_mips.c                   |  254 +++++++++++++++++++
+ drivers/bcma/driver_pci.c                    |   17 ++-
+ drivers/bcma/driver_pci_host.c               |   43 ++++
+ drivers/bcma/host_soc.c                      |  178 ++++++++++++++
+ drivers/bcma/main.c                          |   69 ++++++-
+ drivers/bcma/scan.c                          |  336 +++++++++++++++++---------
+ drivers/bcma/sprom.c                         |    3 +
+ drivers/watchdog/bcm47xx_wdt.c               |   27 ++-
+ include/linux/bcma/bcma.h                    |    7 +
+ include/linux/bcma/bcma_driver_chipcommon.h  |   36 +++
+ include/linux/bcma/bcma_driver_mips.h        |   61 +++++
+ include/linux/bcma/bcma_driver_pci.h         |    1 +
+ include/linux/bcma/bcma_soc.h                |   16 ++
+ 31 files changed, 1538 insertions(+), 181 deletions(-)
+ create mode 100644 arch/mips/bcm47xx/Kconfig
+ create mode 100644 drivers/bcma/driver_mips.c
+ create mode 100644 drivers/bcma/driver_pci_host.c
+ create mode 100644 drivers/bcma/host_soc.c
+ create mode 100644 include/linux/bcma/bcma_driver_mips.h
+ create mode 100644 include/linux/bcma/bcma_soc.h
 
-[   69.472955] wlan0: authenticate with 00:18:f6:aa:6e:25 (try 1)
-[   69.479356] wlan0: authenticated
-[   69.479863] wlan0: associate with 00:18:f6:aa:6e:25 (try 1)
-[   69.482425] wlan0: RX AssocResp from 00:18:f6:aa:6e:25 (capab=0x411
-status=0 aid=2)
-[   69.482428] wlan0: associated
+-- 
+1.7.4.1
 
-
-Thanks for the pointer, Shafi.
-
-Cheers
-Julie
