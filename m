@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37009 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759014Ab1FWKcW convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56910 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752411Ab1F2Uzn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2011 06:32:22 -0400
-From: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 2/2] ath9k: Use PS wrappers in beacon tasklet
-Date: Thu, 23 Jun 2011 10:30:20 +0000
-Message-ID: <8F3AF1C9F856774F8C8D67AA7EDFEC88012D5195@nasanexd02b.na.qualcomm.com> (sfid-20110623_123226_814468_0B575DD9)
-References: <1308816554-2910-1-git-send-email-rmanoharan@atheros.com>,<1308816554-2910-2-git-send-email-rmanoharan@atheros.com>
-In-Reply-To: <1308816554-2910-2-git-send-email-rmanoharan@atheros.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Wed, 29 Jun 2011 16:55:43 -0400
+Subject: Re: [PATCH] net, wireless: Don't return uninitialized in
+ __cfg80211_stop_sched_scan()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jesper Juhl <jj@chaosbits.net>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <alpine.LNX.2.00.1106292241230.3747@swampdragon.chaosbits.net>
+References: <alpine.LNX.2.00.1106292212110.3747@swampdragon.chaosbits.net>
+	 <1309379244.4071.7.camel@jlt3.sipsolutions.net>
+	 <1309379630.1514.122.camel@cumari>
+	 <alpine.LNX.2.00.1106292241230.3747@swampdragon.chaosbits.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 29 Jun 2011 22:55:40 +0200
+Message-ID: <1309380940.4071.8.camel@jlt3.sipsolutions.net> (sfid-20110629_225606_027238_2B347897)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+On Wed, 2011-06-29 at 22:42 +0200, Jesper Juhl wrote:
+> On Wed, 29 Jun 2011, Luciano Coelho wrote:
 > 
-> Ensure that hw is awake before accessing registers during
-> beacon generation.
-> 
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/beacon.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
-> 
-John,
+> > On Wed, 2011-06-29 at 22:27 +0200, Johannes Berg wrote: 
+> > > On Wed, 2011-06-29 at 22:13 +0200, Jesper Juhl wrote:
+> > > > If the 'driver_initiated' function argument to
+> > > > __cfg80211_stop_sched_scan() is not 0 then we'll return an
+> > > > uninitialized 'ret' from the function.
+> > > 
+> > > 'err'. I also dislike the initialisation, can we just replace the
+> > > "return err;" at the end of the function with "return 0;" instead?
+> > 
+> > Luckily we were never using the return value when passing
+> > driver_initiate =- false.
+> > 
+> > And I agree with you, there's no use to return err at the end.  Better
+> > to simply return 0.
+> > 
+> Ok, so how about this?
 
-Please drop this patch as powersave is not supported for ibss/ap mode.
+Fine with me.
 
---
-Rajkumar
+johannes
+
 
