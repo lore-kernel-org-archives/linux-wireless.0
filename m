@@ -1,252 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:65503 "EHLO mga09.intel.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4452 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753102Ab1FRQF2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2011 12:05:28 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 10/25] iwlagn: don't use the PCI wrappers for DMA operation
-Date: Sat, 18 Jun 2011 08:34:16 -0700
-Message-Id: <1308411271-26093-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180553_038459_B5C98132)
-In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1757680Ab1F2XtS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:49:18 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 110/119] staging: brcm80211: replaced macro W_SDREG by
+ function w_sdreg()
+Date: Wed, 29 Jun 2011 16:48:14 -0700
+Message-ID: <1309391303-22741-111-git-send-email-frankyl@broadcom.com> (sfid-20110630_015209_965230_E05AD0A1)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Roland Vossen <rvossen@broadcom.com>
 
-Get a pointer to the struct device during probe and get the rid of all the PCI
-specific DMA wrappers.
+Code cleanup. Leads to more readable code and better type checking.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   12 ++++++------
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c  |   27 +++++++++++++--------------
- drivers/net/wireless/iwlwifi/iwl-agn.c     |    8 ++++----
- drivers/net/wireless/iwlwifi/iwl-tx.c      |   27 +++++++++++++--------------
- 4 files changed, 36 insertions(+), 38 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   74 ++++++++++++++-----------
+ 1 files changed, 41 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 4c11edc..52da539 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -639,9 +639,9 @@ void iwlagn_rx_queue_reset(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- 		/* In the reset function, these buffers may have been allocated
- 		 * to an SKB, so we need to unmap and free potential storage */
- 		if (rxq->pool[i].page != NULL) {
--			pci_unmap_page(priv->pci_dev, rxq->pool[i].page_dma,
-+			dma_unmap_page(priv->bus.dev, rxq->pool[i].page_dma,
- 				PAGE_SIZE << priv->hw_params.rx_page_order,
--				PCI_DMA_FROMDEVICE);
-+				DMA_FROM_DEVICE);
- 			__iwl_free_pages(priv, rxq->pool[i].page);
- 			rxq->pool[i].page = NULL;
- 		}
-@@ -913,9 +913,9 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
- 		BUG_ON(rxb->page);
- 		rxb->page = page;
- 		/* Get physical address of the RB */
--		rxb->page_dma = pci_map_page(priv->pci_dev, page, 0,
-+		rxb->page_dma = dma_map_page(priv->bus.dev, page, 0,
- 				PAGE_SIZE << priv->hw_params.rx_page_order,
--				PCI_DMA_FROMDEVICE);
-+				DMA_FROM_DEVICE);
- 		/* dma address must be no more than 36 bits */
- 		BUG_ON(rxb->page_dma & ~DMA_BIT_MASK(36));
- 		/* and also 256 byte aligned! */
-@@ -958,9 +958,9 @@ void iwlagn_rx_queue_free(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- 	int i;
- 	for (i = 0; i < RX_QUEUE_SIZE + RX_FREE_BUFFERS; i++) {
- 		if (rxq->pool[i].page != NULL) {
--			pci_unmap_page(priv->pci_dev, rxq->pool[i].page_dma,
-+			dma_unmap_page(priv->bus.dev, rxq->pool[i].page_dma,
- 				PAGE_SIZE << priv->hw_params.rx_page_order,
--				PCI_DMA_FROMDEVICE);
-+				DMA_FROM_DEVICE);
- 			__iwl_free_pages(priv, rxq->pool[i].page);
- 			rxq->pool[i].page = NULL;
- 		}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index f4e5ede..d0ac090 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -716,10 +716,10 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 
- 	/* Physical address of this Tx command's header (not MAC header!),
- 	 * within command buffer array. */
--	txcmd_phys = pci_map_single(priv->pci_dev,
-+	txcmd_phys = dma_map_single(priv->bus.dev,
- 				    &out_cmd->hdr, firstlen,
--				    PCI_DMA_BIDIRECTIONAL);
--	if (unlikely(pci_dma_mapping_error(priv->pci_dev, txcmd_phys)))
-+				    DMA_BIDIRECTIONAL);
-+	if (unlikely(dma_mapping_error(priv->bus.dev, txcmd_phys)))
- 		goto drop_unlock_sta;
- 	dma_unmap_addr_set(out_meta, mapping, txcmd_phys);
- 	dma_unmap_len_set(out_meta, len, firstlen);
-@@ -735,13 +735,13 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	 * if any (802.11 null frames have no payload). */
- 	secondlen = skb->len - hdr_len;
- 	if (secondlen > 0) {
--		phys_addr = pci_map_single(priv->pci_dev, skb->data + hdr_len,
--					   secondlen, PCI_DMA_TODEVICE);
--		if (unlikely(pci_dma_mapping_error(priv->pci_dev, phys_addr))) {
--			pci_unmap_single(priv->pci_dev,
-+		phys_addr = dma_map_single(priv->bus.dev, skb->data + hdr_len,
-+					   secondlen, DMA_TO_DEVICE);
-+		if (unlikely(dma_mapping_error(priv->bus.dev, phys_addr))) {
-+			dma_unmap_single(priv->bus.dev,
- 					 dma_unmap_addr(out_meta, mapping),
- 					 dma_unmap_len(out_meta, len),
--					 PCI_DMA_BIDIRECTIONAL);
-+					 DMA_BIDIRECTIONAL);
- 			goto drop_unlock_sta;
- 		}
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 13a319d..9ac256e 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -847,20 +847,20 @@ r_sdreg32(struct brcmf_bus *bus, u32 *regvar, u32 reg_offset, u32 *retryvar)
  	}
-@@ -764,8 +764,8 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 				offsetof(struct iwl_tx_cmd, scratch);
- 
- 	/* take back ownership of DMA buffer to enable update */
--	pci_dma_sync_single_for_cpu(priv->pci_dev, txcmd_phys,
--				    firstlen, PCI_DMA_BIDIRECTIONAL);
-+	dma_sync_single_for_cpu(priv->bus.dev, txcmd_phys, firstlen,
-+			DMA_BIDIRECTIONAL);
- 	tx_cmd->dram_lsb_ptr = cpu_to_le32(scratch_phys);
- 	tx_cmd->dram_msb_ptr = iwl_get_dma_hi_addr(scratch_phys);
- 
-@@ -780,8 +780,8 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 		iwlagn_txq_update_byte_cnt_tbl(priv, txq,
- 					       le16_to_cpu(tx_cmd->len));
- 
--	pci_dma_sync_single_for_device(priv->pci_dev, txcmd_phys,
--				       firstlen, PCI_DMA_BIDIRECTIONAL);
-+	dma_sync_single_for_device(priv->bus.dev, txcmd_phys, firstlen,
-+			DMA_BIDIRECTIONAL);
- 
- 	trace_iwlwifi_dev_tx(priv,
- 			     &((struct iwl_tfd *)txq->tfds)[txq->q.write_ptr],
-@@ -848,8 +848,7 @@ static inline void iwlagn_free_dma_ptr(struct iwl_priv *priv,
- 	if (unlikely(!ptr->addr))
- 		return;
- 
--	dma_free_coherent(priv->bus.dev,
--			  ptr->size, ptr->addr, ptr->dma);
-+	dma_free_coherent(priv->bus.dev, ptr->size, ptr->addr, ptr->dma);
- 	memset(ptr, 0, sizeof(*ptr));
  }
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 72db1a9..eeb31bc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -495,9 +495,9 @@ static void iwl_rx_handle(struct iwl_priv *priv)
+-#define W_SDREG(regval, regaddr, retryvar, typ) \
+-do { \
+-	retryvar = 0; \
+-	do { \
+-		W_REG((u32)(regaddr), regval, typ); \
+-	} while (brcmf_sdcard_regfail(bus->card) && \
+-		 (++retryvar <= retry_limit)); \
+-	if (retryvar) { \
+-		bus->regfails += (retryvar-1); \
+-		if (retryvar > retry_limit) \
+-			DHD_ERROR(("%s: FAILED REGISTER WRITE, LINE %d\n", \
+-			__func__, __LINE__)); \
+-	} \
+-} while (0)
++static void
++w_sdreg32(struct brcmf_bus *bus, u32 regval, u32 reg_offset, u32 *retryvar)
++{
++	*retryvar = 0;
++	do {
++		W_REG(bus->ci->buscorebase + reg_offset, regval, u32);
++	} while (brcmf_sdcard_regfail(bus->card) &&
++		 (++(*retryvar) <= retry_limit));
++	if (*retryvar) {
++		bus->regfails += (*retryvar-1);
++		if (*retryvar > retry_limit)
++			DHD_ERROR(("FAILED REGISTER WRITE %Xh\n", reg_offset));
++	}
++}
  
- 		rxq->queue[i] = NULL;
+ #define DHD_BUS			SDIO_BUS
  
--		pci_unmap_page(priv->pci_dev, rxb->page_dma,
-+		dma_unmap_page(priv->bus.dev, rxb->page_dma,
- 			       PAGE_SIZE << priv->hw_params.rx_page_order,
--			       PCI_DMA_FROMDEVICE);
-+			       DMA_FROM_DEVICE);
- 		pkt = rxb_addr(rxb);
- 
- 		len = le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK;
-@@ -579,9 +579,9 @@ static void iwl_rx_handle(struct iwl_priv *priv)
- 		 * rx_free list for reuse later. */
- 		spin_lock_irqsave(&rxq->lock, flags);
- 		if (rxb->page != NULL) {
--			rxb->page_dma = pci_map_page(priv->pci_dev, rxb->page,
-+			rxb->page_dma = dma_map_page(priv->bus.dev, rxb->page,
- 				0, PAGE_SIZE << priv->hw_params.rx_page_order,
--				PCI_DMA_FROMDEVICE);
-+				DMA_FROM_DEVICE);
- 			list_add_tail(&rxb->list, &rxq->rx_free);
- 			rxq->free_count++;
- 		} else
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index f982ac9..fd8aee9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -128,7 +128,6 @@ static inline u8 iwl_tfd_get_num_tbs(struct iwl_tfd *tfd)
- static void iwlagn_unmap_tfd(struct iwl_priv *priv, struct iwl_cmd_meta *meta,
- 			     struct iwl_tfd *tfd)
+@@ -1173,7 +1173,6 @@ static int brcmf_sdbrcm_clkctl(struct brcmf_bus *bus, uint target, bool pendok)
+ int brcmf_sdbrcm_bussleep(struct brcmf_bus *bus, bool sleep)
  {
--	struct pci_dev *dev = priv->pci_dev;
- 	int i;
- 	int num_tbs;
+ 	struct brcmf_sdio_card *card = bus->card;
+-	struct sdpcmd_regs *regs = bus->regs;
+ 	uint retries = 0;
  
-@@ -143,15 +142,15 @@ static void iwlagn_unmap_tfd(struct iwl_priv *priv, struct iwl_cmd_meta *meta,
+ 	DHD_INFO(("brcmf_sdbrcm_bussleep: request %s (currently %s)\n",
+@@ -1197,7 +1196,8 @@ int brcmf_sdbrcm_bussleep(struct brcmf_bus *bus, bool sleep)
+ 		brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
  
- 	/* Unmap tx_cmd */
- 	if (num_tbs)
--		pci_unmap_single(dev,
-+		dma_unmap_single(priv->bus.dev,
- 				dma_unmap_addr(meta, mapping),
- 				dma_unmap_len(meta, len),
--				PCI_DMA_BIDIRECTIONAL);
-+				DMA_BIDIRECTIONAL);
+ 		/* Tell device to start using OOB wakeup */
+-		W_SDREG(SMB_USE_OOB, &regs->tosbmailbox, retries, u32);
++		w_sdreg32(bus, SMB_USE_OOB,
++			  offsetof(struct sdpcmd_regs, tosbmailbox), &retries);
+ 		if (retries > retry_limit)
+ 			DHD_ERROR(("CANNOT SIGNAL CHIP, WILL NOT WAKE UP!!\n"));
  
- 	/* Unmap chunks, if any. */
- 	for (i = 1; i < num_tbs; i++)
--		pci_unmap_single(dev, iwl_tfd_tb_get_addr(tfd, i),
--				iwl_tfd_tb_get_len(tfd, i), PCI_DMA_TODEVICE);
-+		dma_unmap_single(priv->bus.dev, iwl_tfd_tb_get_addr(tfd, i),
-+				iwl_tfd_tb_get_len(tfd, i), DMA_TO_DEVICE);
- }
+@@ -1236,9 +1236,12 @@ int brcmf_sdbrcm_bussleep(struct brcmf_bus *bus, bool sleep)
+ 		brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
  
- /**
-@@ -310,10 +309,10 @@ void iwl_cmd_queue_unmap(struct iwl_priv *priv)
- 		i = get_cmd_index(q, q->read_ptr);
+ 		/* Send misc interrupt to indicate OOB not needed */
+-		W_SDREG(0, &regs->tosbmailboxdata, retries, u32);
++		w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, tosbmailboxdata),
++			  &retries);
+ 		if (retries <= retry_limit)
+-			W_SDREG(SMB_DEV_INT, &regs->tosbmailbox, retries, u32);
++			w_sdreg32(bus, SMB_DEV_INT,
++				  offsetof(struct sdpcmd_regs, tosbmailbox),
++				  &retries);
  
- 		if (txq->meta[i].flags & CMD_MAPPED) {
--			pci_unmap_single(priv->pci_dev,
-+			dma_unmap_single(priv->bus.dev,
- 					 dma_unmap_addr(&txq->meta[i], mapping),
- 					 dma_unmap_len(&txq->meta[i], len),
--					 PCI_DMA_BIDIRECTIONAL);
-+					 DMA_BIDIRECTIONAL);
- 			txq->meta[i].flags = 0;
+ 		if (retries > retry_limit)
+ 			DHD_ERROR(("CANNOT SIGNAL CHIP TO CLEAR OOB!!\n"));
+@@ -3036,7 +3039,8 @@ static int brcmf_sdbrcm_download_state(struct brcmf_bus *bus, bool enter)
+ 			bcmerror = 0;
  		}
  
-@@ -456,7 +455,7 @@ static int iwl_tx_queue_alloc(struct iwl_priv *priv,
- 	txq->tfds = dma_alloc_coherent(dev, tfd_sz, &txq->q.dma_addr,
- 				       GFP_KERNEL);
- 	if (!txq->tfds) {
--		IWL_ERR(priv, "pci_alloc_consistent(%zd) failed\n", tfd_sz);
-+		IWL_ERR(priv, "dma_alloc_coherent(%zd) failed\n", tfd_sz);
- 		goto error;
- 	}
- 	txq->q.id = id;
-@@ -677,9 +676,9 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 			le16_to_cpu(out_cmd->hdr.sequence), cmd_size,
- 			q->write_ptr, idx, priv->cmd_queue);
+-		W_SDREG(0xFFFFFFFF, &bus->regs->intstatus, retries, u32);
++		w_sdreg32(bus, 0xFFFFFFFF,
++			  offsetof(struct sdpcmd_regs, intstatus), &retries);
  
--	phys_addr = pci_map_single(priv->pci_dev, &out_cmd->hdr,
--				   copy_size, PCI_DMA_BIDIRECTIONAL);
--	if (unlikely(pci_dma_mapping_error(priv->pci_dev, phys_addr))) {
-+	phys_addr = dma_map_single(priv->bus.dev, &out_cmd->hdr, copy_size,
-+				DMA_BIDIRECTIONAL);
-+	if (unlikely(dma_mapping_error(priv->bus.dev, phys_addr))) {
- 		idx = -ENOMEM;
- 		goto out;
+ 		brcmf_sdbrcm_chip_resetcore(bus->card, bus->ci->armcorebase);
+ 
+@@ -3169,7 +3173,7 @@ void brcmf_sdbrcm_bus_stop(struct brcmf_bus *bus, bool enforce_mutex)
+ 		tasklet_kill(&bus->tasklet);
+ 
+ 	/* Disable and clear interrupts at the chip level also */
+-	W_SDREG(0, &bus->regs->hostintmask, retries, u32);
++	w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, hostintmask), &retries);
+ 	local_hostintmask = bus->hostintmask;
+ 	bus->hostintmask = 0;
+ 
+@@ -3196,7 +3200,8 @@ void brcmf_sdbrcm_bus_stop(struct brcmf_bus *bus, bool enforce_mutex)
+ 			 SDIO_FUNC_ENABLE_1, NULL);
+ 
+ 	/* Clear any pending interrupts now that F2 is disabled */
+-	W_SDREG(local_hostintmask, &bus->regs->intstatus, retries, u32);
++	w_sdreg32(bus, local_hostintmask,
++		  offsetof(struct sdpcmd_regs, intstatus), &retries);
+ 
+ 	/* Turn off the backplane clock (only) */
+ 	brcmf_sdbrcm_clkctl(bus, CLK_SDONLY, false);
+@@ -3274,8 +3279,8 @@ int brcmf_sdbrcm_bus_init(struct brcmf_pub *drvr, bool enforce_mutex)
  	}
-@@ -699,9 +698,9 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 			continue;
- 		if (!(cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY))
- 			continue;
--		phys_addr = pci_map_single(priv->pci_dev, (void *)cmd->data[i],
--					   cmd->len[i], PCI_DMA_TODEVICE);
--		if (pci_dma_mapping_error(priv->pci_dev, phys_addr)) {
-+		phys_addr = dma_map_single(priv->bus.dev, (void *)cmd->data[i],
-+					   cmd->len[i], DMA_TO_DEVICE);
-+		if (dma_mapping_error(priv->bus.dev, phys_addr)) {
- 			iwlagn_unmap_tfd(priv, out_meta,
- 					 &txq->tfds[q->write_ptr]);
- 			idx = -ENOMEM;
+ 
+ 	/* Enable function 2 (frame transfers) */
+-	W_SDREG((SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT),
+-		&bus->regs->tosbmailboxdata, retries, u32);
++	w_sdreg32(bus, SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT,
++		  offsetof(struct sdpcmd_regs, tosbmailboxdata), &retries);
+ 	enable = (SDIO_FUNC_ENABLE_1 | SDIO_FUNC_ENABLE_2);
+ 
+ 	brcmf_sdcard_cfg_write(bus->card, SDIO_FUNC_0, SDIO_CCCR_IOEx, enable,
+@@ -3296,9 +3301,8 @@ int brcmf_sdbrcm_bus_init(struct brcmf_pub *drvr, bool enforce_mutex)
+ 	if (ready == enable) {
+ 		/* Set up the interrupt mask and enable interrupts */
+ 		bus->hostintmask = HOSTINTMASK;
+-		W_SDREG(bus->hostintmask,
+-			(unsigned int *)CORE_BUS_REG(bus->ci->buscorebase,
+-			hostintmask), retries, u32);
++		w_sdreg32(bus, bus->hostintmask,
++			  offsetof(struct sdpcmd_regs, hostintmask), &retries);
+ 
+ 		brcmf_sdcard_cfg_write(bus->card, SDIO_FUNC_1, SBSDIO_WATERMARK,
+ 				 (u8) watermark, &err);
+@@ -3356,7 +3360,6 @@ exit:
+ static void brcmf_sdbrcm_rxfail(struct brcmf_bus *bus, bool abort, bool rtx)
+ {
+ 	struct brcmf_sdio_card *card = bus->card;
+-	struct sdpcmd_regs *regs = bus->regs;
+ 	uint retries = 0;
+ 	u16 lastrbc;
+ 	u8 hi, lo;
+@@ -3402,7 +3405,9 @@ static void brcmf_sdbrcm_rxfail(struct brcmf_bus *bus, bool abort, bool rtx)
+ 
+ 	if (rtx) {
+ 		bus->rxrtx++;
+-		W_SDREG(SMB_NAK, &regs->tosbmailbox, retries, u32);
++		w_sdreg32(bus, SMB_NAK,
++			  offsetof(struct sdpcmd_regs, tosbmailbox), &retries);
++
+ 		bus->f1regdata++;
+ 		if (retries <= retry_limit)
+ 			bus->rxskip = true;
+@@ -4523,7 +4528,6 @@ deliver:
+ 
+ static u32 brcmf_sdbrcm_hostmail(struct brcmf_bus *bus)
+ {
+-	struct sdpcmd_regs *regs = bus->regs;
+ 	u32 intstatus = 0;
+ 	u32 hmb_data;
+ 	u8 fcbits;
+@@ -4536,7 +4540,8 @@ static u32 brcmf_sdbrcm_hostmail(struct brcmf_bus *bus)
+ 		  offsetof(struct sdpcmd_regs, tohostmailboxdata), &retries);
+ 
+ 	if (retries <= retry_limit)
+-		W_SDREG(SMB_INT_ACK, &regs->tosbmailbox, retries, u32);
++		w_sdreg32(bus, SMB_INT_ACK,
++			  offsetof(struct sdpcmd_regs, tosbmailbox), &retries);
+ 	bus->f1regdata += 2;
+ 
+ 	/* Dongle recomposed rx frames, accept them again */
+@@ -4600,7 +4605,6 @@ static u32 brcmf_sdbrcm_hostmail(struct brcmf_bus *bus)
+ static bool brcmf_sdbrcm_dpc(struct brcmf_bus *bus)
+ {
+ 	struct brcmf_sdio_card *card = bus->card;
+-	struct sdpcmd_regs *regs = bus->regs;
+ 	u32 intstatus, newstatus = 0;
+ 	uint retries = 0;
+ 	uint rxlimit = brcmf_rxbound;	/* Rx frames to read before resched */
+@@ -4686,7 +4690,9 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_bus *bus)
+ 		newstatus &= bus->hostintmask;
+ 		bus->fcstate = !!(newstatus & I_HMB_FC_STATE);
+ 		if (newstatus) {
+-			W_SDREG(newstatus, &regs->intstatus, retries, u32);
++			w_sdreg32(bus, newstatus,
++				  offsetof(struct sdpcmd_regs, intstatus),
++				  &retries);
+ 			bus->f1regdata++;
+ 		}
+ 	}
+@@ -4701,7 +4707,9 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_bus *bus)
+ 	 */
+ 	if (intstatus & I_HMB_FC_CHANGE) {
+ 		intstatus &= ~I_HMB_FC_CHANGE;
+-		W_SDREG(I_HMB_FC_CHANGE, &regs->intstatus, retries, u32);
++		w_sdreg32(bus, I_HMB_FC_CHANGE,
++			  offsetof(struct sdpcmd_regs, intstatus), &retries);
++
+ 		r_sdreg32(bus, &newstatus,
+ 			  offsetof(struct sdpcmd_regs, intstatus), &retries);
+ 		bus->f1regdata += 2;
 -- 
-1.7.0.4
+1.7.1
+
 
