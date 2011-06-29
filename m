@@ -1,39 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adelie.canonical.com ([91.189.90.139]:41843 "EHLO
-	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754666Ab1FCNar (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2011 09:30:47 -0400
-Date: Fri, 3 Jun 2011 08:30:41 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org,
-	sedat.dilek@gmail.com
-Subject: Re: [PATCH] ath5k: Disable fast channel switching by default
-Message-ID: <20110603133041.GA27529@thinkpad-t410> (sfid-20110603_153051_038032_7C6DA60D)
-References: <20110602000946.GA5951@makis>
- <BANLkTimbvSP4TxZU6C6vokqZMpW_ASaPCw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BANLkTimbvSP4TxZU6C6vokqZMpW_ASaPCw@mail.gmail.com>
+Received: from mail.perches.com ([173.55.12.10]:3327 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751584Ab1F2XqG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:46:06 -0400
+Subject: Re: [PATCH v4 1/6] NFC: add nfc subsystem core
+From: Joe Perches <joe@perches.com>
+To: Aloisio Almeida <aloisio.almeida@openbossa.org>,
+	Jason Baron <jbaron@redhat.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, sameo@linux.intel.com,
+	johannes@sipsolutions.net, lauro.venancio@openbossa.org,
+	marcio.macedo@openbossa.org, Waldemar.Rymarkiewicz@tieto.com,
+	padovan@profusion.mobi, rdunlap@xenotime.net
+In-Reply-To: <BANLkTinospg_dhTC8Tcok3kqk9gOryG6eA@mail.gmail.com>
+References: <1309285246-8495-1-git-send-email-aloisio.almeida@openbossa.org>
+	 <1309285246-8495-2-git-send-email-aloisio.almeida@openbossa.org>
+	 <1309292325.29598.9.camel@Joe-Laptop> <1309311096.2208.33.camel@aeonflux>
+	 <1309312164.29598.53.camel@Joe-Laptop> <1309370457.2208.48.camel@aeonflux>
+	 <BANLkTinospg_dhTC8Tcok3kqk9gOryG6eA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 29 Jun 2011 16:46:03 -0700
+Message-ID: <1309391163.29598.92.camel@Joe-Laptop> (sfid-20110630_014611_582007_166DCF09)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 03, 2011 at 11:59:41AM +0200, Sedat Dilek wrote:
-> On Thu, Jun 2, 2011 at 2:09 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> > Disable fast channel change by default on AR2413/AR5413 due to
-> > some bug reports (it still works for me but it's better to be safe).
-> > Add a module parameter "fastchanswitch" in case anyone wants to enable
-> > it and play with it.
-> >
-> > Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
-> >
-> 
-> Already tested your initial patch from [1] against linux-next (next-20110601).
+On Wed, 2011-06-29 at 20:23 -0300, Aloisio Almeida wrote:
+> >> Today, dynamic_debug can add __func__ to the output as
+> >> desired so I think that it's not really necessary
+> >> to add to any <foo>_dbg callsite.
+> That's true only for pr_debug() function. You cannot add __func__ info
+> on dev_dbg() calls dynamically.
 
-It's also been tested by a number of our users and verified to fix the
-wireless problems they've been seeing in .38. I'd suggest Cc-ing stable
-for .38.x and .39.x.
+I believe that's false.  It's definitely stored.
 
-Seth
+#define dynamic_dev_dbg(dev, fmt, ...) do {				\
+	static struct _ddebug descriptor				\
+	__used								\
+	__attribute__((section("__verbose"), aligned(8))) =		\
+	{ KBUILD_MODNAME, __func__, __FILE__, fmt, __LINE__,		\
+		_DPRINTK_FLAGS_DEFAULT };				\
+	if (unlikely(descriptor.enabled))				\
+		dev_printk(KERN_DEBUG, dev, fmt, ##__VA_ARGS__);	\
+	} while (0)
+
+Jason?  True or false?
+
+> So, for net/nfc/* I propose to use directly pr_*() functions.
+> For device drivers the following macros would be provided:
+> #define nfc_dev_info(dev, fmt, arg...) dev_info((dev), "NFC: " fmt, ## arg)
+> #define nfc_dev_err(dev, fmt, arg...) dev_err((dev), "%s: " fmt,
+> __func__, ## arg)
+> #define nfc_dev_dbg(dev, fmt, arg...) dev_dbg((dev), "%s: " fmt,
+> __func__, ## arg)
+> What do you think?
+
+I still think __func__ isn't useful ;)
+I think you should add NFC to nfc_dev_err too.
+
+cheers, Joe
+
