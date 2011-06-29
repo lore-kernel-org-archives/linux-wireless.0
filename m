@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41589 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755582Ab1FVNrB (ORCPT
+Received: from w1.fi ([128.177.27.249]:51174 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755867Ab1F2NJi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 09:47:01 -0400
-Subject: Re: Performance regression between Madwifi/net80211 and
- ath5k/mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joerg Pommnitz <pommnitz@yahoo.com>
-Cc: Adrian Chadd <adrian@freebsd.org>, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-In-Reply-To: <1308750102.64154.YahooMailRC@web161214.mail.bf1.yahoo.com> (sfid-20110622_154146_913504_76736765)
-References: <loom.20110621T215346-191@post.gmane.org>
-	 <BANLkTik0umam7S+E1oog0LTEErMz-dZamg@mail.gmail.com>
-	 <1308750102.64154.YahooMailRC@web161214.mail.bf1.yahoo.com>
-	 (sfid-20110622_154146_913504_76736765)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Jun 2011 15:46:56 +0200
-Message-ID: <1308750416.29571.10.camel@jlt3.sipsolutions.net> (sfid-20110622_154705_996187_14EBF9A3)
-Mime-Version: 1.0
+	Wed, 29 Jun 2011 09:09:38 -0400
+Date: Wed, 29 Jun 2011 16:09:10 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Michel Alexandre Salim <salimma@fedoraproject.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: Re: [PATCH] ath9k: add module option for disabling 11n
+ functionality
+Message-ID: <20110629130910.GA2688@jm.kir.nu> (sfid-20110629_150941_636689_CF52A54C)
+References: <4E0A2F8A.8010102@fedoraproject.org>
+ <20110628215757.GA14975@jm.kir.nu>
+ <4E0AE8C1.9090809@fedoraproject.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E0AE8C1.9090809@fedoraproject.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-06-22 at 06:41 -0700, Joerg Pommnitz wrote:
-> Adrian,
-> thanks for taking an interest. Today I built the current Madwifi driver for
-> Fedora Kernel 2.6.38.8-32.fc15.i686. The ath5k problem seems to be at the
-> tx side. If I run the iperf server on the ath5k node and the iperf client
-> at the madwifi node (identical hardware config), I consistently get a 
-> significant
-> speedup compared to ath5k-ath5k. The only difference is, which module is
-> blacklisted.
+On Wed, Jun 29, 2011 at 10:56:33AM +0200, Michel Alexandre Salim wrote:
+> I agree with you and Adrian; it should ideally be in the 802.11
+> stack. But as Ben noted, it does have a useful purpose -- for
+> debugging.
 > 
-> I have experimented with the RTS and fragmentation threshold setting without
-> success. 
-> 
-> Now I'm somewhat lost. The problem is either ath5k or mac80211. 
+> If the maintainers are agreeable to a shared mac80211 mechanism,
+> which is the preferred way to handle this -- get this in, then
+> refactor *both* iwlagn and ath9k to use it, or to implement a shared
+> mechanism, demonstrate it with ath9k, then fix iwlagn later?
 
-Do you see different CPU usage? Does it max out? If so can you profile
-it?
+I don't follow this.. Why would we get this into ath9k first if the more
+appropriate way of doing this would be to modify mac80211 in the first
+place. I see no point in doing driver specific hacks for this unless
+there really is some driver specific issues that are being worked around
+and that does not seem to be the case here.
 
-johannes
+As far as being able to disable 802.11n in general is concerned, it
+would much better to do that as a parameter for the connection (e.g.,
+new nl80211 attribute for NL80211_CMD_ASSOCIATE) rather than a module
+parameter. This workaround seems to be needed with some APs and global
+disabling of 802.11n does not sound like the ideal mechanism for that.
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
