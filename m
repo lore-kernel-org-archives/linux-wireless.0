@@ -1,160 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48040 "EHLO mx1.redhat.com"
+Received: from chilli.pcug.org.au ([203.10.76.44]:60881 "EHLO smtps.tip.net.au"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751516Ab1FBOq7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 10:46:59 -0400
-Date: Thu, 2 Jun 2011 16:46:20 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] iwlagn: refactor iwlagn_mac_channel_switch
-Message-ID: <20110602144619.GB4580@redhat.com> (sfid-20110602_164702_861625_4A5254B8)
-References: <20110602144424.GA4580@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110602144424.GA4580@redhat.com>
+	id S1751027Ab1F2GNr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 02:13:47 -0400
+Date: Wed, 29 Jun 2011 16:13:38 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org,
+	randy.dunlap@oracle.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: rtl8192de: Fix build errors when using allyes
+ configuration
+Message-Id: <20110629161338.7d265efd.sfr@canb.auug.org.au> (sfid-20110629_081406_601955_EF770D4D)
+In-Reply-To: <4e0a6a06.Y78QUdJvxEiJ3SGd%Larry.Finger@lwfinger.net>
+References: <4e0a6a06.Y78QUdJvxEiJ3SGd%Larry.Finger@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Wed__29_Jun_2011_16_13_38_+1000_yhZUHVUzkF2s2xjL"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use less indentions and remove uneeded irq-save flags.
+--Signature=_Wed__29_Jun_2011_16_13_38_+1000_yhZUHVUzkF2s2xjL
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |  106 ++++++++++++++++----------------
- 1 files changed, 52 insertions(+), 54 deletions(-)
+On Tue, 28 Jun 2011 18:55:50 -0500 Larry Finger <Larry.Finger@lwfinger.net>=
+ wrote:
+>
+> After adding rtl8192de to linux-next, making the rtlwifi drivers be built=
+-in
+> results in the following warnings:
+>=20
+>   LD      drivers/net/wireless/rtlwifi/built-in.o
+> drivers/net/wireless/rtlwifi/rtl8192de/built-in.o: In function `rtl92ce_s=
+w_led_on':
+> (.text+0x11fb6): multiple definition of `rtl92ce_sw_led_on'
+> drivers/net/wireless/rtlwifi/rtl8192ce/built-in.o:(.text+0xa326): first d=
+efined here
+> drivers/net/wireless/rtlwifi/rtl8192de/built-in.o:(.bss+0x0): multiple de=
+finition of `dm_digtable'
+> drivers/net/wireless/rtlwifi/rtl8192c/built-in.o:(.bss+0x0): first define=
+d here
+> ld: Warning: size of symbol `dm_digtable' changed from 40 in drivers/net/=
+wireless/rtlwifi/rtl8192c/built-in.o to 48 in drivers/net/wireless/rtlwifi/=
+rtl8192de/built-in.o
+> drivers/net/wireless/rtlwifi/rtl8192de/built-in.o: In function `rtl92ce_s=
+w_led_off':
+> (.text+0x11cfe): multiple definition of `rtl92ce_sw_led_off'
+> drivers/net/wireless/rtlwifi/rtl8192ce/built-in.o:(.text+0xa06e): first d=
+efined here
+>=20
+> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 1a143b2..df72cef 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2833,7 +2833,6 @@ static void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
- 	 */
- 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
- 	u16 ch;
--	unsigned long flags = 0;
- 
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
- 
-@@ -2850,65 +2849,64 @@ static void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
- 	if (!iwl_is_associated_ctx(ctx))
- 		goto out;
- 
--	if (priv->cfg->ops->lib->set_channel_switch) {
-+	if (!priv->cfg->ops->lib->set_channel_switch)
-+		goto out;
- 
--		ch = channel->hw_value;
--		if (le16_to_cpu(ctx->active.channel) != ch) {
--			ch_info = iwl_get_channel_info(priv,
--						       channel->band,
--						       ch);
--			if (!is_channel_valid(ch_info)) {
--				IWL_DEBUG_MAC80211(priv, "invalid channel\n");
--				goto out;
--			}
--			spin_lock_irqsave(&priv->lock, flags);
--
--			priv->current_ht_config.smps = conf->smps_mode;
--
--			/* Configure HT40 channels */
--			ctx->ht.enabled = conf_is_ht(conf);
--			if (ctx->ht.enabled) {
--				if (conf_is_ht40_minus(conf)) {
--					ctx->ht.extension_chan_offset =
--						IEEE80211_HT_PARAM_CHA_SEC_BELOW;
--					ctx->ht.is_40mhz = true;
--				} else if (conf_is_ht40_plus(conf)) {
--					ctx->ht.extension_chan_offset =
--						IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
--					ctx->ht.is_40mhz = true;
--				} else {
--					ctx->ht.extension_chan_offset =
--						IEEE80211_HT_PARAM_CHA_SEC_NONE;
--					ctx->ht.is_40mhz = false;
--				}
--			} else
--				ctx->ht.is_40mhz = false;
-+	ch = channel->hw_value;
-+	if (le16_to_cpu(ctx->active.channel) == ch)
-+		goto out;
-+
-+	ch_info = iwl_get_channel_info(priv, channel->band, ch);
-+	if (!is_channel_valid(ch_info)) {
-+		IWL_DEBUG_MAC80211(priv, "invalid channel\n");
-+		goto out;
-+	}
- 
--			if ((le16_to_cpu(ctx->staging.channel) != ch))
--				ctx->staging.flags = 0;
-+	spin_lock_irq(&priv->lock);
- 
--			iwl_set_rxon_channel(priv, channel, ctx);
--			iwl_set_rxon_ht(priv, ht_conf);
--			iwl_set_flags_for_band(priv, ctx, channel->band,
--					       ctx->vif);
--			spin_unlock_irqrestore(&priv->lock, flags);
-+	priv->current_ht_config.smps = conf->smps_mode;
- 
--			iwl_set_rate(priv);
--			/*
--			 * at this point, staging_rxon has the
--			 * configuration for channel switch
--			 */
--			set_bit(STATUS_CHANNEL_SWITCH_PENDING, &priv->status);
--			priv->switch_channel = cpu_to_le16(ch);
--			if (priv->cfg->ops->lib->set_channel_switch(priv,
--								    ch_switch)) {
--				clear_bit(STATUS_CHANNEL_SWITCH_PENDING,
--					  &priv->status);
--				priv->switch_channel = 0;
--				ieee80211_chswitch_done(ctx->vif, false);
--			}
-+	/* Configure HT40 channels */
-+	ctx->ht.enabled = conf_is_ht(conf);
-+	if (ctx->ht.enabled) {
-+		if (conf_is_ht40_minus(conf)) {
-+			ctx->ht.extension_chan_offset =
-+				IEEE80211_HT_PARAM_CHA_SEC_BELOW;
-+			ctx->ht.is_40mhz = true;
-+		} else if (conf_is_ht40_plus(conf)) {
-+			ctx->ht.extension_chan_offset =
-+				IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
-+			ctx->ht.is_40mhz = true;
-+		} else {
-+			ctx->ht.extension_chan_offset =
-+				IEEE80211_HT_PARAM_CHA_SEC_NONE;
-+			ctx->ht.is_40mhz = false;
- 		}
-+	} else
-+		ctx->ht.is_40mhz = false;
-+
-+	if ((le16_to_cpu(ctx->staging.channel) != ch))
-+		ctx->staging.flags = 0;
-+
-+	iwl_set_rxon_channel(priv, channel, ctx);
-+	iwl_set_rxon_ht(priv, ht_conf);
-+	iwl_set_flags_for_band(priv, ctx, channel->band, ctx->vif);
-+
-+	spin_unlock_irq(&priv->lock);
-+
-+	iwl_set_rate(priv);
-+	/*
-+	 * at this point, staging_rxon has the
-+	 * configuration for channel switch
-+	 */
-+	set_bit(STATUS_CHANNEL_SWITCH_PENDING, &priv->status);
-+	priv->switch_channel = cpu_to_le16(ch);
-+	if (priv->cfg->ops->lib->set_channel_switch(priv, ch_switch)) {
-+		clear_bit(STATUS_CHANNEL_SWITCH_PENDING, &priv->status);
-+		priv->switch_channel = 0;
-+		ieee80211_chswitch_done(ctx->vif, false);
- 	}
-+
- out:
- 	mutex_unlock(&priv->mutex);
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
--- 
-1.7.1
+I have added this patch to linux-next for today (and it fixed the build fai=
+lure).
 
+Acked-by: Stephen Rothwell <sfr@canb.auug.org.au>
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Wed__29_Jun_2011_16_13_38_+1000_yhZUHVUzkF2s2xjL
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQEcBAEBAgAGBQJOCsKSAAoJEDMEi1NhKgbsUHQH/3gIvDMsQ8RI/veGWU2os2Xy
+qZzpg17/WUDMosdwAfrTtsFUrpPpe+Z7cDnye4/NMoowGwDdoE8FAW6OauMuPbV6
+517aHdw4Hth5b1q2F66EU37quzCPWQj4FYYzrN/1W5aL26tACsK4wQpV6DfC8b+E
+AgMvfBnADqFXRKZFpq1gtVvboLNFP9j0jbJLJ37QAyykNuHri+IBF0vxTZODbdQr
+ebsNeuei/9e9o2LTIdt+3PLoTubI+jNUxx1AoxjchW3Qr75mV8LSRw8RcdlTDo04
+xVvxJP2+tSZ6oxs13BiMGGaobvLqrpocBfvmDjbtGHtvJJ9hWKpdf3zvBsE8lVY=
+=ReGl
+-----END PGP SIGNATURE-----
+
+--Signature=_Wed__29_Jun_2011_16_13_38_+1000_yhZUHVUzkF2s2xjL--
