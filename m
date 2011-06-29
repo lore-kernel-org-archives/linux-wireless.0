@@ -1,174 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:35448 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750878Ab1FTBqz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2011 21:46:55 -0400
-Received: by pvg12 with SMTP id 12so343471pvg.19
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2011 18:46:55 -0700 (PDT)
-Message-ID: <4DFEA65D.5060801@ring3k.org> (sfid-20110620_034658_632013_BC88742D)
-Date: Mon, 20 Jun 2011 10:46:05 +0900
-From: Mike McCormack <mikem@ring3k.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:4683 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757608Ab1F2XtP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:49:15 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 099/119] staging: brcm80211: removed file sdiovar.h
+Date: Wed, 29 Jun 2011 16:48:03 -0700
+Message-ID: <1309391303-22741-100-git-send-email-frankyl@broadcom.com> (sfid-20110630_015202_839926_A79AF3C0)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-To: linville@tuxdriver.com
-CC: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] rtlwifi: rtl8192cu: Remove unused parameter
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rtl_ps_set_rf_state's protect_or_not parameter is not set to
-true anywhere, except for commented out code.
+From: Roland Vossen <rvossen@broadcom.com>
 
-It enables some legacy locking code, which is no longer used,
-so delete the parameter and the old locking code.
+Code cleanup. Contents merged into other files.
 
-Signed-off-by: Mike McCormack <mikem@ring3k.org>
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/rtlwifi/ps.c           |   63 ++-------------------------
- drivers/net/wireless/rtlwifi/ps.h           |    3 +-
- drivers/net/wireless/rtlwifi/rtl8192se/hw.c |    3 +-
- 3 files changed, 7 insertions(+), 62 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/bcmsdbus.h      |    6 +++
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c  |    1 -
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h  |   10 +++++
+ .../brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c        |    1 -
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |    1 -
+ drivers/staging/brcm80211/brcmfmac/sdiovar.h       |   38 --------------------
+ 6 files changed, 16 insertions(+), 41 deletions(-)
+ delete mode 100644 drivers/staging/brcm80211/brcmfmac/sdiovar.h
 
-diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
-index d14c13d..3eb039a 100644
---- a/drivers/net/wireless/rtlwifi/ps.c
-+++ b/drivers/net/wireless/rtlwifi/ps.c
-@@ -79,53 +79,12 @@ EXPORT_SYMBOL(rtl_ps_disable_nic);
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
+index 761ec20..3ba3c3f 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
+@@ -32,6 +32,12 @@
+ #define SDIOH_DATA_PIO          0	/* PIO mode */
+ #define SDIOH_DATA_DMA          1	/* DMA mode */
  
- bool rtl_ps_set_rf_state(struct ieee80211_hw *hw,
- 			 enum rf_pwrstate state_toset,
--			 u32 changesource, bool protect_or_not)
-+			 u32 changesource)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	bool actionallowed = false;
--	u16 rfwait_cnt = 0;
++struct brcmf_sdreg {
++	int func;
++	int offset;
++	int value;
++};
++
+ /* callback function, taking one arg */
+ typedef void (*sdioh_cb_fn_t) (void *);
  
--	/*protect_or_not = true; */
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 7da200f..7bc9d02 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -28,7 +28,6 @@
+ #include <brcmu_wifi.h>
+ #include "sdio_host.h"
+ #include "bcmsdbus.h"
+-#include "sdiovar.h"		/* ioctl/iovars */
+ #include "dngl_stats.h"
+ #include "dhd.h"
+ #include "bcmsdh_sdmmc.h"
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h
+index 5eb4c65..962fa4b 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h
+@@ -21,6 +21,16 @@
+ #ifndef __BCMSDH_SDMMC_H__
+ #define __BCMSDH_SDMMC_H__
+ 
++/* Common msglevel constants */
++#define SDH_ERROR_VAL		0x0001	/* Error */
++#define SDH_TRACE_VAL		0x0002	/* Trace */
++#define SDH_INFO_VAL		0x0004	/* Info */
++#define SDH_DEBUG_VAL		0x0008	/* Debug */
++#define SDH_DATA_VAL		0x0010	/* Data */
++#define SDH_CTRL_VAL		0x0020	/* Control Regs */
++#define SDH_LOG_VAL		0x0040	/* Enable bcmlog */
++#define SDH_DMA_VAL		0x0080	/* DMA */
++
+ #ifdef BCMDBG
+ #define sd_err(x)	\
+ 	do { \
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
+index 9d00c49..b8ab242 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
+@@ -28,7 +28,6 @@
+ #include <brcmu_wifi.h>
+ #include "sdio_host.h"
+ #include "bcmsdbus.h"
+-#include "sdiovar.h"		/* to get msglevel bit values */
+ #include "dngl_stats.h"
+ #include "dhd.h"
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 4b0352f..6a53ac8 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -176,7 +176,6 @@ struct rte_console {
+ #include "dhd_bus.h"
+ #include "dhd_proto.h"
+ #include "dhd_dbg.h"
+-#include <sdiovar.h>
+ #include <bcmchip.h>
+ 
+ #ifndef DHDSDIO_MEM_DUMP_FNAME
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdiovar.h b/drivers/staging/brcm80211/brcmfmac/sdiovar.h
+deleted file mode 100644
+index 35e913b..0000000
+--- a/drivers/staging/brcm80211/brcmfmac/sdiovar.h
++++ /dev/null
+@@ -1,38 +0,0 @@
+-/*
+- * Copyright (c) 2010 Broadcom Corporation
+- *
+- * Permission to use, copy, modify, and/or distribute this software for any
+- * purpose with or without fee is hereby granted, provided that the above
+- * copyright notice and this permission notice appear in all copies.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+- */
 -
--	if (protect_or_not)
--		goto no_protect;
+-#ifndef _sdiovar_h_
+-#define _sdiovar_h_
 -
--	/*
--	 *Only one thread can change
--	 *the RF state at one time, and others
--	 *should wait to be executed.
--	 */
--	while (true) {
--		spin_lock(&rtlpriv->locks.rf_ps_lock);
--		if (ppsc->rfchange_inprogress) {
--			spin_unlock(&rtlpriv->locks.rf_ps_lock);
+-struct brcmf_sdreg {
+-	int func;
+-	int offset;
+-	int value;
+-};
 -
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
--				 ("RF Change in progress!"
--				  "Wait to set..state_toset(%d).\n",
--				  state_toset));
+-/* Common msglevel constants */
+-#define SDH_ERROR_VAL		0x0001	/* Error */
+-#define SDH_TRACE_VAL		0x0002	/* Trace */
+-#define SDH_INFO_VAL		0x0004	/* Info */
+-#define SDH_DEBUG_VAL		0x0008	/* Debug */
+-#define SDH_DATA_VAL		0x0010	/* Data */
+-#define SDH_CTRL_VAL		0x0020	/* Control Regs */
+-#define SDH_LOG_VAL		0x0040	/* Enable bcmlog */
+-#define SDH_DMA_VAL		0x0080	/* DMA */
 -
--			/* Set RF after the previous action is done.  */
--			while (ppsc->rfchange_inprogress) {
--				rfwait_cnt++;
--				mdelay(1);
+-#define NUM_PREV_TRANSACTIONS	16
 -
--				/*
--				 *Wait too long, return false to avoid
--				 *to be stuck here.
--				 */
--				if (rfwait_cnt > 100)
--					return false;
--			}
--		} else {
--			ppsc->rfchange_inprogress = true;
--			spin_unlock(&rtlpriv->locks.rf_ps_lock);
--			break;
--		}
--	}
--
--no_protect:
- 	switch (state_toset) {
- 	case ERFON:
- 		ppsc->rfoff_reason &= (~changesource);
-@@ -167,12 +126,6 @@ no_protect:
- 	if (actionallowed)
- 		rtlpriv->cfg->ops->set_rf_power_state(hw, state_toset);
- 
--	if (!protect_or_not) {
--		spin_lock(&rtlpriv->locks.rf_ps_lock);
--		ppsc->rfchange_inprogress = false;
--		spin_unlock(&rtlpriv->locks.rf_ps_lock);
--	}
--
- 	return actionallowed;
- }
- EXPORT_SYMBOL(rtl_ps_set_rf_state);
-@@ -195,8 +148,7 @@ static void _rtl_ps_inactive_ps(struct ieee80211_hw *hw)
- 		}
- 	}
- 
--	rtl_ps_set_rf_state(hw, ppsc->inactive_pwrstate,
--			    RF_CHANGE_BY_IPS, false);
-+	rtl_ps_set_rf_state(hw, ppsc->inactive_pwrstate, RF_CHANGE_BY_IPS);
- 
- 	if (ppsc->inactive_pwrstate == ERFOFF &&
- 	    rtlhal->interface == INTF_PCI) {
-@@ -587,7 +539,7 @@ void rtl_swlps_rf_awake(struct ieee80211_hw *hw)
- 	}
- 
- 	spin_lock(&rtlpriv->locks.lps_lock);
--	rtl_ps_set_rf_state(hw, ERFON, RF_CHANGE_BY_PS, false);
-+	rtl_ps_set_rf_state(hw, ERFON, RF_CHANGE_BY_PS);
- 	spin_unlock(&rtlpriv->locks.lps_lock);
- }
- 
-@@ -621,15 +573,8 @@ void rtl_swlps_rf_sleep(struct ieee80211_hw *hw)
- 	if (rtlpriv->link_info.busytraffic)
- 		return;
- 
--	spin_lock(&rtlpriv->locks.rf_ps_lock);
--	if (rtlpriv->psc.rfchange_inprogress) {
--		spin_unlock(&rtlpriv->locks.rf_ps_lock);
--		return;
--	}
--	spin_unlock(&rtlpriv->locks.rf_ps_lock);
--
- 	spin_lock(&rtlpriv->locks.lps_lock);
--	rtl_ps_set_rf_state(hw, ERFSLEEP, RF_CHANGE_BY_PS, false);
-+	rtl_ps_set_rf_state(hw, ERFSLEEP, RF_CHANGE_BY_PS);
- 	spin_unlock(&rtlpriv->locks.lps_lock);
- 
- 	if (ppsc->reg_rfps_level & RT_RF_OFF_LEVL_ASPM &&
-diff --git a/drivers/net/wireless/rtlwifi/ps.h b/drivers/net/wireless/rtlwifi/ps.h
-index e3bf898..84628e60 100644
---- a/drivers/net/wireless/rtlwifi/ps.h
-+++ b/drivers/net/wireless/rtlwifi/ps.h
-@@ -33,8 +33,7 @@
- #define MAX_SW_LPS_SLEEP_INTV	5
- 
- bool rtl_ps_set_rf_state(struct ieee80211_hw *hw,
--			 enum rf_pwrstate state_toset, u32 changesource,
--			 bool protect_or_not);
-+			 enum rf_pwrstate state_toset, u32 changesource);
- bool rtl_ps_enable_nic(struct ieee80211_hw *hw);
- bool rtl_ps_disable_nic(struct ieee80211_hw *hw);
- void rtl_ips_nic_off(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-index 5fab47b..9ed5e24 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-@@ -994,7 +994,8 @@ int rtl92se_hw_init(struct ieee80211_hw *hw)
- 
- 		rtlpriv->psc.rfoff_reason = RF_CHANGE_BY_INIT;
- 		rtlpriv->psc.rfpwr_state = ERFON;
--		rtl_ps_set_rf_state(hw, ERFOFF, rfoffreason, true);
-+		/* FIXME: check spinlocks if this block is uncommented */
-+		rtl_ps_set_rf_state(hw, ERFOFF, rfoffreason);
- 	} else {
- 		/* gpio radio on/off is out of adapter start */
- 		if (rtlpriv->psc.hwradiooff == false) {
+-#endif				/* _sdiovar_h_ */
 -- 
-1.7.4.1
+1.7.1
 
 
