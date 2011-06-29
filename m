@@ -1,98 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:32822 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753809Ab1FDSTp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2011 14:19:45 -0400
-Received: by iwn34 with SMTP id 34so2163081iwn.19
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Jun 2011 11:19:44 -0700 (PDT)
-Message-ID: <4DEA773D.5070500@lwfinger.net> (sfid-20110604_201955_719935_13899D30)
-Date: Sat, 04 Jun 2011 13:19:41 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:4696 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757896Ab1F2Xso (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:44 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 047/119] staging: brcm80211: remove unused prototypes
+ from dhd.h
+Date: Wed, 29 Jun 2011 16:47:11 -0700
+Message-ID: <1309391303-22741-48-git-send-email-frankyl@broadcom.com> (sfid-20110630_014959_670907_2F4C164F)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: In case 3.0-rc1 from wireless-testing fails to boot
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When I tried using 3.0-rc1 from mainline, my computer failed to boot because it 
-got into an infinite loop initiated from user space. Bisection led to a 
-particular commit, and reverting it "fixed" the problem. In fact, the actual 
-problem was a faulty merge. This problem is fixed in the current linux-2.6-git, 
-but that patch is not yet in wireless-testing.
+From: Arend van Spriel <arend@broadcom.com>
 
-In case you run into this problem, the fix is commit 0f48f2600911d (reproduced 
-below):
+A couple of prototypes are not defined or not used and have been
+removed from the driver.
 
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd.h       |    5 -----
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |    9 ---------
+ 2 files changed, 0 insertions(+), 14 deletions(-)
 
-commit 0f48f2600911d5de6393829e4a9986d4075558b3
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Thu Jun 2 05:29:19 2011 +0900
-
-     block: fix mismerge of the DISK_EVENT_MEDIA_CHANGE removal
-
-     Jens' back-merge commit 698567f3fa79 ("Merge commit 'v2.6.39' into
-     for-2.6.40/core") was incorrectly done, and re-introduced the
-     DISK_EVENT_MEDIA_CHANGE lines that had been removed earlier in commits
-
-      - 9fd097b14918 ("block: unexport DISK_EVENT_MEDIA_CHANGE for
-        legacy/fringe drivers")
-
-      - 7eec77a1816a ("ide: unexport DISK_EVENT_MEDIA_CHANGE for ide-gd
-        and ide-cd")
-
-     because of conflicts with the "g->flags" updates near-by by commit
-     d4dc210f69bc ("block: don't block events on excl write for non-optical
-     devices")
-
-     As a result, we re-introduced the hanging behavior due to infinite disk
-     media change reports.
-
-     Tssk, tssk, people! Don't do back-merges at all, and *definitely* don't
-     do them to hide merge conflicts from me - especially as I'm likely
-     better at merging them than you are, since I do so many merges.
-
-     Reported-by: Steven Rostedt <rostedt@goodmis.org>
-     Cc: Jens Axboe <jaxboe@fusionio.com>
-     Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-
-diff --git a/drivers/block/paride/pcd.c b/drivers/block/paride/pcd.c
-index a0aabd9..46b8136 100644
---- a/drivers/block/paride/pcd.c
-+++ b/drivers/block/paride/pcd.c
-@@ -321,7 +321,6 @@ static void pcd_init_units(void)
-  		strcpy(disk->disk_name, cd->name);	/* umm... */
-  		disk->fops = &pcd_bdops;
-  		disk->flags = GENHD_FL_BLOCK_EVENTS_ON_EXCL_WRITE;
--		disk->events = DISK_EVENT_MEDIA_CHANGE;
-  	}
-  }
-
-diff --git a/drivers/cdrom/viocd.c b/drivers/cdrom/viocd.c
-index ae15a4d..7878da8 100644
---- a/drivers/cdrom/viocd.c
-+++ b/drivers/cdrom/viocd.c
-@@ -627,7 +627,6 @@ static int viocd_probe(struct vio_dev *vdev, const struct 
-vio_device_id *id)
-  	gendisk->fops = &viocd_fops;
-  	gendisk->flags = GENHD_FL_CD | GENHD_FL_REMOVABLE |
-  			 GENHD_FL_BLOCK_EVENTS_ON_EXCL_WRITE;
--	gendisk->events = DISK_EVENT_MEDIA_CHANGE;
-  	set_capacity(gendisk, 0);
-  	gendisk->private_data = d;
-  	d->viocd_disk = gendisk;
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 6e5123b..144d272 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1782,7 +1782,6 @@ static int ide_cd_probe(ide_drive_t *drive)
-  	ide_cd_read_toc(drive, &sense);
-  	g->fops = &idecd_ops;
-  	g->flags |= GENHD_FL_REMOVABLE | GENHD_FL_BLOCK_EVENTS_ON_EXCL_WRITE;
--	g->events = DISK_EVENT_MEDIA_CHANGE;
-  	add_disk(g);
-  	return 0;
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index d19d091..3f1b757 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -943,7 +943,6 @@ extern void brcmf_timeout_start(dhd_timeout_t *tmo, uint usec);
+ extern int brcmf_timeout_expired(dhd_timeout_t *tmo);
+ 
+ extern int brcmf_ifname2idx(struct dhd_info *dhd, char *name);
+-extern u8 *dhd_bssidx2bssid(dhd_pub_t *dhd, int idx);
+ extern int brcmf_c_host_event(struct dhd_info *dhd, int *idx, void *pktdata,
+ 			 brcmf_event_msg_t *, void **data_ptr);
+ 
+@@ -964,11 +963,7 @@ extern void brcmf_vif_sendup(struct dhd_info *dhd, int ifidx,
+ /* Send packet to dongle via data channel */
+ extern int brcmf_sendpkt(dhd_pub_t *dhdp, int ifidx, struct sk_buff *pkt);
+ 
+-/* Send event to host */
+-extern void dhd_sendup_event(dhd_pub_t *dhdp, brcmf_event_msg_t *event,
+-			     void *data);
+ extern int brcmf_bus_devreset(dhd_pub_t *dhdp, u8 flag);
+-extern uint dhd_bus_status(dhd_pub_t *dhdp);
+ extern int brcmf_bus_start(dhd_pub_t *dhdp);
+ 
+ extern void brcmf_wait_for_event(dhd_pub_t *dhd, bool * lockvar);
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 928220c..f326071 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -2519,15 +2519,6 @@ dhd_wl_host_event(dhd_info_t *dhd, int *ifidx, void *pktdata,
+ 	return bcmerror;
+ }
+ 
+-/* send up locally generated event */
+-void dhd_sendup_event(dhd_pub_t *dhdp, brcmf_event_msg_t *event, void *data)
+-{
+-	switch (be32_to_cpu(event->event_type)) {
+-	default:
+-		break;
+-	}
+-}
+-
+ void brcmf_wait_for_event(dhd_pub_t *dhd, bool *lockvar)
+ {
+ 	struct dhd_info *dhdinfo = dhd->info;
+-- 
+1.7.1
 
 
