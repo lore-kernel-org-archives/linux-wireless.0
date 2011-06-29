@@ -1,84 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:52685 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756344Ab1F1PEo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2011 11:04:44 -0400
-Received: by wyg8 with SMTP id 8so211602wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2011 08:04:43 -0700 (PDT)
+Received: from c60.cesmail.net ([216.154.195.49]:56725 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756449Ab1F2QHd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 12:07:33 -0400
+Message-ID: <4E0B4DC4.8050702@gnu.org> (sfid-20110629_180736_615941_9E8343F7)
+Date: Wed, 29 Jun 2011 12:07:32 -0400
+From: Pavel Roskin <proski@gnu.org>
 MIME-Version: 1.0
-In-Reply-To: <4E05F12B.4020302@openwrt.org>
-References: <152381309010939@web35.yandex.ru>
-	<4E05F12B.4020302@openwrt.org>
-Date: Tue, 28 Jun 2011 20:34:43 +0530
-Message-ID: <BANLkTi=J8y0TSviVb0Nh6QyVeNu+0sESww@mail.gmail.com> (sfid-20110628_171957_688295_BC6D66DA)
-Subject: Re: AR9280 won't initialize
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Misha Shnurapet <shnurapet@fedoraproject.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Cc: Community support for Fedora users
-	<users@lists.fedoraproject.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Joerg Pommnitz <pommnitz@yahoo.com>
+CC: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: Re: [ath5k-devel] ath5k crash (NULL pointer access) when changing
+ ANI
+References: <1309339683.73960.YahooMailRC@web161214.mail.bf1.yahoo.com>
+In-Reply-To: <1309339683.73960.YahooMailRC@web161214.mail.bf1.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/6/25 Felix Fietkau <nbd@openwrt.org>:
-> On 2011-06-25 4:08 PM, Misha Shnurapet wrote:
->>
->> Hi.
->>
->> I have a little problem. I replaced the old BCM4312 card on my Dell mini
->> 1011 (10v) with:
->> 03:00.0 Network controller: Atheros Communications Inc. AR928X Wireless
->> Network Adapter (PCI-Express) (rev 01)
->>
->> But it won't work.
->>
->> First it crashed Linux:
->> http://pastebin.com/YmEGcPK8
->>
->> Then I installed a system update:
->> http://funkyimg.com/u2/879/849/2.png
->> http://pastebin.com/hWG6u7VJ
->>
->> And now it is:
->>
->> [   30.589243] ath9k 0000:03:00.0: PCI INT A ->  GSI 17 (level, low) ->
->>  IRQ 17
->> [   30.589269] ath9k 0000:03:00.0: setting latency timer to 64
->> [   30.594884] ath: address test failed addr: 0x00008000 - wr:0xaaaaaaaa
->> != rd:0xaaaa2aaa
-
-this looks really wrong if the memory test itself fails, then all
-those REG_READ, REG_WRITES are unreliable and this may be the reason
-that your gettsf64 looks weird and hits a warning. also did you try
-what Felix had suggested?
-
->> [   30.594898] ath: Unable to initialize hardware; initialization status:
->> -19
->> [   30.594913] ath9k 0000:03:00.0: Failed to initialize device
->> [   30.594991] ath9k 0000:03:00.0: PCI INT A disabled
->>
->> lsusb:
->> http://pastebin.com/JHYZiDhr
->>
->> Installing the latest stable compat-wireless from source didn't help
->> (bleeding edge won't build).
->>
->> I would appreciate if you help me.
+On 06/29/2011 05:28 AM, Joerg Pommnitz wrote:
+> Hello all,
+> ath5k will immediately crash when issuing the following command:
 >
-> Looks like a hardware issue to me. Try removing the card and plugging it
-> back in.
+> echo 2>  /sys/class/ieee80211/phy0/device/ani/ani_mode
 >
-> - Felix
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The crash log looks like this:
 >
+> [   66.425365] BUG: unable to handle kernel NULL pointer dereference at 00000100
+> [   66.425652] IP: [<e08e3008>] ath5k_ani_init+0xe/0x399 [ath5k]
 
-
+It looks like we have a major bug in the ath5k sysfs code!  drvdata is 
+set to hw as it should, but the sysfs code assumes it's set to sc.  I'm 
+testing a patch now.
 
 -- 
-shafi
+Regards,
+Pavel Roskin
