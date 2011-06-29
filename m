@@ -1,54 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:45790 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755302Ab1FNLrg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jun 2011 07:47:36 -0400
-Received: by ywe9 with SMTP id 9so2515543ywe.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2011 04:47:35 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:4671 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757427Ab1F2XtR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:49:17 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 065/119] staging: brcm80211: always enable code for
+ PLATFORM_BUS functionality
+Date: Wed, 29 Jun 2011 16:47:29 -0700
+Message-ID: <1309391303-22741-66-git-send-email-frankyl@broadcom.com> (sfid-20110630_015206_148409_791ADA28)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <BANLkTimZFU_g5Ee4Ajh9MyFmWCvtj-Firw@mail.gmail.com>
-References: <BANLkTikFvkUj=JFrCsffz6Z78KdAEw-t0A@mail.gmail.com>
-	<20110613132009.GA7133@redhat.com>
-	<BANLkTi=eKBcV5OjP0qqLe6n9GsiwhYLejg@mail.gmail.com>
-	<20110614100918.GA4450@redhat.com>
-	<BANLkTimZFU_g5Ee4Ajh9MyFmWCvtj-Firw@mail.gmail.com>
-Date: Tue, 14 Jun 2011 19:47:35 +0800
-Message-ID: <BANLkTine2HDAwUnd5jJ=mwL25bJo-7zJSg@mail.gmail.com> (sfid-20110614_134740_671649_B9664201)
-Subject: Re: APSM, AR9285 and bus hangs
-From: Adrian Chadd <adrian@freebsd.org>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	ath9k-devel@venema.h4ckr.net, Tony Houghton <h@realh.co.uk>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	camilo@mesias.co.uk, Rajkumar Manoharan <rmanoharan@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 June 2011 19:44, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+From: Arend van Spriel <arend@broadcom.com>
 
-> I had verified with the internal code base whether this is being done,
-> unfortunately no and at least I had tested this patch in my lenovo
-> T400 machine it did not cause any issue. this might fix the issue for
-> the specific platform but I am not sure whether this will not cause
-> any problems in other platforms. these sort for Workarounds were done
-> based on testing in different platforms.
-> Adrian you have any thoughts?
+Some code is conditionally compiled in upon defintion of PLATFORM_BUS
+macro. This patch will have it compiled in unconditionally.
 
-I don't have any new thoughts, no. I think it's more likely something
-to do with how the bus is being setup, how APSM is being used, how
-power saving in general is handled, quirks of that chipset (all the
-laptops with problems have been a specific AMD chipset, right?)
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/Makefile       |    1 -
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |    9 ---------
+ 2 files changed, 0 insertions(+), 10 deletions(-)
 
-Unfortunately I don't know anywhere near enough about the goings on
-with power saving/APSM on Linux. If someone would like to get us in
-contact with the relevant developers, we could likely have a more
-constructive discussion.
+diff --git a/drivers/staging/brcm80211/brcmfmac/Makefile b/drivers/staging/brcm80211/brcmfmac/Makefile
+index f76e62a..0674a6a 100644
+--- a/drivers/staging/brcm80211/brcmfmac/Makefile
++++ b/drivers/staging/brcm80211/brcmfmac/Makefile
+@@ -16,7 +16,6 @@
+ # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ 
+ ccflags-y :=			\
+-	-DBCMPLATFORM_BUS	\
+ 	-DBCMSDIO		\
+ 	-DBRCM_FULLMAC		\
+ 	-DBRCMF_FIRSTREAD=64	\
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+index 5243f33..5194c59 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+@@ -36,9 +36,6 @@
+ extern void brcmf_sdbrcm_isr(void *args);
+ #endif				/* defined(OOB_INTR_ONLY) */
+ #if defined(CONFIG_MACH_SANDGATE2G) || defined(CONFIG_MACH_LOGICPD_PXA270)
+-#if !defined(BCMPLATFORM_BUS)
+-#define BCMPLATFORM_BUS
+-#endif				/* !defined(BCMPLATFORM_BUS) */
+ 
+ #include <linux/platform_device.h>
+ #endif				/* CONFIG_MACH_SANDGATE2G */
+@@ -51,11 +48,7 @@ extern void brcmf_sdbrcm_isr(void *args);
+  */
+ struct bcmsdh_hc {
+ 	struct bcmsdh_hc *next;
+-#ifdef BCMPLATFORM_BUS
+ 	struct device *dev;	/* platform device handle */
+-#else
+-	struct pci_dev *dev;	/* pci device handle */
+-#endif				/* BCMPLATFORM_BUS */
+ 	void *regs;		/* SDIO Host Controller address */
+ 	struct brcmf_sdio *sdh;	/* SDIO Host Controller handle */
+ 	void *ch;
+@@ -120,7 +113,6 @@ bool brcmf_sdio_chipmatch(u16 vendor, u16 device)
+ 	return false;
+ }
+ 
+-#if defined(BCMPLATFORM_BUS)
+ /* forward declarations */
+ int brcmf_sdio_probe(struct device *dev);
+ EXPORT_SYMBOL(brcmf_sdio_probe);
+@@ -228,7 +220,6 @@ int brcmf_sdio_remove(struct device *dev)
+ 	kfree(sdhc);
+ 	return 0;
+ }
+-#endif				/* BCMPLATFORM_BUS */
+ 
+ extern int brcmf_sdio_function_init(void);
+ 
+-- 
+1.7.1
 
-(And after exams please, I don't have brain cycles to spend thoroughly
-thinking about this until late June..)
 
-
-Adrian
