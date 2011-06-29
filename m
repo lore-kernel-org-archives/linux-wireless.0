@@ -1,95 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:51747 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751973Ab1FLOdo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jun 2011 10:33:44 -0400
-Received: by fxm17 with SMTP id 17so2301587fxm.19
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Jun 2011 07:33:43 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Cc: francesco.gringoli@ing.unibs.it,
-	=?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [RFC][PATCH] b43: do not try sending packets when ring can be full
-Date: Sun, 12 Jun 2011 17:11:53 +0200
-Message-Id: <1307891513-6812-1-git-send-email-zajec5@gmail.com> (sfid-20110612_163353_594450_5A459432)
+Received: from mms2.broadcom.com ([216.31.210.18]:4623 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758129Ab1F2XtF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:49:05 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 097/119] staging: brcm80211: removed brcmf_sdioh_reset()
+Date: Wed, 29 Jun 2011 16:48:01 -0700
+Message-ID: <1309391303-22741-98-git-send-email-frankyl@broadcom.com> (sfid-20110630_015142_197387_D3B923A6)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
-This prevents us from hitting "Packet after queue stopped", but still
-is not an optimal solution. We stop sending packets from queue to
-hardware if just a one ring is full. It may happen there are packets on
-the queue that want to be send to different ring (qos).
----
- drivers/net/wireless/b43/b43.h  |    2 ++
- drivers/net/wireless/b43/dma.c  |    5 +++++
- drivers/net/wireless/b43/main.c |    5 +++++
- 3 files changed, 12 insertions(+), 0 deletions(-)
+From: Roland Vossen <rvossen@broadcom.com>
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index 1cb2dde..8d4bb28 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -582,6 +582,8 @@ struct b43_dma {
- 	struct b43_dmaring *rx_ring;
+Code cleanup. This function did not perform a reset, hence it was removed.
+
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdbus.h     |    3 ---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |    5 -----
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    8 --------
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |    2 --
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    3 ---
+ 5 files changed, 0 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
+index 656caeb..eb08152 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
+@@ -97,9 +97,6 @@ extern int brcmf_sdioh_abort(struct sdioh_info *si, uint fnc);
+ extern int brcmf_sdioh_start(struct sdioh_info *si, int stage);
+ extern int brcmf_sdioh_stop(struct sdioh_info *si);
  
- 	u32 translation; /* Routing bits */
-+
-+	u8 stopped_rings; /* Amount of stopped rings */
- };
+-/* Reset and re-initialize the device */
+-extern int brcmf_sdioh_reset(struct sdioh_info *si);
+-
+ /* Helper function */
+ void *brcmf_sdcard_get_sdioh(struct brcmf_sdio_card *card);
  
- struct b43_pio_txqueue;
-diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
-index d02cf83..a501992 100644
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -1056,6 +1056,7 @@ int b43_dma_init(struct b43_wldev *dev)
- 	if (err)
- 		return err;
- 	dma->translation = ssb_dma_translation(dev->sdev);
-+	dma->stopped_rings = 0;
- 
- 	err = -ENOMEM;
- 	/* setup TX DMA channels. */
-@@ -1374,6 +1375,8 @@ int b43_dma_tx(struct b43_wldev *dev, struct sk_buff *skb)
- 		/* This TX ring is full. */
- 		ieee80211_stop_queue(dev->wl->hw, skb_get_queue_mapping(skb));
- 		ring->stopped = 1;
-+		dev->dma.stopped_rings++;
-+
- 		if (b43_debug(dev, B43_DBG_DMAVERBOSE)) {
- 			b43dbg(dev->wl, "Stopped TX ring %d\n", ring->index);
- 		}
-@@ -1493,9 +1496,11 @@ void b43_dma_handle_txstatus(struct b43_wldev *dev,
- 		B43_WARN_ON(free_slots(ring) < TX_SLOTS_PER_FRAME);
- 		ieee80211_wake_queue(dev->wl->hw, ring->queue_prio);
- 		ring->stopped = 0;
-+		dev->dma.stopped_rings--;
- 		if (b43_debug(dev, B43_DBG_DMAVERBOSE)) {
- 			b43dbg(dev->wl, "Woke up TX ring %d\n", ring->index);
- 		}
-+		ieee80211_queue_work(dev->wl->hw, &dev->wl->tx_work);
- 	}
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 132b18f..11abd55 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -545,11 +545,6 @@ uint brcmf_sdcard_query_iofnum(struct brcmf_sdio_card *card)
+ 	return brcmf_sdioh_query_iofnum(card->sdioh);
  }
  
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 1d8d983..2260b36 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -3219,6 +3219,11 @@ static void b43_tx_work(struct work_struct *work)
- 	}
+-int brcmf_sdcard_reset(struct brcmf_sdio_card *card)
+-{
+-	return brcmf_sdioh_reset(card->sdioh);
+-}
+-
+ void *brcmf_sdcard_get_sdioh(struct brcmf_sdio_card *card)
+ {
+ 	ASSERT(card);
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 092d044..0f0dc42 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -846,14 +846,6 @@ extern int brcmf_sdioh_abort(struct sdioh_info *sd, uint func)
+ 	return 0;
+ }
  
- 	while (skb_queue_len(&wl->tx_queue)) {
-+		if (!b43_using_pio_transfers(dev) && dev->dma.stopped_rings) {
-+			mutex_unlock(&wl->mutex);
-+			return;
-+		}
-+
- 		skb = skb_dequeue(&wl->tx_queue);
+-/* Reset and re-initialize the device */
+-int brcmf_sdioh_reset(struct sdioh_info *si)
+-{
+-	sd_trace(("%s: Enter\n", __func__));
+-	sd_trace(("%s: Exit\n", __func__));
+-	return 0;
+-}
+-
+ /* Disable device interrupt */
+ void brcmf_sdioh_dev_intr_off(struct sdioh_info *sd)
+ {
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index e43c53a..4b0352f 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -6013,8 +6013,6 @@ int brcmf_bus_devreset(struct brcmf_pub *dhdp, u8 flag)
  
- 		if (b43_using_pio_transfers(dev))
+ 		if (bus->dhd->dongle_reset) {
+ 			/* Turn on WLAN */
+-			/* Reset SD client */
+-			brcmf_sdcard_reset(bus->card);
+ 
+ 			/* Attempt to re-attach & download */
+ 			if (brcmf_sdbrcm_probe_attach(bus, bus->card,
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index f05067a..df4063c 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -207,9 +207,6 @@ extern int brcmf_sdcard_iovar_op(struct brcmf_sdio_card *card, const char *name,
+ 				 void *params, int plen, void *arg, int len,
+ 				 bool set);
+ 
+-/* Reset and reinitialize the device */
+-extern int brcmf_sdcard_reset(struct brcmf_sdio_card *card);
+-
+ /* helper functions */
+ 
+ extern void *brcmf_sdcard_get_sdioh(struct brcmf_sdio_card *card);
 -- 
-1.7.3.4
+1.7.1
+
 
