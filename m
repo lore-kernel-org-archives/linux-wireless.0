@@ -1,54 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:35828 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752361Ab1FBTMf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 15:12:35 -0400
-Received: by qyg14 with SMTP id 14so590979qyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Jun 2011 12:12:34 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:2083 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758193Ab1F2XtW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:49:22 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 023/119] staging: brcm80211: corrected tx status
+ feedback for non AMPDU packets
+Date: Wed, 29 Jun 2011 16:46:47 -0700
+Message-ID: <1309391303-22741-24-git-send-email-frankyl@broadcom.com> (sfid-20110630_015236_333809_663C9450)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <4DD4569C.7080303@candelatech.com>
-References: <1305586296-23147-1-git-send-email-greearb@candelatech.com>
- <1305759738.8827.6.camel@jlt3.sipsolutions.net> <4DD4569C.7080303@candelatech.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 2 Jun 2011 12:12:14 -0700
-Message-ID: <BANLkTinozbG2SfOCRd1U__8-Pz9-8HCkPQ@mail.gmail.com> (sfid-20110602_211238_294668_E3CAACEF)
-Subject: Re: [PATCH v2] wireless: Support can-scan-one logic.
-To: Ben Greear <greearb@candelatech.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 18, 2011 at 4:30 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 05/18/2011 04:02 PM, Johannes Berg wrote:
->>
->> On Mon, 2011-05-16 at 15:51 -0700, greearb@candelatech.com wrote:
->>>
->>> From: Ben Greear<greearb@candelatech.com>
->>>
->>> Enable this by passing a -1 for a scan frequency.
->>
->> I still don't think we should do that, especially not with -1. That's
->> totally non-netlink like inband signalling. I'll also reply to your
->> other mail though since I don't think it makes sense to have this sort
->> of convenience function in the kernel.
->
-> It's virtually impossible (as far as I can tell) to carry an
-> out-of-tree netlink patch that uses a new netlink message
-> and still keep things backwards-compat when someone adds a
-> new message to the upstream kernel.  So, the -1 hack works
-> well for me.
->
-> If it were to go into the kernel proper, then we could
-> add a proper flag to the netlink API and start using
-> that.
->
-> If you just don't like the feature, thats OK...it is a pretty
-> specialized feature, and easy enough to carry in my own tree.
+From: Roland Vossen <rvossen@broadcom.com>
 
-Since this shit was merged can you add a respective documentation
-extension for the command for nl80211.h?
+Code still contained a 'FIXME' label that said tx status feedback (consumed by
+the rate control algorithm) was not yet taking RTS/CTS into account.
 
-  Luis
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/main.c |   30 ++++++++++++++++++++++------
+ 1 files changed, 23 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 9aa74df..64f4fe7 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -4371,8 +4371,18 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, tx_status_t *txs, u32 frm_tx2)
+ 	if (!lastframe) {
+ 		wiphy_err(wlc->wiphy, "Not last frame!\n");
+ 	} else {
+-		u16 sfbl, lfbl;
+-		ieee80211_tx_info_clear_status(tx_info);
++		/*
++		 * Set information to be consumed by Minstrel ht.
++		 *
++		 * The "fallback limit" is the number of tx attempts a given
++		 * MPDU is sent at the "primary" rate. Tx attempts beyond that
++		 * limit are sent at the "secondary" rate.
++		 * A 'short frame' does not exceed RTS treshold.
++		 */
++		u16 sfbl,	/* Short Frame Rate Fallback Limit */
++		    lfbl,	/* Long Frame Rate Fallback Limit */
++		    fbl;
++
+ 		if (queue < AC_COUNT) {
+ 			sfbl = WLC_WME_RETRY_SFB_GET(wlc, wme_fifo2ac[queue]);
+ 			lfbl = WLC_WME_RETRY_LFB_GET(wlc, wme_fifo2ac[queue]);
+@@ -4382,14 +4392,20 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, tx_status_t *txs, u32 frm_tx2)
+ 		}
+ 
+ 		txrate = tx_info->status.rates;
+-		/* FIXME: this should use a combination of sfbl, lfbl depending on frame length and RTS setting */
+-		if ((tx_frame_count > sfbl) && (txrate[1].idx >= 0)) {
++		if (txrate[0].flags & IEEE80211_TX_RC_USE_RTS_CTS)
++			fbl = lfbl;
++		else
++			fbl = sfbl;
++
++		ieee80211_tx_info_clear_status(tx_info);
++
++		if ((tx_frame_count > fbl) && (txrate[1].idx >= 0)) {
+ 			/* rate selection requested a fallback rate and we used it */
+-			txrate->count = lfbl;
+-			txrate[1].count = tx_frame_count - lfbl;
++			txrate[0].count = fbl;
++			txrate[1].count = tx_frame_count - fbl;
+ 		} else {
+ 			/* rate selection did not request fallback rate, or we didn't need it */
+-			txrate->count = tx_frame_count;
++			txrate[0].count = tx_frame_count;
+ 			/* rc80211_minstrel.c:minstrel_tx_status() expects unused rates to be marked with idx = -1 */
+ 			txrate[1].idx = -1;
+ 			txrate[1].count = 0;
+-- 
+1.7.1
+
+
