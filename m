@@ -1,64 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:46766 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753655Ab1F3D0Y convert rfc822-to-8bit (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:40131 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752990Ab1F2TFB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 23:26:24 -0400
-Received: by iwn6 with SMTP id 6so1563332iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2011 20:26:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1309391163.29598.92.camel@Joe-Laptop>
-References: <1309285246-8495-1-git-send-email-aloisio.almeida@openbossa.org>
- <1309285246-8495-2-git-send-email-aloisio.almeida@openbossa.org>
- <1309292325.29598.9.camel@Joe-Laptop> <1309311096.2208.33.camel@aeonflux>
- <1309312164.29598.53.camel@Joe-Laptop> <1309370457.2208.48.camel@aeonflux>
- <BANLkTinospg_dhTC8Tcok3kqk9gOryG6eA@mail.gmail.com> <1309391163.29598.92.camel@Joe-Laptop>
-From: Aloisio Almeida <aloisio.almeida@openbossa.org>
-Date: Thu, 30 Jun 2011 00:26:03 -0300
-Message-ID: <CAEsZsEgfKPtsXKGiAV3QuH=YESyS+GHnsNjauVZV==AN94fxug@mail.gmail.com> (sfid-20110630_052636_988126_B6A70721)
-Subject: Re: [PATCH v4 1/6] NFC: add nfc subsystem core
-To: Joe Perches <joe@perches.com>
-Cc: Jason Baron <jbaron@redhat.com>,
-	Marcel Holtmann <marcel@holtmann.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, sameo@linux.intel.com,
-	johannes@sipsolutions.net, lauro.venancio@openbossa.org,
-	marcio.macedo@openbossa.org, Waldemar.Rymarkiewicz@tieto.com,
-	padovan@profusion.mobi, rdunlap@xenotime.net
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 29 Jun 2011 15:05:01 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id B4D11540055
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2011 15:12:27 -0400 (EDT)
+Subject: Compat-wireless release for 2011-06-29 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110629190500.9C63240EC7@repository3.orbit-lab.org> (sfid-20110629_210509_158698_2984EA9F)
+Date: Wed, 29 Jun 2011 15:05:00 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   ce3bc79..89a736d  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 7b31fe9...28c9310 akpm-end   -> origin/akpm-end  (forced update)
+ + 04c93b7...b0af8df akpm-start -> origin/akpm-start  (forced update)
+   de335a4..b0e1893  history    -> origin/history
+ + ff28b39...3c2ce3e master     -> origin/master  (forced update)
+   4d258b2..b0af8df  stable     -> origin/stable
+ * [new tag]         next-20110629 -> next-20110629
+ * [new tag]         v3.0-rc5   -> v3.0-rc5
 
-On Wed, Jun 29, 2011 at 8:46 PM, Joe Perches <joe@perches.com> wrote:
-> On Wed, 2011-06-29 at 20:23 -0300, Aloisio Almeida wrote:
->> >> Today, dynamic_debug can add __func__ to the output as
->> >> desired so I think that it's not really necessary
->> >> to add to any <foo>_dbg callsite.
->> That's true only for pr_debug() function. You cannot add __func__ info
->> on dev_dbg() calls dynamically.
->
-> I believe that's false.  It's definitely stored.
->
-> #define dynamic_dev_dbg(dev, fmt, ...) do {                             \
->        static struct _ddebug descriptor                                \
->        __used                                                          \
->        __attribute__((section("__verbose"), aligned(8))) =             \
->        { KBUILD_MODNAME, __func__, __FILE__, fmt, __LINE__,            \
->                _DPRINTK_FLAGS_DEFAULT };                               \
->        if (unlikely(descriptor.enabled))                               \
->                dev_printk(KERN_DEBUG, dev, fmt, ##__VA_ARGS__);        \
->        } while (0)
->
-> Jason?  True or false?
+compat-wireless code metrics
 
-It's stored but not retrieved. If you check lib/dynamic_debug.c you
-see that only __dynamic_pr_debug() (called by dynamic_pr_debug() )
-adds such information on prints. The dev_printk() does not check
-_DPRINTK_FLAGS_INCL_* flags.
-
-> I think you should add NFC to nfc_dev_err too.
-
-That's make sense to me also.
-
-Aloisio
+    838787 - Total upstream lines of code being pulled
+      2380 - backport code changes
+      2080 - backport code additions
+       300 - backport code deletions
+      8125 - backport from compat module
+     10505 - total backport code
+    1.2524 - % of code consists of backport work
