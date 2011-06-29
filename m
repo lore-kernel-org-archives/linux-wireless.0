@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:55442 "EHLO mga01.intel.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:1911 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758244Ab1FJXLZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2011 19:11:25 -0400
-Subject: Re: iwlagn module ignores parameter "led_mode=1" under certain
- conditions
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Toralf =?ISO-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <201106110025.06740.toralf.foerster@gmx.de>
-References: <201106100937.23295.toralf.foerster@gmx.de>
-	 <1307719540.5115.25.camel@wwguy-ubuntu>
-	 <201106110025.06740.toralf.foerster@gmx.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 10 Jun 2011 16:07:48 -0700
-Message-ID: <1307747268.26537.5.camel@wwguy-ubuntu> (sfid-20110611_011129_245757_48E4FD87)
-Mime-Version: 1.0
+	id S1757242Ab1F2Xsm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:42 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 036/119] staging: brcm80211: remove dhd_set_timer
+ function prototype
+Date: Wed, 29 Jun 2011 16:47:00 -0700
+Message-ID: <1309391303-22741-37-git-send-email-frankyl@broadcom.com> (sfid-20110630_014859_980378_DCC418E9)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-06-10 at 15:25 -0700, Toralf Förster wrote:
-> wwguy wrote at 17:25:40
-> > On Fri, 2011-06-10 at 00:37 -0700, Toralf Förster wrote:
-> > > Hello,
-> > > 
-> > > Since years this worked at my Gentoo system :
-> > > 
-> > > $ cat /etc/modprobe.d/iwlagn.conf
-> > > options iwlcore led_mode=1
-> > > 
-> > > However nowadays this doesn't work when I do the following :
-> > > 
-> > > 1. dock the ThinkPad T400 (no WLAN, only DSL)
-> > > 2. boot it
-> > > 3. s2ram it
-> > > 4. undock iow
-> > > 5. go into the office
-> > > 6. resume the undocked notebook (WLAN, no DSL)
-> > > 
-> > > The led  blinking ...
-> > > 
-> > > Putting however this line into the config file :
-> > > $ options iwlagn  led_mode=1
-> > > 
-> > > works alwasys.
-> > 
-> > what kernel version you are using?
-> 2.6.39.1 and I'm just curious b/c if I boot the system within the office than 
-> the old line works fine.
-> 
-> 
-Now you make me really confuse, so you use the same system, but work in
-the office but not home? 2.6.39.1 already has split driver, so
-"iwlcore.ko" not exist anymore, and it will not affect the led behavior.
+From: Arend van Spriel <arend@broadcom.com>
 
-what module parameters you have in the system, could you do the
-following:
-$modinfo iwlagn
-$modinfo iwlcore
+This function prototype is not implemented nor referenced in the
+brcmfmac driver so it has been removed.
 
-you should see the list of supported module parameters in iwlagn, but
-not iwlcore.
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-Thanks
-Wey
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+index 34bd5e9..bb9a72a 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+@@ -66,8 +66,6 @@ const char dhd_version[] =
+ const char dhd_version[] = "Dongle Host Driver, version " EPI_VERSION_STR;
+ #endif
+ 
+-void dhd_set_timer(void *bus, uint wdtick);
+-
+ /* IOVar table */
+ enum {
+ 	IOV_VERSION = 1,
+-- 
+1.7.1
+
 
