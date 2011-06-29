@@ -1,92 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57913 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753397Ab1FPQEb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2011 12:04:31 -0400
-Message-ID: <4DFA2989.10503@candelatech.com> (sfid-20110616_180435_672451_E1AC618B)
-Date: Thu, 16 Jun 2011 09:04:25 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mail.atheros.com ([12.19.149.2]:38125 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753085Ab1F2Pdd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 11:33:33 -0400
+Received: from mail.atheros.com ([10.234.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2011 08:32:56 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <rodrigue@qca.qualcomm.com>, <senthilb@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC] ath9k: Add a module param to enable paprd
+Date: Wed, 29 Jun 2011 21:03:26 +0530
+Message-ID: <1309361606-5949-1-git-send-email-mshajakhan@atheros.com> (sfid-20110629_173339_544125_EE38234D)
 MIME-Version: 1.0
-To: Chaoxing Lin <Chaoxing.Lin@ultra-3eti.com>
-CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Help on AMPDU stuck in transmit queue
-References: <BD54DDEB2546894FAB0731EA7B0EDF8D05822A57@RockMX01.rock.corp>
-In-Reply-To: <BD54DDEB2546894FAB0731EA7B0EDF8D05822A57@RockMX01.rock.corp>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/16/2011 07:32 AM, Chaoxing Lin wrote:
-> Hi Linux wireles experts,
->
-> Here is my problem. If anyone can throw some ideas, I would appreciate it.
->
-> I have a customized router board which has one wireless card (ath9160) and one Ethernet port. The ath9160 is (and must be) put in client mode. My customization is to translate packet strictly between Ethernet port and wireless port so that the board can be used for old PC to access wireless network.
->
-> I am running kernel 2.6.38.5. I made a mini module which always forwards data packets between wireless port and Ethernet port.
-> In addition, I made two small changes as follows.
-> 1. On wireless Tx path (in ieee80211_subif_start_xmit() defined in mac80211). The change is to replace source address (the MAC of old PC) with wireless radio MAC (ath9160).
-> 2. On wireless Rx path (in ieee80211_deliver_skb() defined in mac80211). The change is to replace destination address (ath9160 MAC) with MAC of my old PC.
->
-> My customization works very well when 802.11n is disabled on AP which is hostapd based on nl80211 driver.
-> When 802.11n is enabled on AP, my customization works only for the first few minutes. (Ping packets from old PC to AP go through well). After a few minutes, wireless radio (ath9160) on my customized router board won't transmit any ping packet. I see AMPDU stuck in transmit queue based on the info from /debugfs/ieee80211/phy0/ath9k/xmit as follows
->
->                              BE         BK        VI        VO
->
-> MPDUs Queued:              126          0         0      4261
-> MPDUs Completed:           126          0         0      4261
-> Aggregates:                  0          0         0         0
-> AMPDUs Queued:            4002          0         0         0
-> AMPDUs Completed:         3877          0         0         0
-> AMPDUs Retried:              0          0         0         0
-> AMPDUs XRetried:             1          0         0         0
-> FIFO Underrun:               0          0         0         0
-> TXOP Exceeded:               0          0         0         0
-> TXTIMER Expiry:              0          0         0         0
-> DESC CFG Error:              0          0         0         0
-> DATA Underrun:               0          0         0         0
-> DELIM Underrun:              0          0         0         0
-> TX-Pkts-All:              4004          0         0      4261
-> TX-Bytes-All:           462852          0         0    105128
->
->
-> I noticed that when 11n is disable, MPDUs are sent and the "MPDUs queued" == "MPDUs completed".
-> When 11n is enabled, AMPDUs are sent and the "AMPDUs queued"=="AMPDUs Complete" only for the first few minutes. After that, "AMPDUs Complete" stop incrementing.
->
-> I also sniffed the air, the "NULL data packet" is still sent out as usual (it's also reflected in the number "MPDUs Queued and Completed" in VO queue). But no ping packets at all.
->
-> Without my customization, the wireless client (standalone) on router board works very well with the AP with 11n enabled. This eliminates the AP or client issue.
->
-> I also tried another radio (ar9380). The symptom is exactly the same.
->
-> Any help on the following is highly appreciated.
-> 1. Point out the issue, or
-> 2. Throw some idea on how to investigate, or
-> 3. Tell me how that AMPDU works in ath9k (mac80211).
-> 4. Anywhere in ath9k or mac80211 that is sensitive to the address change.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-You might try a later kernel.  I saw problems of this type too a while back,
-but not lately.  (I'm using 2.6.39-wl+ for most testing, though the
-latest linus 3.0.0-rc3 kernel seems to work fine too in limited testing.)
+PAPRD is currently disabled and this is purely an RFC patch (or) for
+testing alone, we don't like this to be in our driver
 
-Thanks,
-Ben
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath.h        |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c   |    3 ++-
+ drivers/net/wireless/ath/ath9k/init.c |    5 +++++
+ 3 files changed, 8 insertions(+), 1 deletions(-)
 
->
->
-> Thanks
->
-> Chaoxing
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index 17c4b56..1157231 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -162,6 +162,7 @@ struct ath_common {
+ 
+ 	bool btcoex_enabled;
+ 	bool disable_ani;
++	bool paprd_enabled;
+ };
+ 
+ struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 07827b5..c938ab6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -361,6 +361,7 @@ static bool ath9k_hw_chip_test(struct ath_hw *ah)
+ 
+ static void ath9k_hw_init_config(struct ath_hw *ah)
+ {
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	int i;
+ 
+ 	ah->config.dma_beacon_response_time = 2;
+@@ -380,7 +381,7 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
+ 	}
+ 
+ 	/* PAPRD needs some more work to be enabled */
+-	ah->config.paprd_disable = 1;
++	ah->config.paprd_disable = !common->paprd_enabled;
+ 
+ 	ah->config.rx_intr_mitigation = true;
+ 	ah->config.pcieSerDesWrite = true;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 50103b2..1271a3c 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -42,6 +42,10 @@ static int ath9k_btcoex_enable;
+ module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
+ MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
+ 
++static int ath9k_paprd_enable;
++module_param_named(paprd_enable, ath9k_paprd_enable, int, 0444);
++MODULE_PARM_DESC(paprd_enable, "Enable PAPRD feature");
++
+ bool is_ath9k_unloaded;
+ /* We use the hw_value as an index into our private channel structure */
+ 
+@@ -586,6 +590,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
+ 	common->priv = sc;
+ 	common->debug_mask = ath9k_debug;
+ 	common->btcoex_enabled = ath9k_btcoex_enable == 1;
++	common->paprd_enabled = ath9k_paprd_enable;
+ 	common->disable_ani = false;
+ 	spin_lock_init(&common->cc_lock);
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
 
