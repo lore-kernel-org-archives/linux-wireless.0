@@ -1,76 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sense.xs4all.nl ([80.101.26.192]:51442 "EHLO love.zweije.nl"
+Received: from mms1.broadcom.com ([216.31.210.17]:2020 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753764Ab1FGOnV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jun 2011 10:43:21 -0400
-Date: Tue, 7 Jun 2011 16:37:09 +0200
-From: Vincent Zweije <vincent@zweije.nl>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Trivial Patch Monkey <trivial@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH] networking: fix warning about unused label wake_up
-Message-ID: <20110607143709.GA16841@love.zweije.nl> (sfid-20110607_164339_591149_842B5C33)
+	id S1753496Ab1F2Xsn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:43 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 096/119] staging: brcm80211: removed
+ brcmf_sdioh_interrupt_pending()
+Date: Wed, 29 Jun 2011 16:48:00 -0700
+Message-ID: <1309391303-22741-97-git-send-email-frankyl@broadcom.com> (sfid-20110630_014921_465013_ADCFB09D)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="OgqxwSJOaUobr8KG"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Roland Vossen <rvossen@broadcom.com>
 
---OgqxwSJOaUobr8KG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Code cleanup. This function always returned 0.
 
-=46rom: Vincent Zweije <vincent@zweije.nl>
-
-Function ieee80211_reconfig in net/mac80211/util.c contains label wake_up
-which is defined unconditionally, but only used with CONFIG_PM. Gcc
-warns about this when CONFIG_PM is not defined.
-
-This patch makes the label's definition dependent on CONFIG_PM too,
-eliminating the warning.
-
-The issue was apparently introduced in git commit
-eecc48000afe2ca6da22122d553b7cad294e42fc.
-
-Signed-off-by: Vincent Zweije <vincent@zweije.nl>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
 ---
-The diff below is against 3.0-rc2.
+ drivers/staging/brcm80211/brcmfmac/bcmsdbus.h     |    4 ----
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |    8 --------
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    7 -------
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |    3 +--
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    5 -----
+ 5 files changed, 1 insertions(+), 26 deletions(-)
 
-Thanks.
-Vincent.
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
+index ee01e48..656caeb 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
+@@ -53,10 +53,6 @@ brcmf_sdioh_interrupt_query(struct sdioh_info *si, bool *onoff);
+ extern int
+ brcmf_sdioh_interrupt_set(struct sdioh_info *si, bool enable_disable);
+ 
+-#if defined(BCMDBG)
+-extern bool brcmf_sdioh_interrupt_pending(struct sdioh_info *si);
+-#endif
+-
+ extern int brcmf_sdioh_claim_host_and_lock(struct sdioh_info *si);
+ extern int brcmf_sdioh_release_host_and_unlock(struct sdioh_info *si);
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 4c7e4a9..132b18f 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -138,14 +138,6 @@ int brcmf_sdcard_intr_dereg(struct brcmf_sdio_card *card)
+ 	return brcmf_sdioh_interrupt_deregister(card->sdioh);
+ }
+ 
+-#if defined(BCMDBG)
+-bool brcmf_sdcard_intr_pending(struct brcmf_sdio_card *card)
+-{
+-	ASSERT(card);
+-	return brcmf_sdioh_interrupt_pending(card->sdioh);
+-}
+-#endif
+-
+ int brcmf_sdcard_devremove_reg(struct brcmf_sdio_card *card,
+ 			       brcmf_sdiocard_cb_fn_t fn,
+ 			       void *argh)
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index d0e9b3d..092d044 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -244,13 +244,6 @@ brcmf_sdioh_interrupt_query(struct sdioh_info *sd, bool *onoff)
+ 	return 0;
+ }
+ 
+-#if defined(BCMDBG)
+-extern bool brcmf_sdioh_interrupt_pending(struct sdioh_info *sd)
+-{
+-	return 0;
+-}
+-#endif
+-
+ uint brcmf_sdioh_query_iofnum(struct sdioh_info *sd)
+ {
+ 	return sd->num_funcs;
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 3ed9e12..e43c53a 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -1889,8 +1889,7 @@ void brcmf_sdbrcm_bus_dump(struct brcmf_pub *dhdp, struct brcmu_strbuf *strbuf)
+ #endif				/* SDTEST */
+ #ifdef BCMDBG
+ 	brcmu_bprintf(strbuf, "dpc_sched %d host interrupt%spending\n",
+-		    bus->dpc_sched,
+-		    (brcmf_sdcard_intr_pending(bus->card) ? " " : " not "));
++		      bus->dpc_sched, " not ");
+ 	brcmu_bprintf(strbuf, "blocksize %d roundup %d\n", bus->blocksize,
+ 		    bus->roundup);
+ #endif				/* BCMDBG */
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index 5c5bbca..f05067a 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -93,11 +93,6 @@ brcmf_sdcard_intr_reg(struct brcmf_sdio_card *card, brcmf_sdiocard_cb_fn_t fn,
+ 
+ extern int brcmf_sdcard_intr_dereg(struct brcmf_sdio_card *card);
+ 
+-#if defined(BCMDBG)
+-/* Query pending interrupt status from the host controller */
+-extern bool brcmf_sdcard_intr_pending(struct brcmf_sdio_card *card);
+-#endif
+-
+ /* Register a callback to be called on device removal.
+  * No-op in the case of non-removable/hardwired devices.
+  */
+-- 
+1.7.1
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index d3fe2d2..05e3fb8 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1276,7 +1276,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		if (ieee80211_sdata_running(sdata))
- 			ieee80211_enable_keys(sdata);
-=20
-+#ifdef CONFIG_PM
-  wake_up:
-+#endif
- 	ieee80211_wake_queues_by_reason(hw,
- 			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
-=20
---=20
-Vincent Zweije <vincent@zweije.nl>   | "If you're flamed in a group you
-<http://www.xs4all.nl/~zweije/>      | don't read, does anybody get burnt?"
-[Xhost should be taken out and shot] |            -- Paul Tomblin on a.s.r.
 
---OgqxwSJOaUobr8KG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iD8DBQFN7jeSr5thWunKoTMRAiLsAKD5ZcknyOxJaAsGo7XPxPDxYWBSzgCg9WQm
-wak6/xssqa5LhRmcYZeozqs=
-=TL6G
------END PGP SIGNATURE-----
-
---OgqxwSJOaUobr8KG--
