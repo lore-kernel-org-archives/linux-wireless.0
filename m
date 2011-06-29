@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:37727 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754378Ab1FTOmE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2011 10:42:04 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: dynamic PS - don't enter PS when TX frames are pending
-References: <1308425533-20854-1-git-send-email-arik@wizery.com>
-	<1308471076.4145.6.camel@jlt3.sipsolutions.net>
-	<20110620133535.GA2251@tuxdriver.com>
-	<1308578353.4322.8.camel@jlt3.sipsolutions.net>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Mon, 20 Jun 2011 17:42:00 +0300
-In-Reply-To: <1308578353.4322.8.camel@jlt3.sipsolutions.net> (Johannes Berg's message of "Mon\, 20 Jun 2011 15\:59\:13 +0200")
-Message-ID: <87aadc1s5j.fsf@purkki.adurom.net> (sfid-20110620_164208_125453_CC4A264E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52233 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932112Ab1F2WMr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 18:12:47 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	linux-mips@linux-mips.org
+Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
+	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC v3 13/13] bcm47xx: fix irq assignment for new SoCs.
+Date: Thu, 30 Jun 2011 00:11:58 +0200
+Message-Id: <1309385518-12097-14-git-send-email-hauke@hauke-m.de> (sfid-20110630_001249_706638_49B748F3)
+In-Reply-To: <1309385518-12097-1-git-send-email-hauke@hauke-m.de>
+References: <1309385518-12097-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ arch/mips/bcm47xx/irq.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
->> > FWIW, I don't really consider myself maintaining the PS
->> > implementation ;-) I don't understand it and think the code is way too
->> > complex.
->> 
->> Perhaps Kalle can comment?  Or...?
->
-> Yeah he's a good candidate :)
-
-Hehe :)
-
-But I agree with Johannes, the powersave in mac80211 is pretty
-complex. I lost track of it a long time ago so it's pretty difficult
-for me to comment about the patch.
-
+diff --git a/arch/mips/bcm47xx/irq.c b/arch/mips/bcm47xx/irq.c
+index 325757a..70bdcf0 100644
+--- a/arch/mips/bcm47xx/irq.c
++++ b/arch/mips/bcm47xx/irq.c
+@@ -26,6 +26,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
+ #include <asm/irq_cpu.h>
++#include <bcm47xx.h>
+ 
+ void plat_irq_dispatch(void)
+ {
+@@ -51,5 +52,16 @@ void plat_irq_dispatch(void)
+ 
+ void __init arch_init_irq(void)
+ {
++#ifdef CONFIG_BCM47XX_BCMA
++	if (bcm47xx_active_bus_type == BCM47XX_BUS_TYPE_BCMA) {
++		bcma_write32(bcm47xx_bus.bcma.bus.drv_mips.core,
++			     BCMA_MIPS_MIPS74K_INTMASK(5), 1 << 31);
++		/*
++		 * the kernel reads the timer irq from some register and thinks
++		 * it's #5, but we offset it by 2 and route to #7
++		 */
++		cp0_compare_irq = 7;
++	}
++#endif
+ 	mips_cpu_irq_init();
+ }
 -- 
-Kalle Valo
+1.7.4.1
+
