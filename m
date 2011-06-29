@@ -1,49 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:1488 "EHLO mga02.intel.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:1914 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757243Ab1F0Inz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 04:43:55 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 27 Jun 2011 11:43:07 +0300
-Subject: RE: [PATCH 18/25] iwlagn: warn about nested SYNC commands
-Message-ID: <4825B8A2C4E264489E57869F0DCFB2234455F70359@hasmsx502.ger.corp.intel.com> (sfid-20110627_105906_076833_48A74A4A)
-References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1308411271-26093-19-git-send-email-wey-yi.w.guy@intel.com>
-	 (sfid-20110618_180558_166798_E27083E7)
- <1309164053.3911.3.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1309164053.3911.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	id S1754370Ab1F2Xsd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:33 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 016/119] staging: brcm80211: remove macro FOREACH_AS_STA
+Date: Wed, 29 Jun 2011 16:46:40 -0700
+Message-ID: <1309391303-22741-17-git-send-email-frankyl@broadcom.com> (sfid-20110630_014843_826824_BA32F4A0)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-QWdyZWVkDQoNCg0KVGhhbmtzLA0KICAgICAgIEVtbWFudWVsDQoNCj4gLS0tLS1PcmlnaW5hbCBN
-ZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9oYW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNpcHNv
-bHV0aW9ucy5uZXRdDQo+IFNlbnQ6IE1vbmRheSwgSnVuZSAyNywgMjAxMSAxMTo0MSBBTQ0KPiBU
-bzogR3V5LCBXZXktWWkgVw0KPiBDYzogbGludmlsbGVAdHV4ZHJpdmVyLmNvbTsgbGludXgtd2ly
-ZWxlc3NAdmdlci5rZXJuZWwub3JnOyBHcnVtYmFjaCwNCj4gRW1tYW51ZWwNCj4gU3ViamVjdDog
-UmU6IFtQQVRDSCAxOC8yNV0gaXdsYWduOiB3YXJuIGFib3V0IG5lc3RlZCBTWU5DIGNvbW1hbmRz
-DQo+IA0KPiBPbiBTYXQsIDIwMTEtMDYtMTggYXQgMDg6MzQgLTA3MDAsIFdleS1ZaSBHdXkgd3Jv
-dGU6DQo+ID4gRnJvbTogRW1tYW51ZWwgR3J1bWJhY2ggPGVtbWFudWVsLmdydW1iYWNoQGludGVs
-LmNvbT4NCj4gPg0KPiA+IFNpbmNlIHRoZXJlIGlzIG5vIHByb3RlY3Rpb24gYXJvdW5kIFNZTkMg
-aG9zdCBjb21tYW5kIG1lY2hhbmlzbSwgYXQgbGVhc3QNCj4gV0FSTg0KPiA+IHdoZW4gY29sbGlz
-aW9uIGhhcHBlbnMgYmV0d2VlbiB0d28gU1lOQyBob3N0IGNvbWFtbmRzLiBJIGFtIG5vdCBzdXJl
-DQo+IHRoZXJlIGlzIGENCj4gPiByZWFsICBpc3N1ZSAoYmV5b25kIHRoZSBIQ01EX0FDVElWRSBm
-bGFnIG1haW50ZW5hbmNlKSB3aXRoIGhhdmluZyB0d28NCj4gU1lOQyBob3N0DQo+ID4gY29tbWFu
-ZHMgYXQgdGhlIHNhbWUgdGltZSwgYnV0IGF0IGxlYXN0IG5vdywgd2Ugd2lsbCBrbm93IGFib3V0
-IGl0Lg0KPiANCj4gUGxlYXNlIGRyb3AgdGhpcyBwYXJ0aWN1bGFyIHBhdGNoLiBXZSBkaXNjdXNz
-ZWQgdGhpcyBidXQgdGhlbiBmb3Jnb3QNCj4gYWJvdXQgaXQgLS0gdGhpcyBwYXRjaCBvbmx5IHdh
-cm5zIHdoZW4gY29sbGlzaW9ucyBhY3R1YWxseSBoYXBwZW4sIGJ1dA0KPiB3ZSBjYW4gdXNlIGxv
-Y2tkZXAgdG8gd2FybiB3aGVuIGNvbGxpc2lvbnMgX2NvdWxkXyBoYXBwZW4gYXMgd2VsbC4NCj4g
-DQo+IGpvaGFubmVzDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpJbnRlbCBJc3JhZWwgKDc0KSBMaW1pdGVkCgpU
-aGlzIGUtbWFpbCBhbmQgYW55IGF0dGFjaG1lbnRzIG1heSBjb250YWluIGNvbmZpZGVudGlhbCBt
-YXRlcmlhbCBmb3IKdGhlIHNvbGUgdXNlIG9mIHRoZSBpbnRlbmRlZCByZWNpcGllbnQocykuIEFu
-eSByZXZpZXcgb3IgZGlzdHJpYnV0aW9uCmJ5IG90aGVycyBpcyBzdHJpY3RseSBwcm9oaWJpdGVk
-LiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQKcmVjaXBpZW50LCBwbGVhc2UgY29udGFjdCB0
-aGUgc2VuZGVyIGFuZCBkZWxldGUgYWxsIGNvcGllcy4K
+From: Arend van Spriel <arend@broadcom.com>
+
+The macro definition FOREACH_AS_STA does an assignment inside the
+if condition, which is considered a checkpatch error. It has been
+removed.
+
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/main.c |   31 +++++++++++++++-------------
+ 1 files changed, 17 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 093f3bf..f7ebaf1 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -252,12 +252,6 @@ const u8 wlc_prio2prec_map[] = {
+ #define BSSCFG_STA(cfg)		(1)
+ #define BSSCFG_IBSS(cfg)	(!(cfg)->BSS)
+ 
+-/* Iterator for "associated" STA bss configs:
+-   (struct brcms_c_info *wlc, int idx, struct brcms_c_bsscfg *cfg) */
+-#define FOREACH_AS_STA(wlc, idx, cfg) \
+-	for (idx = 0; (int) idx < WLC_MAXBSSCFG; idx++) \
+-		if ((cfg = (wlc)->bsscfg[idx]) && BSSCFG_STA(cfg) && cfg->associated)
+-
+ /* As above for all non-NULL BSS configs */
+ #define FOREACH_BSS(wlc, idx, cfg) \
+ 	for (idx = 0; (int) idx < WLC_MAXBSSCFG; idx++) \
+@@ -396,13 +390,19 @@ bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
+ 	if (AP_ACTIVE(wlc) || wlc->monitor)
+ 		return false;
+ 
+-	FOREACH_AS_STA(wlc, idx, cfg) {
+-		/* disallow PS when one of the following bsscfg specific conditions meets */
+-		if (!cfg->BSS || !WLC_PORTOPEN(cfg))
+-			return false;
++	for (idx = 0; idx < WLC_MAXBSSCFG; idx++) {
++		cfg = wlc->bsscfg[idx];
++		if (cfg && BSSCFG_STA(cfg) && cfg->associated) {
++			/*
++			 * disallow PS when one of the following
++			 * bsscfg specific conditions meets
++			 */
++			if (!cfg->BSS || !WLC_PORTOPEN(cfg))
++				return false;
+ 
+-		if (!cfg->dtim_programmed)
+-			return false;
++			if (!cfg->dtim_programmed)
++				return false;
++		}
+ 	}
+ 
+ 	return true;
+@@ -1060,8 +1060,11 @@ static void WLBANDINITFN(brcms_c_setband) (struct brcms_c_info *wlc,
+ 		return;
+ 
+ 	/* wait for at least one beacon before entering sleeping state */
+-	FOREACH_AS_STA(wlc, idx, cfg)
+-	    cfg->PMawakebcn = true;
++	for (idx = 0; idx < WLC_MAXBSSCFG; idx++) {
++		cfg = wlc->bsscfg[idx];
++		if (cfg && BSSCFG_STA(cfg) && cfg->associated)
++			cfg->PMawakebcn = true;
++	}
+ 	brcms_c_set_ps_ctrl(wlc);
+ 
+ 	/* band-specific initializations */
+-- 
+1.7.1
+
 
