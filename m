@@ -1,70 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:61830 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758703Ab1FWDvA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 23:51:00 -0400
-Received: from mail.atheros.com ([10.234.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 20:50:24 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <hostap@lists.shmoo.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/4] hostapd: add ACS support
-Date: Wed, 22 Jun 2011 20:50:49 -0700
-Message-ID: <1308801053-2461-1-git-send-email-lrodriguez@atheros.com> (sfid-20110623_055105_040813_5F0171B3)
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:59036 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753609Ab1F2USc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 16:18:32 -0400
+Received: by iwn6 with SMTP id 6so1325916iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2011 13:18:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Wed, 29 Jun 2011 22:18:32 +0200
+Message-ID: <BANLkTimsGJo61eLp3NrVtDkh0m3CN3zDxw@mail.gmail.com> (sfid-20110629_221835_948524_E57FF129)
+Subject: Compile error in carl9170 on Debian Squeeze
+From: Alex <alex9434@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series adds ACS support to hostapd. I've completed
-a few of my own TODOs and splitted up the patches as
-best as possible. I'm pretty satisfied with this code now
-as an initial start for ACS code. At this point we need
-to start finding ideal values for the metrics for offchannel
-operation so that we can consistently always find the same
-channel, even if it means surveying longer or doing more
-scans.
+I get the following error when I try to compile carl9170 on Debian
+Squeeze (armel)
 
-Other algorithms for ACS shoudl be easy to plug in, for example,
-spectral scan ;)
+make[1]: Entering directory `/usr/src/linux-headers-2.6.32-5-kirkwood'
+  LD      /usr/src/compat-wireless-2011-06-29/compat/built-in.o
+  CC [M]  /usr/src/compat-wireless-2011-06-29/compat/main.o
+In file included from
+/usr/src/compat-wireless-2011-06-29/include/linux/compat-2.6.h:29,
+                 from <command-line>:0:
+/usr/src/compat-wireless-2011-06-29/include/linux/compat-2.6.34.h:23:
+error: redefinition of 'netdev_name'
+/usr/src/linux-headers-2.6.32-5-common/include/linux/netdevice.h:2032:
+error: previous definition of 'netdev_name' was here
+make[5]: *** [/usr/src/compat-wireless-2011-06-29/compat/main.o] Error 1
+make[4]: *** [/usr/src/compat-wireless-2011-06-29/compat] Error 2
+make[3]: *** [_module_/usr/src/compat-wireless-2011-06-29] Error 2
+make[2]: *** [sub-make] Error 2
+make[1]: *** [all] Error 2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.32-5-kirkwood'
+make: *** [modules] Error 2
 
-Anyway, to enable and test this thing just set CONFIG_ACS=1
-on your build config and then something like this on your
-hostapd.conf:
+Get the same error on older versions from 2010 of compat. Can anybody help me?
 
-channel=acs_survey
-acs_num_req_surveys=10
-acs_roc_duration_ms=100
-
-Test results, rants are appreciated.
-
-Luis R. Rodriguez (4):
-  hostapd: split up channel checking into helpers
-  hostapd: add offchannel support
-  hostapd: add survey dump support
-  hostapd: add Automatic Channel Selection (ACS) support
-
- hostapd/Makefile             |    5 +
- hostapd/config_file.c        |   47 ++++-
- hostapd/defconfig            |   25 +++
- hostapd/hostapd.conf         |   17 ++
- src/ap/acs.c                 |  464 ++++++++++++++++++++++++++++++++++++++++++
- src/ap/acs.h                 |   40 ++++
- src/ap/ap_config.c           |   15 ++
- src/ap/ap_config.h           |    4 +
- src/ap/ap_drv_ops.h          |   27 +++
- src/ap/drv_callbacks.c       |  139 +++++++++++++-
- src/ap/hostapd.c             |    2 +
- src/ap/hostapd.h             |   24 +++
- src/ap/hw_features.c         |  188 +++++++++++------
- src/drivers/driver.h         |  171 +++++++++++++++-
- src/drivers/driver_nl80211.c |  193 ++++++++++++++++++
- 15 files changed, 1290 insertions(+), 71 deletions(-)
- create mode 100644 src/ap/acs.c
- create mode 100644 src/ap/acs.h
-
--- 
-1.7.4.15.g7811d
-
+Regards,
+alex
