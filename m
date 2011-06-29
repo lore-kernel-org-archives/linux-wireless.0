@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:51439 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751252Ab1F1V61 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2011 17:58:27 -0400
-Date: Wed, 29 Jun 2011 00:57:57 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Michel Alexandre Salim <salimma@fedoraproject.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: Re: [PATCH] ath9k: add module option for disabling 11n
- functionality
-Message-ID: <20110628215757.GA14975@jm.kir.nu> (sfid-20110628_235830_750158_9D76A123)
-References: <4E0A2F8A.8010102@fedoraproject.org>
+Received: from mms1.broadcom.com ([216.31.210.17]:1913 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753496Ab1F2Xsd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:33 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 037/119] staging: brcm80211: remove unused globals from
+ dhd_common.c
+Date: Wed, 29 Jun 2011 16:47:01 -0700
+Message-ID: <1309391303-22741-38-git-send-email-frankyl@broadcom.com> (sfid-20110630_014845_615550_DB373E07)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E0A2F8A.8010102@fedoraproject.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 28, 2011 at 09:46:18PM +0200, Michel Alexandre Salim wrote:
-> Some wireless base stations implement 802.11n mode in ways that
-> open-source drivers cannot handle properly, resulting in very
-> unstable connections. This patch introduces an '11n_disable' option
-> to the ath9k driver, similar to the same option for the iwlagn
-> driver.
+From: Arend van Spriel <arend@broadcom.com>
 
-What is so special about this that makes it impossible for open source
-drivers to handle? The proper approach here would be to figure out what
-is causing the interop issue and fix (or more likely, work around) that.
+Three global variable were defined but never used and have been
+removed.
 
-In addition, if this is really needed, why would this be a driver
-specific hack rather than providing a shared mechanism in mac80211 to
-disable 802.11n support? It would sound strange if there would need to
-be a new module parameter in every 802.11n driver to handle something
-like this.
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+index bb9a72a..cb7e455 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+@@ -35,11 +35,6 @@ int dhd_msg_level;
+ char fw_path[MOD_PARAM_PATHLEN];
+ char nv_path[MOD_PARAM_PATHLEN];
+ 
+-/* Last connection success/failure status */
+-u32 dhd_conn_event;
+-u32 dhd_conn_status;
+-u32 dhd_conn_reason;
+-
+ extern int dhdcdc_set_ioctl(dhd_pub_t *dhd, int ifidx, uint cmd, void *buf,
+ 			    uint len);
+ extern void dhd_ind_scan_confirm(void *h, bool status);
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.1
+
+
