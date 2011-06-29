@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48954 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754371Ab1FTNqb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2011 09:46:31 -0400
-Date: Mon, 20 Jun 2011 09:35:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
-	Kalle Valo <kvalo@adurom.com>
-Subject: Re: [RFC] mac80211: dynamic PS - don't enter PS when TX frames are
- pending
-Message-ID: <20110620133535.GA2251@tuxdriver.com> (sfid-20110620_154635_175397_0BB87F50)
-References: <1308425533-20854-1-git-send-email-arik@wizery.com>
- <1308471076.4145.6.camel@jlt3.sipsolutions.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:1909 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757399Ab1F2Xsm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:42 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 031/119] staging: brcm80211: remove unnecessary null
+ check
+Date: Wed, 29 Jun 2011 16:46:55 -0700
+Message-ID: <1309391303-22741-32-git-send-email-frankyl@broadcom.com> (sfid-20110630_014907_422964_A1B46003)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1308471076.4145.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 19, 2011 at 10:11:16AM +0200, Johannes Berg wrote:
-> On Sat, 2011-06-18 at 22:32 +0300, Arik Nemtsov wrote:
-> > Use the tx_frames_pending() driver callback to determine if Tx frames are
-> > pending for its internal queues. If so postpone the dynamic PS timeout
-> > to avoid interrupting Tx traffic.
-> > 
-> > The commit e8306f989483e4b97a8b37dd268de6c8c6f35e75 enabled this
-> > behavior for drivers with IEEE80211_HW_PS_NULLFUNC_STACK. We enable this
-> > for all drivers supporting dynamic PS.
-> > 
-> > This patch helps improve performance in noisy environments.
-> 
-> FWIW, I don't really consider myself maintaining the PS
-> implementation ;-) I don't understand it and think the code is way too
-> complex.
+From: Henry Ptasinski <henryp@broadcom.com>
 
-Perhaps Kalle can comment?  Or...?
+kfree(NULL) is safe, and the rest of the cleanup should be done regardless
+to make sure the state is consistent.
 
-John
+Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |    8 +++-----
+ 1 files changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 48550f3..0fae0b1 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -5567,11 +5567,9 @@ static void dhdsdio_release_malloc(dhd_bus_t *bus)
+ 	if (bus->dhd && bus->dhd->dongle_reset)
+ 		return;
+ 
+-	if (bus->rxbuf) {
+-		kfree(bus->rxbuf);
+-		bus->rxctl = bus->rxbuf = NULL;
+-		bus->rxlen = 0;
+-	}
++	kfree(bus->rxbuf);
++	bus->rxctl = bus->rxbuf = NULL;
++	bus->rxlen = 0;
+ 
+ 	kfree(bus->databuf);
+ 	bus->databuf = NULL;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.1
+
+
