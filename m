@@ -1,70 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:32600 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752048Ab1FFXcs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 19:32:48 -0400
-Message-Id: <a194a41b3f1376f035113d4f443038eb2e64264f.1307403076.git.pstew@chromium.org> (sfid-20110607_013251_207527_01583B63)
-From: Paul Stewart <pstew@chromium.org>
-Date: Mon, 6 Jun 2011 16:00:36 -0700
-Subject: [RFC] cfg80211: Fix handling of previous_auth deauth
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
+Received: from mms1.broadcom.com ([216.31.210.17]:1914 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757529Ab1F2Xsm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:42 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 017/119] staging: brcm80211: change FOREACH_BSS macro to
+ remove checkpatch error
+Date: Wed, 29 Jun 2011 16:46:41 -0700
+Message-ID: <1309391303-22741-18-git-send-email-frankyl@broadcom.com> (sfid-20110630_014902_642152_7A3C7E20)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The WLAN_REASON_PREV_AUTH_NOT_VALID DEAUTH message is sent
-to remove current successful authentications, not to to abort
-a new authentication attempts.  Therefore, filter this reason
-code out when deciding whether to remove authtry_bsses[] entries.
+From: Arend van Spriel <arend@broadcom.com>
 
-This is the least invasive change which prevents this issue
-from appearing.  It doesn't address the fact that the mac80211
-code still retries authentications if it is DEAUTHed for some
-other reason during authentication.  If one of those retries
-succeeds the client can do nothing with it sicne authtry_bsses[]
-has been cleared.
+The macro FOREACH_BSS did an assignment inside the if condition. The
+macro has been modified to get rid of the error.
 
-Signed-off-by: Paul Stewart <pstew@chromium.org>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
 ---
- net/wireless/mlme.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/main.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 493b939..48e965d 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -150,6 +150,7 @@ void __cfg80211_send_deauth(struct net_device *dev,
- 	const u8 *bssid = mgmt->bssid;
- 	int i;
- 	bool found = false, was_current = false;
-+	u16 reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index f7ebaf1..9aa74df 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -254,8 +254,9 @@ const u8 wlc_prio2prec_map[] = {
  
- 	ASSERT_WDEV_LOCK(wdev);
+ /* As above for all non-NULL BSS configs */
+ #define FOREACH_BSS(wlc, idx, cfg) \
+-	for (idx = 0; (int) idx < WLC_MAXBSSCFG; idx++) \
+-		if ((cfg = (wlc)->bsscfg[idx]))
++	for (idx = 0, cfg = (wlc)->bsscfg[idx]; \
++	     idx < WLC_MAXBSSCFG; cfg = (wlc)->bsscfg[++idx]) \
++		if (cfg)
  
-@@ -170,7 +171,9 @@ void __cfg80211_send_deauth(struct net_device *dev,
- 			break;
- 		}
- 		if (wdev->authtry_bsses[i] &&
--		    memcmp(wdev->authtry_bsses[i]->pub.bssid, bssid, ETH_ALEN) == 0) {
-+		    memcmp(wdev->authtry_bsses[i]->pub.bssid, bssid,
-+			   ETH_ALEN) == 0 &&
-+		    reason_code != WLAN_REASON_PREV_AUTH_NOT_VALID) {
- 			cfg80211_unhold_bss(wdev->authtry_bsses[i]);
- 			cfg80211_put_bss(&wdev->authtry_bsses[i]->pub);
- 			wdev->authtry_bsses[i] = NULL;
-@@ -185,11 +188,8 @@ void __cfg80211_send_deauth(struct net_device *dev,
- 	nl80211_send_deauth(rdev, dev, buf, len, GFP_KERNEL);
- 
- 	if (wdev->sme_state == CFG80211_SME_CONNECTED && was_current) {
--		u16 reason_code;
- 		bool from_ap;
- 
--		reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
--
- 		from_ap = memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0;
- 		__cfg80211_disconnected(dev, NULL, 0, reason_code, from_ap);
- 	} else if (wdev->sme_state == CFG80211_SME_CONNECTING) {
+ /* Sanity check for tx_prec_map and fifo synchup
+  * Either there are some packets pending for the fifo, else if fifo is empty then
 -- 
-1.7.3.1
+1.7.1
+
 
