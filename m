@@ -1,64 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:61480 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161440Ab1FAJXq convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44069 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757650Ab1F2U12 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 05:23:46 -0400
-Received: by qwk3 with SMTP id 3so2482326qwk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jun 2011 02:23:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <BANLkTimBpGRxfidpE4hYCVscmX-Hy5q5jw@mail.gmail.com>
-References: <4CEAB969.20702@lwfinger.net>
-	<1290451982.20888.2.camel@maggie>
-	<4CEAC095.7020706@lwfinger.net>
-	<BANLkTimjRA5CsSDp_+LrGq8PNgaR4JFD=w@mail.gmail.com>
-	<4DC9853A.1090508@lwfinger.net>
-	<BANLkTimBpGRxfidpE4hYCVscmX-Hy5q5jw@mail.gmail.com>
-Date: Wed, 1 Jun 2011 11:23:45 +0200
-Message-ID: <BANLkTi=TohOdjurvgqZT8=GXKbWfNe4v+w@mail.gmail.com> (sfid-20110601_112401_717925_0A35B6DE)
-Subject: Re: b43 error under heavy load
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Juan Carlos Romero <juancarlos.romero@gmail.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 29 Jun 2011 16:27:28 -0400
+Subject: Re: [PATCH] net, wireless: Don't return uninitialized in
+ __cfg80211_stop_sched_scan()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jesper Juhl <jj@chaosbits.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Luciano Coelho <coelho@ti.com>
+In-Reply-To: <alpine.LNX.2.00.1106292212110.3747@swampdragon.chaosbits.net>
+References: <alpine.LNX.2.00.1106292212110.3747@swampdragon.chaosbits.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 29 Jun 2011 22:27:24 +0200
+Message-ID: <1309379244.4071.7.camel@jlt3.sipsolutions.net> (sfid-20110629_222733_799640_76DAAF87)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 1 czerwca 2011 01:29 użytkownik Chris Vine
-<chris@cvine.freeserve.co.uk> napisał:
-> However, fixing this bug reveals something else.  After about 2 hours of
-> streaming on MLB.TV I got this, apparently at random (but this is not a
-> hard error: by disassociating from the AP and reassociating, the rest of
-> the game played fine, and there was no need to load or unload modules):
->
-> b43-phy0 debug: TX-status contains invalid cookie: 0x0DCE
-> b43-phy0 debug: Out of order TX status report on DMA ring 1. Expected 74, but got 76
+On Wed, 2011-06-29 at 22:13 +0200, Jesper Juhl wrote:
+> If the 'driver_initiated' function argument to
+> __cfg80211_stop_sched_scan() is not 0 then we'll return an
+> uninitialized 'ret' from the function.
 
-Chris, my first suspicion for this issue is filling the whole TX
-buffer. This could explain what does it happen on high traffic.
+'err'. I also dislike the initialisation, can we just replace the
+"return err;" at the end of the function with "return 0;" instead?
 
-Below there is an idea how we can easily test it. Can you take a look
-at this, and perform some testing?
+Luca, should it maybe be return -ENOENT anyway in the !sched_scan_req
+case?
+
+johannes
 
 
-2011/5/10 Rafał Miłecki <zajec5@gmail.com>:
-> It seems to happen only under heavy load... maybe it has something to
-> do with reaching end of the ring (not whole ring, just end of free
-> slots)?
->
-> Did you try verbose debugging? I wonder if there is any relation
-> between Out of order and:
-> if (b43_debug(dev, B43_DBG_DMAVERBOSE)) {
->        b43dbg(dev->wl, "Stopped TX ring %d\n", ring->index);
-> }
->
-> Could you try it?
-
-AFAIK to enable this debugging you only need to:
-echo 1 > /sys/kernel/debug/b43/phy0/debug_dmaverbose
-
--- 
-Rafał
