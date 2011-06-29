@@ -1,94 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3783 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161163Ab1FALqU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:20 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 05/83] staging: brcm80211: remove WLC_WATCHDOG_TBTT
- macro
-Date: Wed, 1 Jun 2011 13:44:50 +0200
-Message-ID: <1306928768-7501-5-git-send-email-rvossen@broadcom.com> (sfid-20110601_134627_100158_D017E9BE)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:18701 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757834Ab1F2Uvf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 16:51:35 -0400
+Date: Wed, 29 Jun 2011 22:42:25 +0200 (CEST)
+From: Jesper Juhl <jj@chaosbits.net>
+To: Luciano Coelho <coelho@ti.com>
+cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] net, wireless: Don't return uninitialized in
+ __cfg80211_stop_sched_scan()
+In-Reply-To: <1309379630.1514.122.camel@cumari>
+Message-ID: <alpine.LNX.2.00.1106292241230.3747@swampdragon.chaosbits.net> (sfid-20110629_225158_515263_45B3F728)
+References: <alpine.LNX.2.00.1106292212110.3747@swampdragon.chaosbits.net>  <1309379244.4071.7.camel@jlt3.sipsolutions.net> <1309379630.1514.122.camel@cumari>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+On Wed, 29 Jun 2011, Luciano Coelho wrote:
 
-The expanded macro expression will always be false so it has been
-removed.
+> On Wed, 2011-06-29 at 22:27 +0200, Johannes Berg wrote: 
+> > On Wed, 2011-06-29 at 22:13 +0200, Jesper Juhl wrote:
+> > > If the 'driver_initiated' function argument to
+> > > __cfg80211_stop_sched_scan() is not 0 then we'll return an
+> > > uninitialized 'ret' from the function.
+> > 
+> > 'err'. I also dislike the initialisation, can we just replace the
+> > "return err;" at the end of the function with "return 0;" instead?
+> 
+> Luckily we were never using the return value when passing
+> driver_initiate =- false.
+> 
+> And I agree with you, there's no use to return err at the end.  Better
+> to simply return 0.
+> 
+Ok, so how about this?
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+>From 606ee120df85dbd5205996878f50e51b8b7cd4a3 Mon Sep 17 00:00:00 2001
+From: Jesper Juhl <jj@chaosbits.net>
+Date: Wed, 29 Jun 2011 22:49:33 +0200
+Subject: [PATCH] net, wireless: Don't return uninitialized in
+ __cfg80211_stop_sched_scan()
+
+If the 'driver_initiated' function argument to
+__cfg80211_stop_sched_scan() is not 0 then we'll return an
+uninitialized 'err' from the function.
+
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
 ---
- drivers/staging/brcm80211/brcmsmac/wlc_main.c |   34 -------------------------
- 1 files changed, 0 insertions(+), 34 deletions(-)
+ net/wireless/scan.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-index c078ea0..56ea77f 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-@@ -100,10 +100,6 @@
-  * calibration and scb update
-  */
- 
--/* watchdog trigger mode: OSL timer or TBTT */
--#define WLC_WATCHDOG_TBTT(wlc) \
--	(wlc->stas_associated > 0 && wlc->PM != PM_OFF && wlc->pub->align_wd_tbtt)
--
- /* To inform the ucode of the last mcast frame posted so that it can clear moredata bit */
- #define BCMCFID(wlc, fid) wlc_bmac_write_shm((wlc)->hw, M_BCMC_FID, (fid))
- 
-@@ -1945,14 +1941,7 @@ bool wlc_radio_monitor_stop(struct wlc_info *wlc)
- 
- static void wlc_watchdog_by_timer(void *arg)
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 7a6c676..5d23503 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -132,7 +132,6 @@ EXPORT_SYMBOL(cfg80211_sched_scan_stopped);
+ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
+ 			       bool driver_initiated)
  {
--	struct wlc_info *wlc = (struct wlc_info *) arg;
- 	wlc_watchdog(arg);
--	if (WLC_WATCHDOG_TBTT(wlc)) {
--		/* set to normal osl watchdog period */
--		wl_del_timer(wlc->wl, wlc->wdtimer);
--		wl_add_timer(wlc->wl, wlc->wdtimer, TIMER_INTERVAL_WATCHDOG,
--			     true);
--	}
+-	int err;
+ 	struct net_device *dev;
+ 
+ 	ASSERT_RDEV_LOCK(rdev);
+@@ -143,7 +142,7 @@ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
+ 	dev = rdev->sched_scan_req->dev;
+ 
+ 	if (!driver_initiated) {
+-		err = rdev->ops->sched_scan_stop(&rdev->wiphy, dev);
++		int err = rdev->ops->sched_scan_stop(&rdev->wiphy, dev);
+ 		if (err)
+ 			return err;
+ 	}
+@@ -153,7 +152,7 @@ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
+ 	kfree(rdev->sched_scan_req);
+ 	rdev->sched_scan_req = NULL;
+ 
+-	return err;
++	return 0;
  }
  
- /* common watchdog code */
-@@ -4281,29 +4270,6 @@ void wlc_tbtt(struct wlc_info *wlc, d11regs_t *regs)
- {
- 	struct wlc_bsscfg *cfg = wlc->cfg;
- 
--	if (BSSCFG_STA(cfg)) {
--		/* run watchdog here if the watchdog timer is not armed */
--		if (WLC_WATCHDOG_TBTT(wlc)) {
--			u32 cur, delta;
--			if (wlc->WDarmed) {
--				wl_del_timer(wlc->wl, wlc->wdtimer);
--				wlc->WDarmed = false;
--			}
--
--			cur = OSL_SYSUPTIME();
--			delta = cur > wlc->WDlast ? cur - wlc->WDlast :
--			    (u32) ~0 - wlc->WDlast + cur + 1;
--			if (delta >= TIMER_INTERVAL_WATCHDOG) {
--				wlc_watchdog((void *)wlc);
--				wlc->WDlast = cur;
--			}
--
--			wl_add_timer(wlc->wl, wlc->wdtimer,
--				     wlc_watchdog_backup_bi(wlc), true);
--			wlc->WDarmed = true;
--		}
--	}
--
- 	if (!cfg->BSS) {
- 		/* DirFrmQ is now valid...defer setting until end of ATIM window */
- 		wlc->qvalid |= MCMD_DIRFRMQVAL;
+ static void bss_release(struct kref *ref)
 -- 
-1.7.4.1
+1.7.6
 
+-- 
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
 
