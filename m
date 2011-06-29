@@ -1,116 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2299 "EHLO mms1.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4636 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758816Ab1FALq3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:29 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
+	id S1758233Ab1F2Xtm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:49:42 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
 To: gregkh@suse.de
 cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 56/83] staging: brcm80211: remove sdioh.h from fullmac
-Date: Wed, 1 Jun 2011 13:45:41 +0200
-Message-ID: <1306928768-7501-56-git-send-email-rvossen@broadcom.com> (sfid-20110601_134941_862788_F2E2283B)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+Subject: [PATCH 063/119] staging: brcm80211: remove PKT_FILTER_SUPPORT
+ macro definition
+Date: Wed, 29 Jun 2011 16:47:27 -0700
+Message-ID: <1309391303-22741-64-git-send-email-frankyl@broadcom.com> (sfid-20110630_015306_564306_70A8EC3B)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+From: Arend van Spriel <arend@broadcom.com>
 
-Remove unused head file
+Packet filtering support is now always compiled into the fullmac
+driver.
 
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    1 -
- drivers/staging/brcm80211/brcmfmac/sdioh.h        |   63 ---------------------
- 2 files changed, 0 insertions(+), 64 deletions(-)
- delete mode 100644 drivers/staging/brcm80211/brcmfmac/sdioh.h
+ drivers/staging/brcm80211/brcmfmac/Makefile     |    1 -
+ drivers/staging/brcm80211/brcmfmac/dhd.h        |    2 -
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c |   24 +++++++++-------------
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c  |    2 -
+ 4 files changed, 10 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 6b2a450..3cea01f 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -20,7 +20,6 @@
- #include <bcmdevs.h>
- #include <bcmutils.h>
- #include <bcmwifi.h>
--#include <sdioh.h>		/* SDIO Host Controller Specification */
- #include <bcmsdbus.h>		/* bcmsdh to/from specific controller APIs */
- #include <sdiovar.h>		/* ioctl/iovars */
+diff --git a/drivers/staging/brcm80211/brcmfmac/Makefile b/drivers/staging/brcm80211/brcmfmac/Makefile
+index 8a7cbf3..95d3147 100644
+--- a/drivers/staging/brcm80211/brcmfmac/Makefile
++++ b/drivers/staging/brcm80211/brcmfmac/Makefile
+@@ -26,7 +26,6 @@ ccflags-y :=			\
+ 	-DEMBEDDED_PLATFORM	\
+ 	-DMAX_HDR_READ=64	\
+ 	-DMMC_SDIO_ABORT	\
+-	-DPKT_FILTER_SUPPORT	\
+ 	-DSHOW_EVENTS		\
+ 	-DTOE
  
-diff --git a/drivers/staging/brcm80211/brcmfmac/sdioh.h b/drivers/staging/brcm80211/brcmfmac/sdioh.h
-deleted file mode 100644
-index f96aaf9..0000000
---- a/drivers/staging/brcm80211/brcmfmac/sdioh.h
-+++ /dev/null
-@@ -1,63 +0,0 @@
--/*
-- * Copyright (c) 2010 Broadcom Corporation
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--
--#ifndef	_SDIOH_H
--#define	_SDIOH_H
--
--#define SD_SysAddr			0x000
--#define SD_BlockSize			0x004
--#define SD_BlockCount 			0x006
--#define SD_Arg0				0x008
--#define SD_Arg1 			0x00A
--#define SD_TransferMode			0x00C
--#define SD_Command 			0x00E
--#define SD_Response0			0x010
--#define SD_Response1 			0x012
--#define SD_Response2			0x014
--#define SD_Response3 			0x016
--#define SD_Response4			0x018
--#define SD_Response5 			0x01A
--#define SD_Response6			0x01C
--#define SD_Response7 			0x01E
--#define SD_BufferDataPort0		0x020
--#define SD_BufferDataPort1 		0x022
--#define SD_PresentState			0x024
--#define SD_HostCntrl			0x028
--#define SD_PwrCntrl			0x029
--#define SD_BlockGapCntrl 		0x02A
--#define SD_WakeupCntrl 			0x02B
--#define SD_ClockCntrl			0x02C
--#define SD_TimeoutCntrl 		0x02E
--#define SD_SoftwareReset		0x02F
--#define SD_IntrStatus			0x030
--#define SD_ErrorIntrStatus 		0x032
--#define SD_IntrStatusEnable		0x034
--#define SD_ErrorIntrStatusEnable 	0x036
--#define SD_IntrSignalEnable		0x038
--#define SD_ErrorIntrSignalEnable 	0x03A
--#define SD_CMD12ErrorStatus		0x03C
--#define SD_Capabilities			0x040
--#define SD_Capabilities_Reserved	0x044
--#define SD_MaxCurCap			0x048
--#define SD_MaxCurCap_Reserved		0x04C
--#define SD_ADMA_SysAddr			0x58
--#define SD_SlotInterruptStatus		0x0FC
--#define SD_HostControllerVersion 	0x0FE
--
--/* SD specific registers in PCI config space */
--#define SD_SlotInfo	0x40
--
--#endif				/* _SDIOH_H */
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index fb88c05..65e00a8 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -970,11 +970,9 @@ extern int brcmf_bus_start(dhd_pub_t *dhdp);
+ extern void brcmf_wait_for_event(dhd_pub_t *dhd, bool * lockvar);
+ extern void brcmf_wait_event_wakeup(dhd_pub_t *dhd);
+ 
+-#ifdef PKT_FILTER_SUPPORT
+ extern void brcmf_c_pktfilter_offload_set(dhd_pub_t *dhd, char *arg);
+ extern void brcmf_c_pktfilter_offload_enable(dhd_pub_t *dhd, char *arg,
+ 					     int enable, int master_mode);
+-#endif
+ 
+ #ifdef BCMDBG
+ #define ASSERT(exp) \
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+index 8f593cf..b481eb3 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+@@ -1190,6 +1190,7 @@ int brcmf_c_preinit_ioctls(dhd_pub_t *dhd)
+ 	uint bcn_timeout = 3;
+ 	int scan_assoc_time = 40;
+ 	int scan_unassoc_time = 40;
++	int i;
+ #ifdef GET_CUSTOM_MAC_ENABLE
+ 	int ret = 0;
+ 	u8 ea_addr[ETH_ALEN];
+@@ -1288,22 +1289,17 @@ int brcmf_c_preinit_ioctls(dhd_pub_t *dhd)
+ 		brcmf_c_arp_offload_set(dhd, brcmf_arp_mode);
+ 	brcmf_c_arp_offload_enable(dhd, brcmf_arp_enable);
+ 
+-#ifdef PKT_FILTER_SUPPORT
+-	{
+-		int i;
+-		/* Set up pkt filter */
+-		if (brcmf_pkt_filter_enable) {
+-			for (i = 0; i < dhd->pktfilter_count; i++) {
+-				brcmf_c_pktfilter_offload_set(dhd,
+-							  dhd->pktfilter[i]);
+-				brcmf_c_pktfilter_offload_enable(dhd,
+-				     dhd->pktfilter[i],
+-				     brcmf_pkt_filter_init,
+-				     brcmf_master_mode);
+-			}
++	/* Set up pkt filter */
++	if (brcmf_pkt_filter_enable) {
++		for (i = 0; i < dhd->pktfilter_count; i++) {
++			brcmf_c_pktfilter_offload_set(dhd,
++						  dhd->pktfilter[i]);
++			brcmf_c_pktfilter_offload_enable(dhd,
++			     dhd->pktfilter[i],
++			     brcmf_pkt_filter_init,
++			     brcmf_master_mode);
+ 		}
+ 	}
+-#endif				/* PKT_FILTER_SUPPORT */
+ 
+ 	brcmf_os_proto_unblock(dhd);
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 9ee4866..c3a0e94 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -375,7 +375,6 @@ static int brcmf_host_event(dhd_info_t *dhd, int *ifidx, void *pktdata,
+ 
+ static void brcmf_set_packet_filter(int value, dhd_pub_t *dhd)
+ {
+-#ifdef PKT_FILTER_SUPPORT
+ 	DHD_TRACE(("%s: %d\n", __func__, value));
+ 	/* 1 - Enable packet filter, only allow unicast packet to send up */
+ 	/* 0 - Disable packet filter */
+@@ -388,7 +387,6 @@ static void brcmf_set_packet_filter(int value, dhd_pub_t *dhd)
+ 						     value, brcmf_master_mode);
+ 		}
+ 	}
+-#endif
+ }
+ 
+ #if defined(CONFIG_HAS_EARLYSUSPEND)
 -- 
-1.7.4.1
+1.7.1
 
 
