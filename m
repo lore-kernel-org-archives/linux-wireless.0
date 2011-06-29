@@ -1,158 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33019 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756156Ab1FEWIQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jun 2011 18:08:16 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org
-Cc: zajec5@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
-	arend@broadcom.com, b43-dev@lists.infradead.org,
-	bernhardloos@googlemail.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC][PATCH 02/10] bcma: Make it possible to run bcma_register_cores() later
-Date: Mon,  6 Jun 2011 00:07:30 +0200
-Message-Id: <1307311658-15853-3-git-send-email-hauke@hauke-m.de> (sfid-20110606_000821_880253_7DCF11DD)
-In-Reply-To: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
-References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
+Received: from senator.holtmann.net ([87.106.208.187]:38893 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754242Ab1F2SBA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 14:01:00 -0400
+Subject: Re: [PATCH v4 1/6] NFC: add nfc subsystem core
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Joe Perches <joe@perches.com>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	sameo@linux.intel.com, johannes@sipsolutions.net,
+	lauro.venancio@openbossa.org, marcio.macedo@openbossa.org,
+	Waldemar.Rymarkiewicz@tieto.com, padovan@profusion.mobi,
+	rdunlap@xenotime.net
+Date: Wed, 29 Jun 2011 11:00:50 -0700
+In-Reply-To: <1309312164.29598.53.camel@Joe-Laptop>
+References: <1309285246-8495-1-git-send-email-aloisio.almeida@openbossa.org>
+	 <1309285246-8495-2-git-send-email-aloisio.almeida@openbossa.org>
+	 <1309292325.29598.9.camel@Joe-Laptop>  <1309311096.2208.33.camel@aeonflux>
+	 <1309312164.29598.53.camel@Joe-Laptop>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1309370457.2208.48.camel@aeonflux> (sfid-20110629_200104_383047_664CF6C8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On embedded device we can not allocate memory with kalloc or sleep for
-some time, when bcma is initialized, because this is done early in the
-boot process. This patch makes it possible to do the
-bcma_register_cores() sometime later and not directly after searching
-for the cores. The initialization of the PCI(e) core is also done later
-as it uses udelay(), which will not work so early. The buses are placed
-into a list and bcma_register_cores() will be run when the bcma module
-is initialized. When using bcma on a PCI-Bus in a normal PC
-bcma_register_cores() is triggered directly after bcma_bus_register().
-This patch is based on ssb code.
+Hi Joe,
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/main.c       |   65 ++++++++++++++++++++++++++++++++++++++++++---
- include/linux/bcma/bcma.h |    3 ++
- 2 files changed, 64 insertions(+), 4 deletions(-)
+> > The pr_<level> ones are nice and I wished we had them all back in the
+> > days, but the NFC ones actually could take the controller as argument
+> > and then us the dev_* versions of these commands.
+> 
+> I do think that if there's a controller struct that's always
+> or mostly used with nfc_<level>, then it should be added and
+> passed to the functions arguments, maybe with NULL used where
+> necessary.
+> 
+> > At this stage of the project it is a bit too early to tell I guess.
+> > > I think emitting __func__ rarely adds useful information.
+> > Depends on how you are using your debug statements. I find it really
+> > helpful since then you can keep the text detail to a minimum.
+> 
+> I don't disagree that while debugging function names
+> and tracing function entries/exits are useful.
+> 
+> Today, dynamic_debug can add __func__ to the output as
+> desired so I think that it's not really necessary
+> to add to any <foo>_dbg callsite.
 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index b0e7f5e..1afa107 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -15,6 +15,16 @@ static int bcma_bus_match(struct device *dev, struct device_driver *drv);
- static int bcma_device_probe(struct device *dev);
- static int bcma_device_remove(struct device *dev);
- 
-+/* Temporary list of yet-to-be-attached buses */
-+static LIST_HEAD(attach_queue);
-+/* There are differences in the codeflow, if the bus is
-+ * initialized from early boot, as various needed services
-+ * are not available early. This is a mechanism to delay
-+ * these initializations to after early boot has finished.
-+ * It's also used to avoid mutex locking, as that's not
-+ * available and needed early. */
-+static bool bcma_is_early_boot = 1;
-+
- static ssize_t manuf_show(struct device *dev, struct device_attribute *attr, char *buf)
- {
- 	struct __bcma_dev_wrapper *wrapper = container_of(dev,
-@@ -126,6 +136,36 @@ static int bcma_register_cores(struct bcma_bus *bus)
- 	return 0;
- }
- 
-+static int bcma_attach_queued_buses(void)
-+{
-+	struct bcma_bus *bus, *n;
-+	int err = 0;
-+	int drop_them_all = 0;
-+
-+	list_for_each_entry_safe(bus, n, &attach_queue, attach_list) {
-+		if (drop_them_all) {
-+			list_del(&bus->attach_list);
-+			continue;
-+		}
-+		/* Can't init the PCIcore in bcma_bus_register(), as that
-+		 * is too early in boot for embedded systems
-+		 * (no udelay() available). So do it here in attach stage.
-+		 */
-+		if (bus->drv_pci.core)
-+			bcma_core_pci_init(&bus->drv_pci);
-+
-+		err = bcma_register_cores(bus);
-+		if (err) {
-+			drop_them_all = 1;
-+			list_del(&bus->attach_list);
-+			continue;
-+		}
-+		list_del(&bus->attach_list);
-+	}
-+
-+	return err;
-+}
-+
- static void bcma_unregister_cores(struct bcma_bus *bus)
- {
- 	struct bcma_device *core;
-@@ -157,15 +197,20 @@ int bcma_bus_register(struct bcma_bus *bus)
- 		bcma_core_chipcommon_init(&bus->drv_cc);
- 	}
- 
--	/* Init PCIE core */
-+	/* Find PCIE core */
- 	core = bcma_find_core(bus, BCMA_CORE_PCIE);
- 	if (core) {
-+		/* will be initilized in bcma_attach_queued_buses() */
- 		bus->drv_pci.core = core;
--		bcma_core_pci_init(&bus->drv_pci);
- 	}
- 
--	/* Register found cores */
--	bcma_register_cores(bus);
-+	/* Queue it for attach.
-+	 * See the comment at the bcma_is_early_boot definition. */
-+	list_add_tail(&bus->attach_list, &attach_queue);
-+	if (!bcma_is_early_boot) {
-+		/* This is not early boot, so we must attach the bus now */
-+		bcma_attach_queued_buses();
-+	}
- 
- 	pr_info("Bus registered\n");
- 
-@@ -247,10 +292,22 @@ static int __init bcma_modinit(void)
- {
- 	int err;
- 
-+	/* See the comment at the bcma_is_early_boot definition */
-+	bcma_is_early_boot = 0;
-+
- 	err = bus_register(&bcma_bus_type);
- 	if (err)
- 		return err;
- 
-+	/* Maybe we already registered some buses at early boot.
-+	 * Check for this and attach them.
-+	 */
-+	err = bcma_attach_queued_buses();
-+	if (err) {
-+		pr_err("Attaching core registered in early boot failed\n");
-+		err = 0;
-+	}
-+
- #ifdef CONFIG_BCMA_HOST_PCI
- 	err = bcma_host_pci_init();
- 	if (err) {
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 3dc5302..8b6feca 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -195,6 +195,9 @@ struct bcma_bus {
- 
- 	struct bcma_drv_cc drv_cc;
- 	struct bcma_drv_pci drv_pci;
-+
-+	/* Internal-only stuff follows. Do not touch. */
-+	struct list_head attach_list;
- };
- 
- extern inline u32 bcma_read8(struct bcma_device *core, u16 offset)
--- 
-1.7.4.1
+I did not know that. Then we might should go ahead and also cleanup the
+Bluetooth subsystem.
+
+We do use an implied "Bluetooth: " prefix when calling BT_INFO, but that
+can be easily changed to bt_info() as well since I do not care about
+that part. 
+
+The Bluetooth subsystem has a Linux 2.4 legacy history and a lot of
+things can be done a lot nicer these days.
+
+Regards
+
+Marcel
+
 
