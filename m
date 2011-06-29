@@ -1,63 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:61180 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759290Ab1FBDGy (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:32990 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751390Ab1F2CxH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 23:06:54 -0400
-Received: by iyb14 with SMTP id 14so336610iyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jun 2011 20:06:54 -0700 (PDT)
+	Tue, 28 Jun 2011 22:53:07 -0400
+Received: by gwaa18 with SMTP id a18so322315gwa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2011 19:53:06 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 2 Jun 2011 13:06:33 +1000
-Message-ID: <BANLkTi=Mwbm_yrtL1u8mNboXdYYQz2HbDQ@mail.gmail.com> (sfid-20110602_050708_235074_E6FA5942)
-Subject: Re: [PATCH 01/83] staging: brcm80211: removed unused Broadcom
- specific ioctls codes
-To: Roland Vossen <rvossen@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+In-Reply-To: <BANLkTinUO9PA4dN8JWUox2nXRu25R3J4ew@mail.gmail.com>
+References: <BANLkTimfrcrqVxNXj_5qDYYJoz6Exnzw+w@mail.gmail.com>
+	<1309009093.4317.9.camel@jlt3.sipsolutions.net>
+	<BANLkTinUO9PA4dN8JWUox2nXRu25R3J4ew@mail.gmail.com>
+Date: Wed, 29 Jun 2011 10:53:06 +0800
+Message-ID: <BANLkTiktJ3L3Nw+wHbJt9mkVSRBU8JGwoA@mail.gmail.com> (sfid-20110629_045348_978140_F9DF3E62)
+Subject: Re: [PATCH] chan.c: fix chan.c to return channel number when in
+ monitor mode and on a fixed channel.
+From: Adrian Chadd <adrian@freebsd.org>
+To: Nicholas Hockey <nhockey@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
 	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Roland,
+Take a look at how monitor mode is used by other bits of software, eg
+I think hostapd in Linux uses a monitor mode interface.
 
-I've passed an eye over the entire patch set.
+If I understand the Linux wifi stack use of monitor mode correctly,
+it's not designed like the "classic" monitor mode from days gone by
+(eg madwifi) (And this is what BSD still does..); it's a slave device
+to a currently configured, non-monitor interface. The normal interface
+gets the 'normal' traffic; the slave monitor mode interface sees the
+management traffic so hostapd can do MLME, etc.
 
-My comments are pretty minor, but I've replied to the patches that I
-have concerns for. Please note that I'm not really a developer, and my
-comments are mostly style issues, not actual functional issues. Oh,
-and also, I read most of the patches out of order, so some of the
-comments may not make complete sense.
+So you likely need to look at what hostapd does and create/use a
+monitor mode interface in the same way. Ie, as a slave to a normal
+interface, rather than a stand-alone interface.
 
-Overall, my comments are these:
-1. If you're doing typedef removals in a patch, mention it in the summary.
-2. Work on your summaries, there are a few cases where I think they're
-a little too terse.
-3. Good work!
-4. Keep going =)
+Adrian
 
-A couple of items you might want to add to your TODO list:
-1. Replace the REG_[RW] macros with inline functions or equivalent
-because they're ugly.
-2. You shouldn't need to #ifdef on BIG_ENDIAN - there are a set of
-macros to help with working with different endian systems.
-3. Do a typedef removal sweep over the code because typedefs are ugly =)
-4. I had a glance at /Documentation/CodingStyle and saw that there
-were some issues mentioned in there that could be fixed in your code.
-You might also want to play with checkpatch.
-5. Personally, I'd avoid void pointers, but I'm not sure of the exact
-rules. Could someone else weigh in on this?
-
-I'm probably missing a whole lot of other, much more important, stuff,
-but this is what I saw.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+On 29 June 2011 00:12, Nicholas Hockey <nhockey@gmail.com> wrote:
+> If this has been discussed before, could you please point me to a
+> resource? if this solution is not correct, then id like to read why
+> its not correct, and formulate another solution for the problem. i am
+> an amateur radio tech and i have to apply this patch every single
+> build in order to use some custom software i have developed over the
+> years.
+>
+> On Sat, Jun 25, 2011 at 9:38 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Thu, 2011-06-23 at 16:49 -0400, Nicholas Hockey wrote:
+>>> (sorry if this is not right, its been nearly 10 years since i
+>>> submitted a kernel patch)
+>>
+>> Listing cfg80211 isntead of "chan.c" would have been useful :-)
+>>
+>>> Fixes: When monitoring a fixed channel, chan.c does not report what
+>>> channel it is on.
+>>>
+>>> Signed-off-by: Nicholas Hockey <nhockey@gmail.com>
+>>> ---
+>>> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+>>> index 17cd0c0..261ee32 100644
+>>> --- a/net/wireless/chan.c
+>>> +++ b/net/wireless/chan.c
+>>> @@ -82,10 +82,12 @@ int cfg80211_set_freq(struct
+>>> cfg80211_registered_device *rdev,
+>>>  {
+>>>         struct ieee80211_channel *chan;
+>>>         int result;
+>>> +    struct wireless_dev *mon_dev = NULL;
+>>>
+>>> -       if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR)
+>>> +       if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR) {
+>>> +        mon_dev = wdev;
+>>>                 wdev = NULL;
+>>> -
+>>> +    }
+>>>         if (wdev) {
+>>>                 ASSERT_WDEV_LOCK(wdev);
+>>>
+>>> @@ -131,5 +133,8 @@ int cfg80211_set_freq(struct
+>>> cfg80211_registered_device *rdev,
+>>>         if (wdev)
+>>>                 wdev->channel = chan;
+>>>
+>>> +    if (mon_dev)
+>>> +        mon_dev->channel = chan;
+>>> +
+>>
+>> This has been discussed numerous times, this change still isn't right
+>> because monitors are slaved to others.
+>>
+>> johannes
+>>
+>>
+>
+>
+>
+> --
+> Nicholas (Tilt) Hockey
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
