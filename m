@@ -1,52 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:41789 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755873Ab1FUJY7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 05:24:59 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 24/32] ath9k: fix antenna diversity configuration for non AR9485 chips
-Date: Tue, 21 Jun 2011 11:23:44 +0200
-Message-Id: <1308648232-9906-25-git-send-email-juhosg@openwrt.org> (sfid-20110621_112544_533906_E182AFB3)
-In-Reply-To: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
-References: <1308648232-9906-1-git-send-email-juhosg@openwrt.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:4582 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757529Ab1F2Xs7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:59 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 066/119] staging: brcm80211: remove DHD_SCHED macro
+ definition
+Date: Wed, 29 Jun 2011 16:47:30 -0700
+Message-ID: <1309391303-22741-67-git-send-email-frankyl@broadcom.com> (sfid-20110630_015137_514363_3519B68D)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current values must be used only on AR9485 chips. Other chips
-requires different values.
+From: Arend van Spriel <arend@broadcom.com>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+The fullmac driver now always uses scheduler functionality.
+
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/Makefile    |    1 -
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |    4 ----
+ 2 files changed, 0 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 5e987c7..e788fa0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1214,8 +1214,14 @@ static void ar9003_hw_antdiv_comb_conf_get(struct ath_hw *ah,
- 				 AR_PHY_9485_ANT_DIV_ALT_LNACONF_S;
- 	antconf->fast_div_bias = (regval & AR_PHY_9485_ANT_FAST_DIV_BIAS) >>
- 				  AR_PHY_9485_ANT_FAST_DIV_BIAS_S;
--	antconf->lna1_lna2_delta = -9;
--	antconf->div_group = 2;
-+
-+	if (AR_SREV_9485(ah)) {
-+		antconf->lna1_lna2_delta = -9;
-+		antconf->div_group = 2;
-+	} else {
-+		antconf->lna1_lna2_delta = -3;
-+		antconf->div_group = 0;
-+	}
- }
+diff --git a/drivers/staging/brcm80211/brcmfmac/Makefile b/drivers/staging/brcm80211/brcmfmac/Makefile
+index 0674a6a..1444fd4 100644
+--- a/drivers/staging/brcm80211/brcmfmac/Makefile
++++ b/drivers/staging/brcm80211/brcmfmac/Makefile
+@@ -19,7 +19,6 @@ ccflags-y :=			\
+ 	-DBCMSDIO		\
+ 	-DBRCM_FULLMAC		\
+ 	-DBRCMF_FIRSTREAD=64	\
+-	-DDHD_SCHED		\
+ 	-DBRCMF_SDALIGN=64	\
+ 	-DEMBEDDED_PLATFORM	\
+ 	-DMAX_HDR_READ=64	\
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index c3a0e94..593d180 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -1201,14 +1201,12 @@ static int brcmf_watchdog_thread(void *data)
+ 	/* This thread doesn't need any user-level access,
+ 	 * so get rid of all our resources
+ 	 */
+-#ifdef DHD_SCHED
+ 	if (brcmf_watchdog_prio > 0) {
+ 		struct sched_param param;
+ 		param.sched_priority = (brcmf_watchdog_prio < MAX_RT_PRIO) ?
+ 		    brcmf_watchdog_prio : (MAX_RT_PRIO - 1);
+ 		sched_setscheduler(current, SCHED_FIFO, &param);
+ 	}
+-#endif				/* DHD_SCHED */
  
- static void ar9003_hw_antdiv_comb_conf_set(struct ath_hw *ah,
+ 	allow_signal(SIGTERM);
+ 	/* Run until signal received */
+@@ -1261,7 +1259,6 @@ static int brcmf_dpc_thread(void *data)
+ 	/* This thread doesn't need any user-level access,
+ 	 * so get rid of all our resources
+ 	 */
+-#ifdef DHD_SCHED
+ 	if (brcmf_dpc_prio > 0) {
+ 		struct sched_param param;
+ 		param.sched_priority =
+@@ -1269,7 +1266,6 @@ static int brcmf_dpc_thread(void *data)
+ 		     MAX_RT_PRIO) ? brcmf_dpc_prio : (MAX_RT_PRIO - 1);
+ 		sched_setscheduler(current, SCHED_FIFO, &param);
+ 	}
+-#endif				/* DHD_SCHED */
+ 
+ 	allow_signal(SIGTERM);
+ 	/* Run until signal received */
 -- 
-1.7.2.1
+1.7.1
+
 
