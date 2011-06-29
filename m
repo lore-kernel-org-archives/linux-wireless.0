@@ -1,394 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4822 "EHLO MMS3.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4619 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161163Ab1FALq1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:27 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
+	id S1757798Ab1F2Xso (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:44 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
 To: gregkh@suse.de
 cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 26/83] staging: brcm80211: emptied include/802.11.h
-Date: Wed, 1 Jun 2011 13:45:11 +0200
-Message-ID: <1306928768-7501-26-git-send-email-rvossen@broadcom.com> (sfid-20110601_134640_986208_E0B07905)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+Subject: [PATCH 021/119] staging: brcm80211: parsed ADDBA response ack
+ window parameter
+Date: Wed, 29 Jun 2011 16:46:45 -0700
+Message-ID: <1309391303-22741-22-git-send-email-frankyl@broadcom.com> (sfid-20110630_014936_535615_8B175FFB)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code cleanup. Removed unused definitions. Moved other definitions to less
-generic locations.
+From: Roland Vossen <rvossen@broadcom.com>
+
+IEEE80211_AMPDU_TX_OPERATIONAL provides a BA window size parameter. Code
+is now using this parameter to restrict the amount of outstanding tx
+AMPDUs.
 
 Signed-off-by: Roland Vossen <rvossen@broadcom.com>
 Reviewed-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd.h         |    3 +
- drivers/staging/brcm80211/brcmfmac/dhd_common.c  |    3 +
- drivers/staging/brcm80211/brcmfmac/wl_iw.c       |    4 +
- drivers/staging/brcm80211/brcmsmac/wlc_bmac.c    |    3 +
- drivers/staging/brcm80211/brcmsmac/wlc_main.c    |   64 ++++++++++++
- drivers/staging/brcm80211/brcmsmac/wlc_main.h    |   30 ++++++
- drivers/staging/brcm80211/include/bcmwifi.h      |   17 +++
- drivers/staging/brcm80211/include/proto/802.11.h |  120 ----------------------
- 8 files changed, 124 insertions(+), 120 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/ampdu.c       |   55 +++++++---------------
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.c |    9 +++-
+ drivers/staging/brcm80211/brcmsmac/pub.h         |    2 +
+ drivers/staging/brcm80211/brcmsmac/scb.h         |    3 +-
+ 4 files changed, 29 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index 6156062..9583f57 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -188,6 +188,9 @@ struct dhd_info;
- #define DHD_DEL_IF	-0xe
- #define DHD_BAD_IF	-0xf
+diff --git a/drivers/staging/brcm80211/brcmsmac/ampdu.c b/drivers/staging/brcm80211/brcmsmac/ampdu.c
+index 74c4055..e9b78bf 100644
+--- a/drivers/staging/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/staging/brcm80211/brcmsmac/ampdu.c
+@@ -114,9 +114,6 @@ static void brcms_c_ffpld_init(struct ampdu_info *ampdu);
+ static int brcms_c_ffpld_check_txfunfl(struct brcms_c_info *wlc, int f);
+ static void brcms_c_ffpld_calc_mcs2ampdu_table(struct ampdu_info *ampdu, int f);
  
-+#define DOT11_BSSTYPE_ANY			2
-+#define DOT11_MAX_DEFAULT_KEYS	4
-+
- enum cust_gpio_modes {
- 	WLAN_RESET_ON,
- 	WLAN_RESET_OFF,
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-index 5aa5ee4..b7f4e63 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-@@ -25,6 +25,9 @@
- #include <dhd_dbg.h>
- #include <msgtrace.h>
+-static scb_ampdu_tid_ini_t *brcms_c_ampdu_init_tid_ini(struct ampdu_info *ampdu,
+-						   scb_ampdu_t *scb_ampdu,
+-						   u8 tid, bool override);
+ static void brcms_c_scb_ampdu_update_max_txlen(struct ampdu_info *ampdu,
+ 					       u8 dur);
+ static void brcms_c_scb_ampdu_update_config(struct ampdu_info *ampdu,
+@@ -411,22 +408,26 @@ static void brcms_c_ffpld_calc_mcs2ampdu_table(struct ampdu_info *ampdu, int f)
+ 	}
+ }
  
-+#define BRCM_OUI		"\x00\x10\x18"
-+#define DOT11_OUI_LEN			3
-+
- int dhd_msg_level;
- char fw_path[MOD_PARAM_PATHLEN];
- char nv_path[MOD_PARAM_PATHLEN];
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_iw.c b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
-index b5cb897..2cc9bc7 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_iw.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
-@@ -32,6 +32,10 @@ typedef const struct si_pub si_t;
- #include <dngl_stats.h>
- #include <dhd.h>
+-static void
+-brcms_c_ampdu_agg(struct ampdu_info *ampdu, struct scb *scb, struct sk_buff *p,
+-	      uint prec)
++void
++brcms_c_ampdu_tx_operational(struct brcms_c_info *wlc, u8 tid,
++		  u8 ba_wsize)		/* negotiated ba window size (in pdu) */
+ {
+ 	scb_ampdu_t *scb_ampdu;
+ 	scb_ampdu_tid_ini_t *ini;
+-	u8 tid = (u8) (p->priority);
+-
++	struct ampdu_info *ampdu = wlc->ampdu;
++	struct scb *scb = wlc->pub->global_scb;
+ 	scb_ampdu = SCB_AMPDU_CUBBY(ampdu, scb);
  
-+#define WPA_OUI			"\x00\x50\xF2"
-+#define DOT11_MNG_RSN_ID			48
-+#define DOT11_MNG_WPA_ID			221
+-	/* initialize initiator on first packet; sends addba req */
+-	ini = SCB_AMPDU_INI(scb_ampdu, tid);
+-	if (ini->magic != INI_MAGIC) {
+-		ini = brcms_c_ampdu_init_tid_ini(ampdu, scb_ampdu, tid, false);
++	if (!ampdu->ini_enable[tid]) {
++		wiphy_err(ampdu->wlc->wiphy, "%s: Rejecting tid %d\n",
++			  __func__, tid);
++		return;
+ 	}
+-	return;
 +
- #define WL_ERROR(fmt, args...)	printk(fmt, ##args)
- #define WL_TRACE(fmt, args...)	no_printk(fmt, ##args)
- #define WL_INFORM(fmt, args...)	no_printk(fmt, ##args)
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-index 128c27b..ab4ef6c 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-@@ -75,6 +75,9 @@
- 		(void *)&(wlc_hw->regs->fifo64regs[fifonum].dmaxmt) : \
- 		(void *)&(wlc_hw->regs->fifo64regs[fifonum].dmarcv))
++	ini = SCB_AMPDU_INI(scb_ampdu, tid);
++	ini->tid = tid;
++	ini->scb = scb_ampdu->scb;
++	ini->ba_wsize = ba_wsize;
+ }
  
-+#define APHY_SLOT_TIME		9
-+#define BPHY_SLOT_TIME		20
-+
- /*
-  * The following table lists the buffer memory allocated to xmt fifos in HW.
-  * the size is in units of 256bytes(one block), total size is HW dependent
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.c b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-index 026d200..c50f335 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.c
-@@ -114,6 +114,70 @@
- #define WLFEATURE_DISABLE_11N_AMPDU_RX	0x00000040
- #define WLFEATURE_DISABLE_11N_GF	0x00000080
+ int
+@@ -479,12 +480,13 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_c_txq_info *qi,
  
-+#define EDCF_ACI_MASK                0x60
-+#define EDCF_ACI_SHIFT               5
-+#define EDCF_ECWMIN_MASK             0x0f
-+#define EDCF_ECWMAX_SHIFT            4
-+#define EDCF_AIFSN_MASK              0x0f
-+#define EDCF_AIFSN_MAX               15
-+#define EDCF_ECWMAX_MASK             0xf0
-+
-+#define EDCF_AC_BE_TXOP_STA          0x0000
-+#define EDCF_AC_BK_TXOP_STA          0x0000
-+#define EDCF_AC_VO_ACI_STA           0x62
-+#define EDCF_AC_VO_ECW_STA           0x32
-+#define EDCF_AC_VI_ACI_STA           0x42
-+#define EDCF_AC_VI_ECW_STA           0x43
-+#define EDCF_AC_BK_ECW_STA           0xA4
-+#define EDCF_AC_VI_TXOP_STA          0x005e
-+#define EDCF_AC_VO_TXOP_STA          0x002f
-+#define EDCF_AC_BE_ACI_STA           0x03
-+#define EDCF_AC_BE_ECW_STA           0xA4
-+#define EDCF_AC_BK_ACI_STA           0x27
-+#define EDCF_AC_VO_TXOP_AP           0x002f
-+
-+#define EDCF_TXOP2USEC(txop)         ((txop) << 5)
-+#define EDCF_ECW2CW(exp)             ((1 << (exp)) - 1)
-+
-+#define APHY_SYMBOL_TIME	4
-+#define APHY_PREAMBLE_TIME	16
-+#define APHY_SIGNAL_TIME	4
-+#define APHY_SIFS_TIME		16
-+#define APHY_SERVICE_NBITS	16
-+#define APHY_TAIL_NBITS		6
-+#define BPHY_SIFS_TIME		10
-+#define BPHY_PLCP_SHORT_TIME	96
-+
-+#define PREN_PREAMBLE		24
-+#define PREN_MM_EXT		12
-+#define PREN_PREAMBLE_EXT	4
-+
-+#define DOT11_MAC_HDR_LEN		24
-+#define	DOT11_ACK_LEN		10
-+#define DOT11_BA_LEN		4
-+#define DOT11_OFDM_SIGNAL_EXTENSION	6
-+#define DOT11_MIN_FRAG_LEN		256
-+#define	DOT11_RTS_LEN		16
-+#define	DOT11_CTS_LEN		10
-+#define DOT11_BA_BITMAP_LEN		128
-+#define DOT11_MIN_BEACON_PERIOD		1
-+#define DOT11_MAX_BEACON_PERIOD		0xFFFF
-+#define	DOT11_MAXNUMFRAGS	16
-+#define DOT11_MAX_FRAG_LEN		2346
-+
-+#define BPHY_PLCP_TIME		192
-+#define RIFS_11N_TIME		2
-+
-+#define WME_VER			1
-+#define WME_SUBTYPE_PARAM_IE	1
-+#define WME_TYPE		2
-+#define WME_OUI			"\x00\x50\xf2"
-+
-+#define AC_BE			0
-+#define AC_BK			1
-+#define AC_VI			2
-+#define AC_VO			3
-+
- /*
-  * driver maintains internal 'tick'(wlc->pub->now) which increments in 1s OS timer(soft
-  * watchdog) it is not a wall clock and won't increment when driver is in "down" state
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.h b/drivers/staging/brcm80211/brcmsmac/wlc_main.h
-index d4ae29b..d066339 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_main.h
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.h
-@@ -23,6 +23,16 @@
- #define	MAXCOREREV		28	/* max # supported core revisions (0 .. MAXCOREREV - 1) */
- #define WLC_MAXMODULES		22	/* max #  wlc_module_register() calls */
+ 	/* Let pressure continue to build ... */
+ 	qlen = pktq_plen(&qi->q, prec);
+-	if (ini->tx_in_transit > 0 && qlen < scb_ampdu->max_pdu) {
++	if (ini->tx_in_transit > 0 &&
++	    qlen < min(scb_ampdu->max_pdu, ini->ba_wsize)) {
++		/* Collect multiple MPDU's to be sent in the next AMPDU */
+ 		return -EBUSY;
+ 	}
  
-+#define SEQNUM_SHIFT		4
-+#define AMPDU_DELIMITER_LEN	4
-+#define SEQNUM_MAX		0x1000
-+
-+#define	APHY_CWMIN		15
-+#define PHY_CWMAX		1023
-+
-+#define EDCF_AIFSN_MIN               1
-+#define FRAGNUM_MASK		0xF
-+
- #define WLC_BITSCNT(x)	bcm_bitcount((u8 *)&(x), sizeof(u8))
+-	brcms_c_ampdu_agg(ampdu, scb, p, tid);
+-
++	/* at this point we intend to transmit an AMPDU */
+ 	rr_retry_limit = ampdu->rr_retry_limit_tid[tid];
+ 	ampdu_len = 0;
+ 	dma_len = 0;
+@@ -1083,27 +1085,6 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
+ 	brcms_c_txfifo_complete(wlc, queue, ampdu->txpkt_weight);
+ }
  
- /* Maximum wait time for a MAC suspend */
-@@ -35,6 +45,8 @@
- /* transmit buffer max headroom for protocol headers */
- #define TXOFF (D11_TXH_LEN + D11_PHY_HDR_LEN)
+-/* initialize the initiator code for tid */
+-static scb_ampdu_tid_ini_t *brcms_c_ampdu_init_tid_ini(struct ampdu_info *ampdu,
+-						   scb_ampdu_t *scb_ampdu,
+-						   u8 tid, bool override)
+-{
+-	scb_ampdu_tid_ini_t *ini;
+-
+-	/* check for per-tid control of ampdu */
+-	if (!ampdu->ini_enable[tid]) {
+-		wiphy_err(ampdu->wlc->wiphy, "%s: Rejecting tid %d\n",
+-			  __func__, tid);
+-		return NULL;
+-	}
+-
+-	ini = SCB_AMPDU_INI(scb_ampdu, tid);
+-	ini->tid = tid;
+-	ini->scb = scb_ampdu->scb;
+-	ini->magic = INI_MAGIC;
+-	return ini;
+-}
+-
+ static int brcms_c_ampdu_set(struct ampdu_info *ampdu, bool on)
+ {
+ 	struct brcms_c_info *wlc = ampdu->wlc;
+diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
+index 73e60df..547df75 100644
+--- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
+@@ -656,7 +656,14 @@ brcms_ops_ampdu_action(struct ieee80211_hw *hw,
+ 		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_OPERATIONAL:
+-		/* Not sure what to do here */
++		/*
++		 * BA window size from ADDBA response ('buf_size') defines how
++		 * many outstanding MPDUs are allowed for the BA stream by
++		 * recipient and traffic class.
++		 */
++		LOCK(wl);
++		brcms_c_ampdu_tx_operational(wl->wlc, tid, buf_size);
++		UNLOCK(wl);
+ 		/* Power save wakeup */
+ 		break;
+ 	default:
+diff --git a/drivers/staging/brcm80211/brcmsmac/pub.h b/drivers/staging/brcm80211/brcmsmac/pub.h
+index 2345a31..14c0d20 100644
+--- a/drivers/staging/brcm80211/brcmsmac/pub.h
++++ b/drivers/staging/brcm80211/brcmsmac/pub.h
+@@ -626,6 +626,8 @@ extern void brcms_default_rateset(struct brcms_c_info *wlc, wlc_rateset_t *rs);
  
-+#define AC_COUNT		4
-+
- /* For managing scan result lists */
- struct wlc_bss_list {
- 	uint count;
-@@ -342,6 +354,24 @@ struct dumpcb_s {
- 	struct dumpcb_s *next;
+ extern void brcms_c_ampdu_flush(struct brcms_c_info *wlc,
+ 			    struct ieee80211_sta *sta, u16 tid);
++extern void brcms_c_ampdu_tx_operational(struct brcms_c_info *wlc, u8 tid,
++					 u8 ba_wsize);
+ extern int brcms_c_set_par(struct brcms_c_info *wlc, enum wlc_par_id par_id,
+ 			   int val);
+ extern int brcms_c_get_par(struct brcms_c_info *wlc, enum wlc_par_id par_id,
+diff --git a/drivers/staging/brcm80211/brcmsmac/scb.h b/drivers/staging/brcm80211/brcmsmac/scb.h
+index fa5c0b3..c2080e9 100644
+--- a/drivers/staging/brcm80211/brcmsmac/scb.h
++++ b/drivers/staging/brcm80211/brcmsmac/scb.h
+@@ -25,11 +25,11 @@
+ #define AMPDU_TX_BA_MAX_WSIZE	64	/* max Tx ba window size (in pdu) */
+ /* structure to store per-tid state for the ampdu initiator */
+ struct scb_ampdu_tid_ini {
+-	u32 magic;
+ 	u8 tx_in_transit;	/* number of pending mpdus in transit in driver */
+ 	u8 tid;		/* initiator tid for easy lookup */
+ 	u8 txretry[AMPDU_TX_BA_MAX_WSIZE];	/* tx retry count; indexed by seq modulo */
+ 	struct scb *scb;	/* backptr for easy lookup */
++	u8 ba_wsize;		/* negotiated ba window size (in pdu) */
  };
  
-+struct edcf_acparam {
-+	u8 ACI;
-+	u8 ECW;
-+	u16 TXOP;
-+} __attribute__((packed));
-+typedef struct edcf_acparam edcf_acparam_t;
-+
-+struct wme_param_ie {
-+	u8 oui[3];
-+	u8 type;
-+	u8 subtype;
-+	u8 version;
-+	u8 qosinfo;
-+	u8 rsvd;
-+	edcf_acparam_t acparam[AC_COUNT];
-+} __attribute__((packed));
-+typedef struct wme_param_ie wme_param_ie_t;
-+
- /* virtual interface */
- struct wlc_if {
- 	struct wlc_if *next;
-diff --git a/drivers/staging/brcm80211/include/bcmwifi.h b/drivers/staging/brcm80211/include/bcmwifi.h
-index f0dc6f8..60f404c 100644
---- a/drivers/staging/brcm80211/include/bcmwifi.h
-+++ b/drivers/staging/brcm80211/include/bcmwifi.h
-@@ -131,6 +131,10 @@ typedef u16 chanspec_t;
+ #define AMPDU_MAX_SCB_TID	NUMPRIO
+@@ -51,7 +51,6 @@ struct scb_ampdu {
+ };
  
- #define WLC_2G_25MHZ_OFFSET		5	/* 2.4GHz band channel offset */
+ #define SCB_MAGIC 	0xbeefcafe
+-#define INI_MAGIC 	0xabcd1234
  
-+#define MCSSET_LEN	16
-+
-+#define AC_BITMAP_TST(ab, ac)	(((ab) & (1 << (ac))) != 0)
-+
- /*
-  * Verify the chanspec is using a legal set of parameters, i.e. that the
-  * chanspec specified a band, bw, ctl_sb and channel and that the
-@@ -202,6 +206,17 @@ extern int bcm_mhz2channel(uint freq, uint start_factor);
- /* pmkid */
- #define	MAXPMKID		16
- 
-+#define DOT11_DEFAULT_RTS_LEN		2347
-+#define DOT11_DEFAULT_FRAG_LEN		2346
-+
-+#define DOT11_ICV_AES_LEN		8
-+#define DOT11_QOS_LEN			2
-+#define DOT11_IV_MAX_LEN		8
-+#define DOT11_A4_HDR_LEN		30
-+
-+#define HT_CAP_RX_STBC_NO		0x0
-+#define HT_CAP_RX_STBC_ONE_STREAM	0x1
-+
- typedef struct _pmkid {
- 	u8 BSSID[ETH_ALEN];
- 	u8 PMKID[WLAN_PMKID_LEN];
-@@ -222,4 +237,6 @@ typedef struct _pmkid_cand_list {
- 	pmkid_cand_t pmkid_cand[1];
- } pmkid_cand_list_t;
- 
-+typedef u8 ac_bitmap_t;
-+
- #endif				/* _bcmwifi_h_ */
-diff --git a/drivers/staging/brcm80211/include/proto/802.11.h b/drivers/staging/brcm80211/include/proto/802.11.h
-index 2f32b6c..048dae5 100644
---- a/drivers/staging/brcm80211/include/proto/802.11.h
-+++ b/drivers/staging/brcm80211/include/proto/802.11.h
-@@ -17,124 +17,4 @@
- #ifndef _802_11_H_
- #define _802_11_H_
- 
--#define MCSSET_LEN	16
--#define DOT11_BSSTYPE_ANY			2
--#define DOT11_MAX_DEFAULT_KEYS	4
--#define WPA_OUI			"\x00\x50\xF2"
--#define BRCM_OUI		"\x00\x10\x18"
--#define DOT11_MNG_RSN_ID			48
--#define DOT11_MNG_WPA_ID			221
--#define DOT11_DEFAULT_RTS_LEN		2347
--#define DOT11_DEFAULT_FRAG_LEN		2346
--#define DOT11_OUI_LEN			3
--
--#define AC_COUNT		4
--
--#define AC_BITMAP_TST(ab, ac)	(((ab) & (1 << (ac))) != 0)
--
--typedef u8 ac_bitmap_t;
--
--struct edcf_acparam {
--	u8 ACI;
--	u8 ECW;
--	u16 TXOP;
--} __attribute__((packed));
--typedef struct edcf_acparam edcf_acparam_t;
--
--struct wme_param_ie {
--	u8 oui[3];
--	u8 type;
--	u8 subtype;
--	u8 version;
--	u8 qosinfo;
--	u8 rsvd;
--	edcf_acparam_t acparam[AC_COUNT];
--} __attribute__((packed));
--typedef struct wme_param_ie wme_param_ie_t;
--
--#define DOT11_MAC_HDR_LEN		24
--#define	DOT11_ACK_LEN		10
--#define DOT11_ICV_AES_LEN		8
--#define DOT11_A4_HDR_LEN		30
--#define DOT11_QOS_LEN			2
--#define DOT11_IV_MAX_LEN		8
--#define DOT11_BA_LEN		4
--#define DOT11_OFDM_SIGNAL_EXTENSION	6
--#define DOT11_MIN_FRAG_LEN		256
--#define	DOT11_RTS_LEN		16
--#define	DOT11_CTS_LEN		10
--#define DOT11_BA_BITMAP_LEN		128
--#define DOT11_MIN_BEACON_PERIOD		1
--#define DOT11_MAX_BEACON_PERIOD		0xFFFF
--#define	DOT11_MAXNUMFRAGS	16
--#define DOT11_MAX_FRAG_LEN		2346
--
--#define SEQNUM_SHIFT		4
--#define AMPDU_DELIMITER_LEN	4
--#define SEQNUM_MAX		0x1000
--
--#define APHY_SLOT_TIME		9
--#define BPHY_SLOT_TIME		20
--#define	APHY_CWMIN		15
--#define PHY_CWMAX		1023
--
--#define EDCF_AIFSN_MIN               1
--#define BPHY_PLCP_TIME		192
--
--#define APHY_SYMBOL_TIME	4
--#define APHY_PREAMBLE_TIME	16
--#define APHY_SIGNAL_TIME	4
--#define APHY_SIFS_TIME		16
--#define APHY_SERVICE_NBITS	16
--#define APHY_TAIL_NBITS		6
--#define BPHY_SIFS_TIME		10
--#define BPHY_PLCP_SHORT_TIME	96
--
--#define PREN_PREAMBLE		24
--#define PREN_MM_EXT		12
--#define PREN_PREAMBLE_EXT	4
--
--#define FRAGNUM_MASK		0xF
--
--#define RIFS_11N_TIME		2
--
--#define HT_CAP_RX_STBC_NO		0x0
--
--#define EDCF_ACI_MASK                0x60
--#define EDCF_ACI_SHIFT               5
--#define EDCF_ECWMIN_MASK             0x0f
--#define EDCF_ECWMAX_SHIFT            4
--#define EDCF_AIFSN_MASK              0x0f
--#define EDCF_AIFSN_MAX               15
--#define EDCF_ECWMAX_MASK             0xf0
--
--#define EDCF_AC_BE_TXOP_STA          0x0000
--#define EDCF_AC_BK_TXOP_STA          0x0000
--#define EDCF_AC_VO_ACI_STA           0x62
--#define EDCF_AC_VO_ECW_STA           0x32
--#define EDCF_AC_VI_ACI_STA           0x42
--#define EDCF_AC_VI_ECW_STA           0x43
--#define EDCF_AC_BK_ECW_STA           0xA4
--#define EDCF_AC_VI_TXOP_STA          0x005e
--#define EDCF_AC_VO_TXOP_STA          0x002f
--#define EDCF_AC_BE_ACI_STA           0x03
--#define EDCF_AC_BE_ECW_STA           0xA4
--#define EDCF_AC_BK_ACI_STA           0x27
--#define EDCF_AC_VO_TXOP_AP           0x002f
--
--#define EDCF_TXOP2USEC(txop)         ((txop) << 5)
--#define EDCF_ECW2CW(exp)             ((1 << (exp)) - 1)
--
--#define WME_VER			1
--#define WME_SUBTYPE_PARAM_IE	1
--#define WME_TYPE		2
--#define WME_OUI			"\x00\x50\xf2"
--
--#define AC_BE			0
--#define AC_BK			1
--#define AC_VI			2
--#define AC_VO			3
--
--#define HT_CAP_RX_STBC_ONE_STREAM	0x1
--
- #endif				/* _802_11_H_ */
+ /* station control block - one per remote MAC address */
+ struct scb {
 -- 
-1.7.4.1
+1.7.1
 
 
