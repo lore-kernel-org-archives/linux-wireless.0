@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39377 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750746Ab1FAERE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 00:17:04 -0400
-Subject: Re: [PATCH v7] mac80211_hwsim driver support userspace frame tx/rx
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Lopez <jlopex@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com, j@w1.fi,
-	javier@cozybit.com
-In-Reply-To: <1306879610-21242-1-git-send-email-jlopex@gmail.com> (sfid-20110601_000722_231691_6D77025C)
-References: <BANLkTi=_snQBSFH-d344bjk8-aSeC9Jh5w@mail.gmail.com>
-	 <1306879610-21242-1-git-send-email-jlopex@gmail.com>
-	 (sfid-20110601_000722_231691_6D77025C)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 01 Jun 2011 06:16:54 +0200
-Message-ID: <1306901814.3867.1.camel@jlt3.sipsolutions.net> (sfid-20110601_061709_681761_3400344D)
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:4613 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757747Ab1F2Xso (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:44 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 042/119] staging: brcm80211: replace macro
+ BCM_MSG_IFNAME_MAX with IFNAMSIZ
+Date: Wed, 29 Jun 2011 16:47:06 -0700
+Message-ID: <1309391303-22741-43-git-send-email-frankyl@broadcom.com> (sfid-20110630_014933_818855_34F04BAA)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-06-01 at 00:06 +0200, Javier Lopez wrote:
-> This patch adds to mac80211_hwsim the capability to send traffic via 
-> userspace.
+From: Arend van Spriel <arend@broadcom.com>
 
-Looks good, thanks for your patience.
+In dhd.h the macro BCM_MSG_IFNAME_MAX was defined and used. As this
+is used to carry the interface name we might as well use IFNAMSIZ
+which results in the same size.
 
-> +++ b/drivers/net/wireless/mac80211_hwsim.h
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd.h |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-This file is for userspace, no?
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index 9b27982..55cbd8a 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -136,8 +136,6 @@ struct dhd_info;
+ #define DOT11_BSSTYPE_ANY			2
+ #define DOT11_MAX_DEFAULT_KEYS	4
+ 
+-#define BCM_MSG_IFNAME_MAX		16
+-
+ #define WLC_EVENT_MSG_LINK		0x01
+ #define WLC_EVENT_MSG_FLUSHTXQ		0x02
+ #define WLC_EVENT_MSG_GROUP		0x04
+@@ -151,7 +149,7 @@ typedef struct {
+ 	u32 auth_type;
+ 	u32 datalen;
+ 	u8 addr[ETH_ALEN];
+-	char ifname[BCM_MSG_IFNAME_MAX];
++	char ifname[IFNAMSIZ];
+ } __attribute__((packed)) wl_event_msg_t;
+ 
+ typedef  struct bcmeth_hdr {
+-- 
+1.7.1
 
-> @@ -0,0 +1,131 @@
-> +/*
-> + * mac80211_hwsim - software simulator of 802.11 radio(s) for mac80211
-> + * Copyright (c) 2008, Jouni Malinen <j@w1.fi>
-> + * Copyright (c) 2011, Javier Lopez <jlopex@gmail.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 as
-> + * published by the Free Software Foundation.
-> + */
-> +
-> +#include <net/mac80211.h>
-
-It shouldn't include that then, but it doesn't really matter anyway.
-
-johannes
 
