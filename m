@@ -1,213 +1,249 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4925 "EHLO MMS3.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2020 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758829Ab1FALqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2011 07:46:32 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
+	id S1758063Ab1F2Xs5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:57 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
 To: gregkh@suse.de
 cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 64/83] staging: brcm80211: removed Broadcom specific
- acronym 'hnd'.
-Date: Wed, 1 Jun 2011 13:45:49 +0200
-Message-ID: <1306928768-7501-64-git-send-email-rvossen@broadcom.com> (sfid-20110601_134727_317535_8664E95A)
-In-Reply-To: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
-References: <1306928768-7501-1-git-send-email-rvossen@broadcom.com>
+Subject: [PATCH 073/119] staging: brcm80211: remove custom gpio support
+ code
+Date: Wed, 29 Jun 2011 16:47:37 -0700
+Message-ID: <1309391303-22741-74-git-send-email-frankyl@broadcom.com> (sfid-20110630_015722_901229_434DF537)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code cleanup.
+From: Arend van Spriel <arend@broadcom.com>
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
+The custom gpio code is intended for hardware platform for specific
+customers and require supporting functionality not included in the
+fullmac driver. The fullmac driver does not need this so it has been
+removed.
+
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/staging/brcm80211/brcmfmac/pcicfg.h   |    2 +-
- drivers/staging/brcm80211/brcmsmac/aiutils.h  |    4 +---
- drivers/staging/brcm80211/brcmsmac/bcmdma.h   |    6 +++---
- drivers/staging/brcm80211/brcmsmac/d11.h      |    2 --
- drivers/staging/brcm80211/brcmsmac/dma.c      |   18 +++++++++---------
- drivers/staging/brcm80211/brcmsmac/wlc_bmac.c |    2 +-
- drivers/staging/brcm80211/brcmsmac/wlc_main.h |    2 +-
- drivers/staging/brcm80211/include/bcmsoc.h    |    8 ++++----
- 8 files changed, 20 insertions(+), 24 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/Makefile        |    1 -
+ .../staging/brcm80211/brcmfmac/dhd_custom_gpio.c   |  156 --------------------
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |    8 +-
+ 3 files changed, 1 insertions(+), 164 deletions(-)
+ delete mode 100644 drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/pcicfg.h b/drivers/staging/brcm80211/brcmfmac/pcicfg.h
-index d0c617a..3258449 100644
---- a/drivers/staging/brcm80211/brcmfmac/pcicfg.h
-+++ b/drivers/staging/brcm80211/brcmfmac/pcicfg.h
-@@ -22,7 +22,7 @@
- /* PCI configuration address space size */
- #define PCI_SZPCR		256
- 
--/* Everything below is BRCM HND proprietary */
-+/* Everything below is Broadcom specific */
- 
- /* Brcm PCI configuration registers */
- #define PCI_BAR0_WIN		0x80	/* backplane address space accessed by BAR0 */
-diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
-index ec7acd1..211a27a 100644
---- a/drivers/staging/brcm80211/brcmsmac/aiutils.h
-+++ b/drivers/staging/brcm80211/brcmsmac/aiutils.h
-@@ -151,9 +151,7 @@
- 					 * maps all unused address ranges
- 					 */
- 
--/* There are TWO constants on all HND chips: SI_ENUM_BASE above,
-- * and chipcommon being the first core:
+diff --git a/drivers/staging/brcm80211/brcmfmac/Makefile b/drivers/staging/brcm80211/brcmfmac/Makefile
+index f097246..c38fa55 100644
+--- a/drivers/staging/brcm80211/brcmfmac/Makefile
++++ b/drivers/staging/brcm80211/brcmfmac/Makefile
+@@ -30,7 +30,6 @@ DHDOFILES = \
+ 	wl_cfg80211.o \
+ 	dhd_cdc.o \
+ 	dhd_common.o \
+-	dhd_custom_gpio.o \
+ 	dhd_sdio.o	\
+ 	dhd_linux.o \
+ 	bcmsdh.o \
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c b/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
+deleted file mode 100644
+index 6fd1072..0000000
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
++++ /dev/null
+@@ -1,156 +0,0 @@
+-/*
+- * Copyright (c) 2010 Broadcom Corporation
+- *
+- * Permission to use, copy, modify, and/or distribute this software for any
+- * purpose with or without fee is hereby granted, provided that the above
+- * copyright notice and this permission notice appear in all copies.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 - */
-+/* chipcommon being the first core: */
- #define	SI_CC_IDX		0
+-
+-#include <linux/netdevice.h>
+-#include <linux/sched.h>
+-#include <brcmu_utils.h>
+-#include <defs.h>
+-#include <brcmu_wifi.h>
+-
+-#include "dngl_stats.h"
+-#include "dhd.h"
+-
+-#define WL_ERROR(fmt, args...) printk(fmt, ##args)
+-#define WL_TRACE(fmt, args...) no_printk(fmt, ##args)
+-
+-#ifdef CUSTOMER_HW
+-extern void bcm_wlan_power_off(int);
+-extern void bcm_wlan_power_on(int);
+-#endif				/* CUSTOMER_HW */
+-#ifdef CUSTOMER_HW2
+-int wifi_set_carddetect(int on);
+-int wifi_set_power(int on, unsigned long msec);
+-int wifi_get_irq_number(unsigned long *irq_flags_ptr);
+-#endif
+-
+-#if defined(OOB_INTR_ONLY)
+-
+-extern int sdioh_mmc_irq(int irq);
+-
+-#ifdef CUSTOMER_HW3
+-#include <mach/gpio.h>
+-#endif
+-
+-/* Customer specific Host GPIO definition  */
+-static int dhd_oob_gpio_num = -1;	/* GG 19 */
+-
+-module_param(dhd_oob_gpio_num, int, 0644);
+-MODULE_PARM_DESC(dhd_oob_gpio_num, "DHD oob gpio number");
+-
+-int brcmf_customer_oob_irq_map(unsigned long *irq_flags_ptr)
+-{
+-	int host_oob_irq = 0;
+-
+-#ifdef CUSTOMER_HW2
+-	host_oob_irq = wifi_get_irq_number(irq_flags_ptr);
+-
+-#else				/* for NOT  CUSTOMER_HW2 */
+-#if defined(CUSTOM_OOB_GPIO_NUM)
+-	if (dhd_oob_gpio_num < 0)
+-		dhd_oob_gpio_num = CUSTOM_OOB_GPIO_NUM;
+-#endif
+-
+-	if (dhd_oob_gpio_num < 0) {
+-		WL_ERROR("%s: ERROR customer specific Host GPIO is NOT defined\n",
+-			 __func__);
+-		return dhd_oob_gpio_num;
+-	}
+-
+-	WL_ERROR("%s: customer specific Host GPIO number is (%d)\n",
+-		 __func__, dhd_oob_gpio_num);
+-
+-#if defined CUSTOMER_HW
+-	host_oob_irq = MSM_GPIO_TO_INT(dhd_oob_gpio_num);
+-#elif defined CUSTOMER_HW3
+-	gpio_request(dhd_oob_gpio_num, "oob irq");
+-	host_oob_irq = gpio_to_irq(dhd_oob_gpio_num);
+-	gpio_direction_input(dhd_oob_gpio_num);
+-#endif				/* CUSTOMER_HW */
+-#endif				/* CUSTOMER_HW2 */
+-
+-	return host_oob_irq;
+-}
+-#endif				/* defined(OOB_INTR_ONLY) */
+-
+-/* Customer function to control hw specific wlan gpios */
+-void brcmf_customer_gpio_wlan_ctrl(int onoff)
+-{
+-	switch (onoff) {
+-	case WLAN_RESET_OFF:
+-		WL_TRACE("%s: call customer specific GPIO to insert WLAN RESET\n",
+-			 __func__);
+-#ifdef CUSTOMER_HW
+-		bcm_wlan_power_off(2);
+-#endif				/* CUSTOMER_HW */
+-#ifdef CUSTOMER_HW2
+-		wifi_set_power(0, 0);
+-#endif
+-		WL_ERROR("=========== WLAN placed in RESET ========\n");
+-		break;
+-
+-	case WLAN_RESET_ON:
+-		WL_TRACE("%s: callc customer specific GPIO to remove WLAN RESET\n",
+-			 __func__);
+-#ifdef CUSTOMER_HW
+-		bcm_wlan_power_on(2);
+-#endif				/* CUSTOMER_HW */
+-#ifdef CUSTOMER_HW2
+-		wifi_set_power(1, 0);
+-#endif
+-		WL_ERROR("=========== WLAN going back to live  ========\n");
+-		break;
+-
+-	case WLAN_POWER_OFF:
+-		WL_TRACE("%s: call customer specific GPIO to turn off WL_REG_ON\n",
+-			 __func__);
+-#ifdef CUSTOMER_HW
+-		bcm_wlan_power_off(1);
+-#endif				/* CUSTOMER_HW */
+-		break;
+-
+-	case WLAN_POWER_ON:
+-		WL_TRACE("%s: call customer specific GPIO to turn on WL_REG_ON\n",
+-			 __func__);
+-#ifdef CUSTOMER_HW
+-		bcm_wlan_power_on(1);
+-#endif				/* CUSTOMER_HW */
+-		/* Lets customer power to get stable */
+-		udelay(200);
+-		break;
+-	}
+-}
+-
+-#ifdef GET_CUSTOM_MAC_ENABLE
+-/* Function to get custom MAC address */
+-int brcmf_custom_get_mac_address(unsigned char *buf)
+-{
+-	WL_TRACE("%s Enter\n", __func__);
+-	if (!buf)
+-		return -EINVAL;
+-
+-	/* Customer access to MAC address stored outside of DHD driver */
+-
+-#ifdef EXAMPLE_GET_MAC
+-	/* EXAMPLE code */
+-	{
+-		u8 ea_example[ETH_ALEN] = {0x00, 0x11, 0x22, 0x33, 0x44, 0xFF};
+-		memcpy(buf, ea_example, ETH_ALEN);
+-	}
+-#endif				/* EXAMPLE_GET_MAC */
+-
+-	return 0;
+-}
+-#endif				/* GET_CUSTOM_MAC_ENABLE */
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 6507891..5a0bcb2 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -2192,8 +2192,6 @@ static void __exit brcmf_module_cleanup(void)
+ #if defined(CUSTOMER_HW2) && defined(CONFIG_WIFI_CONTROL_FUNC)
+ 	wifi_del_dev();
+ #endif
+-	/* Call customer gpio to turn off power with WL_REG_ON signal */
+-	brcmf_customer_gpio_wlan_ctrl(WLAN_POWER_OFF);
+ }
  
- /* SOC Interconnect types (aka chip types) */
-diff --git a/drivers/staging/brcm80211/brcmsmac/bcmdma.h b/drivers/staging/brcm80211/brcmsmac/bcmdma.h
-index 1a1ca03..dd55e29 100644
---- a/drivers/staging/brcm80211/brcmsmac/bcmdma.h
-+++ b/drivers/staging/brcm80211/brcmsmac/bcmdma.h
-@@ -58,9 +58,9 @@ typedef volatile struct {
+ static int __init brcmf_module_init(void)
+@@ -2216,8 +2214,6 @@ static int __init brcmf_module_init(void)
+ 		DHD_ERROR(("Invalid module parameters.\n"));
+ 		return -EINVAL;
+ 	} while (0);
+-	/* Call customer gpio to turn on power with WL_REG_ON signal */
+-	brcmf_customer_gpio_wlan_ctrl(WLAN_POWER_ON);
  
- /* range param for dma_getnexttxp() and dma_txreclaim */
- typedef enum txd_range {
--	HNDDMA_RANGE_ALL = 1,
--	HNDDMA_RANGE_TRANSMITTED,
--	HNDDMA_RANGE_TRANSFERED
-+	DMA_RANGE_ALL = 1,
-+	DMA_RANGE_TRANSMITTED,
-+	DMA_RANGE_TRANSFERED
- } txd_range_t;
+ #if defined(CUSTOMER_HW2) && defined(CONFIG_WIFI_CONTROL_FUNC)
+ 	sema_init(&wifi_control_sem, 0);
+@@ -2245,11 +2241,9 @@ static int __init brcmf_module_init(void)
+ 		DHD_ERROR(("%s: dhd_bus_register failed\n", __func__));
+ 		goto failed;
+ 	}
+-	return error;
++	return 0;
  
- /* dma function type */
-diff --git a/drivers/staging/brcm80211/brcmsmac/d11.h b/drivers/staging/brcm80211/brcmsmac/d11.h
-index 12a0ead..e9fa4ca 100644
---- a/drivers/staging/brcm80211/brcmsmac/d11.h
-+++ b/drivers/staging/brcm80211/brcmsmac/d11.h
-@@ -105,8 +105,6 @@ typedef volatile struct {
+ failed:
+-	/* turn off power and exit */
+-	brcmf_customer_gpio_wlan_ctrl(WLAN_POWER_OFF);
+ 	return -EINVAL;
+ }
  
- /*
-  * Host Interface Registers
-- * - primed from hnd_cores/dot11mac/systemC/registers/ihr.h
-- * - but definitely not complete
-  */
- typedef volatile struct _d11regs {
- 	/* Device Control ("semi-standard host registers") */
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
-index d50395d..a754cdd 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.c
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.c
-@@ -1292,9 +1292,9 @@ static void dma64_txreclaim(dma_info_t *di, txd_range_t range)
- 	void *p;
- 
- 	DMA_TRACE(("%s: dma_txreclaim %s\n", di->name,
--		   (range == HNDDMA_RANGE_ALL) ? "all" :
-+		   (range == DMA_RANGE_ALL) ? "all" :
- 		   ((range ==
--		     HNDDMA_RANGE_TRANSMITTED) ? "transmitted" :
-+		     DMA_RANGE_TRANSMITTED) ? "transmitted" :
- 		    "transferred")));
- 
- 	if (di->txin == di->txout)
-@@ -1649,11 +1649,11 @@ static int dma64_txfast(dma_info_t *di, struct sk_buff *p0,
- /*
-  * Reclaim next completed txd (txds if using chained buffers) in the range
-  * specified and return associated packet.
-- * If range is HNDDMA_RANGE_TRANSMITTED, reclaim descriptors that have be
-+ * If range is DMA_RANGE_TRANSMITTED, reclaim descriptors that have be
-  * transmitted as noted by the hardware "CurrDescr" pointer.
-- * If range is HNDDMA_RANGE_TRANSFERED, reclaim descriptors that have be
-+ * If range is DMA_RANGE_TRANSFERED, reclaim descriptors that have be
-  * transferred by the DMA as noted by the hardware "ActiveDescr" pointer.
-- * If range is HNDDMA_RANGE_ALL, reclaim all txd(s) posted to the ring and
-+ * If range is DMA_RANGE_ALL, reclaim all txd(s) posted to the ring and
-  * return associated packet regardless of the value of hardware pointers.
-  */
- static void *dma64_getnexttxp(dma_info_t *di, txd_range_t range)
-@@ -1663,9 +1663,9 @@ static void *dma64_getnexttxp(dma_info_t *di, txd_range_t range)
- 	void *txp;
- 
- 	DMA_TRACE(("%s: dma_getnexttxp %s\n", di->name,
--		   (range == HNDDMA_RANGE_ALL) ? "all" :
-+		   (range == DMA_RANGE_ALL) ? "all" :
- 		   ((range ==
--		     HNDDMA_RANGE_TRANSMITTED) ? "transmitted" :
-+		     DMA_RANGE_TRANSMITTED) ? "transmitted" :
- 		    "transferred")));
- 
- 	if (di->ntxd == 0)
-@@ -1674,7 +1674,7 @@ static void *dma64_getnexttxp(dma_info_t *di, txd_range_t range)
- 	txp = NULL;
- 
- 	start = di->txin;
--	if (range == HNDDMA_RANGE_ALL)
-+	if (range == DMA_RANGE_ALL)
- 		end = di->txout;
- 	else {
- 		dma64regs_t *dregs = di->d64txregs;
-@@ -1685,7 +1685,7 @@ static void *dma64_getnexttxp(dma_info_t *di, txd_range_t range)
- 				 D64_XS0_CD_MASK) -
- 				di->xmtptrbase) & D64_XS0_CD_MASK, dma64dd_t));
- 
--		if (range == HNDDMA_RANGE_TRANSFERED) {
-+		if (range == DMA_RANGE_TRANSFERED) {
- 			active_desc =
- 			    (u16) (R_REG(&dregs->status1) &
- 				      D64_XS1_AD_MASK);
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-index 6b02ebe..caee8d9 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_bmac.c
-@@ -3415,7 +3415,7 @@ static void wlc_flushqueues(struct wlc_info *wlc)
- 	/* free any posted tx packets */
- 	for (i = 0; i < NFIFO; i++)
- 		if (wlc_hw->di[i]) {
--			dma_txreclaim(wlc_hw->di[i], HNDDMA_RANGE_ALL);
-+			dma_txreclaim(wlc_hw->di[i], DMA_RANGE_ALL);
- 			TXPKTPENDCLR(wlc, i);
- 			BCMMSG(wlc->wiphy, "pktpend fifo %d clrd\n", i);
- 		}
-diff --git a/drivers/staging/brcm80211/brcmsmac/wlc_main.h b/drivers/staging/brcm80211/brcmsmac/wlc_main.h
-index 916b2a0..1dfa04b 100644
---- a/drivers/staging/brcm80211/brcmsmac/wlc_main.h
-+++ b/drivers/staging/brcm80211/brcmsmac/wlc_main.h
-@@ -736,7 +736,7 @@ struct antsel_info {
- #define TXPKTPENDCLR(wlc, fifo)		((wlc)->core->txpktpend[(fifo)] = 0)
- #define TXAVAIL(wlc, fifo)		(*(wlc)->core->txavail[(fifo)])
- #define GETNEXTTXP(wlc, _queue)								\
--		dma_getnexttxp((wlc)->hw->di[(_queue)], HNDDMA_RANGE_TRANSMITTED)
-+		dma_getnexttxp((wlc)->hw->di[(_queue)], DMA_RANGE_TRANSMITTED)
- 
- #define WLC_IS_MATCH_SSID(wlc, ssid1, ssid2, len1, len2) \
- 	((len1 == len2) && !memcmp(ssid1, ssid2, len1))
-diff --git a/drivers/staging/brcm80211/include/bcmsoc.h b/drivers/staging/brcm80211/include/bcmsoc.h
-index 012e465..4df0c64 100644
---- a/drivers/staging/brcm80211/include/bcmsoc.h
-+++ b/drivers/staging/brcm80211/include/bcmsoc.h
-@@ -14,8 +14,8 @@
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
--#ifndef	_HNDSOC_H
--#define	_HNDSOC_H
-+#ifndef	_BCMSOC_H
-+#define	_BCMSOC_H
- 
- /* Include the soci specific files */
- #include <aidmp.h>
-@@ -130,7 +130,7 @@
- 					 * unused address ranges
- 					 */
- 
--/* There are TWO constants on all HND chips: SI_ENUM_BASE above,
-+/* There are TWO constants on all Broadcom chips: SI_ENUM_BASE above,
-  * and chipcommon being the first core:
-  */
- #define	SI_CC_IDX		0
-@@ -195,4 +195,4 @@
- #define	BISZ_BSSEND_IDX		6	/*      6: bss end */
- #define BISZ_SIZE		7	/* descriptor size in 32-bit integers */
- 
--#endif				/* _HNDSOC_H */
-+#endif				/* _BCMSOC_H */
 -- 
-1.7.4.1
+1.7.1
 
 
