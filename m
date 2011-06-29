@@ -1,168 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33060 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756247Ab1FEWIX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jun 2011 18:08:23 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org
-Cc: zajec5@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
-	arend@broadcom.com, b43-dev@lists.infradead.org,
-	bernhardloos@googlemail.com, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC][PATCH 05/10] bcma: add serial console support
-Date: Mon,  6 Jun 2011 00:07:33 +0200
-Message-Id: <1307311658-15853-6-git-send-email-hauke@hauke-m.de> (sfid-20110606_000827_388430_08BA5E69)
-In-Reply-To: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
-References: <1307311658-15853-1-git-send-email-hauke@hauke-m.de>
+Received: from mms1.broadcom.com ([216.31.210.17]:1913 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758003Ab1F2Xst (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:49 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 112/119] staging: brcm80211: removed last amd64 compiler
+ warnings
+Date: Wed, 29 Jun 2011 16:48:16 -0700
+Message-ID: <1309391303-22741-113-git-send-email-frankyl@broadcom.com> (sfid-20110630_015047_201008_1406EF80)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds support for serial console to bcma, when operating on an
-embedded device.
+From: Roland Vossen <rvossen@broadcom.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Code cleanup. Warnings were due to pointer declarations being used for an
+address that does not reside on the CPU bus.
+
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/bcma/bcma_private.h           |    4 ++
- drivers/bcma/driver_chipcommon.c      |   62 +++++++++++++++++++++++++++++++++
- drivers/bcma/driver_mips.c            |    9 +++++
- include/linux/bcma/bcma_driver_mips.h |   11 ++++++
- 4 files changed, 86 insertions(+), 0 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |    4 ++--
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |    6 +++---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    4 ++--
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |   20 ++++++++++----------
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    6 +++---
+ 5 files changed, 20 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 842ee17..c65a6e2 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -22,6 +22,10 @@ int bcma_bus_scan(struct bcma_bus *bus);
- /* driver_mips.c */
- extern unsigned int bcma_core_mips_irq(struct bcma_device *dev);
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 84d1bcd..cecb291 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -67,7 +67,7 @@ struct brcmf_sdio_card {
+ static struct brcmf_sdio_card *l_card;
  
-+/* driver_chipcommon.c */
-+extern int bcma_chipco_serial_init(struct bcma_drv_cc *cc,
-+				   struct bcma_drv_mips_serial_port *ports);
-+
- #ifdef CONFIG_BCMA_HOST_PCI
- /* host_pci.c */
- extern int __init bcma_host_pci_init(void);
-diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
-index 6061022..b582570 100644
---- a/drivers/bcma/driver_chipcommon.c
-+++ b/drivers/bcma/driver_chipcommon.c
-@@ -87,3 +87,65 @@ u32 bcma_chipco_gpio_polarity(struct bcma_drv_cc *cc, u32 mask, u32 value)
+ struct brcmf_sdio_card*
+-brcmf_sdcard_attach(void *cfghdl, void **regsva, uint irq)
++brcmf_sdcard_attach(void *cfghdl, u32 *regsva, uint irq)
  {
- 	return bcma_cc_write32_masked(cc, BCMA_CC_GPIOPOL, mask, value);
- }
-+
-+int bcma_chipco_serial_init(struct bcma_drv_cc *cc,
-+			    struct bcma_drv_mips_serial_port *ports)
-+{
-+	int nr_ports = 0;
-+	u32 plltype;
-+	unsigned int irq;
-+	u32 baud_base, div;
-+	u32 i, n;
-+	unsigned int ccrev = cc->core->id.rev;
-+
-+	plltype = (cc->capabilities & BCMA_CC_CAP_PLLT);
-+	irq = bcma_core_mips_irq(cc->core);
-+
-+	if ((ccrev >= 11) && (ccrev != 15) && (ccrev != 20)) {
-+		/* Fixed ALP clock */
-+		baud_base = 20000000;
-+		if (cc->capabilities & BCMA_CC_CAP_PMU) {
-+			/* FIXME: baud_base is different for devices with a PMU */
-+			WARN_ON(1);
-+		}
-+		div = 1;
-+		if (ccrev >= 21) {
-+			/* Turn off UART clock before switching clocksource. */
-+			bcma_cc_write32(cc, BCMA_CC_CORECTL,
-+				       bcma_cc_read32(cc, BCMA_CC_CORECTL)
-+				       & ~BCMA_CC_CORECTL_UARTCLKEN);
-+		}
-+		/* Set the override bit so we don't divide it */
-+		bcma_cc_write32(cc, BCMA_CC_CORECTL,
-+			       bcma_cc_read32(cc, BCMA_CC_CORECTL)
-+			       | BCMA_CC_CORECTL_UARTCLK0);
-+		if (ccrev >= 21) {
-+			/* Re-enable the UART clock. */
-+			bcma_cc_write32(cc, BCMA_CC_CORECTL,
-+				       bcma_cc_read32(cc, BCMA_CC_CORECTL)
-+				       | BCMA_CC_CORECTL_UARTCLKEN);
-+		}
-+	} else
-+		pr_err("serial not supported on this device ccrev: 0x%x\n",
-+		       ccrev);
-+
-+	/* Determine the registers of the UARTs */
-+	n = (cc->capabilities & BCMA_CC_CAP_NRUART);
-+	for (i = 0; i < n; i++) {
-+		void __iomem *cc_mmio;
-+		void __iomem *uart_regs;
-+
-+		cc_mmio = cc->core->bus->mmio +
-+			  (cc->core->core_index * BCMA_CORE_SIZE);
-+		uart_regs = cc_mmio + BCMA_CC_UART0_DATA;
-+		uart_regs += (i * 256);
-+
-+		nr_ports++;
-+		ports[i].regs = uart_regs;
-+		ports[i].irq = irq;
-+		ports[i].baud_base = baud_base;
-+		ports[i].reg_shift = 0;
-+	}
-+
-+	return nr_ports;
-+}
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index 0a6c217..40e4a6d 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -155,6 +155,14 @@ static void bcma_core_mips_dump_irq(struct bcma_bus *bus)
+ 	struct brcmf_sdio_card *card;
+ 
+@@ -88,7 +88,7 @@ brcmf_sdcard_attach(void *cfghdl, void **regsva, uint irq)
+ 
+ 	card->init_success = true;
+ 
+-	*regsva = (u32 *) SI_ENUM_BASE;
++	*regsva = SI_ENUM_BASE;
+ 
+ 	/* Report the BAR, to fix if needed */
+ 	card->sbwad = SI_ENUM_BASE;
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+index 45fb76e..ec7d79d 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+@@ -68,7 +68,7 @@ EXPORT_SYMBOL(brcmf_sdio_remove);
+ int brcmf_sdio_probe(struct device *dev)
+ {
+ 	struct sdio_hc *sdhc = NULL;
+-	unsigned long regs = 0;
++	u32 regs = 0;
+ 	struct brcmf_sdio_card *card = NULL;
+ 	int irq = 0;
+ 	u32 vendevid;
+@@ -82,7 +82,7 @@ int brcmf_sdio_probe(struct device *dev)
  	}
+ 	sdhc->dev = (void *)dev;
+ 
+-	card = brcmf_sdcard_attach((void *)0, (void **)&regs, irq);
++	card = brcmf_sdcard_attach((void *)0, &regs, irq);
+ 	if (!card) {
+ 		SDLX_MSG(("%s: attach failed\n", __func__));
+ 		goto err;
+@@ -101,7 +101,7 @@ int brcmf_sdio_probe(struct device *dev)
+ 
+ 	/* try to attach to the target device */
+ 	sdhc->ch = drvinfo.attach((vendevid >> 16), (vendevid & 0xFFFF),
+-				  0, 0, 0, 0, (void *)regs, card);
++				  0, 0, 0, 0, regs, card);
+ 	if (!sdhc->ch) {
+ 		SDLX_MSG(("%s: device attach failed\n", __func__));
+ 		goto err;
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 1b55e56..4c0a031 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -694,7 +694,7 @@ brcmf_sdioh_request_packet(struct sdioh_info *sd, uint fix_inc, uint write,
+ 		 * is supposed to give
+ 		 * us something we can work with.
+ 		 */
+-		ASSERT(((u32) (pkt->data) & DMA_ALIGN_MASK) == 0);
++		ASSERT(((ulong) (pkt->data) & DMA_ALIGN_MASK) == 0);
+ 
+ 		if ((write) && (!fifo)) {
+ 			err_ret = sdio_memcpy_toio(gInstance->func[func], addr,
+@@ -789,7 +789,7 @@ brcmf_sdioh_request_buffer(struct sdioh_info *sd, uint pio_dma, uint fix_inc,
+ 			memcpy(buffer, mypkt->data, buflen_u);
+ 
+ 		brcmu_pkt_buf_free_skb(mypkt);
+-	} else if (((u32) (pkt->data) & DMA_ALIGN_MASK) != 0) {
++	} else if (((ulong) (pkt->data) & DMA_ALIGN_MASK) != 0) {
+ 		/* Case 2: We have a packet, but it is unaligned. */
+ 
+ 		/* In this case, we cannot have a chain. */
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 9bc47a4..cdc57f9 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -884,7 +884,7 @@ static void brcmf_sdbrcm_release_malloc(struct brcmf_bus *bus);
+ static void brcmf_sdbrcm_disconnect(void *ptr);
+ static bool brcmf_sdbrcm_chipmatch(u16 chipid);
+ static bool brcmf_sdbrcm_probe_attach(struct brcmf_bus *bus, void *card,
+-				 void *regsva, u16 devid);
++				      u32 regsva, u16 devid);
+ static bool brcmf_sdbrcm_probe_malloc(struct brcmf_bus *bus, void *card);
+ static bool brcmf_sdbrcm_probe_init(struct brcmf_bus *bus, void *card);
+ static void brcmf_sdbrcm_release_dongle(struct brcmf_bus *bus);
+@@ -908,7 +908,7 @@ static int brcmf_sdbrcm_download_nvram(struct brcmf_bus *bus);
+ static void
+ brcmf_sdbrcm_chip_disablecore(struct brcmf_sdio_card *card, u32 corebase);
+ 
+-static int brcmf_sdbrcm_chip_attach(struct brcmf_bus *bus, void *regs);
++static int brcmf_sdbrcm_chip_attach(struct brcmf_bus *bus, u32 regs);
+ 
+ static void
+ brcmf_sdbrcm_chip_resetcore(struct brcmf_sdio_card *card, u32 corebase);
+@@ -5343,7 +5343,7 @@ static bool brcmf_sdbrcm_chipmatch(u16 chipid)
  }
  
-+static void bcma_core_mips_serial_init(struct bcma_drv_mips *mcore)
-+{
-+	struct bcma_bus *bus = mcore->core->bus;
-+
-+	mcore->nr_serial_ports = bcma_chipco_serial_init(&bus->drv_cc,
-+							 mcore->serial_ports);
-+}
-+
- static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
+ static void *brcmf_sdbrcm_probe(u16 venid, u16 devid, u16 bus_no,
+-			   u16 slot, u16 func, uint bustype, void *regsva,
++			   u16 slot, u16 func, uint bustype, u32 regsva,
+ 			   void *card)
  {
- 	struct bcma_bus *bus = mcore->core->bus;
-@@ -223,5 +231,6 @@ void bcma_core_mips_init(struct bcma_drv_mips *mcore)
- 	pr_info("after irq reconfiguration\n");
- 	bcma_core_mips_dump_irq(bus);
+ 	int ret;
+@@ -5374,7 +5374,7 @@ static void *brcmf_sdbrcm_probe(u16 venid, u16 devid, u16 bus_no,
+ 	DHD_INFO(("%s: venid 0x%04x devid 0x%04x\n", __func__, venid, devid));
  
-+	bcma_core_mips_serial_init(mcore);
- 	bcma_core_mips_flash_detect(mcore);
+ 	/* We make assumptions about address window mappings */
+-	ASSERT((unsigned long)regsva == SI_ENUM_BASE);
++	ASSERT(regsva == SI_ENUM_BASE);
+ 
+ 	/* SDIO car passes venid and devid based on CIS parsing -- but
+ 	 * low-power start
+@@ -5540,7 +5540,7 @@ fail:
  }
-diff --git a/include/linux/bcma/bcma_driver_mips.h b/include/linux/bcma/bcma_driver_mips.h
-index 5faf30c..6584e7d 100644
---- a/include/linux/bcma/bcma_driver_mips.h
-+++ b/include/linux/bcma/bcma_driver_mips.h
-@@ -27,9 +27,20 @@
  
- struct bcma_device;
+ static bool
+-brcmf_sdbrcm_probe_attach(struct brcmf_bus *bus, void *card, void *regsva,
++brcmf_sdbrcm_probe_attach(struct brcmf_bus *bus, void *card, u32 regsva,
+ 			  u16 devid)
+ {
+ 	u8 clkctl = 0;
+@@ -6097,8 +6097,8 @@ int brcmf_bus_devreset(struct brcmf_pub *drvr, u8 flag)
  
-+struct bcma_drv_mips_serial_port {
-+	void *regs;
-+	unsigned long clockspeed;
-+	unsigned int irq;
-+	unsigned int baud_base;
-+	unsigned int reg_shift;
-+};
-+
- struct bcma_drv_mips {
- 	struct bcma_device *core;
+ 			/* Attempt to re-attach & download */
+ 			if (brcmf_sdbrcm_probe_attach(bus, bus->card,
+-						 (u32 *) SI_ENUM_BASE,
+-						 bus->cl_devid)) {
++						      SI_ENUM_BASE,
++						      bus->cl_devid)) {
+ 				/* Attempt to download binary to the dongle */
+ 				if (brcmf_sdbrcm_probe_init(bus, bus->card)) {
+ 					/* Re-init bus, enable F2 transfer */
+@@ -6126,7 +6126,7 @@ int brcmf_bus_devreset(struct brcmf_pub *drvr, u8 flag)
  
-+	int nr_serial_ports;
-+	struct bcma_drv_mips_serial_port serial_ports[4];
-+
- 	u8 flash_buswidth;
- 	u32 flash_window;
- 	u32 flash_window_size;
+ static int
+ brcmf_sdbrcm_chip_recognition(struct brcmf_sdio_card *card,
+-			      struct chip_info *ci, void *regs)
++			      struct chip_info *ci, u32 regs)
+ {
+ 	u32 regdata;
+ 
+@@ -6136,7 +6136,7 @@ brcmf_sdbrcm_chip_recognition(struct brcmf_sdio_card *card,
+ 	 * For different chiptypes or old sdio hosts w/o chipcommon,
+ 	 * other ways of recognition should be added here.
+ 	 */
+-	ci->cccorebase = (u32)regs;
++	ci->cccorebase = regs;
+ 	regdata = brcmf_sdcard_reg_read(card,
+ 				CORE_CC_REG(ci->cccorebase, chipid), 4);
+ 	ci->chip = regdata & CID_ID_MASK;
+@@ -6263,7 +6263,7 @@ brcmf_sdbrcm_chip_disablecore(struct brcmf_sdio_card *card, u32 corebase)
+ }
+ 
+ static int
+-brcmf_sdbrcm_chip_attach(struct brcmf_bus *bus, void *regs)
++brcmf_sdbrcm_chip_attach(struct brcmf_bus *bus, u32 regs)
+ {
+ 	struct chip_info *ci;
+ 	int err;
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index 68a2a64..9b3c149 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -52,8 +52,8 @@ struct brcmf_sdio_card;
+  *    implementation may maintain a single "default" handle (e.g. the first or
+  *    most recent one) to enable single-instance implementations to pass NULL.
+  */
+-extern struct brcmf_sdio_card *brcmf_sdcard_attach(void *cfghdl, void **regsva,
+-					  uint irq);
++extern struct brcmf_sdio_card*
++brcmf_sdcard_attach(void *cfghdl, u32 *regsva, uint irq);
+ 
+ /* Detach - freeup resources allocated in attach */
+ extern int brcmf_sdcard_detach(struct brcmf_sdio_card *card);
+@@ -174,7 +174,7 @@ extern int brcmf_sdcard_iovar_op(struct brcmf_sdio_card *card, const char *name,
+ struct brcmf_sdioh_driver {
+ 	/* attach to device */
+ 	void *(*attach) (u16 vend_id, u16 dev_id, u16 bus, u16 slot,
+-			 u16 func, uint bustype, void *regsva, void *param);
++			 u16 func, uint bustype, u32 regsva, void *param);
+ 	/* detach from device */
+ 	void (*detach) (void *ch);
+ };
 -- 
-1.7.4.1
+1.7.1
+
 
