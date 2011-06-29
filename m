@@ -1,56 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:55923 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758081Ab1FVVTl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 17:19:41 -0400
-Received: by wwe5 with SMTP id 5so1260556wwe.1
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 14:19:40 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 2/2] wl12xx: AP-mode - use mac80211 indication about STA WME support
-Date: Thu, 23 Jun 2011 00:19:33 +0300
-Message-Id: <1308777573-12257-2-git-send-email-arik@wizery.com> (sfid-20110622_231945_576536_144053C3)
-In-Reply-To: <1308777573-12257-1-git-send-email-arik@wizery.com>
-References: <1308777573-12257-1-git-send-email-arik@wizery.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:2095 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757989Ab1F2Xss (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:48 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 068/119] staging: brcm80211: remove MMC_SDIO_ABORT macro
+ definition
+Date: Wed, 29 Jun 2011 16:47:32 -0700
+Message-ID: <1309391303-22741-69-git-send-email-frankyl@broadcom.com> (sfid-20110630_015035_177115_38177C12)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When adding a station, use the information given in the mac80211
-populated ieee80211_sta structure to determine if it supports WME.
-Provide this information to the FW.
+From: Arend van Spriel <arend@broadcom.com>
 
-This patch depends on "mac80211: propagate information about
-STA WME support down".
+The fullmac driver is always needing the code conditionalized with
+MMC_SDIO_ABORT macro so the macro has been removed and the code
+is always compiled in.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/wl12xx/cmd.c |    9 +--------
- 1 files changed, 1 insertions(+), 8 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/Makefile       |    1 -
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    6 ------
+ 2 files changed, 0 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index b3a4f58..c7f6f60 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -1166,14 +1166,7 @@ int wl1271_cmd_add_sta(struct wl1271 *wl, struct ieee80211_sta *sta, u8 hlid)
- 	cmd->bss_index = WL1271_AP_BSS_INDEX;
- 	cmd->aid = sta->aid;
- 	cmd->hlid = hlid;
--
--	/*
--	 * FIXME: Does STA support QOS? We need to propagate this info from
--	 * hostapd. Currently not that important since this is only used for
--	 * sending the correct flavor of null-data packet in response to a
--	 * trigger.
--	 */
--	cmd->wmm = 0;
-+	cmd->wmm = sta->wme ? 1 : 0;
+diff --git a/drivers/staging/brcm80211/brcmfmac/Makefile b/drivers/staging/brcm80211/brcmfmac/Makefile
+index 2ccfa1f..c97e5bb 100644
+--- a/drivers/staging/brcm80211/brcmfmac/Makefile
++++ b/drivers/staging/brcm80211/brcmfmac/Makefile
+@@ -21,7 +21,6 @@ ccflags-y :=			\
+ 	-DBRCMF_FIRSTREAD=64	\
+ 	-DBRCMF_SDALIGN=64	\
+ 	-DMAX_HDR_READ=64	\
+-	-DMMC_SDIO_ABORT	\
+ 	-DSHOW_EVENTS		\
+ 	-DTOE
  
- 	cmd->supported_rates = cpu_to_le32(wl1271_tx_enabled_rates_get(wl,
- 						sta->supp_rates[wl->band]));
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index c814701..5e52813 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -667,7 +667,6 @@ brcmf_sdioh_request_byte(struct sdioh_info *sd, uint rw, uint func,
+ 					sdio_release_host(gInstance->func[2]);
+ 				}
+ 			}
+-#if defined(MMC_SDIO_ABORT)
+ 			/* to allow abort command through F1 */
+ 			else if (regaddr == SDIO_CCCR_ABORT) {
+ 				sdio_claim_host(gInstance->func[func]);
+@@ -681,7 +680,6 @@ brcmf_sdioh_request_byte(struct sdioh_info *sd, uint rw, uint func,
+ 					    regaddr, &err_ret);
+ 				sdio_release_host(gInstance->func[func]);
+ 			}
+-#endif				/* MMC_SDIO_ABORT */
+ 			else if (regaddr < 0xF0) {
+ 				sd_err(("bcmsdh_sdmmc: F0 Wr:0x%02x: write "
+ 					"disallowed\n", regaddr));
+@@ -951,16 +949,12 @@ brcmf_sdioh_request_buffer(struct sdioh_info *sd, uint pio_dma, uint fix_inc,
+ /* this function performs "abort" for both of host & device */
+ extern int brcmf_sdioh_abort(struct sdioh_info *sd, uint func)
+ {
+-#if defined(MMC_SDIO_ABORT)
+ 	char t_func = (char)func;
+-#endif				/* defined(MMC_SDIO_ABORT) */
+ 	sd_trace(("%s: Enter\n", __func__));
+ 
+-#if defined(MMC_SDIO_ABORT)
+ 	/* issue abort cmd52 command through F0 */
+ 	brcmf_sdioh_request_byte(sd, SDIOH_WRITE, SDIO_FUNC_0, SDIO_CCCR_ABORT,
+ 			   &t_func);
+-#endif				/* defined(MMC_SDIO_ABORT) */
+ 
+ 	sd_trace(("%s: Exit\n", __func__));
+ 	return SDIOH_API_RC_SUCCESS;
 -- 
-1.7.4.1
+1.7.1
+
 
