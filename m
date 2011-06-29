@@ -1,65 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:48796 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752383Ab1FOXXG (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:37334 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752719Ab1F2Nq6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2011 19:23:06 -0400
-Received: by pzk9 with SMTP id 9so673021pzk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jun 2011 16:23:06 -0700 (PDT)
-Message-ID: <4DF93EAC.2030203@ring3k.org> (sfid-20110616_012310_882224_7128E971)
-Date: Thu, 16 Jun 2011 08:22:20 +0900
-From: Mike McCormack <mikem@ring3k.org>
+	Wed, 29 Jun 2011 09:46:58 -0400
+Message-ID: <4E0B2CCE.1080805@lwfinger.net> (sfid-20110629_154703_891900_1A43C016)
+Date: Wed, 29 Jun 2011 08:46:54 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 0/4] rtlwifi: Various cleanups
-Content-Type: text/plain; charset=ISO-8859-1
+To: Dan Carpenter <error27@gmail.com>
+CC: Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"open list:RTL8192CE WIRELES..." <linux-wireless@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch] rtlwifi: potential forever loop in rtl92de_hw_init()
+References: <20110629063149.GE14591@shale.localdomain>
+In-Reply-To: <20110629063149.GE14591@shale.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+On 06/29/2011 01:31 AM, Dan Carpenter wrote:
+> "i" should be an int here because we are trying to use it to count
+> to 10000.  The original code looks like it could hang in a forever
+> loop.
+>
+> Signed-off-by: Dan Carpenter<error27@gmail.com>
+> ---
+> If we exit the loop via a timeout, that error isn't handled.  Should
+> we limp along, or return an error?
 
-The following series is a bunch of cleanups.
+ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-thanks,
+Dan,
 
-Mike
+Thanks for this part. After another look at this routine, there are a couple of 
+places that need to be fixed. I will take care of that.
 
+Larry
 
-Mike McCormack (4):
-  rtlwifi: rtl8192{ce,cu,se}: Remove irq_enabled flag
-  rtlwifi: Fix typo in variable name
-  rtlwifi: rtl8192cu: Remove unused parameter
-  rtlwifi: rtl8192{c,ce,cu,se}: Remove comparisons of booleans with
-    true
-
- drivers/net/wireless/rtlwifi/base.c               |    2 +-
- drivers/net/wireless/rtlwifi/core.c               |    8 +-
- drivers/net/wireless/rtlwifi/efuse.c              |    8 +-
- drivers/net/wireless/rtlwifi/pci.c                |    6 +--
- drivers/net/wireless/rtlwifi/pci.h                |    1 -
- drivers/net/wireless/rtlwifi/ps.c                 |   65 ++-------------------
- drivers/net/wireless/rtlwifi/ps.h                 |    3 +-
- drivers/net/wireless/rtlwifi/rc.c                 |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c       |   12 ++--
- drivers/net/wireless/rtlwifi/rtl8192ce/led.c      |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/rf.c       |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c      |    6 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c       |    8 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/led.c      |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/mac.c      |    9 ---
- drivers/net/wireless/rtlwifi/rtl8192cu/rf.c       |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c      |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192se/dm.c       |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192se/hw.c       |   13 ++---
- drivers/net/wireless/rtlwifi/rtl8192se/led.c      |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192se/phy.c      |    4 +-
- drivers/net/wireless/rtlwifi/rtl8192se/rf.c       |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c      |    6 +-
- drivers/net/wireless/rtlwifi/wifi.h               |    2 +-
- 25 files changed, 49 insertions(+), 124 deletions(-)
-
--- 
-1.7.4.1
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> index eedfb38..cbc0f40 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> @@ -908,7 +908,8 @@ int rtl92de_hw_init(struct ieee80211_hw *hw)
+>   	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+>   	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+>   	bool rtstatus = true;
+> -	u8 tmp_u1b, i;
+> +	u8 tmp_u1b;
+> +	int i;
+>   	int err;
+>   	unsigned long flags;
+>
+>
 
