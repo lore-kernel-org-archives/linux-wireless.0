@@ -1,56 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:54105 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750986Ab1FKSF7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jun 2011 14:05:59 -0400
-Received: by qwk3 with SMTP id 3so1723143qwk.19
-        for <linux-wireless@vger.kernel.org>; Sat, 11 Jun 2011 11:05:58 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:4614 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758123Ab1F2XtE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:49:04 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 075/119] staging: brcm80211: rename EPI_VERSION_STR
+ macro
+Date: Wed, 29 Jun 2011 16:47:39 -0700
+Message-ID: <1309391303-22741-76-git-send-email-frankyl@broadcom.com> (sfid-20110630_015141_150151_37556380)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20110611195721.735dcf4c@maggie>
-References: <BANLkTimaUBe6kszbvSeSPTXR6m1t8C8O-A@mail.gmail.com>
-	<20110611195721.735dcf4c@maggie>
-Date: Sat, 11 Jun 2011 20:05:58 +0200
-Message-ID: <BANLkTi=Wr=HmveLN9VOQmUNFAP7ygWAwkA@mail.gmail.com> (sfid-20110611_200602_867031_678582AD)
-Subject: Re: Can iperf work with no qos? (TCP mode)
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
-Cc: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 11 czerwca 2011 19:57 użytkownik Michael Büsch <m@bues.ch> napisał:
-> On Sat, 11 Jun 2011 19:47:31 +0200
-> Rafał Miłecki <zajec5@gmail.com> wrote:
->
->> I can not get any results when trying to use iperf in TCP mode with
->> driver not supporting qos.
->>
->> Is this expected? Does iperf fill connection with so many packets,
->> it's not possible to get response from the iperf receiver? Should not
->> Linux somehow schedule packet to allow bi-direction communication,
->> even on really filled connection?
->
-> iperf will only fill the best effort queue. At least that's what it did
-> last time when I looked into the code.
-> You can verify that with b43's ring statistics.
+From: Arend van Spriel <arend@broadcom.com>
 
-It's BE queue we create for qos=0 in b43:
-else
-	q = dev->pio.tx_queue_AC_BE;
-so this should not limit iperf
+The fullmac version macro has been renamed and moved to dhd.h to
+get rid of having it defined in two separate c source files.
 
-As another test, I've just tried dma mode with qos=0. iperf was fine.
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd.h        |    2 ++
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c |    5 ++---
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c  |    3 +--
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-So now we know iperf does not need multiple queues. It seems that:
-GOOD: b43 & dma & no qos
-BAD: b43 & pio & no qos
-
-In the second case connection is started (I can see that from "iperf
--s" on my receiving machine), but it seems sender does not receive any
-confirmations.
-
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index 87c65f1..7e19d80 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -21,6 +21,8 @@
+ #ifndef _dhd_h_
+ #define _dhd_h_
+ 
++#define BRCMF_VERSION_STR		"4.218.248.5"
++
+ #define	BRCMF_C_IOCTL_SMLEN	256	/* "small" ioctl buffer required */
+ #define BRCMF_C_IOCTL_MEDLEN	1536	/* "med" ioctl buffer required */
+ #define	BRCMF_C_IOCTL_MAXLEN	8192
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+index 22739f0..5207fa9 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+@@ -36,15 +36,14 @@ int brcmf_msg_level;
+ char brcmf_fw_path[MOD_PARAM_PATHLEN];
+ char brcmf_nv_path[MOD_PARAM_PATHLEN];
+ 
+-#define EPI_VERSION_STR         "4.218.248.5"
+ #define MSGTRACE_VERSION	1
+ 
+ #ifdef BCMDBG
+ const char brcmf_version[] =
+-"Dongle Host Driver, version " EPI_VERSION_STR "\nCompiled on " __DATE__
++"Dongle Host Driver, version " BRCMF_VERSION_STR "\nCompiled on " __DATE__
+ " at " __TIME__;
+ #else
+-const char brcmf_version[] = "Dongle Host Driver, version " EPI_VERSION_STR;
++const char brcmf_version[] = "Dongle Host Driver, version " BRCMF_VERSION_STR;
+ #endif
+ 
+ /* IOVar table */
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 5327941..19e09bd 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -43,7 +43,6 @@
+ #include "dhd_dbg.h"
+ #include "wl_cfg80211.h"
+ 
+-#define EPI_VERSION_STR		"4.218.248.5"
+ #define ETH_P_BRCM			0x886c
+ 
+ /* Global ASSERT type flag */
+@@ -1278,7 +1277,7 @@ static int brcmf_ethtool(dhd_info_t *dhd, void *uaddr)
+ 		/* if dhd requested, identify ourselves */
+ 		if (strcmp(drvname, "?dhd") == 0) {
+ 			sprintf(info.driver, "dhd");
+-			strcpy(info.version, EPI_VERSION_STR);
++			strcpy(info.version, BRCMF_VERSION_STR);
+ 		}
+ 
+ 		/* otherwise, require dongle to be up */
 -- 
-Rafał
+1.7.1
+
+
