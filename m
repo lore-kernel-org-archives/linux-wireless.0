@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2997 "EHLO mail.perches.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4649 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751370Ab1FNQnx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jun 2011 12:43:53 -0400
-Subject: Re: [ath9k-devel] [PATCH net-next 1/2] wireless: Remove casts of
- void *
-From: Joe Perches <joe@perches.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: netdev@vger.kernel.org, Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	ath9k-devel@lists.ath9k.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-In-Reply-To: <4DF78CEC.70409@gnu.org>
-References: <cover.1308024069.git.joe@perches.com>
-	 <337c22b774ff7f007b90b266b25c9a33ff555c48.1308024069.git.joe@perches.com>
-	 <4DF78CEC.70409@gnu.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 14 Jun 2011 09:43:51 -0700
-Message-ID: <1308069831.21026.9.camel@Joe-Laptop> (sfid-20110614_184412_282693_99873C20)
-Mime-Version: 1.0
+	id S1757870Ab1F2Xso (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2011 19:48:44 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 070/119] staging: brcm80211: define SHOW_EVENTS macro
+ only for debugging
+Date: Wed, 29 Jun 2011 16:47:34 -0700
+Message-ID: <1309391303-22741-71-git-send-email-frankyl@broadcom.com> (sfid-20110630_014951_458743_0D8B03F4)
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-06-14 at 12:31 -0400, Pavel Roskin wrote:
-> On 06/14/2011 12:02 AM, Joe Perches wrote:
-> >   		/* Get the message ID */
-> > -		msg_id = (__be16 *) ((void *) htc_hdr +
-> > -				     sizeof(struct htc_frame_hdr));
-> > +		msg_id = (void *)htc_hdr + sizeof(struct htc_frame_hdr);
-> I would never do stuff like this without verifying by sparse that no 
-> warnings are introduced.
+From: Arend van Spriel <arend@broadcom.com>
 
-I did that.  I believe there are no new warnings.
+The macro SHOW_EVENTS will only be defined when Kconfig setting
+BRCMDBG is set.
 
-> Sparse warnings should be avoided to keep sparse checks useful. 
-> Otherwise, important warnings would drown in the noise.
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/Makefile |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-$ make allyesconfig
-$ git log -1 --pretty=oneline drivers/net/wireless/ath/ath9k/htc_hst.c
-337c22b774ff7f007b90b266b25c9a33ff555c48 wireless: Remove casts of void *
-$ make C=2 drivers/net/wireless/ath/ath9k/htc_hst.o
-make[1]: Nothing to be done for `all'.
-  CHK     include/linux/version.h
-  CHK     include/generated/utsrelease.h
-  CALL    scripts/checksyscalls.sh
-  CHECK   scripts/mod/empty.c
-  CHECK   drivers/net/wireless/ath/ath9k/htc_hst.c
-  CC      drivers/net/wireless/ath/ath9k/htc_hst.o
-$
+diff --git a/drivers/staging/brcm80211/brcmfmac/Makefile b/drivers/staging/brcm80211/brcmfmac/Makefile
+index 7441649..2fcc409 100644
+--- a/drivers/staging/brcm80211/brcmfmac/Makefile
++++ b/drivers/staging/brcm80211/brcmfmac/Makefile
+@@ -20,10 +20,9 @@ ccflags-y :=			\
+ 	-DBRCM_FULLMAC		\
+ 	-DBRCMF_FIRSTREAD=64	\
+ 	-DBRCMF_SDALIGN=64	\
+-	-DMAX_HDR_READ=64	\
+-	-DSHOW_EVENTS
++	-DMAX_HDR_READ=64
+ 
+-ccflags-$(CONFIG_BRCMDBG)	+= -DDHD_DEBUG
++ccflags-$(CONFIG_BRCMDBG)	+= -DDHD_DEBUG -DSHOW_EVENTS
+ 
+ ccflags-y += \
+ 	-Idrivers/staging/brcm80211/brcmfmac	\
+-- 
+1.7.1
+
 
