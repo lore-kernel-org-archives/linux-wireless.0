@@ -1,53 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:41437 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750765Ab1F0Onp convert rfc822-to-8bit (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:37075 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751304Ab1F3Apn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2011 10:43:45 -0400
+	Wed, 29 Jun 2011 20:45:43 -0400
+Received: by ywe9 with SMTP id 9so688501ywe.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2011 17:45:42 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTinGvM79fza-=bFwcbtfFzGHAVKJag@mail.gmail.com>
-References: <alpine.DEB.2.00.1106261016100.25900@ayla.of.borg>
-	<BANLkTikSLx6FKvF518s99Q8eRU_WF+cn9A@mail.gmail.com>
-	<BANLkTinGvM79fza-=bFwcbtfFzGHAVKJag@mail.gmail.com>
-Date: Mon, 27 Jun 2011 16:43:41 +0200
-Message-ID: <BANLkTikVtWe0jB_jLeP1YZTEKSYA97gdqQ@mail.gmail.com> (sfid-20110627_164349_732650_AE895116)
-Subject: Re: [PATCH -next] bcma: main.c needs to include <linux/slab.h>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Alexey Dobriyan <adobriyan@gmail.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
-	Linux Kernel Development <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <BLU158-w3443764A60DE4B497231DB87570@phx.gbl>
+References: <BLU158-w3443764A60DE4B497231DB87570@phx.gbl>
+Date: Thu, 30 Jun 2011 01:45:41 +0100
+Message-ID: <BANLkTi=EUnXpdCYb-Y7=g9seJCkbCTQ5tQ@mail.gmail.com> (sfid-20110630_024546_651620_99849E47)
+Subject: Re: [ath9k-devel] STBC functionality details request
+From: Fred Matthews <fredmm@hotmail.co.uk>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 27 czerwca 2011 16:24 użytkownik Alexey Dobriyan
-<adobriyan@gmail.com> napisał:
-> 2011/6/27 Rafał Miłecki <zajec5@gmail.com>:
->> 2011/6/26 Geert Uytterhoeven <geert@linux-m68k.org>:
->>> m68k allmodconfig:
->>>
->>> drivers/bcma/main.c: In function ‘bcma_release_core_dev’:
->>> drivers/bcma/main.c:68: error: implicit declaration of function ‘kfree’
->>
->> We already include slab.h in:
->> host_pci.c
->> scan.c
->> sprom.c
->>
->> Maybe we can just include this in bcma.h as a better solution?
+Hi all,
+
+Please may someone kindly reply to my query regarding STBC (below),
+Thanks!
+
+
+On Mon, Jun 27, 2011 at 12:18 PM, Fred Matthews <fredmm@hotmail.co.uk> wrote:
 >
-> It isn't better solution.
-> It results in situation where unnecessary inclusion will be done.
-> Maybe it's not the case now, but it will be in future.
-
-Scanning code is required for every BCMA board, so we already include
-linux/slab.h on every configuration. No matter if this is PCI host
-board, or SoC, or whatever we will support in the future.
-Now we discovered this is also needed in main.c, which will be always compiled.
-
-That's why I think it's safe to include linux/slab.h in bcma_private.h.
-But if that's just my opinion, everybody think it's wrong idea, I'm OK with it.
-
--- 
-Rafał
+> Hi,
+> I am using STBC (Space Time Block Coding) 1 stream NICs like the AR9280.I would be very grateful someone can kindly advise on how exactly STBC(transmits multiple copies of a data across each of the antennas)�works in ath9k.
+> I ask this because when I enable STBC 1-stream, the driver seems to uses Space division multiplexing (can this be disabled/enabled?), since the rate is over 150Mbps.
+> When is STBC activated ?, ...Does Minstrel/ath9k rate adaptation�mechanism�find first check if Spatial multiplexing is better, if not uses STBC ?
+> Thank you for your time
+> _______________________________________________
+> ath9k-devel mailing list
+> ath9k-devel@lists.ath9k.org
+> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+>
