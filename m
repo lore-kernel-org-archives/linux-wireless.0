@@ -1,56 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([74.125.121.67]:18200 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755279Ab1FTR2P convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2011 13:28:15 -0400
-Received: from hpaq5.eem.corp.google.com (hpaq5.eem.corp.google.com [172.25.149.5])
-	by smtp-out.google.com with ESMTP id p5KHS9gn023423
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Jun 2011 10:28:09 -0700
-Received: from wyi11 (wyi11.prod.google.com [10.241.227.11])
-	by hpaq5.eem.corp.google.com with ESMTP id p5KHS8CN030518
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Jun 2011 10:28:08 -0700
-Received: by wyi11 with SMTP id 11so2677202wyi.2
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jun 2011 10:28:08 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:1547 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754129Ab1F3KUh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2011 06:20:37 -0400
+Message-ID: <4E0C4DB2.7090506@broadcom.com> (sfid-20110630_122040_936267_779ACCA4)
+Date: Thu, 30 Jun 2011 12:19:30 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <87aadc1s5j.fsf@purkki.adurom.net>
-References: <1308425533-20854-1-git-send-email-arik@wizery.com>
-	<1308471076.4145.6.camel@jlt3.sipsolutions.net>
-	<20110620133535.GA2251@tuxdriver.com>
-	<1308578353.4322.8.camel@jlt3.sipsolutions.net>
-	<87aadc1s5j.fsf@purkki.adurom.net>
-Date: Mon, 20 Jun 2011 10:28:08 -0700
-Message-ID: <BANLkTikwj5Qqps_SOk_O6pkBUYbBgcwPxrvZ5skGOkXy7UVSkw@mail.gmail.com> (sfid-20110620_192819_912094_9E967150)
-Subject: Re: [RFC] mac80211: dynamic PS - don't enter PS when TX frames are pending
-From: Sam Leffler <sleffler@google.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Dan Carpenter" <error27@gmail.com>
+cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 017/119] staging: brcm80211: change FOREACH_BSS
+ macro to remove checkpatch error
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+ <1309391303-22741-18-git-send-email-frankyl@broadcom.com>
+ <20110630083700.GK14591@shale.localdomain>
+In-Reply-To: <20110630083700.GK14591@shale.localdomain>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 20, 2011 at 7:42 AM, Kalle Valo <kvalo@adurom.com> wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
->
->>> > FWIW, I don't really consider myself maintaining the PS
->>> > implementation ;-) I don't understand it and think the code is way too
->>> > complex.
->>>
->>> Perhaps Kalle can comment?  Or...?
+On 06/30/2011 10:37 AM, Dan Carpenter wrote:
+> On Wed, Jun 29, 2011 at 04:46:41PM -0700, Franky Lin wrote:
+>>   #define FOREACH_BSS(wlc, idx, cfg) \
+>> -	for (idx = 0; (int) idx<  WLC_MAXBSSCFG; idx++) \
+>> -		if ((cfg = (wlc)->bsscfg[idx]))
+>> +	for (idx = 0, cfg = (wlc)->bsscfg[idx]; \
+>> +	     idx<  WLC_MAXBSSCFG; cfg = (wlc)->bsscfg[++idx]) \
+>> +		if (cfg)
 >>
->> Yeah he's a good candidate :)
+> That's pretty ugly.  Better to leave the original in and ignore the
+> checkpatch warning.  Or maybe do something like this:
 >
-> Hehe :)
+> 	for (idx = 0; (int) idx<  WLC_MAXBSSCFG; idx++) { \
+> 		cfg = (wlc)->bsscfg[idx];		  \
+> 		if (!cfg)				  \
+> 			continue;			  \
 >
-> But I agree with Johannes, the powersave in mac80211 is pretty
-> complex. I lost track of it a long time ago so it's pretty difficult
-> for me to comment about the patch.
+> Then #define END_FOREACH_BSS() }
 
-I believe I've hit this situation (and have changes of my own to do
-something similar but different); will review.
+Hi Dan,
 
--Sam
+I agree this is not the nicest solution. It was a checkpatch error so we 
+felt an urge to fix it. A warning would have been easier to ignore. I 
+will have a look and see whether the patch can be dropped without 
+issues. Your feedback is noted so I will look for a better iteration 
+solution to replace this.
+
+Gr. AvS
+
+-- 
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
+
