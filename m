@@ -1,29 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:58802 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755373Ab1FTVw7 (ORCPT
+Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:49473 "EHLO
+	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753227Ab1F3T3J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2011 17:52:59 -0400
-Received: by mail-gy0-f174.google.com with SMTP id 3so1580080gyh.19
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jun 2011 14:52:59 -0700 (PDT)
-Message-ID: <4DFFC133.7050408@lwfinger.net> (sfid-20110620_235303_713184_B0AD1082)
-Date: Mon, 20 Jun 2011 16:52:51 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 30 Jun 2011 15:29:09 -0400
+Received: by mail-ww0-f49.google.com with SMTP id 22so2086296wwf.30
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2011 12:29:07 -0700 (PDT)
 MIME-Version: 1.0
-To: Peter Chubb <peter@chubb.wattle.id.au>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: State of rtl8192CU driver?
-References: <w4hb7ohfo5.wl%peter@chubb.wattle.id.au>	<4DFB6004.1060006@lwfinger.net> <w44o3l9w74.wl%peter@chubb.wattle.id.au>
-In-Reply-To: <w44o3l9w74.wl%peter@chubb.wattle.id.au>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4E0CC8FC.9050906@boundarydevices.com>
+References: <4E0942CA.9010402@boundarydevices.com> <BANLkTimKSfgE7SOPVDhvOcDB5ox6uyPc_Q@mail.gmail.com>
+ <4E0CC8FC.9050906@boundarydevices.com>
+From: "Krakowski, Oz" <ozk@ti.com>
+Date: Thu, 30 Jun 2011 14:20:49 -0500
+Message-ID: <BANLkTi=TO1gVRz7h-tOH2Cx7yiNVr=enng@mail.gmail.com> (sfid-20110630_212914_916507_913F8BF1)
+Subject: Re: WL1271: WLAN_IRQ not working
+To: Troy Kisky <troy.kisky@boundarydevices.com>
+Cc: mangesh gadre <mangeshgadre07@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter,
+Troy,
+On Thu, Jun 30, 2011 at 2:05 PM, Troy Kisky
+<troy.kisky@boundarydevices.com> wrote:
+> On 6/29/2011 11:24 PM, mangesh gadre wrote:
+>> Hi,
+>>
+>> Please check if your wifi enable pin is in right state. secondly check if
+>> regulator section of your chip is actually powering up wifi internal core .
+>> check your circuit against standard ref circuit.
+>> I have seen similar issue and there was some resistor missing in feedback
+>> path of volatge regulator output path from chip. Most probably wifi section
+>> of your chip is not powered up.
+>
+> I think the problem is solved, but can you point me to a "standard ref
+> circuit" for TiWiR2. Maybe, I can avoid future problems.
 
-I found a problem with rtl8192cu since the 3.0-rcX merge. Please go to 
-https://bugzilla.kernel.org/show_bug.cgi?id=38012 and try the patch found there.
+For the benefit of everyone, can you share what was the issue?
 
-Please let me know if it fixes your problem.
-
-Larry
+Thanks,
+Oz.
