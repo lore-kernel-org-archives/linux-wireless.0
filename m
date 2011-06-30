@@ -1,59 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:49352 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758412Ab1FBJGg convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 05:06:36 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Marc Yang <yangyang@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Thu, 2 Jun 2011 01:57:41 -0700
-Subject: RE: [PATCH 2/2] mwifiex: correct the error check used for
- dev_alloc_name()
-Message-ID: <477F20668A386D41ADCC57781B1F704307FD0BF3B4@SC-VEXCH1.marvell.com> (sfid-20110602_110646_960170_BF9030F3)
-References: <1306198818-7423-1-git-send-email-bzhao@marvell.com>
- <1306198818-7423-2-git-send-email-bzhao@marvell.com>,<20110601191837.GG2509@tuxdriver.com>
-In-Reply-To: <20110601191837.GG2509@tuxdriver.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:48946 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752754Ab1F3T0g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2011 15:26:36 -0400
+Received: by fxd18 with SMTP id 18so2559970fxd.11
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2011 12:26:35 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Thu, 30 Jun 2011 21:06:17 +0200
+Subject: [PATCH -stable] carl9170: add NEC WL300NU-AG usbid
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Message-Id: <E1QcMuC-0001AU-GJ@debian64.daheim> (sfid-20110630_212641_965514_42AF8E60)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> commit 1c5cae815d19ffe02bdfda1260949ef2b1806171
-> Author: Jiri Pirko <jpirko@redhat.com>
-> Date:   Sat Apr 30 01:21:32 2011 +0000
-> 
->     net: call dev_alloc_name from register_netdevice
-> 
->     Force dev_alloc_name() to be called from register_netdevice() by
->     dev_get_valid_name(). That allows to remove multiple explicit
->     dev_alloc_name() calls.
-> 
->     The possibility to call dev_alloc_name in advance remains.
-> 
->     This also fixes veth creation regresion caused by
->     84c49d8c3e4abefb0a41a77b25aa37ebe8d6b743
-> 
->     Signed-off-by: Jiri Pirko <jpirko@redhat.com>
->     Signed-off-by: David S. Miller <davem@davemloft.net>
-> 
-> This patch is now obsolete...
+Cc: stable@kernel.org
+Reported-by: Mark Davis
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+ drivers/net/wireless/ath/carl9170/usb.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Hi John,
+diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
+index 2fb53d0..333b69e 100644
+--- a/drivers/net/wireless/ath/carl9170/usb.c
++++ b/drivers/net/wireless/ath/carl9170/usb.c
+@@ -112,6 +112,8 @@ static struct usb_device_id carl9170_usb_ids[] = {
+ 	{ USB_DEVICE(0x04bb, 0x093f) },
+ 	/* NEC WL300NU-G */
+ 	{ USB_DEVICE(0x0409, 0x0249) },
++	/* NEC WL300NU-AG */
++	{ USB_DEVICE(0x0409, 0x02b4) },
+ 	/* AVM FRITZ!WLAN USB Stick N */
+ 	{ USB_DEVICE(0x057c, 0x8401) },
+ 	/* AVM FRITZ!WLAN USB Stick N 2.4 */
+-- 
+1.7.5.4
 
-Thanks for the info. Please revert this patch then.
-
-Regards,
-Bing
-
-> On Mon, May 23, 2011 at 06:00:18PM -0700, Bing Zhao wrote:
->> From: Amitkumar Karwar <akarwar@marvell.com>
->>
->> In failure case dev_alloc_name() returns negative errno code.
->> This patch corrects the check used for handling error path.
