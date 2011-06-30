@@ -1,38 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:6821 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751049Ab1FQVgR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2011 17:36:17 -0400
-Message-ID: <4DFBC8CA.8020808@gnu.org> (sfid-20110617_233620_788555_9F3E4005)
-Date: Fri, 17 Jun 2011 17:36:10 -0400
-From: Pavel Roskin <proski@gnu.org>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, tsyvarev@ispras.ru,
-	me@bobcopeland.com, mickflemm@gmail.com
-Subject: Re: [PATCH v2] ath5k: free sc->ah in ath5k_deinit_softc
-References: <1308343066-13770-1-git-send-email-linville@tuxdriver.com> <1308343290-13875-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1308343290-13875-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:48359 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751017Ab1F3UQY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2011 16:16:24 -0400
+Received: by mail-bw0-f45.google.com with SMTP id 12so3427386bwd.18
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2011 13:16:23 -0700 (PDT)
+Subject: Re: [PATCH 000/119] staging: brcm80211: more code cleanup and bug
+ fixed
+From: Luciano Coelho <coelho@ti.com>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>
+In-Reply-To: <4E0CB587.3000209@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+	 <BANLkTikPBWvYiNc1rZEwPJTck=AzUsLncA@mail.gmail.com>
+	 <4E0CB587.3000209@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 30 Jun 2011 23:16:19 +0300
+Message-ID: <1309464979.1514.177.camel@cumari> (sfid-20110630_221627_640018_3F0E9330)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/17/2011 04:41 PM, John W. Linville wrote:
-> Nothing else is freeing it, and this mirrors the error handling patch
-> already in ath5k_init_softc.
+Hi Henry,
 
-You mean path, of course.
+On Thu, 2011-06-30 at 10:42 -0700, Henry Ptasinski wrote: 
+> On 06/29/2011 11:29 PM, Rafał Miłecki wrote:
+> > 2011/6/30 Franky Lin<frankyl@broadcom.com>:
+> >> Most of these patches are brcmfmac cleanup.
+> >
+> >
+> > Hm, interesting improvement in your "Release early, release often" strategy.
+> >
+> 
+> Yea, we were waiting for the previous series to get applied.  Not sure 
+> how to make this work better.  Any process suggestions would be appreciated.
 
->   	ath5k_hw_deinit(sc->ah);
-> +	kfree(sc->ah);
->   	free_irq(sc->irq, sc);
+Keep sending them in small batches, I think it is just normal to apply
+the batches one after the other, no need to keep waiting.  If there are
+no conflicts, everything should go smoothly.  And if it doesn't, someone
+will ping you. ;)
 
-Looks good to me.
-
-While at that, ath_ahb_remove() misses ieee80211_free_hw(), which is 
-present in the error handling path in ath_ahb_probe().  I have no AHB 
-devices to test.  Anyone wants to make a (tested) patch?
 
 -- 
-Regards,
-Pavel Roskin
+Cheers,
+Luca.
+
