@@ -1,90 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:48866 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752707Ab1FCIyr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2011 04:54:47 -0400
-Received: by vxi39 with SMTP id 39so1234911vxi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2011 01:54:47 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:44788 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753863Ab1F3I1l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2011 04:27:41 -0400
+To: Dan Carpenter <error27@gmail.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath6kl: implement testmode rx command
+References: <20110627153610.16774.65919.stgit@localhost6.localdomain6>
+	<20110627180609.GZ14591@shale.localdomain>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Thu, 30 Jun 2011 11:27:39 +0300
+In-Reply-To: <20110627180609.GZ14591@shale.localdomain> (Dan Carpenter's message of "Mon\, 27 Jun 2011 21\:06\:09 +0300")
+Message-ID: <87wrg3zptw.fsf@purkki.adurom.net> (sfid-20110630_102744_835599_16EDE013)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTincKD1k1Uq=R8uR-KjExMOErDrOgA@mail.gmail.com>
-References: <BANLkTimnkGyQmEJ2fcowoiv_f+aLm2AQcg@mail.gmail.com>
-	<BANLkTincKD1k1Uq=R8uR-KjExMOErDrOgA@mail.gmail.com>
-Date: Fri, 3 Jun 2011 16:54:46 +0800
-Message-ID: <BANLkTins6quUKYrE9CyzNF6PkP1GECK1cA@mail.gmail.com> (sfid-20110603_105452_176955_008AB335)
-Subject: Re: master-2011-06-01 git tree can't recognize my AR9285 chip.
-From: Matt Chen <machen@novell.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mohammed,
+Dan Carpenter <error27@gmail.com> writes:
 
-2011/6/3 Mohammed Shafi <shafi.wireless@gmail.com>:
-> On Fri, Jun 3, 2011 at 12:13 PM, Matt Chen <machen@novell.com> wrote:
->> Hi all,
->> I git pull the latest version of wireless-testing tree and built whole
->> the kernel and related driver. I found my AR9285 (10ec:002b) can't be
->> recognized, and the ath9k is not loaded automatically. I tried the
->> kernel 2.6.39, it is working right.
+> On Mon, Jun 27, 2011 at 06:36:10PM +0300, Kalle Valo wrote:
 >
-> i am compiling the latest tree, i will try out. any debug messages?
-> sudo modprobe -r ath9k
-> sudo modprobe -v ath9k debug=0xffffffff(you should have enabled
-> ATH_DEBUG and ATH9K_DEBUGFS while compiling the kernel).
-OK, already enabled both and recompiled.
-When load ath9k with debug parameter, it only showed :
-
-linux:/home/linux # modprobe -v ath9k debug=0xfffffffff
-insmod /lib/modules/3.0.0-rc1-wl-0.2.2.2598.1.PTF-pae/kernel/net/wireless/cfg80211.ko
-insmod /lib/modules/3.0.0-rc1-wl-0.2.2.2598.1.PTF-pae/kernel/drivers/net/wireless/ath/ath.ko
-insmod /lib/modules/3.0.0-rc1-wl-0.2.2.2598.1.PTF-pae/kernel/drivers/net/wireless/ath/ath9k/ath9k_hw.ko
-insmod /lib/modules/3.0.0-rc1-wl-0.2.2.2598.1.PTF-pae/kernel/drivers/net/wireless/ath/ath9k/ath9k_common.ko
-insmod /lib/modules/3.0.0-rc1-wl-0.2.2.2598.1.PTF-pae/kernel/net/mac80211/mac80211.ko
-insmod /lib/modules/3.0.0-rc1-wl-0.2.2.2598.1.PTF-pae/kernel/drivers/net/wireless/ath/ath9k/ath9k.ko
-debug=0xfffffffff
-
-
-/var/log/messages:
-Jun  3 16:52:12 linux kernel: [  600.472000] cfg80211: Calling CRDA to
-update world regulatory domain
-
->>
->> Some info as below :
->> 1) linux:/home/linux/git/wireless-testing # git describe
->>    master-2011-06-01
->> 2) linux:/home/linux/git/wireless-testing # lspci -nnk
->>     ....
->>     09:00.0 Network controller [0280]: Atheros Communications Inc.
->> AR9285 Wireless Network Adapter
->>     (PCI-Express) [168c:002b] (rev 01)
->>     ff:00.0 Host bridge [0600]: Intel Corporation Core Processor
->> QuickPath Architecture Generic Non-core Registers
->>     [8086:2c62] (rev 02)
->>     .....
->> --
->> Thanks ~
->> Matt Chen
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+>> +void ar6000_testmode_rx_report_event(struct ar6_softc *ar, void *buf,
+>> +				     int buf_len)
+>> +{
+>> +	kfree(ar->tcmd_rx_report);
+>> +
+>> +	ar->tcmd_rx_report = kmemdup(buf, buf_len, GFP_KERNEL);
+>> +	ar->tcmd_rx_report_len = buf_len;
+>> +
 >
->
->
-> --
-> shafi
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Can this race?  When we use tcmd_rx_report_len we are under lock,
+> but it seems like when we set it here, we're not under lock.
 
+Yes, it can. I'll fix it in v2.
 
+Thanks again for good comments.
 
 -- 
-Thanks ~
-Matt Chen
+Kalle Valo
