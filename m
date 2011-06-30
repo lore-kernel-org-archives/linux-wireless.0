@@ -1,117 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53795 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751518Ab1GQGNB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2011 02:13:01 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 1/2] ath9k: Fix sparse warnings
-Date: Sun, 17 Jul 2011 11:43:02 +0530
-Message-ID: <1310883182-10940-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110717_081307_167071_434C54F7)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:6444 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751358Ab1F3XQq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2011 19:16:46 -0400
+Subject: Re: iwlagn: Problems with Intel Wifi Link 1000 on newer kernels
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Erik Hardesty <ehardesty@gmail.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <BANLkTinEJ_XZcrV-SwRRJ=r1Heo0-YBhfA@mail.gmail.com>
+References: <BANLkTim83iarV-J08JAsVtfLR2ziqLs=iQ@mail.gmail.com>
+	 <20110630095137.GA2666@redhat.com>	<1309443595.25768.1.camel@wwguy-ubuntu>
+	 <BANLkTinEJ_XZcrV-SwRRJ=r1Heo0-YBhfA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 30 Jun 2011 16:12:49 -0700
+Message-ID: <1309475569.26211.3.camel@wwguy-ubuntu> (sfid-20110701_011650_186250_5A7AB9BF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/ath/ath9k/init.c:199:21: warning: context imbalance
-in 'ath9k_reg_rmw' - different lock contexts for basic block
-drivers/net/wireless/ath/ath9k/xmit.c:1175:31: warning: context
-imbalance in 'ath_drain_txq_list' - unexpected unlock
-drivers/net/wireless/ath/ath9k/xmit.c:2047:23: warning: context
-imbalance in 'ath_tx_process_buffer' - unexpected unlock
-drivers/net/wireless/ath/ath9k/ar9003_eeprom.c:3041:24: warning: cast to
-restricted __le32
+On Thu, 2011-06-30 at 16:12 -0700, Erik Hardesty wrote:
+> Forcing iwlwifi-1000-3.ucode results in the same issues. No change in
+> linux 3.0-rc5.
+> 
+> On Thu, Jun 30, 2011 at 9:19 AM, wwguy <wey-yi.w.guy@intel.com> wrote:
+> > On Thu, 2011-06-30 at 02:51 -0700, Stanislaw Gruszka wrote:
+> >> On Fri, Jun 17, 2011 at 01:14:11AM -0500, Erik Hardesty wrote:
+> >> > Having trouble with iwlagn in kernels newer than 2.6.38.
+> >> > I've tried 2.6.39 and 3.0rc3 and both give me the same problem.
+> >> > I have the latest intel firmware installed on the system. Both
+> >> > iwlwifi-1000-3.ucode
+> >> > and iwlwifi-1000-5.ucode are in /lib/firmware
+> >> >
+> >> > Note: 2.6.38 does not exhibit the same issue and works fine.
+> >>
+> >> If there is no other proposition to fix the issue from Intel,
+> >> perhaps you could bisect the problem.
+> >
+> > what if you remove iwlwifi-1000-5.ucode and force to use -3 version of
+> > uCode; are you still seeing the problem with new kernel?
+> >
+then no idea :-(, maybe has to bisect it.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
- drivers/net/wireless/ath/ath9k/init.c          |   25 ++++++++++++++++-------
- drivers/net/wireless/ath/ath9k/xmit.c          |    4 +++
- 3 files changed, 22 insertions(+), 9 deletions(-)
+what exactally the problem you facing, do you have a bugzilla# ?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 1d09f22..d576080 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3038,7 +3038,7 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
- 	case EEP_CHAIN_MASK_REDUCE:
- 		return (pBase->miscConfiguration >> 0x3) & 0x1;
- 	case EEP_ANT_DIV_CTL1:
--		return le32_to_cpu(eep->base_ext1.ant_div_control);
-+		return eep->base_ext1.ant_div_control;
- 	default:
- 		return 0;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index ce29717..dceaa4a 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -196,6 +196,19 @@ static unsigned int ath9k_ioread32(void *hw_priv, u32 reg_offset)
- 	return val;
- }
- 
-+static unsigned int __ath9k_reg_rmw(struct ath_softc *sc, u32 reg_offset,
-+				    u32 set, u32 clr)
-+{
-+	u32 val;
-+
-+	val = ioread32(sc->mem + reg_offset);
-+	val &= ~clr;
-+	val |= set;
-+	iowrite32(val, sc->mem + reg_offset);
-+
-+	return val;
-+}
-+
- static unsigned int ath9k_reg_rmw(void *hw_priv, u32 reg_offset, u32 set, u32 clr)
- {
- 	struct ath_hw *ah = (struct ath_hw *) hw_priv;
-@@ -204,16 +217,12 @@ static unsigned int ath9k_reg_rmw(void *hw_priv, u32 reg_offset, u32 set, u32 cl
- 	unsigned long uninitialized_var(flags);
- 	u32 val;
- 
--	if (ah->config.serialize_regmode == SER_REG_MODE_ON)
-+	if (ah->config.serialize_regmode == SER_REG_MODE_ON) {
- 		spin_lock_irqsave(&sc->sc_serial_rw, flags);
--
--	val = ioread32(sc->mem + reg_offset);
--	val &= ~clr;
--	val |= set;
--	iowrite32(val, sc->mem + reg_offset);
--
--	if (ah->config.serialize_regmode == SER_REG_MODE_ON)
-+		val = __ath9k_reg_rmw(sc, reg_offset, set, clr);
- 		spin_unlock_irqrestore(&sc->sc_serial_rw, flags);
-+	} else
-+		val = __ath9k_reg_rmw(sc, reg_offset, set, clr);
- 
- 	return val;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 9283440..7810b92 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1147,6 +1147,8 @@ static bool bf_is_ampdu_not_probing(struct ath_buf *bf)
- 
- static void ath_drain_txq_list(struct ath_softc *sc, struct ath_txq *txq,
- 			       struct list_head *list, bool retry_tx)
-+	__releases(txq->axq_lock)
-+	__acquires(txq->axq_lock)
- {
- 	struct ath_buf *bf, *lastbf;
- 	struct list_head bf_head;
-@@ -2035,6 +2037,8 @@ static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
- static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
- 				  struct ath_tx_status *ts, struct ath_buf *bf,
- 				  struct list_head *bf_head)
-+	__releases(txq->axq_lock)
-+	__acquires(txq->axq_lock)
- {
- 	int txok;
- 
--- 
-1.7.6
+Thanks
+Wey
+> >
+> >
+> >
+
 
