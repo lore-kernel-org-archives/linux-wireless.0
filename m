@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1910 "EHLO mms1.broadcom.com"
+Received: from purkki.adurom.net ([80.68.90.206]:45531 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755962Ab1F2Xsh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:48:37 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 018/119] staging: brcm80211: remove macro definition
- DRV_MODULE_NAME
-Date: Wed, 29 Jun 2011 16:46:42 -0700
-Message-ID: <1309391303-22741-19-git-send-email-frankyl@broadcom.com> (sfid-20110630_014851_640087_82E13BA6)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+	id S1751499Ab1F3H77 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2011 03:59:59 -0400
+To: Greg KH <greg@kroah.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath6kl: implement testmode rx command
+References: <20110627153610.16774.65919.stgit@localhost6.localdomain6>
+	<20110628201836.GA18749@kroah.com> <20110628201915.GA19616@kroah.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Thu, 30 Jun 2011 10:59:55 +0300
+In-Reply-To: <20110628201915.GA19616@kroah.com> (Greg KH's message of "Tue\, 28 Jun 2011 13\:19\:15 -0700")
+Message-ID: <871uyb21hg.fsf@purkki.adurom.net> (sfid-20110630_100001_952315_7A316A19)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+Greg KH <greg@kroah.com> writes:
 
-The macro definition DRV_MODULE_NAME has exactly the same value as
-KBUILD_MODNAME so using that instead now.
+> On Tue, Jun 28, 2011 at 01:18:36PM -0700, Greg KH wrote:
+>> On Mon, Jun 27, 2011 at 06:36:10PM +0300, Kalle Valo wrote:
+>> > Add new testmode command for retrieving rx reports from firmware.
+>> > 
+>> > Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+>> 
+>> This patch breaks the build.
+>> 
+>> Please test your patches before sending them out, it causes lots of
+>> problems and annoys me when you don't.
+>
+> Oh, and the error is:
+>
+> ERROR: "ar6000_testmode_rx_report_event" [drivers/staging/ath6kl/ath6kl.ko] undefined!
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+I did test the patch but only with CONFIG_NL80211_TESTMODE enabled but
+forgot to test the case when testmode is disabled. The linking fails
+in that case.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index dfbbda7..d09706b 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -180,8 +180,6 @@ MODULE_DESCRIPTION("Broadcom 802.11n wireless LAN fullmac driver.");
- MODULE_SUPPORTED_DEVICE("Broadcom 802.11n WLAN fullmac cards");
- MODULE_LICENSE("Dual BSD/GPL");
- 
--#define DRV_MODULE_NAME "brcmfmac"
--
- /* Linux wireless extension support */
- #if defined(CONFIG_WIRELESS_EXT)
- #include <wl_iw.h>
-@@ -1490,7 +1488,7 @@ static void dhd_ethtool_get_drvinfo(struct net_device *net,
- {
- 	dhd_info_t *dhd = *(dhd_info_t **) netdev_priv(net);
- 
--	sprintf(info->driver, DRV_MODULE_NAME);
-+	sprintf(info->driver, KBUILD_MODNAME);
- 	sprintf(info->version, "%lu", dhd->pub.drv_version);
- 	sprintf(info->fw_version, "%s", wl_cfg80211_get_fwname());
- 	sprintf(info->bus_info, "%s", dev_name(&wl_cfg80211_get_sdio_func()->dev));
+I'll send v2 which will fix this. I'm sorry for all the trouble.
+
 -- 
-1.7.1
-
-
+Kalle Valo
