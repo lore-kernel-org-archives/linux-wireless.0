@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:51513 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932123Ab1FVCMt convert rfc822-to-8bit (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:38537 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754704Ab1F3A5g convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 22:12:49 -0400
-Received: by qyk29 with SMTP id 29so2447676qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 19:12:48 -0700 (PDT)
+	Wed, 29 Jun 2011 20:57:36 -0400
+Received: by gwaa18 with SMTP id a18so679396gwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2011 17:57:35 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <BANLkTinD=zRLioxjruqPCMa1hkG4nUxBEw@mail.gmail.com>
-References: <776913.88107.qm@web161609.mail.bf1.yahoo.com> <4DC0312A.4040303@lwfinger.net>
- <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com> <4DC0669E.4040100@lwfinger.net>
- <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com> <4DC06BF3.6070208@lwfinger.net>
- <20110621124954.GA8462@internetdog.org> <4E011644.3070906@lwfinger.net>
- <20110622010057.GA12123@internetdog.org> <BANLkTinD=zRLioxjruqPCMa1hkG4nUxBEw@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Wed, 22 Jun 2011 04:12:28 +0200
-Message-ID: <BANLkTim_i+qrhHsZwUKQ=DcXuk+uJ3k3Wg@mail.gmail.com> (sfid-20110622_041257_712005_1EECB0E6)
-Subject: Re: r8712u driver for the rtl8192su chip.
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: ali@internetdog.org, Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <BLU158-w3443764A60DE4B497231DB87570@phx.gbl>
+References: <BLU158-w3443764A60DE4B497231DB87570@phx.gbl>
+Date: Thu, 30 Jun 2011 08:57:35 +0800
+Message-ID: <BANLkTinhc2QAgWTk9tur9Y-m2i3tDhvXOQ@mail.gmail.com> (sfid-20110630_025744_670002_680611CA)
+Subject: Re: [ath9k-devel] STBC functionality details request
+From: Adrian Chadd <adrian@freebsd.org>
+To: Fred Matthews <fredmm@hotmail.co.uk>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 22, 2011 at 4:03 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> Ali,
->
-> On Wed, Jun 22, 2011 at 11:00, Ali Bahar <ali@internetdog.org> wrote:
->> On Tue, Jun 21, 2011 at 05:08:04PM -0500, Larry Finger wrote:
->>> On 06/21/2011 07:49 AM, Ali Bahar wrote:
->>
->>> >this is more of a quick FYI, regarding Staging's r8712u driver.
->>
->>> >root@hashbang Tue Jun 21 18:30:06 ~$ iwconfig wlan2 essid "h55m"
->>> >Error for wireless request "Set ESSID" (8B1A) :
->>> >     SET failed on device wlan2 ; Operation not permitted.
->>> >root@hashbang Tue Jun 21 18:30:47 ~$ uname -r
->>
->> How is root unprivileged? The shell-prompt shows the user.
->
-> In general, root prompts have a '#' at the end of the prompt, this one
-> has a '$' which is indicative of a non-privileged user.
+I think things are a bit confusing, but here goes.
 
-I'm pretty sure that is not true for Bash. Perhaps for csh or Dash.
+The earlier NICs only support either RX STBC (pre ar9280?) or TX
+1-stream STBC (ar9280 or above). Multi-stream STBC isn't in any of the
+AR9xxx NICs. It may be in the AR9287; it may be in the AR9300/AR9400.
+I've not looked.
 
->
-> Thanks,
->
-> --
-> Julian Calaby
->
-> Email: julian.calaby@gmail.com
-> Profile: http://www.google.com/profiles/julian.calaby/
-> .Plan: http://sites.google.com/site/juliancalaby/
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I bet what you're finding is:
+
+* with STBC enabled, for single stream rates, it's tx'ing using STBC.
+It just sets a bit in the TX descriptor.
+* with STBC enabled, for multi-stream rates, it's not setting the STBC
+TX bit and it's instead sending it as a 2 stream packet w/out STBC.
+
+The AR9280 is not a one stream NIC - it's a two stream TX/RX NIC.
+(Unless you're using the AR9281 - which is an AR9280 1T2R stream
+device.) The AR9285 is a 1x1 stream device. The AR9287 is a 2x2 stream
+device.
+
+HTH,
 
 
+Adrian
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+> I am using STBC (Space Time Block Coding) 1 stream NICs like the AR9280.I would be very grateful someone can kindly advise on how exactly STBC(transmits multiple copies of a data across each of the antennas) works in ath9k.
+> I ask this because when I enable STBC 1-stream, the driver seems to uses Space division multiplexing (can this be disabled/enabled?), since the rate is over 150Mbps.
+> When is STBC activated ?, ...Does Minstrel/ath9k rate adaptation mechanism find first check if Spatial multiplexing is better, if not uses STBC ?
+> Thank you for your time
+> _______________________________________________
+> ath9k-devel mailing list
+> ath9k-devel@lists.ath9k.org
+> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+>
