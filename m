@@ -1,84 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51487 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751941Ab1FBQbX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 12:31:23 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/4] compat: rename CONFIG_COMPAT_KERNEL_
-Date: Thu,  2 Jun 2011 18:31:03 +0200
-Message-Id: <1307032264-14663-4-git-send-email-hauke@hauke-m.de> (sfid-20110602_183127_733192_8C65F832)
-In-Reply-To: <1307032264-14663-1-git-send-email-hauke@hauke-m.de>
-References: <1307032264-14663-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:52057 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751431Ab1F3G3w convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2011 02:29:52 -0400
+Received: by pzk9 with SMTP id 9so1440875pzk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2011 23:29:51 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+Date: Thu, 30 Jun 2011 08:29:51 +0200
+Message-ID: <BANLkTikPBWvYiNc1rZEwPJTck=AzUsLncA@mail.gmail.com> (sfid-20110630_082959_415699_22559368)
+Subject: Re: [PATCH 000/119] staging: brcm80211: more code cleanup and bug fixed
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Franky Lin <frankyl@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CONFIG_COMPAT_KERNEL_XX was renamed to CONFIG_COMPAT_KERNEL_26XX in
-compat-wireless to support kernel 3.XX, do the same in compat.
+2011/6/30 Franky Lin <frankyl@broadcom.com>:
+> Most of these patches are brcmfmac cleanup.
 
-Add to compat-3.0-stable
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/Makefile |   38 +++++++++++++++++++-------------------
- 1 files changed, 19 insertions(+), 19 deletions(-)
+Hm, interesting improvement in your "Release early, release often" strategy.
 
-diff --git a/compat/Makefile b/compat/Makefile
-index ddfd88d..eb3f15c 100644
---- a/compat/Makefile
-+++ b/compat/Makefile
-@@ -6,31 +6,31 @@ obj-$(CONFIG_COMPAT_FIRMWARE_CLASS) += compat_firmware_class.o
- compat-y += main.o
- 
- # Compat kernel compatibility code
--compat-$(CONFIG_COMPAT_KERNEL_14) += compat-2.6.14.o
--compat-$(CONFIG_COMPAT_KERNEL_18) += compat-2.6.18.o
--compat-$(CONFIG_COMPAT_KERNEL_19) += compat-2.6.19.o
--compat-$(CONFIG_COMPAT_KERNEL_21) += compat-2.6.21.o
--compat-$(CONFIG_COMPAT_KERNEL_22) += compat-2.6.22.o
--compat-$(CONFIG_COMPAT_KERNEL_23) += compat-2.6.23.o
--compat-$(CONFIG_COMPAT_KERNEL_24) += compat-2.6.24.o
--compat-$(CONFIG_COMPAT_KERNEL_25) += \
-+compat-$(CONFIG_COMPAT_KERNEL_2614) += compat-2.6.14.o
-+compat-$(CONFIG_COMPAT_KERNEL_2618) += compat-2.6.18.o
-+compat-$(CONFIG_COMPAT_KERNEL_2619) += compat-2.6.19.o
-+compat-$(CONFIG_COMPAT_KERNEL_2621) += compat-2.6.21.o
-+compat-$(CONFIG_COMPAT_KERNEL_2622) += compat-2.6.22.o
-+compat-$(CONFIG_COMPAT_KERNEL_2623) += compat-2.6.23.o
-+compat-$(CONFIG_COMPAT_KERNEL_2624) += compat-2.6.24.o
-+compat-$(CONFIG_COMPAT_KERNEL_2625) += \
- 	compat-2.6.25.o \
- 	pm_qos_params.o
- 
--compat-$(CONFIG_COMPAT_KERNEL_26) += compat-2.6.26.o
--compat-$(CONFIG_COMPAT_KERNEL_27) += compat-2.6.27.o
--compat-$(CONFIG_COMPAT_KERNEL_28) += compat-2.6.28.o
--compat-$(CONFIG_COMPAT_KERNEL_29) += compat-2.6.29.o
--compat-$(CONFIG_COMPAT_KERNEL_32) += compat-2.6.32.o
--compat-$(CONFIG_COMPAT_KERNEL_33) += compat-2.6.33.o
--compat-$(CONFIG_COMPAT_KERNEL_35) += compat-2.6.35.o
--compat-$(CONFIG_COMPAT_KERNEL_36) += \
-+compat-$(CONFIG_COMPAT_KERNEL_2626) += compat-2.6.26.o
-+compat-$(CONFIG_COMPAT_KERNEL_2627) += compat-2.6.27.o
-+compat-$(CONFIG_COMPAT_KERNEL_2628) += compat-2.6.28.o
-+compat-$(CONFIG_COMPAT_KERNEL_2629) += compat-2.6.29.o
-+compat-$(CONFIG_COMPAT_KERNEL_2632) += compat-2.6.32.o
-+compat-$(CONFIG_COMPAT_KERNEL_2633) += compat-2.6.33.o
-+compat-$(CONFIG_COMPAT_KERNEL_2635) += compat-2.6.35.o
-+compat-$(CONFIG_COMPAT_KERNEL_2636) += \
- 	compat-2.6.36.o \
- 	kfifo.o
- 
--compat-$(CONFIG_COMPAT_KERNEL_37) += compat-2.6.37.o
--compat-$(CONFIG_COMPAT_KERNEL_38) += compat-2.6.38.o
--compat-$(CONFIG_COMPAT_KERNEL_39) += \
-+compat-$(CONFIG_COMPAT_KERNEL_2637) += compat-2.6.37.o
-+compat-$(CONFIG_COMPAT_KERNEL_2638) += compat-2.6.38.o
-+compat-$(CONFIG_COMPAT_KERNEL_2639) += \
- 	compat-2.6.39.o \
- 	kstrtox.o
- 
--- 
-1.7.4.1
 
+---------- Wiadomość przekazana dalej ----------
+Od: Henry Ptasinski <henryp@broadcom.com>
+Data: 1 czerwca 2011 18:23
+Temat: Re: [PATCH 01/83] staging: brcm80211: removed unused Broadcom
+specific ioctls codes
+
+On 06/01/2011 04:59 AM, Rafał Miłecki wrote:
+>
+> 2011/6/1 Roland Vossen<rvossen@broadcom.com>:
+>>
+>> Code cleanup. Removal of code that is not invoked.
+>
+> Have you heard of "Release early, release often"? It's something, we
+> like here...
+
+These are all changes that piled up during the merge window.
+
+We had some issues previously with patch dependencies when sending
+patches out early and often, so we're trying to organize the patches a
+little better.  Perhaps we went a little to far with this set.  We'll
+try to find a better balance in the future.
