@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:55063 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753411Ab1FVOHk convert rfc822-to-8bit (ORCPT
+Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:56336 "HELO
+	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752926Ab1F3UAU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 10:07:40 -0400
-Received: by iyb12 with SMTP id 12so691524iyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 07:07:40 -0700 (PDT)
+	Thu, 30 Jun 2011 16:00:20 -0400
+Message-ID: <4E0CD5C4.7010702@boundarydevices.com> (sfid-20110630_220024_147853_A0FDC8A1)
+Date: Thu, 30 Jun 2011 13:00:04 -0700
+From: Troy Kisky <troy.kisky@boundarydevices.com>
 MIME-Version: 1.0
-In-Reply-To: <20110621220510.GG2628@joana>
-References: <1308592212-5755-1-git-send-email-aloisio.almeida@openbossa.org>
- <1308592212-5755-4-git-send-email-aloisio.almeida@openbossa.org> <20110621220510.GG2628@joana>
-From: Aloisio Almeida <aloisio.almeida@openbossa.org>
-Date: Wed, 22 Jun 2011 11:07:20 -0300
-Message-ID: <BANLkTimo9r8jyMn76V9+9+AqrYekRkF8Xw@mail.gmail.com> (sfid-20110622_160744_903836_3019E55D)
-Subject: Re: [RFC][PATCH v2 3/7] NFC: add nfc generic netlink interface
-To: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	sameo@linux.intel.com, johannes@sipsolutions.net,
-	lauro.venancio@openbossa.org, marcio.macedo@openbossa.org,
-	Waldemar.Rymarkiewicz@tieto.com
+To: "Krakowski, Oz" <ozk@ti.com>
+CC: mangesh gadre <mangeshgadre07@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: WL1271: WLAN_IRQ not working
+References: <4E0942CA.9010402@boundarydevices.com> <BANLkTimKSfgE7SOPVDhvOcDB5ox6uyPc_Q@mail.gmail.com> <4E0CC8FC.9050906@boundarydevices.com> <BANLkTi=TO1gVRz7h-tOH2Cx7yiNVr=enng@mail.gmail.com>
+In-Reply-To: <BANLkTi=TO1gVRz7h-tOH2Cx7yiNVr=enng@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gustavo,
-
-On Tue, Jun 21, 2011 at 7:05 PM, Gustavo F. Padovan
-<padovan@profusion.mobi> wrote:
->>  static int __init nfc_init(void)
->>  {
->> +     int rc;
->> +
->>       printk(KERN_INFO "NFC Core ver %s\n", VERSION);
+On 6/30/2011 12:20 PM, Krakowski, Oz wrote:
+> Troy,
+> On Thu, Jun 30, 2011 at 2:05 PM, Troy Kisky
+> <troy.kisky@boundarydevices.com> wrote:
+>> On 6/29/2011 11:24 PM, mangesh gadre wrote:
+>>> Hi,
+>>>
+>>> Please check if your wifi enable pin is in right state. secondly check if
+>>> regulator section of your chip is actually powering up wifi internal core .
+>>> check your circuit against standard ref circuit.
+>>> I have seen similar issue and there was some resistor missing in feedback
+>>> path of volatge regulator output path from chip. Most probably wifi section
+>>> of your chip is not powered up.
 >>
->> -     return class_register(&nfc_class);
->> +     rc = class_register(&nfc_class);
->> +     if (rc)
->> +             goto err;
->
-> Just return rc here and get rid of the label.
->
-ok
+>> I think the problem is solved, but can you point me to a "standard ref
+>> circuit" for TiWiR2. Maybe, I can avoid future problems.
+> 
+> For the benefit of everyone, can you share what was the issue?
+> 
+> Thanks,
+> Oz.
 
->> +/**
->> + * nfc_genl_exit() - Deinitialize netlink interface
->> + *
->> + * This exit function unregisters the nfc netlink family.
->> + */
->> +void nfc_genl_exit(void)
->
-> You may want __exit here.
+I think missing level shifters were the problem. It will be a little
+while before I can test revised hardware though.
 
-The nfc_genl_exit() is called in  '__init nfc_init(void)' if any error
-occurs. In that case we will have an __exit code inside an __init
-code, resulting in a section mismatch.
-
-Aloisio
+Troy
