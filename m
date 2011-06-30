@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:27652 "EHLO mga09.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:34640 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754407Ab1FRQFb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2011 12:05:31 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 17/25] iwlagn: fix misplaced bracket
-Date: Sat, 18 Jun 2011 08:34:23 -0700
-Message-Id: <1308411271-26093-18-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110618_180608_991425_731C2E94)
-In-Reply-To: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1308411271-26093-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1751027Ab1F3QAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2011 12:00:05 -0400
+Subject: Re: [PATCH 18/19 v2] iwlwifi: remove unnecessary read of
+ PCI_CAP_ID_EXP
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Jon Mason <jdmason@kudzu.us>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20110630154246.GA11407@kudzu.us>
+References: <1309196969-16348-1-git-send-email-jdmason@kudzu.us>
+	 <20110630154246.GA11407@kudzu.us>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 30 Jun 2011 08:56:08 -0700
+Message-ID: <1309449368.25768.12.camel@wwguy-ubuntu> (sfid-20110630_180025_190266_0A1F5500)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Thu, 2011-06-30 at 08:42 -0700, Jon Mason wrote:
+> The PCIE capability offset is saved during PCI bus walking.  It will
+> remove an unnecessary search in the PCI configuration space if this
+> value is referenced instead of reacquiring it.
+> 
+> Signed-off-by: Jon Mason <jdmason@kudzu.us>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-pci.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+compile and work for me now
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index bec98bd..1382863 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3488,7 +3488,9 @@ int iwl_probe(void *bus_specific, struct iwl_bus_ops *bus_ops,
- 	hw = iwl_alloc_all(cfg);
- 	if (!hw) {
- 		err = -ENOMEM;
--		goto out;	}
-+		goto out;
-+	}
-+
- 	priv = hw->priv;
- 
- 	priv->bus.priv = priv;
--- 
-1.7.0.4
+Wey
 
