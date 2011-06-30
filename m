@@ -1,47 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:49316 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752995Ab1F3Pmx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2011 11:42:53 -0400
-Received: by iyb12 with SMTP id 12so2016833iyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2011 08:42:53 -0700 (PDT)
-Date: Thu, 30 Jun 2011 10:42:47 -0500
-From: Jon Mason <jdmason@kudzu.us>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 18/19 v2] iwlwifi: remove unnecessary read of PCI_CAP_ID_EXP
-Message-ID: <20110630154246.GA11407@kudzu.us> (sfid-20110630_174303_614139_1EC45B34)
-References: <1309196969-16348-1-git-send-email-jdmason@kudzu.us>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1309196969-16348-1-git-send-email-jdmason@kudzu.us>
+Received: from mail.perches.com ([173.55.12.10]:3354 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750725Ab1F3E2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2011 00:28:44 -0400
+Subject: RFC: Add __dynamic_dev_dbg
+From: Joe Perches <joe@perches.com>
+To: Aloisio Almeida <aloisio.almeida@openbossa.org>
+Cc: Jason Baron <jbaron@redhat.com>,
+	Marcel Holtmann <marcel@holtmann.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, sameo@linux.intel.com,
+	johannes@sipsolutions.net, lauro.venancio@openbossa.org,
+	marcio.macedo@openbossa.org, Waldemar.Rymarkiewicz@tieto.com,
+	padovan@profusion.mobi, rdunlap@xenotime.net
+In-Reply-To: <CAEsZsEgfKPtsXKGiAV3QuH=YESyS+GHnsNjauVZV==AN94fxug@mail.gmail.com>
+References: <1309285246-8495-1-git-send-email-aloisio.almeida@openbossa.org>
+	 <1309285246-8495-2-git-send-email-aloisio.almeida@openbossa.org>
+	 <1309292325.29598.9.camel@Joe-Laptop> <1309311096.2208.33.camel@aeonflux>
+	 <1309312164.29598.53.camel@Joe-Laptop> <1309370457.2208.48.camel@aeonflux>
+	 <BANLkTinospg_dhTC8Tcok3kqk9gOryG6eA@mail.gmail.com>
+	 <1309391163.29598.92.camel@Joe-Laptop>
+	 <CAEsZsEgfKPtsXKGiAV3QuH=YESyS+GHnsNjauVZV==AN94fxug@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 29 Jun 2011 21:28:42 -0700
+Message-ID: <1309408122.1726.13.camel@Joe-Laptop> (sfid-20110630_062847_944107_B0FF7DB4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The PCIE capability offset is saved during PCI bus walking.  It will
-remove an unnecessary search in the PCI configuration space if this
-value is referenced instead of reacquiring it.
+On Thu, 2011-06-30 at 00:26 -0300, Aloisio Almeida wrote:
+> It's stored but not retrieved. If you check lib/dynamic_debug.c you
+> see that only __dynamic_pr_debug() (called by dynamic_pr_debug() )
+> adds such information on prints. The dev_printk() does not check
+> _DPRINTK_FLAGS_INCL_* flags.
 
-Signed-off-by: Jon Mason <jdmason@kudzu.us>
+That seems enough easy to fix.
+
+Jason?  How does this look?
+
 ---
- drivers/net/wireless/iwlwifi/iwl-pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
-index 7328fbf..068b9ae 100644
---- a/drivers/net/wireless/iwlwifi/iwl-pci.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
-@@ -93,7 +93,7 @@ static u16 iwl_pciexp_link_ctrl(struct iwl_bus *bus)
- 	u16 pci_lnk_ctl;
- 	struct pci_dev *pci_dev = IWL_BUS_GET_PCI_DEV(bus);
+ drivers/base/core.c           |    5 +++--
+ include/linux/device.h        |    5 +++++
+ include/linux/dynamic_debug.h |   10 ++++++++--
+ lib/dynamic_debug.c           |   38 ++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 54 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index bc8729d..82c8654 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -1764,8 +1764,8 @@ void device_shutdown(void)
  
--	pos = pci_find_capability(pci_dev, PCI_CAP_ID_EXP);
-+	pos = pci_pcie_cap(pci_dev);
- 	pci_read_config_word(pci_dev, pos + PCI_EXP_LNKCTL, &pci_lnk_ctl);
- 	return pci_lnk_ctl;
+ #ifdef CONFIG_PRINTK
+ 
+-static int __dev_printk(const char *level, const struct device *dev,
+-			struct va_format *vaf)
++int __dev_printk(const char *level, const struct device *dev,
++		 struct va_format *vaf)
+ {
+ 	if (!dev)
+ 		return printk("%s(NULL device *): %pV", level, vaf);
+@@ -1773,6 +1773,7 @@ static int __dev_printk(const char *level, const struct device *dev,
+ 	return printk("%s%s %s: %pV",
+ 		      level, dev_driver_string(dev), dev_name(dev), vaf);
  }
--- 
-1.7.5.4
++EXPORT_SYMBOL(__dev_printk);
+ 
+ int dev_printk(const char *level, const struct device *dev,
+ 	       const char *fmt, ...)
+diff --git a/include/linux/device.h b/include/linux/device.h
+index e4f62d8..53711f2 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -785,6 +785,8 @@ extern const char *dev_driver_string(const struct device *dev);
+ 
+ #ifdef CONFIG_PRINTK
+ 
++extern int __dev_printk(const char *level, const struct device *dev,
++			struct va_format *vaf);
+ extern int dev_printk(const char *level, const struct device *dev,
+ 		      const char *fmt, ...)
+ 	__attribute__ ((format (printf, 3, 4)));
+@@ -805,6 +807,9 @@ extern int _dev_info(const struct device *dev, const char *fmt, ...)
+ 
+ #else
+ 
++static inline int __dev_printk(const char *level, const struct device *dev,
++			       struct va_format *vaf)
++	 { return 0; }
+ static inline int dev_printk(const char *level, const struct device *dev,
+ 		      const char *fmt, ...)
+ 	__attribute__ ((format (printf, 3, 4)));
+diff --git a/include/linux/dynamic_debug.h b/include/linux/dynamic_debug.h
+index e747ecd..bdf1531 100644
+--- a/include/linux/dynamic_debug.h
++++ b/include/linux/dynamic_debug.h
+@@ -47,6 +47,13 @@ extern int ddebug_remove_module(const char *mod_name);
+ extern int __dynamic_pr_debug(struct _ddebug *descriptor, const char *fmt, ...)
+ 	__attribute__ ((format (printf, 2, 3)));
+ 
++struct device;
++
++extern int __dynamic_dev_dbg(struct _ddebug *descriptor,
++			     const struct device *dev,
++			     const char *fmt, ...)
++	__attribute__ ((format (printf, 3, 4)));
++
+ #define dynamic_pr_debug(fmt, ...) do {					\
+ 	static struct _ddebug descriptor				\
+ 	__used								\
+@@ -57,7 +64,6 @@ extern int __dynamic_pr_debug(struct _ddebug *descriptor, const char *fmt, ...)
+ 		__dynamic_pr_debug(&descriptor, pr_fmt(fmt), ##__VA_ARGS__); \
+ 	} while (0)
+ 
+-
+ #define dynamic_dev_dbg(dev, fmt, ...) do {				\
+ 	static struct _ddebug descriptor				\
+ 	__used								\
+@@ -65,7 +71,7 @@ extern int __dynamic_pr_debug(struct _ddebug *descriptor, const char *fmt, ...)
+ 	{ KBUILD_MODNAME, __func__, __FILE__, fmt, __LINE__,		\
+ 		_DPRINTK_FLAGS_DEFAULT };				\
+ 	if (unlikely(descriptor.enabled))				\
+-		dev_printk(KERN_DEBUG, dev, fmt, ##__VA_ARGS__);	\
++		__dynamic_dev_dbg(&descriptor, dev, fmt, ##__VA_ARGS__);	\
+ 	} while (0)
+ 
+ #else
+diff --git a/lib/dynamic_debug.c b/lib/dynamic_debug.c
+index 75ca78f..5c5f8f9 100644
+--- a/lib/dynamic_debug.c
++++ b/lib/dynamic_debug.c
+@@ -30,6 +30,7 @@
+ #include <linux/jump_label.h>
+ #include <linux/hardirq.h>
+ #include <linux/sched.h>
++#include <linux/device.h>
+ 
+ extern struct _ddebug __start___verbose[];
+ extern struct _ddebug __stop___verbose[];
+@@ -456,6 +457,43 @@ int __dynamic_pr_debug(struct _ddebug *descriptor, const char *fmt, ...)
+ }
+ EXPORT_SYMBOL(__dynamic_pr_debug);
+ 
++int __dynamic_dev_dbg(struct _ddebug *descriptor,
++		      const struct device *dev, const char *fmt, ...)
++{
++	struct va_format vaf;
++	va_list args;
++	int res;
++
++	BUG_ON(!descriptor);
++	BUG_ON(!fmt);
++
++	va_start(args, fmt);
++
++	vaf.fmt = fmt;
++	vaf.va = &args;
++
++	res = printk(KERN_DEBUG);
++	if (descriptor->flags & _DPRINTK_FLAGS_INCL_TID) {
++		if (in_interrupt())
++			res += printk(KERN_CONT "<intr> ");
++		else
++			res += printk(KERN_CONT "[%d] ", task_pid_vnr(current));
++	}
++	if (descriptor->flags & _DPRINTK_FLAGS_INCL_MODNAME)
++		res += printk(KERN_CONT "%s:", descriptor->modname);
++	if (descriptor->flags & _DPRINTK_FLAGS_INCL_FUNCNAME)
++		res += printk(KERN_CONT "%s:", descriptor->function);
++	if (descriptor->flags & _DPRINTK_FLAGS_INCL_LINENO)
++		res += printk(KERN_CONT "%d ", descriptor->lineno);
++
++	res += __dev_printk("", dev, &vaf);
++
++	va_end(args);
++
++	return res;
++}
++EXPORT_SYMBOL(__dynamic_dev_dbg);
++
+ static __initdata char ddebug_setup_string[1024];
+ static __init int ddebug_setup_query(char *str)
+ {
+
 
