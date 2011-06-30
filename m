@@ -1,133 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2081 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758065Ab1F2XtW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 19:49:22 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 038/119] staging: brcm80211: remove extern function
- prototypes from c files
-Date: Wed, 29 Jun 2011 16:47:02 -0700
-Message-ID: <1309391303-22741-39-git-send-email-frankyl@broadcom.com> (sfid-20110630_015230_436632_5A9DC9D6)
-In-Reply-To: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:51123 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758598Ab1F3I1U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2011 04:27:20 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 5so1995448wwe.1
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2011 01:27:19 -0700 (PDT)
+From: Florian Fainelli <florian@openwrt.org>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [RFC v3 12/13] bcm47xx: add support for bcma bus
+Date: Thu, 30 Jun 2011 10:31:30 +0200
+Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	linux-mips@linux-mips.org, mb@bu3sch.de, george@znau.edu.ua,
+	arend@broadcom.com, b43-dev@lists.infradead.org,
+	bernhardloos@googlemail.com, arnd@arndb.de,
+	julian.calaby@gmail.com, sshtylyov@mvista.com
+References: <1309385518-12097-1-git-send-email-hauke@hauke-m.de> <1309385518-12097-13-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1309385518-12097-13-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201106301031.30524.florian@openwrt.org> (sfid-20110630_102725_610756_C4758B0B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+On Thursday 30 June 2011 00:11:57 Hauke Mehrtens wrote:
+> This patch add support for the bcma bus. Broadcom uses only Mips 74K
+> CPUs on the new SoC and on the old ons using ssb bus there are no Mips
+> 74K CPUs.
+> 
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  arch/mips/bcm47xx/Kconfig                    |   13 ++++++
+>  arch/mips/bcm47xx/gpio.c                     |   22 +++++++++++
+>  arch/mips/bcm47xx/nvram.c                    |   10 +++++
+>  arch/mips/bcm47xx/serial.c                   |   29 ++++++++++++++
+>  arch/mips/bcm47xx/setup.c                    |   53
+> +++++++++++++++++++++++++- arch/mips/bcm47xx/time.c                     | 
+>   5 ++
+>  arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |    8 ++++
+>  arch/mips/include/asm/mach-bcm47xx/gpio.h    |   41 ++++++++++++++++++++
+>  drivers/watchdog/bcm47xx_wdt.c               |   11 +++++
+>  9 files changed, 190 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/mips/bcm47xx/Kconfig b/arch/mips/bcm47xx/Kconfig
+> index 443d918..85ca1f5 100644
+> --- a/arch/mips/bcm47xx/Kconfig
+> +++ b/arch/mips/bcm47xx/Kconfig
+> @@ -15,4 +15,17 @@ config BCM47XX_SSB
+> 
+>  	 This will generate an image with support for SSB and MIPS32 R2
+> instruction set.
+> 
+> +config BCM47XX_BCMA
+> +	bool "SSB Support for Broadcom BCM47XX"
 
-It is not recommended to specify function prototypes in c sources
-using the extern keyword. Several occurrences have been removed or
-placed in a header file or simply removed as it was already present
-in a header file.
-
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd.h       |    6 ++++++
- drivers/staging/brcm80211/brcmfmac/dhd_cdc.c   |    2 --
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c |   14 +++-----------
- drivers/staging/brcm80211/brcmfmac/dhd_proto.h |    5 +++++
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |    3 ---
- 5 files changed, 14 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index 4bedf41..4fcdf9d 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -1021,6 +1021,12 @@ extern int dhd_bus_start(dhd_pub_t *dhdp);
- extern void dhd_wait_for_event(dhd_pub_t *dhd, bool * lockvar);
- extern void dhd_wait_event_wakeup(dhd_pub_t *dhd);
- 
-+#ifdef PKT_FILTER_SUPPORT
-+extern void dhd_pktfilter_offload_set(dhd_pub_t *dhd, char *arg);
-+extern void dhd_pktfilter_offload_enable(dhd_pub_t *dhd, char *arg, int enable,
-+					 int master_mode);
-+#endif
-+
- #ifdef BCMDBG
- #define ASSERT(exp) \
- 	  do { if (!(exp)) osl_assert(#exp, __FILE__, __LINE__); } while (0)
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c b/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-index c77c86c..1d94438 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-@@ -84,8 +84,6 @@ struct bdc_header {
- int wifi_get_mac_addr(unsigned char *buf);
- #endif
- 
--extern int dhd_preinit_ioctls(dhd_pub_t *dhd);
--
- /* Packet alignment for most efficient SDIO (can change based on platform) */
- #ifndef DHD_SDALIGN
- #define DHD_SDALIGN	32
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index f80295e..ed4a296 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -32,6 +32,9 @@
- #include <linux/fs.h>
- #include <linux/uaccess.h>
- #include <net/cfg80211.h>
-+#if defined(CONFIG_HAS_EARLYSUSPEND)
-+#include <linux/earlysuspend.h>
-+#endif
- #include <defs.h>
- #include <brcmu_utils.h>
- #include <brcmu_wifi.h>
-@@ -183,17 +186,6 @@ MODULE_DESCRIPTION("Broadcom 802.11n wireless LAN fullmac driver.");
- MODULE_SUPPORTED_DEVICE("Broadcom 802.11n WLAN fullmac cards");
- MODULE_LICENSE("Dual BSD/GPL");
- 
--#if defined(CONFIG_HAS_EARLYSUSPEND)
--#include <linux/earlysuspend.h>
--extern int dhdcdc_set_ioctl(dhd_pub_t *dhd, int ifidx, uint cmd, void *buf,
--			    uint len);
--#endif		/* defined(CONFIG_HAS_EARLYSUSPEND) */
--
--#ifdef PKT_FILTER_SUPPORT
--extern void dhd_pktfilter_offload_set(dhd_pub_t *dhd, char *arg);
--extern void dhd_pktfilter_offload_enable(dhd_pub_t *dhd, char *arg, int enable,
--					 int master_mode);
--#endif
- 
- /* Interface control information */
- typedef struct dhd_if {
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_proto.h b/drivers/staging/brcm80211/brcmfmac/dhd_proto.h
-index 188b588..f75eb1c 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_proto.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_proto.h
-@@ -71,6 +71,11 @@ extern int dhd_ioctl(dhd_pub_t *dhd_pub, dhd_ioctl_t *ioc, void *buf,
- 
- extern int dhd_preinit_ioctls(dhd_pub_t *dhd);
- 
-+#if defined(CONFIG_HAS_EARLYSUSPEND)
-+extern int dhdcdc_set_ioctl(dhd_pub_t *dhd, int ifidx, uint cmd, void *buf,
-+			    uint len);
-+#endif		/* defined(CONFIG_HAS_EARLYSUSPEND) */
-+
- /********************************
-  * For version-string expansion *
-  */
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index e253cb5..19ac421 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -654,9 +654,6 @@ static int tx_packets[NUMPRIO];
- /* Deferred transmit */
- const uint dhd_deferred_tx = 1;
- 
--extern uint dhd_watchdog_ms;
--extern void dhd_os_wd_timer(void *bus, uint wdtick);
--
- /* Tx/Rx bounds */
- uint dhd_txbound;
- uint dhd_rxbound;
--- 
-1.7.1
-
-
+and "BCMA support for Broadcom BCM47XX" here?
