@@ -1,57 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:43374 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754416Ab1FFK3Z (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:49811 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751708Ab1F3TFP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2011 06:29:25 -0400
-Received: by qwk3 with SMTP id 3so1575430qwk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2011 03:29:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1307352901.3894.2.camel@jlt3.sipsolutions.net>
-References: <BANLkTim_YzVXG5g+92AkvJhhQ4OkeW4wMw@mail.gmail.com> <1307352901.3894.2.camel@jlt3.sipsolutions.net>
-From: Matteo Croce <matteo@openwrt.org>
-Date: Mon, 6 Jun 2011 12:28:44 +0200
-Message-ID: <BANLkTikxkvpuDLEsf8Q5b3RZ4PuXYOLGbQ@mail.gmail.com> (sfid-20110606_122937_538386_E14476F0)
-Subject: Re: [PATCH v3] 802.11n frame injection
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 30 Jun 2011 15:05:15 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 890B4540157
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2011 15:12:42 -0400 (EDT)
+Subject: Compat-wireless release for 2011-06-30 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110630190513.5A27A40EC7@repository3.orbit-lab.org> (sfid-20110630_210519_420550_302888DD)
+Date: Thu, 30 Jun 2011 15:05:13 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MjAxMS82LzYgSm9oYW5uZXMgQmVyZyA8am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldD46Cj4gT24g
-U2F0LCAyMDExLTA2LTA0IGF0IDE5OjQyICswMjAwLCBNYXR0ZW8gQ3JvY2Ugd3JvdGU6Cj4KPj4g
-KyDCoCDCoCDCoCDCoCDCoCDCoCBjYXNlIElFRUU4MDIxMV9SQURJT1RBUF9SQVRFOiB7Cj4+ICsg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgc3RydWN0IGllZWU4MDIxMV9zdXBwb3J0ZWRf
-YmFuZCAqc2JhbmQgPQo+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIHR4LT5sb2NhbC0+aHcud2lwaHktPmJhbmRzW3R4LT5jaGFubmVsLT5iYW5kXTsKPj4gKyDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpbmZvLT5jb250cm9sLnJhdGVzWzBdLmlkeCA9
-IDA7Cj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKCppdGVyYXRvci50aGlz
-X2FyZykgewo+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGlu
-dCBpOwo+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGZvciAo
-aSA9IDA7IGkgPCBzYmFuZC0+bl9iaXRyYXRlczsgaSsrKQo+PiArIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGlmIChzYmFuZC0+Yml0cmF0ZXNb
-aV0uYml0cmF0ZSA9PQo+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgICppdGVyYXRvci50aGlzX2FyZyAqIDUpIHsKPj4g
-KyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCBpbmZvLT5jb250cm9sLnJhdGVzWzBdLmlkeCA9IGk7Cj4+ICsgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-YnJlYWs7Cj4KPiBJIGRvbid0IHRoaW5rIHlvdSBzaG91bGQgc2V0IHRoZSBpbmRleCBpZiB0aGUg
-Yml0cmF0ZSBkb2Vzbid0IGV4aXN0Lgo+Cj4gQWxzbywgaGF2ZSB5b3UgYWN0dWFsbHkgX3Rlc3Rl
-ZF8gdGhpcyBwYXRjaD8gSSBzZWUgbm90aGluZyB0aGF0IHdvdWxkCj4gY2F1c2UgcmF0ZSBjb250
-cm9sIHRvIGJlIHNraXBwZWQsIHNvIHJhdGUgY29udHJvbCBzaG91bGQgYWx3YXlzIG92ZXJyaWRl
-Cj4gdGhlIGRhdGEgeW91IHNldCB1cCBoZXJlLgo+Cj4gam9oYW5uZXMKPgo+CgpBY3R1YWxseSBJ
-IHVzZSB0aGlzIHBhdGNoIG9uIG1hbnkgZGV2aWNlcy4KVGhlIHJhdGUgY29udHJvbCBpcyBub3Qg
-YW4gaXNzdWUgYXMgdGhpcyBwYXRjaCBpcyBpbnRlbmRlZCBmb3IKaW5qZWN0aW5nIGluIG1vbml0
-b3IgbW9kZQoKLS0gCk1hdHRlbyBDcm9jZQpPcGVuV3J0IERldmVsb3BlcgrCoF9fX19fX18gwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgX19fX19fX18gwqAgwqAgwqAgwqBfXwp8IMKgIMKg
-IMKgIHwuLS0tLS0uLS0tLS0uLS0tLS0ufCDCoHwgwqB8IMKgfC4tLS0tLnwgwqB8Xwp8IMKgIC0g
-wqAgfHwgwqBfIMKgfCDCoC1fX3wgwqAgwqAgfHwgwqB8IMKgfCDCoHx8IMKgIF98fCDCoCBffAp8
-X19fX19fX3x8IMKgIF9ffF9fX19ffF9ffF9ffHxfX19fX19fX3x8X198IMKgfF9fX198CsKgIMKg
-IMKgIMKgIMKgfF9ffCBXIEkgUiBFIEwgRSBTIFMgwqAgRiBSIEUgRSBEIE8gTQpBVFRJVFVERSBB
-REpVU1RNRU5UIChibGVlZGluZyBlZGdlKSAtLS0tLS0tLS0tLS0tLQrCoCogMS80IG96IFZvZGth
-IMKgIMKgIMKgUG91ciBhbGwgaW5ncmVkZW50cyBpbnRvIG1peGluZwrCoCogMS80IG96IEdpbiDC
-oCDCoCDCoCDCoHRpbiB3aXRoIGljZSwgc3RyYWluIGludG8gZ2xhc3MuCsKgKiAxLzQgb3ogQW1h
-cmV0dG8KwqAqIDEvNCBveiBUcmlwbGUgc2VjCsKgKiAxLzQgb3ogUGVhY2ggc2NobmFwcHMKwqAq
-IDEvNCBveiBTb3VyIG1peArCoCogMSBzcGxhc2ggQ3JhbmJlcnJ5IGp1aWNlCi0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCg==
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 28c9310...f724ed5 akpm-end   -> origin/akpm-end  (forced update)
+   b0af8df..c017d0d  akpm-start -> origin/akpm-start
+   b0e1893..f5b887c  history    -> origin/history
+ + 3c2ce3e...1feb530 master     -> origin/master  (forced update)
+   b0af8df..c017d0d  stable     -> origin/stable
+ * [new tag]         next-20110630 -> next-20110630
+
+compat-wireless code metrics
+
+    839827 - Total upstream lines of code being pulled
+      2380 - backport code changes
+      2080 - backport code additions
+       300 - backport code deletions
+      8125 - backport from compat module
+     10505 - total backport code
+    1.2509 - % of code consists of backport work
