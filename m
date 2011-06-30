@@ -1,32 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:63923 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758238Ab1FWD6X (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:64298 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752146Ab1F3Vot (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2011 23:58:23 -0400
-Received: by iwn6 with SMTP id 6so1253486iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2011 20:58:22 -0700 (PDT)
+	Thu, 30 Jun 2011 17:44:49 -0400
+Date: Thu, 30 Jun 2011 16:44:47 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] rtlwifi: rtl8192de: Remove irq_enabled boolean
+Message-ID: <4e0cee4f.pS2lhGs66g9mS0sR%Larry.Finger@lwfinger.net> (sfid-20110630_234452_585955_20DE3226)
 MIME-Version: 1.0
-In-Reply-To: <1308801053-2461-1-git-send-email-lrodriguez@atheros.com>
-References: <1308801053-2461-1-git-send-email-lrodriguez@atheros.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 22 Jun 2011 20:58:01 -0700
-Message-ID: <BANLkTim4L=oZ2yJX+nTNXQ00NQZCi7akaQ@mail.gmail.com> (sfid-20110623_055826_942546_A3CFF442)
-Subject: Re: [PATCH 0/4] hostapd: add ACS support
-To: hostap@lists.shmoo.com
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 22, 2011 at 8:50 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> Test results, rants are appreciated.
+Prepare rtl8192de for the removal of irq_enaqbled.
 
-For the impatient, just wget and git am this all-in-one file (as soon
-as kernel.org synchs)
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/hostapd/acs-all-in-one-v1.patch
+John,
 
-  Luis
+This material is for 3.1.
+
+Larry
+---
+
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+@@ -1221,7 +1221,6 @@ void rtl92de_enable_interrupt(struct iee
+ 
+ 	rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] & 0xFFFFFFFF);
+ 	rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] & 0xFFFFFFFF);
+-	rtlpci->irq_enabled = true;
+ }
+ 
+ void rtl92de_disable_interrupt(struct ieee80211_hw *hw)
+@@ -1231,7 +1230,6 @@ void rtl92de_disable_interrupt(struct ie
+ 
+ 	rtl_write_dword(rtlpriv, REG_HIMR, IMR8190_DISABLED);
+ 	rtl_write_dword(rtlpriv, REG_HIMRE, IMR8190_DISABLED);
+-	rtlpci->irq_enabled = false;
+ 	synchronize_irq(rtlpci->pdev->irq);
+ }
+ 
