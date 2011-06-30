@@ -1,42 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:36767 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755660Ab1FIUV2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2011 16:21:28 -0400
-Date: Thu, 09 Jun 2011 13:20:20 -0700 (PDT)
-Message-Id: <20110609.132020.549281704173055530.davem@davemloft.net> (sfid-20110609_222154_746227_D6F6706E)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2011-06-09
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110609191632.GA16198@tuxdriver.com>
-References: <20110609191632.GA16198@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from server19320154104.serverpool.info ([193.201.54.104]:34713 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758509Ab1F3HXT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2011 03:23:19 -0400
+Message-ID: <4E0C245F.5040107@hauke-m.de> (sfid-20110630_092323_740353_0F3383A4)
+Date: Thu, 30 Jun 2011 09:23:11 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
+	mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
+	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com
+Subject: Re: [RFC v3 03/13] bcma: add functions to scan cores needed on SoCs
+References: <1309385518-12097-1-git-send-email-hauke@hauke-m.de>	<1309385518-12097-4-git-send-email-hauke@hauke-m.de> <BANLkTimAE-xphUYeMMzzz6B531tedo6Vkw@mail.gmail.com>
+In-Reply-To: <BANLkTimAE-xphUYeMMzzz6B531tedo6Vkw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 9 Jun 2011 15:16:32 -0400
+On 06/30/2011 08:42 AM, Rafał Miłecki wrote:
+> 2011/6/30 Hauke Mehrtens <hauke@hauke-m.de>:
+-		err = bcma_get_next_core(bus, &eromptr, core);
+-		if (err == -ENXIO)
++		err = bcma_get_next_core(bus, &eromptr, NULL, core_num, core);
++		if (err == -ENODEV) {
++			core_num++;
++			continue;
++		} else if (err == -ENXIO)
+ 			continue;
+ 		else if (err == -ESPIPE)
+ 			break;
+ 		else if (err < 0)
+ 			return err;
 
-> There are two reverts, both in mac80211.  One was found to cause a
-> regression.  The other revert was requested by the mac80211 maintainer
-> (Johannes) on the basis of API abuse and a lack of faith that the
-> implementation actual did anything useful. :-(
-> 
-> This includes a fix for an IBSS-related race condition from Johannes,
-> and a fix for an nl80211 integer overflow from Luca.  Also included
-> are a couple of rtlwifi fixes from Mike McCormack, one that fixes a
-> packet dropping error, and another that avoids incorrectly modifying
-> a resubmitted skb.  But the big hero this round is Stanislaw, who
-> not only identified a fix from Wey-Yi that need to go for 3.0 rather
-> than 3.1, but he also fixed an rmmod crash in rt2x00, a locking issue
-> in iwlgacy, a power setting bug in iwl4965, and an 802.11n general
-> instability issue on iwlagn.  As a result, I am researching popular
-> beers in the Czech Republic... :-)
-> 
-> Please let me know if there are problems!
++		core->core_index = core_num++;
++		bus->nr_cores++;
++
+ 		pr_info("Core %d found: %s "
+ 			"(manuf 0x%03X, id 0x%03X, rev 0x%02X, class 0x%X)\n",
+-			bus->nr_cores, bcma_device_name(&core->id),
++			core->core_index, bcma_device_name(&core->id),
+ 			core->id.manuf, core->id.id, core->id.rev,
+ 			core->id.class);
 
-Pulled, thanks!
+-		core->core_index = bus->nr_cores++;
+> 
+> Didn't you just change core indexes (0, 1, ...) to numbers (1, 2,
+> ...)? It would break enabling IRQs on PCI.
+No, the cores are getting the same indexes numbers as before. While
+scanning core_num is increased for every core found also for cores we
+are not searching for or we already found. Then core_num will be
+assigned to core->core_index. bus->nr_cores is no used any more so it
+could be removed or is it needed for something else?
+
+As you can see here [0] it finds core 0 and 3 at first and then the others.
+> 
+> Didn't test it however yet, I'll have access to my machines tomorrow.
+> 
+
+Hauke
+
+[0] http://permalink.gmane.org/gmane.linux.kernel.wireless.general/71851
+
