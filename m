@@ -1,63 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:13433 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754261Ab1FUJVy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2011 05:21:54 -0400
-Received: from mail.atheros.com ([10.234.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2011 02:21:18 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <rodrigue@qca.qualcomm.com>, <senthilb@qca.qualcomm.com>,
-	<nbd@openwrt.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH] ath9k_hw: Fix calculation of PAPRD training power at 5Ghz
-Date: Tue, 21 Jun 2011 14:51:46 +0530
-Message-ID: <1308648106-9294-1-git-send-email-mshajakhan@atheros.com> (sfid-20110621_112157_908921_0E49156E)
+Received: from w1.fi ([128.177.27.249]:56791 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751097Ab1F3Nuh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2011 09:50:37 -0400
+Date: Thu, 30 Jun 2011 16:50:30 +0300
+From: Jouni Malinen <j@w1.fi>
+To: alfred steele <alfred.jaquez@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: STA Driver/MLME handling for broadcast DEAUTHENTICATE from AP
+Message-ID: <20110630135030.GA15540@jm.kir.nu> (sfid-20110630_155042_141889_6C6F8ED5)
+References: <BANLkTi=oxo6ryCaJZiF9NZSV7hA1DJqqSw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BANLkTi=oxo6ryCaJZiF9NZSV7hA1DJqqSw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Tue, Jun 28, 2011 at 02:59:04PM -0500, alfred steele wrote:
+> I have a quick question. How should be a broadcast deauthenticate from
+> an AP handled by a client driver and or MLME.
+> Is it the same way as a unicast deauth is ahandled.
 
-higher the chainmask, lesser the power_delta to be added
-to the paprd_training_power
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c |   18 +++++++++++++++++-
- 1 files changed, 17 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index fc9c08f..8f6d11d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -83,7 +83,23 @@ static int ar9003_get_training_power_5g(struct ath_hw *ah)
- 	if (delta > scale)
- 		return -1;
- 
--	power += 2 * get_streams(common->tx_chainmask);
-+	switch (get_streams(common->tx_chainmask)) {
-+	case 1:
-+		delta = 6;
-+		break;
-+	case 2:
-+		delta = 4;
-+		break;
-+	case 3:
-+		delta = 2;
-+		break;
-+	default:
-+		delta = 0;
-+		ath_dbg(common, ATH_DBG_CALIBRATE,
-+		"Invalid tx-chainmask: %u\n", common->tx_chainmask);
-+	}
-+
-+	power += delta;
- 	return power;
- }
+Yes, if the broadcast Deauthentication frame has a matching BSSID, the
+station should process it just like it would a unicast one directed to
+it.
  
 -- 
-1.7.0.4
-
+Jouni Malinen                                            PGP id EFC895FA
