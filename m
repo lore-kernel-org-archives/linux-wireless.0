@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from que21.charter.net ([209.225.8.22]:35308 "EHLO que21.charter.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752375Ab1FCDAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2011 23:00:05 -0400
-From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
-To: sgruszka@redhat.com, linville@tuxdriver.com
-Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Greg Dietsche <Gregory.Dietsche@cuw.edu>
-Subject: [PATCH 1/5] iwlegacy: remove unreachable code
-Date: Thu,  2 Jun 2011 21:06:06 -0500
-Message-Id: <1307066770-27309-1-git-send-email-Gregory.Dietsche@cuw.edu> (sfid-20110603_050024_627576_091FB9C1)
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:56644 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754126Ab1F3IiI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2011 04:38:08 -0400
+Received: by wwe5 with SMTP id 5so2004447wwe.1
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2011 01:38:07 -0700 (PDT)
+Date: Thu, 30 Jun 2011 11:37:00 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Franky Lin <frankyl@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 017/119] staging: brcm80211: change FOREACH_BSS macro to
+ remove checkpatch error
+Message-ID: <20110630083700.GK14591@shale.localdomain> (sfid-20110630_103817_259224_6099493F)
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+ <1309391303-22741-18-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1309391303-22741-18-git-send-email-frankyl@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-return; at the end of the function is unecessary.
+On Wed, Jun 29, 2011 at 04:46:41PM -0700, Franky Lin wrote:
+>  #define FOREACH_BSS(wlc, idx, cfg) \
+> -	for (idx = 0; (int) idx < WLC_MAXBSSCFG; idx++) \
+> -		if ((cfg = (wlc)->bsscfg[idx]))
+> +	for (idx = 0, cfg = (wlc)->bsscfg[idx]; \
+> +	     idx < WLC_MAXBSSCFG; cfg = (wlc)->bsscfg[++idx]) \
+> +		if (cfg)
+>  
 
-Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
----
- drivers/net/wireless/iwlegacy/iwl-eeprom.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+That's pretty ugly.  Better to leave the original in and ignore the
+checkpatch warning.  Or maybe do something like this:
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-eeprom.c b/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-index cb346d1..5bf3f49 100644
---- a/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-eeprom.c
-@@ -316,7 +316,6 @@ static void iwl_legacy_init_band_reference(const struct iwl_priv *priv,
- 		break;
- 	default:
- 		BUG();
--		return;
- 	}
- }
- 
--- 
-1.7.2.5
+	for (idx = 0; (int) idx < WLC_MAXBSSCFG; idx++) { \
+		cfg = (wlc)->bsscfg[idx];		  \
+		if (!cfg)				  \
+			continue;			  \
 
+Then #define END_FOREACH_BSS() }
+
+Btw, this patchset has over 100 patches so unless there is something
+drastically wrong lets just apply it as is and fix up any complaints
+that people have in later patches.  It sucks when people resend huge
+patchsets and we have to review everything again.
+
+regards,
+dan carpenter
