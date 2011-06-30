@@ -1,186 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:3354 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750725Ab1F3E2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2011 00:28:44 -0400
-Subject: RFC: Add __dynamic_dev_dbg
-From: Joe Perches <joe@perches.com>
-To: Aloisio Almeida <aloisio.almeida@openbossa.org>
-Cc: Jason Baron <jbaron@redhat.com>,
-	Marcel Holtmann <marcel@holtmann.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, sameo@linux.intel.com,
-	johannes@sipsolutions.net, lauro.venancio@openbossa.org,
-	marcio.macedo@openbossa.org, Waldemar.Rymarkiewicz@tieto.com,
-	padovan@profusion.mobi, rdunlap@xenotime.net
-In-Reply-To: <CAEsZsEgfKPtsXKGiAV3QuH=YESyS+GHnsNjauVZV==AN94fxug@mail.gmail.com>
-References: <1309285246-8495-1-git-send-email-aloisio.almeida@openbossa.org>
-	 <1309285246-8495-2-git-send-email-aloisio.almeida@openbossa.org>
-	 <1309292325.29598.9.camel@Joe-Laptop> <1309311096.2208.33.camel@aeonflux>
-	 <1309312164.29598.53.camel@Joe-Laptop> <1309370457.2208.48.camel@aeonflux>
-	 <BANLkTinospg_dhTC8Tcok3kqk9gOryG6eA@mail.gmail.com>
-	 <1309391163.29598.92.camel@Joe-Laptop>
-	 <CAEsZsEgfKPtsXKGiAV3QuH=YESyS+GHnsNjauVZV==AN94fxug@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Jun 2011 21:28:42 -0700
-Message-ID: <1309408122.1726.13.camel@Joe-Laptop> (sfid-20110630_062847_944107_B0FF7DB4)
-Mime-Version: 1.0
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:59081 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751730Ab1F3Sdj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2011 14:33:39 -0400
+Received: by pzk9 with SMTP id 9so1966650pzk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2011 11:33:38 -0700 (PDT)
+Date: Thu, 30 Jun 2011 21:32:58 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Subject: Re: [PATCH 000/119] staging: brcm80211: more code cleanup and bug
+ fixed
+Message-ID: <20110630183258.GB2544@shale.localdomain> (sfid-20110630_203342_735174_299E23E2)
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+ <BANLkTikPBWvYiNc1rZEwPJTck=AzUsLncA@mail.gmail.com>
+ <4E0CB587.3000209@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4E0CB587.3000209@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-06-30 at 00:26 -0300, Aloisio Almeida wrote:
-> It's stored but not retrieved. If you check lib/dynamic_debug.c you
-> see that only __dynamic_pr_debug() (called by dynamic_pr_debug() )
-> adds such information on prints. The dev_printk() does not check
-> _DPRINTK_FLAGS_INCL_* flags.
+On Thu, Jun 30, 2011 at 10:42:31AM -0700, Henry Ptasinski wrote:
+> On 06/29/2011 11:29 PM, Rafał Miłecki wrote:
+> >2011/6/30 Franky Lin<frankyl@broadcom.com>:
+> >>Most of these patches are brcmfmac cleanup.
+> >
+> >
+> >Hm, interesting improvement in your "Release early, release often" strategy.
+> >
+> 
+> Yea, we were waiting for the previous series to get applied.  Not
+> sure how to make this work better.  Any process suggestions would be
+> appreciated.
 
-That seems enough easy to fix.
+Maintain your own git tree.  Post patches in bunches.  If no one
+comments on them within 3 days then probably you can assume they
+are going to be merged.  In the [0 / X] patch say something like:
 
-Jason?  How does this look?
+  Fixes blah blah blah.
 
----
+  Applies to linux-next with the following patch sets applied:
+  Message-ID: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+  Message-ID: <8888888888-88888-1-git-send-email-frankyl@broadcom.com>
+  Or you can get the patches from git://whatever branch.
 
- drivers/base/core.c           |    5 +++--
- include/linux/device.h        |    5 +++++
- include/linux/dynamic_debug.h |   10 ++++++++--
- lib/dynamic_debug.c           |   38 ++++++++++++++++++++++++++++++++++++++
- 4 files changed, 54 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index bc8729d..82c8654 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -1764,8 +1764,8 @@ void device_shutdown(void)
- 
- #ifdef CONFIG_PRINTK
- 
--static int __dev_printk(const char *level, const struct device *dev,
--			struct va_format *vaf)
-+int __dev_printk(const char *level, const struct device *dev,
-+		 struct va_format *vaf)
- {
- 	if (!dev)
- 		return printk("%s(NULL device *): %pV", level, vaf);
-@@ -1773,6 +1773,7 @@ static int __dev_printk(const char *level, const struct device *dev,
- 	return printk("%s%s %s: %pV",
- 		      level, dev_driver_string(dev), dev_name(dev), vaf);
- }
-+EXPORT_SYMBOL(__dev_printk);
- 
- int dev_printk(const char *level, const struct device *dev,
- 	       const char *fmt, ...)
-diff --git a/include/linux/device.h b/include/linux/device.h
-index e4f62d8..53711f2 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -785,6 +785,8 @@ extern const char *dev_driver_string(const struct device *dev);
- 
- #ifdef CONFIG_PRINTK
- 
-+extern int __dev_printk(const char *level, const struct device *dev,
-+			struct va_format *vaf);
- extern int dev_printk(const char *level, const struct device *dev,
- 		      const char *fmt, ...)
- 	__attribute__ ((format (printf, 3, 4)));
-@@ -805,6 +807,9 @@ extern int _dev_info(const struct device *dev, const char *fmt, ...)
- 
- #else
- 
-+static inline int __dev_printk(const char *level, const struct device *dev,
-+			       struct va_format *vaf)
-+	 { return 0; }
- static inline int dev_printk(const char *level, const struct device *dev,
- 		      const char *fmt, ...)
- 	__attribute__ ((format (printf, 3, 4)));
-diff --git a/include/linux/dynamic_debug.h b/include/linux/dynamic_debug.h
-index e747ecd..bdf1531 100644
---- a/include/linux/dynamic_debug.h
-+++ b/include/linux/dynamic_debug.h
-@@ -47,6 +47,13 @@ extern int ddebug_remove_module(const char *mod_name);
- extern int __dynamic_pr_debug(struct _ddebug *descriptor, const char *fmt, ...)
- 	__attribute__ ((format (printf, 2, 3)));
- 
-+struct device;
-+
-+extern int __dynamic_dev_dbg(struct _ddebug *descriptor,
-+			     const struct device *dev,
-+			     const char *fmt, ...)
-+	__attribute__ ((format (printf, 3, 4)));
-+
- #define dynamic_pr_debug(fmt, ...) do {					\
- 	static struct _ddebug descriptor				\
- 	__used								\
-@@ -57,7 +64,6 @@ extern int __dynamic_pr_debug(struct _ddebug *descriptor, const char *fmt, ...)
- 		__dynamic_pr_debug(&descriptor, pr_fmt(fmt), ##__VA_ARGS__); \
- 	} while (0)
- 
--
- #define dynamic_dev_dbg(dev, fmt, ...) do {				\
- 	static struct _ddebug descriptor				\
- 	__used								\
-@@ -65,7 +71,7 @@ extern int __dynamic_pr_debug(struct _ddebug *descriptor, const char *fmt, ...)
- 	{ KBUILD_MODNAME, __func__, __FILE__, fmt, __LINE__,		\
- 		_DPRINTK_FLAGS_DEFAULT };				\
- 	if (unlikely(descriptor.enabled))				\
--		dev_printk(KERN_DEBUG, dev, fmt, ##__VA_ARGS__);	\
-+		__dynamic_dev_dbg(&descriptor, dev, fmt, ##__VA_ARGS__);	\
- 	} while (0)
- 
- #else
-diff --git a/lib/dynamic_debug.c b/lib/dynamic_debug.c
-index 75ca78f..5c5f8f9 100644
---- a/lib/dynamic_debug.c
-+++ b/lib/dynamic_debug.c
-@@ -30,6 +30,7 @@
- #include <linux/jump_label.h>
- #include <linux/hardirq.h>
- #include <linux/sched.h>
-+#include <linux/device.h>
- 
- extern struct _ddebug __start___verbose[];
- extern struct _ddebug __stop___verbose[];
-@@ -456,6 +457,43 @@ int __dynamic_pr_debug(struct _ddebug *descriptor, const char *fmt, ...)
- }
- EXPORT_SYMBOL(__dynamic_pr_debug);
- 
-+int __dynamic_dev_dbg(struct _ddebug *descriptor,
-+		      const struct device *dev, const char *fmt, ...)
-+{
-+	struct va_format vaf;
-+	va_list args;
-+	int res;
-+
-+	BUG_ON(!descriptor);
-+	BUG_ON(!fmt);
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	res = printk(KERN_DEBUG);
-+	if (descriptor->flags & _DPRINTK_FLAGS_INCL_TID) {
-+		if (in_interrupt())
-+			res += printk(KERN_CONT "<intr> ");
-+		else
-+			res += printk(KERN_CONT "[%d] ", task_pid_vnr(current));
-+	}
-+	if (descriptor->flags & _DPRINTK_FLAGS_INCL_MODNAME)
-+		res += printk(KERN_CONT "%s:", descriptor->modname);
-+	if (descriptor->flags & _DPRINTK_FLAGS_INCL_FUNCNAME)
-+		res += printk(KERN_CONT "%s:", descriptor->function);
-+	if (descriptor->flags & _DPRINTK_FLAGS_INCL_LINENO)
-+		res += printk(KERN_CONT "%d ", descriptor->lineno);
-+
-+	res += __dev_printk("", dev, &vaf);
-+
-+	va_end(args);
-+
-+	return res;
-+}
-+EXPORT_SYMBOL(__dynamic_dev_dbg);
-+
- static __initdata char ddebug_setup_string[1024];
- static __init int ddebug_setup_query(char *str)
- {
-
-
+regards,
+dan carpenter
