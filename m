@@ -1,79 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hhlx01.vscom.de ([62.145.30.242]:41888 "EHLO
-	mail.visionsystems.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750979Ab1GTKwZ (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:50328 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752423Ab1GAUBE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2011 06:52:25 -0400
-Message-ID: <4E26ABAA.8050404@visionsystems.de> (sfid-20110720_125228_946659_FC4D17FF)
-Date: Wed, 20 Jul 2011 12:19:22 +0200
-From: Yegor Yefremov <yegor_sub1@visionsystems.de>
-Reply-To: yegor_sub1@visionsystems.de
+	Fri, 1 Jul 2011 16:01:04 -0400
+Received: by yxi11 with SMTP id 11so1080375yxi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2011 13:01:03 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes.berg@intel.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iw: add libnl-3.0 support
-References: <4DB91BB9.2080405@visionsystems.de>
-In-Reply-To: <4DB91BB9.2080405@visionsystems.de>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <20110701152949.wktyhphv6884ww4s-cebfxv@webmail.spamcop.net>
+References: <BANLkTimsGJo61eLp3NrVtDkh0m3CN3zDxw@mail.gmail.com>
+	<4E0B8A61.8090600@upr.edu>
+	<4E0B8E35.8080203@gnu.org>
+	<BANLkTikEqPt1NkPr99Cfp_Rfp63z3s669Q@mail.gmail.com>
+	<20110701152949.wktyhphv6884ww4s-cebfxv@webmail.spamcop.net>
+Date: Fri, 1 Jul 2011 22:01:03 +0200
+Message-ID: <BANLkTimqe-npBQ2hsaYMVPBkE2pgQmgA+A@mail.gmail.com> (sfid-20110701_220108_571034_F75036E1)
+Subject: Re: Compile error in carl9170 on Debian Squeeze
+From: Alex <alex9434@gmail.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Omar Abraham <omar.abraham@upr.edu>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Great, thanks a lot. Worked now!!!
 
-Am 28.04.2011 09:48, schrieb Yegor Yefremov:
-> Extend Makefile to find and use libnl-3.0
-> 
-> Signed-off-by: Yegor Yefremov <yegorslists@googlemail.com>
-> ---
->  Makefile |   10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> Index: b/Makefile
-> ===================================================================
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -24,6 +24,7 @@
->  
->  NL1FOUND := $(shell $(PKG_CONFIG) --atleast-version=1 libnl-1 && echo Y)
->  NL2FOUND := $(shell $(PKG_CONFIG) --atleast-version=2 libnl-2.0 && echo Y)
-> +NL3FOUND := $(shell $(PKG_CONFIG) --atleast-version=3 libnl-3.0 && echo Y)
->  
->  ifeq ($(NL1FOUND),Y)
->  NLLIBNAME = libnl-1
-> @@ -35,6 +36,12 @@
->  NLLIBNAME = libnl-2.0
->  endif
->  
-> +ifeq ($(NL3FOUND),Y)
-> +CFLAGS += -DCONFIG_LIBNL20
-> +LIBS += -lnl-genl
-> +NLLIBNAME = libnl-3.0
-> +endif
-> +
->  ifeq ($(NLLIBNAME),)
->  $(error Cannot find development files for any supported version of libnl)
->  endif
-> @@ -53,6 +60,8 @@
->  all: version_check $(ALL)
->  
->  version_check:
-> +ifeq ($(NL3FOUND),Y)
-> +else
->  ifeq ($(NL2FOUND),Y)
->  else
->  ifeq ($(NL1FOUND),Y)
-> @@ -60,6 +69,7 @@
->  	$(error No libnl found)
->  endif
->  endif
-> +endif
->  
->  
->  VERSION_OBJS := $(filter-out version.o, $(OBJS))
-> 
-
-could you please review the patch?
-
-Thanks.
-
-Yegor
+On Fri, Jul 1, 2011 at 9:29 PM, Pavel Roskin <proski@gnu.org> wrote:
+> Quoting Alex <alex9434@gmail.com>:
+>
+>> Pavel, Omar and all,
+>>
+>> thank you very much for your support. However, I still get the error
+>> message:
+>>
+>>                 from <command-line>:0:
+>> /usr/src/compat-wireless-2011-06-30/include/linux/compat-2.6.34.h:23:
+>> error: redefinition of 'netdev_name'
+>
+> It takes some time to propagate patches.  The patch appeared in
+> compat-wireless-2011-07-01, which is available now.
+>
+>> BTW: One more question: There seems to be a module "carl9170" in the
+>> 2.6.39.2 kernel. Does this replace compat-wireless? Do I only need
+>> this module to get the wlan in monitor mode? (please excuse my
+>> question, I am really new to this...)
+>
+> You can try it.  The point of compat-wireless is to make the current
+> wireless drivers available for older kernels.  If you kernel is not so old,
+> you make have the functionality you need in your kernel already.  But if you
+> want to use the older Debian kernel, compat-wireless is the only option.
+>
+> --
+> Regards,
+> Pavel Roskin
+>
