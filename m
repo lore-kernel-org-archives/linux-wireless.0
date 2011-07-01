@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:49970 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750934Ab1GOXvR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2011 19:51:17 -0400
-Received: by pzk3 with SMTP id 3so2106102pzk.5
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2011 16:51:16 -0700 (PDT)
-Date: Sat, 16 Jul 2011 02:49:25 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Franky Lin <frankyl@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 35/35] staging: brcm80211: replace simple_strtoul usage
- in brcmfmac
-Message-ID: <20110715234924.GH18655@shale.localdomain> (sfid-20110716_015120_367756_F01EA414)
-References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
- <1310678971-28952-36-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1310678971-28952-36-git-send-email-frankyl@broadcom.com>
+Received: from mga11.intel.com ([192.55.52.93]:62949 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751788Ab1GAPxC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jul 2011 11:53:02 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 00/11] update for 3.1
+Date: Fri,  1 Jul 2011 08:19:54 -0700
+Message-Id: <1309533605-25774-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110701_175309_111414_BAE925A9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 14, 2011 at 02:29:31PM -0700, Franky Lin wrote:
-> --- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-> +++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-> @@ -827,10 +827,13 @@ static int brcmf_c_pattern_atoh(char *src, char *dst)
->  		return -EINVAL;
->  	}
->  	for (i = 0; *src != '\0'; i++) {
-> +		unsigned long res;
->  		char num[3];
->  		strncpy(num, src, 2);
->  		num[2] = '\0';
-> -		dst[i] = (u8) simple_strtoul(num, NULL, 16);
-> +		if (kstrtoul(num, 16, &res))
-> +			return -1;
-			       ^^
-Not a proper error code.
+We start the work on separate out transport layer into it own file(s)
+We also fix the mistake in uCode naming for 135 series, and continuous
+code cleanup work
 
-> +		dst[i] = (u8)res;
->  		src += 2;
+Emmanuel Grumbach (4):
+  iwlagn: introduce transport layer and implement rx_init
+  iwlagn: add rx_free to transport layer
+  iwlagn: move the tx allocation funcs to the transport layer
+  iwlagn: remove the indirection for the rx write pointer
 
-regards,
-dan carpenter
+Johannes Berg (1):
+  iwlagn: verify mutex held for sync commands
+
+Wey-Yi Guy (6):
+  iwlagn: re-define the testmode cmd and attr enum
+  iwlagn: add correct firmware name for 135 series
+  iwlagn: add module parameter to disable stuck queue watchdog timer
+  iwlagn: scd memory boundary
+  iwlagn: call bt_coex directlly
+  iwlagn: remove hcmd ops
+
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+ drivers/net/wireless/iwlwifi/Makefile        |    1 +
+ drivers/net/wireless/iwlwifi/iwl-1000.c      |    2 -
+ drivers/net/wireless/iwlwifi/iwl-2000.c      |   21 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c      |    4 -
+ drivers/net/wireless/iwlwifi/iwl-6000.c      |    5 -
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c  |   16 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c   |   88 +-----
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c  |   19 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c    |   90 ------
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c       |   54 ++--
+ drivers/net/wireless/iwlwifi/iwl-agn.h       |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c      |   22 +--
+ drivers/net/wireless/iwlwifi/iwl-core.h      |   18 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h       |   22 ++-
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c      |   13 +-
+ drivers/net/wireless/iwlwifi/iwl-pci.c       |    1 +
+ drivers/net/wireless/iwlwifi/iwl-prph.h      |   19 +-
+ drivers/net/wireless/iwlwifi/iwl-rx.c        |   47 +---
+ drivers/net/wireless/iwlwifi/iwl-testmode.h  |  236 ++++++++-------
+ drivers/net/wireless/iwlwifi/iwl-trans.c     |  423 ++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-trans.h     |   64 ++++
+ drivers/net/wireless/iwlwifi/iwl-tx.c        |  139 +---------
+ 23 files changed, 725 insertions(+), 592 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans.h
+
