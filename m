@@ -1,108 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:43389 "EHLO
-	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751921Ab1GERbm (ORCPT
+Received: from exht1.emulex.com ([138.239.113.183]:32425 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756725Ab1GAOtS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 13:31:42 -0400
-Received: by bwf12 with SMTP id 12so6384067bwf.36
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2011 10:31:39 -0700 (PDT)
-Subject: pull request: wl12xx 2011-07-05
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Jul 2011 20:31:35 +0300
-Message-ID: <1309887095.1514.497.camel@cumari> (sfid-20110705_193146_589426_203475B5)
-Mime-Version: 1.0
+	Fri, 1 Jul 2011 10:49:18 -0400
+Date: Fri, 1 Jul 2011 10:49:01 -0400
+From: James Smart <james.smart@emulex.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: James Smart <james.smart@emulex.com>, Jon Mason <jdmason@kudzu.us>,
+	Richard Lary <rlary@us.ibm.com>, <wey-yi.w.guy@intel.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	<Larry.Finger@lwfinger.net>, <chaoming_li@realsil.com.cn>
+Subject: Warning: iwlegacy/iwlwifi/rtlwifi  : removal of PCI_CAP_ID_EXP
+References: <1309196346-15749-1-git-send-email-jdmason@kudzu.us> <4E0CDF8B.3020505@emulex.com>
+In-Reply-To: <4E0CDF8B.3020505@emulex.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Message-ID: <294849c5-16f3-491b-98c2-2a96275e8378@exht1.ad.emulex.com> (sfid-20110701_164924_165478_05ADFB36)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+All,
 
-This is the first batch of patches for 3.1.  I'll probably still send
-one more later this week.  This took a little longer to be sent than I
-was planning at first, but we had some problems with booting and testing
-3.0, so I had to hold it back.
+I wanted to communicate a potential warning to those drivers that had a patch 
+submitted to replace config space searches of PCI_CAP_ID_EXP with shorthand 
+options such as is_pcie and pci_is_pcie().
 
-These are mainly bugfixes, a few new firmware features support and other
-general clean-ups. 
+Testing with the lpfc driver and AER/EEH identified cases where the short-hand 
+search options would fail on PPC platforms.  The only successful option in all 
+cases was the explicit search via PCI_CAP_ID_EXP.   Therefore, I recommend 
+that this change not be accepted until the platform level issue can be 
+identified and corrected.
 
-Please pull or let me know if there's any problem.  This tree is based
-on wireless-next/master.
-
-Thanks!
+-- james s
 
 
-The following changes since commit 9a4ba833a2d0016cf836827e136f0c219834bd41:
 
-  rtlwifi: potential forever loop in rtl92de_hw_init() (2011-06-29 15:11:07 -0400)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linville
-
-Eliad Peller (12):
-      wl12xx: add support for rx streaming
-      wl12xx: add automatic rx streaming triggers
-      wl12xx: add rx_streaming debugfs entry
-      wl12xx: remove unused crc7 references
-      wl12xx: fix erroneous commit (cb5ae0)
-      wl12xx: don't check wow param on suspend/resume
-      wl12xx: clear wl->wow_enabled on resume
-      wl12xx: enable/disable beacon filtering on ap suspend/resume
-      wl12xx_sdio: enable wowlan only if enable_irq_wake() succeeded
-      wl12xx: check the vif's operstate after join
-      wl12xx: use _ni version of ieee80211_tx_status
-      wl12xx: use freezable workqueue for netstack_work
-
-Felipe Balbi (5):
-      net: wl12xx: sdio: id_tables should be __devinitconst
-      net: wl12xx: remove some unnecessary prints
-      net: wl12xx: care for optional operations
-      net: wl12xx: remove the nops
-      net: wl12xx: remove unnecessary prints
-
-Ido Yariv (3):
-      wl12xx: Check for FW quirks as soon as the FW boots
-      wl12xx: Avoid recovery while one is already in progress
-      wl12xx: Support routing FW logs to the host
-
-Luciano Coelho (1):
-      wl12xx: split channel array per band in sched_scan
-
-Ohad Ben-Cohen (1):
-      wl12xx: don't bail if mmc isn't MMC_CAP_POWER_OFF_CARD
-
-Shahar Levi (2):
-      wl12xx: Enable beacon early termination in 2.4GHz band only
-      wl12xx: Add Support for Low Power DRPw (LPD) Mode
-
- drivers/net/wireless/wl12xx/Kconfig    |    2 +-
- drivers/net/wireless/wl12xx/acx.c      |   49 +++-
- drivers/net/wireless/wl12xx/acx.h      |   16 +
- drivers/net/wireless/wl12xx/boot.c     |   33 ++
- drivers/net/wireless/wl12xx/cmd.c      |   94 +++++-
- drivers/net/wireless/wl12xx/cmd.h      |   62 ++++
- drivers/net/wireless/wl12xx/conf.h     |   55 +++
- drivers/net/wireless/wl12xx/debugfs.c  |  138 ++++++++-
- drivers/net/wireless/wl12xx/event.c    |   36 ++-
- drivers/net/wireless/wl12xx/ini.h      |    3 +
- drivers/net/wireless/wl12xx/init.c     |   19 +
- drivers/net/wireless/wl12xx/io.c       |    7 +-
- drivers/net/wireless/wl12xx/io.h       |   14 +
- drivers/net/wireless/wl12xx/main.c     |  590 ++++++++++++++++++++++++++------
- drivers/net/wireless/wl12xx/ps.c       |   12 +-
- drivers/net/wireless/wl12xx/rx.c       |   39 ++-
- drivers/net/wireless/wl12xx/rx.h       |   12 +
- drivers/net/wireless/wl12xx/scan.c     |   63 ++--
- drivers/net/wireless/wl12xx/scan.h     |   17 +-
- drivers/net/wireless/wl12xx/sdio.c     |   71 ++---
- drivers/net/wireless/wl12xx/spi.c      |   15 +-
- drivers/net/wireless/wl12xx/testmode.c |    2 +-
- drivers/net/wireless/wl12xx/tx.c       |   33 ++-
- drivers/net/wireless/wl12xx/wl12xx.h   |   38 ++-
- 24 files changed, 1176 insertions(+), 244 deletions(-)
-
--- 
-Cheers,
-Luca.
-
+On 6/30/2011 4:41 PM, James Smart wrote:
+> Jon,
+>
+> I must NACK this patch to the lpfc driver and recommend that all other patches
+> which replace pci_find_capability(pdef, PCI_CAP_ID_EXP) with
+> "pci_is_pcie(pdev)" are NACK'd as well.
+>
+> The reason is due to an issue on PPC platforms whereby use of "pdev->is_pcie"
+> and pci_is_pcie() will erroneously fail under some conditions, but explicit
+> search for the capability struct via pci_find_capability() is always
+> successful.   I expect this to be due a shadowing of pci config space in the
+> hal/platform that isn't sufficiently built up.  We detected this issue while
+> testing AER/EEH, and are functional only if the pci_find_capability() option
+> is used.
+>
+> -- james s
+>
+>
+>
+> On 6/27/2011 1:39 PM, Jon Mason wrote:
+>> The PCIE capability offset is saved during PCI bus walking.  It will
+>> remove an unnecessary search in the PCI configuration space if this
+>> value is referenced instead of reacquiring it.  Also, pci_is_pcie is a
+>> better way of determining if the device is PCIE or not (as it uses the
+>> same saved PCIE capability offset).
+>>
+>> Signed-off-by: Jon Mason<jdmason@kudzu.us>
+>> ---
+>>    drivers/scsi/lpfc/lpfc_init.c |    2 +-
+>>    1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+>> index 148b98d..9000ad0 100644
+>> --- a/drivers/scsi/lpfc/lpfc_init.c
+>> +++ b/drivers/scsi/lpfc/lpfc_init.c
+>> @@ -3970,7 +3970,7 @@ lpfc_enable_pci_dev(struct lpfc_hba *phba)
+>>    	pci_save_state(pdev);
+>>
+>>    	/* PCIe EEH recovery on powerpc platforms needs fundamental reset */
+>> -	if (pci_find_capability(pdev, PCI_CAP_ID_EXP))
+>> +	if (pci_is_pcie(pdev))
+>>    		pdev->needs_freset = 1;
+>>
+>>    	return 0;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
