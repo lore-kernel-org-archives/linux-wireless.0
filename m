@@ -1,104 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:45546 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752265Ab1G3Sji convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jul 2011 14:39:38 -0400
-Received: by qyk9 with SMTP id 9so2674924qyk.19
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Jul 2011 11:39:37 -0700 (PDT)
+Received: from cantor2.suse.de ([195.135.220.15]:55377 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751831Ab1GAAQP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2011 20:16:15 -0400
+Date: Thu, 30 Jun 2011 17:14:57 -0700
+From: Greg KH <gregkh@suse.de>
+To: Dan Carpenter <error27@gmail.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Subject: Re: [PATCH 000/119] staging: brcm80211: more code cleanup and bug
+ fixed
+Message-ID: <20110701001457.GB934@suse.de> (sfid-20110701_021620_738732_638E76F4)
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+ <BANLkTikPBWvYiNc1rZEwPJTck=AzUsLncA@mail.gmail.com>
+ <4E0CB587.3000209@broadcom.com>
+ <20110630183258.GB2544@shale.localdomain>
+ <4E0CED43.50305@broadcom.com>
+ <20110701000526.GD2544@shale.localdomain>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <20110730181433.50bd32db.ldarby@tuffmail.com>
-References: <20110730181433.50bd32db.ldarby@tuffmail.com>
-Date: Sat, 30 Jul 2011 20:39:37 +0200
-Message-ID: <CA+icZUURFL1AgYZ=64zqgvU1DTjmp=22Qesp2pM86-OOyRjmVw@mail.gmail.com> (sfid-20110730_203940_503419_4ED965A7)
-Subject: Re: I'm confused and angry
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Laurence Darby <ldarby@tuffmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110701000526.GD2544@shale.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, Jul 01, 2011 at 03:05:26AM +0300, Dan Carpenter wrote:
+> On Thu, Jun 30, 2011 at 02:40:19PM -0700, Henry Ptasinski wrote:
+> > So there are two suggestions here:
+> > 
+> > 1. post patches in smaller bunches, and include dependency info in
+> > the 0/X patch.  Presumably, if one of the dependencies is dropped,
+> > then people will know to drop this series as well, and we would have
+> > to repost everything that was dropped once we fix the identified
+> > issues.
+> > 
+> > 2. maintain a public git tree that people can pull from.  If we do
+> > (1), is this needed and/or still useful?
+> 
+> Yes.  Patches hiding in git trees never get reviewed.  They just
+> pile up until there too many to review.
+> 
+> > Do community folks that
+> > want to contribute changes send them to us or Greg/John/whoever is
+> > upstream? Pros/cons?
+> 
+> That stuff is between you and Greg.  The rest of us don't care.
+> 
+> But what I'm saying is don't delay sending these patches because
+> you're not sure if the other patches were going to go in or not.
+> It's not an unpredictable thing.  Everyone is supposed to CC you
+> along with Greg, linux-wireless and driver-devel.  You're the
+> maintainer.  If you ack a patch or nack it, then 99% of the time
+> Greg is going to go along with your decision.
+> 
+> It's not like Greg is going to complain if you start recording which
+> patches have to go in next and deal with any merge conflicts...
 
-On Sat, Jul 30, 2011 at 7:14 PM, Laurence Darby <ldarby@tuffmail.com> wrote:
->
-> Is there an obvious list of consumer products (NOT chipsets) that
-> hostapd supports that I'm missing?
->
-> I want to make a wireless Access Point, using either a USB dongle, PCI
-> card, or PCIE x1 card.  I have already got a DHCP server and NAT in
-> both my desktop PC and router, I don't want to pay for an expensive
-> external wireless router which would be a 3rd DHCP and NAT.
->
-> None of the consumer devices' websites say which chipset they use, and none
-> the chipset manufactures' sites say what consumer products use their
-> chipset, so I can't just search for devices that support this.
->
-> I've foolishly just bought a Netgear WNA1100, because it was "close
-> enough" to a Netgear WNA1000, which possibly supports AP mode, but that
-> wasn't available.
->
+Nope, Greg would be very happy and hopefully have to stop referring to
+himself in the third person if people were so kind.
 
-A different hardware-revision can mean that vendor has changed wifi-chip :-).
-So, better ask before you buy new hardware.
+thanks,
 
-> I thought it got away with it, because this page:
-> http://linuxwireless.org/en/users/Drivers/ath9k_htc says that driver
-> supports AP mode.
->
-
-AFAICS, people on #linux-wireless dont recommend USB-devices as the
-interface can be a bottleneck.
-
-> I've upgraded to Linux 3.0 and installed the htc_9271.fw firmware, and
-> the device shows up in /proc/net/dev, but now hostapd is giving me the
-> errors:
->
-> rfkill: Cannot open RFKILL control device
-> Hardware does not support configured mode
-> wlan0: IEEE 802.11 Hardware does not support configured mode (2)
-> Could not select hw_mode and channel. (-2)
-> wlan0: Unable to setup interface.
-> rmdir[ctrl_interface]: No such file or directory
->
-
-Please, send full dmesg, lspci/lsusb outputs, etc.
-What software do you use to connect to AP from client?
-Personally, I have no HostAP(d) in use, but interested people might
-want to see its config files, the same for the kernel.
-
-> Does this device and driver support AP mode or not?  If the driver
-> doesn't, then the web page is wrong.
->
-> If the driver does but the device doesn't, then the website should make
-> that clear.
->
-
-And of course, docs could be enhanced.
-It's a wiki, feel free to join and correct.
-
-> I'm not bothered at all if the WNA1100 was a waste of money, it's the
-> amount of time I've wasted on this so far.
->
-
-Maybe a business solution with an anual or longterm contract can help
-(if money does not count).
-
-> Please CC me on any responses, I'm not subscribed.
->
-
-You can try to ask on IRC, try joining #linux-wireless (freenode) and
-ask there (note, it's sometimes a very silent channel).
-But please, be nice and polite :-).
-
-- Sedat -
-
-> Thanks,
-> Laurence
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+greg 'sorry, it's been a long day staring at usb 3.0 patches...' k-h
