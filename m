@@ -1,49 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35856 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750887Ab1GIENQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jul 2011 00:13:16 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 8/9] ath9k_hw: fix synth delay for half/quarter channels
-Date: Sat,  9 Jul 2011 11:12:53 +0700
-Message-Id: <1310184774-32913-8-git-send-email-nbd@openwrt.org> (sfid-20110709_061328_617873_2DBB6EE5)
-In-Reply-To: <1310184774-32913-7-git-send-email-nbd@openwrt.org>
-References: <1310184774-32913-1-git-send-email-nbd@openwrt.org>
- <1310184774-32913-2-git-send-email-nbd@openwrt.org>
- <1310184774-32913-3-git-send-email-nbd@openwrt.org>
- <1310184774-32913-4-git-send-email-nbd@openwrt.org>
- <1310184774-32913-5-git-send-email-nbd@openwrt.org>
- <1310184774-32913-6-git-send-email-nbd@openwrt.org>
- <1310184774-32913-7-git-send-email-nbd@openwrt.org>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:60457 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756475Ab1GANut (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jul 2011 09:50:49 -0400
+Date: Fri, 01 Jul 2011 08:50:48 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: akpm@linux-foundation.org, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl8192de: Replace loops calling udelay with
+ single mdelay
+Message-ID: <4e0dd0b8.irNTM3ZWqD8ljlYa%Larry.Finger@lwfinger.net> (sfid-20110701_155055_637313_D9292F87)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The radio needs twice / four times as much time to stabilize for half/quarter
-channels.
+There are a number of loops to implement delays. These are replaced with
+single calls to mdelay().
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+The need for a fix was noted by Andrew Morton <akpm@linux-foundation.org>.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 441bb33..fac2c6d 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -627,6 +627,11 @@ static void ar5008_hw_init_bb(struct ath_hw *ah,
- 	else
- 		synthDelay /= 10;
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+@@ -932,7 +932,7 @@ bool rtl92d_phy_config_rf_with_headerfil
+ 					  enum rf_content content,
+ 					  enum radio_path rfpath)
+ {
+-	int i, j;
++	int i;
+ 	u32 *radioa_array_table;
+ 	u32 *radiob_array_table;
+ 	u16 radioa_arraylen, radiob_arraylen;
+@@ -974,13 +974,10 @@ bool rtl92d_phy_config_rf_with_headerfil
+ 				mdelay(50);
+ 			} else if (radioa_array_table[i] == 0xfd) {
+ 				/* delay_ms(5); */
+-				for (j = 0; j < 100; j++)
+-					udelay(MAX_STALL_TIME);
++				mdelay(5);
+ 			} else if (radioa_array_table[i] == 0xfc) {
+ 				/* delay_ms(1); */
+-				for (j = 0; j < 20; j++)
+-					udelay(MAX_STALL_TIME);
+-
++				mdelay(1);
+ 			} else if (radioa_array_table[i] == 0xfb) {
+ 				udelay(50);
+ 			} else if (radioa_array_table[i] == 0xfa) {
+@@ -1004,12 +1001,10 @@ bool rtl92d_phy_config_rf_with_headerfil
+ 				mdelay(50);
+ 			} else if (radiob_array_table[i] == 0xfd) {
+ 				/* delay_ms(5); */
+-				for (j = 0; j < 100; j++)
+-					udelay(MAX_STALL_TIME);
++				mdelay(5);
+ 			} else if (radiob_array_table[i] == 0xfc) {
+ 				/* delay_ms(1); */
+-				for (j = 0; j < 20; j++)
+-					udelay(MAX_STALL_TIME);
++				mdelay(1);
+ 			} else if (radiob_array_table[i] == 0xfb) {
+ 				udelay(50);
+ 			} else if (radiob_array_table[i] == 0xfa) {
+@@ -1276,7 +1271,7 @@ static void rtl92d_phy_switch_wirelessba
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+-	u8 i, value8;
++	u8 value8;
  
-+	if (IS_CHAN_HALF_RATE(chan))
-+		synthDelay *= 2;
-+	else if (IS_CHAN_QUARTER_RATE(chan))
-+		synthDelay *= 4;
-+
- 	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, ("==>\n"));
+ 	rtlhal->bandset = band;
+@@ -1321,8 +1316,7 @@ static void rtl92d_phy_switch_wirelessba
+ 		rtl_write_byte(rtlpriv, (rtlhal->interfaceindex ==
+ 			0 ? REG_MAC0 : REG_MAC1), value8);
+ 	}
+-	for (i = 0; i < 20; i++)
+-		udelay(MAX_STALL_TIME);
++	mdelay(1);
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, ("<==Switch Band OK.\n"));
+ }
  
- 	udelay(synthDelay + BASE_ACTIVATE_DELAY);
--- 
-1.7.3.2
-
