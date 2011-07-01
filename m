@@ -1,54 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:41448 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752635Ab1G3U3m (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44891 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757638Ab1GAWPz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jul 2011 16:29:42 -0400
-Received: by fxh19 with SMTP id 19so3312142fxh.19
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Jul 2011 13:29:40 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Subject: Re: [PATCH 2/2] mac80211: Always send EAPOL frames at lowest rate
-Date: Sat, 30 Jul 2011 22:32:27 +0200
-Cc: Jouni Malinen <j@w1.fi>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <1311960137-25420-1-git-send-email-helmut.schaa@googlemail.com> <20110730182810.GA2743@jm.kir.nu> <4E346396.9030707@01019freenet.de>
-In-Reply-To: <4E346396.9030707@01019freenet.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201107302232.28582.chunkeey@googlemail.com> (sfid-20110730_222947_357737_C8A93A43)
+	Fri, 1 Jul 2011 18:15:55 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Qcm0A-0007Ms-MW
+	for linux-wireless@vger.kernel.org; Sat, 02 Jul 2011 00:15:54 +0200
+Message-Id: <20110701221533.639776801@sipsolutions.net> (sfid-20110702_001601_958278_1C4F9159)
+Date: Sat, 02 Jul 2011 00:13:22 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 1/3] mac80211: allow driver to iterate keys
+References: <20110701221321.478559320@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 30 July 2011 22:03:34 Andreas Hartmann wrote:
-> Jouni Malinen schrieb:
-> > On Fri, Jul 29, 2011 at 07:22:17PM +0200, Helmut Schaa wrote:
-> >> Since EAPOL frames are normal data frames they are treated by the
-> >> rate control algorithm as such. Thus it can happen that the rate
-> >> control algorithm chooses an inappropriate rate (minstrel_ht uses
-> >> MCS rates for example) for the 4-way handshake and under low signal
-> >> conditions the handshake may time out.
-> >> 
-> >> To fix this issue always treat EAPOL frames the same as management 
-> >> frames and send them with the lowest available rate.
-> > 
-> > I don't think that this should be applied for the reasons given (and 
-> > alternative mechanisms proposed) in the discussion.
-> 
-> I tested it with AP (rt2860) (with STA rt3572sta) under load and
-> couldn't see any improvement. The first PTK-rekeying didn't work as
-> usual. Or should it be applied to STA?
+From: Johannes Berg <johannes.berg@intel.com>
 
-might be a shot into the dark. But who's assigning a proper frame sequence
-to each eapol? Hostapd certainly can't because it doesn't know what's the
-current sequence at the moment... and mac80211 won't assign one because
-the frame is injected by a monitor interface. So when the receiver gets the
-EAPOL it might drops it because the empty sequence might be not in the
-BA window anymore. Does this sound reasonable, or did I miss something?
+When in suspend/wowlan, devices might implement crypto
+offload differently (more features), and might require
+reprogramming keys for the WoWLAN (as it is the case
+for Intel devices that use another uCode image). Thus
+allow the driver to iterate all keys in this context.
 
-Regards,
-	Chr  
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h |   23 +++++++++++++++++++++++
+ net/mac80211/key.c     |   33 +++++++++++++++++++++++++++++++++
+ 2 files changed, 56 insertions(+)
+
+--- a/include/net/mac80211.h	2011-07-02 00:08:12.000000000 +0200
++++ b/include/net/mac80211.h	2011-07-02 00:08:13.000000000 +0200
+@@ -2850,6 +2850,29 @@ void ieee80211_sta_block_awake(struct ie
+ 			       struct ieee80211_sta *pubsta, bool block);
+ 
+ /**
++ * ieee80211_iter_keys - iterate keys programmed into the device
++ * @hw: pointer obtained from ieee80211_alloc_hw()
++ * @vif: virtual interface to iterate, may be %NULL for all
++ * @iter: iterator function that will be called for each key
++ * @iter_data: custom data to pass to the iterator function
++ *
++ * This function can be used to iterate all the keys known to
++ * mac80211, even those that weren't previously programmed into
++ * the device. This is intended for use in WoWLAN if the device
++ * needs reprogramming of the keys during suspend. Note that due
++ * to locking reasons, it is also only safe to call this at few
++ * spots since it must hold the RTNL and be able to sleep.
++ */
++void ieee80211_iter_keys(struct ieee80211_hw *hw,
++			 struct ieee80211_vif *vif,
++			 void (*iter)(struct ieee80211_hw *hw,
++				      struct ieee80211_vif *vif,
++				      struct ieee80211_sta *sta,
++				      struct ieee80211_key_conf *key,
++				      void *data),
++			 void *iter_data);
++
++/**
+  * ieee80211_ap_probereq_get - retrieve a Probe Request template
+  * @hw: pointer obtained from ieee80211_alloc_hw().
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+--- a/net/mac80211/key.c	2011-07-02 00:07:58.000000000 +0200
++++ b/net/mac80211/key.c	2011-07-02 00:08:13.000000000 +0200
+@@ -504,6 +504,39 @@ void ieee80211_enable_keys(struct ieee80
+ 	mutex_unlock(&sdata->local->key_mtx);
+ }
+ 
++void ieee80211_iter_keys(struct ieee80211_hw *hw,
++			 struct ieee80211_vif *vif,
++			 void (*iter)(struct ieee80211_hw *hw,
++				      struct ieee80211_vif *vif,
++				      struct ieee80211_sta *sta,
++				      struct ieee80211_key_conf *key,
++				      void *data),
++			 void *iter_data)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_key *key;
++	struct ieee80211_sub_if_data *sdata;
++
++	ASSERT_RTNL();
++
++	mutex_lock(&local->key_mtx);
++	if (vif) {
++		sdata = vif_to_sdata(vif);
++		list_for_each_entry(key, &sdata->key_list, list)
++			iter(hw, &sdata->vif,
++			     key->sta ? &key->sta->sta : NULL,
++			     &key->conf, iter_data);
++	} else {
++		list_for_each_entry(sdata, &local->interfaces, list)
++			list_for_each_entry(key, &sdata->key_list, list)
++				iter(hw, &sdata->vif,
++				     key->sta ? &key->sta->sta : NULL,
++				     &key->conf, iter_data);
++	}
++	mutex_unlock(&local->key_mtx);
++}
++EXPORT_SYMBOL(ieee80211_iter_keys);
++
+ void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_key *key;
+
+
