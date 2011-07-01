@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59641 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755139Ab1GAIKt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2011 04:10:49 -0400
-Subject: Re: Crash in mlme.c, wireless-testing 2.6.39-wl + hacks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4E0CECDD.7040409@candelatech.com>
-References: <4E0CE929.7040300@candelatech.com>
-	 (sfid-20110630_232253_480125_B86CAA5E) <1309469454.3873.0.camel@jlt3.sipsolutions.net>
-	 <4E0CECDD.7040409@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 01 Jul 2011 10:10:46 +0200
-Message-ID: <1309507846.3888.1.camel@jlt3.sipsolutions.net> (sfid-20110701_101054_242542_AE97E192)
-Mime-Version: 1.0
+Received: from c60.cesmail.net ([216.154.195.49]:1454 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751921Ab1GAUNn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jul 2011 16:13:43 -0400
+Message-ID: <4E0E2A75.3040009@gnu.org> (sfid-20110701_221347_462858_BC20A44B)
+Date: Fri, 01 Jul 2011 16:13:41 -0400
+From: Pavel Roskin <proski@gnu.org>
+MIME-Version: 1.0
+To: ant2ne <ant2ne@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: carl9170 and debian squeeze
+References: <AANLkTimL=JSK6jcF4d97Nc-vLZdeRLj8o=MbpCas-H7z@mail.gmail.com> <28292.82403.qm@web56807.mail.re3.yahoo.com> <AANLkTi=GgTWU1QmoqxM_rA8jUX7814PvZqsEGvcnc6ps@mail.gmail.com> <AANLkTi=OcXfoo8gFQ+qTYDgL4XaKXiGZpUSSiL8yT_ho@mail.gmail.com> <loom.20110701T212014-423@post.gmane.org>
+In-Reply-To: <loom.20110701T212014-423@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 07/01/2011 03:25 PM, ant2ne wrote:
+> Was there ever a solution for this?
+>
+> I continue to get the "Unknown symbol in module" error.
 
-> Very little significant changes in this area, but I've a non-related
-> proprietary module loaded, and patches to various other parts of the
-> networking code.
-> 
-> The full tree is here if you want to take a look, or I can send
-> you a full unified diff:
-> 
-> http://dmz2.candelatech.com/git/gitweb.cgi?p=linux.wireless-testing-ct.ct/.git;a=summary
+Please be specific and quote the error messages as is.  Also please give 
+the exact command so that others have a chance to tell you if you are 
+doing something wrong.  If you are using insmod, please try modprobe, as 
+only modprobe can load other modules that provide the required symbols.
 
-Fair enough, I don't see anything there that would impact this bug.
+Please see the kernel log using the dmesg command.  It should have more 
+detailed information about the unresolved symbols.
 
-> Seems a tricky timing related bug, possibly we're only hitting it because
-> we're testing on an older C3 processor system that is significantly slower
-> than our normal test systems.
+If you just installed compat-wireless, please reboot, as it would unload 
+the old wireless modules and load the new ones.  If you cannot reboot, 
+you'll need to run "make unload" in the compat-wireless directory.
 
-Hm. That seems odd. I didn't see anything that lacked locking either.
+ > I've got squeeze with
+> 2.6.32-5 kernel
+> and I've tried a variety of compat-wireless versions including the latest 3.0
+> stable.
 
-I think the detail that we need to investigate is what you said before:
+Do they all have the same problem?
 
-> configured for in-kernel authentication,
-> re-configure them for supplicant, let them associate, delete one of
-> them.
-
-but I don't see anything there either right now.
-
-johannes
-
+-- 
+Regards,
+Pavel Roskin
