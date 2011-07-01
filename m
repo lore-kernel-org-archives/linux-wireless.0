@@ -1,159 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47927 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755481Ab1GFTCG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2011 15:02:06 -0400
-Message-ID: <4E14B125.8020203@hauke-m.de> (sfid-20110706_210210_288051_83001D19)
-Date: Wed, 06 Jul 2011 21:01:57 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH] bcma: detect PCI core working in hostmode
-References: <1309888106-30232-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1309888106-30232-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:14050 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756625Ab1GAPxG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jul 2011 11:53:06 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 11/11] iwlagn: remove the indirection for the rx write pointer
+Date: Fri,  1 Jul 2011 08:20:05 -0700
+Message-Id: <1309533605-25774-12-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110701_175321_876844_7F1A4C27)
+In-Reply-To: <1309533605-25774-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1309533605-25774-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/05/2011 07:48 PM, Rafał Miłecki wrote:
-> We must not init it like clientmode one, it would break device (tested
-> by Hauke on BCM4718). Add stub hostmode driver for now.
-> 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Not needed since the driver split.
 
-> ---
-> Hauke: will you add your Signed-off-by?
-> 
-> In comparison to your patch for seriee, I have:
-> 1) Disabled MIPS check for now (commented in code)
-> 2) Enabled mode check even for driver without hostmode enabled
-> ---
->  drivers/bcma/Kconfig           |    6 ++++++
->  drivers/bcma/Makefile          |    1 +
->  drivers/bcma/bcma_private.h    |    4 ++++
->  drivers/bcma/driver_pci.c      |   38 +++++++++++++++++++++++++++++++++++++-
->  drivers/bcma/driver_pci_host.c |   14 ++++++++++++++
->  5 files changed, 62 insertions(+), 1 deletions(-)
->  create mode 100644 drivers/bcma/driver_pci_host.c
-> 
-> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-> index 83e9adf..ae0a02e 100644
-> --- a/drivers/bcma/Kconfig
-> +++ b/drivers/bcma/Kconfig
-> @@ -27,6 +27,12 @@ config BCMA_HOST_PCI
->  	bool "Support for BCMA on PCI-host bus"
->  	depends on BCMA_HOST_PCI_POSSIBLE
->  
-> +config BCMA_DRIVER_PCI_HOSTMODE
-> +	bool "Driver for PCI core working in hostmode"
-> +	depends on BCMA && MIPS
-> +	help
-> +	  PCI core hostmode operation (external PCI bus).
-> +
->  config BCMA_DEBUG
->  	bool "BCMA debugging"
->  	depends on BCMA
-> diff --git a/drivers/bcma/Makefile b/drivers/bcma/Makefile
-> index cde0182..a2161cc 100644
-> --- a/drivers/bcma/Makefile
-> +++ b/drivers/bcma/Makefile
-> @@ -1,6 +1,7 @@
->  bcma-y					+= main.o scan.o core.o sprom.o
->  bcma-y					+= driver_chipcommon.o driver_chipcommon_pmu.o
->  bcma-y					+= driver_pci.o
-> +bcma-$(CONFIG_BCMA_DRIVER_PCI_HOSTMODE)	+= driver_pci_host.o
->  bcma-$(CONFIG_BCMA_HOST_PCI)		+= host_pci.o
->  obj-$(CONFIG_BCMA)			+= bcma.o
->  
-> diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-> index 4228736..e02ff21 100644
-> --- a/drivers/bcma/bcma_private.h
-> +++ b/drivers/bcma/bcma_private.h
-> @@ -28,4 +28,8 @@ extern int __init bcma_host_pci_init(void);
->  extern void __exit bcma_host_pci_exit(void);
->  #endif /* CONFIG_BCMA_HOST_PCI */
->  
-> +#ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
-> +void bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc);
-> +#endif /* CONFIG_BCMA_DRIVER_PCI_HOSTMODE */
-> +
->  #endif
-> diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
-> index b0c19ed..dc6f34a 100644
-> --- a/drivers/bcma/driver_pci.c
-> +++ b/drivers/bcma/driver_pci.c
-> @@ -157,11 +157,47 @@ static void bcma_pcicore_serdes_workaround(struct bcma_drv_pci *pc)
->   * Init.
->   **************************************************/
->  
-> -void bcma_core_pci_init(struct bcma_drv_pci *pc)
-> +static void bcma_core_pci_clientmode_init(struct bcma_drv_pci *pc)
->  {
->  	bcma_pcicore_serdes_workaround(pc);
->  }
->  
-> +static bool bcma_core_pci_is_in_hostmode(struct bcma_drv_pci *pc)
-> +{
-> +	struct bcma_bus *bus = pc->core->bus;
-> +	u16 chipid_top;
-> +
-> +	chipid_top = (bus->chipinfo.id & 0xFF00);
-> +	if (chipid_top != 0x4700 &&
-> +	    chipid_top != 0x5300)
-> +		return false;
-> +
-> +	if (bus->sprom.boardflags_lo & SSB_PCICORE_BFL_NOPCI)
-> +		return false;
-> +
-> +#if 0
-> +	/* TODO: on BCMA we use address from EROM instead of magic formula */
-> +	u32 tmp;
-> +	return !mips_busprobe32(tmp, (bus->mmio +
-> +		(pc->core->core_index * BCMA_CORE_SIZE)));
-> +#endif
-> +
-> +	return true;
-> +}
-> +
-> +void bcma_core_pci_init(struct bcma_drv_pci *pc)
-> +{
-> +	if (bcma_core_pci_is_in_hostmode(pc)) {
-> +#ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
-> +		bcma_core_pci_hostmode_init(pc);
-> +#else
-> +		pr_err("Driver compiled without support for hostmode PCI\n");
-> +#endif /* CONFIG_BCMA_DRIVER_PCI_HOSTMODE */
-> +	} else {
-> +		bcma_core_pci_clientmode_init(pc);
-> +	}
-> +}
-> +
->  int bcma_core_pci_irq_ctl(struct bcma_drv_pci *pc, struct bcma_device *core,
->  			  bool enable)
->  {
-> diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
-> new file mode 100644
-> index 0000000..eb332b7
-> --- /dev/null
-> +++ b/drivers/bcma/driver_pci_host.c
-> @@ -0,0 +1,14 @@
-> +/*
-> + * Broadcom specific AMBA
-> + * PCI Core in hostmode
-> + *
-> + * Licensed under the GNU/GPL. See COPYING for details.
-> + */
-> +
-> +#include "bcma_private.h"
-> +#include <linux/bcma/bcma.h>
-> +
-> +void bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
-> +{
-> +	pr_err("No support for PCI core in hostmode yet\n");
-> +}
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    1 -
+ drivers/net/wireless/iwlwifi/iwl-2000.c |    1 -
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    2 --
+ drivers/net/wireless/iwlwifi/iwl-6000.c |    1 -
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 -
+ drivers/net/wireless/iwlwifi/iwl-rx.c   |    7 +++----
+ 6 files changed, 3 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 8c5a829..cf1449d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -138,7 +138,6 @@ static int iwl1000_hw_set_hw_params(struct iwl_priv *priv)
+ 
+ 	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
+ 					BIT(IEEE80211_BAND_5GHZ);
+-	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
+ 
+ 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
+ 	if (priv->cfg->rx_with_siso_diversity)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index 75d63e6..a401113 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -136,7 +136,6 @@ static int iwl2000_hw_set_hw_params(struct iwl_priv *priv)
+ 
+ 	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
+ 					BIT(IEEE80211_BAND_5GHZ);
+-	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
+ 
+ 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
+ 	if (priv->cfg->rx_with_siso_diversity)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 5ebf5d2..c55cec8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -169,7 +169,6 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+ 
+ 	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
+ 					BIT(IEEE80211_BAND_5GHZ);
+-	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
+ 
+ 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
+ 	priv->hw_params.rx_chains_num = num_of_ant(priv->cfg->valid_rx_ant);
+@@ -214,7 +213,6 @@ static int iwl5150_hw_set_hw_params(struct iwl_priv *priv)
+ 
+ 	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
+ 					BIT(IEEE80211_BAND_5GHZ);
+-	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
+ 
+ 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
+ 	priv->hw_params.rx_chains_num = num_of_ant(priv->cfg->valid_rx_ant);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 94ad57c..965d010 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -157,7 +157,6 @@ static int iwl6000_hw_set_hw_params(struct iwl_priv *priv)
+ 
+ 	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
+ 					BIT(IEEE80211_BAND_5GHZ);
+-	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
+ 
+ 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
+ 	if (priv->cfg->rx_with_siso_diversity)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 4d17619..f4501f8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -665,7 +665,6 @@ struct iwl_hw_params {
+ 	u16 max_rxq_size;
+ 	u16 max_rxq_log;
+ 	u32 rx_page_order;
+-	u32 rx_wrt_ptr_reg;
+ 	u8  max_stations;
+ 	u8  ht40_channel;
+ 	u8  max_beacon_itrvl;	/* in 1024 ms */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 065d2c0..87148bb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -134,7 +134,6 @@ int iwl_rx_queue_space(const struct iwl_rx_queue *q)
+ void iwl_rx_queue_update_write_ptr(struct iwl_priv *priv, struct iwl_rx_queue *q)
+ {
+ 	unsigned long flags;
+-	u32 rx_wrt_ptr_reg = priv->hw_params.rx_wrt_ptr_reg;
+ 	u32 reg;
+ 
+ 	spin_lock_irqsave(&q->lock, flags);
+@@ -146,7 +145,7 @@ void iwl_rx_queue_update_write_ptr(struct iwl_priv *priv, struct iwl_rx_queue *q
+ 		/* shadow register enabled */
+ 		/* Device expects a multiple of 8 */
+ 		q->write_actual = (q->write & ~0x7);
+-		iwl_write32(priv, rx_wrt_ptr_reg, q->write_actual);
++		iwl_write32(priv, FH_RSCSR_CHNL0_WPTR, q->write_actual);
+ 	} else {
+ 		/* If power-saving is in use, make sure device is awake */
+ 		if (test_bit(STATUS_POWER_PMI, &priv->status)) {
+@@ -162,14 +161,14 @@ void iwl_rx_queue_update_write_ptr(struct iwl_priv *priv, struct iwl_rx_queue *q
+ 			}
+ 
+ 			q->write_actual = (q->write & ~0x7);
+-			iwl_write_direct32(priv, rx_wrt_ptr_reg,
++			iwl_write_direct32(priv, FH_RSCSR_CHNL0_WPTR,
+ 					q->write_actual);
+ 
+ 		/* Else device is assumed to be awake */
+ 		} else {
+ 			/* Device expects a multiple of 8 */
+ 			q->write_actual = (q->write & ~0x7);
+-			iwl_write_direct32(priv, rx_wrt_ptr_reg,
++			iwl_write_direct32(priv, FH_RSCSR_CHNL0_WPTR,
+ 				q->write_actual);
+ 		}
+ 	}
+-- 
+1.7.0.4
 
