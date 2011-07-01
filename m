@@ -1,131 +1,328 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:33578 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751536Ab1GLJ5Z (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44897 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757801Ab1GAWT2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2011 05:57:25 -0400
-Date: Tue, 12 Jul 2011 15:27:33 +0530
-From: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v2] ath9k: improve reliability of MIC error detection
-Message-ID: <20110712095732.GA5132@senthil-lnx.users.atheros.com> (sfid-20110712_115728_934345_71BF3472)
-References: <1310435333-70700-1-git-send-email-nbd@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1310435333-70700-1-git-send-email-nbd@openwrt.org>
+	Fri, 1 Jul 2011 18:19:28 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Qcm3b-0007OI-Ih
+	for linux-wireless@vger.kernel.org; Sat, 02 Jul 2011 00:19:27 +0200
+Subject: [RFC] wpa_supplicant/nl80211: support GTK rekey offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <20110701221321.478559320@sipsolutions.net> (sfid-20110702_001559_666877_5A8663AA)
+References: <20110701221321.478559320@sipsolutions.net>
+	 (sfid-20110702_001559_666877_5A8663AA)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 02 Jul 2011 00:19:30 +0200
+Message-ID: <1309558770.3888.6.camel@jlt3.sipsolutions.net> (sfid-20110702_001941_852128_B509616E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 12, 2011 at 09:48:53AM +0800, Felix Fietkau wrote:
-> For unicast the hardware sometimes reports MIC errors even though the
-> frame that it received actually contains a valid MIC - on some chips this
-> can happen frequently enough to trigger TKIP countermeasures.
-> Fix this issue by not reporting MIC errors for unicast frames with a
-> valid key, letting mac80211 validate the MIC instead.
-> 
-> Additionally, strip the MIC for all frames that the hardware considers
-> valid to avoid wasting CPU cycles re-validating it.
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath9k/recv.c |   44 +++++++++++++++++---------------
->  1 files changed, 23 insertions(+), 21 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> index 80bb04f..3d9359a 100644
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -814,16 +814,19 @@ static bool ath9k_rx_accept(struct ath_common *common,
->  			    struct ath_rx_status *rx_stats,
->  			    bool *decrypt_error)
->  {
-> -#define is_mc_or_valid_tkip_keyix ((is_mc ||			\
-> -		(rx_stats->rs_keyix != ATH9K_RXKEYIX_INVALID && \
-> -		test_bit(rx_stats->rs_keyix, common->tkip_keymap))))
-> -
-> +	bool is_mc, is_valid_tkip, strip_mic, mic_error = false;
->  	struct ath_hw *ah = common->ah;
->  	__le16 fc;
->  	u8 rx_status_len = ah->caps.rx_status_len;
->  
->  	fc = hdr->frame_control;
->  
-> +	is_mc = !!is_multicast_ether_addr(hdr->addr1);
-> +	is_valid_tkip = rx_stats->rs_keyix != ATH9K_RXKEYIX_INVALID &&
-> +		test_bit(rx_stats->rs_keyix, common->tkip_keymap);
-> +	strip_mic = is_valid_tkip && !(rx_stats->rs_status &
-> +		(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_CRC | ATH9K_RXERR_MIC));
-> +
-[...]
->  	if (!rx_stats->rs_datalen)
->  		return false;
->          /*
-> @@ -850,25 +853,9 @@ static bool ath9k_rx_accept(struct ath_common *common,
->  		if (rx_stats->rs_status & ATH9K_RXERR_PHY)
->  			return false;
->  
-> -		if (rx_stats->rs_status & ATH9K_RXERR_DECRYPT) {
-> +		if (rx_stats->rs_status & ATH9K_RXERR_DECRYPT)
->  			*decrypt_error = true;
-> -		} else if (rx_stats->rs_status & ATH9K_RXERR_MIC) {
-> -			bool is_mc;
-> -			/*
-> -			 * The MIC error bit is only valid if the frame
-> -			 * is not a control frame or fragment, and it was
-> -			 * decrypted using a valid TKIP key.
-> -			 */
-> -			is_mc = !!is_multicast_ether_addr(hdr->addr1);
->  
-> -			if (!ieee80211_is_ctl(fc) &&
-> -			    !ieee80211_has_morefrags(fc) &&
-> -			    !(le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG) &&
-How are we going to handle the above conditions?
-> -			    is_mc_or_valid_tkip_keyix)
-> -				rxs->flag |= RX_FLAG_MMIC_ERROR;
-> -			else
-> -				rx_stats->rs_status &= ~ATH9K_RXERR_MIC;
-> -		}
->  		/*
->  		 * Reject error frames with the exception of
->  		 * decryption and MIC failures. For monitor mode,
-> @@ -886,6 +873,18 @@ static bool ath9k_rx_accept(struct ath_common *common,
->  			}
->  		}
->  	}
-> +
-> +	/*
-> +	 * For unicast frames the MIC error bit can have false positives,
-> +	 * so all MIC error reports need to be validated in software.
-> +	 * False negatives are not common, so skip software verification
-> +	 * if the hardware considers the MIC valid.
-> +	 */
-> +	if (strip_mic)
-> +		rxs->flag |= RX_FLAG_MMIC_STRIPPED;
-> +	else if (is_mc && mic_error)
-mic_error is always false here. I believe you wanted to set it
-based on MIC failure in rx status and may be missed out...
+From: Johannes Berg <johannes.berg@intel.com>
 
-> +		rxs->flag |= RX_FLAG_MMIC_ERROR;
-> +
->  	return true;
->  }
->  
-> @@ -1938,6 +1937,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
->  			sc->rx.rxotherant = 0;
->  		}
->  
-> +		if (rxs->flag & RX_FLAG_MMIC_STRIPPED)
-> +			skb_trim(skb, skb->len - 8);
-> +
->  		spin_lock_irqsave(&sc->sc_pm_lock, flags);
->  
->  		if ((sc->ps_flags & (PS_WAIT_FOR_BEACON |
-> -- 
-> 1.7.3.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Add support to wpa_supplicant for device-based
+GTK rekeying. In order to support that, pass the
+KEK, KCK and replay counter to the driver, and
+handle rekey events that update the latter.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+Not included is a massive nl80211_copy.h update, that'd just pollute the
+patch as you can see in the diffstat...
+
+ src/drivers/driver.h         |   23 +
+ src/drivers/driver_nl80211.c |   76 ++++++
+ src/drivers/nl80211_copy.h   |  504 +++++++++++++++++++++++++++++++++++++++++--
+ src/rsn_supp/wpa.c           |    7 
+ src/rsn_supp/wpa.h           |    9 
+ src/rsn_supp/wpa_i.h         |    8 
+ wpa_supplicant/driver_i.h    |    9 
+ wpa_supplicant/events.c      |    9 
+ wpa_supplicant/wpas_glue.c   |   10 
+ 9 files changed, 634 insertions(+), 21 deletions(-)
+
+--- a/src/drivers/driver.h	2011-07-01 19:18:00.000000000 +0200
++++ b/src/drivers/driver.h	2011-07-01 23:40:06.000000000 +0200
+@@ -2253,6 +2253,12 @@ struct wpa_driver_ops {
+ 	 * implementation, there is no need to implement this function.
+ 	 */
+ 	int (*set_authmode)(void *priv, int authmode);
++
++	/**
++	 * set_rekey_info - set rekey information
++	 */
++	void (*set_rekey_info)(void *priv, const u8 *kek, const u8 *kck,
++			       const u8 *replay_ctr);
+ };
+ 
+ 
+@@ -2655,7 +2661,14 @@ enum wpa_event_type {
+ 	/**
+ 	 * EVENT_IBSS_PEER_LOST - IBSS peer not reachable anymore
+ 	 */
+-	EVENT_IBSS_PEER_LOST
++	EVENT_IBSS_PEER_LOST,
++
++	/**
++	 * EVENT_DRIVER_GTK_REKEY - device/driver did rekey
++	 *
++	 * This event carries the new replay counter.
++	 */
++	EVENT_DRIVER_GTK_REKEY
+ };
+ 
+ 
+@@ -3187,6 +3200,14 @@ union wpa_event_data {
+ 	struct ibss_peer_lost {
+ 		u8 peer[ETH_ALEN];
+ 	} ibss_peer_lost;
++
++	/**
++	 * struct driver_gtk_rekey
++	 */
++	struct driver_gtk_rekey {
++		const u8 *bssid;
++		const u8 *replay_ctr;
++	} driver_gtk_rekey;
+ };
+ 
+ /**
+--- a/wpa_supplicant/driver_i.h	2011-07-01 19:18:01.000000000 +0200
++++ b/wpa_supplicant/driver_i.h	2011-07-01 19:23:37.000000000 +0200
+@@ -704,4 +704,13 @@ static inline int wpa_drv_tdls_oper(stru
+ 	return wpa_s->driver->tdls_oper(wpa_s->drv_priv, oper, peer);
+ }
+ 
++static inline void wpa_drv_set_rekey_info(struct wpa_supplicant *wpa_s,
++					  const u8 *kek, const u8 *kck,
++					  const u8 *replay_ctr)
++{
++	if (!wpa_s->driver->set_rekey_info)
++		return;
++	wpa_s->driver->set_rekey_info(wpa_s->drv_priv, kek, kck, replay_ctr);
++}
++
+ #endif /* DRIVER_I_H */
+--- a/src/rsn_supp/wpa.c	2011-07-01 19:18:00.000000000 +0200
++++ b/src/rsn_supp/wpa.c	2011-07-01 19:23:37.000000000 +0200
+@@ -1172,6 +1172,8 @@ static void wpa_supplicant_process_3_of_
+ 		goto failed;
+ 	}
+ 
++	wpa_sm_set_rekey_offload(sm);
++
+ 	return;
+ 
+ failed:
+@@ -2642,3 +2644,8 @@ int wpa_sm_has_ptk(struct wpa_sm *sm)
+ 		return 0;
+ 	return sm->ptk_set;
+ }
++
++void wpa_sm_update_replay_ctr(struct wpa_sm *sm, const u8 *replay_ctr)
++{
++	os_memcpy(sm->rx_replay_counter, replay_ctr, WPA_REPLAY_COUNTER_LEN);
++}
+--- a/src/rsn_supp/wpa_i.h	2011-07-01 19:18:00.000000000 +0200
++++ b/src/rsn_supp/wpa_i.h	2011-07-01 19:23:37.000000000 +0200
+@@ -244,6 +244,14 @@ static inline int wpa_sm_mark_authentica
+ 	return -1;
+ }
+ 
++static inline void wpa_sm_set_rekey_offload(struct wpa_sm *sm)
++{
++	if (!sm->ctx->set_rekey_offload)
++		return;
++	sm->ctx->set_rekey_offload(sm->ctx->ctx, sm->ptk.kek,
++				   sm->ptk.kck, sm->rx_replay_counter);
++}
++
+ #ifdef CONFIG_TDLS
+ static inline int wpa_sm_send_tdls_mgmt(struct wpa_sm *sm, const u8 *dst,
+ 					u8 action_code, u8 dialog_token,
+--- a/src/rsn_supp/wpa.h	2011-07-01 19:18:00.000000000 +0200
++++ b/src/rsn_supp/wpa.h	2011-07-01 19:23:37.000000000 +0200
+@@ -61,6 +61,8 @@ struct wpa_sm_ctx {
+ 			      u16 status_code, const u8 *buf, size_t len);
+ 	int (*tdls_oper)(void *ctx, int oper, const u8 *peer);
+ #endif /* CONFIG_TDLS */
++	void (*set_rekey_offload)(void *ctx, const u8 *kek, const u8 *kck,
++				  const u8 *replay_ctr);
+ };
+ 
+ 
+@@ -132,6 +134,8 @@ int wpa_sm_pmksa_cache_list(struct wpa_s
+ void wpa_sm_drop_sa(struct wpa_sm *sm);
+ int wpa_sm_has_ptk(struct wpa_sm *sm);
+ 
++void wpa_sm_update_replay_ctr(struct wpa_sm *sm, const u8 *replay_ctr);
++
+ #else /* CONFIG_NO_WPA */
+ 
+ static inline struct wpa_sm * wpa_sm_init(struct wpa_sm_ctx *ctx)
+@@ -277,6 +281,11 @@ static inline int wpa_sm_has_ptk(struct
+ 	return 0;
+ }
+ 
++static inline void wpa_sm_update_replay_ctr(struct wpa_sm *sm,
++					    const u8 *replay_ctr)
++{
++}
++
+ #endif /* CONFIG_NO_WPA */
+ 
+ #ifdef CONFIG_PEERKEY
+--- a/wpa_supplicant/events.c	2011-07-01 19:23:31.000000000 +0200
++++ b/wpa_supplicant/events.c	2011-07-01 19:23:37.000000000 +0200
+@@ -2203,6 +2203,15 @@ void wpa_supplicant_event(void *ctx, enu
+ 		ibss_rsn_stop(wpa_s->ibss_rsn, data->ibss_peer_lost.peer);
+ #endif /* CONFIG_IBSS_RSN */
+ 		break;
++	case EVENT_DRIVER_GTK_REKEY:
++		if (os_memcmp(data->driver_gtk_rekey.bssid,
++			      wpa_s->bssid, ETH_ALEN))
++			break;
++		if (!wpa_s->wpa)
++			break;
++		wpa_sm_update_replay_ctr(wpa_s->wpa,
++					 data->driver_gtk_rekey.replay_ctr);
++		break;
+ 	default:
+ 		wpa_msg(wpa_s, MSG_INFO, "Unknown event %d", event);
+ 		break;
+--- a/wpa_supplicant/wpas_glue.c	2011-07-01 19:18:00.000000000 +0200
++++ b/wpa_supplicant/wpas_glue.c	2011-07-01 19:23:37.000000000 +0200
+@@ -655,6 +655,15 @@ int wpa_supplicant_init_eapol(struct wpa
+ }
+ 
+ 
++static void wpa_supplicant_set_rekey_offload(void *ctx, const u8 *kek,
++					     const u8 *kck, const u8 *replay_ctr)
++{
++	struct wpa_supplicant *wpa_s = ctx;
++
++	wpa_drv_set_rekey_info(wpa_s, kek, kck, replay_ctr);
++}
++
++
+ int wpa_supplicant_init_wpa(struct wpa_supplicant *wpa_s)
+ {
+ #ifndef CONFIG_NO_WPA
+@@ -694,6 +703,7 @@ int wpa_supplicant_init_wpa(struct wpa_s
+ 	ctx->send_tdls_mgmt = wpa_supplicant_send_tdls_mgmt;
+ 	ctx->tdls_oper = wpa_supplicant_tdls_oper;
+ #endif /* CONFIG_TDLS */
++	ctx->set_rekey_offload = wpa_supplicant_set_rekey_offload;
+ 
+ 	wpa_s->wpa = wpa_sm_init(ctx);
+ 	if (wpa_s->wpa == NULL) {
+--- a/src/drivers/driver_nl80211.c	2011-07-01 19:23:31.000000000 +0200
++++ b/src/drivers/driver_nl80211.c	2011-07-01 23:39:16.000000000 +0200
+@@ -1376,6 +1376,44 @@ static void nl80211_del_station_event(st
+ }
+ 
+ 
++static void nl80211_rekey_offload_event(struct wpa_driver_nl80211_data *drv,
++					struct nlattr **tb)
++{
++	struct nlattr *rekey_info[NUM_NL80211_REKEY_DATA];
++	static struct nla_policy rekey_policy[NUM_NL80211_REKEY_DATA] = {
++		[NL80211_REKEY_DATA_KEK] = {
++			.minlen = NL80211_KEK_LEN,
++			.maxlen = NL80211_KEK_LEN,
++		},
++		[NL80211_REKEY_DATA_KCK] = {
++			.minlen = NL80211_KCK_LEN,
++			.maxlen = NL80211_KCK_LEN,
++		},
++		[NL80211_REKEY_DATA_REPLAY_CTR] = {
++			.minlen = NL80211_REPLAY_CTR_LEN,
++			.maxlen = NL80211_REPLAY_CTR_LEN,
++		},
++	};
++	union wpa_event_data data;
++
++	if (!tb[NL80211_ATTR_MAC])
++		return;
++	if (!tb[NL80211_ATTR_REKEY_DATA])
++		return;
++	if (nla_parse_nested(rekey_info, MAX_NL80211_REKEY_DATA,
++			     tb[NL80211_ATTR_REKEY_DATA], rekey_policy))
++		return;
++	if (!rekey_info[NL80211_REKEY_DATA_REPLAY_CTR])
++		return;
++
++	os_memset(&data, 0, sizeof(data));
++	data.driver_gtk_rekey.bssid = nla_data(tb[NL80211_ATTR_MAC]);
++	data.driver_gtk_rekey.replay_ctr =
++		nla_data(rekey_info[NL80211_REKEY_DATA_REPLAY_CTR]);
++	wpa_supplicant_event(drv->ctx, EVENT_DRIVER_GTK_REKEY, &data);
++}
++
++
+ static int process_event(struct nl_msg *msg, void *arg)
+ {
+ 	struct wpa_driver_nl80211_data *drv = arg;
+@@ -1494,6 +1532,8 @@ static int process_event(struct nl_msg *
+ 	case NL80211_CMD_DEL_STATION:
+ 		nl80211_del_station_event(drv, tb);
+ 		break;
++	case NL80211_CMD_SET_REKEY_OFFLOAD:
++		nl80211_rekey_offload_event(drv, tb);
+ 	default:
+ 		wpa_printf(MSG_DEBUG, "nl80211: Ignored unknown event "
+ 			   "(cmd=%d)", gnlh->cmd);
+@@ -6639,6 +6679,41 @@ static int nl80211_flush_pmkid(void *pri
+ }
+ 
+ 
++static void nl80211_set_rekey_info(void *priv, const u8 *kek, const u8 *kck,
++				   const u8 *replay_ctr)
++{
++	struct i802_bss *bss = priv;
++	struct wpa_driver_nl80211_data *drv = bss->drv;
++	struct nlattr *replay_nested;
++	struct nl_msg *msg;
++
++	msg = nlmsg_alloc();
++	if (!msg)
++		return;
++
++	genlmsg_put(msg, 0, 0, genl_family_get_id(drv->nl80211), 0, 0,
++		    NL80211_CMD_SET_REKEY_OFFLOAD, 0);
++
++	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, bss->ifindex);
++
++	replay_nested = nla_nest_start(msg, NL80211_ATTR_REKEY_DATA);
++	if (!replay_nested)
++		goto nla_put_failure;
++
++	NLA_PUT(msg, NL80211_REKEY_DATA_KEK, NL80211_KEK_LEN, kek);
++	NLA_PUT(msg, NL80211_REKEY_DATA_KCK, NL80211_KCK_LEN, kck);
++	NLA_PUT(msg, NL80211_REKEY_DATA_REPLAY_CTR, NL80211_REPLAY_CTR_LEN,
++		replay_ctr);
++
++	nla_nest_end(msg, replay_nested);
++
++	send_and_recv_msgs(drv, msg, NULL, NULL);
++	return;
++ nla_put_failure:
++	nlmsg_free(msg);
++}
++
++
+ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
+ 	.name = "nl80211",
+ 	.desc = "Linux nl80211/cfg80211",
+@@ -6711,4 +6786,5 @@ const struct wpa_driver_ops wpa_driver_n
+ 	.add_pmkid = nl80211_add_pmkid,
+ 	.remove_pmkid = nl80211_remove_pmkid,
+ 	.flush_pmkid = nl80211_flush_pmkid,
++	.set_rekey_info = nl80211_set_rekey_info,
+ };
+
+
