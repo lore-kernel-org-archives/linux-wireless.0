@@ -1,346 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:55924 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752892Ab1GZAAM (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:56593 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751762Ab1GAFmq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2011 20:00:12 -0400
-Received: by mail-pz0-f42.google.com with SMTP id 37so9320498pzk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2011 17:00:11 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 4/6] mac80211: update mesh peering frame format
-Date: Mon, 25 Jul 2011 16:59:15 -0700
-Message-Id: <1311638357-28740-5-git-send-email-thomas@cozybit.com> (sfid-20110726_020016_516356_F1B30FDD)
-In-Reply-To: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
-References: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
+	Fri, 1 Jul 2011 01:42:46 -0400
+Message-ID: <4E0D5E42.20702@gmail.com> (sfid-20110701_074303_856846_036EDCA7)
+Date: Thu, 30 Jun 2011 22:42:26 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
+Subject: WARNING: at kernel/timer.c:1011 del_timer_sync+0xa9/0xc4()
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch updates the mesh peering frames to the format specified in
-the recently ratified 802.11s standard. Several changes took place to
-make this happen:
+not sure if somebody has posted this or not(did post last week, but no 
+replies on this) I would bisect, but have no time(maybe in the future).
 
-	- Change RX path to handle new self-protected frames
-	- Add new Peering management IE
-	- Remove old Peer Link IE
-	- Remove old plink_action field in ieee80211_mgmt header
+anyways let me know if you need more info.
+dmesg here:
+http://fpaste.org/wLxM/
 
-These changes by themselves would either break peering, or work by
-coincidence, so squash them all into this patch.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- include/linux/ieee80211.h  |   18 ---------
- net/mac80211/ieee80211_i.h |    4 +-
- net/mac80211/mesh.c        |   10 ++++-
- net/mac80211/mesh_plink.c  |   87 ++++++++++++++++++++++++--------------------
- net/mac80211/rx.c          |   18 +++++++++
- net/mac80211/util.c        |    6 ++--
- 6 files changed, 78 insertions(+), 65 deletions(-)
+[ 43.108967] SELinux: initialized (dev fusectl, type fusectl), uses 
+genfs_contexts
+[ 561.844541] ath: Failed to stop TX DMA!
+[ 1514.074565] ------------[ cut here ]------------
+[ 1514.074584] WARNING: at kernel/timer.c:1011 del_timer_sync+0xa9/0xc4()
+[ 1514.074590] Hardware name: MacBookPro2,2
+[ 1514.074595] Modules linked in: fuse 8021q cpufreq_ondemand garp stp 
+acpi_cpufreq llc freq_table mperf ipt_REJECT nf_conntrack_ipv4 
+nf_defrag_ipv4 xt_state nf_conntrack iptable_filter ip_tables arc4 
+radeon ath9k mac80211 ttm ath9k_common drm_kms_helper ath9k_hw drm ath 
+cfg80211 uvcvideo videodev btusb bluetooth sky2 v4l2_compat_ioctl32 
+appletouch iTCO_wdt i2c_i801 joydev i2c_algo_bit iTCO_vendor_support 
+applesmc rfkill i2c_core input_polldev apple_bl video microcode [last 
+unloaded: scsi_wait_scan]
+[ 1514.074730] Pid: 1550, comm: threaded-ml Not tainted 
+3.0.0-rc5-00080-gca56a95 #6
+[ 1514.074735] Call Trace:
+[ 1514.074739] <IRQ> [<ffffffff8104c560>] warn_slowpath_common+0x83/0x9b
+[ 1514.074758] [<ffffffff8104c592>] warn_slowpath_null+0x1a/0x1c
+[ 1514.074767] [<ffffffff81059409>] del_timer_sync+0xa9/0xc4
+[ 1514.074775] [<ffffffff81059360>] ? process_timeout+0x10/0x10
+[ 1514.074794] [<ffffffffa003c971>] ath_reset+0x43/0x1d0 [ath9k]
+[ 1514.074804] [<ffffffff810524b6>] ? _local_bh_enable_ip+0xca/0xce
+[ 1514.074821] [<ffffffffa0040e71>] ath_tx_complete_aggr+0x7c3/0x7dd [ath9k]
+[ 1514.074837] [<ffffffffa00406ae>] ? ath_tx_flush_tid+0xe0/0xe0 [ath9k]
+[ 1514.074855] [<ffffffffa0042396>] ath_tx_tasklet+0x235/0x2cb [ath9k]
+[ 1514.074871] [<ffffffffa003cd23>] ath9k_tasklet+0xf4/0x135 [ath9k]
+[ 1514.074880] [<ffffffff81052112>] tasklet_action+0x8d/0xed
+[ 1514.074889] [<ffffffff810526d4>] __do_softirq+0xdb/0x1ec
+[ 1514.074899] [<ffffffff8107c0c9>] ? lock_release+0x165/0x18e
+[ 1514.074910] [<ffffffff814a921c>] call_softirq+0x1c/0x30
+[ 1514.074919] [<ffffffff8100ab5a>] do_softirq+0x4b/0xa1
+[ 1514.074927] [<ffffffff810529f5>] irq_exit+0x5d/0xa8
+[ 1514.074935] [<ffffffff814a9abe>] do_IRQ+0x8e/0xa5
+[ 1514.074945] [<ffffffff814a1793>] common_interrupt+0x13/0x13
+[ 1514.074950] <EOI> [<ffffffff81071178>] ? current_kernel_time+0x13/0x34
+[ 1514.074968] [<ffffffff814a7fba>] ? sysret_check+0x2e/0x69
+[ 1514.074977] [<ffffffff8107c5b4>] ? trace_hardirqs_on_caller+0x10b/0x12f
+[ 1514.074988] [<ffffffff8109e501>] audit_syscall_entry+0x11c/0x148
+[ 1514.074998] [<ffffffff8122ef3e>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+[ 1514.075076] [<ffffffff814a8089>] auditsys+0x19/0x4a
+[ 1514.075084] ---[ end trace 834e058f0ef2c378 ]---
+[ 1514.075092] ------------[ cut here ]------------
+[ 1514.075101] WARNING: at kernel/softirq.c:98 
+__local_bh_disable+0x45/0xb1()
+[ 1514.075108] Hardware name: MacBookPro2,2
+[ 1514.075113] Modules linked in: fuse 8021q cpufreq_ondemand garp stp 
+acpi_cpufreq llc freq_table mperf ipt_REJECT nf_conntrack_ipv4 
+nf_defrag_ipv4 xt_state nf_conntrack iptable_filter ip_tables arc4 
+radeon ath9k mac80211 ttm ath9k_common drm_kms_helper ath9k_hw drm ath 
+cfg80211 uvcvideo videodev btusb bluetooth sky2 v4l2_compat_ioctl32 
+appletouch iTCO_wdt i2c_i801 joydev i2c_algo_bit iTCO_vendor_support 
+applesmc rfkill i2c_core input_polldev apple_bl video microcode [last 
+unloaded: scsi_wait_scan]
+[ 1514.075271] Pid: 1550, comm: threaded-ml Tainted: G W 
+3.0.0-rc5-00080-gca56a95 #6
+[ 1514.075278] Call Trace:
+[ 1514.075283] <IRQ> [<ffffffff8104c560>] warn_slowpath_common+0x83/0x9b
+[ 1514.075303] [<ffffffff814a1061>] ? _raw_spin_lock_bh+0x16/0x45
+[ 1514.075313] [<ffffffff8104c592>] warn_slowpath_null+0x1a/0x1c
+[ 1514.075324] [<ffffffff810522aa>] __local_bh_disable+0x45/0xb1
+[ 1514.075333] [<ffffffff8105232d>] local_bh_disable+0x17/0x19
+[ 1514.075344] [<ffffffff814a1061>] _raw_spin_lock_bh+0x16/0x45
+[ 1514.075362] [<ffffffffa003c98c>] ath_reset+0x5e/0x1d0 [ath9k]
+[ 1514.075372] [<ffffffff810524b6>] ? _local_bh_enable_ip+0xca/0xce
+[ 1514.075391] [<ffffffffa0040e71>] ath_tx_complete_aggr+0x7c3/0x7dd [ath9k]
+[ 1514.075409] [<ffffffffa00406ae>] ? ath_tx_flush_tid+0xe0/0xe0 [ath9k]
+[ 1514.075428] [<ffffffffa0042396>] ath_tx_tasklet+0x235/0x2cb [ath9k]
+[ 1514.075445] [<ffffffffa003cd23>] ath9k_tasklet+0xf4/0x135 [ath9k]
+[ 1514.075456] [<ffffffff81052112>] tasklet_action+0x8d/0xed
+[ 1514.075465] [<ffffffff810526d4>] __do_softirq+0xdb/0x1ec
+[ 1514.075476] [<ffffffff8107c0c9>] ? lock_release+0x165/0x18e
+[ 1514.075487] [<ffffffff814a921c>] call_softirq+0x1c/0x30
+[ 1514.075496] [<ffffffff8100ab5a>] do_softirq+0x4b/0xa1
+[ 1514.075505] [<ffffffff810529f5>] irq_exit+0x5d/0xa8
+[ 1514.075514] [<ffffffff814a9abe>] do_IRQ+0x8e/0xa5
+[ 1514.075524] [<ffffffff814a1793>] common_interrupt+0x13/0x13
+[ 1514.075529] <EOI> [<ffffffff81071178>] ? current_kernel_time+0x13/0x34
+[ 1514.075548] [<ffffffff814a7fba>] ? sysret_check+0x2e/0x69
+[ 1514.075559] [<ffffffff8107c5b4>] ? trace_hardirqs_on_caller+0x10b/0x12f
+[ 1514.075570] [<ffffffff8109e501>] audit_syscall_entry+0x11c/0x148
+[ 1514.075580] [<ffffffff8122ef3e>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+[ 1514.075590] [<ffffffff814a8089>] auditsys+0x19/0x4a
+[ 1514.075596] ---[ end trace 834e058f0ef2c379 ]---
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 947dc3f..5ecf148 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -736,19 +736,6 @@ struct ieee80211_mgmt {
- 					__le16 params;
- 					__le16 reason_code;
- 				} __attribute__((packed)) delba;
--				struct{
--					u8 action_code;
--					/* capab_info for open and confirm,
--					 * reason for close
--					 */
--					__le16 aux;
--					/* Followed in plink_confirm by status
--					 * code, AID and supported rates,
--					 * and directly by supported rates in
--					 * plink_open and plink_close
--					 */
--					u8 variable[0];
--				} __attribute__((packed)) plink_action;
- 				struct {
- 					u8 action_code;
- 					u8 variable[0];
-@@ -1198,11 +1185,6 @@ enum ieee80211_eid {
- 	WLAN_EID_MESH_ID = 114,
- 	WLAN_EID_LINK_METRIC_REPORT = 115,
- 	WLAN_EID_CONGESTION_NOTIFICATION = 116,
--	/* Note that the Peer Link IE has been replaced with the similar
--	 * Peer Management IE.  We will keep the former definition until mesh
--	 * code is changed to comply with latest 802.11s drafts.
--	 */
--	WLAN_EID_PEER_LINK = 55,  /* no longer in 802.11s drafts */
- 	WLAN_EID_PEER_MGMT = 117,
- 	WLAN_EID_CHAN_SWITCH_PARAM = 118,
- 	WLAN_EID_MESH_AWAKE_WINDOW = 119,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index dda0d1a..b94b79b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1043,7 +1043,7 @@ struct ieee802_11_elems {
- 	struct ieee80211_ht_info *ht_info_elem;
- 	struct ieee80211_meshconf_ie *mesh_config;
- 	u8 *mesh_id;
--	u8 *peer_link;
-+	u8 *peering;
- 	u8 *preq;
- 	u8 *prep;
- 	u8 *perr;
-@@ -1070,7 +1070,7 @@ struct ieee802_11_elems {
- 	u8 wmm_info_len;
- 	u8 wmm_param_len;
- 	u8 mesh_id_len;
--	u8 peer_link_len;
-+	u8 peering_len;
- 	u8 preq_len;
- 	u8 prep_len;
- 	u8 perr_len;
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index e0a19e9..a1bd372 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -662,8 +662,14 @@ static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
- 					  struct ieee80211_rx_status *rx_status)
- {
- 	switch (mgmt->u.action.category) {
--	case WLAN_CATEGORY_MESH_ACTION:
--		mesh_rx_plink_frame(sdata, mgmt, len, rx_status);
-+	case WLAN_CATEGORY_SELF_PROTECTED:
-+		switch (mgmt->u.action.u.self_prot.action_code) {
-+		case WLAN_SP_MESH_PEERING_OPEN:
-+		case WLAN_SP_MESH_PEERING_CLOSE:
-+		case WLAN_SP_MESH_PEERING_CONFIRM:
-+			mesh_rx_plink_frame(sdata, mgmt, len, rx_status);
-+			break;
-+		}
- 		break;
- 	case WLAN_CATEGORY_MESH_PATH_SEL:
- 		mesh_rx_path_sel_frame(sdata, mgmt, len);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index a598a08..e9d182a 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -19,8 +19,8 @@
- #define mpl_dbg(fmt, args...)	do { (void)(0); } while (0)
- #endif
- 
--#define PLINK_GET_LLID(p) (p + 4)
--#define PLINK_GET_PLID(p) (p + 6)
-+#define PLINK_GET_LLID(p) (p + 2)
-+#define PLINK_GET_PLID(p) (p + 4)
- 
- #define mod_plink_timer(s, t) (mod_timer(&s->plink_timer, \
- 				jiffies + HZ * t / 1000))
-@@ -147,9 +147,9 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 			sdata->u.mesh.ie_len);
- 	struct ieee80211_mgmt *mgmt;
- 	bool include_plid = false;
--	static const u8 meshpeeringproto[] = { 0x00, 0x0F, 0xAC, 0x2A };
-+	int ie_len = 4;
-+	u16 peering_proto = 0;
- 	u8 *pos;
--	int ie_len;
- 
- 	if (!skb)
- 		return -1;
-@@ -158,24 +158,23 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 	 * common action part (1)
- 	 */
- 	mgmt = (struct ieee80211_mgmt *)
--		skb_put(skb, 25 + sizeof(mgmt->u.action.u.plink_action));
--	memset(mgmt, 0, 25 + sizeof(mgmt->u.action.u.plink_action));
-+		skb_put(skb, 25 + sizeof(mgmt->u.action.u.self_prot));
-+	memset(mgmt, 0, 25 + sizeof(mgmt->u.action.u.self_prot));
- 	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
- 					  IEEE80211_STYPE_ACTION);
- 	memcpy(mgmt->da, da, ETH_ALEN);
- 	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
- 	memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
--	mgmt->u.action.category = WLAN_CATEGORY_MESH_ACTION;
--	mgmt->u.action.u.plink_action.action_code = action;
-+	mgmt->u.action.category = WLAN_CATEGORY_SELF_PROTECTED;
-+	mgmt->u.action.u.self_prot.action_code = action;
- 
--	if (action == WLAN_SP_MESH_PEERING_CLOSE)
--		mgmt->u.action.u.plink_action.aux = reason;
--	else {
--		mgmt->u.action.u.plink_action.aux = cpu_to_le16(0x0);
-+	if (action != WLAN_SP_MESH_PEERING_CLOSE) {
-+		/* capability info */
-+		pos = skb_put(skb, 2);
-+		memset(pos, 0, 2);
- 		if (action == WLAN_SP_MESH_PEERING_CONFIRM) {
--			pos = skb_put(skb, 4);
--			/* two-byte status code followed by two-byte AID */
--			memset(pos, 0, 2);
-+			/* AID */
-+			pos = skb_put(skb, 2);
- 			memcpy(pos + 2, &plid, 2);
- 		}
- 		if (mesh_add_srates_ie(skb, sdata) ||
-@@ -184,42 +183,50 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		    mesh_add_meshid_ie(skb, sdata) ||
- 		    mesh_add_meshconf_ie(skb, sdata))
- 			return -1;
-+	} else {	/* WLAN_SP_MESH_PEERING_CLOSE */
-+		if (mesh_add_meshid_ie(skb, sdata))
-+			return -1;
- 	}
- 
--	/* Add Peer Link Management element */
-+	/* Add Mesh Peering Management element */
- 	switch (action) {
- 	case WLAN_SP_MESH_PEERING_OPEN:
--		ie_len = 6;
- 		break;
- 	case WLAN_SP_MESH_PEERING_CONFIRM:
--		ie_len = 8;
-+		ie_len += 2;
- 		include_plid = true;
- 		break;
- 	case WLAN_SP_MESH_PEERING_CLOSE:
--	default:
--		if (!plid)
--			ie_len = 8;
--		else {
--			ie_len = 10;
-+		if (plid) {
-+			ie_len += 2;
- 			include_plid = true;
- 		}
-+		ie_len += 2;	/* reason code */
- 		break;
-+	default:
-+		return -EINVAL;
- 	}
- 
-+	if (WARN_ON(skb_tailroom(skb) < 2 + ie_len))
-+		return -ENOMEM;
-+
- 	pos = skb_put(skb, 2 + ie_len);
--	*pos++ = WLAN_EID_PEER_LINK;
-+	*pos++ = WLAN_EID_PEER_MGMT;
- 	*pos++ = ie_len;
--	memcpy(pos, meshpeeringproto, sizeof(meshpeeringproto));
--	pos += 4;
-+	memcpy(pos, &peering_proto, 2);
-+	pos += 2;
- 	memcpy(pos, &llid, 2);
-+	pos += 2;
- 	if (include_plid) {
--		pos += 2;
- 		memcpy(pos, &plid, 2);
-+		pos += 2;
- 	}
- 	if (action == WLAN_SP_MESH_PEERING_CLOSE) {
--		pos += 2;
- 		memcpy(pos, &reason, 2);
-+		pos += 2;
- 	}
-+	if (mesh_add_vendor_ies(skb, sdata))
-+		return -1;
- 
- 	ieee80211_tx_skb(sdata, skb);
- 	return 0;
-@@ -437,14 +444,14 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		return;
- 	}
- 
--	baseaddr = mgmt->u.action.u.plink_action.variable;
--	baselen = (u8 *) mgmt->u.action.u.plink_action.variable - (u8 *) mgmt;
--	if (mgmt->u.action.u.plink_action.action_code == WLAN_SP_MESH_PEERING_CONFIRM) {
-+	baseaddr = mgmt->u.action.u.self_prot.variable;
-+	baselen = (u8 *) mgmt->u.action.u.self_prot.variable - (u8 *) mgmt;
-+	if (mgmt->u.action.u.self_prot.action_code == WLAN_SP_MESH_PEERING_CONFIRM) {
- 		baseaddr += 4;
- 		baselen += 4;
- 	}
- 	ieee802_11_parse_elems(baseaddr, len - baselen, &elems);
--	if (!elems.peer_link) {
-+	if (!elems.peering) {
- 		mpl_dbg("Mesh plink: missing necessary peer link ie\n");
- 		return;
- 	}
-@@ -454,11 +461,11 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		return;
- 	}
- 
--	ftype = mgmt->u.action.u.plink_action.action_code;
--	ie_len = elems.peer_link_len;
--	if ((ftype == WLAN_SP_MESH_PEERING_OPEN && ie_len != 6) ||
--	    (ftype == WLAN_SP_MESH_PEERING_CONFIRM && ie_len != 8) ||
--	    (ftype == WLAN_SP_MESH_PEERING_CLOSE && ie_len != 8 && ie_len != 10)) {
-+	ftype = mgmt->u.action.u.self_prot.action_code;
-+	ie_len = elems.peering_len;
-+	if ((ftype == WLAN_SP_MESH_PEERING_OPEN && ie_len != 4) ||
-+	    (ftype == WLAN_SP_MESH_PEERING_CONFIRM && ie_len != 6) ||
-+	    (ftype == WLAN_SP_MESH_PEERING_CLOSE && ie_len != 6 && ie_len != 8)) {
- 		mpl_dbg("Mesh plink: incorrect plink ie length %d %d\n",
- 		    ftype, ie_len);
- 		return;
-@@ -471,10 +478,10 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 	/* Note the lines below are correct, the llid in the frame is the plid
- 	 * from the point of view of this host.
- 	 */
--	memcpy(&plid, PLINK_GET_LLID(elems.peer_link), 2);
-+	memcpy(&plid, PLINK_GET_LLID(elems.peering), 2);
- 	if (ftype == WLAN_SP_MESH_PEERING_CONFIRM ||
--	    (ftype == WLAN_SP_MESH_PEERING_CLOSE && ie_len == 10))
--		memcpy(&llid, PLINK_GET_PLID(elems.peer_link), 2);
-+	    (ftype == WLAN_SP_MESH_PEERING_CLOSE && ie_len == 8))
-+		memcpy(&llid, PLINK_GET_PLID(elems.peering), 2);
- 
- 	rcu_read_lock();
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index fe2c2a7..3fb6dea 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2220,6 +2220,24 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 			goto handled;
- 		}
- 		break;
-+	case WLAN_CATEGORY_SELF_PROTECTED:
-+		switch (mgmt->u.action.u.self_prot.action_code) {
-+		case WLAN_SP_MESH_PEERING_OPEN:
-+		case WLAN_SP_MESH_PEERING_CLOSE:
-+		case WLAN_SP_MESH_PEERING_CONFIRM:
-+			if (!ieee80211_vif_is_mesh(&sdata->vif))
-+				goto invalid;
-+			if (sdata->u.mesh.security != IEEE80211_MESH_SEC_NONE)
-+				/* userspace handles this frame */
-+				break;
-+			goto queue;
-+		case WLAN_SP_MGK_INFORM:
-+		case WLAN_SP_MGK_ACK:
-+			if (!ieee80211_vif_is_mesh(&sdata->vif))
-+				goto invalid;
-+			break;
-+		}
-+		break;
- 	case WLAN_CATEGORY_MESH_ACTION:
- 		if (!ieee80211_vif_is_mesh(&sdata->vif))
- 			break;
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 5bfb80c..c4e77f4 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -685,9 +685,9 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			if (elen >= sizeof(struct ieee80211_meshconf_ie))
- 				elems->mesh_config = (void *)pos;
- 			break;
--		case WLAN_EID_PEER_LINK:
--			elems->peer_link = pos;
--			elems->peer_link_len = elen;
-+		case WLAN_EID_PEER_MGMT:
-+			elems->peering = pos;
-+			elems->peering_len = elen;
- 			break;
- 		case WLAN_EID_PREQ:
- 			elems->preq = pos;
--- 
-1.7.6
-
+Justin P. Mattock
