@@ -1,70 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:45327 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756900Ab1GKNDJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 09:03:09 -0400
-From: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	<stable@kernel.org>
-Subject: [PATCH 1/1] ath9k_hw: Fix incorrect key_miss handling
-Date: Tue, 12 Jul 2011 00:02:56 +0530
-Message-ID: <1310409176-3083-1-git-send-email-senthilb@qca.qualcomm.com> (sfid-20110711_150314_896417_4563AAE5)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from lo.gmane.org ([80.91.229.12]:45603 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755605Ab1GATaJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jul 2011 15:30:09 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1QcjPi-0008La-Bw
+	for linux-wireless@vger.kernel.org; Fri, 01 Jul 2011 21:30:06 +0200
+Received: from 216.125.91.252 ([216.125.91.252])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2011 21:30:06 +0200
+Received: from ant2ne by 216.125.91.252 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2011 21:30:06 +0200
+To: linux-wireless@vger.kernel.org
+From: ant2ne <ant2ne@gmail.com>
+Subject: Re: carl9170 and debian squeeze
+Date: Fri, 1 Jul 2011 19:25:16 +0000 (UTC)
+Message-ID: <loom.20110701T212014-423@post.gmane.org> (sfid-20110701_213013_718194_2C91E02E)
+References: <AANLkTimL=JSK6jcF4d97Nc-vLZdeRLj8o=MbpCas-H7z@mail.gmail.com> <28292.82403.qm@web56807.mail.re3.yahoo.com> <AANLkTi=GgTWU1QmoqxM_rA8jUX7814PvZqsEGvcnc6ps@mail.gmail.com> <AANLkTi=OcXfoo8gFQ+qTYDgL4XaKXiGZpUSSiL8yT_ho@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Decryping frames on key_miss handling shouldn't be done for Michael
-MIC failed frames as h/w would have already decrypted such frames
-successfully anyway.
+Was there ever a solution for this?
 
-Also leaving CRC and PHY error(where the frame is going to be dropped
-anyway), we are left to prcoess Decrypt error for which s/w decrypt is
-selected anway and so having key_miss as a separate check doesn't serve
-anything. So making key_miss handling mutually exlusive with other RX
-status handling makes much more sense.
-
-This patch addresses an issue with STA not reporting MIC failure events
-resulting in STA being disconnected immediately.
-
-Cc: stable@kernel.org
-Signed-off-by: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |    3 +--
- drivers/net/wireless/ath/ath9k/mac.c        |    3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 575e185..8ff0b88 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -625,8 +625,7 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
- 			rxs->rs_status |= ATH9K_RXERR_DECRYPT;
- 		else if (rxsp->status11 & AR_MichaelErr)
- 			rxs->rs_status |= ATH9K_RXERR_MIC;
--
--		if (rxsp->status11 & AR_KeyMiss)
-+		else if (rxsp->status11 & AR_KeyMiss)
- 			rxs->rs_status |= ATH9K_RXERR_DECRYPT;
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index c2091f1..b6b523a 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -645,8 +645,7 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
- 			rs->rs_status |= ATH9K_RXERR_DECRYPT;
- 		else if (ads.ds_rxstatus8 & AR_MichaelErr)
- 			rs->rs_status |= ATH9K_RXERR_MIC;
--
--		if (ads.ds_rxstatus8 & AR_KeyMiss)
-+		else if (ads.ds_rxstatus8 & AR_KeyMiss)
- 			rs->rs_status |= ATH9K_RXERR_DECRYPT;
- 	}
- 
--- 
-1.7.4.4
+I continue to get the "Unknown symbol in module" error. I've got squeeze with 
+2.6.32-5 kernel
+and I've tried a variety of compat-wireless versions including the latest 3.0 
+stable. 
+I've tried by building with out a specified driver-select (which took awhile) 
+and I've tried with specifying carl9170.
 
