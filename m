@@ -1,220 +1,500 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1424 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754272Ab1GEWDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 18:03:21 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 08/31] staging: brcm80211: removed asserts from
- dhd_linux.c
-Date: Wed, 6 Jul 2011 00:02:35 +0200
-Message-ID: <1309903378-29021-9-git-send-email-arend@broadcom.com> (sfid-20110706_000413_660331_38238AEF)
-In-Reply-To: <1309903378-29021-1-git-send-email-arend@broadcom.com>
-References: <1309903378-29021-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:49954 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757801Ab1GAWce (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jul 2011 18:32:34 -0400
+Received: by mail-gy0-f174.google.com with SMTP id 3so1472217gyh.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2011 15:32:34 -0700 (PDT)
+From: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, sameo@linux.intel.com,
+	lauro.venancio@openbossa.org, marcio.macedo@openbossa.org,
+	Waldemar.Rymarkiewicz@tieto.com, joe@perches.com,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Subject: [PATCH v5 4/6] NFC: add the NFC socket raw protocol
+Date: Fri,  1 Jul 2011 19:31:36 -0300
+Message-Id: <1309559498-600-5-git-send-email-aloisio.almeida@openbossa.org> (sfid-20110702_003237_983704_E93DF0FB)
+In-Reply-To: <1309559498-600-1-git-send-email-aloisio.almeida@openbossa.org>
+References: <1309559498-600-1-git-send-email-aloisio.almeida@openbossa.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
 
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+This socket protocol is used to perform data exchange with NFC
+targets.
+
+Signed-off-by: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Signed-off-by: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c |   33 +-----------------------
- 1 files changed, 1 insertions(+), 32 deletions(-)
+ include/linux/nfc.h |   13 ++-
+ net/nfc/Makefile    |    2 +-
+ net/nfc/core.c      |    7 +
+ net/nfc/nfc.h       |   14 ++
+ net/nfc/rawsock.c   |  354 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 388 insertions(+), 2 deletions(-)
+ create mode 100644 net/nfc/rawsock.c
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index afb1e32..0ea8084 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -235,7 +235,6 @@ static int brcmf_net2idx(struct brcmf_info *drvr_priv, struct net_device *net)
+diff --git a/include/linux/nfc.h b/include/linux/nfc.h
+index 15f8cb3..330a4c5 100644
+--- a/include/linux/nfc.h
++++ b/include/linux/nfc.h
+@@ -24,6 +24,9 @@
+ #ifndef __LINUX_NFC_H
+ #define __LINUX_NFC_H
+ 
++#include <linux/types.h>
++#include <linux/socket.h>
++
+ #define NFC_GENL_NAME "nfc"
+ #define NFC_GENL_VERSION 1
+ 
+@@ -109,7 +112,15 @@ enum nfc_attrs {
+ #define NFC_PROTO_ISO14443_MASK	(1 << NFC_PROTO_ISO14443)
+ #define NFC_PROTO_NFC_DEP_MASK	(1 << NFC_PROTO_NFC_DEP)
+ 
++struct sockaddr_nfc {
++	sa_family_t sa_family;
++	__u32 dev_idx;
++	__u32 target_idx;
++	__u32 nfc_protocol;
++};
++
+ /* NFC socket protocols */
+-#define NFC_SOCKPROTO_MAX	0
++#define NFC_SOCKPROTO_RAW	0
++#define NFC_SOCKPROTO_MAX	1
+ 
+ #endif /*__LINUX_NFC_H */
+diff --git a/net/nfc/Makefile b/net/nfc/Makefile
+index e081fdb..16250c3 100644
+--- a/net/nfc/Makefile
++++ b/net/nfc/Makefile
+@@ -4,4 +4,4 @@
+ 
+ obj-$(CONFIG_NFC) += nfc.o
+ 
+-nfc-objs := core.o netlink.o af_nfc.o
++nfc-objs := core.o netlink.o af_nfc.o rawsock.o
+diff --git a/net/nfc/core.c b/net/nfc/core.c
+index e804dc5..b6fd4e1 100644
+--- a/net/nfc/core.c
++++ b/net/nfc/core.c
+@@ -432,6 +432,10 @@ static int __init nfc_init(void)
+ 	/* the first generation must not be 0 */
+ 	nfc_devlist_generation = 1;
+ 
++	rc = rawsock_init();
++	if (rc)
++		goto err_rawsock;
++
+ 	rc = af_nfc_init();
+ 	if (rc)
+ 		goto err_af_nfc;
+@@ -439,6 +443,8 @@ static int __init nfc_init(void)
+ 	return 0;
+ 
+ err_af_nfc:
++	rawsock_exit();
++err_rawsock:
+ 	nfc_genl_exit();
+ err_genl:
+ 	class_unregister(&nfc_class);
+@@ -448,6 +454,7 @@ err_genl:
+ static void __exit nfc_exit(void)
  {
- 	int i = 0;
- 
--	ASSERT(drvr_priv);
- 	while (i < BRCMF_MAX_IFS) {
- 		if (drvr_priv->iflist[i] && (drvr_priv->iflist[i]->net == net))
- 			return i;
-@@ -249,8 +248,6 @@ int brcmf_ifname2idx(struct brcmf_info *drvr_priv, char *name)
- {
- 	int i = BRCMF_MAX_IFS;
- 
--	ASSERT(drvr_priv);
--
- 	if (name == NULL || *name == '\0')
- 		return 0;
- 
-@@ -268,8 +265,6 @@ char *brcmf_ifname(struct brcmf_pub *drvr, int ifidx)
- {
- 	struct brcmf_info *drvr_priv = drvr->info;
- 
--	ASSERT(drvr_priv);
--
- 	if (ifidx < 0 || ifidx >= BRCMF_MAX_IFS) {
- 		BRCMF_ERROR(("%s: ifidx %d out of range\n", __func__, ifidx));
- 		return "<if_bad>";
-@@ -297,7 +292,6 @@ static void _brcmf_set_multicast_list(struct brcmf_info *drvr_priv, int ifidx)
- 	uint buflen;
- 	int ret;
- 
--	ASSERT(drvr_priv && drvr_priv->iflist[ifidx]);
- 	dev = drvr_priv->iflist[ifidx]->net;
- 	cnt = netdev_mc_count(dev);
- 
-@@ -437,13 +431,12 @@ static int _brcmf_set_mac_address(struct brcmf_info *drvr_priv, int ifidx, u8 *a
- extern struct net_device *ap_net_dev;
- #endif
- 
-+/* Virtual interfaces only ((ifp && ifp->info && ifp->idx == true) */
- static void brcmf_op_if(struct brcmf_if *ifp)
- {
- 	struct brcmf_info *drvr_priv;
- 	int ret = 0, err = 0;
- 
--	ASSERT(ifp && ifp->info && ifp->idx);	/* Virtual interfaces only */
--
- 	drvr_priv = ifp->info;
- 
- 	BRCMF_TRACE(("%s: idx %d, state %d\n", __func__, ifp->idx, ifp->state));
-@@ -509,7 +502,6 @@ static void brcmf_op_if(struct brcmf_if *ifp)
- 		break;
- 	default:
- 		BRCMF_ERROR(("%s: bad op %d\n", __func__, ifp->state));
--		ASSERT(!ifp->state);
- 		break;
- 	}
- 
-@@ -601,7 +593,6 @@ static int brcmf_netdev_set_mac_address(struct net_device *dev, void *addr)
- 	if (ifidx == BRCMF_BAD_IF)
- 		return -1;
- 
--	ASSERT(drvr_priv->sysioc_tsk);
- 	memcpy(&drvr_priv->macvalue, sa->sa_data, ETH_ALEN);
- 	drvr_priv->set_macaddress = true;
- 	up(&drvr_priv->sysioc_sem);
-@@ -618,7 +609,6 @@ static void brcmf_netdev_set_multicast_list(struct net_device *dev)
- 	if (ifidx == BRCMF_BAD_IF)
- 		return;
- 
--	ASSERT(drvr_priv->sysioc_tsk);
- 	drvr_priv->set_multicast = true;
- 	up(&drvr_priv->sysioc_sem);
+ 	af_nfc_exit();
++	rawsock_exit();
+ 	nfc_genl_exit();
+ 	class_unregister(&nfc_class);
  }
-@@ -711,7 +701,6 @@ void brcmf_txflowcontrol(struct brcmf_pub *drvr, int ifidx, bool state)
- 	BRCMF_TRACE(("%s: Enter\n", __func__));
+diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
+index 8335f4d..aaf9832 100644
+--- a/net/nfc/nfc.h
++++ b/net/nfc/nfc.h
+@@ -42,6 +42,20 @@ struct nfc_protocol {
+ 			const struct nfc_protocol *nfc_proto);
+ };
  
- 	drvr->txoff = state;
--	ASSERT(drvr_priv && drvr_priv->iflist[ifidx]);
- 	net = drvr_priv->iflist[ifidx]->net;
- 	if (state == ON)
- 		netif_stop_queue(net);
-@@ -759,7 +748,6 @@ void brcmf_rx_frame(struct brcmf_pub *drvr, int ifidx, struct sk_buff *skb,
- 		if (ifp == NULL)
- 			ifp = drvr_priv->iflist[0];
- 
--		ASSERT(ifp);
- 		skb->dev = ifp->net;
- 		skb->protocol = eth_type_trans(skb, skb->dev);
- 
-@@ -778,7 +766,6 @@ void brcmf_rx_frame(struct brcmf_pub *drvr, int ifidx, struct sk_buff *skb,
- 					  skb_mac_header(skb),
- 					  &event, &data);
- 
--		ASSERT(ifidx < BRCMF_MAX_IFS && drvr_priv->iflist[ifidx]);
- 		if (drvr_priv->iflist[ifidx] &&
- 		    !drvr_priv->iflist[ifidx]->state)
- 			ifp = drvr_priv->iflist[ifidx];
-@@ -833,7 +820,6 @@ static struct net_device_stats *brcmf_netdev_get_stats(struct net_device *net)
- 		return NULL;
- 
- 	ifp = drvr_priv->iflist[ifidx];
--	ASSERT(drvr_priv && ifp);
- 
- 	if (drvr_priv->pub.up) {
- 		/* Use the protocol to get dongle stats */
-@@ -1247,8 +1233,6 @@ brcmf_add_if(struct brcmf_info *drvr_priv, int ifidx, void *handle, char *name,
- 
- 	BRCMF_TRACE(("%s: idx %d, handle->%p\n", __func__, ifidx, handle));
- 
--	ASSERT(drvr_priv && (ifidx < BRCMF_MAX_IFS));
--
- 	ifp = drvr_priv->iflist[ifidx];
- 	if (!ifp) {
- 		ifp = kmalloc(sizeof(struct brcmf_if), GFP_ATOMIC);
-@@ -1268,7 +1252,6 @@ brcmf_add_if(struct brcmf_info *drvr_priv, int ifidx, void *handle, char *name,
- 	if (handle == NULL) {
- 		ifp->state = BRCMF_E_IF_ADD;
- 		ifp->idx = ifidx;
--		ASSERT(drvr_priv->sysioc_tsk);
- 		up(&drvr_priv->sysioc_sem);
- 	} else
- 		ifp->net = (struct net_device *)handle;
-@@ -1282,7 +1265,6 @@ void brcmf_del_if(struct brcmf_info *drvr_priv, int ifidx)
- 
- 	BRCMF_TRACE(("%s: idx %d\n", __func__, ifidx));
- 
--	ASSERT(drvr_priv && ifidx && (ifidx < BRCMF_MAX_IFS));
- 	ifp = drvr_priv->iflist[ifidx];
- 	if (!ifp) {
- 		BRCMF_ERROR(("%s: Null interface\n", __func__));
-@@ -1291,7 +1273,6 @@ void brcmf_del_if(struct brcmf_info *drvr_priv, int ifidx)
- 
- 	ifp->state = BRCMF_E_IF_DEL;
- 	ifp->idx = ifidx;
--	ASSERT(drvr_priv->sysioc_tsk);
- 	up(&drvr_priv->sysioc_sem);
- }
- 
-@@ -1399,8 +1380,6 @@ int brcmf_bus_start(struct brcmf_pub *drvr)
- 	/* Room for "event_msgs" + '\0' + bitvec */
- 	char iovbuf[BRCMF_EVENTING_MASK_LEN + 12];
- 
--	ASSERT(drvr_priv);
--
- 	BRCMF_TRACE(("%s:\n", __func__));
- 
- 	/* Bring up the bus */
-@@ -1475,12 +1454,7 @@ int brcmf_net_attach(struct brcmf_pub *drvr, int ifidx)
- 
- 	BRCMF_TRACE(("%s: ifidx %d\n", __func__, ifidx));
- 
--	ASSERT(drvr_priv && drvr_priv->iflist[ifidx]);
--
- 	net = drvr_priv->iflist[ifidx]->net;
--	ASSERT(net);
--
--	ASSERT(!net->netdev_ops);
- 	net->netdev_ops = &brcmf_netdev_ops_pri;
- 
- 	/*
-@@ -1557,7 +1531,6 @@ void brcmf_detach(struct brcmf_pub *drvr)
- 					brcmf_del_if(drvr_priv, i);
- 
- 			ifp = drvr_priv->iflist[0];
--			ASSERT(ifp);
- 			if (ifp->net->netdev_ops == &brcmf_netdev_ops_pri) {
- 				brcmf_netdev_stop(ifp->net);
- 				unregister_netdev(ifp->net);
-@@ -1685,14 +1658,10 @@ static int brcmf_host_event(struct brcmf_info *drvr_priv, int *ifidx, void *pktd
- {
- 	int bcmerror = 0;
- 
--	ASSERT(drvr_priv != NULL);
--
- 	bcmerror = brcmf_c_host_event(drvr_priv, ifidx, pktdata, event, data);
- 	if (bcmerror != 0)
- 		return bcmerror;
- 
--	ASSERT(drvr_priv->iflist[*ifidx] != NULL);
--	ASSERT(drvr_priv->iflist[*ifidx]->net != NULL);
- 	if (drvr_priv->iflist[*ifidx]->net)
- 		brcmf_cfg80211_event(drvr_priv->iflist[*ifidx]->net,
- 				     event, *data);
++struct nfc_rawsock {
++	struct sock sk;
++	struct nfc_dev *dev;
++	u32 target_idx;
++	struct work_struct tx_work;
++	bool tx_work_scheduled;
++};
++#define nfc_rawsock(sk) ((struct nfc_rawsock *) sk)
++#define to_rawsock_sk(_tx_work) \
++	((struct sock *) container_of(_tx_work, struct nfc_rawsock, tx_work))
++
++int __init rawsock_init(void);
++void rawsock_exit(void);
++
+ int __init af_nfc_init(void);
+ void af_nfc_exit(void);
+ int nfc_proto_register(const struct nfc_protocol *nfc_proto);
+diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
+new file mode 100644
+index 0000000..52de84a
+--- /dev/null
++++ b/net/nfc/rawsock.c
+@@ -0,0 +1,354 @@
++/*
++ * Copyright (C) 2011 Instituto Nokia de Tecnologia
++ *
++ * Authors:
++ *    Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
++ *    Lauro Ramos Venancio <lauro.venancio@openbossa.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the
++ * Free Software Foundation, Inc.,
++ * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#include <net/tcp_states.h>
++#include <linux/nfc.h>
++
++#include "nfc.h"
++
++static void rawsock_write_queue_purge(struct sock *sk)
++{
++	nfc_dbg("sk=%p", sk);
++
++	spin_lock_bh(&sk->sk_write_queue.lock);
++	__skb_queue_purge(&sk->sk_write_queue);
++	nfc_rawsock(sk)->tx_work_scheduled = false;
++	spin_unlock_bh(&sk->sk_write_queue.lock);
++}
++
++static void rawsock_report_error(struct sock *sk, int err)
++{
++	nfc_dbg("sk=%p err=%d", sk, err);
++
++	sk->sk_shutdown = SHUTDOWN_MASK;
++	sk->sk_err = -err;
++	sk->sk_error_report(sk);
++
++	rawsock_write_queue_purge(sk);
++}
++
++static int rawsock_release(struct socket *sock)
++{
++	struct sock *sk = sock->sk;
++
++	nfc_dbg("sock=%p", sock);
++
++	sock_orphan(sk);
++	sock_put(sk);
++
++	return 0;
++}
++
++static int rawsock_connect(struct socket *sock, struct sockaddr *_addr,
++							int len, int flags)
++{
++	struct sock *sk = sock->sk;
++	struct sockaddr_nfc *addr = (struct sockaddr_nfc *)_addr;
++	struct nfc_dev *dev;
++	int rc = 0;
++
++	nfc_dbg("sock=%p sk=%p flags=%d", sock, sk, flags);
++
++	if (!addr || len < sizeof(struct sockaddr_nfc) ||
++		addr->sa_family != AF_NFC)
++		return -EINVAL;
++
++	nfc_dbg("addr dev_idx=%u target_idx=%u protocol=%u", addr->dev_idx,
++					addr->target_idx, addr->nfc_protocol);
++
++	lock_sock(sk);
++
++	if (sock->state == SS_CONNECTED) {
++		rc = -EISCONN;
++		goto error;
++	}
++
++	dev = nfc_get_device(addr->dev_idx);
++	if (!dev) {
++		rc = -ENODEV;
++		goto error;
++	}
++
++	if (addr->target_idx > dev->target_idx - 1 ||
++		addr->target_idx < dev->target_idx - dev->n_targets) {
++		rc = -EINVAL;
++		goto error;
++	}
++
++	if (addr->target_idx > dev->target_idx - 1 ||
++		addr->target_idx < dev->target_idx - dev->n_targets) {
++		rc = -EINVAL;
++		goto error;
++	}
++
++	rc = nfc_activate_target(dev, addr->target_idx, addr->nfc_protocol);
++	if (rc)
++		goto put_dev;
++
++	nfc_rawsock(sk)->dev = dev;
++	nfc_rawsock(sk)->target_idx = addr->target_idx;
++	sock->state = SS_CONNECTED;
++	sk->sk_state = TCP_ESTABLISHED;
++	sk->sk_state_change(sk);
++
++	release_sock(sk);
++	return 0;
++
++put_dev:
++	nfc_put_device(dev);
++error:
++	release_sock(sk);
++	return rc;
++}
++
++static int rawsock_add_header(struct sk_buff *skb)
++{
++
++	if (skb_cow_head(skb, 1))
++		return -ENOMEM;
++
++	*skb_push(skb, 1) = 0;
++
++	return 0;
++}
++
++static void rawsock_data_exchange_complete(void *context, struct sk_buff *skb,
++								int err)
++{
++	struct sock *sk = (struct sock *) context;
++
++	BUG_ON(in_irq());
++
++	nfc_dbg("sk=%p err=%d", sk, err);
++
++	if (err)
++		goto error;
++
++	err = rawsock_add_header(skb);
++	if (err)
++		goto error;
++
++	err = sock_queue_rcv_skb(sk, skb);
++	if (err)
++		goto error;
++
++	spin_lock_bh(&sk->sk_write_queue.lock);
++	if (!skb_queue_empty(&sk->sk_write_queue))
++		schedule_work(&nfc_rawsock(sk)->tx_work);
++	else
++		nfc_rawsock(sk)->tx_work_scheduled = false;
++	spin_unlock_bh(&sk->sk_write_queue.lock);
++
++	sock_put(sk);
++	return;
++
++error:
++	rawsock_report_error(sk, err);
++	sock_put(sk);
++}
++
++static void rawsock_tx_work(struct work_struct *work)
++{
++	struct sock *sk = to_rawsock_sk(work);
++	struct nfc_dev *dev = nfc_rawsock(sk)->dev;
++	u32 target_idx = nfc_rawsock(sk)->target_idx;
++	struct sk_buff *skb;
++	int rc;
++
++	nfc_dbg("sk=%p target_idx=%u", sk, target_idx);
++
++	if (sk->sk_shutdown & SEND_SHUTDOWN) {
++		rawsock_write_queue_purge(sk);
++		return;
++	}
++
++	skb = skb_dequeue(&sk->sk_write_queue);
++
++	sock_hold(sk);
++	rc = nfc_data_exchange(dev, target_idx, skb,
++				rawsock_data_exchange_complete, sk);
++	if (rc) {
++		rawsock_report_error(sk, rc);
++		sock_put(sk);
++	}
++}
++
++static int rawsock_sendmsg(struct kiocb *iocb, struct socket *sock,
++					struct msghdr *msg, size_t len)
++{
++	struct sock *sk = sock->sk;
++	struct sk_buff *skb;
++	int rc;
++
++	nfc_dbg("sock=%p sk=%p len=%zu", sock, sk, len);
++
++	if (msg->msg_namelen)
++		return -EOPNOTSUPP;
++
++	if (sock->state != SS_CONNECTED)
++		return -ENOTCONN;
++
++	skb = sock_alloc_send_skb(sk, len, msg->msg_flags & MSG_DONTWAIT,
++									&rc);
++	if (!skb)
++		return rc;
++
++	rc = memcpy_fromiovec(skb_put(skb, len), msg->msg_iov, len);
++	if (rc < 0) {
++		kfree_skb(skb);
++		return rc;
++	}
++
++	spin_lock_bh(&sk->sk_write_queue.lock);
++	__skb_queue_tail(&sk->sk_write_queue, skb);
++	if (!nfc_rawsock(sk)->tx_work_scheduled) {
++		schedule_work(&nfc_rawsock(sk)->tx_work);
++		nfc_rawsock(sk)->tx_work_scheduled = true;
++	}
++	spin_unlock_bh(&sk->sk_write_queue.lock);
++
++	return len;
++}
++
++static int rawsock_recvmsg(struct kiocb *iocb, struct socket *sock,
++				struct msghdr *msg, size_t len, int flags)
++{
++	int noblock = flags & MSG_DONTWAIT;
++	struct sock *sk = sock->sk;
++	struct sk_buff *skb;
++	int copied;
++	int rc;
++
++	nfc_dbg("sock=%p sk=%p len=%zu flags=%d", sock, sk, len, flags);
++
++	skb = skb_recv_datagram(sk, flags, noblock, &rc);
++	if (!skb)
++		return rc;
++
++	msg->msg_namelen = 0;
++
++	copied = skb->len;
++	if (len < copied) {
++		msg->msg_flags |= MSG_TRUNC;
++		copied = len;
++	}
++
++	rc = skb_copy_datagram_iovec(skb, 0, msg->msg_iov, copied);
++
++	skb_free_datagram(sk, skb);
++
++	return rc ? : copied;
++}
++
++
++static const struct proto_ops rawsock_ops = {
++	.family         = PF_NFC,
++	.owner          = THIS_MODULE,
++	.release        = rawsock_release,
++	.bind           = sock_no_bind,
++	.connect        = rawsock_connect,
++	.socketpair     = sock_no_socketpair,
++	.accept         = sock_no_accept,
++	.getname        = sock_no_getname,
++	.poll           = datagram_poll,
++	.ioctl          = sock_no_ioctl,
++	.listen         = sock_no_listen,
++	.shutdown       = sock_no_shutdown,
++	.setsockopt     = sock_no_setsockopt,
++	.getsockopt     = sock_no_getsockopt,
++	.sendmsg        = rawsock_sendmsg,
++	.recvmsg        = rawsock_recvmsg,
++	.mmap           = sock_no_mmap,
++};
++
++static void rawsock_destruct(struct sock *sk)
++{
++	nfc_dbg("sk=%p", sk);
++
++	if (sk->sk_state == TCP_ESTABLISHED) {
++		nfc_deactivate_target(nfc_rawsock(sk)->dev,
++					nfc_rawsock(sk)->target_idx);
++		nfc_put_device(nfc_rawsock(sk)->dev);
++	}
++
++	skb_queue_purge(&sk->sk_receive_queue);
++
++	if (!sock_flag(sk, SOCK_DEAD)) {
++		nfc_err("Freeing alive NFC raw socket %p", sk);
++		return;
++	}
++}
++
++static int rawsock_create(struct net *net, struct socket *sock,
++				const struct nfc_protocol *nfc_proto)
++{
++	struct sock *sk;
++
++	nfc_dbg("sock=%p", sock);
++
++	if (sock->type != SOCK_SEQPACKET)
++		return -ESOCKTNOSUPPORT;
++
++	sock->ops = &rawsock_ops;
++
++	sk = sk_alloc(net, PF_NFC, GFP_KERNEL, nfc_proto->proto);
++	if (!sk)
++		return -ENOMEM;
++
++	sock_init_data(sock, sk);
++	sk->sk_protocol = nfc_proto->id;
++	sk->sk_destruct = rawsock_destruct;
++	sock->state = SS_UNCONNECTED;
++
++	INIT_WORK(&nfc_rawsock(sk)->tx_work, rawsock_tx_work);
++	nfc_rawsock(sk)->tx_work_scheduled = false;
++
++	return 0;
++}
++
++static struct proto rawsock_proto = {
++	.name     = "NFC_RAW",
++	.owner    = THIS_MODULE,
++	.obj_size = sizeof(struct nfc_rawsock),
++};
++
++static const struct nfc_protocol rawsock_nfc_proto = {
++	.id	  = NFC_SOCKPROTO_RAW,
++	.proto    = &rawsock_proto,
++	.owner    = THIS_MODULE,
++	.create   = rawsock_create
++};
++
++int __init rawsock_init(void)
++{
++	int rc;
++
++	rc = nfc_proto_register(&rawsock_nfc_proto);
++
++	return rc;
++}
++
++void rawsock_exit(void)
++{
++	nfc_proto_unregister(&rawsock_nfc_proto);
++}
 -- 
-1.7.4.1
-
+1.7.5.4
 
