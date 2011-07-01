@@ -1,49 +1,928 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:57139 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693Ab1GDUyp (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:43696 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757623Ab1GAWc2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 16:54:45 -0400
-Received: by iyb12 with SMTP id 12so4702171iyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2011 13:54:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201107042242.25197.chunkeey@googlemail.com>
-References: <CAMJnVwmtNBrAbaL5TU-pQO+cvFn=UJC2rQroJeYASL3zJEesaw@mail.gmail.com>
-	<201107042223.33968.chunkeey@googlemail.com>
-	<CAMJnVwm0WE_T=GztegJaTp_kZttAQnWi_jgbXHk-S6HgP2OyKQ@mail.gmail.com>
-	<201107042242.25197.chunkeey@googlemail.com>
-Date: Mon, 4 Jul 2011 22:54:44 +0200
-Message-ID: <CAMJnVwmsOeSSKVpzkihtxHziKsGv1nH5qhRitSRJHkTenvNiJg@mail.gmail.com> (sfid-20110704_225453_683671_49C74089)
-Subject: Re: carl9170: Problems setting up Virtual Interface
-From: Alex <alex9434@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 1 Jul 2011 18:32:28 -0400
+Received: by ywe9 with SMTP id 9so1481052ywe.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2011 15:32:28 -0700 (PDT)
+From: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, sameo@linux.intel.com,
+	lauro.venancio@openbossa.org, marcio.macedo@openbossa.org,
+	Waldemar.Rymarkiewicz@tieto.com, joe@perches.com,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Subject: [PATCH v5 2/6] NFC: add nfc generic netlink interface
+Date: Fri,  1 Jul 2011 19:31:34 -0300
+Message-Id: <1309559498-600-3-git-send-email-aloisio.almeida@openbossa.org> (sfid-20110702_003232_753086_5F4AE72D)
+In-Reply-To: <1309559498-600-1-git-send-email-aloisio.almeida@openbossa.org>
+References: <1309559498-600-1-git-send-email-aloisio.almeida@openbossa.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-OK, I will set hostapd to use the same channel as my router (my router
-is on channel 3).
-So I will use "channel=3" in hostapd.conf
+From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
 
-What do I need to do to connect to the router with the virtual interface?
+The NFC generic netlink interface exports the NFC control operations
+to the user space.
 
-Any idea?
+Signed-off-by: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Signed-off-by: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/linux/nfc.h |  112 +++++++++++
+ include/net/nfc.h   |   21 ++
+ net/nfc/Makefile    |    2 +-
+ net/nfc/core.c      |   93 +++++++++-
+ net/nfc/netlink.c   |  537 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ net/nfc/nfc.h       |   11 +
+ 6 files changed, 773 insertions(+), 3 deletions(-)
+ create mode 100644 include/linux/nfc.h
+ create mode 100644 net/nfc/netlink.c
 
-Thanks,
-Alex
+diff --git a/include/linux/nfc.h b/include/linux/nfc.h
+new file mode 100644
+index 0000000..1170476
+--- /dev/null
++++ b/include/linux/nfc.h
+@@ -0,0 +1,112 @@
++/*
++ * Copyright (C) 2011 Instituto Nokia de Tecnologia
++ *
++ * Authors:
++ *    Lauro Ramos Venancio <lauro.venancio@openbossa.org>
++ *    Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the
++ * Free Software Foundation, Inc.,
++ * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#ifndef __LINUX_NFC_H
++#define __LINUX_NFC_H
++
++#define NFC_GENL_NAME "nfc"
++#define NFC_GENL_VERSION 1
++
++#define NFC_GENL_MCAST_EVENT_NAME "events"
++
++/**
++ * enum nfc_commands - supported nfc commands
++ *
++ * @NFC_CMD_UNSPEC: unspecified command
++ *
++ * @NFC_CMD_GET_DEVICE: request information about a device (requires
++ *	%NFC_ATTR_DEVICE_INDEX) or dump request to get a list of all nfc devices
++ * @NFC_CMD_START_POLL: start polling for targets using the given protocols
++ *	(requires %NFC_ATTR_DEVICE_INDEX and %NFC_ATTR_PROTOCOLS)
++ * @NFC_CMD_STOP_POLL: stop polling for targets (requires
++ *	%NFC_ATTR_DEVICE_INDEX)
++ * @NFC_CMD_GET_TARGET: dump all targets found by the previous poll (requires
++ *	%NFC_ATTR_DEVICE_INDEX)
++ * @NFC_EVENT_TARGETS_FOUND: event emitted when a new target is found
++ *	(it sends %NFC_ATTR_DEVICE_INDEX)
++ * @NFC_EVENT_DEVICE_ADDED: event emitted when a new device is registred
++ *	(it sends %NFC_ATTR_DEVICE_NAME, %NFC_ATTR_DEVICE_INDEX and
++ *	%NFC_ATTR_PROTOCOLS)
++ * @NFC_EVENT_DEVICE_REMOVED: event emitted when a device is removed
++ *	(it sends %NFC_ATTR_DEVICE_INDEX)
++ */
++enum nfc_commands {
++	NFC_CMD_UNSPEC,
++	NFC_CMD_GET_DEVICE,
++	NFC_CMD_START_POLL,
++	NFC_CMD_STOP_POLL,
++	NFC_CMD_GET_TARGET,
++	NFC_EVENT_TARGETS_FOUND,
++	NFC_EVENT_DEVICE_ADDED,
++	NFC_EVENT_DEVICE_REMOVED,
++/* private: internal use only */
++	__NFC_CMD_AFTER_LAST
++};
++#define NFC_CMD_MAX (__NFC_CMD_AFTER_LAST - 1)
++
++/**
++ * enum nfc_attrs - supported nfc attributes
++ *
++ * @NFC_ATTR_UNSPEC: unspecified attribute
++ *
++ * @NFC_ATTR_DEVICE_INDEX: index of nfc device
++ * @NFC_ATTR_DEVICE_NAME: device name, max 8 chars
++ * @NFC_ATTR_PROTOCOLS: nfc protocols - bitwise or-ed combination from
++ *	NFC_PROTO_*_MASK constants
++ * @NFC_ATTR_TARGET_INDEX: index of the nfc target
++ * @NFC_ATTR_TARGET_SENS_RES: NFC-A targets extra information such as NFCID
++ * @NFC_ATTR_TARGET_SEL_RES: NFC-A targets extra information (useful if the
++ *	target is not NFC-Forum compliant)
++ */
++enum nfc_attrs {
++	NFC_ATTR_UNSPEC,
++	NFC_ATTR_DEVICE_INDEX,
++	NFC_ATTR_DEVICE_NAME,
++	NFC_ATTR_PROTOCOLS,
++	NFC_ATTR_TARGET_INDEX,
++	NFC_ATTR_TARGET_SENS_RES,
++	NFC_ATTR_TARGET_SEL_RES,
++/* private: internal use only */
++	__NFC_ATTR_AFTER_LAST
++};
++#define NFC_ATTR_MAX (__NFC_ATTR_AFTER_LAST - 1)
++
++#define NFC_DEVICE_NAME_MAXSIZE 8
++
++/* NFC protocols */
++#define NFC_PROTO_JEWEL		1
++#define NFC_PROTO_MIFARE	2
++#define NFC_PROTO_FELICA	3
++#define NFC_PROTO_ISO14443	4
++#define NFC_PROTO_NFC_DEP	5
++
++#define NFC_PROTO_MAX		6
++
++/* NFC protocols masks used in bitsets */
++#define NFC_PROTO_JEWEL_MASK	(1 << NFC_PROTO_JEWEL)
++#define NFC_PROTO_MIFARE_MASK	(1 << NFC_PROTO_MIFARE)
++#define NFC_PROTO_FELICA_MASK	(1 << NFC_PROTO_FELICA)
++#define NFC_PROTO_ISO14443_MASK	(1 << NFC_PROTO_ISO14443)
++#define NFC_PROTO_NFC_DEP_MASK	(1 << NFC_PROTO_NFC_DEP)
++
++#endif /*__LINUX_NFC_H */
+diff --git a/include/net/nfc.h b/include/net/nfc.h
+index c57b579..cc01303 100644
+--- a/include/net/nfc.h
++++ b/include/net/nfc.h
+@@ -58,10 +58,28 @@ struct nfc_ops {
+ 							void *cb_context);
+ };
+ 
++struct nfc_target {
++	u32 idx;
++	u32 supported_protocols;
++	u16 sens_res;
++	u8 sel_res;
++};
++
++struct nfc_genl_data {
++	u32 poll_req_pid;
++	struct mutex genl_data_mutex;
++};
++
+ struct nfc_dev {
+ 	unsigned idx;
++	unsigned target_idx;
++	struct nfc_target *targets;
++	int n_targets;
++	int targets_generation;
++	spinlock_t targets_lock;
+ 	struct device dev;
+ 	bool polling;
++	struct nfc_genl_data genl_data;
+ 	u32 supported_protocols;
+ 
+ 	struct nfc_ops *ops;
+@@ -132,4 +150,7 @@ static inline const char *nfc_device_name(struct nfc_dev *dev)
+ 
+ struct sk_buff *nfc_alloc_skb(unsigned int size, gfp_t gfp);
+ 
++int nfc_targets_found(struct nfc_dev *dev, struct nfc_target *targets,
++							int ntargets);
++
+ #endif /* __NET_NFC_H */
+diff --git a/net/nfc/Makefile b/net/nfc/Makefile
+index 28bee59..fa6fc16 100644
+--- a/net/nfc/Makefile
++++ b/net/nfc/Makefile
+@@ -4,4 +4,4 @@
+ 
+ obj-$(CONFIG_NFC) += nfc.o
+ 
+-nfc-objs := core.o
++nfc-objs := core.o netlink.o
+diff --git a/net/nfc/core.c b/net/nfc/core.c
+index 19f8035..c70f607 100644
+--- a/net/nfc/core.c
++++ b/net/nfc/core.c
+@@ -233,12 +233,60 @@ struct sk_buff *nfc_alloc_skb(unsigned int size, gfp_t gfp)
+ }
+ EXPORT_SYMBOL(nfc_alloc_skb);
+ 
++/**
++ * nfc_targets_found - inform that targets were found
++ *
++ * @dev: The nfc device that found the targets
++ * @targets: array of nfc targets found
++ * @ntargets: targets array size
++ *
++ * The device driver must call this function when one or many nfc targets
++ * are found. After calling this function, the device driver must stop
++ * polling for targets.
++ */
++int nfc_targets_found(struct nfc_dev *dev, struct nfc_target *targets,
++							int n_targets)
++{
++	int i;
++
++	nfc_dbg("dev_name=%s n_targets=%d", dev_name(&dev->dev), n_targets);
++
++	dev->polling = false;
++
++	for (i = 0; i < n_targets; i++)
++		targets[i].idx = dev->target_idx++;
++
++	spin_lock_bh(&dev->targets_lock);
++
++	dev->targets_generation++;
++
++	kfree(dev->targets);
++	dev->targets = kmemdup(targets, n_targets * sizeof(struct nfc_target),
++								GFP_ATOMIC);
++
++	if (!dev->targets) {
++		dev->n_targets = 0;
++		spin_unlock_bh(&dev->targets_lock);
++		return -ENOMEM;
++	}
++
++	dev->n_targets = n_targets;
++	spin_unlock_bh(&dev->targets_lock);
++
++	nfc_genl_targets_found(dev);
++
++	return 0;
++}
++EXPORT_SYMBOL(nfc_targets_found);
++
+ static void nfc_release(struct device *d)
+ {
+ 	struct nfc_dev *dev = to_nfc_dev(d);
+ 
+ 	nfc_dbg("dev_name=%s", dev_name(&dev->dev));
+ 
++	nfc_genl_data_exit(&dev->genl_data);
++	kfree(dev->targets);
+ 	kfree(dev);
+ }
+ 
+@@ -298,6 +346,12 @@ struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
+ 	dev->ops = ops;
+ 	dev->supported_protocols = supported_protocols;
+ 
++	spin_lock_init(&dev->targets_lock);
++	nfc_genl_data_init(&dev->genl_data);
++
++	/* first generation must not be 0 */
++	dev->targets_generation = 1;
++
+ 	return dev;
+ }
+ EXPORT_SYMBOL(nfc_allocate_device);
+@@ -318,7 +372,16 @@ int nfc_register_device(struct nfc_dev *dev)
+ 	rc = device_add(&dev->dev);
+ 	mutex_unlock(&nfc_devlist_mutex);
+ 
+-	return rc;
++	if (rc < 0)
++		return rc;
++
++	rc = nfc_genl_device_added(dev);
++	if (rc)
++		nfc_dbg("The userspace won't be notified that the device %s was"
++						" added", dev_name(&dev->dev));
++
++
++	return 0;
+ }
+ EXPORT_SYMBOL(nfc_register_device);
+ 
+@@ -329,6 +392,8 @@ EXPORT_SYMBOL(nfc_register_device);
+  */
+ void nfc_unregister_device(struct nfc_dev *dev)
+ {
++	int rc;
++
+ 	nfc_dbg("dev_name=%s", dev_name(&dev->dev));
+ 
+ 	mutex_lock(&nfc_devlist_mutex);
+@@ -341,18 +406,42 @@ void nfc_unregister_device(struct nfc_dev *dev)
+ 	device_unlock(&dev->dev);
+ 
+ 	mutex_unlock(&nfc_devlist_mutex);
++
++	rc = nfc_genl_device_removed(dev);
++	if (rc)
++		nfc_dbg("The userspace won't be notified that the device %s"
++					" was removed", dev_name(&dev->dev));
++
+ }
+ EXPORT_SYMBOL(nfc_unregister_device);
+ 
+ static int __init nfc_init(void)
+ {
++	int rc;
++
+ 	nfc_info("NFC Core ver %s", VERSION);
+ 
+-	return class_register(&nfc_class);
++	rc = class_register(&nfc_class);
++	if (rc)
++		return rc;
++
++	rc = nfc_genl_init();
++	if (rc)
++		goto err_genl;
++
++	/* the first generation must not be 0 */
++	nfc_devlist_generation = 1;
++
++	return 0;
++
++err_genl:
++	class_unregister(&nfc_class);
++	return rc;
+ }
+ 
+ static void __exit nfc_exit(void)
+ {
++	nfc_genl_exit();
+ 	class_unregister(&nfc_class);
+ }
+ 
+diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
+new file mode 100644
+index 0000000..ccdff79
+--- /dev/null
++++ b/net/nfc/netlink.c
+@@ -0,0 +1,537 @@
++/*
++ * Copyright (C) 2011 Instituto Nokia de Tecnologia
++ *
++ * Authors:
++ *    Lauro Ramos Venancio <lauro.venancio@openbossa.org>
++ *    Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the
++ * Free Software Foundation, Inc.,
++ * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ */
++
++#include <net/genetlink.h>
++#include <linux/nfc.h>
++#include <linux/slab.h>
++
++#include "nfc.h"
++
++static struct genl_multicast_group nfc_genl_event_mcgrp = {
++	.name = NFC_GENL_MCAST_EVENT_NAME,
++};
++
++struct genl_family nfc_genl_family = {
++	.id = GENL_ID_GENERATE,
++	.hdrsize = 0,
++	.name = NFC_GENL_NAME,
++	.version = NFC_GENL_VERSION,
++	.maxattr = NFC_ATTR_MAX,
++};
++
++static const struct nla_policy nfc_genl_policy[NFC_ATTR_MAX + 1] = {
++	[NFC_ATTR_DEVICE_INDEX] = { .type = NLA_U32 },
++	[NFC_ATTR_DEVICE_NAME] = { .type = NLA_STRING,
++				.len = NFC_DEVICE_NAME_MAXSIZE },
++	[NFC_ATTR_PROTOCOLS] = { .type = NLA_U32 },
++};
++
++static int nfc_genl_send_target(struct sk_buff *msg, struct nfc_target *target,
++					struct netlink_callback *cb, int flags)
++{
++	void *hdr;
++
++	nfc_dbg("entry");
++
++	hdr = genlmsg_put(msg, NETLINK_CB(cb->skb).pid, cb->nlh->nlmsg_seq,
++				&nfc_genl_family, flags, NFC_CMD_GET_TARGET);
++	if (!hdr)
++		return -EMSGSIZE;
++
++	genl_dump_check_consistent(cb, hdr, &nfc_genl_family);
++
++	NLA_PUT_U32(msg, NFC_ATTR_TARGET_INDEX, target->idx);
++	NLA_PUT_U32(msg, NFC_ATTR_PROTOCOLS,
++				target->supported_protocols);
++	NLA_PUT_U16(msg, NFC_ATTR_TARGET_SENS_RES, target->sens_res);
++	NLA_PUT_U8(msg, NFC_ATTR_TARGET_SEL_RES, target->sel_res);
++
++	return genlmsg_end(msg, hdr);
++
++nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	return -EMSGSIZE;
++}
++
++static struct nfc_dev *__get_device_from_cb(struct netlink_callback *cb)
++{
++	struct nfc_dev *dev;
++	int rc;
++	u32 idx;
++
++	rc = nlmsg_parse(cb->nlh, GENL_HDRLEN + nfc_genl_family.hdrsize,
++						nfc_genl_family.attrbuf,
++						nfc_genl_family.maxattr,
++						nfc_genl_policy);
++	if (rc < 0)
++		return ERR_PTR(rc);
++
++	if (!nfc_genl_family.attrbuf[NFC_ATTR_DEVICE_INDEX])
++		return ERR_PTR(-EINVAL);
++
++	idx = nla_get_u32(nfc_genl_family.attrbuf[NFC_ATTR_DEVICE_INDEX]);
++
++	dev = nfc_get_device(idx);
++	if (!dev)
++		return ERR_PTR(-ENODEV);
++
++	return dev;
++}
++
++static int nfc_genl_dump_targets(struct sk_buff *skb,
++				struct netlink_callback *cb)
++{
++	int i = cb->args[0];
++	struct nfc_dev *dev = (struct nfc_dev *) cb->args[1];
++	int rc;
++
++	nfc_dbg("entry");
++
++	if (!dev) {
++		dev = __get_device_from_cb(cb);
++		if (IS_ERR(dev))
++			return PTR_ERR(dev);
++
++		cb->args[1] = (long) dev;
++	}
++
++	spin_lock_bh(&dev->targets_lock);
++
++	cb->seq = dev->targets_generation;
++
++	while (i < dev->n_targets) {
++		rc = nfc_genl_send_target(skb, &dev->targets[i], cb,
++								NLM_F_MULTI);
++		if (rc < 0)
++			break;
++
++		i++;
++	}
++
++	spin_unlock_bh(&dev->targets_lock);
++
++	cb->args[0] = i;
++
++	return skb->len;
++}
++
++static int nfc_genl_dump_targets_done(struct netlink_callback *cb)
++{
++	struct nfc_dev *dev = (struct nfc_dev *) cb->args[1];
++
++	nfc_dbg("entry");
++
++	if (dev)
++		nfc_put_device(dev);
++
++	return 0;
++}
++
++int nfc_genl_targets_found(struct nfc_dev *dev)
++{
++	struct sk_buff *msg;
++	void *hdr;
++
++	nfc_dbg("entry");
++
++	dev->genl_data.poll_req_pid = 0;
++
++	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_ATOMIC);
++	if (!msg)
++		return -ENOMEM;
++
++	hdr = genlmsg_put(msg, 0, 0, &nfc_genl_family, 0,
++				NFC_EVENT_TARGETS_FOUND);
++	if (!hdr)
++		goto free_msg;
++
++	NLA_PUT_U32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx);
++
++	genlmsg_end(msg, hdr);
++
++	return genlmsg_multicast(msg, 0, nfc_genl_event_mcgrp.id, GFP_ATOMIC);
++
++nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++free_msg:
++	nlmsg_free(msg);
++	return -EMSGSIZE;
++}
++
++int nfc_genl_device_added(struct nfc_dev *dev)
++{
++	struct sk_buff *msg;
++	void *hdr;
++
++	nfc_dbg("entry");
++
++	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
++	if (!msg)
++		return -ENOMEM;
++
++	hdr = genlmsg_put(msg, 0, 0, &nfc_genl_family, 0,
++				NFC_EVENT_DEVICE_ADDED);
++	if (!hdr)
++		goto free_msg;
++
++	NLA_PUT_STRING(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev));
++	NLA_PUT_U32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx);
++	NLA_PUT_U32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols);
++
++	genlmsg_end(msg, hdr);
++
++	genlmsg_multicast(msg, 0, nfc_genl_event_mcgrp.id, GFP_KERNEL);
++
++	return 0;
++
++nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++free_msg:
++	nlmsg_free(msg);
++	return -EMSGSIZE;
++}
++
++int nfc_genl_device_removed(struct nfc_dev *dev)
++{
++	struct sk_buff *msg;
++	void *hdr;
++
++	nfc_dbg("entry");
++
++	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
++	if (!msg)
++		return -ENOMEM;
++
++	hdr = genlmsg_put(msg, 0, 0, &nfc_genl_family, 0,
++				NFC_EVENT_DEVICE_REMOVED);
++	if (!hdr)
++		goto free_msg;
++
++	NLA_PUT_U32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx);
++
++	genlmsg_end(msg, hdr);
++
++	genlmsg_multicast(msg, 0, nfc_genl_event_mcgrp.id, GFP_KERNEL);
++
++	return 0;
++
++nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++free_msg:
++	nlmsg_free(msg);
++	return -EMSGSIZE;
++}
++
++static int nfc_genl_send_device(struct sk_buff *msg, struct nfc_dev *dev,
++						u32 pid, u32 seq,
++						struct netlink_callback *cb,
++						int flags)
++{
++	void *hdr;
++
++	nfc_dbg("entry");
++
++	hdr = genlmsg_put(msg, pid, seq, &nfc_genl_family, flags,
++							NFC_CMD_GET_DEVICE);
++	if (!hdr)
++		return -EMSGSIZE;
++
++	if (cb)
++		genl_dump_check_consistent(cb, hdr, &nfc_genl_family);
++
++	NLA_PUT_STRING(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev));
++	NLA_PUT_U32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx);
++	NLA_PUT_U32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols);
++
++	return genlmsg_end(msg, hdr);
++
++nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	return -EMSGSIZE;
++}
++
++static int nfc_genl_dump_devices(struct sk_buff *skb,
++				struct netlink_callback *cb)
++{
++	struct class_dev_iter *iter = (struct class_dev_iter *) cb->args[0];
++	struct nfc_dev *dev = (struct nfc_dev *) cb->args[1];
++	bool first_call = false;
++
++	nfc_dbg("entry");
++
++	if (!iter) {
++		first_call = true;
++		iter = kmalloc(sizeof(struct class_dev_iter), GFP_KERNEL);
++		if (!iter)
++			return -ENOMEM;
++		cb->args[0] = (long) iter;
++	}
++
++	mutex_lock(&nfc_devlist_mutex);
++
++	cb->seq = nfc_devlist_generation;
++
++	if (first_call) {
++		nfc_device_iter_init(iter);
++		dev = nfc_device_iter_next(iter);
++	}
++
++	while (dev) {
++		int rc;
++
++		rc = nfc_genl_send_device(skb, dev, NETLINK_CB(cb->skb).pid,
++							cb->nlh->nlmsg_seq,
++							cb, NLM_F_MULTI);
++		if (rc < 0)
++			break;
++
++		dev = nfc_device_iter_next(iter);
++	}
++
++	mutex_unlock(&nfc_devlist_mutex);
++
++	cb->args[1] = (long) dev;
++
++	return skb->len;
++}
++
++static int nfc_genl_dump_devices_done(struct netlink_callback *cb)
++{
++	struct class_dev_iter *iter = (struct class_dev_iter *) cb->args[0];
++
++	nfc_dbg("entry");
++
++	nfc_device_iter_exit(iter);
++	kfree(iter);
++
++	return 0;
++}
++
++static int nfc_genl_get_device(struct sk_buff *skb, struct genl_info *info)
++{
++	struct sk_buff *msg;
++	struct nfc_dev *dev;
++	u32 idx;
++	int rc = -ENOBUFS;
++
++	nfc_dbg("entry");
++
++	if (!info->attrs[NFC_ATTR_DEVICE_INDEX])
++		return -EINVAL;
++
++	idx = nla_get_u32(info->attrs[NFC_ATTR_DEVICE_INDEX]);
++
++	dev = nfc_get_device(idx);
++	if (!dev)
++		return -ENODEV;
++
++	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
++	if (!msg) {
++		rc = -ENOMEM;
++		goto out_putdev;
++	}
++
++	rc = nfc_genl_send_device(msg, dev, info->snd_pid, info->snd_seq,
++								NULL, 0);
++	if (rc < 0)
++		goto out_free;
++
++	nfc_put_device(dev);
++
++	return genlmsg_reply(msg, info);
++
++out_free:
++	nlmsg_free(msg);
++out_putdev:
++	nfc_put_device(dev);
++	return rc;
++}
++
++static int nfc_genl_start_poll(struct sk_buff *skb, struct genl_info *info)
++{
++	struct nfc_dev *dev;
++	int rc;
++	u32 idx;
++	u32 protocols;
++
++	nfc_dbg("entry");
++
++	if (!info->attrs[NFC_ATTR_DEVICE_INDEX] ||
++		!info->attrs[NFC_ATTR_PROTOCOLS])
++		return -EINVAL;
++
++	idx = nla_get_u32(info->attrs[NFC_ATTR_DEVICE_INDEX]);
++	protocols = nla_get_u32(info->attrs[NFC_ATTR_PROTOCOLS]);
++
++	dev = nfc_get_device(idx);
++	if (!dev)
++		return -ENODEV;
++
++	mutex_lock(&dev->genl_data.genl_data_mutex);
++
++	rc = nfc_start_poll(dev, protocols);
++	if (!rc)
++		dev->genl_data.poll_req_pid = info->snd_pid;
++
++	mutex_unlock(&dev->genl_data.genl_data_mutex);
++
++	nfc_put_device(dev);
++	return rc;
++}
++
++static int nfc_genl_stop_poll(struct sk_buff *skb, struct genl_info *info)
++{
++	struct nfc_dev *dev;
++	int rc;
++	u32 idx;
++
++	nfc_dbg("entry");
++
++	if (!info->attrs[NFC_ATTR_DEVICE_INDEX])
++		return -EINVAL;
++
++	idx = nla_get_u32(info->attrs[NFC_ATTR_DEVICE_INDEX]);
++
++	dev = nfc_get_device(idx);
++	if (!dev)
++		return -ENODEV;
++
++	mutex_lock(&dev->genl_data.genl_data_mutex);
++
++	if (dev->genl_data.poll_req_pid != info->snd_pid) {
++		rc = -EBUSY;
++		goto out;
++	}
++
++	rc = nfc_stop_poll(dev);
++	dev->genl_data.poll_req_pid = 0;
++
++out:
++	mutex_unlock(&dev->genl_data.genl_data_mutex);
++	nfc_put_device(dev);
++	return rc;
++}
++
++static struct genl_ops nfc_genl_ops[] = {
++	{
++		.cmd = NFC_CMD_GET_DEVICE,
++		.doit = nfc_genl_get_device,
++		.dumpit = nfc_genl_dump_devices,
++		.done = nfc_genl_dump_devices_done,
++		.policy = nfc_genl_policy,
++	},
++	{
++		.cmd = NFC_CMD_START_POLL,
++		.doit = nfc_genl_start_poll,
++		.policy = nfc_genl_policy,
++	},
++	{
++		.cmd = NFC_CMD_STOP_POLL,
++		.doit = nfc_genl_stop_poll,
++		.policy = nfc_genl_policy,
++	},
++	{
++		.cmd = NFC_CMD_GET_TARGET,
++		.dumpit = nfc_genl_dump_targets,
++		.done = nfc_genl_dump_targets_done,
++		.policy = nfc_genl_policy,
++	},
++};
++
++static int nfc_genl_rcv_nl_event(struct notifier_block *this,
++						unsigned long event, void *ptr)
++{
++	struct netlink_notify *n = ptr;
++	struct class_dev_iter iter;
++	struct nfc_dev *dev;
++
++	if (event != NETLINK_URELEASE || n->protocol != NETLINK_GENERIC)
++		goto out;
++
++	nfc_dbg("NETLINK_URELEASE event from id %d", n->pid);
++
++	nfc_device_iter_init(&iter);
++	dev = nfc_device_iter_next(&iter);
++
++	while (dev) {
++		mutex_lock(&dev->genl_data.genl_data_mutex);
++		if (dev->genl_data.poll_req_pid == n->pid) {
++			nfc_stop_poll(dev);
++			dev->genl_data.poll_req_pid = 0;
++		}
++		mutex_unlock(&dev->genl_data.genl_data_mutex);
++		dev = nfc_device_iter_next(&iter);
++	}
++
++	nfc_device_iter_exit(&iter);
++
++out:
++	return NOTIFY_DONE;
++}
++
++void nfc_genl_data_init(struct nfc_genl_data *genl_data)
++{
++	genl_data->poll_req_pid = 0;
++	mutex_init(&genl_data->genl_data_mutex);
++}
++
++void nfc_genl_data_exit(struct nfc_genl_data *genl_data)
++{
++	mutex_destroy(&genl_data->genl_data_mutex);
++}
++
++static struct notifier_block nl_notifier = {
++	.notifier_call  = nfc_genl_rcv_nl_event,
++};
++
++/**
++ * nfc_genl_init() - Initialize netlink interface
++ *
++ * This initialization function registers the nfc netlink family.
++ */
++int __init nfc_genl_init(void)
++{
++	int rc;
++
++	rc = genl_register_family_with_ops(&nfc_genl_family, nfc_genl_ops,
++					ARRAY_SIZE(nfc_genl_ops));
++	if (rc)
++		return rc;
++
++	rc = genl_register_mc_group(&nfc_genl_family, &nfc_genl_event_mcgrp);
++
++	netlink_register_notifier(&nl_notifier);
++
++	return rc;
++}
++
++/**
++ * nfc_genl_exit() - Deinitialize netlink interface
++ *
++ * This exit function unregisters the nfc netlink family.
++ */
++void nfc_genl_exit(void)
++{
++	netlink_unregister_notifier(&nl_notifier);
++	genl_unregister_family(&nfc_genl_family);
++}
+diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
+index 55f83f8..2b31e80 100644
+--- a/net/nfc/nfc.h
++++ b/net/nfc/nfc.h
+@@ -36,6 +36,17 @@ int nfc_printk(const char *level, const char *fmt, ...);
+ extern int nfc_devlist_generation;
+ extern struct mutex nfc_devlist_mutex;
+ 
++int __init nfc_genl_init(void);
++void nfc_genl_exit(void);
++
++void nfc_genl_data_init(struct nfc_genl_data *genl_data);
++void nfc_genl_data_exit(struct nfc_genl_data *genl_data);
++
++int nfc_genl_targets_found(struct nfc_dev *dev);
++
++int nfc_genl_device_added(struct nfc_dev *dev);
++int nfc_genl_device_removed(struct nfc_dev *dev);
++
+ struct nfc_dev *nfc_get_device(unsigned idx);
+ 
+ static inline void nfc_put_device(struct nfc_dev *dev)
+-- 
+1.7.5.4
 
-
-On Mon, Jul 4, 2011 at 10:42 PM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> On Monday, July 04, 2011 10:29:06 PM Alex wrote:
->> I am quite new to this and don't know how to bring this up to connect
->> to my router (with WPA2 encryption). ifup does not work:
->>
->> ifup wlan1-wlan0
->> Ignoring unknown interface wlan1-wlan0=wlan1-wlan0.
-> be careful there.
-> The device has only one radio and there's no channel manager.
-> As soon as the station is up, it will start scanning and this
-> takes the AP out-of-order...
->
