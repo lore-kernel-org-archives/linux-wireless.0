@@ -1,226 +1,280 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:57498 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753080Ab1G2VnI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 17:43:08 -0400
-Received: by mail-iy0-f174.google.com with SMTP id 12so4402910iyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jul 2011 14:43:08 -0700 (PDT)
-From: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
-To: jouni@qca.qualcomm.com
-Cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
-Subject: [PATCH v7 1/4] hostapd: split up channel checking into helpers
-Date: Fri, 29 Jul 2011 14:42:57 -0700
-Message-Id: <1311975780-26602-2-git-send-email-lrodriguez@qca.qualcomm.com> (sfid-20110729_234314_656157_21F9DECB)
-In-Reply-To: <1311975780-26602-1-git-send-email-lrodriguez@qca.qualcomm.com>
-References: <1311975780-26602-1-git-send-email-lrodriguez@qca.qualcomm.com>
+Received: from mga11.intel.com ([192.55.52.93]:62949 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753550Ab1GAPxD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jul 2011 11:53:03 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 02/11] iwlagn: re-define the testmode cmd and attr enum
+Date: Fri,  1 Jul 2011 08:19:56 -0700
+Message-Id: <1309533605-25774-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110701_175312_919777_3D2389CF)
+In-Reply-To: <1309533605-25774-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1309533605-25774-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This splits up the channel checking upon initialization
-into a few helpers. This should make this a bit easier
-to follow. This also paves the way for some initial
-ACS entry code.
+To make sure not having issues when adding new testmode commands or attributes
+in the future, re-define the enum. no functional changes
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@qca.qualcomm.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- src/ap/hostapd.h     |    6 ++
- src/ap/hw_features.c |  148 +++++++++++++++++++++++++++-----------------------
- 2 files changed, 86 insertions(+), 68 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-testmode.h |  236 +++++++++++++++------------
+ 1 files changed, 132 insertions(+), 104 deletions(-)
 
-diff --git a/src/ap/hostapd.h b/src/ap/hostapd.h
-index 8d12d8b..7436823 100644
---- a/src/ap/hostapd.h
-+++ b/src/ap/hostapd.h
-@@ -30,6 +30,12 @@ struct full_dynamic_vlan;
- enum wps_event;
- union wps_event_data;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.h b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+index 160911a..d825188 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+@@ -66,116 +66,144 @@
+ #include <linux/types.h>
  
-+enum hostapd_chan_status {
-+	HOSTAPD_CHAN_VALID = 0, /* channel is ready */
-+	HOSTAPD_CHAN_INVALID = 1, /* no usable channel found */
-+	HOSTAPD_CHAN_ACS = 2, /* ACS work being performed */
-+};
-+
- struct hostapd_probereq_cb {
- 	int (*cb)(void *ctx, const u8 *sa, const u8 *da, const u8 *bssid,
- 		  const u8 *ie, size_t ie_len);
-diff --git a/src/ap/hw_features.c b/src/ap/hw_features.c
-index 86f6811..887744b 100644
---- a/src/ap/hw_features.c
-+++ b/src/ap/hw_features.c
-@@ -599,6 +599,77 @@ int hostapd_check_ht_capab(struct hostapd_iface *iface)
- 	return 0;
- }
  
-+static int hostapd_is_usable_chan(struct hostapd_iface *iface,
-+				  int channel,
-+				  int primary)
-+{
-+	unsigned int i;
-+	struct hostapd_channel_data *chan;
-+
-+	for (i = 0; i < iface->current_mode->num_channels; i++) {
-+		chan = &iface->current_mode->channels[i];
-+		if (chan->chan == channel) {
-+			if (chan->flag & HOSTAPD_CHAN_DISABLED) {
-+				wpa_printf(MSG_ERROR,
-+					   "%schannel [%i] (%i) is disabled for "
-+					   "use in AP mode, flags: 0x%x",
-+					   primary ? "" : "Configured HT40 secondary ",
-+					   i, chan->chan, chan->flag);
-+			} else {
-+				return 1;
-+			}
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int hostapd_is_usable_chans(struct hostapd_iface *iface)
-+{
-+	if (!hostapd_is_usable_chan(iface, iface->conf->channel, 1))
-+		return 0;
-+
-+	if (!iface->conf->secondary_channel)
-+		return 1;
-+
-+	if (!hostapd_is_usable_chan(iface, iface->conf->secondary_channel, 0))
-+		return 0;
-+
-+	return 1;
-+}
-+
-+static enum hostapd_chan_status hostapd_check_chans(struct hostapd_iface *iface)
-+{
-+	if (iface->conf->channel) {
-+		if (hostapd_is_usable_chans(iface))
-+			return HOSTAPD_CHAN_VALID;
-+		else
-+			return HOSTAPD_CHAN_INVALID;
-+	}
-+
-+	/*
-+	 * The user set channel=0 which is used to trigger ACS,
-+	 * which we do not yet support.
-+	 */
-+	return HOSTAPD_CHAN_INVALID;
-+}
-+
-+static void hostapd_notify_bad_chans(struct hostapd_iface *iface)
-+{
-+	iface->current_mode = NULL;
-+
-+	hostapd_logger(iface->bss[0], NULL,
-+		       HOSTAPD_MODULE_IEEE80211,
-+		       HOSTAPD_LEVEL_WARNING,
-+		       "Configured channel (%d) not found from the "
-+		       "channel list of current mode (%d) %s",
-+		       iface->conf->channel,
-+		       iface->current_mode->mode,
-+		       hostapd_hw_mode_txt(iface->current_mode->mode));
-+	hostapd_logger(iface->bss[0], NULL, HOSTAPD_MODULE_IEEE80211,
-+		       HOSTAPD_LEVEL_WARNING,
-+		       "Hardware does not support configured channel");
-+}
- 
- /**
-  * hostapd_select_hw_mode - Select the hardware mode
-@@ -610,7 +681,7 @@ int hostapd_check_ht_capab(struct hostapd_iface *iface)
+-/* Commands from user space to kernel space(IWL_TM_CMD_ID_APP2DEV_XX) and
++/*
++ * Commands from user space to kernel space(IWL_TM_CMD_ID_APP2DEV_XX) and
+  * from and kernel space to user space(IWL_TM_CMD_ID_DEV2APP_XX).
+- * The command ID is carried with IWL_TM_ATTR_COMMAND. There are three types of
+- * of command from user space and two types of command from kernel space.
+- * See below.
++ * The command ID is carried with IWL_TM_ATTR_COMMAND.
++ *
++ * @IWL_TM_CMD_APP2DEV_UCODE:
++ *	commands from user application to the uCode,
++ *	the actual uCode host command ID is carried with
++ *	IWL_TM_ATTR_UCODE_CMD_ID
++ *
++ * @IWL_TM_CMD_APP2DEV_REG_READ32:
++ * @IWL_TM_CMD_APP2DEV_REG_WRITE32:
++ * @IWL_TM_CMD_APP2DEV_REG_WRITE8:
++ *	commands from user applicaiton to access register
++ *
++ * @IWL_TM_CMD_APP2DEV_GET_DEVICENAME: retrieve device name
++ * @IWL_TM_CMD_APP2DEV_LOAD_INIT_FW: load initial uCode image
++ * @IWL_TM_CMD_APP2DEV_CFG_INIT_CALIB: perform calibration
++ * @IWL_TM_CMD_APP2DEV_LOAD_RUNTIME_FW: load runtime uCode image
++ * @IWL_TM_CMD_APP2DEV_GET_EEPROM: request EEPROM data
++ * @IWL_TM_CMD_APP2DEV_FIXRATE_REQ: set fix MCS
++ *	commands fom user space for pure driver level operations
++ *
++ * @IWL_TM_CMD_APP2DEV_BEGIN_TRACE:
++ * @IWL_TM_CMD_APP2DEV_END_TRACE:
++ * @IWL_TM_CMD_APP2DEV_READ_TRACE:
++ *	commands fom user space for uCode trace operations
++ *
++ * @IWL_TM_CMD_DEV2APP_SYNC_RSP:
++ *	commands from kernel space to carry the synchronous response
++ *	to user application
++ * @IWL_TM_CMD_DEV2APP_UCODE_RX_PKT:
++ *	commands from kernel space to multicast the spontaneous messages
++ *	to user application
++ * @IWL_TM_CMD_DEV2APP_EEPROM_RSP:
++ *	commands from kernel space to carry the eeprom response
++ *	to user application
   */
- int hostapd_select_hw_mode(struct hostapd_iface *iface)
- {
--	int i, j, ok;
-+	int i;
- 
- 	if (iface->num_hw_features < 1)
- 		return -1;
-@@ -634,75 +705,16 @@ int hostapd_select_hw_mode(struct hostapd_iface *iface)
- 		return -2;
- 	}
- 
--	ok = 0;
--	for (j = 0; j < iface->current_mode->num_channels; j++) {
--		struct hostapd_channel_data *chan =
--			&iface->current_mode->channels[j];
--		if (chan->chan == iface->conf->channel) {
--			if (chan->flag & HOSTAPD_CHAN_DISABLED) {
--				wpa_printf(MSG_ERROR,
--					   "channel [%i] (%i) is disabled for "
--					   "use in AP mode, flags: 0x%x",
--					   j, chan->chan, chan->flag);
--			} else {
--				ok = 1;
--				break;
--			}
--		}
--	}
--	if (ok && iface->conf->secondary_channel) {
--		int sec_ok = 0;
--		int sec_chan = iface->conf->channel +
--			iface->conf->secondary_channel * 4;
--		for (j = 0; j < iface->current_mode->num_channels; j++) {
--			struct hostapd_channel_data *chan =
--				&iface->current_mode->channels[j];
--			if (!(chan->flag & HOSTAPD_CHAN_DISABLED) &&
--			    (chan->chan == sec_chan)) {
--				sec_ok = 1;
--				break;
--			}
--		}
--		if (!sec_ok) {
--			hostapd_logger(iface->bss[0], NULL,
--				       HOSTAPD_MODULE_IEEE80211,
--				       HOSTAPD_LEVEL_WARNING,
--				       "Configured HT40 secondary channel "
--				       "(%d) not found from the channel list "
--				       "of current mode (%d) %s",
--				       sec_chan, iface->current_mode->mode,
--				       hostapd_hw_mode_txt(
--					       iface->current_mode->mode));
--			ok = 0;
--		}
--	}
--	if (iface->conf->channel == 0) {
--		/* TODO: could request a scan of neighboring BSSes and select
--		 * the channel automatically */
--		wpa_printf(MSG_ERROR, "Channel not configured "
--			   "(hw_mode/channel in hostapd.conf)");
--		return -3;
--	}
--	if (ok == 0 && iface->conf->channel != 0) {
--		hostapd_logger(iface->bss[0], NULL,
--			       HOSTAPD_MODULE_IEEE80211,
--			       HOSTAPD_LEVEL_WARNING,
--			       "Configured channel (%d) not found from the "
--			       "channel list of current mode (%d) %s",
--			       iface->conf->channel,
--			       iface->current_mode->mode,
--			       hostapd_hw_mode_txt(iface->current_mode->mode));
--		iface->current_mode = NULL;
--	}
+ enum iwl_tm_cmd_t {
+-	/* commands from user application to the uCode,
+-	 * the actual uCode host command ID is carried with
+-	 * IWL_TM_ATTR_UCODE_CMD_ID */
+-	IWL_TM_CMD_APP2DEV_UCODE = 1,
 -
--	if (iface->current_mode == NULL) {
--		hostapd_logger(iface->bss[0], NULL, HOSTAPD_MODULE_IEEE80211,
--			       HOSTAPD_LEVEL_WARNING,
--			       "Hardware does not support configured channel");
-+	switch (hostapd_check_chans(iface)) {
-+	case HOSTAPD_CHAN_VALID:
-+		return 0;
-+	case HOSTAPD_CHAN_ACS: /* ACS not supported yet */
-+	case HOSTAPD_CHAN_INVALID:
-+	default:
-+		hostapd_notify_bad_chans(iface);
- 		return -4;
-+		return HOSTAPD_CHAN_INVALID;
- 	}
+-	/* commands from user applicaiton to access register */
+-	IWL_TM_CMD_APP2DEV_REG_READ32,
+-	IWL_TM_CMD_APP2DEV_REG_WRITE32,
+-	IWL_TM_CMD_APP2DEV_REG_WRITE8,
 -
--	return 0;
- }
+-	/* commands fom user space for pure driver level operations */
+-	IWL_TM_CMD_APP2DEV_GET_DEVICENAME,
+-	IWL_TM_CMD_APP2DEV_LOAD_INIT_FW,
+-	IWL_TM_CMD_APP2DEV_CFG_INIT_CALIB,
+-	IWL_TM_CMD_APP2DEV_LOAD_RUNTIME_FW,
+-	IWL_TM_CMD_APP2DEV_GET_EEPROM,
+-	IWL_TM_CMD_APP2DEV_FIXRATE_REQ,
+-	/* if there is other new command for the driver layer operation,
+-	 * append them here */
+-
+-	/* commands fom user space for uCode trace operations */
+-	IWL_TM_CMD_APP2DEV_BEGIN_TRACE,
+-	IWL_TM_CMD_APP2DEV_END_TRACE,
+-	IWL_TM_CMD_APP2DEV_READ_TRACE,
+-
+-	/* commands from kernel space to carry the synchronous response
+-	 * to user application */
+-	IWL_TM_CMD_DEV2APP_SYNC_RSP,
+-
+-	/* commands from kernel space to multicast the spontaneous messages
+-	 * to user application */
+-	IWL_TM_CMD_DEV2APP_UCODE_RX_PKT,
+-
+-	/* commands from kernel space to carry the eeprom response
+-	 * to user application */
+-	IWL_TM_CMD_DEV2APP_EEPROM_RSP,
+-
+-	IWL_TM_CMD_MAX,
++	IWL_TM_CMD_APP2DEV_UCODE		= 1,
++	IWL_TM_CMD_APP2DEV_REG_READ32		= 2,
++	IWL_TM_CMD_APP2DEV_REG_WRITE32		= 3,
++	IWL_TM_CMD_APP2DEV_REG_WRITE8		= 4,
++	IWL_TM_CMD_APP2DEV_GET_DEVICENAME	= 5,
++	IWL_TM_CMD_APP2DEV_LOAD_INIT_FW		= 6,
++	IWL_TM_CMD_APP2DEV_CFG_INIT_CALIB	= 7,
++	IWL_TM_CMD_APP2DEV_LOAD_RUNTIME_FW	= 8,
++	IWL_TM_CMD_APP2DEV_GET_EEPROM		= 9,
++	IWL_TM_CMD_APP2DEV_FIXRATE_REQ		= 10,
++	IWL_TM_CMD_APP2DEV_BEGIN_TRACE		= 11,
++	IWL_TM_CMD_APP2DEV_END_TRACE		= 12,
++	IWL_TM_CMD_APP2DEV_READ_TRACE		= 13,
++	IWL_TM_CMD_DEV2APP_SYNC_RSP		= 14,
++	IWL_TM_CMD_DEV2APP_UCODE_RX_PKT		= 15,
++	IWL_TM_CMD_DEV2APP_EEPROM_RSP		= 16,
++	IWL_TM_CMD_MAX				= 17,
+ };
  
++/*
++ * Atrribute filed in testmode command
++ * See enum iwl_tm_cmd_t.
++ *
++ * @IWL_TM_ATTR_NOT_APPLICABLE:
++ *	The attribute is not applicable or invalid
++ * @IWL_TM_ATTR_COMMAND:
++ *	From user space to kernel space:
++ *	the command either destines to ucode, driver, or register;
++ *	From kernel space to user space:
++ *	the command either carries synchronous response,
++ *	or the spontaneous message multicast from the device;
++ *
++ * @IWL_TM_ATTR_UCODE_CMD_ID:
++ * @IWL_TM_ATTR_UCODE_CMD_DATA:
++ *	When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_UCODE,
++ *	The mandatory fields are :
++ *	IWL_TM_ATTR_UCODE_CMD_ID for recognizable command ID;
++ *	IWL_TM_ATTR_COMMAND_FLAG for the flags of the commands;
++ *	The optional fields are:
++ *	IWL_TM_ATTR_UCODE_CMD_DATA for the actual command payload
++ *	to the ucode
++ *
++ * @IWL_TM_ATTR_REG_OFFSET:
++ * @IWL_TM_ATTR_REG_VALUE8:
++ * @IWL_TM_ATTR_REG_VALUE32:
++ *	When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_REG_XXX,
++ *	The mandatory fields are:
++ *	IWL_TM_ATTR_REG_OFFSET for the offset of the target register;
++ *	IWL_TM_ATTR_REG_VALUE8 or IWL_TM_ATTR_REG_VALUE32 for value
++ *
++ * @IWL_TM_ATTR_SYNC_RSP:
++ *	When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_DEV2APP_SYNC_RSP,
++ *	The mandatory fields are:
++ *	IWL_TM_ATTR_SYNC_RSP for the data content responding to the user
++ *	application command
++ *
++ * @IWL_TM_ATTR_UCODE_RX_PKT:
++ *	When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_DEV2APP_UCODE_RX_PKT,
++ *	The mandatory fields are:
++ *	IWL_TM_ATTR_UCODE_RX_PKT for the data content multicast to the user
++ *	application
++ *
++ * @IWL_TM_ATTR_EEPROM:
++ *	When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_DEV2APP_EEPROM,
++ *	The mandatory fields are:
++ *	IWL_TM_ATTR_EEPROM for the data content responging to the user
++ *	application
++ *
++ * @IWL_TM_ATTR_TRACE_ADDR:
++ * @IWL_TM_ATTR_TRACE_SIZE:
++ * @IWL_TM_ATTR_TRACE_DUMP:
++ *	When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_XXX_TRACE,
++ *	The mandatory fields are:
++ *	IWL_TM_ATTR_MEM_TRACE_ADDR for the trace address
++ *	IWL_TM_ATTR_MEM_TRACE_SIZE for the trace buffer size
++ *	IWL_TM_ATTR_MEM_TRACE_DUMP for the trace dump
++ *
++ * @IWL_TM_ATTR_FIXRATE:
++ *	When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_FIXRATE_REQ,
++ *	The mandatory fields are:
++ *	IWL_TM_ATTR_FIXRATE for the fixed rate
++ *
++ */
+ enum iwl_tm_attr_t {
+-	IWL_TM_ATTR_NOT_APPLICABLE = 0,
+-
+-	/* From user space to kernel space:
+-	 * the command either destines to ucode, driver, or register;
+-	 * See enum iwl_tm_cmd_t.
+-	 *
+-	 * From kernel space to user space:
+-	 * the command either carries synchronous response,
+-	 * or the spontaneous message multicast from the device;
+-	 * See enum iwl_tm_cmd_t. */
+-	IWL_TM_ATTR_COMMAND,
+-
+-	/* When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_UCODE,
+-	 * The mandatory fields are :
+-	 * IWL_TM_ATTR_UCODE_CMD_ID for recognizable command ID;
+-	 * IWL_TM_ATTR_COMMAND_FLAG for the flags of the commands;
+-	 * The optional fields are:
+-	 * IWL_TM_ATTR_UCODE_CMD_DATA for the actual command payload
+-	 * to the ucode */
+-	IWL_TM_ATTR_UCODE_CMD_ID,
+-	IWL_TM_ATTR_UCODE_CMD_DATA,
+-
+-	/* When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_REG_XXX,
+-	 * The mandatory fields are:
+-	 * IWL_TM_ATTR_REG_OFFSET for the offset of the target register;
+-	 * IWL_TM_ATTR_REG_VALUE8 or IWL_TM_ATTR_REG_VALUE32 for value */
+-	IWL_TM_ATTR_REG_OFFSET,
+-	IWL_TM_ATTR_REG_VALUE8,
+-	IWL_TM_ATTR_REG_VALUE32,
+-
+-	/* When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_DEV2APP_SYNC_RSP,
+-	 * The mandatory fields are:
+-	 * IWL_TM_ATTR_SYNC_RSP for the data content responding to the user
+-	 * application command */
+-	IWL_TM_ATTR_SYNC_RSP,
+-	/* When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_DEV2APP_UCODE_RX_PKT,
+-	 * The mandatory fields are:
+-	 * IWL_TM_ATTR_UCODE_RX_PKT for the data content multicast to the user
+-	 * application */
+-	IWL_TM_ATTR_UCODE_RX_PKT,
+-
+-	/* When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_DEV2APP_EEPROM,
+-	 * The mandatory fields are:
+-	 * IWL_TM_ATTR_EEPROM for the data content responging to the user
+-	 * application */
+-	IWL_TM_ATTR_EEPROM,
+-
+-	/* When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_XXX_TRACE,
+-	 * The mandatory fields are:
+-	 * IWL_TM_ATTR_MEM_TRACE_ADDR for the trace address
+-	 */
+-	IWL_TM_ATTR_TRACE_ADDR,
+-	IWL_TM_ATTR_TRACE_SIZE,
+-	IWL_TM_ATTR_TRACE_DUMP,
+-
+-	/* When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_FIXRATE_REQ,
+-	 * The mandatory fields are:
+-	 * IWL_TM_ATTR_FIXRATE for the fixed rate
+-	 */
+-	IWL_TM_ATTR_FIXRATE,
+-
+-	IWL_TM_ATTR_MAX,
++	IWL_TM_ATTR_NOT_APPLICABLE		= 0,
++	IWL_TM_ATTR_COMMAND			= 1,
++	IWL_TM_ATTR_UCODE_CMD_ID		= 2,
++	IWL_TM_ATTR_UCODE_CMD_DATA		= 3,
++	IWL_TM_ATTR_REG_OFFSET			= 4,
++	IWL_TM_ATTR_REG_VALUE8			= 5,
++	IWL_TM_ATTR_REG_VALUE32			= 6,
++	IWL_TM_ATTR_SYNC_RSP			= 7,
++	IWL_TM_ATTR_UCODE_RX_PKT		= 8,
++	IWL_TM_ATTR_EEPROM			= 9,
++	IWL_TM_ATTR_TRACE_ADDR			= 10,
++	IWL_TM_ATTR_TRACE_SIZE			= 11,
++	IWL_TM_ATTR_TRACE_DUMP			= 12,
++	IWL_TM_ATTR_FIXRATE			= 13,
++	IWL_TM_ATTR_MAX				= 14,
+ };
  
+ /* uCode trace buffer */
 -- 
-1.7.4.15.g7811d
+1.7.0.4
 
