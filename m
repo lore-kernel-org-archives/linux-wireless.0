@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:52307 "HELO
-	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751647Ab1GVQER (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:38422 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757559Ab1GAWqV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 12:04:17 -0400
-Date: Fri, 22 Jul 2011 09:04:14 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-To: Stephen Rothwell <sfr@canb.auug.org.au>, zajec5@gmail.com,
-	linux-wireless@vger.kernel.org
-Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: linux-next: Tree for July 22 (bcma)
-Message-Id: <20110722090414.4e3d80a5.rdunlap@xenotime.net> (sfid-20110722_180434_125844_15ECEEC4)
-In-Reply-To: <20110722164237.2b3f6cbdedafa9e1d3f70867@canb.auug.org.au>
-References: <20110722164237.2b3f6cbdedafa9e1d3f70867@canb.auug.org.au>
+	Fri, 1 Jul 2011 18:46:21 -0400
+Date: Fri, 01 Jul 2011 15:40:29 -0700 (PDT)
+Message-Id: <20110701.154029.1235465964568585857.davem@davemloft.net> (sfid-20110702_004629_953370_717E0C4E)
+To: tgraf@infradead.org
+Cc: johannes@sipsolutions.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, samuel@sortiz.org,
+	aloisio.almeida@openbossa.org, linville@tuxdriver.com,
+	tgraf@suug.ch
+Subject: Re: [PATCH] rtnl: provide link dump consistency info
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110621131120.GA19486@canuck.infradead.org>
+References: <1308570046.4322.5.camel@jlt3.sipsolutions.net>
+	<20110621131120.GA19486@canuck.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 22 Jul 2011 16:42:37 +1000 Stephen Rothwell wrote:
+From: Thomas Graf <tgraf@infradead.org>
+Date: Tue, 21 Jun 2011 09:11:20 -0400
 
-> Hi all,
+> This patch adds a change sequence counter to each net namespace
+> which is bumped whenever a netdevice is added or removed from
+> the list. If such a change occurred while a link dump took place,
+> the dump will have the NLM_F_DUMP_INTR flag set in the first
+> message which has been interrupted and in all subsequent messages
+> of the same dump.
+> 
+> Note that links may still be modified or renamed while a dump is
+> taking place but we can guarantee for userspace to receive a
+> complete list of links and not miss any.
+> 
+> Testing:
+> I have added 500 VLAN netdevices to make sure the dump is split
+> over multiple messages. Then while continuously dumping links in
+> one process I also continuously deleted and re-added a dummy
+> netdevice in another process. Multiple dumps per seconds have
+> had the NLM_F_DUMP_INTR flag set.
+> 
+> I guess we can wait for Johannes patch to hit net-next via the
+> wireless tree.  I just wanted to give this some testing right away.
+> 
+> Signed-off-by: Thomas Graf <tgraf@infradead.org>
 
-(similar to a report from July 16:)
-
-linux-next-20110722/drivers/bcma/driver_pci.c:175: error: 'SSB_PCICORE_BFL_NOPCI' undeclared (first use in this function)
-
-This build error happens whether CONFIG_PCI is enabled or disabled (unlike
-what I stated on July 16).
-
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+Applied.
