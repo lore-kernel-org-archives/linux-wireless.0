@@ -1,45 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36165 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:7398 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751001Ab1GSRQw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 13:16:52 -0400
-Message-ID: <4E25BBF4.1010003@redhat.com> (sfid-20110719_191701_133121_0B049648)
-Date: Tue, 19 Jul 2011 19:16:36 +0200
-From: Stefan Assmann <sassmann@redhat.com>
-MIME-Version: 1.0
-To: ali@internetdog.org
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: r8712u issue
-References: <4E2051F3.20103@redhat.com> <4E205984.5040803@lwfinger.net> <4E23E56C.9000202@redhat.com> <20110718082709.GA8390@internetdog.org> <4E23F2E0.3050200@redhat.com> <4E2448D2.50502@lwfinger.net> <4E244AC6.2030306@redhat.com> <4E2454EC.1050900@lwfinger.net> <4E25858D.9010407@redhat.com> <4E25AB9F.8010607@lwfinger.net> <20110719161656.GA7099@internetdog.org>
-In-Reply-To: <20110719161656.GA7099@internetdog.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1752804Ab1GAPxD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jul 2011 11:53:03 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 01/11] iwlagn: verify mutex held for sync commands
+Date: Fri,  1 Jul 2011 08:19:55 -0700
+Message-Id: <1309533605-25774-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110701_175328_971813_671583DA)
+In-Reply-To: <1309533605-25774-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1309533605-25774-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19.07.2011 18:16, Ali Bahar wrote:
-> On Tue, Jul 19, 2011 at 11:06:55AM -0500, Larry Finger wrote:
->> On 07/19/2011 08:24 AM, Stefan Assmann wrote:
->>>
->>> So far I can say that with scan_ssid=1 after rebooting the AP the
->>> connection is properly re-established. Looks promising.
->>
->> Your results make sense. The driver is fairly passive in all this.
->> It gets TX requests from the MAC layer, and passes received data
->> back up to that layer. It seems likely that the MAC layer built into
->> r8712u is not keeping track of missing responses, or it is not
->> probing the AP. In either case, it would not be productive to devote
->> any effort to fixing that part when either using NetworkManager or
->> setting scan_ssid for wpa_supplicant establishes periodic scans.
->> When these fail to get response from the AP, the softmac code will
->> respond, as you see.
->>
->> The ultimate fix will be to convert to the driver to use mac80211,
-> 
-> Just what I've been thinking lately. I didn't think it very worthwhile
-> to invest too much into fixing the miscellany.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Agreed! Maybe we could add a note to the documentation to make the
-behaviour more obvious.
+Emmanuel noticed that there's no explicit checking
+that prevents the driver from attempting to issue
+multiple synchronous commands at the same time and
+wrote a patch to check. However, his patch warns
+only if a collision actually happened, an unlikely
+thing since the driver mutex should be held for
+synchronous command submissions.
 
-  Stefan
+So instead of checking that a collision happened
+add a check that the mutex is held which ensures
+that collisions can't happen.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 -
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c |   13 +++----------
+ 2 files changed, 3 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 8ec04f2..ae2ecc2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1301,7 +1301,6 @@ struct iwl_priv {
+ 
+ 	/* command queue number */
+ 	u8 cmd_queue;
+-	u8 last_sync_cmd_id;
+ 
+ 	/* max number of station keys */
+ 	u8 sta_key_max_num;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
+index e3e5fb6..107b38e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-hcmd.c
++++ b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
+@@ -171,6 +171,8 @@ int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 	int cmd_idx;
+ 	int ret;
+ 
++	lockdep_assert_held(&priv->mutex);
++
+ 	if (WARN_ON(cmd->flags & CMD_ASYNC))
+ 		return -EINVAL;
+ 
+@@ -181,16 +183,7 @@ int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 	IWL_DEBUG_INFO(priv, "Attempting to send sync command %s\n",
+ 			get_cmd_string(cmd->id));
+ 
+-	if (test_and_set_bit(STATUS_HCMD_ACTIVE, &priv->status)) {
+-		IWL_ERR(priv, "STATUS_HCMD_ACTIVE already set while sending %s"
+-			      ". Previous SYNC cmdn is %s\n",
+-			get_cmd_string(cmd->id),
+-			get_cmd_string(priv->last_sync_cmd_id));
+-		WARN_ON(1);
+-	} else {
+-		priv->last_sync_cmd_id = cmd->id;
+-	}
+-
++	set_bit(STATUS_HCMD_ACTIVE, &priv->status);
+ 	IWL_DEBUG_INFO(priv, "Setting HCMD_ACTIVE for command %s\n",
+ 			get_cmd_string(cmd->id));
+ 
+-- 
+1.7.0.4
+
