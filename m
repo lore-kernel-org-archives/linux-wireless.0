@@ -1,117 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4232 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753670Ab1GROaY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2011 10:30:24 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Franky Lin" <frankyl@broadcom.com>,
-	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 11/19] staging: brcm80211: remove global wait queue head
- sdioh_spinwait_sleep
-Date: Mon, 18 Jul 2011 16:29:57 +0200
-Message-ID: <1310999405-10062-12-git-send-email-arend@broadcom.com> (sfid-20110718_163053_413054_0C10940E)
-In-Reply-To: <1310999405-10062-1-git-send-email-arend@broadcom.com>
-References: <1310999405-10062-1-git-send-email-arend@broadcom.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:35135 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752794Ab1GBRJM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Jul 2011 13:09:12 -0400
+Received: by iyb12 with SMTP id 12so3537576iyb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Jul 2011 10:09:12 -0700 (PDT)
+Message-ID: <4E0F50B4.3080805@lwfinger.net> (sfid-20110702_190916_299783_58C577EF)
+Date: Sat, 02 Jul 2011 12:09:08 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: ali@internetdog.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: r8712u driver for the rtl8192su chip.
+References: <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com> <4DC0669E.4040100@lwfinger.net> <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com> <4DC06BF3.6070208@lwfinger.net> <20110621124954.GA8462@internetdog.org> <4E011644.3070906@lwfinger.net> <20110622010057.GA12123@internetdog.org> <4E0154B7.2000204@lwfinger.net> <20110622025623.GC12547@internetdog.org> <4E015CE8.3000304@lwfinger.net> <20110627072351.GA4251@internetdog.org>
+In-Reply-To: <20110627072351.GA4251@internetdog.org>
+Content-Type: multipart/mixed;
+ boundary="------------090601010707020408080402"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+This is a multi-part message in MIME format.
+--------------090601010707020408080402
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Remove global wait queue head sdioh_spinwait_sleep in fullmac.
+On 06/27/2011 02:23 AM, Ali Bahar wrote:
+> Hi Larry,
+>
+>
+> The cause is that the driver's handler for the Set expects that the
+> interface is Up. In my case, it was not, and so it returns a -1. This
+> pops back up the call-chain until it gets misinterpreted as an EPERM.
+>
+> I'll use this Set as an example, though the same pattern is seen
+> elsewhere.
+> Upon entry into r8711_wx_set_scan(), this check is done:
+>
+>     1090         if (padapter->bup == false)
+>     1091                 return -1;
+>
+>
+> The adapter structure has no comments as to what bup is (nor for
+> bDriverStopped). Current usage suggests that bup indicates that the
+> interface is Up (and bDriverStopped indicates that the driver has been
+> cleanly stopped)
 
-Cc: linux-wireless@vger.kernel.org
-Cc: devel@linuxdriverproject.org
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd.h      |   22 ----------------------
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   21 +++++++++++----------
- 2 files changed, 11 insertions(+), 32 deletions(-)
+The meaning of "bup" is that it is a boolean indicating whether the interface is 
+up or not, just as you surmised.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index 9afd9ff..3c950cc 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -619,28 +619,6 @@ struct bcmevent_name {
- 	const char *name;
- };
- 
--#if defined(CONFIG_PM_SLEEP)
--#define BRCMF_SPINWAIT_SLEEP_INIT(a) DECLARE_WAIT_QUEUE_HEAD(a);
--#define BRCMF_SPINWAIT_SLEEP(a, exp, us) do { \
--		uint countdown = (us) + 9999; \
--		while ((exp) && (countdown >= 10000)) { \
--			wait_event_timeout(a, false, HZ/100); \
--			countdown -= 10000; \
--		} \
--	} while (0)
--
--#else
--#define BRCMF_SPINWAIT_SLEEP_INIT(a)
--#define BRCMF_SPINWAIT_SLEEP(a, exp, us)  do { \
--		uint countdown = (us) + 9; \
--		while ((exp) && (countdown >= 10)) { \
--			udelay(10);  \
--			countdown -= 10;  \
--		} \
--	} while (0)
--
--#endif	/* defined(CONFIG_PM_SLEEP) */
--
- /*
-  * Insmod parameters for debug/test
-  */
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 7a0d036..e9806c3 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -444,8 +444,6 @@ struct rte_console {
- 	(((prio) == PRIO_8021D_NONE || (prio) == PRIO_8021D_BE) ? \
- 	((prio^2)) : (prio))
- 
--BRCMF_SPINWAIT_SLEEP_INIT(sdioh_spinwait_sleep);
--
- /*
-  * Core reg address translation.
-  * Both macro's returns a 32 bits byte address on the backplane bus.
-@@ -1033,6 +1031,7 @@ static int brcmf_sdbrcm_htclk(struct brcmf_bus *bus, bool on, bool pendok)
- 	int err;
- 	u8 clkctl, clkreq, devctl;
- 	struct brcmf_sdio_card *card;
-+	unsigned long timeout;
- 
- 	BRCMF_TRACE(("%s: Enter\n", __func__));
- 
-@@ -1102,14 +1101,16 @@ static int brcmf_sdbrcm_htclk(struct brcmf_bus *bus, bool on, bool pendok)
- 		}
- 
- 		/* Otherwise, wait here (polling) for HT Avail */
--		if (!SBSDIO_CLKAV(clkctl, bus->alp_only)) {
--			BRCMF_SPINWAIT_SLEEP(sdioh_spinwait_sleep,
--			       ((clkctl =
--				 brcmf_sdcard_cfg_read(card, SDIO_FUNC_1,
--					 SBSDIO_FUNC1_CHIPCLKCSR,
--						 &err)),
--				!SBSDIO_CLKAV(clkctl, bus->alp_only)),
--			       PMU_MAX_TRANSITION_DLY);
-+		timeout = jiffies +
-+			  msecs_to_jiffies(PMU_MAX_TRANSITION_DLY/1000);
-+		while (!SBSDIO_CLKAV(clkctl, bus->alp_only)) {
-+			clkctl = brcmf_sdcard_cfg_read(card, SDIO_FUNC_1,
-+						       SBSDIO_FUNC1_CHIPCLKCSR,
-+						       &err);
-+			if (time_after(jiffies, timeout))
-+				break;
-+			else
-+				usleep_range(5000, 10000);
- 		}
- 		if (err) {
- 			BRCMF_ERROR(("%s: HT Avail request error: %d\n",
--- 
-1.7.4.1
+The attached patch has been floating around for a while. Does it help?
+
+Larry
 
 
+--------------090601010707020408080402
+Content-Type: text/plain;
+ name="r8712u_set_essid"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="r8712u_set_essid"
+
+Index: linux-2.6/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
+===================================================================
+--- linux-2.6.orig/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
++++ linux-2.6/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
+@@ -990,8 +990,6 @@ static int r8711_wx_set_wap(struct net_d
+ 	struct wlan_network *pnetwork = NULL;
+ 	enum NDIS_802_11_AUTHENTICATION_MODE	authmode;
+ 
+-	if (padapter->bup == false)
+-		return -1;
+ 	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY) == true)
+ 		return -1;
+ 	if (check_fwstate(pmlmepriv, _FW_UNDER_LINKING) == true)
+@@ -1182,8 +1180,6 @@ static int r8711_wx_set_essid(struct net
+ 	struct list_head *phead;
+ 	u32 len;
+ 
+-	if (padapter->bup == false)
+-		return -1;
+ 	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY))
+ 		return -1;
+ 	if (check_fwstate(pmlmepriv, _FW_UNDER_LINKING))
+
+--------------090601010707020408080402--
