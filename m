@@ -1,46 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:53534 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752163Ab1GUP0u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 11:26:50 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 18/25] iwlagn: remove forgotten debugfs function
-Date: Thu, 21 Jul 2011 07:50:21 -0700
-Message-Id: <1311259828-8415-19-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110721_172715_357236_E53E1E98)
-In-Reply-To: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48889 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753587Ab1GCBYF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Jul 2011 21:24:05 -0400
+Received: by iyb12 with SMTP id 12so3681882iyb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Jul 2011 18:24:04 -0700 (PDT)
+Message-ID: <4E0FC4B1.7080909@lwfinger.net> (sfid-20110703_032417_132257_EC5B11C1)
+Date: Sat, 02 Jul 2011 20:24:01 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: ali@internetdog.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: r8712u driver for the rtl8192su chip.
+References: <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com> <4DC06BF3.6070208@lwfinger.net> <20110621124954.GA8462@internetdog.org> <4E011644.3070906@lwfinger.net> <20110622010057.GA12123@internetdog.org> <4E0154B7.2000204@lwfinger.net> <20110622025623.GC12547@internetdog.org> <4E015CE8.3000304@lwfinger.net> <20110627072351.GA4251@internetdog.org> <4E0F50B4.3080805@lwfinger.net> <20110703010605.GA3736@internetdog.org>
+In-Reply-To: <20110703010605.GA3736@internetdog.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 07/02/2011 08:06 PM, Ali Bahar wrote:
+> Hi Larry,
+>
+> On Sat, Jul 02, 2011 at 12:09:08PM -0500, Larry Finger wrote:
+>> On 06/27/2011 02:23 AM, Ali Bahar wrote:
+>
+>>> The cause is that the driver's handler for the Set expects that the
+>>> interface is Up. In my case, it was not, and so it returns a -1. This
+>>> pops back up the call-chain until it gets misinterpreted as an EPERM.
+>
+>> The attached patch has been floating around for a while. Does it help?
+>
+> Of course, it will, but the general problem with the -1 return-values
+> (and any other Up assumptions) will remain.
+>
+> As I'd indicated earlier, I have no interest in, or use for, this
+> device. I dug into it because there seemed to be a need within this
+> ML (and I was already looking for an 802.11 project anyway.)
+>
+> If that is the case, I can implement the changes, merge recent Realtek
+> changes, and determine how much nl80211 interface is needed.
+> On the other hand, if changes are on-hold, then I'll focus elsewhere.
+>
+> regards,
+> ali
+>
+>
+>> Index: linux-2.6/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
+>> ===================================================================
+>> --- linux-2.6.orig/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
+>> +++ linux-2.6/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
+>> @@ -990,8 +990,6 @@ static int r8711_wx_set_wap(struct net_d
+>>   	struct wlan_network *pnetwork = NULL;
+>>   	enum NDIS_802_11_AUTHENTICATION_MODE	authmode;
+>>
+>> -	if (padapter->bup == false)
+>> -		return -1;
+>>   	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY) == true)
+>>   		return -1;
+>>   	if (check_fwstate(pmlmepriv, _FW_UNDER_LINKING) == true)
+>> @@ -1182,8 +1180,6 @@ static int r8711_wx_set_essid(struct net
+>>   	struct list_head *phead;
+>>   	u32 len;
+>>
+>> -	if (padapter->bup == false)
+>> -		return -1;
+>>   	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY))
+>>   		return -1;
+>>   	if (check_fwstate(pmlmepriv, _FW_UNDER_LINKING))
 
-It seems that due to merge issues between different
-trees or so this function prototype wasn't removed
-when it should have been, do it now.
+If you want to work on it, I will review and test the patches. It will be a long 
+time until I get to it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-debug.h |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index 4529e2d..f9a407e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -78,8 +78,6 @@ static inline void iwl_print_hex_dump(struct iwl_priv *priv, int level,
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- int iwl_dbgfs_register(struct iwl_priv *priv, const char *name);
- void iwl_dbgfs_unregister(struct iwl_priv *priv);
--extern int iwl_dbgfs_statistics_flag(struct iwl_priv *priv, char *buf,
--				     int bufsz);
- #else
- static inline int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
- {
--- 
-1.7.0.4
-
+Larry
