@@ -1,216 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:55698 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752489Ab1GQVlN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2011 17:41:13 -0400
-Subject: [PATCH v3 05/23] ath6kl: add common.h
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: joe@perches.com, devel@linuxdriverproject.org, gregkh@suse.de,
-	error27@gmail.com
-Date: Mon, 18 Jul 2011 00:41:05 +0300
-Message-ID: <20110717214105.23534.42070.stgit@localhost6.localdomain6> (sfid-20110717_234116_155023_FFD8BDF1)
-In-Reply-To: <20110717213832.23534.75274.stgit@localhost6.localdomain6>
-References: <20110717213832.23534.75274.stgit@localhost6.localdomain6>
+Received: from msr8.hinet.net ([168.95.4.108]:63672 "EHLO msr8.hinet.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753832Ab1GCBto (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Jul 2011 21:49:44 -0400
+Date: Sun, 3 Jul 2011 09:47:54 +0800
+From: Ali Bahar <ali@internetdog.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: r8712u driver for the rtl8192su chip.
+Message-ID: <20110703014754.GA4080@internetdog.org> (sfid-20110703_034947_366576_72FDB221)
+Reply-To: ali@internetdog.org
+References: <20110621124954.GA8462@internetdog.org>
+ <4E011644.3070906@lwfinger.net>
+ <20110622010057.GA12123@internetdog.org>
+ <4E0154B7.2000204@lwfinger.net>
+ <20110622025623.GC12547@internetdog.org>
+ <4E015CE8.3000304@lwfinger.net>
+ <20110627072351.GA4251@internetdog.org>
+ <4E0F50B4.3080805@lwfinger.net>
+ <20110703010605.GA3736@internetdog.org>
+ <4E0FC4B1.7080909@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E0FC4B1.7080909@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/common.h |  183 ++++++++++++++++++++++++++++++
- 1 files changed, 183 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/common.h
+On Sat, Jul 02, 2011 at 08:24:01PM -0500, Larry Finger wrote:
+> On 07/02/2011 08:06 PM, Ali Bahar wrote:
 
-diff --git a/drivers/net/wireless/ath/ath6kl/common.h b/drivers/net/wireless/ath/ath6kl/common.h
-new file mode 100644
-index 0000000..0a3a1d8
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath6kl/common.h
-@@ -0,0 +1,183 @@
-+/*
-+ * Copyright (c) 2010-2011 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef COMMON_H
-+#define COMMON_H
-+
-+#include <linux/netdevice.h>
-+
-+#define ATH6KL_MAX_IE			256
-+
-+extern int ath6kl_printk(const char *level, const char *fmt, ...);
-+
-+#define A_CACHE_LINE_PAD            128
-+
-+/*
-+ * Reflects the version of binary interface exposed by ATH6KL target
-+ * firmware. Needs to be incremented by 1 for any change in the firmware
-+ * that requires upgrade of the driver on the host side for the change to
-+ * work correctly
-+ */
-+#define ATH6KL_ABI_VERSION        1
-+
-+#define SIGNAL_QUALITY_METRICS_NUM_MAX    2
-+
-+enum {
-+	SIGNAL_QUALITY_METRICS_SNR = 0,
-+	SIGNAL_QUALITY_METRICS_RSSI,
-+	SIGNAL_QUALITY_METRICS_ALL,
-+};
-+
-+/*
-+ * Data Path
-+ */
-+
-+#define WMI_MAX_TX_DATA_FRAME_LENGTH	      \
-+	(1500 + sizeof(struct wmi_data_hdr) + \
-+	 sizeof(struct ethhdr) +      \
-+	 sizeof(struct ath6kl_llc_snap_hdr))
-+
-+/* An AMSDU frame */ /* The MAX AMSDU length of AR6003 is 3839 */
-+#define WMI_MAX_AMSDU_RX_DATA_FRAME_LENGTH    \
-+	(3840 + sizeof(struct wmi_data_hdr) + \
-+	 sizeof(struct ethhdr) +      \
-+	 sizeof(struct ath6kl_llc_snap_hdr))
-+
-+#define EPPING_ALIGNMENT_PAD			       \
-+	(((sizeof(struct htc_frame_hdr) + 3) & (~0x3)) \
-+	 - sizeof(struct htc_frame_hdr))
-+
-+struct ath6kl_llc_snap_hdr {
-+	u8 dsap;
-+	u8 ssap;
-+	u8 cntl;
-+	u8 org_code[3];
-+	__be16 eth_type;
-+} __packed;
-+
-+enum crypto_type {
-+	NONE_CRYPT          = 0x01,
-+	WEP_CRYPT           = 0x02,
-+	TKIP_CRYPT          = 0x04,
-+	AES_CRYPT           = 0x08,
-+};
-+
-+#define ATH6KL_NODE_HASHSIZE 32
-+/* simple hash is enough for variation of macaddr */
-+#define ATH6KL_NODE_HASH(addr)   \
-+	(((const u8 *)(addr))[ETH_ALEN - 1] % \
-+	 ATH6KL_NODE_HASHSIZE)
-+
-+/*
-+ * Table of ath6kl_node instances.  Each ieee80211com
-+ * has at least one for holding the scan candidates.
-+ * When operating as an access point or in ibss mode there
-+ * is a second table for associated stations or neighbors.
-+ */
-+struct ath6kl_node_table {
-+	void *nt_wmi;		/* back reference */
-+	spinlock_t nt_nodelock;	/* on node table */
-+	struct bss *nt_node_first;	/* information of all nodes */
-+	struct bss *nt_node_last;	/* information of all nodes */
-+	struct bss *nt_hash[ATH6KL_NODE_HASHSIZE];
-+	const char *nt_name;	/* for debugging */
-+	u32 nt_node_age;		/* node aging time */
-+};
-+
-+#define WLAN_NODE_INACT_TIMEOUT_MSEC    120000
-+#define WLAN_NODE_INACT_CNT		4
-+
-+struct ath6kl_common_ie {
-+	u16 ie_chan;
-+	u8 *ie_tstamp;
-+	u8 *ie_ssid;
-+	u8 *ie_rates;
-+	u8 *ie_xrates;
-+	u8 *ie_country;
-+	u8 *ie_wpa;
-+	u8 *ie_rsn;
-+	u8 *ie_wmm;
-+	u8 *ie_ath;
-+	u16 ie_capInfo;
-+	u16 ie_beaconInt;
-+	u8 *ie_tim;
-+	u8 *ie_chswitch;
-+	u8 ie_erp;
-+	u8 *ie_wsc;
-+	u8 *ie_htcap;
-+	u8 *ie_htop;
-+};
-+
-+struct bss {
-+	u8 ni_macaddr[ETH_ALEN];
-+	u8 ni_snr;
-+	s16 ni_rssi;
-+	struct bss *ni_list_next;
-+	struct bss *ni_list_prev;
-+	struct bss *ni_hash_next;
-+	struct bss *ni_hash_prev;
-+	struct ath6kl_common_ie ni_cie;
-+	u8 *ni_buf;
-+	u16 ni_framelen;
-+	struct ath6kl_node_table *ni_table;
-+	u32 ni_refcnt;
-+
-+	u32 ni_tstamp;
-+	u32 ni_actcnt;
-+};
-+
-+struct htc_endpoint_credit_dist;
-+struct ath6kl;
-+enum htc_credit_dist_reason;
-+struct htc_credit_state_info;
-+
-+struct bss *wlan_node_alloc(int wh_size);
-+void wlan_node_free(struct bss *ni);
-+void wlan_setup_node(struct ath6kl_node_table *nt, struct bss *ni,
-+		     const u8 *mac_addr);
-+struct bss *wlan_find_node(struct ath6kl_node_table *nt,
-+			   const u8 *mac_addr);
-+void wlan_node_reclaim(struct ath6kl_node_table *nt, struct bss *ni);
-+void wlan_free_allnodes(struct ath6kl_node_table *nt);
-+void wlan_iterate_nodes(struct ath6kl_node_table *nt,
-+			void (*f) (void *arg, struct bss *),
-+			void *arg);
-+
-+void wlan_node_table_init(void *wmip, struct ath6kl_node_table *nt);
-+void wlan_node_table_cleanup(struct ath6kl_node_table *nt);
-+
-+void wlan_refresh_inactive_nodes(struct ath6kl_node_table *nt);
-+
-+struct bss *wlan_find_ssid_node(struct ath6kl_node_table *nt, u8 *ssid,
-+				  u32 ssid_len, bool is_wpa2, bool match_ssid);
-+
-+void wlan_node_return(struct ath6kl_node_table *nt, struct bss *ni);
-+
-+int ath6k_setup_credit_dist(void *htc_handle,
-+			    struct htc_credit_state_info *cred_info);
-+void ath6k_credit_distribute(struct htc_credit_state_info *cred_inf,
-+			     struct list_head *epdist_list,
-+			     enum htc_credit_dist_reason reason);
-+void ath6k_credit_init(struct htc_credit_state_info *cred_inf,
-+		       struct list_head *ep_list,
-+		       int tot_credits);
-+void ath6k_seek_credits(struct htc_credit_state_info *cred_inf,
-+			struct htc_endpoint_credit_dist *ep_dist);
-+struct ath6kl *ath6kl_core_alloc(struct device *sdev);
-+int ath6kl_core_init(struct ath6kl *ar);
-+int ath6kl_unavail_ev(struct ath6kl *ar);
-+struct sk_buff *ath6kl_buf_alloc(int size);
-+#endif /* COMMON_H */
+> >device. I dug into it because there seemed to be a need within this
+> >ML (and I was already looking for an 802.11 project anyway.)
 
+> >>  	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY))
+> >>  		return -1;
+> >>  	if (check_fwstate(pmlmepriv, _FW_UNDER_LINKING))
+> 
+> If you want to work on it, I will review and test the patches. It
+
+OK.
+
+> will be a long time until I get to it.
+
+I understand.
+
+later,
+ali
