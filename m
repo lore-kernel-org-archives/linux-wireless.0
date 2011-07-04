@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:64133 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755866Ab1G2MJi (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:55526 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754624Ab1GDKkL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 08:09:38 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 12/13] ath9k_hw: Update the radio parameters related to high_power
-Date: Fri, 29 Jul 2011 17:38:19 +0530
-Message-ID: <1311941300-2590-12-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110729_140941_739099_AB69887D)
-In-Reply-To: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Mon, 4 Jul 2011 06:40:11 -0400
+Received: by gwaa18 with SMTP id a18so1943639gwa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2011 03:40:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1309758467-1712-4-git-send-email-nbd@openwrt.org>
+References: <1309758467-1712-1-git-send-email-nbd@openwrt.org>
+	<1309758467-1712-2-git-send-email-nbd@openwrt.org>
+	<1309758467-1712-3-git-send-email-nbd@openwrt.org>
+	<1309758467-1712-4-git-send-email-nbd@openwrt.org>
+Date: Mon, 4 Jul 2011 13:40:10 +0300
+Message-ID: <CAFtRNNzHqQLYxoZBBgpyttLgXRp1SWabPdQvNr4gvRPvPpPOBw@mail.gmail.com> (sfid-20110704_124015_639026_C8AE6F0A)
+Subject: Re: [ath5k-devel] [PATCH 4/8] ath5k: initialize common->clockrate
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+2011/7/4 Felix Fietkau <nbd@openwrt.org>:
+> Fixes a division by zero when setting distance before activating the
+> device for the first time.
+>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  drivers/net/wireless/ath/ath5k/base.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index a6623dd..a413aa7 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -2422,6 +2422,7 @@ ath5k_init_softc(struct ath5k_softc *sc, const struct ath_bus_ops *bus_ops)
+>        common->ah = sc->ah;
+>        common->hw = hw;
+>        common->priv = sc;
+> +       common->clockrate = 40;
+>
+>        /*
+>         * Cache line size is used to size and align various
+> --
+> 1.7.3.2
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index 28b44b0..275b53d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -928,15 +928,15 @@ static const u32 ar9300Modes_high_power_tx_gain_table_2p2[][5] = {
- 	{0x0000c2e0, 0x0000f800, 0x0000f800, 0x03ccc584, 0x03ccc584},
- 	{0x0000c2e4, 0x03ff0000, 0x03ff0000, 0x03f0f800, 0x03f0f800},
- 	{0x0000c2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
--	{0x00016044, 0x056db2e6, 0x056db2e6, 0x056db2e6, 0x056db2e6},
--	{0x00016048, 0xae480001, 0xae480001, 0xae480001, 0xae480001},
--	{0x00016068, 0x6eb6db6c, 0x6eb6db6c, 0x6eb6db6c, 0x6eb6db6c},
--	{0x00016444, 0x056db2e6, 0x056db2e6, 0x056db2e6, 0x056db2e6},
--	{0x00016448, 0xae480001, 0xae480001, 0xae480001, 0xae480001},
--	{0x00016468, 0x6eb6db6c, 0x6eb6db6c, 0x6eb6db6c, 0x6eb6db6c},
--	{0x00016844, 0x056db2e6, 0x056db2e6, 0x056db2e6, 0x056db2e6},
--	{0x00016848, 0xae480001, 0xae480001, 0xae480001, 0xae480001},
--	{0x00016868, 0x6eb6db6c, 0x6eb6db6c, 0x6eb6db6c, 0x6eb6db6c},
-+	{0x00016044, 0x012492d4, 0x012492d4, 0x012492d4, 0x012492d4},
-+	{0x00016048, 0x66480001, 0x66480001, 0x66480001, 0x66480001},
-+	{0x00016068, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c},
-+	{0x00016444, 0x012492d4, 0x012492d4, 0x012492d4, 0x012492d4},
-+	{0x00016448, 0x66480001, 0x66480001, 0x66480001, 0x66480001},
-+	{0x00016468, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c},
-+	{0x00016844, 0x012492d4, 0x012492d4, 0x012492d4, 0x012492d4},
-+	{0x00016848, 0x66480001, 0x66480001, 0x66480001, 0x66480001},
-+	{0x00016868, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c},
- };
- 
- static const u32 ar9300Modes_high_ob_db_tx_gain_table_2p2[][5] = {
+We better set this to 44 for g (according to docs core frequency is 44MHz for g)
+
+
 -- 
-1.7.6
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
