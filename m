@@ -1,90 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:40583 "EHLO
-	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751535Ab1GJHAT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jul 2011 03:00:19 -0400
-Received: by gxk10 with SMTP id 10so1832478gxk.39
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Jul 2011 00:00:18 -0700 (PDT)
-MIME-Version: 1.0
-Date: Sun, 10 Jul 2011 09:55:00 +0300
-Message-ID: <CAHiDVwnX34yXka_fU-FA8mt4AWEuMdpwiGsdmKfbpeBi0k796g@mail.gmail.com> (sfid-20110710_090024_367038_2C3C82EE)
-Subject: pull request: linux-firmware - ti-connectivity 2011-07-11
-From: "Levi, Shahar" <shahar_levi@ti.com>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from linknet-ip-202.77.119.130.link.net.id ([202.77.119.130]:59115
+	"EHLO ppac-jak-id-1.inter-touch.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753738Ab1GDGLE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jul 2011 02:11:04 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org
+Subject: [PATCH 2/8] ath5k: apply the synth voltage tweak only on AR5112 rev 2
+Date: Mon,  4 Jul 2011 12:47:41 +0700
+Message-Id: <1309758467-1712-2-git-send-email-nbd@openwrt.org> (sfid-20110704_081120_871203_D903F05C)
+In-Reply-To: <1309758467-1712-1-git-send-email-nbd@openwrt.org>
+References: <1309758467-1712-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear David,
-This is a pull request to update TI connectivity FW (more friendly to
-linux-wireless list than binaries patches).
-It updates the STA and AP FWs for wl128x and wl127x (wl12xx driver)
+Might fix some stability issues on newer chips
 
-    Update FW for WL128x chip:
-    STA FW version 7.1.5.50.74
-    AP FW version 7.2.1.0.54
-
-   Update FW for WL127x chip:
-    STA FW version 6.1.5.50.74
-    AP FW version 6.2.1.0.54
-
-Please let me know if there are problems!
-
-All the best,
-Shahar
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
+ drivers/net/wireless/ath/ath5k/phy.c |   19 +++++++++++--------
+ 1 files changed, 11 insertions(+), 8 deletions(-)
 
-The following changes since commit f6f644b37083bb5dd22e5da1d9ee25457803f153:
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index c774468..f66124a 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -970,17 +970,20 @@ static int ath5k_hw_rfregs_init(struct ath5k_hw *ah,
+ 			}
+ 
+ 			/* Lower synth voltage on Rev 2 */
+-			ath5k_hw_rfb_op(ah, rf_regs, 2,
+-					AR5K_RF_HIGH_VC_CP, true);
++			if (ah->ah_radio == AR5K_RF5112 &&
++			    (ah->ah_radio_5ghz_revision & AR5K_SREV_REV) > 0) {
++				ath5k_hw_rfb_op(ah, rf_regs, 2,
++						AR5K_RF_HIGH_VC_CP, true);
+ 
+-			ath5k_hw_rfb_op(ah, rf_regs, 2,
+-					AR5K_RF_MID_VC_CP, true);
++				ath5k_hw_rfb_op(ah, rf_regs, 2,
++						AR5K_RF_MID_VC_CP, true);
+ 
+-			ath5k_hw_rfb_op(ah, rf_regs, 2,
+-					AR5K_RF_LOW_VC_CP, true);
++				ath5k_hw_rfb_op(ah, rf_regs, 2,
++						AR5K_RF_LOW_VC_CP, true);
+ 
+-			ath5k_hw_rfb_op(ah, rf_regs, 2,
+-					AR5K_RF_PUSH_UP, true);
++				ath5k_hw_rfb_op(ah, rf_regs, 2,
++						AR5K_RF_PUSH_UP, true);
++			}
+ 
+ 			/* Decrease power consumption on 5213+ BaseBand */
+ 			if (ah->ah_phy_revision >= AR5K_SREV_PHY_5212A) {
+-- 
+1.7.3.2
 
- ath9k_htc: Update firmware to version 1.3 (2011-06-25 19:19:14 +0100)
-
-are available in the git repository at:
- git://github.com/shaharlevi/linux-firmware-ti-connectivity.git ti-connectivity
-
-Shahar Levi (1):
-     linux-firmware: wl12xx: Updated STA & AP FW for WL128x & wl127x
-
- WHENCE                           |    8 ++++----
- ti-connectivity/wl1271-fw-2.bin  |  Bin 273252 -> 273880 bytes
- ti-connectivity/wl1271-fw-ap.bin |  Bin 272784 -> 272836 bytes
- ti-connectivity/wl128x-fw-ap.bin |  Bin 265196 -> 265460 bytes
- ti-connectivity/wl128x-fw.bin    |  Bin 272748 -> 273324 bytes
- 5 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/WHENCE b/WHENCE
-index b037a29..f2e192b 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -1525,10 +1525,10 @@ File: wl1271-nvs-example-wl128x.bin
- Licence: See LICENCE.ti-connectivity for details.
-
-       Station:      wl1271-fw.bin version 6.1.0.50.350
--       Station:      wl1271-fw-2.bin version 6.1.3.50.58
--       Station:      wl128x-fw.bin version 7.1.3.50.58
--       Access Point: wl1271-fw-ap.bin version 6.2.0.0.47
--       Access Point: wl128x-fw-ap.bin version 7.2.0.0.47
-+       Station:      wl1271-fw-2.bin version 6.1.5.50.74
-+       Station:      wl128x-fw.bin version 7.1.5.50.74
-+       Access Point: wl1271-fw-ap.bin version 6.2.1.0.54
-+       Access Point: wl128x-fw-ap.bin version 7.2.1.0.54
-
- The nvs file includes two parts:
-        - radio calibration
-diff --git a/ti-connectivity/wl1271-fw-2.bin b/ti-connectivity/wl1271-fw-2.bin
-index 8d18611..a01324e 100644
-Binary files a/ti-connectivity/wl1271-fw-2.bin and
-b/ti-connectivity/wl1271-fw-2.bin differ
-diff --git a/ti-connectivity/wl1271-fw-ap.bin b/ti-connectivity/wl1271-fw-ap.bin
-index c145a71..3a8e570 100644
-Binary files a/ti-connectivity/wl1271-fw-ap.bin and
-b/ti-connectivity/wl1271-fw-ap.bin differ
-diff --git a/ti-connectivity/wl128x-fw-ap.bin b/ti-connectivity/wl128x-fw-ap.bin
-index 51d307b..3795717 100644
-Binary files a/ti-connectivity/wl128x-fw-ap.bin and
-b/ti-connectivity/wl128x-fw-ap.bin differ
-diff --git a/ti-connectivity/wl128x-fw.bin b/ti-connectivity/wl128x-fw.bin
-index bf5344f..0fbf626 100755
-Binary files a/ti-connectivity/wl128x-fw.bin and
-b/ti-connectivity/wl128x-fw.bin differ
