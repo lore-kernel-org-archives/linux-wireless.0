@@ -1,95 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:9385 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932096Ab1G2Cuq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2011 22:50:46 -0400
-Subject: [PATCH] lib80211: remove exports for functions not called by other
- modules
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Pavel Roskin <proski@gnu.org>
-Date: Thu, 28 Jul 2011 22:50:44 -0400
-Message-ID: <20110729025044.7949.95137.stgit@mj.roinet.com> (sfid-20110729_045050_005665_5299258B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from linknet-ip-202.77.119.130.link.net.id ([202.77.119.130]:59114
+	"EHLO ppac-jak-id-1.inter-touch.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754960Ab1GDGLE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jul 2011 02:11:04 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org
+Subject: [PATCH 8/8] ath5k: do not call ieee80211_stop_queue for queues not managed by mac80211
+Date: Mon,  4 Jul 2011 12:47:47 +0700
+Message-Id: <1309758467-1712-8-git-send-email-nbd@openwrt.org> (sfid-20110704_081121_488798_9E004FEA)
+In-Reply-To: <1309758467-1712-7-git-send-email-nbd@openwrt.org>
+References: <1309758467-1712-1-git-send-email-nbd@openwrt.org>
+ <1309758467-1712-2-git-send-email-nbd@openwrt.org>
+ <1309758467-1712-3-git-send-email-nbd@openwrt.org>
+ <1309758467-1712-4-git-send-email-nbd@openwrt.org>
+ <1309758467-1712-5-git-send-email-nbd@openwrt.org>
+ <1309758467-1712-6-git-send-email-nbd@openwrt.org>
+ <1309758467-1712-7-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- include/net/lib80211.h  |    3 ---
- net/wireless/lib80211.c |   15 +++++++++------
- 2 files changed, 9 insertions(+), 9 deletions(-)
+Instead of using ieee80211_stop_queue, check the configured tx queue
+limit before calling ieee80211_get_buffered_bc.
 
-diff --git a/include/net/lib80211.h b/include/net/lib80211.h
-index 848cce1..659c269 100644
---- a/include/net/lib80211.h
-+++ b/include/net/lib80211.h
-@@ -117,10 +117,7 @@ void lib80211_crypt_info_free(struct lib80211_crypt_info *info);
- int lib80211_register_crypto_ops(struct lib80211_crypto_ops *ops);
- int lib80211_unregister_crypto_ops(struct lib80211_crypto_ops *ops);
- struct lib80211_crypto_ops *lib80211_get_crypto_ops(const char *name);
--void lib80211_crypt_deinit_entries(struct lib80211_crypt_info *, int);
--void lib80211_crypt_deinit_handler(unsigned long);
- void lib80211_crypt_delayed_deinit(struct lib80211_crypt_info *info,
- 				    struct lib80211_crypt_data **crypt);
--void lib80211_crypt_quiescing(struct lib80211_crypt_info *info);
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index efec14f..d889f33 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1555,7 +1555,8 @@ ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		goto drop_packet;
+ 	}
  
- #endif /* LIB80211_H */
-diff --git a/net/wireless/lib80211.c b/net/wireless/lib80211.c
-index 3268fac..a55c27b 100644
---- a/net/wireless/lib80211.c
-+++ b/net/wireless/lib80211.c
-@@ -41,6 +41,11 @@ struct lib80211_crypto_alg {
- static LIST_HEAD(lib80211_crypto_algs);
- static DEFINE_SPINLOCK(lib80211_crypto_lock);
+-	if (txq->txq_len >= txq->txq_max)
++	if (txq->txq_len >= txq->txq_max &&
++	    txq->qnum <= AR5K_TX_QUEUE_ID_DATA_MAX)
+ 		ieee80211_stop_queue(hw, txq->qnum);
  
-+static void lib80211_crypt_deinit_entries(struct lib80211_crypt_info *info,
-+					  int force);
-+static void lib80211_crypt_quiescing(struct lib80211_crypt_info *info);
-+static void lib80211_crypt_deinit_handler(unsigned long data);
+ 	spin_lock_irqsave(&sc->txbuflock, flags);
+@@ -1931,6 +1932,10 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 	skb = ieee80211_get_buffered_bc(sc->hw, vif);
+ 	while (skb) {
+ 		ath5k_tx_queue(sc->hw, skb, sc->cabq);
 +
- const char *print_ssid(char *buf, const char *ssid, u8 ssid_len)
- {
- 	const char *s = ssid;
-@@ -111,7 +116,8 @@ void lib80211_crypt_info_free(struct lib80211_crypt_info *info)
- }
- EXPORT_SYMBOL(lib80211_crypt_info_free);
- 
--void lib80211_crypt_deinit_entries(struct lib80211_crypt_info *info, int force)
-+static void lib80211_crypt_deinit_entries(struct lib80211_crypt_info *info,
-+					  int force)
- {
- 	struct lib80211_crypt_data *entry, *next;
- 	unsigned long flags;
-@@ -131,10 +137,9 @@ void lib80211_crypt_deinit_entries(struct lib80211_crypt_info *info, int force)
++		if (sc->cabq->txq_len >= sc->cabq->txq_max)
++			break;
++
+ 		skb = ieee80211_get_buffered_bc(sc->hw, vif);
  	}
- 	spin_unlock_irqrestore(info->lock, flags);
- }
--EXPORT_SYMBOL(lib80211_crypt_deinit_entries);
  
- /* After this, crypt_deinit_list won't accept new members */
--void lib80211_crypt_quiescing(struct lib80211_crypt_info *info)
-+static void lib80211_crypt_quiescing(struct lib80211_crypt_info *info)
- {
- 	unsigned long flags;
- 
-@@ -142,9 +147,8 @@ void lib80211_crypt_quiescing(struct lib80211_crypt_info *info)
- 	info->crypt_quiesced = 1;
- 	spin_unlock_irqrestore(info->lock, flags);
- }
--EXPORT_SYMBOL(lib80211_crypt_quiescing);
- 
--void lib80211_crypt_deinit_handler(unsigned long data)
-+static void lib80211_crypt_deinit_handler(unsigned long data)
- {
- 	struct lib80211_crypt_info *info = (struct lib80211_crypt_info *)data;
- 	unsigned long flags;
-@@ -160,7 +164,6 @@ void lib80211_crypt_deinit_handler(unsigned long data)
- 	}
- 	spin_unlock_irqrestore(info->lock, flags);
- }
--EXPORT_SYMBOL(lib80211_crypt_deinit_handler);
- 
- void lib80211_crypt_delayed_deinit(struct lib80211_crypt_info *info,
- 				    struct lib80211_crypt_data **crypt)
+-- 
+1.7.3.2
+
