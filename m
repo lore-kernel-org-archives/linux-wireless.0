@@ -1,61 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:64777 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755471Ab1G2MJO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59270 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757048Ab1GDKKQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 08:09:14 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 09/13] ath9k_hw: Optimize rx descriptor processing for AR9003
-Date: Fri, 29 Jul 2011 17:38:16 +0530
-Message-ID: <1311941300-2590-9-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110729_140919_420470_E2EB3A42)
-In-Reply-To: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 4 Jul 2011 06:10:16 -0400
+Subject: Re: [RFC v3 2/3] nl80211: channel type attribute for IBSS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alexander Simon <alexander.simon@saxnet.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAP00Pw9LbyqY18vYnBfkDa5RGNaYHSKVKFfsryDnCp_tTYwjxA@mail.gmail.com> (sfid-20110704_120728_048021_C8058A82)
+References: <1308671129.2656.4.camel@alex-2>
+	 <1308671544.2656.8.camel@alex-2> <4E04DDE0.2020008@openwrt.org>
+	 <CAP00Pw9LbyqY18vYnBfkDa5RGNaYHSKVKFfsryDnCp_tTYwjxA@mail.gmail.com>
+	 (sfid-20110704_120728_048021_C8058A82)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 04 Jul 2011 12:10:12 +0200
+Message-ID: <1309774213.3862.1.camel@jlt3.sipsolutions.net> (sfid-20110704_121020_661763_34650EE6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No need to process RxDone and ds_info status again in case
-valid rx status is given.
+On Mon, 2011-07-04 at 12:07 +0200, Alexander Simon wrote:
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |   15 ++++++++-------
- 1 files changed, 8 insertions(+), 7 deletions(-)
+> Johannes, please don't forget that is still is RFC. And only useful
+> comments can help me :).
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 8ff0b88..1aadc47 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -531,17 +531,18 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
- 
- 	/* TODO: byte swap on big endian for ar9300_10 */
- 
--	if ((rxsp->status11 & AR_RxDone) == 0)
--		return -EINPROGRESS;
-+	if (!rxs) {
-+		if ((rxsp->status11 & AR_RxDone) == 0)
-+			return -EINPROGRESS;
- 
--	if (MS(rxsp->ds_info, AR_DescId) != 0x168c)
--		return -EINVAL;
-+		if (MS(rxsp->ds_info, AR_DescId) != 0x168c)
-+			return -EINVAL;
- 
--	if ((rxsp->ds_info & (AR_TxRxDesc | AR_CtrlStat)) != 0)
--		return -EINPROGRESS;
-+		if ((rxsp->ds_info & (AR_TxRxDesc | AR_CtrlStat)) != 0)
-+			return -EINPROGRESS;
- 
--	if (!rxs)
- 		return 0;
-+	}
- 
- 	rxs->rs_status = 0;
- 	rxs->rs_flags =  0;
--- 
-1.7.6
+You're asking me to spend time reviewing this code. Make sure it's in
+consumable form first.
+
+johannes
 
