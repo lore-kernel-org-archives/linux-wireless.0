@@ -1,94 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:53534 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752002Ab1GUP0q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 11:26:46 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/25] update for 3.1
-Date: Thu, 21 Jul 2011 07:50:03 -0700
-Message-Id: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110721_172656_499477_3BEE0ACD)
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:64323 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754716Ab1GDKtC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jul 2011 06:49:02 -0400
+Received: by yxi11 with SMTP id 11so1544107yxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2011 03:49:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4E1199A9.2040008@openwrt.org>
+References: <1309758467-1712-1-git-send-email-nbd@openwrt.org>
+	<1309758467-1712-2-git-send-email-nbd@openwrt.org>
+	<1309758467-1712-3-git-send-email-nbd@openwrt.org>
+	<1309758467-1712-4-git-send-email-nbd@openwrt.org>
+	<CAFtRNNzHqQLYxoZBBgpyttLgXRp1SWabPdQvNr4gvRPvPpPOBw@mail.gmail.com>
+	<4E1199A9.2040008@openwrt.org>
+Date: Mon, 4 Jul 2011 13:49:01 +0300
+Message-ID: <CAFtRNNxOe5u-oUO-a6q-rGhnL6SOzpYZ2kATrm3DigAJZk8U6Q@mail.gmail.com> (sfid-20110704_124907_436811_BEA991B0)
+Subject: Re: [ath5k-devel] [PATCH 4/8] ath5k: initialize common->clockrate
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We add WoWLAN implementation to iwlwifi
-Continue the work on transport layer, also fix an irq bug introduced
-by transport layer earlier
-Some more work on new 105/135 device support
+2011/7/4 Felix Fietkau <nbd@openwrt.org>:
+> On 2011-07-04 5:40 PM, Nick Kossifidis wrote:
+>>
+>> 2011/7/4 Felix Fietkau<nbd@openwrt.org>:
+>>>
+>>>  Fixes a division by zero when setting distance before activating the
+>>>  device for the first time.
+>>>
+>>>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>>>  ---
+>>>   drivers/net/wireless/ath/ath5k/base.c |    1 +
+>>>   1 files changed, 1 insertions(+), 0 deletions(-)
+>>>
+>>>  diff --git a/drivers/net/wireless/ath/ath5k/base.c
+>>> b/drivers/net/wireless/ath/ath5k/base.c
+>>>  index a6623dd..a413aa7 100644
+>>>  --- a/drivers/net/wireless/ath/ath5k/base.c
+>>>  +++ b/drivers/net/wireless/ath/ath5k/base.c
+>>>  @@ -2422,6 +2422,7 @@ ath5k_init_softc(struct ath5k_softc *sc, const
+>>> struct ath_bus_ops *bus_ops)
+>>>         common->ah = sc->ah;
+>>>         common->hw = hw;
+>>>         common->priv = sc;
+>>>  +       common->clockrate = 40;
+>>>
+>>>         /*
+>>>          * Cache line size is used to size and align various
+>>>  --
+>>>  1.7.3.2
+>>>
+>>
+>> We better set this to 44 for g (according to docs core frequency is 44MHz
+>> for g)
+>
+> It shouldn't make a difference, since the first hardware reset will reload
+> all the settings anyway.
+>
+> - Felix
+>
 
-Emmanuel Grumbach (11):
-  iwlagn: add kick_nic API to transport layer
-  iwlagn: kill iwlagn_rx_handler_setup
-  iwlagn: kill iwlagn_setup_deferred_work
-  iwlagn: SCD configuration for AMPDU moves to transport layer
-  iwlagn: move more functions from the start flow to the transport
-    layer
-  iwlagn: move iwl_prepare_card_hw to the transport layer
-  iwlagn: transport layer receives struct iwl_trans*
-  iwlagn: simplify the bus architecture
-  iwlagn: iwl_bus holds drv_data as void * instead of iwl_priv
-  iwlagn: add comment to warn about WoWLAN in resume / suspend flows
-  iwlagn: probe would crash with DEBUG_SHIRQ
+O.K.
 
-Johannes Berg (6):
-  iwlagn: remove keyinfo cache
-  iwlagn: remove forgotten debugfs function
-  iwlagn: rewrite HW crypto
-  iwlagn: implement WoWLAN
-  iwlagn: track beacon interval sent to device
-  iwlagn: rename iwlagn_set_dynamic_key
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Wey-Yi Guy (8):
-  iwlagn: set correct calibration flag
-  iwlagn: remove legacy calibration command
-  iwlagn: define valid init calibration mask
-  iwlagn: radio sensor offset in le16 format
-  iwlagn: testmode fixed rate available for testmode only
-  iwlagn: remove un-necessary "_agn"
-  iwlagn: write iq invert register for 105/135 device
-  iwlagn: remove "disable otp refresh" W/A
-
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
- drivers/net/wireless/iwlwifi/iwl-1000.c           |    2 -
- drivers/net/wireless/iwlwifi/iwl-2000.c           |   18 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c           |    6 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c           |    8 +-
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c      |   10 +-
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c        |  243 ++-----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c         |    8 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c       |   40 +-
- drivers/net/wireless/iwlwifi/iwl-agn-sta.c        |  380 +++++------
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |  232 +------
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c      |   45 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c            |  789 ++++++++++++++++-----
- drivers/net/wireless/iwlwifi/iwl-agn.h            |   32 +-
- drivers/net/wireless/iwlwifi/iwl-bus.h            |  139 ++++
- drivers/net/wireless/iwlwifi/iwl-commands.h       |  161 ++++-
- drivers/net/wireless/iwlwifi/iwl-core.c           |   28 +-
- drivers/net/wireless/iwlwifi/iwl-core.h           |   13 +-
- drivers/net/wireless/iwlwifi/iwl-csr.h            |    1 +
- drivers/net/wireless/iwlwifi/iwl-debug.h          |   10 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c        |   87 ++-
- drivers/net/wireless/iwlwifi/iwl-dev.h            |  213 ++----
- drivers/net/wireless/iwlwifi/iwl-io.h             |    7 +-
- drivers/net/wireless/iwlwifi/iwl-led.c            |    4 +-
- drivers/net/wireless/iwlwifi/iwl-pci.c            |  101 ++--
- drivers/net/wireless/iwlwifi/iwl-pci.h            |   69 --
- drivers/net/wireless/iwlwifi/iwl-power.c          |    8 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c             |   36 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c           |    8 +-
- drivers/net/wireless/iwlwifi/iwl-sta.c            |    8 +-
- drivers/net/wireless/iwlwifi/iwl-sta.h            |    5 +-
- drivers/net/wireless/iwlwifi/iwl-sv-open.c        |   10 +-
- drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |   14 +-
- drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c  |  110 ++--
- drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c  |  240 ++++++-
- drivers/net/wireless/iwlwifi/iwl-trans.c          |  234 ++++++-
- drivers/net/wireless/iwlwifi/iwl-trans.h          |  143 +++-
- 36 files changed, 2082 insertions(+), 1380 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-bus.h
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-pci.h
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
