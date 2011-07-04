@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3981 "EHLO mms1.broadcom.com"
+Received: from mx1.zhaw.ch ([160.85.104.50]:44735 "EHLO mx1.zhaw.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751074Ab1GYH1Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2011 03:27:24 -0400
-Message-ID: <4E2D1ACF.1010307@broadcom.com> (sfid-20110725_092801_089435_91FACE57)
-Date: Mon, 25 Jul 2011 09:27:11 +0200
-From: "Roland Vossen" <rvossen@broadcom.com>
-MIME-Version: 1.0
-To: "Guilherme Salazar" <gmesalazar@gmail.com>
-cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Subject: Re: ieee80211 messages at startup (3.0 kernel)
-References: <CA+Hmt2hyH3tZqSJjdOZfceGtpfHyTL4hh56ngXLHevOpVT07VA@mail.gmail.com>
-In-Reply-To: <CA+Hmt2hyH3tZqSJjdOZfceGtpfHyTL4hh56ngXLHevOpVT07VA@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	id S1757048Ab1GDKKb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jul 2011 06:10:31 -0400
+From: Tobias Klauser <tklauser@distanz.ch>
+To: "David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH net-next] net/wireless: ipw2x00: Use helpers from linux/etherdevice.h
+Date: Mon,  4 Jul 2011 12:00:22 +0200
+Message-Id: <1309773622-28510-1-git-send-email-tklauser@distanz.ch> (sfid-20110704_121034_118317_A16AA542)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Guilherme,
+Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
+---
+ drivers/net/wireless/ipw2x00/libipw_rx.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
- > I've been seeing weird messages concerning ieee80211 driver at startup
- > after using 3.0.0 kernel.
- > I don't know whether that is a problem or just debugging messages,
- > since everything is working fine,
- > but I've attached the dmesg output (before and after using the 3.0.0)
- > and my config file.
-
-this issue has been fixed in the staging-next repo, the fix is probably 
-still on its way to the wireless repo. FYI, the commit on staging-next is:
-
------------------
-commit 37c962d195005d009e130e65a9e55960996c3cab
-Author: Roland Vossen <rvossen@broadcom.com>
-Date:   Wed Jun 29 16:48:22 2011 -0700
-
-     staging: brcm80211: fix for reported log spam problem
-
-     Every few minutes, this message would appear in syslog:
-
-     ieee80211 ph0: wl_ops_bss_info_changed: BSS idle: true (implement)
-
-     The message has been deleted, the driver requires no special action 
-on this
-     particular event (). See: 
-https://bugzilla.kernel.org/show_bug.cgi?id=38162
------------------
-
-Bye, Roland.
+diff --git a/drivers/net/wireless/ipw2x00/libipw_rx.c b/drivers/net/wireless/ipw2x00/libipw_rx.c
+index e5ad76c..32a9966 100644
+--- a/drivers/net/wireless/ipw2x00/libipw_rx.c
++++ b/drivers/net/wireless/ipw2x00/libipw_rx.c
+@@ -442,7 +442,7 @@ int libipw_rx(struct libipw_device *ieee, struct sk_buff *skb,
+ 		 * 802.11, but makes it easier to use different keys with
+ 		 * stations that do not support WEP key mapping). */
+ 
+-		if (!(hdr->addr1[0] & 0x01) || local->bcrx_sta_key)
++		if (is_unicast_ether_addr(hdr->addr1) || local->bcrx_sta_key)
+ 			(void)hostap_handle_sta_crypto(local, hdr, &crypt,
+ 						       &sta);
+ #endif
+@@ -772,7 +772,7 @@ int libipw_rx(struct libipw_device *ieee, struct sk_buff *skb,
+ 
+ #ifdef NOT_YET
+ 	if (ieee->iw_mode == IW_MODE_MASTER && !wds && ieee->ap->bridge_packets) {
+-		if (dst[0] & 0x01) {
++		if (is_multicast_ether_addr(dst)) {
+ 			/* copy multicast frame both to the higher layers and
+ 			 * to the wireless media */
+ 			ieee->ap->bridged_multicast++;
+-- 
+1.7.5.4
 
