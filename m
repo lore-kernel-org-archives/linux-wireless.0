@@ -1,59 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([72.73.18.11]:41030 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752851Ab1GaKJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jul 2011 06:09:55 -0400
-Date: Sun, 31 Jul 2011 06:09:53 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Adam Cozzette <acozzette@cs.hmc.edu>
-cc: Andreas Hartmann <andihartmann@01019freenet.de>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Alan Piszcz <ap@solarrain.com>, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
-In-Reply-To: <20110731033916.GA7182@[192.168.0.12]>
-Message-ID: <alpine.DEB.2.02.1107310609210.21194@p34.internal.lan> (sfid-20110731_121019_444038_A16E7E0D)
-References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan> <4E318BD0.40202@lwfinger.net> <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan> <alpine.DEB.2.02.1107301310070.4925@p34.internal.lan>
- <20110731033916.GA7182@[192.168.0.12]>
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:44046 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754472Ab1GDK13 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jul 2011 06:27:29 -0400
+Received: by yia27 with SMTP id 27so1897799yia.19
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2011 03:27:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+In-Reply-To: <1309758467-1712-3-git-send-email-nbd@openwrt.org>
+References: <1309758467-1712-1-git-send-email-nbd@openwrt.org>
+	<1309758467-1712-2-git-send-email-nbd@openwrt.org>
+	<1309758467-1712-3-git-send-email-nbd@openwrt.org>
+Date: Mon, 4 Jul 2011 13:27:28 +0300
+Message-ID: <CAFtRNNystdzv4MXCA-i6VPks9Fy5ToHX7k+PmjYfPJhxS0fRWA@mail.gmail.com> (sfid-20110704_122732_669043_EF5ACAAA)
+Subject: Re: [PATCH 3/8] ath5k: fix reference clock frequency for spur
+ mitigation on AR2413
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Sat, 30 Jul 2011, Adam Cozzette wrote:
-
-> On Sat, Jul 30, 2011 at 01:10:26PM -0400, Justin Piszcz wrote:
->> (This is with the patch provided earlier)
->>
->> atom:/usr/src/linux# cd drivers/net/wireless/rt2x00/
->> atom:/usr/src/linux/drivers/net/wireless/rt2x00# grep 'memset(skb_push(entry->skb, TXWI_DESC_SIZE), 0, TXWI_DESC_SIZE)' rt2800lib.c
->>         memset(skb_push(entry->skb, TXWI_DESC_SIZE), 0, TXWI_DESC_SIZE);
->> atom:/usr/src/linux/drivers/net/wireless/rt2x00# cat /usr/src/linux/.version
->> 2
->> atom:/usr/src/linux/drivers/net/wireless/rt2x00# uname -a
->> Linux atom 3.0.0 #2 SMP Sat Jul 30 08:34:18 EDT 2011 x86_64 GNU/Linux
->> atom:/usr/src/linux/drivers/net/wireless/rt2x00#
->>
->> Justin.
+2011/7/4 Felix Fietkau <nbd@openwrt.org>:
+> AR2413 uses the same reference clock as AR5413
 >
-> The last two images you posted show rt2800_txdone in the stack trace. I couldn't
-> find any such function in the source and unless I'm mistaken, it was renamed in
-> commit 8f66bbb5 back in May. Are you sure that the most recent code is what is
-> actually running when you run into this problem?
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  drivers/net/wireless/ath/ath5k/phy.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
 >
-> -- 
-> Adam Cozzette
-> Harvey Mudd College
+> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+> index f66124a..c65c33a 100644
+> --- a/drivers/net/wireless/ath/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath/ath5k/phy.c
+> @@ -105,6 +105,7 @@ bool ath5k_hw_chan_has_spur_noise(struct ath5k_hw *ah,
+>
+>        if ((ah->ah_radio == AR5K_RF5112) ||
+>        (ah->ah_radio == AR5K_RF5413) ||
+> +       (ah->ah_radio == AR5K_RF2413) ||
+>        (ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4)))
+>                refclk_freq = 40;
+>        else
+> --
+> 1.7.3.2
 >
 
-Hi,
+If that's true we should also change it on set_sleep_clock (patch 6 on
+your series).
 
-Here is the .config used (3.0):
-http://home.comcast.net/~jpiszcz/20110731/config-3.0.txt
 
-Justin.
 
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
