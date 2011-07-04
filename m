@@ -1,52 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:53528 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750822Ab1GOMfn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2011 08:35:43 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1QhhcM-00081D-7b
-	for linux-wireless@vger.kernel.org; Fri, 15 Jul 2011 14:35:42 +0200
-Received: from 130.233.194.206 ([130.233.194.206])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2011 14:35:42 +0200
-Received: from swaminathanvasanth.r by 130.233.194.206 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2011 14:35:42 +0200
+Received: from linknet-ip-202.77.119.130.link.net.id ([202.77.119.130]:59119
+	"EHLO ppac-jak-id-1.inter-touch.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1755425Ab1GDGLF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jul 2011 02:11:05 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-From: Swaminathan Vasanth <swaminathanvasanth.r@gmail.com>
-Subject: Auto Channel Selection in hostapd with ath5k and ath9k
-Date: Fri, 15 Jul 2011 12:35:30 +0000 (UTC)
-Message-ID: <loom.20110715T143153-415@post.gmane.org> (sfid-20110715_143546_911179_2F4D45E3)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org
+Subject: [PATCH 7/8] ath5k: disable 32KHz sleep clock operation
+Date: Mon,  4 Jul 2011 12:47:46 +0700
+Message-Id: <1309758467-1712-7-git-send-email-nbd@openwrt.org> (sfid-20110704_081123_271265_6CB9BCF0)
+In-Reply-To: <1309758467-1712-6-git-send-email-nbd@openwrt.org>
+References: <1309758467-1712-1-git-send-email-nbd@openwrt.org>
+ <1309758467-1712-2-git-send-email-nbd@openwrt.org>
+ <1309758467-1712-3-git-send-email-nbd@openwrt.org>
+ <1309758467-1712-4-git-send-email-nbd@openwrt.org>
+ <1309758467-1712-5-git-send-email-nbd@openwrt.org>
+ <1309758467-1712-6-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+While 32 KHz sleep clock might provide some power saving benefits,
+it is also a major source of stability issues, on OpenWrt it produced
+some reproducible data bus errors on register accesses on several
+different MIPS platforms.
 
- I am trying to enable the Auto Channel Selection (ACS) in hostapd with ath5k
-and ath9k drivers.
-1) I cloned the source of hostap from the git and applied the patch
-2) I then went to the hostapd directory of hostap and did make and make install.
+All the Atheros drivers that I can find do not enable this feature,
+so it makes sense to leave it disabled in ath5k as well.
 
-While building i enabled CONFIG_ACS=y in defconfig present in /hostap/hostapd/
-and then copied to .config and performed the build. I then did a make install
-and configured the hostapd.conf file.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath5k/reset.c |    9 ---------
+ 1 files changed, 0 insertions(+), 9 deletions(-)
 
-Hostapd is working fine for me without ACS but when i enable channel=0 or
-channel=acs_survey and uncomment the acs_num_req_surveys=10 and
-acs_roc_duration_ms=5 options for ACS to be enabled it throws this error when
-starting hostapd,
-
-Configuration file: hostapd.conf
-Line 113: set as '0' tries to enable ACS but CONFIG_ACS disabled
-Line 125: invalid acs_num_req_surveys 10 (CONFIG_ACS disabled)
-Line 126: invalid acs_roc_duration_ms 5 (CONFIG_ACS disabled)1..5000)
-3 errors found in configuration file 'hostapd.conf'
-
-Infact i enabled CONFIG_ACS when building.Any pointers on what to do to enable
-ACS please. Awaiting your kind reply. Thanks,
-
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 55276ce..192c0cb 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -1285,15 +1285,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	 */
+ 	ath5k_hw_dma_init(ah);
+ 
+-
+-	/* Enable 32KHz clock function for AR5212+ chips
+-	 * Set clocks to 32KHz operation and use an
+-	 * external 32KHz crystal when sleeping if one
+-	 * exists */
+-	if (ah->ah_version == AR5K_AR5212 &&
+-	    op_mode != NL80211_IFTYPE_AP)
+-		ath5k_hw_set_sleep_clock(ah, true);
+-
+ 	/*
+ 	 * Disable beacons and reset the TSF
+ 	 */
+-- 
+1.7.3.2
 
