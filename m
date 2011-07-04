@@ -1,86 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4279 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754044Ab1GEUGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 16:06:35 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH v2 17/21] staging: brcm80211: W_REG macro cleanup in
- fullmac SDIO
-Date: Tue, 5 Jul 2011 22:06:13 +0200
-Message-ID: <1309896377-4425-18-git-send-email-arend@broadcom.com> (sfid-20110705_220729_524098_CD155A72)
-In-Reply-To: <1309896377-4425-1-git-send-email-arend@broadcom.com>
-References: <1309896377-4425-1-git-send-email-arend@broadcom.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:51213 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757290Ab1GDK3G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jul 2011 06:29:06 -0400
+Received: by yxi11 with SMTP id 11so1540422yxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2011 03:29:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1309758467-1712-2-git-send-email-nbd@openwrt.org>
+References: <1309758467-1712-1-git-send-email-nbd@openwrt.org>
+	<1309758467-1712-2-git-send-email-nbd@openwrt.org>
+Date: Mon, 4 Jul 2011 13:29:06 +0300
+Message-ID: <CAFtRNNzuqqu6oSN+P4X4-NTU6ruNvYSM=0CRJHSiTBgpNPGy6A@mail.gmail.com> (sfid-20110704_122915_048802_C92A674A)
+Subject: Re: [ath5k-devel] [PATCH 2/8] ath5k: apply the synth voltage tweak
+ only on AR5112 rev 2
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
-
-Code cleanup. W_REG was defined the same for both big and little endian systems.
-Replaced W_REG on two spots with its expansion.
-
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   18 +++++-------------
- 1 files changed, 5 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index cdc57f9..ba57481 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -51,22 +51,13 @@
- 	})
- #endif				/* __mips__ */
- 
--#define W_REG(r, v, typ) do { \
--		brcmf_sdcard_reg_write(NULL, (r), sizeof(typ), (v)); \
--	} while (0)
- #else				/* __BIG_ENDIAN */
- #define R_REG(r, typ) \
- 	brcmf_sdcard_reg_read(NULL, (r), sizeof(typ))
--#define W_REG(r, v, typ) do { \
--		brcmf_sdcard_reg_write(NULL, (r), sizeof(typ), (v)); \
--	} while (0)
- #endif				/* __BIG_ENDIAN */
- 
--#define AND_REG(r, v, typ)	W_REG((r), R_REG(r, typ) & (v), typ)
--#define OR_REG(r, v, typ)	W_REG((r), R_REG(r, typ) | (v), typ)
--
--#define SET_REG(r, mask, val, typ) \
--		W_REG((r), ((R_REG(r) & ~(mask)) | (val)), typ)
-+#define OR_REG(r, v, typ) \
-+	brcmf_sdcard_reg_write(NULL, (r), sizeof(typ), R_REG(r, typ) | (v))
- 
- #ifdef BCMDBG
- 
-@@ -609,7 +600,7 @@ struct brcmf_bus {
- 	uint console_addr;	/* Console address from shared struct */
- #endif				/* BCMDBG */
- 
--	uint regfails;		/* Count of R_REG/W_REG failures */
-+	uint regfails;		/* Count of R_REG failures */
- 
- 	uint clkstate;		/* State of sd and backplane clock(s) */
- 	bool activity;		/* Activity flag for clock down */
-@@ -850,7 +841,8 @@ w_sdreg32(struct brcmf_bus *bus, u32 regval, u32 reg_offset, u32 *retryvar)
- {
- 	*retryvar = 0;
- 	do {
--		W_REG(bus->ci->buscorebase + reg_offset, regval, u32);
-+		brcmf_sdcard_reg_write(NULL, bus->ci->buscorebase + reg_offset,
-+				       sizeof(u32), regval);
- 	} while (brcmf_sdcard_regfail(bus->card) &&
- 		 (++(*retryvar) <= retry_limit));
- 	if (*retryvar) {
--- 
-1.7.4.1
-
-
+MjAxMS83LzQgRmVsaXggRmlldGthdSA8bmJkQG9wZW53cnQub3JnPjoKPiBNaWdodCBmaXggc29t
+ZSBzdGFiaWxpdHkgaXNzdWVzIG9uIG5ld2VyIGNoaXBzCj4KPiBTaWduZWQtb2ZmLWJ5OiBGZWxp
+eCBGaWV0a2F1IDxuYmRAb3BlbndydC5vcmc+Cj4gLS0tCj4gwqBkcml2ZXJzL25ldC93aXJlbGVz
+cy9hdGgvYXRoNWsvcGh5LmMgfCDCoCAxOSArKysrKysrKysrKy0tLS0tLS0tCj4gwqAxIGZpbGVz
+IGNoYW5nZWQsIDExIGluc2VydGlvbnMoKyksIDggZGVsZXRpb25zKC0pCj4KPiBkaWZmIC0tZ2l0
+IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDVrL3BoeS5jIGIvZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvYXRoL2F0aDVrL3BoeS5jCj4gaW5kZXggYzc3NDQ2OC4uZjY2MTI0YSAxMDA2NDQKPiAt
+LS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoNWsvcGh5LmMKPiArKysgYi9kcml2ZXJz
+L25ldC93aXJlbGVzcy9hdGgvYXRoNWsvcGh5LmMKPiBAQCAtOTcwLDE3ICs5NzAsMjAgQEAgc3Rh
+dGljIGludCBhdGg1a19od19yZnJlZ3NfaW5pdChzdHJ1Y3QgYXRoNWtfaHcgKmFoLAo+IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgfQo+Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAvKiBMb3dlciBzeW50aCB2b2x0YWdlIG9uIFJldiAyICovCj4gLSDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBhdGg1a19od19yZmJfb3AoYWgsIHJmX3JlZ3Ms
+IDIsCj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCBBUjVLX1JGX0hJR0hfVkNfQ1AsIHRydWUpOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgaWYgKGFoLT5haF9yYWRpbyA9PSBBUjVLX1JGNTExMiAmJgo+ICsgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgKGFoLT5haF9yYWRpb181Z2h6X3Jl
+dmlzaW9uICYgQVI1S19TUkVWX1JFVikgPiAwKSB7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBhdGg1a19od19yZmJfb3AoYWgsIHJmX3JlZ3MsIDIsCj4g
+KyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCBBUjVLX1JGX0hJR0hfVkNfQ1AsIHRydWUpOwo+Cj4gLSDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBhdGg1a19od19yZmJfb3AoYWgsIHJmX3JlZ3MsIDIsCj4g
+LSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCBBUjVLX1JGX01JRF9WQ19DUCwgdHJ1ZSk7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCBhdGg1a19od19yZmJfb3AoYWgsIHJmX3JlZ3MsIDIsCj4gKyDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCBBUjVLX1JGX01JRF9WQ19DUCwgdHJ1ZSk7Cj4KPiAtIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIGF0aDVrX2h3X3JmYl9vcChhaCwgcmZfcmVncywgMiwKPiAtIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIEFS
+NUtfUkZfTE9XX1ZDX0NQLCB0cnVlKTsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIGF0aDVrX2h3X3JmYl9vcChhaCwgcmZfcmVncywgMiwKPiArIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIEFSNUtfUkZfTE9XX1ZDX0NQLCB0cnVlKTsKPgo+IC0gwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgYXRoNWtfaHdfcmZiX29wKGFoLCByZl9yZWdzLCAyLAo+IC0gwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgQVI1S19S
+Rl9QVVNIX1VQLCB0cnVlKTsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIGF0aDVrX2h3X3JmYl9vcChhaCwgcmZfcmVncywgMiwKPiArIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IEFSNUtfUkZfUFVTSF9VUCwgdHJ1ZSk7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCB9Cj4KPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoC8qIERlY3JlYXNl
+IHBvd2VyIGNvbnN1bXB0aW9uIG9uIDUyMTMrIEJhc2VCYW5kICovCj4gwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqBpZiAoYWgtPmFoX3BoeV9yZXZpc2lvbiA+PSBBUjVLX1NSRVZf
+UEhZXzUyMTJBKSB7CgpBY2tlZC1ieTogTmljayBLb3NzaWZpZGlzIDxtaWNrZmxlbW1AZ21haWwu
+Y29tPgoKCi0tIApHUEcgSUQ6IDB4RDIxREIyREIKQXMgeW91IHJlYWQgdGhpcyBwb3N0IGdsb2Jh
+bCBlbnRyb3B5IHJpc2VzLiBIYXZlIEZ1biA7LSkKTmljawo=
