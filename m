@@ -1,51 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:40477 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752219Ab1GTOsM (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:51785 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750959Ab1GDSbo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2011 10:48:12 -0400
-Received: by vxh35 with SMTP id 35so200521vxh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2011 07:48:11 -0700 (PDT)
+	Mon, 4 Jul 2011 14:31:44 -0400
+Received: by qwk3 with SMTP id 3so2549054qwk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2011 11:31:43 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <201107201536.01392.helmut.schaa@googlemail.com>
-References: <CAN=pzdLRaRHkg4NquUpDhEwRzq-roKQXMtMcwnr031maDSLRfw@mail.gmail.com>
-	<201107201536.01392.helmut.schaa@googlemail.com>
-Date: Wed, 20 Jul 2011 18:48:09 +0400
-Message-ID: <CAN=pzdKLtB2yz4-OhKL5gzYF0Qm2weAmNAz-0MqdFuooFNYzwQ@mail.gmail.com> (sfid-20110720_164816_973212_26FC75F0)
-Subject: Re: rt2x00, AP mode, 802.11n is not working properly
-From: Stanislav Demakov <s.demakov@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <loom.20110630T161632-452@post.gmane.org>
+References: <loom.20110630T161632-452@post.gmane.org>
+Date: Mon, 4 Jul 2011 20:31:43 +0200
+Message-ID: <CA+icZUUQwN5uZiSPjWikboH=zrU2Wi6vDHCLUoirF92EMuy2PQ@mail.gmail.com> (sfid-20110704_203153_707234_980FD819)
+Subject: Re: Broadcom 14e4:4357 mode monitor
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: lululatortue <lefrancoisfabien@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes, correct.
+# Clone the remote GIT repository (master GIT branch)
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-2.6.git
 
-This is how I've discovered it:
-At first, I've accidentally found that stable version 2.6.37-4.tar.bz2
-does not have this problem, because every later stable version does.
-Then I've decided to try other drivers that have similar release
-date\archive size.
-So eventually I was in the folder
-http://www.orbit-lab.org/kernel/compat-wireless-2.6/2010/12/ and tried
-the first and the last one. And compat-wireless-2010-12-01.tar.bz2 was
-fine, while compat-wireless-2010-12-26.tar.bz2 wasn't.
-Then I've tried the middle one, etc. In the end I was certain that
-something has changed between 13th and 14th. So since 2010-12-14 the
-problem is present.
+# Change to local GIT repository
+cd staging-2.6
 
+# Switch to staging-next GIT branch
+git checkout -b staging-next origin/staging-next
 
-2011/7/20 Helmut Schaa <helmut.schaa@googlemail.com>:
-> Am Mittwoch, 20. Juli 2011 schrieb Stanislav Demakov:
->> I'm using hostapd 0.73 and 1T1R rt2x00 based wireless dongle to create
->> an AP. The problem is that since version
->> compat-wireless-2010-12-14.tar.bz2 802.11n mode is not working
->> properly. In this driver version and all later you've broken
->> something!
+# Check on which branch you are
+git branch -l
+
+- Sedat -
+
+On Thu, Jun 30, 2011 at 4:34 PM, lululatortue
+<lefrancoisfabien@gmail.com> wrote:
+> Hello,
 >
-> So, 2010-12-14 already shows the problem you've described while 2010-12-13
-> does not, right?
+>     My objectif is to drive my broadcom with monitor mode. I would download the
+> staging-next git tree, available at :
+> git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-next-2.6.git
 >
-> Helmut
+>     but with my linux write:
+>
+>    git clone
+> git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-next-2.6.git
+>
+>    I'have:
+>
+> Initialized empty Git repository in /home/lefrancois/staging-next-2.6/.git/
+> fatal: The remote end hung up unexpectedly
+>
+>
+>    you know were i can found solution why see unexpectedly or if i want have
+> your autorisation for download with my computeur?
+>
+>
+>     2.6.32-32-generic ubuntu 10.04LTS with version git-core (1:1.7.0.4-1ubuntu0.2)
+>
+>     thank you
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
