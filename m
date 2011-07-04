@@ -1,49 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:41224 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754092Ab1GQXW4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:62929 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992Ab1GDFYR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2011 19:22:56 -0400
-Received: by mail-fx0-f52.google.com with SMTP id 18so5569858fxd.11
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jul 2011 16:22:56 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/3] b43: bcma: define 80211 core specific IO status bits
-Date: Mon, 18 Jul 2011 02:01:29 +0200
-Message-Id: <1310947290-3099-2-git-send-email-zajec5@gmail.com> (sfid-20110718_012259_871706_4A7F9A48)
-In-Reply-To: <1310947290-3099-1-git-send-email-zajec5@gmail.com>
-References: <1310947290-3099-1-git-send-email-zajec5@gmail.com>
+	Mon, 4 Jul 2011 01:24:17 -0400
+Date: Mon, 4 Jul 2011 10:54:11 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Forest Bond <forest@alittletooquiet.net>
+CC: Mohammed Shafi <shafi.wireless@gmail.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: ath9k_htc fails to initialize TL-WN721N with compat-wireless
+ 3.0-rc4-1
+Message-ID: <20110704052410.GA1364@vmraj-lnx.users.atheros.com> (sfid-20110704_072426_245244_96BD3FD1)
+References: <20110701133553.GA7125@alittletooquiet.net>
+ <BANLkTikByepHZoEE2b65CrgUmpBmcxiTgw@mail.gmail.com>
+ <BANLkTimUs65_Sw=pwF-J8gPjyrNcs2qnOw@mail.gmail.com>
+ <20110701173237.GC7125@alittletooquiet.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <20110701173237.GC7125@alittletooquiet.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jul 01, 2011 at 01:32:37PM -0400, Forest Bond wrote:
+> Hi shafi,
+> 
+> [Sorry for the duplicate, lost the Cc's the first time around.]
+> 
+> On Fri, Jul 01, 2011 at 07:39:40PM +0530, Mohammed Shafi wrote:
+> > On Fri, Jul 1, 2011 at 7:31 PM, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+> > > On Fri, Jul 1, 2011 at 7:05 PM, Forest Bond <forest@alittletooquiet.net> wrote:
+> > >> Now the module loads fine and appears to load the firmware correctly, but the
+> > >> interface never comes up. †Here's what happens when I insert the device:
+> > >>
+> > >> [ †206.657723] Compat-wireless backport release: compat-wireless-v3.0-rc4-1
+> > >> [ †206.657732] Backport based on linux-2.6-allstable.git v3.0-rc4
+> > >> [ †206.864667] Calling CRDA to update world regulatory domain
+> > >> [ †207.714633] usb 5-7: ath9k_htc: Transferred FW: htc_9271.fw, size: 51288
+> > >> [ †207.861037] ath9k_htc 5-7:1.0: ath9k_htc: HTC initialized with 33 credits
+> > >>
+> > >> At this point the interface is not visible in the output of ifconfig. †Something
+> > >> has gone wrong with USB, because lsusb hangs until I unplug the device, at which
+> > >> point I see the following in dmesg:
+> > >>
+> > >> [ †225.464212] usb 5-7: USB disconnect, address 5
+> > >> [ †225.592282] ath: Reading Magic # failed
+> > >> [ †225.592310] ath: no band has been marked as supported in EEPROM
+> > >> [ †225.592315] ath: Unable to initialize hardware; initialization status: -22
+> > >> [ †225.592321] ath: Unable to initialize hardware; initialization status: -22
+> > >> [ †225.592336] Failed to initialize the device
+> > >> [ †225.592400] ath9k_htc: probe of 5-7:1.0 failed with error -22
+> > >> [ †225.712249] usbcore: registered new interface driver ath9k_htc
+> > >
+> > > something wrong in reading EEPROM, please post the kernel log for
+> > > sudo modprobe ath9k_htc debug debug=0x404
+> > 
+> > please do
+> > sudo modprobe ath9k_htc debug=0xffffffff
+> > this will give lots of information
+> 
+> [   98.421395] Compat-wireless backport release: compat-wireless-v3.0-rc4-1
+> [   98.421405] Backport based on linux-2.6-allstable.git v3.0-rc4
+> [   98.638709] Calling CRDA to update world regulatory domain
+> [   99.219353] usbcore: registered new interface driver ath9k_htc
+> [  103.829197] usb 5-7: new high speed USB device using ehci_hcd and address 5
+> [  103.985215] usb 5-7: configuration #1 chosen from 1 choice
+> [  104.288053] usb 5-7: ath9k_htc: Transferred FW: htc_9271.fw, size: 51288
+> [  104.448323] ath9k_htc 5-7:1.0: ath9k_htc: HTC initialized with 33 credits
+> [  104.453395] ath: UNDEFINED -> AWAKE
+> [  104.454654] ath: serialize_regmode is 0
+> [  104.686218] ath: Timeout waiting for WMI command: WMI_REG_WRITE_CMDID
+> [  104.686240] ath: REGISTER WRITE FAILED, multi len: 9
+> [  104.901237] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
+> [  104.901259] ath: REGISTER READ FAILED: (0x9c00, -110)
+> [  104.901276] ath: Reading from EEPROM, not flash
+> [  105.136983] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
+> [  105.137000] ath: Multiple REGISTER READ FAILED (count: 8)
+> [  105.408496] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
+> [  105.408513] ath: Multiple REGISTER READ FAILED (count: 8)
+> [  105.676507] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
+> [  105.676524] ath: Multiple REGISTER READ FAILED (count: 8)
+> [  105.911084] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
+Please share your PID/VID.
 
-Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/b43.h |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index 08a2827..8cf0459 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -433,6 +433,12 @@ enum {
- #define  B43_BCMA_IOCTL_PHY_BW_40MHZ	0x00000080	/* 40 MHz bandwidth, 160 MHz PHY */
- #define B43_BCMA_IOCTL_GMODE		0x00002000	/* G Mode Enable */
- 
-+/* BCMA 802.11 core specific IO status (BCMA_IOST) flags */
-+#define B43_BCMA_IOST_2G_PHY		0x00000001	/* 2.4G capable phy */
-+#define B43_BCMA_IOST_5G_PHY		0x00000002	/* 5G capable phy */
-+#define B43_BCMA_IOST_FASTCLKA		0x00000004	/* Fast Clock Available */
-+#define B43_BCMA_IOST_DUALB_PHY		0x00000008	/* Dualband phy */
-+
- /* 802.11 core specific TM State Low (SSB_TMSLOW) flags */
- #define B43_TMSLOW_GMODE		0x20000000	/* G Mode Enable */
- #define B43_TMSLOW_PHY_BANDWIDTH	0x00C00000	/* PHY band width and clock speed mask (N-PHY only) */
--- 
-1.7.3.4
-
+--
+Rajkumar
