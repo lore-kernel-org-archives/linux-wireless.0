@@ -1,42 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:37256 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965108Ab1GMIwR convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:47732 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751952Ab1GDUMC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 04:52:17 -0400
-Message-ID: <4E1D5CB7.7070607@adurom.com> (sfid-20110713_105223_632412_78F88FA5)
-Date: Wed, 13 Jul 2011 11:52:07 +0300
-From: Kalle Valo <kvalo@adurom.com>
+	Mon, 4 Jul 2011 16:12:02 -0400
+Received: by iwn6 with SMTP id 6so4679363iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2011 13:12:01 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [TODO] at76c50x: remove wext includes
-References: <1310546836.3873.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1310546836.3873.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <201107042202.27366.chunkeey@googlemail.com>
+References: <CAMJnVwmtNBrAbaL5TU-pQO+cvFn=UJC2rQroJeYASL3zJEesaw@mail.gmail.com>
+	<201107042202.27366.chunkeey@googlemail.com>
+Date: Mon, 4 Jul 2011 22:11:59 +0200
+Message-ID: <CAMJnVwm4Xp87pF7PHLP7vVqF-LYzsgeso7ZPzPwOC_39mwP_Kw@mail.gmail.com> (sfid-20110704_221207_272426_FC5CC3D3)
+Subject: Re: carl9170: Problems setting up Virtual Interface
+From: Alex <alex9434@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/13/2011 11:47 AM, Johannes Berg wrote:
-> Not possible right now:
-> at76c50x-usb.h:404:11: error: ‘IW_ESSID_MAX_SIZE’ undeclared here (not in a function)
-> at76c50x-usb.c: In function ‘at76_startup_device’:
-> at76c50x-usb.c:1371:263: error: ‘IW_MODE_ADHOC’ undeclared (first use in this function)
-> at76c50x-usb.c:1371:263: note: each undeclared identifier is reported only once for each function it appears in
-> at76c50x-usb.c: In function ‘at76_add_interface’:
-> at76c50x-usb.c:1863:19: error: ‘IW_MODE_INFRA’ undeclared (first use in this function)
-> at76c50x-usb.c: In function ‘at76_init_new_device’:
-> at76c50x-usb.c:2269:18: error: ‘IW_MODE_INFRA’ undeclared (first use in this function)
-> 
-> but none of those constants should be used in a mac80211 driver.
-> 
-> Also this driver is missing a MAINTAINERS entry.
+Great! I now get an additional interface:
+wlan1-wlan0 Link encap:Ethernet  HWaddr <deleted>
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
 
-The driver has been broken due to the mac80211 changes for a long time
-and it's obvious that I can't maintain it anymore as I haven't touched
-it for a long time. I would like to just remove it altogether. Any
-objections?
+is this the one? Is the name wlan1-wlan0 that I should use to connect?
 
-If someone wants to step up and fix it, now is the time to do it.
+BTW: What is the interface?
 
-Kalle
+mon.wlan0 Link encap:UNSPEC  HWaddr <deleted>
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:3521 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:585952 (572.2 KiB)  TX bytes:0 (0.0 B)
+
+On Mon, Jul 4, 2011 at 10:02 PM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> On Monday, July 04, 2011 09:46:46 PM Alex wrote:
+>
+>> I am using the carl9170 interface from the 2.6.39.2 kernel with the
+>
+>> newest carl9170 firmware. I have set-up an AP with hostapd. Everything
+>
+>> is working so far:
+>
+>>
+>
+>> root@box:~# ifconfig
+>
+>> mon.wlan0 Link encap:UNSPEC HWaddr <deleted>
+>
+>> UP BROADCAST RUNNING MULTICAST MTU:1500 Metric:1
+>
+>> RX packets:27070 errors:0 dropped:0 overruns:0 frame:0
+>
+>> TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+>
+>> collisions:0 txqueuelen:1000
+>
+>> RX bytes:4583087 (4.3 MiB) TX bytes:0 (0.0 B)
+>
+>>
+>
+>> wlan0 Link encap:Ethernet HWaddr <deleted>
+>
+>> inet addr:192.168.80.1 Bcast:192.168.80.255 Mask:255.255.255.0
+>
+>> inet6 addr: fe80::76ea:3aff:fe8f:130c/64 Scope:Link
+>
+>> UP BROADCAST RUNNING MULTICAST MTU:1500 Metric:1
+>
+>> RX packets:320 errors:0 dropped:1 overruns:0 frame:0
+>
+>> TX packets:231 errors:0 dropped:0 overruns:0 carrier:0
+>
+>> collisions:0 txqueuelen:1000
+>
+>> RX bytes:28815 (28.1 KiB) TX bytes:26887 (26.2 KiB)
+>
+>>
+>
+>> I am now trying to create an additional virtual intereface to connect
+>
+>> wireless to my router as described on:
+>
+>>
+>
+>> http://linuxwireless.org/en/users/Documentation/iw/vif/
+>
+>>
+>
+>> with
+>
+>> iw dev wlan0 interface add wlan1 type station
+>
+>>
+>
+>> However, ifconfig does not list the additional wlan1 interface.
+>
+> The virtual interface might not be listed because it can't be
+>
+> brought up since it shares the same mac with the main interface.
+>
+> so try "ifconfig -a" ?
+>
+> Regards,
+>
+> Chr
