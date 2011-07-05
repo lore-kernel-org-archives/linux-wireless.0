@@ -1,194 +1,241 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:55055 "EHLO mga02.intel.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2953 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753188Ab1GWSBY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jul 2011 14:01:24 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 11/11] iwlagn: support v2 of enhanced sensitivity table
-Date: Sat, 23 Jul 2011 10:24:50 -0700
-Message-Id: <1311441890-19959-12-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110723_201610_458857_5D52EB53)
-In-Reply-To: <1311441890-19959-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1311441890-19959-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1752343Ab1GEWDM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 18:03:12 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 03/31] staging: brcm80211: removed unused #ifdef
+ sections in fullmac
+Date: Wed, 6 Jul 2011 00:02:30 +0200
+Message-ID: <1309903378-29021-4-git-send-email-arend@broadcom.com> (sfid-20110706_000420_811721_10B2F212)
+In-Reply-To: <1309903378-29021-1-git-send-email-arend@broadcom.com>
+References: <1309903378-29021-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for v2 of enhanced sensitivity table for 2000 series products
+From: Roland Vossen <rvossen@broadcom.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+CONFIG_MACH_SANDGATE2G, CONFIG_MMC_MSM7X00A,
+CONFIG_HAS_EARLYSUSPEND and CONFIG_WIFI_CONTROL_FUNC were never
+defined.
+
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-2000.c      |    2 +
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c |   69 +++++++++++++++++--------
- drivers/net/wireless/iwlwifi/iwl-commands.h  |   34 +++++++++----
- drivers/net/wireless/iwlwifi/iwl-core.h      |    2 +
- 4 files changed, 74 insertions(+), 33 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c  |  126 -----------------------
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c   |    5 -
+ drivers/staging/brcm80211/include/brcmu_utils.h |    4 -
+ 3 files changed, 0 insertions(+), 135 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index cdc7428..06f53b3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -222,6 +222,7 @@ static struct iwl_base_params iwl2000_base_params = {
- 	.wd_timeout = IWL_DEF_WD_TIMEOUT,
- 	.max_event_log_size = 512,
- 	.shadow_reg_enable = true,
-+	.hd_v2 = true,
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index f62a3c0..423d5da 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -29,9 +29,6 @@
+ #include <linux/fs.h>
+ #include <linux/uaccess.h>
+ #include <net/cfg80211.h>
+-#if defined(CONFIG_HAS_EARLYSUSPEND)
+-#include <linux/earlysuspend.h>
+-#endif
+ #include <defs.h>
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
+@@ -90,10 +87,6 @@ struct brcmf_info {
+ 	bool set_macaddress;
+ 	u8 macvalue[ETH_ALEN];
+ 	atomic_t pend_8021x_cnt;
+-
+-#ifdef CONFIG_HAS_EARLYSUSPEND
+-	struct early_suspend early_suspend;
+-#endif				/* CONFIG_HAS_EARLYSUSPEND */
  };
  
+ /* Error bits */
+@@ -180,108 +173,6 @@ static int brcmf_host_event(struct brcmf_info *drvr_priv, int *ifidx, void *pktd
+ 			    struct brcmf_event_msg *event_ptr,
+ 			    void **data_ptr);
  
-@@ -241,6 +242,7 @@ static struct iwl_base_params iwl2030_base_params = {
- 	.wd_timeout = IWL_LONG_WD_TIMEOUT,
- 	.max_event_log_size = 512,
- 	.shadow_reg_enable = true,
-+	.hd_v2 = true,
- };
- 
- static struct iwl_ht_params iwl2000_ht_params = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-calib.c b/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-index 72d6297..1789e3a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-@@ -505,28 +505,53 @@ static int iwl_enhance_sensitivity_write(struct iwl_priv *priv)
- 
- 	iwl_prepare_legacy_sensitivity_tbl(priv, data, &cmd.enhance_table[0]);
- 
--	cmd.enhance_table[HD_INA_NON_SQUARE_DET_OFDM_INDEX] =
--		HD_INA_NON_SQUARE_DET_OFDM_DATA;
--	cmd.enhance_table[HD_INA_NON_SQUARE_DET_CCK_INDEX] =
--		HD_INA_NON_SQUARE_DET_CCK_DATA;
--	cmd.enhance_table[HD_CORR_11_INSTEAD_OF_CORR_9_EN_INDEX] =
--		HD_CORR_11_INSTEAD_OF_CORR_9_EN_DATA;
--	cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_INDEX] =
--		HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_DATA;
--	cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_INDEX] =
--		HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_DATA;
--	cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_SLOPE_INDEX] =
--		HD_OFDM_NON_SQUARE_DET_SLOPE_DATA;
--	cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_INTERCEPT_INDEX] =
--		HD_OFDM_NON_SQUARE_DET_INTERCEPT_DATA;
--	cmd.enhance_table[HD_CCK_NON_SQUARE_DET_SLOPE_MRC_INDEX] =
--		HD_CCK_NON_SQUARE_DET_SLOPE_MRC_DATA;
--	cmd.enhance_table[HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_INDEX] =
--		HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_DATA;
--	cmd.enhance_table[HD_CCK_NON_SQUARE_DET_SLOPE_INDEX] =
--		HD_CCK_NON_SQUARE_DET_SLOPE_DATA;
--	cmd.enhance_table[HD_CCK_NON_SQUARE_DET_INTERCEPT_INDEX] =
--		HD_CCK_NON_SQUARE_DET_INTERCEPT_DATA;
-+	if (priv->cfg->base_params->hd_v2) {
-+		cmd.enhance_table[HD_INA_NON_SQUARE_DET_OFDM_INDEX] =
-+			HD_INA_NON_SQUARE_DET_OFDM_DATA_V2;
-+		cmd.enhance_table[HD_INA_NON_SQUARE_DET_CCK_INDEX] =
-+			HD_INA_NON_SQUARE_DET_CCK_DATA_V2;
-+		cmd.enhance_table[HD_CORR_11_INSTEAD_OF_CORR_9_EN_INDEX] =
-+			HD_CORR_11_INSTEAD_OF_CORR_9_EN_DATA_V2;
-+		cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_INDEX] =
-+			HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_DATA_V2;
-+		cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_INDEX] =
-+			HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_DATA_V2;
-+		cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_SLOPE_INDEX] =
-+			HD_OFDM_NON_SQUARE_DET_SLOPE_DATA_V2;
-+		cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_INTERCEPT_INDEX] =
-+			HD_OFDM_NON_SQUARE_DET_INTERCEPT_DATA_V2;
-+		cmd.enhance_table[HD_CCK_NON_SQUARE_DET_SLOPE_MRC_INDEX] =
-+			HD_CCK_NON_SQUARE_DET_SLOPE_MRC_DATA_V2;
-+		cmd.enhance_table[HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_INDEX] =
-+			HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_DATA_V2;
-+		cmd.enhance_table[HD_CCK_NON_SQUARE_DET_SLOPE_INDEX] =
-+			HD_CCK_NON_SQUARE_DET_SLOPE_DATA_V2;
-+		cmd.enhance_table[HD_CCK_NON_SQUARE_DET_INTERCEPT_INDEX] =
-+			HD_CCK_NON_SQUARE_DET_INTERCEPT_DATA_V2;
-+	} else {
-+		cmd.enhance_table[HD_INA_NON_SQUARE_DET_OFDM_INDEX] =
-+			HD_INA_NON_SQUARE_DET_OFDM_DATA_V1;
-+		cmd.enhance_table[HD_INA_NON_SQUARE_DET_CCK_INDEX] =
-+			HD_INA_NON_SQUARE_DET_CCK_DATA_V1;
-+		cmd.enhance_table[HD_CORR_11_INSTEAD_OF_CORR_9_EN_INDEX] =
-+			HD_CORR_11_INSTEAD_OF_CORR_9_EN_DATA_V1;
-+		cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_INDEX] =
-+			HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_DATA_V1;
-+		cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_INDEX] =
-+			HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_DATA_V1;
-+		cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_SLOPE_INDEX] =
-+			HD_OFDM_NON_SQUARE_DET_SLOPE_DATA_V1;
-+		cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_INTERCEPT_INDEX] =
-+			HD_OFDM_NON_SQUARE_DET_INTERCEPT_DATA_V1;
-+		cmd.enhance_table[HD_CCK_NON_SQUARE_DET_SLOPE_MRC_INDEX] =
-+			HD_CCK_NON_SQUARE_DET_SLOPE_MRC_DATA_V1;
-+		cmd.enhance_table[HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_INDEX] =
-+			HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_DATA_V1;
-+		cmd.enhance_table[HD_CCK_NON_SQUARE_DET_SLOPE_INDEX] =
-+			HD_CCK_NON_SQUARE_DET_SLOPE_DATA_V1;
-+		cmd.enhance_table[HD_CCK_NON_SQUARE_DET_INTERCEPT_INDEX] =
-+			HD_CCK_NON_SQUARE_DET_INTERCEPT_DATA_V1;
-+	}
- 
- 	/* Update uCode's "work" table, and copy it to DSP */
- 	cmd.control = SENSITIVITY_CMD_CONTROL_WORK_TABLE;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 5769ca5..4e92d56 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -3067,17 +3067,29 @@ struct iwl_missed_beacon_notif {
- /* number of additional entries for enhanced tbl */
- #define ENHANCE_HD_TABLE_ENTRIES  (ENHANCE_HD_TABLE_SIZE - HD_TABLE_SIZE)
- 
--#define HD_INA_NON_SQUARE_DET_OFDM_DATA			cpu_to_le16(0)
--#define HD_INA_NON_SQUARE_DET_CCK_DATA			cpu_to_le16(0)
--#define HD_CORR_11_INSTEAD_OF_CORR_9_EN_DATA		cpu_to_le16(0)
--#define HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_DATA		cpu_to_le16(668)
--#define HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_DATA	cpu_to_le16(4)
--#define HD_OFDM_NON_SQUARE_DET_SLOPE_DATA		cpu_to_le16(486)
--#define HD_OFDM_NON_SQUARE_DET_INTERCEPT_DATA		cpu_to_le16(37)
--#define HD_CCK_NON_SQUARE_DET_SLOPE_MRC_DATA		cpu_to_le16(853)
--#define HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_DATA	cpu_to_le16(4)
--#define HD_CCK_NON_SQUARE_DET_SLOPE_DATA		cpu_to_le16(476)
--#define HD_CCK_NON_SQUARE_DET_INTERCEPT_DATA		cpu_to_le16(99)
-+#define HD_INA_NON_SQUARE_DET_OFDM_DATA_V1		cpu_to_le16(0)
-+#define HD_INA_NON_SQUARE_DET_CCK_DATA_V1		cpu_to_le16(0)
-+#define HD_CORR_11_INSTEAD_OF_CORR_9_EN_DATA_V1		cpu_to_le16(0)
-+#define HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_DATA_V1	cpu_to_le16(668)
-+#define HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_DATA_V1	cpu_to_le16(4)
-+#define HD_OFDM_NON_SQUARE_DET_SLOPE_DATA_V1		cpu_to_le16(486)
-+#define HD_OFDM_NON_SQUARE_DET_INTERCEPT_DATA_V1	cpu_to_le16(37)
-+#define HD_CCK_NON_SQUARE_DET_SLOPE_MRC_DATA_V1		cpu_to_le16(853)
-+#define HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_DATA_V1	cpu_to_le16(4)
-+#define HD_CCK_NON_SQUARE_DET_SLOPE_DATA_V1		cpu_to_le16(476)
-+#define HD_CCK_NON_SQUARE_DET_INTERCEPT_DATA_V1		cpu_to_le16(99)
-+
-+#define HD_INA_NON_SQUARE_DET_OFDM_DATA_V2		cpu_to_le16(1)
-+#define HD_INA_NON_SQUARE_DET_CCK_DATA_V2		cpu_to_le16(1)
-+#define HD_CORR_11_INSTEAD_OF_CORR_9_EN_DATA_V2		cpu_to_le16(1)
-+#define HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_DATA_V2	cpu_to_le16(600)
-+#define HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_DATA_V2	cpu_to_le16(40)
-+#define HD_OFDM_NON_SQUARE_DET_SLOPE_DATA_V2		cpu_to_le16(486)
-+#define HD_OFDM_NON_SQUARE_DET_INTERCEPT_DATA_V2	cpu_to_le16(45)
-+#define HD_CCK_NON_SQUARE_DET_SLOPE_MRC_DATA_V2		cpu_to_le16(853)
-+#define HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_DATA_V2	cpu_to_le16(60)
-+#define HD_CCK_NON_SQUARE_DET_SLOPE_DATA_V2		cpu_to_le16(476)
-+#define HD_CCK_NON_SQUARE_DET_INTERCEPT_DATA_V2		cpu_to_le16(99)
- 
- 
- /* Control field in struct iwl_sensitivity_cmd */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 74f043d..c246861 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -135,6 +135,7 @@ struct iwl_mod_params {
-  * @temperature_kelvin: temperature report by uCode in kelvin
-  * @max_event_log_size: size of event log buffer size for ucode event logging
-  * @shadow_reg_enable: HW shadhow register bit
-+ * @hd_v2: v2 of enhanced sensitivity value, used for 2000 series and up
-  */
- struct iwl_base_params {
- 	int eeprom_size;
-@@ -156,6 +157,7 @@ struct iwl_base_params {
- 	bool temperature_kelvin;
- 	u32 max_event_log_size;
- 	const bool shadow_reg_enable;
-+	const bool hd_v2;
- };
+-#if defined(CONFIG_HAS_EARLYSUSPEND)
+-static int brcmf_set_suspend(int value, struct brcmf_pub *drvr)
+-{
+-	int power_mode = PM_MAX;
+-	/* struct wl_pkt_filter_enable       enable_parm; */
+-	char iovbuf[32];
+-	int bcn_li_dtim = 3;
+-
+-	DHD_TRACE(("%s: enter, value = %d in_suspend=%d\n",
+-		   __func__, value, drvr->in_suspend));
+-
+-	if (drvr && drvr->up) {
+-		if (value && drvr->in_suspend) {
+-
+-			/* Kernel suspended */
+-			DHD_TRACE(("%s: force extra Suspend setting\n",
+-				   __func__));
+-
+-			brcmf_proto_cdc_set_ioctl(drvr, 0, BRCMF_C_SET_PM,
+-					 (char *)&power_mode,
+-					 sizeof(power_mode));
+-
+-			/* Enable packet filter, only allow unicast
+-				 packet to send up */
+-			brcmf_set_packet_filter(1, drvr);
+-
+-			/* if dtim skip setup as default force it
+-			 * to wake each third dtim
+-			 * for better power saving.
+-			 * Note that side effect is chance to miss BC/MC
+-			 * packet
+-			 */
+-			if ((drvr->dtim_skip == 0) || (drvr->dtim_skip == 1))
+-				bcn_li_dtim = 3;
+-			else
+-				bcn_li_dtim = drvr->dtim_skip;
+-			brcmu_mkiovar("bcn_li_dtim", (char *)&bcn_li_dtim,
+-				    4, iovbuf, sizeof(iovbuf));
+-			brcmf_proto_cdc_set_ioctl(drvr, 0, BRCMF_C_SET_VAR,
+-						  iovbuf, sizeof(iovbuf));
+-		} else {
+-
+-			/* Kernel resumed  */
+-			DHD_TRACE(("%s: Remove extra suspend setting\n",
+-				   __func__));
+-
+-			power_mode = PM_FAST;
+-			brcmf_proto_cdc_set_ioctl(drvr, 0, BRCMF_C_SET_PM,
+-						  (char *)&power_mode,
+-						  sizeof(power_mode));
+-
+-			/* disable pkt filter */
+-			brcmf_set_packet_filter(0, drvr);
+-
+-			/* restore pre-suspend setting for dtim_skip */
+-			brcmu_mkiovar("bcn_li_dtim", (char *)&drvr->dtim_skip,
+-				    4, iovbuf, sizeof(iovbuf));
+-
+-			brcmf_proto_cdc_set_ioctl(drvr, 0, BRCMF_C_SET_VAR,
+-						  iovbuf, sizeof(iovbuf));
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+-static void brcmf_suspend_resume_helper(struct brcmf_info *drvr_priv, int val)
+-{
+-	struct brcmf_pub *drvr = &drvr_priv->pub;
+-
+-	brcmf_os_proto_block(drvr);
+-	/* Set flag when early suspend was called */
+-	drvr->in_suspend = val;
+-	if (!drvr->suspend_disable_flag)
+-		brcmf_set_suspend(val, drvr);
+-	brcmf_os_proto_unblock(drvr);
+-}
+-
+-static void brcmf_early_suspend(struct early_suspend *h)
+-{
+-	struct brcmf_info *drvr_priv =
+-			container_of(h, struct brcmf_info, early_suspend);
+-
+-	DHD_TRACE(("%s: enter\n", __func__));
+-
+-	if (drvr_priv)
+-		brcmf_suspend_resume_helper(drvr_priv, 1);
+-
+-}
+-
+-static void brcmf_late_resume(struct early_suspend *h)
+-{
+-	struct brcmf_info *drvr_priv =
+-			container_of(h, struct brcmf_info, early_suspend);
+-
+-	DHD_TRACE(("%s: enter\n", __func__));
+-
+-	if (drvr_priv)
+-		brcmf_suspend_resume_helper(drvr_priv, 0);
+-}
+-#endif				/* defined(CONFIG_HAS_EARLYSUSPEND) */
+-
  /*
-  * @advanced_bt_coexist: support advanced bt coexist
+  * Generalized timeout mechanism.  Uses spin sleep with exponential
+  * back-off until
+@@ -1479,20 +1370,9 @@ struct brcmf_pub *brcmf_attach(struct brcmf_bus *bus, uint bus_hdrlen)
+ 	 */
+ 	memcpy(netdev_priv(net), &drvr_priv, sizeof(drvr_priv));
+ 
+-#if defined(CUSTOMER_HW2) && defined(CONFIG_WIFI_CONTROL_FUNC)
+-	g_bus = bus;
+-#endif
+ #if defined(CONFIG_PM_SLEEP)
+ 	atomic_set(&brcmf_mmc_suspend, false);
+ #endif	/* defined(CONFIG_PM_SLEEP) */
+-	/* Init lock suspend to prevent kernel going to suspend */
+-#ifdef CONFIG_HAS_EARLYSUSPEND
+-	drvr_priv->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 20;
+-	drvr_priv->early_suspend.suspend = brcmf_early_suspend;
+-	drvr_priv->early_suspend.resume = brcmf_late_resume;
+-	register_early_suspend(&drvr_priv->early_suspend);
+-#endif
+-
+ 	return &drvr_priv->pub;
+ 
+ fail:
+@@ -1664,12 +1544,6 @@ void brcmf_detach(struct brcmf_pub *drvr)
+ 			struct brcmf_if *ifp;
+ 			int i;
+ 
+-#if defined(CONFIG_HAS_EARLYSUSPEND)
+-			if (drvr_priv->early_suspend.suspend)
+-				unregister_early_suspend(
+-					&drvr_priv->early_suspend);
+-#endif				/* defined(CONFIG_HAS_EARLYSUSPEND) */
+-
+ 			for (i = 1; i < BRCMF_MAX_IFS; i++)
+ 				if (drvr_priv->iflist[i])
+ 					brcmf_del_if(drvr_priv, i);
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index c5552f1..4c801e7 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -166,13 +166,8 @@ struct rte_console {
+ 
+ #define TXRETRIES	2	/* # of retries for tx frames */
+ 
+-#if defined(CONFIG_MACH_SANDGATE2G)
+-#define BRCMF_RXBOUND	250	/* Default for max rx frames in
+-				 one scheduling */
+-#else
+ #define BRCMF_RXBOUND	50	/* Default for max rx frames in
+ 				 one scheduling */
+-#endif				/* defined(CONFIG_MACH_SANDGATE2G) */
+ 
+ #define BRCMF_TXBOUND	20	/* Default for max tx frames in
+ 				 one scheduling */
+diff --git a/drivers/staging/brcm80211/include/brcmu_utils.h b/drivers/staging/brcm80211/include/brcmu_utils.h
+index d0039d7..2d54cc5 100644
+--- a/drivers/staging/brcm80211/include/brcmu_utils.h
++++ b/drivers/staging/brcm80211/include/brcmu_utils.h
+@@ -205,12 +205,8 @@ extern int brcmu_iovar_lencheck(const struct brcmu_iovar *table, void *arg,
+ #define	ISPOWEROF2(x)		((((x)-1)&(x)) == 0)
+ 
+ /* map physical to virtual I/O */
+-#if !defined(CONFIG_MMC_MSM7X00A)
+ #define REG_MAP(pa, size)       ioremap_nocache((unsigned long)(pa), \
+ 					(unsigned long)(size))
+-#else
+-#define REG_MAP(pa, size)       (void *)(0)
+-#endif
+ 
+ /* the largest reasonable packet buffer driver uses for ethernet MTU in bytes */
+ #define	PKTBUFSZ	2048
 -- 
-1.7.0.4
+1.7.4.1
+
 
