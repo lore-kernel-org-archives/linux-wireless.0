@@ -1,166 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55846 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754813Ab1GGRQz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2011 13:16:55 -0400
-Date: Thu, 7 Jul 2011 13:02:14 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Roberto Riggio <roberto.riggio@create-net.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Frame injection
-Message-ID: <20110707170214.GF2498@tuxdriver.com> (sfid-20110707_191659_517938_A23E457D)
-References: <4DECB62E.2020202@create-net.org>
+Received: from mms1.broadcom.com ([216.31.210.17]:2950 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753791Ab1GEWDP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 18:03:15 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 18/31] staging: brcm80211: remove checkpatch warnings
+ from phy_n.c
+Date: Wed, 6 Jul 2011 00:02:45 +0200
+Message-ID: <1309903378-29021-19-git-send-email-arend@broadcom.com> (sfid-20110706_000322_996789_AAE279C5)
+In-Reply-To: <1309903378-29021-1-git-send-email-arend@broadcom.com>
+References: <1309903378-29021-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4DECB62E.2020202@create-net.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I never saw any comments on this one...
+The source file phy_n.c had couple of checkpatch warnings that
+have been fixed in this patch.
 
-On Mon, Jun 06, 2011 at 01:12:46PM +0200, Roberto Riggio wrote:
-> This patch is a combination of Matteo's patch and another submitted
-> several months ago on the list. It is tested for what concerns 11g rates.
-> However I did not manage to inject frames at 11n rates (tested only with
-> an atheros sr71a card)
-> 
-> Signed-off-by: Roberto Riggio <roberto.riggio@create-net.org>
-> 
-> --
-> 
-> diff -urN compat-wireless-2011-05-13.old//include/net/mac80211.h
-> compat-wireless-2011-05-13//include/net/mac80211.h
-> --- compat-wireless-2011-05-13.old//include/net/mac80211.h
-> 2011-05-16 19:20:13.000000000 +0100
-> +++ compat-wireless-2011-05-13//include/net/mac80211.h    2011-05-30
-> 12:52:25.260002000 +0100
-> @@ -344,6 +344,7 @@
->   * @IEEE80211_TX_INTFL_TKIP_MIC_FAILURE: Marks this packet to be
-> used for TKIP
->   *    testing. It will be sent out with incorrect Michael MIC key to allow
->   *    TKIP countermeasures to be tested.
-> + * @IEEE80211_TX_CTL_RC_BYPASS: Don't use rate control on the frame.
->   *
->   * Note: If you have to add new flags to the enumeration, then don't
->   *     forget to update %IEEE80211_TX_TEMPORARY_FLAGS when necessary.
-> @@ -374,6 +375,7 @@
->      IEEE80211_TX_CTL_STBC            = BIT(23) | BIT(24),
->      IEEE80211_TX_CTL_TX_OFFCHAN        = BIT(25),
->      IEEE80211_TX_INTFL_TKIP_MIC_FAILURE    = BIT(26),
-> +    IEEE80211_TX_CTL_RC_BYPASS        = BIT(27),
->  };
-> 
->  #define IEEE80211_TX_CTL_STBC_SHIFT        23
-> diff -urN compat-wireless-2011-05-13.old//net/mac80211/tx.c
-> compat-wireless-2011-05-13//net/mac80211/tx.c
-> --- compat-wireless-2011-05-13.old//net/mac80211/tx.c    2011-05-16
-> 19:20:13.000000000 +0100
-> +++ compat-wireless-2011-05-13//net/mac80211/tx.c    2011-05-30
-> 14:00:36.936002002 +0100
-> @@ -1040,11 +1040,14 @@
->      struct ieee80211_radiotap_iterator iterator;
->      struct ieee80211_radiotap_header *rthdr =
->          (struct ieee80211_radiotap_header *) skb->data;
-> +    struct ieee80211_supported_band *sband;
->      bool hw_frag;
->      struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
->      int ret = ieee80211_radiotap_iterator_init(&iterator, rthdr, skb->len,
->                             NULL);
-> 
-> +    sband = tx->local->hw.wiphy->bands[tx->channel->band];
-> +
->      info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
->      tx->flags &= ~IEEE80211_TX_FRAGMENTED;
-> 
-> @@ -1092,6 +1095,55 @@
->                  tx->flags |= IEEE80211_TX_FRAGMENTED;
->              break;
-> 
-> +        case IEEE80211_RADIOTAP_RATE: {
-> +            int i, idx = -1;
-> +            int rate = *iterator.this_arg * 5;
-> +
-> +            for (i = 0; i < sband->n_bitrates; i++)
-> +                if (sband->bitrates[i].bitrate == rate) {
-> +                    idx = i;
-> +                    break;
-> +                }
-> +
-> +            /* Rate not available - rejecting */
-> +            if (idx < 0)
-> +                return false;
-> +
-> +            info->flags |= IEEE80211_TX_CTL_RC_BYPASS;
-> +            info->control.rates[0].idx = idx;
-> +            info->control.rates[0].count = 1;
-> +            for (i = 1; i < IEEE80211_TX_MAX_RATES; i++)
-> +                info->control.rates[i].idx = -1;
-> +            break;
-> +        }
-> +
-> +        case IEEE80211_RADIOTAP_DATA_RETRIES:
-> +            /*
-> +             * Only allow setting the number of retries in
-> +             * conjunction with the rates, when the rate control
-> +             * is bypassed.
-> +             */
-> +            if (info->flags & IEEE80211_TX_CTL_RC_BYPASS)
-> +                info->control.rates[0].count =
-> +                    *iterator.this_arg;
-> +            break;
-> +
-> +        case IEEE80211_RADIOTAP_MCS: {
-> +            u8 flags = iterator.this_arg[1];
-> +            u8 mcs = iterator.this_arg[2];
-> +            info->flags |= IEEE80211_TX_CTL_RC_BYPASS;
-> +            info->control.rates[0].idx = mcs;
-> +            info->control.rates[0].flags |=
-> +                IEEE80211_TX_RC_MCS;
-> +            if (flags & IEEE80211_RADIOTAP_MCS_BW_40)
-> +                info->control.rates[0].flags |=
-> +                IEEE80211_TX_RC_40_MHZ_WIDTH;
-> +            if (flags & IEEE80211_RADIOTAP_MCS_SGI)
-> +                info->control.rates[0].flags |=
-> +                IEEE80211_TX_RC_SHORT_GI;
-> +            break;
-> +        }
-> +
->          /*
->           * Please update the file
->           * Documentation/networking/mac80211-injection.txt
-> @@ -1398,8 +1450,9 @@
->      CALL_TXH(ieee80211_tx_h_ps_buf);
->      CALL_TXH(ieee80211_tx_h_check_control_port_protocol);
->      CALL_TXH(ieee80211_tx_h_select_key);
-> -    if (!(tx->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL))
-> -        CALL_TXH(ieee80211_tx_h_rate_ctrl);
-> +    if (!(tx->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL) &&
-> +        !(info->flags & IEEE80211_TX_CTL_RC_BYPASS))
-> +         CALL_TXH(ieee80211_tx_h_rate_ctrl);
-> 
->      if (unlikely(info->flags & IEEE80211_TX_INTFL_RETRANSMISSION))
->          goto txh_done;
-> diff -urN compat-wireless-2011-05-13.old//net/wireless/radiotap.c
-> compat-wireless-2011-05-13//net/wireless/radiotap.c
-> --- compat-wireless-2011-05-13.old//net/wireless/radiotap.c
-> 2011-05-16 19:20:10.000000000 +0100
-> +++ compat-wireless-2011-05-13//net/wireless/radiotap.c
-> 2011-05-30 12:51:56.348002001 +0100
-> @@ -40,6 +40,7 @@
->      [IEEE80211_RADIOTAP_TX_FLAGS] = { .align = 2, .size = 2, },
->      [IEEE80211_RADIOTAP_RTS_RETRIES] = { .align = 1, .size = 1, },
->      [IEEE80211_RADIOTAP_DATA_RETRIES] = { .align = 1, .size = 1, },
-> +    [IEEE80211_RADIOTAP_MCS] = { .align = 1, .size = 3, },
->      /*
->       * add more here as they are defined in radiotap.h
->       */
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/phy/phy_n.c |   51 ++++++++++-------------
+ 1 files changed, 22 insertions(+), 29 deletions(-)
 
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
+index 151dc3c..2a8c9ff 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
+@@ -14705,12 +14705,10 @@ void WLBANDINITFN(wlc_phy_init_nphy) (struct brcms_phy *pi)
+ 			tx_pwrctrl_tbl = wlc_phy_get_ipa_gaintbl_nphy(pi);
+ 		} else {
+ 			if (CHSPEC_IS5G(pi->radio_chanspec)) {
+-				if NREV_IS
+-					(pi->pubpi.phy_rev, 3) {
++				if (NREV_IS(pi->pubpi.phy_rev, 3)) {
+ 					tx_pwrctrl_tbl =
+ 					    nphy_tpc_5GHz_txgain_rev3;
+-				} else if NREV_IS
+-					(pi->pubpi.phy_rev, 4) {
++				} else if (NREV_IS(pi->pubpi.phy_rev, 4)) {
+ 					tx_pwrctrl_tbl =
+ 					    (pi->srom_fem5g.extpagain == 3) ?
+ 					    nphy_tpc_5GHz_txgain_HiPwrEPA :
+@@ -22515,21 +22513,21 @@ struct nphy_txgains wlc_phy_get_tx_gain_nphy(struct brcms_phy *pi)
+ 			}
+ 		}
+ 	} else {
++		uint phyrev = pi->pubpi.phy_rev;
++
+ 		base_idx[0] = (read_phy_reg(pi, 0x1ed) >> 8) & 0x7f;
+ 		base_idx[1] = (read_phy_reg(pi, 0x1ee) >> 8) & 0x7f;
+ 		for (core_no = 0; core_no < 2; core_no++) {
+-			if (NREV_GE(pi->pubpi.phy_rev, 3)) {
++			if (NREV_GE(phyrev, 3)) {
+ 				if (PHY_IPA(pi)) {
+ 					tx_pwrctrl_tbl =
+ 					    wlc_phy_get_ipa_gaintbl_nphy(pi);
+ 				} else {
+ 					if (CHSPEC_IS5G(pi->radio_chanspec)) {
+-						if NREV_IS
+-							(pi->pubpi.phy_rev, 3) {
++						if (NREV_IS(phyrev, 3)) {
+ 							tx_pwrctrl_tbl =
+ 							    nphy_tpc_5GHz_txgain_rev3;
+-						} else if NREV_IS
+-							(pi->pubpi.phy_rev, 4) {
++						} else if (NREV_IS(phyrev, 4)) {
+ 							tx_pwrctrl_tbl =
+ 							    (pi->srom_fem5g.
+ 							     extpagain ==
+@@ -22542,8 +22540,7 @@ struct nphy_txgains wlc_phy_get_tx_gain_nphy(struct brcms_phy *pi)
+ 							    nphy_tpc_5GHz_txgain_rev5;
+ 						}
+ 					} else {
+-						if (NREV_GE
+-						    (pi->pubpi.phy_rev, 7)) {
++						if (NREV_GE(phyrev, 7)) {
+ 							if (pi->pubpi.
+ 							    radiorev == 3) {
+ 								tx_pwrctrl_tbl =
+@@ -22556,9 +22553,7 @@ struct nphy_txgains wlc_phy_get_tx_gain_nphy(struct brcms_phy *pi)
+ 							}
+ 
+ 						} else {
+-							if (NREV_GE
+-							    (pi->pubpi.phy_rev,
+-							     5)
++							if (NREV_GE(phyrev, 5)
+ 							    && (pi->srom_fem2g.
+ 								extpagain ==
+ 								3)) {
+@@ -22571,8 +22566,7 @@ struct nphy_txgains wlc_phy_get_tx_gain_nphy(struct brcms_phy *pi)
+ 						}
+ 					}
+ 				}
+-				if NREV_GE
+-					(pi->pubpi.phy_rev, 7) {
++				if (NREV_GE(phyrev, 7)) {
+ 					target_gain.ipa[core_no] =
+ 					    (tx_pwrctrl_tbl[base_idx[core_no]]
+ 					     >> 16) & 0x7;
+@@ -27449,20 +27443,20 @@ void wlc_phy_txpwr_fixpower_nphy(struct brcms_phy *pi)
+ 	pi->nphy_txpwrindex[PHY_CORE_1].index_internal_save = txpi[1];
+ 
+ 	for (core = 0; core < pi->pubpi.phy_corenum; core++) {
+-		if (NREV_GE(pi->pubpi.phy_rev, 3)) {
++		uint phyrev = pi->pubpi.phy_rev;
++
++		if (NREV_GE(phyrev, 3)) {
+ 			if (PHY_IPA(pi)) {
+ 				u32 *tx_gaintbl =
+ 				    wlc_phy_get_ipa_gaintbl_nphy(pi);
+ 				txgain = tx_gaintbl[txpi[core]];
+ 			} else {
+ 				if (CHSPEC_IS5G(pi->radio_chanspec)) {
+-					if NREV_IS
+-						(pi->pubpi.phy_rev, 3) {
++					if (NREV_IS(phyrev, 3)) {
+ 						txgain =
+ 						    nphy_tpc_5GHz_txgain_rev3
+ 						    [txpi[core]];
+-					} else if NREV_IS
+-						(pi->pubpi.phy_rev, 4) {
++					} else if (NREV_IS(phyrev, 4)) {
+ 						txgain =
+ 						    (pi->srom_fem5g.extpagain ==
+ 						     3) ?
+@@ -27476,7 +27470,7 @@ void wlc_phy_txpwr_fixpower_nphy(struct brcms_phy *pi)
+ 						    [txpi[core]];
+ 					}
+ 				} else {
+-					if (NREV_GE(pi->pubpi.phy_rev, 5) &&
++					if (NREV_GE(phyrev, 5) &&
+ 					    (pi->srom_fem2g.extpagain == 3)) {
+ 						txgain =
+ 						    nphy_tpc_txgain_HiPwrEPA
+@@ -27492,20 +27486,19 @@ void wlc_phy_txpwr_fixpower_nphy(struct brcms_phy *pi)
+ 			txgain = nphy_tpc_txgain[txpi[core]];
+ 		}
+ 
+-		if (NREV_GE(pi->pubpi.phy_rev, 3)) {
++		if (NREV_GE(phyrev, 3))
+ 			rad_gain = (txgain >> 16) & ((1 << (32 - 16 + 1)) - 1);
+-		} else {
++		else
+ 			rad_gain = (txgain >> 16) & ((1 << (28 - 16 + 1)) - 1);
+-		}
+ 
+-		if (NREV_GE(pi->pubpi.phy_rev, 7)) {
++		if (NREV_GE(phyrev, 7))
+ 			dac_gain = (txgain >> 8) & ((1 << (10 - 8 + 1)) - 1);
+-		} else {
++		else
+ 			dac_gain = (txgain >> 8) & ((1 << (13 - 8 + 1)) - 1);
+-		}
++
+ 		bbmult = (txgain >> 0) & ((1 << (7 - 0 + 1)) - 1);
+ 
+-		if (NREV_GE(pi->pubpi.phy_rev, 3)) {
++		if (NREV_GE(phyrev, 3)) {
+ 			mod_phy_reg(pi, ((core == PHY_CORE_0) ? 0x8f :
+ 					 0xa5), (0x1 << 8), (0x1 << 8));
+ 		} else {
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.1
+
+
