@@ -1,217 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:54052 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756057Ab1GFVAs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2011 17:00:48 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 4so108843ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 14:00:47 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/6] rt2x00: Don't use queue entry as parameter when creating TX descriptor.
-Date: Wed, 6 Jul 2011 22:57:00 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <201107062256.25555.IvDoorn@gmail.com>
-In-Reply-To: <201107062256.25555.IvDoorn@gmail.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:2952 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752283Ab1GEWDM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 18:03:12 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 17/31] staging: brcm80211: made name lookup arrays more
+ const
+Date: Wed, 6 Jul 2011 00:02:44 +0200
+Message-ID: <1309903378-29021-18-git-send-email-arend@broadcom.com> (sfid-20110706_000322_450719_3932B24F)
+In-Reply-To: <1309903378-29021-1-git-send-email-arend@broadcom.com>
+References: <1309903378-29021-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201107062257.01333.IvDoorn@gmail.com> (sfid-20110706_230052_050692_4FE5E2AF)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+The checkpatch script gave a hint that some character string arrays
+probably should have an additional const keyword. This patch changes
+the static const char * arrays to static const char * const arrays as
+suggested getting rid of two checkpatch warnings.
 
-The functions that create the tx descriptor structure do not operate on
-a queue entry at all. Signal this fact in the code by not providing a
-queue entry as a parameter, but the rt2x00 device structure and the skb
-directly.
-
-This patch is a preparation for reducing the time a queue is locked for
-a tx operation.
-
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00crypto.c |    6 ++--
- drivers/net/wireless/rt2x00/rt2x00lib.h    |    3 +-
- drivers/net/wireless/rt2x00/rt2x00queue.c  |   52 +++++++++++++++-------------
- 3 files changed, 33 insertions(+), 28 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/main.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00crypto.c b/drivers/net/wireless/rt2x00/rt2x00crypto.c
-index 1bb9d46..1ca4c7f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00crypto.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00crypto.c
-@@ -45,11 +45,11 @@ enum cipher rt2x00crypto_key_to_cipher(struct ieee80211_key_conf *key)
- 	}
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 8d061ad..b89b0ec 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -278,7 +278,7 @@ static bool in_send_q;
+ #define wme_shmemacindex(ac)	wme_ac2fifo[ac]
+ 
+ #ifdef BCMDBG
+-static const char *fifo_names[] = {
++static const char * const fifo_names[] = {
+ 	"AC_BK", "AC_BE", "AC_VI", "AC_VO", "BCMC", "ATIM" };
+ #else
+ static const char fifo_names[6][0];
+@@ -2831,7 +2831,7 @@ static void brcms_c_wme_retries_write(struct brcms_c_info *wlc)
  }
  
--void rt2x00crypto_create_tx_descriptor(struct queue_entry *entry,
-+void rt2x00crypto_create_tx_descriptor(struct rt2x00_dev *rt2x00dev,
-+				       struct sk_buff *skb,
- 				       struct txentry_desc *txdesc)
- {
--	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
--	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_key_conf *hw_key = tx_info->control.hw_key;
- 
- 	if (!test_bit(CAPABILITY_HW_CRYPTO, &rt2x00dev->cap_flags) || !hw_key)
-diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
-index 322cc4f..15cdc7e 100644
---- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-@@ -336,7 +336,8 @@ static inline void rt2x00debug_update_crypto(struct rt2x00_dev *rt2x00dev,
-  */
- #ifdef CONFIG_RT2X00_LIB_CRYPTO
- enum cipher rt2x00crypto_key_to_cipher(struct ieee80211_key_conf *key);
--void rt2x00crypto_create_tx_descriptor(struct queue_entry *entry,
-+void rt2x00crypto_create_tx_descriptor(struct rt2x00_dev *rt2x00dev,
-+				       struct sk_buff *skb,
- 				       struct txentry_desc *txdesc);
- unsigned int rt2x00crypto_tx_overhead(struct rt2x00_dev *rt2x00dev,
- 				      struct sk_buff *skb);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 551cee1..a70e700 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -200,11 +200,12 @@ void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
- 	skb_pull(skb, l2pad);
- }
- 
--static void rt2x00queue_create_tx_descriptor_seq(struct queue_entry *entry,
-+static void rt2x00queue_create_tx_descriptor_seq(struct rt2x00_dev *rt2x00dev,
-+						 struct sk_buff *skb,
- 						 struct txentry_desc *txdesc)
- {
--	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)entry->skb->data;
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct rt2x00_intf *intf = vif_to_intf(tx_info->control.vif);
- 
- 	if (!(tx_info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ))
-@@ -212,7 +213,7 @@ static void rt2x00queue_create_tx_descriptor_seq(struct queue_entry *entry,
- 
- 	__set_bit(ENTRY_TXD_GENERATE_SEQ, &txdesc->flags);
- 
--	if (!test_bit(REQUIRE_SW_SEQNO, &entry->queue->rt2x00dev->cap_flags))
-+	if (!test_bit(REQUIRE_SW_SEQNO, &rt2x00dev->cap_flags))
- 		return;
- 
- 	/*
-@@ -237,12 +238,12 @@ static void rt2x00queue_create_tx_descriptor_seq(struct queue_entry *entry,
- 
- }
- 
--static void rt2x00queue_create_tx_descriptor_plcp(struct queue_entry *entry,
-+static void rt2x00queue_create_tx_descriptor_plcp(struct rt2x00_dev *rt2x00dev,
-+						  struct sk_buff *skb,
- 						  struct txentry_desc *txdesc,
- 						  const struct rt2x00_rate *hwrate)
- {
--	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
--	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_tx_rate *txrate = &tx_info->control.rates[0];
- 	unsigned int data_length;
- 	unsigned int duration;
-@@ -259,8 +260,8 @@ static void rt2x00queue_create_tx_descriptor_plcp(struct queue_entry *entry,
- 		txdesc->u.plcp.ifs = IFS_SIFS;
- 
- 	/* Data length + CRC + Crypto overhead (IV/EIV/ICV/MIC) */
--	data_length = entry->skb->len + 4;
--	data_length += rt2x00crypto_tx_overhead(rt2x00dev, entry->skb);
-+	data_length = skb->len + 4;
-+	data_length += rt2x00crypto_tx_overhead(rt2x00dev, skb);
- 
- 	/*
- 	 * PLCP setup
-@@ -301,13 +302,14 @@ static void rt2x00queue_create_tx_descriptor_plcp(struct queue_entry *entry,
- 	}
- }
- 
--static void rt2x00queue_create_tx_descriptor_ht(struct queue_entry *entry,
-+static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
-+						struct sk_buff *skb,
- 						struct txentry_desc *txdesc,
- 						const struct rt2x00_rate *hwrate)
- {
--	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_tx_rate *txrate = &tx_info->control.rates[0];
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)entry->skb->data;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 
- 	if (tx_info->control.sta)
- 		txdesc->u.ht.mpdu_density =
-@@ -380,12 +382,12 @@ static void rt2x00queue_create_tx_descriptor_ht(struct queue_entry *entry,
- 		txdesc->u.ht.txop = TXOP_HTTXOP;
- }
- 
--static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
-+static void rt2x00queue_create_tx_descriptor(struct rt2x00_dev *rt2x00dev,
-+					     struct sk_buff *skb,
- 					     struct txentry_desc *txdesc)
- {
--	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
--	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)entry->skb->data;
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_tx_rate *txrate = &tx_info->control.rates[0];
- 	struct ieee80211_rate *rate;
- 	const struct rt2x00_rate *hwrate = NULL;
-@@ -395,8 +397,8 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 	/*
- 	 * Header and frame information.
- 	 */
--	txdesc->length = entry->skb->len;
--	txdesc->header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
-+	txdesc->length = skb->len;
-+	txdesc->header_length = ieee80211_get_hdrlen_from_skb(skb);
- 
- 	/*
- 	 * Check whether this frame is to be acked.
-@@ -471,13 +473,15 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 	/*
- 	 * Apply TX descriptor handling by components
- 	 */
--	rt2x00crypto_create_tx_descriptor(entry, txdesc);
--	rt2x00queue_create_tx_descriptor_seq(entry, txdesc);
-+	rt2x00crypto_create_tx_descriptor(rt2x00dev, skb, txdesc);
-+	rt2x00queue_create_tx_descriptor_seq(rt2x00dev, skb, txdesc);
- 
- 	if (test_bit(REQUIRE_HT_TX_DESC, &rt2x00dev->cap_flags))
--		rt2x00queue_create_tx_descriptor_ht(entry, txdesc, hwrate);
-+		rt2x00queue_create_tx_descriptor_ht(rt2x00dev, skb, txdesc,
-+						    hwrate);
- 	else
--		rt2x00queue_create_tx_descriptor_plcp(entry, txdesc, hwrate);
-+		rt2x00queue_create_tx_descriptor_plcp(rt2x00dev, skb, txdesc,
-+						      hwrate);
- }
- 
- static int rt2x00queue_write_tx_data(struct queue_entry *entry,
-@@ -588,7 +592,7 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
- 	 * for our information.
- 	 */
- 	entry->skb = skb;
--	rt2x00queue_create_tx_descriptor(entry, &txdesc);
-+	rt2x00queue_create_tx_descriptor(queue->rt2x00dev, skb, &txdesc);
- 
- 	/*
- 	 * All information is retrieved from the skb->cb array,
-@@ -707,7 +711,7 @@ int rt2x00queue_update_beacon_locked(struct rt2x00_dev *rt2x00dev,
- 	 * after that we are free to use the skb->cb array
- 	 * for our information.
- 	 */
--	rt2x00queue_create_tx_descriptor(intf->beacon, &txdesc);
-+	rt2x00queue_create_tx_descriptor(rt2x00dev, intf->beacon->skb, &txdesc);
- 
- 	/*
- 	 * Fill in skb descriptor
+ #ifdef BCMDBG
+-static const char *supr_reason[] = {
++static const char * const supr_reason[] = {
+ 	"None", "PMQ Entry", "Flush request",
+ 	"Previous frag failure", "Channel mismatch",
+ 	"Lifetime Expiry", "Underflow"
 -- 
-1.7.2.3
+1.7.4.1
+
 
