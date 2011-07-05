@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:65385 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932371Ab1GNWhc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 18:37:32 -0400
-Subject: [PATCH] hostap: remove IDs for 3Com AirConnect PCI 777A,
- it uses Symbol firmware
-To: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Pavel Roskin <proski@gnu.org>
-Date: Thu, 14 Jul 2011 18:37:30 -0400
-Message-ID: <20110714223730.23239.44416.stgit@mj.roinet.com> (sfid-20110715_003736_606339_4DD20183)
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:61451 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755344Ab1GEKic (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 06:38:32 -0400
+Received: by bwd5 with SMTP id 5so4638557bwd.19
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2011 03:38:31 -0700 (PDT)
+Message-ID: <4E12E9A3.2070004@googlemail.com> (sfid-20110705_123835_906394_23BEA469)
+Date: Tue, 05 Jul 2011 12:38:27 +0200
+From: Dennis Borgmann <dennis.borgmann@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: linux-wireless@vger.kernel.org
+Subject: [ath9k,hostapd]Connection broken after some time...
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hostap only supports Intersil firmware.  Symbol firmware is supported by
-orinoco.
+Hello!
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- drivers/net/wireless/hostap/hostap_cs.c  |    1 -
- drivers/net/wireless/hostap/hostap_plx.c |    1 -
- 2 files changed, 0 insertions(+), 2 deletions(-)
+After asking several times on the IRC without getting any answer, I'll 
+try to use this way of asking my question.
 
-diff --git a/drivers/net/wireless/hostap/hostap_cs.c b/drivers/net/wireless/hostap/hostap_cs.c
-index c052a0d..2fda69a 100644
---- a/drivers/net/wireless/hostap/hostap_cs.c
-+++ b/drivers/net/wireless/hostap/hostap_cs.c
-@@ -623,7 +623,6 @@ static int hostap_cs_resume(struct pcmcia_device *link)
- static const struct pcmcia_device_id hostap_cs_ids[] = {
- 	PCMCIA_DEVICE_MANF_CARD(0x000b, 0x7100),
- 	PCMCIA_DEVICE_MANF_CARD(0x000b, 0x7300),
--	PCMCIA_DEVICE_MANF_CARD(0x0101, 0x0777),
- 	PCMCIA_DEVICE_MANF_CARD(0x0126, 0x8000),
- 	PCMCIA_DEVICE_MANF_CARD(0x0138, 0x0002),
- 	PCMCIA_DEVICE_MANF_CARD(0x01bf, 0x3301),
-diff --git a/drivers/net/wireless/hostap/hostap_plx.c b/drivers/net/wireless/hostap/hostap_plx.c
-index 33e7903..772efd4 100644
---- a/drivers/net/wireless/hostap/hostap_plx.c
-+++ b/drivers/net/wireless/hostap/hostap_plx.c
-@@ -88,7 +88,6 @@ static struct prism2_plx_manfid {
- } prism2_plx_known_manfids[] = {
- 	{ 0x000b, 0x7110 } /* D-Link DWL-650 Rev. P1 */,
- 	{ 0x000b, 0x7300 } /* Philips 802.11b WLAN PCMCIA */,
--	{ 0x0101, 0x0777 } /* 3Com AirConnect PCI 777A */,
- 	{ 0x0126, 0x8000 } /* Proxim RangeLAN */,
- 	{ 0x0138, 0x0002 } /* Compaq WL100 */,
- 	{ 0x0156, 0x0002 } /* Intersil Prism II Ref. Design (and others) */,
+I am using wpa_supplicant 0.7.3 and hostapd in version 0.7.3 with a very 
+simple TKIP encryption on ath9k. After some time, the machine running 
+wpa_supplicant still states after "iw dev wlan0 link", that it's still 
+connected, the machine running hostapd states after "iw dev wlan0 
+station dump" that no device would be connected. I can't ping from 
+either side. Sniffing on a third machine with a monitor card and 
+wireshark shows deauthentication packets from the hostapd-machine after 
+each frame sent by the wpa_supplicant machine. Given reason in the 
+deauth-frames is "packet received from non-authenticated client".
+
+Any idea, what might be the problem?
+
+Best regards,
+Dennis
