@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:63906 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753112Ab1GZU4U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2011 16:56:20 -0400
-Received: by gxk21 with SMTP id 21so583581gxk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 13:56:19 -0700 (PDT)
-Message-ID: <4E2F29F0.8040506@lwfinger.net> (sfid-20110726_225634_167900_6B718EE0)
-Date: Tue, 26 Jul 2011 15:56:16 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH] b43legacy: remove 64-bit DMA support
-References: <20110725213832.32510.3753.stgit@mj.roinet.com>	<4E2EFDCC.3060604@lwfinger.net> <CACna6ryV7ffeuC_6cZdAB_WG4+fOHSbnxiCAV2-Mmkp58o_4=A@mail.gmail.com>
-In-Reply-To: <CACna6ryV7ffeuC_6cZdAB_WG4+fOHSbnxiCAV2-Mmkp58o_4=A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from nbd.name ([46.4.11.11]:53664 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752887Ab1GEDLn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jul 2011 23:11:43 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	mickflemm@gmail.com
+Subject: [PATCH v2 3/8] ath5k: fix reference clock frequency for spur mitigation on AR2413
+Date: Tue,  5 Jul 2011 10:11:19 +0700
+Message-Id: <1309835484-26653-3-git-send-email-nbd@openwrt.org> (sfid-20110705_051155_466320_B9E89D25)
+In-Reply-To: <1309835484-26653-2-git-send-email-nbd@openwrt.org>
+References: <1309835484-26653-1-git-send-email-nbd@openwrt.org>
+ <1309835484-26653-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/26/2011 03:05 PM, Rafał Miłecki wrote:
-> 2011/7/26 Larry Finger<Larry.Finger@lwfinger.net>:
->> On 07/25/2011 04:40 PM, Pavel Roskin wrote:
->>>
->>> Devices supported by b43legacy don't support 64-bit DMA.
->>>
->>> Signed-off-by: Pavel Roskin<proski@gnu.org>
->>> ---
->>> The patch was tested on Broadcom 4306.
->>>
->>>   drivers/net/wireless/b43legacy/dma.c |  374
->>> ++++++----------------------------
->>>   drivers/net/wireless/b43legacy/dma.h |  107 ----------
->>>   2 files changed, 71 insertions(+), 410 deletions(-)
->>
->> Tested on BCM4303.
->
-> Err, BCM4303? What card is that exactly?
+AR2413 uses the same reference clock as AR5413
 
-It is a 14e4:4301 802.11b card in a PCI format. The lspci command also calls it 
-a Linksys WMP11 v2.7 802.11b Wireless-B PCI Adapter.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath5k/phy.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index a28ef9e..b6085d0 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -105,6 +105,7 @@ bool ath5k_hw_chan_has_spur_noise(struct ath5k_hw *ah,
+ 
+ 	if ((ah->ah_radio == AR5K_RF5112) ||
+ 	(ah->ah_radio == AR5K_RF5413) ||
++	(ah->ah_radio == AR5K_RF2413) ||
+ 	(ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4)))
+ 		refclk_freq = 40;
+ 	else
+-- 
+1.7.3.2
+
