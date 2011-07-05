@@ -1,47 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:54611 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753054Ab1GVFn3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 01:43:29 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH 23/31] ath6kl: Print bad trailer data only when htc fails to parse trailer info
-Date: Fri, 22 Jul 2011 08:41:56 +0300
-Message-ID: <1311313324-6766-25-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110722_074335_357496_282AF952)
-In-Reply-To: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:3146 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754381Ab1GEUGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 16:06:39 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH v2 00/21] staging: brcm80211: mostly fullmac cleanup
+ patches
+Date: Tue, 5 Jul 2011 22:05:56 +0200
+Message-ID: <1309896377-4425-1-git-send-email-arend@broadcom.com> (sfid-20110705_220659_391863_65EA8EF7)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+This series are patches from the series 'more code cleanup and bug fixed' that
+failed to apply.
 
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/htc.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+Arend van Spriel (5):
+  staging: brcm80211: rename function variables
+  staging: brcm80211: rename dhd_bus structure and functions
+  staging: brcm80211: rename structures and variables in wl_cfg80211.c
+  staging: brcm80211: rename pointer conversion macros in wl_cfg80211.h
+  staging: brcm80211: rename external function in wl_cfg80211.c
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-index 8367979..9d9948e 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc.c
-@@ -1400,8 +1400,9 @@ static int htc_proc_trailer(struct htc_target *target,
- 		len -= record->len;
- 	}
- 
--	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, "BAD Recv Trailer",
--		     orig_buf, orig_len);
-+	if (status)
-+		ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, "BAD Recv Trailer",
-+				orig_buf, orig_len);
- 
- 	return status;
- }
+Roland Vossen (16):
+  staging: brcm80211: removed last occurrences of bcmsdh/BCMSDH
+  staging: brcm80211: sdh related code cleanup
+  staging: brcm80211: removed brcmf_sdioh_interrupt_pending()
+  staging: brcm80211: removed brcmf_sdioh_reset()
+  staging: brcm80211: removed brcmf_sdioh_start() and
+    brcmf_sdioh_stop()
+  staging: brcm80211: removed file sdiovar.h
+  staging: brcm80211: further cleaned fullmac header files
+  staging: brcm80211: removed last typedefs from fullmac
+  staging: brcm80211: removed unused code and definitions from fullmac
+  staging: brcm80211: fullmac register access macro's take u32 instead
+    of pointers
+  staging: brcm80211: replaced macro R_SDREG by function r_sdreg()
+  staging: brcm80211: replaced macro W_SDREG by function w_sdreg()
+  staging: brcm80211: got rid of redundant member 'regs' of struct
+    dhd_bus
+  staging: brcm80211: removed last amd64 compiler warnings
+  staging: brcm80211: W_REG macro cleanup in fullmac SDIO
+  staging: brcm80211: removed unused definitions from dhd_sdio.c
+
+ drivers/staging/brcm80211/brcmfmac/bcmsdbus.h      |  131 ++-
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c        |  403 +++----
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c  |   83 +-
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c  |   91 +-
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h  |  138 ---
+ .../brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c        |   32 +-
+ drivers/staging/brcm80211/brcmfmac/dhd.h           |  104 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_bus.h       |   32 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_cdc.c       |  123 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c    |   32 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |  140 +--
+ drivers/staging/brcm80211/brcmfmac/dhd_proto.h     |    5 -
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      | 1262 ++++++++++---------
+ drivers/staging/brcm80211/brcmfmac/dngl_stats.h    |    4 +-
+ drivers/staging/brcm80211/brcmfmac/sbsdio.h        |   96 --
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h     |  153 +--
+ drivers/staging/brcm80211/brcmfmac/sdiovar.h       |   38 -
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c   | 1301 ++++++++++----------
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h   |  140 +--
+ 19 files changed, 1926 insertions(+), 2382 deletions(-)
+ delete mode 100644 drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.h
+ delete mode 100644 drivers/staging/brcm80211/brcmfmac/sdiovar.h
+
 -- 
-1.7.1
+1.7.4.1
+
 
