@@ -1,77 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36750 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756715Ab1GGO7X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2011 10:59:23 -0400
-Date: Thu, 7 Jul 2011 07:58:22 -0700
-From: Greg KH <gregkh@suse.de>
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: Pavel Roskin <proski@gnu.org>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-Subject: Re: [RFC] Move brcm80211 to mainline
-Message-ID: <20110707145822.GA29241@suse.de> (sfid-20110707_165926_965670_C4DD94D0)
-References: <20110707002034.GA17885@broadcom.com>
- <CACna6rx5EyZ-=2XgWawdN_Qu2t1K1sdHZydZFW6=TiX2QUwMfw@mail.gmail.com>
- <4E1504A3.1070801@gnu.org>
- <20110707014512.GA21087@suse.de>
- <20110707144628.GF23944@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20110707144628.GF23944@broadcom.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:40866 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752259Ab1GEOi4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 10:38:56 -0400
+Message-Id: <20110705143810.101506240@sipsolutions.net> (sfid-20110705_163859_875141_76741418)
+Date: Tue, 05 Jul 2011 16:35:39 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] mac80211: allow driver to iterate keys
+References: <20110705143538.696899280@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 07, 2011 at 07:46:28AM -0700, Henry Ptasinski wrote:
-> On Wed, Jul 06, 2011 at 06:45:12PM -0700, Greg KH wrote:
-> > On Wed, Jul 06, 2011 at 08:58:11PM -0400, Pavel Roskin wrote:
-> > > On 07/06/2011 08:40 PM, Rafał Miłecki wrote:
-> > > >Short question, without commenting on brcm80211 code yet:
-> > > >
-> > > >Why should we want 2 mainline drivers for the same hardware?
-> > > 
-> > > Also, checkpatch.pl finds a lot of bad stuff:
-> > > 
-> > > total: 1 errors, 1505 warnings, 105454 lines checked
-> > > 
-> > > $ scripts/checkpatch.pl 0001-wireless-testing-add-brcm80211.patch >Log
-> > > $ egrep '^(WARNING|ERROR)' Log |sort |uniq -c
-> > >       1 ERROR: do not use assignment in if condition
-> > >      76 WARNING: braces {} are not necessary for any arm of this statement
-> > >     205 WARNING: braces {} are not necessary for single statement blocks
-> > >       4 WARNING: consider using a completion
-> > >      11 WARNING: consider using kstrto* in preference to simple_strtoul
-> > >      20 WARNING: do not add new typedefs
-> > >       5 WARNING: externs should be avoided in .c files
-> > >    1164 WARNING: line over 80 characters
-> > >      20 WARNING: Use of volatile is usually wrong: see
-> > 
-> > Almost all of these should be fixed, especially the volatile one, that's
-> > just horrible.
-> 
-> Fixes for these are in progress.  We'll keep posting patches to address this
-> cleanup in staging.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Ok, at the least these should be resolved before ever asking for the
-code to be moved out of staging.  Sorry for me not checking this
-previously, I wrongly assumed that you had finished this task already.
+When in suspend/wowlan, devices might implement crypto
+offload differently (more features), and might require
+reprogramming keys for the WoWLAN (as it is the case
+for Intel devices that use another uCode image). Thus
+allow the driver to iterate all keys in this context.
 
-> > Also, there's the whole big endian mess that needs to be fixed up before
-> > the driver can be moved out of staging.  Henry, what's the status of
-> > that?
-> 
-> We're looking at BE MIPS, and I sent some cards to Benjamin Herrenschmidt so he
-> can test on PPC platforms.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h |   23 +++++++++++++++++++++++
+ net/mac80211/key.c     |   33 +++++++++++++++++++++++++++++++++
+ 2 files changed, 56 insertions(+)
 
-Don't forget just building the thing on other arches (SPARC for example)
-and what happens when you try to do that...
+--- a/include/net/mac80211.h	2011-07-02 00:08:12.000000000 +0200
++++ b/include/net/mac80211.h	2011-07-02 00:08:13.000000000 +0200
+@@ -2850,6 +2850,29 @@ void ieee80211_sta_block_awake(struct ie
+ 			       struct ieee80211_sta *pubsta, bool block);
+ 
+ /**
++ * ieee80211_iter_keys - iterate keys programmed into the device
++ * @hw: pointer obtained from ieee80211_alloc_hw()
++ * @vif: virtual interface to iterate, may be %NULL for all
++ * @iter: iterator function that will be called for each key
++ * @iter_data: custom data to pass to the iterator function
++ *
++ * This function can be used to iterate all the keys known to
++ * mac80211, even those that weren't previously programmed into
++ * the device. This is intended for use in WoWLAN if the device
++ * needs reprogramming of the keys during suspend. Note that due
++ * to locking reasons, it is also only safe to call this at few
++ * spots since it must hold the RTNL and be able to sleep.
++ */
++void ieee80211_iter_keys(struct ieee80211_hw *hw,
++			 struct ieee80211_vif *vif,
++			 void (*iter)(struct ieee80211_hw *hw,
++				      struct ieee80211_vif *vif,
++				      struct ieee80211_sta *sta,
++				      struct ieee80211_key_conf *key,
++				      void *data),
++			 void *iter_data);
++
++/**
+  * ieee80211_ap_probereq_get - retrieve a Probe Request template
+  * @hw: pointer obtained from ieee80211_alloc_hw().
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+--- a/net/mac80211/key.c	2011-07-02 00:07:58.000000000 +0200
++++ b/net/mac80211/key.c	2011-07-02 00:08:13.000000000 +0200
+@@ -504,6 +504,39 @@ void ieee80211_enable_keys(struct ieee80
+ 	mutex_unlock(&sdata->local->key_mtx);
+ }
+ 
++void ieee80211_iter_keys(struct ieee80211_hw *hw,
++			 struct ieee80211_vif *vif,
++			 void (*iter)(struct ieee80211_hw *hw,
++				      struct ieee80211_vif *vif,
++				      struct ieee80211_sta *sta,
++				      struct ieee80211_key_conf *key,
++				      void *data),
++			 void *iter_data)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_key *key;
++	struct ieee80211_sub_if_data *sdata;
++
++	ASSERT_RTNL();
++
++	mutex_lock(&local->key_mtx);
++	if (vif) {
++		sdata = vif_to_sdata(vif);
++		list_for_each_entry(key, &sdata->key_list, list)
++			iter(hw, &sdata->vif,
++			     key->sta ? &key->sta->sta : NULL,
++			     &key->conf, iter_data);
++	} else {
++		list_for_each_entry(sdata, &local->interfaces, list)
++			list_for_each_entry(key, &sdata->key_list, list)
++				iter(hw, &sdata->vif,
++				     key->sta ? &key->sta->sta : NULL,
++				     &key->conf, iter_data);
++	}
++	mutex_unlock(&local->key_mtx);
++}
++EXPORT_SYMBOL(ieee80211_iter_keys);
++
+ void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_key *key;
 
-thanks,
 
-greg k-h
