@@ -1,99 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4204 "EHLO mms2.broadcom.com"
+Received: from lo.gmane.org ([80.91.229.12]:39606 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752353Ab1GROaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2011 10:30:23 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Arend van Spriel" <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org
-Subject: [PATCH 08/19] staging: brcm80211: replace simple_strtoul usage
- in brcmsmac
-Date: Mon, 18 Jul 2011 16:29:54 +0200
-Message-ID: <1310999405-10062-9-git-send-email-arend@broadcom.com> (sfid-20110718_163034_336071_41847C4E)
-In-Reply-To: <1310999405-10062-1-git-send-email-arend@broadcom.com>
-References: <1310999405-10062-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752674Ab1GEDfL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jul 2011 23:35:11 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1QdwPh-00089X-Rb
+	for linux-wireless@vger.kernel.org; Tue, 05 Jul 2011 05:35:06 +0200
+Received: from internal-nat-tpm.mimos.net.my ([61.6.1.38])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2011 05:35:05 +0200
+Received: from devil_eddie01 by internal-nat-tpm.mimos.net.my with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2011 05:35:05 +0200
+To: linux-wireless@vger.kernel.org
+From: Ming <devil_eddie01@hotmail.com>
+Subject: Enquiry on DFS =?utf-8?b?ZGV2ZWxvcG1lbnTigI8=?=
+Date: Tue, 5 Jul 2011 02:48:41 +0000 (UTC)
+Message-ID: <loom.20110705T044624-105@post.gmane.org> (sfid-20110705_053514_980009_25D7F519)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The usage of simple_strtoul is not preferred. Instead kstrtoul
-should be used. This patch fixes this for the brcmsmac driver.
-
-Cc: linux-wireless@vger.kernel.org
-Cc: devel@linuxdriverproject.org
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/main.c        |   16 +++++++++-------
- drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |    7 ++++---
- 2 files changed, 13 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index 0d80e59..e5c675d 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -4287,16 +4287,17 @@ int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device, uint unit,
- #endif
- 	if (bustype != SI_BUS) {
- 		char *var;
-+		unsigned long res;
+Hi,
  
- 		var = getvar(vars, "vendid");
--		if (var) {
--			vendor = (u16) simple_strtoul(var, NULL, 0);
-+		if (var && !kstrtoul(var, 0, &res)) {
-+			vendor = (u16)res;
- 			wiphy_err(wiphy, "Overriding vendor id = 0x%x\n",
- 				  vendor);
- 		}
- 		var = getvar(vars, "devid");
--		if (var) {
--			u16 devid = (u16) simple_strtoul(var, NULL, 0);
-+		if (var && !kstrtoul(var, 0, &res)) {
-+			u16 devid = (u16)res;
- 			if (devid != 0xffff) {
- 				device = devid;
- 				wiphy_err(wiphy, "Overriding device id = 0x%x"
-@@ -9596,10 +9597,11 @@ char *getvar(char *vars, const char *name)
- int getintvar(char *vars, const char *name)
- {
- 	char *val;
-+	unsigned long res;
+I like to ask about the current
+development of the DFS feature 
+in wireless testing. Aside from 
+the radar detection, did the 
+implementation of channel 
+switching protocol being consider? 
+Did the measurement request and 
+report protocol being consider 
+to implement as well??
+I would like to do something 
+on the above features, if there 
+are already works been done, 
+then I would love to use it as
+a reference.
  
- 	val = getvar(vars, name);
--	if (val == NULL)
--		return 0;
-+	if (val && !kstrtoul(val, 0, &res))
-+		return res;
+Thanks a lot.
  
--	return simple_strtoul(val, NULL, 0);
-+	return 0;
- }
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-index 582df4a..22f7bfc 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -174,12 +174,13 @@ char *phy_getvar(struct brcms_phy *pi, const char *name)
- int phy_getintvar(struct brcms_phy *pi, const char *name)
- {
- 	char *val;
-+	unsigned long res;
- 
- 	val = PHY_GETVAR(pi, name);
--	if (val == NULL)
--		return 0;
-+	if (val && !kstrtoul(val, 0, &res))
-+		return res;
- 
--	return simple_strtoul(val, NULL, 0);
-+	return 0;
- }
- 
- void wlc_phyreg_enter(struct brcms_phy_pub *pih)
--- 
-1.7.4.1
+Ming
 
 
