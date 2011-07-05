@@ -1,28 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:36523 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753637Ab1GUTEp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 15:04:45 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 1AFE654029E
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2011 15:12:58 -0400 (EDT)
-Subject: Compat-wireless release for 2011-07-21 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110721190444.6EED940ECE@repository3.orbit-lab.org> (sfid-20110721_210448_893710_FD09413A)
-Date: Thu, 21 Jul 2011 15:04:44 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mms2.broadcom.com ([216.31.210.18]:2430 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753413Ab1GEF7I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 01:59:08 -0400
+Message-ID: <4E12A81D.6000901@broadcom.com> (sfid-20110705_075913_577182_FB24EE42)
+Date: Tue, 5 Jul 2011 07:58:53 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: lululatortue <lefrancoisfabien@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Broadcom 14e4:4357 mode monitor
+References: <loom.20110630T161632-452@post.gmane.org>
+In-Reply-To: <loom.20110630T161632-452@post.gmane.org>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 331eea6...b8a3714 akpm-end   -> origin/akpm-end  (forced update)
-   3a5c374..cf6ace1  akpm-start -> origin/akpm-start
-   f9b4b6c..6f811ce  history    -> origin/history
- + 5d40945...7fe07a3 master     -> origin/master  (forced update)
-   3a5c374..cf6ace1  stable     -> origin/stable
- * [new tag]         next-20110721 -> next-20110721
+On 06/30/2011 04:34 PM, lululatortue wrote:
+> Hello,
+>
+>       My objectif is to drive my broadcom with monitor mode. I would download the
+> staging-next git tree, available at :
+> git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-next-2.6.git
+>
+>       but with my linux write:
+>
+>      git clone
+> git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-next-2.6.git
+>
+>      I'have:
+>
+> Initialized empty Git repository in /home/lefrancois/staging-next-2.6/.git/
+> fatal: The remote end hung up unexpectedly
 
-compat-wireless code metrics
+The URL was wrong, see 
+http://git.kernel.org/?p=linux/kernel/git/gregkh/staging-2.6.git;a=summary
 
-    834457 - Total upstream lines of code being pulled
+When the git:// URL still does not work, you can try the http:// variant.
+
+I also noticed your objective. The monitor mode functionality is not 
+(yet) supported by the brcm80211 softmac driver. Currently, it is a 
+STA-only driver.
+
+Gr. AvS
+
+-- 
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
+
