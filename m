@@ -1,144 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:44970 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755008Ab1GMBfV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2011 21:35:21 -0400
-Subject: [PATCH 14/24] ath6kl: add htc_hif.h
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: devel@linuxdriverproject.org, gregkh@suse.de, error27@gmail.com
-Date: Wed, 13 Jul 2011 04:35:15 +0300
-Message-ID: <20110713013515.8517.62312.stgit@localhost6.localdomain6> (sfid-20110713_033524_758845_5840BA7B)
-In-Reply-To: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
+Received: from mms1.broadcom.com ([216.31.210.17]:3148 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754353Ab1GEUGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 16:06:39 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH v2 04/21] staging: brcm80211: removed
+ brcmf_sdioh_reset()
+Date: Tue, 5 Jul 2011 22:06:00 +0200
+Message-ID: <1309896377-4425-5-git-send-email-arend@broadcom.com> (sfid-20110705_220657_232457_E4697967)
+In-Reply-To: <1309896377-4425-1-git-send-email-arend@broadcom.com>
+References: <1309896377-4425-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/htc_hif.h |  112 +++++++++++++++++++++++++++++
- 1 files changed, 112 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/htc_hif.h
+From: Roland Vossen <rvossen@broadcom.com>
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.h b/drivers/net/wireless/ath/ath6kl/htc_hif.h
-new file mode 100644
-index 0000000..81571e9
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath6kl/htc_hif.h
-@@ -0,0 +1,112 @@
-+/*
-+ * Copyright (c) 2007-2011 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef HTC_HIF_H
-+#define HTC_HIF_H
-+
-+#include "htc.h"
-+#include "hif.h"
-+
-+#define ATH6KL_MAILBOXES	4
-+
-+/* HTC runs over mailbox 0 */
-+#define HTC_MAILBOX	0
-+
-+#define ATH6KL_TARGET_DEBUG_INTR_MASK     0x01
-+
-+#define OTHER_INTS_ENABLED		(INT_STATUS_ENABLE_ERROR_MASK |	\
-+					INT_STATUS_ENABLE_CPU_MASK   |	\
-+					INT_STATUS_ENABLE_COUNTER_MASK)
-+
-+#define ATH6KL_REG_IO_BUFFER_SIZE			32
-+#define ATH6KL_MAX_REG_IO_BUFFERS			8
-+#define ATH6KL_SCATTER_ENTRIES_PER_REQ            16
-+#define ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER      (16 * 1024)
-+#define ATH6KL_SCATTER_REQS                       4
-+
-+#ifndef A_CACHE_LINE_PAD
-+#define A_CACHE_LINE_PAD                        128
-+#endif
-+#define ATH6KL_MIN_SCATTER_ENTRIES_PER_REQ        2
-+#define ATH6KL_MIN_TRANSFER_SIZE_PER_SCATTER      (4 * 1024)
-+
-+struct ath6kl_irq_proc_registers {
-+	u8 host_int_status;
-+	u8 cpu_int_status;
-+	u8 error_int_status;
-+	u8 counter_int_status;
-+	u8 mbox_frame;
-+	u8 rx_lkahd_valid;
-+	u8 host_int_status2;
-+	u8 gmbox_rx_avail;
-+	__le32 rx_lkahd[2];
-+	__le32 rx_gmbox_lkahd_alias[2];
-+} __packed;
-+
-+struct ath6kl_irq_enable_reg {
-+	u8 int_status_en;
-+	u8 cpu_int_status_en;
-+	u8 err_int_status_en;
-+	u8 cntr_int_status_en;
-+} __packed;
-+
-+/* buffers for ASYNC I/O */
-+struct ath6kl_async_reg_io_buffer {
-+	struct htc_packet packet;
-+	u8 pad1[A_CACHE_LINE_PAD];
-+	/* cache-line safe with pads around */
-+	u8 buf[ATH6KL_REG_IO_BUFFER_SIZE];
-+	u8 pad2[A_CACHE_LINE_PAD];
-+};
-+
-+struct ath6kl_device {
-+	spinlock_t lock;
-+	u8 pad1[A_CACHE_LINE_PAD];
-+	struct ath6kl_irq_proc_registers irq_proc_reg;
-+	u8 pad2[A_CACHE_LINE_PAD];
-+	struct ath6kl_irq_enable_reg irq_en_reg;
-+	u8 pad3[A_CACHE_LINE_PAD];
-+	u32 block_sz;
-+	u32 block_mask;
-+	struct htc_target *htc_cnxt;
-+	struct list_head reg_io;
-+	struct ath6kl_async_reg_io_buffer reg_io_buf[ATH6KL_MAX_REG_IO_BUFFERS];
-+	int (*msg_pending) (void *context, u32 lk_ahds[], int *npkts_fetched);
-+	struct hif_dev_scat_sup_info hif_scat_info;
-+	bool virt_scat;
-+	int max_rx_bndl_sz;
-+	int max_tx_bndl_sz;
-+	int chk_irq_status_cnt;
-+	struct ath6kl *ar;
-+};
-+
-+int ath6kldev_setup(struct ath6kl_device *dev);
-+int ath6kldev_unmask_intrs(struct ath6kl_device *dev);
-+int ath6kldev_mask_intrs(struct ath6kl_device *dev);
-+int ath6kldev_poll_mboxmsg_rx(struct ath6kl_device *dev,
-+			      u32 *lk_ahd, int timeout);
-+int ath6kldev_rx_control(struct ath6kl_device *dev, bool enable_rx);
-+int ath6kldev_disable_intrs(struct ath6kl_device *dev);
-+
-+int ath6kldev_rw_comp_handler(void *context, int status);
-+int ath6kldev_intr_bh_handler(struct ath6kl *ar);
-+
-+/* Scatter Function and Definitions */
-+int ath6kldev_setup_msg_bndl(struct ath6kl_device *dev, int max_msg_per_xfer);
-+int ath6kldev_submit_scat_req(struct ath6kl_device *dev,
-+			    struct hif_scatter_req *scat_req, bool read);
-+
-+#endif /*ATH6KL_H_ */
+Code cleanup. This function did not perform a reset, hence it was removed.
+
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdbus.h     |    3 ---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |    5 -----
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    8 --------
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |    2 --
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    3 ---
+ 5 files changed, 0 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
+index 656caeb..eb08152 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdbus.h
+@@ -97,9 +97,6 @@ extern int brcmf_sdioh_abort(struct sdioh_info *si, uint fnc);
+ extern int brcmf_sdioh_start(struct sdioh_info *si, int stage);
+ extern int brcmf_sdioh_stop(struct sdioh_info *si);
+ 
+-/* Reset and re-initialize the device */
+-extern int brcmf_sdioh_reset(struct sdioh_info *si);
+-
+ /* Helper function */
+ void *brcmf_sdcard_get_sdioh(struct brcmf_sdio_card *card);
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 132b18f..11abd55 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -545,11 +545,6 @@ uint brcmf_sdcard_query_iofnum(struct brcmf_sdio_card *card)
+ 	return brcmf_sdioh_query_iofnum(card->sdioh);
+ }
+ 
+-int brcmf_sdcard_reset(struct brcmf_sdio_card *card)
+-{
+-	return brcmf_sdioh_reset(card->sdioh);
+-}
+-
+ void *brcmf_sdcard_get_sdioh(struct brcmf_sdio_card *card)
+ {
+ 	ASSERT(card);
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 092d044..0f0dc42 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -846,14 +846,6 @@ extern int brcmf_sdioh_abort(struct sdioh_info *sd, uint func)
+ 	return 0;
+ }
+ 
+-/* Reset and re-initialize the device */
+-int brcmf_sdioh_reset(struct sdioh_info *si)
+-{
+-	sd_trace(("%s: Enter\n", __func__));
+-	sd_trace(("%s: Exit\n", __func__));
+-	return 0;
+-}
+-
+ /* Disable device interrupt */
+ void brcmf_sdioh_dev_intr_off(struct sdioh_info *sd)
+ {
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index e43c53a7..4b0352f 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -6013,8 +6013,6 @@ int brcmf_bus_devreset(struct brcmf_pub *dhdp, u8 flag)
+ 
+ 		if (bus->dhd->dongle_reset) {
+ 			/* Turn on WLAN */
+-			/* Reset SD client */
+-			brcmf_sdcard_reset(bus->card);
+ 
+ 			/* Attempt to re-attach & download */
+ 			if (brcmf_sdbrcm_probe_attach(bus, bus->card,
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index f05067a..df4063c 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -207,9 +207,6 @@ extern int brcmf_sdcard_iovar_op(struct brcmf_sdio_card *card, const char *name,
+ 				 void *params, int plen, void *arg, int len,
+ 				 bool set);
+ 
+-/* Reset and reinitialize the device */
+-extern int brcmf_sdcard_reset(struct brcmf_sdio_card *card);
+-
+ /* helper functions */
+ 
+ extern void *brcmf_sdcard_get_sdioh(struct brcmf_sdio_card *card);
+-- 
+1.7.4.1
+
 
