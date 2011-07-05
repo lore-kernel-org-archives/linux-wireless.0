@@ -1,165 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:65330 "EHLO mga11.intel.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1435 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755454Ab1GPPcL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2011 11:32:11 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 04/18] iwlagn: move the Rx dispatching to the upper layer
-Date: Sat, 16 Jul 2011 07:56:25 -0700
-Message-Id: <1310828199-18000-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110716_173221_185498_612D60AD)
-In-Reply-To: <1310828199-18000-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1310828199-18000-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1754312Ab1GEWDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 18:03:21 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 10/31] staging: brcm80211: removed remains of assert
+ mechanism in fullmac
+Date: Wed, 6 Jul 2011 00:02:37 +0200
+Message-ID: <1309903378-29021-11-git-send-email-arend@broadcom.com> (sfid-20110706_000409_002301_CAB585D4)
+In-Reply-To: <1309903378-29021-1-git-send-email-arend@broadcom.com>
+References: <1309903378-29021-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Roland Vossen <rvossen@broadcom.com>
 
-The upper layer receives a pointer to an iwl_rx_mem_buffer. I would prefer the
-upper layer to receive a pointer to an iwl_rx_packet, but this is impossible
-since the Rx path needs to add the address of the page to the skb.
-I may find a solution later.
-
-All the pre_rx_handler and notification code has been moved to the upper layer.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |   42 +++--------------------------
- drivers/net/wireless/iwlwifi/iwl-agn.h |    2 +
- drivers/net/wireless/iwlwifi/iwl-rx.c  |   46 ++++++++++++++++++++++++++++++++
- 3 files changed, 52 insertions(+), 38 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/dhd.h       |    9 ----
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |   50 ------------------------
+ 2 files changed, 0 insertions(+), 59 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c91e010..ba4e2a8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -513,6 +513,9 @@ static void iwl_rx_handle(struct iwl_priv *priv)
- 			       DMA_FROM_DEVICE);
- 		pkt = rxb_addr(rxb);
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index 229a702..b4d786f 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -703,7 +703,6 @@ extern uint brcmf_pktgen_len;
+ #define BRCMF_MAX_PKTGEN_LEN 1800
+ #endif
  
-+		IWL_DEBUG_RX(priv, "r = %d, i = %d, %s, 0x%02x\n", r,
-+			i, get_cmd_string(pkt->hdr.cmd), pkt->hdr.cmd);
-+
- 		len = le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK;
- 		len += sizeof(u32); /* account for status word */
- 		trace_iwlwifi_dev_rx(priv, pkt, len);
-@@ -531,44 +534,7 @@ static void iwl_rx_handle(struct iwl_priv *priv)
- 			(pkt->hdr.cmd != STATISTICS_NOTIFICATION) &&
- 			(pkt->hdr.cmd != REPLY_TX);
+-extern u32 g_assert_type;
+ extern const struct bcmevent_name bcmevent_names[];
+ extern const int bcmevent_names_size;
  
--		/*
--		 * Do the notification wait before RX handlers so
--		 * even if the RX handler consumes the RXB we have
--		 * access to it in the notification wait entry.
--		 */
--		if (!list_empty(&priv->_agn.notif_waits)) {
--			struct iwl_notification_wait *w;
+@@ -815,14 +814,6 @@ extern void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg);
+ extern void brcmf_c_pktfilter_offload_enable(struct brcmf_pub *drvr, char *arg,
+ 					     int enable, int master_mode);
+ 
+-#ifdef BCMDBG
+-#define ASSERT(exp) \
+-	  do { if (!(exp)) osl_assert(#exp, __FILE__, __LINE__); } while (0)
+-extern void osl_assert(char *exp, char *file, int line);
+-#else
+-#define ASSERT(exp)	do {} while (0)
+-#endif  /* defined(BCMDBG) */
 -
--			spin_lock(&priv->_agn.notif_wait_lock);
--			list_for_each_entry(w, &priv->_agn.notif_waits, list) {
--				if (w->cmd == pkt->hdr.cmd) {
--					w->triggered = true;
--					if (w->fn)
--						w->fn(priv, pkt, w->fn_data);
--				}
--			}
--			spin_unlock(&priv->_agn.notif_wait_lock);
--
--			wake_up_all(&priv->_agn.notif_waitq);
--		}
--		if (priv->pre_rx_handler)
--			priv->pre_rx_handler(priv, rxb);
--
--		/* Based on type of command response or notification,
--		 *   handle those that need handling via function in
--		 *   rx_handlers table.  See iwl_setup_rx_handlers() */
--		if (priv->rx_handlers[pkt->hdr.cmd]) {
--			IWL_DEBUG_RX(priv, "r = %d, i = %d, %s, 0x%02x\n", r,
--				i, get_cmd_string(pkt->hdr.cmd), pkt->hdr.cmd);
--			priv->isr_stats.rx_handlers[pkt->hdr.cmd]++;
--			priv->rx_handlers[pkt->hdr.cmd] (priv, rxb);
--		} else {
--			/* No handling needed */
--			IWL_DEBUG_RX(priv,
--				"r %d i %d No handler needed for %s, 0x%02x\n",
--				r, i, get_cmd_string(pkt->hdr.cmd),
--				pkt->hdr.cmd);
--		}
-+		iwl_rx_dispatch(priv, rxb);
+ /* Linux network driver ioctl encoding */
+ struct brcmf_c_ioctl {
+ 	uint cmd;		/* common ioctl definition */
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 0ea8084..1a7752d 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -41,9 +41,6 @@
+ #include "wl_cfg80211.h"
+ #include "bcmchip.h"
  
- 		/*
- 		 * XXX: After here, we should always check rxb->page
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index fe5451e..666376e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -187,6 +187,8 @@ void iwlagn_rx_replenish(struct iwl_priv *priv);
- void iwlagn_rx_replenish_now(struct iwl_priv *priv);
- int iwlagn_hwrate_to_mac80211_idx(u32 rate_n_flags, enum ieee80211_band band);
- void iwl_setup_rx_handlers(struct iwl_priv *priv);
-+void iwl_rx_dispatch(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb);
-+
- 
- /* tx */
- void iwlagn_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index f3f3efe..c5eb379 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -1105,3 +1105,49 @@ void iwl_setup_rx_handlers(struct iwl_priv *priv)
- 	/* Set up hardware specific Rx handlers */
- 	priv->cfg->ops->lib->rx_handler_setup(priv);
+-/* Global ASSERT type flag */
+-u32 g_assert_type;
+-
+ #if defined(CONFIG_PM_SLEEP)
+ #include <linux/suspend.h>
+ atomic_t brcmf_mmc_suspend;
+@@ -1739,50 +1736,3 @@ exit:
+ 	return ret;
  }
-+
-+void iwl_rx_dispatch(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
-+{
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+
-+	/*
-+	 * Do the notification wait before RX handlers so
-+	 * even if the RX handler consumes the RXB we have
-+	 * access to it in the notification wait entry.
-+	 */
-+	if (!list_empty(&priv->_agn.notif_waits)) {
-+		struct iwl_notification_wait *w;
-+
-+		spin_lock(&priv->_agn.notif_wait_lock);
-+		list_for_each_entry(w, &priv->_agn.notif_waits, list) {
-+			if (w->cmd != pkt->hdr.cmd)
-+				continue;
-+			IWL_DEBUG_RX(priv,
-+				"Notif: %s, 0x%02x - wake the callers up\n",
-+				get_cmd_string(pkt->hdr.cmd),
-+				pkt->hdr.cmd);
-+			w->triggered = true;
-+			if (w->fn)
-+				w->fn(priv, pkt, w->fn_data);
-+		}
-+		spin_unlock(&priv->_agn.notif_wait_lock);
-+
-+		wake_up_all(&priv->_agn.notif_waitq);
-+	}
-+
-+	if (priv->pre_rx_handler)
-+		priv->pre_rx_handler(priv, rxb);
-+
-+	/* Based on type of command response or notification,
-+	 *   handle those that need handling via function in
-+	 *   rx_handlers table.  See iwl_setup_rx_handlers() */
-+	if (priv->rx_handlers[pkt->hdr.cmd]) {
-+		priv->isr_stats.rx_handlers[pkt->hdr.cmd]++;
-+		priv->rx_handlers[pkt->hdr.cmd] (priv, rxb);
-+	} else {
-+		/* No handling needed */
-+		IWL_DEBUG_RX(priv,
-+			"No handler needed for %s, 0x%02x\n",
-+			get_cmd_string(pkt->hdr.cmd), pkt->hdr.cmd);
-+	}
-+}
+ #endif				/* BCMDBG */
+-
+-#if defined(BCMDBG)
+-void osl_assert(char *exp, char *file, int line)
+-{
+-	char tempbuf[256];
+-	char *basename;
+-
+-	basename = strrchr(file, '/');
+-	/* skip the '/' */
+-	if (basename)
+-		basename++;
+-
+-	if (!basename)
+-		basename = file;
+-
+-	snprintf(tempbuf, 256,
+-		 "assertion \"%s\" failed: file \"%s\", line %d\n", exp,
+-		 basename, line);
+-
+-	/*
+-	 * Print assert message and give it time to
+-	 * be written to /var/log/messages
+-	 */
+-	if (!in_interrupt()) {
+-		const int delay = 3;
+-		printk(KERN_ERR "%s", tempbuf);
+-		printk(KERN_ERR "panic in %d seconds\n", delay);
+-		set_current_state(TASK_INTERRUPTIBLE);
+-		schedule_timeout(delay * HZ);
+-	}
+-
+-	switch (g_assert_type) {
+-	case 0:
+-		panic(KERN_ERR "%s", tempbuf);
+-		break;
+-	case 1:
+-		printk(KERN_ERR "%s", tempbuf);
+-		BUG();
+-		break;
+-	case 2:
+-		printk(KERN_ERR "%s", tempbuf);
+-		break;
+-	default:
+-		break;
+-	}
+-}
+-#endif				/* defined(BCMDBG) */
 -- 
-1.7.0.4
+1.7.4.1
+
 
