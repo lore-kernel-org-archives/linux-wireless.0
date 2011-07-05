@@ -1,37 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:42197 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755219Ab1G1Ljr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2011 07:39:47 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1QmOwM-0006jU-QZ
-	for linux-wireless@vger.kernel.org; Thu, 28 Jul 2011 13:39:46 +0200
-Received: from 130.233.194.206 ([130.233.194.206])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2011 13:39:46 +0200
-Received: from swaminathanvasanth.r by 130.233.194.206 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2011 13:39:46 +0200
-To: linux-wireless@vger.kernel.org
-From: Swaminathan Vasanth <swaminathanvasanth.r@gmail.com>
-Subject: Re: Testing Auto Channel Selection with hostapd in ath5k and ath9k
-Date: Thu, 28 Jul 2011 11:39:32 +0000 (UTC)
-Message-ID: <loom.20110728T133919-978@post.gmane.org> (sfid-20110728_133950_871429_DDC28738)
-References: <CAEzeFio8D9aKDFX+Wzo0yceWXy_5tDKpLDFzr9FmarTXCHUOQg@mail.gmail.com> <CAEzeFirXVu_pwDCb6t=ps4xskc4fFUy9gGECJgK1q7cYhLizVQ@mail.gmail.com> <CAEzeFip+PCV4Ccsi6L+RSvrM_86J2=Ps6193WyC0QzVfwe64LQ@mail.gmail.com> <CAEzeFiq2FXYKkfXjDtguryniaU7hQkJczLU98V9P3Uv5-D-P3g@mail.gmail.com> <CAB=NE6VT_Q5Apb_ZCfK9fSYGDtaUOwmVqeogN8HE6+SgGYek1A@mail.gmail.com> <CAEzeFiq5HXyazJfAx3mRV7TBy6CVEivJY63GkF8jnCczGsUK8Q@mail.gmail.com> <CAB=NE6WaRyX0yGs=6h6+2V+gUSPHoY19TTHuXBRAWqR9hw+qAw@mail.gmail.com> <loom.20110727T230512-90@post.gmane.org> <CAB=NE6WwP+S8f=MFDtuC6a97nZEGak5gfFEy9majqD9KVVSjiw@mail.gmail.com> <CAB=NE6U3wa88Fk03q7u17WtoJP1QmoSgJ4D27GSs0pBYGBuCTw@mail.gmail.com> <CAB=NE6VWE1dvc3s-qJK45xcg5xQ6t+nqmnby_gip6-ahMVFh6w@mail.gmail.com>
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:46670 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752144Ab1GETIl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 15:08:41 -0400
+Received: by bwj24 with SMTP id 24so9145712bwj.39
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2011 12:08:39 -0700 (PDT)
+Subject: Re: [PATCH v2 1/3] wl12xx: configure suspend/resume only if
+ associated/started
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1309169205-27966-1-git-send-email-eliad@wizery.com>
+References: <1309169205-27966-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 05 Jul 2011 22:08:36 +0300
+Message-ID: <1309892916.1514.507.camel@cumari> (sfid-20110705_210845_437094_08EC1998)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+On Mon, 2011-06-27 at 13:06 +0300, Eliad Peller wrote:
+> Configure the device (to wowlan) only if the sta/ap
+> is associated/started.
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> --- 
 
- It din work :( Though i pointed to the ACS Hostapd git, while building the
-firmware it is taking the source code of hostapd without ACS. I need to somehow
-point it to ACS enabled hostapd git. I ll try to fix it.
+Applied the series, thanks!
 
-Thanks,
-BR,
- Vasanth
+-- 
+Cheers,
+Luca.
 
