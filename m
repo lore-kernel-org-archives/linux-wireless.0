@@ -1,126 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:60606 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752516Ab1GWN3E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jul 2011 09:29:04 -0400
-Subject: [PATCH 2 2/3] ath5k: remove most references to XR
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:59159 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751676Ab1GEVPu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 17:15:50 -0400
+Received: by mail-fx0-f52.google.com with SMTP id 18so6553855fxd.11
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2011 14:15:49 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>
-From: Pavel Roskin <proski@gnu.org>
-Date: Sat, 23 Jul 2011 09:29:03 -0400
-Message-ID: <20110723132903.10739.29781.stgit@mj.roinet.com> (sfid-20110723_152908_997944_4267C9ED)
-In-Reply-To: <20110723132856.10739.42301.stgit@mj.roinet.com>
-References: <20110723132856.10739.42301.stgit@mj.roinet.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/2] b43: implement BCMA bus ops
+Date: Tue,  5 Jul 2011 23:54:08 +0200
+Message-Id: <1309902848-3141-2-git-send-email-zajec5@gmail.com> (sfid-20110705_231553_342803_DFBBCB55)
+In-Reply-To: <1309902848-3141-1-git-send-email-zajec5@gmail.com>
+References: <1309902848-3141-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-XR is a proprietary feature of the chipset.  It's not supported and
-should not be supported.
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
-Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath5k/ath5k.h  |    4 ----
- drivers/net/wireless/ath/ath5k/eeprom.c |    1 -
- drivers/net/wireless/ath/ath5k/phy.c    |    2 --
- drivers/net/wireless/ath/ath5k/qcu.c    |    7 -------
- drivers/net/wireless/ath/ath5k/reset.c  |    8 --------
- 5 files changed, 0 insertions(+), 22 deletions(-)
+ drivers/net/wireless/b43/bus.c  |  100 +++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/b43/bus.h  |    3 +
+ drivers/net/wireless/b43/main.c |    7 +++
+ 3 files changed, 110 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index be7b8c0..a8a7db4 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -416,7 +416,6 @@ enum ath5k_driver_mode {
- 	AR5K_MODE_11A		=	0,
- 	AR5K_MODE_11B		=	1,
- 	AR5K_MODE_11G		=	2,
--	AR5K_MODE_XR		=	0,
- 	AR5K_MODE_MAX		=	3
+diff --git a/drivers/net/wireless/b43/bus.c b/drivers/net/wireless/b43/bus.c
+index 4200713..f56604f 100644
+--- a/drivers/net/wireless/b43/bus.c
++++ b/drivers/net/wireless/b43/bus.c
+@@ -23,6 +23,106 @@
+ #include "b43.h"
+ #include "bus.h"
+ 
++/* BCMA */
++#ifdef CONFIG_B43_BCMA
++static inline int b43_bus_bcma_bus_may_powerdown(struct b43_bus_dev *dev)
++{
++	return 0; /* bcma_bus_may_powerdown(dev->bdev->bus); */
++}
++static inline int b43_bus_bcma_bus_powerup(struct b43_bus_dev *dev,
++					  bool dynamic_pctl)
++{
++	return 0; /* bcma_bus_powerup(dev->sdev->bus, dynamic_pctl); */
++}
++static inline int b43_bus_bcma_device_is_enabled(struct b43_bus_dev *dev)
++{
++	return bcma_core_is_enabled(dev->bdev);
++}
++static inline void b43_bus_bcma_device_enable(struct b43_bus_dev *dev,
++					     u32 core_specific_flags)
++{
++	bcma_core_enable(dev->bdev, core_specific_flags);
++}
++static inline void b43_bus_bcma_device_disable(struct b43_bus_dev *dev,
++					      u32 core_specific_flags)
++{
++	bcma_core_disable(dev->bdev, core_specific_flags);
++}
++static inline u16 b43_bus_bcma_read16(struct b43_bus_dev *dev, u16 offset)
++{
++	return bcma_read16(dev->bdev, offset);
++}
++static inline u32 b43_bus_bcma_read32(struct b43_bus_dev *dev, u16 offset)
++{
++	return bcma_read32(dev->bdev, offset);
++}
++static inline
++void b43_bus_bcma_write16(struct b43_bus_dev *dev, u16 offset, u16 value)
++{
++	bcma_write16(dev->bdev, offset, value);
++}
++static inline
++void b43_bus_bcma_write32(struct b43_bus_dev *dev, u16 offset, u32 value)
++{
++	bcma_write32(dev->bdev, offset, value);
++}
++static inline
++void b43_bus_bcma_block_read(struct b43_bus_dev *dev, void *buffer,
++			    size_t count, u16 offset, u8 reg_width)
++{
++	bcma_block_read(dev->bdev, buffer, count, offset, reg_width);
++}
++static inline
++void b43_bus_bcma_block_write(struct b43_bus_dev *dev, const void *buffer,
++			     size_t count, u16 offset, u8 reg_width)
++{
++	bcma_block_write(dev->bdev, buffer, count, offset, reg_width);
++}
++
++struct b43_bus_dev *b43_bus_dev_bcma_init(struct bcma_device *core)
++{
++	struct b43_bus_dev *dev = kzalloc(sizeof(*dev), GFP_KERNEL);
++	if (!dev)
++		return NULL;
++
++	dev->bus_type = B43_BUS_BCMA;
++	dev->bdev = core;
++
++	dev->bus_may_powerdown = b43_bus_bcma_bus_may_powerdown;
++	dev->bus_powerup = b43_bus_bcma_bus_powerup;
++	dev->device_is_enabled = b43_bus_bcma_device_is_enabled;
++	dev->device_enable = b43_bus_bcma_device_enable;
++	dev->device_disable = b43_bus_bcma_device_disable;
++
++	dev->read16 = b43_bus_bcma_read16;
++	dev->read32 = b43_bus_bcma_read32;
++	dev->write16 = b43_bus_bcma_write16;
++	dev->write32 = b43_bus_bcma_write32;
++	dev->block_read = b43_bus_bcma_block_read;
++	dev->block_write = b43_bus_bcma_block_write;
++
++	dev->dev = &core->dev;
++	dev->dma_dev = core->dma_dev;
++	dev->irq = core->irq;
++
++	/*
++	dev->board_vendor = core->bus->boardinfo.vendor;
++	dev->board_type = core->bus->boardinfo.type;
++	dev->board_rev = core->bus->boardinfo.rev;
++	*/
++
++	dev->chip_id = core->bus->chipinfo.id;
++	dev->chip_rev = core->bus->chipinfo.rev;
++	dev->chip_pkg = core->bus->chipinfo.pkg;
++
++	dev->bus_sprom = &core->bus->sprom;
++
++	dev->core_id = core->id.id;
++	dev->core_rev = core->id.rev;
++
++	return dev;
++}
++#endif /* CONFIG_B43_BCMA */
+ 
+ /* SSB */
+ #ifdef CONFIG_B43_SSB
+diff --git a/drivers/net/wireless/b43/bus.h b/drivers/net/wireless/b43/bus.h
+index 79a5ab4..a70b7b9 100644
+--- a/drivers/net/wireless/b43/bus.h
++++ b/drivers/net/wireless/b43/bus.h
+@@ -2,12 +2,14 @@
+ #define B43_BUS_H_
+ 
+ enum b43_bus_type {
++	B43_BUS_BCMA,
+ 	B43_BUS_SSB,
  };
  
-@@ -694,12 +693,10 @@ struct ath5k_gain {
- #define	CHANNEL_5GHZ	0x0100	/* 5GHz channel */
- #define	CHANNEL_PASSIVE	0x0200	/* Only passive scan allowed */
- #define	CHANNEL_DYN	0x0400	/* Dynamic CCK-OFDM channel (for g operation) */
--#define	CHANNEL_XR	0x0800	/* XR channel */
+ struct b43_bus_dev {
+ 	enum b43_bus_type bus_type;
+ 	union {
++		struct bcma_device *bdev;
+ 		struct ssb_device *sdev;
+ 	};
  
- #define	CHANNEL_A	(CHANNEL_5GHZ | CHANNEL_OFDM)
- #define	CHANNEL_B	(CHANNEL_2GHZ | CHANNEL_CCK)
- #define	CHANNEL_G	(CHANNEL_2GHZ | CHANNEL_OFDM)
--#define	CHANNEL_X	(CHANNEL_5GHZ | CHANNEL_OFDM | CHANNEL_XR)
+@@ -57,6 +59,7 @@ static inline bool b43_bus_host_is_sdio(struct b43_bus_dev *dev)
+ 		dev->sdev->bus->bustype == SSB_BUSTYPE_SDIO);
+ }
  
- #define	CHANNEL_ALL	(CHANNEL_OFDM | CHANNEL_CCK | \
- 			 CHANNEL_2GHZ | CHANNEL_5GHZ)
-@@ -710,7 +707,6 @@ struct ath5k_gain {
-  * Used internally for ath5k_hw_reset_tx_queue().
-  * Also see struct struct ieee80211_channel.
-  */
--#define IS_CHAN_XR(_c)	((_c->hw_value & CHANNEL_XR) != 0)
- #define IS_CHAN_B(_c)	((_c->hw_value & CHANNEL_B) != 0)
++struct b43_bus_dev *b43_bus_dev_bcma_init(struct bcma_device *core);
+ struct b43_bus_dev *b43_bus_dev_ssb_init(struct ssb_device *sdev);
  
- /*
-diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
-index 9068b91..56cb9d4 100644
---- a/drivers/net/wireless/ath/ath5k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath5k/eeprom.c
-@@ -1782,7 +1782,6 @@ ath5k_eeprom_mode_from_channel(struct ieee80211_channel *channel)
+ #endif /* B43_BUS_H_ */
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 410b77f..b85a973 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -5010,7 +5010,14 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
+ #ifdef CONFIG_B43_BCMA
+ static int b43_bcma_probe(struct bcma_device *core)
  {
- 	switch (channel->hw_value & CHANNEL_MODES) {
- 	case CHANNEL_A:
--	case CHANNEL_XR:
- 		return AR5K_EEPROM_MODE_11A;
- 	case CHANNEL_G:
- 		return AR5K_EEPROM_MODE_11G;
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 81e465e..b9ada88 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -2408,8 +2408,6 @@ ath5k_get_max_ctl_power(struct ath5k_hw *ah,
- 	case CHANNEL_B:
- 		ctl_mode |= AR5K_CTL_11B;
- 		break;
--	case CHANNEL_XR:
--		/* Fall through */
- 	default:
- 		return;
- 	}
-diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
-index 65f1039..1d37675 100644
---- a/drivers/net/wireless/ath/ath5k/qcu.c
-+++ b/drivers/net/wireless/ath/ath5k/qcu.c
-@@ -185,13 +185,6 @@ int ath5k_hw_setup_tx_queue(struct ath5k_hw *ah, enum ath5k_tx_queue queue_type,
- 		case AR5K_TX_QUEUE_CAB:
- 			queue = AR5K_TX_QUEUE_ID_CAB;
- 			break;
--		case AR5K_TX_QUEUE_XR_DATA:
--			if (ah->ah_version != AR5K_AR5212)
--				ATH5K_ERR(ah,
--					"XR data queues only supported in"
--					" 5212!\n");
--			queue = AR5K_TX_QUEUE_ID_XR_DATA;
--			break;
- 		default:
- 			return -EINVAL;
- 		}
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 0686c5d..5d6d3bd 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -1108,14 +1108,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
++	struct b43_bus_dev *dev;
++
++	dev = b43_bus_dev_bcma_init(core);
++	if (!dev)
++		return -ENODEV;
++
+ 	b43err(NULL, "BCMA is not supported yet!");
++	kfree(dev);
+ 	return -EOPNOTSUPP;
+ }
  
- 		mode = AR5K_MODE_11B;
- 		break;
--	case CHANNEL_XR:
--		if (ah->ah_version == AR5K_AR5211) {
--			ATH5K_ERR(ah,
--				"XR mode not available on 5211");
--			return -EINVAL;
--		}
--		mode = AR5K_MODE_XR;
--		break;
- 	default:
- 		ATH5K_ERR(ah,
- 			"invalid channel: %d\n", channel->center_freq);
+-- 
+1.7.3.4
+
