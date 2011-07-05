@@ -1,58 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:53466 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751814Ab1GUHOG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:14:06 -0400
+Received: from mms2.broadcom.com ([216.31.210.18]:1378 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754156Ab1GEWDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 18:03:21 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 01/31] staging: brcm80211: clean up checkpatch error
+Date: Wed, 6 Jul 2011 00:02:28 +0200
+Message-ID: <1309903378-29021-2-git-send-email-arend@broadcom.com> (sfid-20110706_000406_387519_10447006)
+In-Reply-To: <1309903378-29021-1-git-send-email-arend@broadcom.com>
+References: <1309903378-29021-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20110714144509.GA6391@electric-eye.fr.zoreil.com>
-References: <CACna6rxAKMp-2wqwz4k4S3nTkY_3Qz7=hEZk9F2Zig7T5kp_HA@mail.gmail.com>
-	<20110714144509.GA6391@electric-eye.fr.zoreil.com>
-Date: Thu, 21 Jul 2011 09:14:05 +0200
-Message-ID: <CACna6rwQOdb+Z6OiD8K6duW8RxYvD3GR3wxr5taPHuKGesg-vg@mail.gmail.com> (sfid-20110721_091410_840181_3AB3C650)
-Subject: Re: Bug in BCMA: device_unregister causing "NULL pointer dereference at"
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Francois Romieu <romieu@fr.zoreil.com>
-Cc: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 14 lipca 2011 16:45 użytkownik Francois Romieu
-<romieu@fr.zoreil.com> napisał:
-> Rafał Miłecki <zajec5@gmail.com> :
-> [...]
->> Any tip, why does it happen?
->
-> bcma_release_core_dev kfrees core while its list_head is still used ?
->
-> May be something like this :
->
-> diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-> index be52344..85fb3aa 100644
-> --- a/drivers/bcma/main.c
-> +++ b/drivers/bcma/main.c
-> @@ -110,11 +110,14 @@ static int bcma_register_cores(struct bcma_bus *bus)
->
->  static void bcma_unregister_cores(struct bcma_bus *bus)
->  {
-> -       struct bcma_device *core;
-> +       struct bcma_device *core, *next;
->
-> -       list_for_each_entry(core, &bus->cores, list) {
-> +       list_for_each_entry_safe(core, next, &bus->cores, list) {
-> +               list_del(&core->list);
->                if (core->dev_registered)
->                        device_unregister(&core->dev);
-> +               else
-> +                       kfree(core);
->        }
->  }
+A checkpatch error was introduced in following commit:
 
-Thanks for your help, but I'm afraid crash happens in totally
-different place. Have you take a look at dmesg.log from my second
-e-mail? NULL ptr exception happens in kobject_del.
+0f22b8a staging: brcm80211: remove MMC_SDIO_ABORT macro definition
 
+The patch gets rid of the error.
+
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 4c0a031..3f3f0ee 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -567,8 +567,7 @@ brcmf_sdioh_request_byte(struct sdioh_info *sd, uint rw, uint func,
+ 				sdio_writeb(gInstance->func[func], *byte,
+ 					    regaddr, &err_ret);
+ 				sdio_release_host(gInstance->func[func]);
+-			}
+-			else if (regaddr < 0xF0) {
++			} else if (regaddr < 0xF0) {
+ 				sd_err(("brcmf: F0 Wr:0x%02x: write "
+ 					"disallowed\n", regaddr));
+ 			} else {
 -- 
-Rafał
+1.7.4.1
+
+
