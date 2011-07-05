@@ -1,40 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:45066 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751424Ab1GDOlz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 10:41:55 -0400
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, ath5k-devel@lists.ath5k.org
-Subject: Re: [PATCH 7/8] ath5k: disable 32KHz sleep clock operation
-References: <1309758467-1712-1-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-2-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-3-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-4-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-5-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-6-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-7-git-send-email-nbd@openwrt.org>
-	<CAFtRNNyPJOtjW8vDnjveqmMD3snt_iaDV45p3QZEOKrSyED3yg@mail.gmail.com>
-	<4E1190FF.9010701@openwrt.org>
-	<CAFtRNNyyx2e3YhKgGwG4h678dEKkQwdVf8pXBtWqYHZzx9r0cQ@mail.gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Mon, 04 Jul 2011 17:41:49 +0300
-In-Reply-To: <CAFtRNNyyx2e3YhKgGwG4h678dEKkQwdVf8pXBtWqYHZzx9r0cQ@mail.gmail.com> (Nick Kossifidis's message of "Mon\, 4 Jul 2011 13\:14\:43 +0300")
-Message-ID: <87ipriyuoi.fsf@purkki.adurom.net> (sfid-20110704_164158_660990_837DA7D9)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45441 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751252Ab1GESQw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 14:16:52 -0400
+Date: Tue, 5 Jul 2011 14:08:32 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jean Delvare <khali@linux-fr.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ipw2100: Fix command list for debugging
+Message-ID: <20110705180832.GA7540@tuxdriver.com> (sfid-20110705_201707_924010_8F29E1E8)
+References: <20110704145346.384a462a@endymion.delvare>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110704145346.384a462a@endymion.delvare>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nick Kossifidis <mickflemm@gmail.com> writes:
+On Mon, Jul 04, 2011 at 02:53:46PM +0200, Jean Delvare wrote:
+> A missing comma in the array causes an off-by-one for later commands.
+> 
+> Signed-off-by: Jean Delvare <khali@linux-fr.org>
+> Cc: "John W. Linville" <linville@tuxdriver.com>
+> ---
+> Note: I don't have the documentation and I don't have the hardware, so
+> an expert should double-check this one.
+> 
+>  drivers/net/wireless/ipw2x00/ipw2100.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> --- linux-3.0-rc5.orig/drivers/net/wireless/ipw2x00/ipw2100.c	2011-05-20 10:42:41.000000000 +0200
+> +++ linux-3.0-rc5/drivers/net/wireless/ipw2x00/ipw2100.c	2011-07-04 14:44:22.000000000 +0200
+> @@ -287,7 +287,8 @@ static const char *command_types[] = {
+>  	"unused",		/* HOST_INTERRUPT_COALESCING */
+>  	"undefined",
+>  	"CARD_DISABLE_PHY_OFF",
+> -	"MSDU_TX_RATES" "undefined",
+> +	"MSDU_TX_RATES",
+> +	"undefined",
+>  	"undefined",
+>  	"SET_STATION_STAT_BITS",
+>  	"CLEAR_STATIONS_STAT_BITS",
 
-> O.K. let's comment it out then and add some information that it's
-> disabled by default on available HALs...
+This code dates from 2005:
 
-Leaving dead code lying around is bad. Why not add a comment with some
-pointers how to get the old code if someone wants to do that? For
-example git commit id is a good reference and I'm sure it will work
-even after 10 years.
+commit ee8e365aa6395e721399127ccf3d28d269136f0e
+Author: James Ketrenos <jketreno@linux.intel.com>
+Date:   Wed Sep 14 09:47:29 2005 -0500
 
+    Ran scripts/Lindent on drivers/net/wireless/ipw2{1,2}00.{c,h}
+    
+    No other changes.
+    
+    Signed-off-by: James Ketrenos <jketreno@linux.intel.com>
+
+Prior to that, those two strings were on two different lines but with
+no comma betwen them -- so effectively the same as now.  Changing it
+as you suggest would change the offsets in the array of the following
+string pointers, which I suspect will break the debugging code that
+uses it.
+
+I would rather not take this change.  OTOH, perhaps you could submit a
+patch that simply remove the second quoted string from the single line?
+
+John
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
