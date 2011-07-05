@@ -1,109 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:63574 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103Ab1GSWWa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 18:22:30 -0400
-Received: by fxd18 with SMTP id 18so591510fxd.11
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2011 15:22:29 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: disable parity check on BCMA devices
-Date: Wed, 20 Jul 2011 01:01:13 +0200
-Message-Id: <1311116473-3850-1-git-send-email-zajec5@gmail.com> (sfid-20110720_002233_892593_AED848B3)
+Received: from mms2.broadcom.com ([216.31.210.18]:4249 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754036Ab1GEUGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 16:06:34 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH v2 14/21] staging: brcm80211: replaced macro W_SDREG by
+ function w_sdreg()
+Date: Tue, 5 Jul 2011 22:06:10 +0200
+Message-ID: <1309896377-4425-15-git-send-email-arend@broadcom.com> (sfid-20110705_220726_966121_4A0B5AE1)
+In-Reply-To: <1309896377-4425-1-git-send-email-arend@broadcom.com>
+References: <1309896377-4425-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Analyze of MMIO dumps from BCM43224, BCM43225, BCM4313 and BCM4331 has
-shown that wl disables parity check for all that cards. This is required
-for receiving any packets from the hardware.
+From: Roland Vossen <rvossen@broadcom.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-This patch requires:
-[PATCH 3/3] b43: bcma: get DMA translation bits
----
- drivers/net/wireless/b43/b43.h |    1 +
- drivers/net/wireless/b43/dma.c |   14 ++++++++++++++
- 2 files changed, 15 insertions(+), 0 deletions(-)
+Code cleanup. Leads to more readable code and better type checking.
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index 8cf0459..c818b0b 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -594,6 +594,7 @@ struct b43_dma {
- 	struct b43_dmaring *rx_ring;
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   74 ++++++++++++++-----------
+ 1 files changed, 41 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 13a319d..9ac256e 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -847,20 +847,20 @@ r_sdreg32(struct brcmf_bus *bus, u32 *regvar, u32 reg_offset, u32 *retryvar)
+ 	}
+ }
  
- 	u32 translation; /* Routing bits */
-+	bool parity; /* Check for parity */
- };
+-#define W_SDREG(regval, regaddr, retryvar, typ) \
+-do { \
+-	retryvar = 0; \
+-	do { \
+-		W_REG((u32)(regaddr), regval, typ); \
+-	} while (brcmf_sdcard_regfail(bus->card) && \
+-		 (++retryvar <= retry_limit)); \
+-	if (retryvar) { \
+-		bus->regfails += (retryvar-1); \
+-		if (retryvar > retry_limit) \
+-			DHD_ERROR(("%s: FAILED REGISTER WRITE, LINE %d\n", \
+-			__func__, __LINE__)); \
+-	} \
+-} while (0)
++static void
++w_sdreg32(struct brcmf_bus *bus, u32 regval, u32 reg_offset, u32 *retryvar)
++{
++	*retryvar = 0;
++	do {
++		W_REG(bus->ci->buscorebase + reg_offset, regval, u32);
++	} while (brcmf_sdcard_regfail(bus->card) &&
++		 (++(*retryvar) <= retry_limit));
++	if (*retryvar) {
++		bus->regfails += (*retryvar-1);
++		if (*retryvar > retry_limit)
++			DHD_ERROR(("FAILED REGISTER WRITE %Xh\n", reg_offset));
++	}
++}
  
- struct b43_pio_txqueue;
-diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
-index 0a5004b..755bd39 100644
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -659,6 +659,7 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
- 	u32 value;
- 	u32 addrext;
- 	u32 trans = ring->dev->dma.translation;
-+	bool parity = ring->dev->dma.parity;
+ #define DHD_BUS			SDIO_BUS
  
- 	if (ring->tx) {
- 		if (ring->type == B43_DMA_64BIT) {
-@@ -669,6 +670,8 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
- 			value = B43_DMA64_TXENABLE;
- 			value |= (addrext << B43_DMA64_TXADDREXT_SHIFT)
- 			    & B43_DMA64_TXADDREXT_MASK;
-+			if (!parity)
-+				value |= B43_DMA64_TXPARITYDISABLE;
- 			b43_dma_write(ring, B43_DMA64_TXCTL, value);
- 			b43_dma_write(ring, B43_DMA64_TXRINGLO,
- 				      (ringbase & 0xFFFFFFFF));
-@@ -684,6 +687,8 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
- 			value = B43_DMA32_TXENABLE;
- 			value |= (addrext << B43_DMA32_TXADDREXT_SHIFT)
- 			    & B43_DMA32_TXADDREXT_MASK;
-+			if (!parity)
-+				value |= B43_DMA32_TXPARITYDISABLE;
- 			b43_dma_write(ring, B43_DMA32_TXCTL, value);
- 			b43_dma_write(ring, B43_DMA32_TXRING,
- 				      (ringbase & ~SSB_DMA_TRANSLATION_MASK)
-@@ -702,6 +707,8 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
- 			value |= B43_DMA64_RXENABLE;
- 			value |= (addrext << B43_DMA64_RXADDREXT_SHIFT)
- 			    & B43_DMA64_RXADDREXT_MASK;
-+			if (!parity)
-+				value |= B43_DMA64_RXPARITYDISABLE;
- 			b43_dma_write(ring, B43_DMA64_RXCTL, value);
- 			b43_dma_write(ring, B43_DMA64_RXRINGLO,
- 				      (ringbase & 0xFFFFFFFF));
-@@ -720,6 +727,8 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
- 			value |= B43_DMA32_RXENABLE;
- 			value |= (addrext << B43_DMA32_RXADDREXT_SHIFT)
- 			    & B43_DMA32_RXADDREXT_MASK;
-+			if (!parity)
-+				value |= B43_DMA32_RXPARITYDISABLE;
- 			b43_dma_write(ring, B43_DMA32_RXCTL, value);
- 			b43_dma_write(ring, B43_DMA32_RXRING,
- 				      (ringbase & ~SSB_DMA_TRANSLATION_MASK)
-@@ -1075,6 +1084,11 @@ int b43_dma_init(struct b43_wldev *dev)
- #endif
+@@ -1173,7 +1173,6 @@ static int brcmf_sdbrcm_clkctl(struct brcmf_bus *bus, uint target, bool pendok)
+ int brcmf_sdbrcm_bussleep(struct brcmf_bus *bus, bool sleep)
+ {
+ 	struct brcmf_sdio_card *card = bus->card;
+-	struct sdpcmd_regs *regs = bus->regs;
+ 	uint retries = 0;
+ 
+ 	DHD_INFO(("brcmf_sdbrcm_bussleep: request %s (currently %s)\n",
+@@ -1197,7 +1196,8 @@ int brcmf_sdbrcm_bussleep(struct brcmf_bus *bus, bool sleep)
+ 		brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
+ 
+ 		/* Tell device to start using OOB wakeup */
+-		W_SDREG(SMB_USE_OOB, &regs->tosbmailbox, retries, u32);
++		w_sdreg32(bus, SMB_USE_OOB,
++			  offsetof(struct sdpcmd_regs, tosbmailbox), &retries);
+ 		if (retries > retry_limit)
+ 			DHD_ERROR(("CANNOT SIGNAL CHIP, WILL NOT WAKE UP!!\n"));
+ 
+@@ -1236,9 +1236,12 @@ int brcmf_sdbrcm_bussleep(struct brcmf_bus *bus, bool sleep)
+ 		brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
+ 
+ 		/* Send misc interrupt to indicate OOB not needed */
+-		W_SDREG(0, &regs->tosbmailboxdata, retries, u32);
++		w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, tosbmailboxdata),
++			  &retries);
+ 		if (retries <= retry_limit)
+-			W_SDREG(SMB_DEV_INT, &regs->tosbmailbox, retries, u32);
++			w_sdreg32(bus, SMB_DEV_INT,
++				  offsetof(struct sdpcmd_regs, tosbmailbox),
++				  &retries);
+ 
+ 		if (retries > retry_limit)
+ 			DHD_ERROR(("CANNOT SIGNAL CHIP TO CLEAR OOB!!\n"));
+@@ -3036,7 +3039,8 @@ static int brcmf_sdbrcm_download_state(struct brcmf_bus *bus, bool enter)
+ 			bcmerror = 0;
+ 		}
+ 
+-		W_SDREG(0xFFFFFFFF, &bus->regs->intstatus, retries, u32);
++		w_sdreg32(bus, 0xFFFFFFFF,
++			  offsetof(struct sdpcmd_regs, intstatus), &retries);
+ 
+ 		brcmf_sdbrcm_chip_resetcore(bus->card, bus->ci->armcorebase);
+ 
+@@ -3169,7 +3173,7 @@ void brcmf_sdbrcm_bus_stop(struct brcmf_bus *bus, bool enforce_mutex)
+ 		tasklet_kill(&bus->tasklet);
+ 
+ 	/* Disable and clear interrupts at the chip level also */
+-	W_SDREG(0, &bus->regs->hostintmask, retries, u32);
++	w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, hostintmask), &retries);
+ 	local_hostintmask = bus->hostintmask;
+ 	bus->hostintmask = 0;
+ 
+@@ -3196,7 +3200,8 @@ void brcmf_sdbrcm_bus_stop(struct brcmf_bus *bus, bool enforce_mutex)
+ 			 SDIO_FUNC_ENABLE_1, NULL);
+ 
+ 	/* Clear any pending interrupts now that F2 is disabled */
+-	W_SDREG(local_hostintmask, &bus->regs->intstatus, retries, u32);
++	w_sdreg32(bus, local_hostintmask,
++		  offsetof(struct sdpcmd_regs, intstatus), &retries);
+ 
+ 	/* Turn off the backplane clock (only) */
+ 	brcmf_sdbrcm_clkctl(bus, CLK_SDONLY, false);
+@@ -3274,8 +3279,8 @@ int brcmf_sdbrcm_bus_init(struct brcmf_pub *drvr, bool enforce_mutex)
  	}
  
-+	dma->parity = true;
-+	/* TODO: find out which SSB devices need disabling parity */
-+	if (dev->dev->bus_type == B43_BUS_BCMA)
-+		dma->parity = false;
+ 	/* Enable function 2 (frame transfers) */
+-	W_SDREG((SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT),
+-		&bus->regs->tosbmailboxdata, retries, u32);
++	w_sdreg32(bus, SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT,
++		  offsetof(struct sdpcmd_regs, tosbmailboxdata), &retries);
+ 	enable = (SDIO_FUNC_ENABLE_1 | SDIO_FUNC_ENABLE_2);
+ 
+ 	brcmf_sdcard_cfg_write(bus->card, SDIO_FUNC_0, SDIO_CCCR_IOEx, enable,
+@@ -3296,9 +3301,8 @@ int brcmf_sdbrcm_bus_init(struct brcmf_pub *drvr, bool enforce_mutex)
+ 	if (ready == enable) {
+ 		/* Set up the interrupt mask and enable interrupts */
+ 		bus->hostintmask = HOSTINTMASK;
+-		W_SDREG(bus->hostintmask,
+-			(unsigned int *)CORE_BUS_REG(bus->ci->buscorebase,
+-			hostintmask), retries, u32);
++		w_sdreg32(bus, bus->hostintmask,
++			  offsetof(struct sdpcmd_regs, hostintmask), &retries);
+ 
+ 		brcmf_sdcard_cfg_write(bus->card, SDIO_FUNC_1, SBSDIO_WATERMARK,
+ 				 (u8) watermark, &err);
+@@ -3356,7 +3360,6 @@ exit:
+ static void brcmf_sdbrcm_rxfail(struct brcmf_bus *bus, bool abort, bool rtx)
+ {
+ 	struct brcmf_sdio_card *card = bus->card;
+-	struct sdpcmd_regs *regs = bus->regs;
+ 	uint retries = 0;
+ 	u16 lastrbc;
+ 	u8 hi, lo;
+@@ -3402,7 +3405,9 @@ static void brcmf_sdbrcm_rxfail(struct brcmf_bus *bus, bool abort, bool rtx)
+ 
+ 	if (rtx) {
+ 		bus->rxrtx++;
+-		W_SDREG(SMB_NAK, &regs->tosbmailbox, retries, u32);
++		w_sdreg32(bus, SMB_NAK,
++			  offsetof(struct sdpcmd_regs, tosbmailbox), &retries);
 +
- 	err = -ENOMEM;
- 	/* setup TX DMA channels. */
- 	dma->tx_ring_AC_BK = b43_setup_dmaring(dev, 0, 1, type);
+ 		bus->f1regdata++;
+ 		if (retries <= retry_limit)
+ 			bus->rxskip = true;
+@@ -4523,7 +4528,6 @@ deliver:
+ 
+ static u32 brcmf_sdbrcm_hostmail(struct brcmf_bus *bus)
+ {
+-	struct sdpcmd_regs *regs = bus->regs;
+ 	u32 intstatus = 0;
+ 	u32 hmb_data;
+ 	u8 fcbits;
+@@ -4536,7 +4540,8 @@ static u32 brcmf_sdbrcm_hostmail(struct brcmf_bus *bus)
+ 		  offsetof(struct sdpcmd_regs, tohostmailboxdata), &retries);
+ 
+ 	if (retries <= retry_limit)
+-		W_SDREG(SMB_INT_ACK, &regs->tosbmailbox, retries, u32);
++		w_sdreg32(bus, SMB_INT_ACK,
++			  offsetof(struct sdpcmd_regs, tosbmailbox), &retries);
+ 	bus->f1regdata += 2;
+ 
+ 	/* Dongle recomposed rx frames, accept them again */
+@@ -4600,7 +4605,6 @@ static u32 brcmf_sdbrcm_hostmail(struct brcmf_bus *bus)
+ static bool brcmf_sdbrcm_dpc(struct brcmf_bus *bus)
+ {
+ 	struct brcmf_sdio_card *card = bus->card;
+-	struct sdpcmd_regs *regs = bus->regs;
+ 	u32 intstatus, newstatus = 0;
+ 	uint retries = 0;
+ 	uint rxlimit = brcmf_rxbound;	/* Rx frames to read before resched */
+@@ -4686,7 +4690,9 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_bus *bus)
+ 		newstatus &= bus->hostintmask;
+ 		bus->fcstate = !!(newstatus & I_HMB_FC_STATE);
+ 		if (newstatus) {
+-			W_SDREG(newstatus, &regs->intstatus, retries, u32);
++			w_sdreg32(bus, newstatus,
++				  offsetof(struct sdpcmd_regs, intstatus),
++				  &retries);
+ 			bus->f1regdata++;
+ 		}
+ 	}
+@@ -4701,7 +4707,9 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_bus *bus)
+ 	 */
+ 	if (intstatus & I_HMB_FC_CHANGE) {
+ 		intstatus &= ~I_HMB_FC_CHANGE;
+-		W_SDREG(I_HMB_FC_CHANGE, &regs->intstatus, retries, u32);
++		w_sdreg32(bus, I_HMB_FC_CHANGE,
++			  offsetof(struct sdpcmd_regs, intstatus), &retries);
++
+ 		r_sdreg32(bus, &newstatus,
+ 			  offsetof(struct sdpcmd_regs, intstatus), &retries);
+ 		bus->f1regdata += 2;
 -- 
-1.7.3.4
+1.7.4.1
+
 
