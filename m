@@ -1,53 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from h5.dl5rb.org.uk ([81.2.74.5]:60556 "EHLO linux-mips.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751787Ab1G0UHu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2011 16:07:50 -0400
-Date: Wed, 27 Jul 2011 21:06:57 +0100
-From: Ralf Baechle <ralf@linux-mips.org>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-mips@linux-mips.org, jonas.gorski@gmail.com,
-	zajec5@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
-	arend@broadcom.com, b43-dev@lists.infradead.org,
-	bernhardloos@googlemail.com, arnd@arndb.de,
-	julian.calaby@gmail.com, sshtylyov@mvista.com
-Subject: Re: [PATCH v3 00/11] bcma: add support for embedded devices like
- bcm4716
-Message-ID: <20110727200657.GA15028@linux-mips.org> (sfid-20110727_220753_670771_4E37DC34)
-References: <1311376815-15755-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:58997 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751563Ab1GEXGM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 19:06:12 -0400
+Message-ID: <4E1398D3.7000703@gmail.com> (sfid-20110706_010639_436071_B5AF8AE8)
+Date: Tue, 05 Jul 2011 16:05:55 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1311376815-15755-1-git-send-email-hauke@hauke-m.de>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
+Subject: Re: WARNING: at kernel/timer.c:1011 del_timer_sync+0xa9/0xc4()
+References: <4E0D5E42.20702@gmail.com>	<BANLkTinBJBnZbHPpdmnYX3EV0SYFd-pRDA@mail.gmail.com>	<4E0D6B8D.6000601@gmail.com>	<BANLkTimX4=Szn_JT49SLw4BvGxg3Qe0rYw@mail.gmail.com>	<4E0ED42E.3020303@gmail.com>	<4E113498.7050900@gmail.com>	<CAD2nsn0XjoMUMv6e9SuSBUAwq0Lq5QCPMBWTnPZmsndg_XYcvw@mail.gmail.com>	<4E124D42.8040808@gmail.com> <CAD2nsn2AhxWCT0XLn46n4GTE7-HOkT2HzKf6=6RsG3PbSB0hsw@mail.gmail.com>
+In-Reply-To: <CAD2nsn2AhxWCT0XLn46n4GTE7-HOkT2HzKf6=6RsG3PbSB0hsw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 23, 2011 at 01:20:04AM +0200, Hauke Mehrtens wrote:
+On 07/04/2011 09:39 PM, Mohammed Shafi wrote:
+>>
+>>
+>> FWIW below is my .config that I am using that seems to be having this
+>> warning message show up.
+>>
+>> latest pull of the Mainline dmesg:
+>>   http://fpaste.org/
+>>
+>
+> hello Justin,
+>
+> we doubt whether this patch is there in your linux-kernel tree you are
+> using, even though it is there in wireless-testing tree. please try to
+> apply this patch and see you can hit the warning
+> https://patchwork.kernel.org/patch/915952/
+>
+> thanks,
+> shafi
+>
 
-> This patch series adds support for embedded devices like bcm47xx to 
-> bcma. Bcma is used on bcm4716 and bcm4718 SoCs as the system bus and
-> replaced ssb used on older devices. With these patches my bcm4716 
-> device boots up till it tries to access the flash, because the serial 
-> flash chip is unsupported for now, this will be my next task. This adds 
-> support for MIPS cores, interrupt configuration and the serial console.
-> 
-> These patches are not containing all functions needed to get the SoC to 
-> fully work and support every feature, but it is a good start.
-> These patches are now integrated in OpenWrt for everyone how wants to
-> test them.
-> 
-> This was tested with a BCM4704 device (SoC with ssb bus), a BCM4716 
-> device and a pcie wireless card supported by bcma.
-> 
-> @John could you please merge this into wireless-testing. I hope Ralf is 
-> fine with it when some MIPS bits will go through wireless. This will 
-> make it much easier for Linus to merge wireless-testing and the mips 
-> tree together as there are many other changes for bcma in wireless-
-> testing.
+o.k.. appologize for the slow response(have to work!), anyways I rebased 
+the patch to the current Mainline, and am running it.
+(so far no signs of a warning message)
+dmesg with patch applied:
+http://fpaste.org/jTX3/
 
-John, if you want to merge the MIPS bits through the wireless tree, feel
-free to:
+will run it a while to see if anything occurs.
 
-Acked-by: Ralf Baechle <ralf@linux-mips.org>
-
-  Ralf
+Justin P. Mattock
