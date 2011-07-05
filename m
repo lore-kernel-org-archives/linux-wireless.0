@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:57352 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751299Ab1GaQsr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jul 2011 12:48:47 -0400
-Received: by wyg8 with SMTP id 8so1106436wyg.19
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Jul 2011 09:48:46 -0700 (PDT)
-MIME-Version: 1.0
-Date: Sun, 31 Jul 2011 11:48:46 -0500
-Message-ID: <CAJ8GFOg4A4JwC8qdF6e7rRCRETnfrPm5Zv60_8Cm1xpbJJNQpg@mail.gmail.com> (sfid-20110731_184851_677442_BC23B91A)
-Subject: carl9170: How do I change value of retries for long packets?
-From: Harshal Chhaya <harshal@gmail.com>
+Received: from lo.gmane.org ([80.91.229.12]:56602 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753701Ab1GEHkG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 03:40:06 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Qe0En-0002Of-4s
+	for linux-wireless@vger.kernel.org; Tue, 05 Jul 2011 09:40:05 +0200
+Received: from 130.233.194.206 ([130.233.194.206])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2011 09:40:05 +0200
+Received: from swaminathanvasanth.r by 130.233.194.206 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2011 09:40:05 +0200
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+From: Swaminathan Vasanth <swaminathanvasanth.r@gmail.com>
+Subject: Automatic channel selection implementation of ath9k driver in Access point with openwrt Firmware for Netgear WNDR3700
+Date: Tue, 5 Jul 2011 07:31:26 +0000 (UTC)
+Message-ID: <loom.20110705T092928-27@post.gmane.org> (sfid-20110705_094009_722654_3C9E2AC2)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Hi Friends,
 
-Christian - thanks for the pointer to the function that sets the keys
-on the AR9170. I am still figuring out how to use 64 clients with h/w
-encryption on the AR9170 - enabling debug/tracing in my build isn't as
-straightforward as suggested by the wiki.
+ Hope all are doing good. I have a doubt regarding dynamic channel allocation
+for atheros ath9k. I am currently trying to find out the channels used by the
+nearby Access Points during the boot phase.
+ 
+ I came to know that some are working in the same mainly on hostapd.
 
-However, I did find some very helpful information in the debug files
-in 'debugfs' including the number of retries.
-The current value is 4 for long packets and 7 for short packets.
+http://marc.info/?l=linux-wireless&m=130624133910615&w=2
 
-I think the small # of retries for regular data packets may be one
-reason why I am seeing some throughput problems at longer ranges.
+I am trying to do the same with ath9k driver. Is there any working on the same
+or having any experience of it?
+ 
+If so i would like to share, test it and contribute.
 
-How do I change the number of retries for long packets? Is this a
-build-time configuration or can I change it at run-time?
+Awaiting your kind reply.
 
-Thanks,
-- Harshal
+
+
