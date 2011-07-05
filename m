@@ -1,52 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([72.73.18.11]:54519 "EHLO lucidpixels.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1476 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753084Ab1G0XkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2011 19:40:04 -0400
-Date: Wed, 27 Jul 2011 19:33:05 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: linux-kernel@vger.kernel.org
-cc: linux-wireless@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
-Subject: 3.0: rt2800usb(Kernel PANIC) vs. rt2780sta(GOOD/2.6.38)
-Message-ID: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan> (sfid-20110728_014018_228229_7D0A14B7)
+	id S1754353Ab1GEWDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 18:03:21 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 28/31] staging: brcm80211: remove external definitions
+ from phy_lcn.c
+Date: Wed, 6 Jul 2011 00:02:55 +0200
+Message-ID: <1309903378-29021-29-git-send-email-arend@broadcom.com> (sfid-20110706_000355_347306_3B0D43D2)
+In-Reply-To: <1309903378-29021-1-git-send-email-arend@broadcom.com>
+References: <1309903378-29021-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The source file phy_lcn.c had several external definitions flagged
+by checkpatch.pl script. The patch fixes those.
 
-Kernel 3.0 (rt2800usb driver- horrid, and then it panics moments after, 
-see picture below)
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=301 ttl=64 time=146 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=302 ttl=64 time=274 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=303 ttl=64 time=197 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=304 ttl=64 time=115 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=305 ttl=64 time=243 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=306 ttl=64 time=265 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=307 ttl=64 time=183 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=308 ttl=64 time=201 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=309 ttl=64 time=236 ms
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c   |   10 ++--------
+ .../staging/brcm80211/brcmsmac/phy/phytbl_lcn.h    |    2 ++
+ 2 files changed, 4 insertions(+), 8 deletions(-)
 
-Then it crashes if you use the network:
-http://home.comcast.net/~jpiszcz/20110727/photo.JPG
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
+index 8e98d8f..41ac681 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
+@@ -535,12 +535,6 @@ static const s8 lcnphy_gain_index_offset_for_rssi[] = {
+ 	-2
+ };
+ 
+-extern const u8 spur_tbl_rev0[];
+-extern const u32 dot11lcnphytbl_rx_gain_info_sz_rev1;
+-extern const struct phytbl_info dot11lcnphytbl_rx_gain_info_rev1[];
+-extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_bt_epa;
+-extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_bt_epa_p250;
+-
+ struct chan_info_2064_lcnphy {
+ 	uint chan;
+ 	uint freq;
+@@ -991,7 +985,7 @@ static bool wlc_lcnphy_rx_iq_est(struct brcms_phy *pi, u16 num_samps,
+ static bool wlc_lcnphy_calc_rx_iq_comp(struct brcms_phy *pi, u16 num_samps);
+ static u16 wlc_lcnphy_get_pa_gain(struct brcms_phy *pi);
+ static void wlc_lcnphy_afe_clk_init(struct brcms_phy *pi, u8 mode);
+-extern void wlc_lcnphy_tx_pwr_ctrl_init(struct brcms_phy_pub *ppi);
++static void wlc_lcnphy_tx_pwr_ctrl_init(struct brcms_phy_pub *ppi);
+ static void wlc_lcnphy_radio_2064_channel_tune_4313(struct brcms_phy *pi,
+ 						    u8 channel);
+ 
+@@ -2275,7 +2269,7 @@ static void wlc_lcnphy_vbat_temp_sense_setup(struct brcms_phy *pi, u8 mode)
+ 	udelay(999);
+ }
+ 
+-void WLBANDINITFN(wlc_lcnphy_tx_pwr_ctrl_init) (struct brcms_phy_pub *ppi)
++static void WLBANDINITFN(wlc_lcnphy_tx_pwr_ctrl_init) (struct brcms_phy_pub *ppi)
+ {
+ 	struct lcnphy_txgains tx_gains;
+ 	u8 bbmult;
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phytbl_lcn.h b/drivers/staging/brcm80211/brcmsmac/phy/phytbl_lcn.h
+index 644389f..5f75e16 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phytbl_lcn.h
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phytbl_lcn.h
+@@ -22,6 +22,8 @@ extern const u32 dot11lcnphytbl_rx_gain_info_sz_rev0;
+ extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313;
+ extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_epa;
+ extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_epa_combo;
++extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_bt_epa;
++extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_bt_epa_p250;
+ 
+ extern const struct phytbl_info dot11lcnphytbl_info_rev0[];
+ extern const u32 dot11lcnphytbl_info_sz_rev0;
+-- 
+1.7.4.1
 
-With the rt2870sta driver, the machine has been solid for months (2.6.38) 
-with consistent low pings:
 
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=2 ttl=64 time=1.38 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=3 ttl=64 time=0.520 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=4 ttl=64 time=1.11 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=5 ttl=64 time=0.573 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=6 ttl=64 time=0.562 ms
-
-Can we please get the rt2870sta back into the kernel?
-
-If not, can someone recommend a USB wireless stick that works in Linux 
-that is not based on RALINK that does not crash the kernel and gets as 
-good as pings as the one I have (most highest rated on Amazon that 
-everyone seems to buy) with the rt2870sta driver?
-http://www.amazon.com/Medialink-Wireless-Adapter-802-11n-Compatible/dp/B002RM08RE
-
-
-Justin.
