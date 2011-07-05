@@ -1,91 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53676 "EHLO nbd.name"
+Received: from mms2.broadcom.com ([216.31.210.18]:2883 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753063Ab1GEDLq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 23:11:46 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	mickflemm@gmail.com
-Subject: [PATCH v2 7/8] ath5k: disable 32KHz sleep clock operation by default
-Date: Tue,  5 Jul 2011 10:11:23 +0700
-Message-Id: <1309835484-26653-7-git-send-email-nbd@openwrt.org> (sfid-20110705_051155_994325_DD085A3F)
-In-Reply-To: <1309835484-26653-6-git-send-email-nbd@openwrt.org>
-References: <1309835484-26653-1-git-send-email-nbd@openwrt.org>
- <1309835484-26653-2-git-send-email-nbd@openwrt.org>
- <1309835484-26653-3-git-send-email-nbd@openwrt.org>
- <1309835484-26653-4-git-send-email-nbd@openwrt.org>
- <1309835484-26653-5-git-send-email-nbd@openwrt.org>
- <1309835484-26653-6-git-send-email-nbd@openwrt.org>
+	id S1752717Ab1GETrG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 15:47:06 -0400
+Message-ID: <4E136A27.6060207@broadcom.com> (sfid-20110705_214712_621161_1E2ABDEF)
+Date: Tue, 5 Jul 2011 21:46:47 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Greg KH" <greg@kroah.com>
+cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 000/119] staging: brcm80211: more code cleanup and
+ bug fixed
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+ <20110705165949.GA18531@kroah.com> <4E1362D5.2040806@broadcom.com>
+In-Reply-To: <4E1362D5.2040806@broadcom.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While 32 KHz sleep clock might provide some power saving benefits,
-it is also a major source of stability issues, on OpenWrt it produced
-some reproducible data bus errors on register accesses on several
-different MIPS platforms.
+On 07/05/2011 09:15 PM, Arend van Spriel wrote:
+> On 07/05/2011 06:59 PM, Greg KH wrote:
+>> On Wed, Jun 29, 2011 at 04:46:24PM -0700, Franky Lin wrote:
+>>> Most of these patches are brcmfmac cleanup.
+>> Not all of them applied, care to redo the ones that didn't and resend
+>> them?
+>>
+>> thanks,
+>>
+>> greg k-h
+> Will do when I figured out which ones are not applying. Franky, as are
+> all valley broadcom folks, is not in today (fourth of july aftermath).
+> Here in Holland we have other days to celebrate so taking over from him.
+> Can you provide me the info about the not applying patches. I applied
+> them all on top of staging-next as it was this morning and that went
+> fine. Did we miss some brcm80211 patches not coming from us? I will
+> start digging here to find out, but you are more than welcome to provide
+> any info.
+>
+> Gr. AvS
 
-All the Atheros drivers that I can find do not enable this feature,
-so it makes sense to leave it disabled in ath5k as well.
+Hi Greg,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath5k/ath5k.h |    2 ++
- drivers/net/wireless/ath/ath5k/debug.c |    3 +++
- drivers/net/wireless/ath/ath5k/reset.c |   11 ++++++++---
- 3 files changed, 13 insertions(+), 3 deletions(-)
+This is what I excavated so far. Looking at git.kernel.org it seems like 
+patch 92 in the series got applied at the end of the series. Up to patch 
+92 it went fine, but it started to derail from there. I have clear 
+picture which patches are missing and will resend them.
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index c4c02d5..6ea4d5d 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1066,6 +1066,8 @@ struct ath5k_hw {
- 	u8			ah_retry_long;
- 	u8			ah_retry_short;
- 
-+	u32			ah_use_32khz_clock;
-+
- 	u8			ah_coverage_class;
- 	bool			ah_ack_bitrate_high;
- 	u8			ah_bwmode;
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index 0bf7313..c0cebb7 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -918,6 +918,9 @@ ath5k_debug_init_device(struct ath5k_softc *sc)
- 
- 	debugfs_create_file("queue", S_IWUSR | S_IRUSR, phydir, sc,
- 			    &fops_queue);
-+
-+	debugfs_create_bool("32khz_clock", S_IWUSR | S_IRUSR, phydir,
-+			    &sc->ah->ah_use_32khz_clock);
- }
- 
- /* functions used in other places */
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index efcc4df..d94db31 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -1287,11 +1287,16 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 	ath5k_hw_dma_init(ah);
- 
- 
--	/* Enable 32KHz clock function for AR5212+ chips
-+	/*
-+	 * Enable 32KHz clock function for AR5212+ chips
- 	 * Set clocks to 32KHz operation and use an
- 	 * external 32KHz crystal when sleeping if one
--	 * exists */
--	if (ah->ah_version == AR5K_AR5212 &&
-+	 * exists.
-+	 * Disabled by default because it is also disabled in
-+	 * other drivers and it is known to cause stability
-+	 * issues on some devices
-+	 */
-+	if (ah->ah_use_32khz_clock && ah->ah_version == AR5K_AR5212 &&
- 	    op_mode != NL80211_IFTYPE_AP)
- 		ath5k_hw_set_sleep_clock(ah, true);
- 
+Gr. AvS
+
 -- 
-1.7.3.2
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
 
