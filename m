@@ -1,84 +1,265 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:55169 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751341Ab1GMUjt convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44015 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751572Ab1GEUqx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 16:39:49 -0400
-Received: by ywe9 with SMTP id 9so2578202ywe.19
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2011 13:39:49 -0700 (PDT)
+	Tue, 5 Jul 2011 16:46:53 -0400
+Date: Tue, 5 Jul 2011 16:41:07 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2011-07-05
+Message-ID: <20110705204106.GG7540@tuxdriver.com> (sfid-20110705_224658_757371_739C16CD)
 MIME-Version: 1.0
-In-Reply-To: <1310209563-6405-6-git-send-email-hauke@hauke-m.de>
-References: <1310209563-6405-1-git-send-email-hauke@hauke-m.de> <1310209563-6405-6-git-send-email-hauke@hauke-m.de>
-From: Jonas Gorski <jonas.gorski@gmail.com>
-Date: Wed, 13 Jul 2011 22:39:29 +0200
-Message-ID: <CAOiHx=mpRNUtmLHFBw4n9XC4-cf4agc1tn4_twYFvz7=TQStzQ@mail.gmail.com> (sfid-20110713_223953_002244_A4F3B771)
-Subject: Re: [PATCH 05/11] bcma: add mips driver
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
-	zajec5@gmail.com, linux-mips@linux-mips.org, mb@bu3sch.de,
-	george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 July 2011 13:05, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-> index 2ca5eeb..ba9a357 100644
-> --- a/drivers/bcma/main.c
-> +++ b/drivers/bcma/main.c
-> @@ -79,6 +79,7 @@ static int bcma_register_cores(struct bcma_bus *bus)
->                case BCMA_CORE_CHIPCOMMON:
->                case BCMA_CORE_PCI:
->                case BCMA_CORE_PCIE:
-> +               case BCMA_CORE_MIPS_74K:
->                        continue;
->                }
->
-> @@ -138,6 +139,15 @@ int bcma_bus_register(struct bcma_bus *bus)
->                bcma_core_chipcommon_init(&bus->drv_cc);
->        }
->
-> +#ifdef CONFIG_BCMA_DRIVER_MIPS
-> +       /* Init MIPS core */
-> +       core = bcma_find_core(bus, BCMA_CORE_MIPS_74K);
-> +       if (core) {
-> +               bus->drv_mips.core = core;
-> +               bcma_core_mips_init(&bus->drv_mips);
-> +       }
-> +#endif
+Dave,
 
-You could avoid the ugly ifdefs here by moving it to
-bcma_driver_mips.h and change
+Here is another big batch of changed intended for 3.1.  This looks
+bigger than it is, as it also contains a wireless-2.6 pull to resolve
+some build conflicts.
 
-extern void bcma_core_mips_init(struct bcma_drv_mips *mcore);
+The most noteworth item is yet another rtlwifi-based driver (rtl8192de).
+There is also some HT-phy work for b43, plus the usual contributions
+from the ath9k and iwlwifi crews and a variety of other bits here and
+there.
 
-to
-#ifdef CONFIG_BCMA_DRIVER_MIPS
-extern void bcma_core_mips_init(struct bcma_drv_mips *mcore);
-#else
-static inline void bcma_core_mips_init(struct bcma_drv_mips *mcore) { }
-#endif
+Please let me know if there are problems!
 
-assuming the bus->drv_mips.core being set doesn't have any side
-effects in the no mips core driver case.
+Thanks,
 
-> +
->        /* Init PCIE core */
->        core = bcma_find_core(bus, BCMA_CORE_PCIE);
->        if (core) {
-> @@ -200,6 +210,15 @@ int __init bcma_bus_early_register(struct bcma_bus *bus,
->                bcma_core_chipcommon_init(&bus->drv_cc);
->        }
->
-> +#ifdef CONFIG_BCMA_DRIVER_MIPS
-> +       /* Init MIPS core */
-> +       core = bcma_find_core(bus, BCMA_CORE_MIPS_74K);
-> +       if (core) {
-> +               bus->drv_mips.core = core;
-> +               bcma_core_mips_init(&bus->drv_mips);
-> +       }
-> +#endif
+John
 
-Ditto.
+---
+
+The following changes since commit 7d09926d1decb658d4e24f70216b6b0b74168026:
+
+  bnx2x: Fix warning message during 57712/8727 initialization (2011-07-05 04:21:40 -0700)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git for-davem
+
+Arik Nemtsov (5):
+      mac80211: fix rx->key NULL dereference during mic failure
+      mac80211: reestablish mis-configured existing Rx BA sessions
+      mac80211: dynamic PS - don't enter PS when TX frames are pending
+      mac80211: propagate information about STA WME support down
+      wl12xx: AP-mode - use mac80211 indication about STA WME support
+
+Chaoming Li (12):
+      rtlwifi: rtl8192de: Merge def.h
+      rtlwifi: rtl8192de: Merge dynamic management routines
+      rtlwifi: rtl8192de: Merge firmware routines
+      rtlwifi: rtl8192de: Merge hardware routines
+      rtlwifi: rtl8192de: Merge led routines
+      rtlwifi: rtl8192de: Merge phy routines
+      rtlwifi: rtl8192de: Merge register definitions
+      rtlwifi: rtl8192de: Merge rf routines
+      rtlwifi: rtl8192de: Merge main (sw) routines
+      rtlwifi: rtl8192de: Merge table routines
+      rtlwifi: rtl8192de: Merge TX and RX routines
+      rtlwifi: rtl8192de: Modify Kconfig and Makefile routines for new driver
+
+Dan Carpenter (2):
+      mwifiex: restore handling of NULL parameters
+      rtlwifi: potential forever loop in rtl92de_hw_init()
+
+Emmanuel Grumbach (1):
+      iwlagn: Fix a bug introduced by the HUGE command removal
+
+Evgeni Golov (1):
+      iwlagn: fix *_UCODE_API_MAX output in the firmware field
+
+Geert Uytterhoeven (1):
+      bcma: main.c needs to include <linux/slab.h>
+
+Hauke Mehrtens (1):
+      ssb: fix ssb clock rate according to broadcom source
+
+Joe Perches (1):
+      rt2x00: Fix unspeficied typo
+
+Johannes Berg (10):
+      iwlagn: fix change_interface for P2P types
+      iwlagn: use PM ops macro
+      iwlagn: fix cmd queue unmap
+      iwlagn: extend host command timeout
+      iwlagn: fill beacon TX rate properly
+      iwlagn: don't use CCK rates for P2P interfaces
+      iwlagn: fix cmd queue unmap
+      iwlagn: map command buffers BIDI
+      wireless: unify QoS control field definitions
+      mac80211: restrict advertised HW scan rates
+
+John W. Linville (6):
+      Merge branch 'master' of master.kernel.org:/.../padovan/bluetooth-2.6
+      Merge branch 'wireless-2.6' of git://git.kernel.org/.../iwlwifi/iwlwifi-2.6
+      Merge branch 'wireless-next-2.6' of git://git.kernel.org/.../iwlwifi/iwlwifi-2.6
+      iwlagn: use PCI_DMA_* for pci_* operations
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-2.6
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-next-2.6 into for-davem
+
+Jon Mason (3):
+      iwlegacy: remove unnecessary read of PCI_CAP_ID_EXP
+      rtlwifi: remove unnecessary read of PCI_CAP_ID_EXP
+      rtlwifi: use PCI_VENDOR_ID_*
+
+Larry Finger (4):
+      rtlwifi: rtl8192se: Handle duplicate PCI ID 0x10ec:0x8192 conflict with r8192e_pci
+      rtl8192cu: Fix missing firmware load
+      rtlwifi: Fix build problems introduced by merging rtl8192de
+      rtlwifi: rtl8192de: Fix build errors when using allyes configuration
+
+Mohammed Shafi Shajakhan (4):
+      ath9k_hw: Add carrier leak correction in desired gain calculation
+      ath9k_hw: make use of the gain_table_entry macro
+      ath9k: move few descriptor macros to ath9k.h
+      ath9k_htc: Add device ID for Sony UWA-BR100
+
+Paul Stewart (1):
+      mac80211: Drop DS Channel PARAM in directed probe
+
+Rafał Miłecki (10):
+      b43: HT-PHY: prepare place for HT-PHY tables
+      b43: HT-PHY: upload PHY values when switching channel
+      b43: HT-PHY: perform some tables ops on channel switching
+      b43: HT-PHY: add channel switching tables for 2 GHz band
+      b43: HT-PHY: implement lacking 0x908 PHY reg op
+      b43: HT-PHY: replace radio routing magic numbers
+      b43: HT-PHY: init radio when enabling it
+      b43: HT-PHY: add init tables
+      b43: HT-PHY: basic PHY init
+      b43: HT-PHY: correct 0x2059 radio init
+
+Rajkumar Manoharan (2):
+      ath9k_hw: Fix false tx hung detection in AR9003 chips
+      ath9k: Fix locking issue during tx completion
+
+Randy Dunlap (1):
+      bluetooth: uses crypto interfaces, select CRYPTO
+
+Sergei Shtylyov (2):
+      ssb: use pci_dev->revision
+      iwlwifi: use pci_dev->revision, again
+
+Stanislaw Gruszka (1):
+      iwlagn: fix rmmod crash
+
+ drivers/bcma/main.c                             |    1 +
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c     |    8 +-
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c   |   38 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h     |    3 +
+ drivers/net/wireless/ath/ath9k/ath9k.h          |    5 +
+ drivers/net/wireless/ath/ath9k/beacon.c         |    8 +
+ drivers/net/wireless/ath/ath9k/hif_usb.c        |    2 +
+ drivers/net/wireless/ath/ath9k/init.c           |    7 -
+ drivers/net/wireless/ath/ath9k/main.c           |   13 +-
+ drivers/net/wireless/ath/ath9k/xmit.c           |    7 +-
+ drivers/net/wireless/ath/carl9170/rx.c          |    2 +-
+ drivers/net/wireless/b43/Makefile               |    1 +
+ drivers/net/wireless/b43/phy_ht.c               |  132 +-
+ drivers/net/wireless/b43/phy_ht.h               |   14 +-
+ drivers/net/wireless/b43/radio_2059.c           |  135 +
+ drivers/net/wireless/b43/radio_2059.h           |    5 +
+ drivers/net/wireless/b43/tables_phy_ht.c        |  750 +++++
+ drivers/net/wireless/b43/tables_phy_ht.h        |   22 +
+ drivers/net/wireless/iwlegacy/iwl-core.h        |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-1000.c         |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-2000.c         |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c         |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c         |    9 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c     |    2 +
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c      |   17 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c          |   26 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.h          |    2 +
+ drivers/net/wireless/iwlwifi/iwl-core.c         |   16 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h         |    7 -
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c         |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-pci.c          |   20 +-
+ drivers/net/wireless/iwlwifi/iwl-tx.c           |   25 +-
+ drivers/net/wireless/libertas_tf/main.c         |    2 +-
+ drivers/net/wireless/mac80211_hwsim.c           |    2 +
+ drivers/net/wireless/mwifiex/sta_cmd.c          |    2 +
+ drivers/net/wireless/mwifiex/sta_cmdresp.c      |   29 +-
+ drivers/net/wireless/rt2x00/rt2x00queue.h       |    2 +-
+ drivers/net/wireless/rtlwifi/Kconfig            |   15 +-
+ drivers/net/wireless/rtlwifi/Makefile           |    1 +
+ drivers/net/wireless/rtlwifi/pci.c              |   23 +-
+ drivers/net/wireless/rtlwifi/pci.h              |   11 -
+ drivers/net/wireless/rtlwifi/rtl8192ce/reg.h    |    2 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.c     |   20 +
+ drivers/net/wireless/rtlwifi/rtl8192de/Makefile |   14 +
+ drivers/net/wireless/rtlwifi/rtl8192de/def.h    |  269 ++
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c     | 1355 ++++++++
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.h     |  212 ++
+ drivers/net/wireless/rtlwifi/rtl8192de/fw.c     |  790 +++++
+ drivers/net/wireless/rtlwifi/rtl8192de/fw.h     |  155 +
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c     | 2326 ++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.h     |   66 +
+ drivers/net/wireless/rtlwifi/rtl8192de/led.c    |  159 +
+ drivers/net/wireless/rtlwifi/rtl8192de/led.h    |   38 +
+ drivers/net/wireless/rtlwifi/rtl8192de/phy.c    | 3837 +++++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192de/phy.h    |  178 ++
+ drivers/net/wireless/rtlwifi/rtl8192de/reg.h    | 1313 ++++++++
+ drivers/net/wireless/rtlwifi/rtl8192de/rf.c     |  628 ++++
+ drivers/net/wireless/rtlwifi/rtl8192de/rf.h     |   44 +
+ drivers/net/wireless/rtlwifi/rtl8192de/sw.c     |  423 +++
+ drivers/net/wireless/rtlwifi/rtl8192de/sw.h     |   37 +
+ drivers/net/wireless/rtlwifi/rtl8192de/table.c  | 1690 ++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192de/table.h  |   57 +
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.c    |  959 ++++++
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.h    |  756 +++++
+ drivers/net/wireless/rtlwifi/wifi.h             |    3 -
+ drivers/net/wireless/wl12xx/cmd.c               |    9 +-
+ drivers/ssb/main.c                              |    4 +-
+ drivers/ssb/scan.c                              |    3 +-
+ include/linux/ieee80211.h                       |   18 +-
+ include/net/cfg80211.h                          |    2 +-
+ include/net/mac80211.h                          |    2 +
+ net/bluetooth/Kconfig                           |    1 +
+ net/mac80211/agg-rx.c                           |    6 +-
+ net/mac80211/cfg.c                              |    5 +-
+ net/mac80211/ieee80211_i.h                      |    6 +-
+ net/mac80211/mlme.c                             |   41 +-
+ net/mac80211/rx.c                               |    2 +-
+ net/mac80211/scan.c                             |    8 +-
+ net/mac80211/util.c                             |   21 +-
+ net/mac80211/wme.c                              |    3 +-
+ net/mac80211/wme.h                              |    5 -
+ net/mac80211/work.c                             |    2 +-
+ net/mac80211/wpa.c                              |    8 +-
+ net/wireless/nl80211.c                          |    3 +-
+ 84 files changed, 16663 insertions(+), 202 deletions(-)
+ create mode 100644 drivers/net/wireless/b43/tables_phy_ht.c
+ create mode 100644 drivers/net/wireless/b43/tables_phy_ht.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/Makefile
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/def.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/dm.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/fw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/fw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/hw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/led.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/led.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/phy.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/reg.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/rf.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/rf.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/sw.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/table.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/table.h
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/trx.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192de/trx.h
+
+Omnibus patch is available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2011-07-05.patch.bz2
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
