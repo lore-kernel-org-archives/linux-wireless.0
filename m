@@ -1,87 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:37432 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753935Ab1GHIci (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:38665 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753701Ab1GEHhR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2011 04:32:38 -0400
-Received: by bwa19 with SMTP id 19so2444825bwa.15
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2011 01:32:36 -0700 (PDT)
-Subject: pull request: wl12xx 2011-07-05
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 08 Jul 2011 11:32:33 +0300
-Message-ID: <1310113953.1514.607.camel@cumari> (sfid-20110708_103242_281645_169EC4F6)
-Mime-Version: 1.0
+	Tue, 5 Jul 2011 03:37:17 -0400
+Received: by pzk9 with SMTP id 9so2227101pzk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2011 00:37:17 -0700 (PDT)
+Date: Tue, 5 Jul 2011 10:36:15 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Franky Lin <frankyl@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 061/119] staging: brcm80211: further renaming in fullmac
+ sources
+Message-ID: <20110705073615.GO2544@shale.localdomain> (sfid-20110705_093726_827911_DEAF7E27)
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+ <1309391303-22741-62-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1309391303-22741-62-git-send-email-frankyl@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Wed, Jun 29, 2011 at 04:47:25PM -0700, Franky Lin wrote:
+> @@ -1046,7 +1038,7 @@ void brcmf_c_pktfilter_offload_set(dhd_pub_t *dhd, char *arg)
+>  
+>  	memcpy(arg_save, arg, strlen(arg) + 1);
+>  
+> -	if (strlen(arg) > BUF_SIZE) {
+> +	if (strlen(arg) > PKTFILTER_BUF_SIZE) {
 
-Here is another batch of patches for 3.1, probably the last one if Linus
-releases 3.0 next week, as he suggested.
+strlen() doesn't include the NULL terminator so probably this test
+is off by one.  I didn't actually follow the code through to see
+where the buffer overflow happens.  The arg_save buffer is
+dynamically allocated to the correct size...  buf was the only
+buffer that is PKTFILTER_BUF_SIZE and it stores a different string.
 
-These are just a couple of clean-ups and bugfixes, mostly in AP-mode, by
-Arik.
+(maybe the test can just be removed?).
 
-Please pull or let me know if there's any problem. This tree is based
-on wireless-next/master.
+This whole function could be cleaned up with regards to string
+handling.
 
-Thanks!
+For example:
+	str = "pkt_filter_add";
+	str_len = strlen(str);
+	strncpy(buf, str, str_len);
+	buf[str_len] = '\0';
 
-The following changes since commit 5f0dd296a01c8173fcc05a8b262a1168ae90bc74:
+could be replaced with:
+	strcpy(buf, "pkt_filter_add");
 
-  rt2x00: Implement tx_frames_pending mac80211 callback function. (2011-07-07 13:21:00 -0400)
+>  		DHD_ERROR(("Not enough buffer %d < %d\n", (int)strlen(arg),
+>  			   (int)sizeof(buf)));
+>  		goto fail;
 
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linville
-
-Arik Nemtsov (7):
-      wl12xx: AP mode - support FW TX inactivity triggers
-      wl12xx: use 802.11 header location after relocation to frame start
-      wl12xx: schedule TX packets according to FW occupancy
-      wl12xx: implement Tx watermarks per AC
-      wl12xx: initialize max_power levels for 11a channels
-      wl12xx: always initialize AP-mode max power level
-      wl12xx: start/stop queues according to global per-AC counters
-
-Eliad Peller (3):
-      wl12xx: configure suspend/resume only if associated/started
-      wl12xx: add stop_scan command
-      wl12xx: implement cancel_hw_scan() callback
-
-Ido Yariv (1):
-      wl12xx: Increase low & high TX watermarks
-
-Ohad Ben-Cohen (1):
-      wl12xx: one SDIO initialization is enough
-
-Oz Krakowski (1):
-      wl12xx: fix Tx security sequence number handling
-
- drivers/net/wireless/wl12xx/acx.c     |   12 +-
- drivers/net/wireless/wl12xx/acx.h     |    4 +-
- drivers/net/wireless/wl12xx/boot.c    |    4 +-
- drivers/net/wireless/wl12xx/cmd.c     |    6 +-
- drivers/net/wireless/wl12xx/conf.h    |   10 ++-
- drivers/net/wireless/wl12xx/debugfs.c |   15 ++-
- drivers/net/wireless/wl12xx/event.c   |   42 +++++++
- drivers/net/wireless/wl12xx/event.h   |   12 ++-
- drivers/net/wireless/wl12xx/init.c    |    7 +-
- drivers/net/wireless/wl12xx/main.c    |  202 +++++++++++++++++++++++----------
- drivers/net/wireless/wl12xx/ps.c      |    9 +-
- drivers/net/wireless/wl12xx/scan.c    |   27 +++++
- drivers/net/wireless/wl12xx/scan.h    |    1 +
- drivers/net/wireless/wl12xx/sdio.c    |   12 +-
- drivers/net/wireless/wl12xx/tx.c      |  143 ++++++++++++++++--------
- drivers/net/wireless/wl12xx/tx.h      |   28 +++++-
- drivers/net/wireless/wl12xx/wl12xx.h  |   24 +++--
- 17 files changed, 414 insertions(+), 144 deletions(-)
-
--- 
-Cheers,
-Luca.
-
-
+regards,
+dan carpenter
 
