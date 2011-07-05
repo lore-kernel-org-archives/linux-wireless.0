@@ -1,725 +1,306 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:42277 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753796Ab1GQKUt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2011 06:20:49 -0400
-Subject: [PATCH v2 01/23] ath6kl: add bmi.c
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: joe@perches.com, devel@linuxdriverproject.org, gregkh@suse.de,
-	error27@gmail.com
-Date: Sun, 17 Jul 2011 13:20:34 +0300
-Message-ID: <20110717102034.18367.69484.stgit@localhost6.localdomain6> (sfid-20110717_122056_008424_35263493)
-In-Reply-To: <20110717101844.18367.44984.stgit@localhost6.localdomain6>
-References: <20110717101844.18367.44984.stgit@localhost6.localdomain6>
+Received: from mms1.broadcom.com ([216.31.210.17]:2955 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754033Ab1GEWDU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 18:03:20 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 29/31] staging: brcm80211: remove macro WLBANDINITFN
+ from brcmsmac
+Date: Wed, 6 Jul 2011 00:02:56 +0200
+Message-ID: <1309903378-29021-30-git-send-email-arend@broadcom.com> (sfid-20110706_000335_343168_6B7B99C6)
+In-Reply-To: <1309903378-29021-1-git-send-email-arend@broadcom.com>
+References: <1309903378-29021-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/bmi.c |  692 +++++++++++++++++++++++++++++++++
- 1 files changed, 692 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/bmi.c
+The macro WLBANDINITFN does nothing meaningful in the brcmsmac
+driver and has been removed.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/bmi.c b/drivers/net/wireless/ath/ath6kl/bmi.c
-new file mode 100644
-index 0000000..1aed4f1
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath6kl/bmi.c
-@@ -0,0 +1,692 @@
-+/*
-+ * Copyright (c) 2004-2011 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "core.h"
-+#include "hif-ops.h"
-+#include "target.h"
-+#include "debug.h"
-+
-+static int ath6kl_get_bmi_cmd_credits(struct ath6kl *ar)
-+{
-+	u32 addr;
-+	unsigned long timeout;
-+	int ret;
-+
-+	ar->bmi.cmd_credits = 0;
-+
-+	/* Read the counter register to get the command credits */
-+	addr = COUNT_DEC_ADDRESS + (HTC_MAILBOX_NUM_MAX + ENDPOINT1) * 4;
-+
-+	timeout = jiffies + msecs_to_jiffies(BMI_COMMUNICATION_TIMEOUT);
-+	while (time_before(jiffies, timeout) && !ar->bmi.cmd_credits) {
-+
-+		/*
-+		 * Hit the credit counter with a 4-byte access, the first byte
-+		 * read will hit the counter and cause a decrement, while the
-+		 * remaining 3 bytes has no effect. The rationale behind this
-+		 * is to make all HIF accesses 4-byte aligned.
-+		 */
-+		ret = hif_read_write_sync(ar, addr,
-+					 (u8 *)&ar->bmi.cmd_credits, 4,
-+					 HIF_RD_SYNC_BYTE_INC);
-+		if (ret) {
-+			ath6kl_err("Unable to decrement the command credit count register: %d\n",
-+				   ret);
-+			return ret;
-+		}
-+
-+		/* The counter is only 8 bits.
-+		 * Ignore anything in the upper 3 bytes
-+		 */
-+		ar->bmi.cmd_credits &= 0xFF;
-+	}
-+
-+	if (!ar->bmi.cmd_credits) {
-+		ath6kl_err("%s bmi communication timeout\n", __func__);
-+		return -ETIMEDOUT;
-+	}
-+
-+	return 0;
-+}
-+
-+static int ath6kl_bmi_get_rx_lkahd(struct ath6kl *ar, bool need_timeout)
-+{
-+	unsigned long timeout;
-+	u32 rx_word = 0;
-+	int ret = 0;
-+
-+	timeout = jiffies + msecs_to_jiffies(BMI_COMMUNICATION_TIMEOUT);
-+	while ((!need_timeout || time_before(jiffies, timeout)) && !rx_word) {
-+		ret = hif_read_write_sync(ar, RX_LOOKAHEAD_VALID_ADDRESS,
-+					  (u8 *)&rx_word, sizeof(rx_word),
-+					  HIF_RD_SYNC_BYTE_INC);
-+		if (ret) {
-+			ath6kl_err("unable to read RX_LOOKAHEAD_VALID\n");
-+			return ret;
-+		}
-+
-+		 /* all we really want is one bit */
-+		rx_word &= (1 << ENDPOINT1);
-+	}
-+
-+	if (!rx_word) {
-+		ath6kl_err("bmi_recv_buf FIFO empty\n");
-+		return -EINVAL;
-+	}
-+
-+	return ret;
-+}
-+
-+static int ath6kl_bmi_send_buf(struct ath6kl *ar, u8 *buf, u32 len)
-+{
-+	int ret;
-+	u32 addr;
-+
-+	ret = ath6kl_get_bmi_cmd_credits(ar);
-+	if (ret)
-+		return ret;
-+
-+	addr = ar->mbox_info.htc_addr;
-+
-+	ret = hif_read_write_sync(ar, addr, buf, len,
-+				  HIF_WR_SYNC_BYTE_INC);
-+	if (ret)
-+		ath6kl_err("unable to send the bmi data to the device\n");
-+
-+	return ret;
-+}
-+
-+static int ath6kl_bmi_recv_buf(struct ath6kl *ar,
-+			u8 *buf, u32 len, bool want_timeout)
-+{
-+	int ret;
-+	u32 addr;
-+
-+	/*
-+	 * During normal bootup, small reads may be required.
-+	 * Rather than issue an HIF Read and then wait as the Target
-+	 * adds successive bytes to the FIFO, we wait here until
-+	 * we know that response data is available.
-+	 *
-+	 * This allows us to cleanly timeout on an unexpected
-+	 * Target failure rather than risk problems at the HIF level.
-+	 * In particular, this avoids SDIO timeouts and possibly garbage
-+	 * data on some host controllers.  And on an interconnect
-+	 * such as Compact Flash (as well as some SDIO masters) which
-+	 * does not provide any indication on data timeout, it avoids
-+	 * a potential hang or garbage response.
-+	 *
-+	 * Synchronization is more difficult for reads larger than the
-+	 * size of the MBOX FIFO (128B), because the Target is unable
-+	 * to push the 129th byte of data until AFTER the Host posts an
-+	 * HIF Read and removes some FIFO data.  So for large reads the
-+	 * Host proceeds to post an HIF Read BEFORE all the data is
-+	 * actually available to read.  Fortunately, large BMI reads do
-+	 * not occur in practice -- they're supported for debug/development.
-+	 *
-+	 * So Host/Target BMI synchronization is divided into these cases:
-+	 *  CASE 1: length < 4
-+	 *        Should not happen
-+	 *
-+	 *  CASE 2: 4 <= length <= 128
-+	 *        Wait for first 4 bytes to be in FIFO
-+	 *        If CONSERVATIVE_BMI_READ is enabled, also wait for
-+	 *        a BMI command credit, which indicates that the ENTIRE
-+	 *        response is available in the the FIFO
-+	 *
-+	 *  CASE 3: length > 128
-+	 *        Wait for the first 4 bytes to be in FIFO
-+	 *
-+	 * For most uses, a small timeout should be sufficient and we will
-+	 * usually see a response quickly; but there may be some unusual
-+	 * (debug) cases of BMI_EXECUTE where we want an larger timeout.
-+	 * For now, we use an unbounded busy loop while waiting for
-+	 * BMI_EXECUTE.
-+	 *
-+	 * If BMI_EXECUTE ever needs to support longer-latency execution,
-+	 * especially in production, this code needs to be enhanced to sleep
-+	 * and yield.  Also note that BMI_COMMUNICATION_TIMEOUT is currently
-+	 * a function of Host processor speed.
-+	 */
-+	if (len >= 4) { /* NB: Currently, always true */
-+		ret = ath6kl_bmi_get_rx_lkahd(ar, want_timeout);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	addr = ar->mbox_info.htc_addr;
-+	ret = hif_read_write_sync(ar, addr, buf, len,
-+				  HIF_RD_SYNC_BYTE_INC);
-+	if (ret) {
-+		ath6kl_err("Unable to read the bmi data from the device: %d\n",
-+			   ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+int ath6kl_bmi_done(struct ath6kl *ar)
-+{
-+	int ret;
-+	u32 cid = BMI_DONE;
-+
-+	if (ar->bmi.done_sent) {
-+		ath6kl_dbg(ATH6KL_DBG_BMI, "bmi done skipped\n");
-+		return 0;
-+	}
-+
-+	ar->bmi.done_sent = true;
-+
-+	ret = ath6kl_bmi_send_buf(ar, (u8 *)&cid, sizeof(cid));
-+	if (ret) {
-+		ath6kl_err("Unable to send bmi done: %d\n", ret);
-+		return ret;
-+	}
-+
-+	ath6kl_bmi_cleanup(ar);
-+
-+	return 0;
-+}
-+
-+int ath6kl_bmi_get_target_info(struct ath6kl *ar,
-+			       struct ath6kl_bmi_target_info *targ_info)
-+{
-+	int ret;
-+	u32 cid = BMI_GET_TARGET_INFO;
-+
-+	if (ar->bmi.done_sent) {
-+		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
-+		return -EACCES;
-+	}
-+
-+	ret = ath6kl_bmi_send_buf(ar, (u8 *)&cid, sizeof(cid));
-+	if (ret) {
-+		ath6kl_err("Unable to send get target info: %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = ath6kl_bmi_recv_buf(ar, (u8 *)&targ_info->version,
-+			sizeof(targ_info->version), true);
-+	if (ret) {
-+		ath6kl_err("Unable to recv target info: %d\n", ret);
-+		return ret;
-+	}
-+
-+	if (le32_to_cpu(targ_info->version) == TARGET_VERSION_SENTINAL) {
-+		/* Determine how many bytes are in the Target's targ_info */
-+		ret = ath6kl_bmi_recv_buf(ar,
-+				   (u8 *)&targ_info->byte_count,
-+				   sizeof(targ_info->byte_count),
-+				   true);
-+		if (ret) {
-+			ath6kl_err("unable to read target info byte count: %d\n",
-+				   ret);
-+			return ret;
-+		}
-+
-+		/*
-+		 * The target's targ_info doesn't match the host's targ_info.
-+		 * We need to do some backwards compatibility to make this work.
-+		 */
-+		if (le32_to_cpu(targ_info->byte_count) != sizeof(*targ_info)) {
-+			WARN_ON(1);
-+			return -EINVAL;
-+		}
-+
-+		/* Read the remainder of the targ_info */
-+		ret = ath6kl_bmi_recv_buf(ar,
-+				   ((u8 *)targ_info) +
-+				   sizeof(targ_info->byte_count),
-+				   sizeof(*targ_info) -
-+				   sizeof(targ_info->byte_count),
-+				   true);
-+
-+		if (ret) {
-+			ath6kl_err("Unable to read target info (%d bytes): %d\n",
-+				   targ_info->byte_count, ret);
-+			return ret;
-+		}
-+	}
-+
-+	ath6kl_dbg(ATH6KL_DBG_BMI, "target info (ver: 0x%x type: 0x%x)\n",
-+		targ_info->version, targ_info->type);
-+
-+	return 0;
-+}
-+
-+int ath6kl_bmi_read(struct ath6kl *ar, u32 addr, u8 *buf, u32 len)
-+{
-+	u32 cid = BMI_READ_MEMORY;
-+	int ret;
-+	u32 offset;
-+	u32 len_remain, rx_len;
-+	u16 size;
-+
-+	if (ar->bmi.done_sent) {
-+		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
-+		return -EACCES;
-+	}
-+
-+	size = BMI_DATASZ_MAX + sizeof(cid) + sizeof(addr) + sizeof(len);
-+	if (size > MAX_BMI_CMDBUF_SZ) {
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
-+	memset(ar->bmi.cmd_buf, 0, size);
-+
-+	ath6kl_dbg(ATH6KL_DBG_BMI,
-+		   "bmi read memory: device: addr: 0x%x, len: %d\n",
-+		   addr, len);
-+
-+	len_remain = len;
-+
-+	while (len_remain) {
-+		rx_len = (len_remain < BMI_DATASZ_MAX) ?
-+					len_remain : BMI_DATASZ_MAX;
-+		offset = 0;
-+		memcpy(&(ar->bmi.cmd_buf[offset]), &cid, sizeof(cid));
-+		offset += sizeof(cid);
-+		memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
-+		offset += sizeof(addr);
-+		memcpy(&(ar->bmi.cmd_buf[offset]), &rx_len, sizeof(rx_len));
-+		offset += sizeof(len);
-+
-+		ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
-+		if (ret) {
-+			ath6kl_err("Unable to write to the device: %d\n",
-+				   ret);
-+			return ret;
-+		}
-+		ret = ath6kl_bmi_recv_buf(ar, ar->bmi.cmd_buf, rx_len, true);
-+		if (ret) {
-+			ath6kl_err("Unable to read from the device: %d\n",
-+				   ret);
-+			return ret;
-+		}
-+		memcpy(&buf[len - len_remain], ar->bmi.cmd_buf, rx_len);
-+		len_remain -= rx_len; addr += rx_len;
-+	}
-+
-+	return 0;
-+}
-+
-+int ath6kl_bmi_write(struct ath6kl *ar, u32 addr, u8 *buf, u32 len)
-+{
-+	u32 cid = BMI_WRITE_MEMORY;
-+	int ret;
-+	u32 offset;
-+	u32 len_remain, tx_len;
-+	const u32 header = sizeof(cid) + sizeof(addr) + sizeof(len);
-+	u8 aligned_buf[BMI_DATASZ_MAX];
-+	u8 *src;
-+
-+	if (ar->bmi.done_sent) {
-+		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
-+		return -EACCES;
-+	}
-+
-+	if ((BMI_DATASZ_MAX + header) > MAX_BMI_CMDBUF_SZ) {
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
-+
-+	memset(ar->bmi.cmd_buf, 0, BMI_DATASZ_MAX + header);
-+
-+	ath6kl_dbg(ATH6KL_DBG_BMI,
-+		  "bmi write memory: addr: 0x%x, len: %d\n", addr, len);
-+
-+	len_remain = len;
-+	while (len_remain) {
-+		src = &buf[len - len_remain];
-+
-+		if (len_remain < (BMI_DATASZ_MAX - header)) {
-+			if (len_remain & 3) {
-+				/* align it with 4 bytes */
-+				len_remain = len_remain +
-+					     (4 - (len_remain & 3));
-+				memcpy(aligned_buf, src, len_remain);
-+				src = aligned_buf;
-+			}
-+			tx_len = len_remain;
-+		} else {
-+			tx_len = (BMI_DATASZ_MAX - header);
-+		}
-+
-+		offset = 0;
-+		memcpy(&(ar->bmi.cmd_buf[offset]), &cid, sizeof(cid));
-+		offset += sizeof(cid);
-+		memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
-+		offset += sizeof(addr);
-+		memcpy(&(ar->bmi.cmd_buf[offset]), &tx_len, sizeof(tx_len));
-+		offset += sizeof(tx_len);
-+		memcpy(&(ar->bmi.cmd_buf[offset]), src, tx_len);
-+		offset += tx_len;
-+
-+		ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
-+		if (ret) {
-+			ath6kl_err("Unable to write to the device: %d\n",
-+				   ret);
-+			return ret;
-+		}
-+		len_remain -= tx_len; addr += tx_len;
-+	}
-+
-+	return 0;
-+}
-+
-+int ath6kl_bmi_execute(struct ath6kl *ar, u32 addr, u32 *param)
-+{
-+	u32 cid = BMI_EXECUTE;
-+	int ret;
-+	u32 offset;
-+	u16 size;
-+
-+	if (ar->bmi.done_sent) {
-+		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
-+		return -EACCES;
-+	}
-+
-+	size = sizeof(cid) + sizeof(addr) + sizeof(param);
-+	if (size > MAX_BMI_CMDBUF_SZ) {
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
-+	memset(ar->bmi.cmd_buf, 0, size);
-+
-+	ath6kl_dbg(ATH6KL_DBG_BMI, "bmi execute: addr: 0x%x, param: %d)\n",
-+		   addr, *param);
-+
-+	offset = 0;
-+	memcpy(&(ar->bmi.cmd_buf[offset]), &cid, sizeof(cid));
-+	offset += sizeof(cid);
-+	memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
-+	offset += sizeof(addr);
-+	memcpy(&(ar->bmi.cmd_buf[offset]), param, sizeof(*param));
-+	offset += sizeof(*param);
-+
-+	ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
-+	if (ret) {
-+		ath6kl_err("Unable to write to the device: %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = ath6kl_bmi_recv_buf(ar, ar->bmi.cmd_buf, sizeof(*param), false);
-+	if (ret) {
-+		ath6kl_err("Unable to read from the device: %d\n", ret);
-+		return ret;
-+	}
-+
-+	memcpy(param, ar->bmi.cmd_buf, sizeof(*param));
-+
-+	return 0;
-+}
-+
-+int ath6kl_bmi_set_app_start(struct ath6kl *ar, u32 addr)
-+{
-+	u32 cid = BMI_SET_APP_START;
-+	int ret;
-+	u32 offset;
-+	u16 size;
-+
-+	if (ar->bmi.done_sent) {
-+		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
-+		return -EACCES;
-+	}
-+
-+	size = sizeof(cid) + sizeof(addr);
-+	if (size > MAX_BMI_CMDBUF_SZ) {
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
-+	memset(ar->bmi.cmd_buf, 0, size);
-+
-+	ath6kl_dbg(ATH6KL_DBG_BMI, "bmi set app start: addr: 0x%x\n", addr);
-+
-+	offset = 0;
-+	memcpy(&(ar->bmi.cmd_buf[offset]), &cid, sizeof(cid));
-+	offset += sizeof(cid);
-+	memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
-+	offset += sizeof(addr);
-+
-+	ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
-+	if (ret) {
-+		ath6kl_err("Unable to write to the device: %d\n", ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+int ath6kl_bmi_reg_read(struct ath6kl *ar, u32 addr, u32 *param)
-+{
-+	u32 cid = BMI_READ_SOC_REGISTER;
-+	int ret;
-+	u32 offset;
-+	u16 size;
-+
-+	if (ar->bmi.done_sent) {
-+		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
-+		return -EACCES;
-+	}
-+
-+	size = sizeof(cid) + sizeof(addr);
-+	if (size > MAX_BMI_CMDBUF_SZ) {
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
-+	memset(ar->bmi.cmd_buf, 0, size);
-+
-+	ath6kl_dbg(ATH6KL_DBG_BMI, "bmi read SOC reg: addr: 0x%x\n", addr);
-+
-+	offset = 0;
-+	memcpy(&(ar->bmi.cmd_buf[offset]), &cid, sizeof(cid));
-+	offset += sizeof(cid);
-+	memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
-+	offset += sizeof(addr);
-+
-+	ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
-+	if (ret) {
-+		ath6kl_err("Unable to write to the device: %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = ath6kl_bmi_recv_buf(ar, ar->bmi.cmd_buf, sizeof(*param), true);
-+	if (ret) {
-+		ath6kl_err("Unable to read from the device: %d\n", ret);
-+		return ret;
-+	}
-+	memcpy(param, ar->bmi.cmd_buf, sizeof(*param));
-+
-+	return 0;
-+}
-+
-+int ath6kl_bmi_reg_write(struct ath6kl *ar, u32 addr, u32 param)
-+{
-+	u32 cid = BMI_WRITE_SOC_REGISTER;
-+	int ret;
-+	u32 offset;
-+	u16 size;
-+
-+	if (ar->bmi.done_sent) {
-+		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
-+		return -EACCES;
-+	}
-+
-+	size = sizeof(cid) + sizeof(addr) + sizeof(param);
-+	if (size > MAX_BMI_CMDBUF_SZ) {
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
-+	memset(ar->bmi.cmd_buf, 0, size);
-+
-+	ath6kl_dbg(ATH6KL_DBG_BMI,
-+		   "bmi write SOC reg: addr: 0x%x, param: %d\n",
-+		    addr, param);
-+
-+	offset = 0;
-+	memcpy(&(ar->bmi.cmd_buf[offset]), &cid, sizeof(cid));
-+	offset += sizeof(cid);
-+	memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
-+	offset += sizeof(addr);
-+	memcpy(&(ar->bmi.cmd_buf[offset]), &param, sizeof(param));
-+	offset += sizeof(param);
-+
-+	ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
-+	if (ret) {
-+		ath6kl_err("Unable to write to the device: %d\n", ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+int ath6kl_bmi_lz_data(struct ath6kl *ar, u8 *buf, u32 len)
-+{
-+	u32 cid = BMI_LZ_DATA;
-+	int ret;
-+	u32 offset;
-+	u32 len_remain, tx_len;
-+	const u32 header = sizeof(cid) + sizeof(len);
-+	u16 size;
-+
-+	if (ar->bmi.done_sent) {
-+		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
-+		return -EACCES;
-+	}
-+
-+	size = BMI_DATASZ_MAX + header;
-+	if (size > MAX_BMI_CMDBUF_SZ) {
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
-+	memset(ar->bmi.cmd_buf, 0, size);
-+
-+	ath6kl_dbg(ATH6KL_DBG_BMI, "bmi send LZ data: len: %d)\n",
-+		   len);
-+
-+	len_remain = len;
-+	while (len_remain) {
-+		tx_len = (len_remain < (BMI_DATASZ_MAX - header)) ?
-+			  len_remain : (BMI_DATASZ_MAX - header);
-+
-+		offset = 0;
-+		memcpy(&(ar->bmi.cmd_buf[offset]), &cid, sizeof(cid));
-+		offset += sizeof(cid);
-+		memcpy(&(ar->bmi.cmd_buf[offset]), &tx_len, sizeof(tx_len));
-+		offset += sizeof(tx_len);
-+		memcpy(&(ar->bmi.cmd_buf[offset]), &buf[len - len_remain],
-+			tx_len);
-+		offset += tx_len;
-+
-+		ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
-+		if (ret) {
-+			ath6kl_err("Unable to write to the device: %d\n",
-+				   ret);
-+			return ret;
-+		}
-+
-+		len_remain -= tx_len;
-+	}
-+
-+	return 0;
-+}
-+
-+int ath6kl_bmi_lz_stream_start(struct ath6kl *ar, u32 addr)
-+{
-+	u32 cid = BMI_LZ_STREAM_START;
-+	int ret;
-+	u32 offset;
-+	u16 size;
-+
-+	if (ar->bmi.done_sent) {
-+		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
-+		return -EACCES;
-+	}
-+
-+	size = sizeof(cid) + sizeof(addr);
-+	if (size > MAX_BMI_CMDBUF_SZ) {
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
-+	memset(ar->bmi.cmd_buf, 0, size);
-+
-+	ath6kl_dbg(ATH6KL_DBG_BMI,
-+		   "bmi LZ stream start: addr: 0x%x)\n",
-+		    addr);
-+
-+	offset = 0;
-+	memcpy(&(ar->bmi.cmd_buf[offset]), &cid, sizeof(cid));
-+	offset += sizeof(cid);
-+	memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
-+	offset += sizeof(addr);
-+
-+	ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
-+	if (ret) {
-+		ath6kl_err("Unable to start LZ stream to the device: %d\n",
-+			   ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+int ath6kl_bmi_fast_download(struct ath6kl *ar, u32 addr, u8 *buf, u32 len)
-+{
-+	int ret;
-+	u32 last_word = 0;
-+	u32 last_word_offset = len & ~0x3;
-+	u32 unaligned_bytes = len & 0x3;
-+
-+	ret = ath6kl_bmi_lz_stream_start(ar, addr);
-+	if (ret)
-+		return ret;
-+
-+	if (unaligned_bytes) {
-+		/* copy the last word into a zero padded buffer */
-+		memcpy(&last_word, &buf[last_word_offset], unaligned_bytes);
-+	}
-+
-+	ret = ath6kl_bmi_lz_data(ar, buf, last_word_offset);
-+	if (ret)
-+		return ret;
-+
-+	if (unaligned_bytes)
-+		ret = ath6kl_bmi_lz_data(ar, (u8 *)&last_word, 4);
-+
-+	if (!ret) {
-+		/* Close compressed stream and open a new (fake) one.
-+		 * This serves mainly to flush Target caches. */
-+		ret = ath6kl_bmi_lz_stream_start(ar, 0x00);
-+	}
-+	return ret;
-+}
-+
-+int ath6kl_bmi_init(struct ath6kl *ar)
-+{
-+	ar->bmi.cmd_buf = kzalloc(MAX_BMI_CMDBUF_SZ, GFP_ATOMIC);
-+
-+	if (!ar->bmi.cmd_buf)
-+		return -ENOMEM;
-+
-+	return 0;
-+}
-+
-+void ath6kl_bmi_cleanup(struct ath6kl *ar)
-+{
-+	kfree(ar->bmi.cmd_buf);
-+	ar->bmi.cmd_buf = NULL;
-+}
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/bmac.c        |   12 ++++++------
+ drivers/staging/brcm80211/brcmsmac/main.c        |    4 ++--
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |    6 +++---
+ drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c |   22 +++++++++++-----------
+ drivers/staging/brcm80211/brcmsmac/phy/phy_n.c   |    8 ++++----
+ drivers/staging/brcm80211/brcmsmac/types.h       |    2 --
+ 6 files changed, 26 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/bmac.c b/drivers/staging/brcm80211/brcmsmac/bmac.c
+index 225178e..b25c517 100644
+--- a/drivers/staging/brcm80211/brcmsmac/bmac.c
++++ b/drivers/staging/brcm80211/brcmsmac/bmac.c
+@@ -176,7 +176,7 @@ static void brcms_b_update_slot_timing(struct brcms_hardware *wlc_hw,
+ 	}
+ }
+ 
+-static void WLBANDINITFN(brcms_c_ucode_bsinit) (struct brcms_hardware *wlc_hw)
++static void brcms_c_ucode_bsinit(struct brcms_hardware *wlc_hw)
+ {
+ 	struct wiphy *wiphy = wlc_hw->wlc->wiphy;
+ 
+@@ -209,7 +209,7 @@ static void WLBANDINITFN(brcms_c_ucode_bsinit) (struct brcms_hardware *wlc_hw)
+ }
+ 
+ /* switch to new band but leave it inactive */
+-static u32 WLBANDINITFN(brcms_c_setband_inact) (struct brcms_c_info *wlc,
++static u32 brcms_c_setband_inact(struct brcms_c_info *wlc,
+ 					    uint bandunit)
+ {
+ 	struct brcms_hardware *wlc_hw = wlc->hw;
+@@ -1671,7 +1671,7 @@ brcms_b_write_hw_bcntemplates(struct brcms_hardware *wlc_hw, void *bcn,
+ 	}
+ }
+ 
+-static void WLBANDINITFN(brcms_b_upd_synthpu) (struct brcms_hardware *wlc_hw)
++static void brcms_b_upd_synthpu(struct brcms_hardware *wlc_hw)
+ {
+ 	u16 v;
+ 	struct brcms_c_info *wlc = wlc_hw->wlc;
+@@ -1690,7 +1690,7 @@ static void WLBANDINITFN(brcms_b_upd_synthpu) (struct brcms_hardware *wlc_hw)
+ 
+ /* band-specific init */
+ static void
+-WLBANDINITFN(brcms_b_bsinit) (struct brcms_c_info *wlc, chanspec_t chanspec)
++brcms_b_bsinit(struct brcms_c_info *wlc, chanspec_t chanspec)
+ {
+ 	struct brcms_hardware *wlc_hw = wlc->hw;
+ 
+@@ -1833,7 +1833,7 @@ void brcms_b_phy_reset(struct brcms_hardware *wlc_hw)
+ 
+ /* switch to and initialize new band */
+ static void
+-WLBANDINITFN(brcms_b_setband) (struct brcms_hardware *wlc_hw, uint bandunit,
++brcms_b_setband(struct brcms_hardware *wlc_hw, uint bandunit,
+ 				chanspec_t chanspec) {
+ 	struct brcms_c_info *wlc = wlc_hw->wlc;
+ 	u32 macintmask;
+@@ -1870,7 +1870,7 @@ WLBANDINITFN(brcms_b_setband) (struct brcms_hardware *wlc_hw, uint bandunit,
+ }
+ 
+ /* low-level band switch utility routine */
+-void WLBANDINITFN(brcms_c_setxband) (struct brcms_hardware *wlc_hw,
++void brcms_c_setxband(struct brcms_hardware *wlc_hw,
+ 				     uint bandunit)
+ {
+ 	BCMMSG(wlc_hw->wlc->wiphy, "wl%d: bandunit %d\n", wlc_hw->unit,
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 7c06026..1763c45 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -1024,7 +1024,7 @@ static void brcms_c_bandinit_ordered(struct brcms_c_info *wlc,
+ }
+ 
+ /* band-specific init */
+-static void WLBANDINITFN(brcms_c_bsinit) (struct brcms_c_info *wlc)
++static void brcms_c_bsinit(struct brcms_c_info *wlc)
+ {
+ 	BCMMSG(wlc->wiphy, "wl%d: bandunit %d\n",
+ 		 wlc->pub->unit, wlc->band->bandunit);
+@@ -1041,7 +1041,7 @@ static void WLBANDINITFN(brcms_c_bsinit) (struct brcms_c_info *wlc)
+ }
+ 
+ /* switch to and initialize new band */
+-static void WLBANDINITFN(brcms_c_setband) (struct brcms_c_info *wlc,
++static void brcms_c_setband(struct brcms_c_info *wlc,
+ 					   uint bandunit)
+ {
+ 	int idx;
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+index 7b1b584..17012fb 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -433,7 +433,7 @@ void mod_phy_reg(struct brcms_phy *pi, u16 addr, u16 mask, u16 val)
+ 	pi->phy_wreg = 0;
+ }
+ 
+-static void WLBANDINITFN(wlc_set_phy_uninitted) (struct brcms_phy *pi)
++static void wlc_set_phy_uninitted(struct brcms_phy *pi)
+ {
+ 	int i, j;
+ 
+@@ -816,7 +816,7 @@ u32 wlc_phy_clk_bwbits(struct brcms_phy_pub *pih)
+ 	return phy_bw_clkbits;
+ }
+ 
+-void WLBANDINITFN(wlc_phy_por_inform) (struct brcms_phy_pub *ppi)
++void wlc_phy_por_inform(struct brcms_phy_pub *ppi)
+ {
+ 	struct brcms_phy *pi = (struct brcms_phy *) ppi;
+ 
+@@ -862,7 +862,7 @@ void wlc_phy_hw_state_upd(struct brcms_phy_pub *pih, bool newstate)
+ 	pi->sh->up = newstate;
+ }
+ 
+-void WLBANDINITFN(wlc_phy_init) (struct brcms_phy_pub *pih, chanspec_t chanspec)
++void wlc_phy_init(struct brcms_phy_pub *pih, chanspec_t chanspec)
+ {
+ 	u32 mc;
+ 	initfn_t phy_init = NULL;
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
+index 41ac681..6a3fbe6 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
+@@ -2269,7 +2269,7 @@ static void wlc_lcnphy_vbat_temp_sense_setup(struct brcms_phy *pi, u8 mode)
+ 	udelay(999);
+ }
+ 
+-static void WLBANDINITFN(wlc_lcnphy_tx_pwr_ctrl_init) (struct brcms_phy_pub *ppi)
++static void wlc_lcnphy_tx_pwr_ctrl_init(struct brcms_phy_pub *ppi)
+ {
+ 	struct lcnphy_txgains tx_gains;
+ 	u8 bbmult;
+@@ -3585,7 +3585,7 @@ void wlc_lcnphy_get_tssi(struct brcms_phy *pi, s8 *ofdm_pwr, s8 *cck_pwr)
+ 	}
+ }
+ 
+-void WLBANDINITFN(wlc_phy_cal_init_lcnphy) (struct brcms_phy *pi)
++void wlc_phy_cal_init_lcnphy(struct brcms_phy *pi)
+ {
+ 	return;
+ 
+@@ -3677,7 +3677,7 @@ static void wlc_lcnphy_set_rx_iq_comp(struct brcms_phy *pi, u16 a, u16 b)
+ 
+ }
+ 
+-void WLBANDINITFN(wlc_phy_init_lcnphy) (struct brcms_phy *pi)
++void wlc_phy_init_lcnphy(struct brcms_phy *pi)
+ {
+ 	u8 phybw40;
+ 	struct brcms_phy_lcnphy *pi_lcn = pi->u.pi_lcnphy;
+@@ -4213,7 +4213,7 @@ wlc_lcnphy_tx_iqlo_loopback_cleanup(struct brcms_phy *pi, u16 *values_to_save)
+ }
+ 
+ static void
+-WLBANDINITFN(wlc_lcnphy_load_tx_gain_table) (struct brcms_phy *pi,
++wlc_lcnphy_load_tx_gain_table(struct brcms_phy *pi,
+ 			const struct lcnphy_tx_gain_tbl_entry *gain_table) {
+ 	u32 j;
+ 	struct phytbl_info tab;
+@@ -4297,7 +4297,7 @@ static void wlc_lcnphy_load_rfpower(struct brcms_phy *pi)
+ 	}
+ }
+ 
+-static void WLBANDINITFN(wlc_lcnphy_tbl_init) (struct brcms_phy *pi)
++static void wlc_lcnphy_tbl_init(struct brcms_phy *pi)
+ {
+ 	uint idx;
+ 	u8 phybw40;
+@@ -4392,7 +4392,7 @@ static void WLBANDINITFN(wlc_lcnphy_tbl_init) (struct brcms_phy *pi)
+ 	wlc_lcnphy_clear_papd_comptable(pi);
+ }
+ 
+-static void WLBANDINITFN(wlc_lcnphy_rev0_baseband_init) (struct brcms_phy *pi)
++static void wlc_lcnphy_rev0_baseband_init(struct brcms_phy *pi)
+ {
+ 	u16 afectrl1;
+ 	struct brcms_phy_lcnphy *pi_lcn = pi->u.pi_lcnphy;
+@@ -4439,7 +4439,7 @@ static void WLBANDINITFN(wlc_lcnphy_rev0_baseband_init) (struct brcms_phy *pi)
+ 
+ }
+ 
+-static void WLBANDINITFN(wlc_lcnphy_rev2_baseband_init) (struct brcms_phy *pi)
++static void wlc_lcnphy_rev2_baseband_init(struct brcms_phy *pi)
+ {
+ 	if (CHSPEC_IS5G(pi->radio_chanspec)) {
+ 		mod_phy_reg(pi, 0x416, (0xff << 0), 80 << 0);
+@@ -4509,7 +4509,7 @@ static void wlc_lcnphy_agc_temp_init(struct brcms_phy *pi)
+ 
+ }
+ 
+-static void WLBANDINITFN(wlc_lcnphy_bu_tweaks) (struct brcms_phy *pi)
++static void wlc_lcnphy_bu_tweaks(struct brcms_phy *pi)
+ {
+ 	if (NORADIO_ENAB(pi->pubpi))
+ 		return;
+@@ -4564,7 +4564,7 @@ static void WLBANDINITFN(wlc_lcnphy_bu_tweaks) (struct brcms_phy *pi)
+ 	}
+ }
+ 
+-static void WLBANDINITFN(wlc_lcnphy_baseband_init) (struct brcms_phy *pi)
++static void wlc_lcnphy_baseband_init(struct brcms_phy *pi)
+ {
+ 
+ 	wlc_lcnphy_tbl_init(pi);
+@@ -4574,7 +4574,7 @@ static void WLBANDINITFN(wlc_lcnphy_baseband_init) (struct brcms_phy *pi)
+ 	wlc_lcnphy_bu_tweaks(pi);
+ }
+ 
+-static void WLBANDINITFN(wlc_radio_2064_init) (struct brcms_phy *pi)
++static void wlc_radio_2064_init(struct brcms_phy *pi)
+ {
+ 	u32 i;
+ 	struct lcnphy_radio_regs *lcnphyregs = NULL;
+@@ -4635,7 +4635,7 @@ static void WLBANDINITFN(wlc_radio_2064_init) (struct brcms_phy *pi)
+ 	wlc_lcnphy_rc_cal(pi);
+ }
+ 
+-static void WLBANDINITFN(wlc_lcnphy_radio_init) (struct brcms_phy *pi)
++static void wlc_lcnphy_radio_init(struct brcms_phy *pi)
+ {
+ 	if (NORADIO_ENAB(pi->pubpi))
+ 		return;
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
+index 8e19bd0..f8e4192 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
+@@ -14216,7 +14216,7 @@ bool wlc_phy_bist_check_phy(struct brcms_phy_pub *pih)
+ 	return false;
+ }
+ 
+-static void WLBANDINITFN(wlc_phy_bphy_init_nphy) (struct brcms_phy *pi)
++static void wlc_phy_bphy_init_nphy(struct brcms_phy *pi)
+ {
+ 	u16 addr, val;
+ 
+@@ -14273,7 +14273,7 @@ wlc_phy_table_read_nphy(struct brcms_phy *pi, u32 id, u32 len, u32 offset,
+ }
+ 
+ static void
+-WLBANDINITFN(wlc_phy_static_table_download_nphy) (struct brcms_phy *pi)
++wlc_phy_static_table_download_nphy(struct brcms_phy *pi)
+ {
+ 	uint idx;
+ 
+@@ -14296,7 +14296,7 @@ WLBANDINITFN(wlc_phy_static_table_download_nphy) (struct brcms_phy *pi)
+ 	}
+ }
+ 
+-static void WLBANDINITFN(wlc_phy_tbl_init_nphy) (struct brcms_phy *pi)
++static void wlc_phy_tbl_init_nphy(struct brcms_phy *pi)
+ {
+ 	uint idx = 0;
+ 	u8 antswctrllut;
+@@ -14524,7 +14524,7 @@ static void wlc_phy_txpwrctrl_config_nphy(struct brcms_phy *pi)
+ 		pi->phy_5g_pwrgain = true;
+ }
+ 
+-void WLBANDINITFN(wlc_phy_init_nphy) (struct brcms_phy *pi)
++void wlc_phy_init_nphy(struct brcms_phy *pi)
+ {
+ 	u16 val;
+ 	u16 clip1_ths[2];
+diff --git a/drivers/staging/brcm80211/brcmsmac/types.h b/drivers/staging/brcm80211/brcmsmac/types.h
+index d8514c3..bbf2189 100644
+--- a/drivers/staging/brcm80211/brcmsmac/types.h
++++ b/drivers/staging/brcm80211/brcmsmac/types.h
+@@ -244,8 +244,6 @@
+ #define RXBND		8	/* max # frames to process in brcms_c_recv() */
+ #define TXSBND		8	/* max # tx status to process in wlc_txstatus() */
+ 
+-#define WLBANDINITFN(_fn)	_fn
+-
+ #define BAND_5G(bt)	((bt) == BRCM_BAND_5G)
+ #define BAND_2G(bt)	((bt) == BRCM_BAND_2G)
+ 
+-- 
+1.7.4.1
+
 
