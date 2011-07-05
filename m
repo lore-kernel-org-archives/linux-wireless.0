@@ -1,159 +1,354 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:59715 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752771Ab1GAG1y convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40868 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752271Ab1GEOi6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2011 02:27:54 -0400
-MIME-Version: 1.0
-In-Reply-To: <4E0D5E42.20702@gmail.com>
-References: <4E0D5E42.20702@gmail.com>
-Date: Fri, 1 Jul 2011 11:57:52 +0530
-Message-ID: <BANLkTinBJBnZbHPpdmnYX3EV0SYFd-pRDA@mail.gmail.com> (sfid-20110701_082815_951886_ED8A4420)
-Subject: Re: WARNING: at kernel/timer.c:1011 del_timer_sync+0xa9/0xc4()
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 5 Jul 2011 10:38:58 -0400
+Message-Id: <20110705143810.411675400@sipsolutions.net> (sfid-20110705_163902_404541_65C57B52)
+Date: Tue, 05 Jul 2011 16:35:40 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/3] cfg80211/nl80211: support GTK rekey offload
+References: <20110705143538.696899280@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 1, 2011 at 11:12 AM, Justin P. Mattock
-<justinmattock@gmail.com> wrote:
-> not sure if somebody has posted this or not(did post last week, but no
-> replies on this) I would bisect, but have no time(maybe in the future).
->
-> anyways let me know if you need more info.
-> dmesg here:
-> http://fpaste.org/wLxM/
->
->
-> [ 43.108967] SELinux: initialized (dev fusectl, type fusectl), uses
-> genfs_contexts
-> [ 561.844541] ath: Failed to stop TX DMA!
-> [ 1514.074565] ------------[ cut here ]------------
-> [ 1514.074584] WARNING: at kernel/timer.c:1011 del_timer_sync+0xa9/0xc4()
-> [ 1514.074590] Hardware name: MacBookPro2,2
-> [ 1514.074595] Modules linked in: fuse 8021q cpufreq_ondemand garp stp
-> acpi_cpufreq llc freq_table mperf ipt_REJECT nf_conntrack_ipv4
-> nf_defrag_ipv4 xt_state nf_conntrack iptable_filter ip_tables arc4 radeon
-> ath9k mac80211 ttm ath9k_common drm_kms_helper ath9k_hw drm ath cfg80211
-> uvcvideo videodev btusb bluetooth sky2 v4l2_compat_ioctl32 appletouch
-> iTCO_wdt i2c_i801 joydev i2c_algo_bit iTCO_vendor_support applesmc rfkill
-> i2c_core input_polldev apple_bl video microcode [last unloaded:
-> scsi_wait_scan]
-> [ 1514.074730] Pid: 1550, comm: threaded-ml Not tainted
-> 3.0.0-rc5-00080-gca56a95 #6
-> [ 1514.074735] Call Trace:
-> [ 1514.074739] <IRQ> [<ffffffff8104c560>] warn_slowpath_common+0x83/0x9b
-> [ 1514.074758] [<ffffffff8104c592>] warn_slowpath_null+0x1a/0x1c
-> [ 1514.074767] [<ffffffff81059409>] del_timer_sync+0xa9/0xc4
-> [ 1514.074775] [<ffffffff81059360>] ? process_timeout+0x10/0x10
-> [ 1514.074794] [<ffffffffa003c971>] ath_reset+0x43/0x1d0 [ath9k]
-> [ 1514.074804] [<ffffffff810524b6>] ? _local_bh_enable_ip+0xca/0xce
-> [ 1514.074821] [<ffffffffa0040e71>] ath_tx_complete_aggr+0x7c3/0x7dd [ath9k]
-> [ 1514.074837] [<ffffffffa00406ae>] ? ath_tx_flush_tid+0xe0/0xe0 [ath9k]
-> [ 1514.074855] [<ffffffffa0042396>] ath_tx_tasklet+0x235/0x2cb [ath9k]
-> [ 1514.074871] [<ffffffffa003cd23>] ath9k_tasklet+0xf4/0x135 [ath9k]
-> [ 1514.074880] [<ffffffff81052112>] tasklet_action+0x8d/0xed
-> [ 1514.074889] [<ffffffff810526d4>] __do_softirq+0xdb/0x1ec
-> [ 1514.074899] [<ffffffff8107c0c9>] ? lock_release+0x165/0x18e
-> [ 1514.074910] [<ffffffff814a921c>] call_softirq+0x1c/0x30
-> [ 1514.074919] [<ffffffff8100ab5a>] do_softirq+0x4b/0xa1
-> [ 1514.074927] [<ffffffff810529f5>] irq_exit+0x5d/0xa8
-> [ 1514.074935] [<ffffffff814a9abe>] do_IRQ+0x8e/0xa5
-> [ 1514.074945] [<ffffffff814a1793>] common_interrupt+0x13/0x13
-> [ 1514.074950] <EOI> [<ffffffff81071178>] ? current_kernel_time+0x13/0x34
-> [ 1514.074968] [<ffffffff814a7fba>] ? sysret_check+0x2e/0x69
-> [ 1514.074977] [<ffffffff8107c5b4>] ? trace_hardirqs_on_caller+0x10b/0x12f
-> [ 1514.074988] [<ffffffff8109e501>] audit_syscall_entry+0x11c/0x148
-> [ 1514.074998] [<ffffffff8122ef3e>] ? trace_hardirqs_on_thunk+0x3a/0x3f
-> [ 1514.075076] [<ffffffff814a8089>] auditsys+0x19/0x4a
-> [ 1514.075084] ---[ end trace 834e058f0ef2c378 ]---
-> [ 1514.075092] ------------[ cut here ]------------
-> [ 1514.075101] WARNING: at kernel/softirq.c:98
-> __local_bh_disable+0x45/0xb1()
-> [ 1514.075108] Hardware name: MacBookPro2,2
-> [ 1514.075113] Modules linked in: fuse 8021q cpufreq_ondemand garp stp
-> acpi_cpufreq llc freq_table mperf ipt_REJECT nf_conntrack_ipv4
-> nf_defrag_ipv4 xt_state nf_conntrack iptable_filter ip_tables arc4 radeon
-> ath9k mac80211 ttm ath9k_common drm_kms_helper ath9k_hw drm ath cfg80211
-> uvcvideo videodev btusb bluetooth sky2 v4l2_compat_ioctl32 appletouch
-> iTCO_wdt i2c_i801 joydev i2c_algo_bit iTCO_vendor_support applesmc rfkill
-> i2c_core input_polldev apple_bl video microcode [last unloaded:
-> scsi_wait_scan]
-> [ 1514.075271] Pid: 1550, comm: threaded-ml Tainted: G W
-> 3.0.0-rc5-00080-gca56a95 #6
-> [ 1514.075278] Call Trace:
-> [ 1514.075283] <IRQ> [<ffffffff8104c560>] warn_slowpath_common+0x83/0x9b
-> [ 1514.075303] [<ffffffff814a1061>] ? _raw_spin_lock_bh+0x16/0x45
-> [ 1514.075313] [<ffffffff8104c592>] warn_slowpath_null+0x1a/0x1c
-> [ 1514.075324] [<ffffffff810522aa>] __local_bh_disable+0x45/0xb1
-> [ 1514.075333] [<ffffffff8105232d>] local_bh_disable+0x17/0x19
-> [ 1514.075344] [<ffffffff814a1061>] _raw_spin_lock_bh+0x16/0x45
-> [ 1514.075362] [<ffffffffa003c98c>] ath_reset+0x5e/0x1d0 [ath9k]
-> [ 1514.075372] [<ffffffff810524b6>] ? _local_bh_enable_ip+0xca/0xce
-> [ 1514.075391] [<ffffffffa0040e71>] ath_tx_complete_aggr+0x7c3/0x7dd [ath9k]
-> [ 1514.075409] [<ffffffffa00406ae>] ? ath_tx_flush_tid+0xe0/0xe0 [ath9k]
-> [ 1514.075428] [<ffffffffa0042396>] ath_tx_tasklet+0x235/0x2cb [ath9k]
-> [ 1514.075445] [<ffffffffa003cd23>] ath9k_tasklet+0xf4/0x135 [ath9k]
-> [ 1514.075456] [<ffffffff81052112>] tasklet_action+0x8d/0xed
-> [ 1514.075465] [<ffffffff810526d4>] __do_softirq+0xdb/0x1ec
-> [ 1514.075476] [<ffffffff8107c0c9>] ? lock_release+0x165/0x18e
-> [ 1514.075487] [<ffffffff814a921c>] call_softirq+0x1c/0x30
-> [ 1514.075496] [<ffffffff8100ab5a>] do_softirq+0x4b/0xa1
-> [ 1514.075505] [<ffffffff810529f5>] irq_exit+0x5d/0xa8
-> [ 1514.075514] [<ffffffff814a9abe>] do_IRQ+0x8e/0xa5
-> [ 1514.075524] [<ffffffff814a1793>] common_interrupt+0x13/0x13
-> [ 1514.075529] <EOI> [<ffffffff81071178>] ? current_kernel_time+0x13/0x34
-> [ 1514.075548] [<ffffffff814a7fba>] ? sysret_check+0x2e/0x69
-> [ 1514.075559] [<ffffffff8107c5b4>] ? trace_hardirqs_on_caller+0x10b/0x12f
-> [ 1514.075570] [<ffffffff8109e501>] audit_syscall_entry+0x11c/0x148
-> [ 1514.075580] [<ffffffff8122ef3e>] ? trace_hardirqs_on_thunk+0x3a/0x3f
-> [ 1514.075590] [<ffffffff814a8089>] auditsys+0x19/0x4a
-> [ 1514.075596] ---[ end trace 834e058f0ef2c379 ]---
+From: Johannes Berg <johannes.berg@intel.com>
 
-this commit seems to fix it, what did you do to get this warning?
+In certain circumstances, like WoWLAN scenarios,
+devices may implement (partial) GTK rekeying on
+the device to avoid waking up the host for it.
 
-commit f6b4e4d476b890e1ddebbed8ec4924f9c2750a31
-Author: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Date:   Fri Jun 24 17:38:13 2011 +0530
+In order to successfully go through GTK rekeying,
+the KEK, KCK and the replay counter are required.
 
-    ath9k: Fix locking issue during tx completion
+Add API to let the supplicant hand the parameters
+to the driver which may store it for future GTK
+rekey operations.
 
-    The received tx status of aggregated frame without BlockAck may
-    cause deaf state in AR5416 cards. So the driver does a reset to
-    recover. When this happens, we release the pcu_lock before doing
-    a reset as ath_rest acquires pcu_lock. This is ugly and also not
-    atomic. Fixing this addresses the TX DMA failure also.
+Note that, of course, if GTK rekeying is done by
+the device, the EAP frame must not be passed up
+to userspace, instead a rekey event needs to be
+sent to let userspace update its replay counter.
 
-    ath_tx_complete_aggr can be called from different paths which
-    takes different variants of spin_lock. This patch also addresses
-    the following warning.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/nl80211.h |   39 ++++++++++++++++
+ include/net/cfg80211.h  |   26 +++++++++++
+ net/wireless/mlme.c     |   11 ++++
+ net/wireless/nl80211.c  |  113 ++++++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h  |    4 +
+ 5 files changed, 193 insertions(+)
 
-    WARNING: at kernel/timer.c:1011 del_timer_sync+0x4e/0x50()
-    Call Trace:
-     <IRQ>  [<ffffffff8104be3a>] warn_slowpath_common+0x7a/0xb0
-     [<ffffffff8104be85>] warn_slowpath_null+0x15/0x20
-     [<ffffffff8105915e>] del_timer_sync+0x4e/0x50
-     [<ffffffffa03726be>] ath_reset+0x3e/0x210 [ath9k]
-     [<ffffffff8135cdaf>] ? _raw_spin_unlock_bh+0x1f/0x30
-     [<ffffffffa037760a>] ath_tx_complete_aggr.isra.26+0x54a/0xa40 [ath9k]
+--- a/include/linux/nl80211.h	2011-07-02 00:00:35.000000000 +0200
++++ b/include/linux/nl80211.h	2011-07-02 00:00:44.000000000 +0200
+@@ -483,6 +483,14 @@
+  *	more background information, see
+  *	http://wireless.kernel.org/en/users/Documentation/WoWLAN.
+  *
++ * @NL80211_CMD_SET_REKEY_OFFLOAD: This command is used give the driver
++ *	the necessary information for supporting GTK rekey offload. This
++ *	feature is typically used during WoWLAN. The configuration data
++ *	is contained in %NL80211_ATTR_REKEY_DATA (which is nested and
++ *	contains the data in sub-attributes). After rekeying happened,
++ *	this command may also be sent by the driver as an MLME event to
++ *	inform userspace of the new replay counter.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -605,6 +613,8 @@ enum nl80211_commands {
+ 	NL80211_CMD_SCHED_SCAN_RESULTS,
+ 	NL80211_CMD_SCHED_SCAN_STOPPED,
+ 
++	NL80211_CMD_SET_REKEY_OFFLOAD,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -996,6 +1006,9 @@ enum nl80211_commands {
+  *	are managed in software: interfaces of these types aren't subject to
+  *	any restrictions in their number or combinations.
+  *
++ * @%NL80211_ATTR_REKEY_DATA: nested attribute containing the information
++ *	necessary for GTK rekeying in the device, see &enum nl80211_rekey_data.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1194,6 +1207,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_INTERFACE_COMBINATIONS,
+ 	NL80211_ATTR_SOFTWARE_IFTYPES,
+ 
++	NL80211_ATTR_REKEY_DATA,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -2361,4 +2376,28 @@ enum nl80211_plink_state {
+ 	MAX_NL80211_PLINK_STATES = NUM_NL80211_PLINK_STATES - 1
+ };
+ 
++#define NL80211_KCK_LEN			16
++#define NL80211_KEK_LEN			16
++#define NL80211_REPLAY_CTR_LEN		8
++
++/**
++ * enum nl80211_rekey_data - attributes for GTK rekey offload
++ * @__NL80211_REKEY_DATA_INVALID: invalid number for nested attributes
++ * @NL80211_REKEY_DATA_KEK: key encryption key (binary)
++ * @NL80211_REKEY_DATA_KCK: key confirmation key (binary)
++ * @NL80211_REKEY_DATA_REPLAY_CTR: replay counter (binary)
++ * @NUM_NL80211_REKEY_DATA: number of rekey attributes (internal)
++ * @MAX_NL80211_REKEY_DATA: highest rekey attribute (internal)
++ */
++enum nl80211_rekey_data {
++	__NL80211_REKEY_DATA_INVALID,
++	NL80211_REKEY_DATA_KEK,
++	NL80211_REKEY_DATA_KCK,
++	NL80211_REKEY_DATA_REPLAY_CTR,
++
++	/* keep last */
++	NUM_NL80211_REKEY_DATA,
++	MAX_NL80211_REKEY_DATA = NUM_NL80211_REKEY_DATA - 1
++};
++
+ #endif /* __LINUX_NL80211_H */
+--- a/include/net/cfg80211.h	2011-07-02 00:00:35.000000000 +0200
++++ b/include/net/cfg80211.h	2011-07-02 00:00:44.000000000 +0200
+@@ -1154,6 +1154,18 @@ struct cfg80211_wowlan {
+ };
+ 
+ /**
++ * struct cfg80211_gtk_rekey_data - rekey data
++ * @kek: key encryption key
++ * @kck: key confirmation key
++ * @replay_ctr: replay counter
++ */
++struct cfg80211_gtk_rekey_data {
++	u8 kek[NL80211_KEK_LEN];
++	u8 kck[NL80211_KCK_LEN];
++	u8 replay_ctr[NL80211_REPLAY_CTR_LEN];
++};
++
++/**
+  * struct cfg80211_ops - backend description for wireless configuration
+  *
+  * This struct is registered by fullmac card drivers and/or wireless stacks
+@@ -1197,6 +1209,8 @@ struct cfg80211_wowlan {
+  *
+  * @set_default_mgmt_key: set the default management frame key on an interface
+  *
++ * @set_rekey_data: give the data necessary for GTK rekeying to the driver
++ *
+  * @add_beacon: Add a beacon with given parameters, @head, @interval
+  *	and @dtim_period will be valid, @tail is optional.
+  * @set_beacon: Change the beacon parameters for an access point mode
+@@ -1499,6 +1513,9 @@ struct cfg80211_ops {
+ 				struct net_device *dev,
+ 				struct cfg80211_sched_scan_request *request);
+ 	int	(*sched_scan_stop)(struct wiphy *wiphy, struct net_device *dev);
++
++	int	(*set_rekey_data)(struct wiphy *wiphy, struct net_device *dev,
++				  struct cfg80211_gtk_rekey_data *data);
+ };
+ 
+ /*
+@@ -3033,6 +3050,15 @@ void cfg80211_cqm_rssi_notify(struct net
+ void cfg80211_cqm_pktloss_notify(struct net_device *dev,
+ 				 const u8 *peer, u32 num_packets, gfp_t gfp);
+ 
++/**
++ * cfg80211_gtk_rekey_notify - notify userspace about driver rekeying
++ * @dev: network device
++ * @bssid: BSSID of AP (to avoid races)
++ * @replay_ctr: new replay counter
++ */
++void cfg80211_gtk_rekey_notify(struct net_device *dev, const u8 *bssid,
++			       const u8 *replay_ctr, gfp_t gfp);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+--- a/net/wireless/nl80211.c	2011-07-02 00:00:35.000000000 +0200
++++ b/net/wireless/nl80211.c	2011-07-02 00:00:44.000000000 +0200
+@@ -176,6 +176,7 @@ static const struct nla_policy nl80211_p
+ 	[NL80211_ATTR_WOWLAN_TRIGGERS] = { .type = NLA_NESTED },
+ 	[NL80211_ATTR_STA_PLINK_STATE] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_SCHED_SCAN_INTERVAL] = { .type = NLA_U32 },
++	[NL80211_ATTR_REKEY_DATA] = { .type = NLA_NESTED },
+ };
+ 
+ /* policy for the key attributes */
+@@ -206,6 +207,14 @@ nl80211_wowlan_policy[NUM_NL80211_WOWLAN
+ 	[NL80211_WOWLAN_TRIG_PKT_PATTERN] = { .type = NLA_NESTED },
+ };
+ 
++/* policy for GTK rekey offload attributes */
++static const struct nla_policy
++nl80211_rekey_policy[NUM_NL80211_REKEY_DATA] = {
++	[NL80211_REKEY_DATA_KEK] = { .len = NL80211_KEK_LEN },
++	[NL80211_REKEY_DATA_KCK] = { .len = NL80211_KCK_LEN },
++	[NL80211_REKEY_DATA_REPLAY_CTR] = { .len = NL80211_REPLAY_CTR_LEN },
++};
++
+ /* ifidx get helper */
+ static int nl80211_get_ifidx(struct netlink_callback *cb)
+ {
+@@ -5408,6 +5417,57 @@ static int nl80211_set_wowlan(struct sk_
+ 	return err;
+ }
+ 
++static int nl80211_set_rekey_data(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct nlattr *tb[NUM_NL80211_REKEY_DATA];
++	struct cfg80211_gtk_rekey_data rekey_data;
++	int err;
++
++	if (!info->attrs[NL80211_ATTR_REKEY_DATA])
++		return -EINVAL;
++
++	err = nla_parse(tb, MAX_NL80211_REKEY_DATA,
++			nla_data(info->attrs[NL80211_ATTR_REKEY_DATA]),
++			nla_len(info->attrs[NL80211_ATTR_REKEY_DATA]),
++			nl80211_rekey_policy);
++	if (err)
++		return err;
++
++	if (nla_len(tb[NL80211_REKEY_DATA_REPLAY_CTR]) != NL80211_REPLAY_CTR_LEN)
++		return -ERANGE;
++	if (nla_len(tb[NL80211_REKEY_DATA_KEK]) != NL80211_KEK_LEN)
++		return -ERANGE;
++	if (nla_len(tb[NL80211_REKEY_DATA_KCK]) != NL80211_KCK_LEN)
++		return -ERANGE;
++
++	memcpy(rekey_data.kek, nla_data(tb[NL80211_REKEY_DATA_KEK]),
++	       NL80211_KEK_LEN);
++	memcpy(rekey_data.kck, nla_data(tb[NL80211_REKEY_DATA_KCK]),
++	       NL80211_KCK_LEN);
++	memcpy(rekey_data.replay_ctr,
++	       nla_data(tb[NL80211_REKEY_DATA_REPLAY_CTR]),
++	       NL80211_REPLAY_CTR_LEN);
++
++	wdev_lock(wdev);
++	if (!wdev->current_bss) {
++		err = -ENOTCONN;
++		goto out;
++	}
++
++	if (!rdev->ops->set_rekey_data) {
++		err = -EOPNOTSUPP;
++		goto out;
++	}
++
++	err = rdev->ops->set_rekey_data(&rdev->wiphy, dev, &rekey_data);
++ out:
++	wdev_unlock(wdev);
++	return err;
++}
++
+ #define NL80211_FLAG_NEED_WIPHY		0x01
+ #define NL80211_FLAG_NEED_NETDEV	0x02
+ #define NL80211_FLAG_NEED_RTNL		0x04
+@@ -5939,6 +5999,14 @@ static struct genl_ops nl80211_ops[] = {
+ 		.internal_flags = NL80211_FLAG_NEED_WIPHY |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_SET_REKEY_OFFLOAD,
++		.doit = nl80211_set_rekey_data,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
+ };
+ 
+ static struct genl_multicast_group nl80211_mlme_mcgrp = {
+@@ -6871,6 +6939,51 @@ nl80211_send_cqm_rssi_notify(struct cfg8
+ 
+ 	if (genlmsg_end(msg, hdr) < 0) {
+ 		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_mlme_mcgrp.id, gfp);
++	return;
++
++ nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++}
++
++void nl80211_gtk_rekey_notify(struct cfg80211_registered_device *rdev,
++			      struct net_device *netdev, const u8 *bssid,
++			      const u8 *replay_ctr, gfp_t gfp)
++{
++	struct sk_buff *msg;
++	struct nlattr *rekey_attr;
++	void *hdr;
++
++	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_SET_REKEY_OFFLOAD);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
++	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
++	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, bssid);
++
++	rekey_attr = nla_nest_start(msg, NL80211_ATTR_REKEY_DATA);
++	if (!rekey_attr)
++		goto nla_put_failure;
++
++	NLA_PUT(msg, NL80211_REKEY_DATA_REPLAY_CTR,
++		NL80211_REPLAY_CTR_LEN, replay_ctr);
++
++	nla_nest_end(msg, rekey_attr);
++
++	if (genlmsg_end(msg, hdr) < 0) {
++		nlmsg_free(msg);
+ 		return;
+ 	}
+ 
+--- a/net/wireless/mlme.c	2011-07-02 00:00:35.000000000 +0200
++++ b/net/wireless/mlme.c	2011-07-02 00:00:44.000000000 +0200
+@@ -1084,3 +1084,14 @@ void cfg80211_cqm_pktloss_notify(struct
+ 	nl80211_send_cqm_pktloss_notify(rdev, dev, peer, num_packets, gfp);
+ }
+ EXPORT_SYMBOL(cfg80211_cqm_pktloss_notify);
++
++void cfg80211_gtk_rekey_notify(struct net_device *dev, const u8 *bssid,
++			       const u8 *replay_ctr, gfp_t gfp)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct wiphy *wiphy = wdev->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++
++	nl80211_gtk_rekey_notify(rdev, dev, bssid, replay_ctr, gfp);
++}
++EXPORT_SYMBOL(cfg80211_gtk_rekey_notify);
+--- a/net/wireless/nl80211.h	2011-07-02 00:00:35.000000000 +0200
++++ b/net/wireless/nl80211.h	2011-07-02 00:00:44.000000000 +0200
+@@ -109,4 +109,8 @@ nl80211_send_cqm_pktloss_notify(struct c
+ 				struct net_device *netdev, const u8 *peer,
+ 				u32 num_packets, gfp_t gfp);
+ 
++void nl80211_gtk_rekey_notify(struct cfg80211_registered_device *rdev,
++			      struct net_device *netdev, const u8 *bssid,
++			      const u8 *replay_ctr, gfp_t gfp);
++
+ #endif /* __NET_WIRELESS_NL80211_H */
 
-    Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-
-
->
-> Justin P. Mattock
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
--- 
-shafi
