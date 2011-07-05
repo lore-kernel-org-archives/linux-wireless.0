@@ -1,96 +1,414 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:3940 "EHLO mail.perches.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1473 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751077Ab1GMEa5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 00:30:57 -0400
-Subject: Re: [PATCH 17/24] ath6kl: add main.c
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	gregkh@suse.de
-In-Reply-To: <20110713013545.8517.71741.stgit@localhost6.localdomain6>
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
-	 <20110713013545.8517.71741.stgit@localhost6.localdomain6>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Jul 2011 21:30:56 -0700
-Message-ID: <1310531456.1143.30.camel@Joe-Laptop> (sfid-20110713_063059_271147_D99EDA4E)
-Mime-Version: 1.0
+	id S1754357Ab1GEWDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 18:03:21 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 24/31] staging: brcm80211: moved fullmac definitions
+ from .h to .c files
+Date: Wed, 6 Jul 2011 00:02:51 +0200
+Message-ID: <1309903378-29021-25-git-send-email-arend@broadcom.com> (sfid-20110706_000343_561502_86A1818D)
+In-Reply-To: <1309903378-29021-1-git-send-email-arend@broadcom.com>
+References: <1309903378-29021-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-07-13 at 04:35 +0300, Kalle Valo wrote:
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/main.c | 1337 ++++++++++++++++++++++++++++++++
+From: Roland Vossen <rvossen@broadcom.com>
 
-> +static void ath6kl_add_new_sta(struct ath6kl *ar, u8 *mac, u16 aid, u8 *wpaie,
-> +			u8 ielen, u8 keymgmt, u8 ucipher, u8 auth)
-> +{
-> +	u8 free_slot;
-> +
-> +	free_slot = aid - 1;
-> +	memcpy(ar->sta_list[free_slot].mac, mac, ETH_ALEN);
-> +	memcpy(ar->sta_list[free_slot].wpa_ie, wpaie, ielen);
+And deleted unused definitions. Improves code since it makes clear that the
+definitions are only used by a specific .c file.
 
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c    |    7 +
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |   97 ++++++++++
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h |  223 ------------------------
+ 3 files changed, 104 insertions(+), 223 deletions(-)
 
-Many versions of gcc do not optimize these repeated dereferences.
-It's better to use a temporary local.
-
-	struct ath6kl_sta *sta = &ar->sta_list[free_slot];
-
-	memcpy(sta->mac, mac, ETH_ALEN);
-	memcpy(sta->wpa_ie, wpaie, ielen);
-
-	etc..
-
-> +static void ath6kl_sta_cleanup(struct ath6kl *ar, u8 i)
-> +{
-> +	/* empty the queued pkts in the PS queue if any */
-> +	spin_lock_bh(&ar->sta_list[i].psq_lock);
-> +	skb_queue_purge(&ar->sta_list[i].psq);
-> +	spin_unlock_bh(&ar->sta_list[i].psq_lock);
-> +
-> +	memset(&ar->ap_stats.sta[ar->sta_list[i].aid - 1], 0,
-
-here too.
-
-> +	       sizeof(struct wmi_per_sta_stat));
-> +	memset(&ar->sta_list[i].mac, 0, ETH_ALEN);
-> +	memset(&ar->sta_list[i].wpa_ie, 0, IEEE80211_MAX_IE);
-> +	ar->sta_list[i].aid = 0;
-> +	ar->sta_list[i].sta_flags = 0;
-> +
-> +	ar->sta_list_index = ar->sta_list_index & ~(1 << i);
-> +
-> +}
-[]
-> +void ath6kl_tgt_stats_event(struct ath6kl *ar, u8 *ptr, u32 len)
-> +{
-> +	struct wmi_ap_mode_stat *p = (struct wmi_ap_mode_stat *) ptr;
-> +	struct wmi_ap_mode_stat *ap = &ar->ap_stats;
-> +	u8 ac;
-> +
-> +	if (ar->nw_type == AP_NETWORK) {
-> +		if (len < sizeof(*p))
-> +			return;
-> +
-> +		for (ac = 0; ac < AP_MAX_NUM_STA; ac++) {
-> +			ath6kl_add_le32(&ap->sta[ac].tx_bytes,
-> +					p->sta[ac].tx_bytes);
-
-maybe better here to use temporaries too.
-
-		struct ath6kl_sta *st_ap = &ap->sta[ac];
-		struct ath6kl_sta *st_p = &p->sta[ac];
-
-> +			ath6kl_add_le32(&ap->sta[ac].tx_pkts,
-> +					p->sta[ac].tx_pkts);
-> +			ath6kl_add_le32(&ap->sta[ac].tx_error,
-> +					p->sta[ac].tx_error);
-
-			ath6kl_add_le32(st_ap->tx_pkts, st_p->tx_pkts);
-			ath6kl_add_le32(st_ap->tx_error, st_p->tx_error);
-
-etc.
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index a527f29..c9e20e1 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -58,6 +58,13 @@
+ /* debugging macros */
+ #define SDLX_MSG(x)
+ 
++#define SDIOH_CMD_TYPE_NORMAL   0	/* Normal command */
++#define SDIOH_CMD_TYPE_APPEND   1	/* Append command */
++#define SDIOH_CMD_TYPE_CUTTHRU  2	/* Cut-through command */
++
++#define SDIOH_DATA_PIO          0	/* PIO mode */
++#define SDIOH_DATA_DMA          1	/* DMA mode */
++
+ struct brcmf_sdio_card {
+ 	bool init_success;	/* underlying driver successfully attached */
+ 	void *sdioh;		/* handler for sdioh */
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index b34914e..722d4c7 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -178,10 +178,107 @@ struct rte_console {
+ #ifndef BRCMF_FIRSTREAD
+ #define BRCMF_FIRSTREAD	32
+ #endif
++
+ #if !ISPOWEROF2(BRCMF_FIRSTREAD)
+ #error BRCMF_FIRSTREAD is not a power of 2!
+ #endif
+ 
++/* SBSDIO_DEVICE_CTL */
++#define SBSDIO_DEVCTL_SETBUSY		0x01	/* 1: device will assert busy signal when
++						 * receiving CMD53
++						 */
++#define SBSDIO_DEVCTL_SPI_INTR_SYNC	0x02	/* 1: assertion of sdio interrupt is
++						 * synchronous to the sdio clock
++						 */
++#define SBSDIO_DEVCTL_CA_INT_ONLY	0x04	/* 1: mask all interrupts to host
++						 * except the chipActive (rev 8)
++						 */
++#define SBSDIO_DEVCTL_PADS_ISO		0x08	/* 1: isolate internal sdio signals, put
++						 * external pads in tri-state; requires
++						 * sdio bus power cycle to clear (rev 9)
++						 */
++#define SBSDIO_DEVCTL_SB_RST_CTL	0x30	/* Force SD->SB reset mapping (rev 11) */
++#define SBSDIO_DEVCTL_RST_CORECTL	0x00	/*   Determined by CoreControl bit */
++#define SBSDIO_DEVCTL_RST_BPRESET	0x10	/*   Force backplane reset */
++#define SBSDIO_DEVCTL_RST_NOBPRESET	0x20	/*   Force no backplane reset */
++
++/* SBSDIO_FUNC1_CHIPCLKCSR */
++#define SBSDIO_FORCE_ALP		0x01	/* Force ALP request to backplane */
++#define SBSDIO_FORCE_HT			0x02	/* Force HT request to backplane */
++#define SBSDIO_FORCE_ILP		0x04	/* Force ILP request to backplane */
++#define SBSDIO_ALP_AVAIL_REQ		0x08	/* Make ALP ready (power up xtal) */
++#define SBSDIO_HT_AVAIL_REQ		0x10	/* Make HT ready (power up PLL) */
++#define SBSDIO_FORCE_HW_CLKREQ_OFF	0x20	/* Squelch clock requests from HW */
++#define SBSDIO_ALP_AVAIL		0x40	/* Status: ALP is ready */
++#define SBSDIO_HT_AVAIL			0x80	/* Status: HT is ready */
++
++#define SBSDIO_AVBITS			(SBSDIO_HT_AVAIL | SBSDIO_ALP_AVAIL)
++#define SBSDIO_ALPAV(regval)		((regval) & SBSDIO_AVBITS)
++#define SBSDIO_HTAV(regval)		(((regval) & SBSDIO_AVBITS) == SBSDIO_AVBITS)
++#define SBSDIO_ALPONLY(regval)		(SBSDIO_ALPAV(regval) && !SBSDIO_HTAV(regval))
++#define SBSDIO_CLKAV(regval, alponly)	(SBSDIO_ALPAV(regval) && \
++					(alponly ? 1 : SBSDIO_HTAV(regval)))
++/* direct(mapped) cis space */
++#define SBSDIO_CIS_BASE_COMMON		0x1000	/* MAPPED common CIS address */
++#define SBSDIO_CIS_SIZE_LIMIT		0x200	/* maximum bytes in one CIS */
++#define SBSDIO_CIS_OFT_ADDR_MASK	0x1FFFF	/* cis offset addr is < 17 bits */
++
++#define SBSDIO_CIS_MANFID_TUPLE_LEN	6	/* manfid tuple length, include tuple,
++						 * link bytes
++						 */
++
++/* intstatus */
++#define I_SMB_SW0	(1 << 0)	/* To SB Mail S/W interrupt 0 */
++#define I_SMB_SW1	(1 << 1)	/* To SB Mail S/W interrupt 1 */
++#define I_SMB_SW2	(1 << 2)	/* To SB Mail S/W interrupt 2 */
++#define I_SMB_SW3	(1 << 3)	/* To SB Mail S/W interrupt 3 */
++#define I_SMB_SW_MASK	0x0000000f	/* To SB Mail S/W interrupts mask */
++#define I_SMB_SW_SHIFT	0	/* To SB Mail S/W interrupts shift */
++#define I_HMB_SW0	(1 << 4)	/* To Host Mail S/W interrupt 0 */
++#define I_HMB_SW1	(1 << 5)	/* To Host Mail S/W interrupt 1 */
++#define I_HMB_SW2	(1 << 6)	/* To Host Mail S/W interrupt 2 */
++#define I_HMB_SW3	(1 << 7)	/* To Host Mail S/W interrupt 3 */
++#define I_HMB_SW_MASK	0x000000f0	/* To Host Mail S/W interrupts mask */
++#define I_HMB_SW_SHIFT	4	/* To Host Mail S/W interrupts shift */
++#define I_WR_OOSYNC	(1 << 8)	/* Write Frame Out Of Sync */
++#define I_RD_OOSYNC	(1 << 9)	/* Read Frame Out Of Sync */
++#define	I_PC		(1 << 10)	/* descriptor error */
++#define	I_PD		(1 << 11)	/* data error */
++#define	I_DE		(1 << 12)	/* Descriptor protocol Error */
++#define	I_RU		(1 << 13)	/* Receive descriptor Underflow */
++#define	I_RO		(1 << 14)	/* Receive fifo Overflow */
++#define	I_XU		(1 << 15)	/* Transmit fifo Underflow */
++#define	I_RI		(1 << 16)	/* Receive Interrupt */
++#define I_BUSPWR	(1 << 17)	/* SDIO Bus Power Change (rev 9) */
++#define I_XMTDATA_AVAIL (1 << 23)	/* bits in fifo */
++#define	I_XI		(1 << 24)	/* Transmit Interrupt */
++#define I_RF_TERM	(1 << 25)	/* Read Frame Terminate */
++#define I_WF_TERM	(1 << 26)	/* Write Frame Terminate */
++#define I_PCMCIA_XU	(1 << 27)	/* PCMCIA Transmit FIFO Underflow */
++#define I_SBINT		(1 << 28)	/* sbintstatus Interrupt */
++#define I_CHIPACTIVE	(1 << 29)	/* chip from doze to active state */
++#define I_SRESET	(1 << 30)	/* CCCR RES interrupt */
++#define I_IOE2		(1U << 31)	/* CCCR IOE2 Bit Changed */
++#define	I_ERRORS	(I_PC | I_PD | I_DE | I_RU | I_RO | I_XU)
++#define I_DMA		(I_RI | I_XI | I_ERRORS)
++
++/* corecontrol */
++#define CC_CISRDY		(1 << 0)	/* CIS Ready */
++#define CC_BPRESEN		(1 << 1)	/* CCCR RES signal */
++#define CC_F2RDY		(1 << 2)	/* set CCCR IOR2 bit */
++#define CC_CLRPADSISO		(1 << 3)	/* clear SDIO pads isolation */
++#define CC_XMTDATAAVAIL_MODE	(1 << 4)
++#define CC_XMTDATAAVAIL_CTRL	(1 << 5)
++
++/* SDA_FRAMECTRL */
++#define SFC_RF_TERM	(1 << 0)	/* Read Frame Terminate */
++#define SFC_WF_TERM	(1 << 1)	/* Write Frame Terminate */
++#define SFC_CRC4WOOS	(1 << 2)	/* CRC error for write out of sync */
++#define SFC_ABORTALL	(1 << 3)	/* Abort all in-progress frames */
++
++/* HW frame tag */
++#define SDPCM_FRAMETAG_LEN	4	/* 2 bytes len, 2 bytes check val */
++
+ /* Total length of frame header for dongle protocol */
+ #define SDPCM_HDRLEN	(SDPCM_FRAMETAG_LEN + SDPCM_SWHEADER_LEN)
+ #ifdef SDTEST
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index a956339..d345472 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -70,75 +70,6 @@ extern const uint brcmf_sdio_msglevel;
+ #define SBSDIO_FUNC1_MISC_REG_START	0x10000	/* f1 misc register start */
+ #define SBSDIO_FUNC1_MISC_REG_LIMIT	0x1001C	/* f1 misc register end */
+ 
+-/* SBSDIO_SPROM_CS */
+-#define SBSDIO_SPROM_IDLE		0
+-#define SBSDIO_SPROM_WRITE		1
+-#define SBSDIO_SPROM_READ		2
+-#define SBSDIO_SPROM_WEN		4
+-#define SBSDIO_SPROM_WDS		7
+-#define SBSDIO_SPROM_DONE		8
+-
+-/* SBSDIO_SPROM_INFO */
+-#define SROM_SZ_MASK			0x03	/* SROM size, 1: 4k, 2: 16k */
+-#define SROM_BLANK			0x04	/* depreciated in corerev 6 */
+-#define	SROM_OTP			0x80	/* OTP present */
+-
+-/* SBSDIO_CHIP_CTRL */
+-#define SBSDIO_CHIP_CTRL_XTAL		0x01	/* or'd with onchip xtal_pu,
+-						 * 1: power on oscillator
+-						 * (for 4318 only)
+-						 */
+-/* SBSDIO_WATERMARK */
+-#define SBSDIO_WATERMARK_MASK		0x7f	/* number of words - 1 for sd device
+-						 * to wait before sending data to host
+-						 */
+-
+-/* SBSDIO_DEVICE_CTL */
+-#define SBSDIO_DEVCTL_SETBUSY		0x01	/* 1: device will assert busy signal when
+-						 * receiving CMD53
+-						 */
+-#define SBSDIO_DEVCTL_SPI_INTR_SYNC	0x02	/* 1: assertion of sdio interrupt is
+-						 * synchronous to the sdio clock
+-						 */
+-#define SBSDIO_DEVCTL_CA_INT_ONLY	0x04	/* 1: mask all interrupts to host
+-						 * except the chipActive (rev 8)
+-						 */
+-#define SBSDIO_DEVCTL_PADS_ISO		0x08	/* 1: isolate internal sdio signals, put
+-						 * external pads in tri-state; requires
+-						 * sdio bus power cycle to clear (rev 9)
+-						 */
+-#define SBSDIO_DEVCTL_SB_RST_CTL	0x30	/* Force SD->SB reset mapping (rev 11) */
+-#define SBSDIO_DEVCTL_RST_CORECTL	0x00	/*   Determined by CoreControl bit */
+-#define SBSDIO_DEVCTL_RST_BPRESET	0x10	/*   Force backplane reset */
+-#define SBSDIO_DEVCTL_RST_NOBPRESET	0x20	/*   Force no backplane reset */
+-
+-/* SBSDIO_FUNC1_CHIPCLKCSR */
+-#define SBSDIO_FORCE_ALP		0x01	/* Force ALP request to backplane */
+-#define SBSDIO_FORCE_HT			0x02	/* Force HT request to backplane */
+-#define SBSDIO_FORCE_ILP		0x04	/* Force ILP request to backplane */
+-#define SBSDIO_ALP_AVAIL_REQ		0x08	/* Make ALP ready (power up xtal) */
+-#define SBSDIO_HT_AVAIL_REQ		0x10	/* Make HT ready (power up PLL) */
+-#define SBSDIO_FORCE_HW_CLKREQ_OFF	0x20	/* Squelch clock requests from HW */
+-#define SBSDIO_ALP_AVAIL		0x40	/* Status: ALP is ready */
+-#define SBSDIO_HT_AVAIL			0x80	/* Status: HT is ready */
+-/* In rev8, actual avail bits followed original docs */
+-#define SBSDIO_Rev8_HT_AVAIL		0x40
+-#define SBSDIO_Rev8_ALP_AVAIL		0x80
+-
+-#define SBSDIO_AVBITS			(SBSDIO_HT_AVAIL | SBSDIO_ALP_AVAIL)
+-#define SBSDIO_ALPAV(regval)		((regval) & SBSDIO_AVBITS)
+-#define SBSDIO_HTAV(regval)		(((regval) & SBSDIO_AVBITS) == SBSDIO_AVBITS)
+-#define SBSDIO_ALPONLY(regval)		(SBSDIO_ALPAV(regval) && !SBSDIO_HTAV(regval))
+-#define SBSDIO_CLKAV(regval, alponly)	(SBSDIO_ALPAV(regval) && \
+-					(alponly ? 1 : SBSDIO_HTAV(regval)))
+-
+-/* SBSDIO_FUNC1_SDIOPULLUP */
+-#define SBSDIO_PULLUP_D0		0x01	/* Enable D0/MISO pullup */
+-#define SBSDIO_PULLUP_D1		0x02	/* Enable D1/INT# pullup */
+-#define SBSDIO_PULLUP_D2		0x04	/* Enable D2 pullup */
+-#define SBSDIO_PULLUP_CMD		0x08	/* Enable CMD/MOSI pullup */
+-#define SBSDIO_PULLUP_ALL		0x0f	/* All valid bits */
+-
+ /* function 1 OCP space */
+ #define SBSDIO_SB_OFT_ADDR_MASK		0x07FFF	/* sb offset addr is <= 15 bits, 32k */
+ #define SBSDIO_SB_OFT_ADDR_LIMIT	0x08000
+@@ -151,166 +82,12 @@ extern const uint brcmf_sdio_msglevel;
+ #define SBSDIO_SBADDRHIGH_MASK		0xffU	/* Valid bits in SBADDRHIGH */
+ #define SBSDIO_SBWINDOW_MASK		0xffff8000	/* Address bits from SBADDR regs */
+ 
+-/* direct(mapped) cis space */
+-#define SBSDIO_CIS_BASE_COMMON		0x1000	/* MAPPED common CIS address */
+-#define SBSDIO_CIS_SIZE_LIMIT		0x200	/* maximum bytes in one CIS */
+-#define SBSDIO_OTP_CIS_SIZE_LIMIT       0x078	/* maximum bytes OTP CIS */
+-
+-#define SBSDIO_CIS_OFT_ADDR_MASK	0x1FFFF	/* cis offset addr is < 17 bits */
+-
+-#define SBSDIO_CIS_MANFID_TUPLE_LEN	6	/* manfid tuple length, include tuple,
+-						 * link bytes
+-						 */
+-
+-/* indirect cis access (in sprom) */
+-#define SBSDIO_SPROM_CIS_OFFSET		0x8	/* 8 control bytes first, CIS starts from
+-						 * 8th byte
+-						 */
+-
+-#define SBSDIO_BYTEMODE_DATALEN_MAX	64	/* sdio byte mode: maximum length of one
+-						 * data command
+-						 */
+-
+-#define SBSDIO_CORE_ADDR_MASK		0x1FFFF	/* sdio core function one address mask */
+-
+-/* corecontrol */
+-#define CC_CISRDY		(1 << 0)	/* CIS Ready */
+-#define CC_BPRESEN		(1 << 1)	/* CCCR RES signal */
+-#define CC_F2RDY		(1 << 2)	/* set CCCR IOR2 bit */
+-#define CC_CLRPADSISO		(1 << 3)	/* clear SDIO pads isolation */
+-#define CC_XMTDATAAVAIL_MODE	(1 << 4)
+-#define CC_XMTDATAAVAIL_CTRL	(1 << 5)
+-
+-/* corestatus */
+-#define CS_PCMCIAMODE	(1 << 0)	/* Device Mode; 0=SDIO, 1=PCMCIA */
+-#define CS_SMARTDEV	(1 << 1)	/* 1=smartDev enabled */
+-#define CS_F2ENABLED	(1 << 2)	/* 1=host has enabled the device */
+-
+-#define PCMCIA_MES_PA_MASK	0x7fff	/* PCMCIA Message Portal Address Mask */
+-#define PCMCIA_MES_PM_MASK	0x7fff	/* PCMCIA Message Portal Mask Mask */
+-#define PCMCIA_WFBC_MASK	0xffff	/* PCMCIA Write Frame Byte Count Mask */
+-#define PCMCIA_UT_MASK		0x07ff	/* PCMCIA Underflow Timer Mask */
+-
+-/* intstatus */
+-#define I_SMB_SW0	(1 << 0)	/* To SB Mail S/W interrupt 0 */
+-#define I_SMB_SW1	(1 << 1)	/* To SB Mail S/W interrupt 1 */
+-#define I_SMB_SW2	(1 << 2)	/* To SB Mail S/W interrupt 2 */
+-#define I_SMB_SW3	(1 << 3)	/* To SB Mail S/W interrupt 3 */
+-#define I_SMB_SW_MASK	0x0000000f	/* To SB Mail S/W interrupts mask */
+-#define I_SMB_SW_SHIFT	0	/* To SB Mail S/W interrupts shift */
+-#define I_HMB_SW0	(1 << 4)	/* To Host Mail S/W interrupt 0 */
+-#define I_HMB_SW1	(1 << 5)	/* To Host Mail S/W interrupt 1 */
+-#define I_HMB_SW2	(1 << 6)	/* To Host Mail S/W interrupt 2 */
+-#define I_HMB_SW3	(1 << 7)	/* To Host Mail S/W interrupt 3 */
+-#define I_HMB_SW_MASK	0x000000f0	/* To Host Mail S/W interrupts mask */
+-#define I_HMB_SW_SHIFT	4	/* To Host Mail S/W interrupts shift */
+-#define I_WR_OOSYNC	(1 << 8)	/* Write Frame Out Of Sync */
+-#define I_RD_OOSYNC	(1 << 9)	/* Read Frame Out Of Sync */
+-#define	I_PC		(1 << 10)	/* descriptor error */
+-#define	I_PD		(1 << 11)	/* data error */
+-#define	I_DE		(1 << 12)	/* Descriptor protocol Error */
+-#define	I_RU		(1 << 13)	/* Receive descriptor Underflow */
+-#define	I_RO		(1 << 14)	/* Receive fifo Overflow */
+-#define	I_XU		(1 << 15)	/* Transmit fifo Underflow */
+-#define	I_RI		(1 << 16)	/* Receive Interrupt */
+-#define I_BUSPWR	(1 << 17)	/* SDIO Bus Power Change (rev 9) */
+-#define I_XMTDATA_AVAIL (1 << 23)	/* bits in fifo */
+-#define	I_XI		(1 << 24)	/* Transmit Interrupt */
+-#define I_RF_TERM	(1 << 25)	/* Read Frame Terminate */
+-#define I_WF_TERM	(1 << 26)	/* Write Frame Terminate */
+-#define I_PCMCIA_XU	(1 << 27)	/* PCMCIA Transmit FIFO Underflow */
+-#define I_SBINT		(1 << 28)	/* sbintstatus Interrupt */
+-#define I_CHIPACTIVE	(1 << 29)	/* chip from doze to active state */
+-#define I_SRESET	(1 << 30)	/* CCCR RES interrupt */
+-#define I_IOE2		(1U << 31)	/* CCCR IOE2 Bit Changed */
+-#define	I_ERRORS	(I_PC | I_PD | I_DE | I_RU | I_RO | I_XU)
+-#define I_DMA		(I_RI | I_XI | I_ERRORS)
+-
+-/* sbintstatus */
+-#define I_SB_SERR	(1 << 8)	/* Backplane SError (write) */
+-#define I_SB_RESPERR	(1 << 9)	/* Backplane Response Error (read) */
+-#define I_SB_SPROMERR	(1 << 10)	/* Error accessing the sprom */
+-
+-/* sdioaccess */
+-#define SDA_DATA_MASK	0x000000ff	/* Read/Write Data Mask */
+-#define SDA_ADDR_MASK	0x000fff00	/* Read/Write Address Mask */
+-#define SDA_ADDR_SHIFT	8	/* Read/Write Address Shift */
+-#define SDA_WRITE	0x01000000	/* Write bit  */
+-#define SDA_READ	0x00000000	/* Write bit cleared for Read */
+-#define SDA_BUSY	0x80000000	/* Busy bit */
+-
+-/* sdioaccess-accessible register address spaces */
+-#define SDA_CCCR_SPACE		0x000	/* CCCR register space */
+-#define SDA_F1_FBR_SPACE	0x100	/* F1 FBR register space */
+-#define SDA_F2_FBR_SPACE	0x200	/* F2 FBR register space */
+-#define SDA_F1_REG_SPACE	0x300	/* F1 core-specific register space */
+-
+-/* SDA_F1_REG_SPACE sdioaccess-accessible F1 reg space register offsets */
+-#define SDA_CHIPCONTROLDATA	0x006	/* ChipControlData */
+-#define SDA_CHIPCONTROLENAB	0x007	/* ChipControlEnable */
+-#define SDA_F2WATERMARK		0x008	/* Function 2 Watermark */
+-#define SDA_DEVICECONTROL	0x009	/* DeviceControl */
+-#define SDA_SBADDRLOW		0x00a	/* SbAddrLow */
+-#define SDA_SBADDRMID		0x00b	/* SbAddrMid */
+-#define SDA_SBADDRHIGH		0x00c	/* SbAddrHigh */
+-#define SDA_FRAMECTRL		0x00d	/* FrameCtrl */
+-#define SDA_CHIPCLOCKCSR	0x00e	/* ChipClockCSR */
+-#define SDA_SDIOPULLUP		0x00f	/* SdioPullUp */
+-#define SDA_SDIOWRFRAMEBCLOW	0x019	/* SdioWrFrameBCLow */
+-#define SDA_SDIOWRFRAMEBCHIGH	0x01a	/* SdioWrFrameBCHigh */
+-#define SDA_SDIORDFRAMEBCLOW	0x01b	/* SdioRdFrameBCLow */
+-#define SDA_SDIORDFRAMEBCHIGH	0x01c	/* SdioRdFrameBCHigh */
+-
+-/* SDA_F2WATERMARK */
+-#define SDA_F2WATERMARK_MASK	0x7f	/* F2Watermark Mask */
+-
+-/* SDA_SBADDRLOW */
+-#define SDA_SBADDRLOW_MASK	0x80	/* SbAddrLow Mask */
+-
+-/* SDA_SBADDRMID */
+-#define SDA_SBADDRMID_MASK	0xff	/* SbAddrMid Mask */
+-
+-/* SDA_SBADDRHIGH */
+-#define SDA_SBADDRHIGH_MASK	0xff	/* SbAddrHigh Mask */
+-
+-/* SDA_FRAMECTRL */
+-#define SFC_RF_TERM	(1 << 0)	/* Read Frame Terminate */
+-#define SFC_WF_TERM	(1 << 1)	/* Write Frame Terminate */
+-#define SFC_CRC4WOOS	(1 << 2)	/* CRC error for write out of sync */
+-#define SFC_ABORTALL	(1 << 3)	/* Abort all in-progress frames */
+-
+-/* pcmciaframectrl */
+-#define PFC_RF_TERM	(1 << 0)	/* Read Frame Terminate */
+-#define PFC_WF_TERM	(1 << 1)	/* Write Frame Terminate */
+-
+-/* intrcvlazy */
+-#define	IRL_TO_MASK	0x00ffffff	/* timeout */
+-#define	IRL_FC_MASK	0xff000000	/* frame count */
+-#define	IRL_FC_SHIFT	24	/* frame count */
+-
+-/* rx header flags */
+-#define RXF_CRC		0x0001	/* CRC error detected */
+-#define RXF_WOOS	0x0002	/* write frame out of sync */
+-#define RXF_WF_TERM	0x0004	/* write frame terminated */
+-#define RXF_ABORT	0x0008	/* write frame aborted */
+-#define RXF_DISCARD	(RXF_CRC | RXF_WOOS | RXF_WF_TERM | RXF_ABORT)
+-
+-/* HW frame tag */
+-#define SDPCM_FRAMETAG_LEN	4	/* 2 bytes len, 2 bytes check val */
+-
+ #define SDIOH_READ              0	/* Read request */
+ #define SDIOH_WRITE             1	/* Write request */
+ 
+ #define SDIOH_DATA_FIX          0	/* Fixed addressing */
+ #define SDIOH_DATA_INC          1	/* Incremental addressing */
+ 
+-#define SDIOH_CMD_TYPE_NORMAL   0	/* Normal command */
+-#define SDIOH_CMD_TYPE_APPEND   1	/* Append command */
+-#define SDIOH_CMD_TYPE_CUTTHRU  2	/* Cut-through command */
+-
+-#define SDIOH_DATA_PIO          0	/* PIO mode */
+-#define SDIOH_DATA_DMA          1	/* DMA mode */
+-
+ /* internal return code */
+ #define SUCCESS	0
+ #define ERROR	1
+-- 
+1.7.4.1
 
 
