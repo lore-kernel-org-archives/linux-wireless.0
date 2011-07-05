@@ -1,168 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:45720 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751231Ab1GXQEf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jul 2011 12:04:35 -0400
-Received: by vxh35 with SMTP id 35so2438194vxh.19
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jul 2011 09:04:34 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:4296 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754140Ab1GEUGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 16:06:35 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH v2 21/21] staging: brcm80211: rename external function
+ in wl_cfg80211.c
+Date: Tue, 5 Jul 2011 22:06:17 +0200
+Message-ID: <1309896377-4425-22-git-send-email-arend@broadcom.com> (sfid-20110705_220647_837128_E73C9401)
+In-Reply-To: <1309896377-4425-1-git-send-email-arend@broadcom.com>
+References: <1309896377-4425-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <4E2BA0C5.9030905@candelatech.com>
-References: <CAJ8GFOiTwtS7Ddjo8GR3uJMFtkBY+cFuNo3d4mX_4EwOLN9PxQ@mail.gmail.com>
-	<201107151622.43671.chunkeey@googlemail.com>
-	<CAJ8GFOiQfMvZAHh4ahCx5_ovqh4_83+a3QADVuNVRohaKyAR6A@mail.gmail.com>
-	<201107232235.16710.chunkeey@googlemail.com>
-	<CAJ8GFOiJfJyziNjM60CLmzftD+UczMk72nn8hNoVpBxUoSyrBA@mail.gmail.com>
-	<4E2BA0C5.9030905@candelatech.com>
-Date: Sun, 24 Jul 2011 11:04:33 -0500
-Message-ID: <CAJ8GFOi=xzKUaBT192TnJZ0kMgQ2ja-p7jNRfYj7pEwKFGt75g@mail.gmail.com> (sfid-20110724_180439_341976_B319FD4C)
-Subject: Re: carl9170: Beacons at lower Tx power than data frames?
-From: Harshal Chhaya <harshal@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, Sujith <m.sujith@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 23, 2011 at 11:34 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 07/23/2011 02:18 PM, Harshal Chhaya wrote:
->>
->> On Sat, Jul 23, 2011 at 3:35 PM, Christian Lamparter
->> <chunkeey@googlemail.com>  wrote:
->>>
->>> On Saturday 23 July 2011 21:22:35 Harshal Chhaya wrote:
->>>>
->>>> On Fri, Jul 15, 2011 at 9:22 AM, Christian Lamparter
->>>> <chunkeey@googlemail.com>  wrote:
->>>>>
->>>>> On Thursday 14 July 2011 21:37:29 Harshal Chhaya wrote:
->>>>>>
->>>>>> I am working on an AP design that uses a TI-OMAP3 host processor with
->>>>>> an Atheros AR9170 + AR9101 WLAN chipset. We are currently using
->>>>>> carl9170 version 1.9.2 and carl9170 firmware version 1.9.4.
->>>>>
->>>>> One question: have you considered ath9k_htc? I would certainly
->>>>> recommend
->>>>> it over any ar9170 device.
->>>>
->>>> I was under the impression that AP mode support is better in carl9170
->>>> than in ath9k_htc. I had considered using AR9271 (which is a more
->>>> recent chipset than the AR9170) but decided against it based on my
->>>> understanding (which is based on the info on the wiki pages).
->>>
->>> Interesting... Sujith, can you please take a look at the wiki if
->>> ath9k_htc's AP/P2P
->>> infos are still up to date?
->>
->> Thanks for following up on this. I am really interested to know if I
->> should switch to using the AR9271 (or some other similar chipset).
->>
->>>
->>>> If AR9271 (and ath9k_htc) are more stable and preferable to the AR9170
->>>> w/ carl9170, please let me know.
->>>
->>> AR9271 recevied a lot more testing, so it's ought to perform better.
->>>
->>>> Also, to clarify: my application is a wireless network that needs to
->>>> support 60-70 802.11g clients connecting to the AP using WPA2-PEAP.
->>>> All of the clients are battery powered and use the power save
->>>> mechanisms of 802.11.
->>>
->>> 60-70 clients is a lot. This would rule out ath9k_htc since the firmwares
->>> only supports 7/8 stations at a time and I think that's a reasonable
->>> limit
->>> for any wireless network. Also, with so many stations the hardware crypto
->>> will not have enough space to store all station keys and has to switch to
->>> software de- and encryption.
->>>
->>>> Do you see any issues using AR9170 and carl9170 in this scenario?
->>>
->>> Sorry, but I've no data about this scenario. However some time ago
->>> Ben<greearb@candelatech.com>  played around 128 stations on a ath9k
->>> network. But I don't know if he tested any USB solutions at that time.
->>
->> I agree - ~8 clients is a reasonable number for most wireless
->> networks. However, I have a specific application where I need to
->> support 60-70 clients on a single AP. I will check with Ben on his
->> experience. Thanks for his contact info.
->
-> We haven't used USB, but we can reliably support 128 stations,
-> using WPA on AR9380 and the older mini-pci chipsets.  We have hacks
-> to make wpa_supplicant be much more efficient when using lots
-> of virtual stations on one machine, but no significant changes
-> to AP mode.
+Renamed external function getting rid of wl_ prefix. Removed unused
+function from the API header file wl_cfg80211.h as it was not defined.
 
-Ben,
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ .../brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c        |    2 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |   14 ++++++++------
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c   |   18 +++++++++---------
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h   |   19 +++++++++----------
+ 4 files changed, 27 insertions(+), 26 deletions(-)
 
-Thanks for this information. Did you have to make any changes to
-ath9k_htc on the AP side to support this large number of stations?
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
+index cdaa042..e229bcb 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
+@@ -88,7 +88,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 	gInstance->func[func->num] = func;
+ 
+ 	if (func->num == 2) {
+-		wl_cfg80211_sdio_func(func);
++		brcmf_cfg80211_sdio_func(func);
+ 		sd_trace(("F2 found, calling brcmf_sdio_probe...\n"));
+ 		ret = brcmf_sdio_probe(&sdmmc_dev);
+ 	}
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 8db4609..a6dc346 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -1052,7 +1052,8 @@ static void brcmf_ethtool_get_drvinfo(struct net_device *net,
+ 	sprintf(info->driver, KBUILD_MODNAME);
+ 	sprintf(info->version, "%lu", drvr_priv->pub.drv_version);
+ 	sprintf(info->fw_version, "%s", BCM4329_FW_NAME);
+-	sprintf(info->bus_info, "%s", dev_name(&wl_cfg80211_get_sdio_func()->dev));
++	sprintf(info->bus_info, "%s",
++		dev_name(&brcmf_cfg80211_get_sdio_func()->dev));
+ }
+ 
+ struct ethtool_ops brcmf_ethtool_ops = {
+@@ -1292,7 +1293,7 @@ static int brcmf_netdev_stop(struct net_device *net)
+ 	struct brcmf_info *drvr_priv = *(struct brcmf_info **) netdev_priv(net);
+ 
+ 	DHD_TRACE(("%s: Enter\n", __func__));
+-	wl_cfg80211_down();
++	brcmf_cfg80211_down();
+ 	if (drvr_priv->pub.up == 0)
+ 		return 0;
+ 
+@@ -1338,7 +1339,7 @@ static int brcmf_netdev_open(struct net_device *net)
+ 	/* Allow transmit calls */
+ 	netif_start_queue(net);
+ 	drvr_priv->pub.up = 1;
+-	if (unlikely(wl_cfg80211_up())) {
++	if (unlikely(brcmf_cfg80211_up())) {
+ 		DHD_ERROR(("%s: failed to bring up cfg80211\n",
+ 			   __func__));
+ 		return -1;
+@@ -1464,7 +1465,7 @@ struct brcmf_pub *brcmf_attach(struct brcmf_bus *bus, uint bus_hdrlen)
+ 	}
+ 
+ 	/* Attach and link in the cfg80211 */
+-	if (unlikely(wl_cfg80211_attach(net, &drvr_priv->pub))) {
++	if (unlikely(brcmf_cfg80211_attach(net, &drvr_priv->pub))) {
+ 		DHD_ERROR(("wl_cfg80211_attach failed\n"));
+ 		goto fail;
+ 	}
+@@ -1700,7 +1701,7 @@ void brcmf_detach(struct brcmf_pub *drvr)
+ 			if (drvr->prot)
+ 				brcmf_proto_detach(drvr);
+ 
+-			wl_cfg80211_detach();
++			brcmf_cfg80211_detach();
+ 
+ 			/* && defined(DHD_GPL) */
+ 			free_netdev(ifp->net);
+@@ -1824,7 +1825,8 @@ static int brcmf_host_event(struct brcmf_info *drvr_priv, int *ifidx, void *pktd
+ 	ASSERT(drvr_priv->iflist[*ifidx] != NULL);
+ 	ASSERT(drvr_priv->iflist[*ifidx]->net != NULL);
+ 	if (drvr_priv->iflist[*ifidx]->net)
+-		wl_cfg80211_event(drvr_priv->iflist[*ifidx]->net, event, *data);
++		brcmf_cfg80211_event(drvr_priv->iflist[*ifidx]->net,
++				     event, *data);
+ 
+ 	return bcmerror;
+ }
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+index d109de1..17a6bf0 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -3440,7 +3440,7 @@ static void wl_deinit_priv(struct brcmf_cfg80211_priv *cfg_priv)
+ 	brcmf_deinit_priv_mem(cfg_priv);
+ }
+ 
+-s32 wl_cfg80211_attach(struct net_device *ndev, void *data)
++s32 brcmf_cfg80211_attach(struct net_device *ndev, void *data)
+ {
+ 	struct wireless_dev *wdev;
+ 	struct brcmf_cfg80211_priv *cfg_priv;
+@@ -3456,9 +3456,9 @@ s32 wl_cfg80211_attach(struct net_device *ndev, void *data)
+ 		WL_ERR("wl_cfg80211_dev is invalid\n");
+ 		return -ENOMEM;
+ 	}
+-	WL_INFO("func %p\n", wl_cfg80211_get_sdio_func());
++	WL_INFO("func %p\n", brcmf_cfg80211_get_sdio_func());
+ 	wdev = brcmf_alloc_wdev(sizeof(struct brcmf_cfg80211_iface),
+-				&wl_cfg80211_get_sdio_func()->dev);
++				&brcmf_cfg80211_get_sdio_func()->dev);
+ 	if (IS_ERR(wdev))
+ 		return -ENOMEM;
+ 
+@@ -3485,7 +3485,7 @@ cfg80211_attach_out:
+ 	return err;
+ }
+ 
+-void wl_cfg80211_detach(void)
++void brcmf_cfg80211_detach(void)
+ {
+ 	struct brcmf_cfg80211_priv *cfg_priv;
+ 
+@@ -3536,7 +3536,7 @@ static s32 brcmf_event_handler(void *data)
+ }
+ 
+ void
+-wl_cfg80211_event(struct net_device *ndev,
++brcmf_cfg80211_event(struct net_device *ndev,
+ 		  const struct brcmf_event_msg *e, void *data)
+ {
+ 	u32 event_type = be32_to_cpu(e->event_type);
+@@ -3619,7 +3619,7 @@ static void brcmf_put_event(struct brcmf_cfg80211_event_q *e)
+ 	kfree(e);
+ }
+ 
+-void wl_cfg80211_sdio_func(void *func)
++void brcmf_cfg80211_sdio_func(void *func)
+ {
+ 	cfg80211_sdio_func = (struct sdio_func *)func;
+ }
+@@ -3629,7 +3629,7 @@ static void brcmf_clear_sdio_func(void)
+ 	cfg80211_sdio_func = NULL;
+ }
+ 
+-struct sdio_func *wl_cfg80211_get_sdio_func(void)
++struct sdio_func *brcmf_cfg80211_get_sdio_func(void)
+ {
+ 	return cfg80211_sdio_func;
+ }
+@@ -3938,7 +3938,7 @@ static s32 __brcmf_cfg80211_down(struct brcmf_cfg80211_priv *cfg_priv)
+ 	return 0;
+ }
+ 
+-s32 wl_cfg80211_up(void)
++s32 brcmf_cfg80211_up(void)
+ {
+ 	struct brcmf_cfg80211_priv *cfg_priv;
+ 	s32 err = 0;
+@@ -3951,7 +3951,7 @@ s32 wl_cfg80211_up(void)
+ 	return err;
+ }
+ 
+-s32 wl_cfg80211_down(void)
++s32 brcmf_cfg80211_down(void)
+ {
+ 	struct brcmf_cfg80211_priv *cfg_priv;
+ 	s32 err = 0;
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
+index 3ee7a3f..f26d087 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
+@@ -343,15 +343,14 @@ static inline struct brcmf_bss_info *next_bss(struct brcmf_scan_results *list,
+ #define for_each_bss(list, bss, __i)	\
+ 	for (__i = 0; __i < list->count && __i < WL_AP_MAX; __i++, bss = next_bss(list, bss))
+ 
+-extern s32 wl_cfg80211_attach(struct net_device *ndev, void *data);
+-extern void wl_cfg80211_detach(void);
++extern s32 brcmf_cfg80211_attach(struct net_device *ndev, void *data);
++extern void brcmf_cfg80211_detach(void);
+ /* event handler from dongle */
+-extern void wl_cfg80211_event(struct net_device *ndev,
+-			      const struct brcmf_event_msg *e, void *data);
+-extern void wl_cfg80211_sdio_func(void *func);	/* set sdio function info */
+-extern struct sdio_func *wl_cfg80211_get_sdio_func(void);
+-extern s32 wl_cfg80211_up(void);	/* dongle up */
+-extern s32 wl_cfg80211_down(void);	/* dongle down */
+-extern void wl_cfg80211_dbg_level(u32 level);	/* set dongle
+-							 debugging level */
++extern void brcmf_cfg80211_event(struct net_device *ndev,
++				 const struct brcmf_event_msg *e, void *data);
++extern void brcmf_cfg80211_sdio_func(void *func); /* set sdio function info */
++extern struct sdio_func *brcmf_cfg80211_get_sdio_func(void);
++extern s32 brcmf_cfg80211_up(void);	/* dongle up */
++extern s32 brcmf_cfg80211_down(void);	/* dongle down */
++
+ #endif				/* _wl_cfg80211_h_ */
+-- 
+1.7.4.1
 
-Also, any feedback on whether AR9380 (or AR971) chipset with ath9k_htc
-is a better choice on the AP for a large network than the AR9170 +
-carl9170 (which is what I am currently using)?
 
-
-> Also, we are associating 128 virtual stations from a single or
-> small number of radios.  You may get different behaviour if you
-> are using 128 real radios.
-
-Good point. I would guess that the memory mgmt and CPU load on the AP
-will be similar in both cases - but the actual over-the-air packet
-exchanges could be different.
-
-
-> You can find our hostap repository here:
-> https://github.com/greearb/hostap-ct
-
-Is this a super-set of the patches at
-http://www.candelatech.com/~greearb/patches/hostap-h/?
-
-
-> We are trying to get our changes pushed upstream, but it's a slow
-> process...
->
-> The 'can-scan-one' logic requires hacks to the kernel as well, in case
-> you want to use it.  Our kernel patches are here:
-> http://dmz2.candelatech.com/git/?p=linux-3.0.dev.y/.git;a=summary
-
-We are currently using the 2.6.37 kernel because later kernels don't
-have support for my host processor (TI AM3703).
-
-Also, based on your description of 'can-scan-one' (from the list
-archives), I don't think it applies to my application since I don't
-use virtual interfaces.
-
-But I will take a look at your kernel patches to see which ones apply
-to our config.
-
-> I don't think any of our current kernel wireless patches have a chance at
-> upstream
-> acceptance, but they are fairly minimal, so the stock 3.0 kernel might
-> be fine for you.
->
-> Our hardware is dual-core Atom systems or better, 1GB+ RAM, etc.  These are
-> fairly powerful,
-> and we disable power saving by default.  We use software encryption to allow
-> virtualization.
-
-I am going to try s/w encryption but I can't disable power saving
-since my clients are all battery powered. Also, my current h/w has
-64MB of RAM - I have already asked the hardware guys to double it to
-128. Hopefully that willl be enough.
-
-Thanks again for your help. I will let you know if using software
-encryption helps.
-
-Thanks,
-- Harshal
-
-
->
-> Thanks,
-> Ben
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
