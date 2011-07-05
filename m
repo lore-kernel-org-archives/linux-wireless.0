@@ -1,204 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:65011 "EHLO
-	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756064Ab1GQRDO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2011 13:03:14 -0400
-From: Daniel Drake <dsd@laptop.org>
-To: linville@tuxdriver.com
-To: dcbw@redhat.com
-Cc: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org
-Subject: [PATCH 1/4] libertas: remove auto_deep_sleep functionality
-Message-Id: <20110717170310.CAD139D401C@zog.reactivated.net> (sfid-20110717_190318_089926_46F6C8DA)
-Date: Sun, 17 Jul 2011 18:03:10 +0100 (BST)
+Received: from mms1.broadcom.com ([216.31.210.17]:3143 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752487Ab1GEUGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 16:06:34 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH v2 13/21] staging: brcm80211: replaced macro R_SDREG by
+ function r_sdreg()
+Date: Tue, 5 Jul 2011 22:06:09 +0200
+Message-ID: <1309896377-4425-14-git-send-email-arend@broadcom.com> (sfid-20110705_220638_988206_8DDEE668)
+In-Reply-To: <1309896377-4425-1-git-send-email-arend@broadcom.com>
+References: <1309896377-4425-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is unused and I'm not really sure in what context it was designed to
-be used.
+From: Roland Vossen <rvossen@broadcom.com>
 
-Signed-off-by: Daniel Drake <dsd@laptop.org>
+Code cleanup. Leads to more readable code and better type checking.
+
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/libertas/cmd.c  |   14 ++-----
- drivers/net/wireless/libertas/decl.h |    3 --
- drivers/net/wireless/libertas/dev.h  |    3 --
- drivers/net/wireless/libertas/main.c |   64 ----------------------------------
- 4 files changed, 4 insertions(+), 80 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   68 ++++++++++++++----------
+ 1 files changed, 40 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index dbd24a4..627bdf4 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1024,10 +1024,6 @@ static void lbs_submit_command(struct lbs_private *priv,
- 	}
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 5a15002..13a319d 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -403,7 +403,10 @@ struct rte_console {
  
- 	if (command == CMD_802_11_DEEP_SLEEP) {
--		if (priv->is_auto_deep_sleep_enabled) {
--			priv->wakeup_dev_required = 1;
--			priv->dnld_sent = 0;
--		}
- 		priv->is_deep_sleep = 1;
- 		lbs_complete_command(priv, cmdnode, 0);
- 	} else {
-@@ -1614,12 +1610,10 @@ struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
- 	/* No commands are allowed in Deep Sleep until we toggle the GPIO
- 	 * to wake up the card and it has signaled that it's ready.
- 	 */
--	if (!priv->is_auto_deep_sleep_enabled) {
--		if (priv->is_deep_sleep) {
--			lbs_deb_cmd("command not allowed in deep sleep\n");
--			cmdnode = ERR_PTR(-EBUSY);
--			goto done;
--		}
-+	if (priv->is_deep_sleep) {
-+		lbs_deb_cmd("command not allowed in deep sleep\n");
-+		cmdnode = ERR_PTR(-EBUSY);
-+		goto done;
- 	}
+ BRCMF_SPINWAIT_SLEEP_INIT(sdioh_spinwait_sleep);
  
- 	cmdnode = lbs_get_free_cmd_node(priv);
-diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
-index da0b05b..cfe3272 100644
---- a/drivers/net/wireless/libertas/decl.h
-+++ b/drivers/net/wireless/libertas/decl.h
-@@ -54,9 +54,6 @@ int lbs_resume(struct lbs_private *priv);
- void lbs_queue_event(struct lbs_private *priv, u32 event);
- void lbs_notify_command_response(struct lbs_private *priv, u8 resp_idx);
+-/* Core reg address translation */
++/*
++ * Core reg address translation.
++ * Both macro's returns a 32 bits byte address on the backplane bus.
++ */
+ #define CORE_CC_REG(base, field)	(base + offsetof(chipcregs_t, field))
+ #define CORE_BUS_REG(base, field) \
+ 		(base + offsetof(struct sdpcmd_regs, field))
+@@ -530,7 +533,7 @@ struct chip_info {
+ 	u32 cccorebase;
+ 	u32 ccrev;
+ 	u32 cccaps;
+-	u32 buscorebase;
++	u32 buscorebase; /* 32 bits backplane bus address */
+ 	u32 buscorerev;
+ 	u32 buscoretype;
+ 	u32 ramcorebase;
+@@ -549,7 +552,8 @@ struct brcmf_bus {
+ 	uint varsz;		/* Size of variables buffer */
+ 	u32 sbaddr;		/* Current SB window pointer (-1, invalid) */
  
--int lbs_enter_auto_deep_sleep(struct lbs_private *priv);
--int lbs_exit_auto_deep_sleep(struct lbs_private *priv);
--
- u32 lbs_fw_index_to_data_rate(u8 index);
- u8 lbs_data_rate_to_fw_index(u32 rate);
+-	struct sdpcmd_regs *regs;	/* SDIO core */
++	/* SDIO core, 32 bit address on the backplane bus: */
++	struct sdpcmd_regs *regs;
+ 	uint sdpcmrev;		/* SDIO core revision */
+ 	uint armrev;		/* CPU core revision */
+ 	uint ramrev;		/* SOCRAM core revision */
+@@ -822,24 +826,26 @@ static bool brcmf_readahead;
+ 	(((u8)(bus->tx_max - bus->tx_seq) != 0) && \
+ 	(((u8)(bus->tx_max - bus->tx_seq) & 0x80) == 0))
  
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 76d018b..094e1f2 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -74,12 +74,9 @@ struct lbs_private {
- 	/* Deep sleep */
- 	int is_deep_sleep;
- 	int deep_sleep_required;
--	int is_auto_deep_sleep_enabled;
- 	int wakeup_dev_required;
- 	int is_activity_detected;
--	int auto_deep_sleep_timeout; /* in ms */
- 	wait_queue_head_t ds_awake_q;
--	struct timer_list auto_deepsleep_timer;
+-/* Macros to get register read/write status */
+-/* NOTE: these assume a local dhdsdio_bus_t *bus! */
+-#define R_SDREG(regvar, regaddr, retryvar, typ) \
+-do { \
+-	retryvar = 0; \
+-	do { \
+-		regvar = R_REG((u32)(regaddr), typ); \
+-	} while (brcmf_sdcard_regfail(bus->card) && \
+-		 (++retryvar <= retry_limit)); \
+-	if (retryvar) { \
+-		bus->regfails += (retryvar-1); \
+-		if (retryvar > retry_limit) { \
+-			DHD_ERROR(("%s: FAILED" #regvar "READ, LINE %d\n", \
+-			__func__, __LINE__)); \
+-			regvar = 0; \
+-		} \
+-	} \
+-} while (0)
++/*
++ * Reads a register in the SDIO hardware block. This block occupies a series of
++ * adresses on the 32 bit backplane bus.
++ */
++static void
++r_sdreg32(struct brcmf_bus *bus, u32 *regvar, u32 reg_offset, u32 *retryvar)
++{
++	*retryvar = 0;
++	do {
++		*regvar = R_REG(bus->ci->buscorebase + reg_offset, u32);
++	} while (brcmf_sdcard_regfail(bus->card) &&
++		 (++(*retryvar) <= retry_limit));
++	if (*retryvar) {
++		bus->regfails += (*retryvar-1);
++		if (*retryvar > retry_limit) {
++			DHD_ERROR(("FAILED READ %Xh\n", reg_offset));
++			*regvar = 0;
++		}
++	}
++}
  
- 	/* Host sleep*/
- 	int is_host_sleep_configured;
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index c79aac4..4b086cd 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -520,7 +520,6 @@ static int lbs_thread(void *data)
- 	}
+ #define W_SDREG(regval, regaddr, retryvar, typ) \
+ do { \
+@@ -992,8 +998,9 @@ static int brcmf_sdbrcm_htclk(struct brcmf_bus *bus, bool on, bool pendok)
+ 		if (pendok && ((bus->ci->buscoretype == PCMCIA_CORE_ID)
+ 			       && (bus->ci->buscorerev == 9))) {
+ 			u32 dummy, retries;
+-			R_SDREG(dummy, &bus->regs->clockctlstatus, retries,
+-				u32);
++			r_sdreg32(bus, &dummy,
++				  offsetof(struct sdpcmd_regs, clockctlstatus),
++				  &retries);
+ 		}
  
- 	del_timer(&priv->command_timer);
--	del_timer(&priv->auto_deepsleep_timer);
+ 		/* Check current status */
+@@ -1521,7 +1528,6 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_bus *bus, uint maxframes)
+ 	u8 tx_prec_map;
  
- 	lbs_deb_leave(LBS_DEB_THREAD);
- 	return 0;
-@@ -653,64 +652,6 @@ out:
- 	lbs_deb_leave(LBS_DEB_CMD);
- }
+ 	struct brcmf_pub *drvr = bus->drvr;
+-	struct sdpcmd_regs *regs = bus->regs;
  
--/**
-- * auto_deepsleep_timer_fn - put the device back to deep sleep mode when
-- * timer expires and no activity (command, event, data etc.) is detected.
-- * @data:	&struct lbs_private pointer
-- * returns:	N/A
-- */
--static void auto_deepsleep_timer_fn(unsigned long data)
--{
--	struct lbs_private *priv = (struct lbs_private *)data;
--
--	lbs_deb_enter(LBS_DEB_CMD);
--
--	if (priv->is_activity_detected) {
--		priv->is_activity_detected = 0;
--	} else {
--		if (priv->is_auto_deep_sleep_enabled &&
--		    (!priv->wakeup_dev_required) &&
--		    (priv->connect_status != LBS_CONNECTED)) {
--			struct cmd_header cmd;
--
--			lbs_deb_main("Entering auto deep sleep mode...\n");
--			memset(&cmd, 0, sizeof(cmd));
--			cmd.size = cpu_to_le16(sizeof(cmd));
--			lbs_cmd_async(priv, CMD_802_11_DEEP_SLEEP, &cmd,
--					sizeof(cmd));
--		}
--	}
--	mod_timer(&priv->auto_deepsleep_timer , jiffies +
--				(priv->auto_deep_sleep_timeout * HZ)/1000);
--	lbs_deb_leave(LBS_DEB_CMD);
--}
--
--int lbs_enter_auto_deep_sleep(struct lbs_private *priv)
--{
--	lbs_deb_enter(LBS_DEB_SDIO);
--
--	priv->is_auto_deep_sleep_enabled = 1;
--	if (priv->is_deep_sleep)
--		priv->wakeup_dev_required = 1;
--	mod_timer(&priv->auto_deepsleep_timer ,
--			jiffies + (priv->auto_deep_sleep_timeout * HZ)/1000);
--
--	lbs_deb_leave(LBS_DEB_SDIO);
--	return 0;
--}
--
--int lbs_exit_auto_deep_sleep(struct lbs_private *priv)
--{
--	lbs_deb_enter(LBS_DEB_SDIO);
--
--	priv->is_auto_deep_sleep_enabled = 0;
--	priv->auto_deep_sleep_timeout = 0;
--	del_timer(&priv->auto_deepsleep_timer);
--
--	lbs_deb_leave(LBS_DEB_SDIO);
--	return 0;
--}
--
- static int lbs_init_adapter(struct lbs_private *priv)
- {
- 	int ret;
-@@ -726,7 +667,6 @@ static int lbs_init_adapter(struct lbs_private *priv)
- 	priv->psmode = LBS802_11POWERMODECAM;
- 	priv->psstate = PS_STATE_FULL_POWER;
- 	priv->is_deep_sleep = 0;
--	priv->is_auto_deep_sleep_enabled = 0;
- 	priv->deep_sleep_required = 0;
- 	priv->wakeup_dev_required = 0;
- 	init_waitqueue_head(&priv->ds_awake_q);
-@@ -739,8 +679,6 @@ static int lbs_init_adapter(struct lbs_private *priv)
+ 	DHD_TRACE(("%s: Enter\n", __func__));
  
- 	setup_timer(&priv->command_timer, lbs_cmd_timeout_handler,
- 		(unsigned long)priv);
--	setup_timer(&priv->auto_deepsleep_timer, auto_deepsleep_timer_fn,
--			(unsigned long)priv);
+@@ -1553,7 +1559,9 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_bus *bus, uint maxframes)
+ 		/* In poll mode, need to check for other events */
+ 		if (!bus->intr && cnt) {
+ 			/* Check device status, signal pending interrupt */
+-			R_SDREG(intstatus, &regs->intstatus, retries, u32);
++			r_sdreg32(bus, &intstatus,
++				  offsetof(struct sdpcmd_regs, intstatus),
++				  &retries);
+ 			bus->f2txdata++;
+ 			if (brcmf_sdcard_regfail(bus->card))
+ 				break;
+@@ -4524,7 +4532,9 @@ static u32 brcmf_sdbrcm_hostmail(struct brcmf_bus *bus)
+ 	DHD_TRACE(("%s: Enter\n", __func__));
  
- 	INIT_LIST_HEAD(&priv->cmdfreeq);
- 	INIT_LIST_HEAD(&priv->cmdpendingq);
-@@ -776,7 +714,6 @@ static void lbs_free_adapter(struct lbs_private *priv)
- 	lbs_free_cmd_buffer(priv);
- 	kfifo_free(&priv->event_fifo);
- 	del_timer(&priv->command_timer);
--	del_timer(&priv->auto_deepsleep_timer);
- 
- 	lbs_deb_leave(LBS_DEB_MAIN);
- }
-@@ -995,7 +932,6 @@ void lbs_stop_card(struct lbs_private *priv)
- 
- 	/* Delete the timeout of the currently processing command */
- 	del_timer_sync(&priv->command_timer);
--	del_timer_sync(&priv->auto_deepsleep_timer);
- 
- 	/* Flush pending command nodes */
- 	spin_lock_irqsave(&priv->driver_lock, flags);
+ 	/* Read mailbox data and ack that we did so */
+-	R_SDREG(hmb_data, &regs->tohostmailboxdata, retries, u32);
++	r_sdreg32(bus, &hmb_data,
++		  offsetof(struct sdpcmd_regs, tohostmailboxdata), &retries);
++
+ 	if (retries <= retry_limit)
+ 		W_SDREG(SMB_INT_ACK, &regs->tosbmailbox, retries, u32);
+ 	bus->f1regdata += 2;
+@@ -4668,7 +4678,8 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_bus *bus)
+ 	/* Pending interrupt indicates new device status */
+ 	if (bus->ipend) {
+ 		bus->ipend = false;
+-		R_SDREG(newstatus, &regs->intstatus, retries, u32);
++		r_sdreg32(bus, &newstatus,
++			  offsetof(struct sdpcmd_regs, intstatus), &retries);
+ 		bus->f1regdata++;
+ 		if (brcmf_sdcard_regfail(bus->card))
+ 			newstatus = 0;
+@@ -4691,7 +4702,8 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_bus *bus)
+ 	if (intstatus & I_HMB_FC_CHANGE) {
+ 		intstatus &= ~I_HMB_FC_CHANGE;
+ 		W_SDREG(I_HMB_FC_CHANGE, &regs->intstatus, retries, u32);
+-		R_SDREG(newstatus, &regs->intstatus, retries, u32);
++		r_sdreg32(bus, &newstatus,
++			  offsetof(struct sdpcmd_regs, intstatus), &retries);
+ 		bus->f1regdata += 2;
+ 		bus->fcstate =
+ 		    !!(newstatus & (I_HMB_FC_STATE | I_HMB_FC_CHANGE));
 -- 
-1.7.6
+1.7.4.1
+
 
