@@ -1,61 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34856 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758428Ab1GKSq7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 14:46:59 -0400
-Date: Mon, 11 Jul 2011 14:37:11 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
-Subject: Re: [PATCH v2 1/8] ath5k: add missing checks for rfgain probe
-Message-ID: <20110711183711.GD2650@tuxdriver.com> (sfid-20110711_204741_533262_22D3DE0B)
-References: <1309835484-26653-1-git-send-email-nbd@openwrt.org>
- <CAFtRNNwK_LjP_2cAp0macP+8My4nzextWMNz9pLTKRW6V8tDjw@mail.gmail.com>
- <4E129788.4040803@openwrt.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:4294 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754060Ab1GEUGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 16:06:35 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH v2 15/21] staging: brcm80211: got rid of redundant
+ member 'regs' of struct dhd_bus
+Date: Tue, 5 Jul 2011 22:06:11 +0200
+Message-ID: <1309896377-4425-16-git-send-email-arend@broadcom.com> (sfid-20110705_220643_299335_0151F039)
+In-Reply-To: <1309896377-4425-1-git-send-email-arend@broadcom.com>
+References: <1309896377-4425-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E129788.4040803@openwrt.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 05, 2011 at 11:48:08AM +0700, Felix Fietkau wrote:
-> On 2011-07-05 11:46 AM, Nick Kossifidis wrote:
-> >2011/7/5 Felix Fietkau<nbd@openwrt.org>:
-> >> rfgain probe is only necessary for OFDM operation on AR5111 and AR5112.
-> >>
-> >> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
-> >> ---
-> >>   drivers/net/wireless/ath/ath5k/phy.c |   10 ++++++----
-> >>   1 files changed, 6 insertions(+), 4 deletions(-)
-> >>
-> >> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-> >> index 5544191..d0bfcad 100644
-> >> --- a/drivers/net/wireless/ath/ath5k/phy.c
-> >> +++ b/drivers/net/wireless/ath/ath5k/phy.c
-> >> @@ -1604,11 +1604,13 @@ int ath5k_hw_phy_calibrate(struct ath5k_hw *ah,
-> >>         int ret;
-> >>
-> >>         if (ah->ah_radio == AR5K_RF5110)
-> >> -               ret = ath5k_hw_rf5110_calibrate(ah, channel);
-> >> -       else {
-> >> -               ret = ath5k_hw_rf511x_iq_calibrate(ah);
-> >> +               return ath5k_hw_rf5110_calibrate(ah, channel);
-> >> +
-> >> +       ret = ath5k_hw_rf511x_iq_calibrate(ah);
-> >> +
-> >> +       if ((ah->ah_radio == AR5K_RF5112 || ah->ah_radio == AR5K_RF5112)&&
-> >
-> >You probably mean
-> >ah->ah_radio == AR5K_RF5111 || ah->ah_radio == AR5K_RF5112
-> You're right. I need to be more careful with copy&paste ;)
-> Will send a v3 once you've looked over the other patches.
-> 
-> - Felix
+From: Roland Vossen <rvossen@broadcom.com>
 
-Ping?  Time is running short...
+Code cleanup. Decreases amd64 compiler warnings.
 
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   12 +++++-------
+ 1 files changed, 5 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 9ac256e..9bc47a4 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -552,8 +552,6 @@ struct brcmf_bus {
+ 	uint varsz;		/* Size of variables buffer */
+ 	u32 sbaddr;		/* Current SB window pointer (-1, invalid) */
+ 
+-	/* SDIO core, 32 bit address on the backplane bus: */
+-	struct sdpcmd_regs *regs;
+ 	uint sdpcmrev;		/* SDIO core revision */
+ 	uint armrev;		/* CPU core revision */
+ 	uint ramrev;		/* SOCRAM core revision */
+@@ -2725,7 +2723,7 @@ brcmf_sdbrcm_doiovar(struct brcmf_bus *bus, const struct brcmu_iovar *vi, u32 ac
+ 
+ 			sd_ptr = (struct brcmf_sdreg *) params;
+ 
+-			addr = (unsigned long)bus->regs + sd_ptr->offset;
++			addr = bus->ci->buscorebase + sd_ptr->offset;
+ 			size = sd_ptr->func;
+ 			int_val = (s32) brcmf_sdcard_reg_read(bus->card, addr,
+ 							      size);
+@@ -2742,7 +2740,7 @@ brcmf_sdbrcm_doiovar(struct brcmf_bus *bus, const struct brcmu_iovar *vi, u32 ac
+ 
+ 			sd_ptr = (struct brcmf_sdreg *) params;
+ 
+-			addr = (unsigned long)bus->regs + sd_ptr->offset;
++			addr = bus->ci->buscorebase + sd_ptr->offset;
+ 			size = sd_ptr->func;
+ 			brcmf_sdcard_reg_write(bus->card, addr, size,
+ 					       sd_ptr->value);
+@@ -5610,10 +5608,10 @@ brcmf_sdbrcm_probe_attach(struct brcmf_bus *bus, void *card, void *regsva,
+ 			   bus->ramsize, bus->orig_ramsize));
+ 	}
+ 
+-	bus->regs = (void *)bus->ci->buscorebase;
+-
+ 	/* Set core control so an SDIO reset does a backplane reset */
+-	OR_REG((u32)&bus->regs->corecontrol, CC_BPRESEN, u32);
++	OR_REG(bus->ci->buscorebase + offsetof(struct sdpcmd_regs,
++						       corecontrol),
++	       CC_BPRESEN, u32);
+ 
+ 	brcmu_pktq_init(&bus->txq, (PRIOMASK + 1), TXQLEN);
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.1
+
+
