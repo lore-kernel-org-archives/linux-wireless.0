@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:42253 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753757Ab1GNTU5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 15:20:57 -0400
-Received: by wwg11 with SMTP id 11so779116wwg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2011 12:20:56 -0700 (PDT)
+Received: from cantor2.suse.de ([195.135.220.15]:44821 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755224Ab1GFCeI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2011 22:34:08 -0400
+Date: Tue, 5 Jul 2011 18:58:29 -0700
+From: Greg KH <gregkh@suse.de>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Greg KH <greg@kroah.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 000/119] staging: brcm80211: more code cleanup and bug
+ fixed
+Message-ID: <20110706015829.GA15988@suse.de> (sfid-20110706_043416_189944_610DD6AA)
+References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
+ <20110705165949.GA18531@kroah.com>
+ <4E1362D5.2040806@broadcom.com>
+ <4E136A27.6060207@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1310637144.3874.2.camel@jlt3.sipsolutions.net>
-References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
-	<1310600747-9583-6-git-send-email-thomas@cozybit.com>
-	<1310637144.3874.2.camel@jlt3.sipsolutions.net>
-Date: Thu, 14 Jul 2011 12:20:55 -0700
-Message-ID: <CAG6hwVN3eeJw+H8xt9BpV1t6_ujVdsS_Q6xPk7q-wF5+5sUd=A@mail.gmail.com> (sfid-20110714_212100_399233_966A9407)
-Subject: Re: [PATCH 5/5] mac80211: mesh beacon includes TIM IE
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E136A27.6060207@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 14, 2011 at 2:52 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2011-07-13 at 16:45 -0700, Thomas Pedersen wrote:
->
->>                       goto out;
->> @@ -2269,6 +2270,14 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
->>                       memcpy(skb_put(skb, beacon->head_len), beacon->head,
->>                              beacon->head_len);
->>
->> +                     pos = skb_put(skb, 6);
->
-> You just keep adding here -- how is the length of the skb determined?
+On Tue, Jul 05, 2011 at 09:46:47PM +0200, Arend van Spriel wrote:
+> On 07/05/2011 09:15 PM, Arend van Spriel wrote:
+> >On 07/05/2011 06:59 PM, Greg KH wrote:
+> >>On Wed, Jun 29, 2011 at 04:46:24PM -0700, Franky Lin wrote:
+> >>>Most of these patches are brcmfmac cleanup.
+> >>Not all of them applied, care to redo the ones that didn't and resend
+> >>them?
+> >>
+> >>thanks,
+> >>
+> >>greg k-h
+> >Will do when I figured out which ones are not applying. Franky, as are
+> >all valley broadcom folks, is not in today (fourth of july aftermath).
+> >Here in Holland we have other days to celebrate so taking over from him.
+> >Can you provide me the info about the not applying patches. I applied
+> >them all on top of staging-next as it was this morning and that went
+> >fine. Did we miss some brcm80211 patches not coming from us? I will
+> >start digging here to find out, but you are more than welcome to provide
+> >any info.
+> >
+> >Gr. AvS
+> 
+> Hi Greg,
+> 
+> This is what I excavated so far. Looking at git.kernel.org it seems
+> like patch 92 in the series got applied at the end of the series. Up
+> to patch 92 it went fine, but it started to derail from there. I
+> have clear picture which patches are missing and will resend them.
 
-A little further up:
+Yes, I messed up.  I sorted by "brcm" and applied the patches there,
+missing the fact that patch 92 was spelled wrong, so I missed it.
 
-                        /* headroom, head length, tail length, custom IEs, and
-                         * mesh IEs + maximum TIM length */
-                        skb = dev_alloc_skb(local->tx_headroom +
-                                            beacon->head_len +
-                                            beacon->tail_len +
-                                            ifmsh->ie_len + 400);
+Then I went back and applied that one after figuring it out, but you did
+at the same time.
 
-we made room for the max TIM element.
->
-> johannes
->
->
+I'll queue these up in a bit after I get the kids to bed, thanks for
+resending them and sorry for the mixup, it was my fault.
+
+greg k-h
