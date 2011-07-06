@@ -1,61 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:50538 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753182Ab1GILHp (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42292 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752136Ab1GFKQe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jul 2011 07:07:45 -0400
-Received: by wyg8 with SMTP id 8so1766096wyg.19
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Jul 2011 04:07:44 -0700 (PDT)
-From: Olivier Sobrie <olivier@sobrie.be>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	libertas-dev@lists.infradead.org,
-	Olivier Sobrie <olivier@sobrie.be>
-Subject: [PATCH] libertas: fix errors in functions accessing module registers
-Date: Sat,  9 Jul 2011 12:57:05 +0200
-Message-Id: <1310209025-16516-1-git-send-email-olivier@sobrie.be> (sfid-20110709_131610_332293_7DB90164)
+	Wed, 6 Jul 2011 06:16:34 -0400
+Message-Id: <20110706101558.466384440@sipsolutions.net> (sfid-20110706_121637_541845_ADF8A914)
+Date: Wed, 06 Jul 2011 12:09:31 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] mac80211: fix CCMP PN race
+References: <20110706100929.554431961@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Problems located in the two functions lbs_set_reg() and lbs_get_reg():
-- The offset field of struct cmd_ds_reg_access was not filled in
-- The test on the return code of lbs_cmd_with_response() in function
-  lbs_get_reg() was inverted
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Olivier Sobrie <olivier@sobrie.be>
+Since we can process multiple packets at the
+same time for different ACs, but the PN is
+allocated from a single counter, we need to
+use an atomic value there. Use atomic64_t to
+make this cheaper on 64-bit platforms, other
+platforms will support this through software
+emulation, see lib/atomic64.c.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/libertas/cmd.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ net/mac80211/cfg.c         |   14 ++++++++------
+ net/mac80211/debugfs_key.c |    6 ++++--
+ net/mac80211/key.h         |    2 +-
+ net/mac80211/wpa.c         |   19 ++++++++++---------
+ 4 files changed, 23 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 71c8f3f..3e8123c 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -873,6 +873,7 @@ int lbs_get_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 *value)
- 	memset(&cmd, 0, sizeof(cmd));
- 	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
- 	cmd.action = cpu_to_le16(CMD_ACT_GET);
-+	cmd.offset = cpu_to_le16(offset);
+--- a/net/mac80211/key.h	2011-07-06 12:08:57.000000000 +0200
++++ b/net/mac80211/key.h	2011-07-06 12:09:07.000000000 +0200
+@@ -82,7 +82,7 @@ struct ieee80211_key {
+ 			struct tkip_ctx rx[NUM_RX_DATA_QUEUES];
+ 		} tkip;
+ 		struct {
+-			u8 tx_pn[6];
++			atomic64_t tx_pn;
+ 			/*
+ 			 * Last received packet number. The first
+ 			 * NUM_RX_DATA_QUEUES counters are used with Data
+--- a/net/mac80211/cfg.c	2011-07-06 12:08:39.000000000 +0200
++++ b/net/mac80211/cfg.c	2011-07-06 12:09:07.000000000 +0200
+@@ -209,6 +209,7 @@ static int ieee80211_get_key(struct wiph
+ 	u8 seq[6] = {0};
+ 	struct key_params params;
+ 	struct ieee80211_key *key = NULL;
++	u64 pn64;
+ 	u32 iv32;
+ 	u16 iv16;
+ 	int err = -ENOENT;
+@@ -256,12 +257,13 @@ static int ieee80211_get_key(struct wiph
+ 		params.seq_len = 6;
+ 		break;
+ 	case WLAN_CIPHER_SUITE_CCMP:
+-		seq[0] = key->u.ccmp.tx_pn[5];
+-		seq[1] = key->u.ccmp.tx_pn[4];
+-		seq[2] = key->u.ccmp.tx_pn[3];
+-		seq[3] = key->u.ccmp.tx_pn[2];
+-		seq[4] = key->u.ccmp.tx_pn[1];
+-		seq[5] = key->u.ccmp.tx_pn[0];
++		pn64 = atomic64_read(&key->u.ccmp.tx_pn);
++		seq[0] = pn64;
++		seq[1] = pn64 >> 8;
++		seq[2] = pn64 >> 16;
++		seq[3] = pn64 >> 24;
++		seq[4] = pn64 >> 32;
++		seq[5] = pn64 >> 40;
+ 		params.seq = seq;
+ 		params.seq_len = 6;
+ 		break;
+--- a/net/mac80211/wpa.c	2011-07-06 12:08:57.000000000 +0200
++++ b/net/mac80211/wpa.c	2011-07-06 12:09:07.000000000 +0200
+@@ -380,8 +380,9 @@ static int ccmp_encrypt_skb(struct ieee8
+ 	struct ieee80211_key *key = tx->key;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	int hdrlen, len, tail;
+-	u8 *pos, *pn;
+-	int i;
++	u8 *pos;
++	u8 pn[6];
++	u64 pn64;
  
- 	if (reg != CMD_MAC_REG_ACCESS &&
- 	    reg != CMD_BBP_REG_ACCESS &&
-@@ -882,7 +883,7 @@ int lbs_get_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 *value)
- 	}
+ 	if (info->control.hw_key &&
+ 	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV)) {
+@@ -409,14 +410,14 @@ static int ccmp_encrypt_skb(struct ieee8
+ 	hdr = (struct ieee80211_hdr *) pos;
+ 	pos += hdrlen;
  
- 	ret = lbs_cmd_with_response(priv, reg, &cmd);
--	if (ret) {
-+	if (!ret) {
- 		if (reg == CMD_BBP_REG_ACCESS || reg == CMD_RF_REG_ACCESS)
- 			*value = cmd.value.bbp_rf;
- 		else if (reg == CMD_MAC_REG_ACCESS)
-@@ -915,6 +916,7 @@ int lbs_set_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 value)
- 	memset(&cmd, 0, sizeof(cmd));
- 	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
- 	cmd.action = cpu_to_le16(CMD_ACT_SET);
-+	cmd.offset = cpu_to_le16(offset);
+-	/* PN = PN + 1 */
+-	pn = key->u.ccmp.tx_pn;
++	pn64 = atomic64_inc_return(&key->u.ccmp.tx_pn);
  
- 	if (reg == CMD_BBP_REG_ACCESS || reg == CMD_RF_REG_ACCESS)
- 		cmd.value.bbp_rf = (u8) (value & 0xFF);
--- 
-1.7.6
+-	for (i = CCMP_PN_LEN - 1; i >= 0; i--) {
+-		pn[i]++;
+-		if (pn[i])
+-			break;
+-	}
++	pn[5] = pn64;
++	pn[4] = pn64 >> 8;
++	pn[3] = pn64 >> 16;
++	pn[2] = pn64 >> 24;
++	pn[1] = pn64 >> 32;
++	pn[0] = pn64 >> 40;
+ 
+ 	ccmp_pn2hdr(pos, pn, key->conf.keyidx);
+ 
+--- a/net/mac80211/debugfs_key.c	2011-07-06 12:03:22.000000000 +0200
++++ b/net/mac80211/debugfs_key.c	2011-07-06 12:09:07.000000000 +0200
+@@ -79,6 +79,7 @@ static ssize_t key_tx_spec_read(struct f
+ 				size_t count, loff_t *ppos)
+ {
+ 	const u8 *tpn;
++	u64 pn;
+ 	char buf[20];
+ 	int len;
+ 	struct ieee80211_key *key = file->private_data;
+@@ -94,9 +95,10 @@ static ssize_t key_tx_spec_read(struct f
+ 				key->u.tkip.tx.iv16);
+ 		break;
+ 	case WLAN_CIPHER_SUITE_CCMP:
+-		tpn = key->u.ccmp.tx_pn;
++		pn = atomic64_read(&key->u.ccmp.tx_pn);
+ 		len = scnprintf(buf, sizeof(buf), "%02x%02x%02x%02x%02x%02x\n",
+-				tpn[0], tpn[1], tpn[2], tpn[3], tpn[4], tpn[5]);
++				(u8)(pn >> 40), (u8)(pn >> 32), (u8)(pn >> 24),
++				(u8)(pn >> 16), (u8)(pn >> 8), (u8)pn);
+ 		break;
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+ 		tpn = key->u.aes_cmac.tx_pn;
+
 
