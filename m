@@ -1,142 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4330 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932393Ab1GNV34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 17:29:56 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 23/35] staging: brcm80211: power save issue fixed in
- brcmfmac driver
-Date: Thu, 14 Jul 2011 14:29:19 -0700
-Message-ID: <1310678971-28952-24-git-send-email-frankyl@broadcom.com> (sfid-20110714_233005_971786_6D25CD7A)
-In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
-References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:56476 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753445Ab1GFMNl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jul 2011 08:13:41 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1QeQz6-0004CQ-3n
+	for linux-wireless@vger.kernel.org; Wed, 06 Jul 2011 14:13:40 +0200
+Message-Id: <20110706121315.485961879@sipsolutions.net> (sfid-20110706_141344_632489_61996602)
+Date: Wed, 06 Jul 2011 14:12:38 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 2/2] mac80211: allow driver to generate P1K for IV32
+References: <20110706121236.333408679@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sukesh Srikakula <sukeshs@broadcom.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-brcmfmac driver is getting request for enabling power save
-before the interface is up. With the earlier implementation,
-this request used to fail resulting out of sync power save
-state between cfg80211 & brcmfmac driver. With this fix,
-power save state is stored in configuration parameters and
-will be used while initializing the adapter.
+In order to support pre-populating the P1K cache in
+iwlwifi hardware for WoWLAN, we need to calculate
+the P1K for the current IV32. Allow drivers to get
+the P1K for any given IV32 instead of for a given
+packet, but keep the packet-based version around as
+an inline.
 
-Signed-off-by: Sukesh Srikakula <sukeshs@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd_common.c  |    5 ---
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   34 ++++++++++++++++++++--
- 2 files changed, 31 insertions(+), 8 deletions(-)
+This should also enable fixing b43's code -- it's
+also pre-populating the cache in normal operation.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-index 4412893..62b7591 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-@@ -1099,7 +1099,6 @@ int brcmf_c_preinit_ioctls(struct brcmf_pub *drvr)
- 				 "event_msgs" + '\0' + bitvec  */
- 	uint up = 0;
- 	char buf[128], *ptr;
--	uint power_mode = PM_FAST;
- 	u32 dongle_align = BRCMF_SDALIGN;
- 	u32 glom = 0;
- 	uint bcn_timeout = 3;
-@@ -1128,10 +1127,6 @@ int brcmf_c_preinit_ioctls(struct brcmf_pub *drvr)
- 	/* Print fw version info */
- 	BRCMF_ERROR(("Firmware version = %s\n", buf));
+ include/net/mac80211.h |   24 ++++++++++++++++++++++--
+ net/mac80211/tkip.c    |    9 +++------
+ 2 files changed, 25 insertions(+), 8 deletions(-)
+
+--- a/include/net/mac80211.h	2011-07-06 12:45:35.000000000 +0200
++++ b/include/net/mac80211.h	2011-07-06 12:45:55.000000000 +0200
+@@ -20,6 +20,7 @@
+ #include <linux/device.h>
+ #include <linux/ieee80211.h>
+ #include <net/cfg80211.h>
++#include <asm/unaligned.h>
  
--	/* Set PowerSave mode */
--	brcmf_proto_cdc_set_ioctl(drvr, 0, BRCMF_C_SET_PM, (char *)&power_mode,
--			 sizeof(power_mode));
--
- 	/* Match Host and Dongle rx alignment */
- 	brcmu_mkiovar("bus:txglomalign", (char *)&dongle_align, 4, iovbuf,
- 		    sizeof(iovbuf));
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index a69fa93..d4d7c52 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -1974,9 +1974,24 @@ brcmf_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
- {
- 	s32 pm;
- 	s32 err = 0;
-+	struct brcmf_cfg80211_priv *cfg_priv = wiphy_to_cfg(wiphy);
+ /**
+  * DOC: Introduction
+@@ -2564,6 +2565,18 @@ struct sk_buff *
+ ieee80211_get_buffered_bc(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
  
- 	WL_TRACE("Enter\n");
--	CHECK_SYS_UP();
+ /**
++ * ieee80211_get_tkip_p1k_iv - get a TKIP phase 1 key for IV32
++ *
++ * This function returns the TKIP phase 1 key for the given IV32.
++ *
++ * @keyconf: the parameter passed with the set key
++ * @iv32: IV32 to get the P1K for
++ * @p1k: a buffer to which the key will be written, as 5 u16 values
++ */
++void ieee80211_get_tkip_p1k_iv(struct ieee80211_key_conf *keyconf,
++			       u32 iv32, u16 *p1k);
 +
-+	/*
-+	 * Powersave enable/disable request is coming from the
-+	 * cfg80211 even before the interface is up. In that
-+	 * scenario, driver will be storing the power save
-+	 * preference in cfg_priv struct to apply this to
-+	 * FW later while initializing the dongle
-+	 */
-+	cfg_priv->pwr_save = enabled;
-+	if (!test_bit(WL_STATUS_READY, &cfg_priv->status)) {
++/**
+  * ieee80211_get_tkip_p1k - get a TKIP phase 1 key
+  *
+  * This function returns the TKIP phase 1 key for the IV32 taken
+@@ -2574,8 +2587,15 @@ ieee80211_get_buffered_bc(struct ieee802
+  *	with this P1K
+  * @p1k: a buffer to which the key will be written, as 5 u16 values
+  */
+-void ieee80211_get_tkip_p1k(struct ieee80211_key_conf *keyconf,
+-			    struct sk_buff *skb, u16 *p1k);
++static inline void ieee80211_get_tkip_p1k(struct ieee80211_key_conf *keyconf,
++					  struct sk_buff *skb, u16 *p1k)
++{
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	const u8 *data = (u8 *)hdr + ieee80211_hdrlen(hdr->frame_control);
++	u32 iv32 = get_unaligned_le32(&data[4]);
 +
-+		WL_INFO("Device is not ready,"
-+			"storing the value in cfg_priv struct\n");
-+		goto done;
-+	}
++	ieee80211_get_tkip_p1k_iv(keyconf, iv32, p1k);
++}
  
- 	pm = enabled ? PM_FAST : PM_OFF;
- 	pm = cpu_to_le32(pm);
-@@ -1989,6 +2004,7 @@ brcmf_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
- 		else
- 			WL_ERR("error (%d)\n", err);
- 	}
-+done:
- 	WL_TRACE("Exit\n");
- 	return err;
+ /**
+  * ieee80211_get_tkip_p2k - get a TKIP phase 2 key
+--- a/net/mac80211/tkip.c	2011-07-06 12:45:34.000000000 +0200
++++ b/net/mac80211/tkip.c	2011-07-06 13:30:50.000000000 +0200
+@@ -170,15 +170,12 @@ static void ieee80211_compute_tkip_p1k(s
+ 		tkip_mixing_phase1(tk, ctx, sdata->vif.addr, iv32);
  }
-@@ -3390,11 +3406,12 @@ static s32 brcmf_init_iscan(struct brcmf_cfg80211_priv *cfg_priv)
  
- static s32 wl_init_priv(struct brcmf_cfg80211_priv *cfg_priv)
+-void ieee80211_get_tkip_p1k(struct ieee80211_key_conf *keyconf,
+-			    struct sk_buff *skb, u16 *p1k)
++void ieee80211_get_tkip_p1k_iv(struct ieee80211_key_conf *keyconf,
++			       u32 iv32, u16 *p1k)
  {
--	struct wiphy *wiphy = cfg_to_wiphy(cfg_priv);
- 	s32 err = 0;
+ 	struct ieee80211_key *key = (struct ieee80211_key *)
+ 			container_of(keyconf, struct ieee80211_key, conf);
+ 	struct tkip_ctx *ctx = &key->u.tkip.tx;
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	const u8 *data = (u8 *)hdr + ieee80211_hdrlen(hdr->frame_control);
+-	u32 iv32 = get_unaligned_le32(&data[4]);
+ 	unsigned long flags;
  
- 	cfg_priv->scan_request = NULL;
--	cfg_priv->pwr_save = !!(wiphy->flags & WIPHY_FLAG_PS_ON_BY_DEFAULT);
-+#ifndef WL_POWERSAVE_DISABLED
-+	cfg_priv->pwr_save = true;
-+#endif /* WL_POWERSAVE_DISABLED */
- 	cfg_priv->iscan_on = true;	/* iscan on & off switch.
- 				 we enable iscan per default */
- 	cfg_priv->roam_on = false;	/* roam on & off switch.
-@@ -3811,6 +3828,7 @@ s32 brcmf_config_dongle(struct brcmf_cfg80211_priv *cfg_priv, bool need_lock)
- {
- 	struct net_device *ndev;
- 	struct wireless_dev *wdev;
-+	s32 power_mode;
- 	s32 err = 0;
+ 	spin_lock_irqsave(&key->u.tkip.txlock, flags);
+@@ -186,7 +183,7 @@ void ieee80211_get_tkip_p1k(struct ieee8
+ 	memcpy(p1k, ctx->p1k, sizeof(ctx->p1k));
+ 	spin_unlock_irqrestore(&key->u.tkip.txlock, flags);
+ }
+-EXPORT_SYMBOL(ieee80211_get_tkip_p1k);
++EXPORT_SYMBOL(ieee80211_get_tkip_p1k_iv);
  
- 	if (cfg_priv->dongle_up)
-@@ -3827,6 +3845,16 @@ s32 brcmf_config_dongle(struct brcmf_cfg80211_priv *cfg_priv, bool need_lock)
- 	err = brcmf_dongle_eventmsg(ndev);
- 	if (unlikely(err))
- 		goto default_conf_out;
-+
-+	power_mode = cfg_priv->pwr_save ? PM_FAST : PM_OFF;
-+	power_mode = cpu_to_le32(power_mode);
-+	err = brcmf_dev_ioctl(ndev, BRCMF_C_SET_PM,
-+				&power_mode, sizeof(power_mode));
-+	if (err)
-+		goto default_conf_out;
-+	WL_INFO("power save set to %s\n",
-+		(power_mode ? "enabled" : "disabled"));
-+
- 	err = brcmf_dongle_roam(ndev, (cfg_priv->roam_on ? 0 : 1),
- 				WL_BEACON_TIMEOUT);
- 	if (unlikely(err))
--- 
-1.7.1
+ void ieee80211_get_tkip_p2k(struct ieee80211_key_conf *keyconf,
+ 			    struct sk_buff *skb, u8 *p2k)
 
 
