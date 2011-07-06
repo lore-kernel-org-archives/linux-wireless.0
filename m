@@ -1,105 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:50986 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752251Ab1GPWgk (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:56623 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751576Ab1GFLP5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2011 18:36:40 -0400
-Received: by fxd18 with SMTP id 18so4501722fxd.11
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Jul 2011 15:36:39 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: bus: drop inline from SSB functions
-Date: Sun, 17 Jul 2011 01:15:18 +0200
-Message-Id: <1310858118-3948-1-git-send-email-zajec5@gmail.com> (sfid-20110717_003643_755125_47404F45)
+	Wed, 6 Jul 2011 07:15:57 -0400
+Received: by iwn6 with SMTP id 6so5982461iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 04:15:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAGXE3d-nsc3qS1pyayUqZg9AB-572FFhoB+r_ZWP9B6n=xhYHA@mail.gmail.com>
+References: <4E143FCF.8030201@darav.de> <CAGXE3d-nsc3qS1pyayUqZg9AB-572FFhoB+r_ZWP9B6n=xhYHA@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 6 Jul 2011 21:15:36 +1000
+Message-ID: <CAGRGNgUPOEFwpeuy4ASv8wYOa9_9ZzUGokpF-CvwNXpBZ0AS8Q@mail.gmail.com> (sfid-20110706_131600_737123_5FCE147F)
+Subject: Re: RALINK rt2800pci , Patch for Device [1814:539f]
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Carsten Rietzschel <cr7@darav.de>, IvDoorn@gmail.com,
+	gwingerde@gmail.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We use all that functions by pointers only. This forces compiler to
-create additional duplicated functions that are not inline.
-Noticed by Michael in similar bcma code.
+On Wed, Jul 6, 2011 at 21:02, Helmut Schaa <helmut.schaa@googlemail.com> wrote:
+> Nice.
+>
+> On Wed, Jul 6, 2011 at 12:58 PM, Carsten Rietzschel <cr7@darav.de> wrote:
+>> Hello together,
+>>
+>> attached find a small patch for the RALINK wireless driver.
+>> It's just adding one PCI-ID for:
+>>
+>> 02:00.0 Network controller [0280]: Ralink corp. Device [1814:539f]
+>> † †Subsystem: Hewlett-Packard Company Device [103c:1637]
+>> † †Flags: bus master, fast devsel, latency 0, IRQ 17
+>> † †Memory at f0100000 (32-bit, non-prefetchable) [size=64K]
+>> † †Capabilities: [40] Power Management version 3
+>> † †Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
+>> † †Capabilities: [70] Express Endpoint, MSI 00
+>> † †Capabilities: [100] Advanced Error Reporting
+>> † †Capabilities: [140] Device Serial Number 00-00-b2-7f-05-da-f8-c0
+>> † †Kernel driver in use: rt2800pci
+>> † †Kernel modules: rt2800pci
+>>
+>> It's for instance used in the HP DM1Z (Fusion) Netbook.
+>> I use this patch now for several weeks - starting with 2.3.29 up to
+>> 3.0-rc2 kernel. No problems so far.
+>>
+>> *Signed*-*off*-by: Carsten Rietzschel <cr7 [at] darav [dot] de>
+>
+> That should be "Signed-off-by:". Mind to resubmit?
 
-Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/bus.c |   27 ++++++++++++---------------
- 1 files changed, 12 insertions(+), 15 deletions(-)
+And, IIRC, you shouldn't censor your email address.
 
-diff --git a/drivers/net/wireless/b43/bus.c b/drivers/net/wireless/b43/bus.c
-index a5e61a9..64c3f65 100644
---- a/drivers/net/wireless/b43/bus.c
-+++ b/drivers/net/wireless/b43/bus.c
-@@ -126,55 +126,52 @@ struct b43_bus_dev *b43_bus_dev_bcma_init(struct bcma_device *core)
- 
- /* SSB */
- #ifdef CONFIG_B43_SSB
--static inline int b43_bus_ssb_bus_may_powerdown(struct b43_bus_dev *dev)
-+static int b43_bus_ssb_bus_may_powerdown(struct b43_bus_dev *dev)
- {
- 	return ssb_bus_may_powerdown(dev->sdev->bus);
- }
--static inline int b43_bus_ssb_bus_powerup(struct b43_bus_dev *dev,
-+static int b43_bus_ssb_bus_powerup(struct b43_bus_dev *dev,
- 					  bool dynamic_pctl)
- {
- 	return ssb_bus_powerup(dev->sdev->bus, dynamic_pctl);
- }
--static inline int b43_bus_ssb_device_is_enabled(struct b43_bus_dev *dev)
-+static int b43_bus_ssb_device_is_enabled(struct b43_bus_dev *dev)
- {
- 	return ssb_device_is_enabled(dev->sdev);
- }
--static inline void b43_bus_ssb_device_enable(struct b43_bus_dev *dev,
-+static void b43_bus_ssb_device_enable(struct b43_bus_dev *dev,
- 					     u32 core_specific_flags)
- {
- 	ssb_device_enable(dev->sdev, core_specific_flags);
- }
--static inline void b43_bus_ssb_device_disable(struct b43_bus_dev *dev,
-+static void b43_bus_ssb_device_disable(struct b43_bus_dev *dev,
- 					      u32 core_specific_flags)
- {
- 	ssb_device_disable(dev->sdev, core_specific_flags);
- }
- 
--static inline u16 b43_bus_ssb_read16(struct b43_bus_dev *dev, u16 offset)
-+static u16 b43_bus_ssb_read16(struct b43_bus_dev *dev, u16 offset)
- {
- 	return ssb_read16(dev->sdev, offset);
- }
--static inline u32 b43_bus_ssb_read32(struct b43_bus_dev *dev, u16 offset)
-+static u32 b43_bus_ssb_read32(struct b43_bus_dev *dev, u16 offset)
- {
- 	return ssb_read32(dev->sdev, offset);
- }
--static inline
--void b43_bus_ssb_write16(struct b43_bus_dev *dev, u16 offset, u16 value)
-+static void b43_bus_ssb_write16(struct b43_bus_dev *dev, u16 offset, u16 value)
- {
- 	ssb_write16(dev->sdev, offset, value);
- }
--static inline
--void b43_bus_ssb_write32(struct b43_bus_dev *dev, u16 offset, u32 value)
-+static void b43_bus_ssb_write32(struct b43_bus_dev *dev, u16 offset, u32 value)
- {
- 	ssb_write32(dev->sdev, offset, value);
- }
--static inline
--void b43_bus_ssb_block_read(struct b43_bus_dev *dev, void *buffer,
--			    size_t count, u16 offset, u8 reg_width)
-+static void b43_bus_ssb_block_read(struct b43_bus_dev *dev, void *buffer,
-+				   size_t count, u16 offset, u8 reg_width)
- {
- 	ssb_block_read(dev->sdev, buffer, count, offset, reg_width);
- }
--static inline
-+static
- void b43_bus_ssb_block_write(struct b43_bus_dev *dev, const void *buffer,
- 			     size_t count, u16 offset, u8 reg_width)
- {
+Thanks,
+
 -- 
-1.7.3.4
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
