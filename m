@@ -1,35 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39403 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932134Ab1GNRRt (ORCPT
+Received: from lvps46-163-74-235.dedicated.hosteurope.de ([46.163.74.235]:49819
+	"EHLO lvps46-163-74-235.dedicated.hosteurope.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752661Ab1GFLFJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 13:17:49 -0400
-Subject: Re: [RFC 3/3] mac80211: Report 40MHz Intolerance to associated AP.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20110714171236.GB25573@vmraj-lnx.users.atheros.com>
-References: <1310559873-10314-1-git-send-email-rmanohar@qca.qualcomm.com>
-	 <1310559873-10314-3-git-send-email-rmanohar@qca.qualcomm.com>
-	 <1310638549.3874.12.camel@jlt3.sipsolutions.net>
-	 <20110714171236.GB25573@vmraj-lnx.users.atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 14 Jul 2011 19:17:46 +0200
-Message-ID: <1310663866.3874.28.camel@jlt3.sipsolutions.net> (sfid-20110714_191752_918751_6B48EEFE)
-Mime-Version: 1.0
+	Wed, 6 Jul 2011 07:05:09 -0400
+Message-ID: <4E143FCF.8030201@darav.de> (sfid-20110706_130534_850625_6064A2E9)
+Date: Wed, 06 Jul 2011 12:58:23 +0200
+From: Carsten Rietzschel <cr7@darav.de>
+MIME-Version: 1.0
+To: IvDoorn@gmail.com, gwingerde@gmail.com, helmut.schaa@googlemail.com
+CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: RALINK rt2800pci , Patch for Device [1814:539f]
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-07-14 at 22:42 +0530, Rajkumar Manoharan wrote:
+Hello together,
 
-> > Heck, come to think of it, why not do this in wpa_supplicant?
-> >
-> I prefer to go with the common layer for both wpa_s and iw. But cfg80211
-> seems to be better.
+attached find a small patch for the RALINK wireless driver.
+It's just adding one PCI-ID for:
 
-In practise, nobody uses iw to maintain connections. Anything that
-cfg80211 can do, wpa_supplicant can do as well, so I don't really see
-the point in pushing this into the kernel.
+02:00.0 Network controller [0280]: Ralink corp. Device [1814:539f]
+    Subsystem: Hewlett-Packard Company Device [103c:1637]
+    Flags: bus master, fast devsel, latency 0, IRQ 17
+    Memory at f0100000 (32-bit, non-prefetchable) [size=64K]
+    Capabilities: [40] Power Management version 3
+    Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
+    Capabilities: [70] Express Endpoint, MSI 00
+    Capabilities: [100] Advanced Error Reporting
+    Capabilities: [140] Device Serial Number 00-00-b2-7f-05-da-f8-c0
+    Kernel driver in use: rt2800pci
+    Kernel modules: rt2800pci
 
-johannes
+It's for instance used in the HP DM1Z (Fusion) Netbook.
+I use this patch now for several weeks - starting with 2.3.29 up to
+3.0-rc2 kernel. No problems so far.
 
+*Signed*-*off*-by: Carsten Rietzschel <cr7 [at] darav [dot] de>
+---
+diff -ur linux-3.0_rc2/drivers/net/wireless/rt2x00/rt2800pci.c
+linux-3.0_rc2_patched/drivers/net/wireless/rt2x00/rt2800pci.c
+--- linux-3.0_rc2/drivers/net/wireless/rt2x00/rt2800pci.c      
+2011-07-06 12:46:13.251676122 +0200
++++ linux-3.0_rc2_patched/drivers/net/wireless/rt2x00/rt2800pci.c      
+2011-07-06 12:44:38.381673254 +0200
+@@ -1158,6 +1158,7 @@
+ #endif
+ #ifdef CONFIG_RT2800PCI_RT53XX
+        { PCI_DEVICE(0x1814, 0x5390) },
++       { PCI_DEVICE(0x1814, 0x539f) },
+ #endif
+        { 0, }
+ };
+
+
+Feel free to include it or do what you want ;-)
+If you need any further information - please just let me know.
+
+Best regards.
+Carsten
