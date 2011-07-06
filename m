@@ -1,60 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:42832 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751433Ab1G3Xoj convert rfc822-to-8bit (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:50291 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752337Ab1GFLCg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jul 2011 19:44:39 -0400
-Received: by mail-pz0-f42.google.com with SMTP id 37so8757470pzk.1
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Jul 2011 16:44:39 -0700 (PDT)
+	Wed, 6 Jul 2011 07:02:36 -0400
+Received: by gxk21 with SMTP id 21so2576846gxk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 04:02:35 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4e3431a3.okCWfww1KPoiQhgM%Larry.Finger@lwfinger.net>
-References: <4e3431a3.okCWfww1KPoiQhgM%Larry.Finger@lwfinger.net>
-Date: Sun, 31 Jul 2011 01:44:38 +0200
-Message-ID: <CACna6rxA=UxT68Nmp1GOUmgVXiFeEhK0uw1taFk3YBqv9=t82g@mail.gmail.com> (sfid-20110731_014510_635387_76DCF9A7)
-Subject: Re: [PATCH] b43: Remove EXPERIMENTAL designation from LP PHY selection
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4E143FCF.8030201@darav.de>
+References: <4E143FCF.8030201@darav.de>
+Date: Wed, 6 Jul 2011 13:02:35 +0200
+Message-ID: <CAGXE3d-nsc3qS1pyayUqZg9AB-572FFhoB+r_ZWP9B6n=xhYHA@mail.gmail.com> (sfid-20110706_130239_808581_D61AB296)
+Subject: Re: RALINK rt2800pci , Patch for Device [1814:539f]
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Carsten Rietzschel <cr7@darav.de>
+Cc: IvDoorn@gmail.com, gwingerde@gmail.com,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/7/30 Larry Finger <Larry.Finger@lwfinger.net>:
-> Since kernel 3.0, the problems with controlling b43 devices that have
-> low-power (LP) PHYs have been fixed and the EXPERIMENTAL designation
-> can be fixed.
->
-> This patch also fixes a typo as the device supports 802.11b communications.
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->
-> Index: wireless-testing-new/drivers/net/wireless/b43/Kconfig
-> ===================================================================
-> --- wireless-testing-new.orig/drivers/net/wireless/b43/Kconfig
-> +++ wireless-testing-new/drivers/net/wireless/b43/Kconfig
-> @@ -114,13 +114,13 @@ config B43_PHY_N
->          affect other devices support and may provide support for basic needs.
->
->  config B43_PHY_LP
-> -       bool "Support for low-power (LP-PHY) devices (EXPERIMENTAL)"
-> -       depends on B43 && EXPERIMENTAL
-> +       bool "Support for low-power (LP-PHY) devices"
-> +       depends on B43
->        default y
->        ---help---
->          Support for the LP-PHY.
->          The LP-PHY is a low-power PHY built into some notebooks
-> -         and embedded devices. It supports 802.11a/g
-> +         and embedded devices. It supports 802.11a/b/g
->          (802.11a support is optional, and currently disabled).
->
->  config B43_PHY_HT
+Nice.
 
-Acked-by: Rafał Miłecki <zajec5@gmail.com>
+On Wed, Jul 6, 2011 at 12:58 PM, Carsten Rietzschel <cr7@darav.de> wrote:
+> Hello together,
+>
+> attached find a small patch for the RALINK wireless driver.
+> It's just adding one PCI-ID for:
+>
+> 02:00.0 Network controller [0280]: Ralink corp. Device [1814:539f]
+> � �Subsystem: Hewlett-Packard Company Device [103c:1637]
+> � �Flags: bus master, fast devsel, latency 0, IRQ 17
+> � �Memory at f0100000 (32-bit, non-prefetchable) [size=64K]
+> � �Capabilities: [40] Power Management version 3
+> � �Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
+> � �Capabilities: [70] Express Endpoint, MSI 00
+> � �Capabilities: [100] Advanced Error Reporting
+> � �Capabilities: [140] Device Serial Number 00-00-b2-7f-05-da-f8-c0
+> � �Kernel driver in use: rt2800pci
+> � �Kernel modules: rt2800pci
+>
+> It's for instance used in the HP DM1Z (Fusion) Netbook.
+> I use this patch now for several weeks - starting with 2.3.29 up to
+> 3.0-rc2 kernel. No problems so far.
+>
+> *Signed*-*off*-by: Carsten Rietzschel <cr7 [at] darav [dot] de>
 
-(using text/plain this time)
+That should be "Signed-off-by:". Mind to resubmit?
 
--- 
-Rafał
+Otherwise no objections from my side :)
+Helmut
