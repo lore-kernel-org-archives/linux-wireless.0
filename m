@@ -1,205 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:61532 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753591Ab1GOXGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2011 19:06:35 -0400
-Subject: [PATCH 2/4] ath9k: use get_unaligned_{b16, le16,
- le32} where possible
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Pavel Roskin <proski@gnu.org>
-Date: Fri, 15 Jul 2011 19:06:33 -0400
-Message-ID: <20110715230633.4461.24010.stgit@mj.roinet.com> (sfid-20110716_010639_008147_8B749349)
-In-Reply-To: <20110715230627.4461.85730.stgit@mj.roinet.com>
-References: <20110715230627.4461.85730.stgit@mj.roinet.com>
+Received: from exht1.emulex.com ([138.239.113.183]:33067 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752862Ab1GFOic (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jul 2011 10:38:32 -0400
+Message-ID: <4E147363.1060001@emulex.com> (sfid-20110706_163837_310770_F8AF7F58)
+Date: Wed, 6 Jul 2011 10:38:27 -0400
+From: James Smart <james.smart@emulex.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Jon Mason <jdmason@kudzu.us>, Richard Lary <rlary@us.ibm.com>,
+	"wey-yi.w.guy@intel.com" <wey-yi.w.guy@intel.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>
+Subject: Re: Warning: iwlegacy/iwlwifi/rtlwifi  : removal of PCI_CAP_ID_EXP
+References: <1309196346-15749-1-git-send-email-jdmason@kudzu.us> <4E0CDF8B.3020505@emulex.com> <4E0DDE5D.8040904@emulex.com>
+In-Reply-To: <4E0DDE5D.8040904@emulex.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   10 +++++-----
- drivers/net/wireless/ath/ath9k/eeprom_4k.c     |   12 +++++-------
- drivers/net/wireless/ath/ath9k/eeprom_9287.c   |   12 +++++-------
- drivers/net/wireless/ath/ath9k/eeprom_def.c    |   12 +++++-------
- drivers/net/wireless/ath/ath9k/hif_usb.c       |    5 +++--
- 5 files changed, 23 insertions(+), 28 deletions(-)
+FYI:   after discussion of this error on linux-pci and linuxppc-dev, the error 
+was corrected in a patch checked into 2.6.33-rc6/3.0-rc6 
+(http://marc.info/?l=linux-pci&m=130992047232053&w=2)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 1d09f22..33a1600 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -14,6 +14,7 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#include <asm/unaligned.h>
- #include "hw.h"
- #include "ar9003_phy.h"
- #include "ar9003_eeprom.h"
-@@ -3006,11 +3007,11 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
- 
- 	switch (param) {
- 	case EEP_MAC_LSW:
--		return eep->macAddr[0] << 8 | eep->macAddr[1];
-+		return get_unaligned_be16(eep->macAddr);
- 	case EEP_MAC_MID:
--		return eep->macAddr[2] << 8 | eep->macAddr[3];
-+		return get_unaligned_be16(eep->macAddr + 2);
- 	case EEP_MAC_MSW:
--		return eep->macAddr[4] << 8 | eep->macAddr[5];
-+		return get_unaligned_be16(eep->macAddr + 4);
- 	case EEP_REG_0:
- 		return le16_to_cpu(pBase->regDmn[0]);
- 	case EEP_REG_1:
-@@ -3380,8 +3381,7 @@ found:
- 		osize = length;
- 		read(ah, cptr, word, COMP_HDR_LEN + osize + COMP_CKSUM_LEN);
- 		checksum = ar9300_comp_cksum(&word[COMP_HDR_LEN], length);
--		mchecksum = word[COMP_HDR_LEN + osize] |
--		    (word[COMP_HDR_LEN + osize + 1] << 8);
-+		mchecksum = get_unaligned_le16(&word[COMP_HDR_LEN + osize]);
- 		ath_dbg(common, ATH_DBG_EEPROM,
- 			"checksum %x %x\n", checksum, mchecksum);
- 		if (checksum == mchecksum) {
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 5b1e894..47cc950 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -14,6 +14,7 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#include <asm/unaligned.h>
- #include "hw.h"
- #include "ar9002_phy.h"
- 
-@@ -203,11 +204,11 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
- 	case EEP_NFTHRESH_2:
- 		return pModal->noiseFloorThreshCh[0];
- 	case EEP_MAC_LSW:
--		return pBase->macAddr[0] << 8 | pBase->macAddr[1];
-+		return get_unaligned_be16(pBase->macAddr);
- 	case EEP_MAC_MID:
--		return pBase->macAddr[2] << 8 | pBase->macAddr[3];
-+		return get_unaligned_be16(pBase->macAddr + 2);
- 	case EEP_MAC_MSW:
--		return pBase->macAddr[4] << 8 | pBase->macAddr[5];
-+		return get_unaligned_be16(pBase->macAddr + 4);
- 	case EEP_REG_0:
- 		return pBase->regDmn[0];
- 	case EEP_REG_1:
-@@ -331,10 +332,7 @@ static void ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
- 
- 			regOffset = AR_PHY_BASE + (672 << 2) + regChainOffset;
- 			for (j = 0; j < 32; j++) {
--				reg32 = ((pdadcValues[4 * j + 0] & 0xFF) << 0) |
--					((pdadcValues[4 * j + 1] & 0xFF) << 8) |
--					((pdadcValues[4 * j + 2] & 0xFF) << 16)|
--					((pdadcValues[4 * j + 3] & 0xFF) << 24);
-+				reg32 = get_unaligned_le32(&pdadcValues[4 * j]);
- 				REG_WRITE(ah, regOffset, reg32);
- 
- 				ath_dbg(common, ATH_DBG_EEPROM,
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index 343fc9f..d6f6b19 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -14,6 +14,7 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#include <asm/unaligned.h>
- #include "hw.h"
- #include "ar9002_phy.h"
- 
-@@ -195,11 +196,11 @@ static u32 ath9k_hw_ar9287_get_eeprom(struct ath_hw *ah,
- 	case EEP_NFTHRESH_2:
- 		return pModal->noiseFloorThreshCh[0];
- 	case EEP_MAC_LSW:
--		return pBase->macAddr[0] << 8 | pBase->macAddr[1];
-+		return get_unaligned_be16(pBase->macAddr);
- 	case EEP_MAC_MID:
--		return pBase->macAddr[2] << 8 | pBase->macAddr[3];
-+		return get_unaligned_be16(pBase->macAddr + 2);
- 	case EEP_MAC_MSW:
--		return pBase->macAddr[4] << 8 | pBase->macAddr[5];
-+		return get_unaligned_be16(pBase->macAddr + 4);
- 	case EEP_REG_0:
- 		return pBase->regDmn[0];
- 	case EEP_REG_1:
-@@ -434,10 +435,7 @@ static void ath9k_hw_set_ar9287_power_cal_table(struct ath_hw *ah,
- 					(672 << 2) + regChainOffset;
- 
- 				for (j = 0; j < 32; j++) {
--					reg32 = ((pdadcValues[4*j + 0] & 0xFF) << 0)
--						| ((pdadcValues[4*j + 1] & 0xFF) << 8)
--						| ((pdadcValues[4*j + 2] & 0xFF) << 16)
--						| ((pdadcValues[4*j + 3] & 0xFF) << 24);
-+					reg32 = get_unaligned_le32(&pdadcValues[4 * j]);
- 
- 					REG_WRITE(ah, regOffset, reg32);
- 					regOffset += 4;
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 17f0a68..b9540a9 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -14,6 +14,7 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#include <asm/unaligned.h>
- #include "hw.h"
- #include "ar9002_phy.h"
- 
-@@ -276,11 +277,11 @@ static u32 ath9k_hw_def_get_eeprom(struct ath_hw *ah,
- 	case EEP_NFTHRESH_2:
- 		return pModal[1].noiseFloorThreshCh[0];
- 	case EEP_MAC_LSW:
--		return pBase->macAddr[0] << 8 | pBase->macAddr[1];
-+		return get_unaligned_be16(pBase->macAddr);
- 	case EEP_MAC_MID:
--		return pBase->macAddr[2] << 8 | pBase->macAddr[3];
-+		return get_unaligned_be16(pBase->macAddr + 2);
- 	case EEP_MAC_MSW:
--		return pBase->macAddr[4] << 8 | pBase->macAddr[5];
-+		return get_unaligned_be16(pBase->macAddr + 4);
- 	case EEP_REG_0:
- 		return pBase->regDmn[0];
- 	case EEP_REG_1:
-@@ -831,10 +832,7 @@ static void ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
- 
- 			regOffset = AR_PHY_BASE + (672 << 2) + regChainOffset;
- 			for (j = 0; j < 32; j++) {
--				reg32 = ((pdadcValues[4 * j + 0] & 0xFF) << 0) |
--					((pdadcValues[4 * j + 1] & 0xFF) << 8) |
--					((pdadcValues[4 * j + 2] & 0xFF) << 16)|
--					((pdadcValues[4 * j + 3] & 0xFF) << 24);
-+				reg32 = get_unaligned_le32(&pdadcValues[4 * j]);
- 				REG_WRITE(ah, regOffset, reg32);
- 
- 				ath_dbg(common, ATH_DBG_EEPROM,
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 8028fe9..1d11ae1 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -14,6 +14,7 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#include <asm/unaligned.h>
- #include "htc.h"
- 
- /* identify firmware images */
-@@ -557,8 +558,8 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
- 
- 		ptr = (u8 *) skb->data;
- 
--		pkt_len = ptr[index] + (ptr[index+1] << 8);
--		pkt_tag = ptr[index+2] + (ptr[index+3] << 8);
-+		pkt_len = get_unaligned_le16(ptr + index);
-+		pkt_tag = get_unaligned_le16(ptr + index + 2);
- 
- 		if (pkt_tag != ATH_USB_RX_STREAM_MODE_TAG) {
- 			RX_STAT_INC(skb_dropped);
+-- james s
+
+
+
+
+On 7/1/2011 10:49 AM, James Smart wrote:
+> All,
+>
+> I wanted to communicate a potential warning to those drivers that had a patch
+> submitted to replace config space searches of PCI_CAP_ID_EXP with shorthand
+> options such as is_pcie and pci_is_pcie().
+>
+> Testing with the lpfc driver and AER/EEH identified cases where the short-hand
+> search options would fail on PPC platforms.  The only successful option in all
+> cases was the explicit search via PCI_CAP_ID_EXP.   Therefore, I recommend
+> that this change not be accepted until the platform level issue can be
+> identified and corrected.
+>
+> -- james s
+>
+>
+>
+> On 6/30/2011 4:41 PM, James Smart wrote:
+>> Jon,
+>>
+>> I must NACK this patch to the lpfc driver and recommend that all other patches
+>> which replace pci_find_capability(pdef, PCI_CAP_ID_EXP) with
+>> "pci_is_pcie(pdev)" are NACK'd as well.
+>>
+>> The reason is due to an issue on PPC platforms whereby use of "pdev->is_pcie"
+>> and pci_is_pcie() will erroneously fail under some conditions, but explicit
+>> search for the capability struct via pci_find_capability() is always
+>> successful.   I expect this to be due a shadowing of pci config space in the
+>> hal/platform that isn't sufficiently built up.  We detected this issue while
+>> testing AER/EEH, and are functional only if the pci_find_capability() option
+>> is used.
+>>
+>> -- james s
+>>
+>>
+>>
+>> On 6/27/2011 1:39 PM, Jon Mason wrote:
+>>> The PCIE capability offset is saved during PCI bus walking.  It will
+>>> remove an unnecessary search in the PCI configuration space if this
+>>> value is referenced instead of reacquiring it.  Also, pci_is_pcie is a
+>>> better way of determining if the device is PCIE or not (as it uses the
+>>> same saved PCIE capability offset).
+>>>
+>>> Signed-off-by: Jon Mason<jdmason@kudzu.us>
+>>> ---
+>>>     drivers/scsi/lpfc/lpfc_init.c |    2 +-
+>>>     1 files changed, 1 insertions(+), 1 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+>>> index 148b98d..9000ad0 100644
+>>> --- a/drivers/scsi/lpfc/lpfc_init.c
+>>> +++ b/drivers/scsi/lpfc/lpfc_init.c
+>>> @@ -3970,7 +3970,7 @@ lpfc_enable_pci_dev(struct lpfc_hba *phba)
+>>>     	pci_save_state(pdev);
+>>>
+>>>     	/* PCIe EEH recovery on powerpc platforms needs fundamental reset */
+>>> -	if (pci_find_capability(pdev, PCI_CAP_ID_EXP))
+>>> +	if (pci_is_pcie(pdev))
+>>>     		pdev->needs_freset = 1;
+>>>
+>>>     	return 0;
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
