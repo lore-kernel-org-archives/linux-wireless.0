@@ -1,64 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5451 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754338Ab1GVNbO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 09:31:14 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	Tony Houghton <h@realh.co.uk>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [RFC/RFT 6/6] ath9k: always initialize hw registers related to PCIe PM
-Date: Fri, 22 Jul 2011 15:31:52 +0200
-Message-Id: <1311341512-2882-7-git-send-email-sgruszka@redhat.com> (sfid-20110722_153120_356917_66A39EC5)
-In-Reply-To: <1311341512-2882-1-git-send-email-sgruszka@redhat.com>
-References: <1311341512-2882-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:37001 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753245Ab1GFPD3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jul 2011 11:03:29 -0400
+Received: by fxd18 with SMTP id 18so171878fxd.11
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 08:03:28 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: change selecting ucode for newer cores
+Date: Wed,  6 Jul 2011 17:41:55 +0200
+Message-Id: <1309966915-3434-1-git-send-email-zajec5@gmail.com> (sfid-20110706_170332_736834_9FB7A23D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We might not initialize registers if ah->aspm_enabled == false, assure
-we do this.
+Older cores had unique PHY. This is not true anymore for newer ones.
+For example core rev 16 can be LP, SSLPN or N (PHY).
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c  |    5 +----
- drivers/net/wireless/ath/ath9k/pci.c |    4 ++++
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/net/wireless/b43/main.c |   26 +++++++++++++++++---------
+ 1 files changed, 17 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 4ef7313..7084bb5 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -595,10 +595,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index f0b9dd1..cddc5a8 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2160,20 +2160,28 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 	int err;
  
- 	ath9k_hw_init_mode_regs(ah);
- 
--
--	if (ah->is_pciexpress)
--		ath9k_hw_configpcipowersave(ah, false);
+ 	/* Get microcode */
+-	if ((rev >= 5) && (rev <= 10))
++	if ((rev >= 5) && (rev <= 10)) {
+ 		filename = "ucode5";
+-	else if ((rev >= 11) && (rev <= 12))
++	} else if ((rev >= 11) && (rev <= 12)) {
+ 		filename = "ucode11";
+-	else if (rev == 13)
++	} else if (rev == 13) {
+ 		filename = "ucode13";
+-	else if (rev == 14)
++	} else if (rev == 14) {
+ 		filename = "ucode14";
+-	else if (rev == 15)
++	} else if (rev == 15) {
+ 		filename = "ucode15";
+-	else if ((rev >= 16) && (rev <= 20))
+-		filename = "ucode16_mimo";
 -	else
-+	if (!ah->is_pciexpress)
- 		ath9k_hw_disablepcie(ah);
- 
- 	if (!AR_SREV_9300_20_OR_LATER(ah))
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 835a50a..d1c75ec 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -118,6 +118,10 @@ static void ath_pci_aspm_init(struct ath_softc *sc)
- 	if (!pci_is_pcie(pdev))
- 		return;
- 
-+	/* initalize PCIe PM registers if device introduce itself as PCIe */
-+	if (ah->is_pciexpress)
-+		ath9k_hw_ops(ah)->config_pci_powersave(ah, false);
-+
- 	parent = pdev->bus->self;
- 
- 	if (ah->btcoex_hw.scheme != ATH_BTCOEX_CFG_NONE) {
+-		goto err_no_ucode;
++	} else {
++		switch (dev->phy.type) {
++		case B43_PHYTYPE_N:
++			if (rev >= 16)
++				filename = "ucode16_mimo";
++			else
++				goto err_no_ucode;
++			break;
++		default:
++			goto err_no_ucode;
++		}
++	}
+ 	err = b43_do_request_fw(ctx, filename, &fw->ucode);
+ 	if (err)
+ 		goto err_load;
 -- 
-1.7.1
+1.7.3.4
 
