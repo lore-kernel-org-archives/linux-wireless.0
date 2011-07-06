@@ -1,69 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:49821 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751030Ab1GSRpY (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:60346 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750785Ab1GFH6O convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 13:45:24 -0400
-Received: by ywe9 with SMTP id 9so1887958ywe.19
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2011 10:45:23 -0700 (PDT)
-Message-ID: <4E25C2B1.2090804@lwfinger.net> (sfid-20110719_194527_917473_8FE95BC8)
-Date: Tue, 19 Jul 2011 12:45:21 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 6 Jul 2011 03:58:14 -0400
+Received: by wwe5 with SMTP id 5so6678179wwe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 00:58:13 -0700 (PDT)
 MIME-Version: 1.0
-To: Stefan Assmann <sassmann@redhat.com>
-CC: ali@internetdog.org, wireless <linux-wireless@vger.kernel.org>
-Subject: Re: r8712u issue
-References: <4E23E56C.9000202@redhat.com> <20110718082709.GA8390@internetdog.org> <4E23F2E0.3050200@redhat.com> <4E2448D2.50502@lwfinger.net> <4E244AC6.2030306@redhat.com> <4E2454EC.1050900@lwfinger.net> <4E25858D.9010407@redhat.com> <4E25AB9F.8010607@lwfinger.net> <20110719161656.GA7099@internetdog.org> <4E25BBF4.1010003@redhat.com> <20110719173203.GA7406@internetdog.org> <4E25C12F.3080804@redhat.com>
-In-Reply-To: <4E25C12F.3080804@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20110706023943.GA11178@vmraj-lnx.users.atheros.com>
+References: <BANLkTikByepHZoEE2b65CrgUmpBmcxiTgw@mail.gmail.com>
+	<BANLkTimUs65_Sw=pwF-J8gPjyrNcs2qnOw@mail.gmail.com>
+	<20110701173237.GC7125@alittletooquiet.net>
+	<20110704052410.GA1364@vmraj-lnx.users.atheros.com>
+	<20110704095341.GA1380@vmraj-lnx.users.atheros.com>
+	<20110705124914.GC26882@alittletooquiet.net>
+	<CAD2nsn0-FQuo7bT3nb3jJLDe1XwbMw4J-Gr8qFkY5zzY1O-vxg@mail.gmail.com>
+	<20110705143029.GA28091@alittletooquiet.net>
+	<CAD2nsn1r7cW7KZ2W_z+SURHRpaTvuC_bd42yN9S+y9JrYMkS4w@mail.gmail.com>
+	<20110705172022.GB28091@alittletooquiet.net>
+	<20110706023943.GA11178@vmraj-lnx.users.atheros.com>
+Date: Wed, 6 Jul 2011 03:58:13 -0400
+Message-ID: <CAD2nsn0HFgm6Puuzuy4gghdDvpb05WaQtETS4=mfQ63mFzo--Q@mail.gmail.com> (sfid-20110706_095817_357403_73EB8DA1)
+Subject: Re: ath9k_htc fails to initialize TL-WN721N with compat-wireless 3.0-rc4-1
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Forest Bond <forest@alittletooquiet.net>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/19/2011 12:38 PM, Stefan Assmann wrote:
-> On 19.07.2011 19:32, Ali Bahar wrote:
->> On Tue, Jul 19, 2011 at 07:16:36PM +0200, Stefan Assmann wrote:
->>> On 19.07.2011 18:16, Ali Bahar wrote:
->>>> On Tue, Jul 19, 2011 at 11:06:55AM -0500, Larry Finger wrote:
->>>>> On 07/19/2011 08:24 AM, Stefan Assmann wrote:
->>>>>>
->>>>>> So far I can say that with scan_ssid=1 after rebooting the AP the
->>>>>> connection is properly re-established. Looks promising.
->>>>>
->>>>> Your results make sense. The driver is fairly passive in all this.
->>>>> It gets TX requests from the MAC layer, and passes received data
->>>>> back up to that layer. It seems likely that the MAC layer built into
->>>>> r8712u is not keeping track of missing responses, or it is not
->>>>> probing the AP. In either case, it would not be productive to devote
->>>>> any effort to fixing that part when either using NetworkManager or
->>>>> setting scan_ssid for wpa_supplicant establishes periodic scans.
->>>>> When these fail to get response from the AP, the softmac code will
->>>>> respond, as you see.
->>>>>
->>>>> The ultimate fix will be to convert to the driver to use mac80211,
->>>>
->>>> Just what I've been thinking lately. I didn't think it very worthwhile
->>>> to invest too much into fixing the miscellany.
->>>
->>> Agreed! Maybe we could add a note to the documentation to make the
->>> behaviour more obvious.
->>
->> There's documentation?! ;-|
->>
->> ... The following could be an option:
->> http://linuxwireless.org/en/users/Drivers/rtl819x
+> Forest,
 >
-> Good idea!
+> To avoid multi reg writes please apply the following change
 >
->>
->> Larry's the author, and so it's _his_ call. _I_ am just tackling
->> whatever problems I run into; at the moment, that happens to be the
->> r8712u driver.
+> diff --git a/drivers/net/wireless/ath/ath9k/wmi.h
+> b/drivers/net/wireless/ath/ath9k/wmi.h
+> index fde6da6..0878add 100644
+> --- a/drivers/net/wireless/ath/ath9k/wmi.h
+> +++ b/drivers/net/wireless/ath/ath9k/wmi.h
+> @@ -124,7 +124,7 @@ enum wmi_event_id {
+>        WMI_TXSTATUS_EVENTID,
+>         };
 >
-> Right, my statement wasn't directed strictly to you, I was just
-> thinking of how to improve the situation. :)
+>          -#define MAX_CMD_NUMBER 62
+>          +#define MAX_CMD_NUMBER 1
+>
+>            struct register_write {
+>                    __be32 reg;
+> --
 
-The wpa_supplicant documentation is what should be changed to note that 
-scan_ssid is useful for more than hidden ESSIDs. On the other hand, EVERY 
-wireless example in 'man wpa_supplicant.conf' shows "scan_ssid=1".
+Hi Forest,
 
-Larry
+did you try in your system the simple hack Raj had suggested?
+it seems to solve ths issue, but we encountered some soft lock ups due
+to the LED stuff is moved to mac80211 with the recent code base,
+we will take a look at this to fix this, probably requires some backporting.
+
+in order to recreate the issue, we installed Ubuntu 8.04- the Hardy
+Heron - released in April 2008.
+as expected the issue is perfectly reproducible. thanks to Raj for his
+help and suggestions.
+
+*please obtain the stable compat-wireless-2.6.36-4
+http://linuxwireless.org/en/users/Download/stable/#compat-wireless_2.6.36_stable_releases
+*download the old firmware
+http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=blob_plain;f=ar9271.fw;hb=HEAD
+(history http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=history;f=ar9271.fw;h=d0ee74a1c8dccb7cc21f5be90f1d4048fa9dbf9e;hb=HEAD)
+with this your USB card will be up and running, we did some basic testing.
+*I used  usbmodeswitch-0.9.4
+
+we also recommend you upgrade to latest kernel available for your distribution,
+because we may still face some other issues as ath9k_htc very much new
+compared to ath9k
+please also read
+http://wireless.kernel.org/en/users/Download/compat-wireless-old
+
+-- 
+shafi
