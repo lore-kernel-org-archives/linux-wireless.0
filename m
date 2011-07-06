@@ -1,27 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:42992 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754062Ab1GQTCt (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38820 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754718Ab1GFSq5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2011 15:02:49 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id C5A39540055
-	for <linux-wireless@vger.kernel.org>; Sun, 17 Jul 2011 15:10:53 -0400 (EDT)
-Subject: Compat-wireless release for 2011-07-17 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110717190248.A15E740EC9@repository3.orbit-lab.org> (sfid-20110717_210252_618931_4BA0C0BC)
-Date: Sun, 17 Jul 2011 15:02:48 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 6 Jul 2011 14:46:57 -0400
+Date: Wed, 6 Jul 2011 14:37:42 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH 3.0] ssb: fix init regression of hostmode PCI core
+Message-ID: <20110706183742.GB2553@tuxdriver.com> (sfid-20110706_204701_255554_1D15DAA5)
+References: <1309879532-8704-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1309879532-8704-1-git-send-email-zajec5@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jul 05, 2011 at 05:25:32PM +0200, Rafał Miłecki wrote:
+> Our workarounds seem to be clientmode PCI specific. Using SPROM
+> workaround on SoC resulted in Oops:
+> 
+> Data bus error, epc == 8017ed58, ra == 80225838
+>  Oops[#1]:
+>  Cpu 0
+>  $ 0   : 00000000 10008000 b8000000 00000001
+>  $ 4   : 80293b5c 00000caa ffffffff 00000000
+>  $ 8   : 0000000a 00000003 00000001 696d6d20
+>  $12   : ffffffff 00000000 00000000 ffffffff
+>  $16   : 802d0140 b8004800 802c0000 00000000
+>  $20   : 00000000 802c0000 00000000 802d04d4
+>  $24   : 00000018 80151a00
+>  $28   : 81816000 81817df8 8029bda0 80225838
+>  Hi    : 00000000
+>  Lo    : 00000000
+>  epc   : 8017ed58 ssb_ssb_read16+0x48/0x60
+>    Not tainted
+>  ra    : 80225838 ssb_pcicore_init+0x54/0x3b4
+> 
+> Reported-by: Hauke Mehrtens <hauke@hauke-m.de>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> Hauke: could you give it a try?
+> 
+> John: this regression was introduced in 3.0
 
-compat-wireless code metrics
+Hauke, I'd like to see your reply before I merge this.
 
-    834289 - Total upstream lines of code being pulled
-      2380 - backport code changes
-      2080 - backport code additions
-       300 - backport code deletions
-      8127 - backport from compat module
-     10507 - total backport code
-    1.2594 - % of code consists of backport work
+Thanks,
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
