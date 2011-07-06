@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:23167 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751576Ab1GXXhq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jul 2011 19:37:46 -0400
-Subject: Re: [PATCH] iwlagn: wrap suspend/resume definitions in CONFIG_PM
- block
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: David Miller <davem@davemloft.net>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <20110724203956.GA29630@tuxdriver.com>
-References: <20110724.030949.1727841105144911931.davem@davemloft.net>
-	 <1311535150-28686-1-git-send-email-linville@tuxdriver.com>
-	 <20110724.130840.1093555047179460794.davem@davemloft.net>
-	 <20110724203956.GA29630@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 24 Jul 2011 16:01:07 -0700
-Message-ID: <1311548467.5579.119.camel@wwguy-huron> (sfid-20110725_013812_495807_70FDB0F2)
-Mime-Version: 1.0
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:59698 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752979Ab1GFP0t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jul 2011 11:26:49 -0400
+Received: by fxd18 with SMTP id 18so194768fxd.11
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 08:26:48 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: select BLOCKIO for BCMA
+Date: Wed,  6 Jul 2011 18:05:14 +0200
+Message-Id: <1309968314-11634-1-git-send-email-zajec5@gmail.com> (sfid-20110706_172654_806128_E720F378)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-07-24 at 13:39 -0700, John W. Linville wrote:
-> On Sun, Jul 24, 2011 at 01:08:40PM -0700, David Miller wrote:
-> > From: "John W. Linville" <linville@tuxdriver.com>
-> > Date: Sun, 24 Jul 2011 15:19:10 -0400
-> > 
-> > > drivers/net/wireless/iwlwifi/iwl-agn.c:3464: error: unknown field 'suspend' specified in initializer
-> > > drivers/net/wireless/iwlwifi/iwl-agn.c:3464: warning: initialization from incompatible pointer type
-> > > drivers/net/wireless/iwlwifi/iwl-agn.c:3465: error: unknown field 'resume' specified in initializer
-> > > drivers/net/wireless/iwlwifi/iwl-agn.c:3465: warning: initialization from incompatible pointer type
-> > > 
-> > > This was caused by commit c8ac61cf ("iwlagn: implement WoWLAN").
-> > > 
-> > > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > 
-> > Since I already minimally fixed up my build locally last night I know
-> > that your patch leads to a set of warnings because the methods whose
-> > hookup are now commented out become completely unused and they are all
-> > marked "static".  And recursively functions that those methods use
-> > become unused too.
-> > 
-> > Did you turn off CONFIG_PM and test the build of this file to see
-> > what the compiler actually does with it?
-> > 
-> > I'm checking in the following, but I expect much better from you John.
-> 
-> Sorry, Dave.  I confess that I was hoping for a quick fix on a Sunday afternoon. :-)
-> 
-> Thanks for making it better!
-> 
-> John
-My mistake to not catch this to begin with, sorry for cause all the
-trouble.
+We want PIO as fallback for BCMA as well.
 
-Wey
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/Kconfig |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+index 0c29c74..17f9dab 100644
+--- a/drivers/net/wireless/b43/Kconfig
++++ b/drivers/net/wireless/b43/Kconfig
+@@ -90,6 +90,12 @@ config B43_SDIO
+ 
+ #Data transfers to the device via PIO. We want it as a fallback even
+ # if we can do DMA.
++config B43_BCMA_PIO
++	bool
++	depends on B43_BCMA
++	select BCMA_BLOCKIO
++	default y
++
+ config B43_PIO
+ 	bool
+ 	depends on B43
+-- 
+1.7.3.4
 
