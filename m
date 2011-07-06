@@ -1,298 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53402 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750970Ab1GVXUd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 19:20:33 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-mips@linux-mips.org
-Cc: jonas.gorski@gmail.com, ralf@linux-mips.org, zajec5@gmail.com,
-	mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 01/11] bcma: move parsing of EEPROM into own function.
-Date: Sat, 23 Jul 2011 01:20:05 +0200
-Message-Id: <1311376815-15755-2-git-send-email-hauke@hauke-m.de> (sfid-20110723_012037_000315_06656AA1)
-In-Reply-To: <1311376815-15755-1-git-send-email-hauke@hauke-m.de>
-References: <1311376815-15755-1-git-send-email-hauke@hauke-m.de>
+Received: from storm.alittletooquiet.net ([67.23.28.199]:55820 "EHLO
+	storm.alittletooquiet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754329Ab1GFS3i (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jul 2011 14:29:38 -0400
+Date: Wed, 6 Jul 2011 14:29:38 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ath9k_htc fails to initialize TL-WN721N with compat-wireless
+ 3.0-rc4-1
+Message-ID: <20110706182937.GE28091@alittletooquiet.net> (sfid-20110706_202942_522106_B97C0E0F)
+References: <20110701173237.GC7125@alittletooquiet.net>
+ <20110704052410.GA1364@vmraj-lnx.users.atheros.com>
+ <20110704095341.GA1380@vmraj-lnx.users.atheros.com>
+ <20110705124914.GC26882@alittletooquiet.net>
+ <CAD2nsn0-FQuo7bT3nb3jJLDe1XwbMw4J-Gr8qFkY5zzY1O-vxg@mail.gmail.com>
+ <20110705143029.GA28091@alittletooquiet.net>
+ <CAD2nsn1r7cW7KZ2W_z+SURHRpaTvuC_bd42yN9S+y9JrYMkS4w@mail.gmail.com>
+ <20110705172022.GB28091@alittletooquiet.net>
+ <20110706023943.GA11178@vmraj-lnx.users.atheros.com>
+ <CAD2nsn0HFgm6Puuzuy4gghdDvpb05WaQtETS4=mfQ63mFzo--Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="4f28nU6agdXSinmL"
+In-Reply-To: <CAD2nsn0HFgm6Puuzuy4gghdDvpb05WaQtETS4=mfQ63mFzo--Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move the parsing of the EEPROM data in scan function for one core into
-an own function. Now we are able to use it in some other scan function
-as well.
 
-Acked-by: Rafał Miłecki <zajec5@gmail.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/scan.c |  230 ++++++++++++++++++++++++++-------------------------
- 1 files changed, 118 insertions(+), 112 deletions(-)
+--4f28nU6agdXSinmL
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 40d7dcc..4012d8d 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -200,16 +200,124 @@ static s32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 **eromptr,
- 	return addrl;
- }
- 
-+static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
-+			      struct bcma_device *core)
-+{
-+	s32 tmp;
-+	u8 i, j;
-+	s32 cia, cib;
-+	u8 ports[2], wrappers[2];
-+
-+	/* get CIs */
-+	cia = bcma_erom_get_ci(bus, eromptr);
-+	if (cia < 0) {
-+		bcma_erom_push_ent(eromptr);
-+		if (bcma_erom_is_end(bus, eromptr))
-+			return -ESPIPE;
-+		return -EILSEQ;
-+	}
-+	cib = bcma_erom_get_ci(bus, eromptr);
-+	if (cib < 0)
-+		return -EILSEQ;
-+
-+	/* parse CIs */
-+	core->id.class = (cia & SCAN_CIA_CLASS) >> SCAN_CIA_CLASS_SHIFT;
-+	core->id.id = (cia & SCAN_CIA_ID) >> SCAN_CIA_ID_SHIFT;
-+	core->id.manuf = (cia & SCAN_CIA_MANUF) >> SCAN_CIA_MANUF_SHIFT;
-+	ports[0] = (cib & SCAN_CIB_NMP) >> SCAN_CIB_NMP_SHIFT;
-+	ports[1] = (cib & SCAN_CIB_NSP) >> SCAN_CIB_NSP_SHIFT;
-+	wrappers[0] = (cib & SCAN_CIB_NMW) >> SCAN_CIB_NMW_SHIFT;
-+	wrappers[1] = (cib & SCAN_CIB_NSW) >> SCAN_CIB_NSW_SHIFT;
-+	core->id.rev = (cib & SCAN_CIB_REV) >> SCAN_CIB_REV_SHIFT;
-+
-+	if (((core->id.manuf == BCMA_MANUF_ARM) &&
-+	     (core->id.id == 0xFFF)) ||
-+	    (ports[1] == 0)) {
-+		bcma_erom_skip_component(bus, eromptr);
-+		return -ENXIO;
-+	}
-+
-+	/* check if component is a core at all */
-+	if (wrappers[0] + wrappers[1] == 0) {
-+		/* we could save addrl of the router
-+		if (cid == BCMA_CORE_OOB_ROUTER)
-+		 */
-+		bcma_erom_skip_component(bus, eromptr);
-+		return -ENXIO;
-+	}
-+
-+	if (bcma_erom_is_bridge(bus, eromptr)) {
-+		bcma_erom_skip_component(bus, eromptr);
-+		return -ENXIO;
-+	}
-+
-+	/* get & parse master ports */
-+	for (i = 0; i < ports[0]; i++) {
-+		u32 mst_port_d = bcma_erom_get_mst_port(bus, eromptr);
-+		if (mst_port_d < 0)
-+			return -EILSEQ;
-+	}
-+
-+	/* get & parse slave ports */
-+	for (i = 0; i < ports[1]; i++) {
-+		for (j = 0; ; j++) {
-+			tmp = bcma_erom_get_addr_desc(bus, eromptr,
-+				SCAN_ADDR_TYPE_SLAVE, i);
-+			if (tmp < 0) {
-+				/* no more entries for port _i_ */
-+				/* pr_debug("erom: slave port %d "
-+				 * "has %d descriptors\n", i, j); */
-+				break;
-+			} else {
-+				if (i == 0 && j == 0)
-+					core->addr = tmp;
-+			}
-+		}
-+	}
-+
-+	/* get & parse master wrappers */
-+	for (i = 0; i < wrappers[0]; i++) {
-+		for (j = 0; ; j++) {
-+			tmp = bcma_erom_get_addr_desc(bus, eromptr,
-+				SCAN_ADDR_TYPE_MWRAP, i);
-+			if (tmp < 0) {
-+				/* no more entries for port _i_ */
-+				/* pr_debug("erom: master wrapper %d "
-+				 * "has %d descriptors\n", i, j); */
-+				break;
-+			} else {
-+				if (i == 0 && j == 0)
-+					core->wrap = tmp;
-+			}
-+		}
-+	}
-+
-+	/* get & parse slave wrappers */
-+	for (i = 0; i < wrappers[1]; i++) {
-+		u8 hack = (ports[1] == 1) ? 0 : 1;
-+		for (j = 0; ; j++) {
-+			tmp = bcma_erom_get_addr_desc(bus, eromptr,
-+				SCAN_ADDR_TYPE_SWRAP, i + hack);
-+			if (tmp < 0) {
-+				/* no more entries for port _i_ */
-+				/* pr_debug("erom: master wrapper %d "
-+				 * has %d descriptors\n", i, j); */
-+				break;
-+			} else {
-+				if (wrappers[0] == 0 && !i && !j)
-+					core->wrap = tmp;
-+			}
-+		}
-+	}
-+	return 0;
-+}
-+
- int bcma_bus_scan(struct bcma_bus *bus)
- {
- 	u32 erombase;
- 	u32 __iomem *eromptr, *eromend;
- 
--	s32 cia, cib;
--	u8 ports[2], wrappers[2];
--
- 	s32 tmp;
--	u8 i, j;
- 
- 	int err;
- 
-@@ -236,112 +344,13 @@ int bcma_bus_scan(struct bcma_bus *bus)
- 		INIT_LIST_HEAD(&core->list);
- 		core->bus = bus;
- 
--		/* get CIs */
--		cia = bcma_erom_get_ci(bus, &eromptr);
--		if (cia < 0) {
--			bcma_erom_push_ent(&eromptr);
--			if (bcma_erom_is_end(bus, &eromptr))
--				break;
--			err= -EILSEQ;
--			goto out;
--		}
--		cib = bcma_erom_get_ci(bus, &eromptr);
--		if (cib < 0) {
--			err= -EILSEQ;
--			goto out;
--		}
--
--		/* parse CIs */
--		core->id.class = (cia & SCAN_CIA_CLASS) >> SCAN_CIA_CLASS_SHIFT;
--		core->id.id = (cia & SCAN_CIA_ID) >> SCAN_CIA_ID_SHIFT;
--		core->id.manuf = (cia & SCAN_CIA_MANUF) >> SCAN_CIA_MANUF_SHIFT;
--		ports[0] = (cib & SCAN_CIB_NMP) >> SCAN_CIB_NMP_SHIFT;
--		ports[1] = (cib & SCAN_CIB_NSP) >> SCAN_CIB_NSP_SHIFT;
--		wrappers[0] = (cib & SCAN_CIB_NMW) >> SCAN_CIB_NMW_SHIFT;
--		wrappers[1] = (cib & SCAN_CIB_NSW) >> SCAN_CIB_NSW_SHIFT;
--		core->id.rev = (cib & SCAN_CIB_REV) >> SCAN_CIB_REV_SHIFT;
--
--		if (((core->id.manuf == BCMA_MANUF_ARM) &&
--		     (core->id.id == 0xFFF)) ||
--		    (ports[1] == 0)) {
--			bcma_erom_skip_component(bus, &eromptr);
--			continue;
--		}
--
--		/* check if component is a core at all */
--		if (wrappers[0] + wrappers[1] == 0) {
--			/* we could save addrl of the router
--			if (cid == BCMA_CORE_OOB_ROUTER)
--			 */
--			bcma_erom_skip_component(bus, &eromptr);
--			continue;
--		}
--
--		if (bcma_erom_is_bridge(bus, &eromptr)) {
--			bcma_erom_skip_component(bus, &eromptr);
-+		err = bcma_get_next_core(bus, &eromptr, core);
-+		if (err == -ENXIO)
- 			continue;
--		}
--
--		/* get & parse master ports */
--		for (i = 0; i < ports[0]; i++) {
--			u32 mst_port_d = bcma_erom_get_mst_port(bus, &eromptr);
--			if (mst_port_d < 0) {
--				err= -EILSEQ;
--				goto out;
--			}
--		}
--
--		/* get & parse slave ports */
--		for (i = 0; i < ports[1]; i++) {
--			for (j = 0; ; j++) {
--				tmp = bcma_erom_get_addr_desc(bus, &eromptr,
--					SCAN_ADDR_TYPE_SLAVE, i);
--				if (tmp < 0) {
--					/* no more entries for port _i_ */
--					/* pr_debug("erom: slave port %d "
--					 * "has %d descriptors\n", i, j); */
--					break;
--				} else {
--					if (i == 0 && j == 0)
--						core->addr = tmp;
--				}
--			}
--		}
--
--		/* get & parse master wrappers */
--		for (i = 0; i < wrappers[0]; i++) {
--			for (j = 0; ; j++) {
--				tmp = bcma_erom_get_addr_desc(bus, &eromptr,
--					SCAN_ADDR_TYPE_MWRAP, i);
--				if (tmp < 0) {
--					/* no more entries for port _i_ */
--					/* pr_debug("erom: master wrapper %d "
--					 * "has %d descriptors\n", i, j); */
--					break;
--				} else {
--					if (i == 0 && j == 0)
--						core->wrap = tmp;
--				}
--			}
--		}
--
--		/* get & parse slave wrappers */
--		for (i = 0; i < wrappers[1]; i++) {
--			u8 hack = (ports[1] == 1) ? 0 : 1;
--			for (j = 0; ; j++) {
--				tmp = bcma_erom_get_addr_desc(bus, &eromptr,
--					SCAN_ADDR_TYPE_SWRAP, i + hack);
--				if (tmp < 0) {
--					/* no more entries for port _i_ */
--					/* pr_debug("erom: master wrapper %d "
--					 * has %d descriptors\n", i, j); */
--					break;
--				} else {
--					if (wrappers[0] == 0 && !i && !j)
--						core->wrap = tmp;
--				}
--			}
--		}
-+		else if (err == -ESPIPE)
-+			break;
-+		else if (err < 0)
-+			return err;
- 
- 		pr_info("Core %d found: %s "
- 			"(manuf 0x%03X, id 0x%03X, rev 0x%02X, class 0x%X)\n",
-@@ -351,9 +360,6 @@ int bcma_bus_scan(struct bcma_bus *bus)
- 
- 		core->core_index = bus->nr_cores++;
- 		list_add(&core->list, &bus->cores);
--		continue;
--out:
--		return err;
- 	}
- 
- 	return 0;
--- 
-1.7.4.1
+Hi shafi,
 
+On Wed, Jul 06, 2011 at 03:58:13AM -0400, Mohammed Shafi wrote:
+> > To avoid multi reg writes please apply the following change
+> >
+> > diff --git a/drivers/net/wireless/ath/ath9k/wmi.h
+> > b/drivers/net/wireless/ath/ath9k/wmi.h
+> > index fde6da6..0878add 100644
+> > --- a/drivers/net/wireless/ath/ath9k/wmi.h
+> > +++ b/drivers/net/wireless/ath/ath9k/wmi.h
+> > @@ -124,7 +124,7 @@ enum wmi_event_id {
+> > =A0 =A0 =A0 =A0WMI_TXSTATUS_EVENTID,
+> > =A0 =A0 =A0 =A0 };
+> >
+> > =A0 =A0 =A0 =A0 =A0-#define MAX_CMD_NUMBER 62
+> > =A0 =A0 =A0 =A0 =A0+#define MAX_CMD_NUMBER 1
+> >
+> > =A0 =A0 =A0 =A0 =A0 =A0struct register_write {
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0__be32 reg;
+> > --
+>=20
+> did you try in your system the simple hack Raj had suggested?
+> it seems to solve ths issue, but we encountered some soft lock ups due
+> to the LED stuff is moved to mac80211 with the recent code base,
+> we will take a look at this to fix this, probably requires some backporti=
+ng.
+
+Yes, the device seems to initialize properly with this patch.  Like you
+expected, I am seeing soft lock-ups when I try to bring the interface up.
+
+> in order to recreate the issue, we installed Ubuntu 8.04- the Hardy
+> Heron - released in April 2008.
+> as expected the issue is perfectly reproducible. thanks to Raj for his
+> help and suggestions.
+
+Thanks for taking the time to test.  I really appreciate everyone's help.
+
+> *please obtain the stable compat-wireless-2.6.36-4
+> http://linuxwireless.org/en/users/Download/stable/#compat-wireless_2.6.36=
+_stable_releases
+> *download the old firmware
+> http://git.kernel.org/?p=3Dlinux/kernel/git/dwmw2/linux-firmware.git;a=3D=
+blob_plain;f=3Dar9271.fw;hb=3DHEAD
+> (history http://git.kernel.org/?p=3Dlinux/kernel/git/dwmw2/linux-firmware=
+=2Egit;a=3Dhistory;f=3Dar9271.fw;h=3Dd0ee74a1c8dccb7cc21f5be90f1d4048fa9dbf=
+9e;hb=3DHEAD)
+> with this your USB card will be up and running, we did some basic testing.
+> *I used  usbmodeswitch-0.9.4
+
+Ultimately we'd like to try the experimental AP mode.  I understand this was
+introduced in kernel version 2.6.40, so I don't think compat-wireless-2.6.3=
+6-4
+will work for us.
+
+Can you point me to the LED-related commits that you mentioned above?  We'll
+either need to backport the changes required to fix the soft lock-ups or up=
+grade
+our kernel to include these commits.
+
+> we also recommend you upgrade to latest kernel available for your distrib=
+ution,
+> because we may still face some other issues as ath9k_htc very much new
+> compared to ath9k
+
+A kernel upgrade is something I would like to avoid if possible, but of cou=
+rse
+it is something we'll consider if we need to.
+
+> please also read
+> http://wireless.kernel.org/en/users/Download/compat-wireless-old
+
+I think this kernel is supported by the regular compat-wireless package, ri=
+ght?
+
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.rapidrollout.com
+
+--4f28nU6agdXSinmL
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk4UqZEACgkQRO4fQQdv5Ay9jQCbB3lJUTTYM0Vm1o+JNqwG0kyI
+BAMAnjiX7VDThAbNYOyasOBTarI5ZqtE
+=V/bH
+-----END PGP SIGNATURE-----
+
+--4f28nU6agdXSinmL--
