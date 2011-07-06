@@ -1,75 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:64323 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754716Ab1GDKtC convert rfc822-to-8bit (ORCPT
+Received: from lvps46-163-74-235.dedicated.hosteurope.de ([46.163.74.235]:44811
+	"EHLO lvps46-163-74-235.dedicated.hosteurope.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752136Ab1GFLWp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 06:49:02 -0400
-Received: by yxi11 with SMTP id 11so1544107yxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2011 03:49:01 -0700 (PDT)
+	Wed, 6 Jul 2011 07:22:45 -0400
+Message-ID: <4E144581.6000708@darav.de> (sfid-20110706_132257_927779_63DDF1A8)
+Date: Wed, 06 Jul 2011 13:22:41 +0200
+From: Carsten Rietzschel <cr7@darav.de>
 MIME-Version: 1.0
-In-Reply-To: <4E1199A9.2040008@openwrt.org>
-References: <1309758467-1712-1-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-2-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-3-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-4-git-send-email-nbd@openwrt.org>
-	<CAFtRNNzHqQLYxoZBBgpyttLgXRp1SWabPdQvNr4gvRPvPpPOBw@mail.gmail.com>
-	<4E1199A9.2040008@openwrt.org>
-Date: Mon, 4 Jul 2011 13:49:01 +0300
-Message-ID: <CAFtRNNxOe5u-oUO-a6q-rGhnL6SOzpYZ2kATrm3DigAJZk8U6Q@mail.gmail.com> (sfid-20110704_124907_436811_BEA991B0)
-Subject: Re: [ath5k-devel] [PATCH 4/8] ath5k: initialize common->clockrate
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: Helmut Schaa <helmut.schaa@googlemail.com>, IvDoorn@gmail.com,
+	gwingerde@gmail.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+Subject: Re: RALINK rt2800pci , Patch for Device [1814:539f]
+References: <4E143FCF.8030201@darav.de> <CAGXE3d-nsc3qS1pyayUqZg9AB-572FFhoB+r_ZWP9B6n=xhYHA@mail.gmail.com> <CAGRGNgUPOEFwpeuy4ASv8wYOa9_9ZzUGokpF-CvwNXpBZ0AS8Q@mail.gmail.com>
+In-Reply-To: <CAGRGNgUPOEFwpeuy4ASv8wYOa9_9ZzUGokpF-CvwNXpBZ0AS8Q@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/7/4 Felix Fietkau <nbd@openwrt.org>:
-> On 2011-07-04 5:40 PM, Nick Kossifidis wrote:
+Thanks,
+
+here we go with a changed Signed-off-by-Line.
+In case it's usefull even it's already in the git-tree.
+
+Signed-off-by: Carsten Rietzschel <cr7@darav.de>
+
+diff -ur linux-3.0_rc2/drivers/net/wireless/rt2x00/rt2800pci.c
+linux-3.0_rc2_patched/drivers/net/wireless/rt2x00/rt2800pci.c
+--- linux-3.0_rc2/drivers/net/wireless/rt2x00/rt2800pci.c    2011-07-06
+12:46:13.251676122 +0200
++++ linux-3.0_rc2_patched/drivers/net/wireless/rt2x00/rt2800pci.c   
+2011-07-06 12:44:38.381673254 +0200
+@@ -1158,6 +1158,7 @@
+ #endif
+ #ifdef CONFIG_RT2800PCI_RT53XX
+     { PCI_DEVICE(0x1814, 0x5390) },
++    { PCI_DEVICE(0x1814, 0x539f) },
+ #endif
+     { 0, }
+ };
+
+cya.
+Carsten
+
+Am 06.07.2011 13:02, schrieb Helmut Schaa:
+> Nice.
+>
+> On Wed, Jul 6, 2011 at 12:58 PM, Carsten Rietzschel <cr7@darav.de> wrote:
+>> Hello together,
 >>
->> 2011/7/4 Felix Fietkau<nbd@openwrt.org>:
->>>
->>>  Fixes a division by zero when setting distance before activating the
->>>  device for the first time.
->>>
->>>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
->>>  ---
->>>   drivers/net/wireless/ath/ath5k/base.c |    1 +
->>>   1 files changed, 1 insertions(+), 0 deletions(-)
->>>
->>>  diff --git a/drivers/net/wireless/ath/ath5k/base.c
->>> b/drivers/net/wireless/ath/ath5k/base.c
->>>  index a6623dd..a413aa7 100644
->>>  --- a/drivers/net/wireless/ath/ath5k/base.c
->>>  +++ b/drivers/net/wireless/ath/ath5k/base.c
->>>  @@ -2422,6 +2422,7 @@ ath5k_init_softc(struct ath5k_softc *sc, const
->>> struct ath_bus_ops *bus_ops)
->>>         common->ah = sc->ah;
->>>         common->hw = hw;
->>>         common->priv = sc;
->>>  +       common->clockrate = 40;
->>>
->>>         /*
->>>          * Cache line size is used to size and align various
->>>  --
->>>  1.7.3.2
->>>
+>> attached find a small patch for the RALINK wireless driver.
+>> It's just adding one PCI-ID for:
 >>
->> We better set this to 44 for g (according to docs core frequency is 44MHz
->> for g)
+>> 02:00.0 Network controller [0280]: Ralink corp. Device [1814:539f]
+>>    Subsystem: Hewlett-Packard Company Device [103c:1637]
+>>    Flags: bus master, fast devsel, latency 0, IRQ 17
+>>    Memory at f0100000 (32-bit, non-prefetchable) [size=64K]
+>>    Capabilities: [40] Power Management version 3
+>>    Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
+>>    Capabilities: [70] Express Endpoint, MSI 00
+>>    Capabilities: [100] Advanced Error Reporting
+>>    Capabilities: [140] Device Serial Number 00-00-b2-7f-05-da-f8-c0
+>>    Kernel driver in use: rt2800pci
+>>    Kernel modules: rt2800pci
+>>
+>> It's for instance used in the HP DM1Z (Fusion) Netbook.
+>> I use this patch now for several weeks - starting with 2.3.29 up to
+>> 3.0-rc2 kernel. No problems so far.
+>>
+>> *Signed*-*off*-by: Carsten Rietzschel <cr7 [at] darav [dot] de>
+> That should be "Signed-off-by:". Mind to resubmit?
 >
-> It shouldn't make a difference, since the first hardware reset will reload
-> all the settings anyway.
+> Otherwise no objections from my side :)
+> Helmut
+
+
+Am 06.07.2011 13:15, schrieb Julian Calaby:
+> On Wed, Jul 6, 2011 at 21:02, Helmut Schaa <helmut.schaa@googlemail.com> wrote:
+>> Nice.
+>>
+>> On Wed, Jul 6, 2011 at 12:58 PM, Carsten Rietzschel <cr7@darav.de> wrote:
+>>> Hello together,
+>>>
+>>> attached find a small patch for the RALINK wireless driver.
+>>> It's just adding one PCI-ID for:
+>>>
+>>> 02:00.0 Network controller [0280]: Ralink corp. Device [1814:539f]
+>>>    Subsystem: Hewlett-Packard Company Device [103c:1637]
+>>>    Flags: bus master, fast devsel, latency 0, IRQ 17
+>>>    Memory at f0100000 (32-bit, non-prefetchable) [size=64K]
+>>>    Capabilities: [40] Power Management version 3
+>>>    Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
+>>>    Capabilities: [70] Express Endpoint, MSI 00
+>>>    Capabilities: [100] Advanced Error Reporting
+>>>    Capabilities: [140] Device Serial Number 00-00-b2-7f-05-da-f8-c0
+>>>    Kernel driver in use: rt2800pci
+>>>    Kernel modules: rt2800pci
+>>>
+>>> It's for instance used in the HP DM1Z (Fusion) Netbook.
+>>> I use this patch now for several weeks - starting with 2.3.29 up to
+>>> 3.0-rc2 kernel. No problems so far.
+>>>
+>>> *Signed*-*off*-by: Carsten Rietzschel <cr7 [at] darav [dot] de>
+>> That should be "Signed-off-by:". Mind to resubmit?
+> And, IIRC, you shouldn't censor your email address.
 >
-> - Felix
+> Thanks,
 >
 
-O.K.
-
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
