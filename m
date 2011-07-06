@@ -1,61 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from linknet-ip-202.77.119.130.link.net.id ([202.77.119.130]:59120
-	"EHLO ppac-jak-id-1.inter-touch.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755424Ab1GDGLF (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:54052 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756006Ab1GFVBE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 02:11:05 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org
-Subject: [PATCH 6/8] ath5k: fix reference clock usec duration setting restore
-Date: Mon,  4 Jul 2011 12:47:45 +0700
-Message-Id: <1309758467-1712-6-git-send-email-nbd@openwrt.org> (sfid-20110704_081122_724290_3FA67703)
-In-Reply-To: <1309758467-1712-5-git-send-email-nbd@openwrt.org>
-References: <1309758467-1712-1-git-send-email-nbd@openwrt.org>
- <1309758467-1712-2-git-send-email-nbd@openwrt.org>
- <1309758467-1712-3-git-send-email-nbd@openwrt.org>
- <1309758467-1712-4-git-send-email-nbd@openwrt.org>
- <1309758467-1712-5-git-send-email-nbd@openwrt.org>
+	Wed, 6 Jul 2011 17:01:04 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 4so108843ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 14:01:03 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 5/6] rt2x00: Properly identify rt2800usb devices.
+Date: Wed, 6 Jul 2011 22:59:19 +0200
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+References: <201107062256.25555.IvDoorn@gmail.com> <201107062257.38435.IvDoorn@gmail.com> <201107062258.56747.IvDoorn@gmail.com>
+In-Reply-To: <201107062258.56747.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201107062259.20822.IvDoorn@gmail.com> (sfid-20110706_230109_064394_D718668D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-enabling the sleep clock alters the AR5K_USEC_32 field, but disabling
-it didn't restore it.
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Sitecom WLA4000 (USB ID 0x0df6:0x0060) is an RT3072 chipset.
+Sitecom WLA5000 (USB ID 0x0df6:0x0062) is an RT3572 chipset.
+
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/ath/ath5k/reset.c |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800usb.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 1676a3e..55276ce 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -233,7 +233,7 @@ static void ath5k_hw_init_core_clock(struct ath5k_hw *ah)
- static void ath5k_hw_set_sleep_clock(struct ath5k_hw *ah, bool enable)
- {
- 	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
--	u32 scal, spending;
-+	u32 scal, spending, sclock;
- 
- 	/* Only set 32KHz settings if we have an external
- 	 * 32KHz crystal present */
-@@ -317,6 +317,15 @@ static void ath5k_hw_set_sleep_clock(struct ath5k_hw *ah, bool enable)
- 
- 		/* Set up tsf increment on each cycle */
- 		AR5K_REG_WRITE_BITS(ah, AR5K_TSF_PARM, AR5K_TSF_PARM_INC, 1);
-+
-+		if ((ah->ah_radio == AR5K_RF5112) ||
-+			(ah->ah_radio == AR5K_RF5413) ||
-+			(ah->ah_radio == AR5K_RF2316) ||
-+			(ah->ah_radio == AR5K_RF2317))
-+			sclock = 40 - 1;
-+		else
-+			sclock = 32 - 1;
-+		AR5K_REG_WRITE_BITS(ah, AR5K_USEC_5211, AR5K_USEC_32, sclock);
- 	}
- }
- 
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 6e92298..af23058 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -1020,6 +1020,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0df6, 0x0048) },
+ 	{ USB_DEVICE(0x0df6, 0x0051) },
+ 	{ USB_DEVICE(0x0df6, 0x005f) },
++	{ USB_DEVICE(0x0df6, 0x0060) },
+ 	/* SMC */
+ 	{ USB_DEVICE(0x083a, 0x6618) },
+ 	{ USB_DEVICE(0x083a, 0x7511) },
+@@ -1076,6 +1077,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x148f, 0x3572) },
+ 	/* Sitecom */
+ 	{ USB_DEVICE(0x0df6, 0x0041) },
++	{ USB_DEVICE(0x0df6, 0x0062) },
+ 	/* Toshiba */
+ 	{ USB_DEVICE(0x0930, 0x0a07) },
+ 	/* Zinwell */
+@@ -1174,8 +1176,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0df6, 0x004a) },
+ 	{ USB_DEVICE(0x0df6, 0x004d) },
+ 	{ USB_DEVICE(0x0df6, 0x0053) },
+-	{ USB_DEVICE(0x0df6, 0x0060) },
+-	{ USB_DEVICE(0x0df6, 0x0062) },
+ 	/* SMC */
+ 	{ USB_DEVICE(0x083a, 0xa512) },
+ 	{ USB_DEVICE(0x083a, 0xc522) },
 -- 
-1.7.3.2
+1.7.2.3
 
