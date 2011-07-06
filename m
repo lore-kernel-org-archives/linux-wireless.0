@@ -1,166 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4193 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932373Ab1GNV3u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 17:29:50 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 11/35] staging: brcm80211: removed function declaration
- typedefs from main.h,pub.h
-Date: Thu, 14 Jul 2011 14:29:07 -0700
-Message-ID: <1310678971-28952-12-git-send-email-frankyl@broadcom.com> (sfid-20110714_233000_307420_013AD959)
-In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
-References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:38091 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751576Ab1GFLPW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jul 2011 07:15:22 -0400
+Received: by pvg12 with SMTP id 12so5938846pvg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 04:15:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4E143FCF.8030201@darav.de>
+References: <4E143FCF.8030201@darav.de>
+Date: Wed, 6 Jul 2011 13:15:21 +0200
+Message-ID: <CAL1gcdNwooP+nQwtgOSqwnPcO=JozzeEyMMC7shM9nhS954E1A@mail.gmail.com> (sfid-20110706_131525_929931_DD07AB78)
+Subject: Re: RALINK rt2800pci , Patch for Device [1814:539f]
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Carsten Rietzschel <cr7@darav.de>, IvDoorn@gmail.com
+Cc: helmut.schaa@googlemail.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+On Wed, Jul 6, 2011 at 12:58 PM, Carsten Rietzschel <cr7@darav.de> wrote:
+> Hello together,
+>
+> attached find a small patch for the RALINK wireless driver.
+> It's just adding one PCI-ID for:
+>
+> 02:00.0 Network controller [0280]: Ralink corp. Device [1814:539f]
+>    Subsystem: Hewlett-Packard Company Device [103c:1637]
+>    Flags: bus master, fast devsel, latency 0, IRQ 17
+>    Memory at f0100000 (32-bit, non-prefetchable) [size=64K]
+>    Capabilities: [40] Power Management version 3
+>    Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
+>    Capabilities: [70] Express Endpoint, MSI 00
+>    Capabilities: [100] Advanced Error Reporting
+>    Capabilities: [140] Device Serial Number 00-00-b2-7f-05-da-f8-c0
+>    Kernel driver in use: rt2800pci
+>    Kernel modules: rt2800pci
+>
+> It's for instance used in the HP DM1Z (Fusion) Netbook.
+> I use this patch now for several weeks - starting with 2.3.29 up to
+> 3.0-rc2 kernel. No problems so far.
+>
+> *Signed*-*off*-by: Carsten Rietzschel <cr7 [at] darav [dot] de>
 
-Softmac related code cleanup. Typedefs are undesirable according to the
-CodingStyle document.
+This device ID has already been added in the latest rt2x00.git tree via patch:
+http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=c56a574019a75c1ca36c540a8ab092a7ed35020d
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
+However, this hasn't been propagated to the wireless tree yet.
+
+Ivo, when are you planning to submit all pending patches towards the
+wireless tree?
+
 ---
- drivers/staging/brcm80211/brcmsmac/main.c |    4 +-
- drivers/staging/brcm80211/brcmsmac/main.h |   46 +++++++++++++++++++++-------
- drivers/staging/brcm80211/brcmsmac/pub.h  |   27 ++---------------
- 3 files changed, 39 insertions(+), 38 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index bd3d5f0..66de7ef 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -6265,8 +6265,8 @@ _brcms_c_ioctl(struct brcms_c_info *wlc, int cmd, void *arg, int len,
-  * register watchdog and down handlers.
-  */
- int brcms_c_module_register(struct brcms_pub *pub,
--			const char *name, void *hdl,
--			watchdog_fn_t w_fn, down_fn_t d_fn)
-+		const char *name, void *hdl,
-+		int (*w_fn)(void *handle), int (*d_fn)(void *handle))
- {
- 	struct brcms_c_info *wlc = (struct brcms_c_info *) pub->wlc;
- 	int i;
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
-index bf36f10..e61f047 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.h
-+++ b/drivers/staging/brcm80211/brcmsmac/main.h
-@@ -408,11 +408,11 @@ struct brcms_band {
- 	u16 bcntsfoff;	/* beacon tsf offset */
- };
- 
--/* tx completion callback takes 3 args */
--typedef void (*pkcb_fn_t) (struct brcms_c_info *wlc, uint txstatus, void *arg);
--
- struct pkt_cb {
--	pkcb_fn_t fn;		/* function to call when tx frame completes */
-+	/* function to call when tx frame completes */
-+	/* tx completion callback takes 3 args */
-+	void (*fn)(struct brcms_c_info *wlc, uint txstatus, void *arg);
-+
- 	void *arg;		/* void arg for fn */
- 	u8 nextidx;		/* index of next call back if threading */
- 	bool entered;		/* recursion check */
-@@ -423,19 +423,41 @@ struct modulecb {
- 	char name[32];		/* module name : NULL indicates empty array member */
- 	const struct brcmu_iovar *iovars;	/* iovar table */
- 	void *hdl;		/* handle passed when handler 'doiovar' is called */
--	watchdog_fn_t watchdog_fn;	/* watchdog handler */
--	iovar_fn_t iovar_fn;	/* iovar handler */
--	down_fn_t down_fn;	/* down handler. Note: the int returned
--				 * by the down function is a count of the
--				 * number of timers that could not be
--				 * freed.
--				 */
-+	int (*watchdog_fn)(void *handle);	/* watchdog handler */
-+
-+	/* IOVar handler
-+	 *
-+	 * handle - a pointer value registered with the function
-+	 * vi - iovar_info that was looked up
-+	 * actionid - action ID, calculated by IOV_GVAL() and IOV_SVAL()
-+	 *    based on varid.
-+	 * name - the actual iovar name
-+	 * params/plen - parameters and length for a get, input only.
-+	 * arg/len - buffer and length for value to be set or retrieved,
-+	 *      input or output.
-+	 * vsize - value size, valid for integer type only.
-+	 * wlcif - interface context (brcms_c_if pointer)
-+	 *
-+	 * All pointers may point into the same buffer.
-+	 */
-+	int (*iovar_fn)(void *handle, const struct brcmu_iovar *vi,
-+			u32 actionid, const char *name, void *params,
-+			uint plen, void *arg, int alen, int vsize,
-+			struct brcms_c_if *wlcif);
-+
-+	int (*down_fn)(void *handle); /* down handler. Note: the int returned
-+				       * by the down function is a count of the
-+				       * number of timers that could not be
-+				       * freed.
-+				       */
-+
- };
- 
- /* dump control blocks */
- struct dumpcb_s {
- 	const char *name;	/* dump name */
--	dump_fn_t dump_fn;	/* 'wl dump' handler */
-+	/* 'wl dump' handler */
-+	int (*dump_fn)(void *handle, struct brcmu_strbuf *b);
- 	void *dump_fn_arg;
- 	struct dumpcb_s *next;
- };
-diff --git a/drivers/staging/brcm80211/brcmsmac/pub.h b/drivers/staging/brcm80211/brcmsmac/pub.h
-index 01d7460..8ec398a 100644
---- a/drivers/staging/brcm80211/brcmsmac/pub.h
-+++ b/drivers/staging/brcm80211/brcmsmac/pub.h
-@@ -203,29 +203,6 @@ struct brcms_bss_info {
- #define IOVF_GET_BAND	(1<<13)	/* get requires fixed band */
- #define IOVF_OPEN_ALLOW	(1<<14)	/* set allowed iovar for opensrc */
- 
--/* watchdog down and dump callback function proto's */
--typedef int (*watchdog_fn_t) (void *handle);
--typedef int (*down_fn_t) (void *handle);
--typedef int (*dump_fn_t) (void *handle, struct brcmu_strbuf *b);
--
--/* IOVar handler
-- *
-- * handle - a pointer value registered with the function
-- * vi - iovar_info that was looked up
-- * actionid - action ID, calculated by IOV_GVAL() and IOV_SVAL() based on varid.
-- * name - the actual iovar name
-- * params/plen - parameters and length for a get, input only.
-- * arg/len - buffer and length for value to be set or retrieved, input or output.
-- * vsize - value size, valid for integer type only.
-- * wlcif - interface context (brcms_c_if pointer)
-- *
-- * All pointers may point into the same buffer.
-- */
--typedef int (*iovar_fn_t) (void *handle, const struct brcmu_iovar *vi,
--			   u32 actionid, const char *name, void *params,
--			   uint plen, void *arg, int alen, int vsize,
--			   struct brcms_c_if *wlcif);
--
- #define MAC80211_PROMISC_BCNS	(1 << 0)
- #define MAC80211_SCAN		(1 << 1)
- 
-@@ -635,7 +612,9 @@ extern void brcms_c_mctrl(struct brcms_c_info *wlc, u32 mask, u32 val);
- 
- extern int brcms_c_module_register(struct brcms_pub *pub,
- 			       const char *name, void *hdl,
--			       watchdog_fn_t watchdog_fn, down_fn_t down_fn);
-+			       int (*watchdog_fn)(void *handle),
-+			       int (*down_fn)(void *handle));
-+
- extern int brcms_c_module_unregister(struct brcms_pub *pub, const char *name,
- 				 void *hdl);
- extern void brcms_c_suspend_mac_and_wait(struct brcms_c_info *wlc);
--- 
-1.7.1
-
-
+Gertjan.
