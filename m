@@ -1,81 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:53964 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752243Ab1GWOWi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jul 2011 10:22:38 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 04/11] ath6kl: Remove bssid from struct wmi
-Date: Sat, 23 Jul 2011 19:43:10 +0530
-Message-ID: <1311430397-4960-4-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110723_162241_684833_A579ECB2)
-In-Reply-To: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
+Received: from c60.cesmail.net ([216.154.195.49]:31468 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751148Ab1GGApq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jul 2011 20:45:46 -0400
+Message-ID: <4E1501B7.80303@gnu.org> (sfid-20110707_024549_444289_26A28C2D)
+Date: Wed, 06 Jul 2011 20:45:43 -0400
+From: Pavel Roskin <proski@gnu.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Henry Ptasinski <henryp@broadcom.com>
+CC: linville@tuxdriver.com, gregkh@suse.de,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Zhenhui Lin <frankyl@broadcom.com>
+Subject: Re: [RFC] Move brcm80211 to mainline
+References: <20110707002034.GA17885@broadcom.com>
+In-Reply-To: <20110707002034.GA17885@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is nothing but bssid of struct ath6kl.
+On 07/06/2011 08:20 PM, Henry Ptasinski wrote:
+> With the latest series of cleanup patches merged in by Greg KH, I'd like to now
+> propose moving brcm80211 out of staging and into mainline.
+>
+> Since brcm80211 in staging-next has about ~250 patches that areen't in
+> wireless-testing yet, I've put together a patch to add a copy of the current
+> sources from staging-next into wireless-testing:drivers/net/wireless/brcm80211.
+>
+> The patch is somewhat large, so I've posted the patch at:
+>
+> 	http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=get&target=0001-wireless-testing-add-brcm80211.patch
+>
+> Only the necessary Kconfig and Makefile adjustments have been made (the sources
+> are unchanged from what's currently in staging-next).
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/wmi.c |    7 ++-----
- drivers/net/wireless/ath/ath6kl/wmi.h |    1 -
- 2 files changed, 2 insertions(+), 6 deletions(-)
+The change to Kconfig seems to be wrong.  It would be better to respect 
+CONFIG_WLAN in drivers/net/wireless/Kconfig, like all other drivers do. 
+  Then drivers/net/wireless/brcm80211/Kconfig should be cleaned up to 
+remove unneeded dependencies on CONFIG_WLAN.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index ea123c9..ff71b7f 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -498,8 +498,6 @@ static int ath6kl_wmi_connect_event_rx(struct wmi *wmi, u8 *datap, int len)
- 	ath6kl_dbg(ATH6KL_DBG_WMI, "%s: freq %d bssid %pM\n",
- 		   __func__, ev->ch, ev->bssid);
- 
--	memcpy(wmi->bssid, ev->bssid, ETH_ALEN);
--
- 	/* Start of assoc rsp IEs */
- 	pie = ev->assoc_info + ev->beacon_ie_len +
- 	      ev->assoc_req_len + (sizeof(u16) * 3); /* capinfo, status, aid */
-@@ -546,7 +544,6 @@ static int ath6kl_wmi_disconnect_event_rx(struct wmi *wmi, u8 *datap, int len)
- 		return -EINVAL;
- 
- 	ev = (struct wmi_disconnect_event *) datap;
--	memset(wmi->bssid, 0, sizeof(wmi->bssid));
- 
- 	wmi->is_wmm_enabled = false;
- 	wmi->pair_crypto_type = NONE_CRYPT;
-@@ -772,7 +769,7 @@ static int ath6kl_wmi_bssinfo_event_rx(struct wmi *wmi, u8 *datap, int len)
- 		 * instance value of scan result. It also sync up RSSI info
- 		 * in GUI between scan result and RSSI signal icon.
- 		 */
--		if (memcmp(wmi->bssid, bih->bssid, ETH_ALEN) == 0) {
-+		if (memcmp(wmi->parent_dev->bssid, bih->bssid, ETH_ALEN) == 0) {
- 			bih->rssi = a_cpu_to_sle16(bss->ni_rssi);
- 			bih->snr = bss->ni_snr;
- 		}
-@@ -2253,7 +2250,7 @@ int ath6kl_wmi_get_tx_pwr_cmd(struct wmi *wmi)
- void ath6kl_wmi_get_current_bssid(struct wmi *wmi, u8 *bssid)
- {
- 	if (bssid)
--		memcpy(bssid, wmi->bssid, ETH_ALEN);
-+		memcpy(bssid, wmi->parent_dev->bssid, ETH_ALEN);
- }
- 
- int ath6kl_wmi_set_lpreamble_cmd(struct wmi *wmi, u8 status, u8 preamble_policy)
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 1ef779d..1646a92 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -116,7 +116,6 @@ struct wmi {
- 	u8 fat_pipe_exist;
- 	struct ath6kl *parent_dev;
- 	struct wmi_stats stat;
--	u8 bssid[ETH_ALEN];
- 	u8 pwr_mode;
- 	u8 phy_mode;
- 	u8 keep_alive_intvl;
 -- 
-1.7.0.4
-
+Regards,
+Pavel Roskin
