@@ -1,79 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:42831 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751099Ab1GUHSS convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49345 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755125Ab1GGRdv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:18:18 -0400
-MIME-Version: 1.0
-In-Reply-To: <CACna6rxAKMp-2wqwz4k4S3nTkY_3Qz7=hEZk9F2Zig7T5kp_HA@mail.gmail.com>
-References: <CACna6rxAKMp-2wqwz4k4S3nTkY_3Qz7=hEZk9F2Zig7T5kp_HA@mail.gmail.com>
-Date: Thu, 21 Jul 2011 09:18:17 +0200
-Message-ID: <CACna6rwPqeW5Bhc7A0FnkCaRq-a-nA4ziUQdoiakN_DvMyL_RQ@mail.gmail.com> (sfid-20110721_091822_096381_F8762C71)
-Subject: Re: Bug in BCMA: device_unregister causing "NULL pointer dereference at"
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 7 Jul 2011 13:33:51 -0400
+Subject: Re: [PATCH] Frame injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Roberto Riggio <roberto.riggio@create-net.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20110707170214.GF2498@tuxdriver.com> (sfid-20110707_191659_517938_A23E457D)
+References: <4DECB62E.2020202@create-net.org>
+	 <20110707170214.GF2498@tuxdriver.com>
+	 (sfid-20110707_191659_517938_A23E457D)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Jul 2011 19:33:48 +0200
+Message-ID: <1310060028.3924.6.camel@jlt3.sipsolutions.net> (sfid-20110707_193354_887048_B17BF5A1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 7 lipca 2011 17:25 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
-> I've problem with bcma and bus subsystem.
->
-> This works fine:
-> modprobe bcma; rmmod bcma
->
-> This:
-> modprobe bcma; modprobe b43; rmmod b43; rmmod bcma
-> causes:
-> BUG: unable to handle kernel NULL pointer dereference at   (null)
->
-> My BCMA has only 3 fores, out of them only 1 is registered as device:
-> bcma: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x22, class 0x0)
-> bcma: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x17, class 0x0)
-> bcma: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x0F, class 0x0)
->
-> The dereference comes out from
-> static void bcma_unregister_cores(struct bcma_bus *bus)
->
-> There is a simple loop:
-> list_for_each_entry(core, &bus->cores, list) {
->        if (core->dev_registered)
->                device_unregister(&core->dev);
-> }
->
->
-> So when I unload bcma after I got driver (b43) for 0x812 core, I get
-> NULL pointer dereference.
->
-> Any tip, why does it happen?
+On Thu, 2011-07-07 at 13:02 -0400, John W. Linville wrote:
+> I never saw any comments on this one...
 
-I've tracked where does crash really happen (kobject_del does not
-really say much). The real forwardtrace is:
-device_unregister → device_del → kobject_del → kobj_kset_leave →
-kobj_kset_leave → list_del_init
+I ignored it because it was just a lot of things thrown into one and
+then with a useless changelog tacked on ....
 
-If you take a look at list_del_init, it touches "prev" and "next". So
-I've added some debugging:
-pr_info("core->dev.kobj.entry.prev: 0x%p\n", core->dev.kobj.entry.prev);
-pr_info("core->dev.kobj.entry.next: 0x%p\n", core->dev.kobj.entry.next);
+johannes
 
-modprobe bcma && rmmod bcma:
-[  342.866366] bcma: Unregistering device for core 0x812
-[  342.866380] bcma: core->dev.kobj.entry.prev: 0xdb82780c
-[  342.866382] bcma: core->dev.kobj.entry.next: 0xda044980
-
-modprobe bcma && modprobe b43 && rmmod b43 && rmmod bcma:
-[  612.819306] bcma: Unregistering device for core 0x812
-[  612.819320] bcma: core->dev.kobj.entry.prev: 0x  (null)
-[  612.819322] bcma: core->dev.kobj.entry.next: 0xd7fe6614
-[  612.819971] BUG: unable to handle kernel NULL pointer dereference at   (null)
-[  612.819989] IP: [<c03dcfbe>] kobject_del+0x2e/0x60
-
-I've no idea why kobj entry list gets corrupted after loading b43
-driver supporting device for core 0x812.
-
-Any help now maybe?
-
--- 
-Rafał
