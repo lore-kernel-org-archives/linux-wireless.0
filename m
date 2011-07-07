@@ -1,29 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59925 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964777Ab1GOJ5v (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:42019 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752477Ab1GGPZT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2011 05:57:51 -0400
-Subject: Re: [PATCH 2/5] mac80211: correct mesh beacon head
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <1310600747-9583-3-git-send-email-thomas@cozybit.com> (sfid-20110714_014633_387436_20E7419F)
-References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
-	 <1310600747-9583-3-git-send-email-thomas@cozybit.com>
-	 (sfid-20110714_014633_387436_20E7419F)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 15 Jul 2011 11:57:47 +0200
-Message-ID: <1310723867.4164.19.camel@jlt3.sipsolutions.net> (sfid-20110715_115753_089798_A974DE5E)
-Mime-Version: 1.0
+	Thu, 7 Jul 2011 11:25:19 -0400
+MIME-Version: 1.0
+Date: Thu, 7 Jul 2011 17:25:19 +0200
+Message-ID: <CACna6rxAKMp-2wqwz4k4S3nTkY_3Qz7=hEZk9F2Zig7T5kp_HA@mail.gmail.com> (sfid-20110707_172546_276165_D526D387)
+Subject: Bug in BCMA: device_unregister causing "NULL pointer dereference at"
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-07-13 at 16:45 -0700, Thomas Pedersen wrote:
-> Supported Rates and DS Parameter elements go in the beacon head. Add
-> these IEs when we initially construct the beacon.
+I've problem with bcma and bus subsystem.
 
-This breaks mesh_plink_frame_tx() afaict.
+This works fine:
+modprobe bcma; rmmod bcma
 
-johannes
+This:
+modprobe bcma; modprobe b43; rmmod b43; rmmod bcma
+causes:
+BUG: unable to handle kernel NULL pointer dereference at   (null)
 
+My BCMA has only 3 fores, out of them only 1 is registered as device:
+bcma: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x22, class 0x0)
+bcma: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x17, class 0x0)
+bcma: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x0F, class 0x0)
+
+The dereference comes out from
+static void bcma_unregister_cores(struct bcma_bus *bus)
+
+There is a simple loop:
+list_for_each_entry(core, &bus->cores, list) {
+	if (core->dev_registered)
+		device_unregister(&core->dev);
+}
+
+
+So when I unload bcma after I got driver (b43) for 0x812 core, I get
+NULL pointer dereference.
+
+Any tip, why does it happen?
+
+-- 
+Rafał
