@@ -1,85 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:46813 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616Ab1GTQzh convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:20808 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752093Ab1GGSDk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2011 12:55:37 -0400
-Received: by vws1 with SMTP id 1so299040vws.19
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2011 09:55:37 -0700 (PDT)
+	Thu, 7 Jul 2011 14:03:40 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k_htc: do not configure filter before driver is started
+Date: Thu, 7 Jul 2011 23:33:38 +0530
+Message-ID: <1310061819-7260-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110707_200344_161665_7C169738)
 MIME-Version: 1.0
-In-Reply-To: <CAMEN=G50-CYW-+zdiVV-tUF2Ghhatrr0zk5oVYrN8=EN-03ZzA@mail.gmail.com>
-References: <CAN=pzdLRaRHkg4NquUpDhEwRzq-roKQXMtMcwnr031maDSLRfw@mail.gmail.com>
-	<201107201536.01392.helmut.schaa@googlemail.com>
-	<CAN=pzdKLtB2yz4-OhKL5gzYF0Qm2weAmNAz-0MqdFuooFNYzwQ@mail.gmail.com>
-	<201107201709.42141.helmut.schaa@googlemail.com>
-	<CAMEN=G50-CYW-+zdiVV-tUF2Ghhatrr0zk5oVYrN8=EN-03ZzA@mail.gmail.com>
-Date: Wed, 20 Jul 2011 20:55:36 +0400
-Message-ID: <CAN=pzdJHOFL8YcwWYT2BvBM5=TLKYZgOomiHR0eMpNoT1Qntzg@mail.gmail.com> (sfid-20110720_185541_407615_1B81CE70)
-Subject: Re: rt2x00, AP mode, 802.11n is not working properly
-From: Stanislav Demakov <s.demakov@gmail.com>
-To: Juan Carlos Garza Fernandez <juancarlosgarza@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've just tried to apply these patches to the 2011-03-13 as you said
-and none of the applied.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-2011/7/20 Juan Carlos Garza Fernandez <juancarlosgarza@gmail.com>:
-> Hi all,
->
-> On Wed, Jul 20, 2011 at 5:09 PM, Helmut Schaa
-> <helmut.schaa@googlemail.com> wrote:
->> Am Mittwoch, 20. Juli 2011 schrieb Stanislav Demakov:
->>> 2011/7/20 Helmut Schaa <helmut.schaa@googlemail.com>:
->>> > Am Mittwoch, 20. Juli 2011 schrieb Stanislav Demakov:
->>> >> I'm using hostapd 0.73 and 1T1R rt2x00 based wireless dongle to create
->>> >> an AP. The problem is that since version
->>> >> compat-wireless-2010-12-14.tar.bz2 802.11n mode is not working
->>> >> properly. In this driver version and all later you've broken
->>> >> something!
->>> >
->>> > So, 2010-12-14 already shows the problem you've described while 2010-12-13
->>> > does not, right?
->>> Yes, correct.
->>
->> One major change from 12-13 to 12-14 was the queue refactoring. Haven't found
->> anything else that looks related. However, this patchset is quite big and
->> really changed the way the queues are handled in rt2x00. So it's not trivial
->> to find the root cause for your problem ...
->
-> I am running an AP with hostapd 0.73 with also a 1T1R dongle and it
-> works (maybe not as fast as it could, but I am happy with its
-> performance).
-> I use the compat-wireless version from 2011-03-13 plus some patches
-> that Helmut suggested (which are already merged in the main branch):
->
-> [1] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=878a2bbc20100d8bccf84cc058373fe7de2e6501
-> [2] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=4f3ab1e88d8b5ce4852d075016ca784a00383452
-> [3] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=c8cb3a0af064fb5d9cbbaa16bd2f308ba3b90ceb
-> [4] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=66b096e6ad64f718425d2de9a70d82ba187d7db4
->
-> I later tried the version compat-wireless-2011-05-05 and it did not
-> work, some major changes took
-> place in between, and I unfortunately did not have time to go deeper,
-> so I stayed with my
-> running system.
->
-> Since then, some other things have been changed in the TX queues and I
-> will eventually try it again.
->
->>
->> Helmut
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
-> --
-> ________________________________
-> Juan Carlos Garza
->
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 7b77968..7212acb 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1294,11 +1294,16 @@ static void ath9k_htc_configure_filter(struct ieee80211_hw *hw,
+ 	u32 rfilt;
+ 
+ 	mutex_lock(&priv->mutex);
+-	ath9k_htc_ps_wakeup(priv);
+-
+ 	changed_flags &= SUPPORTED_FILTERS;
+ 	*total_flags &= SUPPORTED_FILTERS;
+ 
++	if (priv->op_flags & OP_INVALID) {
++		ath_dbg(ath9k_hw_common(priv->ah), ATH_DBG_ANY,
++			"Unable to configure filter on invalid state\n");
++		return;
++	}
++	ath9k_htc_ps_wakeup(priv);
++
+ 	priv->rxfilter = *total_flags;
+ 	rfilt = ath9k_htc_calcrxfilter(priv);
+ 	ath9k_hw_setrxfilter(priv->ah, rfilt);
+-- 
+1.7.6
+
