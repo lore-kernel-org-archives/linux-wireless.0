@@ -1,195 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:42081 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932308Ab1GMBdv (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:2165 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751889Ab1GGVzt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2011 21:33:51 -0400
-Subject: [PATCH 05/24] ath6kl: add common.h
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: devel@linuxdriverproject.org, gregkh@suse.de, error27@gmail.com
-Date: Wed, 13 Jul 2011 04:33:45 +0300
-Message-ID: <20110713013345.8517.40718.stgit@localhost6.localdomain6> (sfid-20110713_033359_660650_15BCBF4B)
-In-Reply-To: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
+	Thu, 7 Jul 2011 17:55:49 -0400
+Date: Thu, 7 Jul 2011 14:55:37 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: "Greg KH" <gregkh@suse.de>
+cc: "Pavel Roskin" <proski@gnu.org>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Subject: Re: [RFC] Move brcm80211 to mainline
+Message-ID: <20110707215537.GS23944@broadcom.com> (sfid-20110707_235556_773466_88EAC035)
+References: <20110707002034.GA17885@broadcom.com>
+ <CACna6rx5EyZ-=2XgWawdN_Qu2t1K1sdHZydZFW6=TiX2QUwMfw@mail.gmail.com>
+ <4E1504A3.1070801@gnu.org> <20110707014512.GA21087@suse.de>
+ <20110707144628.GF23944@broadcom.com> <20110707145822.GA29241@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20110707145822.GA29241@suse.de>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/common.h |  163 ++++++++++++++++++++++++++++++
- 1 files changed, 163 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/common.h
+On Thu, Jul 07, 2011 at 07:58:22AM -0700, Greg KH wrote:
+> On Thu, Jul 07, 2011 at 07:46:28AM -0700, Henry Ptasinski wrote:
+> > On Wed, Jul 06, 2011 at 06:45:12PM -0700, Greg KH wrote:
+> > > On Wed, Jul 06, 2011 at 08:58:11PM -0400, Pavel Roskin wrote:
+> > > > On 07/06/2011 08:40 PM, Rafał Miłecki wrote:
+> > > > >Short question, without commenting on brcm80211 code yet:
+> > > > >
+> > > > >Why should we want 2 mainline drivers for the same hardware?
+> > > > 
+> > > > Also, checkpatch.pl finds a lot of bad stuff:
+> > > > 
+> > > > total: 1 errors, 1505 warnings, 105454 lines checked
+> > > > 
+> > > > $ scripts/checkpatch.pl 0001-wireless-testing-add-brcm80211.patch >Log
+> > > > $ egrep '^(WARNING|ERROR)' Log |sort |uniq -c
+> > > >       1 ERROR: do not use assignment in if condition
+> > > >      76 WARNING: braces {} are not necessary for any arm of this statement
+> > > >     205 WARNING: braces {} are not necessary for single statement blocks
+> > > >       4 WARNING: consider using a completion
+> > > >      11 WARNING: consider using kstrto* in preference to simple_strtoul
+> > > >      20 WARNING: do not add new typedefs
+> > > >       5 WARNING: externs should be avoided in .c files
+> > > >    1164 WARNING: line over 80 characters
+> > > >      20 WARNING: Use of volatile is usually wrong: see
+> > > 
+> > > Almost all of these should be fixed, especially the volatile one, that's
+> > > just horrible.
+> > 
+> > Fixes for these are in progress.  We'll keep posting patches to address this
+> > cleanup in staging.
+> 
+> Ok, at the least these should be resolved before ever asking for the
+> code to be moved out of staging.  Sorry for me not checking this
+> previously, I wrongly assumed that you had finished this task already.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/common.h b/drivers/net/wireless/ath/ath6kl/common.h
-new file mode 100644
-index 0000000..cd201c5
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath6kl/common.h
-@@ -0,0 +1,163 @@
-+/*
-+ * Copyright (c) 2010-2011 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef COMMON_H
-+#define COMMON_H
-+
-+#include <linux/netdevice.h>
-+
-+#define IEEE80211_MAX_IE        256
-+
-+extern int ath6kl_printk(const char *level, const char *fmt, ...);
-+
-+#define A_CACHE_LINE_PAD            128
-+
-+/*
-+ * Reflects the version of binary interface exposed by ATH6KL target
-+ * firmware. Needs to be incremented by 1 for any change in the firmware
-+ * that requires upgrade of the driver on the host side for the change to
-+ * work correctly
-+ */
-+#define ATH6KL_ABI_VERSION        1
-+
-+#define SIGNAL_QUALITY_METRICS_NUM_MAX    2
-+
-+enum {
-+	SIGNAL_QUALITY_METRICS_SNR = 0,
-+	SIGNAL_QUALITY_METRICS_RSSI,
-+	SIGNAL_QUALITY_METRICS_ALL,
-+};
-+
-+/*
-+ * Data Path
-+ */
-+
-+#define WMI_MAX_TX_DATA_FRAME_LENGTH	      \
-+	(1500 + sizeof(struct wmi_data_hdr) + \
-+	 sizeof(struct ethhdr) +      \
-+	 sizeof(struct ath6kl_llc_snap_hdr))
-+
-+/* An AMSDU frame */ /* The MAX AMSDU length of AR6003 is 3839 */
-+#define WMI_MAX_AMSDU_RX_DATA_FRAME_LENGTH    \
-+	(3840 + sizeof(struct wmi_data_hdr) + \
-+	 sizeof(struct ethhdr) +      \
-+	 sizeof(struct ath6kl_llc_snap_hdr))
-+
-+#define EPPING_ALIGNMENT_PAD			       \
-+	(((sizeof(struct htc_frame_hdr) + 3) & (~0x3)) \
-+	 - sizeof(struct htc_frame_hdr))
-+
-+struct ath6kl_llc_snap_hdr {
-+	u8 dsap;
-+	u8 ssap;
-+	u8 cntl;
-+	u8 org_code[3];
-+	__be16 eth_type;
-+} __packed;
-+
-+enum crypto_type {
-+	NONE_CRYPT          = 0x01,
-+	WEP_CRYPT           = 0x02,
-+	TKIP_CRYPT          = 0x04,
-+	AES_CRYPT           = 0x08,
-+};
-+
-+struct ieee80211_node_table;
-+struct ieee80211_frame;
-+
-+struct ieee80211_common_ie {
-+	u16 ie_chan;
-+	u8 *ie_tstamp;
-+	u8 *ie_ssid;
-+	u8 *ie_rates;
-+	u8 *ie_xrates;
-+	u8 *ie_country;
-+	u8 *ie_wpa;
-+	u8 *ie_rsn;
-+	u8 *ie_wmm;
-+	u8 *ie_ath;
-+	u16 ie_capInfo;
-+	u16 ie_beaconInt;
-+	u8 *ie_tim;
-+	u8 *ie_chswitch;
-+	u8 ie_erp;
-+	u8 *ie_wsc;
-+	u8 *ie_htcap;
-+	u8 *ie_htop;
-+};
-+
-+struct bss {
-+	u8 ni_macaddr[ETH_ALEN];
-+	u8 ni_snr;
-+	s16 ni_rssi;
-+	struct bss *ni_list_next;
-+	struct bss *ni_list_prev;
-+	struct bss *ni_hash_next;
-+	struct bss *ni_hash_prev;
-+	struct ieee80211_common_ie ni_cie;
-+	u8 *ni_buf;
-+	u16 ni_framelen;
-+	struct ieee80211_node_table *ni_table;
-+	u32 ni_refcnt;
-+
-+	u32 ni_tstamp;
-+	u32 ni_actcnt;
-+};
-+
-+struct htc_endpoint_credit_dist;
-+struct ath6kl;
-+enum htc_credit_dist_reason;
-+struct htc_credit_state_info;
-+
-+int wmi_dot3_2_dix(struct sk_buff *skb);
-+
-+struct bss *wlan_node_alloc(int wh_size);
-+void wlan_node_free(struct bss *ni);
-+void wlan_setup_node(struct ieee80211_node_table *nt, struct bss *ni,
-+		     const u8 *mac_addr);
-+struct bss *wlan_find_node(struct ieee80211_node_table *nt,
-+			   const u8 *mac_addr);
-+void wlan_node_reclaim(struct ieee80211_node_table *nt, struct bss *ni);
-+void wlan_free_allnodes(struct ieee80211_node_table *nt);
-+void wlan_iterate_nodes(struct ieee80211_node_table *nt,
-+			void (*f) (void *arg, struct bss *),
-+			void *arg);
-+
-+void wlan_node_table_init(void *wmip, struct ieee80211_node_table *nt);
-+void wlan_node_table_cleanup(struct ieee80211_node_table *nt);
-+
-+void wlan_refresh_inactive_nodes(struct ieee80211_node_table *nt);
-+
-+struct bss *wlan_find_ssid_node(struct ieee80211_node_table *nt, u8 *ssid,
-+				  u32 ssid_len, bool is_wpa2, bool match_ssid);
-+
-+void wlan_node_return(struct ieee80211_node_table *nt, struct bss *ni);
-+
-+int ath6k_setup_credit_dist(void *htc_handle,
-+			    struct htc_credit_state_info *cred_info);
-+void ath6k_credit_distribute(struct htc_credit_state_info *cred_inf,
-+			     struct list_head *epdist_list,
-+			     enum htc_credit_dist_reason reason);
-+void ath6k_credit_init(struct htc_credit_state_info *cred_inf,
-+		       struct list_head *ep_list,
-+		       int tot_credits);
-+void ath6k_seek_credits(struct htc_credit_state_info *cred_inf,
-+			struct htc_endpoint_credit_dist *ep_dist);
-+struct ath6kl *ath6kl_core_alloc(struct device *sdev);
-+int ath6kl_core_init(struct ath6kl *ar);
-+int ath6kl_unavail_ev(struct ath6kl *ar);
-+struct sk_buff *ath6kl_buf_alloc(int size);
-+#endif /* COMMON_H */
+No worries.  We'll have almost all of these cleaned up shortly. The 80 char
+lines will be nice and tedious, though, unless somebody can suggest a decent
+tool that doesn't make the code unreadable.
+
+> 
+> > > Also, there's the whole big endian mess that needs to be fixed up before
+> > > the driver can be moved out of staging.  Henry, what's the status of
+> > > that?
+> > 
+> > We're looking at BE MIPS, and I sent some cards to Benjamin Herrenschmidt so he
+> > can test on PPC platforms.
+> 
+> Don't forget just building the thing on other arches (SPARC for example)
+> and what happens when you try to do that...
+
+Building some cross-compiler toolchains now.  SPARC hardware to do anything
+native with seems to be getting very scarce, and trying to fit a PCIe minicard
+into one might be challenging ...
+
+- Henry
+
 
