@@ -1,118 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:32874 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755726Ab1GQKY5 (ORCPT
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:38127 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751345Ab1GGQUB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2011 06:24:57 -0400
-Subject: [PATCH v2 23/23] ath6kl: add Kconfig and Makefile
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: joe@perches.com, devel@linuxdriverproject.org, gregkh@suse.de,
-	error27@gmail.com
-Date: Sun, 17 Jul 2011 13:24:50 +0300
-Message-ID: <20110717102450.18367.84730.stgit@localhost6.localdomain6> (sfid-20110717_124610_574989_2A56D0B9)
-In-Reply-To: <20110717101844.18367.44984.stgit@localhost6.localdomain6>
-References: <20110717101844.18367.44984.stgit@localhost6.localdomain6>
+	Thu, 7 Jul 2011 12:20:01 -0400
+Received: by mail-fx0-f52.google.com with SMTP id 18so1237688fxd.11
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jul 2011 09:20:01 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/2] b43: LCN-PHY: include new PHY in common code
+Date: Thu,  7 Jul 2011 18:58:25 +0200
+Message-Id: <1310057906-4088-2-git-send-email-zajec5@gmail.com> (sfid-20110707_182005_870108_852C722C)
+In-Reply-To: <1310057906-4088-1-git-send-email-zajec5@gmail.com>
+References: <1310057906-4088-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/Kconfig         |    1 +
- drivers/net/wireless/ath/Makefile        |    1 +
- drivers/net/wireless/ath/ath6kl/Kconfig  |   17 +++++++++++++++
- drivers/net/wireless/ath/ath6kl/Makefile |   35 ++++++++++++++++++++++++++++++
- 4 files changed, 54 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/Kconfig
- create mode 100644 drivers/net/wireless/ath/ath6kl/Makefile
 
-diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
-index d1b2306..0735488 100644
---- a/drivers/net/wireless/ath/Kconfig
-+++ b/drivers/net/wireless/ath/Kconfig
-@@ -25,5 +25,6 @@ config ATH_DEBUG
- source "drivers/net/wireless/ath/ath5k/Kconfig"
- source "drivers/net/wireless/ath/ath9k/Kconfig"
- source "drivers/net/wireless/ath/carl9170/Kconfig"
-+source "drivers/net/wireless/ath/ath6kl/Kconfig"
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_common.c |    6 ++++++
+ drivers/net/wireless/b43/phy_common.h |    3 +++
+ 2 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
+index 9705950..1019575 100644
+--- a/drivers/net/wireless/b43/phy_common.c
++++ b/drivers/net/wireless/b43/phy_common.c
+@@ -32,6 +32,7 @@
+ #include "phy_n.h"
+ #include "phy_lp.h"
+ #include "phy_ht.h"
++#include "phy_lcn.h"
+ #include "b43.h"
+ #include "main.h"
  
- endif
-diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
-index 0e8f528..d121469 100644
---- a/drivers/net/wireless/ath/Makefile
-+++ b/drivers/net/wireless/ath/Makefile
-@@ -1,6 +1,7 @@
- obj-$(CONFIG_ATH5K)		+= ath5k/
- obj-$(CONFIG_ATH9K_HW)		+= ath9k/
- obj-$(CONFIG_CARL9170)		+= carl9170/
-+obj-$(CONFIG_ATH6KL)		+= ath6kl/
+@@ -65,6 +66,11 @@ int b43_phy_allocate(struct b43_wldev *dev)
+ 		phy->ops = &b43_phyops_ht;
+ #endif
+ 		break;
++	case B43_PHYTYPE_LCN:
++#ifdef CONFIG_B43_PHY_LCN
++		phy->ops = &b43_phyops_lcn;
++#endif
++		break;
+ 	}
+ 	if (B43_WARN_ON(!phy->ops))
+ 		return -ENODEV;
+diff --git a/drivers/net/wireless/b43/phy_common.h b/drivers/net/wireless/b43/phy_common.h
+index 47dcb80..aa77ba6 100644
+--- a/drivers/net/wireless/b43/phy_common.h
++++ b/drivers/net/wireless/b43/phy_common.h
+@@ -195,6 +195,7 @@ struct b43_phy_g;
+ struct b43_phy_n;
+ struct b43_phy_lp;
+ struct b43_phy_ht;
++struct b43_phy_lcn;
  
- obj-$(CONFIG_ATH_COMMON)	+= ath.o
+ struct b43_phy {
+ 	/* Hardware operation callbacks. */
+@@ -219,6 +220,8 @@ struct b43_phy {
+ 		struct b43_phy_lp *lp;
+ 		/* HT-PHY specific information */
+ 		struct b43_phy_ht *ht;
++		/* LCN-PHY specific information */
++		struct b43_phy_lcn *lcn;
+ 	};
  
-diff --git a/drivers/net/wireless/ath/ath6kl/Kconfig b/drivers/net/wireless/ath/ath6kl/Kconfig
-new file mode 100644
-index 0000000..fc9f69c
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath6kl/Kconfig
-@@ -0,0 +1,17 @@
-+config ATH6KL
-+	tristate "Atheros ath6kl support"
-+	depends on MMC
-+	depends on CFG80211
-+	select WIRELESS_EXT
-+	select WEXT_PRIV
-+	---help---
-+	  This module adds support for wireless adapters based on
-+	  Atheros AR6003 chipset running over SDIO. If you choose to
-+	  build it as a module, it will be called ath6kl. Pls note
-+	  that AR6002 and AR6001 are not supported by this driver.
-+
-+config ATH6KL_DEBUG
-+	bool "Atheros ath6kl debugging"
-+	depends on ATH6KL
-+	---help---
-+	  Enables debug support
-diff --git a/drivers/net/wireless/ath/ath6kl/Makefile b/drivers/net/wireless/ath/ath6kl/Makefile
-new file mode 100644
-index 0000000..e1bb07e
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath6kl/Makefile
-@@ -0,0 +1,35 @@
-+#------------------------------------------------------------------------------
-+# Copyright (c) 2004-2010 Atheros Communications Inc.
-+# All rights reserved.
-+#
-+#
-+#
-+# Permission to use, copy, modify, and/or distribute this software for any
-+# purpose with or without fee is hereby granted, provided that the above
-+# copyright notice and this permission notice appear in all copies.
-+#
-+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+#
-+#
-+#
-+# Author(s): ="Atheros"
-+#------------------------------------------------------------------------------
-+
-+obj-$(CONFIG_ATH6KL) := ath6kl.o
-+ath6kl-y += debug.o
-+ath6kl-y += htc_hif.o
-+ath6kl-y += htc.o
-+ath6kl-y += bmi.o
-+ath6kl-y += cfg80211.o
-+ath6kl-y += init.o
-+ath6kl-y += main.o
-+ath6kl-y += txrx.o
-+ath6kl-y += wmi.o
-+ath6kl-y += node.o
-+ath6kl-y += sdio.o
+ 	/* Band support flags. */
+-- 
+1.7.3.4
 
