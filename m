@@ -1,116 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1-out1.atlantis.sk ([80.94.52.55]:39426 "EHLO
-	mail.atlantis.sk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754860Ab1G0UTl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40593 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752715Ab1GGQpG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2011 16:19:41 -0400
-From: Ondrej Zary <linux@rainbow-software.org>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: hostap_cs: add ID for LG cards
-Date: Wed, 27 Jul 2011 22:19:15 +0200
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <201107262314.03422.linux@rainbow-software.org> <4E2F379D.9080108@gnu.org>
-In-Reply-To: <4E2F379D.9080108@gnu.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201107272219.23501.linux@rainbow-software.org> (sfid-20110727_222018_399087_D3D3343A)
+	Thu, 7 Jul 2011 12:45:06 -0400
+Subject: [PATCH] mac80211: simplify RX PN/IV handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Jul 2011 18:45:03 +0200
+Message-ID: <1310057103.3924.5.camel@jlt3.sipsolutions.net> (sfid-20110707_184511_741681_96BDD75F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 26 July 2011 23:54:37 Pavel Roskin wrote:
-> On 07/26/2011 05:14 PM, Ondrej Zary wrote:
-> > Add IDs for LG PCMCIA cards.
-> > This allows LG LW1100P PCI card (with integrated CardBus bridge) to work
-> > (tested with rev 3.0) and probably also LW1100N (PCMCIA).
-> >
-> > Signed-off-by: Ondrej Zary<linux@rainbow-software.org>
-> 
-> Acked-by: Pavel Roskin <proski@gnu.org>
-> 
-> I googled for the card name and found indications that the card uses 
-> Intersil firmware and thus supportable by Hostap.
-> 
-> The problem was reported in year 2003, first in June:
-> http://osdir.com/ml/linux.drivers.hostap/2003-06/msg00159.html
-> 
-> And then in November:
-> http://osdir.com/ml/linux.linux-wlan.user/2003-11/msg00039.html
+From: Johannes Berg <johannes.berg@intel.com>
 
-I have the card since 2003 and I was using it back then with HostAP
-(in managed mode - after much pain with linux-wlan-ng, I was surprised how
-well HostAP worked). I even flashed the card's firmware using hostap tools
-multiple times (currently v1.8.4).
-But I don't remember if I had to add card's device ID to the driver...probably
-because PCMCIA configuration was totally different back then.
+The current rx->queue value is slightly confusing.
+It is set to 16 on non-QoS frames, including data,
+and then used for sequence number and PN/IV checks.
+Until recently, we had a TKIP IV checking bug that
+had been introduced in 2008 to fix a seqno issue.
+Before that, we always used TID 0 for checking the
+PN or IV on non-QoS packets.
 
-> It's quite disappointing that we are fixing this more than 8 years after 
-> the first report, when the cards in question have become rare and 
-> obsolete.  But it's still better than nothing.
-> 
-> > --- linux-2.6.39-rc2-orig/drivers/net/wireless/hostap/hostap_cs.c	2011-04-06 03:30:43.000000000 +0200
-> > +++ linux-2.6.39-rc2/drivers/net/wireless/hostap/hostap_cs.c	2011-07-26 22:17:03.000000000 +0200
-> > @@ -648,6 +648,8 @@ static struct pcmcia_device_id hostap_cs
-> >   					 0x74c5e40d),
-> >   	PCMCIA_DEVICE_MANF_CARD_PROD_ID1(0x0156, 0x0002, "Intersil",
-> >   					 0x4b801a17),
-> > +	PCMCIA_DEVICE_MANF_CARD_PROD_ID1(0x0156, 0x0002, "LG",
-> > +					 0xb474d43a),
-> 
-> What is the "pccardctl ident" output on your card?
-> 
-> I think we may want to introduce PCMCIA_DEVICE_MANF_CARD_PROD_ID3 and match
-> 
-> PCMCIA_DEVICE_MANF_CARD_PROD_ID3(0x0156, 0x0002, "Version 1.02", xxx)
-> 
-> Maybe some other card would be supported too?  I doubt there are any 
-> Agere or Symbol cards with "Version 1.02" in the third text ID.
+Go back to the old status for PN/IV checks using
+the TID 0 counter for non-QoS by splitting up the
+rx->queue value into "seqno_idx" and "security_idx"
+in order to avoid confusion in the future. They
+each have special rules on the value used for non-
+QoS data frames.
 
-Yes, that looks good, it would match my card too:
-  product info: "LG", "11Mbps Wireless LAN PCI Card", "Version 01.02", ""
-  manfid: 0x0156, 0x0002
-  function: 6 (network)
+Since the handling is now unified, also revert the
+special TKIP handling from my patch
+"mac80211: fix TKIP replay vulnerability".
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |   17 ++++++++++++++++-
+ net/mac80211/key.h         |    2 +-
+ net/mac80211/rx.c          |   33 +++++++++++++++++++++------------
+ net/mac80211/sta_info.h    |    3 ++-
+ net/mac80211/wpa.c         |   19 ++++---------------
+ 5 files changed, 44 insertions(+), 30 deletions(-)
 
----------------------------
-
-Add generic "Version 01.02" match (used by many different cards) to hostap_cs.
-
-This allows LG LW1100P PCI card (with integrated CardBus bridge) to work
-(tested with rev 3.0) and probably also LW1100N (PCMCIA).
-
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-
---- linux-2.6.39-rc2-orig/include/pcmcia/device_id.h	2011-04-06 03:30:43.000000000 +0200
-+++ linux-2.6.39-rc2/include/pcmcia/device_id.h	2011-07-27 21:43:54.000000000 +0200
-@@ -95,6 +95,14 @@
- 	.prod_id = { (v1), NULL, NULL, NULL }, \
- 	.prod_id_hash = { (vh1), 0, 0, 0 }, }
+--- a/net/mac80211/ieee80211_i.h	2011-07-07 18:00:38.000000000 +0200
++++ b/net/mac80211/ieee80211_i.h	2011-07-07 18:39:02.000000000 +0200
+@@ -202,7 +202,22 @@ struct ieee80211_rx_data {
+ 	struct ieee80211_key *key;
  
-+#define PCMCIA_DEVICE_MANF_CARD_PROD_ID3(manf, card, v3, vh3) { \
-+	.match_flags = PCMCIA_DEV_ID_MATCH_MANF_ID| \
-+			PCMCIA_DEV_ID_MATCH_CARD_ID| \
-+			PCMCIA_DEV_ID_MATCH_PROD_ID3, \
-+	.manf_id = (manf), \
-+	.card_id = (card), \
-+	.prod_id = { NULL, NULL, (v3), NULL }, \
-+	.prod_id_hash = { 0, 0, (vh3), 0 }, }
+ 	unsigned int flags;
+-	int queue;
++
++	/*
++	 * Index into sequence numbers array, 0..16
++	 * since the last (16) is used for non-QoS,
++	 * will be 16 on non-QoS frames.
++	 */
++	int seqno_idx;
++
++	/*
++	 * Index into the security IV/PN arrays, 0..16
++	 * since the last (16) is used for CCMP-encrypted
++	 * management frames, will be set to 16 on mgmt
++	 * frames and 0 on non-QoS frames.
++	 */
++	int security_idx;
++
+ 	u32 tkip_iv32;
+ 	u16 tkip_iv16;
+ };
+--- a/net/mac80211/key.h	2011-07-07 18:37:58.000000000 +0200
++++ b/net/mac80211/key.h	2011-07-07 18:39:02.000000000 +0200
+@@ -29,7 +29,7 @@
+ #define TKIP_IV_LEN		8
+ #define TKIP_ICV_LEN		4
  
- /* multi-function devices */
+-#define NUM_RX_DATA_QUEUES	17
++#define NUM_RX_DATA_QUEUES	16
  
---- linux-2.6.39-rc2-orig/drivers/net/wireless/hostap/hostap_cs.c	2011-04-06 03:30:43.000000000 +0200
-+++ linux-2.6.39-rc2/drivers/net/wireless/hostap/hostap_cs.c	2011-07-27 21:12:19.000000000 +0200
-@@ -648,6 +648,8 @@ static struct pcmcia_device_id hostap_cs
- 					 0x74c5e40d),
- 	PCMCIA_DEVICE_MANF_CARD_PROD_ID1(0x0156, 0x0002, "Intersil",
- 					 0x4b801a17),
-+	PCMCIA_DEVICE_MANF_CARD_PROD_ID3(0x0156, 0x0002, "Version 01.02",
-+					 0x4b74baa0),
- 	PCMCIA_MFC_DEVICE_PROD_ID12(0, "SanDisk", "ConnectPlus",
- 				    0x7a954bd9, 0x74be00c6),
- 	PCMCIA_DEVICE_PROD_ID123(
+ struct ieee80211_local;
+ struct ieee80211_sub_if_data;
+--- a/net/mac80211/rx.c	2011-07-07 18:00:38.000000000 +0200
++++ b/net/mac80211/rx.c	2011-07-07 18:39:02.000000000 +0200
+@@ -331,7 +331,7 @@ static void ieee80211_parse_qos(struct i
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
+-	int tid;
++	int tid, seqno_idx, security_idx;
+ 
+ 	/* does the frame have a qos control field? */
+ 	if (ieee80211_is_data_qos(hdr->frame_control)) {
+@@ -340,6 +340,9 @@ static void ieee80211_parse_qos(struct i
+ 		tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
+ 		if (*qc & IEEE80211_QOS_CTL_A_MSDU_PRESENT)
+ 			status->rx_flags |= IEEE80211_RX_AMSDU;
++
++		seqno_idx = tid;
++		security_idx = tid;
+ 	} else {
+ 		/*
+ 		 * IEEE 802.11-2007, 7.1.3.4.1 ("Sequence Number field"):
+@@ -352,10 +355,15 @@ static void ieee80211_parse_qos(struct i
+ 		 *
+ 		 * We also use that counter for non-QoS STAs.
+ 		 */
+-		tid = NUM_RX_DATA_QUEUES - 1;
++		seqno_idx = NUM_RX_DATA_QUEUES;
++		security_idx = 0;
++		if (ieee80211_is_mgmt(hdr->frame_control))
++			security_idx = NUM_RX_DATA_QUEUES;
++		tid = 0;
+ 	}
+ 
+-	rx->queue = tid;
++	rx->seqno_idx = seqno_idx;
++	rx->security_idx = security_idx;
+ 	/* Set skb->priority to 1d tag if highest order bit of TID is not set.
+ 	 * For now, set skb->priority to 0 for other cases. */
+ 	rx->skb->priority = (tid > 7) ? 0 : tid;
+@@ -810,7 +818,7 @@ ieee80211_rx_h_check(struct ieee80211_rx
+ 	/* Drop duplicate 802.11 retransmissions (IEEE 802.11 Chap. 9.2.9) */
+ 	if (rx->sta && !is_multicast_ether_addr(hdr->addr1)) {
+ 		if (unlikely(ieee80211_has_retry(hdr->frame_control) &&
+-			     rx->sta->last_seq_ctrl[rx->queue] ==
++			     rx->sta->last_seq_ctrl[rx->seqno_idx] ==
+ 			     hdr->seq_ctrl)) {
+ 			if (status->rx_flags & IEEE80211_RX_RA_MATCH) {
+ 				rx->local->dot11FrameDuplicateCount++;
+@@ -818,7 +826,7 @@ ieee80211_rx_h_check(struct ieee80211_rx
+ 			}
+ 			return RX_DROP_UNUSABLE;
+ 		} else
+-			rx->sta->last_seq_ctrl[rx->queue] = hdr->seq_ctrl;
++			rx->sta->last_seq_ctrl[rx->seqno_idx] = hdr->seq_ctrl;
+ 	}
+ 
+ 	if (unlikely(rx->skb->len < 16)) {
+@@ -1374,11 +1382,10 @@ ieee80211_rx_h_defragment(struct ieee802
+ 	if (frag == 0) {
+ 		/* This is the first fragment of a new frame. */
+ 		entry = ieee80211_reassemble_add(rx->sdata, frag, seq,
+-						 rx->queue, &(rx->skb));
++						 rx->seqno_idx, &(rx->skb));
+ 		if (rx->key && rx->key->conf.cipher == WLAN_CIPHER_SUITE_CCMP &&
+ 		    ieee80211_has_protected(fc)) {
+-			int queue = ieee80211_is_mgmt(fc) ?
+-				NUM_RX_DATA_QUEUES : rx->queue;
++			int queue = rx->security_idx;
+ 			/* Store CCMP PN so that we can verify that the next
+ 			 * fragment has a sequential PN value. */
+ 			entry->ccmp = 1;
+@@ -1392,7 +1399,8 @@ ieee80211_rx_h_defragment(struct ieee802
+ 	/* This is a fragment for a frame that should already be pending in
+ 	 * fragment cache. Add this fragment to the end of the pending entry.
+ 	 */
+-	entry = ieee80211_reassemble_find(rx->sdata, frag, seq, rx->queue, hdr);
++	entry = ieee80211_reassemble_find(rx->sdata, frag, seq,
++					  rx->seqno_idx, hdr);
+ 	if (!entry) {
+ 		I802_DEBUG_INC(rx->local->rx_handlers_drop_defrag);
+ 		return RX_DROP_MONITOR;
+@@ -1412,8 +1420,7 @@ ieee80211_rx_h_defragment(struct ieee802
+ 			if (pn[i])
+ 				break;
+ 		}
+-		queue = ieee80211_is_mgmt(fc) ?
+-			NUM_RX_DATA_QUEUES : rx->queue;
++		queue = rx->security_idx;
+ 		rpn = rx->key->u.ccmp.rx_pn[queue];
+ 		if (memcmp(pn, rpn, CCMP_PN_LEN))
+ 			return RX_DROP_UNUSABLE;
+@@ -2590,7 +2597,9 @@ void ieee80211_release_reorder_timeout(s
+ 		.sta = sta,
+ 		.sdata = sta->sdata,
+ 		.local = sta->local,
+-		.queue = tid,
++		/* This is OK -- must be QoS data frame */
++		.security_idx = tid,
++		.seqno_idx = tid,
+ 		.flags = 0,
+ 	};
+ 	struct tid_ampdu_rx *tid_agg_rx;
+--- a/net/mac80211/sta_info.h	2011-07-07 18:00:38.000000000 +0200
++++ b/net/mac80211/sta_info.h	2011-07-07 18:39:02.000000000 +0200
+@@ -287,7 +287,8 @@ struct sta_info {
+ 	unsigned long rx_dropped;
+ 	int last_signal;
+ 	struct ewma avg_signal;
+-	__le16 last_seq_ctrl[NUM_RX_DATA_QUEUES];
++	/* Plus 1 for non-QoS frames */
++	__le16 last_seq_ctrl[NUM_RX_DATA_QUEUES + 1];
+ 
+ 	/* Updated from TX status path only, no locking requirements */
+ 	unsigned long tx_filtered_count;
+--- a/net/mac80211/wpa.c	2011-07-07 18:38:31.000000000 +0200
++++ b/net/mac80211/wpa.c	2011-07-07 18:39:02.000000000 +0200
+@@ -87,11 +87,6 @@ ieee80211_rx_h_michael_mic_verify(struct
+ 	struct sk_buff *skb = rx->skb;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	int queue = rx->queue;
+-
+-	/* otherwise, TKIP is vulnerable to TID 0 vs. non-QoS replays */
+-	if (rx->queue == NUM_RX_DATA_QUEUES - 1)
+-		queue = 0;
+ 
+ 	/*
+ 	 * it makes no sense to check for MIC errors on anything other
+@@ -154,8 +149,8 @@ ieee80211_rx_h_michael_mic_verify(struct
+ 
+ update_iv:
+ 	/* update IV in key information to be able to detect replays */
+-	rx->key->u.tkip.rx[queue].iv32 = rx->tkip_iv32;
+-	rx->key->u.tkip.rx[queue].iv16 = rx->tkip_iv16;
++	rx->key->u.tkip.rx[rx->security_idx].iv32 = rx->tkip_iv32;
++	rx->key->u.tkip.rx[rx->security_idx].iv16 = rx->tkip_iv16;
+ 
+ 	return RX_CONTINUE;
+ 
+@@ -248,11 +243,6 @@ ieee80211_crypto_tkip_decrypt(struct iee
+ 	struct ieee80211_key *key = rx->key;
+ 	struct sk_buff *skb = rx->skb;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+-	int queue = rx->queue;
+-
+-	/* otherwise, TKIP is vulnerable to TID 0 vs. non-QoS replays */
+-	if (rx->queue == NUM_RX_DATA_QUEUES - 1)
+-		queue = 0;
+ 
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 
+@@ -273,7 +263,7 @@ ieee80211_crypto_tkip_decrypt(struct iee
+ 	res = ieee80211_tkip_decrypt_data(rx->local->wep_rx_tfm,
+ 					  key, skb->data + hdrlen,
+ 					  skb->len - hdrlen, rx->sta->sta.addr,
+-					  hdr->addr1, hwaccel, queue,
++					  hdr->addr1, hwaccel, rx->security_idx,
+ 					  &rx->tkip_iv32,
+ 					  &rx->tkip_iv16);
+ 	if (res != TKIP_DECRYPT_OK)
+@@ -488,8 +478,7 @@ ieee80211_crypto_ccmp_decrypt(struct iee
+ 
+ 	ccmp_hdr2pn(pn, skb->data + hdrlen);
+ 
+-	queue = ieee80211_is_mgmt(hdr->frame_control) ?
+-		NUM_RX_DATA_QUEUES : rx->queue;
++	queue = rx->security_idx;
+ 
+ 	if (memcmp(pn, key->u.ccmp.rx_pn[queue], CCMP_PN_LEN) <= 0) {
+ 		key->u.ccmp.replays++;
 
 
--- 
-Ondrej Zary
