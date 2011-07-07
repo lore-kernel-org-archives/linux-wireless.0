@@ -1,69 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35854 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750848Ab1GIENQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jul 2011 00:13:16 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 1/9] ath9k_hw: remove hardcoded PLL overrides for AR9280
-Date: Sat,  9 Jul 2011 11:12:46 +0700
-Message-Id: <1310184774-32913-1-git-send-email-nbd@openwrt.org> (sfid-20110709_061320_207160_F7E4003C)
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:38127 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751345Ab1GGQT5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jul 2011 12:19:57 -0400
+Received: by fxd18 with SMTP id 18so1237688fxd.11
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jul 2011 09:19:56 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/2] b43: define firmwares for HT and LCN PHYs
+Date: Thu,  7 Jul 2011 18:58:24 +0200
+Message-Id: <1310057906-4088-1-git-send-email-zajec5@gmail.com> (sfid-20110707_182000_828818_26EF66B2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the proper masks for the register instead.
-Fixes adding the (still unused) half/quarter PLL flags.
+We were uploading different firmwares to the hardware until finding
+responding one.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9002_phy.c |   25 +++++++++++++------------
- 1 files changed, 13 insertions(+), 12 deletions(-)
+ drivers/net/wireless/b43/main.c |   40 +++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 40 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-index 2fe0a34..abc2cc8 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-@@ -447,26 +447,27 @@ static void ar9002_olc_init(struct ath_hw *ah)
- static u32 ar9002_hw_compute_pll_control(struct ath_hw *ah,
- 					 struct ath9k_channel *chan)
- {
-+	int ref_div = 5;
-+	int pll_div = 0x2c;
- 	u32 pll;
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index ef64628..52136a4 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2159,6 +2159,8 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 	u32 tmshigh;
+ 	int err;
  
--	pll = SM(0x5, AR_RTC_9160_PLL_REFDIV);
-+	if (chan && IS_CHAN_5GHZ(chan) && !IS_CHAN_A_FAST_CLOCK(ah, chan)) {
-+		if (AR_SREV_9280_20(ah)) {
-+			ref_div = 10;
-+			pll_div = 0x50;
-+		} else {
-+			pll_div = 0x28;
-+		}
-+	}
++	/* Files for HT and LCN were found by trying one by one */
 +
-+	pll = SM(ref_div, AR_RTC_9160_PLL_REFDIV);
-+	pll |= SM(pll_div, AR_RTC_9160_PLL_DIV);
- 
- 	if (chan && IS_CHAN_HALF_RATE(chan))
- 		pll |= SM(0x1, AR_RTC_9160_PLL_CLKSEL);
- 	else if (chan && IS_CHAN_QUARTER_RATE(chan))
- 		pll |= SM(0x2, AR_RTC_9160_PLL_CLKSEL);
- 
--	if (chan && IS_CHAN_5GHZ(chan)) {
--		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
--			pll = 0x142c;
--		else if (AR_SREV_9280_20(ah))
--			pll = 0x2850;
--		else
--			pll |= SM(0x28, AR_RTC_9160_PLL_DIV);
--	} else {
--		pll |= SM(0x2c, AR_RTC_9160_PLL_DIV);
--	}
--
- 	return pll;
- }
- 
+ 	/* Get microcode */
+ 	if ((rev >= 5) && (rev <= 10)) {
+ 		filename = "ucode5";
+@@ -2178,6 +2180,18 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 			else
+ 				goto err_no_ucode;
+ 			break;
++		case B43_PHYTYPE_HT:
++			if (rev == 29)
++				filename = "ucode29_mimo";
++			else
++				goto err_no_ucode;
++			break;
++		case B43_PHYTYPE_LCN:
++			if (rev == 24)
++				filename = "ucode24_mimo";
++			else
++				goto err_no_ucode;
++			break;
+ 		default:
+ 			goto err_no_ucode;
+ 		}
+@@ -2240,6 +2254,18 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 		else
+ 			goto err_no_initvals;
+ 		break;
++	case B43_PHYTYPE_HT:
++		if (rev == 29)
++			filename = "ht0initvals29";
++		else
++			goto err_no_initvals;
++		break;
++	case B43_PHYTYPE_LCN:
++		if (rev == 24)
++			filename = "lcn0initvals24";
++		else
++			goto err_no_initvals;
++		break;
+ 	default:
+ 		goto err_no_initvals;
+ 	}
+@@ -2287,6 +2313,18 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 		else
+ 			goto err_no_initvals;
+ 		break;
++	case B43_PHYTYPE_HT:
++		if (rev == 29)
++			filename = "ht0bsinitvals29";
++		else
++			goto err_no_initvals;
++		break;
++	case B43_PHYTYPE_LCN:
++		if (rev == 24)
++			filename = "lcn0bsinitvals24";
++		else
++			goto err_no_initvals;
++		break;
+ 	default:
+ 		goto err_no_initvals;
+ 	}
+@@ -4976,6 +5014,8 @@ static int b43_wireless_core_attach(struct b43_wldev *dev)
+ #endif
+ 		case B43_PHYTYPE_G:
+ 		case B43_PHYTYPE_N:
++		case B43_PHYTYPE_HT:
++		case B43_PHYTYPE_LCN:
+ 			have_2ghz_phy = 1;
+ 			break;
+ 		default:
 -- 
-1.7.3.2
+1.7.3.4
 
