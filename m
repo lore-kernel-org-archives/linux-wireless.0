@@ -1,50 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:58997 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751563Ab1GEXGM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 19:06:12 -0400
-Message-ID: <4E1398D3.7000703@gmail.com> (sfid-20110706_010639_436071_B5AF8AE8)
-Date: Tue, 05 Jul 2011 16:05:55 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+Received: from cantor2.suse.de ([195.135.220.15]:36750 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756715Ab1GGO7X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jul 2011 10:59:23 -0400
+Date: Thu, 7 Jul 2011 07:58:22 -0700
+From: Greg KH <gregkh@suse.de>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: Pavel Roskin <proski@gnu.org>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Subject: Re: [RFC] Move brcm80211 to mainline
+Message-ID: <20110707145822.GA29241@suse.de> (sfid-20110707_165926_965670_C4DD94D0)
+References: <20110707002034.GA17885@broadcom.com>
+ <CACna6rx5EyZ-=2XgWawdN_Qu2t1K1sdHZydZFW6=TiX2QUwMfw@mail.gmail.com>
+ <4E1504A3.1070801@gnu.org>
+ <20110707014512.GA21087@suse.de>
+ <20110707144628.GF23944@broadcom.com>
 MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
-Subject: Re: WARNING: at kernel/timer.c:1011 del_timer_sync+0xa9/0xc4()
-References: <4E0D5E42.20702@gmail.com>	<BANLkTinBJBnZbHPpdmnYX3EV0SYFd-pRDA@mail.gmail.com>	<4E0D6B8D.6000601@gmail.com>	<BANLkTimX4=Szn_JT49SLw4BvGxg3Qe0rYw@mail.gmail.com>	<4E0ED42E.3020303@gmail.com>	<4E113498.7050900@gmail.com>	<CAD2nsn0XjoMUMv6e9SuSBUAwq0Lq5QCPMBWTnPZmsndg_XYcvw@mail.gmail.com>	<4E124D42.8040808@gmail.com> <CAD2nsn2AhxWCT0XLn46n4GTE7-HOkT2HzKf6=6RsG3PbSB0hsw@mail.gmail.com>
-In-Reply-To: <CAD2nsn2AhxWCT0XLn46n4GTE7-HOkT2HzKf6=6RsG3PbSB0hsw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20110707144628.GF23944@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/04/2011 09:39 PM, Mohammed Shafi wrote:
->>
->>
->> FWIW below is my .config that I am using that seems to be having this
->> warning message show up.
->>
->> latest pull of the Mainline dmesg:
->>   http://fpaste.org/
->>
->
-> hello Justin,
->
-> we doubt whether this patch is there in your linux-kernel tree you are
-> using, even though it is there in wireless-testing tree. please try to
-> apply this patch and see you can hit the warning
-> https://patchwork.kernel.org/patch/915952/
->
-> thanks,
-> shafi
->
+On Thu, Jul 07, 2011 at 07:46:28AM -0700, Henry Ptasinski wrote:
+> On Wed, Jul 06, 2011 at 06:45:12PM -0700, Greg KH wrote:
+> > On Wed, Jul 06, 2011 at 08:58:11PM -0400, Pavel Roskin wrote:
+> > > On 07/06/2011 08:40 PM, Rafał Miłecki wrote:
+> > > >Short question, without commenting on brcm80211 code yet:
+> > > >
+> > > >Why should we want 2 mainline drivers for the same hardware?
+> > > 
+> > > Also, checkpatch.pl finds a lot of bad stuff:
+> > > 
+> > > total: 1 errors, 1505 warnings, 105454 lines checked
+> > > 
+> > > $ scripts/checkpatch.pl 0001-wireless-testing-add-brcm80211.patch >Log
+> > > $ egrep '^(WARNING|ERROR)' Log |sort |uniq -c
+> > >       1 ERROR: do not use assignment in if condition
+> > >      76 WARNING: braces {} are not necessary for any arm of this statement
+> > >     205 WARNING: braces {} are not necessary for single statement blocks
+> > >       4 WARNING: consider using a completion
+> > >      11 WARNING: consider using kstrto* in preference to simple_strtoul
+> > >      20 WARNING: do not add new typedefs
+> > >       5 WARNING: externs should be avoided in .c files
+> > >    1164 WARNING: line over 80 characters
+> > >      20 WARNING: Use of volatile is usually wrong: see
+> > 
+> > Almost all of these should be fixed, especially the volatile one, that's
+> > just horrible.
+> 
+> Fixes for these are in progress.  We'll keep posting patches to address this
+> cleanup in staging.
 
-o.k.. appologize for the slow response(have to work!), anyways I rebased 
-the patch to the current Mainline, and am running it.
-(so far no signs of a warning message)
-dmesg with patch applied:
-http://fpaste.org/jTX3/
+Ok, at the least these should be resolved before ever asking for the
+code to be moved out of staging.  Sorry for me not checking this
+previously, I wrongly assumed that you had finished this task already.
 
-will run it a while to see if anything occurs.
+> > Also, there's the whole big endian mess that needs to be fixed up before
+> > the driver can be moved out of staging.  Henry, what's the status of
+> > that?
+> 
+> We're looking at BE MIPS, and I sent some cards to Benjamin Herrenschmidt so he
+> can test on PPC platforms.
 
-Justin P. Mattock
+Don't forget just building the thing on other arches (SPARC for example)
+and what happens when you try to do that...
+
+thanks,
+
+greg k-h
