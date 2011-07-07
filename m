@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54013 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965089Ab1GMIlh (ORCPT
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:42721 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755125Ab1GGR21 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 04:41:37 -0400
-Message-Id: <20110713084034.911957622@sipsolutions.net> (sfid-20110713_104145_459743_1BD8294C)
-Date: Wed, 13 Jul 2011 10:39:17 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 09/11] wl1251: remove wext dependencies
-References: <20110713083908.713123063@sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 7 Jul 2011 13:28:27 -0400
+Received: by fxd18 with SMTP id 18so1287916fxd.11
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jul 2011 10:28:26 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: HT-PHY: define dummy TX power functions
+Date: Thu,  7 Jul 2011 20:06:56 +0200
+Message-Id: <1310062016-3900-1-git-send-email-zajec5@gmail.com> (sfid-20110707_192831_138754_02A811CB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Without them we get Oops with NULL pointer
 
-This driver uses IW_ESSID_MAX_SIZE when it should
-be using IEEE80211_MAX_SSID_LEN instead.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/wl1251/cmd.h          |    2 +-
- drivers/net/wireless/wl1251/wl12xx_80211.h |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/b43/phy_ht.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
 
---- a/drivers/net/wireless/wl1251/cmd.h	2011-07-13 10:22:47.000000000 +0200
-+++ b/drivers/net/wireless/wl1251/cmd.h	2011-07-13 10:22:50.000000000 +0200
-@@ -269,7 +269,7 @@ struct cmd_join {
- 	u8 bss_type;
- 	u8 channel;
- 	u8 ssid_len;
--	u8 ssid[IW_ESSID_MAX_SIZE];
-+	u8 ssid[IEEE80211_MAX_SSID_LEN];
- 	u8 ctrl; /* JOIN_CMD_CTRL_* */
- 	u8 tx_mgt_frame_rate; /* OBSOLETE */
- 	u8 tx_mgt_frame_mod;  /* OBSOLETE */
---- a/drivers/net/wireless/wl1251/wl12xx_80211.h	2011-07-13 10:22:47.000000000 +0200
-+++ b/drivers/net/wireless/wl1251/wl12xx_80211.h	2011-07-13 10:22:50.000000000 +0200
-@@ -76,7 +76,7 @@ struct wl12xx_ie_header {
+diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
+index 30b19c6..2982103 100644
+--- a/drivers/net/wireless/b43/phy_ht.c
++++ b/drivers/net/wireless/b43/phy_ht.c
+@@ -373,6 +373,16 @@ static void b43_phy_ht_op_radio_write(struct b43_wldev *dev, u16 reg,
+ 	b43_write16(dev, B43_MMIO_RADIO24_DATA, value);
+ }
  
- struct wl12xx_ie_ssid {
- 	struct wl12xx_ie_header header;
--	char ssid[IW_ESSID_MAX_SIZE];
-+	char ssid[IEEE80211_MAX_SSID_LEN];
- } __packed;
- 
- struct wl12xx_ie_rates {
-
++static enum b43_txpwr_result
++b43_phy_ht_op_recalc_txpower(struct b43_wldev *dev, bool ignore_tssi)
++{
++	return B43_TXPWR_RES_DONE;
++}
++
++static void b43_phy_ht_op_adjust_txpower(struct b43_wldev *dev)
++{
++}
++
+ /**************************************************
+  * PHY ops struct.
+  **************************************************/
+@@ -391,8 +401,6 @@ const struct b43_phy_operations b43_phyops_ht = {
+ 	.switch_analog		= b43_phy_ht_op_switch_analog,
+ 	.switch_channel		= b43_phy_ht_op_switch_channel,
+ 	.get_default_chan	= b43_phy_ht_op_get_default_chan,
+-	/*
+ 	.recalc_txpower		= b43_phy_ht_op_recalc_txpower,
+ 	.adjust_txpower		= b43_phy_ht_op_adjust_txpower,
+-	*/
+ };
+-- 
+1.7.3.4
 
