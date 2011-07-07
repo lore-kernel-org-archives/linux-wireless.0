@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:44295 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751794Ab1GPTFY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2011 15:05:24 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 362D45402F3
-	for <linux-wireless@vger.kernel.org>; Sat, 16 Jul 2011 15:13:25 -0400 (EDT)
-Subject: Compat-wireless release for 2011-07-16 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110716190522.2436C40EC9@repository3.orbit-lab.org> (sfid-20110716_210527_685460_EC364ADB)
-Date: Sat, 16 Jul 2011 15:05:22 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from c60.cesmail.net ([216.154.195.49]:14355 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753146Ab1GGWZ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jul 2011 18:25:28 -0400
+Message-ID: <4E163255.6060502@gnu.org> (sfid-20110708_002534_950332_113B64A6)
+Date: Thu, 07 Jul 2011 18:25:25 -0400
+From: Pavel Roskin <proski@gnu.org>
+MIME-Version: 1.0
+To: Henry Ptasinski <henryp@broadcom.com>
+CC: Greg KH <gregkh@suse.de>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Subject: Re: [RFC] Move brcm80211 to mainline
+References: <20110707002034.GA17885@broadcom.com> <CACna6rx5EyZ-=2XgWawdN_Qu2t1K1sdHZydZFW6=TiX2QUwMfw@mail.gmail.com> <4E1504A3.1070801@gnu.org> <20110707014512.GA21087@suse.de> <20110707144628.GF23944@broadcom.com> <20110707145822.GA29241@suse.de> <20110707215537.GS23944@broadcom.com>
+In-Reply-To: <20110707215537.GS23944@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + b7f0c5f...8db8bc1 akpm-end   -> origin/akpm-end  (forced update)
-   de3796e..1765a36  akpm-start -> origin/akpm-start
-   c9adaf5..4f3d69a  history    -> origin/history
- + 47f2a8c...ae39777 master     -> origin/master  (forced update)
-   de3796e..1765a36  stable     -> origin/stable
- * [new tag]         next-20110716 -> next-20110716
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- * [new tag]         v3.0-rc7   -> v3.0-rc7
+On 07/07/2011 05:55 PM, Henry Ptasinski wrote:
+> Building some cross-compiler toolchains now.  SPARC hardware to do anything
+> native with seems to be getting very scarce, and trying to fit a PCIe minicard
+> into one might be challenging ...
 
-compat-wireless code metrics
+Those two things combined together should solve your challenge:
 
-    834289 - Total upstream lines of code being pulled
-      2380 - backport code changes
-      2080 - backport code additions
-       300 - backport code deletions
-      8127 - backport from compat module
-     10507 - total backport code
-    1.2594 - % of code consists of backport work
+http://www.google.com/#q=PCI1PEX
+http://www.google.com/#q=MP2W
+
+-- 
+Regards,
+Pavel Roskin
