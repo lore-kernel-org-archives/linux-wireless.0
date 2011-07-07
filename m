@@ -1,89 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4269 "EHLO mms1.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4576 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932380Ab1GNV34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 17:29:56 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 28/35] staging: brcm80211: brcmfmac: Fixed issues with
- iscan
-Date: Thu, 14 Jul 2011 14:29:24 -0700
-Message-ID: <1310678971-28952-29-git-send-email-frankyl@broadcom.com> (sfid-20110714_233135_630002_3C8F4B25)
-In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
-References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+	id S1751156Ab1GGV1H convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jul 2011 17:27:07 -0400
+Date: Thu, 7 Jul 2011 14:21:49 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Subject: Re: [RFC] Move brcm80211 to mainline
+Message-ID: <20110707212149.GR23944@broadcom.com> (sfid-20110707_232712_003506_AA8712D7)
+References: <20110707002034.GA17885@broadcom.com>
+ <CACna6rx5EyZ-=2XgWawdN_Qu2t1K1sdHZydZFW6=TiX2QUwMfw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CACna6rx5EyZ-=2XgWawdN_Qu2t1K1sdHZydZFW6=TiX2QUwMfw@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sukesh Srikakula <sukeshs@broadcom.com>
+On Wed, Jul 06, 2011 at 05:40:13PM -0700, Rafał Miłecki wrote:
+> 2011/7/7 Henry Ptasinski <henryp@broadcom.com>:
+> > With the latest series of cleanup patches merged in by Greg KH, I'd like to
+> > now propose moving brcm80211 out of staging and into mainline.
+> >
+> > Since brcm80211 in staging-next has about ~250 patches that areen't in
+> > wireless-testing yet, I've put together a patch to add a copy of the
+> > current sources from staging-next into
+> > wireless-testing:drivers/net/wireless/brcm80211.
+> >
+> > The patch is somewhat large, so I've posted the patch at:
+> >
+> >      
+> >  http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=get&target=0001-wireless-testing-add-brcm80211.patch
+> >
+> > Only the necessary Kconfig and Makefile adjustments have been made (the
+> > sources are unchanged from what's currently in staging-next).
+> 
+> Short question, without commenting on brcm80211 code yet:
+> 
+> Why should we want 2 mainline drivers for the same hardware?
 
-Disabling the interface doesn't terminate undergoing
-iscan in FW. When the interface is enabled immediately,
-first scan request is returning the stale scan results,
-which are populated during the earlier iscan. These stale
-scan results are causing random failures with chromium
-auto test cases.
+Rafał,
 
-With this patch, iscan will be terminated in FW whenever
-iscan thread is terminated by the host driver.
+The brcm80211 tree provides two device drivers:
 
-Signed-off-by: Sukesh Srikakula <sukeshs@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   14 ++++++++++++--
- 1 files changed, 12 insertions(+), 2 deletions(-)
+The brcmsmac driver supports the BCM4313, BCM43224, and BCM43225 chipsets with
+full performance (e.g. rate/range comparable to Windows drivers), does not have
+any known system stability issues, is fully supported by Broadcom, and provides
+an API for addition of newer chipsets that will help speed up the process of
+getting support for those chipsets into the kernel.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 8423aad..cf57087 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -709,10 +709,14 @@ static s32 brcmf_do_iscan(struct brcmf_cfg80211_priv *cfg_priv)
- 	}
- 	brcmf_set_mpc(ndev, 0);
- 	cfg_priv->iscan_kickstart = true;
--	brcmf_run_iscan(iscan, &ssid, BRCMF_SCAN_ACTION_START);
-+	err = brcmf_run_iscan(iscan, &ssid, BRCMF_SCAN_ACTION_START);
-+	if (err) {
-+		brcmf_set_mpc(ndev, 1);
-+		cfg_priv->iscan_kickstart = false;
-+		return err;
-+	}
- 	mod_timer(&iscan->timer, jiffies + iscan->timer_ms * HZ / 1000);
- 	iscan->timer_on = 1;
--
- 	return err;
- }
- 
-@@ -3165,12 +3169,17 @@ static void brcmf_destroy_event_handler(struct brcmf_cfg80211_priv *cfg_priv)
- static void brcmf_term_iscan(struct brcmf_cfg80211_priv *cfg_priv)
- {
- 	struct brcmf_cfg80211_iscan_ctrl *iscan = cfg_to_iscan(cfg_priv);
-+	struct brcmf_ssid ssid;
- 
- 	if (cfg_priv->iscan_on && iscan->tsk) {
- 		iscan->state = WL_ISCAN_STATE_IDLE;
- 		send_sig(SIGTERM, iscan->tsk, 1);
- 		kthread_stop(iscan->tsk);
- 		iscan->tsk = NULL;
-+
-+		/* Abort iscan running in FW */
-+		memset(&ssid, 0, sizeof(ssid));
-+		brcmf_run_iscan(iscan, &ssid, WL_SCAN_ACTION_ABORT);
- 	}
- }
- 
-@@ -3237,6 +3246,7 @@ brcmf_get_iscan_results(struct brcmf_cfg80211_iscan_ctrl *iscan, u32 *status,
- 	WL_SCAN("results->count = %d\n", results->count);
- 	WL_SCAN("results->buflen = %d\n", results->buflen);
- 	*status = le32_to_cpu(list_buf->status);
-+	WL_SCAN("status = %d\n", *status);
- 	*bss_list = results;
- 
- 	return err;
--- 
-1.7.1
+The brcmfmac driver supports the BCM4329 chipset with full performance, does
+not have any known system stability issues, is fully supported by Broadcom, and
+provides the framework for the addition of other Broadcom embedded WLAN
+chipsets.
+
+There currently isn't any driver in mainline that provides all this, so I'm
+proposing that we use the brcm80211 tree to get all this functionality.
+
+- Henry
 
 
