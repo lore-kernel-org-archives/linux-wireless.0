@@ -1,172 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3354 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755067Ab1GVS5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 14:57:34 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Franky Lin" <frankyl@broadcom.com>, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 20/29] staging: brcm80211: remove function pointer of
- interrupt isr in brcmfmac
-Date: Fri, 22 Jul 2011 20:57:07 +0200
-Message-ID: <1311361036-3175-21-git-send-email-arend@broadcom.com> (sfid-20110722_205812_402381_92165011)
-In-Reply-To: <1311361036-3175-1-git-send-email-arend@broadcom.com>
-References: <1311361036-3175-1-git-send-email-arend@broadcom.com>
+Received: from storm.alittletooquiet.net ([67.23.28.199]:46216 "EHLO
+	storm.alittletooquiet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751632Ab1GGWxW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jul 2011 18:53:22 -0400
+Date: Thu, 7 Jul 2011 18:53:21 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ath9k_htc fails to initialize TL-WN721N with compat-wireless
+ 3.0-rc4-1
+Message-ID: <20110707225321.GG28091@alittletooquiet.net> (sfid-20110708_005325_691359_FC8F3C0E)
+References: <CAD2nsn0-FQuo7bT3nb3jJLDe1XwbMw4J-Gr8qFkY5zzY1O-vxg@mail.gmail.com>
+ <20110705143029.GA28091@alittletooquiet.net>
+ <CAD2nsn1r7cW7KZ2W_z+SURHRpaTvuC_bd42yN9S+y9JrYMkS4w@mail.gmail.com>
+ <20110705172022.GB28091@alittletooquiet.net>
+ <20110706023943.GA11178@vmraj-lnx.users.atheros.com>
+ <CAD2nsn0HFgm6Puuzuy4gghdDvpb05WaQtETS4=mfQ63mFzo--Q@mail.gmail.com>
+ <20110706182937.GE28091@alittletooquiet.net>
+ <CAD2nsn3x5sfhTuzH66myCF0P2PyHoX+pqVkYgWC5ogssPdHsqw@mail.gmail.com>
+ <CAD2nsn03zdg16O3xcAOGRunYm4NG5PqO=1ht4kx39fAXbSpV5A@mail.gmail.com>
+ <CAD2nsn3krB2MZYewRtJpFikUu9079jXXMabz90z6Zc7kfAeELw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="6lXr1rPCNTf1w0X8"
+In-Reply-To: <CAD2nsn3krB2MZYewRtJpFikUu9079jXXMabz90z6Zc7kfAeELw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
 
-The use of function pointer of bus interrupt isr is no longer needed
-in fullmac as there is only one available isr.
+--6lXr1rPCNTf1w0X8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |    5 ++---
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   19 +++----------------
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |    3 ++-
- drivers/staging/brcm80211/brcmfmac/sdio_host.h    |   10 +++-------
- 4 files changed, 10 insertions(+), 27 deletions(-)
+Hi shafi,
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-index 3a6c015..c9893e9 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-@@ -53,10 +53,9 @@ brcmf_sdcard_iovar_op(struct brcmf_sdio_dev *sdiodev, const char *name,
- 				    len, set);
- }
- 
--int brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev,
--			  void (*fn)(void *), void *argh)
-+int brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev)
- {
--	return brcmf_sdioh_interrupt_register(sdiodev->sdioh, fn, argh);
-+	return brcmf_sdioh_interrupt_register(sdiodev->sdioh);
- }
- 
- int brcmf_sdcard_intr_dereg(struct brcmf_sdio_dev *sdiodev)
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index db43b09..1256847 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -228,19 +228,9 @@ extern int brcmf_sdioh_detach(struct sdioh_info *sd)
- 
- /* Configure callback to client when we receive client interrupt */
- extern int
--brcmf_sdioh_interrupt_register(struct sdioh_info *sd, void (*fn)(void *),
--			       void *argh)
-+brcmf_sdioh_interrupt_register(struct sdioh_info *sd)
- {
- 	BRCMF_TRACE(("%s: Entering\n", __func__));
--	if (fn == NULL) {
--		BRCMF_ERROR(("%s: interrupt handler is NULL, not registering\n",
--			__func__));
--		return -EINVAL;
--	}
--
--	sd->intr_handler = fn;
--	sd->intr_handler_arg = argh;
--	sd->intr_handler_valid = true;
- 
- 	/* register and unmask irq */
- 	if (gInstance->func[2]) {
-@@ -277,10 +267,6 @@ extern int brcmf_sdioh_interrupt_deregister(struct sdioh_info *sd)
- 		sdio_release_host(gInstance->func[2]);
- 	}
- 
--	sd->intr_handler_valid = false;
--	sd->intr_handler = NULL;
--	sd->intr_handler_arg = NULL;
--
- 	return 0;
- }
- 
-@@ -877,6 +863,7 @@ brcmf_sdioh_card_regread(struct sdioh_info *sd, int func, u32 regaddr,
- static void brcmf_sdioh_irqhandler(struct sdio_func *func)
- {
- 	struct sdioh_info *sd;
-+	struct brcmf_sdio_dev *sdiodev = dev_get_drvdata(&func->card->dev);
- 
- 	BRCMF_TRACE(("brcmf: ***IRQHandler\n"));
- 	sd = gInstance->sd;
-@@ -884,7 +871,7 @@ static void brcmf_sdioh_irqhandler(struct sdio_func *func)
- 	sdio_release_host(gInstance->func[0]);
- 
- 	sd->intrcount++;
--	(sd->intr_handler) (sd->intr_handler_arg);
-+	brcmf_sdbrcm_isr(sdiodev->bus);
- 
- 	sdio_claim_host(gInstance->func[0]);
- }
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 126090b..8bea865 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -5424,6 +5424,7 @@ void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
- 		goto fail;
- 	}
- 	bus->sdiodev = sdiodev;
-+	sdiodev->bus = bus;
- 	bus->bus = BRCMF_BUS;
- 	bus->tx_seq = SDPCM_SEQUENCE_WRAP - 1;
- 	bus->usebufpool = false;	/* Use bufpool if allocated,
-@@ -5506,7 +5507,7 @@ void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
- 	/* Register interrupt callback, but mask it (not operational yet). */
- 	BRCMF_INTR(("%s: disable SDIO interrupts (not interested yet)\n",
- 		    __func__));
--	ret = brcmf_sdcard_intr_reg(bus->sdiodev, brcmf_sdbrcm_isr, bus);
-+	ret = brcmf_sdcard_intr_reg(bus->sdiodev);
- 	if (ret != 0) {
- 		BRCMF_ERROR(("%s: FAILED: sdcard_intr_reg returned %d\n",
- 			     __func__, ret));
-diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-index 4fcba2a..c5a68c0 100644
---- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-@@ -124,9 +124,6 @@ struct brcmf_sdreg {
- 
- struct sdioh_info {
- 	struct osl_info *osh;		/* osh handler */
--	bool intr_handler_valid; /* client driver interrupt handler valid */
--	void (*intr_handler)(void *);	/* registered interrupt handler */
--	void *intr_handler_arg;	/* argument to call interrupt handler */
- 
- 	uint irq;		/* Client irq */
- 	int intrcount;		/* Client interrupts */
-@@ -159,8 +156,7 @@ struct brcmf_sdio_dev {
- 
- /* Register/deregister device interrupt handler. */
- extern int
--brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev,
--		      void (*fn)(void *), void *argh);
-+brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev);
- 
- extern int brcmf_sdcard_intr_dereg(struct brcmf_sdio_dev *sdiodev);
- 
-@@ -278,8 +274,7 @@ extern struct sdioh_info *brcmf_sdioh_attach(void *cfghdl);
- extern int brcmf_sdioh_detach(struct sdioh_info *si);
- 
- extern int
--brcmf_sdioh_interrupt_register(struct sdioh_info *si,
--			       void (*sdioh_cb_fn)(void *), void *argh);
-+brcmf_sdioh_interrupt_register(struct sdioh_info *si);
- 
- extern int brcmf_sdioh_interrupt_deregister(struct sdioh_info *si);
- 
-@@ -328,4 +323,5 @@ extern struct brcmf_sdmmc_instance *gInstance;
- extern void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
- 				u32 regsva, struct brcmf_sdio_dev *sdiodev);
- extern void brcmf_sdbrcm_disconnect(void *ptr);
-+extern void brcmf_sdbrcm_isr(void *arg);
- #endif				/* _BRCM_SDH_H_ */
--- 
-1.7.4.1
+On Thu, Jul 07, 2011 at 03:23:50AM -0400, Mohammed Shafi wrote:
+> attached a reverting patch for LED, did a basic test and looks fine.
+> need to investigate in this for backporting.  we have not tested in
+> 2.6.24 kernel
 
+Yes, this seems to fix things.  I can bring the interface up now and get
+scanning results.  I will test further and let you know how things go.
 
+Thanks again for your help.
+
+-Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.rapidrollout.com
+
+--6lXr1rPCNTf1w0X8
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk4WOOEACgkQRO4fQQdv5AxHWgCcCMFdHTo389d6SW9Kp4MF8Ux2
+MiEAoL6TIP+qdzRTqGspgOQI5JQeAMk9
+=HFBX
+-----END PGP SIGNATURE-----
+
+--6lXr1rPCNTf1w0X8--
