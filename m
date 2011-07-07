@@ -1,130 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2051 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932231Ab1GNV3q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 17:29:46 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 00/35] staging: brcm80211: code cleanup and bugfix
-Date: Thu, 14 Jul 2011 14:28:56 -0700
-Message-ID: <1310678971-28952-1-git-send-email-frankyl@broadcom.com> (sfid-20110714_232951_859328_A5827B28)
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:61652 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750791Ab1GGFMo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jul 2011 01:12:44 -0400
+Received: by wyg8 with SMTP id 8so387290wyg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 22:12:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20110706182937.GE28091@alittletooquiet.net>
+References: <20110701173237.GC7125@alittletooquiet.net>
+	<20110704052410.GA1364@vmraj-lnx.users.atheros.com>
+	<20110704095341.GA1380@vmraj-lnx.users.atheros.com>
+	<20110705124914.GC26882@alittletooquiet.net>
+	<CAD2nsn0-FQuo7bT3nb3jJLDe1XwbMw4J-Gr8qFkY5zzY1O-vxg@mail.gmail.com>
+	<20110705143029.GA28091@alittletooquiet.net>
+	<CAD2nsn1r7cW7KZ2W_z+SURHRpaTvuC_bd42yN9S+y9JrYMkS4w@mail.gmail.com>
+	<20110705172022.GB28091@alittletooquiet.net>
+	<20110706023943.GA11178@vmraj-lnx.users.atheros.com>
+	<CAD2nsn0HFgm6Puuzuy4gghdDvpb05WaQtETS4=mfQ63mFzo--Q@mail.gmail.com>
+	<20110706182937.GE28091@alittletooquiet.net>
+Date: Thu, 7 Jul 2011 10:42:42 +0530
+Message-ID: <CAD2nsn3x5sfhTuzH66myCF0P2PyHoX+pqVkYgWC5ogssPdHsqw@mail.gmail.com> (sfid-20110707_071300_111753_386D011B)
+Subject: Re: ath9k_htc fails to initialize TL-WN721N with compat-wireless 3.0-rc4-1
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Forest Bond <forest@alittletooquiet.net>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Further code cleanup of attacking checkpatch warning/error along with bugfix.
+On Wed, Jul 6, 2011 at 11:59 PM, Forest Bond <forest@alittletooquiet.net> wrote:
+> Hi shafi,
+>
+> On Wed, Jul 06, 2011 at 03:58:13AM -0400, Mohammed Shafi wrote:
+>> > To avoid multi reg writes please apply the following change
+>> >
+>> > diff --git a/drivers/net/wireless/ath/ath9k/wmi.h
+>> > b/drivers/net/wireless/ath/ath9k/wmi.h
+>> > index fde6da6..0878add 100644
+>> > --- a/drivers/net/wireless/ath/ath9k/wmi.h
+>> > +++ b/drivers/net/wireless/ath/ath9k/wmi.h
+>> > @@ -124,7 +124,7 @@ enum wmi_event_id {
+>> >        WMI_TXSTATUS_EVENTID,
+>> >         };
+>> >
+>> >          -#define MAX_CMD_NUMBER 62
+>> >          +#define MAX_CMD_NUMBER 1
+>> >
+>> >            struct register_write {
+>> >                    __be32 reg;
+>> > --
+>>
+>> did you try in your system the simple hack Raj had suggested?
+>> it seems to solve ths issue, but we encountered some soft lock ups due
+>> to the LED stuff is moved to mac80211 with the recent code base,
+>> we will take a look at this to fix this, probably requires some backporting.
+>
+> Yes, the device seems to initialize properly with this patch.  Like you
+> expected, I am seeing soft lock-ups when I try to bring the interface up.
+>
+>> in order to recreate the issue, we installed Ubuntu 8.04- the Hardy
+>> Heron - released in April 2008.
+>> as expected the issue is perfectly reproducible. thanks to Raj for his
+>> help and suggestions.
+>
+> Thanks for taking the time to test.  I really appreciate everyone's help.
+>
+>> *please obtain the stable compat-wireless-2.6.36-4
+>> http://linuxwireless.org/en/users/Download/stable/#compat-wireless_2.6.36_stable_releases
+>> *download the old firmware
+>> http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=blob_plain;f=ar9271.fw;hb=HEAD
+>> (history http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=history;f=ar9271.fw;h=d0ee74a1c8dccb7cc21f5be90f1d4048fa9dbf9e;hb=HEAD)
+>> with this your USB card will be up and running, we did some basic testing.
+>> *I used  usbmodeswitch-0.9.4
+>
+> Ultimately we'd like to try the experimental AP mode.  I understand this was
+> introduced in kernel version 2.6.40, so I don't think compat-wireless-2.6.36-4
+> will work for us.
 
-Arend van Spriel (10):
-  staging: brcm80211: modify the FOREACH_BSS macro
-  staging: brcm80211: use mutex instead of semaphore in dhd_linux.c
-  staging: brcm80211: remove duplicated code from brcmf_init_iscan
-  staging: brcm80211: remove volatile keyword from driver sources
-  staging: brcm80211: use native error code in brcmf_c_pattern_atoh()
-  staging: brcm80211: use mac_pton() instead of own implementation
-  staging: brcm80211: replace semaphore by wait_queue for sysioc thread
-  staging: brcm80211: use wait queues instead of semaphores in
-    wl_cfg80211.c
-  staging: brcm80211: remove volatile keyword used in struct
-    rte_console
-  staging: brcm80211: replace simple_strtoul usage in brcmfmac
+yes AP mode support is not available in 2.6.36-4 and so as the
+corresponding firmware changes.
 
-Franky Lin (2):
-  staging: brcm80211: move sdio related variables to dhd_sdio.c
-  staging: brcm80211: move ioctl response wait code to dhd_sdio.c
+>
+> Can you point me to the LED-related commits that you mentioned above?  We'll
+> either need to backport the changes required to fix the soft lock-ups or upgrade
+> our kernel to include these commits.
 
-Henry Ptasinski (1):
-  staging: brcm80211: fix for 'remove unnecessary braces' checkpatch
-    warning
+no I have not looked into that deeply, will surely take a look into it sooner.
 
-Roland Vossen (17):
-  staging: brcm80211: bugfix for len==0 parameter in 3 fullmac
-    functions
-  staging: brcm80211: merged bmac.c into main.c
-  staging: brcm80211: shuffled sections in main.c
-  staging: brcm80211: removed function declaration typedefs from
-    phy_int.h
-  staging: brcm80211: removed function declaration typedefs from
-    aiutils.h
-  staging: brcm80211: removed function declaration typedefs from dma.h
-    part 1
-  staging: brcm80211: removed function declaration typedefs from dma.h
-    part 2
-  staging: brcm80211: removed function declaration typedefs from dma.h
-    part 3
-  staging: brcm80211: removed function declaration typedefs from dma.h
-    part 4
-  staging: brcm80211: removed function declaration typedefs from otp.c
-  staging: brcm80211: removed function declaration typedefs from
-    main.h,pub.h
-  staging: brcm80211: removed function declaration typedefs from
-    brcmutil
-  staging: brcm80211: replaced various typedefs
-  staging: brcm80211: replaced typedef wlc_rateset_t
-  staging: brcm80211: replaced typedef wl_rateset_t by struct
-    brcm_rateset
-  staging: brcm80211: replaced all volatile typedefs
-  staging: brcm80211: fix for checkpatch 'avoid externs in c file'
-    warning
+>
+>> we also recommend you upgrade to latest kernel available for your distribution,
+>> because we may still face some other issues as ath9k_htc very much new
+>> compared to ath9k
+>
+> A kernel upgrade is something I would like to avoid if possible, but of course
+> it is something we'll consider if we need to.
 
-Sukesh Srikakula (5):
-  staging: brcm80211: power save issue fixed in brcmfmac driver
-  staging: brcm80211: brcmfmac: Enabling FW roaming by default
-  staging: brcm80211: brcmfmac: Connect request made robust
-  staging: brcm80211: brcmfmac: Fixed issues with iscan
-  staging: brcm80211: brcmfmac: Roamed channel info passed to cfg80211
+its highly recommended you please upgrade the kernel. its needed because
+ we can avoid fixing issues that may need to back ported in the future.
 
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c        |   10 +-
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c  |   22 +-
- drivers/staging/brcm80211/brcmfmac/dhd.h           |   24 +-
- drivers/staging/brcm80211/brcmfmac/dhd_common.c    |  101 +-
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |  127 +-
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |  151 +-
- drivers/staging/brcm80211/brcmfmac/sdio_host.h     |    1 +
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c   |  162 +-
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h   |    9 +-
- drivers/staging/brcm80211/brcmsmac/Makefile        |    1 -
- drivers/staging/brcm80211/brcmsmac/aiutils.c       |  100 +-
- drivers/staging/brcm80211/brcmsmac/aiutils.h       |   16 +-
- drivers/staging/brcm80211/brcmsmac/alloc.c         |    9 +-
- drivers/staging/brcm80211/brcmsmac/ampdu.c         |   33 +-
- drivers/staging/brcm80211/brcmsmac/antsel.c        |   10 +-
- drivers/staging/brcm80211/brcmsmac/bmac.c          | 3593 -----------------
- drivers/staging/brcm80211/brcmsmac/bmac.h          |  174 -
- drivers/staging/brcm80211/brcmsmac/channel.c       |  233 +-
- drivers/staging/brcm80211/brcmsmac/channel.h       |   10 +-
- drivers/staging/brcm80211/brcmsmac/d11.h           |   24 +-
- drivers/staging/brcm80211/brcmsmac/dma.c           |  159 +-
- drivers/staging/brcm80211/brcmsmac/dma.h           |  138 +-
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c   |   58 +-
- drivers/staging/brcm80211/brcmsmac/main.c          | 4135 ++++++++++++++++++--
- drivers/staging/brcm80211/brcmsmac/main.h          |  165 +-
- drivers/staging/brcm80211/brcmsmac/nicpci.c        |   12 +-
- drivers/staging/brcm80211/brcmsmac/otp.c           |   60 +-
- drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c   |  275 +-
- drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h   |   26 +-
- drivers/staging/brcm80211/brcmsmac/phy/phy_int.h   |   71 +-
- drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c   |  157 +-
- drivers/staging/brcm80211/brcmsmac/phy/phy_n.c     | 1354 +++----
- drivers/staging/brcm80211/brcmsmac/phy/phy_qmath.c |   36 +-
- drivers/staging/brcm80211/brcmsmac/phy_shim.c      |    1 -
- drivers/staging/brcm80211/brcmsmac/pmu.c           |   42 +-
- drivers/staging/brcm80211/brcmsmac/pub.h           |   40 +-
- drivers/staging/brcm80211/brcmsmac/rate.c          |   59 +-
- drivers/staging/brcm80211/brcmsmac/rate.h          |   45 +-
- drivers/staging/brcm80211/brcmsmac/srom.c          |   17 +-
- drivers/staging/brcm80211/brcmsmac/stf.c           |   46 +-
- drivers/staging/brcm80211/brcmsmac/stf.h           |    6 +-
- drivers/staging/brcm80211/brcmsmac/types.h         |   18 -
- drivers/staging/brcm80211/brcmutil/utils.c         |   36 +-
- drivers/staging/brcm80211/brcmutil/wifi.c          |   14 +-
- drivers/staging/brcm80211/include/brcmu_utils.h    |   11 +-
- drivers/staging/brcm80211/include/brcmu_wifi.h     |   36 +-
- drivers/staging/brcm80211/include/chipcommon.h     |    4 +-
- drivers/staging/brcm80211/include/defs.h           |    4 +-
- 48 files changed, 5512 insertions(+), 6323 deletions(-)
- delete mode 100644 drivers/staging/brcm80211/brcmsmac/bmac.c
- delete mode 100644 drivers/staging/brcm80211/brcmsmac/bmac.h
+>
+>> please also read
+>> http://wireless.kernel.org/en/users/Download/compat-wireless-old
+>
+> I think this kernel is supported by the regular compat-wireless package, right?
+
+true, but its also mentioned in the known issues that 2.6.26 >= is
+what ath9k best supports.
+its good that  ath9k_htc worked
+
+>
+> Thanks,
+> Forest
+> --
+> Forest Bond
+> http://www.alittletooquiet.net
+> http://www.rapidrollout.com
+>
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v1.4.10 (GNU/Linux)
+>
+> iEYEARECAAYFAk4UqZEACgkQRO4fQQdv5Ay9jQCbB3lJUTTYM0Vm1o+JNqwG0kyI
+> BAMAnjiX7VDThAbNYOyasOBTarI5ZqtE
+> =V/bH
+> -----END PGP SIGNATURE-----
+>
+>
 
 
+
+-- 
+shafi
