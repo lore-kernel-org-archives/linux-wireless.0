@@ -1,88 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56848 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751145Ab1GETQ6 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:44488 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753202Ab1GGGT2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 15:16:58 -0400
-Date: Tue, 5 Jul 2011 15:12:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Cc: linux-wireless@vger.kernel.org, sameo@linux.intel.com,
-	lauro.venancio@openbossa.org, marcio.macedo@openbossa.org,
-	Waldemar.Rymarkiewicz@tieto.com, joe@perches.com
-Subject: Re: [PATCH v5 0/6] NFC subsystem
-Message-ID: <20110705191235.GB7540@tuxdriver.com> (sfid-20110705_211701_512960_5021B9A7)
-References: <1309559498-600-1-git-send-email-aloisio.almeida@openbossa.org>
+	Thu, 7 Jul 2011 02:19:28 -0400
+Received: by wwe5 with SMTP id 5so613262wwe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 23:19:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1309559498-600-1-git-send-email-aloisio.almeida@openbossa.org>
+In-Reply-To: <CAD2nsn3x5sfhTuzH66myCF0P2PyHoX+pqVkYgWC5ogssPdHsqw@mail.gmail.com>
+References: <20110701173237.GC7125@alittletooquiet.net>
+	<20110704052410.GA1364@vmraj-lnx.users.atheros.com>
+	<20110704095341.GA1380@vmraj-lnx.users.atheros.com>
+	<20110705124914.GC26882@alittletooquiet.net>
+	<CAD2nsn0-FQuo7bT3nb3jJLDe1XwbMw4J-Gr8qFkY5zzY1O-vxg@mail.gmail.com>
+	<20110705143029.GA28091@alittletooquiet.net>
+	<CAD2nsn1r7cW7KZ2W_z+SURHRpaTvuC_bd42yN9S+y9JrYMkS4w@mail.gmail.com>
+	<20110705172022.GB28091@alittletooquiet.net>
+	<20110706023943.GA11178@vmraj-lnx.users.atheros.com>
+	<CAD2nsn0HFgm6Puuzuy4gghdDvpb05WaQtETS4=mfQ63mFzo--Q@mail.gmail.com>
+	<20110706182937.GE28091@alittletooquiet.net>
+	<CAD2nsn3x5sfhTuzH66myCF0P2PyHoX+pqVkYgWC5ogssPdHsqw@mail.gmail.com>
+Date: Thu, 7 Jul 2011 11:49:26 +0530
+Message-ID: <CAD2nsn03zdg16O3xcAOGRunYm4NG5PqO=1ht4kx39fAXbSpV5A@mail.gmail.com> (sfid-20110707_081933_951763_A6634E04)
+Subject: Re: ath9k_htc fails to initialize TL-WN721N with compat-wireless 3.0-rc4-1
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Forest Bond <forest@alittletooquiet.net>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm merging this series.  Please post any further changes as patches on top.
+On Thu, Jul 7, 2011 at 10:42 AM, Mohammed Shafi
+<shafi.wireless@gmail.com> wrote:
+> On Wed, Jul 6, 2011 at 11:59 PM, Forest Bond <forest@alittletooquiet.net> wrote:
+>> Hi shafi,
+>>
+>> On Wed, Jul 06, 2011 at 03:58:13AM -0400, Mohammed Shafi wrote:
+>>> > To avoid multi reg writes please apply the following change
+>>> >
+>>> > diff --git a/drivers/net/wireless/ath/ath9k/wmi.h
+>>> > b/drivers/net/wireless/ath/ath9k/wmi.h
+>>> > index fde6da6..0878add 100644
+>>> > --- a/drivers/net/wireless/ath/ath9k/wmi.h
+>>> > +++ b/drivers/net/wireless/ath/ath9k/wmi.h
+>>> > @@ -124,7 +124,7 @@ enum wmi_event_id {
+>>> >        WMI_TXSTATUS_EVENTID,
+>>> >         };
+>>> >
+>>> >          -#define MAX_CMD_NUMBER 62
+>>> >          +#define MAX_CMD_NUMBER 1
+>>> >
+>>> >            struct register_write {
+>>> >                    __be32 reg;
+>>> > --
+>>>
+>>> did you try in your system the simple hack Raj had suggested?
+>>> it seems to solve ths issue, but we encountered some soft lock ups due
+>>> to the LED stuff is moved to mac80211 with the recent code base,
+>>> we will take a look at this to fix this, probably requires some backporting.
+>>
+>> Yes, the device seems to initialize properly with this patch.  Like you
+>> expected, I am seeing soft lock-ups when I try to bring the interface up.
+>>
+>>> in order to recreate the issue, we installed Ubuntu 8.04- the Hardy
+>>> Heron - released in April 2008.
+>>> as expected the issue is perfectly reproducible. thanks to Raj for his
+>>> help and suggestions.
+>>
+>> Thanks for taking the time to test.  I really appreciate everyone's help.
+>>
+>>> *please obtain the stable compat-wireless-2.6.36-4
+>>> http://linuxwireless.org/en/users/Download/stable/#compat-wireless_2.6.36_stable_releases
+>>> *download the old firmware
+>>> http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=blob_plain;f=ar9271.fw;hb=HEAD
+>>> (history http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=history;f=ar9271.fw;h=d0ee74a1c8dccb7cc21f5be90f1d4048fa9dbf9e;hb=HEAD)
+>>> with this your USB card will be up and running, we did some basic testing.
+>>> *I used  usbmodeswitch-0.9.4
+>>
+>> Ultimately we'd like to try the experimental AP mode.  I understand this was
+>> introduced in kernel version 2.6.40, so I don't think compat-wireless-2.6.36-4
+>> will work for us.
+>
+> yes AP mode support is not available in 2.6.36-4 and so as the
+> corresponding firmware changes.
+>
+>>
+>> Can you point me to the LED-related commits that you mentioned above?  We'll
+>> either need to backport the changes required to fix the soft lock-ups or upgrade
+>> our kernel to include these commits.
 
-John
+we are going to revert this and see if it helps (in addition to
+Rajkumar's patch applied)
 
-On Fri, Jul 01, 2011 at 07:31:32PM -0300, Aloisio Almeida Jr wrote:
-> This version has only debug related changes.
-> 
->  1. NFC_*() macros were renamed to nfc_*(). For err and info nfc_printk() is
->     called. For dbg pr_debug() is called.
->  2. nfc_dev_*() macros were created to be used by device drivers. These macros
->     use dev_*().
->  3. The macros does not have __func__ anymore.
-> 
-> Aloisio Almeida Jr (3):
->   NFC: add NFC socket family
->   NFC: pn533: add NXP pn533 nfc device driver
->   NFC: add Documentation/networking/nfc.txt
-> 
-> Lauro Ramos Venancio (3):
->   NFC: add nfc subsystem core
->   NFC: add nfc generic netlink interface
->   NFC: add the NFC socket raw protocol
-> 
->  Documentation/networking/nfc.txt |  128 +++
->  drivers/Kconfig                  |    2 -
->  drivers/Makefile                 |    1 +
->  drivers/nfc/Kconfig              |   24 +-
->  drivers/nfc/Makefile             |    3 +
->  drivers/nfc/pn533.c              | 1632 ++++++++++++++++++++++++++++++++++++++
->  include/linux/nfc.h              |  126 +++
->  include/linux/socket.h           |    4 +-
->  include/net/nfc.h                |  156 ++++
->  net/Kconfig                      |    1 +
->  net/Makefile                     |    1 +
->  net/core/sock.c                  |    6 +-
->  net/nfc/Kconfig                  |   16 +
->  net/nfc/Makefile                 |    7 +
->  net/nfc/af_nfc.c                 |   98 +++
->  net/nfc/core.c                   |  468 +++++++++++
->  net/nfc/netlink.c                |  537 +++++++++++++
->  net/nfc/nfc.h                    |  117 +++
->  net/nfc/rawsock.c                |  354 +++++++++
->  19 files changed, 3663 insertions(+), 18 deletions(-)
->  create mode 100644 Documentation/networking/nfc.txt
->  create mode 100644 drivers/nfc/pn533.c
->  create mode 100644 include/linux/nfc.h
->  create mode 100644 include/net/nfc.h
->  create mode 100644 net/nfc/Kconfig
->  create mode 100644 net/nfc/Makefile
->  create mode 100644 net/nfc/af_nfc.c
->  create mode 100644 net/nfc/core.c
->  create mode 100644 net/nfc/netlink.c
->  create mode 100644 net/nfc/nfc.h
->  create mode 100644 net/nfc/rawsock.c
-> 
-> -- 
-> 1.7.5.4
-> 
+commit d244f21e79162b829c9af09845421d9b4fac4253
+Author: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Date:   Thu Apr 28 16:14:05 2011 +0530
+
+    ath9k_htc: Revamp LED management
+
+    Remove all the convoluted hacks in the driver and simplify things
+    by making use of mac80211's LED triggers.
+
+    Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+
+
+>
+> no I have not looked into that deeply, will surely take a look into it sooner.
+>
+>>
+>>> we also recommend you upgrade to latest kernel available for your distribution,
+>>> because we may still face some other issues as ath9k_htc very much new
+>>> compared to ath9k
+>>
+>> A kernel upgrade is something I would like to avoid if possible, but of course
+>> it is something we'll consider if we need to.
+>
+> its highly recommended you please upgrade the kernel. its needed because
+>  we can avoid fixing issues that may need to back ported in the future.
+>
+>>
+>>> please also read
+>>> http://wireless.kernel.org/en/users/Download/compat-wireless-old
+>>
+>> I think this kernel is supported by the regular compat-wireless package, right?
+>
+> true, but its also mentioned in the known issues that 2.6.26 >= is
+> what ath9k best supports.
+> its good that  ath9k_htc worked
+>
+>>
+>> Thanks,
+>> Forest
+>> --
+>> Forest Bond
+>> http://www.alittletooquiet.net
+>> http://www.rapidrollout.com
+>>
+>> -----BEGIN PGP SIGNATURE-----
+>> Version: GnuPG v1.4.10 (GNU/Linux)
+>>
+>> iEYEARECAAYFAk4UqZEACgkQRO4fQQdv5Ay9jQCbB3lJUTTYM0Vm1o+JNqwG0kyI
+>> BAMAnjiX7VDThAbNYOyasOBTarI5ZqtE
+>> =V/bH
+>> -----END PGP SIGNATURE-----
+>>
+>>
+>
+>
+>
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> shafi
+>
+
+
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+shafi
