@@ -1,136 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53388 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751163Ab1GVXUc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 19:20:32 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-mips@linux-mips.org
-Cc: jonas.gorski@gmail.com, ralf@linux-mips.org, zajec5@gmail.com,
-	mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v3 00/11] bcma: add support for embedded devices like bcm4716
-Date: Sat, 23 Jul 2011 01:20:04 +0200
-Message-Id: <1311376815-15755-1-git-send-email-hauke@hauke-m.de> (sfid-20110723_012036_496003_E773FCC9)
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:63830 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756661Ab1GGP10 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jul 2011 11:27:26 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CACna6rxAKMp-2wqwz4k4S3nTkY_3Qz7=hEZk9F2Zig7T5kp_HA@mail.gmail.com>
+References: <CACna6rxAKMp-2wqwz4k4S3nTkY_3Qz7=hEZk9F2Zig7T5kp_HA@mail.gmail.com>
+Date: Thu, 7 Jul 2011 17:27:25 +0200
+Message-ID: <CACna6ryOcNcwvwR5zmKjPm0WXcViQGdu=QyDmNHUqDVmNygL8g@mail.gmail.com> (sfid-20110707_172742_520620_F422A96D)
+Subject: Re: Bug in BCMA: device_unregister causing "NULL pointer dereference at"
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=bcaec5215fa3a7b4ba04a77c5aa2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series adds support for embedded devices like bcm47xx to 
-bcma. Bcma is used on bcm4716 and bcm4718 SoCs as the system bus and
-replaced ssb used on older devices. With these patches my bcm4716 
-device boots up till it tries to access the flash, because the serial 
-flash chip is unsupported for now, this will be my next task. This adds 
-support for MIPS cores, interrupt configuration and the serial console.
+--bcaec5215fa3a7b4ba04a77c5aa2
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-These patches are not containing all functions needed to get the SoC to 
-fully work and support every feature, but it is a good start.
-These patches are now integrated in OpenWrt for everyone how wants to
-test them.
+W dniu 7 lipca 2011 17:25 u=C5=BCytkownik Rafa=C5=82 Mi=C5=82ecki <zajec5@g=
+mail.com> napisa=C5=82:
+> I've problem with bcma and bus subsystem.
+>
+> This works fine:
+> modprobe bcma; rmmod bcma
+>
+> This:
+> modprobe bcma; modprobe b43; rmmod b43; rmmod bcma
+> causes:
+> BUG: unable to handle kernel NULL pointer dereference at =C2=A0 (null)
+>
+> My BCMA has only 3 fores, out of them only 1 is registered as device:
+> bcma: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x22, class 0x=
+0)
+> bcma: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x17, class 0=
+x0)
+> bcma: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x0F, class 0x0)
+>
+> The dereference comes out from
+> static void bcma_unregister_cores(struct bcma_bus *bus)
+>
+> There is a simple loop:
+> list_for_each_entry(core, &bus->cores, list) {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (core->dev_registered)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0device_unregister(=
+&core->dev);
+> }
+>
+>
+> So when I unload bcma after I got driver (b43) for 0x812 core, I get
+> NULL pointer dereference.
+>
+> Any tip, why does it happen?
 
-This was tested with a BCM4704 device (SoC with ssb bus), a BCM4716 
-device and a pcie wireless card supported by bcma.
+Dmesg
 
-@John could you please merge this into wireless-testing. I hope Ralf is 
-fine with it when some MIPS bits will go through wireless. This will 
-make it much easier for Linus to merge wireless-testing and the mips 
-tree together as there are many other changes for bcma in wireless-
-testing.
+--=20
+Rafa=C5=82
 
-PATCH v3:
- * rebase on wireless-testing master-2011-07-22-2
- * remove BCMA_HOSTTYPE_NONE
- * add Acked-by Rafał
- * rename bcm47xx_active_bus_type to bcm47xx_bus_type
- * set core->dev.dma_mask and core->dma_dev for SoC
- * fix comment
+--bcaec5215fa3a7b4ba04a77c5aa2
+Content-Type: application/octet-stream; name="dmesg.log"
+Content-Disposition: attachment; filename="dmesg.log"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gptvfkhi0
 
-PATCH v2:
- * define inline function bcma_core_mips_init() if mips driver is not build
- * iounmap core->io_wrap and core->io_addr after it was used.
- * update bcma based on new braodcom driver code
-   * add workaround for 5357b0
- * move flash informations into own struct and store it in chipcommon.
-   When adding serial flash support it will be in chipcommon and then all flash structs should be there.
- * some changes to bcma_chipco_serial_init()
-  * some changes are done after looking into a more recent version of broadcom driver.
-  * changes suggested by Jonas
-  * serial struct is in chipcommon as it is accessed through chipcommon.
-  * use bcma_pmu_alp_clock() to get the clock.
- * cpu clock: add detection support for some newer SoCs.
-
-PATCH v1:
- * rebased on mips tree (mips/queue)
- * drop pcie hostmode patch as Rafał sent a better patch to wireless mailing list
- * drop sprom patch because sprom is not supported in bcma version from mips tree,
-     I will send a separate patch to wireless mailing list.
- * fix compilation of arch/mips/bcm47xx/wgt634u.c
- * fix texts in arch/mips/bcm47xx/Kconfig
-
-RFC v3:
- * make bcm47xx built either with bcma, ssb or both and use mips MIPS 74K optimizations if possible
- * add block io support
- * some minor fixes for code and doku
-
-RFC v2:
- * use list and no arry to store cores
- * rename bcma_host_bcma_ to bcma_host_soc_
- * use core->io_addr and core->io_wrap to access cores
- * checkpatch fixes
- * some minor fixes
-
-Hauke Mehrtens (11):
-  bcma: move parsing of EEPROM into own function.
-  bcma: move initializing of struct bcma_bus to own function.
-  bcma: add functions to scan cores needed on SoCs
-  bcma: add SOC bus
-  bcma: add mips driver
-  bcma: add serial console support
-  bcma: get CPU clock
-  bcm47xx: prepare to support different buses
-  bcm47xx: make it possible to build bcm47xx without ssb.
-  bcm47xx: add support for bcma bus
-  bcm47xx: fix irq assignment for new SoCs.
-
- arch/mips/Kconfig                            |    8 +-
- arch/mips/bcm47xx/Kconfig                    |   31 +++
- arch/mips/bcm47xx/Makefile                   |    3 +-
- arch/mips/bcm47xx/gpio.c                     |   82 +++++--
- arch/mips/bcm47xx/irq.c                      |   12 +
- arch/mips/bcm47xx/nvram.c                    |   29 ++-
- arch/mips/bcm47xx/serial.c                   |   46 ++++-
- arch/mips/bcm47xx/setup.c                    |   90 ++++++-
- arch/mips/bcm47xx/time.c                     |   16 +-
- arch/mips/bcm47xx/wgt634u.c                  |   14 +-
- arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |   26 ++-
- arch/mips/include/asm/mach-bcm47xx/gpio.h    |  108 +++++++--
- arch/mips/pci/pci-bcm47xx.c                  |    6 +
- drivers/bcma/Kconfig                         |   13 +
- drivers/bcma/Makefile                        |    2 +
- drivers/bcma/bcma_private.h                  |   16 ++
- drivers/bcma/core.c                          |    2 +
- drivers/bcma/driver_chipcommon.c             |   53 ++++
- drivers/bcma/driver_chipcommon_pmu.c         |  133 ++++++++++
- drivers/bcma/driver_mips.c                   |  256 +++++++++++++++++++
- drivers/bcma/driver_pci.c                    |   14 +-
- drivers/bcma/host_soc.c                      |  183 ++++++++++++++
- drivers/bcma/main.c                          |   70 +++++-
- drivers/bcma/scan.c                          |  348 ++++++++++++++++++--------
- drivers/watchdog/bcm47xx_wdt.c               |   27 ++-
- include/linux/bcma/bcma.h                    |    9 +-
- include/linux/bcma/bcma_driver_chipcommon.h  |   67 +++++
- include/linux/bcma/bcma_driver_mips.h        |   51 ++++
- include/linux/bcma/bcma_soc.h                |   16 ++
- 29 files changed, 1549 insertions(+), 182 deletions(-)
- create mode 100644 arch/mips/bcm47xx/Kconfig
- create mode 100644 drivers/bcma/driver_mips.c
- create mode 100644 drivers/bcma/host_soc.c
- create mode 100644 include/linux/bcma/bcma_driver_mips.h
- create mode 100644 include/linux/bcma/bcma_soc.h
-
--- 
-1.7.4.1
-
+WyAgMjIyLjM5MzIxN10gYmNtYTogVW5yZWdpc3RlcmluZyBkcml2ZXIKWyAgMjI4LjI0Mjg4N10g
+YmNtYTogQ29yZSAweDgyMCByZWdpc3RlcmVkOjAKWyAgMjI4LjI0Mjg5Ml0gYmNtYTogQ29yZSAw
+eDgxMiByZWdpc3RlcmVkOjEKWyAgMjI4LjI0Mzk1Nl0gQlVHOiB1bmFibGUgdG8gaGFuZGxlIGtl
+cm5lbCBOVUxMIHBvaW50ZXIgZGVyZWZlcmVuY2UgYXQgICAobnVsbCkKWyAgMjI4LjI0Mzk3Ml0g
+SVA6IFs8YzAzZGNhNGU+XSBrb2JqZWN0X2RlbCsweDJlLzB4NjAKWyAgMjI4LjI0Mzk4OF0gKnBk
+cHQgPSAwMDAwMDAwMDFiODBjMDAxICpwZGUgPSAwMDAwMDAwMDAwMDAwMDAwIApbICAyMjguMjQz
+OTk3XSBPb3BzOiAwMDAyIFsjMV0gUFJFRU1QVCBTTVAgClsgIDIyOC4yNDQwMDZdIE1vZHVsZXMg
+bGlua2VkIGluOiBhcmM0IHNzYiBtbWNfY29yZSBwY21jaWEgcGNtY2lhX2NvcmUgbWFjODAyMTEg
+Y2ZnODAyMTEgYmNtYSgtKSBpcDZ0X0xPRyB4dF90Y3B1ZHAgeHRfcGt0dHlwZSBpcHRfTE9HIHh0
+X2xpbWl0IHNuZF9wY21fb3NzIHNuZF9taXhlcl9vc3Mgc25kX3NlcSBzbmRfc2VxX2RldmljZSBl
+ZGQgYWZfcGFja2V0IGlwNnRfUkVKRUNUIG5mX2Nvbm50cmFja19pcHY2IG5mX2RlZnJhZ19pcHY2
+IGlwNnRhYmxlX3JhdyB4dF9OT1RSQUNLIGlwdF9SRUpFQ1QgaXB0YWJsZV9yYXcgaXB0YWJsZV9m
+aWx0ZXIgaXA2dGFibGVfbWFuZ2xlIG5mX2Nvbm50cmFja19uZXRiaW9zX25zIG5mX2Nvbm50cmFj
+a19icm9hZGNhc3QgbmZfY29ubnRyYWNrX2lwdjQgbmZfZGVmcmFnX2lwdjQgaXBfdGFibGVzIHh0
+X2Nvbm50cmFjayBuZl9jb25udHJhY2sgaXA2dGFibGVfZmlsdGVyIGlwNl90YWJsZXMgeF90YWJs
+ZXMgZXh0MyBqYmQgZG1fbW9kIHNuZF9pbnRlbDh4MCBzbmRfYWM5N19jb2RlYyBhYzk3X2J1cyBz
+bmRfcGNtIHNnIHNuZF90aW1lciBzbmQgbnM1NTggc2VyaW9fcmF3IHBwZGV2IHBhdGFfYW1kIGZs
+b3BweSBnYW1lcG9ydCBpMmNfbmZvcmNlMiBwYXJwb3J0X3BjIHBhcnBvcnQgc291bmRjb3JlIGZv
+cmNlZGV0aCBrOHRlbXAgcGNzcGtyIHNuZF9wYWdlX2FsbG9jIGJ1dHRvbiBleHQ0IG1iY2FjaGUg
+amJkMiBjcmMxNiBzZF9tb2QgZmFuIHByb2Nlc3NvciBhdGFfZ2VuZXJpYyBwYXRhX3ZpYSBwYXRh
+X2ptaWNyb24gc2F0YV9udiBzYXRhX3ZpYSB0aGVybWFsIHRoZXJtYWxfc3lzIFtsYXN0IHVubG9h
+ZGVkOiBiNDNdClsgIDIyOC4yNDQwMjRdIApbICAyMjguMjQ0MDI0XSBQaWQ6IDMzODAsIGNvbW06
+IHJtbW9kIE5vdCB0YWludGVkIDMuMC4wLXJjNS13bC1iNDMrICM4MSAgICAgICAgICBLOE5GNEct
+U0FUQTIvSzhORjRHLVNBVEEyClsgIDIyOC4yNDQwMjRdIEVJUDogMDA2MDpbPGMwM2RjYTRlPl0g
+RUZMQUdTOiAwMDAxMDI0NiBDUFU6IDAKWyAgMjI4LjI0NDAyNF0gRUlQIGlzIGF0IGtvYmplY3Rf
+ZGVsKzB4MmUvMHg2MApbICAyMjguMjQ0MDI0XSBFQVg6IGRiOGU2YTE4IEVCWDogZGI4ZTZhMTQg
+RUNYOiBkYjRmMWExNCBFRFg6IDAwMDAwMDAwClsgIDIyOC4yNDQwMjRdIEVTSTogZGI4ZTZhMTQg
+RURJOiBkYTEwNjg2MCBFQlA6IGRiNTI5ZTQ4IEVTUDogZGI1MjllNDQKWyAgMjI4LjI0NDAyNF0g
+IERTOiAwMDdiIEVTOiAwMDdiIEZTOiAwMGQ4IEdTOiAwMDMzIFNTOiAwMDY4ClsgIDIyOC4yNDQw
+MjRdIFByb2Nlc3Mgcm1tb2QgKHBpZDogMzM4MCwgdGk9ZGI1MjgwMDAgdGFzaz1kNzhlYzVmMCB0
+YXNrLnRpPWRiNTI4MDAwKQpbICAyMjguMjQ0MDI0XSBTdGFjazoKWyAgMjI4LjI0NDAyNF0gIGRi
+OGU2YTBjIGRiNTI5ZTVjIGMwNDhjNTFjIGRiOGU2YTBjIGRiOGU2YTAwIGRhMTA2ODYwIGRiNTI5
+ZTc4IGMwNDhjNTY5ClsgIDIyOC4yNDQwMjRdICBkYTEwNjg2MCBkYjUyOWU3OCBjMDYyNGYyOCBk
+ZDAwNzVjOCBkYjkwNWUxOCBkYjUyOWU5NCBkZDAwNTQ0OCBkZDAwNzVjOApbICAyMjguMjQ0MDI0
+XSAgMDAwMDA4MTIgMDAwMDAwMDEgZGExMDY4MDAgZGI5MDVlMDAgZGI1MjllYTggZGQwMDZjZTQg
+ZGExMDY4NjAgZGExMDY4MDAKWyAgMjI4LjI0NDAyNF0gQ2FsbCBUcmFjZToKWyAgMjI4LjI0NDAy
+NF0gIFs8YzA0OGM1MWM+XSBkZXZpY2VfZGVsKzB4MTFjLzB4MTUwClsgIDIyOC4yNDQwMjRdICBb
+PGMwNDhjNTY5Pl0gZGV2aWNlX3VucmVnaXN0ZXIrMHgxOS8weDYwClsgIDIyOC4yNDQwMjRdICBb
+PGMwNjI0ZjI4Pl0gPyBwcmludGsrMHgyOC8weDMwClsgIDIyOC4yNDQwMjRdICBbPGRkMDA1NDQ4
+Pl0gYmNtYV9idXNfdW5yZWdpc3RlcisweDY4LzB4NzAgW2JjbWFdClsgIDIyOC4yNDQwMjRdICBb
+PGRkMDA2Y2U0Pl0gYmNtYV9ob3N0X3BjaV9yZW1vdmUrMHgyNC8weDYwIFtiY21hXQpbICAyMjgu
+MjQ0MDI0XSAgWzxjMDNmY2ZiZj5dIHBjaV9kZXZpY2VfcmVtb3ZlKzB4M2YvMHhmMApbICAyMjgu
+MjQ0MDI0XSAgWzxjMDQ4ZjA4Nj5dIF9fZGV2aWNlX3JlbGVhc2VfZHJpdmVyKzB4NTYvMHhhMApb
+ICAyMjguMjQ0MDI0XSAgWzxjMDQ4ZjdlZj5dIGRyaXZlcl9kZXRhY2grMHg4Zi8weGEwClsgIDIy
+OC4yNDQwMjRdICBbPGMwNDhlZjJjPl0gYnVzX3JlbW92ZV9kcml2ZXIrMHg2Yy8weGUwClsgIDIy
+OC4yNDQwMjRdICBbPGMwNDhmYjUxPl0gZHJpdmVyX3VucmVnaXN0ZXIrMHg0MS8weDcwClsgIDIy
+OC4yNDQwMjRdICBbPGMwMzdhMGFmPl0gPyBzeXNmc19yZW1vdmVfZmlsZSsweGYvMHgyMApbICAy
+MjguMjQ0MDI0XSAgWzxjMDNmY2NjZD5dIHBjaV91bnJlZ2lzdGVyX2RyaXZlcisweDJkLzB4ODAK
+WyAgMjI4LjI0NDAyNF0gIFs8ZGQwMDcwODU+XSBiY21hX2hvc3RfcGNpX2V4aXQrMHhkLzB4ZiBb
+YmNtYV0KWyAgMjI4LjI0NDAyNF0gIFs8ZGQwMDcwNmM+XSBiY21hX21vZGV4aXQrMHg4LzB4MTQg
+W2JjbWFdClsgIDIyOC4yNDQwMjRdICBbPGMwMjgyN2M5Pl0gc3lzX2RlbGV0ZV9tb2R1bGUrMHgx
+MjkvMHgyMDAKWyAgMjI4LjI0NDAyNF0gIFs8YzAyZmExYTY+XSA/IHJlbW92ZV92bWErMHg0Ni8w
+eDYwClsgIDIyOC4yNDQwMjRdICBbPGMwMmZiMGQxPl0gPyBkb19tdW5tYXArMHgxZjEvMHgyNzAK
+WyAgMjI4LjI0NDAyNF0gIFs8YzA2MmUwZDg+XSBzeXNlbnRlcl9kb19jYWxsKzB4MTIvMHgyOApb
+ICAyMjguMjQ0MDI0XSBDb2RlOiA4OSBlNSA1MyA4OSBjMyA3NCA1MSBlOCBjMSBlNyBmOSBmZiA4
+YiA0MyAxMCA4MCA2MyAyMCBmZCA4NSBjMCA3NCAzMiA4MyBjMCAwOCBlOCBkZSBiMSAyNCAwMCA4
+YiA0YiAwNCA4ZCA0MyAwNCA4YiA1MyAwOCA4OSA1MSAwNCAKWyAgMjI4LjI0NDAyNF0gIDBhIDg5
+IDQzIDA0IDg5IDQzIDA4IDhiIDQzIDEwIDgzIGMwIDA4IGU4IDhmIGFmIDI0IDAwIDhiIDQzIApb
+ICAyMjguMjQ0MDI0XSBFSVA6IFs8YzAzZGNhNGU+XSBrb2JqZWN0X2RlbCsweDJlLzB4NjAgU1M6
+RVNQIDAwNjg6ZGI1MjllNDQKWyAgMjI4LjI0NDAyNF0gQ1IyOiAwMDAwMDAwMDAwMDAwMDAwClsg
+IDIyOC4yNDQ1MTFdIC0tLVsgZW5kIHRyYWNlIDQwMDFjMTUzMDI0ZTI0ZDAgXS0tLQpbICAyMjgu
+MjQ0NTIwXSBub3RlOiBybW1vZFszMzgwXSBleGl0ZWQgd2l0aCBwcmVlbXB0X2NvdW50IDE=
+--bcaec5215fa3a7b4ba04a77c5aa2--
