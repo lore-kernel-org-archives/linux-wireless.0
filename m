@@ -1,142 +1,416 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17508 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932113Ab1GNRMh (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50229 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750986Ab1GGU2D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 13:12:37 -0400
-Date: Thu, 14 Jul 2011 22:42:41 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 3/3] mac80211: Report 40MHz Intolerance to associated AP.
-Message-ID: <20110714171236.GB25573@vmraj-lnx.users.atheros.com> (sfid-20110714_191241_361966_E16858D3)
-References: <1310559873-10314-1-git-send-email-rmanohar@qca.qualcomm.com>
- <1310559873-10314-3-git-send-email-rmanohar@qca.qualcomm.com>
- <1310638549.3874.12.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1310638549.3874.12.camel@jlt3.sipsolutions.net>
+	Thu, 7 Jul 2011 16:28:03 -0400
+Subject: Re: [PATCH 1/2 v2] mac80211: fix TKIP races, make API easier to use
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20110706101558.179153800@sipsolutions.net> (sfid-20110706_121640_349789_D56165B4)
+References: <20110706100929.554431961@sipsolutions.net>
+	 <20110706101558.179153800@sipsolutions.net>
+	 (sfid-20110706_121640_349789_D56165B4)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Jul 2011 22:28:01 +0200
+Message-ID: <1310070481.3924.7.camel@jlt3.sipsolutions.net> (sfid-20110707_222809_270010_0B3F04DF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 14, 2011 at 12:15:49PM +0200, Johannes Berg wrote:
-> On Wed, 2011-07-13 at 17:54 +0530, Rajkumar Manoharan wrote:
-> > This patch adds support for 40MHz intolerance handling in STA
-> > mode. STA should report of any 40MHz intolerance in case if it
-> > finds a non-HT AP or a HT AP which prohibits 40MHz transmission
-> > (i.e 40MHz intolerant bit is set in HT capabilities IE).
-> > 
-> > STA shall report this condition using 20/40 BSS coexistence
-> > action frame.
-> 
-> I think it'd be smarter to add this logic to cfg80211, the scan parsing
-> stuff can be generic, and even the action frame can be transmitted
-> generically.
->
-> Heck, come to think of it, why not do this in wpa_supplicant?
->
-I prefer to go with the common layer for both wpa_s and iw. But cfg80211
-seems to be better.
-> > --- a/net/mac80211/mlme.c
-> > +++ b/net/mac80211/mlme.c
-> > @@ -206,6 +206,7 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
-> >  		channel_type = NL80211_CHAN_HT20;
-> >  
-> >  		if (!(ap_ht_cap_flags & IEEE80211_HT_CAP_40MHZ_INTOLERANT) &&
-> > +		    !(sband->ht_cap.cap & IEEE80211_HT_CAP_40MHZ_INTOLERANT) &&
-> >  		    (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
-> >  		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
-> >  			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-> > diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-> > index 08a45ac..29d50dd 100644
-> > --- a/net/mac80211/scan.c
-> > +++ b/net/mac80211/scan.c
-> > @@ -74,6 +74,31 @@ static bool is_uapsd_supported(struct ieee802_11_elems *elems)
-> >  	return qos_info & IEEE80211_WMM_IE_AP_QOSINFO_UAPSD;
-> >  }
-> >  
-> > +static void ieee80211_check_40mhz_intolerance(
-> > +			struct ieee80211_sub_if_data *sdata,
-> > +			struct ieee80211_channel *channel,
-> > +			struct ieee802_11_elems *elems)
-> > +{
-> > +	struct ieee80211_local *local = sdata->local;
-> > +
-> > +	if ((local->_oper_channel_type != NL80211_CHAN_HT40MINUS) ||
-> > +	    (local->_oper_channel_type != NL80211_CHAN_HT40PLUS))
-> > +		return;
-> > +
-> > +	if (local->oper_channel->band != channel->band)
-> > +		return;
-> > +
-> > +	if (!elems->ht_cap_elem ||
-> > +	    (le16_to_cpu(elems->ht_cap_elem->cap_info) &
-> > +		    IEEE80211_HT_CAP_40MHZ_INTOLERANT)) {
-> > +		sdata->found_40mhz_intolerant = true;
-> > +		if (!channel->is_40mhz_intolerant) {
-> > +			channel->is_40mhz_intolerant = true;
-> 
-> I don't like mac80211 changing cfg80211 data structures much.
-> 
-> > +			sdata->intol_channels++;
-> 
-> If that's a counter, why is it a u8?
-> 
-> > @@ -434,6 +462,8 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
-> >  	else
-> >  		__set_bit(SCAN_SW_SCANNING, &local->scanning);
-> >  
-> > +	sdata->found_40mhz_intolerant = false;
-> > +	sdata->intol_channels = 0;
-> 
-> This makes no sense, the scan could be on only some channels, but you're
-> resetting all info.
-> 
-> >  	ieee80211_recalc_idle(local);
-> >  
-> >  	if (local->ops->hw_scan) {
-> > diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> > index 652e569..9ad5361 100644
-> > --- a/net/mac80211/util.c
-> > +++ b/net/mac80211/util.c
-> > @@ -1334,6 +1334,93 @@ int ieee80211_reconfig(struct ieee80211_local *local)
-> >  	return 0;
-> >  }
-> >  
-> > +static void ieee80211_send_public_action_frame(
-> > +		struct ieee80211_sub_if_data *sdata)
-> 
-> Kidding, right?
-> "send_public_action_frame", but then it creates a 40 intolerant frame?
->
-Hmm.. 20/40 BSS coexistence management messages are exchanged by action frame
-with public category. That why I named like that.
-Forgive my poor naming convention.
-> > +void ieee80211_process_40mhz_intolerance(struct ieee80211_local *local)
-> > +{
-> > +	struct ieee80211_hw *hw = &local->hw;
-> > +	struct ieee80211_conf *conf = &hw->conf;
-> > +	struct ieee80211_supported_band *sband =
-> > +		local->hw.wiphy->bands[local->oper_channel->band];
-> > +	struct ieee80211_sub_if_data *sdata;
-> > +	int i;
-> > +
-> > +	mutex_lock(&local->iflist_mtx);
-> > +	list_for_each_entry(sdata, &local->interfaces, list) {
-> > +		if (!ieee80211_sdata_running(sdata))
-> > +			continue;
-> > +		if (!sdata->found_40mhz_intolerant)
-> > +			continue;
-> > +		if (!conf_is_ht40(conf))
-> > +			continue;
-> > +		ieee80211_send_public_action_frame(sdata);
-> 
-> What if the AP is HT40, we find the intolerant AP, but we're only 20 MHz
-> capable? IOW -- this logic doesn't seem to make sense?
-> 
-> I really don't see why we can't do all of this in wpa_s.
->
-I really appriciate your review comments. Will comeup with cfg80211 logic.
+From: Johannes Berg <johannes.berg@intel.com>
 
---
-Rajkumar
+Our current TKIP code races against itself on TX
+since we can process multiple packets at the same
+time on different ACs, but they all share the TX
+context for TKIP. This can lead to bad IVs etc.
+
+Also, the crypto offload helper code just obtains
+the P1K/P2K from the cache, and can update it as
+well, but there's no guarantee that packets are
+really processed in order.
+
+To fix these issues, first introduce a spinlock
+that will protect the IV16/IV32 values in the TX
+context. This first step makes sure that we don't
+assign the same IV multiple times or get confused
+in other ways.
+
+Secondly, change the way the P1K cache works. I
+add a field "p1k_iv32" that stores the value of
+the IV32 when the P1K was last recomputed, and
+if different from the last time, then a new P1K
+is recomputed. This can cause the P1K computation
+to flip back and forth if packets are processed
+out of order. All this also happens under the new
+spinlock.
+
+Finally, because there are argument differences,
+split up the ieee80211_get_tkip_key() API into
+ieee80211_get_tkip_p1k() and ieee80211_get_tkip_p2k()
+and give them the correct arguments.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+v2: some whitespace oddities caused this to no longer apply.
+
+ drivers/net/wireless/b43/xmit.c             |    3 
+ drivers/net/wireless/iwlegacy/iwl-4965-tx.c |    3 
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |    3 
+ include/net/mac80211.h                      |   50 +++++-------
+ net/mac80211/key.c                          |    1 
+ net/mac80211/key.h                          |   10 +-
+ net/mac80211/tkip.c                         |  111 +++++++++++++++-------------
+ net/mac80211/tkip.h                         |    8 +-
+ net/mac80211/wpa.c                          |    9 +-
+ 9 files changed, 104 insertions(+), 94 deletions(-)
+
+--- a/include/net/mac80211.h	2011-07-07 22:26:40.000000000 +0200
++++ b/include/net/mac80211.h	2011-07-07 22:26:49.000000000 +0200
+@@ -973,21 +973,6 @@ enum sta_notify_cmd {
+ };
+ 
+ /**
+- * enum ieee80211_tkip_key_type - get tkip key
+- *
+- * Used by drivers which need to get a tkip key for skb. Some drivers need a
+- * phase 1 key, others need a phase 2 key. A single function allows the driver
+- * to get the key, this enum indicates what type of key is required.
+- *
+- * @IEEE80211_TKIP_P1_KEY: the driver needs a phase 1 key
+- * @IEEE80211_TKIP_P2_KEY: the driver needs a phase 2 key
+- */
+-enum ieee80211_tkip_key_type {
+-	IEEE80211_TKIP_P1_KEY,
+-	IEEE80211_TKIP_P2_KEY,
+-};
+-
+-/**
+  * enum ieee80211_hw_flags - hardware flags
+  *
+  * These flags are used to indicate hardware capabilities to
+@@ -2594,21 +2579,32 @@ struct sk_buff *
+ ieee80211_get_buffered_bc(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+ 
+ /**
+- * ieee80211_get_tkip_key - get a TKIP rc4 for skb
++ * ieee80211_get_tkip_p1k - get a TKIP phase 1 key
+  *
+- * This function computes a TKIP rc4 key for an skb. It computes
+- * a phase 1 key if needed (iv16 wraps around). This function is to
+- * be used by drivers which can do HW encryption but need to compute
+- * to phase 1/2 key in SW.
++ * This function returns the TKIP phase 1 key for the IV32 taken
++ * from the given packet.
+  *
+  * @keyconf: the parameter passed with the set key
+- * @skb: the skb for which the key is needed
+- * @type: TBD
+- * @key: a buffer to which the key will be written
+- */
+-void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
+-				struct sk_buff *skb,
+-				enum ieee80211_tkip_key_type type, u8 *key);
++ * @skb: the packet to take the IV32 value from that will be encrypted
++ *	with this P1K
++ * @p1k: a buffer to which the key will be written, as 5 u16 values
++ */
++void ieee80211_get_tkip_p1k(struct ieee80211_key_conf *keyconf,
++			    struct sk_buff *skb, u16 *p1k);
++
++/**
++ * ieee80211_get_tkip_p2k - get a TKIP phase 2 key
++ *
++ * This function computes the TKIP RC4 key for the IV values
++ * in the packet.
++ *
++ * @keyconf: the parameter passed with the set key
++ * @skb: the packet to take the IV32/IV16 values from that will be
++ *	encrypted with this key
++ * @p2k: a buffer to which the key will be written, 16 bytes
++ */
++void ieee80211_get_tkip_p2k(struct ieee80211_key_conf *keyconf,
++			    struct sk_buff *skb, u8 *p2k);
+ 
+ /**
+  * ieee80211_gtk_rekey_notify - notify userspace supplicant of rekeying
+--- a/net/mac80211/tkip.c	2011-07-07 22:26:40.000000000 +0200
++++ b/net/mac80211/tkip.c	2011-07-07 22:26:49.000000000 +0200
+@@ -101,6 +101,7 @@ static void tkip_mixing_phase1(const u8
+ 		p1k[4] += tkipS(p1k[3] ^ get_unaligned_le16(tk + 0 + j)) + i;
+ 	}
+ 	ctx->state = TKIP_STATE_PHASE1_DONE;
++	ctx->p1k_iv32 = tsc_IV32;
+ }
+ 
+ static void tkip_mixing_phase2(const u8 *tk, struct tkip_ctx *ctx,
+@@ -140,60 +141,72 @@ static void tkip_mixing_phase2(const u8
+ /* Add TKIP IV and Ext. IV at @pos. @iv0, @iv1, and @iv2 are the first octets
+  * of the IV. Returns pointer to the octet following IVs (i.e., beginning of
+  * the packet payload). */
+-u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key, u16 iv16)
++u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key)
+ {
+-	pos = write_tkip_iv(pos, iv16);
++	lockdep_assert_held(&key->u.tkip.txlock);
++
++	pos = write_tkip_iv(pos, key->u.tkip.tx.iv16);
+ 	*pos++ = (key->conf.keyidx << 6) | (1 << 5) /* Ext IV */;
+ 	put_unaligned_le32(key->u.tkip.tx.iv32, pos);
+ 	return pos + 4;
+ }
+ 
+-void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
+-			struct sk_buff *skb, enum ieee80211_tkip_key_type type,
+-			u8 *outkey)
++static void ieee80211_compute_tkip_p1k(struct ieee80211_key *key, u32 iv32)
++{
++	struct ieee80211_sub_if_data *sdata = key->sdata;
++	struct tkip_ctx *ctx = &key->u.tkip.tx;
++	const u8 *tk = &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
++
++	lockdep_assert_held(&key->u.tkip.txlock);
++
++	/*
++	 * Update the P1K when the IV32 is different from the value it
++	 * had when we last computed it (or when not initialised yet).
++	 * This might flip-flop back and forth if packets are processed
++	 * out-of-order due to the different ACs, but then we have to
++	 * just compute the P1K more often.
++	 */
++	if (ctx->p1k_iv32 != iv32 || ctx->state == TKIP_STATE_NOT_INIT)
++		tkip_mixing_phase1(tk, ctx, sdata->vif.addr, iv32);
++}
++
++void ieee80211_get_tkip_p1k(struct ieee80211_key_conf *keyconf,
++			    struct sk_buff *skb, u16 *p1k)
+ {
+ 	struct ieee80211_key *key = (struct ieee80211_key *)
+ 			container_of(keyconf, struct ieee80211_key, conf);
++	struct tkip_ctx *ctx = &key->u.tkip.tx;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	u8 *data;
+-	const u8 *tk;
+-	struct tkip_ctx *ctx;
+-	u16 iv16;
+-	u32 iv32;
+-
+-	data = (u8 *)hdr + ieee80211_hdrlen(hdr->frame_control);
+-	iv16 = data[2] | (data[0] << 8);
+-	iv32 = get_unaligned_le32(&data[4]);
+-
+-	tk = &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
+-	ctx = &key->u.tkip.tx;
+-
+-#ifdef CONFIG_MAC80211_TKIP_DEBUG
+-	printk(KERN_DEBUG "TKIP encrypt: iv16 = 0x%04x, iv32 = 0x%08x\n",
+-			iv16, iv32);
+-
+-	if (iv32 != ctx->iv32) {
+-		printk(KERN_DEBUG "skb: iv32 = 0x%08x key: iv32 = 0x%08x\n",
+-			iv32, ctx->iv32);
+-		printk(KERN_DEBUG "Wrap around of iv16 in the middle of a "
+-			"fragmented packet\n");
+-	}
+-#endif
+-
+-	/* Update the p1k only when the iv16 in the packet wraps around, this
+-	 * might occur after the wrap around of iv16 in the key in case of
+-	 * fragmented packets. */
+-	if (iv16 == 0 || ctx->state == TKIP_STATE_NOT_INIT)
+-		tkip_mixing_phase1(tk, ctx, hdr->addr2, iv32);
+-
+-	if (type == IEEE80211_TKIP_P1_KEY) {
+-		memcpy(outkey, ctx->p1k, sizeof(u16) * 5);
+-		return;
+-	}
++	const u8 *data = (u8 *)hdr + ieee80211_hdrlen(hdr->frame_control);
++	u32 iv32 = get_unaligned_le32(&data[4]);
++	unsigned long flags;
++
++	spin_lock_irqsave(&key->u.tkip.txlock, flags);
++	ieee80211_compute_tkip_p1k(key, iv32);
++	memcpy(p1k, ctx->p1k, sizeof(ctx->p1k));
++	spin_unlock_irqrestore(&key->u.tkip.txlock, flags);
++}
++EXPORT_SYMBOL(ieee80211_get_tkip_p1k);
+ 
+-	tkip_mixing_phase2(tk, ctx, iv16, outkey);
++void ieee80211_get_tkip_p2k(struct ieee80211_key_conf *keyconf,
++			    struct sk_buff *skb, u8 *p2k)
++{
++	struct ieee80211_key *key = (struct ieee80211_key *)
++			container_of(keyconf, struct ieee80211_key, conf);
++	const u8 *tk = &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
++	struct tkip_ctx *ctx = &key->u.tkip.tx;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	const u8 *data = (u8 *)hdr + ieee80211_hdrlen(hdr->frame_control);
++	u32 iv32 = get_unaligned_le32(&data[4]);
++	u16 iv16 = data[2] | (data[0] << 8);
++	unsigned long flags;
++
++	spin_lock_irqsave(&key->u.tkip.txlock, flags);
++	ieee80211_compute_tkip_p1k(key, iv32);
++	tkip_mixing_phase2(tk, ctx, iv16, p2k);
++	spin_unlock_irqrestore(&key->u.tkip.txlock, flags);
+ }
+-EXPORT_SYMBOL(ieee80211_get_tkip_key);
++EXPORT_SYMBOL(ieee80211_get_tkip_p2k);
+ 
+ /*
+  * Encrypt packet payload with TKIP using @key. @pos is a pointer to the
+@@ -204,19 +217,15 @@ EXPORT_SYMBOL(ieee80211_get_tkip_key);
+  */
+ int ieee80211_tkip_encrypt_data(struct crypto_cipher *tfm,
+ 				struct ieee80211_key *key,
+-				u8 *pos, size_t payload_len, u8 *ta)
++				struct sk_buff *skb,
++				u8 *payload, size_t payload_len)
+ {
+ 	u8 rc4key[16];
+-	struct tkip_ctx *ctx = &key->u.tkip.tx;
+-	const u8 *tk = &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
+-
+-	/* Calculate per-packet key */
+-	if (ctx->iv16 == 0 || ctx->state == TKIP_STATE_NOT_INIT)
+-		tkip_mixing_phase1(tk, ctx, ta, ctx->iv32);
+ 
+-	tkip_mixing_phase2(tk, ctx, ctx->iv16, rc4key);
++	ieee80211_get_tkip_p2k(&key->conf, skb, rc4key);
+ 
+-	return ieee80211_wep_encrypt_data(tfm, rc4key, 16, pos, payload_len);
++	return ieee80211_wep_encrypt_data(tfm, rc4key, 16,
++					  payload, payload_len);
+ }
+ 
+ /* Decrypt packet payload with TKIP using @key. @pos is a pointer to the
+--- a/drivers/net/wireless/b43/xmit.c	2011-07-07 22:26:40.000000000 +0200
++++ b/drivers/net/wireless/b43/xmit.c	2011-07-07 22:26:49.000000000 +0200
+@@ -323,8 +323,7 @@ int b43_generate_txhdr(struct b43_wldev
+ 			/* we give the phase1key and iv16 here, the key is stored in
+ 			 * shm. With that the hardware can do phase 2 and encryption.
+ 			 */
+-			ieee80211_get_tkip_key(info->control.hw_key, skb_frag,
+-					IEEE80211_TKIP_P1_KEY, (u8*)phase1key);
++			ieee80211_get_tkip_p1k(info->control.hw_key, skb_frag, phase1key);
+ 			/* phase1key is in host endian. Copy to little-endian txhdr->iv. */
+ 			for (i = 0; i < 5; i++) {
+ 				txhdr->iv[i * 2 + 0] = phase1key[i];
+--- a/drivers/net/wireless/iwlegacy/iwl-4965-tx.c	2011-07-07 22:26:40.000000000 +0200
++++ b/drivers/net/wireless/iwlegacy/iwl-4965-tx.c	2011-07-07 22:26:49.000000000 +0200
+@@ -240,8 +240,7 @@ static void iwl4965_tx_cmd_build_hwcrypt
+ 
+ 	case WLAN_CIPHER_SUITE_TKIP:
+ 		tx_cmd->sec_ctl = TX_CMD_SEC_TKIP;
+-		ieee80211_get_tkip_key(keyconf, skb_frag,
+-			IEEE80211_TKIP_P2_KEY, tx_cmd->key);
++		ieee80211_get_tkip_p2k(keyconf, skb_frag, tx_cmd->key);
+ 		IWL_DEBUG_TX(priv, "tx_cmd with tkip hwcrypto\n");
+ 		break;
+ 
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c	2011-07-07 22:26:40.000000000 +0200
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c	2011-07-07 22:26:49.000000000 +0200
+@@ -514,8 +514,7 @@ static void iwlagn_tx_cmd_build_hwcrypto
+ 
+ 	case WLAN_CIPHER_SUITE_TKIP:
+ 		tx_cmd->sec_ctl = TX_CMD_SEC_TKIP;
+-		ieee80211_get_tkip_key(keyconf, skb_frag,
+-			IEEE80211_TKIP_P2_KEY, tx_cmd->key);
++		ieee80211_get_tkip_p2k(keyconf, skb_frag, tx_cmd->key);
+ 		IWL_DEBUG_TX(priv, "tx_cmd with tkip hwcrypto\n");
+ 		break;
+ 
+--- a/net/mac80211/key.c	2011-07-07 22:26:40.000000000 +0200
++++ b/net/mac80211/key.c	2011-07-07 22:26:49.000000000 +0200
+@@ -369,6 +369,7 @@ struct ieee80211_key *ieee80211_key_allo
+ 					get_unaligned_le16(seq);
+ 			}
+ 		}
++		spin_lock_init(&key->u.tkip.txlock);
+ 		break;
+ 	case WLAN_CIPHER_SUITE_CCMP:
+ 		key->conf.iv_len = CCMP_HDR_LEN;
+--- a/net/mac80211/key.h	2011-07-07 22:26:40.000000000 +0200
++++ b/net/mac80211/key.h	2011-07-07 22:26:49.000000000 +0200
+@@ -52,9 +52,10 @@ enum ieee80211_internal_tkip_state {
+ };
+ 
+ struct tkip_ctx {
+-	u32 iv32;
+-	u16 iv16;
+-	u16 p1k[5];
++	u32 iv32;	/* current iv32 */
++	u16 iv16;	/* current iv16 */
++	u16 p1k[5];	/* p1k cache */
++	u32 p1k_iv32;	/* iv32 for which p1k computed */
+ 	enum ieee80211_internal_tkip_state state;
+ };
+ 
+@@ -71,6 +72,9 @@ struct ieee80211_key {
+ 
+ 	union {
+ 		struct {
++			/* protects tx context */
++			spinlock_t txlock;
++
+ 			/* last used TSC */
+ 			struct tkip_ctx tx;
+ 
+--- a/net/mac80211/tkip.h	2011-07-07 22:26:40.000000000 +0200
++++ b/net/mac80211/tkip.h	2011-07-07 22:26:49.000000000 +0200
+@@ -13,11 +13,13 @@
+ #include <linux/crypto.h>
+ #include "key.h"
+ 
+-u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key, u16 iv16);
++u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key);
+ 
+ int ieee80211_tkip_encrypt_data(struct crypto_cipher *tfm,
+-				 struct ieee80211_key *key,
+-				 u8 *pos, size_t payload_len, u8 *ta);
++				struct ieee80211_key *key,
++				struct sk_buff *skb,
++				u8 *payload, size_t payload_len);
++
+ enum {
+ 	TKIP_DECRYPT_OK = 0,
+ 	TKIP_DECRYPT_NO_EXT_IV = -1,
+--- a/net/mac80211/wpa.c	2011-07-07 22:26:48.000000000 +0200
++++ b/net/mac80211/wpa.c	2011-07-07 22:26:49.000000000 +0200
+@@ -176,6 +176,7 @@ static int tkip_encrypt_skb(struct ieee8
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_key *key = tx->key;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	unsigned long flags;
+ 	unsigned int hdrlen;
+ 	int len, tail;
+ 	u8 *pos;
+@@ -203,11 +204,12 @@ static int tkip_encrypt_skb(struct ieee8
+ 	pos += hdrlen;
+ 
+ 	/* Increase IV for the frame */
++	spin_lock_irqsave(&key->u.tkip.txlock, flags);
+ 	key->u.tkip.tx.iv16++;
+ 	if (key->u.tkip.tx.iv16 == 0)
+ 		key->u.tkip.tx.iv32++;
+-
+-	pos = ieee80211_tkip_add_iv(pos, key, key->u.tkip.tx.iv16);
++	pos = ieee80211_tkip_add_iv(pos, key);
++	spin_unlock_irqrestore(&key->u.tkip.txlock, flags);
+ 
+ 	/* hwaccel - with software IV */
+ 	if (info->control.hw_key)
+@@ -216,9 +218,8 @@ static int tkip_encrypt_skb(struct ieee8
+ 	/* Add room for ICV */
+ 	skb_put(skb, TKIP_ICV_LEN);
+ 
+-	hdr = (struct ieee80211_hdr *) skb->data;
+ 	return ieee80211_tkip_encrypt_data(tx->local->wep_tx_tfm,
+-					   key, pos, len, hdr->addr2);
++					   key, skb, pos, len);
+ }
+ 
+ 
+
+
