@@ -1,41 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:64133 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754147Ab1G2MJf (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:38813 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751760Ab1GHNY7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 08:09:35 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 11/13] ath9k_hw: Disable Walsh spatial spreading for 2 chains
-Date: Fri, 29 Jul 2011 17:38:18 +0530
-Message-ID: <1311941300-2590-11-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110729_140939_017055_504E420C)
-In-Reply-To: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Fri, 8 Jul 2011 09:24:59 -0400
+Received: by wyg8 with SMTP id 8so1305774wyg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2011 06:24:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20110707225321.GG28091@alittletooquiet.net>
+References: <CAD2nsn0-FQuo7bT3nb3jJLDe1XwbMw4J-Gr8qFkY5zzY1O-vxg@mail.gmail.com>
+	<20110705143029.GA28091@alittletooquiet.net>
+	<CAD2nsn1r7cW7KZ2W_z+SURHRpaTvuC_bd42yN9S+y9JrYMkS4w@mail.gmail.com>
+	<20110705172022.GB28091@alittletooquiet.net>
+	<20110706023943.GA11178@vmraj-lnx.users.atheros.com>
+	<CAD2nsn0HFgm6Puuzuy4gghdDvpb05WaQtETS4=mfQ63mFzo--Q@mail.gmail.com>
+	<20110706182937.GE28091@alittletooquiet.net>
+	<CAD2nsn3x5sfhTuzH66myCF0P2PyHoX+pqVkYgWC5ogssPdHsqw@mail.gmail.com>
+	<CAD2nsn03zdg16O3xcAOGRunYm4NG5PqO=1ht4kx39fAXbSpV5A@mail.gmail.com>
+	<CAD2nsn3krB2MZYewRtJpFikUu9079jXXMabz90z6Zc7kfAeELw@mail.gmail.com>
+	<20110707225321.GG28091@alittletooquiet.net>
+Date: Fri, 8 Jul 2011 18:54:57 +0530
+Message-ID: <CAD2nsn2BH9vEjKWui8JuQRufiKgTtBCHyifXCi1OxLMRck1heQ@mail.gmail.com> (sfid-20110708_152503_095713_7603513B)
+Subject: Re: ath9k_htc fails to initialize TL-WN721N with compat-wireless 3.0-rc4-1
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Forest Bond <forest@alittletooquiet.net>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Fri, Jul 8, 2011 at 4:23 AM, Forest Bond <forest@alittletooquiet.net> wrote:
+> Hi shafi,
+>
+> On Thu, Jul 07, 2011 at 03:23:50AM -0400, Mohammed Shafi wrote:
+>> attached a reverting patch for LED, did a basic test and looks fine.
+>> need to investigate in this for backporting.  we have not tested in
+>> 2.6.24 kernel
+>
+> Yes, this seems to fix things.  I can bring the interface up now and get
+> scanning results.  I will test further and let you know how things go.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index 2339728..28b44b0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -636,7 +636,7 @@ static const u32 ar9300_2p2_baseband_postamble[][5] = {
- 	{0x00009e44, 0x02321e27, 0x02321e27, 0x02291e27, 0x02291e27},
- 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
- 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
--	{0x0000a204, 0x000037c0, 0x000037c4, 0x000037c4, 0x000037c0},
-+	{0x0000a204, 0x000036c0, 0x000036c4, 0x000036c4, 0x000036c0},
- 	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
- 	{0x0000a22c, 0x01026a2f, 0x01026a2f, 0x01026a2f, 0x01026a2f},
- 	{0x0000a230, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b},
+let me quickly check if undefine CONFIG_MAC80211_LEDS in ath9k_htc in
+latest wireless-testing and if i get a lock up or panic
+
+>
+> Thanks again for your help.
+>
+> -Forest
+> --
+> Forest Bond
+> http://www.alittletooquiet.net
+> http://www.rapidrollout.com
+>
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v1.4.10 (GNU/Linux)
+>
+> iEYEARECAAYFAk4WOOEACgkQRO4fQQdv5AxHWgCcCMFdHTo389d6SW9Kp4MF8Ux2
+> MiEAoL6TIP+qdzRTqGspgOQI5JQeAMk9
+> =HFBX
+> -----END PGP SIGNATURE-----
+>
+>
+
+
+
 -- 
-1.7.6
-
+shafi
