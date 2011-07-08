@@ -1,28 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:43279 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752527Ab1G2TE0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 15:04:26 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 53737540268
-	for <linux-wireless@vger.kernel.org>; Fri, 29 Jul 2011 15:12:55 -0400 (EDT)
-Subject: Compat-wireless release for 2011-07-29 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110729190424.A0EAB40ED1@repository3.orbit-lab.org> (sfid-20110729_210429_379687_36D84BE3)
-Date: Fri, 29 Jul 2011 15:04:24 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from cantor2.suse.de ([195.135.220.15]:53743 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752492Ab1GHJDq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jul 2011 05:03:46 -0400
+From: Jean Delvare <jdelvare@suse.de>
+To: linux-wireless@vger.kernel.org,
+	Henry Ptasinski <henryp@broadcom.com>
+Subject: [PATCH] staging: brcm80211: Fix module parameter permissions
+Date: Fri, 8 Jul 2011 11:03:44 +0200
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201107081103.44726.jdelvare@suse.de> (sfid-20110708_110350_174680_09CCCD4B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + ec8a50d...d7c6e83 akpm-end   -> origin/akpm-end  (forced update)
-   2271220..55f9c40  akpm-start -> origin/akpm-start
-   e24814e..3374342  history    -> origin/history
- + e3293aa...cf684c9 master     -> origin/master  (forced update)
-   2271220..55f9c40  stable     -> origin/stable
- * [new tag]         next-20110729 -> next-20110729
+The third parameter of module_param is supposed to represent sysfs
+file permissions. A value of "1" makes no sense.
 
-compat-wireless code metrics
+I am changing it to "0" to align with the other module parameters in
+this driver.
 
-    835332 - Total upstream lines of code being pulled
+Signed-off-by: Jean Delvare <jdelvare@suse.de>
+Cc: Henry Ptasinski <henryp@broadcom.com>
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>
+Cc: Greg Kroah-Hartman <gregkh@suse.de>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- linux-3.0-rc6.orig/drivers/staging/brcm80211/brcmfmac/dhd_linux.c	2011-05-30 20:45:16.000000000 +0200
++++ linux-3.0-rc6/drivers/staging/brcm80211/brcmfmac/dhd_linux.c	2011-07-08 10:14:52.000000000 +0200
+@@ -300,7 +300,7 @@ module_param(dhd_pkt_filter_init, uint,
+ 
+ /* Pkt filter mode control */
+ uint dhd_master_mode = true;
+-module_param(dhd_master_mode, uint, 1);
++module_param(dhd_master_mode, uint, 0);
+ 
+ /* Watchdog thread priority, -1 to use kernel timer */
+ int dhd_watchdog_prio = 97;
+
+-- 
+Jean Delvare
+Suse L3
