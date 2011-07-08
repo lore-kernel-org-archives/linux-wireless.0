@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:57474 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753292Ab1G0OhS (ORCPT
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:38046 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751856Ab1GHIQZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2011 10:37:18 -0400
-Message-ID: <4E302299.2070309@lwfinger.net> (sfid-20110727_163721_772187_D2BADD71)
-Date: Wed, 27 Jul 2011 09:37:13 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: hubert Liao <liao.hubertt@gmail.com>
-CC: Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Oops when insmod rtl8192ce
-References: <CAMzZzFGqPv6Nbw8J8JGNKcLA76sAs3oD6+hH9NPCjwA33fYpOQ@mail.gmail.com> <CAMzZzFGpDiFAhsLAb+SQxjbGMzBoOStF_Lr7Eb3PT6Drcf=VdA@mail.gmail.com>
-In-Reply-To: <CAMzZzFGpDiFAhsLAb+SQxjbGMzBoOStF_Lr7Eb3PT6Drcf=VdA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 8 Jul 2011 04:16:25 -0400
+Received: by mail-bw0-f54.google.com with SMTP id 20so3042135bwa.27
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2011 01:16:23 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: [PATCH] cfg80211: return -ENOENT when stopping sched_scan while not running
+Date: Fri,  8 Jul 2011 11:16:16 +0300
+Message-Id: <1310112976-1674-1-git-send-email-coelho@ti.com> (sfid-20110708_101629_871656_B1DE9B05)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/27/2011 04:26 AM, hubert Liao wrote:
-> Hi,
-> We got an oops when insmod rtl8192ce module (the board is an ARM soc),
-> accroding the oops message, find it's because in rtl_pci_probe()
-> called _rtl_pci_find_adapter(),
-> in this funcation, the  pdev->bus->self is a NULL pointer .
-> static boot _rtl_pci_find_adapter(strcut pci_dev *dev,
->                struct ieee80211_hw *hw)
-> {
-> struct pci_dev *bridge_pdev = pdev->bus->self;   //line 1601
-> ...
-> pcipriv->ndis_adapter.pcibridge_vendorid = bridge_pdev->vendor;<--
-> [oops here] line 1700
-> ...
-> }
-> here, I just want to know why the bus->self  is NULL?
-> ----
-> [  148.186632] Unable to handle kernel NULL pointer dereference at
-> virtual address 00000020
+If we try to stop a scheduled scan while it is not running, we should
+return -ENOENT instead of simply ignoring the command and returning
+success.  This is more consistent with other parts of the code.
 
-As John Linville suggested, please open a bugzilla report.
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ include/linux/nl80211.h |    3 ++-
+ net/wireless/scan.c     |    2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-I would also like some additional information. What kernel are you using? In 
-addition, please post the 'lspci -nnk' information for your card.
-
-I also think that pdev->bus should have been setup before the initialization 
-code in rtl8192ce was called. I have not tested the driver on other than x86 and 
-x86_64 architectures because of hardware availability, thus ARM may expose some 
-problems. Is this soc little-endian?
-
-Thanks,
-Larry
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 3ec2f94..8cb025a 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -247,7 +247,8 @@
+  *	passed, all channels allowed for the current regulatory domain
+  *	are used.  Extra IEs can also be passed from the userspace by
+  *	using the %NL80211_ATTR_IE attribute.
+- * @NL80211_CMD_STOP_SCHED_SCAN: stop a scheduled scan
++ * @NL80211_CMD_STOP_SCHED_SCAN: stop a scheduled scan.  Returns -ENOENT
++ *	if scheduled scan is not running.
+  * @NL80211_CMD_SCHED_SCAN_RESULTS: indicates that there are scheduled scan
+  *	results available.
+  * @NL80211_CMD_SCHED_SCAN_STOPPED: indicates that the scheduled scan has
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 2cc9d4a..1c4672e 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -137,7 +137,7 @@ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
+ 	lockdep_assert_held(&rdev->sched_scan_mtx);
+ 
+ 	if (!rdev->sched_scan_req)
+-		return 0;
++		return -ENOENT;
+ 
+ 	dev = rdev->sched_scan_req->dev;
+ 
+-- 
+1.7.1
 
