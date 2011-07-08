@@ -1,77 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rere.qmqm.pl ([89.167.52.164]:39186 "EHLO rere.qmqm.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752228Ab1GLJzn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2011 05:55:43 -0400
-Date: Tue, 12 Jul 2011 11:55:41 +0200
-From: =?iso-8859-2?Q?Micha=B3_Miros=B3aw?= <mirq-linux@rere.qmqm.pl>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	ath9k-devel@lists.ath9k.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org
-Subject: Re: [ath9k-devel] [PATCH v2 07/46] net/wireless: ath9k: fix DMA
- API usage
-Message-ID: <20110712095541.GA6236@rere.qmqm.pl> (sfid-20110712_115556_065623_5EF41ABB)
-References: <cover.1310339688.git.mirq-linux@rere.qmqm.pl>
- <280ad9176e6532f231e054b38b952b20580874c5.1310339688.git.mirq-linux@rere.qmqm.pl>
- <4E1BCF36.2010506@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-In-Reply-To: <4E1BCF36.2010506@openwrt.org>
+Received: from dakia2.marvell.com ([65.219.4.35]:48957 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752986Ab1GHAbl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jul 2011 20:31:41 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Philip Rakity <prakity@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: 4-byte alignment in mwifiex_process_sta_txpd()
+Date: Thu,  7 Jul 2011 17:37:09 -0700
+Message-Id: <1310085429-19068-1-git-send-email-bzhao@marvell.com> (sfid-20110708_023144_849030_B4DB815C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 12, 2011 at 12:36:06PM +0800, Felix Fietkau wrote:
-> On 2011-07-11 8:52 AM, Micha³ Miros³aw wrote:
-> >Also constify buf_addr for ath9k_hw_process_rxdesc_edma() to verify
-> >assumptions --- dma_sync_single_for_device() call can be removed.
-> >
-> >Signed-off-by: Micha³ Miros³aw<mirq-linux@rere.qmqm.pl>
-> >---
-> >  drivers/net/wireless/ath/ath9k/ar9003_mac.c |    4 ++--
-> >  drivers/net/wireless/ath/ath9k/ar9003_mac.h |    2 +-
-> >  drivers/net/wireless/ath/ath9k/recv.c       |   10 +++-------
-> >  3 files changed, 6 insertions(+), 10 deletions(-)
-> >
-> >diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> >index 70dc8ec..c5f46d5 100644
-> >--- a/drivers/net/wireless/ath/ath9k/recv.c
-> >+++ b/drivers/net/wireless/ath/ath9k/recv.c
-> >@@ -684,15 +684,11 @@ static bool ath_edma_get_buffers(struct ath_softc *sc,
-> >  	BUG_ON(!bf);
-> >
-> >  	dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
-> >-				common->rx_bufsize, DMA_FROM_DEVICE);
-> >+				common->rx_bufsize, DMA_BIDIRECTIONAL);
-> >
-> >  	ret = ath9k_hw_process_rxdesc_edma(ah, NULL, skb->data);
-> >-	if (ret == -EINPROGRESS) {
-> >-		/*let device gain the buffer again*/
-> >-		dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
-> >-				common->rx_bufsize, DMA_FROM_DEVICE);
-> >+	if (ret == -EINPROGRESS)
-> >  		return false;
-> >-	}
-> >
-> >  	__skb_unlink(skb,&rx_edma->rx_fifo);
-> >  	if (ret == -EINVAL) {
-> I have strong doubts about this change. On most MIPS devices,
-> dma_sync_single_for_cpu is a no-op, whereas
-> dma_sync_single_for_device flushes the cache range. With this
-> change, the CPU could cache the DMA status part behind skb->data and
-> that cache entry would not be flushed inbetween calls to this
-> functions on the same buffer, likely leading to rx stalls.
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-You're suggesting a platform implementation bug then. If the platform is not
-cache-coherent, it should invalidate relevant CPU cache lines for sync_to_cpu
-and unmap cases. Do other devices show such symptoms on MIPS systems?
+In XMIT path, the skb that we get from the kernel itself is not
+aligned with 4-byte boundary on some embedded platforms.
 
-I'm not familiar with the platform internals, so we should ask MIPS people.
+Had it not been the presence of tx_pkt_offset field in txpd, 4 byte
+memory alignment was not possible without memmove of entire skb.
+And that would have increased MIPS instead of reducing.
 
-[added Cc: linux-mips]
+With this patch few memory cycles can be saved while fetching
+interface header and txpd structure because of 4 bytes memory
+alignment.
 
-Best Regards,
-Micha³ Miros³aw
+Reported-by: Philip Rakity <prakity@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Tested-by: Philip Rakity <prakity@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/decl.h   |    4 +++-
+ drivers/net/wireless/mwifiex/sta_tx.c |   13 +++++++++----
+ 2 files changed, 12 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
+index 0e90b09..94ddc90 100644
+--- a/drivers/net/wireless/mwifiex/decl.h
++++ b/drivers/net/wireless/mwifiex/decl.h
+@@ -30,7 +30,9 @@
+ 
+ #define MWIFIEX_MAX_BSS_NUM         (1)
+ 
+-#define MWIFIEX_MIN_DATA_HEADER_LEN 32	/* (sizeof(mwifiex_txpd)) */
++#define MWIFIEX_MIN_DATA_HEADER_LEN 36	/* sizeof(mwifiex_txpd)
++					 *   + 4 byte alignment
++					 */
+ 
+ #define MWIFIEX_MAX_TX_BASTREAM_SUPPORTED	2
+ #define MWIFIEX_MAX_RX_BASTREAM_SUPPORTED	16
+diff --git a/drivers/net/wireless/mwifiex/sta_tx.c b/drivers/net/wireless/mwifiex/sta_tx.c
+index fa6221b..1822bfa 100644
+--- a/drivers/net/wireless/mwifiex/sta_tx.c
++++ b/drivers/net/wireless/mwifiex/sta_tx.c
+@@ -47,6 +47,7 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 	struct txpd *local_tx_pd;
+ 	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
++	u8 pad;
+ 
+ 	if (!skb->len) {
+ 		dev_err(adapter->dev, "Tx: bad packet length: %d\n",
+@@ -55,15 +56,19 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
+ 		return skb->data;
+ 	}
+ 
+-	BUG_ON(skb_headroom(skb) < (sizeof(*local_tx_pd) + INTF_HEADER_LEN));
+-	skb_push(skb, sizeof(*local_tx_pd));
++	/* If skb->data is not aligned; add padding */
++	pad = (4 - (((void *)skb->data - NULL) & 0x3)) % 4;
++
++	BUG_ON(skb_headroom(skb) < (sizeof(*local_tx_pd) + INTF_HEADER_LEN
++								+ pad));
++	skb_push(skb, sizeof(*local_tx_pd) + pad);
+ 
+ 	local_tx_pd = (struct txpd *) skb->data;
+ 	memset(local_tx_pd, 0, sizeof(struct txpd));
+ 	local_tx_pd->bss_num = priv->bss_num;
+ 	local_tx_pd->bss_type = priv->bss_type;
+ 	local_tx_pd->tx_pkt_length = cpu_to_le16((u16) (skb->len -
+-							sizeof(struct txpd)));
++						(sizeof(struct txpd) + pad)));
+ 
+ 	local_tx_pd->priority = (u8) skb->priority;
+ 	local_tx_pd->pkt_delay_2ms =
+@@ -88,7 +93,7 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
+ 	}
+ 
+ 	/* Offset of actual data */
+-	local_tx_pd->tx_pkt_offset = cpu_to_le16(sizeof(struct txpd));
++	local_tx_pd->tx_pkt_offset = cpu_to_le16(sizeof(struct txpd) + pad);
+ 
+ 	/* make space for INTF_HEADER_LEN */
+ 	skb_push(skb, INTF_HEADER_LEN);
+-- 
+1.7.0.2
+
