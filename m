@@ -1,40 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53664 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752887Ab1GEDLn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 23:11:43 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	mickflemm@gmail.com
-Subject: [PATCH v2 3/8] ath5k: fix reference clock frequency for spur mitigation on AR2413
-Date: Tue,  5 Jul 2011 10:11:19 +0700
-Message-Id: <1309835484-26653-3-git-send-email-nbd@openwrt.org> (sfid-20110705_051155_466320_B9E89D25)
-In-Reply-To: <1309835484-26653-2-git-send-email-nbd@openwrt.org>
-References: <1309835484-26653-1-git-send-email-nbd@openwrt.org>
- <1309835484-26653-2-git-send-email-nbd@openwrt.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:55007 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751106Ab1GHHbl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jul 2011 03:31:41 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
+	<senthilb@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] ath9k_hw: Disable PAPRD based on paprd_ht20_mask for 5GHz
+Date: Fri, 8 Jul 2011 13:01:32 +0530
+Message-ID: <1310110292-7854-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110708_093145_123259_51B51C41)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR2413 uses the same reference clock as AR5413
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath5k/phy.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c |   30 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h           |    2 +
+ 2 files changed, 32 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index a28ef9e..b6085d0 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -105,6 +105,7 @@ bool ath5k_hw_chan_has_spur_noise(struct ath5k_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index de19723..f80d1d6 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -21,6 +21,36 @@ void ar9003_paprd_enable(struct ath_hw *ah, bool val)
+ {
+ 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
+ 	struct ath9k_channel *chan = ah->curchan;
++	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
++
++	/*
++	 * 3 bits for modalHeader5G.papdRateMaskHt20
++	 * is used for sub-band disabling of PAPRD.
++	 * 5G band is divided into 3 sub-bands -- upper,
++	 * middle, lower.
++	 * if bit 30 of modalHeader5G.papdRateMaskHt20 is set
++	 * -- disable PAPRD for upper band 5GHz
++	 * if bit 29 of modalHeader5G.papdRateMaskHt20 is set
++	 * -- disable PAPRD for middle band 5GHz
++	 * if bit 28 of modalHeader5G.papdRateMaskHt20 is set
++	 * -- disable PAPRD for lower band 5GHz
++	 */
++
++	if (IS_CHAN_5GHZ(chan)) {
++		if (chan->channel >= UPPER_5G_SUB_BAND_START) {
++			if (le32_to_cpu(eep->modalHeader5G.papdRateMaskHt20)
++								  & BIT(30))
++				val = false;
++		} else if (chan->channel >= MID_5G_SUB_BAND_START) {
++			if (le32_to_cpu(eep->modalHeader5G.papdRateMaskHt20)
++								  & BIT(29))
++				val = false;
++		} else {
++			if (le32_to_cpu(eep->modalHeader5G.papdRateMaskHt20)
++								  & BIT(28))
++				val = false;
++		}
++	}
  
- 	if ((ah->ah_radio == AR5K_RF5112) ||
- 	(ah->ah_radio == AR5K_RF5413) ||
-+	(ah->ah_radio == AR5K_RF2413) ||
- 	(ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4)))
- 		refclk_freq = 40;
- 	else
+ 	if (val) {
+ 		ah->paprd_table_write_done = true;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 818acdd..a1c3174 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -143,6 +143,8 @@
+ #define AR_KEYTABLE_SIZE            128
+ #define POWER_UP_TIME               10000
+ #define SPUR_RSSI_THRESH            40
++#define UPPER_5G_SUB_BAND_START		5700
++#define MID_5G_SUB_BAND_START		5400
+ 
+ #define CAB_TIMEOUT_VAL             10
+ #define BEACON_TIMEOUT_VAL          10
 -- 
-1.7.3.2
+1.7.0.4
 
