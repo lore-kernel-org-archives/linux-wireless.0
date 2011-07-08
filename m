@@ -1,71 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:38477 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752027Ab1GPPtW (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:48923 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751900Ab1GHA1x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2011 11:49:22 -0400
-Received: by fxd18 with SMTP id 18so4255511fxd.11
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Jul 2011 08:49:21 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: use agent R/W ops for BCMA_IOCTL
-Date: Sat, 16 Jul 2011 18:27:55 +0200
-Message-Id: <1310833675-3103-1-git-send-email-zajec5@gmail.com> (sfid-20110716_174930_087167_92F0A782)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 7 Jul 2011 20:27:53 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: fix minor issue in debugfs command 'info'
+Date: Thu,  7 Jul 2011 17:33:20 -0700
+Message-Id: <1310085200-18865-2-git-send-email-bzhao@marvell.com> (sfid-20110708_022756_966139_38E01385)
+In-Reply-To: <1310085200-18865-1-git-send-email-bzhao@marvell.com>
+References: <1310085200-18865-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BCMA_IOCTL is register in agent (AKA wrapper) core, we need to use
-special R/W ops for it.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Debugfs command 'info' shows wrong interface type. The regression
+occurred due to commit eecd8250e (mwifiex: remove MWIFIEX_BSS_MODE_
+macros) in which we replaced MWIFIEX_BSS_MODE_* macros by
+NL80211_IFTYPE_*, for example,
+
+MWIFIEX_BSS_MODE_IBSS (2) --> NL80211_IFTYPE_ADHOC (1)
+
+The issue is fixed by swapping static character array used to
+display interface type information.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/b43/main.c  |    4 ++--
- drivers/net/wireless/b43/phy_n.c |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mwifiex/debugfs.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index b7c7b85..22f20e1 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2814,12 +2814,12 @@ void b43_mac_phy_clock_set(struct b43_wldev *dev, bool on)
- 	switch (dev->dev->bus_type) {
- #ifdef CONFIG_B43_BCMA
- 	case B43_BUS_BCMA:
--		tmp = bcma_read32(dev->dev->bdev, BCMA_IOCTL);
-+		tmp = bcma_aread32(dev->dev->bdev, BCMA_IOCTL);
- 		if (on)
- 			tmp |= B43_BCMA_IOCTL_MACPHYCLKEN;
- 		else
- 			tmp &= ~B43_BCMA_IOCTL_MACPHYCLKEN;
--		bcma_write32(dev->dev->bdev, BCMA_IOCTL, tmp);
-+		bcma_awrite32(dev->dev->bdev, BCMA_IOCTL, tmp);
- 		break;
- #endif
- #ifdef CONFIG_B43_SSB
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 95c28f5..1ae1e84 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -611,12 +611,12 @@ static void b43_nphy_bmac_clock_fgc(struct b43_wldev *dev, bool force)
- 	switch (dev->dev->bus_type) {
- #ifdef CONFIG_B43_BCMA
- 	case B43_BUS_BCMA:
--		tmp = bcma_read32(dev->dev->bdev, BCMA_IOCTL);
-+		tmp = bcma_aread32(dev->dev->bdev, BCMA_IOCTL);
- 		if (force)
- 			tmp |= BCMA_IOCTL_FGC;
- 		else
- 			tmp &= ~BCMA_IOCTL_FGC;
--		bcma_write32(dev->dev->bdev, BCMA_IOCTL, tmp);
-+		bcma_awrite32(dev->dev->bdev, BCMA_IOCTL, tmp);
- 		break;
- #endif
- #ifdef CONFIG_B43_SSB
+diff --git a/drivers/net/wireless/mwifiex/debugfs.c b/drivers/net/wireless/mwifiex/debugfs.c
+index 46d65e0..1bcf9ea 100644
+--- a/drivers/net/wireless/mwifiex/debugfs.c
++++ b/drivers/net/wireless/mwifiex/debugfs.c
+@@ -27,8 +27,8 @@ static struct dentry *mwifiex_dfs_dir;
+ 
+ static char *bss_modes[] = {
+ 	"Unknown",
+-	"Managed",
+ 	"Ad-hoc",
++	"Managed",
+ 	"Auto"
+ };
+ 
 -- 
-1.7.3.4
+1.7.0.2
 
