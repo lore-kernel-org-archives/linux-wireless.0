@@ -1,47 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:54611 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753052Ab1GVFnV (ORCPT
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:37432 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753935Ab1GHIci (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 01:43:21 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Subject: [PATCH 20/31] ath6kl: Bypass reading irq status based on chk_irq_status_cnt
-Date: Fri, 22 Jul 2011 08:41:53 +0300
-Message-ID: <1311313324-6766-22-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110722_074326_967670_EBCF80A5)
-In-Reply-To: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 8 Jul 2011 04:32:38 -0400
+Received: by bwa19 with SMTP id 19so2444825bwa.15
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2011 01:32:36 -0700 (PDT)
+Subject: pull request: wl12xx 2011-07-05
+From: Luciano Coelho <coelho@ti.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 08 Jul 2011 11:32:33 +0300
+Message-ID: <1310113953.1514.607.camel@cumari> (sfid-20110708_103242_281645_169EC4F6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Hi John,
 
-This is a regression.
+Here is another batch of patches for 3.1, probably the last one if Linus
+releases 3.0 next week, as he suggested.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/htc_hif.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+These are just a couple of clean-ups and bugfixes, mostly in AP-mode, by
+Arik.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.c b/drivers/net/wireless/ath/ath6kl/htc_hif.c
-index 9904bee..7ab40c1 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_hif.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_hif.c
-@@ -469,7 +469,8 @@ out:
- 	ath6kl_dbg(ATH6KL_DBG_IRQ,
- 		   "bypassing irq status re-check, forcing done\n");
- 
--	*done = true;
-+	if (!dev->chk_irq_status_cnt)
-+		*done = true;
- 
- 	ath6kl_dbg(ATH6KL_DBG_IRQ,
- 		   "proc_pending_irqs: (done:%d, status=%d\n", *done, status);
+Please pull or let me know if there's any problem. This tree is based
+on wireless-next/master.
+
+Thanks!
+
+The following changes since commit 5f0dd296a01c8173fcc05a8b262a1168ae90bc74:
+
+  rt2x00: Implement tx_frames_pending mac80211 callback function. (2011-07-07 13:21:00 -0400)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linville
+
+Arik Nemtsov (7):
+      wl12xx: AP mode - support FW TX inactivity triggers
+      wl12xx: use 802.11 header location after relocation to frame start
+      wl12xx: schedule TX packets according to FW occupancy
+      wl12xx: implement Tx watermarks per AC
+      wl12xx: initialize max_power levels for 11a channels
+      wl12xx: always initialize AP-mode max power level
+      wl12xx: start/stop queues according to global per-AC counters
+
+Eliad Peller (3):
+      wl12xx: configure suspend/resume only if associated/started
+      wl12xx: add stop_scan command
+      wl12xx: implement cancel_hw_scan() callback
+
+Ido Yariv (1):
+      wl12xx: Increase low & high TX watermarks
+
+Ohad Ben-Cohen (1):
+      wl12xx: one SDIO initialization is enough
+
+Oz Krakowski (1):
+      wl12xx: fix Tx security sequence number handling
+
+ drivers/net/wireless/wl12xx/acx.c     |   12 +-
+ drivers/net/wireless/wl12xx/acx.h     |    4 +-
+ drivers/net/wireless/wl12xx/boot.c    |    4 +-
+ drivers/net/wireless/wl12xx/cmd.c     |    6 +-
+ drivers/net/wireless/wl12xx/conf.h    |   10 ++-
+ drivers/net/wireless/wl12xx/debugfs.c |   15 ++-
+ drivers/net/wireless/wl12xx/event.c   |   42 +++++++
+ drivers/net/wireless/wl12xx/event.h   |   12 ++-
+ drivers/net/wireless/wl12xx/init.c    |    7 +-
+ drivers/net/wireless/wl12xx/main.c    |  202 +++++++++++++++++++++++----------
+ drivers/net/wireless/wl12xx/ps.c      |    9 +-
+ drivers/net/wireless/wl12xx/scan.c    |   27 +++++
+ drivers/net/wireless/wl12xx/scan.h    |    1 +
+ drivers/net/wireless/wl12xx/sdio.c    |   12 +-
+ drivers/net/wireless/wl12xx/tx.c      |  143 ++++++++++++++++--------
+ drivers/net/wireless/wl12xx/tx.h      |   28 +++++-
+ drivers/net/wireless/wl12xx/wl12xx.h  |   24 +++--
+ 17 files changed, 414 insertions(+), 144 deletions(-)
+
 -- 
-1.7.1
+Cheers,
+Luca.
+
+
 
