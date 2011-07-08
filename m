@@ -1,438 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:60809 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753182Ab1GILHA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jul 2011 07:07:00 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
-	zajec5@gmail.com, linux-mips@linux-mips.org
-Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 09/11] bcm47xx: make it possible to build bcm47xx without ssb.
-Date: Sat,  9 Jul 2011 13:06:01 +0200
-Message-Id: <1310209563-6405-10-git-send-email-hauke@hauke-m.de> (sfid-20110709_130704_650461_428C22FE)
-In-Reply-To: <1310209563-6405-1-git-send-email-hauke@hauke-m.de>
-References: <1310209563-6405-1-git-send-email-hauke@hauke-m.de>
+Received: from mga02.intel.com ([134.134.136.20]:2126 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753935Ab1GHQUl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jul 2011 12:20:41 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Kenny Hsu <kenny.hsu@intel.com>
+Subject: [PATCH 20/21] iwlagn: separate and enhance the fixed rate from
+Date: Fri,  8 Jul 2011 08:46:28 -0700
+Message-Id: <1310139989-27661-21-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110708_182055_033495_DE69A522)
+In-Reply-To: <1310139989-27661-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1310139989-27661-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+For testing purpose, we need better control of msc from user application.
+Separate the fixed_rate between debugfs and testmode and enforce it.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Kenny Hsu <kenny.hsu@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- arch/mips/Kconfig                            |    8 +-------
- arch/mips/bcm47xx/Kconfig                    |   18 ++++++++++++++++++
- arch/mips/bcm47xx/Makefile                   |    3 ++-
- arch/mips/bcm47xx/gpio.c                     |    6 ++++++
- arch/mips/bcm47xx/nvram.c                    |    4 ++++
- arch/mips/bcm47xx/serial.c                   |    4 ++++
- arch/mips/bcm47xx/setup.c                    |    8 ++++++++
- arch/mips/bcm47xx/time.c                     |    2 ++
- arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |    4 ++++
- arch/mips/include/asm/mach-bcm47xx/gpio.h    |   12 ++++++++++++
- arch/mips/pci/pci-bcm47xx.c                  |    6 ++++++
- drivers/watchdog/bcm47xx_wdt.c               |    4 ++++
- 12 files changed, 71 insertions(+), 8 deletions(-)
- create mode 100644 arch/mips/bcm47xx/Kconfig
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |   28 ++++++++++++++++++----------
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c  |   10 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-dev.h     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-sv-open.c |    2 +-
+ 4 files changed, 30 insertions(+), 12 deletions(-)
 
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index 653da62..ac6f237 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -91,15 +91,8 @@ config BCM47XX
- 	select DMA_NONCOHERENT
- 	select HW_HAS_PCI
- 	select IRQ_CPU
--	select SYS_HAS_CPU_MIPS32_R1
- 	select SYS_SUPPORTS_32BIT_KERNEL
- 	select SYS_SUPPORTS_LITTLE_ENDIAN
--	select SSB
--	select SSB_DRIVER_MIPS
--	select SSB_DRIVER_EXTIF
--	select SSB_EMBEDDED
--	select SSB_B43_PCI_BRIDGE if PCI
--	select SSB_PCICORE_HOSTMODE if PCI
- 	select GENERIC_GPIO
- 	select SYS_HAS_EARLY_PRINTK
- 	select CFE
-@@ -785,6 +778,7 @@ endchoice
- 
- source "arch/mips/alchemy/Kconfig"
- source "arch/mips/ath79/Kconfig"
-+source "arch/mips/bcm47xx/Kconfig"
- source "arch/mips/bcm63xx/Kconfig"
- source "arch/mips/jazz/Kconfig"
- source "arch/mips/jz4740/Kconfig"
-diff --git a/arch/mips/bcm47xx/Kconfig b/arch/mips/bcm47xx/Kconfig
-new file mode 100644
-index 0000000..0346f92
---- /dev/null
-+++ b/arch/mips/bcm47xx/Kconfig
-@@ -0,0 +1,18 @@
-+if BCM47XX
-+
-+config BCM47XX_SSB
-+	bool "SSB Support for Broadcom BCM47XX"
-+	select SYS_HAS_CPU_MIPS32_R1
-+	select SSB
-+	select SSB_DRIVER_MIPS
-+	select SSB_DRIVER_EXTIF
-+	select SSB_EMBEDDED
-+	select SSB_B43_PCI_BRIDGE if PCI
-+	select SSB_PCICORE_HOSTMODE if PCI
-+	default y
-+	help
-+	 Add support for old Broadcom BCM47xx boards with Sonics Silicon Backplane support.
-+
-+	 This will generate an image with support for SSB and MIPS32 R1 instruction set.
-+
-+endif
-diff --git a/arch/mips/bcm47xx/Makefile b/arch/mips/bcm47xx/Makefile
-index 7465e8a..4add173 100644
---- a/arch/mips/bcm47xx/Makefile
-+++ b/arch/mips/bcm47xx/Makefile
-@@ -3,4 +3,5 @@
- # under Linux.
- #
- 
--obj-y := gpio.o irq.o nvram.o prom.o serial.o setup.o time.o wgt634u.o
-+obj-y 				+= gpio.o irq.o nvram.o prom.o serial.o setup.o time.o
-+obj-$(CONFIG_BCM47XX_SSB)	+= wgt634u.o
-diff --git a/arch/mips/bcm47xx/gpio.c b/arch/mips/bcm47xx/gpio.c
-index 2f6d2df..3320e91 100644
---- a/arch/mips/bcm47xx/gpio.c
-+++ b/arch/mips/bcm47xx/gpio.c
-@@ -21,6 +21,7 @@ static DECLARE_BITMAP(gpio_in_use, BCM47XX_EXTIF_GPIO_LINES);
- int gpio_request(unsigned gpio, const char *tag)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		if (ssb_chipco_available(&bcm47xx_bus.ssb.chipco) &&
- 		    ((unsigned)gpio >= BCM47XX_CHIPCO_GPIO_LINES))
-@@ -34,6 +35,7 @@ int gpio_request(unsigned gpio, const char *tag)
- 			return -EBUSY;
- 
- 		return 0;
-+#endif
- 	}
- 	return -EINVAL;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 85e0828..ebcd13b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -336,6 +336,12 @@ static u8 rs_tl_add_packet(struct iwl_lq_sta *lq_data,
  }
-@@ -42,6 +44,7 @@ EXPORT_SYMBOL(gpio_request);
- void gpio_free(unsigned gpio)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		if (ssb_chipco_available(&bcm47xx_bus.ssb.chipco) &&
- 		    ((unsigned)gpio >= BCM47XX_CHIPCO_GPIO_LINES))
-@@ -53,6 +56,7 @@ void gpio_free(unsigned gpio)
  
- 		clear_bit(gpio, gpio_in_use);
+ #ifdef CONFIG_MAC80211_DEBUGFS
++/**
++ * Program the device to use fixed rate for frame transmit
++ * This is for debugging/testing only
++ * once the device start use fixed rate, we need to reload the module
++ * to being back the normal operation.
++ */
+ static void rs_program_fix_rate(struct iwl_priv *priv,
+ 				struct iwl_lq_sta *lq_sta)
+ {
+@@ -348,13 +354,15 @@ static void rs_program_fix_rate(struct iwl_priv *priv,
+ 	lq_sta->active_mimo2_rate  = 0x1FD0;	/* 6 - 60 MBits, no 9, no CCK */
+ 	lq_sta->active_mimo3_rate  = 0x1FD0;	/* 6 - 60 MBits, no 9, no CCK */
+ 
+-	lq_sta->dbg_fixed_rate = priv->dbg_fixed_rate;
++	/* testmode has higher priority to overwirte the fixed rate */
++	if (priv->tm_fixed_rate)
++		lq_sta->dbg_fixed_rate = priv->tm_fixed_rate;
+ 
+ 	IWL_DEBUG_RATE(priv, "sta_id %d rate 0x%X\n",
+-		lq_sta->lq.sta_id, priv->dbg_fixed_rate);
++		lq_sta->lq.sta_id, lq_sta->dbg_fixed_rate);
+ 
+-	if (priv->dbg_fixed_rate) {
+-		rs_fill_link_cmd(NULL, lq_sta, priv->dbg_fixed_rate);
++	if (lq_sta->dbg_fixed_rate) {
++		rs_fill_link_cmd(NULL, lq_sta, lq_sta->dbg_fixed_rate);
+ 		iwl_send_lq_cmd(lq_sta->drv, ctx, &lq_sta->lq, CMD_ASYNC,
+ 				false);
+ 	}
+@@ -1073,7 +1081,8 @@ done:
+ 	if (sta && sta->supp_rates[sband->band])
+ 		rs_rate_scale_perform(priv, skb, sta, lq_sta);
+ #ifdef CONFIG_MAC80211_DEBUGFS
+-	if (priv->dbg_fixed_rate != lq_sta->dbg_fixed_rate)
++	if ((priv->tm_fixed_rate) &&
++	    (priv->tm_fixed_rate != lq_sta->dbg_fixed_rate))
+ 		rs_program_fix_rate(priv, lq_sta);
+ #endif
+ 	if (priv->cfg->bt_params && priv->cfg->bt_params->advanced_bt_coexist)
+@@ -2896,7 +2905,7 @@ void iwl_rs_rate_init(struct iwl_priv *priv, struct ieee80211_sta *sta, u8 sta_i
+ 		lq_sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
+ 	lq_sta->is_agg = 0;
+ 
+-	priv->dbg_fixed_rate = 0;
++	priv->tm_fixed_rate = 0;
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	lq_sta->dbg_fixed_rate = 0;
+ #endif
+@@ -3095,7 +3104,6 @@ static void rs_dbgfs_set_mcs(struct iwl_lq_sta *lq_sta,
+ 			IWL_DEBUG_RATE(priv, "Fixed rate ON\n");
+ 		} else {
+ 			lq_sta->dbg_fixed_rate = 0;
+-			priv->dbg_fixed_rate = 0;
+ 			IWL_ERR(priv,
+ 			    "Invalid antenna selection 0x%X, Valid is 0x%X\n",
+ 			    ant_sel_tx, valid_tx_ant);
+@@ -3123,9 +3131,9 @@ static ssize_t rs_sta_dbgfs_scale_table_write(struct file *file,
+ 		return -EFAULT;
+ 
+ 	if (sscanf(buf, "%x", &parsed_rate) == 1)
+-		priv->dbg_fixed_rate = lq_sta->dbg_fixed_rate = parsed_rate;
++		lq_sta->dbg_fixed_rate = parsed_rate;
+ 	else
+-		priv->dbg_fixed_rate = lq_sta->dbg_fixed_rate = 0;
++		lq_sta->dbg_fixed_rate = 0;
+ 
+ 	rs_program_fix_rate(priv, lq_sta);
+ 
+@@ -3155,7 +3163,7 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 			lq_sta->total_failed, lq_sta->total_success,
+ 			lq_sta->active_legacy_rate);
+ 	desc += sprintf(buff+desc, "fixed rate 0x%X\n",
+-			priv->dbg_fixed_rate);
++			lq_sta->dbg_fixed_rate);
+ 	desc += sprintf(buff+desc, "valid_tx_ant %s%s%s\n",
+ 	    (priv->hw_params.valid_tx_ant & ANT_A) ? "ANT_A," : "",
+ 	    (priv->hw_params.valid_tx_ant & ANT_B) ? "ANT_B," : "",
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index f77f7e4..0394d11 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -436,6 +436,16 @@ static void iwlagn_tx_cmd_build_rate(struct iwl_priv *priv,
+ 	if (ieee80211_is_data(fc)) {
+ 		tx_cmd->initial_rate_index = 0;
+ 		tx_cmd->tx_flags |= TX_CMD_FLG_STA_RATE_MSK;
++		if (priv->tm_fixed_rate) {
++			/*
++			 * rate overwrite by testmode
++			 * we not only send lq command to change rate
++			 * we also re-enforce per data pkt base.
++			 */
++			tx_cmd->tx_flags &= ~TX_CMD_FLG_STA_RATE_MSK;
++			memcpy(&tx_cmd->rate_n_flags, &priv->tm_fixed_rate,
++			       sizeof(tx_cmd->rate_n_flags));
++		}
  		return;
-+#endif
- 	}
- }
- EXPORT_SYMBOL(gpio_free);
-@@ -60,6 +64,7 @@ EXPORT_SYMBOL(gpio_free);
- int gpio_to_irq(unsigned gpio)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		if (ssb_chipco_available(&bcm47xx_bus.ssb.chipco))
- 			return ssb_mips_irq(bcm47xx_bus.ssb.chipco.dev) + 2;
-@@ -67,6 +72,7 @@ int gpio_to_irq(unsigned gpio)
- 			return ssb_mips_irq(bcm47xx_bus.ssb.extif.dev) + 2;
- 		else
- 			return -EINVAL;
-+#endif
- 	}
- 	return -EINVAL;
- }
-diff --git a/arch/mips/bcm47xx/nvram.c b/arch/mips/bcm47xx/nvram.c
-index d2304d0..d223dac 100644
---- a/arch/mips/bcm47xx/nvram.c
-+++ b/arch/mips/bcm47xx/nvram.c
-@@ -26,7 +26,9 @@ static char nvram_buf[NVRAM_SPACE];
- /* Probe for NVRAM header */
- static void early_nvram_init(void)
- {
-+#ifdef CONFIG_BCM47XX_SSB
- 	struct ssb_mipscore *mcore_ssb;
-+#endif
- 	struct nvram_header *header;
- 	int i;
- 	u32 base = 0;
-@@ -35,11 +37,13 @@ static void early_nvram_init(void)
- 	u32 *src, *dst;
- 
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		mcore_ssb = &bcm47xx_bus.ssb.mipscore;
- 		base = mcore_ssb->flash_window;
- 		lim = mcore_ssb->flash_window_size;
- 		break;
-+#endif
  	}
  
- 	off = FLASH_MIN;
-diff --git a/arch/mips/bcm47xx/serial.c b/arch/mips/bcm47xx/serial.c
-index 87c2c5e..e9258cb 100644
---- a/arch/mips/bcm47xx/serial.c
-+++ b/arch/mips/bcm47xx/serial.c
-@@ -23,6 +23,7 @@ static struct platform_device uart8250_device = {
- 	},
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index fa0827f..a0cca02 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1605,7 +1605,7 @@ struct iwl_priv {
+ #ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
+ 	struct iwl_testmode_trace testmode_trace;
+ #endif
+-	u32 dbg_fixed_rate;
++	u32 tm_fixed_rate;
  
-+#ifdef CONFIG_BCM47XX_SSB
- static int __init uart8250_init_ssb(void)
- {
- 	int i;
-@@ -44,12 +45,15 @@ static int __init uart8250_init_ssb(void)
- 	}
- 	return platform_device_register(&uart8250_device);
- }
-+#endif
+ }; /*iwl_priv */
  
- static int __init uart8250_init(void)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		return uart8250_init_ssb();
-+#endif
- 	}
- 	return -EINVAL;
- }
-diff --git a/arch/mips/bcm47xx/setup.c b/arch/mips/bcm47xx/setup.c
-index bff4181..9fc92bd 100644
---- a/arch/mips/bcm47xx/setup.c
-+++ b/arch/mips/bcm47xx/setup.c
-@@ -47,9 +47,11 @@ static void bcm47xx_machine_restart(char *command)
- 	local_irq_disable();
- 	/* Set the watchdog timer to reset immediately */
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 1);
- 		break;
-+#endif
- 	}
- 	while (1)
- 		cpu_relax();
-@@ -60,14 +62,17 @@ static void bcm47xx_machine_halt(void)
- 	/* Disable interrupts and watchdog and spin forever */
- 	local_irq_disable();
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 0);
- 		break;
-+#endif
- 	}
- 	while (1)
- 		cpu_relax();
- }
- 
-+#ifdef CONFIG_BCM47XX_SSB
- #define READ_FROM_NVRAM(_outvar, name, buf) \
- 	if (nvram_getprefix(prefix, name, buf, sizeof(buf)) >= 0)\
- 		sprom->_outvar = simple_strtoul(buf, NULL, 0);
-@@ -288,13 +293,16 @@ static void __init bcm47xx_register_ssb(void)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sv-open.c b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+index ed9bd91..a322f5e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sv-open.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+@@ -454,7 +454,7 @@ static int iwl_testmode_driver(struct ieee80211_hw *hw, struct nlattr **tb)
+ 				       "Error finding fixrate setting\n");
+ 			return -ENOMSG;
  		}
- 	}
- }
-+#endif
- 
- void __init plat_mem_setup(void)
- {
- 	struct cpuinfo_mips *c = &current_cpu_data;
- 
-+#ifdef CONFIG_BCM47XX_SSB
- 	bcm47xx_active_bus_type = BCM47XX_BUS_TYPE_SSB;
- 	bcm47xx_register_ssb();
-+#endif
- 
- 	_machine_restart = bcm47xx_machine_restart;
- 	_machine_halt = bcm47xx_machine_halt;
-diff --git a/arch/mips/bcm47xx/time.c b/arch/mips/bcm47xx/time.c
-index a7be993..02a652a 100644
---- a/arch/mips/bcm47xx/time.c
-+++ b/arch/mips/bcm47xx/time.c
-@@ -40,9 +40,11 @@ void __init plat_time_init(void)
- 	write_c0_compare(0xffff);
- 
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		hz = ssb_cpu_clock(&bcm47xx_bus.ssb.mipscore) / 2;
+-		priv->dbg_fixed_rate = nla_get_u32(tb[IWL_TM_ATTR_FIXRATE]);
++		priv->tm_fixed_rate = nla_get_u32(tb[IWL_TM_ATTR_FIXRATE]);
  		break;
-+#endif
- 	}
  
- 	if (!hz)
-diff --git a/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h b/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h
-index 4be8b95..764afea 100644
---- a/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h
-+++ b/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h
-@@ -22,11 +22,15 @@
- #include <linux/ssb/ssb.h>
- 
- enum bcm47xx_bus_type {
-+#ifdef CONFIG_BCM47XX_SSB
- 	BCM47XX_BUS_TYPE_SSB,
-+#endif
- };
- 
- union bcm47xx_bus {
-+#ifdef CONFIG_BCM47XX_SSB
- 	struct ssb_bus ssb;
-+#endif
- };
- 
- extern union bcm47xx_bus bcm47xx_bus;
-diff --git a/arch/mips/include/asm/mach-bcm47xx/gpio.h b/arch/mips/include/asm/mach-bcm47xx/gpio.h
-index 976b8aa..0c3bd1f 100644
---- a/arch/mips/include/asm/mach-bcm47xx/gpio.h
-+++ b/arch/mips/include/asm/mach-bcm47xx/gpio.h
-@@ -22,8 +22,10 @@ extern int gpio_to_irq(unsigned gpio);
- static inline int gpio_get_value(unsigned gpio)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		return ssb_gpio_in(&bcm47xx_bus.ssb, 1 << gpio);
-+#endif
- 	}
- 	return -EINVAL;
- }
-@@ -31,18 +33,22 @@ static inline int gpio_get_value(unsigned gpio)
- static inline void gpio_set_value(unsigned gpio, int value)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		ssb_gpio_out(&bcm47xx_bus.ssb, 1 << gpio,
- 			     value ? 1 << gpio : 0);
-+#endif
- 	}
- }
- 
- static inline int gpio_direction_input(unsigned gpio)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		ssb_gpio_outen(&bcm47xx_bus.ssb, 1 << gpio, 0);
- 		return 0;
-+#endif
- 	}
- 	return -EINVAL;
- }
-@@ -50,6 +56,7 @@ static inline int gpio_direction_input(unsigned gpio)
- static inline int gpio_direction_output(unsigned gpio, int value)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		/* first set the gpio out value */
- 		ssb_gpio_out(&bcm47xx_bus.ssb, 1 << gpio,
-@@ -57,6 +64,7 @@ static inline int gpio_direction_output(unsigned gpio, int value)
- 		/* then set the gpio mode */
- 		ssb_gpio_outen(&bcm47xx_bus.ssb, 1 << gpio, 1 << gpio);
- 		return 0;
-+#endif
- 	}
- 	return -EINVAL;
- }
-@@ -64,10 +72,12 @@ static inline int gpio_direction_output(unsigned gpio, int value)
- static inline int gpio_intmask(unsigned gpio, int value)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		ssb_gpio_intmask(&bcm47xx_bus.ssb, 1 << gpio,
- 				 value ? 1 << gpio : 0);
- 		return 0;
-+#endif
- 	}
- 	return -EINVAL;
- }
-@@ -75,10 +85,12 @@ static inline int gpio_intmask(unsigned gpio, int value)
- static inline int gpio_polarity(unsigned gpio, int value)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		ssb_gpio_polarity(&bcm47xx_bus.ssb, 1 << gpio,
- 				  value ? 1 << gpio : 0);
- 		return 0;
-+#endif
- 	}
- 	return -EINVAL;
- }
-diff --git a/arch/mips/pci/pci-bcm47xx.c b/arch/mips/pci/pci-bcm47xx.c
-index 455f8e5..924e158 100644
---- a/arch/mips/pci/pci-bcm47xx.c
-+++ b/arch/mips/pci/pci-bcm47xx.c
-@@ -25,6 +25,7 @@
- #include <linux/types.h>
- #include <linux/pci.h>
- #include <linux/ssb/ssb.h>
-+#include <bcm47xx.h>
- 
- int __init pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- {
-@@ -33,9 +34,13 @@ int __init pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- 
- int pcibios_plat_dev_init(struct pci_dev *dev)
- {
-+#ifdef CONFIG_BCM47XX_SSB
- 	int res;
- 	u8 slot, pin;
- 
-+	if (bcm47xx_active_bus_type !=  BCM47XX_BUS_TYPE_SSB)
-+		return 0;
-+
- 	res = ssb_pcibios_plat_dev_init(dev);
- 	if (res < 0) {
- 		printk(KERN_ALERT "PCI: Failed to init device %s\n",
-@@ -55,5 +60,6 @@ int pcibios_plat_dev_init(struct pci_dev *dev)
- 	}
- 
- 	dev->irq = res;
-+#endif
- 	return 0;
- }
-diff --git a/drivers/watchdog/bcm47xx_wdt.c b/drivers/watchdog/bcm47xx_wdt.c
-index 7e4e063..beacd79 100644
---- a/drivers/watchdog/bcm47xx_wdt.c
-+++ b/drivers/watchdog/bcm47xx_wdt.c
-@@ -55,17 +55,21 @@ static inline void bcm47xx_wdt_hw_start(void)
- {
- 	/* this is 2,5s on 100Mhz clock  and 2s on 133 Mhz */
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 0xfffffff);
- 		break;
-+#endif
- 	}
- }
- 
- static inline int bcm47xx_wdt_hw_stop(void)
- {
- 	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
- 	case BCM47XX_BUS_TYPE_SSB:
- 		return ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 0);
-+#endif
- 	}
- 	return -EINVAL;
- }
+ 	default:
 -- 
-1.7.4.1
+1.7.0.4
 
