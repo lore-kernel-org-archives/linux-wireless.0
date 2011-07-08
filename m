@@ -1,84 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:55007 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751106Ab1GHHbl (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8225 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751864Ab1GHMmI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2011 03:31:41 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Fri, 8 Jul 2011 08:42:08 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
-	<senthilb@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH] ath9k_hw: Disable PAPRD based on paprd_ht20_mask for 5GHz
-Date: Fri, 8 Jul 2011 13:01:32 +0530
-Message-ID: <1310110292-7854-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110708_093145_123259_51B51C41)
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 2/4] ath9k_hw: Disable power detector calibration for AR9003
+Date: Fri, 8 Jul 2011 18:12:01 +0530
+Message-ID: <1310128923-2778-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110708_144225_185694_BEC8FBE9)
+In-Reply-To: <1310128923-2778-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1310128923-2778-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+The power detector calibration is disabled because this block
+doesn't exist in AR9003 based chips and also parallel
+calibration is enabled otherwise the calibration will never stop.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c |   30 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h           |    2 +
- 2 files changed, 32 insertions(+), 0 deletions(-)
+ .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index de19723..f80d1d6 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -21,6 +21,36 @@ void ar9003_paprd_enable(struct ath_hw *ah, bool val)
- {
- 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	struct ath9k_channel *chan = ah->curchan;
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+
-+	/*
-+	 * 3 bits for modalHeader5G.papdRateMaskHt20
-+	 * is used for sub-band disabling of PAPRD.
-+	 * 5G band is divided into 3 sub-bands -- upper,
-+	 * middle, lower.
-+	 * if bit 30 of modalHeader5G.papdRateMaskHt20 is set
-+	 * -- disable PAPRD for upper band 5GHz
-+	 * if bit 29 of modalHeader5G.papdRateMaskHt20 is set
-+	 * -- disable PAPRD for middle band 5GHz
-+	 * if bit 28 of modalHeader5G.papdRateMaskHt20 is set
-+	 * -- disable PAPRD for lower band 5GHz
-+	 */
-+
-+	if (IS_CHAN_5GHZ(chan)) {
-+		if (chan->channel >= UPPER_5G_SUB_BAND_START) {
-+			if (le32_to_cpu(eep->modalHeader5G.papdRateMaskHt20)
-+								  & BIT(30))
-+				val = false;
-+		} else if (chan->channel >= MID_5G_SUB_BAND_START) {
-+			if (le32_to_cpu(eep->modalHeader5G.papdRateMaskHt20)
-+								  & BIT(29))
-+				val = false;
-+		} else {
-+			if (le32_to_cpu(eep->modalHeader5G.papdRateMaskHt20)
-+								  & BIT(28))
-+				val = false;
-+		}
-+	}
- 
- 	if (val) {
- 		ah->paprd_table_write_done = true;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 818acdd..a1c3174 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -143,6 +143,8 @@
- #define AR_KEYTABLE_SIZE            128
- #define POWER_UP_TIME               10000
- #define SPUR_RSSI_THRESH            40
-+#define UPPER_5G_SUB_BAND_START		5700
-+#define MID_5G_SUB_BAND_START		5400
- 
- #define CAB_TIMEOUT_VAL             10
- #define BEACON_TIMEOUT_VAL          10
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+index 39efcbf..cbe765b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+@@ -654,7 +654,7 @@ static const u32 ar9300_2p2_baseband_postamble[][5] = {
+ 	{0x0000a28c, 0x00022222, 0x00022222, 0x00022222, 0x00022222},
+ 	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
+ 	{0x0000a2d0, 0x00071981, 0x00071981, 0x00071981, 0x00071982},
+-	{0x0000a2d8, 0x7999a83a, 0x7999a83a, 0x7999a83a, 0x7999a83a},
++	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
+ 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a830, 0x0000019c, 0x0000019c, 0x0000019c, 0x0000019c},
+ 	{0x0000ae04, 0x001c0000, 0x001c0000, 0x001c0000, 0x001c0000},
+@@ -761,7 +761,7 @@ static const u32 ar9300_2p2_baseband_core[][2] = {
+ 	{0x0000a3ec, 0x20202020},
+ 	{0x0000a3f0, 0x00000000},
+ 	{0x0000a3f4, 0x00000246},
+-	{0x0000a3f8, 0x0cdbd380},
++	{0x0000a3f8, 0x0c9bd380},
+ 	{0x0000a3fc, 0x000f0f01},
+ 	{0x0000a400, 0x8fa91f01},
+ 	{0x0000a404, 0x00000000},
 -- 
-1.7.0.4
+1.7.6
 
