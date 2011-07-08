@@ -1,87 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:35135 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752794Ab1GBRJM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jul 2011 13:09:12 -0400
-Received: by iyb12 with SMTP id 12so3537576iyb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Jul 2011 10:09:12 -0700 (PDT)
-Message-ID: <4E0F50B4.3080805@lwfinger.net> (sfid-20110702_190916_299783_58C577EF)
-Date: Sat, 02 Jul 2011 12:09:08 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: ali@internetdog.org
-CC: linux-wireless@vger.kernel.org
-Subject: Re: r8712u driver for the rtl8192su chip.
-References: <BANLkTinw+jv8zBi29EKs2K2=tAJMYCEdgQ@mail.gmail.com> <4DC0669E.4040100@lwfinger.net> <BANLkTikxS_2wJEpijmYQy3nPy2-9pykxdA@mail.gmail.com> <4DC06BF3.6070208@lwfinger.net> <20110621124954.GA8462@internetdog.org> <4E011644.3070906@lwfinger.net> <20110622010057.GA12123@internetdog.org> <4E0154B7.2000204@lwfinger.net> <20110622025623.GC12547@internetdog.org> <4E015CE8.3000304@lwfinger.net> <20110627072351.GA4251@internetdog.org>
-In-Reply-To: <20110627072351.GA4251@internetdog.org>
-Content-Type: multipart/mixed;
- boundary="------------090601010707020408080402"
+Received: from mga02.intel.com ([134.134.136.20]:2126 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752225Ab1GHQUl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jul 2011 12:20:41 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 17/21] iwlagn: add CMD_ON_DEMAND flag for host command from testmode
+Date: Fri,  8 Jul 2011 08:46:25 -0700
+Message-Id: <1310139989-27661-18-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110708_182052_788355_9A255742)
+In-Reply-To: <1310139989-27661-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1310139989-27661-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------090601010707020408080402
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+For all the hist command request from testmode, set the CMD_ON_DEMAND flag.
+this flag will be used later to control the uCode behavior
 
-On 06/27/2011 02:23 AM, Ali Bahar wrote:
-> Hi Larry,
->
->
-> The cause is that the driver's handler for the Set expects that the
-> interface is Up. In my case, it was not, and so it returns a -1. This
-> pops back up the call-chain until it gets misinterpreted as an EPERM.
->
-> I'll use this Set as an example, though the same pattern is seen
-> elsewhere.
-> Upon entry into r8711_wx_set_scan(), this check is done:
->
->     1090         if (padapter->bup == false)
->     1091                 return -1;
->
->
-> The adapter structure has no comments as to what bup is (nor for
-> bDriverStopped). Current usage suggests that bup indicates that the
-> interface is Up (and bDriverStopped indicates that the driver has been
-> cleanly stopped)
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-sv-open.c |    1 +
+ 2 files changed, 2 insertions(+), 0 deletions(-)
 
-The meaning of "bup" is that it is a boolean indicating whether the interface is 
-up or not, just as you surmised.
-
-The attached patch has been floating around for a while. Does it help?
-
-Larry
-
-
---------------090601010707020408080402
-Content-Type: text/plain;
- name="r8712u_set_essid"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="r8712u_set_essid"
-
-Index: linux-2.6/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-===================================================================
---- linux-2.6.orig/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-+++ linux-2.6/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-@@ -990,8 +990,6 @@ static int r8711_wx_set_wap(struct net_d
- 	struct wlan_network *pnetwork = NULL;
- 	enum NDIS_802_11_AUTHENTICATION_MODE	authmode;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 29eb41d..b7e9fd1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -261,6 +261,7 @@ enum {
+ 	CMD_SYNC = 0,
+ 	CMD_ASYNC = BIT(0),
+ 	CMD_WANT_SKB = BIT(1),
++	CMD_ON_DEMAND = BIT(2),
+ };
  
--	if (padapter->bup == false)
--		return -1;
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY) == true)
- 		return -1;
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_LINKING) == true)
-@@ -1182,8 +1180,6 @@ static int r8711_wx_set_essid(struct net
- 	struct list_head *phead;
- 	u32 len;
+ #define DEF_CMD_PAYLOAD_SIZE 320
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sv-open.c b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+index 81108be..653b787 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sv-open.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+@@ -232,6 +232,7 @@ static int iwl_testmode_ucode(struct ieee80211_hw *hw, struct nlattr **tb)
+ 		return -ENOMSG;
+ 	}
  
--	if (padapter->bup == false)
--		return -1;
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY))
- 		return -1;
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_LINKING))
++	cmd.flags = CMD_ON_DEMAND;
+ 	cmd.id = nla_get_u8(tb[IWL_TM_ATTR_UCODE_CMD_ID]);
+ 	cmd.data[0] = nla_data(tb[IWL_TM_ATTR_UCODE_CMD_DATA]);
+ 	cmd.len[0] = nla_len(tb[IWL_TM_ATTR_UCODE_CMD_DATA]);
+-- 
+1.7.0.4
 
---------------090601010707020408080402--
