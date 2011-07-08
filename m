@@ -1,81 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60717 "EHLO mx1.redhat.com"
+Received: from mga02.intel.com ([134.134.136.20]:2126 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753156Ab1G0NqK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2011 09:46:10 -0400
-Date: Wed, 27 Jul 2011 15:47:45 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] iwlegacy: set tx power after rxon_assoc
-Message-ID: <20110727134744.GA2145@redhat.com> (sfid-20110727_154614_378272_AC14909C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1752201Ab1GHQUf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jul 2011 12:20:35 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 01/21] iwlagn: remove the CMD_MAPPED flag
+Date: Fri,  8 Jul 2011 08:46:09 -0700
+Message-Id: <1310139989-27661-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110708_182113_421354_94F85FB8)
+In-Reply-To: <1310139989-27661-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1310139989-27661-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 260ed53e8906b19985c8afc3d2cc359fa97d92a2 Mon Sep 17 00:00:00 2001
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Wed, 27 Jul 2011 15:37:43 +0200
-Subject: [PATCH] iwlegacy: set tx power after rxon_assoc
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-If settings of tx power was deferred during scan or changing channel we
-have to setup them during commit rxon. Fix problem on 3945 (4965 already
-has this fix).
+It is uneeded since Johannes removed the HUGE flag. The DMA mapping is always held in the same index as the command.
 
-Optimize code to apply tx settings only when tx power was actually
-changed.
-
-Cc: stable@kernel.org # 2.6.39+
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlegacy/iwl-3945.c |    6 +++++-
- drivers/net/wireless/iwlegacy/iwl-4965.c |    8 ++++++--
- 2 files changed, 11 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    1 -
+ drivers/net/wireless/iwlwifi/iwl-tx.c  |   16 ++++------------
+ 2 files changed, 4 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-3945.c b/drivers/net/wireless/iwlegacy/iwl-3945.c
-index dab67a1..73fe3cd 100644
---- a/drivers/net/wireless/iwlegacy/iwl-3945.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-3945.c
-@@ -1746,7 +1746,11 @@ int iwl3945_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 		}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index f4501f8..e429e32 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -263,7 +263,6 @@ enum {
+ 	CMD_NO_SKB = 0,
+ 	CMD_ASYNC = (1 << 1),
+ 	CMD_WANT_SKB = (1 << 2),
+-	CMD_MAPPED = (1 << 3),
+ };
  
- 		memcpy(active_rxon, staging_rxon, sizeof(*active_rxon));
+ #define DEF_CMD_PAYLOAD_SIZE 320
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index db5abaa..dc8f63f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -291,11 +291,9 @@ void iwl_cmd_queue_unmap(struct iwl_priv *priv)
+ 	while (q->read_ptr != q->write_ptr) {
+ 		i = get_cmd_index(q, q->read_ptr);
+ 
+-		if (txq->meta[i].flags & CMD_MAPPED) {
+-			iwlagn_unmap_tfd(priv, &txq->meta[i], &txq->tfds[i],
+-					 DMA_BIDIRECTIONAL);
+-			txq->meta[i].flags = 0;
+-		}
++		iwlagn_unmap_tfd(priv, &txq->meta[i], &txq->tfds[i],
++				 DMA_BIDIRECTIONAL);
++		txq->meta[i].flags = 0;
+ 
+ 		q->read_ptr = iwl_queue_inc_wrap(q->read_ptr, q->n_bd);
+ 	}
+@@ -496,11 +494,6 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 	out_cmd = txq->cmd[idx];
+ 	out_meta = &txq->meta[idx];
+ 
+-	if (WARN_ON(out_meta->flags & CMD_MAPPED)) {
+-		spin_unlock_irqrestore(&priv->hcmd_lock, flags);
+-		return -ENOSPC;
+-	}
 -
-+		/*
-+		 * We do not commit tx power settings while channel changing,
-+		 * do it now if tx power changed.
-+		 */
-+		iwl_legacy_set_tx_power(priv, priv->tx_power_next, false);
- 		return 0;
+ 	memset(out_meta, 0, sizeof(*out_meta));	/* re-initialize to NULL */
+ 	if (cmd->flags & CMD_WANT_SKB)
+ 		out_meta->source = cmd;
+@@ -574,7 +567,7 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ #endif
  	}
  
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965.c b/drivers/net/wireless/iwlegacy/iwl-4965.c
-index bd4b000..ecdc6e5 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965.c
-@@ -1235,7 +1235,12 @@ static int iwl4965_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *c
+-	out_meta->flags = cmd->flags | CMD_MAPPED;
++	out_meta->flags = cmd->flags;
  
- 		memcpy(active_rxon, &ctx->staging, sizeof(*active_rxon));
- 		iwl_legacy_print_rx_config_cmd(priv, ctx);
--		goto set_tx_power;
-+		/*
-+		 * We do not commit tx power settings while channel changing,
-+		 * do it now if tx power changed.
-+		 */
-+		iwl_legacy_set_tx_power(priv, priv->tx_power_next, false);
-+		return 0;
+ 	txq->need_update = 1;
+ 
+@@ -684,7 +677,6 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+ 		wake_up_interruptible(&priv->wait_command_queue);
  	}
  
- 	/* If we are currently associated and the new config requires
-@@ -1315,7 +1320,6 @@ static int iwl4965_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *c
+-	/* Mark as unmapped */
+ 	meta->flags = 0;
  
- 	iwl4965_init_sensitivity(priv);
- 
--set_tx_power:
- 	/* If we issue a new RXON command which required a tune then we must
- 	 * send a new TXPOWER command or we won't be able to Tx any frames */
- 	ret = iwl_legacy_set_tx_power(priv, priv->tx_power_next, true);
+ 	spin_unlock_irqrestore(&priv->hcmd_lock, flags);
 -- 
-1.7.1
+1.7.0.4
 
