@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rere.qmqm.pl ([89.167.52.164]:43686 "EHLO rere.qmqm.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753652Ab1GKAwy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jul 2011 20:52:54 -0400
-Message-Id: <08fc87f027ad07874b83b98786215c94a7acf8b9.1310339688.git.mirq-linux@rere.qmqm.pl> (sfid-20110711_025306_228327_BED3B05E)
-In-Reply-To: <cover.1310339688.git.mirq-linux@rere.qmqm.pl>
-References: <cover.1310339688.git.mirq-linux@rere.qmqm.pl>
-From: =?UTF-8?q?Micha=C5=82=20Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>
-Subject: [PATCH v2 15/46] net/wireless: b43: use kfree_skb() for untouched
- skbs
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-To: netdev@vger.kernel.org
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 11 Jul 2011 02:52:50 +0200 (CEST)
+Received: from dakia2.marvell.com ([65.219.4.35]:48926 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751943Ab1GHA1x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jul 2011 20:27:53 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: fix regression in WEP security mode
+Date: Thu,  7 Jul 2011 17:33:19 -0700
+Message-Id: <1310085200-18865-1-git-send-email-bzhao@marvell.com> (sfid-20110708_022758_743684_3E87248E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Michał Mirosław <mirq-linux@rere.qmqm.pl>
----
- drivers/net/wireless/b43/dma.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
-index 15b11f0..ed78f14 100644
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -592,7 +592,7 @@ static int setup_rx_descbuffer(struct b43_dmaring *ring,
- 		/* ugh. try to realloc in zone_dma */
- 		gfp_flags |= GFP_DMA;
+Htcapinfo is unnecessarily sent in assoc request in WEP security due
+to a regression introduced by commit 2be50b8df53 (mwifiex: remove
+redundant encryption_mode mapping).
+The issue is fixed in this patch.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 687c1f2..4487d93 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -960,7 +960,7 @@ mwifiex_cfg80211_assoc(struct mwifiex_private *priv, size_t ssid_len, u8 *ssid,
+ 		ret = mwifiex_set_gen_ie(priv, sme->ie, sme->ie_len);
  
--		dev_kfree_skb_any(skb);
-+		kfree_skb(skb);
- 
- 		skb = __dev_alloc_skb(ring->rx_buffersize, gfp_flags);
- 		if (unlikely(!skb))
-@@ -602,7 +602,7 @@ static int setup_rx_descbuffer(struct b43_dmaring *ring,
- 					 ring->rx_buffersize, 0);
- 		if (b43_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize, 0)) {
- 			b43err(ring->dev->wl, "RX DMA buffer allocation failed\n");
--			dev_kfree_skb_any(skb);
-+			kfree_skb(skb);
- 			return -EIO;
- 		}
- 	}
-@@ -645,7 +645,7 @@ static int alloc_initial_descbuffers(struct b43_dmaring *ring)
- 		desc = ring->ops->idx2desc(ring, i, &meta);
- 
- 		unmap_descbuffer(ring, meta->dmaaddr, ring->rx_buffersize, 0);
--		dev_kfree_skb(meta->skb);
-+		kfree_skb(meta->skb);
- 	}
- 	goto out;
- }
+ 	if (sme->key) {
+-		if (mwifiex_is_alg_wep(0) | mwifiex_is_alg_wep(0)) {
++		if (mwifiex_is_alg_wep(priv->sec_info.encryption_mode)) {
+ 			dev_dbg(priv->adapter->dev,
+ 				"info: setting wep encryption"
+ 				" with key len %d\n", sme->key_len);
 -- 
-1.7.5.4
+1.7.0.2
 
