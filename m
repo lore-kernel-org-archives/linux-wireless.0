@@ -1,105 +1,294 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:46405 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750785Ab1GMTw1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 15:52:27 -0400
-Received: by yia27 with SMTP id 27so2565246yia.19
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2011 12:52:27 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1310209563-6405-11-git-send-email-hauke@hauke-m.de>
-References: <1310209563-6405-1-git-send-email-hauke@hauke-m.de> <1310209563-6405-11-git-send-email-hauke@hauke-m.de>
-From: Jonas Gorski <jonas.gorski@gmail.com>
-Date: Wed, 13 Jul 2011 21:52:07 +0200
-Message-ID: <CAOiHx=myVVQYJumwhy7FwoSp5-mebhryDs1xnKMLCZpn=NP-7Q@mail.gmail.com> (sfid-20110713_215231_475909_7D5A1859)
-Subject: Re: [PATCH 10/11] bcm47xx: add support for bcma bus
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
-	zajec5@gmail.com, linux-mips@linux-mips.org, mb@bu3sch.de,
-	george@znau.edu.ua, arend@broadcom.com,
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60700 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752773Ab1GILGc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jul 2011 07:06:32 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
+	zajec5@gmail.com, linux-mips@linux-mips.org
+Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
 	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com
-Content-Type: text/plain; charset=UTF-8
+	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 01/11] bcma: move parsing of EEPROM into own function.
+Date: Sat,  9 Jul 2011 13:05:53 +0200
+Message-Id: <1310209563-6405-2-git-send-email-hauke@hauke-m.de> (sfid-20110709_130637_078452_0807AE58)
+In-Reply-To: <1310209563-6405-1-git-send-email-hauke@hauke-m.de>
+References: <1310209563-6405-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 July 2011 13:06, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> This patch add support for the bcma bus. Broadcom uses only Mips 74K
-> CPUs on the new SoC and on the old ons using ssb bus there are no Mips
-> 74K CPUs.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  arch/mips/bcm47xx/Kconfig                    |   13 ++++++
->  arch/mips/bcm47xx/gpio.c                     |   22 +++++++++++
->  arch/mips/bcm47xx/nvram.c                    |   10 +++++
->  arch/mips/bcm47xx/serial.c                   |   29 ++++++++++++++
->  arch/mips/bcm47xx/setup.c                    |   53 +++++++++++++++++++++++++-
->  arch/mips/bcm47xx/time.c                     |    5 ++
->  arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |    8 ++++
->  arch/mips/include/asm/mach-bcm47xx/gpio.h    |   41 ++++++++++++++++++++
->  drivers/watchdog/bcm47xx_wdt.c               |   11 +++++
->  9 files changed, 190 insertions(+), 2 deletions(-)
->
-> diff --git a/arch/mips/bcm47xx/Kconfig b/arch/mips/bcm47xx/Kconfig
-> index 0346f92..6210b8d 100644
-> --- a/arch/mips/bcm47xx/Kconfig
-> +++ b/arch/mips/bcm47xx/Kconfig
-> @@ -15,4 +15,17 @@ config BCM47XX_SSB
->
->         This will generate an image with support for SSB and MIPS32 R1 instruction set.
->
-> +config BCM47XX_BCMA
-> +       bool "BCMA Support for Broadcom BCM47XX"
-> +       select SYS_HAS_CPU_MIPS32_R2
-> +       select BCMA
-> +       select BCMA_HOST_SOC
-> +       select BCMA_DRIVER_MIPS
-> +       select BCMA_DRIVER_PCI_HOSTMODE if PCI
-> +       default y
-> +       help
-> +        Add support for new Broadcom BCM47xx boards with Broadcom specific Advanced Microcontroller Bus.
-> +
-> +        This will generate an image with support for BCMA and MIPS32 R2 instruction set.
-> +
+Move the parsing of the EEPROM data in scan function for one core into
+an own function. Now we are able to use it in some other scan function
+as well.
 
-BCM47XX_SSB and BCM47XX_BCMA should either exclude each other, or
-SYS_HAS_CPU_MIPS32_R2 should only be selected when BCM47XX_SSB isn't
-selected.
-I would expect an image built when having both selected to also
-support both systems, but selecting MIPS32_R2 as the CPU this will
-make it actually not work on SSB systems.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/scan.c |  230 ++++++++++++++++++++++++++-------------------------
+ 1 files changed, 118 insertions(+), 112 deletions(-)
 
-> diff --git a/arch/mips/bcm47xx/gpio.c b/arch/mips/bcm47xx/gpio.c
-> index 3320e91..9d5bafe 100644
-> --- a/arch/mips/bcm47xx/gpio.c
-> +++ b/arch/mips/bcm47xx/gpio.c
-> @@ -36,6 +36,16 @@ int gpio_request(unsigned gpio, const char *tag)
->
->                return 0;
->  #endif
-> +#ifdef CONFIG_BCM47XX_BCMA
-> +       case BCM47XX_BUS_TYPE_BCMA:
-> +               if ((unsigned)gpio >= BCM47XX_CHIPCO_GPIO_LINES)
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index 40d7dcc..4012d8d 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -200,16 +200,124 @@ static s32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 **eromptr,
+ 	return addrl;
+ }
+ 
++static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
++			      struct bcma_device *core)
++{
++	s32 tmp;
++	u8 i, j;
++	s32 cia, cib;
++	u8 ports[2], wrappers[2];
++
++	/* get CIs */
++	cia = bcma_erom_get_ci(bus, eromptr);
++	if (cia < 0) {
++		bcma_erom_push_ent(eromptr);
++		if (bcma_erom_is_end(bus, eromptr))
++			return -ESPIPE;
++		return -EILSEQ;
++	}
++	cib = bcma_erom_get_ci(bus, eromptr);
++	if (cib < 0)
++		return -EILSEQ;
++
++	/* parse CIs */
++	core->id.class = (cia & SCAN_CIA_CLASS) >> SCAN_CIA_CLASS_SHIFT;
++	core->id.id = (cia & SCAN_CIA_ID) >> SCAN_CIA_ID_SHIFT;
++	core->id.manuf = (cia & SCAN_CIA_MANUF) >> SCAN_CIA_MANUF_SHIFT;
++	ports[0] = (cib & SCAN_CIB_NMP) >> SCAN_CIB_NMP_SHIFT;
++	ports[1] = (cib & SCAN_CIB_NSP) >> SCAN_CIB_NSP_SHIFT;
++	wrappers[0] = (cib & SCAN_CIB_NMW) >> SCAN_CIB_NMW_SHIFT;
++	wrappers[1] = (cib & SCAN_CIB_NSW) >> SCAN_CIB_NSW_SHIFT;
++	core->id.rev = (cib & SCAN_CIB_REV) >> SCAN_CIB_REV_SHIFT;
++
++	if (((core->id.manuf == BCMA_MANUF_ARM) &&
++	     (core->id.id == 0xFFF)) ||
++	    (ports[1] == 0)) {
++		bcma_erom_skip_component(bus, eromptr);
++		return -ENXIO;
++	}
++
++	/* check if component is a core at all */
++	if (wrappers[0] + wrappers[1] == 0) {
++		/* we could save addrl of the router
++		if (cid == BCMA_CORE_OOB_ROUTER)
++		 */
++		bcma_erom_skip_component(bus, eromptr);
++		return -ENXIO;
++	}
++
++	if (bcma_erom_is_bridge(bus, eromptr)) {
++		bcma_erom_skip_component(bus, eromptr);
++		return -ENXIO;
++	}
++
++	/* get & parse master ports */
++	for (i = 0; i < ports[0]; i++) {
++		u32 mst_port_d = bcma_erom_get_mst_port(bus, eromptr);
++		if (mst_port_d < 0)
++			return -EILSEQ;
++	}
++
++	/* get & parse slave ports */
++	for (i = 0; i < ports[1]; i++) {
++		for (j = 0; ; j++) {
++			tmp = bcma_erom_get_addr_desc(bus, eromptr,
++				SCAN_ADDR_TYPE_SLAVE, i);
++			if (tmp < 0) {
++				/* no more entries for port _i_ */
++				/* pr_debug("erom: slave port %d "
++				 * "has %d descriptors\n", i, j); */
++				break;
++			} else {
++				if (i == 0 && j == 0)
++					core->addr = tmp;
++			}
++		}
++	}
++
++	/* get & parse master wrappers */
++	for (i = 0; i < wrappers[0]; i++) {
++		for (j = 0; ; j++) {
++			tmp = bcma_erom_get_addr_desc(bus, eromptr,
++				SCAN_ADDR_TYPE_MWRAP, i);
++			if (tmp < 0) {
++				/* no more entries for port _i_ */
++				/* pr_debug("erom: master wrapper %d "
++				 * "has %d descriptors\n", i, j); */
++				break;
++			} else {
++				if (i == 0 && j == 0)
++					core->wrap = tmp;
++			}
++		}
++	}
++
++	/* get & parse slave wrappers */
++	for (i = 0; i < wrappers[1]; i++) {
++		u8 hack = (ports[1] == 1) ? 0 : 1;
++		for (j = 0; ; j++) {
++			tmp = bcma_erom_get_addr_desc(bus, eromptr,
++				SCAN_ADDR_TYPE_SWRAP, i + hack);
++			if (tmp < 0) {
++				/* no more entries for port _i_ */
++				/* pr_debug("erom: master wrapper %d "
++				 * has %d descriptors\n", i, j); */
++				break;
++			} else {
++				if (wrappers[0] == 0 && !i && !j)
++					core->wrap = tmp;
++			}
++		}
++	}
++	return 0;
++}
++
+ int bcma_bus_scan(struct bcma_bus *bus)
+ {
+ 	u32 erombase;
+ 	u32 __iomem *eromptr, *eromend;
+ 
+-	s32 cia, cib;
+-	u8 ports[2], wrappers[2];
+-
+ 	s32 tmp;
+-	u8 i, j;
+ 
+ 	int err;
+ 
+@@ -236,112 +344,13 @@ int bcma_bus_scan(struct bcma_bus *bus)
+ 		INIT_LIST_HEAD(&core->list);
+ 		core->bus = bus;
+ 
+-		/* get CIs */
+-		cia = bcma_erom_get_ci(bus, &eromptr);
+-		if (cia < 0) {
+-			bcma_erom_push_ent(&eromptr);
+-			if (bcma_erom_is_end(bus, &eromptr))
+-				break;
+-			err= -EILSEQ;
+-			goto out;
+-		}
+-		cib = bcma_erom_get_ci(bus, &eromptr);
+-		if (cib < 0) {
+-			err= -EILSEQ;
+-			goto out;
+-		}
+-
+-		/* parse CIs */
+-		core->id.class = (cia & SCAN_CIA_CLASS) >> SCAN_CIA_CLASS_SHIFT;
+-		core->id.id = (cia & SCAN_CIA_ID) >> SCAN_CIA_ID_SHIFT;
+-		core->id.manuf = (cia & SCAN_CIA_MANUF) >> SCAN_CIA_MANUF_SHIFT;
+-		ports[0] = (cib & SCAN_CIB_NMP) >> SCAN_CIB_NMP_SHIFT;
+-		ports[1] = (cib & SCAN_CIB_NSP) >> SCAN_CIB_NSP_SHIFT;
+-		wrappers[0] = (cib & SCAN_CIB_NMW) >> SCAN_CIB_NMW_SHIFT;
+-		wrappers[1] = (cib & SCAN_CIB_NSW) >> SCAN_CIB_NSW_SHIFT;
+-		core->id.rev = (cib & SCAN_CIB_REV) >> SCAN_CIB_REV_SHIFT;
+-
+-		if (((core->id.manuf == BCMA_MANUF_ARM) &&
+-		     (core->id.id == 0xFFF)) ||
+-		    (ports[1] == 0)) {
+-			bcma_erom_skip_component(bus, &eromptr);
+-			continue;
+-		}
+-
+-		/* check if component is a core at all */
+-		if (wrappers[0] + wrappers[1] == 0) {
+-			/* we could save addrl of the router
+-			if (cid == BCMA_CORE_OOB_ROUTER)
+-			 */
+-			bcma_erom_skip_component(bus, &eromptr);
+-			continue;
+-		}
+-
+-		if (bcma_erom_is_bridge(bus, &eromptr)) {
+-			bcma_erom_skip_component(bus, &eromptr);
++		err = bcma_get_next_core(bus, &eromptr, core);
++		if (err == -ENXIO)
+ 			continue;
+-		}
+-
+-		/* get & parse master ports */
+-		for (i = 0; i < ports[0]; i++) {
+-			u32 mst_port_d = bcma_erom_get_mst_port(bus, &eromptr);
+-			if (mst_port_d < 0) {
+-				err= -EILSEQ;
+-				goto out;
+-			}
+-		}
+-
+-		/* get & parse slave ports */
+-		for (i = 0; i < ports[1]; i++) {
+-			for (j = 0; ; j++) {
+-				tmp = bcma_erom_get_addr_desc(bus, &eromptr,
+-					SCAN_ADDR_TYPE_SLAVE, i);
+-				if (tmp < 0) {
+-					/* no more entries for port _i_ */
+-					/* pr_debug("erom: slave port %d "
+-					 * "has %d descriptors\n", i, j); */
+-					break;
+-				} else {
+-					if (i == 0 && j == 0)
+-						core->addr = tmp;
+-				}
+-			}
+-		}
+-
+-		/* get & parse master wrappers */
+-		for (i = 0; i < wrappers[0]; i++) {
+-			for (j = 0; ; j++) {
+-				tmp = bcma_erom_get_addr_desc(bus, &eromptr,
+-					SCAN_ADDR_TYPE_MWRAP, i);
+-				if (tmp < 0) {
+-					/* no more entries for port _i_ */
+-					/* pr_debug("erom: master wrapper %d "
+-					 * "has %d descriptors\n", i, j); */
+-					break;
+-				} else {
+-					if (i == 0 && j == 0)
+-						core->wrap = tmp;
+-				}
+-			}
+-		}
+-
+-		/* get & parse slave wrappers */
+-		for (i = 0; i < wrappers[1]; i++) {
+-			u8 hack = (ports[1] == 1) ? 0 : 1;
+-			for (j = 0; ; j++) {
+-				tmp = bcma_erom_get_addr_desc(bus, &eromptr,
+-					SCAN_ADDR_TYPE_SWRAP, i + hack);
+-				if (tmp < 0) {
+-					/* no more entries for port _i_ */
+-					/* pr_debug("erom: master wrapper %d "
+-					 * has %d descriptors\n", i, j); */
+-					break;
+-				} else {
+-					if (wrappers[0] == 0 && !i && !j)
+-						core->wrap = tmp;
+-				}
+-			}
+-		}
++		else if (err == -ESPIPE)
++			break;
++		else if (err < 0)
++			return err;
+ 
+ 		pr_info("Core %d found: %s "
+ 			"(manuf 0x%03X, id 0x%03X, rev 0x%02X, class 0x%X)\n",
+@@ -351,9 +360,6 @@ int bcma_bus_scan(struct bcma_bus *bus)
+ 
+ 		core->core_index = bus->nr_cores++;
+ 		list_add(&core->list, &bus->cores);
+-		continue;
+-out:
+-		return err;
+ 	}
+ 
+ 	return 0;
+-- 
+1.7.4.1
 
-gpio is already unsigned, you shouldn't need to cast it.
-
-> +                       return -EINVAL;
-> +
-> +               if (test_and_set_bit(gpio, gpio_in_use))
-> +                       return -EBUSY;
-> +
-> +               return 0;
-> +#endif
->        }
->        return -EINVAL;
->  }
-> @@ -57,6 +67,14 @@ void gpio_free(unsigned gpio)
->                clear_bit(gpio, gpio_in_use);
->                return;
->  #endif
-> +#ifdef CONFIG_BCM47XX_BCMA
-> +       case BCM47XX_BUS_TYPE_BCMA:
-> +               if ((unsigned)gpio >= BCM47XX_CHIPCO_GPIO_LINES)
-
-Ditto.
