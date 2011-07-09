@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:49390 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964856Ab1GOGNY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2011 02:13:24 -0400
-Received: by pzk3 with SMTP id 3so1193743pzk.5
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2011 23:13:23 -0700 (PDT)
-MIME-Version: 1.0
-Date: Fri, 15 Jul 2011 01:13:23 -0500
-Message-ID: <CABRmwPszXW5+7GqzXV2Cpp7FhDE095d8iGiOe1dvhb8pynQZaw@mail.gmail.com> (sfid-20110715_081327_590327_518EE3D8)
-Subject: Control beacon transmission
-From: Duc Anh Truong Tan <ducanhtt@gmail.com>
+Received: from nautica.notk.org ([91.121.71.147]:47156 "EHLO nautica.notk.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753964Ab1GIO4N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jul 2011 10:56:13 -0400
+Date: Sat, 9 Jul 2011 16:50:01 +0200
+From: Adrien Nader <adrien@notk.org>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: [PATCH 3.0.0-rc6] rt2x00: add Ralink 0x539f to PCI_DEVICE_TABLE
+Message-ID: <20110709145001.GA6938@notk.org> (sfid-20110709_165623_088610_9F90403B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Actual support for this card which is to be found in HP dm1* laptops is
+already there for the 5390. This only adds the device id to the list of
+hardware handled by the driver.
 
-I'm doing a project on power saving for adhoc network, using ATIM
-window. However, the transmission of beacons at each beacon interval
-makes TSF timers unstable in IBSS environment. Then, our first task is
-to stabilize the TSF timer. We do this by letting only the faster
-stations compete for transmitting beacon at beacon intervals. At those
-intervals, the stations with slower TSF timers need not send beacon.
+Signed-off-by: Adrien Nader <adrien@notk.org>
+---
+It also changes some spaces into tabs to be be consistent with the
+previous lines (it lined up correctly only if you have tabs set to 8
+spaces).
 
-I would like to ask where in ath9k we could change the code to disable
-or enable beacon transmission (i.e., turn on\off beacon transmission)
-as wanted? As far as I found from ath9k, ath9k_hw_dissable_interrupts
-defined in mac.c stops sending a beacon and ath9k_hw_set_interrupts
-restarts transmitting beacon as normal. Is it true in ath9k?
-
-If we cannot change beacon transmission in ath9k, could we stop
-hardware's beaconing and use software to describe the desired beacon
-transmission mechanism (as our own way) ?
-Any comment or suggestion would be appreciated.
-Thank you,
-Anh
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index cc4a54f..55cd3e1 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -1158,6 +1158,7 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
+ #endif
+ #ifdef CONFIG_RT2800PCI_RT53XX
+ 	{ PCI_DEVICE(0x1814, 0x5390) },
++	{ PCI_DEVICE(0x1814, 0x539f) },
+ #endif
+ 	{ 0, }
+ };
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index c446db6..5c5b6a8 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -190,7 +190,7 @@ struct rt2x00_chip {
+ #define RT3572		0x3572
+ #define RT3593		0x3593	/* PCIe */
+ #define RT3883		0x3883	/* WSOC */
+-#define RT5390         0x5390  /* 2.4GHz */
++#define RT5390		0x5390	/* 2.4GHz */
+ 
+ 	u16 rf;
+ 	u16 rev;
