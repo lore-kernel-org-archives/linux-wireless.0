@@ -1,40 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54005 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965029Ab1GMIla (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:42506 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754294Ab1GITCt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 04:41:30 -0400
-Message-Id: <20110713084032.913600502@sipsolutions.net> (sfid-20110713_104140_074814_17C4F719)
-Date: Wed, 13 Jul 2011 10:39:13 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 05/11] b43: remove wireless extensions inclusions
-References: <20110713083908.713123063@sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 9 Jul 2011 15:02:49 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 4FCE3542477
+	for <linux-wireless@vger.kernel.org>; Sat,  9 Jul 2011 15:10:36 -0400 (EDT)
+Subject: Compat-wireless release for 2011-07-09 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110709190248.1D10640EC9@repository3.orbit-lab.org> (sfid-20110709_210257_077828_E66EF900)
+Date: Sat,  9 Jul 2011 15:02:48 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-linux/wireless.h and net/iw_handler.h headers are
-for wireless extensions only, so mac80211 drivers
-shouldn't be including them.
+compat-wireless code metrics
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/b43/main.c |    1 -
- 1 file changed, 1 deletion(-)
-
---- a/drivers/net/wireless/b43/main.c	2011-07-13 10:09:54.000000000 +0200
-+++ b/drivers/net/wireless/b43/main.c	2011-07-13 10:09:56.000000000 +0200
-@@ -37,7 +37,6 @@
- #include <linux/if_arp.h>
- #include <linux/etherdevice.h>
- #include <linux/firmware.h>
--#include <linux/wireless.h>
- #include <linux/workqueue.h>
- #include <linux/skbuff.h>
- #include <linux/io.h>
-
-
+    832112 - Total upstream lines of code being pulled
+      2380 - backport code changes
+      2080 - backport code additions
+       300 - backport code deletions
+      8127 - backport from compat module
+     10507 - total backport code
+    1.2627 - % of code consists of backport work
