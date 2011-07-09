@@ -1,47 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:52651 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752651Ab1G2VUm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 17:20:42 -0400
-MIME-Version: 1.0
-In-Reply-To: <20110727.222247.2000159983502866405.davem@davemloft.net>
-References: <20110727184920.GB16431@tuxdriver.com>
-	<20110727.222247.2000159983502866405.davem@davemloft.net>
-Date: Fri, 29 Jul 2011 23:20:41 +0200
-Message-ID: <CACna6rzSuTnTXidC-1EOMkddmU9pcSpisNQxrMWba8-4qL=BOA@mail.gmail.com> (sfid-20110729_232101_468549_F484E06D)
-Subject: Re: pull request: wireless-next-2.6 2011-07-27
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: David Miller <davem@davemloft.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60831 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753275Ab1GILHE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jul 2011 07:07:04 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
+	zajec5@gmail.com, linux-mips@linux-mips.org
+Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
+	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 11/11] bcm47xx: fix irq assignment for new SoCs.
+Date: Sat,  9 Jul 2011 13:06:03 +0200
+Message-Id: <1310209563-6405-12-git-send-email-hauke@hauke-m.de> (sfid-20110709_131610_254482_D50B8581)
+In-Reply-To: <1310209563-6405-1-git-send-email-hauke@hauke-m.de>
+References: <1310209563-6405-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/7/28 David Miller <davem@davemloft.net>:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Wed, 27 Jul 2011 14:49:21 -0400
->
->> Here is a handful of fixes intended for 3.1.  This includes a
->> user-visible typo fix, a fix for a user after free in the new pn533
->> NFC driver, a cfg80211 fix for a possible NULL pointer dereference,
->> a fix for an invalid memory access in b43, and another b43 fix for
->> a memory corruption problem.
->>
->> On top of that b43 memory corruption fix, there is a patch to remove
->> BROKEN from the B43_BCMA Kconfig entry, which is key to enabling
->> support for some of the more modern Broadcom wireless hardware.
->> I'm sure the Rafał (and a number of others) would love to see that
->> merged while the 3.1 merge window is still open as well.
->>
->> Please let me know if there are problems...
->
-> Yep, removing BROKEN from b43 seems reasonable.
->
-> Pulled, thanks!
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ arch/mips/bcm47xx/irq.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-Thanks a lot John and David, hope to get some testers now :)
-
+diff --git a/arch/mips/bcm47xx/irq.c b/arch/mips/bcm47xx/irq.c
+index 325757a..70bdcf0 100644
+--- a/arch/mips/bcm47xx/irq.c
++++ b/arch/mips/bcm47xx/irq.c
+@@ -26,6 +26,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
+ #include <asm/irq_cpu.h>
++#include <bcm47xx.h>
+ 
+ void plat_irq_dispatch(void)
+ {
+@@ -51,5 +52,16 @@ void plat_irq_dispatch(void)
+ 
+ void __init arch_init_irq(void)
+ {
++#ifdef CONFIG_BCM47XX_BCMA
++	if (bcm47xx_active_bus_type == BCM47XX_BUS_TYPE_BCMA) {
++		bcma_write32(bcm47xx_bus.bcma.bus.drv_mips.core,
++			     BCMA_MIPS_MIPS74K_INTMASK(5), 1 << 31);
++		/*
++		 * the kernel reads the timer irq from some register and thinks
++		 * it's #5, but we offset it by 2 and route to #7
++		 */
++		cp0_compare_irq = 7;
++	}
++#endif
+ 	mips_cpu_irq_init();
+ }
 -- 
-Rafał
+1.7.4.1
+
