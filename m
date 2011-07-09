@@ -1,142 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:14050 "EHLO mga01.intel.com"
+Received: from nbd.name ([46.4.11.11]:35869 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756625Ab1GAPxG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2011 11:53:06 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 11/11] iwlagn: remove the indirection for the rx write pointer
-Date: Fri,  1 Jul 2011 08:20:05 -0700
-Message-Id: <1309533605-25774-12-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110701_175321_876844_7F1A4C27)
-In-Reply-To: <1309533605-25774-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1309533605-25774-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1751265Ab1GIENS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jul 2011 00:13:18 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 6/9] ath9k_hw: remove ar9287 v1.3+ specific hardcoded register hacks
+Date: Sat,  9 Jul 2011 11:12:51 +0700
+Message-Id: <1310184774-32913-6-git-send-email-nbd@openwrt.org> (sfid-20110709_061327_998391_A7230A80)
+In-Reply-To: <1310184774-32913-5-git-send-email-nbd@openwrt.org>
+References: <1310184774-32913-1-git-send-email-nbd@openwrt.org>
+ <1310184774-32913-2-git-send-email-nbd@openwrt.org>
+ <1310184774-32913-3-git-send-email-nbd@openwrt.org>
+ <1310184774-32913-4-git-send-email-nbd@openwrt.org>
+ <1310184774-32913-5-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Now that the clock rate is initialized properly and SIFS, EIFS, USEC,
+slot time and ACK timeout are properly calculated by the generic code,
+the 'async FIFO' register hacks are no longer necessary.
 
-Not needed since the driver split.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-1000.c |    1 -
- drivers/net/wireless/iwlwifi/iwl-2000.c |    1 -
- drivers/net/wireless/iwlwifi/iwl-5000.c |    2 --
- drivers/net/wireless/iwlwifi/iwl-6000.c |    1 -
- drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 -
- drivers/net/wireless/iwlwifi/iwl-rx.c   |    7 +++----
- 6 files changed, 3 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c |   39 ----------------------------
+ drivers/net/wireless/ath/ath9k/hw.c        |   10 +++++--
+ drivers/net/wireless/ath/ath9k/hw.h        |    2 -
+ drivers/net/wireless/ath/ath9k/reg.h       |    5 ---
+ 4 files changed, 7 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 8c5a829..cf1449d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -138,7 +138,6 @@ static int iwl1000_hw_set_hw_params(struct iwl_priv *priv)
- 
- 	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
- 					BIT(IEEE80211_BAND_5GHZ);
--	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
- 
- 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
- 	if (priv->cfg->rx_with_siso_diversity)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index 75d63e6..a401113 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -136,7 +136,6 @@ static int iwl2000_hw_set_hw_params(struct iwl_priv *priv)
- 
- 	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
- 					BIT(IEEE80211_BAND_5GHZ);
--	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
- 
- 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
- 	if (priv->cfg->rx_with_siso_diversity)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 5ebf5d2..c55cec8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -169,7 +169,6 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- 
- 	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
- 					BIT(IEEE80211_BAND_5GHZ);
--	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
- 
- 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
- 	priv->hw_params.rx_chains_num = num_of_ant(priv->cfg->valid_rx_ant);
-@@ -214,7 +213,6 @@ static int iwl5150_hw_set_hw_params(struct iwl_priv *priv)
- 
- 	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
- 					BIT(IEEE80211_BAND_5GHZ);
--	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
- 
- 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
- 	priv->hw_params.rx_chains_num = num_of_ant(priv->cfg->valid_rx_ant);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 94ad57c..965d010 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -157,7 +157,6 @@ static int iwl6000_hw_set_hw_params(struct iwl_priv *priv)
- 
- 	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
- 					BIT(IEEE80211_BAND_5GHZ);
--	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
- 
- 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
- 	if (priv->cfg->rx_with_siso_diversity)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 4d17619..f4501f8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -665,7 +665,6 @@ struct iwl_hw_params {
- 	u16 max_rxq_size;
- 	u16 max_rxq_log;
- 	u32 rx_page_order;
--	u32 rx_wrt_ptr_reg;
- 	u8  max_stations;
- 	u8  ht40_channel;
- 	u8  max_beacon_itrvl;	/* in 1024 ms */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 065d2c0..87148bb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -134,7 +134,6 @@ int iwl_rx_queue_space(const struct iwl_rx_queue *q)
- void iwl_rx_queue_update_write_ptr(struct iwl_priv *priv, struct iwl_rx_queue *q)
- {
- 	unsigned long flags;
--	u32 rx_wrt_ptr_reg = priv->hw_params.rx_wrt_ptr_reg;
- 	u32 reg;
- 
- 	spin_lock_irqsave(&q->lock, flags);
-@@ -146,7 +145,7 @@ void iwl_rx_queue_update_write_ptr(struct iwl_priv *priv, struct iwl_rx_queue *q
- 		/* shadow register enabled */
- 		/* Device expects a multiple of 8 */
- 		q->write_actual = (q->write & ~0x7);
--		iwl_write32(priv, rx_wrt_ptr_reg, q->write_actual);
-+		iwl_write32(priv, FH_RSCSR_CHNL0_WPTR, q->write_actual);
- 	} else {
- 		/* If power-saving is in use, make sure device is awake */
- 		if (test_bit(STATUS_POWER_PMI, &priv->status)) {
-@@ -162,14 +161,14 @@ void iwl_rx_queue_update_write_ptr(struct iwl_priv *priv, struct iwl_rx_queue *q
- 			}
- 
- 			q->write_actual = (q->write & ~0x7);
--			iwl_write_direct32(priv, rx_wrt_ptr_reg,
-+			iwl_write_direct32(priv, FH_RSCSR_CHNL0_WPTR,
- 					q->write_actual);
- 
- 		/* Else device is assumed to be awake */
- 		} else {
- 			/* Device expects a multiple of 8 */
- 			q->write_actual = (q->write & ~0x7);
--			iwl_write_direct32(priv, rx_wrt_ptr_reg,
-+			iwl_write_direct32(priv, FH_RSCSR_CHNL0_WPTR,
- 				q->write_actual);
- 		}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index f344cc2..9ff7c30 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -499,45 +499,6 @@ void ar9002_hw_enable_async_fifo(struct ath_hw *ah)
  	}
+ }
+ 
+-/*
+- * If Async FIFO is enabled, the following counters change as MAC now runs
+- * at 117 Mhz instead of 88/44MHz when async FIFO is disabled.
+- *
+- * The values below tested for ht40 2 chain.
+- * Overwrite the delay/timeouts initialized in process ini.
+- */
+-void ar9002_hw_update_async_fifo(struct ath_hw *ah)
+-{
+-	if (AR_SREV_9287_13_OR_LATER(ah)) {
+-		REG_WRITE(ah, AR_D_GBL_IFS_SIFS,
+-			  AR_D_GBL_IFS_SIFS_ASYNC_FIFO_DUR);
+-		REG_WRITE(ah, AR_D_GBL_IFS_SLOT,
+-			  AR_D_GBL_IFS_SLOT_ASYNC_FIFO_DUR);
+-		REG_WRITE(ah, AR_D_GBL_IFS_EIFS,
+-			  AR_D_GBL_IFS_EIFS_ASYNC_FIFO_DUR);
+-
+-		REG_WRITE(ah, AR_TIME_OUT, AR_TIME_OUT_ACK_CTS_ASYNC_FIFO_DUR);
+-		REG_WRITE(ah, AR_USEC, AR_USEC_ASYNC_FIFO_DUR);
+-
+-		REG_SET_BIT(ah, AR_MAC_PCU_LOGIC_ANALYZER,
+-			    AR_MAC_PCU_LOGIC_ANALYZER_DISBUG20768);
+-		REG_RMW_FIELD(ah, AR_AHB_MODE, AR_AHB_CUSTOM_BURST_EN,
+-			      AR_AHB_CUSTOM_BURST_ASYNC_FIFO_VAL);
+-	}
+-}
+-
+-/*
+- * We don't enable WEP aggregation on mac80211 but we keep this
+- * around for HAL unification purposes.
+- */
+-void ar9002_hw_enable_wep_aggregation(struct ath_hw *ah)
+-{
+-	if (AR_SREV_9287_13_OR_LATER(ah)) {
+-		REG_SET_BIT(ah, AR_PCU_MISC_MODE2,
+-			    AR_PCU_MISC_MODE2_ENABLE_AGGWEP);
+-	}
+-}
+-
+ /* Sets up the AR5008/AR9001/AR9002 hardware familiy callbacks */
+ void ar9002_hw_attach_ops(struct ath_hw *ah)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 279d73a..2a5f908 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1631,9 +1631,13 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 
+ 	ath9k_hw_init_global_settings(ah);
+ 
+-	if (!AR_SREV_9300_20_OR_LATER(ah)) {
+-		ar9002_hw_update_async_fifo(ah);
+-		ar9002_hw_enable_wep_aggregation(ah);
++	if (AR_SREV_9287(ah) && AR_SREV_9287_13_OR_LATER(ah)) {
++		REG_SET_BIT(ah, AR_MAC_PCU_LOGIC_ANALYZER,
++			    AR_MAC_PCU_LOGIC_ANALYZER_DISBUG20768);
++		REG_RMW_FIELD(ah, AR_AHB_MODE, AR_AHB_CUSTOM_BURST_EN,
++			      AR_AHB_CUSTOM_BURST_ASYNC_FIFO_VAL);
++		REG_SET_BIT(ah, AR_PCU_MISC_MODE2,
++			    AR_PCU_MISC_MODE2_ENABLE_AGGWEP);
+ 	}
+ 
+ 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PRESERVE_SEQNUM);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index a1c3174..6acd0f9 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -985,8 +985,6 @@ void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
+ void ar9002_hw_cck_chan14_spread(struct ath_hw *ah);
+ int ar9002_hw_rf_claim(struct ath_hw *ah);
+ void ar9002_hw_enable_async_fifo(struct ath_hw *ah);
+-void ar9002_hw_update_async_fifo(struct ath_hw *ah);
+-void ar9002_hw_enable_wep_aggregation(struct ath_hw *ah);
+ 
+ /*
+  * Code specific to AR9003, we stuff these here to avoid callbacks
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index a483388..759b72c 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -600,7 +600,6 @@
+ 
+ #define AR_D_GBL_IFS_SIFS         0x1030
+ #define AR_D_GBL_IFS_SIFS_M       0x0000FFFF
+-#define AR_D_GBL_IFS_SIFS_ASYNC_FIFO_DUR 0x000003AB
+ #define AR_D_GBL_IFS_SIFS_RESV0   0xFFFFFFFF
+ 
+ #define AR_D_TXBLK_BASE            0x1038
+@@ -616,12 +615,10 @@
+ #define AR_D_GBL_IFS_SLOT         0x1070
+ #define AR_D_GBL_IFS_SLOT_M       0x0000FFFF
+ #define AR_D_GBL_IFS_SLOT_RESV0   0xFFFF0000
+-#define AR_D_GBL_IFS_SLOT_ASYNC_FIFO_DUR   0x00000420
+ 
+ #define AR_D_GBL_IFS_EIFS         0x10b0
+ #define AR_D_GBL_IFS_EIFS_M       0x0000FFFF
+ #define AR_D_GBL_IFS_EIFS_RESV0   0xFFFF0000
+-#define AR_D_GBL_IFS_EIFS_ASYNC_FIFO_DUR   0x0000A5EB
+ 
+ #define AR_D_GBL_IFS_MISC        0x10f0
+ #define AR_D_GBL_IFS_MISC_LFSR_SLICE_SEL        0x00000007
+@@ -1477,7 +1474,6 @@ enum {
+ #define AR_TIME_OUT_ACK_S    0
+ #define AR_TIME_OUT_CTS      0x3FFF0000
+ #define AR_TIME_OUT_CTS_S    16
+-#define AR_TIME_OUT_ACK_CTS_ASYNC_FIFO_DUR    0x16001D56
+ 
+ #define AR_RSSI_THR          0x8018
+ #define AR_RSSI_THR_MASK     0x000000FF
+@@ -1493,7 +1489,6 @@ enum {
+ #define AR_USEC_TX_LAT_S     14
+ #define AR_USEC_RX_LAT       0x1F800000
+ #define AR_USEC_RX_LAT_S     23
+-#define AR_USEC_ASYNC_FIFO_DUR    0x12e00074
+ 
+ #define AR_RESET_TSF        0x8020
+ #define AR_RESET_TSF_ONCE   0x01000000
 -- 
-1.7.0.4
+1.7.3.2
 
