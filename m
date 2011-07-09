@@ -1,51 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4200 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752993Ab1GVJhq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 05:37:46 -0400
-Message-ID: <4E2944DA.5070507@broadcom.com> (sfid-20110722_113749_515825_03548031)
-Date: Fri, 22 Jul 2011 11:37:30 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Greg KH" <greg@kroah.com>
-cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/19] checkpatch changes and brcmfmac cleanup
-References: <4E294123.8040504@broadcom.com>
-In-Reply-To: <4E294123.8040504@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60719 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752773Ab1GILGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jul 2011 07:06:34 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
+	zajec5@gmail.com, linux-mips@linux-mips.org
+Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
+	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 02/11] bcma: move initializing of struct bcma_bus to own function.
+Date: Sat,  9 Jul 2011 13:05:54 +0200
+Message-Id: <1310209563-6405-3-git-send-email-hauke@hauke-m.de> (sfid-20110709_130638_465471_A960A905)
+In-Reply-To: <1310209563-6405-1-git-send-email-hauke@hauke-m.de>
+References: <1310209563-6405-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This makes it possible to use this code in some other method.
 
-> Subject: [PATCH 00/19] checkpatch changes and brcmfmac cleanup
-> Date: Mon, 18 Jul 2011 07:29:46 -0700
-> From: Arend van Spriel<arend@broadcom.com>
-> To: gregkh@suse.de<gregkh@suse.de>
-> CC: Arend Van Spriel<arend@broadcom.com>,
-> "linux-wireless@vger.kernel.org"	<linux-wireless@vger.kernel.org>,
-> "devel@linuxdriverproject.org"	<devel@linuxdriverproject.org>
->
-> This series removes several checkpatch errors and warnings in the
-> drivers and several cleanup changes in brcmfmac driver.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/scan.c |   17 +++++++++++------
+ 1 files changed, 11 insertions(+), 6 deletions(-)
 
-Hi Greg,
-
-Intended to add some dependency info but forgot. Using the format 
-suggested by Dan Carpenter, here it is:
-
-This series applies to staging-next with the following patch set applied:
-
-Message-ID:<1310678971-28952-1-git-send-email-frankyl@broadcom.com>
-*excluding* Message-ID:<1310678971-28952-36-git-send-email-frankyl@broadcom.com>
-
-
-Gr. AvS
-
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index 4012d8d..7970553 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -312,15 +312,10 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 	return 0;
+ }
+ 
+-int bcma_bus_scan(struct bcma_bus *bus)
++static void bcma_init_bus(struct bcma_bus *bus)
+ {
+-	u32 erombase;
+-	u32 __iomem *eromptr, *eromend;
+-
+ 	s32 tmp;
+ 
+-	int err;
+-
+ 	INIT_LIST_HEAD(&bus->cores);
+ 	bus->nr_cores = 0;
+ 
+@@ -330,6 +325,16 @@ int bcma_bus_scan(struct bcma_bus *bus)
+ 	bus->chipinfo.id = (tmp & BCMA_CC_ID_ID) >> BCMA_CC_ID_ID_SHIFT;
+ 	bus->chipinfo.rev = (tmp & BCMA_CC_ID_REV) >> BCMA_CC_ID_REV_SHIFT;
+ 	bus->chipinfo.pkg = (tmp & BCMA_CC_ID_PKG) >> BCMA_CC_ID_PKG_SHIFT;
++}
++
++int bcma_bus_scan(struct bcma_bus *bus)
++{
++	u32 erombase;
++	u32 __iomem *eromptr, *eromend;
++
++	int err;
++
++	bcma_init_bus(bus);
+ 
+ 	erombase = bcma_scan_read32(bus, 0, BCMA_CC_EROM);
+ 	eromptr = bus->mmio;
 -- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
-
+1.7.4.1
 
