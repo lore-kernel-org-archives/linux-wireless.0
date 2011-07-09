@@ -1,155 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:52744 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750939Ab1GOOcn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2011 10:32:43 -0400
-Subject: Re: iwlagn: Random "Time out reading EEPROM".
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Nicolas de =?ISO-8859-1?Q?Peslo=FCan?=
-	<nicolas.2p.debian@gmail.com>
-Cc: "dhalperi@cs.washington.edu" <dhalperi@cs.washington.edu>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>, wey-yi.w.guy@intel.com
-In-Reply-To: <4E1FF8B8.9020005@gmail.com>
-References: <4DEA2FC1.2030104@gmail.com>
-	 <1307284276.6918.17.camel@wwguy-ubuntu>  <4E1FF8B8.9020005@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 15 Jul 2011 07:28:31 -0700
-Message-ID: <1310740111.13897.13.camel@wwguy-ubuntu> (sfid-20110715_163248_247591_CB75224B)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60768 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753182Ab1GILGp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jul 2011 07:06:45 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
+	zajec5@gmail.com, linux-mips@linux-mips.org
+Cc: mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
+	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 06/11] bcma: add serial console support
+Date: Sat,  9 Jul 2011 13:05:58 +0200
+Message-Id: <1310209563-6405-7-git-send-email-hauke@hauke-m.de> (sfid-20110709_130648_363005_0F483789)
+In-Reply-To: <1310209563-6405-1-git-send-email-hauke@hauke-m.de>
+References: <1310209563-6405-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-07-15 at 01:22 -0700, Nicolas de Pesloüan wrote:
-> Le 05/06/2011 16:31, wwguy a écrit :
-> > On Sat, 2011-06-04 at 06:14 -0700, Nicolas de Pesloüan wrote:
-> >> Hi,
-> >>
-> >>   From time to time, my Intel Wifi adapter fail on cold boot, with the following in dmesg:
-> >>
-> >> [    7.442634] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27ks
-> >> [    7.442636] iwlagn: Copyright(c) 2003-2009 Intel Corporation
-> >> [    7.442701] iwlagn 0000:05:00.0: PCI INT A ->  GSI 18 (level, low) ->  IRQ 18
-> >> [    7.442708] iwlagn 0000:05:00.0: setting latency timer to 64
-> >> [    7.442788] iwlagn 0000:05:00.0: Detected Intel Wireless WiFi Link 5100AGN REV=0x54
-> >> [    7.455547] iwlagn 0000:05:00.0: Time out reading EEPROM[0]
-> >> [    7.455611] iwlagn 0000:05:00.0: Unable to init EEPROM
-> >> [    7.455678] iwlagn 0000:05:00.0: PCI INT A disabled
-> >> [    7.455685] iwlagn: probe of 0000:05:00.0 failed with error -110
-> >>
-> >> After "modprobe -r iwlagn ; modprobe iwlagn" or after a reboot, everything work fine:
-> >>
-> >> [  346.332166] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27ks
-> >> [  346.332169] iwlagn: Copyright(c) 2003-2009 Intel Corporation
-> >> [  346.332225] iwlagn 0000:05:00.0: PCI INT A ->  GSI 18 (level, low) ->  IRQ 18
-> >> [  346.332234] iwlagn 0000:05:00.0: setting latency timer to 64
-> >> [  346.332277] iwlagn 0000:05:00.0: Detected Intel Wireless WiFi Link 5100AGN REV=0x54
-> >> [  346.365739] iwlagn 0000:05:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
-> >> [  346.365787]   alloc irq_desc for 33 on node -1
-> >> [  346.365788]   alloc kstat_irqs on node -1
-> >> [  346.365804] iwlagn 0000:05:00.0: irq 33 for MSI/MSI-X
-> >> [  346.449989] phy0: Selected rate control algorithm 'iwl-agn-rs'
-> >>
-> >> This happens using 2.6.32-5 from Debian. I didn't had the opportunity to reproduce it using recent
-> >> kernel, but it occurs too rarely to conclude anything.
-> >>
-> >> I had a look at the git log, without finding something that seems related to this problem. Does this
-> >> ring a bell for someone?
-> >>
-> >> 	Nicolas.
-> >>
-> >> 05:00.0 Network controller: Intel Corporation WiFi Link 5100
-> >>           Subsystem: Intel Corporation WiFi Link 5100 AGN
-> >>           Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR-
-> >> FastB2B- DisINTx-
-> >>           Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast>TAbort-<TAbort-<MAbort->SERR-
-> >> <PERR- INTx-
-> >>           Latency: 0, Cache Line Size: 64 bytes
-> >>           Interrupt: pin A routed to IRQ 33
-> >>           Region 0: Memory at d6d00000 (64-bit, non-prefetchable) [size=8K]
-> >>           Capabilities: [c8] Power Management version 3
-> >>                   Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-> >>                   Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-> >>           Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
-> >>                   Address: 00000000fee0300c  Data: 41c9
-> >>           Capabilities: [e0] Express (v1) Endpoint, MSI 00
-> >>                   DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s<512ns, L1 unlimited
-> >>                           ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
-> >>                   DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-> >>                           RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
-> >>                           MaxPayload 128 bytes, MaxReadReq 128 bytes
-> >>                   DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
-> >>                   LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0<128ns, L1<32us
-> >>                           ClockPM+ Surprise- LLActRep- BwNot-
-> >>                   LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
-> >>                           ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-> >>                   LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-> >>           Capabilities: [100 v1] Advanced Error Reporting
-> >>                   UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC-
-> >> UnsupReq- ACSViol-
-> >>                   UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC-
-> >> UnsupReq- ACSViol-
-> >>                   UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC-
-> >> UnsupReq- ACSViol-
-> >>                   CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-> >>                   CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-> >>                   AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
-> >>           Capabilities: [140 v1] Device Serial Number 00-22-fb-ff-ff-28-46-c8
-> >>           Kernel driver in use: iwlagn
-> >>
-> >
-> > no sure, you are the ONLY one report this issue, since the device works
-> > after you reload the module, the HW/SW is ok. maybe the timing/sequence
-> > have problem on the kernel you are using on your system. The bus is not
-> > ready when you boot the system and access the EEPROM.
-> >
-> > What model of the laptop you have? could you try to upgrade to newer
-> > kernel?
-> 
-> This problem also happens using 2.6.39-2-amd64 from Debian.
-> 
-> [    8.507426] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:
-> [    8.507429] iwlagn: Copyright(c) 2003-2010 Intel Corporation
-> [    8.507521] iwlagn 0000:05:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-> [    8.507529] iwlagn 0000:05:00.0: setting latency timer to 64
-> [    8.507556] iwlagn 0000:05:00.0: Detected Intel(R) WiFi Link 5100 AGN, REV=0x54
-> [    8.516687] iwlagn 0000:05:00.0: Time out reading EEPROM[2]
-> [    8.516724] iwlagn 0000:05:00.0: Unable to init EEPROM
-> [    8.516739] iwlagn 0000:05:00.0: PCI INT A disabled
-> [    8.516745] iwlagn: probe of 0000:05:00.0 failed with error -110
-> 
-> modprobe -r iwlagn ; modprobe iwlagn
-> 
-> [  208.948664] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:
-> [  208.948666] iwlagn: Copyright(c) 2003-2010 Intel Corporation
-> [  208.948743] iwlagn 0000:05:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-> [  208.948753] iwlagn 0000:05:00.0: setting latency timer to 64
-> [  208.948817] iwlagn 0000:05:00.0: Detected Intel(R) WiFi Link 5100 AGN, REV=0x54
-> [  208.969659] iwlagn 0000:05:00.0: device EEPROM VER=0x11f, CALIB=0x4
-> [  208.969661] iwlagn 0000:05:00.0: Device SKU: 0Xb
-> [  208.969701] iwlagn 0000:05:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
-> [  208.969766] iwlagn 0000:05:00.0: irq 50 for MSI/MSI-X
-> [  209.048366] iwlagn 0000:05:00.0: loaded firmware version 8.83.5.1 build 33692
-> 
-> Because it happens not very often, I still didn't had the opportunity to reproduce it with up to 
-> date kernel.
-> 
-> The laptop is a two years old Sony Vaio VGN-AW21M.
-> 
-the error indicate fail to read data from EEPROM, your 2nd report is
-even more strange, the number at the end the error message indicate the
-index of DWORD driver trying to read from EEPROM. 
+This adds support for serial console to bcma, when operating on an SoC.
 
-"Time out reading EEPROM[2]" telling me the first 2 DWORD is reading ok
-but not the 3rd read.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/bcma_private.h           |    6 +++
+ drivers/bcma/driver_chipcommon.c      |   64 +++++++++++++++++++++++++++++++++
+ drivers/bcma/driver_mips.c            |    9 +++++
+ include/linux/bcma/bcma_driver_mips.h |   11 ++++++
+ 4 files changed, 90 insertions(+), 0 deletions(-)
 
-How many PCI-E slots you have in your system, could it possible for you
-to switch to another PCI-E slot, or pull out and re-insert the NIC.
-
-Also, it is possible to put the NIC into different system and see if you
-are seeing the similar problem?
-
-Thanks
-Wey
-
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index 830386c..92ec671 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -26,6 +26,12 @@ int __init bcma_bus_scan_early(struct bcma_bus *bus,
+ 			       struct bcma_device *core);
+ void bcma_init_bus(struct bcma_bus *bus);
+ 
++/* driver_chipcommon.c */
++#ifdef CONFIG_BCMA_DRIVER_MIPS
++extern int bcma_chipco_serial_init(struct bcma_drv_cc *cc,
++				   struct bcma_drv_mips_serial_port *ports);
++#endif /* CONFIG_BCMA_DRIVER_MIPS */
++
+ #ifdef CONFIG_BCMA_HOST_PCI
+ /* host_pci.c */
+ extern int __init bcma_host_pci_init(void);
+diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
+index 70321c6..88533ca 100644
+--- a/drivers/bcma/driver_chipcommon.c
++++ b/drivers/bcma/driver_chipcommon.c
+@@ -92,3 +92,67 @@ u32 bcma_chipco_gpio_polarity(struct bcma_drv_cc *cc, u32 mask, u32 value)
+ {
+ 	return bcma_cc_write32_masked(cc, BCMA_CC_GPIOPOL, mask, value);
+ }
++
++#ifdef CONFIG_BCMA_DRIVER_MIPS
++int bcma_chipco_serial_init(struct bcma_drv_cc *cc,
++			    struct bcma_drv_mips_serial_port *ports)
++{
++	int nr_ports = 0;
++	u32 plltype;
++	unsigned int irq;
++	u32 baud_base, div;
++	u32 i, n;
++	unsigned int ccrev = cc->core->id.rev;
++
++	plltype = (cc->capabilities & BCMA_CC_CAP_PLLT);
++	irq = bcma_core_mips_irq(cc->core);
++
++	if ((ccrev >= 11) && (ccrev != 15) && (ccrev != 20)) {
++		/* Fixed ALP clock */
++		baud_base = 20000000;
++		if (cc->capabilities & BCMA_CC_CAP_PMU) {
++			/* FIXME: baud_base is different for devices with a PMU */
++			WARN_ON(1);
++		}
++		div = 1;
++		if (ccrev >= 21) {
++			/* Turn off UART clock before switching clocksource. */
++			bcma_cc_write32(cc, BCMA_CC_CORECTL,
++				       bcma_cc_read32(cc, BCMA_CC_CORECTL)
++				       & ~BCMA_CC_CORECTL_UARTCLKEN);
++		}
++		/* Set the override bit so we don't divide it */
++		bcma_cc_write32(cc, BCMA_CC_CORECTL,
++			       bcma_cc_read32(cc, BCMA_CC_CORECTL)
++			       | BCMA_CC_CORECTL_UARTCLK0);
++		if (ccrev >= 21) {
++			/* Re-enable the UART clock. */
++			bcma_cc_write32(cc, BCMA_CC_CORECTL,
++				       bcma_cc_read32(cc, BCMA_CC_CORECTL)
++				       | BCMA_CC_CORECTL_UARTCLKEN);
++		}
++	} else
++		pr_err("serial not supported on this device ccrev: 0x%x\n",
++		       ccrev);
++
++	/* Determine the registers of the UARTs */
++	n = (cc->capabilities & BCMA_CC_CAP_NRUART);
++	for (i = 0; i < n; i++) {
++		void __iomem *cc_mmio;
++		void __iomem *uart_regs;
++
++		cc_mmio = cc->core->bus->mmio +
++			  (cc->core->core_index * BCMA_CORE_SIZE);
++		uart_regs = cc_mmio + BCMA_CC_UART0_DATA;
++		uart_regs += (i * 256);
++
++		nr_ports++;
++		ports[i].regs = uart_regs;
++		ports[i].irq = irq;
++		ports[i].baud_base = baud_base;
++		ports[i].reg_shift = 0;
++	}
++
++	return nr_ports;
++}
++#endif /* CONFIG_BCMA_DRIVER_MIPS */
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index 605bb08..3989fb9 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -156,6 +156,14 @@ static void bcma_core_mips_dump_irq(struct bcma_bus *bus)
+ 	}
+ }
+ 
++static void bcma_core_mips_serial_init(struct bcma_drv_mips *mcore)
++{
++	struct bcma_bus *bus = mcore->core->bus;
++
++	mcore->nr_serial_ports = bcma_chipco_serial_init(&bus->drv_cc,
++							 mcore->serial_ports);
++}
++
+ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
+ {
+ 	struct bcma_bus *bus = mcore->core->bus;
+@@ -228,6 +236,7 @@ void bcma_core_mips_init(struct bcma_drv_mips *mcore)
+ 	if (mcore->setup_done)
+ 		return;
+ 
++	bcma_core_mips_serial_init(mcore);
+ 	bcma_core_mips_flash_detect(mcore);
+ 	mcore->setup_done = true;
+ }
+diff --git a/include/linux/bcma/bcma_driver_mips.h b/include/linux/bcma/bcma_driver_mips.h
+index f19b21a..13b44c2 100644
+--- a/include/linux/bcma/bcma_driver_mips.h
++++ b/include/linux/bcma/bcma_driver_mips.h
+@@ -32,11 +32,22 @@
+ 
+ struct bcma_device;
+ 
++struct bcma_drv_mips_serial_port {
++	void *regs;
++	unsigned long clockspeed;
++	unsigned int irq;
++	unsigned int baud_base;
++	unsigned int reg_shift;
++};
++
+ struct bcma_drv_mips {
+ 	struct bcma_device *core;
+ 	u8 setup_done:1;
+ 	unsigned int assigned_irqs;
+ 
++	int nr_serial_ports;
++	struct bcma_drv_mips_serial_port serial_ports[4];
++
+ 	u8 flash_buswidth;
+ 	u32 flash_window;
+ 	u32 flash_window_size;
+-- 
+1.7.4.1
 
