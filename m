@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:55924 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752455Ab1GZAAC (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55443 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752026Ab1GIMtS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2011 20:00:02 -0400
-Received: by pzk37 with SMTP id 37so9320498pzk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2011 17:00:02 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 0/6] update mesh frame formats
-Date: Mon, 25 Jul 2011 16:59:11 -0700
-Message-Id: <1311638357-28740-1-git-send-email-thomas@cozybit.com> (sfid-20110726_020006_376874_EB505917)
+	Sat, 9 Jul 2011 08:49:18 -0400
+Message-Id: <20110709124855.112992920@sipsolutions.net> (sfid-20110709_144929_919505_54E23228)
+Date: Sat, 09 Jul 2011 14:48:31 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] mac80211: fix docbook
+References: <20110709124829.025946360@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset updates the existing mesh beacon, peering, and path selection
-frames to use the frame formats specified in the recently ratified 802.11s
-standard. These patches break compatibility with previous versions of the mesh
-stack.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Previously submitted mesh beacon patches have been rolled into 'mac80211: fix
-mesh beacon format', and the scope severely reduced. Changes from v1:
- - Don't fake PS support
- - Don't keep beacon in if_mesh for now
- - Don't call into cfg80211
- - Set privacy bit if security is on
+I changed the TKIP key functions, but forgot to
+update the documentation includes, fix that.
 
-Thomas Pedersen (6):
-  mac80211: fix mesh beacon format
-  ieee80211: introduce Self Protected Action codes
-  mac80211: update mesh peering frame codes
-  mac80211: update mesh peering frame format
-  ieee80211: add mesh action codes
-  mac80211: update mesh path selection frame format
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ Documentation/DocBook/80211.tmpl |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
- include/linux/ieee80211.h  |   46 +++++----
- net/mac80211/ieee80211_i.h |    4 +-
- net/mac80211/mesh.c        |  239 ++++++++++++++++++++++++++++++++------------
- net/mac80211/mesh.h        |   14 +++
- net/mac80211/mesh_hwmp.c   |   43 +++++---
- net/mac80211/mesh_plink.c  |  238 ++++++++++++++++++++++---------------------
- net/mac80211/rx.c          |   20 ++++-
- net/mac80211/tx.c          |   13 ++-
- net/mac80211/util.c        |    6 +-
- 9 files changed, 398 insertions(+), 225 deletions(-)
+--- a/Documentation/DocBook/80211.tmpl	2011-07-09 14:45:55.000000000 +0200
++++ b/Documentation/DocBook/80211.tmpl	2011-07-09 14:46:17.000000000 +0200
+@@ -419,8 +419,9 @@ MISSING
+ !Finclude/net/mac80211.h set_key_cmd
+ !Finclude/net/mac80211.h ieee80211_key_conf
+ !Finclude/net/mac80211.h ieee80211_key_flags
+-!Finclude/net/mac80211.h ieee80211_tkip_key_type
+-!Finclude/net/mac80211.h ieee80211_get_tkip_key
++!Finclude/net/mac80211.h ieee80211_get_tkip_p1k
++!Finclude/net/mac80211.h ieee80211_get_tkip_p1k_iv
++!Finclude/net/mac80211.h ieee80211_get_tkip_p2k
+ !Finclude/net/mac80211.h ieee80211_key_removed
+       </chapter>
+ 
 
--- 
-1.7.6
 
