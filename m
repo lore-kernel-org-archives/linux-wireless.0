@@ -1,112 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:55581 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756154Ab1G2CuL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2011 22:50:11 -0400
-Subject: [PATCH] lib80211: call try_module_get() in lib80211_get_crypto_ops()
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Pavel Roskin <proski@gnu.org>
-Date: Thu, 28 Jul 2011 22:50:07 -0400
-Message-ID: <20110729025007.7889.19879.stgit@mj.roinet.com> (sfid-20110729_045017_968320_003C98BC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53711 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752863Ab1GILWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jul 2011 07:22:13 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, zajec5@gmail.com
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] bcma: add check if sprom is available before accessing it.
+Date: Sat,  9 Jul 2011 13:22:03 +0200
+Message-Id: <1310210523-13431-1-git-send-email-hauke@hauke-m.de> (sfid-20110709_132311_056667_FBE0871D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Doing it by the caller is racy.  Some callers neglected to do so.  Fix
-callers not to call try_module_get() after lib80211_get_crypto_ops().
+The SoCs like the bcm4716 do not have a sprom on the bcma bus like a
+pcie device. It stores the values in some partition on flash memory.
+For ssb this informations are read out in the bcm47xx arch code,
+something like that should also be implemented for bcma. Without this
+patch bcma panics on SoCs.
 
-When ops is copied, move lib80211_crypt_delayed_deinit() after
-try_module_get() to avoid the risk that the module would be unloaded
-between those calls.
-
-Signed-off-by: Pavel Roskin <proski@gnu.org>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/hostap/hostap_ioctl.c |    5 ++---
- drivers/net/wireless/ipw2x00/libipw_wx.c   |    6 +++---
- net/wireless/lib80211.c                    |    3 +++
- 3 files changed, 8 insertions(+), 6 deletions(-)
+ drivers/bcma/main.c  |    4 +++-
+ drivers/bcma/sprom.c |    3 +++
+ 2 files changed, 6 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/hostap/hostap_ioctl.c b/drivers/net/wireless/hostap/hostap_ioctl.c
-index 12de464..af0516c 100644
---- a/drivers/net/wireless/hostap/hostap_ioctl.c
-+++ b/drivers/net/wireless/hostap/hostap_ioctl.c
-@@ -166,7 +166,7 @@ static int prism2_ioctl_siwencode(struct net_device *dev,
- 			request_module("lib80211_crypt_wep");
- 			new_crypt->ops = lib80211_get_crypto_ops("WEP");
- 		}
--		if (new_crypt->ops && try_module_get(new_crypt->ops->owner))
-+		if (new_crypt->ops)
- 			new_crypt->priv = new_crypt->ops->init(i);
- 		if (!new_crypt->ops || !new_crypt->priv) {
- 			kfree(new_crypt);
-@@ -3293,8 +3293,6 @@ static int prism2_ioctl_siwencodeext(struct net_device *dev,
- 	if (*crypt == NULL || (*crypt)->ops != ops) {
- 		struct lib80211_crypt_data *new_crypt;
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 08a14a3..873e2e4 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -149,7 +149,9 @@ int bcma_bus_register(struct bcma_bus *bus)
  
--		lib80211_crypt_delayed_deinit(&local->crypt_info, crypt);
--
- 		new_crypt = kzalloc(sizeof(struct lib80211_crypt_data),
- 				GFP_KERNEL);
- 		if (new_crypt == NULL) {
-@@ -3310,6 +3308,7 @@ static int prism2_ioctl_siwencodeext(struct net_device *dev,
- 			goto done;
- 		}
- 
-+		lib80211_crypt_delayed_deinit(&local->crypt_info, crypt);
- 		*crypt = new_crypt;
+ 	/* Try to get SPROM */
+ 	err = bcma_sprom_get(bus);
+-	if (err) {
++	if (err == -ENOENT) {
++		pr_err("No SPROM available\n");
++	} else if (err) {
+ 		pr_err("Failed to get SPROM: %d\n", err);
+ 		return -ENOENT;
  	}
+diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
+index ffbb0e3..8e8d5cf 100644
+--- a/drivers/bcma/sprom.c
++++ b/drivers/bcma/sprom.c
+@@ -143,6 +143,9 @@ int bcma_sprom_get(struct bcma_bus *bus)
+ 	if (!bus->drv_cc.core)
+ 		return -EOPNOTSUPP;
  
-diff --git a/drivers/net/wireless/ipw2x00/libipw_wx.c b/drivers/net/wireless/ipw2x00/libipw_wx.c
-index d7bd6cf0..04c4a60 100644
---- a/drivers/net/wireless/ipw2x00/libipw_wx.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_wx.c
-@@ -395,7 +395,7 @@ int libipw_wx_set_encode(struct libipw_device *ieee,
- 			new_crypt->ops = lib80211_get_crypto_ops("WEP");
- 		}
- 
--		if (new_crypt->ops && try_module_get(new_crypt->ops->owner))
-+		if (new_crypt->ops)
- 			new_crypt->priv = new_crypt->ops->init(key);
- 
- 		if (!new_crypt->ops || !new_crypt->priv) {
-@@ -629,8 +629,6 @@ int libipw_wx_set_encodeext(struct libipw_device *ieee,
- 	if (*crypt == NULL || (*crypt)->ops != ops) {
- 		struct lib80211_crypt_data *new_crypt;
- 
--		lib80211_crypt_delayed_deinit(&ieee->crypt_info, crypt);
--
- 		new_crypt = kzalloc(sizeof(*new_crypt), GFP_KERNEL);
- 		if (new_crypt == NULL) {
- 			ret = -ENOMEM;
-@@ -644,6 +642,8 @@ int libipw_wx_set_encodeext(struct libipw_device *ieee,
- 			ret = -EINVAL;
- 			goto done;
- 		}
++	if (!(bus->drv_cc.capabilities & BCMA_CC_CAP_SPROM))
++		return -ENOENT;
 +
-+		lib80211_crypt_delayed_deinit(&ieee->crypt_info, crypt);
- 		*crypt = new_crypt;
- 	}
- 
-diff --git a/net/wireless/lib80211.c b/net/wireless/lib80211.c
-index a55c27b..123fa19 100644
---- a/net/wireless/lib80211.c
-+++ b/net/wireless/lib80211.c
-@@ -242,6 +242,7 @@ struct lib80211_crypto_ops *lib80211_get_crypto_ops(const char *name)
- {
- 	struct lib80211_crypto_alg *alg;
- 	unsigned long flags;
-+	struct lib80211_crypto_ops *ret = NULL;
- 
- 	spin_lock_irqsave(&lib80211_crypto_lock, flags);
- 	list_for_each_entry(alg, &lib80211_crypto_algs, list) {
-@@ -252,6 +253,8 @@ struct lib80211_crypto_ops *lib80211_get_crypto_ops(const char *name)
- 	return NULL;
- 
-       found:
-+	if (try_module_get(alg->ops->owner))
-+		ret = alg->ops;
- 	spin_unlock_irqrestore(&lib80211_crypto_lock, flags);
- 	return alg->ops;
- }
+ 	sprom = kcalloc(SSB_SPROMSIZE_WORDS_R4, sizeof(u16),
+ 			GFP_KERNEL);
+ 	if (!sprom)
+-- 
+1.7.4.1
+
