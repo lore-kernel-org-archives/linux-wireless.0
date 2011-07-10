@@ -1,192 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4280 "EHLO mms1.broadcom.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:42591 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932416Ab1GNVaC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 17:30:02 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 17/35] staging: brcm80211: modify the FOREACH_BSS macro
-Date: Thu, 14 Jul 2011 14:29:13 -0700
-Message-ID: <1310678971-28952-18-git-send-email-frankyl@broadcom.com> (sfid-20110714_233026_314307_4E681D0F)
-In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
-References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+	id S1753610Ab1GJLVn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Jul 2011 07:21:43 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: 3.0-rc6-git6: Reported regressions 2.6.38 -> 2.6.39
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <AtAvQwe5sAK.A.loH.OlYGOB@chimera> (sfid-20110710_132211_467383_80CAE72C)
+Date: Sun, 10 Jul 2011 12:54:51 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+This message contains a list of some post-2.6.38 regressions introduced before
+2.6.39, for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
 
-The FOREACH_BSS macro was changed to remove a checkpatch error. However,
-the patch was considered ugly. This patch is another attempt to make it
-more clear.
+If you know of any other unresolved post-2.6.38 regressions, please let us know
+either and we'll add them to the list.  Also, please let us know if any
+of the entries below are invalid.
 
-Reported-by: Dan Carpenter <error27@gmail.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/main.c |   48 ++++++++++++++++------------
- 1 files changed, 27 insertions(+), 21 deletions(-)
+Each entry from the list will be sent additionally in an automatic reply to
+this message with CCs to the people involved in reporting and handling the
+issue.
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index d3c325c..3509361 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -250,10 +250,14 @@
- #define BSSCFG_STA(cfg)		(1)
- #define BSSCFG_IBSS(cfg)	(!(cfg)->BSS)
- 
--/* As above for all non-NULL BSS configs */
-+/* iterate through all valid bsscfg entries */
- #define FOREACH_BSS(wlc, idx, cfg) \
--	for (idx = 0; (int) idx < BRCMS_MAXBSSCFG; idx++) \
--		if ((cfg = (wlc)->bsscfg[idx]))
-+	for (idx = 0; (int) idx < BRCMS_MAXBSSCFG; idx++) { \
-+		cfg = (wlc)->bsscfg[idx]; \
-+		if (!cfg) \
-+			continue;
-+/* close marker for iterator code block */
-+#define END_FOREACH_BSS		}
- 
- /* Shared memory location index for various AC params */
- #define wme_shmemacindex(ac)	wme_ac2fifo[ac]
-@@ -3315,14 +3319,14 @@ void brcms_c_init(struct brcms_c_info *wlc)
- 	brcms_c_reprate_init(wlc);
- 
- 	/* write ethernet address to core */
--	FOREACH_BSS(wlc, i, bsscfg) {
-+	FOREACH_BSS(wlc, i, bsscfg)
- 		brcms_c_set_mac(bsscfg);
- 		brcms_c_set_bssid(bsscfg);
--	}
-+	END_FOREACH_BSS
- 
- 	/* Update tsf_cfprep if associated and up */
- 	if (wlc->pub->associated) {
--		FOREACH_BSS(wlc, i, bsscfg) {
-+		FOREACH_BSS(wlc, i, bsscfg)
- 			if (bsscfg->up) {
- 				u32 bi;
- 
-@@ -3340,7 +3344,7 @@ void brcms_c_init(struct brcms_c_info *wlc)
- 
- 				break;
- 			}
--		}
-+		END_FOREACH_BSS
- 	}
- 
- 	brcms_c_bandinit_ordered(wlc, chanspec);
-@@ -3540,7 +3544,7 @@ void brcms_c_switch_shortslot(struct brcms_c_info *wlc, bool shortslot)
- 	wlc->shortslot = shortslot;
- 
- 	/* update the capability based on current shortslot mode */
--	FOREACH_BSS(wlc, idx, cfg) {
-+	FOREACH_BSS(wlc, idx, cfg)
- 		if (!cfg->associated)
- 			continue;
- 		cfg->current_bss->capability &=
-@@ -3548,7 +3552,8 @@ void brcms_c_switch_shortslot(struct brcms_c_info *wlc, bool shortslot)
- 		if (wlc->shortslot)
- 			cfg->current_bss->capability |=
- 					WLAN_CAPABILITY_SHORT_SLOT_TIME;
--	}
-+	END_FOREACH_BSS
-+
- 
- 	brcms_b_set_shortslot(wlc->hw, shortslot);
- }
-@@ -3589,12 +3594,13 @@ void brcms_c_set_home_chanspec(struct brcms_c_info *wlc, u16 chanspec)
- 
- 		wlc->home_chanspec = chanspec;
- 
--		FOREACH_BSS(wlc, idx, cfg) {
-+		FOREACH_BSS(wlc, idx, cfg)
- 			if (!cfg->associated)
- 				continue;
- 
- 			cfg->current_bss->chanspec = chanspec;
--		}
-+		END_FOREACH_BSS
-+
- 
- 	}
- }
-@@ -5309,14 +5315,14 @@ static void brcms_c_watchdog(void *arg)
- 		brcms_c_statsupd(wlc);
- 
- 	/* Manage TKIP countermeasures timers */
--	FOREACH_BSS(wlc, i, cfg) {
-+	FOREACH_BSS(wlc, i, cfg)
- 		if (cfg->tk_cm_dt) {
- 			cfg->tk_cm_dt--;
- 		}
- 		if (cfg->tk_cm_bt) {
- 			cfg->tk_cm_bt--;
- 		}
--	}
-+	END_FOREACH_BSS
- 
- 	/* Call any registered watchdog handlers */
- 	for (i = 0; i < BRCMS_MAXMODULES; i++) {
-@@ -5474,7 +5480,7 @@ int brcms_c_up(struct brcms_c_info *wlc)
- 				mboolset(wlc->pub->radio_disabled,
- 					 WL_RADIO_HW_DISABLE);
- 
--				FOREACH_BSS(wlc, idx, bsscfg) {
-+				FOREACH_BSS(wlc, idx, bsscfg)
- 					if (!BSSCFG_STA(bsscfg)
- 					    || !bsscfg->enable || !bsscfg->BSS)
- 						continue;
-@@ -5482,7 +5488,7 @@ int brcms_c_up(struct brcms_c_info *wlc)
- 						  ": rfdisable -> "
- 						  "bsscfg_disable()\n",
- 						   wlc->pub->unit, idx);
--				}
-+				END_FOREACH_BSS
- 			}
- 		}
- 	}
-@@ -8918,10 +8924,10 @@ void brcms_c_update_beacon(struct brcms_c_info *wlc)
- 	struct brcms_bss_cfg *bsscfg;
- 
- 	/* update AP or IBSS beacons */
--	FOREACH_BSS(wlc, idx, bsscfg) {
-+	FOREACH_BSS(wlc, idx, bsscfg)
- 		if (bsscfg->up && (BSSCFG_AP(bsscfg) || !bsscfg->BSS))
- 			brcms_c_bss_update_beacon(wlc, bsscfg);
--	}
-+	END_FOREACH_BSS
- }
- 
- /* Write ssid into shared memory */
-@@ -8947,10 +8953,10 @@ void brcms_c_update_probe_resp(struct brcms_c_info *wlc, bool suspend)
- 	struct brcms_bss_cfg *bsscfg;
- 
- 	/* update AP or IBSS probe responses */
--	FOREACH_BSS(wlc, idx, bsscfg) {
-+	FOREACH_BSS(wlc, idx, bsscfg)
- 		if (bsscfg->up && (BSSCFG_AP(bsscfg) || !bsscfg->BSS))
- 			brcms_c_bss_update_probe_resp(wlc, bsscfg, suspend);
--	}
-+	END_FOREACH_BSS
- }
- 
- void
-@@ -9031,9 +9037,9 @@ void brcms_c_reprate_init(struct brcms_c_info *wlc)
- 	int i;
- 	struct brcms_bss_cfg *bsscfg;
- 
--	FOREACH_BSS(wlc, i, bsscfg) {
-+	FOREACH_BSS(wlc, i, bsscfg)
- 		brcms_c_bsscfg_reprate_init(bsscfg);
--	}
-+	END_FOREACH_BSS
- }
- 
- /* per bsscfg init tx reported rate mechanism */
--- 
-1.7.1
 
+Listed regressions statistics:
+
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2011-07-10       99       26          24
+  2011-06-27       94       25          23
+  2011-06-12       81       21          18
+  2011-05-15       50       12          11
+  2011-04-30       38       17          16
+  2011-04-17       17       11          10
+
+
+Unresolved regressions
+----------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38842
+Subject		: panic in elv_completed_request on safe remove usb hard drive
+Submitter	: leniviy <basinilya@gmail.com>
+Date		: 2011-07-06 09:20 (5 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38742
+Subject		: After hard power-off, btrfs cannot be recovered except booting 2.6.38 or below kernel
+Submitter	: Ryan Underwood <nemesis@icequake.net>
+Date		: 2011-07-03 18:57 (8 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38572
+Subject		: New NFS: directory XXX contains a readdir loop seems to be triggered by well-behaving server
+Submitter	: Petr Vandrovec <petr@vandrovec.name>
+Date		: 2011-06-30 19:38 (11 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38132
+Subject		: [Warning] 2.6.39.x latencytop
+Submitter	: Andrew Watts <akwatts@ymail.com>
+Date		: 2011-06-14 17:07 (27 days old)
+Message-ID	: <80098.5633.qm@web111013.mail.gq1.yahoo.com>
+References	: http://marc.info/?l=linux-kernel&m=130807128506490&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38102
+Subject		: BUG kmalloc-2048: Poison overwritten
+Submitter	: Alexey Zaytsev <alexey.zaytsev@gmail.com>
+Date		: 2011-06-23 17:33 (18 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37772
+Subject		: Sometimes, sound disappears and doesn't want to idle.
+Submitter	:  <merkil@savhon.org>
+Date		: 2011-06-17 22:06 (24 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37752
+Subject		: Kernel Panic in drm_vblank_put+0x13/0x50 on P4 HT machine with 82915G/GV/910GL Integrated Graphics Controller
+Submitter	: Martin Rogge <marogge@onlinehome.de>
+Date		: 2011-06-17 13:02 (24 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37712
+Subject		: reboot  / "shutdown -r now" hangs ;  works fine on 2.6.38.7-1
+Submitter	: Dave Hooper <dave@beermex.com>
+Date		: 2011-06-16 20:50 (25 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37692
+Subject		: Linux 2.6.39.x fails to boot - unable to mount root fs
+Submitter	: Dan Dart <dandart@googlemail.com>
+Date		: 2011-06-16 18:55 (25 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37622
+Subject		: Poor wireless performance with Intel 4965AGN with iwl-legacy/iwl4965
+Submitter	:  <MDstr_1@hotmail.com>
+Date		: 2011-06-16 11:22 (25 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37472
+Subject		: Lenovo U160 (i915 black screen)
+Submitter	: Robse <rob-se@live.de>
+Date		: 2011-06-14 15:17 (27 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37322
+Subject		: high load, unresponsive system spinning in rcu_kthread
+Submitter	: Ferenc Wágner <wferi@niif.hu>
+Date		: 2011-06-12 14:53 (29 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37312
+Subject		: Intel 5100 wifi stopped working with 2.6.39.1
+Submitter	: Thibault Dory <dory.thibault@gmail.com>
+Date		: 2011-06-12 12:43 (29 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37292
+Subject		: kernel BUG at fs/ecryptfs/read_write.c:47!
+Submitter	:  <rems14@lestoutous.com>
+Date		: 2011-06-12 10:25 (29 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37042
+Subject		: linux 3.0.0-rc2 libata-eh.c:4018 ata_scsi_port_error_handler+0x80/0x53d on s2disk
+Submitter	: Alex Zhavnerchik <alex.vizor@gmail.com>
+Date		: 2011-06-09 08:22 (32 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36952
+Subject		: [2.6.39] CIFS write failures where 2.6.38 works
+Submitter	: Helge Hafting <helge.hafting@hist.no>
+Date		: 2011-06-01 10:11 (40 days old)
+Message-ID	: <4DE6103E.6010100@hist.no>
+References	: http://marc.info/?l=linux-kernel&m=130692387613423&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36392
+Subject		: 2.6.39, 3.0-rc2 Intel DRI Regression: Black Screen after trying to play video
+Submitter	: Dennis Jansen <dennis.jansen@web.de>
+Date		: 2011-06-01 04:41 (40 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36332
+Subject		: Intel gpu turns external monitor off when X starts
+Submitter	: rocko <rockorequin@hotmail.com>
+Date		: 2011-05-31 02:53 (41 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36182
+Subject		: Erroneous package power limit notification since kernel 2.6.39
+Submitter	: Olaf Freyer <aaron667@gmx.net>
+Date		: 2011-05-22 13:01 (50 days old)
+Message-ID	: <4DD9092A.4080507@gmx.net>
+References	: http://marc.info/?l=linux-kernel&m=130606930631131&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=35922
+Subject		: SND_USB_AUDIO recording device not initializing correctly
+Submitter	:  <bjoern.online@gmail.com>
+Date		: 2011-05-26 10:30 (46 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=35662
+Subject		: softlockup with kernel 2.6.39
+Submitter	: Hussam Al-Tayeb <ht990332@gmail.com>
+Date		: 2011-05-23 08:13 (49 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=35242
+Subject		: NULL pointer dereference in intel_sdvo_write_cmd (was Black screen after boot)
+Submitter	: Ko Mi <chaostya.test@hotmail.com>
+Date		: 2011-05-17 10:27 (55 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=35142
+Subject		: 2.6.39-rc7-git1 boot error message (no crash)
+Submitter	: werner <w.landgraf@ru.ru>
+Date		: 2011-05-11 4:58 (61 days old)
+Message-ID	: <web-520830057@zbackend1.aha.ru>
+References	: http://marc.info/?l=linux-kernel&m=130512952706444&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34942
+Subject		: [Bug] Kdump does not work when panic triggered due to MCE
+Submitter	: K.Prasad <prasad@linux.vnet.ibm.com>
+Date		: 2011-05-06 16:54 (66 days old)
+Message-ID	: <20110506165412.GB2719@in.ibm.com>
+References	: http://marc.info/?l=linux-kernel&m=130470087226270&w=2
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=35642
+Subject		: On resume, I sometimes get a kernel oops with led_trigger_unregister_simple
+Submitter	: Sven-Hendrik Haase <sh@lutzhaase.com>
+Date		: 2011-05-23 00:15 (49 days old)
+Patch		: https://patchwork.kernel.org/patch/927582/
+		  https://patchwork.kernel.org/patch/927612/
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33242
+Subject		: Lockdep splat in autofs with 2.6.39-rc2
+Submitter	: Nick Bowler <nbowler@elliptictech.com>
+Date		: 2011-04-07 19:44 (95 days old)
+Message-ID	: <20110407194403.GA29404@elliptictech.com>
+References	: http://marc.info/?l=linux-kernel&m=130220545614682&w=2
+Patch		: http://marc.info/?l=linux-kernel&m=130342115008659&w=2
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions introduced
+between 2.6.38 and 2.6.39, unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=32012
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
 
