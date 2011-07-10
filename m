@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3358 "EHLO mms2.broadcom.com"
+Received: from mail.perches.com ([173.55.12.10]:3729 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755072Ab1GVS5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 14:57:34 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 27/29] staging: brcm80211: SPARC build error fix
-Date: Fri, 22 Jul 2011 20:57:14 +0200
-Message-ID: <1311361036-3175-28-git-send-email-arend@broadcom.com> (sfid-20110722_205807_923212_F152C226)
-In-Reply-To: <1311361036-3175-1-git-send-email-arend@broadcom.com>
-References: <1311361036-3175-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1755745Ab1GJJ2f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Jul 2011 05:28:35 -0400
+From: Joe Perches <joe@perches.com>
+To: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 3/5] ath5k: Add missing breaks in switch/case
+Date: Sun, 10 Jul 2011 02:28:26 -0700
+Message-Id: <e554bed5c753a3fe85d3be34983a15e6110a6e35.1310289795.git.joe@perches.com> (sfid-20110710_112939_406619_7137D0DC)
+In-Reply-To: <cover.1310289795.git.joe@perches.com>
+References: <cover.1310289795.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-
-Due to missing memset function declaration.
-
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/staging/brcm80211/brcmsmac/otp.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath5k/desc.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/otp.c b/drivers/staging/brcm80211/brcmsmac/otp.c
-index 975d80c..b6ff767 100644
---- a/drivers/staging/brcm80211/brcmsmac/otp.c
-+++ b/drivers/staging/brcm80211/brcmsmac/otp.c
-@@ -16,6 +16,7 @@
+diff --git a/drivers/net/wireless/ath/ath5k/desc.c b/drivers/net/wireless/ath/ath5k/desc.c
+index 62172d5..f82383b 100644
+--- a/drivers/net/wireless/ath/ath5k/desc.c
++++ b/drivers/net/wireless/ath/ath5k/desc.c
+@@ -107,10 +107,13 @@ ath5k_hw_setup_2word_tx_desc(struct ath5k_hw *ah, struct ath5k_desc *desc,
+ 		case AR5K_PKT_TYPE_BEACON:
+ 		case AR5K_PKT_TYPE_PROBE_RESP:
+ 			frame_type = AR5K_AR5210_TX_DESC_FRAME_TYPE_NO_DELAY;
++			break;
+ 		case AR5K_PKT_TYPE_PIFS:
+ 			frame_type = AR5K_AR5210_TX_DESC_FRAME_TYPE_PIFS;
++			break;
+ 		default:
+ 			frame_type = type;
++			break;
+ 		}
  
- #include <linux/io.h>
- #include <linux/errno.h>
-+#include <linux/string.h>
- 
- #include <brcm_hw_ids.h>
- #include <chipcommon.h>
+ 		tx_ctl->tx_control_0 |=
 -- 
-1.7.4.1
-
+1.7.6.131.g99019
 
