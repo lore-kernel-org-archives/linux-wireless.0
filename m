@@ -1,182 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4239 "EHLO mms2.broadcom.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:42353 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753984Ab1GROaY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2011 10:30:24 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Franky Lin" <frankyl@broadcom.com>,
-	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 12/19] staging: brcm80211: remove code for unsupported
- chip
-Date: Mon, 18 Jul 2011 16:29:58 +0200
-Message-ID: <1310999405-10062-13-git-send-email-arend@broadcom.com> (sfid-20110718_163050_710745_73815974)
-In-Reply-To: <1310999405-10062-1-git-send-email-arend@broadcom.com>
-References: <1310999405-10062-1-git-send-email-arend@broadcom.com>
+	id S1753133Ab1GJKqe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Jul 2011 06:46:34 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: 3.0-rc6-git6: Reported regressions from 2.6.39
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <Y7LyOsOBwFM.A.kJG.kBYGOB@chimera> (sfid-20110710_124712_285053_7BCF3183)
+Date: Sun, 10 Jul 2011 12:19:24 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+This message contains a list of some regressions from 2.6.39,
+for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
 
-Currently fullmac only support bcm4329. Remove dead code for
-unsupported chip.
+If you know of any other unresolved regressions from 2.6.39, please let us
+know either and we'll add them to the list.  Also, please let us know
+if any of the entries below are invalid.
 
-Cc: linux-wireless@vger.kernel.org
-Cc: devel@linuxdriverproject.org
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   40 +-------------------
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |   17 +--------
- 2 files changed, 3 insertions(+), 54 deletions(-)
+Each entry from the list will be sent additionally in an automatic reply
+to this message with CCs to the people involved in reporting and handling
+the issue.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index d6f0f92..846b6be 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -34,36 +34,17 @@
- #include "dhd_dbg.h"
- #include "wl_cfg80211.h"
- 
--#define BLOCK_SIZE_64 64
--#define BLOCK_SIZE_512 512
--#define BLOCK_SIZE_4318 64
--#define BLOCK_SIZE_4328 512
--
--/* private bus modes */
--#define SDIOH_MODE_SD4		2
--
- #define CLIENT_INTR		0x100	/* Get rid of this! */
- 
- #if !defined(SDIO_VENDOR_ID_BROADCOM)
- #define SDIO_VENDOR_ID_BROADCOM		0x02d0
- #endif				/* !defined(SDIO_VENDOR_ID_BROADCOM) */
- 
--#define SDIO_DEVICE_ID_BROADCOM_DEFAULT	0x0000
--
- #define DMA_ALIGN_MASK	0x03
- 
--#if !defined(SDIO_DEVICE_ID_BROADCOM_4325_SDGWB)
--#define SDIO_DEVICE_ID_BROADCOM_4325_SDGWB	0x0492	/* BCM94325SDGWB */
--#endif		/* !defined(SDIO_DEVICE_ID_BROADCOM_4325_SDGWB) */
--#if !defined(SDIO_DEVICE_ID_BROADCOM_4325)
--#define SDIO_DEVICE_ID_BROADCOM_4325	0x0493
--#endif		/* !defined(SDIO_DEVICE_ID_BROADCOM_4325) */
- #if !defined(SDIO_DEVICE_ID_BROADCOM_4329)
- #define SDIO_DEVICE_ID_BROADCOM_4329	0x4329
- #endif		/* !defined(SDIO_DEVICE_ID_BROADCOM_4329) */
--#if !defined(SDIO_DEVICE_ID_BROADCOM_4319)
--#define SDIO_DEVICE_ID_BROADCOM_4319	0x4319
--#endif		/* !defined(SDIO_DEVICE_ID_BROADCOM_4329) */
- 
- /* Common msglevel constants */
- #define SDH_ERROR_VAL		0x0001	/* Error */
-@@ -136,12 +117,6 @@ uint sd_f2_blocksize = 512;	/* Default blocksize */
- 
- uint sd_msglevel = 0x01;
- 
--/* module param defaults */
--static int clockoverride;
--
--module_param(clockoverride, int, 0644);
--MODULE_PARM_DESC(clockoverride, "SDIO card clock override");
--
- struct brcmf_sdmmc_instance *gInstance;
- static atomic_t brcmf_mmc_suspend;
- 
-@@ -149,12 +124,7 @@ struct device sdmmc_dev;
- 
- /* devices we support, null terminated */
- static const struct sdio_device_id brcmf_sdmmc_ids[] = {
--	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_DEFAULT)},
--	{SDIO_DEVICE
--	 (SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4325_SDGWB)},
--	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4325)},
- 	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4329)},
--	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4319)},
- 	{ /* end: all zeroes */ },
- };
- 
-@@ -498,10 +468,10 @@ brcmf_sdioh_iovar_op(struct sdioh_info *si, const char *name,
- 				maxsize = 32;
- 				break;
- 			case 1:
--				maxsize = BLOCK_SIZE_4318;
-+				maxsize = 64;
- 				break;
- 			case 2:
--				maxsize = BLOCK_SIZE_4328;
-+				maxsize = 512;
- 				break;
- 			default:
- 				maxsize = 0;
-@@ -1058,12 +1028,6 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 		sdio_func_0.num = 0;
- 		sdio_func_0.card = func->card;
- 		gInstance->func[0] = &sdio_func_0;
--		if (func->device == 0x4) {	/* 4318 */
--			gInstance->func[2] = NULL;
--			sd_trace(("NIC found, calling brcmf_sdio_probe...\n"));
--			ret = brcmf_sdio_probe(&sdmmc_dev);
--		}
--		atomic_set(&brcmf_mmc_suspend, false);
- 	}
- 
- 	gInstance->func[func->num] = func;
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index e9806c3..fe11478 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -1273,8 +1273,7 @@ int brcmf_sdbrcm_bussleep(struct brcmf_bus *bus, bool sleep)
- 			SBSDIO_FORCE_HW_CLKREQ_OFF, NULL);
- 
- 		/* Isolate the bus */
--		if (bus->ci->chip != BCM4329_CHIP_ID
--		    && bus->ci->chip != BCM4319_CHIP_ID) {
-+		if (bus->ci->chip != BCM4329_CHIP_ID) {
- 			brcmf_sdcard_cfg_write(card, SDIO_FUNC_1,
- 				SBSDIO_DEVICE_CTL,
- 				SBSDIO_DEVCTL_PADS_ISO, NULL);
-@@ -5401,12 +5400,8 @@ done:
- 
- static bool brcmf_sdbrcm_chipmatch(u16 chipid)
- {
--	if (chipid == BCM4325_CHIP_ID)
--		return true;
- 	if (chipid == BCM4329_CHIP_ID)
- 		return true;
--	if (chipid == BCM4319_CHIP_ID)
--		return true;
- 	return false;
- }
- 
-@@ -5461,22 +5456,12 @@ static void *brcmf_sdbrcm_probe(u16 venid, u16 devid, u16 bus_no,
- 
- 	/* Check the Device ID and make sure it's one that we support */
- 	switch (devid) {
--	case BCM4325_D11DUAL_ID:	/* 4325 802.11a/g id */
--	case BCM4325_D11G_ID:	/* 4325 802.11g 2.4Ghz band id */
--	case BCM4325_D11A_ID:	/* 4325 802.11a 5Ghz band id */
--		BRCMF_INFO(("%s: found 4325 Dongle\n", __func__));
--		break;
- 	case BCM4329_D11NDUAL_ID:	/* 4329 802.11n dualband device */
- 	case BCM4329_D11N2G_ID:	/* 4329 802.11n 2.4G device */
- 	case BCM4329_D11N5G_ID:	/* 4329 802.11n 5G device */
- 	case 0x4329:
- 		BRCMF_INFO(("%s: found 4329 Dongle\n", __func__));
- 		break;
--	case BCM4319_D11N_ID:	/* 4319 802.11n id */
--	case BCM4319_D11N2G_ID:	/* 4319 802.11n2g id */
--	case BCM4319_D11N5G_ID:	/* 4319 802.11n5g id */
--		BRCMF_INFO(("%s: found 4319 Dongle\n", __func__));
--		break;
- 	case 0:
- 		BRCMF_INFO(("%s: allow device id 0, will check chip"
- 			    " internals\n", __func__));
--- 
-1.7.4.1
 
+Listed regressions statistics:
+
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2011-07-10       38       16          13
+  2011-06-26       22       14          12
+  2011-06-12        8        7           7
+
+
+Unresolved regressions
+----------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39052
+Subject		: .tmp_depmod owned by root after modules_install
+Submitter	: Christian Kujau <lists@nerdbynature.de>
+Date		: 2011-07-04 9:49 (7 days old)
+Message-ID	: <alpine.DEB.2.01.1107040242180.9183@trent.utfs.org>
+References	: http://marc.info/?l=linux-kernel&m=130977296812731&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38802
+Subject		: Not work hotkey of Microsoft Comfort Curve Keyboard 2000
+Submitter	: Cristian Aravena Romero <caravena@gmail.com>
+Date		: 2011-07-05 20:43 (6 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38732
+Subject		: Linux 3.0-rc5 doesnt boot and hangs at rcu_sched_state ()
+Submitter	: RKK <kulkarni.ravi4@gmail.com>
+Date		: 2011-06-29 13:38 (12 days old)
+Message-ID	: <BANLkTikW6Xk8UMsOHLCnLn7STRzy8RaiJA@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=130935402722869&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38702
+Subject		: 3.0.0-rc4-git6 - INFO: possible circular locking dependency detected - (&rdev->mtx){+.+.+.}, at: [<ffffffffa00e27e0>] cfg80211_netdev_notifier_call+0x275/0x4ff [cfg80211]
+Submitter	: Miles Lane <miles.lane@gmail.com>
+Date		: 2011-06-26 21:54 (15 days old)
+Message-ID	: <BANLkTikztsFnPkJZ7VxRC-zsitwCCvVmeg@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=130912559804336&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38672
+Subject		: KVM guest boot crashed
+Submitter	: Steve <stefan.bosak@gmail.com>
+Date		: 2011-07-02 06:56 (9 days old)
+First-Bad-Commit: http://git.kernel.org/linus/6506e4f995967b1a48cc34418c77b318df92ce35
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38622
+Subject		: [radeon cayman regresion] artefacts on screen
+Submitter	: Marek Hobler, &apos;neutrinus&apos; <kernellist@neutrinus.com>
+Date		: 2011-07-01 09:35 (10 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38612
+Subject		: Boot time warnings in APIC
+Submitter	: Bill Huey <bill.huey@gmail.com>
+Date		: 2011-07-01 06:44 (10 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38582
+Subject		: T510 43495KG won't resume with 32bit installation
+Submitter	: Marc Koschewski <marc@osknowledge.org>
+Date		: 2011-06-30 22:39 (11 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38522
+Subject		: address space collision error message on boot
+Submitter	: Jools Wills <jools@oxfordinspire.co.uk>
+Date		: 2011-06-29 02:28 (12 days old)
+First-Bad-Commit: http://git.kernel.org/linus/5d94e81f69d4b1d1102d3ab557ce0a817c11fbbb
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38332
+Subject		: System hang when enable rc6
+Submitter	: Gu Rui <chaos.proton@gmail.com>
+Date		: 2011-06-27 08:16 (14 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37872
+Subject		: CPU lockup during boot
+Submitter	: Bruno Wolff III <bruno@wolff.to>
+Date		: 2011-06-19 15:00 (22 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37482
+Subject		: Driver: i915 - Starting with kernel 3.0.0-rc3, dual monitor freezes a Dell Latitude E6410 when a second monitor is connected at boot time
+Submitter	: David Hill <hilld@binarystorm.net>
+Date		: 2011-06-14 18:42 (27 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37432
+Subject		: sdhci-pci fails on 3.0.0-rc1 on Dell E6510
+Submitter	: Oliver Hartkopp <socketcan@hartkopp.net>
+Date		: 2011-06-07 20:06 (34 days old)
+First-Bad-Commit: http://git.kernel.org/linus/da7822e5ad71ec9b745b412639f1e5e0ba795a20
+References	: http://article.gmane.org/gmane.linux.kernel.mmc/8442
+		  https://lkml.org/lkml/2011/6/23/660
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38972
+Subject		: Kernel panic when syncing while cifs is mounted
+Submitter	:  <farbing@web.de>
+Date		: 2011-07-08 15:39 (3 days old)
+First-Bad-Commit: http://git.kernel.org/linus/dd8544661947ad6d8d87b3c9d4333bfa1583d1bc
+Handled-By	: Jeff Layton <jlayton@redhat.com>
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=65082
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38302
+Subject		: NFS crash in un-modified 3.0.0-rc3+, list corruption.
+Submitter	: Ben Greear <greearb@candelatech.com>
+Date		: 2011-06-20 22:42 (21 days old)
+Message-ID	: <4DFFCCDC.2070106@candelatech.com>
+References	: http://marc.info/?l=linux-kernel&m=130860979610651&w=2
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=63902
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38152
+Subject		: acpi_power_off lockdep splat
+Submitter	: Borislav Petkov <bp@alien8.de>
+Date		: 2011-06-19 13:30 (22 days old)
+Message-ID	: <20110619133049.GA18168@liondog.tnic>
+References	: http://marc.info/?l=linux-kernel&m=130849028317365&w=2
+Handled-By	: Rafael J. Wysocki <rjw@sisk.pl>
+Patch		: https://patchwork.kernel.org/patch/950852/
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions from 2.6.39,
+unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=36912
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
 
