@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:51035 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752228Ab1GERns (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50203 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753689Ab1GJKzV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 13:43:48 -0400
-Received: by mail-bw0-f45.google.com with SMTP id 12so6401651bwd.32
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2011 10:43:44 -0700 (PDT)
-Subject: Re: [PATCH 1/3] wl12xx: fix Tx security sequence number handling
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Oz Krakowski <ozk@ti.com>
-In-Reply-To: <1308463496-15522-1-git-send-email-arik@wizery.com>
-References: <1308463496-15522-1-git-send-email-arik@wizery.com>
+	Sun, 10 Jul 2011 06:55:21 -0400
+Subject: Re: 3.0-rc6-git6: Reported regressions from 2.6.39
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+In-Reply-To: <Y7LyOsOBwFM.A.kJG.kBYGOB@chimera> (sfid-20110710_124712_285053_7BCF3183)
+References: <Y7LyOsOBwFM.A.kJG.kBYGOB@chimera>
+	 (sfid-20110710_124712_285053_7BCF3183)
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Jul 2011 20:43:41 +0300
-Message-ID: <1309887821.1514.498.camel@cumari> (sfid-20110705_194408_100733_687A6278)
+Date: Sun, 10 Jul 2011 12:54:37 +0200
+Message-ID: <1310295277.3942.1.camel@jlt3.sipsolutions.net> (sfid-20110710_125548_522351_0C8E0633)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-06-19 at 09:04 +0300, Arik Nemtsov wrote: 
-> From: Oz Krakowski <ozk@ti.com>
-> 
-> Do not reset the security sequence number when issuing a join command or
-> interface is removed. Instead, reset the counter only during the unjoin
-> command.
-> 
-> Added the notion of counter wrap-around to the LSB number in
-> wl1271_tx_complete_packet.
-> 
-> Added post recovery padding to adjust for potential security number
-> progress during the recovery process by the firmware and avoid
-> potential interop issues in encrypted networks.
-> 
-> Signed-off-by: Oz Krakowski <ozk@ti.com>
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+On Sun, 2011-07-10 at 12:19 +0200, Rafael J. Wysocki wrote:
 
-Applied the series, thanks!
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38702
+> Subject		: 3.0.0-rc4-git6 - INFO: possible circular locking dependency detected - (&rdev->mtx){+.+.+.}, at: [<ffffffffa00e27e0>] cfg80211_netdev_notifier_call+0x275/0x4ff [cfg80211]
+> Submitter	: Miles Lane <miles.lane@gmail.com>
+> Date		: 2011-06-26 21:54 (15 days old)
+> Message-ID	: <BANLkTikztsFnPkJZ7VxRC-zsitwCCvVmeg@mail.gmail.com>
+> References	: http://marc.info/?l=linux-kernel&m=130912559804336&w=2
 
-Oz, nice to see a patch from you! :)
+Should be fixed by c10841ca722a0bc960dc541c51582773f9a24f98 which was
+part of John's latest pull request and is in net-2.6 now on its way up.
 
--- 
-Cheers,
-Luca.
+johannes
 
