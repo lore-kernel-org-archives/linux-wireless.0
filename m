@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:63131 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751178Ab1GTQbK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2011 12:31:10 -0400
-Message-ID: <4E2702CB.9030909@lwfinger.net> (sfid-20110720_183140_011372_ED924A03)
-Date: Wed, 20 Jul 2011 11:31:07 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from defaultvalue.org ([70.85.129.156]:59342 "EHLO defaultvalue.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754620Ab1GJUY3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Jul 2011 16:24:29 -0400
+From: Rob Browning <rlb@defaultvalue.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Slow receive with rtl8192cu (usb ew-7811Un)
+References: <87pqnl5i81.fsf@raven.defaultvalue.org>
+	<4DD074E3.3090502@lwfinger.net>
+	<87vcxbe5xz.fsf@trouble.defaultvalue.org>
+	<4DD09C78.2010304@lwfinger.net>
+	<8762pbkytq.fsf@trouble.defaultvalue.org>
+	<4DD13EF0.2070803@lwfinger.net>
+	<87iptaj8nf.fsf@trouble.defaultvalue.org>
+	<87fwoehtd7.fsf@trouble.defaultvalue.org>
+	<874o45z6b8.fsf@raven.defaultvalue.org>
+	<874o41rqrg.fsf@trouble.defaultvalue.org>
+	<87oc222acu.fsf@raven.defaultvalue.org>
+Date: Sun, 10 Jul 2011 15:24:27 -0500
+In-Reply-To: <87oc222acu.fsf@raven.defaultvalue.org> (Rob Browning's message
+	of "Sun, 12 Jun 2011 13:06:08 -0500")
+Message-ID: <87aacl6g04.fsf@raven.defaultvalue.org> (sfid-20110710_222433_531175_F85E36B5)
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org,
-	'Chaoming_Li' <chaoming_li@realsil.com.cn>
-Subject: Re: [PATCH 1/3] wireless: rtlwifi: throw away MAC_FMT and use %pM
- instead
-References: <fddeabc04a1b81a5c1f51a4164d93366dccf5f8e.1311162926.git.andriy.shevchenko@linux.intel.com>	 <4E26F879.8010601@lwfinger.net> <1311177762.1663.9.camel@Joe-Laptop>
-In-Reply-To: <1311177762.1663.9.camel@Joe-Laptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/20/2011 11:02 AM, Joe Perches wrote:
-> On Wed, 2011-07-20 at 10:47 -0500, Larry Finger wrote:
->> Thanks for the patch.
->
-> Hey Larry.
->
-> rtlwifi has a CONFIG_BT_COEXIST which is currently
-> unused/undefined by Kconfig.
->
-> Are there plans to enable this or should the code
-> just be removed?
->
-> There may be a few dependencies in rtlwifi for
-> variables set in this block so it seems from
-> superficial reading that removal might be a bit
-> involved.  I didn't look much more than that,
-> but struct btcoexist_priv doesn't seem to be
-> specified by the code anywhere.
+Rob Browning <rlb@defaultvalue.org> writes:
 
-I don't know the answer to that, but I have added Chaoming Li to the Cc. He will 
-know if Realtek has any plans for BT coexistence.
+> Instead, I was able to test an ath9k_htc based adapter (netgear n150),
+> which doesn't appear to have trouble in the same environment, but I'd
+> still prefer to use the much smaller rtl8192cu device if we can figure
+> out what's wrong.
 
-Larry
+Actually, I just realized I quoted the wrong model number above.  The
+device that works well is the WNA1100.
+
+The rtl8192cu devices still struggle, after a short initial period of
+reasonable behavior.
+
+Thanks
+-- 
+Rob Browning
+rlb @defaultvalue.org and @debian.org
+GPG as of 2002-11-03 14DD 432F AE39 534D B592 F9A0 25C8 D377 8C7E 73A4
