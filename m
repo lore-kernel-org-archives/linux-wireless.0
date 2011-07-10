@@ -1,35 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:23827 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964995Ab1GMI0D (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:43153 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752534Ab1GJPFX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 04:26:03 -0400
-Message-ID: <4E1D5696.7060108@qca.qualcomm.com> (sfid-20110713_102607_552750_816A7CAD)
-Date: Wed, 13 Jul 2011 11:25:58 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Sun, 10 Jul 2011 11:05:23 -0400
+Received: by eyx24 with SMTP id 24so1110003eyx.19
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jul 2011 08:05:21 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/1] Add new device ID for Belkin
+Date: Sun, 10 Jul 2011 17:05:14 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <devel@linuxdriverproject.org>,
-	<gregkh@suse.de>, <error27@gmail.com>
-Subject: Re: [PATCH 15/24] ath6kl: add ieee80211.h
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>	 <20110713013524.8517.92169.stgit@localhost6.localdomain6>	 (sfid-20110713_033533_941292_7CB29E9A) <1310542156.3873.3.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1310542156.3873.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201107101705.15918.IvDoorn@gmail.com> (sfid-20110710_170532_453031_F108E51A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/13/2011 10:29 AM, Johannes Berg wrote:
-> On Wed, 2011-07-13 at 04:35 +0300, Kalle Valo wrote:
->> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
->> ---
->>  drivers/net/wireless/ath/ath6kl/ieee80211.h |  158 +++++++++++++++++++++++++++
-> 
-> This file shouldn't exist. Anything generic should go to
-> include/linux/ieee80211.h, and anything HW specific shouldn't be called
-> IEEE80211_*.
+From: Eduardo Bacchi Kienetz <eduardo@kienetz.com>
 
-Will fix in v2.
+Belkin's Connect N150 Wireless USB Adapter, model F7D1101 version 2, uses ID 0x945b.
+Chipset info: rt: 3390, rf: 000b, rev: 3213.
+I have just bought one, which started to work perfectly after the ID was added through this patch.
 
-Thanks.
+Signed-off-by: Eduardo Bacchi Kienetz <eduardo@kienetz.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Kalle
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 59e7779..5075593 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -1054,6 +1054,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0586, 0x341e) },
+ 	{ USB_DEVICE(0x0586, 0x343e) },
+ #ifdef CONFIG_RT2800USB_RT33XX
++	/* Belkin */
++	{ USB_DEVICE(0x050d, 0x945b) },
+ 	/* Ralink */
+ 	{ USB_DEVICE(0x148f, 0x3370) },
+ 	{ USB_DEVICE(0x148f, 0x8070) },
+-- 
+1.7.2.3
+
