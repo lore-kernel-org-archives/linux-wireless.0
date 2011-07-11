@@ -1,48 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:16129 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751532Ab1G0C1H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2011 22:27:07 -0400
-Subject: [PATCH 1/3] ath: fix spelling of Grenada
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Pavel Roskin <proski@gnu.org>
-Date: Tue, 26 Jul 2011 22:26:52 -0400
-Message-ID: <20110727022652.27981.27951.stgit@mj.roinet.com> (sfid-20110727_042714_360893_BA2A9D92)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from he.sipsolutions.net ([78.46.109.217]:48427 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758008Ab1GKQFR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2011 12:05:17 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1QgIyx-00085h-EB
+	for linux-wireless@vger.kernel.org; Mon, 11 Jul 2011 18:05:15 +0200
+Subject: [RFC] mac80211: allow driver to disconnect after resume
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 11 Jul 2011 18:05:31 +0200
+Message-ID: <1310400331.23469.4.camel@jlt3.sipsolutions.net> (sfid-20110711_180522_382604_D96BDD06)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- drivers/net/wireless/ath/regd.h        |    2 +-
- drivers/net/wireless/ath/regd_common.h |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
-index 172f63f..03a8268 100644
---- a/drivers/net/wireless/ath/regd.h
-+++ b/drivers/net/wireless/ath/regd.h
-@@ -101,7 +101,7 @@ enum CountryCode {
- 	CTRY_GERMANY = 276,
- 	CTRY_GREECE = 300,
- 	CTRY_GREENLAND = 304,
--	CTRY_GRENEDA = 308,
-+	CTRY_GRENADA = 308,
- 	CTRY_GUAM = 316,
- 	CTRY_GUATEMALA = 320,
- 	CTRY_HAITI = 332,
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index 24b5383..bdd2b4d 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -332,7 +332,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_GERMANY, ETSI1_WORLD, "DE"},
- 	{CTRY_GREECE, ETSI1_WORLD, "GR"},
- 	{CTRY_GREENLAND, ETSI1_WORLD, "GL"},
--	{CTRY_GRENEDA, FCC3_FCCA, "GD"},
-+	{CTRY_GRENADA, FCC3_FCCA, "GD"},
- 	{CTRY_GUAM, FCC1_FCCA, "GU"},
- 	{CTRY_GUATEMALA, FCC1_FCCA, "GT"},
- 	{CTRY_HAITI, ETSI1_WORLD, "HT"},
+In WoWLAN, devices may use crypto keys for TX/RX
+and could also implement GTK rekeying. If the
+driver isn't able to retrieve replay counters and
+similar information from the device upon resume,
+or if the device isn't responsive due to platform
+issues, it isn't safe to keep the connection up
+as GTK rekey messages from during the sleep time
+could be replayed against it.
+
+The only protection against that is disconnecting
+from the AP. Modifying mac80211 to do that while
+it is resuming would be very complex and invasive
+in the case that the driver requires a reconfig,
+so do it after it has resumed completely. In that
+case, however, packets might be replayed since it
+can then only happen after TX/RX are up again, so
+mark keys for interfaces that need to disconnect
+as "tainted" and drop all packets that are sent
+or received with those keys.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h     |   23 +++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/key.h         |    2 ++
+ net/mac80211/mlme.c        |   32 ++++++++++++++++++++++++++------
+ net/mac80211/rx.c          |    3 +++
+ net/mac80211/tx.c          |    3 +++
+ net/mac80211/util.c        |   28 ++++++++++++++++++++++++++++
+ 7 files changed, 87 insertions(+), 6 deletions(-)
+
+--- a/net/mac80211/rx.c	2011-07-11 14:17:41.000000000 +0200
++++ b/net/mac80211/rx.c	2011-07-11 16:00:43.000000000 +0200
+@@ -1019,6 +1019,9 @@ ieee80211_rx_h_decrypt(struct ieee80211_
+ 	}
+ 
+ 	if (rx->key) {
++		if (unlikely(rx->key->flags & KEY_FLAG_TAINTED))
++			return RX_DROP_MONITOR;
++
+ 		rx->key->tx_rx_count++;
+ 		/* TODO: add threshold stuff again */
+ 	} else {
+--- a/net/mac80211/tx.c	2011-07-11 14:16:46.000000000 +0200
++++ b/net/mac80211/tx.c	2011-07-11 16:00:50.000000000 +0200
+@@ -589,6 +589,9 @@ ieee80211_tx_h_select_key(struct ieee802
+ 			break;
+ 		}
+ 
++		if (unlikely(tx->key && tx->key->flags & KEY_FLAG_TAINTED))
++			return TX_DROP;
++
+ 		if (!skip_hw && tx->key &&
+ 		    tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
+ 			info->control.hw_key = &tx->key->conf;
+--- a/include/net/mac80211.h	2011-07-11 14:21:00.000000000 +0200
++++ b/include/net/mac80211.h	2011-07-11 15:59:47.000000000 +0200
+@@ -3024,6 +3024,29 @@ void ieee80211_beacon_loss(struct ieee80
+ void ieee80211_connection_loss(struct ieee80211_vif *vif);
+ 
+ /**
++ * ieee80211_resume_disconnect - disconnect from AP after resume
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ *
++ * Instructs mac80211 to disconnect from the AP after resume.
++ * Drivers can use this after WoWLAN if they know that the
++ * connection cannot be kept up, for example because keys were
++ * used while the device was asleep but the replay counters or
++ * similar cannot be retrieved from the device during resume.
++ *
++ * Note that due to implementation issues, if the driver uses
++ * the reconfiguration functionality during resume the interface
++ * will still be added as associated first during resume and then
++ * disconnect normally later.
++ *
++ * This function can only be called from the resume callback and
++ * the driver must not be holding any of its own locks while it
++ * calls this function, or at least not any locks it needs in the
++ * key configuration paths (if it supports HW crypto).
++ */
++void ieee80211_resume_disconnect(struct ieee80211_vif *vif);
++
++/**
+  * ieee80211_disable_dyn_ps - force mac80211 to temporarily disable dynamic psm
+  *
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+--- a/net/mac80211/ieee80211_i.h	2011-07-11 15:55:31.000000000 +0200
++++ b/net/mac80211/ieee80211_i.h	2011-07-11 15:56:02.000000000 +0200
+@@ -538,12 +538,14 @@ struct ieee80211_if_mesh {
+  * @IEEE80211_SDATA_DONT_BRIDGE_PACKETS: bridge packets between
+  *	associated stations and deliver multicast frames both
+  *	back to wireless media and to the local net stack.
++ * @IEEE80211_SDATA_DISCONNECT_RESUME: Disconnect after resume.
+  */
+ enum ieee80211_sub_if_data_flags {
+ 	IEEE80211_SDATA_ALLMULTI		= BIT(0),
+ 	IEEE80211_SDATA_PROMISC			= BIT(1),
+ 	IEEE80211_SDATA_OPERATING_GMODE		= BIT(2),
+ 	IEEE80211_SDATA_DONT_BRIDGE_PACKETS	= BIT(3),
++	IEEE80211_SDATA_DISCONNECT_RESUME	= BIT(4),
+ };
+ 
+ /**
+--- a/net/mac80211/util.c	2011-07-11 15:20:21.000000000 +0200
++++ b/net/mac80211/util.c	2011-07-11 17:06:18.000000000 +0200
+@@ -1334,6 +1334,34 @@ int ieee80211_reconfig(struct ieee80211_
+ 	return 0;
+ }
+ 
++void ieee80211_resume_disconnect(struct ieee80211_vif *vif)
++{
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_local *local;
++	struct ieee80211_key *key;
++
++	if (WARN_ON(!vif))
++		return;
++
++	sdata = vif_to_sdata(vif);
++	local = sdata->local;
++
++	if (WARN_ON(!local->resuming))
++		return;
++
++	if (WARN_ON(vif->type != NL80211_IFTYPE_STATION))
++		return;
++
++	sdata->flags |= IEEE80211_SDATA_DISCONNECT_RESUME;
++
++	mutex_lock(&local->key_mtx);
++	list_for_each_entry(key, &sdata->key_list, list) {
++		key->flags |= KEY_FLAG_TAINTED;
++	}
++	mutex_unlock(&local->key_mtx);
++}
++EXPORT_SYMBOL_GPL(ieee80211_resume_disconnect);
++
+ static int check_mgd_smps(struct ieee80211_if_managed *ifmgd,
+ 			  enum ieee80211_smps_mode *smps_mode)
+ {
+--- a/net/mac80211/key.h	2011-07-11 15:59:59.000000000 +0200
++++ b/net/mac80211/key.h	2011-07-11 16:00:25.000000000 +0200
+@@ -41,9 +41,11 @@ struct sta_info;
+  *
+  * @KEY_FLAG_UPLOADED_TO_HARDWARE: Indicates that this key is present
+  *	in the hardware for TX crypto hardware acceleration.
++ * @KEY_FLAG_TAINTED: Key is tainted and packets should be dropped.
+  */
+ enum ieee80211_internal_key_flags {
+ 	KEY_FLAG_UPLOADED_TO_HARDWARE	= BIT(0),
++	KEY_FLAG_TAINTED		= BIT(1),
+ };
+ 
+ enum ieee80211_internal_tkip_state {
+--- a/net/mac80211/mlme.c	2011-07-11 16:02:38.000000000 +0200
++++ b/net/mac80211/mlme.c	2011-07-11 17:56:33.000000000 +0200
+@@ -2052,7 +2052,7 @@ static void ieee80211_sta_timer(unsigned
+ }
+ 
+ static void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
+-					  u8 *bssid)
++					  u8 *bssid, u8 reason)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+@@ -2070,8 +2070,7 @@ static void ieee80211_sta_connection_los
+ 	 * but that's not a problem.
+ 	 */
+ 	ieee80211_send_deauth_disassoc(sdata, bssid,
+-			IEEE80211_STYPE_DEAUTH,
+-			WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
++			IEEE80211_STYPE_DEAUTH, reason,
+ 			NULL, true);
+ 	mutex_lock(&ifmgd->mtx);
+ }
+@@ -2117,7 +2116,8 @@ void ieee80211_sta_work(struct ieee80211
+ 					    " AP %pM, disconnecting.\n",
+ 					    sdata->name, bssid);
+ #endif
+-				ieee80211_sta_connection_lost(sdata, bssid);
++				ieee80211_sta_connection_lost(sdata, bssid,
++					WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+ 			}
+ 		} else if (time_is_after_jiffies(ifmgd->probe_timeout))
+ 			run_again(ifmgd, ifmgd->probe_timeout);
+@@ -2129,7 +2129,8 @@ void ieee80211_sta_work(struct ieee80211
+ 				    sdata->name,
+ 				    bssid, probe_wait_ms);
+ #endif
+-			ieee80211_sta_connection_lost(sdata, bssid);
++			ieee80211_sta_connection_lost(sdata, bssid,
++				WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+ 		} else if (ifmgd->probe_send_count < max_tries) {
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 			wiphy_debug(local->hw.wiphy,
+@@ -2151,7 +2152,8 @@ void ieee80211_sta_work(struct ieee80211
+ 				    sdata->name,
+ 				    bssid, probe_wait_ms);
+ 
+-			ieee80211_sta_connection_lost(sdata, bssid);
++			ieee80211_sta_connection_lost(sdata, bssid,
++				WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
+ 		}
+ 	}
+ 
+@@ -2241,6 +2243,24 @@ void ieee80211_sta_restart(struct ieee80
+ 	if (!ifmgd->associated)
+ 		return;
+ 
++	if (sdata->flags & IEEE80211_SDATA_DISCONNECT_RESUME) {
++		sdata->flags &= ~IEEE80211_SDATA_DISCONNECT_RESUME;
++		mutex_lock(&ifmgd->mtx);
++		if (ifmgd->associated) {
++#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
++			wiphy_debug(sdata->local->hw.wiphy,
++				    "%s: driver requested disconnect after resume.\n",
++				    sdata->name);
++#endif
++			ieee80211_sta_connection_lost(sdata,
++				ifmgd->associated->bssid,
++				WLAN_REASON_UNSPECIFIED);
++			mutex_unlock(&ifmgd->mtx);
++			return;
++		}
++		mutex_unlock(&ifmgd->mtx);
++	}
++
+ 	if (test_and_clear_bit(TMR_RUNNING_TIMER, &ifmgd->timers_running))
+ 		add_timer(&ifmgd->timer);
+ 	if (test_and_clear_bit(TMR_RUNNING_CHANSW, &ifmgd->timers_running))
+
+
