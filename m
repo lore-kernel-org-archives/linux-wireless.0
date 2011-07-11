@@ -1,86 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:39766 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752383Ab1GSH03 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:45327 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756900Ab1GKNDJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 03:26:29 -0400
-Received: by mail-fx0-f52.google.com with SMTP id 18so7996352fxd.11
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2011 00:26:28 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org, Pavel Roskin <proski@gnu.org>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/2] b43: bcma: get DMA translation bits
-Date: Tue, 19 Jul 2011 10:05:01 +0200
-Message-Id: <1311062701-3455-2-git-send-email-zajec5@gmail.com> (sfid-20110719_092631_930118_CFC03DEE)
-In-Reply-To: <1311062701-3455-1-git-send-email-zajec5@gmail.com>
-References: <1311062701-3455-1-git-send-email-zajec5@gmail.com>
+	Mon, 11 Jul 2011 09:03:09 -0400
+From: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	<stable@kernel.org>
+Subject: [PATCH 1/1] ath9k_hw: Fix incorrect key_miss handling
+Date: Tue, 12 Jul 2011 00:02:56 +0530
+Message-ID: <1310409176-3083-1-git-send-email-senthilb@qca.qualcomm.com> (sfid-20110711_150314_896417_4563AAE5)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add some missing defines by the way.
+Decryping frames on key_miss handling shouldn't be done for Michael
+MIC failed frames as h/w would have already decrypted such frames
+successfully anyway.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Also leaving CRC and PHY error(where the frame is going to be dropped
+anyway), we are left to prcoess Decrypt error for which s/w decrypt is
+selected anway and so having key_miss as a separate check doesn't serve
+anything. So making key_miss handling mutually exlusive with other RX
+status handling makes much more sense.
+
+This patch addresses an issue with STA not reporting MIC failure events
+resulting in STA being disconnected immediately.
+
+Cc: stable@kernel.org
+Signed-off-by: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
 ---
- drivers/net/wireless/b43/dma.c |    5 +++++
- drivers/net/wireless/b43/dma.h |    4 ++++
- 2 files changed, 9 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |    3 +--
+ drivers/net/wireless/ath/ath9k/mac.c        |    3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
-index ce572ae..0bedc30 100644
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -1057,6 +1057,11 @@ int b43_dma_init(struct b43_wldev *dev)
- 		return err;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 575e185..8ff0b88 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -625,8 +625,7 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+ 			rxs->rs_status |= ATH9K_RXERR_DECRYPT;
+ 		else if (rxsp->status11 & AR_MichaelErr)
+ 			rxs->rs_status |= ATH9K_RXERR_MIC;
+-
+-		if (rxsp->status11 & AR_KeyMiss)
++		else if (rxsp->status11 & AR_KeyMiss)
+ 			rxs->rs_status |= ATH9K_RXERR_DECRYPT;
+ 	}
  
- 	switch (dev->dev->bus_type) {
-+#ifdef CONFIG_B43_BCMA
-+	case B43_BUS_BCMA:
-+		dma->translation = bcma_dma_translation(dev->dev->bdev->bus);
-+		break;
-+#endif
- #ifdef CONFIG_B43_SSB
- 	case B43_BUS_SSB:
- 		dma->translation = ssb_dma_translation(dev->dev->sdev);
-diff --git a/drivers/net/wireless/b43/dma.h b/drivers/net/wireless/b43/dma.h
-index e8a80a1..cdf8709 100644
---- a/drivers/net/wireless/b43/dma.h
-+++ b/drivers/net/wireless/b43/dma.h
-@@ -20,6 +20,7 @@
- #define		B43_DMA32_TXSUSPEND			0x00000002
- #define		B43_DMA32_TXLOOPBACK		0x00000004
- #define		B43_DMA32_TXFLUSH			0x00000010
-+#define		B43_DMA32_TXPARITYDISABLE		0x00000800
- #define		B43_DMA32_TXADDREXT_MASK		0x00030000
- #define		B43_DMA32_TXADDREXT_SHIFT		16
- #define B43_DMA32_TXRING				0x04
-@@ -44,6 +45,7 @@
- #define		B43_DMA32_RXFROFF_MASK		0x000000FE
- #define		B43_DMA32_RXFROFF_SHIFT		1
- #define		B43_DMA32_RXDIRECTFIFO		0x00000100
-+#define		B43_DMA32_RXPARITYDISABLE		0x00000800
- #define		B43_DMA32_RXADDREXT_MASK		0x00030000
- #define		B43_DMA32_RXADDREXT_SHIFT		16
- #define B43_DMA32_RXRING				0x14
-@@ -84,6 +86,7 @@ struct b43_dmadesc32 {
- #define		B43_DMA64_TXSUSPEND			0x00000002
- #define		B43_DMA64_TXLOOPBACK		0x00000004
- #define		B43_DMA64_TXFLUSH			0x00000010
-+#define		B43_DMA64_TXPARITYDISABLE		0x00000800
- #define		B43_DMA64_TXADDREXT_MASK		0x00030000
- #define		B43_DMA64_TXADDREXT_SHIFT		16
- #define B43_DMA64_TXINDEX				0x04
-@@ -111,6 +114,7 @@ struct b43_dmadesc32 {
- #define		B43_DMA64_RXFROFF_MASK		0x000000FE
- #define		B43_DMA64_RXFROFF_SHIFT		1
- #define		B43_DMA64_RXDIRECTFIFO		0x00000100
-+#define		B43_DMA64_RXPARITYDISABLE		0x00000800
- #define		B43_DMA64_RXADDREXT_MASK		0x00030000
- #define		B43_DMA64_RXADDREXT_SHIFT		16
- #define B43_DMA64_RXINDEX				0x24
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index c2091f1..b6b523a 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -645,8 +645,7 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 			rs->rs_status |= ATH9K_RXERR_DECRYPT;
+ 		else if (ads.ds_rxstatus8 & AR_MichaelErr)
+ 			rs->rs_status |= ATH9K_RXERR_MIC;
+-
+-		if (ads.ds_rxstatus8 & AR_KeyMiss)
++		else if (ads.ds_rxstatus8 & AR_KeyMiss)
+ 			rs->rs_status |= ATH9K_RXERR_DECRYPT;
+ 	}
+ 
 -- 
-1.7.3.4
+1.7.4.4
 
