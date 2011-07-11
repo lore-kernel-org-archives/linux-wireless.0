@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:48695 "HELO
-	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753570Ab1G0QMA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2011 12:12:00 -0400
-Date: Wed, 27 Jul 2011 09:11:50 -0700
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	Tony Houghton <h@realh.co.uk>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	Adrian Chadd <adrian@freebsd.org>, linux-pci@vger.kernel.org,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	e1000-devel@lists.sourceforge.net
-Subject: Re: [RFC/RFT v2 00/12] ath9k: ASPM fixes
-Message-ID: <20110727091150.4e517f30@jbarnes-desktop> (sfid-20110727_181205_331563_39FEB027)
-In-Reply-To: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
-References: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from c60.cesmail.net ([216.154.195.49]:57877 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757489Ab1GKVEb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2011 17:04:31 -0400
+Message-ID: <4E1B655E.6010209@gnu.org> (sfid-20110711_230435_306844_151F40E2)
+Date: Mon, 11 Jul 2011 17:04:30 -0400
+From: Pavel Roskin <proski@gnu.org>
+MIME-Version: 1.0
+To: Sven Neumann <s.neumann@raumfeld.com>
+CC: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: kernel NULL pointer dereference in lbs_set_11d_domain_info (3.0-rc6)
+References: <1310399981.11331.4.camel@sven>
+In-Reply-To: <1310399981.11331.4.camel@sven>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 27 Jul 2011 14:14:47 +0200
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+On 07/11/2011 11:59 AM, Sven Neumann wrote:
+> Hi,
+>
+> we are using a PXA device and I am observing sporadic crashes after
+> resume from suspend with 3.0-rc6:
+>
+>
+> [ 1296.027645] PM: resume of devices complete after 296.440 msecs
+> [ 1296.284633] Restarting tasks ...
+> [ 1296.320276] done.
+> [ 1296.421618] mmc0: new SDIO card at address 0001
+> [ 1297.312570] libertas_sdio mmc0:0001:1: (unregistered net_device): 00:19:88:11:db:67, fw 9.70.7p0, cap 0x00000303
 
-> This patch series try to fix ath9k ASPM. Some of patches are cleanup
-> only or do merging common code (with e1000e driver).
-> 
-> With CONFIG_PCIEASPM it's possible to change ASPM settings on runtime
-> via /sys/module/pcie_aspm/parameters/policy . However most drivers
-> I looked at assume this setting is constant. I add a callback to pci
-> driver to inform about the change, and allow driver to do needed hw
-> related changes. Currently only ath9k implement the callback, but
-> I think it will be useful for other drivers (i.e. iwlwifi, rtlwifi)
-> that do some own ASPM handling.
-> 
-> These patches needs wide testing as they may work on some systems
-> and not work on others, that can depend on PCIe bridges.
+I think the trouble starts with "unregistered net_device".  It looks 
+like some structures in memory are corrupted.  Debugging that may be 
+tricky.  I think the first step would be to print stack where that 
+message is printed in lbs_update_hw_spec().  Also, add statements to 
+print priv and priv->dev at that point.  You should be able to compare 
+the pointers before and after the suspend.
 
-These look fine, I remember seeing a place where e1000e could use this
-just recently and it looks like you took care of it.
-
-We may be able to sneak this in to 3.1 to make things easier on the
-dependent drivers, but it'll have to wait until I send my pull request
-for the first batch of PCI changes (probably today).
+Once you find what is corrupted, go up the stack and see where the 
+corruption happens.
 
 -- 
-Jesse Barnes, Intel Open Source Technology Center
+Regards,
+Pavel Roskin
