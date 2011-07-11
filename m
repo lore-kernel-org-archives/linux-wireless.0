@@ -1,67 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:61631 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693Ab1G2PxO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 11:53:14 -0400
-Date: Fri, 29 Jul 2011 10:53:12 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: liao.hubertt@gmail.com, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Fix kernel oops on ARM SOC
-Message-ID: <4e32d768.rwWPDWLrMCef6f5m%Larry.Finger@lwfinger.net> (sfid-20110729_175317_308437_AD67C7DF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:1026 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756174Ab1GKXXB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2011 19:23:01 -0400
+Subject: Re: [PATCH] libertas: fix errors in functions accessing module
+ registers
+From: Dan Williams <dcbw@redhat.com>
+To: Olivier Sobrie <olivier@sobrie.be>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Date: Mon, 11 Jul 2011 18:26:24 -0500
+In-Reply-To: <1310209025-16516-1-git-send-email-olivier@sobrie.be>
+References: <1310209025-16516-1-git-send-email-olivier@sobrie.be>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1310426786.3122.4.camel@dcbw.foobar.com> (sfid-20110712_012305_883360_A5123E22)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver uses information from the self member of the pci_bus struct to
-get information regarding the bridge to which the PCIe device is attached.
-Unfortunately, this member is not established on all architectures, which
-leads to a kernel oops.
+On Sat, 2011-07-09 at 12:57 +0200, Olivier Sobrie wrote:
+> Problems located in the two functions lbs_set_reg() and lbs_get_reg():
+> - The offset field of struct cmd_ds_reg_access was not filled in
+> - The test on the return code of lbs_cmd_with_response() in function
+>   lbs_get_reg() was inverted
+> 
+> Signed-off-by: Olivier Sobrie <olivier@sobrie.be>
 
-Skipping the entire block that uses the self member to determine the bridge
-vendor will only affect RTL8192DE devices as that driver sets the ASPM support
-flag differently when the bridge vendor is Intel. If the self member is
-available, there is no functional change.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-This patch fixes Bugzilla No. 40212.
+> ---
+>  drivers/net/wireless/libertas/cmd.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+> index 71c8f3f..3e8123c 100644
+> --- a/drivers/net/wireless/libertas/cmd.c
+> +++ b/drivers/net/wireless/libertas/cmd.c
+> @@ -873,6 +873,7 @@ int lbs_get_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 *value)
+>  	memset(&cmd, 0, sizeof(cmd));
+>  	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
+>  	cmd.action = cpu_to_le16(CMD_ACT_GET);
+> +	cmd.offset = cpu_to_le16(offset);
+>  
+>  	if (reg != CMD_MAC_REG_ACCESS &&
+>  	    reg != CMD_BBP_REG_ACCESS &&
+> @@ -882,7 +883,7 @@ int lbs_get_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 *value)
+>  	}
+>  
+>  	ret = lbs_cmd_with_response(priv, reg, &cmd);
+> -	if (ret) {
+> +	if (!ret) {
+>  		if (reg == CMD_BBP_REG_ACCESS || reg == CMD_RF_REG_ACCESS)
+>  			*value = cmd.value.bbp_rf;
+>  		else if (reg == CMD_MAC_REG_ACCESS)
+> @@ -915,6 +916,7 @@ int lbs_set_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 value)
+>  	memset(&cmd, 0, sizeof(cmd));
+>  	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
+>  	cmd.action = cpu_to_le16(CMD_ACT_SET);
+> +	cmd.offset = cpu_to_le16(offset);
+>  
+>  	if (reg == CMD_BBP_REG_ACCESS || reg == CMD_RF_REG_ACCESS)
+>  		cmd.value.bbp_rf = (u8) (value & 0xFF);
 
-Reported-by: Hubert Liao <liao.hubertt@gmail.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@kernel.org> [back to 2.6.38]
----
 
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
-@@ -1696,15 +1696,17 @@ static bool _rtl_pci_find_adapter(struct
- 	pcipriv->ndis_adapter.devnumber = PCI_SLOT(pdev->devfn);
- 	pcipriv->ndis_adapter.funcnumber = PCI_FUNC(pdev->devfn);
- 
--	/*find bridge info */
--	pcipriv->ndis_adapter.pcibridge_vendorid = bridge_pdev->vendor;
--	for (tmp = 0; tmp < PCI_BRIDGE_VENDOR_MAX; tmp++) {
--		if (bridge_pdev->vendor == pcibridge_vendors[tmp]) {
--			pcipriv->ndis_adapter.pcibridge_vendor = tmp;
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
--				 ("Pci Bridge Vendor is found index: %d\n",
--				  tmp));
--			break;
-+	if (bridge_pdev) {
-+		/*find bridge info if available */
-+		pcipriv->ndis_adapter.pcibridge_vendorid = bridge_pdev->vendor;
-+		for (tmp = 0; tmp < PCI_BRIDGE_VENDOR_MAX; tmp++) {
-+			if (bridge_pdev->vendor == pcibridge_vendors[tmp]) {
-+				pcipriv->ndis_adapter.pcibridge_vendor = tmp;
-+				RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
-+					 ("Pci Bridge Vendor is found index:"
-+					 " %d\n", tmp));
-+				break;
-+			}
- 		}
- 	}
- 
