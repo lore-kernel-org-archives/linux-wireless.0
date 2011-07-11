@@ -1,48 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:59698 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752979Ab1GFP0t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2011 11:26:49 -0400
-Received: by fxd18 with SMTP id 18so194768fxd.11
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 08:26:48 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: select BLOCKIO for BCMA
-Date: Wed,  6 Jul 2011 18:05:14 +0200
-Message-Id: <1309968314-11634-1-git-send-email-zajec5@gmail.com> (sfid-20110706_172654_806128_E720F378)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from msr3.hinet.net ([168.95.4.103]:38309 "EHLO msr3.hinet.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755922Ab1GKMQf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2011 08:16:35 -0400
+From: Ali Bahar <ali@internetdog.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, WLAN FAE <wlanfae@realtek.com>,
+	Ali Bahar <ali@internetdog.org>
+Subject: [PATCH 1/2] staging: r8712u: Sets to SSID, and to AP MAC#, can now be done when the interface is Down.
+Date: Mon, 11 Jul 2011 18:07:55 +0800
+Message-Id: <1310378876-1311-2-git-send-email-ali@internetDog.org> (sfid-20110711_141638_163843_54A164DE)
+In-Reply-To: <1310378876-1311-1-git-send-email-ali@internetDog.org>
+References: <1310378876-1311-1-git-send-email-ali@internetDog.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We want PIO as fallback for BCMA as well.
+The original Realtek code assumed that ioctl Sets get done after the
+interface is Up. This included the set to Essid and to the AP MAC#;
+and it fit Realtek's installation procedure. But there is no such
+necessity for the adapter, and no stated requirement found
+elsewhere. Also, wireless drivers typically permit this.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+A typical error message used to be:
+Error for wireless request "Set ESSID" (8B1A) :
+    SET failed on device wlan0 ; Operation not permitted.
+
+Signed-off-by: Ali Bahar <ali@internetDog.org>
 ---
- drivers/net/wireless/b43/Kconfig |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Larry,
 
-diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
-index 0c29c74..17f9dab 100644
---- a/drivers/net/wireless/b43/Kconfig
-+++ b/drivers/net/wireless/b43/Kconfig
-@@ -90,6 +90,12 @@ config B43_SDIO
+this matches _your_ patch, of course. So it is a good candidate for an initial
+submission -- to ensure that I don't fall foul of the process.
+
+Ali
+
+---
+ drivers/staging/rtl8712/drv_types.h           |    5 +++++
+ drivers/staging/rtl8712/rtl871x_ioctl_linux.c |   25 +++++++++++++++++++++----
+ 2 files changed, 26 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/rtl8712/drv_types.h b/drivers/staging/rtl8712/drv_types.h
+index 3bb66dc..fd50f78 100644
+--- a/drivers/staging/rtl8712/drv_types.h
++++ b/drivers/staging/rtl8712/drv_types.h
+@@ -118,6 +118,11 @@ struct dvobj_priv {
+ 	struct usb_device *pusbdev;
+ };
  
- #Data transfers to the device via PIO. We want it as a fallback even
- # if we can do DMA.
-+config B43_BCMA_PIO
-+	bool
-+	depends on B43_BCMA
-+	select BCMA_BLOCKIO
-+	default y
-+
- config B43_PIO
- 	bool
- 	depends on B43
++/**
++ * struct _adapter - the main adapter structure for this device.
++ *
++ * bup: True indicates that the interface is Up.
++ */
+ struct _adapter {
+ 	struct	dvobj_priv dvobjpriv;
+ 	struct	mlme_priv mlmepriv;
+diff --git a/drivers/staging/rtl8712/rtl871x_ioctl_linux.c b/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
+index 40e6b5c..59bdab1 100644
+--- a/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
++++ b/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
+@@ -975,6 +975,13 @@ static int r871x_wx_set_priv(struct net_device *dev,
+  * s2. set_802_11_authentication_mode()
+  * s3. set_802_11_encryption_mode()
+  * s4. set_802_11_bssid()
++ *
++ * This function intends to handle the Set AP command, which specifies the
++ * MAC# of a preferred Access Point.
++ * Currently, the request comes via Wireless Extensions' SIOCSIWAP ioctl.
++ *
++ * For this operation to succeed, there is no need for the interface to be Up.
++ *
+  */
+ static int r8711_wx_set_wap(struct net_device *dev,
+ 			 struct iw_request_info *info,
+@@ -992,8 +999,6 @@ static int r8711_wx_set_wap(struct net_device *dev,
+ 	struct wlan_network *pnetwork = NULL;
+ 	enum NDIS_802_11_AUTHENTICATION_MODE	authmode;
+ 
+-	if (padapter->bup == false)
+-		return -1;
+ 	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY) == true)
+ 		return -1;
+ 	if (check_fwstate(pmlmepriv, _FW_UNDER_LINKING) == true)
+@@ -1074,6 +1079,14 @@ static int r871x_wx_set_mlme(struct net_device *dev,
+ 	return ret;
+ }
+ 
++/**
++ *
++ * This function intends to handle the Set Scan command.
++ * Currently, the request comes via Wireless Extensions' SIOCSIWSCAN ioctl.
++ *
++ * For this operation to succeed, the interface is brought Up beforehand.
++ *
++ */
+ static int r8711_wx_set_scan(struct net_device *dev,
+ 			struct iw_request_info *a,
+ 			union iwreq_data *wrqu, char *extra)
+@@ -1169,6 +1182,12 @@ static int r8711_wx_get_scan(struct net_device *dev,
+  * s2. set_802_11_authenticaion_mode()
+  * s3. set_802_11_encryption_mode()
+  * s4. set_802_11_ssid()
++ *
++ * This function intends to handle the Set ESSID command.
++ * Currently, the request comes via the Wireless Extensions' SIOCSIWESSID ioctl.
++ *
++ * For this operation to succeed, there is no need for the interface to be Up.
++ *
+  */
+ static int r8711_wx_set_essid(struct net_device *dev,
+ 				struct iw_request_info *a,
+@@ -1184,8 +1203,6 @@ static int r8711_wx_set_essid(struct net_device *dev,
+ 	struct list_head *phead;
+ 	u32 len;
+ 
+-	if (padapter->bup == false)
+-		return -1;
+ 	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY))
+ 		return -1;
+ 	if (check_fwstate(pmlmepriv, _FW_UNDER_LINKING))
 -- 
-1.7.3.4
+1.7.6
 
