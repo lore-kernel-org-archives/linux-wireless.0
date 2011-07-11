@@ -1,271 +1,235 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:37710 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751835Ab1GQVnZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2011 17:43:25 -0400
-Subject: [PATCH v3 17/23] ath6kl: add node.c
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: joe@perches.com, devel@linuxdriverproject.org, gregkh@suse.de,
-	error27@gmail.com
-Date: Mon, 18 Jul 2011 00:43:18 +0300
-Message-ID: <20110717214318.23534.20477.stgit@localhost6.localdomain6> (sfid-20110717_234327_195678_1A1B0CF4)
-In-Reply-To: <20110717213832.23534.75274.stgit@localhost6.localdomain6>
-References: <20110717213832.23534.75274.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:63322 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756174Ab1GKXY6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2011 19:24:58 -0400
+Subject: Re: [PATCH] libertas: fix handling of command timeout, completion
+ and interruption
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Drake <dsd@laptop.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+Date: Mon, 11 Jul 2011 18:28:24 -0500
+In-Reply-To: <20110709144125.A0FB49D401C@zog.reactivated.net>
+References: <20110709144125.A0FB49D401C@zog.reactivated.net>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1310426905.3122.5.camel@dcbw.foobar.com> (sfid-20110712_012500_412735_A201FC83)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/node.c |  238 ++++++++++++++++++++++++++++++++
- 1 files changed, 238 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/node.c
+On Sat, 2011-07-09 at 15:41 +0100, Daniel Drake wrote:
+> When commands time out, corruption ensues. As lbs_complete_command()
+> is called without locking, the command node is mistakenly freed twice.
+> Also fixed up locking here in a few other places.
+> 
+> The nature of command timeout may be that the card didn't even
+> acknowledge receipt of the request. Detect this case and reset dnld_sent
+> so that other commands don't hang forever.
+> 
+> When cmdnodes are moved between the free list and the pending list,
+> their list heads should be reinitialized. Fixed this.
+> 
+> Sometimes commands are completed without actually submitting them or
+> removing them from cmdpendingq. We must remember to remove them from
+> cmdpendingq in these cases, so handle this in lbs_complete_command().
+> 
+> Harmless signals generated during suspend/resume were interrupting
+> lbs_cmd. Convert to an uninterruptible sleep to avoid this.
+> 
+> lbs_thread must be woken up every time there is some new work to do.
+> I found that when 2 commands are queued, ther completion of the first
+> command would not wake up lbs_thread to submit the second. Poke lbs_thread
+> at the end of lbs_complete_command() to fix this.
+> 
+> Signed-off-by: Daniel Drake <dsd@laptop.org>
 
-diff --git a/drivers/net/wireless/ath/ath6kl/node.c b/drivers/net/wireless/ath/ath6kl/node.c
-new file mode 100644
-index 0000000..b0f9ba2
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath6kl/node.c
-@@ -0,0 +1,238 @@
-+/*
-+ * Copyright (c) 2004-2011 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "htc.h"
-+#include "wmi.h"
-+#include "debug.h"
-+
-+struct bss *wlan_node_alloc(int wh_size)
-+{
-+	struct bss *ni;
-+
-+	ni = kzalloc(sizeof(struct bss), GFP_ATOMIC);
-+
-+	if ((ni != NULL) && wh_size) {
-+		ni->ni_buf = kmalloc(wh_size, GFP_ATOMIC);
-+		if (ni->ni_buf == NULL) {
-+			kfree(ni);
-+			return NULL;
-+		}
-+	}
-+
-+	return ni;
-+}
-+
-+void wlan_node_free(struct bss *ni)
-+{
-+	kfree(ni->ni_buf);
-+	kfree(ni);
-+}
-+
-+void wlan_setup_node(struct ath6kl_node_table *nt, struct bss *ni,
-+		     const u8 *mac_addr)
-+{
-+	int hash;
-+
-+	memcpy(ni->ni_macaddr, mac_addr, ETH_ALEN);
-+	hash = ATH6KL_NODE_HASH(mac_addr);
-+	ni->ni_refcnt = 1;
-+
-+	ni->ni_tstamp = jiffies_to_msecs(jiffies);
-+	ni->ni_actcnt = WLAN_NODE_INACT_CNT;
-+
-+	spin_lock_bh(&nt->nt_nodelock);
-+
-+	/* insert at the end of the node list */
-+	ni->ni_list_next = NULL;
-+	ni->ni_list_prev = nt->nt_node_last;
-+	if (nt->nt_node_last != NULL)
-+		nt->nt_node_last->ni_list_next = ni;
-+
-+	nt->nt_node_last = ni;
-+	if (nt->nt_node_first == NULL)
-+		nt->nt_node_first = ni;
-+
-+	/* insert into the hash list */
-+	ni->ni_hash_next = nt->nt_hash[hash];
-+	if (ni->ni_hash_next != NULL)
-+		nt->nt_hash[hash]->ni_hash_prev = ni;
-+
-+	ni->ni_hash_prev = NULL;
-+	nt->nt_hash[hash] = ni;
-+
-+	spin_unlock_bh(&nt->nt_nodelock);
-+}
-+
-+struct bss *wlan_find_node(struct ath6kl_node_table *nt,
-+			   const u8 *mac_addr)
-+{
-+	struct bss *ni, *found_ni = NULL;
-+	int hash;
-+
-+	spin_lock_bh(&nt->nt_nodelock);
-+
-+	hash = ATH6KL_NODE_HASH(mac_addr);
-+	for (ni = nt->nt_hash[hash]; ni; ni = ni->ni_hash_next) {
-+		if (memcmp(ni->ni_macaddr, mac_addr, ETH_ALEN) == 0) {
-+			ni->ni_refcnt++;
-+			found_ni = ni;
-+			break;
-+		}
-+	}
-+
-+	spin_unlock_bh(&nt->nt_nodelock);
-+
-+	return found_ni;
-+}
-+
-+void wlan_node_reclaim(struct ath6kl_node_table *nt, struct bss *ni)
-+{
-+	int hash;
-+
-+	spin_lock_bh(&nt->nt_nodelock);
-+
-+	if (ni->ni_list_prev == NULL)
-+		/* fix list head */
-+		nt->nt_node_first = ni->ni_list_next;
-+	else
-+		ni->ni_list_prev->ni_list_next = ni->ni_list_next;
-+
-+	if (ni->ni_list_next == NULL)
-+		/* fix list tail */
-+		nt->nt_node_last = ni->ni_list_prev;
-+	else
-+		ni->ni_list_next->ni_list_prev = ni->ni_list_prev;
-+
-+	if (ni->ni_hash_prev == NULL) {
-+		/* first in list so fix the list head */
-+		hash = ATH6KL_NODE_HASH(ni->ni_macaddr);
-+		nt->nt_hash[hash] = ni->ni_hash_next;
-+	} else {
-+		ni->ni_hash_prev->ni_hash_next = ni->ni_hash_next;
-+	}
-+
-+	if (ni->ni_hash_next != NULL)
-+		ni->ni_hash_next->ni_hash_prev = ni->ni_hash_prev;
-+
-+	wlan_node_free(ni);
-+
-+	spin_unlock_bh(&nt->nt_nodelock);
-+}
-+
-+static void wlan_node_dec_free(struct bss *ni)
-+{
-+	if ((ni->ni_refcnt--) == 1)
-+		wlan_node_free(ni);
-+}
-+
-+void wlan_free_allnodes(struct ath6kl_node_table *nt)
-+{
-+	struct bss *ni;
-+
-+	while ((ni = nt->nt_node_first) != NULL)
-+		wlan_node_reclaim(nt, ni);
-+}
-+
-+void wlan_iterate_nodes(struct ath6kl_node_table *nt,
-+			void (*f) (void *arg, struct bss *), void *arg)
-+{
-+	struct bss *ni;
-+
-+	spin_lock_bh(&nt->nt_nodelock);
-+	for (ni = nt->nt_node_first; ni; ni = ni->ni_list_next) {
-+			ni->ni_refcnt++;
-+			(*f) (arg, ni);
-+			wlan_node_dec_free(ni);
-+	}
-+	spin_unlock_bh(&nt->nt_nodelock);
-+}
-+
-+void wlan_node_table_init(void *wmi, struct ath6kl_node_table *nt)
-+{
-+	ath6kl_dbg(ATH6KL_DBG_WLAN_NODE, "node table = 0x%lx\n",
-+		   (unsigned long)nt);
-+
-+	memset(nt, 0, sizeof(struct ath6kl_node_table));
-+
-+	spin_lock_init(&nt->nt_nodelock);
-+
-+	nt->nt_wmi = wmi;
-+	nt->nt_node_age = WLAN_NODE_INACT_TIMEOUT_MSEC;
-+}
-+
-+void wlan_refresh_inactive_nodes(struct ath6kl_node_table *nt)
-+{
-+	struct bss *bss;
-+	u8 my_bssid[ETH_ALEN];
-+	u32 now;
-+
-+	ath6kl_wmi_get_current_bssid(nt->nt_wmi, my_bssid);
-+
-+	now = jiffies_to_msecs(jiffies);
-+	bss = nt->nt_node_first;
-+	while (bss != NULL) {
-+		/* refresh all nodes except the current bss */
-+		if (memcmp(my_bssid, bss->ni_macaddr, sizeof(my_bssid)) != 0) {
-+			if (((now - bss->ni_tstamp) > nt->nt_node_age)
-+			    || --bss->ni_actcnt == 0) {
-+				wlan_node_reclaim(nt, bss);
-+			}
-+		}
-+		bss = bss->ni_list_next;
-+	}
-+}
-+
-+void wlan_node_table_cleanup(struct ath6kl_node_table *nt)
-+{
-+	wlan_free_allnodes(nt);
-+}
-+
-+struct bss *wlan_find_ssid_node(struct ath6kl_node_table *nt, u8 * ssid,
-+				u32 ssid_len, bool is_wpa2, bool match_ssid)
-+{
-+	struct bss *ni, *found_ni = NULL;
-+	u8 *ie_ssid;
-+
-+	spin_lock_bh(&nt->nt_nodelock);
-+
-+	for (ni = nt->nt_node_first; ni; ni = ni->ni_list_next) {
-+
-+		ie_ssid = ni->ni_cie.ie_ssid;
-+
-+		if ((ie_ssid[1] <= IEEE80211_MAX_SSID_LEN) &&
-+		    (memcmp(ssid, &ie_ssid[2], ssid_len) == 0)) {
-+
-+				if (match_ssid ||
-+				    (is_wpa2 && ni->ni_cie.ie_rsn != NULL) ||
-+				    (!is_wpa2 && ni->ni_cie.ie_wpa != NULL)) {
-+					ni->ni_refcnt++;
-+					found_ni = ni;
-+					break;
-+				}
-+		}
-+	}
-+
-+	spin_unlock_bh(&nt->nt_nodelock);
-+
-+	return found_ni;
-+}
-+
-+void wlan_node_return(struct ath6kl_node_table *nt, struct bss *ni)
-+{
-+	spin_lock_bh(&nt->nt_nodelock);
-+	wlan_node_dec_free(ni);
-+	spin_unlock_bh(&nt->nt_nodelock);
-+}
+Acked-by: Dan Williams <dcbw@redhat.com>
+
+> ---
+>  drivers/net/wireless/libertas/cmd.c     |   42 ++++++++++++++++++++++---------
+>  drivers/net/wireless/libertas/cmd.h     |    2 +
+>  drivers/net/wireless/libertas/cmdresp.c |    6 ++--
+>  drivers/net/wireless/libertas/main.c    |   12 +++++++-
+>  4 files changed, 45 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+> index 71c8f3f..0e89d23 100644
+> --- a/drivers/net/wireless/libertas/cmd.c
+> +++ b/drivers/net/wireless/libertas/cmd.c
+> @@ -1067,16 +1067,34 @@ static void lbs_cleanup_and_insert_cmd(struct lbs_private *priv,
+>  	spin_unlock_irqrestore(&priv->driver_lock, flags);
+>  }
+>  
+> -void lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
+> -			  int result)
+> +void __lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
+> +			    int result)
+>  {
+> +	/*
+> +	 * Normally, commands are removed from cmdpendingq before being
+> +	 * submitted. However, we can arrive here on alternative codepaths
+> +	 * where the command is still pending. Make sure the command really
+> +	 * isn't part of a list at this point.
+> +	 */
+> +	list_del_init(&cmd->list);
+> +
+>  	cmd->result = result;
+>  	cmd->cmdwaitqwoken = 1;
+> -	wake_up_interruptible(&cmd->cmdwait_q);
+> +	wake_up(&cmd->cmdwait_q);
+>  
+>  	if (!cmd->callback || cmd->callback == lbs_cmd_async_callback)
+>  		__lbs_cleanup_and_insert_cmd(priv, cmd);
+>  	priv->cur_cmd = NULL;
+> +	wake_up_interruptible(&priv->waitq);
+> +}
+> +
+> +void lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
+> +			  int result)
+> +{
+> +	unsigned long flags;
+> +	spin_lock_irqsave(&priv->driver_lock, flags);
+> +	__lbs_complete_command(priv, cmd, result);
+> +	spin_unlock_irqrestore(&priv->driver_lock, flags);
+>  }
+>  
+>  int lbs_set_radio(struct lbs_private *priv, u8 preamble, u8 radio_on)
+> @@ -1248,7 +1266,7 @@ static struct cmd_ctrl_node *lbs_get_free_cmd_node(struct lbs_private *priv)
+>  	if (!list_empty(&priv->cmdfreeq)) {
+>  		tempnode = list_first_entry(&priv->cmdfreeq,
+>  					    struct cmd_ctrl_node, list);
+> -		list_del(&tempnode->list);
+> +		list_del_init(&tempnode->list);
+>  	} else {
+>  		lbs_deb_host("GET_CMD_NODE: cmd_ctrl_node is not available\n");
+>  		tempnode = NULL;
+> @@ -1356,10 +1374,7 @@ int lbs_execute_next_command(struct lbs_private *priv)
+>  				    cpu_to_le16(PS_MODE_ACTION_EXIT_PS)) {
+>  					lbs_deb_host(
+>  					       "EXEC_NEXT_CMD: ignore ENTER_PS cmd\n");
+> -					spin_lock_irqsave(&priv->driver_lock, flags);
+> -					list_del(&cmdnode->list);
+>  					lbs_complete_command(priv, cmdnode, 0);
+> -					spin_unlock_irqrestore(&priv->driver_lock, flags);
+>  
+>  					ret = 0;
+>  					goto done;
+> @@ -1369,10 +1384,7 @@ int lbs_execute_next_command(struct lbs_private *priv)
+>  				    (priv->psstate == PS_STATE_PRE_SLEEP)) {
+>  					lbs_deb_host(
+>  					       "EXEC_NEXT_CMD: ignore EXIT_PS cmd in sleep\n");
+> -					spin_lock_irqsave(&priv->driver_lock, flags);
+> -					list_del(&cmdnode->list);
+>  					lbs_complete_command(priv, cmdnode, 0);
+> -					spin_unlock_irqrestore(&priv->driver_lock, flags);
+>  					priv->needtowakeup = 1;
+>  
+>  					ret = 0;
+> @@ -1384,7 +1396,7 @@ int lbs_execute_next_command(struct lbs_private *priv)
+>  			}
+>  		}
+>  		spin_lock_irqsave(&priv->driver_lock, flags);
+> -		list_del(&cmdnode->list);
+> +		list_del_init(&cmdnode->list);
+>  		spin_unlock_irqrestore(&priv->driver_lock, flags);
+>  		lbs_deb_host("EXEC_NEXT_CMD: sending command 0x%04x\n",
+>  			    le16_to_cpu(cmd->command));
+> @@ -1667,7 +1679,13 @@ int __lbs_cmd(struct lbs_private *priv, uint16_t command,
+>  	}
+>  
+>  	might_sleep();
+> -	wait_event_interruptible(cmdnode->cmdwait_q, cmdnode->cmdwaitqwoken);
+> +
+> +	/*
+> +	 * Be careful with signals here. A signal may be received as the system
+> +	 * goes into suspend or resume. We do not want this to interrupt the
+> +	 * command, so we perform an uninterruptible sleep.
+> +	 */
+> +	wait_event(cmdnode->cmdwait_q, cmdnode->cmdwaitqwoken);
+>  
+>  	spin_lock_irqsave(&priv->driver_lock, flags);
+>  	ret = cmdnode->result;
+> diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
+> index 7109d6b..b280ef7 100644
+> --- a/drivers/net/wireless/libertas/cmd.h
+> +++ b/drivers/net/wireless/libertas/cmd.h
+> @@ -59,6 +59,8 @@ int lbs_allocate_cmd_buffer(struct lbs_private *priv);
+>  int lbs_free_cmd_buffer(struct lbs_private *priv);
+>  
+>  int lbs_execute_next_command(struct lbs_private *priv);
+> +void __lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
+> +			    int result);
+>  void lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
+>  			  int result);
+>  int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len);
+> diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+> index 207fc36..7da8949 100644
+> --- a/drivers/net/wireless/libertas/cmdresp.c
+> +++ b/drivers/net/wireless/libertas/cmdresp.c
+> @@ -165,7 +165,7 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
+>  			lbs_deb_host("CMD_RESP: PS action 0x%X\n", action);
+>  		}
+>  
+> -		lbs_complete_command(priv, priv->cur_cmd, result);
+> +		__lbs_complete_command(priv, priv->cur_cmd, result);
+>  		spin_unlock_irqrestore(&priv->driver_lock, flags);
+>  
+>  		ret = 0;
+> @@ -186,7 +186,7 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
+>  			break;
+>  
+>  		}
+> -		lbs_complete_command(priv, priv->cur_cmd, result);
+> +		__lbs_complete_command(priv, priv->cur_cmd, result);
+>  		spin_unlock_irqrestore(&priv->driver_lock, flags);
+>  
+>  		ret = -1;
+> @@ -204,7 +204,7 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
+>  
+>  	if (priv->cur_cmd) {
+>  		/* Clean up and Put current command back to cmdfreeq */
+> -		lbs_complete_command(priv, priv->cur_cmd, result);
+> +		__lbs_complete_command(priv, priv->cur_cmd, result);
+>  	}
+>  	spin_unlock_irqrestore(&priv->driver_lock, flags);
+>  
+> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+> index 8c40949..a839de0 100644
+> --- a/drivers/net/wireless/libertas/main.c
+> +++ b/drivers/net/wireless/libertas/main.c
+> @@ -638,6 +638,14 @@ static void lbs_cmd_timeout_handler(unsigned long data)
+>  		    le16_to_cpu(priv->cur_cmd->cmdbuf->command));
+>  
+>  	priv->cmd_timed_out = 1;
+> +
+> +	/*
+> +	 * If the device didn't even acknowledge the command, reset the state
+> +	 * so that we don't block all future commands due to this one timeout.
+> +	 */
+> +	if (priv->dnld_sent == DNLD_CMD_SENT)
+> +		priv->dnld_sent = DNLD_RES_RECEIVED;
+> +
+>  	wake_up_interruptible(&priv->waitq);
+>  out:
+>  	spin_unlock_irqrestore(&priv->driver_lock, flags);
+> @@ -994,7 +1002,7 @@ void lbs_stop_card(struct lbs_private *priv)
+>  	list_for_each_entry(cmdnode, &priv->cmdpendingq, list) {
+>  		cmdnode->result = -ENOENT;
+>  		cmdnode->cmdwaitqwoken = 1;
+> -		wake_up_interruptible(&cmdnode->cmdwait_q);
+> +		wake_up(&cmdnode->cmdwait_q);
+>  	}
+>  
+>  	/* Flush the command the card is currently processing */
+> @@ -1002,7 +1010,7 @@ void lbs_stop_card(struct lbs_private *priv)
+>  		lbs_deb_main("clearing current command\n");
+>  		priv->cur_cmd->result = -ENOENT;
+>  		priv->cur_cmd->cmdwaitqwoken = 1;
+> -		wake_up_interruptible(&priv->cur_cmd->cmdwait_q);
+> +		wake_up(&priv->cur_cmd->cmdwait_q);
+>  	}
+>  	lbs_deb_main("done clearing commands\n");
+>  	spin_unlock_irqrestore(&priv->driver_lock, flags);
+
 
