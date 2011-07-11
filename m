@@ -1,74 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:63916 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751358Ab1G2RWa (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:55503 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870Ab1GKVYH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 13:22:30 -0400
-Received: by fxh19 with SMTP id 19so2464952fxh.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jul 2011 10:22:29 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH 1/2] mac80211: Fill in skb->protocol information for injected frames
-Date: Fri, 29 Jul 2011 19:22:16 +0200
-Message-Id: <1311960137-25420-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20110729_192236_673801_AAA0153D)
+	Mon, 11 Jul 2011 17:24:07 -0400
+MIME-Version: 1.0
+In-Reply-To: <e554bed5c753a3fe85d3be34983a15e6110a6e35.1310289795.git.joe@perches.com>
+References: <cover.1310289795.git.joe@perches.com>
+	<e554bed5c753a3fe85d3be34983a15e6110a6e35.1310289795.git.joe@perches.com>
+Date: Tue, 12 Jul 2011 00:24:05 +0300
+Message-ID: <CAFtRNNwx0=8VnqRuHaOetCk2em78pOZ_rr74SpCNCxKuh1surw@mail.gmail.com> (sfid-20110711_232429_678452_D1C66BCD)
+Subject: Re: [PATCH 3/5] ath5k: Add missing breaks in switch/case
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers (ath9k for example) are using skb->protocol to treat EAPOL
-frames somehow special (disallow aggregation for example).
-
-When running in AP mode hostapd injects the EAPOL frames through a
-monitor interface and thus skb->protocol isn't set at all. Hence, if the
-injected frame is a data frame and carries a rfc1042 headaer update the
-skb->protocol field accordingly.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- net/mac80211/tx.c |   20 ++++++++++++++++++++
- 1 files changed, 20 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index b83de4e..939c3f0 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1631,7 +1631,9 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	struct ieee80211_radiotap_header *prthdr =
- 		(struct ieee80211_radiotap_header *)skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *hdr;
- 	u16 len_rthdr;
-+	u8 *payload;
- 
- 	/*
- 	 * Frame injection is not allowed if beaconing is not allowed
-@@ -1682,6 +1684,24 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	skb_set_network_header(skb, len_rthdr);
- 	skb_set_transport_header(skb, len_rthdr);
- 
-+	/*
-+	 * Initialize skb->protocol if the injected frame is a data frame
-+	 * carrying a rfc1042 header
-+	 */
-+	if (skb->len > len_rthdr + 2) {
-+		hdr = (struct ieee80211_hdr *)(skb->data + len_rthdr);
-+		if (ieee80211_is_data(hdr->frame_control) &&
-+		    skb->len >= len_rthdr +
-+				ieee80211_hdrlen(hdr->frame_control) +
-+				sizeof(rfc1042_header) + 2) {
-+			payload = (u8 *)hdr +
-+				  ieee80211_hdrlen(hdr->frame_control);
-+			if (compare_ether_addr(payload, rfc1042_header) == 0)
-+				skb->protocol = ntohs((payload[6] << 8) |
-+						       payload[7]);
-+		}
-+	}
-+
- 	memset(info, 0, sizeof(*info));
- 
- 	info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
--- 
-1.7.3.4
-
+MjAxMS83LzEwIEpvZSBQZXJjaGVzIDxqb2VAcGVyY2hlcy5jb20+Ogo+IFNpZ25lZC1vZmYtYnk6
+IEpvZSBQZXJjaGVzIDxqb2VAcGVyY2hlcy5jb20+Cj4gLS0tCj4gwqBkcml2ZXJzL25ldC93aXJl
+bGVzcy9hdGgvYXRoNWsvZGVzYy5jIHwgwqAgwqAzICsrKwo+IMKgMSBmaWxlcyBjaGFuZ2VkLCAz
+IGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0pCj4KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvYXRoL2F0aDVrL2Rlc2MuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9h
+dGg1ay9kZXNjLmMKPiBpbmRleCA2MjE3MmQ1Li5mODIzODNiIDEwMDY0NAo+IC0tLSBhL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg1ay9kZXNjLmMKPiArKysgYi9kcml2ZXJzL25ldC93aXJl
+bGVzcy9hdGgvYXRoNWsvZGVzYy5jCj4gQEAgLTEwNywxMCArMTA3LDEzIEBAIGF0aDVrX2h3X3Nl
+dHVwXzJ3b3JkX3R4X2Rlc2Moc3RydWN0IGF0aDVrX2h3ICphaCwgc3RydWN0IGF0aDVrX2Rlc2Mg
+KmRlc2MsCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBjYXNlIEFSNUtfUEtUX1RZUEVfQkVBQ09O
+Ogo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgY2FzZSBBUjVLX1BLVF9UWVBFX1BST0JFX1JFU1A6
+Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBmcmFtZV90eXBlID0gQVI1S19B
+UjUyMTBfVFhfREVTQ19GUkFNRV9UWVBFX05PX0RFTEFZOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgYnJlYWs7Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBjYXNlIEFSNUtf
+UEtUX1RZUEVfUElGUzoKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoGZyYW1l
+X3R5cGUgPSBBUjVLX0FSNTIxMF9UWF9ERVNDX0ZSQU1FX1RZUEVfUElGUzsKPiArIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGJyZWFrOwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+ZGVmYXVsdDoKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoGZyYW1lX3R5cGUg
+PSB0eXBlOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgYnJlYWs7Cj4gwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqB9Cj4KPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHR4X2N0bC0+
+dHhfY29udHJvbF8wIHw9CgpBY2tlZC1ieTogTmljayBLb3NzaWZpZGlzIDxtaWNrZmxlbW1AZ21h
+aWwuY29tPgoKCgotLSAKR1BHIElEOiAweEQyMURCMkRCCkFzIHlvdSByZWFkIHRoaXMgcG9zdCBn
+bG9iYWwgZW50cm9weSByaXNlcy4gSGF2ZSBGdW4gOy0pCk5pY2sK
