@@ -1,43 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:57225 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:15408 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752240Ab1GHMmQ (ORCPT
+	with ESMTP id S1752051Ab1GKOoW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2011 08:42:16 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+	Mon, 11 Jul 2011 10:44:22 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 1/4] ath9k_hw: Update AR9003 interval to improve 5G Tx EVM
-Date: Fri, 8 Jul 2011 18:12:00 +0530
-Message-ID: <1310128923-2778-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110708_144225_721850_810D9D49)
+CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
+	<senthilb@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] ath9k: remove an unnecessary function declaration
+Date: Mon, 11 Jul 2011 20:14:14 +0530
+Message-ID: <1310395454-2645-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110711_164426_654250_62F1363D)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The number of temperature reading samples to average
-during a Tx packet is decreased to 1 from 2 to improve
-5G Tx EVM with chain 0-only mode.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/rc.c |   50 ++++++++++++++++------------------
+ 1 files changed, 24 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index e8ac70d..39efcbf 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -780,7 +780,7 @@ static const u32 ar9300_2p2_baseband_core[][2] = {
- 	{0x0000a43c, 0x00100000},
- 	{0x0000a440, 0x00000000},
- 	{0x0000a444, 0x00000000},
--	{0x0000a448, 0x06000080},
-+	{0x0000a448, 0x05000080},
- 	{0x0000a44c, 0x00000001},
- 	{0x0000a450, 0x00010000},
- 	{0x0000a458, 0x00000000},
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index e7fe4d9..c04a6c3 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -379,7 +379,30 @@ static const struct ath_rate_table ar5416_11g_ratetable = {
+ };
+ 
+ static int ath_rc_get_rateindex(const struct ath_rate_table *rate_table,
+-				struct ieee80211_tx_rate *rate);
++				struct ieee80211_tx_rate *rate)
++{
++	int rix = 0, i = 0;
++	static const int mcs_rix_off[] = { 7, 15, 20, 21, 22, 23 };
++
++	if (!(rate->flags & IEEE80211_TX_RC_MCS))
++		return rate->idx;
++
++	while (i < ARRAY_SIZE(mcs_rix_off) && rate->idx > mcs_rix_off[i]) {
++		rix++; i++;
++	}
++
++	rix += rate->idx + rate_table->mcs_start;
++
++	if ((rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) &&
++	    (rate->flags & IEEE80211_TX_RC_SHORT_GI))
++		rix = rate_table->info[rix].ht_index;
++	else if (rate->flags & IEEE80211_TX_RC_SHORT_GI)
++		rix = rate_table->info[rix].sgi_index;
++	else if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++		rix = rate_table->info[rix].cw40index;
++
++	return rix;
++}
+ 
+ static void ath_rc_sort_validrates(const struct ath_rate_table *rate_table,
+ 				   struct ath_rate_priv *ath_rc_priv)
+@@ -1080,31 +1103,6 @@ static void ath_rc_update_ht(struct ath_softc *sc,
+ 
+ }
+ 
+-static int ath_rc_get_rateindex(const struct ath_rate_table *rate_table,
+-				struct ieee80211_tx_rate *rate)
+-{
+-	int rix = 0, i = 0;
+-	static const int mcs_rix_off[] = { 7, 15, 20, 21, 22, 23 };
+-
+-	if (!(rate->flags & IEEE80211_TX_RC_MCS))
+-		return rate->idx;
+-
+-	while (i < ARRAY_SIZE(mcs_rix_off) && rate->idx > mcs_rix_off[i]) {
+-		rix++; i++;
+-	}
+-
+-	rix += rate->idx + rate_table->mcs_start;
+-
+-	if ((rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) &&
+-	    (rate->flags & IEEE80211_TX_RC_SHORT_GI))
+-		rix = rate_table->info[rix].ht_index;
+-	else if (rate->flags & IEEE80211_TX_RC_SHORT_GI)
+-		rix = rate_table->info[rix].sgi_index;
+-	else if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
+-		rix = rate_table->info[rix].cw40index;
+-
+-	return rix;
+-}
+ 
+ static void ath_rc_tx_status(struct ath_softc *sc,
+ 			     struct ath_rate_priv *ath_rc_priv,
 -- 
-1.7.6
+1.7.0.4
 
