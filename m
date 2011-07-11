@@ -1,107 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40866 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752259Ab1GEOi4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 10:38:56 -0400
-Message-Id: <20110705143810.101506240@sipsolutions.net> (sfid-20110705_163859_875141_76741418)
-Date: Tue, 05 Jul 2011 16:35:39 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] mac80211: allow driver to iterate keys
-References: <20110705143538.696899280@sipsolutions.net>
-Mime-Version: 1.0
+Received: from rere.qmqm.pl ([89.167.52.164]:43666 "EHLO rere.qmqm.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753170Ab1GKAwu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Jul 2011 20:52:50 -0400
+Message-Id: <280ad9176e6532f231e054b38b952b20580874c5.1310339688.git.mirq-linux@rere.qmqm.pl> (sfid-20110711_025337_538538_0B4762C2)
+In-Reply-To: <cover.1310339688.git.mirq-linux@rere.qmqm.pl>
+References: <cover.1310339688.git.mirq-linux@rere.qmqm.pl>
+From: =?UTF-8?q?Micha=C5=82=20Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>
+Subject: [PATCH v2 07/46] net/wireless: ath9k: fix DMA API usage
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+To: netdev@vger.kernel.org
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Date: Mon, 11 Jul 2011 02:52:47 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Also constify buf_addr for ath9k_hw_process_rxdesc_edma() to verify
+assumptions --- dma_sync_single_for_device() call can be removed.
 
-When in suspend/wowlan, devices might implement crypto
-offload differently (more features), and might require
-reprogramming keys for the WoWLAN (as it is the case
-for Intel devices that use another uCode image). Thus
-allow the driver to iterate all keys in this context.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Michał Mirosław <mirq-linux@rere.qmqm.pl>
 ---
- include/net/mac80211.h |   23 +++++++++++++++++++++++
- net/mac80211/key.c     |   33 +++++++++++++++++++++++++++++++++
- 2 files changed, 56 insertions(+)
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |    4 ++--
+ drivers/net/wireless/ath/ath9k/ar9003_mac.h |    2 +-
+ drivers/net/wireless/ath/ath9k/recv.c       |   10 +++-------
+ 3 files changed, 6 insertions(+), 10 deletions(-)
 
---- a/include/net/mac80211.h	2011-07-02 00:08:12.000000000 +0200
-+++ b/include/net/mac80211.h	2011-07-02 00:08:13.000000000 +0200
-@@ -2850,6 +2850,29 @@ void ieee80211_sta_block_awake(struct ie
- 			       struct ieee80211_sta *pubsta, bool block);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 575e185..2d211b6 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -524,9 +524,9 @@ void ath9k_hw_addrxbuf_edma(struct ath_hw *ah, u32 rxdp,
+ EXPORT_SYMBOL(ath9k_hw_addrxbuf_edma);
  
- /**
-+ * ieee80211_iter_keys - iterate keys programmed into the device
-+ * @hw: pointer obtained from ieee80211_alloc_hw()
-+ * @vif: virtual interface to iterate, may be %NULL for all
-+ * @iter: iterator function that will be called for each key
-+ * @iter_data: custom data to pass to the iterator function
-+ *
-+ * This function can be used to iterate all the keys known to
-+ * mac80211, even those that weren't previously programmed into
-+ * the device. This is intended for use in WoWLAN if the device
-+ * needs reprogramming of the keys during suspend. Note that due
-+ * to locking reasons, it is also only safe to call this at few
-+ * spots since it must hold the RTNL and be able to sleep.
-+ */
-+void ieee80211_iter_keys(struct ieee80211_hw *hw,
-+			 struct ieee80211_vif *vif,
-+			 void (*iter)(struct ieee80211_hw *hw,
-+				      struct ieee80211_vif *vif,
-+				      struct ieee80211_sta *sta,
-+				      struct ieee80211_key_conf *key,
-+				      void *data),
-+			 void *iter_data);
-+
-+/**
-  * ieee80211_ap_probereq_get - retrieve a Probe Request template
-  * @hw: pointer obtained from ieee80211_alloc_hw().
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
---- a/net/mac80211/key.c	2011-07-02 00:07:58.000000000 +0200
-+++ b/net/mac80211/key.c	2011-07-02 00:08:13.000000000 +0200
-@@ -504,6 +504,39 @@ void ieee80211_enable_keys(struct ieee80
- 	mutex_unlock(&sdata->local->key_mtx);
- }
- 
-+void ieee80211_iter_keys(struct ieee80211_hw *hw,
-+			 struct ieee80211_vif *vif,
-+			 void (*iter)(struct ieee80211_hw *hw,
-+				      struct ieee80211_vif *vif,
-+				      struct ieee80211_sta *sta,
-+				      struct ieee80211_key_conf *key,
-+				      void *data),
-+			 void *iter_data)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_key *key;
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	ASSERT_RTNL();
-+
-+	mutex_lock(&local->key_mtx);
-+	if (vif) {
-+		sdata = vif_to_sdata(vif);
-+		list_for_each_entry(key, &sdata->key_list, list)
-+			iter(hw, &sdata->vif,
-+			     key->sta ? &key->sta->sta : NULL,
-+			     &key->conf, iter_data);
-+	} else {
-+		list_for_each_entry(sdata, &local->interfaces, list)
-+			list_for_each_entry(key, &sdata->key_list, list)
-+				iter(hw, &sdata->vif,
-+				     key->sta ? &key->sta->sta : NULL,
-+				     &key->conf, iter_data);
-+	}
-+	mutex_unlock(&local->key_mtx);
-+}
-+EXPORT_SYMBOL(ieee80211_iter_keys);
-+
- void ieee80211_disable_keys(struct ieee80211_sub_if_data *sdata)
+ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+-				 void *buf_addr)
++				 const void *buf_addr)
  {
- 	struct ieee80211_key *key;
-
+-	struct ar9003_rxs *rxsp = (struct ar9003_rxs *) buf_addr;
++	const struct ar9003_rxs *rxsp = buf_addr;
+ 	unsigned int phyerr;
+ 
+ 	/* TODO: byte swap on big endian for ar9300_10 */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.h b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+index c504493..c310edc 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+@@ -114,7 +114,7 @@ void ath9k_hw_addrxbuf_edma(struct ath_hw *ah, u32 rxdp,
+ 
+ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah,
+ 				 struct ath_rx_status *rxs,
+-				 void *buf_addr);
++				 const void *buf_addr);
+ void ath9k_hw_reset_txstatus_ring(struct ath_hw *ah);
+ void ath9k_hw_setup_statusring(struct ath_hw *ah, void *ts_start,
+ 			       u32 ts_paddr_start,
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 70dc8ec..c5f46d5 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -156,7 +156,7 @@ static bool ath_rx_edma_buf_link(struct ath_softc *sc,
+ 	ATH_RXBUF_RESET(bf);
+ 	memset(skb->data, 0, ah->caps.rx_status_len);
+ 	dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
+-				ah->caps.rx_status_len, DMA_TO_DEVICE);
++				ah->caps.rx_status_len, DMA_BIDIRECTIONAL);
+ 
+ 	SKB_CB_ATHBUF(skb) = bf;
+ 	ath9k_hw_addrxbuf_edma(ah, bf->bf_buf_addr, qtype);
+@@ -684,15 +684,11 @@ static bool ath_edma_get_buffers(struct ath_softc *sc,
+ 	BUG_ON(!bf);
+ 
+ 	dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
+-				common->rx_bufsize, DMA_FROM_DEVICE);
++				common->rx_bufsize, DMA_BIDIRECTIONAL);
+ 
+ 	ret = ath9k_hw_process_rxdesc_edma(ah, NULL, skb->data);
+-	if (ret == -EINPROGRESS) {
+-		/*let device gain the buffer again*/
+-		dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
+-				common->rx_bufsize, DMA_FROM_DEVICE);
++	if (ret == -EINPROGRESS)
+ 		return false;
+-	}
+ 
+ 	__skb_unlink(skb, &rx_edma->rx_fifo);
+ 	if (ret == -EINVAL) {
+-- 
+1.7.5.4
 
