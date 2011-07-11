@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1714 "EHLO mms1.broadcom.com"
+Received: from mga14.intel.com ([143.182.124.37]:26765 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751981Ab1GFO1h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2011 10:27:37 -0400
-Message-ID: <4E1470CA.9000209@broadcom.com> (sfid-20110706_162740_336814_2EF640A9)
-Date: Wed, 6 Jul 2011 16:27:22 +0200
-From: "Roland Vossen" <rvossen@broadcom.com>
-MIME-Version: 1.0
-To: "Dan Carpenter" <error27@gmail.com>
-cc: "Arend Van Spriel" <arend@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 07/31] staging: brcm80211: removed asserts from
- dhd_cdc.c and dhd_common.c
-References: <1309903378-29021-1-git-send-email-arend@broadcom.com>
- <1309903378-29021-8-git-send-email-arend@broadcom.com>
- <20110706092401.GH18655@shale.localdomain>
-In-Reply-To: <20110706092401.GH18655@shale.localdomain>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	id S1757821Ab1GKORZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2011 10:17:25 -0400
+Subject: Re: [PATCH 3/3] iwlagn: Add missing comma between constant string
+ array
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Joe Perches <joe@perches.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <2c8a6e15b0f320e4b4b761ae6434862fc3c15924.1310187270.git.joe@perches.com>
+References: <cover.1310187270.git.joe@perches.com>
+	 <2c8a6e15b0f320e4b4b761ae6434862fc3c15924.1310187270.git.joe@perches.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 11 Jul 2011 06:42:54 -0700
+Message-ID: <1310391774.24940.25.camel@wwguy-huron> (sfid-20110711_161757_063320_B71358B2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+On Fri, 2011-07-08 at 23:20 -0700, Joe Perches wrote:
+> Multiple quoted strings are concatenated without comma separators.
+> 
+> Make the array const while there.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-agn.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> index 7e6c463..de1a0c1 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> @@ -1563,7 +1563,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+>  	release_firmware(ucode_raw);
+>  }
+>  
+> -static const char *desc_lookup_text[] = {
+> +static const char * const desc_lookup_text[] = {
+>  	"OK",
+>  	"FAIL",
+>  	"BAD_PARAM",
+> @@ -1587,7 +1587,7 @@ static const char *desc_lookup_text[] = {
+>  	"NMI_INTERRUPT_DATA_ACTION_PT",
+>  	"NMI_TRM_HW_ER",
+>  	"NMI_INTERRUPT_TRM",
+> -	"NMI_INTERRUPT_BREAK_POINT"
+> +	"NMI_INTERRUPT_BREAK_POINT",
+>  	"DEBUG_0",
+>  	"DEBUG_1",
+>  	"DEBUG_2",
 
->> @@ -317,14 +312,16 @@ brcmf_c_iovar_op(struct brcmf_pub *drvr, const char *name,
->>
->>   	BRCMF_TRACE(("%s: Enter\n", __func__));
->>
->> -	ASSERT(name);
->> -	ASSERT(len>= 0);
->> +	if (name == NULL || len<= 0)
->> +		return -EINVAL;
->>
->
-> In the original code len == 0 was OK but now we return -EINVAL.
+Thanks
+Wey
 
-Agreed, this is non desirable behavior. We did not see a regression in 
-our fullmac driver testing (which, I admit, is fairly limited at this 
-stage). I will create an additional patch to fix this.
-
-Thanks, Roland.
 
