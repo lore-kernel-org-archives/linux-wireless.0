@@ -1,81 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:32845 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753194Ab1GLFah (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:56791 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756882Ab1GKApf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2011 01:30:37 -0400
-Message-ID: <4E1BDBEF.1090505@candelatech.com> (sfid-20110712_073045_629597_D465551E)
-Date: Mon, 11 Jul 2011 22:30:23 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	ath9k-devel@venema.h4ckr.net,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: Re: [ath9k-devel] [PATCH v2 07/46] net/wireless: ath9k: fix DMA API
- usage
-References: <cover.1310339688.git.mirq-linux@rere.qmqm.pl> <280ad9176e6532f231e054b38b952b20580874c5.1310339688.git.mirq-linux@rere.qmqm.pl> <4E1BCF36.2010506@openwrt.org>
-In-Reply-To: <4E1BCF36.2010506@openwrt.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sun, 10 Jul 2011 20:45:35 -0400
+Subject: Re: [PATCH v5 0/6] NFC subsystem
+From: Samuel Ortiz <samuel@sortiz.org>
+Reply-To: Samuel Ortiz <samuel@sortiz.org>
+To: "Elias, Ilan" <ilane@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE66001317B8E2A@dnce02.ent.ti.com>
+References: <AC090B9732AB2B4DB7FF476E907FE66001317B8E2A@dnce02.ent.ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 11 Jul 2011 02:46:14 +0200
+Message-ID: <1310345174.5017.17.camel@sortiz-mobl> (sfid-20110711_024544_955625_0CB04053)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/11/2011 09:36 PM, Felix Fietkau wrote:
-> On 2011-07-11 8:52 AM, Michał Mirosław wrote:
->> Also constify buf_addr for ath9k_hw_process_rxdesc_edma() to verify
->> assumptions --- dma_sync_single_for_device() call can be removed.
->>
->> Signed-off-by: Michał Mirosław<mirq-linux@rere.qmqm.pl>
->> ---
->> drivers/net/wireless/ath/ath9k/ar9003_mac.c | 4 ++--
->> drivers/net/wireless/ath/ath9k/ar9003_mac.h | 2 +-
->> drivers/net/wireless/ath/ath9k/recv.c | 10 +++-------
->> 3 files changed, 6 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
->> index 70dc8ec..c5f46d5 100644
->> --- a/drivers/net/wireless/ath/ath9k/recv.c
->> +++ b/drivers/net/wireless/ath/ath9k/recv.c
->> @@ -684,15 +684,11 @@ static bool ath_edma_get_buffers(struct ath_softc *sc,
->> BUG_ON(!bf);
->>
->> dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
->> - common->rx_bufsize, DMA_FROM_DEVICE);
->> + common->rx_bufsize, DMA_BIDIRECTIONAL);
->>
->> ret = ath9k_hw_process_rxdesc_edma(ah, NULL, skb->data);
->> - if (ret == -EINPROGRESS) {
->> - /*let device gain the buffer again*/
->> - dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
->> - common->rx_bufsize, DMA_FROM_DEVICE);
->> + if (ret == -EINPROGRESS)
->> return false;
->> - }
->>
->> __skb_unlink(skb,&rx_edma->rx_fifo);
->> if (ret == -EINVAL) {
-> I have strong doubts about this change. On most MIPS devices, dma_sync_single_for_cpu is a no-op, whereas dma_sync_single_for_device flushes the cache range.
-> With this change, the CPU could cache the DMA status part behind skb->data and that cache entry would not be flushed inbetween calls to this functions on the
-> same buffer, likely leading to rx stalls.
+Hi Ilan,
 
-At the very least, it would need heavy testing.  It took a very long time to get
-the ath9k DMA issues (mostly?) resolved...so we shouldn't go mucking in this
-code on theory...
-
-Thanks,
-Ben
-
->
-> - Felix
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
+On Sun, 2011-07-10 at 16:16 +0200, Elias, Ilan wrote:
+> Hi Aloisio,
+> 
+> I went over the userspace interface and it seems to me 
+> that it's very much following the PN533 chip interface.
+> 
+> As you probably know, the NFC forum is in the process of defining 
+> a new industry standard for the NFC Controller Interface (NCI).
+> All NFC chips in the near future will probably support the NCI,
+I suppose that's arguable, especialy the "All" and "near future" terms
+of your statement :)
+Moreover, as far as I know, most NFC chips are currently HCI based and I
+expect the transition from HCI to NCI to not be that fast.
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+>  
+> which will provide a generic and standard interface for NFC functionality.
+> 
+> I think that your current userspace interface might be too specific 
+> for PN533 chip, and might not expose all the required NFC functionality.
+The idea for the current netlink userspace API is to be a generic and
+high level one. It should allow for userspace components to build their
+target management code and NDEF  parsing code on top of it, without
+having to know if the below HW is HCI, NCI or anything else based.
+Also, please note that the current API is going to be soon extended to
+support target mode.
+
+
+> A similar case with Bluetooth, where HCI is the industry standard which 
+> is supported by most Bluetooth chips, thus BlueZ support it of course.
+We plan to implement the NFC HCI (as in ETSI 102 622) code as a kernel
+component, and we're currently working on that. HCI NFC based chipsets
+will register against this layer which will then talk to the NFC core
+layer.
+The same architecture would hopefully work with NCI, although due to the
+lack of currently available public NCI specs, I can't guarantee that it
+won't require some small adjustments.
+
+> Doesn't it make more sense to make the userspace interface more similar to the NCI?
+Could you please point us at a publically available description of that
+interface ?
+
+Cheers,
+Samuel.
+
+
