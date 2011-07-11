@@ -1,235 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63322 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756174Ab1GKXY6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 19:24:58 -0400
-Subject: Re: [PATCH] libertas: fix handling of command timeout, completion
- and interruption
-From: Dan Williams <dcbw@redhat.com>
-To: Daniel Drake <dsd@laptop.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-Date: Mon, 11 Jul 2011 18:28:24 -0500
-In-Reply-To: <20110709144125.A0FB49D401C@zog.reactivated.net>
-References: <20110709144125.A0FB49D401C@zog.reactivated.net>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1310426905.3122.5.camel@dcbw.foobar.com> (sfid-20110712_012500_412735_A201FC83)
-Mime-Version: 1.0
+Received: from storm.alittletooquiet.net ([67.23.28.199]:40270 "EHLO
+	storm.alittletooquiet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757829Ab1GKPE6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2011 11:04:58 -0400
+Date: Mon, 11 Jul 2011 11:04:57 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ath9k_htc fails to initialize TL-WN721N with compat-wireless
+ 3.0-rc4-1
+Message-ID: <20110711150457.GL28091@alittletooquiet.net> (sfid-20110711_170500_973428_3814418E)
+References: <20110705172022.GB28091@alittletooquiet.net>
+ <20110706023943.GA11178@vmraj-lnx.users.atheros.com>
+ <CAD2nsn0HFgm6Puuzuy4gghdDvpb05WaQtETS4=mfQ63mFzo--Q@mail.gmail.com>
+ <20110706182937.GE28091@alittletooquiet.net>
+ <CAD2nsn3x5sfhTuzH66myCF0P2PyHoX+pqVkYgWC5ogssPdHsqw@mail.gmail.com>
+ <CAD2nsn03zdg16O3xcAOGRunYm4NG5PqO=1ht4kx39fAXbSpV5A@mail.gmail.com>
+ <CAD2nsn3krB2MZYewRtJpFikUu9079jXXMabz90z6Zc7kfAeELw@mail.gmail.com>
+ <20110707225321.GG28091@alittletooquiet.net>
+ <CAD2nsn2BH9vEjKWui8JuQRufiKgTtBCHyifXCi1OxLMRck1heQ@mail.gmail.com>
+ <CAD2nsn0UC=dkM-vB7vsawyB-PzgTV=rGzLDRr_5fx3ZQqVJiuQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="7vAdt9JsdkkzRPKN"
+In-Reply-To: <CAD2nsn0UC=dkM-vB7vsawyB-PzgTV=rGzLDRr_5fx3ZQqVJiuQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-07-09 at 15:41 +0100, Daniel Drake wrote:
-> When commands time out, corruption ensues. As lbs_complete_command()
-> is called without locking, the command node is mistakenly freed twice.
-> Also fixed up locking here in a few other places.
-> 
-> The nature of command timeout may be that the card didn't even
-> acknowledge receipt of the request. Detect this case and reset dnld_sent
-> so that other commands don't hang forever.
-> 
-> When cmdnodes are moved between the free list and the pending list,
-> their list heads should be reinitialized. Fixed this.
-> 
-> Sometimes commands are completed without actually submitting them or
-> removing them from cmdpendingq. We must remember to remove them from
-> cmdpendingq in these cases, so handle this in lbs_complete_command().
-> 
-> Harmless signals generated during suspend/resume were interrupting
-> lbs_cmd. Convert to an uninterruptible sleep to avoid this.
-> 
-> lbs_thread must be woken up every time there is some new work to do.
-> I found that when 2 commands are queued, ther completion of the first
-> command would not wake up lbs_thread to submit the second. Poke lbs_thread
-> at the end of lbs_complete_command() to fix this.
-> 
-> Signed-off-by: Daniel Drake <dsd@laptop.org>
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+--7vAdt9JsdkkzRPKN
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> ---
->  drivers/net/wireless/libertas/cmd.c     |   42 ++++++++++++++++++++++---------
->  drivers/net/wireless/libertas/cmd.h     |    2 +
->  drivers/net/wireless/libertas/cmdresp.c |    6 ++--
->  drivers/net/wireless/libertas/main.c    |   12 +++++++-
->  4 files changed, 45 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-> index 71c8f3f..0e89d23 100644
-> --- a/drivers/net/wireless/libertas/cmd.c
-> +++ b/drivers/net/wireless/libertas/cmd.c
-> @@ -1067,16 +1067,34 @@ static void lbs_cleanup_and_insert_cmd(struct lbs_private *priv,
->  	spin_unlock_irqrestore(&priv->driver_lock, flags);
->  }
->  
-> -void lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
-> -			  int result)
-> +void __lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
-> +			    int result)
->  {
-> +	/*
-> +	 * Normally, commands are removed from cmdpendingq before being
-> +	 * submitted. However, we can arrive here on alternative codepaths
-> +	 * where the command is still pending. Make sure the command really
-> +	 * isn't part of a list at this point.
-> +	 */
-> +	list_del_init(&cmd->list);
-> +
->  	cmd->result = result;
->  	cmd->cmdwaitqwoken = 1;
-> -	wake_up_interruptible(&cmd->cmdwait_q);
-> +	wake_up(&cmd->cmdwait_q);
->  
->  	if (!cmd->callback || cmd->callback == lbs_cmd_async_callback)
->  		__lbs_cleanup_and_insert_cmd(priv, cmd);
->  	priv->cur_cmd = NULL;
-> +	wake_up_interruptible(&priv->waitq);
-> +}
-> +
-> +void lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
-> +			  int result)
-> +{
-> +	unsigned long flags;
-> +	spin_lock_irqsave(&priv->driver_lock, flags);
-> +	__lbs_complete_command(priv, cmd, result);
-> +	spin_unlock_irqrestore(&priv->driver_lock, flags);
->  }
->  
->  int lbs_set_radio(struct lbs_private *priv, u8 preamble, u8 radio_on)
-> @@ -1248,7 +1266,7 @@ static struct cmd_ctrl_node *lbs_get_free_cmd_node(struct lbs_private *priv)
->  	if (!list_empty(&priv->cmdfreeq)) {
->  		tempnode = list_first_entry(&priv->cmdfreeq,
->  					    struct cmd_ctrl_node, list);
-> -		list_del(&tempnode->list);
-> +		list_del_init(&tempnode->list);
->  	} else {
->  		lbs_deb_host("GET_CMD_NODE: cmd_ctrl_node is not available\n");
->  		tempnode = NULL;
-> @@ -1356,10 +1374,7 @@ int lbs_execute_next_command(struct lbs_private *priv)
->  				    cpu_to_le16(PS_MODE_ACTION_EXIT_PS)) {
->  					lbs_deb_host(
->  					       "EXEC_NEXT_CMD: ignore ENTER_PS cmd\n");
-> -					spin_lock_irqsave(&priv->driver_lock, flags);
-> -					list_del(&cmdnode->list);
->  					lbs_complete_command(priv, cmdnode, 0);
-> -					spin_unlock_irqrestore(&priv->driver_lock, flags);
->  
->  					ret = 0;
->  					goto done;
-> @@ -1369,10 +1384,7 @@ int lbs_execute_next_command(struct lbs_private *priv)
->  				    (priv->psstate == PS_STATE_PRE_SLEEP)) {
->  					lbs_deb_host(
->  					       "EXEC_NEXT_CMD: ignore EXIT_PS cmd in sleep\n");
-> -					spin_lock_irqsave(&priv->driver_lock, flags);
-> -					list_del(&cmdnode->list);
->  					lbs_complete_command(priv, cmdnode, 0);
-> -					spin_unlock_irqrestore(&priv->driver_lock, flags);
->  					priv->needtowakeup = 1;
->  
->  					ret = 0;
-> @@ -1384,7 +1396,7 @@ int lbs_execute_next_command(struct lbs_private *priv)
->  			}
->  		}
->  		spin_lock_irqsave(&priv->driver_lock, flags);
-> -		list_del(&cmdnode->list);
-> +		list_del_init(&cmdnode->list);
->  		spin_unlock_irqrestore(&priv->driver_lock, flags);
->  		lbs_deb_host("EXEC_NEXT_CMD: sending command 0x%04x\n",
->  			    le16_to_cpu(cmd->command));
-> @@ -1667,7 +1679,13 @@ int __lbs_cmd(struct lbs_private *priv, uint16_t command,
->  	}
->  
->  	might_sleep();
-> -	wait_event_interruptible(cmdnode->cmdwait_q, cmdnode->cmdwaitqwoken);
-> +
-> +	/*
-> +	 * Be careful with signals here. A signal may be received as the system
-> +	 * goes into suspend or resume. We do not want this to interrupt the
-> +	 * command, so we perform an uninterruptible sleep.
-> +	 */
-> +	wait_event(cmdnode->cmdwait_q, cmdnode->cmdwaitqwoken);
->  
->  	spin_lock_irqsave(&priv->driver_lock, flags);
->  	ret = cmdnode->result;
-> diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
-> index 7109d6b..b280ef7 100644
-> --- a/drivers/net/wireless/libertas/cmd.h
-> +++ b/drivers/net/wireless/libertas/cmd.h
-> @@ -59,6 +59,8 @@ int lbs_allocate_cmd_buffer(struct lbs_private *priv);
->  int lbs_free_cmd_buffer(struct lbs_private *priv);
->  
->  int lbs_execute_next_command(struct lbs_private *priv);
-> +void __lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
-> +			    int result);
->  void lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
->  			  int result);
->  int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len);
-> diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-> index 207fc36..7da8949 100644
-> --- a/drivers/net/wireless/libertas/cmdresp.c
-> +++ b/drivers/net/wireless/libertas/cmdresp.c
-> @@ -165,7 +165,7 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
->  			lbs_deb_host("CMD_RESP: PS action 0x%X\n", action);
->  		}
->  
-> -		lbs_complete_command(priv, priv->cur_cmd, result);
-> +		__lbs_complete_command(priv, priv->cur_cmd, result);
->  		spin_unlock_irqrestore(&priv->driver_lock, flags);
->  
->  		ret = 0;
-> @@ -186,7 +186,7 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
->  			break;
->  
->  		}
-> -		lbs_complete_command(priv, priv->cur_cmd, result);
-> +		__lbs_complete_command(priv, priv->cur_cmd, result);
->  		spin_unlock_irqrestore(&priv->driver_lock, flags);
->  
->  		ret = -1;
-> @@ -204,7 +204,7 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
->  
->  	if (priv->cur_cmd) {
->  		/* Clean up and Put current command back to cmdfreeq */
-> -		lbs_complete_command(priv, priv->cur_cmd, result);
-> +		__lbs_complete_command(priv, priv->cur_cmd, result);
->  	}
->  	spin_unlock_irqrestore(&priv->driver_lock, flags);
->  
-> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-> index 8c40949..a839de0 100644
-> --- a/drivers/net/wireless/libertas/main.c
-> +++ b/drivers/net/wireless/libertas/main.c
-> @@ -638,6 +638,14 @@ static void lbs_cmd_timeout_handler(unsigned long data)
->  		    le16_to_cpu(priv->cur_cmd->cmdbuf->command));
->  
->  	priv->cmd_timed_out = 1;
-> +
-> +	/*
-> +	 * If the device didn't even acknowledge the command, reset the state
-> +	 * so that we don't block all future commands due to this one timeout.
-> +	 */
-> +	if (priv->dnld_sent == DNLD_CMD_SENT)
-> +		priv->dnld_sent = DNLD_RES_RECEIVED;
-> +
->  	wake_up_interruptible(&priv->waitq);
->  out:
->  	spin_unlock_irqrestore(&priv->driver_lock, flags);
-> @@ -994,7 +1002,7 @@ void lbs_stop_card(struct lbs_private *priv)
->  	list_for_each_entry(cmdnode, &priv->cmdpendingq, list) {
->  		cmdnode->result = -ENOENT;
->  		cmdnode->cmdwaitqwoken = 1;
-> -		wake_up_interruptible(&cmdnode->cmdwait_q);
-> +		wake_up(&cmdnode->cmdwait_q);
->  	}
->  
->  	/* Flush the command the card is currently processing */
-> @@ -1002,7 +1010,7 @@ void lbs_stop_card(struct lbs_private *priv)
->  		lbs_deb_main("clearing current command\n");
->  		priv->cur_cmd->result = -ENOENT;
->  		priv->cur_cmd->cmdwaitqwoken = 1;
-> -		wake_up_interruptible(&priv->cur_cmd->cmdwait_q);
-> +		wake_up(&priv->cur_cmd->cmdwait_q);
->  	}
->  	lbs_deb_main("done clearing commands\n");
->  	spin_unlock_irqrestore(&priv->driver_lock, flags);
+Hi shafi,
 
+On Mon, Jul 11, 2011 at 11:01:04AM +0530, Mohammed Shafi wrote:
+> On Fri, Jul 8, 2011 at 6:54 PM, Mohammed Shafi <shafi.wireless@gmail.com>=
+ wrote:
+> > On Fri, Jul 8, 2011 at 4:23 AM, Forest Bond <forest@alittletooquiet.net=
+> wrote:
+> >> Hi shafi,
+> >>
+> >> On Thu, Jul 07, 2011 at 03:23:50AM -0400, Mohammed Shafi wrote:
+> >>> attached a reverting patch for LED, did a basic test and looks fine.
+> >>> need to investigate in this for backporting. =A0we have not tested in
+> >>> 2.6.24 kernel
+> >>
+> >> Yes, this seems to fix things. =A0I can bring the interface up now and=
+ get
+> >> scanning results. =A0I will test further and let you know how things g=
+o.
+> >
+> > let me quickly check if undefine CONFIG_MAC80211_LEDS in ath9k_htc in
+> > latest wireless-testing and if i get a lock up or panic
+>=20
+> it did not help, got an idea its a locking issue in com pat, I don't
+> know why its happening for the older kernel. made it working by
+> commenting out few spinlocks,
 
+Okay, in the meantime I am up and running with hostapd.  I have been testin=
+g for
+a few hours and have not seen problems, so this setup appears to be relativ=
+ely
+stable.
+
+Of course I am happy to test any other patches you would like to try.
+
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.rapidrollout.com
+
+--7vAdt9JsdkkzRPKN
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk4bERkACgkQRO4fQQdv5AyuIwCfWnc9fycqtRe+fV2agqevKbWI
+HkEAmgPly6YJjpnZ4WhNdBiyTDlme0eg
+=8A/J
+-----END PGP SIGNATURE-----
+
+--7vAdt9JsdkkzRPKN--
