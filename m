@@ -1,33 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57619 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753265Ab1GNJvv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 05:51:51 -0400
-Subject: Re: [PATCH 4/5] mac80211: move RSN IE to tail of mesh beacon
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <1310600747-9583-5-git-send-email-thomas@cozybit.com> (sfid-20110714_014636_987067_066D29B9)
-References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
-	 <1310600747-9583-5-git-send-email-thomas@cozybit.com>
-	 (sfid-20110714_014636_987067_066D29B9)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 14 Jul 2011 11:51:48 +0200
-Message-ID: <1310637108.3874.1.camel@jlt3.sipsolutions.net> (sfid-20110714_115153_845032_0B1C255E)
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:44795 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750831Ab1GLEgS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jul 2011 00:36:18 -0400
+Message-ID: <4E1BCF36.2010506@openwrt.org> (sfid-20110712_063722_719569_CC4E02B6)
+Date: Tue, 12 Jul 2011 12:36:06 +0800
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	ath9k-devel@lists.ath9k.org,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: Re: [ath9k-devel] [PATCH v2 07/46] net/wireless: ath9k: fix DMA API
+ usage
+References: <cover.1310339688.git.mirq-linux@rere.qmqm.pl> <280ad9176e6532f231e054b38b952b20580874c5.1310339688.git.mirq-linux@rere.qmqm.pl>
+In-Reply-To: <280ad9176e6532f231e054b38b952b20580874c5.1310339688.git.mirq-linux@rere.qmqm.pl>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-07-13 at 16:45 -0700, Thomas Pedersen wrote:
+On 2011-07-11 8:52 AM, Michał Mirosław wrote:
+> Also constify buf_addr for ath9k_hw_process_rxdesc_edma() to verify
+> assumptions --- dma_sync_single_for_device() call can be removed.
+>
+> Signed-off-by: Michał Mirosław<mirq-linux@rere.qmqm.pl>
+> ---
+>   drivers/net/wireless/ath/ath9k/ar9003_mac.c |    4 ++--
+>   drivers/net/wireless/ath/ath9k/ar9003_mac.h |    2 +-
+>   drivers/net/wireless/ath/ath9k/recv.c       |   10 +++-------
+>   3 files changed, 6 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> index 70dc8ec..c5f46d5 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -684,15 +684,11 @@ static bool ath_edma_get_buffers(struct ath_softc *sc,
+>   	BUG_ON(!bf);
+>
+>   	dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
+> -				common->rx_bufsize, DMA_FROM_DEVICE);
+> +				common->rx_bufsize, DMA_BIDIRECTIONAL);
+>
+>   	ret = ath9k_hw_process_rxdesc_edma(ah, NULL, skb->data);
+> -	if (ret == -EINPROGRESS) {
+> -		/*let device gain the buffer again*/
+> -		dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
+> -				common->rx_bufsize, DMA_FROM_DEVICE);
+> +	if (ret == -EINPROGRESS)
+>   		return false;
+> -	}
+>
+>   	__skb_unlink(skb,&rx_edma->rx_fifo);
+>   	if (ret == -EINVAL) {
+I have strong doubts about this change. On most MIPS devices, 
+dma_sync_single_for_cpu is a no-op, whereas dma_sync_single_for_device 
+flushes the cache range. With this change, the CPU could cache the DMA 
+status part behind skb->data and that cache entry would not be flushed 
+inbetween calls to this functions on the same buffer, likely leading to 
+rx stalls.
 
-> +			if (skb_tailroom(skb) > len)
-> +				memcpy(skb_put(skb, len), data, len);
-> +			else
-> +				printk(KERN_ERR "o11s: not enough tailroom\n");
-
-Can this printk happen? If not, how about WARN(1, ...);, and if, I think
-there should be better handling than a printk.
-
-johannes
-
+- Felix
