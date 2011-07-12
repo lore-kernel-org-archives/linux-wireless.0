@@ -1,97 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:50893 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752610Ab1GPW1g (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:32845 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753194Ab1GLFah (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2011 18:27:36 -0400
-Received: by mail-fx0-f52.google.com with SMTP id 18so4497137fxd.11
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Jul 2011 15:27:36 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/4] bcma: allow setting FAST clockmode for a core
-Date: Sun, 17 Jul 2011 01:06:04 +0200
-Message-Id: <1310857566-2876-2-git-send-email-zajec5@gmail.com> (sfid-20110717_002740_090526_2761DA1A)
-In-Reply-To: <1310857566-2876-1-git-send-email-zajec5@gmail.com>
-References: <1310857566-2876-1-git-send-email-zajec5@gmail.com>
+	Tue, 12 Jul 2011 01:30:37 -0400
+Message-ID: <4E1BDBEF.1090505@candelatech.com> (sfid-20110712_073045_629597_D465551E)
+Date: Mon, 11 Jul 2011 22:30:23 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Felix Fietkau <nbd@openwrt.org>
+CC: =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	ath9k-devel@venema.h4ckr.net,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: Re: [ath9k-devel] [PATCH v2 07/46] net/wireless: ath9k: fix DMA API
+ usage
+References: <cover.1310339688.git.mirq-linux@rere.qmqm.pl> <280ad9176e6532f231e054b38b952b20580874c5.1310339688.git.mirq-linux@rere.qmqm.pl> <4E1BCF36.2010506@openwrt.org>
+In-Reply-To: <4E1BCF36.2010506@openwrt.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 07/11/2011 09:36 PM, Felix Fietkau wrote:
+> On 2011-07-11 8:52 AM, Michał Mirosław wrote:
+>> Also constify buf_addr for ath9k_hw_process_rxdesc_edma() to verify
+>> assumptions --- dma_sync_single_for_device() call can be removed.
+>>
+>> Signed-off-by: Michał Mirosław<mirq-linux@rere.qmqm.pl>
+>> ---
+>> drivers/net/wireless/ath/ath9k/ar9003_mac.c | 4 ++--
+>> drivers/net/wireless/ath/ath9k/ar9003_mac.h | 2 +-
+>> drivers/net/wireless/ath/ath9k/recv.c | 10 +++-------
+>> 3 files changed, 6 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+>> index 70dc8ec..c5f46d5 100644
+>> --- a/drivers/net/wireless/ath/ath9k/recv.c
+>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+>> @@ -684,15 +684,11 @@ static bool ath_edma_get_buffers(struct ath_softc *sc,
+>> BUG_ON(!bf);
+>>
+>> dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
+>> - common->rx_bufsize, DMA_FROM_DEVICE);
+>> + common->rx_bufsize, DMA_BIDIRECTIONAL);
+>>
+>> ret = ath9k_hw_process_rxdesc_edma(ah, NULL, skb->data);
+>> - if (ret == -EINPROGRESS) {
+>> - /*let device gain the buffer again*/
+>> - dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
+>> - common->rx_bufsize, DMA_FROM_DEVICE);
+>> + if (ret == -EINPROGRESS)
+>> return false;
+>> - }
+>>
+>> __skb_unlink(skb,&rx_edma->rx_fifo);
+>> if (ret == -EINVAL) {
+> I have strong doubts about this change. On most MIPS devices, dma_sync_single_for_cpu is a no-op, whereas dma_sync_single_for_device flushes the cache range.
+> With this change, the CPU could cache the DMA status part behind skb->data and that cache entry would not be flushed inbetween calls to this functions on the
+> same buffer, likely leading to rx stalls.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/core.c       |   31 +++++++++++++++++++++++++++++++
- include/linux/bcma/bcma.h |    8 +++++++-
- 2 files changed, 38 insertions(+), 1 deletions(-)
+At the very least, it would need heavy testing.  It took a very long time to get
+the ath9k DMA issues (mostly?) resolved...so we shouldn't go mucking in this
+code on theory...
 
-diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
-index 1ec7d45..0686b1b 100644
---- a/drivers/bcma/core.c
-+++ b/drivers/bcma/core.c
-@@ -50,3 +50,34 @@ int bcma_core_enable(struct bcma_device *core, u32 flags)
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(bcma_core_enable);
-+
-+void bcma_core_set_clockmode(struct bcma_device *core,
-+			     enum bcma_clkmode clkmode)
-+{
-+	u16 i;
-+
-+	WARN_ON(core->id.id != BCMA_CORE_CHIPCOMMON &&
-+		core->id.id != BCMA_CORE_PCIE &&
-+		core->id.id != BCMA_CORE_80211);
-+
-+	switch (clkmode) {
-+	case BCMA_CLKMODE_FAST:
-+		bcma_set32(core, BCMA_CLKCTLST, BCMA_CLKCTLST_FORCEHT);
-+		udelay(64);
-+		for (i = 0; i < 1500; i++) {
-+			if (bcma_read32(core, BCMA_CLKCTLST) &
-+			    BCMA_CLKCTLST_HAVEHT) {
-+				i = 0;
-+				break;
-+			}
-+			udelay(10);
-+		}
-+		if (i)
-+			pr_err("HT force timeout\n");
-+		break;
-+	case BCMA_CLKMODE_DYNAMIC:
-+		pr_warn("Dynamic clockmode not supported yet!\n");
-+		break;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(bcma_core_set_clockmode);
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 6e5dc7b..37017c1 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -25,6 +25,11 @@ struct bcma_chipinfo {
- 	u8 pkg;
- };
- 
-+enum bcma_clkmode {
-+	BCMA_CLKMODE_FAST,
-+	BCMA_CLKMODE_DYNAMIC,
-+};
-+
- struct bcma_host_ops {
- 	u8 (*read8)(struct bcma_device *core, u16 offset);
- 	u16 (*read16)(struct bcma_device *core, u16 offset);
-@@ -253,6 +258,7 @@ void bcma_awrite32(struct bcma_device *core, u16 offset, u32 value)
- extern bool bcma_core_is_enabled(struct bcma_device *core);
- extern void bcma_core_disable(struct bcma_device *core, u32 flags);
- extern int bcma_core_enable(struct bcma_device *core, u32 flags);
--
-+extern void bcma_core_set_clockmode(struct bcma_device *core,
-+				    enum bcma_clkmode clkmode);
- 
- #endif /* LINUX_BCMA_H_ */
+Thanks,
+Ben
+
+>
+> - Felix
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+
+
 -- 
-1.7.3.4
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
