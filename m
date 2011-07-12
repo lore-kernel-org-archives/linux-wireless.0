@@ -1,52 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vwp2514.webpack.hosteurope.de ([87.230.42.24]:52232 "EHLO
-	vwp2514.webpack.hosteurope.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753539Ab1GLHWK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2011 03:22:10 -0400
-Subject: Re: kernel NULL pointer dereference in lbs_set_11d_domain_info
- (3.0-rc6)
+Received: from svenfoo.org ([82.94.215.22]:48386 "EHLO mail.zonque.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750743Ab1GLHwr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jul 2011 03:52:47 -0400
 From: Sven Neumann <s.neumann@raumfeld.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <4E1B655E.6010209@gnu.org>
-References: <1310399981.11331.4.camel@sven>  <4E1B655E.6010209@gnu.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Jul 2011 09:22:06 +0200
-Message-ID: <1310455326.2218.1.camel@sven> (sfid-20110712_092213_924387_788740E2)
-Mime-Version: 1.0
+To: libertas-dev@lists.infradead.org
+Cc: daniel@zonque.org, linux-wireless@vger.kernel.org,
+	Sven Neumann <s.neumann@raumfeld.com>
+Subject: [PATCH] cfg80211: hold reg_mutex when updating regulatory
+Date: Tue, 12 Jul 2011 09:52:39 +0200
+Message-Id: <1310457159-16698-2-git-send-email-s.neumann@raumfeld.com> (sfid-20110712_095251_161161_3860B940)
+In-Reply-To: <1310456639-16468-1-git-send-email-s.neumann@raumfeld.com>
+References: <1310456639-16468-1-git-send-email-s.neumann@raumfeld.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-07-11 at 17:04 -0400, Pavel Roskin wrote:
-> On 07/11/2011 11:59 AM, Sven Neumann wrote:
-> > Hi,
-> >
-> > we are using a PXA device and I am observing sporadic crashes after
-> > resume from suspend with 3.0-rc6:
-> >
-> >
-> > [ 1296.027645] PM: resume of devices complete after 296.440 msecs
-> > [ 1296.284633] Restarting tasks ...
-> > [ 1296.320276] done.
-> > [ 1296.421618] mmc0: new SDIO card at address 0001
-> > [ 1297.312570] libertas_sdio mmc0:0001:1: (unregistered net_device): 00:19:88:11:db:67, fw 9.70.7p0, cap 0x00000303
-> 
-> I think the trouble starts with "unregistered net_device".  It looks 
-> like some structures in memory are corrupted.
+The function wiphy_update_regulatory() uses the static variable
+last_request and thus needs to be called with reg_mutex held.
+This is the case for all users in reg.c, but the function was
+exported for use by wiphy_register(), from where it is called
+without the lock being held.
 
-I don't think that is the problem. The output from booting the kernel
-says "unregistered net_device" as well:
+Fix this by making wiphy_update_regulatory() private and introducing
+regulatory_update() as a wrapper that acquires and holds the lock.
 
-[    9.236512] libertas_sdio: Libertas SDIO driver
-[    9.245261] libertas_sdio: Copyright Pierre Ossman
-[    9.762777] libertas_sdio mmc0:0001:1: (unregistered net_device):
-00:19:88:11:db:67, fw 9.70.7p0, cap 0x00000303
-[    9.792377] libertas_sdio mmc0:0001:1: wlan0: Marvell WLAN 802.11
-adapter
+Signed-off-by: Sven Neumann <s.neumann@raumfeld.com>
+---
+ net/wireless/core.c |    2 +-
+ net/wireless/core.h |    2 -
+ net/wireless/reg.c  |   62 +++++++++++++++++++++++++++++---------------------
+ net/wireless/reg.h  |    2 +
+ 4 files changed, 39 insertions(+), 29 deletions(-)
 
-
-Thanks anyway,
-Sven
-
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index c22ef34..179921e 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -577,7 +577,7 @@ int wiphy_register(struct wiphy *wiphy)
+ 	}
+ 
+ 	/* set up regulatory info */
+-	wiphy_update_regulatory(wiphy, NL80211_REGDOM_SET_BY_CORE);
++	regulatory_update(wiphy, NL80211_REGDOM_SET_BY_CORE);
+ 
+ 	list_add_rcu(&rdev->list, &cfg80211_rdev_list);
+ 	cfg80211_rdev_list_generation++;
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 3dce1f1..0517d03 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -277,8 +277,6 @@ extern int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
+ 			       char *newname);
+ 
+ void ieee80211_set_bitrate_flags(struct wiphy *wiphy);
+-void wiphy_update_regulatory(struct wiphy *wiphy,
+-			     enum nl80211_reg_initiator setby);
+ 
+ void cfg80211_bss_expire(struct cfg80211_registered_device *dev);
+ void cfg80211_bss_age(struct cfg80211_registered_device *dev,
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 1ad0f39..a10dc34 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -912,14 +912,6 @@ static bool ignore_reg_update(struct wiphy *wiphy,
+ 	return false;
+ }
+ 
+-static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
+-{
+-	struct cfg80211_registered_device *rdev;
+-
+-	list_for_each_entry(rdev, &cfg80211_rdev_list, list)
+-		wiphy_update_regulatory(&rdev->wiphy, initiator);
+-}
+-
+ static void handle_reg_beacon(struct wiphy *wiphy,
+ 			      unsigned int chan_idx,
+ 			      struct reg_beacon *reg_beacon)
+@@ -1119,24 +1111,6 @@ static void reg_process_ht_flags(struct wiphy *wiphy)
+ 
+ }
+ 
+-void wiphy_update_regulatory(struct wiphy *wiphy,
+-			     enum nl80211_reg_initiator initiator)
+-{
+-	enum ieee80211_band band;
+-
+-	if (ignore_reg_update(wiphy, initiator))
+-		goto out;
+-	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+-		if (wiphy->bands[band])
+-			handle_band(wiphy, band, initiator);
+-	}
+-out:
+-	reg_process_beacons(wiphy);
+-	reg_process_ht_flags(wiphy);
+-	if (wiphy->reg_notifier)
+-		wiphy->reg_notifier(wiphy, last_request);
+-}
+-
+ static void handle_channel_custom(struct wiphy *wiphy,
+ 				  enum ieee80211_band band,
+ 				  unsigned int chan_idx,
+@@ -1423,6 +1397,42 @@ new_request:
+ 	return call_crda(last_request->alpha2);
+ }
+ 
++static void wiphy_update_regulatory(struct wiphy *wiphy,
++				    enum nl80211_reg_initiator initiator)
++{
++	enum ieee80211_band band;
++
++	assert_reg_lock();
++
++	if (ignore_reg_update(wiphy, initiator))
++		goto out;
++	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
++		if (wiphy->bands[band])
++			handle_band(wiphy, band, initiator);
++	}
++out:
++	reg_process_beacons(wiphy);
++	reg_process_ht_flags(wiphy);
++	if (wiphy->reg_notifier)
++		wiphy->reg_notifier(wiphy, last_request);
++}
++
++static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
++{
++	struct cfg80211_registered_device *rdev;
++
++	list_for_each_entry(rdev, &cfg80211_rdev_list, list)
++		wiphy_update_regulatory(&rdev->wiphy, initiator);
++}
++
++void regulatory_update(struct wiphy *wiphy,
++		       enum nl80211_reg_initiator setby)
++{
++	mutex_lock(&reg_mutex);
++	wiphy_update_regulatory(wiphy, setby);
++	mutex_unlock(&reg_mutex);
++}
++
+ /* This processes *all* regulatory hints */
+ static void reg_process_hint(struct regulatory_request *reg_request)
+ {
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index b67d1c3..4a56799 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -16,6 +16,8 @@ void regulatory_exit(void);
+ 
+ int set_regdom(const struct ieee80211_regdomain *rd);
+ 
++void regulatory_update(struct wiphy *wiphy, enum nl80211_reg_initiator setby);
++
+ /**
+  * regulatory_hint_found_beacon - hints a beacon was found on a channel
+  * @wiphy: the wireless device where the beacon was found on
+-- 
+1.7.1
 
