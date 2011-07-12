@@ -1,31 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:46688 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756153Ab1GQS5O (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51932 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750803Ab1GLOB7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2011 14:57:14 -0400
-Message-ID: <4E23307B.4060504@qca.qualcomm.com> (sfid-20110717_205739_904685_47E2EE67)
-Date: Sun, 17 Jul 2011 21:56:59 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Tue, 12 Jul 2011 10:01:59 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1QgdXA-0003gn-HJ
+	for linux-wireless@vger.kernel.org; Tue, 12 Jul 2011 10:01:56 -0400
+Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id p6CDnMV8012942
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Jul 2011 09:49:23 -0400
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id p6CDnMPk012940
+	for linux-wireless@vger.kernel.org; Tue, 12 Jul 2011 09:49:22 -0400
+Date: Tue, 12 Jul 2011 09:49:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: new stuff for 3.1 needs to be posted _now_
+Message-ID: <20110712134921.GA11351@tuxdriver.com> (sfid-20110712_160208_834345_FAA1F9AB)
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: <devel@linuxdriverproject.org>, <gregkh@suse.de>,
-	<error27@gmail.com>, <linux-kernel@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: Re: [PATCH 0/3] ath6kl: neatening
-References: <cover.1310927985.git.joe@perches.com>
-In-Reply-To: <cover.1310927985.git.joe@perches.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/17/2011 09:43 PM, Joe Perches wrote:
-> Joe Perches (3):
->   ath6kl: Add missing newlines and coalesce messages
->   ath6kl: Remove __func__ uses from ath6kl_err
->   ath6kl: cfg80211: Add and use ath6kl_cfg80211_ready helper
+You may have noticed that Linus has released 3.0-rc7.  So, the
+merge window is around the corner!
 
-Nice, thanks a lot. I'm planning to send v3 of athk6kl patches later
-today. Is it okay for you if I amend your three patches to that patchset?
+For those that need a reminder, the opening of the merge window is a
+_deadline_ for new features.  Once the merge window opens, only fixes
+will be accepted for 3.1.  In fact, any non-fix patches need to
+already be in wireless-next-2.6 when the merge window opens if you want
+them in 3.1.  That means you need to get them posted _now_, so they
+can be reviewed and I can find time to merge them before the deadline.
 
-Kalle
+You have been warned...this means you!
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
