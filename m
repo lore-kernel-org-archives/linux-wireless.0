@@ -1,283 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:51274 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751835Ab1GQVkc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2011 17:40:32 -0400
-Subject: [PATCH v3 02/23] ath6kl: add bmi.h
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: joe@perches.com, devel@linuxdriverproject.org, gregkh@suse.de,
-	error27@gmail.com
-Date: Mon, 18 Jul 2011 00:40:24 +0300
-Message-ID: <20110717214024.23534.83996.stgit@localhost6.localdomain6> (sfid-20110717_234035_752979_A453FD77)
-In-Reply-To: <20110717213832.23534.75274.stgit@localhost6.localdomain6>
-References: <20110717213832.23534.75274.stgit@localhost6.localdomain6>
+Received: from rere.qmqm.pl ([89.167.52.164]:48743 "EHLO rere.qmqm.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753704Ab1GLP6u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jul 2011 11:58:50 -0400
+Date: Tue, 12 Jul 2011 17:58:49 +0200
+From: =?iso-8859-2?Q?Micha=B3_Miros=B3aw?= <mirq-linux@rere.qmqm.pl>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>
+Subject: Re: [ath9k-devel] [PATCH v2 07/46] net/wireless: ath9k: fix DMA
+ API usage
+Message-ID: <20110712155849.GB10651@rere.qmqm.pl> (sfid-20110712_175859_523053_C35E3F46)
+References: <cover.1310339688.git.mirq-linux@rere.qmqm.pl>
+ <280ad9176e6532f231e054b38b952b20580874c5.1310339688.git.mirq-linux@rere.qmqm.pl>
+ <4E1BCF36.2010506@openwrt.org>
+ <20110712095541.GA6236@rere.qmqm.pl>
+ <B4765EFC-B5C9-4E2D-BE00-ED5519D13A4E@nbd.name>
+ <20110712130316.GA8621@rere.qmqm.pl>
+ <EC2F82D7-9206-4139-9539-F5DDE38A5629@nbd.name>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-2
+In-Reply-To: <EC2F82D7-9206-4139-9539-F5DDE38A5629@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/bmi.h |  250 +++++++++++++++++++++++++++++++++
- 1 files changed, 250 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/bmi.h
+On Tue, Jul 12, 2011 at 10:21:05PM +0800, Felix Fietkau wrote:
+> On 12.07.2011, at 21:03, Micha³ Miros³aw <mirq-linux@rere.qmqm.pl> wrote:
+> 
+> > On Tue, Jul 12, 2011 at 08:54:32PM +0800, Felix Fietkau wrote:
+> >> On 12.07.2011, at 17:55, Micha³ Miros³aw <mirq-linux@rere.qmqm.pl> wrote:
+> >> 
+> >>> On Tue, Jul 12, 2011 at 12:36:06PM +0800, Felix Fietkau wrote:
+> >>>> On 2011-07-11 8:52 AM, Micha³ Miros³aw wrote:
+> >>>>> Also constify buf_addr for ath9k_hw_process_rxdesc_edma() to verify
+> >>>>> assumptions --- dma_sync_single_for_device() call can be removed.
+> >>>>> 
+> >>>>> Signed-off-by: Micha³ Miros³aw<mirq-linux@rere.qmqm.pl>
+> >>>>> ---
+> >>>>> drivers/net/wireless/ath/ath9k/ar9003_mac.c |    4 ++--
+> >>>>> drivers/net/wireless/ath/ath9k/ar9003_mac.h |    2 +-
+> >>>>> drivers/net/wireless/ath/ath9k/recv.c       |   10 +++-------
+> >>>>> 3 files changed, 6 insertions(+), 10 deletions(-)
+> >>>>> 
+> >>>>> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> >>>>> index 70dc8ec..c5f46d5 100644
+> >>>>> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> >>>>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> >>>>> @@ -684,15 +684,11 @@ static bool ath_edma_get_buffers(struct ath_softc *sc,
+> >>>>>   BUG_ON(!bf);
+> >>>>> 
+> >>>>>   dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
+> >>>>> -                common->rx_bufsize, DMA_FROM_DEVICE);
+> >>>>> +                common->rx_bufsize, DMA_BIDIRECTIONAL);
+> >>>>> 
+> >>>>>   ret = ath9k_hw_process_rxdesc_edma(ah, NULL, skb->data);
+> >>>>> -    if (ret == -EINPROGRESS) {
+> >>>>> -        /*let device gain the buffer again*/
+> >>>>> -        dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
+> >>>>> -                common->rx_bufsize, DMA_FROM_DEVICE);
+> >>>>> +    if (ret == -EINPROGRESS)
+> >>>>>       return false;
+> >>>>> -    }
+> >>>>> 
+> >>>>>   __skb_unlink(skb,&rx_edma->rx_fifo);
+> >>>>>   if (ret == -EINVAL) {
+> >>>> I have strong doubts about this change. On most MIPS devices,
+> >>>> dma_sync_single_for_cpu is a no-op, whereas
+> >>>> dma_sync_single_for_device flushes the cache range. With this
+> >>>> change, the CPU could cache the DMA status part behind skb->data and
+> >>>> that cache entry would not be flushed inbetween calls to this
+> >>>> functions on the same buffer, likely leading to rx stalls.
+> >>> You're suggesting a platform implementation bug then. If the platform is not
+> >>> cache-coherent, it should invalidate relevant CPU cache lines for sync_to_cpu
+> >>> and unmap cases. Do other devices show such symptoms on MIPS systems?
+> >>> 
+> >>> I'm not familiar with the platform internals, so we should ask MIPS people.
+> >> I only mentioned MIPS to describe the potential side effect of this change. From my current understanding of the DMA API, it would be wrong on other platforms as well. I believe the _for_device function needs to be used to transfer ownership of the buffer back to the device, before calling _for_cpu again later for another read.
+> > What you're saying reminds the wording in DMA-API-HOWTO.txt that I find
+> > wrong (or at least misleading) compared to what DMA-API.txt describes.
+> > DMA sync calls do not transfer the ownership of the buffer - they are
+> > cache synchronization points, ownership passing is handled entirely by
+> > the driver.
+> What I meant was that the DMA sync calls reflect the ownership transfer of the memory regions. In this case ownership is transferred between device and CPU multiple times and the code reflects that.
+> >> This is definitely required in this case, because when the return code is -EINPROGRESS, the driver waits for the hardware to complete this buffer, and the next call has to fetch the memory again after the device has updated it.
+> > Correctness of this access should be provided by sync_to_cpu() call.
+> At least in MIPS I'm sure it isn't. If I remember correctly, it also isn't on ARM, so I'm pretty sure that either your understanding of the API is incorrect, or arch code does not implement it properly. In either case, this change (and probably also the p54 one) should not be merged.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/bmi.h b/drivers/net/wireless/ath/ath6kl/bmi.h
-new file mode 100644
-index 0000000..83546d7
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath6kl/bmi.h
-@@ -0,0 +1,250 @@
-+/*
-+ * Copyright (c) 2004-2011 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef BMI_H
-+#define BMI_H
-+
-+/*
-+ * Bootloader Messaging Interface (BMI)
-+ *
-+ * BMI is a very simple messaging interface used during initialization
-+ * to read memory, write memory, execute code, and to define an
-+ * application entry PC.
-+ *
-+ * It is used to download an application to ATH6KL, to provide
-+ * patches to code that is already resident on ATH6KL, and generally
-+ * to examine and modify state.  The Host has an opportunity to use
-+ * BMI only once during bootup.  Once the Host issues a BMI_DONE
-+ * command, this opportunity ends.
-+ *
-+ * The Host writes BMI requests to mailbox0, and reads BMI responses
-+ * from mailbox0.   BMI requests all begin with a command
-+ * (see below for specific commands), and are followed by
-+ * command-specific data.
-+ *
-+ * Flow control:
-+ * The Host can only issue a command once the Target gives it a
-+ * "BMI Command Credit", using ATH6KL Counter #4.  As soon as the
-+ * Target has completed a command, it issues another BMI Command
-+ * Credit (so the Host can issue the next command).
-+ *
-+ * BMI handles all required Target-side cache flushing.
-+ */
-+
-+#define MAX_BMI_CMDBUF_SZ (BMI_DATASZ_MAX + \
-+			   (sizeof(u32) * 3 /* cmd + addr + len */))
-+
-+/* Maximum data size used for BMI transfers */
-+#define BMI_DATASZ_MAX                      256
-+
-+/* BMI Commands */
-+
-+#define BMI_NO_COMMAND                      0
-+
-+#define BMI_DONE                            1
-+/*
-+ * Semantics: Host is done using BMI
-+ * Request format:
-+ *    u32 command (BMI_DONE)
-+ * Response format: none
-+ */
-+
-+#define BMI_READ_MEMORY                     2
-+/*
-+ * Semantics: Host reads ATH6KL memory
-+ * Request format:
-+ *    u32 command (BMI_READ_MEMORY)
-+ *    u32 address
-+ *    u32 length, at most BMI_DATASZ_MAX
-+ * Response format:
-+ *    u8 data[length]
-+ */
-+
-+#define BMI_WRITE_MEMORY                    3
-+/*
-+ * Semantics: Host writes ATH6KL memory
-+ * Request format:
-+ *    u32 command (BMI_WRITE_MEMORY)
-+ *    u32 address
-+ *    u32 length, at most BMI_DATASZ_MAX
-+ *    u8 data[length]
-+ * Response format: none
-+ */
-+
-+#define BMI_EXECUTE                         4
-+/*
-+ * Semantics: Causes ATH6KL to execute code
-+ * Request format:
-+ *    u32 command (BMI_EXECUTE)
-+ *    u32 address
-+ *    u32 parameter
-+ * Response format:
-+ *    u32 return value
-+ */
-+
-+#define BMI_SET_APP_START                   5
-+/*
-+ * Semantics: Set Target application starting address
-+ * Request format:
-+ *    u32 command (BMI_SET_APP_START)
-+ *    u32 address
-+ * Response format: none
-+ */
-+
-+#define BMI_READ_SOC_REGISTER               6
-+/*
-+ * Semantics: Read a 32-bit Target SOC register.
-+ * Request format:
-+ *    u32 command (BMI_READ_REGISTER)
-+ *    u32 address
-+ * Response format:
-+ *    u32 value
-+ */
-+
-+#define BMI_WRITE_SOC_REGISTER              7
-+/*
-+ * Semantics: Write a 32-bit Target SOC register.
-+ * Request format:
-+ *    u32 command (BMI_WRITE_REGISTER)
-+ *    u32 address
-+ *    u32 value
-+ *
-+ * Response format: none
-+ */
-+
-+#define BMI_GET_TARGET_ID                  8
-+#define BMI_GET_TARGET_INFO                8
-+/*
-+ * Semantics: Fetch the 4-byte Target information
-+ * Request format:
-+ *    u32 command (BMI_GET_TARGET_ID/INFO)
-+ * Response format1 (old firmware):
-+ *    u32 TargetVersionID
-+ * Response format2 (newer firmware):
-+ *    u32 TARGET_VERSION_SENTINAL
-+ *    struct bmi_target_info;
-+ */
-+
-+#define TARGET_VERSION_SENTINAL 0xffffffff
-+#define TARGET_TYPE_AR6003	3
-+
-+#define BMI_ROMPATCH_INSTALL               9
-+/*
-+ * Semantics: Install a ROM Patch.
-+ * Request format:
-+ *    u32 command (BMI_ROMPATCH_INSTALL)
-+ *    u32 Target ROM Address
-+ *    u32 Target RAM Address or Value (depending on Target Type)
-+ *    u32 Size, in bytes
-+ *    u32 Activate? 1-->activate;
-+ *                            0-->install but do not activate
-+ * Response format:
-+ *    u32 PatchID
-+ */
-+
-+#define BMI_ROMPATCH_UNINSTALL             10
-+/*
-+ * Semantics: Uninstall a previously-installed ROM Patch,
-+ * automatically deactivating, if necessary.
-+ * Request format:
-+ *    u32 command (BMI_ROMPATCH_UNINSTALL)
-+ *    u32 PatchID
-+ *
-+ * Response format: none
-+ */
-+
-+#define BMI_ROMPATCH_ACTIVATE              11
-+/*
-+ * Semantics: Activate a list of previously-installed ROM Patches.
-+ * Request format:
-+ *    u32 command (BMI_ROMPATCH_ACTIVATE)
-+ *    u32 rompatch_count
-+ *    u32 PatchID[rompatch_count]
-+ *
-+ * Response format: none
-+ */
-+
-+#define BMI_ROMPATCH_DEACTIVATE            12
-+/*
-+ * Semantics: Deactivate a list of active ROM Patches.
-+ * Request format:
-+ *    u32 command (BMI_ROMPATCH_DEACTIVATE)
-+ *    u32 rompatch_count
-+ *    u32 PatchID[rompatch_count]
-+ *
-+ * Response format: none
-+ */
-+
-+
-+#define BMI_LZ_STREAM_START                13
-+/*
-+ * Semantics: Begin an LZ-compressed stream of input
-+ * which is to be uncompressed by the Target to an
-+ * output buffer at address.  The output buffer must
-+ * be sufficiently large to hold the uncompressed
-+ * output from the compressed input stream.  This BMI
-+ * command should be followed by a series of 1 or more
-+ * BMI_LZ_DATA commands.
-+ *    u32 command (BMI_LZ_STREAM_START)
-+ *    u32 address
-+ * Note: Not supported on all versions of ROM firmware.
-+ */
-+
-+#define BMI_LZ_DATA                        14
-+/*
-+ * Semantics: Host writes ATH6KL memory with LZ-compressed
-+ * data which is uncompressed by the Target.  This command
-+ * must be preceded by a BMI_LZ_STREAM_START command. A series
-+ * of BMI_LZ_DATA commands are considered part of a single
-+ * input stream until another BMI_LZ_STREAM_START is issued.
-+ * Request format:
-+ *    u32 command (BMI_LZ_DATA)
-+ *    u32 length (of compressed data),
-+ *                  at most BMI_DATASZ_MAX
-+ *    u8 CompressedData[length]
-+ * Response format: none
-+ * Note: Not supported on all versions of ROM firmware.
-+ */
-+
-+#define BMI_COMMUNICATION_TIMEOUT       1000 /* in msec */
-+
-+struct ath6kl;
-+struct ath6kl_bmi_target_info {
-+	__le32 byte_count;   /* size of this structure */
-+	__le32 version;      /* target version id */
-+	__le32 type;         /* target type */
-+} __packed;
-+
-+int ath6kl_bmi_init(struct ath6kl *ar);
-+void ath6kl_bmi_cleanup(struct ath6kl *ar);
-+int ath6kl_bmi_done(struct ath6kl *ar);
-+int ath6kl_bmi_get_target_info(struct ath6kl *ar,
-+			       struct ath6kl_bmi_target_info *targ_info);
-+int ath6kl_bmi_read(struct ath6kl *ar, u32 addr, u8 *buf, u32 len);
-+int ath6kl_bmi_write(struct ath6kl *ar, u32 addr, u8 *buf, u32 len);
-+int ath6kl_bmi_execute(struct ath6kl *ar,
-+		       u32 addr, u32 *param);
-+int ath6kl_bmi_set_app_start(struct ath6kl *ar,
-+			     u32 addr);
-+int ath6kl_bmi_reg_read(struct ath6kl *ar, u32 addr, u32 *param);
-+int ath6kl_bmi_reg_write(struct ath6kl *ar, u32 addr, u32 param);
-+int ath6kl_bmi_lz_data(struct ath6kl *ar,
-+		       u8 *buf, u32 len);
-+int ath6kl_bmi_lz_stream_start(struct ath6kl *ar,
-+			       u32 addr);
-+int ath6kl_bmi_fast_download(struct ath6kl *ar,
-+			     u32 addr, u8 *buf, u32 len);
-+#endif
+I briefly looked through DMA API implementation in MIPS, and except
+for R10k and R12k both sync_for_cpu and sync_for_device are no-ops
+(see: arch/mips/mm/dma-default.c).  For R10k and R12k the syncs are
+in both points, and exactly like I described before - CPU cachelines
+are invalidated for DMA_FROM_DEVICE mappings, written back for
+DMA_TO_DEVICE, both for DMA_BIDIRECTIONAL (including redundant
+mapping+sync direction).
 
+So doing that sync_to_device you are just invalidating the same cachelines
+twice for no gain (or do nothing twice in some cases) - they are not read
+by CPU between sync_to_device -> sync_to_cpu (unless you have other bugs
+in the driver). 
+
+Best Regards,
+Micha³ Miros³aw
