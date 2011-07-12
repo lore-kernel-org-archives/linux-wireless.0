@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61904 "EHLO mx1.redhat.com"
+Received: from nbd.name ([46.4.11.11]:58700 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751337Ab1GYJ2i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2011 05:28:38 -0400
-Date: Mon, 25 Jul 2011 11:29:30 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	Tony Houghton <h@realh.co.uk>,
-	Adrian Chadd <adrian@freebsd.org>
-Subject: Re: [RFC/RFT 6/6] ath9k: always initialize hw registers related to
- PCIe PM
-Message-ID: <20110725092929.GB2608@redhat.com> (sfid-20110725_112842_292693_9D8DEC83)
-References: <1311341512-2882-1-git-send-email-sgruszka@redhat.com>
- <1311341512-2882-7-git-send-email-sgruszka@redhat.com>
- <20110723051129.GC828@vmraj-lnx.users.atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110723051129.GC828@vmraj-lnx.users.atheros.com>
+	id S1752938Ab1GLBCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2011 21:02:20 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	mickflemm@gmail.com
+Subject: [PATCH v3 2/8] ath5k: apply the synth voltage tweak only on AR5112 rev 2
+Date: Tue, 12 Jul 2011 09:01:59 +0800
+Message-Id: <1310432525-70077-2-git-send-email-nbd@openwrt.org> (sfid-20110712_030231_075566_B0872D0A)
+In-Reply-To: <1310432525-70077-1-git-send-email-nbd@openwrt.org>
+References: <1310432525-70077-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 23, 2011 at 10:41:30AM +0530, Rajkumar Manoharan wrote:
-> > +	/* initalize PCIe PM registers if device introduce itself as PCIe */
-> > +	if (ah->is_pciexpress)
-> > +		ath9k_hw_ops(ah)->config_pci_powersave(ah, false);
-> > +
-> Use ath9k_hw_configpcipowersave wrapper instead.
-I changed wrapper to check ah->aspm_enabled, so if I would use it here
-it will not setup registers. I think I should comment that. 
+Might fix some stability issues on newer chips
 
-> And ensure that there is no
-> sideeffect by changing SERDES config from __ath9k_hw_init to pci_probe.
-Hmm, not sure if I understand what I have to do :-(
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/phy.c |   19 +++++++++++--------
+ 1 files changed, 11 insertions(+), 8 deletions(-)
 
-We have something like that:
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 3f19e31..acf73a0 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -970,17 +970,20 @@ static int ath5k_hw_rfregs_init(struct ath5k_hw *ah,
+ 			}
+ 
+ 			/* Lower synth voltage on Rev 2 */
+-			ath5k_hw_rfb_op(ah, rf_regs, 2,
+-					AR5K_RF_HIGH_VC_CP, true);
++			if (ah->ah_radio == AR5K_RF5112 &&
++			    (ah->ah_radio_5ghz_revision & AR5K_SREV_REV) > 0) {
++				ath5k_hw_rfb_op(ah, rf_regs, 2,
++						AR5K_RF_HIGH_VC_CP, true);
+ 
+-			ath5k_hw_rfb_op(ah, rf_regs, 2,
+-					AR5K_RF_MID_VC_CP, true);
++				ath5k_hw_rfb_op(ah, rf_regs, 2,
++						AR5K_RF_MID_VC_CP, true);
+ 
+-			ath5k_hw_rfb_op(ah, rf_regs, 2,
+-					AR5K_RF_LOW_VC_CP, true);
++				ath5k_hw_rfb_op(ah, rf_regs, 2,
++						AR5K_RF_LOW_VC_CP, true);
+ 
+-			ath5k_hw_rfb_op(ah, rf_regs, 2,
+-					AR5K_RF_PUSH_UP, true);
++				ath5k_hw_rfb_op(ah, rf_regs, 2,
++						AR5K_RF_PUSH_UP, true);
++			}
+ 
+ 			/* Decrease power consumption on 5213+ BaseBand */
+ 			if (ah->ah_phy_revision >= AR5K_SREV_PHY_5212A) {
+-- 
+1.7.3.2
 
-ath_pci_probe
-  ath9k_init_device
-    ath9k_init_softc
-      ath9k_hw_init
-	__ath9k_hw_init
-            ath9k_hw_configpcipowersave();
-
-I changed it this way:
-
-ath_pci_probe
-  ath9k_init_device
-    ath9k_init_softc
-      ath9k_hw_init
-	__ath9k_hw_init
-
-      ath9k_init_queues
-      ath9k_init_btcoex
-   some other inits
-     
-  ath9k_hw_configpcipowersave();
-
-Can this cause some side effects?
