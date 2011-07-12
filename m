@@ -1,67 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23340 "EHLO mx1.redhat.com"
+Received: from rere.qmqm.pl ([89.167.52.164]:33722 "EHLO rere.qmqm.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752720Ab1GOPvS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2011 11:51:18 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 1/2] compat: add pr_<level>_once macros
-Date: Fri, 15 Jul 2011 17:50:25 +0200
-Message-Id: <1310745026-2282-1-git-send-email-sgruszka@redhat.com> (sfid-20110715_175129_310920_6883C38B)
+	id S1752948Ab1GLNDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jul 2011 09:03:21 -0400
+Date: Tue, 12 Jul 2011 15:03:16 +0200
+From: =?iso-8859-2?Q?Micha=B3_Miros=B3aw?= <mirq-linux@rere.qmqm.pl>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>
+Subject: Re: [ath9k-devel] [PATCH v2 07/46] net/wireless: ath9k: fix DMA
+ API usage
+Message-ID: <20110712130316.GA8621@rere.qmqm.pl> (sfid-20110712_150329_152023_5437C994)
+References: <cover.1310339688.git.mirq-linux@rere.qmqm.pl>
+ <280ad9176e6532f231e054b38b952b20580874c5.1310339688.git.mirq-linux@rere.qmqm.pl>
+ <4E1BCF36.2010506@openwrt.org>
+ <20110712095541.GA6236@rere.qmqm.pl>
+ <B4765EFC-B5C9-4E2D-BE00-ED5519D13A4E@nbd.name>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-2
+In-Reply-To: <B4765EFC-B5C9-4E2D-BE00-ED5519D13A4E@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add functions from 2.6.38 kernel commit:
+On Tue, Jul 12, 2011 at 08:54:32PM +0800, Felix Fietkau wrote:
+> On 12.07.2011, at 17:55, Micha³ Miros³aw <mirq-linux@rere.qmqm.pl> wrote:
+> 
+> > On Tue, Jul 12, 2011 at 12:36:06PM +0800, Felix Fietkau wrote:
+> >> On 2011-07-11 8:52 AM, Micha³ Miros³aw wrote:
+> >>> Also constify buf_addr for ath9k_hw_process_rxdesc_edma() to verify
+> >>> assumptions --- dma_sync_single_for_device() call can be removed.
+> >>> 
+> >>> Signed-off-by: Micha³ Miros³aw<mirq-linux@rere.qmqm.pl>
+> >>> ---
+> >>> drivers/net/wireless/ath/ath9k/ar9003_mac.c |    4 ++--
+> >>> drivers/net/wireless/ath/ath9k/ar9003_mac.h |    2 +-
+> >>> drivers/net/wireless/ath/ath9k/recv.c       |   10 +++-------
+> >>> 3 files changed, 6 insertions(+), 10 deletions(-)
+> >>> 
+> >>> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> >>> index 70dc8ec..c5f46d5 100644
+> >>> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> >>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> >>> @@ -684,15 +684,11 @@ static bool ath_edma_get_buffers(struct ath_softc *sc,
+> >>>    BUG_ON(!bf);
+> >>> 
+> >>>    dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
+> >>> -                common->rx_bufsize, DMA_FROM_DEVICE);
+> >>> +                common->rx_bufsize, DMA_BIDIRECTIONAL);
+> >>> 
+> >>>    ret = ath9k_hw_process_rxdesc_edma(ah, NULL, skb->data);
+> >>> -    if (ret == -EINPROGRESS) {
+> >>> -        /*let device gain the buffer again*/
+> >>> -        dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
+> >>> -                common->rx_bufsize, DMA_FROM_DEVICE);
+> >>> +    if (ret == -EINPROGRESS)
+> >>>        return false;
+> >>> -    }
+> >>> 
+> >>>    __skb_unlink(skb,&rx_edma->rx_fifo);
+> >>>    if (ret == -EINVAL) {
+> >> I have strong doubts about this change. On most MIPS devices,
+> >> dma_sync_single_for_cpu is a no-op, whereas
+> >> dma_sync_single_for_device flushes the cache range. With this
+> >> change, the CPU could cache the DMA status part behind skb->data and
+> >> that cache entry would not be flushed inbetween calls to this
+> >> functions on the same buffer, likely leading to rx stalls.
+> > 
+> > You're suggesting a platform implementation bug then. If the platform is not
+> > cache-coherent, it should invalidate relevant CPU cache lines for sync_to_cpu
+> > and unmap cases. Do other devices show such symptoms on MIPS systems?
+> > 
+> > I'm not familiar with the platform internals, so we should ask MIPS people.
+> I only mentioned MIPS to describe the potential side effect of this change. From my current understanding of the DMA API, it would be wrong on other platforms as well. I believe the _for_device function needs to be used to transfer ownership of the buffer back to the device, before calling _for_cpu again later for another read.
 
-commit 16cb839f13324978bd58082e69de81a711802b11
-Author: Joe Perches <joe@perches.com>
-Date:   Wed Jan 12 16:59:46 2011 -0800
+What you're saying reminds the wording in DMA-API-HOWTO.txt that I find
+wrong (or at least misleading) compared to what DMA-API.txt describes.
+DMA sync calls do not transfer the ownership of the buffer - they are
+cache synchronization points, ownership passing is handled entirely by
+the driver.
 
-    include/linux/printk.h: add pr_<level>_once macros
+> This is definitely required in this case, because when the return code is -EINPROGRESS, the driver waits for the hardware to complete this buffer, and the next call has to fetch the memory again after the device has updated it.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- include/linux/compat-2.6.38.h |   25 +++++++++++++++++++++++++
- 1 files changed, 25 insertions(+), 0 deletions(-)
+Correctness of this access should be provided by sync_to_cpu() call.
 
-diff --git a/include/linux/compat-2.6.38.h b/include/linux/compat-2.6.38.h
-index 2dd1910..dfe1250 100644
---- a/include/linux/compat-2.6.38.h
-+++ b/include/linux/compat-2.6.38.h
-@@ -46,6 +46,31 @@ static inline int skb_checksum_start_offset(const struct sk_buff *skb)
- 	return skb->csum_start - skb_headroom(skb);
- }
- 
-+/* from include/linux/printk.h */ 
-+#define pr_emerg_once(fmt, ...)					\
-+	printk_once(KERN_EMERG pr_fmt(fmt), ##__VA_ARGS__)
-+#define pr_alert_once(fmt, ...)					\
-+	printk_once(KERN_ALERT pr_fmt(fmt), ##__VA_ARGS__)
-+#define pr_crit_once(fmt, ...)					\
-+	printk_once(KERN_CRIT pr_fmt(fmt), ##__VA_ARGS__)
-+#define pr_err_once(fmt, ...)					\
-+	printk_once(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
-+#define pr_warn_once(fmt, ...)					\
-+	printk_once(KERN_WARNING pr_fmt(fmt), ##__VA_ARGS__)
-+#define pr_notice_once(fmt, ...)				\
-+	printk_once(KERN_NOTICE pr_fmt(fmt), ##__VA_ARGS__)
-+#define pr_info_once(fmt, ...)					\
-+	printk_once(KERN_INFO pr_fmt(fmt), ##__VA_ARGS__)
-+#define pr_cont_once(fmt, ...)					\
-+	printk_once(KERN_CONT pr_fmt(fmt), ##__VA_ARGS__)
-+#if defined(DEBUG)
-+#define pr_debug_once(fmt, ...)					\
-+	printk_once(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
-+#else
-+#define pr_debug_once(fmt, ...)					\
-+	no_printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
-+#endif
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38)) */
- 
- #endif /* LINUX_26_38_COMPAT_H */
--- 
-1.7.1
-
+Best Regards,
+Micha³ Miros³aw
