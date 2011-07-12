@@ -1,68 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:51785 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750959Ab1GDSbo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 14:31:44 -0400
-Received: by qwk3 with SMTP id 3so2549054qwk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2011 11:31:43 -0700 (PDT)
+Received: from nbd.name ([46.4.11.11]:42394 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751065Ab1GLEud (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jul 2011 00:50:33 -0400
+Message-ID: <4E1BD28C.2070704@openwrt.org> (sfid-20110712_065104_528692_F1423E9D)
+Date: Tue, 12 Jul 2011 12:50:20 +0800
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <loom.20110630T161632-452@post.gmane.org>
-References: <loom.20110630T161632-452@post.gmane.org>
-Date: Mon, 4 Jul 2011 20:31:43 +0200
-Message-ID: <CA+icZUUQwN5uZiSPjWikboH=zrU2Wi6vDHCLUoirF92EMuy2PQ@mail.gmail.com> (sfid-20110704_203153_707234_980FD819)
-Subject: Re: Broadcom 14e4:4357 mode monitor
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: lululatortue <lefrancoisfabien@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>
+CC: netdev@vger.kernel.org,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 04/46] net/wireless: p54: remove useless dma_sync_single_for_device(DMA_FROM_DEVICE)
+References: <cover.1310339688.git.mirq-linux@rere.qmqm.pl> <86c8bde08b005ca7eb4806ea77aec1f3212d63fc.1310339688.git.mirq-linux@rere.qmqm.pl>
+In-Reply-To: <86c8bde08b005ca7eb4806ea77aec1f3212d63fc.1310339688.git.mirq-linux@rere.qmqm.pl>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-# Clone the remote GIT repository (master GIT branch)
-git clone git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-2.6.git
+On 2011-07-11 8:52 AM, Michał Mirosław wrote:
+> Also constify pointers used in frame parsers to verify assumptions.
+>
+> Signed-off-by: Michał Mirosław<mirq-linux@rere.qmqm.pl>
+> ---
+>   drivers/net/wireless/p54/p54pci.c |    2 --
+>   drivers/net/wireless/p54/txrx.c   |   22 +++++++++++-----------
+>   2 files changed, 11 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+> index 1b75317..4491d33 100644
+> --- a/drivers/net/wireless/p54/p54pci.c
+> +++ b/drivers/net/wireless/p54/p54pci.c
+> @@ -229,8 +229,6 @@ static void p54p_check_rx_ring(struct ieee80211_hw *dev, u32 *index,
+>   			desc->host_addr = cpu_to_le32(0);
+>   		} else {
+>   			skb_trim(skb, 0);
+> -			pci_dma_sync_single_for_device(priv->pdev, dma_addr,
+> -				priv->common.rx_mtu + 32, PCI_DMA_FROMDEVICE);
+>   			desc->len = cpu_to_le16(priv->common.rx_mtu + 32);
+>   		}
+>
+This part does not look correct to me - same issue as your ath9k change, 
+which I commented on earlier. I don't think this call to 
+dma_sync_single_for_device is useless
 
-# Change to local GIT repository
-cd staging-2.6
+- Felix
 
-# Switch to staging-next GIT branch
-git checkout -b staging-next origin/staging-next
-
-# Check on which branch you are
-git branch -l
-
-- Sedat -
-
-On Thu, Jun 30, 2011 at 4:34 PM, lululatortue
-<lefrancoisfabien@gmail.com> wrote:
-> Hello,
->
->     My objectif is to drive my broadcom with monitor mode. I would download the
-> staging-next git tree, available at :
-> git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-next-2.6.git
->
->     but with my linux write:
->
->    git clone
-> git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-next-2.6.git
->
->    I'have:
->
-> Initialized empty Git repository in /home/lefrancois/staging-next-2.6/.git/
-> fatal: The remote end hung up unexpectedly
->
->
->    you know were i can found solution why see unexpectedly or if i want have
-> your autorisation for download with my computeur?
->
->
->     2.6.32-32-generic ubuntu 10.04LTS with version git-core (1:1.7.0.4-1ubuntu0.2)
->
->     thank you
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
