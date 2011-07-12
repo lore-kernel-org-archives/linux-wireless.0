@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:59399 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752610Ab1GGT6Z (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32335 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750808Ab1GLJtO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2011 15:58:25 -0400
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH] net/b43: don't return IRQ_HANDLED if nothing was done
-Date: Thu,  7 Jul 2011 21:58:10 +0200
-Message-Id: <1310068690-17892-1-git-send-email-bigeasy@linutronix.de> (sfid-20110707_215830_331996_9294E237)
+	Tue, 12 Jul 2011 05:49:14 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] mac80211: remove a redundant check
+Date: Tue, 12 Jul 2011 15:19:04 +0530
+Message-ID: <1310464144-3509-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110712_114918_229766_0AAD58C9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+
+is_valid_ether_addr itself checks for is_zero_ether_addr
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
+ net/mac80211/iface.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-Compiled tested only.
-
- drivers/net/wireless/b43/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index eb41596..16ffee9 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -1923,7 +1923,7 @@ static irqreturn_t b43_do_interrupt(struct b43_wldev *dev)
- 		return IRQ_NONE;
- 	reason &= dev->irq_mask;
- 	if (!reason)
--		return IRQ_HANDLED;
-+		return IRQ_NONE;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 236d158..cd5fb40 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -363,8 +363,7 @@ static int ieee80211_open(struct net_device *dev)
+ 	int err;
  
- 	dev->dma_reason[0] = b43_read32(dev, B43_MMIO_DMA0_REASON)
- 	    & 0x0001DC00;
+ 	/* fail early if user set an invalid address */
+-	if (!is_zero_ether_addr(dev->dev_addr) &&
+-	    !is_valid_ether_addr(dev->dev_addr))
++	if (!is_valid_ether_addr(dev->dev_addr))
+ 		return -EADDRNOTAVAIL;
+ 
+ 	err = ieee80211_check_concurrent_iface(sdata, sdata->vif.type);
 -- 
-1.7.4.4
+1.7.0.4
 
