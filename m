@@ -1,31 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:38764 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757156Ab1GDKHO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 06:07:14 -0400
-Received: by qyk29 with SMTP id 29so933852qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2011 03:07:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4E04DDE0.2020008@openwrt.org>
-References: <1308671129.2656.4.camel@alex-2>
-	<1308671544.2656.8.camel@alex-2>
-	<4E04DDE0.2020008@openwrt.org>
-Date: Mon, 4 Jul 2011 12:07:13 +0200
-Message-ID: <CAP00Pw9LbyqY18vYnBfkDa5RGNaYHSKVKFfsryDnCp_tTYwjxA@mail.gmail.com> (sfid-20110704_120728_048021_C8058A82)
-Subject: Re: [RFC v3 2/3] nl80211: channel type attribute for IBSS
-From: Alexander Simon <alexander.simon@saxnet.de>
+Received: from nbd.name ([46.4.11.11]:58702 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753061Ab1GLBCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2011 21:02:20 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	mickflemm@gmail.com
+Subject: [PATCH v3 4/8] ath5k: initialize common->clockrate
+Date: Tue, 12 Jul 2011 09:02:01 +0800
+Message-Id: <1310432525-70077-4-git-send-email-nbd@openwrt.org> (sfid-20110712_030225_634974_EB03CFC9)
+In-Reply-To: <1310432525-70077-3-git-send-email-nbd@openwrt.org>
+References: <1310432525-70077-1-git-send-email-nbd@openwrt.org>
+ <1310432525-70077-2-git-send-email-nbd@openwrt.org>
+ <1310432525-70077-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Of course i would.
+Fixes a division by zero when setting distance before activating the
+device for the first time.
 
-I did not delete it as it is needed for the (still to do)
-can-we-use-that-channel check (i think i will need to write a new
-function for this as i need to check at several points). It didn't run
-(yet).
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Johannes, please don't forget that is still is RFC. And only useful
-comments can help me :).
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 3e5e9b7..523bb08 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2420,6 +2420,7 @@ ath5k_init_softc(struct ath5k_softc *sc, const struct ath_bus_ops *bus_ops)
+ 	common->ah = sc->ah;
+ 	common->hw = hw;
+ 	common->priv = sc;
++	common->clockrate = 40;
+ 
+ 	/*
+ 	 * Cache line size is used to size and align various
+-- 
+1.7.3.2
+
