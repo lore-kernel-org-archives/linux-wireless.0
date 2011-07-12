@@ -1,84 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37978 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752398Ab1GVFmY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 01:42:24 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 00/31] ath6kl: pending patches from ath6kl-cleanup
-Date: Fri, 22 Jul 2011 08:41:32 +0300
-Message-ID: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110722_074229_270813_9276EBEA)
+Received: from msr6.hinet.net ([168.95.4.106]:33891 "EHLO msr6.hinet.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752855Ab1GLCCv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2011 22:02:51 -0400
+Date: Tue, 12 Jul 2011 10:00:49 +0800
+From: Ali Bahar <ali@internetdog.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, WLAN FAE <wlanfae@realtek.com>
+Subject: Re: [PATCH 0/2] staging: r8712u: Set ESSID/AP now possible before
+ interface is brought Up.
+Message-ID: <20110712020049.GA6364@internetdog.org> (sfid-20110712_040300_884634_A09CAA5F)
+Reply-To: ali@internetdog.org
+References: <1310378876-1311-1-git-send-email-ali@internetDog.org>
+ <4E1B1D60.9030509@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E1B1D60.9030509@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Mon, Jul 11, 2011 at 10:57:20AM -0500, Larry Finger wrote:
+> On 07/11/2011 05:07 AM, Ali Bahar wrote:
+> >These are updates to how the 'bup' flag is handled. The first allows Sets
+> >before the interface is brought Up, and the second is housekeeping of the
+> >flag's value when the interface is taken Down.
+> >
+> >Ali Bahar (2):
+> >   staging: r8712u: Sets to SSID, and to AP MAC#, can now be done
+> >     when the interface is Down.
+> >   staging: r8712u: Interface-state not fully tracked.
+> >
+> >  drivers/staging/rtl8712/drv_types.h           |    5 +++++
+> >  drivers/staging/rtl8712/os_intfs.c            |   14 ++++++++++++++
+> >  drivers/staging/rtl8712/rtl871x_ioctl_linux.c |   25 +++++++++++++++++++++----
+> >  3 files changed, 40 insertions(+), 4 deletions(-)
+> >
+> 
+> Ali,
+> 
+> The patches look good, except for one problem. As this driver is in
+> staging, the patches need to be sent to Greg Kroah-Hartman
+> <gregkh@suse.de>, not through linux-wireless.
 
-here are pending patches from ath6kl-cleanup which were implemented
-while the ath6kl review was ongoing. Please consider taking them once
-wireless-testing is open again.
+Hmm, I must admit that I'd raised this question with myself (ie
+Staging's recipients), and had dug into it a bit, but neglected it at
+the last minute. Sorry.
 
-Kalle
+See below, anyway.
 
-Kalle Valo (5):
-  ath6kl: don't force foreground scan when connected
-  ath6kl: fix atomicity in ath6kl_cfg80211_scan_node()
-  ath6kl: fix crash when interface is closed but scan is ongoing
-  ath6kl: remove dependency to wireless extensions
-  ath6kl: change aggreation timeout message from an error to a debug
-    message
+ 
+> One other point - for those patches that are properly sent through
+> wireless, John Linville should be the one to receive those. He is
+> the maintainer for that section, just as GregKH is the maintainer
+> for staging.
 
-Raja Mani (4):
-  ath6kl: Print bad trailer data only when htc fails to parse trailer
-    info
-  ath6kl: Rearrange the variable and the value position in IF condition
-  ath6kl: Avoid two memset to clear src and desr mac addr variable
-    memory in ath6kl_wmi_dot11_hdr_remove()
-  ath6kl: Use bit field macros to maintain wlan enabled and disabled
-    status
+Yes, but my understanding was that _you_ are my upstream, since you
+are this driver's maintainer. (MAINTAINERS does not mention you for
+exactly the r8712u, but does so for related devices.) So it was going
+to be To: Larry, CC: wireless ML. Observing other threads suggested
+that you may then Ack and send it to Linville -- which, now that you
+have reminded me, would have been Greg KH.
 
-Vasanthakumar Thiagarajan (22):
-  ath6kl: cleanup callbacks for different scatter gather method
-  ath6kl: Move ath6kl_sdio_async_rw_scatter() down to other hif_ops
-    functions
-  ath6kl: Remove struct hif_scatter_req_priv
-  ath6kl: Remove useless flags in hif_scatter_req
-  ath6kl: Remove endpoint reference from hif_scatter_req
-  ath6kl: Refactor refactor ath6kl_sdio_setup_scat_resource()
-  ath6kl: Cleanup ath6kl_sdio_enable_scatter()
-  ath6kl: Cleanup ath6kl_sdio_cleanup_scatter()
-  ath6kl: Move down scatter enable and cleanup functions
-  ath6kl: Merge scatter gather setup functions for two method
-  ath6kl: Moe virt_scat from hif_dev_scat_sup_info to hif_scatter_req
-  ath6kl: Refactor ath6kl_sdio_read_write_sync()
-  ath6kl: Merge scatter rw request functions into one
-  ath6kl: Remove ath6kldev_setup_msg_bndl()
-  ath6kl: Minor cleanup in ath6kldev_submit_scat_req()
-  ath6kl: Remove callback msg_pending() and used the function directly
-  ath6kl: Move bundle size from ath6kl_device to htc_target
-  ath6kl: Move block_sz and block_mask from ath6kl_device to htc_target
-  ath6kl: Move scatter information from ath6kl_device to htc_target
-  ath6kl: Bypass reading irq status based on chk_irq_status_cnt
-  ath6kl: Move chk_irq_status_cnt from ath6kl_device to htc_target
-  ath6kl: Remove unused struct ath6kl_async_reg_io_buffer
+OK, so I will re-send these to Greg. Do you not get even a CC?!! You
+mention none, above, and had offered/expected to review them (in a 3
+July email.)
 
- drivers/net/wireless/ath/ath6kl/Kconfig    |    2 -
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   52 +++---
- drivers/net/wireless/ath/ath6kl/core.h     |    7 +-
- drivers/net/wireless/ath/ath6kl/debug.h    |    1 +
- drivers/net/wireless/ath/ath6kl/hif-ops.h  |   11 +-
- drivers/net/wireless/ath/ath6kl/hif.h      |   25 +--
- drivers/net/wireless/ath/ath6kl/htc.c      |   72 +++----
- drivers/net/wireless/ath/ath6kl/htc.h      |   16 +-
- drivers/net/wireless/ath/ath6kl/htc_hif.c  |  200 ++----------------
- drivers/net/wireless/ath/ath6kl/htc_hif.h  |   21 --
- drivers/net/wireless/ath/ath6kl/init.c     |    4 +-
- drivers/net/wireless/ath/ath6kl/main.c     |    4 +-
- drivers/net/wireless/ath/ath6kl/sdio.c     |  317 ++++++++++++++++-----------
- drivers/net/wireless/ath/ath6kl/txrx.c     |    7 +-
- drivers/net/wireless/ath/ath6kl/wmi.c      |    3 +-
- 15 files changed, 302 insertions(+), 440 deletions(-)
+(NB I ruled out a CC to linuxdriverproject.org, of course.)
 
+
+thanks,
+ali
