@@ -1,51 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:47950 "EHLO mga01.intel.com"
+Received: from nbd.name ([46.4.11.11]:58703 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752193Ab1GUP0v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 11:26:51 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 21/25] iwlagn: write iq invert register for 105/135 device
-Date: Thu, 21 Jul 2011 07:50:24 -0700
-Message-Id: <1311259828-8415-22-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110721_172719_489171_19EF8C88)
-In-Reply-To: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1753315Ab1GLBCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2011 21:02:20 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	mickflemm@gmail.com
+Subject: [PATCH v3 8/8] ath5k: do not call ieee80211_stop_queue for queues not managed by mac80211
+Date: Tue, 12 Jul 2011 09:02:05 +0800
+Message-Id: <1310432525-70077-8-git-send-email-nbd@openwrt.org> (sfid-20110712_030233_674538_8F6552EF)
+In-Reply-To: <1310432525-70077-7-git-send-email-nbd@openwrt.org>
+References: <1310432525-70077-1-git-send-email-nbd@openwrt.org>
+ <1310432525-70077-2-git-send-email-nbd@openwrt.org>
+ <1310432525-70077-3-git-send-email-nbd@openwrt.org>
+ <1310432525-70077-4-git-send-email-nbd@openwrt.org>
+ <1310432525-70077-5-git-send-email-nbd@openwrt.org>
+ <1310432525-70077-6-git-send-email-nbd@openwrt.org>
+ <1310432525-70077-7-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For 105/135 series of devices, we need to do I/Q invert just like 2000
-series devices.
+Instead of using ieee80211_stop_queue, check the configured tx queue
+limit before calling ieee80211_get_buffered_bc.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-2000.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath5k/base.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index aff555c..00480e4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -319,7 +319,8 @@ struct iwl_cfg iwl2030_2bg_cfg = {
- 	.need_temp_offset_calib = true,				\
- 	.led_mode = IWL_LED_RF_STATE,				\
- 	.adv_pm = true,						\
--	.rx_with_siso_diversity = true				\
-+	.rx_with_siso_diversity = true,				\
-+	.iq_invert = true					\
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 3b58e00..5f055d6 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1554,7 +1554,8 @@ ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		goto drop_packet;
+ 	}
  
- struct iwl_cfg iwl105_bg_cfg = {
- 	.name = "105 Series 1x1 BG",
-@@ -345,7 +346,8 @@ struct iwl_cfg iwl105_bgn_cfg = {
- 	.need_temp_offset_calib = true,				\
- 	.led_mode = IWL_LED_RF_STATE,				\
- 	.adv_pm = true,						\
--	.rx_with_siso_diversity = true				\
-+	.rx_with_siso_diversity = true,				\
-+	.iq_invert = true					\
+-	if (txq->txq_len >= txq->txq_max)
++	if (txq->txq_len >= txq->txq_max &&
++	    txq->qnum <= AR5K_TX_QUEUE_ID_DATA_MAX)
+ 		ieee80211_stop_queue(hw, txq->qnum);
  
- struct iwl_cfg iwl135_bg_cfg = {
- 	.name = "135 Series 1x1 BG/BT",
+ 	spin_lock_irqsave(&sc->txbuflock, flags);
+@@ -1930,6 +1931,10 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 	skb = ieee80211_get_buffered_bc(sc->hw, vif);
+ 	while (skb) {
+ 		ath5k_tx_queue(sc->hw, skb, sc->cabq);
++
++		if (sc->cabq->txq_len >= sc->cabq->txq_max)
++			break;
++
+ 		skb = ieee80211_get_buffered_bc(sc->hw, vif);
+ 	}
+ 
 -- 
-1.7.0.4
+1.7.3.2
 
