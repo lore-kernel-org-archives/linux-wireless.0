@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:49925 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751719Ab1GTRAf convert rfc822-to-8bit (ORCPT
+Received: from vwp2514.webpack.hosteurope.de ([87.230.42.24]:52232 "EHLO
+	vwp2514.webpack.hosteurope.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753539Ab1GLHWK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2011 13:00:35 -0400
-Received: by pvg12 with SMTP id 12so332866pvg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2011 10:00:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1311115936.3872.3.camel@jlt3.sipsolutions.net>
-References: <1311115936.3872.3.camel@jlt3.sipsolutions.net>
-Date: Wed, 20 Jul 2011 19:00:34 +0200
-Message-ID: <CACna6rwz3YLahb0t4CCfmUK7HFdyYFmEpCNuWWDe+zmg0LbxsQ@mail.gmail.com> (sfid-20110720_190038_732323_DB408F44)
-Subject: Re: [PATCH] cfg80211: fix scan crash on single-band cards
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Pavel Roskin <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 12 Jul 2011 03:22:10 -0400
+Subject: Re: kernel NULL pointer dereference in lbs_set_11d_domain_info
+ (3.0-rc6)
+From: Sven Neumann <s.neumann@raumfeld.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <4E1B655E.6010209@gnu.org>
+References: <1310399981.11331.4.camel@sven>  <4E1B655E.6010209@gnu.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 12 Jul 2011 09:22:06 +0200
+Message-ID: <1310455326.2218.1.camel@sven> (sfid-20110712_092213_924387_788740E2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/7/20 Johannes Berg <johannes@sipsolutions.net>:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> commit 58389c69150e6032504dfcd3edca6b1975c8b5bc
-> Author: Johannes Berg <johannes.berg@intel.com>
-> Date:   Mon Jul 18 18:08:35 2011 +0200
->
->     cfg80211: allow userspace to control supported rates in scan
->
-> made single-band cards crash since it would always
-> access all wiphy->bands[]. Fix this and reject any
-> attempts in the new helper ieee80211_get_ratemask()
-> to do the same, rejecting rates configuration for
-> unsupported bands.
->
-> Reported-by: Pavel Roskin <proski@gnu.org>
-> Tested-by: Pavel Roskin <proski@gnu.org>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2011-07-11 at 17:04 -0400, Pavel Roskin wrote:
+> On 07/11/2011 11:59 AM, Sven Neumann wrote:
+> > Hi,
+> >
+> > we are using a PXA device and I am observing sporadic crashes after
+> > resume from suspend with 3.0-rc6:
+> >
+> >
+> > [ 1296.027645] PM: resume of devices complete after 296.440 msecs
+> > [ 1296.284633] Restarting tasks ...
+> > [ 1296.320276] done.
+> > [ 1296.421618] mmc0: new SDIO card at address 0001
+> > [ 1297.312570] libertas_sdio mmc0:0001:1: (unregistered net_device): 00:19:88:11:db:67, fw 9.70.7p0, cap 0x00000303
+> 
+> I think the trouble starts with "unregistered net_device".  It looks 
+> like some structures in memory are corrupted.
 
-Just confirming the fix from my Broadcom cards and b43.
+I don't think that is the problem. The output from booting the kernel
+says "unregistered net_device" as well:
 
--- 
-Rafał
+[    9.236512] libertas_sdio: Libertas SDIO driver
+[    9.245261] libertas_sdio: Copyright Pierre Ossman
+[    9.762777] libertas_sdio mmc0:0001:1: (unregistered net_device):
+00:19:88:11:db:67, fw 9.70.7p0, cap 0x00000303
+[    9.792377] libertas_sdio mmc0:0001:1: wlan0: Marvell WLAN 802.11
+adapter
+
+
+Thanks anyway,
+Sven
+
+
