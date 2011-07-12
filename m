@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from msr9.hinet.net ([168.95.4.109]:36238 "EHLO msr9.hinet.net"
+Received: from nbd.name ([46.4.11.11]:58701 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750788Ab1GSEYT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 00:24:19 -0400
-Date: Tue, 19 Jul 2011 12:21:19 +0800
-From: Ali Bahar <ali@internetdog.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, joe@perches.com,
-	devel@linuxdriverproject.org, gregkh@suse.de, error27@gmail.com
-Subject: Re: [PATCH v2 00/23] ath6kl cleaned up driver
-Message-ID: <20110719042119.GA2988@internetdog.org> (sfid-20110719_062422_824361_153A77A9)
-Reply-To: ali@internetdog.org
-References: <20110717101844.18367.44984.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110717101844.18367.44984.stgit@localhost6.localdomain6>
+	id S1752980Ab1GLBCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2011 21:02:20 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	mickflemm@gmail.com
+Subject: [PATCH v3 1/8] ath5k: add missing checks for rfgain probe
+Date: Tue, 12 Jul 2011 09:01:58 +0800
+Message-Id: <1310432525-70077-1-git-send-email-nbd@openwrt.org> (sfid-20110712_030225_102347_D186066B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle,
+rfgain probe is only necessary for OFDM operation on AR5111 and AR5112.
 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath5k/phy.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-On Sun, Jul 17, 2011 at 01:20:07PM +0300, Kalle Valo wrote:
-> Hello,
-> 
-> last May we started working on cleaning up ath6kl driver which is
-> currently in staging. The work has happened in a separate
-> ath6kl-cleanup tree:
-> 
-> http://git.kernel.org/?p=linux/kernel/git/kvalo/ath6kl-cleanup.git;a=summary
-> 
-> After over 1100 (!) patches we have now reached a state where I would
-> like to start discussing about pushing the driver to the wireless
-> trees and replacing the staging driver.
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index e00ab5a..3f19e31 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1604,11 +1604,13 @@ int ath5k_hw_phy_calibrate(struct ath5k_hw *ah,
+ 	int ret;
+ 
+ 	if (ah->ah_radio == AR5K_RF5110)
+-		ret = ath5k_hw_rf5110_calibrate(ah, channel);
+-	else {
+-		ret = ath5k_hw_rf511x_iq_calibrate(ah);
++		return ath5k_hw_rf5110_calibrate(ah, channel);
++
++	ret = ath5k_hw_rf511x_iq_calibrate(ah);
++
++	if ((ah->ah_radio == AR5K_RF5111 || ah->ah_radio == AR5K_RF5112) &&
++	    (channel->hw_value & CHANNEL_OFDM))
+ 		ath5k_hw_request_rfgain_probe(ah);
+-	}
+ 
+ 	return ret;
+ }
+-- 
+1.7.3.2
 
-> Please review and comment. John, please consider taking this driver to
-> wireless-testing.
-
-you seem to have not CCed John on this.
-
-later,
-ali
-
-> 
-> Kalle
