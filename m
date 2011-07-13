@@ -1,93 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:34000 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754370Ab1GRRhS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2011 13:37:18 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, arend@broadcom.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 2/2] compat-wireless: deactivate sido suspend for brcmfmac on older kernels.
-Date: Mon, 18 Jul 2011 19:36:13 +0200
-Message-Id: <1311010573-17015-1-git-send-email-hauke@hauke-m.de> (sfid-20110718_193722_940542_183052BB)
-In-Reply-To: <4E240E32.2020109@broadcom.com>
-References: <4E240E32.2020109@broadcom.com>
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:50925 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756685Ab1GMBeV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jul 2011 21:34:21 -0400
+Subject: [PATCH 08/24] ath6kl: add debug.h
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: devel@linuxdriverproject.org, gregkh@suse.de, error27@gmail.com
+Date: Wed, 13 Jul 2011 04:34:15 +0300
+Message-ID: <20110713013415.8517.52987.stgit@localhost6.localdomain6> (sfid-20110713_033424_687082_FB4B975C)
+In-Reply-To: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
+References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With this patch the build does not break any more because of this commit:
-
-commit da68c4eb258cd9f3f0b8aeb7e46b8118bb6358b6
-Author: Nicolas Pitre <nico@fluxnic.net>
-Date:   Fri Mar 5 13:43:31 2010 -0800
-
-    sdio: introduce API for special power management features
-
-This build error occurs without the patch on linux-2.6.32.
-/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c: In function ‘brcmf_sdio_suspend’:
-/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c:1087:2: error: ‘mmc_pm_flag_t’ undeclared (first use in this function)
-/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c:1087:2: note: each undeclared identifier is reported only once for each function it appears in
-/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c:1087:16: error: expected ‘;’ before ‘sdio_flags’
-/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c:1088:2: warning: ISO C90 forbids mixed declarations and code
-/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c:1092:2: error: ‘sdio_flags’ undeclared (first use in this function)
-/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c:1092:2: error: implicit declaration of function ‘sdio_get_host_pm_caps’
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath6kl/debug.h |  103 +++++++++++++++++++++++++++++++
+ 1 files changed, 103 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/debug.h
 
-If someone wants to backport the the SDIO API for special power management features it will be nice.
-
- patches/29-sdio_no_suspend.patch |   38 ++++++++++++++++++++++++++++++++++++++
- 1 files changed, 38 insertions(+), 0 deletions(-)
-
-diff --git a/patches/29-sdio_no_suspend.patch b/patches/29-sdio_no_suspend.patch
-index d6a6713..e940745 100644
---- a/patches/29-sdio_no_suspend.patch
-+++ b/patches/29-sdio_no_suspend.patch
-@@ -84,3 +84,41 @@ suspend and resume that are not backported.
-  	}
-  };
-  
-+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+@@ -127,7 +127,7 @@ static int brcmf_ops_sdio_probe(struct s
-+ 				const struct sdio_device_id *id);
-+ static void brcmf_ops_sdio_remove(struct sdio_func *func);
-+ 
-+-#ifdef CONFIG_PM
-++#if defined(CONFIG_PM) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-+ static int brcmf_sdio_suspend(struct device *dev);
-+ static int brcmf_sdio_resume(struct device *dev);
-+ #endif /* CONFIG_PM */
-+@@ -157,7 +157,7 @@ static const struct sdio_device_id brcmf
-+ 	{ /* end: all zeroes */ },
-+ };
-+ 
-+-#ifdef CONFIG_PM
-++#if defined(CONFIG_PM) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-+ static const struct dev_pm_ops brcmf_sdio_pm_ops = {
-+ 	.suspend	= brcmf_sdio_suspend,
-+ 	.resume		= brcmf_sdio_resume,
-+@@ -169,7 +169,7 @@ static struct sdio_driver brcmf_sdmmc_dr
-+ 	.remove = brcmf_ops_sdio_remove,
-+ 	.name = "brcmfmac",
-+ 	.id_table = brcmf_sdmmc_ids,
-+-#ifdef CONFIG_PM
-++#if defined(CONFIG_PM) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-+ 	.drv = {
-+ 		.pm = &brcmf_sdio_pm_ops,
-+ 	},
-+@@ -1081,7 +1081,7 @@ static void brcmf_ops_sdio_remove(struct
-+ }
-+ 
-+ 
-+-#ifdef CONFIG_PM
-++#if defined(CONFIG_PM) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-+ static int brcmf_sdio_suspend(struct device *dev)
-+ {
-+ 	mmc_pm_flag_t sdio_flags;
--- 
-1.7.4.1
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
+new file mode 100644
+index 0000000..0f51e12
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath6kl/debug.h
+@@ -0,0 +1,103 @@
++/*
++ * Copyright (c) 2011 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef DEBUG_H
++#define DEBUG_H
++
++#include "htc_hif.h"
++
++enum ATH6K_DEBUG_MASK {
++	ATH6KL_DBG_WLAN_CONNECT = BIT(0),     /* wlan connect */
++	ATH6KL_DBG_WLAN_SCAN    = BIT(1),     /* wlan scan */
++	ATH6KL_DBG_WLAN_TX      = BIT(2),     /* wlan tx */
++	ATH6KL_DBG_WLAN_RX      = BIT(3),     /* wlan rx */
++	ATH6KL_DBG_BMI		= BIT(4),     /* bmi tracing */
++	ATH6KL_DBG_HTC_SEND     = BIT(5),     /* htc send */
++	ATH6KL_DBG_HTC_RECV     = BIT(6),     /* htc recv */
++	ATH6KL_DBG_IRQ		= BIT(7),     /* interrupt processing */
++	ATH6KL_DBG_PM           = BIT(8),     /* power management */
++	ATH6KL_DBG_WLAN_NODE    = BIT(9),     /* general wlan node tracing */
++	ATH6KL_DBG_WMI          = BIT(10),    /* wmi tracing */
++	ATH6KL_DBG_TRC	        = BIT(11),    /* generic func tracing */
++	ATH6KL_DBG_SCATTER	= BIT(12),    /* hif scatter tracing */
++	ATH6KL_DBG_WLAN_CFG     = BIT(13),    /* cfg80211 i/f file tracing */
++	ATH6KL_DBG_RAW_BYTES    = BIT(14),    /* dump tx/rx and wmi frames */
++	ATH6KL_DBG_ANY	        = 0xffffffff  /* enable all logs */
++};
++
++extern unsigned int debug_mask;
++extern int ath6kl_printk(const char *level, const char *fmt, ...);
++
++#define ath6kl_info(common, fmt, ...)				\
++	ath6kl_printk(KERN_INFO, common, fmt, ##__VA_ARGS__)
++#define ath6kl_err(fmt, ...)					\
++	ath6kl_printk(KERN_ERR, fmt, ##__VA_ARGS__)
++#define ath6kl_warn(fmt, ...)					\
++	ath6kl_printk(KERN_WARNING, fmt, ##__VA_ARGS__)
++
++#define AR_DBG_LVL_CHECK(mask)	(debug_mask & mask)
++
++#ifdef CONFIG_ATH6KL_DEBUG
++#define ath6kl_dbg(mask, fmt, ...)					\
++	({								\
++	 int rtn;							\
++	 if (debug_mask & mask)						\
++		rtn = ath6kl_printk(KERN_DEBUG, fmt, ##__VA_ARGS__);	\
++	 else								\
++		rtn = 0;						\
++									\
++	 rtn;								\
++	 })
++
++static inline void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
++				   const char *msg, const void *buf,
++				   size_t len)
++{
++	if (debug_mask & mask) {
++		ath6kl_dbg(mask, "%s\n", msg);
++		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, buf, len);
++	}
++}
++
++void ath6kl_dump_registers(struct ath6kl_device *dev,
++			   struct ath6kl_irq_proc_registers *irq_proc_reg,
++			   struct ath6kl_irq_enable_reg *irq_en_reg);
++void dump_cred_dist_stats(struct htc_target *target);
++#else
++static inline int ath6kl_dbg(enum ATH6K_DEBUG_MASK dbg_mask,
++			     const char *fmt, ...)
++{
++	return 0;
++}
++
++static inline void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
++				   const char *msg, const void *buf,
++				   size_t len)
++{
++}
++
++static inline void ath6kl_dump_registers(struct ath6kl_device *dev,
++		struct ath6kl_irq_proc_registers *irq_proc_reg,
++		struct ath6kl_irq_enable_reg *irq_en_reg)
++{
++
++}
++static inline void dump_cred_dist_stats(struct htc_target *target)
++{
++}
++#endif
++
++#endif
 
