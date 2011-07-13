@@ -1,73 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2440 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752902Ab1GWOZj (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:51694 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751162Ab1GMUGZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jul 2011 10:25:39 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 08/11] ath6kl: Pass only the needed scan_table to ath6kl_wmi_iterate_nodes()
-Date: Sat, 23 Jul 2011 19:43:14 +0530
-Message-ID: <1311430397-4960-8-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110723_162552_614137_A5350BF5)
-In-Reply-To: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 13 Jul 2011 16:06:25 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] MAINTAINERS: add entry for Marvell mwifiex wireless driver
+Date: Wed, 13 Jul 2011 13:11:58 -0700
+Message-Id: <1310587918-29744-1-git-send-email-bzhao@marvell.com> (sfid-20110713_220627_967395_42EAB26E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    2 +-
- drivers/net/wireless/ath/ath6kl/wmi.c      |    4 ++--
- drivers/net/wireless/ath/ath6kl/wmi.h      |    2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ MAINTAINERS |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index d1d4794..9eaa1b1 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -833,7 +833,7 @@ void ath6kl_cfg80211_scan_complete_event(struct ath6kl *ar, int status)
- 	}
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 187282d..21afb51 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -4097,6 +4097,12 @@ S:	Maintained
+ F:	drivers/net/mv643xx_eth.*
+ F:	include/linux/mv643xx.h
  
- 	/* Translate data to cfg80211 mgmt format */
--	ath6kl_wmi_iterate_nodes(ar->wmi, ath6kl_cfg80211_scan_node,
-+	ath6kl_wmi_iterate_nodes(&ar->scan_table, ath6kl_cfg80211_scan_node,
- 				 ar->wdev->wiphy);
- 
- 	cfg80211_scan_done(ar->scan_req, false);
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 742eaa1..6a6f79c 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -386,11 +386,11 @@ int ath6kl_wmi_data_hdr_remove(struct wmi *wmi, struct sk_buff *skb)
- 	return 0;
- }
- 
--void ath6kl_wmi_iterate_nodes(struct wmi *wmi,
-+void ath6kl_wmi_iterate_nodes(struct ath6kl_node_table *scan_tbl,
- 			      void (*f) (void *arg, struct bss *),
- 			      void *arg)
- {
--	wlan_iterate_nodes(&wmi->parent_dev->scan_table, f, arg);
-+	wlan_iterate_nodes(scan_tbl, f, arg);
- }
- 
- static void ath6kl_wmi_convert_bssinfo_hdr2_to_hdr(struct sk_buff *skb,
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 991d29f..a9f8f9e 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -1931,7 +1931,7 @@ int ath6kl_wmi_implicit_create_pstream(struct wmi *wmi, struct sk_buff *skb,
- 				       u8 *ac);
- 
- int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb);
--void ath6kl_wmi_iterate_nodes(struct wmi *wmi,
-+void ath6kl_wmi_iterate_nodes(struct ath6kl_node_table *scan_tbl,
- 			      void (*f) (void *arg, struct bss *),
- 			      void *arg);
- struct bss *ath6kl_wmi_find_node(struct wmi *wmi, const u8 *mac_addr);
++MARVELL MWIFIEX WIRELESS DRIVER
++M:	Bing Zhao <bzhao@marvell.com>
++L:	linux-wireless@vger.kernel.org
++S:	Maintained
++F:	drivers/net/wireless/mwifiex/
++
+ MARVELL MWL8K WIRELESS DRIVER
+ M:	Lennert Buytenhek <buytenh@wantstofly.org>
+ L:	linux-wireless@vger.kernel.org
 -- 
-1.7.0.4
+1.7.0.2
 
