@@ -1,103 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:52947 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752559Ab1GaCgu convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54011 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965092Ab1GMIle (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jul 2011 22:36:50 -0400
-Received: by qwk3 with SMTP id 3so2350107qwk.19
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Jul 2011 19:36:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20110730205931.3cc8a004.ldarby@tuffmail.com>
-References: <20110730181433.50bd32db.ldarby@tuffmail.com> <4E3442ED.90206@lwfinger.net>
- <20110730191422.3b2931ba.ldarby@tuffmail.com> <4E344F90.4040003@lwfinger.net> <20110730205931.3cc8a004.ldarby@tuffmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 31 Jul 2011 04:36:29 +0200
-Message-ID: <CA+XFjipwu1WNXoYv8H8Vo+jHs600HKoOdfnvQDXi5CT--Xa=Ng@mail.gmail.com> (sfid-20110731_043657_278591_1CA9A1DA)
-Subject: Re: I'm no longer confused and angry
-To: Laurence Darby <ldarby@tuffmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 13 Jul 2011 04:41:34 -0400
+Message-Id: <20110713084034.328005382@sipsolutions.net> (sfid-20110713_104138_297844_C6CDE848)
+Date: Wed, 13 Jul 2011 10:39:16 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 08/11] wl12xx: remove wext dependencies
+References: <20110713083908.713123063@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 30, 2011 at 9:59 PM, Laurence Darby <ldarby@tuffmail.com> wrote:
-> Larry Finger wrote:
->
->> On 07/30/2011 01:14 PM, Laurence Darby wrote:
->> >
->> > I have now enabled rfkill.  The hostapd error message is now:
->> >
->> > Hardware does not support configured mode
->> > wlan0: IEEE 802.11 Hardware does not support configured mode (2)
->> > Could not select hw_mode and channel. (-2)
->> > wlan0: Unable to setup interface.
->> > rmdir[ctrl_interface]: No such file or directory
->>
->> Please post your hostapd.conf. I don't have any ath9k hardware and
->> cannot check that it works with, but other wireless devices work with
->>
->> interface=wlan0
->> driver=nl80211
->> hw_mode=g
->> channel=1
->> ssid=test2
->> #wpa=2
->> #wpa_key_mgmt=WPA-PSK
->> #wpa_pairwise=CCMP
->> #wpa_passphrase="deleted"
->>
->> Larry
->
-> Ah, thanks, that does work and my other devices can see it now!
->
-> I was using the unmodified hostapd.conf, which has hw_mode=a, but
-> this device only supports modes b,g & n.  That is what the error is
-> talking about, not the Master/Ad-Hoc mode which I thought it was trying
-> to configure (which it is as well, actually).  Would be good if the
-> error message included the mode it's trying to configure, instead of
-> "(2)", that would definitely have stopped me getting confused here.
->
-> Some more reasons I didn't think this supported AP mode:
-> http://linuxwireless.org/en/users/Drivers has 'no' for AP support for
-> the ath9k_htc, that conflicts with the driver page, and
->
->  # iwconfig wlan0 mode Managed
->
-> works, while
->
->  # iwconfig wlan0 mode Master
-> always gives:
-> Error for wireless request "Set Mode" (8B06) :
->    SET failed on device wlan0 ; Invalid argument.
->
-> With hostapd running, iwconfig says:
->
-> wlan0     IEEE 802.11bgn  Mode:Master  Frequency:2.412 GHz  Tx-Power=20
-> dBm Retry  long limit:7   RTS thr:off   Fragment thr:off
->          Power Management:off
->
-> and reverts to Mode:Managed if I stop hostapd, so I'm not sure why
-> iwconfig can't change it...
->
-> Ok, http://linuxwireless.org/en/users/Documentation/hostapd does say
-> that hw_mode needs to be set correctly, but it wasn't obvious enough
-> that's what the problem was.  The error and solution could be added to
-> where ./hostapd gets started.  Also, it refers to a
-> hostapd-minimal.conf, I couldn't see that anywhere, that's why I used
-> the default hostapd.conf.
->
-> Laurence
->
+From: Johannes Berg <johannes.berg@intel.com>
 
-"iwconfig wlan0 mode master" means "Set wlan0 to use the in-kernel
-master mode implementation." Since mac80211 has no in-kernel support
-for master mode (that's why you need hostapd - master mode is
-supported from userspace), it will always fail.
+This driver uses IW_ESSID_MAX_SIZE when it should
+be using IEEE80211_MAX_SSID_LEN instead.
 
-Also, iwconfig uses Wireless Extensions (AKA wext) to configure the
-wireless card - access to AP mode through wext is intentionally
-blocked, to help the migration of userspace utilities to nl80211.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/wl12xx/cmd.h          |    4 ++--
+ drivers/net/wireless/wl12xx/main.c         |    2 +-
+ drivers/net/wireless/wl12xx/scan.h         |    6 +++---
+ drivers/net/wireless/wl12xx/wl12xx.h       |    4 ++--
+ drivers/net/wireless/wl12xx/wl12xx_80211.h |    2 +-
+ 5 files changed, 9 insertions(+), 9 deletions(-)
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--- a/drivers/net/wireless/wl12xx/cmd.h	2011-07-13 10:22:17.000000000 +0200
++++ b/drivers/net/wireless/wl12xx/cmd.h	2011-07-13 10:22:22.000000000 +0200
+@@ -239,7 +239,7 @@ struct wl1271_cmd_join {
+ 	u8 bss_type;
+ 	u8 channel;
+ 	u8 ssid_len;
+-	u8 ssid[IW_ESSID_MAX_SIZE];
++	u8 ssid[IEEE80211_MAX_SSID_LEN];
+ 	u8 ctrl; /* JOIN_CMD_CTRL_* */
+ 	u8 reserved[3];
+ } __packed;
+@@ -528,7 +528,7 @@ struct wl1271_cmd_bss_start {
+ 	/* wl1271_ssid_type */
+ 	u8 ssid_type;
+ 	u8 ssid_len;
+-	u8 ssid[IW_ESSID_MAX_SIZE];
++	u8 ssid[IEEE80211_MAX_SSID_LEN];
+ 	u8 padding_1[2];
+ 
+ 	/* Basic rate set */
+--- a/drivers/net/wireless/wl12xx/main.c	2011-07-13 10:22:17.000000000 +0200
++++ b/drivers/net/wireless/wl12xx/main.c	2011-07-13 10:22:22.000000000 +0200
+@@ -1997,7 +1997,7 @@ static void __wl1271_op_remove_interface
+ 	wl1271_power_off(wl);
+ 
+ 	memset(wl->bssid, 0, ETH_ALEN);
+-	memset(wl->ssid, 0, IW_ESSID_MAX_SIZE + 1);
++	memset(wl->ssid, 0, IEEE80211_MAX_SSID_LEN + 1);
+ 	wl->ssid_len = 0;
+ 	wl->bss_type = MAX_BSS_TYPE;
+ 	wl->set_bss_type = MAX_BSS_TYPE;
+--- a/drivers/net/wireless/wl12xx/scan.h	2011-07-13 10:22:17.000000000 +0200
++++ b/drivers/net/wireless/wl12xx/scan.h	2011-07-13 10:22:22.000000000 +0200
+@@ -77,7 +77,7 @@ struct basic_scan_params {
+ 	u8 ssid_len;
+ 	/* in order to align */
+ 	u8 padding1[2];
+-	u8 ssid[IW_ESSID_MAX_SIZE];
++	u8 ssid[IEEE80211_MAX_SSID_LEN];
+ 	/* Band to scan */
+ 	u8 band;
+ 	u8 use_ssid_list;
+@@ -167,7 +167,7 @@ struct wl1271_cmd_sched_scan_config {
+ 	u8 filter_type;
+ 
+ 	u8 ssid_len;     /* For SCAN_SSID_FILTER_SPECIFIC */
+-	u8 ssid[IW_ESSID_MAX_SIZE];
++	u8 ssid[IEEE80211_MAX_SSID_LEN];
+ 
+ 	u8 n_probe_reqs; /* Number of probes requests per channel */
+ 
+@@ -194,7 +194,7 @@ enum {
+ struct wl1271_ssid {
+ 	u8 type;
+ 	u8 len;
+-	u8 ssid[IW_ESSID_MAX_SIZE];
++	u8 ssid[IEEE80211_MAX_SSID_LEN];
+ 	/* u8 padding[2]; */
+ } __packed;
+ 
+--- a/drivers/net/wireless/wl12xx/wl12xx.h	2011-07-13 10:22:17.000000000 +0200
++++ b/drivers/net/wireless/wl12xx/wl12xx.h	2011-07-13 10:22:22.000000000 +0200
+@@ -309,7 +309,7 @@ struct wl1271_scan {
+ 	unsigned long scanned_ch[BITS_TO_LONGS(WL1271_MAX_CHANNELS)];
+ 	bool failed;
+ 	u8 state;
+-	u8 ssid[IW_ESSID_MAX_SIZE+1];
++	u8 ssid[IEEE80211_MAX_SSID_LEN+1];
+ 	size_t ssid_len;
+ };
+ 
+@@ -415,7 +415,7 @@ struct wl1271 {
+ 	u8 mac_addr[ETH_ALEN];
+ 	u8 bss_type;
+ 	u8 set_bss_type;
+-	u8 ssid[IW_ESSID_MAX_SIZE + 1];
++	u8 ssid[IEEE80211_MAX_SSID_LEN + 1];
+ 	u8 ssid_len;
+ 	int channel;
+ 
+--- a/drivers/net/wireless/wl12xx/wl12xx_80211.h	2011-07-13 10:22:17.000000000 +0200
++++ b/drivers/net/wireless/wl12xx/wl12xx_80211.h	2011-07-13 10:22:22.000000000 +0200
+@@ -77,7 +77,7 @@ struct wl12xx_ie_header {
+ 
+ struct wl12xx_ie_ssid {
+ 	struct wl12xx_ie_header header;
+-	char ssid[IW_ESSID_MAX_SIZE];
++	char ssid[IEEE80211_MAX_SSID_LEN];
+ } __packed;
+ 
+ struct wl12xx_ie_rates {
+
+
