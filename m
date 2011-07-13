@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:52231 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750848Ab1GIERr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jul 2011 00:17:47 -0400
-Subject: [PATCH 1/2] ath5k: validate mode in ath5k_ani_init() before trying
- to set it
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Pavel Roskin <proski@gnu.org>
-Date: Sat, 09 Jul 2011 00:17:45 -0400
-Message-ID: <20110709041745.22099.12306.stgit@mj.roinet.com> (sfid-20110709_061749_076103_A325DCA8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from he.sipsolutions.net ([78.46.109.217]:54005 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965029Ab1GMIla (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2011 04:41:30 -0400
+Message-Id: <20110713084032.913600502@sipsolutions.net> (sfid-20110713_104140_074814_17C4F719)
+Date: Wed, 13 Jul 2011 10:39:13 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 05/11] b43: remove wireless extensions inclusions
+References: <20110713083908.713123063@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- drivers/net/wireless/ath/ath5k/ani.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath5k/ani.c b/drivers/net/wireless/ath/ath5k/ani.c
-index a08f173..b88d10c 100644
---- a/drivers/net/wireless/ath/ath5k/ani.c
-+++ b/drivers/net/wireless/ath/ath5k/ani.c
-@@ -630,6 +630,11 @@ ath5k_ani_init(struct ath5k_hw *ah, enum ath5k_ani_mode mode)
- 	if (ah->ah_version < AR5K_AR5212)
- 		return;
- 
-+	if (mode < ATH5K_ANI_MODE_OFF || mode > ATH5K_ANI_MODE_AUTO) {
-+		ATH5K_ERR(ah->ah_sc, "ANI mode %d out of range", mode);
-+		return;
-+	}
-+
- 	/* clear old state information */
- 	memset(&ah->ah_sc->ani_state, 0, sizeof(ah->ah_sc->ani_state));
- 
+linux/wireless.h and net/iw_handler.h headers are
+for wireless extensions only, so mac80211 drivers
+shouldn't be including them.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/b43/main.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+--- a/drivers/net/wireless/b43/main.c	2011-07-13 10:09:54.000000000 +0200
++++ b/drivers/net/wireless/b43/main.c	2011-07-13 10:09:56.000000000 +0200
+@@ -37,7 +37,6 @@
+ #include <linux/if_arp.h>
+ #include <linux/etherdevice.h>
+ #include <linux/firmware.h>
+-#include <linux/wireless.h>
+ #include <linux/workqueue.h>
+ #include <linux/skbuff.h>
+ #include <linux/io.h>
+
+
