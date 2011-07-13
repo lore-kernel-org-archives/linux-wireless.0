@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53675 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752847Ab1GEDLq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 23:11:46 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	mickflemm@gmail.com
-Subject: [PATCH v2 8/8] ath5k: do not call ieee80211_stop_queue for queues not managed by mac80211
-Date: Tue,  5 Jul 2011 10:11:24 +0700
-Message-Id: <1309835484-26653-8-git-send-email-nbd@openwrt.org> (sfid-20110705_051157_458788_84C40165)
-In-Reply-To: <1309835484-26653-7-git-send-email-nbd@openwrt.org>
-References: <1309835484-26653-1-git-send-email-nbd@openwrt.org>
- <1309835484-26653-2-git-send-email-nbd@openwrt.org>
- <1309835484-26653-3-git-send-email-nbd@openwrt.org>
- <1309835484-26653-4-git-send-email-nbd@openwrt.org>
- <1309835484-26653-5-git-send-email-nbd@openwrt.org>
- <1309835484-26653-6-git-send-email-nbd@openwrt.org>
- <1309835484-26653-7-git-send-email-nbd@openwrt.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:33547 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964995Ab1GMIVi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2011 04:21:38 -0400
+Message-ID: <4E1D558E.3090309@qca.qualcomm.com> (sfid-20110713_102143_384368_C7FC4142)
+Date: Wed, 13 Jul 2011 11:21:34 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@linuxdriverproject.org>,
+	<gregkh@suse.de>
+Subject: Re: [PATCH 21/24] ath6kl: add txrx.c
+References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>	 <20110713013630.8517.77720.stgit@localhost6.localdomain6> <1310531463.1143.31.camel@Joe-Laptop>
+In-Reply-To: <1310531463.1143.31.camel@Joe-Laptop>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of using ieee80211_stop_queue, check the configured tx queue
-limit before calling ieee80211_get_buffered_bc.
+On 07/13/2011 07:31 AM, Joe Perches wrote:
+> On Wed, 2011-07-13 at 04:36 +0300, Kalle Valo wrote:
+>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+>>  drivers/net/wireless/ath/ath6kl/txrx.c | 1471 ++++++++++++++++++++++++++++++++
+> []
+>> +int ath6kl_control_tx(void *devt, struct sk_buff *skb,
+>> +		      enum htc_endpoint_id eid)
+>> +{
+> []
+>> +	ath6kl_dbg(ATH6KL_DBG_WLAN_TX,
+>> +		   "%s: skb=0x%lx, len=0x%x eid =%d\n", __func__,
+>> +		   (unsigned long)skb, skb->len, eid);
+> 
+> 
+> This style of casting a pointer to an unsigned long is used
+> unnecessarily quite often.
+> 
+> I think it's more intelligible to use %p without the case.
+> Also, hex length is often not as readable as decimal.
+> 
+> 	ath6kl_dbg(ATH6KL_DBG_WLAN_TX, "%s: skb=%p, len=%u eid=%d\n",
+> 		   __func__, skb, skb->len, eid);
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath5k/base.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+I agree. We already had a task in the todo list about this.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index efec14f..d889f33 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1555,7 +1555,8 @@ ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		goto drop_packet;
- 	}
- 
--	if (txq->txq_len >= txq->txq_max)
-+	if (txq->txq_len >= txq->txq_max &&
-+	    txq->qnum <= AR5K_TX_QUEUE_ID_DATA_MAX)
- 		ieee80211_stop_queue(hw, txq->qnum);
- 
- 	spin_lock_irqsave(&sc->txbuflock, flags);
-@@ -1931,6 +1932,10 @@ ath5k_beacon_send(struct ath5k_softc *sc)
- 	skb = ieee80211_get_buffered_bc(sc->hw, vif);
- 	while (skb) {
- 		ath5k_tx_queue(sc->hw, skb, sc->cabq);
-+
-+		if (sc->cabq->txq_len >= sc->cabq->txq_max)
-+			break;
-+
- 		skb = ieee80211_get_buffered_bc(sc->hw, vif);
- 	}
- 
--- 
-1.7.3.2
-
+Kalle
