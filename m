@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:60001 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754650Ab1G0XCh convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:46304 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752815Ab1GMXqH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2011 19:02:37 -0400
-Received: by yxi11 with SMTP id 11so1125697yxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2011 16:02:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6WwP+S8f=MFDtuC6a97nZEGak5gfFEy9majqD9KVVSjiw@mail.gmail.com>
-References: <CAEzeFio8D9aKDFX+Wzo0yceWXy_5tDKpLDFzr9FmarTXCHUOQg@mail.gmail.com>
- <CAEzeFirXVu_pwDCb6t=ps4xskc4fFUy9gGECJgK1q7cYhLizVQ@mail.gmail.com>
- <CAEzeFip+PCV4Ccsi6L+RSvrM_86J2=Ps6193WyC0QzVfwe64LQ@mail.gmail.com>
- <CAEzeFiq2FXYKkfXjDtguryniaU7hQkJczLU98V9P3Uv5-D-P3g@mail.gmail.com>
- <CAB=NE6VT_Q5Apb_ZCfK9fSYGDtaUOwmVqeogN8HE6+SgGYek1A@mail.gmail.com>
- <CAEzeFiq5HXyazJfAx3mRV7TBy6CVEivJY63GkF8jnCczGsUK8Q@mail.gmail.com>
- <CAB=NE6WaRyX0yGs=6h6+2V+gUSPHoY19TTHuXBRAWqR9hw+qAw@mail.gmail.com>
- <loom.20110727T230512-90@post.gmane.org> <CAB=NE6WwP+S8f=MFDtuC6a97nZEGak5gfFEy9majqD9KVVSjiw@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 27 Jul 2011 16:02:17 -0700
-Message-ID: <CAB=NE6U3wa88Fk03q7u17WtoJP1QmoSgJ4D27GSs0pBYGBuCTw@mail.gmail.com> (sfid-20110728_010239_982402_9A408A45)
-Subject: Re: Testing Auto Channel Selection with hostapd in ath5k and ath9k
-To: Swaminathan Vasanth <swaminathanvasanth.r@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 13 Jul 2011 19:46:07 -0400
+Received: by iyb12 with SMTP id 12so5995000iyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2011 16:46:06 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 0/5] mac80211: mesh beaconing
+Date: Wed, 13 Jul 2011 16:45:42 -0700
+Message-Id: <1310600747-9583-1-git-send-email-thomas@cozybit.com> (sfid-20110714_014611_337942_6AC9E17F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 27, 2011 at 4:01 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Wed, Jul 27, 2011 at 2:18 PM, Swaminathan Vasanth
-> <swaminathanvasanth.r@gmail.com> wrote:
->> Hi Luis,
->>  Do you maintain any public git for ACS ? If so can you please send the
->> repository ID? Since hostapd of Openwrt uses the hostap git namely
->> git://w1.fi/srv/git/hostap.git for compiling and building, i think that if i can
->> point it to the correct public ACS git, ACS might be integrated with Openwrt.
->>  Thanks
->> BR,
->
-> Can't you just point it to a local /home/foo/hostapd/.git  ?
+Currently, mesh beacons have IEs either missing or in the wrong order. Update
+the mesh beacon to the proper format specified in 802.11s draft 12.0. This
+patch set will be part of a greater effort to update the mesh stack in mac80211
+in anticipation of the ratification of the 802.11s standard.
 
-I just have a tree for ACS, with code independent from hostapd, but
-nothing for hostapd. If you *really* need this let me know and I can
-make one..
+Thomas Pedersen (5):
+  mac80211: give if_mesh a beacon
+  mac80211: correct mesh beacon head
+  mac80211: Ext. Supported Rates go in mesh beacon tail
+  mac80211: move RSN IE to tail of mesh beacon
+  mac80211: mesh beacon includes TIM IE
 
-  Luis
+ net/mac80211/cfg.c         |   31 ++++++--
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mesh.c        |  185 ++++++++++++++++++++++++++++++++------------
+ net/mac80211/tx.c          |   51 ++++++------
+ 4 files changed, 187 insertions(+), 81 deletions(-)
+
+-- 
+1.7.6
+
