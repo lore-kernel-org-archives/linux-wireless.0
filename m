@@ -1,160 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35869 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751265Ab1GIENS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jul 2011 00:13:18 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 6/9] ath9k_hw: remove ar9287 v1.3+ specific hardcoded register hacks
-Date: Sat,  9 Jul 2011 11:12:51 +0700
-Message-Id: <1310184774-32913-6-git-send-email-nbd@openwrt.org> (sfid-20110709_061327_998391_A7230A80)
-In-Reply-To: <1310184774-32913-5-git-send-email-nbd@openwrt.org>
-References: <1310184774-32913-1-git-send-email-nbd@openwrt.org>
- <1310184774-32913-2-git-send-email-nbd@openwrt.org>
- <1310184774-32913-3-git-send-email-nbd@openwrt.org>
- <1310184774-32913-4-git-send-email-nbd@openwrt.org>
- <1310184774-32913-5-git-send-email-nbd@openwrt.org>
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:47383 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751005Ab1GMT4L convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2011 15:56:11 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 13 Jul 2011 12:56:03 -0700
+Subject: RE: [PATCH 10/11] mwifiex: add wext include
+Message-ID: <477F20668A386D41ADCC57781B1F704307FFB08C50@SC-VEXCH1.marvell.com> (sfid-20110713_215615_795956_250C039C)
+References: <20110713083908.713123063@sipsolutions.net>
+ <20110713084035.355518062@sipsolutions.net>
+In-Reply-To: <20110713084035.355518062@sipsolutions.net>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that the clock rate is initialized properly and SIFS, EIFS, USEC,
-slot time and ACK timeout are properly calculated by the generic code,
-the 'async FIFO' register hacks are no longer necessary.
+Hi Johannes,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9002_hw.c |   39 ----------------------------
- drivers/net/wireless/ath/ath9k/hw.c        |   10 +++++--
- drivers/net/wireless/ath/ath9k/hw.h        |    2 -
- drivers/net/wireless/ath/ath9k/reg.h       |    5 ---
- 4 files changed, 7 insertions(+), 49 deletions(-)
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> In trying to remove the wext includes from mac80211
+> and cfg80211 I found that mwifiex currently uses
+> them. This is wrong, it shouldn't, but to not break
+> it completely include wext there.
+> 
+> Please remove this and fix all the resulting bugs.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index f344cc2..9ff7c30 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -499,45 +499,6 @@ void ar9002_hw_enable_async_fifo(struct ath_hw *ah)
- 	}
- }
- 
--/*
-- * If Async FIFO is enabled, the following counters change as MAC now runs
-- * at 117 Mhz instead of 88/44MHz when async FIFO is disabled.
-- *
-- * The values below tested for ht40 2 chain.
-- * Overwrite the delay/timeouts initialized in process ini.
-- */
--void ar9002_hw_update_async_fifo(struct ath_hw *ah)
--{
--	if (AR_SREV_9287_13_OR_LATER(ah)) {
--		REG_WRITE(ah, AR_D_GBL_IFS_SIFS,
--			  AR_D_GBL_IFS_SIFS_ASYNC_FIFO_DUR);
--		REG_WRITE(ah, AR_D_GBL_IFS_SLOT,
--			  AR_D_GBL_IFS_SLOT_ASYNC_FIFO_DUR);
--		REG_WRITE(ah, AR_D_GBL_IFS_EIFS,
--			  AR_D_GBL_IFS_EIFS_ASYNC_FIFO_DUR);
--
--		REG_WRITE(ah, AR_TIME_OUT, AR_TIME_OUT_ACK_CTS_ASYNC_FIFO_DUR);
--		REG_WRITE(ah, AR_USEC, AR_USEC_ASYNC_FIFO_DUR);
--
--		REG_SET_BIT(ah, AR_MAC_PCU_LOGIC_ANALYZER,
--			    AR_MAC_PCU_LOGIC_ANALYZER_DISBUG20768);
--		REG_RMW_FIELD(ah, AR_AHB_MODE, AR_AHB_CUSTOM_BURST_EN,
--			      AR_AHB_CUSTOM_BURST_ASYNC_FIFO_VAL);
--	}
--}
--
--/*
-- * We don't enable WEP aggregation on mac80211 but we keep this
-- * around for HAL unification purposes.
-- */
--void ar9002_hw_enable_wep_aggregation(struct ath_hw *ah)
--{
--	if (AR_SREV_9287_13_OR_LATER(ah)) {
--		REG_SET_BIT(ah, AR_PCU_MISC_MODE2,
--			    AR_PCU_MISC_MODE2_ENABLE_AGGWEP);
--	}
--}
--
- /* Sets up the AR5008/AR9001/AR9002 hardware familiy callbacks */
- void ar9002_hw_attach_ops(struct ath_hw *ah)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 279d73a..2a5f908 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1631,9 +1631,13 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 
- 	ath9k_hw_init_global_settings(ah);
- 
--	if (!AR_SREV_9300_20_OR_LATER(ah)) {
--		ar9002_hw_update_async_fifo(ah);
--		ar9002_hw_enable_wep_aggregation(ah);
-+	if (AR_SREV_9287(ah) && AR_SREV_9287_13_OR_LATER(ah)) {
-+		REG_SET_BIT(ah, AR_MAC_PCU_LOGIC_ANALYZER,
-+			    AR_MAC_PCU_LOGIC_ANALYZER_DISBUG20768);
-+		REG_RMW_FIELD(ah, AR_AHB_MODE, AR_AHB_CUSTOM_BURST_EN,
-+			      AR_AHB_CUSTOM_BURST_ASYNC_FIFO_VAL);
-+		REG_SET_BIT(ah, AR_PCU_MISC_MODE2,
-+			    AR_PCU_MISC_MODE2_ENABLE_AGGWEP);
- 	}
- 
- 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PRESERVE_SEQNUM);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index a1c3174..6acd0f9 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -985,8 +985,6 @@ void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
- void ar9002_hw_cck_chan14_spread(struct ath_hw *ah);
- int ar9002_hw_rf_claim(struct ath_hw *ah);
- void ar9002_hw_enable_async_fifo(struct ath_hw *ah);
--void ar9002_hw_update_async_fifo(struct ath_hw *ah);
--void ar9002_hw_enable_wep_aggregation(struct ath_hw *ah);
- 
- /*
-  * Code specific to AR9003, we stuff these here to avoid callbacks
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index a483388..759b72c 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -600,7 +600,6 @@
- 
- #define AR_D_GBL_IFS_SIFS         0x1030
- #define AR_D_GBL_IFS_SIFS_M       0x0000FFFF
--#define AR_D_GBL_IFS_SIFS_ASYNC_FIFO_DUR 0x000003AB
- #define AR_D_GBL_IFS_SIFS_RESV0   0xFFFFFFFF
- 
- #define AR_D_TXBLK_BASE            0x1038
-@@ -616,12 +615,10 @@
- #define AR_D_GBL_IFS_SLOT         0x1070
- #define AR_D_GBL_IFS_SLOT_M       0x0000FFFF
- #define AR_D_GBL_IFS_SLOT_RESV0   0xFFFF0000
--#define AR_D_GBL_IFS_SLOT_ASYNC_FIFO_DUR   0x00000420
- 
- #define AR_D_GBL_IFS_EIFS         0x10b0
- #define AR_D_GBL_IFS_EIFS_M       0x0000FFFF
- #define AR_D_GBL_IFS_EIFS_RESV0   0xFFFF0000
--#define AR_D_GBL_IFS_EIFS_ASYNC_FIFO_DUR   0x0000A5EB
- 
- #define AR_D_GBL_IFS_MISC        0x10f0
- #define AR_D_GBL_IFS_MISC_LFSR_SLICE_SEL        0x00000007
-@@ -1477,7 +1474,6 @@ enum {
- #define AR_TIME_OUT_ACK_S    0
- #define AR_TIME_OUT_CTS      0x3FFF0000
- #define AR_TIME_OUT_CTS_S    16
--#define AR_TIME_OUT_ACK_CTS_ASYNC_FIFO_DUR    0x16001D56
- 
- #define AR_RSSI_THR          0x8018
- #define AR_RSSI_THR_MASK     0x000000FF
-@@ -1493,7 +1489,6 @@ enum {
- #define AR_USEC_TX_LAT_S     14
- #define AR_USEC_RX_LAT       0x1F800000
- #define AR_USEC_RX_LAT_S     23
--#define AR_USEC_ASYNC_FIFO_DUR    0x12e00074
- 
- #define AR_RESET_TSF        0x8020
- #define AR_RESET_TSF_ONCE   0x01000000
--- 
-1.7.3.2
+Thanks for pointing that out.
+I will remove the wext and fix all the resulting bugs.
+
+Thanks,
+Bing
+
+> 
+> Cc: Bing Zhao <bzhao@marvell.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+
+Acked-by: Bing Zhao <bzhao@marvell.com>
+
+> ---
+>  drivers/net/wireless/mwifiex/ioctl.h |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> --- a/drivers/net/wireless/mwifiex/ioctl.h	2011-07-13 10:29:57.000000000 +0200
+> +++ b/drivers/net/wireless/mwifiex/ioctl.h	2011-07-13 10:32:42.000000000 +0200
+> @@ -20,6 +20,7 @@
+>  #ifndef _MWIFIEX_IOCTL_H_
+>  #define _MWIFIEX_IOCTL_H_
+> 
+> +#include <linux/wireless.h>
+>  #include <net/mac80211.h>
+> 
+>  enum {
+> 
 
