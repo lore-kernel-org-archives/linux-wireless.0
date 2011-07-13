@@ -1,145 +1,724 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:23383 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755393Ab1G1R3f (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:44789 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756467Ab1GMBdJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2011 13:29:35 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 2/9] ath9k: Dump modal eeprom header for AR9003
-Date: Thu, 28 Jul 2011 22:59:29 +0530
-Message-ID: <1311874176-27569-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110728_192938_405133_498447B7)
-In-Reply-To: <1311874176-27569-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1311874176-27569-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Tue, 12 Jul 2011 21:33:09 -0400
+Subject: [PATCH 01/24] ath6kl: add bmi.c
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: devel@linuxdriverproject.org, gregkh@suse.de, error27@gmail.com
+Date: Wed, 13 Jul 2011 04:33:00 +0300
+Message-ID: <20110713013300.8517.98566.stgit@localhost6.localdomain6> (sfid-20110713_033313_660169_AD3A337B)
+In-Reply-To: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
+References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Debugfs file location:
-<debugfs_mnt>/ieee80211/phy#/ath9k/modal_eeprom
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/debug.c |   96 ++++++++++++++++++++++++++++++++
- 1 files changed, 96 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath6kl/bmi.c |  692 +++++++++++++++++++++++++++++++++
+ 1 files changed, 692 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/bmi.c
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index df71c72..b0a80d5 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1308,6 +1308,100 @@ static const struct file_operations fops_base_eeprom = {
- 	.llseek = default_llseek,
- };
- 
-+static u32 read_9003_modal_eeprom(char *buf, u32 len, u32 size,
-+				  struct ar9300_modal_eep_header *pModal)
+diff --git a/drivers/net/wireless/ath/ath6kl/bmi.c b/drivers/net/wireless/ath/ath6kl/bmi.c
+new file mode 100644
+index 0000000..95fd3c7
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath6kl/bmi.c
+@@ -0,0 +1,692 @@
++/*
++ * Copyright (c) 2004-2011 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include "core.h"
++#include "hif-ops.h"
++#include "target.h"
++#include "debug.h"
++
++static int ath6kl_get_bmi_cmd_credits(struct ath6kl *ar)
 +{
-+#define PR_EEP(_s, _val)						\
-+	do {								\
-+		len += snprintf(buf + len, size - len, "%20s : %10d\n",	\
-+				_s, (_val));				\
-+	} while (0)
++	u32 addr;
++	unsigned long timeout;
++	int ret;
 +
-+	PR_EEP("Chain0 Ant. Control", le16_to_cpu(pModal->antCtrlChain[0]));
-+	PR_EEP("Chain1 Ant. Control", le16_to_cpu(pModal->antCtrlChain[1]));
-+	PR_EEP("Chain2 Ant. Control", le16_to_cpu(pModal->antCtrlChain[1]));
-+	PR_EEP("Ant. Common Control", le32_to_cpu(pModal->antCtrlCommon));
-+	PR_EEP("Ant. Common Control2", le32_to_cpu(pModal->antCtrlCommon2));
-+	PR_EEP("Ant. Gain", pModal->antennaGain);
-+	PR_EEP("Switch Settle", pModal->switchSettling);
-+	PR_EEP("Chain0 xatten1DB", pModal->xatten1DB[0]);
-+	PR_EEP("Chain1 xatten1DB", pModal->xatten1DB[1]);
-+	PR_EEP("Chain2 xatten1DB", pModal->xatten1DB[2]);
-+	PR_EEP("Chain0 xatten1Margin", pModal->xatten1Margin[0]);
-+	PR_EEP("Chain1 xatten1Margin", pModal->xatten1Margin[1]);
-+	PR_EEP("Chain2 xatten1Margin", pModal->xatten1Margin[2]);
-+	PR_EEP("Temp Slope", pModal->tempSlope);
-+	PR_EEP("Volt Slope", pModal->voltSlope);
-+	PR_EEP("spur Channels0", pModal->spurChans[0]);
-+	PR_EEP("spur Channels1", pModal->spurChans[1]);
-+	PR_EEP("spur Channels2", pModal->spurChans[2]);
-+	PR_EEP("spur Channels3", pModal->spurChans[3]);
-+	PR_EEP("spur Channels4", pModal->spurChans[4]);
-+	PR_EEP("Chain0 NF Threshold", pModal->noiseFloorThreshCh[0]);
-+	PR_EEP("Chain1 NF Threshold", pModal->noiseFloorThreshCh[1]);
-+	PR_EEP("Chain2 NF Threshold", pModal->noiseFloorThreshCh[2]);
-+	PR_EEP("xPA Bias Level", pModal->xpaBiasLvl);
-+	PR_EEP("txFrameToDataStart", pModal->txFrameToDataStart);
-+	PR_EEP("txFrameToPaOn", pModal->txFrameToPaOn);
-+	PR_EEP("txFrameToXpaOn", pModal->txFrameToXpaOn);
-+	PR_EEP("txClip", pModal->txClip);
-+	PR_EEP("ADC Desired size", pModal->adcDesiredSize);
-+	PR_EEP("Chain0 ob", pModal->ob[0]);
-+	PR_EEP("Chain1 ob", pModal->ob[1]);
-+	PR_EEP("Chain2 ob", pModal->ob[2]);
++	ar->bmi.cmd_credits = 0;
 +
-+	PR_EEP("Chain0 db_stage2", pModal->db_stage2[0]);
-+	PR_EEP("Chain1 db_stage2", pModal->db_stage2[1]);
-+	PR_EEP("Chain2 db_stage2", pModal->db_stage2[2]);
-+	PR_EEP("Chain0 db_stage3", pModal->db_stage3[0]);
-+	PR_EEP("Chain1 db_stage3", pModal->db_stage3[1]);
-+	PR_EEP("Chain2 db_stage3", pModal->db_stage3[2]);
-+	PR_EEP("Chain0 db_stage4", pModal->db_stage4[0]);
-+	PR_EEP("Chain1 db_stage4", pModal->db_stage4[1]);
-+	PR_EEP("Chain2 db_stage4", pModal->db_stage4[2]);
-+	if (len > size)
-+		len = size;
++	/* Read the counter register to get the command credits */
++	addr = COUNT_DEC_ADDRESS + (HTC_MAILBOX_NUM_MAX + ENDPOINT1) * 4;
 +
-+	return len;
++	timeout = jiffies + msecs_to_jiffies(BMI_COMMUNICATION_TIMEOUT);
++	while (time_before(jiffies, timeout) && !ar->bmi.cmd_credits) {
 +
-+#undef PR_EEP
++		/*
++		 * Hit the credit counter with a 4-byte access, the first byte
++		 * read will hit the counter and cause a decrement, while the
++		 * remaining 3 bytes has no effect. The rationale behind this
++		 * is to make all HIF accesses 4-byte aligned.
++		 */
++		ret = hif_read_write_sync(ar, addr,
++					 (u8 *)&ar->bmi.cmd_credits, 4,
++					 HIF_RD_SYNC_BYTE_INC);
++		if (ret) {
++			ath6kl_err("Unable to decrement the command "
++				   "credit count register: %d\n", ret);
++			return ret;
++		}
++
++		/* The counter is only 8 bits.
++		 * Ignore anything in the upper 3 bytes
++		 */
++		ar->bmi.cmd_credits &= 0xFF;
++	}
++
++	if (!ar->bmi.cmd_credits) {
++		ath6kl_err("%s bmi communication timeout\n", __func__);
++		return -ETIMEDOUT;
++	}
++
++	return 0;
 +}
 +
-+static ssize_t read_file_modal_eeprom(struct file *file, char __user *user_buf,
-+				      size_t count, loff_t *ppos)
++static int ath6kl_bmi_get_rx_lkahd(struct ath6kl *ar, bool need_timeout)
 +{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+	u32 len = 0, size = 6000;
-+	char *buf;
-+	size_t retval;
++	unsigned long timeout;
++	u32 rx_word = 0;
++	int ret = 0;
 +
-+	buf = kzalloc(size, GFP_KERNEL);
-+	if (buf == NULL)
++	timeout = jiffies + msecs_to_jiffies(BMI_COMMUNICATION_TIMEOUT);
++	while ((!need_timeout || time_before(jiffies, timeout)) && !rx_word) {
++		ret = hif_read_write_sync(ar, RX_LOOKAHEAD_VALID_ADDRESS,
++					  (u8 *)&rx_word, sizeof(rx_word),
++					  HIF_RD_SYNC_BYTE_INC);
++		if (ret) {
++			ath6kl_err("unable to read RX_LOOKAHEAD_VALID\n");
++			return ret;
++		}
++
++		 /* all we really want is one bit */
++		rx_word &= (1 << ENDPOINT1);
++	}
++
++	if (!rx_word) {
++		ath6kl_err("bmi_recv_buf FIFO empty\n");
++		return -EINVAL;
++	}
++
++	return ret;
++}
++
++static int ath6kl_bmi_send_buf(struct ath6kl *ar, u8 *buf, u32 len)
++{
++	int ret;
++	u32 addr;
++
++	ret = ath6kl_get_bmi_cmd_credits(ar);
++	if (ret)
++		return ret;
++
++	addr = ar->mbox_info.htc_addr;
++
++	ret = hif_read_write_sync(ar, addr, buf, len,
++				  HIF_WR_SYNC_BYTE_INC);
++	if (ret)
++		ath6kl_err("unable to send the bmi data to the device\n");
++
++	return ret;
++}
++
++static int ath6kl_bmi_recv_buf(struct ath6kl *ar,
++			u8 *buf, u32 len, bool want_timeout)
++{
++	int ret;
++	u32 addr;
++
++	/*
++	 * During normal bootup, small reads may be required.
++	 * Rather than issue an HIF Read and then wait as the Target
++	 * adds successive bytes to the FIFO, we wait here until
++	 * we know that response data is available.
++	 *
++	 * This allows us to cleanly timeout on an unexpected
++	 * Target failure rather than risk problems at the HIF level.
++	 * In particular, this avoids SDIO timeouts and possibly garbage
++	 * data on some host controllers.  And on an interconnect
++	 * such as Compact Flash (as well as some SDIO masters) which
++	 * does not provide any indication on data timeout, it avoids
++	 * a potential hang or garbage response.
++	 *
++	 * Synchronization is more difficult for reads larger than the
++	 * size of the MBOX FIFO (128B), because the Target is unable
++	 * to push the 129th byte of data until AFTER the Host posts an
++	 * HIF Read and removes some FIFO data.  So for large reads the
++	 * Host proceeds to post an HIF Read BEFORE all the data is
++	 * actually available to read.  Fortunately, large BMI reads do
++	 * not occur in practice -- they're supported for debug/development.
++	 *
++	 * So Host/Target BMI synchronization is divided into these cases:
++	 *  CASE 1: length < 4
++	 *        Should not happen
++	 *
++	 *  CASE 2: 4 <= length <= 128
++	 *        Wait for first 4 bytes to be in FIFO
++	 *        If CONSERVATIVE_BMI_READ is enabled, also wait for
++	 *        a BMI command credit, which indicates that the ENTIRE
++	 *        response is available in the the FIFO
++	 *
++	 *  CASE 3: length > 128
++	 *        Wait for the first 4 bytes to be in FIFO
++	 *
++	 * For most uses, a small timeout should be sufficient and we will
++	 * usually see a response quickly; but there may be some unusual
++	 * (debug) cases of BMI_EXECUTE where we want an larger timeout.
++	 * For now, we use an unbounded busy loop while waiting for
++	 * BMI_EXECUTE.
++	 *
++	 * If BMI_EXECUTE ever needs to support longer-latency execution,
++	 * especially in production, this code needs to be enhanced to sleep
++	 * and yield.  Also note that BMI_COMMUNICATION_TIMEOUT is currently
++	 * a function of Host processor speed.
++	 */
++	if (len >= 4) { /* NB: Currently, always true */
++		ret = ath6kl_bmi_get_rx_lkahd(ar, want_timeout);
++		if (ret)
++			return ret;
++	}
++
++	addr = ar->mbox_info.htc_addr;
++	ret = hif_read_write_sync(ar, addr, buf, len,
++				  HIF_RD_SYNC_BYTE_INC);
++	if (ret) {
++		ath6kl_err("Unable to read the bmi data "
++			   "from the device: %d\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++int ath6kl_bmi_done(struct ath6kl *ar)
++{
++	int ret;
++	u32 cid = BMI_DONE;
++
++	if (ar->bmi.done_sent) {
++		ath6kl_dbg(ATH6KL_DBG_BMI, "bmi done skipped\n");
++		return 0;
++	}
++
++	ar->bmi.done_sent = true;
++
++	ret = ath6kl_bmi_send_buf(ar, (u8 *)&cid, sizeof(cid));
++	if (ret) {
++		ath6kl_err("Unable to send bmi done: %d\n", ret);
++		return ret;
++	}
++
++	ath6kl_bmi_cleanup(ar);
++
++	return 0;
++}
++
++int ath6kl_bmi_get_target_info(struct ath6kl *ar,
++			       struct ath6kl_bmi_target_info *targ_info)
++{
++	int ret;
++	u32 cid = BMI_GET_TARGET_INFO;
++
++	if (ar->bmi.done_sent) {
++		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
++		return -EACCES;
++	}
++
++	ret = ath6kl_bmi_send_buf(ar, (u8 *)&cid, sizeof(cid));
++	if (ret) {
++		ath6kl_err("Unable to send get target info: %d\n", ret);
++		return ret;
++	}
++
++	ret = ath6kl_bmi_recv_buf(ar, (u8 *)&targ_info->version,
++			sizeof(targ_info->version), true);
++	if (ret) {
++		ath6kl_err("Unable to recv target info: %d\n", ret);
++		return ret;
++	}
++
++	if (le32_to_cpu(targ_info->version) == TARGET_VERSION_SENTINAL) {
++		/* Determine how many bytes are in the Target's targ_info */
++		ret = ath6kl_bmi_recv_buf(ar,
++				   (u8 *)&targ_info->byte_count,
++				   sizeof(targ_info->byte_count),
++				   true);
++		if (ret) {
++			ath6kl_err("unable to read target info "
++				   "byte count: %d\n", ret);
++			return ret;
++		}
++
++		/*
++		 * The target's targ_info doesn't match the host's targ_info.
++		 * We need to do some backwards compatibility to make this work.
++		 */
++		if (le32_to_cpu(targ_info->byte_count) != sizeof(*targ_info)) {
++			WARN_ON(1);
++			return -EINVAL;
++		}
++
++		/* Read the remainder of the targ_info */
++		ret = ath6kl_bmi_recv_buf(ar,
++				   ((u8 *)targ_info) +
++				   sizeof(targ_info->byte_count),
++				   sizeof(*targ_info) -
++				   sizeof(targ_info->byte_count),
++				   true);
++
++		if (ret) {
++			ath6kl_err("Unable to read target info "
++				   "(%d bytes): %d\n",
++				   targ_info->byte_count, ret);
++			return ret;
++		}
++	}
++
++	ath6kl_dbg(ATH6KL_DBG_BMI, "target info (ver: 0x%x type: 0x%x)\n",
++		targ_info->version, targ_info->type);
++
++	return 0;
++}
++
++int ath6kl_bmi_read(struct ath6kl *ar, u32 addr, u8 *buf, u32 len)
++{
++	u32 cid = BMI_READ_MEMORY;
++	int ret;
++	u32 offset;
++	u32 len_remain, rx_len;
++	u16 size;
++
++	if (ar->bmi.done_sent) {
++		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
++		return -EACCES;
++	}
++
++	size = BMI_DATASZ_MAX + sizeof(cid) + sizeof(addr) + sizeof(len);
++	if (size > MAX_BMI_CMDBUF_SZ) {
++		WARN_ON(1);
++		return -EINVAL;
++	}
++	memset(ar->bmi.cmd_buf, 0, size);
++
++	ath6kl_dbg(ATH6KL_DBG_BMI,
++		   "bmi read memory: device: addr: 0x%x, len: %d\n",
++		   addr, len);
++
++	len_remain = len;
++
++	while (len_remain) {
++		rx_len = (len_remain < BMI_DATASZ_MAX) ?
++					len_remain : BMI_DATASZ_MAX;
++		offset = 0;
++		memcpy(&(ar->bmi.cmd_buf[offset]), &cid, sizeof(cid));
++		offset += sizeof(cid);
++		memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
++		offset += sizeof(addr);
++		memcpy(&(ar->bmi.cmd_buf[offset]), &rx_len, sizeof(rx_len));
++		offset += sizeof(len);
++
++		ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
++		if (ret) {
++			ath6kl_err("Unable to write to the device: %d\n",
++				   ret);
++			return ret;
++		}
++		ret = ath6kl_bmi_recv_buf(ar, ar->bmi.cmd_buf, rx_len, true);
++		if (ret) {
++			ath6kl_err("Unable to read from the device: %d\n",
++				   ret);
++			return ret;
++		}
++		memcpy(&buf[len - len_remain], ar->bmi.cmd_buf, rx_len);
++		len_remain -= rx_len; addr += rx_len;
++	}
++
++	return 0;
++}
++
++int ath6kl_bmi_write(struct ath6kl *ar, u32 addr, u8 *buf, u32 len)
++{
++	u32 cid = BMI_WRITE_MEMORY;
++	int ret;
++	u32 offset;
++	u32 len_remain, tx_len;
++	const u32 header = sizeof(cid) + sizeof(addr) + sizeof(len);
++	u8 aligned_buf[BMI_DATASZ_MAX];
++	u8 *src;
++
++	if (ar->bmi.done_sent) {
++		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
++		return -EACCES;
++	}
++
++	if ((BMI_DATASZ_MAX + header) > MAX_BMI_CMDBUF_SZ) {
++		WARN_ON(1);
++		return -EINVAL;
++	}
++
++	memset(ar->bmi.cmd_buf, 0, BMI_DATASZ_MAX + header);
++
++	ath6kl_dbg(ATH6KL_DBG_BMI,
++		  "bmi write memory: addr: 0x%x, len: %d\n", addr, len);
++
++	len_remain = len;
++	while (len_remain) {
++		src = &buf[len - len_remain];
++
++		if (len_remain < (BMI_DATASZ_MAX - header)) {
++			if (len_remain & 3) {
++				/* align it with 4 bytes */
++				len_remain = len_remain +
++					     (4 - (len_remain & 3));
++				memcpy(aligned_buf, src, len_remain);
++				src = aligned_buf;
++			}
++			tx_len = len_remain;
++		} else {
++			tx_len = (BMI_DATASZ_MAX - header);
++		}
++
++		offset = 0;
++		memcpy(&(ar->bmi.cmd_buf[offset]), &cid, sizeof(cid));
++		offset += sizeof(cid);
++		memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
++		offset += sizeof(addr);
++		memcpy(&(ar->bmi.cmd_buf[offset]), &tx_len, sizeof(tx_len));
++		offset += sizeof(tx_len);
++		memcpy(&(ar->bmi.cmd_buf[offset]), src, tx_len);
++		offset += tx_len;
++
++		ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
++		if (ret) {
++			ath6kl_err("Unable to write to the device: %d\n",
++				   ret);
++			return ret;
++		}
++		len_remain -= tx_len; addr += tx_len;
++	}
++
++	return 0;
++}
++
++int ath6kl_bmi_execute(struct ath6kl *ar, u32 addr, u32 *param)
++{
++	u32 cid = BMI_EXECUTE;
++	int ret;
++	u32 offset;
++	u16 size;
++
++	if (ar->bmi.done_sent) {
++		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
++		return -EACCES;
++	}
++
++	size = sizeof(cid) + sizeof(addr) + sizeof(param);
++	if (size > MAX_BMI_CMDBUF_SZ) {
++		WARN_ON(1);
++		return -EINVAL;
++	}
++	memset(ar->bmi.cmd_buf, 0, size);
++
++	ath6kl_dbg(ATH6KL_DBG_BMI, "bmi execute: addr: 0x%x, "
++		"param: %d)\n", addr, *param);
++
++	offset = 0;
++	memcpy(&(ar->bmi.cmd_buf[offset]), &cid, sizeof(cid));
++	offset += sizeof(cid);
++	memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
++	offset += sizeof(addr);
++	memcpy(&(ar->bmi.cmd_buf[offset]), param, sizeof(*param));
++	offset += sizeof(*param);
++
++	ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
++	if (ret) {
++		ath6kl_err("Unable to write to the device: %d\n", ret);
++		return ret;
++	}
++
++	ret = ath6kl_bmi_recv_buf(ar, ar->bmi.cmd_buf, sizeof(*param), false);
++	if (ret) {
++		ath6kl_err("Unable to read from the device: %d\n", ret);
++		return ret;
++	}
++
++	memcpy(param, ar->bmi.cmd_buf, sizeof(*param));
++
++	return 0;
++}
++
++int ath6kl_bmi_set_app_start(struct ath6kl *ar, u32 addr)
++{
++	u32 cid = BMI_SET_APP_START;
++	int ret;
++	u32 offset;
++	u16 size;
++
++	if (ar->bmi.done_sent) {
++		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
++		return -EACCES;
++	}
++
++	size = sizeof(cid) + sizeof(addr);
++	if (size > MAX_BMI_CMDBUF_SZ) {
++		WARN_ON(1);
++		return -EINVAL;
++	}
++	memset(ar->bmi.cmd_buf, 0, size);
++
++	ath6kl_dbg(ATH6KL_DBG_BMI, "bmi set app start: addr: 0x%x\n", addr);
++
++	offset = 0;
++	memcpy(&(ar->bmi.cmd_buf[offset]), &cid, sizeof(cid));
++	offset += sizeof(cid);
++	memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
++	offset += sizeof(addr);
++
++	ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
++	if (ret) {
++		ath6kl_err("Unable to write to the device: %d\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++int ath6kl_bmi_reg_read(struct ath6kl *ar, u32 addr, u32 *param)
++{
++	u32 cid = BMI_READ_SOC_REGISTER;
++	int ret;
++	u32 offset;
++	u16 size;
++
++	if (ar->bmi.done_sent) {
++		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
++		return -EACCES;
++	}
++
++	size = sizeof(cid) + sizeof(addr);
++	if (size > MAX_BMI_CMDBUF_SZ) {
++		WARN_ON(1);
++		return -EINVAL;
++	}
++	memset(ar->bmi.cmd_buf, 0, size);
++
++	ath6kl_dbg(ATH6KL_DBG_BMI, "bmi read SOC reg: addr: 0x%x\n", addr);
++
++	offset = 0;
++	memcpy(&(ar->bmi.cmd_buf[offset]), &cid, sizeof(cid));
++	offset += sizeof(cid);
++	memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
++	offset += sizeof(addr);
++
++	ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
++	if (ret) {
++		ath6kl_err("Unable to write to the device: %d\n", ret);
++		return ret;
++	}
++
++	ret = ath6kl_bmi_recv_buf(ar, ar->bmi.cmd_buf, sizeof(*param), true);
++	if (ret) {
++		ath6kl_err("Unable to read from the device: %d\n");
++		return ret;
++	}
++	memcpy(param, ar->bmi.cmd_buf, sizeof(*param));
++
++	return 0;
++}
++
++int ath6kl_bmi_reg_write(struct ath6kl *ar, u32 addr, u32 param)
++{
++	u32 cid = BMI_WRITE_SOC_REGISTER;
++	int ret;
++	u32 offset;
++	u16 size;
++
++	if (ar->bmi.done_sent) {
++		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
++		return -EACCES;
++	}
++
++	size = sizeof(cid) + sizeof(addr) + sizeof(param);
++	if (size > MAX_BMI_CMDBUF_SZ) {
++		WARN_ON(1);
++		return -EINVAL;
++	}
++	memset(ar->bmi.cmd_buf, 0, size);
++
++	ath6kl_dbg(ATH6KL_DBG_BMI,
++		   "bmi write SOC reg: addr: 0x%x, param: %d\n",
++		    addr, param);
++
++	offset = 0;
++	memcpy(&(ar->bmi.cmd_buf[offset]), &cid, sizeof(cid));
++	offset += sizeof(cid);
++	memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
++	offset += sizeof(addr);
++	memcpy(&(ar->bmi.cmd_buf[offset]), &param, sizeof(param));
++	offset += sizeof(param);
++
++	ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
++	if (ret) {
++		ath6kl_err("Unable to write to the device: %d\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++int ath6kl_bmi_lz_data(struct ath6kl *ar, u8 *buf, u32 len)
++{
++	u32 cid = BMI_LZ_DATA;
++	int ret;
++	u32 offset;
++	u32 len_remain, tx_len;
++	const u32 header = sizeof(cid) + sizeof(len);
++	u16 size;
++
++	if (ar->bmi.done_sent) {
++		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
++		return -EACCES;
++	}
++
++	size = BMI_DATASZ_MAX + header;
++	if (size > MAX_BMI_CMDBUF_SZ) {
++		WARN_ON(1);
++		return -EINVAL;
++	}
++	memset(ar->bmi.cmd_buf, 0, size);
++
++	ath6kl_dbg(ATH6KL_DBG_BMI, "bmi send LZ data: len: %d)\n",
++		   len);
++
++	len_remain = len;
++	while (len_remain) {
++		tx_len = (len_remain < (BMI_DATASZ_MAX - header)) ?
++			  len_remain : (BMI_DATASZ_MAX - header);
++
++		offset = 0;
++		memcpy(&(ar->bmi.cmd_buf[offset]), &cid, sizeof(cid));
++		offset += sizeof(cid);
++		memcpy(&(ar->bmi.cmd_buf[offset]), &tx_len, sizeof(tx_len));
++		offset += sizeof(tx_len);
++		memcpy(&(ar->bmi.cmd_buf[offset]), &buf[len - len_remain],
++			tx_len);
++		offset += tx_len;
++
++		ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
++		if (ret) {
++			ath6kl_err("Unable to write to the device: %d\n",
++				   ret);
++			return ret;
++		}
++
++		len_remain -= tx_len;
++	}
++
++	return 0;
++}
++
++int ath6kl_bmi_lz_stream_start(struct ath6kl *ar, u32 addr)
++{
++	u32 cid = BMI_LZ_STREAM_START;
++	int ret;
++	u32 offset;
++	u16 size;
++
++	if (ar->bmi.done_sent) {
++		ath6kl_err("bmi done sent already, cmd %d disallowed\n", cid);
++		return -EACCES;
++	}
++
++	size = sizeof(cid) + sizeof(addr);
++	if (size > MAX_BMI_CMDBUF_SZ) {
++		WARN_ON(1);
++		return -EINVAL;
++	}
++	memset(ar->bmi.cmd_buf, 0, size);
++
++	ath6kl_dbg(ATH6KL_DBG_BMI,
++		   "bmi LZ stream start: addr: 0x%x)\n",
++		    addr);
++
++	offset = 0;
++	memcpy(&(ar->bmi.cmd_buf[offset]), &cid, sizeof(cid));
++	offset += sizeof(cid);
++	memcpy(&(ar->bmi.cmd_buf[offset]), &addr, sizeof(addr));
++	offset += sizeof(addr);
++
++	ret = ath6kl_bmi_send_buf(ar, ar->bmi.cmd_buf, offset);
++	if (ret) {
++		ath6kl_err("Unable to start LZ stream to the device: %d\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++int ath6kl_bmi_fast_download(struct ath6kl *ar, u32 addr, u8 *buf, u32 len)
++{
++	int ret;
++	u32 last_word = 0;
++	u32 last_word_offset = len & ~0x3;
++	u32 unaligned_bytes = len & 0x3;
++
++	ret = ath6kl_bmi_lz_stream_start(ar, addr);
++	if (ret)
++		return ret;
++
++	if (unaligned_bytes) {
++		/* copy the last word into a zero padded buffer */
++		memcpy(&last_word, &buf[last_word_offset], unaligned_bytes);
++	}
++
++	ret = ath6kl_bmi_lz_data(ar, buf, last_word_offset);
++	if (ret)
++		return ret;
++
++	if (unaligned_bytes)
++		ret = ath6kl_bmi_lz_data(ar, (u8 *)&last_word, 4);
++
++	if (!ret) {
++		/* Close compressed stream and open a new (fake) one.
++		 * This serves mainly to flush Target caches. */
++		ret = ath6kl_bmi_lz_stream_start(ar, 0x00);
++	}
++	return ret;
++}
++
++int ath6kl_bmi_init(struct ath6kl *ar)
++{
++	ar->bmi.cmd_buf = kzalloc(MAX_BMI_CMDBUF_SZ, GFP_ATOMIC);
++
++	if (!ar->bmi.cmd_buf)
 +		return -ENOMEM;
 +
-+	if (!AR_SREV_9300_20_OR_LATER(ah))
-+		return 0;
-+
-+	len += snprintf(buf + len, size - len, "%20s :\n", "2GHz modal Header");
-+	len += read_9003_modal_eeprom(buf, len, size, &eep->modalHeader2G);
-+	len += snprintf(buf + len, size - len, "%20s :\n", "5GHz modal Header");
-+	len += read_9003_modal_eeprom(buf, len, size, &eep->modalHeader5G);
-+
-+	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	kfree(buf);
-+
-+	return retval;
++	return 0;
 +}
 +
-+static const struct file_operations fops_modal_eeprom = {
-+	.read = read_file_modal_eeprom,
-+	.open = ath9k_debugfs_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- int ath9k_init_debug(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -1353,6 +1447,8 @@ int ath9k_init_debug(struct ath_hw *ah)
- 			    &fops_regdump);
- 	debugfs_create_file("base_eeprom", S_IRUSR, sc->debug.debugfs_phy, sc,
- 			    &fops_base_eeprom);
-+	debugfs_create_file("modal_eeprom", S_IRUSR, sc->debug.debugfs_phy, sc,
-+			    &fops_modal_eeprom);
- 
- 	debugfs_create_u32("gpio_mask", S_IRUSR | S_IWUSR,
- 			   sc->debug.debugfs_phy, &sc->sc_ah->gpio_mask);
--- 
-1.7.6
++void ath6kl_bmi_cleanup(struct ath6kl *ar)
++{
++	kfree(ar->bmi.cmd_buf);
++	ar->bmi.cmd_buf = NULL;
++}
 
