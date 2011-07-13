@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58693 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752305Ab1GLBCT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 21:02:19 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	mickflemm@gmail.com
-Subject: [PATCH v3 3/8] ath5k: fix reference clock frequency for spur mitigation on AR2413
-Date: Tue, 12 Jul 2011 09:02:00 +0800
-Message-Id: <1310432525-70077-3-git-send-email-nbd@openwrt.org> (sfid-20110712_030223_204039_A72428E4)
-In-Reply-To: <1310432525-70077-2-git-send-email-nbd@openwrt.org>
-References: <1310432525-70077-1-git-send-email-nbd@openwrt.org>
- <1310432525-70077-2-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:34238 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965073Ab1GMIrA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2011 04:47:00 -0400
+Subject: [TODO] at76c50x: remove wext includes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kalle.valo@iki.fi>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 13 Jul 2011 10:47:16 +0200
+Message-ID: <1310546836.3873.6.camel@jlt3.sipsolutions.net> (sfid-20110713_104704_324549_A1DF1978)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR2413 uses the same reference clock as AR5413
+Not possible right now:
+at76c50x-usb.h:404:11: error: ‘IW_ESSID_MAX_SIZE’ undeclared here (not in a function)
+at76c50x-usb.c: In function ‘at76_startup_device’:
+at76c50x-usb.c:1371:263: error: ‘IW_MODE_ADHOC’ undeclared (first use in this function)
+at76c50x-usb.c:1371:263: note: each undeclared identifier is reported only once for each function it appears in
+at76c50x-usb.c: In function ‘at76_add_interface’:
+at76c50x-usb.c:1863:19: error: ‘IW_MODE_INFRA’ undeclared (first use in this function)
+at76c50x-usb.c: In function ‘at76_init_new_device’:
+at76c50x-usb.c:2269:18: error: ‘IW_MODE_INFRA’ undeclared (first use in this function)
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+but none of those constants should be used in a mac80211 driver.
+
+Also this driver is missing a MAINTAINERS entry.
+
+Cc: Kalle Valo <kalle.valo@iki.fi>
 ---
- drivers/net/wireless/ath/ath5k/phy.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/at76c50x-usb.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index acf73a0..dd2b417 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -105,6 +105,7 @@ bool ath5k_hw_chan_has_spur_noise(struct ath5k_hw *ah,
- 
- 	if ((ah->ah_radio == AR5K_RF5112) ||
- 	(ah->ah_radio == AR5K_RF5413) ||
-+	(ah->ah_radio == AR5K_RF2413) ||
- 	(ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4)))
- 		refclk_freq = 40;
- 	else
--- 
-1.7.3.2
+--- a/drivers/net/wireless/at76c50x-usb.c	2011-07-13 10:09:37.000000000 +0200
++++ b/drivers/net/wireless/at76c50x-usb.c	2011-07-13 10:09:40.000000000 +0200
+@@ -38,8 +38,6 @@
+ #include <linux/if_arp.h>
+ #include <linux/etherdevice.h>
+ #include <linux/ethtool.h>
+-#include <linux/wireless.h>
+-#include <net/iw_handler.h>
+ #include <net/ieee80211_radiotap.h>
+ #include <linux/firmware.h>
+ #include <linux/leds.h>
+
 
