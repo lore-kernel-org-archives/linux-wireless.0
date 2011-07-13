@@ -1,168 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:54052 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756249Ab1GFVBH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48923 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965134Ab1GMJ2d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2011 17:01:07 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 4so108843ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 14:01:06 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 6/6] rt2x00: Implement tx_frames_pending mac80211 callback function.
-Date: Wed, 6 Jul 2011 23:00:21 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <201107062256.25555.IvDoorn@gmail.com> <201107062258.56747.IvDoorn@gmail.com> <201107062259.20822.IvDoorn@gmail.com>
-In-Reply-To: <201107062259.20822.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201107062300.22718.IvDoorn@gmail.com> (sfid-20110706_230233_881010_3E04F18F)
+	Wed, 13 Jul 2011 05:28:33 -0400
+Subject: Re: [PATCH 00/24] ath6kl cleaned up driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Carpenter <error27@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	gregkh@suse.de
+In-Reply-To: <20110713092257.GN18655@shale.localdomain> (sfid-20110713_112439_856249_A0EE796F)
+References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
+	 <20110713092257.GN18655@shale.localdomain>
+	 (sfid-20110713_112439_856249_A0EE796F)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 13 Jul 2011 11:28:44 +0200
+Message-ID: <1310549324.3873.8.camel@jlt3.sipsolutions.net> (sfid-20110713_112836_176734_DAE3F020)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+On Wed, 2011-07-13 at 12:22 +0300, Dan Carpenter wrote:
 
-Implementing this callback function will cause mac80211 refrain from
-going to powersave state when there are still untransmitted TX frames
-in the queues.
-This would exactly mimic the behaviour of the legacy vendor driver which
-also doesn't go in powersave mode if there are still TX frames that are not
-transmitted.
-This should make powersaving and rt2x00 a better couple.
+> warn: returning -1 instead of -ENOMEM is sloppy
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c |    1 +
- drivers/net/wireless/rt2x00/rt2500pci.c |    1 +
- drivers/net/wireless/rt2x00/rt2500usb.c |    1 +
- drivers/net/wireless/rt2x00/rt2800pci.c |    1 +
- drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
- drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
- drivers/net/wireless/rt2x00/rt2x00mac.c |   14 ++++++++++++++
- drivers/net/wireless/rt2x00/rt61pci.c   |    1 +
- drivers/net/wireless/rt2x00/rt73usb.c   |    1 +
- 9 files changed, 22 insertions(+), 0 deletions(-)
+out of curiosity -- why does it say "instead of -ENOMEM"? -1 really gets
+interpreted as "-EPERM" (since EPERM == 1)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 937f9e8..76bcc354 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1723,6 +1723,7 @@ static const struct ieee80211_ops rt2400pci_mac80211_ops = {
- 	.set_antenna		= rt2x00mac_set_antenna,
- 	.get_antenna		= rt2x00mac_get_antenna,
- 	.get_ringparam		= rt2x00mac_get_ringparam,
-+	.tx_frames_pending	= rt2x00mac_tx_frames_pending,
- };
- 
- static const struct rt2x00lib_ops rt2400pci_rt2x00_ops = {
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index d27d7b8..c288d95 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -2016,6 +2016,7 @@ static const struct ieee80211_ops rt2500pci_mac80211_ops = {
- 	.set_antenna		= rt2x00mac_set_antenna,
- 	.get_antenna		= rt2x00mac_get_antenna,
- 	.get_ringparam		= rt2x00mac_get_ringparam,
-+	.tx_frames_pending	= rt2x00mac_tx_frames_pending,
- };
- 
- static const struct rt2x00lib_ops rt2500pci_rt2x00_ops = {
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 15237c2..53c5f87 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1827,6 +1827,7 @@ static const struct ieee80211_ops rt2500usb_mac80211_ops = {
- 	.set_antenna		= rt2x00mac_set_antenna,
- 	.get_antenna		= rt2x00mac_get_antenna,
- 	.get_ringparam		= rt2x00mac_get_ringparam,
-+	.tx_frames_pending	= rt2x00mac_tx_frames_pending,
- };
- 
- static const struct rt2x00lib_ops rt2500usb_rt2x00_ops = {
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index fd99449..5319ed9 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -1031,6 +1031,7 @@ static const struct ieee80211_ops rt2800pci_mac80211_ops = {
- 	.flush			= rt2x00mac_flush,
- 	.get_survey		= rt2800_get_survey,
- 	.get_ringparam		= rt2x00mac_get_ringparam,
-+	.tx_frames_pending	= rt2x00mac_tx_frames_pending,
- };
- 
- static const struct rt2800_ops rt2800pci_rt2800_ops = {
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index af23058..59e7779 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -757,6 +757,7 @@ static const struct ieee80211_ops rt2800usb_mac80211_ops = {
- 	.flush			= rt2x00mac_flush,
- 	.get_survey		= rt2800_get_survey,
- 	.get_ringparam		= rt2x00mac_get_ringparam,
-+	.tx_frames_pending	= rt2x00mac_tx_frames_pending,
- };
- 
- static const struct rt2800_ops rt2800usb_rt2800_ops = {
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index c446db6..db435ab 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -1276,6 +1276,7 @@ int rt2x00mac_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant);
- int rt2x00mac_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant);
- void rt2x00mac_get_ringparam(struct ieee80211_hw *hw,
- 			     u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max);
-+bool rt2x00mac_tx_frames_pending(struct ieee80211_hw *hw);
- 
- /*
-  * Driver allocation handlers.
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 93bec14..8efab39 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -818,3 +818,17 @@ void rt2x00mac_get_ringparam(struct ieee80211_hw *hw,
- 	*rx_max = rt2x00dev->rx->limit;
- }
- EXPORT_SYMBOL_GPL(rt2x00mac_get_ringparam);
-+
-+bool rt2x00mac_tx_frames_pending(struct ieee80211_hw *hw)
-+{
-+	struct rt2x00_dev *rt2x00dev = hw->priv;
-+	struct data_queue *queue;
-+
-+	tx_queue_for_each(rt2x00dev, queue) {
-+		if (!rt2x00queue_empty(queue))
-+			return true;
-+	}
-+
-+	return false;
-+}
-+EXPORT_SYMBOL_GPL(rt2x00mac_tx_frames_pending);
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 9d35ec1..53110b8 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2982,6 +2982,7 @@ static const struct ieee80211_ops rt61pci_mac80211_ops = {
- 	.set_antenna		= rt2x00mac_set_antenna,
- 	.get_antenna		= rt2x00mac_get_antenna,
- 	.get_ringparam		= rt2x00mac_get_ringparam,
-+	.tx_frames_pending	= rt2x00mac_tx_frames_pending,
- };
- 
- static const struct rt2x00lib_ops rt61pci_rt2x00_ops = {
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index ad20953..6a93939 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2314,6 +2314,7 @@ static const struct ieee80211_ops rt73usb_mac80211_ops = {
- 	.set_antenna		= rt2x00mac_set_antenna,
- 	.get_antenna		= rt2x00mac_get_antenna,
- 	.get_ringparam		= rt2x00mac_get_ringparam,
-+	.tx_frames_pending	= rt2x00mac_tx_frames_pending,
- };
- 
- static const struct rt2x00lib_ops rt73usb_rt2x00_ops = {
--- 
-1.7.2.3
+johannes
 
