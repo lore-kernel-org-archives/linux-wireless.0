@@ -1,138 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:61652 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750791Ab1GGFMo convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:52926 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750856Ab1GMHWb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2011 01:12:44 -0400
-Received: by wyg8 with SMTP id 8so387290wyg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 22:12:43 -0700 (PDT)
+	Wed, 13 Jul 2011 03:22:31 -0400
+Message-ID: <4E1D47B2.4080706@qca.qualcomm.com> (sfid-20110713_092234_629997_468578AC)
+Date: Wed, 13 Jul 2011 10:22:26 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <20110706182937.GE28091@alittletooquiet.net>
-References: <20110701173237.GC7125@alittletooquiet.net>
-	<20110704052410.GA1364@vmraj-lnx.users.atheros.com>
-	<20110704095341.GA1380@vmraj-lnx.users.atheros.com>
-	<20110705124914.GC26882@alittletooquiet.net>
-	<CAD2nsn0-FQuo7bT3nb3jJLDe1XwbMw4J-Gr8qFkY5zzY1O-vxg@mail.gmail.com>
-	<20110705143029.GA28091@alittletooquiet.net>
-	<CAD2nsn1r7cW7KZ2W_z+SURHRpaTvuC_bd42yN9S+y9JrYMkS4w@mail.gmail.com>
-	<20110705172022.GB28091@alittletooquiet.net>
-	<20110706023943.GA11178@vmraj-lnx.users.atheros.com>
-	<CAD2nsn0HFgm6Puuzuy4gghdDvpb05WaQtETS4=mfQ63mFzo--Q@mail.gmail.com>
-	<20110706182937.GE28091@alittletooquiet.net>
-Date: Thu, 7 Jul 2011 10:42:42 +0530
-Message-ID: <CAD2nsn3x5sfhTuzH66myCF0P2PyHoX+pqVkYgWC5ogssPdHsqw@mail.gmail.com> (sfid-20110707_071300_111753_386D011B)
-Subject: Re: ath9k_htc fails to initialize TL-WN721N with compat-wireless 3.0-rc4-1
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Forest Bond <forest@alittletooquiet.net>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Joe Perches <joe@perches.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@linuxdriverproject.org>,
+	<gregkh@suse.de>
+Subject: Re: [PATCH 03/24] ath6kl: add cfg80211.c
+References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>	 <20110713013324.8517.86411.stgit@localhost6.localdomain6> <1310531343.1143.26.camel@Joe-Laptop>
+In-Reply-To: <1310531343.1143.26.camel@Joe-Laptop>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 6, 2011 at 11:59 PM, Forest Bond <forest@alittletooquiet.net> wrote:
-> Hi shafi,
->
-> On Wed, Jul 06, 2011 at 03:58:13AM -0400, Mohammed Shafi wrote:
->> > To avoid multi reg writes please apply the following change
->> >
->> > diff --git a/drivers/net/wireless/ath/ath9k/wmi.h
->> > b/drivers/net/wireless/ath/ath9k/wmi.h
->> > index fde6da6..0878add 100644
->> > --- a/drivers/net/wireless/ath/ath9k/wmi.h
->> > +++ b/drivers/net/wireless/ath/ath9k/wmi.h
->> > @@ -124,7 +124,7 @@ enum wmi_event_id {
->> >        WMI_TXSTATUS_EVENTID,
->> >         };
->> >
->> >          -#define MAX_CMD_NUMBER 62
->> >          +#define MAX_CMD_NUMBER 1
->> >
->> >            struct register_write {
->> >                    __be32 reg;
->> > --
->>
->> did you try in your system the simple hack Raj had suggested?
->> it seems to solve ths issue, but we encountered some soft lock ups due
->> to the LED stuff is moved to mac80211 with the recent code base,
->> we will take a look at this to fix this, probably requires some backporting.
->
-> Yes, the device seems to initialize properly with this patch.  Like you
-> expected, I am seeing soft lock-ups when I try to bring the interface up.
->
->> in order to recreate the issue, we installed Ubuntu 8.04- the Hardy
->> Heron - released in April 2008.
->> as expected the issue is perfectly reproducible. thanks to Raj for his
->> help and suggestions.
->
-> Thanks for taking the time to test.  I really appreciate everyone's help.
->
->> *please obtain the stable compat-wireless-2.6.36-4
->> http://linuxwireless.org/en/users/Download/stable/#compat-wireless_2.6.36_stable_releases
->> *download the old firmware
->> http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=blob_plain;f=ar9271.fw;hb=HEAD
->> (history http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=history;f=ar9271.fw;h=d0ee74a1c8dccb7cc21f5be90f1d4048fa9dbf9e;hb=HEAD)
->> with this your USB card will be up and running, we did some basic testing.
->> *I used  usbmodeswitch-0.9.4
->
-> Ultimately we'd like to try the experimental AP mode.  I understand this was
-> introduced in kernel version 2.6.40, so I don't think compat-wireless-2.6.36-4
-> will work for us.
+On 07/13/2011 07:29 AM, Joe Perches wrote:
+> On Wed, 2011-07-13 at 04:33 +0300, Kalle Valo wrote: 
+>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+>> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> [] 
+>> +static struct ieee80211_rate ath6kl_rates[] = {
+> 
+> const?
+> 
+>> +static struct ieee80211_channel ath6kl_2ghz_channels[] = {
+> 
+> const?
+> 
+>> +static struct ieee80211_channel ath6kl_5ghz_a_channels[] = {
+> 
+> const?
+> 
+>> +static struct ieee80211_supported_band ath6kl_band_2ghz = {
+> 
+> const?
+> 
+>> +static struct ieee80211_supported_band ath6kl_band_5ghz = {
+> 
+> const?
 
-yes AP mode support is not available in 2.6.36-4 and so as the
-corresponding firmware changes.
+cfg80211 requires them to be non-const.
 
->
-> Can you point me to the LED-related commits that you mentioned above?  We'll
-> either need to backport the changes required to fix the soft lock-ups or upgrade
-> our kernel to include these commits.
+>> +		ath6kl_err("%s: %u not spported\n", __func__, wpa_version);
+>> +		ath6kl_err("%s: 0x%x not spported\n", __func__, auth_type);
+> 
+> supported
 
-no I have not looked into that deeply, will surely take a look into it sooner.
+Fixed.
 
->
->> we also recommend you upgrade to latest kernel available for your distribution,
->> because we may still face some other issues as ath9k_htc very much new
->> compared to ath9k
->
-> A kernel upgrade is something I would like to avoid if possible, but of course
-> it is something we'll consider if we need to.
+>> +		wait_event_interruptible_timeout(ar->event_wq,
+>> +						 ar->
+>> +						 tx_pending[wmi_get_control_ep
+>> +							     (ar->wmi)] == 0,
+>> +						 WMI_TIMEOUT);
+> 
+> I think you can ignore 80 columns for this.
+> 
+> 		wait_event_interruptible_timeout(ar->event_wq,
+> 						 ar->tx_pending[wmi_get_control_ep(ar->wmi)] == 0,
+> 						 WMI_TIMEOUT);
+> 
+> or maybe use different argument alignment when appropriate:
+> 
+> 		wait_event_interruptible_timeout(ar->event_wq,
+> 			ar->tx_pending[wmi_get_control_ep(ar->wmi)] == 0,
+> 			WMI_TIMEOUT);
 
-its highly recommended you please upgrade the kernel. its needed because
- we can avoid fixing issues that may need to back ported in the future.
+I took the latter approach to avoid checkpatch warnings.
 
->
->> please also read
->> http://wireless.kernel.org/en/users/Download/compat-wireless-old
->
-> I think this kernel is supported by the regular compat-wireless package, right?
+>> +		if (sme->key_idx < WMI_MIN_KEY_INDEX
+>> +		    || sme->key_idx > WMI_MAX_KEY_INDEX) {
+> 
+> I think it's more consistent with other files in drivers/net
+> to use logical continuations at EOL
+> 
+> if (sme->key_idx < WMI_MIN_KEY_INDEX ||
+>     sme->key_idx > WMI_MAX_KEY_INDEX) {
 
-true, but its also mentioned in the known issues that 2.6.26 >= is
-what ath9k best supports.
-its good that  ath9k_htc worked
+Yes, we just had missed that. Fixed.
 
->
-> Thanks,
-> Forest
-> --
-> Forest Bond
-> http://www.alittletooquiet.net
-> http://www.rapidrollout.com
->
-> -----BEGIN PGP SIGNATURE-----
-> Version: GnuPG v1.4.10 (GNU/Linux)
->
-> iEYEARECAAYFAk4UqZEACgkQRO4fQQdv5Ay9jQCbB3lJUTTYM0Vm1o+JNqwG0kyI
-> BAMAnjiX7VDThAbNYOyasOBTarI5ZqtE
-> =V/bH
-> -----END PGP SIGNATURE-----
->
->
+> 
+>> +			ath6kl_err("%s: key index %d out of bounds\n", __func__,
+>> +				   sme->key_idx);
+> 
+> I think it's better to use format on one line,
+> arguments on another.
+> 
+> 			ath6kl_err("%s: key index %d out of bounds\n",
+> 				    __func__, sme->key_idx);
+> 
 
+Fixed.
 
+> It seems almost all of your ath6kl_<level> logging
+> messages use __func__.  Perhaps you might as well
+> #define it to take __func__ instead of using it
+> in-place over and over.
 
--- 
-shafi
+Actually I would like to get rid of __func__ usage from logging
+altogether, IMHO they just clutter the logs. I started doing that but
+haven't removed all of them yet (obviously).
+
+Kalle
