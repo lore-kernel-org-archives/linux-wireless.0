@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11818 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753201Ab1GNGqI (ORCPT
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:49849 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965115Ab1GMJEf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 02:46:08 -0400
-Message-ID: <4E1E90AB.6030707@qca.qualcomm.com> (sfid-20110714_084612_843535_85C872D7)
-Date: Thu, 14 Jul 2011 09:46:03 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@linuxdriverproject.org>,
-	<gregkh@suse.de>
-Subject: Re: [PATCH 01/24] ath6kl: add bmi.c
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>	 <20110713013300.8517.98566.stgit@localhost6.localdomain6>	 <1310531333.1143.25.camel@Joe-Laptop>  <4E1D4479.8090201@qca.qualcomm.com> <1310559554.1662.6.camel@Joe-Laptop>
-In-Reply-To: <1310559554.1662.6.camel@Joe-Laptop>
+	Wed, 13 Jul 2011 05:04:35 -0400
+Received: by mail-bw0-f51.google.com with SMTP id 18so6768697bwa.24
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2011 02:04:34 -0700 (PDT)
+Subject: Re: [PATCH 08/11] wl12xx: remove wext dependencies
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20110713084034.328005382@sipsolutions.net>
+References: <20110713083908.713123063@sipsolutions.net>
+	 <20110713084034.328005382@sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 13 Jul 2011 12:04:31 +0300
+Message-ID: <1310547871.1514.813.camel@cumari> (sfid-20110713_110440_023862_562100EF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/13/2011 03:19 PM, Joe Perches wrote:
-> On Wed, 2011-07-13 at 10:08 +0300, Kalle Valo wrote:
->> On 07/13/2011 07:28 AM, Joe Perches wrote:
->>> This helps grepping the sources for a specific dmesg.
->>> 			ath6kl_err("Unable to decrement the command credit count register: %d\n",
->>> 				   ret);
->> I agree, that would improve readibility. The reason why the lines were
->> split is because of checkpatch warnings. I could unsplit them but then
->> someone else might start complaining about high number checkpatch
->> warnings about long lines. So I really don't know what to do with them.
+On Wed, 2011-07-13 at 10:39 +0200, Johannes Berg wrote:
+> plain text document attachment (011-wl12xx-fix-wext.patch)
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> Add this patch to checkpatch?
-> I'll submit it to Andrew Morton later.
+> This driver uses IW_ESSID_MAX_SIZE when it should
+> be using IEEE80211_MAX_SSID_LEN instead.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
 
-Awesome! I had no idea checkpatch supports this. Just tested this with
-ath6kl and I don't get long line warnings with long log messages.
+Acked-by: Luciano Coelho <coelho@ti.com>
 
-Thank you very much for this!
+-- 
+Cheers,
+Luca.
 
-I see that Andrew already took your patch but anyway:
-
-Tested-by: Kalle Valo <kvalo@qca.qualcomm.comm>
-
-Kalle
