@@ -1,140 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35870 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751279Ab1GIENS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jul 2011 00:13:18 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:42072 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756150Ab1GMBdl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jul 2011 21:33:41 -0400
+Subject: [PATCH 04/24] ath6kl: add cfg80211.h
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 5/9] ath9k_hw: initialize more timing related registers for half/quarter channels
-Date: Sat,  9 Jul 2011 11:12:50 +0700
-Message-Id: <1310184774-32913-5-git-send-email-nbd@openwrt.org> (sfid-20110709_061327_395690_D3D4CEE6)
-In-Reply-To: <1310184774-32913-4-git-send-email-nbd@openwrt.org>
-References: <1310184774-32913-1-git-send-email-nbd@openwrt.org>
- <1310184774-32913-2-git-send-email-nbd@openwrt.org>
- <1310184774-32913-3-git-send-email-nbd@openwrt.org>
- <1310184774-32913-4-git-send-email-nbd@openwrt.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: devel@linuxdriverproject.org, gregkh@suse.de, error27@gmail.com
+Date: Wed, 13 Jul 2011 04:33:35 +0300
+Message-ID: <20110713013335.8517.33529.stgit@localhost6.localdomain6> (sfid-20110713_033344_652390_C886320A)
+In-Reply-To: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
+References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialize the the clock-to-TSF field of AR_USEC and the SIFS and EIFS time
-registers based on the clock rate instead of relying on initvals.
-With those changes, some of the hardcoded AR9287 1.3+ specific overrides
-can be dropped.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c |   67 ++++++++++++++++++++++++++++++----
- 1 files changed, 59 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |   39 ++++++++++++++++++++++++++++
+ 1 files changed, 39 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/cfg80211.h
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index d4084d8..279d73a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -905,6 +905,13 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
- 	}
- }
- 
-+static void ath9k_hw_set_sifs_time(struct ath_hw *ah, u32 us)
-+{
-+	u32 val = ath9k_hw_mac_to_clks(ah, us - 2);
-+	val = min(val, (u32) 0xFFFF);
-+	REG_WRITE(ah, AR_D_GBL_IFS_SIFS, val);
-+}
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+new file mode 100644
+index 0000000..a84adc2
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+@@ -0,0 +1,39 @@
++/*
++ * Copyright (c) 2011 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
 +
- static void ath9k_hw_setslottime(struct ath_hw *ah, u32 us)
- {
- 	u32 val = ath9k_hw_mac_to_clks(ah, us);
-@@ -942,25 +949,60 @@ static bool ath9k_hw_set_global_txtimeout(struct ath_hw *ah, u32 tu)
- 
- void ath9k_hw_init_global_settings(struct ath_hw *ah)
- {
--	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ieee80211_conf *conf = &common->hw->conf;
-+	const struct ath9k_channel *chan = ah->curchan;
- 	int acktimeout;
- 	int slottime;
- 	int sifstime;
-+	int rx_lat = 0, tx_lat = 0, eifs = 0;
-+	u32 reg;
- 
- 	ath_dbg(ath9k_hw_common(ah), ATH_DBG_RESET, "ah->misc_mode 0x%x\n",
- 		ah->misc_mode);
- 
-+	if (!chan)
-+		return;
++#ifndef ATH6KL_CFG80211_H
++#define ATH6KL_CFG80211_H
 +
- 	if (ah->misc_mode != 0)
- 		REG_SET_BIT(ah, AR_PCU_MISC, ah->misc_mode);
- 
--	if (conf->channel && conf->channel->band == IEEE80211_BAND_5GHZ)
--		sifstime = 16;
--	else
--		sifstime = 10;
-+	rx_lat = 37;
-+	tx_lat = 54;
++struct wireless_dev *ath6kl_cfg80211_init(struct device *dev);
++void ath6kl_cfg80211_deinit(struct ath6kl *ar);
 +
-+	if (IS_CHAN_HALF_RATE(chan)) {
-+		eifs = 175;
-+		rx_lat *= 2;
-+		tx_lat *= 2;
-+		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
-+		    tx_lat += 11;
++void ath6kl_cfg80211_scan_complete_event(struct ath6kl *ar, int status);
 +
-+		slottime = 13;
-+		sifstime = 32;
-+	} else if (IS_CHAN_QUARTER_RATE(chan)) {
-+		eifs = 340;
-+		rx_lat *= 4;
-+		tx_lat *= 4;
-+		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
-+		    tx_lat += 22;
++void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
++				   u8 *bssid, u16 listen_intvl,
++				   u16 beacon_intvl,
++				   enum network_type nw_type,
++				   u8 beacon_ie_len, u8 assoc_req_len,
++				   u8 assoc_resp_len, u8 *assoc_info);
 +
-+		slottime = 21;
-+		sifstime = 64;
-+	} else {
-+		eifs = REG_READ(ah, AR_D_GBL_IFS_EIFS);
-+		reg = REG_READ(ah, AR_USEC);
-+		rx_lat = MS(reg, AR_USEC_RX_LAT);
-+		tx_lat = MS(reg, AR_USEC_TX_LAT);
++void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
++				      u8 *bssid, u8 assoc_resp_len,
++				      u8 *assoc_info, u16 proto_reason);
 +
-+		slottime = ah->slottime;
-+		if (IS_CHAN_5GHZ(chan))
-+			sifstime = 16;
-+		else
-+			sifstime = 10;
-+	}
- 
- 	/* As defined by IEEE 802.11-2007 17.3.8.6 */
--	slottime = ah->slottime + 3 * ah->coverage_class;
--	acktimeout = slottime + sifstime;
-+	acktimeout = slottime + sifstime + 3 * ah->coverage_class;
- 
- 	/*
- 	 * Workaround for early ACK timeouts, add an offset to match the
-@@ -972,11 +1014,20 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 	if (conf->channel && conf->channel->band == IEEE80211_BAND_2GHZ)
- 		acktimeout += 64 - sifstime - ah->slottime;
- 
--	ath9k_hw_setslottime(ah, ah->slottime);
-+	ath9k_hw_set_sifs_time(ah, sifstime);
-+	ath9k_hw_setslottime(ah, slottime);
- 	ath9k_hw_set_ack_timeout(ah, acktimeout);
- 	ath9k_hw_set_cts_timeout(ah, acktimeout);
- 	if (ah->globaltxtimeout != (u32) -1)
- 		ath9k_hw_set_global_txtimeout(ah, ah->globaltxtimeout);
++void ath6kl_cfg80211_tkip_micerr_event(struct ath6kl *ar, u8 keyid,
++				     bool ismcast);
 +
-+	REG_WRITE(ah, AR_D_GBL_IFS_EIFS, ath9k_hw_mac_to_clks(ah, eifs));
-+	REG_RMW(ah, AR_USEC,
-+		(common->clockrate - 1) |
-+		SM(rx_lat, AR_USEC_RX_LAT) |
-+		SM(tx_lat, AR_USEC_TX_LAT),
-+		AR_USEC_TX_LAT | AR_USEC_RX_LAT | AR_USEC_USEC);
-+
- }
- EXPORT_SYMBOL(ath9k_hw_init_global_settings);
- 
--- 
-1.7.3.2
++#endif /* ATH6KL_CFG80211_H */
 
