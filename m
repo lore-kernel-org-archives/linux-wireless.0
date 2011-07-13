@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:56828 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751230Ab1GSDSZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2011 23:18:25 -0400
-Message-ID: <20110718231824.xl0vv9csjs4oowwc-cebfxv@webmail.spamcop.net> (sfid-20110719_051854_167374_3A6CD968)
-Date: Mon, 18 Jul 2011 23:18:24 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: JJLee <jjleecareer@gmail.com>
-Cc: wy408 <wy52119514@163.com>, linux-wireless@vger.kernel.org
-Subject: Re: compat-wireless cross compile
-References: <loom.20110716T174804-267@post.gmane.org>
-	<4E24589B.5030303@gnu.org>
-	<CABmiYRZ9vdHyTrxt8ZRxrseHn+M0Z_7O+s7fWXXNwwSE9o7VGQ@mail.gmail.com>
-In-Reply-To: <CABmiYRZ9vdHyTrxt8ZRxrseHn+M0Z_7O+s7fWXXNwwSE9o7VGQ@mail.gmail.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12656 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965019Ab1GMHmA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2011 03:42:00 -0400
+Message-ID: <4E1D4C40.9000706@qca.qualcomm.com> (sfid-20110713_094205_052113_41F051D1)
+Date: Wed, 13 Jul 2011 10:41:52 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+To: Joe Perches <joe@perches.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@linuxdriverproject.org>,
+	<gregkh@suse.de>
+Subject: Re: [PATCH 06/24] ath6kl: add core.h
+References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>	 <20110713013355.8517.6083.stgit@localhost6.localdomain6> <1310531354.1143.27.camel@Joe-Laptop>
+In-Reply-To: <1310531354.1143.27.camel@Joe-Laptop>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting JJLee <jjleecareer@gmail.com>:
+On 07/13/2011 07:29 AM, Joe Perches wrote:
+> On Wed, 2011-07-13 at 04:33 +0300, Kalle Valo wrote: 
+>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+>> diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+> [] 
+>> +/* Pkt log info */
+>> +struct pkt_log {
+>> +	struct info {
+>> +		__le16 st;
+>> +		__le16 end;
+>> +		__le16 cur;
+>> +	} info[4096];
+>> +	__le16 last_idx;
+>> +} __packed;
+> 
+> pretty big struct.
 
-> maybe your corss compile gcc not support elseif keywords
+Indeed.
 
-Please don't top-post.  Top-posting kills an intelligent discussion.
+>> +struct skb_hold_q {
+>> +	struct sk_buff *skb;
+>> +	bool is_amsdu;
+>> +	u16 seq_no;
+>> +};
+> 
+> Maybe all the structs could be inspected for alignment
+> and possible packing appropriateness?
+> 
+> struct sk_buff *skb;
+> u16 seq_no;
+> bool is_amsdu;
+> ?
 
->>> config.mk:26:*****missing "endif"........
+I added a task to the todo list:
 
-If you actually read the text you quoted you would have realized that  
-the message comes from the make program that fails to interpret  
-config.mk.  The compiler is not involved at this stage.
+http://wireless.kernel.org/en/users/Drivers/ath6kl/todo
 
-There is no "elseif" or even "elsif" anywhere in  
-compat-wireless-2.6.39, and if GNU make failed to understand a  
-keyword, it would have reported it differently:
-
-$ cat makefile
-ifeq (0,0)
-elseif
-$ make
-makefile:2: *** missing separator.  Stop.
-
-BSD make would stop of the first like of the compat-wireless Makefile  
-without even getting to config.mk:
-
-$ bmake
-bmake: "/home/proski/src/compat-wireless-2.6.39-1-sn/Makefile" line 1:  
-Need an operator
-
--- 
-Regards,
-Pavel Roskin
+Kalle
