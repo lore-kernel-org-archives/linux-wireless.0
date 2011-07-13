@@ -1,124 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from msr3.hinet.net ([168.95.4.103]:38309 "EHLO msr3.hinet.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755922Ab1GKMQf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 08:16:35 -0400
-From: Ali Bahar <ali@internetdog.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, WLAN FAE <wlanfae@realtek.com>,
-	Ali Bahar <ali@internetdog.org>
-Subject: [PATCH 1/2] staging: r8712u: Sets to SSID, and to AP MAC#, can now be done when the interface is Down.
-Date: Mon, 11 Jul 2011 18:07:55 +0800
-Message-Id: <1310378876-1311-2-git-send-email-ali@internetDog.org> (sfid-20110711_141638_163843_54A164DE)
-In-Reply-To: <1310378876-1311-1-git-send-email-ali@internetDog.org>
-References: <1310378876-1311-1-git-send-email-ali@internetDog.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:58716 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965400Ab1GMRui (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2011 13:50:38 -0400
+Subject: [PATCH] mac80211: allow driver access to TKIP RX P1K
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 13 Jul 2011 19:50:34 +0200
+Message-ID: <1310579434.3873.11.camel@jlt3.sipsolutions.net> (sfid-20110713_195041_261681_7BE54DCD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The original Realtek code assumed that ioctl Sets get done after the
-interface is Up. This included the set to Essid and to the AP MAC#;
-and it fit Realtek's installation procedure. But there is no such
-necessity for the adapter, and no stated requirement found
-elsewhere. Also, wireless drivers typically permit this.
+From: Johannes Berg <johannes.berg@intel.com>
 
-A typical error message used to be:
-Error for wireless request "Set ESSID" (8B1A) :
-    SET failed on device wlan0 ; Operation not permitted.
+When the driver wants to pre-program the TKIP
+RX phase 1 key, it needs to be able to obtain
+it for the peer's TA. Add API to allow it to
+generate it.
 
-Signed-off-by: Ali Bahar <ali@internetDog.org>
+The generation uses a dummy on-stack context
+since it doesn't know the RX queue.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-Larry,
+ include/net/mac80211.h |   14 ++++++++++++++
+ net/mac80211/tkip.c    |   11 +++++++++++
+ 2 files changed, 25 insertions(+)
 
-this matches _your_ patch, of course. So it is a good candidate for an initial
-submission -- to ensure that I don't fall foul of the process.
-
-Ali
-
----
- drivers/staging/rtl8712/drv_types.h           |    5 +++++
- drivers/staging/rtl8712/rtl871x_ioctl_linux.c |   25 +++++++++++++++++++++----
- 2 files changed, 26 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/rtl8712/drv_types.h b/drivers/staging/rtl8712/drv_types.h
-index 3bb66dc..fd50f78 100644
---- a/drivers/staging/rtl8712/drv_types.h
-+++ b/drivers/staging/rtl8712/drv_types.h
-@@ -118,6 +118,11 @@ struct dvobj_priv {
- 	struct usb_device *pusbdev;
- };
- 
-+/**
-+ * struct _adapter - the main adapter structure for this device.
-+ *
-+ * bup: True indicates that the interface is Up.
-+ */
- struct _adapter {
- 	struct	dvobj_priv dvobjpriv;
- 	struct	mlme_priv mlmepriv;
-diff --git a/drivers/staging/rtl8712/rtl871x_ioctl_linux.c b/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-index 40e6b5c..59bdab1 100644
---- a/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-+++ b/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-@@ -975,6 +975,13 @@ static int r871x_wx_set_priv(struct net_device *dev,
-  * s2. set_802_11_authentication_mode()
-  * s3. set_802_11_encryption_mode()
-  * s4. set_802_11_bssid()
-+ *
-+ * This function intends to handle the Set AP command, which specifies the
-+ * MAC# of a preferred Access Point.
-+ * Currently, the request comes via Wireless Extensions' SIOCSIWAP ioctl.
-+ *
-+ * For this operation to succeed, there is no need for the interface to be Up.
-+ *
-  */
- static int r8711_wx_set_wap(struct net_device *dev,
- 			 struct iw_request_info *info,
-@@ -992,8 +999,6 @@ static int r8711_wx_set_wap(struct net_device *dev,
- 	struct wlan_network *pnetwork = NULL;
- 	enum NDIS_802_11_AUTHENTICATION_MODE	authmode;
- 
--	if (padapter->bup == false)
--		return -1;
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY) == true)
- 		return -1;
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_LINKING) == true)
-@@ -1074,6 +1079,14 @@ static int r871x_wx_set_mlme(struct net_device *dev,
- 	return ret;
+--- a/include/net/mac80211.h	2011-07-13 19:20:36.000000000 +0200
++++ b/include/net/mac80211.h	2011-07-13 19:24:20.000000000 +0200
+@@ -2612,6 +2612,20 @@ static inline void ieee80211_get_tkip_p1
  }
  
-+/**
+ /**
++ * ieee80211_get_tkip_rx_p1k - get a TKIP phase 1 key for RX
 + *
-+ * This function intends to handle the Set Scan command.
-+ * Currently, the request comes via Wireless Extensions' SIOCSIWSCAN ioctl.
++ * This function returns the TKIP phase 1 key for the given IV32
++ * and transmitter address.
 + *
-+ * For this operation to succeed, the interface is brought Up beforehand.
-+ *
++ * @keyconf: the parameter passed with the set key
++ * @ta: TA that will be used with the key
++ * @iv32: IV32 to get the P1K for
++ * @p1k: a buffer to which the key will be written, as 5 u16 values
 + */
- static int r8711_wx_set_scan(struct net_device *dev,
- 			struct iw_request_info *a,
- 			union iwreq_data *wrqu, char *extra)
-@@ -1169,6 +1182,12 @@ static int r8711_wx_get_scan(struct net_device *dev,
-  * s2. set_802_11_authenticaion_mode()
-  * s3. set_802_11_encryption_mode()
-  * s4. set_802_11_ssid()
-+ *
-+ * This function intends to handle the Set ESSID command.
-+ * Currently, the request comes via the Wireless Extensions' SIOCSIWESSID ioctl.
-+ *
-+ * For this operation to succeed, there is no need for the interface to be Up.
-+ *
-  */
- static int r8711_wx_set_essid(struct net_device *dev,
- 				struct iw_request_info *a,
-@@ -1184,8 +1203,6 @@ static int r8711_wx_set_essid(struct net_device *dev,
- 	struct list_head *phead;
- 	u32 len;
++void ieee80211_get_tkip_rx_p1k(struct ieee80211_key_conf *keyconf,
++			       const u8 *ta, u32 iv32, u16 *p1k);
++
++/**
+  * ieee80211_get_tkip_p2k - get a TKIP phase 2 key
+  *
+  * This function computes the TKIP RC4 key for the IV values
+--- a/net/mac80211/tkip.c	2011-07-13 19:20:36.000000000 +0200
++++ b/net/mac80211/tkip.c	2011-07-13 19:20:37.000000000 +0200
+@@ -185,6 +185,17 @@ void ieee80211_get_tkip_p1k_iv(struct ie
+ }
+ EXPORT_SYMBOL(ieee80211_get_tkip_p1k_iv);
  
--	if (padapter->bup == false)
--		return -1;
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY))
- 		return -1;
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_LINKING))
--- 
-1.7.6
++void ieee80211_get_tkip_rx_p1k(struct ieee80211_key_conf *keyconf,
++                               const u8 *ta, u32 iv32, u16 *p1k)
++{
++	const u8 *tk = &keyconf->key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
++	struct tkip_ctx ctx;
++
++	tkip_mixing_phase1(tk, &ctx, ta, iv32);
++	memcpy(p1k, ctx.p1k, sizeof(ctx.p1k));
++}
++EXPORT_SYMBOL(ieee80211_get_tkip_rx_p1k);
++
+ void ieee80211_get_tkip_p2k(struct ieee80211_key_conf *keyconf,
+ 			    struct sk_buff *skb, u8 *p2k)
+ {
+
 
