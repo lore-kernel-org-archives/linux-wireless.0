@@ -1,76 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:3318 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755149Ab1GNOIF (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53999 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965100Ab1GMIl1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 10:08:05 -0400
-Date: Thu, 14 Jul 2011 19:38:09 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 1/3] mac80211: Add 20/40 BSS coexistence management frame
- format
-Message-ID: <20110714140804.GA23883@vmraj-lnx.users.atheros.com> (sfid-20110714_160810_914194_E6223D2F)
-References: <1310559873-10314-1-git-send-email-rmanohar@qca.qualcomm.com>
- <1310638112.3874.5.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1310638112.3874.5.camel@jlt3.sipsolutions.net>
+	Wed, 13 Jul 2011 04:41:27 -0400
+Message-Id: <20110713084031.752929662@sipsolutions.net> (sfid-20110713_104130_706984_F7FB7AF9)
+Date: Wed, 13 Jul 2011 10:39:10 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 02/11] iwlagn: remove wireless extensions inclusions
+References: <20110713083908.713123063@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 14, 2011 at 12:08:32PM +0200, Johannes Berg wrote:
-> On Wed, 2011-07-13 at 17:54 +0530, Rajkumar Manoharan wrote:
-> > Add 20/40 BSS coexistence and intolerant channel report IEs.
-> 
-> Can you make the subject "wireless" or "ieee80211" instead of
-> "mac80211"?
->
-OK
-> > +/**
-> > + * struct ieee80211_2040_bss_coex_ie
-> > + *
-> > + * This structure refers to "20/40 BSS Coexistence information element"
-> > + */
-> 
-> That documentation is incomplete.
->
-Followed the existing IE struct documenting style.
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > +struct ieee80211_2040_bss_coex_ie {
-> > +	u8 element_id;
-> > +	u8 length;
-> > +#define IEEE80211_2040_BC_INFO_REQ		0x01
-> > +#define IEEE80211_2040_BC_40MHZ_INTOL		0x02
-> > +#define IEEE80211_2040_BC_20MHZ_WIDTH_REQ	0x04
-> > +#define IEEE80211_2040_BC_OBSS_SCAN_EXMPT_REQ	0x08
-> > +#define IEEE80211_2040_BC_OBSS_SCAN_EXMPT_GRNT	0x10
-> 
-> Please don't define them inside the struct, the docbook processing
-> doesn't like that. Also BIT() would be nice to be more readable, and
-> maybe make them an enum so they can have docs?
->
-OK
-> > +/**
-> > + * struct ieee80211_2040_intol_chan_report
-> > + *
-> > + * This structure refers to "20/40 BSS Intolerant Channel Report"
-> > + */
-> 
-> Again incomplete docs. Come to think of it, maybe give pointers to the
-> spec?
->
-Followed the existing IE struct documenting style.
-> > +struct ieee80211_2040_intol_chan_report {
-> > +	u8 element_id;
-> > +	u8 length;
-> > +	u8 reg_class;
-> > +	u8 variable[0];
-> > +} __packed;
-> 
-> Does that variable[] really belong to the report? Didn't check now.
->
-Yes. It points to intolerant channel list (sec 7.3.2.58)
+linux/wireless.h and net/iw_handler.h headers are
+for wireless extensions only, so mac80211 drivers
+shouldn't be including them.
 
---
-Rajkumar
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c   |    1 -
+ drivers/net/wireless/iwlwifi/iwl-2000.c   |    1 -
+ drivers/net/wireless/iwlwifi/iwl-5000.c   |    1 -
+ drivers/net/wireless/iwlwifi/iwl-6000.c   |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |    1 -
+ drivers/net/wireless/iwlwifi/iwl-led.c    |    1 -
+ 7 files changed, 7 deletions(-)
+
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-07-13 10:01:13.000000000 +0200
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c	2011-07-13 10:04:15.000000000 +0200
+@@ -38,7 +38,6 @@
+ #include <linux/sched.h>
+ #include <linux/skbuff.h>
+ #include <linux/netdevice.h>
+-#include <linux/wireless.h>
+ #include <linux/firmware.h>
+ #include <linux/etherdevice.h>
+ #include <linux/if_arp.h>
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c	2011-07-13 10:02:54.000000000 +0200
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c	2011-07-13 10:02:58.000000000 +0200
+@@ -30,7 +30,6 @@
+ #include <linux/delay.h>
+ #include <linux/skbuff.h>
+ #include <linux/netdevice.h>
+-#include <linux/wireless.h>
+ #include <net/mac80211.h>
+ #include <linux/etherdevice.h>
+ #include <asm/unaligned.h>
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c	2011-07-13 10:02:54.000000000 +0200
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c	2011-07-13 10:02:59.000000000 +0200
+@@ -30,7 +30,6 @@
+ #include <linux/delay.h>
+ #include <linux/skbuff.h>
+ #include <linux/netdevice.h>
+-#include <linux/wireless.h>
+ #include <net/mac80211.h>
+ #include <linux/etherdevice.h>
+ #include <asm/unaligned.h>
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c	2011-07-13 10:02:54.000000000 +0200
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c	2011-07-13 10:03:00.000000000 +0200
+@@ -31,7 +31,6 @@
+ #include <linux/sched.h>
+ #include <linux/skbuff.h>
+ #include <linux/netdevice.h>
+-#include <linux/wireless.h>
+ #include <net/mac80211.h>
+ #include <linux/etherdevice.h>
+ #include <asm/unaligned.h>
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c	2011-07-13 10:02:54.000000000 +0200
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c	2011-07-13 10:03:02.000000000 +0200
+@@ -30,7 +30,6 @@
+ #include <linux/delay.h>
+ #include <linux/skbuff.h>
+ #include <linux/netdevice.h>
+-#include <linux/wireless.h>
+ #include <net/mac80211.h>
+ #include <linux/etherdevice.h>
+ #include <asm/unaligned.h>
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c	2011-07-13 10:02:54.000000000 +0200
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c	2011-07-13 10:03:03.000000000 +0200
+@@ -27,7 +27,6 @@
+ #include <linux/init.h>
+ #include <linux/skbuff.h>
+ #include <linux/slab.h>
+-#include <linux/wireless.h>
+ #include <net/mac80211.h>
+ 
+ #include <linux/netdevice.h>
+--- a/drivers/net/wireless/iwlwifi/iwl-led.c	2011-07-13 10:02:54.000000000 +0200
++++ b/drivers/net/wireless/iwlwifi/iwl-led.c	2011-07-13 10:03:05.000000000 +0200
+@@ -31,7 +31,6 @@
+ #include <linux/delay.h>
+ #include <linux/skbuff.h>
+ #include <linux/netdevice.h>
+-#include <linux/wireless.h>
+ #include <net/mac80211.h>
+ #include <linux/etherdevice.h>
+ #include <asm/unaligned.h>
+
+
