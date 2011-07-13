@@ -1,228 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4249 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754036Ab1GEUGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 16:06:34 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH v2 14/21] staging: brcm80211: replaced macro W_SDREG by
- function w_sdreg()
-Date: Tue, 5 Jul 2011 22:06:10 +0200
-Message-ID: <1309896377-4425-15-git-send-email-arend@broadcom.com> (sfid-20110705_220726_966121_4A0B5AE1)
-In-Reply-To: <1309896377-4425-1-git-send-email-arend@broadcom.com>
-References: <1309896377-4425-1-git-send-email-arend@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:46382 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751227Ab1GMMYa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2011 08:24:30 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [RFC 1/3] mac80211: Add 20/40 BSS coexistence management frame format
+Date: Wed, 13 Jul 2011 17:54:31 +0530
+Message-ID: <1310559873-10314-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110713_142434_262323_C456F32D)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Add 20/40 BSS coexistence and intolerant channel report IEs.
 
-Code cleanup. Leads to more readable code and better type checking.
-
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   74 ++++++++++++++-----------
- 1 files changed, 41 insertions(+), 33 deletions(-)
+ include/linux/ieee80211.h |   36 ++++++++++++++++++++++++++++++++++++
+ 1 files changed, 36 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 13a319d..9ac256e 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -847,20 +847,20 @@ r_sdreg32(struct brcmf_bus *bus, u32 *regvar, u32 reg_offset, u32 *retryvar)
- 	}
- }
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index a26108e..af6f57f 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -634,6 +634,34 @@ struct ieee80211_rann_ie {
  
--#define W_SDREG(regval, regaddr, retryvar, typ) \
--do { \
--	retryvar = 0; \
--	do { \
--		W_REG((u32)(regaddr), regval, typ); \
--	} while (brcmf_sdcard_regfail(bus->card) && \
--		 (++retryvar <= retry_limit)); \
--	if (retryvar) { \
--		bus->regfails += (retryvar-1); \
--		if (retryvar > retry_limit) \
--			DHD_ERROR(("%s: FAILED REGISTER WRITE, LINE %d\n", \
--			__func__, __LINE__)); \
--	} \
--} while (0)
-+static void
-+w_sdreg32(struct brcmf_bus *bus, u32 regval, u32 reg_offset, u32 *retryvar)
-+{
-+	*retryvar = 0;
-+	do {
-+		W_REG(bus->ci->buscorebase + reg_offset, regval, u32);
-+	} while (brcmf_sdcard_regfail(bus->card) &&
-+		 (++(*retryvar) <= retry_limit));
-+	if (*retryvar) {
-+		bus->regfails += (*retryvar-1);
-+		if (*retryvar > retry_limit)
-+			DHD_ERROR(("FAILED REGISTER WRITE %Xh\n", reg_offset));
-+	}
-+}
+ #define WLAN_SA_QUERY_TR_ID_LEN 2
  
- #define DHD_BUS			SDIO_BUS
- 
-@@ -1173,7 +1173,6 @@ static int brcmf_sdbrcm_clkctl(struct brcmf_bus *bus, uint target, bool pendok)
- int brcmf_sdbrcm_bussleep(struct brcmf_bus *bus, bool sleep)
- {
- 	struct brcmf_sdio_card *card = bus->card;
--	struct sdpcmd_regs *regs = bus->regs;
- 	uint retries = 0;
- 
- 	DHD_INFO(("brcmf_sdbrcm_bussleep: request %s (currently %s)\n",
-@@ -1197,7 +1196,8 @@ int brcmf_sdbrcm_bussleep(struct brcmf_bus *bus, bool sleep)
- 		brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
- 
- 		/* Tell device to start using OOB wakeup */
--		W_SDREG(SMB_USE_OOB, &regs->tosbmailbox, retries, u32);
-+		w_sdreg32(bus, SMB_USE_OOB,
-+			  offsetof(struct sdpcmd_regs, tosbmailbox), &retries);
- 		if (retries > retry_limit)
- 			DHD_ERROR(("CANNOT SIGNAL CHIP, WILL NOT WAKE UP!!\n"));
- 
-@@ -1236,9 +1236,12 @@ int brcmf_sdbrcm_bussleep(struct brcmf_bus *bus, bool sleep)
- 		brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
- 
- 		/* Send misc interrupt to indicate OOB not needed */
--		W_SDREG(0, &regs->tosbmailboxdata, retries, u32);
-+		w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, tosbmailboxdata),
-+			  &retries);
- 		if (retries <= retry_limit)
--			W_SDREG(SMB_DEV_INT, &regs->tosbmailbox, retries, u32);
-+			w_sdreg32(bus, SMB_DEV_INT,
-+				  offsetof(struct sdpcmd_regs, tosbmailbox),
-+				  &retries);
- 
- 		if (retries > retry_limit)
- 			DHD_ERROR(("CANNOT SIGNAL CHIP TO CLEAR OOB!!\n"));
-@@ -3036,7 +3039,8 @@ static int brcmf_sdbrcm_download_state(struct brcmf_bus *bus, bool enter)
- 			bcmerror = 0;
- 		}
- 
--		W_SDREG(0xFFFFFFFF, &bus->regs->intstatus, retries, u32);
-+		w_sdreg32(bus, 0xFFFFFFFF,
-+			  offsetof(struct sdpcmd_regs, intstatus), &retries);
- 
- 		brcmf_sdbrcm_chip_resetcore(bus->card, bus->ci->armcorebase);
- 
-@@ -3169,7 +3173,7 @@ void brcmf_sdbrcm_bus_stop(struct brcmf_bus *bus, bool enforce_mutex)
- 		tasklet_kill(&bus->tasklet);
- 
- 	/* Disable and clear interrupts at the chip level also */
--	W_SDREG(0, &bus->regs->hostintmask, retries, u32);
-+	w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, hostintmask), &retries);
- 	local_hostintmask = bus->hostintmask;
- 	bus->hostintmask = 0;
- 
-@@ -3196,7 +3200,8 @@ void brcmf_sdbrcm_bus_stop(struct brcmf_bus *bus, bool enforce_mutex)
- 			 SDIO_FUNC_ENABLE_1, NULL);
- 
- 	/* Clear any pending interrupts now that F2 is disabled */
--	W_SDREG(local_hostintmask, &bus->regs->intstatus, retries, u32);
-+	w_sdreg32(bus, local_hostintmask,
-+		  offsetof(struct sdpcmd_regs, intstatus), &retries);
- 
- 	/* Turn off the backplane clock (only) */
- 	brcmf_sdbrcm_clkctl(bus, CLK_SDONLY, false);
-@@ -3274,8 +3279,8 @@ int brcmf_sdbrcm_bus_init(struct brcmf_pub *drvr, bool enforce_mutex)
- 	}
- 
- 	/* Enable function 2 (frame transfers) */
--	W_SDREG((SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT),
--		&bus->regs->tosbmailboxdata, retries, u32);
-+	w_sdreg32(bus, SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT,
-+		  offsetof(struct sdpcmd_regs, tosbmailboxdata), &retries);
- 	enable = (SDIO_FUNC_ENABLE_1 | SDIO_FUNC_ENABLE_2);
- 
- 	brcmf_sdcard_cfg_write(bus->card, SDIO_FUNC_0, SDIO_CCCR_IOEx, enable,
-@@ -3296,9 +3301,8 @@ int brcmf_sdbrcm_bus_init(struct brcmf_pub *drvr, bool enforce_mutex)
- 	if (ready == enable) {
- 		/* Set up the interrupt mask and enable interrupts */
- 		bus->hostintmask = HOSTINTMASK;
--		W_SDREG(bus->hostintmask,
--			(unsigned int *)CORE_BUS_REG(bus->ci->buscorebase,
--			hostintmask), retries, u32);
-+		w_sdreg32(bus, bus->hostintmask,
-+			  offsetof(struct sdpcmd_regs, hostintmask), &retries);
- 
- 		brcmf_sdcard_cfg_write(bus->card, SDIO_FUNC_1, SBSDIO_WATERMARK,
- 				 (u8) watermark, &err);
-@@ -3356,7 +3360,6 @@ exit:
- static void brcmf_sdbrcm_rxfail(struct brcmf_bus *bus, bool abort, bool rtx)
- {
- 	struct brcmf_sdio_card *card = bus->card;
--	struct sdpcmd_regs *regs = bus->regs;
- 	uint retries = 0;
- 	u16 lastrbc;
- 	u8 hi, lo;
-@@ -3402,7 +3405,9 @@ static void brcmf_sdbrcm_rxfail(struct brcmf_bus *bus, bool abort, bool rtx)
- 
- 	if (rtx) {
- 		bus->rxrtx++;
--		W_SDREG(SMB_NAK, &regs->tosbmailbox, retries, u32);
-+		w_sdreg32(bus, SMB_NAK,
-+			  offsetof(struct sdpcmd_regs, tosbmailbox), &retries);
++/**
++ * struct ieee80211_2040_bss_coex_ie
++ *
++ * This structure refers to "20/40 BSS Coexistence information element"
++ */
++struct ieee80211_2040_bss_coex_ie {
++	u8 element_id;
++	u8 length;
++#define IEEE80211_2040_BC_INFO_REQ		0x01
++#define IEEE80211_2040_BC_40MHZ_INTOL		0x02
++#define IEEE80211_2040_BC_20MHZ_WIDTH_REQ	0x04
++#define IEEE80211_2040_BC_OBSS_SCAN_EXMPT_REQ	0x08
++#define IEEE80211_2040_BC_OBSS_SCAN_EXMPT_GRNT	0x10
++	u8 coex_param;
++} __packed;
 +
- 		bus->f1regdata++;
- 		if (retries <= retry_limit)
- 			bus->rxskip = true;
-@@ -4523,7 +4528,6 @@ deliver:
- 
- static u32 brcmf_sdbrcm_hostmail(struct brcmf_bus *bus)
- {
--	struct sdpcmd_regs *regs = bus->regs;
- 	u32 intstatus = 0;
- 	u32 hmb_data;
- 	u8 fcbits;
-@@ -4536,7 +4540,8 @@ static u32 brcmf_sdbrcm_hostmail(struct brcmf_bus *bus)
- 		  offsetof(struct sdpcmd_regs, tohostmailboxdata), &retries);
- 
- 	if (retries <= retry_limit)
--		W_SDREG(SMB_INT_ACK, &regs->tosbmailbox, retries, u32);
-+		w_sdreg32(bus, SMB_INT_ACK,
-+			  offsetof(struct sdpcmd_regs, tosbmailbox), &retries);
- 	bus->f1regdata += 2;
- 
- 	/* Dongle recomposed rx frames, accept them again */
-@@ -4600,7 +4605,6 @@ static u32 brcmf_sdbrcm_hostmail(struct brcmf_bus *bus)
- static bool brcmf_sdbrcm_dpc(struct brcmf_bus *bus)
- {
- 	struct brcmf_sdio_card *card = bus->card;
--	struct sdpcmd_regs *regs = bus->regs;
- 	u32 intstatus, newstatus = 0;
- 	uint retries = 0;
- 	uint rxlimit = brcmf_rxbound;	/* Rx frames to read before resched */
-@@ -4686,7 +4690,9 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_bus *bus)
- 		newstatus &= bus->hostintmask;
- 		bus->fcstate = !!(newstatus & I_HMB_FC_STATE);
- 		if (newstatus) {
--			W_SDREG(newstatus, &regs->intstatus, retries, u32);
-+			w_sdreg32(bus, newstatus,
-+				  offsetof(struct sdpcmd_regs, intstatus),
-+				  &retries);
- 			bus->f1regdata++;
- 		}
- 	}
-@@ -4701,7 +4707,9 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_bus *bus)
- 	 */
- 	if (intstatus & I_HMB_FC_CHANGE) {
- 		intstatus &= ~I_HMB_FC_CHANGE;
--		W_SDREG(I_HMB_FC_CHANGE, &regs->intstatus, retries, u32);
-+		w_sdreg32(bus, I_HMB_FC_CHANGE,
-+			  offsetof(struct sdpcmd_regs, intstatus), &retries);
++/**
++ * struct ieee80211_2040_intol_chan_report
++ *
++ * This structure refers to "20/40 BSS Intolerant Channel Report"
++ */
++struct ieee80211_2040_intol_chan_report {
++	u8 element_id;
++	u8 length;
++	u8 reg_class;
++	u8 variable[0];
++} __packed;
 +
- 		r_sdreg32(bus, &newstatus,
- 			  offsetof(struct sdpcmd_regs, intstatus), &retries);
- 		bus->f1regdata += 2;
+ struct ieee80211_mgmt {
+ 	__le16 frame_control;
+ 	__le16 duration;
+@@ -761,6 +789,13 @@ struct ieee80211_mgmt {
+ 					u8 action;
+ 					u8 smps_control;
+ 				} __attribute__ ((packed)) ht_smps;
++				struct {
++					u8 action_code;
++					struct ieee80211_2040_bss_coex_ie
++						bc_elem;
++					struct ieee80211_2040_intol_chan_report
++						ic_report;
++				} __packed bss_coex;
+ 			} u;
+ 		} __attribute__ ((packed)) action;
+ 	} u;
+@@ -1253,6 +1288,7 @@ enum ieee80211_eid {
+ 	WLAN_EID_RRM_ENABLED_CAPABILITIES = 70,
+ 	WLAN_EID_MULTIPLE_BSSID = 71,
+ 	WLAN_EID_BSS_COEX_2040 = 72,
++	WLAN_EID_BSS_2040_INTOL_CHAN_REPORT = 73,
+ 	WLAN_EID_OVERLAP_BSS_SCAN_PARAM = 74,
+ 	WLAN_EID_EXT_CAPABILITY = 127,
+ 
 -- 
-1.7.4.1
-
+1.7.6
 
