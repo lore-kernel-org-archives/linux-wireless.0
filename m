@@ -1,56 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38831 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751849Ab1GXUrR (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:56815 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965171Ab1GMJga (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jul 2011 16:47:17 -0400
-Date: Sun, 24 Jul 2011 16:39:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: johannes.berg@intel.com, wey-yi.w.guy@intel.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iwlagn: wrap suspend/resume definitions in CONFIG_PM
- block
-Message-ID: <20110724203956.GA29630@tuxdriver.com> (sfid-20110724_224737_957275_0CACC315)
-References: <20110724.030949.1727841105144911931.davem@davemloft.net>
- <1311535150-28686-1-git-send-email-linville@tuxdriver.com>
- <20110724.130840.1093555047179460794.davem@davemloft.net>
+	Wed, 13 Jul 2011 05:36:30 -0400
+Received: by pvg12 with SMTP id 12so4549874pvg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2011 02:36:30 -0700 (PDT)
+Date: Wed, 13 Jul 2011 12:34:50 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	gregkh@suse.de
+Subject: Re: [PATCH 00/24] ath6kl cleaned up driver
+Message-ID: <20110713093450.GP18655@shale.localdomain> (sfid-20110713_113633_604347_27410D5A)
+References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
+ <20110713092257.GN18655@shale.localdomain>
+ <1310549324.3873.8.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110724.130840.1093555047179460794.davem@davemloft.net>
+In-Reply-To: <1310549324.3873.8.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 24, 2011 at 01:08:40PM -0700, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Sun, 24 Jul 2011 15:19:10 -0400
+On Wed, Jul 13, 2011 at 11:28:44AM +0200, Johannes Berg wrote:
+> On Wed, 2011-07-13 at 12:22 +0300, Dan Carpenter wrote:
 > 
-> > drivers/net/wireless/iwlwifi/iwl-agn.c:3464: error: unknown field 'suspend' specified in initializer
-> > drivers/net/wireless/iwlwifi/iwl-agn.c:3464: warning: initialization from incompatible pointer type
-> > drivers/net/wireless/iwlwifi/iwl-agn.c:3465: error: unknown field 'resume' specified in initializer
-> > drivers/net/wireless/iwlwifi/iwl-agn.c:3465: warning: initialization from incompatible pointer type
-> > 
-> > This was caused by commit c8ac61cf ("iwlagn: implement WoWLAN").
-> > 
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > warn: returning -1 instead of -ENOMEM is sloppy
 > 
-> Since I already minimally fixed up my build locally last night I know
-> that your patch leads to a set of warnings because the methods whose
-> hookup are now commented out become completely unused and they are all
-> marked "static".  And recursively functions that those methods use
-> become unused too.
-> 
-> Did you turn off CONFIG_PM and test the build of this file to see
-> what the compiler actually does with it?
-> 
-> I'm checking in the following, but I expect much better from you John.
+> out of curiosity -- why does it say "instead of -ENOMEM"? -1 really gets
+> interpreted as "-EPERM" (since EPERM == 1)
 
-Sorry, Dave.  I confess that I was hoping for a quick fix on a Sunday afternoon. :-)
+It's for an allocation failure.  The code returns -1 (-EPERM) but it
+should be returning -ENOMEM.
 
-Thanks for making it better!
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+regards,
+dan carpenter
