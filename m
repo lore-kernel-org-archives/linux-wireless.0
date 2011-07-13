@@ -1,36 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:58973 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752829Ab1GUXBu convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8030 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752281Ab1GMMYg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 19:01:50 -0400
-Received: by mail-pz0-f42.google.com with SMTP id 37so2600511pzk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2011 16:01:50 -0700 (PDT)
+	Wed, 13 Jul 2011 08:24:36 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [RFC 2/3] wireless: Add 40MHz Intolerance support to HT capablities.
+Date: Wed, 13 Jul 2011 17:54:32 +0530
+Message-ID: <1310559873-10314-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110713_142440_143428_FA651F52)
+In-Reply-To: <1310559873-10314-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1310559873-10314-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1310835342-18877-3-git-send-email-hauke@hauke-m.de>
-References: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
-	<1310835342-18877-3-git-send-email-hauke@hauke-m.de>
-Date: Fri, 22 Jul 2011 01:01:50 +0200
-Message-ID: <CACna6rzTqqHpqOfKNQi_T8uUEnbO_KXKGiwwMCbtWY7mX=NtSA@mail.gmail.com> (sfid-20110722_010229_678446_81CD9727)
-Subject: Re: [PATCH v2 02/11] bcma: move initializing of struct bcma_bus to
- own function.
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
-	linux-mips@linux-mips.org, jonas.gorski@gmail.com, mb@bu3sch.de,
-	george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/7/16 Hauke Mehrtens <hauke@hauke-m.de>:
-> This makes it possible to use this code in some other method.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ include/net/cfg80211.h |    5 +++++
+ net/wireless/core.c    |    3 +++
+ 2 files changed, 8 insertions(+), 0 deletions(-)
 
-Acked-by: Rafał Miłecki <zajec5@gmail.com>
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 4bf101b..eaa9dee 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -128,6 +128,8 @@ enum ieee80211_channel_flags {
+  * @beacon_found: helper to regulatory code to indicate when a beacon
+  *	has been found on this channel. Use regulatory_hint_found_beacon()
+  *	to enable this, this is useful only on 5 GHz band.
++ * @is_40mhz_intolerant: one of the bss in this channel disallows the use of
++ *	20/40 MHz BSS. this will be used by Intolerant Channel Report.
+  * @orig_mag: internal use
+  * @orig_mpwr: internal use
+  */
+@@ -139,6 +141,7 @@ struct ieee80211_channel {
+ 	int max_antenna_gain;
+ 	int max_power;
+ 	bool beacon_found;
++	bool is_40mhz_intolerant;
+ 	u32 orig_flags;
+ 	int orig_mag, orig_mpwr;
+ };
+@@ -1746,6 +1749,7 @@ struct wiphy_wowlan_support {
+  *	add to probe request frames transmitted during a scan, must not
+  *	include fixed IEs like supported rates
+  * @coverage_class: current coverage class
++ * @dot11FortyMHzIntolerant: Enable/Disable Forty MHz Intolerance
+  * @fw_version: firmware version for ethtool reporting
+  * @hw_version: hardware version for ethtool reporting
+  * @max_num_pmkids: maximum number of PMKIDs supported by device
+@@ -1806,6 +1810,7 @@ struct wiphy {
+ 	u32 frag_threshold;
+ 	u32 rts_threshold;
+ 	u8 coverage_class;
++	bool dot11FortyMHzIntolerant;
+ 
+ 	char fw_version[ETHTOOL_BUSINFO_LEN];
+ 	u32 hw_version;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 880dbe2..e4b9321 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -412,6 +412,7 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+ 	rdev->wiphy.frag_threshold = (u32) -1;
+ 	rdev->wiphy.rts_threshold = (u32) -1;
+ 	rdev->wiphy.coverage_class = 0;
++	rdev->wiphy.dot11FortyMHzIntolerant = false;
+ 
+ 	return &rdev->wiphy;
+ }
+@@ -532,6 +533,8 @@ int wiphy_register(struct wiphy *wiphy)
+ 			sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+ 			sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SGI_40;
+ 		}
++		if (wiphy->dot11FortyMHzIntolerant)
++			sband->ht_cap.cap |= IEEE80211_HT_CAP_40MHZ_INTOLERANT;
+ 
+ 		/*
+ 		 * Since we use a u32 for rate bitmaps in
 -- 
-Rafał
+1.7.6
+
