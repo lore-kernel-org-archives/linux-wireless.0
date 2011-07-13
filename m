@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:3933 "EHLO mail.perches.com"
+Received: from mail.perches.com ([173.55.12.10]:3962 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751041Ab1GME3X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 00:29:23 -0400
-Subject: Re: [PATCH 07/24] ath6kl: add debug.c
+	id S1751907Ab1GMMTQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2011 08:19:16 -0400
+Subject: Re: [PATCH 01/24] ath6kl: add bmi.c
 From: Joe Perches <joe@perches.com>
 To: Kalle Valo <kvalo@qca.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
 	gregkh@suse.de
-In-Reply-To: <20110713013405.8517.51546.stgit@localhost6.localdomain6>
+In-Reply-To: <4E1D4479.8090201@qca.qualcomm.com>
 References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
-	 <20110713013405.8517.51546.stgit@localhost6.localdomain6>
+	 <20110713013300.8517.98566.stgit@localhost6.localdomain6>
+	 <1310531333.1143.25.camel@Joe-Laptop>  <4E1D4479.8090201@qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Jul 2011 21:29:22 -0700
-Message-ID: <1310531362.1143.28.camel@Joe-Laptop> (sfid-20110713_062925_441933_A54057CF)
+Date: Wed, 13 Jul 2011 05:19:14 -0700
+Message-ID: <1310559554.1662.6.camel@Joe-Laptop> (sfid-20110713_141920_870938_A585A3F4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-07-13 at 04:34 +0300, Kalle Valo wrote: 
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-[] 
-> +int ath6kl_printk(const char *level, const char *fmt, ...)
+On Wed, 2011-07-13 at 10:08 +0300, Kalle Valo wrote:
+> On 07/13/2011 07:28 AM, Joe Perches wrote:
+> > On Wed, 2011-07-13 at 04:33 +0300, Kalle Valo wrote: 
+> >> diff --git a/drivers/net/wireless/ath/ath6kl/bmi.c b/drivers/net/wireless/ath/ath6kl/bmi.c
+> > [] 
+> >> +			ath6kl_err("Unable to decrement the command "
+> >> +				   "credit count register: %d\n", ret);
+> > I think all of these ath6kl_<level> uses in all the patches
+> > should coalesce formats that are split across multiple lines.
+> > This helps grepping the sources for a specific dmesg.
+> > 			ath6kl_err("Unable to decrement the command credit count register: %d\n",
+> > 				   ret);
+> I agree, that would improve readibility. The reason why the lines were
+> split is because of checkpatch warnings. I could unsplit them but then
+> someone else might start complaining about high number checkpatch
+> warnings about long lines. So I really don't know what to do with them.
 
-Looks familiar.
+Add this patch to checkpatch?
+I'll submit it to Andrew Morton later.
 
-> +#ifdef CONFIG_ATH6KL_DEBUG
-> +void ath6kl_dump_registers(struct ath6kl_device *dev,
-> +			   struct ath6kl_irq_proc_registers *irq_proc_reg,
-> +			   struct ath6kl_irqenable_reg *irq_enable_reg)
-> +{
-> +
-> +	ath6kl_dbg(ATH6KL_DBG_ANY, ("<------- Register Table -------->\n"));
-> +
-> +	if (irq_proc_reg != NULL) {
-> +		ath6kl_dbg(ATH6KL_DBG_ANY,
-> +			"Host Int status:           0x%x\n",
-> +			irq_proc_reg->host_int_status);
-> + ath6kl_dbg(ATH6KL_DBG_ANY,
-> + "CPU Int status:            0x%x\n",
-> + irq_proc_reg->cpu_int_status);
-
-Some text could be saved by using:
-
-		ath6kl_dbg(ATH6KL_DBG_ANY, "%-26x 0x%x\n",
-			   "Host Int status:", inq_proc_reg->host_int_status);
-		ath6kl_dbg(ATH6KL_DBG_ANY, "%-26x 0x%x\n"
-			   "CPU Int status:", irq_proc_reg->cpu_int_status);
-etc.
+diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
+index b0aa2c6..c0be3c5 100755
+--- a/scripts/checkpatch.pl
++++ b/scripts/checkpatch.pl
+@@ -210,7 +210,7 @@ our $typeTypedefs = qr{(?x:
+ 
+ our $logFunctions = qr{(?x:
+ 	printk|
+-	[a-z]+_(emerg|alert|crit|err|warning|warn|notice|info|debug|dbg|vdbg|devel|cont|WARN)|
++	[a-z0-9]+_(emerg|alert|crit|err|warning|warn|notice|info|debug|dbg|vdbg|devel|cont|WARN)|
+ 	WARN|
+ 	panic|
+ 	MODULE_[A-Z_]+
 
 
 
