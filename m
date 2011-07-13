@@ -1,32 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from msr17.hinet.net ([168.95.4.117]:42616 "EHLO msr17.hinet.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752733Ab1GLPNH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2011 11:13:07 -0400
-From: Ali Bahar <ali@internetdog.org>
-To: Greg Kroah-Hartman <gregkh@suse.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Ali Bahar <ali@internetdog.org>
-Subject: [PATCH 0/2] staging: r8712u: Set ESSID/AP now possible before interface is brought Up.
-Date: Tue, 12 Jul 2011 23:10:54 +0800
-Message-Id: <1310483456-10543-1-git-send-email-ali@internetDog.org> (sfid-20110712_171313_528428_5B4AC9A9)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48165 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758676Ab1GMKEt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2011 06:04:49 -0400
+Date: Wed, 13 Jul 2011 15:34:27 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: Dan Carpenter <error27@gmail.com>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <devel@linuxdriverproject.org>,
+	<gregkh@suse.de>
+Subject: Re: [PATCH 00/24] ath6kl cleaned up driver
+Message-ID: <20110713100426.GA32707@vasanth-laptop> (sfid-20110713_120453_856114_5FFA4DE2)
+References: <20110713013023.8517.15940.stgit@localhost6.localdomain6> <20110713092257.GN18655@shale.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20110713092257.GN18655@shale.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are updates to how the 'bup' flag is handled. The first allows Sets
-before the interface is brought Up, and the second is housekeeping of the
-flag's value when the interface is taken Down.
+On Wed, Jul 13, 2011 at 12:22:57PM +0300, Dan Carpenter wrote:
+> Nice.  :)
+> 
+> There are a some smatch warnings you might want to take a look at:
+> 
+> drivers/net/wireless/ath/ath6kl/sdio.c +373 ath6kl_sdio_setup_scat_resource(42) warn: 's_req' was already freed.
+> drivers/net/wireless/ath/ath6kl/htc.c +2480 htc_create(74) warn: possible memory leak of 'packet'
+> drivers/net/wireless/ath/ath6kl/txrx.c +156 ath6kl_powersave_ap(76) error: we previously assumed 'conn' could be null.
+>   (The line number is off on that one.  Should be +142.  Odd)
+> drivers/net/wireless/ath/ath6kl/txrx.c +758 ath6kl_alloc_amsdu_rxbuf(33) warn: can 'packet' even be NULL?
 
-Ali Bahar (2):
-  staging: r8712u: Sets to SSID, and to AP MAC#, can now be done    
-    when the interface is Down.
-  staging: r8712u: Interface-state not fully tracked.
+Thanks a lot. W'll fix them.
 
- drivers/staging/rtl8712/drv_types.h           |    5 +++++
- drivers/staging/rtl8712/os_intfs.c            |   14 ++++++++++++++
- drivers/staging/rtl8712/rtl871x_ioctl_linux.c |   25 +++++++++++++++++++++----
- 3 files changed, 40 insertions(+), 4 deletions(-)
-
--- 
-1.7.6
-
+Vasanth
