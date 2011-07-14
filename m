@@ -1,89 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:7398 "EHLO mga11.intel.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4184 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756527Ab1GAPxF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2011 11:53:05 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 08/11] iwlagn: scd memory boundary
-Date: Fri,  1 Jul 2011 08:20:02 -0700
-Message-Id: <1309533605-25774-9-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110701_175318_069038_253A8B0D)
-In-Reply-To: <1309533605-25774-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1309533605-25774-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S932370Ab1GNV3z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 17:29:55 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 30/35] staging: brcm80211: move sdio related variables
+ to dhd_sdio.c
+Date: Thu, 14 Jul 2011 14:29:26 -0700
+Message-ID: <1310678971-28952-31-git-send-email-frankyl@broadcom.com> (sfid-20110714_233309_734184_1AC2BEED)
+In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Assign memory boundary for SCD context, tx status and translation table
+In fullmac some variables are used by sdio layer declared in
+dhd_linux.c. Move them to dhd_sdio.c for clean up.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |    8 +++++---
- drivers/net/wireless/iwlwifi/iwl-prph.h      |   19 ++++++++++++++-----
- 2 files changed, 19 insertions(+), 8 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/dhd.h       |   13 -------------
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |   22 ----------------------
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |   18 ++++++++++++++++++
+ 3 files changed, 18 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-index de8277e..2043c8b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-@@ -386,11 +386,13 @@ static int iwlagn_alive_notify(struct iwl_priv *priv)
- 	spin_lock_irqsave(&priv->lock, flags);
- 
- 	priv->scd_base_addr = iwl_read_prph(priv, IWLAGN_SCD_SRAM_BASE_ADDR);
--	a = priv->scd_base_addr + IWLAGN_SCD_CONTEXT_DATA_OFFSET;
--	for (; a < priv->scd_base_addr + IWLAGN_SCD_TX_STTS_BITMAP_OFFSET;
-+	a = priv->scd_base_addr + IWLAGN_SCD_CONTEXT_MEM_LOWER_BOUND;
-+	/* reset conext data memory */
-+	for (; a < priv->scd_base_addr + IWLAGN_SCD_CONTEXT_MEM_UPPER_BOUND;
- 		a += 4)
- 		iwl_write_targ_mem(priv, a, 0);
--	for (; a < priv->scd_base_addr + IWLAGN_SCD_TRANSLATE_TBL_OFFSET;
-+	/* reset tx status memory */
-+	for (; a < priv->scd_base_addr + IWLAGN_SCD_TX_STTS_MEM_UPPER_BOUND;
- 		a += 4)
- 		iwl_write_targ_mem(priv, a, 0);
- 	for (; a < priv->scd_base_addr +
-diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
-index f00d188..1cc0ed1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
-@@ -168,6 +168,7 @@
-  * the scheduler (especially for queue #4/#9, the command queue, otherwise
-  * the driver can't issue commands!):
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index 537eb00..1f203fb 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -669,12 +669,6 @@ extern atomic_t brcmf_mmc_suspend;
+  * Insmod parameters for debug/test
   */
-+#define SCD_MEM_LOWER_BOUND		(0x0000)
  
- /**
-  * Max Tx window size is the max number of contiguous TFDs that the scheduler
-@@ -197,15 +198,23 @@
- #define IWLAGN_SCD_QUEUE_CTX_REG2_FRAME_LIMIT_POS	(16)
- #define IWLAGN_SCD_QUEUE_CTX_REG2_FRAME_LIMIT_MSK	(0x007F0000)
+-/* Use interrupts */
+-extern uint brcmf_intr;
+-
+-/* Use polling */
+-extern uint brcmf_poll;
+-
+ /* ARP offload agent mode */
+ extern uint brcmf_arp_mode;
  
--#define IWLAGN_SCD_CONTEXT_DATA_OFFSET		(0x600)
--#define IWLAGN_SCD_TX_STTS_BITMAP_OFFSET		(0x7B1)
--#define IWLAGN_SCD_TRANSLATE_TBL_OFFSET		(0x7E0)
-+/* Context Data */
-+#define IWLAGN_SCD_CONTEXT_MEM_LOWER_BOUND	(SCD_MEM_LOWER_BOUND + 0x600)
-+#define IWLAGN_SCD_CONTEXT_MEM_UPPER_BOUND	(SCD_MEM_LOWER_BOUND + 0x6A0)
+@@ -696,13 +690,6 @@ extern uint brcmf_roam;
+ /* Roaming mode control */
+ extern uint brcmf_radio_up;
+ 
+-/* Initial idletime ticks (may be -1 for immediate idle, 0 for no idle) */
+-extern int brcmf_idletime;
+-#define BRCMF_IDLETIME_TICKS 1
+-
+-/* SDIO Drive Strength */
+-extern uint brcmf_sdiod_drive_strength;
+-
+ /* Override to force tx queueing all the time */
+ extern uint brcmf_force_tx_queueing;
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 9c79e05..94bcf2d 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -114,8 +114,6 @@ module_param(brcmf_pkt_filter_init, uint, 0);
+ uint brcmf_master_mode = true;
+ module_param(brcmf_master_mode, uint, 0);
+ 
+-module_param(brcmf_dongle_memsize, int, 0);
+-
+ /* Contorl fw roaming */
+ uint brcmf_roam = 1;
+ 
+@@ -131,26 +129,6 @@ module_param_string(iface_name, iface_name, IFNAMSIZ, 0);
+ /* IOCTL response timeout */
+ int brcmf_ioctl_timeout_msec = IOCTL_RESP_TIMEOUT;
+ 
+-/* Idle timeout for backplane clock */
+-int brcmf_idletime = BRCMF_IDLETIME_TICKS;
+-module_param(brcmf_idletime, int, 0);
+-
+-/* Use polling */
+-uint brcmf_poll;
+-module_param(brcmf_poll, uint, 0);
+-
+-/* Use interrupts */
+-uint brcmf_intr = true;
+-module_param(brcmf_intr, uint, 0);
+-
+-/* SDIO Drive Strength (in milliamps) */
+-uint brcmf_sdiod_drive_strength = 6;
+-module_param(brcmf_sdiod_drive_strength, uint, 0);
+-
+-/* Tx/Rx bounds */
+-module_param(brcmf_txbound, uint, 0);
+-module_param(brcmf_rxbound, uint, 0);
+-
+ #ifdef SDTEST
+ /* Echo packet generator (pkts/s) */
+ uint brcmf_pktgen;
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 705b57c..2f33f37 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -838,11 +838,29 @@ module_param(brcmf_console_ms, uint, 0);
+ /* Tx/Rx bounds */
+ uint brcmf_txbound;
+ uint brcmf_rxbound;
++module_param(brcmf_txbound, uint, 0);
++module_param(brcmf_rxbound, uint, 0);
+ uint brcmf_txminmax;
+ 
++int brcmf_idletime = 1;
++module_param(brcmf_idletime, int, 0);
 +
-+/* Tx status */
-+#define IWLAGN_SCD_TX_STTS_MEM_LOWER_BOUND	(SCD_MEM_LOWER_BOUND + 0x6A0)
-+#define IWLAGN_SCD_TX_STTS_MEM_UPPER_BOUND	(SCD_MEM_LOWER_BOUND + 0x7E0)
++/* SDIO Drive Strength (in milliamps) */
++uint brcmf_sdiod_drive_strength = 6;
++module_param(brcmf_sdiod_drive_strength, uint, 0);
 +
-+/* Translation Data */
-+#define IWLAGN_SCD_TRANS_TBL_MEM_LOWER_BOUND	(SCD_MEM_LOWER_BOUND + 0x7E0)
-+#define IWLAGN_SCD_TRANS_TBL_MEM_UPPER_BOUND	(SCD_MEM_LOWER_BOUND + 0x808)
++/* Use polling */
++uint brcmf_poll;
++module_param(brcmf_poll, uint, 0);
++
++/* Use interrupts */
++uint brcmf_intr = true;
++module_param(brcmf_intr, uint, 0);
++
+ /* override the RAM size if possible */
+ #define DONGLE_MIN_MEMSIZE (128 * 1024)
+ int brcmf_dongle_memsize;
++module_param(brcmf_dongle_memsize, int, 0);
  
- #define IWLAGN_SCD_CONTEXT_QUEUE_OFFSET(x)\
--	(IWLAGN_SCD_CONTEXT_DATA_OFFSET + ((x) * 8))
-+	(IWLAGN_SCD_CONTEXT_MEM_LOWER_BOUND + ((x) * 8))
+ static bool brcmf_alignctl;
  
- #define IWLAGN_SCD_TRANSLATE_TBL_OFFSET_QUEUE(x) \
--	((IWLAGN_SCD_TRANSLATE_TBL_OFFSET + ((x) * 2)) & 0xfffc)
-+	((IWLAGN_SCD_TRANS_TBL_MEM_LOWER_BOUND + ((x) * 2)) & 0xfffc)
- 
- #define IWLAGN_SCD_QUEUECHAIN_SEL_ALL(priv)	\
- 	(((1<<(priv)->hw_params.max_txq_num) - 1) &\
 -- 
-1.7.0.4
+1.7.1
+
 
