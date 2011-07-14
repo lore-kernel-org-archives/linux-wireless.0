@@ -1,67 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:33088 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752377Ab1GPJXo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2011 05:23:44 -0400
-To: ali@internetdog.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] staging: r8712u: Most return-values changed from -1 to proper errno macros.
-References: <20110703010605.GA3736@internetdog.org>
-	<1310749876-32632-1-git-send-email-ali@internetDog.org>
-	<1310749876-32632-2-git-send-email-ali@internetDog.org>
-	<4E20AA5A.6020101@lwfinger.net>
-	<20110716032100.GA3274@internetdog.org>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Sat, 16 Jul 2011 12:23:42 +0300
-In-Reply-To: <20110716032100.GA3274@internetdog.org> (Ali Bahar's message of "Sat\, 16 Jul 2011 11\:21\:01 +0800")
-Message-ID: <87zkkevash.fsf@purkki.adurom.net> (sfid-20110716_112354_005105_E19637FD)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24405 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753747Ab1GNHiX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 03:38:23 -0400
+Message-ID: <4E1E9CE7.2070305@qca.qualcomm.com> (sfid-20110714_093827_194615_12F903FD)
+Date: Thu, 14 Jul 2011 10:38:15 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Joe Perches <joe@perches.com>
+CC: <linux-wireless@vger.kernel.org>, <devel@linuxdriverproject.org>,
+	<gregkh@suse.de>
+Subject: Re: [PATCH 01/24] ath6kl: add bmi.c
+References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>	 <20110713013300.8517.98566.stgit@localhost6.localdomain6>	 <1310531333.1143.25.camel@Joe-Laptop>  <4E1D4479.8090201@qca.qualcomm.com>	 <1310559554.1662.6.camel@Joe-Laptop>  <4E1E90AB.6030707@qca.qualcomm.com> <1310628837.7582.12.camel@Joe-Laptop>
+In-Reply-To: <1310628837.7582.12.camel@Joe-Laptop>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ali Bahar <ali@internetdog.org> writes:
+On 07/14/2011 10:33 AM, Joe Perches wrote:
+> On Thu, 2011-07-14 at 09:46 +0300, Kalle Valo wrote:
+>> On 07/13/2011 03:19 PM, Joe Perches wrote:
+>>> Add this patch to checkpatch?
+>>> I'll submit it to Andrew Morton later.
+>> Awesome! I had no idea checkpatch supports this. Just tested this with
+>> ath6kl and I don't get long line warnings with long log messages.
+> 
+> Note that this doesn't let you have arbitrarily
+> long lines just because it's a printk or any other
+> logging function.  Only the format portion of the
+> printk may exceed 80 columns.
+> 
+> Any additional arguments for the printk must not
+> start after or exceed 80 columns.
 
-> I am aware of the current state of the Linux code's documentation.
-> Habitually, I comment the big-picture as I go along. Industry
-> practice wrt comments differs from Linux's, of course. The comments
-> were in the function heads, not in the bodies, as per
-> Documentation/CodingStyle. The big-picture of the functions is clear
-> once you are familiar enough to begin to modify the code. However,
-> and especially for linux, code is read a thousand times for every
-> time it is written. Most eyeballs could do with a line or two of
-> explanation. To me, Documentation/kernel-docs.txt echoed the need
-> for a big-picture view. 
+Thanks, that's good to know. And it's a very nice feature. I also hate
+long lines but splitting log messages doesn't really make any sense.
 
-The problem with comments is that they quickly get out of date
-(usually people change the code but forget the comments). It's better
-to write code so that everyone understands and, like Larry said, only
-the cases which are not obvious need comments.
-
-> If the goal is to attract more developers (as it is at least Greg
-> KH's intent), then Linux's code-base has a long way to go. I meant
-> only to start chipping away at the task.
-
-There's always a maintenance cost, even on code comments. If we start
-documenting every piece of code, we would have a lot less time writing
-the actual code. So there needs to be a trade-off and in Linux it has
-been that code should be of good quality so that it's easy to read for
-everyone but there will be less comments.
-
-And personally I will always choose good code with few comments over
-crappy code with full of comments. So IMHO the style decision made in
-Linux kernel has been a good one.
-
-Of course I'm not saying that there should not be any comments. It's
-very important to document public interfaces, like mac80211.h and
-sdio_func.h, as these are used by a lot of people. 
-
-Also having a general overview how a component/driver works would not
-be bad at all, it just should just not clutter the code. That could be
-in the beginning of the file or maybe in a separate file. But as I
-said, they will easily get obsolete.
-
--- 
-Kalle Valo
+Kalle
