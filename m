@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:40931 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750755Ab1GUWfC convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:51359 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753507Ab1GNTKx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 18:35:02 -0400
-Received: by pzk37 with SMTP id 37so2571796pzk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2011 15:35:02 -0700 (PDT)
+	Thu, 14 Jul 2011 15:10:53 -0400
+Received: by mail-fx0-f52.google.com with SMTP id 18so1505335fxd.11
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2011 12:10:52 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/4] bcma: cc: set GPIOTIMER register
+Date: Thu, 14 Jul 2011 21:49:19 +0200
+Message-Id: <1310672961-5311-2-git-send-email-zajec5@gmail.com> (sfid-20110714_211055_467539_93191364)
+In-Reply-To: <1310672961-5311-1-git-send-email-zajec5@gmail.com>
+References: <1310672961-5311-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1310835342-18877-4-git-send-email-hauke@hauke-m.de>
-References: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
-	<1310835342-18877-4-git-send-email-hauke@hauke-m.de>
-Date: Fri, 22 Jul 2011 00:35:01 +0200
-Message-ID: <CACna6ryPABAx87b2+-gsTY5a5_qHTo61Otre-Pm+vYH8ad9hNg@mail.gmail.com> (sfid-20110722_003507_084706_9E44F9F4)
-Subject: Re: [PATCH v2 03/11] bcma: add functions to scan cores needed on SoCs
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
-	linux-mips@linux-mips.org, jonas.gorski@gmail.com, mb@bu3sch.de,
-	george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/7/16 Hauke Mehrtens <hauke@hauke-m.de>:
-> @@ -159,5 +159,8 @@ static void bcma_pcicore_serdes_workaround(struct bcma_drv_pci *pc)
->
->  void bcma_core_pci_init(struct bcma_drv_pci *pc)
->  {
-> +       if (pc->setup_done)
-> +               return;
->        bcma_pcicore_serdes_workaround(pc);
-> +       pc->setup_done = true;
->  }
+We use value supplied via SPROM, or default 10:90 as fallback.
 
-This won't apply to the upstream driver_pci.c. Fix is obvious for me
-and you, but could be nice to don't bother John/Ralf.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/bcma/driver_chipcommon.c |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-
-> +       /* Scan for devices (cores) */
-> +       err = bcma_bus_scan_early(bus, &match, core_cc);
-
-Could you update the comment by the way?
-
+diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
+index 6061022..fb54302 100644
+--- a/drivers/bcma/driver_chipcommon.c
++++ b/drivers/bcma/driver_chipcommon.c
+@@ -23,6 +23,9 @@ static inline u32 bcma_cc_write32_masked(struct bcma_drv_cc *cc, u16 offset,
+ 
+ void bcma_core_chipcommon_init(struct bcma_drv_cc *cc)
+ {
++	u32 leddc_on = 10;
++	u32 leddc_off = 90;
++
+ 	if (cc->core->id.rev >= 11)
+ 		cc->status = bcma_cc_read32(cc, BCMA_CC_CHIPSTAT);
+ 	cc->capabilities = bcma_cc_read32(cc, BCMA_CC_CAP);
+@@ -38,6 +41,17 @@ void bcma_core_chipcommon_init(struct bcma_drv_cc *cc)
+ 		bcma_pmu_init(cc);
+ 	if (cc->capabilities & BCMA_CC_CAP_PCTL)
+ 		pr_err("Power control not implemented!\n");
++
++	if (cc->core->id.rev >= 16) {
++		if (cc->core->bus->sprom.leddc_on_time &&
++		    cc->core->bus->sprom.leddc_off_time) {
++			leddc_on = cc->core->bus->sprom.leddc_on_time;
++			leddc_off = cc->core->bus->sprom.leddc_off_time;
++		}
++		bcma_cc_write32(cc, BCMA_CC_GPIOTIMER,
++			((leddc_on << BCMA_CC_GPIOTIMER_ONTIME_SHIFT) |
++			 (leddc_off << BCMA_CC_GPIOTIMER_OFFTIME_SHIFT)));
++	}
+ }
+ 
+ /* Set chip watchdog reset timer to fire in 'ticks' backplane cycles */
 -- 
-Rafał
+1.7.3.4
+
