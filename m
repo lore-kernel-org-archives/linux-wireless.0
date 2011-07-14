@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:54611 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752398Ab1GVFnJ (ORCPT
+Received: from violet.fr.zoreil.com ([92.243.8.30]:50471 "EHLO
+	violet.fr.zoreil.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754856Ab1GNPml (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 01:43:09 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Subject: [PATCH 15/31] ath6kl: Minor cleanup in ath6kldev_submit_scat_req()
-Date: Fri, 22 Jul 2011 08:41:48 +0300
-Message-ID: <1311313324-6766-17-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110722_074314_104707_F5B8316C)
-In-Reply-To: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 14 Jul 2011 11:42:41 -0400
+Date: Thu, 14 Jul 2011 16:45:09 +0200
+From: Francois Romieu <romieu@fr.zoreil.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: Bug in BCMA: device_unregister causing "NULL pointer dereference at"
+Message-ID: <20110714144509.GA6391@electric-eye.fr.zoreil.com> (sfid-20110714_174245_084345_883F0884)
+References: <CACna6rxAKMp-2wqwz4k4S3nTkY_3Qz7=hEZk9F2Zig7T5kp_HA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rxAKMp-2wqwz4k4S3nTkY_3Qz7=hEZk9F2Zig7T5kp_HA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Rafał Miłecki <zajec5@gmail.com> :
+[...]
+> Any tip, why does it happen?
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/htc_hif.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+bcma_release_core_dev kfrees core while its list_head is still used ?
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.c b/drivers/net/wireless/ath/ath6kl/htc_hif.c
-index 003fe0a..043f85f 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_hif.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_hif.c
-@@ -191,16 +191,13 @@ int ath6kldev_submit_scat_req(struct ath6kl_device *dev,
- 		   scat_req->addr, !read ? "async" : "sync",
- 		   (read) ? "rd" : "wr");
+May be something like this :
+
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index be52344..85fb3aa 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -110,11 +110,14 @@ static int bcma_register_cores(struct bcma_bus *bus)
  
--	if (!read && scat_req->virt_scat)
-+	if (!read && scat_req->virt_scat) {
- 		status = ath6kldev_cp_scat_dma_buf(scat_req, false);
--
--	if (status) {
--		if (!read) {
-+		if (status) {
- 			scat_req->status = status;
- 			scat_req->complete(dev->ar->htc_target, scat_req);
- 			return 0;
- 		}
--		return status;
+ static void bcma_unregister_cores(struct bcma_bus *bus)
+ {
+-	struct bcma_device *core;
++	struct bcma_device *core, *next;
+ 
+-	list_for_each_entry(core, &bus->cores, list) {
++	list_for_each_entry_safe(core, next, &bus->cores, list) {
++		list_del(&core->list);
+ 		if (core->dev_registered)
+ 			device_unregister(&core->dev);
++		else
++			kfree(core);
  	}
+ }
  
- 	status = ath6kl_hif_scat_req_rw(dev->ar, scat_req);
--- 
-1.7.1
-
