@@ -1,167 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:55924 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752900Ab1GZAAO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46755 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754164Ab1GNKL0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2011 20:00:14 -0400
-Received: by mail-pz0-f42.google.com with SMTP id 37so9320498pzk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2011 17:00:14 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 6/6] mac80211: update mesh path selection frame format
-Date: Mon, 25 Jul 2011 16:59:17 -0700
-Message-Id: <1311638357-28740-7-git-send-email-thomas@cozybit.com> (sfid-20110726_020020_546456_02B2F4FE)
-In-Reply-To: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
-References: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
+	Thu, 14 Jul 2011 06:11:26 -0400
+Subject: Re: [RFC 2/3] wireless: Add 40MHz Intolerance support to HT
+ capablities.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1310559873-10314-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110713_142440_143428_FA651F52)
+References: <1310559873-10314-1-git-send-email-rmanohar@qca.qualcomm.com>
+	 <1310559873-10314-2-git-send-email-rmanohar@qca.qualcomm.com>
+	 (sfid-20110713_142440_143428_FA651F52)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 14 Jul 2011 12:11:24 +0200
+Message-ID: <1310638284.3874.8.camel@jlt3.sipsolutions.net> (sfid-20110714_121135_788708_82A5A7BA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make mesh path selection frames Mesh Action category, remove outdated
-Mesh Path Selection category, and update/correct IEs.
+On Wed, 2011-07-13 at 17:54 +0530, Rajkumar Manoharan wrote:
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- include/linux/ieee80211.h |    3 ---
- net/mac80211/mesh.c       |    6 ++++--
- net/mac80211/mesh_hwmp.c  |   43 ++++++++++++++++++++++++++-----------------
- net/mac80211/rx.c         |    2 --
- 4 files changed, 30 insertions(+), 24 deletions(-)
+More description would be nice. I don't think I get it.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 08b1093..f43d6b0 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1267,9 +1267,6 @@ enum ieee80211_category {
- 	WLAN_CATEGORY_MULTIHOP_ACTION = 14,
- 	WLAN_CATEGORY_SELF_PROTECTED = 15,
- 	WLAN_CATEGORY_WMM = 17,
--	/* TODO: remove MESH_PATH_SEL after mesh is updated
--	 * to current 802.11s draft  */
--	WLAN_CATEGORY_MESH_PATH_SEL = 32,
- 	WLAN_CATEGORY_VENDOR_SPECIFIC_PROTECTED = 126,
- 	WLAN_CATEGORY_VENDOR_SPECIFIC = 127,
- };
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index a1bd372..34bb99d 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -671,8 +671,10 @@ static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
- 			break;
- 		}
- 		break;
--	case WLAN_CATEGORY_MESH_PATH_SEL:
--		mesh_rx_path_sel_frame(sdata, mgmt, len);
-+	case WLAN_CATEGORY_MESH_ACTION:
-+		if (mgmt->u.action.u.mesh_action.action_code ==
-+		    WLAN_MESH_ACTION_HWMP_PATH_SELECTION)
-+			mesh_rx_path_sel_frame(sdata, mgmt, len);
- 		break;
- 	}
- }
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 2b18053..b9be6e9 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -68,12 +68,12 @@ static inline u32 u16_field_get(u8 *preq_elem, int offset, bool ae)
- #define PREP_IE_FLAGS(x)	PREQ_IE_FLAGS(x)
- #define PREP_IE_HOPCOUNT(x)	PREQ_IE_HOPCOUNT(x)
- #define PREP_IE_TTL(x)		PREQ_IE_TTL(x)
--#define PREP_IE_ORIG_ADDR(x)	(x + 3)
--#define PREP_IE_ORIG_SN(x)	u32_field_get(x, 9, 0);
-+#define PREP_IE_ORIG_ADDR(x)	(AE_F_SET(x) ? x + 27 : x + 21)
-+#define PREP_IE_ORIG_SN(x)	u32_field_get(x, 27, AE_F_SET(x));
- #define PREP_IE_LIFETIME(x)	u32_field_get(x, 13, AE_F_SET(x));
- #define PREP_IE_METRIC(x)	u32_field_get(x, 17, AE_F_SET(x));
--#define PREP_IE_TARGET_ADDR(x)	(AE_F_SET(x) ? x + 27 : x + 21)
--#define PREP_IE_TARGET_SN(x)	u32_field_get(x, 27, AE_F_SET(x));
-+#define PREP_IE_TARGET_ADDR(x)	(x + 3)
-+#define PREP_IE_TARGET_SN(x)	u32_field_get(x, 9, 0);
+> +++ b/include/net/cfg80211.h
+> @@ -128,6 +128,8 @@ enum ieee80211_channel_flags {
+>   * @beacon_found: helper to regulatory code to indicate when a beacon
+>   *	has been found on this channel. Use regulatory_hint_found_beacon()
+>   *	to enable this, this is useful only on 5 GHz band.
+> + * @is_40mhz_intolerant: one of the bss in this channel disallows the use of
+> + *	20/40 MHz BSS. this will be used by Intolerant Channel Report.
+
+I'm not convinced this should a channel thing here?
+
+> @@ -1746,6 +1749,7 @@ struct wiphy_wowlan_support {
+>   *	add to probe request frames transmitted during a scan, must not
+>   *	include fixed IEs like supported rates
+>   * @coverage_class: current coverage class
+> + * @dot11FortyMHzIntolerant: Enable/Disable Forty MHz Intolerance
+
+that variable name is ... highly unusual. please make it match its
+surroundings better.
+
+> @@ -1806,6 +1810,7 @@ struct wiphy {
+>  	u32 frag_threshold;
+>  	u32 rts_threshold;
+>  	u8 coverage_class;
+> +	bool dot11FortyMHzIntolerant;
  
- #define PERR_IE_TTL(x)		(*(x))
- #define PERR_IE_TARGET_FLAGS(x)	(*(x + 2))
-@@ -132,8 +132,8 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
- 	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
- 	/* BSSID == SA */
- 	memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
--	mgmt->u.action.category = WLAN_CATEGORY_MESH_PATH_SEL;
--	mgmt->u.action.u.mesh_action.action_code = MESH_PATH_SEL_ACTION;
-+	mgmt->u.action.category = WLAN_CATEGORY_MESH_ACTION;
-+	mgmt->u.action.u.mesh_action.action_code = WLAN_MESH_ACTION_HWMP_PATH_SELECTION;
+Ok so in struct wiphy, to me means that the *driver* said it was 40MHz
+intolerant? That makes no sense, why would the driver want to say that
+*statically*? I can see maybe dynamically, but statically?
+
+> @@ -412,6 +412,7 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+>  	rdev->wiphy.frag_threshold = (u32) -1;
+>  	rdev->wiphy.rts_threshold = (u32) -1;
+>  	rdev->wiphy.coverage_class = 0;
+> +	rdev->wiphy.dot11FortyMHzIntolerant = false;
+
+not really necessary, but I guess it's ok.
  
- 	switch (action) {
- 	case MPATH_PREQ:
-@@ -166,11 +166,16 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
- 	if (action == MPATH_PREQ) {
- 		memcpy(pos, &preq_id, 4);
- 		pos += 4;
-+		memcpy(pos, orig_addr, ETH_ALEN);
-+		pos += ETH_ALEN;
-+		memcpy(pos, &orig_sn, 4);
-+		pos += 4;
-+	} else if (action == MPATH_PREP) {
-+		memcpy(pos, target, ETH_ALEN);
-+		pos += ETH_ALEN;
-+		memcpy(pos, &target_sn, 4);
-+		pos += 4;
- 	}
--	memcpy(pos, orig_addr, ETH_ALEN);
--	pos += ETH_ALEN;
--	memcpy(pos, &orig_sn, 4);
--	pos += 4;
- 	if (action != MPATH_RANN) {
- 		memcpy(pos, &lifetime, 4);
- 		pos += 4;
-@@ -178,14 +183,17 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
- 	memcpy(pos, &metric, 4);
- 	pos += 4;
- 	if (action == MPATH_PREQ) {
--		/* destination count */
--		*pos++ = 1;
-+		*pos++ = 1; /* destination count */
- 		*pos++ = target_flags;
--	}
--	if (action != MPATH_RANN) {
- 		memcpy(pos, target, ETH_ALEN);
- 		pos += ETH_ALEN;
- 		memcpy(pos, &target_sn, 4);
-+		pos += 4;
-+	} else if (action == MPATH_PREP) {
-+		memcpy(pos, orig_addr, ETH_ALEN);
-+		pos += ETH_ALEN;
-+		memcpy(pos, &orig_sn, 4);
-+		pos += 4;
- 	}
- 
- 	ieee80211_tx_skb(sdata, skb);
-@@ -224,9 +232,10 @@ int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn,
- 
- 	memcpy(mgmt->da, ra, ETH_ALEN);
- 	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
--	/* BSSID is left zeroed, wildcard value */
--	mgmt->u.action.category = WLAN_CATEGORY_MESH_PATH_SEL;
--	mgmt->u.action.u.mesh_action.action_code = MESH_PATH_SEL_ACTION;
-+	/* BSSID == SA */
-+	memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
-+	mgmt->u.action.category = WLAN_CATEGORY_MESH_ACTION;
-+	mgmt->u.action.u.mesh_action.action_code = WLAN_MESH_ACTION_HWMP_PATH_SELECTION;
- 	ie_len = 15;
- 	pos = skb_put(skb, 2 + ie_len);
- 	*pos++ = WLAN_EID_PERR;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 3fb6dea..46aa303 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2241,8 +2241,6 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 	case WLAN_CATEGORY_MESH_ACTION:
- 		if (!ieee80211_vif_is_mesh(&sdata->vif))
- 			break;
--		goto queue;
--	case WLAN_CATEGORY_MESH_PATH_SEL:
- 		if (!mesh_path_sel_is_hwmp(sdata))
- 			break;
- 		goto queue;
--- 
-1.7.6
+> @@ -532,6 +533,8 @@ int wiphy_register(struct wiphy *wiphy)
+>  			sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+>  			sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SGI_40;
+>  		}
+> +		if (wiphy->dot11FortyMHzIntolerant)
+> +			sband->ht_cap.cap |= IEEE80211_HT_CAP_40MHZ_INTOLERANT;
+
+I don't get this. All you use this variable for is setting a
+variable ... that the driver could already have set. Seems completely
+pointless.
+
+johannes
 
