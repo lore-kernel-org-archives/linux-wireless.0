@@ -1,102 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([72.73.18.11]:40364 "EHLO lucidpixels.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4338 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751893Ab1G3OUW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jul 2011 10:20:22 -0400
-Date: Sat, 30 Jul 2011 10:20:20 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Alan Piszcz <ap@solarrain.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
-In-Reply-To: <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan>
-Message-ID: <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan> (sfid-20110730_162027_484210_29FF383D)
-References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan> <4E318BD0.40202@lwfinger.net> <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan>
+	id S932396Ab1GNV34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 17:29:56 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 07/35] staging: brcm80211: removed function declaration
+ typedefs from dma.h part 2
+Date: Thu, 14 Jul 2011 14:29:03 -0700
+Message-ID: <1310678971-28952-8-git-send-email-frankyl@broadcom.com> (sfid-20110714_233017_204199_58E0435B)
+In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Roland Vossen <rvossen@broadcom.com>
 
+Softmac related code cleanup. Typedefs are undesirable according to the
+CodingStyle document.
 
-On Sat, 30 Jul 2011, Justin Piszcz wrote:
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/dma.c |   22 ++++++++++----------
+ drivers/staging/brcm80211/brcmsmac/dma.h |   33 ++++++++++--------------------
+ 2 files changed, 22 insertions(+), 33 deletions(-)
 
->
->
-> On Sat, 30 Jul 2011, Stanislaw Gruszka wrote:
->
->> We should clear skb->data not skb itself. Bug was introduced by:
->> commit 0b8004aa12d13ec750d102ba4082a95f0107c649 "rt2x00: Properly
->> reserve room for descriptors in skbs".
->> 
->> Cc: stable@kernel.org # 2.6.36+
->> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
->> ---
->> drivers/net/wireless/rt2x00/rt2800lib.c |    3 +--
->> 1 files changed, 1 insertions(+), 2 deletions(-)
->> 
->> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c 
->> b/drivers/net/wireless/rt2x00/rt2800lib.c
->> index 75d2c6c..f94d669 100644
->> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->> @@ -703,8 +703,7 @@ void rt2800_write_beacon(struct queue_entry *entry, 
->> struct txentry_desc *txdesc)
->> 	/*
->> 	 * Add space for the TXWI in front of the skb.
->> 	 */
->> -	skb_push(entry->skb, TXWI_DESC_SIZE);
->> -	memset(entry->skb, 0, TXWI_DESC_SIZE);
->> +	memset(skb_push(entry->skb, TXWI_DESC_SIZE), 0, TXWI_DESC_SIZE);
->>
->> 	/*
->> 	 * Register descriptor details in skb frame descriptor.
->> -- 
->> 1.7.4
->> 
->
-> Hi,
->
-> Testing w/ Linux kernel 3.0:
->
-> # patch -p1 < ../patch3
-> patching file drivers/net/wireless/rt2x00/rt2800lib.c
-> Hunk #1 succeeded at 784 (offset 81 lines).
->
-> Compiled/installed.
->
-> Will reboot shortly, need to run a backup first, thanks.
->
-> Justin.
->
->
+diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
+index 5fd5e8c..3e732c8 100644
+--- a/drivers/staging/brcm80211/brcmsmac/dma.c
++++ b/drivers/staging/brcm80211/brcmsmac/dma.c
+@@ -389,16 +389,16 @@ static inline u32 parity32(u32 data);
+ const struct di_fcn_s dma64proc = {
+ 	(void (*)(struct dma_pub *)) _dma_detach,
+ 	(void (*)(struct dma_pub *)) dma64_txinit,
+-	(di_txreset_t) dma64_txreset,
+-	(di_txenabled_t) dma64_txenabled,
++	(bool(*)(struct dma_pub *)) dma64_txreset,
++	(bool(*)(struct dma_pub *)) dma64_txenabled,
+ 	(void (*)(struct dma_pub *)) dma64_txsuspend,
+ 	(void (*)(struct dma_pub *)) dma64_txresume,
+-	(di_txsuspended_t) dma64_txsuspended,
+-	(di_txsuspendedidle_t) dma64_txsuspendedidle,
++	(bool(*)(struct dma_pub *)) dma64_txsuspended,
++	(bool(*)(struct dma_pub *)) dma64_txsuspendedidle,
+ 	(di_txfast_t) dma64_txfast,
+ 	(di_txunframed_t) dma64_txunframed,
+ 	(di_getpos_t) dma64_getpos,
+-	(di_txstopped_t) dma64_txstopped,
++	(bool(*)(struct dma_pub *)) dma64_txstopped,
+ 	(di_txreclaim_t) dma64_txreclaim,
+ 	(di_getnexttxp_t) dma64_getnexttxp,
+ 	(di_peeknexttxp_t) _dma_peeknexttxp,
+@@ -408,13 +408,13 @@ const struct di_fcn_s dma64proc = {
+ 	(void (*)(struct dma_pub *)) dma64_txrotate,
+ 
+ 	(void (*)(struct dma_pub *)) _dma_rxinit,
+-	(di_rxreset_t) dma64_rxreset,
+-	(di_rxidle_t) dma64_rxidle,
+-	(di_rxstopped_t) dma64_rxstopped,
+-	(di_rxenable_t) _dma_rxenable,
+-	(di_rxenabled_t) dma64_rxenabled,
++	(bool(*)(struct dma_pub *)) dma64_rxreset,
++	(bool(*)(struct dma_pub *)) dma64_rxidle,
++	(bool(*)(struct dma_pub *)) dma64_rxstopped,
++	(bool(*)(struct dma_pub *)) _dma_rxenable,
++	(bool(*)(struct dma_pub *)) dma64_rxenabled,
+ 	(di_rx_t) _dma_rx,
+-	(di_rxfill_t) _dma_rxfill,
++	(bool(*)(struct dma_pub *)) _dma_rxfill,
+ 	(void (*)(struct dma_pub *)) _dma_rxreclaim,
+ 	(di_getnextrxp_t) _dma_getnextrxp,
+ 	(di_peeknextrxp_t) _dma_peeknextrxp,
+diff --git a/drivers/staging/brcm80211/brcmsmac/dma.h b/drivers/staging/brcm80211/brcmsmac/dma.h
+index 69f2e94..6d6dbd8 100644
+--- a/drivers/staging/brcm80211/brcmsmac/dma.h
++++ b/drivers/staging/brcm80211/brcmsmac/dma.h
+@@ -59,23 +59,12 @@ enum txd_range {
+ };
+ 
+ /* dma function type */
+-typedef bool(*di_txreset_t) (struct dma_pub *dmah);
+-typedef bool(*di_rxreset_t) (struct dma_pub *dmah);
+-typedef bool(*di_rxidle_t) (struct dma_pub *dmah);
+-typedef bool(*di_txenabled_t) (struct dma_pub *dmah);
+-typedef bool(*di_txsuspended_t) (struct dma_pub *dmah);
+-typedef bool(*di_txsuspendedidle_t) (struct dma_pub *dmah);
+ typedef int (*di_txfast_t) (struct dma_pub *dmah, struct sk_buff *p,
+ 			    bool commit);
+ typedef int (*di_txunframed_t) (struct dma_pub *dmah, void *p, uint len,
+ 				bool commit);
+ typedef void *(*di_getpos_t) (struct dma_pub *di, bool direction);
+-typedef bool(*di_txstopped_t) (struct dma_pub *dmah);
+-typedef bool(*di_rxstopped_t) (struct dma_pub *dmah);
+-typedef bool(*di_rxenable_t) (struct dma_pub *dmah);
+-typedef bool(*di_rxenabled_t) (struct dma_pub *dmah);
+ typedef void *(*di_rx_t) (struct dma_pub *dmah);
+-typedef bool(*di_rxfill_t) (struct dma_pub *dmah);
+ typedef void (*di_txreclaim_t) (struct dma_pub *dmah, enum txd_range range);
+ typedef unsigned long (*di_getvar_t) (struct dma_pub *dmah,
+ 				      const char *name);
+@@ -101,16 +90,16 @@ typedef uint(*di_txcommitted_t) (struct dma_pub *dmah);
+ struct di_fcn_s {
+ 	void (*detach)(struct dma_pub *dmah);
+ 	void (*txinit)(struct dma_pub *dmah);
+-	di_txreset_t txreset;
+-	di_txenabled_t txenabled;
++	bool (*txreset)(struct dma_pub *dmah);
++	bool (*txenabled)(struct dma_pub *dmah);
+ 	void (*txsuspend)(struct dma_pub *dmah);
+ 	void (*txresume)(struct dma_pub *dmah);
+-	di_txsuspended_t txsuspended;
+-	di_txsuspendedidle_t txsuspendedidle;
++	bool (*txsuspended)(struct dma_pub *dmah);
++	bool (*txsuspendedidle)(struct dma_pub *dmah);
+ 	di_txfast_t txfast;
+ 	di_txunframed_t txunframed;
+ 	di_getpos_t getpos;
+-	di_txstopped_t txstopped;
++	bool (*txstopped)(struct dma_pub *dmah);
+ 	di_txreclaim_t txreclaim;
+ 	di_getnexttxp_t getnexttxp;
+ 	di_peeknexttxp_t peeknexttxp;
+@@ -120,13 +109,13 @@ struct di_fcn_s {
+ 	void (*txrotate) (struct dma_pub *dmah);
+ 
+ 	void (*rxinit)(struct dma_pub *dmah);
+-	di_rxreset_t rxreset;
+-	di_rxidle_t rxidle;
+-	di_rxstopped_t rxstopped;
+-	di_rxenable_t rxenable;
+-	di_rxenabled_t rxenabled;
++	bool (*rxreset)(struct dma_pub *dmah);
++	bool (*rxidle)(struct dma_pub *dmah);
++	bool (*rxstopped)(struct dma_pub *dmah);
++	bool (*rxenable)(struct dma_pub *dmah);
++	bool (*rxenabled)(struct dma_pub *dmah);
+ 	di_rx_t rx;
+-	di_rxfill_t rxfill;
++	bool (*rxfill)(struct dma_pub *dmah);
+ 	void (*rxreclaim)(struct dma_pub *dmah);
+ 	di_getnextrxp_t getnextrxp;
+ 	di_peeknextrxp_t peeknextrxp;
+-- 
+1.7.1
 
-Hi,
-
-Patched, its working, latency is MUCH better than before the patch!
-
-PING atomw.internal.lan (192.168.0.2) 56(84) bytes of data.
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=1 ttl=64 time=0.535 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=2 ttl=64 time=0.589 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=3 ttl=64 time=48.8 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=4 ttl=64 time=1.14 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=5 ttl=64 time=64.5 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=6 ttl=64 time=0.582 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=7 ttl=64 time=80.6 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=8 ttl=64 time=51.9 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=9 ttl=64 time=35.5 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=10 ttl=64 time=0.614 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=11 ttl=64 time=0.497 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=12 ttl=64 time=41.5 ms
-
-$ uptime
-  10:19:18 up 5 min,  2 users,  load average: 1.32, 1.02, 0.47
-
-It hasn't crashed yet, if you don't hear from me/stating it has crashed again,
-then you can assume its stable, I'll let you know if anything happens.
-
-Justin.
 
