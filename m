@@ -1,70 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58705 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754064Ab1GLBCV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 21:02:21 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	mickflemm@gmail.com
-Subject: [PATCH v3 6/8] ath5k: fix reference clock usec duration setting restore
-Date: Tue, 12 Jul 2011 09:02:03 +0800
-Message-Id: <1310432525-70077-6-git-send-email-nbd@openwrt.org> (sfid-20110712_030228_562640_AE46CDEF)
-In-Reply-To: <1310432525-70077-5-git-send-email-nbd@openwrt.org>
-References: <1310432525-70077-1-git-send-email-nbd@openwrt.org>
- <1310432525-70077-2-git-send-email-nbd@openwrt.org>
- <1310432525-70077-3-git-send-email-nbd@openwrt.org>
- <1310432525-70077-4-git-send-email-nbd@openwrt.org>
- <1310432525-70077-5-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:55329 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754615Ab1GNOYa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 10:24:30 -0400
+Subject: [PATCH] mac80211: be more careful in suspend/resume
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 14 Jul 2011 16:24:26 +0200
+Message-ID: <1310653466.3874.23.camel@jlt3.sipsolutions.net> (sfid-20110714_162435_452545_1D488BF6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-enabling the sleep clock alters the AR5K_USEC_32 field, but disabling
-it didn't restore it.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+When suspending with all netdevs down, the device
+is stopped but we still call a number of driver
+callbacks that the driver might not expect. The
+same happens during resume, we might call a few
+callbacks without starting the driver. Fix this
+by checking open_count around more things and
+exiting quickly if it is 0.
+
+Also, while at this I noticed that the coverage
+class isn't reprogrammed after resume, so add
+that.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath5k/reset.c |   12 +++++++++++-
- 1 files changed, 11 insertions(+), 1 deletions(-)
+ net/mac80211/pm.c   |    3 ++
+ net/mac80211/util.c |   54 ++++++++++++++++++++++++++--------------------------
+ 2 files changed, 31 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 57f2e56..0e89fc9 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -142,6 +142,7 @@ static void ath5k_hw_init_core_clock(struct ath5k_hw *ah)
+--- a/net/mac80211/pm.c	2011-07-14 16:21:12.000000000 +0200
++++ b/net/mac80211/pm.c	2011-07-14 16:21:28.000000000 +0200
+@@ -34,6 +34,9 @@ int __ieee80211_suspend(struct ieee80211
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
  
- 	/* Set 32MHz USEC counter */
- 	if ((ah->ah_radio == AR5K_RF5112) ||
-+	    (ah->ah_radio == AR5K_RF2413) ||
- 	    (ah->ah_radio == AR5K_RF5413) ||
- 	    (ah->ah_radio == AR5K_RF2316) ||
- 	    (ah->ah_radio == AR5K_RF2317))
-@@ -233,7 +234,7 @@ static void ath5k_hw_init_core_clock(struct ath5k_hw *ah)
- static void ath5k_hw_set_sleep_clock(struct ath5k_hw *ah, bool enable)
- {
- 	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
--	u32 scal, spending;
-+	u32 scal, spending, sclock;
- 
- 	/* Only set 32KHz settings if we have an external
- 	 * 32KHz crystal present */
-@@ -317,6 +318,15 @@ static void ath5k_hw_set_sleep_clock(struct ath5k_hw *ah, bool enable)
- 
- 		/* Set up tsf increment on each cycle */
- 		AR5K_REG_WRITE_BITS(ah, AR5K_TSF_PARM, AR5K_TSF_PARM_INC, 1);
++	if (!local->open_count)
++		goto suspend;
 +
-+		if ((ah->ah_radio == AR5K_RF5112) ||
-+			(ah->ah_radio == AR5K_RF5413) ||
-+			(ah->ah_radio == AR5K_RF2316) ||
-+			(ah->ah_radio == AR5K_RF2317))
-+			sclock = 40 - 1;
-+		else
-+			sclock = 32 - 1;
-+		AR5K_REG_WRITE_BITS(ah, AR5K_USEC_5211, AR5K_USEC_32, sclock);
- 	}
- }
+ 	ieee80211_scan_cancel(local);
  
--- 
-1.7.3.2
+ 	if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
+--- a/net/mac80211/util.c	2011-07-14 16:21:12.000000000 +0200
++++ b/net/mac80211/util.c	2011-07-14 16:21:28.000000000 +0200
+@@ -1157,27 +1157,37 @@ int ieee80211_reconfig(struct ieee80211_
+ 	}
+ #endif
+ 
+-	/* restart hardware */
+-	if (local->open_count) {
+-		/*
+-		 * Upon resume hardware can sometimes be goofy due to
+-		 * various platform / driver / bus issues, so restarting
+-		 * the device may at times not work immediately. Propagate
+-		 * the error.
+-		 */
+-		res = drv_start(local);
+-		if (res) {
+-			WARN(local->suspended, "Hardware became unavailable "
+-			     "upon resume. This could be a software issue "
+-			     "prior to suspend or a hardware issue.\n");
+-			return res;
+-		}
++	/* setup fragmentation threshold */
++	drv_set_frag_threshold(local, hw->wiphy->frag_threshold);
++
++	/* setup RTS threshold */
++	drv_set_rts_threshold(local, hw->wiphy->rts_threshold);
++
++	/* reset coverage class */
++	drv_set_rts_threshold(local, hw->wiphy->rts_threshold);
+ 
+-		ieee80211_led_radio(local, true);
+-		ieee80211_mod_tpt_led_trig(local,
+-					   IEEE80211_TPT_LEDTRIG_FL_RADIO, 0);
++	/* everything else happens only if HW was up & running */
++	if (!local->open_count)
++		goto wake_up;
++
++	/*
++	 * Upon resume hardware can sometimes be goofy due to
++	 * various platform / driver / bus issues, so restarting
++	 * the device may at times not work immediately. Propagate
++	 * the error.
++	 */
++	res = drv_start(local);
++	if (res) {
++		WARN(local->suspended, "Hardware became unavailable "
++		     "upon resume. This could be a software issue "
++		     "prior to suspend or a hardware issue.\n");
++		return res;
+ 	}
+ 
++	ieee80211_led_radio(local, true);
++	ieee80211_mod_tpt_led_trig(local,
++				   IEEE80211_TPT_LEDTRIG_FL_RADIO, 0);
++
+ 	/* add interfaces */
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+@@ -1201,12 +1211,6 @@ int ieee80211_reconfig(struct ieee80211_
+ 	}
+ 	mutex_unlock(&local->sta_mtx);
+ 
+-	/* setup fragmentation threshold */
+-	drv_set_frag_threshold(local, hw->wiphy->frag_threshold);
+-
+-	/* setup RTS threshold */
+-	drv_set_rts_threshold(local, hw->wiphy->rts_threshold);
+-
+ 	/* reconfigure hardware */
+ 	ieee80211_hw_config(local, ~0);
+ 
+@@ -1287,9 +1291,7 @@ int ieee80211_reconfig(struct ieee80211_
+ 		if (ieee80211_sdata_running(sdata))
+ 			ieee80211_enable_keys(sdata);
+ 
+-#ifdef CONFIG_PM
+  wake_up:
+-#endif
+ 	ieee80211_wake_queues_by_reason(hw,
+ 			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
+ 
+
 
