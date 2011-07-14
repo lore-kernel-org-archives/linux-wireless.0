@@ -1,128 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54001 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965029Ab1GMIl2 (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:42253 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753757Ab1GNTU5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 04:41:28 -0400
-Message-Id: <20110713084032.135463902@sipsolutions.net> (sfid-20110713_104132_512955_53891287)
-Date: Wed, 13 Jul 2011 10:39:11 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 03/11] iwlegacy: remove wireless extensions inclusions
-References: <20110713083908.713123063@sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 14 Jul 2011 15:20:57 -0400
+Received: by wwg11 with SMTP id 11so779116wwg.1
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2011 12:20:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1310637144.3874.2.camel@jlt3.sipsolutions.net>
+References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
+	<1310600747-9583-6-git-send-email-thomas@cozybit.com>
+	<1310637144.3874.2.camel@jlt3.sipsolutions.net>
+Date: Thu, 14 Jul 2011 12:20:55 -0700
+Message-ID: <CAG6hwVN3eeJw+H8xt9BpV1t6_ujVdsS_Q6xPk7q-wF5+5sUd=A@mail.gmail.com> (sfid-20110714_212100_399233_966A9407)
+Subject: Re: [PATCH 5/5] mac80211: mesh beacon includes TIM IE
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Jul 14, 2011 at 2:52 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2011-07-13 at 16:45 -0700, Thomas Pedersen wrote:
+>
+>>                       goto out;
+>> @@ -2269,6 +2270,14 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+>>                       memcpy(skb_put(skb, beacon->head_len), beacon->head,
+>>                              beacon->head_len);
+>>
+>> +                     pos = skb_put(skb, 6);
+>
+> You just keep adding here -- how is the length of the skb determined?
 
-linux/wireless.h and net/iw_handler.h headers are
-for wireless extensions only, so mac80211 drivers
-shouldn't be including them.
+A little further up:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlegacy/iwl-3945-led.c |    1 -
- drivers/net/wireless/iwlegacy/iwl-3945-rs.c  |    1 -
- drivers/net/wireless/iwlegacy/iwl-3945.c     |    1 -
- drivers/net/wireless/iwlegacy/iwl-4965-led.c |    1 -
- drivers/net/wireless/iwlegacy/iwl-4965-rs.c  |    1 -
- drivers/net/wireless/iwlegacy/iwl-4965.c     |    1 -
- drivers/net/wireless/iwlegacy/iwl-led.c      |    1 -
- drivers/net/wireless/iwlegacy/iwl3945-base.c |    1 -
- drivers/net/wireless/iwlegacy/iwl4965-base.c |    1 -
- 9 files changed, 9 deletions(-)
+                        /* headroom, head length, tail length, custom IEs, and
+                         * mesh IEs + maximum TIM length */
+                        skb = dev_alloc_skb(local->tx_headroom +
+                                            beacon->head_len +
+                                            beacon->tail_len +
+                                            ifmsh->ie_len + 400);
 
---- a/drivers/net/wireless/iwlegacy/iwl-3945-led.c	2011-07-13 10:03:26.000000000 +0200
-+++ b/drivers/net/wireless/iwlegacy/iwl-3945-led.c	2011-07-13 10:03:29.000000000 +0200
-@@ -32,7 +32,6 @@
- #include <linux/delay.h>
- #include <linux/skbuff.h>
- #include <linux/netdevice.h>
--#include <linux/wireless.h>
- #include <net/mac80211.h>
- #include <linux/etherdevice.h>
- #include <asm/unaligned.h>
---- a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c	2011-07-13 10:03:26.000000000 +0200
-+++ b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c	2011-07-13 10:03:30.000000000 +0200
-@@ -28,7 +28,6 @@
- #include <linux/init.h>
- #include <linux/skbuff.h>
- #include <linux/slab.h>
--#include <linux/wireless.h>
- #include <net/mac80211.h>
- 
- #include <linux/netdevice.h>
---- a/drivers/net/wireless/iwlegacy/iwl-3945.c	2011-07-13 10:03:26.000000000 +0200
-+++ b/drivers/net/wireless/iwlegacy/iwl-3945.c	2011-07-13 10:03:31.000000000 +0200
-@@ -34,7 +34,6 @@
- #include <linux/sched.h>
- #include <linux/skbuff.h>
- #include <linux/netdevice.h>
--#include <linux/wireless.h>
- #include <linux/firmware.h>
- #include <linux/etherdevice.h>
- #include <asm/unaligned.h>
---- a/drivers/net/wireless/iwlegacy/iwl-4965-led.c	2011-07-13 10:03:26.000000000 +0200
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-led.c	2011-07-13 10:03:32.000000000 +0200
-@@ -32,7 +32,6 @@
- #include <linux/delay.h>
- #include <linux/skbuff.h>
- #include <linux/netdevice.h>
--#include <linux/wireless.h>
- #include <net/mac80211.h>
- #include <linux/etherdevice.h>
- #include <asm/unaligned.h>
---- a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c	2011-07-13 10:03:26.000000000 +0200
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c	2011-07-13 10:03:33.000000000 +0200
-@@ -27,7 +27,6 @@
- #include <linux/init.h>
- #include <linux/skbuff.h>
- #include <linux/slab.h>
--#include <linux/wireless.h>
- #include <net/mac80211.h>
- 
- #include <linux/netdevice.h>
---- a/drivers/net/wireless/iwlegacy/iwl-4965.c	2011-07-13 10:03:26.000000000 +0200
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965.c	2011-07-13 10:03:34.000000000 +0200
-@@ -33,7 +33,6 @@
- #include <linux/sched.h>
- #include <linux/skbuff.h>
- #include <linux/netdevice.h>
--#include <linux/wireless.h>
- #include <net/mac80211.h>
- #include <linux/etherdevice.h>
- #include <asm/unaligned.h>
---- a/drivers/net/wireless/iwlegacy/iwl-led.c	2011-07-13 10:03:26.000000000 +0200
-+++ b/drivers/net/wireless/iwlegacy/iwl-led.c	2011-07-13 10:03:35.000000000 +0200
-@@ -33,7 +33,6 @@
- #include <linux/delay.h>
- #include <linux/skbuff.h>
- #include <linux/netdevice.h>
--#include <linux/wireless.h>
- #include <net/mac80211.h>
- #include <linux/etherdevice.h>
- #include <asm/unaligned.h>
---- a/drivers/net/wireless/iwlegacy/iwl3945-base.c	2011-07-13 10:03:26.000000000 +0200
-+++ b/drivers/net/wireless/iwlegacy/iwl3945-base.c	2011-07-13 10:03:36.000000000 +0200
-@@ -40,7 +40,6 @@
- #include <linux/sched.h>
- #include <linux/skbuff.h>
- #include <linux/netdevice.h>
--#include <linux/wireless.h>
- #include <linux/firmware.h>
- #include <linux/etherdevice.h>
- #include <linux/if_arp.h>
---- a/drivers/net/wireless/iwlegacy/iwl4965-base.c	2011-07-13 10:03:26.000000000 +0200
-+++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c	2011-07-13 10:03:37.000000000 +0200
-@@ -40,7 +40,6 @@
- #include <linux/sched.h>
- #include <linux/skbuff.h>
- #include <linux/netdevice.h>
--#include <linux/wireless.h>
- #include <linux/firmware.h>
- #include <linux/etherdevice.h>
- #include <linux/if_arp.h>
-
-
+we made room for the max TIM element.
+>
+> johannes
+>
+>
