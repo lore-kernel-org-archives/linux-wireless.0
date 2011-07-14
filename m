@@ -1,228 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4256 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754033Ab1GEUGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 16:06:34 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH v2 16/21] staging: brcm80211: removed last amd64
- compiler warnings
-Date: Tue, 5 Jul 2011 22:06:12 +0200
-Message-ID: <1309896377-4425-17-git-send-email-arend@broadcom.com> (sfid-20110705_220713_283139_FE474E8B)
-In-Reply-To: <1309896377-4425-1-git-send-email-arend@broadcom.com>
-References: <1309896377-4425-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:35147 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932195Ab1GNR3Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 13:29:24 -0400
+Received: by wyg8 with SMTP id 8so304384wyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2011 10:29:23 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3] mac80211: reconfigure tx on device reconfiguration
+Date: Thu, 14 Jul 2011 20:29:42 +0300
+Message-Id: <1310664582-11973-1-git-send-email-eliad@wizery.com> (sfid-20110714_192927_724513_87966210)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Add tx_conf array to save the current tx queues
+configuration, and reconfig it on resume (ieee80211_reconfig).
 
-Code cleanup. Warnings were due to pointer declarations being used for an
-address that does not reside on the CPU bus.
+On resume, the driver is being reconfigured. Without
+reconfiguring the tx queues as well, the driver might
+configure the device to use wrong ac params (e.g. ps-poll
+instead of uapsd).
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |    4 ++--
- drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |    6 +++---
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    4 ++--
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |   20 ++++++++++----------
- drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    6 +++---
- 5 files changed, 20 insertions(+), 20 deletions(-)
+v2: edit commit message
+v3: use hw->queues, save tx conf in ieee80211_set_txq_params
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-index 84d1bcd..cecb291 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-@@ -67,7 +67,7 @@ struct brcmf_sdio_card {
- static struct brcmf_sdio_card *l_card;
- 
- struct brcmf_sdio_card*
--brcmf_sdcard_attach(void *cfghdl, void **regsva, uint irq)
-+brcmf_sdcard_attach(void *cfghdl, u32 *regsva, uint irq)
- {
- 	struct brcmf_sdio_card *card;
- 
-@@ -88,7 +88,7 @@ brcmf_sdcard_attach(void *cfghdl, void **regsva, uint irq)
- 
- 	card->init_success = true;
- 
--	*regsva = (u32 *) SI_ENUM_BASE;
-+	*regsva = SI_ENUM_BASE;
- 
- 	/* Report the BAR, to fix if needed */
- 	card->sbwad = SI_ENUM_BASE;
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-index 45fb76e..ec7d79d 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-@@ -68,7 +68,7 @@ EXPORT_SYMBOL(brcmf_sdio_remove);
- int brcmf_sdio_probe(struct device *dev)
- {
- 	struct sdio_hc *sdhc = NULL;
--	unsigned long regs = 0;
-+	u32 regs = 0;
- 	struct brcmf_sdio_card *card = NULL;
- 	int irq = 0;
- 	u32 vendevid;
-@@ -82,7 +82,7 @@ int brcmf_sdio_probe(struct device *dev)
- 	}
- 	sdhc->dev = (void *)dev;
- 
--	card = brcmf_sdcard_attach((void *)0, (void **)&regs, irq);
-+	card = brcmf_sdcard_attach((void *)0, &regs, irq);
- 	if (!card) {
- 		SDLX_MSG(("%s: attach failed\n", __func__));
- 		goto err;
-@@ -101,7 +101,7 @@ int brcmf_sdio_probe(struct device *dev)
- 
- 	/* try to attach to the target device */
- 	sdhc->ch = drvinfo.attach((vendevid >> 16), (vendevid & 0xFFFF),
--				  0, 0, 0, 0, (void *)regs, card);
-+				  0, 0, 0, 0, regs, card);
- 	if (!sdhc->ch) {
- 		SDLX_MSG(("%s: device attach failed\n", __func__));
- 		goto err;
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 1b55e56..4c0a031 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -694,7 +694,7 @@ brcmf_sdioh_request_packet(struct sdioh_info *sd, uint fix_inc, uint write,
- 		 * is supposed to give
- 		 * us something we can work with.
- 		 */
--		ASSERT(((u32) (pkt->data) & DMA_ALIGN_MASK) == 0);
-+		ASSERT(((ulong) (pkt->data) & DMA_ALIGN_MASK) == 0);
- 
- 		if ((write) && (!fifo)) {
- 			err_ret = sdio_memcpy_toio(gInstance->func[func], addr,
-@@ -789,7 +789,7 @@ brcmf_sdioh_request_buffer(struct sdioh_info *sd, uint pio_dma, uint fix_inc,
- 			memcpy(buffer, mypkt->data, buflen_u);
- 
- 		brcmu_pkt_buf_free_skb(mypkt);
--	} else if (((u32) (pkt->data) & DMA_ALIGN_MASK) != 0) {
-+	} else if (((ulong) (pkt->data) & DMA_ALIGN_MASK) != 0) {
- 		/* Case 2: We have a packet, but it is unaligned. */
- 
- 		/* In this case, we cannot have a chain. */
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 9bc47a4..cdc57f9 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -884,7 +884,7 @@ static void brcmf_sdbrcm_release_malloc(struct brcmf_bus *bus);
- static void brcmf_sdbrcm_disconnect(void *ptr);
- static bool brcmf_sdbrcm_chipmatch(u16 chipid);
- static bool brcmf_sdbrcm_probe_attach(struct brcmf_bus *bus, void *card,
--				 void *regsva, u16 devid);
-+				      u32 regsva, u16 devid);
- static bool brcmf_sdbrcm_probe_malloc(struct brcmf_bus *bus, void *card);
- static bool brcmf_sdbrcm_probe_init(struct brcmf_bus *bus, void *card);
- static void brcmf_sdbrcm_release_dongle(struct brcmf_bus *bus);
-@@ -908,7 +908,7 @@ static int brcmf_sdbrcm_download_nvram(struct brcmf_bus *bus);
- static void
- brcmf_sdbrcm_chip_disablecore(struct brcmf_sdio_card *card, u32 corebase);
- 
--static int brcmf_sdbrcm_chip_attach(struct brcmf_bus *bus, void *regs);
-+static int brcmf_sdbrcm_chip_attach(struct brcmf_bus *bus, u32 regs);
- 
- static void
- brcmf_sdbrcm_chip_resetcore(struct brcmf_sdio_card *card, u32 corebase);
-@@ -5343,7 +5343,7 @@ static bool brcmf_sdbrcm_chipmatch(u16 chipid)
- }
- 
- static void *brcmf_sdbrcm_probe(u16 venid, u16 devid, u16 bus_no,
--			   u16 slot, u16 func, uint bustype, void *regsva,
-+			   u16 slot, u16 func, uint bustype, u32 regsva,
- 			   void *card)
- {
- 	int ret;
-@@ -5374,7 +5374,7 @@ static void *brcmf_sdbrcm_probe(u16 venid, u16 devid, u16 bus_no,
- 	DHD_INFO(("%s: venid 0x%04x devid 0x%04x\n", __func__, venid, devid));
- 
- 	/* We make assumptions about address window mappings */
--	ASSERT((unsigned long)regsva == SI_ENUM_BASE);
-+	ASSERT(regsva == SI_ENUM_BASE);
- 
- 	/* SDIO car passes venid and devid based on CIS parsing -- but
- 	 * low-power start
-@@ -5540,7 +5540,7 @@ fail:
- }
- 
- static bool
--brcmf_sdbrcm_probe_attach(struct brcmf_bus *bus, void *card, void *regsva,
-+brcmf_sdbrcm_probe_attach(struct brcmf_bus *bus, void *card, u32 regsva,
- 			  u16 devid)
- {
- 	u8 clkctl = 0;
-@@ -6097,8 +6097,8 @@ int brcmf_bus_devreset(struct brcmf_pub *drvr, u8 flag)
- 
- 			/* Attempt to re-attach & download */
- 			if (brcmf_sdbrcm_probe_attach(bus, bus->card,
--						 (u32 *) SI_ENUM_BASE,
--						 bus->cl_devid)) {
-+						      SI_ENUM_BASE,
-+						      bus->cl_devid)) {
- 				/* Attempt to download binary to the dongle */
- 				if (brcmf_sdbrcm_probe_init(bus, bus->card)) {
- 					/* Re-init bus, enable F2 transfer */
-@@ -6126,7 +6126,7 @@ int brcmf_bus_devreset(struct brcmf_pub *drvr, u8 flag)
- 
- static int
- brcmf_sdbrcm_chip_recognition(struct brcmf_sdio_card *card,
--			      struct chip_info *ci, void *regs)
-+			      struct chip_info *ci, u32 regs)
- {
- 	u32 regdata;
- 
-@@ -6136,7 +6136,7 @@ brcmf_sdbrcm_chip_recognition(struct brcmf_sdio_card *card,
- 	 * For different chiptypes or old sdio hosts w/o chipcommon,
- 	 * other ways of recognition should be added here.
+ net/mac80211/cfg.c         |    4 ++++
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |    1 +
+ net/mac80211/util.c        |    7 ++++++-
+ 4 files changed, 12 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index d7ea34a..4938841 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1262,6 +1262,10 @@ static int ieee80211_set_txq_params(struct wiphy *wiphy,
  	 */
--	ci->cccorebase = (u32)regs;
-+	ci->cccorebase = regs;
- 	regdata = brcmf_sdcard_reg_read(card,
- 				CORE_CC_REG(ci->cccorebase, chipid), 4);
- 	ci->chip = regdata & CID_ID_MASK;
-@@ -6263,7 +6263,7 @@ brcmf_sdbrcm_chip_disablecore(struct brcmf_sdio_card *card, u32 corebase)
- }
+ 	p.uapsd = false;
  
- static int
--brcmf_sdbrcm_chip_attach(struct brcmf_bus *bus, void *regs)
-+brcmf_sdbrcm_chip_attach(struct brcmf_bus *bus, u32 regs)
- {
- 	struct chip_info *ci;
- 	int err;
-diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-index 68a2a64..9b3c149 100644
---- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-@@ -52,8 +52,8 @@ struct brcmf_sdio_card;
-  *    implementation may maintain a single "default" handle (e.g. the first or
-  *    most recent one) to enable single-instance implementations to pass NULL.
-  */
--extern struct brcmf_sdio_card *brcmf_sdcard_attach(void *cfghdl, void **regsva,
--					  uint irq);
-+extern struct brcmf_sdio_card*
-+brcmf_sdcard_attach(void *cfghdl, u32 *regsva, uint irq);
++	if (params->queue >= local->hw.queues)
++		return -EINVAL;
++
++	local->tx_conf[params->queue] = p;
+ 	if (drv_conf_tx(local, params->queue, &p)) {
+ 		wiphy_debug(local->hw.wiphy,
+ 			    "failed to set TX queue parameters for queue %d\n",
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 4f2e424..a976d8d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -721,6 +721,7 @@ struct ieee80211_local {
+ 	struct workqueue_struct *workqueue;
  
- /* Detach - freeup resources allocated in attach */
- extern int brcmf_sdcard_detach(struct brcmf_sdio_card *card);
-@@ -174,7 +174,7 @@ extern int brcmf_sdcard_iovar_op(struct brcmf_sdio_card *card, const char *name,
- struct brcmf_sdioh_driver {
- 	/* attach to device */
- 	void *(*attach) (u16 vend_id, u16 dev_id, u16 bus, u16 slot,
--			 u16 func, uint bustype, void *regsva, void *param);
-+			 u16 func, uint bustype, u32 regsva, void *param);
- 	/* detach from device */
- 	void (*detach) (void *ch);
- };
+ 	unsigned long queue_stop_reasons[IEEE80211_MAX_QUEUES];
++	struct ieee80211_tx_queue_params tx_conf[IEEE80211_MAX_QUEUES];
+ 	/* also used to protect ampdu_ac_queue and amdpu_ac_stop_refcnt */
+ 	spinlock_t queue_stop_reason_lock;
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 182cda6..6d0883a 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -917,6 +917,7 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 			    params.aifs, params.cw_min, params.cw_max,
+ 			    params.txop, params.uapsd);
+ #endif
++		local->tx_conf[queue] = params;
+ 		if (drv_conf_tx(local, queue, &params))
+ 			wiphy_debug(local->hw.wiphy,
+ 				    "failed to set TX queue parameters for queue %d\n",
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index faa392e..96f4cf9 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -799,6 +799,7 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
+ 
+ 		qparam.uapsd = false;
+ 
++		local->tx_conf[queue] = qparam;
+ 		drv_conf_tx(local, queue, &qparam);
+ 	}
+ 
+@@ -1146,7 +1147,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	struct ieee80211_hw *hw = &local->hw;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
+-	int res;
++	int res, i;
+ 
+ #ifdef CONFIG_PM
+ 	if (local->suspended)
+@@ -1219,6 +1220,10 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	/* setup RTS threshold */
+ 	drv_set_rts_threshold(local, hw->wiphy->rts_threshold);
+ 
++	/* reconfigure tx conf */
++	for (i = 0; i < hw->queues; i++)
++		drv_conf_tx(local, i, &local->tx_conf[i]);
++
+ 	/* reconfigure hardware */
+ 	ieee80211_hw_config(local, ~0);
+ 
 -- 
-1.7.4.1
-
+1.7.0.4
 
