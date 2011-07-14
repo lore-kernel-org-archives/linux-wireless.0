@@ -1,179 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f171.google.com ([209.85.215.171]:35244 "EHLO
-	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752169Ab1GZANV (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:50057 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753245Ab1GNKkL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2011 20:13:21 -0400
-Received: by eye22 with SMTP id 22so4079820eye.2
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2011 17:13:19 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: problem on ACS
-Date: Tue, 26 Jul 2011 02:13:16 +0200
-Cc: MingAnn Ng <devil_eddie01@hotmail.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <COL114-W9CEFD4E7F3803005186F98A4F0@phx.gbl> <CAB=NE6WoKhvR7AVcwaGkijkph+UAts9h-=L4oPwhE=b6gW8eDg@mail.gmail.com> <CAB=NE6X=ykO6fX1+vrYyjHt0V1z8hN7HY3p7cEaeXw13z2aKnA@mail.gmail.com>
-In-Reply-To: <CAB=NE6X=ykO6fX1+vrYyjHt0V1z8hN7HY3p7cEaeXw13z2aKnA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201107260213.16509.chunkeey@googlemail.com> (sfid-20110726_021324_570107_0A5C364E)
+	Thu, 14 Jul 2011 06:40:11 -0400
+Received: by wyg8 with SMTP id 8so59921wyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2011 03:40:10 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] mac80211: reconfigure tx on device reconfiguration
+Date: Thu, 14 Jul 2011 13:40:29 +0300
+Message-Id: <1310640029-22468-1-git-send-email-eliad@wizery.com> (sfid-20110714_124015_814094_50E62B6C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, July 26, 2011 01:35:07 AM Luis R. Rodriguez wrote:
-> On Mon, Jul 25, 2011 at 1:32 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > On Thu, Jul 21, 2011 at 8:13 PM, MingAnn Ng <devil_eddie01@hotmail.com> wrote:
-> >> Hi Luis,
-> >>
-> >> I am thinking of using the ACS application for channel selection on IBSS
-> >> network. I had run a test with the current git. But the result is not so
-> >> convincing.
-> >>
-> >>    10 surveys for 2412 MHz: 11.382248 12.847997 13.223471 13.403065
-> >> 13.454694 13.529891 12.556324 13.573309 13.616969 13.645601
-> >>    10 surveys for 2417 MHz: 12.678072 10.299560 -inf -inf 9.678072 -inf -inf
-> >> -inf -inf -inf
-> >>    10 surveys for 2422 MHz: -inf -inf -inf -inf -inf -inf -inf -inf -inf
-> >> -inf
-> >>    10 surveys for 2427 MHz: -inf -inf 12.192645 -inf -inf -inf -inf -inf
-> >> -inf -inf
-> >>    10 surveys for 2432 MHz: -inf 9.192645 12.777608 12.192645 12.192645 -inf
-> >> 12.192645 -inf 10.093109 12.192645
-> >>    10 surveys for 2437 MHz: 11.192645 -inf 11.000000 10.093109 10.093109
-> >> 11.192645 -inf 11.192645 -inf -inf
-> >>    10 surveys for 2442 MHz: 10.192645 10.093109 -inf 10.061401 11.192645
-> >> -inf -inf -inf 11.192645 10.093109
-> >>    10 surveys for 2447 MHz: -inf -inf -inf 11.777608 -inf 10.192645 -inf
-> >> -inf -inf -inf
-> >>    10 surveys for 2452 MHz: 11.192645 -inf -inf 11.192645 -inf -inf -inf
-> >> 13.777608 11.337035 10.830075
-> >>    10 surveys for 2457 MHz: 10.192645 -inf -inf -inf -inf -inf -inf -inf
-> >> -inf -inf
-> >>    10 surveys for 2462 MHz: 9.540568 9.192645 10.283793 8.476438 -inf -inf
-> >> -inf -inf 10.192645 -inf
-> >>    10 surveys for 2467 MHz: -inf -inf -inf -inf -inf -inf 9.752072 -inf -inf
-> >> -inf
-> >>    10 surveys for 2472 MHz: -inf -inf 10.192645 -inf -inf -inf -inf -inf
-> >> 7.714598 -inf
-> >>    10 surveys for 5180 MHz: 2.000000 1.830075 1.000000 0.678072 2.000000
-> >> 2.000000 2.000000 0.678072 2.000000 2.000000
-> >>    10 surveys for 5200 MHz: 2.000000 1.678072 2.000000 2.000000 2.000000
-> >> 2.000000 1.678072 2.000000 0.678072 0.678072
-> >>    10 surveys for 5220 MHz: 2.000000 1.415037 2.000000 0.000000 2.000000
-> >> 2.000000 1.678072 2.000000 2.000000 2.000000
-> >>    10 surveys for 5240 MHz: 3.000000 3.000000 3.000000 1.245112 3.000000
-> >> 3.000000 3.000000 2.678072 2.000000 3.000000
-> >>    10 surveys for 5260 MHz: 3.000000 2.000000 3.000000 3.000000 3.000000
-> >> 3.000000 2.000000 2.678072 2.000000 2.678072
-> >>    10 surveys for 5280 MHz: 3.000000 1.415037 3.000000 1.415037 1.678072
-> >> 2.000000 1.245112 3.000000 3.000000 2.678072
-> >>    10 surveys for 5300 MHz: 3.000000 3.000000 3.000000 1.415037 3.000000
-> >> 3.000000 3.000000 2.000000 3.000000 3.000000
-> >>    10 surveys for 5320 MHz: 3.000000 3.000000 3.000000 3.000000 3.000000
-> >> 2.678072 3.000000 1.415037 3.000000 2.000000
-> >>    10 surveys for 5500 MHz: -1.000000 -2.000000 -1.000000 -2.321928
-> >> -1.321928 -1.321928 -1.000000 -2.321928 -1.000000 -2.459432
-> >>    10 surveys for 5520 MHz: -2.392317 -1.169925 -1.169925 -0.807355
-> >> -1.906891 -1.169925 -1.169925 -1.169925 -1.700440 -0.807355
-> >>    10 surveys for 5540 MHz: -1.169925 -2.643856 -1.169925 -2.087463
-> >> -1.169925 -1.169925 -2.523562 -1.169925 -1.169925 -1.169925
-> >>    10 surveys for 5560 MHz: -1.169925 -1.169925 -2.643856 -1.169925
-> >> -1.321928 -1.169925 -1.459432 -1.700440 -2.087463 -1.169925
-> >>    10 surveys for 5580 MHz: -1.169925 -1.700440 -1.169925 -1.906891
-> >> -1.321928 -1.169925 -1.169925 -1.169925 -1.169925 -1.169925
-> >>    10 surveys for 5600 MHz: -1.169925 -1.169925 -1.169925 -2.643856
-> >> -0.807355 -2.459432 -1.459432 -1.169925 -1.169925 -1.169925
-> >>    10 surveys for 5620 MHz: -1.169925 -1.321928 -2.087463 -1.169925
-> >> -1.169925 -1.321928 -0.807355 -2.392317 -1.169925 -1.169925
-> >>    10 surveys for 5640 MHz: -2.643856 -1.321928 -1.169925 -2.857981
-> >> -1.169925 -0.584963 -1.169925 -1.169925 -1.169925 -3.643856
-> >>    10 surveys for 5660 MHz: -2.169925 -1.584963 -2.169925 -2.857981
-> >> -1.169925 -1.169925 -1.169925 -1.169925 -1.459432 -1.169925
-> >>    10 surveys for 5680 MHz: -1.169925 -1.169925 -2.643856 -2.700440
-> >> -1.169925 -1.169925 -1.169925 -1.169925 -0.807355 -1.700440
-> >>    10 surveys for 5700 MHz: -2.087463 -1.169925 -1.169925 -1.000000
-> >> -2.459432 -1.169925 -1.169925 -1.169925 -1.169925 -1.169925
-> >> 2412 MHz: 13.123357
-> >> 2417 MHz: -inf
-> >> 2422 MHz: -inf
-> >> 2427 MHz: -inf
-> >> 2432 MHz: -inf
-> >> 2437 MHz: -inf
-> >> 2442 MHz: -inf
-> >> 2447 MHz: -inf
-> >> 2452 MHz: -inf
-> >> 2457 MHz: -inf
-> >> 2462 MHz: -inf
-> >> 2467 MHz: -inf
-> >> 2472 MHz: -inf
-> >> 5180 MHz: 1.618622
-> >> 5200 MHz: 1.671229
-> >> 5220 MHz: 1.709311
-> >> 5240 MHz: 2.692318
-> >> 5260 MHz: 2.635614
-> >> 5280 MHz: 2.243133
-> >> 5300 MHz: 2.741504
-> >> 5320 MHz: 2.709311
-> >> 5500 MHz: -1.574714
-> >> 5520 MHz: -1.346398
-> >> 5540 MHz: -1.544436
-> >> 5560 MHz: -1.506274
-> >> 5580 MHz: -1.311873
-> >> 5600 MHz: -1.438962
-> >> 5620 MHz: -1.378062
-> >> 5640 MHz: -1.690221
-> >> 5660 MHz: -1.609185
-> >> 5680 MHz: -1.487164
-> >> 5700 MHz: -1.373637
-> >> Ideal freq: 2417 MHz
-> >>
-> >>
-> >> The ideal channel is 2417MHz. But there are many interference in 2.4G at my
-> >> testing place. the result for that channel is -inf.
-> >
-> > Right..
-> >
-> >> I did not understand the
-> >> outcome, maybe you can describe about -infinity and why that this result
-> >> occurs.
-> >
-> > Sure, so -inf means the calculation resulted in a value out of bounds
-> > by the used data type. The issue lies in the wide range of values that
-> > we run into for analysis in very noisy environments. One alternative I
-> > considered was to use __float128 instead of long double for the
-> > interference_factor but I was unable to figure out how to print these
-> > correctly.
-> >
-> >> will it be causing by scanning time for particular channel is too
-> >> short?
-> >
-> > Can you test with the latest ACS patches I posted for hostapd with
-> > debugging and see the values you get there?
-> 
-> Or you can try to split up the computation by using logarithm
-> identities as follows:
-> 
-> 
-> diff --git a/survey.c b/survey.c
-> index ef47f95..13defc8 100644
-> --- a/survey.c
-> +++ b/survey.c
-> @@ -274,10 +274,9 @@ static long double
-> compute_interference_factor(struct freq_survey *survey, __s8
->  {
->         long double factor;
-> 
-> -       factor = survey->channel_time_busy - survey->channel_time_tx;
-> -       factor /= (survey->channel_time - survey->channel_time_tx);
-> -       factor *= (base_to_power(2, survey->noise - min_noise));
-> -       factor = log2(factor);
-> +       factor = log2(survey->channel_time_busy - survey->channel_time_tx);
-> +       factor -= log2(survey->channel_time - survey->channel_time_tx);
-> +       factor += survey->noise + min_noise;
-							^^^^^ that "+" should a "-" right?
+Add tx_conf array to save the current tx queues
+configuration, and reconfig it on resume (ieee80211_reconfig).
 
-btw, base_to_power can go as well. [now if only acs would stop freezing]
+On resume, the driver is being reconfigured. Without
+reconfiguring the tx queues as well, the driver might
+configure the device to use wrong ac params (e.g. ps-poll
+instead of uapsd).
 
-Regards,
-	Chr
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+v1 -> v2: edit commit message
+
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |    1 +
+ net/mac80211/util.c        |    7 ++++++-
+ 3 files changed, 8 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 4f2e424..a976d8d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -721,6 +721,7 @@ struct ieee80211_local {
+ 	struct workqueue_struct *workqueue;
+ 
+ 	unsigned long queue_stop_reasons[IEEE80211_MAX_QUEUES];
++	struct ieee80211_tx_queue_params tx_conf[IEEE80211_MAX_QUEUES];
+ 	/* also used to protect ampdu_ac_queue and amdpu_ac_stop_refcnt */
+ 	spinlock_t queue_stop_reason_lock;
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 182cda6..6d0883a 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -917,6 +917,7 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 			    params.aifs, params.cw_min, params.cw_max,
+ 			    params.txop, params.uapsd);
+ #endif
++		local->tx_conf[queue] = params;
+ 		if (drv_conf_tx(local, queue, &params))
+ 			wiphy_debug(local->hw.wiphy,
+ 				    "failed to set TX queue parameters for queue %d\n",
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index faa392e..466ded7 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -799,6 +799,7 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
+ 
+ 		qparam.uapsd = false;
+ 
++		local->tx_conf[queue] = qparam;
+ 		drv_conf_tx(local, queue, &qparam);
+ 	}
+ 
+@@ -1146,7 +1147,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	struct ieee80211_hw *hw = &local->hw;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
+-	int res;
++	int res, i;
+ 
+ #ifdef CONFIG_PM
+ 	if (local->suspended)
+@@ -1219,6 +1220,10 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	/* setup RTS threshold */
+ 	drv_set_rts_threshold(local, hw->wiphy->rts_threshold);
+ 
++	/* reconfigure tx conf */
++	for (i = 0; i < IEEE80211_MAX_QUEUES; i++)
++		drv_conf_tx(local, i, &local->tx_conf[i]);
++
+ 	/* reconfigure hardware */
+ 	ieee80211_hw_config(local, ~0);
+ 
+-- 
+1.7.0.4
+
