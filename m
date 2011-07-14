@@ -1,111 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:56593 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751762Ab1GAFmq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2011 01:42:46 -0400
-Message-ID: <4E0D5E42.20702@gmail.com> (sfid-20110701_074303_856846_036EDCA7)
-Date: Thu, 30 Jun 2011 22:42:26 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:4330 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932393Ab1GNV34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 17:29:56 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 23/35] staging: brcm80211: power save issue fixed in
+ brcmfmac driver
+Date: Thu, 14 Jul 2011 14:29:19 -0700
+Message-ID: <1310678971-28952-24-git-send-email-frankyl@broadcom.com> (sfid-20110714_233005_971786_6D25CD7A)
+In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
-Subject: WARNING: at kernel/timer.c:1011 del_timer_sync+0xa9/0xc4()
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-not sure if somebody has posted this or not(did post last week, but no 
-replies on this) I would bisect, but have no time(maybe in the future).
+From: Sukesh Srikakula <sukeshs@broadcom.com>
 
-anyways let me know if you need more info.
-dmesg here:
-http://fpaste.org/wLxM/
+brcmfmac driver is getting request for enabling power save
+before the interface is up. With the earlier implementation,
+this request used to fail resulting out of sync power save
+state between cfg80211 & brcmfmac driver. With this fix,
+power save state is stored in configuration parameters and
+will be used while initializing the adapter.
+
+Signed-off-by: Sukesh Srikakula <sukeshs@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c  |    5 ---
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   34 ++++++++++++++++++++--
+ 2 files changed, 31 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+index 4412893..62b7591 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+@@ -1099,7 +1099,6 @@ int brcmf_c_preinit_ioctls(struct brcmf_pub *drvr)
+ 				 "event_msgs" + '\0' + bitvec  */
+ 	uint up = 0;
+ 	char buf[128], *ptr;
+-	uint power_mode = PM_FAST;
+ 	u32 dongle_align = BRCMF_SDALIGN;
+ 	u32 glom = 0;
+ 	uint bcn_timeout = 3;
+@@ -1128,10 +1127,6 @@ int brcmf_c_preinit_ioctls(struct brcmf_pub *drvr)
+ 	/* Print fw version info */
+ 	BRCMF_ERROR(("Firmware version = %s\n", buf));
+ 
+-	/* Set PowerSave mode */
+-	brcmf_proto_cdc_set_ioctl(drvr, 0, BRCMF_C_SET_PM, (char *)&power_mode,
+-			 sizeof(power_mode));
+-
+ 	/* Match Host and Dongle rx alignment */
+ 	brcmu_mkiovar("bus:txglomalign", (char *)&dongle_align, 4, iovbuf,
+ 		    sizeof(iovbuf));
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+index a69fa93..d4d7c52 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -1974,9 +1974,24 @@ brcmf_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	s32 pm;
+ 	s32 err = 0;
++	struct brcmf_cfg80211_priv *cfg_priv = wiphy_to_cfg(wiphy);
+ 
+ 	WL_TRACE("Enter\n");
+-	CHECK_SYS_UP();
++
++	/*
++	 * Powersave enable/disable request is coming from the
++	 * cfg80211 even before the interface is up. In that
++	 * scenario, driver will be storing the power save
++	 * preference in cfg_priv struct to apply this to
++	 * FW later while initializing the dongle
++	 */
++	cfg_priv->pwr_save = enabled;
++	if (!test_bit(WL_STATUS_READY, &cfg_priv->status)) {
++
++		WL_INFO("Device is not ready,"
++			"storing the value in cfg_priv struct\n");
++		goto done;
++	}
+ 
+ 	pm = enabled ? PM_FAST : PM_OFF;
+ 	pm = cpu_to_le32(pm);
+@@ -1989,6 +2004,7 @@ brcmf_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 		else
+ 			WL_ERR("error (%d)\n", err);
+ 	}
++done:
+ 	WL_TRACE("Exit\n");
+ 	return err;
+ }
+@@ -3390,11 +3406,12 @@ static s32 brcmf_init_iscan(struct brcmf_cfg80211_priv *cfg_priv)
+ 
+ static s32 wl_init_priv(struct brcmf_cfg80211_priv *cfg_priv)
+ {
+-	struct wiphy *wiphy = cfg_to_wiphy(cfg_priv);
+ 	s32 err = 0;
+ 
+ 	cfg_priv->scan_request = NULL;
+-	cfg_priv->pwr_save = !!(wiphy->flags & WIPHY_FLAG_PS_ON_BY_DEFAULT);
++#ifndef WL_POWERSAVE_DISABLED
++	cfg_priv->pwr_save = true;
++#endif /* WL_POWERSAVE_DISABLED */
+ 	cfg_priv->iscan_on = true;	/* iscan on & off switch.
+ 				 we enable iscan per default */
+ 	cfg_priv->roam_on = false;	/* roam on & off switch.
+@@ -3811,6 +3828,7 @@ s32 brcmf_config_dongle(struct brcmf_cfg80211_priv *cfg_priv, bool need_lock)
+ {
+ 	struct net_device *ndev;
+ 	struct wireless_dev *wdev;
++	s32 power_mode;
+ 	s32 err = 0;
+ 
+ 	if (cfg_priv->dongle_up)
+@@ -3827,6 +3845,16 @@ s32 brcmf_config_dongle(struct brcmf_cfg80211_priv *cfg_priv, bool need_lock)
+ 	err = brcmf_dongle_eventmsg(ndev);
+ 	if (unlikely(err))
+ 		goto default_conf_out;
++
++	power_mode = cfg_priv->pwr_save ? PM_FAST : PM_OFF;
++	power_mode = cpu_to_le32(power_mode);
++	err = brcmf_dev_ioctl(ndev, BRCMF_C_SET_PM,
++				&power_mode, sizeof(power_mode));
++	if (err)
++		goto default_conf_out;
++	WL_INFO("power save set to %s\n",
++		(power_mode ? "enabled" : "disabled"));
++
+ 	err = brcmf_dongle_roam(ndev, (cfg_priv->roam_on ? 0 : 1),
+ 				WL_BEACON_TIMEOUT);
+ 	if (unlikely(err))
+-- 
+1.7.1
 
 
-[ 43.108967] SELinux: initialized (dev fusectl, type fusectl), uses 
-genfs_contexts
-[ 561.844541] ath: Failed to stop TX DMA!
-[ 1514.074565] ------------[ cut here ]------------
-[ 1514.074584] WARNING: at kernel/timer.c:1011 del_timer_sync+0xa9/0xc4()
-[ 1514.074590] Hardware name: MacBookPro2,2
-[ 1514.074595] Modules linked in: fuse 8021q cpufreq_ondemand garp stp 
-acpi_cpufreq llc freq_table mperf ipt_REJECT nf_conntrack_ipv4 
-nf_defrag_ipv4 xt_state nf_conntrack iptable_filter ip_tables arc4 
-radeon ath9k mac80211 ttm ath9k_common drm_kms_helper ath9k_hw drm ath 
-cfg80211 uvcvideo videodev btusb bluetooth sky2 v4l2_compat_ioctl32 
-appletouch iTCO_wdt i2c_i801 joydev i2c_algo_bit iTCO_vendor_support 
-applesmc rfkill i2c_core input_polldev apple_bl video microcode [last 
-unloaded: scsi_wait_scan]
-[ 1514.074730] Pid: 1550, comm: threaded-ml Not tainted 
-3.0.0-rc5-00080-gca56a95 #6
-[ 1514.074735] Call Trace:
-[ 1514.074739] <IRQ> [<ffffffff8104c560>] warn_slowpath_common+0x83/0x9b
-[ 1514.074758] [<ffffffff8104c592>] warn_slowpath_null+0x1a/0x1c
-[ 1514.074767] [<ffffffff81059409>] del_timer_sync+0xa9/0xc4
-[ 1514.074775] [<ffffffff81059360>] ? process_timeout+0x10/0x10
-[ 1514.074794] [<ffffffffa003c971>] ath_reset+0x43/0x1d0 [ath9k]
-[ 1514.074804] [<ffffffff810524b6>] ? _local_bh_enable_ip+0xca/0xce
-[ 1514.074821] [<ffffffffa0040e71>] ath_tx_complete_aggr+0x7c3/0x7dd [ath9k]
-[ 1514.074837] [<ffffffffa00406ae>] ? ath_tx_flush_tid+0xe0/0xe0 [ath9k]
-[ 1514.074855] [<ffffffffa0042396>] ath_tx_tasklet+0x235/0x2cb [ath9k]
-[ 1514.074871] [<ffffffffa003cd23>] ath9k_tasklet+0xf4/0x135 [ath9k]
-[ 1514.074880] [<ffffffff81052112>] tasklet_action+0x8d/0xed
-[ 1514.074889] [<ffffffff810526d4>] __do_softirq+0xdb/0x1ec
-[ 1514.074899] [<ffffffff8107c0c9>] ? lock_release+0x165/0x18e
-[ 1514.074910] [<ffffffff814a921c>] call_softirq+0x1c/0x30
-[ 1514.074919] [<ffffffff8100ab5a>] do_softirq+0x4b/0xa1
-[ 1514.074927] [<ffffffff810529f5>] irq_exit+0x5d/0xa8
-[ 1514.074935] [<ffffffff814a9abe>] do_IRQ+0x8e/0xa5
-[ 1514.074945] [<ffffffff814a1793>] common_interrupt+0x13/0x13
-[ 1514.074950] <EOI> [<ffffffff81071178>] ? current_kernel_time+0x13/0x34
-[ 1514.074968] [<ffffffff814a7fba>] ? sysret_check+0x2e/0x69
-[ 1514.074977] [<ffffffff8107c5b4>] ? trace_hardirqs_on_caller+0x10b/0x12f
-[ 1514.074988] [<ffffffff8109e501>] audit_syscall_entry+0x11c/0x148
-[ 1514.074998] [<ffffffff8122ef3e>] ? trace_hardirqs_on_thunk+0x3a/0x3f
-[ 1514.075076] [<ffffffff814a8089>] auditsys+0x19/0x4a
-[ 1514.075084] ---[ end trace 834e058f0ef2c378 ]---
-[ 1514.075092] ------------[ cut here ]------------
-[ 1514.075101] WARNING: at kernel/softirq.c:98 
-__local_bh_disable+0x45/0xb1()
-[ 1514.075108] Hardware name: MacBookPro2,2
-[ 1514.075113] Modules linked in: fuse 8021q cpufreq_ondemand garp stp 
-acpi_cpufreq llc freq_table mperf ipt_REJECT nf_conntrack_ipv4 
-nf_defrag_ipv4 xt_state nf_conntrack iptable_filter ip_tables arc4 
-radeon ath9k mac80211 ttm ath9k_common drm_kms_helper ath9k_hw drm ath 
-cfg80211 uvcvideo videodev btusb bluetooth sky2 v4l2_compat_ioctl32 
-appletouch iTCO_wdt i2c_i801 joydev i2c_algo_bit iTCO_vendor_support 
-applesmc rfkill i2c_core input_polldev apple_bl video microcode [last 
-unloaded: scsi_wait_scan]
-[ 1514.075271] Pid: 1550, comm: threaded-ml Tainted: G W 
-3.0.0-rc5-00080-gca56a95 #6
-[ 1514.075278] Call Trace:
-[ 1514.075283] <IRQ> [<ffffffff8104c560>] warn_slowpath_common+0x83/0x9b
-[ 1514.075303] [<ffffffff814a1061>] ? _raw_spin_lock_bh+0x16/0x45
-[ 1514.075313] [<ffffffff8104c592>] warn_slowpath_null+0x1a/0x1c
-[ 1514.075324] [<ffffffff810522aa>] __local_bh_disable+0x45/0xb1
-[ 1514.075333] [<ffffffff8105232d>] local_bh_disable+0x17/0x19
-[ 1514.075344] [<ffffffff814a1061>] _raw_spin_lock_bh+0x16/0x45
-[ 1514.075362] [<ffffffffa003c98c>] ath_reset+0x5e/0x1d0 [ath9k]
-[ 1514.075372] [<ffffffff810524b6>] ? _local_bh_enable_ip+0xca/0xce
-[ 1514.075391] [<ffffffffa0040e71>] ath_tx_complete_aggr+0x7c3/0x7dd [ath9k]
-[ 1514.075409] [<ffffffffa00406ae>] ? ath_tx_flush_tid+0xe0/0xe0 [ath9k]
-[ 1514.075428] [<ffffffffa0042396>] ath_tx_tasklet+0x235/0x2cb [ath9k]
-[ 1514.075445] [<ffffffffa003cd23>] ath9k_tasklet+0xf4/0x135 [ath9k]
-[ 1514.075456] [<ffffffff81052112>] tasklet_action+0x8d/0xed
-[ 1514.075465] [<ffffffff810526d4>] __do_softirq+0xdb/0x1ec
-[ 1514.075476] [<ffffffff8107c0c9>] ? lock_release+0x165/0x18e
-[ 1514.075487] [<ffffffff814a921c>] call_softirq+0x1c/0x30
-[ 1514.075496] [<ffffffff8100ab5a>] do_softirq+0x4b/0xa1
-[ 1514.075505] [<ffffffff810529f5>] irq_exit+0x5d/0xa8
-[ 1514.075514] [<ffffffff814a9abe>] do_IRQ+0x8e/0xa5
-[ 1514.075524] [<ffffffff814a1793>] common_interrupt+0x13/0x13
-[ 1514.075529] <EOI> [<ffffffff81071178>] ? current_kernel_time+0x13/0x34
-[ 1514.075548] [<ffffffff814a7fba>] ? sysret_check+0x2e/0x69
-[ 1514.075559] [<ffffffff8107c5b4>] ? trace_hardirqs_on_caller+0x10b/0x12f
-[ 1514.075570] [<ffffffff8109e501>] audit_syscall_entry+0x11c/0x148
-[ 1514.075580] [<ffffffff8122ef3e>] ? trace_hardirqs_on_thunk+0x3a/0x3f
-[ 1514.075590] [<ffffffff814a8089>] auditsys+0x19/0x4a
-[ 1514.075596] ---[ end trace 834e058f0ef2c379 ]---
-
-Justin P. Mattock
