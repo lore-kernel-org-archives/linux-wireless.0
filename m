@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35867 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750929Ab1GIENS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jul 2011 00:13:18 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 4/9] ath9k_hw: fix MAC clock rate for AR9287 v1.3+
-Date: Sat,  9 Jul 2011 11:12:49 +0700
-Message-Id: <1310184774-32913-4-git-send-email-nbd@openwrt.org> (sfid-20110709_061322_909184_BBE36F5D)
-In-Reply-To: <1310184774-32913-3-git-send-email-nbd@openwrt.org>
-References: <1310184774-32913-1-git-send-email-nbd@openwrt.org>
- <1310184774-32913-2-git-send-email-nbd@openwrt.org>
- <1310184774-32913-3-git-send-email-nbd@openwrt.org>
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:34743 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754652Ab1GNSij (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 14:38:39 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Thu, 14 Jul 2011 11:36:56 -0700
+Subject: RE: [PATCH] mwifiex: remove wireless.h inclusion and fix resulting
+ bugs
+Message-ID: <477F20668A386D41ADCC57781B1F704307FFB08EBD@SC-VEXCH1.marvell.com> (sfid-20110714_203842_684319_7AD89236)
+References: <1310607514-30808-1-git-send-email-bzhao@marvell.com>
+ <1310621575.3902.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1310621575.3902.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This chip uses the async FIFO feature and runs the MAC at 117 MHz
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index f69c62e..d4084d8 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -87,7 +87,10 @@ static void ath9k_hw_set_clockrate(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	unsigned int clockrate;
- 
--	if (!ah->curchan) /* should really check for CCK instead */
-+	/* AR9287 v1.3+ uses async FIFO and runs the MAC at 117 MHz */
-+	if (AR_SREV_9287(ah) && AR_SREV_9287_13_OR_LATER(ah))
-+		clockrate = 117;
-+	else if (!ah->curchan) /* should really check for CCK instead */
- 		clockrate = ATH9K_CLOCK_RATE_CCK;
- 	else if (conf->channel->band == IEEE80211_BAND_2GHZ)
- 		clockrate = ATH9K_CLOCK_RATE_2GHZ_OFDM;
--- 
-1.7.3.2
-
+SGkgSm9oYW5uZXMsDQoNCj4gPiAgCS8qIEFsbG9jYXRlIGJ1ZmZlciB0byBzdG9yZSB0aGUgQlNT
+SUQgbGlzdCAqLw0KPiA+IC0JYnVmX3NpemUgPSBzaXplb2Yoc3RydWN0IG13aWZpZXhfYnNzZGVz
+Y3JpcHRvcikgKiBJV19NQVhfQVA7DQo+ID4gKwlidWZfc2l6ZSA9IHNpemVvZihzdHJ1Y3QgbXdp
+ZmlleF9ic3NkZXNjcmlwdG9yKSAqIE1XSUZJRVhfTUFYX0FQOw0KPiANCj4gQnkgdGhlIHdheSwg
+d2h5IGRvZXMgbXdpZmlleCBzdG9yZSAidGhlIEJTU0lEIGxpc3QiIGluIGEgc3RhdGljYWxseQ0K
+PiBzaXplZCB0YWJsZT8gSXQgc2VlbXMgdGhhdCB0aGlzIHNob3VsZG4ndCBiZSBuZWNlc3Nhcnkg
+c2luY2UgY2ZnODAyMTENCj4gc3RvcmVzIGl0IGluIGEgZHluYW1pYyBsaXN0IGFuZCBsZXRzIGRy
+aXZlcnMgZ2V0IGluZm9ybWF0aW9uIG91dCBhZ2Fpbg0KPiBhcyB3ZWxsLg0KDQpUaGFua3MgZm9y
+IHlvdXIgY29tbWVudC4NCg0KSXQgc2VlbXMgdGhhdCB0aGUgZHluYW1pYyBsaXN0IGluIGNmZzgw
+MjExIGNhbiBiZSB1c2VkIGZvciBzdG9yaW5nIG91ciBic3MgZW50cmllcy4gV2Ugd2lsbCB0cnkg
+dG8gbWFrZSBjaGFuZ2VzIGluIG91ciBzY2FuL2Fzc29jaWF0aW9uIGhhbmRsaW5nIHRvIHV0aWxp
+emUgY2ZnODAyMTEgYnNzIGxpc3QsIGFuZCBnZXQgcmlkIG9mIG13aWZpZXhfYnNzZGVzY3JpcHRv
+ciB0YWJsZSBldmVudHVhbGx5Lg0KDQpUaGFua3MsDQpCaW5nDQoNCg==
