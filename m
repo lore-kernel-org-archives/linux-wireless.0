@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:33020 "EHLO c60.cesmail.net"
+Received: from mms1.broadcom.com ([216.31.210.17]:4307 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757776Ab1GKPuf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 11:50:35 -0400
-Message-ID: <4E1B1BC9.3080601@gnu.org> (sfid-20110711_175053_509596_F738D529)
-Date: Mon, 11 Jul 2011 11:50:33 -0400
-From: Pavel Roskin <proski@gnu.org>
+	id S932423Ab1GNVaD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 17:30:03 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 34/35] staging: brcm80211: remove volatile keyword used
+ in struct rte_console
+Date: Thu, 14 Jul 2011 14:29:30 -0700
+Message-ID: <1310678971-28952-35-git-send-email-frankyl@broadcom.com> (sfid-20110714_233054_305476_925213D4)
+In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>, netdev@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [ath5k-devel] [PATCH 3/5] ath5k: Add missing breaks in switch/case
-References: <cover.1310289795.git.joe@perches.com> <e554bed5c753a3fe85d3be34983a15e6110a6e35.1310289795.git.joe@perches.com>
-In-Reply-To: <e554bed5c753a3fe85d3be34983a15e6110a6e35.1310289795.git.joe@perches.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/10/2011 05:28 AM, Joe Perches wrote:
-> Signed-off-by: Joe Perches<joe@perches.com>
+From: Arend van Spriel <arend@broadcom.com>
 
-Acked-by: Pavel Roskin <proski@gnu.org>
+Two members vcons_in and vcons_out were declared using the volatile
+keyword. However, there is no reason for doing so. The member is
+used only to calculate the backplane address to access using offsetof.
+This address is passed to subsequent read function. Use of volatile
+is not warranted.
 
-> ---
->   drivers/net/wireless/ath/ath5k/desc.c |    3 +++
->   1 files changed, 3 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/desc.c b/drivers/net/wireless/ath/ath5k/desc.c
-> index 62172d5..f82383b 100644
-> --- a/drivers/net/wireless/ath/ath5k/desc.c
-> +++ b/drivers/net/wireless/ath/ath5k/desc.c
-> @@ -107,10 +107,13 @@ ath5k_hw_setup_2word_tx_desc(struct ath5k_hw *ah, struct ath5k_desc *desc,
->   		case AR5K_PKT_TYPE_BEACON:
->   		case AR5K_PKT_TYPE_PROBE_RESP:
->   			frame_type = AR5K_AR5210_TX_DESC_FRAME_TYPE_NO_DELAY;
-> +			break;
->   		case AR5K_PKT_TYPE_PIFS:
->   			frame_type = AR5K_AR5210_TX_DESC_FRAME_TYPE_PIFS;
-> +			break;
->   		default:
->   			frame_type = type;
-> +			break;
->   		}
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-The intention here is to replace frame types from enum ath5k_pkt_type 
-with their AR5210-specific counterparts.  So the intention is definitely 
-to have breaks here.
-
-Unfortunately, AR5210 cards are extremely rare these days.  I have one, 
-but it only works with old motherboards.  It would take me half a day to 
-dust off that system, compile the kernel and check the patch.  But I 
-assume your patch is fine.  At least it's very unlikely to break anything.
-
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 3e7d5b2..8cb34d6 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -126,8 +126,8 @@ struct rte_console {
+ 	 * (at risk of conflicting with
+ 	 * the real UART).  vcons_out is currently unused.
+ 	 */
+-	volatile uint vcons_in;
+-	volatile uint vcons_out;
++	uint vcons_in;
++	uint vcons_out;
+ 
+ 	/* Output (logging) buffer
+ 	 * Console output is written to a ring buffer log_buf at index log_idx.
 -- 
-Regards,
-Pavel Roskin
+1.7.1
+
+
