@@ -1,55 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:47326 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932617Ab1GODkP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 23:40:15 -0400
-Received: by vws1 with SMTP id 1so640614vws.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2011 20:40:14 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:4244 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932379Ab1GNV34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 17:29:56 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 20/35] staging: brcm80211: remove volatile keyword from
+ driver sources
+Date: Thu, 14 Jul 2011 14:29:16 -0700
+Message-ID: <1310678971-28952-21-git-send-email-frankyl@broadcom.com> (sfid-20110714_233312_882069_FBC4ADE2)
+In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Date: Fri, 15 Jul 2011 11:40:14 +0800
-Message-ID: <CAGwCZhoYDW-V2a6tmb+hntXvVxcq9RUTf4NFYvfbPprVrAGeSA@mail.gmail.com> (sfid-20110715_054024_244552_C5E18441)
-Subject: Looking for tuning beacon interval on BCM4329
-From: Hao Han <hhanwm@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear All,
+From: Arend van Spriel <arend@broadcom.com>
 
-Using BCM4329 driver, my Nexus One can serve in AP mode with default
-beacon interval of 100ms. I am really hoping to be able to tuning such
-a value for some tests. After downloading and searching the source
-code from
+As checkpatch.pl rightfully indicated the volatile keyword was used
+but not necessary. It has been removed from the code.
 
-http://android.git.kernel.org/?p=kernel/msm.git;a=tree;f=drivers/net/wireless/bcm4329;h=01f09252ff9b80379e6db6dbb22af4fcba004982;hb=HEAD
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/main.c        |   12 ++++++------
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |    2 +-
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-I cannot find any place where the default value of beacon interval is
-assgined to 100ms. All beacon related lines are parsed in the
-following
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 3509361..ec3a4db 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -2017,11 +2017,11 @@ static void brcms_c_write_inits(struct brcms_hardware *wlc_hw,
+ 			    const struct d11init *inits)
+ {
+ 	int i;
+-	volatile u8 *base;
++	u8 *base;
+ 
+ 	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
+ 
+-	base = (volatile u8 *)wlc_hw->regs;
++	base = (u8 *)wlc_hw->regs;
+ 
+ 	for (i = 0; inits[i].addr != 0xffff; i++) {
+ 		if (inits[i].size == 2)
+@@ -2822,8 +2822,8 @@ static u16
+ brcms_b_read_objmem(struct brcms_hardware *wlc_hw, uint offset, u32 sel)
+ {
+ 	struct d11regs *regs = wlc_hw->regs;
+-	volatile u16 *objdata_lo = (volatile u16 *)&regs->objdata;
+-	volatile u16 *objdata_hi = objdata_lo + 1;
++	u16 *objdata_lo = (u16 *)&regs->objdata;
++	u16 *objdata_hi = objdata_lo + 1;
+ 	u16 v;
+ 
+ 	W_REG(&regs->objaddr, sel | (offset >> 2));
+@@ -2842,8 +2842,8 @@ brcms_b_write_objmem(struct brcms_hardware *wlc_hw, uint offset, u16 v,
+ 		     u32 sel)
+ {
+ 	struct d11regs *regs = wlc_hw->regs;
+-	volatile u16 *objdata_lo = (volatile u16 *)&regs->objdata;
+-	volatile u16 *objdata_hi = objdata_lo + 1;
++	u16 *objdata_lo = (u16 *)&regs->objdata;
++	u16 *objdata_hi = objdata_lo + 1;
+ 
+ 	W_REG(&regs->objaddr, sel | (offset >> 2));
+ 	(void)R_REG(&regs->objaddr);
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+index 940f76b..c6c5287 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -205,7 +205,7 @@ void wlc_radioreg_enter(struct brcms_phy_pub *pih)
+ void wlc_radioreg_exit(struct brcms_phy_pub *pih)
+ {
+ 	struct brcms_phy *pi = (struct brcms_phy *) pih;
+-	volatile u16 dummy;
++	u16 dummy;
+ 
+ 	dummy = R_REG(&pi->regs->phyversion);
+ 	pi->phy_wreg = 0;
+-- 
+1.7.1
 
-./include/wlioctl.h:98:	uint16		beacon_period;		
-./include/wlioctl.h:966:#define VNDR_IE_BEACON_FLAG	0x1
-./include/wlioctl.h:1103:	uint32	rxbeaconmbss;	
-./include/wlioctl.h:1105:	uint32	rxbeaconobss;	
-./include/proto/802.11.h:86:#define DOT11_MIN_BEACON_PERIOD		1	
-./include/proto/802.11.h:87:#define DOT11_MAX_BEACON_PERIOD		0xFFFF	
-./include/proto/802.11.h:224:	uint16			beacon_interval;
-./include/proto/802.11.h:746:#define FC_SUBTYPE_BEACON		8	
-./include/proto/802.11.h:802:#define FC_BEACON	FC_KIND(FC_TYPE_MNG,
-FC_SUBTYPE_BEACON)
-./include/proto/802.11.h:862:#define DOT11_MNG_BEACON_INT_LEN	2	
-./include/proto/bcmevent.h:92:#define WLC_E_BEACON_RX		15	
-./dhd_common.c:548:		{WLC_E_BEACON_RX, "BEACON_RX"},
-./dhd_common.c:693:	case WLC_E_BEACON_RX:
-./dhd_common.c:1311:	uint32 listen_interval = LISTEN_INTERVAL; /*
-Default Listen Interval in Beacons */
-./dhd_common.c:1398:	/* Setup timeout if Beacons are lost and roam is
-off to report link down */
-./wl_iw.c:8022:	wstats->miss.beacon = 0;
 
-Any feedback would be extremely appreciated :)
-
-Thanks,
-Hao
