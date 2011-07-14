@@ -1,75 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:35705 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751214Ab1GYT4j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2011 15:56:39 -0400
-Message-ID: <4E2DCA73.3050103@candelatech.com> (sfid-20110725_215643_023615_6A6DC34E)
-Date: Mon, 25 Jul 2011 12:56:35 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from qult.net ([82.238.217.46]:46739 "EHLO qult.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754627Ab1GNMu5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 08:50:57 -0400
+Received: from zenon.in.qult.net ([192.168.128.3])
+	by qult.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.74)
+	(envelope-from <i@lri.fr>)
+	id 1QhL1Q-0005WE-TM
+	for linux-wireless@vger.kernel.org; Thu, 14 Jul 2011 14:28:05 +0200
+Received: from ig by zenon.in.qult.net with local (Exim 4.74)
+	(envelope-from <i@lri.fr>)
+	id 1QhL1P-0008PD-Np
+	for linux-wireless@vger.kernel.org; Thu, 14 Jul 2011 14:28:03 +0200
+Date: Thu, 14 Jul 2011 14:28:03 +0200
+From: Ignacy Gawedzki <i@lri.fr>
+To: linux-wireless@vger.kernel.org
+Subject: carl9170 firmware: WoWLAN and adding fields to carl9170_tx_superdesc
+Message-ID: <20110714122803.GA31692@zenon.in.qult.net> (sfid-20110714_145100_525642_F13AEBA6)
 MIME-Version: 1.0
-To: Eliad Peller <eliad@wizery.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC 2/2] mac80211: config hw when going back on-channel
-References: <1311607763-12603-1-git-send-email-eliad@wizery.com>	<1311607763-12603-3-git-send-email-eliad@wizery.com>	<4E2DA564.5070305@candelatech.com> <CAB3XZEcu68SZ0-cAt5-ZAvmp31mafcx856p26BRRcNOSs3Lt1A@mail.gmail.com>
-In-Reply-To: <CAB3XZEcu68SZ0-cAt5-ZAvmp31mafcx856p26BRRcNOSs3Lt1A@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/25/2011 12:16 PM, Eliad Peller wrote:
-> hi Ben,
->
-> On Mon, Jul 25, 2011 at 8:18 PM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 07/25/2011 08:29 AM, Eliad Peller wrote:
->>>
->>> The hw is currently not configured when going
->>> back on-channel.
->>
->> I am less sure about this patch.  With the existing code,
->> I think it should catch going from on channel to off
->> and do the hw config properly.
->>
-> IIUC, this code is responsible for going back on-channel (if there is
-> no started work on the tmp_channel).
->
->> With your change it will also reconfig the hardware, but it will
->> reconfig even if we were already on-channel (if, for instance,
->> local->tmp_channel is oper-channel), right?
->>
->> Can you please explain in more detail how this code is
->> broken?
->>
-> we should reconfigure the hardware iff the hardware is not configured
-> to the operational channel.
-> the current code doesn't handle it (e.g. oper_channel=1,
-> tmp_channel=11, hw_channel=11. since
-> ieee80211_cfg_on_oper_channel(local) == 0, the hw won't go back
-> on-channel).
+Hi,
 
-If we are off-channel when entering that block of code, then tmp_channel
-!= NULL, and on_oper_chan will be false.
+I'm still working on an extension of the carl9170 firmware to enable TX
+service time measurements.  This implies the addition of a u32 field to
+carl9170_tx_superdesc to record the TSF value at the time the frame is
+received by the firmware.
 
-Then, we set tmp_channel to NULL, which should make ieee80211_cfg_on_oper_channel
-true.
+The problem with WoWLAN, more specifically with changes introduced by
+af915846d44d23adc02c7ded807282d607b46faa, is that adding that field makes
+carl9170_sram_reserved::cmd larger than CARL9170_MAX_CMD_LEN.
 
-So, the hw_config will happen.
+I still don't see an easy way out other than disabling WoWLAN altogether.  If
+anyone has any suggestion, I'd be happy to read it.
 
-Or am I missing something?
+BTW, I noticed something that may be a bug in wlan.c, in
+wlan_wol_connection_monitor(void)'s definition:
 
-Thanks,
-Ben
+  memset(nullf, 0, sizeof(nullf));
 
->
-> i don't think it will reconfig if we are already on-channel, as in
-> this case oper_channel == hw_channel.
->
-> thanks for your review!
-> Eliad.
+Shouldn't that be
 
+  memset(nullf, 0, sizeof *nullf);
+
+instead?
+
+Cheers,
+
+Ignacy
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+To err is human, to moo bovine.
