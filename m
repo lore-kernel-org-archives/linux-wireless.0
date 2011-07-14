@@ -1,63 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:62156 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755969Ab1GQXeu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2011 19:34:50 -0400
-Received: by fxd18 with SMTP id 18so5577927fxd.11
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jul 2011 16:34:49 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/4] b43: HT-PHY: fix masks in radio ctl
-Date: Mon, 18 Jul 2011 02:13:23 +0200
-Message-Id: <1310948006-3365-1-git-send-email-zajec5@gmail.com> (sfid-20110718_013453_273702_D2ACD337)
+Received: from mms1.broadcom.com ([216.31.210.17]:4184 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932408Ab1GNVaC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 17:30:02 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 05/35] staging: brcm80211: removed function declaration
+ typedefs from aiutils.h
+Date: Thu, 14 Jul 2011 14:29:01 -0700
+Message-ID: <1310678971-28952-6-git-send-email-frankyl@broadcom.com> (sfid-20110714_233121_927136_3609EC31)
+In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Old masks were causing ugly, delayed lock ups.
+From: Roland Vossen <rvossen@broadcom.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: Explain why we do such a dummy operations like: write(read() & 0).
-Put cleaning this as TODO. We should wait with cleaning until having BCM4331
-working at all.
----
- drivers/net/wireless/b43/phy_ht.c |   15 ++++++++++-----
- 1 files changed, 10 insertions(+), 5 deletions(-)
+Softmac related code cleanup. Typedefs are undesirable according to the
+CodingStyle document.
 
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 2982103..85a30af 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -276,13 +276,18 @@ static void b43_phy_ht_op_software_rfkill(struct b43_wldev *dev,
- 	if (b43_read32(dev, B43_MMIO_MACCTL) & B43_MACCTL_ENABLED)
- 		b43err(dev->wl, "MAC not suspended\n");
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/aiutils.c |    6 +++---
+ drivers/staging/brcm80211/brcmsmac/aiutils.h |   16 ++++++----------
+ 2 files changed, 9 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+index a25901e..5a5fc4b 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+@@ -1279,9 +1279,9 @@ ai_register_intr_callback(struct si_pub *sih, void *intrsoff_fn,
  
-+	/* In the following PHY ops we copy wl's dummy behaviour.
-+	 * TODO: Find out if reads (currently hidden in masks/masksets) are
-+	 * needed and replace following ops with just writes or w&r.
-+	 * Note: B43_PHY_HT_RF_CTL1 register is tricky, wrong operation can
-+	 * cause delayed (!) machine lock up. */
- 	if (blocked) {
--		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, ~0);
-+		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, 0);
- 	} else {
--		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, ~0);
--		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, ~0, 0x1);
--		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, ~0);
--		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, ~0, 0x2);
-+		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, 0);
-+		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, 0, 0x1);
-+		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, 0);
-+		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, 0, 0x2);
+ 	sii = SI_INFO(sih);
+ 	sii->intr_arg = intr_arg;
+-	sii->intrsoff_fn = (si_intrsoff_t) intrsoff_fn;
+-	sii->intrsrestore_fn = (si_intrsrestore_t) intrsrestore_fn;
+-	sii->intrsenabled_fn = (si_intrsenabled_t) intrsenabled_fn;
++	sii->intrsoff_fn = (u32 (*)(void *)) intrsoff_fn;
++	sii->intrsrestore_fn = (void (*) (void *, u32)) intrsrestore_fn;
++	sii->intrsenabled_fn = (bool (*)(void *)) intrsenabled_fn;
+ 	/* save current core id.  when this function called, the current core
+ 	 * must be the core which provides driver functions(il, et, wl, etc.)
+ 	 */
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+index e245c27..f881b44 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+@@ -425,8 +425,6 @@ struct si_pub {
+ #define CCPLL_ENAB(sih)		((sih)->cccaps & CC_CAP_PLL_MASK)
+ #endif
  
- 		if (dev->phy.radio_ver == 0x2059)
- 			b43_radio_2059_init(dev);
+-typedef void (*gpio_handler_t) (u32 stat, void *arg);
+-
+ /* External PA enable mask */
+ #define GPIO_CTRL_EPA_EN_MASK 0x40
+ 
+@@ -444,14 +442,10 @@ typedef void (*gpio_handler_t) (u32 stat, void *arg);
+ #define	IS_SIM(chippkg)	\
+ 	((chippkg == HDLSIM_PKG_ID) || (chippkg == HWSIM_PKG_ID))
+ 
+-typedef u32(*si_intrsoff_t) (void *intr_arg);
+-typedef void (*si_intrsrestore_t) (void *intr_arg, u32 arg);
+-typedef bool(*si_intrsenabled_t) (void *intr_arg);
+-
+ struct gpioh_item {
+ 	void *arg;
+ 	bool level;
+-	gpio_handler_t handler;
++	void (*handler) (u32 stat, void *arg);
+ 	u32 event;
+ 	struct gpioh_item *next;
+ };
+@@ -462,9 +456,11 @@ struct si_info {
+ 	void *pbus;		/* handle to bus (pci/sdio/..) */
+ 	uint dev_coreid;	/* the core provides driver functions */
+ 	void *intr_arg;		/* interrupt callback function arg */
+-	si_intrsoff_t intrsoff_fn;	/* turns chip interrupts off */
+-	si_intrsrestore_t intrsrestore_fn; /* restore chip interrupts */
+-	si_intrsenabled_t intrsenabled_fn; /* check if interrupts are enabled */
++	u32 (*intrsoff_fn) (void *intr_arg); /* turns chip interrupts off */
++	/* restore chip interrupts */
++	void (*intrsrestore_fn) (void *intr_arg, u32 arg);
++	/* check if interrupts are enabled */
++	bool (*intrsenabled_fn) (void *intr_arg);
+ 
+ 	void *pch;		/* PCI/E core handle */
+ 
 -- 
-1.7.3.4
+1.7.1
+
 
