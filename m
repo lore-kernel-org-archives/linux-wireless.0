@@ -1,238 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:64124 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753079Ab1GZPnu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46801 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754111Ab1GNKPv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2011 11:43:50 -0400
-Received: by ewy4 with SMTP id 4so521894ewy.19
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 08:43:49 -0700 (PDT)
-Subject: Re: [RFC v4 3/4] mac80211: Add HT helper functions
-From: Alexander Simon <alexander.simon@saxnet.de>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <1311694819.2974.3.camel@alex-2>
-References: <1311694819.2974.3.camel@alex-2>
+	Thu, 14 Jul 2011 06:15:51 -0400
+Subject: Re: [RFC 3/3] mac80211: Report 40MHz Intolerance to associated AP.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1310559873-10314-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110713_142647_318351_9E1F152E)
+References: <1310559873-10314-1-git-send-email-rmanohar@qca.qualcomm.com>
+	 <1310559873-10314-3-git-send-email-rmanohar@qca.qualcomm.com>
+	 (sfid-20110713_142647_318351_9E1F152E)
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 26 Jul 2011 17:43:46 +0200
-Message-ID: <1311695026.2974.6.camel@alex-2> (sfid-20110726_174353_941670_340A9305)
+Date: Thu, 14 Jul 2011 12:15:49 +0200
+Message-ID: <1310638549.3874.12.camel@jlt3.sipsolutions.net> (sfid-20110714_121554_919352_A85C2A54)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-these can also be used from existing code.
+On Wed, 2011-07-13 at 17:54 +0530, Rajkumar Manoharan wrote:
+> This patch adds support for 40MHz intolerance handling in STA
+> mode. STA should report of any 40MHz intolerance in case if it
+> finds a non-HT AP or a HT AP which prohibits 40MHz transmission
+> (i.e 40MHz intolerant bit is set in HT capabilities IE).
+> 
+> STA shall report this condition using 20/40 BSS coexistence
+> action frame.
 
-Signed-off-by: Alexander Simon <alexander.simon@saxnet.de>
----
- net/mac80211/ieee80211_i.h |    8 +++
- net/mac80211/util.c        |  116 +++++++++++++++++++++++++++++++++++++------
- net/mac80211/work.c        |   29 +-----------
- 3 files changed, 108 insertions(+), 45 deletions(-)
+I think it'd be smarter to add this logic to cfg80211, the scan parsing
+stuff can be generic, and even the action frame can be transmitted
+generically.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 400c09b..bfb820c 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1401,6 +1401,12 @@ void ieee80211_recalc_smps(struct ieee80211_local *local);
- size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
- 			  const u8 *ids, int n_ids, size_t offset);
- size_t ieee80211_ie_split_vendor(const u8 *ies, size_t ielen, size_t offset);
-+u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_supported_band *sband,
-+			       u16 cap);
-+u8 *ieee80211_ie_build_ht_info(u8 *pos,
-+				struct ieee80211_sta_ht_cap *ht_cap,
-+				struct ieee80211_channel *channel,
-+				enum nl80211_channel_type channel_type);
- 
- /* internal work items */
- void ieee80211_work_init(struct ieee80211_local *local);
-@@ -1429,6 +1435,8 @@ ieee80211_get_channel_mode(struct ieee80211_local *local,
- bool ieee80211_set_channel_type(struct ieee80211_local *local,
- 				struct ieee80211_sub_if_data *sdata,
- 				enum nl80211_channel_type chantype);
-+enum nl80211_channel_type ieee80211_ht_info_to_channel_type(
-+					struct ieee80211_ht_info *ht_info);
- 
- #ifdef CONFIG_MAC80211_NOINLINE
- #define debug_noinline noinline
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index ddeb1b9..b62fc4e 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -983,23 +983,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
- 		offset = noffset;
- 	}
- 
--	if (sband->ht_cap.ht_supported) {
--		u16 cap = sband->ht_cap.cap;
--		__le16 tmp;
--
--		*pos++ = WLAN_EID_HT_CAPABILITY;
--		*pos++ = sizeof(struct ieee80211_ht_cap);
--		memset(pos, 0, sizeof(struct ieee80211_ht_cap));
--		tmp = cpu_to_le16(cap);
--		memcpy(pos, &tmp, sizeof(u16));
--		pos += sizeof(u16);
--		*pos++ = sband->ht_cap.ampdu_factor |
--			 (sband->ht_cap.ampdu_density <<
--				IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
--		memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
--		pos += sizeof(sband->ht_cap.mcs);
--		pos += 2 + 4 + 1; /* ext info, BF cap, antsel */
--	}
-+	if (sband->ht_cap.ht_supported)
-+		pos = ieee80211_ie_build_ht_cap(pos, sband, sband->ht_cap.cap);
- 
- 	/*
- 	 * If adding more here, adjust code in main.c
-@@ -1522,3 +1507,100 @@ void ieee80211_disable_rssi_reports(struct ieee80211_vif *vif)
- 	_ieee80211_enable_rssi_reports(sdata, 0, 0);
- }
- EXPORT_SYMBOL(ieee80211_disable_rssi_reports);
-+
-+u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_supported_band *sband,
-+			       u16 cap)
-+{
-+	__le16 tmp;
-+
-+	*pos++ = WLAN_EID_HT_CAPABILITY;
-+	*pos++ = sizeof(struct ieee80211_ht_cap);
-+	memset(pos, 0, sizeof(struct ieee80211_ht_cap));
-+
-+	/* capability flags */
-+	tmp = cpu_to_le16(cap);
-+	memcpy(pos, &tmp, sizeof(u16));
-+	pos += sizeof(u16);
-+
-+	/* AMPDU parameters */
-+	*pos++ = sband->ht_cap.ampdu_factor |
-+		 (sband->ht_cap.ampdu_density <<
-+			IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
-+
-+	/* MCS set */
-+	memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
-+	pos += sizeof(sband->ht_cap.mcs);
-+
-+	/* extended capabilities */
-+	pos += sizeof(__le16);
-+
-+	/* BF capabilities */
-+	pos += sizeof(__le32);
-+
-+	/* antenna selection */
-+	pos += sizeof(u8);
-+
-+	return pos;
-+}
-+
-+u8 *ieee80211_ie_build_ht_info(u8 *pos,
-+				struct ieee80211_sta_ht_cap *ht_cap,
-+				struct ieee80211_channel *channel,
-+				enum nl80211_channel_type channel_type)
-+{
-+	struct ieee80211_ht_info *ht_info;
-+	/* Build HT Information */
-+	*pos++ = WLAN_EID_HT_INFORMATION;
-+	*pos++ = sizeof(struct ieee80211_ht_info);
-+	ht_info = (struct ieee80211_ht_info *)pos;
-+	ht_info->control_chan =
-+			ieee80211_frequency_to_channel(channel->center_freq);
-+	switch (channel_type) {
-+	case NL80211_CHAN_HT40MINUS:
-+		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
-+		break;
-+	case NL80211_CHAN_HT40PLUS:
-+		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
-+		break;
-+	case NL80211_CHAN_HT20:
-+	default:
-+		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_NONE;
-+		break;
-+	}
-+	if (ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
-+		ht_info->ht_param |= IEEE80211_HT_PARAM_CHAN_WIDTH_ANY;
-+	ht_info->operation_mode = 0x0000;
-+	ht_info->stbc_param = 0x0000;
-+
-+	/* It seems that Basic MCS set and Supported MCS set
-+	   are identical for the first 10 bytes */
-+	memset(&ht_info->basic_set, 0, 16);
-+	memcpy(&ht_info->basic_set, &ht_cap->mcs, 10);
-+
-+	return pos + sizeof(struct ieee80211_ht_info);
-+}
-+
-+enum nl80211_channel_type ieee80211_ht_info_to_channel_type(
-+					struct ieee80211_ht_info *ht_info)
-+{
-+	enum nl80211_channel_type channel_type;
-+
-+	if (!ht_info)
-+		return NL80211_CHAN_NO_HT;
-+
-+	switch (ht_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-+	case IEEE80211_HT_PARAM_CHA_SEC_NONE:
-+		channel_type = NL80211_CHAN_HT20;
-+		break;
-+	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-+		channel_type = NL80211_CHAN_HT40PLUS;
-+		break;
-+	case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
-+		channel_type = NL80211_CHAN_HT40MINUS;
-+		break;
-+	default:
-+		channel_type = NL80211_CHAN_NO_HT;
-+	}
-+
-+	return channel_type;
-+}
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 380b9a7..8d9251c 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -103,7 +103,6 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
- 	u8 *pos;
- 	u32 flags = channel->flags;
- 	u16 cap = sband->ht_cap.cap;
--	__le16 tmp;
- 
- 	if (!sband->ht_cap.ht_supported)
- 		return;
-@@ -154,34 +153,8 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
- 	}
- 
- 	/* reserve and fill IE */
--
- 	pos = skb_put(skb, sizeof(struct ieee80211_ht_cap) + 2);
--	*pos++ = WLAN_EID_HT_CAPABILITY;
--	*pos++ = sizeof(struct ieee80211_ht_cap);
--	memset(pos, 0, sizeof(struct ieee80211_ht_cap));
--
--	/* capability flags */
--	tmp = cpu_to_le16(cap);
--	memcpy(pos, &tmp, sizeof(u16));
--	pos += sizeof(u16);
--
--	/* AMPDU parameters */
--	*pos++ = sband->ht_cap.ampdu_factor |
--		 (sband->ht_cap.ampdu_density <<
--			IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
--
--	/* MCS set */
--	memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
--	pos += sizeof(sband->ht_cap.mcs);
--
--	/* extended capabilities */
--	pos += sizeof(__le16);
--
--	/* BF capabilities */
--	pos += sizeof(__le32);
--
--	/* antenna selection */
--	pos += sizeof(u8);
-+	ieee80211_ie_build_ht_cap(pos, sband, cap);
- }
- 
- static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
--- 
-1.7.3.4
+Heck, come to think of it, why not do this in wpa_supplicant?
 
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -206,6 +206,7 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+>  		channel_type = NL80211_CHAN_HT20;
+>  
+>  		if (!(ap_ht_cap_flags & IEEE80211_HT_CAP_40MHZ_INTOLERANT) &&
+> +		    !(sband->ht_cap.cap & IEEE80211_HT_CAP_40MHZ_INTOLERANT) &&
+>  		    (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
+>  		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
+>  			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
+> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+> index 08a45ac..29d50dd 100644
+> --- a/net/mac80211/scan.c
+> +++ b/net/mac80211/scan.c
+> @@ -74,6 +74,31 @@ static bool is_uapsd_supported(struct ieee802_11_elems *elems)
+>  	return qos_info & IEEE80211_WMM_IE_AP_QOSINFO_UAPSD;
+>  }
+>  
+> +static void ieee80211_check_40mhz_intolerance(
+> +			struct ieee80211_sub_if_data *sdata,
+> +			struct ieee80211_channel *channel,
+> +			struct ieee802_11_elems *elems)
+> +{
+> +	struct ieee80211_local *local = sdata->local;
+> +
+> +	if ((local->_oper_channel_type != NL80211_CHAN_HT40MINUS) ||
+> +	    (local->_oper_channel_type != NL80211_CHAN_HT40PLUS))
+> +		return;
+> +
+> +	if (local->oper_channel->band != channel->band)
+> +		return;
+> +
+> +	if (!elems->ht_cap_elem ||
+> +	    (le16_to_cpu(elems->ht_cap_elem->cap_info) &
+> +		    IEEE80211_HT_CAP_40MHZ_INTOLERANT)) {
+> +		sdata->found_40mhz_intolerant = true;
+> +		if (!channel->is_40mhz_intolerant) {
+> +			channel->is_40mhz_intolerant = true;
+
+I don't like mac80211 changing cfg80211 data structures much.
+
+> +			sdata->intol_channels++;
+
+If that's a counter, why is it a u8?
+
+> @@ -434,6 +462,8 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+>  	else
+>  		__set_bit(SCAN_SW_SCANNING, &local->scanning);
+>  
+> +	sdata->found_40mhz_intolerant = false;
+> +	sdata->intol_channels = 0;
+
+This makes no sense, the scan could be on only some channels, but you're
+resetting all info.
+
+>  	ieee80211_recalc_idle(local);
+>  
+>  	if (local->ops->hw_scan) {
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index 652e569..9ad5361 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -1334,6 +1334,93 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+>  	return 0;
+>  }
+>  
+> +static void ieee80211_send_public_action_frame(
+> +		struct ieee80211_sub_if_data *sdata)
+
+Kidding, right?
+"send_public_action_frame", but then it creates a 40 intolerant frame?
+
+> +void ieee80211_process_40mhz_intolerance(struct ieee80211_local *local)
+> +{
+> +	struct ieee80211_hw *hw = &local->hw;
+> +	struct ieee80211_conf *conf = &hw->conf;
+> +	struct ieee80211_supported_band *sband =
+> +		local->hw.wiphy->bands[local->oper_channel->band];
+> +	struct ieee80211_sub_if_data *sdata;
+> +	int i;
+> +
+> +	mutex_lock(&local->iflist_mtx);
+> +	list_for_each_entry(sdata, &local->interfaces, list) {
+> +		if (!ieee80211_sdata_running(sdata))
+> +			continue;
+> +		if (!sdata->found_40mhz_intolerant)
+> +			continue;
+> +		if (!conf_is_ht40(conf))
+> +			continue;
+> +		ieee80211_send_public_action_frame(sdata);
+
+What if the AP is HT40, we find the intolerant AP, but we're only 20 MHz
+capable? IOW -- this logic doesn't seem to make sense?
+
+I really don't see why we can't do all of this in wpa_s.
+
+johannes
 
