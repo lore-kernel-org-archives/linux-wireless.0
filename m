@@ -1,33 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60418 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752643Ab1GMH3E (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:53362 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753567Ab1GNDq1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 03:29:04 -0400
-Subject: Re: [PATCH 15/24] ath6kl: add ieee80211.h
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	gregkh@suse.de, error27@gmail.com
-In-Reply-To: <20110713013524.8517.92169.stgit@localhost6.localdomain6> (sfid-20110713_033533_941292_7CB29E9A)
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
-	 <20110713013524.8517.92169.stgit@localhost6.localdomain6>
-	 (sfid-20110713_033533_941292_7CB29E9A)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 13 Jul 2011 09:29:16 +0200
-Message-ID: <1310542156.3873.3.camel@jlt3.sipsolutions.net> (sfid-20110713_092908_924441_EAF5E2AD)
-Mime-Version: 1.0
+	Wed, 13 Jul 2011 23:46:27 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: disable auto deep sleep before unloading the driver
+Date: Wed, 13 Jul 2011 20:51:59 -0700
+Message-Id: <1310615519-32112-3-git-send-email-bzhao@marvell.com> (sfid-20110714_054632_837988_2DE8B442)
+In-Reply-To: <1310615519-32112-1-git-send-email-bzhao@marvell.com>
+References: <1310615519-32112-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-07-13 at 04:35 +0300, Kalle Valo wrote:
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/ieee80211.h |  158 +++++++++++++++++++++++++++
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-This file shouldn't exist. Anything generic should go to
-include/linux/ieee80211.h, and anything HW specific shouldn't be called
-IEEE80211_*.
+Since the auto deep sleep mode has been enabled at driver init time
+we should disable it at driver unloading to shutdown the function
+gracefully.
 
-johannes
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/ioctl.h     |    1 +
+ drivers/net/wireless/mwifiex/main.h      |    1 +
+ drivers/net/wireless/mwifiex/sdio.c      |    3 +++
+ drivers/net/wireless/mwifiex/sta_ioctl.c |   14 ++++++++++++++
+ 4 files changed, 19 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
+index 9929749..bd9e074 100644
+--- a/drivers/net/wireless/mwifiex/ioctl.h
++++ b/drivers/net/wireless/mwifiex/ioctl.h
+@@ -249,6 +249,7 @@ struct mwifiex_ds_hs_cfg {
+ };
+ 
+ #define DEEP_SLEEP_ON  1
++#define DEEP_SLEEP_OFF 0
+ #define DEEP_SLEEP_IDLE_TIME	100
+ #define PS_MODE_AUTO		1
+ 
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 84f780d..e6db047 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -929,6 +929,7 @@ int mwifiex_set_hs_params(struct mwifiex_private *priv,
+ 			      struct mwifiex_ds_hs_cfg *hscfg);
+ int mwifiex_cancel_hs(struct mwifiex_private *priv, int cmd_type);
+ int mwifiex_enable_hs(struct mwifiex_adapter *adapter);
++int mwifiex_disable_auto_ds(struct mwifiex_private *priv);
+ int mwifiex_get_signal_info(struct mwifiex_private *priv,
+ 			    struct mwifiex_ds_get_signal *signal);
+ int mwifiex_drv_get_data_rate(struct mwifiex_private *priv,
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index f7105a9..82098ac 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -133,6 +133,9 @@ mwifiex_sdio_remove(struct sdio_func *func)
+ 					adapter->priv[i]->media_connected)
+ 				mwifiex_deauthenticate(adapter->priv[i], NULL);
+ 
++		mwifiex_disable_auto_ds(mwifiex_get_priv(adapter,
++							 MWIFIEX_BSS_ROLE_ANY));
++
+ 		mwifiex_init_shutdown_fw(mwifiex_get_priv(adapter,
+ 						MWIFIEX_BSS_ROLE_ANY),
+ 					 MWIFIEX_FUNC_SHUTDOWN);
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 6547013..10ef9e9 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -487,6 +487,20 @@ int mwifiex_set_radio_band_cfg(struct mwifiex_private *priv,
+ }
+ 
+ /*
++ * The function disables auto deep sleep mode.
++ */
++int mwifiex_disable_auto_ds(struct mwifiex_private *priv)
++{
++	struct mwifiex_ds_auto_ds auto_ds;
++
++	auto_ds.auto_ds = DEEP_SLEEP_OFF;
++
++	return mwifiex_send_cmd_sync(priv, HostCmd_CMD_802_11_PS_MODE_ENH,
++				     DIS_AUTO_PS, BITMAP_AUTO_DS, &auto_ds);
++}
++EXPORT_SYMBOL_GPL(mwifiex_disable_auto_ds);
++
++/*
+  * IOCTL request handler to set/get active channel.
+  *
+  * This function performs validity checking on channel/frequency
+-- 
+1.7.0.2
 
