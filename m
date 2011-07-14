@@ -1,68 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from msr6.hinet.net ([168.95.4.106]:56891 "EHLO msr6.hinet.net"
+Received: from mms2.broadcom.com ([216.31.210.18]:2051 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751018Ab1GSNb0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 09:31:26 -0400
-Date: Tue, 19 Jul 2011 21:28:38 +0800
-From: Ali Bahar <ali@internetdog.org>
-To: Stefan Assmann <sassmann@redhat.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: r8712u issue
-Message-ID: <20110719132838.GA5959@internetdog.org> (sfid-20110719_153129_571652_E54AEE6B)
-Reply-To: ali@internetdog.org
-References: <4E2051F3.20103@redhat.com>
- <4E205984.5040803@lwfinger.net>
- <4E23E56C.9000202@redhat.com>
- <20110718082709.GA8390@internetdog.org>
- <4E23F2E0.3050200@redhat.com>
- <4E2448D2.50502@lwfinger.net>
- <4E244AC6.2030306@redhat.com>
- <4E2454EC.1050900@lwfinger.net>
- <4E25858D.9010407@redhat.com>
+	id S932231Ab1GNV3t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 17:29:49 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 01/35] staging: brcm80211: bugfix for len==0 parameter
+ in 3 fullmac functions
+Date: Thu, 14 Jul 2011 14:28:57 -0700
+Message-ID: <1310678971-28952-2-git-send-email-frankyl@broadcom.com> (sfid-20110714_232954_014762_1F845F6B)
+In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E25858D.9010407@redhat.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 19, 2011 at 03:24:29PM +0200, Stefan Assmann wrote:
-> On 18.07.2011 17:44, Larry Finger wrote:
-> > On 07/18/2011 10:01 AM, Stefan Assmann wrote:
-> >> On 18.07.2011 16:53, Larry Finger wrote:
-> >>> On 07/18/2011 03:46 AM, Stefan Assmann wrote:
+From: Roland Vossen <rvossen@broadcom.com>
 
-> >>> Please post your wpa_supplicant.conf. In particular, what is the value for
-> >>> scan_ssid?
-> >>
-> >> ctrl_interface=/var/run/wpa_supplicant
-> >> eapol_version=1
-> >> ap_scan=2
-> >>
-> >> network={
-> >>          ssid="<ssid>"
-> >>          id_str="<ssid>"
-> >>          priority=5
-> >>          proto=RSN
-> >>          key_mgmt=WPA-PSK
-> >>          psk=<psk>
-> >> }
-> >>
-> >> Should I try again with scan_ssid=1 ? From reading the man page this
-> >> makes a difference if the ssid is hidden, which is not the case.
-> > 
-> > Yes. It also changes the scan behavior.
-> 
-> So far I can say that with scan_ssid=1 after rebooting the AP the
-> connection is properly re-established. Looks promising.
+Three functions use the same method to check incoming parameters. The
+'len' parameter can be equal to 0 in case of a 'set' operation.
+Currently these functions return an error code under that condition,
+which is incorrect. The problem was introduced in recent patches in
+which asserts were removed from the fullmac.
 
-I have not yet managed to reproduce your problem, unfortunately. I
-will watch for it, though.
+Despite this being a bug, my regression testing has not shown any problems.
 
-regards,
-ali
+Reported-by: Dan Carpenter <error27@gmail.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c   |    2 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 38bd9ba..e345af7 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -407,7 +407,7 @@ brcmf_sdioh_iovar_op(struct sdioh_info *si, const char *name,
+ 	bool bool_val;
+ 	u32 actionid;
  
->   Stefan
-> 
+-	if (name == NULL || len <= 0)
++	if (name == NULL || len < 0)
+ 		return -EINVAL;
+ 
+ 	/* Set does not take qualifiers */
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+index fdec468..1e757b7 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+@@ -311,7 +311,7 @@ brcmf_c_iovar_op(struct brcmf_pub *drvr, const char *name,
+ 
+ 	BRCMF_TRACE(("%s: Enter\n", __func__));
+ 
+-	if (name == NULL || len <= 0)
++	if (name == NULL || len < 0)
+ 		return -EINVAL;
+ 
+ 	/* Set does not take qualifiers */
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 7fa95b6..acad298 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3123,7 +3123,7 @@ brcmf_sdbrcm_bus_iovar_op(struct brcmf_pub *drvr, const char *name,
+ 
+ 	BRCMF_TRACE(("%s: Enter\n", __func__));
+ 
+-	if (name == NULL || len <= 0)
++	if (name == NULL || len < 0)
+ 		return -EINVAL;
+ 
+ 	/* Set does not take qualifiers */
+-- 
+1.7.1
+
+
