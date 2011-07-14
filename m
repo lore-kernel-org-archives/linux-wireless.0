@@ -1,81 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:39175 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752399Ab1GVFHr (ORCPT
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:50072 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754564Ab1GNMsD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 01:07:47 -0400
-Message-ID: <4E290594.9050201@gmail.com> (sfid-20110722_070809_975712_8FEEE85F)
-Date: Thu, 21 Jul 2011 22:07:32 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: ath: Unable to reset channel (2412 MHz), reset status -5
-References: <4E252076.1050309@gmail.com>	<CAD2nsn12vOXv-msWR+GF7edz3Q26P-pb4H-SO4rf2RHjC7mG+w@mail.gmail.com>	<4E2525BA.4090902@gmail.com>	<CAD2nsn3ifSMa_eFr2vQ0VVF9Ga-0VD3YB_beb28r+eoAHKv4kQ@mail.gmail.com>	<4E25A1E3.9080707@gmail.com> <CAD2nsn1xEB-e33_wrGqLETZ4MwFy12gtyawtg5XHLH0=-9vs2w@mail.gmail.com>
-In-Reply-To: <CAD2nsn1xEB-e33_wrGqLETZ4MwFy12gtyawtg5XHLH0=-9vs2w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 14 Jul 2011 08:48:03 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 5so200041wwe.13
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2011 05:48:01 -0700 (PDT)
+From: Gery Kahn <geryk@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>
+Subject: [PATCH 1/2] wl12xx: Fix for PG version and sysfs files
+Date: Thu, 14 Jul 2011 15:47:52 +0300
+Message-Id: <1310647673-10144-1-git-send-email-geryk@ti.com> (sfid-20110714_144807_972285_654C10F6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/19/2011 08:49 AM, Mohammed Shafi wrote:
-> On Tue, Jul 19, 2011 at 8:55 PM, Justin P. Mattock
-> <justinmattock@gmail.com>  wrote:
->> On 07/18/2011 11:46 PM, Mohammed Shafi wrote:
->>>
->>> On Tue, Jul 19, 2011 at 12:05 PM, Justin P. Mattock
->>> <justinmattock@gmail.com>    wrote:
->>>>
->>>> On 07/18/2011 11:25 PM, Mohammed Shafi wrote:
->>>>>
->>>>> On Tue, Jul 19, 2011 at 11:43 AM, Justin P. Mattock
->>>>> <justinmattock@gmail.com>      wrote:
->>>>>>
->>>>>> seems with the latest Mainline I am getting the ath9k carpping out
->>>>>> after
->>>>>> a
->>>>>> while of streaming(dmesg below)..:
->>>>>> http://fpaste.org/D7wM/
->>>>>>
->>>>>> will try a bisect if I have the time..
->>>>>
->>>>> I will try to recreate here with 3.0.0-rc7-wl, we can get more
->>>>> information by ath9k debug=0xffffffff.
->>>>> thanks.
->>>>>
->>>>
->>>> cool!
->>>> seems to fire off randomly over here.
->>>
->>> I have got AR5416, will try with that.
->>>
->>
->> I can try the bisect, but might take a while, since external
->> activities(job). Seems this is just starting i.g. with
->> 3.0.0-rc1 I never saw this, but with 3.0.0-rc7-00125-gf560f66
->> its making noise.
->
-> I am unable to get this problem in my AR5416 :( will also try
-> tomorrow. I am using the card for browsing etc.
-> recently there were patches for hardware code changes.
-> just a guess, please check does this patch helps(or is it already
-> there). i think this will be called via
-> ath_set_channel->ath9k_hw_reset->ath9k_hw_init_bb and may be
-> https://patchwork.kernel.org/patch/957902/
->
+Fix the value of PG version for 128x at sysfs, remove write permissions
+from PG version (hw_pg_ver) in sysfs and add remove files
+(hw_pg_ver,bt_coex_state) from sysfs while freeing hardware.
+New macro names for register Fuse_data_2_1 depend on architecture.
 
-alright, I applied the patch above, and have ran this a few days in 
-various hotspots etc.. unfortunantly this patch does not fix the issue.
-dmesg is below:
-http://fpaste.org/ozCA/
+Signed-off-by: Gery Kahn <geryk@ti.com>
+---
+ drivers/net/wireless/wl12xx/boot.c |   13 ++++++++-----
+ drivers/net/wireless/wl12xx/boot.h |    3 ++-
+ drivers/net/wireless/wl12xx/main.c |    6 +++++-
+ 3 files changed, 15 insertions(+), 7 deletions(-)
 
-from what I remember, I had all my clients doing their thing, then all 
-of a sudden everything slowly started to crap out.
-
-as for bisecting, I think this might take a while due to the 
-inconsistancy of this(seems to show up every 4/5 boots etc..)but if I 
-get some free time, I will have a try.
-
-Justin P. Mattock
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index 4bcee1c..74ed1b3 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -524,13 +524,13 @@ static void wl1271_boot_hw_version(struct wl1271 *wl)
+ {
+ 	u32 fuse;
+ 
+-	fuse = wl1271_top_reg_read(wl, REG_FUSE_DATA_2_1);
++	if (wl->chip.id == CHIP_ID_1283_PG20)
++		fuse = wl1271_top_reg_read(wl, WL128X_REG_FUSE_DATA_2_1);
++	else
++		fuse = wl1271_top_reg_read(wl, WL127X_REG_FUSE_DATA_2_1);
+ 	fuse = (fuse & PG_VER_MASK) >> PG_VER_OFFSET;
+ 
+ 	wl->hw_pg_ver = (s8)fuse;
+-
+-	if (((wl->hw_pg_ver & PG_MAJOR_VER_MASK) >> PG_MAJOR_VER_OFFSET) < 3)
+-		wl->quirks |= WL12XX_QUIRK_END_OF_TRANSACTION;
+ }
+ 
+ static int wl128x_switch_tcxo_to_fref(struct wl1271 *wl)
+@@ -671,7 +671,8 @@ static int wl127x_boot_clk(struct wl1271 *wl)
+ 	u32 pause;
+ 	u32 clk;
+ 
+-	wl1271_boot_hw_version(wl);
++	if (((wl->hw_pg_ver & PG_MAJOR_VER_MASK) >> PG_MAJOR_VER_OFFSET) < 3)
++		wl->quirks |= WL12XX_QUIRK_END_OF_TRANSACTION;
+ 
+ 	if (wl->ref_clock == CONF_REF_CLK_19_2_E ||
+ 	    wl->ref_clock == CONF_REF_CLK_38_4_E ||
+@@ -725,6 +726,8 @@ int wl1271_load_firmware(struct wl1271 *wl)
+ 	u32 tmp, clk;
+ 	int selected_clock = -1;
+ 
++	wl1271_boot_hw_version(wl);
++
+ 	if (wl->chip.id == CHIP_ID_1283_PG20) {
+ 		ret = wl128x_boot_clk(wl, &selected_clock);
+ 		if (ret < 0)
+diff --git a/drivers/net/wireless/wl12xx/boot.h b/drivers/net/wireless/wl12xx/boot.h
+index e8f8255..06dad93 100644
+--- a/drivers/net/wireless/wl12xx/boot.h
++++ b/drivers/net/wireless/wl12xx/boot.h
+@@ -55,7 +55,8 @@ struct wl1271_static_data {
+ #define OCP_REG_CLK_POLARITY 0x0cb2
+ #define OCP_REG_CLK_PULL     0x0cb4
+ 
+-#define REG_FUSE_DATA_2_1    0x050a
++#define WL127X_REG_FUSE_DATA_2_1    0x050a
++#define WL128X_REG_FUSE_DATA_2_1    0x2152
+ #define PG_VER_MASK          0x3c
+ #define PG_VER_OFFSET        2
+ 
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 85b3385..d65fef6 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -4434,7 +4434,7 @@ static ssize_t wl1271_sysfs_show_hw_pg_ver(struct device *dev,
+ 	return len;
+ }
+ 
+-static DEVICE_ATTR(hw_pg_ver, S_IRUGO | S_IWUSR,
++static DEVICE_ATTR(hw_pg_ver, S_IRUGO,
+ 		   wl1271_sysfs_show_hw_pg_ver, NULL);
+ 
+ static ssize_t wl1271_sysfs_read_fwlog(struct file *filp, struct kobject *kobj,
+@@ -4848,6 +4848,10 @@ int wl1271_free_hw(struct wl1271 *wl)
+ 	mutex_unlock(&wl->mutex);
+ 
+ 	device_remove_bin_file(&wl->plat_dev->dev, &fwlog_attr);
++
++	device_remove_file(&wl->plat_dev->dev, &dev_attr_hw_pg_ver);
++
++	device_remove_file(&wl->plat_dev->dev, &dev_attr_bt_coex_state);
+ 	platform_device_unregister(wl->plat_dev);
+ 	free_page((unsigned long)wl->fwlog);
+ 	dev_kfree_skb(wl->dummy_packet);
+-- 
+1.7.0.4
 
