@@ -1,209 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56474 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752661Ab1GFMNk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2011 08:13:40 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1QeQz4-0004CJ-Rf
-	for linux-wireless@vger.kernel.org; Wed, 06 Jul 2011 14:13:38 +0200
-Message-Id: <20110706121315.215752759@sipsolutions.net> (sfid-20110706_141342_555231_9BAC1052)
-Date: Wed, 06 Jul 2011 14:12:37 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 1/2] mac80211: allow drivers to access key sequence counter
-References: <20110706121236.333408679@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:2051 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932231Ab1GNV3q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 17:29:46 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 00/35] staging: brcm80211: code cleanup and bugfix
+Date: Thu, 14 Jul 2011 14:28:56 -0700
+Message-ID: <1310678971-28952-1-git-send-email-frankyl@broadcom.com> (sfid-20110714_232951_859328_A5827B28)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Further code cleanup of attacking checkpatch warning/error along with bugfix.
 
-In order to implement GTK rekeying, the device
-needs to be able to encrypt frames with the
-right PN/IV.
+Arend van Spriel (10):
+  staging: brcm80211: modify the FOREACH_BSS macro
+  staging: brcm80211: use mutex instead of semaphore in dhd_linux.c
+  staging: brcm80211: remove duplicated code from brcmf_init_iscan
+  staging: brcm80211: remove volatile keyword from driver sources
+  staging: brcm80211: use native error code in brcmf_c_pattern_atoh()
+  staging: brcm80211: use mac_pton() instead of own implementation
+  staging: brcm80211: replace semaphore by wait_queue for sysioc thread
+  staging: brcm80211: use wait queues instead of semaphores in
+    wl_cfg80211.c
+  staging: brcm80211: remove volatile keyword used in struct
+    rte_console
+  staging: brcm80211: replace simple_strtoul usage in brcmfmac
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h |   58 ++++++++++++++++++++++++++++++++++++++++
- net/mac80211/key.c     |   70 +++++++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/key.h     |    7 ++--
- 3 files changed, 132 insertions(+), 3 deletions(-)
+Franky Lin (2):
+  staging: brcm80211: move sdio related variables to dhd_sdio.c
+  staging: brcm80211: move ioctl response wait code to dhd_sdio.c
 
---- a/include/net/mac80211.h	2011-07-06 12:45:34.000000000 +0200
-+++ b/include/net/mac80211.h	2011-07-06 12:45:35.000000000 +0200
-@@ -2592,6 +2592,64 @@ void ieee80211_get_tkip_p2k(struct ieee8
- 			    struct sk_buff *skb, u8 *p2k);
- 
- /**
-+ * struct ieee80211_key_seq - key sequence counter
-+ *
-+ * @tkip: TKIP data, containing IV32 and IV16 in host byte order
-+ * @ccmp: PN data, most significant byte first (big endian,
-+ *	reverse order than in packet)
-+ * @aes_cmac: PN data, most significant byte first (big endian,
-+ *	reverse order than in packet)
-+ */
-+struct ieee80211_key_seq {
-+	union {
-+		struct {
-+			u32 iv32;
-+			u16 iv16;
-+		} tkip;
-+		struct {
-+			u8 pn[6];
-+		} ccmp;
-+		struct {
-+			u8 pn[6];
-+		} aes_cmac;
-+	};
-+};
-+
-+/**
-+ * ieee80211_get_key_tx_seq - get key TX sequence counter
-+ *
-+ * @keyconf: the parameter passed with the set key
-+ * @seq: buffer to receive the sequence data
-+ *
-+ * This function allows a driver to retrieve the current TX IV/PN
-+ * for the given key. It must not be called if IV generation is
-+ * offloaded to the device.
-+ *
-+ * Note that this function may only be called when no TX processing
-+ * can be done concurrently, for example when queues are stopped
-+ * and the stop has been synchronized.
-+ */
-+void ieee80211_get_key_tx_seq(struct ieee80211_key_conf *keyconf,
-+			      struct ieee80211_key_seq *seq);
-+
-+/**
-+ * ieee80211_get_key_rx_seq - get key RX sequence counter
-+ *
-+ * @keyconf: the parameter passed with the set key
-+ * @tid: the TID, or -1 for the non-QoS value
-+ * @seq: buffer to receive the sequence data
-+ *
-+ * This function allows a driver to retrieve the current RX IV/PNs
-+ * for the given key. It must not be called if IV checking is done
-+ * by the device and not by mac80211.
-+ *
-+ * Note that this function may only be called when no RX processing
-+ * can be done concurrently.
-+ */
-+void ieee80211_get_key_rx_seq(struct ieee80211_key_conf *keyconf,
-+			      s8 tid, struct ieee80211_key_seq *seq);
-+
-+/**
-  * ieee80211_gtk_rekey_notify - notify userspace supplicant of rekeying
-  * @vif: virtual interface the rekeying was done on
-  * @bssid: The BSSID of the AP, for checking association
---- a/net/mac80211/key.c	2011-07-06 12:45:34.000000000 +0200
-+++ b/net/mac80211/key.c	2011-07-06 12:45:35.000000000 +0200
-@@ -579,3 +579,73 @@ void ieee80211_gtk_rekey_notify(struct i
- 	cfg80211_gtk_rekey_notify(sdata->dev, bssid, replay_ctr, gfp);
- }
- EXPORT_SYMBOL_GPL(ieee80211_gtk_rekey_notify);
-+
-+void ieee80211_get_key_tx_seq(struct ieee80211_key_conf *keyconf,
-+			      struct ieee80211_key_seq *seq)
-+{
-+	struct ieee80211_key *key;
-+	u64 pn64;
-+
-+	if (WARN_ON(!(keyconf->flags & IEEE80211_KEY_FLAG_GENERATE_IV)))
-+		return;
-+
-+	key = container_of(keyconf, struct ieee80211_key, conf);
-+
-+	switch (key->conf.cipher) {
-+	case WLAN_CIPHER_SUITE_TKIP:
-+		seq->tkip.iv32 = key->u.tkip.tx.iv32;
-+		seq->tkip.iv16 = key->u.tkip.tx.iv16;
-+		break;
-+	case WLAN_CIPHER_SUITE_CCMP:
-+		pn64 = atomic64_read(&key->u.ccmp.tx_pn);
-+		seq->ccmp.pn[5] = pn64;
-+		seq->ccmp.pn[4] = pn64 >> 8;
-+		seq->ccmp.pn[3] = pn64 >> 16;
-+		seq->ccmp.pn[2] = pn64 >> 24;
-+		seq->ccmp.pn[1] = pn64 >> 32;
-+		seq->ccmp.pn[0] = pn64 >> 40;
-+		break;
-+	case WLAN_CIPHER_SUITE_AES_CMAC:
-+		memcpy(seq->aes_cmac.pn, key->u.aes_cmac.tx_pn, CMAC_PN_LEN);
-+		break;
-+	default:
-+		WARN_ON(1);
-+	}
-+}
-+EXPORT_SYMBOL(ieee80211_get_key_tx_seq);
-+
-+void ieee80211_get_key_rx_seq(struct ieee80211_key_conf *keyconf,
-+			      s8 tid, struct ieee80211_key_seq *seq)
-+{
-+	struct ieee80211_key *key;
-+	const u8 *pn;
-+
-+	if (WARN_ON(tid < -1 || tid > 15))
-+		return;
-+
-+	key = container_of(keyconf, struct ieee80211_key, conf);
-+
-+	switch (key->conf.cipher) {
-+	case WLAN_CIPHER_SUITE_TKIP:
-+		if (tid < 0) {
-+			seq->tkip.iv32 = key->u.tkip.rx[16].iv32;
-+			seq->tkip.iv16 = key->u.tkip.rx[16].iv16;
-+		} else {
-+			seq->tkip.iv32 = key->u.tkip.rx[tid].iv32;
-+			seq->tkip.iv16 = key->u.tkip.rx[tid].iv16;
-+		}
-+		break;
-+	case WLAN_CIPHER_SUITE_CCMP:
-+		if (tid < 0)
-+			pn = key->u.ccmp.rx_pn[16];
-+		else
-+			pn = key->u.ccmp.rx_pn[tid];
-+		memcpy(seq->ccmp.pn, pn, CCMP_PN_LEN);
-+		break;
-+	case WLAN_CIPHER_SUITE_AES_CMAC:
-+		pn = key->u.aes_cmac.rx_pn;
-+		memcpy(seq->aes_cmac.pn, pn, CMAC_PN_LEN);
-+		break;
-+	}
-+}
-+EXPORT_SYMBOL(ieee80211_get_key_rx_seq);
---- a/net/mac80211/key.h	2011-07-06 12:45:35.000000000 +0200
-+++ b/net/mac80211/key.h	2011-07-06 12:45:35.000000000 +0200
-@@ -28,6 +28,7 @@
- #define CCMP_PN_LEN		6
- #define TKIP_IV_LEN		8
- #define TKIP_ICV_LEN		4
-+#define CMAC_PN_LEN		6
- 
- #define NUM_RX_DATA_QUEUES	17
- 
-@@ -89,7 +90,7 @@ struct ieee80211_key {
- 			 * frames and the last counter is used with Robust
- 			 * Management frames.
- 			 */
--			u8 rx_pn[NUM_RX_DATA_QUEUES + 1][6];
-+			u8 rx_pn[NUM_RX_DATA_QUEUES + 1][CCMP_PN_LEN];
- 			struct crypto_cipher *tfm;
- 			u32 replays; /* dot11RSNAStatsCCMPReplays */
- 			/* scratch buffers for virt_to_page() (crypto API) */
-@@ -100,8 +101,8 @@ struct ieee80211_key {
- 			u8 rx_crypto_buf[6 * AES_BLOCK_LEN];
- 		} ccmp;
- 		struct {
--			u8 tx_pn[6];
--			u8 rx_pn[6];
-+			u8 tx_pn[CMAC_PN_LEN];
-+			u8 rx_pn[CMAC_PN_LEN];
- 			struct crypto_cipher *tfm;
- 			u32 replays; /* dot11RSNAStatsCMACReplays */
- 			u32 icverrors; /* dot11RSNAStatsCMACICVErrors */
+Henry Ptasinski (1):
+  staging: brcm80211: fix for 'remove unnecessary braces' checkpatch
+    warning
+
+Roland Vossen (17):
+  staging: brcm80211: bugfix for len==0 parameter in 3 fullmac
+    functions
+  staging: brcm80211: merged bmac.c into main.c
+  staging: brcm80211: shuffled sections in main.c
+  staging: brcm80211: removed function declaration typedefs from
+    phy_int.h
+  staging: brcm80211: removed function declaration typedefs from
+    aiutils.h
+  staging: brcm80211: removed function declaration typedefs from dma.h
+    part 1
+  staging: brcm80211: removed function declaration typedefs from dma.h
+    part 2
+  staging: brcm80211: removed function declaration typedefs from dma.h
+    part 3
+  staging: brcm80211: removed function declaration typedefs from dma.h
+    part 4
+  staging: brcm80211: removed function declaration typedefs from otp.c
+  staging: brcm80211: removed function declaration typedefs from
+    main.h,pub.h
+  staging: brcm80211: removed function declaration typedefs from
+    brcmutil
+  staging: brcm80211: replaced various typedefs
+  staging: brcm80211: replaced typedef wlc_rateset_t
+  staging: brcm80211: replaced typedef wl_rateset_t by struct
+    brcm_rateset
+  staging: brcm80211: replaced all volatile typedefs
+  staging: brcm80211: fix for checkpatch 'avoid externs in c file'
+    warning
+
+Sukesh Srikakula (5):
+  staging: brcm80211: power save issue fixed in brcmfmac driver
+  staging: brcm80211: brcmfmac: Enabling FW roaming by default
+  staging: brcm80211: brcmfmac: Connect request made robust
+  staging: brcm80211: brcmfmac: Fixed issues with iscan
+  staging: brcm80211: brcmfmac: Roamed channel info passed to cfg80211
+
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c        |   10 +-
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c  |   22 +-
+ drivers/staging/brcm80211/brcmfmac/dhd.h           |   24 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c    |  101 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |  127 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |  151 +-
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h     |    1 +
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c   |  162 +-
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h   |    9 +-
+ drivers/staging/brcm80211/brcmsmac/Makefile        |    1 -
+ drivers/staging/brcm80211/brcmsmac/aiutils.c       |  100 +-
+ drivers/staging/brcm80211/brcmsmac/aiutils.h       |   16 +-
+ drivers/staging/brcm80211/brcmsmac/alloc.c         |    9 +-
+ drivers/staging/brcm80211/brcmsmac/ampdu.c         |   33 +-
+ drivers/staging/brcm80211/brcmsmac/antsel.c        |   10 +-
+ drivers/staging/brcm80211/brcmsmac/bmac.c          | 3593 -----------------
+ drivers/staging/brcm80211/brcmsmac/bmac.h          |  174 -
+ drivers/staging/brcm80211/brcmsmac/channel.c       |  233 +-
+ drivers/staging/brcm80211/brcmsmac/channel.h       |   10 +-
+ drivers/staging/brcm80211/brcmsmac/d11.h           |   24 +-
+ drivers/staging/brcm80211/brcmsmac/dma.c           |  159 +-
+ drivers/staging/brcm80211/brcmsmac/dma.h           |  138 +-
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.c   |   58 +-
+ drivers/staging/brcm80211/brcmsmac/main.c          | 4135 ++++++++++++++++++--
+ drivers/staging/brcm80211/brcmsmac/main.h          |  165 +-
+ drivers/staging/brcm80211/brcmsmac/nicpci.c        |   12 +-
+ drivers/staging/brcm80211/brcmsmac/otp.c           |   60 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c   |  275 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h   |   26 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_int.h   |   71 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c   |  157 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_n.c     | 1354 +++----
+ drivers/staging/brcm80211/brcmsmac/phy/phy_qmath.c |   36 +-
+ drivers/staging/brcm80211/brcmsmac/phy_shim.c      |    1 -
+ drivers/staging/brcm80211/brcmsmac/pmu.c           |   42 +-
+ drivers/staging/brcm80211/brcmsmac/pub.h           |   40 +-
+ drivers/staging/brcm80211/brcmsmac/rate.c          |   59 +-
+ drivers/staging/brcm80211/brcmsmac/rate.h          |   45 +-
+ drivers/staging/brcm80211/brcmsmac/srom.c          |   17 +-
+ drivers/staging/brcm80211/brcmsmac/stf.c           |   46 +-
+ drivers/staging/brcm80211/brcmsmac/stf.h           |    6 +-
+ drivers/staging/brcm80211/brcmsmac/types.h         |   18 -
+ drivers/staging/brcm80211/brcmutil/utils.c         |   36 +-
+ drivers/staging/brcm80211/brcmutil/wifi.c          |   14 +-
+ drivers/staging/brcm80211/include/brcmu_utils.h    |   11 +-
+ drivers/staging/brcm80211/include/brcmu_wifi.h     |   36 +-
+ drivers/staging/brcm80211/include/chipcommon.h     |    4 +-
+ drivers/staging/brcm80211/include/defs.h           |    4 +-
+ 48 files changed, 5512 insertions(+), 6323 deletions(-)
+ delete mode 100644 drivers/staging/brcm80211/brcmsmac/bmac.c
+ delete mode 100644 drivers/staging/brcm80211/brcmsmac/bmac.h
 
 
