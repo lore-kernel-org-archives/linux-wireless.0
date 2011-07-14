@@ -1,90 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:15210 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752243Ab1GWOWc (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:33991 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753507Ab1GNHUw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jul 2011 10:22:32 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 03/11] ath6kl: Cleanup parameters for wlan_refresh_inactive_nodes()
-Date: Sat, 23 Jul 2011 19:43:09 +0530
-Message-ID: <1311430397-4960-3-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110723_162235_770127_2E507036)
-In-Reply-To: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 14 Jul 2011 03:20:52 -0400
+Received: by wwe5 with SMTP id 5so69142wwe.1
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2011 00:20:51 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: reconfigure tx on device reconfiguration
+Date: Thu, 14 Jul 2011 10:21:10 +0300
+Message-Id: <1310628070-6012-1-git-send-email-eliad@wizery.com> (sfid-20110714_092055_849205_F0B2B3D4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-And remove the reference to wmi in ath6kl_node_table.
+Add tx_conf array to save the current tx queues
+configuration, and reconfig it on resume (ieee80211_reconfig).
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath6kl/common.h |    3 +--
- drivers/net/wireless/ath/ath6kl/node.c   |    6 +++---
- drivers/net/wireless/ath/ath6kl/wmi.c    |    2 +-
- 3 files changed, 5 insertions(+), 6 deletions(-)
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |    1 +
+ net/mac80211/util.c        |    7 ++++++-
+ 3 files changed, 8 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/common.h b/drivers/net/wireless/ath/ath6kl/common.h
-index 0a3a1d8..cc8b040 100644
---- a/drivers/net/wireless/ath/ath6kl/common.h
-+++ b/drivers/net/wireless/ath/ath6kl/common.h
-@@ -88,7 +88,6 @@ enum crypto_type {
-  * is a second table for associated stations or neighbors.
-  */
- struct ath6kl_node_table {
--	void *nt_wmi;		/* back reference */
- 	spinlock_t nt_nodelock;	/* on node table */
- 	struct bss *nt_node_first;	/* information of all nodes */
- 	struct bss *nt_node_last;	/* information of all nodes */
-@@ -159,7 +158,7 @@ void wlan_iterate_nodes(struct ath6kl_node_table *nt,
- void wlan_node_table_init(void *wmip, struct ath6kl_node_table *nt);
- void wlan_node_table_cleanup(struct ath6kl_node_table *nt);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 4f2e424..a976d8d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -721,6 +721,7 @@ struct ieee80211_local {
+ 	struct workqueue_struct *workqueue;
  
--void wlan_refresh_inactive_nodes(struct ath6kl_node_table *nt);
-+void wlan_refresh_inactive_nodes(struct ath6kl *ar);
+ 	unsigned long queue_stop_reasons[IEEE80211_MAX_QUEUES];
++	struct ieee80211_tx_queue_params tx_conf[IEEE80211_MAX_QUEUES];
+ 	/* also used to protect ampdu_ac_queue and amdpu_ac_stop_refcnt */
+ 	spinlock_t queue_stop_reason_lock;
  
- struct bss *wlan_find_ssid_node(struct ath6kl_node_table *nt, u8 *ssid,
- 				  u32 ssid_len, bool is_wpa2, bool match_ssid);
-diff --git a/drivers/net/wireless/ath/ath6kl/node.c b/drivers/net/wireless/ath/ath6kl/node.c
-index b0f9ba2..533588c 100644
---- a/drivers/net/wireless/ath/ath6kl/node.c
-+++ b/drivers/net/wireless/ath/ath6kl/node.c
-@@ -169,17 +169,17 @@ void wlan_node_table_init(void *wmi, struct ath6kl_node_table *nt)
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 182cda6..6d0883a 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -917,6 +917,7 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 			    params.aifs, params.cw_min, params.cw_max,
+ 			    params.txop, params.uapsd);
+ #endif
++		local->tx_conf[queue] = params;
+ 		if (drv_conf_tx(local, queue, &params))
+ 			wiphy_debug(local->hw.wiphy,
+ 				    "failed to set TX queue parameters for queue %d\n",
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index faa392e..466ded7 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -799,6 +799,7 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
  
- 	spin_lock_init(&nt->nt_nodelock);
+ 		qparam.uapsd = false;
  
--	nt->nt_wmi = wmi;
- 	nt->nt_node_age = WLAN_NODE_INACT_TIMEOUT_MSEC;
- }
++		local->tx_conf[queue] = qparam;
+ 		drv_conf_tx(local, queue, &qparam);
+ 	}
  
--void wlan_refresh_inactive_nodes(struct ath6kl_node_table *nt)
-+void wlan_refresh_inactive_nodes(struct ath6kl *ar)
- {
-+	struct ath6kl_node_table *nt = &ar->scan_table;
- 	struct bss *bss;
- 	u8 my_bssid[ETH_ALEN];
- 	u32 now;
+@@ -1146,7 +1147,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	struct ieee80211_hw *hw = &local->hw;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
+-	int res;
++	int res, i;
  
--	ath6kl_wmi_get_current_bssid(nt->nt_wmi, my_bssid);
-+	ath6kl_wmi_get_current_bssid(ar->wmi, my_bssid);
+ #ifdef CONFIG_PM
+ 	if (local->suspended)
+@@ -1219,6 +1220,10 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	/* setup RTS threshold */
+ 	drv_set_rts_threshold(local, hw->wiphy->rts_threshold);
  
- 	now = jiffies_to_msecs(jiffies);
- 	bss = nt->nt_node_first;
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 2e1b411..ea123c9 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -1009,7 +1009,7 @@ static int ath6kl_wmi_scan_complete_rx(struct wmi *wmi, u8 *datap, int len)
- 	ev = (struct wmi_scan_complete_event *) datap;
++	/* reconfigure tx conf */
++	for (i = 0; i < IEEE80211_MAX_QUEUES; i++)
++		drv_conf_tx(local, i, &local->tx_conf[i]);
++
+ 	/* reconfigure hardware */
+ 	ieee80211_hw_config(local, ~0);
  
- 	if (a_sle32_to_cpu(ev->status) == 0)
--		wlan_refresh_inactive_nodes(&wmi->parent_dev->scan_table);
-+		wlan_refresh_inactive_nodes(wmi->parent_dev);
- 
- 	ath6kl_scan_complete_evt(wmi->parent_dev, a_sle32_to_cpu(ev->status));
- 	wmi->is_probe_ssid = false;
 -- 
 1.7.0.4
 
