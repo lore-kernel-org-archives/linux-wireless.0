@@ -1,357 +1,2530 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:46289 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750977Ab1GEN33 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 09:29:29 -0400
-Received: by wyg8 with SMTP id 8so3987932wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2011 06:29:28 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:2084 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932370Ab1GNV3t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 17:29:49 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 03/35] staging: brcm80211: shuffled sections in main.c
+Date: Thu, 14 Jul 2011 14:28:59 -0700
+Message-ID: <1310678971-28952-4-git-send-email-frankyl@broadcom.com> (sfid-20110714_232957_648441_02FE0518)
+In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20110705124914.GC26882@alittletooquiet.net>
-References: <20110701133553.GA7125@alittletooquiet.net>
-	<BANLkTikByepHZoEE2b65CrgUmpBmcxiTgw@mail.gmail.com>
-	<BANLkTimUs65_Sw=pwF-J8gPjyrNcs2qnOw@mail.gmail.com>
-	<20110701173237.GC7125@alittletooquiet.net>
-	<20110704052410.GA1364@vmraj-lnx.users.atheros.com>
-	<20110704095341.GA1380@vmraj-lnx.users.atheros.com>
-	<20110705124914.GC26882@alittletooquiet.net>
-Date: Tue, 5 Jul 2011 18:59:27 +0530
-Message-ID: <CAD2nsn0-FQuo7bT3nb3jJLDe1XwbMw4J-Gr8qFkY5zzY1O-vxg@mail.gmail.com> (sfid-20110705_152933_509386_11E8AB7C)
-Subject: Re: ath9k_htc fails to initialize TL-WN721N with compat-wireless 3.0-rc4-1
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Forest Bond <forest@alittletooquiet.net>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: multipart/mixed; boundary=00221597639e195c7304a75279d3
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---00221597639e195c7304a75279d3
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+From: Roland Vossen <rvossen@broadcom.com>
 
->> > Please share your PID/VID.
->
-> 0cf3:9271
->
->> And also for compat-wireless-v3.0-rc4-1, FW version should be 1.3 and fw=
- size
->> should be 51272. But in your case size is 51288 which is 1.2. Please upg=
-rade fw
->> to 1.3 and test again.
->>
->> http://wireless.kernel.org/download/htc_fw/1.3/htc_9271.fw
->
-> Okay. =A0I had tried both versions previously; neither seems to work any =
-better
-> than the other. =A0Here is dmesg using firmware version 1.3:
->
-> [ =A0102.984766] Compat-wireless backport release: compat-wireless-v3.0-r=
-c4-1
-> [ =A0102.984775] Backport based on linux-2.6-allstable.git v3.0-rc4
-> [ =A0103.213468] Calling CRDA to update world regulatory domain
-> [ =A0103.798281] usbcore: registered new interface driver ath9k_htc
-> [ =A0108.482070] usb 5-7: new high speed USB device using ehci_hcd and ad=
-dress 5
-> [ =A0108.643105] usb 5-7: configuration #1 chosen from 1 choice
-> [ =A0108.996663] usb 5-7: ath9k_htc: Transferred FW: htc_9271.fw, size: 5=
-1272
-> [ =A0109.135499] ath9k_htc 5-7:1.0: ath9k_htc: HTC initialized with 33 cr=
-edits
-> [ =A0109.140526] ath: UNDEFINED -> AWAKE
-> [ =A0109.141769] ath: serialize_regmode is 0
-> [ =A0109.383151] ath: Timeout waiting for WMI command: WMI_REG_WRITE_CMDI=
-D
-> [ =A0109.383168] ath: REGISTER WRITE FAILED, multi len: 9
-> [ =A0109.609805] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0109.609822] ath: REGISTER READ FAILED: (0x9c00, -110)
-> [ =A0109.609835] ath: Reading from EEPROM, not flash
-> [ =A0109.824058] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0109.824079] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0110.042132] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0110.042148] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0110.260786] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0110.260802] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0110.482613] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0110.482629] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0110.719736] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0110.719753] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0110.953628] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0110.953645] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0111.195035] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0111.195057] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0111.432953] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0111.432975] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0111.668211] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0111.668227] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0111.903626] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0111.903642] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0112.135695] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0112.135711] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0112.370919] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0112.370936] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0112.603491] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0112.603508] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0112.841972] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0112.841988] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0113.065412] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0113.065428] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0113.300441] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0113.300458] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0113.536889] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0113.536906] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0113.774809] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0113.774826] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0114.012001] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0114.012018] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0114.245297] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0114.245314] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0114.476929] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0114.476946] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0114.753310] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0114.753327] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0114.966595] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0114.966611] ath: Multiple REGISTER READ FAILED (count: 8)
-> [ =A0115.193618] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0115.193634] ath: Multiple REGISTER READ FAILED (count: 4)
-> [ =A0115.462402] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0115.462419] ath: REGISTER READ FAILED: (0x2000, -110)
-> [ =A0115.685667] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0115.685684] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0115.918681] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0115.918703] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0116.152756] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0116.152773] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0116.391881] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0116.391898] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0116.629244] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0116.629265] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0116.860197] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0116.860214] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0117.094108] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0117.094124] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0117.325535] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0117.325551] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0117.578615] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0117.578632] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0117.819951] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0117.819968] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0118.055933] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0118.055950] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0118.329876] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0118.329893] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0118.563992] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0118.564009] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0118.803279] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0118.803296] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0119.045193] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0119.045209] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0119.294820] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0119.294832] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0119.536403] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0119.536421] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0119.764358] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0119.764375] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0120.002647] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0120.002664] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0120.223089] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0120.223107] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0120.450418] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0120.450435] ath: REGISTER READ FAILED: (0x407c, -110)
-> [ =A0120.701625] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [ =A0120.701638] ath: REGISTER READ FAILED: (0x407c, -110)
+Moved bmac functions above 'common' functions invoking them. This facilitates
+merging these functions in a later commit. Also declared locally used
+functions static.
 
-please try to apply the attached reverting patch, if it works it may
-help us to narrow down the issue.
-Thanks.
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/main.c | 2250 ++++++++++++++---------------
+ 1 files changed, 1092 insertions(+), 1158 deletions(-)
 
->
-> I appreciate your help on this.
->
-> Thanks,
-> Forest
-> --
-> Forest Bond
-> http://www.alittletooquiet.net
-> http://www.rapidrollout.com
->
-> -----BEGIN PGP SIGNATURE-----
-> Version: GnuPG v1.4.10 (GNU/Linux)
->
-> iEYEARECAAYFAk4TCEoACgkQRO4fQQdv5AzU1QCfTLes04IZ3F9Zrdo+WdMQ6Kg8
-> bV8AoI0CgOsrqwPnSxGA/NMPZFAXmsbP
-> =3D0xqn
-> -----END PGP SIGNATURE-----
->
->
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 8399bf3..bd3d5f0 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -271,7 +271,6 @@ struct brcms_b_state {
+ 
+ /* local prototypes */
+ static void brcms_b_clkctl_clk(struct brcms_hardware *wlc, uint mode);
+-static void brcms_b_coreinit(struct brcms_c_info *wlc);
+ 
+ /* used by wlc_wakeucode_init() */
+ static void brcms_c_write_inits(struct brcms_hardware *wlc_hw,
+@@ -281,13 +280,6 @@ static void brcms_ucode_write(struct brcms_hardware *wlc_hw, const u32 ucode[],
+ static void brcms_ucode_download(struct brcms_hardware *wlc);
+ static void brcms_c_ucode_txant_set(struct brcms_hardware *wlc_hw);
+ 
+-/* used by brcms_c_dpc() */
+-static bool brcms_b_dotxstatus(struct brcms_hardware *wlc,
+-			       struct tx_status *txs, u32 s2);
+-static bool brcms_b_txstatus(struct brcms_hardware *wlc, bool bound,
+-			     bool *fatal);
+-static bool brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound);
+-
+ /* used by brcms_c_down() */
+ static void brcms_c_flushqueues(struct brcms_c_info *wlc);
+ 
+@@ -296,8 +288,6 @@ static void brcms_c_mctrl_reset(struct brcms_hardware *wlc_hw);
+ static void brcms_b_corerev_fifofixup(struct brcms_hardware *wlc_hw);
+ static bool brcms_b_tx_fifo_suspended(struct brcms_hardware *wlc_hw,
+ 				       uint tx_fifo);
+-static void brcms_b_tx_fifo_suspend(struct brcms_hardware *wlc_hw,
+-				    uint tx_fifo);
+ static void brcms_b_tx_fifo_resume(struct brcms_hardware *wlc_hw,
+ 				   uint tx_fifo);
+ 
+@@ -305,66 +295,38 @@ static void brcms_b_tx_fifo_resume(struct brcms_hardware *wlc_hw,
+ 
+ struct brcms_b_state;
+ 
+-extern int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device,
++static int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device,
+ 			   uint unit, bool piomode, void *regsva, uint bustype,
+ 			   void *btparam);
+-extern int brcms_b_detach(struct brcms_c_info *wlc);
+-extern void brcms_b_watchdog(void *arg);
+ 
+ /* up/down, reset, clk */
+-extern void brcms_b_reset(struct brcms_hardware *wlc_hw);
+-extern void brcms_b_init(struct brcms_hardware *wlc_hw, chanspec_t chanspec,
+-			  bool mute);
+-extern int brcms_b_up_prep(struct brcms_hardware *wlc_hw);
+-extern int brcms_b_up_finish(struct brcms_hardware *wlc_hw);
+-extern int brcms_b_bmac_down_prep(struct brcms_hardware *wlc_hw);
+-extern int brcms_b_down_finish(struct brcms_hardware *wlc_hw);
+-
+-extern int brcms_b_xmtfifo_sz_get(struct brcms_hardware *wlc_hw, uint fifo,
+-				   uint *blocks);
+-extern u16 brcms_b_mhf_get(struct brcms_hardware *wlc_hw, u8 idx, int bands);
+-extern int brcms_b_state_get(struct brcms_hardware *wlc_hw,
++static void brcms_b_reset(struct brcms_hardware *wlc_hw);
++static int brcms_b_state_get(struct brcms_hardware *wlc_hw,
+ 			      struct brcms_b_state *state);
+-extern void brcms_b_copyfrom_vars(struct brcms_hardware *wlc_hw, char **buf,
++static void brcms_b_copyfrom_vars(struct brcms_hardware *wlc_hw, char **buf,
+ 				   uint *len);
+ 
+-extern void brcms_b_hw_etheraddr(struct brcms_hardware *wlc_hw,
++static void brcms_b_hw_etheraddr(struct brcms_hardware *wlc_hw,
+ 				  u8 *ea);
+ 
+-extern bool brcms_b_radio_read_hwdisabled(struct brcms_hardware *wlc_hw);
+-extern void brcms_b_set_shortslot(struct brcms_hardware *wlc_hw,
+-				  bool shortslot);
+-
+-extern void brcms_b_wait_for_wake(struct brcms_hardware *wlc_hw);
++static bool brcms_b_radio_read_hwdisabled(struct brcms_hardware *wlc_hw);
++static void brcms_b_wait_for_wake(struct brcms_hardware *wlc_hw);
+ 
+-extern void brcms_b_set_addrmatch(struct brcms_hardware *wlc_hw,
++static void brcms_b_set_addrmatch(struct brcms_hardware *wlc_hw,
+ 				   int match_reg_offset,
+ 				   const u8 *addr);
+-extern void brcms_b_write_hw_bcntemplates(struct brcms_hardware *wlc_hw,
+-					   void *bcn, int len, bool both);
++static void brcms_b_set_cwmin(struct brcms_hardware *wlc_hw, u16 newmin);
++static void brcms_b_set_cwmax(struct brcms_hardware *wlc_hw, u16 newmax);
+ 
+-extern void brcms_b_read_tsf(struct brcms_hardware *wlc_hw, u32 *tsf_l_ptr,
+-			      u32 *tsf_h_ptr);
+-extern void brcms_b_set_cwmin(struct brcms_hardware *wlc_hw, u16 newmin);
+-extern void brcms_b_set_cwmax(struct brcms_hardware *wlc_hw, u16 newmax);
+-
+-extern void brcms_b_retrylimit_upd(struct brcms_hardware *wlc_hw, u16 SRL,
++static void brcms_b_retrylimit_upd(struct brcms_hardware *wlc_hw, u16 SRL,
+ 				    u16 LRL);
+ 
+-extern void brcms_b_fifoerrors(struct brcms_hardware *wlc_hw);
+-
++static void brcms_b_fifoerrors(struct brcms_hardware *wlc_hw);
+ 
+-/* API for BMAC driver (e.g. wlc_phy.c etc) */
+-
+-extern void brcms_b_pllreq(struct brcms_hardware *wlc_hw, bool set,
++static void brcms_b_pllreq(struct brcms_hardware *wlc_hw, bool set,
+ 			    mbool req_bit);
+-extern void brcms_b_hw_up(struct brcms_hardware *wlc_hw);
+-extern void brcms_b_antsel_set(struct brcms_hardware *wlc_hw,
++static void brcms_b_antsel_set(struct brcms_hardware *wlc_hw,
+ 			       u32 antsel_avail);
+-
+-
+-
+-
+ static int brcms_b_bandtype(struct brcms_hardware *wlc_hw);
+ static void brcms_b_info_init(struct brcms_hardware *wlc_hw);
+ static void brcms_b_xtal(struct brcms_hardware *wlc_hw, bool want);
+@@ -546,19 +508,6 @@ static const char fifo_names[6][0];
+ static struct brcms_c_info *wlc_info_dbg = (struct brcms_c_info *) (NULL);
+ #endif
+ 
+-/* === Low Level functions === */
+-
+-void brcms_b_set_shortslot(struct brcms_hardware *wlc_hw, bool shortslot)
+-{
+-	wlc_hw->shortslot = shortslot;
+-
+-	if (BAND_2G(brcms_b_bandtype(wlc_hw)) && wlc_hw->up) {
+-		brcms_c_suspend_mac_and_wait(wlc_hw->wlc);
+-		brcms_b_update_slot_timing(wlc_hw, shortslot);
+-		brcms_c_enable_mac(wlc_hw->wlc);
+-	}
+-}
+-
+ /*
+  * Update the slot timing for standard 11b/g (20us slots)
+  * or shortslot 11g (9us slots)
+@@ -687,6 +636,81 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
+ 	return n >= bound_limit;
+ }
+ 
++static bool
++brcms_b_dotxstatus(struct brcms_hardware *wlc_hw, struct tx_status *txs,
++		   u32 s2)
++{
++	/* discard intermediate indications for ucode with one legitimate case:
++	 *   e.g. if "useRTS" is set. ucode did a successful rts/cts exchange, but the subsequent
++	 *   tx of DATA failed. so it will start rts/cts from the beginning (resetting the rts
++	 *   transmission count)
++	 */
++	if (!(txs->status & TX_STATUS_AMPDU)
++	    && (txs->status & TX_STATUS_INTERMEDIATE)) {
++		return false;
++	}
++
++	return brcms_c_dotxstatus(wlc_hw->wlc, txs, s2);
++}
++
++/* process tx completion events in BMAC
++ * Return true if more tx status need to be processed. false otherwise.
++ */
++static bool
++brcms_b_txstatus(struct brcms_hardware *wlc_hw, bool bound, bool *fatal)
++{
++	bool morepending = false;
++	struct brcms_c_info *wlc = wlc_hw->wlc;
++	d11regs_t *regs;
++	struct tx_status txstatus, *txs;
++	u32 s1, s2;
++	uint n = 0;
++	/*
++	 * Param 'max_tx_num' indicates max. # tx status to process before
++	 * break out.
++	 */
++	uint max_tx_num = bound ? wlc->pub->tunables->txsbnd : -1;
++
++	BCMMSG(wlc->wiphy, "wl%d\n", wlc_hw->unit);
++
++	txs = &txstatus;
++	regs = wlc_hw->regs;
++	while (!(*fatal)
++	       && (s1 = R_REG(&regs->frmtxstatus)) & TXS_V) {
++
++		if (s1 == 0xffffffff) {
++			wiphy_err(wlc->wiphy, "wl%d: %s: dead chip\n",
++				wlc_hw->unit, __func__);
++			return morepending;
++		}
++
++			s2 = R_REG(&regs->frmtxstatus2);
++
++		txs->status = s1 & TXS_STATUS_MASK;
++		txs->frameid = (s1 & TXS_FID_MASK) >> TXS_FID_SHIFT;
++		txs->sequence = s2 & TXS_SEQ_MASK;
++		txs->phyerr = (s2 & TXS_PTX_MASK) >> TXS_PTX_SHIFT;
++		txs->lasttxtime = 0;
++
++		*fatal = brcms_b_dotxstatus(wlc_hw, txs, s2);
++
++		/* !give others some time to run! */
++		if (++n >= max_tx_num)
++			break;
++	}
++
++	if (*fatal)
++		return 0;
++
++	if (n >= max_tx_num)
++		morepending = true;
++
++	if (!pktq_empty(&wlc->pkt_queue->q))
++		brcms_c_send_q(wlc);
++
++	return morepending;
++}
++
+ /* second-level interrupt processing
+  *   Return true if another dpc needs to be re-scheduled. false otherwise.
+  *   Param 'bounded' indicates if applicable loops should be bounded.
+@@ -790,73 +814,6 @@ bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded)
+ 	return wlc->macintstatus != 0;
+ }
+ 
+-/* common low-level watchdog code */
+-void brcms_b_watchdog(void *arg)
+-{
+-	struct brcms_c_info *wlc = (struct brcms_c_info *) arg;
+-	struct brcms_hardware *wlc_hw = wlc->hw;
+-
+-	BCMMSG(wlc->wiphy, "wl%d\n", wlc_hw->unit);
+-
+-	if (!wlc_hw->up)
+-		return;
+-
+-	/* increment second count */
+-	wlc_hw->now++;
+-
+-	/* Check for FIFO error interrupts */
+-	brcms_b_fifoerrors(wlc_hw);
+-
+-	/* make sure RX dma has buffers */
+-	dma_rxfill(wlc->hw->di[RX_FIFO]);
+-
+-	wlc_phy_watchdog(wlc_hw->band->pi);
+-}
+-
+-void
+-brcms_b_set_chanspec(struct brcms_hardware *wlc_hw, chanspec_t chanspec,
+-		      bool mute, struct txpwr_limits *txpwr)
+-{
+-	uint bandunit;
+-
+-	BCMMSG(wlc_hw->wlc->wiphy, "wl%d: 0x%x\n", wlc_hw->unit, chanspec);
+-
+-	wlc_hw->chanspec = chanspec;
+-
+-	/* Switch bands if necessary */
+-	if (NBANDS_HW(wlc_hw) > 1) {
+-		bandunit = CHSPEC_BANDUNIT(chanspec);
+-		if (wlc_hw->band->bandunit != bandunit) {
+-			/* brcms_b_setband disables other bandunit,
+-			 *  use light band switch if not up yet
+-			 */
+-			if (wlc_hw->up) {
+-				wlc_phy_chanspec_radio_set(wlc_hw->
+-							   bandstate[bandunit]->
+-							   pi, chanspec);
+-				brcms_b_setband(wlc_hw, bandunit, chanspec);
+-			} else {
+-				brcms_c_setxband(wlc_hw, bandunit);
+-			}
+-		}
+-	}
+-
+-	wlc_phy_initcal_enable(wlc_hw->band->pi, !mute);
+-
+-	if (!wlc_hw->up) {
+-		if (wlc_hw->clk)
+-			wlc_phy_txpower_limit_set(wlc_hw->band->pi, txpwr,
+-						  chanspec);
+-		wlc_phy_chanspec_radio_set(wlc_hw->band->pi, chanspec);
+-	} else {
+-		wlc_phy_chanspec_set(wlc_hw->band->pi, chanspec);
+-		wlc_phy_txpower_limit_set(wlc_hw->band->pi, txpwr, chanspec);
+-
+-		/* Update muting of the channel */
+-		brcms_b_mute(wlc_hw, mute, 0);
+-	}
+-}
+-
+ int brcms_b_state_get(struct brcms_hardware *wlc_hw,
+ 		      struct brcms_b_state *state)
+ {
+@@ -974,356 +931,6 @@ static void brcms_b_detach_dmapio(struct brcms_hardware *wlc_hw)
+ 	}
+ }
+ 
+-/* low level attach
+- *    run backplane attach, init nvram
+- *    run phy attach
+- *    initialize software state for each core and band
+- *    put the whole chip in reset(driver down state), no clock
+- */
+-int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device, uint unit,
+-		    bool piomode, void *regsva, uint bustype, void *btparam)
+-{
+-	struct brcms_hardware *wlc_hw;
+-	d11regs_t *regs;
+-	char *macaddr = NULL;
+-	char *vars;
+-	uint err = 0;
+-	uint j;
+-	bool wme = false;
+-	struct shared_phy_params sha_params;
+-	struct wiphy *wiphy = wlc->wiphy;
+-
+-	BCMMSG(wlc->wiphy, "wl%d: vendor 0x%x device 0x%x\n", unit, vendor,
+-		device);
+-
+-	wme = true;
+-
+-	wlc_hw = wlc->hw;
+-	wlc_hw->wlc = wlc;
+-	wlc_hw->unit = unit;
+-	wlc_hw->band = wlc_hw->bandstate[0];
+-	wlc_hw->_piomode = piomode;
+-
+-	/* populate struct brcms_hardware with default values  */
+-	brcms_b_info_init(wlc_hw);
+-
+-	/*
+-	 * Do the hardware portion of the attach.
+-	 * Also initialize software state that depends on the particular hardware
+-	 * we are running.
+-	 */
+-	wlc_hw->sih = ai_attach(regsva, bustype, btparam,
+-				&wlc_hw->vars, &wlc_hw->vars_size);
+-	if (wlc_hw->sih == NULL) {
+-		wiphy_err(wiphy, "wl%d: brcms_b_attach: si_attach failed\n",
+-			  unit);
+-		err = 11;
+-		goto fail;
+-	}
+-	vars = wlc_hw->vars;
+-
+-	/*
+-	 * Get vendid/devid nvram overwrites, which could be different
+-	 * than those the BIOS recognizes for devices on PCMCIA_BUS,
+-	 * SDIO_BUS, and SROMless devices on PCI_BUS.
+-	 */
+-#ifdef BCMBUSTYPE
+-	bustype = BCMBUSTYPE;
+-#endif
+-	if (bustype != SI_BUS) {
+-		char *var;
+-
+-		var = getvar(vars, "vendid");
+-		if (var) {
+-			vendor = (u16) simple_strtoul(var, NULL, 0);
+-			wiphy_err(wiphy, "Overriding vendor id = 0x%x\n",
+-				  vendor);
+-		}
+-		var = getvar(vars, "devid");
+-		if (var) {
+-			u16 devid = (u16) simple_strtoul(var, NULL, 0);
+-			if (devid != 0xffff) {
+-				device = devid;
+-				wiphy_err(wiphy, "Overriding device id = 0x%x"
+-					  "\n", device);
+-			}
+-		}
+-
+-		/* verify again the device is supported */
+-		if (!brcms_c_chipmatch(vendor, device)) {
+-			wiphy_err(wiphy, "wl%d: brcms_b_attach: Unsupported "
+-				"vendor/device (0x%x/0x%x)\n",
+-				 unit, vendor, device);
+-			err = 12;
+-			goto fail;
+-		}
+-	}
+-
+-	wlc_hw->vendorid = vendor;
+-	wlc_hw->deviceid = device;
+-
+-	/* set bar0 window to point at D11 core */
+-	wlc_hw->regs = (d11regs_t *) ai_setcore(wlc_hw->sih, D11_CORE_ID, 0);
+-	wlc_hw->corerev = ai_corerev(wlc_hw->sih);
+-
+-	regs = wlc_hw->regs;
+-
+-	wlc->regs = wlc_hw->regs;
+-
+-	/* validate chip, chiprev and corerev */
+-	if (!brcms_c_isgoodchip(wlc_hw)) {
+-		err = 13;
+-		goto fail;
+-	}
+-
+-	/* initialize power control registers */
+-	ai_clkctl_init(wlc_hw->sih);
+-
+-	/* request fastclock and force fastclock for the rest of attach
+-	 * bring the d11 core out of reset.
+-	 *   For PMU chips, the first wlc_clkctl_clk is no-op since core-clk is still false;
+-	 *   But it will be called again inside wlc_corereset, after d11 is out of reset.
+-	 */
+-	brcms_b_clkctl_clk(wlc_hw, CLK_FAST);
+-	brcms_b_corereset(wlc_hw, BRCMS_USE_COREFLAGS);
+-
+-	if (!brcms_b_validate_chip_access(wlc_hw)) {
+-		wiphy_err(wiphy, "wl%d: brcms_b_attach: validate_chip_access "
+-			"failed\n", unit);
+-		err = 14;
+-		goto fail;
+-	}
+-
+-	/* get the board rev, used just below */
+-	j = getintvar(vars, "boardrev");
+-	/* promote srom boardrev of 0xFF to 1 */
+-	if (j == BOARDREV_PROMOTABLE)
+-		j = BOARDREV_PROMOTED;
+-	wlc_hw->boardrev = (u16) j;
+-	if (!brcms_c_validboardtype(wlc_hw)) {
+-		wiphy_err(wiphy, "wl%d: brcms_b_attach: Unsupported Broadcom "
+-			"board type (0x%x)" " or revision level (0x%x)\n",
+-			 unit, wlc_hw->sih->boardtype, wlc_hw->boardrev);
+-		err = 15;
+-		goto fail;
+-	}
+-	wlc_hw->sromrev = (u8) getintvar(vars, "sromrev");
+-	wlc_hw->boardflags = (u32) getintvar(vars, "boardflags");
+-	wlc_hw->boardflags2 = (u32) getintvar(vars, "boardflags2");
+-
+-	if (wlc_hw->boardflags & BFL_NOPLLDOWN)
+-		brcms_b_pllreq(wlc_hw, true, BRCMS_PLLREQ_SHARED);
+-
+-	if ((wlc_hw->sih->bustype == PCI_BUS)
+-	    && (ai_pci_war16165(wlc_hw->sih)))
+-		wlc->war16165 = true;
+-
+-	/* check device id(srom, nvram etc.) to set bands */
+-	if (wlc_hw->deviceid == BCM43224_D11N_ID ||
+-	    wlc_hw->deviceid == BCM43224_D11N_ID_VEN1) {
+-		/* Dualband boards */
+-		wlc_hw->_nbands = 2;
+-	} else
+-		wlc_hw->_nbands = 1;
+-
+-	if ((wlc_hw->sih->chip == BCM43225_CHIP_ID))
+-		wlc_hw->_nbands = 1;
+-
+-	/* BMAC_NOTE: remove init of pub values when brcms_c_attach()
+-	 * unconditionally does the init of these values
+-	 */
+-	wlc->vendorid = wlc_hw->vendorid;
+-	wlc->deviceid = wlc_hw->deviceid;
+-	wlc->pub->sih = wlc_hw->sih;
+-	wlc->pub->corerev = wlc_hw->corerev;
+-	wlc->pub->sromrev = wlc_hw->sromrev;
+-	wlc->pub->boardrev = wlc_hw->boardrev;
+-	wlc->pub->boardflags = wlc_hw->boardflags;
+-	wlc->pub->boardflags2 = wlc_hw->boardflags2;
+-	wlc->pub->_nbands = wlc_hw->_nbands;
+-
+-	wlc_hw->physhim = wlc_phy_shim_attach(wlc_hw, wlc->wl, wlc);
+-
+-	if (wlc_hw->physhim == NULL) {
+-		wiphy_err(wiphy, "wl%d: brcms_b_attach: wlc_phy_shim_attach "
+-			"failed\n", unit);
+-		err = 25;
+-		goto fail;
+-	}
+-
+-	/* pass all the parameters to wlc_phy_shared_attach in one struct */
+-	sha_params.sih = wlc_hw->sih;
+-	sha_params.physhim = wlc_hw->physhim;
+-	sha_params.unit = unit;
+-	sha_params.corerev = wlc_hw->corerev;
+-	sha_params.vars = vars;
+-	sha_params.vid = wlc_hw->vendorid;
+-	sha_params.did = wlc_hw->deviceid;
+-	sha_params.chip = wlc_hw->sih->chip;
+-	sha_params.chiprev = wlc_hw->sih->chiprev;
+-	sha_params.chippkg = wlc_hw->sih->chippkg;
+-	sha_params.sromrev = wlc_hw->sromrev;
+-	sha_params.boardtype = wlc_hw->sih->boardtype;
+-	sha_params.boardrev = wlc_hw->boardrev;
+-	sha_params.boardvendor = wlc_hw->sih->boardvendor;
+-	sha_params.boardflags = wlc_hw->boardflags;
+-	sha_params.boardflags2 = wlc_hw->boardflags2;
+-	sha_params.bustype = wlc_hw->sih->bustype;
+-	sha_params.buscorerev = wlc_hw->sih->buscorerev;
+-
+-	/* alloc and save pointer to shared phy state area */
+-	wlc_hw->phy_sh = wlc_phy_shared_attach(&sha_params);
+-	if (!wlc_hw->phy_sh) {
+-		err = 16;
+-		goto fail;
+-	}
+-
+-	/* initialize software state for each core and band */
+-	for (j = 0; j < NBANDS_HW(wlc_hw); j++) {
+-		/*
+-		 * band0 is always 2.4Ghz
+-		 * band1, if present, is 5Ghz
+-		 */
+-
+-		/* So if this is a single band 11a card, use band 1 */
+-		if (IS_SINGLEBAND_5G(wlc_hw->deviceid))
+-			j = BAND_5G_INDEX;
+-
+-		brcms_c_setxband(wlc_hw, j);
+-
+-		wlc_hw->band->bandunit = j;
+-		wlc_hw->band->bandtype = j ? BRCM_BAND_5G : BRCM_BAND_2G;
+-		wlc->band->bandunit = j;
+-		wlc->band->bandtype = j ? BRCM_BAND_5G : BRCM_BAND_2G;
+-		wlc->core->coreidx = ai_coreidx(wlc_hw->sih);
+-
+-		wlc_hw->machwcap = R_REG(&regs->machwcap);
+-		wlc_hw->machwcap_backup = wlc_hw->machwcap;
+-
+-		/* init tx fifo size */
+-		wlc_hw->xmtfifo_sz =
+-		    xmtfifo_sz[(wlc_hw->corerev - XMTFIFOTBL_STARTREV)];
+-
+-		/* Get a phy for this band */
+-		wlc_hw->band->pi = wlc_phy_attach(wlc_hw->phy_sh,
+-			(void *)regs, brcms_b_bandtype(wlc_hw), vars,
+-			wlc->wiphy);
+-		if (wlc_hw->band->pi == NULL) {
+-			wiphy_err(wiphy, "wl%d: brcms_b_attach: wlc_phy_"
+-				  "attach failed\n", unit);
+-			err = 17;
+-			goto fail;
+-		}
+-
+-		wlc_phy_machwcap_set(wlc_hw->band->pi, wlc_hw->machwcap);
+-
+-		wlc_phy_get_phyversion(wlc_hw->band->pi, &wlc_hw->band->phytype,
+-				       &wlc_hw->band->phyrev,
+-				       &wlc_hw->band->radioid,
+-				       &wlc_hw->band->radiorev);
+-		wlc_hw->band->abgphy_encore =
+-		    wlc_phy_get_encore(wlc_hw->band->pi);
+-		wlc->band->abgphy_encore = wlc_phy_get_encore(wlc_hw->band->pi);
+-		wlc_hw->band->core_flags =
+-		    wlc_phy_get_coreflags(wlc_hw->band->pi);
+-
+-		/* verify good phy_type & supported phy revision */
+-		if (BRCMS_ISNPHY(wlc_hw->band)) {
+-			if (NCONF_HAS(wlc_hw->band->phyrev))
+-				goto good_phy;
+-			else
+-				goto bad_phy;
+-		} else if (BRCMS_ISLCNPHY(wlc_hw->band)) {
+-			if (LCNCONF_HAS(wlc_hw->band->phyrev))
+-				goto good_phy;
+-			else
+-				goto bad_phy;
+-		} else {
+- bad_phy:
+-			wiphy_err(wiphy, "wl%d: brcms_b_attach: unsupported "
+-				  "phy type/rev (%d/%d)\n", unit,
+-				  wlc_hw->band->phytype, wlc_hw->band->phyrev);
+-			err = 18;
+-			goto fail;
+-		}
+-
+- good_phy:
+-		/* BMAC_NOTE: wlc->band->pi should not be set below and should be done in the
+-		 * high level attach. However we can not make that change until all low level access
+-		 * is changed to wlc_hw->band->pi. Instead do the wlc->band->pi init below, keeping
+-		 * wlc_hw->band->pi as well for incremental update of low level fns, and cut over
+-		 * low only init when all fns updated.
+-		 */
+-		wlc->band->pi = wlc_hw->band->pi;
+-		wlc->band->phytype = wlc_hw->band->phytype;
+-		wlc->band->phyrev = wlc_hw->band->phyrev;
+-		wlc->band->radioid = wlc_hw->band->radioid;
+-		wlc->band->radiorev = wlc_hw->band->radiorev;
+-
+-		/* default contention windows size limits */
+-		wlc_hw->band->CWmin = APHY_CWMIN;
+-		wlc_hw->band->CWmax = PHY_CWMAX;
+-
+-		if (!brcms_b_attach_dmapio(wlc, j, wme)) {
+-			err = 19;
+-			goto fail;
+-		}
+-	}
+-
+-	/* disable core to match driver "down" state */
+-	brcms_c_coredisable(wlc_hw);
+-
+-	/* Match driver "down" state */
+-	if (wlc_hw->sih->bustype == PCI_BUS)
+-		ai_pci_down(wlc_hw->sih);
+-
+-	/* register sb interrupt callback functions */
+-	ai_register_intr_callback(wlc_hw->sih, (void *)brcms_c_wlintrsoff,
+-				  (void *)brcms_c_wlintrsrestore, NULL, wlc);
+-
+-	/* turn off pll and xtal to match driver "down" state */
+-	brcms_b_xtal(wlc_hw, OFF);
+-
+-	/* *********************************************************************
+-	 * The hardware is in the DOWN state at this point. D11 core
+-	 * or cores are in reset with clocks off, and the board PLLs
+-	 * are off if possible.
+-	 *
+-	 * Beyond this point, wlc->sbclk == false and chip registers
+-	 * should not be touched.
+-	 *********************************************************************
+-	 */
+-
+-	/* init etheraddr state variables */
+-	macaddr = brcms_c_get_macaddr(wlc_hw);
+-	if (macaddr == NULL) {
+-		wiphy_err(wiphy, "wl%d: brcms_b_attach: macaddr not found\n",
+-			  unit);
+-		err = 21;
+-		goto fail;
+-	}
+-	brcmu_ether_atoe(macaddr, wlc_hw->etheraddr);
+-	if (is_broadcast_ether_addr(wlc_hw->etheraddr) ||
+-	    is_zero_ether_addr(wlc_hw->etheraddr)) {
+-		wiphy_err(wiphy, "wl%d: brcms_b_attach: bad macaddr %s\n",
+-			  unit, macaddr);
+-		err = 22;
+-		goto fail;
+-	}
+-
+-	BCMMSG(wlc->wiphy,
+-		 "deviceid 0x%x nbands %d board 0x%x macaddr: %s\n",
+-		 wlc_hw->deviceid, wlc_hw->_nbands,
+-		 wlc_hw->sih->boardtype, macaddr);
+-
+-	return err;
+-
+- fail:
+-	wiphy_err(wiphy, "wl%d: brcms_b_attach: failed with err %d\n", unit,
+-		  err);
+-	return err;
+-}
+-
+ /*
+  * Initialize brcms_c_info default values ...
+  * may get overrides later in this function
+@@ -1348,253 +955,6 @@ static void brcms_b_info_init(struct brcms_hardware *wlc_hw)
+ 	wlc_hw->chanspec = CH20MHZ_CHSPEC(1);
+ }
+ 
+-/*
+- * low level detach
+- */
+-int brcms_b_detach(struct brcms_c_info *wlc)
+-{
+-	uint i;
+-	struct brcms_hw_band *band;
+-	struct brcms_hardware *wlc_hw = wlc->hw;
+-	int callbacks;
+-
+-	callbacks = 0;
+-
+-	if (wlc_hw->sih) {
+-		/* detach interrupt sync mechanism since interrupt is disabled and per-port
+-		 * interrupt object may has been freed. this must be done before sb core switch
+-		 */
+-		ai_deregister_intr_callback(wlc_hw->sih);
+-
+-		if (wlc_hw->sih->bustype == PCI_BUS)
+-			ai_pci_sleep(wlc_hw->sih);
+-	}
+-
+-	brcms_b_detach_dmapio(wlc_hw);
+-
+-	band = wlc_hw->band;
+-	for (i = 0; i < NBANDS_HW(wlc_hw); i++) {
+-		if (band->pi) {
+-			/* Detach this band's phy */
+-			wlc_phy_detach(band->pi);
+-			band->pi = NULL;
+-		}
+-		band = wlc_hw->bandstate[OTHERBANDUNIT(wlc)];
+-	}
+-
+-	/* Free shared phy state */
+-	kfree(wlc_hw->phy_sh);
+-
+-	wlc_phy_shim_detach(wlc_hw->physhim);
+-
+-	/* free vars */
+-	kfree(wlc_hw->vars);
+-	wlc_hw->vars = NULL;
+-
+-	if (wlc_hw->sih) {
+-		ai_detach(wlc_hw->sih);
+-		wlc_hw->sih = NULL;
+-	}
+-
+-	return callbacks;
+-
+-}
+-
+-void brcms_b_reset(struct brcms_hardware *wlc_hw)
+-{
+-	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
+-
+-	/* reset the core */
+-	if (!DEVICEREMOVED(wlc_hw->wlc))
+-		brcms_b_corereset(wlc_hw, BRCMS_USE_COREFLAGS);
+-
+-	/* purge the dma rings */
+-	brcms_c_flushqueues(wlc_hw->wlc);
+-
+-	brcms_c_reset_bmac_done(wlc_hw->wlc);
+-}
+-
+-void
+-brcms_b_init(struct brcms_hardware *wlc_hw, chanspec_t chanspec,
+-			  bool mute) {
+-	u32 macintmask;
+-	bool fastclk;
+-	struct brcms_c_info *wlc = wlc_hw->wlc;
+-
+-	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
+-
+-	/* request FAST clock if not on */
+-	fastclk = wlc_hw->forcefastclk;
+-	if (!fastclk)
+-		brcms_b_clkctl_clk(wlc_hw, CLK_FAST);
+-
+-	/* disable interrupts */
+-	macintmask = brcms_intrsoff(wlc->wl);
+-
+-	/* set up the specified band and chanspec */
+-	brcms_c_setxband(wlc_hw, CHSPEC_BANDUNIT(chanspec));
+-	wlc_phy_chanspec_radio_set(wlc_hw->band->pi, chanspec);
+-
+-	/* do one-time phy inits and calibration */
+-	wlc_phy_cal_init(wlc_hw->band->pi);
+-
+-	/* core-specific initialization */
+-	brcms_b_coreinit(wlc);
+-
+-	/* suspend the tx fifos and mute the phy for preism cac time */
+-	if (mute)
+-		brcms_b_mute(wlc_hw, ON, PHY_MUTE_FOR_PREISM);
+-
+-	/* band-specific inits */
+-	brcms_b_bsinit(wlc, chanspec);
+-
+-	/* restore macintmask */
+-	brcms_intrsrestore(wlc->wl, macintmask);
+-
+-	/* seed wake_override with BRCMS_WAKE_OVERRIDE_MACSUSPEND since the mac
+-	 * is suspended and brcms_c_enable_mac() will clear this override bit.
+-	 */
+-	mboolset(wlc_hw->wake_override, BRCMS_WAKE_OVERRIDE_MACSUSPEND);
+-
+-	/*
+-	 * initialize mac_suspend_depth to 1 to match ucode initial suspended state
+-	 */
+-	wlc_hw->mac_suspend_depth = 1;
+-
+-	/* restore the clk */
+-	if (!fastclk)
+-		brcms_b_clkctl_clk(wlc_hw, CLK_DYNAMIC);
+-}
+-
+-int brcms_b_up_prep(struct brcms_hardware *wlc_hw)
+-{
+-	uint coremask;
+-
+-	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
+-
+-	/*
+-	 * Enable pll and xtal, initialize the power control registers,
+-	 * and force fastclock for the remainder of brcms_c_up().
+-	 */
+-	brcms_b_xtal(wlc_hw, ON);
+-	ai_clkctl_init(wlc_hw->sih);
+-	brcms_b_clkctl_clk(wlc_hw, CLK_FAST);
+-
+-	/*
+-	 * Configure pci/pcmcia here instead of in brcms_c_attach()
+-	 * to allow mfg hotswap:  down, hotswap (chip power cycle), up.
+-	 */
+-	coremask = (1 << wlc_hw->wlc->core->coreidx);
+-
+-	if (wlc_hw->sih->bustype == PCI_BUS)
+-		ai_pci_setup(wlc_hw->sih, coremask);
+-
+-	/*
+-	 * Need to read the hwradio status here to cover the case where the system
+-	 * is loaded with the hw radio disabled. We do not want to bring the driver up in this case.
+-	 */
+-	if (brcms_b_radio_read_hwdisabled(wlc_hw)) {
+-		/* put SB PCI in down state again */
+-		if (wlc_hw->sih->bustype == PCI_BUS)
+-			ai_pci_down(wlc_hw->sih);
+-		brcms_b_xtal(wlc_hw, OFF);
+-		return -ENOMEDIUM;
+-	}
+-
+-	if (wlc_hw->sih->bustype == PCI_BUS)
+-		ai_pci_up(wlc_hw->sih);
+-
+-	/* reset the d11 core */
+-	brcms_b_corereset(wlc_hw, BRCMS_USE_COREFLAGS);
+-
+-	return 0;
+-}
+-
+-int brcms_b_up_finish(struct brcms_hardware *wlc_hw)
+-{
+-	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
+-
+-	wlc_hw->up = true;
+-	wlc_phy_hw_state_upd(wlc_hw->band->pi, true);
+-
+-	/* FULLY enable dynamic power control and d11 core interrupt */
+-	brcms_b_clkctl_clk(wlc_hw, CLK_DYNAMIC);
+-	brcms_intrson(wlc_hw->wlc->wl);
+-	return 0;
+-}
+-
+-int brcms_b_bmac_down_prep(struct brcms_hardware *wlc_hw)
+-{
+-	bool dev_gone;
+-	uint callbacks = 0;
+-
+-	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
+-
+-	if (!wlc_hw->up)
+-		return callbacks;
+-
+-	dev_gone = DEVICEREMOVED(wlc_hw->wlc);
+-
+-	/* disable interrupts */
+-	if (dev_gone)
+-		wlc_hw->wlc->macintmask = 0;
+-	else {
+-		/* now disable interrupts */
+-		brcms_intrsoff(wlc_hw->wlc->wl);
+-
+-		/* ensure we're running on the pll clock again */
+-		brcms_b_clkctl_clk(wlc_hw, CLK_FAST);
+-	}
+-	/* down phy at the last of this stage */
+-	callbacks += wlc_phy_down(wlc_hw->band->pi);
+-
+-	return callbacks;
+-}
+-
+-int brcms_b_down_finish(struct brcms_hardware *wlc_hw)
+-{
+-	uint callbacks = 0;
+-	bool dev_gone;
+-
+-	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
+-
+-	if (!wlc_hw->up)
+-		return callbacks;
+-
+-	wlc_hw->up = false;
+-	wlc_phy_hw_state_upd(wlc_hw->band->pi, false);
+-
+-	dev_gone = DEVICEREMOVED(wlc_hw->wlc);
+-
+-	if (dev_gone) {
+-		wlc_hw->sbclk = false;
+-		wlc_hw->clk = false;
+-		wlc_phy_hw_clk_state_upd(wlc_hw->band->pi, false);
+-
+-		/* reclaim any posted packets */
+-		brcms_c_flushqueues(wlc_hw->wlc);
+-	} else {
+-
+-		/* Reset and disable the core */
+-		if (ai_iscoreup(wlc_hw->sih)) {
+-			if (R_REG(&wlc_hw->regs->maccontrol) &
+-			    MCTL_EN_MAC)
+-				brcms_c_suspend_mac_and_wait(wlc_hw->wlc);
+-			callbacks += brcms_reset(wlc_hw->wlc->wl);
+-			brcms_c_coredisable(wlc_hw);
+-		}
+-
+-		/* turn off primary xtal and pll */
+-		if (!wlc_hw->noreset) {
+-			if (wlc_hw->sih->bustype == PCI_BUS)
+-				ai_pci_down(wlc_hw->sih);
+-			brcms_b_xtal(wlc_hw, OFF);
+-		}
+-	}
+-
+-	return callbacks;
+-}
+-
+ void brcms_b_wait_for_wake(struct brcms_hardware *wlc_hw)
+ {
+ 	/* delay before first read of ucode state */
+@@ -1769,32 +1129,6 @@ brcms_b_mhf(struct brcms_hardware *wlc_hw, u8 idx, u16 mask, u16 val,
+ 	}
+ }
+ 
+-u16 brcms_b_mhf_get(struct brcms_hardware *wlc_hw, u8 idx, int bands)
+-{
+-	struct brcms_hw_band *band;
+-
+-	if (idx >= MHFMAX)
+-		return 0; /* error condition */
+-	switch (bands) {
+-	case BRCM_BAND_AUTO:
+-		band = wlc_hw->band;
+-		break;
+-	case BRCM_BAND_5G:
+-		band = wlc_hw->bandstate[BAND_5G_INDEX];
+-		break;
+-	case BRCM_BAND_2G:
+-		band = wlc_hw->bandstate[BAND_2G_INDEX];
+-		break;
+-	default:
+-		band = NULL;		/* error condition */
+-	}
+-
+-	if (!band)
+-		return 0;
+-
+-	return band->mhfs[idx];
+-}
+-
+ static void brcms_c_write_mhf(struct brcms_hardware *wlc_hw, u16 *mhfs)
+ {
+ 	u8 idx;
+@@ -2055,27 +1389,6 @@ brcms_c_write_hw_bcntemplate1(struct brcms_hardware *wlc_hw, void *bcn,
+ 	OR_REG(&regs->maccommand, MCMD_BCN1VLD);
+ }
+ 
+-/* mac is assumed to be suspended at this point */
+-void
+-brcms_b_write_hw_bcntemplates(struct brcms_hardware *wlc_hw, void *bcn,
+-			      int len, bool both)
+-{
+-	d11regs_t *regs = wlc_hw->regs;
+-
+-	if (both) {
+-		brcms_c_write_hw_bcntemplate0(wlc_hw, bcn, len);
+-		brcms_c_write_hw_bcntemplate1(wlc_hw, bcn, len);
+-	} else {
+-		/* bcn 0 */
+-		if (!(R_REG(&regs->maccommand) & MCMD_BCN0VLD))
+-			brcms_c_write_hw_bcntemplate0(wlc_hw, bcn, len);
+-		/* bcn 1 */
+-		else if (!
+-			 (R_REG(&regs->maccommand) & MCMD_BCN1VLD))
+-			brcms_c_write_hw_bcntemplate1(wlc_hw, bcn, len);
+-	}
+-}
+-
+ static void brcms_b_upd_synthpu(struct brcms_hardware *wlc_hw)
+ {
+ 	u16 v;
+@@ -2403,48 +1716,6 @@ bool brcms_b_radio_read_hwdisabled(struct brcms_hardware *wlc_hw)
+ 	return v;
+ }
+ 
+-/* Initialize just the hardware when coming out of POR or S3/S5 system states */
+-void brcms_b_hw_up(struct brcms_hardware *wlc_hw)
+-{
+-	if (wlc_hw->wlc->pub->hw_up)
+-		return;
+-
+-	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
+-
+-	/*
+-	 * Enable pll and xtal, initialize the power control registers,
+-	 * and force fastclock for the remainder of brcms_c_up().
+-	 */
+-	brcms_b_xtal(wlc_hw, ON);
+-	ai_clkctl_init(wlc_hw->sih);
+-	brcms_b_clkctl_clk(wlc_hw, CLK_FAST);
+-
+-	if (wlc_hw->sih->bustype == PCI_BUS) {
+-		ai_pci_fixcfg(wlc_hw->sih);
+-
+-		/* AI chip doesn't restore bar0win2 on hibernation/resume, need sw fixup */
+-		if ((wlc_hw->sih->chip == BCM43224_CHIP_ID) ||
+-		    (wlc_hw->sih->chip == BCM43225_CHIP_ID))
+-			wlc_hw->regs =
+-			    (d11regs_t *) ai_setcore(wlc_hw->sih, D11_CORE_ID,
+-						     0);
+-	}
+-
+-	/* Inform phy that a POR reset has occurred so it does a complete phy init */
+-	wlc_phy_por_inform(wlc_hw->band->pi);
+-
+-	wlc_hw->ucode_loaded = false;
+-	wlc_hw->wlc->pub->hw_up = true;
+-
+-	if ((wlc_hw->boardflags & BFL_FEM)
+-	    && (wlc_hw->sih->chip == BCM4313_CHIP_ID)) {
+-		if (!
+-		    (wlc_hw->boardrev >= 0x1250
+-		     && (wlc_hw->boardflags & BFL_FEM_BT)))
+-			ai_epa_4313war(wlc_hw->sih);
+-	}
+-}
+-
+ static bool wlc_dma_rxreset(struct brcms_hardware *wlc_hw, uint fifo)
+ {
+ 	struct dma_pub *di = wlc_hw->di[fifo];
+@@ -2589,191 +1860,6 @@ static void brcms_b_corerev_fifofixup(struct brcms_hardware *wlc_hw)
+ 			    xmtfifo_sz[TX_BCMC_FIFO]));
+ }
+ 
+-/* d11 core init
+- *   reset PSM
+- *   download ucode/PCM
+- *   let ucode run to suspended
+- *   download ucode inits
+- *   config other core registers
+- *   init dma
+- */
+-static void brcms_b_coreinit(struct brcms_c_info *wlc)
+-{
+-	struct brcms_hardware *wlc_hw = wlc->hw;
+-	d11regs_t *regs;
+-	u32 sflags;
+-	uint bcnint_us;
+-	uint i = 0;
+-	bool fifosz_fixup = false;
+-	int err = 0;
+-	u16 buf[NFIFO];
+-	struct wiphy *wiphy = wlc->wiphy;
+-
+-	regs = wlc_hw->regs;
+-
+-	BCMMSG(wlc->wiphy, "wl%d\n", wlc_hw->unit);
+-
+-	/* reset PSM */
+-	brcms_b_mctrl(wlc_hw, ~0, (MCTL_IHR_EN | MCTL_PSM_JMP_0 | MCTL_WAKE));
+-
+-	brcms_ucode_download(wlc_hw);
+-	/*
+-	 * FIFOSZ fixup. driver wants to controls the fifo allocation.
+-	 */
+-	fifosz_fixup = true;
+-
+-	/* let the PSM run to the suspended state, set mode to BSS STA */
+-	W_REG(&regs->macintstatus, -1);
+-	brcms_b_mctrl(wlc_hw, ~0,
+-		       (MCTL_IHR_EN | MCTL_INFRA | MCTL_PSM_RUN | MCTL_WAKE));
+-
+-	/* wait for ucode to self-suspend after auto-init */
+-	SPINWAIT(((R_REG(&regs->macintstatus) & MI_MACSSPNDD) == 0),
+-		 1000 * 1000);
+-	if ((R_REG(&regs->macintstatus) & MI_MACSSPNDD) == 0)
+-		wiphy_err(wiphy, "wl%d: wlc_coreinit: ucode did not self-"
+-			  "suspend!\n", wlc_hw->unit);
+-
+-	brcms_c_gpio_init(wlc);
+-
+-	sflags = ai_core_sflags(wlc_hw->sih, 0, 0);
+-
+-	if (D11REV_IS(wlc_hw->corerev, 23)) {
+-		if (BRCMS_ISNPHY(wlc_hw->band))
+-			brcms_c_write_inits(wlc_hw, d11n0initvals16);
+-		else
+-			wiphy_err(wiphy, "%s: wl%d: unsupported phy in corerev"
+-				  " %d\n", __func__, wlc_hw->unit,
+-				  wlc_hw->corerev);
+-	} else if (D11REV_IS(wlc_hw->corerev, 24)) {
+-		if (BRCMS_ISLCNPHY(wlc_hw->band)) {
+-			brcms_c_write_inits(wlc_hw, d11lcn0initvals24);
+-		} else {
+-			wiphy_err(wiphy, "%s: wl%d: unsupported phy in corerev"
+-				  " %d\n", __func__, wlc_hw->unit,
+-				  wlc_hw->corerev);
+-		}
+-	} else {
+-		wiphy_err(wiphy, "%s: wl%d: unsupported corerev %d\n",
+-			  __func__, wlc_hw->unit, wlc_hw->corerev);
+-	}
+-
+-	/* For old ucode, txfifo sizes needs to be modified(increased) */
+-	if (fifosz_fixup == true) {
+-		brcms_b_corerev_fifofixup(wlc_hw);
+-	}
+-
+-	/* check txfifo allocations match between ucode and driver */
+-	buf[TX_AC_BE_FIFO] = brcms_b_read_shm(wlc_hw, M_FIFOSIZE0);
+-	if (buf[TX_AC_BE_FIFO] != wlc_hw->xmtfifo_sz[TX_AC_BE_FIFO]) {
+-		i = TX_AC_BE_FIFO;
+-		err = -1;
+-	}
+-	buf[TX_AC_VI_FIFO] = brcms_b_read_shm(wlc_hw, M_FIFOSIZE1);
+-	if (buf[TX_AC_VI_FIFO] != wlc_hw->xmtfifo_sz[TX_AC_VI_FIFO]) {
+-		i = TX_AC_VI_FIFO;
+-		err = -1;
+-	}
+-	buf[TX_AC_BK_FIFO] = brcms_b_read_shm(wlc_hw, M_FIFOSIZE2);
+-	buf[TX_AC_VO_FIFO] = (buf[TX_AC_BK_FIFO] >> 8) & 0xff;
+-	buf[TX_AC_BK_FIFO] &= 0xff;
+-	if (buf[TX_AC_BK_FIFO] != wlc_hw->xmtfifo_sz[TX_AC_BK_FIFO]) {
+-		i = TX_AC_BK_FIFO;
+-		err = -1;
+-	}
+-	if (buf[TX_AC_VO_FIFO] != wlc_hw->xmtfifo_sz[TX_AC_VO_FIFO]) {
+-		i = TX_AC_VO_FIFO;
+-		err = -1;
+-	}
+-	buf[TX_BCMC_FIFO] = brcms_b_read_shm(wlc_hw, M_FIFOSIZE3);
+-	buf[TX_ATIM_FIFO] = (buf[TX_BCMC_FIFO] >> 8) & 0xff;
+-	buf[TX_BCMC_FIFO] &= 0xff;
+-	if (buf[TX_BCMC_FIFO] != wlc_hw->xmtfifo_sz[TX_BCMC_FIFO]) {
+-		i = TX_BCMC_FIFO;
+-		err = -1;
+-	}
+-	if (buf[TX_ATIM_FIFO] != wlc_hw->xmtfifo_sz[TX_ATIM_FIFO]) {
+-		i = TX_ATIM_FIFO;
+-		err = -1;
+-	}
+-	if (err != 0) {
+-		wiphy_err(wiphy, "wlc_coreinit: txfifo mismatch: ucode size %d"
+-			  " driver size %d index %d\n", buf[i],
+-			  wlc_hw->xmtfifo_sz[i], i);
+-	}
+-
+-	/* make sure we can still talk to the mac */
+-	WARN_ON(R_REG(&regs->maccontrol) == 0xffffffff);
+-
+-	/* band-specific inits done by wlc_bsinit() */
+-
+-	/* Set up frame burst size and antenna swap threshold init values */
+-	brcms_b_write_shm(wlc_hw, M_MBURST_SIZE, MAXTXFRAMEBURST);
+-	brcms_b_write_shm(wlc_hw, M_MAX_ANTCNT, ANTCNT);
+-
+-	/* enable one rx interrupt per received frame */
+-	W_REG(&regs->intrcvlazy[0], (1 << IRL_FC_SHIFT));
+-
+-	/* set the station mode (BSS STA) */
+-	brcms_b_mctrl(wlc_hw,
+-		       (MCTL_INFRA | MCTL_DISCARD_PMQ | MCTL_AP),
+-		       (MCTL_INFRA | MCTL_DISCARD_PMQ));
+-
+-	/* set up Beacon interval */
+-	bcnint_us = 0x8000 << 10;
+-	W_REG(&regs->tsf_cfprep, (bcnint_us << CFPREP_CBI_SHIFT));
+-	W_REG(&regs->tsf_cfpstart, bcnint_us);
+-	W_REG(&regs->macintstatus, MI_GP1);
+-
+-	/* write interrupt mask */
+-	W_REG(&regs->intctrlregs[RX_FIFO].intmask, DEF_RXINTMASK);
+-
+-	/* allow the MAC to control the PHY clock (dynamic on/off) */
+-	brcms_b_macphyclk_set(wlc_hw, ON);
+-
+-	/* program dynamic clock control fast powerup delay register */
+-	wlc->fastpwrup_dly = ai_clkctl_fast_pwrup_delay(wlc_hw->sih);
+-	W_REG(&regs->scc_fastpwrup_dly, wlc->fastpwrup_dly);
+-
+-	/* tell the ucode the corerev */
+-	brcms_b_write_shm(wlc_hw, M_MACHW_VER, (u16) wlc_hw->corerev);
+-
+-	/* tell the ucode MAC capabilities */
+-	brcms_b_write_shm(wlc_hw, M_MACHW_CAP_L,
+-			   (u16) (wlc_hw->machwcap & 0xffff));
+-	brcms_b_write_shm(wlc_hw, M_MACHW_CAP_H,
+-			   (u16) ((wlc_hw->
+-				      machwcap >> 16) & 0xffff));
+-
+-	/* write retry limits to SCR, this done after PSM init */
+-	W_REG(&regs->objaddr, OBJADDR_SCR_SEL | S_DOT11_SRC_LMT);
+-	(void)R_REG(&regs->objaddr);
+-	W_REG(&regs->objdata, wlc_hw->SRL);
+-	W_REG(&regs->objaddr, OBJADDR_SCR_SEL | S_DOT11_LRC_LMT);
+-	(void)R_REG(&regs->objaddr);
+-	W_REG(&regs->objdata, wlc_hw->LRL);
+-
+-	/* write rate fallback retry limits */
+-	brcms_b_write_shm(wlc_hw, M_SFRMTXCNTFBRTHSD, wlc_hw->SFBL);
+-	brcms_b_write_shm(wlc_hw, M_LFRMTXCNTFBRTHSD, wlc_hw->LFBL);
+-
+-	AND_REG(&regs->ifs_ctl, 0x0FFF);
+-	W_REG(&regs->ifs_aifsn, EDCF_AIFSN_MIN);
+-
+-	/* dma initializations */
+-	wlc->txpend16165war = 0;
+-
+-	/* init the tx dma engines */
+-	for (i = 0; i < NFIFO; i++) {
+-		if (wlc_hw->di[i])
+-			dma_txinit(wlc_hw->di[i]);
+-	}
+-
+-	/* init the rx dma engine(s) and post receive buffers */
+-	dma_rxinit(wlc_hw->di[RX_FIFO]);
+-	dma_rxfill(wlc_hw->di[RX_FIFO]);
+-}
+-
+ /* This function is used for changing the tsf frac register
+  * If spur avoidance mode is off, the mac freq will be 80/120/160Mhz
+  * If spur avoidance mode is on1, the mac freq will be 82/123/164Mhz
+@@ -3107,6 +2193,39 @@ void brcms_c_intrsrestore(struct brcms_c_info *wlc, u32 macintmask)
+ 	W_REG(&wlc_hw->regs->macintmask, wlc->macintmask);
+ }
+ 
++static void brcms_b_tx_fifo_suspend(struct brcms_hardware *wlc_hw,
++				    uint tx_fifo)
++{
++	u8 fifo = 1 << tx_fifo;
++
++	/* Two clients of this code, 11h Quiet period and scanning. */
++
++	/* only suspend if not already suspended */
++	if ((wlc_hw->suspended_fifos & fifo) == fifo)
++		return;
++
++	/* force the core awake only if not already */
++	if (wlc_hw->suspended_fifos == 0)
++		brcms_c_ucode_wake_override_set(wlc_hw,
++						BRCMS_WAKE_OVERRIDE_TXFIFO);
++
++	wlc_hw->suspended_fifos |= fifo;
++
++	if (wlc_hw->di[tx_fifo]) {
++		/* Suspending AMPDU transmissions in the middle can cause underflow
++		 * which may result in mismatch between ucode and driver
++		 * so suspend the mac before suspending the FIFO
++		 */
++		if (BRCMS_PHY_11N_CAP(wlc_hw->band))
++			brcms_c_suspend_mac_and_wait(wlc_hw->wlc);
++
++		dma_txsuspend(wlc_hw->di[tx_fifo]);
++
++		if (BRCMS_PHY_11N_CAP(wlc_hw->band))
++			brcms_c_enable_mac(wlc_hw->wlc);
++	}
++}
++
+ static void brcms_b_mute(struct brcms_hardware *wlc_hw, bool on, mbool flags)
+ {
+ 	u8 null_ether_addr[ETH_ALEN] = {0, 0, 0, 0, 0, 0};
+@@ -3143,17 +2262,6 @@ static void brcms_b_mute(struct brcms_hardware *wlc_hw, bool on, mbool flags)
+ 		brcms_c_ucode_mute_override_clear(wlc_hw);
+ }
+ 
+-int brcms_b_xmtfifo_sz_get(struct brcms_hardware *wlc_hw, uint fifo,
+-			   uint *blocks)
+-{
+-	if (fifo >= NFIFO)
+-		return -EINVAL;
+-
+-	*blocks = wlc_hw->xmtfifo_sz[fifo];
+-
+-	return 0;
+-}
+-
+ /* brcms_b_tx_fifo_suspended:
+  * Check the MAC's tx suspend status for a tx fifo.
+  *
+@@ -3183,39 +2291,6 @@ static bool brcms_b_tx_fifo_suspended(struct brcms_hardware *wlc_hw,
+ 	return false;
+ }
+ 
+-static void brcms_b_tx_fifo_suspend(struct brcms_hardware *wlc_hw,
+-				    uint tx_fifo)
+-{
+-	u8 fifo = 1 << tx_fifo;
+-
+-	/* Two clients of this code, 11h Quiet period and scanning. */
+-
+-	/* only suspend if not already suspended */
+-	if ((wlc_hw->suspended_fifos & fifo) == fifo)
+-		return;
+-
+-	/* force the core awake only if not already */
+-	if (wlc_hw->suspended_fifos == 0)
+-		brcms_c_ucode_wake_override_set(wlc_hw,
+-						BRCMS_WAKE_OVERRIDE_TXFIFO);
+-
+-	wlc_hw->suspended_fifos |= fifo;
+-
+-	if (wlc_hw->di[tx_fifo]) {
+-		/* Suspending AMPDU transmissions in the middle can cause underflow
+-		 * which may result in mismatch between ucode and driver
+-		 * so suspend the mac before suspending the FIFO
+-		 */
+-		if (BRCMS_PHY_11N_CAP(wlc_hw->band))
+-			brcms_c_suspend_mac_and_wait(wlc_hw->wlc);
+-
+-		dma_txsuspend(wlc_hw->di[tx_fifo]);
+-
+-		if (BRCMS_PHY_11N_CAP(wlc_hw->band))
+-			brcms_c_enable_mac(wlc_hw->wlc);
+-	}
+-}
+-
+ static void brcms_b_tx_fifo_resume(struct brcms_hardware *wlc_hw,
+ 				   uint tx_fifo)
+ {
+@@ -3356,81 +2431,6 @@ bool brcms_c_isr(struct brcms_c_info *wlc, bool *wantdpc)
+ 
+ }
+ 
+-static bool
+-brcms_b_dotxstatus(struct brcms_hardware *wlc_hw, struct tx_status *txs,
+-		   u32 s2)
+-{
+-	/* discard intermediate indications for ucode with one legitimate case:
+-	 *   e.g. if "useRTS" is set. ucode did a successful rts/cts exchange, but the subsequent
+-	 *   tx of DATA failed. so it will start rts/cts from the beginning (resetting the rts
+-	 *   transmission count)
+-	 */
+-	if (!(txs->status & TX_STATUS_AMPDU)
+-	    && (txs->status & TX_STATUS_INTERMEDIATE)) {
+-		return false;
+-	}
+-
+-	return brcms_c_dotxstatus(wlc_hw->wlc, txs, s2);
+-}
+-
+-/* process tx completion events in BMAC
+- * Return true if more tx status need to be processed. false otherwise.
+- */
+-static bool
+-brcms_b_txstatus(struct brcms_hardware *wlc_hw, bool bound, bool *fatal)
+-{
+-	bool morepending = false;
+-	struct brcms_c_info *wlc = wlc_hw->wlc;
+-	d11regs_t *regs;
+-	struct tx_status txstatus, *txs;
+-	u32 s1, s2;
+-	uint n = 0;
+-	/*
+-	 * Param 'max_tx_num' indicates max. # tx status to process before
+-	 * break out.
+-	 */
+-	uint max_tx_num = bound ? wlc->pub->tunables->txsbnd : -1;
+-
+-	BCMMSG(wlc->wiphy, "wl%d\n", wlc_hw->unit);
+-
+-	txs = &txstatus;
+-	regs = wlc_hw->regs;
+-	while (!(*fatal)
+-	       && (s1 = R_REG(&regs->frmtxstatus)) & TXS_V) {
+-
+-		if (s1 == 0xffffffff) {
+-			wiphy_err(wlc->wiphy, "wl%d: %s: dead chip\n",
+-				wlc_hw->unit, __func__);
+-			return morepending;
+-		}
+-
+-			s2 = R_REG(&regs->frmtxstatus2);
+-
+-		txs->status = s1 & TXS_STATUS_MASK;
+-		txs->frameid = (s1 & TXS_FID_MASK) >> TXS_FID_SHIFT;
+-		txs->sequence = s2 & TXS_SEQ_MASK;
+-		txs->phyerr = (s2 & TXS_PTX_MASK) >> TXS_PTX_SHIFT;
+-		txs->lasttxtime = 0;
+-
+-		*fatal = brcms_b_dotxstatus(wlc_hw, txs, s2);
+-
+-		/* !give others some time to run! */
+-		if (++n >= max_tx_num)
+-			break;
+-	}
+-
+-	if (*fatal)
+-		return 0;
+-
+-	if (n >= max_tx_num)
+-		morepending = true;
+-
+-	if (!pktq_empty(&wlc->pkt_queue->q))
+-		brcms_c_send_q(wlc);
+-
+-	return morepending;
+-}
+-
+ void brcms_c_suspend_mac_and_wait(struct brcms_c_info *wlc)
+ {
+ 	struct brcms_hardware *wlc_hw = wlc->hw;
+@@ -3612,19 +2612,6 @@ void brcms_b_band_stf_ss_set(struct brcms_hardware *wlc_hw, u8 stf_mode)
+ 		brcms_upd_ofdm_pctl1_table(wlc_hw);
+ }
+ 
+-void
+-brcms_b_read_tsf(struct brcms_hardware *wlc_hw, u32 *tsf_l_ptr,
+-		  u32 *tsf_h_ptr)
+-{
+-	d11regs_t *regs = wlc_hw->regs;
+-
+-	/* read the tsf timer low, then high to get an atomic read */
+-	*tsf_l_ptr = R_REG(&regs->tsf_timerlow);
+-	*tsf_h_ptr = R_REG(&regs->tsf_timerhigh);
+-
+-	return;
+-}
+-
+ static bool brcms_b_validate_chip_access(struct brcms_hardware *wlc_hw)
+ {
+ 	d11regs_t *regs;
+@@ -3966,29 +2953,6 @@ void brcms_b_pllreq(struct brcms_hardware *wlc_hw, bool set, mbool req_bit)
+ 	return;
+ }
+ 
+-u16 brcms_b_rate_shm_offset(struct brcms_hardware *wlc_hw, u8 rate)
+-{
+-	u16 table_ptr;
+-	u8 phy_rate, index;
+-
+-	/* get the phy specific rate encoding for the PLCP SIGNAL field */
+-	if (IS_OFDM(rate))
+-		table_ptr = M_RT_DIRMAP_A;
+-	else
+-		table_ptr = M_RT_DIRMAP_B;
+-
+-	/* for a given rate, the LS-nibble of the PLCP SIGNAL field is
+-	 * the index into the rate table.
+-	 */
+-	phy_rate = rate_info[rate] & BRCMS_RATE_MASK;
+-	index = phy_rate & 0xf;
+-
+-	/* Find the SHM pointer to the rate table entry by looking in the
+-	 * Direct-map Table
+-	 */
+-	return 2 * brcms_b_read_shm(wlc_hw, table_ptr + (index * 2));
+-}
+-
+ void brcms_b_antsel_set(struct brcms_hardware *wlc_hw, u32 antsel_avail)
+ {
+ 	wlc_hw->antsel_avail = antsel_avail;
+@@ -4027,6 +2991,20 @@ bool brcms_c_ps_allowed(struct brcms_c_info *wlc)
+ 	return true;
+ }
+ 
++void brcms_b_reset(struct brcms_hardware *wlc_hw)
++{
++	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
++
++	/* reset the core */
++	if (!DEVICEREMOVED(wlc_hw->wlc))
++		brcms_b_corereset(wlc_hw, BRCMS_USE_COREFLAGS);
++
++	/* purge the dma rings */
++	brcms_c_flushqueues(wlc_hw->wlc);
++
++	brcms_c_reset_bmac_done(wlc_hw->wlc);
++}
++
+ void brcms_c_reset(struct brcms_c_info *wlc)
+ {
+ 	BCMMSG(wlc->wiphy, "wl%d\n", wlc->pub->unit);
+@@ -4072,6 +3050,243 @@ static void brcms_c_init_scb(struct brcms_c_info *wlc, struct scb *scb)
+ 		scb->seqnum[i] = 0;
+ }
+ 
++/* d11 core init
++ *   reset PSM
++ *   download ucode/PCM
++ *   let ucode run to suspended
++ *   download ucode inits
++ *   config other core registers
++ *   init dma
++ */
++static void brcms_b_coreinit(struct brcms_c_info *wlc)
++{
++	struct brcms_hardware *wlc_hw = wlc->hw;
++	d11regs_t *regs;
++	u32 sflags;
++	uint bcnint_us;
++	uint i = 0;
++	bool fifosz_fixup = false;
++	int err = 0;
++	u16 buf[NFIFO];
++	struct wiphy *wiphy = wlc->wiphy;
++
++	regs = wlc_hw->regs;
++
++	BCMMSG(wlc->wiphy, "wl%d\n", wlc_hw->unit);
++
++	/* reset PSM */
++	brcms_b_mctrl(wlc_hw, ~0, (MCTL_IHR_EN | MCTL_PSM_JMP_0 | MCTL_WAKE));
++
++	brcms_ucode_download(wlc_hw);
++	/*
++	 * FIFOSZ fixup. driver wants to controls the fifo allocation.
++	 */
++	fifosz_fixup = true;
++
++	/* let the PSM run to the suspended state, set mode to BSS STA */
++	W_REG(&regs->macintstatus, -1);
++	brcms_b_mctrl(wlc_hw, ~0,
++		       (MCTL_IHR_EN | MCTL_INFRA | MCTL_PSM_RUN | MCTL_WAKE));
++
++	/* wait for ucode to self-suspend after auto-init */
++	SPINWAIT(((R_REG(&regs->macintstatus) & MI_MACSSPNDD) == 0),
++		 1000 * 1000);
++	if ((R_REG(&regs->macintstatus) & MI_MACSSPNDD) == 0)
++		wiphy_err(wiphy, "wl%d: wlc_coreinit: ucode did not self-"
++			  "suspend!\n", wlc_hw->unit);
++
++	brcms_c_gpio_init(wlc);
++
++	sflags = ai_core_sflags(wlc_hw->sih, 0, 0);
++
++	if (D11REV_IS(wlc_hw->corerev, 23)) {
++		if (BRCMS_ISNPHY(wlc_hw->band))
++			brcms_c_write_inits(wlc_hw, d11n0initvals16);
++		else
++			wiphy_err(wiphy, "%s: wl%d: unsupported phy in corerev"
++				  " %d\n", __func__, wlc_hw->unit,
++				  wlc_hw->corerev);
++	} else if (D11REV_IS(wlc_hw->corerev, 24)) {
++		if (BRCMS_ISLCNPHY(wlc_hw->band)) {
++			brcms_c_write_inits(wlc_hw, d11lcn0initvals24);
++		} else {
++			wiphy_err(wiphy, "%s: wl%d: unsupported phy in corerev"
++				  " %d\n", __func__, wlc_hw->unit,
++				  wlc_hw->corerev);
++		}
++	} else {
++		wiphy_err(wiphy, "%s: wl%d: unsupported corerev %d\n",
++			  __func__, wlc_hw->unit, wlc_hw->corerev);
++	}
++
++	/* For old ucode, txfifo sizes needs to be modified(increased) */
++	if (fifosz_fixup == true) {
++		brcms_b_corerev_fifofixup(wlc_hw);
++	}
++
++	/* check txfifo allocations match between ucode and driver */
++	buf[TX_AC_BE_FIFO] = brcms_b_read_shm(wlc_hw, M_FIFOSIZE0);
++	if (buf[TX_AC_BE_FIFO] != wlc_hw->xmtfifo_sz[TX_AC_BE_FIFO]) {
++		i = TX_AC_BE_FIFO;
++		err = -1;
++	}
++	buf[TX_AC_VI_FIFO] = brcms_b_read_shm(wlc_hw, M_FIFOSIZE1);
++	if (buf[TX_AC_VI_FIFO] != wlc_hw->xmtfifo_sz[TX_AC_VI_FIFO]) {
++		i = TX_AC_VI_FIFO;
++		err = -1;
++	}
++	buf[TX_AC_BK_FIFO] = brcms_b_read_shm(wlc_hw, M_FIFOSIZE2);
++	buf[TX_AC_VO_FIFO] = (buf[TX_AC_BK_FIFO] >> 8) & 0xff;
++	buf[TX_AC_BK_FIFO] &= 0xff;
++	if (buf[TX_AC_BK_FIFO] != wlc_hw->xmtfifo_sz[TX_AC_BK_FIFO]) {
++		i = TX_AC_BK_FIFO;
++		err = -1;
++	}
++	if (buf[TX_AC_VO_FIFO] != wlc_hw->xmtfifo_sz[TX_AC_VO_FIFO]) {
++		i = TX_AC_VO_FIFO;
++		err = -1;
++	}
++	buf[TX_BCMC_FIFO] = brcms_b_read_shm(wlc_hw, M_FIFOSIZE3);
++	buf[TX_ATIM_FIFO] = (buf[TX_BCMC_FIFO] >> 8) & 0xff;
++	buf[TX_BCMC_FIFO] &= 0xff;
++	if (buf[TX_BCMC_FIFO] != wlc_hw->xmtfifo_sz[TX_BCMC_FIFO]) {
++		i = TX_BCMC_FIFO;
++		err = -1;
++	}
++	if (buf[TX_ATIM_FIFO] != wlc_hw->xmtfifo_sz[TX_ATIM_FIFO]) {
++		i = TX_ATIM_FIFO;
++		err = -1;
++	}
++	if (err != 0) {
++		wiphy_err(wiphy, "wlc_coreinit: txfifo mismatch: ucode size %d"
++			  " driver size %d index %d\n", buf[i],
++			  wlc_hw->xmtfifo_sz[i], i);
++	}
++
++	/* make sure we can still talk to the mac */
++	WARN_ON(R_REG(&regs->maccontrol) == 0xffffffff);
++
++	/* band-specific inits done by wlc_bsinit() */
++
++	/* Set up frame burst size and antenna swap threshold init values */
++	brcms_b_write_shm(wlc_hw, M_MBURST_SIZE, MAXTXFRAMEBURST);
++	brcms_b_write_shm(wlc_hw, M_MAX_ANTCNT, ANTCNT);
++
++	/* enable one rx interrupt per received frame */
++	W_REG(&regs->intrcvlazy[0], (1 << IRL_FC_SHIFT));
++
++	/* set the station mode (BSS STA) */
++	brcms_b_mctrl(wlc_hw,
++		       (MCTL_INFRA | MCTL_DISCARD_PMQ | MCTL_AP),
++		       (MCTL_INFRA | MCTL_DISCARD_PMQ));
++
++	/* set up Beacon interval */
++	bcnint_us = 0x8000 << 10;
++	W_REG(&regs->tsf_cfprep, (bcnint_us << CFPREP_CBI_SHIFT));
++	W_REG(&regs->tsf_cfpstart, bcnint_us);
++	W_REG(&regs->macintstatus, MI_GP1);
++
++	/* write interrupt mask */
++	W_REG(&regs->intctrlregs[RX_FIFO].intmask, DEF_RXINTMASK);
++
++	/* allow the MAC to control the PHY clock (dynamic on/off) */
++	brcms_b_macphyclk_set(wlc_hw, ON);
++
++	/* program dynamic clock control fast powerup delay register */
++	wlc->fastpwrup_dly = ai_clkctl_fast_pwrup_delay(wlc_hw->sih);
++	W_REG(&regs->scc_fastpwrup_dly, wlc->fastpwrup_dly);
++
++	/* tell the ucode the corerev */
++	brcms_b_write_shm(wlc_hw, M_MACHW_VER, (u16) wlc_hw->corerev);
++
++	/* tell the ucode MAC capabilities */
++	brcms_b_write_shm(wlc_hw, M_MACHW_CAP_L,
++			   (u16) (wlc_hw->machwcap & 0xffff));
++	brcms_b_write_shm(wlc_hw, M_MACHW_CAP_H,
++			   (u16) ((wlc_hw->
++				      machwcap >> 16) & 0xffff));
++
++	/* write retry limits to SCR, this done after PSM init */
++	W_REG(&regs->objaddr, OBJADDR_SCR_SEL | S_DOT11_SRC_LMT);
++	(void)R_REG(&regs->objaddr);
++	W_REG(&regs->objdata, wlc_hw->SRL);
++	W_REG(&regs->objaddr, OBJADDR_SCR_SEL | S_DOT11_LRC_LMT);
++	(void)R_REG(&regs->objaddr);
++	W_REG(&regs->objdata, wlc_hw->LRL);
++
++	/* write rate fallback retry limits */
++	brcms_b_write_shm(wlc_hw, M_SFRMTXCNTFBRTHSD, wlc_hw->SFBL);
++	brcms_b_write_shm(wlc_hw, M_LFRMTXCNTFBRTHSD, wlc_hw->LFBL);
++
++	AND_REG(&regs->ifs_ctl, 0x0FFF);
++	W_REG(&regs->ifs_aifsn, EDCF_AIFSN_MIN);
++
++	/* dma initializations */
++	wlc->txpend16165war = 0;
++
++	/* init the tx dma engines */
++	for (i = 0; i < NFIFO; i++) {
++		if (wlc_hw->di[i])
++			dma_txinit(wlc_hw->di[i]);
++	}
++
++	/* init the rx dma engine(s) and post receive buffers */
++	dma_rxinit(wlc_hw->di[RX_FIFO]);
++	dma_rxfill(wlc_hw->di[RX_FIFO]);
++}
++
++void
++brcms_b_init(struct brcms_hardware *wlc_hw, chanspec_t chanspec,
++			  bool mute) {
++	u32 macintmask;
++	bool fastclk;
++	struct brcms_c_info *wlc = wlc_hw->wlc;
++
++	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
++
++	/* request FAST clock if not on */
++	fastclk = wlc_hw->forcefastclk;
++	if (!fastclk)
++		brcms_b_clkctl_clk(wlc_hw, CLK_FAST);
++
++	/* disable interrupts */
++	macintmask = brcms_intrsoff(wlc->wl);
++
++	/* set up the specified band and chanspec */
++	brcms_c_setxband(wlc_hw, CHSPEC_BANDUNIT(chanspec));
++	wlc_phy_chanspec_radio_set(wlc_hw->band->pi, chanspec);
++
++	/* do one-time phy inits and calibration */
++	wlc_phy_cal_init(wlc_hw->band->pi);
++
++	/* core-specific initialization */
++	brcms_b_coreinit(wlc);
++
++	/* suspend the tx fifos and mute the phy for preism cac time */
++	if (mute)
++		brcms_b_mute(wlc_hw, ON, PHY_MUTE_FOR_PREISM);
++
++	/* band-specific inits */
++	brcms_b_bsinit(wlc, chanspec);
++
++	/* restore macintmask */
++	brcms_intrsrestore(wlc->wl, macintmask);
++
++	/* seed wake_override with BRCMS_WAKE_OVERRIDE_MACSUSPEND since the mac
++	 * is suspended and brcms_c_enable_mac() will clear this override bit.
++	 */
++	mboolset(wlc_hw->wake_override, BRCMS_WAKE_OVERRIDE_MACSUSPEND);
++
++	/*
++	 * initialize mac_suspend_depth to 1 to match ucode initial suspended state
++	 */
++	wlc_hw->mac_suspend_depth = 1;
++
++	/* restore the clk */
++	if (!fastclk)
++		brcms_b_clkctl_clk(wlc_hw, CLK_DYNAMIC);
++}
++
+ void brcms_c_init(struct brcms_c_info *wlc)
+ {
+ 	d11regs_t *regs;
+@@ -4296,6 +3511,17 @@ void brcms_c_set_bssid(struct brcms_bss_cfg *cfg)
+ #endif
+ }
+ 
++void brcms_b_set_shortslot(struct brcms_hardware *wlc_hw, bool shortslot)
++{
++	wlc_hw->shortslot = shortslot;
++
++	if (BAND_2G(brcms_b_bandtype(wlc_hw)) && wlc_hw->up) {
++		brcms_c_suspend_mac_and_wait(wlc_hw->wlc);
++		brcms_b_update_slot_timing(wlc_hw, shortslot);
++		brcms_c_enable_mac(wlc_hw->wlc);
++	}
++}
++
+ /*
+  * Suspend the the MAC and update the slot timing
+  * for standard 11b/g (20us slots) or shortslot 11g (9us slots).
+@@ -4394,6 +3620,50 @@ static void brcms_c_set_phy_chanspec(struct brcms_c_info *wlc,
+ 
+ }
+ 
++void
++brcms_b_set_chanspec(struct brcms_hardware *wlc_hw, chanspec_t chanspec,
++		      bool mute, struct txpwr_limits *txpwr)
++{
++	uint bandunit;
++
++	BCMMSG(wlc_hw->wlc->wiphy, "wl%d: 0x%x\n", wlc_hw->unit, chanspec);
++
++	wlc_hw->chanspec = chanspec;
++
++	/* Switch bands if necessary */
++	if (NBANDS_HW(wlc_hw) > 1) {
++		bandunit = CHSPEC_BANDUNIT(chanspec);
++		if (wlc_hw->band->bandunit != bandunit) {
++			/* brcms_b_setband disables other bandunit,
++			 *  use light band switch if not up yet
++			 */
++			if (wlc_hw->up) {
++				wlc_phy_chanspec_radio_set(wlc_hw->
++							   bandstate[bandunit]->
++							   pi, chanspec);
++				brcms_b_setband(wlc_hw, bandunit, chanspec);
++			} else {
++				brcms_c_setxband(wlc_hw, bandunit);
++			}
++		}
++	}
++
++	wlc_phy_initcal_enable(wlc_hw->band->pi, !mute);
++
++	if (!wlc_hw->up) {
++		if (wlc_hw->clk)
++			wlc_phy_txpower_limit_set(wlc_hw->band->pi, txpwr,
++						  chanspec);
++		wlc_phy_chanspec_radio_set(wlc_hw->band->pi, chanspec);
++	} else {
++		wlc_phy_chanspec_set(wlc_hw->band->pi, chanspec);
++		wlc_phy_txpower_limit_set(wlc_hw->band->pi, txpwr, chanspec);
++
++		/* Update muting of the channel */
++		brcms_b_mute(wlc_hw, mute, 0);
++	}
++}
++
+ void brcms_c_set_chanspec(struct brcms_c_info *wlc, chanspec_t chanspec)
+ {
+ 	uint bandunit;
+@@ -4981,6 +4251,356 @@ struct brcms_pub *brcms_c_pub(void *wlc)
+ 
+ #define CHIP_SUPPORTS_11N(wlc)	1
+ 
++/* low level attach
++ *    run backplane attach, init nvram
++ *    run phy attach
++ *    initialize software state for each core and band
++ *    put the whole chip in reset(driver down state), no clock
++ */
++int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device, uint unit,
++		    bool piomode, void *regsva, uint bustype, void *btparam)
++{
++	struct brcms_hardware *wlc_hw;
++	d11regs_t *regs;
++	char *macaddr = NULL;
++	char *vars;
++	uint err = 0;
++	uint j;
++	bool wme = false;
++	struct shared_phy_params sha_params;
++	struct wiphy *wiphy = wlc->wiphy;
++
++	BCMMSG(wlc->wiphy, "wl%d: vendor 0x%x device 0x%x\n", unit, vendor,
++		device);
++
++	wme = true;
++
++	wlc_hw = wlc->hw;
++	wlc_hw->wlc = wlc;
++	wlc_hw->unit = unit;
++	wlc_hw->band = wlc_hw->bandstate[0];
++	wlc_hw->_piomode = piomode;
++
++	/* populate struct brcms_hardware with default values  */
++	brcms_b_info_init(wlc_hw);
++
++	/*
++	 * Do the hardware portion of the attach.
++	 * Also initialize software state that depends on the particular hardware
++	 * we are running.
++	 */
++	wlc_hw->sih = ai_attach(regsva, bustype, btparam,
++				&wlc_hw->vars, &wlc_hw->vars_size);
++	if (wlc_hw->sih == NULL) {
++		wiphy_err(wiphy, "wl%d: brcms_b_attach: si_attach failed\n",
++			  unit);
++		err = 11;
++		goto fail;
++	}
++	vars = wlc_hw->vars;
++
++	/*
++	 * Get vendid/devid nvram overwrites, which could be different
++	 * than those the BIOS recognizes for devices on PCMCIA_BUS,
++	 * SDIO_BUS, and SROMless devices on PCI_BUS.
++	 */
++#ifdef BCMBUSTYPE
++	bustype = BCMBUSTYPE;
++#endif
++	if (bustype != SI_BUS) {
++		char *var;
++
++		var = getvar(vars, "vendid");
++		if (var) {
++			vendor = (u16) simple_strtoul(var, NULL, 0);
++			wiphy_err(wiphy, "Overriding vendor id = 0x%x\n",
++				  vendor);
++		}
++		var = getvar(vars, "devid");
++		if (var) {
++			u16 devid = (u16) simple_strtoul(var, NULL, 0);
++			if (devid != 0xffff) {
++				device = devid;
++				wiphy_err(wiphy, "Overriding device id = 0x%x"
++					  "\n", device);
++			}
++		}
++
++		/* verify again the device is supported */
++		if (!brcms_c_chipmatch(vendor, device)) {
++			wiphy_err(wiphy, "wl%d: brcms_b_attach: Unsupported "
++				"vendor/device (0x%x/0x%x)\n",
++				 unit, vendor, device);
++			err = 12;
++			goto fail;
++		}
++	}
++
++	wlc_hw->vendorid = vendor;
++	wlc_hw->deviceid = device;
++
++	/* set bar0 window to point at D11 core */
++	wlc_hw->regs = (d11regs_t *) ai_setcore(wlc_hw->sih, D11_CORE_ID, 0);
++	wlc_hw->corerev = ai_corerev(wlc_hw->sih);
++
++	regs = wlc_hw->regs;
++
++	wlc->regs = wlc_hw->regs;
++
++	/* validate chip, chiprev and corerev */
++	if (!brcms_c_isgoodchip(wlc_hw)) {
++		err = 13;
++		goto fail;
++	}
++
++	/* initialize power control registers */
++	ai_clkctl_init(wlc_hw->sih);
++
++	/* request fastclock and force fastclock for the rest of attach
++	 * bring the d11 core out of reset.
++	 *   For PMU chips, the first wlc_clkctl_clk is no-op since core-clk is still false;
++	 *   But it will be called again inside wlc_corereset, after d11 is out of reset.
++	 */
++	brcms_b_clkctl_clk(wlc_hw, CLK_FAST);
++	brcms_b_corereset(wlc_hw, BRCMS_USE_COREFLAGS);
++
++	if (!brcms_b_validate_chip_access(wlc_hw)) {
++		wiphy_err(wiphy, "wl%d: brcms_b_attach: validate_chip_access "
++			"failed\n", unit);
++		err = 14;
++		goto fail;
++	}
++
++	/* get the board rev, used just below */
++	j = getintvar(vars, "boardrev");
++	/* promote srom boardrev of 0xFF to 1 */
++	if (j == BOARDREV_PROMOTABLE)
++		j = BOARDREV_PROMOTED;
++	wlc_hw->boardrev = (u16) j;
++	if (!brcms_c_validboardtype(wlc_hw)) {
++		wiphy_err(wiphy, "wl%d: brcms_b_attach: Unsupported Broadcom "
++			"board type (0x%x)" " or revision level (0x%x)\n",
++			 unit, wlc_hw->sih->boardtype, wlc_hw->boardrev);
++		err = 15;
++		goto fail;
++	}
++	wlc_hw->sromrev = (u8) getintvar(vars, "sromrev");
++	wlc_hw->boardflags = (u32) getintvar(vars, "boardflags");
++	wlc_hw->boardflags2 = (u32) getintvar(vars, "boardflags2");
++
++	if (wlc_hw->boardflags & BFL_NOPLLDOWN)
++		brcms_b_pllreq(wlc_hw, true, BRCMS_PLLREQ_SHARED);
++
++	if ((wlc_hw->sih->bustype == PCI_BUS)
++	    && (ai_pci_war16165(wlc_hw->sih)))
++		wlc->war16165 = true;
++
++	/* check device id(srom, nvram etc.) to set bands */
++	if (wlc_hw->deviceid == BCM43224_D11N_ID ||
++	    wlc_hw->deviceid == BCM43224_D11N_ID_VEN1) {
++		/* Dualband boards */
++		wlc_hw->_nbands = 2;
++	} else
++		wlc_hw->_nbands = 1;
++
++	if ((wlc_hw->sih->chip == BCM43225_CHIP_ID))
++		wlc_hw->_nbands = 1;
++
++	/* BMAC_NOTE: remove init of pub values when brcms_c_attach()
++	 * unconditionally does the init of these values
++	 */
++	wlc->vendorid = wlc_hw->vendorid;
++	wlc->deviceid = wlc_hw->deviceid;
++	wlc->pub->sih = wlc_hw->sih;
++	wlc->pub->corerev = wlc_hw->corerev;
++	wlc->pub->sromrev = wlc_hw->sromrev;
++	wlc->pub->boardrev = wlc_hw->boardrev;
++	wlc->pub->boardflags = wlc_hw->boardflags;
++	wlc->pub->boardflags2 = wlc_hw->boardflags2;
++	wlc->pub->_nbands = wlc_hw->_nbands;
++
++	wlc_hw->physhim = wlc_phy_shim_attach(wlc_hw, wlc->wl, wlc);
++
++	if (wlc_hw->physhim == NULL) {
++		wiphy_err(wiphy, "wl%d: brcms_b_attach: wlc_phy_shim_attach "
++			"failed\n", unit);
++		err = 25;
++		goto fail;
++	}
++
++	/* pass all the parameters to wlc_phy_shared_attach in one struct */
++	sha_params.sih = wlc_hw->sih;
++	sha_params.physhim = wlc_hw->physhim;
++	sha_params.unit = unit;
++	sha_params.corerev = wlc_hw->corerev;
++	sha_params.vars = vars;
++	sha_params.vid = wlc_hw->vendorid;
++	sha_params.did = wlc_hw->deviceid;
++	sha_params.chip = wlc_hw->sih->chip;
++	sha_params.chiprev = wlc_hw->sih->chiprev;
++	sha_params.chippkg = wlc_hw->sih->chippkg;
++	sha_params.sromrev = wlc_hw->sromrev;
++	sha_params.boardtype = wlc_hw->sih->boardtype;
++	sha_params.boardrev = wlc_hw->boardrev;
++	sha_params.boardvendor = wlc_hw->sih->boardvendor;
++	sha_params.boardflags = wlc_hw->boardflags;
++	sha_params.boardflags2 = wlc_hw->boardflags2;
++	sha_params.bustype = wlc_hw->sih->bustype;
++	sha_params.buscorerev = wlc_hw->sih->buscorerev;
++
++	/* alloc and save pointer to shared phy state area */
++	wlc_hw->phy_sh = wlc_phy_shared_attach(&sha_params);
++	if (!wlc_hw->phy_sh) {
++		err = 16;
++		goto fail;
++	}
++
++	/* initialize software state for each core and band */
++	for (j = 0; j < NBANDS_HW(wlc_hw); j++) {
++		/*
++		 * band0 is always 2.4Ghz
++		 * band1, if present, is 5Ghz
++		 */
++
++		/* So if this is a single band 11a card, use band 1 */
++		if (IS_SINGLEBAND_5G(wlc_hw->deviceid))
++			j = BAND_5G_INDEX;
++
++		brcms_c_setxband(wlc_hw, j);
++
++		wlc_hw->band->bandunit = j;
++		wlc_hw->band->bandtype = j ? BRCM_BAND_5G : BRCM_BAND_2G;
++		wlc->band->bandunit = j;
++		wlc->band->bandtype = j ? BRCM_BAND_5G : BRCM_BAND_2G;
++		wlc->core->coreidx = ai_coreidx(wlc_hw->sih);
++
++		wlc_hw->machwcap = R_REG(&regs->machwcap);
++		wlc_hw->machwcap_backup = wlc_hw->machwcap;
++
++		/* init tx fifo size */
++		wlc_hw->xmtfifo_sz =
++		    xmtfifo_sz[(wlc_hw->corerev - XMTFIFOTBL_STARTREV)];
++
++		/* Get a phy for this band */
++		wlc_hw->band->pi = wlc_phy_attach(wlc_hw->phy_sh,
++			(void *)regs, brcms_b_bandtype(wlc_hw), vars,
++			wlc->wiphy);
++		if (wlc_hw->band->pi == NULL) {
++			wiphy_err(wiphy, "wl%d: brcms_b_attach: wlc_phy_"
++				  "attach failed\n", unit);
++			err = 17;
++			goto fail;
++		}
++
++		wlc_phy_machwcap_set(wlc_hw->band->pi, wlc_hw->machwcap);
++
++		wlc_phy_get_phyversion(wlc_hw->band->pi, &wlc_hw->band->phytype,
++				       &wlc_hw->band->phyrev,
++				       &wlc_hw->band->radioid,
++				       &wlc_hw->band->radiorev);
++		wlc_hw->band->abgphy_encore =
++		    wlc_phy_get_encore(wlc_hw->band->pi);
++		wlc->band->abgphy_encore = wlc_phy_get_encore(wlc_hw->band->pi);
++		wlc_hw->band->core_flags =
++		    wlc_phy_get_coreflags(wlc_hw->band->pi);
++
++		/* verify good phy_type & supported phy revision */
++		if (BRCMS_ISNPHY(wlc_hw->band)) {
++			if (NCONF_HAS(wlc_hw->band->phyrev))
++				goto good_phy;
++			else
++				goto bad_phy;
++		} else if (BRCMS_ISLCNPHY(wlc_hw->band)) {
++			if (LCNCONF_HAS(wlc_hw->band->phyrev))
++				goto good_phy;
++			else
++				goto bad_phy;
++		} else {
++ bad_phy:
++			wiphy_err(wiphy, "wl%d: brcms_b_attach: unsupported "
++				  "phy type/rev (%d/%d)\n", unit,
++				  wlc_hw->band->phytype, wlc_hw->band->phyrev);
++			err = 18;
++			goto fail;
++		}
++
++ good_phy:
++		/* BMAC_NOTE: wlc->band->pi should not be set below and should be done in the
++		 * high level attach. However we can not make that change until all low level access
++		 * is changed to wlc_hw->band->pi. Instead do the wlc->band->pi init below, keeping
++		 * wlc_hw->band->pi as well for incremental update of low level fns, and cut over
++		 * low only init when all fns updated.
++		 */
++		wlc->band->pi = wlc_hw->band->pi;
++		wlc->band->phytype = wlc_hw->band->phytype;
++		wlc->band->phyrev = wlc_hw->band->phyrev;
++		wlc->band->radioid = wlc_hw->band->radioid;
++		wlc->band->radiorev = wlc_hw->band->radiorev;
++
++		/* default contention windows size limits */
++		wlc_hw->band->CWmin = APHY_CWMIN;
++		wlc_hw->band->CWmax = PHY_CWMAX;
++
++		if (!brcms_b_attach_dmapio(wlc, j, wme)) {
++			err = 19;
++			goto fail;
++		}
++	}
++
++	/* disable core to match driver "down" state */
++	brcms_c_coredisable(wlc_hw);
++
++	/* Match driver "down" state */
++	if (wlc_hw->sih->bustype == PCI_BUS)
++		ai_pci_down(wlc_hw->sih);
++
++	/* register sb interrupt callback functions */
++	ai_register_intr_callback(wlc_hw->sih, (void *)brcms_c_wlintrsoff,
++				  (void *)brcms_c_wlintrsrestore, NULL, wlc);
++
++	/* turn off pll and xtal to match driver "down" state */
++	brcms_b_xtal(wlc_hw, OFF);
++
++	/* *********************************************************************
++	 * The hardware is in the DOWN state at this point. D11 core
++	 * or cores are in reset with clocks off, and the board PLLs
++	 * are off if possible.
++	 *
++	 * Beyond this point, wlc->sbclk == false and chip registers
++	 * should not be touched.
++	 *********************************************************************
++	 */
++
++	/* init etheraddr state variables */
++	macaddr = brcms_c_get_macaddr(wlc_hw);
++	if (macaddr == NULL) {
++		wiphy_err(wiphy, "wl%d: brcms_b_attach: macaddr not found\n",
++			  unit);
++		err = 21;
++		goto fail;
++	}
++	brcmu_ether_atoe(macaddr, wlc_hw->etheraddr);
++	if (is_broadcast_ether_addr(wlc_hw->etheraddr) ||
++	    is_zero_ether_addr(wlc_hw->etheraddr)) {
++		wiphy_err(wiphy, "wl%d: brcms_b_attach: bad macaddr %s\n",
++			  unit, macaddr);
++		err = 22;
++		goto fail;
++	}
++
++	BCMMSG(wlc->wiphy,
++		 "deviceid 0x%x nbands %d board 0x%x macaddr: %s\n",
++		 wlc_hw->deviceid, wlc_hw->_nbands,
++		 wlc_hw->sih->boardtype, macaddr);
++
++	return err;
++
++ fail:
++	wiphy_err(wiphy, "wl%d: brcms_b_attach: failed with err %d\n", unit,
++		  err);
++	return err;
++}
++
+ /*
+  * The common driver entry routine. Error codes should be unique
+  */
+@@ -5334,6 +4954,58 @@ static void brcms_c_detach_module(struct brcms_c_info *wlc)
+ }
+ 
+ /*
++ * low level detach
++ */
++int brcms_b_detach(struct brcms_c_info *wlc)
++{
++	uint i;
++	struct brcms_hw_band *band;
++	struct brcms_hardware *wlc_hw = wlc->hw;
++	int callbacks;
++
++	callbacks = 0;
++
++	if (wlc_hw->sih) {
++		/* detach interrupt sync mechanism since interrupt is disabled and per-port
++		 * interrupt object may has been freed. this must be done before sb core switch
++		 */
++		ai_deregister_intr_callback(wlc_hw->sih);
++
++		if (wlc_hw->sih->bustype == PCI_BUS)
++			ai_pci_sleep(wlc_hw->sih);
++	}
++
++	brcms_b_detach_dmapio(wlc_hw);
++
++	band = wlc_hw->band;
++	for (i = 0; i < NBANDS_HW(wlc_hw); i++) {
++		if (band->pi) {
++			/* Detach this band's phy */
++			wlc_phy_detach(band->pi);
++			band->pi = NULL;
++		}
++		band = wlc_hw->bandstate[OTHERBANDUNIT(wlc)];
++	}
++
++	/* Free shared phy state */
++	kfree(wlc_hw->phy_sh);
++
++	wlc_phy_shim_detach(wlc_hw->physhim);
++
++	/* free vars */
++	kfree(wlc_hw->vars);
++	wlc_hw->vars = NULL;
++
++	if (wlc_hw->sih) {
++		ai_detach(wlc_hw->sih);
++		wlc_hw->sih = NULL;
++	}
++
++	return callbacks;
++
++}
++
++/*
+  * Return a count of the number of driver callbacks still pending.
+  *
+  * General policy is that brcms_c_detach can only dealloc/free software states.
+@@ -5560,6 +5232,29 @@ bool brcms_c_radio_monitor_stop(struct brcms_c_info *wlc)
+ 	return brcms_del_timer(wlc->wl, wlc->radio_timer);
+ }
+ 
++/* common low-level watchdog code */
++void brcms_b_watchdog(void *arg)
++{
++	struct brcms_c_info *wlc = (struct brcms_c_info *) arg;
++	struct brcms_hardware *wlc_hw = wlc->hw;
++
++	BCMMSG(wlc->wiphy, "wl%d\n", wlc_hw->unit);
++
++	if (!wlc_hw->up)
++		return;
++
++	/* increment second count */
++	wlc_hw->now++;
++
++	/* Check for FIFO error interrupts */
++	brcms_b_fifoerrors(wlc_hw);
++
++	/* make sure RX dma has buffers */
++	dma_rxfill(wlc->hw->di[RX_FIFO]);
++
++	wlc_phy_watchdog(wlc_hw->band->pi);
++}
++
+ static void brcms_c_watchdog_by_timer(void *arg)
+ {
+ 	brcms_c_watchdog(arg);
+@@ -5637,6 +5332,105 @@ static void brcms_c_watchdog(void *arg)
+ 	}
+ }
+ 
++/* Initialize just the hardware when coming out of POR or S3/S5 system states */
++void brcms_b_hw_up(struct brcms_hardware *wlc_hw)
++{
++	if (wlc_hw->wlc->pub->hw_up)
++		return;
++
++	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
++
++	/*
++	 * Enable pll and xtal, initialize the power control registers,
++	 * and force fastclock for the remainder of brcms_c_up().
++	 */
++	brcms_b_xtal(wlc_hw, ON);
++	ai_clkctl_init(wlc_hw->sih);
++	brcms_b_clkctl_clk(wlc_hw, CLK_FAST);
++
++	if (wlc_hw->sih->bustype == PCI_BUS) {
++		ai_pci_fixcfg(wlc_hw->sih);
++
++		/* AI chip doesn't restore bar0win2 on hibernation/resume, need sw fixup */
++		if ((wlc_hw->sih->chip == BCM43224_CHIP_ID) ||
++		    (wlc_hw->sih->chip == BCM43225_CHIP_ID))
++			wlc_hw->regs =
++			    (d11regs_t *) ai_setcore(wlc_hw->sih, D11_CORE_ID,
++						     0);
++	}
++
++	/* Inform phy that a POR reset has occurred so it does a complete phy init */
++	wlc_phy_por_inform(wlc_hw->band->pi);
++
++	wlc_hw->ucode_loaded = false;
++	wlc_hw->wlc->pub->hw_up = true;
++
++	if ((wlc_hw->boardflags & BFL_FEM)
++	    && (wlc_hw->sih->chip == BCM4313_CHIP_ID)) {
++		if (!
++		    (wlc_hw->boardrev >= 0x1250
++		     && (wlc_hw->boardflags & BFL_FEM_BT)))
++			ai_epa_4313war(wlc_hw->sih);
++	}
++}
++
++int brcms_b_up_prep(struct brcms_hardware *wlc_hw)
++{
++	uint coremask;
++
++	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
++
++	/*
++	 * Enable pll and xtal, initialize the power control registers,
++	 * and force fastclock for the remainder of brcms_c_up().
++	 */
++	brcms_b_xtal(wlc_hw, ON);
++	ai_clkctl_init(wlc_hw->sih);
++	brcms_b_clkctl_clk(wlc_hw, CLK_FAST);
++
++	/*
++	 * Configure pci/pcmcia here instead of in brcms_c_attach()
++	 * to allow mfg hotswap:  down, hotswap (chip power cycle), up.
++	 */
++	coremask = (1 << wlc_hw->wlc->core->coreidx);
++
++	if (wlc_hw->sih->bustype == PCI_BUS)
++		ai_pci_setup(wlc_hw->sih, coremask);
++
++	/*
++	 * Need to read the hwradio status here to cover the case where the system
++	 * is loaded with the hw radio disabled. We do not want to bring the driver up in this case.
++	 */
++	if (brcms_b_radio_read_hwdisabled(wlc_hw)) {
++		/* put SB PCI in down state again */
++		if (wlc_hw->sih->bustype == PCI_BUS)
++			ai_pci_down(wlc_hw->sih);
++		brcms_b_xtal(wlc_hw, OFF);
++		return -ENOMEDIUM;
++	}
++
++	if (wlc_hw->sih->bustype == PCI_BUS)
++		ai_pci_up(wlc_hw->sih);
++
++	/* reset the d11 core */
++	brcms_b_corereset(wlc_hw, BRCMS_USE_COREFLAGS);
++
++	return 0;
++}
++
++int brcms_b_up_finish(struct brcms_hardware *wlc_hw)
++{
++	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
++
++	wlc_hw->up = true;
++	wlc_phy_hw_state_upd(wlc_hw->band->pi, true);
++
++	/* FULLY enable dynamic power control and d11 core interrupt */
++	brcms_b_clkctl_clk(wlc_hw, CLK_DYNAMIC);
++	brcms_intrson(wlc_hw->wlc->wl);
++	return 0;
++}
++
+ /* make interface operational */
+ int brcms_c_up(struct brcms_c_info *wlc)
+ {
+@@ -5773,6 +5567,78 @@ static uint brcms_c_down_del_timer(struct brcms_c_info *wlc)
+ 	return callbacks;
+ }
+ 
++int brcms_b_bmac_down_prep(struct brcms_hardware *wlc_hw)
++{
++	bool dev_gone;
++	uint callbacks = 0;
++
++	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
++
++	if (!wlc_hw->up)
++		return callbacks;
++
++	dev_gone = DEVICEREMOVED(wlc_hw->wlc);
++
++	/* disable interrupts */
++	if (dev_gone)
++		wlc_hw->wlc->macintmask = 0;
++	else {
++		/* now disable interrupts */
++		brcms_intrsoff(wlc_hw->wlc->wl);
++
++		/* ensure we're running on the pll clock again */
++		brcms_b_clkctl_clk(wlc_hw, CLK_FAST);
++	}
++	/* down phy at the last of this stage */
++	callbacks += wlc_phy_down(wlc_hw->band->pi);
++
++	return callbacks;
++}
++
++int brcms_b_down_finish(struct brcms_hardware *wlc_hw)
++{
++	uint callbacks = 0;
++	bool dev_gone;
++
++	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
++
++	if (!wlc_hw->up)
++		return callbacks;
++
++	wlc_hw->up = false;
++	wlc_phy_hw_state_upd(wlc_hw->band->pi, false);
++
++	dev_gone = DEVICEREMOVED(wlc_hw->wlc);
++
++	if (dev_gone) {
++		wlc_hw->sbclk = false;
++		wlc_hw->clk = false;
++		wlc_phy_hw_clk_state_upd(wlc_hw->band->pi, false);
++
++		/* reclaim any posted packets */
++		brcms_c_flushqueues(wlc_hw->wlc);
++	} else {
++
++		/* Reset and disable the core */
++		if (ai_iscoreup(wlc_hw->sih)) {
++			if (R_REG(&wlc_hw->regs->maccontrol) &
++			    MCTL_EN_MAC)
++				brcms_c_suspend_mac_and_wait(wlc_hw->wlc);
++			callbacks += brcms_reset(wlc_hw->wlc->wl);
++			brcms_c_coredisable(wlc_hw);
++		}
++
++		/* turn off primary xtal and pll */
++		if (!wlc_hw->noreset) {
++			if (wlc_hw->sih->bustype == PCI_BUS)
++				ai_pci_down(wlc_hw->sih);
++			brcms_b_xtal(wlc_hw, OFF);
++		}
++	}
++
++	return callbacks;
++}
++
+ /*
+  * Mark the interface nonoperational, stop the software mechanisms,
+  * disable the hardware, free any transient buffer state.
+@@ -6709,6 +6575,29 @@ void brcms_c_print_rxh(struct d11rxhdr *rxh)
+ }
+ #endif				/* defined(BCMDBG) */
+ 
++u16 brcms_b_rate_shm_offset(struct brcms_hardware *wlc_hw, u8 rate)
++{
++	u16 table_ptr;
++	u8 phy_rate, index;
++
++	/* get the phy specific rate encoding for the PLCP SIGNAL field */
++	if (IS_OFDM(rate))
++		table_ptr = M_RT_DIRMAP_A;
++	else
++		table_ptr = M_RT_DIRMAP_B;
++
++	/* for a given rate, the LS-nibble of the PLCP SIGNAL field is
++	 * the index into the rate table.
++	 */
++	phy_rate = rate_info[rate] & BRCMS_RATE_MASK;
++	index = phy_rate & 0xf;
++
++	/* Find the SHM pointer to the rate table entry by looking in the
++	 * Direct-map Table
++	 */
++	return 2 * brcms_b_read_shm(wlc_hw, table_ptr + (index * 2));
++}
++
+ static u16 brcms_c_rate_shm_offset(struct brcms_c_info *wlc, u8 rate)
+ {
+ 	return brcms_b_rate_shm_offset(wlc->hw, rate);
+@@ -8114,6 +8003,19 @@ void brcms_c_bcn_li_upd(struct brcms_c_info *wlc)
+ 			      (wlc->bcn_li_dtim << 8) | wlc->bcn_li_bcn);
+ }
+ 
++void
++brcms_b_read_tsf(struct brcms_hardware *wlc_hw, u32 *tsf_l_ptr,
++		  u32 *tsf_h_ptr)
++{
++	d11regs_t *regs = wlc_hw->regs;
++
++	/* read the tsf timer low, then high to get an atomic read */
++	*tsf_l_ptr = R_REG(&regs->tsf_timerlow);
++	*tsf_h_ptr = R_REG(&regs->tsf_timerhigh);
++
++	return;
++}
++
+ /*
+  * recover 64bit TSF value from the 16bit TSF value in the rx header
+  * given the assumption that the TSF passed in header is within 65ms
+@@ -8933,6 +8835,27 @@ int brcms_c_get_header_len()
+ 	return TXOFF;
+ }
+ 
++/* mac is assumed to be suspended at this point */
++void
++brcms_b_write_hw_bcntemplates(struct brcms_hardware *wlc_hw, void *bcn,
++			      int len, bool both)
++{
++	d11regs_t *regs = wlc_hw->regs;
++
++	if (both) {
++		brcms_c_write_hw_bcntemplate0(wlc_hw, bcn, len);
++		brcms_c_write_hw_bcntemplate1(wlc_hw, bcn, len);
++	} else {
++		/* bcn 0 */
++		if (!(R_REG(&regs->maccommand) & MCMD_BCN0VLD))
++			brcms_c_write_hw_bcntemplate0(wlc_hw, bcn, len);
++		/* bcn 1 */
++		else if (!
++			 (R_REG(&regs->maccommand) & MCMD_BCN1VLD))
++			brcms_c_write_hw_bcntemplate1(wlc_hw, bcn, len);
++	}
++}
++
+ /* Update a beacon for a particular BSS
+  * For MBSS, this updates the software template and sets "latest" to the index of the
+  * template updated.
+@@ -9341,6 +9264,17 @@ void brcms_c_mhf(struct brcms_c_info *wlc, u8 idx, u16 mask, u16 val, int bands)
+ 	brcms_b_mhf(wlc->hw, idx, mask, val, bands);
+ }
+ 
++int brcms_b_xmtfifo_sz_get(struct brcms_hardware *wlc_hw, uint fifo,
++			   uint *blocks)
++{
++	if (fifo >= NFIFO)
++		return -EINVAL;
++
++	*blocks = wlc_hw->xmtfifo_sz[fifo];
++
++	return 0;
++}
++
+ int brcms_c_xmtfifo_sz_get(struct brcms_c_info *wlc, uint fifo, uint *blocks)
+ {
+ 	return brcms_b_xmtfifo_sz_get(wlc->hw, fifo, blocks);
+-- 
+1.7.1
 
 
-
---=20
-shafi
-
---00221597639e195c7304a75279d3
-Content-Type: text/x-diff; charset=US-ASCII;
-	name="0001-Revert-ath9k_hw-Offload-USB-eeprom-reading-to-target.patch"
-Content-Disposition: attachment;
-	filename="0001-Revert-ath9k_hw-Offload-USB-eeprom-reading-to-target.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gpqw72d11
-
-RnJvbSA3MTM3NDMzNWUwZmZhMjk5Nzc1YmUwM2Y5OWYyNjVhMDJiYmE0MzQ3IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBNb2hhbW1lZCBTaGFmaSBTaGFqYWtoYW4gPG1vaGFtbWVkQHFj
-YS5xdWFsY29tbS5jb20+CkRhdGU6IFR1ZSwgNSBKdWwgMjAxMSAxODo0ODoxMCArMDUzMApTdWJq
-ZWN0OiBbUEFUQ0hdIFJldmVydCAiYXRoOWtfaHc6IE9mZmxvYWQgVVNCIGVlcHJvbSByZWFkaW5n
-IHRvIHRhcmdldCIKClRoaXMgcmV2ZXJ0cyBjb21taXQgMDRjZjUzZjQ2NTA0OWM3YzUwOWFhYzdi
-Nzc2Zjc1ZDM4ZWY2OGU2OS4KClNpZ25lZC1vZmYtYnk6IE1vaGFtbWVkIFNoYWZpIFNoYWpha2hh
-biA8bW9oYW1tZWRAcWNhLnF1YWxjb21tLmNvbT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9h
-dGgvYXRoOWsvZWVwcm9tLmMgICAgICB8ICAgMzIgLS0tLS0tLS0tLS0tLS0tLS0tCiBkcml2ZXJz
-L25ldC93aXJlbGVzcy9hdGgvYXRoOWsvZWVwcm9tLmggICAgICB8ICAgIDIgLQogZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvYXRoL2F0aDlrL2VlcHJvbV80ay5jICAgfCAgIDQxICsrKysrKy0tLS0tLS0t
-LS0tLS0tLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvZWVwcm9tXzkyODcuYyB8
-ICAgNDUgKysrKysrKystLS0tLS0tLS0tLS0tLS0tLQogZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRo
-L2F0aDlrL2VlcHJvbV9kZWYuYyAgfCAgIDMyICsrLS0tLS0tLS0tLS0tLS0tLQogNSBmaWxlcyBj
-aGFuZ2VkLCAyOSBpbnNlcnRpb25zKCspLCAxMjMgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEv
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDlrL2VlcHJvbS5jIGIvZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvYXRoL2F0aDlrL2VlcHJvbS5jCmluZGV4IGU2MTQwNGQuLmE0YTQxMDAgMTAwNjQ0Ci0t
-LSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9lZXByb20uYworKysgYi9kcml2ZXJz
-L25ldC93aXJlbGVzcy9hdGgvYXRoOWsvZWVwcm9tLmMKQEAgLTg5LDM4ICs4OSw2IEBAIGJvb2wg
-YXRoOWtfaHdfZ2V0X2xvd2VyX3VwcGVyX2luZGV4KHU4IHRhcmdldCwgdTggKnBMaXN0LCB1MTYg
-bGlzdFNpemUsCiAJcmV0dXJuIGZhbHNlOwogfQogCi12b2lkIGF0aDlrX2h3X3VzYl9nZW5fZmls
-bF9lZXByb20oc3RydWN0IGF0aF9odyAqYWgsIHUxNiAqZWVwX2RhdGEsCi0JCQkJICBpbnQgZWVw
-X3N0YXJ0X2xvYywgaW50IHNpemUpCi17Ci0JaW50IGkgPSAwLCBqLCBhZGRyOwotCXUzMiBhZGRy
-ZGF0YVs4XTsKLQl1MzIgZGF0YVs4XTsKLQotCWZvciAoYWRkciA9IDA7IGFkZHIgPCBzaXplOyBh
-ZGRyKyspIHsKLQkJYWRkcmRhdGFbaV0gPSBBUjU0MTZfRUVQUk9NX09GRlNFVCArCi0JCQkoKGFk
-ZHIgKyBlZXBfc3RhcnRfbG9jKSA8PCBBUjU0MTZfRUVQUk9NX1MpOwotCQlpKys7Ci0JCWlmIChp
-ID09IDgpIHsKLQkJCVJFR19SRUFEX01VTFRJKGFoLCBhZGRyZGF0YSwgZGF0YSwgaSk7Ci0KLQkJ
-CWZvciAoaiA9IDA7IGogPCBpOyBqKyspIHsKLQkJCQkqZWVwX2RhdGEgPSBkYXRhW2pdOwotCQkJ
-CWVlcF9kYXRhKys7Ci0JCQl9Ci0JCQlpID0gMDsKLQkJfQotCX0KLQotCWlmIChpICE9IDApIHsK
-LQkJUkVHX1JFQURfTVVMVEkoYWgsIGFkZHJkYXRhLCBkYXRhLCBpKTsKLQotCQlmb3IgKGogPSAw
-OyBqIDwgaTsgaisrKSB7Ci0JCQkqZWVwX2RhdGEgPSBkYXRhW2pdOwotCQkJZWVwX2RhdGErKzsK
-LQkJfQotCX0KLX0KLQogYm9vbCBhdGg5a19od19udnJhbV9yZWFkKHN0cnVjdCBhdGhfY29tbW9u
-ICpjb21tb24sIHUzMiBvZmYsIHUxNiAqZGF0YSkKIHsKIAlyZXR1cm4gY29tbW9uLT5idXNfb3Bz
-LT5lZXByb21fcmVhZChjb21tb24sIG9mZiwgZGF0YSk7CmRpZmYgLS1naXQgYS9kcml2ZXJzL25l
-dC93aXJlbGVzcy9hdGgvYXRoOWsvZWVwcm9tLmggYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgv
-YXRoOWsvZWVwcm9tLmgKaW5kZXggZGU5OWMwZC4uZmMzYjYyMCAxMDA2NDQKLS0tIGEvZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvYXRoL2F0aDlrL2VlcHJvbS5oCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVs
-ZXNzL2F0aC9hdGg5ay9lZXByb20uaApAQCAtNjY5LDggKzY2OSw2IEBAIGludDE2X3QgYXRoOWtf
-aHdfaW50ZXJwb2xhdGUodTE2IHRhcmdldCwgdTE2IHNyY0xlZnQsIHUxNiBzcmNSaWdodCwKIGJv
-b2wgYXRoOWtfaHdfZ2V0X2xvd2VyX3VwcGVyX2luZGV4KHU4IHRhcmdldCwgdTggKnBMaXN0LCB1
-MTYgbGlzdFNpemUsCiAJCQkJICAgIHUxNiAqaW5kZXhMLCB1MTYgKmluZGV4Uik7CiBib29sIGF0
-aDlrX2h3X252cmFtX3JlYWQoc3RydWN0IGF0aF9jb21tb24gKmNvbW1vbiwgdTMyIG9mZiwgdTE2
-ICpkYXRhKTsKLXZvaWQgYXRoOWtfaHdfdXNiX2dlbl9maWxsX2VlcHJvbShzdHJ1Y3QgYXRoX2h3
-ICphaCwgdTE2ICplZXBfZGF0YSwKLQkJCQkgIGludCBlZXBfc3RhcnRfbG9jLCBpbnQgc2l6ZSk7
-CiB2b2lkIGF0aDlrX2h3X2ZpbGxfdnBkX3RhYmxlKHU4IHB3ck1pbiwgdTggcHdyTWF4LCB1OCAq
-cFB3ckxpc3QsCiAJCQkgICAgIHU4ICpwVnBkTGlzdCwgdTE2IG51bUludGVyY2VwdHMsCiAJCQkg
-ICAgIHU4ICpwUmV0VnBkTGlzdCk7CmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9h
-dGgvYXRoOWsvZWVwcm9tXzRrLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvZWVw
-cm9tXzRrLmMKaW5kZXggNWIxZTg5NC4uODY3Y2I4OSAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQv
-d2lyZWxlc3MvYXRoL2F0aDlrL2VlcHJvbV80ay5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L2F0aC9hdGg5ay9lZXByb21fNGsuYwpAQCAtMjcsMTMgKzI3LDE5IEBAIHN0YXRpYyBpbnQgYXRo
-OWtfaHdfNGtfZ2V0X2VlcHJvbV9yZXYoc3RydWN0IGF0aF9odyAqYWgpCiAJcmV0dXJuICgoYWgt
-PmVlcHJvbS5tYXA0ay5iYXNlRWVwSGVhZGVyLnZlcnNpb24pICYgMHhGRkYpOwogfQogCi0jZGVm
-aW5lIFNJWkVfRUVQUk9NXzRLIChzaXplb2Yoc3RydWN0IGFyNTQxNl9lZXByb21fNGspIC8gc2l6
-ZW9mKHUxNikpCi0KLXN0YXRpYyBib29sIF9fYXRoOWtfaHdfNGtfZmlsbF9lZXByb20oc3RydWN0
-IGF0aF9odyAqYWgpCitzdGF0aWMgYm9vbCBhdGg5a19od180a19maWxsX2VlcHJvbShzdHJ1Y3Qg
-YXRoX2h3ICphaCkKIHsKKyNkZWZpbmUgU0laRV9FRVBST01fNEsgKHNpemVvZihzdHJ1Y3QgYXI1
-NDE2X2VlcHJvbV80aykgLyBzaXplb2YodTE2KSkKIAlzdHJ1Y3QgYXRoX2NvbW1vbiAqY29tbW9u
-ID0gYXRoOWtfaHdfY29tbW9uKGFoKTsKIAl1MTYgKmVlcF9kYXRhID0gKHUxNiAqKSZhaC0+ZWVw
-cm9tLm1hcDRrOwotCWludCBhZGRyLCBlZXBfc3RhcnRfbG9jID0gNjQ7CisJaW50IGFkZHIsIGVl
-cF9zdGFydF9sb2MgPSAwOworCisJZWVwX3N0YXJ0X2xvYyA9IDY0OworCisJaWYgKCFhdGg5a19o
-d191c2VfZmxhc2goYWgpKSB7CisJCWF0aF9kYmcoY29tbW9uLCBBVEhfREJHX0VFUFJPTSwKKwkJ
-CSJSZWFkaW5nIGZyb20gRUVQUk9NLCBub3QgZmxhc2hcbiIpOworCX0KIAogCWZvciAoYWRkciA9
-IDA7IGFkZHIgPCBTSVpFX0VFUFJPTV80SzsgYWRkcisrKSB7CiAJCWlmICghYXRoOWtfaHdfbnZy
-YW1fcmVhZChjb21tb24sIGFkZHIgKyBlZXBfc3RhcnRfbG9jLCBlZXBfZGF0YSkpIHsKQEAgLTQ1
-LDMzICs1MSw4IEBAIHN0YXRpYyBib29sIF9fYXRoOWtfaHdfNGtfZmlsbF9lZXByb20oc3RydWN0
-IGF0aF9odyAqYWgpCiAJfQogCiAJcmV0dXJuIHRydWU7Ci19Ci0KLXN0YXRpYyBib29sIF9fYXRo
-OWtfaHdfdXNiXzRrX2ZpbGxfZWVwcm9tKHN0cnVjdCBhdGhfaHcgKmFoKQotewotCXUxNiAqZWVw
-X2RhdGEgPSAodTE2ICopJmFoLT5lZXByb20ubWFwNGs7Ci0KLQlhdGg5a19od191c2JfZ2VuX2Zp
-bGxfZWVwcm9tKGFoLCBlZXBfZGF0YSwgNjQsIFNJWkVfRUVQUk9NXzRLKTsKLQotCXJldHVybiB0
-cnVlOwotfQotCi1zdGF0aWMgYm9vbCBhdGg5a19od180a19maWxsX2VlcHJvbShzdHJ1Y3QgYXRo
-X2h3ICphaCkKLXsKLQlzdHJ1Y3QgYXRoX2NvbW1vbiAqY29tbW9uID0gYXRoOWtfaHdfY29tbW9u
-KGFoKTsKLQotCWlmICghYXRoOWtfaHdfdXNlX2ZsYXNoKGFoKSkgewotCQlhdGhfZGJnKGNvbW1v
-biwgQVRIX0RCR19FRVBST00sCi0JCQkiUmVhZGluZyBmcm9tIEVFUFJPTSwgbm90IGZsYXNoXG4i
-KTsKLQl9Ci0KLQlpZiAoY29tbW9uLT5idXNfb3BzLT5hdGhfYnVzX3R5cGUgPT0gQVRIX1VTQikK
-LQkJcmV0dXJuIF9fYXRoOWtfaHdfdXNiXzRrX2ZpbGxfZWVwcm9tKGFoKTsKLQllbHNlCi0JCXJl
-dHVybiBfX2F0aDlrX2h3XzRrX2ZpbGxfZWVwcm9tKGFoKTsKLX0KLQogI3VuZGVmIFNJWkVfRUVQ
-Uk9NXzRLCit9CiAKIHN0YXRpYyBpbnQgYXRoOWtfaHdfNGtfY2hlY2tfZWVwcm9tKHN0cnVjdCBh
-dGhfaHcgKmFoKQogewpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDlr
-L2VlcHJvbV85Mjg3LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvZWVwcm9tXzky
-ODcuYwppbmRleCAzNDNmYzlmLi43MDE1NTQ3IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJl
-bGVzcy9hdGgvYXRoOWsvZWVwcm9tXzkyODcuYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9h
-dGgvYXRoOWsvZWVwcm9tXzkyODcuYwpAQCAtMTcsNyArMTcsNyBAQAogI2luY2x1ZGUgImh3Lmgi
-CiAjaW5jbHVkZSAiYXI5MDAyX3BoeS5oIgogCi0jZGVmaW5lIFNJWkVfRUVQUk9NX0FSOTI4NyAo
-c2l6ZW9mKHN0cnVjdCBhcjkyODdfZWVwcm9tKSAvIHNpemVvZih1MTYpKQorI2RlZmluZSBOVU1f
-RUVQX1dPUkRTIChzaXplb2Yoc3RydWN0IGFyOTI4N19lZXByb20pIC8gc2l6ZW9mKHUxNikpCiAK
-IHN0YXRpYyBpbnQgYXRoOWtfaHdfYXI5Mjg3X2dldF9lZXByb21fdmVyKHN0cnVjdCBhdGhfaHcg
-KmFoKQogewpAQCAtMjksMTUgKzI5LDI1IEBAIHN0YXRpYyBpbnQgYXRoOWtfaHdfYXI5Mjg3X2dl
-dF9lZXByb21fcmV2KHN0cnVjdCBhdGhfaHcgKmFoKQogCXJldHVybiAoYWgtPmVlcHJvbS5tYXA5
-Mjg3LmJhc2VFZXBIZWFkZXIudmVyc2lvbikgJiAweEZGRjsKIH0KIAotc3RhdGljIGJvb2wgX19h
-dGg5a19od19hcjkyODdfZmlsbF9lZXByb20oc3RydWN0IGF0aF9odyAqYWgpCitzdGF0aWMgYm9v
-bCBhdGg5a19od19hcjkyODdfZmlsbF9lZXByb20oc3RydWN0IGF0aF9odyAqYWgpCiB7CiAJc3Ry
-dWN0IGFyOTI4N19lZXByb20gKmVlcCA9ICZhaC0+ZWVwcm9tLm1hcDkyODc7CiAJc3RydWN0IGF0
-aF9jb21tb24gKmNvbW1vbiA9IGF0aDlrX2h3X2NvbW1vbihhaCk7CiAJdTE2ICplZXBfZGF0YTsK
-LQlpbnQgYWRkciwgZWVwX3N0YXJ0X2xvYyA9IEFSOTI4N19FRVBfU1RBUlRfTE9DOworCWludCBh
-ZGRyLCBlZXBfc3RhcnRfbG9jOwogCWVlcF9kYXRhID0gKHUxNiAqKWVlcDsKIAotCWZvciAoYWRk
-ciA9IDA7IGFkZHIgPCBTSVpFX0VFUFJPTV9BUjkyODc7IGFkZHIrKykgeworCWlmIChjb21tb24t
-PmJ1c19vcHMtPmF0aF9idXNfdHlwZSA9PSBBVEhfVVNCKQorCQllZXBfc3RhcnRfbG9jID0gQVI5
-Mjg3X0hUQ19FRVBfU1RBUlRfTE9DOworCWVsc2UKKwkJZWVwX3N0YXJ0X2xvYyA9IEFSOTI4N19F
-RVBfU1RBUlRfTE9DOworCisJaWYgKCFhdGg5a19od191c2VfZmxhc2goYWgpKSB7CisJCWF0aF9k
-YmcoY29tbW9uLCBBVEhfREJHX0VFUFJPTSwKKwkJCSJSZWFkaW5nIGZyb20gRUVQUk9NLCBub3Qg
-Zmxhc2hcbiIpOworCX0KKworCWZvciAoYWRkciA9IDA7IGFkZHIgPCBOVU1fRUVQX1dPUkRTOyBh
-ZGRyKyspIHsKIAkJaWYgKCFhdGg5a19od19udnJhbV9yZWFkKGNvbW1vbiwgYWRkciArIGVlcF9z
-dGFydF9sb2MsCiAJCQkJCSBlZXBfZGF0YSkpIHsKIAkJCWF0aF9kYmcoY29tbW9uLCBBVEhfREJH
-X0VFUFJPTSwKQEAgLTUwLDMxICs2MCw2IEBAIHN0YXRpYyBib29sIF9fYXRoOWtfaHdfYXI5Mjg3
-X2ZpbGxfZWVwcm9tKHN0cnVjdCBhdGhfaHcgKmFoKQogCXJldHVybiB0cnVlOwogfQogCi1zdGF0
-aWMgYm9vbCBfX2F0aDlrX2h3X3VzYl9hcjkyODdfZmlsbF9lZXByb20oc3RydWN0IGF0aF9odyAq
-YWgpCi17Ci0JdTE2ICplZXBfZGF0YSA9ICh1MTYgKikmYWgtPmVlcHJvbS5tYXA5Mjg3OwotCi0J
-YXRoOWtfaHdfdXNiX2dlbl9maWxsX2VlcHJvbShhaCwgZWVwX2RhdGEsCi0JCQkJICAgICBBUjky
-ODdfSFRDX0VFUF9TVEFSVF9MT0MsCi0JCQkJICAgICBTSVpFX0VFUFJPTV9BUjkyODcpOwotCXJl
-dHVybiB0cnVlOwotfQotCi1zdGF0aWMgYm9vbCBhdGg5a19od19hcjkyODdfZmlsbF9lZXByb20o
-c3RydWN0IGF0aF9odyAqYWgpCi17Ci0Jc3RydWN0IGF0aF9jb21tb24gKmNvbW1vbiA9IGF0aDlr
-X2h3X2NvbW1vbihhaCk7Ci0KLQlpZiAoIWF0aDlrX2h3X3VzZV9mbGFzaChhaCkpIHsKLQkJYXRo
-X2RiZyhjb21tb24sIEFUSF9EQkdfRUVQUk9NLAotCQkJIlJlYWRpbmcgZnJvbSBFRVBST00sIG5v
-dCBmbGFzaFxuIik7Ci0JfQotCi0JaWYgKGNvbW1vbi0+YnVzX29wcy0+YXRoX2J1c190eXBlID09
-IEFUSF9VU0IpCi0JCXJldHVybiBfX2F0aDlrX2h3X3VzYl9hcjkyODdfZmlsbF9lZXByb20oYWgp
-OwotCWVsc2UKLQkJcmV0dXJuIF9fYXRoOWtfaHdfYXI5Mjg3X2ZpbGxfZWVwcm9tKGFoKTsKLX0K
-LQogc3RhdGljIGludCBhdGg5a19od19hcjkyODdfY2hlY2tfZWVwcm9tKHN0cnVjdCBhdGhfaHcg
-KmFoKQogewogCXUzMiBzdW0gPSAwLCBlbCwgaW50ZWdlcjsKQEAgLTEwMSw3ICs4Niw3IEBAIHN0
-YXRpYyBpbnQgYXRoOWtfaHdfYXI5Mjg3X2NoZWNrX2VlcHJvbShzdHJ1Y3QgYXRoX2h3ICphaCkK
-IAkJCQluZWVkX3N3YXAgPSB0cnVlOwogCQkJCWVlcGRhdGEgPSAodTE2ICopKCZhaC0+ZWVwcm9t
-KTsKIAotCQkJCWZvciAoYWRkciA9IDA7IGFkZHIgPCBTSVpFX0VFUFJPTV9BUjkyODc7IGFkZHIr
-KykgeworCQkJCWZvciAoYWRkciA9IDA7IGFkZHIgPCBOVU1fRUVQX1dPUkRTOyBhZGRyKyspIHsK
-IAkJCQkJdGVtcCA9IHN3YWIxNigqZWVwZGF0YSk7CiAJCQkJCSplZXBkYXRhID0gdGVtcDsKIAkJ
-CQkJZWVwZGF0YSsrOwpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDlr
-L2VlcHJvbV9kZWYuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9lZXByb21fZGVm
-LmMKaW5kZXggMTdmMGE2OC4uNTFlNzI4NiAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxl
-c3MvYXRoL2F0aDlrL2VlcHJvbV9kZWYuYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgv
-YXRoOWsvZWVwcm9tX2RlZi5jCkBAIC04NiwxMCArODYsOSBAQCBzdGF0aWMgaW50IGF0aDlrX2h3
-X2RlZl9nZXRfZWVwcm9tX3JldihzdHJ1Y3QgYXRoX2h3ICphaCkKIAlyZXR1cm4gKChhaC0+ZWVw
-cm9tLmRlZi5iYXNlRWVwSGVhZGVyLnZlcnNpb24pICYgMHhGRkYpOwogfQogCi0jZGVmaW5lIFNJ
-WkVfRUVQUk9NX0RFRiAoc2l6ZW9mKHN0cnVjdCBhcjU0MTZfZWVwcm9tX2RlZikgLyBzaXplb2Yo
-dTE2KSkKLQotc3RhdGljIGJvb2wgX19hdGg5a19od19kZWZfZmlsbF9lZXByb20oc3RydWN0IGF0
-aF9odyAqYWgpCitzdGF0aWMgYm9vbCBhdGg5a19od19kZWZfZmlsbF9lZXByb20oc3RydWN0IGF0
-aF9odyAqYWgpCiB7CisjZGVmaW5lIFNJWkVfRUVQUk9NX0RFRiAoc2l6ZW9mKHN0cnVjdCBhcjU0
-MTZfZWVwcm9tX2RlZikgLyBzaXplb2YodTE2KSkKIAlzdHJ1Y3QgYXRoX2NvbW1vbiAqY29tbW9u
-ID0gYXRoOWtfaHdfY29tbW9uKGFoKTsKIAl1MTYgKmVlcF9kYXRhID0gKHUxNiAqKSZhaC0+ZWVw
-cm9tLmRlZjsKIAlpbnQgYWRkciwgYXI1NDE2X2VlcF9zdGFydF9sb2MgPSAweDEwMDsKQEAgLTEw
-NCwzMyArMTAzLDggQEAgc3RhdGljIGJvb2wgX19hdGg5a19od19kZWZfZmlsbF9lZXByb20oc3Ry
-dWN0IGF0aF9odyAqYWgpCiAJCWVlcF9kYXRhKys7CiAJfQogCXJldHVybiB0cnVlOwotfQotCi1z
-dGF0aWMgYm9vbCBfX2F0aDlrX2h3X3VzYl9kZWZfZmlsbF9lZXByb20oc3RydWN0IGF0aF9odyAq
-YWgpCi17Ci0JdTE2ICplZXBfZGF0YSA9ICh1MTYgKikmYWgtPmVlcHJvbS5kZWY7Ci0KLQlhdGg5
-a19od191c2JfZ2VuX2ZpbGxfZWVwcm9tKGFoLCBlZXBfZGF0YSwKLQkJCQkgICAgIDB4MTAwLCBT
-SVpFX0VFUFJPTV9ERUYpOwotCXJldHVybiB0cnVlOwotfQotCi1zdGF0aWMgYm9vbCBhdGg5a19o
-d19kZWZfZmlsbF9lZXByb20oc3RydWN0IGF0aF9odyAqYWgpCi17Ci0Jc3RydWN0IGF0aF9jb21t
-b24gKmNvbW1vbiA9IGF0aDlrX2h3X2NvbW1vbihhaCk7Ci0KLQlpZiAoIWF0aDlrX2h3X3VzZV9m
-bGFzaChhaCkpIHsKLQkJYXRoX2RiZyhjb21tb24sIEFUSF9EQkdfRUVQUk9NLAotCQkJIlJlYWRp
-bmcgZnJvbSBFRVBST00sIG5vdCBmbGFzaFxuIik7Ci0JfQotCi0JaWYgKGNvbW1vbi0+YnVzX29w
-cy0+YXRoX2J1c190eXBlID09IEFUSF9VU0IpCi0JCXJldHVybiBfX2F0aDlrX2h3X3VzYl9kZWZf
-ZmlsbF9lZXByb20oYWgpOwotCWVsc2UKLQkJcmV0dXJuIF9fYXRoOWtfaHdfZGVmX2ZpbGxfZWVw
-cm9tKGFoKTsKLX0KLQogI3VuZGVmIFNJWkVfRUVQUk9NX0RFRgorfQogCiBzdGF0aWMgaW50IGF0
-aDlrX2h3X2RlZl9jaGVja19lZXByb20oc3RydWN0IGF0aF9odyAqYWgpCiB7Ci0tIAoxLjcuMC40
-Cgo=
---00221597639e195c7304a75279d3--
