@@ -1,100 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:55108 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753282Ab1GVFnA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 01:43:00 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Subject: [PATCH 12/31] ath6kl: Refactor ath6kl_sdio_read_write_sync()
-Date: Fri, 22 Jul 2011 08:41:45 +0300
-Message-ID: <1311313324-6766-14-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110722_074304_745692_BA840D74)
-In-Reply-To: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:4281 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932387Ab1GNV34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 17:29:56 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 26/35] staging: brcm80211: use mac_pton() instead of own
+ implementation
+Date: Thu, 14 Jul 2011 14:29:22 -0700
+Message-ID: <1310678971-28952-27-git-send-email-frankyl@broadcom.com> (sfid-20110714_233145_988010_6BE67CA6)
+In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+From: Arend van Spriel <arend@broadcom.com>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+The function brcmu_ether_atoe() does exactly the same as mac_pton().
+The driver now uses the latter and brcmu_ether_atoe() has been removed
+as it is not used anymore.
+
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
 ---
- drivers/net/wireless/ath/ath6kl/sdio.c |   51 ++++++++++++++++++-------------
- 1 files changed, 30 insertions(+), 21 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/main.c       |    5 +++--
+ drivers/staging/brcm80211/brcmutil/utils.c      |   15 ---------------
+ drivers/staging/brcm80211/include/brcmu_utils.h |    3 ---
+ 3 files changed, 3 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 686f091..6c66613 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -128,6 +128,33 @@ static int ath6kl_sdio_func0_cmd52_wr_byte(struct mmc_card *card,
- 	return mmc_wait_for_cmd(card->host, &io_cmd, 0);
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 85d161c..ebcb7e8 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -15,6 +15,7 @@
+  */
+ 
+ #include <linux/pci_ids.h>
++#include <linux/if_ether.h>
+ #include <net/mac80211.h>
+ #include <brcm_hw_ids.h>
+ #include <aiutils.h>
+@@ -4584,8 +4585,8 @@ int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device, uint unit,
+ 		err = 21;
+ 		goto fail;
+ 	}
+-	brcmu_ether_atoe(macaddr, wlc_hw->etheraddr);
+-	if (is_broadcast_ether_addr(wlc_hw->etheraddr) ||
++	if (!mac_pton(macaddr, wlc_hw->etheraddr) ||
++	    is_broadcast_ether_addr(wlc_hw->etheraddr) ||
+ 	    is_zero_ether_addr(wlc_hw->etheraddr)) {
+ 		wiphy_err(wiphy, "wl%d: brcms_b_attach: bad macaddr %s\n",
+ 			  unit, macaddr);
+diff --git a/drivers/staging/brcm80211/brcmutil/utils.c b/drivers/staging/brcm80211/brcmutil/utils.c
+index cad1600..2151e0b 100644
+--- a/drivers/staging/brcm80211/brcmutil/utils.c
++++ b/drivers/staging/brcm80211/brcmutil/utils.c
+@@ -350,21 +350,6 @@ struct sk_buff *brcmu_pktq_mdeq(struct pktq *pq, uint prec_bmp,
  }
+ EXPORT_SYMBOL(brcmu_pktq_mdeq);
  
-+static int ath6kl_sdio_io(struct sdio_func *func, u32 request, u32 addr,
-+			  u8 *buf, u32 len)
-+{
-+	int ret = 0;
-+
-+	if (request & HIF_WRITE) {
-+		if (addr >= HIF_MBOX_BASE_ADDR &&
-+		    addr <= HIF_MBOX_END_ADDR)
-+			addr += (HIF_MBOX_WIDTH - len);
-+
-+		if (addr == HIF_MBOX0_EXT_BASE_ADDR)
-+			addr += HIF_MBOX0_EXT_WIDTH - len;
-+
-+		if (request & HIF_FIXED_ADDRESS)
-+			ret = sdio_writesb(func, addr, buf, len);
-+		else
-+			ret = sdio_memcpy_toio(func, addr, buf, len);
-+	} else {
-+		if (request & HIF_FIXED_ADDRESS)
-+			ret = sdio_readsb(func, buf, addr, len);
-+		else
-+			ret = sdio_memcpy_fromio(func, buf, addr, len);
-+	}
-+
-+	return ret;
-+}
-+
- static struct bus_request *ath6kl_sdio_alloc_busreq(struct ath6kl_sdio *ar_sdio)
- {
- 	struct bus_request *bus_req;
-@@ -355,27 +382,9 @@ static int ath6kl_sdio_read_write_sync(struct ath6kl *ar, u32 addr, u8 *buf,
- 		tbuf = buf;
- 
- 	sdio_claim_host(ar_sdio->func);
--	if (request & HIF_WRITE) {
--		if (addr >= HIF_MBOX_BASE_ADDR &&
--		    addr <= HIF_MBOX_END_ADDR)
--			addr += (HIF_MBOX_WIDTH - len);
+-/* parse a xx:xx:xx:xx:xx:xx format ethernet address */
+-int brcmu_ether_atoe(char *p, u8 *ea)
+-{
+-	int i = 0;
 -
--		if (addr == HIF_MBOX0_EXT_BASE_ADDR)
--			addr += HIF_MBOX0_EXT_WIDTH - len;
--
--		if (request & HIF_FIXED_ADDRESS)
--			ret = sdio_writesb(ar_sdio->func, addr, tbuf, len);
--		else
--			ret = sdio_memcpy_toio(ar_sdio->func, addr, tbuf, len);
--	} else {
--		if (request & HIF_FIXED_ADDRESS)
--			ret = sdio_readsb(ar_sdio->func, tbuf, addr, len);
--		else
--			ret = sdio_memcpy_fromio(ar_sdio->func, tbuf,
--						 addr, len);
--		if (bounced)
--			memcpy(buf, tbuf, len);
+-	for (;;) {
+-		ea[i++] = (char)simple_strtoul(p, &p, 16);
+-		if (!*p++ || i == 6)
+-			break;
 -	}
-+	ret = ath6kl_sdio_io(ar_sdio->func, request, addr, tbuf, len);
-+	if ((request & HIF_READ) && bounced)
-+		memcpy(buf, tbuf, len);
- 	sdio_release_host(ar_sdio->func);
+-
+-	return i == 6;
+-}
+-EXPORT_SYMBOL(brcmu_ether_atoe);
+-
+ #if defined(BCMDBG)
+ /* pretty hex print a pkt buffer chain */
+ void brcmu_prpkt(const char *msg, struct sk_buff *p0)
+diff --git a/drivers/staging/brcm80211/include/brcmu_utils.h b/drivers/staging/brcm80211/include/brcmu_utils.h
+index 8a340f0..513fa34 100644
+--- a/drivers/staging/brcm80211/include/brcmu_utils.h
++++ b/drivers/staging/brcm80211/include/brcmu_utils.h
+@@ -133,9 +133,6 @@ extern uint brcmu_pktfrombuf(struct sk_buff *p,
+ 	uint offset, int len, unsigned char *buf);
+ extern uint brcmu_pkttotlen(struct sk_buff *p);
  
- 	return ret;
+-/* ethernet address */
+-extern int brcmu_ether_atoe(char *p, u8 *ea);
+-
+ /* ip address */
+ struct ipv4_addr;
+ 
 -- 
 1.7.1
+
 
