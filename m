@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:59186 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752157Ab1GOSg4 (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:54534 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932117Ab1GNRFD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2011 14:36:56 -0400
-Received: by fxd18 with SMTP id 18so3189146fxd.11
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2011 11:36:55 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: Binary for carl9170
-Date: Fri, 15 Jul 2011 20:39:06 +0200
-Cc: Roman Shishkin <r.shishkin@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <CACAiNS3-3K06Cro+VWypyWGetUW-v0qeJ29noXi7WNtUaCWzTw@mail.gmail.com> <201107151509.23258.chunkeey@googlemail.com> <4E2072BF.6000306@gnu.org>
-In-Reply-To: <4E2072BF.6000306@gnu.org>
+	Thu, 14 Jul 2011 13:05:03 -0400
+Received: by gwaa18 with SMTP id a18so186121gwa.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2011 10:05:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201107152039.07294.chunkeey@googlemail.com> (sfid-20110715_203700_496385_E74A7BB3)
+In-Reply-To: <20110714140503.GA2327@redhat.com>
+References: <1310640029-22468-1-git-send-email-eliad@wizery.com>
+	<20110714140503.GA2327@redhat.com>
+Date: Thu, 14 Jul 2011 20:05:02 +0300
+Message-ID: <CAB3XZEczvHokbqGKR5NK0KmyBkNHC1TFBNjGTLkXmL8u9cz0nQ@mail.gmail.com> (sfid-20110714_190508_342085_EF3CB7D0)
+Subject: Re: [PATCH v2] mac80211: reconfigure tx on device reconfiguration
+From: Eliad Peller <eliad@wizery.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 15 July 2011 19:02:55 Pavel Roskin wrote:
-> On 07/15/2011 09:09 AM, Christian Lamparter wrote:
-> > On Friday 15 July 2011 14:31:07 Roman Shishkin wrote:
-> >> Source code avaliable of course, but I need just the binary of 1.9.4.
-> >> Probably lot of casual linux users needs this binary too :)
-> > Oh no, the firmware is supposed to be shipped by the distribution and
-> > not "installed by hand". After all, they provide compiled and fully tested
-> > packages for kernel+driver+userland and in doing so verify that no
-> > malicious code compromises the system's security.
-> 
-> Christian, I think the latest firmware needs to be on the site.  I 
-> understand that you want to keep the entry barrier high, but it's 
-> hurting wrong people.
-> [...]
-> But that's more time to spend on something I thought would take minutes. 
-> And I'll have to keep the toolchain somewhere if I want to compile 
-> future version of the firmware.
+On Thu, Jul 14, 2011 at 5:05 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Thu, Jul 14, 2011 at 01:40:29PM +0300, Eliad Peller wrote:
+>> +     /* reconfigure tx conf */
+>> +     for (i = 0; i < IEEE80211_MAX_QUEUES; i++)
+>> +             drv_conf_tx(local, i, &local->tx_conf[i]);
 >
-> I was complaining recently that AR5210 hard to get to work (it only 
-> works on old motherboards), but I think I can get it to work faster than 
-> AR9170.
-> 
-> Not providing the binary hurts potential tester and contributors.
-??? [high entry barrier? no, that theory is something you just made up]
-Anyway, pretty much everyone can compile, test and upload their own
-favorite firmware on the wiki site. In fact, this is what the site is for, right?
-So, since you already have a working version, why simply put it on the
-wiki? Or do you really prefer to argue with some uncooperative fool
-instead?
+> Perhaps you should use hw->queues instead of IEEE80211_MAX_QUEUES ...
+
+sure.
+i also found another place in which drv_conf_tx was called but the new
+tx configuration wasn't saved (ieee80211_set_txq_params).
+i'll send a new version soon.
+
+thanks,
+Eliad.
