@@ -1,83 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:4368 "EHLO mail.perches.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4307 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752917Ab1G2Vv2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 17:51:28 -0400
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] cfg80211: Update REG_DBG_PRINT macro and uses
-Date: Fri, 29 Jul 2011 14:51:25 -0700
-Message-Id: <01300ba58766070ab14137b8ba8a29fa78695a5c.1311976033.git.joe@perches.com> (sfid-20110729_235150_738256_4D88363D)
+	id S932390Ab1GNV34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 17:29:56 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 21/35] staging: brcm80211: use native error code in
+ brcmf_c_pattern_atoh()
+Date: Thu, 14 Jul 2011 14:29:17 -0700
+Message-ID: <1310678971-28952-22-git-send-email-frankyl@broadcom.com> (sfid-20110714_233235_282343_C5CCDB2B)
+In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several uses were missing terminating newlines.
-Typo fix and macro neatening.
+From: Arend van Spriel <arend@broadcom.com>
 
-Signed-off-by: Joe Perches <joe@perches.com>
+The function brcmf_c_pattern_atoh() returned meaningless -1 value.
+These have been replaced by linux error code -EINVAL.
+
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
 ---
- net/wireless/reg.c |   16 +++++++---------
- 1 files changed, 7 insertions(+), 9 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 1ad0f39..b22c324 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -49,10 +49,8 @@
- #include "nl80211.h"
- 
- #ifdef CONFIG_CFG80211_REG_DEBUG
--#define REG_DBG_PRINT(format, args...) \
--	do { \
--		printk(KERN_DEBUG pr_fmt(format), ##args);	\
--	} while (0)
-+#define REG_DBG_PRINT(format, args...)			\
-+	printk(KERN_DEBUG pr_fmt(format), ##args)
- #else
- #define REG_DBG_PRINT(args...)
- #endif
-@@ -890,7 +888,7 @@ static bool ignore_reg_update(struct wiphy *wiphy,
- 	    wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY) {
- 		REG_DBG_PRINT("Ignoring regulatory request %s "
- 			      "since the driver uses its own custom "
--			      "regulatory domain ",
-+			      "regulatory domain\n",
- 			      reg_initiator_name(initiator));
- 		return true;
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+index 1e757b7..4412893 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+@@ -841,12 +841,12 @@ static int brcmf_c_pattern_atoh(char *src, char *dst)
+ 	int i;
+ 	if (strncmp(src, "0x", 2) != 0 && strncmp(src, "0X", 2) != 0) {
+ 		BRCMF_ERROR(("Mask invalid format. Needs to start with 0x\n"));
+-		return -1;
++		return -EINVAL;
  	}
-@@ -903,8 +901,8 @@ static bool ignore_reg_update(struct wiphy *wiphy,
- 	    initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
- 	    !is_world_regdom(last_request->alpha2)) {
- 		REG_DBG_PRINT("Ignoring regulatory request %s "
--			      "since the driver requires its own regulaotry "
--			      "domain to be set first",
-+			      "since the driver requires its own regulatory "
-+			      "domain to be set first\n",
- 			      reg_initiator_name(initiator));
- 		return true;
+ 	src = src + 2;		/* Skip past 0x */
+ 	if (strlen(src) % 2 != 0) {
+ 		BRCMF_ERROR(("Mask invalid format. Length must be even.\n"));
+-		return -1;
++		return -EINVAL;
  	}
-@@ -1473,7 +1471,7 @@ static void reg_process_pending_hints(void)
- 	/* When last_request->processed becomes true this will be rescheduled */
- 	if (last_request && !last_request->processed) {
- 		REG_DBG_PRINT("Pending regulatory request, waiting "
--			      "for it to be processed...");
-+			      "for it to be processed...\n");
- 		goto out;
- 	}
- 
-@@ -2186,7 +2184,7 @@ out:
- static void reg_timeout_work(struct work_struct *work)
- {
- 	REG_DBG_PRINT("Timeout while waiting for CRDA to reply, "
--		      "restoring regulatory settings");
-+		      "restoring regulatory settings\n");
- 	restore_regulatory_settings(true);
- }
- 
+ 	for (i = 0; *src != '\0'; i++) {
+ 		char num[3];
 -- 
-1.7.6.131.g99019
+1.7.1
+
 
