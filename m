@@ -1,93 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:56485 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751808Ab1GROxL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2011 10:53:11 -0400
-Received: by vws1 with SMTP id 1so2189072vws.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jul 2011 07:53:10 -0700 (PDT)
-Message-ID: <4E2448D2.50502@lwfinger.net> (sfid-20110718_165314_822093_853E1DC4)
-Date: Mon, 18 Jul 2011 09:53:06 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:4291 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932389Ab1GNV34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 17:29:56 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 10/35] staging: brcm80211: removed function declaration
+ typedefs from otp.c
+Date: Thu, 14 Jul 2011 14:29:06 -0700
+Message-ID: <1310678971-28952-11-git-send-email-frankyl@broadcom.com> (sfid-20110714_233135_072058_2AD5D482)
+In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-To: Stefan Assmann <sassmann@redhat.com>
-CC: ali@internetdog.org, wireless <linux-wireless@vger.kernel.org>
-Subject: Re: r8712u issue
-References: <4E2051F3.20103@redhat.com> <4E205984.5040803@lwfinger.net> <4E23E56C.9000202@redhat.com> <20110718082709.GA8390@internetdog.org> <4E23F2E0.3050200@redhat.com>
-In-Reply-To: <4E23F2E0.3050200@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/18/2011 03:46 AM, Stefan Assmann wrote:
-> On 18.07.2011 10:27, Ali Bahar wrote:
->> Stefan,
->>
->> I'd like to reproduce this problem. So I'd appreciate some specifics,
->> as asked below.
->>
->>
->> On Mon, Jul 18, 2011 at 09:49:00AM +0200, Stefan Assmann wrote:
->>> On 15.07.2011 17:15, Larry Finger wrote:
->>>> On 07/15/2011 09:42 AM, Stefan Assmann wrote:
->>
->>>>> driver. The problem I'm currently facing is that the driver does not
->>>>> recognize any network disconnects. So whenever the network goes down the
->>>>> driver will still report it's connected and thus doesn't reconnect when
->>>>> the network is up again.
->>
->>
->>> The system is a headless debian squeeze with a self build vanilla 2.6.39
->>> kernel. The network is handled by debian scripts I just added the following
->>> to /etc/network/interfaces:
->>> auto wlan0
->>> iface wlan0 inet dhcp
->>> wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
->>>
->>> No NM involved.
->>
->> So wpa_supplicant is controlling (and presumably monitoring) the
->> connection.
->> How are you seeing that (to quote the above) "the network goes down"
->> and that the driver reports that "it's connected"?
->> (Typically, I use only ifconfig and iwconfig, but those don't monitor
->> the connection.)
->
-> OK, so I first recognized the problem when I rebooted my AP and the host
-> in question didn't get back online. Checking the host itself it seemed
-> that the network is doing fine, ifconfig showed the interface has an IP
-> but I couldn't ping any hosts. After an ifdown ; ifup cycle everything
-> was back to normal.
-> I pulled the power from the AP, waited a few minutes and checked back.
-> The ifconfig output still showed that the device had its IP.
->
->>>> When this situation occurs, what is output to the dmesg log?
->>>
->>> Sorry, I don't have the output at hand but IIRC basically nothing special
->>> occurred in dmesg. The interface even keeps it's IP although the wireless
->>> was long gone.
->>
->> So ifconfig shows the IP#. I'm assuming that it no longer shows a
->> state of "UP".
->
-> I would assume so, but I'll have to reproduce to make sure.
->
->> This'd seem an inane question, but I must ask: What exactly do you
->> mean by the wireless being "gone"? Which GUI/utility/effect do you
->> see? Is it a powered-down AP, roaming, iwconfig's output, or what?
->
-> I pulled the power from the AP. :)
->
->>> Ccing Ali Bahar to this reply, since he has seen something similar.
->>
->> To clarify: I just meant that I've seen quite a number of similar
->> inconsistencies in my testing as well as in my analysis of the code.
->> So, when I read your post, it came as no surprise to me. These'll get
->> fixed ... uh, let's hope soon! ;-)
->
-> I see. :)
+From: Roland Vossen <rvossen@broadcom.com>
 
-Please post your wpa_supplicant.conf. In particular, what is the value for 
-scan_ssid?
+Softmac related code cleanup. Typedefs are undesirable according to the
+CodingStyle document.
 
-Larry
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/otp.c |   34 +++++++++++------------------
+ 1 files changed, 13 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/otp.c b/drivers/staging/brcm80211/brcmsmac/otp.c
+index 34253cf..a257ed8 100644
+--- a/drivers/staging/brcm80211/brcmsmac/otp.c
++++ b/drivers/staging/brcm80211/brcmsmac/otp.c
+@@ -59,23 +59,15 @@
+ 
+ #define MAXNUMRDES		9	/* Maximum OTP redundancy entries */
+ 
+-/* OTP common function type */
+-typedef int (*otp_status_t) (void *oh);
+-typedef int (*otp_size_t) (void *oh);
+-typedef void *(*otp_init_t) (struct si_pub *sih);
+-typedef u16(*otp_read_bit_t) (void *oh, chipcregs_t *cc, uint off);
+-typedef int (*otp_read_region_t) (struct si_pub *sih, int region, u16 *data,
+-				  uint *wlen);
+-typedef int (*otp_nvread_t) (void *oh, char *data, uint *len);
+-
+ /* OTP function struct */
+ struct otp_fn_s {
+-	otp_size_t size;
+-	otp_read_bit_t read_bit;
+-	otp_init_t init;
+-	otp_read_region_t read_region;
+-	otp_nvread_t nvread;
+-	otp_status_t status;
++	int (*size)(void *oh);
++	u16 (*read_bit)(void *oh, chipcregs_t *cc, uint off);
++	void *(*init)(struct si_pub *sih);
++	int (*read_region)(struct si_pub *sih, int region, u16 *data,
++			   uint *wlen);
++	int (*nvread)(void *oh, char *data, uint *len);
++	int (*status)(void *oh);
+ };
+ 
+ struct otpinfo {
+@@ -445,14 +437,14 @@ static int ipxotp_nvread(void *oh, char *data, uint *len)
+ }
+ 
+ static struct otp_fn_s ipxotp_fn = {
+-	(otp_size_t) ipxotp_size,
+-	(otp_read_bit_t) ipxotp_read_bit,
++	(int (*)(void *)) ipxotp_size,
++	(u16 (*)(void *, chipcregs_t *, uint)) ipxotp_read_bit,
+ 
+-	(otp_init_t) ipxotp_init,
+-	(otp_read_region_t) ipxotp_read_region,
+-	(otp_nvread_t) ipxotp_nvread,
++	(void *(*)(struct si_pub *)) ipxotp_init,
++	(int (*)(struct si_pub *, int, u16 *, uint *)) ipxotp_read_region,
++	(int (*)(void *, char *, uint *)) ipxotp_nvread,
+ 
+-	(otp_status_t) ipxotp_status
++	(int (*)(void *)) ipxotp_status
+ };
+ 
+ /*
+-- 
+1.7.1
+
+
