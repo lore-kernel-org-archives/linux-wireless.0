@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59936 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964777Ab1GOKA2 (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:39503 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754585Ab1GNNSR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2011 06:00:28 -0400
-Subject: Re: [PATCH 5/5] mac80211: mesh beacon includes TIM IE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-In-Reply-To: <CAG6hwVN3HED+LZdKN0zpNfjmK9FmBuBWnZ0qe9gYTPPYmCedTg@mail.gmail.com> (sfid-20110714_221703_735281_4D5F9F4B)
-References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
-	 <1310600747-9583-6-git-send-email-thomas@cozybit.com>
-	 <20110714062522.GA2534@jm.kir.nu>
-	 <CAG6hwVN3HED+LZdKN0zpNfjmK9FmBuBWnZ0qe9gYTPPYmCedTg@mail.gmail.com>
-	 (sfid-20110714_221703_735281_4D5F9F4B)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 15 Jul 2011 12:00:23 +0200
-Message-ID: <1310724023.4164.22.camel@jlt3.sipsolutions.net> (sfid-20110715_120030_202767_7A4687B0)
-Mime-Version: 1.0
+	Thu, 14 Jul 2011 09:18:17 -0400
+Received: by ewy4 with SMTP id 4so133319ewy.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2011 06:18:16 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Ignacy Gawedzki <i@lri.fr>
+Subject: Re: carl9170 firmware: WoWLAN and adding fields to carl9170_tx_superdesc
+Date: Thu, 14 Jul 2011 15:18:03 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <20110714122803.GA31692@zenon.in.qult.net>
+In-Reply-To: <20110714122803.GA31692@zenon.in.qult.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201107141518.03757.chunkeey@googlemail.com> (sfid-20110714_151821_209666_572B4D69)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-07-14 at 13:16 -0700, Thomas Pedersen wrote:
-> On Wed, Jul 13, 2011 at 11:25 PM, Jouni Malinen <j@w1.fi> wrote:
-> > On Wed, Jul 13, 2011 at 04:45:47PM -0700, Thomas Pedersen wrote:
-> >> Even though we don't currently implement PS for mesh points, the
-> >> standard asks us to include a TIM element in beacons. Include an empty
-> >> element for now.
-> >
-> > Is it allowed to not support PS in this type of case? AP does not have
-> > such option..
-> >
+On Thursday, July 14, 2011 02:28:03 PM Ignacy Gawedzki wrote:
+> Hi,
 > 
-> You're right, it doesn't look like PS support is optional. The
-> standard requires us to respect the PS states of peers. Support for
-> this will require some work, but in the meantime, we can include a TIM
-> element indicating no frames buffered here, as well as a Mesh Awake
-> Window which never expires.
+> I'm still working on an extension of the carl9170 firmware to enable TX
+> service time measurements.  This implies the addition of a u32 field to
+> carl9170_tx_superdesc to record the TSF value at the time the frame is
+> received by the firmware.
 > 
-> Otherwise, until we implement proper PS, might it be better not to
-> include the TIM IE at all?
+> The problem with WoWLAN, more specifically with changes introduced by
+> af915846d44d23adc02c7ded807282d607b46faa, is that adding that field makes
+> carl9170_sram_reserved::cmd larger than CARL9170_MAX_CMD_LEN.
+> 
+> I still don't see an easy way out other than disabling WoWLAN altogether.
+> If anyone has any suggestion, I'd be happy to read it.
+Well, I think there's enough space in the rsp [fw->driver] buffer.
+After all in WoWLAN mode, this buffer will be unused as well?
 
-Or just not pretend to support the latest mesh draft ...
+> BTW, I noticed something that may be a bug in wlan.c, in
+> wlan_wol_connection_monitor(void)'s definition:
+> 
+>   memset(nullf, 0, sizeof(nullf));
+> 
+> Shouldn't that be
+> 
+>   memset(nullf, 0, sizeof *nullf);
+> 
+> instead?
+Yes it should be. Thanks [fix pushed].
 
-I don't think PS support can be hard. We have all of it in AP mode
-anyway, so you just need to generalise that a bit, maybe refactor like I
-said in my other email, and you should be able to get it up & running
-pretty quickly?
-
-johannes
-
+Regards,
+	Chr
