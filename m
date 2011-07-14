@@ -1,244 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34461 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779Ab1GRQKW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2011 12:10:22 -0400
-Message-Id: <20110718160949.338355119@sipsolutions.net> (sfid-20110718_181025_491495_47D86BA0)
-Date: Mon, 18 Jul 2011 18:08:35 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] cfg80211: allow userspace to control supported rates
- in scan
-References: <20110718160834.876776560@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:4193 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932373Ab1GNV3u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2011 17:29:50 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 11/35] staging: brcm80211: removed function declaration
+ typedefs from main.h,pub.h
+Date: Thu, 14 Jul 2011 14:29:07 -0700
+Message-ID: <1310678971-28952-12-git-send-email-frankyl@broadcom.com> (sfid-20110714_233000_307420_013AD959)
+In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Roland Vossen <rvossen@broadcom.com>
 
-Some P2P scans are not allowed to advertise
-11b rates, but that is a rather special case
-so instead of having that, allow userspace
-to request the rate sets (per band) that are
-advertised in scan probe request frames.
+Softmac related code cleanup. Typedefs are undesirable according to the
+CodingStyle document.
 
-Since it's needed in two places now, factor
-out some common code parsing a rate array.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
 ---
- include/linux/nl80211.h |    7 ++++++
- include/net/cfg80211.h  |    3 ++
- net/wireless/core.h     |    4 +++
- net/wireless/nl80211.c  |   50 +++++++++++++++++++++++++++++-------------------
- net/wireless/scan.c     |    3 ++
- net/wireless/util.c     |   35 +++++++++++++++++++++++++++++++++
- 6 files changed, 83 insertions(+), 19 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/main.c |    4 +-
+ drivers/staging/brcm80211/brcmsmac/main.h |   46 +++++++++++++++++++++-------
+ drivers/staging/brcm80211/brcmsmac/pub.h  |   27 ++---------------
+ 3 files changed, 39 insertions(+), 38 deletions(-)
 
---- a/include/linux/nl80211.h	2011-07-18 14:05:02.000000000 +0200
-+++ b/include/linux/nl80211.h	2011-07-18 15:18:13.000000000 +0200
-@@ -1014,6 +1014,11 @@ enum nl80211_commands {
-  * @%NL80211_ATTR_REKEY_DATA: nested attribute containing the information
-  *	necessary for GTK rekeying in the device, see &enum nl80211_rekey_data.
-  *
-+ * @NL80211_ATTR_SCAN_SUPP_RATES: rates per to be advertised as supported in scan,
-+ *	nested array attribute containing an entry for each band, with the entry
-+ *	being a list of supported rates as defined by IEEE 802.11 7.3.2.2 but
-+ *	without the length restriction (at most %NL80211_MAX_SUPP_RATES).
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index bd3d5f0..66de7ef 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -6265,8 +6265,8 @@ _brcms_c_ioctl(struct brcms_c_info *wlc, int cmd, void *arg, int len,
+  * register watchdog and down handlers.
   */
-@@ -1217,6 +1222,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_MAX_NUM_SCHED_SCAN_SSIDS,
- 	NL80211_ATTR_MAX_SCHED_SCAN_IE_LEN,
- 
-+	NL80211_ATTR_SCAN_SUPP_RATES,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
---- a/include/net/cfg80211.h	2011-07-18 14:13:47.000000000 +0200
-+++ b/include/net/cfg80211.h	2011-07-18 14:15:16.000000000 +0200
-@@ -772,6 +772,7 @@ struct cfg80211_ssid {
-  * @n_channels: total number of channels to scan
-  * @ie: optional information element(s) to add into Probe Request or %NULL
-  * @ie_len: length of ie in octets
-+ * @rates: bitmap of rates to advertise for each band
-  * @wiphy: the wiphy this was for
-  * @dev: the interface
-  * @aborted: (internal) scan request was notified as aborted
-@@ -783,6 +784,8 @@ struct cfg80211_scan_request {
- 	const u8 *ie;
- 	size_t ie_len;
- 
-+	u32 rates[IEEE80211_NUM_BANDS];
-+
- 	/* internal */
- 	struct wiphy *wiphy;
- 	struct net_device *dev;
---- a/net/wireless/nl80211.c	2011-07-18 14:15:48.000000000 +0200
-+++ b/net/wireless/nl80211.c	2011-07-18 15:31:38.000000000 +0200
-@@ -177,6 +177,7 @@ static const struct nla_policy nl80211_p
- 	[NL80211_ATTR_STA_PLINK_STATE] = { .type = NLA_U8 },
- 	[NL80211_ATTR_SCHED_SCAN_INTERVAL] = { .type = NLA_U32 },
- 	[NL80211_ATTR_REKEY_DATA] = { .type = NLA_NESTED },
-+	[NL80211_ATTR_SCAN_SUPP_RATES] = { .type = NLA_NESTED },
+ int brcms_c_module_register(struct brcms_pub *pub,
+-			const char *name, void *hdl,
+-			watchdog_fn_t w_fn, down_fn_t d_fn)
++		const char *name, void *hdl,
++		int (*w_fn)(void *handle), int (*d_fn)(void *handle))
+ {
+ 	struct brcms_c_info *wlc = (struct brcms_c_info *) pub->wlc;
+ 	int i;
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
+index bf36f10..e61f047 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.h
++++ b/drivers/staging/brcm80211/brcmsmac/main.h
+@@ -408,11 +408,11 @@ struct brcms_band {
+ 	u16 bcntsfoff;	/* beacon tsf offset */
  };
  
- /* policy for the key attributes */
-@@ -3324,7 +3325,6 @@ static int nl80211_trigger_scan(struct s
- 	struct nlattr *attr;
- 	struct wiphy *wiphy;
- 	int err, tmp, n_ssids = 0, n_channels, i;
--	enum ieee80211_band band;
- 	size_t ie_len;
- 
- 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
-@@ -3344,6 +3344,7 @@ static int nl80211_trigger_scan(struct s
- 		if (!n_channels)
- 			return -EINVAL;
- 	} else {
-+		enum ieee80211_band band;
- 		n_channels = 0;
- 
- 		for (band = 0; band < IEEE80211_NUM_BANDS; band++)
-@@ -3404,6 +3405,8 @@ static int nl80211_trigger_scan(struct s
- 			i++;
- 		}
- 	} else {
-+		enum ieee80211_band band;
-+
- 		/* all channels */
- 		for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 			int j;
-@@ -3450,6 +3453,28 @@ static int nl80211_trigger_scan(struct s
- 		       request->ie_len);
- 	}
- 
-+	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
-+		request->rates[i] = (1 << wiphy->bands[i]->n_bitrates) - 1;
-+
-+	if (info->attrs[NL80211_ATTR_SCAN_SUPP_RATES]) {
-+		nla_for_each_nested(attr,
-+				    info->attrs[NL80211_ATTR_SCAN_SUPP_RATES],
-+				    tmp) {
-+			enum ieee80211_band band = nla_type(attr);
-+
-+			if (band < 0 || band > IEEE80211_NUM_BANDS) {
-+				err = -EINVAL;
-+				goto out_free;
-+			}
-+			err = ieee80211_get_ratemask(wiphy->bands[band],
-+						     nla_data(attr),
-+						     nla_len(attr),
-+						     &request->rates[band]);
-+			if (err)
-+				goto out_free;
-+		}
-+	}
-+
- 	request->dev = dev;
- 	request->wiphy = &rdev->wiphy;
- 
-@@ -4336,25 +4361,12 @@ static int nl80211_join_ibss(struct sk_b
- 			nla_len(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
- 		struct ieee80211_supported_band *sband =
- 			wiphy->bands[ibss.channel->band];
--		int i, j;
+-/* tx completion callback takes 3 args */
+-typedef void (*pkcb_fn_t) (struct brcms_c_info *wlc, uint txstatus, void *arg);
 -
--		if (n_rates == 0)
--			return -EINVAL;
-+		int err;
- 
--		for (i = 0; i < n_rates; i++) {
--			int rate = (rates[i] & 0x7f) * 5;
--			bool found = false;
--
--			for (j = 0; j < sband->n_bitrates; j++) {
--				if (sband->bitrates[j].bitrate == rate) {
--					found = true;
--					ibss.basic_rates |= BIT(j);
--					break;
--				}
--			}
--			if (!found)
--				return -EINVAL;
--		}
-+		err = ieee80211_get_ratemask(sband, rates, n_rates,
-+					     &ibss.basic_rates);
-+		if (err)
-+			return err;
- 	}
- 
- 	if (info->attrs[NL80211_ATTR_MCAST_RATE] &&
---- a/net/wireless/core.h	2011-07-18 15:15:23.000000000 +0200
-+++ b/net/wireless/core.h	2011-07-18 15:15:31.000000000 +0200
-@@ -447,6 +447,10 @@ int cfg80211_set_freq(struct cfg80211_re
- 
- u16 cfg80211_calculate_bitrate(struct rate_info *rate);
- 
-+int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
-+			   const u8 *rates, unsigned int n_rates,
-+			   u32 *mask);
+ struct pkt_cb {
+-	pkcb_fn_t fn;		/* function to call when tx frame completes */
++	/* function to call when tx frame completes */
++	/* tx completion callback takes 3 args */
++	void (*fn)(struct brcms_c_info *wlc, uint txstatus, void *arg);
 +
- int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- 				 u32 beacon_int);
- 
---- a/net/wireless/util.c	2011-07-18 15:13:31.000000000 +0200
-+++ b/net/wireless/util.c	2011-07-18 15:37:10.000000000 +0200
-@@ -1006,3 +1006,38 @@ int cfg80211_can_change_interface(struct
- 
- 	return -EBUSY;
- }
+ 	void *arg;		/* void arg for fn */
+ 	u8 nextidx;		/* index of next call back if threading */
+ 	bool entered;		/* recursion check */
+@@ -423,19 +423,41 @@ struct modulecb {
+ 	char name[32];		/* module name : NULL indicates empty array member */
+ 	const struct brcmu_iovar *iovars;	/* iovar table */
+ 	void *hdl;		/* handle passed when handler 'doiovar' is called */
+-	watchdog_fn_t watchdog_fn;	/* watchdog handler */
+-	iovar_fn_t iovar_fn;	/* iovar handler */
+-	down_fn_t down_fn;	/* down handler. Note: the int returned
+-				 * by the down function is a count of the
+-				 * number of timers that could not be
+-				 * freed.
+-				 */
++	int (*watchdog_fn)(void *handle);	/* watchdog handler */
 +
-+int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
-+			   const u8 *rates, unsigned int n_rates,
-+			   u32 *mask)
-+{
-+	int i, j;
-+
-+	if (n_rates == 0 || n_rates > NL80211_MAX_SUPP_RATES)
-+		return -EINVAL;
-+
-+	*mask = 0;
-+
-+	for (i = 0; i < n_rates; i++) {
-+		int rate = (rates[i] & 0x7f) * 5;
-+		bool found = false;
-+
-+		for (j = 0; j < sband->n_bitrates; j++) {
-+			if (sband->bitrates[j].bitrate == rate) {
-+				found = true;
-+				*mask |= BIT(j);
-+				break;
-+			}
-+		}
-+		if (!found)
-+			return -EINVAL;
-+	}
-+
-+	/*
-+	 * mask must have at least one bit set here since we
-+	 * didn't accept a 0-length rates array nor allowed
-+	 * entries in the array that didn't exist
++	/* IOVar handler
++	 *
++	 * handle - a pointer value registered with the function
++	 * vi - iovar_info that was looked up
++	 * actionid - action ID, calculated by IOV_GVAL() and IOV_SVAL()
++	 *    based on varid.
++	 * name - the actual iovar name
++	 * params/plen - parameters and length for a get, input only.
++	 * arg/len - buffer and length for value to be set or retrieved,
++	 *      input or output.
++	 * vsize - value size, valid for integer type only.
++	 * wlcif - interface context (brcms_c_if pointer)
++	 *
++	 * All pointers may point into the same buffer.
 +	 */
++	int (*iovar_fn)(void *handle, const struct brcmu_iovar *vi,
++			u32 actionid, const char *name, void *params,
++			uint plen, void *arg, int alen, int vsize,
++			struct brcms_c_if *wlcif);
 +
-+	return 0;
-+}
---- a/net/wireless/scan.c	2011-07-18 14:16:06.000000000 +0200
-+++ b/net/wireless/scan.c	2011-07-18 15:28:54.000000000 +0200
-@@ -863,6 +863,9 @@ int cfg80211_wext_siwscan(struct net_dev
- 			creq->n_ssids = 0;
- 	}
++	int (*down_fn)(void *handle); /* down handler. Note: the int returned
++				       * by the down function is a count of the
++				       * number of timers that could not be
++				       * freed.
++				       */
++
+ };
  
-+	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
-+		creq->rates[i] = (1 << wiphy->bands[i]->n_bitrates) - 1;
+ /* dump control blocks */
+ struct dumpcb_s {
+ 	const char *name;	/* dump name */
+-	dump_fn_t dump_fn;	/* 'wl dump' handler */
++	/* 'wl dump' handler */
++	int (*dump_fn)(void *handle, struct brcmu_strbuf *b);
+ 	void *dump_fn_arg;
+ 	struct dumpcb_s *next;
+ };
+diff --git a/drivers/staging/brcm80211/brcmsmac/pub.h b/drivers/staging/brcm80211/brcmsmac/pub.h
+index 01d7460..8ec398a 100644
+--- a/drivers/staging/brcm80211/brcmsmac/pub.h
++++ b/drivers/staging/brcm80211/brcmsmac/pub.h
+@@ -203,29 +203,6 @@ struct brcms_bss_info {
+ #define IOVF_GET_BAND	(1<<13)	/* get requires fixed band */
+ #define IOVF_OPEN_ALLOW	(1<<14)	/* set allowed iovar for opensrc */
+ 
+-/* watchdog down and dump callback function proto's */
+-typedef int (*watchdog_fn_t) (void *handle);
+-typedef int (*down_fn_t) (void *handle);
+-typedef int (*dump_fn_t) (void *handle, struct brcmu_strbuf *b);
+-
+-/* IOVar handler
+- *
+- * handle - a pointer value registered with the function
+- * vi - iovar_info that was looked up
+- * actionid - action ID, calculated by IOV_GVAL() and IOV_SVAL() based on varid.
+- * name - the actual iovar name
+- * params/plen - parameters and length for a get, input only.
+- * arg/len - buffer and length for value to be set or retrieved, input or output.
+- * vsize - value size, valid for integer type only.
+- * wlcif - interface context (brcms_c_if pointer)
+- *
+- * All pointers may point into the same buffer.
+- */
+-typedef int (*iovar_fn_t) (void *handle, const struct brcmu_iovar *vi,
+-			   u32 actionid, const char *name, void *params,
+-			   uint plen, void *arg, int alen, int vsize,
+-			   struct brcms_c_if *wlcif);
+-
+ #define MAC80211_PROMISC_BCNS	(1 << 0)
+ #define MAC80211_SCAN		(1 << 1)
+ 
+@@ -635,7 +612,9 @@ extern void brcms_c_mctrl(struct brcms_c_info *wlc, u32 mask, u32 val);
+ 
+ extern int brcms_c_module_register(struct brcms_pub *pub,
+ 			       const char *name, void *hdl,
+-			       watchdog_fn_t watchdog_fn, down_fn_t down_fn);
++			       int (*watchdog_fn)(void *handle),
++			       int (*down_fn)(void *handle));
 +
- 	rdev->scan_req = creq;
- 	err = rdev->ops->scan(wiphy, dev, creq);
- 	if (err) {
+ extern int brcms_c_module_unregister(struct brcms_pub *pub, const char *name,
+ 				 void *hdl);
+ extern void brcms_c_suspend_mac_and_wait(struct brcms_c_info *wlc);
+-- 
+1.7.1
 
 
