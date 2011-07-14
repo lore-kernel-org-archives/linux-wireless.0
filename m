@@ -1,31 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44890 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757296Ab1GAWPz (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:53360 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753500Ab1GNDq1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2011 18:15:55 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Qcm09-0007Mq-Mg
-	for linux-wireless@vger.kernel.org; Sat, 02 Jul 2011 00:15:53 +0200
-Message-Id: <20110701221321.478559320@sipsolutions.net> (sfid-20110702_001559_666877_5A8663AA)
-Date: Sat, 02 Jul 2011 00:13:21 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 13 Jul 2011 23:46:27 -0400
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Subject: [RFC 0/3] cfg80211/mac80211 wowlan crypto offload
-Mime-Version: 1.0
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: check SDIO multi-port aggregation buffer room correctly
+Date: Wed, 13 Jul 2011 20:51:58 -0700
+Message-Id: <1310615519-32112-2-git-send-email-bzhao@marvell.com> (sfid-20110714_054631_276662_B9647D98)
+In-Reply-To: <1310615519-32112-1-git-send-email-bzhao@marvell.com>
+References: <1310615519-32112-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is my current code for wowlan crypto offload.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-It's still incomplete, but I figured I could use some
-feedback.
+We should consider current packet length also while checking
+Tx aggregation buffer room.
 
-Missing is access for the driver to IV/PN/RSC/TSC
-so it can correctly check frames and use the right
-one when sending frames. Will do that soon.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sdio.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 711fa68..f7105a9 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1319,7 +1319,7 @@ static int mwifiex_host_to_card_mp_aggr(struct mwifiex_adapter *adapter,
+ 				if (!(card->mp_wr_bitmap &
+ 						(1 << card->curr_wr_port))
+ 						|| !MP_TX_AGGR_BUF_HAS_ROOM(
+-							card, next_pkt_len))
++						card, pkt_len + next_pkt_len))
+ 					f_send_aggr_buf = 1;
+ 			} else {
+ 				/* No room in Aggr buf, send it */
+-- 
+1.7.0.2
 
