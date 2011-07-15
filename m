@@ -1,42 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:43509 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753113Ab1GWRWM convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:53660 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965014Ab1GOKNg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jul 2011 13:22:12 -0400
-Received: by yxi11 with SMTP id 11so1749638yxi.19
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Jul 2011 10:22:11 -0700 (PDT)
+	Fri, 15 Jul 2011 06:13:36 -0400
+Received: by iyb12 with SMTP id 12so1018207iyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2011 03:13:36 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20110723093747.m71o2krisow4ows8-cebfxv@webmail.spamcop.net>
-References: <20110723072113.17363.59871.stgit@mj.roinet.com>
-	<20110723072120.17363.56122.stgit@mj.roinet.com>
-	<CAFtRNNwO4-Cp429e+Vy61T9A+mCR8T-xRtpHVnOOp97CDLxnTQ@mail.gmail.com>
-	<20110723093747.m71o2krisow4ows8-cebfxv@webmail.spamcop.net>
-Date: Sat, 23 Jul 2011 20:22:11 +0300
-Message-ID: <CAFtRNNxsszwUuv6TEt08==oPE2Dm6KBqvC-=fdNzDyz4Xd_4Fw@mail.gmail.com> (sfid-20110723_192214_403647_13E20BE0)
-Subject: Re: [PATCH 2/3] ath5k: remove most references to XR
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4E200B2F.3060108@broadcom.com>
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+ <1310678971-28952-6-git-send-email-frankyl@broadcom.com> <CAGRGNgWx5-8cbU3zSnHQbbCdbf5xOGjYEnkcxnz5M4kB1s0nUQ@mail.gmail.com>
+ <4E200B2F.3060108@broadcom.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 15 Jul 2011 20:13:16 +1000
+Message-ID: <CAGRGNgWSAZvBs0w5jBx8Tjyo9f-=iO_s8WGJumNv7hr8eM7jrg@mail.gmail.com> (sfid-20110715_121340_192686_0E739076)
+Subject: Re: [PATCH 05/35] staging: brcm80211: removed function declaration
+ typedefs from aiutils.h
+To: Roland Vossen <rvossen@broadcom.com>
+Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/7/23 Pavel Roskin <proski@gnu.org>:
-> Quoting Nick Kossifidis <mickflemm@gmail.com>:
->
->> Could we leave the comments on ath5k.h and the rate code definitions ?
->> I believe we should leave them there as reference...
->
-> Sure. Â Version 2 has been sent.
->
+Hi Roland,
 
-Thanks a lot ;-)
+On Fri, Jul 15, 2011 at 19:41, Roland Vossen <rvossen@broadcom.com> wrote:
+> Hello Julian,
+>
+>>> Signed-off-by: Roland Vossen<rvossen@broadcom.com>
+>>> Reviewed-by: Arend van Spriel<arend@broadcom.com>
+>>> ---
+>>> diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c
+>>> b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+>>> index a25901e..5a5fc4b 100644
+>>> --- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
+>>> +++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+>>> @@ -1279,9 +1279,9 @@ ai_register_intr_callback(struct si_pub *sih, void
+>>> *intrsoff_fn,
+>>>
+>>>        sii = SI_INFO(sih);
+>>>        sii->intr_arg = intr_arg;
+>>> -       sii->intrsoff_fn = (si_intrsoff_t) intrsoff_fn;
+>>> -       sii->intrsrestore_fn = (si_intrsrestore_t) intrsrestore_fn;
+>>> -       sii->intrsenabled_fn = (si_intrsenabled_t) intrsenabled_fn;
+>>> +       sii->intrsoff_fn = (u32 (*)(void *)) intrsoff_fn;
+>>> +       sii->intrsrestore_fn = (void (*) (void *, u32)) intrsrestore_fn;
+>>> +       sii->intrsenabled_fn = (bool (*)(void *)) intrsenabled_fn;
+>>>        /* save current core id.  when this function called, the current
+>>> core
+>>>         * must be the core which provides driver functions(il, et, wl,
+>>> etc.)
+>>>         */
+>>
+>> Are these casts necessary - as in could better types be chosen for
+>> these function pointers and the underlying functions themselves?
+>> I see the same issue in patches 6 - 10.
+>
+> The first goal was to replace the typedefs, in a way that is obvious to the
+> reviewer. The next step is to get rid of void* where possible (I agree with
+> you that it is ugly).
 
+Fair enough.
 
+> Is it ok with you if we submit a separate patch train for that (since there
+> are quite some void* to be replaced) ?
+
+That's fine, I was just drawing your attention to them.
+
+Thanks,
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
