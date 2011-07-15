@@ -1,110 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1388 "EHLO mms2.broadcom.com"
+Received: from c60.cesmail.net ([216.154.195.49]:27785 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754220Ab1GEWDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 18:03:21 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 14/31] staging: brcm80211: replaced typedef tx_power_t
- by struct brcms_tx_power
-Date: Wed, 6 Jul 2011 00:02:41 +0200
-Message-ID: <1309903378-29021-15-git-send-email-arend@broadcom.com> (sfid-20110706_000414_199327_B4429FDA)
-In-Reply-To: <1309903378-29021-1-git-send-email-arend@broadcom.com>
-References: <1309903378-29021-1-git-send-email-arend@broadcom.com>
+	id S1753702Ab1GORC5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jul 2011 13:02:57 -0400
+Message-ID: <4E2072BF.6000306@gnu.org> (sfid-20110715_190300_373848_4451EBBA)
+Date: Fri, 15 Jul 2011 13:02:55 -0400
+From: Pavel Roskin <proski@gnu.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: Roman Shishkin <r.shishkin@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Binary for carl9170
+References: <CACAiNS3-3K06Cro+VWypyWGetUW-v0qeJ29noXi7WNtUaCWzTw@mail.gmail.com> <201107141119.08932.chunkeey@googlemail.com> <CACAiNS3rirp4i=pGK2j1Q8CSbVGXthGuHx+nwr21FEyCd3=F_Q@mail.gmail.com> <201107151509.23258.chunkeey@googlemail.com>
+In-Reply-To: <201107151509.23258.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+On 07/15/2011 09:09 AM, Christian Lamparter wrote:
+> On Friday 15 July 2011 14:31:07 Roman Shishkin wrote:
+>> Source code avaliable of course, but I need just the binary of 1.9.4.
+>> Probably lot of casual linux users needs this binary too :)
+> Oh no, the firmware is supposed to be shipped by the distribution and
+> not "installed by hand". After all, they provide compiled and fully tested
+> packages for kernel+driver+userland and in doing so verify that no
+> malicious code compromises the system's security.
 
+Christian, I think the latest firmware needs to be on the site.  I 
+understand that you want to keep the entry barrier high, but it's 
+hurting wrong people.
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |    4 ++--
- drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h |    2 +-
- drivers/staging/brcm80211/brcmsmac/phy_shim.h    |    2 +-
- drivers/staging/brcm80211/brcmsmac/stf.c         |    2 +-
- drivers/staging/brcm80211/brcmsmac/types.h       |    1 -
- 5 files changed, 5 insertions(+), 6 deletions(-)
+I made some changes to the ath module and wanted to make a quick check 
+that carl9170 is OK.  First I found that the 1.9.2 firmware won't work 
+with wireless-testing.  Then I found that the binary is not there.  Then 
+I downloaded the sources and ran "make -C toolchain".  After a long 
+download, I got
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-index 43a1dc5..8850d6d 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -2179,7 +2179,7 @@ static u32 wlc_phy_txpower_est_power_nphy(struct brcms_phy *pi)
- }
- 
- void
--wlc_phy_txpower_get_current(struct brcms_phy_pub *ppi, tx_power_t *power,
-+wlc_phy_txpower_get_current(struct brcms_phy_pub *ppi, struct tx_power *power,
- 			    uint channel)
- {
- 	struct brcms_phy *pi = (struct brcms_phy *) ppi;
-@@ -2187,7 +2187,7 @@ wlc_phy_txpower_get_current(struct brcms_phy_pub *ppi, tx_power_t *power,
- 	u8 min_pwr, max_pwr;
- 
- #if WL_TX_POWER_RATES != TXP_NUM_RATES
--#error "tx_power_t struct out of sync with this fn"
-+#error "struct tx_power out of sync with this fn"
- #endif
- 
- 	if (ISNPHY(pi)) {
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h b/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h
-index a2df6b4..e327a57 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h
-@@ -270,7 +270,7 @@ extern void wlc_phy_mute_upd(struct brcms_phy_pub *ppi, bool val, mbool flags);
- extern void wlc_phy_antsel_type_set(struct brcms_phy_pub *ppi, u8 antsel_type);
- 
- extern void wlc_phy_txpower_get_current(struct brcms_phy_pub *ppi,
--					tx_power_t *power, uint channel);
-+					struct tx_power *power, uint channel);
- 
- extern void wlc_phy_initcal_enable(struct brcms_phy_pub *pih, bool initcal);
- extern bool wlc_phy_test_ison(struct brcms_phy_pub *ppi);
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy_shim.h b/drivers/staging/brcm80211/brcmsmac/phy_shim.h
-index a4550ed..0a29b67 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy_shim.h
-+++ b/drivers/staging/brcm80211/brcmsmac/phy_shim.h
-@@ -98,7 +98,7 @@
- /* sslpnphy specifics */
- #define WL_TX_POWER_MCS20_SISO_FIRST_SSN   12	/* Index for first 20MHz MCS SISO rate */
- 
--/* tx_power_t.flags bits */
-+/* struct tx_power::flags bits */
- #define WL_TX_POWER_F_ENABLED	1
- #define WL_TX_POWER_F_HW	2
- #define WL_TX_POWER_F_MIMO	4
-diff --git a/drivers/staging/brcm80211/brcmsmac/stf.c b/drivers/staging/brcm80211/brcmsmac/stf.c
-index 3d5979b..b51ca7a 100644
---- a/drivers/staging/brcm80211/brcmsmac/stf.c
-+++ b/drivers/staging/brcm80211/brcmsmac/stf.c
-@@ -97,7 +97,7 @@ void
- brcms_c_stf_ss_algo_channel_get(struct brcms_c_info *wlc, u16 *ss_algo_channel,
- 			    chanspec_t chanspec)
- {
--	tx_power_t power;
-+	struct tx_power power;
- 	u8 siso_mcs_id, cdd_mcs_id, stbc_mcs_id;
- 
- 	/* Clear previous settings */
-diff --git a/drivers/staging/brcm80211/brcmsmac/types.h b/drivers/staging/brcm80211/brcmsmac/types.h
-index 9e9fe56..7ab4263 100644
---- a/drivers/staging/brcm80211/brcmsmac/types.h
-+++ b/drivers/staging/brcm80211/brcmsmac/types.h
-@@ -383,7 +383,6 @@ typedef volatile struct dma32diag dma32diag_t;
- typedef volatile struct dma64regs dma64regs_t;
- typedef struct brcms_rateset wlc_rateset_t;
- typedef u32 ratespec_t;
--typedef struct tx_power tx_power_t;
- typedef struct chanvec chanvec_t;
- typedef s32 fixed;
- typedef struct _cs32 cs32;
+configure: error: Building GCC requires GMP 4.2+, MPFR 2.3.1+ and MPC 
+0.8.0+.
+Try the --with-gmp, --with-mpfr and/or --with-mpc options to specify
+
+No big deal, I'll need to install some libraries and restart make.  But 
+that's more time to spend on something I thought would take minutes. 
+And I'll have to keep the toolchain somewhere if I want to compile 
+future version of the firmware.
+
+At this point I start having doubts whether it's easier just to look at 
+my changes more carefully and send them.
+
+I was complaining recently that AR5210 hard to get to work (it only 
+works on old motherboards), but I think I can get it to work faster than 
+AR9170.
+
+Not providing the binary hurts potential tester and contributors.
+
 -- 
-1.7.4.1
-
-
+Regards,
+Pavel Roskin
