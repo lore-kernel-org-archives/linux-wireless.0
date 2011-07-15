@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:3947 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751077Ab1GMEbE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 00:31:04 -0400
-Subject: Re: [PATCH 21/24] ath6kl: add txrx.c
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	gregkh@suse.de
-In-Reply-To: <20110713013630.8517.77720.stgit@localhost6.localdomain6>
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
-	 <20110713013630.8517.77720.stgit@localhost6.localdomain6>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Jul 2011 21:31:03 -0700
-Message-ID: <1310531463.1143.31.camel@Joe-Laptop> (sfid-20110713_063108_235031_403C6F59)
-Mime-Version: 1.0
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:43973 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751650Ab1GOSg4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jul 2011 14:36:56 -0400
+Received: by wyg8 with SMTP id 8so991915wyg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2011 11:36:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1310723140.4164.10.camel@jlt3.sipsolutions.net>
+References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
+	<1310600747-9583-2-git-send-email-thomas@cozybit.com>
+	<1310723140.4164.10.camel@jlt3.sipsolutions.net>
+Date: Fri, 15 Jul 2011 11:36:54 -0700
+Message-ID: <CAG6hwVP4pGonXgJwoRYgG0yRgPXZVOR54PvcC2-oCkMPWu14eQ@mail.gmail.com> (sfid-20110715_203659_011568_17AFCD7B)
+Subject: Re: [PATCH 1/5] mac80211: give if_mesh a beacon
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-07-13 at 04:36 +0300, Kalle Valo wrote:
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
->  drivers/net/wireless/ath/ath6kl/txrx.c | 1471 ++++++++++++++++++++++++++++++++
-[]
-> +int ath6kl_control_tx(void *devt, struct sk_buff *skb,
-> +		      enum htc_endpoint_id eid)
-> +{
-[]
-> +	ath6kl_dbg(ATH6KL_DBG_WLAN_TX,
-> +		   "%s: skb=0x%lx, len=0x%x eid =%d\n", __func__,
-> +		   (unsigned long)skb, skb->len, eid);
+On Fri, Jul 15, 2011 at 2:45 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2011-07-13 at 16:45 -0700, Thomas Pedersen wrote:
+>
+>> Based on Javier Cardona's "mac80211: Support beacon configuration via
+>> nl80211 for mesh interfaces", which never made it upstream.
+>
+> Ok I don't get it -- this patchset seems to apply fine, so what part is
+> dependent on Javier's patches?
 
+"derived from" would have been much more accurate wording.
 
-This style of casting a pointer to an unsigned long is used
-unnecessarily quite often.
-
-I think it's more intelligible to use %p without the case.
-Also, hex length is often not as readable as decimal.
-
-	ath6kl_dbg(ATH6KL_DBG_WLAN_TX, "%s: skb=%p, len=%u eid=%d\n",
-		   __func__, skb, skb->len, eid);
-
-
+>
+> johannes
+>
+>
