@@ -1,182 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:44419 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752143Ab1GWMEC convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59936 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964777Ab1GOKA2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jul 2011 08:04:02 -0400
-Received: by gwaa18 with SMTP id a18so2050470gwa.19
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Jul 2011 05:04:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20110723072120.17363.56122.stgit@mj.roinet.com>
-References: <20110723072113.17363.59871.stgit@mj.roinet.com>
-	<20110723072120.17363.56122.stgit@mj.roinet.com>
-Date: Sat, 23 Jul 2011 15:04:01 +0300
-Message-ID: <CAFtRNNwO4-Cp429e+Vy61T9A+mCR8T-xRtpHVnOOp97CDLxnTQ@mail.gmail.com> (sfid-20110723_140408_729160_D0E7E2ED)
-Subject: Re: [PATCH 2/3] ath5k: remove most references to XR
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 15 Jul 2011 06:00:28 -0400
+Subject: Re: [PATCH 5/5] mac80211: mesh beacon includes TIM IE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+In-Reply-To: <CAG6hwVN3HED+LZdKN0zpNfjmK9FmBuBWnZ0qe9gYTPPYmCedTg@mail.gmail.com> (sfid-20110714_221703_735281_4D5F9F4B)
+References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
+	 <1310600747-9583-6-git-send-email-thomas@cozybit.com>
+	 <20110714062522.GA2534@jm.kir.nu>
+	 <CAG6hwVN3HED+LZdKN0zpNfjmK9FmBuBWnZ0qe9gYTPPYmCedTg@mail.gmail.com>
+	 (sfid-20110714_221703_735281_4D5F9F4B)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 15 Jul 2011 12:00:23 +0200
+Message-ID: <1310724023.4164.22.camel@jlt3.sipsolutions.net> (sfid-20110715_120030_202767_7A4687B0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Could we leave the comments on ath5k.h and the rate code definitions ?
-I believe we should leave them there as reference...
+On Thu, 2011-07-14 at 13:16 -0700, Thomas Pedersen wrote:
+> On Wed, Jul 13, 2011 at 11:25 PM, Jouni Malinen <j@w1.fi> wrote:
+> > On Wed, Jul 13, 2011 at 04:45:47PM -0700, Thomas Pedersen wrote:
+> >> Even though we don't currently implement PS for mesh points, the
+> >> standard asks us to include a TIM element in beacons. Include an empty
+> >> element for now.
+> >
+> > Is it allowed to not support PS in this type of case? AP does not have
+> > such option..
+> >
+> 
+> You're right, it doesn't look like PS support is optional. The
+> standard requires us to respect the PS states of peers. Support for
+> this will require some work, but in the meantime, we can include a TIM
+> element indicating no frames buffered here, as well as a Mesh Awake
+> Window which never expires.
+> 
+> Otherwise, until we implement proper PS, might it be better not to
+> include the TIM IE at all?
 
-2011/7/23 Pavel Roskin <proski@gnu.org>:
-> XR is a proprietary feature of the chipset.  It's not supported and
-> should not be supported.
->
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
-> ---
->  drivers/net/wireless/ath/ath5k/ath5k.h  |   26 --------------------------
->  drivers/net/wireless/ath/ath5k/eeprom.c |    1 -
->  drivers/net/wireless/ath/ath5k/phy.c    |    2 --
->  drivers/net/wireless/ath/ath5k/qcu.c    |    7 -------
->  drivers/net/wireless/ath/ath5k/reset.c  |    8 --------
->  5 files changed, 0 insertions(+), 44 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-> index be7b8c0..c3a008d 100644
-> --- a/drivers/net/wireless/ath/ath5k/ath5k.h
-> +++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-> @@ -356,23 +356,6 @@ struct ath5k_srev_name {
->  /* TODO add support to mac80211 for vendor-specific rates and modes */
->
->  /*
-> - * Some of this information is based on Documentation from:
-> - *
-> - * http://madwifi-project.org/wiki/ChipsetFeatures/SuperAG
-> - *
-> - * Modulation for Atheros' eXtended Range - range enhancing extension that is
-> - * supposed to double the distance an Atheros client device can keep a
-> - * connection with an Atheros access point. This is achieved by increasing
-> - * the receiver sensitivity up to, -105dBm, which is about 20dB above what
-> - * the 802.11 specifications demand. In addition, new (proprietary) data rates
-> - * are introduced: 3, 2, 1, 0.5 and 0.25 MBit/s.
-> - *
-> - * Please note that can you either use XR or TURBO but you cannot use both,
-> - * they are exclusive.
-> - *
-> - */
-> -#define MODULATION_XR          0x00000200
-> -/*
->  * Modulation for Atheros' Turbo G and Turbo A, its supposed to provide a
->  * throughput transmission speed up to 40Mbit/s-60Mbit/s at a 108Mbit/s
->  * signaling rate achieved through the bonding of two 54Mbit/s 802.11g
-> @@ -416,7 +399,6 @@ enum ath5k_driver_mode {
->        AR5K_MODE_11A           =       0,
->        AR5K_MODE_11B           =       1,
->        AR5K_MODE_11G           =       2,
-> -       AR5K_MODE_XR            =       0,
->        AR5K_MODE_MAX           =       3
->  };
->
-> @@ -694,12 +676,10 @@ struct ath5k_gain {
->  #define        CHANNEL_5GHZ    0x0100  /* 5GHz channel */
->  #define        CHANNEL_PASSIVE 0x0200  /* Only passive scan allowed */
->  #define        CHANNEL_DYN     0x0400  /* Dynamic CCK-OFDM channel (for g operation) */
-> -#define        CHANNEL_XR      0x0800  /* XR channel */
->
->  #define        CHANNEL_A       (CHANNEL_5GHZ | CHANNEL_OFDM)
->  #define        CHANNEL_B       (CHANNEL_2GHZ | CHANNEL_CCK)
->  #define        CHANNEL_G       (CHANNEL_2GHZ | CHANNEL_OFDM)
-> -#define        CHANNEL_X       (CHANNEL_5GHZ | CHANNEL_OFDM | CHANNEL_XR)
->
->  #define        CHANNEL_ALL     (CHANNEL_OFDM | CHANNEL_CCK | \
->                         CHANNEL_2GHZ | CHANNEL_5GHZ)
-> @@ -710,7 +690,6 @@ struct ath5k_gain {
->  * Used internally for ath5k_hw_reset_tx_queue().
->  * Also see struct struct ieee80211_channel.
->  */
-> -#define IS_CHAN_XR(_c) ((_c->hw_value & CHANNEL_XR) != 0)
->  #define IS_CHAN_B(_c)  ((_c->hw_value & CHANNEL_B) != 0)
->
->  /*
-> @@ -772,11 +751,6 @@ struct ath5k_athchan_2ghz {
->  #define ATH5K_RATE_CODE_36M    0x0D
->  #define ATH5K_RATE_CODE_48M    0x08
->  #define ATH5K_RATE_CODE_54M    0x0C
-> -/* XR */
-> -#define ATH5K_RATE_CODE_XR_500K        0x07
-> -#define ATH5K_RATE_CODE_XR_1M  0x02
-> -#define ATH5K_RATE_CODE_XR_2M  0x06
-> -#define ATH5K_RATE_CODE_XR_3M  0x01
->
->  /* adding this flag to rate_code enables short preamble */
->  #define AR5K_SET_SHORT_PREAMBLE 0x04
-> diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
-> index 9068b91..56cb9d4 100644
-> --- a/drivers/net/wireless/ath/ath5k/eeprom.c
-> +++ b/drivers/net/wireless/ath/ath5k/eeprom.c
-> @@ -1782,7 +1782,6 @@ ath5k_eeprom_mode_from_channel(struct ieee80211_channel *channel)
->  {
->        switch (channel->hw_value & CHANNEL_MODES) {
->        case CHANNEL_A:
-> -       case CHANNEL_XR:
->                return AR5K_EEPROM_MODE_11A;
->        case CHANNEL_G:
->                return AR5K_EEPROM_MODE_11G;
-> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-> index 81e465e..b9ada88 100644
-> --- a/drivers/net/wireless/ath/ath5k/phy.c
-> +++ b/drivers/net/wireless/ath/ath5k/phy.c
-> @@ -2408,8 +2408,6 @@ ath5k_get_max_ctl_power(struct ath5k_hw *ah,
->        case CHANNEL_B:
->                ctl_mode |= AR5K_CTL_11B;
->                break;
-> -       case CHANNEL_XR:
-> -               /* Fall through */
->        default:
->                return;
->        }
-> diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
-> index 65f1039..1d37675 100644
-> --- a/drivers/net/wireless/ath/ath5k/qcu.c
-> +++ b/drivers/net/wireless/ath/ath5k/qcu.c
-> @@ -185,13 +185,6 @@ int ath5k_hw_setup_tx_queue(struct ath5k_hw *ah, enum ath5k_tx_queue queue_type,
->                case AR5K_TX_QUEUE_CAB:
->                        queue = AR5K_TX_QUEUE_ID_CAB;
->                        break;
-> -               case AR5K_TX_QUEUE_XR_DATA:
-> -                       if (ah->ah_version != AR5K_AR5212)
-> -                               ATH5K_ERR(ah,
-> -                                       "XR data queues only supported in"
-> -                                       " 5212!\n");
-> -                       queue = AR5K_TX_QUEUE_ID_XR_DATA;
-> -                       break;
->                default:
->                        return -EINVAL;
->                }
-> diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-> index 0686c5d..5d6d3bd 100644
-> --- a/drivers/net/wireless/ath/ath5k/reset.c
-> +++ b/drivers/net/wireless/ath/ath5k/reset.c
-> @@ -1108,14 +1108,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
->
->                mode = AR5K_MODE_11B;
->                break;
-> -       case CHANNEL_XR:
-> -               if (ah->ah_version == AR5K_AR5211) {
-> -                       ATH5K_ERR(ah,
-> -                               "XR mode not available on 5211");
-> -                       return -EINVAL;
-> -               }
-> -               mode = AR5K_MODE_XR;
-> -               break;
->        default:
->                ATH5K_ERR(ah,
->                        "invalid channel: %d\n", channel->center_freq);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Or just not pretend to support the latest mesh draft ...
 
+I don't think PS support can be hard. We have all of it in AP mode
+anyway, so you just need to generalise that a bit, maybe refactor like I
+said in my other email, and you should be able to get it up & running
+pretty quickly?
 
+johannes
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
