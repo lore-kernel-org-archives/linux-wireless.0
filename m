@@ -1,134 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46801 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754111Ab1GNKPv (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:49970 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750934Ab1GOXvR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 06:15:51 -0400
-Subject: Re: [RFC 3/3] mac80211: Report 40MHz Intolerance to associated AP.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1310559873-10314-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110713_142647_318351_9E1F152E)
-References: <1310559873-10314-1-git-send-email-rmanohar@qca.qualcomm.com>
-	 <1310559873-10314-3-git-send-email-rmanohar@qca.qualcomm.com>
-	 (sfid-20110713_142647_318351_9E1F152E)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 14 Jul 2011 12:15:49 +0200
-Message-ID: <1310638549.3874.12.camel@jlt3.sipsolutions.net> (sfid-20110714_121554_919352_A85C2A54)
-Mime-Version: 1.0
+	Fri, 15 Jul 2011 19:51:17 -0400
+Received: by pzk3 with SMTP id 3so2106102pzk.5
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2011 16:51:16 -0700 (PDT)
+Date: Sat, 16 Jul 2011 02:49:25 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Franky Lin <frankyl@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 35/35] staging: brcm80211: replace simple_strtoul usage
+ in brcmfmac
+Message-ID: <20110715234924.GH18655@shale.localdomain> (sfid-20110716_015120_367756_F01EA414)
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+ <1310678971-28952-36-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1310678971-28952-36-git-send-email-frankyl@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-07-13 at 17:54 +0530, Rajkumar Manoharan wrote:
-> This patch adds support for 40MHz intolerance handling in STA
-> mode. STA should report of any 40MHz intolerance in case if it
-> finds a non-HT AP or a HT AP which prohibits 40MHz transmission
-> (i.e 40MHz intolerant bit is set in HT capabilities IE).
-> 
-> STA shall report this condition using 20/40 BSS coexistence
-> action frame.
+On Thu, Jul 14, 2011 at 02:29:31PM -0700, Franky Lin wrote:
+> --- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+> +++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+> @@ -827,10 +827,13 @@ static int brcmf_c_pattern_atoh(char *src, char *dst)
+>  		return -EINVAL;
+>  	}
+>  	for (i = 0; *src != '\0'; i++) {
+> +		unsigned long res;
+>  		char num[3];
+>  		strncpy(num, src, 2);
+>  		num[2] = '\0';
+> -		dst[i] = (u8) simple_strtoul(num, NULL, 16);
+> +		if (kstrtoul(num, 16, &res))
+> +			return -1;
+			       ^^
+Not a proper error code.
 
-I think it'd be smarter to add this logic to cfg80211, the scan parsing
-stuff can be generic, and even the action frame can be transmitted
-generically.
+> +		dst[i] = (u8)res;
+>  		src += 2;
 
-Heck, come to think of it, why not do this in wpa_supplicant?
-
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -206,6 +206,7 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
->  		channel_type = NL80211_CHAN_HT20;
->  
->  		if (!(ap_ht_cap_flags & IEEE80211_HT_CAP_40MHZ_INTOLERANT) &&
-> +		    !(sband->ht_cap.cap & IEEE80211_HT_CAP_40MHZ_INTOLERANT) &&
->  		    (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
->  		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
->  			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-> index 08a45ac..29d50dd 100644
-> --- a/net/mac80211/scan.c
-> +++ b/net/mac80211/scan.c
-> @@ -74,6 +74,31 @@ static bool is_uapsd_supported(struct ieee802_11_elems *elems)
->  	return qos_info & IEEE80211_WMM_IE_AP_QOSINFO_UAPSD;
->  }
->  
-> +static void ieee80211_check_40mhz_intolerance(
-> +			struct ieee80211_sub_if_data *sdata,
-> +			struct ieee80211_channel *channel,
-> +			struct ieee802_11_elems *elems)
-> +{
-> +	struct ieee80211_local *local = sdata->local;
-> +
-> +	if ((local->_oper_channel_type != NL80211_CHAN_HT40MINUS) ||
-> +	    (local->_oper_channel_type != NL80211_CHAN_HT40PLUS))
-> +		return;
-> +
-> +	if (local->oper_channel->band != channel->band)
-> +		return;
-> +
-> +	if (!elems->ht_cap_elem ||
-> +	    (le16_to_cpu(elems->ht_cap_elem->cap_info) &
-> +		    IEEE80211_HT_CAP_40MHZ_INTOLERANT)) {
-> +		sdata->found_40mhz_intolerant = true;
-> +		if (!channel->is_40mhz_intolerant) {
-> +			channel->is_40mhz_intolerant = true;
-
-I don't like mac80211 changing cfg80211 data structures much.
-
-> +			sdata->intol_channels++;
-
-If that's a counter, why is it a u8?
-
-> @@ -434,6 +462,8 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
->  	else
->  		__set_bit(SCAN_SW_SCANNING, &local->scanning);
->  
-> +	sdata->found_40mhz_intolerant = false;
-> +	sdata->intol_channels = 0;
-
-This makes no sense, the scan could be on only some channels, but you're
-resetting all info.
-
->  	ieee80211_recalc_idle(local);
->  
->  	if (local->ops->hw_scan) {
-> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> index 652e569..9ad5361 100644
-> --- a/net/mac80211/util.c
-> +++ b/net/mac80211/util.c
-> @@ -1334,6 +1334,93 @@ int ieee80211_reconfig(struct ieee80211_local *local)
->  	return 0;
->  }
->  
-> +static void ieee80211_send_public_action_frame(
-> +		struct ieee80211_sub_if_data *sdata)
-
-Kidding, right?
-"send_public_action_frame", but then it creates a 40 intolerant frame?
-
-> +void ieee80211_process_40mhz_intolerance(struct ieee80211_local *local)
-> +{
-> +	struct ieee80211_hw *hw = &local->hw;
-> +	struct ieee80211_conf *conf = &hw->conf;
-> +	struct ieee80211_supported_band *sband =
-> +		local->hw.wiphy->bands[local->oper_channel->band];
-> +	struct ieee80211_sub_if_data *sdata;
-> +	int i;
-> +
-> +	mutex_lock(&local->iflist_mtx);
-> +	list_for_each_entry(sdata, &local->interfaces, list) {
-> +		if (!ieee80211_sdata_running(sdata))
-> +			continue;
-> +		if (!sdata->found_40mhz_intolerant)
-> +			continue;
-> +		if (!conf_is_ht40(conf))
-> +			continue;
-> +		ieee80211_send_public_action_frame(sdata);
-
-What if the AP is HT40, we find the intolerant AP, but we're only 20 MHz
-capable? IOW -- this logic doesn't seem to make sense?
-
-I really don't see why we can't do all of this in wpa_s.
-
-johannes
-
+regards,
+dan carpenter
