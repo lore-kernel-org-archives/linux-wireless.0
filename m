@@ -1,110 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hhlx01.visionsystems.de ([62.145.30.242]:56647 "EHLO
-	mail.visionsystems.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751195Ab1GUPG2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 11:06:28 -0400
-Message-ID: <4E284069.7070603@visionsystems.de> (sfid-20110721_170631_876796_485C6C1D)
-Date: Thu, 21 Jul 2011 17:06:17 +0200
-From: Yegor Yefremov <yegor_sub1@visionsystems.de>
-Reply-To: yegor_sub1@visionsystems.de
-MIME-Version: 1.0
+Received: from lo.gmane.org ([80.91.229.12]:53528 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750822Ab1GOMfn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jul 2011 08:35:43 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1QhhcM-00081D-7b
+	for linux-wireless@vger.kernel.org; Fri, 15 Jul 2011 14:35:42 +0200
+Received: from 130.233.194.206 ([130.233.194.206])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2011 14:35:42 +0200
+Received: from swaminathanvasanth.r by 130.233.194.206 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2011 14:35:42 +0200
 To: linux-wireless@vger.kernel.org
-CC: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] iw: add libnl-3.0 support
-Content-Type: text/plain; charset=ISO-8859-15
+From: Swaminathan Vasanth <swaminathanvasanth.r@gmail.com>
+Subject: Auto Channel Selection in hostapd with ath5k and ath9k
+Date: Fri, 15 Jul 2011 12:35:30 +0000 (UTC)
+Message-ID: <loom.20110715T143153-415@post.gmane.org> (sfid-20110715_143546_911179_2F4D45E3)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Yegor Yefremov <yegorslists@googlemail.com>
----
-Changes from v1:
-- CONFIG_LIBNL30 added
+Hi,
 
- Makefile |   10 ++++++++++
- iw.c     |    7 +++----
- iw.h     |    3 ++-
- 3 files changed, 15 insertions(+), 5 deletions(-)
+ I am trying to enable the Auto Channel Selection (ACS) in hostapd with ath5k
+and ath9k drivers.
+1) I cloned the source of hostap from the git and applied the patch
+2) I then went to the hostapd directory of hostap and did make and make install.
 
-Index: b/Makefile
-===================================================================
---- a/Makefile
-+++ b/Makefile
-@@ -24,6 +24,7 @@
- 
- NL1FOUND := $(shell $(PKG_CONFIG) --atleast-version=1 libnl-1 && echo Y)
- NL2FOUND := $(shell $(PKG_CONFIG) --atleast-version=2 libnl-2.0 && echo Y)
-+NL3FOUND := $(shell $(PKG_CONFIG) --atleast-version=3 libnl-3.0 && echo Y)
- 
- ifeq ($(NL1FOUND),Y)
- NLLIBNAME = libnl-1
-@@ -35,6 +36,12 @@
- NLLIBNAME = libnl-2.0
- endif
- 
-+ifeq ($(NL3FOUND),Y)
-+CFLAGS += -DCONFIG_LIBNL30
-+LIBS += -lnl-genl
-+NLLIBNAME = libnl-3.0
-+endif
-+
- ifeq ($(NLLIBNAME),)
- $(error Cannot find development files for any supported version of libnl)
- endif
-@@ -53,6 +60,8 @@
- all: version_check $(ALL)
- 
- version_check:
-+ifeq ($(NL3FOUND),Y)
-+else
- ifeq ($(NL2FOUND),Y)
- else
- ifeq ($(NL1FOUND),Y)
-@@ -60,6 +69,7 @@
- 	$(error No libnl found)
- endif
- endif
-+endif
- 
- 
- VERSION_OBJS := $(filter-out version.o, $(OBJS))
-Index: b/iw.c
-===================================================================
---- a/iw.c
-+++ b/iw.c
-@@ -23,9 +23,8 @@
- #include "nl80211.h"
- #include "iw.h"
- 
--#ifndef CONFIG_LIBNL20
--/* libnl 2.0 compatibility code */
--
-+/* libnl 1.x compatibility code */
-+#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30)
- static inline struct nl_handle *nl_socket_alloc(void)
- {
- 	return nl_handle_alloc();
-@@ -45,7 +44,7 @@
- 	return 0;
- }
- #define genl_ctrl_alloc_cache __genl_ctrl_alloc_cache
--#endif /* CONFIG_LIBNL20 */
-+#endif /* CONFIG_LIBNL20 && CONFIG_LIBNL30 */
- 
- int iw_debug = 0;
- 
-Index: b/iw.h
-===================================================================
---- a/iw.h
-+++ b/iw.h
-@@ -11,7 +11,8 @@
- 
- #define ETH_ALEN 6
- 
--#ifndef CONFIG_LIBNL20
-+/* libnl 1.x compatibility code */
-+#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30)
- #  define nl_sock nl_handle
- #endif
- 
+While building i enabled CONFIG_ACS=y in defconfig present in /hostap/hostapd/
+and then copied to .config and performed the build. I then did a make install
+and configured the hostapd.conf file.
+
+Hostapd is working fine for me without ACS but when i enable channel=0 or
+channel=acs_survey and uncomment the acs_num_req_surveys=10 and
+acs_roc_duration_ms=5 options for ACS to be enabled it throws this error when
+starting hostapd,
+
+Configuration file: hostapd.conf
+Line 113: set as '0' tries to enable ACS but CONFIG_ACS disabled
+Line 125: invalid acs_num_req_surveys 10 (CONFIG_ACS disabled)
+Line 126: invalid acs_roc_duration_ms 5 (CONFIG_ACS disabled)1..5000)
+3 errors found in configuration file 'hostapd.conf'
+
+Infact i enabled CONFIG_ACS when building.Any pointers on what to do to enable
+ACS please. Awaiting your kind reply. Thanks,
+
 
