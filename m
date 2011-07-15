@@ -1,155 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:33977 "EHLO mail.atheros.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4463 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751016Ab1GUUwW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 16:52:22 -0400
-Received: from mail.atheros.com ([10.234.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2011 13:51:41 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <jouni@qca.qualcomm.com>
-CC: <hostap@lists.shmoo.com>, <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v4 2/4] hostapd: add offchannel support
-Date: Thu, 21 Jul 2011 13:52:12 -0700
-Message-ID: <1311281534-10733-3-git-send-email-lrodriguez@atheros.com> (sfid-20110721_225236_653513_8B9484A8)
-In-Reply-To: <1311281534-10733-1-git-send-email-lrodriguez@atheros.com>
-References: <1311281534-10733-1-git-send-email-lrodriguez@atheros.com>
+	id S965262Ab1GOJlU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jul 2011 05:41:20 -0400
+Message-ID: <4E200B2F.3060108@broadcom.com> (sfid-20110715_114126_716540_CCA051D2)
+Date: Fri, 15 Jul 2011 11:41:03 +0200
+From: "Roland Vossen" <rvossen@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Julian Calaby" <julian.calaby@gmail.com>
+cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 05/35] staging: brcm80211: removed function
+ declaration typedefs from aiutils.h
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+ <1310678971-28952-6-git-send-email-frankyl@broadcom.com>
+ <CAGRGNgWx5-8cbU3zSnHQbbCdbf5xOGjYEnkcxnz5M4kB1s0nUQ@mail.gmail.com>
+In-Reply-To: <CAGRGNgWx5-8cbU3zSnHQbbCdbf5xOGjYEnkcxnz5M4kB1s0nUQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Although unused at the moment, this will be used later by
-ACS code.
+Hello Julian,
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- src/ap/ap_drv_ops.h    |   11 ++++++++
- src/ap/drv_callbacks.c |   67 ++++++++++++++++++++++++++++++++++++++++++++++++
- src/ap/hostapd.h       |    4 +++
- 3 files changed, 82 insertions(+), 0 deletions(-)
+>> Signed-off-by: Roland Vossen<rvossen@broadcom.com>
+>> Reviewed-by: Arend van Spriel<arend@broadcom.com>
+>> ---
+>> diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+>> index a25901e..5a5fc4b 100644
+>> --- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
+>> +++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+>> @@ -1279,9 +1279,9 @@ ai_register_intr_callback(struct si_pub *sih, void *intrsoff_fn,
+>>
+>>         sii = SI_INFO(sih);
+>>         sii->intr_arg = intr_arg;
+>> -       sii->intrsoff_fn = (si_intrsoff_t) intrsoff_fn;
+>> -       sii->intrsrestore_fn = (si_intrsrestore_t) intrsrestore_fn;
+>> -       sii->intrsenabled_fn = (si_intrsenabled_t) intrsenabled_fn;
+>> +       sii->intrsoff_fn = (u32 (*)(void *)) intrsoff_fn;
+>> +       sii->intrsrestore_fn = (void (*) (void *, u32)) intrsrestore_fn;
+>> +       sii->intrsenabled_fn = (bool (*)(void *)) intrsenabled_fn;
+>>         /* save current core id.  when this function called, the current core
+>>          * must be the core which provides driver functions(il, et, wl, etc.)
+>>          */
+>
+> Are these casts necessary - as in could better types be chosen for
+> these function pointers and the underlying functions themselves?
+> I see the same issue in patches 6 - 10.
 
-diff --git a/src/ap/ap_drv_ops.h b/src/ap/ap_drv_ops.h
-index 6f947f9..660a36b 100644
---- a/src/ap/ap_drv_ops.h
-+++ b/src/ap/ap_drv_ops.h
-@@ -203,4 +203,15 @@ static inline int hostapd_drv_set_authmode(struct hostapd_data *hapd,
- 	return hapd->driver->set_authmode(hapd->drv_priv, auth_algs);
- }
- 
-+static inline int hostapd_drv_remain_on_channel(struct hostapd_data *hapd,
-+						unsigned int freq,
-+						unsigned int duration)
-+{
-+	if (hapd->driver == NULL)
-+		return -1;
-+        if (!hapd->driver->remain_on_channel)
-+		return -1;
-+	return hapd->driver->remain_on_channel(hapd->drv_priv, freq, duration);
-+}
-+
- #endif /* AP_DRV_OPS */
-diff --git a/src/ap/drv_callbacks.c b/src/ap/drv_callbacks.c
-index db2d5f2..fb3e0dd 100644
---- a/src/ap/drv_callbacks.c
-+++ b/src/ap/drv_callbacks.c
-@@ -487,6 +487,63 @@ static void hostapd_event_eapol_rx(struct hostapd_data *hapd, const u8 *src,
- 	ieee802_1x_receive(hapd, src, data, data_len);
- }
- 
-+static int hostapd_roc_channel_check(struct hostapd_iface *iface)
-+{
-+	struct hostapd_channel_data *chan = NULL, *offchan;
-+	unsigned int i;
-+	int found = 0;
-+
-+	offchan = &iface->current_mode->channels[iface->off_channel_freq_idx];
-+
-+	for (i = 0; i < iface->current_mode->num_channels; i++) {
-+		chan = &iface->current_mode->channels[i];
-+		if (offchan != chan)
-+			continue;
-+		found = 1;
-+		break;
-+	}
-+
-+	if (!found || !chan) {
-+		wpa_printf(MSG_ERROR, "channel requested to go offchannel "
-+			   "on freq %d MHz disappeared",
-+			   chan->freq);
-+		goto fail;
-+	}
-+
-+	if (chan->flag & HOSTAPD_CHAN_DISABLED) {
-+		wpa_printf(MSG_ERROR, "channel requested to go offchannel "
-+			   "on freq %d MHz became disabled",
-+			   chan->freq);
-+		goto fail;
-+	}
-+
-+
-+	return 0;
-+fail:
-+	return -1;
-+}
-+
-+static void hostapd_event_roc(struct hostapd_data *hapd,
-+			      unsigned int freq,
-+			      unsigned int duration)
-+{
-+	struct hostapd_iface *iface = hapd->iface;
-+	int err;
-+
-+	err = hostapd_roc_channel_check(iface);
-+	/* XXX: pass err to listeners, no one yet */
-+}
-+
-+static void hostapd_event_roc_cancel(struct hostapd_data *hapd,
-+				     unsigned int freq,
-+				     unsigned int duration)
-+{
-+	struct hostapd_iface *iface = hapd->iface;
-+	int err;
-+
-+	err = hostapd_roc_channel_check(iface);
-+	/* XXX: pass err to listeners, no one yet */
-+}
- 
- void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
- 			  union wpa_event_data *data)
-@@ -580,6 +637,16 @@ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
- 		hostapd_rx_action(hapd, &data->rx_action);
- 		break;
- #endif /* NEED_AP_MLME */
-+	case EVENT_REMAIN_ON_CHANNEL:
-+		hostapd_event_roc(hapd,
-+				  data->remain_on_channel.freq,
-+				  data->remain_on_channel.duration);
-+		break;
-+	case EVENT_CANCEL_REMAIN_ON_CHANNEL:
-+		hostapd_event_roc_cancel(hapd,
-+					 data->remain_on_channel.freq,
-+					 data->remain_on_channel.duration);
-+		break;
- 	default:
- 		wpa_printf(MSG_DEBUG, "Unknown event %d", event);
- 		break;
-diff --git a/src/ap/hostapd.h b/src/ap/hostapd.h
-index 7436823..dedd2ce 100644
---- a/src/ap/hostapd.h
-+++ b/src/ap/hostapd.h
-@@ -228,6 +228,10 @@ struct hostapd_iface {
- 	int olbc_ht;
- 
- 	u16 ht_op_mode;
-+
-+	/* Offchannel operation helper */
-+	unsigned int off_channel_freq_idx;
-+
- 	void (*scan_cb)(struct hostapd_iface *iface);
- 
- 	int (*ctrl_iface_init)(struct hostapd_data *hapd);
--- 
-1.7.4.15.g7811d
+The first goal was to replace the typedefs, in a way that is obvious to 
+the reviewer. The next step is to get rid of void* where possible (I 
+agree with you that it is ugly).
+
+Is it ok with you if we submit a separate patch train for that (since 
+there are quite some void* to be replaced) ?
+
+Thanks, Roland.
 
