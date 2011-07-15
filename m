@@ -1,57 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:55526 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754624Ab1GDKkL convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:32977 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751278Ab1GOXee (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 06:40:11 -0400
-Received: by gwaa18 with SMTP id a18so1943639gwa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2011 03:40:11 -0700 (PDT)
+	Fri, 15 Jul 2011 19:34:34 -0400
+Received: by fxd18 with SMTP id 18so3452729fxd.11
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2011 16:34:33 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: Binary for carl9170
+Date: Sat, 16 Jul 2011 01:36:43 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <CACAiNS3-3K06Cro+VWypyWGetUW-v0qeJ29noXi7WNtUaCWzTw@mail.gmail.com> <20110715151642.0j86tyrj4k0g4sg4-cebfxv@webmail.spamcop.net> <4E20C3DC.3020200@gnu.org>
+In-Reply-To: <4E20C3DC.3020200@gnu.org>
 MIME-Version: 1.0
-In-Reply-To: <1309758467-1712-4-git-send-email-nbd@openwrt.org>
-References: <1309758467-1712-1-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-2-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-3-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-4-git-send-email-nbd@openwrt.org>
-Date: Mon, 4 Jul 2011 13:40:10 +0300
-Message-ID: <CAFtRNNzHqQLYxoZBBgpyttLgXRp1SWabPdQvNr4gvRPvPpPOBw@mail.gmail.com> (sfid-20110704_124015_639026_C8AE6F0A)
-Subject: Re: [ath5k-devel] [PATCH 4/8] ath5k: initialize common->clockrate
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201107160136.44182.chunkeey@googlemail.com> (sfid-20110716_013437_604835_D280F647)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/7/4 Felix Fietkau <nbd@openwrt.org>:
-> Fixes a division by zero when setting distance before activating the
-> device for the first time.
->
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath5k/base.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index a6623dd..a413aa7 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -2422,6 +2422,7 @@ ath5k_init_softc(struct ath5k_softc *sc, const struct ath_bus_ops *bus_ops)
->        common->ah = sc->ah;
->        common->hw = hw;
->        common->priv = sc;
-> +       common->clockrate = 40;
->
->        /*
->         * Cache line size is used to size and align various
-> --
-> 1.7.3.2
->
+On Saturday 16 July 2011 00:49:00 Pavel Roskin wrote:
+> On 07/15/2011 03:16 PM, Pavel Roskin wrote:
+> > Quoting Christian Lamparter <chunkeey@googlemail.com>:
+> >> So, since you already have a working version, why simply put it on the
+> >> wiki?
+> >
+> > Yes, I have a working version now (compiled with all defaults) and I'll
+> > try to upload it myself.
+> 
+> Oh well, I can upload it to wiki, but not to your page at 
+> http://www.kernel.org/pub/linux/kernel/people/chr/carl9170/fw/
+The question is, is kernel.org really a good address to host those firmwares.
+especially in a personal folder.
 
-We better set this to 44 for g (according to docs core frequency is 44MHz for g)
+> I don't want to setup an alternative competing repository for carl9170 
+> firmwares. Also, it would be nice to have the 1.9.4 firmware on 
+> http://www.kernel.org/pub/linux/kernel/people/chr/carl9170/fw/
 
+I would rather have them on wireless.kernel.org. Just like the ath9k_htc
+firmware.
+> The wiki allows attachments, so I uploaded the firmware as an 
+> attachment.  First I put is on the main carl9170 page, but it turned out 
+> that MoinMoin doesn't appear to have any way to specify the attachment 
+> name in the link.  Since I called the attachment "carl9170-1.fw-1.9.4", 
+> it would only download under that name, rather than as "carl9170-1.fw". 
+>   I don't want to call the attachment "carl9170-1.fw" since nobody, 
+> including me, would be able to replace it with another version ever.
+>
+> So I created a separate wiki page for the 1.9.4 version of the firmware 
+> and attached the firmware to it as "carl9170-1.fw".  That's an 
+> equivalent of having directories with files having the same name.
+Good thinking, we could add a changelog, the configuration and
+some infos like supported features [e.g.: number of supported virtual
+interfaces, supported WoWLAN triggers, etc...] to the same page.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+> The carl9170 page recommends 1.9.2 for all kernels up to 3.0.  The 1.9.4 
+> is recommended for compat-wireless.  If that's not your recommendation, 
+> please feel free to update the wiki.
+oh no, this should be just fine.
+
+Thanks,
+	Christian
