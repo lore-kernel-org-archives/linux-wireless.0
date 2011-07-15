@@ -1,93 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:41704 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751471Ab1GWIhd convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59928 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964777Ab1GOJ6f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jul 2011 04:37:33 -0400
-Date: Sat, 23 Jul 2011 10:37:25 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH 1/2] ssb: define boardflags
-Message-ID: <20110723103725.6d5bab09@maggie> (sfid-20110723_103737_300137_241CCE8B)
-In-Reply-To: <1311412213-3825-2-git-send-email-zajec5@gmail.com>
-References: <1311412213-3825-1-git-send-email-zajec5@gmail.com>
-	<1311412213-3825-2-git-send-email-zajec5@gmail.com>
+	Fri, 15 Jul 2011 05:58:35 -0400
+Subject: Re: [PATCH 3/5] mac80211: Ext. Supported Rates go in mesh beacon
+ tail
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <1310600747-9583-4-git-send-email-thomas@cozybit.com> (sfid-20110714_014634_757340_52A97A31)
+References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
+	 <1310600747-9583-4-git-send-email-thomas@cozybit.com>
+	 (sfid-20110714_014634_757340_52A97A31)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 15 Jul 2011 11:58:32 +0200
+Message-ID: <1310723912.4164.20.camel@jlt3.sipsolutions.net> (sfid-20110715_115837_611104_EED28EB5)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 23 Jul 2011 11:10:11 +0200
-Rafał Miłecki <zajec5@gmail.com> wrote:
-
-> They are SPROM specific, so all should be defined in ssb code.
-
-Oh, well. I'm not sure.
-Most of these currently are defined in b43 code, because they are b43-specific
-and _not_ ssb specific. If we decide to define them in ssb, they need to be
-removed from b43, at least.
-
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
->  include/linux/ssb/ssb_regs.h |   40 ++++++++++++++++++++++++++++++++++++++++
->  1 files changed, 40 insertions(+), 0 deletions(-)
+On Wed, 2011-07-13 at 16:45 -0700, Thomas Pedersen wrote:
+> Give mesh beacon a tail and maintain Extended Supported Rates IE here.
+> Reorder construction of mesh beacon frame so it looks like:
 > 
-> diff --git a/include/linux/ssb/ssb_regs.h b/include/linux/ssb/ssb_regs.h
-> index efbf459..9894120 100644
-> --- a/include/linux/ssb/ssb_regs.h
-> +++ b/include/linux/ssb/ssb_regs.h
-> @@ -462,6 +462,46 @@
->  #define SSB_SPROM8_OFDM5GLPO		0x014A	/* 5.2GHz OFDM power offset */
->  #define SSB_SPROM8_OFDM5GHPO		0x014E	/* 5.8GHz OFDM power offset */
->  
-> +/* Values for boardflags_lo read from SPROM */
-> +#define SSB_BFL_BTCOEXIST		0x0001	/* implements Bluetooth coexistance */
-> +#define SSB_BFL_PACTRL			0x0002	/* GPIO 9 controlling the PA */
-> +#define SSB_BFL_AIRLINEMODE		0x0004	/* implements GPIO 13 radio disable indication */
-> +#define SSB_BFL_RSSI			0x0008	/* software calculates nrssi slope. */
-> +#define SSB_BFL_ENETSPI			0x0010	/* has ephy roboswitch spi */
-> +#define SSB_BFL_XTAL_NOSLOW		0x0020	/* no slow clock available */
-> +#define SSB_BFL_CCKHIPWR		0x0040	/* can do high power CCK transmission */
-> +#define SSB_BFL_ENETADM			0x0080	/* has ADMtek switch */
-> +#define SSB_BFL_ENETVLAN		0x0100	/* can do vlan */
-> +#define SSB_BFL_AFTERBURNER		0x0200	/* supports Afterburner mode */
-> +#define SSB_BFL_NOPCI			0x0400	/* board leaves PCI floating */
-> +#define SSB_BFL_FEM			0x0800	/* supports the Front End Module */
-> +#define SSB_BFL_EXTLNA			0x1000	/* has an external LNA */
-> +#define SSB_BFL_HGPA			0x2000	/* had high gain PA */
-> +#define SSB_BFL_BTCMOD			0x4000	/* BFL_BTCOEXIST is given in alternate GPIOs */
-> +#define SSB_BFL_ALTIQ			0x8000	/* alternate I/Q settings */
-> +
-> +/* Values for boardflags_hi read from SPROM */
-> +#define SSB_BFH_NOPA			0x0001	/* has no PA */
-> +#define SSB_BFH_RSSIINV			0x0002	/* RSSI uses positive slope (not TSSI) */
-> +#define SSB_BFH_PAREF			0x0004	/* uses the PARef LDO */
-> +#define SSB_BFH_3TSWITCH		0x0008	/* uses a triple throw switch shared with bluetooth */
-> +#define SSB_BFH_PHASESHIFT		0x0010	/* can support phase shifter */
-> +#define SSB_BFH_BUCKBOOST		0x0020	/* has buck/booster */
-> +#define SSB_BFH_FEM_BT			0x0040	/* has FEM and switch to share antenna with bluetooth */
-> +
-> +/* Values for boardflags2_lo read from SPROM */
-> +#define SSB_BFL2_RXBB_INT_REG_DIS	0x0001	/* external RX BB regulator present */
-> +#define SSB_BFL2_APLL_WAR		0x0002	/* alternative A-band PLL settings implemented */
-> +#define SSB_BFL2_TXPWRCTRL_EN 		0x0004	/* permits enabling TX Power Control */
-> +#define SSB_BFL2_2X4_DIV		0x0008	/* 2x4 diversity switch */
-> +#define SSB_BFL2_5G_PWRGAIN		0x0010	/* supports 5G band power gain */
-> +#define SSB_BFL2_PCIEWAR_OVR		0x0020	/* overrides ASPM and Clkreq settings */
-> +#define SSB_BFL2_CAESERS_BRD		0x0040	/* is Caesers board (unused) */
-> +#define SSB_BFL2_BTC3WIRE		0x0080	/* used 3-wire bluetooth coexist */
-> +#define SSB_BFL2_SKWRKFEM_BRD		0x0100	/* 4321mcm93 uses Skyworks FEM */
-> +#define SSB_BFL2_SPUR_WAR		0x0200	/* has a workaround for clock-harmonic spurs */
-> +#define SSB_BFL2_GPLL_WAR		0x0400	/* altenative G-band PLL settings implemented */
-> +
->  /* Values for SSB_SPROM1_BINF_CCODE */
->  enum {
->  	SSB_SPROM1CCODE_WORLD = 0,
+> head | tail | mesh IEs | vendor IEs
+> 
+> mesh IEs include dynamic elements which must be updated on each beacon.
 
+This is stupid, you're introducing a bug you fix in patch 4/5.
 
+johannes
 
--- 
-Greetings, Michael.
