@@ -1,37 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:61501 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754526Ab1GANrT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2011 09:47:19 -0400
-Date: Fri, 01 Jul 2011 08:47:17 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: y.diruzza@lim.eu, george0505@realtek.com,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192cu: Add new USB ID for Netgear WNA1000M
-Message-ID: <4e0dcfe5.IT9kwZ/nGKqEN5GW%Larry.Finger@lwfinger.net> (sfid-20110701_154723_582697_8B9F1C25)
+Received: from c60.cesmail.net ([216.154.195.49]:9651 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753591Ab1GOXGl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jul 2011 19:06:41 -0400
+Subject: [PATCH 3/4] ath9k: remove defines in reg.h that exist in ../reg.h
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+From: Pavel Roskin <proski@gnu.org>
+Date: Fri, 15 Jul 2011 19:06:40 -0400
+Message-ID: <20110715230640.4461.34448.stgit@mj.roinet.com> (sfid-20110716_010644_511424_83697D78)
+In-Reply-To: <20110715230627.4461.85730.stgit@mj.roinet.com>
+References: <20110715230627.4461.85730.stgit@mj.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yoann DI-RUZZA <y.diruzza@lim.eu>
-
-Signed-off-by: Yoann DI-RUZZA <y.diruzza@lim.eu>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@kernel.org>
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
+ drivers/net/wireless/ath/ath9k/reg.h |   23 -----------------------
+ 1 files changed, 0 insertions(+), 23 deletions(-)
 
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -298,6 +298,7 @@ static struct usb_device_id rtl8192c_usb
- 	{RTL_USB_DEVICE(0x06f8, 0xe033, rtl92cu_hal_cfg)}, /*Hercules - Edimax*/
- 	{RTL_USB_DEVICE(0x07b8, 0x8188, rtl92cu_hal_cfg)}, /*Abocom - Abocom*/
- 	{RTL_USB_DEVICE(0x07b8, 0x8189, rtl92cu_hal_cfg)}, /*Funai - Abocom*/
-+	{RTL_USB_DEVICE(0x0846, 0x9041, rtl92cu_hal_cfg)}, /*NetGear WNA1000M*/
- 	{RTL_USB_DEVICE(0x0Df6, 0x0052, rtl92cu_hal_cfg)}, /*Sitecom - Edimax*/
- 	{RTL_USB_DEVICE(0x0eb0, 0x9071, rtl92cu_hal_cfg)}, /*NO Brand - Etop*/
- 	/* HP - Lite-On ,8188CUS Slim Combo */
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 759b72c..fa4c0bb 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1873,29 +1873,6 @@ enum {
+ #define AR_RATE_DURATION(_n)    (AR_RATE_DURATION_0 + ((_n)<<2))
+ 
+ 
+-#define AR_KEYTABLE_0           0x8800
+-#define AR_KEYTABLE(_n)         (AR_KEYTABLE_0 + ((_n)*32))
+-#define AR_KEY_CACHE_SIZE       128
+-#define AR_RSVD_KEYTABLE_ENTRIES 4
+-#define AR_KEY_TYPE             0x00000007
+-#define AR_KEYTABLE_TYPE_40     0x00000000
+-#define AR_KEYTABLE_TYPE_104    0x00000001
+-#define AR_KEYTABLE_TYPE_128    0x00000003
+-#define AR_KEYTABLE_TYPE_TKIP   0x00000004
+-#define AR_KEYTABLE_TYPE_AES    0x00000005
+-#define AR_KEYTABLE_TYPE_CCM    0x00000006
+-#define AR_KEYTABLE_TYPE_CLR    0x00000007
+-#define AR_KEYTABLE_ANT         0x00000008
+-#define AR_KEYTABLE_VALID       0x00008000
+-#define AR_KEYTABLE_KEY0(_n)    (AR_KEYTABLE(_n) + 0)
+-#define AR_KEYTABLE_KEY1(_n)    (AR_KEYTABLE(_n) + 4)
+-#define AR_KEYTABLE_KEY2(_n)    (AR_KEYTABLE(_n) + 8)
+-#define AR_KEYTABLE_KEY3(_n)    (AR_KEYTABLE(_n) + 12)
+-#define AR_KEYTABLE_KEY4(_n)    (AR_KEYTABLE(_n) + 16)
+-#define AR_KEYTABLE_TYPE(_n)    (AR_KEYTABLE(_n) + 20)
+-#define AR_KEYTABLE_MAC0(_n)    (AR_KEYTABLE(_n) + 24)
+-#define AR_KEYTABLE_MAC1(_n)    (AR_KEYTABLE(_n) + 28)
+-
+ #define AR9271_CORE_CLOCK	117   /* clock to 117Mhz */
+ #define AR9271_TARGET_BAUD_RATE	19200 /* 115200 */
+ 
