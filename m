@@ -1,74 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:10258 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750778Ab1GWFLX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46935 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751125Ab1GOVAz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jul 2011 01:11:23 -0400
-Date: Sat, 23 Jul 2011 10:41:30 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	<ath9k-devel@venema.h4ckr.net>, <camilo@mesias.co.uk>,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	Tony Houghton <h@realh.co.uk>,
-	Adrian Chadd <adrian@freebsd.org>
-Subject: Re: [RFC/RFT 6/6] ath9k: always initialize hw registers related to
- PCIe PM
-Message-ID: <20110723051129.GC828@vmraj-lnx.users.atheros.com> (sfid-20110723_071127_664019_59FE3D84)
-References: <1311341512-2882-1-git-send-email-sgruszka@redhat.com>
- <1311341512-2882-7-git-send-email-sgruszka@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1311341512-2882-7-git-send-email-sgruszka@redhat.com>
+	Fri, 15 Jul 2011 17:00:55 -0400
+Subject: Re: [PATCH 2/5] mac80211: correct mesh beacon head
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <CAG6hwVO1hYQVFQ2YThkjDUuoP6ZN8MM_P0MUtnD_k258Z6zqnA@mail.gmail.com> (sfid-20110715_204511_138077_B4574EDE)
+References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
+	 <1310600747-9583-3-git-send-email-thomas@cozybit.com>
+	 <1310723867.4164.19.camel@jlt3.sipsolutions.net>
+	 <CAG6hwVO1hYQVFQ2YThkjDUuoP6ZN8MM_P0MUtnD_k258Z6zqnA@mail.gmail.com>
+	 (sfid-20110715_204511_138077_B4574EDE)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 15 Jul 2011 23:00:54 +0200
+Message-ID: <1310763654.4164.30.camel@jlt3.sipsolutions.net> (sfid-20110715_230058_664834_0D950E69)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 22, 2011 at 03:31:52PM +0200, Stanislaw Gruszka wrote:
-> We might not initialize registers if ah->aspm_enabled == false, assure
-> we do this.
+On Fri, 2011-07-15 at 11:44 -0700, Thomas Pedersen wrote:
+> On Fri, Jul 15, 2011 at 2:57 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2011-07-13 at 16:45 -0700, Thomas Pedersen wrote:
+> >> Supported Rates and DS Parameter elements go in the beacon head. Add
+> >> these IEs when we initially construct the beacon.
+> >
+> > This breaks mesh_plink_frame_tx() afaict.
 > 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/ath/ath9k/hw.c  |    5 +----
->  drivers/net/wireless/ath/ath9k/pci.c |    4 ++++
->  2 files changed, 5 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-> index 4ef7313..7084bb5 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.c
-> +++ b/drivers/net/wireless/ath/ath9k/hw.c
-> @@ -595,10 +595,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
->  
->  	ath9k_hw_init_mode_regs(ah);
->  
-> -
-> -	if (ah->is_pciexpress)
-> -		ath9k_hw_configpcipowersave(ah, false);
-> -	else
-> +	if (!ah->is_pciexpress)
->  		ath9k_hw_disablepcie(ah);
->  
->  	if (!AR_SREV_9300_20_OR_LATER(ah))
-> diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-> index 835a50a..d1c75ec 100644
-> --- a/drivers/net/wireless/ath/ath9k/pci.c
-> +++ b/drivers/net/wireless/ath/ath9k/pci.c
-> @@ -118,6 +118,10 @@ static void ath_pci_aspm_init(struct ath_softc *sc)
->  	if (!pci_is_pcie(pdev))
->  		return;
->  
-> +	/* initalize PCIe PM registers if device introduce itself as PCIe */
-> +	if (ah->is_pciexpress)
-> +		ath9k_hw_ops(ah)->config_pci_powersave(ah, false);
-> +
-Use ath9k_hw_configpcipowersave wrapper instead. And ensure that there is no
-sideeffect by changing SERDES config from __ath9k_hw_init to pci_probe.
+> Yes, although DS parameters didn't belong there anyway. v2 will fix
+> this. Is there a better way in mac80211 to add these IEs than just
+> hardcoding them into the frame construction?
 
---
-Rajkumar
->  	parent = pdev->bus->self;
->  
->  	if (ah->btcoex_hw.scheme != ATH_BTCOEX_CFG_NONE) {
-> -- 
-> 1.7.1
-> 
+Not sure what you mean, but I guess not.
+
+johannes
+
