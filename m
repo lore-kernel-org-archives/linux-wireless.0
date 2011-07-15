@@ -1,36 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:43236 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755391Ab1GATFT (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:50110 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750934Ab1GOSou (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2011 15:05:19 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 7E39B540D76
-	for <linux-wireless@vger.kernel.org>; Fri,  1 Jul 2011 15:12:48 -0400 (EDT)
-Subject: Compat-wireless release for 2011-07-01 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110701190517.2F22B40EC7@repository3.orbit-lab.org> (sfid-20110701_210523_251613_86586F9A)
-Date: Fri,  1 Jul 2011 15:05:17 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 15 Jul 2011 14:44:50 -0400
+Received: by wwe5 with SMTP id 5so1552269wwe.1
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2011 11:44:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1310723867.4164.19.camel@jlt3.sipsolutions.net>
+References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
+	<1310600747-9583-3-git-send-email-thomas@cozybit.com>
+	<1310723867.4164.19.camel@jlt3.sipsolutions.net>
+Date: Fri, 15 Jul 2011 11:44:49 -0700
+Message-ID: <CAG6hwVO1hYQVFQ2YThkjDUuoP6ZN8MM_P0MUtnD_k258Z6zqnA@mail.gmail.com> (sfid-20110715_204454_090589_76713FE2)
+Subject: Re: [PATCH 2/5] mac80211: correct mesh beacon head
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   50d796c..7d35284  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + f724ed5...f7879b5 akpm-end   -> origin/akpm-end  (forced update)
-   c017d0d..daf54f1  akpm-start -> origin/akpm-start
-   f5b887c..25e9787  history    -> origin/history
- + 1feb530...271b68e master     -> origin/master  (forced update)
-   c017d0d..daf54f1  stable     -> origin/stable
- * [new tag]         next-20110701 -> next-20110701
+On Fri, Jul 15, 2011 at 2:57 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2011-07-13 at 16:45 -0700, Thomas Pedersen wrote:
+>> Supported Rates and DS Parameter elements go in the beacon head. Add
+>> these IEs when we initially construct the beacon.
+>
+> This breaks mesh_plink_frame_tx() afaict.
 
-compat-wireless code metrics
+Yes, although DS parameters didn't belong there anyway. v2 will fix
+this. Is there a better way in mac80211 to add these IEs than just
+hardcoding them into the frame construction?
 
-    839830 - Total upstream lines of code being pulled
-      2380 - backport code changes
-      2080 - backport code additions
-       300 - backport code deletions
-      8127 - backport from compat module
-     10507 - total backport code
-    1.2511 - % of code consists of backport work
+> johannes
+>
+>
+
+Thanks,
+Thomas
