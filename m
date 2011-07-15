@@ -1,98 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:55378 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751763Ab1GTRX5 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33189 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753604Ab1GORrI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2011 13:23:57 -0400
-Received: by fxd18 with SMTP id 18so2066589fxd.11
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2011 10:23:56 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: (un)initialize driver on the BCMA bus
-Date: Wed, 20 Jul 2011 20:02:39 +0200
-Message-Id: <1311184959-4393-1-git-send-email-zajec5@gmail.com> (sfid-20110720_192401_024324_F8095043)
+	Fri, 15 Jul 2011 13:47:08 -0400
+Date: Fri, 15 Jul 2011 13:33:06 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Sven Neumann <s.neumann@raumfeld.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Daniel Mack <daniel@zonque.org>, mcgrof@gmail.com
+Subject: Re: [PATCH] cfg80211: really ignore the regulatory request
+Message-ID: <20110715173306.GE2566@tuxdriver.com> (sfid-20110715_194713_823356_66E11385)
+References: <1310399981.11331.4.camel@sven>
+ <1310478727-12099-2-git-send-email-s.neumann@raumfeld.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1310478727-12099-2-git-send-email-s.neumann@raumfeld.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Luis, ping?
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/main.c |   48 +++++++++++++++++++++++++++++++++++---
- 1 files changed, 44 insertions(+), 4 deletions(-)
+On Tue, Jul 12, 2011 at 03:52:07PM +0200, Sven Neumann wrote:
+> At the beginning of wiphy_update_regulatory() a check is performed
+> whether the request is to be ignored. Then the request is sent to
+> the driver nevertheless. This happens even if last_request points
+> to NULL, leading to a crash in the driver:
+> 
+>  [<bf01d864>] (lbs_set_11d_domain_info+0x28/0x1e4 [libertas]) from [<c03b714c>] (wiphy_update_regulatory+0x4d0/0x4f4)
+>  [<c03b714c>] (wiphy_update_regulatory+0x4d0/0x4f4) from [<c03b4008>] (wiphy_register+0x354/0x420)
+>  [<c03b4008>] (wiphy_register+0x354/0x420) from [<bf01b17c>] (lbs_cfg_register+0x80/0x164 [libertas])
+>  [<bf01b17c>] (lbs_cfg_register+0x80/0x164 [libertas]) from [<bf020e64>] (lbs_start_card+0x20/0x88 [libertas])
+>  [<bf020e64>] (lbs_start_card+0x20/0x88 [libertas]) from [<bf02cbd8>] (if_sdio_probe+0x898/0x9c0 [libertas_sdio])
+> 
+> Fix this by returning early. Also remove the out: label as it is
+> not any longer needed.
+> 
+> Signed-off-by: Sven Neumann <s.neumann@raumfeld.com>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> Cc: Daniel Mack <daniel@zonque.org>
+> ---
+>  net/wireless/reg.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 1ad0f39..4453eb7 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -1125,12 +1125,13 @@ void wiphy_update_regulatory(struct wiphy *wiphy,
+>  	enum ieee80211_band band;
+>  
+>  	if (ignore_reg_update(wiphy, initiator))
+> -		goto out;
+> +		return;
+> +
+>  	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+>  		if (wiphy->bands[band])
+>  			handle_band(wiphy, band, initiator);
+>  	}
+> -out:
+> +
+>  	reg_process_beacons(wiphy);
+>  	reg_process_ht_flags(wiphy);
+>  	if (wiphy->reg_notifier)
+> -- 
+> 1.7.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 269483a..d9f53b7 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -5235,19 +5235,59 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
- static int b43_bcma_probe(struct bcma_device *core)
- {
- 	struct b43_bus_dev *dev;
-+	struct b43_wl *wl;
-+	int err;
- 
- 	dev = b43_bus_dev_bcma_init(core);
- 	if (!dev)
- 		return -ENODEV;
- 
--	b43err(NULL, "BCMA is not supported yet!");
--	kfree(dev);
--	return -EOPNOTSUPP;
-+	wl = b43_wireless_init(dev);
-+	if (IS_ERR(wl)) {
-+		err = PTR_ERR(wl);
-+		goto bcma_out;
-+	}
-+
-+	err = b43_one_core_attach(dev, wl);
-+	if (err)
-+		goto bcma_err_wireless_exit;
-+
-+	err = ieee80211_register_hw(wl->hw);
-+	if (err)
-+		goto bcma_err_one_core_detach;
-+	b43_leds_register(wl->current_dev);
-+
-+bcma_out:
-+	return err;
-+
-+bcma_err_one_core_detach:
-+	b43_one_core_detach(dev);
-+bcma_err_wireless_exit:
-+	ieee80211_free_hw(wl->hw);
-+	return err;
- }
- 
- static void b43_bcma_remove(struct bcma_device *core)
- {
--	/* TODO */
-+	struct b43_wldev *wldev = bcma_get_drvdata(core);
-+	struct b43_wl *wl = wldev->wl;
-+
-+	/* We must cancel any work here before unregistering from ieee80211,
-+	 * as the ieee80211 unreg will destroy the workqueue. */
-+	cancel_work_sync(&wldev->restart_work);
-+
-+	/* Restore the queues count before unregistering, because firmware detect
-+	 * might have modified it. Restoring is important, so the networking
-+	 * stack can properly free resources. */
-+	wl->hw->queues = wl->mac80211_initially_registered_queues;
-+	b43_leds_stop(wldev);
-+	ieee80211_unregister_hw(wl->hw);
-+
-+	b43_one_core_detach(wldev->dev);
-+
-+	b43_leds_unregister(wl);
-+
-+	ieee80211_free_hw(wl->hw);
- }
- 
- static struct bcma_driver b43_bcma_driver = {
 -- 
-1.7.3.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
