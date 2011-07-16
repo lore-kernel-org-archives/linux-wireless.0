@@ -1,44 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:57877 "EHLO c60.cesmail.net"
+Received: from mga11.intel.com ([192.55.52.93]:65330 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757489Ab1GKVEb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 17:04:31 -0400
-Message-ID: <4E1B655E.6010209@gnu.org> (sfid-20110711_230435_306844_151F40E2)
-Date: Mon, 11 Jul 2011 17:04:30 -0400
-From: Pavel Roskin <proski@gnu.org>
-MIME-Version: 1.0
-To: Sven Neumann <s.neumann@raumfeld.com>
-CC: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: kernel NULL pointer dereference in lbs_set_11d_domain_info (3.0-rc6)
-References: <1310399981.11331.4.camel@sven>
-In-Reply-To: <1310399981.11331.4.camel@sven>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	id S1755435Ab1GPPcH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Jul 2011 11:32:07 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 08/18] iwlagn: comments for iwl_cfg
+Date: Sat, 16 Jul 2011 07:56:29 -0700
+Message-Id: <1310828199-18000-10-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110716_173216_731169_2F5528E5)
+In-Reply-To: <1310828199-18000-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1310828199-18000-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/11/2011 11:59 AM, Sven Neumann wrote:
-> Hi,
->
-> we are using a PXA device and I am observing sporadic crashes after
-> resume from suspend with 3.0-rc6:
->
->
-> [ 1296.027645] PM: resume of devices complete after 296.440 msecs
-> [ 1296.284633] Restarting tasks ...
-> [ 1296.320276] done.
-> [ 1296.421618] mmc0: new SDIO card at address 0001
-> [ 1297.312570] libertas_sdio mmc0:0001:1: (unregistered net_device): 00:19:88:11:db:67, fw 9.70.7p0, cap 0x00000303
+Modify the comments for iwl_cfg, no functional changes
 
-I think the trouble starts with "unregistered net_device".  It looks 
-like some structures in memory are corrupted.  Debugging that may be 
-tricky.  I think the first step would be to print stack where that 
-message is printed in lbs_update_hw_spec().  Also, add statements to 
-print priv and priv->dev at that point.  You should be able to compare 
-the pointers before and after the suspend.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.h |   17 ++++++++++++-----
+ 1 files changed, 12 insertions(+), 5 deletions(-)
 
-Once you find what is corrupted, go up the stack and see where the 
-corruption happens.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 28c21f4..5187318 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -189,11 +189,22 @@ struct iwl_ht_params {
+ 
+ /**
+  * struct iwl_cfg
++ * @name: Offical name of the device
+  * @fw_name_pre: Firmware filename prefix. The api version and extension
+  *	(.ucode) will be added to filename before loading from disk. The
+  *	filename is constructed as fw_name_pre<api>.ucode.
+  * @ucode_api_max: Highest version of uCode API supported by driver.
+  * @ucode_api_min: Lowest version of uCode API supported by driver.
++ * @valid_tx_ant: valid transmit antenna
++ * @valid_rx_ant: valid receive antenna
++ * @sku: sku information from EEPROM
++ * @eeprom_ver: EEPROM version
++ * @eeprom_calib_ver: EEPROM calibration version
++ * @lib: pointer to the lib ops
++ * @additional_nic_config: additional nic configuration
++ * @base_params: pointer to basic parameters
++ * @ht_params: point to ht patameters
++ * @bt_params: pointer to bt parameters
+  * @pa_type: used by 6000 series only to identify the type of Power Amplifier
+  * @need_dc_calib: need to perform init dc calibration
+  * @need_temp_offset_calib: need to perform temperature offset calibration
+@@ -220,11 +231,7 @@ struct iwl_ht_params {
+  * }
+  *
+  * The ideal usage of this infrastructure is to treat a new ucode API
+- * release as a new hardware revision. That is, through utilizing the
+- * iwl_hcmd_utils_ops etc. we accommodate different command structures
+- * and flows between hardware versions (4965/5000) as well as their API
+- * versions.
+- *
++ * release as a new hardware revision.
+  */
+ struct iwl_cfg {
+ 	/* params specific to an individual device within a device family */
 -- 
-Regards,
-Pavel Roskin
+1.7.0.4
+
