@@ -1,53 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:58629 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751219Ab1GYO7v (ORCPT
+Received: from relais.videotron.ca ([24.201.245.36]:27627 "EHLO
+	relais.videotron.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751084Ab1GPVRe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2011 10:59:51 -0400
-Received: by iyb12 with SMTP id 12so4695259iyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2011 07:59:51 -0700 (PDT)
-Message-ID: <4E2D8478.4040701@lwfinger.net> (sfid-20110725_165955_275739_A18BB7C4)
-Date: Mon, 25 Jul 2011 09:58:00 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Lubomir Schmidt <gentoo.lubomir@googlemail.com>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	'George0505' <george0505@realtek.com>
-Subject: Re: Support for Realtek 8188RU Chipset in rtl8192cu driver?
-References: <CAHFBKjfHfAvpxGhhvRFwni9EVXdSC3HA1WxMJRzVm9SxvowmWQ@mail.gmail.com>
-In-Reply-To: <CAHFBKjfHfAvpxGhhvRFwni9EVXdSC3HA1WxMJRzVm9SxvowmWQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sat, 16 Jul 2011 17:17:34 -0400
+MIME-version: 1.0
+Received: from TesterServ.TesterNet ([70.81.104.103])
+ by vl-mo-mrz23.ip.videotron.ca
+ (Sun Java(tm) System Messaging Server 6.3-8.01 (built Dec 16 2008; 32bit))
+ with ESMTP id <0LOG00APQ33UHN00@vl-mo-mrz23.ip.videotron.ca> for
+ linux-wireless@vger.kernel.org; Sat, 16 Jul 2011 17:16:42 -0400 (EDT)
+Received: from 76-10-170-176.dsl.teksavvy.com
+ ([76.10.170.176] helo=[192.168.4.11])	by TesterServ.TesterNet with esmtpsa
+ (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)	(Exim 4.72)
+	(envelope-from <olivier.crete@ocrete.ca>)
+	id 1QiCEv-0004dD-1f	for linux-wireless@vger.kernel.org; Sat,
+ 16 Jul 2011 17:17:33 -0400
+Subject: Sometimes rtl8187 stops sending/receiving packets under load
+From: Olivier =?ISO-8859-1?Q?Cr=EAte?= <olivier.crete@ocrete.ca>
+To: linux-wireless@vger.kernel.org
+Date: Sat, 16 Jul 2011 17:17:29 -0400
+Content-type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature"; boundary="=-bhO5AvNH5LX3mFEn7ylQ"
+Message-id: <1310851053.5700.14.camel@TesterBox.tester.ca> (sfid-20110716_231743_467685_D886E22D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/25/2011 06:47 AM, Lubomir Schmidt wrote:
-> What distribution did you mean?
->
-> The old AWUS036H had the Realtek 8187L, yes. Then there came out before nearly
-> an year the AWUS036NH and the AWUS036NEH. Both base on the Ralink 3070L Chipset
-> and have till today the best range of all devices on the market.
-> Now Alfa release the AWUS036NHR with the Realtek 8188RU and the AWUS036NHA with
-> an Atheros AR9271.
->
-> Last year i helped to get support for the Ralink Chipsets in the 2800usb driver.
-> I got white papers and so on from the chipsets and the driver developer could
-> connect to an laptop running 24/7 and make tests with the device.
->
-> How can i help to get support? What distribution did you prefere on the notebook
-> to connect to?
 
-If you keep dropping the Cc'd recipients, I will not answer your Emails! Note, I 
-also included linux-wireless here.
+--=-bhO5AvNH5LX3mFEn7ylQ
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
 
-I do not care what distribution you use. I can use any. As the driver from the 
-Realtek web site 
-(ftp://WebUser:wK9xBuD5@202.134.71.21/cn/wlan/RTL8188RU_linux_v3.0.2164.20110715.zip) 
-is only for kernel 2.6.38 or later, it would be better if I had a kernel that 
-new; however, I could backport the system to an older one if necessary.
+Hello,
 
-As I downloaded the Realtek driver while composing this Email, I need to look at 
-the driver before making any commitment.
+It's a regularly reproducible bug: under some load, like a couple
+torrents running, but not enough to saturate the wireless link (and not
+even enough to saturate the ADSL link on the other side), the card stops
+sending or receiving any packet. Unloading and reloading the rtl8187
+driver fixes the problem.
 
-Larry
+Kernel version is 2.6.38, but it also happened with older versions, and
+I haven't bothered testing new ones since there are no changes in that
+driver.
 
+I get this on my dmesg:
+ieee80211 phy0: wlan0: No probe response from AP 00:0f:66:e2:5f:dd after 50=
+0ms, disconnecting.
+cfg80211: Calling CRDA to update world regulatory domain
+wlan0: authenticate with 00:0f:66:e2:5f:dd (try 1)
+wlan0: authenticate with 00:0f:66:e2:5f:dd (try 2)
+wlan0: authenticate with 00:0f:66:e2:5f:dd (try 3)
+wlan0: authentication with 00:0f:66:e2:5f:dd timed out
+
+The wireless card is the one built-in a Asus P5K-E/wifi-ap motherboard.
+And the router is a WRT54G v2 running the latest OpenWRT.
+
+This bit of dmesg output may also be useful:
+usb 1-3: reset high speed USB device using ehci_hcd and address 2
+cfg80211: Calling CRDA to update world regulatory domain
+ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+ieee80211 phy0: hwaddr 00:15:af:37:19:b3, RTL8187vB (default) V1 + rtl8225z=
+2, rfkill mask 2
+
+
+--=20
+Olivier Cr=EAte
+olivier.crete@ocrete.ca
+
+--=-bhO5AvNH5LX3mFEn7ylQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (GNU/Linux)
+
+iEYEABECAAYFAk4h/+oACgkQHTiOWk7ZorvE9wCcDCJ8V6kZcYS9lylIBw+wVUke
+T6IAn3NGI9wzCaUe/+kvd72qJtLHurrh
+=7Scl
+-----END PGP SIGNATURE-----
+
+--=-bhO5AvNH5LX3mFEn7ylQ--
 
