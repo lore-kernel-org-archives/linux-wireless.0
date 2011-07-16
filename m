@@ -1,39 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:12096 "EHLO mga02.intel.com"
+Received: from msr11.hinet.net ([168.95.4.111]:35441 "EHLO msr11.hinet.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753898Ab1GHQUk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2011 12:20:40 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 16/21] iwlagn: declare static
-Date: Fri,  8 Jul 2011 08:46:24 -0700
-Message-Id: <1310139989-27661-17-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110708_182059_595205_ECC05954)
-In-Reply-To: <1310139989-27661-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1310139989-27661-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1753951Ab1GPL6V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Jul 2011 07:58:21 -0400
+Date: Sat, 16 Jul 2011 19:55:27 +0800
+From: Ali Bahar <ali@internetdog.org>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] staging: r8712u: Most return-values changed from
+ -1 to proper errno macros.
+Message-ID: <20110716115527.GA2804@internetdog.org> (sfid-20110716_135830_865086_6B151EAB)
+Reply-To: ali@internetdog.org
+References: <20110703010605.GA3736@internetdog.org>
+ <1310749876-32632-1-git-send-email-ali@internetDog.org>
+ <1310749876-32632-2-git-send-email-ali@internetDog.org>
+ <4E20AA5A.6020101@lwfinger.net>
+ <20110716032100.GA3274@internetdog.org>
+ <87zkkevash.fsf@purkki.adurom.net>
+ <20110716105019.GA2176@internetdog.org>
+ <87r55qv49e.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87r55qv49e.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Declare iwl_mac_rssi_callback as "static"
+On Sat, Jul 16, 2011 at 02:44:45PM +0300, Kalle Valo wrote:
+> Ali Bahar <ali@internetdog.org> writes:
+> 
+> >> The problem with comments is that they quickly get out of date
+> >
+> > Oh boy! I did say I don't want to start a debate, but only to explain
+> > my original intentions.
+> 
+> Yeah, I noticed. I just merely wanted to give you reasoning behind the
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+And it was useful. I either did not know it, or had forgotten it.
+Thanks.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index cbd8d10..3f2b9d6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3342,7 +3342,7 @@ static void iwl_uninit_drv(struct iwl_priv *priv)
- 	kfree(priv->beacon_cmd);
- }
- 
--void iwl_mac_rssi_callback(struct ieee80211_hw *hw,
-+static void iwl_mac_rssi_callback(struct ieee80211_hw *hw,
- 			   enum ieee80211_rssi_event rssi_event)
- {
- 	struct iwl_priv *priv = hw->priv;
--- 
-1.7.0.4
 
+> comment style we have. Sorry if I sounded like I wanted to start a
+> flamewar, I did not mean to do that :)
+
+You didn't sound that way. 
+Email is easily misconstrued; I always try to give the benefit of a
+doubt.
+
+regards,
+ali
