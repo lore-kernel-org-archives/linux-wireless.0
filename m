@@ -1,120 +1,269 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:46304 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752939Ab1GMXqK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 19:46:10 -0400
-Received: by mail-iy0-f174.google.com with SMTP id 12so5995000iyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2011 16:46:10 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 2/5] mac80211: correct mesh beacon head
-Date: Wed, 13 Jul 2011 16:45:44 -0700
-Message-Id: <1310600747-9583-3-git-send-email-thomas@cozybit.com> (sfid-20110714_014619_826297_F0360E94)
-In-Reply-To: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
-References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
+Received: from mga11.intel.com ([192.55.52.93]:39510 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755381Ab1GPPgY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Jul 2011 11:36:24 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.guy@intel.com>
+Subject: [PATCH 16/18] iwlagn: move iwlagn_stop_device to transport layer
+Date: Sat, 16 Jul 2011 08:01:03 -0700
+Message-Id: <1310828463-18178-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110716_173627_987178_4ED2660B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Supported Rates and DS Parameter elements go in the beacon head. Add
-these IEs when we initially construct the beacon.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Since iwlagn_stop_device was the only caller to the rx_stop / tx_stop,
+these two don't need to be API any more.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.guy@intel.com>
 ---
- net/mac80211/mesh.c |   47 ++++++++++++++++++++++++++++++-----------------
- 1 files changed, 30 insertions(+), 17 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c   |   39 -----------------------
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c       |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.h       |    1 -
+ drivers/net/wireless/iwlwifi/iwl-dev.h       |    7 ++--
+ drivers/net/wireless/iwlwifi/iwl-sv-open.c   |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans.c     |   44 ++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-trans.h     |   13 ++-----
+ 8 files changed, 52 insertions(+), 58 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 60fd958..70bfa96 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -217,14 +217,6 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 	len = sband->n_bitrates;
- 	if (len > 8)
- 		len = 8;
--	pos = skb_put(skb, len + 2);
--	*pos++ = WLAN_EID_SUPP_RATES;
--	*pos++ = len;
--	for (i = 0; i < len; i++) {
--		rate = sband->bitrates[i].bitrate;
--		*pos++ = (u8) (rate / 5);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 4156316..e06a5c2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -2166,42 +2166,3 @@ int iwlagn_start_device(struct iwl_priv *priv)
+ 	return 0;
+ }
+ 
+-void iwlagn_stop_device(struct iwl_priv *priv)
+-{
+-	unsigned long flags;
+-
+-	/* stop and reset the on-board processor */
+-	iwl_write32(priv, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
+-
+-	/* tell the device to stop sending interrupts */
+-	spin_lock_irqsave(&priv->lock, flags);
+-	iwl_disable_interrupts(priv);
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-	trans_sync_irq(priv);
+-
+-	/* device going down, Stop using ICT table */
+-	iwl_disable_ict(priv);
+-
+-	/*
+-	 * If a HW restart happens during firmware loading,
+-	 * then the firmware loading might call this function
+-	 * and later it might be called again due to the
+-	 * restart. So don't process again if the device is
+-	 * already dead.
+-	 */
+-	if (test_bit(STATUS_DEVICE_ENABLED, &priv->status)) {
+-		trans_tx_stop(priv);
+-		trans_rx_stop(priv);
+-
+-		/* Power-down device's busmaster DMA clocks */
+-		iwl_write_prph(priv, APMG_CLK_DIS_REG,
+-			       APMG_CLK_VAL_DMA_CLK_RQT);
+-		udelay(5);
 -	}
 -
- 	if (sband->n_bitrates > len) {
- 		pos = skb_put(skb, sband->n_bitrates - len + 2);
- 		*pos++ = WLAN_EID_EXT_SUPP_RATES;
-@@ -235,13 +227,6 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 		}
- 	}
- 
--	if (sband->band == IEEE80211_BAND_2GHZ) {
--		pos = skb_put(skb, 2 + 1);
--		*pos++ = WLAN_EID_DS_PARAMS;
--		*pos++ = 1;
--		*pos++ = ieee80211_frequency_to_channel(local->hw.conf.channel->center_freq);
--	}
+-	/* Make sure (redundant) we've released our request to stay awake */
+-	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
 -
- 	pos = skb_put(skb, 2 + sdata->u.mesh.mesh_id_len);
- 	*pos++ = WLAN_EID_MESH_ID;
- 	*pos++ = sdata->u.mesh.mesh_id_len;
-@@ -464,6 +449,10 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_mgmt *bcn_head;
- 	struct beacon_parameters bcn_params;
-+	struct ieee80211_supported_band *sband;
-+	struct ieee80211_channel *channel = local->hw.conf.channel;
-+	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
-+	int rates, i;
- 	u8 *pos;
+-	/* Stop the device, and put it in low power state */
+-	iwl_apm_stop(priv);
+-}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+index 06304a6..c15a1f7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+@@ -707,6 +707,6 @@ int iwlagn_run_init_ucode(struct iwl_priv *priv)
+ 	iwlagn_remove_notification(priv, &calib_wait);
+  out:
+ 	/* Whatever happened, stop the device */
+-	iwlagn_stop_device(priv);
++	trans_stop_device(priv);
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index bd85af9..3de90c5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1782,7 +1782,7 @@ static void __iwl_down(struct iwl_priv *priv)
+ 		       test_bit(STATUS_EXIT_PENDING, &priv->status) <<
+ 				STATUS_EXIT_PENDING;
  
- 	local->fif_other_bss++;
-@@ -478,11 +467,22 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 	ieee80211_mesh_root_setup(ifmsh);
- 	ieee80211_queue_work(&local->hw, &sdata->work);
+-	iwlagn_stop_device(priv);
++	trans_stop_device(priv);
  
-+	/* build supported rates array */
-+	sband = local->hw.wiphy->bands[channel->band];
-+	rates = sband->n_bitrates;
-+	if (rates > 8)
-+		rates = 8;
-+	for (i = 0; i < rates; i++) {
-+		int rate = sband->bitrates[i].bitrate;
-+		supp_rates[i] = (u8) (rate / 5);
+ 	dev_kfree_skb(priv->beacon_skb);
+ 	priv->beacon_skb = NULL;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 0c4e145..fa32eb9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -129,7 +129,6 @@ static inline void iwl_set_calib_hdr(struct iwl_calib_hdr *hdr, u8 cmd)
+ int iwl_prepare_card_hw(struct iwl_priv *priv);
+ 
+ int iwlagn_start_device(struct iwl_priv *priv);
+-void iwlagn_stop_device(struct iwl_priv *priv);
+ 
+ /* tx queue */
+ void iwlagn_set_wr_ptrs(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 34625de..cf6f4b2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1236,11 +1236,10 @@ struct iwl_trans;
+  * struct iwl_trans_ops - transport specific operations
+ 
+  * @rx_init: inits the rx memory, allocate it if needed
+- * @rx_stop: stop the rx
+  * @rx_free: frees the rx memory
+  * @tx_init:inits the tx memory, allocate if needed
+- * @tx_stop: stop the tx
+  * @tx_free: frees the tx memory
++ * @stop_device:stops the whole device (embedded CPU put to reset)
+  * @send_cmd:send a host command
+  * @send_cmd_pdu:send a host command: flags can be CMD_*
+  * @get_tx_cmd: returns a pointer to a new Tx cmd for the upper layer use
+@@ -1254,13 +1253,13 @@ struct iwl_trans;
+  */
+ struct iwl_trans_ops {
+ 	int (*rx_init)(struct iwl_priv *priv);
+-	int (*rx_stop)(struct iwl_priv *priv);
+ 	void (*rx_free)(struct iwl_priv *priv);
+ 
+ 	int (*tx_init)(struct iwl_priv *priv);
+-	int (*tx_stop)(struct iwl_priv *priv);
+ 	void (*tx_free)(struct iwl_priv *priv);
+ 
++	void (*stop_device)(struct iwl_priv *priv);
++
+ 	int (*send_cmd)(struct iwl_priv *priv, struct iwl_host_cmd *cmd);
+ 
+ 	int (*send_cmd_pdu)(struct iwl_priv *priv, u8 id, u32 flags, u16 len,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sv-open.c b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+index 77ed1c2..d736a9d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sv-open.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+@@ -407,7 +407,7 @@ static int iwl_testmode_driver(struct ieee80211_hw *hw, struct nlattr **tb)
+ 
+ 	case IWL_TM_CMD_APP2DEV_CFG_INIT_CALIB:
+ 		iwl_testmode_cfg_init_calib(priv);
+-		iwlagn_stop_device(priv);
++		trans_stop_device(priv);
+ 		break;
+ 
+ 	case IWL_TM_CMD_APP2DEV_LOAD_RUNTIME_FW:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+index 6b7cb73..8d45554 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -611,6 +611,46 @@ static int iwl_trans_tx_stop(struct iwl_priv *priv)
+ 	return 0;
+ }
+ 
++static void iwl_trans_stop_device(struct iwl_priv *priv)
++{
++	unsigned long flags;
++
++	/* stop and reset the on-board processor */
++	iwl_write32(priv, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
++
++	/* tell the device to stop sending interrupts */
++	spin_lock_irqsave(&priv->lock, flags);
++	iwl_disable_interrupts(priv);
++	spin_unlock_irqrestore(&priv->lock, flags);
++	trans_sync_irq(priv);
++
++	/* device going down, Stop using ICT table */
++	iwl_disable_ict(priv);
++
++	/*
++	 * If a HW restart happens during firmware loading,
++	 * then the firmware loading might call this function
++	 * and later it might be called again due to the
++	 * restart. So don't process again if the device is
++	 * already dead.
++	 */
++	if (test_bit(STATUS_DEVICE_ENABLED, &priv->status)) {
++		iwl_trans_tx_stop(priv);
++		iwl_trans_rx_stop(priv);
++
++		/* Power-down device's busmaster DMA clocks */
++		iwl_write_prph(priv, APMG_CLK_DIS_REG,
++			       APMG_CLK_VAL_DMA_CLK_RQT);
++		udelay(5);
 +	}
 +
- 	/* Build fixed part of mesh beacon. */
- 	memset(&bcn_params, 0, sizeof(struct beacon_parameters));
- 
--	/* header + fixed fields + null ssid */
--	bcn_params.head_len = 24 + sizeof(bcn_head->u.beacon) + 2;
-+	/* header + fixed fields + null ssid + supp rates + DS params */
-+	bcn_params.head_len = 24 + sizeof(bcn_head->u.beacon) + 2 +
-+			      (2 + rates) + 3;
- 	pos = kmalloc(bcn_params.head_len, GFP_KERNEL | __GFP_ZERO);
- 	if (pos == NULL) {
- 		printk(KERN_ERR "Unable to allocate mesh beacon\n");
-@@ -506,6 +506,19 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 	*pos++ = WLAN_EID_SSID;
- 	*pos++ = 0x0;
- 
-+	/* supported rates */
-+	*pos++ = WLAN_EID_SUPP_RATES;
-+	*pos++ = rates;
-+	memcpy(pos, supp_rates, rates);
-+	pos += rates;
++	/* Make sure (redundant) we've released our request to stay awake */
++	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
 +
-+	/* DS parameter set */
-+	if (sband->band == IEEE80211_BAND_2GHZ) {
-+		*pos++ = WLAN_EID_DS_PARAMS;
-+		*pos++ = 1;
-+		*pos++ = ieee80211_frequency_to_channel(channel->center_freq);
-+	}
++	/* Stop the device, and put it in low power state */
++	iwl_apm_stop(priv);
++}
 +
- 	bcn_params.head = (char *) bcn_head;
- 	bcn_params.dtim_period = 1;	/* unused for now */
+ static struct iwl_tx_cmd *iwl_trans_get_tx_cmd(struct iwl_priv *priv,
+ 						int txq_id)
+ {
+@@ -779,13 +819,13 @@ static void iwl_trans_free(struct iwl_priv *priv)
  
+ static const struct iwl_trans_ops trans_ops = {
+ 	.rx_init = iwl_trans_rx_init,
+-	.rx_stop = iwl_trans_rx_stop,
+ 	.rx_free = iwl_trans_rx_free,
+ 
+ 	.tx_init = iwl_trans_tx_init,
+-	.tx_stop = iwl_trans_tx_stop,
+ 	.tx_free = iwl_trans_tx_free,
+ 
++	.stop_device = iwl_trans_stop_device,
++
+ 	.send_cmd = iwl_send_cmd,
+ 	.send_cmd_pdu = iwl_send_cmd_pdu,
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 8293f54..55e6c33 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -69,11 +69,6 @@ static inline int trans_rx_init(struct iwl_priv *priv)
+ 	return priv->trans.ops->rx_init(priv);
+ }
+ 
+-static inline int trans_rx_stop(struct iwl_priv *priv)
+-{
+-	return priv->trans.ops->rx_stop(priv);
+-}
+-
+ static inline void trans_rx_free(struct iwl_priv *priv)
+ {
+ 	priv->trans.ops->rx_free(priv);
+@@ -84,14 +79,14 @@ static inline int trans_tx_init(struct iwl_priv *priv)
+ 	return priv->trans.ops->tx_init(priv);
+ }
+ 
+-static inline int trans_tx_stop(struct iwl_priv *priv)
++static inline void trans_tx_free(struct iwl_priv *priv)
+ {
+-	return priv->trans.ops->tx_stop(priv);
++	priv->trans.ops->tx_free(priv);
+ }
+ 
+-static inline void trans_tx_free(struct iwl_priv *priv)
++static inline void trans_stop_device(struct iwl_priv *priv)
+ {
+-	priv->trans.ops->tx_free(priv);
++	priv->trans.ops->stop_device(priv);
+ }
+ 
+ static inline int trans_send_cmd(struct iwl_priv *priv,
 -- 
-1.7.6
+1.7.0.4
 
