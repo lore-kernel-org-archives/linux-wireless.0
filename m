@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:60750 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752893Ab1GZAAM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2011 20:00:12 -0400
-Received: by pzk37 with SMTP id 37so9320782pzk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2011 17:00:12 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 5/6] ieee80211: add mesh action codes
-Date: Mon, 25 Jul 2011 16:59:16 -0700
-Message-Id: <1311638357-28740-6-git-send-email-thomas@cozybit.com> (sfid-20110726_020018_469503_079AB1B7)
-In-Reply-To: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
-References: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
+Received: from mga11.intel.com ([192.55.52.93]:7249 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755473Ab1GPPcM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Jul 2011 11:32:12 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 09/18] iwlagn: add comment to tx and get_tx_cmd in iwl_trans_ops
+Date: Sat, 16 Jul 2011 07:56:30 -0700
+Message-Id: <1310828199-18000-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110716_173241_704261_D4FA4774)
+In-Reply-To: <1310828199-18000-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1310828199-18000-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Those comments were missed in a previous commit.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- include/linux/ieee80211.h |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 5ecf148..08b1093 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1305,6 +1305,21 @@ enum ieee80211_self_protected_actioncode {
- 	WLAN_SP_MGK_ACK = 5,
- };
- 
-+/* Mesh action codes */
-+enum ieee80211_mesh_actioncode {
-+	WLAN_MESH_ACTION_LINK_METRIC_REPORT,
-+	WLAN_MESH_ACTION_HWMP_PATH_SELECTION,
-+	WLAN_MESH_ACTION_GATE_ANNOUNCEMENT,
-+	WLAN_MESH_ACTION_CONGESTION_CONTROL_NOTIFICATION,
-+	WLAN_MESH_ACTION_MCCA_SETUP_REQUEST,
-+	WLAN_MESH_ACTION_MCCA_SETUP_REPLY,
-+	WLAN_MESH_ACTION_MCCA_ADVERTISEMENT_REQUEST,
-+	WLAN_MESH_ACTION_MCCA_ADVERTISEMENT,
-+	WLAN_MESH_ACTION_MCCA_TEARDOWN,
-+	WLAN_MESH_ACTION_TBTT_ADJUSTMENT_REQUEST,
-+	WLAN_MESH_ACTION_TBTT_ADJUSTMENT_RESPONSE,
-+};
-+
- /* Security key length */
- enum ieee80211_key_len {
- 	WLAN_KEY_LEN_WEP40 = 5,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index cb6801c..34625de 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1243,6 +1243,8 @@ struct iwl_trans;
+  * @tx_free: frees the tx memory
+  * @send_cmd:send a host command
+  * @send_cmd_pdu:send a host command: flags can be CMD_*
++ * @get_tx_cmd: returns a pointer to a new Tx cmd for the upper layer use
++ * @tx: send an skb
+  * @sync_irq: the upper layer will typically disable interrupt and call this
+  *            handler. After this handler returns, it is guaranteed that all
+  *            the ISR / tasklet etc... have finished running and the transport
 -- 
-1.7.6
+1.7.0.4
 
