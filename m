@@ -1,121 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:3230 "EHLO mx1.redhat.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:3049 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754024Ab1G0MN4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2011 08:13:56 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	Tony Houghton <h@realh.co.uk>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org
-Subject: [RFC/RFT v2 07/12] pci: aspm: add function for disabling ASPM
-Date: Wed, 27 Jul 2011 14:14:54 +0200
-Message-Id: <1311768899-4559-8-git-send-email-sgruszka@redhat.com> (sfid-20110727_141411_165391_5188DBB6)
-In-Reply-To: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
-References: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
+	id S1752023Ab1GPJ71 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Jul 2011 05:59:27 -0400
+Message-ID: <4E2160EC.8020003@broadcom.com> (sfid-20110716_115930_724080_25CAA5ED)
+Date: Sat, 16 Jul 2011 11:59:08 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Dan Carpenter" <error27@gmail.com>
+cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 22/35] staging: brcm80211: fix for checkpatch 'avoid
+ externs in c file' warning
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+ <1310678971-28952-23-git-send-email-frankyl@broadcom.com>
+ <20110716000626.GI18655@shale.localdomain>
+In-Reply-To: <20110716000626.GI18655@shale.localdomain>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for disabling ASPM if !CONFIG_PCIEASPM. Patch is based
-on code from e1000e.
+On 07/16/2011 02:06 AM, Dan Carpenter wrote:
+>> @@ -3552,8 +3552,7 @@ void brcms_c_switch_shortslot(struct brcms_c_info *wlc, bool shortslot)
+>>   		if (wlc->shortslot)
+>>   			cfg->current_bss->capability |=
+>>   					WLAN_CAPABILITY_SHORT_SLOT_TIME;
+>> -	END_FOREACH_BSS
+>> -
+>> +	END_FOREACH_BSS /* this comment fixes a checkpatch warning */
+> I don't have strong feelings about this, but another way to do that
+> would be to write it like:
+>
+> 	FOR_EACH(blah, blah) {
+> 		frob();
+> 		frob();
+> 		frob();
+> 	} END_FOREACH_BSS();
 
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/pci/pcie/Makefile |    3 +--
- drivers/pci/pcie/aspm.c   |   41 +++++++++++++++++++++++++++++++++++++++++
- include/linux/pci-aspm.h  |    2 ++
- 3 files changed, 44 insertions(+), 2 deletions(-)
+Maybe have to revisit the macro definitions. Will look into this. As 
+this patch fixes some true extern warnings I suggest to let this one go 
+in the tree.
 
-diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
-index 00c62df..6e20c59 100644
---- a/drivers/pci/pcie/Makefile
-+++ b/drivers/pci/pcie/Makefile
-@@ -2,8 +2,7 @@
- # Makefile for PCI-Express PORT Driver
- #
- 
--# Build PCI Express ASPM if needed
--obj-$(CONFIG_PCIEASPM)		+= aspm.o
-+obj-y				+= aspm.o
- 
- pcieportdrv-y			:= portdrv_core.o portdrv_pci.o portdrv_bus.o
- pcieportdrv-$(CONFIG_ACPI)	+= portdrv_acpi.o
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 6892601..2883fc3 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -21,6 +21,8 @@
- #include <linux/pci-aspm.h>
- #include "../pci.h"
- 
-+#ifdef CONFIG_PCIEASPM
-+
- #ifdef MODULE_PARAM_PREFIX
- #undef MODULE_PARAM_PREFIX
- #endif
-@@ -976,3 +978,42 @@ bool pcie_aspm_support_enabled(void)
- 	return aspm_support_enabled;
- }
- EXPORT_SYMBOL(pcie_aspm_support_enabled);
-+
-+void pcie_disable_aspm(struct pci_dev *pdev, u16 state)
-+{
-+	pci_disable_link_state_locked(pdev, state);
-+}
-+EXPORT_SYMBOL(pcie_disable_aspm);
-+
-+#else /* CONFIG_PCIEASPM */
-+
-+void pcie_disable_aspm(struct pci_dev *pdev, u16 state)
-+{
-+	int pos;
-+	u16 reg16;
-+	struct pci_dev *parent;
-+
-+	pos = pci_pcie_cap(pdev);
-+	if (!pos)
-+		return;
-+	/*
-+	 * Both device and parent should have the same ASPM setting.
-+	 * Disable ASPM in downstream component first and then upstream.
-+	 */
-+
-+	pci_read_config_word(pdev, pos + PCI_EXP_LNKCTL, &reg16);
-+	reg16 &= ~state;
-+	pci_write_config_word(pdev, pos + PCI_EXP_LNKCTL, reg16);
-+
-+	parent = pdev->bus->self;
-+	if (WARN_ON(!parent))
-+		return;
-+
-+	pos = pci_pcie_cap(parent);
-+	pci_read_config_word(parent, pos + PCI_EXP_LNKCTL, &reg16);
-+	reg16 &= ~state;
-+	pci_write_config_word(parent, pos + PCI_EXP_LNKCTL, reg16);
-+}
-+EXPORT_SYMBOL(pcie_disable_aspm);
-+
-+#endif
-diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
-index 7cea7b6..f9722e6 100644
---- a/include/linux/pci-aspm.h
-+++ b/include/linux/pci-aspm.h
-@@ -55,6 +55,8 @@ static inline void pcie_no_aspm(void)
- }
- #endif
- 
-+extern void pcie_disable_aspm(struct pci_dev *pdev, u16 state);
-+
- #ifdef CONFIG_PCIEASPM_DEBUG /* this depends on CONFIG_PCIEASPM */
- extern void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev);
- extern void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev);
+> Or if you know perl, you could look into why checkpatch is printing
+> the wrong warning here...
+
+I moved on to python scripting and perl got flushed from memory ;-)
+
+Gr. AvS
+
 -- 
-1.7.1
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
 
