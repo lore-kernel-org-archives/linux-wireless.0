@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:32977 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751278Ab1GOXee (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2011 19:34:34 -0400
-Received: by fxd18 with SMTP id 18so3452729fxd.11
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2011 16:34:33 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
+Received: from purkki.adurom.net ([80.68.90.206]:56654 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753413Ab1GPLlk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Jul 2011 07:41:40 -0400
 To: Pavel Roskin <proski@gnu.org>
-Subject: Re: Binary for carl9170
-Date: Sat, 16 Jul 2011 01:36:43 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <CACAiNS3-3K06Cro+VWypyWGetUW-v0qeJ29noXi7WNtUaCWzTw@mail.gmail.com> <20110715151642.0j86tyrj4k0g4sg4-cebfxv@webmail.spamcop.net> <4E20C3DC.3020200@gnu.org>
-In-Reply-To: <4E20C3DC.3020200@gnu.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [TODO] at76c50x: remove wext includes
+References: <1310546836.3873.6.camel@jlt3.sipsolutions.net>
+	<4E1D5CB7.7070607@adurom.com> <4E1DA3A0.1000606@gnu.org>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Sat, 16 Jul 2011 14:41:38 +0300
+In-Reply-To: <4E1DA3A0.1000606@gnu.org> (Pavel Roskin's message of "Wed\, 13 Jul 2011 09\:54\:40 -0400")
+Message-ID: <87vcv2v4el.fsf@purkki.adurom.net> (sfid-20110716_134143_347210_BEB2727C)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201107160136.44182.chunkeey@googlemail.com> (sfid-20110716_013437_604835_D280F647)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 16 July 2011 00:49:00 Pavel Roskin wrote:
-> On 07/15/2011 03:16 PM, Pavel Roskin wrote:
-> > Quoting Christian Lamparter <chunkeey@googlemail.com>:
-> >> So, since you already have a working version, why simply put it on the
-> >> wiki?
-> >
-> > Yes, I have a working version now (compiled with all defaults) and I'll
-> > try to upload it myself.
-> 
-> Oh well, I can upload it to wiki, but not to your page at 
-> http://www.kernel.org/pub/linux/kernel/people/chr/carl9170/fw/
-The question is, is kernel.org really a good address to host those firmwares.
-especially in a personal folder.
+Pavel Roskin <proski@gnu.org> writes:
 
-> I don't want to setup an alternative competing repository for carl9170 
-> firmwares. Also, it would be nice to have the 1.9.4 firmware on 
-> http://www.kernel.org/pub/linux/kernel/people/chr/carl9170/fw/
-
-I would rather have them on wireless.kernel.org. Just like the ath9k_htc
-firmware.
-> The wiki allows attachments, so I uploaded the firmware as an 
-> attachment.  First I put is on the main carl9170 page, but it turned out 
-> that MoinMoin doesn't appear to have any way to specify the attachment 
-> name in the link.  Since I called the attachment "carl9170-1.fw-1.9.4", 
-> it would only download under that name, rather than as "carl9170-1.fw". 
->   I don't want to call the attachment "carl9170-1.fw" since nobody, 
-> including me, would be able to replace it with another version ever.
+> On 07/13/2011 04:52 AM, Kalle Valo wrote:
+>> The driver has been broken due to the mac80211 changes for a long time
+>> and it's obvious that I can't maintain it anymore as I haven't touched
+>> it for a long time. I would like to just remove it altogether. Any
+>> objections?
+>>
+>> If someone wants to step up and fix it, now is the time to do it.
 >
-> So I created a separate wiki page for the 1.9.4 version of the firmware 
-> and attached the firmware to it as "carl9170-1.fw".  That's an 
-> equivalent of having directories with files having the same name.
-Good thinking, we could add a changelog, the configuration and
-some infos like supported features [e.g.: number of supported virtual
-interfaces, supported WoWLAN triggers, etc...] to the same page.
+> Please keep the driver for now!
 
-> The carl9170 page recommends 1.9.2 for all kernels up to 3.0.  The 1.9.4 
-> is recommended for compat-wireless.  If that's not your recommendation, 
-> please feel free to update the wiki.
-oh no, this should be just fine.
+Ok, I won't remove it now but I'll send a patch stating that it's
+broken currently.
 
-Thanks,
-	Christian
+> I have a pile of compatible hardware, and I should be able to fix
+> it. I'm placing it onto my TODO list.
+
+Nice. Thank you for stepping in.
+
+> There is some really obsolete hardware that we may need to stop
+> supporting, e.g. Atheros AR5210, but the reason is because it's
+> supported by an actively developed driver, ath5k, and the AR5210 code
+> stands in the way all the time.
+>
+> However, at76c50x-usb is a separate driver and it doesn't stand in the
+> way of anybody except when global changes are made.
+
+You are right. The problem is that the driver is broken currently as
+it requires bssid before authentication and mac80211 doesn't provide
+it. Or at least I haven't found a way to do that.
+
+I know that Johannes has been talking about adding support for
+providing bssid to the driver before authentication. So there is a
+chance that we might be able to fix this without major hacks.
+
+-- 
+Kalle Valo
