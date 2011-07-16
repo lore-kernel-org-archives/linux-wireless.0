@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:55921 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750803Ab1GSSYx convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 14:24:53 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Daniel Drake <dsd@laptop.org>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"dcbw@redhat.com" <dcbw@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Tue, 19 Jul 2011 11:23:49 -0700
-Subject: RE: [PATCH 1/4] libertas: remove auto_deep_sleep functionality
-Message-ID: <477F20668A386D41ADCC57781B1F704307FFBB244E@SC-VEXCH1.marvell.com> (sfid-20110719_202459_694100_43CB074B)
-References: <20110717170310.CAD139D401C@zog.reactivated.net>
-	<477F20668A386D41ADCC57781B1F704307FFB0947D@SC-VEXCH1.marvell.com>
- <CAGq3pz6DbsHG9JY8oZqaeRp4=EC1-sKunSuF2Q1+tfBoYbcyLg@mail.gmail.com>
-In-Reply-To: <CAGq3pz6DbsHG9JY8oZqaeRp4=EC1-sKunSuF2Q1+tfBoYbcyLg@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:16181 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755381Ab1GPPcA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Jul 2011 11:32:00 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH wireless-3.1] iwlagn: fix warning in testmode attribute table
+Date: Sat, 16 Jul 2011 07:56:21 -0700
+Message-Id: <1310828199-18000-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110716_173214_895666_2D640852)
+In-Reply-To: <1310828199-18000-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1310828199-18000-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+Fix the compile warning cause by [IWL_TM_ATTR_MAX - 1]
 
-> > As the auto deep sleep feature for SD8385/SD8686/SD8688 cards is very useful for many embedded
-> platforms to handle enter/exit deep sleep mode automatically, please do not remove it from libertas
-> driver. If you have any particular issue with this feature enabled, we can work on it and solve the
-> problem.
-> 
-> The problem is that it can't actually be enabled. This is dead code.
-> Or if it can, please point out what I'm missing.
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+this patch is also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+---
+ drivers/net/wireless/iwlwifi/iwl-sv-open.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-To enable deep sleep mode:
-iwconfig wlan0 power period 0
-
-To enable auto deep sleep mode with idle time period set to 5 seconds:
-iwconfig wlan0 power period 5
-
-To disable deep sleep/auto deep sleep mode:
-iwconfig wlan0 power period -1
-
-The iwconfig (from Wireless Tools version 30pre8 beta or newer) supports "power period" command.
-
-Thanks,
-Bing
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sv-open.c b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+index c00aa5a..b17a330 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sv-open.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+@@ -607,7 +607,7 @@ static int iwl_testmode_trace_dump(struct ieee80211_hw *hw, struct nlattr **tb,
+  */
+ int iwl_testmode_cmd(struct ieee80211_hw *hw, void *data, int len)
+ {
+-	struct nlattr *tb[IWL_TM_ATTR_MAX - 1];
++	struct nlattr *tb[IWL_TM_ATTR_MAX];
+ 	struct iwl_priv *priv = hw->priv;
+ 	int result;
+ 
+-- 
+1.7.0.4
 
