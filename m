@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:24939 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753427Ab1GURgo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 13:36:44 -0400
-Subject: [PATCH 3/3] ath5k: use get_unaligned_le32() in
- ath5k_write_pwr_to_pdadc_table()
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Pavel Roskin <proski@gnu.org>
-Date: Thu, 21 Jul 2011 13:36:42 -0400
-Message-ID: <20110721173642.30989.45021.stgit@mj.roinet.com> (sfid-20110721_193657_723031_A1318774)
-In-Reply-To: <20110721173628.30989.19587.stgit@mj.roinet.com>
-References: <20110721173628.30989.19587.stgit@mj.roinet.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58958 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755579Ab1GPQ4i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Jul 2011 12:56:38 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
+	zajec5@gmail.com, linux-mips@linux-mips.org
+Cc: jonas.gorski@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
+	arend@broadcom.com, b43-dev@lists.infradead.org,
+	bernhardloos@googlemail.com, arnd@arndb.de,
+	julian.calaby@gmail.com, sshtylyov@mvista.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 11/11] bcm47xx: fix irq assignment for new SoCs.
+Date: Sat, 16 Jul 2011 18:55:42 +0200
+Message-Id: <1310835342-18877-12-git-send-email-hauke@hauke-m.de> (sfid-20110716_185655_817026_37802C22)
+In-Reply-To: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
+References: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath5k/phy.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
+ arch/mips/bcm47xx/irq.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index a0c66cf..81e465e 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -22,6 +22,7 @@
+diff --git a/arch/mips/bcm47xx/irq.c b/arch/mips/bcm47xx/irq.c
+index 325757a..70bdcf0 100644
+--- a/arch/mips/bcm47xx/irq.c
++++ b/arch/mips/bcm47xx/irq.c
+@@ -26,6 +26,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
+ #include <asm/irq_cpu.h>
++#include <bcm47xx.h>
  
- #include <linux/delay.h>
- #include <linux/slab.h>
-+#include <asm/unaligned.h>
+ void plat_irq_dispatch(void)
+ {
+@@ -51,5 +52,16 @@ void plat_irq_dispatch(void)
  
- #include "ath5k.h"
- #include "reg.h"
-@@ -2794,12 +2795,8 @@ ath5k_write_pwr_to_pdadc_table(struct ath5k_hw *ah, u8 ee_mode)
- 	 * Write TX power values
- 	 */
- 	for (i = 0; i < (AR5K_EEPROM_POWER_TABLE_SIZE / 2); i++) {
--		ath5k_hw_reg_write(ah,
--			((pdadc_out[4 * i + 0] & 0xff) << 0) |
--			((pdadc_out[4 * i + 1] & 0xff) << 8) |
--			((pdadc_out[4 * i + 2] & 0xff) << 16) |
--			((pdadc_out[4 * i + 3] & 0xff) << 24),
--			AR5K_PHY_PDADC_TXPOWER(i));
-+		u32 val = get_unaligned_le32(&pdadc_out[4 * i]);
-+		ath5k_hw_reg_write(ah, val, AR5K_PHY_PDADC_TXPOWER(i));
- 	}
+ void __init arch_init_irq(void)
+ {
++#ifdef CONFIG_BCM47XX_BCMA
++	if (bcm47xx_active_bus_type == BCM47XX_BUS_TYPE_BCMA) {
++		bcma_write32(bcm47xx_bus.bcma.bus.drv_mips.core,
++			     BCMA_MIPS_MIPS74K_INTMASK(5), 1 << 31);
++		/*
++		 * the kernel reads the timer irq from some register and thinks
++		 * it's #5, but we offset it by 2 and route to #7
++		 */
++		cp0_compare_irq = 7;
++	}
++#endif
+ 	mips_cpu_irq_init();
  }
- 
+-- 
+1.7.4.1
+
