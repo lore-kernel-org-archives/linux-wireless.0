@@ -1,113 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47901 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754256Ab1GGRAr (ORCPT
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:59340 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751129Ab1GPQE6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2011 13:00:47 -0400
-Message-Id: <20110707165954.486011879@sipsolutions.net> (sfid-20110707_190051_493622_CD060955)
-Date: Thu, 07 Jul 2011 18:58:01 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] mac80211: allow driver to generate P1K for IV32
-References: <20110707165759.856063840@sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 16 Jul 2011 12:04:58 -0400
+Received: by fxd18 with SMTP id 18so4268723fxd.11
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Jul 2011 09:04:57 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [RFC][PATCH] bcma: move define of BCMA_CLKCTLST register
+Date: Sat, 16 Jul 2011 18:43:36 +0200
+Message-Id: <1310834616-3314-1-git-send-email-zajec5@gmail.com> (sfid-20110716_180501_728022_DE0DA45C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Recent experiments have shown many cores share 0x1E0 register used for
+clock management.
 
-In order to support pre-populating the P1K cache in
-iwlwifi hardware for WoWLAN, we need to calculate
-the P1K for the current IV32. Allow drivers to get
-the P1K for any given IV32 instead of for a given
-packet, but keep the packet-based version around as
-an inline.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
-This should also enable fixing b43's code -- it's
-also pre-populating the cache in normal operation.
+Is this OK to move it this way? I prefer this over defining same names
+for 3 different cores.
+Do you have any better ideas?
+---
+ include/linux/bcma/bcma_driver_chipcommon.h |   10 +---------
+ include/linux/bcma/bcma_regs.h              |   19 +++++++++++++++++++
+ 2 files changed, 20 insertions(+), 9 deletions(-)
 
- include/net/mac80211.h |   24 ++++++++++++++++++++++--
- net/mac80211/tkip.c    |    9 +++------
- 2 files changed, 25 insertions(+), 8 deletions(-)
-
---- a/include/net/mac80211.h	2011-07-07 18:52:08.000000000 +0200
-+++ b/include/net/mac80211.h	2011-07-07 18:53:29.000000000 +0200
-@@ -20,6 +20,7 @@
- #include <linux/device.h>
- #include <linux/ieee80211.h>
- #include <net/cfg80211.h>
-+#include <asm/unaligned.h>
+diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
+index 9c5b69f..6e7b8b5 100644
+--- a/include/linux/bcma/bcma_driver_chipcommon.h
++++ b/include/linux/bcma/bcma_driver_chipcommon.h
+@@ -179,15 +179,7 @@
+ #define BCMA_CC_PROG_WAITCNT		0x0124
+ #define BCMA_CC_FLASH_CFG		0x0128
+ #define BCMA_CC_FLASH_WAITCNT		0x012C
+-#define BCMA_CC_CLKCTLST		0x01E0 /* Clock control and status (rev >= 20) */
+-#define  BCMA_CC_CLKCTLST_FORCEALP	0x00000001 /* Force ALP request */
+-#define  BCMA_CC_CLKCTLST_FORCEHT	0x00000002 /* Force HT request */
+-#define  BCMA_CC_CLKCTLST_FORCEILP	0x00000004 /* Force ILP request */
+-#define  BCMA_CC_CLKCTLST_HAVEALPREQ	0x00000008 /* ALP available request */
+-#define  BCMA_CC_CLKCTLST_HAVEHTREQ	0x00000010 /* HT available request */
+-#define  BCMA_CC_CLKCTLST_HWCROFF	0x00000020 /* Force HW clock request off */
+-#define  BCMA_CC_CLKCTLST_HAVEHT	0x00010000 /* HT available */
+-#define  BCMA_CC_CLKCTLST_HAVEALP	0x00020000 /* APL available */
++/* 0x1E0 is defined as shared BCMA_CLKCTLST */
+ #define BCMA_CC_HW_WORKAROUND		0x01E4 /* Hardware workaround (rev >= 20) */
+ #define BCMA_CC_UART0_DATA		0x0300
+ #define BCMA_CC_UART0_IMR		0x0304
+diff --git a/include/linux/bcma/bcma_regs.h b/include/linux/bcma/bcma_regs.h
+index f82d88a..3e0a27f 100644
+--- a/include/linux/bcma/bcma_regs.h
++++ b/include/linux/bcma/bcma_regs.h
+@@ -1,6 +1,25 @@
+ #ifndef LINUX_BCMA_REGS_H_
+ #define LINUX_BCMA_REGS_H_
  
- /**
-  * DOC: Introduction
-@@ -2579,6 +2580,18 @@ struct sk_buff *
- ieee80211_get_buffered_bc(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
- 
- /**
-+ * ieee80211_get_tkip_p1k_iv - get a TKIP phase 1 key for IV32
-+ *
-+ * This function returns the TKIP phase 1 key for the given IV32.
-+ *
-+ * @keyconf: the parameter passed with the set key
-+ * @iv32: IV32 to get the P1K for
-+ * @p1k: a buffer to which the key will be written, as 5 u16 values
-+ */
-+void ieee80211_get_tkip_p1k_iv(struct ieee80211_key_conf *keyconf,
-+			       u32 iv32, u16 *p1k);
++/* Some single registers are shared between many cores */
++/* BCMA_CLKCTLST: ChipCommon (rev >= 20), PCIe, 80211 */
++#define BCMA_CLKCTLST			0x01E0 /* Clock control and status */
++#define  BCMA_CLKCTLST_FORCEALP		0x00000001 /* Force ALP request */
++#define  BCMA_CLKCTLST_FORCEHT		0x00000002 /* Force HT request */
++#define  BCMA_CLKCTLST_FORCEILP		0x00000004 /* Force ILP request */
++#define  BCMA_CLKCTLST_HAVEALPREQ	0x00000008 /* ALP available request */
++#define  BCMA_CLKCTLST_HAVEHTREQ	0x00000010 /* HT available request */
++#define  BCMA_CLKCTLST_HWCROFF		0x00000020 /* Force HW clock request off */
++#define  BCMA_CLKCTLST_EXTRESREQ	0x00000700 /* Mask of external resource requests */
++#define  BCMA_CLKCTLST_HAVEALP		0x00010000 /* ALP available */
++#define  BCMA_CLKCTLST_HAVEHT		0x00020000 /* HT available */
++#define  BCMA_CLKCTLST_BP_ON_ALP	0x00040000 /* RO: running on ALP clock */
++#define  BCMA_CLKCTLST_BP_ON_HT		0x00080000 /* RO: running on HT clock */
++#define  BCMA_CLKCTLST_EXTRESST		0x07000000 /* Mask of external resource status */
++/* Is there any BCM4328 on BCMA bus? */
++#define  BCMA_CLKCTLST_4328A0_HAVEHT	0x00010000 /* 4328a0 has reversed bits */
++#define  BCMA_CLKCTLST_4328A0_HAVEALP	0x00020000 /* 4328a0 has reversed bits */
 +
-+/**
-  * ieee80211_get_tkip_p1k - get a TKIP phase 1 key
-  *
-  * This function returns the TKIP phase 1 key for the IV32 taken
-@@ -2589,8 +2602,15 @@ ieee80211_get_buffered_bc(struct ieee802
-  *	with this P1K
-  * @p1k: a buffer to which the key will be written, as 5 u16 values
-  */
--void ieee80211_get_tkip_p1k(struct ieee80211_key_conf *keyconf,
--			    struct sk_buff *skb, u16 *p1k);
-+static inline void ieee80211_get_tkip_p1k(struct ieee80211_key_conf *keyconf,
-+					  struct sk_buff *skb, u16 *p1k)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	const u8 *data = (u8 *)hdr + ieee80211_hdrlen(hdr->frame_control);
-+	u32 iv32 = get_unaligned_le32(&data[4]);
-+
-+	ieee80211_get_tkip_p1k_iv(keyconf, iv32, p1k);
-+}
- 
- /**
-  * ieee80211_get_tkip_p2k - get a TKIP phase 2 key
---- a/net/mac80211/tkip.c	2011-07-07 18:37:46.000000000 +0200
-+++ b/net/mac80211/tkip.c	2011-07-07 18:53:29.000000000 +0200
-@@ -170,15 +170,12 @@ static void ieee80211_compute_tkip_p1k(s
- 		tkip_mixing_phase1(tk, ctx, sdata->vif.addr, iv32);
- }
- 
--void ieee80211_get_tkip_p1k(struct ieee80211_key_conf *keyconf,
--			    struct sk_buff *skb, u16 *p1k)
-+void ieee80211_get_tkip_p1k_iv(struct ieee80211_key_conf *keyconf,
-+			       u32 iv32, u16 *p1k)
- {
- 	struct ieee80211_key *key = (struct ieee80211_key *)
- 			container_of(keyconf, struct ieee80211_key, conf);
- 	struct tkip_ctx *ctx = &key->u.tkip.tx;
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	const u8 *data = (u8 *)hdr + ieee80211_hdrlen(hdr->frame_control);
--	u32 iv32 = get_unaligned_le32(&data[4]);
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&key->u.tkip.txlock, flags);
-@@ -186,7 +183,7 @@ void ieee80211_get_tkip_p1k(struct ieee8
- 	memcpy(p1k, ctx->p1k, sizeof(ctx->p1k));
- 	spin_unlock_irqrestore(&key->u.tkip.txlock, flags);
- }
--EXPORT_SYMBOL(ieee80211_get_tkip_p1k);
-+EXPORT_SYMBOL(ieee80211_get_tkip_p1k_iv);
- 
- void ieee80211_get_tkip_p2k(struct ieee80211_key_conf *keyconf,
- 			    struct sk_buff *skb, u8 *p2k)
-
+ /* Agent registers (common for every core) */
+ #define BCMA_IOCTL			0x0408
+ #define  BCMA_IOCTL_CLK			0x0001
+-- 
+1.7.3.4
 
