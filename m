@@ -1,179 +1,260 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:4455 "EHLO
-	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751957Ab1GTQyA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2011 12:54:00 -0400
-From: Daniel Drake <dsd@laptop.org>
-To: linville@tuxdriver.com
-To: dcbw@redhat.com
-Cc: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org
-Subject: [PATCH v2 2/3] libertas: only enable mesh when interface is active
-Message-Id: <20110720165356.AC8949D401D@zog.reactivated.net> (sfid-20110720_185407_600925_6916A20D)
-Date: Wed, 20 Jul 2011 17:53:56 +0100 (BST)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58918 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755497Ab1GPQ4b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Jul 2011 12:56:31 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
+	zajec5@gmail.com, linux-mips@linux-mips.org
+Cc: jonas.gorski@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
+	arend@broadcom.com, b43-dev@lists.infradead.org,
+	bernhardloos@googlemail.com, arnd@arndb.de,
+	julian.calaby@gmail.com, sshtylyov@mvista.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 07/11] bcma: get CPU clock
+Date: Sat, 16 Jul 2011 18:55:38 +0200
+Message-Id: <1310835342-18877-8-git-send-email-hauke@hauke-m.de> (sfid-20110716_185635_283309_3DC068C0)
+In-Reply-To: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
+References: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously, the mesh was running whenever the appropriate hardware
-and firmware was present.
+Add method to return the clock of the CPU. This is needed by the arch
+code to calculate the mips_hpt_frequency.
 
-Now we only run the mesh when the interface is running.
-
-Also simplifies interface management a little.
-
-Signed-off-by: Daniel Drake <dsd@laptop.org>
-Acked-by: Dan Williams <dcbw@redhat.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/libertas/dev.h  |    2 --
- drivers/net/wireless/libertas/main.c |    2 +-
- drivers/net/wireless/libertas/mesh.c |   23 +++++++++--------------
- drivers/net/wireless/libertas/mesh.h |    7 -------
- drivers/net/wireless/libertas/tx.c   |    2 +-
- 5 files changed, 11 insertions(+), 25 deletions(-)
+ drivers/bcma/bcma_private.h                 |    3 +
+ drivers/bcma/driver_chipcommon_pmu.c        |  107 +++++++++++++++++++++++++++
+ drivers/bcma/driver_mips.c                  |   12 +++
+ include/linux/bcma/bcma_driver_chipcommon.h |   39 ++++++++++
+ include/linux/bcma/bcma_driver_mips.h       |    2 +
+ 5 files changed, 163 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 76d018b..adb3490 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -44,9 +44,7 @@ struct lbs_private {
- 	/* Mesh */
- 	struct net_device *mesh_dev; /* Virtual device */
- #ifdef CONFIG_LIBERTAS_MESH
--	u32 mesh_connect_status;
- 	struct lbs_mesh_stats mstats;
--	int mesh_open;
- 	uint16_t mesh_tlv;
- 	u8 mesh_ssid[IEEE80211_MAX_SSID_LEN + 1];
- 	u8 mesh_ssid_len;
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index c79aac4..94652c5 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -512,7 +512,7 @@ static int lbs_thread(void *data)
- 				if (priv->connect_status == LBS_CONNECTED)
- 					netif_wake_queue(priv->dev);
- 				if (priv->mesh_dev &&
--				    lbs_mesh_connected(priv))
-+				    netif_running(priv->mesh_dev))
- 					netif_wake_queue(priv->mesh_dev);
- 			}
- 		}
-diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
-index a20419d..be72c08 100644
---- a/drivers/net/wireless/libertas/mesh.c
-+++ b/drivers/net/wireless/libertas/mesh.c
-@@ -270,17 +270,11 @@ static ssize_t lbs_mesh_set(struct device *dev,
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index b9b4587..8b6f046 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -26,6 +26,9 @@ int __init bcma_bus_scan_early(struct bcma_bus *bus,
+ 			       struct bcma_device *core);
+ void bcma_init_bus(struct bcma_bus *bus);
+ 
++/* driver_chipcommon_pmu.c */
++extern u32 bcma_pmu_get_clockcpu(struct bcma_drv_cc *cc);
++
+ /* driver_chipcommon.c */
+ #ifdef CONFIG_BCMA_DRIVER_MIPS
+ void bcma_chipco_serial_init(struct bcma_drv_cc *cc);
+diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
+index 532757c..250e0c2 100644
+--- a/drivers/bcma/driver_chipcommon_pmu.c
++++ b/drivers/bcma/driver_chipcommon_pmu.c
+@@ -11,6 +11,13 @@
+ #include "bcma_private.h"
+ #include <linux/bcma/bcma.h>
+ 
++static u32 bcma_chipco_pll_read(struct bcma_drv_cc *cc, u32 offset)
++{
++	bcma_cc_write32(cc, BCMA_CC_PLLCTL_ADDR, offset);
++	bcma_cc_read32(cc, BCMA_CC_PLLCTL_ADDR);
++	return bcma_cc_read32(cc, BCMA_CC_PLLCTL_DATA);
++}
++
+ static void bcma_chipco_chipctl_maskset(struct bcma_drv_cc *cc,
+ 					u32 offset, u32 mask, u32 set)
  {
- 	struct lbs_private *priv = to_net_dev(dev)->ml_priv;
- 	int enable;
--	int ret, action = CMD_ACT_MESH_CONFIG_STOP;
- 
- 	sscanf(buf, "%x", &enable);
- 	enable = !!enable;
- 	if (enable == !!priv->mesh_dev)
- 		return count;
--	if (enable)
--		action = CMD_ACT_MESH_CONFIG_START;
--	ret = lbs_mesh_config(priv, action, priv->channel);
--	if (ret)
--		return ret;
- 
- 	if (enable)
- 		lbs_add_mesh(priv);
-@@ -823,8 +817,6 @@ int lbs_init_mesh(struct lbs_private *priv)
- 
- 	lbs_deb_enter(LBS_DEB_MESH);
- 
--	priv->mesh_connect_status = LBS_DISCONNECTED;
--
- 	/* Determine mesh_fw_ver from fwrelease and fwcapinfo */
- 	/* 5.0.16p0 9.0.0.p0 is known to NOT support any mesh */
- 	/* 5.110.22 have mesh command with 0xa3 command id */
-@@ -864,6 +856,8 @@ int lbs_init_mesh(struct lbs_private *priv)
- 			priv->mesh_tlv = 0;
+@@ -158,3 +165,103 @@ u32 bcma_pmu_alp_clock(struct bcma_drv_cc *cc)
  	}
- 
-+	/* Stop meshing until interface is brought up */
-+	lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_STOP, priv->channel);
- 
- 	if (priv->mesh_tlv) {
- 		sprintf(priv->mesh_ssid, "mesh");
-@@ -910,10 +904,9 @@ static int lbs_mesh_stop(struct net_device *dev)
- 	struct lbs_private *priv = dev->ml_priv;
- 
- 	lbs_deb_enter(LBS_DEB_MESH);
--	spin_lock_irq(&priv->driver_lock);
-+	lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_STOP, priv->channel);
- 
--	priv->mesh_open = 0;
--	priv->mesh_connect_status = LBS_DISCONNECTED;
-+	spin_lock_irq(&priv->driver_lock);
- 
- 	netif_stop_queue(dev);
- 	netif_carrier_off(dev);
-@@ -943,18 +936,20 @@ static int lbs_mesh_dev_open(struct net_device *dev)
- 
- 	if (priv->wdev->iftype == NL80211_IFTYPE_MONITOR) {
- 		ret = -EBUSY;
-+		spin_unlock_irq(&priv->driver_lock);
- 		goto out;
- 	}
- 
--	priv->mesh_open = 1;
--	priv->mesh_connect_status = LBS_CONNECTED;
- 	netif_carrier_on(dev);
- 
- 	if (!priv->tx_pending_len)
- 		netif_wake_queue(dev);
-- out:
- 
- 	spin_unlock_irq(&priv->driver_lock);
-+
-+	ret = lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START, priv->channel);
-+
-+out:
- 	lbs_deb_leave_args(LBS_DEB_NET, "ret %d", ret);
- 	return ret;
+ 	return BCMA_CC_PMU_ALP_CLOCK;
  }
-diff --git a/drivers/net/wireless/libertas/mesh.h b/drivers/net/wireless/libertas/mesh.h
-index 7d3dd81..5014491 100644
---- a/drivers/net/wireless/libertas/mesh.h
-+++ b/drivers/net/wireless/libertas/mesh.h
-@@ -63,11 +63,6 @@ void lbs_mesh_ethtool_get_strings(struct net_device *dev,
- 	uint32_t stringset, uint8_t *s);
++
++/* Find the output of the "m" pll divider given pll controls that start with
++ * pllreg "pll0" i.e. 12 for main 6 for phy, 0 for misc.
++ */
++static u32 bcma_pmu_clock(struct bcma_drv_cc *cc, u32 pll0, u32 m)
++{
++	u32 tmp, div, ndiv, p1, p2, fc;
++	struct bcma_bus *bus = cc->core->bus;
++
++	BUG_ON((pll0 & 3) || (pll0 > BCMA_CC_PMU4716_MAINPLL_PLL0));
++
++	BUG_ON(!m || m > 4);
++
++	if (bus->chipinfo.id == 0x5357 || bus->chipinfo.id == 0x4749) {
++		/* Detect failure in clock setting */
++		tmp = bcma_cc_read32(cc, BCMA_CC_CHIPSTAT);
++		if (tmp & 0x40000)
++			return 133 * 1000000;
++	}
++
++	tmp = bcma_chipco_pll_read(cc, pll0 + BCMA_CC_PPL_P1P2_OFF);
++	p1 = (tmp & BCMA_CC_PPL_P1_MASK) >> BCMA_CC_PPL_P1_SHIFT;
++	p2 = (tmp & BCMA_CC_PPL_P2_MASK) >> BCMA_CC_PPL_P2_SHIFT;
++
++	tmp = bcma_chipco_pll_read(cc, pll0 + BCMA_CC_PPL_M14_OFF);
++	div = (tmp >> ((m - 1) * BCMA_CC_PPL_MDIV_WIDTH)) &
++		BCMA_CC_PPL_MDIV_MASK;
++
++	tmp = bcma_chipco_pll_read(cc, pll0 + BCMA_CC_PPL_NM5_OFF);
++	ndiv = (tmp & BCMA_CC_PPL_NDIV_MASK) >> BCMA_CC_PPL_NDIV_SHIFT;
++
++	/* Do calculation in Mhz */
++	fc = bcma_pmu_alp_clock(cc) / 1000000;
++	fc = (p1 * ndiv * fc) / p2;
++
++	/* Return clock in Hertz */
++	return (fc / div) * 1000000;
++}
++
++/* query bus clock frequency for PMU-enabled chipcommon */
++u32 bcma_pmu_get_clockcontrol(struct bcma_drv_cc *cc)
++{
++	struct bcma_bus *bus = cc->core->bus;
++
++	switch (bus->chipinfo.id) {
++	case 0x4716:
++	case 0x4748:
++	case 47162:
++		return bcma_pmu_clock(cc, BCMA_CC_PMU4716_MAINPLL_PLL0,
++				      BCMA_CC_PMU5_MAINPLL_SSB);
++	case 0x5356:
++		return bcma_pmu_clock(cc, BCMA_CC_PMU5356_MAINPLL_PLL0,
++				      BCMA_CC_PMU5_MAINPLL_SSB);
++	case 0x5357:
++	case 0x4749:
++		return bcma_pmu_clock(cc, BCMA_CC_PMU5357_MAINPLL_PLL0,
++				      BCMA_CC_PMU5_MAINPLL_SSB);
++	case 0x5300:
++		return bcma_pmu_clock(cc, BCMA_CC_PMU4706_MAINPLL_PLL0,
++				      BCMA_CC_PMU5_MAINPLL_SSB);
++	case 53572:
++		return 75000000;
++	default:
++		pr_warn("No backplane clock specified for %04X device, "
++			"pmu rev. %d, using default %d Hz\n",
++			bus->chipinfo.id, cc->pmu.rev, BCMA_CC_PMU_HT_CLOCK);
++	}
++	return BCMA_CC_PMU_HT_CLOCK;
++}
++
++/* query cpu clock frequency for PMU-enabled chipcommon */
++u32 bcma_pmu_get_clockcpu(struct bcma_drv_cc *cc)
++{
++	struct bcma_bus *bus = cc->core->bus;
++
++	if (bus->chipinfo.id == 53572)
++		return 300000000;
++
++	if (cc->pmu.rev >= 5) {
++		u32 pll;
++		switch (bus->chipinfo.id) {
++		case 0x5356:
++			pll = BCMA_CC_PMU5356_MAINPLL_PLL0;
++			break;
++		case 0x5357:
++		case 0x4749:
++			pll = BCMA_CC_PMU5357_MAINPLL_PLL0;
++			break;
++		default:
++			pll = BCMA_CC_PMU4716_MAINPLL_PLL0;
++			break;
++		}
++
++		/* TODO: if (bus->chipinfo.id == 0x5300)
++		  return si_4706_pmu_clock(sih, osh, cc, PMU4706_MAINPLL_PLL0, PMU5_MAINPLL_CPU); */
++		return bcma_pmu_clock(cc, pll, BCMA_CC_PMU5_MAINPLL_CPU);
++	}
++
++	return bcma_pmu_get_clockcontrol(cc);
++}
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index b17233c..c3e9dff 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -166,6 +166,18 @@ static void bcma_core_mips_dump_irq(struct bcma_bus *bus)
+ 	}
+ }
  
++u32 bcma_cpu_clock(struct bcma_drv_mips *mcore)
++{
++	struct bcma_bus *bus = mcore->core->bus;
++
++	if (bus->drv_cc.capabilities & BCMA_CC_CAP_PMU)
++		return bcma_pmu_get_clockcpu(&bus->drv_cc);
++
++	pr_err("No PMU available, need this to get the cpu clock\n");
++	return 0;
++}
++EXPORT_SYMBOL(bcma_cpu_clock);
++
+ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
+ {
+ 	struct bcma_bus *bus = mcore->core->bus;
+diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
+index ad7b0bc..099c478 100644
+--- a/include/linux/bcma/bcma_driver_chipcommon.h
++++ b/include/linux/bcma/bcma_driver_chipcommon.h
+@@ -247,8 +247,47 @@
+ #define BCMA_CC_PLLCTL_ADDR		0x0660
+ #define BCMA_CC_PLLCTL_DATA		0x0664
  
--/* Accessors */
--
--#define lbs_mesh_open(priv) (priv->mesh_open)
--#define lbs_mesh_connected(priv) (priv->mesh_connect_status == LBS_CONNECTED)
--
- #else
++/* Divider allocation in 4716/47162/5356 */
++#define BCMA_CC_PMU5_MAINPLL_CPU	1
++#define BCMA_CC_PMU5_MAINPLL_MEM	2
++#define BCMA_CC_PMU5_MAINPLL_SSB	3
++
++/* PLL usage in 4716/47162 */
++#define BCMA_CC_PMU4716_MAINPLL_PLL0	12
++
++/* PLL usage in 5356/5357 */
++#define BCMA_CC_PMU5356_MAINPLL_PLL0	0
++#define BCMA_CC_PMU5357_MAINPLL_PLL0	0
++
++/* 4706 PMU */
++#define BCMA_CC_PMU4706_MAINPLL_PLL0	0
++
+ /* ALP clock on pre-PMU chips */
+ #define BCMA_CC_PMU_ALP_CLOCK		20000000
++/* HT clock for systems with PMU-enabled chipcommon */
++#define BCMA_CC_PMU_HT_CLOCK		80000000
++
++/* PMU rev 5 (& 6) */
++#define BCMA_CC_PPL_P1P2_OFF		0
++#define BCMA_CC_PPL_P1_MASK		0x0f000000
++#define BCMA_CC_PPL_P1_SHIFT		24
++#define BCMA_CC_PPL_P2_MASK		0x00f00000
++#define BCMA_CC_PPL_P2_SHIFT		20
++#define BCMA_CC_PPL_M14_OFF		1
++#define BCMA_CC_PPL_MDIV_MASK		0x000000ff
++#define BCMA_CC_PPL_MDIV_WIDTH		8
++#define BCMA_CC_PPL_NM5_OFF		2
++#define BCMA_CC_PPL_NDIV_MASK		0xfff00000
++#define BCMA_CC_PPL_NDIV_SHIFT		20
++#define BCMA_CC_PPL_FMAB_OFF		3
++#define BCMA_CC_PPL_MRAT_MASK		0xf0000000
++#define BCMA_CC_PPL_MRAT_SHIFT		28
++#define BCMA_CC_PPL_ABRAT_MASK		0x08000000
++#define BCMA_CC_PPL_ABRAT_SHIFT		27
++#define BCMA_CC_PPL_FDIV_MASK		0x07ffffff
++#define BCMA_CC_PPL_PLLCTL_OFF		4
++#define BCMA_CC_PPL_PCHI_OFF		5
++#define BCMA_CC_PPL_PCHI_MASK		0x0000003f
  
- #define lbs_init_mesh(priv)
-@@ -77,8 +72,6 @@ void lbs_mesh_ethtool_get_strings(struct net_device *dev,
- #define lbs_mesh_set_dev(priv, dev, rxpd) (dev)
- #define lbs_mesh_set_txpd(priv, dev, txpd)
- #define lbs_mesh_config(priv, enable, chan)
--#define lbs_mesh_open(priv) (0)
--#define lbs_mesh_connected(priv) (0)
- 
+ /* Data for the PMU, if available.
+  * Check availability with ((struct bcma_chipcommon)->capabilities & BCMA_CC_CAP_PMU)
+diff --git a/include/linux/bcma/bcma_driver_mips.h b/include/linux/bcma/bcma_driver_mips.h
+index 82b3bfd..c004364 100644
+--- a/include/linux/bcma/bcma_driver_mips.h
++++ b/include/linux/bcma/bcma_driver_mips.h
+@@ -44,6 +44,8 @@ extern void bcma_core_mips_init(struct bcma_drv_mips *mcore);
+ static inline void bcma_core_mips_init(struct bcma_drv_mips *mcore) { }
  #endif
  
-diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
-index f19495b..a6e8513 100644
---- a/drivers/net/wireless/libertas/tx.c
-+++ b/drivers/net/wireless/libertas/tx.c
-@@ -199,7 +199,7 @@ void lbs_send_tx_feedback(struct lbs_private *priv, u32 try_count)
- 	if (priv->connect_status == LBS_CONNECTED)
- 		netif_wake_queue(priv->dev);
++extern u32 bcma_cpu_clock(struct bcma_drv_mips *mcore);
++
+ extern unsigned int bcma_core_mips_irq(struct bcma_device *dev);
  
--	if (priv->mesh_dev && lbs_mesh_connected(priv))
-+	if (priv->mesh_dev && netif_running(priv->mesh_dev))
- 		netif_wake_queue(priv->mesh_dev);
- }
- EXPORT_SYMBOL_GPL(lbs_send_tx_feedback);
+ #endif /* LINUX_BCMA_DRIVER_MIPS_H_ */
 -- 
-1.7.6
+1.7.4.1
 
