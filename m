@@ -1,53 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59082 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751912Ab1GXTWl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jul 2011 15:22:41 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] iwlagn: wrap suspend/resume definitions in CONFIG_PM block
-Date: Sun, 24 Jul 2011 15:19:10 -0400
-Message-Id: <1311535150-28686-1-git-send-email-linville@tuxdriver.com> (sfid-20110724_212256_823964_73F31E57)
-In-Reply-To: <20110724.030949.1727841105144911931.davem@davemloft.net>
-References: <20110724.030949.1727841105144911931.davem@davemloft.net>
+Received: from purkki.adurom.net ([80.68.90.206]:33088 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752377Ab1GPJXo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Jul 2011 05:23:44 -0400
+To: ali@internetdog.org
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] staging: r8712u: Most return-values changed from -1 to proper errno macros.
+References: <20110703010605.GA3736@internetdog.org>
+	<1310749876-32632-1-git-send-email-ali@internetDog.org>
+	<1310749876-32632-2-git-send-email-ali@internetDog.org>
+	<4E20AA5A.6020101@lwfinger.net>
+	<20110716032100.GA3274@internetdog.org>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Sat, 16 Jul 2011 12:23:42 +0300
+In-Reply-To: <20110716032100.GA3274@internetdog.org> (Ali Bahar's message of "Sat\, 16 Jul 2011 11\:21\:01 +0800")
+Message-ID: <87zkkevash.fsf@purkki.adurom.net> (sfid-20110716_112354_005105_E19637FD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/iwlwifi/iwl-agn.c:3464: error: unknown field 'suspend' specified in initializer
-drivers/net/wireless/iwlwifi/iwl-agn.c:3464: warning: initialization from incompatible pointer type
-drivers/net/wireless/iwlwifi/iwl-agn.c:3465: error: unknown field 'resume' specified in initializer
-drivers/net/wireless/iwlwifi/iwl-agn.c:3465: warning: initialization from incompatible pointer type
+Ali Bahar <ali@internetdog.org> writes:
 
-This was caused by commit c8ac61cf ("iwlagn: implement WoWLAN").
+> I am aware of the current state of the Linux code's documentation.
+> Habitually, I comment the big-picture as I go along. Industry
+> practice wrt comments differs from Linux's, of course. The comments
+> were in the function heads, not in the bodies, as per
+> Documentation/CodingStyle. The big-picture of the functions is clear
+> once you are familiar enough to begin to modify the code. However,
+> and especially for linux, code is read a thousand times for every
+> time it is written. Most eyeballs could do with a line or two of
+> explanation. To me, Documentation/kernel-docs.txt echoed the need
+> for a big-picture view. 
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+The problem with comments is that they quickly get out of date
+(usually people change the code but forget the comments). It's better
+to write code so that everyone understands and, like Larry said, only
+the cases which are not obvious need comments.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 4b666b7..ff3e6c0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3461,8 +3461,10 @@ struct ieee80211_ops iwlagn_hw_ops = {
- 	.tx = iwlagn_mac_tx,
- 	.start = iwlagn_mac_start,
- 	.stop = iwlagn_mac_stop,
-+#ifdef CONFIG_PM
- 	.suspend = iwlagn_mac_suspend,
- 	.resume = iwlagn_mac_resume,
-+#endif /* CONFIG_PM */
- 	.add_interface = iwl_mac_add_interface,
- 	.remove_interface = iwl_mac_remove_interface,
- 	.change_interface = iwl_mac_change_interface,
+> If the goal is to attract more developers (as it is at least Greg
+> KH's intent), then Linux's code-base has a long way to go. I meant
+> only to start chipping away at the task.
+
+There's always a maintenance cost, even on code comments. If we start
+documenting every piece of code, we would have a lot less time writing
+the actual code. So there needs to be a trade-off and in Linux it has
+been that code should be of good quality so that it's easy to read for
+everyone but there will be less comments.
+
+And personally I will always choose good code with few comments over
+crappy code with full of comments. So IMHO the style decision made in
+Linux kernel has been a good one.
+
+Of course I'm not saying that there should not be any comments. It's
+very important to document public interfaces, like mac80211.h and
+sdio_func.h, as these are used by a lot of people. 
+
+Also having a general overview how a component/driver works would not
+be bad at all, it just should just not clutter the code. That could be
+in the beginning of the file or maybe in a separate file. But as I
+said, they will easily get obsolete.
+
 -- 
-1.7.4.4
-
+Kalle Valo
