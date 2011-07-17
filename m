@@ -1,57 +1,271 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46359 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964805Ab1GMRuy (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:37710 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751835Ab1GQVnZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 13:50:54 -0400
-Subject: [PATCH] mac80211: let key iteration get keys in install order
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 13 Jul 2011 19:50:53 +0200
-Message-ID: <1310579453.3873.12.camel@jlt3.sipsolutions.net> (sfid-20110713_195057_926559_A0B796B4)
-Mime-Version: 1.0
+	Sun, 17 Jul 2011 17:43:25 -0400
+Subject: [PATCH v3 17/23] ath6kl: add node.c
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: joe@perches.com, devel@linuxdriverproject.org, gregkh@suse.de,
+	error27@gmail.com
+Date: Mon, 18 Jul 2011 00:43:18 +0300
+Message-ID: <20110717214318.23534.20477.stgit@localhost6.localdomain6> (sfid-20110717_234327_195678_1A1B0CF4)
+In-Reply-To: <20110717213832.23534.75274.stgit@localhost6.localdomain6>
+References: <20110717213832.23534.75274.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-ieee80211_iter_keys() currently returns keys in
-the backward order they were installed in, which
-is a bit confusing. Add them to the tail of the
-key list to make sure iterations go in the same
-order that keys were originally installed in.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- include/net/mac80211.h |    4 ++++
- net/mac80211/key.c     |    2 +-
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath6kl/node.c |  238 ++++++++++++++++++++++++++++++++
+ 1 files changed, 238 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/node.c
 
---- a/net/mac80211/key.c	2011-07-13 19:24:20.000000000 +0200
-+++ b/net/mac80211/key.c	2011-07-13 19:28:17.000000000 +0200
-@@ -278,7 +278,7 @@ static void __ieee80211_key_replace(stru
- 	bool defunikey, defmultikey, defmgmtkey;
- 
- 	if (new)
--		list_add(&new->list, &sdata->key_list);
-+		list_add_tail(&new->list, &sdata->key_list);
- 
- 	if (sta && pairwise) {
- 		rcu_assign_pointer(sta->ptk, new);
---- a/include/net/mac80211.h	2011-07-13 19:24:20.000000000 +0200
-+++ b/include/net/mac80211.h	2011-07-13 19:28:17.000000000 +0200
-@@ -2986,6 +2986,10 @@ void ieee80211_sta_block_awake(struct ie
-  * needs reprogramming of the keys during suspend. Note that due
-  * to locking reasons, it is also only safe to call this at few
-  * spots since it must hold the RTNL and be able to sleep.
+diff --git a/drivers/net/wireless/ath/ath6kl/node.c b/drivers/net/wireless/ath/ath6kl/node.c
+new file mode 100644
+index 0000000..b0f9ba2
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath6kl/node.c
+@@ -0,0 +1,238 @@
++/*
++ * Copyright (c) 2004-2011 Atheros Communications Inc.
 + *
-+ * The order in which the keys are iterated matches the order
-+ * in which they were originally installed and handed to the
-+ * set_key callback.
-  */
- void ieee80211_iter_keys(struct ieee80211_hw *hw,
- 			 struct ieee80211_vif *vif,
-
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include "htc.h"
++#include "wmi.h"
++#include "debug.h"
++
++struct bss *wlan_node_alloc(int wh_size)
++{
++	struct bss *ni;
++
++	ni = kzalloc(sizeof(struct bss), GFP_ATOMIC);
++
++	if ((ni != NULL) && wh_size) {
++		ni->ni_buf = kmalloc(wh_size, GFP_ATOMIC);
++		if (ni->ni_buf == NULL) {
++			kfree(ni);
++			return NULL;
++		}
++	}
++
++	return ni;
++}
++
++void wlan_node_free(struct bss *ni)
++{
++	kfree(ni->ni_buf);
++	kfree(ni);
++}
++
++void wlan_setup_node(struct ath6kl_node_table *nt, struct bss *ni,
++		     const u8 *mac_addr)
++{
++	int hash;
++
++	memcpy(ni->ni_macaddr, mac_addr, ETH_ALEN);
++	hash = ATH6KL_NODE_HASH(mac_addr);
++	ni->ni_refcnt = 1;
++
++	ni->ni_tstamp = jiffies_to_msecs(jiffies);
++	ni->ni_actcnt = WLAN_NODE_INACT_CNT;
++
++	spin_lock_bh(&nt->nt_nodelock);
++
++	/* insert at the end of the node list */
++	ni->ni_list_next = NULL;
++	ni->ni_list_prev = nt->nt_node_last;
++	if (nt->nt_node_last != NULL)
++		nt->nt_node_last->ni_list_next = ni;
++
++	nt->nt_node_last = ni;
++	if (nt->nt_node_first == NULL)
++		nt->nt_node_first = ni;
++
++	/* insert into the hash list */
++	ni->ni_hash_next = nt->nt_hash[hash];
++	if (ni->ni_hash_next != NULL)
++		nt->nt_hash[hash]->ni_hash_prev = ni;
++
++	ni->ni_hash_prev = NULL;
++	nt->nt_hash[hash] = ni;
++
++	spin_unlock_bh(&nt->nt_nodelock);
++}
++
++struct bss *wlan_find_node(struct ath6kl_node_table *nt,
++			   const u8 *mac_addr)
++{
++	struct bss *ni, *found_ni = NULL;
++	int hash;
++
++	spin_lock_bh(&nt->nt_nodelock);
++
++	hash = ATH6KL_NODE_HASH(mac_addr);
++	for (ni = nt->nt_hash[hash]; ni; ni = ni->ni_hash_next) {
++		if (memcmp(ni->ni_macaddr, mac_addr, ETH_ALEN) == 0) {
++			ni->ni_refcnt++;
++			found_ni = ni;
++			break;
++		}
++	}
++
++	spin_unlock_bh(&nt->nt_nodelock);
++
++	return found_ni;
++}
++
++void wlan_node_reclaim(struct ath6kl_node_table *nt, struct bss *ni)
++{
++	int hash;
++
++	spin_lock_bh(&nt->nt_nodelock);
++
++	if (ni->ni_list_prev == NULL)
++		/* fix list head */
++		nt->nt_node_first = ni->ni_list_next;
++	else
++		ni->ni_list_prev->ni_list_next = ni->ni_list_next;
++
++	if (ni->ni_list_next == NULL)
++		/* fix list tail */
++		nt->nt_node_last = ni->ni_list_prev;
++	else
++		ni->ni_list_next->ni_list_prev = ni->ni_list_prev;
++
++	if (ni->ni_hash_prev == NULL) {
++		/* first in list so fix the list head */
++		hash = ATH6KL_NODE_HASH(ni->ni_macaddr);
++		nt->nt_hash[hash] = ni->ni_hash_next;
++	} else {
++		ni->ni_hash_prev->ni_hash_next = ni->ni_hash_next;
++	}
++
++	if (ni->ni_hash_next != NULL)
++		ni->ni_hash_next->ni_hash_prev = ni->ni_hash_prev;
++
++	wlan_node_free(ni);
++
++	spin_unlock_bh(&nt->nt_nodelock);
++}
++
++static void wlan_node_dec_free(struct bss *ni)
++{
++	if ((ni->ni_refcnt--) == 1)
++		wlan_node_free(ni);
++}
++
++void wlan_free_allnodes(struct ath6kl_node_table *nt)
++{
++	struct bss *ni;
++
++	while ((ni = nt->nt_node_first) != NULL)
++		wlan_node_reclaim(nt, ni);
++}
++
++void wlan_iterate_nodes(struct ath6kl_node_table *nt,
++			void (*f) (void *arg, struct bss *), void *arg)
++{
++	struct bss *ni;
++
++	spin_lock_bh(&nt->nt_nodelock);
++	for (ni = nt->nt_node_first; ni; ni = ni->ni_list_next) {
++			ni->ni_refcnt++;
++			(*f) (arg, ni);
++			wlan_node_dec_free(ni);
++	}
++	spin_unlock_bh(&nt->nt_nodelock);
++}
++
++void wlan_node_table_init(void *wmi, struct ath6kl_node_table *nt)
++{
++	ath6kl_dbg(ATH6KL_DBG_WLAN_NODE, "node table = 0x%lx\n",
++		   (unsigned long)nt);
++
++	memset(nt, 0, sizeof(struct ath6kl_node_table));
++
++	spin_lock_init(&nt->nt_nodelock);
++
++	nt->nt_wmi = wmi;
++	nt->nt_node_age = WLAN_NODE_INACT_TIMEOUT_MSEC;
++}
++
++void wlan_refresh_inactive_nodes(struct ath6kl_node_table *nt)
++{
++	struct bss *bss;
++	u8 my_bssid[ETH_ALEN];
++	u32 now;
++
++	ath6kl_wmi_get_current_bssid(nt->nt_wmi, my_bssid);
++
++	now = jiffies_to_msecs(jiffies);
++	bss = nt->nt_node_first;
++	while (bss != NULL) {
++		/* refresh all nodes except the current bss */
++		if (memcmp(my_bssid, bss->ni_macaddr, sizeof(my_bssid)) != 0) {
++			if (((now - bss->ni_tstamp) > nt->nt_node_age)
++			    || --bss->ni_actcnt == 0) {
++				wlan_node_reclaim(nt, bss);
++			}
++		}
++		bss = bss->ni_list_next;
++	}
++}
++
++void wlan_node_table_cleanup(struct ath6kl_node_table *nt)
++{
++	wlan_free_allnodes(nt);
++}
++
++struct bss *wlan_find_ssid_node(struct ath6kl_node_table *nt, u8 * ssid,
++				u32 ssid_len, bool is_wpa2, bool match_ssid)
++{
++	struct bss *ni, *found_ni = NULL;
++	u8 *ie_ssid;
++
++	spin_lock_bh(&nt->nt_nodelock);
++
++	for (ni = nt->nt_node_first; ni; ni = ni->ni_list_next) {
++
++		ie_ssid = ni->ni_cie.ie_ssid;
++
++		if ((ie_ssid[1] <= IEEE80211_MAX_SSID_LEN) &&
++		    (memcmp(ssid, &ie_ssid[2], ssid_len) == 0)) {
++
++				if (match_ssid ||
++				    (is_wpa2 && ni->ni_cie.ie_rsn != NULL) ||
++				    (!is_wpa2 && ni->ni_cie.ie_wpa != NULL)) {
++					ni->ni_refcnt++;
++					found_ni = ni;
++					break;
++				}
++		}
++	}
++
++	spin_unlock_bh(&nt->nt_nodelock);
++
++	return found_ni;
++}
++
++void wlan_node_return(struct ath6kl_node_table *nt, struct bss *ni)
++{
++	spin_lock_bh(&nt->nt_nodelock);
++	wlan_node_dec_free(ni);
++	spin_unlock_bh(&nt->nt_nodelock);
++}
 
