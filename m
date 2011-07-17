@@ -1,29 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:55997 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755858Ab1G1VOW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2011 17:14:22 -0400
-Received: by qyk29 with SMTP id 29so3012341qyk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2011 14:14:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1311874176-27569-6-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1311874176-27569-1-git-send-email-rmanohar@qca.qualcomm.com> <1311874176-27569-6-git-send-email-rmanohar@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 28 Jul 2011 14:14:01 -0700
-Message-ID: <CAB=NE6UZXZ+XD=FyRqwYck=By4203f==K_-2TMPnuSRvR3zr5g@mail.gmail.com> (sfid-20110728_231425_521880_A9B9F23E)
-Subject: Re: [PATCH 6/9] ath9k_hw: update PMU to improve ripple issue for AR9485
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.perches.com ([173.55.12.10]:4089 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751835Ab1GQVjE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jul 2011 17:39:04 -0400
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: devel@linuxdriverproject.org, gregkh@suse.de, error27@gmail.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH 0/2] ath6kl: more neatening
+Date: Sun, 17 Jul 2011 14:38:55 -0700
+Message-Id: <cover.1310938421.git.joe@perches.com> (sfid-20110717_233959_921465_9BDB5FB6)
+In-Reply-To: <4E2349D4.4000204@qca.qualcomm.com>
+References: <4E2349D4.4000204@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 28, 2011 at 10:29 AM, Rajkumar Manoharan
-<rmanohar@qca.qualcomm.com> wrote:
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> Great, thanks. I have now applied your patches to ath6kl-cleanup tree
+> and they will be included in patchset v3.
 
-Is this a stable fix <etc, etc>, what effects are there to not apply
-this patch ?
+Here's a couple of more.
 
- Luis
+Joe Perches (2):
+  ath6kl: Remove __func__ uses from ath6kl_dbg
+  ath6kl: Remove trailing unpaired close paren from ath6kl_err uses
+
+ drivers/net/wireless/ath/ath6kl/bmi.c      |    4 +-
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |  101 ++++++++++++---------------
+ drivers/net/wireless/ath/ath6kl/debug.c    |   20 +++---
+ drivers/net/wireless/ath/ath6kl/debug.h    |   27 ++++----
+ drivers/net/wireless/ath/ath6kl/htc.c      |   11 ++--
+ drivers/net/wireless/ath/ath6kl/init.c     |    8 +-
+ drivers/net/wireless/ath/ath6kl/main.c     |   13 ++--
+ drivers/net/wireless/ath/ath6kl/sdio.c     |   12 ++--
+ drivers/net/wireless/ath/ath6kl/txrx.c     |   30 ++++-----
+ drivers/net/wireless/ath/ath6kl/wmi.c      |    8 +--
+ 10 files changed, 107 insertions(+), 127 deletions(-)
+
+-- 
+1.7.6.131.g99019
+
