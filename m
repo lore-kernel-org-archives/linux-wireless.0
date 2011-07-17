@@ -1,27 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:53089 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932239Ab1GNTC6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 15:02:58 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id D029154242E
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2011 15:10:55 -0400 (EDT)
-Subject: Compat-wireless release for 2011-07-14 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110714190257.10AD140EC9@repository3.orbit-lab.org> (sfid-20110714_210304_635109_F7A0B0C4)
-Date: Thu, 14 Jul 2011 15:02:57 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mail.perches.com ([173.55.12.10]:4102 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753393Ab1GQVjJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jul 2011 17:39:09 -0400
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>, linux-kernel@vger.kernel.org
+Cc: devel@linuxdriverproject.org, gregkh@suse.de, error27@gmail.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/2] ath6kl: Remove trailing unpaired close paren from ath6kl_err uses
+Date: Sun, 17 Jul 2011 14:38:57 -0700
+Message-Id: <6a83ad0030e3b0495468d8fcc44bb6cd913baa9f.1310938421.git.joe@perches.com> (sfid-20110717_233959_409372_73CE49E4)
+In-Reply-To: <4E2349D4.4000204@qca.qualcomm.com>
+References: <4E2349D4.4000204@qca.qualcomm.com>
+In-Reply-To: <cover.1310938421.git.joe@perches.com>
+References: <cover.1310938421.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Unpaired parentheses are unsightly.
 
-compat-wireless code metrics
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/ath/ath6kl/sdio.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-    832112 - Total upstream lines of code being pulled
-      2380 - backport code changes
-      2080 - backport code additions
-       300 - backport code deletions
-      8127 - backport from compat module
-     10507 - total backport code
-    1.2627 - % of code consists of backport work
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index c58a107..e399b17 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -511,7 +511,7 @@ static int ath6kl_sdio_power_on(struct ath6kl_sdio *ar_sdio)
+ 
+ 	ret = sdio_enable_func(func);
+ 	if (ret) {
+-		ath6kl_err("Unable to enable sdio func: %d)\n", ret);
++		ath6kl_err("Unable to enable sdio func: %d\n", ret);
+ 		sdio_release_host(func);
+ 		return ret;
+ 	}
+@@ -760,7 +760,7 @@ static int ath6kl_sdio_probe(struct sdio_func *func,
+ 
+ 	ret = sdio_set_block_size(func, HIF_MBOX_BLOCK_SIZE);
+ 	if (ret) {
+-		ath6kl_err("Set sdio block size %d failed: %d)\n",
++		ath6kl_err("Set sdio block size %d failed: %d\n",
+ 			   HIF_MBOX_BLOCK_SIZE, ret);
+ 		sdio_release_host(func);
+ 		goto err_off;
+-- 
+1.7.6.131.g99019
+
