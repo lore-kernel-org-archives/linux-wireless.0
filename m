@@ -1,17 +1,18 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:42522 "EHLO
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:42580 "EHLO
 	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932277Ab1GMBeD (ORCPT
+	with ESMTP id S1754439Ab1GQKXu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2011 21:34:03 -0400
-Subject: [PATCH 06/24] ath6kl: add core.h
+	Sun, 17 Jul 2011 06:23:50 -0400
+Subject: [PATCH v2 17/23] ath6kl: add node.c
 To: linux-wireless@vger.kernel.org
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: devel@linuxdriverproject.org, gregkh@suse.de, error27@gmail.com
-Date: Wed, 13 Jul 2011 04:33:55 +0300
-Message-ID: <20110713013355.8517.6083.stgit@localhost6.localdomain6> (sfid-20110713_033410_054480_98DDCFB9)
-In-Reply-To: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
+Cc: joe@perches.com, devel@linuxdriverproject.org, gregkh@suse.de,
+	error27@gmail.com
+Date: Sun, 17 Jul 2011 13:23:43 +0300
+Message-ID: <20110717102343.18367.47914.stgit@localhost6.localdomain6> (sfid-20110717_124610_914848_4D41854C)
+In-Reply-To: <20110717101844.18367.44984.stgit@localhost6.localdomain6>
+References: <20110717101844.18367.44984.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
@@ -19,18 +20,18 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath6kl/core.h |  518 ++++++++++++++++++++++++++++++++
- 1 files changed, 518 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/core.h
+ drivers/net/wireless/ath/ath6kl/node.c |  238 ++++++++++++++++++++++++++++++++
+ 1 files changed, 238 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/node.c
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+diff --git a/drivers/net/wireless/ath/ath6kl/node.c b/drivers/net/wireless/ath/ath6kl/node.c
 new file mode 100644
-index 0000000..debc52e
+index 0000000..b0f9ba2
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -0,0 +1,518 @@
++++ b/drivers/net/wireless/ath/ath6kl/node.c
+@@ -0,0 +1,238 @@
 +/*
-+ * Copyright (c) 2010-2011 Atheros Communications Inc.
++ * Copyright (c) 2004-2011 Atheros Communications Inc.
 + *
 + * Permission to use, copy, modify, and/or distribute this software for any
 + * purpose with or without fee is hereby granted, provided that the above
@@ -45,506 +46,226 @@ index 0000000..debc52e
 + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 + */
 +
-+#ifndef CORE_H
-+#define CORE_H
-+
-+#include <linux/etherdevice.h>
-+#include <linux/rtnetlink.h>
-+#include <linux/firmware.h>
-+#include <linux/sched.h>
-+#include <net/cfg80211.h>
 +#include "htc.h"
-+#include "ieee80211.h"
 +#include "wmi.h"
-+#include "bmi.h"
++#include "debug.h"
 +
-+#define MAX_ATH6KL                        1
-+#define ATH6KL_MAX_RX_BUFFERS             16
-+#define ATH6KL_BUFFER_SIZE                1664
-+#define ATH6KL_MAX_AMSDU_RX_BUFFERS       4
-+#define ATH6KL_AMSDU_REFILL_THRESHOLD     3
-+#define ATH6KL_AMSDU_BUFFER_SIZE     (WMI_MAX_AMSDU_RX_DATA_FRAME_LENGTH + 128)
-+#define MAX_MSDU_SUBFRAME_PAYLOAD_LEN	1508
-+#define MIN_MSDU_SUBFRAME_PAYLOAD_LEN	46
-+
-+#define USER_SAVEDKEYS_STAT_INIT     0
-+#define USER_SAVEDKEYS_STAT_RUN      1
-+
-+#define ATH6KL_TX_TIMEOUT      10
-+#define ATH6KL_MAX_ENDPOINTS   4
-+#define MAX_NODE_NUM           15
-+
-+/* MAX_HI_COOKIE_NUM are reserved for high priority traffic */
-+#define MAX_DEF_COOKIE_NUM                180
-+#define MAX_HI_COOKIE_NUM                 18	/* 10% of MAX_COOKIE_NUM */
-+#define MAX_COOKIE_NUM                 (MAX_DEF_COOKIE_NUM + MAX_HI_COOKIE_NUM)
-+
-+#define MAX_DEFAULT_SEND_QUEUE_DEPTH      (MAX_DEF_COOKIE_NUM / WMM_NUM_AC)
-+
-+#define DISCON_TIMER_INTVAL               10000  /* in msec */
-+#define A_DEFAULT_LISTEN_INTERVAL         100
-+#define A_MAX_WOW_LISTEN_INTERVAL         1000
-+
-+/* AR6003 1.0 definitions */
-+#define AR6003_REV1_VERSION                 0x300002ba
-+
-+/* AR6003 2.0 definitions */
-+#define AR6003_REV2_VERSION                 0x30000384
-+#define AR6003_REV2_PATCH_DOWNLOAD_ADDRESS  0x57e910
-+#define AR6003_REV2_OTP_FILE                "ath6k/AR6003/hw2.0/otp.bin.z77"
-+#define AR6003_REV2_FIRMWARE_FILE           "ath6k/AR6003/hw2.0/athwlan.bin.z77"
-+#define AR6003_REV2_PATCH_FILE              "ath6k/AR6003/hw2.0/data.patch.bin"
-+#define AR6003_REV2_BOARD_DATA_FILE         "ath6k/AR6003/hw2.0/bdata.bin"
-+#define AR6003_REV2_DEFAULT_BOARD_DATA_FILE "ath6k/AR6003/hw2.0/bdata.SD31.bin"
-+
-+/* AR6003 3.0 definitions */
-+#define AR6003_REV3_VERSION                 0x30000582
-+#define AR6003_REV3_OTP_FILE                "ath6k/AR6003/hw2.1.1/otp.bin"
-+#define AR6003_REV3_FIRMWARE_FILE           "ath6k/AR6003/hw2.1.1/athwlan.bin"
-+#define AR6003_REV3_PATCH_FILE            "ath6k/AR6003/hw2.1.1/data.patch.bin"
-+#define AR6003_REV3_BOARD_DATA_FILE       "ath6k/AR6003/hw2.1.1/bdata.bin"
-+#define AR6003_REV3_DEFAULT_BOARD_DATA_FILE	\
-+	"ath6k/AR6003/hw2.1.1/bdata.SD31.bin"
-+
-+/* Per STA data, used in AP mode */
-+#define STA_PS_AWAKE		BIT(0)
-+#define	STA_PS_SLEEP		BIT(1)
-+#define	STA_PS_POLLED		BIT(2)
-+
-+/* HTC TX packet tagging definitions */
-+#define ATH6KL_CONTROL_PKT_TAG    HTC_TX_PACKET_TAG_USER_DEFINED
-+#define ATH6KL_DATA_PKT_TAG       (ATH6KL_CONTROL_PKT_TAG + 1)
-+
-+#define AR6003_CUST_DATA_SIZE 16
-+
-+#define AGGR_WIN_IDX(x, y)          ((x) % (y))
-+#define AGGR_INCR_IDX(x, y)         AGGR_WIN_IDX(((x) + 1), (y))
-+#define AGGR_DCRM_IDX(x, y)         AGGR_WIN_IDX(((x) - 1), (y))
-+#define IEEE80211_MAX_SEQ_NO        0xFFF
-+#define IEEE80211_NEXT_SEQ_NO(x)    (((x) + 1) & IEEE80211_MAX_SEQ_NO)
-+
-+#define NUM_OF_TIDS         8
-+#define AGGR_SZ_DEFAULT     8
-+
-+#define AGGR_WIN_SZ_MIN     2
-+#define AGGR_WIN_SZ_MAX     8
-+
-+#define TID_WINDOW_SZ(_x)   ((_x) << 1)
-+
-+#define AGGR_NUM_OF_FREE_NETBUFS    16
-+
-+#define AGGR_RX_TIMEOUT     400	/* in ms */
-+
-+#define WMI_TIMEOUT (2 * HZ)
-+
-+#define MBOX_YIELD_LIMIT 99
-+
-+/* configuration lags */
-+/*
-+ * ATH6KL_CONF_IGNORE_ERP_BARKER: Ignore the barker premable in
-+ * ERP IE of beacon to determine the short premable support when
-+ * sending (Re)Assoc req.
-+ * ATH6KL_CONF_IGNORE_PS_FAIL_EVT_IN_SCAN: Don't send the power
-+ * module state transition failure events which happen during
-+ * scan, to the host.
-+ */
-+#define ATH6KL_CONF_IGNORE_ERP_BARKER		BIT(0)
-+#define ATH6KL_CONF_IGNORE_PS_FAIL_EVT_IN_SCAN  BIT(1)
-+#define ATH6KL_CONF_ENABLE_11N			BIT(2)
-+#define ATH6KL_CONF_ENABLE_TX_BURST		BIT(3)
-+
-+enum wlan_low_pwr_state {
-+	WLAN_POWER_STATE_ON,
-+	WLAN_POWER_STATE_CUT_PWR,
-+	WLAN_POWER_STATE_DEEP_SLEEP,
-+	WLAN_POWER_STATE_WOW
-+};
-+
-+enum sme_state {
-+	SME_DISCONNECTED,
-+	SME_CONNECTING,
-+	SME_CONNECTED
-+};
-+
-+enum ath6kl_wlan_state {
-+	WLAN_DISABLED,
-+	WLAN_ENABLED
-+};
-+
-+/* Pkt log info */
-+struct pkt_log {
-+	struct info {
-+		__le16 st;
-+		__le16 end;
-+		__le16 cur;
-+	} info[4096];
-+	__le16 last_idx;
-+} __packed;
-+
-+struct skb_hold_q {
-+	struct sk_buff *skb;
-+	bool is_amsdu;
-+	u16 seq_no;
-+};
-+
-+struct rxtid {
-+	bool aggr;
-+	bool progress;
-+	bool timer_mon;
-+	u16 win_sz;
-+	u16 seq_next;
-+	u32 hold_q_sz;
-+	struct skb_hold_q *hold_q;
-+	struct sk_buff_head q;
-+	spinlock_t lock;
-+};
-+
-+struct rxtid_stats {
-+	u32 num_into_aggr;
-+	u32 num_dups;
-+	u32 num_oow;
-+	u32 num_mpdu;
-+	u32 num_amsdu;
-+	u32 num_delivered;
-+	u32 num_timeouts;
-+	u32 num_hole;
-+	u32 num_bar;
-+};
-+
-+struct aggr_info {
-+	u8 aggr_sz;
-+	u8 timer_scheduled;
-+	struct timer_list timer;
-+	struct net_device *dev;
-+	struct rxtid rx_tid[NUM_OF_TIDS];
-+	struct sk_buff_head free_q;
-+	struct rxtid_stats stat[NUM_OF_TIDS];
-+	struct pkt_log pkt_log;
-+};
-+
-+struct ath6kl_wep_key {
-+	u8 key_index;
-+	u8 key_len;
-+	u8 key[64];
-+};
-+
-+struct ath6kl_key {
-+	u8 key[WLAN_MAX_KEY_LEN];
-+	u8 key_len;
-+	u8 seq[IW_ENCODE_SEQ_MAX_SIZE];
-+	u8 seq_len;
-+	u32 cipher;
-+};
-+
-+struct ath6kl_node_mapping {
-+	u8 mac_addr[ETH_ALEN];
-+	u8 ep_id;
-+	u8 tx_pend;
-+};
-+
-+struct ath6kl_cookie {
-+	struct sk_buff *skb;
-+	u32 map_no;
-+	struct htc_packet htc_pkt;
-+	struct ath6kl_cookie *arc_list_next;
-+};
-+
-+struct ath6kl_sta {
-+	u16 sta_flags;
-+	u8 mac[ETH_ALEN];
-+	u8 aid;
-+	u8 keymgmt;
-+	u8 ucipher;
-+	u8 auth;
-+	u8 wpa_ie[IEEE80211_MAX_IE];
-+	struct sk_buff_head psq;
-+	spinlock_t psq_lock;
-+};
-+
-+struct ath6kl_version {
-+	u32 target_ver;
-+	u32 wlan_ver;
-+	u32 abi_ver;
-+};
-+
-+struct ath6kl_bmi {
-+	u32 cmd_credits;
-+	bool done_sent;
-+	u8 *cmd_buf;
-+};
-+
-+struct target_stats {
-+	u64 tx_pkt;
-+	u64 tx_byte;
-+	u64 tx_ucast_pkt;
-+	u64 tx_ucast_byte;
-+	u64 tx_mcast_pkt;
-+	u64 tx_mcast_byte;
-+	u64 tx_bcast_pkt;
-+	u64 tx_bcast_byte;
-+	u64 tx_rts_success_cnt;
-+	u64 tx_pkt_per_ac[4];
-+
-+	u64 tx_err;
-+	u64 tx_fail_cnt;
-+	u64 tx_retry_cnt;
-+	u64 tx_mult_retry_cnt;
-+	u64 tx_rts_fail_cnt;
-+
-+	u64 rx_pkt;
-+	u64 rx_byte;
-+	u64 rx_ucast_pkt;
-+	u64 rx_ucast_byte;
-+	u64 rx_mcast_pkt;
-+	u64 rx_mcast_byte;
-+	u64 rx_bcast_pkt;
-+	u64 rx_bcast_byte;
-+	u64 rx_frgment_pkt;
-+
-+	u64 rx_err;
-+	u64 rx_crc_err;
-+	u64 rx_key_cache_miss;
-+	u64 rx_decrypt_err;
-+	u64 rx_dupl_frame;
-+
-+	u64 tkip_local_mic_fail;
-+	u64 tkip_cnter_measures_invoked;
-+	u64 tkip_replays;
-+	u64 tkip_fmt_err;
-+	u64 ccmp_fmt_err;
-+	u64 ccmp_replays;
-+
-+	u64 pwr_save_fail_cnt;
-+
-+	u64 cs_bmiss_cnt;
-+	u64 cs_low_rssi_cnt;
-+	u64 cs_connect_cnt;
-+	u64 cs_discon_cnt;
-+
-+	s32 tx_ucast_rate;
-+	s32 rx_ucast_rate;
-+
-+	u32 lq_val;
-+
-+	u32 wow_pkt_dropped;
-+	u16 wow_evt_discarded;
-+
-+	s16 noise_floor_calib;
-+	s16 cs_rssi;
-+	s16 cs_ave_beacon_rssi;
-+	u8 cs_ave_beacon_snr;
-+	u8 cs_last_roam_msec;
-+	u8 cs_snr;
-+
-+	u8 wow_host_pkt_wakeups;
-+	u8 wow_host_evt_wakeups;
-+
-+	u32 arp_received;
-+	u32 arp_matched;
-+	u32 arp_replied;
-+};
-+
-+struct ath6kl_mbox_info {
-+	u32 htc_addr;
-+	u32 htc_ext_addr;
-+	u32 htc_ext_sz;
-+
-+	u32 block_size;
-+
-+	u32 gmbox_addr;
-+
-+	u32 gmbox_sz;
-+};
-+
-+/* Flag info */
-+#define WMI_ENABLED	0
-+#define WMI_READY	1
-+#define CONNECTED	2
-+#define STATS_UPDATE_PEND 3
-+#define CONNECT_PEND	  4
-+#define WMM_ENABLED	  5
-+#define NETQ_STOPPED	  6
-+#define WMI_CTRL_EP_FULL  7
-+#define DTIM_EXPIRED	  8
-+#define DESTROY_IN_PROGRESS  9
-+#define NETDEV_REGISTERED    10
-+#define SKIP_SCAN	     11
-+
-+struct ath6kl {
-+	struct device *dev;
-+	struct net_device *net_dev;
-+	struct ath6kl_bmi bmi;
-+	const struct ath6kl_hif_ops *hif_ops;
-+	struct wmi *wmi;
-+	int tx_pending[ENDPOINT_MAX];
-+	int total_tx_data_pend;
-+	struct htc_target *htc_target;
-+	void *hif_priv;
-+	spinlock_t lock;
-+	struct semaphore sem;
-+	int ssid_len;
-+	u8 ssid[IEEE80211_MAX_SSID_LEN];
-+	u8 next_mode;
-+	u8 nw_type;
-+	u8 dot11_auth_mode;
-+	u8 auth_mode;
-+	u8 prwise_crypto;
-+	u8 prwise_crypto_len;
-+	u8 grp_crypto;
-+	u8 grp_crpto_len;
-+	u8 def_txkey_index;
-+	struct ath6kl_wep_key wep_key_list[WMI_MAX_KEY_INDEX + 1];
-+	u8 bssid[ETH_ALEN];
-+	u8 req_bssid[ETH_ALEN];
-+	u16 ch_hint;
-+	u16 bss_ch;
-+	u16 listen_intvl_b;
-+	u16 listen_intvl_t;
-+	struct ath6kl_version version;
-+	u32 target_type;
-+	u8 tx_pwr;
-+	struct net_device_stats net_stats;
-+	struct target_stats target_stats;
-+	enum ath6kl_wlan_state wlan_state;
-+	struct ath6kl_node_mapping node_map[MAX_NODE_NUM];
-+	u8 ibss_ps_enable;
-+	u8 node_num;
-+	u8 next_ep_id;
-+	struct ath6kl_cookie *cookie_list;
-+	u32 cookie_count;
-+	enum htc_endpoint_id ac2ep_map[WMM_NUM_AC];
-+	bool ac_stream_active[WMM_NUM_AC];
-+	u8 ac_stream_pri_map[WMM_NUM_AC];
-+	u8 hiac_stream_active_pri;
-+	u8 ep2ac_map[ENDPOINT_MAX];
-+	enum htc_endpoint_id ctrl_ep;
-+	struct htc_credit_state_info credit_state_info;
-+	u32 connect_ctrl_flags;
-+	u32 user_key_ctrl;
-+	u8 usr_bss_filter;
-+	struct ath6kl_sta sta_list[AP_MAX_NUM_STA];
-+	u8 sta_list_index;
-+	struct ieee80211req_key ap_mode_bkey;
-+	struct sk_buff_head mcastpsq;
-+	spinlock_t mcastpsq_lock;
-+	u8 intra_bss;
-+	struct aggr_info *aggr_cntxt;
-+	struct wmi_ap_mode_stat ap_stats;
-+	u8 ap_country_code[3];
-+	struct list_head amsdu_rx_buffer_queue;
-+	struct timer_list disconnect_timer;
-+	u8 rx_meta_ver;
-+	struct wireless_dev *wdev;
-+	struct cfg80211_scan_request *scan_req;
-+	struct ath6kl_key keys[WMI_MAX_KEY_INDEX + 1];
-+	enum sme_state sme_state;
-+	enum wlan_low_pwr_state wlan_pwr_state;
-+	struct wmi_scan_params_cmd sc_params;
-+#define AR_MCAST_FILTER_MAC_ADDR_SIZE  4
-+	u8 auto_auth_stage;
-+
-+	u16 conf_flags;
-+	wait_queue_head_t event_wq;
-+	struct ath6kl_mbox_info mbox_info;
-+
-+	struct ath6kl_cookie cookie_mem[MAX_COOKIE_NUM];
-+	int reconnect_flag;
-+	unsigned long flag;
-+
-+	u8 *fw_board;
-+	size_t fw_board_len;
-+
-+	u8 *fw_otp;
-+	size_t fw_otp_len;
-+
-+	u8 *fw;
-+	size_t fw_len;
-+
-+	u8 *fw_patch;
-+	size_t fw_patch_len;
-+
-+	struct workqueue_struct *ath6kl_wq;
-+};
-+
-+static inline void *ath6kl_priv(struct net_device *dev)
++struct bss *wlan_node_alloc(int wh_size)
 +{
-+	return wdev_priv(dev->ieee80211_ptr);
++	struct bss *ni;
++
++	ni = kzalloc(sizeof(struct bss), GFP_ATOMIC);
++
++	if ((ni != NULL) && wh_size) {
++		ni->ni_buf = kmalloc(wh_size, GFP_ATOMIC);
++		if (ni->ni_buf == NULL) {
++			kfree(ni);
++			return NULL;
++		}
++	}
++
++	return ni;
 +}
 +
-+static inline void ath6kl_deposit_credit_to_ep(struct htc_credit_state_info
-+					       *cred_info,
-+					       struct htc_endpoint_credit_dist
-+					       *ep_dist, int credits)
++void wlan_node_free(struct bss *ni)
 +{
-+	ep_dist->credits += credits;
-+	ep_dist->cred_assngd += credits;
-+	cred_info->cur_free_credits -= credits;
++	kfree(ni->ni_buf);
++	kfree(ni);
 +}
 +
-+void ath6kl_destroy(struct net_device *dev, unsigned int unregister);
-+int ath6kl_configure_target(struct ath6kl *ar);
-+void ath6kl_detect_error(unsigned long ptr);
-+void disconnect_timer_handler(unsigned long ptr);
-+void init_netdev(struct net_device *dev);
-+void ath6kl_cookie_init(struct ath6kl *ar);
-+void ath6kl_cookie_cleanup(struct ath6kl *ar);
-+void ath6kl_rx(void *context, struct htc_packet *packet);
-+void ath6kl_tx_complete(void *context, struct list_head *packet_queue);
-+enum htc_send_full_action ath6kl_tx_queue_full(void *context,
-+					       struct htc_packet *packet);
-+void ath6kl_stop_txrx(struct ath6kl *ar);
-+void ath6kl_cleanup_amsdu_rxbufs(struct ath6kl *ar);
-+int ath6kl_access_datadiag(struct ath6kl *ar, u32 address,
-+			   u8 *data, u32 length, bool read);
-+int ath6kl_read_reg_diag(struct ath6kl *ar, u32 *address, u32 *data);
-+void ath6kl_init_profile_info(struct ath6kl *ar);
-+void ath6kl_tx_data_cleanup(struct ath6kl *ar);
-+void ath6kl_stop_endpoint(struct net_device *dev, bool keep_profile,
-+			  bool get_dbglogs);
++void wlan_setup_node(struct ath6kl_node_table *nt, struct bss *ni,
++		     const u8 *mac_addr)
++{
++	int hash;
 +
-+struct ath6kl_cookie *ath6kl_alloc_cookie(struct ath6kl *ar);
-+void ath6kl_free_cookie(struct ath6kl *ar, struct ath6kl_cookie *cookie);
-+int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev);
++	memcpy(ni->ni_macaddr, mac_addr, ETH_ALEN);
++	hash = ATH6KL_NODE_HASH(mac_addr);
++	ni->ni_refcnt = 1;
 +
-+struct aggr_info *aggr_init(struct net_device *dev);
-+void ath6kl_rx_refill(void *context, enum htc_endpoint_id endpoint);
-+void ath6kl_refill_amsdu_rxbufs(struct ath6kl *ar, int count);
-+struct htc_packet *ath6kl_alloc_amsdu_rxbuf(void *context,
-+					    enum htc_endpoint_id endpoint,
-+					    int len);
-+void aggr_module_destroy(struct aggr_info *aggr_info);
-+void aggr_reset_state(struct aggr_info *aggr_info);
++	ni->ni_tstamp = jiffies_to_msecs(jiffies);
++	ni->ni_actcnt = WLAN_NODE_INACT_CNT;
 +
-+struct ath6kl_sta *ath6kl_find_sta(struct ath6kl *ar, u8 * node_addr);
-+struct ath6kl_sta *ath6kl_find_sta_by_aid(struct ath6kl *ar, u8 aid);
++	spin_lock_bh(&nt->nt_nodelock);
 +
-+void ath6kl_ready_event(void *devt, u8 * datap, u32 sw_ver, u32 abi_ver);
-+int ath6kl_control_tx(void *devt, struct sk_buff *skb,
-+		      enum htc_endpoint_id eid);
-+void ath6kl_connect_event(struct ath6kl *ar, u16 channel,
-+			  u8 *bssid, u16 listen_int,
-+			  u16 beacon_int, enum network_type net_type,
-+			  u8 beacon_ie_len, u8 assoc_req_len,
-+			  u8 assoc_resp_len, u8 *assoc_info);
-+void ath6kl_disconnect_event(struct ath6kl *ar, u8 reason,
-+			     u8 *bssid, u8 assoc_resp_len,
-+			     u8 *assoc_info, u16 prot_reason_status);
-+void ath6kl_tkip_micerr_event(struct ath6kl *ar, u8 keyid, bool ismcast);
-+void ath6kl_txpwr_rx_evt(void *devt, u8 tx_pwr);
-+void ath6kl_scan_complete_evt(struct ath6kl *ar, int status);
-+void ath6kl_tgt_stats_event(struct ath6kl *ar, u8 *ptr, u32 len);
-+void ath6kl_indicate_tx_activity(void *devt, u8 traffic_class, bool active);
-+enum htc_endpoint_id ath6kl_ac2_endpoint_id(void *devt, u8 ac);
++	/* insert at the end of the node list */
++	ni->ni_list_next = NULL;
++	ni->ni_list_prev = nt->nt_node_last;
++	if (nt->nt_node_last != NULL)
++		nt->nt_node_last->ni_list_next = ni;
 +
-+void ath6kl_pspoll_event(struct ath6kl *ar, u8 aid);
++	nt->nt_node_last = ni;
++	if (nt->nt_node_first == NULL)
++		nt->nt_node_first = ni;
 +
-+void ath6kl_dtimexpiry_event(struct ath6kl *ar);
-+void ath6kl_disconnect(struct ath6kl *ar);
-+void aggr_recv_delba_req_evt(struct ath6kl *ar, u8 tid);
-+void aggr_recv_addba_req_evt(struct ath6kl *ar, u8 tid, u16 seq_no,
-+			     u8 win_sz);
-+void ath6kl_wakeup_event(void *dev);
-+void ath6kl_target_failure(struct ath6kl *ar);
++	/* insert into the hash list */
++	ni->ni_hash_next = nt->nt_hash[hash];
++	if (ni->ni_hash_next != NULL)
++		nt->nt_hash[hash]->ni_hash_prev = ni;
 +
-+#endif /* CORE_H */
++	ni->ni_hash_prev = NULL;
++	nt->nt_hash[hash] = ni;
++
++	spin_unlock_bh(&nt->nt_nodelock);
++}
++
++struct bss *wlan_find_node(struct ath6kl_node_table *nt,
++			   const u8 *mac_addr)
++{
++	struct bss *ni, *found_ni = NULL;
++	int hash;
++
++	spin_lock_bh(&nt->nt_nodelock);
++
++	hash = ATH6KL_NODE_HASH(mac_addr);
++	for (ni = nt->nt_hash[hash]; ni; ni = ni->ni_hash_next) {
++		if (memcmp(ni->ni_macaddr, mac_addr, ETH_ALEN) == 0) {
++			ni->ni_refcnt++;
++			found_ni = ni;
++			break;
++		}
++	}
++
++	spin_unlock_bh(&nt->nt_nodelock);
++
++	return found_ni;
++}
++
++void wlan_node_reclaim(struct ath6kl_node_table *nt, struct bss *ni)
++{
++	int hash;
++
++	spin_lock_bh(&nt->nt_nodelock);
++
++	if (ni->ni_list_prev == NULL)
++		/* fix list head */
++		nt->nt_node_first = ni->ni_list_next;
++	else
++		ni->ni_list_prev->ni_list_next = ni->ni_list_next;
++
++	if (ni->ni_list_next == NULL)
++		/* fix list tail */
++		nt->nt_node_last = ni->ni_list_prev;
++	else
++		ni->ni_list_next->ni_list_prev = ni->ni_list_prev;
++
++	if (ni->ni_hash_prev == NULL) {
++		/* first in list so fix the list head */
++		hash = ATH6KL_NODE_HASH(ni->ni_macaddr);
++		nt->nt_hash[hash] = ni->ni_hash_next;
++	} else {
++		ni->ni_hash_prev->ni_hash_next = ni->ni_hash_next;
++	}
++
++	if (ni->ni_hash_next != NULL)
++		ni->ni_hash_next->ni_hash_prev = ni->ni_hash_prev;
++
++	wlan_node_free(ni);
++
++	spin_unlock_bh(&nt->nt_nodelock);
++}
++
++static void wlan_node_dec_free(struct bss *ni)
++{
++	if ((ni->ni_refcnt--) == 1)
++		wlan_node_free(ni);
++}
++
++void wlan_free_allnodes(struct ath6kl_node_table *nt)
++{
++	struct bss *ni;
++
++	while ((ni = nt->nt_node_first) != NULL)
++		wlan_node_reclaim(nt, ni);
++}
++
++void wlan_iterate_nodes(struct ath6kl_node_table *nt,
++			void (*f) (void *arg, struct bss *), void *arg)
++{
++	struct bss *ni;
++
++	spin_lock_bh(&nt->nt_nodelock);
++	for (ni = nt->nt_node_first; ni; ni = ni->ni_list_next) {
++			ni->ni_refcnt++;
++			(*f) (arg, ni);
++			wlan_node_dec_free(ni);
++	}
++	spin_unlock_bh(&nt->nt_nodelock);
++}
++
++void wlan_node_table_init(void *wmi, struct ath6kl_node_table *nt)
++{
++	ath6kl_dbg(ATH6KL_DBG_WLAN_NODE, "node table = 0x%lx\n",
++		   (unsigned long)nt);
++
++	memset(nt, 0, sizeof(struct ath6kl_node_table));
++
++	spin_lock_init(&nt->nt_nodelock);
++
++	nt->nt_wmi = wmi;
++	nt->nt_node_age = WLAN_NODE_INACT_TIMEOUT_MSEC;
++}
++
++void wlan_refresh_inactive_nodes(struct ath6kl_node_table *nt)
++{
++	struct bss *bss;
++	u8 my_bssid[ETH_ALEN];
++	u32 now;
++
++	ath6kl_wmi_get_current_bssid(nt->nt_wmi, my_bssid);
++
++	now = jiffies_to_msecs(jiffies);
++	bss = nt->nt_node_first;
++	while (bss != NULL) {
++		/* refresh all nodes except the current bss */
++		if (memcmp(my_bssid, bss->ni_macaddr, sizeof(my_bssid)) != 0) {
++			if (((now - bss->ni_tstamp) > nt->nt_node_age)
++			    || --bss->ni_actcnt == 0) {
++				wlan_node_reclaim(nt, bss);
++			}
++		}
++		bss = bss->ni_list_next;
++	}
++}
++
++void wlan_node_table_cleanup(struct ath6kl_node_table *nt)
++{
++	wlan_free_allnodes(nt);
++}
++
++struct bss *wlan_find_ssid_node(struct ath6kl_node_table *nt, u8 * ssid,
++				u32 ssid_len, bool is_wpa2, bool match_ssid)
++{
++	struct bss *ni, *found_ni = NULL;
++	u8 *ie_ssid;
++
++	spin_lock_bh(&nt->nt_nodelock);
++
++	for (ni = nt->nt_node_first; ni; ni = ni->ni_list_next) {
++
++		ie_ssid = ni->ni_cie.ie_ssid;
++
++		if ((ie_ssid[1] <= IEEE80211_MAX_SSID_LEN) &&
++		    (memcmp(ssid, &ie_ssid[2], ssid_len) == 0)) {
++
++				if (match_ssid ||
++				    (is_wpa2 && ni->ni_cie.ie_rsn != NULL) ||
++				    (!is_wpa2 && ni->ni_cie.ie_wpa != NULL)) {
++					ni->ni_refcnt++;
++					found_ni = ni;
++					break;
++				}
++		}
++	}
++
++	spin_unlock_bh(&nt->nt_nodelock);
++
++	return found_ni;
++}
++
++void wlan_node_return(struct ath6kl_node_table *nt, struct bss *ni)
++{
++	spin_lock_bh(&nt->nt_nodelock);
++	wlan_node_dec_free(ni);
++	spin_unlock_bh(&nt->nt_nodelock);
++}
 
