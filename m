@@ -1,244 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:26451 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751788Ab1GAPxE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2011 11:53:04 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 06/11] iwlagn: add rx_free to transport layer
-Date: Fri,  1 Jul 2011 08:20:00 -0700
-Message-Id: <1309533605-25774-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110701_175314_010991_70E47D90)
-In-Reply-To: <1309533605-25774-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1309533605-25774-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:32874 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755726Ab1GQKY5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jul 2011 06:24:57 -0400
+Subject: [PATCH v2 23/23] ath6kl: add Kconfig and Makefile
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: joe@perches.com, devel@linuxdriverproject.org, gregkh@suse.de,
+	error27@gmail.com
+Date: Sun, 17 Jul 2011 13:24:50 +0300
+Message-ID: <20110717102450.18367.84730.stgit@localhost6.localdomain6> (sfid-20110717_124610_574989_2A56D0B9)
+In-Reply-To: <20110717101844.18367.44984.stgit@localhost6.localdomain6>
+References: <20110717101844.18367.44984.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-The transport layer ness to release all rx ressources. This function is an API for it.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   27 ----------
- drivers/net/wireless/iwlwifi/iwl-agn.c     |    3 +-
- drivers/net/wireless/iwlwifi/iwl-agn.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-dev.h     |    2 +
- drivers/net/wireless/iwlwifi/iwl-trans.c   |   78 +++++++++++++++++++++-------
- 5 files changed, 62 insertions(+), 49 deletions(-)
+ drivers/net/wireless/ath/Kconfig         |    1 +
+ drivers/net/wireless/ath/Makefile        |    1 +
+ drivers/net/wireless/ath/ath6kl/Kconfig  |   17 +++++++++++++++
+ drivers/net/wireless/ath/ath6kl/Makefile |   35 ++++++++++++++++++++++++++++++
+ 4 files changed, 54 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/Kconfig
+ create mode 100644 drivers/net/wireless/ath/ath6kl/Makefile
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 3d97114..a2c5c6b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -910,33 +910,6 @@ void iwlagn_rx_replenish_now(struct iwl_priv *priv)
- 	iwlagn_rx_queue_restock(priv);
- }
+diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
+index d1b2306..0735488 100644
+--- a/drivers/net/wireless/ath/Kconfig
++++ b/drivers/net/wireless/ath/Kconfig
+@@ -25,5 +25,6 @@ config ATH_DEBUG
+ source "drivers/net/wireless/ath/ath5k/Kconfig"
+ source "drivers/net/wireless/ath/ath9k/Kconfig"
+ source "drivers/net/wireless/ath/carl9170/Kconfig"
++source "drivers/net/wireless/ath/ath6kl/Kconfig"
  
--/* Assumes that the skb field of the buffers in 'pool' is kept accurate.
-- * If an SKB has been detached, the POOL needs to have its SKB set to NULL
-- * This free routine walks the list of POOL entries and if SKB is set to
-- * non NULL it is unmapped and freed
-- */
--void iwlagn_rx_queue_free(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
--{
--	int i;
--	for (i = 0; i < RX_QUEUE_SIZE + RX_FREE_BUFFERS; i++) {
--		if (rxq->pool[i].page != NULL) {
--			dma_unmap_page(priv->bus.dev, rxq->pool[i].page_dma,
--				PAGE_SIZE << priv->hw_params.rx_page_order,
--				DMA_FROM_DEVICE);
--			__iwl_free_pages(priv, rxq->pool[i].page);
--			rxq->pool[i].page = NULL;
--		}
--	}
--
--	dma_free_coherent(priv->bus.dev, 4 * RX_QUEUE_SIZE,
--			  rxq->bd, rxq->bd_dma);
--	dma_free_coherent(priv->bus.dev,
--			  sizeof(struct iwl_rb_status),
--			  rxq->rb_stts, rxq->rb_stts_dma);
--	rxq->bd = NULL;
--	rxq->rb_stts  = NULL;
--}
--
- int iwlagn_rxq_stop(struct iwl_priv *priv)
- {
+ endif
+diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
+index 0e8f528..d121469 100644
+--- a/drivers/net/wireless/ath/Makefile
++++ b/drivers/net/wireless/ath/Makefile
+@@ -1,6 +1,7 @@
+ obj-$(CONFIG_ATH5K)		+= ath5k/
+ obj-$(CONFIG_ATH9K_HW)		+= ath9k/
+ obj-$(CONFIG_CARL9170)		+= carl9170/
++obj-$(CONFIG_ATH6KL)		+= ath6kl/
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index b065718..f9127e7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3718,8 +3718,7 @@ void __devexit iwl_remove(struct iwl_priv * priv)
+ obj-$(CONFIG_ATH_COMMON)	+= ath.o
  
- 	iwl_dealloc_ucode(priv);
- 
--	if (priv->rxq.bd)
--		iwlagn_rx_queue_free(priv, &priv->rxq);
-+	priv->trans.ops->rx_free(priv);
- 	iwlagn_hw_txq_ctx_free(priv);
- 
- 	iwl_eeprom_free(priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 7273297..877a694 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -193,7 +193,6 @@ void iwlagn_rx_queue_restock(struct iwl_priv *priv);
- void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority);
- void iwlagn_rx_replenish(struct iwl_priv *priv);
- void iwlagn_rx_replenish_now(struct iwl_priv *priv);
--void iwlagn_rx_queue_free(struct iwl_priv *priv, struct iwl_rx_queue *rxq);
- int iwlagn_rxq_stop(struct iwl_priv *priv);
- int iwlagn_hwrate_to_mac80211_idx(u32 rate_n_flags, enum ieee80211_band band);
- void iwl_setup_rx_handlers(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 7d3e55d..04b19a4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1233,9 +1233,11 @@ struct iwl_trans;
-  * struct iwl_trans_ops - transport specific operations
- 
-  * @rx_init: inits the rx memory, allocate it if needed
-+ *@rx_free: frees the rx memory
-  */
- struct iwl_trans_ops {
- 	int (*rx_init)(struct iwl_priv *priv);
-+	void (*rx_free)(struct iwl_priv *priv);
- };
- 
- struct iwl_trans {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index ccf73ff..1f5834b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -60,7 +60,7 @@
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  *****************************************************************************/
-- #include "iwl-dev.h"
-+#include "iwl-dev.h"
- #include "iwl-trans.h"
- 
- static int iwl_trans_rx_alloc(struct iwl_priv *priv)
-@@ -78,12 +78,11 @@ static int iwl_trans_rx_alloc(struct iwl_priv *priv)
- 		return -EINVAL;
- 
- 	/* Allocate the circular buffer of Read Buffer Descriptors (RBDs) */
--	/*Every descriptor is an __le32, hence its */
--	rxq->bd = dma_alloc_coherent(dev, 4 * RX_QUEUE_SIZE, &rxq->bd_dma,
--				     GFP_KERNEL);
-+	rxq->bd = dma_alloc_coherent(dev, sizeof(__le32) * RX_QUEUE_SIZE,
-+				     &rxq->bd_dma, GFP_KERNEL);
- 	if (!rxq->bd)
- 		goto err_bd;
--	memset(rxq->bd, 0, 4 * RX_QUEUE_SIZE);
-+	memset(rxq->bd, 0, sizeof(__le32) * RX_QUEUE_SIZE);
- 
- 	/*Allocate the driver's pointer to receive buffer status */
- 	rxq->rb_stts = dma_alloc_coherent(dev, sizeof(*rxq->rb_stts),
-@@ -95,28 +94,18 @@ static int iwl_trans_rx_alloc(struct iwl_priv *priv)
- 	return 0;
- 
- err_rb_stts:
--	dma_free_coherent(dev, 4 * RX_QUEUE_SIZE, rxq->bd, rxq->bd_dma);
-+	dma_free_coherent(dev, sizeof(__le32) * RX_QUEUE_SIZE,
-+			rxq->bd, rxq->bd_dma);
- 	memset(&rxq->bd_dma, 0, sizeof(rxq->bd_dma));
- 	rxq->bd = NULL;
- err_bd:
- 	return -ENOMEM;
- }
- 
--static int iwl_trans_rx_init(struct iwl_priv *priv)
-+static void iwl_trans_rxq_free_rx_bufs(struct iwl_priv *priv)
- {
- 	struct iwl_rx_queue *rxq = &priv->rxq;
--	int i, err;
--	unsigned long flags;
--
--	if (!rxq->bd) {
--		err = iwl_trans_rx_alloc(priv);
--		if (err)
--			return err;
--	}
--
--	spin_lock_irqsave(&rxq->lock, flags);
--	INIT_LIST_HEAD(&rxq->rx_free);
--	INIT_LIST_HEAD(&rxq->rx_used);
-+	int i;
- 
- 	/* Fill the rx_used queue with _all_ of the Rx buffers */
- 	for (i = 0; i < RX_FREE_BUFFERS + RX_QUEUE_SIZE; i++) {
-@@ -131,6 +120,25 @@ static int iwl_trans_rx_init(struct iwl_priv *priv)
- 		}
- 		list_add_tail(&rxq->pool[i].list, &rxq->rx_used);
- 	}
-+}
+diff --git a/drivers/net/wireless/ath/ath6kl/Kconfig b/drivers/net/wireless/ath/ath6kl/Kconfig
+new file mode 100644
+index 0000000..fc9f69c
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath6kl/Kconfig
+@@ -0,0 +1,17 @@
++config ATH6KL
++	tristate "Atheros ath6kl support"
++	depends on MMC
++	depends on CFG80211
++	select WIRELESS_EXT
++	select WEXT_PRIV
++	---help---
++	  This module adds support for wireless adapters based on
++	  Atheros AR6003 chipset running over SDIO. If you choose to
++	  build it as a module, it will be called ath6kl. Pls note
++	  that AR6002 and AR6001 are not supported by this driver.
 +
-+static int iwl_trans_rx_init(struct iwl_priv *priv)
-+{
-+	struct iwl_rx_queue *rxq = &priv->rxq;
-+	int i, err;
-+	unsigned long flags;
++config ATH6KL_DEBUG
++	bool "Atheros ath6kl debugging"
++	depends on ATH6KL
++	---help---
++	  Enables debug support
+diff --git a/drivers/net/wireless/ath/ath6kl/Makefile b/drivers/net/wireless/ath/ath6kl/Makefile
+new file mode 100644
+index 0000000..e1bb07e
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath6kl/Makefile
+@@ -0,0 +1,35 @@
++#------------------------------------------------------------------------------
++# Copyright (c) 2004-2010 Atheros Communications Inc.
++# All rights reserved.
++#
++#
++#
++# Permission to use, copy, modify, and/or distribute this software for any
++# purpose with or without fee is hereby granted, provided that the above
++# copyright notice and this permission notice appear in all copies.
++#
++# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++#
++#
++#
++# Author(s): ="Atheros"
++#------------------------------------------------------------------------------
 +
-+	if (!rxq->bd) {
-+		err = iwl_trans_rx_alloc(priv);
-+		if (err)
-+			return err;
-+	}
-+
-+	spin_lock_irqsave(&rxq->lock, flags);
-+	INIT_LIST_HEAD(&rxq->rx_free);
-+	INIT_LIST_HEAD(&rxq->rx_used);
-+
-+	iwl_trans_rxq_free_rx_bufs(priv);
- 
- 	for (i = 0; i < RX_QUEUE_SIZE; i++)
- 		rxq->queue[i] = NULL;
-@@ -145,8 +153,40 @@ static int iwl_trans_rx_init(struct iwl_priv *priv)
- 	return 0;
- }
- 
-+static void iwl_trans_rx_free(struct iwl_priv *priv)
-+{
-+	struct iwl_rx_queue *rxq = &priv->rxq;
-+	unsigned long flags;
-+
-+	/*if rxq->bd is NULL, it means that nothing has been allocated,
-+	 * exit now */
-+	if (!rxq->bd) {
-+		IWL_DEBUG_INFO(priv, "Free NULL rx context\n");
-+		return;
-+	}
-+
-+	spin_lock_irqsave(&rxq->lock, flags);
-+	iwl_trans_rxq_free_rx_bufs(priv);
-+	spin_unlock_irqrestore(&rxq->lock, flags);
-+
-+	dma_free_coherent(priv->bus.dev, sizeof(__le32) * RX_QUEUE_SIZE,
-+			  rxq->bd, rxq->bd_dma);
-+	memset(&rxq->bd_dma, 0, sizeof(rxq->bd_dma));
-+	rxq->bd = NULL;
-+
-+	if (rxq->rb_stts)
-+		dma_free_coherent(priv->bus.dev,
-+				  sizeof(struct iwl_rb_status),
-+				  rxq->rb_stts, rxq->rb_stts_dma);
-+	else
-+		IWL_DEBUG_INFO(priv, "Free rxq->rb_stts which is NULL\n");
-+	memset(&rxq->rb_stts_dma, 0, sizeof(rxq->rb_stts_dma));
-+	rxq->rb_stts = NULL;
-+}
-+
- static const struct iwl_trans_ops trans_ops = {
- 	.rx_init = iwl_trans_rx_init,
-+	.rx_free = iwl_trans_rx_free,
- };
- 
- void iwl_trans_register(struct iwl_trans *trans)
--- 
-1.7.0.4
++obj-$(CONFIG_ATH6KL) := ath6kl.o
++ath6kl-y += debug.o
++ath6kl-y += htc_hif.o
++ath6kl-y += htc.o
++ath6kl-y += bmi.o
++ath6kl-y += cfg80211.o
++ath6kl-y += init.o
++ath6kl-y += main.o
++ath6kl-y += txrx.o
++ath6kl-y += wmi.o
++ath6kl-y += node.o
++ath6kl-y += sdio.o
 
