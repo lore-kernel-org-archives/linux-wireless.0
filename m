@@ -1,53 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47165 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752649Ab1GRHe3 (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:55273 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753796Ab1GQKWK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2011 03:34:29 -0400
-Subject: Re: [PATCH 1/5] mac80211: give if_mesh a beacon
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <CAG6hwVOVJGBF87jqY-K4xnjDWcVD-RTYXfV-N9=T-5Ty1U2TdQ@mail.gmail.com> (sfid-20110717_193702_895186_F8D25DFA)
-References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
-	 <1310600747-9583-2-git-send-email-thomas@cozybit.com>
-	 <1310723669.4164.18.camel@jlt3.sipsolutions.net>
-	 <CAG6hwVONFH+vkSasF7AaSaqvHK78wwNtZesi0RSUnuCi17d9Fw@mail.gmail.com>
-	 <1310763624.4164.29.camel@jlt3.sipsolutions.net>
-	 <CAG6hwVOVJGBF87jqY-K4xnjDWcVD-RTYXfV-N9=T-5Ty1U2TdQ@mail.gmail.com>
-	 (sfid-20110717_193702_895186_F8D25DFA)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 18 Jul 2011 09:34:24 +0200
-Message-ID: <1310974464.3942.1.camel@jlt3.sipsolutions.net> (sfid-20110718_093432_150861_352ECF48)
-Mime-Version: 1.0
+	Sun, 17 Jul 2011 06:22:10 -0400
+Subject: [PATCH v2 08/23] ath6kl: add debug.h
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: joe@perches.com, devel@linuxdriverproject.org, gregkh@suse.de,
+	error27@gmail.com
+Date: Sun, 17 Jul 2011 13:22:03 +0300
+Message-ID: <20110717102203.18367.12523.stgit@localhost6.localdomain6> (sfid-20110717_122213_856885_BE00108C)
+In-Reply-To: <20110717101844.18367.44984.stgit@localhost6.localdomain6>
+References: <20110717101844.18367.44984.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-07-17 at 12:36 -0500, Thomas Pedersen wrote:
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/debug.h |  104 +++++++++++++++++++++++++++++++
+ 1 files changed, 104 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/debug.h
 
-> >> > Also ... since you'll need PS support eventually anyway, maybe you
-> >> > should refactor "struct ieee80211_if_ap" into something AP-specific
-> >> > (currently only VLANs) and the rest, and then use "the rest" in mesh as
-> >> > well to make all this code more unified.
-> >>
-> >> I like this approach much better. Are you suggesting just factoring
-> >> out the PS data, or taking it further and creating a generic "if which
-> >> beacons"?
-> >
-> > Well, I don't think "iface which beacons" is really what we need here --
-> > IBSS sends beacons as well but we don't really have PS support there and
-> > it'd be different anyway. But on the other hand, if you also factor out
-> > the beacon pointer, you can embed that into both. Like I said, I think
-> > from struct ..._if_ap you only have the vlan list that you don't want?
-> 
-> I'd rather just factor all the PS data out for now, and maintain the
-> beacon separately. Is there Is there any good reason we'd want to lump
-> these two together? ieee80211_beacon_add_tim() for example already
-> treats these as separate.
-
-No that's fine, I see no particular reason to do one or the other. Or
-maybe actually I do -- beacon handling requires TX PS handling for the
-TIM IE?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
+new file mode 100644
+index 0000000..2e60588
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath6kl/debug.h
+@@ -0,0 +1,104 @@
++/*
++ * Copyright (c) 2011 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef DEBUG_H
++#define DEBUG_H
++
++#include "htc_hif.h"
++
++enum ATH6K_DEBUG_MASK {
++	ATH6KL_DBG_WLAN_CONNECT = BIT(0),     /* wlan connect */
++	ATH6KL_DBG_WLAN_SCAN    = BIT(1),     /* wlan scan */
++	ATH6KL_DBG_WLAN_TX      = BIT(2),     /* wlan tx */
++	ATH6KL_DBG_WLAN_RX      = BIT(3),     /* wlan rx */
++	ATH6KL_DBG_BMI		= BIT(4),     /* bmi tracing */
++	ATH6KL_DBG_HTC_SEND     = BIT(5),     /* htc send */
++	ATH6KL_DBG_HTC_RECV     = BIT(6),     /* htc recv */
++	ATH6KL_DBG_IRQ		= BIT(7),     /* interrupt processing */
++	ATH6KL_DBG_PM           = BIT(8),     /* power management */
++	ATH6KL_DBG_WLAN_NODE    = BIT(9),     /* general wlan node tracing */
++	ATH6KL_DBG_WMI          = BIT(10),    /* wmi tracing */
++	ATH6KL_DBG_TRC	        = BIT(11),    /* generic func tracing */
++	ATH6KL_DBG_SCATTER	= BIT(12),    /* hif scatter tracing */
++	ATH6KL_DBG_WLAN_CFG     = BIT(13),    /* cfg80211 i/f file tracing */
++	ATH6KL_DBG_RAW_BYTES    = BIT(14),    /* dump tx/rx and wmi frames */
++	ATH6KL_DBG_ANY	        = 0xffffffff  /* enable all logs */
++};
++
++extern unsigned int debug_mask;
++extern int ath6kl_printk(const char *level, const char *fmt, ...)
++	__attribute__ ((format (printf, 2, 3)));
++
++#define ath6kl_info(fmt, ...)				\
++	ath6kl_printk(KERN_INFO, fmt, ##__VA_ARGS__)
++#define ath6kl_err(fmt, ...)					\
++	ath6kl_printk(KERN_ERR, fmt, ##__VA_ARGS__)
++#define ath6kl_warn(fmt, ...)					\
++	ath6kl_printk(KERN_WARNING, fmt, ##__VA_ARGS__)
++
++#define AR_DBG_LVL_CHECK(mask)	(debug_mask & mask)
++
++#ifdef CONFIG_ATH6KL_DEBUG
++#define ath6kl_dbg(mask, fmt, ...)					\
++	({								\
++	 int rtn;							\
++	 if (debug_mask & mask)						\
++		rtn = ath6kl_printk(KERN_DEBUG, fmt, ##__VA_ARGS__);	\
++	 else								\
++		rtn = 0;						\
++									\
++	 rtn;								\
++	 })
++
++static inline void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
++				   const char *msg, const void *buf,
++				   size_t len)
++{
++	if (debug_mask & mask) {
++		ath6kl_dbg(mask, "%s\n", msg);
++		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, buf, len);
++	}
++}
++
++void ath6kl_dump_registers(struct ath6kl_device *dev,
++			   struct ath6kl_irq_proc_registers *irq_proc_reg,
++			   struct ath6kl_irq_enable_reg *irq_en_reg);
++void dump_cred_dist_stats(struct htc_target *target);
++#else
++static inline int ath6kl_dbg(enum ATH6K_DEBUG_MASK dbg_mask,
++			     const char *fmt, ...)
++{
++	return 0;
++}
++
++static inline void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
++				   const char *msg, const void *buf,
++				   size_t len)
++{
++}
++
++static inline void ath6kl_dump_registers(struct ath6kl_device *dev,
++		struct ath6kl_irq_proc_registers *irq_proc_reg,
++		struct ath6kl_irq_enable_reg *irq_en_reg)
++{
++
++}
++static inline void dump_cred_dist_stats(struct htc_target *target)
++{
++}
++#endif
++
++#endif
 
