@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35855 "EHLO nbd.name"
+Received: from bues.ch ([80.190.117.144]:54185 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750929Ab1GIENQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jul 2011 00:13:16 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 7/9] ath9k_hw: set 5 GHz half/quarter channels on AR9002 using fractional mode
-Date: Sat,  9 Jul 2011 11:12:52 +0700
-Message-Id: <1310184774-32913-7-git-send-email-nbd@openwrt.org> (sfid-20110709_061322_070181_9CACCDB0)
-In-Reply-To: <1310184774-32913-6-git-send-email-nbd@openwrt.org>
-References: <1310184774-32913-1-git-send-email-nbd@openwrt.org>
- <1310184774-32913-2-git-send-email-nbd@openwrt.org>
- <1310184774-32913-3-git-send-email-nbd@openwrt.org>
- <1310184774-32913-4-git-send-email-nbd@openwrt.org>
- <1310184774-32913-5-git-send-email-nbd@openwrt.org>
- <1310184774-32913-6-git-send-email-nbd@openwrt.org>
+	id S1752161Ab1GQIoJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jul 2011 04:44:09 -0400
+Date: Sun, 17 Jul 2011 10:43:59 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH 1/4] b43: HT-PHY: fix masks in radio ctl
+Message-ID: <20110717104359.72a27182@maggie> (sfid-20110717_104414_989837_5FFA7435)
+In-Reply-To: <1310891434-3537-1-git-send-email-zajec5@gmail.com>
+References: <1310891434-3537-1-git-send-email-zajec5@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The radio seems to perform better that way
+On Sun, 17 Jul 2011 10:30:31 +0200
+Rafał Miłecki <zajec5@gmail.com> wrote:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9002_phy.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+> Old masks were causing ugly, delayed lock ups.
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+>  drivers/net/wireless/b43/phy_ht.c |   10 +++++-----
+>  1 files changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
+> index 2982103..0cc293a 100644
+> --- a/drivers/net/wireless/b43/phy_ht.c
+> +++ b/drivers/net/wireless/b43/phy_ht.c
+> @@ -277,12 +277,12 @@ static void b43_phy_ht_op_software_rfkill(struct b43_wldev *dev,
+>  		b43err(dev->wl, "MAC not suspended\n");
+>  
+>  	if (blocked) {
+> -		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, ~0);
+> +		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, 0);
+>  	} else {
+> -		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, ~0);
+> -		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, ~0, 0x1);
+> -		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, ~0);
+> -		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, ~0, 0x2);
+> +		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, 0);
+> +		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, 0, 0x1);
+> +		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, 0);
+> +		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, 0, 0x2);
+>  
+>  		if (dev->phy.radio_ver == 0x2059)
+>  			b43_radio_2059_init(dev);
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-index abc2cc8..ac8b35c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-@@ -111,7 +111,9 @@ static int ar9002_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- 
- 		switch (ah->eep_ops->get_eeprom(ah, EEP_FRAC_N_5G)) {
- 		case 0:
--			if ((freq % 20) == 0)
-+			if (IS_CHAN_HALF_RATE(chan) || IS_CHAN_QUARTER_RATE(chan))
-+				aModeRefSel = 0;
-+			else if ((freq % 20) == 0)
- 				aModeRefSel = 3;
- 			else if ((freq % 10) == 0)
- 				aModeRefSel = 2;
--- 
-1.7.3.2
+Why are we using mask/maskset here at all, if the mask is zero?
+You could just use phy_write.
 
+(And mask() with ~0 should always ring a bell anyway, because it does
+nothing except for possible side effects of the register read/write).
