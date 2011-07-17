@@ -1,810 +1,1050 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:33326 "HELO
-	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752757Ab1GPTKa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2011 15:10:30 -0400
-Date: Sat, 16 Jul 2011 12:10:28 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-To: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-wireless@vger.kernel.org
-Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	zajec5@gmail.com
-Subject: Re: linux-next: Tree for July 16 (bcma)
-Message-Id: <20110716121028.24187792.rdunlap@xenotime.net> (sfid-20110716_211053_196302_4677D2F8)
-In-Reply-To: <20110717000815.c83755be9598d34ac8431908@canb.auug.org.au>
-References: <20110717000815.c83755be9598d34ac8431908@canb.auug.org.au>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="Multipart=_Sat__16_Jul_2011_12_10_28_-0700_soej5Phq2BInCJkx"
+Received: from mail.perches.com ([173.55.12.10]:4067 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756232Ab1GQSn5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jul 2011 14:43:57 -0400
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>, linux-kernel@vger.kernel.org
+Cc: devel@linuxdriverproject.org, gregkh@suse.de, error27@gmail.com,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 2/3] ath6kl: Remove __func__ uses from ath6kl_err
+Date: Sun, 17 Jul 2011 11:43:43 -0700
+Message-Id: <e835f257239b40e651b99d73dcdf2fc9f9eaf2fb.1310927985.git.joe@perches.com> (sfid-20110717_204430_884448_621AAF45)
+In-Reply-To: <cover.1310927985.git.joe@perches.com>
+References: <cover.1310927985.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
+Remove unnecessary clutter from ath6kl_err messages.
 
---Multipart=_Sat__16_Jul_2011_12_10_28_-0700_soej5Phq2BInCJkx
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-
-On Sun, 17 Jul 2011 00:08:15 +1000 Stephen Rothwell wrote:
-
-> Hi all,
-> 
-> Changes since 20110707:
-
-When CONFIG_PCI (and probably some more driver-specific kconfig symbols) is
-not enabled:
-
-drivers/bcma/driver_pci.c:175: error: 'SSB_PCICORE_BFL_NOPCI' undeclared (first use in this function)
-
-Full kernel config file is attached.
-
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+ drivers/net/wireless/ath/ath6kl/bmi.c      |    2 +-
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |  129 +++++++++++++--------------
+ drivers/net/wireless/ath/ath6kl/htc.c      |    7 +-
+ drivers/net/wireless/ath/ath6kl/htc_hif.c  |    3 +-
+ drivers/net/wireless/ath/ath6kl/init.c     |   78 +++++++----------
+ drivers/net/wireless/ath/ath6kl/main.c     |   16 ++--
+ drivers/net/wireless/ath/ath6kl/txrx.c     |   39 ++++-----
+ drivers/net/wireless/ath/ath6kl/wmi.c      |    8 +-
+ 8 files changed, 125 insertions(+), 157 deletions(-)
 
---Multipart=_Sat__16_Jul_2011_12_10_28_-0700_soej5Phq2BInCJkx
-Content-Type: application/octet-stream;
- name="config-r9110"
-Content-Disposition: attachment;
- filename="config-r9110"
-Content-Transfer-Encoding: base64
+diff --git a/drivers/net/wireless/ath/ath6kl/bmi.c b/drivers/net/wireless/ath/ath6kl/bmi.c
+index 1aed4f1..8467669 100644
+--- a/drivers/net/wireless/ath/ath6kl/bmi.c
++++ b/drivers/net/wireless/ath/ath6kl/bmi.c
+@@ -55,7 +55,7 @@ static int ath6kl_get_bmi_cmd_credits(struct ath6kl *ar)
+ 	}
+ 
+ 	if (!ar->bmi.cmd_credits) {
+-		ath6kl_err("%s bmi communication timeout\n", __func__);
++		ath6kl_err("bmi communication timeout\n");
+ 		return -ETIMEDOUT;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index f556e23..34df184 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -196,7 +196,7 @@ static int ath6kl_set_cipher(struct ath6kl *ar, u32 cipher, bool ucast)
+ 		*ar_cipher_len = 0;
+ 		break;
+ 	default:
+-		ath6kl_err("%s: cipher 0x%x not supported\n", __func__, cipher);
++		ath6kl_err("cipher 0x%x not supported\n", cipher);
+ 		return -ENOTSUPP;
+ 	}
+ 
+@@ -226,40 +226,39 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	ar->sme_state = SME_CONNECTING;
+ 
+ 	if (!test_bit(WMI_READY, &ar->flag)) {
+-		ath6kl_err("%s: wmi is not ready yet\n", __func__);
++		ath6kl_err("wmi is not ready yet\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (ar->wlan_state == WLAN_DISABLED) {
+-		ath6kl_err("%s: wlan disabled\n", __func__);
++		ath6kl_err("wlan disabled\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (test_bit(DESTROY_IN_PROGRESS, &ar->flag)) {
+-		ath6kl_err("%s: destroy in progress\n", __func__);
++		ath6kl_err("destroy in progress\n");
+ 		return -EBUSY;
+ 	}
+ 
+ 	if (!sme->ssid_len || sme->ssid_len > IEEE80211_MAX_SSID_LEN) {
+-		ath6kl_err("%s: ssid invalid\n", __func__);
++		ath6kl_err("ssid invalid\n");
+ 		return -EINVAL;
+ 	}
+ 
+ 	if (test_bit(SKIP_SCAN, &ar->flag) &&
+ 	    ((sme->channel && sme->channel->center_freq == 0) ||
+ 	     (sme->bssid && is_zero_ether_addr(sme->bssid)))) {
+-		ath6kl_err("%s: SkipScan: channel or bssid invalid\n",
+-			   __func__);
++		ath6kl_err("SkipScan: channel or bssid invalid\n");
+ 		return -EINVAL;
+ 	}
+ 
+ 	if (down_interruptible(&ar->sem)) {
+-		ath6kl_err("%s: busy, couldn't get access\n", __func__);
++		ath6kl_err("busy, couldn't get access\n");
+ 		return -ERESTARTSYS;
+ 	}
+ 
+ 	if (test_bit(DESTROY_IN_PROGRESS, &ar->flag)) {
+-		ath6kl_err("%s: busy, destroy in progress\n", __func__);
++		ath6kl_err("busy, destroy in progress\n");
+ 		up(&ar->sem);
+ 		return -EBUSY;
+ 	}
+@@ -272,7 +271,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 			ar->tx_pending[ath6kl_wmi_get_control_ep(ar->wmi)] == 0,
+ 			WMI_TIMEOUT);
+ 		if (signal_pending(current)) {
+-			ath6kl_err("%s: cmd queue drain timeout\n", __func__);
++			ath6kl_err("cmd queue drain timeout\n");
+ 			up(&ar->sem);
+ 			return -EINTR;
+ 		}
+@@ -287,7 +286,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 		up(&ar->sem);
+ 		if (status) {
+-			ath6kl_err("%s: wmi_reconnect_cmd failed\n", __func__);
++			ath6kl_err("wmi_reconnect_cmd failed\n");
+ 			return -EIO;
+ 		}
+ 		return 0;
+@@ -326,8 +325,8 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 		if (sme->key_idx < WMI_MIN_KEY_INDEX ||
+ 		    sme->key_idx > WMI_MAX_KEY_INDEX) {
+-			ath6kl_err("%s: key index %d out of bounds\n",
+-				   __func__, sme->key_idx);
++			ath6kl_err("key index %d out of bounds\n",
++				   sme->key_idx);
+ 			up(&ar->sem);
+ 			return -ENOENT;
+ 		}
+@@ -349,8 +348,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	if (!ar->usr_bss_filter) {
+ 		if (ath6kl_wmi_bssfilter_cmd(ar->wmi, ALL_BSS_FILTER, 0) != 0) {
+-			ath6kl_err("%s: couldn't set bss filtering\n",
+-				   __func__);
++			ath6kl_err("couldn't set bss filtering\n");
+ 			up(&ar->sem);
+ 			return -EIO;
+ 		}
+@@ -382,10 +380,10 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	if (status == -EINVAL) {
+ 		memset(ar->ssid, 0, sizeof(ar->ssid));
+ 		ar->ssid_len = 0;
+-		ath6kl_err("%s: invalid request\n", __func__);
++		ath6kl_err("invalid request\n");
+ 		return -ENOENT;
+ 	} else if (status) {
+-		ath6kl_err("%s: ath6kl_wmi_connect_cmd failed\n", __func__);
++		ath6kl_err("ath6kl_wmi_connect_cmd failed\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -521,7 +519,7 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
+ 
+ 	ieeemgmtbuf = kzalloc(size, GFP_ATOMIC);
+ 	if (!ieeemgmtbuf) {
+-		ath6kl_err("%s: ieee mgmt buf alloc error\n", __func__);
++		ath6kl_err("ieee mgmt buf alloc error\n");
+ 		cfg80211_put_bss(bss);
+ 		return;
+ 	}
+@@ -578,22 +576,22 @@ static int ath6kl_cfg80211_disconnect(struct wiphy *wiphy,
+ 		   reason_code);
+ 
+ 	if (!test_bit(WMI_READY, &ar->flag)) {
+-		ath6kl_err("%s: wmi is not ready\n", __func__);
++		ath6kl_err("wmi is not ready\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (ar->wlan_state == WLAN_DISABLED) {
+-		ath6kl_err("%s: wlan disabled\n", __func__);
++		ath6kl_err("wlan disabled\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (test_bit(DESTROY_IN_PROGRESS, &ar->flag)) {
+-		ath6kl_err("%s: busy, destroy in progress\n", __func__);
++		ath6kl_err("busy, destroy in progress\n");
+ 		return -EBUSY;
+ 	}
+ 
+ 	if (down_interruptible(&ar->sem)) {
+-		ath6kl_err("%s: busy, couldn't get access\n", __func__);
++		ath6kl_err("busy, couldn't get access\n");
+ 		return -ERESTARTSYS;
+ 	}
+ 
+@@ -685,7 +683,7 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
+ 	 */
+ 	key = &ar->keys[ar->def_txkey_index];
+ 	if (down_interruptible(&ar->sem)) {
+-		ath6kl_err("%s: busy, couldn't get access\n", __func__);
++		ath6kl_err("busy, couldn't get access\n");
+ 		return;
+ 	}
+ 
+@@ -746,7 +744,7 @@ static void ath6kl_cfg80211_scan_node(void *arg, struct bss *ni)
+ 	size = ni->ni_framelen + offsetof(struct ieee80211_mgmt, u);
+ 	ieeemgmtbuf = kmalloc(size, GFP_ATOMIC);
+ 	if (!ieeemgmtbuf) {
+-		ath6kl_err("%s: ieee mgmt buf alloc error\n", __func__);
++		ath6kl_err("ieee mgmt buf alloc error\n");
+ 		return;
+ 	}
+ 
+@@ -784,12 +782,12 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ 	u32 force_fg_scan = 0;
+ 
+ 	if (!test_bit(WMI_READY, &ar->flag)) {
+-		ath6kl_err("%s: wmi is not ready\n", __func__);
++		ath6kl_err("wmi is not ready\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (ar->wlan_state == WLAN_DISABLED) {
+-		ath6kl_err("%s: wlan disabled\n", __func__);
++		ath6kl_err("wlan disabled\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -798,8 +796,7 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ 					     (test_bit(CONNECTED, &ar->flag) ?
+ 					     ALL_BUT_BSS_FILTER :
+ 					     ALL_BSS_FILTER), 0) != 0) {
+-			ath6kl_err("%s: couldn't set bss filtering\n",
+-				   __func__);
++			ath6kl_err("couldn't set bss filtering\n");
+ 			return -EIO;
+ 		}
+ 	}
+@@ -822,7 +819,7 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ 
+ 	if (ath6kl_wmi_startscan_cmd(ar->wmi, WMI_LONG_SCAN, force_fg_scan,
+ 				     false, 0, 0, 0, NULL) != 0) {
+-		ath6kl_err("%s: wmi_startscan_cmd failed\n", __func__);
++		ath6kl_err("wmi_startscan_cmd failed\n");
+ 		ret = -EIO;
+ 	}
+ 
+@@ -870,12 +867,12 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 	int status = 0;
+ 
+ 	if (!test_bit(WMI_READY, &ar->flag)) {
+-		ath6kl_err("%s: wmi is not ready\n", __func__);
++		ath6kl_err("wmi is not ready\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (ar->wlan_state == WLAN_DISABLED) {
+-		ath6kl_err("%s: wlan disabled\n", __func__);
++		ath6kl_err("wlan disabled\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -955,12 +952,12 @@ static int ath6kl_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: index %d\n", __func__, key_index);
+ 
+ 	if (!test_bit(WMI_READY, &ar->flag)) {
+-		ath6kl_err("%s: wmi is not ready\n", __func__);
++		ath6kl_err("wmi is not ready\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (ar->wlan_state == WLAN_DISABLED) {
+-		ath6kl_err("%s: wlan disabled\n", __func__);
++		ath6kl_err("wlan disabled\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -995,12 +992,12 @@ static int ath6kl_cfg80211_get_key(struct wiphy *wiphy, struct net_device *ndev,
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: index %d\n", __func__, key_index);
+ 
+ 	if (!test_bit(WMI_READY, &ar->flag)) {
+-		ath6kl_err("%s: wmi is not ready\n", __func__);
++		ath6kl_err("wmi is not ready\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (ar->wlan_state == WLAN_DISABLED) {
+-		ath6kl_err("%s: wlan disabled\n", __func__);
++		ath6kl_err("wlan disabled\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -1037,12 +1034,12 @@ static int ath6kl_cfg80211_set_default_key(struct wiphy *wiphy,
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: index %d\n", __func__, key_index);
+ 
+ 	if (!test_bit(WMI_READY, &ar->flag)) {
+-		ath6kl_err("%s: wmi is not ready\n", __func__);
++		ath6kl_err("wmi is not ready\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (ar->wlan_state == WLAN_DISABLED) {
+-		ath6kl_err("%s: wlan disabled\n", __func__);
++		ath6kl_err("wlan disabled\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -1085,12 +1082,12 @@ static int ath6kl_cfg80211_set_default_mgmt_key(struct wiphy *wiphy,
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: index %d\n", __func__, key_index);
+ 
+ 	if (!test_bit(WMI_READY, &ar->flag)) {
+-		ath6kl_err("%s: wmi is not ready\n", __func__);
++		ath6kl_err("wmi is not ready\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (ar->wlan_state == WLAN_DISABLED) {
+-		ath6kl_err("%s: wlan disabled\n", __func__);
++		ath6kl_err("wlan disabled\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -1119,20 +1116,19 @@ static int ath6kl_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ 		   changed);
+ 
+ 	if (!test_bit(WMI_READY, &ar->flag)) {
+-		ath6kl_err("%s: wmi is not ready\n", __func__);
++		ath6kl_err("wmi is not ready\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (ar->wlan_state == WLAN_DISABLED) {
+-		ath6kl_err("%s: wlan disabled\n", __func__);
++		ath6kl_err("wlan disabled\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (changed & WIPHY_PARAM_RTS_THRESHOLD) {
+ 		ret = ath6kl_wmi_set_rts_cmd(ar->wmi, wiphy->rts_threshold);
+ 		if (ret != 0) {
+-			ath6kl_err("%s: ath6kl_wmi_set_rts_cmd failed\n",
+-				   __func__);
++			ath6kl_err("ath6kl_wmi_set_rts_cmd failed\n");
+ 			return -EIO;
+ 		}
+ 	}
+@@ -1155,12 +1151,12 @@ static int ath6kl_cfg80211_set_txpower(struct wiphy *wiphy,
+ 		   type, dbm);
+ 
+ 	if (!test_bit(WMI_READY, &ar->flag)) {
+-		ath6kl_err("%s: wmi is not ready\n", __func__);
++		ath6kl_err("wmi is not ready\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (ar->wlan_state == WLAN_DISABLED) {
+-		ath6kl_err("%s: wlan disabled\n", __func__);
++		ath6kl_err("wlan disabled\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -1186,12 +1182,12 @@ static int ath6kl_cfg80211_get_txpower(struct wiphy *wiphy, int *dbm)
+ 	struct ath6kl *ar = (struct ath6kl *)wiphy_priv(wiphy);
+ 
+ 	if (!test_bit(WMI_READY, &ar->flag)) {
+-		ath6kl_err("%s: wmi is not ready\n", __func__);
++		ath6kl_err("wmi is not ready\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (ar->wlan_state == WLAN_DISABLED) {
+-		ath6kl_err("%s: wlan disabled\n", __func__);
++		ath6kl_err("wlan disabled\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -1199,8 +1195,7 @@ static int ath6kl_cfg80211_get_txpower(struct wiphy *wiphy, int *dbm)
+ 		ar->tx_pwr = 0;
+ 
+ 		if (ath6kl_wmi_get_tx_pwr_cmd(ar->wmi) != 0) {
+-			ath6kl_err("%s: ath6kl_wmi_get_tx_pwr_cmd failed\n",
+-				    __func__);
++			ath6kl_err("ath6kl_wmi_get_tx_pwr_cmd failed\n");
+ 			return -EIO;
+ 		}
+ 
+@@ -1208,7 +1203,7 @@ static int ath6kl_cfg80211_get_txpower(struct wiphy *wiphy, int *dbm)
+ 						 5 * HZ);
+ 
+ 		if (signal_pending(current)) {
+-			ath6kl_err("%s: target did not respond\n", __func__);
++			ath6kl_err("target did not respond\n");
+ 			return -EINTR;
+ 		}
+ 	}
+@@ -1228,12 +1223,12 @@ static int ath6kl_cfg80211_set_power_mgmt(struct wiphy *wiphy,
+ 		   __func__, pmgmt, timeout);
+ 
+ 	if (!test_bit(WMI_READY, &ar->flag)) {
+-		ath6kl_err("%s: wmi is not ready\n", __func__);
++		ath6kl_err("wmi is not ready\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (ar->wlan_state == WLAN_DISABLED) {
+-		ath6kl_err("%s: wlan disabled\n", __func__);
++		ath6kl_err("wlan disabled\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -1246,7 +1241,7 @@ static int ath6kl_cfg80211_set_power_mgmt(struct wiphy *wiphy,
+ 	}
+ 
+ 	if (ath6kl_wmi_powermode_cmd(ar->wmi, mode.pwr_mode) != 0) {
+-		ath6kl_err("%s: wmi_powermode_cmd failed\n", __func__);
++		ath6kl_err("wmi_powermode_cmd failed\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -1264,12 +1259,12 @@ static int ath6kl_cfg80211_change_iface(struct wiphy *wiphy,
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: type %u\n", __func__, type);
+ 
+ 	if (!test_bit(WMI_READY, &ar->flag)) {
+-		ath6kl_err("%s: wmi is not ready\n", __func__);
++		ath6kl_err("wmi is not ready\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (ar->wlan_state == WLAN_DISABLED) {
+-		ath6kl_err("%s: wlan disabled\n", __func__);
++		ath6kl_err("wlan disabled\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -1281,7 +1276,7 @@ static int ath6kl_cfg80211_change_iface(struct wiphy *wiphy,
+ 		ar->next_mode = ADHOC_NETWORK;
+ 		break;
+ 	default:
+-		ath6kl_err("%s: invalid type %u\n", __func__, type);
++		ath6kl_err("invalid interface type %u\n", type);
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+@@ -1298,18 +1293,18 @@ static int ath6kl_cfg80211_join_ibss(struct wiphy *wiphy,
+ 	int status;
+ 
+ 	if (!test_bit(WMI_READY, &ar->flag)) {
+-		ath6kl_err("%s: wmi is not ready\n", __func__);
++		ath6kl_err("wmi is not ready\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (ar->wlan_state == WLAN_DISABLED) {
+-		ath6kl_err("%s: wlan disabled\n", __func__);
++		ath6kl_err("wlan disabled\n");
+ 		return -EIO;
+ 	}
+ 
+-	if (!ibss_param->ssid_len
+-	    || IEEE80211_MAX_SSID_LEN < ibss_param->ssid_len) {
+-		ath6kl_err("%s: ssid invalid\n", __func__);
++	if (!ibss_param->ssid_len ||
++	    IEEE80211_MAX_SSID_LEN < ibss_param->ssid_len) {
++		ath6kl_err("ssid invalid\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -1373,12 +1368,12 @@ static int ath6kl_cfg80211_leave_ibss(struct wiphy *wiphy,
+ 	struct ath6kl *ar = (struct ath6kl *)ath6kl_priv(dev);
+ 
+ 	if (!test_bit(WMI_READY, &ar->flag)) {
+-		ath6kl_err("%s: wmi is not ready\n", __func__);
++		ath6kl_err("wmi is not ready\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (ar->wlan_state == WLAN_DISABLED) {
+-		ath6kl_err("%s: wlan disabled\n", __func__);
++		ath6kl_err("wlan disabled\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -1535,7 +1530,7 @@ static int ath6kl_get_station(struct wiphy *wiphy, struct net_device *dev,
+ 		sinfo->txrate.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
+ 		sinfo->txrate.flags |= RATE_INFO_FLAGS_MCS;
+ 	} else {
+-		ath6kl_warn("%s: invalid rate: %d\n", __func__, rate);
++		ath6kl_warn("invalid rate: %d\n", rate);
+ 		return 0;
+ 	}
+ 
+@@ -1597,14 +1592,14 @@ struct wireless_dev *ath6kl_cfg80211_init(struct device *dev)
+ 
+ 	wdev = kzalloc(sizeof(struct wireless_dev), GFP_KERNEL);
+ 	if (!wdev) {
+-		ath6kl_err("%s: couldn't allocate wireless device\n", __func__);
++		ath6kl_err("couldn't allocate wireless device\n");
+ 		return NULL;
+ 	}
+ 
+ 	/* create a new wiphy for use with cfg80211 */
+ 	wdev->wiphy = wiphy_new(&ath6kl_cfg80211_ops, sizeof(struct ath6kl));
+ 	if (!wdev->wiphy) {
+-		ath6kl_err("%s: couldn't allocate wiphy device\n", __func__);
++		ath6kl_err("couldn't allocate wiphy device\n");
+ 		kfree(wdev);
+ 		return NULL;
+ 	}
+@@ -1625,7 +1620,7 @@ struct wireless_dev *ath6kl_cfg80211_init(struct device *dev)
+ 
+ 	ret = wiphy_register(wdev->wiphy);
+ 	if (ret < 0) {
+-		ath6kl_err("%s: couldn't register wiphy device\n", __func__);
++		ath6kl_err("couldn't register wiphy device\n");
+ 		wiphy_free(wdev->wiphy);
+ 		kfree(wdev);
+ 		return NULL;
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index f9b2294..95c47bb 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -81,8 +81,7 @@ static void htc_tx_comp_update(struct htc_target *target,
+ 	if (!packet->status)
+ 		return;
+ 
+-	ath6kl_err("%s: req failed (status:%d, ep:%d, len:%d creds:%d)\n",
+-		   __func__,
++	ath6kl_err("req failed (status:%d, ep:%d, len:%d creds:%d)\n",
+ 		   packet->status, packet->endpoint, packet->act_len,
+ 		   packet->info.tx.cred_used);
+ 
+@@ -906,8 +905,8 @@ static int dev_rx_pkt(struct htc_target *target, struct htc_packet *packet,
+ 	padded_len = CALC_TXRX_PADDED_LEN(dev, rx_len);
+ 
+ 	if (padded_len > packet->buf_len) {
+-		ath6kl_err("%s: not enough space for padlen:%d recvlen:%d bufferlen:%d\n",
+-			   __func__, padded_len, rx_len, packet->buf_len);
++		ath6kl_err("not enough receive space for packet - padlen:%d recvlen:%d bufferlen:%d\n",
++			   padded_len, rx_len, packet->buf_len);
+ 		return -ENOMEM;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.c b/drivers/net/wireless/ath/ath6kl/htc_hif.c
+index bc06b3d..1bcaaec 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_hif.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_hif.c
+@@ -553,8 +553,7 @@ static int proc_pending_irqs(struct ath6kl_device *dev, bool *done)
+ 				rg = &dev->irq_proc_reg;
+ 				lk_ahd = le32_to_cpu(rg->rx_lkahd[HTC_MAILBOX]);
+ 				if (!lk_ahd)
+-					ath6kl_err("%s():lookAhead is zero!\n",
+-						   __func__);
++					ath6kl_err("lookAhead is zero!\n");
+ 			}
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index dae5442..fe61871 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -162,8 +162,8 @@ static int ath6kl_connectservice(struct ath6kl *ar,
+ 
+ 	status = htc_conn_service(ar->htc_target, con_req, &response);
+ 	if (status) {
+-		ath6kl_err("%s: failed to connect to %s service status:%d\n",
+-				__func__, desc, status);
++		ath6kl_err("failed to connect to %s service status:%d\n",
++			   desc, status);
+ 		return status;
+ 	}
+ 
+@@ -186,8 +186,7 @@ static int ath6kl_connectservice(struct ath6kl *ar,
+ 		set_ac2_ep_map(ar, WMM_AC_VO, response.endpoint);
+ 		break;
+ 	default:
+-		ath6kl_err("%s: service id is not mapped %d\n",
+-			__func__, con_req->svc_id);
++		ath6kl_err("service id is not mapped %d\n", con_req->svc_id);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -330,8 +329,7 @@ static int ath6kl_set_htc_params(struct ath6kl *ar, u32 mbox_isr_yield_val,
+ 			(u8 *)&blk_size,
+ 			4);
+ 	if (status) {
+-		ath6kl_err("%s: bmi_write_memory for IO block size failed\n",
+-			   __func__);
++		ath6kl_err("bmi_write_memory for IO block size failed\n");
+ 		goto out;
+ 	}
+ 
+@@ -347,8 +345,7 @@ static int ath6kl_set_htc_params(struct ath6kl *ar, u32 mbox_isr_yield_val,
+ 				(u8 *)&mbox_isr_yield_val,
+ 				4);
+ 		if (status) {
+-			ath6kl_err("%s: bmi_write_memory for yield limit failed\n",
+-				   __func__);
++			ath6kl_err("bmi_write_memory for yield limit failed\n");
+ 			goto out;
+ 		}
+ 	}
+@@ -379,8 +376,7 @@ static void ath6kl_dump_target_assert_info(struct ath6kl *ar)
+ 	status = ath6kl_read_reg_diag(ar, &address, &regdump_loc);
+ 
+ 	if (status || !regdump_loc) {
+-		ath6kl_err("%s: failed to get ptr to register dump area\n",
+-			__func__);
++		ath6kl_err("failed to get ptr to register dump area\n");
+ 		return;
+ 	}
+ 
+@@ -410,7 +406,7 @@ static void ath6kl_dump_target_assert_info(struct ath6kl *ar)
+ 
+ void ath6kl_target_failure(struct ath6kl *ar)
+ {
+-	ath6kl_err("%s: target asserted\n", __func__);
++	ath6kl_err("target asserted\n");
+ 
+ 	/* try dumping target assertion information (if any) */
+ 	ath6kl_dump_target_assert_info(ar);
+@@ -428,44 +424,39 @@ static int ath6kl_target_config_wlan_params(struct ath6kl *ar)
+ 	 */
+ 	if (ath6kl_wmi_set_rx_frame_format_cmd(ar->wmi,
+ 					       ar->rx_meta_ver, 0, 0)) {
+-		ath6kl_err("%s: unable to set the rx frame format\n", __func__);
++		ath6kl_err("unable to set the rx frame format\n");
+ 		status = -EIO;
+ 	}
+ 
+ 	if (ar->conf_flags & ATH6KL_CONF_IGNORE_PS_FAIL_EVT_IN_SCAN)
+ 		if ((ath6kl_wmi_pmparams_cmd(ar->wmi, 0, 1, 0, 0, 1,
+ 		     IGNORE_POWER_SAVE_FAIL_EVENT_DURING_SCAN)) != 0) {
+-			ath6kl_err("%s: unable to set power save fail event policy\n",
+-				   __func__);
++			ath6kl_err("unable to set power save fail event policy\n");
+ 			status = -EIO;
+ 		}
+ 
+ 	if (!(ar->conf_flags & ATH6KL_CONF_IGNORE_ERP_BARKER))
+ 		if ((ath6kl_wmi_set_lpreamble_cmd(ar->wmi, 0,
+ 		     WMI_DONOT_IGNORE_BARKER_IN_ERP)) != 0) {
+-			ath6kl_err("%s: unable to set barker preamble policy\n",
+-				   __func__);
++			ath6kl_err("unable to set barker preamble policy\n");
+ 			status = -EIO;
+ 		}
+ 
+ 	if (ath6kl_wmi_set_keepalive_cmd(ar->wmi,
+ 			WLAN_CONFIG_KEEP_ALIVE_INTERVAL)) {
+-		ath6kl_err("%s: unable to set keep alive interval\n",
+-			   __func__);
++		ath6kl_err("unable to set keep alive interval\n");
+ 		status = -EIO;
+ 	}
+ 
+ 	if (ath6kl_wmi_disctimeout_cmd(ar->wmi,
+ 			WLAN_CONFIG_DISCONNECT_TIMEOUT)) {
+-		ath6kl_err("%s: unable to set disconnect timeout\n",
+-			   __func__);
++		ath6kl_err("unable to set disconnect timeout\n");
+ 		status = -EIO;
+ 	}
+ 
+ 	if (!(ar->conf_flags & ATH6KL_CONF_ENABLE_TX_BURST))
+ 		if (ath6kl_wmi_set_wmm_txop(ar->wmi, WMI_TXOP_DISABLED)) {
+-			ath6kl_err("%s: unable to set txop bursting\n",
+-				   __func__);
++			ath6kl_err("unable to set txop bursting\n");
+ 			status = -EIO;
+ 		}
+ 
+@@ -487,8 +478,7 @@ int ath6kl_configure_target(struct ath6kl *ar)
+ 			     ath6kl_get_hi_item_addr(ar,
+ 			     HI_ITEM(hi_app_host_interest)),
+ 			     (u8 *)&param, 4) != 0) {
+-		ath6kl_err("%s: bmi_write_memory for htc version failed\n",
+-			__func__);
++		ath6kl_err("bmi_write_memory for htc version failed\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -499,8 +489,7 @@ int ath6kl_configure_target(struct ath6kl *ar)
+ 			    ath6kl_get_hi_item_addr(ar,
+ 			    HI_ITEM(hi_option_flag)),
+ 			    (u8 *)&param, 4) != 0) {
+-		ath6kl_err("%s: bmi_read_memory for setting fwmode failed\n",
+-			__func__);
++		ath6kl_err("bmi_read_memory for setting fwmode failed\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -514,8 +503,7 @@ int ath6kl_configure_target(struct ath6kl *ar)
+ 			     HI_ITEM(hi_option_flag)),
+ 			     (u8 *)&param,
+ 			     4) != 0) {
+-		ath6kl_err("%s: bmi_write_memory for setting fwmode failed\n",
+-			__func__);
++		ath6kl_err("bmi_write_memory for setting fwmode failed\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -543,16 +531,14 @@ int ath6kl_configure_target(struct ath6kl *ar)
+ 				     ath6kl_get_hi_item_addr(ar,
+ 				     HI_ITEM(hi_board_ext_data)),
+ 				     (u8 *)&param, 4) != 0) {
+-			ath6kl_err("%s: bmi_write_memory for hi_board_ext_data failed\n",
+-				   __func__);
++			ath6kl_err("bmi_write_memory for hi_board_ext_data failed\n");
+ 			return -EIO;
+ 		}
+ 		if (ath6kl_bmi_write(ar,
+ 				     ath6kl_get_hi_item_addr(ar,
+ 				     HI_ITEM(hi_end_ram_reserve_sz)),
+ 				     (u8 *)&ram_reserved_size, 4) != 0) {
+-			ath6kl_err("%s: bmi_write_memory for hi_end_ram_reserve_sz failed\n",
+-				   __func__);
++			ath6kl_err("bmi_write_memory for hi_end_ram_reserve_sz failed\n");
+ 			return -EIO;
+ 		}
+ 	}
+@@ -573,7 +559,7 @@ struct ath6kl *ath6kl_core_alloc(struct device *sdev)
+ 
+ 	wdev = ath6kl_cfg80211_init(sdev);
+ 	if (!wdev) {
+-		ath6kl_err("%s: ath6kl_cfg80211_init failed\n", __func__);
++		ath6kl_err("ath6kl_cfg80211_init failed\n");
+ 		return NULL;
+ 	}
+ 
+@@ -584,8 +570,7 @@ struct ath6kl *ath6kl_core_alloc(struct device *sdev)
+ 
+ 	dev = alloc_netdev(0, "wlan%d", ether_setup);
+ 	if (!dev) {
+-		ath6kl_err("%s: no memory for network device instance\n",
+-			__func__);
++		ath6kl_err("no memory for network device instance\n");
+ 		ath6kl_cfg80211_deinit(ar);
+ 		return NULL;
+ 	}
+@@ -985,8 +970,7 @@ static int ath6kl_init_upload(struct ath6kl *ar)
+ 
+ 	/* WAR to avoid SDIO CRC err */
+ 	if (ar->version.target_ver == AR6003_REV2_VERSION) {
+-		ath6kl_err("%s: temporary war to avoid sdio crc error\n",
+-			   __func__);
++		ath6kl_err("temporary war to avoid sdio crc error\n");
+ 
+ 		param = 0x20;
+ 
+@@ -1071,7 +1055,7 @@ static int ath6kl_init(struct net_device *dev)
+ 	set_bit(WMI_ENABLED, &ar->flag);
+ 	ar->wmi = ath6kl_wmi_init((void *) ar);
+ 	if (!ar->wmi) {
+-		ath6kl_err("%s: failed to initialize wmi\n", __func__);
++		ath6kl_err("failed to initialize wmi\n");
+ 		status = -EIO;
+ 		goto ath6kl_init_done;
+ 	}
+@@ -1126,16 +1110,14 @@ static int ath6kl_init(struct net_device *dev)
+ 						    WMI_TIMEOUT);
+ 
+ 	if (ar->version.abi_ver != ATH6KL_ABI_VERSION) {
+-		ath6kl_err("%s: abi version mismatch: host(0x%x), target(0x%x)\n",
+-			   __func__, ATH6KL_ABI_VERSION,
+-			   ar->version.abi_ver);
++		ath6kl_err("abi version mismatch: host(0x%x), target(0x%x)\n",
++			   ATH6KL_ABI_VERSION, ar->version.abi_ver);
+ 		status = -EIO;
+ 		goto err_htc_stop;
+ 	}
+ 
+ 	if (!timeleft || signal_pending(current)) {
+-		ath6kl_err("%s: wmi is not ready or wait was interrupted\n",
+-			   __func__);
++		ath6kl_err("wmi is not ready or wait was interrupted\n");
+ 		status = -EIO;
+ 		goto err_htc_stop;
+ 	}
+@@ -1144,7 +1126,7 @@ static int ath6kl_init(struct net_device *dev)
+ 
+ 	/* communicate the wmi protocol verision to the target */
+ 	if ((ath6kl_set_host_app_area(ar)) != 0)
+-		ath6kl_err("%s: unable to set the host app area\n", __func__);
++		ath6kl_err("unable to set the host app area\n");
+ 
+ 	ar->conf_flags = ATH6KL_CONF_IGNORE_ERP_BARKER |
+ 			 ATH6KL_CONF_ENABLE_11N | ATH6KL_CONF_ENABLE_TX_BURST;
+@@ -1203,7 +1185,7 @@ int ath6kl_core_init(struct ath6kl *ar)
+ 
+ 	ar->aggr_cntxt = aggr_init(ar->net_dev);
+ 	if (!ar->aggr_cntxt) {
+-		ath6kl_err("%s: failed to initialize aggr.\n", __func__);
++		ath6kl_err("failed to initialize aggr\n");
+ 		ret = -ENOMEM;
+ 		goto err_htc_cleanup;
+ 	}
+@@ -1219,7 +1201,7 @@ int ath6kl_core_init(struct ath6kl *ar)
+ 	/* This runs the init function if registered */
+ 	ret = register_netdev(ar->net_dev);
+ 	if (ret) {
+-		ath6kl_err("%s: register_netdev failed\n", __func__);
++		ath6kl_err("register_netdev failed\n");
+ 		ath6kl_destroy(ar->net_dev, 0);
+ 		return ret;
+ 	}
+@@ -1250,7 +1232,7 @@ void ath6kl_stop_txrx(struct ath6kl *ar)
+ 	set_bit(DESTROY_IN_PROGRESS, &ar->flag);
+ 
+ 	if (down_interruptible(&ar->sem)) {
+-		ath6kl_err("%s: down_interruptible failed\n", __func__);
++		ath6kl_err("down_interruptible failed\n");
+ 		return;
+ 	}
+ 
+@@ -1281,7 +1263,7 @@ void ath6kl_destroy(struct net_device *dev, unsigned int unregister)
+ 	struct ath6kl *ar;
+ 
+ 	if (!dev || !ath6kl_priv(dev)) {
+-		ath6kl_err("%s: failed to get device structure\n", __func__);
++		ath6kl_err("failed to get device structure\n");
+ 		return;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index ec07888..f325a23 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -204,8 +204,8 @@ static int ath6kl_set_addrwin_reg(struct ath6kl *ar, u32 reg_addr, u32 addr)
+ 	}
+ 
+ 	if (status) {
+-		ath6kl_err("%s: failed to write initial bytes of 0x%x to window reg: 0x%X\n",
+-			   __func__, addr, reg_addr);
++		ath6kl_err("failed to write initial bytes of 0x%x to window reg: 0x%X\n",
++			   addr, reg_addr);
+ 		return status;
+ 	}
+ 
+@@ -219,8 +219,8 @@ static int ath6kl_set_addrwin_reg(struct ath6kl *ar, u32 reg_addr, u32 addr)
+ 				     4, HIF_WR_SYNC_BYTE_INC);
+ 
+ 	if (status) {
+-		ath6kl_err("%s: failed to write 0x%x to window reg: 0x%X\n",
+-			   __func__, addr, reg_addr);
++		ath6kl_err("failed to write 0x%x to window reg: 0x%X\n",
++			   addr, reg_addr);
+ 		return status;
+ 	}
+ 
+@@ -246,8 +246,7 @@ int ath6kl_read_reg_diag(struct ath6kl *ar, u32 *address, u32 *data)
+ 	status = hif_read_write_sync(ar, WINDOW_DATA_ADDRESS, (u8 *)data,
+ 				     sizeof(u32), HIF_RD_SYNC_BYTE_INC);
+ 	if (status) {
+-		ath6kl_err("%s: failed to read from window data addr\n",
+-			__func__);
++		ath6kl_err("failed to read from window data addr\n");
+ 		return status;
+ 	}
+ 
+@@ -267,8 +266,7 @@ static int ath6kl_write_reg_diag(struct ath6kl *ar, u32 *address, u32 *data)
+ 	status = hif_read_write_sync(ar, WINDOW_DATA_ADDRESS, (u8 *)data,
+ 				     sizeof(u32), HIF_WR_SYNC_BYTE_INC);
+ 	if (status) {
+-		ath6kl_err("%s: failed to write 0x%x to window data addr\n",
+-			   __func__, *data);
++		ath6kl_err("failed to write 0x%x to window data addr\n", *data);
+ 		return status;
+ 	}
+ 
+@@ -316,7 +314,7 @@ static void ath6kl_reset_device(struct ath6kl *ar, u32 target_type,
+ 	status = ath6kl_write_reg_diag(ar, &address, &data);
+ 
+ 	if (status)
+-		ath6kl_err("%s: failed to reset target\n", __func__);
++		ath6kl_err("failed to reset target\n");
+ }
+ 
+ void ath6kl_stop_endpoint(struct net_device *dev, bool keep_profile,
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 1125b37..615b46d 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -194,8 +194,8 @@ int ath6kl_control_tx(void *devt, struct sk_buff *skb,
+ 		 * are just going to drop this packet.
+ 		 */
+ 		cookie = NULL;
+-		ath6kl_err("%s: wmi ctrl ep full, dropping pkt : 0x%p, len:%d\n",
+-			   __func__, skb, skb->len);
++		ath6kl_err("wmi ctrl ep full, dropping pkt : 0x%p, len:%d\n",
++			   skb, skb->len);
+ 	} else
+ 		cookie = ath6kl_alloc_cookie(ar);
+ 
+@@ -270,14 +270,13 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
+ 		}
+ 
+ 		if (ath6kl_wmi_dix_2_dot3(ar->wmi, skb)) {
+-			ath6kl_err("%s: ath6kl_wmi_dix_2_dot3 failed\n",
+-				   __func__);
++			ath6kl_err("ath6kl_wmi_dix_2_dot3 failed\n");
+ 			goto fail_tx;
+ 		}
+ 
+ 		if (ath6kl_wmi_data_hdr_add(ar->wmi, skb, DATA_MSGTYPE,
+ 					    more_data, 0, 0, NULL)) {
+-			ath6kl_err("%s: wmi_data_hdr_add failed\n", __func__);
++			ath6kl_err("wmi_data_hdr_add failed\n");
+ 			goto fail_tx;
+ 		}
+ 
+@@ -302,7 +301,7 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
+ 		eid = ar->ac2ep_map[ac];
+ 
+ 	if (eid == 0 || eid == ENDPOINT_UNUSED) {
+-		ath6kl_err("%s: eid %d is not mapped!\n", __func__, eid);
++		ath6kl_err("eid %d is not mapped!\n", eid);
+ 		spin_unlock_bh(&ar->lock);
+ 		goto fail_tx;
+ 	}
+@@ -423,7 +422,7 @@ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
+ 		spin_lock_bh(&ar->lock);
+ 		set_bit(WMI_CTRL_EP_FULL, &ar->flag);
+ 		spin_unlock_bh(&ar->lock);
+-		ath6kl_err("%s: wmi ctrl ep is full\n", __func__);
++		ath6kl_err("wmi ctrl ep is full\n");
+ 		return HTC_SEND_FULL_KEEP;
+ 	}
+ 
+@@ -562,8 +561,7 @@ void ath6kl_tx_complete(void *context, struct list_head *packet_queue)
+ 			ar->net_stats.tx_errors++;
+ 
+ 			if (status != -ENOSPC)
+-				ath6kl_err("%s: tx error, status: 0x%x\n",
+-					   __func__, status);
++				ath6kl_err("tx error, status: 0x%x\n", status);
+ 			ath6kl_dbg(ATH6KL_DBG_WLAN_TX,
+ 				   "%s: skb=0x%p data=0x%p len=0x%x eid=%d %s\n",
+ 				   __func__, skb, packet->buf, packet->act_len,
+@@ -644,7 +642,7 @@ static void ath6kl_alloc_netbufs(struct sk_buff_head *q, u16 num)
+ 	while (num) {
+ 		skb = ath6kl_buf_alloc(ATH6KL_BUFFER_SIZE);
+ 		if (!skb) {
+-			ath6kl_err("%s: netbuf allocation failed\n", __func__);
++			ath6kl_err("netbuf allocation failed\n");
+ 			return;
+ 		}
+ 		skb_queue_tail(q, skb);
+@@ -785,22 +783,22 @@ static void aggr_slice_amsdu(struct aggr_info *p_aggr,
+ 
+ 		if (payload_8023_len < MIN_MSDU_SUBFRAME_PAYLOAD_LEN ||
+ 		    payload_8023_len > MAX_MSDU_SUBFRAME_PAYLOAD_LEN) {
+-			ath6kl_err("%s: 802.3 AMSDU frame bound check failed. len %d\n",
+-				   __func__, payload_8023_len);
++			ath6kl_err("802.3 AMSDU frame bound check failed. len %d\n",
++				   payload_8023_len);
+ 			break;
+ 		}
+ 
+ 		frame_8023_len = payload_8023_len + mac_hdr_len;
+ 		new_skb = aggr_get_free_skb(p_aggr);
+ 		if (!new_skb) {
+-			ath6kl_err("%s: no buffer available\n", __func__);
++			ath6kl_err("no buffer available\n");
+ 			break;
+ 		}
+ 
+ 		memcpy(new_skb->data, framep, frame_8023_len);
+ 		skb_put(new_skb, frame_8023_len);
+ 		if (ath6kl_wmi_dot3_2_dix(new_skb)) {
+-			ath6kl_err("%s: dot3_2_dix error\n", __func__);
++			ath6kl_err("dot3_2_dix error\n");
+ 			dev_kfree_skb(new_skb);
+ 			break;
+ 		}
+@@ -1080,10 +1078,8 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ 	 */
+ 	if (ar->nw_type != AP_NETWORK &&
+ 	    ((packet->act_len < min_hdr_len) ||
+-	     (packet->act_len >
+-	      WMI_MAX_AMSDU_RX_DATA_FRAME_LENGTH))) {
+-		ath6kl_info("%s: frame len is too short or too long\n",
+-			    __func__);
++	     (packet->act_len > WMI_MAX_AMSDU_RX_DATA_FRAME_LENGTH))) {
++		ath6kl_info("frame len is too short or too long\n");
+ 		ar->net_stats.rx_errors++;
+ 		ar->net_stats.rx_length_errors++;
+ 		dev_kfree_skb(skb);
+@@ -1255,8 +1251,8 @@ static void aggr_timeout(unsigned long arg)
+ 			continue;
+ 
+ 		stats->num_timeouts++;
+-		ath6kl_err("%s: aggr timeout (st %d end %d)\n",
+-			   __func__, rxtid->seq_next,
++		ath6kl_err("aggr timeout (st %d end %d)\n",
++			   rxtid->seq_next,
+ 			   ((rxtid->seq_next + rxtid->hold_q_sz-1) &
+ 			    ATH6KL_MAX_SEQ_NO));
+ 		aggr_deque_frms(p_aggr, i, 0, 0);
+@@ -1356,8 +1352,7 @@ struct aggr_info *aggr_init(struct net_device *dev)
+ 
+ 	p_aggr = kzalloc(sizeof(struct aggr_info), GFP_KERNEL);
+ 	if (!p_aggr) {
+-		ath6kl_err("%s: failed to alloc memory for aggr_node\n",
+-			   __func__);
++		ath6kl_err("failed to alloc memory for aggr_node\n");
+ 		return NULL;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 5d95b56..a52d7d2 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -1373,7 +1373,7 @@ static int ath6kl_wmi_snr_threshold_event_rx(struct wmi *wmi, u8 *datap,
+ 
+ 	ret = ath6kl_wmi_send_snr_threshold_params(wmi, &cmd);
+ 	if (ret) {
+-		ath6kl_err("%s: unable to configure snr threshold\n", __func__);
++		ath6kl_err("unable to configure snr threshold\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -2490,7 +2490,7 @@ static int ath6kl_wmi_control_rx_xtnd(struct wmi *wmi, struct sk_buff *skb)
+ 	int ret = 0;
+ 
+ 	if (skb->len < sizeof(struct wmix_cmd_hdr)) {
+-		ath6kl_err("%s: bad packet 1\n", __func__);
++		ath6kl_err("bad packet 1\n");
+ 		wmi->stat.cmd_len_err++;
+ 		return -EINVAL;
+ 	}
+@@ -2509,7 +2509,7 @@ static int ath6kl_wmi_control_rx_xtnd(struct wmi *wmi, struct sk_buff *skb)
+ 	case WMIX_DBGLOG_EVENTID:
+ 		break;
+ 	default:
+-		ath6kl_err("%s: unknown cmd id 0x%x\n", __func__, id);
++		ath6kl_err("unknown cmd id 0x%x\n", id);
+ 		wmi->stat.cmd_id_err++;
+ 		ret = -EINVAL;
+ 		break;
+@@ -2531,7 +2531,7 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
+ 		return -EINVAL;
+ 
+ 	if (skb->len < sizeof(struct wmi_cmd_hdr)) {
+-		ath6kl_err("%s: bad packet 1\n", __func__);
++		ath6kl_err("bad packet 1\n");
+ 		dev_kfree_skb(skb);
+ 		wmi->stat.cmd_len_err++;
+ 		return -EINVAL;
+-- 
+1.7.6.131.g99019
 
-IwojIEF1dG9tYXRpY2FsbHkgZ2VuZXJhdGVkIGZpbGU7IERPIE5PVCBFRElULgojIExpbnV4L2kz
-ODYgMy4wLjAtcmM3IEtlcm5lbCBDb25maWd1cmF0aW9uCiMKIyBDT05GSUdfNjRCSVQgaXMgbm90
-IHNldApDT05GSUdfWDg2XzMyPXkKIyBDT05GSUdfWDg2XzY0IGlzIG5vdCBzZXQKQ09ORklHX1g4
-Nj15CkNPTkZJR19JTlNUUlVDVElPTl9ERUNPREVSPXkKQ09ORklHX09VVFBVVF9GT1JNQVQ9ImVs
-ZjMyLWkzODYiCkNPTkZJR19BUkNIX0RFRkNPTkZJRz0iYXJjaC94ODYvY29uZmlncy9pMzg2X2Rl
-ZmNvbmZpZyIKQ09ORklHX0dFTkVSSUNfQ01PU19VUERBVEU9eQpDT05GSUdfQ0xPQ0tTT1VSQ0Vf
-V0FUQ0hET0c9eQpDT05GSUdfR0VORVJJQ19DTE9DS0VWRU5UUz15CkNPTkZJR19MT0NLREVQX1NV
-UFBPUlQ9eQpDT05GSUdfU1RBQ0tUUkFDRV9TVVBQT1JUPXkKQ09ORklHX0hBVkVfTEFURU5DWVRP
-UF9TVVBQT1JUPXkKQ09ORklHX01NVT15CkNPTkZJR19aT05FX0RNQT15CkNPTkZJR19ORUVEX0RN
-QV9NQVBfU1RBVEU9eQpDT05GSUdfTkVFRF9TR19ETUFfTEVOR1RIPXkKQ09ORklHX0dFTkVSSUNf
-SVNBX0RNQT15CkNPTkZJR19HRU5FUklDX0lPTUFQPXkKQ09ORklHX0dFTkVSSUNfQlVHPXkKQ09O
-RklHX0dFTkVSSUNfSFdFSUdIVD15CkNPTkZJR19HRU5FUklDX0dQSU89eQpDT05GSUdfQVJDSF9N
-QVlfSEFWRV9QQ19GREM9eQojIENPTkZJR19SV1NFTV9HRU5FUklDX1NQSU5MT0NLIGlzIG5vdCBz
-ZXQKQ09ORklHX1JXU0VNX1hDSEdBRERfQUxHT1JJVEhNPXkKQ09ORklHX0FSQ0hfSEFTX0NQVV9J
-RExFX1dBSVQ9eQpDT05GSUdfR0VORVJJQ19DQUxJQlJBVEVfREVMQVk9eQojIENPTkZJR19HRU5F
-UklDX1RJTUVfVlNZU0NBTEwgaXMgbm90IHNldApDT05GSUdfQVJDSF9IQVNfQ1BVX1JFTEFYPXkK
-Q09ORklHX0FSQ0hfSEFTX0RFRkFVTFRfSURMRT15CkNPTkZJR19BUkNIX0hBU19DQUNIRV9MSU5F
-X1NJWkU9eQpDT05GSUdfSEFWRV9TRVRVUF9QRVJfQ1BVX0FSRUE9eQpDT05GSUdfTkVFRF9QRVJf
-Q1BVX0VNQkVEX0ZJUlNUX0NIVU5LPXkKQ09ORklHX05FRURfUEVSX0NQVV9QQUdFX0ZJUlNUX0NI
-VU5LPXkKIyBDT05GSUdfSEFWRV9DUFVNQVNLX09GX0NQVV9NQVAgaXMgbm90IHNldApDT05GSUdf
-QVJDSF9ISUJFUk5BVElPTl9QT1NTSUJMRT15CkNPTkZJR19BUkNIX1NVU1BFTkRfUE9TU0lCTEU9
-eQojIENPTkZJR19aT05FX0RNQTMyIGlzIG5vdCBzZXQKQ09ORklHX0FSQ0hfUE9QVUxBVEVTX05P
-REVfTUFQPXkKIyBDT05GSUdfQVVESVRfQVJDSCBpcyBub3Qgc2V0CkNPTkZJR19BUkNIX1NVUFBP
-UlRTX09QVElNSVpFRF9JTkxJTklORz15CkNPTkZJR19BUkNIX1NVUFBPUlRTX0RFQlVHX1BBR0VB
-TExPQz15CkNPTkZJR19YODZfMzJfTEFaWV9HUz15CkNPTkZJR19BUkNIX0hXRUlHSFRfQ0ZMQUdT
-PSItZmNhbGwtc2F2ZWQtZWN4IC1mY2FsbC1zYXZlZC1lZHgiCkNPTkZJR19LVElNRV9TQ0FMQVI9
-eQpDT05GSUdfREVGQ09ORklHX0xJU1Q9Ii9saWIvbW9kdWxlcy8kVU5BTUVfUkVMRUFTRS8uY29u
-ZmlnIgpDT05GSUdfSEFWRV9JUlFfV09SSz15CkNPTkZJR19JUlFfV09SSz15CgojCiMgR2VuZXJh
-bCBzZXR1cAojCkNPTkZJR19FWFBFUklNRU5UQUw9eQpDT05GSUdfQlJPS0VOX09OX1NNUD15CkNP
-TkZJR19JTklUX0VOVl9BUkdfTElNSVQ9MzIKQ09ORklHX0NST1NTX0NPTVBJTEU9IiIKQ09ORklH
-X0xPQ0FMVkVSU0lPTj0iIgojIENPTkZJR19MT0NBTFZFUlNJT05fQVVUTyBpcyBub3Qgc2V0CkNP
-TkZJR19IQVZFX0tFUk5FTF9HWklQPXkKQ09ORklHX0hBVkVfS0VSTkVMX0JaSVAyPXkKQ09ORklH
-X0hBVkVfS0VSTkVMX0xaTUE9eQpDT05GSUdfSEFWRV9LRVJORUxfWFo9eQpDT05GSUdfSEFWRV9L
-RVJORUxfTFpPPXkKIyBDT05GSUdfS0VSTkVMX0daSVAgaXMgbm90IHNldApDT05GSUdfS0VSTkVM
-X0JaSVAyPXkKIyBDT05GSUdfS0VSTkVMX0xaTUEgaXMgbm90IHNldAojIENPTkZJR19LRVJORUxf
-WFogaXMgbm90IHNldAojIENPTkZJR19LRVJORUxfTFpPIGlzIG5vdCBzZXQKQ09ORklHX0RFRkFV
-TFRfSE9TVE5BTUU9Iihub25lKSIKQ09ORklHX1NZU1ZJUEM9eQpDT05GSUdfU1lTVklQQ19TWVND
-VEw9eQpDT05GSUdfQlNEX1BST0NFU1NfQUNDVD15CkNPTkZJR19CU0RfUFJPQ0VTU19BQ0NUX1Yz
-PXkKIyBDT05GSUdfRkhBTkRMRSBpcyBub3Qgc2V0CkNPTkZJR19IQVZFX0dFTkVSSUNfSEFSRElS
-UVM9eQoKIwojIElSUSBzdWJzeXN0ZW0KIwpDT05GSUdfR0VORVJJQ19IQVJESVJRUz15CkNPTkZJ
-R19IQVZFX1NQQVJTRV9JUlE9eQpDT05GSUdfR0VORVJJQ19JUlFfUFJPQkU9eQpDT05GSUdfR0VO
-RVJJQ19JUlFfU0hPVz15CkNPTkZJR19JUlFfRk9SQ0VEX1RIUkVBRElORz15CiMgQ09ORklHX1NQ
-QVJTRV9JUlEgaXMgbm90IHNldAoKIwojIFJDVSBTdWJzeXN0ZW0KIwpDT05GSUdfVElOWV9SQ1U9
-eQojIENPTkZJR19QUkVFTVBUX1JDVSBpcyBub3Qgc2V0CkNPTkZJR19SQ1VfVFJBQ0U9eQojIENP
-TkZJR19UUkVFX1JDVV9UUkFDRSBpcyBub3Qgc2V0CkNPTkZJR19JS0NPTkZJRz1tCiMgQ09ORklH
-X0lLQ09ORklHX1BST0MgaXMgbm90IHNldApDT05GSUdfTE9HX0JVRl9TSElGVD0xNwpDT05GSUdf
-SEFWRV9VTlNUQUJMRV9TQ0hFRF9DTE9DSz15CkNPTkZJR19DR1JPVVBTPXkKQ09ORklHX0NHUk9V
-UF9ERUJVRz15CiMgQ09ORklHX0NHUk9VUF9GUkVFWkVSIGlzIG5vdCBzZXQKIyBDT05GSUdfQ0dS
-T1VQX0RFVklDRSBpcyBub3Qgc2V0CiMgQ09ORklHX0NQVVNFVFMgaXMgbm90IHNldApDT05GSUdf
-Q0dST1VQX0NQVUFDQ1Q9eQpDT05GSUdfUkVTT1VSQ0VfQ09VTlRFUlM9eQpDT05GSUdfQ0dST1VQ
-X01FTV9SRVNfQ1RMUj15CkNPTkZJR19DR1JPVVBfUEVSRj15CkNPTkZJR19DR1JPVVBfU0NIRUQ9
-eQpDT05GSUdfRkFJUl9HUk9VUF9TQ0hFRD15CkNPTkZJR19SVF9HUk9VUF9TQ0hFRD15CkNPTkZJ
-R19OQU1FU1BBQ0VTPXkKQ09ORklHX1VUU19OUz15CiMgQ09ORklHX0lQQ19OUyBpcyBub3Qgc2V0
-CiMgQ09ORklHX1VTRVJfTlMgaXMgbm90IHNldApDT05GSUdfUElEX05TPXkKQ09ORklHX1NDSEVE
-X0FVVE9HUk9VUD15CkNPTkZJR19NTV9PV05FUj15CkNPTkZJR19TWVNGU19ERVBSRUNBVEVEPXkK
-Q09ORklHX1NZU0ZTX0RFUFJFQ0FURURfVjI9eQpDT05GSUdfUkVMQVk9eQojIENPTkZJR19CTEtf
-REVWX0lOSVRSRCBpcyBub3Qgc2V0CkNPTkZJR19DQ19PUFRJTUlaRV9GT1JfU0laRT15CkNPTkZJ
-R19TWVNDVEw9eQpDT05GSUdfQU5PTl9JTk9ERVM9eQpDT05GSUdfRVhQRVJUPXkKQ09ORklHX1VJ
-RDE2PXkKIyBDT05GSUdfU1lTQ1RMX1NZU0NBTEwgaXMgbm90IHNldApDT05GSUdfS0FMTFNZTVM9
-eQpDT05GSUdfS0FMTFNZTVNfQUxMPXkKIyBDT05GSUdfSE9UUExVRyBpcyBub3Qgc2V0CkNPTkZJ
-R19QUklOVEs9eQpDT05GSUdfQlVHPXkKQ09ORklHX0VMRl9DT1JFPXkKQ09ORklHX1BDU1BLUl9Q
-TEFURk9STT15CkNPTkZJR19IQVZFX1BDU1BLUl9QTEFURk9STT15CiMgQ09ORklHX0JBU0VfRlVM
-TCBpcyBub3Qgc2V0CiMgQ09ORklHX0ZVVEVYIGlzIG5vdCBzZXQKQ09ORklHX0VQT0xMPXkKQ09O
-RklHX1NJR05BTEZEPXkKQ09ORklHX1RJTUVSRkQ9eQpDT05GSUdfRVZFTlRGRD15CkNPTkZJR19T
-SE1FTT15CiMgQ09ORklHX0FJTyBpcyBub3Qgc2V0CkNPTkZJR19FTUJFRERFRD15CkNPTkZJR19I
-QVZFX1BFUkZfRVZFTlRTPXkKCiMKIyBLZXJuZWwgUGVyZm9ybWFuY2UgRXZlbnRzIEFuZCBDb3Vu
-dGVycwojCkNPTkZJR19QRVJGX0VWRU5UUz15CiMgQ09ORklHX1BFUkZfQ09VTlRFUlMgaXMgbm90
-IHNldAojIENPTkZJR19ERUJVR19QRVJGX1VTRV9WTUFMTE9DIGlzIG5vdCBzZXQKIyBDT05GSUdf
-Vk1fRVZFTlRfQ09VTlRFUlMgaXMgbm90IHNldApDT05GSUdfQ09NUEFUX0JSSz15CiMgQ09ORklH
-X1NMQUIgaXMgbm90IHNldAojIENPTkZJR19TTFVCIGlzIG5vdCBzZXQKQ09ORklHX1NMT0I9eQpD
-T05GSUdfUFJPRklMSU5HPXkKQ09ORklHX1RSQUNFUE9JTlRTPXkKIyBDT05GSUdfT1BST0ZJTEUg
-aXMgbm90IHNldApDT05GSUdfSEFWRV9PUFJPRklMRT15CkNPTkZJR19LUFJPQkVTPXkKIyBDT05G
-SUdfSlVNUF9MQUJFTCBpcyBub3Qgc2V0CkNPTkZJR19PUFRQUk9CRVM9eQpDT05GSUdfSEFWRV9F
-RkZJQ0lFTlRfVU5BTElHTkVEX0FDQ0VTUz15CkNPTkZJR19LUkVUUFJPQkVTPXkKQ09ORklHX0hB
-VkVfSU9SRU1BUF9QUk9UPXkKQ09ORklHX0hBVkVfS1BST0JFUz15CkNPTkZJR19IQVZFX0tSRVRQ
-Uk9CRVM9eQpDT05GSUdfSEFWRV9PUFRQUk9CRVM9eQpDT05GSUdfSEFWRV9BUkNIX1RSQUNFSE9P
-Sz15CkNPTkZJR19IQVZFX0RNQV9BVFRSUz15CkNPTkZJR19IQVZFX1JFR1NfQU5EX1NUQUNLX0FD
-Q0VTU19BUEk9eQpDT05GSUdfSEFWRV9ETUFfQVBJX0RFQlVHPXkKQ09ORklHX0hBVkVfSFdfQlJF
-QUtQT0lOVD15CkNPTkZJR19IQVZFX01JWEVEX0JSRUFLUE9JTlRTX1JFR1M9eQpDT05GSUdfSEFW
-RV9VU0VSX1JFVFVSTl9OT1RJRklFUj15CkNPTkZJR19IQVZFX1BFUkZfRVZFTlRTX05NST15CkNP
-TkZJR19IQVZFX0FSQ0hfSlVNUF9MQUJFTD15CkNPTkZJR19BUkNIX0hBVkVfTk1JX1NBRkVfQ01Q
-WENIRz15CgojCiMgR0NPVi1iYXNlZCBrZXJuZWwgcHJvZmlsaW5nCiMKIyBDT05GSUdfR0NPVl9L
-RVJORUwgaXMgbm90IHNldApDT05GSUdfSEFWRV9HRU5FUklDX0RNQV9DT0hFUkVOVD15CkNPTkZJ
-R19SVF9NVVRFWEVTPXkKQ09ORklHX0JBU0VfU01BTEw9MQpDT05GSUdfTU9EVUxFUz15CkNPTkZJ
-R19NT0RVTEVfRk9SQ0VfTE9BRD15CkNPTkZJR19NT0RVTEVfVU5MT0FEPXkKIyBDT05GSUdfTU9E
-VUxFX0ZPUkNFX1VOTE9BRCBpcyBub3Qgc2V0CiMgQ09ORklHX01PRFZFUlNJT05TIGlzIG5vdCBz
-ZXQKIyBDT05GSUdfTU9EVUxFX1NSQ1ZFUlNJT05fQUxMIGlzIG5vdCBzZXQKIyBDT05GSUdfQkxP
-Q0sgaXMgbm90IHNldAojIENPTkZJR19JTkxJTkVfU1BJTl9UUllMT0NLIGlzIG5vdCBzZXQKIyBD
-T05GSUdfSU5MSU5FX1NQSU5fVFJZTE9DS19CSCBpcyBub3Qgc2V0CiMgQ09ORklHX0lOTElORV9T
-UElOX0xPQ0sgaXMgbm90IHNldAojIENPTkZJR19JTkxJTkVfU1BJTl9MT0NLX0JIIGlzIG5vdCBz
-ZXQKIyBDT05GSUdfSU5MSU5FX1NQSU5fTE9DS19JUlEgaXMgbm90IHNldAojIENPTkZJR19JTkxJ
-TkVfU1BJTl9MT0NLX0lSUVNBVkUgaXMgbm90IHNldAojIENPTkZJR19JTkxJTkVfU1BJTl9VTkxP
-Q0sgaXMgbm90IHNldAojIENPTkZJR19JTkxJTkVfU1BJTl9VTkxPQ0tfQkggaXMgbm90IHNldAoj
-IENPTkZJR19JTkxJTkVfU1BJTl9VTkxPQ0tfSVJRIGlzIG5vdCBzZXQKIyBDT05GSUdfSU5MSU5F
-X1NQSU5fVU5MT0NLX0lSUVJFU1RPUkUgaXMgbm90IHNldAojIENPTkZJR19JTkxJTkVfUkVBRF9U
-UllMT0NLIGlzIG5vdCBzZXQKIyBDT05GSUdfSU5MSU5FX1JFQURfTE9DSyBpcyBub3Qgc2V0CiMg
-Q09ORklHX0lOTElORV9SRUFEX0xPQ0tfQkggaXMgbm90IHNldAojIENPTkZJR19JTkxJTkVfUkVB
-RF9MT0NLX0lSUSBpcyBub3Qgc2V0CiMgQ09ORklHX0lOTElORV9SRUFEX0xPQ0tfSVJRU0FWRSBp
-cyBub3Qgc2V0CiMgQ09ORklHX0lOTElORV9SRUFEX1VOTE9DSyBpcyBub3Qgc2V0CiMgQ09ORklH
-X0lOTElORV9SRUFEX1VOTE9DS19CSCBpcyBub3Qgc2V0CiMgQ09ORklHX0lOTElORV9SRUFEX1VO
-TE9DS19JUlEgaXMgbm90IHNldAojIENPTkZJR19JTkxJTkVfUkVBRF9VTkxPQ0tfSVJRUkVTVE9S
-RSBpcyBub3Qgc2V0CiMgQ09ORklHX0lOTElORV9XUklURV9UUllMT0NLIGlzIG5vdCBzZXQKIyBD
-T05GSUdfSU5MSU5FX1dSSVRFX0xPQ0sgaXMgbm90IHNldAojIENPTkZJR19JTkxJTkVfV1JJVEVf
-TE9DS19CSCBpcyBub3Qgc2V0CiMgQ09ORklHX0lOTElORV9XUklURV9MT0NLX0lSUSBpcyBub3Qg
-c2V0CiMgQ09ORklHX0lOTElORV9XUklURV9MT0NLX0lSUVNBVkUgaXMgbm90IHNldAojIENPTkZJ
-R19JTkxJTkVfV1JJVEVfVU5MT0NLIGlzIG5vdCBzZXQKIyBDT05GSUdfSU5MSU5FX1dSSVRFX1VO
-TE9DS19CSCBpcyBub3Qgc2V0CiMgQ09ORklHX0lOTElORV9XUklURV9VTkxPQ0tfSVJRIGlzIG5v
-dCBzZXQKIyBDT05GSUdfSU5MSU5FX1dSSVRFX1VOTE9DS19JUlFSRVNUT1JFIGlzIG5vdCBzZXQK
-IyBDT05GSUdfTVVURVhfU1BJTl9PTl9PV05FUiBpcyBub3Qgc2V0CiMgQ09ORklHX0ZSRUVaRVIg
-aXMgbm90IHNldAoKIwojIFByb2Nlc3NvciB0eXBlIGFuZCBmZWF0dXJlcwojCkNPTkZJR19USUNL
-X09ORVNIT1Q9eQpDT05GSUdfTk9fSFo9eQpDT05GSUdfSElHSF9SRVNfVElNRVJTPXkKQ09ORklH
-X0dFTkVSSUNfQ0xPQ0tFVkVOVFNfQlVJTEQ9eQojIENPTkZJR19TTVAgaXMgbm90IHNldAojIENP
-TkZJR19YODZfRVhURU5ERURfUExBVEZPUk0gaXMgbm90IHNldApDT05GSUdfWDg2X1NVUFBPUlRT
-X01FTU9SWV9GQUlMVVJFPXkKIyBDT05GSUdfWDg2XzMyX0lSSVMgaXMgbm90IHNldApDT05GSUdf
-U0NIRURfT01JVF9GUkFNRV9QT0lOVEVSPXkKQ09ORklHX1BBUkFWSVJUX0dVRVNUPXkKIyBDT05G
-SUdfUEFSQVZJUlRfVElNRV9BQ0NPVU5USU5HIGlzIG5vdCBzZXQKIyBDT05GSUdfWEVOX1BSSVZJ
-TEVHRURfR1VFU1QgaXMgbm90IHNldAojIENPTkZJR19LVk1fQ0xPQ0sgaXMgbm90IHNldAojIENP
-TkZJR19LVk1fR1VFU1QgaXMgbm90IHNldAojIENPTkZJR19MR1VFU1RfR1VFU1QgaXMgbm90IHNl
-dAojIENPTkZJR19QQVJBVklSVCBpcyBub3Qgc2V0CkNPTkZJR19OT19CT09UTUVNPXkKQ09ORklH
-X01FTVRFU1Q9eQojIENPTkZJR19NMzg2IGlzIG5vdCBzZXQKIyBDT05GSUdfTTQ4NiBpcyBub3Qg
-c2V0CiMgQ09ORklHX001ODYgaXMgbm90IHNldAojIENPTkZJR19NNTg2VFNDIGlzIG5vdCBzZXQK
-IyBDT05GSUdfTTU4Nk1NWCBpcyBub3Qgc2V0CkNPTkZJR19NNjg2PXkKIyBDT05GSUdfTVBFTlRJ
-VU1JSSBpcyBub3Qgc2V0CiMgQ09ORklHX01QRU5USVVNSUlJIGlzIG5vdCBzZXQKIyBDT05GSUdf
-TVBFTlRJVU1NIGlzIG5vdCBzZXQKIyBDT05GSUdfTVBFTlRJVU00IGlzIG5vdCBzZXQKIyBDT05G
-SUdfTUs2IGlzIG5vdCBzZXQKIyBDT05GSUdfTUs3IGlzIG5vdCBzZXQKIyBDT05GSUdfTUs4IGlz
-IG5vdCBzZXQKIyBDT05GSUdfTUNSVVNPRSBpcyBub3Qgc2V0CiMgQ09ORklHX01FRkZJQ0VPTiBp
-cyBub3Qgc2V0CiMgQ09ORklHX01XSU5DSElQQzYgaXMgbm90IHNldAojIENPTkZJR19NV0lOQ0hJ
-UDNEIGlzIG5vdCBzZXQKIyBDT05GSUdfTUVMQU4gaXMgbm90IHNldAojIENPTkZJR19NR0VPREVH
-WDEgaXMgbm90IHNldAojIENPTkZJR19NR0VPREVfTFggaXMgbm90IHNldAojIENPTkZJR19NQ1lS
-SVhJSUkgaXMgbm90IHNldAojIENPTkZJR19NVklBQzNfMiBpcyBub3Qgc2V0CiMgQ09ORklHX01W
-SUFDNyBpcyBub3Qgc2V0CiMgQ09ORklHX01DT1JFMiBpcyBub3Qgc2V0CiMgQ09ORklHX01BVE9N
-IGlzIG5vdCBzZXQKQ09ORklHX1g4Nl9HRU5FUklDPXkKQ09ORklHX1g4Nl9JTlRFUk5PREVfQ0FD
-SEVfU0hJRlQ9NgpDT05GSUdfWDg2X0NNUFhDSEc9eQpDT05GSUdfQ01QWENIR19MT0NBTD15CkNP
-TkZJR19DTVBYQ0hHX0RPVUJMRT15CkNPTkZJR19YODZfTDFfQ0FDSEVfU0hJRlQ9NgpDT05GSUdf
-WDg2X1hBREQ9eQojIENPTkZJR19YODZfUFBST19GRU5DRSBpcyBub3Qgc2V0CkNPTkZJR19YODZf
-V1BfV09SS1NfT0s9eQpDT05GSUdfWDg2X0lOVkxQRz15CkNPTkZJR19YODZfQlNXQVA9eQpDT05G
-SUdfWDg2X1BPUEFEX09LPXkKQ09ORklHX1g4Nl9JTlRFTF9VU0VSQ09QWT15CkNPTkZJR19YODZf
-VVNFX1BQUk9fQ0hFQ0tTVU09eQpDT05GSUdfWDg2X1RTQz15CkNPTkZJR19YODZfQ01QWENIRzY0
-PXkKQ09ORklHX1g4Nl9DTU9WPXkKQ09ORklHX1g4Nl9NSU5JTVVNX0NQVV9GQU1JTFk9NQpDT05G
-SUdfWDg2X0RFQlVHQ1RMTVNSPXkKIyBDT05GSUdfUFJPQ0VTU09SX1NFTEVDVCBpcyBub3Qgc2V0
-CkNPTkZJR19DUFVfU1VQX0lOVEVMPXkKQ09ORklHX0NQVV9TVVBfQ1lSSVhfMzI9eQpDT05GSUdf
-Q1BVX1NVUF9BTUQ9eQpDT05GSUdfQ1BVX1NVUF9DRU5UQVVSPXkKQ09ORklHX0NQVV9TVVBfVFJB
-TlNNRVRBXzMyPXkKQ09ORklHX0NQVV9TVVBfVU1DXzMyPXkKQ09ORklHX0hQRVRfVElNRVI9eQpD
-T05GSUdfSFBFVF9FTVVMQVRFX1JUQz15CkNPTkZJR19ETUk9eQojIENPTkZJR19JT01NVV9IRUxQ
-RVIgaXMgbm90IHNldApDT05GSUdfTlJfQ1BVUz0xCkNPTkZJR19JUlFfVElNRV9BQ0NPVU5USU5H
-PXkKQ09ORklHX1BSRUVNUFRfTk9ORT15CiMgQ09ORklHX1BSRUVNUFRfVk9MVU5UQVJZIGlzIG5v
-dCBzZXQKIyBDT05GSUdfUFJFRU1QVCBpcyBub3Qgc2V0CkNPTkZJR19QUkVFTVBUX0NPVU5UPXkK
-IyBDT05GSUdfWDg2X1VQX0FQSUMgaXMgbm90IHNldApDT05GSUdfWDg2X01DRT15CkNPTkZJR19Y
-ODZfQU5DSUVOVF9NQ0U9eQpDT05GSUdfWDg2X01DRV9JTkpFQ1Q9bQpDT05GSUdfVk04Nj15CiMg
-Q09ORklHX1RPU0hJQkEgaXMgbm90IHNldAojIENPTkZJR19JOEsgaXMgbm90IHNldApDT05GSUdf
-WDg2X1JFQk9PVEZJWFVQUz15CiMgQ09ORklHX01JQ1JPQ09ERSBpcyBub3Qgc2V0CiMgQ09ORklH
-X1g4Nl9NU1IgaXMgbm90IHNldApDT05GSUdfWDg2X0NQVUlEPW0KIyBDT05GSUdfTk9ISUdITUVN
-IGlzIG5vdCBzZXQKQ09ORklHX0hJR0hNRU00Rz15CiMgQ09ORklHX0hJR0hNRU02NEcgaXMgbm90
-IHNldAojIENPTkZJR19WTVNQTElUXzNHIGlzIG5vdCBzZXQKIyBDT05GSUdfVk1TUExJVF8zR19P
-UFQgaXMgbm90IHNldAojIENPTkZJR19WTVNQTElUXzJHIGlzIG5vdCBzZXQKIyBDT05GSUdfVk1T
-UExJVF8yR19PUFQgaXMgbm90IHNldApDT05GSUdfVk1TUExJVF8xRz15CkNPTkZJR19QQUdFX09G
-RlNFVD0weDQwMDAwMDAwCkNPTkZJR19ISUdITUVNPXkKIyBDT05GSUdfQVJDSF9QSFlTX0FERFJf
-VF82NEJJVCBpcyBub3Qgc2V0CiMgQ09ORklHX0FSQ0hfRE1BX0FERFJfVF82NEJJVCBpcyBub3Qg
-c2V0CkNPTkZJR19BUkNIX0ZMQVRNRU1fRU5BQkxFPXkKQ09ORklHX0FSQ0hfU1BBUlNFTUVNX0VO
-QUJMRT15CkNPTkZJR19BUkNIX1NFTEVDVF9NRU1PUllfTU9ERUw9eQpDT05GSUdfSUxMRUdBTF9Q
-T0lOVEVSX1ZBTFVFPTAKQ09ORklHX1NFTEVDVF9NRU1PUllfTU9ERUw9eQpDT05GSUdfRkxBVE1F
-TV9NQU5VQUw9eQojIENPTkZJR19TUEFSU0VNRU1fTUFOVUFMIGlzIG5vdCBzZXQKQ09ORklHX0ZM
-QVRNRU09eQpDT05GSUdfRkxBVF9OT0RFX01FTV9NQVA9eQpDT05GSUdfU1BBUlNFTUVNX1NUQVRJ
-Qz15CkNPTkZJR19IQVZFX01FTUJMT0NLPXkKQ09ORklHX1BBR0VGTEFHU19FWFRFTkRFRD15CkNP
-TkZJR19TUExJVF9QVExPQ0tfQ1BVUz05OTk5OTkKQ09ORklHX0NPTVBBQ1RJT049eQpDT05GSUdf
-TUlHUkFUSU9OPXkKIyBDT05GSUdfUEhZU19BRERSX1RfNjRCSVQgaXMgbm90IHNldApDT05GSUdf
-Wk9ORV9ETUFfRkxBRz0xCkNPTkZJR19WSVJUX1RPX0JVUz15CkNPTkZJR19LU009eQpDT05GSUdf
-REVGQVVMVF9NTUFQX01JTl9BRERSPTQwOTYKQ09ORklHX0FSQ0hfU1VQUE9SVFNfTUVNT1JZX0ZB
-SUxVUkU9eQojIENPTkZJR19NRU1PUllfRkFJTFVSRSBpcyBub3Qgc2V0CkNPTkZJR19UUkFOU1BB
-UkVOVF9IVUdFUEFHRT15CkNPTkZJR19UUkFOU1BBUkVOVF9IVUdFUEFHRV9BTFdBWVM9eQojIENP
-TkZJR19UUkFOU1BBUkVOVF9IVUdFUEFHRV9NQURWSVNFIGlzIG5vdCBzZXQKQ09ORklHX05FRURf
-UEVSX0NQVV9LTT15CkNPTkZJR19DTEVBTkNBQ0hFPXkKIyBDT05GSUdfSElHSFBURSBpcyBub3Qg
-c2V0CkNPTkZJR19YODZfQ0hFQ0tfQklPU19DT1JSVVBUSU9OPXkKIyBDT05GSUdfWDg2X0JPT1RQ
-QVJBTV9NRU1PUllfQ09SUlVQVElPTl9DSEVDSyBpcyBub3Qgc2V0CkNPTkZJR19YODZfUkVTRVJW
-RV9MT1c9NjQKIyBDT05GSUdfTUFUSF9FTVVMQVRJT04gaXMgbm90IHNldAojIENPTkZJR19NVFJS
-IGlzIG5vdCBzZXQKQ09ORklHX1NFQ0NPTVA9eQojIENPTkZJR19DQ19TVEFDS1BST1RFQ1RPUiBp
-cyBub3Qgc2V0CiMgQ09ORklHX0haXzEwMCBpcyBub3Qgc2V0CiMgQ09ORklHX0haXzI1MCBpcyBu
-b3Qgc2V0CiMgQ09ORklHX0haXzMwMCBpcyBub3Qgc2V0CkNPTkZJR19IWl8xMDAwPXkKQ09ORklH
-X0haPTEwMDAKQ09ORklHX1NDSEVEX0hSVElDSz15CkNPTkZJR19LRVhFQz15CkNPTkZJR19DUkFT
-SF9EVU1QPXkKQ09ORklHX1BIWVNJQ0FMX1NUQVJUPTB4MTAwMDAwMApDT05GSUdfUkVMT0NBVEFC
-TEU9eQpDT05GSUdfWDg2X05FRURfUkVMT0NTPXkKQ09ORklHX1BIWVNJQ0FMX0FMSUdOPTB4MTAw
-MDAwMAojIENPTkZJR19DT01QQVRfVkRTTyBpcyBub3Qgc2V0CiMgQ09ORklHX0NNRExJTkVfQk9P
-TCBpcyBub3Qgc2V0CkNPTkZJR19BUkNIX0VOQUJMRV9NRU1PUllfSE9UUExVRz15CgojCiMgUG93
-ZXIgbWFuYWdlbWVudCBhbmQgQUNQSSBvcHRpb25zCiMKIyBDT05GSUdfU1VTUEVORCBpcyBub3Qg
-c2V0CiMgQ09ORklHX1BNX1JVTlRJTUUgaXMgbm90IHNldApDT05GSUdfU0ZJPXkKCiMKIyBDUFUg
-RnJlcXVlbmN5IHNjYWxpbmcKIwpDT05GSUdfQ1BVX0ZSRVE9eQpDT05GSUdfQ1BVX0ZSRVFfVEFC
-TEU9bQojIENPTkZJR19DUFVfRlJFUV9TVEFUIGlzIG5vdCBzZXQKIyBDT05GSUdfQ1BVX0ZSRVFf
-REVGQVVMVF9HT1ZfUEVSRk9STUFOQ0UgaXMgbm90IHNldApDT05GSUdfQ1BVX0ZSRVFfREVGQVVM
-VF9HT1ZfUE9XRVJTQVZFPXkKIyBDT05GSUdfQ1BVX0ZSRVFfREVGQVVMVF9HT1ZfVVNFUlNQQUNF
-IGlzIG5vdCBzZXQKIyBDT05GSUdfQ1BVX0ZSRVFfREVGQVVMVF9HT1ZfT05ERU1BTkQgaXMgbm90
-IHNldAojIENPTkZJR19DUFVfRlJFUV9ERUZBVUxUX0dPVl9DT05TRVJWQVRJVkUgaXMgbm90IHNl
-dApDT05GSUdfQ1BVX0ZSRVFfR09WX1BFUkZPUk1BTkNFPW0KQ09ORklHX0NQVV9GUkVRX0dPVl9Q
-T1dFUlNBVkU9eQojIENPTkZJR19DUFVfRlJFUV9HT1ZfVVNFUlNQQUNFIGlzIG5vdCBzZXQKQ09O
-RklHX0NQVV9GUkVRX0dPVl9PTkRFTUFORD1tCiMgQ09ORklHX0NQVV9GUkVRX0dPVl9DT05TRVJW
-QVRJVkUgaXMgbm90IHNldAoKIwojIHg4NiBDUFUgZnJlcXVlbmN5IHNjYWxpbmcgZHJpdmVycwoj
-CiMgQ09ORklHX1g4Nl9QT1dFUk5PV19LNiBpcyBub3Qgc2V0CkNPTkZJR19YODZfUE9XRVJOT1df
-Szc9bQpDT05GSUdfWDg2X1NQRUVEU1RFUF9DRU5UUklOTz1tCkNPTkZJR19YODZfU1BFRURTVEVQ
-X0NFTlRSSU5PX1RBQkxFPXkKQ09ORklHX1g4Nl9TUEVFRFNURVBfSUNIPW0KQ09ORklHX1g4Nl9T
-UEVFRFNURVBfU01JPW0KIyBDT05GSUdfWDg2X1A0X0NMT0NLTU9EIGlzIG5vdCBzZXQKQ09ORklH
-X1g4Nl9DUFVGUkVRX05GT1JDRTI9bQpDT05GSUdfWDg2X0xPTkdSVU49bQojIENPTkZJR19YODZf
-RV9QT1dFUlNBVkVSIGlzIG5vdCBzZXQKCiMKIyBzaGFyZWQgb3B0aW9ucwojCkNPTkZJR19YODZf
-U1BFRURTVEVQX0xJQj1tCiMgQ09ORklHX1g4Nl9TUEVFRFNURVBfUkVMQVhFRF9DQVBfQ0hFQ0sg
-aXMgbm90IHNldApDT05GSUdfQ1BVX0lETEU9eQpDT05GSUdfQ1BVX0lETEVfR09WX0xBRERFUj15
-CkNPTkZJR19DUFVfSURMRV9HT1ZfTUVOVT15CiMgQ09ORklHX0lOVEVMX0lETEUgaXMgbm90IHNl
-dAoKIwojIEJ1cyBvcHRpb25zIChQQ0kgZXRjLikKIwojIENPTkZJR19QQ0kgaXMgbm90IHNldAoj
-IENPTkZJR19BUkNIX1NVUFBPUlRTX01TSSBpcyBub3Qgc2V0CkNPTkZJR19QQ0lfTEFCRUw9eQpD
-T05GSUdfSVNBX0RNQV9BUEk9eQpDT05GSUdfSVNBPXkKIyBDT05GSUdfRUlTQSBpcyBub3Qgc2V0
-CiMgQ09ORklHX01DQSBpcyBub3Qgc2V0CkNPTkZJR19TQ3gyMDA9bQpDT05GSUdfU0N4MjAwSFJf
-VElNRVI9bQpDT05GSUdfT0xQQz15CiMgQ09ORklHX0FMSVggaXMgbm90IHNldAoKIwojIEV4ZWN1
-dGFibGUgZmlsZSBmb3JtYXRzIC8gRW11bGF0aW9ucwojCiMgQ09ORklHX0JJTkZNVF9FTEYgaXMg
-bm90IHNldApDT05GSUdfSEFWRV9BT1VUPXkKIyBDT05GSUdfQklORk1UX0FPVVQgaXMgbm90IHNl
-dAojIENPTkZJR19CSU5GTVRfTUlTQyBpcyBub3Qgc2V0CkNPTkZJR19IQVZFX0FUT01JQ19JT01B
-UD15CkNPTkZJR19IQVZFX1RFWFRfUE9LRV9TTVA9eQojIENPTkZJR19ORVQgaXMgbm90IHNldAoK
-IwojIERldmljZSBEcml2ZXJzCiMKCiMKIyBHZW5lcmljIERyaXZlciBPcHRpb25zCiMKQ09ORklH
-X1NUQU5EQUxPTkU9eQpDT05GSUdfUFJFVkVOVF9GSVJNV0FSRV9CVUlMRD15CkNPTkZJR19GV19M
-T0FERVI9bQpDT05GSUdfRklSTVdBUkVfSU5fS0VSTkVMPXkKQ09ORklHX0VYVFJBX0ZJUk1XQVJF
-PSIiCkNPTkZJR19ERUJVR19EUklWRVI9eQpDT05GSUdfREVCVUdfREVWUkVTPXkKIyBDT05GSUdf
-U1lTX0hZUEVSVklTT1IgaXMgbm90IHNldApDT05GSUdfTVREPW0KIyBDT05GSUdfTVREX0RFQlVH
-IGlzIG5vdCBzZXQKQ09ORklHX01URF9URVNUUz1tCkNPTkZJR19NVERfUkVEQk9PVF9QQVJUUz1t
-CkNPTkZJR19NVERfUkVEQk9PVF9ESVJFQ1RPUllfQkxPQ0s9LTEKQ09ORklHX01URF9SRURCT09U
-X1BBUlRTX1VOQUxMT0NBVEVEPXkKIyBDT05GSUdfTVREX1JFREJPT1RfUEFSVFNfUkVBRE9OTFkg
-aXMgbm90IHNldApDT05GSUdfTVREX09GX1BBUlRTPW0KQ09ORklHX01URF9BUjdfUEFSVFM9bQoK
-IwojIFVzZXIgTW9kdWxlcyBBbmQgVHJhbnNsYXRpb24gTGF5ZXJzCiMKQ09ORklHX01URF9DSEFS
-PW0KIyBDT05GSUdfTVREX09PUFMgaXMgbm90IHNldAoKIwojIFJBTS9ST00vRmxhc2ggY2hpcCBk
-cml2ZXJzCiMKQ09ORklHX01URF9DRkk9bQpDT05GSUdfTVREX0pFREVDUFJPQkU9bQpDT05GSUdf
-TVREX0dFTl9QUk9CRT1tCiMgQ09ORklHX01URF9DRklfQURWX09QVElPTlMgaXMgbm90IHNldApD
-T05GSUdfTVREX01BUF9CQU5LX1dJRFRIXzE9eQpDT05GSUdfTVREX01BUF9CQU5LX1dJRFRIXzI9
-eQpDT05GSUdfTVREX01BUF9CQU5LX1dJRFRIXzQ9eQojIENPTkZJR19NVERfTUFQX0JBTktfV0lE
-VEhfOCBpcyBub3Qgc2V0CiMgQ09ORklHX01URF9NQVBfQkFOS19XSURUSF8xNiBpcyBub3Qgc2V0
-CiMgQ09ORklHX01URF9NQVBfQkFOS19XSURUSF8zMiBpcyBub3Qgc2V0CkNPTkZJR19NVERfQ0ZJ
-X0kxPXkKQ09ORklHX01URF9DRklfSTI9eQojIENPTkZJR19NVERfQ0ZJX0k0IGlzIG5vdCBzZXQK
-IyBDT05GSUdfTVREX0NGSV9JOCBpcyBub3Qgc2V0CkNPTkZJR19NVERfQ0ZJX0lOVEVMRVhUPW0K
-IyBDT05GSUdfTVREX0NGSV9BTURTVEQgaXMgbm90IHNldAojIENPTkZJR19NVERfQ0ZJX1NUQUEg
-aXMgbm90IHNldApDT05GSUdfTVREX0NGSV9VVElMPW0KQ09ORklHX01URF9SQU09bQpDT05GSUdf
-TVREX1JPTT1tCiMgQ09ORklHX01URF9BQlNFTlQgaXMgbm90IHNldAoKIwojIE1hcHBpbmcgZHJp
-dmVycyBmb3IgY2hpcCBhY2Nlc3MKIwojIENPTkZJR19NVERfQ09NUExFWF9NQVBQSU5HUyBpcyBu
-b3Qgc2V0CkNPTkZJR19NVERfUEhZU01BUD1tCkNPTkZJR19NVERfUEhZU01BUF9DT01QQVQ9eQpD
-T05GSUdfTVREX1BIWVNNQVBfU1RBUlQ9MHg4MDAwMDAwCkNPTkZJR19NVERfUEhZU01BUF9MRU49
-MApDT05GSUdfTVREX1BIWVNNQVBfQkFOS1dJRFRIPTIKIyBDT05GSUdfTVREX1BIWVNNQVBfT0Yg
-aXMgbm90IHNldApDT05GSUdfTVREX1NDNTIwQ0RQPW0KIyBDT05GSUdfTVREX05FVFNDNTIwIGlz
-IG5vdCBzZXQKIyBDT05GSUdfTVREX1RTNTUwMCBpcyBub3Qgc2V0CiMgQ09ORklHX01URF9TQ3gy
-MDBfRE9DRkxBU0ggaXMgbm90IHNldAojIENPTkZJR19NVERfQU1ENzZYUk9NIGlzIG5vdCBzZXQK
-Q09ORklHX01URF9JQ0hYUk9NPW0KIyBDT05GSUdfTVREX1NDQjJfRkxBU0ggaXMgbm90IHNldApD
-T05GSUdfTVREX05FVHRlbD1tCiMgQ09ORklHX01URF9MNDQwR1ggaXMgbm90IHNldApDT05GSUdf
-TVREX1BMQVRSQU09bQoKIwojIFNlbGYtY29udGFpbmVkIE1URCBkZXZpY2UgZHJpdmVycwojCkNP
-TkZJR19NVERfU0xSQU09bQpDT05GSUdfTVREX1BIUkFNPW0KQ09ORklHX01URF9NVERSQU09bQpD
-T05GSUdfTVREUkFNX1RPVEFMX1NJWkU9NDA5NgpDT05GSUdfTVREUkFNX0VSQVNFX1NJWkU9MTI4
-CgojCiMgRGlzay1Pbi1DaGlwIERldmljZSBEcml2ZXJzCiMKIyBDT05GSUdfTVREX0RPQzIwMDAg
-aXMgbm90IHNldApDT05GSUdfTVREX0RPQzIwMDE9bQpDT05GSUdfTVREX0RPQzIwMDFQTFVTPW0K
-Q09ORklHX01URF9ET0NQUk9CRT1tCkNPTkZJR19NVERfRE9DRUNDPW0KIyBDT05GSUdfTVREX0RP
-Q1BST0JFX0FEVkFOQ0VEIGlzIG5vdCBzZXQKQ09ORklHX01URF9ET0NQUk9CRV9BRERSRVNTPTAK
-Q09ORklHX01URF9OQU5EX0VDQz1tCiMgQ09ORklHX01URF9OQU5EX0VDQ19TTUMgaXMgbm90IHNl
-dApDT05GSUdfTVREX05BTkQ9bQojIENPTkZJR19NVERfTkFORF9WRVJJRllfV1JJVEUgaXMgbm90
-IHNldApDT05GSUdfTVREX05BTkRfQkNIPW0KQ09ORklHX01URF9OQU5EX0VDQ19CQ0g9eQojIENP
-TkZJR19NVERfU01fQ09NTU9OIGlzIG5vdCBzZXQKQ09ORklHX01URF9OQU5EX01VU0VVTV9JRFM9
-eQpDT05GSUdfTVREX05BTkRfSURTPW0KIyBDT05GSUdfTVREX05BTkRfRElTS09OQ0hJUCBpcyBu
-b3Qgc2V0CiMgQ09ORklHX01URF9OQU5EX0NTNTUzWCBpcyBub3Qgc2V0CiMgQ09ORklHX01URF9O
-QU5EX05BTkRTSU0gaXMgbm90IHNldAojIENPTkZJR19NVERfTkFORF9QTEFURk9STSBpcyBub3Qg
-c2V0CiMgQ09ORklHX01URF9PTkVOQU5EIGlzIG5vdCBzZXQKCiMKIyBMUEREUiBmbGFzaCBtZW1v
-cnkgZHJpdmVycwojCiMgQ09ORklHX01URF9MUEREUiBpcyBub3Qgc2V0CiMgQ09ORklHX01URF9V
-QkkgaXMgbm90IHNldApDT05GSUdfT0Y9eQoKIwojIERldmljZSBUcmVlIGFuZCBPcGVuIEZpcm13
-YXJlIHN1cHBvcnQKIwpDT05GSUdfUFJPQ19ERVZJQ0VUUkVFPXkKQ09ORklHX09GX1BST01UUkVF
-PXkKQ09ORklHX09GX0FERFJFU1M9eQpDT05GSUdfT0ZfSVJRPXkKQ09ORklHX09GX0RFVklDRT15
-CkNPTkZJR19PRl9HUElPPXkKQ09ORklHX09GX0kyQz1tCiMgQ09ORklHX1BBUlBPUlQgaXMgbm90
-IHNldAojIENPTkZJR19QTlAgaXMgbm90IHNldApDT05GSUdfU0VOU09SU19MSVMzTFYwMkQ9bQpD
-T05GSUdfTUlTQ19ERVZJQ0VTPXkKIyBDT05GSUdfQUQ1MjVYX0RQT1QgaXMgbm90IHNldAojIENP
-TkZJR19JTlRFTF9NSURfUFRJIGlzIG5vdCBzZXQKIyBDT05GSUdfSUNTOTMyUzQwMSBpcyBub3Qg
-c2V0CiMgQ09ORklHX0VOQ0xPU1VSRV9TRVJWSUNFUyBpcyBub3Qgc2V0CkNPTkZJR19BUERTOTgw
-MkFMUz1tCkNPTkZJR19JU0wyOTAwMz1tCkNPTkZJR19JU0wyOTAyMD1tCkNPTkZJR19TRU5TT1JT
-X1RTTDI1NTA9bQojIENPTkZJR19TRU5TT1JTX0JIMTc4MCBpcyBub3Qgc2V0CkNPTkZJR19TRU5T
-T1JTX0JIMTc3MD1tCiMgQ09ORklHX1NFTlNPUlNfQVBEUzk5MFggaXMgbm90IHNldApDT05GSUdf
-SE1DNjM1Mj1tCkNPTkZJR19EUzE2ODI9bQpDT05GSUdfVk1XQVJFX0JBTExPT049bQojIENPTkZJ
-R19CTVAwODUgaXMgbm90IHNldApDT05GSUdfQzJQT1JUPW0KQ09ORklHX0MyUE9SVF9EVVJBTUFS
-XzIxNTA9bQoKIwojIEVFUFJPTSBzdXBwb3J0CiMKQ09ORklHX0VFUFJPTV9BVDI0PW0KIyBDT05G
-SUdfRUVQUk9NX0xFR0FDWSBpcyBub3Qgc2V0CiMgQ09ORklHX0VFUFJPTV9NQVg2ODc1IGlzIG5v
-dCBzZXQKIyBDT05GSUdfRUVQUk9NXzkzQ1g2IGlzIG5vdCBzZXQKQ09ORklHX0lXTUMzMjAwVE9Q
-PW0KIyBDT05GSUdfSVdNQzMyMDBUT1BfREVCVUcgaXMgbm90IHNldAojIENPTkZJR19JV01DMzIw
-MFRPUF9ERUJVR0ZTIGlzIG5vdCBzZXQKCiMKIyBUZXhhcyBJbnN0cnVtZW50cyBzaGFyZWQgdHJh
-bnNwb3J0IGxpbmUgZGlzY2lwbGluZQojCkNPTkZJR19TRU5TT1JTX0xJUzNfSTJDPW0KQ09ORklH
-X0hBVkVfSURFPXkKCiMKIyBTQ1NJIGRldmljZSBzdXBwb3J0CiMKQ09ORklHX1NDU0lfTU9EPXkK
-IyBDT05GSUdfU0NTSV9ETUEgaXMgbm90IHNldAojIENPTkZJR19TQ1NJX05FVExJTksgaXMgbm90
-IHNldApDT05GSUdfTUFDSU5UT1NIX0RSSVZFUlM9eQojIENPTkZJR19NQUNfRU1VTU9VU0VCVE4g
-aXMgbm90IHNldAojIENPTkZJR19QSE9ORSBpcyBub3Qgc2V0CgojCiMgSW5wdXQgZGV2aWNlIHN1
-cHBvcnQKIwpDT05GSUdfSU5QVVQ9eQpDT05GSUdfSU5QVVRfRkZfTUVNTEVTUz1tCkNPTkZJR19J
-TlBVVF9QT0xMREVWPW0KQ09ORklHX0lOUFVUX1NQQVJTRUtNQVA9bQoKIwojIFVzZXJsYW5kIGlu
-dGVyZmFjZXMKIwojIENPTkZJR19JTlBVVF9NT1VTRURFViBpcyBub3Qgc2V0CkNPTkZJR19JTlBV
-VF9KT1lERVY9bQojIENPTkZJR19JTlBVVF9FVkRFViBpcyBub3Qgc2V0CkNPTkZJR19JTlBVVF9F
-VkJVRz1tCgojCiMgSW5wdXQgRGV2aWNlIERyaXZlcnMKIwpDT05GSUdfSU5QVVRfS0VZQk9BUkQ9
-eQpDT05GSUdfS0VZQk9BUkRfQURQNTU4OD1tCiMgQ09ORklHX0tFWUJPQVJEX0FEUDU1ODkgaXMg
-bm90IHNldAojIENPTkZJR19LRVlCT0FSRF9BVEtCRCBpcyBub3Qgc2V0CiMgQ09ORklHX0tFWUJP
-QVJEX1FUMTA3MCBpcyBub3Qgc2V0CkNPTkZJR19LRVlCT0FSRF9RVDIxNjA9bQpDT05GSUdfS0VZ
-Qk9BUkRfTEtLQkQ9bQpDT05GSUdfS0VZQk9BUkRfR1BJTz1tCkNPTkZJR19LRVlCT0FSRF9HUElP
-X1BPTExFRD1tCiMgQ09ORklHX0tFWUJPQVJEX1RDQTY0MTYgaXMgbm90IHNldApDT05GSUdfS0VZ
-Qk9BUkRfTUFUUklYPW0KIyBDT05GSUdfS0VZQk9BUkRfTE04MzIzIGlzIG5vdCBzZXQKIyBDT05G
-SUdfS0VZQk9BUkRfTUFYNzM1OSBpcyBub3Qgc2V0CiMgQ09ORklHX0tFWUJPQVJEX01DUyBpcyBu
-b3Qgc2V0CkNPTkZJR19LRVlCT0FSRF9NUFIxMjE9bQojIENPTkZJR19LRVlCT0FSRF9ORVdUT04g
-aXMgbm90IHNldAojIENPTkZJR19LRVlCT0FSRF9PUEVOQ09SRVMgaXMgbm90IHNldApDT05GSUdf
-S0VZQk9BUkRfU1RPV0FXQVk9bQpDT05GSUdfS0VZQk9BUkRfU1VOS0JEPW0KQ09ORklHX0tFWUJP
-QVJEX1hUS0JEPW0KQ09ORklHX0lOUFVUX01PVVNFPXkKIyBDT05GSUdfTU9VU0VfUFMyIGlzIG5v
-dCBzZXQKIyBDT05GSUdfTU9VU0VfU0VSSUFMIGlzIG5vdCBzZXQKIyBDT05GSUdfTU9VU0VfSU5Q
-T1JUIGlzIG5vdCBzZXQKIyBDT05GSUdfTU9VU0VfTE9HSUJNIGlzIG5vdCBzZXQKIyBDT05GSUdf
-TU9VU0VfUEMxMTBQQUQgaXMgbm90IHNldApDT05GSUdfTU9VU0VfVlNYWFhBQT1tCiMgQ09ORklH
-X01PVVNFX0dQSU8gaXMgbm90IHNldApDT05GSUdfTU9VU0VfU1lOQVBUSUNTX0kyQz1tCkNPTkZJ
-R19JTlBVVF9KT1lTVElDSz15CiMgQ09ORklHX0pPWVNUSUNLX0FOQUxPRyBpcyBub3Qgc2V0CiMg
-Q09ORklHX0pPWVNUSUNLX0EzRCBpcyBub3Qgc2V0CiMgQ09ORklHX0pPWVNUSUNLX0FESSBpcyBu
-b3Qgc2V0CkNPTkZJR19KT1lTVElDS19DT0JSQT1tCiMgQ09ORklHX0pPWVNUSUNLX0dGMksgaXMg
-bm90IHNldAojIENPTkZJR19KT1lTVElDS19HUklQIGlzIG5vdCBzZXQKQ09ORklHX0pPWVNUSUNL
-X0dSSVBfTVA9bQpDT05GSUdfSk9ZU1RJQ0tfR1VJTExFTU9UPW0KIyBDT05GSUdfSk9ZU1RJQ0tf
-SU5URVJBQ1QgaXMgbm90IHNldAojIENPTkZJR19KT1lTVElDS19TSURFV0lOREVSIGlzIG5vdCBz
-ZXQKIyBDT05GSUdfSk9ZU1RJQ0tfVE1EQyBpcyBub3Qgc2V0CkNPTkZJR19KT1lTVElDS19JRk9S
-Q0U9bQpDT05GSUdfSk9ZU1RJQ0tfSUZPUkNFXzIzMj15CiMgQ09ORklHX0pPWVNUSUNLX1dBUlJJ
-T1IgaXMgbm90IHNldAojIENPTkZJR19KT1lTVElDS19NQUdFTExBTiBpcyBub3Qgc2V0CkNPTkZJ
-R19KT1lTVElDS19TUEFDRU9SQj1tCiMgQ09ORklHX0pPWVNUSUNLX1NQQUNFQkFMTCBpcyBub3Qg
-c2V0CiMgQ09ORklHX0pPWVNUSUNLX1NUSU5HRVIgaXMgbm90IHNldApDT05GSUdfSk9ZU1RJQ0tf
-VFdJREpPWT1tCiMgQ09ORklHX0pPWVNUSUNLX1pIRU5IVUEgaXMgbm90IHNldApDT05GSUdfSk9Z
-U1RJQ0tfQVM1MDExPW0KQ09ORklHX0pPWVNUSUNLX0pPWURVTVA9bQpDT05GSUdfSU5QVVRfVEFC
-TEVUPXkKQ09ORklHX0lOUFVUX1RPVUNIU0NSRUVOPXkKQ09ORklHX1RPVUNIU0NSRUVOX0FENzg3
-OT1tCkNPTkZJR19UT1VDSFNDUkVFTl9BRDc4NzlfSTJDPW0KIyBDT05GSUdfVE9VQ0hTQ1JFRU5f
-QVRNRUxfTVhUIGlzIG5vdCBzZXQKQ09ORklHX1RPVUNIU0NSRUVOX0JVMjEwMTM9bQojIENPTkZJ
-R19UT1VDSFNDUkVFTl9DWThDVE1HMTEwIGlzIG5vdCBzZXQKQ09ORklHX1RPVUNIU0NSRUVOX0RZ
-TkFQUk89bQpDT05GSUdfVE9VQ0hTQ1JFRU5fSEFNUFNISVJFPW0KIyBDT05GSUdfVE9VQ0hTQ1JF
-RU5fRUVUSSBpcyBub3Qgc2V0CkNPTkZJR19UT1VDSFNDUkVFTl9GVUpJVFNVPW0KQ09ORklHX1RP
-VUNIU0NSRUVOX0dVTlpFPW0KQ09ORklHX1RPVUNIU0NSRUVOX0VMTz1tCiMgQ09ORklHX1RPVUNI
-U0NSRUVOX1dBQ09NX1c4MDAxIGlzIG5vdCBzZXQKIyBDT05GSUdfVE9VQ0hTQ1JFRU5fTUFYMTE4
-MDEgaXMgbm90IHNldApDT05GSUdfVE9VQ0hTQ1JFRU5fTUNTNTAwMD1tCiMgQ09ORklHX1RPVUNI
-U0NSRUVOX01UT1VDSCBpcyBub3Qgc2V0CiMgQ09ORklHX1RPVUNIU0NSRUVOX0lORVhJTyBpcyBu
-b3Qgc2V0CkNPTkZJR19UT1VDSFNDUkVFTl9NSzcxMj1tCkNPTkZJR19UT1VDSFNDUkVFTl9IVENQ
-RU49bQojIENPTkZJR19UT1VDSFNDUkVFTl9QRU5NT1VOVCBpcyBub3Qgc2V0CiMgQ09ORklHX1RP
-VUNIU0NSRUVOX1RPVUNIUklHSFQgaXMgbm90IHNldApDT05GSUdfVE9VQ0hTQ1JFRU5fVE9VQ0hX
-SU49bQojIENPTkZJR19UT1VDSFNDUkVFTl9UT1VDSElUMjEzIGlzIG5vdCBzZXQKQ09ORklHX1RP
-VUNIU0NSRUVOX1RTQzIwMDc9bQojIENPTkZJR19UT1VDSFNDUkVFTl9TVDEyMzIgaXMgbm90IHNl
-dApDT05GSUdfVE9VQ0hTQ1JFRU5fVFBTNjUwN1g9bQpDT05GSUdfSU5QVVRfTUlTQz15CiMgQ09O
-RklHX0lOUFVUX0FENzE0WCBpcyBub3Qgc2V0CiMgQ09ORklHX0lOUFVUX1BDU1BLUiBpcyBub3Qg
-c2V0CiMgQ09ORklHX0lOUFVUX01NQTg0NTAgaXMgbm90IHNldAojIENPTkZJR19JTlBVVF9NUFUz
-MDUwIGlzIG5vdCBzZXQKQ09ORklHX0lOUFVUX0FQQU5FTD1tCkNPTkZJR19JTlBVVF9XSVNUUk9O
-X0JUTlM9bQojIENPTkZJR19JTlBVVF9LWFRKOSBpcyBub3Qgc2V0CkNPTkZJR19JTlBVVF9VSU5Q
-VVQ9bQpDT05GSUdfSU5QVVRfUENGODU3ND1tCkNPTkZJR19JTlBVVF9HUElPX1JPVEFSWV9FTkNP
-REVSPW0KQ09ORklHX0lOUFVUX0FEWEwzNFg9bQpDT05GSUdfSU5QVVRfQURYTDM0WF9JMkM9bQpD
-T05GSUdfSU5QVVRfQ01BMzAwMD1tCiMgQ09ORklHX0lOUFVUX0NNQTMwMDBfSTJDIGlzIG5vdCBz
-ZXQKCiMKIyBIYXJkd2FyZSBJL08gcG9ydHMKIwpDT05GSUdfU0VSSU89bQpDT05GSUdfU0VSSU9f
-STgwNDI9bQojIENPTkZJR19TRVJJT19TRVJQT1JUIGlzIG5vdCBzZXQKIyBDT05GSUdfU0VSSU9f
-Q1Q4MkM3MTAgaXMgbm90IHNldAojIENPTkZJR19TRVJJT19MSUJQUzIgaXMgbm90IHNldAojIENP
-TkZJR19TRVJJT19SQVcgaXMgbm90IHNldApDT05GSUdfU0VSSU9fQUxURVJBX1BTMj1tCiMgQ09O
-RklHX1NFUklPX1BTMk1VTFQgaXMgbm90IHNldApDT05GSUdfR0FNRVBPUlQ9bQpDT05GSUdfR0FN
-RVBPUlRfTlM1NTg9bQpDT05GSUdfR0FNRVBPUlRfTDQ9bQoKIwojIENoYXJhY3RlciBkZXZpY2Vz
-CiMKQ09ORklHX1ZUPXkKIyBDT05GSUdfQ09OU09MRV9UUkFOU0xBVElPTlMgaXMgbm90IHNldApD
-T05GSUdfVlRfQ09OU09MRT15CkNPTkZJR19IV19DT05TT0xFPXkKIyBDT05GSUdfVlRfSFdfQ09O
-U09MRV9CSU5ESU5HIGlzIG5vdCBzZXQKQ09ORklHX1VOSVg5OF9QVFlTPXkKIyBDT05GSUdfREVW
-UFRTX01VTFRJUExFX0lOU1RBTkNFUyBpcyBub3Qgc2V0CiMgQ09ORklHX0xFR0FDWV9QVFlTIGlz
-IG5vdCBzZXQKIyBDT05GSUdfU0VSSUFMX05PTlNUQU5EQVJEIGlzIG5vdCBzZXQKIyBDT05GSUdf
-VFJBQ0VfU0lOSyBpcyBub3Qgc2V0CiMgQ09ORklHX0RFVktNRU0gaXMgbm90IHNldAoKIwojIFNl
-cmlhbCBkcml2ZXJzCiMKIyBDT05GSUdfU0VSSUFMXzgyNTAgaXMgbm90IHNldApDT05GSUdfRklY
-X0VBUkxZQ09OX01FTT15CgojCiMgTm9uLTgyNTAgc2VyaWFsIHBvcnQgc3VwcG9ydAojCkNPTkZJ
-R19TRVJJQUxfQ09SRT1tCiMgQ09ORklHX1NFUklBTF9USU1CRVJEQUxFIGlzIG5vdCBzZXQKQ09O
-RklHX1NFUklBTF9BTFRFUkFfSlRBR1VBUlQ9bQpDT05GSUdfU0VSSUFMX0FMVEVSQV9VQVJUPW0K
-Q09ORklHX1NFUklBTF9BTFRFUkFfVUFSVF9NQVhQT1JUUz00CkNPTkZJR19TRVJJQUxfQUxURVJB
-X1VBUlRfQkFVRFJBVEU9MTE1MjAwCiMgQ09ORklHX1NFUklBTF9YSUxJTlhfUFNfVUFSVCBpcyBu
-b3Qgc2V0CkNPTkZJR19UVFlfUFJJTlRLPXkKIyBDT05GSUdfVklSVElPX0NPTlNPTEUgaXMgbm90
-IHNldAojIENPTkZJR19JUE1JX0hBTkRMRVIgaXMgbm90IHNldApDT05GSUdfSFdfUkFORE9NPW0K
-IyBDT05GSUdfSFdfUkFORE9NX1RJTUVSSU9NRU0gaXMgbm90IHNldApDT05GSUdfSFdfUkFORE9N
-X1ZJQT1tCkNPTkZJR19IV19SQU5ET01fVklSVElPPW0KQ09ORklHX05WUkFNPW0KQ09ORklHX0RU
-TEs9bQojIENPTkZJR19SMzk2NCBpcyBub3Qgc2V0CiMgQ09ORklHX01XQVZFIGlzIG5vdCBzZXQK
-IyBDT05GSUdfU0N4MjAwX0dQSU8gaXMgbm90IHNldAojIENPTkZJR19QQzg3MzZ4X0dQSU8gaXMg
-bm90IHNldApDT05GSUdfTlNDX0dQSU89bQpDT05GSUdfSEFOR0NIRUNLX1RJTUVSPW0KIyBDT05G
-SUdfVENHX1RQTSBpcyBub3Qgc2V0CiMgQ09ORklHX1RFTENMT0NLIGlzIG5vdCBzZXQKQ09ORklH
-X0RFVlBPUlQ9eQojIENPTkZJR19SQU1PT1BTIGlzIG5vdCBzZXQKQ09ORklHX0kyQz1tCkNPTkZJ
-R19JMkNfQk9BUkRJTkZPPXkKQ09ORklHX0kyQ19DT01QQVQ9eQojIENPTkZJR19JMkNfQ0hBUkRF
-ViBpcyBub3Qgc2V0CkNPTkZJR19JMkNfTVVYPW0KCiMKIyBNdWx0aXBsZXhlciBJMkMgQ2hpcCBz
-dXBwb3J0CiMKIyBDT05GSUdfSTJDX01VWF9HUElPIGlzIG5vdCBzZXQKIyBDT05GSUdfSTJDX01V
-WF9QQ0E5NTQxIGlzIG5vdCBzZXQKIyBDT05GSUdfSTJDX01VWF9QQ0E5NTR4IGlzIG5vdCBzZXQK
-Q09ORklHX0kyQ19IRUxQRVJfQVVUTz15CkNPTkZJR19JMkNfU01CVVM9bQpDT05GSUdfSTJDX0FM
-R09CSVQ9bQpDT05GSUdfSTJDX0FMR09QQ0Y9bQpDT05GSUdfSTJDX0FMR09QQ0E9bQoKIwojIEky
-QyBIYXJkd2FyZSBCdXMgc3VwcG9ydAojCgojCiMgSTJDIHN5c3RlbSBidXMgZHJpdmVycyAobW9z
-dGx5IGVtYmVkZGVkIC8gc3lzdGVtLW9uLWNoaXApCiMKIyBDT05GSUdfSTJDX0dQSU8gaXMgbm90
-IHNldAojIENPTkZJR19JMkNfT0NPUkVTIGlzIG5vdCBzZXQKIyBDT05GSUdfSTJDX1BDQV9QTEFU
-Rk9STSBpcyBub3Qgc2V0CiMgQ09ORklHX0kyQ19QWEFfUENJIGlzIG5vdCBzZXQKIyBDT05GSUdf
-STJDX1NJTVRFQyBpcyBub3Qgc2V0CiMgQ09ORklHX0kyQ19YSUxJTlggaXMgbm90IHNldAoKIwoj
-IEV4dGVybmFsIEkyQy9TTUJ1cyBhZGFwdGVyIGRyaXZlcnMKIwpDT05GSUdfSTJDX1BBUlBPUlRf
-TElHSFQ9bQojIENPTkZJR19JMkNfVEFPU19FVk0gaXMgbm90IHNldAoKIwojIE90aGVyIEkyQy9T
-TUJ1cyBidXMgZHJpdmVycwojCkNPTkZJR19JMkNfRUxFS1RPUj1tCkNPTkZJR19JMkNfUENBX0lT
-QT1tCiMgQ09ORklHX0kyQ19TVFVCIGlzIG5vdCBzZXQKIyBDT05GSUdfSTJDX0RFQlVHX0NPUkUg
-aXMgbm90IHNldApDT05GSUdfSTJDX0RFQlVHX0FMR089eQpDT05GSUdfSTJDX0RFQlVHX0JVUz15
-CiMgQ09ORklHX1NQSSBpcyBub3Qgc2V0CgojCiMgUFBTIHN1cHBvcnQKIwojIENPTkZJR19QUFMg
-aXMgbm90IHNldAoKIwojIFBQUyBnZW5lcmF0b3JzIHN1cHBvcnQKIwoKIwojIFBUUCBjbG9jayBz
-dXBwb3J0CiMKCiMKIyBFbmFibGUgRGV2aWNlIERyaXZlcnMgLT4gUFBTIHRvIHNlZSB0aGUgUFRQ
-IGNsb2NrIG9wdGlvbnMuCiMKQ09ORklHX0FSQ0hfV0FOVF9PUFRJT05BTF9HUElPTElCPXkKQ09O
-RklHX0dQSU9MSUI9eQojIENPTkZJR19ERUJVR19HUElPIGlzIG5vdCBzZXQKQ09ORklHX0dQSU9f
-U1lTRlM9eQpDT05GSUdfR1BJT19NQVg3MzBYPW0KCiMKIyBNZW1vcnkgbWFwcGVkIEdQSU8gZHJp
-dmVyczoKIwojIENPTkZJR19HUElPX0dFTkVSSUNfUExBVEZPUk0gaXMgbm90IHNldApDT05GSUdf
-R1BJT19JVDg3NjFFPW0KCiMKIyBJMkMgR1BJTyBleHBhbmRlcnM6CiMKQ09ORklHX0dQSU9fTUFY
-NzMwMD1tCkNPTkZJR19HUElPX01BWDczMlg9bQpDT05GSUdfR1BJT19QQ0E5NTNYPW0KIyBDT05G
-SUdfR1BJT19QQ0Y4NTdYIGlzIG5vdCBzZXQKQ09ORklHX0dQSU9fQURQNTU4OD1tCgojCiMgUENJ
-IEdQSU8gZXhwYW5kZXJzOgojCgojCiMgU1BJIEdQSU8gZXhwYW5kZXJzOgojCkNPTkZJR19HUElP
-X01DUDIzUzA4PW0KCiMKIyBBQzk3IEdQSU8gZXhwYW5kZXJzOgojCgojCiMgTU9EVUxidXMgR1BJ
-TyBleHBhbmRlcnM6CiMKQ09ORklHX1cxPW0KCiMKIyAxLXdpcmUgQnVzIE1hc3RlcnMKIwojIENP
-TkZJR19XMV9NQVNURVJfRFMyNDgyIGlzIG5vdCBzZXQKIyBDT05GSUdfVzFfTUFTVEVSX0RTMVdN
-IGlzIG5vdCBzZXQKIyBDT05GSUdfVzFfTUFTVEVSX0dQSU8gaXMgbm90IHNldAoKIwojIDEtd2ly
-ZSBTbGF2ZXMKIwpDT05GSUdfVzFfU0xBVkVfVEhFUk09bQpDT05GSUdfVzFfU0xBVkVfU01FTT1t
-CkNPTkZJR19XMV9TTEFWRV9EUzI0MDg9bQpDT05GSUdfVzFfU0xBVkVfRFMyNDIzPW0KIyBDT05G
-SUdfVzFfU0xBVkVfRFMyNDMxIGlzIG5vdCBzZXQKQ09ORklHX1cxX1NMQVZFX0RTMjQzMz1tCiMg
-Q09ORklHX1cxX1NMQVZFX0RTMjQzM19DUkMgaXMgbm90IHNldApDT05GSUdfVzFfU0xBVkVfRFMy
-NzYwPW0KQ09ORklHX1cxX1NMQVZFX0RTMjc4MD1tCiMgQ09ORklHX1cxX1NMQVZFX0JRMjcwMDAg
-aXMgbm90IHNldApDT05GSUdfUE9XRVJfU1VQUExZPW0KIyBDT05GSUdfUE9XRVJfU1VQUExZX0RF
-QlVHIGlzIG5vdCBzZXQKIyBDT05GSUdfUERBX1BPV0VSIGlzIG5vdCBzZXQKQ09ORklHX1RFU1Rf
-UE9XRVI9bQpDT05GSUdfQkFUVEVSWV9EUzI3NjA9bQojIENPTkZJR19CQVRURVJZX0RTMjc4MCBp
-cyBub3Qgc2V0CkNPTkZJR19CQVRURVJZX0RTMjc4Mj1tCiMgQ09ORklHX0JBVFRFUllfT0xQQyBp
-cyBub3Qgc2V0CiMgQ09ORklHX0JBVFRFUllfQlEyMFo3NSBpcyBub3Qgc2V0CiMgQ09ORklHX0JB
-VFRFUllfQlEyN3gwMCBpcyBub3Qgc2V0CkNPTkZJR19CQVRURVJZX01BWDE3MDQwPW0KIyBDT05G
-SUdfQkFUVEVSWV9NQVgxNzA0MiBpcyBub3Qgc2V0CiMgQ09ORklHX0NIQVJHRVJfSVNQMTcwNCBp
-cyBub3Qgc2V0CkNPTkZJR19DSEFSR0VSX01BWDg5MDM9bQpDT05GSUdfQ0hBUkdFUl9HUElPPW0K
-Q09ORklHX0hXTU9OPW0KQ09ORklHX0hXTU9OX1ZJRD1tCiMgQ09ORklHX0hXTU9OX0RFQlVHX0NI
-SVAgaXMgbm90IHNldAoKIwojIE5hdGl2ZSBkcml2ZXJzCiMKQ09ORklHX1NFTlNPUlNfQUJJVFVH
-VVJVPW0KIyBDT05GSUdfU0VOU09SU19BQklUVUdVUlUzIGlzIG5vdCBzZXQKQ09ORklHX1NFTlNP
-UlNfQUQ3NDE0PW0KQ09ORklHX1NFTlNPUlNfQUQ3NDE4PW0KQ09ORklHX1NFTlNPUlNfQURNMTAy
-MT1tCiMgQ09ORklHX1NFTlNPUlNfQURNMTAyNSBpcyBub3Qgc2V0CkNPTkZJR19TRU5TT1JTX0FE
-TTEwMjY9bQojIENPTkZJR19TRU5TT1JTX0FETTEwMjkgaXMgbm90IHNldApDT05GSUdfU0VOU09S
-U19BRE0xMDMxPW0KIyBDT05GSUdfU0VOU09SU19BRE05MjQwIGlzIG5vdCBzZXQKIyBDT05GSUdf
-U0VOU09SU19BRFQ3NDExIGlzIG5vdCBzZXQKIyBDT05GSUdfU0VOU09SU19BRFQ3NDYyIGlzIG5v
-dCBzZXQKQ09ORklHX1NFTlNPUlNfQURUNzQ3MD1tCiMgQ09ORklHX1NFTlNPUlNfQURUNzQ3NSBp
-cyBub3Qgc2V0CiMgQ09ORklHX1NFTlNPUlNfQVNDNzYyMSBpcyBub3Qgc2V0CkNPTkZJR19TRU5T
-T1JTX0FTQjEwMD1tCiMgQ09ORklHX1NFTlNPUlNfQVRYUDEgaXMgbm90IHNldAojIENPTkZJR19T
-RU5TT1JTX0RTNjIwIGlzIG5vdCBzZXQKIyBDT05GSUdfU0VOU09SU19EUzE2MjEgaXMgbm90IHNl
-dApDT05GSUdfU0VOU09SU19GNzE4MDVGPW0KQ09ORklHX1NFTlNPUlNfRjcxODgyRkc9bQojIENP
-TkZJR19TRU5TT1JTX0Y3NTM3NVMgaXMgbm90IHNldAojIENPTkZJR19TRU5TT1JTX0ZTQ0hNRCBp
-cyBub3Qgc2V0CkNPTkZJR19TRU5TT1JTX0c3NjBBPW0KQ09ORklHX1NFTlNPUlNfR0w1MThTTT1t
-CiMgQ09ORklHX1NFTlNPUlNfR0w1MjBTTSBpcyBub3Qgc2V0CkNPTkZJR19TRU5TT1JTX0dQSU9f
-RkFOPW0KQ09ORklHX1NFTlNPUlNfSVQ4Nz1tCiMgQ09ORklHX1NFTlNPUlNfSkM0MiBpcyBub3Qg
-c2V0CkNPTkZJR19TRU5TT1JTX0xJTkVBR0U9bQpDT05GSUdfU0VOU09SU19MTTYzPW0KQ09ORklH
-X1NFTlNPUlNfTE03Mz1tCiMgQ09ORklHX1NFTlNPUlNfTE03NSBpcyBub3Qgc2V0CiMgQ09ORklH
-X1NFTlNPUlNfTE03NyBpcyBub3Qgc2V0CiMgQ09ORklHX1NFTlNPUlNfTE03OCBpcyBub3Qgc2V0
-CkNPTkZJR19TRU5TT1JTX0xNODA9bQojIENPTkZJR19TRU5TT1JTX0xNODMgaXMgbm90IHNldApD
-T05GSUdfU0VOU09SU19MTTg1PW0KQ09ORklHX1NFTlNPUlNfTE04Nz1tCkNPTkZJR19TRU5TT1JT
-X0xNOTA9bQpDT05GSUdfU0VOU09SU19MTTkyPW0KQ09ORklHX1NFTlNPUlNfTE05Mz1tCiMgQ09O
-RklHX1NFTlNPUlNfTFRDNDE1MSBpcyBub3Qgc2V0CiMgQ09ORklHX1NFTlNPUlNfTFRDNDIxNSBp
-cyBub3Qgc2V0CiMgQ09ORklHX1NFTlNPUlNfTFRDNDI0NSBpcyBub3Qgc2V0CkNPTkZJR19TRU5T
-T1JTX0xUQzQyNjE9bQpDT05GSUdfU0VOU09SU19MTTk1MjQxPW0KQ09ORklHX1NFTlNPUlNfTE05
-NTI0NT1tCkNPTkZJR19TRU5TT1JTX01BWDE2MDY1PW0KIyBDT05GSUdfU0VOU09SU19NQVgxNjE5
-IGlzIG5vdCBzZXQKIyBDT05GSUdfU0VOU09SU19NQVgxNjY4IGlzIG5vdCBzZXQKIyBDT05GSUdf
-U0VOU09SU19NQVg2NjM5IGlzIG5vdCBzZXQKQ09ORklHX1NFTlNPUlNfTUFYNjY0Mj1tCkNPTkZJ
-R19TRU5TT1JTX01BWDY2NTA9bQojIENPTkZJR19TRU5TT1JTX05UQ19USEVSTUlTVE9SIGlzIG5v
-dCBzZXQKQ09ORklHX1NFTlNPUlNfUEM4NzM2MD1tCkNPTkZJR19TRU5TT1JTX1BDODc0Mjc9bQpD
-T05GSUdfU0VOU09SU19QQ0Y4NTkxPW0KQ09ORklHX1BNQlVTPW0KIyBDT05GSUdfU0VOU09SU19Q
-TUJVUyBpcyBub3Qgc2V0CkNPTkZJR19TRU5TT1JTX0FETTEyNzU9bQojIENPTkZJR19TRU5TT1JT
-X0xNMjUwNjYgaXMgbm90IHNldApDT05GSUdfU0VOU09SU19NQVgxNjA2ND1tCkNPTkZJR19TRU5T
-T1JTX01BWDM0NDQwPW0KQ09ORklHX1NFTlNPUlNfTUFYODY4OD1tCiMgQ09ORklHX1NFTlNPUlNf
-VUNEOTAwMCBpcyBub3Qgc2V0CkNPTkZJR19TRU5TT1JTX1VDRDkyMDA9bQpDT05GSUdfU0VOU09S
-U19TSFQxNT1tCkNPTkZJR19TRU5TT1JTX1NIVDIxPW0KQ09ORklHX1NFTlNPUlNfU01NNjY1PW0K
-Q09ORklHX1NFTlNPUlNfRE1FMTczNz1tCiMgQ09ORklHX1NFTlNPUlNfRU1DMTQwMyBpcyBub3Qg
-c2V0CkNPTkZJR19TRU5TT1JTX0VNQzIxMDM9bQpDT05GSUdfU0VOU09SU19FTUM2VzIwMT1tCiMg
-Q09ORklHX1NFTlNPUlNfU01TQzQ3TTEgaXMgbm90IHNldApDT05GSUdfU0VOU09SU19TTVNDNDdN
-MTkyPW0KQ09ORklHX1NFTlNPUlNfU01TQzQ3QjM5Nz1tCkNPTkZJR19TRU5TT1JTX1NDSDU2WFhf
-Q09NTU9OPW0KQ09ORklHX1NFTlNPUlNfU0NINTYyNz1tCiMgQ09ORklHX1NFTlNPUlNfU0NINTYz
-NiBpcyBub3Qgc2V0CiMgQ09ORklHX1NFTlNPUlNfQURTMTAxNSBpcyBub3Qgc2V0CkNPTkZJR19T
-RU5TT1JTX0FEUzc4Mjg9bQpDT05GSUdfU0VOU09SU19BTUM2ODIxPW0KIyBDT05GSUdfU0VOU09S
-U19USE1DNTAgaXMgbm90IHNldApDT05GSUdfU0VOU09SU19UTVAxMDI9bQojIENPTkZJR19TRU5T
-T1JTX1RNUDQwMSBpcyBub3Qgc2V0CkNPTkZJR19TRU5TT1JTX1RNUDQyMT1tCkNPTkZJR19TRU5T
-T1JTX1ZJQV9DUFVURU1QPW0KQ09ORklHX1NFTlNPUlNfVlQxMjExPW0KQ09ORklHX1NFTlNPUlNf
-VzgzNzgxRD1tCkNPTkZJR19TRU5TT1JTX1c4Mzc5MUQ9bQojIENPTkZJR19TRU5TT1JTX1c4Mzc5
-MkQgaXMgbm90IHNldAojIENPTkZJR19TRU5TT1JTX1c4Mzc5MyBpcyBub3Qgc2V0CiMgQ09ORklH
-X1NFTlNPUlNfVzgzNzk1IGlzIG5vdCBzZXQKQ09ORklHX1NFTlNPUlNfVzgzTDc4NVRTPW0KIyBD
-T05GSUdfU0VOU09SU19XODNMNzg2TkcgaXMgbm90IHNldAojIENPTkZJR19TRU5TT1JTX1c4MzYy
-N0hGIGlzIG5vdCBzZXQKIyBDT05GSUdfU0VOU09SU19XODM2MjdFSEYgaXMgbm90IHNldApDT05G
-SUdfU0VOU09SU19BUFBMRVNNQz1tCkNPTkZJR19USEVSTUFMPW0KQ09ORklHX1RIRVJNQUxfSFdN
-T049eQojIENPTkZJR19XQVRDSERPRyBpcyBub3Qgc2V0CkNPTkZJR19TU0JfUE9TU0lCTEU9eQoK
-IwojIFNvbmljcyBTaWxpY29uIEJhY2twbGFuZQojCiMgQ09ORklHX1NTQiBpcyBub3Qgc2V0CkNP
-TkZJR19CQ01BX1BPU1NJQkxFPXkKCiMKIyBCcm9hZGNvbSBzcGVjaWZpYyBBTUJBCiMKQ09ORklH
-X0JDTUE9bQojIENPTkZJR19CQ01BX0RFQlVHIGlzIG5vdCBzZXQKIyBDT05GSUdfTUZEX1NVUFBP
-UlQgaXMgbm90IHNldApDT05GSUdfUkVHVUxBVE9SPXkKIyBDT05GSUdfUkVHVUxBVE9SX0RFQlVH
-IGlzIG5vdCBzZXQKIyBDT05GSUdfUkVHVUxBVE9SX0RVTU1ZIGlzIG5vdCBzZXQKIyBDT05GSUdf
-UkVHVUxBVE9SX0ZJWEVEX1ZPTFRBR0UgaXMgbm90IHNldApDT05GSUdfUkVHVUxBVE9SX1ZJUlRV
-QUxfQ09OU1VNRVI9bQpDT05GSUdfUkVHVUxBVE9SX1VTRVJTUEFDRV9DT05TVU1FUj1tCkNPTkZJ
-R19SRUdVTEFUT1JfQlEyNDAyMj1tCiMgQ09ORklHX1JFR1VMQVRPUl9NQVgxNTg2IGlzIG5vdCBz
-ZXQKIyBDT05GSUdfUkVHVUxBVE9SX01BWDg2NDkgaXMgbm90IHNldApDT05GSUdfUkVHVUxBVE9S
-X01BWDg2NjA9bQpDT05GSUdfUkVHVUxBVE9SX01BWDg5NTI9bQojIENPTkZJR19SRUdVTEFUT1Jf
-TFAzOTcxIGlzIG5vdCBzZXQKIyBDT05GSUdfUkVHVUxBVE9SX0xQMzk3MiBpcyBub3Qgc2V0CiMg
-Q09ORklHX1JFR1VMQVRPUl9UUFM2NTAyMyBpcyBub3Qgc2V0CkNPTkZJR19SRUdVTEFUT1JfVFBT
-NjUwN1g9bQpDT05GSUdfUkVHVUxBVE9SX0lTTDYyNzFBPW0KIyBDT05GSUdfUkVHVUxBVE9SX0FE
-NTM5OCBpcyBub3Qgc2V0CiMgQ09ORklHX01FRElBX1NVUFBPUlQgaXMgbm90IHNldAoKIwojIEdy
-YXBoaWNzIHN1cHBvcnQKIwojIENPTkZJR19EUk0gaXMgbm90IHNldAojIENPTkZJR19WR0FTVEFU
-RSBpcyBub3Qgc2V0CkNPTkZJR19WSURFT19PVVRQVVRfQ09OVFJPTD1tCkNPTkZJR19GQj1tCiMg
-Q09ORklHX0ZJUk1XQVJFX0VESUQgaXMgbm90IHNldAojIENPTkZJR19GQl9EREMgaXMgbm90IHNl
-dAojIENPTkZJR19GQl9CT09UX1ZFU0FfU1VQUE9SVCBpcyBub3Qgc2V0CkNPTkZJR19GQl9DRkJf
-RklMTFJFQ1Q9bQpDT05GSUdfRkJfQ0ZCX0NPUFlBUkVBPW0KQ09ORklHX0ZCX0NGQl9JTUFHRUJM
-SVQ9bQojIENPTkZJR19GQl9DRkJfUkVWX1BJWEVMU19JTl9CWVRFIGlzIG5vdCBzZXQKQ09ORklH
-X0ZCX1NZU19GSUxMUkVDVD1tCkNPTkZJR19GQl9TWVNfQ09QWUFSRUE9bQpDT05GSUdfRkJfU1lT
-X0lNQUdFQkxJVD1tCiMgQ09ORklHX0ZCX0ZPUkVJR05fRU5ESUFOIGlzIG5vdCBzZXQKQ09ORklH
-X0ZCX1NZU19GT1BTPW0KIyBDT05GSUdfRkJfV01UX0dFX1JPUFMgaXMgbm90IHNldApDT05GSUdf
-RkJfREVGRVJSRURfSU89eQojIENPTkZJR19GQl9TVkdBTElCIGlzIG5vdCBzZXQKIyBDT05GSUdf
-RkJfTUFDTU9ERVMgaXMgbm90IHNldAojIENPTkZJR19GQl9CQUNLTElHSFQgaXMgbm90IHNldAoj
-IENPTkZJR19GQl9NT0RFX0hFTFBFUlMgaXMgbm90IHNldApDT05GSUdfRkJfVElMRUJMSVRUSU5H
-PXkKCiMKIyBGcmFtZSBidWZmZXIgaGFyZHdhcmUgZHJpdmVycwojCkNPTkZJR19GQl9BUkM9bQoj
-IENPTkZJR19GQl9WR0ExNiBpcyBub3Qgc2V0CiMgQ09ORklHX0ZCX040MTEgaXMgbm90IHNldApD
-T05GSUdfRkJfSEdBPW0KQ09ORklHX0ZCX1MxRDEzWFhYPW0KIyBDT05GSUdfRkJfVklSVFVBTCBp
-cyBub3Qgc2V0CkNPTkZJR19GQl9NRVRST05PTUU9bQojIENPTkZJR19GQl9CUk9BRFNIRUVUIGlz
-IG5vdCBzZXQKIyBDT05GSUdfQkFDS0xJR0hUX0xDRF9TVVBQT1JUIGlzIG5vdCBzZXQKQ09ORklH
-X0JBQ0tMSUdIVF9DTEFTU19ERVZJQ0U9bQoKIwojIERpc3BsYXkgZGV2aWNlIHN1cHBvcnQKIwoj
-IENPTkZJR19ESVNQTEFZX1NVUFBPUlQgaXMgbm90IHNldAoKIwojIENvbnNvbGUgZGlzcGxheSBk
-cml2ZXIgc3VwcG9ydAojCkNPTkZJR19WR0FfQ09OU09MRT15CkNPTkZJR19WR0FDT05fU09GVF9T
-Q1JPTExCQUNLPXkKQ09ORklHX1ZHQUNPTl9TT0ZUX1NDUk9MTEJBQ0tfU0laRT02NAojIENPTkZJ
-R19NREFfQ09OU09MRSBpcyBub3Qgc2V0CkNPTkZJR19EVU1NWV9DT05TT0xFPXkKQ09ORklHX0ZS
-QU1FQlVGRkVSX0NPTlNPTEU9bQojIENPTkZJR19GUkFNRUJVRkZFUl9DT05TT0xFX0RFVEVDVF9Q
-UklNQVJZIGlzIG5vdCBzZXQKIyBDT05GSUdfRlJBTUVCVUZGRVJfQ09OU09MRV9ST1RBVElPTiBp
-cyBub3Qgc2V0CiMgQ09ORklHX0ZPTlRTIGlzIG5vdCBzZXQKQ09ORklHX0ZPTlRfOHg4PXkKQ09O
-RklHX0ZPTlRfOHgxNj15CkNPTkZJR19MT0dPPXkKQ09ORklHX0xPR09fTElOVVhfTU9OTz15CkNP
-TkZJR19MT0dPX0xJTlVYX1ZHQTE2PXkKQ09ORklHX0xPR09fTElOVVhfQ0xVVDIyND15CiMgQ09O
-RklHX1NPVU5EIGlzIG5vdCBzZXQKQ09ORklHX0hJRF9TVVBQT1JUPXkKIyBDT05GSUdfSElEIGlz
-IG5vdCBzZXQKIyBDT05GSUdfSElEX1BJRCBpcyBub3Qgc2V0CkNPTkZJR19VU0JfU1VQUE9SVD15
-CiMgQ09ORklHX1VTQl9BUkNIX0hBU19IQ0QgaXMgbm90IHNldAojIENPTkZJR19VU0JfQVJDSF9I
-QVNfT0hDSSBpcyBub3Qgc2V0CiMgQ09ORklHX1VTQl9BUkNIX0hBU19FSENJIGlzIG5vdCBzZXQK
-IyBDT05GSUdfVVNCX09UR19XSElURUxJU1QgaXMgbm90IHNldAojIENPTkZJR19VU0JfT1RHX0JM
-QUNLTElTVF9IVUIgaXMgbm90IHNldAoKIwojIE5PVEU6IFVTQl9TVE9SQUdFIGRlcGVuZHMgb24g
-U0NTSSBidXQgQkxLX0RFVl9TRCBtYXkKIwpDT05GSUdfVVNCX0dBREdFVD1tCkNPTkZJR19VU0Jf
-R0FER0VUX0RFQlVHPXkKIyBDT05GSUdfVVNCX0dBREdFVF9ERUJVR19GSUxFUyBpcyBub3Qgc2V0
-CkNPTkZJR19VU0JfR0FER0VUX0RFQlVHX0ZTPXkKQ09ORklHX1VTQl9HQURHRVRfVkJVU19EUkFX
-PTIKQ09ORklHX1VTQl9GVVNCMzAwPW0KIyBDT05GSUdfVVNCX1I4QTY2NTk3IGlzIG5vdCBzZXQK
-Q09ORklHX1VTQl9NNjY1OTI9bQojIENPTkZJR19VU0JfTkVUMjI3MiBpcyBub3Qgc2V0CkNPTkZJ
-R19VU0JfR0FER0VUX0RVQUxTUEVFRD15CkNPTkZJR19VU0JfWkVSTz1tCiMgQ09ORklHX1VTQl9H
-QURHRVRGUyBpcyBub3Qgc2V0CiMgQ09ORklHX1VTQl9GVU5DVElPTkZTIGlzIG5vdCBzZXQKIyBD
-T05GSUdfVVNCX0dfU0VSSUFMIGlzIG5vdCBzZXQKQ09ORklHX1VTQl9HX1BSSU5URVI9bQpDT05G
-SUdfVVNCX0dfSElEPW0KIyBDT05GSUdfVVNCX0dfREJHUCBpcyBub3Qgc2V0CgojCiMgT1RHIGFu
-ZCByZWxhdGVkIGluZnJhc3RydWN0dXJlCiMKQ09ORklHX1VTQl9PVEdfVVRJTFM9eQpDT05GSUdf
-VVNCX0dQSU9fVkJVUz1tCiMgQ09ORklHX05PUF9VU0JfWENFSVYgaXMgbm90IHNldApDT05GSUdf
-TU1DPW0KQ09ORklHX01NQ19ERUJVRz15CiMgQ09ORklHX01NQ19VTlNBRkVfUkVTVU1FIGlzIG5v
-dCBzZXQKIyBDT05GSUdfTU1DX0NMS0dBVEUgaXMgbm90IHNldAoKIwojIE1NQy9TRC9TRElPIENh
-cmQgRHJpdmVycwojCiMgQ09ORklHX1NESU9fVUFSVCBpcyBub3Qgc2V0CiMgQ09ORklHX01NQ19U
-RVNUIGlzIG5vdCBzZXQKCiMKIyBNTUMvU0QvU0RJTyBIb3N0IENvbnRyb2xsZXIgRHJpdmVycwoj
-CiMgQ09ORklHX01NQ19TREhDSSBpcyBub3Qgc2V0CiMgQ09ORklHX01NQ19XQlNEIGlzIG5vdCBz
-ZXQKIyBDT05GSUdfTUVNU1RJQ0sgaXMgbm90IHNldApDT05GSUdfTkVXX0xFRFM9eQpDT05GSUdf
-TEVEU19DTEFTUz15CgojCiMgTEVEIGRyaXZlcnMKIwpDT05GSUdfTEVEU19MTTM1MzA9bQpDT05G
-SUdfTEVEU19QQ0E5NTMyPW0KIyBDT05GSUdfTEVEU19QQ0E5NTMyX0dQSU8gaXMgbm90IHNldApD
-T05GSUdfTEVEU19HUElPPW0KIyBDT05GSUdfTEVEU19MUDM5NDQgaXMgbm90IHNldAojIENPTkZJ
-R19MRURTX0xQNTUyMSBpcyBub3Qgc2V0CkNPTkZJR19MRURTX0xQNTUyMz1tCkNPTkZJR19MRURT
-X0NMRVZPX01BSUw9bQpDT05GSUdfTEVEU19QQ0E5NTVYPW0KIyBDT05GSUdfTEVEU19SRUdVTEFU
-T1IgaXMgbm90IHNldAojIENPTkZJR19MRURTX0JEMjgwMiBpcyBub3Qgc2V0CkNPTkZJR19MRURT
-X0xUMzU5Mz1tCiMgQ09ORklHX0xFRFNfVFJJR0dFUlMgaXMgbm90IHNldAoKIwojIExFRCBUcmln
-Z2VycwojCkNPTkZJR19BQ0NFU1NJQklMSVRZPXkKQ09ORklHX0VEQUM9eQoKIwojIFJlcG9ydGlu
-ZyBzdWJzeXN0ZW1zCiMKQ09ORklHX0VEQUNfREVCVUc9eQojIENPTkZJR19FREFDX0RFQ09ERV9N
-Q0UgaXMgbm90IHNldAojIENPTkZJR19FREFDX01NX0VEQUMgaXMgbm90IHNldApDT05GSUdfUlRD
-X0xJQj15CkNPTkZJR19SVENfQ0xBU1M9eQpDT05GSUdfUlRDX0hDVE9TWVM9eQpDT05GSUdfUlRD
-X0hDVE9TWVNfREVWSUNFPSJydGMwIgojIENPTkZJR19SVENfREVCVUcgaXMgbm90IHNldAoKIwoj
-IFJUQyBpbnRlcmZhY2VzCiMKQ09ORklHX1JUQ19JTlRGX1NZU0ZTPXkKQ09ORklHX1JUQ19JTlRG
-X1BST0M9eQpDT05GSUdfUlRDX0lOVEZfREVWPXkKIyBDT05GSUdfUlRDX0lOVEZfREVWX1VJRV9F
-TVVMIGlzIG5vdCBzZXQKIyBDT05GSUdfUlRDX0RSVl9URVNUIGlzIG5vdCBzZXQKCiMKIyBJMkMg
-UlRDIGRyaXZlcnMKIwpDT05GSUdfUlRDX0RSVl9EUzEzMDc9bQojIENPTkZJR19SVENfRFJWX0RT
-MTM3NCBpcyBub3Qgc2V0CkNPTkZJR19SVENfRFJWX0RTMTY3Mj1tCkNPTkZJR19SVENfRFJWX0RT
-MzIzMj1tCkNPTkZJR19SVENfRFJWX01BWDY5MDA9bQojIENPTkZJR19SVENfRFJWX1JTNUMzNzIg
-aXMgbm90IHNldApDT05GSUdfUlRDX0RSVl9JU0wxMjA4PW0KQ09ORklHX1JUQ19EUlZfSVNMMTIw
-MjI9bQpDT05GSUdfUlRDX0RSVl9YMTIwNT1tCkNPTkZJR19SVENfRFJWX1BDRjg1NjM9bQpDT05G
-SUdfUlRDX0RSVl9QQ0Y4NTgzPW0KIyBDT05GSUdfUlRDX0RSVl9NNDFUODAgaXMgbm90IHNldAoj
-IENPTkZJR19SVENfRFJWX0JRMzJLIGlzIG5vdCBzZXQKIyBDT05GSUdfUlRDX0RSVl9TMzUzOTBB
-IGlzIG5vdCBzZXQKIyBDT05GSUdfUlRDX0RSVl9GTTMxMzAgaXMgbm90IHNldAojIENPTkZJR19S
-VENfRFJWX1JYODU4MSBpcyBub3Qgc2V0CiMgQ09ORklHX1JUQ19EUlZfUlg4MDI1IGlzIG5vdCBz
-ZXQKIyBDT05GSUdfUlRDX0RSVl9FTTMwMjcgaXMgbm90IHNldAojIENPTkZJR19SVENfRFJWX1JW
-MzAyOUMyIGlzIG5vdCBzZXQKCiMKIyBTUEkgUlRDIGRyaXZlcnMKIwoKIwojIFBsYXRmb3JtIFJU
-QyBkcml2ZXJzCiMKQ09ORklHX1JUQ19EUlZfQ01PUz1tCiMgQ09ORklHX1JUQ19EUlZfRFMxMjg2
-IGlzIG5vdCBzZXQKQ09ORklHX1JUQ19EUlZfRFMxNTExPW0KQ09ORklHX1JUQ19EUlZfRFMxNTUz
-PW0KQ09ORklHX1JUQ19EUlZfRFMxNzQyPW0KIyBDT05GSUdfUlRDX0RSVl9TVEsxN1RBOCBpcyBu
-b3Qgc2V0CiMgQ09ORklHX1JUQ19EUlZfTTQ4VDg2IGlzIG5vdCBzZXQKIyBDT05GSUdfUlRDX0RS
-Vl9NNDhUMzUgaXMgbm90IHNldApDT05GSUdfUlRDX0RSVl9NNDhUNTk9bQpDT05GSUdfUlRDX0RS
-Vl9NU002MjQyPW0KQ09ORklHX1JUQ19EUlZfQlE0ODAyPW0KQ09ORklHX1JUQ19EUlZfUlA1QzAx
-PW0KQ09ORklHX1JUQ19EUlZfVjMwMjA9bQoKIwojIG9uLUNQVSBSVEMgZHJpdmVycwojCiMgQ09O
-RklHX0RNQURFVklDRVMgaXMgbm90IHNldAojIENPTkZJR19BVVhESVNQTEFZIGlzIG5vdCBzZXQK
-Q09ORklHX1VJTz1tCkNPTkZJR19VSU9fUERSVj1tCkNPTkZJR19VSU9fUERSVl9HRU5JUlE9bQpD
-T05GSUdfU1RBR0lORz15CkNPTkZJR19FQ0hPPW0KIyBDT05GSUdfQlJDTVVUSUwgaXMgbm90IHNl
-dAojIENPTkZJR19DT01FREkgaXMgbm90IHNldApDT05GSUdfRkJfT0xQQ19EQ09OPW0KIyBDT05G
-SUdfSUlPIGlzIG5vdCBzZXQKIyBDT05GSUdfWFZNQUxMT0MgaXMgbm90IHNldAojIENPTkZJR19a
-Q0FDSEUgaXMgbm90IHNldAojIENPTkZJR19GQl9TTTdYWCBpcyBub3Qgc2V0CkNPTkZJR19NQUNI
-X05PX1dFU1RCUklER0U9eQpDT05GSUdfRlQxMDAwPW0KCiMKIyBTcGVha3VwIGNvbnNvbGUgc3Bl
-ZWNoCiMKQ09ORklHX1NQRUFLVVA9bQojIENPTkZJR19TUEVBS1VQX1NZTlRIX0FDTlRTQSBpcyBu
-b3Qgc2V0CiMgQ09ORklHX1NQRUFLVVBfU1lOVEhfQUNOVFBDIGlzIG5vdCBzZXQKQ09ORklHX1NQ
-RUFLVVBfU1lOVEhfQVBPTExPPW0KIyBDT05GSUdfU1BFQUtVUF9TWU5USF9BVURQVFIgaXMgbm90
-IHNldAojIENPTkZJR19TUEVBS1VQX1NZTlRIX0JOUyBpcyBub3Qgc2V0CkNPTkZJR19TUEVBS1VQ
-X1NZTlRIX0RFQ1RMSz1tCiMgQ09ORklHX1NQRUFLVVBfU1lOVEhfREVDRVhUIGlzIG5vdCBzZXQK
-Q09ORklHX1NQRUFLVVBfU1lOVEhfREVDUEM9bQojIENPTkZJR19TUEVBS1VQX1NZTlRIX0RUTEsg
-aXMgbm90IHNldAojIENPTkZJR19TUEVBS1VQX1NZTlRIX0tFWVBDIGlzIG5vdCBzZXQKIyBDT05G
-SUdfU1BFQUtVUF9TWU5USF9MVExLIGlzIG5vdCBzZXQKIyBDT05GSUdfU1BFQUtVUF9TWU5USF9T
-T0ZUIGlzIG5vdCBzZXQKIyBDT05GSUdfU1BFQUtVUF9TWU5USF9TUEtPVVQgaXMgbm90IHNldApD
-T05GSUdfU1BFQUtVUF9TWU5USF9UWFBSVD1tCiMgQ09ORklHX1NQRUFLVVBfU1lOVEhfRFVNTVkg
-aXMgbm90IHNldApDT05GSUdfVE9VQ0hTQ1JFRU5fQ0xFQVJQQURfVE0xMjE3PW0KIyBDT05GSUdf
-VE9VQ0hTQ1JFRU5fU1lOQVBUSUNTX0kyQ19STUk0IGlzIG5vdCBzZXQKIyBDT05GSUdfQUxURVJB
-X1NUQVBMIGlzIG5vdCBzZXQKIyBDT05GSUdfWDg2X1BMQVRGT1JNX0RFVklDRVMgaXMgbm90IHNl
-dApDT05GSUdfQ0xLU1JDX0k4MjUzPXkKQ09ORklHX0NMS0VWVF9JODI1Mz15CkNPTkZJR19JODI1
-M19MT0NLPXkKQ09ORklHX0NMS0JMRF9JODI1Mz15CiMgQ09ORklHX1ZJUlRfRFJJVkVSUyBpcyBu
-b3Qgc2V0CkNPTkZJR19JT01NVV9TVVBQT1JUPXkKCiMKIyBGaXJtd2FyZSBEcml2ZXJzCiMKIyBD
-T05GSUdfRUREIGlzIG5vdCBzZXQKQ09ORklHX0ZJUk1XQVJFX01FTU1BUD15CkNPTkZJR19ERUxM
-X1JCVT1tCiMgQ09ORklHX0RDREJBUyBpcyBub3Qgc2V0CiMgQ09ORklHX0RNSUlEIGlzIG5vdCBz
-ZXQKQ09ORklHX0RNSV9TWVNGUz1tCkNPTkZJR19JU0NTSV9JQkZUX0ZJTkQ9eQojIENPTkZJR19T
-SUdNQSBpcyBub3Qgc2V0CiMgQ09ORklHX0dPT0dMRV9GSVJNV0FSRSBpcyBub3Qgc2V0CgojCiMg
-RmlsZSBzeXN0ZW1zCiMKIyBDT05GSUdfRlNfUE9TSVhfQUNMIGlzIG5vdCBzZXQKIyBDT05GSUdf
-RklMRV9MT0NLSU5HIGlzIG5vdCBzZXQKQ09ORklHX0ZTTk9USUZZPXkKIyBDT05GSUdfRE5PVElG
-WSBpcyBub3Qgc2V0CkNPTkZJR19JTk9USUZZX1VTRVI9eQpDT05GSUdfRkFOT1RJRlk9eQojIENP
-TkZJR19RVU9UQSBpcyBub3Qgc2V0CiMgQ09ORklHX1FVT1RBQ1RMIGlzIG5vdCBzZXQKIyBDT05G
-SUdfQVVUT0ZTNF9GUyBpcyBub3Qgc2V0CiMgQ09ORklHX0ZVU0VfRlMgaXMgbm90IHNldAoKIwoj
-IENhY2hlcwojCiMgQ09ORklHX0ZTQ0FDSEUgaXMgbm90IHNldAoKIwojIFBzZXVkbyBmaWxlc3lz
-dGVtcwojCkNPTkZJR19QUk9DX0ZTPXkKIyBDT05GSUdfUFJPQ19LQ09SRSBpcyBub3Qgc2V0CiMg
-Q09ORklHX1BST0NfVk1DT1JFIGlzIG5vdCBzZXQKQ09ORklHX1BST0NfU1lTQ1RMPXkKIyBDT05G
-SUdfUFJPQ19QQUdFX01PTklUT1IgaXMgbm90IHNldApDT05GSUdfU1lTRlM9eQojIENPTkZJR19U
-TVBGUyBpcyBub3Qgc2V0CkNPTkZJR19IVUdFVExCRlM9eQpDT05GSUdfSFVHRVRMQl9QQUdFPXkK
-Q09ORklHX0NPTkZJR0ZTX0ZTPW0KQ09ORklHX01JU0NfRklMRVNZU1RFTVM9eQpDT05GSUdfRUNS
-WVBUX0ZTPW0KIyBDT05GSUdfSkZGUzJfRlMgaXMgbm90IHNldApDT05GSUdfTE9HRlM9bQpDT05G
-SUdfUk9NRlNfRlM9bQpDT05GSUdfUk9NRlNfQkFDS0VEX0JZX01URD15CkNPTkZJR19ST01GU19P
-Tl9NVEQ9eQojIENPTkZJR19QU1RPUkUgaXMgbm90IHNldApDT05GSUdfTkxTPXkKQ09ORklHX05M
-U19ERUZBVUxUPSJpc284ODU5LTEiCiMgQ09ORklHX05MU19DT0RFUEFHRV80MzcgaXMgbm90IHNl
-dAojIENPTkZJR19OTFNfQ09ERVBBR0VfNzM3IGlzIG5vdCBzZXQKQ09ORklHX05MU19DT0RFUEFH
-RV83NzU9bQpDT05GSUdfTkxTX0NPREVQQUdFXzg1MD1tCkNPTkZJR19OTFNfQ09ERVBBR0VfODUy
-PW0KQ09ORklHX05MU19DT0RFUEFHRV84NTU9bQojIENPTkZJR19OTFNfQ09ERVBBR0VfODU3IGlz
-IG5vdCBzZXQKQ09ORklHX05MU19DT0RFUEFHRV84NjA9bQojIENPTkZJR19OTFNfQ09ERVBBR0Vf
-ODYxIGlzIG5vdCBzZXQKIyBDT05GSUdfTkxTX0NPREVQQUdFXzg2MiBpcyBub3Qgc2V0CiMgQ09O
-RklHX05MU19DT0RFUEFHRV84NjMgaXMgbm90IHNldApDT05GSUdfTkxTX0NPREVQQUdFXzg2ND1t
-CiMgQ09ORklHX05MU19DT0RFUEFHRV84NjUgaXMgbm90IHNldAojIENPTkZJR19OTFNfQ09ERVBB
-R0VfODY2IGlzIG5vdCBzZXQKQ09ORklHX05MU19DT0RFUEFHRV84Njk9bQpDT05GSUdfTkxTX0NP
-REVQQUdFXzkzNj1tCkNPTkZJR19OTFNfQ09ERVBBR0VfOTUwPW0KIyBDT05GSUdfTkxTX0NPREVQ
-QUdFXzkzMiBpcyBub3Qgc2V0CkNPTkZJR19OTFNfQ09ERVBBR0VfOTQ5PW0KQ09ORklHX05MU19D
-T0RFUEFHRV84NzQ9bQpDT05GSUdfTkxTX0lTTzg4NTlfOD1tCkNPTkZJR19OTFNfQ09ERVBBR0Vf
-MTI1MD1tCiMgQ09ORklHX05MU19DT0RFUEFHRV8xMjUxIGlzIG5vdCBzZXQKIyBDT05GSUdfTkxT
-X0FTQ0lJIGlzIG5vdCBzZXQKIyBDT05GSUdfTkxTX0lTTzg4NTlfMSBpcyBub3Qgc2V0CiMgQ09O
-RklHX05MU19JU084ODU5XzIgaXMgbm90IHNldAojIENPTkZJR19OTFNfSVNPODg1OV8zIGlzIG5v
-dCBzZXQKQ09ORklHX05MU19JU084ODU5XzQ9bQpDT05GSUdfTkxTX0lTTzg4NTlfNT1tCiMgQ09O
-RklHX05MU19JU084ODU5XzYgaXMgbm90IHNldApDT05GSUdfTkxTX0lTTzg4NTlfNz1tCiMgQ09O
-RklHX05MU19JU084ODU5XzkgaXMgbm90IHNldApDT05GSUdfTkxTX0lTTzg4NTlfMTM9bQpDT05G
-SUdfTkxTX0lTTzg4NTlfMTQ9bQojIENPTkZJR19OTFNfSVNPODg1OV8xNSBpcyBub3Qgc2V0CiMg
-Q09ORklHX05MU19LT0k4X1IgaXMgbm90IHNldAojIENPTkZJR19OTFNfS09JOF9VIGlzIG5vdCBz
-ZXQKQ09ORklHX05MU19VVEY4PW0KCiMKIyBLZXJuZWwgaGFja2luZwojCkNPTkZJR19UUkFDRV9J
-UlFGTEFHU19TVVBQT1JUPXkKQ09ORklHX1BSSU5US19USU1FPXkKQ09ORklHX0RFRkFVTFRfTUVT
-U0FHRV9MT0dMRVZFTD00CiMgQ09ORklHX0VOQUJMRV9XQVJOX0RFUFJFQ0FURUQgaXMgbm90IHNl
-dAojIENPTkZJR19FTkFCTEVfTVVTVF9DSEVDSyBpcyBub3Qgc2V0CkNPTkZJR19GUkFNRV9XQVJO
-PTEwMjQKIyBDT05GSUdfTUFHSUNfU1lTUlEgaXMgbm90IHNldAojIENPTkZJR19TVFJJUF9BU01f
-U1lNUyBpcyBub3Qgc2V0CkNPTkZJR19VTlVTRURfU1lNQk9MUz15CkNPTkZJR19ERUJVR19GUz15
-CiMgQ09ORklHX0hFQURFUlNfQ0hFQ0sgaXMgbm90IHNldApDT05GSUdfREVCVUdfU0VDVElPTl9N
-SVNNQVRDSD15CkNPTkZJR19ERUJVR19LRVJORUw9eQpDT05GSUdfREVCVUdfU0hJUlE9eQpDT05G
-SUdfTE9DS1VQX0RFVEVDVE9SPXkKQ09ORklHX0hBUkRMT0NLVVBfREVURUNUT1I9eQojIENPTkZJ
-R19CT09UUEFSQU1fSEFSRExPQ0tVUF9QQU5JQyBpcyBub3Qgc2V0CkNPTkZJR19CT09UUEFSQU1f
-SEFSRExPQ0tVUF9QQU5JQ19WQUxVRT0wCiMgQ09ORklHX0JPT1RQQVJBTV9TT0ZUTE9DS1VQX1BB
-TklDIGlzIG5vdCBzZXQKQ09ORklHX0JPT1RQQVJBTV9TT0ZUTE9DS1VQX1BBTklDX1ZBTFVFPTAK
-IyBDT05GSUdfREVURUNUX0hVTkdfVEFTSyBpcyBub3Qgc2V0CkNPTkZJR19TQ0hFRF9ERUJVRz15
-CiMgQ09ORklHX1NDSEVEU1RBVFMgaXMgbm90IHNldApDT05GSUdfVElNRVJfU1RBVFM9eQojIENP
-TkZJR19ERUJVR19PQkpFQ1RTIGlzIG5vdCBzZXQKIyBDT05GSUdfREVCVUdfS01FTUxFQUsgaXMg
-bm90IHNldApDT05GSUdfREVCVUdfUlRfTVVURVhFUz15CkNPTkZJR19ERUJVR19QSV9MSVNUPXkK
-Q09ORklHX1JUX01VVEVYX1RFU1RFUj15CkNPTkZJR19ERUJVR19TUElOTE9DSz15CkNPTkZJR19E
-RUJVR19NVVRFWEVTPXkKQ09ORklHX0RFQlVHX0xPQ0tfQUxMT0M9eQojIENPTkZJR19QUk9WRV9M
-T0NLSU5HIGlzIG5vdCBzZXQKIyBDT05GSUdfU1BBUlNFX1JDVV9QT0lOVEVSIGlzIG5vdCBzZXQK
-Q09ORklHX0xPQ0tERVA9eQojIENPTkZJR19MT0NLX1NUQVQgaXMgbm90IHNldApDT05GSUdfREVC
-VUdfTE9DS0RFUD15CkNPTkZJR19UUkFDRV9JUlFGTEFHUz15CkNPTkZJR19ERUJVR19BVE9NSUNf
-U0xFRVA9eQojIENPTkZJR19ERUJVR19MT0NLSU5HX0FQSV9TRUxGVEVTVFMgaXMgbm90IHNldApD
-T05GSUdfU1RBQ0tUUkFDRT15CiMgQ09ORklHX0RFQlVHX1NUQUNLX1VTQUdFIGlzIG5vdCBzZXQK
-Q09ORklHX0RFQlVHX0tPQkpFQ1Q9eQojIENPTkZJR19ERUJVR19ISUdITUVNIGlzIG5vdCBzZXQK
-IyBDT05GSUdfREVCVUdfQlVHVkVSQk9TRSBpcyBub3Qgc2V0CiMgQ09ORklHX0RFQlVHX0lORk8g
-aXMgbm90IHNldAojIENPTkZJR19ERUJVR19WTSBpcyBub3Qgc2V0CiMgQ09ORklHX0RFQlVHX1ZJ
-UlRVQUwgaXMgbm90IHNldAojIENPTkZJR19ERUJVR19XUklURUNPVU5UIGlzIG5vdCBzZXQKQ09O
-RklHX0RFQlVHX01FTU9SWV9JTklUPXkKQ09ORklHX0RFQlVHX0xJU1Q9eQpDT05GSUdfVEVTVF9M
-SVNUX1NPUlQ9eQojIENPTkZJR19ERUJVR19TRyBpcyBub3Qgc2V0CiMgQ09ORklHX0RFQlVHX05P
-VElGSUVSUyBpcyBub3Qgc2V0CiMgQ09ORklHX0RFQlVHX0NSRURFTlRJQUxTIGlzIG5vdCBzZXQK
-Q09ORklHX0FSQ0hfV0FOVF9GUkFNRV9QT0lOVEVSUz15CkNPTkZJR19GUkFNRV9QT0lOVEVSPXkK
-Q09ORklHX0JPT1RfUFJJTlRLX0RFTEFZPXkKQ09ORklHX1JDVV9UT1JUVVJFX1RFU1Q9bQojIENP
-TkZJR19LUFJPQkVTX1NBTklUWV9URVNUIGlzIG5vdCBzZXQKIyBDT05GSUdfQkFDS1RSQUNFX1NF
-TEZfVEVTVCBpcyBub3Qgc2V0CiMgQ09ORklHX0RFQlVHX0ZPUkNFX1dFQUtfUEVSX0NQVSBpcyBu
-b3Qgc2V0CiMgQ09ORklHX0ZBVUxUX0lOSkVDVElPTiBpcyBub3Qgc2V0CiMgQ09ORklHX0xBVEVO
-Q1lUT1AgaXMgbm90IHNldAojIENPTkZJR19TWVNDVExfU1lTQ0FMTF9DSEVDSyBpcyBub3Qgc2V0
-CiMgQ09ORklHX0RFQlVHX1BBR0VBTExPQyBpcyBub3Qgc2V0CkNPTkZJR19VU0VSX1NUQUNLVFJB
-Q0VfU1VQUE9SVD15CkNPTkZJR19OT1BfVFJBQ0VSPXkKQ09ORklHX0hBVkVfRlRSQUNFX05NSV9F
-TlRFUj15CkNPTkZJR19IQVZFX0ZVTkNUSU9OX1RSQUNFUj15CkNPTkZJR19IQVZFX0ZVTkNUSU9O
-X0dSQVBIX1RSQUNFUj15CkNPTkZJR19IQVZFX0ZVTkNUSU9OX0dSQVBIX0ZQX1RFU1Q9eQpDT05G
-SUdfSEFWRV9GVU5DVElPTl9UUkFDRV9NQ09VTlRfVEVTVD15CkNPTkZJR19IQVZFX0RZTkFNSUNf
-RlRSQUNFPXkKQ09ORklHX0hBVkVfRlRSQUNFX01DT1VOVF9SRUNPUkQ9eQpDT05GSUdfSEFWRV9T
-WVNDQUxMX1RSQUNFUE9JTlRTPXkKQ09ORklHX0hBVkVfQ19SRUNPUkRNQ09VTlQ9eQpDT05GSUdf
-VFJBQ0VSX01BWF9UUkFDRT15CkNPTkZJR19SSU5HX0JVRkZFUj15CkNPTkZJR19GVFJBQ0VfTk1J
-X0VOVEVSPXkKQ09ORklHX0VWRU5UX1RSQUNJTkc9eQojIENPTkZJR19FVkVOVF9QT1dFUl9UUkFD
-SU5HX0RFUFJFQ0FURUQgaXMgbm90IHNldApDT05GSUdfQ09OVEVYVF9TV0lUQ0hfVFJBQ0VSPXkK
-Q09ORklHX1JJTkdfQlVGRkVSX0FMTE9XX1NXQVA9eQpDT05GSUdfVFJBQ0lORz15CkNPTkZJR19H
-RU5FUklDX1RSQUNFUj15CkNPTkZJR19UUkFDSU5HX1NVUFBPUlQ9eQpDT05GSUdfRlRSQUNFPXkK
-Q09ORklHX0ZVTkNUSU9OX1RSQUNFUj15CkNPTkZJR19JUlFTT0ZGX1RSQUNFUj15CiMgQ09ORklH
-X1NDSEVEX1RSQUNFUiBpcyBub3Qgc2V0CiMgQ09ORklHX0ZUUkFDRV9TWVNDQUxMUyBpcyBub3Qg
-c2V0CkNPTkZJR19UUkFDRV9CUkFOQ0hfUFJPRklMSU5HPXkKIyBDT05GSUdfQlJBTkNIX1BST0ZJ
-TEVfTk9ORSBpcyBub3Qgc2V0CkNPTkZJR19QUk9GSUxFX0FOTk9UQVRFRF9CUkFOQ0hFUz15CiMg
-Q09ORklHX1BST0ZJTEVfQUxMX0JSQU5DSEVTIGlzIG5vdCBzZXQKQ09ORklHX1RSQUNJTkdfQlJB
-TkNIRVM9eQpDT05GSUdfQlJBTkNIX1RSQUNFUj15CkNPTkZJR19TVEFDS19UUkFDRVI9eQojIENP
-TkZJR19LUFJPQkVfRVZFTlQgaXMgbm90IHNldApDT05GSUdfRFlOQU1JQ19GVFJBQ0U9eQojIENP
-TkZJR19GVU5DVElPTl9QUk9GSUxFUiBpcyBub3Qgc2V0CkNPTkZJR19GVFJBQ0VfTUNPVU5UX1JF
-Q09SRD15CkNPTkZJR19GVFJBQ0VfU0VMRlRFU1Q9eQpDT05GSUdfRlRSQUNFX1NUQVJUVVBfVEVT
-VD15CkNPTkZJR19FVkVOVF9UUkFDRV9URVNUX1NZU0NBTExTPXkKIyBDT05GSUdfUklOR19CVUZG
-RVJfQkVOQ0hNQVJLIGlzIG5vdCBzZXQKQ09ORklHX0RZTkFNSUNfREVCVUc9eQpDT05GSUdfRE1B
-X0FQSV9ERUJVRz15CkNPTkZJR19BVE9NSUM2NF9TRUxGVEVTVD15CkNPTkZJR19TQU1QTEVTPXkK
-IyBDT05GSUdfU0FNUExFX1RSQUNFUE9JTlRTIGlzIG5vdCBzZXQKQ09ORklHX1NBTVBMRV9UUkFD
-RV9FVkVOVFM9bQpDT05GSUdfU0FNUExFX0tPQkpFQ1Q9bQojIENPTkZJR19TQU1QTEVfS1BST0JF
-UyBpcyBub3Qgc2V0CkNPTkZJR19TQU1QTEVfSFdfQlJFQUtQT0lOVD1tCiMgQ09ORklHX1NBTVBM
-RV9LRklGTyBpcyBub3Qgc2V0CkNPTkZJR19IQVZFX0FSQ0hfS0dEQj15CiMgQ09ORklHX0tHREIg
-aXMgbm90IHNldApDT05GSUdfSEFWRV9BUkNIX0tNRU1DSEVDSz15CiMgQ09ORklHX1RFU1RfS1NU
-UlRPWCBpcyBub3Qgc2V0CkNPTkZJR19TVFJJQ1RfREVWTUVNPXkKIyBDT05GSUdfWDg2X1ZFUkJP
-U0VfQk9PVFVQIGlzIG5vdCBzZXQKQ09ORklHX0VBUkxZX1BSSU5USz15CkNPTkZJR19ERUJVR19T
-VEFDS09WRVJGTE9XPXkKQ09ORklHX1g4Nl9QVERVTVA9eQpDT05GSUdfREVCVUdfUk9EQVRBPXkK
-IyBDT05GSUdfREVCVUdfUk9EQVRBX1RFU1QgaXMgbm90IHNldAojIENPTkZJR19ERUJVR19TRVRf
-TU9EVUxFX1JPTlggaXMgbm90IHNldApDT05GSUdfREVCVUdfTlhfVEVTVD1tCkNPTkZJR19ET1VC
-TEVGQVVMVD15CkNPTkZJR19JT01NVV9TVFJFU1M9eQpDT05GSUdfSEFWRV9NTUlPVFJBQ0VfU1VQ
-UE9SVD15CiMgQ09ORklHX1g4Nl9ERUNPREVSX1NFTEZURVNUIGlzIG5vdCBzZXQKQ09ORklHX0lP
-X0RFTEFZX1RZUEVfMFg4MD0wCkNPTkZJR19JT19ERUxBWV9UWVBFXzBYRUQ9MQpDT05GSUdfSU9f
-REVMQVlfVFlQRV9VREVMQVk9MgpDT05GSUdfSU9fREVMQVlfVFlQRV9OT05FPTMKQ09ORklHX0lP
-X0RFTEFZXzBYODA9eQojIENPTkZJR19JT19ERUxBWV8wWEVEIGlzIG5vdCBzZXQKIyBDT05GSUdf
-SU9fREVMQVlfVURFTEFZIGlzIG5vdCBzZXQKIyBDT05GSUdfSU9fREVMQVlfTk9ORSBpcyBub3Qg
-c2V0CkNPTkZJR19ERUZBVUxUX0lPX0RFTEFZX1RZUEU9MApDT05GSUdfREVCVUdfQk9PVF9QQVJB
-TVM9eQojIENPTkZJR19DUEFfREVCVUcgaXMgbm90IHNldAojIENPTkZJR19PUFRJTUlaRV9JTkxJ
-TklORyBpcyBub3Qgc2V0CgojCiMgU2VjdXJpdHkgb3B0aW9ucwojCkNPTkZJR19LRVlTPXkKIyBD
-T05GSUdfS0VZU19ERUJVR19QUk9DX0tFWVMgaXMgbm90IHNldApDT05GSUdfU0VDVVJJVFlfRE1F
-U0dfUkVTVFJJQ1Q9eQojIENPTkZJR19TRUNVUklUWSBpcyBub3Qgc2V0CkNPTkZJR19TRUNVUklU
-WUZTPXkKQ09ORklHX0RFRkFVTFRfU0VDVVJJVFlfREFDPXkKQ09ORklHX0RFRkFVTFRfU0VDVVJJ
-VFk9IiIKQ09ORklHX0NSWVBUTz1tCgojCiMgQ3J5cHRvIGNvcmUgb3IgaGVscGVyCiMKQ09ORklH
-X0NSWVBUT19GSVBTPXkKQ09ORklHX0NSWVBUT19BTEdBUEk9bQpDT05GSUdfQ1JZUFRPX0FMR0FQ
-STI9bQpDT05GSUdfQ1JZUFRPX0FFQUQ9bQpDT05GSUdfQ1JZUFRPX0FFQUQyPW0KQ09ORklHX0NS
-WVBUT19CTEtDSVBIRVI9bQpDT05GSUdfQ1JZUFRPX0JMS0NJUEhFUjI9bQpDT05GSUdfQ1JZUFRP
-X0hBU0g9bQpDT05GSUdfQ1JZUFRPX0hBU0gyPW0KQ09ORklHX0NSWVBUT19STkc9bQpDT05GSUdf
-Q1JZUFRPX1JORzI9bQpDT05GSUdfQ1JZUFRPX1BDT01QPW0KQ09ORklHX0NSWVBUT19QQ09NUDI9
-bQpDT05GSUdfQ1JZUFRPX01BTkFHRVI9bQpDT05GSUdfQ1JZUFRPX01BTkFHRVIyPW0KIyBDT05G
-SUdfQ1JZUFRPX01BTkFHRVJfRElTQUJMRV9URVNUUyBpcyBub3Qgc2V0CkNPTkZJR19DUllQVE9f
-R0YxMjhNVUw9bQpDT05GSUdfQ1JZUFRPX05VTEw9bQpDT05GSUdfQ1JZUFRPX1dPUktRVUVVRT1t
-CkNPTkZJR19DUllQVE9fQ1JZUFREPW0KQ09ORklHX0NSWVBUT19BVVRIRU5DPW0KQ09ORklHX0NS
-WVBUT19URVNUPW0KCiMKIyBBdXRoZW50aWNhdGVkIEVuY3J5cHRpb24gd2l0aCBBc3NvY2lhdGVk
-IERhdGEKIwpDT05GSUdfQ1JZUFRPX0NDTT1tCkNPTkZJR19DUllQVE9fR0NNPW0KQ09ORklHX0NS
-WVBUT19TRVFJVj1tCgojCiMgQmxvY2sgbW9kZXMKIwpDT05GSUdfQ1JZUFRPX0NCQz1tCkNPTkZJ
-R19DUllQVE9fQ1RSPW0KQ09ORklHX0NSWVBUT19DVFM9bQpDT05GSUdfQ1JZUFRPX0VDQj1tCkNP
-TkZJR19DUllQVE9fTFJXPW0KQ09ORklHX0NSWVBUT19QQ0JDPW0KIyBDT05GSUdfQ1JZUFRPX1hU
-UyBpcyBub3Qgc2V0CgojCiMgSGFzaCBtb2RlcwojCkNPTkZJR19DUllQVE9fSE1BQz1tCiMgQ09O
-RklHX0NSWVBUT19YQ0JDIGlzIG5vdCBzZXQKQ09ORklHX0NSWVBUT19WTUFDPW0KCiMKIyBEaWdl
-c3QKIwojIENPTkZJR19DUllQVE9fQ1JDMzJDIGlzIG5vdCBzZXQKIyBDT05GSUdfQ1JZUFRPX0NS
-QzMyQ19JTlRFTCBpcyBub3Qgc2V0CkNPTkZJR19DUllQVE9fR0hBU0g9bQpDT05GSUdfQ1JZUFRP
-X01END1tCkNPTkZJR19DUllQVE9fTUQ1PW0KQ09ORklHX0NSWVBUT19NSUNIQUVMX01JQz1tCiMg
-Q09ORklHX0NSWVBUT19STUQxMjggaXMgbm90IHNldApDT05GSUdfQ1JZUFRPX1JNRDE2MD1tCiMg
-Q09ORklHX0NSWVBUT19STUQyNTYgaXMgbm90IHNldApDT05GSUdfQ1JZUFRPX1JNRDMyMD1tCkNP
-TkZJR19DUllQVE9fU0hBMT1tCkNPTkZJR19DUllQVE9fU0hBMjU2PW0KQ09ORklHX0NSWVBUT19T
-SEE1MTI9bQojIENPTkZJR19DUllQVE9fVEdSMTkyIGlzIG5vdCBzZXQKIyBDT05GSUdfQ1JZUFRP
-X1dQNTEyIGlzIG5vdCBzZXQKCiMKIyBDaXBoZXJzCiMKQ09ORklHX0NSWVBUT19BRVM9bQpDT05G
-SUdfQ1JZUFRPX0FFU181ODY9bQojIENPTkZJR19DUllQVE9fQUVTX05JX0lOVEVMIGlzIG5vdCBz
-ZXQKQ09ORklHX0NSWVBUT19BTlVCSVM9bQpDT05GSUdfQ1JZUFRPX0FSQzQ9bQpDT05GSUdfQ1JZ
-UFRPX0JMT1dGSVNIPW0KQ09ORklHX0NSWVBUT19DQU1FTExJQT1tCiMgQ09ORklHX0NSWVBUT19D
-QVNUNSBpcyBub3Qgc2V0CkNPTkZJR19DUllQVE9fQ0FTVDY9bQojIENPTkZJR19DUllQVE9fREVT
-IGlzIG5vdCBzZXQKQ09ORklHX0NSWVBUT19GQ1JZUFQ9bQojIENPTkZJR19DUllQVE9fS0hBWkFE
-IGlzIG5vdCBzZXQKIyBDT05GSUdfQ1JZUFRPX1NBTFNBMjAgaXMgbm90IHNldAojIENPTkZJR19D
-UllQVE9fU0FMU0EyMF81ODYgaXMgbm90IHNldAojIENPTkZJR19DUllQVE9fU0VFRCBpcyBub3Qg
-c2V0CkNPTkZJR19DUllQVE9fU0VSUEVOVD1tCkNPTkZJR19DUllQVE9fVEVBPW0KQ09ORklHX0NS
-WVBUT19UV09GSVNIPW0KQ09ORklHX0NSWVBUT19UV09GSVNIX0NPTU1PTj1tCiMgQ09ORklHX0NS
-WVBUT19UV09GSVNIXzU4NiBpcyBub3Qgc2V0CgojCiMgQ29tcHJlc3Npb24KIwojIENPTkZJR19D
-UllQVE9fREVGTEFURSBpcyBub3Qgc2V0CkNPTkZJR19DUllQVE9fWkxJQj1tCkNPTkZJR19DUllQ
-VE9fTFpPPW0KCiMKIyBSYW5kb20gTnVtYmVyIEdlbmVyYXRpb24KIwpDT05GSUdfQ1JZUFRPX0FO
-U0lfQ1BSTkc9bQpDT05GSUdfQ1JZUFRPX0hXPXkKQ09ORklHX0NSWVBUT19ERVZfUEFETE9DSz1t
-CkNPTkZJR19DUllQVE9fREVWX1BBRExPQ0tfQUVTPW0KQ09ORklHX0NSWVBUT19ERVZfUEFETE9D
-S19TSEE9bQpDT05GSUdfSEFWRV9LVk09eQpDT05GSUdfVklSVFVBTElaQVRJT049eQojIENPTkZJ
-R19MR1VFU1QgaXMgbm90IHNldApDT05GSUdfVklSVElPPW0KQ09ORklHX1ZJUlRJT19SSU5HPW0K
-Q09ORklHX1ZJUlRJT19CQUxMT09OPW0KQ09ORklHX0JJTkFSWV9QUklOVEY9eQoKIwojIExpYnJh
-cnkgcm91dGluZXMKIwpDT05GSUdfQklUUkVWRVJTRT1tCkNPTkZJR19HRU5FUklDX0ZJTkRfRklS
-U1RfQklUPXkKIyBDT05GSUdfQ1JDX0NDSVRUIGlzIG5vdCBzZXQKQ09ORklHX0NSQzE2PW0KIyBD
-T05GSUdfQ1JDX1QxMERJRiBpcyBub3Qgc2V0CkNPTkZJR19DUkNfSVRVX1Q9bQpDT05GSUdfQ1JD
-MzI9bQojIENPTkZJR19DUkM3IGlzIG5vdCBzZXQKIyBDT05GSUdfTElCQ1JDMzJDIGlzIG5vdCBz
-ZXQKQ09ORklHX0NSQzg9bQpDT05GSUdfWkxJQl9JTkZMQVRFPW0KQ09ORklHX1pMSUJfREVGTEFU
-RT1tCkNPTkZJR19MWk9fQ09NUFJFU1M9bQpDT05GSUdfTFpPX0RFQ09NUFJFU1M9bQojIENPTkZJ
-R19YWl9ERUMgaXMgbm90IHNldAojIENPTkZJR19YWl9ERUNfQkNKIGlzIG5vdCBzZXQKQ09ORklH
-X0JDSD1tCkNPTkZJR19CVFJFRT15CkNPTkZJR19IQVNfSU9NRU09eQpDT05GSUdfSEFTX0lPUE9S
-VD15CkNPTkZJR19IQVNfRE1BPXkKQ09ORklHX0NIRUNLX1NJR05BVFVSRT15CkNPTkZJR19OTEFU
-VFI9eQpDT05GSUdfQVZFUkFHRT15CkNPTkZJR19DT1JESUM9bQo=
-
---Multipart=_Sat__16_Jul_2011_12_10_28_-0700_soej5Phq2BInCJkx--
