@@ -1,42 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:4205 "EHLO mail.perches.com"
+Received: from mail.perches.com ([173.55.12.10]:4078 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751584Ab1GTQCn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2011 12:02:43 -0400
-Subject: Re: [PATCH 1/3] wireless: rtlwifi: throw away MAC_FMT and use %pM
- instead
+	id S1754566Ab1GQTwR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jul 2011 15:52:17 -0400
+Subject: Re: [PATCH 0/3] ath6kl: neatening
 From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <4E26F879.8010601@lwfinger.net>
-References: <fddeabc04a1b81a5c1f51a4164d93366dccf5f8e.1311162926.git.andriy.shevchenko@linux.intel.com>
-	 <4E26F879.8010601@lwfinger.net>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: devel@linuxdriverproject.org, gregkh@suse.de, error27@gmail.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <4E23307B.4060504@qca.qualcomm.com>
+References: <cover.1310927985.git.joe@perches.com>
+	 <4E23307B.4060504@qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 20 Jul 2011 09:02:42 -0700
-Message-ID: <1311177762.1663.9.camel@Joe-Laptop> (sfid-20110720_180302_859629_8F2CF954)
+Date: Sun, 17 Jul 2011 12:52:14 -0700
+Message-ID: <1310932335.2286.8.camel@Joe-Laptop> (sfid-20110717_215238_153082_8E6EDEEB)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-07-20 at 10:47 -0500, Larry Finger wrote:
-> Thanks for the patch.
+On Sun, 2011-07-17 at 21:56 +0300, Kalle Valo wrote:
+> On 07/17/2011 09:43 PM, Joe Perches wrote:
+> > Joe Perches (3):
+> >   ath6kl: Add missing newlines and coalesce messages
+> >   ath6kl: Remove __func__ uses from ath6kl_err
+> >   ath6kl: cfg80211: Add and use ath6kl_cfg80211_ready helper
+> Nice, thanks a lot. I'm planning to send v3 of athk6kl patches later
+> today. Is it okay for you if I amend your three patches to that patchset?
 
-Hey Larry.
+'course.
 
-rtlwifi has a CONFIG_BT_COEXIST which is currently
-unused/undefined by Kconfig.
-
-Are there plans to enable this or should the code
-just be removed?
-
-There may be a few dependencies in rtlwifi for
-variables set in this block so it seems from
-superficial reading that removal might be a bit
-involved.  I didn't look much more than that,
-but struct btcoexist_priv doesn't seem to be
-specified by the code anywhere.
 
 
