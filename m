@@ -1,136 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from powered.by.root24.eu ([91.121.20.142]:53733 "EHLO Root24.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751013Ab1GXPwH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jul 2011 11:52:07 -0400
-Message-ID: <4E2C3E45.2020708@ionic.de> (sfid-20110724_175242_721069_2832586C)
-Date: Sun, 24 Jul 2011 17:46:13 +0200
-From: Mihai Moldovan <ionic@ionic.de>
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:33382 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752767Ab1GQVmw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jul 2011 17:42:52 -0400
+Subject: [PATCH v3 14/23] ath6kl: add htc_hif.h
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: joe@perches.com, devel@linuxdriverproject.org, gregkh@suse.de,
+	error27@gmail.com
+Date: Mon, 18 Jul 2011 00:42:45 +0300
+Message-ID: <20110717214245.23534.75609.stgit@localhost6.localdomain6> (sfid-20110717_234254_116730_E9592D79)
+In-Reply-To: <20110717213832.23534.75274.stgit@localhost6.localdomain6>
+References: <20110717213832.23534.75274.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "Linux Wireless Mailing List" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: fix a typo in ignore_reg_update
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms060406000907070707090203"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a cryptographically signed message in MIME format.
-
---------------ms060406000907070707090203
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-Just a typo fix changing regulaotry to regulatory.
-
-Signed-off-by: Mihai Moldovan <ionic@ionic.de>
-CC: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- net/wireless/reg.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath6kl/htc_hif.h |  113 +++++++++++++++++++++++++++++
+ 1 files changed, 113 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/htc_hif.h
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 1ad0f39..d99ead3 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -903,7 +903,7 @@ static bool ignore_reg_update(struct wiphy *wiphy,
-         initiator !=3D NL80211_REGDOM_SET_BY_COUNTRY_IE &&
-         !is_world_regdom(last_request->alpha2)) {
-         REG_DBG_PRINT("Ignoring regulatory request %s "
--                  "since the driver requires its own regulaotry "
-+                  "since the driver requires its own regulatory "
-                   "domain to be set first",
-                   reg_initiator_name(initiator));
-         return true;
---=20
-1.7.6
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.h b/drivers/net/wireless/ath/ath6kl/htc_hif.h
+new file mode 100644
+index 0000000..d770d4e
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath6kl/htc_hif.h
+@@ -0,0 +1,113 @@
++/*
++ * Copyright (c) 2007-2011 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef HTC_HIF_H
++#define HTC_HIF_H
++
++#include "htc.h"
++#include "hif.h"
++
++#define ATH6KL_MAILBOXES	4
++
++/* HTC runs over mailbox 0 */
++#define HTC_MAILBOX	0
++
++#define ATH6KL_TARGET_DEBUG_INTR_MASK     0x01
++
++#define OTHER_INTS_ENABLED		(INT_STATUS_ENABLE_ERROR_MASK |	\
++					INT_STATUS_ENABLE_CPU_MASK   |	\
++					INT_STATUS_ENABLE_COUNTER_MASK)
++
++#define ATH6KL_REG_IO_BUFFER_SIZE			32
++#define ATH6KL_MAX_REG_IO_BUFFERS			8
++#define ATH6KL_SCATTER_ENTRIES_PER_REQ            16
++#define ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER      (16 * 1024)
++#define ATH6KL_SCATTER_REQS                       4
++
++#ifndef A_CACHE_LINE_PAD
++#define A_CACHE_LINE_PAD                        128
++#endif
++#define ATH6KL_MIN_SCATTER_ENTRIES_PER_REQ        2
++#define ATH6KL_MIN_TRANSFER_SIZE_PER_SCATTER      (4 * 1024)
++
++struct ath6kl_irq_proc_registers {
++	u8 host_int_status;
++	u8 cpu_int_status;
++	u8 error_int_status;
++	u8 counter_int_status;
++	u8 mbox_frame;
++	u8 rx_lkahd_valid;
++	u8 host_int_status2;
++	u8 gmbox_rx_avail;
++	__le32 rx_lkahd[2];
++	__le32 rx_gmbox_lkahd_alias[2];
++} __packed;
++
++struct ath6kl_irq_enable_reg {
++	u8 int_status_en;
++	u8 cpu_int_status_en;
++	u8 err_int_status_en;
++	u8 cntr_int_status_en;
++} __packed;
++
++/* buffers for ASYNC I/O */
++struct ath6kl_async_reg_io_buffer {
++	struct htc_packet packet;
++	u8 pad1[A_CACHE_LINE_PAD];
++	/* cache-line safe with pads around */
++	u8 buf[ATH6KL_REG_IO_BUFFER_SIZE];
++	u8 pad2[A_CACHE_LINE_PAD];
++};
++
++struct ath6kl_device {
++	spinlock_t lock;
++	u8 pad1[A_CACHE_LINE_PAD];
++	struct ath6kl_irq_proc_registers irq_proc_reg;
++	u8 pad2[A_CACHE_LINE_PAD];
++	struct ath6kl_irq_enable_reg irq_en_reg;
++	u8 pad3[A_CACHE_LINE_PAD];
++	u32 block_sz;
++	u32 block_mask;
++	struct htc_target *htc_cnxt;
++	struct list_head reg_io;
++	struct ath6kl_async_reg_io_buffer reg_io_buf[ATH6KL_MAX_REG_IO_BUFFERS];
++	int (*msg_pending) (struct htc_target *target, u32 lk_ahds[],
++			    int *npkts_fetched);
++	struct hif_dev_scat_sup_info hif_scat_info;
++	bool virt_scat;
++	int max_rx_bndl_sz;
++	int max_tx_bndl_sz;
++	int chk_irq_status_cnt;
++	struct ath6kl *ar;
++};
++
++int ath6kldev_setup(struct ath6kl_device *dev);
++int ath6kldev_unmask_intrs(struct ath6kl_device *dev);
++int ath6kldev_mask_intrs(struct ath6kl_device *dev);
++int ath6kldev_poll_mboxmsg_rx(struct ath6kl_device *dev,
++			      u32 *lk_ahd, int timeout);
++int ath6kldev_rx_control(struct ath6kl_device *dev, bool enable_rx);
++int ath6kldev_disable_intrs(struct ath6kl_device *dev);
++
++int ath6kldev_rw_comp_handler(void *context, int status);
++int ath6kldev_intr_bh_handler(struct ath6kl *ar);
++
++/* Scatter Function and Definitions */
++int ath6kldev_setup_msg_bndl(struct ath6kl_device *dev, int max_msg_per_xfer);
++int ath6kldev_submit_scat_req(struct ath6kl_device *dev,
++			    struct hif_scatter_req *scat_req, bool read);
++
++#endif /*ATH6KL_H_ */
 
-
-
---------------ms060406000907070707090203
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIINBjCC
-BjQwggQcoAMCAQICASAwDQYJKoZIhvcNAQEFBQAwfTELMAkGA1UEBhMCSUwxFjAUBgNVBAoT
-DVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNp
-Z25pbmcxKTAnBgNVBAMTIFN0YXJ0Q29tIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTA3
-MTAyNDIxMDI1NVoXDTE3MTAyNDIxMDI1NVowgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1T
-dGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWdu
-aW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFzcyAyIFByaW1hcnkgSW50ZXJtZWRpYXRlIENs
-aWVudCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMsohUWcASz7GfKrpTOM
-KqANy9BV7V0igWdGxA8IU77L3aTxErQ+fcxtDYZ36Z6GH0YFn7fq5RADteP0AYzrCA+EQTfi
-8q1+kA3m0nwtwXG94M5sIqsvs7lRP1aycBke/s5g9hJHryZ2acScnzczjBCAo7X1v5G3yw8M
-DP2m2RCye0KfgZ4nODerZJVzhAlOD9YejvAXZqHksw56HzElVIoYSZ3q4+RJuPXXfIoyby+Y
-2m1E+YzX5iCZXBx05gk6MKAW1vaw4/v2OOLy6FZH3XHHtOkzUreG//CsFnB9+uaYSlR65cdG
-zTsmoIK8WH1ygoXhRBm98SD7Hf/r3FELNvUCAwEAAaOCAa0wggGpMA8GA1UdEwEB/wQFMAMB
-Af8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBSuVYNv7DHKufcd+q9rMfPIHeOsuzAfBgNV
-HSMEGDAWgBROC+8apEBbpRdphzDKNGhD0EGu8jBmBggrBgEFBQcBAQRaMFgwJwYIKwYBBQUH
-MAGGG2h0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9jYTAtBggrBgEFBQcwAoYhaHR0cDovL3d3
-dy5zdGFydHNzbC5jb20vc2ZzY2EuY3J0MFsGA1UdHwRUMFIwJ6AloCOGIWh0dHA6Ly93d3cu
-c3RhcnRzc2wuY29tL3Nmc2NhLmNybDAnoCWgI4YhaHR0cDovL2NybC5zdGFydHNzbC5jb20v
-c2ZzY2EuY3JsMIGABgNVHSAEeTB3MHUGCysGAQQBgbU3AQIBMGYwLgYIKwYBBQUHAgEWImh0
-dHA6Ly93d3cuc3RhcnRzc2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93
-d3cuc3RhcnRzc2wuY29tL2ludGVybWVkaWF0ZS5wZGYwDQYJKoZIhvcNAQEFBQADggIBADqp
-Jw3I07QWke9plNBpxUxcffc7nUrIQpJHDci91DFG7fVhHRkMZ1J+BKg5UNUxIFJ2Z9B90Mic
-c/NXcs7kPBRdn6XGO/vPc87Y6R+cWS9Nc9+fp3Enmsm94OxOwI9wn8qnr/6o3mD4noP9Jphw
-UPTXwHovjavRnhUQHLfo/i2NG0XXgTHXS2Xm0kVUozXqpYpAdumMiB/vezj1QHQJDmUdPYMc
-p+reg9901zkyT3fDW/ivJVv6pWtkh6Pw2ytZT7mvg7YhX3V50Nv860cV11mocUVcqBLv0gcT
-+HBDYtbuvexNftwNQKD5193A7zN4vG7CTYkXxytSjKuXrpEatEiFPxWgb84nVj25SU5q/r1X
-hwby6mLhkbaXslkVtwEWT3Van49rKjlK4XrUKYYWtnfzq6aSak5u0Vpxd1rY79tWhD3EdCvO
-hNz/QplNa+VkIsrcp7+8ZhP1l1b2U6MaxIVteuVMD3X0vziIwr7jxYae9FZjbxlpUemqXjcC
-0QaFfN7qI0JsQMALL7iGRBg7K0CoOBzECdD3fuZil5kU/LP9cr1BK31U0Uy651bFnAMMMkqh
-AChIbn0ei72VnbpSsrrSdF0BAGYQ8vyHae5aCg+H75dVCV33K6FuxZrf09yTz+Vx/PkdRUYk
-XmZz/OTfyJXsUOUXrym6KvI2rYpccSk5MIIGyjCCBbKgAwIBAgICBnIwDQYJKoZIhvcNAQEF
-BQAwgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSswKQYDVQQLEyJT
-ZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFydENvbSBD
-bGFzcyAyIFByaW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQTAeFw0xMDAzMjMxNjI2NTZa
-Fw0xMjAzMjQwNTQ2MjJaMIHHMSAwHgYDVQQNExcxNjg2MTctOUo5elVlMUVuNHg5b3ZiTzEL
-MAkGA1UEBhMCREUxGzAZBgNVBAgTEkJhZGVuLVd1ZXJ0dGVtYmVyZzESMBAGA1UEBxMJS2Fy
-bHNydWhlMS0wKwYDVQQLEyRTdGFydENvbSBWZXJpZmllZCBDZXJ0aWZpY2F0ZSBNZW1iZXIx
-FzAVBgNVBAMTDk1paGFpIE1vbGRvdmFuMR0wGwYJKoZIhvcNAQkBFg5pb25pY0Bpb25pYy5k
-ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMssU6wPYwJJAxY07er/P6ANPXgz
-yCczuA+7q/eql1St56r91yQ534A4oeXEqRZvpMsDuvczNG1Yz80nLpM+lO3Wg8csxaGReewe
-RBIS3abf40HCIBVlOl7oTcmzZuzqz2KE70CHZ7p3k0WAEUfUb7AS8qrqxuoj0dtUkrdMwjoD
-rPWs3zJ+vHo5FU3sTvj2ksiStjG3NMERBT+1Gzf2pVx2cKJRBmqACbKZfwE9QufRqrZT8bWY
-i5DCV34RL7eVLnejLL+MvtarZv2K8Acojq9t7zO9Z+0rnlr6o46c2egVB+s/ol28q3DEce6f
-p1KrCiujqRqQwVQ8O/2ogg4l5h0CAwEAAaOCAvcwggLzMAkGA1UdEwQCMAAwCwYDVR0PBAQD
-AgSwMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDBDAdBgNVHQ4EFgQU3JbCyOa+BBzV
-nBAKycZGQAzit2wwHwYDVR0jBBgwFoAUrlWDb+wxyrn3HfqvazHzyB3jrLswGQYDVR0RBBIw
-EIEOaW9uaWNAaW9uaWMuZGUwggFCBgNVHSAEggE5MIIBNTCCATEGCysGAQQBgbU3AQIBMIIB
-IDAuBggrBgEFBQcCARYiaHR0cDovL3d3dy5zdGFydHNzbC5jb20vcG9saWN5LnBkZjA0Bggr
-BgEFBQcCARYoaHR0cDovL3d3dy5zdGFydHNzbC5jb20vaW50ZXJtZWRpYXRlLnBkZjCBtwYI
-KwYBBQUHAgIwgaowFBYNU3RhcnRDb20gTHRkLjADAgEBGoGRTGltaXRlZCBMaWFiaWxpdHks
-IHNlZSBzZWN0aW9uICpMZWdhbCBMaW1pdGF0aW9ucyogb2YgdGhlIFN0YXJ0Q29tIENlcnRp
-ZmljYXRpb24gQXV0aG9yaXR5IFBvbGljeSBhdmFpbGFibGUgYXQgaHR0cDovL3d3dy5zdGFy
-dHNzbC5jb20vcG9saWN5LnBkZjBjBgNVHR8EXDBaMCugKaAnhiVodHRwOi8vd3d3LnN0YXJ0
-c3NsLmNvbS9jcnR1Mi1jcmwuY3JsMCugKaAnhiVodHRwOi8vY3JsLnN0YXJ0c3NsLmNvbS9j
-cnR1Mi1jcmwuY3JsMIGOBggrBgEFBQcBAQSBgTB/MDkGCCsGAQUFBzABhi1odHRwOi8vb2Nz
-cC5zdGFydHNzbC5jb20vc3ViL2NsYXNzMi9jbGllbnQvY2EwQgYIKwYBBQUHMAKGNmh0dHA6
-Ly93d3cuc3RhcnRzc2wuY29tL2NlcnRzL3N1Yi5jbGFzczIuY2xpZW50LmNhLmNydDAjBgNV
-HRIEHDAahhhodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS8wDQYJKoZIhvcNAQEFBQADggEBACle
-v1JwhVI4Pu8GzKRJzJdcYdsT7fJ9R5OzNnec4CADsb9Xu7HDyRa5qABBXihHvmo+fxGVe6Hy
-8TxPvZYCGaeUi2t6aodIFOTQDWcdEP9o7SynBOXHqsN2lZ08Q4MBuoGfquJi0XjpCNnLY9KS
-OZTHTwAIqGVH7lf99egY1Atfl+y/Lc0e6Sw/0qvcnaQSzwCZ/OkqVWSTGDZXwCDFuy6Cbwjy
-Kn9qshZzeMqvSKHmHPihzJQ6eVXImZgrgWk5FrBpO8d59xoqO32PbSyM0cZhqvkbG/nlWPbz
-Xn13+cgG7ajAGCg8XueMeh3m03sIIHinvgaeHOAqeO3TvVVv6WQxggPNMIIDyQIBATCBkzCB
-jDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3Vy
-ZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNz
-IDIgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgIGcjAJBgUrDgMCGgUAoIICDjAY
-BgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJBTEPFw0xMTA3MjQxNTQ2MTNa
-MCMGCSqGSIb3DQEJBDEWBBS0WRCRMbLkNFhN3gven6ssW0SG/jBfBgkqhkiG9w0BCQ8xUjBQ
-MAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzAOBggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwIC
-AUAwBwYFKw4DAgcwDQYIKoZIhvcNAwICASgwgaQGCSsGAQQBgjcQBDGBljCBkzCBjDELMAkG
-A1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdp
-dGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDIgUHJp
-bWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgIGcjCBpgYLKoZIhvcNAQkQAgsxgZaggZMw
-gYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSswKQYDVQQLEyJTZWN1
-cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFydENvbSBDbGFz
-cyAyIFByaW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQQICBnIwDQYJKoZIhvcNAQEBBQAE
-ggEAxqcZ8Z5FBkNLUbX5GPlonO47WR7y+/bwWarWK5LFvgnJa3oQs8Molk4ui6W6joltLSBJ
-CtaJWYAEU1/Ibpor4KlRrvf/yYkyHmELLtIWPtBxGny/ZECEjyn1BRmeazO1jD35XSPyEkj4
-tzs9I4S6D6Z5lTjOuWk0fQctDFc1nayHY3Z3qFlIfQIQiplu2LHyivOC+AV0zQaNw8008UQR
-cMBFYNtmZbB4T0sjxFr5/w+5laa9V6v30Czm5P14QWYJR5g45fhK0CSeLwuVEREG2KrnX830
-QXqWSyIB9OGfub/V1EfnAd4j1FI7PRw3yS9ZS1x7QIIbGHlploYCNmGtHwAAAAAAAA==
---------------ms060406000907070707090203--
