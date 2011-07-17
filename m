@@ -1,327 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from msr17.hinet.net ([168.95.4.117]:62511 "EHLO msr17.hinet.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752251Ab1GORNU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2011 13:13:20 -0400
-From: Ali Bahar <ali@internetdog.org>
-To: Greg Kroah-Hartman <gregkh@suse.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Ali Bahar <ali@internetdog.org>
-Subject: [PATCH 1/2] staging: r8712u: Most return-values changed from -1 to proper errno macros.
-Date: Sat, 16 Jul 2011 01:11:15 +0800
-Message-Id: <1310749876-32632-2-git-send-email-ali@internetDog.org> (sfid-20110715_191326_921619_05EDDFBF)
-In-Reply-To: <1310749876-32632-1-git-send-email-ali@internetDog.org>
-References: <20110703010605.GA3736@internetdog.org>
- <1310749876-32632-1-git-send-email-ali@internetDog.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:53795 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751518Ab1GQGNB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jul 2011 02:13:01 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 1/2] ath9k: Fix sparse warnings
+Date: Sun, 17 Jul 2011 11:43:02 +0530
+Message-ID: <1310883182-10940-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110717_081307_167071_434C54F7)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ioctl handlers were frequently returning -1 upon failure. Most of
-these have now been changed to proper errno macros.
-The few remaining ones have been left untouched because either the
-handler is not called (and so cannot be tested), or the function never
-fails (and so cannot be system-tested), or requires new code to
-distinguish its failures.
+drivers/net/wireless/ath/ath9k/init.c:199:21: warning: context imbalance
+in 'ath9k_reg_rmw' - different lock contexts for basic block
+drivers/net/wireless/ath/ath9k/xmit.c:1175:31: warning: context
+imbalance in 'ath_drain_txq_list' - unexpected unlock
+drivers/net/wireless/ath/ath9k/xmit.c:2047:23: warning: context
+imbalance in 'ath_tx_process_buffer' - unexpected unlock
+drivers/net/wireless/ath/ath9k/ar9003_eeprom.c:3041:24: warning: cast to
+restricted __le32
 
-Signed-off-by: Ali Bahar <ali@internetDog.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/staging/rtl8712/rtl871x_ioctl_linux.c |  121 +++++++++++++++++++++----
- 1 files changed, 105 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
+ drivers/net/wireless/ath/ath9k/init.c          |   25 ++++++++++++++++-------
+ drivers/net/wireless/ath/ath9k/xmit.c          |    4 +++
+ 3 files changed, 22 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/staging/rtl8712/rtl871x_ioctl_linux.c b/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-index 40e6b5c..bb97d8b 100644
---- a/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-+++ b/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-@@ -526,7 +526,7 @@ static int r871x_set_wpa_ie(struct _adapter *padapter, char *pie,
- 		memcpy(buf, pie , ielen);
- 		pos = buf;
- 		if (ielen < RSN_HEADER_LEN) {
--			ret  = -1;
-+			ret  = -EINVAL;
- 			goto exit;
- 		}
- 		if (r8712_parse_wpa_ie(buf, ielen, &group_cipher,
-@@ -689,6 +689,11 @@ static const long frequency_list[] = {
- 	5825
- };
- 
-+/*
-+ * This function intends to handle the Set Freq command.
-+ * Currently, the request comes via the Wireless Extensions' SIOCSIWFREQ ioctl.
-+ *
-+ */
- static int r8711_wx_set_freq(struct net_device *dev,
- 			     struct iw_request_info *info,
- 			     union iwreq_data *wrqu, char *extra)
-@@ -723,6 +728,11 @@ static int r8711_wx_set_freq(struct net_device *dev,
- 	return rc;
- }
- 
-+/*
-+ * This function intends to handle the Get Freq command.
-+ * Currently, the request comes via the Wireless Extensions' SIOCGIWFREQ ioctl.
-+ *
-+ */
- static int r8711_wx_get_freq(struct net_device *dev,
- 			     struct iw_request_info *info,
- 			     union iwreq_data *wrqu, char *extra)
-@@ -736,11 +746,21 @@ static int r8711_wx_get_freq(struct net_device *dev,
- 			       pcur_bss->Configuration.DSConfig-1] * 100000;
- 		wrqu->freq.e = 1;
- 		wrqu->freq.i = pcur_bss->Configuration.DSConfig;
--	} else
--		return -1;
-+	} else {
-+		return -ENOLINK;
-+	}
- 	return 0;
- }
- 
-+/*
-+ * This function intends to handle the Set Mode command.
-+ * Currently, the request comes via the Wireless Extensions' SIOCSIWMODE ioctl.
-+ *
-+ * Note: Currently (July 2011) the call to
-+ * r8712_set_802_11_infrastructure_mode() always returns true. Since we have no
-+ * specific failure reason, we return EPERM in lieu of general failure.
-+ *
-+ */
- static int r8711_wx_set_mode(struct net_device *dev,
- 			     struct iw_request_info *a,
- 			     union iwreq_data *wrqu, char *b)
-@@ -769,10 +789,15 @@ static int r8711_wx_set_mode(struct net_device *dev,
- 	else
- 		r8712_setopmode_cmd(padapter, Ndis802_11AutoUnknown);
- 	if (!r8712_set_802_11_infrastructure_mode(padapter, networkType))
--		return -1;
-+		return -EPERM; /* Unknown failure. */
- 	return 0;
- }
- 
-+/*
-+ * This function intends to handle the Get Mode command.
-+ * Currently, the request comes via the Wireless Extensions' SIOCGIWMODE ioctl.
-+ *
-+ */
- static int r8711_wx_get_mode(struct net_device *dev, struct iw_request_info *a,
- 			     union iwreq_data *wrqu, char *b)
- {
-@@ -975,6 +1000,16 @@ static int r871x_wx_set_priv(struct net_device *dev,
-  * s2. set_802_11_authentication_mode()
-  * s3. set_802_11_encryption_mode()
-  * s4. set_802_11_bssid()
-+ *
-+ * This function intends to handle the Set AP command, which specifies the
-+ * MAC# of a preferred Access Point.
-+ * Currently, the request comes via Wireless Extensions' SIOCSIWAP ioctl.
-+ *
-+ * For this operation to succeed, there is no need for the interface to be Up.
-+ *
-+ * Note: Currently (July 2011) r8712_set_802_11_bssid() may fail for one of
-+ * several reasons. For now, we let -1 be returned as a catch-all failure
-+ * indication, until that function's implementation is updated. 
-  */
- static int r8711_wx_set_wap(struct net_device *dev,
- 			 struct iw_request_info *info,
-@@ -995,7 +1030,7 @@ static int r8711_wx_set_wap(struct net_device *dev,
- 	if (padapter->bup == false)
- 		return -1;
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY) == true)
--		return -1;
-+		return -EBUSY;
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_LINKING) == true)
- 		return ret;
- 	if (temp->sa_family != ARPHRD_ETHER)
-@@ -1014,14 +1049,14 @@ static int r8711_wx_set_wap(struct net_device *dev,
- 		if (!memcmp(dst_bssid, temp->sa_data, ETH_ALEN)) {
- 			if (r8712_set_802_11_infrastructure_mode(padapter,
- 			    pnetwork->network.InfrastructureMode) == false)
--				ret = -1;
-+				ret = -EPERM; /* Unknown failure. */
- 			break;
- 		}
- 	}
- 	spin_unlock_irqrestore(&queue->lock, irqL);
- 	if (!ret) {
- 		if (!r8712_set_802_11_authentication_mode(padapter, authmode))
--			ret = -1;
-+			ret = -ENOMEM;
- 		else {
- 			if (!r8712_set_802_11_bssid(padapter, temp->sa_data))
- 				ret = -1;
-@@ -1074,6 +1109,19 @@ static int r871x_wx_set_mlme(struct net_device *dev,
- 	return ret;
- }
- 
-+/**
-+ *
-+ * This function intends to handle the Set Scan command.
-+ * Currently, the request comes via Wireless Extensions' SIOCSIWSCAN ioctl.
-+ *
-+ * For this operation to succeed, the interface is brought Up beforehand.
-+ *
-+ * Note: It is not clear what value we ought to return when hw_init_completed
-+ * is false. If the firmware could not be found/loaded, which errno should we
-+ * return?
-+ * The same question arises for bDriverStopped being true.
-+ *
-+ */ 
- static int r8711_wx_set_scan(struct net_device *dev,
- 			struct iw_request_info *a,
- 			union iwreq_data *wrqu, char *extra)
-@@ -1088,7 +1136,7 @@ static int r8711_wx_set_scan(struct net_device *dev,
- 		return -1;
- 	}
- 	if (padapter->bup == false)
--		return -1;
-+		return -ENETDOWN;
- 	if (padapter->hw_init_completed == false)
- 		return -1;
- 	if ((check_fwstate(pmlmepriv, _FW_UNDER_SURVEY|_FW_UNDER_LINKING)) ||
-@@ -1122,6 +1170,13 @@ static int r8711_wx_set_scan(struct net_device *dev,
- 	return 0;
- }
- 
-+/**
-+ *
-+ * This function intends to handle the Get Scan command.
-+ * Currently, the request comes via Wireless Extensions' SIOCGIWSCAN ioctl.
-+ *
-+ *
-+ */
- static int r8711_wx_get_scan(struct net_device *dev,
- 				struct iw_request_info *a,
- 				union iwreq_data *wrqu, char *extra)
-@@ -1169,6 +1224,16 @@ static int r8711_wx_get_scan(struct net_device *dev,
-  * s2. set_802_11_authenticaion_mode()
-  * s3. set_802_11_encryption_mode()
-  * s4. set_802_11_ssid()
-+ *
-+ * This function intends to handle the Set ESSID command.
-+ * Currently, the request comes via the Wireless Extensions' SIOCSIWESSID ioctl.
-+ *
-+ * For this operation to succeed, there is no need for the interface to be Up.
-+ *
-+ * Note: Currently (July 2011) the call to
-+ * r8712_set_802_11_infrastructure_mode() always returns true. Since we have no
-+ * specific failure reason, we return EPERM in lieu of general failure.
-+ *
-  */
- static int r8711_wx_set_essid(struct net_device *dev,
- 				struct iw_request_info *a,
-@@ -1187,7 +1252,7 @@ static int r8711_wx_set_essid(struct net_device *dev,
- 	if (padapter->bup == false)
- 		return -1;
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY))
--		return -1;
-+		return -EBUSY;
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_LINKING))
- 		return 0;
- 	if (wrqu->essid.length > IW_ESSID_MAX_SIZE)
-@@ -1215,7 +1280,7 @@ static int r8711_wx_set_essid(struct net_device *dev,
- 				if (!r8712_set_802_11_infrastructure_mode(
- 				     padapter,
- 				     pnetwork->network.InfrastructureMode))
--					return -1;
-+					return -EPERM; /* Unknown failure. */
- 				break;
- 			}
- 		}
-@@ -1225,6 +1290,12 @@ static int r8711_wx_set_essid(struct net_device *dev,
- 	return -EINPROGRESS;
- }
- 
-+/**
-+ *
-+ * This function intends to handle the Get ESSID command.
-+ * Currently, the request comes via Wireless Extensions' SIOCGIWESSID ioctl.
-+ *
-+ */
- static int r8711_wx_get_essid(struct net_device *dev,
- 				struct iw_request_info *a,
- 				union iwreq_data *wrqu, char *extra)
-@@ -1240,10 +1311,16 @@ static int r8711_wx_get_essid(struct net_device *dev,
- 		memcpy(extra, pcur_bss->Ssid.Ssid, len);
- 		wrqu->essid.flags = 1;
- 	} else
--		ret = -1;
-+		ret = -ENOLINK;
- 	return ret;
- }
- 
-+/**
-+ *
-+ * This function intends to handle the Set Rate command.
-+ * Currently, the request comes via the Wireless Extensions' SIOCSIWRATE ioctl.
-+ *
-+ */
- static int r8711_wx_set_rate(struct net_device *dev,
- 				struct iw_request_info *a,
- 				union iwreq_data *wrqu, char *extra)
-@@ -1312,10 +1389,16 @@ set_rate:
- 			datarates[i] = 0xff;
- 	}
- 	if (r8712_setdatarate_cmd(padapter, datarates) != _SUCCESS)
--		ret = -1;
-+		ret = -ENOMEM;
- 	return ret;
- }
- 
-+/**
-+ *
-+ * This function intends to handle the Get Rate command.
-+ * Currently, the request comes via the Wireless Extensions' SIOCGIWRATE ioctl.
-+ *
-+ */
- static int r8711_wx_get_rate(struct net_device *dev,
- 			     struct iw_request_info *info,
- 			     union iwreq_data *wrqu, char *extra)
-@@ -1371,10 +1454,16 @@ static int r8711_wx_get_rate(struct net_device *dev,
- 			wrqu->bitrate.value = max_rate * 500000;
- 		}
- 	} else
--		return -1;
-+		return -ENOLINK;
- 	return 0;
- }
- 
-+/**
-+ *
-+ * This function intends to handle the Get RTS Threshold command.
-+ * Currently, the request comes via the Wireless Extensions' SIOCGIWRTS ioctl.
-+ *
-+ */
- static int r8711_wx_get_rts(struct net_device *dev,
- 				struct iw_request_info *info,
- 				union iwreq_data *wrqu, char *extra)
-@@ -1701,7 +1790,7 @@ static int r871x_wx_set_enc_ext(struct net_device *dev,
- 	param_len = sizeof(struct ieee_param) + pext->key_len;
- 	param = (struct ieee_param *)_malloc(param_len);
- 	if (param == NULL)
--		return -1;
-+		return -ENOMEM;
- 	memset(param, 0, param_len);
- 	param->cmd = IEEE_CMD_SET_ENCRYPTION;
- 	memset(param->sta_addr, 0xff, ETH_ALEN);
-@@ -1719,7 +1808,7 @@ static int r871x_wx_set_enc_ext(struct net_device *dev,
- 		alg_name = "CCMP";
- 		break;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 1d09f22..d576080 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3038,7 +3038,7 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
+ 	case EEP_CHAIN_MASK_REDUCE:
+ 		return (pBase->miscConfiguration >> 0x3) & 0x1;
+ 	case EEP_ANT_DIV_CTL1:
+-		return le32_to_cpu(eep->base_ext1.ant_div_control);
++		return eep->base_ext1.ant_div_control;
  	default:
--		return -1;
-+		return -EINVAL;
+ 		return 0;
  	}
- 	strncpy((char *)param->u.crypt.alg, alg_name, IEEE_CRYPT_ALG_NAME_LEN);
- 	if (pext->ext_flags & IW_ENCODE_EXT_GROUP_KEY)
-@@ -1785,7 +1874,7 @@ static int dummy(struct net_device *dev,
- 		struct iw_request_info *a,
- 		union iwreq_data *wrqu, char *b)
- {
--	return -1;
-+	return -ENOSYS;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index ce29717..dceaa4a 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -196,6 +196,19 @@ static unsigned int ath9k_ioread32(void *hw_priv, u32 reg_offset)
+ 	return val;
  }
  
- static int r8711_drvext_hdl(struct net_device *dev,
++static unsigned int __ath9k_reg_rmw(struct ath_softc *sc, u32 reg_offset,
++				    u32 set, u32 clr)
++{
++	u32 val;
++
++	val = ioread32(sc->mem + reg_offset);
++	val &= ~clr;
++	val |= set;
++	iowrite32(val, sc->mem + reg_offset);
++
++	return val;
++}
++
+ static unsigned int ath9k_reg_rmw(void *hw_priv, u32 reg_offset, u32 set, u32 clr)
+ {
+ 	struct ath_hw *ah = (struct ath_hw *) hw_priv;
+@@ -204,16 +217,12 @@ static unsigned int ath9k_reg_rmw(void *hw_priv, u32 reg_offset, u32 set, u32 cl
+ 	unsigned long uninitialized_var(flags);
+ 	u32 val;
+ 
+-	if (ah->config.serialize_regmode == SER_REG_MODE_ON)
++	if (ah->config.serialize_regmode == SER_REG_MODE_ON) {
+ 		spin_lock_irqsave(&sc->sc_serial_rw, flags);
+-
+-	val = ioread32(sc->mem + reg_offset);
+-	val &= ~clr;
+-	val |= set;
+-	iowrite32(val, sc->mem + reg_offset);
+-
+-	if (ah->config.serialize_regmode == SER_REG_MODE_ON)
++		val = __ath9k_reg_rmw(sc, reg_offset, set, clr);
+ 		spin_unlock_irqrestore(&sc->sc_serial_rw, flags);
++	} else
++		val = __ath9k_reg_rmw(sc, reg_offset, set, clr);
+ 
+ 	return val;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 9283440..7810b92 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1147,6 +1147,8 @@ static bool bf_is_ampdu_not_probing(struct ath_buf *bf)
+ 
+ static void ath_drain_txq_list(struct ath_softc *sc, struct ath_txq *txq,
+ 			       struct list_head *list, bool retry_tx)
++	__releases(txq->axq_lock)
++	__acquires(txq->axq_lock)
+ {
+ 	struct ath_buf *bf, *lastbf;
+ 	struct list_head bf_head;
+@@ -2035,6 +2037,8 @@ static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
+ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
+ 				  struct ath_tx_status *ts, struct ath_buf *bf,
+ 				  struct list_head *bf_head)
++	__releases(txq->axq_lock)
++	__acquires(txq->axq_lock)
+ {
+ 	int txok;
+ 
 -- 
 1.7.6
 
