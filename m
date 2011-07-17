@@ -1,49 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:57960 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752156Ab1GSGqC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 02:46:02 -0400
+Received: from mout4.freenet.de ([195.4.92.94]:44001 "EHLO mout4.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750984Ab1GQGBF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jul 2011 02:01:05 -0400
+Received: from [195.4.92.10] (helo=0.mx.freenet.de)
+	by mout4.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #5)
+	id 1QiKPW-0004st-Jt
+	for linux-wireless@vger.kernel.org; Sun, 17 Jul 2011 08:01:02 +0200
+Received: from p54a19116.dip0.t-ipconnect.de ([84.161.145.22]:45933 helo=mail.maya.org)
+	by 0.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.72 #5)
+	id 1QiKPW-0002Op-9f
+	for linux-wireless@vger.kernel.org; Sun, 17 Jul 2011 08:01:02 +0200
+Message-ID: <4E227AE0.6080709@01019freenet.de> (sfid-20110717_080234_959981_EB510805)
+Date: Sun, 17 Jul 2011 08:02:08 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-In-Reply-To: <4E2525BA.4090902@gmail.com>
-References: <4E252076.1050309@gmail.com>
-	<CAD2nsn12vOXv-msWR+GF7edz3Q26P-pb4H-SO4rf2RHjC7mG+w@mail.gmail.com>
-	<4E2525BA.4090902@gmail.com>
-Date: Tue, 19 Jul 2011 12:16:00 +0530
-Message-ID: <CAD2nsn3ifSMa_eFr2vQ0VVF9Ga-0VD3YB_beb28r+eoAHKv4kQ@mail.gmail.com> (sfid-20110719_084624_074893_217DEDEA)
-Subject: Re: ath: Unable to reset channel (2412 MHz), reset status -5
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?ISO-8859-15?Q?Olivier_Cr=EAte?= <olivier.crete@ocrete.ca>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Sometimes rtl8187 stops sending/receiving packets under load
+References: <1310851053.5700.14.camel@TesterBox.tester.ca> <4E221A18.2070504@lwfinger.net> <1310864785.3540.5.camel@TesterBox.tester.ca>
+In-Reply-To: <1310864785.3540.5.camel@TesterBox.tester.ca>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 19, 2011 at 12:05 PM, Justin P. Mattock
-<justinmattock@gmail.com> wrote:
-> On 07/18/2011 11:25 PM, Mohammed Shafi wrote:
->>
->> On Tue, Jul 19, 2011 at 11:43 AM, Justin P. Mattock
->> <justinmattock@gmail.com>  wrote:
+Olivier Crête wrote:
+> On Sat, 2011-07-16 at 18:09 -0500, Larry Finger wrote:
+>> On 07/16/2011 04:17 PM, Olivier Crête wrote:
+>>> I get this on my dmesg:
+>>> ieee80211 phy0: wlan0: No probe response from AP 00:0f:66:e2:5f:dd after 500ms, disconnecting.
+>>> cfg80211: Calling CRDA to update world regulatory domain
+>>> wlan0: authenticate with 00:0f:66:e2:5f:dd (try 1)
+>>> wlan0: authenticate with 00:0f:66:e2:5f:dd (try 2)
+>>> wlan0: authenticate with 00:0f:66:e2:5f:dd (try 3)
+>>> wlan0: authentication with 00:0f:66:e2:5f:dd timed out
 >>>
->>> seems with the latest Mainline I am getting the ath9k carpping out after
->>> a
->>> while of streaming(dmesg below)..:
->>> http://fpaste.org/D7wM/
+>>> The wireless card is the one built-in a Asus P5K-E/wifi-ap motherboard.
+>>> And the router is a WRT54G v2 running the latest OpenWRT.
 >>>
->>> will try a bisect if I have the time..
+>>> This bit of dmesg output may also be useful:
+>>> usb 1-3: reset high speed USB device using ehci_hcd and address 2
+>>> cfg80211: Calling CRDA to update world regulatory domain
+>>> ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+>>> ieee80211 phy0: hwaddr 00:15:af:37:19:b3, RTL8187vB (default) V1 + rtl8225z2, rfkill mask 2
 >>
->> I will try to recreate here with 3.0.0-rc7-wl, we can get more
->> information by ath9k debug=0xffffffff.
->> thanks.
+>> I have the same device as you as shown in the following:
 >>
->
-> cool!
-> seems to fire off randomly over here.
+>> ieee80211 phy1: hwaddr 00:1b:2f:a2:07:ca, RTL8187vB (default) V1 + rtl8225z2, 
+>> rfkill mask 2
+>>
+>> I have run this card extensively in the past several months and have not seen 
+>> any problems. One of my APs is a WRT54GL running a fairly recent openWRT.
+>>
+>> Does this only happen when running torrents, or does it happen with a different 
+>> heavy load?
+> 
+> I can only reproduce it with torrents, downloading something with a
+> single TCP connection doesn't crash. So my guess it has something to do
+> with the upload side maybe or maybe with loading both directions at the
+> same time.
+> 
+>> Please try to repeat with a 2.6.39 or 3.0 kernel.
+> 
+> Alright, upgraded to 3.0-rc7 and I could still reproduce it in less than
+> 10 minutes. 
 
-I have got AR5416, will try with that.
+Do you have a SMP-machine (there are running more then one threads
+parallel)? If yes, there have been problems fixed in the rt2x00 driver,
+which showed similar problems as you described. I "forced" them with
+netperf to get them easily reproduced. Don't know, if these patches
+would address your problem, too.
 
--- 
-shafi
+https://patchwork.kernel.org/patch/951132/
+https://patchwork.kernel.org/patch/951222/
+https://patchwork.kernel.org/patch/951192/
+
+
+Unfortunately, there are more load-related problems in the WLAN stack,
+especially with hostapd / wpa_supplicant, which are just ignored by the
+programmer.
+
+
+
+Andreas
