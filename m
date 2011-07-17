@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from home.keithp.com ([63.227.221.253]:53390 "EHLO keithp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752694Ab1GYTie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2011 15:38:34 -0400
-From: Keith Packard <keithp@keithp.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Keith Packard <keithp@keithp.com>
-Subject: [PATCH] iwlagn: check for !priv->txq in iwlagn_wait_tx_queue_empty
-Date: Mon, 25 Jul 2011 12:38:22 -0700
-Message-Id: <1311622702-4807-1-git-send-email-keithp@keithp.com> (sfid-20110725_213900_920131_622A4E59)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39226 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752730Ab1GQVtv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jul 2011 17:49:51 -0400
+Message-ID: <4E2358F7.3020709@qca.qualcomm.com> (sfid-20110717_235014_343214_04271C87)
+Date: Mon, 18 Jul 2011 00:49:43 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: <devel@linuxdriverproject.org>, <gregkh@suse.de>,
+	<error27@gmail.com>, <linux-kernel@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: Re: [PATCH 0/2] ath6kl: more neatening
+References: <4E2349D4.4000204@qca.qualcomm.com> <cover.1310938421.git.joe@perches.com>
+In-Reply-To: <cover.1310938421.git.joe@perches.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the interface is down, txq is NULL. iwlagn_wait_tx_queue_empty
-needs to check for this case to avoid dereferencing that pointer.
+On 07/18/2011 12:38 AM, Joe Perches wrote:
+>> Great, thanks. I have now applied your patches to ath6kl-cleanup tree
+>> and they will be included in patchset v3.
+> 
+> Here's a couple of more.
+> 
+> Joe Perches (2):
+>   ath6kl: Remove __func__ uses from ath6kl_dbg
+>   ath6kl: Remove trailing unpaired close paren from ath6kl_err uses
 
-Signed-off-by: Keith Packard <keithp@keithp.com>
----
+Thanks again.
 
-This is on top of v3.0
+I just sent v3. But if I need to create v4 (I hope not) I'll include
+your patches. If v3 is ok, I can resend your patches to wireless-testing
+so that you don't need to followup.
 
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index f803fb6..d6ae444 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1487,6 +1487,9 @@ int iwlagn_wait_tx_queue_empty(struct iwl_priv *priv)
- 	unsigned long now = jiffies;
- 	int ret = 0;
- 
-+	if (!priv->txq)
-+		return 0;
-+
- 	/* waiting for all the tx frames complete might take a while */
- 	for (cnt = 0; cnt < priv->hw_params.max_txq_num; cnt++) {
- 		if (cnt == priv->cmd_queue)
--- 
-1.7.5.4
-
+Kalle
