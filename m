@@ -1,89 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2165 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751889Ab1GGVzt convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54428 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752873Ab1GQLMx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2011 17:55:49 -0400
-Date: Thu, 7 Jul 2011 14:55:37 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: "Greg KH" <gregkh@suse.de>
-cc: "Pavel Roskin" <proski@gnu.org>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: Re: [RFC] Move brcm80211 to mainline
-Message-ID: <20110707215537.GS23944@broadcom.com> (sfid-20110707_235556_773466_88EAC035)
-References: <20110707002034.GA17885@broadcom.com>
- <CACna6rx5EyZ-=2XgWawdN_Qu2t1K1sdHZydZFW6=TiX2QUwMfw@mail.gmail.com>
- <4E1504A3.1070801@gnu.org> <20110707014512.GA21087@suse.de>
- <20110707144628.GF23944@broadcom.com> <20110707145822.GA29241@suse.de>
-MIME-Version: 1.0
-In-Reply-To: <20110707145822.GA29241@suse.de>
-Content-Type: text/plain;
- charset=utf-8
+	Sun, 17 Jul 2011 07:12:53 -0400
+Subject: Re: [PATCH v2 03/23] ath6kl: add cfg80211.c
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, joe@perches.com,
+	devel@linuxdriverproject.org, gregkh@suse.de, error27@gmail.com
+In-Reply-To: <20110717102106.18367.62814.stgit@localhost6.localdomain6> (sfid-20110717_122119_953813_F3D94E8A)
+References: <20110717101844.18367.44984.stgit@localhost6.localdomain6>
+	 <20110717102106.18367.62814.stgit@localhost6.localdomain6>
+	 (sfid-20110717_122119_953813_F3D94E8A)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 17 Jul 2011 13:12:41 +0200
+Message-ID: <1310901161.4542.8.camel@jlt3.sipsolutions.net> (sfid-20110717_131302_698127_D74C5A8F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 07, 2011 at 07:58:22AM -0700, Greg KH wrote:
-> On Thu, Jul 07, 2011 at 07:46:28AM -0700, Henry Ptasinski wrote:
-> > On Wed, Jul 06, 2011 at 06:45:12PM -0700, Greg KH wrote:
-> > > On Wed, Jul 06, 2011 at 08:58:11PM -0400, Pavel Roskin wrote:
-> > > > On 07/06/2011 08:40 PM, Rafał Miłecki wrote:
-> > > > >Short question, without commenting on brcm80211 code yet:
-> > > > >
-> > > > >Why should we want 2 mainline drivers for the same hardware?
-> > > > 
-> > > > Also, checkpatch.pl finds a lot of bad stuff:
-> > > > 
-> > > > total: 1 errors, 1505 warnings, 105454 lines checked
-> > > > 
-> > > > $ scripts/checkpatch.pl 0001-wireless-testing-add-brcm80211.patch >Log
-> > > > $ egrep '^(WARNING|ERROR)' Log |sort |uniq -c
-> > > >       1 ERROR: do not use assignment in if condition
-> > > >      76 WARNING: braces {} are not necessary for any arm of this statement
-> > > >     205 WARNING: braces {} are not necessary for single statement blocks
-> > > >       4 WARNING: consider using a completion
-> > > >      11 WARNING: consider using kstrto* in preference to simple_strtoul
-> > > >      20 WARNING: do not add new typedefs
-> > > >       5 WARNING: externs should be avoided in .c files
-> > > >    1164 WARNING: line over 80 characters
-> > > >      20 WARNING: Use of volatile is usually wrong: see
-> > > 
-> > > Almost all of these should be fixed, especially the volatile one, that's
-> > > just horrible.
-> > 
-> > Fixes for these are in progress.  We'll keep posting patches to address this
-> > cleanup in staging.
-> 
-> Ok, at the least these should be resolved before ever asking for the
-> code to be moved out of staging.  Sorry for me not checking this
-> previously, I wrongly assumed that you had finished this task already.
+On Sun, 2011-07-17 at 13:21 +0300, Kalle Valo wrote:
 
-No worries.  We'll have almost all of these cleaned up shortly. The 80 char
-lines will be nice and tedious, though, unless somebody can suggest a decent
-tool that doesn't make the code unreadable.
+> +static int ath6kl_set_auth_type(struct ath6kl *ar,
+> +				enum nl80211_auth_type auth_type)
+> +{
 
-> 
-> > > Also, there's the whole big endian mess that needs to be fixed up before
-> > > the driver can be moved out of staging.  Henry, what's the status of
-> > > that?
-> > 
-> > We're looking at BE MIPS, and I sent some cards to Benjamin Herrenschmidt so he
-> > can test on PPC platforms.
-> 
-> Don't forget just building the thing on other arches (SPARC for example)
-> and what happens when you try to do that...
+> +	default:
+> +		ar->dot11_auth_mode = OPEN_AUTH;
 
-Building some cross-compiler toolchains now.  SPARC hardware to do anything
-native with seems to be getting very scarce, and trying to fit a PCIe minicard
-into one might be challenging ...
+are you sure you want that?
 
-- Henry
+> +	if (!sme->ssid_len || sme->ssid_len > IEEE80211_MAX_SSID_LEN) {
+> +		ath6kl_err("%s: ssid invalid\n", __func__);
+> +		return -EINVAL;
+> +	}
 
+I don't mind the code here -- but it's not going to happen anyway :)
+
+> +	if (down_interruptible(&ar->sem)) {
+> +		ath6kl_err("%s: busy, couldn't get access\n", __func__);
+> +		return -ERESTARTSYS;
+> +	}
+
+Hmm, will that really work? I don't think netlink has any -ERESTARTSYS
+handling so this would go to userspace which isn't supposed to happen,
+better make it -EBUSY. Besides, no point in restarting something that
+continually fails right?
+
+> +	if (down_interruptible(&ar->sem)) {
+> +		ath6kl_err("%s: busy, couldn't get access\n", __func__);
+> +		return -ERESTARTSYS;
+> +	}
+
+same here (disconnect) and maybe other places
+
+> +	/*
+> +	 * TODO: Update target to include 802.11 mac header while sending
+> +	 * bss info. Target removes 802.11 mac header while sending the bss
+> +	 * info to host, cfg80211 needs it, for time being just filling the
+> +	 * da, sa and bssid fields alone.
+> +	 */
+> +	mgmt = (struct ieee80211_mgmt *)ieeemgmtbuf;
+> +	memset(mgmt->da, 0xff, ETH_ALEN);	/*broadcast addr */
+> +	memcpy(mgmt->sa, ni->ni_macaddr, ETH_ALEN);
+> +	memcpy(mgmt->bssid, ni->ni_macaddr, ETH_ALEN);
+> +	memcpy(ieeemgmtbuf + offsetof(struct ieee80211_mgmt, u),
+> +	       ni->ni_buf, ni->ni_framelen);
+> +
+> +	freq = cie->ie_chan;
+> +	channel = ieee80211_get_channel(wiphy, freq);
+> +	signal = ni->ni_snr * 100;
+> +
+> +	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+> +		   "%s: bssid %pM ch %d freq %d size %d\n", __func__,
+> +		   mgmt->bssid, channel->hw_value, freq, size);
+> +	cfg80211_inform_bss_frame(wiphy, channel, mgmt,
+> +				  size, signal, GFP_KERNEL);
+
+What's with the comment and all the frame creation code; what's wrong
+with cfg80211_inform_bss() instead of _frame()?
+
+> +static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+> +				   u8 key_index, bool pairwise,
+> +				   const u8 *mac_addr,
+> +				   struct key_params *params)
+> +{
+
+...
+
+> +	if (!mac_addr || is_broadcast_ether_addr(mac_addr))
+> +		key_usage = GROUP_USAGE;
+> +	else
+> +		key_usage = PAIRWISE_USAGE;
+
+Isn't that covered by the pairwise argument?
+
+> +static int ath6kl_cfg80211_set_default_mgmt_key(struct wiphy *wiphy,
+> +						struct net_device *ndev,
+> +						u8 key_index)
+> +{
+> +	struct ath6kl *ar = (struct ath6kl *)ath6kl_priv(ndev);
+> +
+> +	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: index %d\n", __func__, key_index);
+> +
+> +	if (!test_bit(WMI_READY, &ar->flag)) {
+> +		ath6kl_err("%s: wmi is not ready\n", __func__);
+> +		return -EIO;
+> +	}
+> +
+> +	if (ar->wlan_state == WLAN_DISABLED) {
+> +		ath6kl_err("%s: wlan disabled\n", __func__);
+> +		return -EIO;
+> +	}
+> +
+> +	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: not supported\n", __func__);
+> +	return -ENOTSUPP;
+> +}
+
+This is completely pointless -- remove the entire function.
+
+> +/*
+> + * The type nl80211_tx_power_setting replaces the following
+> + * data type from 2.6.36 onwards
+> +*/
+
+??
+
+> +static int ath6kl_cfg80211_change_iface(struct wiphy *wiphy,
+> +					struct net_device *ndev,
+> +					enum nl80211_iftype type, u32 *flags,
+> +					struct vif_params *params)
+> +{
+> +	struct ath6kl *ar = ath6kl_priv(ndev);
+> +	struct wireless_dev *wdev = ar->wdev;
+> +
+> +	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: type %u\n", __func__, type);
+> +
+> +	if (!test_bit(WMI_READY, &ar->flag)) {
+> +		ath6kl_err("%s: wmi is not ready\n", __func__);
+> +		return -EIO;
+> +	}
+> +
+> +	if (ar->wlan_state == WLAN_DISABLED) {
+> +		ath6kl_err("%s: wlan disabled\n", __func__);
+> +		return -EIO;
+> +	}
+> +
+> +	switch (type) {
+> +	case NL80211_IFTYPE_STATION:
+> +		ar->next_mode = INFRA_NETWORK;
+> +		break;
+> +	case NL80211_IFTYPE_ADHOC:
+> +		ar->next_mode = ADHOC_NETWORK;
+> +		break;
+> +	default:
+> +		ath6kl_err("%s: invalid type %u\n", __func__, type);
+> +		return -EOPNOTSUPP;
+> +	}
+> +
+> +	wdev->iftype = type;
+
+We kinda expect it to have taken effect by the time you return from this
+function -- it doesn't quite look like it will?
+
+> +	if (!ibss_param->ssid_len
+> +	    || IEEE80211_MAX_SSID_LEN < ibss_param->ssid_len) {
+> +		ath6kl_err("%s: ssid invalid\n", __func__);
+> +		return -EINVAL;
+> +	}
+
+Like above -- won't happen. You can trust cfg80211 ;-)
+
+> +	ar->ssid_len = ibss_param->ssid_len;
+> +	memcpy(ar->ssid, ibss_param->ssid, ar->ssid_len);
+> +
+> +	if (ibss_param->channel)
+> +		ar->ch_hint = ibss_param->channel->center_freq;
+> +
+> +	if (ibss_param->channel_fixed) {
+> +		/*
+> +		 * TODO: channel_fixed: The channel should be fixed, do not
+> +		 * search for IBSSs to join on other channels. Target
+> +		 * firmware does not support this feature, needs to be
+> +		 * updated.
+> +		 */
+> +	}
+
+return an error?
+
+johannes
 
