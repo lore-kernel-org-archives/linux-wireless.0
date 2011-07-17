@@ -1,34 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57623 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753483Ab1GNJw1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 05:52:27 -0400
-Subject: Re: [PATCH 5/5] mac80211: mesh beacon includes TIM IE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <1310600747-9583-6-git-send-email-thomas@cozybit.com> (sfid-20110714_014638_433123_1C508A2C)
-References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
-	 <1310600747-9583-6-git-send-email-thomas@cozybit.com>
-	 (sfid-20110714_014638_433123_1C508A2C)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 14 Jul 2011 11:52:24 +0200
-Message-ID: <1310637144.3874.2.camel@jlt3.sipsolutions.net> (sfid-20110714_115230_003715_60D3C598)
-Mime-Version: 1.0
+Received: from mail.perches.com ([173.55.12.10]:4055 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754062Ab1GQSnu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jul 2011 14:43:50 -0400
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: devel@linuxdriverproject.org, gregkh@suse.de, error27@gmail.com,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH 0/3] ath6kl: neatening
+Date: Sun, 17 Jul 2011 11:43:41 -0700
+Message-Id: <cover.1310927985.git.joe@perches.com> (sfid-20110717_204353_863630_AE41E597)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-07-13 at 16:45 -0700, Thomas Pedersen wrote:
+Joe Perches (3):
+  ath6kl: Add missing newlines and coalesce messages
+  ath6kl: Remove __func__ uses from ath6kl_err
+  ath6kl: cfg80211: Add and use ath6kl_cfg80211_ready helper
 
->  			goto out;
-> @@ -2269,6 +2270,14 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
->  			memcpy(skb_put(skb, beacon->head_len), beacon->head,
->  			       beacon->head_len);
->  
-> +			pos = skb_put(skb, 6);
+ drivers/net/wireless/ath/ath6kl/bmi.c      |    2 +-
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |  230 ++++++++-------------------
+ drivers/net/wireless/ath/ath6kl/debug.c    |    2 +-
+ drivers/net/wireless/ath/ath6kl/htc.c      |   15 +-
+ drivers/net/wireless/ath/ath6kl/htc_hif.c  |    3 +-
+ drivers/net/wireless/ath/ath6kl/init.c     |   79 ++++------
+ drivers/net/wireless/ath/ath6kl/main.c     |   16 +-
+ drivers/net/wireless/ath/ath6kl/txrx.c     |   53 +++----
+ drivers/net/wireless/ath/ath6kl/wmi.c      |   29 ++--
+ 9 files changed, 155 insertions(+), 274 deletions(-)
 
-You just keep adding here -- how is the length of the skb determined?
-
-johannes
+-- 
+1.7.6.131.g99019
 
