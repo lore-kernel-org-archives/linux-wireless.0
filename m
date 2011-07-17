@@ -1,128 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4295 "EHLO mms2.broadcom.com"
+Received: from purkki.adurom.net ([80.68.90.206]:42222 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754084Ab1GEUGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 16:06:35 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH v2 18/21] staging: brcm80211: removed unused definitions
- from dhd_sdio.c
-Date: Tue, 5 Jul 2011 22:06:14 +0200
-Message-ID: <1309896377-4425-19-git-send-email-arend@broadcom.com> (sfid-20110705_220645_173278_01D128EB)
-In-Reply-To: <1309896377-4425-1-git-send-email-arend@broadcom.com>
-References: <1309896377-4425-1-git-send-email-arend@broadcom.com>
+	id S1752333Ab1GQVpH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jul 2011 17:45:07 -0400
+To: "Kahn\, Gery" <geryk@ti.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+Subject: Re: [PATCH 2/2] wl12xx Export chip id to sysfs
+References: <1310647673-10144-1-git-send-email-geryk@ti.com>
+	<1310647673-10144-2-git-send-email-geryk@ti.com>
+	<874o2nx16b.fsf@purkki.adurom.net>
+	<CABB-i1foCSozXa1ZacqNPf_-vEUrw9uv+V6rraFhM-FoNoo3qg@mail.gmail.com>
+	<CABB-i1eXpgA7iiHmrstFBnNjGntUtydQFBL17SJELqt5HU8g3A@mail.gmail.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Mon, 18 Jul 2011 00:45:04 +0300
+In-Reply-To: <CABB-i1eXpgA7iiHmrstFBnNjGntUtydQFBL17SJELqt5HU8g3A@mail.gmail.com> (Gery Kahn's message of "Sun\, 17 Jul 2011 15\:51\:47 +0300")
+Message-ID: <87aaccvaxr.fsf@purkki.adurom.net> (sfid-20110717_234510_602098_9A2ADC78)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+"Kahn, Gery" <geryk@ti.com> writes:
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   25 ++-----------------------
- 1 files changed, 2 insertions(+), 23 deletions(-)
+Hi Gery,
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index ba57481..5e079b0 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -65,11 +65,6 @@
- 
- /* Trap types defined by ARM (see arminc.h) */
- 
--/* Trap locations in lo memory */
--#define	TRAP_STRIDE	4
--#define FIRST_TRAP	TR_RST
--#define LAST_TRAP	(TR_FIQ * TRAP_STRIDE)
--
- #if defined(__ARM_ARCH_4T__)
- #define	MAX_TRAP_TYPE	(TR_FIQ + 1)
- #elif defined(__ARM_ARCH_7M__)
-@@ -114,8 +109,6 @@ struct brcmf_trap {
- 
- #define CBUF_LEN	(128)
- 
--#define LOG_BUF_LEN	1024
--
- struct rte_log {
- 	u32 buf;		/* Can't be pointer on (64-bit) hosts */
- 	uint buf_size;
-@@ -166,10 +159,6 @@ struct rte_console {
- #include "dhd_dbg.h"
- #include <bcmchip.h>
- 
--#ifndef DHDSDIO_MEM_DUMP_FNAME
--#define DHDSDIO_MEM_DUMP_FNAME         "mem_dump"
--#endif
--
- #define TXQLEN		2048	/* bulk tx queue length */
- #define TXHI		(TXQLEN - 256)	/* turn on flow control above TXHI */
- #define TXLOW		(TXHI - 256)	/* turn off flow control below TXLOW */
-@@ -344,7 +333,6 @@ struct rte_console {
- /* Value for ChipClockCSR during initial setup */
- #define DHD_INIT_CLKCTL1	(SBSDIO_FORCE_HW_CLKREQ_OFF |	\
- 					SBSDIO_ALP_AVAIL_REQ)
--#define DHD_INIT_CLKCTL2	(SBSDIO_FORCE_HW_CLKREQ_OFF | SBSDIO_FORCE_ALP)
- 
- /* Flags for SDH calls */
- #define F2SYNC	(SDIO_REQ_4BYTE | SDIO_REQ_FIXED)
-@@ -541,11 +529,7 @@ struct brcmf_bus {
- 	struct chip_info *ci;	/* Chip info struct */
- 	char *vars;		/* Variables (from CIS and/or other) */
- 	uint varsz;		/* Size of variables buffer */
--	u32 sbaddr;		/* Current SB window pointer (-1, invalid) */
- 
--	uint sdpcmrev;		/* SDIO core revision */
--	uint armrev;		/* CPU core revision */
--	uint ramrev;		/* SOCRAM core revision */
- 	u32 ramsize;		/* Size of RAM in SOCRAM (bytes) */
- 	u32 orig_ramsize;	/* Size of RAM in SOCRAM (bytes) */
- 
-@@ -612,8 +596,6 @@ struct brcmf_bus {
- 	bool sleeping;		/* Is SDIO bus sleeping? */
- 	bool rxflow_mode;	/* Rx flow control mode */
- 	bool rxflow;		/* Is rx flow control on */
--	uint prev_rxlim_hit;	/* Is prev rx limit exceeded
--					 (per dpc schedule) */
- 	bool alp_only;		/* Don't use HT clock (ALP only) */
- /* Field to decide if rx of control frames happen in rxbuf or lb-pool */
- 	bool usebufpool;
-@@ -782,8 +764,6 @@ static bool retrydata;
- static const uint watermark = 8;
- static const uint firstread = BRCMF_FIRSTREAD;
- 
--#define HDATLEN (firstread - (SDPCM_HDRLEN))
--
- /* Retry count for register access failures */
- static const uint retry_limit = 2;
- 
-@@ -5584,8 +5564,8 @@ brcmf_sdbrcm_probe_attach(struct brcmf_bus *bus, void *card, u32 regsva,
- 
- 	/* Get info on the ARM and SOCRAM cores... */
- 	if (!DHD_NOPMU(bus)) {
--		bus->armrev = SBCOREREV(brcmf_sdcard_reg_read(bus->card,
--			CORE_SB(bus->ci->armcorebase, sbidhigh), 4));
-+		brcmf_sdcard_reg_read(bus->card,
-+			  CORE_SB(bus->ci->armcorebase, sbidhigh), 4);
- 		bus->orig_ramsize = bus->ci->ramsize;
- 		if (!(bus->orig_ramsize)) {
- 			DHD_ERROR(("%s: failed to find SOCRAM memory!\n",
-@@ -5680,7 +5660,6 @@ static bool brcmf_sdbrcm_probe_init(struct brcmf_bus *bus, void *card)
- 	bus->drvr->busstate = DHD_BUS_DOWN;
- 	bus->sleeping = false;
- 	bus->rxflow = false;
--	bus->prev_rxlim_hit = 0;
- 
- 	/* Done with backplane-dependent accesses, can drop clock... */
- 	brcmf_sdcard_cfg_write(card, SDIO_FUNC_1, SBSDIO_FUNC1_CHIPCLKCSR, 0,
+> On Sun, Jul 17, 2011 at 11:16, Kahn, Gery <geryk@ti.com> wrote:
+>> On Fri, Jul 15, 2011 at 13:56, Kalle Valo <kvalo@adurom.com> wrote:
+>>> Gery Kahn <geryk@ti.com> writes:
+>>>
+>>>> Export the chip id to userspace. This helps to change application behavior
+>>>> according to architecture of the wl12xx chip.
+>>>
+>>> We already support exporting this type of information through
+>>> ethtool's ioctl interface using the wiphy.hw_version, which was
+>>> specifially added for this purpose. That's much better than yet
+>>> another sysfs file.
+>>>
+>> Right.
+>> In PLT mode it didn't show any information, but
+>> that might have been a mistake on our part.
+>>
+>> I'll send another patch.
+>>
+> After some investigation, found that ethtool's ioctl interface doesn't work
+> at this case.
+
+This reminds me: I have patches for these issues but I never sent them
+upstream. It's too late for me now, but I'll search them tomorrow (or
+today to be exact..) and send them for testing purposes.
+
+If I forget, please ping me :)
+
 -- 
-1.7.4.1
-
-
+Kalle Valo
