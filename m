@@ -1,328 +1,629 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44897 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757801Ab1GAWT2 (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:55771 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752722Ab1GQVma (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2011 18:19:28 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Qcm3b-0007OI-Ih
-	for linux-wireless@vger.kernel.org; Sat, 02 Jul 2011 00:19:27 +0200
-Subject: [RFC] wpa_supplicant/nl80211: support GTK rekey offload
-From: Johannes Berg <johannes@sipsolutions.net>
+	Sun, 17 Jul 2011 17:42:30 -0400
+Subject: [PATCH v3 12/23] ath6kl: add htc.h
 To: linux-wireless@vger.kernel.org
-In-Reply-To: <20110701221321.478559320@sipsolutions.net> (sfid-20110702_001559_666877_5A8663AA)
-References: <20110701221321.478559320@sipsolutions.net>
-	 (sfid-20110702_001559_666877_5A8663AA)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 02 Jul 2011 00:19:30 +0200
-Message-ID: <1309558770.3888.6.camel@jlt3.sipsolutions.net> (sfid-20110702_001941_852128_B509616E)
-Mime-Version: 1.0
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: joe@perches.com, devel@linuxdriverproject.org, gregkh@suse.de,
+	error27@gmail.com
+Date: Mon, 18 Jul 2011 00:42:22 +0300
+Message-ID: <20110717214222.23534.98606.stgit@localhost6.localdomain6> (sfid-20110717_234232_626281_3E2B762A)
+In-Reply-To: <20110717213832.23534.75274.stgit@localhost6.localdomain6>
+References: <20110717213832.23534.75274.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-Add support to wpa_supplicant for device-based
-GTK rekeying. In order to support that, pass the
-KEK, KCK and replay counter to the driver, and
-handle rekey events that update the latter.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
-Not included is a massive nl80211_copy.h update, that'd just pollute the
-patch as you can see in the diffstat...
+ drivers/net/wireless/ath/ath6kl/htc.h |  596 +++++++++++++++++++++++++++++++++
+ 1 files changed, 596 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/htc.h
 
- src/drivers/driver.h         |   23 +
- src/drivers/driver_nl80211.c |   76 ++++++
- src/drivers/nl80211_copy.h   |  504 +++++++++++++++++++++++++++++++++++++++++--
- src/rsn_supp/wpa.c           |    7 
- src/rsn_supp/wpa.h           |    9 
- src/rsn_supp/wpa_i.h         |    8 
- wpa_supplicant/driver_i.h    |    9 
- wpa_supplicant/events.c      |    9 
- wpa_supplicant/wpas_glue.c   |   10 
- 9 files changed, 634 insertions(+), 21 deletions(-)
-
---- a/src/drivers/driver.h	2011-07-01 19:18:00.000000000 +0200
-+++ b/src/drivers/driver.h	2011-07-01 23:40:06.000000000 +0200
-@@ -2253,6 +2253,12 @@ struct wpa_driver_ops {
- 	 * implementation, there is no need to implement this function.
- 	 */
- 	int (*set_authmode)(void *priv, int authmode);
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
+new file mode 100644
+index 0000000..16fa7a8
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath6kl/htc.h
+@@ -0,0 +1,596 @@
++/*
++ * Copyright (c) 2004-2011 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
 +
-+	/**
-+	 * set_rekey_info - set rekey information
++#ifndef HTC_H
++#define HTC_H
++
++#include "common.h"
++
++/* frame header flags */
++
++/* send direction */
++#define HTC_FLAGS_NEED_CREDIT_UPDATE (1 << 0)
++#define HTC_FLAGS_SEND_BUNDLE        (1 << 1)
++
++/* receive direction */
++#define HTC_FLG_RX_UNUSED        (1 << 0)
++#define HTC_FLG_RX_TRAILER       (1 << 1)
++/* Bundle count maske and shift */
++#define HTC_FLG_RX_BNDL_CNT	 (0xF0)
++#define HTC_FLG_RX_BNDL_CNT_S	 4
++
++#define HTC_HDR_LENGTH  (sizeof(struct htc_frame_hdr))
++#define HTC_MAX_PAYLOAD_LENGTH   (4096 - sizeof(struct htc_frame_hdr))
++
++/* HTC control message IDs */
++
++#define HTC_MSG_READY_ID		1
++#define HTC_MSG_CONN_SVC_ID		2
++#define HTC_MSG_CONN_SVC_RESP_ID	3
++#define HTC_MSG_SETUP_COMPLETE_ID	4
++#define HTC_MSG_SETUP_COMPLETE_EX_ID	5
++
++#define HTC_MAX_CTRL_MSG_LEN  256
++
++#define HTC_VERSION_2P0  0x00
++#define HTC_VERSION_2P1  0x01
++
++#define HTC_SERVICE_META_DATA_MAX_LENGTH 128
++
++#define HTC_CONN_FLGS_THRESH_LVL_QUAT		0x0
++#define HTC_CONN_FLGS_THRESH_LVL_HALF		0x1
++#define HTC_CONN_FLGS_THRESH_LVL_THREE_QUAT	0x2
++#define HTC_CONN_FLGS_REDUCE_CRED_DRIB		0x4
++#define HTC_CONN_FLGS_THRESH_MASK		0x3
++
++/* connect response status codes */
++#define HTC_SERVICE_SUCCESS      0
++#define HTC_SERVICE_NOT_FOUND    1
++#define HTC_SERVICE_FAILED       2
++
++/* no resources (i.e. no more endpoints) */
++#define HTC_SERVICE_NO_RESOURCES 3
++
++/* specific service is not allowing any more endpoints */
++#define HTC_SERVICE_NO_MORE_EP   4
++
++/* report record IDs */
++#define HTC_RECORD_NULL             0
++#define HTC_RECORD_CREDITS          1
++#define HTC_RECORD_LOOKAHEAD        2
++#define HTC_RECORD_LOOKAHEAD_BUNDLE 3
++
++#define HTC_SETUP_COMP_FLG_RX_BNDL_EN     (1 << 0)
++
++#define MAKE_SERVICE_ID(group, index) \
++	(int)(((int)group << 8) | (int)(index))
++
++/* NOTE: service ID of 0x0000 is reserved and should never be used */
++#define HTC_CTRL_RSVD_SVC MAKE_SERVICE_ID(RSVD_SERVICE_GROUP, 1)
++#define WMI_CONTROL_SVC   MAKE_SERVICE_ID(WMI_SERVICE_GROUP, 0)
++#define WMI_DATA_BE_SVC   MAKE_SERVICE_ID(WMI_SERVICE_GROUP, 1)
++#define WMI_DATA_BK_SVC   MAKE_SERVICE_ID(WMI_SERVICE_GROUP, 2)
++#define WMI_DATA_VI_SVC   MAKE_SERVICE_ID(WMI_SERVICE_GROUP, 3)
++#define WMI_DATA_VO_SVC   MAKE_SERVICE_ID(WMI_SERVICE_GROUP, 4)
++#define WMI_MAX_SERVICES  5
++
++/* reserved and used to flush ALL packets */
++#define HTC_TX_PACKET_TAG_ALL          0
++#define HTC_SERVICE_TX_PACKET_TAG      1
++#define HTC_TX_PACKET_TAG_USER_DEFINED (HTC_SERVICE_TX_PACKET_TAG + 9)
++
++/* more packets on this endpoint are being fetched */
++#define HTC_RX_FLAGS_INDICATE_MORE_PKTS  (1 << 0)
++
++/* TODO.. for BMI */
++#define ENDPOINT1 0
++/* TODO -remove me, but we have to fix BMI first */
++#define HTC_MAILBOX_NUM_MAX    4
++
++/* enable send bundle padding for this endpoint */
++#define HTC_FLGS_TX_BNDL_PAD_EN	 (1 << 0)
++#define HTC_EP_ACTIVE                            ((u32) (1u << 31))
++
++/* HTC operational parameters */
++#define HTC_TARGET_RESPONSE_TIMEOUT        2000	/* in ms */
++#define HTC_TARGET_DEBUG_INTR_MASK         0x01
++#define HTC_TARGET_CREDIT_INTR_MASK        0xF0
++
++#define HTC_HOST_MAX_MSG_PER_BUNDLE        8
++#define HTC_MIN_HTC_MSGS_TO_BUNDLE         2
++
++/* packet flags */
++
++#define HTC_RX_PKT_IGNORE_LOOKAHEAD      (1 << 0)
++#define HTC_RX_PKT_REFRESH_HDR           (1 << 1)
++#define HTC_RX_PKT_PART_OF_BUNDLE        (1 << 2)
++#define HTC_RX_PKT_NO_RECYCLE            (1 << 3)
++
++/* scatter request flags */
++
++#define HTC_SCAT_REQ_FLG_PART_BNDL  (1 << 0)
++
++#define NUM_CONTROL_BUFFERS     8
++#define NUM_CONTROL_TX_BUFFERS  2
++#define NUM_CONTROL_RX_BUFFERS  (NUM_CONTROL_BUFFERS - NUM_CONTROL_TX_BUFFERS)
++
++#define HTC_RECV_WAIT_BUFFERS        (1 << 0)
++#define HTC_OP_STATE_STOPPING        (1 << 0)
++
++/*
++ * The frame header length and message formats defined herein were selected
++ * to accommodate optimal alignment for target processing. This reduces
++ * code size and improves performance. Any changes to the header length may
++ * alter the alignment and cause exceptions on the target. When adding to
++ * the messagestructures insure that fields are properly aligned.
++ */
++
++/* HTC frame header
++ *
++ * NOTE: do not remove or re-arrange the fields, these are minimally
++ * required to take advantage of 4-byte lookaheads in some hardware
++ * implementations.
++ */
++struct htc_frame_hdr {
++	u8 eid;
++	u8 flags;
++
++	/* length of data (including trailer) that follows the header */
++	__le16 payld_len;
++
++	/* end of 4-byte lookahead */
++
++	u8 ctrl[2];
++} __packed;
++
++/* HTC ready message */
++struct htc_ready_msg {
++	__le16 msg_id;
++	__le16 cred_cnt;
++	__le16 cred_sz;
++	u8 max_ep;
++	u8 pad;
++} __packed;
++
++/* extended HTC ready message */
++struct htc_ready_ext_msg {
++	struct htc_ready_msg ver2_0_info;
++	u8 htc_ver;
++	u8 msg_per_htc_bndl;
++} __packed;
++
++/* connect service */
++struct htc_conn_service_msg {
++	__le16 msg_id;
++	__le16 svc_id;
++	__le16 conn_flags;
++	u8 svc_meta_len;
++	u8 pad;
++} __packed;
++
++/* connect response */
++struct htc_conn_service_resp {
++	__le16 msg_id;
++	__le16 svc_id;
++	u8 status;
++	u8 eid;
++	__le16 max_msg_sz;
++	u8 svc_meta_len;
++	u8 pad;
++} __packed;
++
++struct htc_setup_comp_msg {
++	__le16 msg_id;
++} __packed;
++
++/* extended setup completion message */
++struct htc_setup_comp_ext_msg {
++	__le16 msg_id;
++	__le32 flags;
++	u8 msg_per_rxbndl;
++	u8 Rsvd[3];
++} __packed;
++
++struct htc_record_hdr {
++	u8 rec_id;
++	u8 len;
++} __packed;
++
++struct htc_credit_report {
++	u8 eid;
++	u8 credits;
++} __packed;
++
++/*
++ * NOTE: The lk_ahd array is guarded by a pre_valid
++ * and Post Valid guard bytes. The pre_valid bytes must
++ * equal the inverse of the post_valid byte.
++ */
++struct htc_lookahead_report {
++	u8 pre_valid;
++	u8 lk_ahd[4];
++	u8 post_valid;
++} __packed;
++
++struct htc_bundle_lkahd_rpt {
++	u8 lk_ahd[4];
++} __packed;
++
++/* Current service IDs */
++
++enum htc_service_grp_ids {
++	RSVD_SERVICE_GROUP = 0,
++	WMI_SERVICE_GROUP = 1,
++
++	HTC_TEST_GROUP = 254,
++	HTC_SERVICE_GROUP_LAST = 255
++};
++
++/* ------ endpoint IDS ------ */
++
++enum htc_endpoint_id {
++	ENDPOINT_UNUSED = -1,
++	ENDPOINT_0 = 0,
++	ENDPOINT_1 = 1,
++	ENDPOINT_2 = 2,
++	ENDPOINT_3,
++	ENDPOINT_4,
++	ENDPOINT_5,
++	ENDPOINT_6,
++	ENDPOINT_7,
++	ENDPOINT_8,
++	ENDPOINT_MAX,
++};
++
++struct htc_tx_packet_info {
++	u16 tag;
++	int cred_used;
++	u8 flags;
++	int seqno;
++};
++
++struct htc_rx_packet_info {
++	u32 exp_hdr;
++	u32 rx_flags;
++	u32 indicat_flags;
++};
++
++struct htc_target;
++
++/* wrapper around endpoint-specific packets */
++struct htc_packet {
++	struct list_head list;
++
++	/* caller's per packet specific context */
++	void *pkt_cntxt;
++
++	/*
++	 * the true buffer start , the caller can store the real
++	 * buffer start here.  In receive callbacks, the HTC layer
++	 * sets buf to the start of the payload past the header.
++	 * This field allows the caller to reset buf when it recycles
++	 * receive packets back to HTC.
 +	 */
-+	void (*set_rekey_info)(void *priv, const u8 *kek, const u8 *kck,
-+			       const u8 *replay_ctr);
- };
- 
- 
-@@ -2655,7 +2661,14 @@ enum wpa_event_type {
- 	/**
- 	 * EVENT_IBSS_PEER_LOST - IBSS peer not reachable anymore
- 	 */
--	EVENT_IBSS_PEER_LOST
-+	EVENT_IBSS_PEER_LOST,
++	u8 *buf_start;
 +
-+	/**
-+	 * EVENT_DRIVER_GTK_REKEY - device/driver did rekey
-+	 *
-+	 * This event carries the new replay counter.
++	/*
++	 * Pointer to the start of the buffer. In the transmit
++	 * direction this points to the start of the payload. In the
++	 * receive direction, however, the buffer when queued up
++	 * points to the start of the HTC header but when returned
++	 * to the caller points to the start of the payload
 +	 */
-+	EVENT_DRIVER_GTK_REKEY
- };
- 
- 
-@@ -3187,6 +3200,14 @@ union wpa_event_data {
- 	struct ibss_peer_lost {
- 		u8 peer[ETH_ALEN];
- 	} ibss_peer_lost;
++	u8 *buf;
++	u32 buf_len;
 +
-+	/**
-+	 * struct driver_gtk_rekey
++	/* actual length of payload */
++	u32 act_len;
++
++	/* endpoint that this packet was sent/recv'd from */
++	enum htc_endpoint_id endpoint;
++
++	/* completion status */
++
++	int status;
++	union {
++		struct htc_tx_packet_info tx;
++		struct htc_rx_packet_info rx;
++	} info;
++
++	void (*completion) (struct htc_target *, struct htc_packet *);
++	struct htc_target *context;
++};
++
++enum htc_send_full_action {
++	HTC_SEND_FULL_KEEP = 0,
++	HTC_SEND_FULL_DROP = 1,
++};
++
++struct htc_ep_callbacks {
++	void (*rx) (struct htc_target *, struct htc_packet *);
++	void (*rx_refill) (struct htc_target *, enum htc_endpoint_id endpoint);
++	enum htc_send_full_action (*tx_full) (struct htc_target *,
++					      struct htc_packet *);
++	struct htc_packet *(*rx_allocthresh) (struct htc_target *,
++					      enum htc_endpoint_id, int);
++	int rx_alloc_thresh;
++	int rx_refill_thresh;
++};
++
++/* service connection information */
++struct htc_service_connect_req {
++	u16 svc_id;
++	u16 conn_flags;
++	struct htc_ep_callbacks ep_cb;
++	int max_txq_depth;
++	u32 flags;
++	unsigned int max_rxmsg_sz;
++};
++
++/* service connection response information */
++struct htc_service_connect_resp {
++	u8 buf_len;
++	u8 act_len;
++	enum htc_endpoint_id endpoint;
++	unsigned int len_max;
++	u8 resp_code;
++};
++
++/* endpoint distributionstructure */
++struct htc_endpoint_credit_dist {
++	struct list_head list;
++
++	/* Service ID (set by HTC) */
++	u16 svc_id;
++
++	/* endpoint for this distributionstruct (set by HTC) */
++	enum htc_endpoint_id endpoint;
++
++	u32 dist_flags;
++
++	/*
++	 * credits for normal operation, anything above this
++	 * indicates the endpoint is over-subscribed.
 +	 */
-+	struct driver_gtk_rekey {
-+		const u8 *bssid;
-+		const u8 *replay_ctr;
-+	} driver_gtk_rekey;
- };
- 
- /**
---- a/wpa_supplicant/driver_i.h	2011-07-01 19:18:01.000000000 +0200
-+++ b/wpa_supplicant/driver_i.h	2011-07-01 19:23:37.000000000 +0200
-@@ -704,4 +704,13 @@ static inline int wpa_drv_tdls_oper(stru
- 	return wpa_s->driver->tdls_oper(wpa_s->drv_priv, oper, peer);
- }
- 
-+static inline void wpa_drv_set_rekey_info(struct wpa_supplicant *wpa_s,
-+					  const u8 *kek, const u8 *kck,
-+					  const u8 *replay_ctr)
++	int cred_norm;
++
++	/* floor for credit distribution */
++	int cred_min;
++
++	int cred_assngd;
++
++	/* current credits available */
++	int credits;
++
++	/*
++	 * pending credits to distribute on this endpoint, this
++	 * is set by HTC when credit reports arrive.  The credit
++	 * distribution functions sets this to zero when it distributes
++	 * the credits.
++	 */
++	int cred_to_dist;
++
++	/*
++	 * the number of credits that the current pending TX packet needs
++	 * to transmit. This is set by HTC when endpoint needs credits in
++	 * order to transmit.
++	 */
++	int seek_cred;
++
++	/* size in bytes of each credit */
++	int cred_sz;
++
++	/* credits required for a maximum sized messages */
++	int cred_per_msg;
++
++	/* reserved for HTC use */
++	void *htc_rsvd;
++
++	/*
++	 * current depth of TX queue , i.e. messages waiting for credits
++	 * This field is valid only when HTC_CREDIT_DIST_ACTIVITY_CHANGE
++	 * or HTC_CREDIT_DIST_SEND_COMPLETE is indicated on an endpoint
++	 * that has non-zero credits to recover.
++	 */
++	int txq_depth;
++};
++
++/*
++ * credit distibution code that is passed into the distrbution function,
++ * there are mandatory and optional codes that must be handled
++ */
++enum htc_credit_dist_reason {
++	HTC_CREDIT_DIST_SEND_COMPLETE = 0,
++	HTC_CREDIT_DIST_ACTIVITY_CHANGE = 1,
++	HTC_CREDIT_DIST_SEEK_CREDITS,
++};
++
++struct htc_credit_state_info {
++	int total_avail_credits;
++	int cur_free_credits;
++	struct list_head lowestpri_ep_dist;
++};
++
++/* endpoint statistics */
++struct htc_endpoint_stats {
++	/*
++	 * number of times the host set the credit-low flag in a send
++	 * message on this endpoint
++	 */
++	u32 cred_low_indicate;
++
++	u32 tx_issued;
++	u32 tx_pkt_bundled;
++	u32 tx_bundles;
++	u32 tx_dropped;
++
++	/* running count of total credit reports received for this endpoint */
++	u32 tx_cred_rpt;
++
++	/* credit reports received from this endpoint's RX packets */
++	u32 cred_rpt_from_rx;
++
++	/* credit reports received from RX packets of other endpoints */
++	u32 cred_rpt_from_other;
++
++	/* credit reports received from endpoint 0 RX packets */
++	u32 cred_rpt_ep0;
++
++	/* count of credits received via Rx packets on this endpoint */
++	u32 cred_from_rx;
++
++	/* count of credits received via another endpoint */
++	u32 cred_from_other;
++
++	/* count of credits received via another endpoint */
++	u32 cred_from_ep0;
++
++	/* count of consummed credits */
++	u32 cred_cosumd;
++
++	/* count of credits returned */
++	u32 cred_retnd;
++
++	u32 rx_pkts;
++
++	/* count of lookahead records found in Rx msg */
++	u32 rx_lkahds;
++
++	/* count of recv packets received in a bundle */
++	u32 rx_bundl;
++
++	/* count of number of bundled lookaheads */
++	u32 rx_bundle_lkahd;
++
++	/* count of the number of bundle indications from the HTC header */
++	u32 rx_bundle_from_hdr;
++
++	/* the number of times the recv allocation threshold was hit */
++	u32 rx_alloc_thresh_hit;
++
++	/* total number of bytes */
++	u32 rxalloc_thresh_byte;
++};
++
++struct htc_endpoint {
++	enum htc_endpoint_id eid;
++	u16 svc_id;
++	struct list_head txq;
++	struct list_head rx_bufq;
++	struct htc_endpoint_credit_dist cred_dist;
++	struct htc_ep_callbacks ep_cb;
++	int max_txq_depth;
++	int len_max;
++	int tx_proc_cnt;
++	int rx_proc_cnt;
++	struct htc_target *target;
++	u8 seqno;
++	u32 conn_flags;
++	struct htc_endpoint_stats ep_st;
++};
++
++struct htc_control_buffer {
++	struct htc_packet packet;
++	u8 *buf;
++};
++
++struct ath6kl_device;
++
++/* our HTC target state */
++struct htc_target {
++	struct htc_endpoint endpoint[ENDPOINT_MAX];
++	struct list_head cred_dist_list;
++	struct list_head free_ctrl_txbuf;
++	struct list_head free_ctrl_rxbuf;
++	struct htc_credit_state_info *cred_dist_cntxt;
++	int tgt_creds;
++	unsigned int tgt_cred_sz;
++	spinlock_t htc_lock;
++	spinlock_t rx_lock;
++	spinlock_t tx_lock;
++	struct ath6kl_device *dev;
++	u32 htc_flags;
++	u32 rx_st_flags;
++	enum htc_endpoint_id ep_waiting;
++	u8 htc_tgt_ver;
++
++	/* max messages per bundle for HTC */
++	int msg_per_bndl_max;
++
++	bool tx_bndl_enable;
++	int rx_bndl_enable;
++};
++
++void *htc_create(struct ath6kl *ar);
++void htc_set_credit_dist(struct htc_target *target,
++			 struct htc_credit_state_info *cred_info,
++			  u16 svc_pri_order[], int len);
++int htc_wait_target(struct htc_target *target);
++int htc_start(struct htc_target *target);
++int htc_conn_service(struct htc_target *target,
++		     struct htc_service_connect_req *req,
++		     struct htc_service_connect_resp *resp);
++int htc_tx(struct htc_target *target, struct htc_packet *packet);
++void htc_stop(struct htc_target *target);
++void htc_cleanup(struct htc_target *target);
++void htc_flush_txep(struct htc_target *target,
++		    enum htc_endpoint_id endpoint, u16 tag);
++void htc_flush_rx_buf(struct htc_target *target);
++void htc_indicate_activity_change(struct htc_target *target,
++				  enum htc_endpoint_id endpoint, bool active);
++int htc_get_rxbuf_num(struct htc_target *target, enum htc_endpoint_id endpoint);
++int htc_add_rxbuf_multiple(struct htc_target *target, struct list_head *pktq);
++
++static inline void set_htc_pkt_info(struct htc_packet *packet, void *context,
++				    u8 *buf, unsigned int len,
++				    enum htc_endpoint_id eid, u16 tag)
 +{
-+	if (!wpa_s->driver->set_rekey_info)
-+		return;
-+	wpa_s->driver->set_rekey_info(wpa_s->drv_priv, kek, kck, replay_ctr);
++	packet->pkt_cntxt = context;
++	packet->buf = buf;
++	packet->act_len = len;
++	packet->endpoint = eid;
++	packet->info.tx.tag = tag;
 +}
 +
- #endif /* DRIVER_I_H */
---- a/src/rsn_supp/wpa.c	2011-07-01 19:18:00.000000000 +0200
-+++ b/src/rsn_supp/wpa.c	2011-07-01 19:23:37.000000000 +0200
-@@ -1172,6 +1172,8 @@ static void wpa_supplicant_process_3_of_
- 		goto failed;
- 	}
- 
-+	wpa_sm_set_rekey_offload(sm);
-+
- 	return;
- 
- failed:
-@@ -2642,3 +2644,8 @@ int wpa_sm_has_ptk(struct wpa_sm *sm)
- 		return 0;
- 	return sm->ptk_set;
- }
-+
-+void wpa_sm_update_replay_ctr(struct wpa_sm *sm, const u8 *replay_ctr)
++static inline void htc_rxpkt_reset(struct htc_packet *packet)
 +{
-+	os_memcpy(sm->rx_replay_counter, replay_ctr, WPA_REPLAY_COUNTER_LEN);
-+}
---- a/src/rsn_supp/wpa_i.h	2011-07-01 19:18:00.000000000 +0200
-+++ b/src/rsn_supp/wpa_i.h	2011-07-01 19:23:37.000000000 +0200
-@@ -244,6 +244,14 @@ static inline int wpa_sm_mark_authentica
- 	return -1;
- }
- 
-+static inline void wpa_sm_set_rekey_offload(struct wpa_sm *sm)
-+{
-+	if (!sm->ctx->set_rekey_offload)
-+		return;
-+	sm->ctx->set_rekey_offload(sm->ctx->ctx, sm->ptk.kek,
-+				   sm->ptk.kck, sm->rx_replay_counter);
++	packet->buf = packet->buf_start;
++	packet->act_len = 0;
 +}
 +
- #ifdef CONFIG_TDLS
- static inline int wpa_sm_send_tdls_mgmt(struct wpa_sm *sm, const u8 *dst,
- 					u8 action_code, u8 dialog_token,
---- a/src/rsn_supp/wpa.h	2011-07-01 19:18:00.000000000 +0200
-+++ b/src/rsn_supp/wpa.h	2011-07-01 19:23:37.000000000 +0200
-@@ -61,6 +61,8 @@ struct wpa_sm_ctx {
- 			      u16 status_code, const u8 *buf, size_t len);
- 	int (*tdls_oper)(void *ctx, int oper, const u8 *peer);
- #endif /* CONFIG_TDLS */
-+	void (*set_rekey_offload)(void *ctx, const u8 *kek, const u8 *kck,
-+				  const u8 *replay_ctr);
- };
- 
- 
-@@ -132,6 +134,8 @@ int wpa_sm_pmksa_cache_list(struct wpa_s
- void wpa_sm_drop_sa(struct wpa_sm *sm);
- int wpa_sm_has_ptk(struct wpa_sm *sm);
- 
-+void wpa_sm_update_replay_ctr(struct wpa_sm *sm, const u8 *replay_ctr);
-+
- #else /* CONFIG_NO_WPA */
- 
- static inline struct wpa_sm * wpa_sm_init(struct wpa_sm_ctx *ctx)
-@@ -277,6 +281,11 @@ static inline int wpa_sm_has_ptk(struct
- 	return 0;
- }
- 
-+static inline void wpa_sm_update_replay_ctr(struct wpa_sm *sm,
-+					    const u8 *replay_ctr)
++static inline void set_htc_rxpkt_info(struct htc_packet *packet, void *context,
++				      u8 *buf, unsigned long len,
++				      enum htc_endpoint_id eid)
 +{
++	packet->pkt_cntxt = context;
++	packet->buf = buf;
++	packet->buf_start = buf;
++	packet->buf_len = len;
++	packet->endpoint = eid;
 +}
 +
- #endif /* CONFIG_NO_WPA */
- 
- #ifdef CONFIG_PEERKEY
---- a/wpa_supplicant/events.c	2011-07-01 19:23:31.000000000 +0200
-+++ b/wpa_supplicant/events.c	2011-07-01 19:23:37.000000000 +0200
-@@ -2203,6 +2203,15 @@ void wpa_supplicant_event(void *ctx, enu
- 		ibss_rsn_stop(wpa_s->ibss_rsn, data->ibss_peer_lost.peer);
- #endif /* CONFIG_IBSS_RSN */
- 		break;
-+	case EVENT_DRIVER_GTK_REKEY:
-+		if (os_memcmp(data->driver_gtk_rekey.bssid,
-+			      wpa_s->bssid, ETH_ALEN))
-+			break;
-+		if (!wpa_s->wpa)
-+			break;
-+		wpa_sm_update_replay_ctr(wpa_s->wpa,
-+					 data->driver_gtk_rekey.replay_ctr);
-+		break;
- 	default:
- 		wpa_msg(wpa_s, MSG_INFO, "Unknown event %d", event);
- 		break;
---- a/wpa_supplicant/wpas_glue.c	2011-07-01 19:18:00.000000000 +0200
-+++ b/wpa_supplicant/wpas_glue.c	2011-07-01 19:23:37.000000000 +0200
-@@ -655,6 +655,15 @@ int wpa_supplicant_init_eapol(struct wpa
- }
- 
- 
-+static void wpa_supplicant_set_rekey_offload(void *ctx, const u8 *kek,
-+					     const u8 *kck, const u8 *replay_ctr)
++static inline int get_queue_depth(struct list_head *queue)
 +{
-+	struct wpa_supplicant *wpa_s = ctx;
++	struct list_head *tmp_list;
++	int depth = 0;
 +
-+	wpa_drv_set_rekey_info(wpa_s, kek, kck, replay_ctr);
++	list_for_each(tmp_list, queue)
++	    depth++;
++
++	return depth;
 +}
 +
-+
- int wpa_supplicant_init_wpa(struct wpa_supplicant *wpa_s)
- {
- #ifndef CONFIG_NO_WPA
-@@ -694,6 +703,7 @@ int wpa_supplicant_init_wpa(struct wpa_s
- 	ctx->send_tdls_mgmt = wpa_supplicant_send_tdls_mgmt;
- 	ctx->tdls_oper = wpa_supplicant_tdls_oper;
- #endif /* CONFIG_TDLS */
-+	ctx->set_rekey_offload = wpa_supplicant_set_rekey_offload;
- 
- 	wpa_s->wpa = wpa_sm_init(ctx);
- 	if (wpa_s->wpa == NULL) {
---- a/src/drivers/driver_nl80211.c	2011-07-01 19:23:31.000000000 +0200
-+++ b/src/drivers/driver_nl80211.c	2011-07-01 23:39:16.000000000 +0200
-@@ -1376,6 +1376,44 @@ static void nl80211_del_station_event(st
- }
- 
- 
-+static void nl80211_rekey_offload_event(struct wpa_driver_nl80211_data *drv,
-+					struct nlattr **tb)
-+{
-+	struct nlattr *rekey_info[NUM_NL80211_REKEY_DATA];
-+	static struct nla_policy rekey_policy[NUM_NL80211_REKEY_DATA] = {
-+		[NL80211_REKEY_DATA_KEK] = {
-+			.minlen = NL80211_KEK_LEN,
-+			.maxlen = NL80211_KEK_LEN,
-+		},
-+		[NL80211_REKEY_DATA_KCK] = {
-+			.minlen = NL80211_KCK_LEN,
-+			.maxlen = NL80211_KCK_LEN,
-+		},
-+		[NL80211_REKEY_DATA_REPLAY_CTR] = {
-+			.minlen = NL80211_REPLAY_CTR_LEN,
-+			.maxlen = NL80211_REPLAY_CTR_LEN,
-+		},
-+	};
-+	union wpa_event_data data;
-+
-+	if (!tb[NL80211_ATTR_MAC])
-+		return;
-+	if (!tb[NL80211_ATTR_REKEY_DATA])
-+		return;
-+	if (nla_parse_nested(rekey_info, MAX_NL80211_REKEY_DATA,
-+			     tb[NL80211_ATTR_REKEY_DATA], rekey_policy))
-+		return;
-+	if (!rekey_info[NL80211_REKEY_DATA_REPLAY_CTR])
-+		return;
-+
-+	os_memset(&data, 0, sizeof(data));
-+	data.driver_gtk_rekey.bssid = nla_data(tb[NL80211_ATTR_MAC]);
-+	data.driver_gtk_rekey.replay_ctr =
-+		nla_data(rekey_info[NL80211_REKEY_DATA_REPLAY_CTR]);
-+	wpa_supplicant_event(drv->ctx, EVENT_DRIVER_GTK_REKEY, &data);
-+}
-+
-+
- static int process_event(struct nl_msg *msg, void *arg)
- {
- 	struct wpa_driver_nl80211_data *drv = arg;
-@@ -1494,6 +1532,8 @@ static int process_event(struct nl_msg *
- 	case NL80211_CMD_DEL_STATION:
- 		nl80211_del_station_event(drv, tb);
- 		break;
-+	case NL80211_CMD_SET_REKEY_OFFLOAD:
-+		nl80211_rekey_offload_event(drv, tb);
- 	default:
- 		wpa_printf(MSG_DEBUG, "nl80211: Ignored unknown event "
- 			   "(cmd=%d)", gnlh->cmd);
-@@ -6639,6 +6679,41 @@ static int nl80211_flush_pmkid(void *pri
- }
- 
- 
-+static void nl80211_set_rekey_info(void *priv, const u8 *kek, const u8 *kck,
-+				   const u8 *replay_ctr)
-+{
-+	struct i802_bss *bss = priv;
-+	struct wpa_driver_nl80211_data *drv = bss->drv;
-+	struct nlattr *replay_nested;
-+	struct nl_msg *msg;
-+
-+	msg = nlmsg_alloc();
-+	if (!msg)
-+		return;
-+
-+	genlmsg_put(msg, 0, 0, genl_family_get_id(drv->nl80211), 0, 0,
-+		    NL80211_CMD_SET_REKEY_OFFLOAD, 0);
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, bss->ifindex);
-+
-+	replay_nested = nla_nest_start(msg, NL80211_ATTR_REKEY_DATA);
-+	if (!replay_nested)
-+		goto nla_put_failure;
-+
-+	NLA_PUT(msg, NL80211_REKEY_DATA_KEK, NL80211_KEK_LEN, kek);
-+	NLA_PUT(msg, NL80211_REKEY_DATA_KCK, NL80211_KCK_LEN, kck);
-+	NLA_PUT(msg, NL80211_REKEY_DATA_REPLAY_CTR, NL80211_REPLAY_CTR_LEN,
-+		replay_ctr);
-+
-+	nla_nest_end(msg, replay_nested);
-+
-+	send_and_recv_msgs(drv, msg, NULL, NULL);
-+	return;
-+ nla_put_failure:
-+	nlmsg_free(msg);
-+}
-+
-+
- const struct wpa_driver_ops wpa_driver_nl80211_ops = {
- 	.name = "nl80211",
- 	.desc = "Linux nl80211/cfg80211",
-@@ -6711,4 +6786,5 @@ const struct wpa_driver_ops wpa_driver_n
- 	.add_pmkid = nl80211_add_pmkid,
- 	.remove_pmkid = nl80211_remove_pmkid,
- 	.flush_pmkid = nl80211_flush_pmkid,
-+	.set_rekey_info = nl80211_set_rekey_info,
- };
-
++#endif
 
