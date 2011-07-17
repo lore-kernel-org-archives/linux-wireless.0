@@ -1,24 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:38530 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750802Ab1GUNp2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 09:45:28 -0400
-To: gregkh@suse.de
-Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH ersion=v2] ath6kl: fix suspend and resume
-References: <20110721132223.10837.60499.stgit@localhost6.localdomain6>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Thu, 21 Jul 2011 16:45:27 +0300
-In-Reply-To: <20110721132223.10837.60499.stgit@localhost6.localdomain6> (Kalle Valo's message of "Thu\, 21 Jul 2011 16\:22\:23 +0300")
-Message-ID: <87y5zrsq6g.fsf@purkki.adurom.net> (sfid-20110721_154532_380425_E0ACCBA8)
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:37608 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752899Ab1GQVlp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jul 2011 17:41:45 -0400
+Subject: [PATCH v3 08/23] ath6kl: add debug.h
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: joe@perches.com, devel@linuxdriverproject.org, gregkh@suse.de,
+	error27@gmail.com
+Date: Mon, 18 Jul 2011 00:41:38 +0300
+Message-ID: <20110717214138.23534.88259.stgit@localhost6.localdomain6> (sfid-20110717_234148_808457_7CF8D665)
+In-Reply-To: <20110717213832.23534.75274.stgit@localhost6.localdomain6>
+References: <20110717213832.23534.75274.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case someone wonders the strange "ersion=v2" in the subject: I made
-a typo with stgit command and wrote "-version=v2" when I was supposed
-to write "--version=v2" :)
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/debug.h |  104 +++++++++++++++++++++++++++++++
+ 1 files changed, 104 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/debug.h
 
--- 
-Kalle Valo
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
+new file mode 100644
+index 0000000..2e60588
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath6kl/debug.h
+@@ -0,0 +1,104 @@
++/*
++ * Copyright (c) 2011 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef DEBUG_H
++#define DEBUG_H
++
++#include "htc_hif.h"
++
++enum ATH6K_DEBUG_MASK {
++	ATH6KL_DBG_WLAN_CONNECT = BIT(0),     /* wlan connect */
++	ATH6KL_DBG_WLAN_SCAN    = BIT(1),     /* wlan scan */
++	ATH6KL_DBG_WLAN_TX      = BIT(2),     /* wlan tx */
++	ATH6KL_DBG_WLAN_RX      = BIT(3),     /* wlan rx */
++	ATH6KL_DBG_BMI		= BIT(4),     /* bmi tracing */
++	ATH6KL_DBG_HTC_SEND     = BIT(5),     /* htc send */
++	ATH6KL_DBG_HTC_RECV     = BIT(6),     /* htc recv */
++	ATH6KL_DBG_IRQ		= BIT(7),     /* interrupt processing */
++	ATH6KL_DBG_PM           = BIT(8),     /* power management */
++	ATH6KL_DBG_WLAN_NODE    = BIT(9),     /* general wlan node tracing */
++	ATH6KL_DBG_WMI          = BIT(10),    /* wmi tracing */
++	ATH6KL_DBG_TRC	        = BIT(11),    /* generic func tracing */
++	ATH6KL_DBG_SCATTER	= BIT(12),    /* hif scatter tracing */
++	ATH6KL_DBG_WLAN_CFG     = BIT(13),    /* cfg80211 i/f file tracing */
++	ATH6KL_DBG_RAW_BYTES    = BIT(14),    /* dump tx/rx and wmi frames */
++	ATH6KL_DBG_ANY	        = 0xffffffff  /* enable all logs */
++};
++
++extern unsigned int debug_mask;
++extern int ath6kl_printk(const char *level, const char *fmt, ...)
++	__attribute__ ((format (printf, 2, 3)));
++
++#define ath6kl_info(fmt, ...)				\
++	ath6kl_printk(KERN_INFO, fmt, ##__VA_ARGS__)
++#define ath6kl_err(fmt, ...)					\
++	ath6kl_printk(KERN_ERR, fmt, ##__VA_ARGS__)
++#define ath6kl_warn(fmt, ...)					\
++	ath6kl_printk(KERN_WARNING, fmt, ##__VA_ARGS__)
++
++#define AR_DBG_LVL_CHECK(mask)	(debug_mask & mask)
++
++#ifdef CONFIG_ATH6KL_DEBUG
++#define ath6kl_dbg(mask, fmt, ...)					\
++	({								\
++	 int rtn;							\
++	 if (debug_mask & mask)						\
++		rtn = ath6kl_printk(KERN_DEBUG, fmt, ##__VA_ARGS__);	\
++	 else								\
++		rtn = 0;						\
++									\
++	 rtn;								\
++	 })
++
++static inline void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
++				   const char *msg, const void *buf,
++				   size_t len)
++{
++	if (debug_mask & mask) {
++		ath6kl_dbg(mask, "%s\n", msg);
++		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, buf, len);
++	}
++}
++
++void ath6kl_dump_registers(struct ath6kl_device *dev,
++			   struct ath6kl_irq_proc_registers *irq_proc_reg,
++			   struct ath6kl_irq_enable_reg *irq_en_reg);
++void dump_cred_dist_stats(struct htc_target *target);
++#else
++static inline int ath6kl_dbg(enum ATH6K_DEBUG_MASK dbg_mask,
++			     const char *fmt, ...)
++{
++	return 0;
++}
++
++static inline void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
++				   const char *msg, const void *buf,
++				   size_t len)
++{
++}
++
++static inline void ath6kl_dump_registers(struct ath6kl_device *dev,
++		struct ath6kl_irq_proc_registers *irq_proc_reg,
++		struct ath6kl_irq_enable_reg *irq_en_reg)
++{
++
++}
++static inline void dump_cred_dist_stats(struct htc_target *target)
++{
++}
++#endif
++
++#endif
+
