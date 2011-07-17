@@ -1,153 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:50973 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750764Ab1GHQUj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2011 12:20:39 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 12/21] iwlagn: remove double level temperature indirect call
-Date: Fri,  8 Jul 2011 08:46:20 -0700
-Message-Id: <1310139989-27661-13-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110708_182101_466074_4F77260A)
-In-Reply-To: <1310139989-27661-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1310139989-27661-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:56314 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751668Ab1GQJOD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jul 2011 05:14:03 -0400
+Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
+	by emh03-2.mail.saunalahti.fi (Postfix) with SMTP id 4CC40EBBA1
+	for <linux-wireless@vger.kernel.org>; Sun, 17 Jul 2011 12:14:00 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-184-248.elisa-laajakaista.fi [88.115.184.248])
+	by emh01.mail.saunalahti.fi (Postfix) with ESMTP id 2DAC8402E
+	for <linux-wireless@vger.kernel.org>; Sun, 17 Jul 2011 12:13:57 +0300 (EEST)
+Subject: [PATCH] ieee80211: add few wmm tspec values
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Date: Sun, 17 Jul 2011 12:13:56 +0300
+Message-ID: <20110717091356.3427.38487.stgit@localhost6.localdomain6> (sfid-20110717_111433_219264_02D12B78)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No need to do double level indirect call after driver split
-no functional changes
+These are needed by ath6kl for parsing tspec status from an IE.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-1000.c |    4 +---
- drivers/net/wireless/iwlwifi/iwl-2000.c |    4 +---
- drivers/net/wireless/iwlwifi/iwl-5000.c |    8 ++------
- drivers/net/wireless/iwlwifi/iwl-6000.c |    8 ++------
- drivers/net/wireless/iwlwifi/iwl-core.h |    6 +-----
- drivers/net/wireless/iwlwifi/iwl-rx.c   |    4 ++--
- 6 files changed, 9 insertions(+), 25 deletions(-)
+ include/linux/ieee80211.h |   37 +++++++++++++++++++++++++++++++++++++
+ 1 files changed, 37 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index a558df9..7795855 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -183,9 +183,7 @@ static struct iwl_lib_ops iwl1000_lib = {
- 			EEPROM_REGULATORY_BAND_NO_HT40,
- 		},
- 	},
--	.temp_ops = {
--		.temperature = iwlagn_temperature,
--	 },
-+	.temperature = iwlagn_temperature,
- };
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index a26108e..54c8789 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1453,6 +1453,43 @@ enum ieee80211_sa_query_action {
  
- static const struct iwl_ops iwl1000_ops = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index 2855994..b2b054f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -184,9 +184,7 @@ static struct iwl_lib_ops iwl2000_lib = {
- 		},
- 		.update_enhanced_txpower = iwlcore_eeprom_enhanced_txpower,
- 	},
--	.temp_ops = {
--		.temperature = iwlagn_temperature,
--	},
-+	.temperature = iwlagn_temperature,
- };
+ #define WLAN_PMKID_LEN			16
  
- static const struct iwl_ops iwl2000_ops = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 55972cf..30c2df6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -336,9 +336,7 @@ static struct iwl_lib_ops iwl5000_lib = {
- 			EEPROM_REG_BAND_52_HT40_CHANNELS
- 		},
- 	},
--	.temp_ops = {
--		.temperature = iwlagn_temperature,
--	 },
-+	.temperature = iwlagn_temperature,
- };
- 
- static struct iwl_lib_ops iwl5150_lib = {
-@@ -359,9 +357,7 @@ static struct iwl_lib_ops iwl5150_lib = {
- 			EEPROM_REG_BAND_52_HT40_CHANNELS
- 		},
- 	},
--	.temp_ops = {
--		.temperature = iwl5150_temperature,
--	 },
-+	.temperature = iwl5150_temperature,
- };
- 
- static const struct iwl_ops iwl5000_ops = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 17dc337..57f3169 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -277,9 +277,7 @@ static struct iwl_lib_ops iwl6000_lib = {
- 		},
- 		.update_enhanced_txpower = iwlcore_eeprom_enhanced_txpower,
- 	},
--	.temp_ops = {
--		.temperature = iwlagn_temperature,
--	 },
-+	.temperature = iwlagn_temperature,
- };
- 
- static struct iwl_lib_ops iwl6030_lib = {
-@@ -302,9 +300,7 @@ static struct iwl_lib_ops iwl6030_lib = {
- 		},
- 		.update_enhanced_txpower = iwlcore_eeprom_enhanced_txpower,
- 	},
--	.temp_ops = {
--		.temperature = iwlagn_temperature,
--	 },
-+	.temperature = iwlagn_temperature,
- };
- 
- static struct iwl_nic_ops iwl6050_nic_ops = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 47cfbb9..2e3ea55 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -96,10 +96,6 @@ struct iwl_hcmd_utils_ops {
- 	int (*request_scan)(struct iwl_priv *priv, struct ieee80211_vif *vif);
- };
- 
--struct iwl_temp_ops {
--	void (*temperature)(struct iwl_priv *priv);
--};
--
- struct iwl_lib_ops {
- 	/* set hw dependent parameters */
- 	int (*set_hw_params)(struct iwl_priv *priv);
-@@ -120,7 +116,7 @@ struct iwl_lib_ops {
- 	struct iwl_eeprom_ops eeprom_ops;
- 
- 	/* temperature */
--	struct iwl_temp_ops temp_ops;
-+	void (*temperature)(struct iwl_priv *priv);
- };
- 
- /* NIC specific ops */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 87148bb..1690b49 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -624,8 +624,8 @@ static void iwl_rx_statistics(struct iwl_priv *priv,
- 		iwl_rx_calc_noise(priv);
- 		queue_work(priv->workqueue, &priv->run_time_calib_work);
- 	}
--	if (priv->cfg->ops->lib->temp_ops.temperature && change)
--		priv->cfg->ops->lib->temp_ops.temperature(priv);
-+	if (priv->cfg->ops->lib->temperature && change)
-+		priv->cfg->ops->lib->temperature(priv);
- }
- 
- static void iwl_rx_reply_statistics(struct iwl_priv *priv,
--- 
-1.7.0.4
++/*
++ * WMM/802.11e Tspec Element
++ */
++#define IEEE80211_WMM_IE_TSPEC_TID_MASK		0x0F
++#define IEEE80211_WMM_IE_TSPEC_TID_SHIFT	1
++
++enum ieee80211_tspec_status_code {
++	IEEE80211_TSPEC_STATUS_ADMISS_ACCEPTED = 0,
++	IEEE80211_TSPEC_STATUS_ADDTS_INVAL_PARAMS = 0x1,
++};
++
++struct ieee80211_tspec_ie {
++	u8 element_id;
++	u8 len;
++	u8 oui[3];
++	u8 oui_type;
++	u8 oui_subtype;
++	u8 version;
++	__le16 tsinfo;
++	u8 tsinfo_resvd;
++	__le16 nominal_msdu;
++	__le16 max_msdu;
++	__le32 min_service_int;
++	__le32 max_service_int;
++	__le32 inactivity_int;
++	__le32 suspension_int;
++	__le32 service_start_time;
++	__le32 min_data_rate;
++	__le32 mean_data_rate;
++	__le32 peak_data_rate;
++	__le32 max_burst_size;
++	__le32 delay_bound;
++	__le32 min_phy_rate;
++	__le16 sba;
++	__le16 medium_time;
++} __packed;
++
+ /**
+  * ieee80211_get_qos_ctl - get pointer to qos control bytes
+  * @hdr: the frame
 
