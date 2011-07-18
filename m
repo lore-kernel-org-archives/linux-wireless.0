@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:43472 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756352Ab1GQU5l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2011 16:57:41 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat-wireless: add some new config options for b43
-Date: Sun, 17 Jul 2011 22:57:29 +0200
-Message-Id: <1310936250-10224-1-git-send-email-hauke@hauke-m.de> (sfid-20110717_225748_280137_C3BC1BE8)
+Received: from he.sipsolutions.net ([78.46.109.217]:59687 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750745Ab1GRHqS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 03:46:18 -0400
+Subject: Re: IEEE802.11 BEB Implementation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Anbarasan <anbarasans85@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <loom.20110717T202533-832@post.gmane.org> (sfid-20110717_203020_523344_08EE9078)
+References: <loom.20110717T202533-832@post.gmane.org>
+	 (sfid-20110717_203020_523344_08EE9078)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 18 Jul 2011 09:46:15 +0200
+Message-ID: <1310975175.3942.3.camel@jlt3.sipsolutions.net> (sfid-20110718_094626_906358_80FBDD2C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, 2011-07-17 at 18:29 +0000, Anbarasan wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+> Following is a comment in the file (driver/net/wireless/iwl-commands.h):
+> /*Device will automatically increase contention window by (2*CW) + 1 for each 
+> transmission retry.  Device uses cw_max as a bit mask, ANDed with new CW  value,
+> to cap the CW value.*/
+> 
+> The above is the BEB and I am looking for this implementation. I could not find
+> it. Kindly help. (I have a Intel Wireless card.)
 
-diff --git a/config.mk b/config.mk
-index 3cae526..c7ed0a0 100644
---- a/config.mk
-+++ b/config.mk
-@@ -273,6 +273,7 @@ endif #CONFIG_MAC80211_LEDS
- CONFIG_B43_PHY_LP=y
- CONFIG_B43_PHY_N=y
- # CONFIG_B43_PHY_HT=y
-+# CONFIG_B43_PHY_LCN=y
- # CONFIG_B43_FORCE_PIO=y
- # CONFIG_B43_DEBUG=y
- 
-@@ -334,6 +335,7 @@ CONFIG_BCMA_BLOCKIO=y
- CONFIG_BCMA_HOST_PCI=y
- # CONFIG_BCMA_DEBUG=y
- # CONFIG_B43_BCMA=y
-+# CONFIG_B43_BCMA_PIO=y
- 
- CONFIG_P54_PCI=m
- 
--- 
-1.7.4.1
+Isn't "Device will" and "Device uses" obvious? The card does it, you
+cannot modify this implementation.
+
+johannes
 
