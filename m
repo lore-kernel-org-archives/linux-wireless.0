@@ -1,57 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:57950 "EHLO c60.cesmail.net"
+Received: from msr3.hinet.net ([168.95.4.103]:34608 "EHLO msr3.hinet.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751847Ab1GUQdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 12:33:44 -0400
-Message-ID: <4E2854E5.3020905@gnu.org> (sfid-20110721_183401_784278_B719A8CA)
-Date: Thu, 21 Jul 2011 12:33:41 -0400
-From: Pavel Roskin <proski@gnu.org>
+	id S1753150Ab1GRI3u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 04:29:50 -0400
+Date: Mon, 18 Jul 2011 16:27:09 +0800
+From: Ali Bahar <ali@internetdog.org>
+To: Stefan Assmann <sassmann@redhat.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: r8712u issue
+Message-ID: <20110718082709.GA8390@internetdog.org> (sfid-20110718_102954_232368_E68244B5)
+Reply-To: ali@internetdog.org
+References: <4E2051F3.20103@redhat.com>
+ <4E205984.5040803@lwfinger.net>
+ <4E23E56C.9000202@redhat.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: Bug in BCMA: device_unregister causing "NULL pointer dereference
- at"
-References: <CACna6rxAKMp-2wqwz4k4S3nTkY_3Qz7=hEZk9F2Zig7T5kp_HA@mail.gmail.com> <CACna6rwPqeW5Bhc7A0FnkCaRq-a-nA4ziUQdoiakN_DvMyL_RQ@mail.gmail.com>
-In-Reply-To: <CACna6rwPqeW5Bhc7A0FnkCaRq-a-nA4ziUQdoiakN_DvMyL_RQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E23E56C.9000202@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/21/2011 03:18 AM, Rafał Miłecki wrote:
+Stefan,
 
->> So when I unload bcma after I got driver (b43) for 0x812 core, I get
->> NULL pointer dereference.
->>
->> Any tip, why does it happen?
->
-> I've tracked where does crash really happen (kobject_del does not
-> really say much). The real forwardtrace is:
-> device_unregister → device_del → kobject_del → kobj_kset_leave →
-> kobj_kset_leave → list_del_init
->
-> If you take a look at list_del_init, it touches "prev" and "next". So
-> I've added some debugging:
-> pr_info("core->dev.kobj.entry.prev: 0x%p\n", core->dev.kobj.entry.prev);
-> pr_info("core->dev.kobj.entry.next: 0x%p\n", core->dev.kobj.entry.next);
+I'd like to reproduce this problem. So I'd appreciate some specifics,
+as asked below.
 
-There are options for debugging that you may want to enable:
 
-CONFIG_DEBUG_LIST
-CONFIG_DEBUG_OBJECTS
-CONFIG_DEBUG_KOBJECT
+On Mon, Jul 18, 2011 at 09:49:00AM +0200, Stefan Assmann wrote:
+> On 15.07.2011 17:15, Larry Finger wrote:
+> > On 07/15/2011 09:42 AM, Stefan Assmann wrote:
 
-Actually, consider enabling most debug options as possible, except 
-perhaps the most time consuming (such as CONFIG_DEBUG_KMEMLEAK).  Maybe 
-you are passing a freed pointer or something.
+> >> driver. The problem I'm currently facing is that the driver does not
+> >> recognize any network disconnects. So whenever the network goes down the
+> >> driver will still report it's connected and thus doesn't reconnect when
+> >> the network is up again.
 
-Print the pointers you are passing to device_register() and 
-device_unregister().
 
-> [  612.819320] bcma: core->dev.kobj.entry.prev: 0x  (null)
+> The system is a headless debian squeeze with a self build vanilla 2.6.39
+> kernel. The network is handled by debian scripts I just added the following
+> to /etc/network/interfaces:
+> auto wlan0
+> iface wlan0 inet dhcp
+> wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+> 
+> No NM involved.
 
-You may want to make it a macro and print it in most bcma functions.
+So wpa_supplicant is controlling (and presumably monitoring) the
+connection.
+How are you seeing that (to quote the above) "the network goes down"
+and that the driver reports that "it's connected"? 
+(Typically, I use only ifconfig and iwconfig, but those don't monitor
+the connection.)
 
--- 
-Regards,
-Pavel Roskin
+
+ 
+> > When this situation occurs, what is output to the dmesg log?
+> 
+> Sorry, I don't have the output at hand but IIRC basically nothing special
+> occurred in dmesg. The interface even keeps it's IP although the wireless
+> was long gone.
+
+So ifconfig shows the IP#. I'm assuming that it no longer shows a
+state of "UP".
+This'd seem an inane question, but I must ask: What exactly do you
+mean by the wireless being "gone"? Which GUI/utility/effect do you
+see? Is it a powered-down AP, roaming, iwconfig's output, or what?
+
+
+ 
+
+> Ccing Ali Bahar to this reply, since he has seen something similar.
+
+To clarify: I just meant that I've seen quite a number of similar
+inconsistencies in my testing as well as in my analysis of the code.
+So, when I read your post, it came as no surprise to me. These'll get
+fixed ... uh, let's hope soon! ;-)
+
