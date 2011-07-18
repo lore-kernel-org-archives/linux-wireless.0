@@ -1,48 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout2.freenet.de ([195.4.92.92]:37684 "EHLO mout2.freenet.de"
+Received: from mms2.broadcom.com ([216.31.210.18]:4204 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751572Ab1G3PES (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jul 2011 11:04:18 -0400
-Message-ID: <4E341DC4.9010107@01019freenet.de> (sfid-20110730_170422_694952_A5CA2220)
-Date: Sat, 30 Jul 2011 17:05:40 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+	id S1752353Ab1GROaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 10:30:23 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org
+Subject: [PATCH 08/19] staging: brcm80211: replace simple_strtoul usage
+ in brcmsmac
+Date: Mon, 18 Jul 2011 16:29:54 +0200
+Message-ID: <1310999405-10062-9-git-send-email-arend@broadcom.com> (sfid-20110718_163034_336071_41847C4E)
+In-Reply-To: <1310999405-10062-1-git-send-email-arend@broadcom.com>
+References: <1310999405-10062-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Alan Piszcz <ap@solarrain.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
-References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan> <4E318BD0.40202@lwfinger.net> <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan> <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan> <alpine.DEB.2.02.1107301031560.4925@p34.internal.lan>
-In-Reply-To: <alpine.DEB.2.02.1107301031560.4925@p34.internal.lan>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Justin,
+The usage of simple_strtoul is not preferred. Instead kstrtoul
+should be used. This patch fixes this for the brcmsmac driver.
 
-if you want to test, if the module works stable, run this script for one
-or two hours. It will stress the driver and the hardware.
+Cc: linux-wireless@vger.kernel.org
+Cc: devel@linuxdriverproject.org
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/main.c        |   16 +++++++++-------
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |    7 ++++---
+ 2 files changed, 13 insertions(+), 10 deletions(-)
 
-If it doesn't crash and if the throughput is stable, you can hope, that
-the driver is ok for daily work.
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 0d80e59..e5c675d 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -4287,16 +4287,17 @@ int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device, uint unit,
+ #endif
+ 	if (bustype != SI_BUS) {
+ 		char *var;
++		unsigned long res;
+ 
+ 		var = getvar(vars, "vendid");
+-		if (var) {
+-			vendor = (u16) simple_strtoul(var, NULL, 0);
++		if (var && !kstrtoul(var, 0, &res)) {
++			vendor = (u16)res;
+ 			wiphy_err(wiphy, "Overriding vendor id = 0x%x\n",
+ 				  vendor);
+ 		}
+ 		var = getvar(vars, "devid");
+-		if (var) {
+-			u16 devid = (u16) simple_strtoul(var, NULL, 0);
++		if (var && !kstrtoul(var, 0, &res)) {
++			u16 devid = (u16)res;
+ 			if (devid != 0xffff) {
+ 				device = devid;
+ 				wiphy_err(wiphy, "Overriding device id = 0x%x"
+@@ -9596,10 +9597,11 @@ char *getvar(char *vars, const char *name)
+ int getintvar(char *vars, const char *name)
+ {
+ 	char *val;
++	unsigned long res;
+ 
+ 	val = getvar(vars, name);
+-	if (val == NULL)
+-		return 0;
++	if (val && !kstrtoul(val, 0, &res))
++		return res;
+ 
+-	return simple_strtoul(val, NULL, 0);
++	return 0;
+ }
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+index 582df4a..22f7bfc 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -174,12 +174,13 @@ char *phy_getvar(struct brcms_phy *pi, const char *name)
+ int phy_getintvar(struct brcms_phy *pi, const char *name)
+ {
+ 	char *val;
++	unsigned long res;
+ 
+ 	val = PHY_GETVAR(pi, name);
+-	if (val == NULL)
+-		return 0;
++	if (val && !kstrtoul(val, 0, &res))
++		return res;
+ 
+-	return simple_strtoul(val, NULL, 0);
++	return 0;
+ }
+ 
+ void wlc_phyreg_enter(struct brcms_phy_pub *pih)
+-- 
+1.7.4.1
 
 
-#!/bin/sh
-
-dest="server" # set the servername
-
-while true ; do
-netperf -t TCP_MAERTS -H $dest
-netperf -t TCP_STREAM -H $dest
-netperf -t TCP_SENDFILE -H $dest
-done
-
-
-Start the script on the client. On the server start netserver.
-You get netperf from http://www.netperf.org/netperf/
-
-
-Andreas
