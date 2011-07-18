@@ -1,45 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:64837 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753067Ab1GEEj7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 00:39:59 -0400
+Received: from mms2.broadcom.com ([216.31.210.18]:4244 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754194Ab1GROaY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 10:30:24 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org
+Subject: [PATCH 19/19] staging: brcm80211: replace simple_strtoul usage
+ in brcmfmac
+Date: Mon, 18 Jul 2011 16:30:05 +0200
+Message-ID: <1310999405-10062-20-git-send-email-arend@broadcom.com> (sfid-20110718_163110_501607_1BD73EC7)
+In-Reply-To: <1310999405-10062-1-git-send-email-arend@broadcom.com>
+References: <1310999405-10062-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <4E124D42.8040808@gmail.com>
-References: <4E0D5E42.20702@gmail.com>
-	<BANLkTinBJBnZbHPpdmnYX3EV0SYFd-pRDA@mail.gmail.com>
-	<4E0D6B8D.6000601@gmail.com>
-	<BANLkTimX4=Szn_JT49SLw4BvGxg3Qe0rYw@mail.gmail.com>
-	<4E0ED42E.3020303@gmail.com>
-	<4E113498.7050900@gmail.com>
-	<CAD2nsn0XjoMUMv6e9SuSBUAwq0Lq5QCPMBWTnPZmsndg_XYcvw@mail.gmail.com>
-	<4E124D42.8040808@gmail.com>
-Date: Tue, 5 Jul 2011 10:09:57 +0530
-Message-ID: <CAD2nsn2AhxWCT0XLn46n4GTE7-HOkT2HzKf6=6RsG3PbSB0hsw@mail.gmail.com> (sfid-20110705_064004_706716_8507974E)
-Subject: Re: WARNING: at kernel/timer.c:1011 del_timer_sync+0xa9/0xc4()
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
->
-> FWIW below is my .config that I am using that seems to be having this
-> warning message show up.
->
-> latest pull of the Mainline dmesg:
->  http://fpaste.org/
->
+The usage of simple_strtoul is not preferred. Instead kstrtoul
+should be used. This patch fixes this for the brcmfmac driver.
 
-hello Justin,
+Cc: linux-wireless@vger.kernel.org
+Cc: devel@linuxdriverproject.org
+Reported-by: Dan Carpenter <error27@gmail.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c |   27 +++++++++++++++++-----
+ 1 files changed, 21 insertions(+), 6 deletions(-)
 
-we doubt whether this patch is there in your linux-kernel tree you are
-using, even though it is there in wireless-testing tree. please try to
-apply this patch and see you can hit the warning
-https://patchwork.kernel.org/patch/915952/
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+index 12c772d..fdd3629 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+@@ -827,10 +827,13 @@ static int brcmf_c_pattern_atoh(char *src, char *dst)
+ 		return -EINVAL;
+ 	}
+ 	for (i = 0; *src != '\0'; i++) {
++		unsigned long res;
+ 		char num[3];
+ 		strncpy(num, src, 2);
+ 		num[2] = '\0';
+-		dst[i] = (u8) simple_strtoul(num, NULL, 16);
++		if (kstrtoul(num, 16, &res))
++			return -EINVAL;
++		dst[i] = (u8)res;
+ 		src += 2;
+ 	}
+ 	return i;
+@@ -840,6 +843,7 @@ void
+ brcmf_c_pktfilter_offload_enable(struct brcmf_pub *drvr, char *arg, int enable,
+ 			     int master_mode)
+ {
++	unsigned long res;
+ 	char *argv[8];
+ 	int i = 0;
+ 	const char *str;
+@@ -876,7 +880,9 @@ brcmf_c_pktfilter_offload_enable(struct brcmf_pub *drvr, char *arg, int enable,
+ 	pkt_filterp = (struct brcmf_pkt_filter_enable *) (buf + str_len + 1);
+ 
+ 	/* Parse packet filter id. */
+-	enable_parm.id = simple_strtoul(argv[i], NULL, 0);
++	enable_parm.id = 0;
++	if (!kstrtoul(argv[i], 0, &res))
++		enable_parm.id = (u32)res;
+ 
+ 	/* Parse enable/disable value. */
+ 	enable_parm.enable = enable;
+@@ -913,6 +919,7 @@ void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg)
+ 	const char *str;
+ 	struct brcmf_pkt_filter pkt_filter;
+ 	struct brcmf_pkt_filter *pkt_filterp;
++	unsigned long res;
+ 	int buf_len;
+ 	int str_len;
+ 	int rc;
+@@ -956,7 +963,9 @@ void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg)
+ 	pkt_filterp = (struct brcmf_pkt_filter *) (buf + str_len + 1);
+ 
+ 	/* Parse packet filter id. */
+-	pkt_filter.id = simple_strtoul(argv[i], NULL, 0);
++	pkt_filter.id = 0;
++	if (!kstrtoul(argv[i], 0, &res))
++		pkt_filter.id = (u32)res;
+ 
+ 	if (NULL == argv[++i]) {
+ 		BRCMF_ERROR(("Polarity not provided\n"));
+@@ -964,7 +973,9 @@ void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg)
+ 	}
+ 
+ 	/* Parse filter polarity. */
+-	pkt_filter.negate_match = simple_strtoul(argv[i], NULL, 0);
++	pkt_filter.negate_match = 0;
++	if (!kstrtoul(argv[i], 0, &res))
++		pkt_filter.negate_match = (u32)res;
+ 
+ 	if (NULL == argv[++i]) {
+ 		BRCMF_ERROR(("Filter type not provided\n"));
+@@ -972,7 +983,9 @@ void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg)
+ 	}
+ 
+ 	/* Parse filter type. */
+-	pkt_filter.type = simple_strtoul(argv[i], NULL, 0);
++	pkt_filter.type = 0;
++	if (!kstrtoul(argv[i], 0, &res))
++		pkt_filter.type = (u32)res;
+ 
+ 	if (NULL == argv[++i]) {
+ 		BRCMF_ERROR(("Offset not provided\n"));
+@@ -980,7 +993,9 @@ void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg)
+ 	}
+ 
+ 	/* Parse pattern filter offset. */
+-	pkt_filter.u.pattern.offset = simple_strtoul(argv[i], NULL, 0);
++	pkt_filter.u.pattern.offset = 0;
++	if (!kstrtoul(argv[i], 0, &res))
++		pkt_filter.u.pattern.offset = (u32)res;
+ 
+ 	if (NULL == argv[++i]) {
+ 		BRCMF_ERROR(("Bitmask not provided\n"));
+-- 
+1.7.4.1
 
-thanks,
-shafi
+
