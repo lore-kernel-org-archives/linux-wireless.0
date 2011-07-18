@@ -1,58 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:51313 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753160Ab1GZWwt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2011 18:52:49 -0400
-Subject: [PATCH 3/3] orinoco_cs: be more careful when matching cards with ID
- 0x0156:0x0002
-To: linux-pcmcia@lists.infradead.org, linux-wireless@vger.kernel.org
-From: Pavel Roskin <proski@gnu.org>
-Date: Tue, 26 Jul 2011 18:52:48 -0400
-Message-ID: <20110726225248.29951.81874.stgit@mj.roinet.com> (sfid-20110727_005256_655906_AE583D09)
-In-Reply-To: <20110726225235.29951.70265.stgit@mj.roinet.com>
-References: <20110726225235.29951.70265.stgit@mj.roinet.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:56485 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751808Ab1GROxL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 10:53:11 -0400
+Received: by vws1 with SMTP id 1so2189072vws.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jul 2011 07:53:10 -0700 (PDT)
+Message-ID: <4E2448D2.50502@lwfinger.net> (sfid-20110718_165314_822093_853E1DC4)
+Date: Mon, 18 Jul 2011 09:53:06 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Stefan Assmann <sassmann@redhat.com>
+CC: ali@internetdog.org, wireless <linux-wireless@vger.kernel.org>
+Subject: Re: r8712u issue
+References: <4E2051F3.20103@redhat.com> <4E205984.5040803@lwfinger.net> <4E23E56C.9000202@redhat.com> <20110718082709.GA8390@internetdog.org> <4E23F2E0.3050200@redhat.com>
+In-Reply-To: <4E23F2E0.3050200@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Without CONFIG_HERMES_PRISM, only match cards that have "Version 01.01"
-as the third product ID.  Those have Agere firmware.
+On 07/18/2011 03:46 AM, Stefan Assmann wrote:
+> On 18.07.2011 10:27, Ali Bahar wrote:
+>> Stefan,
+>>
+>> I'd like to reproduce this problem. So I'd appreciate some specifics,
+>> as asked below.
+>>
+>>
+>> On Mon, Jul 18, 2011 at 09:49:00AM +0200, Stefan Assmann wrote:
+>>> On 15.07.2011 17:15, Larry Finger wrote:
+>>>> On 07/15/2011 09:42 AM, Stefan Assmann wrote:
+>>
+>>>>> driver. The problem I'm currently facing is that the driver does not
+>>>>> recognize any network disconnects. So whenever the network goes down the
+>>>>> driver will still report it's connected and thus doesn't reconnect when
+>>>>> the network is up again.
+>>
+>>
+>>> The system is a headless debian squeeze with a self build vanilla 2.6.39
+>>> kernel. The network is handled by debian scripts I just added the following
+>>> to /etc/network/interfaces:
+>>> auto wlan0
+>>> iface wlan0 inet dhcp
+>>> wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+>>>
+>>> No NM involved.
+>>
+>> So wpa_supplicant is controlling (and presumably monitoring) the
+>> connection.
+>> How are you seeing that (to quote the above) "the network goes down"
+>> and that the driver reports that "it's connected"?
+>> (Typically, I use only ifconfig and iwconfig, but those don't monitor
+>> the connection.)
+>
+> OK, so I first recognized the problem when I rebooted my AP and the host
+> in question didn't get back online. Checking the host itself it seemed
+> that the network is doing fine, ifconfig showed the interface has an IP
+> but I couldn't ping any hosts. After an ifdown ; ifup cycle everything
+> was back to normal.
+> I pulled the power from the AP, waited a few minutes and checked back.
+> The ifconfig output still showed that the device had its IP.
+>
+>>>> When this situation occurs, what is output to the dmesg log?
+>>>
+>>> Sorry, I don't have the output at hand but IIRC basically nothing special
+>>> occurred in dmesg. The interface even keeps it's IP although the wireless
+>>> was long gone.
+>>
+>> So ifconfig shows the IP#. I'm assuming that it no longer shows a
+>> state of "UP".
+>
+> I would assume so, but I'll have to reproduce to make sure.
+>
+>> This'd seem an inane question, but I must ask: What exactly do you
+>> mean by the wireless being "gone"? Which GUI/utility/effect do you
+>> see? Is it a powered-down AP, roaming, iwconfig's output, or what?
+>
+> I pulled the power from the AP. :)
+>
+>>> Ccing Ali Bahar to this reply, since he has seen something similar.
+>>
+>> To clarify: I just meant that I've seen quite a number of similar
+>> inconsistencies in my testing as well as in my analysis of the code.
+>> So, when I read your post, it came as no surprise to me. These'll get
+>> fixed ... uh, let's hope soon! ;-)
+>
+> I see. :)
 
-With CONFIG_HERMES_PRISM, match all 0x0156:0x0002 cards.
+Please post your wpa_supplicant.conf. In particular, what is the value for 
+scan_ssid?
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- drivers/net/wireless/orinoco/orinoco_cs.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/orinoco/orinoco_cs.c b/drivers/net/wireless/orinoco/orinoco_cs.c
-index 3f7fc4a..d7dbc00 100644
---- a/drivers/net/wireless/orinoco/orinoco_cs.c
-+++ b/drivers/net/wireless/orinoco/orinoco_cs.c
-@@ -239,7 +239,6 @@ static int orinoco_cs_resume(struct pcmcia_device *link)
- 
- static const struct pcmcia_device_id orinoco_cs_ids[] = {
- 	PCMCIA_DEVICE_MANF_CARD(0x0101, 0x0777), /* 3Com AirConnect PCI 777A */
--	PCMCIA_DEVICE_MANF_CARD(0x0156, 0x0002), /* Lucent Orinoco and old Intersil */
- 	PCMCIA_DEVICE_MANF_CARD(0x016b, 0x0001), /* Ericsson WLAN Card C11 */
- 	PCMCIA_DEVICE_MANF_CARD(0x01eb, 0x080a), /* Nortel Networks eMobility 802.11 Wireless Adapter */
- 	PCMCIA_DEVICE_MANF_CARD(0x0261, 0x0002), /* AirWay 802.11 Adapter (PCMCIA) */
-@@ -272,6 +271,7 @@ static const struct pcmcia_device_id orinoco_cs_ids[] = {
- 	PCMCIA_DEVICE_PROD_ID12("PROXIM", "LAN PCI CARD HARMONY 80211B", 0xc6536a5e, 0x9f494e26),
- 	PCMCIA_DEVICE_PROD_ID12("SAMSUNG", "11Mbps WLAN Card", 0x43d74cb4, 0x579bd91b),
- 	PCMCIA_DEVICE_PROD_ID12("Symbol Technologies", "LA4111 Spectrum24 Wireless LAN PC Card", 0x3f02b4d6, 0x3663cb0e),
-+	PCMCIA_DEVICE_MANF_CARD_PROD_ID3(0x0156, 0x0002, "Version 01.01", 0xd27deb1a), /* Lucent Orinoco */
- #ifdef CONFIG_HERMES_PRISM
- 	/* Only entries that certainly identify Prism chipset */
- 	PCMCIA_DEVICE_MANF_CARD(0x000b, 0x7100), /* SonicWALL Long Range Wireless Card */
-@@ -321,6 +321,9 @@ static const struct pcmcia_device_id orinoco_cs_ids[] = {
- 	PCMCIA_DEVICE_PROD_ID3("ISL37100P", 0x630d52b2),
- 	PCMCIA_DEVICE_PROD_ID3("ISL37101P-10", 0xdd97a26b),
- 	PCMCIA_DEVICE_PROD_ID3("ISL37300P", 0xc9049a39),
-+
-+	/* This may be Agere or Intersil Firmware */
-+	PCMCIA_DEVICE_MANF_CARD(0x0156, 0x0002),
- #endif
- 	PCMCIA_DEVICE_NULL,
- };
+Larry
