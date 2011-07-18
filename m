@@ -1,89 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:40021 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754590Ab1G1SsE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2011 14:48:04 -0400
-Received: by pzk37 with SMTP id 37so4966261pzk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2011 11:48:04 -0700 (PDT)
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:39100 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750752Ab1GRTb0 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 15:31:26 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Daniel Drake <dsd@laptop.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"dcbw@redhat.com" <dcbw@redhat.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Mon, 18 Jul 2011 12:25:37 -0700
+Subject: RE: [PATCH 1/4] libertas: remove auto_deep_sleep functionality
+Message-ID: <477F20668A386D41ADCC57781B1F704307FFB0947D@SC-VEXCH1.marvell.com> (sfid-20110718_213129_644654_64435CD5)
+References: <20110717170310.CAD139D401C@zog.reactivated.net>
+In-Reply-To: <20110717170310.CAD139D401C@zog.reactivated.net>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-In-Reply-To: <20110728065111.GA6734@sapphire.tkos.co.il>
-References: <20110728065111.GA6734@sapphire.tkos.co.il>
-From: Javier Cardona <javier@cozybit.com>
-Date: Thu, 28 Jul 2011 11:47:44 -0700
-Message-ID: <CAPjQAd_KCc+TtTMeJmhD8WdqooUHWqttdASDpwB0DdrXfXWkRA@mail.gmail.com> (sfid-20110728_204809_209461_549141C3)
-Subject: Re: Mesh HWMP: PREQ node queue full
-To: Baruch Siach <baruch@tkos.co.il>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Baruch,
+Hi Daniel,
 
-Thanks for reporting.  Is 02:92:ca:39:48:72 the address of the mesh
-gate or the address of the external proxied node?
+> Subject: [PATCH 1/4] libertas: remove auto_deep_sleep functionality
+> 
+> This is unused and I'm not really sure in what context it was designed to
+> be used.
 
-Javier
+The auto deep sleep feature was added with commit 4912545:
+libertas: Add auto deep sleep support for SD8385/SD8686/SD8688
 
-On Wed, Jul 27, 2011 at 11:51 PM, Baruch Siach <baruch@tkos.co.il> wrote:
-> Hi linux-wireless list,
->
-> I'm testing the mesh capabilities (specifically, MPP) of the latest kernel
-> (3.0). My driver is ath9k on AR9390 chip. My two APs are configured
-> identically as follows:
->
-> ----- mesh.sh start
-> #!/bin/sh
->
-> iw dev wlan1 interface add mesh0 type mp mesh_id wavmesh
-> ip link set mesh0 addr $(cat /etc/network/mesh0.mac)
->
-> brctl addbr br0
-> brctl addif br0 eth0
-> brctl addif br0 mesh0
->
-> ifconfig mesh0 down up
-> ifconfig eth0 0.0.0.0
-> ifconfig br0 up
-> ----- mesh.sh end
->
-> When transferring traffic from a machine behind one eth0 to a machine behind
-> the other eth0, I see the following on the console (of both APs, only
-> different MACs):
->
-> Mesh HWMP: sending PREP to 02:92:ca:39:48:72
-> Mesh HWMP: sending PREQ to 02:92:ca:39:48:72
-> Mesh HWMP: received PREP from 02:92:ca:39:48:72
-> Mesh HWMP: received PREQ from 02:92:ca:39:48:72
-> Mesh HWMP: PREQ is for us
-> Mesh HWMP: replying to the PREQ
-> Mesh HWMP: sending PREP to 02:92:ca:39:48:72
-> mesh_queue_preq: 40 callbacks suppressed
-> Mesh HWMP: PREQ node queue full
-> Mesh HWMP: PREQ node queue full
-> Mesh HWMP: PREQ node queue full
-> Mesh HWMP: PREQ node queue full
-> Mesh HWMP: PREQ node queue full
-> Mesh HWMP: PREQ node queue full
-> Mesh HWMP: PREQ node queue full
-> Mesh HWMP: PREQ node queue full
-> Mesh HWMP: PREQ node queue full
-> Mesh HWMP: PREQ node queue full
->
-> Any suggestion?
->
-> baruch
->
-> --
->                                                     ~. .~   Tk Open Systems
-> =}------------------------------------------------ooO--U--Ooo------------{=
->   - baruch@tkos.co.il - tel: +972.2.679.5364, http://www.tkos.co.il -
->
+When auto deep sleep is enabled a timer will be started to monitor the activities. At timer expiry (no activity for configured time period) an enter_deep_sleep command will be sent to the card automatically to save power. Once an activity is detected station will exit from deep sleep mode for processing and restart the timer. After the event is processed and there is no new activity the timer will expire and then the deep sleep mode is entered automatically again.
 
+As the auto deep sleep feature for SD8385/SD8686/SD8688 cards is very useful for many embedded platforms to handle enter/exit deep sleep mode automatically, please do not remove it from libertas driver. If you have any particular issue with this feature enabled, we can work on it and solve the problem.
 
+Thanks,
+Bing
 
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
