@@ -1,65 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1026 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756174Ab1GKXXB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 19:23:01 -0400
-Subject: Re: [PATCH] libertas: fix errors in functions accessing module
- registers
-From: Dan Williams <dcbw@redhat.com>
-To: Olivier Sobrie <olivier@sobrie.be>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Date: Mon, 11 Jul 2011 18:26:24 -0500
-In-Reply-To: <1310209025-16516-1-git-send-email-olivier@sobrie.be>
-References: <1310209025-16516-1-git-send-email-olivier@sobrie.be>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1310426786.3122.4.camel@dcbw.foobar.com> (sfid-20110712_012305_883360_A5123E22)
-Mime-Version: 1.0
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:34550 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933Ab1GRUHX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 16:07:23 -0400
+Received: by fxd18 with SMTP id 18so7131177fxd.11
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jul 2011 13:07:19 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org, Pavel Roskin <proski@gnu.org>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: correctly display longer chipsets ids
+Date: Mon, 18 Jul 2011 22:45:58 +0200
+Message-Id: <1311021958-6758-1-git-send-email-zajec5@gmail.com> (sfid-20110718_220727_397899_9C2485DD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-07-09 at 12:57 +0200, Olivier Sobrie wrote:
-> Problems located in the two functions lbs_set_reg() and lbs_get_reg():
-> - The offset field of struct cmd_ds_reg_access was not filled in
-> - The test on the return code of lbs_cmd_with_response() in function
->   lbs_get_reg() was inverted
-> 
-> Signed-off-by: Olivier Sobrie <olivier@sobrie.be>
+Some of the newer Broadcom chipsets have longe names like BCM43224,
+BCM43225, etc. However Broadcom decided to keep using u16 for storing
+them. Use %X or %d depending on chip_id value to avoid BCMA8D8, etc.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+V final: Use snprintf instead of duplicating whole string with %d vs. %X.
+Thanks Pavel.
+---
+ drivers/net/wireless/b43/main.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-> ---
->  drivers/net/wireless/libertas/cmd.c |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-> index 71c8f3f..3e8123c 100644
-> --- a/drivers/net/wireless/libertas/cmd.c
-> +++ b/drivers/net/wireless/libertas/cmd.c
-> @@ -873,6 +873,7 @@ int lbs_get_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 *value)
->  	memset(&cmd, 0, sizeof(cmd));
->  	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
->  	cmd.action = cpu_to_le16(CMD_ACT_GET);
-> +	cmd.offset = cpu_to_le16(offset);
->  
->  	if (reg != CMD_MAC_REG_ACCESS &&
->  	    reg != CMD_BBP_REG_ACCESS &&
-> @@ -882,7 +883,7 @@ int lbs_get_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 *value)
->  	}
->  
->  	ret = lbs_cmd_with_response(priv, reg, &cmd);
-> -	if (ret) {
-> +	if (!ret) {
->  		if (reg == CMD_BBP_REG_ACCESS || reg == CMD_RF_REG_ACCESS)
->  			*value = cmd.value.bbp_rf;
->  		else if (reg == CMD_MAC_REG_ACCESS)
-> @@ -915,6 +916,7 @@ int lbs_set_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 value)
->  	memset(&cmd, 0, sizeof(cmd));
->  	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
->  	cmd.action = cpu_to_le16(CMD_ACT_SET);
-> +	cmd.offset = cpu_to_le16(offset);
->  
->  	if (reg == CMD_BBP_REG_ACCESS || reg == CMD_RF_REG_ACCESS)
->  		cmd.value.bbp_rf = (u8) (value & 0xFF);
-
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 22f20e1..08cd8db 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -5164,6 +5164,7 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
+ 	struct ssb_sprom *sprom = dev->bus_sprom;
+ 	struct ieee80211_hw *hw;
+ 	struct b43_wl *wl;
++	char chip_name[6];
+ 
+ 	hw = ieee80211_alloc_hw(sizeof(*wl), &b43_hw_ops);
+ 	if (!hw) {
+@@ -5202,8 +5203,10 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
+ 	INIT_WORK(&wl->tx_work, b43_tx_work);
+ 	skb_queue_head_init(&wl->tx_queue);
+ 
+-	b43info(wl, "Broadcom %04X WLAN found (core revision %u)\n",
+-		dev->chip_id, dev->core_rev);
++	snprintf(chip_name, ARRAY_SIZE(chip_name),
++		 (dev->chip_id > 0x9999) ? "%d" : "%04X", dev->chip_id);
++	b43info(wl, "Broadcom %s WLAN found (core revision %u)\n", chip_name,
++		dev->core_rev);
+ 	return wl;
+ }
+ 
+-- 
+1.7.3.4
 
