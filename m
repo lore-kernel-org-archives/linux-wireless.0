@@ -1,46 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:56227 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750755Ab1GUWbE (ORCPT
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:62156 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755969Ab1GQXeu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 18:31:04 -0400
-Received: by gyh3 with SMTP id 3so890176gyh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2011 15:31:03 -0700 (PDT)
-Message-ID: <4E28A8A4.3080509@lwfinger.net> (sfid-20110722_003114_144298_6D005D0B)
-Date: Thu, 21 Jul 2011 17:31:00 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 17 Jul 2011 19:34:50 -0400
+Received: by fxd18 with SMTP id 18so5577927fxd.11
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Jul 2011 16:34:49 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/4] b43: HT-PHY: fix masks in radio ctl
+Date: Mon, 18 Jul 2011 02:13:23 +0200
+Message-Id: <1310948006-3365-1-git-send-email-zajec5@gmail.com> (sfid-20110718_013453_273702_D2ACD337)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org
-Subject: Re: [PATCH] b43legacy: dma: cache translation (routing bits)
-References: <1311287100-3888-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1311287100-3888-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/21/2011 05:25 PM, Rafał Miłecki wrote:
->
-> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
-> ---
-> Ideally this should have been applied before:
-> ssb: return correct translation bit for 64-bit DMA
->
-> This is because mentioned patch added TMSHIGH register read on every
-> ssb_dma_translation call which affected performance.
->
-> If we can live with affected performance between that 2 commits, please
-> just apply this ASAP.
->
-> It affected performance (however I don't expect anything like making it
-> 90% slower) is not acceptable, please revert mentioned patch, apply this
-> one and then re-apply reverted patches.
+Old masks were causing ugly, delayed lock ups.
 
-I will be testing this patch ASAP. Unfortunately, my test box with a b43legacy 
-device crashes on boot with wireless-testing with a fresh pull this afternoon. 
-It does boot with commit d36a160 with only 70 commits between. It shouldn't take 
-too long to sort out.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+V2: Explain why we do such a dummy operations like: write(read() & 0).
+Put cleaning this as TODO. We should wait with cleaning until having BCM4331
+working at all.
+---
+ drivers/net/wireless/b43/phy_ht.c |   15 ++++++++++-----
+ 1 files changed, 10 insertions(+), 5 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
+index 2982103..85a30af 100644
+--- a/drivers/net/wireless/b43/phy_ht.c
++++ b/drivers/net/wireless/b43/phy_ht.c
+@@ -276,13 +276,18 @@ static void b43_phy_ht_op_software_rfkill(struct b43_wldev *dev,
+ 	if (b43_read32(dev, B43_MMIO_MACCTL) & B43_MACCTL_ENABLED)
+ 		b43err(dev->wl, "MAC not suspended\n");
+ 
++	/* In the following PHY ops we copy wl's dummy behaviour.
++	 * TODO: Find out if reads (currently hidden in masks/masksets) are
++	 * needed and replace following ops with just writes or w&r.
++	 * Note: B43_PHY_HT_RF_CTL1 register is tricky, wrong operation can
++	 * cause delayed (!) machine lock up. */
+ 	if (blocked) {
+-		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, ~0);
++		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, 0);
+ 	} else {
+-		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, ~0);
+-		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, ~0, 0x1);
+-		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, ~0);
+-		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, ~0, 0x2);
++		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, 0);
++		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, 0, 0x1);
++		b43_phy_mask(dev, B43_PHY_HT_RF_CTL1, 0);
++		b43_phy_maskset(dev, B43_PHY_HT_RF_CTL1, 0, 0x2);
+ 
+ 		if (dev->phy.radio_ver == 0x2059)
+ 			b43_radio_2059_init(dev);
+-- 
+1.7.3.4
+
