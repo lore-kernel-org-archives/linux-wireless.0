@@ -1,77 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:61250 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751747Ab1GSPtm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 11:49:42 -0400
+Received: from mms2.broadcom.com ([216.31.210.18]:4202 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752719Ab1GROaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 10:30:23 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Roland Vossen" <rvossen@broadcom.com>,
+	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 02/19] staging: brcm80211: resolved checkpatch warnings
+ in LCN phy
+Date: Mon, 18 Jul 2011 16:29:48 +0200
+Message-ID: <1310999405-10062-3-git-send-email-arend@broadcom.com> (sfid-20110718_163032_631101_C6BC6B06)
+In-Reply-To: <1310999405-10062-1-git-send-email-arend@broadcom.com>
+References: <1310999405-10062-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <4E25A1E3.9080707@gmail.com>
-References: <4E252076.1050309@gmail.com>
-	<CAD2nsn12vOXv-msWR+GF7edz3Q26P-pb4H-SO4rf2RHjC7mG+w@mail.gmail.com>
-	<4E2525BA.4090902@gmail.com>
-	<CAD2nsn3ifSMa_eFr2vQ0VVF9Ga-0VD3YB_beb28r+eoAHKv4kQ@mail.gmail.com>
-	<4E25A1E3.9080707@gmail.com>
-Date: Tue, 19 Jul 2011 21:19:40 +0530
-Message-ID: <CAD2nsn1xEB-e33_wrGqLETZ4MwFy12gtyawtg5XHLH0=-9vs2w@mail.gmail.com> (sfid-20110719_175004_380495_1FBE8B8B)
-Subject: Re: ath: Unable to reset channel (2412 MHz), reset status -5
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 19, 2011 at 8:55 PM, Justin P. Mattock
-<justinmattock@gmail.com> wrote:
-> On 07/18/2011 11:46 PM, Mohammed Shafi wrote:
->>
->> On Tue, Jul 19, 2011 at 12:05 PM, Justin P. Mattock
->> <justinmattock@gmail.com>  wrote:
->>>
->>> On 07/18/2011 11:25 PM, Mohammed Shafi wrote:
->>>>
->>>> On Tue, Jul 19, 2011 at 11:43 AM, Justin P. Mattock
->>>> <justinmattock@gmail.com>    wrote:
->>>>>
->>>>> seems with the latest Mainline I am getting the ath9k carpping out
->>>>> after
->>>>> a
->>>>> while of streaming(dmesg below)..:
->>>>> http://fpaste.org/D7wM/
->>>>>
->>>>> will try a bisect if I have the time..
->>>>
->>>> I will try to recreate here with 3.0.0-rc7-wl, we can get more
->>>> information by ath9k debug=0xffffffff.
->>>> thanks.
->>>>
->>>
->>> cool!
->>> seems to fire off randomly over here.
->>
->> I have got AR5416, will try with that.
->>
->
-> I can try the bisect, but might take a while, since external
-> activities(job). Seems this is just starting i.g. with
-> 3.0.0-rc1 I never saw this, but with 3.0.0-rc7-00125-gf560f66
-> its making noise.
+From: Roland Vossen <rvossen@broadcom.com>
 
-I am unable to get this problem in my AR5416 :( will also try
-tomorrow. I am using the card for browsing etc.
-recently there were patches for hardware code changes.
-just a guess, please check does this patch helps(or is it already
-there). i think this will be called via
-ath_set_channel->ath9k_hw_reset->ath9k_hw_init_bb and may be
-https://patchwork.kernel.org/patch/957902/
+Refactored code to not exceed the 80 char limit.
 
->
-> Justin P. Mattock
->
+Cc: linux-wireless@vger.kernel.org
+Cc: devel@linuxdriverproject.org
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c |   46 ++++++++--------------
+ 1 files changed, 16 insertions(+), 30 deletions(-)
 
-
-
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
+index a109866..3d140eb 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
+@@ -4342,39 +4342,25 @@ static void wlc_lcnphy_tbl_init(struct brcms_phy *pi)
+ 	}
+ 
+ 	if (LCNREV_IS(pi->pubpi.phy_rev, 2)) {
++		const struct phytbl_info *tb;
++		int l;
++
+ 		if (CHSPEC_IS2G(pi->radio_chanspec)) {
+-			for (idx = 0;
+-			     idx < dot11lcnphytbl_rx_gain_info_2G_rev2_sz;
+-			     idx++)
+-				if (pi->sh->boardflags & BFL_EXTLNA)
+-					wlc_lcnphy_write_table(
+-						pi,
+-						&
+-						dot11lcnphytbl_rx_gain_info_extlna_2G_rev2
+-						[idx]);
+-				else
+-					wlc_lcnphy_write_table(
+-						pi,
+-						&
+-						dot11lcnphytbl_rx_gain_info_2G_rev2
+-						[idx]);
++			l = dot11lcnphytbl_rx_gain_info_2G_rev2_sz;
++			if (pi->sh->boardflags & BFL_EXTLNA)
++				tb = dot11lcnphytbl_rx_gain_info_extlna_2G_rev2;
++			else
++				tb = dot11lcnphytbl_rx_gain_info_2G_rev2;
+ 		} else {
+-			for (idx = 0;
+-			     idx < dot11lcnphytbl_rx_gain_info_5G_rev2_sz;
+-			     idx++)
+-				if (pi->sh->boardflags & BFL_EXTLNA_5GHz)
+-					wlc_lcnphy_write_table(
+-						pi,
+-						&
+-						dot11lcnphytbl_rx_gain_info_extlna_5G_rev2
+-						[idx]);
+-				else
+-					wlc_lcnphy_write_table(
+-						pi,
+-						&
+-						dot11lcnphytbl_rx_gain_info_5G_rev2
+-						[idx]);
++			l = dot11lcnphytbl_rx_gain_info_5G_rev2_sz;
++			if (pi->sh->boardflags & BFL_EXTLNA_5GHz)
++				tb = dot11lcnphytbl_rx_gain_info_extlna_5G_rev2;
++			else
++				tb = dot11lcnphytbl_rx_gain_info_5G_rev2;
+ 		}
++
++		for (idx = 0; idx < l; idx++)
++			wlc_lcnphy_write_table(pi, &tb[idx]);
+ 	}
+ 
+ 	if ((pi->sh->boardflags & BFL_FEM)
 -- 
-shafi
+1.7.4.1
+
+
