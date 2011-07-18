@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:54718 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751254Ab1GZIOr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2011 04:14:47 -0400
-Received: by pzk37 with SMTP id 37so448642pzk.1
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 01:14:47 -0700 (PDT)
-Date: Tue, 26 Jul 2011 11:12:49 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 09/29] staging: brcm80211: remove code for unsupported
- chip
-Message-ID: <20110726081248.GB3824@shale.localdomain> (sfid-20110726_101456_020200_272FA6C7)
-References: <1311361036-3175-1-git-send-email-arend@broadcom.com>
- <1311361036-3175-10-git-send-email-arend@broadcom.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:4387 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753309Ab1GRKnW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 06:43:22 -0400
+Message-ID: <4E240E32.2020109@broadcom.com> (sfid-20110718_124325_640509_4285A7F9)
+Date: Mon, 18 Jul 2011 12:42:58 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1311361036-3175-10-git-send-email-arend@broadcom.com>
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: "mcgrof@gmail.com" <mcgrof@gmail.com>,
+	"lrodriguez@atheros.com" <lrodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] compat-wireless: deactivate sido suspend for
+ brcmfmac on older kernels.
+References: <1310936250-10224-1-git-send-email-hauke@hauke-m.de>
+ <1310936250-10224-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1310936250-10224-2-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 22, 2011 at 08:56:56PM +0200, Arend van Spriel wrote:
-> From: Franky Lin <frankyl@broadcom.com>
-> 
-> Currently fullmac only support bcm4329. Remove dead code for
-> unsupported chip.
-
-This description doesn't match the code at all.
-
-Sorry that I'm looking at this so long after you sent it...
-
-regards,
-dan carpenter
-
-> 
-> Cc: devel@linuxdriverproject.org
-> Cc: linux-wireless@vger.kernel.org
-> Reported-by: Dan Carpenter <error27@gmail.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+On 07/17/2011 10:57 PM, Hauke Mehrtens wrote:
+> Signed-off-by: Hauke Mehrtens<hauke@hauke-m.de>
 > ---
->  drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-> index 16ea6e8..2a9efc3 100644
-> --- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-> +++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-> @@ -980,6 +980,8 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
->  			return -ENOMEM;
->  		sdiodev->func1 = func;
->  		dev_set_drvdata(&func->card->dev, sdiodev);
-> +
-> +		atomic_set(&brcmf_mmc_suspend, false);
->  	}
->  
->  	gInstance->func[func->num] = func;
-> -- 
-> 1.7.4.1
-> 
-> 
-> _______________________________________________
-> devel mailing list
-> devel@linuxdriverproject.org
-> http://driverdev.linuxdriverproject.org/mailman/listinfo/devel
+>   patches/29-sdio_no_suspend.patch |   38 ++++++++++++++++++++++++++++++++++++++
+>   1 files changed, 38 insertions(+), 0 deletions(-)
+>
+> diff --git a/patches/29-sdio_no_suspend.patch b/patches/29-sdio_no_suspend.patch
+> index d6a6713..e940745 100644
+> --- a/patches/29-sdio_no_suspend.patch
+> +++ b/patches/29-sdio_no_suspend.patch
+> @@ -84,3 +84,41 @@ suspend and resume that are not backported.
+>    	}
+>    };
+
+It probably is obvious but could your patch elaborate on the 'why' for 
+this deactivation for mere mortals like me ;-)
+
+Gr. AvS
+
+-- 
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
+
