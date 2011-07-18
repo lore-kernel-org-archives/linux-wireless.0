@@ -1,50 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from knuth.cs.hmc.edu ([134.173.42.100]:52331 "EHLO knuth.cs.hmc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752156Ab1GaDrx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jul 2011 23:47:53 -0400
-Date: Sat, 30 Jul 2011 21:41:11 -0600
-From: Adam Cozzette <acozzette@cs.hmc.edu>
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Andreas Hartmann <andihartmann@01019freenet.de>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Alan Piszcz <ap@solarrain.com>, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
-Message-ID: <20110731033916.GA7182@[192.168.0.12]> (sfid-20110731_054835_403025_FA1CA237)
-References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan>
- <4E318BD0.40202@lwfinger.net>
- <20110730113009.GA2847@redhat.com>
- <20110730113255.GB2847@redhat.com>
- <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan>
- <alpine.DEB.2.02.1107301310070.4925@p34.internal.lan>
+Received: from DMZ-MAILSEC-SCANNER-6.MIT.EDU ([18.7.68.35]:46008 "EHLO
+	dmz-mailsec-scanner-6.mit.edu" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751073Ab1GRVOO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 17:14:14 -0400
+Date: Mon, 18 Jul 2011 17:14:07 -0400 (EDT)
+From: Michael Forbes <miforbes@MIT.EDU>
+To: Ben Hutchings <ben@decadent.org.uk>
+cc: 633919@bugs.debian.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Bug#633919: /lib/modules/2.6.39-2-amd64/kernel/net/wireless/cfg80211.ko:
+ cfg80211 calling CRDA drops wireless connection, clears ssid
+In-Reply-To: <1310703973.8783.270.camel@localhost>
+Message-ID: <alpine.DEB.2.02.1107181710350.26150@vincent> (sfid-20110718_231417_729675_2C143E04)
+References: <20110715005011.15043.39294.reportbug@vincent> <1310703973.8783.270.camel@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.02.1107301310070.4925@p34.internal.lan>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 30, 2011 at 01:10:26PM -0400, Justin Piszcz wrote:
-> (This is with the patch provided earlier)
-> 
-> atom:/usr/src/linux# cd drivers/net/wireless/rt2x00/
-> atom:/usr/src/linux/drivers/net/wireless/rt2x00# grep 'memset(skb_push(entry->skb, TXWI_DESC_SIZE), 0, TXWI_DESC_SIZE)' rt2800lib.c
->         memset(skb_push(entry->skb, TXWI_DESC_SIZE), 0, TXWI_DESC_SIZE);
-> atom:/usr/src/linux/drivers/net/wireless/rt2x00# cat /usr/src/linux/.version
-> 2
-> atom:/usr/src/linux/drivers/net/wireless/rt2x00# uname -a
-> Linux atom 3.0.0 #2 SMP Sat Jul 30 08:34:18 EDT 2011 x86_64 GNU/Linux
-> atom:/usr/src/linux/drivers/net/wireless/rt2x00#
-> 
-> Justin.
+>>
+>> 2011-07-14 20:38 [root@******** miforbes]# iw event
+>> wlan0 (phy #0): deauth a0:88:b4:68:59:e4 -> 16:18:0a:30:23:5c reason 4: Disassociated due to inactivity
+>> wlan0 (phy #0): disconnected (local request)
+> [...]
+>
+> I would have expected that to appear in the kernel log.
 
-The last two images you posted show rt2800_txdone in the stack trace. I couldn't
-find any such function in the source and unless I'm mistaken, it was renamed in
-commit 8f66bbb5 back in May. Are you sure that the most recent code is what is
-actually running when you run into this problem?
+Well, AFAIK `iw' doesn't seem to be well-integrated into Debian yet, and 
+indeed wasn't installed on my laptop until I did so manually.  `iwevent' 
+doesn't give the reason for deauthentication.  So perhaps the log just 
+isn't getting the information from the right sources.
 
--- 
-Adam Cozzette
-Harvey Mudd College
+> Don't know what's going on here but maybe the upstream wireless
+> developers can work it out.
+
+Thanks!
+
+-Michael
