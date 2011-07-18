@@ -1,34 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44445 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754248Ab1GNKfa (ORCPT
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:41224 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754092Ab1GQXWw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 06:35:30 -0400
-Message-ID: <4E1EC66B.9050705@qca.qualcomm.com> (sfid-20110714_123534_049138_B1E6F6E2)
-Date: Thu, 14 Jul 2011 13:35:23 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Sun, 17 Jul 2011 19:22:52 -0400
+Received: by fxd18 with SMTP id 18so5569858fxd.11
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Jul 2011 16:22:51 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/3] bcma: define IO status register
+Date: Mon, 18 Jul 2011 02:01:28 +0200
+Message-Id: <1310947290-3099-1-git-send-email-zajec5@gmail.com> (sfid-20110718_012255_787031_13AE6EB9)
 MIME-Version: 1.0
-To: Dan Carpenter <error27@gmail.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@linuxdriverproject.org>,
-	<gregkh@suse.de>
-Subject: Re: [PATCH 00/24] ath6kl cleaned up driver
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6> <20110714100612.GW18655@shale.localdomain>
-In-Reply-To: <20110714100612.GW18655@shale.localdomain>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/14/2011 01:06 PM, Dan Carpenter wrote:
-> On Wed, Jul 13, 2011 at 04:32:44AM +0300, Kalle Valo wrote:
->> The most important tasks left are:
->>
->> o proper review of locking (currently 13 spin locks and one semaphore)
-> 
-> For example the DMA bounce buffer should probably be protected by
-> a lock so dueling threads don't corrupt it.
 
-Thanks, I added this to the todo list.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ include/linux/bcma/bcma_regs.h |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
 
-http://wireless.kernel.org/en/users/Drivers/ath6kl/todo
+diff --git a/include/linux/bcma/bcma_regs.h b/include/linux/bcma/bcma_regs.h
+index 3e0a27f..9faae2a 100644
+--- a/include/linux/bcma/bcma_regs.h
++++ b/include/linux/bcma/bcma_regs.h
+@@ -21,12 +21,18 @@
+ #define  BCMA_CLKCTLST_4328A0_HAVEALP	0x00020000 /* 4328a0 has reversed bits */
+ 
+ /* Agent registers (common for every core) */
+-#define BCMA_IOCTL			0x0408
++#define BCMA_IOCTL			0x0408 /* IO control */
+ #define  BCMA_IOCTL_CLK			0x0001
+ #define  BCMA_IOCTL_FGC			0x0002
+ #define  BCMA_IOCTL_CORE_BITS		0x3FFC
+ #define  BCMA_IOCTL_PME_EN		0x4000
+ #define  BCMA_IOCTL_BIST_EN		0x8000
++#define BCMA_IOST			0x0500 /* IO status */
++#define  BCMA_IOST_CORE_BITS		0x0FFF
++#define  BCMA_IOST_DMA64		0x1000
++#define  BCMA_IOST_GATED_CLK		0x2000
++#define  BCMA_IOST_BIST_ERROR		0x4000
++#define  BCMA_IOST_BIST_DONE		0x8000
+ #define BCMA_RESET_CTL			0x0800
+ #define  BCMA_RESET_CTL_RESET		0x0001
+ 
+-- 
+1.7.3.4
 
-Kalle
