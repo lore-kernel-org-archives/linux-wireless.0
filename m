@@ -1,44 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:42281 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751219Ab1F3WDY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2011 18:03:24 -0400
-Received: by iwn6 with SMTP id 6so2294917iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2011 15:03:24 -0700 (PDT)
-Message-ID: <4E0CF2A4.7070207@lwfinger.net> (sfid-20110701_000327_730061_1E156DFD)
-Date: Thu, 30 Jun 2011 17:03:16 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:4218 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753643Ab1GROaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 10:30:23 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Roland Vossen" <rvossen@broadcom.com>,
+	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 04/19] staging: brcm80211: fixed build issue for big
+ endian platforms
+Date: Mon, 18 Jul 2011 16:29:50 +0200
+Message-ID: <1310999405-10062-5-git-send-email-arend@broadcom.com> (sfid-20110718_163051_218818_0CE2876A)
+In-Reply-To: <1310999405-10062-1-git-send-email-arend@broadcom.com>
+References: <1310999405-10062-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Andrew Morton <akpm@linux-foundation.org>
-CC: John W Linville <linville@tuxdriver.com>,
-	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: rtl8192de/phy.c: fix udelay() usage
-References: <4e0cea92.d87Od1Tkbar3iIK/%Larry.Finger@lwfinger.net> <20110630143358.cf4d4e2f.akpm@linux-foundation.org>
-In-Reply-To: <20110630143358.cf4d4e2f.akpm@linux-foundation.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/30/2011 04:33 PM, Andrew Morton wrote:
-> Also, there are eleventy billion instances of
->
-> 	for (j = 0; j<  N; j++)
-> 		udelay(MAX_STALL_TIME);
->
-> which seem rather unnecessary.
->
-> static inline void rtl8192c_udelay(unsigned n)
-> {
-> 	if (n<  1000)
-> 		udelay(n);
-> 	else
-> 		mdelay(n / 1000);
-> }
->
-> or something.
+From: Roland Vossen <rvossen@broadcom.com>
 
-As MAX_STALL_TIME is 50, I have done the math for (N * 50) / 1000 and changed 
-the loop to the equivalent mdelay call.
+Driver now builds for big endian mips platform, possibly also for other
+big endian platforms. A change was made to the R_REG and W_REG macro's.
+These macro's perform an xor (^) operation for endianess swap purposes.
+Gcc complained because an xor operation is not allowed on a pointer type.
+Fixed this by casting the pointer to an unsigned long.
 
-Larry
+Cc: linux-wireless@vger.kernel.org
+Cc: devel@linuxdriverproject.org
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/dma.h   |    1 +
+ drivers/staging/brcm80211/brcmsmac/types.h |    8 ++++----
+ 2 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/dma.h b/drivers/staging/brcm80211/brcmsmac/dma.h
+index 3ff109f..334f2eb 100644
+--- a/drivers/staging/brcm80211/brcmsmac/dma.h
++++ b/drivers/staging/brcm80211/brcmsmac/dma.h
+@@ -17,6 +17,7 @@
+ #ifndef	_BRCM_DMA_H_
+ #define	_BRCM_DMA_H_
+ 
++#include <linux/delay.h>
+ #include "types.h"		/* forward structure declarations */
+ 
+ /* DMA structure:
+diff --git a/drivers/staging/brcm80211/brcmsmac/types.h b/drivers/staging/brcm80211/brcmsmac/types.h
+index 6275160..55db3cd 100644
+--- a/drivers/staging/brcm80211/brcmsmac/types.h
++++ b/drivers/staging/brcm80211/brcmsmac/types.h
+@@ -304,11 +304,11 @@ do {						\
+ 		switch (sizeof(*(r))) { \
+ 		case sizeof(u8): \
+ 			__osl_v = \
+-			readb((u8 *)((r)^3)); \
++			readb((u8 *)((unsigned long)(r)^3)); \
+ 			break; \
+ 		case sizeof(u16): \
+ 			__osl_v = \
+-			readw((u16 *)((r)^2)); \
++			readw((u16 *)((unsigned long)(r)^2)); \
+ 			break; \
+ 		case sizeof(u32): \
+ 			__osl_v = readl((u32 *)(r)); \
+@@ -321,10 +321,10 @@ do {						\
+ 		switch (sizeof(*(r))) { \
+ 		case sizeof(u8):	\
+ 			writeb((u8)(v), \
+-			(u8 *)((r)^3)); break; \
++			(u8 *)((unsigned long)(r)^3)); break; \
+ 		case sizeof(u16):	\
+ 			writew((u16)(v), \
+-			(u16 *)((r)^2)); break; \
++			(u16 *)((unsigned long)(r)^2)); break; \
+ 		case sizeof(u32):	\
+ 			writel((u32)(v), \
+ 			(u32 *)(r)); break; \
+-- 
+1.7.4.1
+
+
