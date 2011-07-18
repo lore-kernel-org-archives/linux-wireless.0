@@ -1,64 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44821 "EHLO mx2.suse.de"
+Received: from mms2.broadcom.com ([216.31.210.18]:4203 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755224Ab1GFCeI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 22:34:08 -0400
-Date: Tue, 5 Jul 2011 18:58:29 -0700
-From: Greg KH <gregkh@suse.de>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Greg KH <greg@kroah.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 000/119] staging: brcm80211: more code cleanup and bug
- fixed
-Message-ID: <20110706015829.GA15988@suse.de> (sfid-20110706_043416_189944_610DD6AA)
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
- <20110705165949.GA18531@kroah.com>
- <4E1362D5.2040806@broadcom.com>
- <4E136A27.6060207@broadcom.com>
+	id S1753405Ab1GROaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 10:30:23 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Franky Lin" <frankyl@broadcom.com>,
+	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 18/19] staging: brcm80211: absorb brcmf_sdcard_detach
+ into brcmf_sdio_remove
+Date: Mon, 18 Jul 2011 16:30:04 +0200
+Message-ID: <1310999405-10062-19-git-send-email-arend@broadcom.com> (sfid-20110718_163030_580285_01292E69)
+In-Reply-To: <1310999405-10062-1-git-send-email-arend@broadcom.com>
+References: <1310999405-10062-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E136A27.6060207@broadcom.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 05, 2011 at 09:46:47PM +0200, Arend van Spriel wrote:
-> On 07/05/2011 09:15 PM, Arend van Spriel wrote:
-> >On 07/05/2011 06:59 PM, Greg KH wrote:
-> >>On Wed, Jun 29, 2011 at 04:46:24PM -0700, Franky Lin wrote:
-> >>>Most of these patches are brcmfmac cleanup.
-> >>Not all of them applied, care to redo the ones that didn't and resend
-> >>them?
-> >>
-> >>thanks,
-> >>
-> >>greg k-h
-> >Will do when I figured out which ones are not applying. Franky, as are
-> >all valley broadcom folks, is not in today (fourth of july aftermath).
-> >Here in Holland we have other days to celebrate so taking over from him.
-> >Can you provide me the info about the not applying patches. I applied
-> >them all on top of staging-next as it was this morning and that went
-> >fine. Did we miss some brcm80211 patches not coming from us? I will
-> >start digging here to find out, but you are more than welcome to provide
-> >any info.
-> >
-> >Gr. AvS
-> 
-> Hi Greg,
-> 
-> This is what I excavated so far. Looking at git.kernel.org it seems
-> like patch 92 in the series got applied at the end of the series. Up
-> to patch 92 it went fine, but it started to derail from there. I
-> have clear picture which patches are missing and will resend them.
+From: Franky Lin <frankyl@broadcom.com>
 
-Yes, I messed up.  I sorted by "brcm" and applied the patches there,
-missing the fact that patch 92 was spelled wrong, so I missed it.
+To increase code readability of brcmfmac
 
-Then I went back and applied that one after figuring it out, but you did
-at the same time.
+Cc: linux-wireless@vger.kernel.org
+Cc: devel@linuxdriverproject.org
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c    |   32 ++++++++++-------------
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h |    3 --
+ 2 files changed, 14 insertions(+), 21 deletions(-)
 
-I'll queue these up in a bit after I get the kids to bed, thanks for
-resending them and sorry for the mixup, it was my fault.
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 6f88bd2..0cd449d 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -57,19 +57,6 @@ static struct brcmf_sdioh_driver drvinfo = { NULL, NULL };
+ 
+ module_param(sd_f2_blocksize, int, 0);
+ 
+-int brcmf_sdcard_detach(struct brcmf_sdio_card *card)
+-{
+-	if (card != NULL) {
+-		if (card->sdioh) {
+-			brcmf_sdioh_detach(card->sdioh);
+-			card->sdioh = NULL;
+-		}
+-		kfree(card);
+-	}
+-
+-	return 0;
+-}
+-
+ int
+ brcmf_sdcard_iovar_op(struct brcmf_sdio_card *card, const char *name,
+ 		void *params, int plen, void *arg, int len, bool set)
+@@ -441,7 +428,6 @@ int brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 
+ 	sdiodev->card->sdioh = brcmf_sdioh_attach((void *)0);
+ 	if (!sdiodev->card->sdioh) {
+-		brcmf_sdcard_detach(sdiodev->card);
+ 		ret = -ENODEV;
+ 		goto out;
+ 	}
+@@ -466,8 +452,8 @@ int brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 	}
+ 
+ out:
+-	if ((ret) && (sdiodev->card))
+-		brcmf_sdcard_detach(sdiodev->card);
++	if (ret)
++		brcmf_sdio_remove(sdiodev);
+ 
+ 	return ret;
+ }
+@@ -475,8 +461,18 @@ EXPORT_SYMBOL(brcmf_sdio_probe);
+ 
+ int brcmf_sdio_remove(struct brcmf_sdio_dev *sdiodev)
+ {
+-	drvinfo.detach(sdiodev->bus);
+-	brcmf_sdcard_detach(sdiodev->card);
++	if (sdiodev->bus) {
++		drvinfo.detach(sdiodev->bus);
++		sdiodev->bus = NULL;
++	}
++
++	if (sdiodev->card) {
++		if (sdiodev->card->sdioh)
++			brcmf_sdioh_detach(sdiodev->card->sdioh);
++		kfree(sdiodev->card);
++		sdiodev->card = NULL;
++	}
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(brcmf_sdio_remove);
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index 68b6843..cf3b8fc 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -136,9 +136,6 @@ struct brcmf_sdio_dev {
+ 	void *bus;
+ };
+ 
+-/* Detach - freeup resources allocated in attach */
+-extern int brcmf_sdcard_detach(struct brcmf_sdio_card *card);
+-
+ /* Enable/disable SD interrupt */
+ extern int brcmf_sdcard_intr_enable(struct brcmf_sdio_card *card);
+ extern int brcmf_sdcard_intr_disable(struct brcmf_sdio_card *card);
+-- 
+1.7.4.1
 
-greg k-h
+
