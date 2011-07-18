@@ -1,69 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35442 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932125Ab1GVUcj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 16:32:39 -0400
-Date: Fri, 22 Jul 2011 16:16:37 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	ralf@linux-mips.org, linux-wireless@vger.kernel.org,
-	linux-mips@linux-mips.org, jonas.gorski@gmail.com, mb@bu3sch.de,
-	george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com
-Subject: Re: [PATCH v2 00/11] bcma: add support for embedded devices like
- bcm4716
-Message-ID: <20110722201637.GC10938@tuxdriver.com> (sfid-20110722_223244_032020_35B38A93)
-References: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
- <CACna6ryjYGuLc5c88eke=gjgwQyVD+A9afM6zCRhqV1THHgWvA@mail.gmail.com>
- <4E2933A0.40200@hauke-m.de>
- <20110722133925.GA10938@tuxdriver.com>
- <4E299189.7080700@hauke-m.de>
+Received: from mms2.broadcom.com ([216.31.210.18]:4201 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751670Ab1GROaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 10:30:23 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Franky Lin" <frankyl@broadcom.com>,
+	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 09/19] staging: brcm80211: remove private timeout
+ functions in fullmac
+Date: Mon, 18 Jul 2011 16:29:55 +0200
+Message-ID: <1310999405-10062-10-git-send-email-arend@broadcom.com> (sfid-20110718_163036_684407_9547483C)
+In-Reply-To: <1310999405-10062-1-git-send-email-arend@broadcom.com>
+References: <1310999405-10062-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4E299189.7080700@hauke-m.de>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 22, 2011 at 05:04:41PM +0200, Hauke Mehrtens wrote:
-> On 07/22/2011 03:39 PM, John W. Linville wrote:
-> > On Fri, Jul 22, 2011 at 10:24:00AM +0200, Hauke Mehrtens wrote:
-> >> On 07/22/2011 12:30 AM, Rafał Miłecki wrote:
-> >>> 2011/7/16 Hauke Mehrtens <hauke@hauke-m.de>:
-> > 
-> >>>> @Ralf: Could you please merger this into the mips tree so that it will be in linux-3.1.
-> >>>
-> >>> ML for bcma is linux-wireless. Should we pass that patches "via" Ralf
-> >>> or John? Using linux-wireless (and John's tree) makes more sense to
-> >>> me, as we will work on the same tree and will get less merge
-> >>> conflicts. However don't take me as Linux development style guru, just
-> >>> my POV.
-> > 
-> >> I talked about this with Florian Fainelli and he said that the patches
-> >> should rather pass Ralf then John, but merging would be easier when they
-> >> are passing John. I do not have a problem with both solutions and
-> >> rebasing it to an other tree is no problem for me.
-> >> John and Ralf, who wants to take these patches? ;-)
-> > 
-> > I don't really care -- I figured Ralf was taking them due to the MIPS arch bits.
-> > 
-> > John
-> 
-> Hi John,
-> 
-> yes because of the MIPS arch bits it should go through Ralf, but there
-> are many changes for bcma in wireless-testing and adding my changes to
-> mips tree will cause some problems when wireless-testing and mips are
-> merged together by Linus.
-> 
-> Hauke
+From: Franky Lin <frankyl@broadcom.com>
 
-I'm happy to take them if Ralf agrees.  You'll need to repost them
-(or at least send them to me again).
+Use kernel timer macros to replace current private timeout functions
+used in dhd_sdio.c
 
-John
+Cc: linux-wireless@vger.kernel.org
+Cc: devel@linuxdriverproject.org
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd.h       |   10 ----
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |   58 ------------------------
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |   18 +++++---
+ 3 files changed, 11 insertions(+), 75 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index f3633fe..1fe9d69 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -614,13 +614,6 @@ struct brcmf_if_event {
+ 	u8 bssidx;
+ };
+ 
+-struct brcmf_timeout {
+-	u32 limit;		/* Expiration time (usec) */
+-	u32 increment;	/* Current expiration increment (usec) */
+-	u32 elapsed;		/* Current elapsed time (usec) */
+-	u32 tick;		/* O/S tick time (usec) */
+-};
+-
+ struct bcmevent_name {
+ 	uint event;
+ 	const char *name;
+@@ -783,9 +776,6 @@ extern int brcmf_os_proto_unblock(struct brcmf_pub *drvr);
+ extern int brcmf_write_to_file(struct brcmf_pub *drvr, u8 *buf, int size);
+ #endif				/* BCMDBG */
+ 
+-extern void brcmf_timeout_start(struct brcmf_timeout *tmo, uint usec);
+-extern int brcmf_timeout_expired(struct brcmf_timeout *tmo);
+-
+ extern int brcmf_ifname2idx(struct brcmf_info *drvr_priv, char *name);
+ extern int brcmf_c_host_event(struct brcmf_info *drvr_priv, int *idx,
+ 			      void *pktdata, struct brcmf_event_msg *,
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index ea49f01..8319237 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -142,64 +142,6 @@ static int brcmf_host_event(struct brcmf_info *drvr_priv, int *ifidx, void *pktd
+ 			    struct brcmf_event_msg *event_ptr,
+ 			    void **data_ptr);
+ 
+-/*
+- * Generalized timeout mechanism.  Uses spin sleep with exponential
+- * back-off until
+- * the sleep time reaches one jiffy, then switches over to task delay.  Usage:
+- *
+- *      brcmf_timeout_start(&tmo, usec);
+- *      while (!brcmf_timeout_expired(&tmo))
+- *              if (poll_something())
+- *                      break;
+- *      if (brcmf_timeout_expired(&tmo))
+- *              fatal();
+- */
+-
+-void brcmf_timeout_start(struct brcmf_timeout *tmo, uint usec)
+-{
+-	tmo->limit = usec;
+-	tmo->increment = 0;
+-	tmo->elapsed = 0;
+-	tmo->tick = 1000000 / HZ;
+-}
+-
+-int brcmf_timeout_expired(struct brcmf_timeout *tmo)
+-{
+-	/* Does nothing the first call */
+-	if (tmo->increment == 0) {
+-		tmo->increment = 1;
+-		return 0;
+-	}
+-
+-	if (tmo->elapsed >= tmo->limit)
+-		return 1;
+-
+-	/* Add the delay that's about to take place */
+-	tmo->elapsed += tmo->increment;
+-
+-	if (tmo->increment < tmo->tick) {
+-		udelay(tmo->increment);
+-		tmo->increment *= 2;
+-		if (tmo->increment > tmo->tick)
+-			tmo->increment = tmo->tick;
+-	} else {
+-		wait_queue_head_t delay_wait;
+-		DECLARE_WAITQUEUE(wait, current);
+-		int pending;
+-		init_waitqueue_head(&delay_wait);
+-		add_wait_queue(&delay_wait, &wait);
+-		set_current_state(TASK_INTERRUPTIBLE);
+-		schedule_timeout(1);
+-		pending = signal_pending(current);
+-		remove_wait_queue(&delay_wait, &wait);
+-		set_current_state(TASK_RUNNING);
+-		if (pending)
+-			return 1;	/* Interrupted */
+-	}
+-
+-	return 0;
+-}
+-
+ static int brcmf_net2idx(struct brcmf_info *drvr_priv, struct net_device *net)
+ {
+ 	int i = 0;
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index d02bcc7..7a0d036 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3306,7 +3306,7 @@ void brcmf_sdbrcm_bus_stop(struct brcmf_bus *bus, bool enforce_mutex)
+ int brcmf_sdbrcm_bus_init(struct brcmf_pub *drvr, bool enforce_mutex)
+ {
+ 	struct brcmf_bus *bus = drvr->bus;
+-	struct brcmf_timeout tmo;
++	unsigned long timeout;
+ 	uint retries = 0;
+ 	u8 ready, enable;
+ 	int err, ret = 0;
+@@ -3358,16 +3358,20 @@ int brcmf_sdbrcm_bus_init(struct brcmf_pub *drvr, bool enforce_mutex)
+ 	brcmf_sdcard_cfg_write(bus->card, SDIO_FUNC_0, SDIO_CCCR_IOEx, enable,
+ 			       NULL);
+ 
+-	/* Give the dongle some time to do its thing and set IOR2 */
+-	brcmf_timeout_start(&tmo, BRCMF_WAIT_F2RDY * 1000);
+-
++	timeout = jiffies + msecs_to_jiffies(BRCMF_WAIT_F2RDY);
+ 	ready = 0;
+-	while (ready != enable && !brcmf_timeout_expired(&tmo))
++	while (enable != ready) {
+ 		ready = brcmf_sdcard_cfg_read(bus->card, SDIO_FUNC_0,
+ 					      SDIO_CCCR_IORx, NULL);
++		if (time_after(jiffies, timeout))
++			break;
++		else if (time_after(jiffies, timeout - BRCMF_WAIT_F2RDY + 50))
++			/* prevent busy waiting if it takes too long */
++			msleep_interruptible(20);
++	}
+ 
+-	BRCMF_INFO(("%s: enable 0x%02x, ready 0x%02x (waited %uus)\n",
+-		    __func__, enable, ready, tmo.elapsed));
++	BRCMF_INFO(("%s: enable 0x%02x, ready 0x%02x\n",
++		    __func__, enable, ready));
+ 
+ 	/* If F2 successfully enabled, set core and enable interrupts */
+ 	if (ready == enable) {
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.1
+
+
