@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60539 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752159Ab1GPInH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2011 04:43:07 -0400
-Subject: Re: Binary for carl9170
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4E20C3DC.3020200@gnu.org> (sfid-20110716_005149_371117_00B679B5)
-References: <CACAiNS3-3K06Cro+VWypyWGetUW-v0qeJ29noXi7WNtUaCWzTw@mail.gmail.com>
-	 <201107151509.23258.chunkeey@googlemail.com> <4E2072BF.6000306@gnu.org>
-	 <201107152039.07294.chunkeey@googlemail.com>
-	 <20110715151642.0j86tyrj4k0g4sg4-cebfxv@webmail.spamcop.net>
-	 <4E20C3DC.3020200@gnu.org> (sfid-20110716_005149_371117_00B679B5)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 16 Jul 2011 10:43:00 +0200
-Message-ID: <1310805780.3800.0.camel@jlt3.sipsolutions.net> (sfid-20110716_104325_212277_2CCE0CE3)
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:2044 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750903Ab1GRWYH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 18:24:07 -0400
+Message-ID: <4E24B27B.2020004@broadcom.com> (sfid-20110719_002414_176307_7CF263E8)
+Date: Mon, 18 Jul 2011 15:23:55 -0700
+From: "Franky Lin" <frankyl@broadcom.com>
+MIME-Version: 1.0
+To: "Pavel Roskin" <proski@gnu.org>
+cc: "Dan Carpenter" <error27@gmail.com>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 12/19] staging: brcm80211: remove code for
+ unsupported chip
+References: <1310999405-10062-1-git-send-email-arend@broadcom.com>
+ <1310999405-10062-13-git-send-email-arend@broadcom.com>
+ <20110718194215.GD4010@shale.localdomain>
+ <4E24A313.3080800@broadcom.com> <4E24A6E3.8070700@gnu.org>
+In-Reply-To: <4E24A6E3.8070700@gnu.org>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-07-15 at 18:49 -0400, Pavel Roskin wrote:
+On 7/18/2011 2:34:27 PM, Pavel Roskin <proski@gnu.org> wrote:
+> On 07/18/2011 05:18 PM, Franky Lin wrote:
+>
+>> No, i didn't. Thank you for pointing out this. I missed it when I
+>> rebased my local branch. It didn't break any thing because
+>> brcmf_mmc_suspend is a global variable. Is it ok to keep the patch like
+>> this? I will prepare another patch to put it back and put the variable
+>> in a structure instead of using a global.
+>
+> Broken commits are bad for bisecting.  "git bisect" is used to search
+> for a revision that introduces a bug.  "git bisect" selects a commit
+> between the known working and the known broken revision.  If the commit
+> selected by "git commit" suffers from additional breakage, this could
+> lead to wasted time and possibly to a failure to find the commit
+> responsible for the original problem.
+>
+> Please don't submit known broken commits.  You can always send another
+> version of the series.  If you are using stgit, see "stg mail --help".
+>
 
-> The wiki allows attachments, so I uploaded the firmware as an 
-> attachment.  First I put is on the main carl9170 page, but it turned out 
-> that MoinMoin doesn't appear to have any way to specify the attachment 
-> name in the link.  Since I called the attachment "carl9170-1.fw-1.9.4", 
-> it would only download under that name, rather than as "carl9170-1.fw". 
->   I don't want to call the attachment "carl9170-1.fw" since nobody, 
-> including me, would be able to replace it with another version ever.
-
-FWIW, the only reason you can't delete attachments right now is that
-they aren't versioned, so if somebody deletes a file we can never get it
-back... It _is_ possible to delete things again though.
-
-johannes
+Thanks Pavel. We will send out a v2 to fix this.
 
