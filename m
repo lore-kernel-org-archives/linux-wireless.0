@@ -1,97 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:51359 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753547Ab1GNTK5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 15:10:57 -0400
-Received: by mail-fx0-f52.google.com with SMTP id 18so1505335fxd.11
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2011 12:10:57 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3/4] bcma: implement BCM4331 workaround for external PA lines
-Date: Thu, 14 Jul 2011 21:49:20 +0200
-Message-Id: <1310672961-5311-3-git-send-email-zajec5@gmail.com> (sfid-20110714_211100_053383_81E548D9)
-In-Reply-To: <1310672961-5311-1-git-send-email-zajec5@gmail.com>
-References: <1310672961-5311-1-git-send-email-zajec5@gmail.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:4234 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753876Ab1GROaY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 10:30:24 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Roland Vossen" <rvossen@broadcom.com>,
+	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 07/19] staging: brcm80211: removed global variable from
+ sdio fullmac
+Date: Mon, 18 Jul 2011 16:29:53 +0200
+Message-ID: <1310999405-10062-8-git-send-email-arend@broadcom.com> (sfid-20110718_163054_866822_4245C10F)
+In-Reply-To: <1310999405-10062-1-git-send-email-arend@broadcom.com>
+References: <1310999405-10062-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Roland Vossen <rvossen@broadcom.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Code cleanup. bus->card is assigned in brcmf_sdbrcm_probe (before
+brcmf_sdbrcm_probe_attach()). Since w_sdreg32() and r_sdreg32() are called
+only after that assignment, they can safely use bus->card. Thus there
+is no instance left where brcmf_sdcard_reg_read() or brcmf_sdcard_reg_write()
+is called with a NULL parameter, so the mechanism in bcmsdh.c that deals with
+a NULL pointer could be deleted.
+
+Cc: linux-wireless@vger.kernel.org
+Cc: devel@linuxdriverproject.org
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/bcma/driver_chipcommon_pmu.c        |   19 ++++++++++++++++++-
- include/linux/bcma/bcma_driver_chipcommon.h |   16 ++++++++++++++++
- 2 files changed, 34 insertions(+), 1 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c   |   31 -------------------------
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |    9 ++++---
+ 2 files changed, 5 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index dd5846b..9fab4cd 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -83,6 +83,23 @@ void bcma_pmu_swreg_init(struct bcma_drv_cc *cc)
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index fb3ab63..916d41f 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -89,9 +89,6 @@ struct sdio_hc {
+ 	bool oob_irq_registered;
+ };
+ 
+-/* local copy of bcm sd handler */
+-static struct brcmf_sdio_card *l_card;
+-
+ const uint brcmf_sdio_msglevel = BRCMF_SD_ERROR_VAL;
+ 
+ static struct sdio_hc *sdhcinfo;
+@@ -116,9 +113,6 @@ brcmf_sdcard_attach(void *cfghdl, u32 *regsva, uint irq)
+ 		return NULL;
  	}
+ 
+-	/* save the handler locally */
+-	l_card = card;
+-
+ 	card->sdioh = brcmf_sdioh_attach(cfghdl, irq);
+ 	if (!card->sdioh) {
+ 		brcmf_sdcard_detach(card);
+@@ -144,7 +138,6 @@ int brcmf_sdcard_detach(struct brcmf_sdio_card *card)
+ 		kfree(card);
+ 	}
+ 
+-	l_card = NULL;
+ 	return 0;
  }
  
-+static void bcma_bcm4331_exp_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable)
-+{
-+	struct bcma_bus *bus = cc->core->bus;
-+	u32 val;
-+
-+	val = bcma_cc_read32(cc, BCMA_CC_CHIPCTL);
-+	if (enable) {
-+		val |= BCMA_CHIPCTL_4331_EXTPA_EN;
-+		if (bus->chipinfo.pkg == 9 || bus->chipinfo.pkg == 11)
-+			val |= BCMA_CHIPCTL_4331_EXTPA_ON_GPIO2_5;
-+	} else {
-+		val &= ~BCMA_CHIPCTL_4331_EXTPA_EN;
-+		val &= ~BCMA_CHIPCTL_4331_EXTPA_ON_GPIO2_5;
-+	}
-+	bcma_cc_write32(cc, BCMA_CC_CHIPCTL, val);
-+}
-+
- void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
- {
- 	struct bcma_bus *bus = cc->core->bus;
-@@ -92,7 +109,7 @@ void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
- 		bcma_chipco_chipctl_maskset(cc, 0, ~0, 0x7);
- 		break;
- 	case 0x4331:
--		pr_err("Enabling Ext PA lines not implemented\n");
-+		bcma_bcm4331_exp_pa_lines_ctl(cc, true);
- 		break;
- 	case 43224:
- 		if (bus->chipinfo.rev == 0) {
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 9c5b69f..ac659f0 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -246,6 +246,22 @@
- #define BCMA_CC_PLLCTL_DATA		0x0664
- #define BCMA_CC_SPROM			0x0830 /* SPROM beginning */
+@@ -184,9 +177,6 @@ u8 brcmf_sdcard_cfg_read(struct brcmf_sdio_card *card, uint fnc_num, u32 addr,
+ 	s32 retry = 0;
+ 	u8 data = 0;
  
-+/* BCM4331 ChipControl numbers. */
-+#define BCMA_CHIPCTL_4331_BT_COEXIST		BIT(0)	/* 0 disable */
-+#define BCMA_CHIPCTL_4331_SECI			BIT(1)	/* 0 SECI is disabled (JATG functional) */
-+#define BCMA_CHIPCTL_4331_EXT_LNA		BIT(2)	/* 0 disable */
-+#define BCMA_CHIPCTL_4331_SPROM_GPIO13_15	BIT(3)	/* sprom/gpio13-15 mux */
-+#define BCMA_CHIPCTL_4331_EXTPA_EN		BIT(4)	/* 0 ext pa disable, 1 ext pa enabled */
-+#define BCMA_CHIPCTL_4331_GPIOCLK_ON_SPROMCS	BIT(5)	/* set drive out GPIO_CLK on sprom_cs pin */
-+#define BCMA_CHIPCTL_4331_PCIE_MDIO_ON_SPROMCS	BIT(6)	/* use sprom_cs pin as PCIE mdio interface */
-+#define BCMA_CHIPCTL_4331_EXTPA_ON_GPIO2_5	BIT(7)	/* aband extpa will be at gpio2/5 and sprom_dout */
-+#define BCMA_CHIPCTL_4331_OVR_PIPEAUXCLKEN	BIT(8)	/* override core control on pipe_AuxClkEnable */
-+#define BCMA_CHIPCTL_4331_OVR_PIPEAUXPWRDOWN	BIT(9)	/* override core control on pipe_AuxPowerDown */
-+#define BCMA_CHIPCTL_4331_PCIE_AUXCLKEN		BIT(10)	/* pcie_auxclkenable */
-+#define BCMA_CHIPCTL_4331_PCIE_PIPE_PLLDOWN	BIT(11)	/* pcie_pipe_pllpowerdown */
-+#define BCMA_CHIPCTL_4331_BT_SHD0_ON_GPIO4	BIT(16)	/* enable bt_shd0 at gpio4 */
-+#define BCMA_CHIPCTL_4331_BT_SHD1_ON_GPIO5	BIT(17)	/* enable bt_shd1 at gpio5 */
-+
- /* Data for the PMU, if available.
-  * Check availability with ((struct bcma_chipcommon)->capabilities & BCMA_CC_CAP_PMU)
-  */
+-	if (!card)
+-		card = l_card;
+-
+ 	do {
+ 		if (retry)	/* wait for 1 ms till bus get settled down */
+ 			udelay(1000);
+@@ -211,9 +201,6 @@ brcmf_sdcard_cfg_write(struct brcmf_sdio_card *card, uint fnc_num, u32 addr,
+ 	int status;
+ 	s32 retry = 0;
+ 
+-	if (!card)
+-		card = l_card;
+-
+ 	do {
+ 		if (retry)	/* wait for 1 ms till bus get settled down */
+ 			udelay(1000);
+@@ -235,9 +222,6 @@ u32 brcmf_sdcard_cfg_read_word(struct brcmf_sdio_card *card, uint fnc_num,
+ 	int status;
+ 	u32 data = 0;
+ 
+-	if (!card)
+-		card = l_card;
+-
+ 	status = brcmf_sdioh_request_word(card->sdioh, SDIOH_CMD_TYPE_NORMAL,
+ 		SDIOH_READ, fnc_num, addr, &data, 4);
+ 
+@@ -256,9 +240,6 @@ brcmf_sdcard_cfg_write_word(struct brcmf_sdio_card *card, uint fnc_num,
+ {
+ 	int status;
+ 
+-	if (!card)
+-		card = l_card;
+-
+ 	status =
+ 	    brcmf_sdioh_request_word(card->sdioh, SDIOH_CMD_TYPE_NORMAL,
+ 			       SDIOH_WRITE, fnc_num, addr, &data, 4);
+@@ -280,9 +261,6 @@ int brcmf_sdcard_cis_read(struct brcmf_sdio_card *card, uint func, u8 * cis,
+ 	bool ascii = func & ~0xf;
+ 	func &= 0x7;
+ 
+-	if (!card)
+-		card = l_card;
+-
+ 	status = brcmf_sdioh_cis_read(card->sdioh, func, cis, length);
+ 
+ 	if (ascii) {
+@@ -334,9 +312,6 @@ u32 brcmf_sdcard_reg_read(struct brcmf_sdio_card *card, u32 addr, uint size)
+ 
+ 	BRCMF_SD_INFO(("%s:fun = 1, addr = 0x%x, ", __func__, addr));
+ 
+-	if (!card)
+-		card = l_card;
+-
+ 	if (bar0 != card->sbwad) {
+ 		if (brcmf_sdcard_set_sbaddr_window(card, bar0))
+ 			return 0xFFFFFFFF;
+@@ -386,9 +361,6 @@ u32 brcmf_sdcard_reg_write(struct brcmf_sdio_card *card, u32 addr, uint size,
+ 	BRCMF_SD_INFO(("%s:fun = 1, addr = 0x%x, uint%ddata = 0x%x\n",
+ 		     __func__, addr, size * 8, data));
+ 
+-	if (!card)
+-		card = l_card;
+-
+ 	if (bar0 != card->sbwad) {
+ 		err = brcmf_sdcard_set_sbaddr_window(card, bar0);
+ 		if (err)
+@@ -522,9 +494,6 @@ int brcmf_sdcard_query_device(struct brcmf_sdio_card *card)
+ 
+ u32 brcmf_sdcard_cur_sbwad(struct brcmf_sdio_card *card)
+ {
+-	if (!card)
+-		card = l_card;
+-
+ 	return card->sbwad;
+ }
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 27a6937..d02bcc7 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -889,7 +889,7 @@ r_sdreg32(struct brcmf_bus *bus, u32 *regvar, u32 reg_offset, u32 *retryvar)
+ {
+ 	*retryvar = 0;
+ 	do {
+-		*regvar = brcmf_sdcard_reg_read(NULL,
++		*regvar = brcmf_sdcard_reg_read(bus->card,
+ 				bus->ci->buscorebase + reg_offset, sizeof(u32));
+ 	} while (brcmf_sdcard_regfail(bus->card) &&
+ 		 (++(*retryvar) <= retry_limit));
+@@ -907,7 +907,8 @@ w_sdreg32(struct brcmf_bus *bus, u32 regval, u32 reg_offset, u32 *retryvar)
+ {
+ 	*retryvar = 0;
+ 	do {
+-		brcmf_sdcard_reg_write(NULL, bus->ci->buscorebase + reg_offset,
++		brcmf_sdcard_reg_write(bus->card,
++				       bus->ci->buscorebase + reg_offset,
+ 				       sizeof(u32), regval);
+ 	} while (brcmf_sdcard_regfail(bus->card) &&
+ 		 (++(*retryvar) <= retry_limit));
+@@ -5682,8 +5683,8 @@ brcmf_sdbrcm_probe_attach(struct brcmf_bus *bus, void *card, u32 regsva,
+ 	/* Set core control so an SDIO reset does a backplane reset */
+ 	reg_addr = bus->ci->buscorebase +
+ 		   offsetof(struct sdpcmd_regs, corecontrol);
+-	reg_val = brcmf_sdcard_reg_read(NULL, reg_addr, sizeof(u32));
+-	brcmf_sdcard_reg_write(NULL, reg_addr, sizeof(u32),
++	reg_val = brcmf_sdcard_reg_read(bus->card, reg_addr, sizeof(u32));
++	brcmf_sdcard_reg_write(bus->card, reg_addr, sizeof(u32),
+ 			       reg_val | CC_BPRESEN);
+ 
+ 	brcmu_pktq_init(&bus->txq, (PRIOMASK + 1), TXQLEN);
 -- 
-1.7.3.4
+1.7.4.1
+
 
