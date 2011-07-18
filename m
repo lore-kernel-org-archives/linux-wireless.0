@@ -1,133 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from msr9.hinet.net ([168.95.4.109]:39997 "EHLO msr9.hinet.net"
+Received: from mms2.broadcom.com ([216.31.210.18]:4213 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751482Ab1GPDXJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2011 23:23:09 -0400
-Date: Sat, 16 Jul 2011 11:21:01 +0800
-From: Ali Bahar <ali@internetdog.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Greg Kroah-Hartman <gregkh@suse.de>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] staging: r8712u: Most return-values changed from
- -1 to proper errno macros.
-Message-ID: <20110716032100.GA3274@internetdog.org> (sfid-20110716_052314_044149_767D9ADD)
-Reply-To: ali@internetdog.org
-References: <20110703010605.GA3736@internetdog.org>
- <1310749876-32632-1-git-send-email-ali@internetDog.org>
- <1310749876-32632-2-git-send-email-ali@internetDog.org>
- <4E20AA5A.6020101@lwfinger.net>
+	id S1753540Ab1GROaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 10:30:23 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org
+Subject: [PATCH 00/19] checkpatch changes and brcmfmac cleanup
+Date: Mon, 18 Jul 2011 16:29:46 +0200
+Message-ID: <1310999405-10062-1-git-send-email-arend@broadcom.com> (sfid-20110718_163051_948368_D7F1C675)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E20AA5A.6020101@lwfinger.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 15, 2011 at 04:00:10PM -0500, Larry Finger wrote:
-> On 07/15/2011 12:11 PM, Ali Bahar wrote:
-> >The ioctl handlers were frequently returning -1 upon failure. Most of
-> >these have now been changed to proper errno macros.
-> >The few remaining ones have been left untouched because either the
-> >handler is not called (and so cannot be tested), or the function never
-> >fails (and so cannot be system-tested), or requires new code to
-> >distinguish its failures.
-> >
-> >Signed-off-by: Ali Bahar<ali@internetDog.org>
-> >Cc: Larry Finger<Larry.Finger@lwfinger.net>
-> >---
-> >  drivers/staging/rtl8712/rtl871x_ioctl_linux.c |  121 +++++++++++++++++++++----
-> >  1 files changed, 105 insertions(+), 16 deletions(-)
-> >
-> >diff --git a/drivers/staging/rtl8712/rtl871x_ioctl_linux.c b/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-> >index 40e6b5c..bb97d8b 100644
-> >--- a/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-> >+++ b/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-> >@@ -526,7 +526,7 @@ static int r871x_set_wpa_ie(struct _adapter *padapter, char *pie,
-> >  		memcpy(buf, pie , ielen);
-> >  		pos = buf;
-> >  		if (ielen<  RSN_HEADER_LEN) {
-> >-			ret  = -1;
-> >+			ret  = -EINVAL;
-> >  			goto exit;
-> >  		}
-> >  		if (r8712_parse_wpa_ie(buf, ielen,&group_cipher,
-> >@@ -689,6 +689,11 @@ static const long frequency_list[] = {
-> >  	5825
-> >  };
-> >
-> >+/*
-> >+ * This function intends to handle the Set Freq command.
-> >+ * Currently, the request comes via the Wireless Extensions' SIOCSIWFREQ ioctl.
-> >+ *
-> >+ */
-> 
-> This comment is not needed. The function name is descriptive and it
-> is clear that it is part of WEXT.
+This series removes several checkpatch errors and warnings in the
+drivers and several cleanup changes in brcmfmac driver.
 
-OK.
-See below.
+Arend van Spriel (2):
+  staging: brcm80211: replace simple_strtoul usage in brcmsmac
+  staging: brcm80211: replace simple_strtoul usage in brcmfmac
 
+Franky Lin (10):
+  staging: brcm80211: remove private timeout functions in fullmac
+  staging: brcm80211: move brcmf_mmc_suspend to sdio layer in fullmac
+  staging: brcm80211: remove global wait queue head
+    sdioh_spinwait_sleep
+  staging: brcm80211: remove code for unsupported chip
+  staging: brcm80211: get rid of sd debug message macro in fullmac
+  staging: brcm80211: remove structure sdio_hc in brcmfmac
+  staging: brcm80211: remove SDLX_MSG from brcmfmac
+  staging: brcm80211: remove BRCMF_SD_* debug macros from brcmfmac
+  staging: brcm80211: absorb brcmf_sdcard_attach into brcmf_sdio_probe
+  staging: brcm80211: absorb brcmf_sdcard_detach into brcmf_sdio_remove
 
+Roland Vossen (7):
+  staging: brcm80211: fix for checkpatch warnings in phy directory
+  staging: brcm80211: resolved checkpatch warnings in LCN phy
+  staging: brcm80211: resolved checkpatch warnings in N phy
+  staging: brcm80211: fixed build issue for big endian platforms
+  staging: brcm80211: remove MIPS specific 'sync' instruction in
+    fullmac
+  staging: brcm80211: removed R_REG and OR_REG macro's from fullmac
+  staging: brcm80211: removed global variable from sdio fullmac
 
-> >  static int r8711_wx_set_mode(struct net_device *dev,
-> >  			     struct iw_request_info *a,
-> >  			     union iwreq_data *wrqu, char *b)
-> >@@ -769,10 +789,15 @@ static int r8711_wx_set_mode(struct net_device *dev,
-> >  	else
-> >  		r8712_setopmode_cmd(padapter, Ndis802_11AutoUnknown);
-> >  	if (!r8712_set_802_11_infrastructure_mode(padapter, networkType))
-> >-		return -1;
-> >+		return -EPERM; /* Unknown failure. */
-> >  	return 0;
-> 
-> As r8712_set_802_11_infrastructure_mode() always returns true. it
-> would be better to rewrite it as a void function and completely do
-> away with the test here.
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c        |  246 +-
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c  |  337 +-
+ drivers/staging/brcm80211/brcmfmac/dhd.h           |   49 -
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c    |   27 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |   66 -
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |   97 +-
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h     |   30 +-
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c   |    8 -
+ drivers/staging/brcm80211/brcmsmac/dma.h           |    1 +
+ drivers/staging/brcm80211/brcmsmac/main.c          |   16 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c   |  244 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h   |   51 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_int.h   |  138 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c   |  413 ++-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_n.c     | 3777 ++++++++++----------
+ drivers/staging/brcm80211/brcmsmac/phy/phy_qmath.c |  136 +-
+ .../staging/brcm80211/brcmsmac/phy/phytbl_lcn.c    | 1168 ++----
+ drivers/staging/brcm80211/brcmsmac/phy/phytbl_n.c  |    3 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phytbl_n.h  |   24 +-
+ drivers/staging/brcm80211/brcmsmac/types.h         |    8 +-
+ 20 files changed, 3195 insertions(+), 3644 deletions(-)
 
-Agreed. I was going to wait till after the/any merge with Realtek's
-latest. Instead, I'll do it now.
-Similarly with the other such checks.
+Cc: linux-wireless@vger.kernel.org
+Cc: devel@linuxdriverproject.org
+-- 
+1.7.4.1
 
 
-
-
-> Comments in the Linux kernel are relatively rare. Only things that
-> are not immediately obvious should receive special annotation.
-
-I'll undo all the comments.
-
-Please don't interpret the following as the start of a debate on
-commenting Linux; it's not my place to do so. I'm just explaining, for
-public record, why the above was done.
-
-I am aware of the current state of the Linux code's documentation.
-Habitually, I comment the big-picture as I go along. Industry practice
-wrt comments differs from Linux's, of course.
-The comments were in the function heads, not in the bodies, as per
-Documentation/CodingStyle. 
-The big-picture of the functions is clear once you are familiar enough
-to begin to modify the code. However, and especially for linux, code
-is read a thousand times for every time it is written. Most eyeballs
-could do with a line or two of explanation.
-To me, Documentation/kernel-docs.txt echoed the need for a
-big-picture view.
-If the goal is to attract more developers (as it is at least Greg KH's
-intent), then Linux's code-base has a long way to go. I meant only to
-start chipping away at the task.
-
-
-Anyways. Didn't mean to give you a headache.
-
-
-> 
-> Larry
-
-Thank you for taking the time. Greatly appreciated.
-
-BTW, if there's any particular work that you feel this driver needs,
-do let me know. I've planned to look at the latest Reaktek code for
-potential merges, and then see if I can interface it with iw
-(cfg80211.) I'll also dig to see what it may take to add monitor-mode
-to this.
-Any such patches will be posted to the Staging ML.
-
-regards,
-ali
