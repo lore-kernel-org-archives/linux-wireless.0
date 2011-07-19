@@ -1,94 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:56634 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752041Ab1GXUJ7 (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:61250 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751747Ab1GSPtm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jul 2011 16:09:59 -0400
-Date: Sun, 24 Jul 2011 13:08:40 -0700 (PDT)
-Message-Id: <20110724.130840.1093555047179460794.davem@davemloft.net> (sfid-20110724_221022_772024_1F68E0E5)
-To: linville@tuxdriver.com
-Cc: johannes.berg@intel.com, wey-yi.w.guy@intel.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iwlagn: wrap suspend/resume definitions in CONFIG_PM
- block
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1311535150-28686-1-git-send-email-linville@tuxdriver.com>
-References: <20110724.030949.1727841105144911931.davem@davemloft.net>
-	<1311535150-28686-1-git-send-email-linville@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 19 Jul 2011 11:49:42 -0400
+MIME-Version: 1.0
+In-Reply-To: <4E25A1E3.9080707@gmail.com>
+References: <4E252076.1050309@gmail.com>
+	<CAD2nsn12vOXv-msWR+GF7edz3Q26P-pb4H-SO4rf2RHjC7mG+w@mail.gmail.com>
+	<4E2525BA.4090902@gmail.com>
+	<CAD2nsn3ifSMa_eFr2vQ0VVF9Ga-0VD3YB_beb28r+eoAHKv4kQ@mail.gmail.com>
+	<4E25A1E3.9080707@gmail.com>
+Date: Tue, 19 Jul 2011 21:19:40 +0530
+Message-ID: <CAD2nsn1xEB-e33_wrGqLETZ4MwFy12gtyawtg5XHLH0=-9vs2w@mail.gmail.com> (sfid-20110719_175004_380495_1FBE8B8B)
+Subject: Re: ath: Unable to reset channel (2412 MHz), reset status -5
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Sun, 24 Jul 2011 15:19:10 -0400
+On Tue, Jul 19, 2011 at 8:55 PM, Justin P. Mattock
+<justinmattock@gmail.com> wrote:
+> On 07/18/2011 11:46 PM, Mohammed Shafi wrote:
+>>
+>> On Tue, Jul 19, 2011 at 12:05 PM, Justin P. Mattock
+>> <justinmattock@gmail.com>  wrote:
+>>>
+>>> On 07/18/2011 11:25 PM, Mohammed Shafi wrote:
+>>>>
+>>>> On Tue, Jul 19, 2011 at 11:43 AM, Justin P. Mattock
+>>>> <justinmattock@gmail.com>    wrote:
+>>>>>
+>>>>> seems with the latest Mainline I am getting the ath9k carpping out
+>>>>> after
+>>>>> a
+>>>>> while of streaming(dmesg below)..:
+>>>>> http://fpaste.org/D7wM/
+>>>>>
+>>>>> will try a bisect if I have the time..
+>>>>
+>>>> I will try to recreate here with 3.0.0-rc7-wl, we can get more
+>>>> information by ath9k debug=0xffffffff.
+>>>> thanks.
+>>>>
+>>>
+>>> cool!
+>>> seems to fire off randomly over here.
+>>
+>> I have got AR5416, will try with that.
+>>
+>
+> I can try the bisect, but might take a while, since external
+> activities(job). Seems this is just starting i.g. with
+> 3.0.0-rc1 I never saw this, but with 3.0.0-rc7-00125-gf560f66
+> its making noise.
 
-> drivers/net/wireless/iwlwifi/iwl-agn.c:3464: error: unknown field 'suspend' specified in initializer
-> drivers/net/wireless/iwlwifi/iwl-agn.c:3464: warning: initialization from incompatible pointer type
-> drivers/net/wireless/iwlwifi/iwl-agn.c:3465: error: unknown field 'resume' specified in initializer
-> drivers/net/wireless/iwlwifi/iwl-agn.c:3465: warning: initialization from incompatible pointer type
-> 
-> This was caused by commit c8ac61cf ("iwlagn: implement WoWLAN").
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+I am unable to get this problem in my AR5416 :( will also try
+tomorrow. I am using the card for browsing etc.
+recently there were patches for hardware code changes.
+just a guess, please check does this patch helps(or is it already
+there). i think this will be called via
+ath_set_channel->ath9k_hw_reset->ath9k_hw_init_bb and may be
+https://patchwork.kernel.org/patch/957902/
 
-Since I already minimally fixed up my build locally last night I know
-that your patch leads to a set of warnings because the methods whose
-hookup are now commented out become completely unused and they are all
-marked "static".  And recursively functions that those methods use
-become unused too.
+>
+> Justin P. Mattock
+>
 
-Did you turn off CONFIG_PM and test the build of this file to see
-what the compiler actually does with it?
 
-I'm checking in the following, but I expect much better from you John.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 4b666b7..b0ae4de 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2279,6 +2279,7 @@ static void iwlagn_mac_stop(struct ieee80211_hw *hw)
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- }
- 
-+#ifdef CONFIG_PM
- static int iwlagn_send_patterns(struct iwl_priv *priv,
- 				struct cfg80211_wowlan *wowlan)
- {
-@@ -2320,6 +2321,7 @@ static int iwlagn_send_patterns(struct iwl_priv *priv,
- 	kfree(pattern_cmd);
- 	return err;
- }
-+#endif
- 
- static void iwlagn_mac_set_rekey_data(struct ieee80211_hw *hw,
- 				      struct ieee80211_vif *vif,
-@@ -2352,6 +2354,7 @@ struct wowlan_key_data {
- 	bool error, use_rsc_tsc, use_tkip;
- };
- 
-+#ifdef CONFIG_PM
- static void iwlagn_convert_p1k(u16 *p1k, __le16 *out)
- {
- 	int i;
-@@ -2739,6 +2742,7 @@ static int iwlagn_mac_resume(struct ieee80211_hw *hw)
- 
- 	return 1;
- }
-+#endif
- 
- static void iwlagn_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
-@@ -3461,8 +3465,10 @@ struct ieee80211_ops iwlagn_hw_ops = {
- 	.tx = iwlagn_mac_tx,
- 	.start = iwlagn_mac_start,
- 	.stop = iwlagn_mac_stop,
-+#ifdef CONFIG_PM
- 	.suspend = iwlagn_mac_suspend,
- 	.resume = iwlagn_mac_resume,
-+#endif
- 	.add_interface = iwl_mac_add_interface,
- 	.remove_interface = iwl_mac_remove_interface,
- 	.change_interface = iwl_mac_change_interface,
-
+-- 
+shafi
