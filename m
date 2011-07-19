@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:53534 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751754Ab1GUP0p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 11:26:45 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 06/25] iwlagn: define valid init calibration mask
-Date: Thu, 21 Jul 2011 07:50:09 -0700
-Message-Id: <1311259828-8415-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110721_172649_613119_EDBD2087)
-In-Reply-To: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:34449 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751061Ab1GSKNd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jul 2011 06:13:33 -0400
+Subject: Re: [PATCH] cfg80211: enter psm when working as p2p_cli
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1311069433-17524-1-git-send-email-eliad@wizery.com> (sfid-20110719_115658_657993_7314DA69)
+References: <1311069433-17524-1-git-send-email-eliad@wizery.com>
+	 (sfid-20110719_115658_657993_7314DA69)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 19 Jul 2011 12:13:30 +0200
+Message-ID: <1311070410.24078.4.camel@jlt3.sipsolutions.net> (sfid-20110719_121335_932047_44E93B34)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the valid calibration mask for init calibration
+On Tue, 2011-07-19 at 12:57 +0300, Eliad Peller wrote:
+> cfg80211_netdev_notifier_call() is configuring psm in case
+> of NL80211_IFTYPE_STATION interface type (on NETDEV_UP).
+> do the same for NL80211_IFTYPE_P2P_CLIENT interface type.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-commands.h |   16 +++++++++++++---
- 1 files changed, 13 insertions(+), 3 deletions(-)
+Good catch!
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 1c0dea2..d7f20c8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -3167,9 +3167,6 @@ enum {
- 
- #define IWL_MAX_PHY_CALIBRATE_TBL_SIZE		(253)
- 
--#define IWL_CALIB_INIT_CFG_ALL				cpu_to_le32(0xffffffff)
--#define IWL_CALIB_CFG_FLAG_SEND_COMPLETE_NTFY_MSK	cpu_to_le32(BIT(0))
--
- /* This enum defines the bitmap of various calibrations to enable in both
-  * init ucode and runtime ucode through CALIBRATION_CFG_CMD.
-  */
-@@ -3187,6 +3184,19 @@ enum iwl_ucode_calib_cfg {
- 	IWL_CALIB_CFG_TX_PWR_IDX		= BIT(10),
- };
- 
-+#define IWL_CALIB_INIT_CFG_ALL	cpu_to_le32(IWL_CALIB_CFG_RX_BB_IDX |	\
-+					IWL_CALIB_CFG_DC_IDX |		\
-+					IWL_CALIB_CFG_LO_IDX |		\
-+					IWL_CALIB_CFG_TX_IQ_IDX |	\
-+					IWL_CALIB_CFG_RX_IQ_IDX |	\
-+					IWL_CALIB_CFG_NOISE_IDX |	\
-+					IWL_CALIB_CFG_CRYSTAL_IDX |	\
-+					IWL_CALIB_CFG_TEMPERATURE_IDX |	\
-+					IWL_CALIB_CFG_PAPD_IDX |	\
-+					IWL_CALIB_CFG_SENSITIVITY_IDX |	\
-+					IWL_CALIB_CFG_TX_PWR_IDX)
-+
-+#define IWL_CALIB_CFG_FLAG_SEND_COMPLETE_NTFY_MSK	cpu_to_le32(BIT(0))
- 
- struct iwl_calib_cfg_elmnt_s {
- 	__le32 is_enable;
--- 
-1.7.0.4
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
+>  net/wireless/core.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/wireless/core.c b/net/wireless/core.c
+> index f6b359f..41f1598 100644
+> --- a/net/wireless/core.c
+> +++ b/net/wireless/core.c
+> @@ -922,7 +922,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block * nb,
+>  		 * Configure power management to the driver here so that its
+>  		 * correctly set also after interface type changes etc.
+>  		 */
+> -		if (wdev->iftype == NL80211_IFTYPE_STATION &&
+> +		if ((wdev->iftype == NL80211_IFTYPE_STATION ||
+> +		     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT) &&
+>  		    rdev->ops->set_power_mgmt)
+>  			if (rdev->ops->set_power_mgmt(wdev->wiphy, dev,
+>  						      wdev->ps,
+
 
