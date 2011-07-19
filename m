@@ -1,163 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from svenfoo.org ([82.94.215.22]:48386 "EHLO mail.zonque.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750743Ab1GLHwr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2011 03:52:47 -0400
-From: Sven Neumann <s.neumann@raumfeld.com>
-To: libertas-dev@lists.infradead.org
-Cc: daniel@zonque.org, linux-wireless@vger.kernel.org,
-	Sven Neumann <s.neumann@raumfeld.com>
-Subject: [PATCH] cfg80211: hold reg_mutex when updating regulatory
-Date: Tue, 12 Jul 2011 09:52:39 +0200
-Message-Id: <1310457159-16698-2-git-send-email-s.neumann@raumfeld.com> (sfid-20110712_095251_161161_3860B940)
-In-Reply-To: <1310456639-16468-1-git-send-email-s.neumann@raumfeld.com>
-References: <1310456639-16468-1-git-send-email-s.neumann@raumfeld.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:43303 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751092Ab1GSUu3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jul 2011 16:50:29 -0400
+Received: by pvg12 with SMTP id 12so4175562pvg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2011 13:50:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110719204246.GB2477@tuxdriver.com>
+References: <1310857566-2876-1-git-send-email-zajec5@gmail.com>
+	<1310857566-2876-2-git-send-email-zajec5@gmail.com>
+	<20110719204246.GB2477@tuxdriver.com>
+Date: Tue, 19 Jul 2011 22:50:28 +0200
+Message-ID: <CACna6rxZMFnFiYFkrW9xTkL_eXTXH91sEO-W=HZqoiUYLMNumQ@mail.gmail.com> (sfid-20110719_225032_062136_16E2C9BB)
+Subject: Re: [PATCH 2/4] bcma: allow setting FAST clockmode for a core
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function wiphy_update_regulatory() uses the static variable
-last_request and thus needs to be called with reg_mutex held.
-This is the case for all users in reg.c, but the function was
-exported for use by wiphy_register(), from where it is called
-without the lock being held.
+W dniu 19 lipca 2011 22:42 użytkownik John W. Linville
+<linville@tuxdriver.com> napisał:
+>  CC [M]  drivers/bcma/core.o
+> drivers/bcma/core.c: In function ‘bcma_core_set_clockmode’:
+> drivers/bcma/core.c:65:22: error: ‘BCMA_CLKCTLST’ undeclared (first use in this function)
+> drivers/bcma/core.c:65:22: note: each undeclared identifier is reported only once for each function it appears in
+> drivers/bcma/core.c:65:73: error: ‘BCMA_CLKCTLST_FORCEHT’ undeclared (first use in this function)
+> drivers/bcma/core.c:69:8: error: ‘BCMA_CLKCTLST_HAVEHT’ undeclared (first use in this function)
+> drivers/bcma/core.c: In function ‘bcma_core_pll_ctl’:
+> drivers/bcma/core.c:89:35: error: ‘BCMA_CLKCTLST_EXTRESREQ’ undeclared (first use in this function)
+> drivers/bcma/core.c:90:38: error: ‘BCMA_CLKCTLST_EXTRESST’ undeclared (first use in this function)
+> drivers/bcma/core.c:93:22: error: ‘BCMA_CLKCTLST’ undeclared (first use in this function)
+> make[2]: *** [drivers/bcma/core.o] Error 1
+> make[1]: *** [drivers/bcma] Error 2
+> make: *** [drivers] Error 2
 
-Fix this by making wiphy_update_regulatory() private and introducing
-regulatory_update() as a wrapper that acquires and holds the lock.
+I'm sorry, that's quite normal you could lost order&dependency with
+the amount of patches I've sent.
 
-Signed-off-by: Sven Neumann <s.neumann@raumfeld.com>
----
- net/wireless/core.c |    2 +-
- net/wireless/core.h |    2 -
- net/wireless/reg.c  |   62 +++++++++++++++++++++++++++++---------------------
- net/wireless/reg.h  |    2 +
- 4 files changed, 39 insertions(+), 29 deletions(-)
+As nobody objected, please apply
+[RFC][PATCH] bcma: move define of BCMA_CLKCTLST register
+It should be applied before this one.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index c22ef34..179921e 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -577,7 +577,7 @@ int wiphy_register(struct wiphy *wiphy)
- 	}
- 
- 	/* set up regulatory info */
--	wiphy_update_regulatory(wiphy, NL80211_REGDOM_SET_BY_CORE);
-+	regulatory_update(wiphy, NL80211_REGDOM_SET_BY_CORE);
- 
- 	list_add_rcu(&rdev->list, &cfg80211_rdev_list);
- 	cfg80211_rdev_list_generation++;
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 3dce1f1..0517d03 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -277,8 +277,6 @@ extern int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
- 			       char *newname);
- 
- void ieee80211_set_bitrate_flags(struct wiphy *wiphy);
--void wiphy_update_regulatory(struct wiphy *wiphy,
--			     enum nl80211_reg_initiator setby);
- 
- void cfg80211_bss_expire(struct cfg80211_registered_device *dev);
- void cfg80211_bss_age(struct cfg80211_registered_device *dev,
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 1ad0f39..a10dc34 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -912,14 +912,6 @@ static bool ignore_reg_update(struct wiphy *wiphy,
- 	return false;
- }
- 
--static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
--{
--	struct cfg80211_registered_device *rdev;
--
--	list_for_each_entry(rdev, &cfg80211_rdev_list, list)
--		wiphy_update_regulatory(&rdev->wiphy, initiator);
--}
--
- static void handle_reg_beacon(struct wiphy *wiphy,
- 			      unsigned int chan_idx,
- 			      struct reg_beacon *reg_beacon)
-@@ -1119,24 +1111,6 @@ static void reg_process_ht_flags(struct wiphy *wiphy)
- 
- }
- 
--void wiphy_update_regulatory(struct wiphy *wiphy,
--			     enum nl80211_reg_initiator initiator)
--{
--	enum ieee80211_band band;
--
--	if (ignore_reg_update(wiphy, initiator))
--		goto out;
--	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
--		if (wiphy->bands[band])
--			handle_band(wiphy, band, initiator);
--	}
--out:
--	reg_process_beacons(wiphy);
--	reg_process_ht_flags(wiphy);
--	if (wiphy->reg_notifier)
--		wiphy->reg_notifier(wiphy, last_request);
--}
--
- static void handle_channel_custom(struct wiphy *wiphy,
- 				  enum ieee80211_band band,
- 				  unsigned int chan_idx,
-@@ -1423,6 +1397,42 @@ new_request:
- 	return call_crda(last_request->alpha2);
- }
- 
-+static void wiphy_update_regulatory(struct wiphy *wiphy,
-+				    enum nl80211_reg_initiator initiator)
-+{
-+	enum ieee80211_band band;
-+
-+	assert_reg_lock();
-+
-+	if (ignore_reg_update(wiphy, initiator))
-+		goto out;
-+	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
-+		if (wiphy->bands[band])
-+			handle_band(wiphy, band, initiator);
-+	}
-+out:
-+	reg_process_beacons(wiphy);
-+	reg_process_ht_flags(wiphy);
-+	if (wiphy->reg_notifier)
-+		wiphy->reg_notifier(wiphy, last_request);
-+}
-+
-+static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
-+{
-+	struct cfg80211_registered_device *rdev;
-+
-+	list_for_each_entry(rdev, &cfg80211_rdev_list, list)
-+		wiphy_update_regulatory(&rdev->wiphy, initiator);
-+}
-+
-+void regulatory_update(struct wiphy *wiphy,
-+		       enum nl80211_reg_initiator setby)
-+{
-+	mutex_lock(&reg_mutex);
-+	wiphy_update_regulatory(wiphy, setby);
-+	mutex_unlock(&reg_mutex);
-+}
-+
- /* This processes *all* regulatory hints */
- static void reg_process_hint(struct regulatory_request *reg_request)
- {
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index b67d1c3..4a56799 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -16,6 +16,8 @@ void regulatory_exit(void);
- 
- int set_regdom(const struct ieee80211_regdomain *rd);
- 
-+void regulatory_update(struct wiphy *wiphy, enum nl80211_reg_initiator setby);
-+
- /**
-  * regulatory_hint_found_beacon - hints a beacon was found on a channel
-  * @wiphy: the wireless device where the beacon was found on
+
+> On Sun, Jul 17, 2011 at 01:06:04AM +0200, Rafał Miłecki wrote:
+>>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>>  drivers/bcma/core.c       |   31 +++++++++++++++++++++++++++++++
+>>  include/linux/bcma/bcma.h |    8 +++++++-
+>>  2 files changed, 38 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
+>> index 1ec7d45..0686b1b 100644
+>> --- a/drivers/bcma/core.c
+>> +++ b/drivers/bcma/core.c
+>> @@ -50,3 +50,34 @@ int bcma_core_enable(struct bcma_device *core, u32 flags)
+>>       return 0;
+>>  }
+>>  EXPORT_SYMBOL_GPL(bcma_core_enable);
+>> +
+>> +void bcma_core_set_clockmode(struct bcma_device *core,
+>> +                          enum bcma_clkmode clkmode)
+>> +{
+>> +     u16 i;
+>> +
+>> +     WARN_ON(core->id.id != BCMA_CORE_CHIPCOMMON &&
+>> +             core->id.id != BCMA_CORE_PCIE &&
+>> +             core->id.id != BCMA_CORE_80211);
+>> +
+>> +     switch (clkmode) {
+>> +     case BCMA_CLKMODE_FAST:
+>> +             bcma_set32(core, BCMA_CLKCTLST, BCMA_CLKCTLST_FORCEHT);
+>> +             udelay(64);
+>> +             for (i = 0; i < 1500; i++) {
+>> +                     if (bcma_read32(core, BCMA_CLKCTLST) &
+>> +                         BCMA_CLKCTLST_HAVEHT) {
+>> +                             i = 0;
+>> +                             break;
+>> +                     }
+>> +                     udelay(10);
+>> +             }
+>> +             if (i)
+>> +                     pr_err("HT force timeout\n");
+>> +             break;
+>> +     case BCMA_CLKMODE_DYNAMIC:
+>> +             pr_warn("Dynamic clockmode not supported yet!\n");
+>> +             break;
+>> +     }
+>> +}
+>> +EXPORT_SYMBOL_GPL(bcma_core_set_clockmode);
+>> diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+>> index 6e5dc7b..37017c1 100644
+>> --- a/include/linux/bcma/bcma.h
+>> +++ b/include/linux/bcma/bcma.h
+>> @@ -25,6 +25,11 @@ struct bcma_chipinfo {
+>>       u8 pkg;
+>>  };
+>>
+>> +enum bcma_clkmode {
+>> +     BCMA_CLKMODE_FAST,
+>> +     BCMA_CLKMODE_DYNAMIC,
+>> +};
+>> +
+>>  struct bcma_host_ops {
+>>       u8 (*read8)(struct bcma_device *core, u16 offset);
+>>       u16 (*read16)(struct bcma_device *core, u16 offset);
+>> @@ -253,6 +258,7 @@ void bcma_awrite32(struct bcma_device *core, u16 offset, u32 value)
+>>  extern bool bcma_core_is_enabled(struct bcma_device *core);
+>>  extern void bcma_core_disable(struct bcma_device *core, u32 flags);
+>>  extern int bcma_core_enable(struct bcma_device *core, u32 flags);
+>> -
+>> +extern void bcma_core_set_clockmode(struct bcma_device *core,
+>> +                                 enum bcma_clkmode clkmode);
+>>
+>>  #endif /* LINUX_BCMA_H_ */
+>> --
+>> 1.7.3.4
+
 -- 
-1.7.1
-
+Rafał
