@@ -1,56 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qult.net ([82.238.217.46]:46739 "EHLO qult.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754627Ab1GNMu5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 08:50:57 -0400
-Received: from zenon.in.qult.net ([192.168.128.3])
-	by qult.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.74)
-	(envelope-from <i@lri.fr>)
-	id 1QhL1Q-0005WE-TM
-	for linux-wireless@vger.kernel.org; Thu, 14 Jul 2011 14:28:05 +0200
-Received: from ig by zenon.in.qult.net with local (Exim 4.74)
-	(envelope-from <i@lri.fr>)
-	id 1QhL1P-0008PD-Np
-	for linux-wireless@vger.kernel.org; Thu, 14 Jul 2011 14:28:03 +0200
-Date: Thu, 14 Jul 2011 14:28:03 +0200
-From: Ignacy Gawedzki <i@lri.fr>
-To: linux-wireless@vger.kernel.org
-Subject: carl9170 firmware: WoWLAN and adding fields to carl9170_tx_superdesc
-Message-ID: <20110714122803.GA31692@zenon.in.qult.net> (sfid-20110714_145100_525642_F13AEBA6)
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:33942 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751382Ab1GSVdx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jul 2011 17:33:53 -0400
+Received: by mail-fx0-f52.google.com with SMTP id 18so542082fxd.11
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2011 14:33:53 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org, Pavel Roskin <proski@gnu.org>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/3] b43: bcma: get DMA translation bits
+Date: Wed, 20 Jul 2011 00:12:22 +0200
+Message-Id: <1311113542-2540-4-git-send-email-zajec5@gmail.com> (sfid-20110719_233405_741151_1F6AD98E)
+In-Reply-To: <1311113542-2540-1-git-send-email-zajec5@gmail.com>
+References: <1311113542-2540-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Add some missing defines by the way.
 
-I'm still working on an extension of the carl9170 firmware to enable TX
-service time measurements.  This implies the addition of a u32 field to
-carl9170_tx_superdesc to record the TSF value at the time the frame is
-received by the firmware.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/dma.c |    5 +++++
+ drivers/net/wireless/b43/dma.h |    4 ++++
+ 2 files changed, 9 insertions(+), 0 deletions(-)
 
-The problem with WoWLAN, more specifically with changes introduced by
-af915846d44d23adc02c7ded807282d607b46faa, is that adding that field makes
-carl9170_sram_reserved::cmd larger than CARL9170_MAX_CMD_LEN.
-
-I still don't see an easy way out other than disabling WoWLAN altogether.  If
-anyone has any suggestion, I'd be happy to read it.
-
-BTW, I noticed something that may be a bug in wlan.c, in
-wlan_wol_connection_monitor(void)'s definition:
-
-  memset(nullf, 0, sizeof(nullf));
-
-Shouldn't that be
-
-  memset(nullf, 0, sizeof *nullf);
-
-instead?
-
-Cheers,
-
-Ignacy
-
+diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
+index 530a153..0a5004b 100644
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -1057,6 +1057,11 @@ int b43_dma_init(struct b43_wldev *dev)
+ 		return err;
+ 
+ 	switch (dev->dev->bus_type) {
++#ifdef CONFIG_B43_BCMA
++	case B43_BUS_BCMA:
++		dma->translation = bcma_core_dma_translation(dev->dev->bdev);
++		break;
++#endif
+ #ifdef CONFIG_B43_SSB
+ 	case B43_BUS_SSB:
+ 		dma->translation = ssb_dma_translation(dev->dev->sdev);
+diff --git a/drivers/net/wireless/b43/dma.h b/drivers/net/wireless/b43/dma.h
+index e8a80a1..cdf8709 100644
+--- a/drivers/net/wireless/b43/dma.h
++++ b/drivers/net/wireless/b43/dma.h
+@@ -20,6 +20,7 @@
+ #define		B43_DMA32_TXSUSPEND			0x00000002
+ #define		B43_DMA32_TXLOOPBACK		0x00000004
+ #define		B43_DMA32_TXFLUSH			0x00000010
++#define		B43_DMA32_TXPARITYDISABLE		0x00000800
+ #define		B43_DMA32_TXADDREXT_MASK		0x00030000
+ #define		B43_DMA32_TXADDREXT_SHIFT		16
+ #define B43_DMA32_TXRING				0x04
+@@ -44,6 +45,7 @@
+ #define		B43_DMA32_RXFROFF_MASK		0x000000FE
+ #define		B43_DMA32_RXFROFF_SHIFT		1
+ #define		B43_DMA32_RXDIRECTFIFO		0x00000100
++#define		B43_DMA32_RXPARITYDISABLE		0x00000800
+ #define		B43_DMA32_RXADDREXT_MASK		0x00030000
+ #define		B43_DMA32_RXADDREXT_SHIFT		16
+ #define B43_DMA32_RXRING				0x14
+@@ -84,6 +86,7 @@ struct b43_dmadesc32 {
+ #define		B43_DMA64_TXSUSPEND			0x00000002
+ #define		B43_DMA64_TXLOOPBACK		0x00000004
+ #define		B43_DMA64_TXFLUSH			0x00000010
++#define		B43_DMA64_TXPARITYDISABLE		0x00000800
+ #define		B43_DMA64_TXADDREXT_MASK		0x00030000
+ #define		B43_DMA64_TXADDREXT_SHIFT		16
+ #define B43_DMA64_TXINDEX				0x04
+@@ -111,6 +114,7 @@ struct b43_dmadesc32 {
+ #define		B43_DMA64_RXFROFF_MASK		0x000000FE
+ #define		B43_DMA64_RXFROFF_SHIFT		1
+ #define		B43_DMA64_RXDIRECTFIFO		0x00000100
++#define		B43_DMA64_RXPARITYDISABLE		0x00000800
+ #define		B43_DMA64_RXADDREXT_MASK		0x00030000
+ #define		B43_DMA64_RXADDREXT_SHIFT		16
+ #define B43_DMA64_RXINDEX				0x24
 -- 
-To err is human, to moo bovine.
+1.7.3.4
+
