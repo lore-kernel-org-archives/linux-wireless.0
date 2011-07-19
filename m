@@ -1,63 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:34433 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753200Ab1GFMbZ convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:62750 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751772Ab1GSPc6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2011 08:31:25 -0400
-Received: by qwk3 with SMTP id 3so3317338qwk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 05:31:24 -0700 (PDT)
+	Tue, 19 Jul 2011 11:32:58 -0400
+Received: by fxd18 with SMTP id 18so199037fxd.11
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2011 08:32:57 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAL1gcdNwooP+nQwtgOSqwnPcO=JozzeEyMMC7shM9nhS954E1A@mail.gmail.com>
-References: <4E143FCF.8030201@darav.de>
-	<CAL1gcdNwooP+nQwtgOSqwnPcO=JozzeEyMMC7shM9nhS954E1A@mail.gmail.com>
-Date: Wed, 6 Jul 2011 14:31:24 +0200
-Message-ID: <CAOZOX0V5nrj4KjKNaqKwJ4WsyDyX4NOpsU6_erQM7q4Yt=vehA@mail.gmail.com> (sfid-20110706_143128_431507_BDED969A)
-Subject: Re: RALINK rt2800pci , Patch for Device [1814:539f]
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Carsten Rietzschel <cr7@darav.de>, helmut.schaa@googlemail.com,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <477F20668A386D41ADCC57781B1F704307FFB0947D@SC-VEXCH1.marvell.com>
+References: <20110717170310.CAD139D401C@zog.reactivated.net>
+	<477F20668A386D41ADCC57781B1F704307FFB0947D@SC-VEXCH1.marvell.com>
+Date: Tue, 19 Jul 2011 16:32:57 +0100
+Message-ID: <CAGq3pz6DbsHG9JY8oZqaeRp4=EC1-sKunSuF2Q1+tfBoYbcyLg@mail.gmail.com> (sfid-20110719_173301_488967_915A55A6)
+Subject: Re: [PATCH 1/4] libertas: remove auto_deep_sleep functionality
+From: Daniel Drake <dsd@laptop.org>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"dcbw@redhat.com" <dcbw@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 18 July 2011 20:25, Bing Zhao <bzhao@marvell.com> wrote:
+> As the auto deep sleep feature for SD8385/SD8686/SD8688 cards is very useful for many embedded platforms to handle enter/exit deep sleep mode automatically, please do not remove it from libertas driver. If you have any particular issue with this feature enabled, we can work on it and solve the problem.
 
-On Wed, Jul 6, 2011 at 1:15 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> On Wed, Jul 6, 2011 at 12:58 PM, Carsten Rietzschel <cr7@darav.de> wrote:
->> Hello together,
->>
->> attached find a small patch for the RALINK wireless driver.
->> It's just adding one PCI-ID for:
->>
->> 02:00.0 Network controller [0280]: Ralink corp. Device [1814:539f]
->>    Subsystem: Hewlett-Packard Company Device [103c:1637]
->>    Flags: bus master, fast devsel, latency 0, IRQ 17
->>    Memory at f0100000 (32-bit, non-prefetchable) [size=64K]
->>    Capabilities: [40] Power Management version 3
->>    Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
->>    Capabilities: [70] Express Endpoint, MSI 00
->>    Capabilities: [100] Advanced Error Reporting
->>    Capabilities: [140] Device Serial Number 00-00-b2-7f-05-da-f8-c0
->>    Kernel driver in use: rt2800pci
->>    Kernel modules: rt2800pci
->>
->> It's for instance used in the HP DM1Z (Fusion) Netbook.
->> I use this patch now for several weeks - starting with 2.3.29 up to
->> 3.0-rc2 kernel. No problems so far.
->>
->> *Signed*-*off*-by: Carsten Rietzschel <cr7 [at] darav [dot] de>
->
-> This device ID has already been added in the latest rt2x00.git tree via patch:
-> http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=c56a574019a75c1ca36c540a8ab092a7ed35020d
->
-> However, this hasn't been propagated to the wireless tree yet.
->
-> Ivo, when are you planning to submit all pending patches towards the
-> wireless tree?
+The problem is that it can't actually be enabled. This is dead code.
+Or if it can, please point out what I'm missing.
 
-Well actually I planned that for last weekend... :)
-I'll go for the retry this evening.
+Or is this a work in progress?
 
-Ivo
+Thanks,
+Daniel
