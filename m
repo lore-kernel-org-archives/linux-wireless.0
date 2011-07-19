@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:42488 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752178Ab1G2SAK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 14:00:10 -0400
-Received: by gxk21 with SMTP id 21so2698847gxk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jul 2011 11:00:09 -0700 (PDT)
+Received: from c60.cesmail.net ([216.154.195.49]:56828 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751230Ab1GSDSZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jul 2011 23:18:25 -0400
+Message-ID: <20110718231824.xl0vv9csjs4oowwc-cebfxv@webmail.spamcop.net> (sfid-20110719_051854_167374_3A6CD968)
+Date: Mon, 18 Jul 2011 23:18:24 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: JJLee <jjleecareer@gmail.com>
+Cc: wy408 <wy52119514@163.com>, linux-wireless@vger.kernel.org
+Subject: Re: compat-wireless cross compile
+References: <loom.20110716T174804-267@post.gmane.org>
+	<4E24589B.5030303@gnu.org>
+	<CABmiYRZ9vdHyTrxt8ZRxrseHn+M0Z_7O+s7fWXXNwwSE9o7VGQ@mail.gmail.com>
+In-Reply-To: <CABmiYRZ9vdHyTrxt8ZRxrseHn+M0Z_7O+s7fWXXNwwSE9o7VGQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAGXE3d9hNajZ0C=aVrA9Qf=aRAfZGR6ChVR36yrTqWrLEyP2+A@mail.gmail.com>
-References: <1311960137-25420-1-git-send-email-helmut.schaa@googlemail.com>
-	<1311960137-25420-2-git-send-email-helmut.schaa@googlemail.com>
-	<4E32F338.8040901@openwrt.org>
-	<CAGXE3d9hNajZ0C=aVrA9Qf=aRAfZGR6ChVR36yrTqWrLEyP2+A@mail.gmail.com>
-Date: Fri, 29 Jul 2011 20:00:09 +0200
-Message-ID: <CAGXE3d-k37U5g7Leq135SzwxgXjdqsJ7-h9kLyoUc1QtbT0w-w@mail.gmail.com> (sfid-20110729_200014_428419_E3A2F637)
-Subject: Re: [PATCH 2/2] mac80211: Always send EAPOL frames at lowest rate
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 29, 2011 at 7:56 PM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> On Fri, Jul 29, 2011 at 7:51 PM, Felix Fietkau <nbd@openwrt.org> wrote:
->> On 2011-07-29 7:22 PM, Helmut Schaa wrote:
->>>
->>> Since EAPOL frames are normal data frames they are treated by the rate
->>> control algorithm as such. Thus it can happen that the rate control
->>> algorithm chooses an inappropriate rate (minstrel_ht uses MCS rates for
->>> example) for the 4-way handshake and under low signal conditions the
->>> handshake may time out.
->>>
->>> To fix this issue always treat EAPOL frames the same as management
->>> frames and send them with the lowest available rate.
->>
->> Have you tried preventing minstrel_ht from using EAPOL frames for probing
->> different rates instead of forcing it to use the lowest rate?
->
-> Nope. I'll give it a try soon.
+Quoting JJLee <jjleecareer@gmail.com>:
 
-Felix, what rate is used by minstrel_ht if there are no statistics yet? MCS0?
+> maybe your corss compile gcc not support elseif keywords
+
+Please don't top-post.  Top-posting kills an intelligent discussion.
+
+>>> config.mk:26:*****missing "endif"........
+
+If you actually read the text you quoted you would have realized that  
+the message comes from the make program that fails to interpret  
+config.mk.  The compiler is not involved at this stage.
+
+There is no "elseif" or even "elsif" anywhere in  
+compat-wireless-2.6.39, and if GNU make failed to understand a  
+keyword, it would have reported it differently:
+
+$ cat makefile
+ifeq (0,0)
+elseif
+$ make
+makefile:2: *** missing separator.  Stop.
+
+BSD make would stop of the first like of the compat-wireless Makefile  
+without even getting to config.mk:
+
+$ bmake
+bmake: "/home/proski/src/compat-wireless-2.6.39-1-sn/Makefile" line 1:  
+Need an operator
+
+-- 
+Regards,
+Pavel Roskin
