@@ -1,56 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:38091 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751576Ab1GFLPW convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:33942 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751092Ab1GSVdo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2011 07:15:22 -0400
-Received: by pvg12 with SMTP id 12so5938846pvg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 04:15:21 -0700 (PDT)
+	Tue, 19 Jul 2011 17:33:44 -0400
+Received: by mail-fx0-f52.google.com with SMTP id 18so542082fxd.11
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2011 14:33:43 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org, Pavel Roskin <proski@gnu.org>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 0/3] b43 & bcma: DMA special (translation) bits
+Date: Wed, 20 Jul 2011 00:12:19 +0200
+Message-Id: <1311113542-2540-1-git-send-email-zajec5@gmail.com> (sfid-20110719_233404_062300_55784008)
 MIME-Version: 1.0
-In-Reply-To: <4E143FCF.8030201@darav.de>
-References: <4E143FCF.8030201@darav.de>
-Date: Wed, 6 Jul 2011 13:15:21 +0200
-Message-ID: <CAL1gcdNwooP+nQwtgOSqwnPcO=JozzeEyMMC7shM9nhS954E1A@mail.gmail.com> (sfid-20110706_131525_929931_DD07AB78)
-Subject: Re: RALINK rt2800pci , Patch for Device [1814:539f]
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Carsten Rietzschel <cr7@darav.de>, IvDoorn@gmail.com
-Cc: helmut.schaa@googlemail.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 6, 2011 at 12:58 PM, Carsten Rietzschel <cr7@darav.de> wrote:
-> Hello together,
->
-> attached find a small patch for the RALINK wireless driver.
-> It's just adding one PCI-ID for:
->
-> 02:00.0 Network controller [0280]: Ralink corp. Device [1814:539f]
-> † †Subsystem: Hewlett-Packard Company Device [103c:1637]
-> † †Flags: bus master, fast devsel, latency 0, IRQ 17
-> † †Memory at f0100000 (32-bit, non-prefetchable) [size=64K]
-> † †Capabilities: [40] Power Management version 3
-> † †Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
-> † †Capabilities: [70] Express Endpoint, MSI 00
-> † †Capabilities: [100] Advanced Error Reporting
-> † †Capabilities: [140] Device Serial Number 00-00-b2-7f-05-da-f8-c0
-> † †Kernel driver in use: rt2800pci
-> † †Kernel modules: rt2800pci
->
-> It's for instance used in the HP DM1Z (Fusion) Netbook.
-> I use this patch now for several weeks - starting with 2.3.29 up to
-> 3.0-rc2 kernel. No problems so far.
->
-> *Signed*-*off*-by: Carsten Rietzschel <cr7 [at] darav [dot] de>
+Thanks to Pavel's comments I digged into translation bits and found out
+the hackish way we currently use to handle 32-bit and 64-bit DMA.
 
-This device ID has already been added in the latest rt2x00.git tree via patch:
-http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=c56a574019a75c1ca36c540a8ab092a7ed35020d
+I've replaced out bit shifting hacks with just a one, documented in the
+comment. This workaround ideally should be just fixed, but I'm not going
+to blidly change the current behaviour of ssb_dma_translation without
+testing that with b43legacy and b44. As I don't have such a hardware,
+we will need to find some testers.
 
-However, this hasn't been propagated to the wireless tree yet.
+In any case, the way we changed the code should be correct. When ssb
+function will be fixed, b43 will only require deletion of 2 code lines.
 
-Ivo, when are you planning to submit all pending patches towards the
-wireless tree?
+I've tested this code for regressions on my following cards:
+1) 14e4:432b (64-bit DMA)
+2) 14e4:4315 (64-bit DMA)
+3) 14e4:4312 (32-bit DMA)
+Transmission is still possible on all of them, no errors were noticed.
 
----
-Gertjan.
+
+Pavel: sorry for CC-ing you with my previous serie. Fortunately this
+lead to the much nicer solution, thanks for your help.
+I let myself yo CC you once more, as this patch serie tries to fix
+issues you pointed to me.
+
+Rafa≈Ç Mi≈Çecki (3):
+  b43: replace DMA translation workarounds with just a one, commented
+  bcma: inform drivers about translation bits needed for the core
+  b43: bcma: get DMA translation bits
+
+ drivers/bcma/core.c            |   16 ++++++++++++++++
+ drivers/net/wireless/b43/dma.c |   17 ++++++++++++++---
+ drivers/net/wireless/b43/dma.h |    4 ++++
+ include/linux/bcma/bcma.h      |    5 +++++
+ 4 files changed, 39 insertions(+), 3 deletions(-)
+
+-- 
+1.7.3.4
+
