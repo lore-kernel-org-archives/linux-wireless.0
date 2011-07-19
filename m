@@ -1,53 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:3967 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751756Ab1GMMdG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 08:33:06 -0400
-Subject: Re: [PATCH 11/24] ath6kl: add htc.c
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	gregkh@suse.de
-In-Reply-To: <4E1D4D63.8000909@qca.qualcomm.com>
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
-	 <20110713013444.8517.89603.stgit@localhost6.localdomain6>
-	 <1310531449.1143.29.camel@Joe-Laptop>  <4E1D4D63.8000909@qca.qualcomm.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:39049 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751067Ab1GSWwX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jul 2011 18:52:23 -0400
+Subject: [PATCH] cfg80211: fix scan crash on single-band cards
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 13 Jul 2011 05:33:04 -0700
-Message-ID: <1310560384.1662.11.camel@Joe-Laptop> (sfid-20110713_143310_070575_F9DC09DA)
+Date: Wed, 20 Jul 2011 00:52:16 +0200
+Message-ID: <1311115936.3872.3.camel@jlt3.sipsolutions.net> (sfid-20110720_005226_048022_378572D2)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-07-13 at 10:46 +0300, Kalle Valo wrote:
-> On 07/13/2011 07:30 AM, Joe Perches wrote:
-> > On Wed, 2011-07-13 at 04:34 +0300, Kalle Valo wrote: 
-> >> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> >> diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-> > [] 
-> >> +static void htc_tx_comp_update(struct htc_target *target,
-> >> +			       struct htc_endpoint *endpoint,
-> >> +			       struct htc_packet *packet)
-> >> +{
-> > [] 
-> >> 	ath6kl_dbg(ATH6KL_DBG_HTC_SEND, "ctxt:0x%lx dist:0x%lx\n",
-> >> +		(unsigned long) target->cred_dist_cntxt,
-> >> +		(unsigned long *) &target->cred_dist_list);
-> > compiler warning?
-> I haven't seen any. But all these unsigned long casts will be removed
-> anyway.
+From: Johannes Berg <johannes.berg@intel.com>
 
-You need to update debug.h [08/24]
+commit 58389c69150e6032504dfcd3edca6b1975c8b5bc
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Mon Jul 18 18:08:35 2011 +0200
 
-> diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
-[]
-> +extern int ath6kl_printk(const char *level, const char *fmt, ...);
+     cfg80211: allow userspace to control supported rates in scan
 
-You're not seeing compiler warnings for mismatched
-arguments because this should to be:
+made single-band cards crash since it would always
+access all wiphy->bands[]. Fix this and reject any
+attempts in the new helper ieee80211_get_ratemask()
+to do the same, rejecting rates configuration for
+unsupported bands.
 
-extern __attribute__((format (printf, 2, 3)))
-int ath6kl_printk(const char *level, const char *fmt, ...);
+Reported-by: Pavel Roskin <proski@gnu.org>
+Tested-by: Pavel Roskin <proski@gnu.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c |    4 +++-
+ net/wireless/scan.c    |    3 ++-
+ net/wireless/util.c    |    3 +++
+ 3 files changed, 8 insertions(+), 2 deletions(-)
 
+--- a/net/wireless/nl80211.c	2011-07-20 00:50:57.000000000 +0200
++++ b/net/wireless/nl80211.c	2011-07-20 00:51:00.000000000 +0200
+@@ -3454,7 +3454,9 @@ static int nl80211_trigger_scan(struct s
+ 	}
+ 
+ 	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
+-		request->rates[i] = (1 << wiphy->bands[i]->n_bitrates) - 1;
++		if (wiphy->bands[i])
++			request->rates[i] =
++				(1 << wiphy->bands[i]->n_bitrates) - 1;
+ 
+ 	if (info->attrs[NL80211_ATTR_SCAN_SUPP_RATES]) {
+ 		nla_for_each_nested(attr,
+--- a/net/wireless/scan.c	2011-07-20 00:50:57.000000000 +0200
++++ b/net/wireless/scan.c	2011-07-20 00:51:00.000000000 +0200
+@@ -864,7 +864,8 @@ int cfg80211_wext_siwscan(struct net_dev
+ 	}
+ 
+ 	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
+-		creq->rates[i] = (1 << wiphy->bands[i]->n_bitrates) - 1;
++		if (wiphy->bands[i])
++			creq->rates[i] = (1 << wiphy->bands[i]->n_bitrates) - 1;
+ 
+ 	rdev->scan_req = creq;
+ 	err = rdev->ops->scan(wiphy, dev, creq);
+--- a/net/wireless/util.c	2011-07-20 00:50:57.000000000 +0200
++++ b/net/wireless/util.c	2011-07-20 00:51:00.000000000 +0200
+@@ -1013,6 +1013,9 @@ int ieee80211_get_ratemask(struct ieee80
+ {
+ 	int i, j;
+ 
++	if (!sband)
++		return -EINVAL;
++
+ 	if (n_rates == 0 || n_rates > NL80211_MAX_SUPP_RATES)
+ 		return -EINVAL;
+ 
 
 
