@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from DMZ-MAILSEC-SCANNER-6.MIT.EDU ([18.7.68.35]:46008 "EHLO
-	dmz-mailsec-scanner-6.mit.edu" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751073Ab1GRVOO (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:57960 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752156Ab1GSGqC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2011 17:14:14 -0400
-Date: Mon, 18 Jul 2011 17:14:07 -0400 (EDT)
-From: Michael Forbes <miforbes@MIT.EDU>
-To: Ben Hutchings <ben@decadent.org.uk>
-cc: 633919@bugs.debian.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Bug#633919: /lib/modules/2.6.39-2-amd64/kernel/net/wireless/cfg80211.ko:
- cfg80211 calling CRDA drops wireless connection, clears ssid
-In-Reply-To: <1310703973.8783.270.camel@localhost>
-Message-ID: <alpine.DEB.2.02.1107181710350.26150@vincent> (sfid-20110718_231417_729675_2C143E04)
-References: <20110715005011.15043.39294.reportbug@vincent> <1310703973.8783.270.camel@localhost>
+	Tue, 19 Jul 2011 02:46:02 -0400
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+In-Reply-To: <4E2525BA.4090902@gmail.com>
+References: <4E252076.1050309@gmail.com>
+	<CAD2nsn12vOXv-msWR+GF7edz3Q26P-pb4H-SO4rf2RHjC7mG+w@mail.gmail.com>
+	<4E2525BA.4090902@gmail.com>
+Date: Tue, 19 Jul 2011 12:16:00 +0530
+Message-ID: <CAD2nsn3ifSMa_eFr2vQ0VVF9Ga-0VD3YB_beb28r+eoAHKv4kQ@mail.gmail.com> (sfid-20110719_084624_074893_217DEDEA)
+Subject: Re: ath: Unable to reset channel (2412 MHz), reset status -5
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jul 19, 2011 at 12:05 PM, Justin P. Mattock
+<justinmattock@gmail.com> wrote:
+> On 07/18/2011 11:25 PM, Mohammed Shafi wrote:
 >>
->> 2011-07-14 20:38 [root@******** miforbes]# iw event
->> wlan0 (phy #0): deauth a0:88:b4:68:59:e4 -> 16:18:0a:30:23:5c reason 4: Disassociated due to inactivity
->> wlan0 (phy #0): disconnected (local request)
-> [...]
+>> On Tue, Jul 19, 2011 at 11:43 AM, Justin P. Mattock
+>> <justinmattock@gmail.com>  wrote:
+>>>
+>>> seems with the latest Mainline I am getting the ath9k carpping out after
+>>> a
+>>> while of streaming(dmesg below)..:
+>>> http://fpaste.org/D7wM/
+>>>
+>>> will try a bisect if I have the time..
+>>
+>> I will try to recreate here with 3.0.0-rc7-wl, we can get more
+>> information by ath9k debug=0xffffffff.
+>> thanks.
+>>
 >
-> I would have expected that to appear in the kernel log.
+> cool!
+> seems to fire off randomly over here.
 
-Well, AFAIK `iw' doesn't seem to be well-integrated into Debian yet, and 
-indeed wasn't installed on my laptop until I did so manually.  `iwevent' 
-doesn't give the reason for deauthentication.  So perhaps the log just 
-isn't getting the information from the right sources.
+I have got AR5416, will try with that.
 
-> Don't know what's going on here but maybe the upstream wireless
-> developers can work it out.
-
-Thanks!
-
--Michael
+-- 
+shafi
