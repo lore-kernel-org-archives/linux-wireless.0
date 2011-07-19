@@ -1,61 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:50779 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752233Ab1G2SKE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 14:10:04 -0400
-Received: by gwaa12 with SMTP id a12so665095gwa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jul 2011 11:10:03 -0700 (PDT)
+Received: from msr19.hinet.net ([168.95.4.119]:45655 "EHLO msr19.hinet.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751151Ab1GSRyd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jul 2011 13:54:33 -0400
+Date: Wed, 20 Jul 2011 01:51:36 +0800
+From: Ali Bahar <ali@internetdog.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stefan Assmann <sassmann@redhat.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: r8712u issue
+Message-ID: <20110719175136.GA7689@internetdog.org> (sfid-20110719_195438_223164_BFD5FBBD)
+Reply-To: ali@internetdog.org
+References: <4E2448D2.50502@lwfinger.net>
+ <4E244AC6.2030306@redhat.com>
+ <4E2454EC.1050900@lwfinger.net>
+ <4E25858D.9010407@redhat.com>
+ <4E25AB9F.8010607@lwfinger.net>
+ <20110719161656.GA7099@internetdog.org>
+ <4E25BBF4.1010003@redhat.com>
+ <20110719173203.GA7406@internetdog.org>
+ <4E25C12F.3080804@redhat.com>
+ <4E25C2B1.2090804@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4E32F681.6020900@openwrt.org>
-References: <1311960137-25420-1-git-send-email-helmut.schaa@googlemail.com>
-	<1311960137-25420-2-git-send-email-helmut.schaa@googlemail.com>
-	<4E32F338.8040901@openwrt.org>
-	<CAGXE3d9hNajZ0C=aVrA9Qf=aRAfZGR6ChVR36yrTqWrLEyP2+A@mail.gmail.com>
-	<CAGXE3d-k37U5g7Leq135SzwxgXjdqsJ7-h9kLyoUc1QtbT0w-w@mail.gmail.com>
-	<4E32F681.6020900@openwrt.org>
-Date: Fri, 29 Jul 2011 20:10:03 +0200
-Message-ID: <CAGXE3d9Lb54PPMMqi6GJhLyjiVN+GP6jOoEA1SWLECL64HbTvQ@mail.gmail.com> (sfid-20110729_201045_381121_76CFEEDF)
-Subject: Re: [PATCH 2/2] mac80211: Always send EAPOL frames at lowest rate
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E25C2B1.2090804@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 29, 2011 at 8:05 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2011-07-29 8:00 PM, Helmut Schaa wrote:
->>
->> On Fri, Jul 29, 2011 at 7:56 PM, Helmut Schaa
->> <helmut.schaa@googlemail.com>  wrote:
->>>
->>>  On Fri, Jul 29, 2011 at 7:51 PM, Felix Fietkau<nbd@openwrt.org>  wrote:
->>>>
->>>>  On 2011-07-29 7:22 PM, Helmut Schaa wrote:
->>>>>
->>>>>  Since EAPOL frames are normal data frames they are treated by the rate
->>>>>  control algorithm as such. Thus it can happen that the rate control
->>>>>  algorithm chooses an inappropriate rate (minstrel_ht uses MCS rates
->>>>> for
->>>>>  example) for the 4-way handshake and under low signal conditions the
->>>>>  handshake may time out.
->>>>>
->>>>>  To fix this issue always treat EAPOL frames the same as management
->>>>>  frames and send them with the lowest available rate.
->>>>
->>>>  Have you tried preventing minstrel_ht from using EAPOL frames for
->>>> probing
->>>>  different rates instead of forcing it to use the lowest rate?
->>>
->>>  Nope. I'll give it a try soon.
->>
->> Felix, what rate is used by minstrel_ht if there are no statistics yet?
->> MCS0?
->
-> Yes, rates default to lowest until better ones are available.
+On Tue, Jul 19, 2011 at 12:45:21PM -0500, Larry Finger wrote:
+> On 07/19/2011 12:38 PM, Stefan Assmann wrote:
+> >On 19.07.2011 19:32, Ali Bahar wrote:
 
-Ok, I'll try if forbidding rate probing for EAPOL frames in
-minstrel_ht solves this problem.
+> >>>Agreed! Maybe we could add a note to the documentation to make the
+> >>>behaviour more obvious.
+
+> >>... The following could be an option:
+> >>http://linuxwireless.org/en/users/Drivers/rtl819x
+> >
+> >Good idea!
+
+> The wpa_supplicant documentation is what should be changed to note
+> that scan_ssid is useful for more than hidden ESSIDs. On the other
+
+I assume that you've informed Jouni (hostap@lists.shmoo.com) already.
+
+
+> hand, EVERY wireless example in 'man wpa_supplicant.conf' shows
+> "scan_ssid=1".
+
+They do, but none of the examples in
+/usr/share/doc/wpasupplicant/examples/ uses it.
+
+regards,
+ali
+
+ 
+> Larry
