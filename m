@@ -1,35 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hhlx01.visionsystems.de ([62.145.30.242]:54142 "EHLO
-	mail.visionsystems.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751111Ab1GUPJZ (ORCPT
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:33942 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751300Ab1GSVdr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 11:09:25 -0400
-Message-ID: <4E28411B.5050807@visionsystems.de> (sfid-20110721_170928_465891_BD5F3B7A)
-Date: Thu, 21 Jul 2011 17:09:15 +0200
-From: Yegor Yefremov <yegor_sub1@visionsystems.de>
-Reply-To: yegor_sub1@visionsystems.de
+	Tue, 19 Jul 2011 17:33:47 -0400
+Received: by mail-fx0-f52.google.com with SMTP id 18so542082fxd.11
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2011 14:33:47 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org, Pavel Roskin <proski@gnu.org>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/3] b43: replace DMA translation workarounds with just a one, commented
+Date: Wed, 20 Jul 2011 00:12:20 +0200
+Message-Id: <1311113542-2540-2-git-send-email-zajec5@gmail.com> (sfid-20110719_233404_625752_C5D0A8FB)
+In-Reply-To: <1311113542-2540-1-git-send-email-zajec5@gmail.com>
+References: <1311113542-2540-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes.berg@intel.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iw: add libnl-3.0 support
-References: <4DB91BB9.2080405@visionsystems.de>	 <4E26ABAA.8050404@visionsystems.de> (sfid-20110720_125228_946659_FC4D17FF) <1311190027.15152.14.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1311190027.15152.14.camel@jlt3.sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 20.07.2011 21:27, schrieb Johannes Berg:
-> On Wed, 2011-07-20 at 12:19 +0200, Yegor Yefremov wrote:
->
->>> +ifeq ($(NL3FOUND),Y)
->>> +CFLAGS += -DCONFIG_LIBNL20
->>> +LIBS += -lnl-genl
->>> +NLLIBNAME = libnl-3.0
->>> +endif
-> I'd prefer if you did -DCONFIG_LIBNL30 and added the correct ifdefs
-> (please make it #if defined(...) || defined(...))  
+Routing bits are always placed in 0xC0000000, there is no any special
+bit shifting for 64-bit DMA. We just workaround wrong value (passed by
+ssb) in this way. Replace that with just a one workaround and comment
+it. Real fix for this requires testing with all ssb drivers.
 
-O.K. I made the changes (see v2).  The code excluded, if LIBNL20 is detected, was actually libnl 1.x compatibility code and not libnl 2.0 compatibility code. Do I see it right?
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/dma.c |   12 +++++++++---
+ 1 files changed, 9 insertions(+), 3 deletions(-)
 
-Yegor
+diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
+index ce572ae..530a153 100644
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -174,7 +174,7 @@ static void op64_fill_descriptor(struct b43_dmaring *ring,
+ 	addrhi = (((u64) dmaaddr >> 32) & ~SSB_DMA_TRANSLATION_MASK);
+ 	addrext = (((u64) dmaaddr >> 32) & SSB_DMA_TRANSLATION_MASK)
+ 	    >> SSB_DMA_TRANSLATION_SHIFT;
+-	addrhi |= (ring->dev->dma.translation << 1);
++	addrhi |= ring->dev->dma.translation;
+ 	if (slot == ring->nr_slots - 1)
+ 		ctl0 |= B43_DMA64_DCTL0_DTABLEEND;
+ 	if (start)
+@@ -675,7 +675,7 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
+ 			b43_dma_write(ring, B43_DMA64_TXRINGHI,
+ 				      ((ringbase >> 32) &
+ 				       ~SSB_DMA_TRANSLATION_MASK)
+-				      | (trans << 1));
++				      | trans);
+ 		} else {
+ 			u32 ringbase = (u32) (ring->dmabase);
+ 
+@@ -708,7 +708,7 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
+ 			b43_dma_write(ring, B43_DMA64_RXRINGHI,
+ 				      ((ringbase >> 32) &
+ 				       ~SSB_DMA_TRANSLATION_MASK)
+-				      | (trans << 1));
++				      | trans);
+ 			b43_dma_write(ring, B43_DMA64_RXINDEX, ring->nr_slots *
+ 				      sizeof(struct b43_dmadesc64));
+ 		} else {
+@@ -1060,6 +1060,12 @@ int b43_dma_init(struct b43_wldev *dev)
+ #ifdef CONFIG_B43_SSB
+ 	case B43_BUS_SSB:
+ 		dma->translation = ssb_dma_translation(dev->dev->sdev);
++		/* ssb does not handle 64-bit DMA case, where Client Mode
++		 * Translation is set with value 0x2 instead of 0x1. This should
++		 * be fixed on ssb side, but requires testing with b43,
++		 * b43legacy and b44. */
++		if (b43_read32(dev, SSB_TMSHIGH) & SSB_TMSHIGH_DMA64)
++			dma->translation <<= 1;
+ 		break;
+ #endif
+ 	}
+-- 
+1.7.3.4
 
