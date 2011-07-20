@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zone0.gcu-squad.org ([212.85.147.21]:35808 "EHLO
-	services.gcu-squad.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753426Ab1GEW1N (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:59163 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750980Ab1GTNQQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 18:27:13 -0400
-Date: Wed, 6 Jul 2011 00:27:06 +0200
-From: Jean Delvare <khali@linux-fr.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] ipw2100: Fix command list for debugging
-Message-ID: <20110706002706.51bfc492@endymion.delvare> (sfid-20110706_002716_110289_AA6BE77B)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 20 Jul 2011 09:16:16 -0400
+Received: by vxh35 with SMTP id 35so131393vxh.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2011 06:16:15 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 20 Jul 2011 17:16:15 +0400
+Message-ID: <CAN=pzdLRaRHkg4NquUpDhEwRzq-roKQXMtMcwnr031maDSLRfw@mail.gmail.com> (sfid-20110720_151619_779532_B838DC90)
+Subject: rt2x00, AP mode, 802.11n is not working properly
+From: Stanislav Demakov <s.demakov@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is a stray "undefined" string in the array, get rid of it.
+Hi,
+I'm using hostapd 0.73 and 1T1R rt2x00 based wireless dongle to create
+an AP. The problem is that since version
+compat-wireless-2010-12-14.tar.bz2 802.11n mode is not working
+properly. In this driver version and all later you've broken
+something!
+The point is if wmm_enabled=1 then max transfer speed slows down to
+100-200 KBytes\s. Without wmm_enabled speed is ok and about 4-5
+MBytes\s (my max connection rate is 65mbps).
+But some wireless clients won't connect in 802.11n mode when this
+option is disabled, this is why I need it.
 
-Signed-off-by: Jean Delvare <khali@linux-fr.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>
----
-Changes since v1:
-* Only drop the extra string, as advised by John Linville.
+My hostapd.conf:
+interface=wlan0
+driver=nl80211
+ssid=Server
+hw_mode=g
+channel=11
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wmm_enabled=1
+ieee80211n=1
+wpa=2
+wpa_key_mgmt=WPA-PSK
+wpa_passphrase=***
+rsn_pairwise=CCMP
 
- drivers/net/wireless/ipw2x00/ipw2100.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- linux-3.0-rc6.orig/drivers/net/wireless/ipw2x00/ipw2100.c	2011-07-05 10:07:59.000000000 +0200
-+++ linux-3.0-rc6/drivers/net/wireless/ipw2x00/ipw2100.c	2011-07-06 00:22:14.000000000 +0200
-@@ -287,7 +287,7 @@ static const char *command_types[] = {
- 	"unused",		/* HOST_INTERRUPT_COALESCING */
- 	"undefined",
- 	"CARD_DISABLE_PHY_OFF",
--	"MSDU_TX_RATES" "undefined",
-+	"MSDU_TX_RATES",
- 	"undefined",
- 	"SET_STATION_STAT_BITS",
- 	"CLEAR_STATIONS_STAT_BITS",
-
-
--- 
-Jean Delvare
+(Ubuntu Server 10.04, driver module is rt2800usb.)
+I've tested the speed in both directions and it seems that speed from
+client to AP is fine, while from AP to client is very slow.
+I've build on different kernels and also tried two other dongles with
+no difference. Currently I have the latest stable compat-wireless
+driver and the problem is the same. And same thing for current
+bleeding edge.
+The last release where it wasn't broken yet is
+compat-wireless-2010-12-13.tar.bz2 or stable
+compat-wireless-2.6.37-4.tar.bz2. But I can't use them at all because
+they have stability issues.
