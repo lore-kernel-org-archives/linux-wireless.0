@@ -1,30 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:58132 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752346Ab1GTBKD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 21:10:03 -0400
-Received: by qyk29 with SMTP id 29so2399045qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2011 18:10:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1310936457-10640-1-git-send-email-hauke@hauke-m.de>
-References: <1310936291-10275-1-git-send-email-hauke@hauke-m.de> <1310936457-10640-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 19 Jul 2011 18:09:41 -0700
-Message-ID: <CAB=NE6VXbVx1ciqYAnqZC9ykgvyBuiK4nouFn9BeBq3vq9q9kg@mail.gmail.com> (sfid-20110720_031007_675605_6F857358)
-Subject: Re: [PATCH 1/3] compat: backport: pr_FOO_once()
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:11939 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751780Ab1GTNfW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jul 2011 09:35:22 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	ath9k-devel@lists.ath9k.org
+Subject: [PATCH 2/3] wireless: ath9k: use %pM to print MAC
+Date: Wed, 20 Jul 2011 16:34:30 +0300
+Message-Id: <e9d4e9e2edf4c51412c141140d51e9baf9ff13a3.1311162926.git.andriy.shevchenko@linux.intel.com> (sfid-20110720_153604_251525_6A3E67CE)
+In-Reply-To: <fddeabc04a1b81a5c1f51a4164d93366dccf5f8e.1311162926.git.andriy.shevchenko@linux.intel.com>
+References: <fddeabc04a1b81a5c1f51a4164d93366dccf5f8e.1311162926.git.andriy.shevchenko@linux.intel.com>
+In-Reply-To: <fddeabc04a1b81a5c1f51a4164d93366dccf5f8e.1311162926.git.andriy.shevchenko@linux.intel.com>
+References: <fddeabc04a1b81a5c1f51a4164d93366dccf5f8e.1311162926.git.andriy.shevchenko@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 17, 2011 at 2:00 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: ath9k-devel@lists.ath9k.org
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
 
-Stanislaw Gruszka beat you to this and the mq one, so I applied those
-but applied the other patch. Thanks so much!!
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+index aa48b3a..d3ff33c 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -623,11 +623,8 @@ static ssize_t read_file_base_eeprom(struct file *file, char __user *user_buf,
+ 				pBase9287->openLoopPwrCntl);
+ 	}
+ 
+-	len += snprintf(buf + len, size - len,
+-			"%20s : %02X:%02X:%02X:%02X:%02X:%02X\n",
+-			"MacAddress",
+-			pBase->macAddr[0], pBase->macAddr[1], pBase->macAddr[2],
+-			pBase->macAddr[3], pBase->macAddr[4], pBase->macAddr[5]);
++	len += snprintf(buf + len, size - len, "%20s : %pM\n", "MacAddress",
++			pBase->macAddr);
+ 	if (len > size)
+ 		len = size;
+ 
+-- 
+1.7.5.4
 
-  Luis
