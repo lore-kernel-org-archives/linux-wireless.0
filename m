@@ -1,71 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:47950 "EHLO mga01.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:3961 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752213Ab1GUP0w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 11:26:52 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 24/25] iwlagn: remove "disable otp refresh" W/A
-Date: Thu, 21 Jul 2011 07:50:27 -0700
-Message-Id: <1311259828-8415-25-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110721_172702_462927_F906A996)
-In-Reply-To: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1751780Ab1GTNfM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jul 2011 09:35:12 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 1/3] wireless: rtlwifi: throw away MAC_FMT and use %pM instead
+Date: Wed, 20 Jul 2011 16:34:29 +0300
+Message-Id: <fddeabc04a1b81a5c1f51a4164d93366dccf5f8e.1311162926.git.andriy.shevchenko@linux.intel.com> (sfid-20110720_153517_474636_9DDE7D57)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the "disable otp refresh" work-around, not needed anymore.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-2000.c |    6 +-----
- drivers/net/wireless/iwlwifi/iwl-core.h |    2 --
- 2 files changed, 1 insertions(+), 7 deletions(-)
+ drivers/net/wireless/rtlwifi/base.c         |   11 +++++------
+ drivers/net/wireless/rtlwifi/cam.c          |    4 ++--
+ drivers/net/wireless/rtlwifi/core.c         |    6 +++---
+ drivers/net/wireless/rtlwifi/debug.h        |    5 -----
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c |    2 +-
+ 7 files changed, 13 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index 00480e4..0e13f0b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -85,9 +85,6 @@ static void iwl2000_nic_config(struct iwl_priv *priv)
- 	if (priv->cfg->iq_invert)
- 		iwl_set_bit(priv, CSR_GP_DRIVER_REG,
- 			    CSR_GP_DRIVER_REG_BIT_RADIO_IQ_INVER);
+diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
+index bc13533..5f46efd 100644
+--- a/drivers/net/wireless/rtlwifi/base.c
++++ b/drivers/net/wireless/rtlwifi/base.c
+@@ -756,18 +756,17 @@ bool rtl_action_proc(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx)
+ 				return false;
+ 
+ 			RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
+-				 ("%s ACT_ADDBAREQ From :" MAC_FMT "\n",
+-				  is_tx ? "Tx" : "Rx", MAC_ARG(hdr->addr2)));
++				 ("%s ACT_ADDBAREQ From :%pM\n",
++				  is_tx ? "Tx" : "Rx", hdr->addr2));
+ 			break;
+ 		case ACT_ADDBARSP:
+ 			RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
+-				 ("%s ACT_ADDBARSP From :" MAC_FMT "\n",
+-				  is_tx ? "Tx" : "Rx", MAC_ARG(hdr->addr2)));
++				 ("%s ACT_ADDBARSP From :%pM\n",
++				  is_tx ? "Tx" : "Rx", hdr->addr2));
+ 			break;
+ 		case ACT_DELBA:
+ 			RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
+-				 ("ACT_ADDBADEL From :" MAC_FMT "\n",
+-				  MAC_ARG(hdr->addr2)));
++				 ("ACT_ADDBADEL From :%pM\n", hdr->addr2));
+ 			break;
+ 		}
+ 		break;
+diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
+index 7295af0..66588c2 100644
+--- a/drivers/net/wireless/rtlwifi/cam.c
++++ b/drivers/net/wireless/rtlwifi/cam.c
+@@ -131,9 +131,9 @@ u8 rtl_cam_add_one_entry(struct ieee80211_hw *hw, u8 *mac_addr,
+ 
+ 	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
+ 		 ("EntryNo:%x, ulKeyId=%x, ulEncAlg=%x, "
+-		  "ulUseDK=%x MacAddr" MAC_FMT "\n",
++		  "ulUseDK=%x MacAddr %pM\n",
+ 		  ul_entry_idx, ul_key_id, ul_enc_alg,
+-		  ul_default_key, MAC_ARG(mac_addr)));
++		  ul_default_key, mac_addr));
+ 
+ 	if (ul_key_id == TOTAL_CAM_ENTRY) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
+index 03ce696..1bdc1aa 100644
+--- a/drivers/net/wireless/rtlwifi/core.c
++++ b/drivers/net/wireless/rtlwifi/core.c
+@@ -456,7 +456,7 @@ static int rtl_op_sta_add(struct ieee80211_hw *hw,
+ 			sta_entry->wireless_mode = WIRELESS_MODE_G;
+ 
+ 		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
+-			("Add sta addr is "MAC_FMT"\n", MAC_ARG(sta->addr)));
++			("Add sta addr is %pM\n", sta->addr));
+ 		rtlpriv->cfg->ops->update_rate_tbl(hw, sta, 0);
+ 	}
+ 	return 0;
+@@ -469,7 +469,7 @@ static int rtl_op_sta_remove(struct ieee80211_hw *hw,
+ 	struct rtl_sta_info *sta_entry;
+ 	if (sta) {
+ 		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
+-			("Remove sta addr is "MAC_FMT"\n", MAC_ARG(sta->addr)));
++			("Remove sta addr is %pM\n", sta->addr));
+ 		sta_entry = (struct rtl_sta_info *) sta->drv_priv;
+ 		sta_entry->wireless_mode = 0;
+ 		sta_entry->ratr_index = 0;
+@@ -678,7 +678,7 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
+ 					      (u8 *) bss_conf->bssid);
+ 
+ 		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
+-			 (MAC_FMT "\n", MAC_ARG(bss_conf->bssid)));
++			 ("%pM\n", bss_conf->bssid));
+ 
+ 		mac->vendor = PEER_UNKNOWN;
+ 		memcpy(mac->bssid, bss_conf->bssid, 6);
+diff --git a/drivers/net/wireless/rtlwifi/debug.h b/drivers/net/wireless/rtlwifi/debug.h
+index e4aa868..160dd06 100644
+--- a/drivers/net/wireless/rtlwifi/debug.h
++++ b/drivers/net/wireless/rtlwifi/debug.h
+@@ -204,10 +204,5 @@ enum dbgp_flag_e {
+ 		} \
+ 	} while (0);
+ 
+-#define MAC_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
+-#define MAC_ARG(x) \
+-	((u8 *)(x))[0], ((u8 *)(x))[1], ((u8 *)(x))[2],\
+-	((u8 *)(x))[3], ((u8 *)(x))[4], ((u8 *)(x))[5]
 -
--	if (priv->cfg->disable_otp_refresh)
--		iwl_write_prph(priv, APMG_ANALOG_SVR_REG, 0x80000010);
- }
+ void rtl_dbgp_flag_init(struct ieee80211_hw *hw);
+ #endif
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+index 9e2a9e3..a3deaef 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -1592,7 +1592,7 @@ static void _rtl92ce_read_adapter_info(struct ieee80211_hw *hw)
+ 	}
  
- static struct iwl_sensitivity_ranges iwl2000_sensitivity = {
-@@ -267,8 +264,7 @@ static struct iwl_bt_params iwl2030_bt_params = {
- 	.need_dc_calib = true,					\
- 	.need_temp_offset_calib = true,				\
- 	.led_mode = IWL_LED_RF_STATE,				\
--	.iq_invert = true,					\
--	.disable_otp_refresh = true				\
-+	.iq_invert = true					\
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+-		 (MAC_FMT "\n", MAC_ARG(rtlefuse->dev_addr)));
++		 ("%pM\n", rtlefuse->dev_addr));
  
- struct iwl_cfg iwl2000_2bgn_cfg = {
- 	.name = "2000 Series 2x2 BGN",
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index c2d58df..3e6bb73 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -212,7 +212,6 @@ struct iwl_ht_params {
-  * @rx_with_siso_diversity: 1x1 device with rx antenna diversity
-  * @internal_wimax_coex: internal wifi/wimax combo device
-  * @iq_invert: I/Q inversion
-- * @disable_otp_refresh: disable OTP refresh current limit
-  *
-  * We enable the driver to be backward compatible wrt API version. The
-  * driver specifies which APIs it supports (with @ucode_api_max being the
-@@ -258,7 +257,6 @@ struct iwl_cfg {
- 	const bool rx_with_siso_diversity;
- 	const bool internal_wimax_coex;
- 	const bool iq_invert;
--	const bool disable_otp_refresh;
- };
+ 	_rtl92ce_read_txpower_info_from_hwpg(hw,
+ 					     rtlefuse->autoload_failflag,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+index 5a65bea..0073cf1 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+@@ -1829,7 +1829,7 @@ static void _rtl92de_read_adapter_info(struct ieee80211_hw *hw)
+ 	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_ETHER_ADDR,
+ 				      rtlefuse->dev_addr);
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+-		 (MAC_FMT "\n", MAC_ARG(rtlefuse->dev_addr)));
++		 ("%pM\n", rtlefuse->dev_addr));
+ 	_rtl92de_read_txpower_info(hw, rtlefuse->autoload_failflag, hwinfo);
  
- /***************************
+ 	/* Read Channel Plan */
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+index b1d0213..fe2b0b9 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+@@ -1682,7 +1682,7 @@ static void _rtl92se_read_adapter_info(struct ieee80211_hw *hw)
+ 		rtl_write_byte(rtlpriv, MACIDR0 + i, rtlefuse->dev_addr[i]);
+ 
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+-		 (MAC_FMT "\n", MAC_ARG(rtlefuse->dev_addr)));
++		 ("%pM\n", rtlefuse->dev_addr));
+ 
+ 	/* Get Tx Power Level by Channel */
+ 	/* Read Tx power of Channel 1 ~ 14 from EEPROM. */
 -- 
-1.7.0.4
+1.7.5.4
 
