@@ -1,33 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:52174 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753696Ab1GZP4F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2011 11:56:05 -0400
-Received: by iyb12 with SMTP id 12so669718iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 08:56:02 -0700 (PDT)
-Message-ID: <4E2EE383.4040403@lwfinger.net> (sfid-20110726_175611_040788_6D7D47A5)
-Date: Tue, 26 Jul 2011 10:55:47 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2/2] b43legacy: remove asm/atomic.h includes as suggested
- by checkpatch.pl
-References: <20110726153648.24611.49190.stgit@mj.roinet.com> <20110726153655.24611.76833.stgit@mj.roinet.com>
-In-Reply-To: <20110726153655.24611.76833.stgit@mj.roinet.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:57653 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752443Ab1GTT1H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jul 2011 15:27:07 -0400
+Subject: Re: [PATCH] iw: add libnl-3.0 support
+From: Johannes Berg <johannes.berg@intel.com>
+To: yegor_sub1@visionsystems.de
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4E26ABAA.8050404@visionsystems.de> (sfid-20110720_125228_946659_FC4D17FF)
+References: <4DB91BB9.2080405@visionsystems.de>
+	 <4E26ABAA.8050404@visionsystems.de> (sfid-20110720_125228_946659_FC4D17FF)
+Date: Wed, 20 Jul 2011 21:27:07 +0200
+Message-ID: <1311190027.15152.14.camel@jlt3.sipsolutions.net> (sfid-20110720_212711_115648_FE5BBA4A)
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/26/2011 10:36 AM, Pavel Roskin wrote:
-> Including linux/atomic.h doesn't appear to be necessary.
->
-> Signed-off-by: Pavel Roskin<proski@gnu.org>
-
-As b43 manages to also do atomic operations without this header, this patch 
-should be OK for all architectures.
-
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+T24gV2VkLCAyMDExLTA3LTIwIGF0IDEyOjE5ICswMjAwLCBZZWdvciBZZWZyZW1vdiB3cm90ZToK
+Cj4gPiAraWZlcSAoJChOTDNGT1VORCksWSkKPiA+ICtDRkxBR1MgKz0gLURDT05GSUdfTElCTkwy
+MAo+ID4gK0xJQlMgKz0gLWxubC1nZW5sCj4gPiArTkxMSUJOQU1FID0gbGlibmwtMy4wCj4gPiAr
+ZW5kaWYKCkknZCBwcmVmZXIgaWYgeW91IGRpZCAtRENPTkZJR19MSUJOTDMwIGFuZCBhZGRlZCB0
+aGUgY29ycmVjdCBpZmRlZnMKKHBsZWFzZSBtYWtlIGl0ICNpZiBkZWZpbmVkKC4uLikgfHwgZGVm
+aW5lZCguLi4pKQoKam9oYW5uZXMKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkludGVs
+IEdtYkgKRG9ybmFjaGVyIFN0cmFzc2UgMQo4NTYyMiBGZWxka2lyY2hlbi9NdWVuY2hlbiwgRGV1
+dHNjaGxhbmQgClNpdHogZGVyIEdlc2VsbHNjaGFmdDogRmVsZGtpcmNoZW4gYmVpIE11ZW5jaGVu
+Ckdlc2NoYWVmdHNmdWVocmVyOiBEb3VnbGFzIEx1c2ssIFBldGVyIEdsZWlzc25lciwgSGFubmVz
+IFNjaHdhZGVyZXIKUmVnaXN0ZXJnZXJpY2h0OiBNdWVuY2hlbiBIUkIgNDc0NTYgClVzdC4tSWRO
+ci4vVkFUIFJlZ2lzdHJhdGlvbiBOby46IERFMTI5Mzg1ODk1CkNpdGliYW5rIEZyYW5rZnVydCBh
+Lk0uIChCTFogNTAyIDEwOSAwMCkgNjAwMTE5MDUyCg==
 
