@@ -1,38 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:60073 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753203Ab1GVQvW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 12:51:22 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat: backport generic pr_fmt
-Date: Fri, 22 Jul 2011 18:51:09 +0200
-Message-Id: <1311353470-31012-1-git-send-email-hauke@hauke-m.de> (sfid-20110722_185125_248376_D1B43BB4)
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:39351 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751727Ab1GTPAW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jul 2011 11:00:22 -0400
+MIME-Version: 1.0
+In-Reply-To: <e9d4e9e2edf4c51412c141140d51e9baf9ff13a3.1311162926.git.andriy.shevchenko@linux.intel.com>
+References: <fddeabc04a1b81a5c1f51a4164d93366dccf5f8e.1311162926.git.andriy.shevchenko@linux.intel.com>
+	<e9d4e9e2edf4c51412c141140d51e9baf9ff13a3.1311162926.git.andriy.shevchenko@linux.intel.com>
+Date: Wed, 20 Jul 2011 20:30:21 +0530
+Message-ID: <CAD2nsn2tOJTcOo=OcUp-agYCkBNT5Rt2j0D1+E1m1C56+QdQ-A@mail.gmail.com> (sfid-20110720_170048_032284_6B971373)
+Subject: Re: [PATCH 2/3] wireless: ath9k: use %pM to print MAC
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jul 20, 2011 at 7:04 PM, Andy Shevchenko
+<andriy.shevchenko@linux.intel.com> wrote:
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+> Cc: ath9k-devel@lists.ath9k.org
+> ---
+>  drivers/net/wireless/ath/ath9k/htc_drv_debug.c |    7 ++-----
+>  1 files changed, 2 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+> index aa48b3a..d3ff33c 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+> @@ -623,11 +623,8 @@ static ssize_t read_file_base_eeprom(struct file *file, char __user *user_buf,
+>                                pBase9287->openLoopPwrCntl);
+>        }
+>
+> -       len += snprintf(buf + len, size - len,
+> -                       "%20s : %02X:%02X:%02X:%02X:%02X:%02X\n",
+> -                       "MacAddress",
+> -                       pBase->macAddr[0], pBase->macAddr[1], pBase->macAddr[2],
+> -                       pBase->macAddr[3], pBase->macAddr[4], pBase->macAddr[5]);
+> +       len += snprintf(buf + len, size - len, "%20s : %pM\n", "MacAddress",
+> +                       pBase->macAddr);
+>        if (len > size)
+>                len = size;
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.28.h |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+thanks for the patch!
 
-diff --git a/include/linux/compat-2.6.28.h b/include/linux/compat-2.6.28.h
-index fdb8fb2..c92c8b4 100644
---- a/include/linux/compat-2.6.28.h
-+++ b/include/linux/compat-2.6.28.h
-@@ -238,6 +238,10 @@ int pci_wake_from_d3(struct pci_dev *dev, bool enable);
- 
- #define alloc_workqueue(name, flags, max_active) __create_workqueue(name, flags, max_active)
- 
-+#ifndef pr_fmt
-+#define pr_fmt(fmt) fmt
-+#endif
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28)) */
- 
- #endif /* LINUX_26_28_COMPAT_H */
+>
+> --
+> 1.7.5.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
 -- 
-1.7.4.1
-
+shafi
