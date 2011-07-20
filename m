@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:62632 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751531Ab1GTWpn (ORCPT
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:46022 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751870Ab1GTRRd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2011 18:45:43 -0400
-Message-ID: <4E275A93.4050705@lwfinger.net> (sfid-20110721_004613_863968_C8DD5BB2)
-Date: Wed, 20 Jul 2011 17:45:39 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 20 Jul 2011 13:17:33 -0400
+Received: by fxd18 with SMTP id 18so2060516fxd.11
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2011 10:17:32 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org, Pavel Roskin <proski@gnu.org>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 0/3 V3] b43 & ssb & bcma: DMA special (translation) bits
+Date: Wed, 20 Jul 2011 19:56:11 +0200
+Message-Id: <1311184574-3665-1-git-send-email-zajec5@gmail.com> (sfid-20110720_191736_808810_E196B4AB)
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: Convert printks to pr_<level>
-References: <b57f00fc1d0947443aa1830c11c288e78924af44.1311177059.git.joe@perches.com>
-In-Reply-To: <b57f00fc1d0947443aa1830c11c288e78924af44.1311177059.git.joe@perches.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/20/2011 10:51 AM, Joe Perches wrote:
-> Use the current logging styles.
-> Add pr_fmt where appropriate.
-> Remove now unnecessary prefixes from printks.
-> Convert hard coded prefix to __func__.
-> Add a missing "\n" to a format.
->
-> Signed-off-by: Joe Perches<joe@perches.com>
-> ---
->   drivers/net/wireless/rtlwifi/base.c               |    9 ++-
->   drivers/net/wireless/rtlwifi/cam.c                |    4 +-
->   drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c |    5 +-
->   drivers/net/wireless/rtlwifi/rtl8192cu/hw.c       |   69 ++++++++------------
->   drivers/net/wireless/rtlwifi/rtl8192cu/mac.c      |   11 ++-
->   drivers/net/wireless/rtlwifi/rtl8192de/sw.c       |    8 +-
->   drivers/net/wireless/rtlwifi/rtl8192se/hw.c       |   10 ++--
->   drivers/net/wireless/rtlwifi/rtl8192se/phy.c      |    5 +-
->   drivers/net/wireless/rtlwifi/rtl8192se/rf.c       |    4 +-
->   drivers/net/wireless/rtlwifi/rtl8192se/sw.c       |    6 +-
->   drivers/net/wireless/rtlwifi/usb.c                |   12 ++--
->   11 files changed, 72 insertions(+), 71 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
-> index bc13533..d88e405 100644
-> --- a/drivers/net/wireless/rtlwifi/base.c
-> +++ b/drivers/net/wireless/rtlwifi/base.c
-> @@ -27,6 +27,8 @@
->    *
->    *****************************************************************************/
+As result of the latest discussion I'm sending patches cleaning whole
+DMA translation situation.
 
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+As Michael explained, there are not 64-bit DMA devices supported by
+drivers using ssb_dma_translation. This way we can just fix this
+function without fear of regressing b43legacy or b44.
 
+Also drop additng some defines by 3/3. They should be (and were) added
+in the separated patch that really makes use of them.
+
+Rafał Miłecki (3):
+  ssb: return correct translation bit for 64-bit DMA
+  bcma: inform drivers about translation bits needed for the core
+  b43: bcma: get DMA translation bits
+
+ drivers/bcma/core.c            |   16 ++++++++++++++++
+ drivers/net/wireless/b43/dma.c |   11 ++++++++---
+ drivers/ssb/main.c             |    5 ++++-
+ include/linux/bcma/bcma.h      |    5 +++++
+ 4 files changed, 33 insertions(+), 4 deletions(-)
+
+-- 
+1.7.3.4
 
