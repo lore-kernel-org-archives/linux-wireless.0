@@ -1,69 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:51213 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757290Ab1GDK3G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 06:29:06 -0400
-Received: by yxi11 with SMTP id 11so1540422yxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2011 03:29:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1309758467-1712-2-git-send-email-nbd@openwrt.org>
-References: <1309758467-1712-1-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-2-git-send-email-nbd@openwrt.org>
-Date: Mon, 4 Jul 2011 13:29:06 +0300
-Message-ID: <CAFtRNNzuqqu6oSN+P4X4-NTU6ruNvYSM=0CRJHSiTBgpNPGy6A@mail.gmail.com> (sfid-20110704_122915_048802_C92A674A)
-Subject: Re: [ath5k-devel] [PATCH 2/8] ath5k: apply the synth voltage tweak
- only on AR5112 rev 2
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.perches.com ([173.55.12.10]:4207 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751536Ab1GTWEn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jul 2011 18:04:43 -0400
+Subject: Re: [PATCH] rtlwifi: Convert printks to pr_<level>
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <4E27048F.9090004@lwfinger.net>
+References: <b57f00fc1d0947443aa1830c11c288e78924af44.1311177059.git.joe@perches.com>
+	 <4E27048F.9090004@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 20 Jul 2011 15:04:42 -0700
+Message-ID: <1311199482.1663.13.camel@Joe-Laptop> (sfid-20110721_000501_419702_5FEB9B9F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MjAxMS83LzQgRmVsaXggRmlldGthdSA8bmJkQG9wZW53cnQub3JnPjoKPiBNaWdodCBmaXggc29t
-ZSBzdGFiaWxpdHkgaXNzdWVzIG9uIG5ld2VyIGNoaXBzCj4KPiBTaWduZWQtb2ZmLWJ5OiBGZWxp
-eCBGaWV0a2F1IDxuYmRAb3BlbndydC5vcmc+Cj4gLS0tCj4gwqBkcml2ZXJzL25ldC93aXJlbGVz
-cy9hdGgvYXRoNWsvcGh5LmMgfCDCoCAxOSArKysrKysrKysrKy0tLS0tLS0tCj4gwqAxIGZpbGVz
-IGNoYW5nZWQsIDExIGluc2VydGlvbnMoKyksIDggZGVsZXRpb25zKC0pCj4KPiBkaWZmIC0tZ2l0
-IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDVrL3BoeS5jIGIvZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvYXRoL2F0aDVrL3BoeS5jCj4gaW5kZXggYzc3NDQ2OC4uZjY2MTI0YSAxMDA2NDQKPiAt
-LS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoNWsvcGh5LmMKPiArKysgYi9kcml2ZXJz
-L25ldC93aXJlbGVzcy9hdGgvYXRoNWsvcGh5LmMKPiBAQCAtOTcwLDE3ICs5NzAsMjAgQEAgc3Rh
-dGljIGludCBhdGg1a19od19yZnJlZ3NfaW5pdChzdHJ1Y3QgYXRoNWtfaHcgKmFoLAo+IMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgfQo+Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAvKiBMb3dlciBzeW50aCB2b2x0YWdlIG9uIFJldiAyICovCj4gLSDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBhdGg1a19od19yZmJfb3AoYWgsIHJmX3JlZ3Ms
-IDIsCj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCBBUjVLX1JGX0hJR0hfVkNfQ1AsIHRydWUpOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgaWYgKGFoLT5haF9yYWRpbyA9PSBBUjVLX1JGNTExMiAmJgo+ICsgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgKGFoLT5haF9yYWRpb181Z2h6X3Jl
-dmlzaW9uICYgQVI1S19TUkVWX1JFVikgPiAwKSB7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBhdGg1a19od19yZmJfb3AoYWgsIHJmX3JlZ3MsIDIsCj4g
-KyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCBBUjVLX1JGX0hJR0hfVkNfQ1AsIHRydWUpOwo+Cj4gLSDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBhdGg1a19od19yZmJfb3AoYWgsIHJmX3JlZ3MsIDIsCj4g
-LSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCBBUjVLX1JGX01JRF9WQ19DUCwgdHJ1ZSk7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCBhdGg1a19od19yZmJfb3AoYWgsIHJmX3JlZ3MsIDIsCj4gKyDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCBBUjVLX1JGX01JRF9WQ19DUCwgdHJ1ZSk7Cj4KPiAtIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIGF0aDVrX2h3X3JmYl9vcChhaCwgcmZfcmVncywgMiwKPiAtIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIEFS
-NUtfUkZfTE9XX1ZDX0NQLCB0cnVlKTsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIGF0aDVrX2h3X3JmYl9vcChhaCwgcmZfcmVncywgMiwKPiArIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIEFSNUtfUkZfTE9XX1ZDX0NQLCB0cnVlKTsKPgo+IC0gwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgYXRoNWtfaHdfcmZiX29wKGFoLCByZl9yZWdzLCAyLAo+IC0gwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgQVI1S19S
-Rl9QVVNIX1VQLCB0cnVlKTsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIGF0aDVrX2h3X3JmYl9vcChhaCwgcmZfcmVncywgMiwKPiArIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IEFSNUtfUkZfUFVTSF9VUCwgdHJ1ZSk7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCB9Cj4KPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoC8qIERlY3JlYXNl
-IHBvd2VyIGNvbnN1bXB0aW9uIG9uIDUyMTMrIEJhc2VCYW5kICovCj4gwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqBpZiAoYWgtPmFoX3BoeV9yZXZpc2lvbiA+PSBBUjVLX1NSRVZf
-UEhZXzUyMTJBKSB7CgpBY2tlZC1ieTogTmljayBLb3NzaWZpZGlzIDxtaWNrZmxlbW1AZ21haWwu
-Y29tPgoKCi0tIApHUEcgSUQ6IDB4RDIxREIyREIKQXMgeW91IHJlYWQgdGhpcyBwb3N0IGdsb2Jh
-bCBlbnRyb3B5IHJpc2VzLiBIYXZlIEZ1biA7LSkKTmljawo=
+On Wed, 2011-07-20 at 11:38 -0500, Larry Finger wrote:
+> On 07/20/2011 10:51 AM, Joe Perches wrote:
+> > Use the current logging styles.
+> > Add pr_fmt where appropriate.
+> > Remove now unnecessary prefixes from printks.
+> > Convert hard coded prefix to __func__.
+> > Add a missing "\n" to a format.
+[]
+> In general these look good, but why not define pr_fmt in rtlwifi/wifi.h. That 
+> header is used by every source file, and you only need the define once.
+
+Because that's not the first #include in every file.
+
+The #define pr_fmt has to be before anything that
+includes kernel.h so it's safest/best to have it
+be the first thing in the file.
+
+At some point in the next year or so, all of the
+uses of:
+
+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+
+should be removed and that should become the default.
+
+cheers, Joe
+
