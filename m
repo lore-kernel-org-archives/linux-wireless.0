@@ -1,100 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:47950 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752137Ab1GUP0r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 11:26:47 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 15/25] iwlagn: testmode fixed rate available for testmode only
-Date: Thu, 21 Jul 2011 07:50:18 -0700
-Message-Id: <1311259828-8415-16-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110721_172735_307823_E5ACD6C4)
-In-Reply-To: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:63131 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751178Ab1GTQbK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jul 2011 12:31:10 -0400
+Message-ID: <4E2702CB.9030909@lwfinger.net> (sfid-20110720_183140_011372_ED924A03)
+Date: Wed, 20 Jul 2011 11:31:07 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org,
+	'Chaoming_Li' <chaoming_li@realsil.com.cn>
+Subject: Re: [PATCH 1/3] wireless: rtlwifi: throw away MAC_FMT and use %pM
+ instead
+References: <fddeabc04a1b81a5c1f51a4164d93366dccf5f8e.1311162926.git.andriy.shevchenko@linux.intel.com>	 <4E26F879.8010601@lwfinger.net> <1311177762.1663.9.camel@Joe-Laptop>
+In-Reply-To: <1311177762.1663.9.camel@Joe-Laptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move tm_fixed_rate inside CONFIG_IWLWIFI_DEVICE_SVTOOL and only
-available when the option is enable.
+On 07/20/2011 11:02 AM, Joe Perches wrote:
+> On Wed, 2011-07-20 at 10:47 -0500, Larry Finger wrote:
+>> Thanks for the patch.
+>
+> Hey Larry.
+>
+> rtlwifi has a CONFIG_BT_COEXIST which is currently
+> unused/undefined by Kconfig.
+>
+> Are there plans to enable this or should the code
+> just be removed?
+>
+> There may be a few dependencies in rtlwifi for
+> variables set in this block so it seems from
+> superficial reading that removal might be a bit
+> involved.  I didn't look much more than that,
+> but struct btcoexist_priv doesn't seem to be
+> specified by the code anywhere.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    8 ++++++--
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    2 ++
- drivers/net/wireless/iwlwifi/iwl-dev.h    |    2 +-
- 3 files changed, 9 insertions(+), 3 deletions(-)
+I don't know the answer to that, but I have added Chaoming Li to the Cc. He will 
+know if Realtek has any plans for BT coexistence.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index ebcd13b..3789ff4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -354,9 +354,11 @@ static void rs_program_fix_rate(struct iwl_priv *priv,
- 	lq_sta->active_mimo2_rate  = 0x1FD0;	/* 6 - 60 MBits, no 9, no CCK */
- 	lq_sta->active_mimo3_rate  = 0x1FD0;	/* 6 - 60 MBits, no 9, no CCK */
- 
-+#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
- 	/* testmode has higher priority to overwirte the fixed rate */
- 	if (priv->tm_fixed_rate)
- 		lq_sta->dbg_fixed_rate = priv->tm_fixed_rate;
-+#endif
- 
- 	IWL_DEBUG_RATE(priv, "sta_id %d rate 0x%X\n",
- 		lq_sta->lq.sta_id, lq_sta->dbg_fixed_rate);
-@@ -1080,7 +1082,8 @@ done:
- 	/* See if there's a better rate or modulation mode to try. */
- 	if (sta && sta->supp_rates[sband->band])
- 		rs_rate_scale_perform(priv, skb, sta, lq_sta);
--#ifdef CONFIG_MAC80211_DEBUGFS
-+
-+#if defined(CONFIG_MAC80211_DEBUGFS) && defined(CONFIG_IWLWIFI_DEVICE_SVTOOL)
- 	if ((priv->tm_fixed_rate) &&
- 	    (priv->tm_fixed_rate != lq_sta->dbg_fixed_rate))
- 		rs_program_fix_rate(priv, lq_sta);
-@@ -2904,8 +2907,9 @@ void iwl_rs_rate_init(struct iwl_priv *priv, struct ieee80211_sta *sta, u8 sta_i
- 	if (sband->band == IEEE80211_BAND_5GHZ)
- 		lq_sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
- 	lq_sta->is_agg = 0;
--
-+#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
- 	priv->tm_fixed_rate = 0;
-+#endif
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	lq_sta->dbg_fixed_rate = 0;
- #endif
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index a5295c1..53bb59e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -217,6 +217,7 @@ static void iwlagn_tx_cmd_build_rate(struct iwl_priv *priv,
- 	if (ieee80211_is_data(fc)) {
- 		tx_cmd->initial_rate_index = 0;
- 		tx_cmd->tx_flags |= TX_CMD_FLG_STA_RATE_MSK;
-+#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
- 		if (priv->tm_fixed_rate) {
- 			/*
- 			 * rate overwrite by testmode
-@@ -227,6 +228,7 @@ static void iwlagn_tx_cmd_build_rate(struct iwl_priv *priv,
- 			memcpy(&tx_cmd->rate_n_flags, &priv->tm_fixed_rate,
- 			       sizeof(tx_cmd->rate_n_flags));
- 		}
-+#endif
- 		return;
- 	}
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 964be57..72ef50e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1535,8 +1535,8 @@ struct iwl_priv {
- 	bool led_registered;
- #ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
- 	struct iwl_testmode_trace testmode_trace;
--#endif
- 	u32 tm_fixed_rate;
-+#endif
- 
- }; /*iwl_priv */
- 
--- 
-1.7.0.4
-
+Larry
