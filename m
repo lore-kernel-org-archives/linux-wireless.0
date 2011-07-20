@@ -1,135 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4193 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932410Ab1GNVaC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 17:30:02 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 32/35] staging: brcm80211: replace semaphore by
- wait_queue for sysioc thread
-Date: Thu, 14 Jul 2011 14:29:28 -0700
-Message-ID: <1310678971-28952-33-git-send-email-frankyl@broadcom.com> (sfid-20110714_233119_009949_99F2A0D5)
-In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
-References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:58565 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752133Ab1GTQFn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jul 2011 12:05:43 -0400
+Received: by vxh35 with SMTP id 35so261011vxh.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2011 09:05:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <201107201709.42141.helmut.schaa@googlemail.com>
+References: <CAN=pzdLRaRHkg4NquUpDhEwRzq-roKQXMtMcwnr031maDSLRfw@mail.gmail.com>
+	<201107201536.01392.helmut.schaa@googlemail.com>
+	<CAN=pzdKLtB2yz4-OhKL5gzYF0Qm2weAmNAz-0MqdFuooFNYzwQ@mail.gmail.com>
+	<201107201709.42141.helmut.schaa@googlemail.com>
+Date: Wed, 20 Jul 2011 18:05:42 +0200
+Message-ID: <CAMEN=G50-CYW-+zdiVV-tUF2Ghhatrr0zk5oVYrN8=EN-03ZzA@mail.gmail.com> (sfid-20110720_180546_216104_E5A42DA7)
+Subject: Re: rt2x00, AP mode, 802.11n is not working properly
+From: Juan Carlos Garza Fernandez <juancarlosgarza@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Stanislav Demakov <s.demakov@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+Hi all,
 
-The sysioc thread was triggered using a semaphore. Now it waits for
-a wake_up() on its wait queue and the semaphore has been removed as
-the semaphore serves another purpose. This removes a checkpatch
-warning for dhd_linux.c.
+On Wed, Jul 20, 2011 at 5:09 PM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> Am Mittwoch, 20. Juli 2011 schrieb Stanislav Demakov:
+>> 2011/7/20 Helmut Schaa <helmut.schaa@googlemail.com>:
+>> > Am Mittwoch, 20. Juli 2011 schrieb Stanislav Demakov:
+>> >> I'm using hostapd 0.73 and 1T1R rt2x00 based wireless dongle to create
+>> >> an AP. The problem is that since version
+>> >> compat-wireless-2010-12-14.tar.bz2 802.11n mode is not working
+>> >> properly. In this driver version and all later you've broken
+>> >> something!
+>> >
+>> > So, 2010-12-14 already shows the problem you've described while 2010-12-13
+>> > does not, right?
+>> Yes, correct.
+>
+> One major change from 12-13 to 12-14 was the queue refactoring. Haven't found
+> anything else that looks related. However, this patchset is quite big and
+> really changed the way the queues are handled in rt2x00. So it's not trivial
+> to find the root cause for your problem ...
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c |   27 ++++++++++++++++--------
- 1 files changed, 18 insertions(+), 9 deletions(-)
+I am running an AP with hostapd 0.73 with also a 1T1R dongle and it
+works (maybe not as fast as it could, but I am happy with its
+performance).
+I use the compat-wireless version from 2011-03-13 plus some patches
+that Helmut suggested (which are already merged in the main branch):
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index 41d3e81..ea49f01 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -29,6 +29,7 @@
- #include <linux/fs.h>
- #include <linux/uaccess.h>
- #include <linux/mutex.h>
-+#include <linux/wait.h>
- #include <net/cfg80211.h>
- #include <defs.h>
- #include <brcmu_utils.h>
-@@ -78,7 +79,7 @@ struct brcmf_info {
- 
- 	/* Thread to issue ioctl for multicast */
- 	struct task_struct *sysioc_tsk;
--	struct semaphore sysioc_sem;
-+	wait_queue_head_t sysioc_waitq;
- 	bool set_multicast;
- 	bool set_macaddress;
- 	u8 macvalue[ETH_ALEN];
-@@ -493,12 +494,20 @@ static int _brcmf_sysioc_thread(void *data)
- #ifdef SOFTAP
- 	bool in_ap = false;
- #endif
--
-+	DECLARE_WAITQUEUE(wait, current);
- 	allow_signal(SIGTERM);
- 
--	while (down_interruptible(&drvr_priv->sysioc_sem) == 0) {
-+	add_wait_queue(&drvr_priv->sysioc_waitq, &wait);
-+	while (1) {
-+		prepare_to_wait(&drvr_priv->sysioc_waitq, &wait,
-+				TASK_INTERRUPTIBLE);
-+
-+		/* wait for event */
-+		schedule();
-+
- 		if (kthread_should_stop())
- 			break;
-+
- 		for (i = 0; i < BRCMF_MAX_IFS; i++) {
- 			struct brcmf_if *ifentry = drvr_priv->iflist[i];
- 			if (ifentry) {
-@@ -545,6 +554,7 @@ static int _brcmf_sysioc_thread(void *data)
- 			}
- 		}
- 	}
-+	finish_wait(&drvr_priv->sysioc_waitq, &wait);
- 	return 0;
- }
- 
-@@ -562,8 +572,7 @@ static int brcmf_netdev_set_mac_address(struct net_device *dev, void *addr)
- 
- 	memcpy(&drvr_priv->macvalue, sa->sa_data, ETH_ALEN);
- 	drvr_priv->set_macaddress = true;
--	up(&drvr_priv->sysioc_sem);
--
-+	wake_up(&drvr_priv->sysioc_waitq);
- 	return ret;
- }
- 
-@@ -577,7 +586,7 @@ static void brcmf_netdev_set_multicast_list(struct net_device *dev)
- 		return;
- 
- 	drvr_priv->set_multicast = true;
--	up(&drvr_priv->sysioc_sem);
-+	wake_up(&drvr_priv->sysioc_waitq);
- }
- 
- int brcmf_sendpkt(struct brcmf_pub *drvr, int ifidx, struct sk_buff *pktbuf)
-@@ -1217,7 +1226,7 @@ brcmf_add_if(struct brcmf_info *drvr_priv, int ifidx, void *handle, char *name,
- 	if (handle == NULL) {
- 		ifp->state = BRCMF_E_IF_ADD;
- 		ifp->idx = ifidx;
--		up(&drvr_priv->sysioc_sem);
-+		wake_up(&drvr_priv->sysioc_waitq);
- 	} else
- 		ifp->net = (struct net_device *)handle;
- 
-@@ -1238,7 +1247,7 @@ void brcmf_del_if(struct brcmf_info *drvr_priv, int ifidx)
- 
- 	ifp->state = BRCMF_E_IF_DEL;
- 	ifp->idx = ifidx;
--	up(&drvr_priv->sysioc_sem);
-+	wake_up(&drvr_priv->sysioc_waitq);
- }
- 
- struct brcmf_pub *brcmf_attach(struct brcmf_bus *bus, uint bus_hdrlen)
-@@ -1306,7 +1315,7 @@ struct brcmf_pub *brcmf_attach(struct brcmf_bus *bus, uint bus_hdrlen)
- 	}
- 
- 	if (brcmf_sysioc) {
--		sema_init(&drvr_priv->sysioc_sem, 0);
-+		init_waitqueue_head(&drvr_priv->sysioc_waitq);
- 		drvr_priv->sysioc_tsk = kthread_run(_brcmf_sysioc_thread, drvr_priv,
- 						"_brcmf_sysioc");
- 		if (IS_ERR(drvr_priv->sysioc_tsk)) {
+[1] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=878a2bbc20100d8bccf84cc058373fe7de2e6501
+[2] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=4f3ab1e88d8b5ce4852d075016ca784a00383452
+[3] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=c8cb3a0af064fb5d9cbbaa16bd2f308ba3b90ceb
+[4] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=66b096e6ad64f718425d2de9a70d82ba187d7db4
+
+I later tried the version compat-wireless-2011-05-05 and it did not
+work, some major changes took
+place in between, and I unfortunately did not have time to go deeper,
+so I stayed with my
+running system.
+
+Since then, some other things have been changed in the TX queues and I
+will eventually try it again.
+
+>
+> Helmut
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
 -- 
-1.7.1
-
-
+________________________________
+Juan Carlos Garza
