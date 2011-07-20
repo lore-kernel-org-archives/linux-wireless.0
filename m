@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:47864 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751491Ab1G3PTI (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:52615 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750941Ab1GTGQJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jul 2011 11:19:08 -0400
-Received: by iyb12 with SMTP id 12so5141150iyb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Jul 2011 08:19:08 -0700 (PDT)
-Message-ID: <4E3420E9.6080603@lwfinger.net> (sfid-20110730_171936_395743_89DE6563)
-Date: Sat, 30 Jul 2011 10:19:05 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 20 Jul 2011 02:16:09 -0400
+Received: by pzk3 with SMTP id 3so5838131pzk.5
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2011 23:16:09 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Report on bcma with 14e4:4353 (BCM43224)
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20110720011509.504022f8@maggie>
+References: <1311113542-2540-1-git-send-email-zajec5@gmail.com>
+	<1311113542-2540-2-git-send-email-zajec5@gmail.com>
+	<20110720011509.504022f8@maggie>
+Date: Wed, 20 Jul 2011 08:16:08 +0200
+Message-ID: <CACna6rwMe9-dHANpDLko5yy5wu521YTGXmqBr1JYh18tYt+Z4A@mail.gmail.com> (sfid-20110720_081614_192016_71A588B1)
+Subject: Re: [PATCH 1/3] b43: replace DMA translation workarounds with just a
+ one, commented
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pavel Roskin <proski@gnu.org>, b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał,
+W dniu 20 lipca 2011 01:15 użytkownik Michael Büsch <m@bues.ch> napisał:
+> On Wed, 20 Jul 2011 00:12:20 +0200
+> Rafał Miłecki <zajec5@gmail.com> wrote:
+>> +              * be fixed on ssb side, but requires testing with b43,
+>> +              * b43legacy and b44. */
+>
+> No it doesn't. b44 and b43legacy don't use 64bit DMA.
+> Just fix it in ssb, please.
 
-I'm using a recent pull from wireless-testing - 'git describe' results in 
-master-2011-07-26-150-g4ea94a9.
+They (drivers) don't, but what if we start giving them routing for
+64-bit DMA? AFAIU they treat 64-bit DMA as 32-bit one (according to
+specs: "If 64 Bit isn't an option, Silicon Backplane and PCI-E buses
+can use 32 bit DMA.").
 
-The driver is working well with reasonable performance. Using tcpperf, I get 
-8-10 Mb/s upload on an 802.11g connection. The connection has been up for 17 
-hours with no disconnects.
+Won't they start using 64-bit DMA in the 32-bit way but with 64-bit
+routing bits?
 
-A minor annoyance is that the driver does not autoload on boot and had to be 
-manually modprobed. AFAIK, I don't have any blacklisting or other configuration 
-parameters that would cause this. Furthermore, I don't see anything in the 
-driver code that would cause this. Does autoload work on your system?
-
-A more serious problem is that the driver does not work on my 802.11n AP that is 
-set for "up to 270 Mbps at 2.4 GHz". It will authenticate and associate, but the 
-throughput is minimal. It also gets the "PHY transmission error" messages. None 
-occur with 802.11g. I would guess some kind of error in the HT40 settings.
-
-Thanks for your hard work on this device.
-
-Larry
+-- 
+Rafał
