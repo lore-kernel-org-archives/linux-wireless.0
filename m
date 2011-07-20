@@ -1,59 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58703 "EHLO nbd.name"
+Received: from bues.ch ([80.190.117.144]:44572 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753315Ab1GLBCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 21:02:20 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	mickflemm@gmail.com
-Subject: [PATCH v3 8/8] ath5k: do not call ieee80211_stop_queue for queues not managed by mac80211
-Date: Tue, 12 Jul 2011 09:02:05 +0800
-Message-Id: <1310432525-70077-8-git-send-email-nbd@openwrt.org> (sfid-20110712_030233_674538_8F6552EF)
-In-Reply-To: <1310432525-70077-7-git-send-email-nbd@openwrt.org>
-References: <1310432525-70077-1-git-send-email-nbd@openwrt.org>
- <1310432525-70077-2-git-send-email-nbd@openwrt.org>
- <1310432525-70077-3-git-send-email-nbd@openwrt.org>
- <1310432525-70077-4-git-send-email-nbd@openwrt.org>
- <1310432525-70077-5-git-send-email-nbd@openwrt.org>
- <1310432525-70077-6-git-send-email-nbd@openwrt.org>
- <1310432525-70077-7-git-send-email-nbd@openwrt.org>
+	id S1751673Ab1GTPbi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jul 2011 11:31:38 -0400
+Date: Wed, 20 Jul 2011 15:35:42 +0000
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pavel Roskin <proski@gnu.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+Subject: Re: [PATCH 1/3] b43: replace DMA translation workarounds with just
+ a one, commented
+Message-ID: <20110720153542.69edd601@Nokia-N900> (sfid-20110720_173141_081215_F7C40E13)
+In-Reply-To: <CACna6rxNyZquGMVz5RUWs58ty+KTeFkv5wcccBQyw2n2A7XLMA@mail.gmail.com>
+References: <1311113542-2540-1-git-send-email-zajec5@gmail.com>
+	<1311113542-2540-2-git-send-email-zajec5@gmail.com>
+	<20110720011509.504022f8@maggie>
+	<CACna6rwMe9-dHANpDLko5yy5wu521YTGXmqBr1JYh18tYt+Z4A@mail.gmail.com>
+	<20110720105540.1c9d072c@maggie>
+	<CACna6rxNyZquGMVz5RUWs58ty+KTeFkv5wcccBQyw2n2A7XLMA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of using ieee80211_stop_queue, check the configured tx queue
-limit before calling ieee80211_get_buffered_bc.
+On Wed, 20 Jul 2011 13:10:55 +0200
+Rafał Miłecki <zajec5@gmail.com> wrote:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath5k/base.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+> Sorry, for not explaining this well eno
+> ugh. I'm afraid of situation where b44 driver supports 64-bit DMA
+> device *without* handling this as such a device. 
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 3b58e00..5f055d6 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1554,7 +1554,8 @@ ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		goto drop_packet;
- 	}
- 
--	if (txq->txq_len >= txq->txq_max)
-+	if (txq->txq_len >= txq->txq_max &&
-+	    txq->qnum <= AR5K_TX_QUEUE_ID_DATA_MAX)
- 		ieee80211_stop_queue(hw, txq->qnum);
- 
- 	spin_lock_irqsave(&sc->txbuflock, flags);
-@@ -1930,6 +1931,10 @@ ath5k_beacon_send(struct ath5k_softc *sc)
- 	skb = ieee80211_get_buffered_bc(sc->hw, vif);
- 	while (skb) {
- 		ath5k_tx_queue(sc->hw, skb, sc->cabq);
-+
-+		if (sc->cabq->txq_len >= sc->cabq->txq_max)
-+			break;
-+
- 		skb = ieee80211_get_buffered_bc(sc->hw, vif);
- 	}
- 
--- 
-1.7.3.2
-
+A b44 or b43legacy device with 64bit DMA engine does not exist.
