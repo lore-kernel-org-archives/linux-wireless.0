@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42394 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751065Ab1GLEud (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2011 00:50:33 -0400
-Message-ID: <4E1BD28C.2070704@openwrt.org> (sfid-20110712_065104_528692_F1423E9D)
-Date: Tue, 12 Jul 2011 12:50:20 +0800
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:58054 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751178Ab1GTTlO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jul 2011 15:41:14 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Dan Williams <dcbw@redhat.com>
+CC: Daniel Drake <dsd@laptop.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Wed, 20 Jul 2011 12:32:09 -0700
+Subject: RE: [PATCH 1/4] libertas: remove auto_deep_sleep functionality
+Message-ID: <477F20668A386D41ADCC57781B1F704307FFBB27DD@SC-VEXCH1.marvell.com> (sfid-20110720_214117_552805_415A281F)
+References: <20110717170310.CAD139D401C@zog.reactivated.net>
+	 <477F20668A386D41ADCC57781B1F704307FFB0947D@SC-VEXCH1.marvell.com>
+	 <CAGq3pz6DbsHG9JY8oZqaeRp4=EC1-sKunSuF2Q1+tfBoYbcyLg@mail.gmail.com>
+	 <477F20668A386D41ADCC57781B1F704307FFBB244E@SC-VEXCH1.marvell.com>
+	 <CAGq3pz4cTSZj+_MwJrxG=Ri1zELKbx2i9Hz==3_=t+aho_Y+Xg@mail.gmail.com>
+	 <477F20668A386D41ADCC57781B1F704307FFBB25D6@SC-VEXCH1.marvell.com>
+ <1311177831.21004.0.camel@dcbw.foobar.com>
+In-Reply-To: <1311177831.21004.0.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>
-CC: netdev@vger.kernel.org,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 04/46] net/wireless: p54: remove useless dma_sync_single_for_device(DMA_FROM_DEVICE)
-References: <cover.1310339688.git.mirq-linux@rere.qmqm.pl> <86c8bde08b005ca7eb4806ea77aec1f3212d63fc.1310339688.git.mirq-linux@rere.qmqm.pl>
-In-Reply-To: <86c8bde08b005ca7eb4806ea77aec1f3212d63fc.1310339688.git.mirq-linux@rere.qmqm.pl>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-07-11 8:52 AM, Michał Mirosław wrote:
-> Also constify pointers used in frame parsers to verify assumptions.
->
-> Signed-off-by: Michał Mirosław<mirq-linux@rere.qmqm.pl>
-> ---
->   drivers/net/wireless/p54/p54pci.c |    2 --
->   drivers/net/wireless/p54/txrx.c   |   22 +++++++++++-----------
->   2 files changed, 11 insertions(+), 13 deletions(-)
->
-> diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
-> index 1b75317..4491d33 100644
-> --- a/drivers/net/wireless/p54/p54pci.c
-> +++ b/drivers/net/wireless/p54/p54pci.c
-> @@ -229,8 +229,6 @@ static void p54p_check_rx_ring(struct ieee80211_hw *dev, u32 *index,
->   			desc->host_addr = cpu_to_le32(0);
->   		} else {
->   			skb_trim(skb, 0);
-> -			pci_dma_sync_single_for_device(priv->pdev, dma_addr,
-> -				priv->common.rx_mtu + 32, PCI_DMA_FROMDEVICE);
->   			desc->len = cpu_to_le16(priv->common.rx_mtu + 32);
->   		}
->
-This part does not look correct to me - same issue as your ath9k change, 
-which I commented on earlier. I don't think this call to 
-dma_sync_single_for_device is useless
-
-- Felix
-
+SGkgRGFuLA0KDQo+ID4gPiA+IFRvIGVuYWJsZSBkZWVwIHNsZWVwIG1vZGU6DQo+ID4gPiA+IGl3
+Y29uZmlnIHdsYW4wIHBvd2VyIHBlcmlvZCAwDQo+ID4gPiA+DQo+ID4gPiA+IFRvIGVuYWJsZSBh
+dXRvIGRlZXAgc2xlZXAgbW9kZSB3aXRoIGlkbGUgdGltZSBwZXJpb2Qgc2V0IHRvIDUgc2Vjb25k
+czoNCj4gPiA+ID4gaXdjb25maWcgd2xhbjAgcG93ZXIgcGVyaW9kIDUNCj4gPiA+ID4NCj4gPiA+
+ID4gVG8gZGlzYWJsZSBkZWVwIHNsZWVwL2F1dG8gZGVlcCBzbGVlcCBtb2RlOg0KPiA+ID4gPiBp
+d2NvbmZpZyB3bGFuMCBwb3dlciBwZXJpb2QgLTENCj4gPiA+DQo+ID4gPiBQYXVsIHBvaW50ZWQg
+b3V0IHRoYXQgaW5kZWVkLCBpbiBvbGQga2VybmVscywgdGhpcyBmdW5jdGlvbmFsaXR5IHdhcw0K
+PiA+ID4gaG9va2VkIHVwIHRvIHRoZSBwb3dlciB3aXJlbGVzcyBleHRlbnNpb24uDQo+ID4gPg0K
+PiA+ID4gSW4gcmVjZW50IGtlcm5lbHMsIHRoaXMgaXMgbm90IHRoZSBjYXNlIC0gaXRzIG5vdCBo
+b29rZWQgdXAgdG8NCj4gPiA+IGFueXRoaW5nLiBUaGUgY29tbWFuZHMgeW91IHdyaXRlIGFib3Zl
+IHdpbGwgZmFpbC4NCj4gPg0KPiA+IFllYWguIEkgZGlkbid0IGtub3cgdGhhdCB0aGUgZW50aXJl
+IHdleHQgaGFzIGJlZW4gcmVtb3ZlZCBmcm9tIGxpYmVydGFzLg0KPiA+DQo+ID4gQW55d2F5LCBm
+b3IgdXNlcnMgd2hvIG5lZWQgdGhpcyBmZWF0dXJlIHdlIGNhbiBhZGQgYSBtb2R1bGUgcGFyYW1l
+dGVyIHRvIGVuYWJsZSBpdCB3aXRoIHRoZSBwYXRjaA0KPiBiZWxvdy4gUGxlYXNlIGxldCBtZSBr
+bm93IHdoYXQgeW91IHRoaW5rLg0KPiANCj4gSSdkIHJhdGhlciB3ZSBmaWd1cmUgb3V0IHNvbWUg
+bmw4MDIxMS9jZmc4MDIxMSBrbm9iIGZvciB0aGlzIHJhdGhlciB0aGFuDQo+IGEgbW9kdWxlIHBh
+cmFtZXRlcjsgd2UgY2FuIGNlcnRhaW5seSBhZGQgY2FsbHMgYW5kIGF0dHJpYnV0ZXMgdG8gbmw4
+MDIxMQ0KPiBpZiB3ZSBuZWVkIHRvLg0KDQpBZ3JlZS4gQ29uZmlndXJhdGlvbiB2aWEgbmw4MDIx
+MS9jZmc4MDIxMSBBUEkgaXMgdGhlIGJlc3Qgc29sdXRpb24uIEknbGwgY2hlY2sgb24gdGhhdC4N
+Cg0KVGhhbmtzLA0KQmluZw0K
