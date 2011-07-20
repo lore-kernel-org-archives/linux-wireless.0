@@ -1,116 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4203 "EHLO mms2.broadcom.com"
+Received: from purkki.adurom.net ([80.68.90.206]:35505 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753405Ab1GROaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2011 10:30:23 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Franky Lin" <frankyl@broadcom.com>,
-	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 18/19] staging: brcm80211: absorb brcmf_sdcard_detach
- into brcmf_sdio_remove
-Date: Mon, 18 Jul 2011 16:30:04 +0200
-Message-ID: <1310999405-10062-19-git-send-email-arend@broadcom.com> (sfid-20110718_163030_580285_01292E69)
-In-Reply-To: <1310999405-10062-1-git-send-email-arend@broadcom.com>
-References: <1310999405-10062-1-git-send-email-arend@broadcom.com>
+	id S1751508Ab1GTSKw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jul 2011 14:10:52 -0400
+To: Daniel Drake <dsd@laptop.org>
+Cc: linville@tuxdriver.com, dcbw@redhat.com,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Subject: Re: [PATCH v2 3/3] libertas: reimplement mesh channel selection
+References: <20110720165403.52B629D401C@zog.reactivated.net>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 20 Jul 2011 21:10:50 +0300
+In-Reply-To: <20110720165403.52B629D401C@zog.reactivated.net> (Daniel Drake's message of "Wed\, 20 Jul 2011 17\:54\:03 +0100 \(BST\)")
+Message-ID: <87hb6gu8k5.fsf@purkki.adurom.net> (sfid-20110720_201055_514173_1E766668)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+Daniel Drake <dsd@laptop.org> writes:
 
-To increase code readability of brcmfmac
+> This reimplements code allowing for mesh channel selection according
+> to how NetworkManager expects.
 
-Cc: linux-wireless@vger.kernel.org
-Cc: devel@linuxdriverproject.org
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c    |   32 ++++++++++-------------
- drivers/staging/brcm80211/brcmfmac/sdio_host.h |    3 --
- 2 files changed, 14 insertions(+), 21 deletions(-)
+[...]
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-index 6f88bd2..0cd449d 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-@@ -57,19 +57,6 @@ static struct brcmf_sdioh_driver drvinfo = { NULL, NULL };
- 
- module_param(sd_f2_blocksize, int, 0);
- 
--int brcmf_sdcard_detach(struct brcmf_sdio_card *card)
--{
--	if (card != NULL) {
--		if (card->sdioh) {
--			brcmf_sdioh_detach(card->sdioh);
--			card->sdioh = NULL;
--		}
--		kfree(card);
--	}
--
--	return 0;
--}
--
- int
- brcmf_sdcard_iovar_op(struct brcmf_sdio_card *card, const char *name,
- 		void *params, int plen, void *arg, int len, bool set)
-@@ -441,7 +428,6 @@ int brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
- 
- 	sdiodev->card->sdioh = brcmf_sdioh_attach((void *)0);
- 	if (!sdiodev->card->sdioh) {
--		brcmf_sdcard_detach(sdiodev->card);
- 		ret = -ENODEV;
- 		goto out;
- 	}
-@@ -466,8 +452,8 @@ int brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
- 	}
- 
- out:
--	if ((ret) && (sdiodev->card))
--		brcmf_sdcard_detach(sdiodev->card);
-+	if (ret)
-+		brcmf_sdio_remove(sdiodev);
- 
- 	return ret;
- }
-@@ -475,8 +461,18 @@ EXPORT_SYMBOL(brcmf_sdio_probe);
- 
- int brcmf_sdio_remove(struct brcmf_sdio_dev *sdiodev)
- {
--	drvinfo.detach(sdiodev->bus);
--	brcmf_sdcard_detach(sdiodev->card);
-+	if (sdiodev->bus) {
-+		drvinfo.detach(sdiodev->bus);
-+		sdiodev->bus = NULL;
-+	}
-+
-+	if (sdiodev->card) {
-+		if (sdiodev->card->sdioh)
-+			brcmf_sdioh_detach(sdiodev->card->sdioh);
-+		kfree(sdiodev->card);
-+		sdiodev->card = NULL;
-+	}
-+
- 	return 0;
- }
- EXPORT_SYMBOL(brcmf_sdio_remove);
-diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-index 68b6843..cf3b8fc 100644
---- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-@@ -136,9 +136,6 @@ struct brcmf_sdio_dev {
- 	void *bus;
- };
- 
--/* Detach - freeup resources allocated in attach */
--extern int brcmf_sdcard_detach(struct brcmf_sdio_card *card);
--
- /* Enable/disable SD interrupt */
- extern int brcmf_sdcard_intr_enable(struct brcmf_sdio_card *card);
- extern int brcmf_sdcard_intr_disable(struct brcmf_sdio_card *card);
+> +static const iw_handler mesh_iw_handler[] =
+> +{
+> +	IW_HANDLER(SIOCGIWNAME, (iw_handler) mesh_get_name),
+> +	IW_HANDLER(SIOCGIWFREQ, (iw_handler) mesh_get_freq),
+> +	IW_HANDLER(SIOCSIWFREQ, (iw_handler) mesh_set_freq),
+> +};
+
+We are trying to remove wext code, not add it. I'm surprised to see this.
+
 -- 
-1.7.4.1
-
-
+Kalle Valo
