@@ -1,109 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:32866 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752206Ab1GUP0w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 11:26:52 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:40105 "EHLO
+	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752836Ab1GTQyH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jul 2011 12:54:07 -0400
+From: Daniel Drake <dsd@laptop.org>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 22/25] iwlagn: track beacon interval sent to device
-Date: Thu, 21 Jul 2011 07:50:25 -0700
-Message-Id: <1311259828-8415-23-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110721_172705_534926_D4D5C369)
-In-Reply-To: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
+To: dcbw@redhat.com
+Cc: linux-wireless@vger.kernel.org
+Cc: libertas-dev@lists.infradead.org
+Subject: [PATCH v2 3/3] libertas: reimplement mesh channel selection
+Message-Id: <20110720165403.52B629D401C@zog.reactivated.net> (sfid-20110720_185415_016035_B7D3DC76)
+Date: Wed, 20 Jul 2011 17:54:03 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This reimplements code allowing for mesh channel selection according
+to how NetworkManager expects.
 
-Sometimes, when mac80211 changes the beacon
-interval or when it isn't yet set in mac80211
-before association, the uCode will sysassert
-because we send it confusing RXON timing vs.
-PAN parameters. To fix this, track the last
-beacon interval sent to the device and use
-that in PAN parameter calculations.
-
-This fixes a bug during P2P group formation
-as a client (and possibly association to a
-regular AP) while connected to another AP.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Daniel Drake <dsd@laptop.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   11 +++++------
- drivers/net/wireless/iwlwifi/iwl-core.c     |    2 ++
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 ++
- 3 files changed, 9 insertions(+), 6 deletions(-)
+ drivers/net/wireless/libertas/dev.h  |    1 +
+ drivers/net/wireless/libertas/mesh.c |   76 +++++++++++++++++++++++++++++----
+ 2 files changed, 67 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index d78a465..d42ef17 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -342,7 +342,7 @@ int iwlagn_set_pan_params(struct iwl_priv *priv)
- 		slot1 = priv->hw_roc_duration;
- 		slot0 = IWL_MIN_SLOT_TIME;
- 	} else if (ctx_bss->vif && ctx_pan->vif) {
--		int bcnint = ctx_pan->vif->bss_conf.beacon_int;
-+		int bcnint = ctx_pan->beacon_int;
- 		int dtim = ctx_pan->vif->bss_conf.dtim_period ?: 1;
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index adb3490..86494b0 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -48,6 +48,7 @@ struct lbs_private {
+ 	uint16_t mesh_tlv;
+ 	u8 mesh_ssid[IEEE80211_MAX_SSID_LEN + 1];
+ 	u8 mesh_ssid_len;
++	short mesh_channel;
+ #endif
  
- 		/* should be set, but seems unused?? */
-@@ -350,14 +350,13 @@ int iwlagn_set_pan_params(struct iwl_priv *priv)
+ 	/* Debugfs */
+diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
+index be72c08..87d1049 100644
+--- a/drivers/net/wireless/libertas/mesh.c
++++ b/drivers/net/wireless/libertas/mesh.c
+@@ -123,7 +123,7 @@ static int lbs_mesh_config(struct lbs_private *priv, uint16_t action,
+ 		return -1;
+ 	}
+ 	lbs_deb_cmd("mesh config action %d type %x channel %d SSID %s\n",
+-		    action, priv->mesh_tlv, chan,
++		    action, priv->mesh_tlv, priv->mesh_channel,
+ 		    print_ssid(ssid, priv->mesh_ssid, priv->mesh_ssid_len));
  
- 		if (ctx_pan->vif->type == NL80211_IFTYPE_AP &&
- 		    bcnint &&
--		    bcnint != ctx_bss->vif->bss_conf.beacon_int) {
-+		    bcnint != ctx_bss->beacon_int) {
- 			IWL_ERR(priv,
- 				"beacon intervals don't match (%d, %d)\n",
--				ctx_bss->vif->bss_conf.beacon_int,
--				ctx_pan->vif->bss_conf.beacon_int);
-+				ctx_bss->beacon_int, ctx_pan->beacon_int);
- 		} else
- 			bcnint = max_t(int, bcnint,
--				       ctx_bss->vif->bss_conf.beacon_int);
-+				       ctx_bss->beacon_int);
- 		if (!bcnint)
- 			bcnint = DEFAULT_BEACON_INTERVAL;
- 		slot0 = bcnint / 2;
-@@ -376,7 +375,7 @@ int iwlagn_set_pan_params(struct iwl_priv *priv)
- 	} else if (ctx_pan->vif) {
- 		slot0 = 0;
- 		slot1 = max_t(int, 1, ctx_pan->vif->bss_conf.dtim_period) *
--					ctx_pan->vif->bss_conf.beacon_int;
-+					ctx_pan->beacon_int;
- 		slot1 = max_t(int, DEFAULT_BEACON_INTERVAL, slot1);
+ 	return __lbs_mesh_config_send(priv, &cmd, action, priv->mesh_tlv);
+@@ -803,6 +803,62 @@ static void lbs_persist_config_remove(struct net_device *dev)
  
- 		if (test_bit(STATUS_SCAN_HW, &priv->status)) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 2f42547..cf376f6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -363,6 +363,8 @@ int iwl_send_rxon_timing(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 		ctx->timing.beacon_interval = cpu_to_le16(beacon_int);
+ 
+ /***************************************************************************
++ * WEXT handlers
++ */
++
++static int mesh_get_name(struct net_device *dev,
++    struct iw_request_info *info, char *name, char *extra)
++{
++	strcpy(name, "IEEE 802.11b/g");
++	return 0;
++}
++
++static int mesh_get_freq(struct net_device *dev,
++    struct iw_request_info *info, struct iw_freq *freq, char *extra)
++{
++	struct lbs_private *priv = dev->ml_priv;
++	freq->e = 0;
++	freq->m = priv->mesh_channel;
++	return 0;
++}
++
++static int mesh_set_freq(struct net_device *dev,
++    struct iw_request_info *info, struct iw_freq *freq, char *extra)
++{
++	struct lbs_private *priv = dev->ml_priv;
++	short channel = 0;
++
++	if (freq->e == 0)
++		channel = freq->m;
++	else {
++		channel = ieee80211_freq_to_dsss_chan(freq->m);
++		if (channel < 0)
++			channel = 1;
++	}
++
++	priv->mesh_channel = channel;
++
++	if (netif_running(dev))
++		lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
++				priv->mesh_channel);
++
++	return 0;
++}
++
++static const iw_handler mesh_iw_handler[] =
++{
++	IW_HANDLER(SIOCGIWNAME, (iw_handler) mesh_get_name),
++	IW_HANDLER(SIOCGIWFREQ, (iw_handler) mesh_get_freq),
++	IW_HANDLER(SIOCSIWFREQ, (iw_handler) mesh_set_freq),
++};
++
++static const struct iw_handler_def mesh_iw_handler_def = {
++	.num_standard	= ARRAY_SIZE(mesh_iw_handler),
++	.standard 	= mesh_iw_handler,
++};
++
++
++/***************************************************************************
+  * Initializing and starting, stopping mesh
+  */
+ 
+@@ -837,11 +893,9 @@ int lbs_init_mesh(struct lbs_private *priv)
+ 		   useful */
+ 
+ 		priv->mesh_tlv = TLV_TYPE_OLD_MESH_ID;
+-		if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
+-				    priv->channel)) {
++		if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START, 1)) {
+ 			priv->mesh_tlv = TLV_TYPE_MESH_ID;
+-			if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
+-					    priv->channel))
++			if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START, 1))
+ 				priv->mesh_tlv = 0;
+ 		}
+ 	} else
+@@ -851,13 +905,12 @@ int lbs_init_mesh(struct lbs_private *priv)
+ 		 * 0x100+37; Do not invoke command with old TLV.
+ 		 */
+ 		priv->mesh_tlv = TLV_TYPE_MESH_ID;
+-		if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
+-				    priv->channel))
++		if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START, 1))
+ 			priv->mesh_tlv = 0;
  	}
  
-+	ctx->beacon_int = beacon_int;
-+
- 	tsf = priv->timestamp; /* tsf is modifed by do_div: copy it */
- 	interval_tm = beacon_int * TIME_UNIT;
- 	rem = do_div(tsf, interval_tm);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index fc23873..8da38be 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1152,6 +1152,8 @@ struct iwl_rxon_context {
+ 	/* Stop meshing until interface is brought up */
+-	lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_STOP, priv->channel);
++	lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_STOP, 1);
  
- 	__le32 station_flags;
+ 	if (priv->mesh_tlv) {
+ 		sprintf(priv->mesh_ssid, "mesh");
+@@ -904,7 +957,7 @@ static int lbs_mesh_stop(struct net_device *dev)
+ 	struct lbs_private *priv = dev->ml_priv;
  
-+	int beacon_int;
-+
- 	struct {
- 		bool non_gf_sta_present;
- 		u8 protection;
+ 	lbs_deb_enter(LBS_DEB_MESH);
+-	lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_STOP, priv->channel);
++	lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_STOP, priv->mesh_channel);
+ 
+ 	spin_lock_irq(&priv->driver_lock);
+ 
+@@ -947,7 +1000,8 @@ static int lbs_mesh_dev_open(struct net_device *dev)
+ 
+ 	spin_unlock_irq(&priv->driver_lock);
+ 
+-	ret = lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START, priv->channel);
++	ret = lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
++			      priv->mesh_channel);
+ 
+ out:
+ 	lbs_deb_leave_args(LBS_DEB_NET, "ret %d", ret);
+@@ -984,8 +1038,10 @@ static int lbs_add_mesh(struct lbs_private *priv)
+ 	}
+ 	mesh_dev->ml_priv = priv;
+ 	priv->mesh_dev = mesh_dev;
++	priv->mesh_channel = 1;
+ 
+ 	mesh_dev->netdev_ops = &mesh_netdev_ops;
++	mesh_dev->wireless_handlers = &mesh_iw_handler_def;
+ 	mesh_dev->ethtool_ops = &lbs_ethtool_ops;
+ 	memcpy(mesh_dev->dev_addr, priv->dev->dev_addr, ETH_ALEN);
+ 
 -- 
-1.7.0.4
+1.7.6
 
