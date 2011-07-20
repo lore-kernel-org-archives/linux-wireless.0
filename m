@@ -1,98 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4202 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752719Ab1GROaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2011 10:30:23 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Roland Vossen" <rvossen@broadcom.com>,
-	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 02/19] staging: brcm80211: resolved checkpatch warnings
- in LCN phy
-Date: Mon, 18 Jul 2011 16:29:48 +0200
-Message-ID: <1310999405-10062-3-git-send-email-arend@broadcom.com> (sfid-20110718_163032_631101_C6BC6B06)
-In-Reply-To: <1310999405-10062-1-git-send-email-arend@broadcom.com>
-References: <1310999405-10062-1-git-send-email-arend@broadcom.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:45378 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750885Ab1GTIaQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jul 2011 04:30:16 -0400
+Received: by iyb12 with SMTP id 12so4802390iyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2011 01:30:15 -0700 (PDT)
+Message-ID: <4E269214.9050308@lwfinger.net> (sfid-20110720_103020_606184_C4DE4B47)
+Date: Wed, 20 Jul 2011 03:30:12 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pavel Roskin <proski@gnu.org>, b43-dev@lists.infradead.org
+Subject: Re: [PATCH 1/3] b43: replace DMA translation workarounds with just
+ a one, commented
+References: <1311113542-2540-1-git-send-email-zajec5@gmail.com>	<1311113542-2540-2-git-send-email-zajec5@gmail.com>	<20110720011509.504022f8@maggie> <CACna6rwMe9-dHANpDLko5yy5wu521YTGXmqBr1JYh18tYt+Z4A@mail.gmail.com>
+In-Reply-To: <CACna6rwMe9-dHANpDLko5yy5wu521YTGXmqBr1JYh18tYt+Z4A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+On 07/20/2011 01:16 AM, Rafał Miłecki wrote:
+> W dniu 20 lipca 2011 01:15 użytkownik Michael Büsch<m@bues.ch>  napisał:
+>> On Wed, 20 Jul 2011 00:12:20 +0200
+>> Rafał Miłecki<zajec5@gmail.com>  wrote:
+>>> +              * be fixed on ssb side, but requires testing with b43,
+>>> +              * b43legacy and b44. */
+>>
+>> No it doesn't. b44 and b43legacy don't use 64bit DMA.
+>> Just fix it in ssb, please.
+>
+> They (drivers) don't, but what if we start giving them routing for
+> 64-bit DMA? AFAIU they treat 64-bit DMA as 32-bit one (according to
+> specs: "If 64 Bit isn't an option, Silicon Backplane and PCI-E buses
+> can use 32 bit DMA.").
+>
+> Won't they start using 64-bit DMA in the 32-bit way but with 64-bit
+> routing bits?
 
-Refactored code to not exceed the 80 char limit.
+The BCM4311 was the first device that supported 64-bit DMA. I had the first of 
+those, and I got to debug the 64-bit stuff that had been written by Michael, but 
+there had been no hardware for testing. All earlier devices were restricted to 
+32-bit paths.
 
-Cc: linux-wireless@vger.kernel.org
-Cc: devel@linuxdriverproject.org
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c |   46 ++++++++--------------
- 1 files changed, 16 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
-index a109866..3d140eb 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
-@@ -4342,39 +4342,25 @@ static void wlc_lcnphy_tbl_init(struct brcms_phy *pi)
- 	}
- 
- 	if (LCNREV_IS(pi->pubpi.phy_rev, 2)) {
-+		const struct phytbl_info *tb;
-+		int l;
-+
- 		if (CHSPEC_IS2G(pi->radio_chanspec)) {
--			for (idx = 0;
--			     idx < dot11lcnphytbl_rx_gain_info_2G_rev2_sz;
--			     idx++)
--				if (pi->sh->boardflags & BFL_EXTLNA)
--					wlc_lcnphy_write_table(
--						pi,
--						&
--						dot11lcnphytbl_rx_gain_info_extlna_2G_rev2
--						[idx]);
--				else
--					wlc_lcnphy_write_table(
--						pi,
--						&
--						dot11lcnphytbl_rx_gain_info_2G_rev2
--						[idx]);
-+			l = dot11lcnphytbl_rx_gain_info_2G_rev2_sz;
-+			if (pi->sh->boardflags & BFL_EXTLNA)
-+				tb = dot11lcnphytbl_rx_gain_info_extlna_2G_rev2;
-+			else
-+				tb = dot11lcnphytbl_rx_gain_info_2G_rev2;
- 		} else {
--			for (idx = 0;
--			     idx < dot11lcnphytbl_rx_gain_info_5G_rev2_sz;
--			     idx++)
--				if (pi->sh->boardflags & BFL_EXTLNA_5GHz)
--					wlc_lcnphy_write_table(
--						pi,
--						&
--						dot11lcnphytbl_rx_gain_info_extlna_5G_rev2
--						[idx]);
--				else
--					wlc_lcnphy_write_table(
--						pi,
--						&
--						dot11lcnphytbl_rx_gain_info_5G_rev2
--						[idx]);
-+			l = dot11lcnphytbl_rx_gain_info_5G_rev2_sz;
-+			if (pi->sh->boardflags & BFL_EXTLNA_5GHz)
-+				tb = dot11lcnphytbl_rx_gain_info_extlna_5G_rev2;
-+			else
-+				tb = dot11lcnphytbl_rx_gain_info_5G_rev2;
- 		}
-+
-+		for (idx = 0; idx < l; idx++)
-+			wlc_lcnphy_write_table(pi, &tb[idx]);
- 	}
- 
- 	if ((pi->sh->boardflags & BFL_FEM)
--- 
-1.7.4.1
-
-
+Larry
