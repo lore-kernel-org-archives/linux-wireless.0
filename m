@@ -1,71 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from msr2.hinet.net ([168.95.4.102]:48404 "EHLO msr2.hinet.net"
+Received: from mga01.intel.com ([192.55.52.88]:53534 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756356Ab1GKMR4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 08:17:56 -0400
-From: Ali Bahar <ali@internetdog.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, WLAN FAE <wlanfae@realtek.com>,
-	Ali Bahar <ali@internetdog.org>
-Subject: [PATCH 2/2] staging: r8712u: Interface-state not fully tracked.
-Date: Mon, 11 Jul 2011 18:07:56 +0800
-Message-Id: <1310378876-1311-3-git-send-email-ali@internetDog.org> (sfid-20110711_141758_861888_7F34E358)
-In-Reply-To: <1310378876-1311-1-git-send-email-ali@internetDog.org>
-References: <1310378876-1311-1-git-send-email-ali@internetDog.org>
+	id S1752163Ab1GUP0u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 11:26:50 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 18/25] iwlagn: remove forgotten debugfs function
+Date: Thu, 21 Jul 2011 07:50:21 -0700
+Message-Id: <1311259828-8415-19-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110721_172715_357236_E53E1E98)
+In-Reply-To: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-padapter->bup is True when the interface has been
-brought Up. But it was not being reset when the
-interface is taken Down.
-This has not caused a known problem, as other
-state variables may be compensating for it. Never
-the less, it is now properly tracked.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Ali Bahar <ali@internetDog.org>
+It seems that due to merge issues between different
+trees or so this function prototype wasn't removed
+when it should have been, do it now.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/staging/rtl8712/os_intfs.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-debug.h |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/rtl8712/os_intfs.c b/drivers/staging/rtl8712/os_intfs.c
-index 3f38e8e..6697941 100644
---- a/drivers/staging/rtl8712/os_intfs.c
-+++ b/drivers/staging/rtl8712/os_intfs.c
-@@ -375,6 +375,12 @@ static void enable_video_mode(struct _adapter *padapter, int cbw40_value)
- 	r8712_fw_cmd(padapter, intcmd);
- }
- 
-+/**
-+ *
-+ * This function intends to handle the activation of an interface
-+ * i.e. when it is brought Up/Active from a Down state.
-+ *
-+ */
- static int netdev_open(struct net_device *pnetdev)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 4529e2d..f9a407e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -78,8 +78,6 @@ static inline void iwl_print_hex_dump(struct iwl_priv *priv, int level,
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name);
+ void iwl_dbgfs_unregister(struct iwl_priv *priv);
+-extern int iwl_dbgfs_statistics_flag(struct iwl_priv *priv, char *buf,
+-				     int bufsz);
+ #else
+ static inline int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
  {
- 	struct _adapter *padapter = (struct _adapter *)_netdev_priv(pnetdev);
-@@ -434,6 +440,12 @@ netdev_open_error:
- 	return -1;
- }
- 
-+/**
-+ *
-+ * This function intends to handle the shutdown of an interface
-+ * i.e. when it is brought Down from an Up/Active state.
-+ *
-+ */
- static int netdev_close(struct net_device *pnetdev)
- {
- 	struct _adapter *padapter = (struct _adapter *) _netdev_priv(pnetdev);
-@@ -458,6 +470,8 @@ static int netdev_close(struct net_device *pnetdev)
- 	r8712_free_network_queue(padapter);
- 	/*Stop driver mlme relation timer*/
- 	stop_drv_timers(padapter);
-+	/* The interface is no longer Up: */
-+	padapter->bup = false;
- 	return 0;
- }
- 
 -- 
-1.7.6
+1.7.0.4
 
