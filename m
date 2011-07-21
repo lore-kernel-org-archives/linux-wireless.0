@@ -1,55 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51169 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751178Ab1GTURN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2011 16:17:13 -0400
-Date: Wed, 20 Jul 2011 16:00:04 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: sedat.dilek@gmail.com, Sedat Dilek <sedat.dilek@googlemail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ath5k: merge ath5k_hw and ath5k_softc
-Message-ID: <20110720200004.GB18231@tuxdriver.com> (sfid-20110720_221716_994840_4EC34DFD)
-References: <20110715002155.14332.3527.stgit@mj.roinet.com>
- <CAFtRNNy3SvLXUJ8uaOibGfnynS7gwCOMW2x=cLhfPDf9aNw4vQ@mail.gmail.com>
- <CA+icZUXFwP7QM2JY8HzCjNEAbyVhr6K1K_AMDMKE2x+5wwWvuA@mail.gmail.com>
- <4E2733BC.3070309@gnu.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E2733BC.3070309@gnu.org>
+Received: from mga01.intel.com ([192.55.52.88]:47950 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752137Ab1GUP0r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 11:26:47 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 15/25] iwlagn: testmode fixed rate available for testmode only
+Date: Thu, 21 Jul 2011 07:50:18 -0700
+Message-Id: <1311259828-8415-16-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110721_172735_307823_E5ACD6C4)
+In-Reply-To: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 20, 2011 at 03:59:56PM -0400, Pavel Roskin wrote:
-> On 07/20/2011 06:19 AM, Sedat Dilek wrote:
-> 
-> >I have tested this patch on top of linux-next (next-20110720) and it fails:
-> 
-> The patch is for wireless-testing.
-> 
-> >In file included from
-> >/mnt/sdb3/linux-kernel/linux-3.0-rc7/debian/build/source_i386_none/drivers/net/wireless/ath/ath5k/caps.c:24:0:
-> >/mnt/sdb3/linux-kernel/linux-3.0-rc7/debian/build/source_i386_none/drivers/net/wireless/ath/ath5k/ath5k.h:1072:24:
-> >error: field 'toggleq' has incomplete type
-> 
-> It looks like ath5.h needs to include linux/interrupt.h, which is
-> currently included by base.h.
-> 
-> linux-next is stricter about the includes than wireless-testing.
-> Let's not break linux-next, as someone else will need to fix it.
-> 
-> I'll send another version of the patch, tested both on
-> wireless-testing and linux-next.
+Move tm_fixed_rate inside CONFIG_IWLWIFI_DEVICE_SVTOOL and only
+available when the option is enable.
 
-I already merged a version that incorporated Sedat's change on top
-of your.  If that isn't what you want, please post your change as a
-patch on top.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    8 ++++++--
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-dev.h    |    2 +-
+ 3 files changed, 9 insertions(+), 3 deletions(-)
 
-Thanks,
-
-JOhn
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index ebcd13b..3789ff4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -354,9 +354,11 @@ static void rs_program_fix_rate(struct iwl_priv *priv,
+ 	lq_sta->active_mimo2_rate  = 0x1FD0;	/* 6 - 60 MBits, no 9, no CCK */
+ 	lq_sta->active_mimo3_rate  = 0x1FD0;	/* 6 - 60 MBits, no 9, no CCK */
+ 
++#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
+ 	/* testmode has higher priority to overwirte the fixed rate */
+ 	if (priv->tm_fixed_rate)
+ 		lq_sta->dbg_fixed_rate = priv->tm_fixed_rate;
++#endif
+ 
+ 	IWL_DEBUG_RATE(priv, "sta_id %d rate 0x%X\n",
+ 		lq_sta->lq.sta_id, lq_sta->dbg_fixed_rate);
+@@ -1080,7 +1082,8 @@ done:
+ 	/* See if there's a better rate or modulation mode to try. */
+ 	if (sta && sta->supp_rates[sband->band])
+ 		rs_rate_scale_perform(priv, skb, sta, lq_sta);
+-#ifdef CONFIG_MAC80211_DEBUGFS
++
++#if defined(CONFIG_MAC80211_DEBUGFS) && defined(CONFIG_IWLWIFI_DEVICE_SVTOOL)
+ 	if ((priv->tm_fixed_rate) &&
+ 	    (priv->tm_fixed_rate != lq_sta->dbg_fixed_rate))
+ 		rs_program_fix_rate(priv, lq_sta);
+@@ -2904,8 +2907,9 @@ void iwl_rs_rate_init(struct iwl_priv *priv, struct ieee80211_sta *sta, u8 sta_i
+ 	if (sband->band == IEEE80211_BAND_5GHZ)
+ 		lq_sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
+ 	lq_sta->is_agg = 0;
+-
++#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
+ 	priv->tm_fixed_rate = 0;
++#endif
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	lq_sta->dbg_fixed_rate = 0;
+ #endif
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index a5295c1..53bb59e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -217,6 +217,7 @@ static void iwlagn_tx_cmd_build_rate(struct iwl_priv *priv,
+ 	if (ieee80211_is_data(fc)) {
+ 		tx_cmd->initial_rate_index = 0;
+ 		tx_cmd->tx_flags |= TX_CMD_FLG_STA_RATE_MSK;
++#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
+ 		if (priv->tm_fixed_rate) {
+ 			/*
+ 			 * rate overwrite by testmode
+@@ -227,6 +228,7 @@ static void iwlagn_tx_cmd_build_rate(struct iwl_priv *priv,
+ 			memcpy(&tx_cmd->rate_n_flags, &priv->tm_fixed_rate,
+ 			       sizeof(tx_cmd->rate_n_flags));
+ 		}
++#endif
+ 		return;
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 964be57..72ef50e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1535,8 +1535,8 @@ struct iwl_priv {
+ 	bool led_registered;
+ #ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
+ 	struct iwl_testmode_trace testmode_trace;
+-#endif
+ 	u32 tm_fixed_rate;
++#endif
+ 
+ }; /*iwl_priv */
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
