@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53663 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752841Ab1GEDLn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 23:11:43 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	mickflemm@gmail.com
-Subject: [PATCH v2 4/8] ath5k: initialize common->clockrate
-Date: Tue,  5 Jul 2011 10:11:20 +0700
-Message-Id: <1309835484-26653-4-git-send-email-nbd@openwrt.org> (sfid-20110705_051153_865275_CC643D94)
-In-Reply-To: <1309835484-26653-3-git-send-email-nbd@openwrt.org>
-References: <1309835484-26653-1-git-send-email-nbd@openwrt.org>
- <1309835484-26653-2-git-send-email-nbd@openwrt.org>
- <1309835484-26653-3-git-send-email-nbd@openwrt.org>
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:34692 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144Ab1GUOPI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 10:15:08 -0400
+Received: by fxd18 with SMTP id 18so3643792fxd.11
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2011 07:15:06 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Stanislav Demakov <s.demakov@gmail.com>
+Subject: Re: rt2x00, AP mode, 802.11n is not working properly
+Date: Thu, 21 Jul 2011 16:13:01 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <CAN=pzdLRaRHkg4NquUpDhEwRzq-roKQXMtMcwnr031maDSLRfw@mail.gmail.com> <CAGXE3d9HgRvdJModc3hSA25+jLktZJ3i997oq7GfZz4dUJfuvw@mail.gmail.com> <CAN=pzdKHWNcvwAn3uDMzTdpvv3MkM9KNC89NuzZX=z6npBnUGg@mail.gmail.com>
+In-Reply-To: <CAN=pzdKHWNcvwAn3uDMzTdpvv3MkM9KNC89NuzZX=z6npBnUGg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201107211613.01938.helmut.schaa@googlemail.com> (sfid-20110721_161513_179016_C1DA7EAD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes a division by zero when setting distance before activating the
-device for the first time.
+Am Donnerstag, 21. Juli 2011 schrieb Stanislav Demakov:
+> This patch won't apply on current compat-wireless-2011-07-20.tar.bz2
+> 
+> (Stripping trailing CRs from patch.)
+> patching file b/drivers/net/wireless/rt2x00/rt2800lib.c
+> Hunk #1 FAILED at 4194.
+> 1 out of 1 hunk FAILED -- saving rejects to file
+> b/drivers/net/wireless/rt2x00/rt2800lib.c.rej
+> (Stripping trailing CRs from patch.)
+> patching file b/drivers/net/wireless/rt2x00/rt2800usb.c
+> Hunk #1 FAILED at 527.
+> patch unexpectedly ends in middle of line
+> Hunk #2 FAILED at 820.
+> 2 out of 2 hunks FAILED -- saving rejects to file
+> b/drivers/net/wireless/rt2x00/rt2800usb.c.rej
+> 
+> Should I use another version of compat wireless or edit files manually?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
----
- drivers/net/wireless/ath/ath5k/base.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Just edit manually, it's not much ...
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index a6623dd..a413aa7 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2422,6 +2422,7 @@ ath5k_init_softc(struct ath5k_softc *sc, const struct ath_bus_ops *bus_ops)
- 	common->ah = sc->ah;
- 	common->hw = hw;
- 	common->priv = sc;
-+	common->clockrate = 40;
- 
- 	/*
- 	 * Cache line size is used to size and align various
--- 
-1.7.3.2
+> Also I have no stability issues, the connection is stable, but as I
+> said the TX speed from AP running rt2x00 (the driver is in Master
+> mode) to client is extremely slow in 802.11n+WMM mode.
 
+Yeah, understood. That's what I saw in STA mode as well. Now I get a stable
+transmit speed >20Mbps (MCS7 20Mhz).
+
+> And this is only WMM mode related, because wIthout it everything is fine.
+
+Disabling WMM might force some clients to disable 11n, not sure though how
+this relates.
+
+Helmut
