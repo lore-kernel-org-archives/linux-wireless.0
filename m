@@ -1,206 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43280 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.19.149.2]:62706 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751772Ab1GSPbP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 11:31:15 -0400
-Subject: Re: [PATCH 4/4] libertas: reimplement mesh channel selection
-From: Dan Williams <dcbw@redhat.com>
-To: Daniel Drake <dsd@laptop.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-Date: Tue, 19 Jul 2011 10:34:50 -0500
-In-Reply-To: <20110717170346.45A739D401C@zog.reactivated.net>
-References: <20110717170346.45A739D401C@zog.reactivated.net>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1311089696.2647.4.camel@dcbw.foobar.com> (sfid-20110719_173119_180261_377E4B9F)
-Mime-Version: 1.0
+	id S1753131Ab1GUUwS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 16:52:18 -0400
+Received: from mail.atheros.com ([10.234.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2011 13:51:37 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <jouni@qca.qualcomm.com>
+CC: <hostap@lists.shmoo.com>, <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@qualcomm.com>
+Subject: [PATCH v4 0/4] hostapd: add ACS support
+Date: Thu, 21 Jul 2011 13:52:10 -0700
+Message-ID: <1311281534-10733-1-git-send-email-lrodriguez@atheros.com> (sfid-20110721_225238_489050_911AA0DA)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-07-17 at 18:03 +0100, Daniel Drake wrote:
-> This reimplements code allowing for mesh channel selection according
-> to how NetworkManager expects.
+From: Luis R. Rodriguez <lrodriguez@qualcomm.com>
 
-Originally I was trying to get away from magical functions that used
-variables of the internal private structure to change state, ie moving
-most of the actual data for the firmware commands to the function
-argument list instead of accessing priv->xxxx internally.  The idea
-there was that it would be easier to follow the code flow through the
-driver if you knew that these functions weren't touching all sorts of
-internal variables.  Any chance we can preserve that?  Thoughts?  That
-was my intent at least but it's not set in stone.
+Here's a v4 which corrects one bug (rather typo) and one uneeded
+blank line hunk. This also rebases on top of today's hostapd.git.
+This also casts to (unsigned long int) the u64 on debug prints
+for the survey as in some compilers it will rant.
 
-Dan
+For more details please refer to:
 
-> Signed-off-by: Daniel Drake <dsd@laptop.org>
-> ---
->  drivers/net/wireless/libertas/dev.h  |    1 +
->  drivers/net/wireless/libertas/mesh.c |   79 ++++++++++++++++++++++++++++------
->  2 files changed, 67 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-> index 8a43ec0..0329238 100644
-> --- a/drivers/net/wireless/libertas/dev.h
-> +++ b/drivers/net/wireless/libertas/dev.h
-> @@ -48,6 +48,7 @@ struct lbs_private {
->  	uint16_t mesh_tlv;
->  	u8 mesh_ssid[IEEE80211_MAX_SSID_LEN + 1];
->  	u8 mesh_ssid_len;
-> +	short mesh_channel;
->  #endif
->  
->  	/* Debugfs */
-> diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
-> index be72c08..ade3770 100644
-> --- a/drivers/net/wireless/libertas/mesh.c
-> +++ b/drivers/net/wireless/libertas/mesh.c
-> @@ -88,15 +88,14 @@ static int lbs_mesh_config_send(struct lbs_private *priv,
->   * are all handled by preparing a struct cmd_ds_mesh_config and passing it to
->   * lbs_mesh_config_send.
->   */
-> -static int lbs_mesh_config(struct lbs_private *priv, uint16_t action,
-> -		uint16_t chan)
-> +static int lbs_mesh_config(struct lbs_private *priv, uint16_t action)
->  {
->  	struct cmd_ds_mesh_config cmd;
->  	struct mrvl_meshie *ie;
->  	DECLARE_SSID_BUF(ssid);
->  
->  	memset(&cmd, 0, sizeof(cmd));
-> -	cmd.channel = cpu_to_le16(chan);
-> +	cmd.channel = cpu_to_le16(priv->mesh_channel);
->  	ie = (struct mrvl_meshie *)cmd.data;
->  
->  	switch (action) {
-> @@ -123,7 +122,7 @@ static int lbs_mesh_config(struct lbs_private *priv, uint16_t action,
->  		return -1;
->  	}
->  	lbs_deb_cmd("mesh config action %d type %x channel %d SSID %s\n",
-> -		    action, priv->mesh_tlv, chan,
-> +		    action, priv->mesh_tlv, priv->mesh_channel,
->  		    print_ssid(ssid, priv->mesh_ssid, priv->mesh_ssid_len));
->  
->  	return __lbs_mesh_config_send(priv, &cmd, action, priv->mesh_tlv);
-> @@ -803,6 +802,61 @@ static void lbs_persist_config_remove(struct net_device *dev)
->  
-> 
->  /***************************************************************************
-> + * WEXT handlers
-> + */
-> +
-> +static int mesh_get_name(struct net_device *dev,
-> +    struct iw_request_info *info, char *name, char *extra)
-> +{
-> +	strcpy(name, "IEEE 802.11b/g OLPC Mesh");
-> +	return 0;
-> +}
-> +
-> +static int mesh_get_freq(struct net_device *dev,
-> +    struct iw_request_info *info, struct iw_freq *freq, char *extra)
-> +{
-> +	struct lbs_private *priv = dev->ml_priv;
-> +	freq->e = 0;
-> +	freq->m = priv->mesh_channel;
-> +	return 0;
-> +}
-> +
-> +static int mesh_set_freq(struct net_device *dev,
-> +    struct iw_request_info *info, struct iw_freq *freq, char *extra)
-> +{
-> +	struct lbs_private *priv = dev->ml_priv;
-> +	short channel = 0;
-> +
-> +	if (freq->e == 0)
-> +		channel = freq->m;
-> +	else {
-> +		channel = ieee80211_freq_to_dsss_chan(freq->m);
-> +		if (channel < 0)
-> +			channel = 1;
-> +	}
-> +
-> +	priv->mesh_channel = channel;
-> +
-> +	if (netif_running(dev))
-> +		lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START);
-> +
-> +	return 0;
-> +}
-> +
-> +static const iw_handler mesh_iw_handler[] =
-> +{
-> +	IW_HANDLER(SIOCGIWNAME, (iw_handler) mesh_get_name),
-> +	IW_HANDLER(SIOCGIWFREQ, (iw_handler) mesh_get_freq),
-> +	IW_HANDLER(SIOCSIWFREQ, (iw_handler) mesh_set_freq),
-> +};
-> +
-> +static const struct iw_handler_def mesh_iw_handler_def = {
-> +	.num_standard	= ARRAY_SIZE(mesh_iw_handler),
-> +	.standard 	= mesh_iw_handler,
-> +};
-> +
-> +
-> +/***************************************************************************
->   * Initializing and starting, stopping mesh
->   */
->  
-> @@ -837,11 +891,9 @@ int lbs_init_mesh(struct lbs_private *priv)
->  		   useful */
->  
->  		priv->mesh_tlv = TLV_TYPE_OLD_MESH_ID;
-> -		if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
-> -				    priv->channel)) {
-> +		if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START)) {
->  			priv->mesh_tlv = TLV_TYPE_MESH_ID;
-> -			if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
-> -					    priv->channel))
-> +			if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START))
->  				priv->mesh_tlv = 0;
->  		}
->  	} else
-> @@ -851,13 +903,12 @@ int lbs_init_mesh(struct lbs_private *priv)
->  		 * 0x100+37; Do not invoke command with old TLV.
->  		 */
->  		priv->mesh_tlv = TLV_TYPE_MESH_ID;
-> -		if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
-> -				    priv->channel))
-> +		if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START))
->  			priv->mesh_tlv = 0;
->  	}
->  
->  	/* Stop meshing until interface is brought up */
-> -	lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_STOP, priv->channel);
-> +	lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_STOP);
->  
->  	if (priv->mesh_tlv) {
->  		sprintf(priv->mesh_ssid, "mesh");
-> @@ -904,7 +955,7 @@ static int lbs_mesh_stop(struct net_device *dev)
->  	struct lbs_private *priv = dev->ml_priv;
->  
->  	lbs_deb_enter(LBS_DEB_MESH);
-> -	lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_STOP, priv->channel);
-> +	lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_STOP);
->  
->  	spin_lock_irq(&priv->driver_lock);
->  
-> @@ -947,7 +998,7 @@ static int lbs_mesh_dev_open(struct net_device *dev)
->  
->  	spin_unlock_irq(&priv->driver_lock);
->  
-> -	ret = lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START, priv->channel);
-> +	ret = lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START);
->  
->  out:
->  	lbs_deb_leave_args(LBS_DEB_NET, "ret %d", ret);
-> @@ -984,8 +1035,10 @@ static int lbs_add_mesh(struct lbs_private *priv)
->  	}
->  	mesh_dev->ml_priv = priv;
->  	priv->mesh_dev = mesh_dev;
-> +	priv->mesh_channel = 1;
->  
->  	mesh_dev->netdev_ops = &mesh_netdev_ops;
-> +	mesh_dev->wireless_handlers = &mesh_iw_handler_def;
->  	mesh_dev->ethtool_ops = &lbs_ethtool_ops;
->  	memcpy(mesh_dev->dev_addr, priv->dev->dev_addr, ETH_ALEN);
->  
+http://wireless.kernel.org/en/users/Documentation/acs
 
+You can get the v4 single patch file from:
+
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/hostapd/acs-all-in-one-v4.patch
+
+When you run this you should get sometime like:
+
+mcgrof@mouche ~/hostap/hostapd (git::master)$ sudo ./hostapd /home/mcgrof/wpa/hostapd.conf 
+Configuration file: /home/mcgrof/wpa/hostapd.conf
+ACS: automatic channel selection started, this may take a bit
+ACS: Ideal chan: 9 (2452 MHz) Average interference factor: -3.403722
+Using interface wlan0 with hwaddr 00:03:7f:11:a3:f3 and ssid 'pogo'
+
+mcgrof@mouche ~/hostap/hostapd (git::master)$ grep acs /home/mcgrof/wpa/hostapd.conf 
+channel=acs_survey
+acs_num_req_surveys=5
+acs_roc_duration_ms=5
+
+Luis R. Rodriguez (4):
+  hostapd: split up channel checking into helpers
+  hostapd: add offchannel support
+  hostapd: add survey dump support
+  hostapd: add Automatic Channel Selection (ACS) support
+
+ hostapd/Makefile             |   12 +
+ hostapd/config_file.c        |   47 ++++-
+ hostapd/defconfig            |   25 +++
+ hostapd/hostapd.conf         |   17 ++
+ src/ap/acs.c                 |  464 ++++++++++++++++++++++++++++++++++++++++++
+ src/ap/acs.h                 |   40 ++++
+ src/ap/ap_config.c           |   15 ++
+ src/ap/ap_config.h           |    4 +
+ src/ap/ap_drv_ops.h          |   26 +++
+ src/ap/drv_callbacks.c       |  138 +++++++++++++
+ src/ap/hostapd.c             |    2 +
+ src/ap/hostapd.h             |   24 +++
+ src/ap/hw_features.c         |  188 +++++++++++------
+ src/drivers/driver.h         |  171 +++++++++++++++-
+ src/drivers/driver_nl80211.c |  193 ++++++++++++++++++
+ 15 files changed, 1296 insertions(+), 70 deletions(-)
+ create mode 100644 src/ap/acs.c
+ create mode 100644 src/ap/acs.h
+
+-- 
+1.7.4.15.g7811d
 
