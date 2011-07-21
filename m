@@ -1,195 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:58888 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755497Ab1GPQ4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2011 12:56:20 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
-	zajec5@gmail.com, linux-mips@linux-mips.org
-Cc: jonas.gorski@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
-	arend@broadcom.com, b43-dev@lists.infradead.org,
-	bernhardloos@googlemail.com, arnd@arndb.de,
-	julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 06/11] bcma: add serial console support
-Date: Sat, 16 Jul 2011 18:55:37 +0200
-Message-Id: <1310835342-18877-7-git-send-email-hauke@hauke-m.de> (sfid-20110716_185627_503627_AB5A00B8)
-In-Reply-To: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
-References: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:58812 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750802Ab1GUOD0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 10:03:26 -0400
+Received: by vxh35 with SMTP id 35so896983vxh.19
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2011 07:03:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAGXE3d9HgRvdJModc3hSA25+jLktZJ3i997oq7GfZz4dUJfuvw@mail.gmail.com>
+References: <CAN=pzdLRaRHkg4NquUpDhEwRzq-roKQXMtMcwnr031maDSLRfw@mail.gmail.com>
+	<201107201536.01392.helmut.schaa@googlemail.com>
+	<CAN=pzdKLtB2yz4-OhKL5gzYF0Qm2weAmNAz-0MqdFuooFNYzwQ@mail.gmail.com>
+	<201107201709.42141.helmut.schaa@googlemail.com>
+	<CAN=pzdL7baXMVORm6CDh4Py773jbFBFkfRUKhjbL0ATZ_yvJmg@mail.gmail.com>
+	<CAGXE3d9HgRvdJModc3hSA25+jLktZJ3i997oq7GfZz4dUJfuvw@mail.gmail.com>
+Date: Thu, 21 Jul 2011 18:03:25 +0400
+Message-ID: <CAN=pzdKHWNcvwAn3uDMzTdpvv3MkM9KNC89NuzZX=z6npBnUGg@mail.gmail.com> (sfid-20110721_160331_899093_ECAE30B3)
+Subject: Re: rt2x00, AP mode, 802.11n is not working properly
+From: Stanislav Demakov <s.demakov@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds support for serial console to bcma, when operating on an SoC.
+This patch won't apply on current compat-wireless-2011-07-20.tar.bz2
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/bcma_private.h                 |    8 ++++
- drivers/bcma/driver_chipcommon.c            |   48 +++++++++++++++++++++++++++
- drivers/bcma/driver_chipcommon_pmu.c        |   26 ++++++++++++++
- drivers/bcma/driver_mips.c                  |    1 +
- include/linux/bcma/bcma_driver_chipcommon.h |   14 ++++++++
- 5 files changed, 97 insertions(+), 0 deletions(-)
+(Stripping trailing CRs from patch.)
+patching file b/drivers/net/wireless/rt2x00/rt2800lib.c
+Hunk #1 FAILED at 4194.
+1 out of 1 hunk FAILED -- saving rejects to file
+b/drivers/net/wireless/rt2x00/rt2800lib.c.rej
+(Stripping trailing CRs from patch.)
+patching file b/drivers/net/wireless/rt2x00/rt2800usb.c
+Hunk #1 FAILED at 527.
+patch unexpectedly ends in middle of line
+Hunk #2 FAILED at 820.
+2 out of 2 hunks FAILED -- saving rejects to file
+b/drivers/net/wireless/rt2x00/rt2800usb.c.rej
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 830386c..b9b4587 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -26,6 +26,14 @@ int __init bcma_bus_scan_early(struct bcma_bus *bus,
- 			       struct bcma_device *core);
- void bcma_init_bus(struct bcma_bus *bus);
- 
-+/* driver_chipcommon.c */
-+#ifdef CONFIG_BCMA_DRIVER_MIPS
-+void bcma_chipco_serial_init(struct bcma_drv_cc *cc);
-+#endif /* CONFIG_BCMA_DRIVER_MIPS */
-+
-+/* driver_chipcommon_pmu.c */
-+u32 bcma_pmu_alp_clock(struct bcma_drv_cc *cc);
-+
- #ifdef CONFIG_BCMA_HOST_PCI
- /* host_pci.c */
- extern int __init bcma_host_pci_init(void);
-diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
-index 70321c6..aaf035a 100644
---- a/drivers/bcma/driver_chipcommon.c
-+++ b/drivers/bcma/driver_chipcommon.c
-@@ -92,3 +92,51 @@ u32 bcma_chipco_gpio_polarity(struct bcma_drv_cc *cc, u32 mask, u32 value)
- {
- 	return bcma_cc_write32_masked(cc, BCMA_CC_GPIOPOL, mask, value);
- }
-+
-+#ifdef CONFIG_BCMA_DRIVER_MIPS
-+void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
-+{
-+	unsigned int irq;
-+	u32 baud_base;
-+	u32 i;
-+	unsigned int ccrev = cc->core->id.rev;
-+	struct bcma_serial_port *ports = cc->serial_ports;
-+
-+	if (ccrev >= 11 && ccrev != 15) {
-+		/* Fixed ALP clock */
-+		baud_base = bcma_pmu_alp_clock(cc);
-+		if (ccrev >= 21) {
-+			/* Turn off UART clock before switching clocksource. */
-+			bcma_cc_write32(cc, BCMA_CC_CORECTL,
-+				       bcma_cc_read32(cc, BCMA_CC_CORECTL)
-+				       & ~BCMA_CC_CORECTL_UARTCLKEN);
-+		}
-+		/* Set the override bit so we don't divide it */
-+		bcma_cc_write32(cc, BCMA_CC_CORECTL,
-+			       bcma_cc_read32(cc, BCMA_CC_CORECTL)
-+			       | BCMA_CC_CORECTL_UARTCLK0);
-+		if (ccrev >= 21) {
-+			/* Re-enable the UART clock. */
-+			bcma_cc_write32(cc, BCMA_CC_CORECTL,
-+				       bcma_cc_read32(cc, BCMA_CC_CORECTL)
-+				       | BCMA_CC_CORECTL_UARTCLKEN);
-+		}
-+	} else {
-+		pr_err("serial not supported on this device ccrev: 0x%x\n",
-+		       ccrev);
-+		return;
-+	}
-+
-+	irq = bcma_core_mips_irq(cc->core);
-+
-+	/* Determine the registers of the UARTs */
-+	cc->nr_serial_ports = (cc->capabilities & BCMA_CC_CAP_NRUART);
-+	for (i = 0; i < cc->nr_serial_ports; i++) {
-+		ports[i].regs = cc->core->io_addr + BCMA_CC_UART0_DATA +
-+				(i * 256);
-+		ports[i].irq = irq;
-+		ports[i].baud_base = baud_base;
-+		ports[i].reg_shift = 0;
-+	}
-+}
-+#endif /* CONFIG_BCMA_DRIVER_MIPS */
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index f44177a..532757c 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -132,3 +132,29 @@ void bcma_pmu_init(struct bcma_drv_cc *cc)
- 	bcma_pmu_swreg_init(cc);
- 	bcma_pmu_workarounds(cc);
- }
-+
-+u32 bcma_pmu_alp_clock(struct bcma_drv_cc *cc)
-+{
-+	struct bcma_bus *bus = cc->core->bus;
-+
-+	switch (bus->chipinfo.id) {
-+	case 0x4716:
-+	case 0x4748:
-+	case 47162:
-+	case 0x4313:
-+	case 0x5357:
-+	case 0x4749:
-+	case 53572:
-+		/* always 20Mhz */
-+		return 20000 * 1000;
-+	case 0x5356:
-+	case 0x5300:
-+		/* always 25Mhz */
-+		return 25000 * 1000;
-+	default:
-+		pr_warn("No ALP clock specified for %04X device, "
-+			"pmu rev. %d, using default %d Hz\n",
-+			bus->chipinfo.id, cc->pmu.rev, BCMA_CC_PMU_ALP_CLOCK);
-+	}
-+	return BCMA_CC_PMU_ALP_CLOCK;
-+}
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index 4b60c9f9..b17233c 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -238,6 +238,7 @@ void bcma_core_mips_init(struct bcma_drv_mips *mcore)
- 	if (mcore->setup_done)
- 		return;
- 
-+	bcma_chipco_serial_init(&bus->drv_cc);
- 	bcma_core_mips_flash_detect(mcore);
- 	mcore->setup_done = true;
- }
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 0d44121..ad7b0bc 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -247,6 +247,9 @@
- #define BCMA_CC_PLLCTL_ADDR		0x0660
- #define BCMA_CC_PLLCTL_DATA		0x0664
- 
-+/* ALP clock on pre-PMU chips */
-+#define BCMA_CC_PMU_ALP_CLOCK		20000000
-+
- /* Data for the PMU, if available.
-  * Check availability with ((struct bcma_chipcommon)->capabilities & BCMA_CC_CAP_PMU)
-  */
-@@ -261,6 +264,14 @@ struct bcma_pflash {
- 	u32 window;
- 	u32 window_size;
- };
-+
-+struct bcma_serial_port {
-+	void *regs;
-+	unsigned long clockspeed;
-+	unsigned int irq;
-+	unsigned int baud_base;
-+	unsigned int reg_shift;
-+};
- #endif /* CONFIG_BCMA_DRIVER_MIPS */
- 
- struct bcma_drv_cc {
-@@ -274,6 +285,9 @@ struct bcma_drv_cc {
- 	struct bcma_chipcommon_pmu pmu;
- #ifdef CONFIG_BCMA_DRIVER_MIPS
- 	struct bcma_pflash pflash;
-+
-+	int nr_serial_ports;
-+	struct bcma_serial_port serial_ports[4];
- #endif /* CONFIG_BCMA_DRIVER_MIPS */
- };
- 
--- 
-1.7.4.1
+Should I use another version of compat wireless or edit files manually?
+Also I have no stability issues, the connection is stable, but as I
+said the TX speed from AP running rt2x00 (the driver is in Master
+mode) to client is extremely slow in 802.11n+WMM mode.
+And this is only WMM mode related, because wIthout it everything is fine.
 
+
+2011/7/21 Helmut Schaa <helmut.schaa@googlemail.com>:
+> On Thu, Jul 21, 2011 at 1:53 PM, Stanislav Demakov <s.demakov@gmail.com> wrote:
+>> So eventually, are you going to fix or discover this bug yourself?
+>
+> Please try this on top of a current compat-wireless. It improved STA
+> mode stability in
+> rt2800usb for me quite a bit. But this is not a valid fix, it's just
+> for tracking down the
+> problem a bit further.
+>
+> Thanks,
+> Helmut
+>
+> ---
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c
+> b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 1ac1f39..3d9d152 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -4194,8 +4194,7 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+>        /*
+>         * Disable powersaving as default on PCI devices.
+>         */
+> -       if (rt2x00_is_pci(rt2x00dev) || rt2x00_is_soc(rt2x00dev))
+> -               rt2x00dev->hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+> +       rt2x00dev->hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+>
+>        /*
+>         * Initialize all hw fields.
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c
+> b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index f9c58cd..602677c 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -527,7 +527,7 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
+>                entry = NULL;
+>                while (!rt2x00queue_empty(queue)) {
+>                        entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
+> -                       if (rt2800usb_txdone_entry_check(entry, reg))
+> +                       /*if (rt2800usb_txdone_entry_check(entry, reg))*/
+>                                break;
+>                }
+>
+> @@ -820,7 +820,7 @@ static const struct data_queue_desc rt2800usb_queue_rx = {
+>  };
+>
+>  static const struct data_queue_desc rt2800usb_queue_tx = {
+> -       .entry_num              = 64,
+> +       .entry_num              = 8,
+>        .data_size              = AGGREGATION_SIZE,
+>        .desc_size              = TXINFO_DESC_SIZE + TXWI_DESC_SIZE,
+>        .priv_size              = sizeof(struct queue_entry_priv_usb),
+>
