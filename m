@@ -1,65 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22765 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965134Ab1GMJZp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 05:25:45 -0400
-Date: Wed, 13 Jul 2011 11:25:38 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/3] iwlegacy: Add missing comma between constant string
- array
-Message-ID: <20110713092538.GA2429@redhat.com> (sfid-20110713_112618_834557_3CDF0F12)
-References: <cover.1310187270.git.joe@perches.com>
- <36f8b5d1a32b8702941ebeda7a406188af132e9e.1310187270.git.joe@perches.com>
- <20110711183542.GB2650@tuxdriver.com>
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:58973 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752685Ab1GUXB1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 19:01:27 -0400
+Received: by pzk37 with SMTP id 37so2600511pzk.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2011 16:01:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110711183542.GB2650@tuxdriver.com>
+In-Reply-To: <1310835342-18877-2-git-send-email-hauke@hauke-m.de>
+References: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
+	<1310835342-18877-2-git-send-email-hauke@hauke-m.de>
+Date: Fri, 22 Jul 2011 01:01:26 +0200
+Message-ID: <CACna6rxugXiGd87hk_d5tK8NM0m9v_hjJ8o7xyQhkn=j9ocOJg@mail.gmail.com> (sfid-20110722_010235_219147_B6542DCF)
+Subject: Re: [PATCH v2 01/11] bcma: move parsing of EEPROM into own function.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
+	linux-mips@linux-mips.org, jonas.gorski@gmail.com, mb@bu3sch.de,
+	george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
+	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 11, 2011 at 02:35:42PM -0400, John W. Linville wrote:
-> How is this array indexed?  Aren't you changing the index of the
-> later strings?
+2011/7/16 Hauke Mehrtens <hauke@hauke-m.de>:
+> Move the parsing of the EEPROM data in scan function for one core into
+> an own function. Now we are able to use it in some other scan function
+> as well.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-We read index directly from device memory (and check agains
-ARRAY_SIZE). Patch make indexing correct with code author
-intention, ACK. iwlagn should be simmilarly fine.
+Acked-by: Rafał Miłecki <zajec5@gmail.com>
 
-Stanislaw
-
-> On Fri, Jul 08, 2011 at 11:20:24PM -0700, Joe Perches wrote:
-> > Multiple quoted strings are concatenated without comma separators.
-> > 
-> > Signed-off-by: Joe Perches <joe@perches.com>
-> > ---
-> >  drivers/net/wireless/iwlegacy/iwl4965-base.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/iwlegacy/iwl4965-base.c b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-> > index 46242d2..1433466 100644
-> > --- a/drivers/net/wireless/iwlegacy/iwl4965-base.c
-> > +++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-> > @@ -1484,7 +1484,7 @@ static const char * const desc_lookup_text[] = {
-> >  	"NMI_INTERRUPT_DATA_ACTION_PT",
-> >  	"NMI_TRM_HW_ER",
-> >  	"NMI_INTERRUPT_TRM",
-> > -	"NMI_INTERRUPT_BREAK_POINT"
-> > +	"NMI_INTERRUPT_BREAK_POINT",
-> >  	"DEBUG_0",
-> >  	"DEBUG_1",
-> >  	"DEBUG_2",
-> > -- 
-> > 1.7.6.131.g99019
-> > 
-> > 
-> 
-> -- 
-> John W. Linville		Someday the world will need a hero, and you
-> linville@tuxdriver.com			might be all we have.  Be ready.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Rafał
