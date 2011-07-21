@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:47648 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753071Ab1GNUQm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 16:16:42 -0400
-Received: by wwe5 with SMTP id 5so683965wwe.1
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2011 13:16:41 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:36785 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752028Ab1GULoL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 07:44:11 -0400
+To: gregkh@suse.de
+Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath6kl: fix suspend and resume
+References: <20110721113112.8044.26825.stgit@localhost6.localdomain6>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Thu, 21 Jul 2011 14:44:09 +0300
+In-Reply-To: <20110721113112.8044.26825.stgit@localhost6.localdomain6> (Kalle Valo's message of "Thu\, 21 Jul 2011 14\:31\:15 +0300")
+Message-ID: <87d3h3uad2.fsf@purkki.adurom.net> (sfid-20110721_134415_353220_058287E5)
 MIME-Version: 1.0
-In-Reply-To: <20110714062522.GA2534@jm.kir.nu>
-References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
-	<1310600747-9583-6-git-send-email-thomas@cozybit.com>
-	<20110714062522.GA2534@jm.kir.nu>
-Date: Thu, 14 Jul 2011 13:16:41 -0700
-Message-ID: <CAG6hwVN3HED+LZdKN0zpNfjmK9FmBuBWnZ0qe9gYTPPYmCedTg@mail.gmail.com> (sfid-20110714_221646_251107_E32FE07D)
-Subject: Re: [PATCH 5/5] mac80211: mesh beacon includes TIM IE
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 13, 2011 at 11:25 PM, Jouni Malinen <j@w1.fi> wrote:
-> On Wed, Jul 13, 2011 at 04:45:47PM -0700, Thomas Pedersen wrote:
->> Even though we don't currently implement PS for mesh points, the
->> standard asks us to include a TIM element in beacons. Include an empty
->> element for now.
->
-> Is it allowed to not support PS in this type of case? AP does not have
-> such option..
->
+Hi Greg,
 
-You're right, it doesn't look like PS support is optional. The
-standard requires us to respect the PS states of peers. Support for
-this will require some work, but in the meantime, we can include a TIM
-element indicating no frames buffered here, as well as a Mesh Awake
-Window which never expires.
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-Otherwise, until we implement proper PS, might it be better not to
-include the TIM IE at all?
-
->> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
->> @@ -2269,6 +2270,14 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
->> +                     pos = skb_put(skb, 6);
->> +                     *pos++ = WLAN_EID_TIM;
->> +                     *pos++ = 4;
->> +                     *pos++ = 0;     /* DTIM count */
->> +                     *pos++ = 0;     /* DTIM period */
+> The current suspend code in ath6kl is not working properly. Most of the
+> time during response there are sdio errors and sdio stack reloads the
+> driver.
 >
-> The DTIM Period value 0 is reserved and does not really make much
-> sense.. Would it be better to set this to 1?
+> I was pondering different options how to fix this and decided to take
+> the simplest route. First remove all the existing suspend/resume code
+> which was complicated and replace it with code which will leave
+> the chip powered on but will put it to deep sleep state. Now suspend
+> works much faster and realiably, the cost being that power consumption
+> will increase a bit during suspend.
 
-That makes sense, thanks!
+With ath6kl-cleanup we missed the 3.1 deadline for the wireless code
+so the staging version of ath6kl will be still in 3.1. Because of this
+I need to send few critical fixes for 3.1, this suspend fix being one
+of them. There are might few others as well, but the patches are not
+ready yet.
 
->
-> --
-> Jouni Malinen                                            PGP id EFC895FA
->
+I'm doing the big mistake of sending new code and going for a trip the
+next day and not have internet access for 10 days. If there are any
+issues my collagues will jump in.
+
+-- 
+Kalle Valo
