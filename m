@@ -1,127 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:27582 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752320Ab1GWSBV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jul 2011 14:01:21 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 01/11] iwlagn: reserve queue 10 for TX during scan dwell
-Date: Sat, 23 Jul 2011 10:24:40 -0700
-Message-Id: <1311441890-19959-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110723_200137_118120_5613D2C1)
-In-Reply-To: <1311441890-19959-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1311441890-19959-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from hhlx01.visionsystems.de ([62.145.30.242]:54142 "EHLO
+	mail.visionsystems.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751111Ab1GUPJZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 11:09:25 -0400
+Message-ID: <4E28411B.5050807@visionsystems.de> (sfid-20110721_170928_465891_BD5F3B7A)
+Date: Thu, 21 Jul 2011 17:09:15 +0200
+From: Yegor Yefremov <yegor_sub1@visionsystems.de>
+Reply-To: yegor_sub1@visionsystems.de
+MIME-Version: 1.0
+To: Johannes Berg <johannes.berg@intel.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iw: add libnl-3.0 support
+References: <4DB91BB9.2080405@visionsystems.de>	 <4E26ABAA.8050404@visionsystems.de> (sfid-20110720_125228_946659_FC4D17FF) <1311190027.15152.14.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1311190027.15152.14.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Am 20.07.2011 21:27, schrieb Johannes Berg:
+> On Wed, 2011-07-20 at 12:19 +0200, Yegor Yefremov wrote:
+>
+>>> +ifeq ($(NL3FOUND),Y)
+>>> +CFLAGS += -DCONFIG_LIBNL20
+>>> +LIBS += -lnl-genl
+>>> +NLLIBNAME = libnl-3.0
+>>> +endif
+> I'd prefer if you did -DCONFIG_LIBNL30 and added the correct ifdefs
+> (please make it #if defined(...) || defined(...))  
 
-New uCode images will use queue 10 for TX
-during scan (for P2P offchannel operation
-scan). We'll bump the API version of those,
-but before we need to reserve queue 10 and
-stop using it for aggregation.
+O.K. I made the changes (see v2).  The code excluded, if LIBNL20 is detected, was actually libnl 1.x compatibility code and not libnl 2.0 compatibility code. Do I see it right?
 
-To simplify the code, always reserve it,
-we could continue using it on older uCode
-images but that'd be rather complicated.
-Also, we'll set it up to map to the right
-FIFO as needed later, but as we don't use
-the queue now that doesn't hurt.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-hw.h |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-dev.h    |   19 +++++++++++++++----
- drivers/net/wireless/iwlwifi/iwl-trans.c  |   10 +++++++---
- 3 files changed, 24 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hw.h b/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
-index 0e5b842..47c4304 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
-@@ -92,8 +92,8 @@
- 
- #define IWLAGN_CMD_FIFO_NUM		7
- #define IWLAGN_NUM_QUEUES		20
--#define IWLAGN_NUM_AMPDU_QUEUES		10
--#define IWLAGN_FIRST_AMPDU_QUEUE	10
-+#define IWLAGN_NUM_AMPDU_QUEUES		9
-+#define IWLAGN_FIRST_AMPDU_QUEUE	11
- 
- /* Fixed (non-configurable) rx data from phy */
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 8da38be..287f478 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -229,12 +229,23 @@ struct iwl_channel_info {
- #define IWL_TX_FIFO_BE_IPAN	4
- #define IWL_TX_FIFO_VI_IPAN	IWL_TX_FIFO_VI
- #define IWL_TX_FIFO_VO_IPAN	5
-+/* re-uses the VO FIFO, uCode will properly flush/schedule */
-+#define IWL_TX_FIFO_AUX		5
- #define IWL_TX_FIFO_UNUSED	-1
- 
--/* Minimum number of queues. MAX_NUM is defined in hw specific files.
-- * Set the minimum to accommodate the 4 standard TX queues, 1 command
-- * queue, 2 (unused) HCCA queues, and 4 HT queues (one for each AC) */
--#define IWL_MIN_NUM_QUEUES	10
-+/* AUX (TX during scan dwell) queue */
-+#define IWL_AUX_QUEUE		10
-+
-+/*
-+ * Minimum number of queues. MAX_NUM is defined in hw specific files.
-+ * Set the minimum to accommodate
-+ *  - 4 standard TX queues
-+ *  - the command queue
-+ *  - 4 PAN TX queues
-+ *  - the PAN multicast queue, and
-+ *  - the AUX (TX during scan dwell) queue.
-+ */
-+#define IWL_MIN_NUM_QUEUES	11
- 
- /*
-  * Command queue depends on iPAN support.
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index 41f0de9..3001bfb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -750,6 +750,7 @@ static const struct queue_to_fifo_ac iwlagn_default_queue_to_tx_fifo[] = {
- 	{ IWL_TX_FIFO_UNUSED, IWL_AC_UNSET, },
- 	{ IWL_TX_FIFO_UNUSED, IWL_AC_UNSET, },
- 	{ IWL_TX_FIFO_UNUSED, IWL_AC_UNSET, },
-+	{ IWL_TX_FIFO_UNUSED, IWL_AC_UNSET, },
- };
- 
- static const struct queue_to_fifo_ac iwlagn_ipan_queue_to_tx_fifo[] = {
-@@ -763,6 +764,7 @@ static const struct queue_to_fifo_ac iwlagn_ipan_queue_to_tx_fifo[] = {
- 	{ IWL_TX_FIFO_VO_IPAN, IEEE80211_AC_VO, },
- 	{ IWL_TX_FIFO_BE_IPAN, 2, },
- 	{ IWLAGN_CMD_FIFO_NUM, IWL_AC_UNSET, },
-+	{ IWL_TX_FIFO_AUX, IWL_AC_UNSET, },
- };
- static void iwl_trans_tx_start(struct iwl_priv *priv)
- {
-@@ -848,10 +850,12 @@ static void iwl_trans_tx_start(struct iwl_priv *priv)
- 	/* reset to 0 to enable all the queue first */
- 	priv->txq_ctx_active_msk = 0;
- 
--	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_default_queue_to_tx_fifo) != 10);
--	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_ipan_queue_to_tx_fifo) != 10);
-+	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_default_queue_to_tx_fifo) !=
-+						IWLAGN_FIRST_AMPDU_QUEUE);
-+	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_ipan_queue_to_tx_fifo) !=
-+						IWLAGN_FIRST_AMPDU_QUEUE);
- 
--	for (i = 0; i < 10; i++) {
-+	for (i = 0; i < IWLAGN_FIRST_AMPDU_QUEUE; i++) {
- 		int fifo = queue_to_fifo[i].fifo;
- 		int ac = queue_to_fifo[i].ac;
- 
--- 
-1.7.0.4
+Yegor
 
