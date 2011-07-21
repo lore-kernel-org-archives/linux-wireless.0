@@ -1,74 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:61734 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751870Ab1GTRNh (ORCPT
+Received: from exchange.solarflare.com ([216.237.3.220]:5345 "EHLO
+	exchange.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751419Ab1GURyL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2011 13:13:37 -0400
-Received: by mail-fx0-f52.google.com with SMTP id 18so2056296fxd.11
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2011 10:13:37 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org, Pavel Roskin <proski@gnu.org>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/3 V3] bcma: inform drivers about translation bits needed for the core
-Date: Wed, 20 Jul 2011 19:52:15 +0200
-Message-Id: <1311184336-3633-2-git-send-email-zajec5@gmail.com> (sfid-20110720_191348_960649_C2893CA0)
-In-Reply-To: <1311184336-3633-1-git-send-email-zajec5@gmail.com>
-References: <1311184336-3633-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 21 Jul 2011 13:54:11 -0400
+Subject: [PATCH net-2.6] ethtool: Allow zero-length register dumps again
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: David Miller <davem@davemloft.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1311270409.28569.32.camel@localhost>
+References: <20110720091850.32210.2059.stgit@localhost6.localdomain6>
+	 <1311161889.1041.11.camel@localhost> <4E26C2DC.8090208@qca.qualcomm.com>
+	 <20110720143611.GA18231@tuxdriver.com>
+	 <1311270409.28569.32.camel@localhost>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 21 Jul 2011 19:54:00 +0200
+Message-ID: <1311270840.28569.34.camel@localhost> (sfid-20110721_195417_011929_3E38E2E5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When using DMA, drivers need to pass special translation info to the
-hardware.
+Some drivers (ab)use the ethtool_ops::get_regs operation to expose
+only a hardware revision ID.  Commit
+a77f5db361ed9953b5b749353ea2c7fed2bf8d93 ('ethtool: Allocate register
+dump buffer with vmalloc()') had the side-effect of breaking these, as
+vmalloc() returns a null pointer for size=0 whereas kmalloc() did not.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+For backward-compatibility, allow zero-length dumps again.
+
+Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Ben Hutchings <bhutchings@solarflare.com>
+Cc: stable@kernel.org [2.6.37+]
 ---
- drivers/bcma/core.c       |   16 ++++++++++++++++
- include/linux/bcma/bcma.h |    5 +++++
- 2 files changed, 21 insertions(+), 0 deletions(-)
+This is compile-tested only.  I'm on vacation, damnit.
 
-diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
-index 2d8506d..4a04a49 100644
---- a/drivers/bcma/core.c
-+++ b/drivers/bcma/core.c
-@@ -106,3 +106,19 @@ void bcma_core_pll_ctl(struct bcma_device *core, u32 req, u32 status, bool on)
- 	}
- }
- EXPORT_SYMBOL_GPL(bcma_core_pll_ctl);
-+
-+u32 bcma_core_dma_translation(struct bcma_device *core)
-+{
-+	switch (core->bus->hosttype) {
-+	case BCMA_HOSTTYPE_PCI:
-+		if (bcma_aread32(core, BCMA_IOST) & BCMA_IOST_DMA64)
-+			return BCMA_DMA_TRANSLATION_DMA64_CMT;
-+		else
-+			return BCMA_DMA_TRANSLATION_DMA32_CMT;
-+	default:
-+		pr_err("DMA translation unknown for host %d\n",
-+		       core->bus->hosttype);
-+	}
-+	return BCMA_DMA_TRANSLATION_NONE;
-+}
-+EXPORT_SYMBOL(bcma_core_dma_translation);
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index cc1582d..8c96654 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -262,5 +262,10 @@ extern void bcma_core_set_clockmode(struct bcma_device *core,
- 				    enum bcma_clkmode clkmode);
- extern void bcma_core_pll_ctl(struct bcma_device *core, u32 req, u32 status,
- 			      bool on);
-+#define BCMA_DMA_TRANSLATION_MASK	0xC0000000
-+#define  BCMA_DMA_TRANSLATION_NONE	0x00000000
-+#define  BCMA_DMA_TRANSLATION_DMA32_CMT	0x40000000 /* Client Mode Translation for 32-bit DMA */
-+#define  BCMA_DMA_TRANSLATION_DMA64_CMT	0x80000000 /* Client Mode Translation for 64-bit DMA */
-+extern u32 bcma_core_dma_translation(struct bcma_device *core);
+Ben.
+
+ net/core/ethtool.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/core/ethtool.c b/net/core/ethtool.c
+index fd14116..4fb7704 100644
+--- a/net/core/ethtool.c
++++ b/net/core/ethtool.c
+@@ -1227,7 +1227,7 @@ static int ethtool_get_regs(struct net_device *dev, char __user *useraddr)
+ 		regs.len = reglen;
  
- #endif /* LINUX_BCMA_H_ */
+ 	regbuf = vzalloc(reglen);
+-	if (!regbuf)
++	if (reglen && !regbuf)
+ 		return -ENOMEM;
+ 
+ 	ops->get_regs(dev, &regs, regbuf);
+@@ -1236,7 +1236,7 @@ static int ethtool_get_regs(struct net_device *dev, char __user *useraddr)
+ 	if (copy_to_user(useraddr, &regs, sizeof(regs)))
+ 		goto out;
+ 	useraddr += offsetof(struct ethtool_regs, data);
+-	if (copy_to_user(useraddr, regbuf, regs.len))
++	if (regbuf && copy_to_user(useraddr, regbuf, regs.len))
+ 		goto out;
+ 	ret = 0;
+ 
 -- 
-1.7.3.4
+1.7.5.4
+
+
+-- 
+Ben Hutchings, Senior Software Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
