@@ -1,573 +1,508 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:32866 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.19.149.2]:21209 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751985Ab1GUP0p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 11:26:45 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 09/25] iwlagn: move more functions from the start flow to the transport layer
-Date: Thu, 21 Jul 2011 07:50:12 -0700
-Message-Id: <1311259828-8415-10-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110721_172734_792452_D0D5941A)
-In-Reply-To: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1751455Ab1GUUwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 16:52:24 -0400
+Received: from mail.atheros.com ([10.234.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2011 13:51:43 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <jouni@qca.qualcomm.com>
+CC: <hostap@lists.shmoo.com>, <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v4 3/4] hostapd: add survey dump support
+Date: Thu, 21 Jul 2011 13:52:13 -0700
+Message-ID: <1311281534-10733-4-git-send-email-lrodriguez@atheros.com> (sfid-20110721_225237_242717_441A6FD2)
+In-Reply-To: <1311281534-10733-1-git-send-email-lrodriguez@atheros.com>
+References: <1311281534-10733-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This adds survey dump support for all frequencies
+and for specific desired frequencies. This will later
+be used by ACS code for spectrum heuristics.
 
-Basically all the nic_init flow should be in the transport layer.
-iwl_prepare_card_hw will move to the transport too in a separate patch.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c       |  102 --------------
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c           |   49 -------
- drivers/net/wireless/iwlwifi/iwl-agn.h           |    5 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h           |   16 +--
- drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c |   12 +-
- drivers/net/wireless/iwlwifi/iwl-trans.c         |  164 ++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-trans.h         |   21 +--
- 8 files changed, 178 insertions(+), 193 deletions(-)
+ src/ap/ap_drv_ops.h          |   15 +++
+ src/ap/drv_callbacks.c       |   70 +++++++++++++++
+ src/ap/hostapd.h             |    8 ++
+ src/drivers/driver.h         |   89 +++++++++++++++++++-
+ src/drivers/driver_nl80211.c |  193 ++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 374 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 339a89c..6ed0eae 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -606,59 +606,6 @@ struct iwl_mod_params iwlagn_mod_params = {
- 	/* the rest are 0 by default */
+diff --git a/src/ap/ap_drv_ops.h b/src/ap/ap_drv_ops.h
+index 660a36b..0075e60 100644
+--- a/src/ap/ap_drv_ops.h
++++ b/src/ap/ap_drv_ops.h
+@@ -214,4 +214,19 @@ static inline int hostapd_drv_remain_on_channel(struct hostapd_data *hapd,
+ 	return hapd->driver->remain_on_channel(hapd->drv_priv, freq, duration);
+ }
+ 
++static inline int hostapd_drv_survey_freq(struct hostapd_data *hapd,
++					  unsigned int freq)
++{
++	if (hapd->driver == NULL)
++		return -1;
++        if (!hapd->driver->get_survey)
++		return -1;
++	return hapd->driver->get_survey(hapd->drv_priv, freq);
++}
++
++static inline int hostapd_drv_survey(struct hostapd_data *hapd)
++{
++	return hostapd_drv_survey_freq(hapd, 0);
++}
++
+ #endif /* AP_DRV_OPS */
+diff --git a/src/ap/drv_callbacks.c b/src/ap/drv_callbacks.c
+index fb3e0dd..44e1147 100644
+--- a/src/ap/drv_callbacks.c
++++ b/src/ap/drv_callbacks.c
+@@ -545,6 +545,73 @@ static void hostapd_event_roc_cancel(struct hostapd_data *hapd,
+ 	/* XXX: pass err to listeners, no one yet */
+ }
+ 
++struct hostapd_channel_data *hostapd_get_mode_channel(struct hostapd_iface *iface,
++						      unsigned int freq)
++{
++	unsigned int i;
++	struct hostapd_channel_data *chan;
++
++	for (i = 0; i < iface->current_mode->num_channels; i++) {
++		chan = &iface->current_mode->channels[i];
++		if (!chan)
++			return NULL;
++		if (chan->freq == freq)
++			return chan;
++	}
++
++	return NULL;
++}
++
++static void hostapd_update_nf(struct hostapd_iface *iface,
++			      struct hostapd_channel_data *chan,
++			      struct freq_survey *survey)
++{
++	if (!iface->chans_surveyed) {
++		chan->min_nf = survey->nf;
++		iface->lowest_nf = survey->nf;
++	} else {
++		if (!chan->survey_count)
++			chan->min_nf = survey->nf;
++		else if (survey->nf < chan->min_nf)
++			chan->min_nf = survey->nf;
++		if (survey->nf < iface->lowest_nf)
++			iface->lowest_nf = survey->nf;
++	}
++}
++
++static void hostapd_event_get_survey(struct hostapd_data *hapd,
++				     struct survey_results *survey_results)
++{
++	struct hostapd_iface *iface = hapd->iface;
++	struct freq_survey *survey, *tmp;
++	struct hostapd_channel_data *chan;
++
++	if (dl_list_empty(&survey_results->survey_list)) {
++		wpa_printf(MSG_DEBUG, "ACS: no survey data received");
++                return;
++	}
++
++	dl_list_for_each_safe(survey, tmp, &survey_results->survey_list, struct freq_survey, list_member) {
++		chan = hostapd_get_mode_channel(iface, survey->freq);
++		if (!chan)
++			goto fail;
++		if (chan->flag & HOSTAPD_CHAN_DISABLED)
++			continue;
++
++		dl_list_del(&survey->list_member);
++		dl_list_add_tail(&chan->survey_list, &survey->list_member);
++
++		hostapd_update_nf(iface, chan, survey);
++
++		chan->survey_count++;
++		iface->chans_surveyed++;
++	}
++
++	return;
++fail:
++	iface->chans_surveyed = 0;
++}
++
+ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
+ 			  union wpa_event_data *data)
+ {
+@@ -647,6 +714,9 @@ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
+ 					 data->remain_on_channel.freq,
+ 					 data->remain_on_channel.duration);
+ 		break;
++	case EVENT_SURVEY:
++		hostapd_event_get_survey(hapd, &data->survey_results);
++		break;
+ 	default:
+ 		wpa_printf(MSG_DEBUG, "Unknown event %d", event);
+ 		break;
+diff --git a/src/ap/hostapd.h b/src/ap/hostapd.h
+index dedd2ce..18e582b 100644
+--- a/src/ap/hostapd.h
++++ b/src/ap/hostapd.h
+@@ -232,6 +232,14 @@ struct hostapd_iface {
+ 	/* Offchannel operation helper */
+ 	unsigned int off_channel_freq_idx;
+ 
++	/* surveying helpers */
++
++	/* number of channels surveyed */
++	unsigned int chans_surveyed;
++
++	/* lowest observed noise floor in dBm */
++	s8 lowest_nf;
++
+ 	void (*scan_cb)(struct hostapd_iface *iface);
+ 
+ 	int (*ctrl_iface_init)(struct hostapd_data *hapd);
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index 92951ae..7ebba43 100644
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -26,6 +26,7 @@
+ #define WPA_SUPPLICANT_DRIVER_VERSION 4
+ 
+ #include "common/defs.h"
++#include "list.h"
+ 
+ #define HOSTAPD_CHAN_DISABLED 0x00000001
+ #define HOSTAPD_CHAN_PASSIVE_SCAN 0x00000002
+@@ -58,6 +59,22 @@ struct hostapd_channel_data {
+ 	 * max_tx_power - maximum transmit power in dBm
+ 	 */
+ 	u8 max_tx_power;
++
++	/*
++	 * survey_count - number of surveys XXX: can we remove this and use the count of the linked list?
++	 */
++        unsigned int survey_count;
++
++	/*
++	 * survey_list - linked list of surveys
++	 */
++	struct dl_list survey_list;
++
++	/**
++	 * min_nf - minimum observed noise floor, in dBm, based on all surveyed channel data
++	 */
++	s8 min_nf;
++
  };
  
--static void iwlagn_set_pwr_vmain(struct iwl_priv *priv)
--{
--/*
-- * (for documentation purposes)
-- * to set power to V_AUX, do:
--
--		if (pci_pme_capable(priv->pci_dev, PCI_D3cold))
--			iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
--					       APMG_PS_CTRL_VAL_PWR_SRC_VAUX,
--					       ~APMG_PS_CTRL_MSK_PWR_SRC);
-- */
--
--	iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
--			       APMG_PS_CTRL_VAL_PWR_SRC_VMAIN,
--			       ~APMG_PS_CTRL_MSK_PWR_SRC);
--}
--
--/*TODO: this function should move to transport layer */
--int iwlagn_hw_nic_init(struct iwl_priv *priv)
--{
--	unsigned long flags;
--
--	/* nic_init */
--	spin_lock_irqsave(&priv->lock, flags);
--	iwl_apm_init(priv);
--
--	/* Set interrupt coalescing calibration timer to default (512 usecs) */
--	iwl_write8(priv, CSR_INT_COALESCING, IWL_HOST_INT_CALIB_TIMEOUT_DEF);
--
--	spin_unlock_irqrestore(&priv->lock, flags);
--
--	iwlagn_set_pwr_vmain(priv);
--
--	priv->cfg->lib->nic_config(priv);
--
--	/* Allocate the RX queue, or reset if it is already allocated */
--	trans_rx_init(priv);
--
--	/* Allocate or reset and init all Tx and Command queues */
--	if (trans_tx_init(priv))
--		return -ENOMEM;
--
--	if (priv->cfg->base_params->shadow_reg_enable) {
--		/* enable shadow regs in HW */
--		iwl_set_bit(priv, CSR_MAC_SHADOW_REG_CTRL,
--			0x800FFFFF);
--	}
--
--	set_bit(STATUS_INIT, &priv->status);
--
--	return 0;
--}
--
- int iwlagn_hwrate_to_mac80211_idx(u32 rate_n_flags, enum ieee80211_band band)
- {
- 	int idx = 0;
-@@ -2092,52 +2039,3 @@ void iwlagn_remove_notification(struct iwl_priv *priv,
- 	list_del(&wait_entry->list);
- 	spin_unlock_bh(&priv->_agn.notif_wait_lock);
- }
--
--int iwlagn_start_device(struct iwl_priv *priv)
--{
--	int ret;
--
--	priv->ucode_owner = IWL_OWNERSHIP_DRIVER;
--
--	if ((priv->cfg->sku & EEPROM_SKU_CAP_AMT_ENABLE) &&
--	     iwl_prepare_card_hw(priv)) {
--		IWL_WARN(priv, "Exit HW not ready\n");
--		return -EIO;
--	}
--
--	/* If platform's RF_KILL switch is NOT set to KILL */
--	if (iwl_read32(priv, CSR_GP_CNTRL) & CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
--		clear_bit(STATUS_RF_KILL_HW, &priv->status);
--	else
--		set_bit(STATUS_RF_KILL_HW, &priv->status);
--
--	if (iwl_is_rfkill(priv)) {
--		wiphy_rfkill_set_hw_state(priv->hw->wiphy, true);
--		iwl_enable_interrupts(priv);
--		return -ERFKILL;
--	}
--
--	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
--
--	ret = iwlagn_hw_nic_init(priv);
--	if (ret) {
--		IWL_ERR(priv, "Unable to init nic\n");
--		return ret;
--	}
--
--	/* make sure rfkill handshake bits are cleared */
--	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
--	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR,
--		    CSR_UCODE_DRV_GP1_BIT_CMD_BLOCKED);
--
--	/* clear (again), then enable host interrupts */
--	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
--	iwl_enable_interrupts(priv);
--
--	/* really make sure rfkill handshake bits are cleared */
--	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
--	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
--
--	return 0;
--}
--
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-index 667cfb7..e4b2f78 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-@@ -478,7 +478,7 @@ int iwlagn_load_ucode_wait_alive(struct iwl_priv *priv,
- 	int ret;
- 	enum iwlagn_ucode_type old_type;
- 
--	ret = iwlagn_start_device(priv);
-+	ret = trans_start_device(priv);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 9ba5fcd..d0f6875 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1798,55 +1798,6 @@ static void iwl_down(struct iwl_priv *priv)
- 	iwl_cancel_deferred_work(priv);
- }
- 
--#define HW_READY_TIMEOUT (50)
--
--/* Note: returns poll_bit return value, which is >= 0 if success */
--static int iwl_set_hw_ready(struct iwl_priv *priv)
--{
--	int ret;
--
--	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
--		CSR_HW_IF_CONFIG_REG_BIT_NIC_READY);
--
--	/* See if we got it */
--	ret = iwl_poll_bit(priv, CSR_HW_IF_CONFIG_REG,
--				CSR_HW_IF_CONFIG_REG_BIT_NIC_READY,
--				CSR_HW_IF_CONFIG_REG_BIT_NIC_READY,
--				HW_READY_TIMEOUT);
--
--	IWL_DEBUG_INFO(priv, "hardware%s ready\n", ret < 0 ? " not" : "");
--	return ret;
--}
--
--/* Note: returns standard 0/-ERROR code */
--int iwl_prepare_card_hw(struct iwl_priv *priv)
--{
--	int ret;
--
--	IWL_DEBUG_INFO(priv, "iwl_prepare_card_hw enter\n");
--
--	ret = iwl_set_hw_ready(priv);
--	if (ret >= 0)
--		return 0;
--
--	/* If HW is not ready, prepare the conditions to check again */
--	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
--			CSR_HW_IF_CONFIG_REG_PREPARE);
--
--	ret = iwl_poll_bit(priv, CSR_HW_IF_CONFIG_REG,
--			~CSR_HW_IF_CONFIG_REG_BIT_NIC_PREPARE_DONE,
--			CSR_HW_IF_CONFIG_REG_BIT_NIC_PREPARE_DONE, 150000);
--
--	if (ret < 0)
--		return ret;
--
--	/* HW should be ready by now, check again. */
--	ret = iwl_set_hw_ready(priv);
--	if (ret >= 0)
--		return 0;
--	return ret;
--}
--
- #define MAX_HW_RESTARTS 5
- 
- static int __iwl_up(struct iwl_priv *priv)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 0a8417a..ffb6bd2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -122,12 +122,10 @@ static inline void iwl_set_calib_hdr(struct iwl_calib_hdr *hdr, u8 cmd)
- 	hdr->data_valid = 1;
- }
- 
-+/* TODO: this one should be API of the transport layer */
- int iwl_prepare_card_hw(struct iwl_priv *priv);
- 
--int iwlagn_start_device(struct iwl_priv *priv);
--
- /* tx queue */
--/*TODO: this one should go to transport layer */
- void iwl_free_tfds_in_queue(struct iwl_priv *priv,
- 			    int sta_id, int tid, int freed);
- 
-@@ -158,7 +156,6 @@ int iwlagn_hw_valid_rtc_data_addr(u32 addr);
- int iwlagn_send_tx_power(struct iwl_priv *priv);
- void iwlagn_temperature(struct iwl_priv *priv);
- u16 iwlagn_eeprom_calib_version(struct iwl_priv *priv);
--int iwlagn_hw_nic_init(struct iwl_priv *priv);
- int iwlagn_wait_tx_queue_empty(struct iwl_priv *priv);
- int iwlagn_txfifo_flush(struct iwl_priv *priv, u16 flush_control);
- void iwlagn_dev_txfifo_flush(struct iwl_priv *priv, u16 flush_control);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index b18a9a8..ca15434 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1234,13 +1234,13 @@ struct iwl_trans;
- 
  /**
-  * struct iwl_trans_ops - transport specific operations
-- * @rx_init: inits the rx memory, allocate it if needed
-- * @rx_free: frees the rx memory
-- * @tx_init:inits the tx memory, allocate if needed
-+ * @start_device: allocates and inits all the resources for the transport
-+ *                layer.
-  * @tx_start: starts and configures all the Tx fifo - usually done once the fw
-  *           is alive.
-- * @tx_free: frees the tx memory
-  * @stop_device:stops the whole device (embedded CPU put to reset)
-+ * @rx_free: frees the rx memory
-+ * @tx_free: frees the tx memory
-  * @send_cmd:send a host command
-  * @send_cmd_pdu:send a host command: flags can be CMD_*
-  * @get_tx_cmd: returns a pointer to a new Tx cmd for the upper layer use
-@@ -1257,14 +1257,12 @@ struct iwl_trans;
-  *        irq, tasklet etc...
-  */
- struct iwl_trans_ops {
--	int (*rx_init)(struct iwl_priv *priv);
--	void (*rx_free)(struct iwl_priv *priv);
- 
--	int (*tx_init)(struct iwl_priv *priv);
-+	int (*start_device)(struct iwl_priv *priv);
-+	void (*stop_device)(struct iwl_priv *priv);
- 	void (*tx_start)(struct iwl_priv *priv);
- 	void (*tx_free)(struct iwl_priv *priv);
--
--	void (*stop_device)(struct iwl_priv *priv);
-+	void (*rx_free)(struct iwl_priv *priv);
- 
- 	int (*send_cmd)(struct iwl_priv *priv, struct iwl_host_cmd *cmd);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-index 9cecb10..7dac6ee 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-@@ -35,15 +35,9 @@
- #include "iwl-dev.h"
- #include "iwl-core.h"
- #include "iwl-io.h"
--#include "iwl-sta.h"
- #include "iwl-helpers.h"
- #include "iwl-trans-int-pcie.h"
- 
--/* TODO:this file should _not_ include the external API header file
-- * (iwl-trans.h). This is needed as a W/A until reclaim functions will move to
-- * the transport layer */
--#include "iwl-trans.h"
--
- /**
-  * iwl_trans_txq_update_byte_cnt_tbl - Set up entry in Tx byte-count array
-  */
-@@ -339,7 +333,11 @@ int iwl_queue_init(struct iwl_priv *priv, struct iwl_queue *q,
- }
- 
- /*TODO: this functions should NOT be exported from trans module - export it
-- * until the reclaim flow will be brought to the transport module too */
-+ * until the reclaim flow will be brought to the transport module too.
-+ * Add a declaration to make sparse happy */
-+void iwlagn_txq_inval_byte_cnt_tbl(struct iwl_priv *priv,
-+					  struct iwl_tx_queue *txq);
+@@ -2274,6 +2291,30 @@ struct wpa_driver_ops {
+ 	 */
+ 	void (*set_rekey_info)(void *priv, const u8 *kek, const u8 *kck,
+ 			       const u8 *replay_ctr);
 +
- void iwlagn_txq_inval_byte_cnt_tbl(struct iwl_priv *priv,
- 					  struct iwl_tx_queue *txq)
- {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index bddc12d..e9c7de9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -177,7 +177,7 @@ static void iwl_trans_rx_hw_init(struct iwl_priv *priv,
- 	iwl_write8(priv, CSR_INT_COALESCING, IWL_HOST_INT_TIMEOUT_DEF);
- }
++	/*
++	 * get_survey - Retrieve survey data
++	 * @priv: Private driver interface data
++	 * @freq: if set survey data for the specified frequency is only
++	 *	being requested. If not set all survey data is requested.
++	 * Returns: 0 on success, -1 on failure
++	 *
++	 * Use this to retreieve:
++	 *
++	 * - the observed channel noise floor
++	 * - the amount of time we have spent on the channel
++	 * - the amount of time during which we have spent on the channel that
++	 *   the radio has determined the the medium is busy and we cannot transmit
++	 * - the amount of time we have spent RX'ing data
++	 * - the amount of time we have spent TX'ing data
++	 *
++	 * This data can be use for spectrum heuristics, one example is
++	 * Automatic Channel Selection (ACS). The channel survey data is
++	 * kept on a linked list on the channel data, one entry is added
++	 * for each survey. The min_nf of the channel is updated for
++	 * each survey.
++	 */
++	int (*get_survey)(void *priv, unsigned int freq);
+ };
  
--static int iwl_trans_rx_init(struct iwl_priv *priv)
-+static int iwl_rx_init(struct iwl_priv *priv)
- {
- 	struct iwl_rx_queue *rxq = &priv->rxq;
- 	int i, err;
-@@ -530,7 +530,7 @@ error:
  
- 	return ret;
- }
--static int iwl_trans_tx_init(struct iwl_priv *priv)
-+static int iwl_tx_init(struct iwl_priv *priv)
- {
- 	int ret;
- 	int txq_id, slots_num;
-@@ -574,6 +574,156 @@ error:
- 	return ret;
- }
- 
-+static void iwl_set_pwr_vmain(struct iwl_priv *priv)
-+{
-+/*
-+ * (for documentation purposes)
-+ * to set power to V_AUX, do:
+@@ -2686,9 +2727,44 @@ enum wpa_event_type {
+ 	 * completed Group Key Handshake while the host (including
+ 	 * wpa_supplicant was sleeping).
+ 	 */
+-	EVENT_DRIVER_GTK_REKEY
++	EVENT_DRIVER_GTK_REKEY,
 +
-+		if (pci_pme_capable(priv->pci_dev, PCI_D3cold))
-+			iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
-+					       APMG_PS_CTRL_VAL_PWR_SRC_VAUX,
-+					       ~APMG_PS_CTRL_MSK_PWR_SRC);
++	/*
++	 * EVENT_SURVEY - Received survey data
++	 *
++	 * This event gets triggered when a driver query is issued for survey
++	 * data and its returned. The returned data is stored in
++	 * struct survey_results. The results provide at most one survey
++	 * entry for each frequency and at minimum will provide survey
++	 * one survey entry for one frequency. The survey data can be
++	 * os_malloc()'d and then os_free()'d, so the event callback must
++	 * only copy data.
++	 */
++	EVENT_SURVEY,
+ };
+ 
++/**
++ * struct survey_info - channel survey info
++ *
++ * @ifidx: interface index in which this survey was observed
++ * @freq: center of frequency of the surveyed channel
++ * @nf: channel noise floor in dBm
++ * @channel_time: amount of time in ms the radio spent on the channel
++ * @channel_time_busy: amount of time in ms the radio detected some signal
++ *	that indicated to the radio the channel was not clear
++ * @channel_time_rx: amount of time the radio spent receiving data
++ * @channel_time_tx: amount of time the radio spent transmitting data
 + */
++struct freq_survey {
++	u32 ifidx;
++	unsigned int freq;
++	s8 nf;
++	u64 channel_time;
++	u64 channel_time_busy;
++	u64 channel_time_rx;
++	u64 channel_time_tx;
++	struct dl_list list_member;
++};
+ 
+ /**
+  * union wpa_event_data - Additional data for wpa_supplicant_event() calls
+@@ -3238,6 +3314,17 @@ union wpa_event_data {
+ 		const u8 *bssid;
+ 		const u8 *replay_ctr;
+ 	} driver_gtk_rekey;
 +
-+	iwl_set_bits_mask_prph(priv, APMG_PS_CTRL_REG,
-+			       APMG_PS_CTRL_VAL_PWR_SRC_VMAIN,
-+			       ~APMG_PS_CTRL_MSK_PWR_SRC);
++	/*
++	 * survey_results - survey result data for EVENT_SURVEY
++	 * @freq_filter: requested frequency survey filter, 0 if request
++	 *	was for all survey data
++	 * @survey_list: linked list of survey data
++	 */
++	struct survey_results {
++		unsigned int freq_filter;
++		struct dl_list survey_list;
++	} survey_results;
+ };
+ 
+ /**
+diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
+index 87d474e..1f26326 100644
+--- a/src/drivers/driver_nl80211.c
++++ b/src/drivers/driver_nl80211.c
+@@ -6750,6 +6750,198 @@ static int nl80211_flush_pmkid(void *priv)
+ 	return nl80211_pmkid(bss, NL80211_CMD_FLUSH_PMKSA, NULL, NULL);
+ }
+ 
++static void clean_survey_results(struct survey_results *survey_results)
++{
++	struct freq_survey *survey, *tmp;
++
++	if (dl_list_empty(&survey_results->survey_list))
++		return;
++
++	dl_list_for_each_safe(survey, tmp, &survey_results->survey_list, struct freq_survey, list_member) {
++		dl_list_del(&survey->list_member);
++		os_free(survey);
++	}
 +}
 +
-+static int iwl_nic_init(struct iwl_priv *priv)
++static void add_survey(struct nlattr **sinfo, u32 ifidx, struct dl_list *survey_list)
 +{
-+	unsigned long flags;
++	struct freq_survey *survey;
 +
-+	/* nic_init */
-+	spin_lock_irqsave(&priv->lock, flags);
-+	iwl_apm_init(priv);
++	survey = (struct freq_survey*) os_malloc(sizeof(struct freq_survey));
++	if  (!survey)
++		return;
++	os_memset(survey, 0, sizeof(struct freq_survey));
 +
-+	/* Set interrupt coalescing calibration timer to default (512 usecs) */
-+	iwl_write8(priv, CSR_INT_COALESCING, IWL_HOST_INT_CALIB_TIMEOUT_DEF);
++	survey->ifidx = ifidx;
++	survey->freq = nla_get_u32(sinfo[NL80211_SURVEY_INFO_FREQUENCY]);
++	survey->nf = (int8_t) nla_get_u8(sinfo[NL80211_SURVEY_INFO_NOISE]);
++	survey->channel_time = nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME]);
++	survey->channel_time_busy = nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_BUSY]);
++	survey->channel_time_rx = nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_RX]);
++	survey->channel_time_tx = nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_TX]);
 +
-+	spin_unlock_irqrestore(&priv->lock, flags);
++	wpa_printf(MSG_DEBUG, "nl80211: Freq survey dump event  (freq=%d MHz noise=%d "
++		   "channel_time=%ld busy_time=%ld tx_time=%ld rx_time=%ld)",
++		   survey->freq,
++		   survey->nf,
++		   (unsigned long int) survey->channel_time,
++		   (unsigned long int) survey->channel_time_busy,
++		   (unsigned long int) survey->channel_time_rx,
++		   (unsigned long int) survey->channel_time_tx);
 +
-+	iwl_set_pwr_vmain(priv);
++	dl_list_add_tail(survey_list, &survey->list_member);
++}
 +
-+	priv->cfg->lib->nic_config(priv);
++static int survey_check(struct nlattr **sinfo)
++{
++	if (!sinfo[NL80211_SURVEY_INFO_NOISE] ||
++	    !sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME] ||
++	    !sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_BUSY] ||
++	    !sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_TX])
++		return 0;
++	return 1;
++}
 +
-+	/* Allocate the RX queue, or reset if it is already allocated */
-+	iwl_rx_init(priv);
++static void survey_fail_reason(struct nlattr **sinfo, u32 surveyed_freq)
++{
++	wpa_printf(MSG_ERROR,
++		   "nl80211: Following survey data missing "
++		   "for freq %d MHz:",
++		   surveyed_freq);
 +
-+	/* Allocate or reset and init all Tx and Command queues */
-+	if (iwl_tx_init(priv))
-+		return -ENOMEM;
++	if (!sinfo[NL80211_SURVEY_INFO_NOISE])
++		wpa_printf(MSG_ERROR, "\tnoise");
 +
-+	if (priv->cfg->base_params->shadow_reg_enable) {
-+		/* enable shadow regs in HW */
-+		iwl_set_bit(priv, CSR_MAC_SHADOW_REG_CTRL,
-+			0x800FFFFF);
++	if (!sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME])
++		wpa_printf(MSG_ERROR, "\tchannel time");
++
++	if (!sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_BUSY])
++		wpa_printf(MSG_ERROR, "\tchannel busy time");
++
++	if (!sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_TX])
++		wpa_printf(MSG_ERROR, "\tchannel tx time");
++}
++
++static int check_survey_ok(struct nlattr **sinfo,
++			   u32 surveyed_freq,
++			   unsigned int freq_filter)
++{
++	int good_survey = survey_check(sinfo);
++
++	/* If no filter is specified we just drop data for any bogus survey */
++	if (!freq_filter) {
++		if (good_survey)
++			return 1;
++		/* No filter used but no usable survey data found */
++		survey_fail_reason(sinfo, surveyed_freq);
++		return 0;
 +	}
 +
-+	set_bit(STATUS_INIT, &priv->status);
++	if (freq_filter != surveyed_freq)
++		return 0;
 +
++	if (good_survey)
++		return 1;
++	/* Filter matches now, lets be verbose why this is a bad survey */
++
++	survey_fail_reason(sinfo, surveyed_freq);
 +	return 0;
 +}
 +
-+#define HW_READY_TIMEOUT (50)
-+
-+/* Note: returns poll_bit return value, which is >= 0 if success */
-+static int iwl_set_hw_ready(struct iwl_priv *priv)
++static int survey_handler(struct nl_msg *msg, void *arg)
 +{
-+	int ret;
++	struct nlattr *tb[NL80211_ATTR_MAX + 1];
++	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
++	struct nlattr *sinfo[NL80211_SURVEY_INFO_MAX + 1];
++	struct survey_results *survey_results;
++	u32 surveyed_freq = 0;
++	u32 ifidx;
 +
-+	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
-+		CSR_HW_IF_CONFIG_REG_BIT_NIC_READY);
++	static struct nla_policy survey_policy[NL80211_SURVEY_INFO_MAX + 1] = {
++		[NL80211_SURVEY_INFO_FREQUENCY] = { .type = NLA_U32 },
++		[NL80211_SURVEY_INFO_NOISE] = { .type = NLA_U8 },
++	};
 +
-+	/* See if we got it */
-+	ret = iwl_poll_bit(priv, CSR_HW_IF_CONFIG_REG,
-+				CSR_HW_IF_CONFIG_REG_BIT_NIC_READY,
-+				CSR_HW_IF_CONFIG_REG_BIT_NIC_READY,
-+				HW_READY_TIMEOUT);
++	survey_results = (struct survey_results *) arg;
 +
-+	IWL_DEBUG_INFO(priv, "hardware%s ready\n", ret < 0 ? " not" : "");
-+	return ret;
-+}
++	nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
++		  genlmsg_attrlen(gnlh, 0), NULL);
 +
-+/* Note: returns standard 0/-ERROR code */
-+int iwl_prepare_card_hw(struct iwl_priv *priv)
-+{
-+	int ret;
++	ifidx = nla_get_u32(tb[NL80211_ATTR_IFINDEX]);
 +
-+	IWL_DEBUG_INFO(priv, "iwl_prepare_card_hw enter\n");
++	if (!tb[NL80211_ATTR_SURVEY_INFO])
++		return NL_SKIP;
 +
-+	ret = iwl_set_hw_ready(priv);
-+	if (ret >= 0)
-+		return 0;
++	if (nla_parse_nested(sinfo, NL80211_SURVEY_INFO_MAX,
++			     tb[NL80211_ATTR_SURVEY_INFO],
++			     survey_policy))
++		return NL_SKIP;
 +
-+	/* If HW is not ready, prepare the conditions to check again */
-+	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
-+			CSR_HW_IF_CONFIG_REG_PREPARE);
-+
-+	ret = iwl_poll_bit(priv, CSR_HW_IF_CONFIG_REG,
-+			~CSR_HW_IF_CONFIG_REG_BIT_NIC_PREPARE_DONE,
-+			CSR_HW_IF_CONFIG_REG_BIT_NIC_PREPARE_DONE, 150000);
-+
-+	if (ret < 0)
-+		return ret;
-+
-+	/* HW should be ready by now, check again. */
-+	ret = iwl_set_hw_ready(priv);
-+	if (ret >= 0)
-+		return 0;
-+	return ret;
-+}
-+
-+static int iwl_trans_start_device(struct iwl_priv *priv)
-+{
-+	int ret;
-+
-+	priv->ucode_owner = IWL_OWNERSHIP_DRIVER;
-+
-+	if ((priv->cfg->sku & EEPROM_SKU_CAP_AMT_ENABLE) &&
-+	     iwl_prepare_card_hw(priv)) {
-+		IWL_WARN(priv, "Exit HW not ready\n");
-+		return -EIO;
++	if (!sinfo[NL80211_SURVEY_INFO_FREQUENCY]) {
++		wpa_printf(MSG_ERROR, "nl80211: invalid survey data");
++		return NL_SKIP;
 +	}
 +
-+	/* If platform's RF_KILL switch is NOT set to KILL */
-+	if (iwl_read32(priv, CSR_GP_CNTRL) &
-+			CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
-+		clear_bit(STATUS_RF_KILL_HW, &priv->status);
-+	else
-+		set_bit(STATUS_RF_KILL_HW, &priv->status);
++	surveyed_freq = nla_get_u32(sinfo[NL80211_SURVEY_INFO_FREQUENCY]);
 +
-+	if (iwl_is_rfkill(priv)) {
-+		wiphy_rfkill_set_hw_state(priv->hw->wiphy, true);
-+		iwl_enable_interrupts(priv);
-+		return -ERFKILL;
++	if (!check_survey_ok(sinfo, surveyed_freq, survey_results->freq_filter))
++		return NL_SKIP;
++
++	if (survey_results->freq_filter &&
++	    survey_results->freq_filter != surveyed_freq) {
++		wpa_printf(MSG_EXCESSIVE, "nl80211: ignoring survey data "
++			   "for freq %d MHz", surveyed_freq);
++		return NL_SKIP;
 +	}
 +
-+	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
++	add_survey(sinfo, ifidx, &survey_results->survey_list);
 +
-+	ret = iwl_nic_init(priv);
-+	if (ret) {
-+		IWL_ERR(priv, "Unable to init nic\n");
-+		return ret;
-+	}
-+
-+	/* make sure rfkill handshake bits are cleared */
-+	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
-+	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR,
-+		    CSR_UCODE_DRV_GP1_BIT_CMD_BLOCKED);
-+
-+	/* clear (again), then enable host interrupts */
-+	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
-+	iwl_enable_interrupts(priv);
-+
-+	/* really make sure rfkill handshake bits are cleared */
-+	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
-+	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
-+
-+	return 0;
++	return NL_SKIP;
 +}
 +
- /*
-  * Activate/Deactivate Tx DMA/FIFO channels according tx fifos mask
-  * must be called under priv->lock and mac access
-@@ -972,14 +1122,12 @@ static void iwl_trans_free(struct iwl_priv *priv)
- }
++static int wpa_driver_nl80211_get_survey(void *priv, unsigned int freq)
++{
++	struct i802_bss *bss = priv;
++	struct wpa_driver_nl80211_data *drv = bss->drv;
++	struct nl_msg *msg;
++	int err = -ENOBUFS;
++	union wpa_event_data data;
++	struct survey_results *survey_results;
++
++	os_memset(&data, 0, sizeof(data));
++	survey_results = &data.survey_results;
++
++	dl_list_init(&survey_results->survey_list);
++
++	msg = nlmsg_alloc();
++	if (!msg)
++		goto nla_put_failure;
++
++	genlmsg_put(msg, 0, 0, genl_family_get_id(drv->nl80211), 0, NLM_F_DUMP,
++		    NL80211_CMD_GET_SURVEY, 0);
++
++	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, drv->ifindex);
++
++	if (freq)
++		data.survey_results.freq_filter = freq;
++
++	do {
++		err = send_and_recv_msgs(drv, msg, survey_handler, survey_results);
++	} while (err > 0);
++
++	if (err) {
++		wpa_printf(MSG_ERROR, "nl80211: failed to process survey data");
++		goto out_clean;
++	}
++
++	wpa_supplicant_event(drv->ctx, EVENT_SURVEY, &data);
++
++out_clean:
++	clean_survey_results(survey_results);
++nla_put_failure:
++	return err;
++}
++
  
- static const struct iwl_trans_ops trans_ops = {
--	.rx_init = iwl_trans_rx_init,
--	.rx_free = iwl_trans_rx_free,
--
--	.tx_init = iwl_trans_tx_init,
-+	.start_device = iwl_trans_start_device,
-+	.stop_device = iwl_trans_stop_device,
- 	.tx_start = iwl_trans_tx_start,
--	.tx_free = iwl_trans_tx_free,
- 
--	.stop_device = iwl_trans_stop_device,
-+	.rx_free = iwl_trans_rx_free,
-+	.tx_free = iwl_trans_tx_free,
- 
- 	.send_cmd = iwl_send_cmd,
- 	.send_cmd_pdu = iwl_send_cmd_pdu,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 215f4d5..9e801d8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -64,19 +64,14 @@
-  /*This file includes the declaration that are exported from the transport
-  * layer */
- 
--static inline int trans_rx_init(struct iwl_priv *priv)
-+static inline int trans_start_device(struct iwl_priv *priv)
- {
--	return priv->trans.ops->rx_init(priv);
-+	return priv->trans.ops->start_device(priv);
- }
- 
--static inline void trans_rx_free(struct iwl_priv *priv)
--{
--	priv->trans.ops->rx_free(priv);
--}
--
--static inline int trans_tx_init(struct iwl_priv *priv)
-+static inline void trans_stop_device(struct iwl_priv *priv)
- {
--	return priv->trans.ops->tx_init(priv);
-+	priv->trans.ops->stop_device(priv);
- }
- 
- static inline void trans_tx_start(struct iwl_priv *priv)
-@@ -84,14 +79,14 @@ static inline void trans_tx_start(struct iwl_priv *priv)
- 	priv->trans.ops->tx_start(priv);
- }
- 
--static inline void trans_tx_free(struct iwl_priv *priv)
-+static inline void trans_rx_free(struct iwl_priv *priv)
- {
--	priv->trans.ops->tx_free(priv);
-+	priv->trans.ops->rx_free(priv);
- }
- 
--static inline void trans_stop_device(struct iwl_priv *priv)
-+static inline void trans_tx_free(struct iwl_priv *priv)
- {
--	priv->trans.ops->stop_device(priv);
-+	priv->trans.ops->tx_free(priv);
- }
- 
- static inline int trans_send_cmd(struct iwl_priv *priv,
+ static void nl80211_set_rekey_info(void *priv, const u8 *kek, const u8 *kck,
+ 				   const u8 *replay_ctr)
+@@ -6859,4 +7051,5 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
+ 	.remove_pmkid = nl80211_remove_pmkid,
+ 	.flush_pmkid = nl80211_flush_pmkid,
+ 	.set_rekey_info = nl80211_set_rekey_info,
++	.get_survey = wpa_driver_nl80211_get_survey,
+ };
 -- 
-1.7.0.4
+1.7.4.15.g7811d
 
