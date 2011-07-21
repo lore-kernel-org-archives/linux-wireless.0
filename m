@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:42934 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753030Ab1G2VTE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 17:19:04 -0400
-Received: by iyb12 with SMTP id 12so4384179iyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jul 2011 14:19:04 -0700 (PDT)
-Message-ID: <4E3323C5.2010009@lwfinger.net> (sfid-20110729_231918_364816_C20F0305)
-Date: Fri, 29 Jul 2011 16:19:01 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Jongmyeong Kim <jongmyeong.kim@gmail.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RTL8192SE
-References: <CADmdGK5PhiPtHaHFp34jV=7H8NB0fJo-km8=qEsRb35=YJ-5ew@mail.gmail.com>
-In-Reply-To: <CADmdGK5PhiPtHaHFp34jV=7H8NB0fJo-km8=qEsRb35=YJ-5ew@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga01.intel.com ([192.55.52.88]:53534 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751598Ab1GUP0p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 11:26:45 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/25] iwlagn: remove legacy calibration command
+Date: Thu, 21 Jul 2011 07:50:08 -0700
+Message-Id: <1311259828-8415-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110721_172652_622329_B48B0AFB)
+In-Reply-To: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/29/2011 03:41 PM, Jongmyeong Kim wrote:
-> Hi Larry,
->
-> I have thinkpad T410 and it has rtl8192se as wifi card.
-> Today, I downloaded newest rtl8192se linux driver from realtek website
-> (92ce_se_de_linux_mac80211_0003.0620.2011.tar.gz) and installed it.
-> It worked fantastically but when I tried to reboot the laptop, the laptop says
-> 'unauthorized network card is plugged in' and refuses to boot.
->
-> I think your driver changed PCI ID of the wireless card and I want to bring back
-> to the original value. Fortunately, I have another T410 with same configuration
-> so I can get some information from that laptop. I'm planning to restore eeprom
-> of rtl8192se by using 'ethtool' but it requires magic number of rtl8192se.
-> Can you provide the magic number?
->
-> I'm looking at the driver's code, can you point out which file changes PCI ID
-> of the wireless card? I'm a programmer so I can read and understand the C code
-> and I hope there can be a clue in the source code to fix this problem.
+IWL_PHY_CALIBRATE_DIFF_GAIN_CMD is for legacy device, remove it
 
-Nothing in the rtl8192se driver changes the PCI ID. That information is hard 
-coded into the device. I do not know why the Thinkpad's BIOS did not flag the 
-card as illegal on the initial startup. My HP certainly does.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |   10 ----------
+ 1 files changed, 0 insertions(+), 10 deletions(-)
 
-I think that "whitelisting" the wifi cards is a horrible practice. I have used 
-HP notebook computers for about 10 years, but the current one will be the last 
-due to their BIOS practices. I own 14 mini-PCIe wifi devices, and only 2 are 
-whitelisted. Similarly, I will never buy a Lenovo notebook. I use these 
-"foreign" PCIe cards on an ExpressCard extender card, but that came from Realtek 
-as part of my work with them. I do not know of a source for these cards.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 200389d..1c0dea2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -3155,7 +3155,6 @@ struct iwl_enhance_sensitivity_cmd {
+ /* The default calibrate table size if not specified by firmware */
+ #define IWL_DEFAULT_STANDARD_PHY_CALIBRATE_TBL_SIZE	18
+ enum {
+-	IWL_PHY_CALIBRATE_DIFF_GAIN_CMD		= 7,
+ 	IWL_PHY_CALIBRATE_DC_CMD		= 8,
+ 	IWL_PHY_CALIBRATE_LO_CMD		= 9,
+ 	IWL_PHY_CALIBRATE_TX_IQ_CMD		= 11,
+@@ -3221,15 +3220,6 @@ struct iwl_calib_cmd {
+ 	u8 data[0];
+ } __packed;
+ 
+-/* IWL_PHY_CALIBRATE_DIFF_GAIN_CMD (7) */
+-struct iwl_calib_diff_gain_cmd {
+-	struct iwl_calib_hdr hdr;
+-	s8 diff_gain_a;		/* see above */
+-	s8 diff_gain_b;
+-	s8 diff_gain_c;
+-	u8 reserved1;
+-} __packed;
+-
+ struct iwl_calib_xtal_freq_cmd {
+ 	struct iwl_calib_hdr hdr;
+ 	u8 cap_pin1;
+-- 
+1.7.0.4
 
-Larry
