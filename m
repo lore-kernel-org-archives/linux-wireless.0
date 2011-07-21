@@ -1,57 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:3962 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751907Ab1GMMTQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 08:19:16 -0400
-Subject: Re: [PATCH 01/24] ath6kl: add bmi.c
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	gregkh@suse.de
-In-Reply-To: <4E1D4479.8090201@qca.qualcomm.com>
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
-	 <20110713013300.8517.98566.stgit@localhost6.localdomain6>
-	 <1310531333.1143.25.camel@Joe-Laptop>  <4E1D4479.8090201@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 13 Jul 2011 05:19:14 -0700
-Message-ID: <1310559554.1662.6.camel@Joe-Laptop> (sfid-20110713_141920_870938_A585A3F4)
-Mime-Version: 1.0
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:58973 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752829Ab1GUXBu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 19:01:50 -0400
+Received: by mail-pz0-f42.google.com with SMTP id 37so2600511pzk.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2011 16:01:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1310835342-18877-3-git-send-email-hauke@hauke-m.de>
+References: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
+	<1310835342-18877-3-git-send-email-hauke@hauke-m.de>
+Date: Fri, 22 Jul 2011 01:01:50 +0200
+Message-ID: <CACna6rzTqqHpqOfKNQi_T8uUEnbO_KXKGiwwMCbtWY7mX=NtSA@mail.gmail.com> (sfid-20110722_010229_678446_81CD9727)
+Subject: Re: [PATCH v2 02/11] bcma: move initializing of struct bcma_bus to
+ own function.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
+	linux-mips@linux-mips.org, jonas.gorski@gmail.com, mb@bu3sch.de,
+	george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
+	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-07-13 at 10:08 +0300, Kalle Valo wrote:
-> On 07/13/2011 07:28 AM, Joe Perches wrote:
-> > On Wed, 2011-07-13 at 04:33 +0300, Kalle Valo wrote: 
-> >> diff --git a/drivers/net/wireless/ath/ath6kl/bmi.c b/drivers/net/wireless/ath/ath6kl/bmi.c
-> > [] 
-> >> +			ath6kl_err("Unable to decrement the command "
-> >> +				   "credit count register: %d\n", ret);
-> > I think all of these ath6kl_<level> uses in all the patches
-> > should coalesce formats that are split across multiple lines.
-> > This helps grepping the sources for a specific dmesg.
-> > 			ath6kl_err("Unable to decrement the command credit count register: %d\n",
-> > 				   ret);
-> I agree, that would improve readibility. The reason why the lines were
-> split is because of checkpatch warnings. I could unsplit them but then
-> someone else might start complaining about high number checkpatch
-> warnings about long lines. So I really don't know what to do with them.
+2011/7/16 Hauke Mehrtens <hauke@hauke-m.de>:
+> This makes it possible to use this code in some other method.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Add this patch to checkpatch?
-I'll submit it to Andrew Morton later.
+Acked-by: Rafał Miłecki <zajec5@gmail.com>
 
-diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-index b0aa2c6..c0be3c5 100755
---- a/scripts/checkpatch.pl
-+++ b/scripts/checkpatch.pl
-@@ -210,7 +210,7 @@ our $typeTypedefs = qr{(?x:
- 
- our $logFunctions = qr{(?x:
- 	printk|
--	[a-z]+_(emerg|alert|crit|err|warning|warn|notice|info|debug|dbg|vdbg|devel|cont|WARN)|
-+	[a-z0-9]+_(emerg|alert|crit|err|warning|warn|notice|info|debug|dbg|vdbg|devel|cont|WARN)|
- 	WARN|
- 	panic|
- 	MODULE_[A-Z_]+
-
-
-
+-- 
+Rafał
