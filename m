@@ -1,183 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40913 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751800Ab1GSP2T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 11:28:19 -0400
-Subject: Re: [PATCH 3/4] libertas: only enable mesh when interface is active
-From: Dan Williams <dcbw@redhat.com>
-To: Daniel Drake <dsd@laptop.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-Date: Tue, 19 Jul 2011 10:31:57 -0500
-In-Reply-To: <20110717170339.BA1BB9D401D@zog.reactivated.net>
-References: <20110717170339.BA1BB9D401D@zog.reactivated.net>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1311089519.2647.2.camel@dcbw.foobar.com> (sfid-20110719_172822_755033_417A74C8)
-Mime-Version: 1.0
+Received: from hhlx01.visionsystems.de ([62.145.30.242]:56647 "EHLO
+	mail.visionsystems.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751195Ab1GUPG2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 11:06:28 -0400
+Message-ID: <4E284069.7070603@visionsystems.de> (sfid-20110721_170631_876796_485C6C1D)
+Date: Thu, 21 Jul 2011 17:06:17 +0200
+From: Yegor Yefremov <yegor_sub1@visionsystems.de>
+Reply-To: yegor_sub1@visionsystems.de
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] iw: add libnl-3.0 support
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-07-17 at 18:03 +0100, Daniel Drake wrote:
-> Previously, the mesh was running whenever the appropriate hardware
-> and firmware was present.
-> 
-> Now we only run the mesh when the interface is running.
-> 
-> Also simplifies interface management a little.
-> 
-> Signed-off-by: Daniel Drake <dsd@laptop.org>
+Signed-off-by: Yegor Yefremov <yegorslists@googlemail.com>
+---
+Changes from v1:
+- CONFIG_LIBNL30 added
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+ Makefile |   10 ++++++++++
+ iw.c     |    7 +++----
+ iw.h     |    3 ++-
+ 3 files changed, 15 insertions(+), 5 deletions(-)
 
-> ---
->  drivers/net/wireless/libertas/dev.h  |    2 --
->  drivers/net/wireless/libertas/main.c |    2 +-
->  drivers/net/wireless/libertas/mesh.c |   23 +++++++++--------------
->  drivers/net/wireless/libertas/mesh.h |    7 -------
->  drivers/net/wireless/libertas/tx.c   |    2 +-
->  5 files changed, 11 insertions(+), 25 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-> index 094e1f2..8a43ec0 100644
-> --- a/drivers/net/wireless/libertas/dev.h
-> +++ b/drivers/net/wireless/libertas/dev.h
-> @@ -44,9 +44,7 @@ struct lbs_private {
->  	/* Mesh */
->  	struct net_device *mesh_dev; /* Virtual device */
->  #ifdef CONFIG_LIBERTAS_MESH
-> -	u32 mesh_connect_status;
->  	struct lbs_mesh_stats mstats;
-> -	int mesh_open;
->  	uint16_t mesh_tlv;
->  	u8 mesh_ssid[IEEE80211_MAX_SSID_LEN + 1];
->  	u8 mesh_ssid_len;
-> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-> index 4b086cd..6723c67 100644
-> --- a/drivers/net/wireless/libertas/main.c
-> +++ b/drivers/net/wireless/libertas/main.c
-> @@ -512,7 +512,7 @@ static int lbs_thread(void *data)
->  				if (priv->connect_status == LBS_CONNECTED)
->  					netif_wake_queue(priv->dev);
->  				if (priv->mesh_dev &&
-> -				    lbs_mesh_connected(priv))
-> +				    netif_running(priv->mesh_dev))
->  					netif_wake_queue(priv->mesh_dev);
->  			}
->  		}
-> diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
-> index a20419d..be72c08 100644
-> --- a/drivers/net/wireless/libertas/mesh.c
-> +++ b/drivers/net/wireless/libertas/mesh.c
-> @@ -270,17 +270,11 @@ static ssize_t lbs_mesh_set(struct device *dev,
->  {
->  	struct lbs_private *priv = to_net_dev(dev)->ml_priv;
->  	int enable;
-> -	int ret, action = CMD_ACT_MESH_CONFIG_STOP;
->  
->  	sscanf(buf, "%x", &enable);
->  	enable = !!enable;
->  	if (enable == !!priv->mesh_dev)
->  		return count;
-> -	if (enable)
-> -		action = CMD_ACT_MESH_CONFIG_START;
-> -	ret = lbs_mesh_config(priv, action, priv->channel);
-> -	if (ret)
-> -		return ret;
->  
->  	if (enable)
->  		lbs_add_mesh(priv);
-> @@ -823,8 +817,6 @@ int lbs_init_mesh(struct lbs_private *priv)
->  
->  	lbs_deb_enter(LBS_DEB_MESH);
->  
-> -	priv->mesh_connect_status = LBS_DISCONNECTED;
-> -
->  	/* Determine mesh_fw_ver from fwrelease and fwcapinfo */
->  	/* 5.0.16p0 9.0.0.p0 is known to NOT support any mesh */
->  	/* 5.110.22 have mesh command with 0xa3 command id */
-> @@ -864,6 +856,8 @@ int lbs_init_mesh(struct lbs_private *priv)
->  			priv->mesh_tlv = 0;
->  	}
->  
-> +	/* Stop meshing until interface is brought up */
-> +	lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_STOP, priv->channel);
->  
->  	if (priv->mesh_tlv) {
->  		sprintf(priv->mesh_ssid, "mesh");
-> @@ -910,10 +904,9 @@ static int lbs_mesh_stop(struct net_device *dev)
->  	struct lbs_private *priv = dev->ml_priv;
->  
->  	lbs_deb_enter(LBS_DEB_MESH);
-> -	spin_lock_irq(&priv->driver_lock);
-> +	lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_STOP, priv->channel);
->  
-> -	priv->mesh_open = 0;
-> -	priv->mesh_connect_status = LBS_DISCONNECTED;
-> +	spin_lock_irq(&priv->driver_lock);
->  
->  	netif_stop_queue(dev);
->  	netif_carrier_off(dev);
-> @@ -943,18 +936,20 @@ static int lbs_mesh_dev_open(struct net_device *dev)
->  
->  	if (priv->wdev->iftype == NL80211_IFTYPE_MONITOR) {
->  		ret = -EBUSY;
-> +		spin_unlock_irq(&priv->driver_lock);
->  		goto out;
->  	}
->  
-> -	priv->mesh_open = 1;
-> -	priv->mesh_connect_status = LBS_CONNECTED;
->  	netif_carrier_on(dev);
->  
->  	if (!priv->tx_pending_len)
->  		netif_wake_queue(dev);
-> - out:
->  
->  	spin_unlock_irq(&priv->driver_lock);
-> +
-> +	ret = lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START, priv->channel);
-> +
-> +out:
->  	lbs_deb_leave_args(LBS_DEB_NET, "ret %d", ret);
->  	return ret;
->  }
-> diff --git a/drivers/net/wireless/libertas/mesh.h b/drivers/net/wireless/libertas/mesh.h
-> index 7d3dd81..5014491 100644
-> --- a/drivers/net/wireless/libertas/mesh.h
-> +++ b/drivers/net/wireless/libertas/mesh.h
-> @@ -63,11 +63,6 @@ void lbs_mesh_ethtool_get_strings(struct net_device *dev,
->  	uint32_t stringset, uint8_t *s);
->  
-> 
-> -/* Accessors */
-> -
-> -#define lbs_mesh_open(priv) (priv->mesh_open)
-> -#define lbs_mesh_connected(priv) (priv->mesh_connect_status == LBS_CONNECTED)
-> -
->  #else
->  
->  #define lbs_init_mesh(priv)
-> @@ -77,8 +72,6 @@ void lbs_mesh_ethtool_get_strings(struct net_device *dev,
->  #define lbs_mesh_set_dev(priv, dev, rxpd) (dev)
->  #define lbs_mesh_set_txpd(priv, dev, txpd)
->  #define lbs_mesh_config(priv, enable, chan)
-> -#define lbs_mesh_open(priv) (0)
-> -#define lbs_mesh_connected(priv) (0)
->  
->  #endif
->  
-> diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
-> index f19495b..a6e8513 100644
-> --- a/drivers/net/wireless/libertas/tx.c
-> +++ b/drivers/net/wireless/libertas/tx.c
-> @@ -199,7 +199,7 @@ void lbs_send_tx_feedback(struct lbs_private *priv, u32 try_count)
->  	if (priv->connect_status == LBS_CONNECTED)
->  		netif_wake_queue(priv->dev);
->  
-> -	if (priv->mesh_dev && lbs_mesh_connected(priv))
-> +	if (priv->mesh_dev && netif_running(priv->mesh_dev))
->  		netif_wake_queue(priv->mesh_dev);
->  }
->  EXPORT_SYMBOL_GPL(lbs_send_tx_feedback);
-
+Index: b/Makefile
+===================================================================
+--- a/Makefile
++++ b/Makefile
+@@ -24,6 +24,7 @@
+ 
+ NL1FOUND := $(shell $(PKG_CONFIG) --atleast-version=1 libnl-1 && echo Y)
+ NL2FOUND := $(shell $(PKG_CONFIG) --atleast-version=2 libnl-2.0 && echo Y)
++NL3FOUND := $(shell $(PKG_CONFIG) --atleast-version=3 libnl-3.0 && echo Y)
+ 
+ ifeq ($(NL1FOUND),Y)
+ NLLIBNAME = libnl-1
+@@ -35,6 +36,12 @@
+ NLLIBNAME = libnl-2.0
+ endif
+ 
++ifeq ($(NL3FOUND),Y)
++CFLAGS += -DCONFIG_LIBNL30
++LIBS += -lnl-genl
++NLLIBNAME = libnl-3.0
++endif
++
+ ifeq ($(NLLIBNAME),)
+ $(error Cannot find development files for any supported version of libnl)
+ endif
+@@ -53,6 +60,8 @@
+ all: version_check $(ALL)
+ 
+ version_check:
++ifeq ($(NL3FOUND),Y)
++else
+ ifeq ($(NL2FOUND),Y)
+ else
+ ifeq ($(NL1FOUND),Y)
+@@ -60,6 +69,7 @@
+ 	$(error No libnl found)
+ endif
+ endif
++endif
+ 
+ 
+ VERSION_OBJS := $(filter-out version.o, $(OBJS))
+Index: b/iw.c
+===================================================================
+--- a/iw.c
++++ b/iw.c
+@@ -23,9 +23,8 @@
+ #include "nl80211.h"
+ #include "iw.h"
+ 
+-#ifndef CONFIG_LIBNL20
+-/* libnl 2.0 compatibility code */
+-
++/* libnl 1.x compatibility code */
++#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30)
+ static inline struct nl_handle *nl_socket_alloc(void)
+ {
+ 	return nl_handle_alloc();
+@@ -45,7 +44,7 @@
+ 	return 0;
+ }
+ #define genl_ctrl_alloc_cache __genl_ctrl_alloc_cache
+-#endif /* CONFIG_LIBNL20 */
++#endif /* CONFIG_LIBNL20 && CONFIG_LIBNL30 */
+ 
+ int iw_debug = 0;
+ 
+Index: b/iw.h
+===================================================================
+--- a/iw.h
++++ b/iw.h
+@@ -11,7 +11,8 @@
+ 
+ #define ETH_ALEN 6
+ 
+-#ifndef CONFIG_LIBNL20
++/* libnl 1.x compatibility code */
++#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30)
+ #  define nl_sock nl_handle
+ #endif
+ 
 
