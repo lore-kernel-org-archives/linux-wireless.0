@@ -1,79 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42792 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755728Ab1G2MI4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 08:08:56 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 06/13] ath9k: Dump modal eeprom header
-Date: Fri, 29 Jul 2011 17:38:13 +0530
-Message-ID: <1311941300-2590-6-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110729_140902_330495_E80EB754)
-In-Reply-To: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:47950 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752213Ab1GUP0w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 11:26:52 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 24/25] iwlagn: remove "disable otp refresh" W/A
+Date: Thu, 21 Jul 2011 07:50:27 -0700
+Message-Id: <1311259828-8415-25-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110721_172702_462927_F906A996)
+In-Reply-To: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Debugfs file location:
-<debugfs_mnt>/ieee80211/phy#/ath9k/modal_eeprom
+Remove the "disable otp refresh" work-around, not needed anymore.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/debug.c |   30 ++++++++++++++++++++++++++++++
- 1 files changed, 30 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-2000.c |    6 +-----
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 --
+ 2 files changed, 1 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index cdd370c..9bec3b8 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1191,6 +1191,34 @@ static const struct file_operations fops_base_eeprom = {
- 	.llseek = default_llseek,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index 00480e4..0e13f0b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -85,9 +85,6 @@ static void iwl2000_nic_config(struct iwl_priv *priv)
+ 	if (priv->cfg->iq_invert)
+ 		iwl_set_bit(priv, CSR_GP_DRIVER_REG,
+ 			    CSR_GP_DRIVER_REG_BIT_RADIO_IQ_INVER);
+-
+-	if (priv->cfg->disable_otp_refresh)
+-		iwl_write_prph(priv, APMG_ANALOG_SVR_REG, 0x80000010);
+ }
+ 
+ static struct iwl_sensitivity_ranges iwl2000_sensitivity = {
+@@ -267,8 +264,7 @@ static struct iwl_bt_params iwl2030_bt_params = {
+ 	.need_dc_calib = true,					\
+ 	.need_temp_offset_calib = true,				\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+-	.iq_invert = true,					\
+-	.disable_otp_refresh = true				\
++	.iq_invert = true					\
+ 
+ struct iwl_cfg iwl2000_2bgn_cfg = {
+ 	.name = "2000 Series 2x2 BGN",
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index c2d58df..3e6bb73 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -212,7 +212,6 @@ struct iwl_ht_params {
+  * @rx_with_siso_diversity: 1x1 device with rx antenna diversity
+  * @internal_wimax_coex: internal wifi/wimax combo device
+  * @iq_invert: I/Q inversion
+- * @disable_otp_refresh: disable OTP refresh current limit
+  *
+  * We enable the driver to be backward compatible wrt API version. The
+  * driver specifies which APIs it supports (with @ucode_api_max being the
+@@ -258,7 +257,6 @@ struct iwl_cfg {
+ 	const bool rx_with_siso_diversity;
+ 	const bool internal_wimax_coex;
+ 	const bool iq_invert;
+-	const bool disable_otp_refresh;
  };
  
-+static ssize_t read_file_modal_eeprom(struct file *file, char __user *user_buf,
-+				      size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_hw *ah = sc->sc_ah;
-+	u32 len = 0, size = 6000;
-+	char *buf;
-+	size_t retval;
-+
-+	buf = kzalloc(size, GFP_KERNEL);
-+	if (buf == NULL)
-+		return -ENOMEM;
-+
-+	len = ah->eep_ops->dump_eeprom(ah, false, buf, len, size);
-+
-+	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	kfree(buf);
-+
-+	return retval;
-+}
-+
-+static const struct file_operations fops_modal_eeprom = {
-+	.read = read_file_modal_eeprom,
-+	.open = ath9k_debugfs_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- int ath9k_init_debug(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -1236,6 +1264,8 @@ int ath9k_init_debug(struct ath_hw *ah)
- 			    &fops_regdump);
- 	debugfs_create_file("base_eeprom", S_IRUSR, sc->debug.debugfs_phy, sc,
- 			    &fops_base_eeprom);
-+	debugfs_create_file("modal_eeprom", S_IRUSR, sc->debug.debugfs_phy, sc,
-+			    &fops_modal_eeprom);
- 
- 	debugfs_create_u32("gpio_mask", S_IRUSR | S_IWUSR,
- 			   sc->debug.debugfs_phy, &sc->sc_ah->gpio_mask);
+ /***************************
 -- 
-1.7.6
+1.7.0.4
 
