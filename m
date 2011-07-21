@@ -1,58 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:45282 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751092Ab1GSFqZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 01:46:25 -0400
-Received: by wyg8 with SMTP id 8so2534098wyg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jul 2011 22:46:24 -0700 (PDT)
-Date: Tue, 19 Jul 2011 08:44:30 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Franky Lin <frankyl@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 12/19] staging: brcm80211: remove code for unsupported
- chip
-Message-ID: <20110719054430.GE4010@shale.localdomain> (sfid-20110719_074629_213283_9D584498)
-References: <1310999405-10062-1-git-send-email-arend@broadcom.com>
- <1310999405-10062-13-git-send-email-arend@broadcom.com>
- <20110718194215.GD4010@shale.localdomain>
- <4E24A313.3080800@broadcom.com>
- <4E24A6E3.8070700@gnu.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E24A6E3.8070700@gnu.org>
+Received: from mga01.intel.com ([192.55.52.88]:53534 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752060Ab1GUP0r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 11:26:47 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 10/25] iwlagn: move iwl_prepare_card_hw to the transport layer
+Date: Thu, 21 Jul 2011 07:50:13 -0700
+Message-Id: <1311259828-8415-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110721_172726_907273_C0B2FC96)
+In-Reply-To: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 18, 2011 at 05:34:27PM -0400, Pavel Roskin wrote:
-> On 07/18/2011 05:18 PM, Franky Lin wrote:
-> 
-> >No, i didn't. Thank you for pointing out this. I missed it when I
-> >rebased my local branch. It didn't break any thing because
-> >brcmf_mmc_suspend is a global variable. Is it ok to keep the patch like
-> >this? I will prepare another patch to put it back and put the variable
-> >in a structure instead of using a global.
-> 
-> Broken commits are bad for bisecting.  "git bisect" is used to
-> search for a revision that introduces a bug.  "git bisect" selects a
-> commit between the known working and the known broken revision.  If
-> the commit selected by "git commit" suffers from additional
-> breakage, this could lead to wasted time and possibly to a failure
-> to find the commit responsible for the original problem.
-> 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This commit doesn't break anything.  He explained that.
-brcmf_mmc_suspend is already initialized to false here because it is
-a static variable.
+This function is really related to the transport layer - move it.
 
-Don't send a v2 of the patchset.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c   |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.h   |    3 ---
+ drivers/net/wireless/iwlwifi/iwl-dev.h   |    3 +++
+ drivers/net/wireless/iwlwifi/iwl-trans.c |    8 +++++---
+ drivers/net/wireless/iwlwifi/iwl-trans.h |    5 +++++
+ 5 files changed, 14 insertions(+), 7 deletions(-)
 
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index d0f6875..703c106 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3174,7 +3174,7 @@ int iwl_probe(void *bus_specific, struct iwl_bus_ops *bus_ops,
+ 	IWL_INFO(priv, "Detected %s, REV=0x%X\n",
+ 		priv->cfg->name, hw_rev);
+ 
+-	if (iwl_prepare_card_hw(priv)) {
++	if (trans_prepare_card_hw(priv)) {
+ 		err = -EIO;
+ 		IWL_WARN(priv, "Failed, HW not ready\n");
+ 		goto out_free_traffic_mem;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index ffb6bd2..496ab99 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -122,9 +122,6 @@ static inline void iwl_set_calib_hdr(struct iwl_calib_hdr *hdr, u8 cmd)
+ 	hdr->data_valid = 1;
+ }
+ 
+-/* TODO: this one should be API of the transport layer */
+-int iwl_prepare_card_hw(struct iwl_priv *priv);
+-
+ /* tx queue */
+ void iwl_free_tfds_in_queue(struct iwl_priv *priv,
+ 			    int sta_id, int tid, int freed);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index ca15434..9a39836 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1236,6 +1236,8 @@ struct iwl_trans;
+  * struct iwl_trans_ops - transport specific operations
+  * @start_device: allocates and inits all the resources for the transport
+  *                layer.
++ * @prepare_card_hw: claim the ownership on the HW. Will be called during
++ *                   probe.
+  * @tx_start: starts and configures all the Tx fifo - usually done once the fw
+  *           is alive.
+  * @stop_device:stops the whole device (embedded CPU put to reset)
+@@ -1259,6 +1261,7 @@ struct iwl_trans;
+ struct iwl_trans_ops {
+ 
+ 	int (*start_device)(struct iwl_priv *priv);
++	int (*prepare_card_hw)(struct iwl_priv *priv);
+ 	void (*stop_device)(struct iwl_priv *priv);
+ 	void (*tx_start)(struct iwl_priv *priv);
+ 	void (*tx_free)(struct iwl_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+index e9c7de9..88ab20a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -647,11 +647,11 @@ static int iwl_set_hw_ready(struct iwl_priv *priv)
+ }
+ 
+ /* Note: returns standard 0/-ERROR code */
+-int iwl_prepare_card_hw(struct iwl_priv *priv)
++static int iwl_trans_prepare_card_hw(struct iwl_priv *priv)
+ {
+ 	int ret;
+ 
+-	IWL_DEBUG_INFO(priv, "iwl_prepare_card_hw enter\n");
++	IWL_DEBUG_INFO(priv, "iwl_trans_prepare_card_hw enter\n");
+ 
+ 	ret = iwl_set_hw_ready(priv);
+ 	if (ret >= 0)
+@@ -682,7 +682,7 @@ static int iwl_trans_start_device(struct iwl_priv *priv)
+ 	priv->ucode_owner = IWL_OWNERSHIP_DRIVER;
+ 
+ 	if ((priv->cfg->sku & EEPROM_SKU_CAP_AMT_ENABLE) &&
+-	     iwl_prepare_card_hw(priv)) {
++	     iwl_trans_prepare_card_hw(priv)) {
+ 		IWL_WARN(priv, "Exit HW not ready\n");
+ 		return -EIO;
+ 	}
+@@ -1123,7 +1123,9 @@ static void iwl_trans_free(struct iwl_priv *priv)
+ 
+ static const struct iwl_trans_ops trans_ops = {
+ 	.start_device = iwl_trans_start_device,
++	.prepare_card_hw = iwl_trans_prepare_card_hw,
+ 	.stop_device = iwl_trans_stop_device,
++
+ 	.tx_start = iwl_trans_tx_start,
+ 
+ 	.rx_free = iwl_trans_rx_free,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 9e801d8..fca0181 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -69,6 +69,11 @@ static inline int trans_start_device(struct iwl_priv *priv)
+ 	return priv->trans.ops->start_device(priv);
+ }
+ 
++static inline int trans_prepare_card_hw(struct iwl_priv *priv)
++{
++	return priv->trans.ops->prepare_card_hw(priv);
++}
++
+ static inline void trans_stop_device(struct iwl_priv *priv)
+ {
+ 	priv->trans.ops->stop_device(priv);
+-- 
+1.7.0.4
 
-PS: Franky, if you already know the answer then you can just tell us.
-You don't need to ask for permission.
