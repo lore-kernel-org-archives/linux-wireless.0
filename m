@@ -1,57 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3619 "EHLO mms2.broadcom.com"
+Received: from c60.cesmail.net ([216.154.195.49]:16964 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751988Ab1GSK3K convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 06:29:10 -0400
-Message-ID: <4E255C6C.50507@broadcom.com> (sfid-20110719_122914_168463_A59A5AE9)
-Date: Tue, 19 Jul 2011 12:29:00 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1752460Ab1GURgb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 13:36:31 -0400
+Subject: [PATCH 1/3] ath5k: merge ath5k_{init,
+ deinit}_hw() with their thin wrappers
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+From: Pavel Roskin <proski@gnu.org>
+Date: Thu, 21 Jul 2011 13:36:28 -0400
+Message-ID: <20110721173628.30989.19587.stgit@mj.roinet.com> (sfid-20110721_193635_931266_5B5BE012)
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: "mcgrof@gmail.com" <mcgrof@gmail.com>,
-	"lrodriguez@atheros.com" <lrodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 2/2] compat-wireless: deactivate sido suspend for
- brcmfmac on older kernels.
-References: <4E240E32.2020109@broadcom.com>
- <1311010573-17015-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1311010573-17015-1-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/18/2011 07:36 PM, Hauke Mehrtens wrote:
-> With this patch the build does not break any more because of this commit:
->
-> commit da68c4eb258cd9f3f0b8aeb7e46b8118bb6358b6
-> Author: Nicolas Pitre<nico@fluxnic.net>
-> Date:   Fri Mar 5 13:43:31 2010 -0800
->
->      sdio: introduce API for special power management features
->
-> This build error occurs without the patch on linux-2.6.32.
-> /drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c: In function ‘brcmf_sdio_suspend’:
-> /drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c:1087:2: error: ‘mmc_pm_flag_t’ undeclared (first use in this function)
-> /drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c:1087:2: note: each undeclared identifier is reported only once for each function it appears in
-> /drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c:1087:16: error: expected ‘;’ before ‘sdio_flags’
-> /drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c:1088:2: warning: ISO C90 forbids mixed declarations and code
-> /drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c:1092:2: error: ‘sdio_flags’ undeclared (first use in this function)
-> /drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c:1092:2: error: implicit declaration of function ‘sdio_get_host_pm_caps’
->
-> Signed-off-by: Hauke Mehrtens<hauke@hauke-m.de>
-> ---
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h        |    4 ++--
+ drivers/net/wireless/ath/ath5k/base.c         |   10 ++++------
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c |   14 --------------
+ 3 files changed, 6 insertions(+), 22 deletions(-)
 
-Thanks, Hauke
-
-That clarifies it.
-
-Gr. AvS
-
--- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
-
-
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 0289584..c6fb44c 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1372,8 +1372,8 @@ void ath5k_set_beacon_filter(struct ieee80211_hw *hw, bool enable);
+ bool ath5k_any_vif_assoc(struct ath5k_hw *ah);
+ void ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		    struct ath5k_txq *txq);
+-int ath5k_init_hw(struct ath5k_hw *ah);
+-int ath5k_stop_hw(struct ath5k_hw *ah);
++int ath5k_start(struct ieee80211_hw *hw);
++void ath5k_stop(struct ieee80211_hw *hw);
+ void ath5k_mode_setup(struct ath5k_hw *ah, struct ieee80211_vif *vif);
+ void ath5k_update_bssid_mask_and_opmode(struct ath5k_hw *ah,
+ 					struct ieee80211_vif *vif);
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 20e4ef4..a74d286 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2526,9 +2526,9 @@ ath5k_stop_locked(struct ath5k_hw *ah)
+ 	return 0;
+ }
+ 
+-int
+-ath5k_init_hw(struct ath5k_hw *ah)
++int ath5k_start(struct ieee80211_hw *hw)
+ {
++	struct ath5k_hw *ah = hw->priv;
+ 	struct ath_common *common = ath5k_hw_common(ah);
+ 	int ret, i;
+ 
+@@ -2602,9 +2602,9 @@ static void ath5k_stop_tasklets(struct ath5k_hw *ah)
+  * if another thread does a system call and the thread doing the
+  * stop is preempted).
+  */
+-int
+-ath5k_stop_hw(struct ath5k_hw *ah)
++void ath5k_stop(struct ieee80211_hw *hw)
+ {
++	struct ath5k_hw *ah = hw->priv;
+ 	int ret;
+ 
+ 	mutex_lock(&ah->lock);
+@@ -2644,8 +2644,6 @@ ath5k_stop_hw(struct ath5k_hw *ah)
+ 	cancel_delayed_work_sync(&ah->tx_complete_work);
+ 
+ 	ath5k_rfkill_hw_stop(ah);
+-
+-	return ret;
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+index 7aa2a63..2a715ca 100644
+--- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
++++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+@@ -66,20 +66,6 @@ ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 
+ 
+ static int
+-ath5k_start(struct ieee80211_hw *hw)
+-{
+-	return ath5k_init_hw(hw->priv);
+-}
+-
+-
+-static void
+-ath5k_stop(struct ieee80211_hw *hw)
+-{
+-	ath5k_stop_hw(hw->priv);
+-}
+-
+-
+-static int
+ ath5k_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ {
+ 	struct ath5k_hw *ah = hw->priv;
