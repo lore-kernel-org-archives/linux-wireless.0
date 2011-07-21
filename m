@@ -1,58 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from msr19.hinet.net ([168.95.4.119]:48291 "EHLO msr19.hinet.net"
+Received: from mga01.intel.com ([192.55.52.88]:47950 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758631Ab1GLDXE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 23:23:04 -0400
-Date: Tue, 12 Jul 2011 11:21:03 +0800
-From: Ali Bahar <ali@internetdog.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, WLAN FAE <wlanfae@realtek.com>
-Subject: Re: [PATCH 0/2] staging: r8712u: Set ESSID/AP now possible before
- interface is brought Up.
-Message-ID: <20110712032103.GA6847@internetdog.org> (sfid-20110712_052307_984828_08EC0D0B)
-Reply-To: ali@internetdog.org
-References: <1310378876-1311-1-git-send-email-ali@internetDog.org>
- <4E1B1D60.9030509@lwfinger.net>
- <20110712020049.GA6364@internetdog.org>
- <4E1BB788.2010405@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E1BB788.2010405@lwfinger.net>
+	id S1752156Ab1GUP0t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 11:26:49 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 14/25] iwlagn: add comment to warn about WoWLAN in resume / suspend flows
+Date: Thu, 21 Jul 2011 07:50:17 -0700
+Message-Id: <1311259828-8415-15-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110721_172707_017956_B3C6AC09)
+In-Reply-To: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 11, 2011 at 09:55:04PM -0500, Larry Finger wrote:
-> On 07/11/2011 09:00 PM, Ali Bahar wrote:
-> >On Mon, Jul 11, 2011 at 10:57:20AM -0500, Larry Finger wrote:
-> >>On 07/11/2011 05:07 AM, Ali Bahar wrote:
-> >>>These are updates to how the 'bup' flag is handled. The first allows Sets
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> >that you may then Ack and send it to Linville -- which, now that you
-> >have reminded me, would have been Greg KH.
+WoWLAN may need the NIC even after suspend. One should not do anything to the
+NIC in the bus level, since one cannot check whether WoWLAN is enabled or not.
+Same for resume.
 
-> >OK, so I will re-send these to Greg. Do you not get even a CC?!! You
-> >mention none, above, and had offered/expected to review them (in a 3
-> >July email.)
+Add a simple comment to the code to warn about this.
 
-> I am one of the driver's authors, not a maintainer. You should send
-> any patches for a staging driver to GregKH, and Cc all of the driver
-> authors. As I am the only one listed, you only need send these to
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-pci.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-So,
-  To: Greg
-  Cc: Larry
-  # and I expect
-  Cc: linux-wireless
-  # No need for wlanfae@realtek.com
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index 0b815de..fb7e436 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -508,6 +508,11 @@ static int iwl_pci_suspend(struct device *device)
+ 	struct pci_dev *pdev = to_pci_dev(device);
+ 	struct iwl_bus *bus = pci_get_drvdata(pdev);
+ 
++	/* Before you put code here, think about WoWLAN. You cannot check here
++	 * whether WoWLAN is enabled or not, and your code will run even if
++	 * WoWLAN is enabled - don't kill the NIC, someone may need it in Sx.
++	 */
++
+ 	return iwl_suspend(bus->drv_data);
+ }
+ 
+@@ -516,6 +521,11 @@ static int iwl_pci_resume(struct device *device)
+ 	struct pci_dev *pdev = to_pci_dev(device);
+ 	struct iwl_bus *bus = pci_get_drvdata(pdev);
+ 
++	/* Before you put code here, think about WoWLAN. You cannot check here
++	 * whether WoWLAN is enabled or not, and your code will run even if
++	 * WoWLAN is enabled - the NIC may be alive.
++	 */
++
+ 	/*
+ 	 * We disable the RETRY_TIMEOUT register (0x41) to keep
+ 	 * PCI Tx retries from interfering with C3 CPU state.
+-- 
+1.7.0.4
 
-
-> me. You will need me to ACK the patch, otherwise Greg is unlikely to
-> pick it up, particularly as it does more than make cosmetic changes.
-
-Of course.
-Thanks,
-Ali
-
-
-> 
-> Larry
