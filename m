@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:58936 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753917Ab1GVK6i convert rfc822-to-8bit (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:56227 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755Ab1GUWbE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 06:58:38 -0400
-Received: by yia27 with SMTP id 27so1132107yia.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2011 03:58:38 -0700 (PDT)
+	Thu, 21 Jul 2011 18:31:04 -0400
+Received: by gyh3 with SMTP id 3so890176gyh.19
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2011 15:31:03 -0700 (PDT)
+Message-ID: <4E28A8A4.3080509@lwfinger.net> (sfid-20110722_003114_144298_6D005D0B)
+Date: Thu, 21 Jul 2011 17:31:00 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <CA+icZUXXxQN1wSiwbNwDc5npFpB4AVVzawM=ssgkAvRbhhPp2Q@mail.gmail.com>
-References: <CACna6rxbwQUQXOn_11WyXG0zjLq107oJZv7aHoZ3B8sF-4HuHA@mail.gmail.com>
-	<CA+icZUXXxQN1wSiwbNwDc5npFpB4AVVzawM=ssgkAvRbhhPp2Q@mail.gmail.com>
-Date: Fri, 22 Jul 2011 12:58:37 +0200
-Message-ID: <CACna6rw7+KvLv_gcsx_fZhy4aaFBSFVedqnH5337JhFg7BQkrg@mail.gmail.com> (sfid-20110722_125842_185581_84EEE7B0)
-Subject: Re: [ANNOUNCEMENT] BCM43224 and BCM43225 support thanks to Poznan
- University of Technology
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: sedat.dilek@gmail.com
-Cc: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org
+Subject: Re: [PATCH] b43legacy: dma: cache translation (routing bits)
+References: <1311287100-3888-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1311287100-3888-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 22 lipca 2011 12:56 użytkownik Sedat Dilek
-<sedat.dilek@googlemail.com> napisał:
-> 2011/7/22 Rafał Miłecki <zajec5@gmail.com>:
->> Hi guys,
->>
->> As you hopefully noticed, I've spent a lot of time on Broadcom's cards
->> in the last few months. Adding bcma, modifying b43, fixing some bugs,
->> and so on... Today I've finally proposed enabling BCM43224 and
->> BCM43225 support, with a little of luck, still for 3.1 kernel.
->>
->> I've time for all of that thanks to Poznan University of Technology
->> (the one I study at). After my first success with BCM4321 they
->> proposed me to continue this project as part of my MSc work. Thanks to
->> that I could fully focus on b43 and related projects. Focusing on
->> another MSc work woudn't give me so much time and wouldn't result in
->> so fast development.
->>
->> I would like to say big "Thank You" to the University. It was one of
->> the most enjoyable projects during my studies!
->>
->>
->> Now, get the latest code and give me feedback for your BCM43224 or BCM43225! :)
->>
->> --
->> Rafał
->> --
+On 07/21/2011 05:25 PM, Rafał Miłecki wrote:
 >
-> First of all, a big thank you for all the work and to your University
-> which supported you.
-> From where shall people test? Does a GIT repository exist?
-> Or you simply forgot to mention in your euphoria (I know it's end of semester)?
+> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
+> ---
+> Ideally this should have been applied before:
+> ssb: return correct translation bit for 64-bit DMA
+>
+> This is because mentioned patch added TMSHIGH register read on every
+> ssb_dma_translation call which affected performance.
+>
+> If we can live with affected performance between that 2 commits, please
+> just apply this ASAP.
+>
+> It affected performance (however I don't expect anything like making it
+> 90% slower) is not acceptable, please revert mentioned patch, apply this
+> one and then re-apply reverted patches.
 
-All the needed stuff is almost in witeless-testing git tree. The only
-two patches you need to apply manually are recently sent:
-[PATCH 1/2 3.1] b43: bus: fix memory corruption when setting driver's data
-[PATCH 2/2 3.1???] b43: bcma: drop BROKEN
+I will be testing this patch ASAP. Unfortunately, my test box with a b43legacy 
+device crashes on boot with wireless-testing with a fresh pull this afternoon. 
+It does boot with commit d36a160 with only 70 commits between. It shouldn't take 
+too long to sort out.
 
--- 
-Rafał
+Larry
