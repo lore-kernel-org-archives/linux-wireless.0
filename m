@@ -1,45 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:56204 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751185Ab1GaHCc (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:34847 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751147Ab1GUOUC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jul 2011 03:02:32 -0400
-Received: by qwk3 with SMTP id 3so2381129qwk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Jul 2011 00:02:31 -0700 (PDT)
+	Thu, 21 Jul 2011 10:20:02 -0400
+Received: by vxh35 with SMTP id 35so909066vxh.19
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2011 07:20:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAC9WiBhiBBwoBR3p23wnO5LFSe0agRMkquvy9RjhmEs8NbYGfg@mail.gmail.com>
-References: <CAC9WiBhiBBwoBR3p23wnO5LFSe0agRMkquvy9RjhmEs8NbYGfg@mail.gmail.com>
-Date: Sun, 31 Jul 2011 09:02:31 +0200
-Message-ID: <CAOZOX0UxwbsF1Lg6vRqEx5_rM3MYKcYSSpddPmUcCih0O3EKdA@mail.gmail.com> (sfid-20110731_090235_895464_994D5AA2)
-Subject: Re: v3.0 wants a firmware for rt2870 but v2.6.39 needn't
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Francis Moreau <francis.moro@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <201107211613.01938.helmut.schaa@googlemail.com>
+References: <CAN=pzdLRaRHkg4NquUpDhEwRzq-roKQXMtMcwnr031maDSLRfw@mail.gmail.com>
+	<CAGXE3d9HgRvdJModc3hSA25+jLktZJ3i997oq7GfZz4dUJfuvw@mail.gmail.com>
+	<CAN=pzdKHWNcvwAn3uDMzTdpvv3MkM9KNC89NuzZX=z6npBnUGg@mail.gmail.com>
+	<201107211613.01938.helmut.schaa@googlemail.com>
+Date: Thu, 21 Jul 2011 18:20:01 +0400
+Message-ID: <CAN=pzdLHHgyPxEbCOGEXvbuhAYZ863fW_Rai5OWWxE8yHai1jw@mail.gmail.com> (sfid-20110721_162006_385998_9D000388)
+Subject: Re: rt2x00, AP mode, 802.11n is not working properly
+From: Stanislav Demakov <s.demakov@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+>>Disabling WMM might force some clients to disable 11n, not sure though how
+this relates.
 
-> I've just updated my kernel to 3.0 and now my wireless card using a
-> rt2870 chip doesn't work anymore.
+That's right, this is why I need it to work properly when it's enabled.
+E.g my netbook can handle 11n without WMM and I get 65mbps, but
+iDevices (ipad ipod) will only connect in G mode in this case.
+
+
+2011/7/21 Helmut Schaa <helmut.schaa@googlemail.com>:
+> Am Donnerstag, 21. Juli 2011 schrieb Stanislav Demakov:
+>> This patch won't apply on current compat-wireless-2011-07-20.tar.bz2
+>>
+>> (Stripping trailing CRs from patch.)
+>> patching file b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> Hunk #1 FAILED at 4194.
+>> 1 out of 1 hunk FAILED -- saving rejects to file
+>> b/drivers/net/wireless/rt2x00/rt2800lib.c.rej
+>> (Stripping trailing CRs from patch.)
+>> patching file b/drivers/net/wireless/rt2x00/rt2800usb.c
+>> Hunk #1 FAILED at 527.
+>> patch unexpectedly ends in middle of line
+>> Hunk #2 FAILED at 820.
+>> 2 out of 2 hunks FAILED -- saving rejects to file
+>> b/drivers/net/wireless/rt2x00/rt2800usb.c.rej
+>>
+>> Should I use another version of compat wireless or edit files manually?
 >
-> It wants now a firmware rt2870.bin whereas this wasn't needed for older kernels.
+> Just edit manually, it's not much ...
 >
-> Is this expected ? If so why the firmware is now mandatory whereas it
-> wasn't previously ?
-
-rt2870 has always needed firmware, but what you didn't notice is that you
-are not using the same driver as before. Previous kernels contained 2
-drivers for the rt2870 chipset. Namely rt2800usb (as part of rt2x00) and
-rt2870 (inside the staging directory). For 3.0 the rt2870 from the staging
-directory has been removed, so now you are forced to use rt2800usb.
-
-Both drivers needed firmware, however rt2870 had the firmware compiled
-into the driver, while rt2800usb needed the firmware as separate file (as is
-the preferred behavior for drivers which need firmware).
-
-So you should just the rt2870.bin file from the linux-firmware package
-to get started with the driver.
-
-Ivo
+>> Also I have no stability issues, the connection is stable, but as I
+>> said the TX speed from AP running rt2x00 (the driver is in Master
+>> mode) to client is extremely slow in 802.11n+WMM mode.
+>
+> Yeah, understood. That's what I saw in STA mode as well. Now I get a stable
+> transmit speed >20Mbps (MCS7 20Mhz).
+>
+>> And this is only WMM mode related, because wIthout it everything is fine.
+>
+> Disabling WMM might force some clients to disable 11n, not sure though how
+> this relates.
+>
+> Helmut
+>
