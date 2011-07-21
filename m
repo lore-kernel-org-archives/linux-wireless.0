@@ -1,768 +1,497 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:33623 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757623Ab1GAWcZ (ORCPT
+Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:37108 "EHLO
+	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751452Ab1GUTn2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2011 18:32:25 -0400
-Received: by yxi11 with SMTP id 11so1114010yxi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2011 15:32:24 -0700 (PDT)
-From: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+	Thu, 21 Jul 2011 15:43:28 -0400
+From: Daniel Drake <dsd@laptop.org>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, sameo@linux.intel.com,
-	lauro.venancio@openbossa.org, marcio.macedo@openbossa.org,
-	Waldemar.Rymarkiewicz@tieto.com, joe@perches.com,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Subject: [PATCH v5 1/6] NFC: add nfc subsystem core
-Date: Fri,  1 Jul 2011 19:31:33 -0300
-Message-Id: <1309559498-600-2-git-send-email-aloisio.almeida@openbossa.org> (sfid-20110702_003228_829066_0EA986B5)
-In-Reply-To: <1309559498-600-1-git-send-email-aloisio.almeida@openbossa.org>
-References: <1309559498-600-1-git-send-email-aloisio.almeida@openbossa.org>
+To: dcbw@redhat.com
+Cc: linux-wireless@vger.kernel.org
+Cc: libertas-dev@lists.infradead.org
+Cc: kvalo@adurom.com
+Subject: [PATCH] libertas: link mesh device to wiphy
+Message-Id: <20110721194318.2FA099D401C@zog.reactivated.net> (sfid-20110721_214332_238161_89950D1F)
+Date: Thu, 21 Jul 2011 20:43:17 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+The mesh device is now exposed as an interface of the wiphy.
+This exposes the mesh device to the cfg80211 interface, allowing
+mesh channel selection to be reimplemented, and available to
+NetworkManager as it was before.
 
-The NFC subsystem core is responsible for providing the device driver
-interface. It is also responsible for providing an interface to the control
-operations and data exchange.
+Some header tweaking was needed in order to implement lbs_mesh_activated().
 
-Signed-off-by: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Signed-off-by: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Daniel Drake <dsd@laptop.org>
 ---
- drivers/Kconfig      |    2 -
- drivers/Makefile     |    1 +
- drivers/nfc/Kconfig  |   16 +--
- drivers/nfc/Makefile |    2 +
- include/net/nfc.h    |  135 +++++++++++++++++++
- net/Kconfig          |    1 +
- net/Makefile         |    1 +
- net/nfc/Kconfig      |   16 +++
- net/nfc/Makefile     |    7 +
- net/nfc/core.c       |  365 ++++++++++++++++++++++++++++++++++++++++++++++++++
- net/nfc/nfc.h        |   78 +++++++++++
- 11 files changed, 609 insertions(+), 15 deletions(-)
- create mode 100644 include/net/nfc.h
- create mode 100644 net/nfc/Kconfig
- create mode 100644 net/nfc/Makefile
- create mode 100644 net/nfc/core.c
- create mode 100644 net/nfc/nfc.h
+ drivers/net/wireless/libertas/cfg.c     |   36 +++++++++++++++-
+ drivers/net/wireless/libertas/dev.h     |   12 +++++-
+ drivers/net/wireless/libertas/ethtool.c |    1 +
+ drivers/net/wireless/libertas/main.c    |   14 ++++--
+ drivers/net/wireless/libertas/mesh.c    |   68 ++++++++++++++++++++++---------
+ drivers/net/wireless/libertas/mesh.h    |   27 +++++-------
+ drivers/net/wireless/libertas/rx.c      |    1 +
+ drivers/net/wireless/libertas/tx.c      |    1 +
+ 8 files changed, 117 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/Kconfig b/drivers/Kconfig
-index 61631ed..a56b0b8 100644
---- a/drivers/Kconfig
-+++ b/drivers/Kconfig
-@@ -92,8 +92,6 @@ source "drivers/memstick/Kconfig"
+Replaces previous patch "libertas: reimplement mesh channel selection"
+
+diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+index b456a53..63009c7 100644
+--- a/drivers/net/wireless/libertas/cfg.c
++++ b/drivers/net/wireless/libertas/cfg.c
+@@ -19,6 +19,7 @@
+ #include "decl.h"
+ #include "cfg.h"
+ #include "cmd.h"
++#include "mesh.h"
  
- source "drivers/leds/Kconfig"
  
--source "drivers/nfc/Kconfig"
--
- source "drivers/accessibility/Kconfig"
+ #define CHAN2G(_channel, _freq, _flags) {        \
+@@ -442,13 +443,16 @@ static int lbs_cfg_set_channel(struct wiphy *wiphy,
+ 	struct lbs_private *priv = wiphy_priv(wiphy);
+ 	int ret = -ENOTSUPP;
  
- source "drivers/infiniband/Kconfig"
-diff --git a/drivers/Makefile b/drivers/Makefile
-index a29527f..843cd31 100644
---- a/drivers/Makefile
-+++ b/drivers/Makefile
-@@ -120,3 +120,4 @@ obj-y				+= ieee802154/
- obj-y				+= clk/
+-	lbs_deb_enter_args(LBS_DEB_CFG80211, "freq %d, type %d",
+-			   channel->center_freq, channel_type);
++	lbs_deb_enter_args(LBS_DEB_CFG80211, "iface %s freq %d, type %d",
++			   netdev_name(netdev), channel->center_freq, channel_type);
  
- obj-$(CONFIG_HWSPINLOCK)	+= hwspinlock/
-+obj-$(CONFIG_NFC)		+= nfc/
-diff --git a/drivers/nfc/Kconfig b/drivers/nfc/Kconfig
-index ea15800..7809289 100644
---- a/drivers/nfc/Kconfig
-+++ b/drivers/nfc/Kconfig
-@@ -2,17 +2,8 @@
- # Near Field Communication (NFC) devices
- #
+ 	if (channel_type != NL80211_CHAN_NO_HT)
+ 		goto out;
  
--menuconfig NFC_DEVICES
--	bool "Near Field Communication (NFC) devices"
--	default n
--	---help---
--	  You'll have to say Y if your computer contains an NFC device that
--	  you want to use under Linux.
--
--	  You can say N here if you don't have any Near Field Communication
--	  devices connected to your computer.
--
--if NFC_DEVICES
-+menu "Near Field Communication (NFC) devices"
-+	depends on NFC
+-	ret = lbs_set_channel(priv, channel->hw_value);
++	if (netdev == priv->mesh_dev)
++		ret = lbs_mesh_set_channel(priv, channel->hw_value);
++	else
++		ret = lbs_set_channel(priv, channel->hw_value);
  
- config PN544_NFC
- 	tristate "PN544 NFC driver"
-@@ -26,5 +17,4 @@ config PN544_NFC
- 	  To compile this driver as a module, choose m here. The module will
- 	  be called pn544.
+  out:
+ 	lbs_deb_leave_args(LBS_DEB_CFG80211, "ret %d", ret);
+@@ -1292,6 +1296,9 @@ static int lbs_cfg_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	int ret = 0;
+ 	u8 preamble = RADIO_PREAMBLE_SHORT;
  
--
--endif # NFC_DEVICES
-+endmenu
-diff --git a/drivers/nfc/Makefile b/drivers/nfc/Makefile
-index a4efb16..25296f0 100644
---- a/drivers/nfc/Makefile
-+++ b/drivers/nfc/Makefile
-@@ -3,3 +3,5 @@
- #
- 
- obj-$(CONFIG_PN544_NFC)		+= pn544.o
++	if (dev == priv->mesh_dev)
++		return -EOPNOTSUPP;
 +
-+ccflags-$(CONFIG_NFC_DEBUG) := -DDEBUG
-diff --git a/include/net/nfc.h b/include/net/nfc.h
-new file mode 100644
-index 0000000..c57b579
---- /dev/null
-+++ b/include/net/nfc.h
-@@ -0,0 +1,135 @@
-+/*
-+ * Copyright (C) 2011 Instituto Nokia de Tecnologia
-+ *
-+ * Authors:
-+ *    Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-+ *    Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the
-+ * Free Software Foundation, Inc.,
-+ * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ */
+ 	lbs_deb_enter(LBS_DEB_CFG80211);
+ 
+ 	if (!sme->bssid) {
+@@ -1408,6 +1415,9 @@ static int lbs_cfg_disconnect(struct wiphy *wiphy, struct net_device *dev,
+ 	struct lbs_private *priv = wiphy_priv(wiphy);
+ 	struct cmd_ds_802_11_deauthenticate cmd;
+ 
++	if (dev == priv->mesh_dev)
++		return -EOPNOTSUPP;
 +
-+#ifndef __NET_NFC_H
-+#define __NET_NFC_H
+ 	lbs_deb_enter_args(LBS_DEB_CFG80211, "reason_code %d", reason_code);
+ 
+ 	/* store for lbs_cfg_ret_disconnect() */
+@@ -1439,6 +1449,9 @@ static int lbs_cfg_set_default_key(struct wiphy *wiphy,
+ {
+ 	struct lbs_private *priv = wiphy_priv(wiphy);
+ 
++	if (netdev == priv->mesh_dev)
++		return -EOPNOTSUPP;
 +
-+#include <linux/device.h>
-+#include <linux/skbuff.h>
+ 	lbs_deb_enter(LBS_DEB_CFG80211);
+ 
+ 	if (key_index != priv->wep_tx_key) {
+@@ -1460,6 +1473,9 @@ static int lbs_cfg_add_key(struct wiphy *wiphy, struct net_device *netdev,
+ 	u16 key_type;
+ 	int ret = 0;
+ 
++	if (netdev == priv->mesh_dev)
++		return -EOPNOTSUPP;
 +
-+#define nfc_dev_info(dev, fmt, arg...) dev_info((dev), "NFC: " fmt "\n", ## arg)
-+#define nfc_dev_err(dev, fmt, arg...) dev_err((dev), "NFC: " fmt "\n", ## arg)
-+#define nfc_dev_dbg(dev, fmt, arg...) dev_dbg((dev), fmt "\n", ## arg)
+ 	lbs_deb_enter(LBS_DEB_CFG80211);
+ 
+ 	lbs_deb_assoc("add_key: cipher 0x%x, mac_addr %pM\n",
+@@ -1603,6 +1619,9 @@ static int lbs_get_survey(struct wiphy *wiphy, struct net_device *dev,
+ 	s8 signal, noise;
+ 	int ret;
+ 
++	if (dev == priv->mesh_dev)
++		return -EOPNOTSUPP;
 +
-+struct nfc_dev;
+ 	if (idx != 0)
+ 		ret = -ENOENT;
+ 
+@@ -1636,6 +1655,9 @@ static int lbs_change_intf(struct wiphy *wiphy, struct net_device *dev,
+ 	struct lbs_private *priv = wiphy_priv(wiphy);
+ 	int ret = 0;
+ 
++	if (dev == priv->mesh_dev)
++		return -EOPNOTSUPP;
 +
-+/**
-+ * data_exchange_cb_t - Definition of nfc_data_exchange callback
-+ *
-+ * @context: nfc_data_exchange cb_context parameter
-+ * @skb: response data
-+ * @err: If an error has occurred during data exchange, it is the
-+ *	error number. Zero means no error.
-+ *
-+ * When a rx or tx package is lost or corrupted or the target gets out
-+ * of the operating field, err is -EIO.
-+ */
-+typedef void (*data_exchange_cb_t)(void *context, struct sk_buff *skb,
-+								int err);
+ 	lbs_deb_enter(LBS_DEB_CFG80211);
+ 
+ 	switch (type) {
+@@ -1959,6 +1981,9 @@ static int lbs_join_ibss(struct wiphy *wiphy, struct net_device *dev,
+ 	struct cfg80211_bss *bss;
+ 	DECLARE_SSID_BUF(ssid_buf);
+ 
++	if (dev == priv->mesh_dev)
++		return -EOPNOTSUPP;
 +
-+struct nfc_ops {
-+	int (*start_poll)(struct nfc_dev *dev, u32 protocols);
-+	void (*stop_poll)(struct nfc_dev *dev);
-+	int (*activate_target)(struct nfc_dev *dev, u32 target_idx,
-+							u32 protocol);
-+	void (*deactivate_target)(struct nfc_dev *dev, u32 target_idx);
-+	int (*data_exchange)(struct nfc_dev *dev, u32 target_idx,
-+				struct sk_buff *skb, data_exchange_cb_t cb,
-+							void *cb_context);
+ 	lbs_deb_enter(LBS_DEB_CFG80211);
+ 
+ 	if (!params->channel) {
+@@ -1995,6 +2020,9 @@ static int lbs_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
+ 	struct cmd_ds_802_11_ad_hoc_stop cmd;
+ 	int ret = 0;
+ 
++	if (dev == priv->mesh_dev)
++		return -EOPNOTSUPP;
++
+ 	lbs_deb_enter(LBS_DEB_CFG80211);
+ 
+ 	memset(&cmd, 0, sizeof(cmd));
+@@ -2117,6 +2145,8 @@ int lbs_cfg_register(struct lbs_private *priv)
+ 			BIT(NL80211_IFTYPE_ADHOC);
+ 	if (lbs_rtap_supported(priv))
+ 		wdev->wiphy->interface_modes |= BIT(NL80211_IFTYPE_MONITOR);
++	if (lbs_mesh_activated(priv))
++		wdev->wiphy->interface_modes |= BIT(NL80211_IFTYPE_MESH_POINT);
+ 
+ 	wdev->wiphy->bands[IEEE80211_BAND_2GHZ] = &lbs_band_2ghz;
+ 
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index adb3490..133ff1c 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -6,7 +6,6 @@
+ #ifndef _LBS_DEV_H_
+ #define _LBS_DEV_H_
+ 
+-#include "mesh.h"
+ #include "defs.h"
+ #include "host.h"
+ 
+@@ -22,6 +21,17 @@ struct sleep_params {
+ 	uint16_t sp_reserved;
+ };
+ 
++/* Mesh statistics */
++struct lbs_mesh_stats {
++	u32	fwd_bcast_cnt;		/* Fwd: Broadcast counter */
++	u32	fwd_unicast_cnt;	/* Fwd: Unicast counter */
++	u32	fwd_drop_ttl;		/* Fwd: TTL zero */
++	u32	fwd_drop_rbt;		/* Fwd: Recently Broadcasted */
++	u32	fwd_drop_noroute; 	/* Fwd: No route to Destination */
++	u32	fwd_drop_nobuf;		/* Fwd: Run out of internal buffers */
++	u32	drop_blind;		/* Rx:  Dropped by blinding table */
++	u32	tx_failed_cnt;		/* Tx:  Failed transmissions */
 +};
-+
-+struct nfc_dev {
-+	unsigned idx;
-+	struct device dev;
-+	bool polling;
-+	u32 supported_protocols;
-+
-+	struct nfc_ops *ops;
-+};
-+#define to_nfc_dev(_dev) container_of(_dev, struct nfc_dev, dev)
-+
-+extern struct class nfc_class;
-+
-+struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
-+					u32 supported_protocols);
-+
-+/**
-+ * nfc_free_device - free nfc device
-+ *
-+ * @dev: The nfc device to free
-+ */
-+static inline void nfc_free_device(struct nfc_dev *dev)
-+{
-+	put_device(&dev->dev);
-+}
-+
-+int nfc_register_device(struct nfc_dev *dev);
-+
-+void nfc_unregister_device(struct nfc_dev *dev);
-+
-+/**
-+ * nfc_set_parent_dev - set the parent device
-+ *
-+ * @nfc_dev: The nfc device whose parent is being set
-+ * @dev: The parent device
-+ */
-+static inline void nfc_set_parent_dev(struct nfc_dev *nfc_dev,
-+					struct device *dev)
-+{
-+	nfc_dev->dev.parent = dev;
-+}
-+
-+/**
-+ * nfc_set_drvdata - set driver specifc data
-+ *
-+ * @dev: The nfc device
-+ * @data: Pointer to driver specifc data
-+ */
-+static inline void nfc_set_drvdata(struct nfc_dev *dev, void *data)
-+{
-+	dev_set_drvdata(&dev->dev, data);
-+}
-+
-+/**
-+ * nfc_get_drvdata - get driver specifc data
-+ *
-+ * @dev: The nfc device
-+ */
-+static inline void *nfc_get_drvdata(struct nfc_dev *dev)
-+{
-+	return dev_get_drvdata(&dev->dev);
-+}
-+
-+/**
-+ * nfc_device_name - get the nfc device name
-+ *
-+ * @dev: The nfc device whose name to return
-+ */
-+static inline const char *nfc_device_name(struct nfc_dev *dev)
-+{
-+	return dev_name(&dev->dev);
-+}
-+
-+struct sk_buff *nfc_alloc_skb(unsigned int size, gfp_t gfp);
-+
-+#endif /* __NET_NFC_H */
-diff --git a/net/Kconfig b/net/Kconfig
-index 878151c..a073148 100644
---- a/net/Kconfig
-+++ b/net/Kconfig
-@@ -322,6 +322,7 @@ source "net/rfkill/Kconfig"
- source "net/9p/Kconfig"
- source "net/caif/Kconfig"
- source "net/ceph/Kconfig"
-+source "net/nfc/Kconfig"
+ 
+ /* Private structure for the MV device */
+ struct lbs_private {
+diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
+index 4dfb3bf..885ddc1 100644
+--- a/drivers/net/wireless/libertas/ethtool.c
++++ b/drivers/net/wireless/libertas/ethtool.c
+@@ -5,6 +5,7 @@
+ 
+ #include "decl.h"
+ #include "cmd.h"
++#include "mesh.h"
  
  
- endif   # if NET
-diff --git a/net/Makefile b/net/Makefile
-index a51d946..acdde49 100644
---- a/net/Makefile
-+++ b/net/Makefile
-@@ -68,3 +68,4 @@ obj-$(CONFIG_WIMAX)		+= wimax/
- obj-$(CONFIG_DNS_RESOLVER)	+= dns_resolver/
- obj-$(CONFIG_CEPH_LIB)		+= ceph/
- obj-$(CONFIG_BATMAN_ADV)	+= batman-adv/
-+obj-$(CONFIG_NFC)		+= nfc/
-diff --git a/net/nfc/Kconfig b/net/nfc/Kconfig
-new file mode 100644
-index 0000000..33e095b
---- /dev/null
-+++ b/net/nfc/Kconfig
-@@ -0,0 +1,16 @@
-+#
-+# NFC sybsystem configuration
-+#
+ static void lbs_ethtool_get_drvinfo(struct net_device *dev,
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 94652c5..ee28ae5 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -23,6 +23,7 @@
+ #include "cfg.h"
+ #include "debugfs.h"
+ #include "cmd.h"
++#include "mesh.h"
+ 
+ #define DRIVER_RELEASE_VERSION "323.p0"
+ const char lbs_driver_version[] = "COMM-USB8388-" DRIVER_RELEASE_VERSION
+@@ -950,17 +951,20 @@ int lbs_start_card(struct lbs_private *priv)
+ 	if (ret)
+ 		goto done;
+ 
++	if (!lbs_disablemesh)
++		lbs_init_mesh(priv);
++	else
++		pr_info("%s: mesh disabled\n", dev->name);
 +
-+menuconfig NFC
-+	depends on NET && EXPERIMENTAL
-+	tristate "NFC subsystem support (EXPERIMENTAL)"
-+	default n
-+	help
-+	  Say Y here if you want to build support for NFC (Near field
-+	  communication) devices.
-+
-+	  To compile this support as a module, choose M here: the module will
-+	  be called nfc.
-+
-+source "drivers/nfc/Kconfig"
-diff --git a/net/nfc/Makefile b/net/nfc/Makefile
-new file mode 100644
-index 0000000..28bee59
---- /dev/null
-+++ b/net/nfc/Makefile
-@@ -0,0 +1,7 @@
-+#
-+# Makefile for the Linux NFC subsystem.
-+#
-+
-+obj-$(CONFIG_NFC) += nfc.o
-+
-+nfc-objs := core.o
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-new file mode 100644
-index 0000000..19f8035
---- /dev/null
-+++ b/net/nfc/core.c
-@@ -0,0 +1,365 @@
-+/*
-+ * Copyright (C) 2011 Instituto Nokia de Tecnologia
-+ *
-+ * Authors:
-+ *    Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-+ *    Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the
-+ * Free Software Foundation, Inc.,
-+ * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ */
-+
-+#include <linux/init.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/slab.h>
-+
-+#include "nfc.h"
-+
-+#define VERSION "0.1"
-+
-+int nfc_devlist_generation;
-+DEFINE_MUTEX(nfc_devlist_mutex);
-+
-+int nfc_printk(const char *level, const char *format, ...)
+ 	if (lbs_cfg_register(priv)) {
+ 		pr_err("cannot register device\n");
+ 		goto done;
+ 	}
+ 
+-	lbs_update_channel(priv);
++	if (lbs_mesh_activated(priv))
++		lbs_start_mesh(priv);
+ 
+-	if (!lbs_disablemesh)
+-		lbs_init_mesh(priv);
+-	else
+-		pr_info("%s: mesh disabled\n", dev->name);
++	lbs_update_channel(priv);
+ 
+ 	lbs_debugfs_init_one(priv, dev);
+ 
+diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
+index be72c08..2a635d2 100644
+--- a/drivers/net/wireless/libertas/mesh.c
++++ b/drivers/net/wireless/libertas/mesh.c
+@@ -129,6 +129,19 @@ static int lbs_mesh_config(struct lbs_private *priv, uint16_t action,
+ 	return __lbs_mesh_config_send(priv, &cmd, action, priv->mesh_tlv);
+ }
+ 
++int lbs_mesh_set_channel(struct lbs_private *priv, u8 channel)
 +{
-+	struct va_format vaf;
-+	va_list args;
-+	int r;
-+
-+	va_start(args, format);
-+
-+	vaf.fmt = format;
-+	vaf.va = &args;
-+
-+	r = printk("%sNFC: %pV\n", level, &vaf);
-+
-+	va_end(args);
-+
-+	return r;
++	return lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START, channel);
 +}
-+EXPORT_SYMBOL(nfc_printk);
 +
-+/**
-+ * nfc_start_poll - start polling for nfc targets
-+ *
-+ * @dev: The nfc device that must start polling
-+ * @protocols: bitset of nfc protocols that must be used for polling
-+ *
-+ * The device remains polling for targets until a target is found or
-+ * the nfc_stop_poll function is called.
-+ */
-+int nfc_start_poll(struct nfc_dev *dev, u32 protocols)
++static uint16_t lbs_mesh_get_channel(struct lbs_private *priv)
 +{
-+	int rc;
++	struct wireless_dev *mesh_wdev = priv->mesh_dev->ieee80211_ptr;
++	if (mesh_wdev->channel)
++		return mesh_wdev->channel->hw_value;
++	else
++		return 1;
++}
+ 
+ /***************************************************************************
+  * Mesh sysfs support
+@@ -812,7 +825,6 @@ static void lbs_persist_config_remove(struct net_device *dev)
+  */
+ int lbs_init_mesh(struct lbs_private *priv)
+ {
+-	struct net_device *dev = priv->dev;
+ 	int ret = 0;
+ 
+ 	lbs_deb_enter(LBS_DEB_MESH);
+@@ -837,11 +849,9 @@ int lbs_init_mesh(struct lbs_private *priv)
+ 		   useful */
+ 
+ 		priv->mesh_tlv = TLV_TYPE_OLD_MESH_ID;
+-		if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
+-				    priv->channel)) {
++		if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START, 1)) {
+ 			priv->mesh_tlv = TLV_TYPE_MESH_ID;
+-			if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
+-					    priv->channel))
++			if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START, 1))
+ 				priv->mesh_tlv = 0;
+ 		}
+ 	} else
+@@ -851,23 +861,16 @@ int lbs_init_mesh(struct lbs_private *priv)
+ 		 * 0x100+37; Do not invoke command with old TLV.
+ 		 */
+ 		priv->mesh_tlv = TLV_TYPE_MESH_ID;
+-		if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
+-				    priv->channel))
++		if (lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START, 1))
+ 			priv->mesh_tlv = 0;
+ 	}
+ 
+ 	/* Stop meshing until interface is brought up */
+-	lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_STOP, priv->channel);
++	lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_STOP, 1);
+ 
+ 	if (priv->mesh_tlv) {
+ 		sprintf(priv->mesh_ssid, "mesh");
+ 		priv->mesh_ssid_len = 4;
+-
+-		lbs_add_mesh(priv);
+-
+-		if (device_create_file(&dev->dev, &dev_attr_lbs_mesh))
+-			netdev_err(dev, "cannot register lbs_mesh attribute\n");
+-
+ 		ret = 1;
+ 	}
+ 
+@@ -875,6 +878,13 @@ int lbs_init_mesh(struct lbs_private *priv)
+ 	return ret;
+ }
+ 
++void lbs_start_mesh(struct lbs_private *priv)
++{
++	lbs_add_mesh(priv);
 +
-+	nfc_dbg("dev_name=%s protocols=0x%x", dev_name(&dev->dev), protocols);
-+
-+	if (!protocols)
-+		return -EINVAL;
-+
-+	device_lock(&dev->dev);
-+
-+	if (!device_is_registered(&dev->dev)) {
-+		rc = -ENODEV;
-+		goto error;
++	if (device_create_file(&priv->dev->dev, &dev_attr_lbs_mesh))
++		netdev_err(priv->dev, "cannot register lbs_mesh attribute\n");
++}
+ 
+ int lbs_deinit_mesh(struct lbs_private *priv)
+ {
+@@ -904,7 +914,8 @@ static int lbs_mesh_stop(struct net_device *dev)
+ 	struct lbs_private *priv = dev->ml_priv;
+ 
+ 	lbs_deb_enter(LBS_DEB_MESH);
+-	lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_STOP, priv->channel);
++	lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_STOP,
++		lbs_mesh_get_channel(priv));
+ 
+ 	spin_lock_irq(&priv->driver_lock);
+ 
+@@ -947,7 +958,8 @@ static int lbs_mesh_dev_open(struct net_device *dev)
+ 
+ 	spin_unlock_irq(&priv->driver_lock);
+ 
+-	ret = lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START, priv->channel);
++	ret = lbs_mesh_config(priv, CMD_ACT_MESH_CONFIG_START,
++		lbs_mesh_get_channel(priv));
+ 
+ out:
+ 	lbs_deb_leave_args(LBS_DEB_NET, "ret %d", ret);
+@@ -971,18 +983,32 @@ static const struct net_device_ops mesh_netdev_ops = {
+ static int lbs_add_mesh(struct lbs_private *priv)
+ {
+ 	struct net_device *mesh_dev = NULL;
++	struct wireless_dev *mesh_wdev;
+ 	int ret = 0;
+ 
+ 	lbs_deb_enter(LBS_DEB_MESH);
+ 
+ 	/* Allocate a virtual mesh device */
++	mesh_wdev = kzalloc(sizeof(struct wireless_dev), GFP_KERNEL);
++	if (!mesh_wdev) {
++		lbs_deb_mesh("init mshX wireless device failed\n");
++		ret = -ENOMEM;
++		goto done;
 +	}
 +
-+	if (dev->polling) {
-+		rc = -EBUSY;
-+		goto error;
-+	}
+ 	mesh_dev = alloc_netdev(0, "msh%d", ether_setup);
+ 	if (!mesh_dev) {
+ 		lbs_deb_mesh("init mshX device failed\n");
+ 		ret = -ENOMEM;
+-		goto done;
++		goto err_free_wdev;
+ 	}
 +
-+	rc = dev->ops->start_poll(dev, protocols);
-+	if (!rc)
-+		dev->polling = true;
++	mesh_wdev->iftype = NL80211_IFTYPE_MESH_POINT;
++	mesh_wdev->wiphy = priv->wdev->wiphy;
++	mesh_wdev->netdev = mesh_dev;
 +
-+error:
-+	device_unlock(&dev->dev);
-+	return rc;
-+}
+ 	mesh_dev->ml_priv = priv;
++	mesh_dev->ieee80211_ptr = mesh_wdev;
+ 	priv->mesh_dev = mesh_dev;
+ 
+ 	mesh_dev->netdev_ops = &mesh_netdev_ops;
+@@ -996,7 +1022,7 @@ static int lbs_add_mesh(struct lbs_private *priv)
+ 	ret = register_netdev(mesh_dev);
+ 	if (ret) {
+ 		pr_err("cannot register mshX virtual interface\n");
+-		goto err_free;
++		goto err_free_netdev;
+ 	}
+ 
+ 	ret = sysfs_create_group(&(mesh_dev->dev.kobj), &lbs_mesh_attr_group);
+@@ -1012,9 +1038,12 @@ static int lbs_add_mesh(struct lbs_private *priv)
+ err_unregister:
+ 	unregister_netdev(mesh_dev);
+ 
+-err_free:
++err_free_netdev:
+ 	free_netdev(mesh_dev);
+ 
++err_free_wdev:
++	kfree(mesh_wdev);
 +
-+/**
-+ * nfc_stop_poll - stop polling for nfc targets
-+ *
-+ * @dev: The nfc device that must stop polling
-+ */
-+int nfc_stop_poll(struct nfc_dev *dev)
+ done:
+ 	lbs_deb_leave_args(LBS_DEB_MESH, "ret %d", ret);
+ 	return ret;
+@@ -1035,6 +1064,7 @@ void lbs_remove_mesh(struct lbs_private *priv)
+ 	lbs_persist_config_remove(mesh_dev);
+ 	unregister_netdev(mesh_dev);
+ 	priv->mesh_dev = NULL;
++	kfree(mesh_dev->ieee80211_ptr);
+ 	free_netdev(mesh_dev);
+ 	lbs_deb_leave(LBS_DEB_MESH);
+ }
+diff --git a/drivers/net/wireless/libertas/mesh.h b/drivers/net/wireless/libertas/mesh.h
+index 5014491..6603f34 100644
+--- a/drivers/net/wireless/libertas/mesh.h
++++ b/drivers/net/wireless/libertas/mesh.h
+@@ -9,30 +9,25 @@
+ #include <net/lib80211.h>
+ 
+ #include "host.h"
++#include "dev.h"
+ 
+ #ifdef CONFIG_LIBERTAS_MESH
+ 
+-/* Mesh statistics */
+-struct lbs_mesh_stats {
+-	u32	fwd_bcast_cnt;		/* Fwd: Broadcast counter */
+-	u32	fwd_unicast_cnt;	/* Fwd: Unicast counter */
+-	u32	fwd_drop_ttl;		/* Fwd: TTL zero */
+-	u32	fwd_drop_rbt;		/* Fwd: Recently Broadcasted */
+-	u32	fwd_drop_noroute; 	/* Fwd: No route to Destination */
+-	u32	fwd_drop_nobuf;		/* Fwd: Run out of internal buffers */
+-	u32	drop_blind;		/* Rx:  Dropped by blinding table */
+-	u32	tx_failed_cnt;		/* Tx:  Failed transmissions */
+-};
+-
+-
+ struct net_device;
+-struct lbs_private;
+ 
+ int lbs_init_mesh(struct lbs_private *priv);
++void lbs_start_mesh(struct lbs_private *priv);
+ int lbs_deinit_mesh(struct lbs_private *priv);
+ 
+ void lbs_remove_mesh(struct lbs_private *priv);
+ 
++static inline bool lbs_mesh_activated(struct lbs_private *priv)
 +{
-+	int rc = 0;
-+
-+	nfc_dbg("dev_name=%s", dev_name(&dev->dev));
-+
-+	device_lock(&dev->dev);
-+
-+	if (!device_is_registered(&dev->dev)) {
-+		rc = -ENODEV;
-+		goto error;
-+	}
-+
-+	if (!dev->polling) {
-+		rc = -EINVAL;
-+		goto error;
-+	}
-+
-+	dev->ops->stop_poll(dev);
-+	dev->polling = false;
-+
-+error:
-+	device_unlock(&dev->dev);
-+	return rc;
++	/* Mesh SSID is only programmed after successful init */
++	return priv->mesh_ssid_len != 0;
 +}
 +
-+/**
-+ * nfc_activate_target - prepare the target for data exchange
-+ *
-+ * @dev: The nfc device that found the target
-+ * @target_idx: index of the target that must be activated
-+ * @protocol: nfc protocol that will be used for data exchange
-+ */
-+int nfc_activate_target(struct nfc_dev *dev, u32 target_idx, u32 protocol)
-+{
-+	int rc;
-+
-+	nfc_dbg("dev_name=%s target_idx=%u protocol=%u", dev_name(&dev->dev),
-+							target_idx, protocol);
-+
-+	device_lock(&dev->dev);
-+
-+	if (!device_is_registered(&dev->dev)) {
-+		rc = -ENODEV;
-+		goto error;
-+	}
-+
-+	rc = dev->ops->activate_target(dev, target_idx, protocol);
-+
-+error:
-+	device_unlock(&dev->dev);
-+	return rc;
-+}
-+
-+/**
-+ * nfc_deactivate_target - deactivate a nfc target
-+ *
-+ * @dev: The nfc device that found the target
-+ * @target_idx: index of the target that must be deactivated
-+ */
-+int nfc_deactivate_target(struct nfc_dev *dev, u32 target_idx)
-+{
-+	int rc = 0;
-+
-+	nfc_dbg("dev_name=%s target_idx=%u", dev_name(&dev->dev), target_idx);
-+
-+	device_lock(&dev->dev);
-+
-+	if (!device_is_registered(&dev->dev)) {
-+		rc = -ENODEV;
-+		goto error;
-+	}
-+
-+	dev->ops->deactivate_target(dev, target_idx);
-+
-+error:
-+	device_unlock(&dev->dev);
-+	return rc;
-+}
-+
-+/**
-+ * nfc_data_exchange - transceive data
-+ *
-+ * @dev: The nfc device that found the target
-+ * @target_idx: index of the target
-+ * @skb: data to be sent
-+ * @cb: callback called when the response is received
-+ * @cb_context: parameter for the callback function
-+ *
-+ * The user must wait for the callback before calling this function again.
-+ */
-+int nfc_data_exchange(struct nfc_dev *dev, u32 target_idx,
-+					struct sk_buff *skb,
-+					data_exchange_cb_t cb,
-+					void *cb_context)
-+{
-+	int rc;
-+
-+	nfc_dbg("dev_name=%s target_idx=%u skb->len=%u", dev_name(&dev->dev),
-+							target_idx, skb->len);
-+
-+	device_lock(&dev->dev);
-+
-+	if (!device_is_registered(&dev->dev)) {
-+		rc = -ENODEV;
-+		kfree_skb(skb);
-+		goto error;
-+	}
-+
-+	rc = dev->ops->data_exchange(dev, target_idx, skb, cb, cb_context);
-+
-+error:
-+	device_unlock(&dev->dev);
-+	return rc;
-+}
-+
-+/**
-+ * nfc_alloc_skb - allocate a skb for data exchange responses
-+ *
-+ * @size: size to allocate
-+ * @gfp: gfp flags
-+ */
-+struct sk_buff *nfc_alloc_skb(unsigned int size, gfp_t gfp)
-+{
-+	struct sk_buff *skb;
-+	unsigned int total_size;
-+
-+	total_size = size + 1;
-+	skb = alloc_skb(total_size, gfp);
-+
-+	if (skb)
-+		skb_reserve(skb, 1);
-+
-+	return skb;
-+}
-+EXPORT_SYMBOL(nfc_alloc_skb);
-+
-+static void nfc_release(struct device *d)
-+{
-+	struct nfc_dev *dev = to_nfc_dev(d);
-+
-+	nfc_dbg("dev_name=%s", dev_name(&dev->dev));
-+
-+	kfree(dev);
-+}
-+
-+struct class nfc_class = {
-+	.name = "nfc",
-+	.dev_release = nfc_release,
-+};
-+EXPORT_SYMBOL(nfc_class);
-+
-+static int match_idx(struct device *d, void *data)
-+{
-+	struct nfc_dev *dev = to_nfc_dev(d);
-+	unsigned *idx = data;
-+
-+	return dev->idx == *idx;
-+}
-+
-+struct nfc_dev *nfc_get_device(unsigned idx)
-+{
-+	struct device *d;
-+
-+	d = class_find_device(&nfc_class, NULL, &idx, match_idx);
-+	if (!d)
-+		return NULL;
-+
-+	return to_nfc_dev(d);
-+}
-+
-+/**
-+ * nfc_allocate_device - allocate a new nfc device
-+ *
-+ * @ops: device operations
-+ * @supported_protocols: NFC protocols supported by the device
-+ */
-+struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
-+					u32 supported_protocols)
-+{
-+	static atomic_t dev_no = ATOMIC_INIT(0);
-+	struct nfc_dev *dev;
-+
-+	if (!ops->start_poll || !ops->stop_poll || !ops->activate_target ||
-+		!ops->deactivate_target || !ops->data_exchange)
-+		return NULL;
-+
-+	if (!supported_protocols)
-+		return NULL;
-+
-+	dev = kzalloc(sizeof(struct nfc_dev), GFP_KERNEL);
-+	if (!dev)
-+		return NULL;
-+
-+	dev->dev.class = &nfc_class;
-+	dev->idx = atomic_inc_return(&dev_no) - 1;
-+	dev_set_name(&dev->dev, "nfc%d", dev->idx);
-+	device_initialize(&dev->dev);
-+
-+	dev->ops = ops;
-+	dev->supported_protocols = supported_protocols;
-+
-+	return dev;
-+}
-+EXPORT_SYMBOL(nfc_allocate_device);
-+
-+/**
-+ * nfc_register_device - register a nfc device in the nfc subsystem
-+ *
-+ * @dev: The nfc device to register
-+ */
-+int nfc_register_device(struct nfc_dev *dev)
-+{
-+	int rc;
-+
-+	nfc_dbg("dev_name=%s", dev_name(&dev->dev));
-+
-+	mutex_lock(&nfc_devlist_mutex);
-+	nfc_devlist_generation++;
-+	rc = device_add(&dev->dev);
-+	mutex_unlock(&nfc_devlist_mutex);
-+
-+	return rc;
-+}
-+EXPORT_SYMBOL(nfc_register_device);
-+
-+/**
-+ * nfc_unregister_device - unregister a nfc device in the nfc subsystem
-+ *
-+ * @dev: The nfc device to unregister
-+ */
-+void nfc_unregister_device(struct nfc_dev *dev)
-+{
-+	nfc_dbg("dev_name=%s", dev_name(&dev->dev));
-+
-+	mutex_lock(&nfc_devlist_mutex);
-+	nfc_devlist_generation++;
-+
-+	/* lock to avoid unregistering a device while an operation
-+	   is in progress */
-+	device_lock(&dev->dev);
-+	device_del(&dev->dev);
-+	device_unlock(&dev->dev);
-+
-+	mutex_unlock(&nfc_devlist_mutex);
-+}
-+EXPORT_SYMBOL(nfc_unregister_device);
-+
-+static int __init nfc_init(void)
-+{
-+	nfc_info("NFC Core ver %s", VERSION);
-+
-+	return class_register(&nfc_class);
-+}
-+
-+static void __exit nfc_exit(void)
-+{
-+	class_unregister(&nfc_class);
-+}
-+
-+subsys_initcall(nfc_init);
-+module_exit(nfc_exit);
-+
-+MODULE_AUTHOR("Lauro Ramos Venancio <lauro.venancio@openbossa.org>");
-+MODULE_DESCRIPTION("NFC Core ver " VERSION);
-+MODULE_VERSION(VERSION);
-+MODULE_LICENSE("GPL");
-diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
-new file mode 100644
-index 0000000..55f83f8
---- /dev/null
-+++ b/net/nfc/nfc.h
-@@ -0,0 +1,78 @@
-+/*
-+ * Copyright (C) 2011 Instituto Nokia de Tecnologia
-+ *
-+ * Authors:
-+ *    Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-+ *    Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the
-+ * Free Software Foundation, Inc.,
-+ * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ */
-+
-+#ifndef __LOCAL_NFC_H
-+#define __LOCAL_NFC_H
-+
-+#include <net/nfc.h>
-+
-+__attribute__((format (printf, 2, 3)))
-+int nfc_printk(const char *level, const char *fmt, ...);
-+
-+#define nfc_info(fmt, arg...) nfc_printk(KERN_INFO, fmt, ##arg)
-+#define nfc_err(fmt, arg...) nfc_printk(KERN_ERR, fmt, ##arg)
-+#define nfc_dbg(fmt, arg...) pr_debug(fmt "\n", ##arg)
-+
-+extern int nfc_devlist_generation;
-+extern struct mutex nfc_devlist_mutex;
-+
-+struct nfc_dev *nfc_get_device(unsigned idx);
-+
-+static inline void nfc_put_device(struct nfc_dev *dev)
-+{
-+	put_device(&dev->dev);
-+}
-+
-+static inline void nfc_device_iter_init(struct class_dev_iter *iter)
-+{
-+	class_dev_iter_init(iter, &nfc_class, NULL, NULL);
-+}
-+
-+static inline struct nfc_dev *nfc_device_iter_next(struct class_dev_iter *iter)
-+{
-+	struct device *d = class_dev_iter_next(iter);
-+	if (!d)
-+		return NULL;
-+
-+	return to_nfc_dev(d);
-+}
-+
-+static inline void nfc_device_iter_exit(struct class_dev_iter *iter)
-+{
-+	class_dev_iter_exit(iter);
-+}
-+
-+int nfc_start_poll(struct nfc_dev *dev, u32 protocols);
-+
-+int nfc_stop_poll(struct nfc_dev *dev);
-+
-+int nfc_activate_target(struct nfc_dev *dev, u32 target_idx, u32 protocol);
-+
-+int nfc_deactivate_target(struct nfc_dev *dev, u32 target_idx);
-+
-+int nfc_data_exchange(struct nfc_dev *dev, u32 target_idx,
-+					struct sk_buff *skb,
-+					data_exchange_cb_t cb,
-+					void *cb_context);
-+
-+#endif /* __LOCAL_NFC_H */
++int lbs_mesh_set_channel(struct lbs_private *priv, u8 channel);
+ 
+ /* Sending / Receiving */
+ 
+@@ -67,11 +62,13 @@ void lbs_mesh_ethtool_get_strings(struct net_device *dev,
+ 
+ #define lbs_init_mesh(priv)
+ #define lbs_deinit_mesh(priv)
++#define lbs_start_mesh(priv)
+ #define lbs_add_mesh(priv)
+ #define lbs_remove_mesh(priv)
+ #define lbs_mesh_set_dev(priv, dev, rxpd) (dev)
+ #define lbs_mesh_set_txpd(priv, dev, txpd)
+-#define lbs_mesh_config(priv, enable, chan)
++#define lbs_mesh_set_channel(priv, channel) (0)
++#define lbs_mesh_activated(priv) (false)
+ 
+ #endif
+ 
+diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
+index bfb8898..62e10ee 100644
+--- a/drivers/net/wireless/libertas/rx.c
++++ b/drivers/net/wireless/libertas/rx.c
+@@ -15,6 +15,7 @@
+ #include "radiotap.h"
+ #include "decl.h"
+ #include "dev.h"
++#include "mesh.h"
+ 
+ struct eth803hdr {
+ 	u8 dest_addr[6];
+diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
+index a6e8513..8f12752 100644
+--- a/drivers/net/wireless/libertas/tx.c
++++ b/drivers/net/wireless/libertas/tx.c
+@@ -12,6 +12,7 @@
+ #include "decl.h"
+ #include "defs.h"
+ #include "dev.h"
++#include "mesh.h"
+ 
+ /**
+  * convert_radiotap_rate_to_mv - converts Tx/Rx rates from IEEE80211_RADIOTAP_RATE
 -- 
-1.7.5.4
+1.7.6
 
