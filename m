@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:38871 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753571Ab1F2WOh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2011 18:14:37 -0400
-Received: by gwaa18 with SMTP id a18so643141gwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2011 15:14:36 -0700 (PDT)
-Message-ID: <4E0BA3C8.6050000@upr.edu> (sfid-20110630_001439_136209_0B9A2FDD)
-Date: Wed, 29 Jun 2011 18:14:32 -0400
-From: Omar Abraham <omar.abraham@upr.edu>
-MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: Alex <alex9434@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: Compile error in carl9170 on Debian Squeeze
-References: <BANLkTimsGJo61eLp3NrVtDkh0m3CN3zDxw@mail.gmail.com> <4E0B8A61.8090600@upr.edu> <4E0B8E35.8080203@gnu.org> <4E0B9E43.3040209@upr.edu> <4E0BA17E.2020705@gnu.org>
-In-Reply-To: <4E0BA17E.2020705@gnu.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:39477 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751949Ab1GURQD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 13:16:03 -0400
+Subject: Re: [PATCH v2 3/3] libertas: reimplement mesh channel selection
+From: Dan Williams <dcbw@redhat.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Daniel Drake <dsd@laptop.org>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, libertas-dev@lists.infradead.org
+Date: Thu, 21 Jul 2011 11:38:43 -0500
+In-Reply-To: <87hb6gu8k5.fsf@purkki.adurom.net>
+References: <20110720165403.52B629D401C@zog.reactivated.net>
+	 <87hb6gu8k5.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1311266334.3059.11.camel@dcbw.foobar.com> (sfid-20110721_191609_067262_E80D6B4C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Point taken, thanks for your efforts
-On 6/29/2011 6:04 PM, Pavel Roskin wrote:
-> On 06/29/2011 05:50 PM, Omar Abraham wrote:
->> Is that so? thanks, will be looking it up whenever you have it available
->> On 6/29/2011 4:42 PM, Pavel Roskin wrote:
->>> On 06/29/2011 04:26 PM, Omar Abraham wrote:
->>>> You are using older kernel headers, most likely that could be the
->>>> problem
->>>
->>> No, Debian backports netdev_name in 2.6.32. The fix is to define
->>> netdev_name as a macro in compat-wireless. The same issue was already
->>> reported today, and I'm about to send a patch.
->
-> Please don't drop the mailing list from the headers.  It's impolite 
-> towards other mailing list members to take the discussion private.
->
-> The patch is already here:
-> http://marc.info/?l=linux-wireless&m=130938043926323&w=2
->
->
+On Wed, 2011-07-20 at 21:10 +0300, Kalle Valo wrote:
+> Daniel Drake <dsd@laptop.org> writes:
+> 
+> > This reimplements code allowing for mesh channel selection according
+> > to how NetworkManager expects.
+> 
+> [...]
+> 
+> > +static const iw_handler mesh_iw_handler[] =
+> > +{
+> > +	IW_HANDLER(SIOCGIWNAME, (iw_handler) mesh_get_name),
+> > +	IW_HANDLER(SIOCGIWFREQ, (iw_handler) mesh_get_freq),
+> > +	IW_HANDLER(SIOCSIWFREQ, (iw_handler) mesh_set_freq),
+> > +};
+> 
+> We are trying to remove wext code, not add it. I'm surprised to see this.
+
+Mesh on OLPC/usb8388 was a pre-802.11s mesh protocol specific to OLPC
+implementations.  It's unlikely it would map directly to the standard
+mesh layer in mac80211/nl80211, plus it's all fullmac handled by the
+firmware.  So unless we want to look into creating one-off commands for
+the OLPC mesh bits for nl80211, we probably just want to keep the wext
+bits for this until we remove wext completely in the next few years.
+
+Dan
 
