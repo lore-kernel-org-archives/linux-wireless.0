@@ -1,1840 +1,1039 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:65330 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755496Ab1GPPcP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2011 11:32:15 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 15/18] iwlagn: move tx transport functions to iwl-trans-tx-pcie.c
-Date: Sat, 16 Jul 2011 07:56:36 -0700
-Message-Id: <1310828199-18000-17-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110716_173237_543712_F8CA7C30)
-In-Reply-To: <1310828199-18000-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1310828199-18000-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:50079 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132Ab1GUNWe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 09:22:34 -0400
+Subject: [PATCH ersion=v2] ath6kl: fix suspend and resume
+To: gregkh@suse.de
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Date: Thu, 21 Jul 2011 16:22:23 +0300
+Message-ID: <20110721132223.10837.60499.stgit@localhost6.localdomain6> (sfid-20110721_152237_640915_2937B146)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+The current suspend code in ath6kl is not working properly. Most of the
+time during response there are sdio errors and sdio stack reloads the
+driver.
 
-There are still a few functions here and there that should be
-put in the transport layer. Mainly the functions that are related to the reclaim flow.
+I was pondering different options how to fix this and decided to take
+the simplest route. First remove all the existing suspend/resume code
+which was complicated and replace it with code which will leave
+the chip powered on but will put it to deep sleep state. Now suspend
+works much faster and realiably, the cost being that power consumption
+will increase a bit during suspend.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/Makefile             |    6 +-
- drivers/net/wireless/iwlwifi/iwl-agn.h            |    3 -
- drivers/net/wireless/iwlwifi/iwl-core.h           |   16 -
- drivers/net/wireless/iwlwifi/iwl-hcmd.c           |  271 -------
- drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |   20 +
- drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c  |  808 +++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-trans.h          |    4 +
- drivers/net/wireless/iwlwifi/iwl-tx.c             |  576 ---------------
- 8 files changed, 835 insertions(+), 869 deletions(-)
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-hcmd.c
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-tx.c
+ .../staging/ath6kl/hif/sdio/linux_sdio/src/hif.c   |  127 ----
+ drivers/staging/ath6kl/os/linux/ar6000_drv.c       |   35 -
+ drivers/staging/ath6kl/os/linux/ar6000_pm.c        |  603 --------------------
+ drivers/staging/ath6kl/os/linux/cfg80211.c         |   66 ++
+ .../staging/ath6kl/os/linux/include/ar6000_drv.h   |    8 
+ .../ath6kl/os/linux/include/ar6xapi_linux.h        |    7 
+ 6 files changed, 66 insertions(+), 780 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-index d3c8e37..1468e16 100644
---- a/drivers/net/wireless/iwlwifi/Makefile
-+++ b/drivers/net/wireless/iwlwifi/Makefile
-@@ -5,8 +5,8 @@ iwlagn-objs		+= iwl-agn-ucode.o iwl-agn-tx.o
- iwlagn-objs		+= iwl-agn-lib.o iwl-agn-calib.o iwl-io.o
- iwlagn-objs		+= iwl-agn-tt.o iwl-agn-sta.o iwl-agn-eeprom.o
+diff --git a/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c b/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c
+index 5f5d677..156b552 100644
+--- a/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c
++++ b/drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif.c
+@@ -50,10 +50,6 @@
+ #endif
  
--iwlagn-objs 		+= iwl-core.o iwl-eeprom.o iwl-hcmd.o iwl-power.o
--iwlagn-objs 		+= iwl-rx.o iwl-tx.o iwl-sta.o
-+iwlagn-objs 		+= iwl-core.o iwl-eeprom.o iwl-power.o
-+iwlagn-objs 		+= iwl-rx.o iwl-sta.o
- iwlagn-objs 		+= iwl-scan.o iwl-led.o
- iwlagn-objs             += iwl-agn-rxon.o iwl-agn-ict.o
- iwlagn-objs             += iwl-5000.o
-@@ -14,7 +14,7 @@ iwlagn-objs             += iwl-6000.o
- iwlagn-objs             += iwl-1000.o
- iwlagn-objs             += iwl-2000.o
- iwlagn-objs             += iwl-pci.o
--iwlagn-objs             += iwl-trans.o iwl-trans-rx-pcie.o
-+iwlagn-objs             += iwl-trans.o iwl-trans-rx-pcie.o iwl-trans-tx-pcie.o
+ /* ATHENV */
+-#if defined(CONFIG_PM)
+-#define dev_to_sdio_func(d)	container_of(d, struct sdio_func, dev)
+-#define to_sdio_driver(d)      container_of(d, struct sdio_driver, drv)
+-#endif /* CONFIG_PM */
+ static void delHifDevice(struct hif_device * device);
+ static int Func0_CMD52WriteByte(struct mmc_card *card, unsigned int address, unsigned char byte);
+ static int Func0_CMD52ReadByte(struct mmc_card *card, unsigned int address, unsigned char *byte);
+@@ -160,72 +156,11 @@ static void ath6kl_hifdev_remove(struct sdio_func *func)
+ 	delHifDevice(device);
+ }
  
- iwlagn-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
- iwlagn-$(CONFIG_IWLWIFI_DEVICE_TRACING) += iwl-devtrace.o
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 1655e59..0c4e145 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -189,9 +189,6 @@ void iwl_rx_dispatch(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb);
- /* tx */
- void iwlagn_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq,
- 				int index);
--int iwlagn_txq_attach_buf_to_tfd(struct iwl_priv *priv,
--				 struct iwl_tx_queue *txq,
--				 dma_addr_t addr, u16 len, u8 reset);
- void iwlagn_hwrate_to_tx_control(struct iwl_priv *priv, u32 rate_n_flags,
- 			      struct ieee80211_tx_info *info);
- int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 711d2f6..c10ced5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -336,18 +336,8 @@ static inline void iwl_update_stats(struct iwl_priv *priv, bool is_tx,
- /*****************************************************
- * RX
- ******************************************************/
--void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb);
--
- void iwl_chswitch_done(struct iwl_priv *priv, bool is_success);
- 
--/* TX helpers */
--
--/*****************************************************
--* TX
--******************************************************/
--void iwl_txq_update_write_ptr(struct iwl_priv *priv, struct iwl_tx_queue *txq);
--int iwl_queue_init(struct iwl_priv *priv, struct iwl_queue *q,
--			  int count, int slots_num, u32 id);
- void iwl_setup_watchdog(struct iwl_priv *priv);
- /*****************************************************
-  * TX power
-@@ -398,12 +388,6 @@ int __must_check iwl_scan_initiate(struct iwl_priv *priv,
-  *****************************************************/
- 
- const char *get_cmd_string(u8 cmd);
--int iwl_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd);
--int __must_check iwl_send_cmd_pdu(struct iwl_priv *priv, u8 id, u32 flags,
--				  u16 len, const void *data);
--
--int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd);
--
- void iwl_bg_watchdog(unsigned long data);
- u32 iwl_usecs_to_beacons(struct iwl_priv *priv, u32 usec, u32 beacon_interval);
- __le32 iwl_add_beacon_time(struct iwl_priv *priv, u32 base,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-deleted file mode 100644
-index 6cff8c1..0000000
---- a/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-+++ /dev/null
-@@ -1,271 +0,0 @@
--/******************************************************************************
-- *
-- * GPL LICENSE SUMMARY
-- *
-- * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-- * USA
-- *
-- * The full GNU General Public License is included in this distribution
-- * in the file called LICENSE.GPL.
-- *
-- * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-- *****************************************************************************/
--
--#include <linux/kernel.h>
--#include <linux/module.h>
--#include <linux/sched.h>
--#include <net/mac80211.h>
--
--#include "iwl-dev.h" /* FIXME: remove */
--#include "iwl-debug.h"
--#include "iwl-eeprom.h"
--#include "iwl-core.h"
--
--
--const char *get_cmd_string(u8 cmd)
+-#if defined(CONFIG_PM)
+-static int ath6kl_hifdev_suspend(struct device *dev)
 -{
--	switch (cmd) {
--		IWL_CMD(REPLY_ALIVE);
--		IWL_CMD(REPLY_ERROR);
--		IWL_CMD(REPLY_RXON);
--		IWL_CMD(REPLY_RXON_ASSOC);
--		IWL_CMD(REPLY_QOS_PARAM);
--		IWL_CMD(REPLY_RXON_TIMING);
--		IWL_CMD(REPLY_ADD_STA);
--		IWL_CMD(REPLY_REMOVE_STA);
--		IWL_CMD(REPLY_REMOVE_ALL_STA);
--		IWL_CMD(REPLY_TXFIFO_FLUSH);
--		IWL_CMD(REPLY_WEPKEY);
--		IWL_CMD(REPLY_TX);
--		IWL_CMD(REPLY_LEDS_CMD);
--		IWL_CMD(REPLY_TX_LINK_QUALITY_CMD);
--		IWL_CMD(COEX_PRIORITY_TABLE_CMD);
--		IWL_CMD(COEX_MEDIUM_NOTIFICATION);
--		IWL_CMD(COEX_EVENT_CMD);
--		IWL_CMD(REPLY_QUIET_CMD);
--		IWL_CMD(REPLY_CHANNEL_SWITCH);
--		IWL_CMD(CHANNEL_SWITCH_NOTIFICATION);
--		IWL_CMD(REPLY_SPECTRUM_MEASUREMENT_CMD);
--		IWL_CMD(SPECTRUM_MEASURE_NOTIFICATION);
--		IWL_CMD(POWER_TABLE_CMD);
--		IWL_CMD(PM_SLEEP_NOTIFICATION);
--		IWL_CMD(PM_DEBUG_STATISTIC_NOTIFIC);
--		IWL_CMD(REPLY_SCAN_CMD);
--		IWL_CMD(REPLY_SCAN_ABORT_CMD);
--		IWL_CMD(SCAN_START_NOTIFICATION);
--		IWL_CMD(SCAN_RESULTS_NOTIFICATION);
--		IWL_CMD(SCAN_COMPLETE_NOTIFICATION);
--		IWL_CMD(BEACON_NOTIFICATION);
--		IWL_CMD(REPLY_TX_BEACON);
--		IWL_CMD(WHO_IS_AWAKE_NOTIFICATION);
--		IWL_CMD(QUIET_NOTIFICATION);
--		IWL_CMD(REPLY_TX_PWR_TABLE_CMD);
--		IWL_CMD(MEASURE_ABORT_NOTIFICATION);
--		IWL_CMD(REPLY_BT_CONFIG);
--		IWL_CMD(REPLY_STATISTICS_CMD);
--		IWL_CMD(STATISTICS_NOTIFICATION);
--		IWL_CMD(REPLY_CARD_STATE_CMD);
--		IWL_CMD(CARD_STATE_NOTIFICATION);
--		IWL_CMD(MISSED_BEACONS_NOTIFICATION);
--		IWL_CMD(REPLY_CT_KILL_CONFIG_CMD);
--		IWL_CMD(SENSITIVITY_CMD);
--		IWL_CMD(REPLY_PHY_CALIBRATION_CMD);
--		IWL_CMD(REPLY_RX_PHY_CMD);
--		IWL_CMD(REPLY_RX_MPDU_CMD);
--		IWL_CMD(REPLY_RX);
--		IWL_CMD(REPLY_COMPRESSED_BA);
--		IWL_CMD(CALIBRATION_CFG_CMD);
--		IWL_CMD(CALIBRATION_RES_NOTIFICATION);
--		IWL_CMD(CALIBRATION_COMPLETE_NOTIFICATION);
--		IWL_CMD(REPLY_TX_POWER_DBM_CMD);
--		IWL_CMD(TEMPERATURE_NOTIFICATION);
--		IWL_CMD(TX_ANT_CONFIGURATION_CMD);
--		IWL_CMD(REPLY_BT_COEX_PROFILE_NOTIF);
--		IWL_CMD(REPLY_BT_COEX_PRIO_TABLE);
--		IWL_CMD(REPLY_BT_COEX_PROT_ENV);
--		IWL_CMD(REPLY_WIPAN_PARAMS);
--		IWL_CMD(REPLY_WIPAN_RXON);
--		IWL_CMD(REPLY_WIPAN_RXON_TIMING);
--		IWL_CMD(REPLY_WIPAN_RXON_ASSOC);
--		IWL_CMD(REPLY_WIPAN_QOS_PARAM);
--		IWL_CMD(REPLY_WIPAN_WEPKEY);
--		IWL_CMD(REPLY_WIPAN_P2P_CHANNEL_SWITCH);
--		IWL_CMD(REPLY_WIPAN_NOA_NOTIFICATION);
--		IWL_CMD(REPLY_WIPAN_DEACTIVATION_COMPLETE);
--	default:
--		return "UNKNOWN";
+-	struct sdio_func *func = dev_to_sdio_func(dev);
+-	int status = 0;
+-	struct hif_device *device;
 -
--	}
--}
+-	device = ath6kl_get_hifdev(func);
 -
--#define HOST_COMPLETE_TIMEOUT (2 * HZ)
--
--static void iwl_generic_cmd_callback(struct iwl_priv *priv,
--				     struct iwl_device_cmd *cmd,
--				     struct iwl_rx_packet *pkt)
--{
--	if (pkt->hdr.flags & IWL_CMD_FAILED_MSK) {
--		IWL_ERR(priv, "Bad return from %s (0x%08X)\n",
--			get_cmd_string(cmd->hdr.cmd), pkt->hdr.flags);
--		return;
+-	if (device && device->claimedContext &&
+-	    osdrvCallbacks.deviceSuspendHandler) {
+-		/* set true first for PowerStateChangeNotify(..) */
+-		device->is_suspend = true;
+-		status = osdrvCallbacks.
+-			deviceSuspendHandler(device->claimedContext);
+-		if (status)
+-			device->is_suspend = false;
 -	}
 -
--#ifdef CONFIG_IWLWIFI_DEBUG
--	switch (cmd->hdr.cmd) {
--	case REPLY_TX_LINK_QUALITY_CMD:
--	case SENSITIVITY_CMD:
--		IWL_DEBUG_HC_DUMP(priv, "back from %s (0x%08X)\n",
--				get_cmd_string(cmd->hdr.cmd), pkt->hdr.flags);
--		break;
--	default:
--		IWL_DEBUG_HC(priv, "back from %s (0x%08X)\n",
--				get_cmd_string(cmd->hdr.cmd), pkt->hdr.flags);
--	}
--#endif
--}
+-	CleanupHIFScatterResources(device);
 -
--static int iwl_send_cmd_async(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
--{
--	int ret;
--
--	/* An asynchronous command can not expect an SKB to be set. */
--	if (WARN_ON(cmd->flags & CMD_WANT_SKB))
--		return -EINVAL;
--
--	/* Assign a generic callback if one is not provided */
--	if (!cmd->callback)
--		cmd->callback = iwl_generic_cmd_callback;
--
--	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+-	switch (status) {
+-	case 0:
+-		return 0;
+-	case A_EBUSY:
+-		/* Hack for kernel in order to support deep sleep and wow */
 -		return -EBUSY;
--
--	ret = iwl_enqueue_hcmd(priv, cmd);
--	if (ret < 0) {
--		IWL_ERR(priv, "Error sending %s: enqueue_hcmd failed: %d\n",
--			  get_cmd_string(cmd->id), ret);
--		return ret;
+-	default:
+-		return -1;
 -	}
--	return 0;
 -}
 -
--static int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+-static int ath6kl_hifdev_resume(struct device *dev)
 -{
--	int cmd_idx;
--	int ret;
+-	struct sdio_func *func = dev_to_sdio_func(dev);
+-	int status = 0;
+-	struct hif_device *device;
 -
--	lockdep_assert_held(&priv->mutex);
--
--	 /* A synchronous command can not have a callback set. */
--	if (WARN_ON(cmd->callback))
--		return -EINVAL;
--
--	IWL_DEBUG_INFO(priv, "Attempting to send sync command %s\n",
--			get_cmd_string(cmd->id));
--
--	set_bit(STATUS_HCMD_ACTIVE, &priv->status);
--	IWL_DEBUG_INFO(priv, "Setting HCMD_ACTIVE for command %s\n",
--			get_cmd_string(cmd->id));
--
--	cmd_idx = iwl_enqueue_hcmd(priv, cmd);
--	if (cmd_idx < 0) {
--		ret = cmd_idx;
--		clear_bit(STATUS_HCMD_ACTIVE, &priv->status);
--		IWL_ERR(priv, "Error sending %s: enqueue_hcmd failed: %d\n",
--			  get_cmd_string(cmd->id), ret);
--		return ret;
+-	device = ath6kl_get_hifdev(func);
+-	if (device && device->claimedContext &&
+-	    osdrvCallbacks.deviceSuspendHandler) {
+-		status = osdrvCallbacks.
+-			deviceResumeHandler(device->claimedContext);
+-		if (status == 0)
+-			device->is_suspend = false;
 -	}
 -
--	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
--			!test_bit(STATUS_HCMD_ACTIVE, &priv->status),
--			HOST_COMPLETE_TIMEOUT);
--	if (!ret) {
--		if (test_bit(STATUS_HCMD_ACTIVE, &priv->status)) {
--			IWL_ERR(priv,
--				"Error sending %s: time out after %dms.\n",
--				get_cmd_string(cmd->id),
--				jiffies_to_msecs(HOST_COMPLETE_TIMEOUT));
--
--			clear_bit(STATUS_HCMD_ACTIVE, &priv->status);
--			IWL_DEBUG_INFO(priv, "Clearing HCMD_ACTIVE for command %s\n",
--				       get_cmd_string(cmd->id));
--			ret = -ETIMEDOUT;
--			goto cancel;
--		}
--	}
--
--	if (test_bit(STATUS_RF_KILL_HW, &priv->status)) {
--		IWL_ERR(priv, "Command %s aborted: RF KILL Switch\n",
--			       get_cmd_string(cmd->id));
--		ret = -ECANCELED;
--		goto fail;
--	}
--	if (test_bit(STATUS_FW_ERROR, &priv->status)) {
--		IWL_ERR(priv, "Command %s failed: FW Error\n",
--			       get_cmd_string(cmd->id));
--		ret = -EIO;
--		goto fail;
--	}
--	if ((cmd->flags & CMD_WANT_SKB) && !cmd->reply_page) {
--		IWL_ERR(priv, "Error: Response NULL in '%s'\n",
--			  get_cmd_string(cmd->id));
--		ret = -EIO;
--		goto cancel;
--	}
--
--	return 0;
--
--cancel:
--	if (cmd->flags & CMD_WANT_SKB) {
--		/*
--		 * Cancel the CMD_WANT_SKB flag for the cmd in the
--		 * TX cmd queue. Otherwise in case the cmd comes
--		 * in later, it will possibly set an invalid
--		 * address (cmd->meta.source).
--		 */
--		priv->txq[priv->cmd_queue].meta[cmd_idx].flags &=
--							~CMD_WANT_SKB;
--	}
--fail:
--	if (cmd->reply_page) {
--		iwl_free_pages(priv, cmd->reply_page);
--		cmd->reply_page = 0;
--	}
--
--	return ret;
+-	return status;
 -}
 -
--int iwl_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
--{
--	if (cmd->flags & CMD_ASYNC)
--		return iwl_send_cmd_async(priv, cmd);
+-static const struct dev_pm_ops ath6kl_hifdev_pmops = {
+-	.suspend = ath6kl_hifdev_suspend,
+-	.resume = ath6kl_hifdev_resume,
+-};
+-#endif /* CONFIG_PM */
 -
--	return iwl_send_cmd_sync(priv, cmd);
--}
--
--int iwl_send_cmd_pdu(struct iwl_priv *priv, u8 id, u32 flags, u16 len,
--		     const void *data)
--{
--	struct iwl_host_cmd cmd = {
--		.id = id,
--		.len = { len, },
--		.data = { data, },
--		.flags = flags,
--	};
--
--	return iwl_send_cmd(priv, &cmd);
--}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
-index 6c56a3f..8307064 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
-@@ -32,11 +32,31 @@
- /*This file includes the declaration that are internal to the
-  * trans_pcie layer */
+ static struct sdio_driver ath6kl_hifdev_driver = {
+ 	.name = "ath6kl_hifdev",
+ 	.id_table = ath6kl_hifdev_ids,
+ 	.probe = ath6kl_hifdev_probe,
+ 	.remove = ath6kl_hifdev_remove,
+-#if defined(CONFIG_PM)
+-	.drv = {
+-		.pm = &ath6kl_hifdev_pmops,
+-	},
+-#endif
+ };
  
-+/*****************************************************
-+* RX
-+******************************************************/
- void iwl_bg_rx_replenish(struct work_struct *data);
- void iwl_irq_tasklet(struct iwl_priv *priv);
- void iwlagn_rx_replenish(struct iwl_priv *priv);
- void iwl_rx_queue_update_write_ptr(struct iwl_priv *priv,
- 			struct iwl_rx_queue *q);
- 
-+/*****************************************************
-+* TX / HCMD
-+******************************************************/
-+void iwl_txq_update_write_ptr(struct iwl_priv *priv, struct iwl_tx_queue *txq);
-+void iwlagn_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq,
-+				int index);
-+int iwlagn_txq_attach_buf_to_tfd(struct iwl_priv *priv,
-+				 struct iwl_tx_queue *txq,
-+				 dma_addr_t addr, u16 len, u8 reset);
-+int iwl_queue_init(struct iwl_priv *priv, struct iwl_queue *q,
-+			  int count, int slots_num, u32 id);
-+int iwl_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd);
-+int __must_check iwl_send_cmd_pdu(struct iwl_priv *priv, u8 id, u32 flags,
-+			u16 len, const void *data);
-+void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb);
-+
-+
- #endif /* __iwl_trans_int_pcie_h__ */
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-new file mode 100644
-index 0000000..f3b531b
---- /dev/null
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-@@ -0,0 +1,808 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2003 - 2011 Intel Corporation. All rights reserved.
-+ *
-+ * Portions of this file are derived from the ipw3945 project, as well
-+ * as portions of the ieee80211 subsystem header files.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ *****************************************************************************/
-+#include <linux/etherdevice.h>
-+#include <linux/slab.h>
-+#include <linux/sched.h>
-+#include <net/mac80211.h>
-+
-+#include "iwl-agn.h"
-+#include "iwl-dev.h"
-+#include "iwl-core.h"
-+#include "iwl-io.h"
-+#include "iwl-helpers.h"
-+#include "iwl-trans-int-pcie.h"
-+
-+/**
-+ * iwl_txq_update_write_ptr - Send new write index to hardware
-+ */
-+void iwl_txq_update_write_ptr(struct iwl_priv *priv, struct iwl_tx_queue *txq)
-+{
-+	u32 reg = 0;
-+	int txq_id = txq->q.id;
-+
-+	if (txq->need_update == 0)
-+		return;
-+
-+	if (priv->cfg->base_params->shadow_reg_enable) {
-+		/* shadow register enabled */
-+		iwl_write32(priv, HBUS_TARG_WRPTR,
-+			    txq->q.write_ptr | (txq_id << 8));
-+	} else {
-+		/* if we're trying to save power */
-+		if (test_bit(STATUS_POWER_PMI, &priv->status)) {
-+			/* wake up nic if it's powered down ...
-+			 * uCode will wake up, and interrupt us again, so next
-+			 * time we'll skip this part. */
-+			reg = iwl_read32(priv, CSR_UCODE_DRV_GP1);
-+
-+			if (reg & CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP) {
-+				IWL_DEBUG_INFO(priv,
-+					"Tx queue %d requesting wakeup,"
-+					" GP1 = 0x%x\n", txq_id, reg);
-+				iwl_set_bit(priv, CSR_GP_CNTRL,
-+					CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
-+				return;
-+			}
-+
-+			iwl_write_direct32(priv, HBUS_TARG_WRPTR,
-+				     txq->q.write_ptr | (txq_id << 8));
-+
-+		/*
-+		 * else not in power-save mode,
-+		 * uCode will never sleep when we're
-+		 * trying to tx (during RFKILL, we're not trying to tx).
-+		 */
-+		} else
-+			iwl_write32(priv, HBUS_TARG_WRPTR,
-+				    txq->q.write_ptr | (txq_id << 8));
-+	}
-+	txq->need_update = 0;
-+}
-+
-+static inline dma_addr_t iwl_tfd_tb_get_addr(struct iwl_tfd *tfd, u8 idx)
-+{
-+	struct iwl_tfd_tb *tb = &tfd->tbs[idx];
-+
-+	dma_addr_t addr = get_unaligned_le32(&tb->lo);
-+	if (sizeof(dma_addr_t) > sizeof(u32))
-+		addr |=
-+		((dma_addr_t)(le16_to_cpu(tb->hi_n_len) & 0xF) << 16) << 16;
-+
-+	return addr;
-+}
-+
-+static inline u16 iwl_tfd_tb_get_len(struct iwl_tfd *tfd, u8 idx)
-+{
-+	struct iwl_tfd_tb *tb = &tfd->tbs[idx];
-+
-+	return le16_to_cpu(tb->hi_n_len) >> 4;
-+}
-+
-+static inline void iwl_tfd_set_tb(struct iwl_tfd *tfd, u8 idx,
-+				  dma_addr_t addr, u16 len)
-+{
-+	struct iwl_tfd_tb *tb = &tfd->tbs[idx];
-+	u16 hi_n_len = len << 4;
-+
-+	put_unaligned_le32(addr, &tb->lo);
-+	if (sizeof(dma_addr_t) > sizeof(u32))
-+		hi_n_len |= ((addr >> 16) >> 16) & 0xF;
-+
-+	tb->hi_n_len = cpu_to_le16(hi_n_len);
-+
-+	tfd->num_tbs = idx + 1;
-+}
-+
-+static inline u8 iwl_tfd_get_num_tbs(struct iwl_tfd *tfd)
-+{
-+	return tfd->num_tbs & 0x1f;
-+}
-+
-+static void iwlagn_unmap_tfd(struct iwl_priv *priv, struct iwl_cmd_meta *meta,
-+		     struct iwl_tfd *tfd, enum dma_data_direction dma_dir)
-+{
-+	int i;
-+	int num_tbs;
-+
-+	/* Sanity check on number of chunks */
-+	num_tbs = iwl_tfd_get_num_tbs(tfd);
-+
-+	if (num_tbs >= IWL_NUM_OF_TBS) {
-+		IWL_ERR(priv, "Too many chunks: %i\n", num_tbs);
-+		/* @todo issue fatal error, it is quite serious situation */
-+		return;
-+	}
-+
-+	/* Unmap tx_cmd */
-+	if (num_tbs)
-+		dma_unmap_single(priv->bus.dev,
-+				dma_unmap_addr(meta, mapping),
-+				dma_unmap_len(meta, len),
-+				DMA_BIDIRECTIONAL);
-+
-+	/* Unmap chunks, if any. */
-+	for (i = 1; i < num_tbs; i++)
-+		dma_unmap_single(priv->bus.dev, iwl_tfd_tb_get_addr(tfd, i),
-+				iwl_tfd_tb_get_len(tfd, i), dma_dir);
-+}
-+
-+/**
-+ * iwlagn_txq_free_tfd - Free all chunks referenced by TFD [txq->q.read_ptr]
-+ * @priv - driver private data
-+ * @txq - tx queue
-+ * @index - the index of the TFD to be freed
-+ *
-+ * Does NOT advance any TFD circular buffer read/write indexes
-+ * Does NOT free the TFD itself (which is within circular buffer)
-+ */
-+void iwlagn_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq,
-+	int index)
-+{
-+	struct iwl_tfd *tfd_tmp = txq->tfds;
-+
-+	iwlagn_unmap_tfd(priv, &txq->meta[index], &tfd_tmp[index],
-+			 DMA_TO_DEVICE);
-+
-+	/* free SKB */
-+	if (txq->txb) {
-+		struct sk_buff *skb;
-+
-+		skb = txq->txb[index].skb;
-+
-+		/* can be called from irqs-disabled context */
-+		if (skb) {
-+			dev_kfree_skb_any(skb);
-+			txq->txb[index].skb = NULL;
-+		}
-+	}
-+}
-+
-+int iwlagn_txq_attach_buf_to_tfd(struct iwl_priv *priv,
-+				 struct iwl_tx_queue *txq,
-+				 dma_addr_t addr, u16 len,
-+				 u8 reset)
-+{
-+	struct iwl_queue *q;
-+	struct iwl_tfd *tfd, *tfd_tmp;
-+	u32 num_tbs;
-+
-+	q = &txq->q;
-+	tfd_tmp = txq->tfds;
-+	tfd = &tfd_tmp[q->write_ptr];
-+
-+	if (reset)
-+		memset(tfd, 0, sizeof(*tfd));
-+
-+	num_tbs = iwl_tfd_get_num_tbs(tfd);
-+
-+	/* Each TFD can point to a maximum 20 Tx buffers */
-+	if (num_tbs >= IWL_NUM_OF_TBS) {
-+		IWL_ERR(priv, "Error can not send more than %d chunks\n",
-+			  IWL_NUM_OF_TBS);
-+		return -EINVAL;
-+	}
-+
-+	if (WARN_ON(addr & ~DMA_BIT_MASK(36)))
-+		return -EINVAL;
-+
-+	if (unlikely(addr & ~IWL_TX_DMA_MASK))
-+		IWL_ERR(priv, "Unaligned address = %llx\n",
-+			  (unsigned long long)addr);
-+
-+	iwl_tfd_set_tb(tfd, num_tbs, addr, len);
-+
-+	return 0;
-+}
-+
-+/*************** DMA-QUEUE-GENERAL-FUNCTIONS  *****
-+ * DMA services
-+ *
-+ * Theory of operation
-+ *
-+ * A Tx or Rx queue resides in host DRAM, and is comprised of a circular buffer
-+ * of buffer descriptors, each of which points to one or more data buffers for
-+ * the device to read from or fill.  Driver and device exchange status of each
-+ * queue via "read" and "write" pointers.  Driver keeps minimum of 2 empty
-+ * entries in each circular buffer, to protect against confusing empty and full
-+ * queue states.
-+ *
-+ * The device reads or writes the data in the queues via the device's several
-+ * DMA/FIFO channels.  Each queue is mapped to a single DMA channel.
-+ *
-+ * For Tx queue, there are low mark and high mark limits. If, after queuing
-+ * the packet for Tx, free space become < low mark, Tx queue stopped. When
-+ * reclaiming packets (on 'tx done IRQ), if free space become > high mark,
-+ * Tx queue resumed.
-+ *
-+ ***************************************************/
-+
-+int iwl_queue_space(const struct iwl_queue *q)
-+{
-+	int s = q->read_ptr - q->write_ptr;
-+
-+	if (q->read_ptr > q->write_ptr)
-+		s -= q->n_bd;
-+
-+	if (s <= 0)
-+		s += q->n_window;
-+	/* keep some reserve to not confuse empty and full situations */
-+	s -= 2;
-+	if (s < 0)
-+		s = 0;
-+	return s;
-+}
-+
-+/**
-+ * iwl_queue_init - Initialize queue's high/low-water and read/write indexes
-+ */
-+int iwl_queue_init(struct iwl_priv *priv, struct iwl_queue *q,
-+			  int count, int slots_num, u32 id)
-+{
-+	q->n_bd = count;
-+	q->n_window = slots_num;
-+	q->id = id;
-+
-+	/* count must be power-of-two size, otherwise iwl_queue_inc_wrap
-+	 * and iwl_queue_dec_wrap are broken. */
-+	if (WARN_ON(!is_power_of_2(count)))
-+		return -EINVAL;
-+
-+	/* slots_num must be power-of-two size, otherwise
-+	 * get_cmd_index is broken. */
-+	if (WARN_ON(!is_power_of_2(slots_num)))
-+		return -EINVAL;
-+
-+	q->low_mark = q->n_window / 4;
-+	if (q->low_mark < 4)
-+		q->low_mark = 4;
-+
-+	q->high_mark = q->n_window / 8;
-+	if (q->high_mark < 2)
-+		q->high_mark = 2;
-+
-+	q->write_ptr = q->read_ptr = 0;
-+
-+	return 0;
-+}
-+
-+/*************** HOST COMMAND QUEUE FUNCTIONS   *****/
-+
-+/**
-+ * iwl_enqueue_hcmd - enqueue a uCode command
-+ * @priv: device private data point
-+ * @cmd: a point to the ucode command structure
-+ *
-+ * The function returns < 0 values to indicate the operation is
-+ * failed. On success, it turns the index (> 0) of command in the
-+ * command queue.
-+ */
-+static int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
-+{
-+	struct iwl_tx_queue *txq = &priv->txq[priv->cmd_queue];
-+	struct iwl_queue *q = &txq->q;
-+	struct iwl_device_cmd *out_cmd;
-+	struct iwl_cmd_meta *out_meta;
-+	dma_addr_t phys_addr;
-+	unsigned long flags;
-+	u32 idx;
-+	u16 copy_size, cmd_size;
-+	bool is_ct_kill = false;
-+	bool had_nocopy = false;
-+	int i;
-+	u8 *cmd_dest;
-+#ifdef CONFIG_IWLWIFI_DEVICE_TRACING
-+	const void *trace_bufs[IWL_MAX_CMD_TFDS + 1] = {};
-+	int trace_lens[IWL_MAX_CMD_TFDS + 1] = {};
-+	int trace_idx;
-+#endif
-+
-+	if (test_bit(STATUS_FW_ERROR, &priv->status)) {
-+		IWL_WARN(priv, "fw recovery, no hcmd send\n");
-+		return -EIO;
-+	}
-+
-+	if ((priv->ucode_owner == IWL_OWNERSHIP_TM) &&
-+	    !(cmd->flags & CMD_ON_DEMAND)) {
-+		IWL_DEBUG_HC(priv, "tm own the uCode, no regular hcmd send\n");
-+		return -EIO;
-+	}
-+
-+	copy_size = sizeof(out_cmd->hdr);
-+	cmd_size = sizeof(out_cmd->hdr);
-+
-+	/* need one for the header if the first is NOCOPY */
-+	BUILD_BUG_ON(IWL_MAX_CMD_TFDS > IWL_NUM_OF_TBS - 1);
-+
-+	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
-+		if (!cmd->len[i])
-+			continue;
-+		if (cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY) {
-+			had_nocopy = true;
-+		} else {
-+			/* NOCOPY must not be followed by normal! */
-+			if (WARN_ON(had_nocopy))
-+				return -EINVAL;
-+			copy_size += cmd->len[i];
-+		}
-+		cmd_size += cmd->len[i];
-+	}
-+
-+	/*
-+	 * If any of the command structures end up being larger than
-+	 * the TFD_MAX_PAYLOAD_SIZE and they aren't dynamically
-+	 * allocated into separate TFDs, then we will need to
-+	 * increase the size of the buffers.
-+	 */
-+	if (WARN_ON(copy_size > TFD_MAX_PAYLOAD_SIZE))
-+		return -EINVAL;
-+
-+	if (iwl_is_rfkill(priv) || iwl_is_ctkill(priv)) {
-+		IWL_WARN(priv, "Not sending command - %s KILL\n",
-+			 iwl_is_rfkill(priv) ? "RF" : "CT");
-+		return -EIO;
-+	}
-+
-+	spin_lock_irqsave(&priv->hcmd_lock, flags);
-+
-+	if (iwl_queue_space(q) < ((cmd->flags & CMD_ASYNC) ? 2 : 1)) {
-+		spin_unlock_irqrestore(&priv->hcmd_lock, flags);
-+
-+		IWL_ERR(priv, "No space in command queue\n");
-+		is_ct_kill = iwl_check_for_ct_kill(priv);
-+		if (!is_ct_kill) {
-+			IWL_ERR(priv, "Restarting adapter due to queue full\n");
-+			iwlagn_fw_error(priv, false);
-+		}
-+		return -ENOSPC;
-+	}
-+
-+	idx = get_cmd_index(q, q->write_ptr);
-+	out_cmd = txq->cmd[idx];
-+	out_meta = &txq->meta[idx];
-+
-+	memset(out_meta, 0, sizeof(*out_meta));	/* re-initialize to NULL */
-+	if (cmd->flags & CMD_WANT_SKB)
-+		out_meta->source = cmd;
-+	if (cmd->flags & CMD_ASYNC)
-+		out_meta->callback = cmd->callback;
-+
-+	/* set up the header */
-+
-+	out_cmd->hdr.cmd = cmd->id;
-+	out_cmd->hdr.flags = 0;
-+	out_cmd->hdr.sequence = cpu_to_le16(QUEUE_TO_SEQ(priv->cmd_queue) |
-+					    INDEX_TO_SEQ(q->write_ptr));
-+
-+	/* and copy the data that needs to be copied */
-+
-+	cmd_dest = &out_cmd->cmd.payload[0];
-+	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
-+		if (!cmd->len[i])
-+			continue;
-+		if (cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY)
-+			break;
-+		memcpy(cmd_dest, cmd->data[i], cmd->len[i]);
-+		cmd_dest += cmd->len[i];
-+	}
-+
-+	IWL_DEBUG_HC(priv, "Sending command %s (#%x), seq: 0x%04X, "
-+			"%d bytes at %d[%d]:%d\n",
-+			get_cmd_string(out_cmd->hdr.cmd),
-+			out_cmd->hdr.cmd,
-+			le16_to_cpu(out_cmd->hdr.sequence), cmd_size,
-+			q->write_ptr, idx, priv->cmd_queue);
-+
-+	phys_addr = dma_map_single(priv->bus.dev, &out_cmd->hdr, copy_size,
-+				DMA_BIDIRECTIONAL);
-+	if (unlikely(dma_mapping_error(priv->bus.dev, phys_addr))) {
-+		idx = -ENOMEM;
-+		goto out;
-+	}
-+
-+	dma_unmap_addr_set(out_meta, mapping, phys_addr);
-+	dma_unmap_len_set(out_meta, len, copy_size);
-+
-+	iwlagn_txq_attach_buf_to_tfd(priv, txq, phys_addr, copy_size, 1);
-+#ifdef CONFIG_IWLWIFI_DEVICE_TRACING
-+	trace_bufs[0] = &out_cmd->hdr;
-+	trace_lens[0] = copy_size;
-+	trace_idx = 1;
-+#endif
-+
-+	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
-+		if (!cmd->len[i])
-+			continue;
-+		if (!(cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY))
-+			continue;
-+		phys_addr = dma_map_single(priv->bus.dev, (void *)cmd->data[i],
-+					   cmd->len[i], DMA_BIDIRECTIONAL);
-+		if (dma_mapping_error(priv->bus.dev, phys_addr)) {
-+			iwlagn_unmap_tfd(priv, out_meta,
-+					 &txq->tfds[q->write_ptr],
-+					 DMA_BIDIRECTIONAL);
-+			idx = -ENOMEM;
-+			goto out;
-+		}
-+
-+		iwlagn_txq_attach_buf_to_tfd(priv, txq, phys_addr,
-+					     cmd->len[i], 0);
-+#ifdef CONFIG_IWLWIFI_DEVICE_TRACING
-+		trace_bufs[trace_idx] = cmd->data[i];
-+		trace_lens[trace_idx] = cmd->len[i];
-+		trace_idx++;
-+#endif
-+	}
-+
-+	out_meta->flags = cmd->flags;
-+
-+	txq->need_update = 1;
-+
-+	/* check that tracing gets all possible blocks */
-+	BUILD_BUG_ON(IWL_MAX_CMD_TFDS + 1 != 3);
-+#ifdef CONFIG_IWLWIFI_DEVICE_TRACING
-+	trace_iwlwifi_dev_hcmd(priv, cmd->flags,
-+			       trace_bufs[0], trace_lens[0],
-+			       trace_bufs[1], trace_lens[1],
-+			       trace_bufs[2], trace_lens[2]);
-+#endif
-+
-+	/* Increment and update queue's write index */
-+	q->write_ptr = iwl_queue_inc_wrap(q->write_ptr, q->n_bd);
-+	iwl_txq_update_write_ptr(priv, txq);
-+
-+ out:
-+	spin_unlock_irqrestore(&priv->hcmd_lock, flags);
-+	return idx;
-+}
-+
-+/**
-+ * iwl_hcmd_queue_reclaim - Reclaim TX command queue entries already Tx'd
-+ *
-+ * When FW advances 'R' index, all entries between old and new 'R' index
-+ * need to be reclaimed. As result, some free space forms.  If there is
-+ * enough free space (> low mark), wake the stack that feeds us.
-+ */
-+static void iwl_hcmd_queue_reclaim(struct iwl_priv *priv, int txq_id, int idx)
-+{
-+	struct iwl_tx_queue *txq = &priv->txq[txq_id];
-+	struct iwl_queue *q = &txq->q;
-+	int nfreed = 0;
-+
-+	if ((idx >= q->n_bd) || (iwl_queue_used(q, idx) == 0)) {
-+		IWL_ERR(priv, "%s: Read index for DMA queue txq id (%d), "
-+			  "index %d is out of range [0-%d] %d %d.\n", __func__,
-+			  txq_id, idx, q->n_bd, q->write_ptr, q->read_ptr);
-+		return;
-+	}
-+
-+	for (idx = iwl_queue_inc_wrap(idx, q->n_bd); q->read_ptr != idx;
-+	     q->read_ptr = iwl_queue_inc_wrap(q->read_ptr, q->n_bd)) {
-+
-+		if (nfreed++ > 0) {
-+			IWL_ERR(priv, "HCMD skipped: index (%d) %d %d\n", idx,
-+					q->write_ptr, q->read_ptr);
-+			iwlagn_fw_error(priv, false);
-+		}
-+
-+	}
-+}
-+
-+/**
-+ * iwl_tx_cmd_complete - Pull unused buffers off the queue and reclaim them
-+ * @rxb: Rx buffer to reclaim
-+ *
-+ * If an Rx buffer has an async callback associated with it the callback
-+ * will be executed.  The attached skb (if present) will only be freed
-+ * if the callback returns 1
-+ */
-+void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
-+{
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	u16 sequence = le16_to_cpu(pkt->hdr.sequence);
-+	int txq_id = SEQ_TO_QUEUE(sequence);
-+	int index = SEQ_TO_INDEX(sequence);
-+	int cmd_index;
-+	struct iwl_device_cmd *cmd;
-+	struct iwl_cmd_meta *meta;
-+	struct iwl_tx_queue *txq = &priv->txq[priv->cmd_queue];
-+	unsigned long flags;
-+
-+	/* If a Tx command is being handled and it isn't in the actual
-+	 * command queue then there a command routing bug has been introduced
-+	 * in the queue management code. */
-+	if (WARN(txq_id != priv->cmd_queue,
-+		 "wrong command queue %d (should be %d), sequence 0x%X readp=%d writep=%d\n",
-+		  txq_id, priv->cmd_queue, sequence,
-+		  priv->txq[priv->cmd_queue].q.read_ptr,
-+		  priv->txq[priv->cmd_queue].q.write_ptr)) {
-+		iwl_print_hex_error(priv, pkt, 32);
-+		return;
-+	}
-+
-+	cmd_index = get_cmd_index(&txq->q, index);
-+	cmd = txq->cmd[cmd_index];
-+	meta = &txq->meta[cmd_index];
-+
-+	iwlagn_unmap_tfd(priv, meta, &txq->tfds[index], DMA_BIDIRECTIONAL);
-+
-+	/* Input error checking is done when commands are added to queue. */
-+	if (meta->flags & CMD_WANT_SKB) {
-+		meta->source->reply_page = (unsigned long)rxb_addr(rxb);
-+		rxb->page = NULL;
-+	} else if (meta->callback)
-+		meta->callback(priv, cmd, pkt);
-+
-+	spin_lock_irqsave(&priv->hcmd_lock, flags);
-+
-+	iwl_hcmd_queue_reclaim(priv, txq_id, index);
-+
-+	if (!(meta->flags & CMD_ASYNC)) {
-+		clear_bit(STATUS_HCMD_ACTIVE, &priv->status);
-+		IWL_DEBUG_INFO(priv, "Clearing HCMD_ACTIVE for command %s\n",
-+			       get_cmd_string(cmd->hdr.cmd));
-+		wake_up_interruptible(&priv->wait_command_queue);
-+	}
-+
-+	meta->flags = 0;
-+
-+	spin_unlock_irqrestore(&priv->hcmd_lock, flags);
-+}
-+
-+const char *get_cmd_string(u8 cmd)
-+{
-+	switch (cmd) {
-+		IWL_CMD(REPLY_ALIVE);
-+		IWL_CMD(REPLY_ERROR);
-+		IWL_CMD(REPLY_RXON);
-+		IWL_CMD(REPLY_RXON_ASSOC);
-+		IWL_CMD(REPLY_QOS_PARAM);
-+		IWL_CMD(REPLY_RXON_TIMING);
-+		IWL_CMD(REPLY_ADD_STA);
-+		IWL_CMD(REPLY_REMOVE_STA);
-+		IWL_CMD(REPLY_REMOVE_ALL_STA);
-+		IWL_CMD(REPLY_TXFIFO_FLUSH);
-+		IWL_CMD(REPLY_WEPKEY);
-+		IWL_CMD(REPLY_TX);
-+		IWL_CMD(REPLY_LEDS_CMD);
-+		IWL_CMD(REPLY_TX_LINK_QUALITY_CMD);
-+		IWL_CMD(COEX_PRIORITY_TABLE_CMD);
-+		IWL_CMD(COEX_MEDIUM_NOTIFICATION);
-+		IWL_CMD(COEX_EVENT_CMD);
-+		IWL_CMD(REPLY_QUIET_CMD);
-+		IWL_CMD(REPLY_CHANNEL_SWITCH);
-+		IWL_CMD(CHANNEL_SWITCH_NOTIFICATION);
-+		IWL_CMD(REPLY_SPECTRUM_MEASUREMENT_CMD);
-+		IWL_CMD(SPECTRUM_MEASURE_NOTIFICATION);
-+		IWL_CMD(POWER_TABLE_CMD);
-+		IWL_CMD(PM_SLEEP_NOTIFICATION);
-+		IWL_CMD(PM_DEBUG_STATISTIC_NOTIFIC);
-+		IWL_CMD(REPLY_SCAN_CMD);
-+		IWL_CMD(REPLY_SCAN_ABORT_CMD);
-+		IWL_CMD(SCAN_START_NOTIFICATION);
-+		IWL_CMD(SCAN_RESULTS_NOTIFICATION);
-+		IWL_CMD(SCAN_COMPLETE_NOTIFICATION);
-+		IWL_CMD(BEACON_NOTIFICATION);
-+		IWL_CMD(REPLY_TX_BEACON);
-+		IWL_CMD(WHO_IS_AWAKE_NOTIFICATION);
-+		IWL_CMD(QUIET_NOTIFICATION);
-+		IWL_CMD(REPLY_TX_PWR_TABLE_CMD);
-+		IWL_CMD(MEASURE_ABORT_NOTIFICATION);
-+		IWL_CMD(REPLY_BT_CONFIG);
-+		IWL_CMD(REPLY_STATISTICS_CMD);
-+		IWL_CMD(STATISTICS_NOTIFICATION);
-+		IWL_CMD(REPLY_CARD_STATE_CMD);
-+		IWL_CMD(CARD_STATE_NOTIFICATION);
-+		IWL_CMD(MISSED_BEACONS_NOTIFICATION);
-+		IWL_CMD(REPLY_CT_KILL_CONFIG_CMD);
-+		IWL_CMD(SENSITIVITY_CMD);
-+		IWL_CMD(REPLY_PHY_CALIBRATION_CMD);
-+		IWL_CMD(REPLY_RX_PHY_CMD);
-+		IWL_CMD(REPLY_RX_MPDU_CMD);
-+		IWL_CMD(REPLY_RX);
-+		IWL_CMD(REPLY_COMPRESSED_BA);
-+		IWL_CMD(CALIBRATION_CFG_CMD);
-+		IWL_CMD(CALIBRATION_RES_NOTIFICATION);
-+		IWL_CMD(CALIBRATION_COMPLETE_NOTIFICATION);
-+		IWL_CMD(REPLY_TX_POWER_DBM_CMD);
-+		IWL_CMD(TEMPERATURE_NOTIFICATION);
-+		IWL_CMD(TX_ANT_CONFIGURATION_CMD);
-+		IWL_CMD(REPLY_BT_COEX_PROFILE_NOTIF);
-+		IWL_CMD(REPLY_BT_COEX_PRIO_TABLE);
-+		IWL_CMD(REPLY_BT_COEX_PROT_ENV);
-+		IWL_CMD(REPLY_WIPAN_PARAMS);
-+		IWL_CMD(REPLY_WIPAN_RXON);
-+		IWL_CMD(REPLY_WIPAN_RXON_TIMING);
-+		IWL_CMD(REPLY_WIPAN_RXON_ASSOC);
-+		IWL_CMD(REPLY_WIPAN_QOS_PARAM);
-+		IWL_CMD(REPLY_WIPAN_WEPKEY);
-+		IWL_CMD(REPLY_WIPAN_P2P_CHANNEL_SWITCH);
-+		IWL_CMD(REPLY_WIPAN_NOA_NOTIFICATION);
-+		IWL_CMD(REPLY_WIPAN_DEACTIVATION_COMPLETE);
-+	default:
-+		return "UNKNOWN";
-+
-+	}
-+}
-+
-+#define HOST_COMPLETE_TIMEOUT (2 * HZ)
-+
-+static void iwl_generic_cmd_callback(struct iwl_priv *priv,
-+				     struct iwl_device_cmd *cmd,
-+				     struct iwl_rx_packet *pkt)
-+{
-+	if (pkt->hdr.flags & IWL_CMD_FAILED_MSK) {
-+		IWL_ERR(priv, "Bad return from %s (0x%08X)\n",
-+			get_cmd_string(cmd->hdr.cmd), pkt->hdr.flags);
-+		return;
-+	}
-+
-+#ifdef CONFIG_IWLWIFI_DEBUG
-+	switch (cmd->hdr.cmd) {
-+	case REPLY_TX_LINK_QUALITY_CMD:
-+	case SENSITIVITY_CMD:
-+		IWL_DEBUG_HC_DUMP(priv, "back from %s (0x%08X)\n",
-+				get_cmd_string(cmd->hdr.cmd), pkt->hdr.flags);
-+		break;
-+	default:
-+		IWL_DEBUG_HC(priv, "back from %s (0x%08X)\n",
-+				get_cmd_string(cmd->hdr.cmd), pkt->hdr.flags);
-+	}
-+#endif
-+}
-+
-+static int iwl_send_cmd_async(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
-+{
-+	int ret;
-+
-+	/* An asynchronous command can not expect an SKB to be set. */
-+	if (WARN_ON(cmd->flags & CMD_WANT_SKB))
-+		return -EINVAL;
-+
-+	/* Assign a generic callback if one is not provided */
-+	if (!cmd->callback)
-+		cmd->callback = iwl_generic_cmd_callback;
-+
-+	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
-+		return -EBUSY;
-+
-+	ret = iwl_enqueue_hcmd(priv, cmd);
-+	if (ret < 0) {
-+		IWL_ERR(priv, "Error sending %s: enqueue_hcmd failed: %d\n",
-+			  get_cmd_string(cmd->id), ret);
-+		return ret;
-+	}
-+	return 0;
-+}
-+
-+static int iwl_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
-+{
-+	int cmd_idx;
-+	int ret;
-+
-+	lockdep_assert_held(&priv->mutex);
-+
-+	 /* A synchronous command can not have a callback set. */
-+	if (WARN_ON(cmd->callback))
-+		return -EINVAL;
-+
-+	IWL_DEBUG_INFO(priv, "Attempting to send sync command %s\n",
-+			get_cmd_string(cmd->id));
-+
-+	set_bit(STATUS_HCMD_ACTIVE, &priv->status);
-+	IWL_DEBUG_INFO(priv, "Setting HCMD_ACTIVE for command %s\n",
-+			get_cmd_string(cmd->id));
-+
-+	cmd_idx = iwl_enqueue_hcmd(priv, cmd);
-+	if (cmd_idx < 0) {
-+		ret = cmd_idx;
-+		clear_bit(STATUS_HCMD_ACTIVE, &priv->status);
-+		IWL_ERR(priv, "Error sending %s: enqueue_hcmd failed: %d\n",
-+			  get_cmd_string(cmd->id), ret);
-+		return ret;
-+	}
-+
-+	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
-+			!test_bit(STATUS_HCMD_ACTIVE, &priv->status),
-+			HOST_COMPLETE_TIMEOUT);
-+	if (!ret) {
-+		if (test_bit(STATUS_HCMD_ACTIVE, &priv->status)) {
-+			IWL_ERR(priv,
-+				"Error sending %s: time out after %dms.\n",
-+				get_cmd_string(cmd->id),
-+				jiffies_to_msecs(HOST_COMPLETE_TIMEOUT));
-+
-+			clear_bit(STATUS_HCMD_ACTIVE, &priv->status);
-+			IWL_DEBUG_INFO(priv, "Clearing HCMD_ACTIVE for command"
-+				 "%s\n", get_cmd_string(cmd->id));
-+			ret = -ETIMEDOUT;
-+			goto cancel;
-+		}
-+	}
-+
-+	if (test_bit(STATUS_RF_KILL_HW, &priv->status)) {
-+		IWL_ERR(priv, "Command %s aborted: RF KILL Switch\n",
-+			       get_cmd_string(cmd->id));
-+		ret = -ECANCELED;
-+		goto fail;
-+	}
-+	if (test_bit(STATUS_FW_ERROR, &priv->status)) {
-+		IWL_ERR(priv, "Command %s failed: FW Error\n",
-+			       get_cmd_string(cmd->id));
-+		ret = -EIO;
-+		goto fail;
-+	}
-+	if ((cmd->flags & CMD_WANT_SKB) && !cmd->reply_page) {
-+		IWL_ERR(priv, "Error: Response NULL in '%s'\n",
-+			  get_cmd_string(cmd->id));
-+		ret = -EIO;
-+		goto cancel;
-+	}
-+
-+	return 0;
-+
-+cancel:
-+	if (cmd->flags & CMD_WANT_SKB) {
-+		/*
-+		 * Cancel the CMD_WANT_SKB flag for the cmd in the
-+		 * TX cmd queue. Otherwise in case the cmd comes
-+		 * in later, it will possibly set an invalid
-+		 * address (cmd->meta.source).
-+		 */
-+		priv->txq[priv->cmd_queue].meta[cmd_idx].flags &=
-+							~CMD_WANT_SKB;
-+	}
-+fail:
-+	if (cmd->reply_page) {
-+		iwl_free_pages(priv, cmd->reply_page);
-+		cmd->reply_page = 0;
-+	}
-+
-+	return ret;
-+}
-+
-+int iwl_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
-+{
-+	if (cmd->flags & CMD_ASYNC)
-+		return iwl_send_cmd_async(priv, cmd);
-+
-+	return iwl_send_cmd_sync(priv, cmd);
-+}
-+
-+int iwl_send_cmd_pdu(struct iwl_priv *priv, u8 id, u32 flags, u16 len,
-+		     const void *data)
-+{
-+	struct iwl_host_cmd cmd = {
-+		.id = id,
-+		.len = { len, },
-+		.data = { data, },
-+		.flags = flags,
-+	};
-+
-+	return iwl_send_cmd(priv, &cmd);
-+}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 886730e..8293f54 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -60,6 +60,10 @@
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  *****************************************************************************/
-+
-+ /*This file includes the declaration that are exported from the transport
-+ * layer */
-+
- static inline int trans_rx_init(struct iwl_priv *priv)
+ /* make sure we only unregister when registered. */
+@@ -769,42 +704,6 @@ int
+ PowerStateChangeNotify(struct hif_device *device, HIF_DEVICE_POWER_CHANGE_TYPE config)
  {
- 	return priv->trans.ops->rx_init(priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-deleted file mode 100644
-index 9b07e07..0000000
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ /dev/null
-@@ -1,576 +0,0 @@
--/******************************************************************************
-- *
-- * Copyright(c) 2003 - 2011 Intel Corporation. All rights reserved.
-- *
-- * Portions of this file are derived from the ipw3945 project, as well
-- * as portions of the ieee80211 subsystem header files.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of version 2 of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-- * The full GNU General Public License is included in this distribution in the
-- * file called LICENSE.
-- *
-- * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-- *
-- *****************************************************************************/
+     int status = 0;
+-#if defined(CONFIG_PM)
+-	struct sdio_func *func = device->func;
+-    int old_reset_val;
+-    AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: +PowerStateChangeNotify %d\n", config));
+-    switch (config) {
+-       case HIF_DEVICE_POWER_DOWN:
+-       case HIF_DEVICE_POWER_CUT:
+-            old_reset_val = reset_sdio_on_unload;
+-            reset_sdio_on_unload = 1;
+-            status = hifDisableFunc(device, func);
+-            reset_sdio_on_unload = old_reset_val;
+-            if (!device->is_suspend) {
+-                struct mmc_host *host = func->card->host;
+-	            host->ios.clock = 0;
+-	            host->ios.vdd = 0;
+-                host->ios.bus_mode = MMC_BUSMODE_OPENDRAIN;
+-                host->ios.chip_select = MMC_CS_DONTCARE;
+-                host->ios.power_mode = MMC_POWER_OFF;
+-                host->ios.bus_width = MMC_BUS_WIDTH_1;
+-                host->ios.timing = MMC_TIMING_LEGACY;
+-                host->ops->set_ios(host, &host->ios);
+-            }
+-            break;
+-       case HIF_DEVICE_POWER_UP:
+-            if (device->powerConfig == HIF_DEVICE_POWER_CUT) {
+-                status = ReinitSDIO(device);
+-            }
+-            if (status == 0) {
+-                status = hifEnableFunc(device, func);
+-            }
+-            break;
+-    } 
+-    device->powerConfig = config;
 -
--#include <linux/etherdevice.h>
--#include <linux/sched.h>
--#include <linux/slab.h>
--#include <net/mac80211.h>
--#include "iwl-eeprom.h"
--#include "iwl-agn.h"
--#include "iwl-dev.h"
--#include "iwl-core.h"
--#include "iwl-sta.h"
--#include "iwl-io.h"
--#include "iwl-helpers.h"
--
--/**
-- * iwl_txq_update_write_ptr - Send new write index to hardware
-- */
--void iwl_txq_update_write_ptr(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+-    AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: -PowerStateChangeNotify\n"));
+-#endif
+     return status;
+ }
+ 
+@@ -921,26 +820,6 @@ static int startup_task(void *param)
+     return 0;
+ }
+ 
+-#if defined(CONFIG_PM)
+-static int enable_task(void *param)
 -{
--	u32 reg = 0;
--	int txq_id = txq->q.id;
+-    struct hif_device *device;
+-    device = (struct hif_device *)param;
+-    AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: call  from resume_task\n"));
 -
--	if (txq->need_update == 0)
--		return;
+-        /* start  up inform DRV layer */
+-    if (device && 
+-        device->claimedContext && 
+-        osdrvCallbacks.devicePowerChangeHandler &&
+-        osdrvCallbacks.devicePowerChangeHandler(device->claimedContext, HIF_DEVICE_POWER_UP) != 0)
+-    {
+-        AR_DEBUG_PRINTF(ATH_DEBUG_TRACE, ("AR6000: Device rejected\n"));
+-    }
 -
--	if (priv->cfg->base_params->shadow_reg_enable) {
--		/* shadow register enabled */
--		iwl_write32(priv, HBUS_TARG_WRPTR,
--			    txq->q.write_ptr | (txq_id << 8));
--	} else {
--		/* if we're trying to save power */
--		if (test_bit(STATUS_POWER_PMI, &priv->status)) {
--			/* wake up nic if it's powered down ...
--			 * uCode will wake up, and interrupt us again, so next
--			 * time we'll skip this part. */
--			reg = iwl_read32(priv, CSR_UCODE_DRV_GP1);
--
--			if (reg & CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP) {
--				IWL_DEBUG_INFO(priv,
--					"Tx queue %d requesting wakeup,"
--					" GP1 = 0x%x\n", txq_id, reg);
--				iwl_set_bit(priv, CSR_GP_CNTRL,
--					CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
--				return;
--			}
--
--			iwl_write_direct32(priv, HBUS_TARG_WRPTR,
--				     txq->q.write_ptr | (txq_id << 8));
--
--		/*
--		 * else not in power-save mode,
--		 * uCode will never sleep when we're
--		 * trying to tx (during RFKILL, we're not trying to tx).
--		 */
--		} else
--			iwl_write32(priv, HBUS_TARG_WRPTR,
--				    txq->q.write_ptr | (txq_id << 8));
--	}
--	txq->need_update = 0;
+-    return 0;
 -}
--
--static inline dma_addr_t iwl_tfd_tb_get_addr(struct iwl_tfd *tfd, u8 idx)
--{
--	struct iwl_tfd_tb *tb = &tfd->tbs[idx];
--
--	dma_addr_t addr = get_unaligned_le32(&tb->lo);
--	if (sizeof(dma_addr_t) > sizeof(u32))
--		addr |=
--		((dma_addr_t)(le16_to_cpu(tb->hi_n_len) & 0xF) << 16) << 16;
--
--	return addr;
--}
--
--static inline u16 iwl_tfd_tb_get_len(struct iwl_tfd *tfd, u8 idx)
--{
--	struct iwl_tfd_tb *tb = &tfd->tbs[idx];
--
--	return le16_to_cpu(tb->hi_n_len) >> 4;
--}
--
--static inline void iwl_tfd_set_tb(struct iwl_tfd *tfd, u8 idx,
--				  dma_addr_t addr, u16 len)
--{
--	struct iwl_tfd_tb *tb = &tfd->tbs[idx];
--	u16 hi_n_len = len << 4;
--
--	put_unaligned_le32(addr, &tb->lo);
--	if (sizeof(dma_addr_t) > sizeof(u32))
--		hi_n_len |= ((addr >> 16) >> 16) & 0xF;
--
--	tb->hi_n_len = cpu_to_le16(hi_n_len);
--
--	tfd->num_tbs = idx + 1;
--}
--
--static inline u8 iwl_tfd_get_num_tbs(struct iwl_tfd *tfd)
--{
--	return tfd->num_tbs & 0x1f;
--}
--
--static void iwlagn_unmap_tfd(struct iwl_priv *priv, struct iwl_cmd_meta *meta,
--			     struct iwl_tfd *tfd, enum dma_data_direction dma_dir)
--{
--	int i;
--	int num_tbs;
--
--	/* Sanity check on number of chunks */
--	num_tbs = iwl_tfd_get_num_tbs(tfd);
--
--	if (num_tbs >= IWL_NUM_OF_TBS) {
--		IWL_ERR(priv, "Too many chunks: %i\n", num_tbs);
--		/* @todo issue fatal error, it is quite serious situation */
--		return;
--	}
--
--	/* Unmap tx_cmd */
--	if (num_tbs)
--		dma_unmap_single(priv->bus.dev,
--				dma_unmap_addr(meta, mapping),
--				dma_unmap_len(meta, len),
--				DMA_BIDIRECTIONAL);
--
--	/* Unmap chunks, if any. */
--	for (i = 1; i < num_tbs; i++)
--		dma_unmap_single(priv->bus.dev, iwl_tfd_tb_get_addr(tfd, i),
--				iwl_tfd_tb_get_len(tfd, i), dma_dir);
--}
--
--/**
-- * iwlagn_txq_free_tfd - Free all chunks referenced by TFD [txq->q.read_ptr]
-- * @priv - driver private data
-- * @txq - tx queue
-- * @index - the index of the TFD to be freed
-- *
-- * Does NOT advance any TFD circular buffer read/write indexes
-- * Does NOT free the TFD itself (which is within circular buffer)
-- */
--void iwlagn_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq,
--	int index)
--{
--	struct iwl_tfd *tfd_tmp = txq->tfds;
--
--	iwlagn_unmap_tfd(priv, &txq->meta[index], &tfd_tmp[index],
--			 DMA_TO_DEVICE);
--
--	/* free SKB */
--	if (txq->txb) {
--		struct sk_buff *skb;
--
--		skb = txq->txb[index].skb;
--
--		/* can be called from irqs-disabled context */
--		if (skb) {
--			dev_kfree_skb_any(skb);
--			txq->txb[index].skb = NULL;
--		}
--	}
--}
--
--int iwlagn_txq_attach_buf_to_tfd(struct iwl_priv *priv,
--				 struct iwl_tx_queue *txq,
--				 dma_addr_t addr, u16 len,
--				 u8 reset)
--{
--	struct iwl_queue *q;
--	struct iwl_tfd *tfd, *tfd_tmp;
--	u32 num_tbs;
--
--	q = &txq->q;
--	tfd_tmp = txq->tfds;
--	tfd = &tfd_tmp[q->write_ptr];
--
--	if (reset)
--		memset(tfd, 0, sizeof(*tfd));
--
--	num_tbs = iwl_tfd_get_num_tbs(tfd);
--
--	/* Each TFD can point to a maximum 20 Tx buffers */
--	if (num_tbs >= IWL_NUM_OF_TBS) {
--		IWL_ERR(priv, "Error can not send more than %d chunks\n",
--			  IWL_NUM_OF_TBS);
--		return -EINVAL;
--	}
--
--	if (WARN_ON(addr & ~DMA_BIT_MASK(36)))
--		return -EINVAL;
--
--	if (unlikely(addr & ~IWL_TX_DMA_MASK))
--		IWL_ERR(priv, "Unaligned address = %llx\n",
--			  (unsigned long long)addr);
--
--	iwl_tfd_set_tb(tfd, num_tbs, addr, len);
--
--	return 0;
--}
--
--/*************** DMA-QUEUE-GENERAL-FUNCTIONS  *****
-- * DMA services
-- *
-- * Theory of operation
-- *
-- * A Tx or Rx queue resides in host DRAM, and is comprised of a circular buffer
-- * of buffer descriptors, each of which points to one or more data buffers for
-- * the device to read from or fill.  Driver and device exchange status of each
-- * queue via "read" and "write" pointers.  Driver keeps minimum of 2 empty
-- * entries in each circular buffer, to protect against confusing empty and full
-- * queue states.
-- *
-- * The device reads or writes the data in the queues via the device's several
-- * DMA/FIFO channels.  Each queue is mapped to a single DMA channel.
-- *
-- * For Tx queue, there are low mark and high mark limits. If, after queuing
-- * the packet for Tx, free space become < low mark, Tx queue stopped. When
-- * reclaiming packets (on 'tx done IRQ), if free space become > high mark,
-- * Tx queue resumed.
-- *
-- ***************************************************/
--
--int iwl_queue_space(const struct iwl_queue *q)
--{
--	int s = q->read_ptr - q->write_ptr;
--
--	if (q->read_ptr > q->write_ptr)
--		s -= q->n_bd;
--
--	if (s <= 0)
--		s += q->n_window;
--	/* keep some reserve to not confuse empty and full situations */
--	s -= 2;
--	if (s < 0)
--		s = 0;
--	return s;
--}
--
--/**
-- * iwl_queue_init - Initialize queue's high/low-water and read/write indexes
-- */
--int iwl_queue_init(struct iwl_priv *priv, struct iwl_queue *q,
--			  int count, int slots_num, u32 id)
--{
--	q->n_bd = count;
--	q->n_window = slots_num;
--	q->id = id;
--
--	/* count must be power-of-two size, otherwise iwl_queue_inc_wrap
--	 * and iwl_queue_dec_wrap are broken. */
--	if (WARN_ON(!is_power_of_2(count)))
--		return -EINVAL;
--
--	/* slots_num must be power-of-two size, otherwise
--	 * get_cmd_index is broken. */
--	if (WARN_ON(!is_power_of_2(slots_num)))
--		return -EINVAL;
--
--	q->low_mark = q->n_window / 4;
--	if (q->low_mark < 4)
--		q->low_mark = 4;
--
--	q->high_mark = q->n_window / 8;
--	if (q->high_mark < 2)
--		q->high_mark = 2;
--
--	q->write_ptr = q->read_ptr = 0;
--
--	return 0;
--}
--
--/*************** HOST COMMAND QUEUE FUNCTIONS   *****/
--
--/**
-- * iwl_enqueue_hcmd - enqueue a uCode command
-- * @priv: device private data point
-- * @cmd: a point to the ucode command structure
-- *
-- * The function returns < 0 values to indicate the operation is
-- * failed. On success, it turns the index (> 0) of command in the
-- * command queue.
-- */
--int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
--{
--	struct iwl_tx_queue *txq = &priv->txq[priv->cmd_queue];
--	struct iwl_queue *q = &txq->q;
--	struct iwl_device_cmd *out_cmd;
--	struct iwl_cmd_meta *out_meta;
--	dma_addr_t phys_addr;
--	unsigned long flags;
--	u32 idx;
--	u16 copy_size, cmd_size;
--	bool is_ct_kill = false;
--	bool had_nocopy = false;
--	int i;
--	u8 *cmd_dest;
--#ifdef CONFIG_IWLWIFI_DEVICE_TRACING
--	const void *trace_bufs[IWL_MAX_CMD_TFDS + 1] = {};
--	int trace_lens[IWL_MAX_CMD_TFDS + 1] = {};
--	int trace_idx;
 -#endif
 -
--	if (test_bit(STATUS_FW_ERROR, &priv->status)) {
--		IWL_WARN(priv, "fw recovery, no hcmd send\n");
--		return -EIO;
--	}
--
--	if ((priv->ucode_owner == IWL_OWNERSHIP_TM) &&
--	    !(cmd->flags & CMD_ON_DEMAND)) {
--		IWL_DEBUG_HC(priv, "tm own the uCode, no regular hcmd send\n");
--		return -EIO;
--	}
--
--	copy_size = sizeof(out_cmd->hdr);
--	cmd_size = sizeof(out_cmd->hdr);
--
--	/* need one for the header if the first is NOCOPY */
--	BUILD_BUG_ON(IWL_MAX_CMD_TFDS > IWL_NUM_OF_TBS - 1);
--
--	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
--		if (!cmd->len[i])
--			continue;
--		if (cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY) {
--			had_nocopy = true;
--		} else {
--			/* NOCOPY must not be followed by normal! */
--			if (WARN_ON(had_nocopy))
--				return -EINVAL;
--			copy_size += cmd->len[i];
--		}
--		cmd_size += cmd->len[i];
--	}
--
--	/*
--	 * If any of the command structures end up being larger than
--	 * the TFD_MAX_PAYLOAD_SIZE and they aren't dynamically
--	 * allocated into separate TFDs, then we will need to
--	 * increase the size of the buffers.
--	 */
--	if (WARN_ON(copy_size > TFD_MAX_PAYLOAD_SIZE))
--		return -EINVAL;
--
--	if (iwl_is_rfkill(priv) || iwl_is_ctkill(priv)) {
--		IWL_WARN(priv, "Not sending command - %s KILL\n",
--			 iwl_is_rfkill(priv) ? "RF" : "CT");
--		return -EIO;
--	}
--
--	spin_lock_irqsave(&priv->hcmd_lock, flags);
--
--	if (iwl_queue_space(q) < ((cmd->flags & CMD_ASYNC) ? 2 : 1)) {
--		spin_unlock_irqrestore(&priv->hcmd_lock, flags);
--
--		IWL_ERR(priv, "No space in command queue\n");
--		is_ct_kill = iwl_check_for_ct_kill(priv);
--		if (!is_ct_kill) {
--			IWL_ERR(priv, "Restarting adapter due to queue full\n");
--			iwlagn_fw_error(priv, false);
--		}
--		return -ENOSPC;
--	}
--
--	idx = get_cmd_index(q, q->write_ptr);
--	out_cmd = txq->cmd[idx];
--	out_meta = &txq->meta[idx];
--
--	memset(out_meta, 0, sizeof(*out_meta));	/* re-initialize to NULL */
--	if (cmd->flags & CMD_WANT_SKB)
--		out_meta->source = cmd;
--	if (cmd->flags & CMD_ASYNC)
--		out_meta->callback = cmd->callback;
--
--	/* set up the header */
--
--	out_cmd->hdr.cmd = cmd->id;
--	out_cmd->hdr.flags = 0;
--	out_cmd->hdr.sequence = cpu_to_le16(QUEUE_TO_SEQ(priv->cmd_queue) |
--					    INDEX_TO_SEQ(q->write_ptr));
--
--	/* and copy the data that needs to be copied */
--
--	cmd_dest = &out_cmd->cmd.payload[0];
--	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
--		if (!cmd->len[i])
--			continue;
--		if (cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY)
--			break;
--		memcpy(cmd_dest, cmd->data[i], cmd->len[i]);
--		cmd_dest += cmd->len[i];
--	}
--
--	IWL_DEBUG_HC(priv, "Sending command %s (#%x), seq: 0x%04X, "
--			"%d bytes at %d[%d]:%d\n",
--			get_cmd_string(out_cmd->hdr.cmd),
--			out_cmd->hdr.cmd,
--			le16_to_cpu(out_cmd->hdr.sequence), cmd_size,
--			q->write_ptr, idx, priv->cmd_queue);
--
--	phys_addr = dma_map_single(priv->bus.dev, &out_cmd->hdr, copy_size,
--				DMA_BIDIRECTIONAL);
--	if (unlikely(dma_mapping_error(priv->bus.dev, phys_addr))) {
--		idx = -ENOMEM;
--		goto out;
--	}
--
--	dma_unmap_addr_set(out_meta, mapping, phys_addr);
--	dma_unmap_len_set(out_meta, len, copy_size);
--
--	iwlagn_txq_attach_buf_to_tfd(priv, txq, phys_addr, copy_size, 1);
--#ifdef CONFIG_IWLWIFI_DEVICE_TRACING
--	trace_bufs[0] = &out_cmd->hdr;
--	trace_lens[0] = copy_size;
--	trace_idx = 1;
+ void
+ HIFAckInterrupt(struct hif_device *device)
+ {
+@@ -1132,12 +1011,6 @@ static int hifEnableFunc(struct hif_device *device, struct sdio_func *func)
+         taskFunc = startup_task;
+         taskName = "AR6K startup";
+         ret = 0;
+-#if defined(CONFIG_PM)
+-    } else {
+-        taskFunc = enable_task;
+-        taskName = "AR6K enable";
+-        ret = -ENOMEM;
+-#endif /* CONFIG_PM */
+     }
+     /* create resume thread */
+     pTask = kthread_create(taskFunc, (void *)device, taskName);
+diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+index 499b7a9..f12d9f6 100644
+--- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
++++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+@@ -634,11 +634,6 @@ ar6000_init_module(void)
+     A_MEMZERO(&osdrvCallbacks,sizeof(osdrvCallbacks));
+     osdrvCallbacks.deviceInsertedHandler = ar6000_avail_ev;
+     osdrvCallbacks.deviceRemovedHandler = ar6000_unavail_ev;
+-#ifdef CONFIG_PM
+-    osdrvCallbacks.deviceSuspendHandler = ar6000_suspend_ev;
+-    osdrvCallbacks.deviceResumeHandler = ar6000_resume_ev;
+-    osdrvCallbacks.devicePowerChangeHandler = ar6000_power_change_ev;
 -#endif
--
--	for (i = 0; i < IWL_MAX_CMD_TFDS; i++) {
--		if (!cmd->len[i])
--			continue;
--		if (!(cmd->dataflags[i] & IWL_HCMD_DFL_NOCOPY))
--			continue;
--		phys_addr = dma_map_single(priv->bus.dev, (void *)cmd->data[i],
--					   cmd->len[i], DMA_BIDIRECTIONAL);
--		if (dma_mapping_error(priv->bus.dev, phys_addr)) {
--			iwlagn_unmap_tfd(priv, out_meta,
--					 &txq->tfds[q->write_ptr],
--					 DMA_BIDIRECTIONAL);
--			idx = -ENOMEM;
--			goto out;
--		}
--
--		iwlagn_txq_attach_buf_to_tfd(priv, txq, phys_addr,
--					     cmd->len[i], 0);
--#ifdef CONFIG_IWLWIFI_DEVICE_TRACING
--		trace_bufs[trace_idx] = cmd->data[i];
--		trace_lens[trace_idx] = cmd->len[i];
--		trace_idx++;
--#endif
--	}
--
--	out_meta->flags = cmd->flags;
--
--	txq->need_update = 1;
--
--	/* check that tracing gets all possible blocks */
--	BUILD_BUG_ON(IWL_MAX_CMD_TFDS + 1 != 3);
--#ifdef CONFIG_IWLWIFI_DEVICE_TRACING
--	trace_iwlwifi_dev_hcmd(priv, cmd->flags,
--			       trace_bufs[0], trace_lens[0],
--			       trace_bufs[1], trace_lens[1],
--			       trace_bufs[2], trace_lens[2]);
--#endif
--
--	/* Increment and update queue's write index */
--	q->write_ptr = iwl_queue_inc_wrap(q->write_ptr, q->n_bd);
--	iwl_txq_update_write_ptr(priv, txq);
--
-- out:
--	spin_unlock_irqrestore(&priv->hcmd_lock, flags);
--	return idx;
--}
--
--/**
-- * iwl_hcmd_queue_reclaim - Reclaim TX command queue entries already Tx'd
-- *
-- * When FW advances 'R' index, all entries between old and new 'R' index
-- * need to be reclaimed. As result, some free space forms.  If there is
-- * enough free space (> low mark), wake the stack that feeds us.
+ 
+ #ifdef DEBUG
+     /* Set the debug flags if specified at load time */
+@@ -1704,14 +1699,6 @@ ar6000_avail_ev(void *context, void *hif_handle)
+ 
+     ar->arWlanPowerState     = WLAN_POWER_STATE_ON;
+     ar->arWlanOff            = false;   /* We are in ON state */
+-#ifdef CONFIG_PM
+-    ar->arWowState           = WLAN_WOW_STATE_NONE;
+-    ar->arBTOff              = true;   /* BT chip assumed to be OFF */
+-    ar->arBTSharing          = WLAN_CONFIG_BT_SHARING; 
+-    ar->arWlanOffConfig      = WLAN_CONFIG_WLAN_OFF;
+-    ar->arSuspendConfig      = WLAN_CONFIG_PM_SUSPEND;
+-    ar->arWow2Config         = WLAN_CONFIG_PM_WOW2;
+-#endif /* CONFIG_PM */
+ 
+     A_INIT_TIMER(&ar->arHBChallengeResp.timer, ar6000_detect_error, dev);
+     ar->arHBChallengeResp.seqNum = 0;
+@@ -2944,12 +2931,6 @@ ar6000_data_tx(struct sk_buff *skb, struct net_device *dev)
+     bool            checkAdHocPsMapping = false,bMoreData = false;
+     HTC_TX_TAG        htc_tag = AR6K_DATA_PKT_TAG;
+     u8 dot11Hdr = processDot11Hdr;
+-#ifdef CONFIG_PM
+-    if (ar->arWowState != WLAN_WOW_STATE_NONE) {
+-        A_NETBUF_FREE(skb);
+-        return 0;
+-    }
+-#endif /* CONFIG_PM */
+ 
+     AR_DEBUG_PRINTF(ATH_DEBUG_WLAN_TX,("ar6000_data_tx start - skb=0x%lx, data=0x%lx, len=0x%x\n",
+                      (unsigned long)skb, (unsigned long)A_NETBUF_DATA(skb),
+@@ -3668,9 +3649,6 @@ ar6000_rx(void *Context, struct htc_packet *pPacket)
+            /*
+             * this is a wmi control msg
+             */
+-#ifdef CONFIG_PM 
+-            ar6000_check_wow_status(ar, skb, true);
+-#endif /* CONFIG_PM */
+             wmi_control_rx(ar->arWmi, skb);
+         } else {
+                 WMI_DATA_HDR *dhdr = (WMI_DATA_HDR *)A_NETBUF_DATA(skb);
+@@ -3693,9 +3671,6 @@ ar6000_rx(void *Context, struct htc_packet *pPacket)
+ 			return;
+ 		}
+ 
+-#ifdef CONFIG_PM 
+-                ar6000_check_wow_status(ar, NULL, false);
+-#endif /* CONFIG_PM */
+                 /*
+                  * this is a wmi data packet
+                  */
+@@ -3912,9 +3887,6 @@ ar6000_deliver_frames_to_nw_stack(void *dev, void *osbuf)
+     if(skb) {
+         skb->dev = dev;
+         if ((skb->dev->flags & IFF_UP) == IFF_UP) {
+-#ifdef CONFIG_PM 
+-            ar6000_check_wow_status((struct ar6_softc *)ar6k_priv(dev), skb, false);
+-#endif /* CONFIG_PM */
+             skb->protocol = eth_type_trans(skb, skb->dev);
+         /*
+          * If this routine is called on a ISR (Hard IRQ) or DSR (Soft IRQ)
+@@ -5189,12 +5161,7 @@ ar6000_control_tx(void *devt, void *osbuf, HTC_ENDPOINT_ID eid)
+     int         status = 0;
+     struct ar_cookie *cookie = NULL;
+     int i;
+-#ifdef CONFIG_PM
+-    if (ar->arWowState != WLAN_WOW_STATE_NONE) {
+-        A_NETBUF_FREE(osbuf);
+-        return A_EACCES;
+-    }
+-#endif /* CONFIG_PM */
++
+         /* take lock to protect ar6000_alloc_cookie() */
+     AR6000_SPIN_LOCK(&ar->arLock, 0);
+ 
+diff --git a/drivers/staging/ath6kl/os/linux/ar6000_pm.c b/drivers/staging/ath6kl/os/linux/ar6000_pm.c
+index 1e0ace8..e43dd5c 100644
+--- a/drivers/staging/ath6kl/os/linux/ar6000_pm.c
++++ b/drivers/staging/ath6kl/os/linux/ar6000_pm.c
+@@ -21,606 +21,3 @@
+  *
+  */
+ 
+-/*
+- * Implementation of system power management
 - */
--static void iwl_hcmd_queue_reclaim(struct iwl_priv *priv, int txq_id, int idx)
+-
+-#include "ar6000_drv.h"
+-#include <linux/inetdevice.h>
+-#include <linux/platform_device.h>
+-#include "wlan_config.h"
+-
+-#define WOW_ENABLE_MAX_INTERVAL 0
+-#define WOW_SET_SCAN_PARAMS     0
+-
+-extern unsigned int wmitimeout;
+-extern wait_queue_head_t arEvent;
+-
+-#undef ATH_MODULE_NAME
+-#define ATH_MODULE_NAME pm
+-#define  ATH_DEBUG_PM       ATH_DEBUG_MAKE_MODULE_MASK(0)
+-
+-#ifdef DEBUG
+-static struct ath_debug_mask_description pm_debug_desc[] = {
+-    { ATH_DEBUG_PM     , "System power management"},
+-};
+-
+-ATH_DEBUG_INSTANTIATE_MODULE_VAR(pm,
+-                                 "pm",
+-                                 "System Power Management",
+-                                 ATH_DEBUG_MASK_DEFAULTS | ATH_DEBUG_PM,
+-                                 ATH_DEBUG_DESCRIPTION_COUNT(pm_debug_desc),
+-                                 pm_debug_desc);
+-
+-#endif /* DEBUG */
+-
+-int ar6000_exit_cut_power_state(struct ar6_softc *ar);
+-
+-#ifdef CONFIG_PM
+-static void ar6k_send_asleep_event_to_app(struct ar6_softc *ar, bool asleep)
 -{
--	struct iwl_tx_queue *txq = &priv->txq[txq_id];
--	struct iwl_queue *q = &txq->q;
--	int nfreed = 0;
+-    char buf[128];
+-    union iwreq_data wrqu;
 -
--	if ((idx >= q->n_bd) || (iwl_queue_used(q, idx) == 0)) {
--		IWL_ERR(priv, "%s: Read index for DMA queue txq id (%d), "
--			  "index %d is out of range [0-%d] %d %d.\n", __func__,
--			  txq_id, idx, q->n_bd, q->write_ptr, q->read_ptr);
--		return;
--	}
--
--	for (idx = iwl_queue_inc_wrap(idx, q->n_bd); q->read_ptr != idx;
--	     q->read_ptr = iwl_queue_inc_wrap(q->read_ptr, q->n_bd)) {
--
--		if (nfreed++ > 0) {
--			IWL_ERR(priv, "HCMD skipped: index (%d) %d %d\n", idx,
--					q->write_ptr, q->read_ptr);
--			iwlagn_fw_error(priv, false);
--		}
--
--	}
+-    snprintf(buf, sizeof(buf), "HOST_ASLEEP=%s", asleep ? "asleep" : "awake");
+-    A_MEMZERO(&wrqu, sizeof(wrqu));
+-    wrqu.data.length = strlen(buf);
+-    wireless_send_event(ar->arNetDev, IWEVCUSTOM, &wrqu, buf);
 -}
 -
--/**
-- * iwl_tx_cmd_complete - Pull unused buffers off the queue and reclaim them
-- * @rxb: Rx buffer to reclaim
-- *
-- * If an Rx buffer has an async callback associated with it the callback
-- * will be executed.  The attached skb (if present) will only be freed
-- * if the callback returns 1
-- */
--void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+-static void ar6000_wow_resume(struct ar6_softc *ar)
 -{
--	struct iwl_rx_packet *pkt = rxb_addr(rxb);
--	u16 sequence = le16_to_cpu(pkt->hdr.sequence);
--	int txq_id = SEQ_TO_QUEUE(sequence);
--	int index = SEQ_TO_INDEX(sequence);
--	int cmd_index;
--	struct iwl_device_cmd *cmd;
--	struct iwl_cmd_meta *meta;
--	struct iwl_tx_queue *txq = &priv->txq[priv->cmd_queue];
--	unsigned long flags;
+-    if (ar->arWowState!= WLAN_WOW_STATE_NONE) {
+-        u16 fg_start_period = (ar->scParams.fg_start_period==0) ? 1 : ar->scParams.fg_start_period;
+-        u16 bg_period = (ar->scParams.bg_period==0) ? 60 : ar->scParams.bg_period;
+-        WMI_SET_HOST_SLEEP_MODE_CMD hostSleepMode = {true, false};
+-        ar->arWowState = WLAN_WOW_STATE_NONE;
+-        if (wmi_set_host_sleep_mode_cmd(ar->arWmi, &hostSleepMode)!= 0) {
+-            AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("Fail to setup restore host awake\n"));
+-        }
+-#if WOW_SET_SCAN_PARAMS
+-        wmi_scanparams_cmd(ar->arWmi, fg_start_period,
+-                                   ar->scParams.fg_end_period,
+-                                   bg_period,
+-                                   ar->scParams.minact_chdwell_time,
+-                                   ar->scParams.maxact_chdwell_time,
+-                                   ar->scParams.pas_chdwell_time,
+-                                   ar->scParams.shortScanRatio,
+-                                   ar->scParams.scanCtrlFlags,
+-                                   ar->scParams.max_dfsch_act_time,
+-                                   ar->scParams.maxact_scan_per_ssid);
+-#else
+-       (void)fg_start_period;
+-       (void)bg_period;
+-#endif
 -
--	/* If a Tx command is being handled and it isn't in the actual
--	 * command queue then there a command routing bug has been introduced
--	 * in the queue management code. */
--	if (WARN(txq_id != priv->cmd_queue,
--		 "wrong command queue %d (should be %d), sequence 0x%X readp=%d writep=%d\n",
--		  txq_id, priv->cmd_queue, sequence,
--		  priv->txq[priv->cmd_queue].q.read_ptr,
--		  priv->txq[priv->cmd_queue].q.write_ptr)) {
--		iwl_print_hex_error(priv, pkt, 32);
--		return;
--	}
 -
--	cmd_index = get_cmd_index(&txq->q, index);
--	cmd = txq->cmd[cmd_index];
--	meta = &txq->meta[cmd_index];
--
--	iwlagn_unmap_tfd(priv, meta, &txq->tfds[index], DMA_BIDIRECTIONAL);
--
--	/* Input error checking is done when commands are added to queue. */
--	if (meta->flags & CMD_WANT_SKB) {
--		meta->source->reply_page = (unsigned long)rxb_addr(rxb);
--		rxb->page = NULL;
--	} else if (meta->callback)
--		meta->callback(priv, cmd, pkt);
--
--	spin_lock_irqsave(&priv->hcmd_lock, flags);
--
--	iwl_hcmd_queue_reclaim(priv, txq_id, index);
--
--	if (!(meta->flags & CMD_ASYNC)) {
--		clear_bit(STATUS_HCMD_ACTIVE, &priv->status);
--		IWL_DEBUG_INFO(priv, "Clearing HCMD_ACTIVE for command %s\n",
--			       get_cmd_string(cmd->hdr.cmd));
--		wake_up_interruptible(&priv->wait_command_queue);
--	}
--
--	meta->flags = 0;
--
--	spin_unlock_irqrestore(&priv->hcmd_lock, flags);
+-#if WOW_ENABLE_MAX_INTERVAL /* we don't do it if the power consumption is already good enough. */
+-        if (wmi_listeninterval_cmd(ar->arWmi, ar->arListenIntervalT, ar->arListenIntervalB) == 0) {
+-        }
+-#endif
+-        ar6k_send_asleep_event_to_app(ar, false);
+-        AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("Resume WoW successfully\n"));
+-    } else {
+-        AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("WoW does not invoked. skip resume"));
+-    }
+-    ar->arWlanPowerState = WLAN_POWER_STATE_ON;
 -}
--- 
-1.7.0.4
+-
+-static void ar6000_wow_suspend(struct ar6_softc *ar)
+-{
+-#define WOW_LIST_ID 1
+-    if (ar->arNetworkType != AP_NETWORK) {
+-        /* Setup WoW for unicast & Arp request for our own IP
+-        disable background scan. Set listen interval into 1000 TUs
+-        Enable keepliave for 110 seconds
+-        */
+-        struct in_ifaddr **ifap = NULL;
+-        struct in_ifaddr *ifa = NULL;
+-        struct in_device *in_dev;
+-        u8 macMask[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+-        int status;
+-        WMI_ADD_WOW_PATTERN_CMD addWowCmd = { .filter = { 0 } };
+-        WMI_DEL_WOW_PATTERN_CMD delWowCmd;
+-        WMI_SET_HOST_SLEEP_MODE_CMD hostSleepMode = {false, true};
+-        WMI_SET_WOW_MODE_CMD wowMode = {    .enable_wow = true,
+-                                            .hostReqDelay = 500 };/*500 ms delay*/
+-
+-        if (ar->arWowState!= WLAN_WOW_STATE_NONE) {
+-            AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("System already go into wow mode!\n"));
+-            return;
+-        }
+-
+-        ar6000_TxDataCleanup(ar); /* IMPORTANT, otherwise there will be 11mA after listen interval as 1000*/
+-
+-#if WOW_ENABLE_MAX_INTERVAL /* we don't do it if the power consumption is already good enough. */
+-        if (wmi_listeninterval_cmd(ar->arWmi, A_MAX_WOW_LISTEN_INTERVAL, 0) == 0) {
+-        }
+-#endif
+-
+-#if WOW_SET_SCAN_PARAMS
+-        status = wmi_scanparams_cmd(ar->arWmi, 0xFFFF, 0, 0xFFFF, 0, 0, 0, 0, 0, 0, 0);
+-#endif
+-        /* clear up our WoW pattern first */
+-        delWowCmd.filter_list_id = WOW_LIST_ID;
+-        delWowCmd.filter_id = 0;
+-        wmi_del_wow_pattern_cmd(ar->arWmi, &delWowCmd);
+-
+-        /* setup unicast packet pattern for WoW */
+-        if (ar->arNetDev->dev_addr[1]) {
+-            addWowCmd.filter_list_id = WOW_LIST_ID;
+-            addWowCmd.filter_size = 6; /* MAC address */
+-            addWowCmd.filter_offset = 0;
+-            status = wmi_add_wow_pattern_cmd(ar->arWmi, &addWowCmd, ar->arNetDev->dev_addr, macMask, addWowCmd.filter_size);
+-            if (status) {
+-                AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("Fail to add WoW pattern\n"));
+-            }
+-        }
+-        /* setup ARP request for our own IP */
+-        if ((in_dev = __in_dev_get_rtnl(ar->arNetDev)) != NULL) {
+-            for (ifap = &in_dev->ifa_list; (ifa = *ifap) != NULL; ifap = &ifa->ifa_next) {
+-                if (!strcmp(ar->arNetDev->name, ifa->ifa_label)) {
+-                    break; /* found */
+-                }
+-            }
+-        }
+-        if (ifa && ifa->ifa_local) {
+-            WMI_SET_IP_CMD ipCmd;
+-            memset(&ipCmd, 0, sizeof(ipCmd));
+-            ipCmd.ips[0] = ifa->ifa_local;
+-            status = wmi_set_ip_cmd(ar->arWmi, &ipCmd);
+-            if (status) {
+-                AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("Fail to setup IP for ARP agent\n"));
+-            }
+-        }
+-
+-#ifndef ATH6K_CONFIG_OTA_MODE
+-        wmi_powermode_cmd(ar->arWmi, REC_POWER);
+-#endif
+-
+-        status = wmi_set_wow_mode_cmd(ar->arWmi, &wowMode);
+-        if (status) {
+-            AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("Fail to enable wow mode\n"));
+-        }
+-        ar6k_send_asleep_event_to_app(ar, true);
+-
+-        status = wmi_set_host_sleep_mode_cmd(ar->arWmi, &hostSleepMode);
+-        if (status) {
+-            AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("Fail to set host asleep\n"));
+-        }
+-
+-        ar->arWowState = WLAN_WOW_STATE_SUSPENDING;
+-        if (ar->arTxPending[ar->arControlEp]) {
+-            u32 timeleft = wait_event_interruptible_timeout(arEvent,
+-            ar->arTxPending[ar->arControlEp] == 0, wmitimeout * HZ);
+-            if (!timeleft || signal_pending(current)) {
+-               /* what can I do? wow resume at once */
+-                AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("Fail to setup WoW. Pending wmi control data %d\n", ar->arTxPending[ar->arControlEp]));
+-            }
+-        }
+-
+-        status = hifWaitForPendingRecv(ar->arHifDevice);
+-
+-        ar->arWowState = WLAN_WOW_STATE_SUSPENDED;
+-        ar->arWlanPowerState = WLAN_POWER_STATE_WOW;
+-    } else {
+-        AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("Not allowed to go to WOW at this moment.\n"));
+-    }
+-}
+-
+-int ar6000_suspend_ev(void *context)
+-{
+-    int status = 0;
+-    struct ar6_softc *ar = (struct ar6_softc *)context;
+-    s16 pmmode = ar->arSuspendConfig;
+-wow_not_connected:
+-    switch (pmmode) {
+-    case WLAN_SUSPEND_WOW:
+-        if (ar->arWmiReady && ar->arWlanState==WLAN_ENABLED && ar->arConnected) {
+-            ar6000_wow_suspend(ar);
+-            AR_DEBUG_PRINTF(ATH_DEBUG_PM,("%s:Suspend for wow mode %d\n", __func__, ar->arWlanPowerState));
+-        } else {
+-            pmmode = ar->arWow2Config;
+-            goto wow_not_connected;
+-        }
+-        break;
+-    case WLAN_SUSPEND_CUT_PWR:
+-        /* fall through */
+-    case WLAN_SUSPEND_CUT_PWR_IF_BT_OFF:
+-        /* fall through */
+-    case WLAN_SUSPEND_DEEP_SLEEP:
+-        /* fall through */
+-    default:
+-        status = ar6000_update_wlan_pwr_state(ar, WLAN_DISABLED, true);
+-        if (ar->arWlanPowerState==WLAN_POWER_STATE_ON ||
+-            ar->arWlanPowerState==WLAN_POWER_STATE_WOW) {
+-            AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("Strange suspend state for not wow mode %d", ar->arWlanPowerState));
+-        }
+-        AR_DEBUG_PRINTF(ATH_DEBUG_PM,("%s:Suspend for %d mode pwr %d status %d\n", __func__, pmmode, ar->arWlanPowerState, status));
+-        status = (ar->arWlanPowerState == WLAN_POWER_STATE_CUT_PWR) ? 0 : A_EBUSY;
+-        break;
+-    }
+-
+-    ar->scan_triggered = 0;
+-    return status;
+-}
+-
+-int ar6000_resume_ev(void *context)
+-{
+-    struct ar6_softc *ar = (struct ar6_softc *)context;
+-    u16 powerState = ar->arWlanPowerState;
+-
+-    AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("%s: enter previous state %d wowState %d\n", __func__, powerState, ar->arWowState));
+-    switch (powerState) {
+-    case WLAN_POWER_STATE_WOW:
+-        ar6000_wow_resume(ar);
+-        break;
+-    case WLAN_POWER_STATE_CUT_PWR:
+-        /* fall through */
+-    case WLAN_POWER_STATE_DEEP_SLEEP:
+-        ar6000_update_wlan_pwr_state(ar, WLAN_ENABLED, true);
+-        AR_DEBUG_PRINTF(ATH_DEBUG_PM,("%s:Resume for %d mode pwr %d\n", __func__, powerState, ar->arWlanPowerState));
+-        break;
+-    case WLAN_POWER_STATE_ON:
+-        break;
+-    default:
+-        AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("Strange SDIO bus power mode!!\n"));
+-        break;
+-    }
+-    return 0;
+-}
+-
+-void ar6000_check_wow_status(struct ar6_softc *ar, struct sk_buff *skb, bool isEvent)
+-{
+-    if (ar->arWowState!=WLAN_WOW_STATE_NONE) {
+-        if (ar->arWowState==WLAN_WOW_STATE_SUSPENDING) {
+-            AR_DEBUG_PRINTF(ATH_DEBUG_PM,("\n%s: Received IRQ while we are wow suspending!!!\n\n", __func__));
+-            return;
+-        }
+-        /* Wow resume from irq interrupt */
+-        AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("%s: WoW resume from irq thread status %d\n", __func__, ar->arWlanPowerState));
+-        ar6000_wow_resume(ar);
+-    }
+-}
+-
+-int ar6000_power_change_ev(void *context, u32 config)
+-{
+-    struct ar6_softc *ar = (struct ar6_softc *)context;
+-    int status = 0;
+-
+-    AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("%s: power change event callback %d \n", __func__, config));
+-    switch (config) {
+-       case HIF_DEVICE_POWER_UP:
+-            ar6000_restart_endpoint(ar->arNetDev);
+-            status = 0;
+-            break;
+-       case HIF_DEVICE_POWER_DOWN:
+-       case HIF_DEVICE_POWER_CUT:
+-            status = 0;
+-            break;
+-    }
+-    return status;
+-}
+-
+-#endif /* CONFIG_PM */
+-
+-int
+-ar6000_setup_cut_power_state(struct ar6_softc *ar,  AR6000_WLAN_STATE state)
+-{
+-    int                      status = 0;
+-    HIF_DEVICE_POWER_CHANGE_TYPE  config;
+-
+-    AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("%s: Cut power %d %d \n", __func__,state, ar->arWlanPowerState));
+-#ifdef CONFIG_PM
+-    AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("Wlan OFF %d BT OFf %d \n", ar->arWlanOff, ar->arBTOff));
+-#endif
+-    do {
+-        if (state == WLAN_ENABLED) {
+-            /* Not in cut power state.. exit */
+-            if (ar->arWlanPowerState != WLAN_POWER_STATE_CUT_PWR) {
+-                break;
+-            }
+-
+-            /* Change the state to ON */
+-            ar->arWlanPowerState = WLAN_POWER_STATE_ON;
+-
+-
+-            /* Indicate POWER_UP to HIF */
+-            config = HIF_DEVICE_POWER_UP;
+-            status = HIFConfigureDevice(ar->arHifDevice,
+-                                HIF_DEVICE_POWER_STATE_CHANGE,
+-                                &config,
+-                                sizeof(HIF_DEVICE_POWER_CHANGE_TYPE));
+-
+-            if (status == A_PENDING) {
+-            } else if (status == 0) {
+-                ar6000_restart_endpoint(ar->arNetDev);
+-                status = 0;
+-            }
+-        } else if (state == WLAN_DISABLED) {
+-
+-
+-            /* Already in cut power state.. exit */
+-            if (ar->arWlanPowerState == WLAN_POWER_STATE_CUT_PWR) {
+-                break;
+-            }
+-            ar6000_stop_endpoint(ar->arNetDev, true, false);
+-
+-            config = HIF_DEVICE_POWER_CUT;
+-            status = HIFConfigureDevice(ar->arHifDevice,
+-                                HIF_DEVICE_POWER_STATE_CHANGE,
+-                                &config,
+-                                sizeof(HIF_DEVICE_POWER_CHANGE_TYPE));
+-
+-            ar->arWlanPowerState = WLAN_POWER_STATE_CUT_PWR;
+-        }
+-    } while (0);
+-
+-    return status;
+-}
+-
+-int
+-ar6000_setup_deep_sleep_state(struct ar6_softc *ar, AR6000_WLAN_STATE state)
+-{
+-    int status = 0;
+-
+-    AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("%s: Deep sleep %d %d \n", __func__,state, ar->arWlanPowerState));
+-#ifdef CONFIG_PM
+-    AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("Wlan OFF %d BT OFf %d \n", ar->arWlanOff, ar->arBTOff));
+-#endif
+-    do {
+-        WMI_SET_HOST_SLEEP_MODE_CMD hostSleepMode;
+-
+-        if (state == WLAN_ENABLED) {
+-            u16 fg_start_period;
+-
+-            /* Not in deep sleep state.. exit */
+-            if (ar->arWlanPowerState != WLAN_POWER_STATE_DEEP_SLEEP) {
+-                if (ar->arWlanPowerState != WLAN_POWER_STATE_ON) {
+-                    AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("Strange state when we resume from deep sleep %d\n", ar->arWlanPowerState));
+-                }
+-                break;
+-            }
+-
+-            fg_start_period = (ar->scParams.fg_start_period==0) ? 1 : ar->scParams.fg_start_period;
+-            hostSleepMode.awake = true;
+-            hostSleepMode.asleep = false;
+-
+-            if ((status=wmi_set_host_sleep_mode_cmd(ar->arWmi, &hostSleepMode)) != 0) {
+-                break;
+-            }
+-
+-            /* Change the state to ON */
+-            ar->arWlanPowerState = WLAN_POWER_STATE_ON;
+-
+-                /* Enable foreground scanning */
+-                if ((status=wmi_scanparams_cmd(ar->arWmi, fg_start_period,
+-                                        ar->scParams.fg_end_period,
+-                                        ar->scParams.bg_period,
+-                                        ar->scParams.minact_chdwell_time,
+-                                        ar->scParams.maxact_chdwell_time,
+-                                        ar->scParams.pas_chdwell_time,
+-                                        ar->scParams.shortScanRatio,
+-                                        ar->scParams.scanCtrlFlags,
+-                                        ar->scParams.max_dfsch_act_time,
+-                                        ar->scParams.maxact_scan_per_ssid)) != 0)
+-                {
+-                    break;
+-                }
+-
+-            if (ar->arNetworkType != AP_NETWORK)
+-            {
+-                if (ar->arSsidLen) {
+-                    if (ar6000_connect_to_ap(ar) != 0) {
+-                        /* no need to report error if connection failed */
+-                        break;
+-                    }
+-                }
+-            }
+-        } else if (state == WLAN_DISABLED){
+-            WMI_SET_WOW_MODE_CMD wowMode = { .enable_wow = false };
+-
+-            /* Already in deep sleep state.. exit */
+-            if (ar->arWlanPowerState != WLAN_POWER_STATE_ON) {
+-                if (ar->arWlanPowerState != WLAN_POWER_STATE_DEEP_SLEEP) {
+-                    AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("Strange state when we suspend for deep sleep %d\n", ar->arWlanPowerState));
+-                }
+-                break;
+-            }
+-
+-            if (ar->arNetworkType != AP_NETWORK)
+-            {
+-                /* Disconnect from the AP and disable foreground scanning */
+-                AR6000_SPIN_LOCK(&ar->arLock, 0);
+-                if (ar->arConnected == true || ar->arConnectPending == true) {
+-                    AR6000_SPIN_UNLOCK(&ar->arLock, 0);
+-                    wmi_disconnect_cmd(ar->arWmi);
+-                } else {
+-                    AR6000_SPIN_UNLOCK(&ar->arLock, 0);
+-                }
+-            }
+-
+-            ar->scan_triggered = 0;
+-
+-            if ((status=wmi_scanparams_cmd(ar->arWmi, 0xFFFF, 0, 0, 0, 0, 0, 0, 0, 0, 0)) != 0) {
+-                break;
+-            }
+-
+-            /* make sure we disable wow for deep sleep */
+-            if ((status=wmi_set_wow_mode_cmd(ar->arWmi, &wowMode))!= 0)
+-            {
+-                break;
+-            }
+-
+-            ar6000_TxDataCleanup(ar);
+-#ifndef ATH6K_CONFIG_OTA_MODE
+-            wmi_powermode_cmd(ar->arWmi, REC_POWER);
+-#endif
+-
+-            hostSleepMode.awake = false;
+-            hostSleepMode.asleep = true;
+-            if ((status=wmi_set_host_sleep_mode_cmd(ar->arWmi, &hostSleepMode))!= 0) {
+-                break;
+-            }
+-            if (ar->arTxPending[ar->arControlEp]) {
+-                u32 timeleft = wait_event_interruptible_timeout(arEvent,
+-                                ar->arTxPending[ar->arControlEp] == 0, wmitimeout * HZ);
+-                if (!timeleft || signal_pending(current)) {
+-                    status = A_ERROR;
+-                    break;
+-                }
+-            }
+-            status = hifWaitForPendingRecv(ar->arHifDevice);
+-
+-            ar->arWlanPowerState = WLAN_POWER_STATE_DEEP_SLEEP;
+-        }
+-    } while (0);
+-
+-    if (status) {
+-        AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("Fail to enter/exit deep sleep %d\n", state));
+-    }
+-
+-    return status;
+-}
+-
+-int
+-ar6000_update_wlan_pwr_state(struct ar6_softc *ar, AR6000_WLAN_STATE state, bool pmEvent)
+-{
+-    int status = 0;
+-    u16 powerState, oldPowerState;
+-    AR6000_WLAN_STATE oldstate = ar->arWlanState;
+-    bool wlanOff = ar->arWlanOff;
+-#ifdef CONFIG_PM
+-    bool btOff = ar->arBTOff;
+-#endif /* CONFIG_PM */
+-
+-    if ((state!=WLAN_DISABLED && state!=WLAN_ENABLED)) {
+-        return A_ERROR;
+-    }
+-
+-    if (ar->bIsDestroyProgress) {
+-        return A_EBUSY;
+-    }
+-
+-    if (down_interruptible(&ar->arSem)) {
+-        return A_ERROR;
+-    }
+-
+-    if (ar->bIsDestroyProgress) {
+-        up(&ar->arSem);
+-        return A_EBUSY;
+-    }
+-
+-    ar->arWlanState = wlanOff ? WLAN_DISABLED : state;
+-    oldPowerState = ar->arWlanPowerState;
+-    if (state == WLAN_ENABLED) {
+-        powerState = ar->arWlanPowerState;
+-        AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("WLAN PWR set to ENABLE^^\n"));
+-        if (!wlanOff) {
+-            if (powerState == WLAN_POWER_STATE_DEEP_SLEEP) {
+-                status = ar6000_setup_deep_sleep_state(ar, WLAN_ENABLED);
+-            } else if (powerState == WLAN_POWER_STATE_CUT_PWR) {
+-                status = ar6000_setup_cut_power_state(ar, WLAN_ENABLED);
+-            }
+-        }
+-#ifdef CONFIG_PM
+-        else if (pmEvent && wlanOff) {
+-            bool allowCutPwr = ((!ar->arBTSharing) || btOff);
+-            if ((powerState==WLAN_POWER_STATE_CUT_PWR) && (!allowCutPwr)) {
+-                /* Come out of cut power */
+-                ar6000_setup_cut_power_state(ar, WLAN_ENABLED);
+-                status = ar6000_setup_deep_sleep_state(ar, WLAN_DISABLED);
+-            }
+-        }
+-#endif /* CONFIG_PM */
+-    } else if (state == WLAN_DISABLED) {
+-        AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("WLAN PWR set to DISABLED~\n"));
+-        powerState = WLAN_POWER_STATE_DEEP_SLEEP;
+-#ifdef CONFIG_PM
+-        if (pmEvent) {  /* disable due to suspend */
+-            bool suspendCutPwr = (ar->arSuspendConfig == WLAN_SUSPEND_CUT_PWR ||
+-                                    (ar->arSuspendConfig == WLAN_SUSPEND_WOW &&
+-                                        ar->arWow2Config==WLAN_SUSPEND_CUT_PWR));
+-            bool suspendCutIfBtOff = ((ar->arSuspendConfig ==
+-                                            WLAN_SUSPEND_CUT_PWR_IF_BT_OFF ||
+-                                        (ar->arSuspendConfig == WLAN_SUSPEND_WOW &&
+-                                         ar->arWow2Config==WLAN_SUSPEND_CUT_PWR_IF_BT_OFF)) &&
+-                                        (!ar->arBTSharing || btOff));
+-            if ((suspendCutPwr) ||
+-                (suspendCutIfBtOff) ||
+-                (ar->arWlanState==WLAN_POWER_STATE_CUT_PWR))
+-            {
+-                powerState = WLAN_POWER_STATE_CUT_PWR;
+-            }
+-        } else {
+-            if ((wlanOff) &&
+-                (ar->arWlanOffConfig == WLAN_OFF_CUT_PWR) &&
+-                (!ar->arBTSharing || btOff))
+-            {
+-                /* For BT clock sharing designs, CUT_POWER depend on BT state */
+-                powerState = WLAN_POWER_STATE_CUT_PWR;
+-            }
+-        }
+-#endif /* CONFIG_PM */
+-
+-        if (powerState == WLAN_POWER_STATE_DEEP_SLEEP) {
+-            if (ar->arWlanPowerState == WLAN_POWER_STATE_CUT_PWR) {
+-                AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("Load firmware before set to deep sleep\n"));
+-                ar6000_setup_cut_power_state(ar, WLAN_ENABLED);
+-            }
+-            status = ar6000_setup_deep_sleep_state(ar, WLAN_DISABLED);
+-        } else if (powerState == WLAN_POWER_STATE_CUT_PWR) {
+-            status = ar6000_setup_cut_power_state(ar, WLAN_DISABLED);
+-        }
+-
+-    }
+-
+-    if (status) {
+-        AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("Fail to setup WLAN state %d\n", ar->arWlanState));
+-        ar->arWlanState = oldstate;
+-    } else if (status == 0) {
+-        WMI_REPORT_SLEEP_STATE_EVENT  wmiSleepEvent, *pSleepEvent = NULL;
+-        if ((ar->arWlanPowerState == WLAN_POWER_STATE_ON) && (oldPowerState != WLAN_POWER_STATE_ON)) {
+-            wmiSleepEvent.sleepState = WMI_REPORT_SLEEP_STATUS_IS_AWAKE;
+-            pSleepEvent = &wmiSleepEvent;
+-        } else if ((ar->arWlanPowerState != WLAN_POWER_STATE_ON) && (oldPowerState == WLAN_POWER_STATE_ON)) {
+-            wmiSleepEvent.sleepState = WMI_REPORT_SLEEP_STATUS_IS_DEEP_SLEEP;
+-            pSleepEvent = &wmiSleepEvent;
+-        }
+-        if (pSleepEvent) {
+-            AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("SENT WLAN Sleep Event %d\n", wmiSleepEvent.sleepState));
+-        }
+-    }
+-    up(&ar->arSem);
+-    return status;
+-}
+-
+-int
+-ar6000_set_bt_hw_state(struct ar6_softc *ar, u32 enable)
+-{
+-#ifdef CONFIG_PM
+-    bool off = (enable == 0);
+-    int status;
+-    if (ar->arBTOff == off) {
+-        return 0;
+-    }
+-    ar->arBTOff = off;
+-    status = ar6000_update_wlan_pwr_state(ar, ar->arWlanOff ? WLAN_DISABLED : WLAN_ENABLED, false);
+-    return status;
+-#else
+-    return 0;
+-#endif
+-}
+-
+-int
+-ar6000_set_wlan_state(struct ar6_softc *ar, AR6000_WLAN_STATE state)
+-{
+-    int status;
+-    bool off = (state == WLAN_DISABLED);
+-    if (ar->arWlanOff == off) {
+-        return 0;
+-    }
+-    ar->arWlanOff = off;
+-    status = ar6000_update_wlan_pwr_state(ar, state, false);
+-    return status;
+-}
+diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
+index 5fdda4a..78018cc 100644
+--- a/drivers/staging/ath6kl/os/linux/cfg80211.c
++++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
+@@ -25,9 +25,11 @@
+ #include <linux/ieee80211.h>
+ #include <net/cfg80211.h>
+ #include <net/netlink.h>
++#include <linux/mmc/pm.h>
++#include <linux/mmc/sdio_func.h>
+ 
+ #include "ar6000_drv.h"
+-
++#include "../../hif/sdio/linux_sdio/include/hif_internal.h"
+ 
+ extern A_WAITQUEUE_HEAD arEvent;
+ extern unsigned int wmitimeout;
+@@ -1788,6 +1790,65 @@ static int ar6k_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM
++static int ar6k_cfg80211_suspend(struct wiphy *wiphy,
++				 struct cfg80211_wowlan *wow)
++{
++	struct ar6_softc *ar = wiphy_priv(wiphy);
++	struct hif_device *hif_dev = ar->arHifDevice;
++	struct sdio_func *func = hif_dev->func;
++	mmc_pm_flag_t flags;
++	int ret;
++
++	flags = sdio_get_host_pm_caps(func);
++
++	if (!(flags & MMC_PM_KEEP_POWER))
++		/* as host doesn't support keep power we need to bail out */
++		return -EINVAL;
++
++	ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
++
++	if (ret) {
++		printk(KERN_ERR "ath6kl: set sdio pm flags failed: %d\n",
++		       ret);
++		return ret;
++	}
++
++	switch (ar->smeState) {
++	case SME_CONNECTING:
++		cfg80211_connect_result(ar->arNetDev, ar->arBssid, NULL, 0,
++					NULL, 0,
++					WLAN_STATUS_UNSPECIFIED_FAILURE,
++					GFP_KERNEL);
++		break;
++	case SME_CONNECTED:
++	default:
++		/*
++		 * FIXME: oddly enough smeState is in DISCONNECTED during
++		 * suspend, why? Need to send disconnected event in that
++		 * state.
++		 */
++		cfg80211_disconnected(ar->arNetDev, 0, NULL, 0, GFP_KERNEL);
++		break;
++	}
++
++	if (ar->arConnected || ar->arConnectPending)
++		wmi_disconnect_cmd(ar->arWmi);
++
++	ar->smeState = SME_DISCONNECTED;
++
++	/* disable scanning */
++	if (wmi_scanparams_cmd(ar->arWmi, 0xFFFF, 0, 0, 0, 0, 0, 0, 0,
++			       0, 0) != 0)
++		printk(KERN_WARNING "ath6kl: failed to disable scan "
++		       "during suspend\n");
++
++	ar6k_cfg80211_scanComplete_event(ar, A_ECANCELED);
++
++	return 0;
++}
++#endif
++
+ static struct
+ cfg80211_ops ar6k_cfg80211_ops = {
+     .change_virtual_intf = ar6k_cfg80211_change_iface,
+@@ -1813,6 +1874,9 @@ cfg80211_ops ar6k_cfg80211_ops = {
+     .del_pmksa = ar6k_del_pmksa,
+     .flush_pmksa = ar6k_flush_pmksa,
+     CFG80211_TESTMODE_CMD(ar6k_testmode_cmd)
++#ifdef CONFIG_PM
++    .suspend = ar6k_cfg80211_suspend,
++#endif
+ };
+ 
+ struct wireless_dev *
+diff --git a/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h b/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
+index 05cc774..2240da9 100644
+--- a/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
++++ b/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
+@@ -627,14 +627,6 @@ struct ar6_softc {
+     u32 smeState;
+     u16 arWlanPowerState;
+     bool                  arWlanOff;
+-#ifdef CONFIG_PM
+-    u16 arWowState;
+-    bool                  arBTOff;
+-    bool                  arBTSharing;
+-    u16 arSuspendConfig;
+-    u16 arWlanOffConfig;
+-    u16 arWow2Config;
+-#endif
+     u8 scan_triggered;
+     WMI_SCAN_PARAMS_CMD     scParams;
+ #define AR_MCAST_FILTER_MAC_ADDR_SIZE  4
+diff --git a/drivers/staging/ath6kl/os/linux/include/ar6xapi_linux.h b/drivers/staging/ath6kl/os/linux/include/ar6xapi_linux.h
+index 184dbdb..063a8ec 100644
+--- a/drivers/staging/ath6kl/os/linux/include/ar6xapi_linux.h
++++ b/drivers/staging/ath6kl/os/linux/include/ar6xapi_linux.h
+@@ -171,13 +171,6 @@ int ar6000_update_wlan_pwr_state(struct ar6_softc *ar, AR6000_WLAN_STATE state,
+ int ar6000_set_wlan_state(struct ar6_softc *ar, AR6000_WLAN_STATE state);
+ int ar6000_set_bt_hw_state(struct ar6_softc *ar, u32 state);
+ 
+-#ifdef CONFIG_PM
+-int ar6000_suspend_ev(void *context);
+-int ar6000_resume_ev(void *context);
+-int ar6000_power_change_ev(void *context, u32 config);
+-void ar6000_check_wow_status(struct ar6_softc *ar, struct sk_buff *skb, bool isEvent);
+-#endif
+-
+ #ifdef CONFIG_AP_VIRTUAL_ADAPTER_SUPPORT
+ int ar6000_add_ap_interface(struct ar6_softc *ar, char *ifname);
+ int ar6000_remove_ap_interface(struct ar6_softc *ar);
 
