@@ -1,66 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:56102 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754241Ab1GDKey convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 06:34:54 -0400
-Received: by ywe9 with SMTP id 9so1911759ywe.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2011 03:34:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1309758467-1712-5-git-send-email-nbd@openwrt.org>
-References: <1309758467-1712-1-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-2-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-3-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-4-git-send-email-nbd@openwrt.org>
-	<1309758467-1712-5-git-send-email-nbd@openwrt.org>
-Date: Mon, 4 Jul 2011 13:34:53 +0300
-Message-ID: <CAFtRNNy9AK0BUShq+U6Pvk-qtMLttkWSUBB4p9A9EgWLvQ=g7w@mail.gmail.com> (sfid-20110704_123457_949771_1F7B5D1A)
-Subject: Re: [ath5k-devel] [PATCH 5/8] ath5k: delay full calibration after reset
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:32866 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752217Ab1GUP0w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2011 11:26:52 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 25/25] iwlagn: probe would crash with DEBUG_SHIRQ
+Date: Thu, 21 Jul 2011 07:50:28 -0700
+Message-Id: <1311259828-8415-26-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110721_172712_197679_81DD1855)
+In-Reply-To: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/7/4 Felix Fietkau <nbd@openwrt.org>:
-> During scans the full calibration usually does not make much sense,
-> PAPD probing and IQ calibration should be deferred until there is
-> enough time to complete them. Adding 100 ms to the initial full
-> calibration delay should be enough to do this.
->
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath5k/base.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index a413aa7..efec14f 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -2728,7 +2728,7 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
->
->        ath5k_ani_init(ah, ani_mode);
->
-> -       ah->ah_cal_next_full = jiffies;
-> +       ah->ah_cal_next_full = jiffies + msecs_to_jiffies(100);
->        ah->ah_cal_next_ani = jiffies;
->        ah->ah_cal_next_nf = jiffies;
->        ewma_init(&ah->ah_beacon_rssi_avg, 1024, 8);
-> --
-> 1.7.3.2
->
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-BTW have you checked this one ->
-http://www.kernel.org/pub/linux/kernel/people/mickflemm/calibtest.patch
-?
+This is since my patch:
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+    iwlagn: introduce transport layer and implement rx_init
 
+The IRQ is requested before the locks are initialized, hence the crash.
+Initialize the tasklet before we request the IRQ on the way.
 
+Reported-by: Johannes Berg <johannes.berg@intel.com>
+Tested-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c   |   16 ++++++++--------
+ drivers/net/wireless/iwlwifi/iwl-trans.c |    6 +++---
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 299acb4..4b666b7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3645,10 +3645,6 @@ int iwl_probe(struct iwl_bus *bus, struct iwl_cfg *cfg)
+ 	priv->cfg = cfg;
+ 	priv->inta_mask = CSR_INI_SET_MASK;
+ 
+-	err = iwl_trans_register(&priv->trans, priv);
+-	if (err)
+-		goto out_free_priv;
+-
+ 	/* is antenna coupling more than 35dB ? */
+ 	priv->bt_ant_couple_ok =
+ 		(iwlagn_ant_coupling > IWL_BT_ANTENNA_COUPLING_THRESHOLD) ?
+@@ -3682,10 +3678,14 @@ int iwl_probe(struct iwl_bus *bus, struct iwl_cfg *cfg)
+ 	IWL_INFO(priv, "Detected %s, REV=0x%X\n",
+ 		priv->cfg->name, hw_rev);
+ 
++	err = iwl_trans_register(&priv->trans, priv);
++	if (err)
++		goto out_free_traffic_mem;
++
+ 	if (trans_prepare_card_hw(&priv->trans)) {
+ 		err = -EIO;
+ 		IWL_WARN(priv, "Failed, HW not ready\n");
+-		goto out_free_traffic_mem;
++		goto out_free_trans;
+ 	}
+ 
+ 	/*****************
+@@ -3695,7 +3695,7 @@ int iwl_probe(struct iwl_bus *bus, struct iwl_cfg *cfg)
+ 	err = iwl_eeprom_init(priv, hw_rev);
+ 	if (err) {
+ 		IWL_ERR(priv, "Unable to init EEPROM\n");
+-		goto out_free_traffic_mem;
++		goto out_free_trans;
+ 	}
+ 	err = iwl_eeprom_check_version(priv);
+ 	if (err)
+@@ -3778,10 +3778,10 @@ out_destroy_workqueue:
+ 	iwl_uninit_drv(priv);
+ out_free_eeprom:
+ 	iwl_eeprom_free(priv);
++out_free_trans:
++	trans_free(&priv->trans);
+ out_free_traffic_mem:
+ 	iwl_free_traffic_mem(priv);
+-	trans_free(&priv->trans);
+-out_free_priv:
+ 	ieee80211_free_hw(priv->hw);
+ out:
+ 	return err;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+index 582ab1b..41f0de9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -1153,6 +1153,9 @@ int iwl_trans_register(struct iwl_trans *trans, struct iwl_priv *priv)
+ 	priv->trans.ops = &trans_ops;
+ 	priv->trans.priv = priv;
+ 
++	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
++		iwl_irq_tasklet, (unsigned long)priv);
++
+ 	iwl_alloc_isr_ict(priv);
+ 
+ 	err = request_irq(priv->bus->irq, iwl_isr_ict, IRQF_SHARED,
+@@ -1163,9 +1166,6 @@ int iwl_trans_register(struct iwl_trans *trans, struct iwl_priv *priv)
+ 		return err;
+ 	}
+ 
+-	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
+-		iwl_irq_tasklet, (unsigned long)priv);
+-
+ 	INIT_WORK(&priv->rx_replenish, iwl_bg_rx_replenish);
+ 
+ 	return 0;
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.7.0.4
+
