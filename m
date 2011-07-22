@@ -1,144 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:40408 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753113Ab1GWRTa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jul 2011 13:19:30 -0400
-Received: by yxi11 with SMTP id 11so1749154yxi.19
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Jul 2011 10:19:29 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:3344 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755025Ab1GVS5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 14:57:34 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 05/29] staging: brcm80211: remove unused rx status
+ definitions
+Date: Fri, 22 Jul 2011 20:56:52 +0200
+Message-ID: <1311361036-3175-6-git-send-email-arend@broadcom.com> (sfid-20110722_205741_086935_D50B19AC)
+In-Reply-To: <1311361036-3175-1-git-send-email-arend@broadcom.com>
+References: <1311361036-3175-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20110723132903.10739.29781.stgit@mj.roinet.com>
-References: <20110723132856.10739.42301.stgit@mj.roinet.com>
-	<20110723132903.10739.29781.stgit@mj.roinet.com>
-Date: Sat, 23 Jul 2011 20:19:28 +0300
-Message-ID: <CAFtRNNyyvU4sCyJF9vjjhVGOhW4Br3S9sGfeNKrjmW2H1=x62A@mail.gmail.com> (sfid-20110723_191933_470182_761AEF24)
-Subject: Re: [PATCH 2 2/3] ath5k: remove most references to XR
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/7/23 Pavel Roskin <proski@gnu.org>:
-> XR is a proprietary feature of the chipset.  It's not supported and
-> should not be supported.
->
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
-> Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath5k/ath5k.h  |    4 ----
->  drivers/net/wireless/ath/ath5k/eeprom.c |    1 -
->  drivers/net/wireless/ath/ath5k/phy.c    |    2 --
->  drivers/net/wireless/ath/ath5k/qcu.c    |    7 -------
->  drivers/net/wireless/ath/ath5k/reset.c  |    8 --------
->  5 files changed, 0 insertions(+), 22 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-> index be7b8c0..a8a7db4 100644
-> --- a/drivers/net/wireless/ath/ath5k/ath5k.h
-> +++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-> @@ -416,7 +416,6 @@ enum ath5k_driver_mode {
->        AR5K_MODE_11A           =       0,
->        AR5K_MODE_11B           =       1,
->        AR5K_MODE_11G           =       2,
-> -       AR5K_MODE_XR            =       0,
->        AR5K_MODE_MAX           =       3
->  };
->
-> @@ -694,12 +693,10 @@ struct ath5k_gain {
->  #define        CHANNEL_5GHZ    0x0100  /* 5GHz channel */
->  #define        CHANNEL_PASSIVE 0x0200  /* Only passive scan allowed */
->  #define        CHANNEL_DYN     0x0400  /* Dynamic CCK-OFDM channel (for g operation) */
-> -#define        CHANNEL_XR      0x0800  /* XR channel */
->
->  #define        CHANNEL_A       (CHANNEL_5GHZ | CHANNEL_OFDM)
->  #define        CHANNEL_B       (CHANNEL_2GHZ | CHANNEL_CCK)
->  #define        CHANNEL_G       (CHANNEL_2GHZ | CHANNEL_OFDM)
-> -#define        CHANNEL_X       (CHANNEL_5GHZ | CHANNEL_OFDM | CHANNEL_XR)
->
->  #define        CHANNEL_ALL     (CHANNEL_OFDM | CHANNEL_CCK | \
->                         CHANNEL_2GHZ | CHANNEL_5GHZ)
-> @@ -710,7 +707,6 @@ struct ath5k_gain {
->  * Used internally for ath5k_hw_reset_tx_queue().
->  * Also see struct struct ieee80211_channel.
->  */
-> -#define IS_CHAN_XR(_c) ((_c->hw_value & CHANNEL_XR) != 0)
->  #define IS_CHAN_B(_c)  ((_c->hw_value & CHANNEL_B) != 0)
->
->  /*
-> diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
-> index 9068b91..56cb9d4 100644
-> --- a/drivers/net/wireless/ath/ath5k/eeprom.c
-> +++ b/drivers/net/wireless/ath/ath5k/eeprom.c
-> @@ -1782,7 +1782,6 @@ ath5k_eeprom_mode_from_channel(struct ieee80211_channel *channel)
->  {
->        switch (channel->hw_value & CHANNEL_MODES) {
->        case CHANNEL_A:
-> -       case CHANNEL_XR:
->                return AR5K_EEPROM_MODE_11A;
->        case CHANNEL_G:
->                return AR5K_EEPROM_MODE_11G;
-> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-> index 81e465e..b9ada88 100644
-> --- a/drivers/net/wireless/ath/ath5k/phy.c
-> +++ b/drivers/net/wireless/ath/ath5k/phy.c
-> @@ -2408,8 +2408,6 @@ ath5k_get_max_ctl_power(struct ath5k_hw *ah,
->        case CHANNEL_B:
->                ctl_mode |= AR5K_CTL_11B;
->                break;
-> -       case CHANNEL_XR:
-> -               /* Fall through */
->        default:
->                return;
->        }
-> diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
-> index 65f1039..1d37675 100644
-> --- a/drivers/net/wireless/ath/ath5k/qcu.c
-> +++ b/drivers/net/wireless/ath/ath5k/qcu.c
-> @@ -185,13 +185,6 @@ int ath5k_hw_setup_tx_queue(struct ath5k_hw *ah, enum ath5k_tx_queue queue_type,
->                case AR5K_TX_QUEUE_CAB:
->                        queue = AR5K_TX_QUEUE_ID_CAB;
->                        break;
-> -               case AR5K_TX_QUEUE_XR_DATA:
-> -                       if (ah->ah_version != AR5K_AR5212)
-> -                               ATH5K_ERR(ah,
-> -                                       "XR data queues only supported in"
-> -                                       " 5212!\n");
-> -                       queue = AR5K_TX_QUEUE_ID_XR_DATA;
-> -                       break;
->                default:
->                        return -EINVAL;
->                }
-> diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-> index 0686c5d..5d6d3bd 100644
-> --- a/drivers/net/wireless/ath/ath5k/reset.c
-> +++ b/drivers/net/wireless/ath/ath5k/reset.c
-> @@ -1108,14 +1108,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
->
->                mode = AR5K_MODE_11B;
->                break;
-> -       case CHANNEL_XR:
-> -               if (ah->ah_version == AR5K_AR5211) {
-> -                       ATH5K_ERR(ah,
-> -                               "XR mode not available on 5211");
-> -                       return -EINVAL;
-> -               }
-> -               mode = AR5K_MODE_XR;
-> -               break;
->        default:
->                ATH5K_ERR(ah,
->                        "invalid channel: %d\n", channel->center_freq);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+The file pub.h contained a number of definitions that are not
+used in the brcmsmac driver and consequently have been removed.
 
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/pub.h |   33 ------------------------------
+ 1 files changed, 0 insertions(+), 33 deletions(-)
 
+diff --git a/drivers/staging/brcm80211/brcmsmac/pub.h b/drivers/staging/brcm80211/brcmsmac/pub.h
+index 9b847b3..bfbdc3a 100644
+--- a/drivers/staging/brcm80211/brcmsmac/pub.h
++++ b/drivers/staging/brcm80211/brcmsmac/pub.h
+@@ -308,39 +308,6 @@ struct wl_rxsts {
+ 	struct brcms_if *wlif;	/* wl interface */
+ };
+ 
+-/* status per error RX pkt */
+-#define WL_RXS_CRC_ERROR		0x00000001	/* CRC Error in packet */
+-#define WL_RXS_RUNT_ERROR		0x00000002	/* Runt packet */
+-#define WL_RXS_ALIGN_ERROR		0x00000004	/* Misaligned packet */
+-#define WL_RXS_OVERSIZE_ERROR		0x00000008	/* packet bigger than RX_LENGTH (usually 1518) */
+-#define WL_RXS_WEP_ICV_ERROR		0x00000010	/* Integrity Check Value error */
+-#define WL_RXS_WEP_ENCRYPTED		0x00000020	/* Encrypted with WEP */
+-#define WL_RXS_PLCP_SHORT		0x00000040	/* Short PLCP error */
+-#define WL_RXS_DECRYPT_ERR		0x00000080	/* Decryption error */
+-#define WL_RXS_OTHER_ERR		0x80000000	/* Other errors */
+-
+-/* phy type */
+-#define WL_RXS_PHY_A			0x00000000	/* A phy type */
+-#define WL_RXS_PHY_B			0x00000001	/* B phy type */
+-#define WL_RXS_PHY_G			0x00000002	/* G phy type */
+-#define WL_RXS_PHY_N			0x00000004	/* N phy type */
+-
+-/* encoding */
+-#define WL_RXS_ENCODING_CCK		0x00000000	/* CCK encoding */
+-#define WL_RXS_ENCODING_OFDM		0x00000001	/* OFDM encoding */
+-
+-/* preamble */
+-#define WL_RXS_UNUSED_STUB		0x0	/* stub to match with wlc_ethereal.h */
+-#define WL_RXS_PREAMBLE_SHORT		0x00000001	/* Short preamble */
+-#define WL_RXS_PREAMBLE_LONG		0x00000002	/* Long preamble */
+-#define WL_RXS_PREAMBLE_MIMO_MM		0x00000003	/* MIMO mixed mode preamble */
+-#define WL_RXS_PREAMBLE_MIMO_GF		0x00000004	/* MIMO green field preamble */
+-
+-#define WL_RXS_NFRM_AMPDU_FIRST		0x00000001	/* first MPDU in A-MPDU */
+-#define WL_RXS_NFRM_AMPDU_SUB		0x00000002	/* subsequent MPDU(s) in A-MPDU */
+-#define WL_RXS_NFRM_AMSDU_FIRST		0x00000004	/* first MSDU in A-MSDU */
+-#define WL_RXS_NFRM_AMSDU_SUB		0x00000008	/* subsequent MSDU(s) in A-MSDU */
+-
+ enum wlc_par_id {
+ 	IOV_MPC = 1,
+ 	IOV_RTSTHRESH,
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.7.4.1
+
+
