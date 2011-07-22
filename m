@@ -1,42 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:39100 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750752Ab1GRTb0 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2011 15:31:26 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Daniel Drake <dsd@laptop.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"dcbw@redhat.com" <dcbw@redhat.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Mon, 18 Jul 2011 12:25:37 -0700
-Subject: RE: [PATCH 1/4] libertas: remove auto_deep_sleep functionality
-Message-ID: <477F20668A386D41ADCC57781B1F704307FFB0947D@SC-VEXCH1.marvell.com> (sfid-20110718_213129_644654_64435CD5)
-References: <20110717170310.CAD139D401C@zog.reactivated.net>
-In-Reply-To: <20110717170310.CAD139D401C@zog.reactivated.net>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:34713 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754278Ab1GVNbH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 09:31:07 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Tony Houghton <h@realh.co.uk>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [RFC/RFT 3/6] ath9k: merge common ->config_pci_powersave() checks
+Date: Fri, 22 Jul 2011 15:31:49 +0200
+Message-Id: <1311341512-2882-4-git-send-email-sgruszka@redhat.com> (sfid-20110722_153111_397023_44ACFFBC)
+In-Reply-To: <1311341512-2882-1-git-send-email-sgruszka@redhat.com>
+References: <1311341512-2882-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c |    3 ---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c |    3 ---
+ drivers/net/wireless/ath/ath9k/hw-ops.h    |    3 +++
+ 3 files changed, 3 insertions(+), 6 deletions(-)
 
-> Subject: [PATCH 1/4] libertas: remove auto_deep_sleep functionality
-> 
-> This is unused and I'm not really sure in what context it was designed to
-> be used.
-
-The auto deep sleep feature was added with commit 4912545:
-libertas: Add auto deep sleep support for SD8385/SD8686/SD8688
-
-When auto deep sleep is enabled a timer will be started to monitor the activities. At timer expiry (no activity for configured time period) an enter_deep_sleep command will be sent to the card automatically to save power. Once an activity is detected station will exit from deep sleep mode for processing and restart the timer. After the event is processed and there is no new activity the timer will expire and then the deep sleep mode is entered automatically again.
-
-As the auto deep sleep feature for SD8385/SD8686/SD8688 cards is very useful for many embedded platforms to handle enter/exit deep sleep mode automatically, please do not remove it from libertas driver. If you have any particular issue with this feature enabled, we can work on it and solve the problem.
-
-Thanks,
-Bing
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index 70a18d1..b54ab78 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -308,9 +308,6 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
+ 	u8 i;
+ 	u32 val;
+ 
+-	if (ah->is_pciexpress != true || ah->aspm_enabled != true)
+-		return;
+-
+ 	/* Nothing to do on restore for 11N */
+ 	if (!power_off /* !restore */) {
+ 		if (AR_SREV_9280_20_OR_LATER(ah)) {
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index e3d58bd..9cf5d13 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -518,9 +518,6 @@ static void ar9003_hw_init_mode_gain_regs(struct ath_hw *ah)
+ static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
+ 					 bool power_off)
+ {
+-	if (ah->is_pciexpress != true || ah->aspm_enabled != true)
+-		return;
+-
+ 	/* Nothing to do on restore for 11N */
+ 	if (!power_off /* !restore */) {
+ 		/* set bit 19 to allow forcing of pcie core into L1 state */
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index 8c12385..f7d4e2a 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -24,6 +24,9 @@
+ static inline void ath9k_hw_configpcipowersave(struct ath_hw *ah,
+ 					       bool power_off)
+ {
++	if (ah->is_pciexpress != true || ah->aspm_enabled != true)
++		return;
++
+ 	ath9k_hw_ops(ah)->config_pci_powersave(ah, power_off);
+ }
+ 
+-- 
+1.7.1
 
