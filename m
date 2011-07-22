@@ -1,292 +1,491 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:20650 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753282Ab1GVFmy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 01:42:54 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Subject: [PATCH 10/31] ath6kl: Merge scatter gather setup functions for two method
-Date: Fri, 22 Jul 2011 08:41:43 +0300
-Message-ID: <1311313324-6766-12-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110722_074302_931375_1297CB16)
-In-Reply-To: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53464 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750970Ab1GVXUp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 19:20:45 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-mips@linux-mips.org
+Cc: jonas.gorski@gmail.com, ralf@linux-mips.org, zajec5@gmail.com,
+	mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
+	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 05/11] bcma: add mips driver
+Date: Sat, 23 Jul 2011 01:20:09 +0200
+Message-Id: <1311376815-15755-6-git-send-email-hauke@hauke-m.de> (sfid-20110723_012048_365669_748D509B)
+In-Reply-To: <1311376815-15755-1-git-send-email-hauke@hauke-m.de>
+References: <1311376815-15755-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+This adds a mips driver to bcma. This is only found on embedded
+devices. For now the driver just initializes the irqs used on this
+system.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath6kl/hif.h     |    1 +
- drivers/net/wireless/ath/ath6kl/htc_hif.c |   77 ++---------------------------
- drivers/net/wireless/ath/ath6kl/htc_hif.h |    1 -
- drivers/net/wireless/ath/ath6kl/sdio.c    |   75 ++++++++++++++++++++++------
- 4 files changed, 63 insertions(+), 91 deletions(-)
+ drivers/bcma/Kconfig                        |    9 +
+ drivers/bcma/Makefile                       |    1 +
+ drivers/bcma/driver_mips.c                  |  243 +++++++++++++++++++++++++++
+ drivers/bcma/main.c                         |   15 ++
+ include/linux/bcma/bcma.h                   |    3 +
+ include/linux/bcma/bcma_driver_chipcommon.h |   13 ++
+ include/linux/bcma/bcma_driver_mips.h       |   49 ++++++
+ 7 files changed, 333 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/bcma/driver_mips.c
+ create mode 100644 include/linux/bcma/bcma_driver_mips.h
 
-diff --git a/drivers/net/wireless/ath/ath6kl/hif.h b/drivers/net/wireless/ath/ath6kl/hif.h
-index 73340f2..6e0ec4a 100644
---- a/drivers/net/wireless/ath/ath6kl/hif.h
-+++ b/drivers/net/wireless/ath/ath6kl/hif.h
-@@ -185,6 +185,7 @@ struct hif_scatter_req {
- struct hif_dev_scat_sup_info {
- 	int max_scat_entries;
- 	int max_xfer_szper_scatreq;
-+	bool virt_scat;
- };
+diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+index 4a062f8..c1172da 100644
+--- a/drivers/bcma/Kconfig
++++ b/drivers/bcma/Kconfig
+@@ -35,7 +35,16 @@ config BCMA_DRIVER_PCI_HOSTMODE
  
- struct ath6kl_hif_ops {
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.c b/drivers/net/wireless/ath/ath6kl/htc_hif.c
-index 40853cb..33887cc 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_hif.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_hif.c
-@@ -273,7 +273,7 @@ int ath6kldev_submit_scat_req(struct ath6kl_device *dev,
- 		   scat_req->addr, !read ? "async" : "sync",
- 		   (read) ? "rd" : "wr");
- 
--	if (!read && dev->virt_scat)
-+	if (!read && dev->hif_scat_info.virt_scat)
- 		status = ath6kldev_cp_scat_dma_buf(scat_req, false);
- 
- 	if (status) {
-@@ -285,7 +285,7 @@ int ath6kldev_submit_scat_req(struct ath6kl_device *dev,
- 		return status;
- 	}
- 
--	if (dev->virt_scat)
-+	if (dev->hif_scat_info.virt_scat)
- 		status =  ath6kldev_rw_scatter(dev->ar, scat_req);
- 	else
- 		status = ath6kl_hif_scat_req_rw(dev->ar, scat_req);
-@@ -293,7 +293,7 @@ int ath6kldev_submit_scat_req(struct ath6kl_device *dev,
- 	if (read) {
- 		/* in sync mode, we can touch the scatter request */
- 		scat_req->status = status;
--		if (!status && dev->virt_scat)
-+		if (!status && dev->hif_scat_info.virt_scat)
- 			scat_req->status =
- 				ath6kldev_cp_scat_dma_buf(scat_req, true);
- 	}
-@@ -301,78 +301,9 @@ int ath6kldev_submit_scat_req(struct ath6kl_device *dev,
- 	return status;
- }
- 
--/*
-- * function to set up virtual scatter support if HIF
-- * layer has not implemented the interface.
-- */
--static int ath6kldev_setup_virt_scat_sup(struct ath6kl_device *dev)
--{
--	struct hif_scatter_req *scat_req;
--	int buf_sz, scat_req_sz, scat_list_sz;
--	int i, status = 0;
--	u8 *virt_dma_buf;
--
--	buf_sz = 2 * L1_CACHE_BYTES + ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER;
--
--	scat_list_sz = (ATH6KL_SCATTER_ENTRIES_PER_REQ - 1) *
--		       sizeof(struct hif_scatter_item);
--	scat_req_sz = sizeof(*scat_req) + scat_list_sz;
--
--	for (i = 0; i < ATH6KL_SCATTER_REQS; i++) {
--		scat_req = kzalloc(scat_req_sz, GFP_KERNEL);
--
--		if (!scat_req) {
--			status = -ENOMEM;
--			break;
--		}
--
--		virt_dma_buf = kzalloc(buf_sz, GFP_KERNEL);
--		if (!virt_dma_buf) {
--			kfree(scat_req);
--			status = -ENOMEM;
--			break;
--		}
--
--		scat_req->virt_dma_buf =
--			(u8 *)L1_CACHE_ALIGN((unsigned long)virt_dma_buf);
--
--		/* we emulate a DMA bounce interface */
--		hif_scatter_req_add(dev->ar, scat_req);
--	}
--
--	if (status)
--		ath6kl_hif_cleanup_scatter(dev->ar);
--	else {
--		dev->hif_scat_info.max_scat_entries =
--			ATH6KL_SCATTER_ENTRIES_PER_REQ;
--		dev->hif_scat_info.max_xfer_szper_scatreq =
--			ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER;
--		dev->virt_scat = true;
--	}
--
--	return status;
--}
--
- int ath6kldev_setup_msg_bndl(struct ath6kl_device *dev, int max_msg_per_trans)
- {
--	int status;
--
--	status = ath6kl_hif_enable_scatter(dev->ar, &dev->hif_scat_info);
--
--	if (status) {
--		ath6kl_warn("hif does not support scatter requests (%d)\n",
--			    status);
--
--		/* we can try to use a virtual DMA scatter mechanism */
--		status = ath6kldev_setup_virt_scat_sup(dev);
--	}
--
--	if (!status)
--		ath6kl_dbg(ATH6KL_DBG_ANY, "max scatter items:%d: maxlen:%d\n",
--			   dev->hif_scat_info.max_scat_entries,
--			   dev->hif_scat_info.max_xfer_szper_scatreq);
--
--	return status;
-+	return ath6kl_hif_enable_scatter(dev->ar, &dev->hif_scat_info);
- }
- 
- static int ath6kldev_proc_counter_intr(struct ath6kl_device *dev)
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.h b/drivers/net/wireless/ath/ath6kl/htc_hif.h
-index d770d4e..3514c22 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_hif.h
-+++ b/drivers/net/wireless/ath/ath6kl/htc_hif.h
-@@ -87,7 +87,6 @@ struct ath6kl_device {
- 	int (*msg_pending) (struct htc_target *target, u32 lk_ahds[],
- 			    int *npkts_fetched);
- 	struct hif_dev_scat_sup_info hif_scat_info;
--	bool virt_scat;
- 	int max_rx_bndl_sz;
- 	int max_tx_bndl_sz;
- 	int chk_irq_status_cnt;
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 9220a01..96a112e 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -275,13 +275,17 @@ static int ath6kl_sdio_alloc_prep_scat_req(struct ath6kl_sdio *ar_sdio,
- {
- 	struct hif_scatter_req *s_req;
- 	struct bus_request *bus_req;
--	int i, scat_req_sz, scat_list_sz, sg_sz = 0;
-+	int i, scat_req_sz, scat_list_sz, sg_sz, buf_sz;
-+	u8 *virt_buf;
- 
- 	scat_list_sz = (n_scat_entry - 1) * sizeof(struct hif_scatter_item);
- 	scat_req_sz = sizeof(*s_req) + scat_list_sz;
- 
- 	if (!virt_scat)
- 		sg_sz = sizeof(struct scatterlist) * n_scat_entry;
-+	else
-+		buf_sz =  2 * L1_CACHE_BYTES +
-+			  ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER;
- 
- 	for (i = 0; i < n_scat_req; i++) {
- 		/* allocate the scatter request */
-@@ -289,7 +293,16 @@ static int ath6kl_sdio_alloc_prep_scat_req(struct ath6kl_sdio *ar_sdio,
- 		if (!s_req)
- 			return -ENOMEM;
- 
--		if (sg_sz) {
-+		if (virt_scat) {
-+			virt_buf = kzalloc(buf_sz, GFP_KERNEL);
-+			if (!virt_buf) {
-+				kfree(s_req);
-+				return -ENOMEM;
-+			}
+ config BCMA_HOST_SOC
+ 	bool
++	depends on BCMA_DRIVER_MIPS
 +
-+			s_req->virt_dma_buf =
-+				(u8 *)L1_CACHE_ALIGN((unsigned long)virt_buf);
-+		} else {
- 			/* allocate sglist */
- 			s_req->sgentries = kzalloc(sg_sz, GFP_KERNEL);
++config BCMA_DRIVER_MIPS
++	bool "BCMA Broadcom MIPS core driver"
+ 	depends on BCMA && MIPS
++	help
++	  Driver for the Broadcom MIPS core attached to Broadcom specific
++	  Advanced Microcontroller Bus.
++
++	  If unsure, say N
  
-@@ -303,6 +316,7 @@ static int ath6kl_sdio_alloc_prep_scat_req(struct ath6kl_sdio *ar_sdio,
- 		bus_req = ath6kl_sdio_alloc_busreq(ar_sdio);
- 		if (!bus_req) {
- 			kfree(s_req->sgentries);
-+			kfree(s_req->virt_dma_buf);
- 			kfree(s_req);
- 			return -ENOMEM;
- 		}
-@@ -629,31 +643,58 @@ static int ath6kl_sdio_enable_scatter(struct ath6kl *ar,
- 				      struct hif_dev_scat_sup_info *pinfo)
- {
- 	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
--	int ret = 0;
-+	int ret;
-+	bool virt_scat = false;
- 
- 	/* check if host supports scatter and it meets our requirements */
- 	if (ar_sdio->func->card->host->max_segs < MAX_SCATTER_ENTRIES_PER_REQ) {
--		ath6kl_err("hif-scatter: host only supports scatter of : %d entries, need: %d\n",
-+		ath6kl_err("host only supports scatter of :%d entries, need: %d\n",
- 			   ar_sdio->func->card->host->max_segs,
- 			   MAX_SCATTER_ENTRIES_PER_REQ);
--		return -EINVAL;
-+		virt_scat = true;
+ config BCMA_DEBUG
+ 	bool "BCMA debugging"
+diff --git a/drivers/bcma/Makefile b/drivers/bcma/Makefile
+index 8dc730d..82de24e 100644
+--- a/drivers/bcma/Makefile
++++ b/drivers/bcma/Makefile
+@@ -2,6 +2,7 @@ bcma-y					+= main.o scan.o core.o sprom.o
+ bcma-y					+= driver_chipcommon.o driver_chipcommon_pmu.o
+ bcma-y					+= driver_pci.o
+ bcma-$(CONFIG_BCMA_DRIVER_PCI_HOSTMODE)	+= driver_pci_host.o
++bcma-$(CONFIG_BCMA_DRIVER_MIPS)		+= driver_mips.o
+ bcma-$(CONFIG_BCMA_HOST_PCI)		+= host_pci.o
+ bcma-$(CONFIG_BCMA_HOST_SOC)		+= host_soc.o
+ obj-$(CONFIG_BCMA)			+= bcma.o
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+new file mode 100644
+index 0000000..4b60c9f9
+--- /dev/null
++++ b/drivers/bcma/driver_mips.c
+@@ -0,0 +1,243 @@
++/*
++ * Broadcom specific AMBA
++ * Broadcom MIPS32 74K core driver
++ *
++ * Copyright 2009, Broadcom Corporation
++ * Copyright 2006, 2007, Michael Buesch <mb@bu3sch.de>
++ * Copyright 2010, Bernhard Loos <bernhardloos@googlemail.com>
++ * Copyright 2011, Hauke Mehrtens <hauke@hauke-m.de>
++ *
++ * Licensed under the GNU/GPL. See COPYING for details.
++ */
++
++#include "bcma_private.h"
++
++#include <linux/bcma/bcma.h>
++
++#include <linux/serial.h>
++#include <linux/serial_core.h>
++#include <linux/serial_reg.h>
++#include <linux/time.h>
++
++/* The 47162a0 hangs when reading MIPS DMP registers registers */
++static inline bool bcma_core_mips_bcm47162a0_quirk(struct bcma_device *dev)
++{
++	return dev->bus->chipinfo.id == 47162 && dev->bus->chipinfo.rev == 0 &&
++	       dev->id.id == BCMA_CORE_MIPS_74K;
++}
++
++/* The 5357b0 hangs when reading USB20H DMP registers */
++static inline bool bcma_core_mips_bcm5357b0_quirk(struct bcma_device *dev)
++{
++	return (dev->bus->chipinfo.id == 0x5357 ||
++		dev->bus->chipinfo.id == 0x4749) &&
++	       dev->bus->chipinfo.pkg == 11 &&
++	       dev->id.id == BCMA_CORE_USB20_HOST;
++}
++
++static inline u32 mips_read32(struct bcma_drv_mips *mcore,
++			      u16 offset)
++{
++	return bcma_read32(mcore->core, offset);
++}
++
++static inline void mips_write32(struct bcma_drv_mips *mcore,
++				u16 offset,
++				u32 value)
++{
++	bcma_write32(mcore->core, offset, value);
++}
++
++static const u32 ipsflag_irq_mask[] = {
++	0,
++	BCMA_MIPS_IPSFLAG_IRQ1,
++	BCMA_MIPS_IPSFLAG_IRQ2,
++	BCMA_MIPS_IPSFLAG_IRQ3,
++	BCMA_MIPS_IPSFLAG_IRQ4,
++};
++
++static const u32 ipsflag_irq_shift[] = {
++	0,
++	BCMA_MIPS_IPSFLAG_IRQ1_SHIFT,
++	BCMA_MIPS_IPSFLAG_IRQ2_SHIFT,
++	BCMA_MIPS_IPSFLAG_IRQ3_SHIFT,
++	BCMA_MIPS_IPSFLAG_IRQ4_SHIFT,
++};
++
++static u32 bcma_core_mips_irqflag(struct bcma_device *dev)
++{
++	u32 flag;
++
++	if (bcma_core_mips_bcm47162a0_quirk(dev))
++		return dev->core_index;
++	if (bcma_core_mips_bcm5357b0_quirk(dev))
++		return dev->core_index;
++	flag = bcma_aread32(dev, BCMA_MIPS_OOBSELOUTA30);
++
++	return flag & 0x1F;
++}
++
++/* Get the MIPS IRQ assignment for a specified device.
++ * If unassigned, 0 is returned.
++ */
++unsigned int bcma_core_mips_irq(struct bcma_device *dev)
++{
++	struct bcma_device *mdev = dev->bus->drv_mips.core;
++	u32 irqflag;
++	unsigned int irq;
++
++	irqflag = bcma_core_mips_irqflag(dev);
++
++	for (irq = 1; irq <= 4; irq++)
++		if (bcma_read32(mdev, BCMA_MIPS_MIPS74K_INTMASK(irq)) &
++		    (1 << irqflag))
++			return irq;
++
++	return 0;
++}
++EXPORT_SYMBOL(bcma_core_mips_irq);
++
++static void bcma_core_mips_set_irq(struct bcma_device *dev, unsigned int irq)
++{
++	unsigned int oldirq = bcma_core_mips_irq(dev);
++	struct bcma_bus *bus = dev->bus;
++	struct bcma_device *mdev = bus->drv_mips.core;
++	u32 irqflag;
++
++	irqflag = bcma_core_mips_irqflag(dev);
++	BUG_ON(oldirq == 6);
++
++	dev->irq = irq + 2;
++
++	/* clear the old irq */
++	if (oldirq == 0)
++		bcma_write32(mdev, BCMA_MIPS_MIPS74K_INTMASK(0),
++			    bcma_read32(mdev, BCMA_MIPS_MIPS74K_INTMASK(0)) &
++			    ~(1 << irqflag));
++	else
++		bcma_write32(mdev, BCMA_MIPS_MIPS74K_INTMASK(irq), 0);
++
++	/* assign the new one */
++	if (irq == 0) {
++		bcma_write32(mdev, BCMA_MIPS_MIPS74K_INTMASK(0),
++			    bcma_read32(mdev, BCMA_MIPS_MIPS74K_INTMASK(0)) |
++			    (1 << irqflag));
++	} else {
++		u32 oldirqflag = bcma_read32(mdev,
++					     BCMA_MIPS_MIPS74K_INTMASK(irq));
++		if (oldirqflag) {
++			struct bcma_device *core;
++
++			/* backplane irq line is in use, find out who uses
++			 * it and set user to irq 0
++			 */
++			list_for_each_entry_reverse(core, &bus->cores, list) {
++				if ((1 << bcma_core_mips_irqflag(core)) ==
++				    oldirqflag) {
++					bcma_core_mips_set_irq(core, 0);
++					break;
++				}
++			}
++		}
++		bcma_write32(mdev, BCMA_MIPS_MIPS74K_INTMASK(irq),
++			     1 << irqflag);
 +	}
 +
-+	if (!virt_scat) {
-+		ret = ath6kl_sdio_alloc_prep_scat_req(ar_sdio,
-+				MAX_SCATTER_ENTRIES_PER_REQ,
-+				MAX_SCATTER_REQUESTS, virt_scat);
++	pr_info("set_irq: core 0x%04x, irq %d => %d\n",
++		dev->id.id, oldirq + 2, irq + 2);
++}
 +
-+		if (!ret) {
-+			ath6kl_dbg(ATH6KL_DBG_ANY,
-+				   "hif-scatter enabled: max scatter req : %d entries: %d\n",
-+				   MAX_SCATTER_REQUESTS,
-+				   MAX_SCATTER_ENTRIES_PER_REQ);
++static void bcma_core_mips_print_irq(struct bcma_device *dev, unsigned int irq)
++{
++	int i;
++	static const char *irq_name[] = {"2(S)", "3", "4", "5", "6", "D", "I"};
++	printk(KERN_INFO KBUILD_MODNAME ": core 0x%04x, irq :", dev->id.id);
++	for (i = 0; i <= 6; i++)
++		printk(" %s%s", irq_name[i], i == irq ? "*" : " ");
++	printk("\n");
++}
 +
-+			pinfo->max_scat_entries = MAX_SCATTER_ENTRIES_PER_REQ;
-+			pinfo->max_xfer_szper_scatreq =
-+						MAX_SCATTER_REQ_TRANSFER_SIZE;
-+		} else {
-+			ath6kl_sdio_cleanup_scatter(ar);
-+			ath6kl_warn("hif scatter resource setup failed, trying virtual scatter method\n");
++static void bcma_core_mips_dump_irq(struct bcma_bus *bus)
++{
++	struct bcma_device *core;
++
++	list_for_each_entry_reverse(core, &bus->cores, list) {
++		bcma_core_mips_print_irq(core, bcma_core_mips_irq(core));
++	}
++}
++
++static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
++{
++	struct bcma_bus *bus = mcore->core->bus;
++
++	switch (bus->drv_cc.capabilities & BCMA_CC_CAP_FLASHT) {
++	case BCMA_CC_FLASHT_STSER:
++	case BCMA_CC_FLASHT_ATSER:
++		pr_err("Serial flash not supported.\n");
++		break;
++	case BCMA_CC_FLASHT_PARA:
++		pr_info("found parallel flash.\n");
++		bus->drv_cc.pflash.window = 0x1c000000;
++		bus->drv_cc.pflash.window_size = 0x02000000;
++
++		if ((bcma_read32(bus->drv_cc.core, BCMA_CC_FLASH_CFG) &
++		     BCMA_CC_FLASH_CFG_DS) == 0)
++			bus->drv_cc.pflash.buswidth = 1;
++		else
++			bus->drv_cc.pflash.buswidth = 2;
++		break;
++	default:
++		pr_err("flash not supported.\n");
++	}
++}
++
++void bcma_core_mips_init(struct bcma_drv_mips *mcore)
++{
++	struct bcma_bus *bus;
++	struct bcma_device *core;
++	bus = mcore->core->bus;
++
++	pr_info("Initializing MIPS core...\n");
++
++	if (!mcore->setup_done)
++		mcore->assigned_irqs = 1;
++
++	/* Assign IRQs to all cores on the bus */
++	list_for_each_entry_reverse(core, &bus->cores, list) {
++		int mips_irq;
++		if (core->irq)
++			continue;
++
++		mips_irq = bcma_core_mips_irq(core);
++		if (mips_irq > 4)
++			core->irq = 0;
++		else
++			core->irq = mips_irq + 2;
++		if (core->irq > 5)
++			continue;
++		switch (core->id.id) {
++		case BCMA_CORE_PCI:
++		case BCMA_CORE_PCIE:
++		case BCMA_CORE_ETHERNET:
++		case BCMA_CORE_ETHERNET_GBIT:
++		case BCMA_CORE_MAC_GBIT:
++		case BCMA_CORE_80211:
++		case BCMA_CORE_USB20_HOST:
++			/* These devices get their own IRQ line if available,
++			 * the rest goes on IRQ0
++			 */
++			if (mcore->assigned_irqs <= 4)
++				bcma_core_mips_set_irq(core,
++						       mcore->assigned_irqs++);
++			break;
 +		}
++	}
++	pr_info("IRQ reconfiguration done\n");
++	bcma_core_mips_dump_irq(bus);
++
++	if (mcore->setup_done)
++		return;
++
++	bcma_core_mips_flash_detect(mcore);
++	mcore->setup_done = true;
++}
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 2648522..7072216 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -84,6 +84,7 @@ static int bcma_register_cores(struct bcma_bus *bus)
+ 		case BCMA_CORE_CHIPCOMMON:
+ 		case BCMA_CORE_PCI:
+ 		case BCMA_CORE_PCIE:
++		case BCMA_CORE_MIPS_74K:
+ 			continue;
+ 		}
+ 
+@@ -147,6 +148,13 @@ int bcma_bus_register(struct bcma_bus *bus)
+ 		bcma_core_chipcommon_init(&bus->drv_cc);
  	}
  
--	ath6kl_dbg(ATH6KL_DBG_ANY,
--		   "hif-scatter enabled: max scatter req : %d entries: %d\n",
--		   MAX_SCATTER_REQUESTS, MAX_SCATTER_ENTRIES_PER_REQ);
-+	if (virt_scat || ret) {
-+		ret = ath6kl_sdio_alloc_prep_scat_req(ar_sdio,
-+				ATH6KL_SCATTER_ENTRIES_PER_REQ,
-+				ATH6KL_SCATTER_REQS, virt_scat);
- 
--	ret = ath6kl_sdio_alloc_prep_scat_req(ar_sdio,
--					      MAX_SCATTER_ENTRIES_PER_REQ,
--					      MAX_SCATTER_REQUESTS, 0);
--	if (ret) {
--		ath6kl_err("hif-scatter: failed to alloc scatter resources !\n");
--		ath6kl_sdio_cleanup_scatter(ar);
--		return ret;
-+		if (ret) {
-+			ath6kl_err("failed to alloc virtual scatter resources !\n");
-+			ath6kl_sdio_cleanup_scatter(ar);
-+			return ret;
-+		}
++	/* Init MIPS core */
++	core = bcma_find_core(bus, BCMA_CORE_MIPS_74K);
++	if (core) {
++		bus->drv_mips.core = core;
++		bcma_core_mips_init(&bus->drv_mips);
++	}
 +
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			   "Vitual scatter enabled, max_scat_req:%d, entries:%d\n",
-+			   ATH6KL_SCATTER_REQS, ATH6KL_SCATTER_ENTRIES_PER_REQ);
-+
-+		pinfo->max_scat_entries = ATH6KL_SCATTER_ENTRIES_PER_REQ;
-+		pinfo->max_xfer_szper_scatreq =
-+					ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER;
+ 	/* Init PCIE core */
+ 	core = bcma_find_core(bus, BCMA_CORE_PCIE);
+ 	if (core) {
+@@ -217,6 +225,13 @@ int __init bcma_bus_early_register(struct bcma_bus *bus,
+ 		bcma_core_chipcommon_init(&bus->drv_cc);
  	}
  
--	pinfo->max_scat_entries = MAX_SCATTER_ENTRIES_PER_REQ;
--	pinfo->max_xfer_szper_scatreq = MAX_SCATTER_REQ_TRANSFER_SIZE;
-+	pinfo->virt_scat = virt_scat;
++	/* Init MIPS core */
++	core = bcma_find_core(bus, BCMA_CORE_MIPS_74K);
++	if (core) {
++		bus->drv_mips.core = core;
++		bcma_core_mips_init(&bus->drv_mips);
++	}
++
+ 	pr_info("Early bus registered\n");
  
  	return 0;
- }
+diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+index c70cec5..5dbd705 100644
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -6,6 +6,7 @@
+ 
+ #include <linux/bcma/bcma_driver_chipcommon.h>
+ #include <linux/bcma/bcma_driver_pci.h>
++#include <linux/bcma/bcma_driver_mips.h>
+ #include <linux/ssb/ssb.h> /* SPROM sharing */
+ 
+ #include "bcma_regs.h"
+@@ -130,6 +131,7 @@ struct bcma_device {
+ 
+ 	struct device dev;
+ 	struct device *dma_dev;
++
+ 	unsigned int irq;
+ 	bool dev_registered;
+ 
+@@ -197,6 +199,7 @@ struct bcma_bus {
+ 
+ 	struct bcma_drv_cc drv_cc;
+ 	struct bcma_drv_pci drv_pci;
++	struct bcma_drv_mips drv_mips;
+ 
+ 	/* We decided to share SPROM struct with SSB as long as we do not need
+ 	 * any hacks for BCMA. This simplifies drivers code. */
+diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
+index c8b4cf7..03cde8d 100644
+--- a/include/linux/bcma/bcma_driver_chipcommon.h
++++ b/include/linux/bcma/bcma_driver_chipcommon.h
+@@ -24,6 +24,7 @@
+ #define   BCMA_CC_FLASHT_NONE		0x00000000	/* No flash */
+ #define   BCMA_CC_FLASHT_STSER		0x00000100	/* ST serial flash */
+ #define   BCMA_CC_FLASHT_ATSER		0x00000200	/* Atmel serial flash */
++#define   BCMA_CC_FLASHT_NFLASH		0x00000200
+ #define	  BCMA_CC_FLASHT_PARA		0x00000700	/* Parallel flash */
+ #define  BCMA_CC_CAP_PLLT		0x00038000	/* PLL Type */
+ #define   BCMA_PLLTYPE_NONE		0x00000000
+@@ -178,6 +179,7 @@
+ #define BCMA_CC_PROG_CFG		0x0120
+ #define BCMA_CC_PROG_WAITCNT		0x0124
+ #define BCMA_CC_FLASH_CFG		0x0128
++#define  BCMA_CC_FLASH_CFG_DS		0x0010	/* Data size, 0=8bit, 1=16bit */
+ #define BCMA_CC_FLASH_WAITCNT		0x012C
+ /* 0x1E0 is defined as shared BCMA_CLKCTLST */
+ #define BCMA_CC_HW_WORKAROUND		0x01E4 /* Hardware workaround (rev >= 20) */
+@@ -247,6 +249,14 @@ struct bcma_chipcommon_pmu {
+ 	u32 crystalfreq;	/* The active crystal frequency (in kHz) */
+ };
+ 
++#ifdef CONFIG_BCMA_DRIVER_MIPS
++struct bcma_pflash {
++	u8 buswidth;
++	u32 window;
++	u32 window_size;
++};
++#endif /* CONFIG_BCMA_DRIVER_MIPS */
++
+ struct bcma_drv_cc {
+ 	struct bcma_device *core;
+ 	u32 status;
+@@ -256,6 +266,9 @@ struct bcma_drv_cc {
+ 	/* Fast Powerup Delay constant */
+ 	u16 fast_pwrup_delay;
+ 	struct bcma_chipcommon_pmu pmu;
++#ifdef CONFIG_BCMA_DRIVER_MIPS
++	struct bcma_pflash pflash;
++#endif /* CONFIG_BCMA_DRIVER_MIPS */
+ };
+ 
+ /* Register access */
+diff --git a/include/linux/bcma/bcma_driver_mips.h b/include/linux/bcma/bcma_driver_mips.h
+new file mode 100644
+index 0000000..82b3bfd
+--- /dev/null
++++ b/include/linux/bcma/bcma_driver_mips.h
+@@ -0,0 +1,49 @@
++#ifndef LINUX_BCMA_DRIVER_MIPS_H_
++#define LINUX_BCMA_DRIVER_MIPS_H_
++
++#define BCMA_MIPS_IPSFLAG		0x0F08
++/* which sbflags get routed to mips interrupt 1 */
++#define  BCMA_MIPS_IPSFLAG_IRQ1		0x0000003F
++#define  BCMA_MIPS_IPSFLAG_IRQ1_SHIFT	0
++/* which sbflags get routed to mips interrupt 2 */
++#define  BCMA_MIPS_IPSFLAG_IRQ2		0x00003F00
++#define  BCMA_MIPS_IPSFLAG_IRQ2_SHIFT	8
++/* which sbflags get routed to mips interrupt 3 */
++#define  BCMA_MIPS_IPSFLAG_IRQ3		0x003F0000
++#define  BCMA_MIPS_IPSFLAG_IRQ3_SHIFT	16
++/* which sbflags get routed to mips interrupt 4 */
++#define  BCMA_MIPS_IPSFLAG_IRQ4		0x3F000000
++#define  BCMA_MIPS_IPSFLAG_IRQ4_SHIFT	24
++
++/* MIPS 74K core registers */
++#define BCMA_MIPS_MIPS74K_CORECTL	0x0000
++#define BCMA_MIPS_MIPS74K_EXCEPTBASE	0x0004
++#define BCMA_MIPS_MIPS74K_BIST		0x000C
++#define BCMA_MIPS_MIPS74K_INTMASK_INT0	0x0014
++#define BCMA_MIPS_MIPS74K_INTMASK(int) \
++	((int) * 4 + BCMA_MIPS_MIPS74K_INTMASK_INT0)
++#define BCMA_MIPS_MIPS74K_NMIMASK	0x002C
++#define BCMA_MIPS_MIPS74K_GPIOSEL	0x0040
++#define BCMA_MIPS_MIPS74K_GPIOOUT	0x0044
++#define BCMA_MIPS_MIPS74K_GPIOEN	0x0048
++#define BCMA_MIPS_MIPS74K_CLKCTLST	0x01E0
++
++#define BCMA_MIPS_OOBSELOUTA30		0x100
++
++struct bcma_device;
++
++struct bcma_drv_mips {
++	struct bcma_device *core;
++	u8 setup_done:1;
++	unsigned int assigned_irqs;
++};
++
++#ifdef CONFIG_BCMA_DRIVER_MIPS
++extern void bcma_core_mips_init(struct bcma_drv_mips *mcore);
++#else
++static inline void bcma_core_mips_init(struct bcma_drv_mips *mcore) { }
++#endif
++
++extern unsigned int bcma_core_mips_irq(struct bcma_device *dev);
++
++#endif /* LINUX_BCMA_DRIVER_MIPS_H_ */
 -- 
-1.7.1
+1.7.4.1
 
