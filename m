@@ -1,55 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:38404 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753754Ab1GFP6Q convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:20650 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753266Ab1GVFms (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2011 11:58:16 -0400
-Date: Wed, 6 Jul 2011 17:58:10 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH 2/2] b43: implement BCMA bus ops
-Message-ID: <20110706175810.76749948@maggie> (sfid-20110706_175820_084331_236FA877)
-In-Reply-To: <CACna6ryHRNLNPrPam2dAWLysqtFLtE8bcu4A26A4xFj2ui2eNg@mail.gmail.com>
-References: <1309902848-3141-1-git-send-email-zajec5@gmail.com>
-	<1309902848-3141-2-git-send-email-zajec5@gmail.com>
-	<20110706174046.0ae24b6d@maggie>
-	<CACna6ryHRNLNPrPam2dAWLysqtFLtE8bcu4A26A4xFj2ui2eNg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 22 Jul 2011 01:42:48 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Subject: [PATCH 08/31] ath6kl: Cleanup ath6kl_sdio_cleanup_scatter()
+Date: Fri, 22 Jul 2011 08:41:41 +0300
+Message-ID: <1311313324-6766-10-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110722_074256_235866_3D8DFFAF)
+In-Reply-To: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 6 Jul 2011 17:52:40 +0200
-Rafał Miłecki <zajec5@gmail.com> wrote:
-> >> +/* BCMA */
-> >> +#ifdef CONFIG_B43_BCMA
-> >> +static inline int b43_bus_bcma_bus_may_powerdown(struct b43_bus_dev *dev)
-> >> +{
-> >> +     return 0; /* bcma_bus_may_powerdown(dev->bdev->bus); */
-> >> +}
-> >
-> > Why is this inline?
-> > You can't inline and take a pointer of the function at the same time.
-> > (The compiler will workaround this by generating multiple versions of
-> > the function, of which at least one is not inline).
-> > So remove it, please. Same below...
-> 
-> I didn't know about any such a limitation.
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-This is not a limitation. It's just the way it is. You can't take
-a reference to an object, that doesn't exist as an independent object.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/sdio.c |   12 +++---------
+ 1 files changed, 3 insertions(+), 9 deletions(-)
 
-So in this case, if there are no static callers of your function, the
-compiler will simply ignore the inline. However, if there were other static
-callers (in addition to the indirect callers through pointer), the compiler
-would generate (most likely) an inline version for the static callers
-and additionally a non-inline version for the indirect callers.
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 5de3884..797a39f 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -319,8 +319,9 @@ static int ath6kl_sdio_alloc_prep_scat_req(struct ath6kl_sdio *ar_sdio,
+ }
+ 
+ /* clean up scatter support */
+-static void ath6kl_sdio_cleanup_scat_resource(struct ath6kl_sdio *ar_sdio)
++static void ath6kl_sdio_cleanup_scatter(struct ath6kl *ar)
+ {
++	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
+ 	struct hif_scatter_req *s_req, *tmp_req;
+ 	unsigned long flag;
+ 
+@@ -365,7 +366,7 @@ static int ath6kl_sdio_enable_scatter(struct ath6kl *ar,
+ 					      MAX_SCATTER_REQUESTS, 0);
+ 	if (ret) {
+ 		ath6kl_err("hif-scatter: failed to alloc scatter resources !\n");
+-		ath6kl_sdio_cleanup_scat_resource(ar_sdio);
++		ath6kl_sdio_cleanup_scatter(ar);
+ 		return ret;
+ 	}
+ 
+@@ -657,13 +658,6 @@ static int ath6kl_sdio_async_rw_scatter(struct ath6kl *ar,
+ 	return status;
+ }
+ 
+-static void ath6kl_sdio_cleanup_scatter(struct ath6kl *ar)
+-{
+-	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
+-
+-	ath6kl_sdio_cleanup_scat_resource(ar_sdio);
+-}
+-
+ static const struct ath6kl_hif_ops ath6kl_sdio_ops = {
+ 	.read_write_sync = ath6kl_sdio_read_write_sync,
+ 	.write_async = ath6kl_sdio_write_async,
+-- 
+1.7.1
 
-> Just for sure: did you really mean "pointer of the function"? Cause my
-> function is taking pointer of the struct, not pointer of function.
-
-You are taking the pointer to the function (C adds the & for you, so you only
-need the function name) and put it into the bus struct.
