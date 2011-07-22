@@ -1,44 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:57120 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755182Ab1G0VAa convert rfc822-to-8bit (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:58936 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753917Ab1GVK6i convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2011 17:00:30 -0400
-Received: by qyk9 with SMTP id 9so1184821qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2011 14:00:29 -0700 (PDT)
+	Fri, 22 Jul 2011 06:58:38 -0400
+Received: by yia27 with SMTP id 27so1132107yia.19
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2011 03:58:38 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <loom.20110727T224259-350@post.gmane.org>
-References: <COL114-W9CEFD4E7F3803005186F98A4F0@phx.gbl> <COL114-W76260EA23039CA8000DB88A320@phx.gbl>
- <CAB=NE6Wcn3-GwqPJQDXOT0JCNnZgCs1E7HecWrXpc8LS+XRyDA@mail.gmail.com>
- <201107262031.11394.chunkeey@googlemail.com> <CAB=NE6WoGZfpGnNkdaLdtN+nC+aM1mxV4rkUCMarnuDonQeJeg@mail.gmail.com>
- <COL114-W2204F3FA55EF4C0D20D0C58A350@phx.gbl> <CAB=NE6WCagRUrMynd2CoAAN_LtoVkaoCYxOLE1COKx9zXgCBuQ@mail.gmail.com>
- <loom.20110727T224259-350@post.gmane.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 27 Jul 2011 14:00:09 -0700
-Message-ID: <CAB=NE6UKkLTwkUR_r=WdUAwPRq=vTWGb4Y3FqN73RBU3_3a0Qg@mail.gmail.com> (sfid-20110727_230034_409725_E3C3F389)
-Subject: Re: problem on ACS
-To: Swaminathan Vasanth <swaminathanvasanth.r@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CA+icZUXXxQN1wSiwbNwDc5npFpB4AVVzawM=ssgkAvRbhhPp2Q@mail.gmail.com>
+References: <CACna6rxbwQUQXOn_11WyXG0zjLq107oJZv7aHoZ3B8sF-4HuHA@mail.gmail.com>
+	<CA+icZUXXxQN1wSiwbNwDc5npFpB4AVVzawM=ssgkAvRbhhPp2Q@mail.gmail.com>
+Date: Fri, 22 Jul 2011 12:58:37 +0200
+Message-ID: <CACna6rw7+KvLv_gcsx_fZhy4aaFBSFVedqnH5337JhFg7BQkrg@mail.gmail.com> (sfid-20110722_125842_185581_84EEE7B0)
+Subject: Re: [ANNOUNCEMENT] BCM43224 and BCM43225 support thanks to Poznan
+ University of Technology
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: sedat.dilek@gmail.com
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 27, 2011 at 1:55 PM, Swaminathan Vasanth
-<swaminathanvasanth.r@gmail.com> wrote:
+W dniu 22 lipca 2011 12:56 użytkownik Sedat Dilek
+<sedat.dilek@googlemail.com> napisał:
+> 2011/7/22 Rafał Miłecki <zajec5@gmail.com>:
+>> Hi guys,
+>>
+>> As you hopefully noticed, I've spent a lot of time on Broadcom's cards
+>> in the last few months. Adding bcma, modifying b43, fixing some bugs,
+>> and so on... Today I've finally proposed enabling BCM43224 and
+>> BCM43225 support, with a little of luck, still for 3.1 kernel.
+>>
+>> I've time for all of that thanks to Poznan University of Technology
+>> (the one I study at). After my first success with BCM4321 they
+>> proposed me to continue this project as part of my MSc work. Thanks to
+>> that I could fully focus on b43 and related projects. Focusing on
+>> another MSc work woudn't give me so much time and wouldn't result in
+>> so fast development.
+>>
+>> I would like to say big "Thank You" to the University. It was one of
+>> the most enjoyable projects during my studies!
+>>
+>>
+>> Now, get the latest code and give me feedback for your BCM43224 or BCM43225! :)
+>>
+>> --
+>> Rafał
+>> --
 >
-> Hi all,
->  @ MingAnn Ng > If you increase the value for acs_num_req_surveys and
-> acs_roc_duration_ms, you will not get -inf as the interference value. I faced
-> this problem initially, but with more number of surveys ACS actually picks the
-> best channel.
->  @ Luis > I got convincing results on Channel selection. I also cross verified
-> the selected channel and the channels used by the nearby AP's through Kismet.
-> With 9 AP's using different channel, ACS selected the channel which was least
-> used. Great Work Luis !
+> First of all, a big thank you for all the work and to your University
+> which supported you.
+> From where shall people test? Does a GIT repository exist?
+> Or you simply forgot to mention in your euphoria (I know it's end of semester)?
 
-Wow, awesome, thanks for the verification of the work :) truly the
-implementation was just a rush job for an "intermediary" solution for
-people who want ACS until we get Spectral Scan ACS support upstream.
-Glad its working out as such.
+All the needed stuff is almost in witeless-testing git tree. The only
+two patches you need to apply manually are recently sent:
+[PATCH 1/2 3.1] b43: bus: fix memory corruption when setting driver's data
+[PATCH 2/2 3.1???] b43: bcma: drop BROKEN
 
-  Luis
+-- 
+Rafał
