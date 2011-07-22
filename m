@@ -1,95 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rere.qmqm.pl ([89.167.52.164]:43666 "EHLO rere.qmqm.pl"
+Received: from mx1.redhat.com ([209.132.183.28]:52232 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753170Ab1GKAwu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jul 2011 20:52:50 -0400
-Message-Id: <280ad9176e6532f231e054b38b952b20580874c5.1310339688.git.mirq-linux@rere.qmqm.pl> (sfid-20110711_025337_538538_0B4762C2)
-In-Reply-To: <cover.1310339688.git.mirq-linux@rere.qmqm.pl>
-References: <cover.1310339688.git.mirq-linux@rere.qmqm.pl>
-From: =?UTF-8?q?Micha=C5=82=20Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>
-Subject: [PATCH v2 07/46] net/wireless: ath9k: fix DMA API usage
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-To: netdev@vger.kernel.org
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Date: Mon, 11 Jul 2011 02:52:47 +0200 (CEST)
+	id S1754165Ab1GVNbD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 09:31:03 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Tony Houghton <h@realh.co.uk>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [RFC/RFT 1/6] ath9k: skip ->config_pci_powersave() if PCIe port has ASPM disabled
+Date: Fri, 22 Jul 2011 15:31:47 +0200
+Message-Id: <1311341512-2882-2-git-send-email-sgruszka@redhat.com> (sfid-20110722_153109_172548_717D1A5F)
+In-Reply-To: <1311341512-2882-1-git-send-email-sgruszka@redhat.com>
+References: <1311341512-2882-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also constify buf_addr for ath9k_hw_process_rxdesc_edma() to verify
-assumptions --- dma_sync_single_for_device() call can be removed.
+We receive many bug reports about system hang during suspend/resume
+when ath9k driver is in use. Adrian Chadd remarked that this problem
+happens on systems that have ASPM disabled.
 
-Signed-off-by: Michał Mirosław <mirq-linux@rere.qmqm.pl>
+To do not hit the bug, skip doing ->config_pci_powersave magic if PCIe
+downstream port device, which ath9k device is connected to, has ASPM
+disabled.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |    4 ++--
- drivers/net/wireless/ath/ath9k/ar9003_mac.h |    2 +-
- drivers/net/wireless/ath/ath9k/recv.c       |   10 +++-------
- 3 files changed, 6 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c |    6 +-----
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c |    6 +-----
+ drivers/net/wireless/ath/ath9k/hw.c        |    1 -
+ drivers/net/wireless/ath/ath9k/hw.h        |    2 +-
+ drivers/net/wireless/ath/ath9k/pci.c       |   23 +++++++++++++++++++++++
+ 5 files changed, 26 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 575e185..2d211b6 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -524,9 +524,9 @@ void ath9k_hw_addrxbuf_edma(struct ath_hw *ah, u32 rxdp,
- EXPORT_SYMBOL(ath9k_hw_addrxbuf_edma);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index 9ff7c30..44d9d8d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -309,11 +309,7 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
+ 	u8 i;
+ 	u32 val;
  
- int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
--				 void *buf_addr)
-+				 const void *buf_addr)
+-	if (ah->is_pciexpress != true)
+-		return;
+-
+-	/* Do not touch SerDes registers */
+-	if (ah->config.pcie_powersave_enable == 2)
++	if (ah->is_pciexpress != true || ah->aspm_enabled != true)
+ 		return;
+ 
+ 	/* Nothing to do on restore for 11N */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 8efdec2..ad2bb2b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -519,11 +519,7 @@ static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
+ 					 int restore,
+ 					 int power_off)
  {
--	struct ar9003_rxs *rxsp = (struct ar9003_rxs *) buf_addr;
-+	const struct ar9003_rxs *rxsp = buf_addr;
- 	unsigned int phyerr;
+-	if (ah->is_pciexpress != true)
+-		return;
+-
+-	/* Do not touch SerDes registers */
+-	if (ah->config.pcie_powersave_enable == 2)
++	if (ah->is_pciexpress != true || ah->aspm_enabled != true)
+ 		return;
  
- 	/* TODO: byte swap on big endian for ar9300_10 */
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.h b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-index c504493..c310edc 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-@@ -114,7 +114,7 @@ void ath9k_hw_addrxbuf_edma(struct ath_hw *ah, u32 rxdp,
+ 	/* Nothing to do on restore for 11N */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8006ce0..6bda08e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -378,7 +378,6 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
+ 	ah->config.additional_swba_backoff = 0;
+ 	ah->config.ack_6mb = 0x0;
+ 	ah->config.cwm_ignore_extcca = 0;
+-	ah->config.pcie_powersave_enable = 0;
+ 	ah->config.pcie_clock_req = 0;
+ 	ah->config.pcie_waen = 0;
+ 	ah->config.analog_shiftreg = 1;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 6acd0f9..7dd78e7 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -219,7 +219,6 @@ struct ath9k_ops_config {
+ 	int additional_swba_backoff;
+ 	int ack_6mb;
+ 	u32 cwm_ignore_extcca;
+-	u8 pcie_powersave_enable;
+ 	bool pcieSerDesWrite;
+ 	u8 pcie_clock_req;
+ 	u32 pcie_waen;
+@@ -673,6 +672,7 @@ struct ath_hw {
  
- int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah,
- 				 struct ath_rx_status *rxs,
--				 void *buf_addr);
-+				 const void *buf_addr);
- void ath9k_hw_reset_txstatus_ring(struct ath_hw *ah);
- void ath9k_hw_setup_statusring(struct ath_hw *ah, void *ts_start,
- 			       u32 ts_paddr_start,
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 70dc8ec..c5f46d5 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -156,7 +156,7 @@ static bool ath_rx_edma_buf_link(struct ath_softc *sc,
- 	ATH_RXBUF_RESET(bf);
- 	memset(skb->data, 0, ah->caps.rx_status_len);
- 	dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
--				ah->caps.rx_status_len, DMA_TO_DEVICE);
-+				ah->caps.rx_status_len, DMA_BIDIRECTIONAL);
+ 	bool sw_mgmt_crypto;
+ 	bool is_pciexpress;
++	bool aspm_enabled;
+ 	bool is_monitoring;
+ 	bool need_an_top2_fixup;
+ 	u16 tx_trig_level;
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 3bad0b2..480e25b 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -123,6 +123,27 @@ static const struct ath_bus_ops ath_pci_bus_ops = {
+ 	.extn_synch_en = ath_pci_extn_synch_enable,
+ };
  
- 	SKB_CB_ATHBUF(skb) = bf;
- 	ath9k_hw_addrxbuf_edma(ah, bf->bf_buf_addr, qtype);
-@@ -684,15 +684,11 @@ static bool ath_edma_get_buffers(struct ath_softc *sc,
- 	BUG_ON(!bf);
++static void ath_pci_check_aspm(struct ath_softc *sc)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct pci_dev *pdev = to_pci_dev(sc->dev);
++	struct pci_dev *parent;
++	u8 aspm;
++
++	ah->aspm_enabled = false;
++
++	if (!pci_is_pcie(pdev))
++		return;
++
++	parent = pdev->bus->self;
++	if (WARN_ON(!parent))
++		return;
++
++	pci_read_config_byte(parent, ATH_PCIE_CAP_LINK_CTRL, &aspm);
++	if (aspm & (ATH_PCIE_CAP_LINK_L0S | ATH_PCIE_CAP_LINK_L1))
++		ah->aspm_enabled = true;
++}
++
+ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+ 	void __iomem *mem;
+@@ -230,6 +251,8 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto err_init;
+ 	}
  
- 	dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
--				common->rx_bufsize, DMA_FROM_DEVICE);
-+				common->rx_bufsize, DMA_BIDIRECTIONAL);
- 
- 	ret = ath9k_hw_process_rxdesc_edma(ah, NULL, skb->data);
--	if (ret == -EINPROGRESS) {
--		/*let device gain the buffer again*/
--		dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
--				common->rx_bufsize, DMA_FROM_DEVICE);
-+	if (ret == -EINPROGRESS)
- 		return false;
--	}
- 
- 	__skb_unlink(skb, &rx_edma->rx_fifo);
- 	if (ret == -EINVAL) {
++	ath_pci_check_aspm(sc);
++
+ 	ath9k_hw_name(sc->sc_ah, hw_name, sizeof(hw_name));
+ 	wiphy_info(hw->wiphy, "%s mem=0x%lx, irq=%d\n",
+ 		   hw_name, (unsigned long)mem, pdev->irq);
 -- 
-1.7.5.4
+1.7.1
 
