@@ -1,74 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:41041 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752108Ab1G2P4m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 11:56:42 -0400
-Received: by yxi11 with SMTP id 11so2313558yxi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jul 2011 08:56:42 -0700 (PDT)
-Message-ID: <4E32D836.4080308@lwfinger.net> (sfid-20110729_175646_108605_D73F8C71)
-Date: Fri, 29 Jul 2011 10:56:38 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:26051 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754145Ab1GVN3k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 09:29:40 -0400
+Date: Fri, 22 Jul 2011 15:30:34 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Jonathan Nieder <jrnieder@gmail.com>, ath9k-devel@venema.h4ckr.net,
+	Tony Houghton <h@realh.co.uk>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	camilo@mesias.co.uk, Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: Re: APSM, AR9285 and bus hangs
+Message-ID: <20110722133033.GA2327@redhat.com> (sfid-20110722_152944_010370_E63F3352)
+References: <BANLkTikFvkUj=JFrCsffz6Z78KdAEw-t0A@mail.gmail.com>
+ <20110613132009.GA7133@redhat.com>
+ <BANLkTi=epV40yWe0piXoaDes_F5jOV_DJQ@mail.gmail.com>
+ <20110715161857.GA2122@redhat.com>
 MIME-Version: 1.0
-To: Lubomir Schmidt <gentoo.lubomir@googlemail.com>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	'George0505' <george0505@realtek.com>
-Subject: Re: Support for Realtek 8188RU Chipset in rtl8192cu driver?
-References: <CAHFBKjfHfAvpxGhhvRFwni9EVXdSC3HA1WxMJRzVm9SxvowmWQ@mail.gmail.com>
-In-Reply-To: <CAHFBKjfHfAvpxGhhvRFwni9EVXdSC3HA1WxMJRzVm9SxvowmWQ@mail.gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------060706090804010205060904"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110715161857.GA2122@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------060706090804010205060904
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+On Fri, Jul 15, 2011 at 06:18:58PM +0200, Stanislaw Gruszka wrote:
+> On Tue, Jun 14, 2011 at 08:02:54AM +0800, Adrian Chadd wrote:
+> > I think the problem on these laptops is that -disabling- the APSM bits
+> > causes some systems to hang.
+> 
+> It is interesting if below patch works, people who can reproduce the
+> problem please give it a try. Except testing, I'm also interested
+> on comments :-)
 
-On 07/25/2011 06:47 AM, Lubomir Schmidt wrote:
-> What distribution did you mean?
->
-> The old AWUS036H had the Realtek 8187L, yes. Then there came out before nearly
-> an year the AWUS036NH and the AWUS036NEH. Both base on the Ralink 3070L Chipset
-> and have till today the best range of all devices on the market.
-> Now Alfa release the AWUS036NHR with the Realtek 8188RU and the AWUS036NHA with
-> an Atheros AR9271.
->
-> Last year i helped to get support for the Ralink Chipsets in the 2800usb driver.
-> I got white papers and so on from the chipsets and the driver developer could
-> connect to an laptop running 24/7 and make tests with the device.
->
-> How can i help to get support? What distribution did you prefere on the notebook
-> to connect to?
+I got only feedback from Camilo, patch stops to hung system regularly,
+but still there was rare random hangs.
 
-When I looked at the driver, it turned out to be the driver for the RTL8192CU 
-with new additional device IDs. Please try the attached patch for any 2.6.39 or 
-later kernel. Meanwhile, I will see what other changes have been made to the driver.
+I'm going to post some more patches on linux-wireles mailing list.
+Please check them out!
 
-This is a ping on the previous mail. Did the patch work?
-
-Larry
-
---------------060706090804010205060904
-Content-Type: text/plain;
- name="rtl8192cu_add_new_device"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="rtl8192cu_add_new_device"
-
-SW5kZXg6IHdpcmVsZXNzLXRlc3RpbmctbmV3L2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0bHdp
-ZmkvcnRsODE5MmN1L3N3LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gd2lyZWxlc3MtdGVzdGluZy1u
-ZXcub3JpZy9kcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJjdS9zdy5jCisr
-KyB3aXJlbGVzcy10ZXN0aW5nLW5ldy9kcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0
-bDgxOTJjdS9zdy5jCkBAIC0yODEsNiArMjgxLDggQEAgc3RhdGljIHN0cnVjdCB1c2JfZGV2
-aWNlX2lkIHJ0bDgxOTJjX3VzYgogCXtSVExfVVNCX0RFVklDRShVU0JfVkVOREVSX0lEX1JF
-QUxURUssIDB4ODE3ZCwgcnRsOTJjdV9oYWxfY2ZnKX0sCiAJLyogODE4OENFLVZBVSBVU0Ig
-bWluQ2FyZCAoYi9nIG1vZGUgb25seSkgKi8KIAl7UlRMX1VTQl9ERVZJQ0UoVVNCX1ZFTkRF
-Ul9JRF9SRUFMVEVLLCAweDgxN2UsIHJ0bDkyY3VfaGFsX2NmZyl9LAorCS8qIDgxODhSVSBp
-biBBbGZhIEFXVVMwMzZOSFIgKi8KKwl7UlRMX1VTQl9ERVZJQ0UoVVNCX1ZFTkRFUl9JRF9S
-RUFMVEVLLCAweDgxN2YsIHJ0bDkyY3VfaGFsX2NmZyl9LAogCS8qIDgxODggQ29tYm8gZm9y
-IEJDNCAqLwogCXtSVExfVVNCX0RFVklDRShVU0JfVkVOREVSX0lEX1JFQUxURUssIDB4ODc1
-NCwgcnRsOTJjdV9oYWxfY2ZnKX0sCiAK
---------------060706090804010205060904--
+Thanks
+Stanislaw
