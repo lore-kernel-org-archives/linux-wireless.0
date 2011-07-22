@@ -1,110 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3342 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755032Ab1GVS5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 14:57:34 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Roland Vossen" <rvossen@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 02/29] staging: brcm80211: fixed checkpatch warnings for
- brcmutil dir
-Date: Fri, 22 Jul 2011 20:56:49 +0200
-Message-ID: <1311361036-3175-3-git-send-email-arend@broadcom.com> (sfid-20110722_205849_473413_A473ABAB)
-In-Reply-To: <1311361036-3175-1-git-send-email-arend@broadcom.com>
-References: <1311361036-3175-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from vwp2514.webpack.hosteurope.de ([87.230.42.24]:43359 "EHLO
+	vwp2514.webpack.hosteurope.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932096Ab1GVUkH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 16:40:07 -0400
+Subject: Re: [PATCH] cfg80211: really ignore the regulatory request
+From: Sven Neumann <s.neumann@raumfeld.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Daniel Mack <daniel@zonque.org>, mcgrof@gmail.com
+Date: Fri, 22 Jul 2011 22:40:02 +0200
+In-Reply-To: <20110715173306.GE2566@tuxdriver.com>
+References: <1310399981.11331.4.camel@sven>
+	 <1310478727-12099-2-git-send-email-s.neumann@raumfeld.com>
+	 <20110715173306.GE2566@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1311367203.27468.6.camel@bender> (sfid-20110722_224011_608776_A680DFCB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Hi,
 
-Most of them being 'line longer than 80 chars' type of warning.
+this patches fixes a kernel crash. Perhaps I should file a bug report on
+the kernel bug-tracker so that it gets more attention?
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmutil/utils.c |    9 ++++++---
- drivers/staging/brcm80211/brcmutil/wifi.c  |   23 +++++++++++++++--------
- 2 files changed, 21 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmutil/utils.c b/drivers/staging/brcm80211/brcmutil/utils.c
-index 4b08157..7b4d658 100644
---- a/drivers/staging/brcm80211/brcmutil/utils.c
-+++ b/drivers/staging/brcm80211/brcmutil/utils.c
-@@ -489,8 +489,8 @@ static const u8 crc8_table[256] = {
- };
- 
- u8 brcmu_crc8(u8 *pdata,	/* pointer to array of data to process */
--			 uint nbytes,	/* number of input data bytes to process */
--			 u8 crc	/* either CRC8_INIT_VALUE or previous return value */
-+	      uint nbytes,	/* number of input data bytes to process */
-+	      u8 crc	/* either CRC8_INIT_VALUE or previous return value */
- 	) {
- 	/* loop over the buffer data */
- 	while (nbytes-- > 0)
-@@ -586,7 +586,10 @@ brcmu_format_flags(const struct brcmu_bit_desc *bd, u32 flags, char *buf,
- }
- EXPORT_SYMBOL(brcmu_format_flags);
- 
--/* print bytes formatted as hex to a string. return the resulting string length */
-+/*
-+ * print bytes formatted as hex to a string. return the resulting
-+ * string length
-+ */
- int brcmu_format_hex(char *str, const void *bytes, int len)
- {
- 	int i;
-diff --git a/drivers/staging/brcm80211/brcmutil/wifi.c b/drivers/staging/brcm80211/brcmutil/wifi.c
-index 1bce888..636515c 100644
---- a/drivers/staging/brcm80211/brcmutil/wifi.c
-+++ b/drivers/staging/brcm80211/brcmutil/wifi.c
-@@ -43,9 +43,9 @@ bool brcmu_chspec_malformed(u16 chanspec)
- EXPORT_SYMBOL(brcmu_chspec_malformed);
- 
- /*
-- * This function returns the channel number that control traffic is being sent on, for legacy
-- * channels this is just the channel number, for 40MHZ channels it is the upper or lowre 20MHZ
-- * sideband depending on the chanspec selected
-+ * This function returns the channel number that control traffic is being sent
-+ * on, for legacy channels this is just the channel number, for 40MHZ channels
-+ * it is the upper or lower 20MHZ sideband depending on the chanspec selected.
-  */
- u8 brcmu_chspec_ctlchan(u16 chspec)
- {
-@@ -55,15 +55,22 @@ u8 brcmu_chspec_ctlchan(u16 chspec)
- 	if (CHSPEC_CTL_SB(chspec) == WL_CHANSPEC_CTL_SB_NONE) {
- 		return CHSPEC_CHANNEL(chspec);
- 	} else {
--		/* we only support 40MHZ with sidebands */
--		/* chanspec channel holds the centre frequency, use that and the
--		 * side band information to reconstruct the control channel number
-+		/*
-+		 * we only support 40MHZ with sidebands. chanspec channel holds
-+		 * the centre frequency, use that and the side band information
-+		 * to reconstruct the control channel number
- 		 */
- 		if (CHSPEC_CTL_SB(chspec) == WL_CHANSPEC_CTL_SB_UPPER)
--			/* control chan is the upper 20 MHZ SB of the 40MHZ channel */
-+			/*
-+			 * control chan is the upper 20 MHZ SB of the
-+			 * 40MHZ channel
-+			 */
- 			ctl_chan = UPPER_20_SB(CHSPEC_CHANNEL(chspec));
- 		else
--			/* control chan is the lower 20 MHZ SB of the 40MHZ channel */
-+			/*
-+			 * control chan is the lower 20 MHZ SB of the
-+			 * 40MHZ channel
-+			 */
- 			ctl_chan = LOWER_20_SB(CHSPEC_CHANNEL(chspec));
- 	}
- 
--- 
-1.7.4.1
+On Fri, 2011-07-15 at 13:33 -0400, John W. Linville wrote:
+> Luis, ping?
+> 
+> On Tue, Jul 12, 2011 at 03:52:07PM +0200, Sven Neumann wrote:
+> > At the beginning of wiphy_update_regulatory() a check is performed
+> > whether the request is to be ignored. Then the request is sent to
+> > the driver nevertheless. This happens even if last_request points
+> > to NULL, leading to a crash in the driver:
+> > 
+> >  [<bf01d864>] (lbs_set_11d_domain_info+0x28/0x1e4 [libertas]) from [<c03b714c>] (wiphy_update_regulatory+0x4d0/0x4f4)
+> >  [<c03b714c>] (wiphy_update_regulatory+0x4d0/0x4f4) from [<c03b4008>] (wiphy_register+0x354/0x420)
+> >  [<c03b4008>] (wiphy_register+0x354/0x420) from [<bf01b17c>] (lbs_cfg_register+0x80/0x164 [libertas])
+> >  [<bf01b17c>] (lbs_cfg_register+0x80/0x164 [libertas]) from [<bf020e64>] (lbs_start_card+0x20/0x88 [libertas])
+> >  [<bf020e64>] (lbs_start_card+0x20/0x88 [libertas]) from [<bf02cbd8>] (if_sdio_probe+0x898/0x9c0 [libertas_sdio])
+> > 
+> > Fix this by returning early. Also remove the out: label as it is
+> > not any longer needed.
+> > 
+> > Signed-off-by: Sven Neumann <s.neumann@raumfeld.com>
+> > Cc: linux-wireless@vger.kernel.org
+> > Cc: Johannes Berg <johannes@sipsolutions.net>
+> > Cc: Daniel Mack <daniel@zonque.org>
+> > ---
+> >  net/wireless/reg.c |    5 +++--
+> >  1 files changed, 3 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> > index 1ad0f39..4453eb7 100644
+> > --- a/net/wireless/reg.c
+> > +++ b/net/wireless/reg.c
+> > @@ -1125,12 +1125,13 @@ void wiphy_update_regulatory(struct wiphy *wiphy,
+> >  	enum ieee80211_band band;
+> >  
+> >  	if (ignore_reg_update(wiphy, initiator))
+> > -		goto out;
+> > +		return;
+> > +
+> >  	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+> >  		if (wiphy->bands[band])
+> >  			handle_band(wiphy, band, initiator);
+> >  	}
+> > -out:
+> > +
+> >  	reg_process_beacons(wiphy);
+> >  	reg_process_ht_flags(wiphy);
+> >  	if (wiphy->reg_notifier)
+> > -- 
+> > 1.7.1
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> 
 
 
