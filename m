@@ -1,102 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:53362 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753567Ab1GNDq1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 23:46:27 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: disable auto deep sleep before unloading the driver
-Date: Wed, 13 Jul 2011 20:51:59 -0700
-Message-Id: <1310615519-32112-3-git-send-email-bzhao@marvell.com> (sfid-20110714_054632_837988_2DE8B442)
-In-Reply-To: <1310615519-32112-1-git-send-email-bzhao@marvell.com>
-References: <1310615519-32112-1-git-send-email-bzhao@marvell.com>
+Received: from mx1.redhat.com ([209.132.183.28]:5451 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754338Ab1GVNbO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 09:31:14 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Tony Houghton <h@realh.co.uk>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [RFC/RFT 6/6] ath9k: always initialize hw registers related to PCIe PM
+Date: Fri, 22 Jul 2011 15:31:52 +0200
+Message-Id: <1311341512-2882-7-git-send-email-sgruszka@redhat.com> (sfid-20110722_153120_356917_66A39EC5)
+In-Reply-To: <1311341512-2882-1-git-send-email-sgruszka@redhat.com>
+References: <1311341512-2882-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+We might not initialize registers if ah->aspm_enabled == false, assure
+we do this.
 
-Since the auto deep sleep mode has been enabled at driver init time
-we should disable it at driver unloading to shutdown the function
-gracefully.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/mwifiex/ioctl.h     |    1 +
- drivers/net/wireless/mwifiex/main.h      |    1 +
- drivers/net/wireless/mwifiex/sdio.c      |    3 +++
- drivers/net/wireless/mwifiex/sta_ioctl.c |   14 ++++++++++++++
- 4 files changed, 19 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c  |    5 +----
+ drivers/net/wireless/ath/ath9k/pci.c |    4 ++++
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
-index 9929749..bd9e074 100644
---- a/drivers/net/wireless/mwifiex/ioctl.h
-+++ b/drivers/net/wireless/mwifiex/ioctl.h
-@@ -249,6 +249,7 @@ struct mwifiex_ds_hs_cfg {
- };
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 4ef7313..7084bb5 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -595,10 +595,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
  
- #define DEEP_SLEEP_ON  1
-+#define DEEP_SLEEP_OFF 0
- #define DEEP_SLEEP_IDLE_TIME	100
- #define PS_MODE_AUTO		1
+ 	ath9k_hw_init_mode_regs(ah);
  
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 84f780d..e6db047 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -929,6 +929,7 @@ int mwifiex_set_hs_params(struct mwifiex_private *priv,
- 			      struct mwifiex_ds_hs_cfg *hscfg);
- int mwifiex_cancel_hs(struct mwifiex_private *priv, int cmd_type);
- int mwifiex_enable_hs(struct mwifiex_adapter *adapter);
-+int mwifiex_disable_auto_ds(struct mwifiex_private *priv);
- int mwifiex_get_signal_info(struct mwifiex_private *priv,
- 			    struct mwifiex_ds_get_signal *signal);
- int mwifiex_drv_get_data_rate(struct mwifiex_private *priv,
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index f7105a9..82098ac 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -133,6 +133,9 @@ mwifiex_sdio_remove(struct sdio_func *func)
- 					adapter->priv[i]->media_connected)
- 				mwifiex_deauthenticate(adapter->priv[i], NULL);
+-
+-	if (ah->is_pciexpress)
+-		ath9k_hw_configpcipowersave(ah, false);
+-	else
++	if (!ah->is_pciexpress)
+ 		ath9k_hw_disablepcie(ah);
  
-+		mwifiex_disable_auto_ds(mwifiex_get_priv(adapter,
-+							 MWIFIEX_BSS_ROLE_ANY));
-+
- 		mwifiex_init_shutdown_fw(mwifiex_get_priv(adapter,
- 						MWIFIEX_BSS_ROLE_ANY),
- 					 MWIFIEX_FUNC_SHUTDOWN);
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 6547013..10ef9e9 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -487,6 +487,20 @@ int mwifiex_set_radio_band_cfg(struct mwifiex_private *priv,
- }
+ 	if (!AR_SREV_9300_20_OR_LATER(ah))
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 835a50a..d1c75ec 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -118,6 +118,10 @@ static void ath_pci_aspm_init(struct ath_softc *sc)
+ 	if (!pci_is_pcie(pdev))
+ 		return;
  
- /*
-+ * The function disables auto deep sleep mode.
-+ */
-+int mwifiex_disable_auto_ds(struct mwifiex_private *priv)
-+{
-+	struct mwifiex_ds_auto_ds auto_ds;
++	/* initalize PCIe PM registers if device introduce itself as PCIe */
++	if (ah->is_pciexpress)
++		ath9k_hw_ops(ah)->config_pci_powersave(ah, false);
 +
-+	auto_ds.auto_ds = DEEP_SLEEP_OFF;
-+
-+	return mwifiex_send_cmd_sync(priv, HostCmd_CMD_802_11_PS_MODE_ENH,
-+				     DIS_AUTO_PS, BITMAP_AUTO_DS, &auto_ds);
-+}
-+EXPORT_SYMBOL_GPL(mwifiex_disable_auto_ds);
-+
-+/*
-  * IOCTL request handler to set/get active channel.
-  *
-  * This function performs validity checking on channel/frequency
+ 	parent = pdev->bus->self;
+ 
+ 	if (ah->btcoex_hw.scheme != ATH_BTCOEX_CFG_NONE) {
 -- 
-1.7.0.2
+1.7.1
 
