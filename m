@@ -1,81 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:52007 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752963Ab1GFRs7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2011 13:48:59 -0400
-Received: by fxd18 with SMTP id 18so308521fxd.11
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 10:48:58 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] b43: use radio ID reading code to older cores only
-Date: Wed,  6 Jul 2011 20:27:24 +0200
-Message-Id: <1309976845-19588-1-git-send-email-zajec5@gmail.com> (sfid-20110706_194902_865182_5EBEC873)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60015 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752767Ab1GVQu0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 12:50:26 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/5] compat-wireless: fix build of b43 on older kernels.
+Date: Fri, 22 Jul 2011 18:50:12 +0200
+Message-Id: <1311353415-30952-2-git-send-email-hauke@hauke-m.de> (sfid-20110722_185029_257089_07038BED)
+In-Reply-To: <1311353415-30952-1-git-send-email-hauke@hauke-m.de>
+References: <1311353415-30952-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Newer ones need separated way
+The structs in b43 changed.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/b43/main.c |   36 ++++++++++++++++++++++--------------
- 1 files changed, 22 insertions(+), 14 deletions(-)
+ patches/09-threaded-irq.patch |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index cddc5a8..074765a 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4218,22 +4218,30 @@ static int b43_phy_versioning(struct b43_wldev *dev)
- 	       analog_type, phy_type, phy_rev);
+diff --git a/patches/09-threaded-irq.patch b/patches/09-threaded-irq.patch
+index e2748d9..cc8c5d4 100644
+--- a/patches/09-threaded-irq.patch
++++ b/patches/09-threaded-irq.patch
+@@ -6,7 +6,7 @@ thread in process context as well.
  
- 	/* Get RADIO versioning */
--	if (dev->dev->chip_id == 0x4317) {
--		if (dev->dev->chip_rev == 0)
--			tmp = 0x3205017F;
--		else if (dev->dev->chip_rev == 1)
--			tmp = 0x4205017F;
--		else
--			tmp = 0x5205017F;
-+	if (dev->dev->core_rev >= 24) {
-+		/* TODO */
- 	} else {
--		b43_write16(dev, B43_MMIO_RADIO_CONTROL, B43_RADIOCTL_ID);
--		tmp = b43_read16(dev, B43_MMIO_RADIO_DATA_LOW);
--		b43_write16(dev, B43_MMIO_RADIO_CONTROL, B43_RADIOCTL_ID);
--		tmp |= (u32)b43_read16(dev, B43_MMIO_RADIO_DATA_HIGH) << 16;
--	}
--	radio_manuf = (tmp & 0x00000FFF);
--	radio_ver = (tmp & 0x0FFFF000) >> 12;
--	radio_rev = (tmp & 0xF0000000) >> 28;
-+		if (dev->dev->chip_id == 0x4317) {
-+			if (dev->dev->chip_rev == 0)
-+				tmp = 0x3205017F;
-+			else if (dev->dev->chip_rev == 1)
-+				tmp = 0x4205017F;
-+			else
-+				tmp = 0x5205017F;
-+		} else {
-+			b43_write16(dev, B43_MMIO_RADIO_CONTROL,
-+				    B43_RADIOCTL_ID);
-+			tmp = b43_read16(dev, B43_MMIO_RADIO_DATA_LOW);
-+			b43_write16(dev, B43_MMIO_RADIO_CONTROL,
-+				    B43_RADIOCTL_ID);
-+			tmp |= (u32)b43_read16(dev, B43_MMIO_RADIO_DATA_HIGH)
-+				<< 16;
-+		}
-+		radio_manuf = (tmp & 0x00000FFF);
-+		radio_ver = (tmp & 0x0FFFF000) >> 12;
-+		radio_rev = (tmp & 0xF0000000) >> 28;
-+	}
-+
- 	if (radio_manuf != 0x17F /* Broadcom */)
- 		unsupported = 1;
- 	switch (phy_type) {
+ --- a/drivers/net/wireless/b43/main.c
+ +++ b/drivers/net/wireless/b43/main.c
+-@@ -4124,8 +4124,13 @@ redo:
++@@ -4144,8 +4144,13 @@ redo:
+  	if (b43_bus_host_is_sdio(dev->dev)) {
+  		b43_sdio_free_irq(dev);
+  	} else {
+@@ -20,7 +20,7 @@ thread in process context as well.
+  	}
+  	mutex_lock(&wl->mutex);
+  	dev = wl->current_dev;
+-@@ -4165,9 +4170,17 @@ static int b43_wireless_core_start(struc
++@@ -4185,9 +4190,17 @@ static int b43_wireless_core_start(struc
+  			goto out;
+  		}
+  	} else {
+@@ -38,12 +38,12 @@ thread in process context as well.
+  		if (err) {
+  			b43err(dev->wl, "Cannot request IRQ-%d\n",
+  			       dev->dev->irq);
+-@@ -4937,6 +4950,10 @@ static int b43_setup_bands(struct b43_wl
++@@ -4957,6 +4970,10 @@ static int b43_setup_bands(struct b43_wl
+  
+  static void b43_wireless_core_detach(struct b43_wldev *dev)
+  {
+ +#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+-+	if (dev->sdev->bus->bustype != SSB_BUSTYPE_SDIO)
+++	if (dev->dev->sdev->bus->bustype != SSB_BUSTYPE_SDIO)
+ +		compat_destroy_threaded_irq(&dev->irq_compat);
+ +#endif
+  	/* We release firmware that late to not be required to re-request
+@@ -51,7 +51,7 @@ thread in process context as well.
+  	b43_release_firmware(dev);
+ --- a/drivers/net/wireless/b43/b43.h
+ +++ b/drivers/net/wireless/b43/b43.h
+-@@ -791,6 +791,9 @@ struct b43_wldev {
++@@ -798,6 +798,9 @@ struct b43_wldev {
+  	unsigned int tx_count;
+  	unsigned int rx_count;
+  #endif
 -- 
-1.7.3.4
+1.7.4.1
 
