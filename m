@@ -1,58 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:46113 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753178Ab1GEKAK (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:3158 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753387Ab1GVFno (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 06:00:10 -0400
-Received: by pvg12 with SMTP id 12so5000852pvg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2011 03:00:10 -0700 (PDT)
-Date: Tue, 5 Jul 2011 12:59:05 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Franky Lin <frankyl@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 094/119] staging: brcm80211: removed last occurrences of
- bcmsdh/BCMSDH
-Message-ID: <20110705095905.GP2544@shale.localdomain> (sfid-20110705_120015_039626_FB6AFDFE)
-References: <1309391303-22741-1-git-send-email-frankyl@broadcom.com>
- <1309391303-22741-95-git-send-email-frankyl@broadcom.com>
+	Fri, 22 Jul 2011 01:43:44 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 29/31] ath6kl: fix crash when interface is closed but scan is ongoing
+Date: Fri, 22 Jul 2011 08:42:02 +0300
+Message-ID: <1311313324-6766-31-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110722_074349_239187_681C7409)
+In-Reply-To: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1309391303-22741-95-git-send-email-frankyl@broadcom.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 29, 2011 at 04:47:58PM -0700, Franky Lin wrote:
-> @@ -549,7 +549,9 @@ brcmf_sdioh_request_byte(struct sdioh_info *sd, uint rw, uint func,
->  						    sdio_enable_func
->  						    (gInstance->func[2]);
->  						if (err_ret)
-> -							sd_err(("bcmsdh_sdmmc: enable F2 failed:%d",
-> +							sd_err(("request_byte: "
-> +								"enable F2 "
-> +								"failed:%d",
-                                                                         ^^^
-	Newline needed here.
->  								 err_ret));
->  					} else {
->  						/* Disable Function 2 */
-> @@ -557,7 +559,9 @@ brcmf_sdioh_request_byte(struct sdioh_info *sd, uint rw, uint func,
->  						    sdio_disable_func
->  						    (gInstance->func[2]);
->  						if (err_ret)
-> -							sd_err(("bcmsdh_sdmmc: Disab F2 failed:%d",
-> +							sd_err(("request_byte: "
-> +								"Disab F2 "
-> +								"failed:%d",
-                                                                         ^^^
-	Same.
+When ath6kl module was removed while a scan was ongoing the driver would
+crash in ath6kl_cfg80211_scan_complete_event().
 
+Fix the function not to iterate nodes when the scan is aborted. The nodes
+are already freed when the module is being unloaded. This patch removes the
+null check entirely as the wmi structure is not accessed anymore during
+module unload.
 
->  								 err_ret));
->  					}
->  					sdio_release_host(gInstance->func[2]);
+Also fix a bug where the status was checked as a bitfield with '&' operator.
+But it's not a bitfield, just a regular error code.
 
-regards,
-dan carpenter
+This is a port of my patch from ath6kl staging with the same title.
 
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   41 +++++++++++++++------------
+ 1 files changed, 23 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index eff9983..d1d4794 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -820,29 +820,34 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ 
+ void ath6kl_cfg80211_scan_complete_event(struct ath6kl *ar, int status)
+ {
++	int i;
+ 
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: status %d\n", __func__, status);
+ 
+-	if (ar->scan_req) {
+-		/* Translate data to cfg80211 mgmt format */
+-		ath6kl_wmi_iterate_nodes(ar->wmi, ath6kl_cfg80211_scan_node,
+-					 ar->wdev->wiphy);
+-
+-		cfg80211_scan_done(ar->scan_req, ((status & -ECANCELED)
+-						  || (status & -EBUSY)) ? true :
+-				   false);
+-
+-		if (ar->scan_req->n_ssids && ar->scan_req->ssids[0].ssid_len) {
+-			u8 i;
+-
+-			for (i = 0; i < ar->scan_req->n_ssids; i++) {
+-				ath6kl_wmi_probedssid_cmd(ar->wmi, i + 1,
+-							  DISABLE_SSID_FLAG,
+-							  0, NULL);
+-			}
++	if (!ar->scan_req)
++		return;
++
++	if ((status == -ECANCELED) || (status == -EBUSY)) {
++		cfg80211_scan_done(ar->scan_req, true);
++		goto out;
++	}
++
++	/* Translate data to cfg80211 mgmt format */
++	ath6kl_wmi_iterate_nodes(ar->wmi, ath6kl_cfg80211_scan_node,
++				 ar->wdev->wiphy);
++
++	cfg80211_scan_done(ar->scan_req, false);
++
++	if (ar->scan_req->n_ssids && ar->scan_req->ssids[0].ssid_len) {
++		for (i = 0; i < ar->scan_req->n_ssids; i++) {
++			ath6kl_wmi_probedssid_cmd(ar->wmi, i + 1,
++						  DISABLE_SSID_FLAG,
++						  0, NULL);
+ 		}
+-		ar->scan_req = NULL;
+ 	}
++
++out:
++	ar->scan_req = NULL;
+ }
+ 
+ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+-- 
+1.7.1
 
