@@ -1,183 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:40068 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752489Ab1GQVle (ORCPT
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:37595 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751543Ab1GVHbn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2011 17:41:34 -0400
-Subject: [PATCH v3 07/23] ath6kl: add debug.c
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: joe@perches.com, devel@linuxdriverproject.org, gregkh@suse.de,
-	error27@gmail.com
-Date: Mon, 18 Jul 2011 00:41:27 +0300
-Message-ID: <20110717214127.23534.33963.stgit@localhost6.localdomain6> (sfid-20110717_234137_326297_770ABC94)
-In-Reply-To: <20110717213832.23534.75274.stgit@localhost6.localdomain6>
-References: <20110717213832.23534.75274.stgit@localhost6.localdomain6>
+	Fri, 22 Jul 2011 03:31:43 -0400
+Received: by fxd18 with SMTP id 18so4831783fxd.11
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2011 00:31:42 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Stanislav Demakov <s.demakov@gmail.com>
+Subject: Re: rt2x00, AP mode, 802.11n is not working properly
+Date: Fri, 22 Jul 2011 09:29:35 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <CAN=pzdLRaRHkg4NquUpDhEwRzq-roKQXMtMcwnr031maDSLRfw@mail.gmail.com> <CAN=pzd+EFcyRnexjiMMLNR86hT_UKiePr=yCkZZk5dD4sqYSew@mail.gmail.com> <CAN=pzdL596WrhmaWWE6s_ouAmR-zSr1bUki2YVzLKgE1Y2VijQ@mail.gmail.com>
+In-Reply-To: <CAN=pzdL596WrhmaWWE6s_ouAmR-zSr1bUki2YVzLKgE1Y2VijQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201107220929.35836.helmut.schaa@googlemail.com> (sfid-20110722_093146_772430_28CF450F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/debug.c |  150 +++++++++++++++++++++++++++++++
- 1 files changed, 150 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/debug.c
+Am Donnerstag, 21. Juli 2011 schrieb Stanislav Demakov:
+> Quick note: changed .entry_num value back to 64 and the speed raised
+> even more! Now it's about 2.5 MB/s.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-new file mode 100644
-index 0000000..316136c
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -0,0 +1,150 @@
-+/*
-+ * Copyright (c) 2004-2011 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "core.h"
-+#include "debug.h"
-+
-+int ath6kl_printk(const char *level, const char *fmt, ...)
-+{
-+	struct va_format vaf;
-+	va_list args;
-+	int rtn;
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	rtn = printk("%sath6kl: %pV", level, &vaf);
-+
-+	va_end(args);
-+
-+	return rtn;
-+}
-+
-+#ifdef CONFIG_ATH6KL_DEBUG
-+void ath6kl_dump_registers(struct ath6kl_device *dev,
-+			   struct ath6kl_irq_proc_registers *irq_proc_reg,
-+			   struct ath6kl_irq_enable_reg *irq_enable_reg)
-+{
-+
-+	ath6kl_dbg(ATH6KL_DBG_ANY, ("<------- Register Table -------->\n"));
-+
-+	if (irq_proc_reg != NULL) {
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			"Host Int status:           0x%x\n",
-+			irq_proc_reg->host_int_status);
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			   "CPU Int status:            0x%x\n",
-+			irq_proc_reg->cpu_int_status);
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			   "Error Int status:          0x%x\n",
-+			irq_proc_reg->error_int_status);
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			   "Counter Int status:        0x%x\n",
-+			irq_proc_reg->counter_int_status);
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			   "Mbox Frame:                0x%x\n",
-+			irq_proc_reg->mbox_frame);
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			   "Rx Lookahead Valid:        0x%x\n",
-+			irq_proc_reg->rx_lkahd_valid);
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			   "Rx Lookahead 0:            0x%x\n",
-+			irq_proc_reg->rx_lkahd[0]);
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			   "Rx Lookahead 1:            0x%x\n",
-+			irq_proc_reg->rx_lkahd[1]);
-+
-+		if (dev->ar->mbox_info.gmbox_addr != 0) {
-+			/*
-+			 * If the target supports GMBOX hardware, dump some
-+			 * additional state.
-+			 */
-+			ath6kl_dbg(ATH6KL_DBG_ANY,
-+				"GMBOX Host Int status 2:   0x%x\n",
-+				irq_proc_reg->host_int_status2);
-+			ath6kl_dbg(ATH6KL_DBG_ANY,
-+				"GMBOX RX Avail:            0x%x\n",
-+				irq_proc_reg->gmbox_rx_avail);
-+			ath6kl_dbg(ATH6KL_DBG_ANY,
-+				"GMBOX lookahead alias 0:   0x%x\n",
-+				irq_proc_reg->rx_gmbox_lkahd_alias[0]);
-+			ath6kl_dbg(ATH6KL_DBG_ANY,
-+				"GMBOX lookahead alias 1:   0x%x\n",
-+				irq_proc_reg->rx_gmbox_lkahd_alias[1]);
-+		}
-+
-+	}
-+
-+	if (irq_enable_reg != NULL) {
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			"Int status Enable:         0x%x\n",
-+			irq_enable_reg->int_status_en);
-+		ath6kl_dbg(ATH6KL_DBG_ANY, "Counter Int status Enable: 0x%x\n",
-+			irq_enable_reg->cntr_int_status_en);
-+	}
-+	ath6kl_dbg(ATH6KL_DBG_ANY, "<------------------------------->\n");
-+}
-+
-+static void dump_cred_dist(struct htc_endpoint_credit_dist *ep_dist)
-+{
-+	ath6kl_dbg(ATH6KL_DBG_ANY,
-+		   "--- endpoint: %d  svc_id: 0x%X ---\n",
-+		   ep_dist->endpoint, ep_dist->svc_id);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " dist_flags     : 0x%X\n",
-+		   ep_dist->dist_flags);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_norm      : %d\n",
-+		   ep_dist->cred_norm);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_min       : %d\n",
-+		   ep_dist->cred_min);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " credits        : %d\n",
-+		   ep_dist->credits);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_assngd    : %d\n",
-+		   ep_dist->cred_assngd);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " seek_cred      : %d\n",
-+		   ep_dist->seek_cred);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_sz        : %d\n",
-+		   ep_dist->cred_sz);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_per_msg   : %d\n",
-+		   ep_dist->cred_per_msg);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_to_dist   : %d\n",
-+		   ep_dist->cred_to_dist);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " txq_depth      : %d\n",
-+		   get_queue_depth(&((struct htc_endpoint *)
-+				     ep_dist->htc_rsvd)->txq));
-+	ath6kl_dbg(ATH6KL_DBG_ANY,
-+		   "----------------------------------\n");
-+}
-+
-+void dump_cred_dist_stats(struct htc_target *target)
-+{
-+	struct htc_endpoint_credit_dist *ep_list;
-+
-+	if (!AR_DBG_LVL_CHECK(ATH6KL_DBG_TRC))
-+		return;
-+
-+	list_for_each_entry(ep_list, &target->cred_dist_list, list)
-+		dump_cred_dist(ep_list);
-+
-+	ath6kl_dbg(ATH6KL_DBG_HTC_SEND, "ctxt:%p dist:%p\n",
-+		   target->cred_dist_cntxt, NULL);
-+	ath6kl_dbg(ATH6KL_DBG_TRC, "credit distribution, total : %d, free : %d\n",
-+		   target->cred_dist_cntxt->total_avail_credits,
-+		   target->cred_dist_cntxt->cur_free_credits);
-+}
-+
-+#endif
+64 is not a safe value in this case and rt2800usb_txdone_entry_check tries
+to protect against a special case where the tx status for single frames
+gets "lost". But at least we now know a little more about this issue.
 
+> But still there is still room for improvement. :)
+> Looks like rt2800usb_txdone_entry_check was the major cause for the delay.
+
+Ok, thanks for trying. I'll think about a proper solution without causing
+regressions ...
+
+Helmut
