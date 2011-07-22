@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:58841 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754701Ab1GPQ4J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2011 12:56:09 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
-	zajec5@gmail.com, linux-mips@linux-mips.org
-Cc: jonas.gorski@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
-	arend@broadcom.com, b43-dev@lists.infradead.org,
-	bernhardloos@googlemail.com, arnd@arndb.de,
-	julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 02/11] bcma: move initializing of struct bcma_bus to own function.
-Date: Sat, 16 Jul 2011 18:55:33 +0200
-Message-Id: <1310835342-18877-3-git-send-email-hauke@hauke-m.de> (sfid-20110716_185625_368282_953CE6AE)
-In-Reply-To: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
-References: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35427 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932090Ab1GVUcU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 16:32:20 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: zajec5@gmail.com, Randy Dunlap <rdunlap@xenotime.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] bcma: fix 'SSB_PCICORE_BFL_NOPCI' undeclared build breakage
+Date: Fri, 22 Jul 2011 16:27:16 -0400
+Message-Id: <1311366436-25791-1-git-send-email-linville@tuxdriver.com> (sfid-20110722_223239_076260_9C13AF9B)
+In-Reply-To: <20110722090414.4e3d80a5.rdunlap@xenotime.net>
+References: <20110722090414.4e3d80a5.rdunlap@xenotime.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes it possible to use this code in some other method.
+linux-next-20110722/drivers/bcma/driver_pci.c:175: error: 'SSB_PCICORE_BFL_NOPCI' undeclared (first use in this function)
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Reported-by: Randy Dunlap <rdunlap@xenotime.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/bcma/scan.c |   17 +++++++++++------
- 1 files changed, 11 insertions(+), 6 deletions(-)
+ drivers/bcma/driver_pci.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 4012d8d..7970553 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -312,15 +312,10 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 	return 0;
- }
+diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
+index dc6f34a..745d264 100644
+--- a/drivers/bcma/driver_pci.c
++++ b/drivers/bcma/driver_pci.c
+@@ -172,8 +172,10 @@ static bool bcma_core_pci_is_in_hostmode(struct bcma_drv_pci *pc)
+ 	    chipid_top != 0x5300)
+ 		return false;
  
--int bcma_bus_scan(struct bcma_bus *bus)
-+static void bcma_init_bus(struct bcma_bus *bus)
- {
--	u32 erombase;
--	u32 __iomem *eromptr, *eromend;
--
- 	s32 tmp;
++#ifdef CONFIG_SSB_DRIVER_PCICORE
+ 	if (bus->sprom.boardflags_lo & SSB_PCICORE_BFL_NOPCI)
+ 		return false;
++#endif /* CONFIG_SSB_DRIVER_PCICORE */
  
--	int err;
--
- 	INIT_LIST_HEAD(&bus->cores);
- 	bus->nr_cores = 0;
- 
-@@ -330,6 +325,16 @@ int bcma_bus_scan(struct bcma_bus *bus)
- 	bus->chipinfo.id = (tmp & BCMA_CC_ID_ID) >> BCMA_CC_ID_ID_SHIFT;
- 	bus->chipinfo.rev = (tmp & BCMA_CC_ID_REV) >> BCMA_CC_ID_REV_SHIFT;
- 	bus->chipinfo.pkg = (tmp & BCMA_CC_ID_PKG) >> BCMA_CC_ID_PKG_SHIFT;
-+}
-+
-+int bcma_bus_scan(struct bcma_bus *bus)
-+{
-+	u32 erombase;
-+	u32 __iomem *eromptr, *eromend;
-+
-+	int err;
-+
-+	bcma_init_bus(bus);
- 
- 	erombase = bcma_scan_read32(bus, 0, BCMA_CC_EROM);
- 	eromptr = bus->mmio;
+ #if 0
+ 	/* TODO: on BCMA we use address from EROM instead of magic formula */
 -- 
-1.7.4.1
+1.7.4.4
 
