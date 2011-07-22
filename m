@@ -1,74 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from exchange.solarflare.com ([216.237.3.220]:5345 "EHLO
-	exchange.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751419Ab1GURyL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 13:54:11 -0400
-Subject: [PATCH net-2.6] ethtool: Allow zero-length register dumps again
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: David Miller <davem@davemloft.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1311270409.28569.32.camel@localhost>
-References: <20110720091850.32210.2059.stgit@localhost6.localdomain6>
-	 <1311161889.1041.11.camel@localhost> <4E26C2DC.8090208@qca.qualcomm.com>
-	 <20110720143611.GA18231@tuxdriver.com>
-	 <1311270409.28569.32.camel@localhost>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 21 Jul 2011 19:54:00 +0200
-Message-ID: <1311270840.28569.34.camel@localhost> (sfid-20110721_195417_011929_3E38E2E5)
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:4200 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752993Ab1GVJhq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 05:37:46 -0400
+Message-ID: <4E2944DA.5070507@broadcom.com> (sfid-20110722_113749_515825_03548031)
+Date: Fri, 22 Jul 2011 11:37:30 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Greg KH" <greg@kroah.com>
+cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/19] checkpatch changes and brcmfmac cleanup
+References: <4E294123.8040504@broadcom.com>
+In-Reply-To: <4E294123.8040504@broadcom.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers (ab)use the ethtool_ops::get_regs operation to expose
-only a hardware revision ID.  Commit
-a77f5db361ed9953b5b749353ea2c7fed2bf8d93 ('ethtool: Allocate register
-dump buffer with vmalloc()') had the side-effect of breaking these, as
-vmalloc() returns a null pointer for size=0 whereas kmalloc() did not.
 
-For backward-compatibility, allow zero-length dumps again.
+> Subject: [PATCH 00/19] checkpatch changes and brcmfmac cleanup
+> Date: Mon, 18 Jul 2011 07:29:46 -0700
+> From: Arend van Spriel<arend@broadcom.com>
+> To: gregkh@suse.de<gregkh@suse.de>
+> CC: Arend Van Spriel<arend@broadcom.com>,
+> "linux-wireless@vger.kernel.org"	<linux-wireless@vger.kernel.org>,
+> "devel@linuxdriverproject.org"	<devel@linuxdriverproject.org>
+>
+> This series removes several checkpatch errors and warnings in the
+> drivers and several cleanup changes in brcmfmac driver.
 
-Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Ben Hutchings <bhutchings@solarflare.com>
-Cc: stable@kernel.org [2.6.37+]
----
-This is compile-tested only.  I'm on vacation, damnit.
+Hi Greg,
 
-Ben.
+Intended to add some dependency info but forgot. Using the format 
+suggested by Dan Carpenter, here it is:
 
- net/core/ethtool.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+This series applies to staging-next with the following patch set applied:
 
-diff --git a/net/core/ethtool.c b/net/core/ethtool.c
-index fd14116..4fb7704 100644
---- a/net/core/ethtool.c
-+++ b/net/core/ethtool.c
-@@ -1227,7 +1227,7 @@ static int ethtool_get_regs(struct net_device *dev, char __user *useraddr)
- 		regs.len = reglen;
- 
- 	regbuf = vzalloc(reglen);
--	if (!regbuf)
-+	if (reglen && !regbuf)
- 		return -ENOMEM;
- 
- 	ops->get_regs(dev, &regs, regbuf);
-@@ -1236,7 +1236,7 @@ static int ethtool_get_regs(struct net_device *dev, char __user *useraddr)
- 	if (copy_to_user(useraddr, &regs, sizeof(regs)))
- 		goto out;
- 	useraddr += offsetof(struct ethtool_regs, data);
--	if (copy_to_user(useraddr, regbuf, regs.len))
-+	if (regbuf && copy_to_user(useraddr, regbuf, regs.len))
- 		goto out;
- 	ret = 0;
- 
--- 
-1.7.5.4
+Message-ID:<1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+*excluding* Message-ID:<1310678971-28952-36-git-send-email-frankyl@broadcom.com>
 
+
+Gr. AvS
 
 -- 
-Ben Hutchings, Senior Software Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
 
