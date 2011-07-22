@@ -1,91 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:56550 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751668Ab1GQIWU (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:37985 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752917Ab1GVFma (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2011 04:22:20 -0400
-Received: by fxd18 with SMTP id 18so4884389fxd.11
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jul 2011 01:22:19 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2] bcma: handle alternative SPROM location
-Date: Sun, 17 Jul 2011 11:00:59 +0200
-Message-Id: <1310893259-4307-1-git-send-email-zajec5@gmail.com> (sfid-20110717_102224_508603_1C8431B5)
+	Fri, 22 Jul 2011 01:42:30 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Subject: [PATCH 01/31] ath6kl: cleanup callbacks for different scatter gather method
+Date: Fri, 22 Jul 2011 08:41:34 +0300
+Message-ID: <1311313324-6766-3-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110722_074233_530314_60D5848A)
+In-Reply-To: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some cards do not use additional 0x30 offset for SPROM location. We do
-not know the real condition for it yet, make it BCM4331 specific for
-now.
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: commit message typos
----
- drivers/bcma/sprom.c                        |   12 +++++++++---
- include/linux/bcma/bcma_driver_chipcommon.h |    3 ++-
- 2 files changed, 11 insertions(+), 4 deletions(-)
+Define a hook in ath6kl_hif_ops for hif scatter gather mechanism.
+When virtual scatter gather is used, call the respective function
+directly.
 
-diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
-index 52917e5..8b5b785 100644
---- a/drivers/bcma/sprom.c
-+++ b/drivers/bcma/sprom.c
-@@ -20,12 +20,12 @@
-  * R/W ops.
-  **************************************************/
- 
--static void bcma_sprom_read(struct bcma_bus *bus, u16 *sprom)
-+static void bcma_sprom_read(struct bcma_bus *bus, u16 offset, u16 *sprom)
- {
- 	int i;
- 	for (i = 0; i < SSB_SPROMSIZE_WORDS_R4; i++)
- 		sprom[i] = bcma_read16(bus->drv_cc.core,
--				       BCMA_CC_SPROM + (i * 2));
-+				       offset + (i * 2));
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/hif-ops.h |    6 ++++++
+ drivers/net/wireless/ath/ath6kl/hif.h     |    3 ++-
+ drivers/net/wireless/ath/ath6kl/htc_hif.c |    6 ++++--
+ drivers/net/wireless/ath/ath6kl/sdio.c    |    7 +++----
+ 4 files changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/hif-ops.h b/drivers/net/wireless/ath/ath6kl/hif-ops.h
+index ad49669..32890cd 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif-ops.h
++++ b/drivers/net/wireless/ath/ath6kl/hif-ops.h
+@@ -59,6 +59,12 @@ static inline int ath6kl_hif_enable_scatter(struct ath6kl *ar,
+ 	return ar->hif_ops->enable_scatter(ar, info);
  }
  
- /**************************************************
-@@ -137,6 +137,7 @@ static void bcma_sprom_extract_r8(struct bcma_bus *bus, const u16 *sprom)
- 
- int bcma_sprom_get(struct bcma_bus *bus)
++static inline int ath6kl_hif_scat_req_rw(struct ath6kl *ar,
++					 struct hif_scatter_req *scat_req)
++{
++	return ar->hif_ops->scat_req_rw(ar, scat_req);
++}
++
+ static inline void ath6kl_hif_cleanup_scatter(struct ath6kl *ar)
  {
-+	u16 offset;
- 	u16 *sprom;
- 	int err = 0;
+ 	return ar->hif_ops->cleanup_scatter(ar);
+diff --git a/drivers/net/wireless/ath/ath6kl/hif.h b/drivers/net/wireless/ath/ath6kl/hif.h
+index 465876f..4c7a7d3 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif.h
++++ b/drivers/net/wireless/ath/ath6kl/hif.h
+@@ -184,7 +184,6 @@ struct hif_scatter_req {
+ };
  
-@@ -151,7 +152,12 @@ int bcma_sprom_get(struct bcma_bus *bus)
- 	if (!sprom)
- 		return -ENOMEM;
+ struct hif_dev_scat_sup_info {
+-	int (*rw_scat_func) (struct ath6kl *ar, struct hif_scatter_req *);
+ 	int max_scat_entries;
+ 	int max_xfer_szper_scatreq;
+ };
+@@ -208,6 +207,8 @@ struct ath6kl_hif_ops {
+ 				struct hif_scatter_req *s_req);
+ 	int (*enable_scatter)(struct ath6kl *ar,
+ 			      struct hif_dev_scat_sup_info *info);
++	int (*scat_req_rw) (struct ath6kl *ar,
++			    struct hif_scatter_req *scat_req);
+ 	void (*cleanup_scatter)(struct ath6kl *ar);
+ };
  
--	bcma_sprom_read(bus, sprom);
-+	/* Most cards have SPROM moved by additional offset 0x30 (48 dwords).
-+	 * According to brcm80211 this applies to cards with PCIe rev >= 6
-+	 * TODO: understand this condition and use it */
-+	offset = (bus->chipinfo.id == 0x4331) ? BCMA_CC_SPROM :
-+		BCMA_CC_SPROM_PCIE6;
-+	bcma_sprom_read(bus, offset, sprom);
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.c b/drivers/net/wireless/ath/ath6kl/htc_hif.c
+index 1bcaaec..df904d8 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_hif.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_hif.c
+@@ -285,7 +285,10 @@ int ath6kldev_submit_scat_req(struct ath6kl_device *dev,
+ 		return status;
+ 	}
  
- 	err = bcma_sprom_valid(sprom);
- 	if (err)
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 6e7b8b5..a0f6846 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -236,7 +236,8 @@
- #define BCMA_CC_REGCTL_DATA		0x065C
- #define BCMA_CC_PLLCTL_ADDR		0x0660
- #define BCMA_CC_PLLCTL_DATA		0x0664
--#define BCMA_CC_SPROM			0x0830 /* SPROM beginning */
-+#define BCMA_CC_SPROM			0x0800 /* SPROM beginning */
-+#define BCMA_CC_SPROM_PCIE6		0x0830 /* SPROM beginning on PCIe rev >= 6 */
+-	status = dev->hif_scat_info.rw_scat_func(dev->ar, scat_req);
++	if (dev->virt_scat)
++		status =  ath6kldev_rw_scatter(dev->ar, scat_req);
++	else
++		status = ath6kl_hif_scat_req_rw(dev->ar, scat_req);
  
- /* Data for the PMU, if available.
-  * Check availability with ((struct bcma_chipcommon)->capabilities & BCMA_CC_CAP_PMU)
+ 	if (read) {
+ 		/* in sync mode, we can touch the scatter request */
+@@ -340,7 +343,6 @@ static int ath6kldev_setup_virt_scat_sup(struct ath6kl_device *dev)
+ 	if (status)
+ 		ath6kl_hif_cleanup_scatter(dev->ar);
+ 	else {
+-		dev->hif_scat_info.rw_scat_func = ath6kldev_rw_scatter;
+ 		dev->hif_scat_info.max_scat_entries =
+ 			ATH6KL_SCATTER_ENTRIES_PER_REQ;
+ 		dev->hif_scat_info.max_xfer_szper_scatreq =
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index b38732a..d217f1c 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -271,9 +271,9 @@ static int ath6kl_sdio_scat_rw(struct ath6kl_sdio *ar_sdio,
+ }
+ 
+ 
+-/* callback to issue a read-write scatter request */
++/* scatter gather read write request */
+ static int ath6kl_sdio_async_rw_scatter(struct ath6kl *ar,
+-					struct hif_scatter_req *scat_req)
++				 struct hif_scatter_req *scat_req)
+ {
+ 	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
+ 	struct hif_scatter_req_priv *req_priv = scat_req->req_priv;
+@@ -379,8 +379,6 @@ static int ath6kl_sdio_setup_scat_resource(struct ath6kl_sdio *ar_sdio,
+ 		hif_scatter_req_add(ar_sdio->ar, s_req);
+ 	}
+ 
+-	/* set scatter function pointers */
+-	pinfo->rw_scat_func = ath6kl_sdio_async_rw_scatter;
+ 	pinfo->max_scat_entries = MAX_SCATTER_ENTRIES_PER_REQ;
+ 	pinfo->max_xfer_szper_scatreq = MAX_SCATTER_REQ_TRANSFER_SIZE;
+ 
+@@ -671,6 +669,7 @@ static const struct ath6kl_hif_ops ath6kl_sdio_ops = {
+ 	.scatter_req_get = ath6kl_sdio_scatter_req_get,
+ 	.scatter_req_add = ath6kl_sdio_scatter_req_add,
+ 	.enable_scatter = ath6kl_sdio_enable_scatter,
++	.scat_req_rw = ath6kl_sdio_async_rw_scatter,
+ 	.cleanup_scatter = ath6kl_sdio_cleanup_scatter,
+ };
+ 
 -- 
-1.7.3.4
+1.7.1
 
