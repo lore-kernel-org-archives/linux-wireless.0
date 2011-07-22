@@ -1,35 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:61420 "EHLO c60.cesmail.net"
+Received: from mms2.broadcom.com ([216.31.210.18]:3354 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751431Ab1GZQIO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2011 12:08:14 -0400
-Message-ID: <4E2EE66C.8030308@gnu.org> (sfid-20110726_180817_868508_38089074)
-Date: Tue, 26 Jul 2011 12:08:12 -0400
-From: Pavel Roskin <proski@gnu.org>
+	id S1755067Ab1GVS5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 14:57:34 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Franky Lin" <frankyl@broadcom.com>, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 20/29] staging: brcm80211: remove function pointer of
+ interrupt isr in brcmfmac
+Date: Fri, 22 Jul 2011 20:57:07 +0200
+Message-ID: <1311361036-3175-21-git-send-email-arend@broadcom.com> (sfid-20110722_205812_402381_92165011)
+In-Reply-To: <1311361036-3175-1-git-send-email-arend@broadcom.com>
+References: <1311361036-3175-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 1/2] b43legacy: report core number
-References: <20110726153648.24611.49190.stgit@mj.roinet.com> <4E2EE403.5090207@lwfinger.net>
-In-Reply-To: <4E2EE403.5090207@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/26/2011 11:57 AM, Larry Finger wrote:
-> On 07/26/2011 10:36 AM, Pavel Roskin wrote:
->> Signed-off-by: Pavel Roskin<proski@gnu.org>
->> ---
->> 0 files changed, 0 insertions(+), 0 deletions(-)
->
-> Very informative diffstat! :)
+From: Franky Lin <frankyl@broadcom.com>
 
-That happens if "stg mail" is run from a directory that is not above the 
-changed files.  I'll try to get it fixed.
+The use of function pointer of bus interrupt isr is no longer needed
+in fullmac as there is only one available isr.
 
-Thanks for the quick review!
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |    5 ++---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   19 +++----------------
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |    3 ++-
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h    |   10 +++-------
+ 4 files changed, 10 insertions(+), 27 deletions(-)
 
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 3a6c015..c9893e9 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -53,10 +53,9 @@ brcmf_sdcard_iovar_op(struct brcmf_sdio_dev *sdiodev, const char *name,
+ 				    len, set);
+ }
+ 
+-int brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev,
+-			  void (*fn)(void *), void *argh)
++int brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev)
+ {
+-	return brcmf_sdioh_interrupt_register(sdiodev->sdioh, fn, argh);
++	return brcmf_sdioh_interrupt_register(sdiodev->sdioh);
+ }
+ 
+ int brcmf_sdcard_intr_dereg(struct brcmf_sdio_dev *sdiodev)
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index db43b09..1256847 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -228,19 +228,9 @@ extern int brcmf_sdioh_detach(struct sdioh_info *sd)
+ 
+ /* Configure callback to client when we receive client interrupt */
+ extern int
+-brcmf_sdioh_interrupt_register(struct sdioh_info *sd, void (*fn)(void *),
+-			       void *argh)
++brcmf_sdioh_interrupt_register(struct sdioh_info *sd)
+ {
+ 	BRCMF_TRACE(("%s: Entering\n", __func__));
+-	if (fn == NULL) {
+-		BRCMF_ERROR(("%s: interrupt handler is NULL, not registering\n",
+-			__func__));
+-		return -EINVAL;
+-	}
+-
+-	sd->intr_handler = fn;
+-	sd->intr_handler_arg = argh;
+-	sd->intr_handler_valid = true;
+ 
+ 	/* register and unmask irq */
+ 	if (gInstance->func[2]) {
+@@ -277,10 +267,6 @@ extern int brcmf_sdioh_interrupt_deregister(struct sdioh_info *sd)
+ 		sdio_release_host(gInstance->func[2]);
+ 	}
+ 
+-	sd->intr_handler_valid = false;
+-	sd->intr_handler = NULL;
+-	sd->intr_handler_arg = NULL;
+-
+ 	return 0;
+ }
+ 
+@@ -877,6 +863,7 @@ brcmf_sdioh_card_regread(struct sdioh_info *sd, int func, u32 regaddr,
+ static void brcmf_sdioh_irqhandler(struct sdio_func *func)
+ {
+ 	struct sdioh_info *sd;
++	struct brcmf_sdio_dev *sdiodev = dev_get_drvdata(&func->card->dev);
+ 
+ 	BRCMF_TRACE(("brcmf: ***IRQHandler\n"));
+ 	sd = gInstance->sd;
+@@ -884,7 +871,7 @@ static void brcmf_sdioh_irqhandler(struct sdio_func *func)
+ 	sdio_release_host(gInstance->func[0]);
+ 
+ 	sd->intrcount++;
+-	(sd->intr_handler) (sd->intr_handler_arg);
++	brcmf_sdbrcm_isr(sdiodev->bus);
+ 
+ 	sdio_claim_host(gInstance->func[0]);
+ }
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 126090b..8bea865 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -5424,6 +5424,7 @@ void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
+ 		goto fail;
+ 	}
+ 	bus->sdiodev = sdiodev;
++	sdiodev->bus = bus;
+ 	bus->bus = BRCMF_BUS;
+ 	bus->tx_seq = SDPCM_SEQUENCE_WRAP - 1;
+ 	bus->usebufpool = false;	/* Use bufpool if allocated,
+@@ -5506,7 +5507,7 @@ void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
+ 	/* Register interrupt callback, but mask it (not operational yet). */
+ 	BRCMF_INTR(("%s: disable SDIO interrupts (not interested yet)\n",
+ 		    __func__));
+-	ret = brcmf_sdcard_intr_reg(bus->sdiodev, brcmf_sdbrcm_isr, bus);
++	ret = brcmf_sdcard_intr_reg(bus->sdiodev);
+ 	if (ret != 0) {
+ 		BRCMF_ERROR(("%s: FAILED: sdcard_intr_reg returned %d\n",
+ 			     __func__, ret));
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index 4fcba2a..c5a68c0 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -124,9 +124,6 @@ struct brcmf_sdreg {
+ 
+ struct sdioh_info {
+ 	struct osl_info *osh;		/* osh handler */
+-	bool intr_handler_valid; /* client driver interrupt handler valid */
+-	void (*intr_handler)(void *);	/* registered interrupt handler */
+-	void *intr_handler_arg;	/* argument to call interrupt handler */
+ 
+ 	uint irq;		/* Client irq */
+ 	int intrcount;		/* Client interrupts */
+@@ -159,8 +156,7 @@ struct brcmf_sdio_dev {
+ 
+ /* Register/deregister device interrupt handler. */
+ extern int
+-brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev,
+-		      void (*fn)(void *), void *argh);
++brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev);
+ 
+ extern int brcmf_sdcard_intr_dereg(struct brcmf_sdio_dev *sdiodev);
+ 
+@@ -278,8 +274,7 @@ extern struct sdioh_info *brcmf_sdioh_attach(void *cfghdl);
+ extern int brcmf_sdioh_detach(struct sdioh_info *si);
+ 
+ extern int
+-brcmf_sdioh_interrupt_register(struct sdioh_info *si,
+-			       void (*sdioh_cb_fn)(void *), void *argh);
++brcmf_sdioh_interrupt_register(struct sdioh_info *si);
+ 
+ extern int brcmf_sdioh_interrupt_deregister(struct sdioh_info *si);
+ 
+@@ -328,4 +323,5 @@ extern struct brcmf_sdmmc_instance *gInstance;
+ extern void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
+ 				u32 regsva, struct brcmf_sdio_dev *sdiodev);
+ extern void brcmf_sdbrcm_disconnect(void *ptr);
++extern void brcmf_sdbrcm_isr(void *arg);
+ #endif				/* _BRCM_SDH_H_ */
 -- 
-Regards,
-Pavel Roskin
+1.7.4.1
+
+
