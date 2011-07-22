@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:48165 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758676Ab1GMKEt (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44452 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754489Ab1GVNrQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 06:04:49 -0400
-Date: Wed, 13 Jul 2011 15:34:27 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Dan Carpenter <error27@gmail.com>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <devel@linuxdriverproject.org>,
-	<gregkh@suse.de>
-Subject: Re: [PATCH 00/24] ath6kl cleaned up driver
-Message-ID: <20110713100426.GA32707@vasanth-laptop> (sfid-20110713_120453_856114_5FFA4DE2)
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6> <20110713092257.GN18655@shale.localdomain>
+	Fri, 22 Jul 2011 09:47:16 -0400
+Date: Fri, 22 Jul 2011 09:40:38 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/31] *** SUBJECT HERE ***
+Message-ID: <20110722134037.GB10938@tuxdriver.com> (sfid-20110722_154730_833386_E81C0CA2)
+References: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
+ <1311313324-6766-2-git-send-email-kvalo@qca.qualcomm.com>
+ <87tyaesvxz.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20110713092257.GN18655@shale.localdomain>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87tyaesvxz.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 13, 2011 at 12:22:57PM +0300, Dan Carpenter wrote:
-> Nice.  :)
+On Fri, Jul 22, 2011 at 08:53:12AM +0300, Kalle Valo wrote:
+> Kalle Valo <kvalo@qca.qualcomm.com> writes:
 > 
-> There are a some smatch warnings you might want to take a look at:
+> > *** BLURB HERE ***
 > 
-> drivers/net/wireless/ath/ath6kl/sdio.c +373 ath6kl_sdio_setup_scat_resource(42) warn: 's_req' was already freed.
-> drivers/net/wireless/ath/ath6kl/htc.c +2480 htc_create(74) warn: possible memory leak of 'packet'
-> drivers/net/wireless/ath/ath6kl/txrx.c +156 ath6kl_powersave_ap(76) error: we previously assumed 'conn' could be null.
->   (The line number is off on that one.  Should be +142.  Odd)
-> drivers/net/wireless/ath/ath6kl/txrx.c +758 ath6kl_alloc_amsdu_rxbuf(33) warn: can 'packet' even be NULL?
+> Note to myself: git send-email also sends emacs backup files (*~) by
+> default. Instead use vi to edit the cover letter.
 
-Thanks a lot. W'll fix them.
+Be thankful that your emacs backup didn't tell us all what you really
+think of us... :-)
 
-Vasanth
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
