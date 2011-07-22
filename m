@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:56387 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751191Ab1GVKcf (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:54611 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753052Ab1GVFn0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 06:32:35 -0400
-Received: by mail-fx0-f52.google.com with SMTP id 18so5086698fxd.11
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2011 03:32:35 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/2 3.1???] b43: bcma: drop BROKEN
-Date: Fri, 22 Jul 2011 13:11:05 +0200
-Message-Id: <1311333065-12561-2-git-send-email-zajec5@gmail.com> (sfid-20110722_123238_030389_374799D6)
-In-Reply-To: <1311333065-12561-1-git-send-email-zajec5@gmail.com>
-References: <1311333065-12561-1-git-send-email-zajec5@gmail.com>
+	Fri, 22 Jul 2011 01:43:26 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Subject: [PATCH 22/31] ath6kl: Remove unused struct ath6kl_async_reg_io_buffer
+Date: Fri, 22 Jul 2011 08:41:55 +0300
+Message-ID: <1311313324-6766-24-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110722_074331_604740_1A7CC08D)
+In-Reply-To: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We've fixed the last issue with BCMA support which caused memory
-corruption on loading and unloading b43. Support for BCMA in b43 was
-tested with 14e4:4353, 14e4:4357, 14e4:4727 and 14e4:4331. First two
-cards (BCM43224 and BCM43225) are supported.
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
-John: after fixing memory corruption we have finally stable driver for
-BCMA. It works with my BCM43224 and BCM43225 cards, all the problems
-seem to be resolved.
+ drivers/net/wireless/ath/ath6kl/htc_hif.h |    9 ---------
+ 1 files changed, 0 insertions(+), 9 deletions(-)
 
-I know it's few hours after opening merge window, but maybe you could
-make an exception for this patch and take it for 3.1?
----
- drivers/net/wireless/b43/Kconfig |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
-index d2293dc..3cab843 100644
---- a/drivers/net/wireless/b43/Kconfig
-+++ b/drivers/net/wireless/b43/Kconfig
-@@ -28,7 +28,7 @@ config B43
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.h b/drivers/net/wireless/ath/ath6kl/htc_hif.h
+index 498701f..171ad63 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_hif.h
++++ b/drivers/net/wireless/ath/ath6kl/htc_hif.h
+@@ -63,15 +63,6 @@ struct ath6kl_irq_enable_reg {
+ 	u8 cntr_int_status_en;
+ } __packed;
  
- config B43_BCMA
- 	bool "Support for BCMA bus"
--	depends on B43 && BCMA && BROKEN
-+	depends on B43 && BCMA
- 	default y
- 
- config B43_SSB
+-/* buffers for ASYNC I/O */
+-struct ath6kl_async_reg_io_buffer {
+-	struct htc_packet packet;
+-	u8 pad1[A_CACHE_LINE_PAD];
+-	/* cache-line safe with pads around */
+-	u8 buf[ATH6KL_REG_IO_BUFFER_SIZE];
+-	u8 pad2[A_CACHE_LINE_PAD];
+-};
+-
+ struct ath6kl_device {
+ 	spinlock_t lock;
+ 	u8 pad1[A_CACHE_LINE_PAD];
 -- 
-1.7.3.4
+1.7.1
 
