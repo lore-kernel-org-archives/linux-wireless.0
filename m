@@ -1,86 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:52377 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755321Ab1G1S5D (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2011 14:57:03 -0400
-Received: by vxh35 with SMTP id 35so2133485vxh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2011 11:57:01 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:3353 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755071Ab1GVS5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 14:57:34 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 07/29] staging: brcm80211: remove
+ wl_alloc_dma_resources() function
+Date: Fri, 22 Jul 2011 20:56:54 +0200
+Message-ID: <1311361036-3175-8-git-send-email-arend@broadcom.com> (sfid-20110722_205845_279447_BFAE80B6)
+In-Reply-To: <1311361036-3175-1-git-send-email-arend@broadcom.com>
+References: <1311361036-3175-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <201107281849.29700.chunkeey@googlemail.com>
-References: <CAJ8GFOiTwtS7Ddjo8GR3uJMFtkBY+cFuNo3d4mX_4EwOLN9PxQ@mail.gmail.com>
-	<201107232235.16710.chunkeey@googlemail.com>
-	<CAJ8GFOg4FL2vkF5q2Hc1GZyTk0+cfX4nnEOovFcvXiL0nZLO_w@mail.gmail.com>
-	<201107281849.29700.chunkeey@googlemail.com>
-Date: Thu, 28 Jul 2011 13:57:01 -0500
-Message-ID: <CAJ8GFOhQySNW+hL-NHR+TEgX+tzYOhP2G3NmfTv0bGt6fDVn4Q@mail.gmail.com> (sfid-20110728_205711_752691_B475A2B4)
-Subject: Re: carl9170: Beacons at lower Tx power than data frames?
-From: Harshal Chhaya <harshal@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 28, 2011 at 11:49 AM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> On Thursday, July 28, 2011 06:18:09 PM Harshal Chhaya wrote:
->> Sujith, Christian,
->>
->> On the wiki page for carl9170, the first item in the "not working yet" list is:
->> * Power Save Mode, It's implemented but buggy
->>
->> Is this still the case?
->>
->> I am seeing clients disconnect after a few seconds when I enable power
->> saving on the clients. I can send more details if needed.
-> Oh no, unless of course your failing clients are also running carl9170.
-> Take a look at 802.11-2007 11.2 for an explantation. APs usually don't
-> do any PSM.
+The function wl_alloc_dma_resources() does not provide any value
+for the brcmsmac driver as it only returns true. It has been
+removed from the driver.
 
-Sorry - looks like I misread the statement.  I didn't realize it
-applied only for STA mode.
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.c |    8 --------
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.h |    1 -
+ drivers/staging/brcm80211/brcmsmac/main.c        |    6 ------
+ 3 files changed, 0 insertions(+), 15 deletions(-)
 
-To clarify, my clients are not running carl9170 - only my AP is.
+diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
+index 6439fd9..a708306 100644
+--- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
+@@ -1443,14 +1443,6 @@ void brcms_intrson(struct brcms_info *wl)
+ 	INT_UNLOCK(wl, flags);
+ }
+ 
+-/*
+- * precondition: perimeter lock has been acquired
+- */
+-bool wl_alloc_dma_resources(struct brcms_info *wl, uint addrwidth)
+-{
+-	return true;
+-}
+-
+ u32 brcms_intrsoff(struct brcms_info *wl)
+ {
+ 	unsigned long flags;
+diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.h b/drivers/staging/brcm80211/brcmsmac/mac80211_if.h
+index 0d91366..01fce54 100644
+--- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.h
++++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.h
+@@ -87,7 +87,6 @@ extern int brcms_up(struct brcms_info *wl);
+ extern void brcms_down(struct brcms_info *wl);
+ extern void brcms_txflowcontrol(struct brcms_info *wl, struct brcms_if *wlif,
+ 				bool state, int prio);
+-extern bool wl_alloc_dma_resources(struct brcms_info *wl, uint dmaddrwidth);
+ extern bool brcms_rfkill_set_hw_state(struct brcms_info *wl);
+ 
+ /* timer functions */
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 0e6b9ca..847e1ab 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -870,12 +870,6 @@ static bool brcms_b_attach_dmapio(struct brcms_c_info *wlc, uint j, bool wme)
+ 		addrwidth =
+ 		    dma_addrwidth(wlc_hw->sih, DMAREG(wlc_hw, DMA_TX, 0));
+ 
+-		if (!wl_alloc_dma_resources(wlc_hw->wlc->wl, addrwidth)) {
+-			wiphy_err(wiphy, "wl%d: wlc_attach: alloc_dma_"
+-				  "resources failed\n", unit);
+-			return false;
+-		}
+-
+ 		/*
+ 		 * FIFO 0
+ 		 * TX: TX_AC_BK_FIFO (TX AC Background data packets)
+-- 
+1.7.4.1
 
-But I am seeing a definite problem with network stability when I
-enable power saving on my clients. The clients work as expected with
-another off-the-shelf AP.
 
-Could you tell me how to enable debug output in carl9170? I would like
-to better understand what's going on in the carl9170 driver/firmware
-when I see these disconnects.
-
-I found the 'ath_debug_level' enum in ath.h but don't know how to use
-this with carl9170.
-
-
->> >> Here is what I have tried so far:
->> >>
->> >> 30 802.11g clients
->> >>
->> >> open mode + power save - no problems, can send data to all 30 for hrs
->> >> wpa2 + disable power save - no problems, can send data to all 30 for hrs
->> >> wpa2 + enable power save - clients connect but then randomly
->> >> disconnect every few seconds.
->> > Is this with or without the hardware crypto enabled? Usually it's enabled by
->> > default. But in your case I would give it a try to go without one. Just load
->> > the module with:
->> >
->> > nohwcrypt=1
->> >
->> > this will help to rule out any hw limitations in this regard.
->>
->> However - I am curious about the limit of 32. The chip itself supports
->> keys for up to 64 users (i.e. a total of 128 keys). I didn't see any
->> obvious pieces of the carl9170 code that limited this number to 32.
->
-> well, the second "user" is currently only used by the tkip mic. If you
-> are only using ccmp you may be able to utilize the second slot as well.
-> However this requires a more sophisticated key-management in the driver.
-
-All of my clients use CCMP. Which file/function do I look at to see
-what it would take to use all 64 key entries for CCMP?
-
-Thanks,
-- Harshal
