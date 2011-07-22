@@ -1,67 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45441 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35442 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751252Ab1GESQw (ORCPT
+	with ESMTP id S932125Ab1GVUcj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 14:16:52 -0400
-Date: Tue, 5 Jul 2011 14:08:32 -0400
+	Fri, 22 Jul 2011 16:32:39 -0400
+Date: Fri, 22 Jul 2011 16:16:37 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Jean Delvare <khali@linux-fr.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ipw2100: Fix command list for debugging
-Message-ID: <20110705180832.GA7540@tuxdriver.com> (sfid-20110705_201707_924010_8F29E1E8)
-References: <20110704145346.384a462a@endymion.delvare>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	ralf@linux-mips.org, linux-wireless@vger.kernel.org,
+	linux-mips@linux-mips.org, jonas.gorski@gmail.com, mb@bu3sch.de,
+	george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
+	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com
+Subject: Re: [PATCH v2 00/11] bcma: add support for embedded devices like
+ bcm4716
+Message-ID: <20110722201637.GC10938@tuxdriver.com> (sfid-20110722_223244_032020_35B38A93)
+References: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
+ <CACna6ryjYGuLc5c88eke=gjgwQyVD+A9afM6zCRhqV1THHgWvA@mail.gmail.com>
+ <4E2933A0.40200@hauke-m.de>
+ <20110722133925.GA10938@tuxdriver.com>
+ <4E299189.7080700@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110704145346.384a462a@endymion.delvare>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4E299189.7080700@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 04, 2011 at 02:53:46PM +0200, Jean Delvare wrote:
-> A missing comma in the array causes an off-by-one for later commands.
+On Fri, Jul 22, 2011 at 05:04:41PM +0200, Hauke Mehrtens wrote:
+> On 07/22/2011 03:39 PM, John W. Linville wrote:
+> > On Fri, Jul 22, 2011 at 10:24:00AM +0200, Hauke Mehrtens wrote:
+> >> On 07/22/2011 12:30 AM, Rafał Miłecki wrote:
+> >>> 2011/7/16 Hauke Mehrtens <hauke@hauke-m.de>:
+> > 
+> >>>> @Ralf: Could you please merger this into the mips tree so that it will be in linux-3.1.
+> >>>
+> >>> ML for bcma is linux-wireless. Should we pass that patches "via" Ralf
+> >>> or John? Using linux-wireless (and John's tree) makes more sense to
+> >>> me, as we will work on the same tree and will get less merge
+> >>> conflicts. However don't take me as Linux development style guru, just
+> >>> my POV.
+> > 
+> >> I talked about this with Florian Fainelli and he said that the patches
+> >> should rather pass Ralf then John, but merging would be easier when they
+> >> are passing John. I do not have a problem with both solutions and
+> >> rebasing it to an other tree is no problem for me.
+> >> John and Ralf, who wants to take these patches? ;-)
+> > 
+> > I don't really care -- I figured Ralf was taking them due to the MIPS arch bits.
+> > 
+> > John
 > 
-> Signed-off-by: Jean Delvare <khali@linux-fr.org>
-> Cc: "John W. Linville" <linville@tuxdriver.com>
-> ---
-> Note: I don't have the documentation and I don't have the hardware, so
-> an expert should double-check this one.
+> Hi John,
 > 
->  drivers/net/wireless/ipw2x00/ipw2100.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+> yes because of the MIPS arch bits it should go through Ralf, but there
+> are many changes for bcma in wireless-testing and adding my changes to
+> mips tree will cause some problems when wireless-testing and mips are
+> merged together by Linus.
 > 
-> --- linux-3.0-rc5.orig/drivers/net/wireless/ipw2x00/ipw2100.c	2011-05-20 10:42:41.000000000 +0200
-> +++ linux-3.0-rc5/drivers/net/wireless/ipw2x00/ipw2100.c	2011-07-04 14:44:22.000000000 +0200
-> @@ -287,7 +287,8 @@ static const char *command_types[] = {
->  	"unused",		/* HOST_INTERRUPT_COALESCING */
->  	"undefined",
->  	"CARD_DISABLE_PHY_OFF",
-> -	"MSDU_TX_RATES" "undefined",
-> +	"MSDU_TX_RATES",
-> +	"undefined",
->  	"undefined",
->  	"SET_STATION_STAT_BITS",
->  	"CLEAR_STATIONS_STAT_BITS",
+> Hauke
 
-This code dates from 2005:
-
-commit ee8e365aa6395e721399127ccf3d28d269136f0e
-Author: James Ketrenos <jketreno@linux.intel.com>
-Date:   Wed Sep 14 09:47:29 2005 -0500
-
-    Ran scripts/Lindent on drivers/net/wireless/ipw2{1,2}00.{c,h}
-    
-    No other changes.
-    
-    Signed-off-by: James Ketrenos <jketreno@linux.intel.com>
-
-Prior to that, those two strings were on two different lines but with
-no comma betwen them -- so effectively the same as now.  Changing it
-as you suggest would change the offsets in the array of the following
-string pointers, which I suspect will break the debugging code that
-uses it.
-
-I would rather not take this change.  OTOH, perhaps you could submit a
-patch that simply remove the second quoted string from the single line?
+I'm happy to take them if Ralf agrees.  You'll need to repost them
+(or at least send them to me again).
 
 John
 -- 
