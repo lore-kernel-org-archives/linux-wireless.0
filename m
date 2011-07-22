@@ -1,87 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:56206 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083Ab1GZHbH (ORCPT
+Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:52307 "HELO
+	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751647Ab1GVQER (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2011 03:31:07 -0400
-Date: Tue, 26 Jul 2011 13:01:15 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	<ath9k-devel@venema.h4ckr.net>, <camilo@mesias.co.uk>,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	Tony Houghton <h@realh.co.uk>,
-	Adrian Chadd <adrian@freebsd.org>
-Subject: Re: [RFC/RFT 6/6] ath9k: always initialize hw registers related to
- PCIe PM
-Message-ID: <20110726073113.GA3335@vmraj-lnx.users.atheros.com> (sfid-20110726_093112_622638_F308D069)
-References: <1311341512-2882-1-git-send-email-sgruszka@redhat.com>
- <1311341512-2882-7-git-send-email-sgruszka@redhat.com>
- <20110723051129.GC828@vmraj-lnx.users.atheros.com>
- <20110725092929.GB2608@redhat.com>
- <20110725140152.GD2608@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20110725140152.GD2608@redhat.com>
+	Fri, 22 Jul 2011 12:04:17 -0400
+Date: Fri, 22 Jul 2011 09:04:14 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: Stephen Rothwell <sfr@canb.auug.org.au>, zajec5@gmail.com,
+	linux-wireless@vger.kernel.org
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next: Tree for July 22 (bcma)
+Message-Id: <20110722090414.4e3d80a5.rdunlap@xenotime.net> (sfid-20110722_180434_125844_15ECEEC4)
+In-Reply-To: <20110722164237.2b3f6cbdedafa9e1d3f70867@canb.auug.org.au>
+References: <20110722164237.2b3f6cbdedafa9e1d3f70867@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 25, 2011 at 04:01:52PM +0200, Stanislaw Gruszka wrote:
-> On Mon, Jul 25, 2011 at 11:29:30AM +0200, Stanislaw Gruszka wrote:
-> > On Sat, Jul 23, 2011 at 10:41:30AM +0530, Rajkumar Manoharan wrote:
-> > > > +	/* initalize PCIe PM registers if device introduce itself as PCIe */
-> > > > +	if (ah->is_pciexpress)
-> > > > +		ath9k_hw_ops(ah)->config_pci_powersave(ah, false);
-> > > > +
-> > > Use ath9k_hw_configpcipowersave wrapper instead.
-> > I changed wrapper to check ah->aspm_enabled, so if I would use it here
-> > it will not setup registers. I think I should comment that. 
-> >
-Yeah. I got it. I think ah->aspm_enabled alone is sufficient in the wrapper
-function. 
-> > > And ensure that there is no
-> > > sideeffect by changing SERDES config from __ath9k_hw_init to pci_probe.
-> > Hmm, not sure if I understand what I have to do :-(
-> > 
-> > We have something like that:
-> > 
-> > ath_pci_probe
-> >   ath9k_init_device
-> >     ath9k_init_softc
-> >       ath9k_hw_init
-> > 	__ath9k_hw_init
-> >             ath9k_hw_configpcipowersave();
-> > 
-> > I changed it this way:
-> > 
-> > ath_pci_probe
-> >   ath9k_init_device
-> >     ath9k_init_softc
-> >       ath9k_hw_init
-> > 	__ath9k_hw_init
-> > 
-> >       ath9k_init_queues
-> >       ath9k_init_btcoex
-> >    some other inits
-> >      
-> >   ath9k_hw_configpcipowersave();
-> > 
-> > Can this cause some side effects?
-> 
-> Actually this movement is not necessary, in the way things I did
-> currently. Is enough to replace ath9k_hw_configpcipowersave() by
-> ath9k_hw_ops(ah)->config_pci_powersave() in __ath9k_hw_init().
-> In such case SERDES and PCIe PM registers will be always initialized.
-> 
-> However movement would be needed if we want to initialize registers,
-> only when ASPM is enabled, hence we first need to discovery that,
-> and then eventually call ath9k_hw_configpcipowersave().
-> 
-> Which option is correct: always initialize SERDES and PCIe PM registers
-> or do it only if ASPM is enabled?
->
-Good point. Let them configured on ASPM case. please cross check with other
-embed platform.
+On Fri, 22 Jul 2011 16:42:37 +1000 Stephen Rothwell wrote:
 
---
-Rajkumar
+> Hi all,
+
+(similar to a report from July 16:)
+
+linux-next-20110722/drivers/bcma/driver_pci.c:175: error: 'SSB_PCICORE_BFL_NOPCI' undeclared (first use in this function)
+
+This build error happens whether CONFIG_PCI is enabled or disabled (unlike
+what I stated on July 16).
+
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
