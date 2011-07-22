@@ -1,73 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:34564 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751871Ab1GSQBo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 12:01:44 -0400
-Message-ID: <4E25AA5A.6070709@gmail.com> (sfid-20110719_180212_400710_D0456BB2)
-Date: Tue, 19 Jul 2011 09:01:30 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+Received: from mms2.broadcom.com ([216.31.210.18]:3351 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755070Ab1GVS5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 14:57:34 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Franky Lin" <frankyl@broadcom.com>, devel@linuxdriverproject.org,
 	linux-wireless@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: ath: Unable to reset channel (2412 MHz), reset status -5
-References: <4E252076.1050309@gmail.com>	<CAD2nsn12vOXv-msWR+GF7edz3Q26P-pb4H-SO4rf2RHjC7mG+w@mail.gmail.com>	<4E2525BA.4090902@gmail.com>	<CAD2nsn3ifSMa_eFr2vQ0VVF9Ga-0VD3YB_beb28r+eoAHKv4kQ@mail.gmail.com>	<4E25A1E3.9080707@gmail.com> <CAD2nsn1xEB-e33_wrGqLETZ4MwFy12gtyawtg5XHLH0=-9vs2w@mail.gmail.com>
-In-Reply-To: <CAD2nsn1xEB-e33_wrGqLETZ4MwFy12gtyawtg5XHLH0=-9vs2w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 18/29] staging: brcm80211: remove dead code from
+ brcmfmac
+Date: Fri, 22 Jul 2011 20:57:05 +0200
+Message-ID: <1311361036-3175-19-git-send-email-arend@broadcom.com> (sfid-20110722_205827_304202_BA205EB4)
+In-Reply-To: <1311361036-3175-1-git-send-email-arend@broadcom.com>
+References: <1311361036-3175-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/19/2011 08:49 AM, Mohammed Shafi wrote:
-> On Tue, Jul 19, 2011 at 8:55 PM, Justin P. Mattock
-> <justinmattock@gmail.com>  wrote:
->> On 07/18/2011 11:46 PM, Mohammed Shafi wrote:
->>>
->>> On Tue, Jul 19, 2011 at 12:05 PM, Justin P. Mattock
->>> <justinmattock@gmail.com>    wrote:
->>>>
->>>> On 07/18/2011 11:25 PM, Mohammed Shafi wrote:
->>>>>
->>>>> On Tue, Jul 19, 2011 at 11:43 AM, Justin P. Mattock
->>>>> <justinmattock@gmail.com>      wrote:
->>>>>>
->>>>>> seems with the latest Mainline I am getting the ath9k carpping out
->>>>>> after
->>>>>> a
->>>>>> while of streaming(dmesg below)..:
->>>>>> http://fpaste.org/D7wM/
->>>>>>
->>>>>> will try a bisect if I have the time..
->>>>>
->>>>> I will try to recreate here with 3.0.0-rc7-wl, we can get more
->>>>> information by ath9k debug=0xffffffff.
->>>>> thanks.
->>>>>
->>>>
->>>> cool!
->>>> seems to fire off randomly over here.
->>>
->>> I have got AR5416, will try with that.
->>>
->>
->> I can try the bisect, but might take a while, since external
->> activities(job). Seems this is just starting i.g. with
->> 3.0.0-rc1 I never saw this, but with 3.0.0-rc7-00125-gf560f66
->> its making noise.
->
-> I am unable to get this problem in my AR5416 :( will also try
-> tomorrow. I am using the card for browsing etc.
-> recently there were patches for hardware code changes.
-> just a guess, please check does this patch helps(or is it already
-> there). i think this will be called via
-> ath_set_channel->ath9k_hw_reset->ath9k_hw_init_bb and may be
-> https://patchwork.kernel.org/patch/957902/
+From: Franky Lin <frankyl@broadcom.com>
 
-I am not seeing this in: ar5008_hw_init_bb
-will apply this to the current Mainline when I get the chance and run 
-the system to see if I get this firing off.
-(as for what I have, and was doing:(OS fedora 15)simply streaming radio 
-with clients running in the background twitter, facebook, thunderbird
+brcmf_sdcrad_cfg_read_word and brcmf_sdcard_cfg_write_word are
+not used by anyone.
 
-Justin P. Mattock
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c    |   35 ------------------------
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h |    9 ------
+ 2 files changed, 0 insertions(+), 44 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 31e6728..6cabda5 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -120,41 +120,6 @@ brcmf_sdcard_cfg_write(struct brcmf_sdio_dev *sdiodev, uint fnc_num, u32 addr,
+ 		     __func__, fnc_num, addr, data));
+ }
+ 
+-u32 brcmf_sdcard_cfg_read_word(struct brcmf_sdio_dev *sdiodev, uint fnc_num,
+-			       u32 addr, int *err)
+-{
+-	int status;
+-	u32 data = 0;
+-
+-	status = brcmf_sdioh_request_word(sdiodev->sdioh, SDIOH_CMD_TYPE_NORMAL,
+-		SDIOH_READ, fnc_num, addr, &data, 4);
+-
+-	if (err)
+-		*err = status;
+-
+-	BRCMF_INFO(("%s:fun = %d, addr = 0x%x, u32data = 0x%x\n",
+-		     __func__, fnc_num, addr, data));
+-
+-	return data;
+-}
+-
+-void
+-brcmf_sdcard_cfg_write_word(struct brcmf_sdio_dev *sdiodev, uint fnc_num,
+-			    u32 addr, u32 data, int *err)
+-{
+-	int status;
+-
+-	status =
+-	    brcmf_sdioh_request_word(sdiodev->sdioh, SDIOH_CMD_TYPE_NORMAL,
+-			       SDIOH_WRITE, fnc_num, addr, &data, 4);
+-
+-	if (err)
+-		*err = status;
+-
+-	BRCMF_INFO(("%s:fun = %d, addr = 0x%x, u32data = 0x%x\n",
+-		     __func__, fnc_num, addr, data));
+-}
+-
+ int brcmf_sdcard_cis_read(struct brcmf_sdio_dev *sdiodev, uint func, u8 * cis,
+ 			  uint length)
+ {
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index b82a462..3c97af4 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -183,15 +183,6 @@ extern u8 brcmf_sdcard_cfg_read(struct brcmf_sdio_dev *sdiodev, uint func,
+ extern void brcmf_sdcard_cfg_write(struct brcmf_sdio_dev *sdiodev, uint func,
+ 				   u32 addr, u8 data, int *err);
+ 
+-/* Read/Write 4bytes from/to cfg space */
+-extern u32
+-brcmf_sdcard_cfg_read_word(struct brcmf_sdio_dev *sdiodev, uint fnc_num,
+-			   u32 addr, int *err);
+-
+-extern void brcmf_sdcard_cfg_write_word(struct brcmf_sdio_dev *sdiodev,
+-					uint fnc_num, u32 addr,
+-					u32 data, int *err);
+-
+ /* Read CIS content for specified function.
+  *   fn:     function whose CIS is being requested (0 is common CIS)
+  *   cis:    pointer to memory location to place results
+-- 
+1.7.4.1
+
+
