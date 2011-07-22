@@ -1,333 +1,282 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:36955 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751202Ab1GZRsA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2011 13:48:00 -0400
-Received: by iyb12 with SMTP id 12so751172iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 10:47:59 -0700 (PDT)
-Message-ID: <4E2EFDCC.3060604@lwfinger.net> (sfid-20110726_194804_044937_6678BCFC)
-Date: Tue, 26 Jul 2011 12:47:56 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] b43legacy: remove 64-bit DMA support
-References: <20110725213832.32510.3753.stgit@mj.roinet.com>
-In-Reply-To: <20110725213832.32510.3753.stgit@mj.roinet.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60032 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752984Ab1GVQub (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 12:50:31 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/5] compat-wireless: adapt some changes to atheros ethernet driver
+Date: Fri, 22 Jul 2011 18:50:13 +0200
+Message-Id: <1311353415-30952-3-git-send-email-hauke@hauke-m.de> (sfid-20110722_185034_204226_A09B44DD)
+In-Reply-To: <1311353415-30952-1-git-send-email-hauke@hauke-m.de>
+References: <1311353415-30952-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/25/2011 04:40 PM, Pavel Roskin wrote:
-> Devices supported by b43legacy don't support 64-bit DMA.
->
-> Signed-off-by: Pavel Roskin<proski@gnu.org>
-> ---
-> The patch was tested on Broadcom 4306.
->
->   drivers/net/wireless/b43legacy/dma.c |  374 ++++++----------------------------
->   drivers/net/wireless/b43legacy/dma.h |  107 ----------
->   2 files changed, 71 insertions(+), 410 deletions(-)
 
-Tested on BCM4303.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/40-netdev-hw-features.patch |  138 ++++++++++++++++++++++++++++-------
+ 1 files changed, 110 insertions(+), 28 deletions(-)
 
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+diff --git a/patches/40-netdev-hw-features.patch b/patches/40-netdev-hw-features.patch
+index 3e07c23..791db54 100644
+--- a/patches/40-netdev-hw-features.patch
++++ b/patches/40-netdev-hw-features.patch
+@@ -44,23 +44,23 @@ Date:   Thu Apr 7 07:32:18 2011 +0000
+  void atl1c_set_ethtool_ops(struct net_device *netdev)
+ --- a/drivers/net/atl1c/atl1c_main.c
+ +++ b/drivers/net/atl1c/atl1c_main.c
+-@@ -485,6 +485,7 @@ static void atl1c_set_rxbufsize(struct a
++@@ -486,6 +486,7 @@ static void atl1c_set_rxbufsize(struct a
+  		roundup(mtu + ETH_HLEN + ETH_FCS_LEN + VLAN_HLEN, 8) : AT_RX_BUF_SIZE;
+  }
+  
+ +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
+  static u32 atl1c_fix_features(struct net_device *netdev, u32 features)
+  {
+- 	if (netdev->mtu > MAX_TSO_FRAME_SIZE)
+-@@ -492,6 +493,7 @@ static u32 atl1c_fix_features(struct net
++ 	/*
++@@ -512,6 +513,7 @@ static int atl1c_set_features(struct net
+  
+- 	return features;
++ 	return 0;
+  }
+ +#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)) */
+  
+  /*
+   * atl1c_change_mtu - Change the Maximum Transfer Unit
+-@@ -519,8 +521,19 @@ static int atl1c_change_mtu(struct net_d
++@@ -539,8 +541,19 @@ static int atl1c_change_mtu(struct net_d
+  		netdev->mtu = new_mtu;
+  		adapter->hw.max_frame_size = new_mtu;
+  		atl1c_set_rxbufsize(adapter, netdev);
+@@ -80,28 +80,29 @@ Date:   Thu Apr 7 07:32:18 2011 +0000
+  		atl1c_up(adapter);
+  		clear_bit(__AT_RESETTING, &adapter->flags);
+  		if (adapter->hw.ctrl_flags & ATL1C_FPGA_VERSION) {
+-@@ -2588,7 +2601,9 @@ static const struct net_device_ops atl1c
+- 	.ndo_set_mac_address 	= atl1c_set_mac_addr,
++@@ -2606,8 +2619,10 @@ static const struct net_device_ops atl1c
++ 	.ndo_set_mac_address	= atl1c_set_mac_addr,
+  	.ndo_set_multicast_list = atl1c_set_multi,
+  	.ndo_change_mtu		= atl1c_change_mtu,
+ +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
+  	.ndo_fix_features	= atl1c_fix_features,
++ 	.ndo_set_features	= atl1c_set_features,
+ +#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)) */
+  	.ndo_do_ioctl		= atl1c_ioctl,
+  	.ndo_tx_timeout		= atl1c_tx_timeout,
+  	.ndo_get_stats		= atl1c_get_stats,
+-@@ -2609,6 +2624,7 @@ static int atl1c_init_netdev(struct net_
++@@ -2627,6 +2642,7 @@ static int atl1c_init_netdev(struct net_
+  	atl1c_set_ethtool_ops(netdev);
+  
+  	/* TODO: add when ready */
+ +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
+  	netdev->hw_features =	NETIF_F_SG	   |
+  				NETIF_F_HW_CSUM	   |
+- 				NETIF_F_HW_VLAN_TX |
+-@@ -2616,6 +2632,14 @@ static int atl1c_init_netdev(struct net_
++ 				NETIF_F_HW_VLAN_RX |
++@@ -2634,6 +2650,14 @@ static int atl1c_init_netdev(struct net_
+  				NETIF_F_TSO6;
+  	netdev->features =	netdev->hw_features |
+- 				NETIF_F_HW_VLAN_RX;
++ 				NETIF_F_HW_VLAN_TX;
+ +#else
+ +	netdev->features =	NETIF_F_SG	   |
+ +				NETIF_F_HW_CSUM	   |
+@@ -129,7 +130,23 @@ Date:   Thu Apr 7 07:32:18 2011 +0000
+  void atl1e_set_ethtool_ops(struct net_device *netdev)
+ --- a/drivers/net/atl1e/atl1e_main.c
+ +++ b/drivers/net/atl1e/atl1e_main.c
+-@@ -1928,7 +1928,11 @@ void atl1e_down(struct atl1e_adapter *ad
++@@ -374,6 +374,7 @@ static int atl1e_set_mac_addr(struct net
++ 	return 0;
++ }
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
++ static u32 atl1e_fix_features(struct net_device *netdev, u32 features)
++ {
++ 	/*
++@@ -397,6 +398,7 @@ static int atl1e_set_features(struct net
++ 
++ 	return 0;
++ }
+++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)) */
++ 
++ /*
++  * atl1e_change_mtu - Change the Maximum Transfer Unit
++@@ -1949,7 +1951,11 @@ void atl1e_down(struct atl1e_adapter *ad
+  	 * reschedule our watchdog timer */
+  	set_bit(__AT_DOWN, &adapter->flags);
+  
+@@ -141,32 +158,53 @@ Date:   Thu Apr 7 07:32:18 2011 +0000
+  
+  	/* reset MAC to disable all RX/TX */
+  	atl1e_reset_hw(&adapter->hw);
+-@@ -2220,10 +2224,17 @@ static int atl1e_init_netdev(struct net_
++@@ -2219,8 +2225,10 @@ static const struct net_device_ops atl1e
++ 	.ndo_set_multicast_list	= atl1e_set_multi,
++ 	.ndo_validate_addr	= eth_validate_addr,
++ 	.ndo_set_mac_address	= atl1e_set_mac_addr,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
++ 	.ndo_fix_features	= atl1e_fix_features,
++ 	.ndo_set_features	= atl1e_set_features,
+++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)) */
++ 	.ndo_change_mtu		= atl1e_change_mtu,
++ 	.ndo_do_ioctl		= atl1e_ioctl,
++ 	.ndo_tx_timeout		= atl1e_tx_timeout,
++@@ -2241,10 +2249,15 @@ static int atl1e_init_netdev(struct net_
+  	netdev->watchdog_timeo = AT_TX_WATCHDOG;
+  	atl1e_set_ethtool_ops(netdev);
+  
+ +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
+  	netdev->hw_features = NETIF_F_SG | NETIF_F_HW_CSUM | NETIF_F_TSO |
+- 		NETIF_F_HW_VLAN_TX;
+- 	netdev->features = netdev->hw_features |
+- 		NETIF_F_HW_VLAN_RX | NETIF_F_LLTX;
++ 			      NETIF_F_HW_VLAN_RX;
++ 	netdev->features = netdev->hw_features | NETIF_F_LLTX |
++ 			   NETIF_F_HW_VLAN_TX;
+ +#else
+-+	netdev->features = NETIF_F_SG | NETIF_F_HW_CSUM |
+-+		NETIF_F_HW_VLAN_TX | NETIF_F_HW_VLAN_RX;
+-+	netdev->features |= NETIF_F_LLTX;
+-+	netdev->features |= NETIF_F_TSO;
+++	netdev->features = NETIF_F_SG | NETIF_F_HW_CSUM | NETIF_F_TSO |
+++			   NETIF_F_HW_VLAN_RX | NETIF_F_LLTX | NETIF_F_HW_VLAN_TX;
+ +#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)) */
+  
+  	return 0;
+  }
+ --- a/drivers/net/atlx/atl1.c
+ +++ b/drivers/net/atlx/atl1.c
+-@@ -2987,10 +2987,12 @@ static int __devinit atl1_probe(struct p
++@@ -2876,8 +2876,10 @@ static const struct net_device_ops atl1_
++ 	.ndo_validate_addr	= eth_validate_addr,
++ 	.ndo_set_mac_address	= atl1_set_mac,
++ 	.ndo_change_mtu		= atl1_change_mtu,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
++ 	.ndo_fix_features	= atlx_fix_features,
++ 	.ndo_set_features	= atlx_set_features,
+++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)) */
++ 	.ndo_do_ioctl		= atlx_ioctl,
++ 	.ndo_tx_timeout		= atlx_tx_timeout,
++ #ifdef CONFIG_NET_POLL_CONTROLLER
++@@ -2987,11 +2989,13 @@ static int __devinit atl1_probe(struct p
+  	netdev->features |= NETIF_F_SG;
+  	netdev->features |= (NETIF_F_HW_VLAN_TX | NETIF_F_HW_VLAN_RX);
+  
+ +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
+- 	netdev->hw_features = NETIF_F_HW_CSUM | NETIF_F_SG | NETIF_F_TSO;
++ 	netdev->hw_features = NETIF_F_HW_CSUM | NETIF_F_SG | NETIF_F_TSO |
++ 			      NETIF_F_HW_VLAN_RX;
+  
+  	/* is this valid? see atl1_setup_mac_ctrl() */
+  	netdev->features |= NETIF_F_RXCSUM;
+@@ -174,7 +212,7 @@ Date:   Thu Apr 7 07:32:18 2011 +0000
+  
+  	/*
+  	 * patch for some L1 of old version,
+-@@ -3607,6 +3609,14 @@ static int atl1_set_pauseparam(struct ne
++@@ -3608,6 +3612,14 @@ static int atl1_set_pauseparam(struct ne
+  	return 0;
+  }
+  
+@@ -189,7 +227,7 @@ Date:   Thu Apr 7 07:32:18 2011 +0000
+  static void atl1_get_strings(struct net_device *netdev, u32 stringset,
+  	u8 *data)
+  {
+-@@ -3679,4 +3689,10 @@ static const struct ethtool_ops atl1_eth
++@@ -3680,4 +3692,10 @@ static const struct ethtool_ops atl1_eth
+  	.nway_reset		= atl1_nway_reset,
+  	.get_ethtool_stats	= atl1_get_ethtool_stats,
+  	.get_sset_count		= atl1_get_sset_count,
+@@ -202,12 +240,39 @@ Date:   Thu Apr 7 07:32:18 2011 +0000
+  };
+ --- a/drivers/net/atlx/atl2.c
+ +++ b/drivers/net/atlx/atl2.c
+-@@ -1414,8 +1414,12 @@ static int __devinit atl2_probe(struct p
++@@ -395,6 +395,7 @@ static void atl2_restore_vlan(struct atl
++ 	atl2_vlan_mode(adapter->netdev, adapter->netdev->features);
++ }
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
++ static u32 atl2_fix_features(struct net_device *netdev, u32 features)
++ {
++ 	/*
++@@ -418,6 +419,7 @@ static int atl2_set_features(struct net_
++ 
++ 	return 0;
++ }
+++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)) */
++ 
++ static void atl2_intr_rx(struct atl2_adapter *adapter)
++ {
++@@ -1333,8 +1335,10 @@ static const struct net_device_ops atl2_
++ 	.ndo_validate_addr	= eth_validate_addr,
++ 	.ndo_set_mac_address	= atl2_set_mac,
++ 	.ndo_change_mtu		= atl2_change_mtu,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
++ 	.ndo_fix_features	= atl2_fix_features,
++ 	.ndo_set_features	= atl2_set_features,
+++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)) */
++ 	.ndo_do_ioctl		= atl2_ioctl,
++ 	.ndo_tx_timeout		= atl2_tx_timeout,
++ #ifdef CONFIG_NET_POLL_CONTROLLER
++@@ -1432,8 +1436,12 @@ static int __devinit atl2_probe(struct p
+  
+  	err = -EIO;
+  
+ +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
+- 	netdev->hw_features = NETIF_F_SG;
++ 	netdev->hw_features = NETIF_F_SG | NETIF_F_HW_VLAN_RX;
+ +#endif
+ +#if defined(NETIF_F_HW_VLAN_TX) || (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
+  	netdev->features |= (NETIF_F_HW_VLAN_TX | NETIF_F_HW_VLAN_RX);
+@@ -215,7 +280,7 @@ Date:   Thu Apr 7 07:32:18 2011 +0000
+  
+  	/* Init PHY as early as possible due to power saving issue  */
+  	atl2_phy_init(&adapter->hw);
+-@@ -1842,6 +1846,13 @@ static int atl2_set_settings(struct net_
++@@ -1860,6 +1868,13 @@ static int atl2_set_settings(struct net_
+  	return 0;
+  }
+  
+@@ -229,7 +294,7 @@ Date:   Thu Apr 7 07:32:18 2011 +0000
+  static u32 atl2_get_msglevel(struct net_device *netdev)
+  {
+  	return 0;
+-@@ -2109,6 +2120,14 @@ static const struct ethtool_ops atl2_eth
++@@ -2127,6 +2142,14 @@ static const struct ethtool_ops atl2_eth
+  	.get_eeprom_len		= atl2_get_eeprom_len,
+  	.get_eeprom		= atl2_get_eeprom,
+  	.set_eeprom		= atl2_set_eeprom,
+@@ -244,3 +309,20 @@ Date:   Thu Apr 7 07:32:18 2011 +0000
+  };
+  
+  static void atl2_set_ethtool_ops(struct net_device *netdev)
++--- a/drivers/net/atlx/atlx.c
+++++ b/drivers/net/atlx/atlx.c
++@@ -246,6 +246,7 @@ static void atlx_restore_vlan(struct atl
++ 	atlx_vlan_mode(adapter->netdev, adapter->netdev->features);
++ }
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39))
++ static u32 atlx_fix_features(struct net_device *netdev, u32 features)
++ {
++ 	/*
++@@ -269,5 +270,6 @@ static int atlx_set_features(struct net_
++ 
++ 	return 0;
++ }
+++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39)) */
++ 
++ #endif /* ATLX_C */
+-- 
+1.7.4.1
 
-See some minor comments below.
-
-Larry
-
-
-> diff --git a/drivers/net/wireless/b43legacy/dma.c b/drivers/net/wireless/b43legacy/dma.c
-> index 704ee62..a23b998 100644
-> --- a/drivers/net/wireless/b43legacy/dma.c
-> +++ b/drivers/net/wireless/b43legacy/dma.c
-> @@ -42,10 +42,9 @@
->
->   /* 32bit DMA ops. */
->   static
-> -struct b43legacy_dmadesc_generic *op32_idx2desc(
-> -					struct b43legacy_dmaring *ring,
-> -					int slot,
-> -					struct b43legacy_dmadesc_meta **meta)
-> +struct b43legacy_dmadesc32 *op32_idx2desc(struct b43legacy_dmaring *ring,
-> +					  int slot,
-> +					  struct b43legacy_dmadesc_meta **meta)
->   {
->   	struct b43legacy_dmadesc32 *desc;
->
-> @@ -53,11 +52,11 @@ struct b43legacy_dmadesc_generic *op32_idx2desc(
->   	desc = ring->descbase;
->   	desc =&(desc[slot]);
->
-> -	return (struct b43legacy_dmadesc_generic *)desc;
-> +	return (struct b43legacy_dmadesc32 *)desc;
->   }
->
->   static void op32_fill_descriptor(struct b43legacy_dmaring *ring,
-> -				 struct b43legacy_dmadesc_generic *desc,
-> +				 struct b43legacy_dmadesc32 *desc,
->   				 dma_addr_t dmaaddr, u16 bufsize,
->   				 int start, int end, int irq)
->   {
-> @@ -67,7 +66,7 @@ static void op32_fill_descriptor(struct b43legacy_dmaring *ring,
->   	u32 addr;
->   	u32 addrext;
->
-> -	slot = (int)(&(desc->dma32) - descbase);
-> +	slot = (int)(desc - descbase);
->   	B43legacy_WARN_ON(!(slot>= 0&&  slot<  ring->nr_slots));
->
->   	addr = (u32)(dmaaddr&  ~SSB_DMA_TRANSLATION_MASK);
-> @@ -87,8 +86,8 @@ static void op32_fill_descriptor(struct b43legacy_dmaring *ring,
->   	ctl |= (addrext<<  B43legacy_DMA32_DCTL_ADDREXT_SHIFT)
->   	&  B43legacy_DMA32_DCTL_ADDREXT_MASK;
->
-> -	desc->dma32.control = cpu_to_le32(ctl);
-> -	desc->dma32.address = cpu_to_le32(addr);
-> +	desc->control = cpu_to_le32(ctl);
-> +	desc->address = cpu_to_le32(addr);
->   }
->
->   static void op32_poke_tx(struct b43legacy_dmaring *ring, int slot)
-> @@ -128,121 +127,6 @@ static void op32_set_current_rxslot(struct b43legacy_dmaring *ring,
->   			    (u32)(slot * sizeof(struct b43legacy_dmadesc32)));
->   }
->
-> -static const struct b43legacy_dma_ops dma32_ops = {
-> -	.idx2desc		= op32_idx2desc,
-> -	.fill_descriptor	= op32_fill_descriptor,
-> -	.poke_tx		= op32_poke_tx,
-> -	.tx_suspend		= op32_tx_suspend,
-> -	.tx_resume		= op32_tx_resume,
-> -	.get_current_rxslot	= op32_get_current_rxslot,
-> -	.set_current_rxslot	= op32_set_current_rxslot,
-> -};
-> -
-> -/* 64bit DMA ops. */
-> -static
-> -struct b43legacy_dmadesc_generic *op64_idx2desc(
-> -					struct b43legacy_dmaring *ring,
-> -					int slot,
-> -					struct b43legacy_dmadesc_meta
-> -					**meta)
-> -{
-> -	struct b43legacy_dmadesc64 *desc;
-> -
-> -	*meta =&(ring->meta[slot]);
-> -	desc = ring->descbase;
-> -	desc =&(desc[slot]);
-> -
-> -	return (struct b43legacy_dmadesc_generic *)desc;
-> -}
-> -
-> -static void op64_fill_descriptor(struct b43legacy_dmaring *ring,
-> -				 struct b43legacy_dmadesc_generic *desc,
-> -				 dma_addr_t dmaaddr, u16 bufsize,
-> -				 int start, int end, int irq)
-> -{
-> -	struct b43legacy_dmadesc64 *descbase = ring->descbase;
-> -	int slot;
-> -	u32 ctl0 = 0;
-> -	u32 ctl1 = 0;
-> -	u32 addrlo;
-> -	u32 addrhi;
-> -	u32 addrext;
-> -
-> -	slot = (int)(&(desc->dma64) - descbase);
-> -	B43legacy_WARN_ON(!(slot>= 0&&  slot<  ring->nr_slots));
-> -
-> -	addrlo = (u32)(dmaaddr&  0xFFFFFFFF);
-> -	addrhi = (((u64)dmaaddr>>  32)&  ~SSB_DMA_TRANSLATION_MASK);
-> -	addrext = (((u64)dmaaddr>>  32)&  SSB_DMA_TRANSLATION_MASK)
-> -		>>  SSB_DMA_TRANSLATION_SHIFT;
-> -	addrhi |= ring->dev->dma.translation;
-> -	if (slot == ring->nr_slots - 1)
-> -		ctl0 |= B43legacy_DMA64_DCTL0_DTABLEEND;
-> -	if (start)
-> -		ctl0 |= B43legacy_DMA64_DCTL0_FRAMESTART;
-> -	if (end)
-> -		ctl0 |= B43legacy_DMA64_DCTL0_FRAMEEND;
-> -	if (irq)
-> -		ctl0 |= B43legacy_DMA64_DCTL0_IRQ;
-> -	ctl1 |= (bufsize - ring->frameoffset)
-> -		&  B43legacy_DMA64_DCTL1_BYTECNT;
-> -	ctl1 |= (addrext<<  B43legacy_DMA64_DCTL1_ADDREXT_SHIFT)
-> -		&  B43legacy_DMA64_DCTL1_ADDREXT_MASK;
-> -
-> -	desc->dma64.control0 = cpu_to_le32(ctl0);
-> -	desc->dma64.control1 = cpu_to_le32(ctl1);
-> -	desc->dma64.address_low = cpu_to_le32(addrlo);
-> -	desc->dma64.address_high = cpu_to_le32(addrhi);
-> -}
-> -
-> -static void op64_poke_tx(struct b43legacy_dmaring *ring, int slot)
-> -{
-> -	b43legacy_dma_write(ring, B43legacy_DMA64_TXINDEX,
-> -			    (u32)(slot * sizeof(struct b43legacy_dmadesc64)));
-> -}
-> -
-> -static void op64_tx_suspend(struct b43legacy_dmaring *ring)
-> -{
-> -	b43legacy_dma_write(ring, B43legacy_DMA64_TXCTL,
-> -			    b43legacy_dma_read(ring, B43legacy_DMA64_TXCTL)
-> -			    | B43legacy_DMA64_TXSUSPEND);
-> -}
-> -
-> -static void op64_tx_resume(struct b43legacy_dmaring *ring)
-> -{
-> -	b43legacy_dma_write(ring, B43legacy_DMA64_TXCTL,
-> -			    b43legacy_dma_read(ring, B43legacy_DMA64_TXCTL)
-> -			&  ~B43legacy_DMA64_TXSUSPEND);
-> -}
-> -
-> -static int op64_get_current_rxslot(struct b43legacy_dmaring *ring)
-> -{
-> -	u32 val;
-> -
-> -	val = b43legacy_dma_read(ring, B43legacy_DMA64_RXSTATUS);
-> -	val&= B43legacy_DMA64_RXSTATDPTR;
-> -
-> -	return (val / sizeof(struct b43legacy_dmadesc64));
-> -}
-> -
-> -static void op64_set_current_rxslot(struct b43legacy_dmaring *ring,
-> -				    int slot)
-> -{
-> -	b43legacy_dma_write(ring, B43legacy_DMA64_RXINDEX,
-> -			    (u32)(slot * sizeof(struct b43legacy_dmadesc64)));
-> -}
-> -
-> -static const struct b43legacy_dma_ops dma64_ops = {
-> -	.idx2desc		= op64_idx2desc,
-> -	.fill_descriptor	= op64_fill_descriptor,
-> -	.poke_tx		= op64_poke_tx,
-> -	.tx_suspend		= op64_tx_suspend,
-> -	.tx_resume		= op64_tx_resume,
-> -	.get_current_rxslot	= op64_get_current_rxslot,
-> -	.set_current_rxslot	= op64_set_current_rxslot,
-> -};
-> -
-> -
->   static inline int free_slots(struct b43legacy_dmaring *ring)
->   {
->   	return (ring->nr_slots - ring->used_slots);
-> @@ -358,14 +242,6 @@ return 0;
->   static u16 b43legacy_dmacontroller_base(enum b43legacy_dmatype type,
->   					int controller_idx)
->   {
-> -	static const u16 map64[] = {
-> -		B43legacy_MMIO_DMA64_BASE0,
-> -		B43legacy_MMIO_DMA64_BASE1,
-> -		B43legacy_MMIO_DMA64_BASE2,
-> -		B43legacy_MMIO_DMA64_BASE3,
-> -		B43legacy_MMIO_DMA64_BASE4,
-> -		B43legacy_MMIO_DMA64_BASE5,
-> -	};
->   	static const u16 map32[] = {
->   		B43legacy_MMIO_DMA32_BASE0,
->   		B43legacy_MMIO_DMA32_BASE1,
-> @@ -375,11 +251,6 @@ static u16 b43legacy_dmacontroller_base(enum b43legacy_dmatype type,
->   		B43legacy_MMIO_DMA32_BASE5,
->   	};
->
-> -	if (type == B43legacy_DMA_64BIT) {
-> -		B43legacy_WARN_ON(!(controller_idx>= 0&&
-> -				  controller_idx<  ARRAY_SIZE(map64)));
-> -		return map64[controller_idx];
-> -	}
->   	B43legacy_WARN_ON(!(controller_idx>= 0&&
->   			controller_idx<  ARRAY_SIZE(map32)));
->   	return map32[controller_idx];
-> @@ -491,25 +362,15 @@ static int b43legacy_dmacontroller_rx_reset(struct b43legacy_wldev *dev,
->
->   	might_sleep();
->
-> -	offset = (type == B43legacy_DMA_64BIT) ?
-> -		 B43legacy_DMA64_RXCTL : B43legacy_DMA32_RXCTL;
-> +	offset = B43legacy_DMA32_RXCTL;
->   	b43legacy_write32(dev, mmio_base + offset, 0);
->   	for (i = 0; i<  10; i++) {
-> -		offset = (type == B43legacy_DMA_64BIT) ?
-> -			 B43legacy_DMA64_RXSTATUS : B43legacy_DMA32_RXSTATUS;
-> +		offset = B43legacy_DMA32_RXSTATUS;
->   		value = b43legacy_read32(dev, mmio_base + offset);
-> -		if (type == B43legacy_DMA_64BIT) {
-> -			value&= B43legacy_DMA64_RXSTAT;
-> -			if (value == B43legacy_DMA64_RXSTAT_DISABLED) {
-> -				i = -1;
-> -				break;
-> -			}
-> -		} else {
-> -			value&= B43legacy_DMA32_RXSTATE;
-> -			if (value == B43legacy_DMA32_RXSTAT_DISABLED) {
-> -				i = -1;
-> -				break;
-> -			}
-> +		value&= B43legacy_DMA32_RXSTATE;
-
-I am surprised that checkpatch doesn't see the spacing around the &= as an error.
-
-> +		if (value == B43legacy_DMA32_RXSTAT_DISABLED) {
-> +			i = -1;
-> +			break;
->   		}
->   		msleep(1);
->   	}
-> @@ -533,43 +394,24 @@ static int b43legacy_dmacontroller_tx_reset(struct b43legacy_wldev *dev,
->   	might_sleep();
->
->   	for (i = 0; i<  10; i++) {
-> -		offset = (type == B43legacy_DMA_64BIT) ?
-> -			 B43legacy_DMA64_TXSTATUS : B43legacy_DMA32_TXSTATUS;
-> +		offset = B43legacy_DMA32_TXSTATUS;
->   		value = b43legacy_read32(dev, mmio_base + offset);
-> -		if (type == B43legacy_DMA_64BIT) {
-> -			value&= B43legacy_DMA64_TXSTAT;
-> -			if (value == B43legacy_DMA64_TXSTAT_DISABLED ||
-> -			    value == B43legacy_DMA64_TXSTAT_IDLEWAIT ||
-> -			    value == B43legacy_DMA64_TXSTAT_STOPPED)
-> -				break;
-> -		} else {
-> -			value&= B43legacy_DMA32_TXSTATE;
-> -			if (value == B43legacy_DMA32_TXSTAT_DISABLED ||
-> -			    value == B43legacy_DMA32_TXSTAT_IDLEWAIT ||
-> -			    value == B43legacy_DMA32_TXSTAT_STOPPED)
-> -				break;
-> -		}
-> +		value&= B43legacy_DMA32_TXSTATE;
-
-Ditto.
-
-> +		if (value == B43legacy_DMA32_TXSTAT_DISABLED ||
-> +		    value == B43legacy_DMA32_TXSTAT_IDLEWAIT ||
-> +		    value == B43legacy_DMA32_TXSTAT_STOPPED)
-> +			break;
->   		msleep(1);
->   	}
-> -	offset = (type == B43legacy_DMA_64BIT) ? B43legacy_DMA64_TXCTL :
-> -						 B43legacy_DMA32_TXCTL;
-> +	offset = B43legacy_DMA32_TXCTL;
->   	b43legacy_write32(dev, mmio_base + offset, 0);
->   	for (i = 0; i<  10; i++) {
-> -		offset = (type == B43legacy_DMA_64BIT) ?
-> -			 B43legacy_DMA64_TXSTATUS : B43legacy_DMA32_TXSTATUS;
-> +		offset = B43legacy_DMA32_TXSTATUS;
->   		value = b43legacy_read32(dev, mmio_base + offset);
-> -		if (type == B43legacy_DMA_64BIT) {
-> -			value&= B43legacy_DMA64_TXSTAT;
-> -			if (value == B43legacy_DMA64_TXSTAT_DISABLED) {
-> -				i = -1;
-> -				break;
-> -			}
-> -		} else {
-> -			value&= B43legacy_DMA32_TXSTATE;
-> -			if (value == B43legacy_DMA32_TXSTAT_DISABLED) {
-> -				i = -1;
-> -				break;
-> -			}
-> +		value&= B43legacy_DMA32_TXSTATE;
-
-Ditto.
