@@ -1,56 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:58653 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752526Ab1GXNSr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jul 2011 09:18:47 -0400
-Received: by ywf7 with SMTP id 7so2253067ywf.13
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jul 2011 06:18:46 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [RFC 2/2] mac80211: adding 'scan_cancel' command.
-Date: Sun, 24 Jul 2011 16:10:38 +0300
-Message-Id: <1311513038-5669-2-git-send-email-VictorG@ti.com> (sfid-20110724_151851_517107_B8BF035E)
-In-Reply-To: <1311513038-5669-1-git-send-email-VictorG@ti.com>
-References: <1311513038-5669-1-git-send-email-VictorG@ti.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:3355 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755062Ab1GVS5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 14:57:34 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Roland Vossen" <rvossen@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 25/29] staging: brcm80211: removed
+ brcms_c_module_unregister() call in ampdu.c
+Date: Fri, 22 Jul 2011 20:57:12 +0200
+Message-ID: <1311361036-3175-26-git-send-email-arend@broadcom.com> (sfid-20110722_205757_746791_6243C9C3)
+In-Reply-To: <1311361036-3175-1-git-send-email-arend@broadcom.com>
+References: <1311361036-3175-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implementing the scan_cancel operation in the mac80211.
-Mostly from an energy consumption and cpu load
-perspective, it can be useful to stop a scan earlier.
+From: Roland Vossen <rvossen@broadcom.com>
 
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+The AMPDU module was never registered, so it does not have to be unregistered.
+
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/mac80211/cfg.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/ampdu.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 295ab74..bd4096b 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1382,6 +1382,13 @@ ieee80211_sched_scan_stop(struct wiphy *wiphy, struct net_device *dev)
- 	return ieee80211_request_sched_scan_stop(sdata);
+diff --git a/drivers/staging/brcm80211/brcmsmac/ampdu.c b/drivers/staging/brcm80211/brcmsmac/ampdu.c
+index 64bbc24..3c0fa13 100644
+--- a/drivers/staging/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/staging/brcm80211/brcmsmac/ampdu.c
+@@ -243,7 +243,6 @@ void brcms_c_ampdu_detach(struct ampdu_info *ampdu)
+ 	for (i = 0; i < AMPDU_INI_FREE; i++)
+ 		kfree(ampdu->ini_free[i]);
+ 
+-	brcms_c_module_unregister(ampdu->wlc->pub, "ampdu", ampdu);
+ 	kfree(ampdu);
  }
  
-+static void ieee80211_scan_cancel_req(struct wiphy *wiphy,
-+					struct net_device *dev)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	ieee80211_scan_cancel(sdata->local);
-+}
-+
- static int ieee80211_auth(struct wiphy *wiphy, struct net_device *dev,
- 			  struct cfg80211_auth_request *req)
- {
-@@ -2151,6 +2158,7 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.suspend = ieee80211_suspend,
- 	.resume = ieee80211_resume,
- 	.scan = ieee80211_scan,
-+	.scan_cancel = ieee80211_scan_cancel_req,
- 	.sched_scan_start = ieee80211_sched_scan_start,
- 	.sched_scan_stop = ieee80211_sched_scan_stop,
- 	.auth = ieee80211_auth,
 -- 
-1.7.0.4
+1.7.4.1
+
 
