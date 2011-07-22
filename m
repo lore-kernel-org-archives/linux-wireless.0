@@ -1,207 +1,292 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40870 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752930Ab1GEOi7 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:20650 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753282Ab1GVFmy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 10:38:59 -0400
-Message-Id: <20110705143810.683109320@sipsolutions.net> (sfid-20110705_163904_493093_A923BF22)
-Date: Tue, 05 Jul 2011 16:35:41 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] mac80211: support GTK rekey offload
-References: <20110705143538.696899280@sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 22 Jul 2011 01:42:54 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Subject: [PATCH 10/31] ath6kl: Merge scatter gather setup functions for two method
+Date: Fri, 22 Jul 2011 08:41:43 +0300
+Message-ID: <1311313324-6766-12-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110722_074302_931375_1297CB16)
+In-Reply-To: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-This adds the necessary mac80211 APIs to support
-GTK rekey offload, mirroring the functionality
-from cfg80211.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- include/net/mac80211.h      |   20 +++++++++++++++++
- net/mac80211/cfg.c          |   16 ++++++++++++++
- net/mac80211/driver-ops.h   |   10 ++++++++
- net/mac80211/driver-trace.h |   49 ++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/key.c          |   12 ++++++++++
- 5 files changed, 107 insertions(+)
+ drivers/net/wireless/ath/ath6kl/hif.h     |    1 +
+ drivers/net/wireless/ath/ath6kl/htc_hif.c |   77 ++---------------------------
+ drivers/net/wireless/ath/ath6kl/htc_hif.h |    1 -
+ drivers/net/wireless/ath/ath6kl/sdio.c    |   75 ++++++++++++++++++++++------
+ 4 files changed, 63 insertions(+), 91 deletions(-)
 
---- a/include/net/mac80211.h	2011-07-02 00:08:13.000000000 +0200
-+++ b/include/net/mac80211.h	2011-07-02 00:12:31.000000000 +0200
-@@ -1700,6 +1700,12 @@ enum ieee80211_ampdu_mlme_action {
-  * 	which set IEEE80211_KEY_FLAG_TKIP_REQ_RX_P1_KEY.
-  *	The callback must be atomic.
-  *
-+ * @set_rekey_data: If the device supports GTK rekeying, for example while the
-+ *	host is suspended, it can assign this callback to retrieve the data
-+ *	necessary to do GTK rekeying, this is the KEK, KCK and replay counter.
-+ *	After rekeying was done it should (for example during resume) notify
-+ *	userspace of the new replay counter using ieee80211_gtk_rekey_notify().
-+ *
-  * @hw_scan: Ask the hardware to service the scan request, no need to start
-  *	the scan state machine in stack. The scan must honour the channel
-  *	configuration done by the regulatory agent in the wiphy's
-@@ -1912,6 +1918,9 @@ struct ieee80211_ops {
- 				struct ieee80211_key_conf *conf,
- 				struct ieee80211_sta *sta,
- 				u32 iv32, u16 *phase1key);
-+	void (*set_rekey_data)(struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif,
-+			       struct cfg80211_gtk_rekey_data *data);
- 	int (*hw_scan)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		       struct cfg80211_scan_request *req);
- 	void (*cancel_hw_scan)(struct ieee80211_hw *hw,
-@@ -2585,6 +2594,17 @@ ieee80211_get_buffered_bc(struct ieee802
- void ieee80211_get_tkip_key(struct ieee80211_key_conf *keyconf,
- 				struct sk_buff *skb,
- 				enum ieee80211_tkip_key_type type, u8 *key);
-+
-+/**
-+ * ieee80211_gtk_rekey_notify - notify userspace supplicant of rekeying
-+ * @vif: virtual interface the rekeying was done on
-+ * @bssid: The BSSID of the AP, for checking association
-+ * @replay_ctr: the new replay counter after GTK rekeying
-+ * @gfp: allocation flags
-+ */
-+void ieee80211_gtk_rekey_notify(struct ieee80211_vif *vif, const u8 *bssid,
-+				const u8 *replay_ctr, gfp_t gfp);
-+
- /**
-  * ieee80211_wake_queue - wake specific queue
-  * @hw: pointer as obtained from ieee80211_alloc_hw().
---- a/net/mac80211/cfg.c	2011-07-02 00:00:35.000000000 +0200
-+++ b/net/mac80211/cfg.c	2011-07-02 00:12:31.000000000 +0200
-@@ -2101,6 +2101,21 @@ static void ieee80211_get_ringparam(stru
- 	drv_get_ringparam(local, tx, tx_max, rx, rx_max);
- }
- 
-+static int ieee80211_set_rekey_data(struct wiphy *wiphy,
-+				    struct net_device *dev,
-+				    struct cfg80211_gtk_rekey_data *data)
-+{
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	if (!local->ops->set_rekey_data)
-+		return -EOPNOTSUPP;
-+
-+	drv_set_rekey_data(local, sdata, data);
-+
-+	return 0;
-+}
-+
- struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -2163,4 +2178,5 @@ struct cfg80211_ops mac80211_config_ops
- 	.get_antenna = ieee80211_get_antenna,
- 	.set_ringparam = ieee80211_set_ringparam,
- 	.get_ringparam = ieee80211_get_ringparam,
-+	.set_rekey_data = ieee80211_set_rekey_data,
+diff --git a/drivers/net/wireless/ath/ath6kl/hif.h b/drivers/net/wireless/ath/ath6kl/hif.h
+index 73340f2..6e0ec4a 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif.h
++++ b/drivers/net/wireless/ath/ath6kl/hif.h
+@@ -185,6 +185,7 @@ struct hif_scatter_req {
+ struct hif_dev_scat_sup_info {
+ 	int max_scat_entries;
+ 	int max_xfer_szper_scatreq;
++	bool virt_scat;
  };
---- a/net/mac80211/driver-trace.h	2011-07-02 00:00:35.000000000 +0200
-+++ b/net/mac80211/driver-trace.h	2011-07-02 00:12:31.000000000 +0200
-@@ -1024,6 +1024,34 @@ TRACE_EVENT(drv_set_bitrate_mask,
- 	)
- );
  
-+TRACE_EVENT(drv_set_rekey_data,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 struct cfg80211_gtk_rekey_data *data),
-+
-+	TP_ARGS(local, sdata, data),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+		__array(u8, kek, NL80211_KEK_LEN)
-+		__array(u8, kck, NL80211_KCK_LEN)
-+		__array(u8, replay_ctr, NL80211_REPLAY_CTR_LEN)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+		memcpy(__entry->kek, data->kek, NL80211_KEK_LEN);
-+		memcpy(__entry->kck, data->kck, NL80211_KCK_LEN);
-+		memcpy(__entry->replay_ctr, data->replay_ctr,
-+		       NL80211_REPLAY_CTR_LEN);
-+	),
-+
-+	TP_printk(LOCAL_PR_FMT VIF_PR_FMT,
-+		  LOCAL_PR_ARG, VIF_PR_ARG)
-+);
-+
- /*
-  * Tracing for API calls that drivers call.
-  */
-@@ -1293,6 +1321,27 @@ DEFINE_EVENT(local_only_evt, api_remain_
- 	TP_ARGS(local)
- );
+ struct ath6kl_hif_ops {
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.c b/drivers/net/wireless/ath/ath6kl/htc_hif.c
+index 40853cb..33887cc 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_hif.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_hif.c
+@@ -273,7 +273,7 @@ int ath6kldev_submit_scat_req(struct ath6kl_device *dev,
+ 		   scat_req->addr, !read ? "async" : "sync",
+ 		   (read) ? "rd" : "wr");
  
-+TRACE_EVENT(api_gtk_rekey_notify,
-+	TP_PROTO(struct ieee80211_sub_if_data *sdata,
-+		 const u8 *bssid, const u8 *replay_ctr),
-+
-+	TP_ARGS(sdata, bssid, replay_ctr),
-+
-+	TP_STRUCT__entry(
-+		VIF_ENTRY
-+		__array(u8, bssid, ETH_ALEN)
-+		__array(u8, replay_ctr, NL80211_REPLAY_CTR_LEN)
-+	),
-+
-+	TP_fast_assign(
-+		VIF_ASSIGN;
-+		memcpy(__entry->bssid, bssid, ETH_ALEN);
-+		memcpy(__entry->replay_ctr, replay_ctr, NL80211_REPLAY_CTR_LEN);
-+	),
-+
-+	TP_printk(VIF_PR_FMT, VIF_PR_ARG)
-+);
-+
- /*
-  * Tracing for internal functions
-  * (which may also be called in response to driver calls)
---- a/net/mac80211/key.c	2011-07-02 00:08:13.000000000 +0200
-+++ b/net/mac80211/key.c	2011-07-02 00:12:31.000000000 +0200
-@@ -566,3 +566,15 @@ void ieee80211_free_keys(struct ieee8021
+-	if (!read && dev->virt_scat)
++	if (!read && dev->hif_scat_info.virt_scat)
+ 		status = ath6kldev_cp_scat_dma_buf(scat_req, false);
  
- 	mutex_unlock(&sdata->local->key_mtx);
- }
-+
-+
-+void ieee80211_gtk_rekey_notify(struct ieee80211_vif *vif, const u8 *bssid,
-+				const u8 *replay_ctr, gfp_t gfp)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+
-+	trace_api_gtk_rekey_notify(sdata, bssid, replay_ctr);
-+
-+	cfg80211_gtk_rekey_notify(sdata->dev, bssid, replay_ctr, gfp);
-+}
-+EXPORT_SYMBOL_GPL(ieee80211_gtk_rekey_notify);
---- a/net/mac80211/driver-ops.h	2011-07-02 00:07:54.000000000 +0200
-+++ b/net/mac80211/driver-ops.h	2011-07-02 00:12:48.000000000 +0200
-@@ -647,4 +647,14 @@ static inline int drv_set_bitrate_mask(s
- 	return ret;
+ 	if (status) {
+@@ -285,7 +285,7 @@ int ath6kldev_submit_scat_req(struct ath6kl_device *dev,
+ 		return status;
+ 	}
+ 
+-	if (dev->virt_scat)
++	if (dev->hif_scat_info.virt_scat)
+ 		status =  ath6kldev_rw_scatter(dev->ar, scat_req);
+ 	else
+ 		status = ath6kl_hif_scat_req_rw(dev->ar, scat_req);
+@@ -293,7 +293,7 @@ int ath6kldev_submit_scat_req(struct ath6kl_device *dev,
+ 	if (read) {
+ 		/* in sync mode, we can touch the scatter request */
+ 		scat_req->status = status;
+-		if (!status && dev->virt_scat)
++		if (!status && dev->hif_scat_info.virt_scat)
+ 			scat_req->status =
+ 				ath6kldev_cp_scat_dma_buf(scat_req, true);
+ 	}
+@@ -301,78 +301,9 @@ int ath6kldev_submit_scat_req(struct ath6kl_device *dev,
+ 	return status;
  }
  
-+static inline void drv_set_rekey_data(struct ieee80211_local *local,
-+				      struct ieee80211_sub_if_data *sdata,
-+				      struct cfg80211_gtk_rekey_data *data)
-+{
-+	trace_drv_set_rekey_data(local, sdata, data);
-+	if (local->ops->set_rekey_data)
-+		local->ops->set_rekey_data(&local->hw, &sdata->vif, data);
-+	trace_drv_return_void(local);
-+}
+-/*
+- * function to set up virtual scatter support if HIF
+- * layer has not implemented the interface.
+- */
+-static int ath6kldev_setup_virt_scat_sup(struct ath6kl_device *dev)
+-{
+-	struct hif_scatter_req *scat_req;
+-	int buf_sz, scat_req_sz, scat_list_sz;
+-	int i, status = 0;
+-	u8 *virt_dma_buf;
+-
+-	buf_sz = 2 * L1_CACHE_BYTES + ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER;
+-
+-	scat_list_sz = (ATH6KL_SCATTER_ENTRIES_PER_REQ - 1) *
+-		       sizeof(struct hif_scatter_item);
+-	scat_req_sz = sizeof(*scat_req) + scat_list_sz;
+-
+-	for (i = 0; i < ATH6KL_SCATTER_REQS; i++) {
+-		scat_req = kzalloc(scat_req_sz, GFP_KERNEL);
+-
+-		if (!scat_req) {
+-			status = -ENOMEM;
+-			break;
+-		}
+-
+-		virt_dma_buf = kzalloc(buf_sz, GFP_KERNEL);
+-		if (!virt_dma_buf) {
+-			kfree(scat_req);
+-			status = -ENOMEM;
+-			break;
+-		}
+-
+-		scat_req->virt_dma_buf =
+-			(u8 *)L1_CACHE_ALIGN((unsigned long)virt_dma_buf);
+-
+-		/* we emulate a DMA bounce interface */
+-		hif_scatter_req_add(dev->ar, scat_req);
+-	}
+-
+-	if (status)
+-		ath6kl_hif_cleanup_scatter(dev->ar);
+-	else {
+-		dev->hif_scat_info.max_scat_entries =
+-			ATH6KL_SCATTER_ENTRIES_PER_REQ;
+-		dev->hif_scat_info.max_xfer_szper_scatreq =
+-			ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER;
+-		dev->virt_scat = true;
+-	}
+-
+-	return status;
+-}
+-
+ int ath6kldev_setup_msg_bndl(struct ath6kl_device *dev, int max_msg_per_trans)
+ {
+-	int status;
+-
+-	status = ath6kl_hif_enable_scatter(dev->ar, &dev->hif_scat_info);
+-
+-	if (status) {
+-		ath6kl_warn("hif does not support scatter requests (%d)\n",
+-			    status);
+-
+-		/* we can try to use a virtual DMA scatter mechanism */
+-		status = ath6kldev_setup_virt_scat_sup(dev);
+-	}
+-
+-	if (!status)
+-		ath6kl_dbg(ATH6KL_DBG_ANY, "max scatter items:%d: maxlen:%d\n",
+-			   dev->hif_scat_info.max_scat_entries,
+-			   dev->hif_scat_info.max_xfer_szper_scatreq);
+-
+-	return status;
++	return ath6kl_hif_enable_scatter(dev->ar, &dev->hif_scat_info);
+ }
+ 
+ static int ath6kldev_proc_counter_intr(struct ath6kl_device *dev)
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.h b/drivers/net/wireless/ath/ath6kl/htc_hif.h
+index d770d4e..3514c22 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_hif.h
++++ b/drivers/net/wireless/ath/ath6kl/htc_hif.h
+@@ -87,7 +87,6 @@ struct ath6kl_device {
+ 	int (*msg_pending) (struct htc_target *target, u32 lk_ahds[],
+ 			    int *npkts_fetched);
+ 	struct hif_dev_scat_sup_info hif_scat_info;
+-	bool virt_scat;
+ 	int max_rx_bndl_sz;
+ 	int max_tx_bndl_sz;
+ 	int chk_irq_status_cnt;
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 9220a01..96a112e 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -275,13 +275,17 @@ static int ath6kl_sdio_alloc_prep_scat_req(struct ath6kl_sdio *ar_sdio,
+ {
+ 	struct hif_scatter_req *s_req;
+ 	struct bus_request *bus_req;
+-	int i, scat_req_sz, scat_list_sz, sg_sz = 0;
++	int i, scat_req_sz, scat_list_sz, sg_sz, buf_sz;
++	u8 *virt_buf;
+ 
+ 	scat_list_sz = (n_scat_entry - 1) * sizeof(struct hif_scatter_item);
+ 	scat_req_sz = sizeof(*s_req) + scat_list_sz;
+ 
+ 	if (!virt_scat)
+ 		sg_sz = sizeof(struct scatterlist) * n_scat_entry;
++	else
++		buf_sz =  2 * L1_CACHE_BYTES +
++			  ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER;
+ 
+ 	for (i = 0; i < n_scat_req; i++) {
+ 		/* allocate the scatter request */
+@@ -289,7 +293,16 @@ static int ath6kl_sdio_alloc_prep_scat_req(struct ath6kl_sdio *ar_sdio,
+ 		if (!s_req)
+ 			return -ENOMEM;
+ 
+-		if (sg_sz) {
++		if (virt_scat) {
++			virt_buf = kzalloc(buf_sz, GFP_KERNEL);
++			if (!virt_buf) {
++				kfree(s_req);
++				return -ENOMEM;
++			}
 +
- #endif /* __MAC80211_DRIVER_OPS */
-
++			s_req->virt_dma_buf =
++				(u8 *)L1_CACHE_ALIGN((unsigned long)virt_buf);
++		} else {
+ 			/* allocate sglist */
+ 			s_req->sgentries = kzalloc(sg_sz, GFP_KERNEL);
+ 
+@@ -303,6 +316,7 @@ static int ath6kl_sdio_alloc_prep_scat_req(struct ath6kl_sdio *ar_sdio,
+ 		bus_req = ath6kl_sdio_alloc_busreq(ar_sdio);
+ 		if (!bus_req) {
+ 			kfree(s_req->sgentries);
++			kfree(s_req->virt_dma_buf);
+ 			kfree(s_req);
+ 			return -ENOMEM;
+ 		}
+@@ -629,31 +643,58 @@ static int ath6kl_sdio_enable_scatter(struct ath6kl *ar,
+ 				      struct hif_dev_scat_sup_info *pinfo)
+ {
+ 	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
+-	int ret = 0;
++	int ret;
++	bool virt_scat = false;
+ 
+ 	/* check if host supports scatter and it meets our requirements */
+ 	if (ar_sdio->func->card->host->max_segs < MAX_SCATTER_ENTRIES_PER_REQ) {
+-		ath6kl_err("hif-scatter: host only supports scatter of : %d entries, need: %d\n",
++		ath6kl_err("host only supports scatter of :%d entries, need: %d\n",
+ 			   ar_sdio->func->card->host->max_segs,
+ 			   MAX_SCATTER_ENTRIES_PER_REQ);
+-		return -EINVAL;
++		virt_scat = true;
++	}
++
++	if (!virt_scat) {
++		ret = ath6kl_sdio_alloc_prep_scat_req(ar_sdio,
++				MAX_SCATTER_ENTRIES_PER_REQ,
++				MAX_SCATTER_REQUESTS, virt_scat);
++
++		if (!ret) {
++			ath6kl_dbg(ATH6KL_DBG_ANY,
++				   "hif-scatter enabled: max scatter req : %d entries: %d\n",
++				   MAX_SCATTER_REQUESTS,
++				   MAX_SCATTER_ENTRIES_PER_REQ);
++
++			pinfo->max_scat_entries = MAX_SCATTER_ENTRIES_PER_REQ;
++			pinfo->max_xfer_szper_scatreq =
++						MAX_SCATTER_REQ_TRANSFER_SIZE;
++		} else {
++			ath6kl_sdio_cleanup_scatter(ar);
++			ath6kl_warn("hif scatter resource setup failed, trying virtual scatter method\n");
++		}
+ 	}
+ 
+-	ath6kl_dbg(ATH6KL_DBG_ANY,
+-		   "hif-scatter enabled: max scatter req : %d entries: %d\n",
+-		   MAX_SCATTER_REQUESTS, MAX_SCATTER_ENTRIES_PER_REQ);
++	if (virt_scat || ret) {
++		ret = ath6kl_sdio_alloc_prep_scat_req(ar_sdio,
++				ATH6KL_SCATTER_ENTRIES_PER_REQ,
++				ATH6KL_SCATTER_REQS, virt_scat);
+ 
+-	ret = ath6kl_sdio_alloc_prep_scat_req(ar_sdio,
+-					      MAX_SCATTER_ENTRIES_PER_REQ,
+-					      MAX_SCATTER_REQUESTS, 0);
+-	if (ret) {
+-		ath6kl_err("hif-scatter: failed to alloc scatter resources !\n");
+-		ath6kl_sdio_cleanup_scatter(ar);
+-		return ret;
++		if (ret) {
++			ath6kl_err("failed to alloc virtual scatter resources !\n");
++			ath6kl_sdio_cleanup_scatter(ar);
++			return ret;
++		}
++
++		ath6kl_dbg(ATH6KL_DBG_ANY,
++			   "Vitual scatter enabled, max_scat_req:%d, entries:%d\n",
++			   ATH6KL_SCATTER_REQS, ATH6KL_SCATTER_ENTRIES_PER_REQ);
++
++		pinfo->max_scat_entries = ATH6KL_SCATTER_ENTRIES_PER_REQ;
++		pinfo->max_xfer_szper_scatreq =
++					ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER;
+ 	}
+ 
+-	pinfo->max_scat_entries = MAX_SCATTER_ENTRIES_PER_REQ;
+-	pinfo->max_xfer_szper_scatreq = MAX_SCATTER_REQ_TRANSFER_SIZE;
++	pinfo->virt_scat = virt_scat;
+ 
+ 	return 0;
+ }
+-- 
+1.7.1
 
