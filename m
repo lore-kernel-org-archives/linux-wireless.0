@@ -1,845 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:42587 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932277Ab1GMBfL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2011 21:35:11 -0400
-Subject: [PATCH 13/24] ath6kl: add htc_hif.c
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: devel@linuxdriverproject.org, gregkh@suse.de, error27@gmail.com
-Date: Wed, 13 Jul 2011 04:35:05 +0300
-Message-ID: <20110713013505.8517.89984.stgit@localhost6.localdomain6> (sfid-20110713_033515_963644_708E392A)
-In-Reply-To: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
+Received: from mms2.broadcom.com ([216.31.210.18]:3359 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755076Ab1GVS5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 14:57:34 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Franky Lin" <frankyl@broadcom.com>, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 16/29] staging: brcm80211: remove vendor and device id
+ check from brcmfmac
+Date: Fri, 22 Jul 2011 20:57:03 +0200
+Message-ID: <1311361036-3175-17-git-send-email-arend@broadcom.com> (sfid-20110722_205748_267617_603F3442)
+In-Reply-To: <1311361036-3175-1-git-send-email-arend@broadcom.com>
+References: <1311361036-3175-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/htc_hif.c |  813 +++++++++++++++++++++++++++++
- 1 files changed, 813 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/htc_hif.c
+From: Franky Lin <frankyl@broadcom.com>
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.c b/drivers/net/wireless/ath/ath6kl/htc_hif.c
-new file mode 100644
-index 0000000..4f16ac9
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath6kl/htc_hif.c
-@@ -0,0 +1,813 @@
-+/*
-+ * Copyright (c) 2007-2011 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "core.h"
-+#include "target.h"
-+#include "hif-ops.h"
-+#include "htc_hif.h"
-+#include "debug.h"
-+
-+#define MAILBOX_FOR_BLOCK_SIZE          1
-+
-+#define ATH6KL_TIME_QUANTUM	10  /* in ms */
-+
-+static void ath6kl_add_io_pkt(struct ath6kl_device *dev,
-+			      struct htc_packet *packet)
-+{
-+	spin_lock_bh(&dev->lock);
-+	list_add_tail(&packet->list, &dev->reg_io);
-+	spin_unlock_bh(&dev->lock);
-+}
-+
-+static struct htc_packet *ath6kl_get_io_pkt(struct ath6kl_device *dev)
-+{
-+	struct htc_packet *packet = NULL;
-+
-+	spin_lock_bh(&dev->lock);
-+	if (!list_empty(&dev->reg_io)) {
-+		packet = list_first_entry(&dev->reg_io,
-+					 struct htc_packet, list);
-+		list_del(&packet->list);
-+	}
-+	spin_unlock_bh(&dev->lock);
-+
-+	return packet;
-+}
-+
-+static int ath6kldev_cp_scat_dma_buf(struct hif_scatter_req *req, bool from_dma)
-+{
-+	u8 *buf;
-+	int i;
-+
-+	buf = req->virt_dma_buf;
-+
-+	for (i = 0; i < req->scat_entries; i++) {
-+
-+		if (from_dma)
-+			memcpy(req->scat_list[i].buf, buf,
-+			       req->scat_list[i].len);
-+		else
-+			memcpy(buf, req->scat_list[i].buf,
-+			       req->scat_list[i].len);
-+
-+		buf += req->scat_list[i].len;
-+	}
-+
-+	return 0;
-+}
-+
-+int ath6kldev_rw_comp_handler(void *context, int status)
-+{
-+	struct htc_packet *packet = context;
-+
-+	ath6kl_dbg(ATH6KL_DBG_HTC_RECV,
-+		   "ath6kldev_rw_comp_handler (pkt:0x%lX) , status: %d\n",
-+		   (unsigned long)packet, status);
-+
-+	packet->status = status;
-+	packet->completion(packet->context, packet);
-+
-+	return 0;
-+}
-+
-+static int ath6kldev_proc_dbg_intr(struct ath6kl_device *dev)
-+{
-+	u32 dummy;
-+	int status;
-+
-+	ath6kl_err("target debug interrupt\n");
-+
-+	ath6kl_target_failure(dev->ar);
-+
-+	/*
-+	 * read counter to clear the interrupt, the debug error interrupt is
-+	 * counter 0.
-+	 */
-+	status = hif_read_write_sync(dev->ar, COUNT_DEC_ADDRESS,
-+				     (u8 *)&dummy, 4, HIF_RD_SYNC_BYTE_INC);
-+	if (status)
-+		WARN_ON(1);
-+
-+	return status;
-+}
-+
-+/* mailbox recv message polling */
-+int ath6kldev_poll_mboxmsg_rx(struct ath6kl_device *dev, u32 *lk_ahd,
-+			      int timeout)
-+{
-+	struct ath6kl_irq_proc_registers *rg;
-+	int status = 0, i;
-+	u8 htc_mbox = 1 << HTC_MAILBOX;
-+
-+	for (i = timeout / ATH6KL_TIME_QUANTUM; i > 0; i--) {
-+		/* this is the standard HIF way, load the reg table */
-+		status = hif_read_write_sync(dev->ar, HOST_INT_STATUS_ADDRESS,
-+					     (u8 *) &dev->irq_proc_reg,
-+					     sizeof(dev->irq_proc_reg),
-+					     HIF_RD_SYNC_BYTE_INC);
-+
-+		if (status) {
-+			ath6kl_err("failed to read reg table\n");
-+			return status;
-+		}
-+
-+		/* check for MBOX data and valid lookahead */
-+		if (dev->irq_proc_reg.host_int_status & htc_mbox) {
-+			if (dev->irq_proc_reg.rx_lkahd_valid &
-+			    htc_mbox) {
-+				/*
-+				 * Mailbox has a message and the look ahead
-+				 * is valid.
-+				 */
-+				rg = &dev->irq_proc_reg;
-+				*lk_ahd =
-+					le32_to_cpu(rg->rx_lkahd[HTC_MAILBOX]);
-+				break;
-+			}
-+		}
-+
-+		/* delay a little  */
-+		mdelay(ATH6KL_TIME_QUANTUM);
-+		ath6kl_dbg(ATH6KL_DBG_HTC_RECV, "retry mbox poll : %d\n", i);
-+	}
-+
-+	if (i == 0) {
-+		ath6kl_err("timeout waiting for recv message\n");
-+		status = -ETIME;
-+		/* check if the target asserted */
-+		if (dev->irq_proc_reg.counter_int_status &
-+		    ATH6KL_TARGET_DEBUG_INTR_MASK)
-+			/*
-+			 * Target failure handler will be called in case of
-+			 * an assert.
-+			 */
-+			ath6kldev_proc_dbg_intr(dev);
-+	}
-+
-+	return status;
-+}
-+
-+/*
-+ * Disable packet reception (used in case the host runs out of buffers)
-+ * using the interrupt enable registers through the host I/F
-+ */
-+int ath6kldev_rx_control(struct ath6kl_device *dev, bool enable_rx)
-+{
-+	struct ath6kl_irq_enable_reg regs;
-+	int status = 0;
-+
-+	/* take the lock to protect interrupt enable shadows */
-+	spin_lock_bh(&dev->lock);
-+
-+	if (enable_rx)
-+		dev->irq_en_reg.int_status_en |=
-+			SM(INT_STATUS_ENABLE_MBOX_DATA, 0x01);
-+	else
-+		dev->irq_en_reg.int_status_en &=
-+		    ~SM(INT_STATUS_ENABLE_MBOX_DATA, 0x01);
-+
-+	memcpy(&regs, &dev->irq_en_reg, sizeof(regs));
-+
-+	spin_unlock_bh(&dev->lock);
-+
-+	status = hif_read_write_sync(dev->ar, INT_STATUS_ENABLE_ADDRESS,
-+				     &regs.int_status_en,
-+				     sizeof(struct ath6kl_irq_enable_reg),
-+				     HIF_WR_SYNC_BYTE_INC);
-+
-+	return status;
-+}
-+
-+static void ath6kldev_rw_async_handler(void *context, struct htc_packet *packet)
-+{
-+	struct ath6kl_device *dev = context;
-+	struct hif_scatter_req *req = packet->pkt_cntxt;
-+
-+	req->status = packet->status;
-+
-+	ath6kl_add_io_pkt(dev, packet);
-+
-+	req->complete(req);
-+}
-+
-+static int ath6kldev_rw_scatter(struct ath6kl *ar, struct hif_scatter_req *req)
-+{
-+	struct ath6kl_device *dev = ar->htc_target->dev;
-+	struct htc_packet *packet = NULL;
-+	int status = 0;
-+	u32 request = req->req;
-+	u8 *virt_dma_buf;
-+
-+	if (!req->len)
-+		return 0;
-+
-+	if (request & HIF_ASYNCHRONOUS) {
-+		/* use an I/O packet to carry this request */
-+		packet = ath6kl_get_io_pkt(dev);
-+		if (!packet) {
-+			status = -ENOMEM;
-+			goto out;
-+		}
-+
-+		packet->pkt_cntxt = req;
-+		packet->completion = ath6kldev_rw_async_handler;
-+		packet->context = dev;
-+	}
-+
-+	virt_dma_buf = req->virt_dma_buf;
-+
-+	if (request & HIF_ASYNCHRONOUS)
-+		status = hif_write_async(dev->ar, req->addr, virt_dma_buf,
-+					 req->len, request, packet);
-+	else
-+		status = hif_read_write_sync(dev->ar, req->addr, virt_dma_buf,
-+					     req->len, request);
-+
-+out:
-+	if (status)
-+		if (request & HIF_ASYNCHRONOUS) {
-+			if (packet != NULL)
-+				ath6kl_add_io_pkt(dev, packet);
-+			req->status = status;
-+			req->complete(req);
-+			status = 0;
-+		}
-+
-+	return status;
-+}
-+
-+int ath6kldev_submit_scat_req(struct ath6kl_device *dev,
-+			      struct hif_scatter_req *scat_req, bool read)
-+{
-+	int status = 0;
-+
-+	if (read) {
-+		scat_req->req = HIF_RD_SYNC_BLOCK_FIX;
-+		scat_req->addr = dev->ar->mbox_info.htc_addr;
-+	} else {
-+		scat_req->req = HIF_WR_ASYNC_BLOCK_INC;
-+
-+		scat_req->addr =
-+			(scat_req->len > HIF_MBOX_WIDTH) ?
-+			dev->ar->mbox_info.htc_ext_addr :
-+			dev->ar->mbox_info.htc_addr;
-+	}
-+
-+	ath6kl_dbg((ATH6KL_DBG_HTC_RECV | ATH6KL_DBG_HTC_SEND),
-+		   "ath6kldev_submit_scat_req, entries: %d, "
-+		   "total len: %d mbox:0x%X (mode: %s : %s)\n",
-+		   scat_req->scat_entries, scat_req->len,
-+		   scat_req->addr, !read ? "async" : "sync",
-+		   (read) ? "rd" : "wr");
-+
-+	if (!read && dev->virt_scat)
-+		status = ath6kldev_cp_scat_dma_buf(scat_req, false);
-+
-+	if (status) {
-+		if (!read) {
-+			scat_req->status = status;
-+			scat_req->complete(scat_req);
-+			return 0;
-+		}
-+		return status;
-+	}
-+
-+	status = dev->hif_scat_info.rw_scat_func(dev->ar, scat_req);
-+
-+	if (read) {
-+		/* in sync mode, we can touch the scatter request */
-+		scat_req->status = status;
-+		if (!status && dev->virt_scat)
-+			scat_req->status =
-+				ath6kldev_cp_scat_dma_buf(scat_req, true);
-+	}
-+
-+	return status;
-+}
-+
-+/*
-+ * function to set up virtual scatter support if HIF
-+ * layer has not implemented the interface.
-+ */
-+static int ath6kldev_setup_virt_scat_sup(struct ath6kl_device *dev)
-+{
-+	struct hif_scatter_req *scat_req;
-+	int buf_sz, scat_req_sz, scat_list_sz;
-+	int i, status = 0;
-+	u8 *virt_dma_buf;
-+
-+	buf_sz = 2 * L1_CACHE_BYTES + ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER;
-+
-+	scat_list_sz = (ATH6KL_SCATTER_ENTRIES_PER_REQ - 1) *
-+		       sizeof(struct hif_scatter_item);
-+	scat_req_sz = sizeof(*scat_req) + scat_list_sz;
-+
-+	for (i = 0; i < ATH6KL_SCATTER_REQS; i++) {
-+		scat_req = kzalloc(scat_req_sz, GFP_KERNEL);
-+
-+		if (!scat_req) {
-+			status = -ENOMEM;
-+			break;
-+		}
-+
-+		virt_dma_buf = kzalloc(buf_sz, GFP_KERNEL);
-+		if (!virt_dma_buf) {
-+			kfree(scat_req);
-+			status = -ENOMEM;
-+			break;
-+		}
-+
-+		scat_req->virt_dma_buf =
-+			(u8 *)L1_CACHE_ALIGN((unsigned long)virt_dma_buf);
-+
-+		/* we emulate a DMA bounce interface */
-+		hif_scatter_req_add(dev->ar, scat_req);
-+	}
-+
-+	if (status)
-+		ath6kl_hif_cleanup_scatter(dev->ar);
-+	else {
-+		dev->hif_scat_info.rw_scat_func = ath6kldev_rw_scatter;
-+		dev->hif_scat_info.max_scat_entries =
-+			ATH6KL_SCATTER_ENTRIES_PER_REQ;
-+		dev->hif_scat_info.max_xfer_szper_scatreq =
-+			ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER;
-+		dev->virt_scat = true;
-+	}
-+
-+	return status;
-+}
-+
-+int ath6kldev_setup_msg_bndl(struct ath6kl_device *dev, int max_msg_per_trans)
-+{
-+	int status;
-+
-+	status = ath6kl_hif_enable_scatter(dev->ar, &dev->hif_scat_info);
-+
-+	if (status) {
-+		ath6kl_warn("hif does not support scatter requests (%d)\n",
-+			    status);
-+
-+		/* we can try to use a virtual DMA scatter mechanism */
-+		status = ath6kldev_setup_virt_scat_sup(dev);
-+	}
-+
-+	if (!status)
-+		ath6kl_dbg(ATH6KL_DBG_ANY, "max scatter items:%d: maxlen:%d\n",
-+			   dev->hif_scat_info.max_scat_entries,
-+			   dev->hif_scat_info.max_xfer_szper_scatreq);
-+
-+	return status;
-+}
-+
-+static int ath6kldev_proc_counter_intr(struct ath6kl_device *dev)
-+{
-+	u8 counter_int_status;
-+
-+	ath6kl_dbg(ATH6KL_DBG_IRQ, "counter interrupt\n");
-+
-+	counter_int_status = dev->irq_proc_reg.counter_int_status &
-+			     dev->irq_en_reg.cntr_int_status_en;
-+
-+	ath6kl_dbg(ATH6KL_DBG_IRQ,
-+		"valid interrupt source(s) in COUNTER_INT_STATUS: 0x%x\n",
-+		counter_int_status);
-+
-+	/*
-+	 * NOTE: other modules like GMBOX may use the counter interrupt for
-+	 * credit flow control on other counters, we only need to check for
-+	 * the debug assertion counter interrupt.
-+	 */
-+	if (counter_int_status & ATH6KL_TARGET_DEBUG_INTR_MASK)
-+		return ath6kldev_proc_dbg_intr(dev);
-+
-+	return 0;
-+}
-+
-+static int ath6kldev_proc_err_intr(struct ath6kl_device *dev)
-+{
-+	int status;
-+	u8 error_int_status;
-+	u8 reg_buf[4];
-+
-+	ath6kl_dbg(ATH6KL_DBG_IRQ, "error interrupt\n");
-+
-+	error_int_status = dev->irq_proc_reg.error_int_status & 0x0F;
-+	if (!error_int_status) {
-+		WARN_ON(1);
-+		return -EIO;
-+	}
-+
-+	ath6kl_dbg(ATH6KL_DBG_IRQ,
-+		   "valid interrupt source(s) in ERROR_INT_STATUS: 0x%x\n",
-+		   error_int_status);
-+
-+	if (MS(ERROR_INT_STATUS_WAKEUP, error_int_status))
-+		ath6kl_dbg(ATH6KL_DBG_IRQ, "error : wakeup\n");
-+
-+	if (MS(ERROR_INT_STATUS_RX_UNDERFLOW, error_int_status))
-+		ath6kl_err("rx underflow\n");
-+
-+	if (MS(ERROR_INT_STATUS_TX_OVERFLOW, error_int_status))
-+		ath6kl_err("tx overflow\n");
-+
-+	/* Clear the interrupt */
-+	dev->irq_proc_reg.error_int_status &= ~error_int_status;
-+
-+	/* set W1C value to clear the interrupt, this hits the register first */
-+	reg_buf[0] = error_int_status;
-+	reg_buf[1] = 0;
-+	reg_buf[2] = 0;
-+	reg_buf[3] = 0;
-+
-+	status = hif_read_write_sync(dev->ar, ERROR_INT_STATUS_ADDRESS,
-+				     reg_buf, 4, HIF_WR_SYNC_BYTE_FIX);
-+
-+	if (status)
-+		WARN_ON(1);
-+
-+	return status;
-+}
-+
-+static int ath6kldev_proc_cpu_intr(struct ath6kl_device *dev)
-+{
-+	int status;
-+	u8 cpu_int_status;
-+	u8 reg_buf[4];
-+
-+	ath6kl_dbg(ATH6KL_DBG_IRQ, "cpu interrupt\n");
-+
-+	cpu_int_status = dev->irq_proc_reg.cpu_int_status &
-+			 dev->irq_en_reg.cpu_int_status_en;
-+	if (!cpu_int_status) {
-+		WARN_ON(1);
-+		return -EIO;
-+	}
-+
-+	ath6kl_dbg(ATH6KL_DBG_IRQ,
-+		"valid interrupt source(s) in CPU_INT_STATUS: 0x%x\n",
-+		cpu_int_status);
-+
-+	/* Clear the interrupt */
-+	dev->irq_proc_reg.cpu_int_status &= ~cpu_int_status;
-+
-+	/*
-+	 * Set up the register transfer buffer to hit the register 4 times ,
-+	 * this is done to make the access 4-byte aligned to mitigate issues
-+	 * with host bus interconnects that restrict bus transfer lengths to
-+	 * be a multiple of 4-bytes.
-+	 */
-+
-+	/* set W1C value to clear the interrupt, this hits the register first */
-+	reg_buf[0] = cpu_int_status;
-+	/* the remaining are set to zero which have no-effect  */
-+	reg_buf[1] = 0;
-+	reg_buf[2] = 0;
-+	reg_buf[3] = 0;
-+
-+	status = hif_read_write_sync(dev->ar, CPU_INT_STATUS_ADDRESS,
-+				     reg_buf, 4, HIF_WR_SYNC_BYTE_FIX);
-+
-+	if (status)
-+		WARN_ON(1);
-+
-+	return status;
-+}
-+
-+/* process pending interrupts synchronously */
-+static int proc_pending_irqs(struct ath6kl_device *dev, bool *done)
-+{
-+	struct ath6kl_irq_proc_registers *rg;
-+	int status = 0;
-+	u8 host_int_status = 0;
-+	u32 lk_ahd = 0;
-+	u8 htc_mbox = 1 << HTC_MAILBOX;
-+
-+	ath6kl_dbg(ATH6KL_DBG_IRQ, "proc_pending_irqs: (dev: 0x%lX)\n",
-+		(unsigned long)dev);
-+
-+	/*
-+	 * NOTE: HIF implementation guarantees that the context of this
-+	 * call allows us to perform SYNCHRONOUS I/O, that is we can block,
-+	 * sleep or call any API that can block or switch thread/task
-+	 * contexts. This is a fully schedulable context.
-+	 */
-+
-+	/*
-+	 * Process pending intr only when int_status_en is clear, it may
-+	 * result in unnecessary bus transaction otherwise. Target may be
-+	 * unresponsive at the time.
-+	 */
-+	if (dev->irq_en_reg.int_status_en) {
-+		/*
-+		 * Read the first 28 bytes of the HTC register table. This
-+		 * will yield us the value of different int status
-+		 * registers and the lookahead registers.
-+		 *
-+		 *    length = sizeof(int_status) + sizeof(cpu_int_status)
-+		 *             + sizeof(error_int_status) +
-+		 *             sizeof(counter_int_status) +
-+		 *             sizeof(mbox_frame) + sizeof(rx_lkahd_valid)
-+		 *             + sizeof(hole) + sizeof(rx_lkahd) +
-+		 *             sizeof(int_status_en) +
-+		 *             sizeof(cpu_int_status_en) +
-+		 *             sizeof(err_int_status_en) +
-+		 *             sizeof(cntr_int_status_en);
-+		 */
-+		status = hif_read_write_sync(dev->ar, HOST_INT_STATUS_ADDRESS,
-+					     (u8 *) &dev->irq_proc_reg,
-+					     sizeof(dev->irq_proc_reg),
-+					     HIF_RD_SYNC_BYTE_INC);
-+		if (status)
-+			goto out;
-+
-+		if (AR_DBG_LVL_CHECK(ATH6KL_DBG_IRQ))
-+			ath6kl_dump_registers(dev, &dev->irq_proc_reg,
-+					 &dev->irq_en_reg);
-+
-+		/* Update only those registers that are enabled */
-+		host_int_status = dev->irq_proc_reg.host_int_status &
-+				  dev->irq_en_reg.int_status_en;
-+
-+		/* Look at mbox status */
-+		if (host_int_status & htc_mbox) {
-+			/*
-+			 * Mask out pending mbox value, we use "lookAhead as
-+			 * the real flag for mbox processing.
-+			 */
-+			host_int_status &= ~htc_mbox;
-+			if (dev->irq_proc_reg.rx_lkahd_valid &
-+			    htc_mbox) {
-+				rg = &dev->irq_proc_reg;
-+				lk_ahd = le32_to_cpu(rg->rx_lkahd[HTC_MAILBOX]);
-+				if (!lk_ahd)
-+					ath6kl_err("%s():lookAhead is zero!\n",
-+						   __func__);
-+			}
-+		}
-+	}
-+
-+	if (!host_int_status && !lk_ahd) {
-+		*done = true;
-+		goto out;
-+	}
-+
-+	if (lk_ahd) {
-+		int fetched = 0;
-+
-+		ath6kl_dbg(ATH6KL_DBG_IRQ,
-+			   "pending mailbox msg, lk_ahd: 0x%X\n", lk_ahd);
-+		/*
-+		 * Mailbox Interrupt, the HTC layer may issue async
-+		 * requests to empty the mailbox. When emptying the recv
-+		 * mailbox we use the async handler above called from the
-+		 * completion routine of the callers read request. This can
-+		 * improve performance by reducing context switching when
-+		 * we rapidly pull packets.
-+		 */
-+		status = dev->msg_pending(dev->htc_cnxt, &lk_ahd, &fetched);
-+		if (status)
-+			goto out;
-+
-+		if (!fetched)
-+			/*
-+			 * HTC could not pull any messages out due to lack
-+			 * of resources.
-+			 */
-+			dev->chk_irq_status_cnt = 0;
-+	}
-+
-+	/* now handle the rest of them */
-+	ath6kl_dbg(ATH6KL_DBG_IRQ,
-+		   "valid interrupt source(s) for other interrupts: 0x%x\n",
-+		   host_int_status);
-+
-+	if (MS(HOST_INT_STATUS_CPU, host_int_status)) {
-+		/* CPU Interrupt */
-+		status = ath6kldev_proc_cpu_intr(dev);
-+		if (status)
-+			goto out;
-+	}
-+
-+	if (MS(HOST_INT_STATUS_ERROR, host_int_status)) {
-+		/* Error Interrupt */
-+		status = ath6kldev_proc_err_intr(dev);
-+		if (status)
-+			goto out;
-+	}
-+
-+	if (MS(HOST_INT_STATUS_COUNTER, host_int_status))
-+		/* Counter Interrupt */
-+		status = ath6kldev_proc_counter_intr(dev);
-+
-+out:
-+	/*
-+	 * An optimization to bypass reading the IRQ status registers
-+	 * unecessarily which can re-wake the target, if upper layers
-+	 * determine that we are in a low-throughput mode, we can rely on
-+	 * taking another interrupt rather than re-checking the status
-+	 * registers which can re-wake the target.
-+	 *
-+	 * NOTE : for host interfaces that makes use of detecting pending
-+	 * mbox messages at hif can not use this optimization due to
-+	 * possible side effects, SPI requires the host to drain all
-+	 * messages from the mailbox before exiting the ISR routine.
-+	 */
-+
-+	ath6kl_dbg(ATH6KL_DBG_IRQ,
-+		   "bypassing irq status re-check, forcing done\n");
-+
-+	*done = true;
-+
-+	ath6kl_dbg(ATH6KL_DBG_IRQ,
-+		   "proc_pending_irqs: (done:%d, status=%d\n", *done, status);
-+
-+	return status;
-+}
-+
-+/* interrupt handler, kicks off all interrupt processing */
-+int ath6kldev_intr_bh_handler(struct ath6kl *ar)
-+{
-+	struct ath6kl_device *dev = ar->htc_target->dev;
-+	int status = 0;
-+	bool done = false;
-+
-+	/*
-+	 * Reset counter used to flag a re-scan of IRQ status registers on
-+	 * the target.
-+	 */
-+	dev->chk_irq_status_cnt = 0;
-+
-+	/*
-+	 * IRQ processing is synchronous, interrupt status registers can be
-+	 * re-read.
-+	 */
-+	while (!done) {
-+		status = proc_pending_irqs(dev, &done);
-+		if (status)
-+			break;
-+	}
-+
-+	return status;
-+}
-+
-+static int ath6kldev_enable_intrs(struct ath6kl_device *dev)
-+{
-+	struct ath6kl_irq_enable_reg regs;
-+	int status;
-+
-+	spin_lock_bh(&dev->lock);
-+
-+	/* Enable all but ATH6KL CPU interrupts */
-+	dev->irq_en_reg.int_status_en =
-+			SM(INT_STATUS_ENABLE_ERROR, 0x01) |
-+			SM(INT_STATUS_ENABLE_CPU, 0x01) |
-+			SM(INT_STATUS_ENABLE_COUNTER, 0x01);
-+
-+	/*
-+	 * NOTE: There are some cases where HIF can do detection of
-+	 * pending mbox messages which is disabled now.
-+	 */
-+	dev->irq_en_reg.int_status_en |= SM(INT_STATUS_ENABLE_MBOX_DATA, 0x01);
-+
-+	/* Set up the CPU Interrupt status Register */
-+	dev->irq_en_reg.cpu_int_status_en = 0;
-+
-+	/* Set up the Error Interrupt status Register */
-+	dev->irq_en_reg.err_int_status_en =
-+		SM(ERROR_STATUS_ENABLE_RX_UNDERFLOW, 0x01) |
-+		SM(ERROR_STATUS_ENABLE_TX_OVERFLOW, 0x1);
-+
-+	/*
-+	 * Enable Counter interrupt status register to get fatal errors for
-+	 * debugging.
-+	 */
-+	dev->irq_en_reg.cntr_int_status_en = SM(COUNTER_INT_STATUS_ENABLE_BIT,
-+						ATH6KL_TARGET_DEBUG_INTR_MASK);
-+	memcpy(&regs, &dev->irq_en_reg, sizeof(regs));
-+
-+	spin_unlock_bh(&dev->lock);
-+
-+	status = hif_read_write_sync(dev->ar, INT_STATUS_ENABLE_ADDRESS,
-+				     &regs.int_status_en, sizeof(regs),
-+				     HIF_WR_SYNC_BYTE_INC);
-+
-+	if (status)
-+		ath6kl_err("failed to update interrupt ctl reg err: %d\n",
-+			   status);
-+
-+	return status;
-+}
-+
-+int ath6kldev_disable_intrs(struct ath6kl_device *dev)
-+{
-+	struct ath6kl_irq_enable_reg regs;
-+
-+	spin_lock_bh(&dev->lock);
-+	/* Disable all interrupts */
-+	dev->irq_en_reg.int_status_en = 0;
-+	dev->irq_en_reg.cpu_int_status_en = 0;
-+	dev->irq_en_reg.err_int_status_en = 0;
-+	dev->irq_en_reg.cntr_int_status_en = 0;
-+	memcpy(&regs, &dev->irq_en_reg, sizeof(regs));
-+	spin_unlock_bh(&dev->lock);
-+
-+	return hif_read_write_sync(dev->ar, INT_STATUS_ENABLE_ADDRESS,
-+				   &regs.int_status_en, sizeof(regs),
-+				   HIF_WR_SYNC_BYTE_INC);
-+}
-+
-+/* enable device interrupts */
-+int ath6kldev_unmask_intrs(struct ath6kl_device *dev)
-+{
-+	int status = 0;
-+
-+	/*
-+	 * Make sure interrupt are disabled before unmasking at the HIF
-+	 * layer. The rationale here is that between device insertion
-+	 * (where we clear the interrupts the first time) and when HTC
-+	 * is finally ready to handle interrupts, other software can perform
-+	 * target "soft" resets. The ATH6KL interrupt enables reset back to an
-+	 * "enabled" state when this happens.
-+	 */
-+	ath6kldev_disable_intrs(dev);
-+
-+	/* unmask the host controller interrupts */
-+	ath6kl_hif_irq_enable(dev->ar);
-+	status = ath6kldev_enable_intrs(dev);
-+
-+	return status;
-+}
-+
-+/* disable all device interrupts */
-+int ath6kldev_mask_intrs(struct ath6kl_device *dev)
-+{
-+	/*
-+	 * Mask the interrupt at the HIF layer to avoid any stray interrupt
-+	 * taken while we zero out our shadow registers in
-+	 * ath6kldev_disable_intrs().
-+	 */
-+	ath6kl_hif_irq_disable(dev->ar);
-+
-+	return ath6kldev_disable_intrs(dev);
-+}
-+
-+int ath6kldev_setup(struct ath6kl_device *dev)
-+{
-+	int status = 0;
-+	int i;
-+	struct htc_packet *packet;
-+
-+	/* initialize our free list of IO packets */
-+	INIT_LIST_HEAD(&dev->reg_io);
-+	spin_lock_init(&dev->lock);
-+
-+	/* carve up register I/O packets (these are for ASYNC register I/O ) */
-+	for (i = 0; i < ATH6KL_MAX_REG_IO_BUFFERS; i++) {
-+		packet = &dev->reg_io_buf[i].packet;
-+		set_htc_rxpkt_info(packet, dev, dev->reg_io_buf[i].buf,
-+				   ATH6KL_REG_IO_BUFFER_SIZE, 0);
-+		ath6kl_add_io_pkt(dev, packet);
-+	}
-+
-+	/*
-+	 * NOTE: we actually get the block size of a mailbox other than 0,
-+	 * for SDIO the block size on mailbox 0 is artificially set to 1.
-+	 * So we use the block size that is set for the other 3 mailboxes.
-+	 */
-+	dev->block_sz = dev->ar->mbox_info.block_size;
-+
-+	/* must be a power of 2 */
-+	if ((dev->block_sz & (dev->block_sz - 1)) != 0) {
-+		WARN_ON(1);
-+		goto fail_setup;
-+	}
-+
-+	/* assemble mask, used for padding to a block */
-+	dev->block_mask = dev->block_sz - 1;
-+
-+	ath6kl_dbg(ATH6KL_DBG_TRC, "block size: %d, mbox addr:0x%X\n",
-+		   dev->block_sz, dev->ar->mbox_info.htc_addr);
-+
-+	ath6kl_dbg(ATH6KL_DBG_TRC,
-+		   "hif interrupt processing is sync only\n");
-+
-+	status = ath6kldev_disable_intrs(dev);
-+
-+fail_setup:
-+	return status;
-+
-+}
+mmc core is handling the vendor/device id check and matching drivers
+with devices. No need to do it again in driver.
+
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c    |   14 +------
+ drivers/staging/brcm80211/brcmfmac/dhd_bus.h   |    5 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |   53 +++---------------------
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h |    3 -
+ 4 files changed, 9 insertions(+), 66 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 82d9d2c..3208a11 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -44,7 +44,6 @@
+ struct brcmf_sdio_card {
+ 	bool init_success;	/* underlying driver successfully attached */
+ 	void *sdioh;		/* handler for sdioh */
+-	u32 vendevid;	/* Target Vendor and Device ID on SD bus */
+ 	bool regfail;		/* Save status of last
+ 				 reg_read/reg_write call */
+ 	u32 sbwad;		/* Save backplane window address */
+@@ -399,12 +398,6 @@ int brcmf_sdcard_abort(struct brcmf_sdio_card *card, uint fn)
+ 	return brcmf_sdioh_abort(card->sdioh, fn);
+ }
+ 
+-int brcmf_sdcard_query_device(struct brcmf_sdio_card *card)
+-{
+-	card->vendevid = (PCI_VENDOR_ID_BROADCOM << 16) | 0;
+-	return card->vendevid;
+-}
+-
+ u32 brcmf_sdcard_cur_sbwad(struct brcmf_sdio_card *card)
+ {
+ 	return card->sbwad;
+@@ -413,7 +406,6 @@ u32 brcmf_sdcard_cur_sbwad(struct brcmf_sdio_card *card)
+ int brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ {
+ 	u32 regs = 0;
+-	u32 vendevid;
+ 	int ret = 0;
+ 
+ 	sdiodev->card = kzalloc(sizeof(struct brcmf_sdio_card), GFP_ATOMIC);
+@@ -436,12 +428,8 @@ int brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 	/* Report the BAR, to fix if needed */
+ 	sdiodev->card->sbwad = SI_ENUM_BASE;
+ 
+-	/* Read the vendor/device ID from the CIS */
+-	vendevid = brcmf_sdcard_query_device(sdiodev->card);
+-
+ 	/* try to attach to the target device */
+-	sdiodev->bus = brcmf_sdbrcm_probe((vendevid >> 16), (vendevid & 0xFFFF),
+-				  0, 0, 0, 0, regs, sdiodev->card);
++	sdiodev->bus = brcmf_sdbrcm_probe(0, 0, 0, 0, regs, sdiodev->card);
+ 	if (!sdiodev->bus) {
+ 		BRCMF_ERROR(("%s: device attach failed\n", __func__));
+ 		ret = -ENODEV;
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_bus.h b/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
+index 0fb3250..4521fe5 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
+@@ -75,8 +75,7 @@ extern void brcmf_bus_clearcounts(struct brcmf_pub *drvr);
+ 
+ extern void brcmf_sdbrcm_wd_timer(struct brcmf_bus *bus, uint wdtick);
+ 
+-extern void *brcmf_sdbrcm_probe(u16 venid, u16 devid, u16 bus_no,
+-				u16 slot, u16 func, uint bustype, u32 regsva,
+-				void *card);
++extern void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
++				u32 regsva, void *card);
+ extern void brcmf_sdbrcm_disconnect(void *ptr);
+ #endif				/* _BRCMF_BUS_H_ */
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 1b84767..bd83da3 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -625,8 +625,6 @@ struct brcmf_bus {
+ 	bool dpc_sched;		/* Indicates DPC schedule (intrpt rcvd) */
+ 	bool fcstate;		/* State of dongle flow-control */
+ 
+-	u16 cl_devid;	/* cached devid for brcmf_sdio_probe_attach() */
+-
+ 	uint blocksize;		/* Block size of SDIO transfers */
+ 	uint roundup;		/* Max roundup limit */
+ 
+@@ -964,7 +962,7 @@ static void brcmf_sdbrcm_release(struct brcmf_bus *bus);
+ static void brcmf_sdbrcm_release_malloc(struct brcmf_bus *bus);
+ static bool brcmf_sdbrcm_chipmatch(u16 chipid);
+ static bool brcmf_sdbrcm_probe_attach(struct brcmf_bus *bus, void *card,
+-				      u32 regsva, u16 devid);
++				      u32 regsva);
+ static bool brcmf_sdbrcm_probe_malloc(struct brcmf_bus *bus, void *card);
+ static bool brcmf_sdbrcm_probe_init(struct brcmf_bus *bus, void *card);
+ static void brcmf_sdbrcm_release_dongle(struct brcmf_bus *bus);
+@@ -5430,9 +5428,8 @@ static bool brcmf_sdbrcm_chipmatch(u16 chipid)
+ 	return false;
+ }
+ 
+-void *brcmf_sdbrcm_probe(u16 venid, u16 devid, u16 bus_no,
+-			   u16 slot, u16 func, uint bustype, u32 regsva,
+-			   void *card)
++void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
++			 u32 regsva, void *card)
+ {
+ 	int ret;
+ 	struct brcmf_bus *bus;
+@@ -5459,45 +5456,10 @@ void *brcmf_sdbrcm_probe(u16 venid, u16 devid, u16 bus_no,
+ 	brcmf_c_init();
+ 
+ 	BRCMF_TRACE(("%s: Enter\n", __func__));
+-	BRCMF_INFO(("%s: venid 0x%04x devid 0x%04x\n", __func__, venid, devid));
+ 
+ 	/* We make an assumption about address window mappings:
+ 	 * regsva == SI_ENUM_BASE*/
+ 
+-	/* SDIO car passes venid and devid based on CIS parsing -- but
+-	 * low-power start
+-	 * means early parse could fail, so here we should get either an ID
+-	 * we recognize OR (-1) indicating we must request power first.
+-	 */
+-	/* Check the Vendor ID */
+-	switch (venid) {
+-	case 0x0000:
+-	case PCI_VENDOR_ID_BROADCOM:
+-		break;
+-	default:
+-		BRCMF_ERROR(("%s: unknown vendor: 0x%04x\n", __func__, venid));
+-		return NULL;
+-	}
+-
+-	/* Check the Device ID and make sure it's one that we support */
+-	switch (devid) {
+-	case BCM4329_D11NDUAL_ID:	/* 4329 802.11n dualband device */
+-	case BCM4329_D11N2G_ID:	/* 4329 802.11n 2.4G device */
+-	case BCM4329_D11N5G_ID:	/* 4329 802.11n 5G device */
+-	case 0x4329:
+-		BRCMF_INFO(("%s: found 4329 Dongle\n", __func__));
+-		break;
+-	case 0:
+-		BRCMF_INFO(("%s: allow device id 0, will check chip"
+-			    " internals\n", __func__));
+-		break;
+-
+-	default:
+-		BRCMF_ERROR(("%s: skipping 0x%04x/0x%04x, not a dongle\n",
+-			     __func__, venid, devid));
+-		return NULL;
+-	}
+-
+ 	/* Allocate private bus interface state */
+ 	bus = kzalloc(sizeof(struct brcmf_bus), GFP_ATOMIC);
+ 	if (!bus) {
+@@ -5506,14 +5468,13 @@ void *brcmf_sdbrcm_probe(u16 venid, u16 devid, u16 bus_no,
+ 		goto fail;
+ 	}
+ 	bus->card = card;
+-	bus->cl_devid = (u16) devid;
+ 	bus->bus = BRCMF_BUS;
+ 	bus->tx_seq = SDPCM_SEQUENCE_WRAP - 1;
+ 	bus->usebufpool = false;	/* Use bufpool if allocated,
+ 					 else use locally malloced rxbuf */
+ 
+ 	/* attempt to attach to the dongle */
+-	if (!(brcmf_sdbrcm_probe_attach(bus, card, regsva, devid))) {
++	if (!(brcmf_sdbrcm_probe_attach(bus, card, regsva))) {
+ 		BRCMF_ERROR(("%s: brcmf_sdbrcm_probe_attach failed\n",
+ 			     __func__));
+ 		goto fail;
+@@ -5623,8 +5584,7 @@ fail:
+ }
+ 
+ static bool
+-brcmf_sdbrcm_probe_attach(struct brcmf_bus *bus, void *card, u32 regsva,
+-			  u16 devid)
++brcmf_sdbrcm_probe_attach(struct brcmf_bus *bus, void *card, u32 regsva)
+ {
+ 	u8 clkctl = 0;
+ 	int err = 0;
+@@ -6170,8 +6130,7 @@ int brcmf_bus_devreset(struct brcmf_pub *drvr, u8 flag)
+ 
+ 			/* Attempt to re-attach & download */
+ 			if (brcmf_sdbrcm_probe_attach(bus, bus->card,
+-						      SI_ENUM_BASE,
+-						      bus->cl_devid)) {
++						      SI_ENUM_BASE)) {
+ 				/* Attempt to download binary to the dongle */
+ 				if (brcmf_sdbrcm_probe_init(bus, bus->card)) {
+ 					/* Re-init bus, enable F2 transfer */
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index 3d6c261..22441e9 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -268,9 +268,6 @@ extern int brcmf_sdcard_rwdata(struct brcmf_sdio_card *card, uint rw, u32 addr,
+ /* Issue an abort to the specified function */
+ extern int brcmf_sdcard_abort(struct brcmf_sdio_card *card, uint fn);
+ 
+-/* Returns the "Device ID" of target device on the SDIO bus. */
+-extern int brcmf_sdcard_query_device(struct brcmf_sdio_card *card);
+-
+ /* Miscellaneous knob tweaker. */
+ extern int brcmf_sdcard_iovar_op(struct brcmf_sdio_card *card, const char *name,
+ 				 void *params, int plen, void *arg, int len,
+-- 
+1.7.4.1
+
 
