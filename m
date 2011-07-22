@@ -1,66 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([72.73.18.11]:34227 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752267Ab1G3RHO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jul 2011 13:07:14 -0400
-Date: Sat, 30 Jul 2011 13:07:11 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Alan Piszcz <ap@solarrain.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
-In-Reply-To: <4E341DC4.9010107@01019freenet.de>
-Message-ID: <alpine.DEB.2.02.1107301305590.4925@p34.internal.lan> (sfid-20110730_190717_353221_8F84F990)
-References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan> <4E318BD0.40202@lwfinger.net> <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan> <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan>
- <alpine.DEB.2.02.1107301031560.4925@p34.internal.lan> <4E341DC4.9010107@01019freenet.de>
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:51305 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752026Ab1GVKcY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 06:32:24 -0400
+Received: by pzk37 with SMTP id 37so3390788pzk.1
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2011 03:32:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Date: Fri, 22 Jul 2011 12:32:24 +0200
+Message-ID: <CACna6rxbwQUQXOn_11WyXG0zjLq107oJZv7aHoZ3B8sF-4HuHA@mail.gmail.com> (sfid-20110722_123227_807036_487CFEFD)
+Subject: [ANNOUNCEMENT] BCM43224 and BCM43225 support thanks to Poznan
+ University of Technology
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: b43-dev <b43-dev@lists.infradead.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi guys,
+
+As you hopefully noticed, I've spent a lot of time on Broadcom's cards
+in the last few months. Adding bcma, modifying b43, fixing some bugs,
+and so on... Today I've finally proposed enabling BCM43224 and
+BCM43225 support, with a little of luck, still for 3.1 kernel.
+
+I've time for all of that thanks to Poznan University of Technology
+(the one I study at). After my first success with BCM4321 they
+proposed me to continue this project as part of my MSc work. Thanks to
+that I could fully focus on b43 and related projects. Focusing on
+another MSc work woudn't give me so much time and wouldn't result in
+so fast development.
+
+I would like to say big "Thank You" to the University. It was one of
+the most enjoyable projects during my studies!
 
 
-On Sat, 30 Jul 2011, Andreas Hartmann wrote:
+Now, get the latest code and give me feedback for your BCM43224 or BCM43225! :)
 
-> Hi Justin,
->
-> if you want to test, if the module works stable, run this script for one
-> or two hours. It will stress the driver and the hardware.
->
-> If it doesn't crash and if the throughput is stable, you can hope, that
-> the driver is ok for daily work.
->
->
-> #!/bin/sh
->
-> dest="server" # set the servername
->
-> while true ; do
-> netperf -t TCP_MAERTS -H $dest
-> netperf -t TCP_STREAM -H $dest
-> netperf -t TCP_SENDFILE -H $dest
-> done
->
->
-> Start the script on the client. On the server start netserver.
-> You get netperf from http://www.netperf.org/netperf/
->
->
-> Andreas
->
-
-Hello Andreas,
-
-Thanks for the suggestion; however, it is crashing repeatedly after about 
-5-10 minutes, so it is not needed yet.
-
-Here you go, crash 2:
-http://home.comcast.net/~jpiszcz/20110730/2630-rt2800usb-crash2p1.jpg
-http://home.comcast.net/~jpiszcz/20110730/2630-rt2800usb-crash2p2.jpg
-
-Justin.
-
+-- 
+Rafał
