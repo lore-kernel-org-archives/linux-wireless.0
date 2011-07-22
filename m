@@ -1,58 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60878 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751989Ab1GOVA0 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:54611 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752931Ab1GVFnK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2011 17:00:26 -0400
-Subject: Re: [PATCH 1/5] mac80211: give if_mesh a beacon
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <CAG6hwVONFH+vkSasF7AaSaqvHK78wwNtZesi0RSUnuCi17d9Fw@mail.gmail.com> (sfid-20110715_213042_753766_17EB6895)
-References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
-	 <1310600747-9583-2-git-send-email-thomas@cozybit.com>
-	 <1310723669.4164.18.camel@jlt3.sipsolutions.net>
-	 <CAG6hwVONFH+vkSasF7AaSaqvHK78wwNtZesi0RSUnuCi17d9Fw@mail.gmail.com>
-	 (sfid-20110715_213042_753766_17EB6895)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 15 Jul 2011 23:00:24 +0200
-Message-ID: <1310763624.4164.29.camel@jlt3.sipsolutions.net> (sfid-20110715_230030_431933_CB371186)
-Mime-Version: 1.0
+	Fri, 22 Jul 2011 01:43:10 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Subject: [PATCH 06/31] ath6kl: Refactor refactor ath6kl_sdio_setup_scat_resource()
+Date: Fri, 22 Jul 2011 08:41:39 +0300
+Message-ID: <1311313324-6766-8-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110722_074316_323920_BE29BD96)
+In-Reply-To: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-07-15 at 12:30 -0700, Thomas Pedersen wrote:
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-> >> +     if (ieee80211_vif_is_mesh(&sdata->vif))
-> >> +             rcu_assign_pointer(sdata->u.mesh.beacon, new);
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/sdio.c |   99 ++++++++++++++++++-------------
+ 1 files changed, 57 insertions(+), 42 deletions(-)
 
-> The ifdef is already in ieee80211_vif_is_mesh()
-
-Yeah but sdata->u.mesh doesn't exist without mesh configured.
-
-> > what's + 400? You can't really think the TIM IE is that long?
-> 
-> No, but you're right, that number is pretty arbitrary. Maximum length
-> of mesh IEs currently (Mesh ID + Mesh Conf + Mesh Awake) is only 47.
-> Since mesh IEs have to be added during beacon time, might it make
-> sense to track the needed length in the if_mesh?
-
-Maybe just add a comment what's included in the 400?
-
-> > Also ... since you'll need PS support eventually anyway, maybe you
-> > should refactor "struct ieee80211_if_ap" into something AP-specific
-> > (currently only VLANs) and the rest, and then use "the rest" in mesh as
-> > well to make all this code more unified.
-> 
-> I like this approach much better. Are you suggesting just factoring
-> out the PS data, or taking it further and creating a generic "if which
-> beacons"?
-
-Well, I don't think "iface which beacons" is really what we need here --
-IBSS sends beacons as well but we don't really have PS support there and
-it'd be different anyway. But on the other hand, if you also factor out
-the beacon pointer, you can embed that into both. Like I said, I think
-from struct ..._if_ap you only have the vlan list that you don't want?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 6fbc27e..36f25fc 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -269,6 +269,55 @@ static int ath6kl_sdio_scat_rw(struct ath6kl_sdio *ar_sdio,
+ 	return status;
+ }
+ 
++static int ath6kl_sdio_alloc_prep_scat_req(struct ath6kl_sdio *ar_sdio,
++					   int n_scat_entry, int n_scat_req,
++					   bool virt_scat)
++{
++	struct hif_scatter_req *s_req;
++	struct bus_request *bus_req;
++	int i, scat_req_sz, scat_list_sz, sg_sz = 0;
++
++	scat_list_sz = (n_scat_entry - 1) * sizeof(struct hif_scatter_item);
++	scat_req_sz = sizeof(*s_req) + scat_list_sz;
++
++	if (!virt_scat)
++		sg_sz = sizeof(struct scatterlist) * n_scat_entry;
++
++	for (i = 0; i < n_scat_req; i++) {
++		/* allocate the scatter request */
++		s_req = kzalloc(scat_req_sz, GFP_KERNEL);
++		if (!s_req)
++			return -ENOMEM;
++
++		if (sg_sz) {
++			/* allocate sglist */
++			s_req->sgentries = kzalloc(sg_sz, GFP_KERNEL);
++
++			if (!s_req->sgentries) {
++				kfree(s_req);
++				return -ENOMEM;
++			}
++		}
++
++		/* allocate a bus request for this scatter request */
++		bus_req = ath6kl_sdio_alloc_busreq(ar_sdio);
++		if (!bus_req) {
++			kfree(s_req->sgentries);
++			kfree(s_req);
++			return -ENOMEM;
++		}
++
++		/* assign the scatter request to this bus request */
++		bus_req->scat_req = s_req;
++		s_req->busrequest = bus_req;
++
++		/* add it to the scatter pool */
++		hif_scatter_req_add(ar_sdio->ar, s_req);
++	}
++
++	return 0;
++}
++
+ /* clean up scatter support */
+ static void ath6kl_sdio_cleanup_scat_resource(struct ath6kl_sdio *ar_sdio)
+ {
+@@ -296,9 +345,7 @@ static void ath6kl_sdio_cleanup_scat_resource(struct ath6kl_sdio *ar_sdio)
+ static int ath6kl_sdio_setup_scat_resource(struct ath6kl_sdio *ar_sdio,
+ 					   struct hif_dev_scat_sup_info *pinfo)
+ {
+-	struct hif_scatter_req *s_req;
+-	struct bus_request *bus_req;
+-	int i, scat_req_sz, scat_list_sz, sg_sz;
++	int ret = 0;
+ 
+ 	/* check if host supports scatter and it meets our requirements */
+ 	if (ar_sdio->func->card->host->max_segs < MAX_SCATTER_ENTRIES_PER_REQ) {
+@@ -312,51 +359,19 @@ static int ath6kl_sdio_setup_scat_resource(struct ath6kl_sdio *ar_sdio,
+ 		   "hif-scatter enabled: max scatter req : %d entries: %d\n",
+ 		   MAX_SCATTER_REQUESTS, MAX_SCATTER_ENTRIES_PER_REQ);
+ 
+-	scat_list_sz = (MAX_SCATTER_ENTRIES_PER_REQ - 1) *
+-		       sizeof(struct hif_scatter_item);
+-	scat_req_sz = sizeof(*s_req) + scat_list_sz;
+-
+-	sg_sz = sizeof(struct scatterlist) * MAX_SCATTER_ENTRIES_PER_REQ;
+-
+-	for (i = 0; i < MAX_SCATTER_REQUESTS; i++) {
+-		/* allocate the scatter request */
+-		s_req = kzalloc(scat_req_sz, GFP_KERNEL);
+-		if (!s_req)
+-			goto fail_setup_scat;
+-
+-		/* allocate sglist */
+-		s_req->sgentries = kzalloc(sg_sz, GFP_KERNEL);
+-
+-		if (!s_req->sgentries) {
+-			kfree(s_req);
+-			goto fail_setup_scat;
+-		}
+-
+-		/* allocate a bus request for this scatter request */
+-		bus_req = ath6kl_sdio_alloc_busreq(ar_sdio);
+-		if (!bus_req) {
+-			kfree(s_req->sgentries);
+-			kfree(s_req);
+-			goto fail_setup_scat;
+-		}
+-
+-		/* assign the scatter request to this bus request */
+-		bus_req->scat_req = s_req;
+-		s_req->busrequest = bus_req;
+-		/* add it to the scatter pool */
+-		hif_scatter_req_add(ar_sdio->ar, s_req);
++	ret = ath6kl_sdio_alloc_prep_scat_req(ar_sdio,
++					      MAX_SCATTER_ENTRIES_PER_REQ,
++					      MAX_SCATTER_REQUESTS, 0);
++	if (ret) {
++		ath6kl_err("hif-scatter: failed to alloc scatter resources !\n");
++		ath6kl_sdio_cleanup_scat_resource(ar_sdio);
++		return ret;
+ 	}
+ 
+ 	pinfo->max_scat_entries = MAX_SCATTER_ENTRIES_PER_REQ;
+ 	pinfo->max_xfer_szper_scatreq = MAX_SCATTER_REQ_TRANSFER_SIZE;
+ 
+ 	return 0;
+-
+-fail_setup_scat:
+-	ath6kl_err("hif-scatter: failed to alloc scatter resources !\n");
+-	ath6kl_sdio_cleanup_scat_resource(ar_sdio);
+-
+-	return -ENOMEM;
+ }
+ 
+ static int ath6kl_sdio_read_write_sync(struct ath6kl *ar, u32 addr, u8 *buf,
+-- 
+1.7.1
 
