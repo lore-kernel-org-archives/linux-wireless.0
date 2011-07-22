@@ -1,48 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36563 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751693Ab1G2Pu0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 11:50:26 -0400
-Subject: Re: IBSS channel support
-From: Dan Williams <dcbw@redhat.com>
-To: p4u <hakais@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 29 Jul 2011 10:54:33 -0500
-In-Reply-To: <4E32D144.6050304@gmail.com>
-References: <4E32D144.6050304@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1311954873.3084.2.camel@dcbw.foobar.com> (sfid-20110729_175030_072145_BD0D5FD6)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60070 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753203Ab1GVQvV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 12:51:21 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat: add include/crypto/aes.h
+Date: Fri, 22 Jul 2011 18:51:10 +0200
+Message-Id: <1311353470-31012-2-git-send-email-hauke@hauke-m.de> (sfid-20110722_185123_538417_AB1A6ABA)
+In-Reply-To: <1311353470-31012-1-git-send-email-hauke@hauke-m.de>
+References: <1311353470-31012-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-07-29 at 17:27 +0200, p4u wrote:
-> Hi,
-> This is my first mail to this list, I'm Pau from Barcelona working in 
-> guifi.net (wireless community)
-> First of all I want to say thank you guys for your amazing job :-)
-> 
-> Now, I have a little question. Using command "iw phy phy0 info" I can 
-> see that IBSS mode is only avaiable in some channels for 5ghz spectrum. 
-> I have been looking for information about it, but I cannot find from 
-> what depends if some channel can by used in IBSS mode or not. So I think 
-> it depends on the driver and on the regdomain, is it right?
 
-Yes.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/crypto/aes.h |   21 +++++++++++++++++++++
+ 1 files changed, 21 insertions(+), 0 deletions(-)
+ create mode 100644 include/crypto/aes.h
 
-> Also I'm working in some scripts, and I need to know if a channel has 
-> IBSS support or not. The only way I found is with iw command, but pharse 
-> this data is very dirty. Furthermore I can read in the end of iw help:
-> 
-> "Do NOT screenscrape this tool, we don't consider its output stable."
-> 
-> So I need another way to get this information. Any idea?
-
-Couldn't you use the CRDA database?  That's got bits that indicate
-whether or not some channels allow IBSS in your domain or not.
-
-http://wireless.kernel.org/download/wireless-regdb/
-
-Dan
-
+diff --git a/include/crypto/aes.h b/include/crypto/aes.h
+new file mode 100644
+index 0000000..8031a54
+--- /dev/null
++++ b/include/crypto/aes.h
+@@ -0,0 +1,21 @@
++#ifndef _COMPAT_CRYPTO_AES_H
++#define _COMPAT_CRYPTO_AES_H
++
++#include <linux/version.h>
++
++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24))
++#include_next <crypto/aes.h>
++#else
++
++#define AES_MIN_KEY_SIZE	16
++#define AES_MAX_KEY_SIZE	32
++#define AES_KEYSIZE_128		16
++#define AES_KEYSIZE_192		24
++#define AES_KEYSIZE_256		32
++#define AES_BLOCK_SIZE		16
++#define AES_MAX_KEYLENGTH	(15 * 16)
++#define AES_MAX_KEYLENGTH_U32	(AES_MAX_KEYLENGTH / sizeof(u32))
++
++#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24)) */
++
++#endif
+-- 
+1.7.4.1
 
