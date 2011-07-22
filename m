@@ -1,41 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:45256 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751853Ab1GSPpy convert rfc822-to-8bit (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:44402 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753010Ab1GVDUS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 11:45:54 -0400
-Received: by fxd18 with SMTP id 18so213471fxd.11
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2011 08:45:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1311089451.2647.1.camel@dcbw.foobar.com>
-References: <20110717170325.8ABB09D401C@zog.reactivated.net>
-	<1311089451.2647.1.camel@dcbw.foobar.com>
-Date: Tue, 19 Jul 2011 16:45:53 +0100
-Message-ID: <CAGq3pz5rniWzM86ETz4A9THCjfwDxq7mJewb4rVYgjwNQUiFcg@mail.gmail.com> (sfid-20110719_174557_824065_A6C7D9DD)
-Subject: Re: [PATCH 2/4] libertas: mesh: misc cleanup
-From: Daniel Drake <dsd@laptop.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 21 Jul 2011 23:20:18 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: remove redundant variable scan_table_idx
+Date: Thu, 21 Jul 2011 20:25:58 -0700
+Message-Id: <1311305158-15534-2-git-send-email-bzhao@marvell.com> (sfid-20110722_052025_850742_D19441F3)
+In-Reply-To: <1311305158-15534-1-git-send-email-bzhao@marvell.com>
+References: <1311305158-15534-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 July 2011 16:30, Dan Williams <dcbw@redhat.com> wrote:
-> On Sun, 2011-07-17 at 18:03 +0100, Daniel Drake wrote:
->> Remove unused blindlist code.
->
-> The blind list stuff was to enable easier testing of the mesh
-> functionality in an automated fashion; are you guys not using that?  I'm
-> fine with removing it for now if it's not actually being used by OLPC.
+mwifiex_get_bss_info() routine updates variable 'info->scan_table_idx'
+but it is never used.
 
-It's definitely not being used - it is dead code, not accessible from anywhere.
-I guess this was originally a private ioctl.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/ioctl.h     |    1 -
+ drivers/net/wireless/mwifiex/sta_ioctl.c |   12 ------------
+ 2 files changed, 0 insertions(+), 13 deletions(-)
 
-We don't actively work on the mesh as before, we are just sticking
-with the current implementation. If that ever were to change I guess
-we could find a way to add this code in again, but I don't see that
-being likely.
+diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
+index bd9e074..e0b68e7 100644
+--- a/drivers/net/wireless/mwifiex/ioctl.h
++++ b/drivers/net/wireless/mwifiex/ioctl.h
+@@ -134,7 +134,6 @@ struct mwifiex_ver_ext {
+ struct mwifiex_bss_info {
+ 	u32 bss_mode;
+ 	struct mwifiex_802_11_ssid ssid;
+-	u32 scan_table_idx;
+ 	u32 bss_chan;
+ 	u32 region_code;
+ 	u32 media_connected;
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 10ef9e9..fd764b3 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -376,7 +376,6 @@ int mwifiex_get_bss_info(struct mwifiex_private *priv,
+ {
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 	struct mwifiex_bssdescriptor *bss_desc;
+-	s32 tbl_idx;
+ 
+ 	if (!info)
+ 		return -1;
+@@ -394,17 +393,6 @@ int mwifiex_get_bss_info(struct mwifiex_private *priv,
+ 
+ 	info->region_code = adapter->region_code;
+ 
+-	/* Scan table index if connected */
+-	info->scan_table_idx = 0;
+-	if (priv->media_connected) {
+-		tbl_idx =
+-			mwifiex_find_ssid_in_list(priv, &bss_desc->ssid,
+-						  bss_desc->mac_address,
+-						  priv->bss_mode);
+-		if (tbl_idx >= 0)
+-			info->scan_table_idx = tbl_idx;
+-	}
+-
+ 	info->media_connected = priv->media_connected;
+ 
+ 	info->max_power_level = priv->max_tx_power_level;
+-- 
+1.7.0.2
 
-Thanks,
-Daniel
