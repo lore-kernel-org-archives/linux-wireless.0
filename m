@@ -1,358 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44892 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757657Ab1GAWP4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:54611 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753282Ab1GVFnK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2011 18:15:56 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Qcm0B-0007Mw-Ka
-	for linux-wireless@vger.kernel.org; Sat, 02 Jul 2011 00:15:55 +0200
-Message-Id: <20110701221533.846716160@sipsolutions.net> (sfid-20110702_001605_678620_87CFAFA1)
-Date: Sat, 02 Jul 2011 00:13:23 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 2/3] cfg80211/nl80211: support GTK rekey offload
-References: <20110701221321.478559320@sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 22 Jul 2011 01:43:10 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Subject: [PATCH 16/31] ath6kl: Remove callback msg_pending() and used the function directly
+Date: Fri, 22 Jul 2011 08:41:49 +0300
+Message-ID: <1311313324-6766-18-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110722_074334_851088_8A04FDD9)
+In-Reply-To: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-In certain circumstances, like WoWLAN scenarios,
-devices may implement (partial) GTK rekeying on
-the device to avoid waking up the host for it.
-
-In order to successfully go through GTK rekeying,
-the KEK, KCK and the replay counter are required.
-
-Add API to let the supplicant hand the parameters
-to the driver which may store it for future GTK
-rekey operations.
-
-Note that, of course, if GTK rekeying is done by
-the device, the EAP frame must not be passed up
-to userspace, instead a rekey event needs to be
-sent to let userspace update its replay counter.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- include/linux/nl80211.h |   39 ++++++++++++++++
- include/net/cfg80211.h  |   26 +++++++++++
- net/wireless/mlme.c     |   11 ++++
- net/wireless/nl80211.c  |  113 ++++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h  |    4 +
- 5 files changed, 193 insertions(+)
+ drivers/net/wireless/ath/ath6kl/htc.c     |    6 ++----
+ drivers/net/wireless/ath/ath6kl/htc.h     |    2 ++
+ drivers/net/wireless/ath/ath6kl/htc_hif.c |    3 ++-
+ drivers/net/wireless/ath/ath6kl/htc_hif.h |    2 --
+ 4 files changed, 6 insertions(+), 7 deletions(-)
 
---- a/include/linux/nl80211.h	2011-07-02 00:00:35.000000000 +0200
-+++ b/include/linux/nl80211.h	2011-07-02 00:00:44.000000000 +0200
-@@ -483,6 +483,14 @@
-  *	more background information, see
-  *	http://wireless.kernel.org/en/users/Documentation/WoWLAN.
-  *
-+ * @NL80211_CMD_SET_REKEY_OFFLOAD: This command is used give the driver
-+ *	the necessary information for supporting GTK rekey offload. This
-+ *	feature is typically used during WoWLAN. The configuration data
-+ *	is contained in %NL80211_ATTR_REKEY_DATA (which is nested and
-+ *	contains the data in sub-attributes). After rekeying happened,
-+ *	this command may also be sent by the driver as an MLME event to
-+ *	inform userspace of the new replay counter.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -605,6 +613,8 @@ enum nl80211_commands {
- 	NL80211_CMD_SCHED_SCAN_RESULTS,
- 	NL80211_CMD_SCHED_SCAN_STOPPED,
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index a359332..052dc19 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -1723,9 +1723,8 @@ static int htc_fetch_rxpkts(struct htc_target *target,
+ 	return status;
+ }
  
-+	NL80211_CMD_SET_REKEY_OFFLOAD,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -996,6 +1006,9 @@ enum nl80211_commands {
-  *	are managed in software: interfaces of these types aren't subject to
-  *	any restrictions in their number or combinations.
-  *
-+ * @%NL80211_ATTR_REKEY_DATA: nested attribute containing the information
-+ *	necessary for GTK rekeying in the device, see &enum nl80211_rekey_data.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1194,6 +1207,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_INTERFACE_COMBINATIONS,
- 	NL80211_ATTR_SOFTWARE_IFTYPES,
- 
-+	NL80211_ATTR_REKEY_DATA,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -2361,4 +2376,28 @@ enum nl80211_plink_state {
- 	MAX_NL80211_PLINK_STATES = NUM_NL80211_PLINK_STATES - 1
- };
- 
-+#define NL80211_KCK_LEN			16
-+#define NL80211_KEK_LEN			16
-+#define NL80211_REPLAY_CTR_LEN		8
-+
-+/**
-+ * enum nl80211_rekey_data - attributes for GTK rekey offload
-+ * @__NL80211_REKEY_DATA_INVALID: invalid number for nested attributes
-+ * @NL80211_REKEY_DATA_KEK: key encryption key (binary)
-+ * @NL80211_REKEY_DATA_KCK: key confirmation key (binary)
-+ * @NL80211_REKEY_DATA_REPLAY_CTR: replay counter (binary)
-+ * @NUM_NL80211_REKEY_DATA: number of rekey attributes (internal)
-+ * @MAX_NL80211_REKEY_DATA: highest rekey attribute (internal)
-+ */
-+enum nl80211_rekey_data {
-+	__NL80211_REKEY_DATA_INVALID,
-+	NL80211_REKEY_DATA_KEK,
-+	NL80211_REKEY_DATA_KCK,
-+	NL80211_REKEY_DATA_REPLAY_CTR,
-+
-+	/* keep last */
-+	NUM_NL80211_REKEY_DATA,
-+	MAX_NL80211_REKEY_DATA = NUM_NL80211_REKEY_DATA - 1
-+};
-+
- #endif /* __LINUX_NL80211_H */
---- a/include/net/cfg80211.h	2011-07-02 00:00:35.000000000 +0200
-+++ b/include/net/cfg80211.h	2011-07-02 00:00:44.000000000 +0200
-@@ -1154,6 +1154,18 @@ struct cfg80211_wowlan {
- };
- 
- /**
-+ * struct cfg80211_gtk_rekey_data - rekey data
-+ * @kek: key encryption key
-+ * @kck: key confirmation key
-+ * @replay_ctr: replay counter
-+ */
-+struct cfg80211_gtk_rekey_data {
-+	u8 kek[NL80211_KEK_LEN];
-+	u8 kck[NL80211_KCK_LEN];
-+	u8 replay_ctr[NL80211_REPLAY_CTR_LEN];
-+};
-+
-+/**
-  * struct cfg80211_ops - backend description for wireless configuration
-  *
-  * This struct is registered by fullmac card drivers and/or wireless stacks
-@@ -1197,6 +1209,8 @@ struct cfg80211_wowlan {
-  *
-  * @set_default_mgmt_key: set the default management frame key on an interface
-  *
-+ * @set_rekey_data: give the data necessary for GTK rekeying to the driver
-+ *
-  * @add_beacon: Add a beacon with given parameters, @head, @interval
-  *	and @dtim_period will be valid, @tail is optional.
-  * @set_beacon: Change the beacon parameters for an access point mode
-@@ -1499,6 +1513,9 @@ struct cfg80211_ops {
- 				struct net_device *dev,
- 				struct cfg80211_sched_scan_request *request);
- 	int	(*sched_scan_stop)(struct wiphy *wiphy, struct net_device *dev);
-+
-+	int	(*set_rekey_data)(struct wiphy *wiphy, struct net_device *dev,
-+				  struct cfg80211_gtk_rekey_data *data);
- };
- 
- /*
-@@ -3033,6 +3050,15 @@ void cfg80211_cqm_rssi_notify(struct net
- void cfg80211_cqm_pktloss_notify(struct net_device *dev,
- 				 const u8 *peer, u32 num_packets, gfp_t gfp);
- 
-+/**
-+ * cfg80211_gtk_rekey_notify - notify userspace about driver rekeying
-+ * @dev: network device
-+ * @bssid: BSSID of AP (to avoid races)
-+ * @replay_ctr: new replay counter
-+ */
-+void cfg80211_gtk_rekey_notify(struct net_device *dev, const u8 *bssid,
-+			       const u8 *replay_ctr, gfp_t gfp);
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
---- a/net/wireless/nl80211.c	2011-07-02 00:00:35.000000000 +0200
-+++ b/net/wireless/nl80211.c	2011-07-02 00:00:44.000000000 +0200
-@@ -176,6 +176,7 @@ static const struct nla_policy nl80211_p
- 	[NL80211_ATTR_WOWLAN_TRIGGERS] = { .type = NLA_NESTED },
- 	[NL80211_ATTR_STA_PLINK_STATE] = { .type = NLA_U8 },
- 	[NL80211_ATTR_SCHED_SCAN_INTERVAL] = { .type = NLA_U32 },
-+	[NL80211_ATTR_REKEY_DATA] = { .type = NLA_NESTED },
- };
- 
- /* policy for the key attributes */
-@@ -206,6 +207,14 @@ nl80211_wowlan_policy[NUM_NL80211_WOWLAN
- 	[NL80211_WOWLAN_TRIG_PKT_PATTERN] = { .type = NLA_NESTED },
- };
- 
-+/* policy for GTK rekey offload attributes */
-+static const struct nla_policy
-+nl80211_rekey_policy[NUM_NL80211_REKEY_DATA] = {
-+	[NL80211_REKEY_DATA_KEK] = { .len = NL80211_KEK_LEN },
-+	[NL80211_REKEY_DATA_KCK] = { .len = NL80211_KCK_LEN },
-+	[NL80211_REKEY_DATA_REPLAY_CTR] = { .len = NL80211_REPLAY_CTR_LEN },
-+};
-+
- /* ifidx get helper */
- static int nl80211_get_ifidx(struct netlink_callback *cb)
+-static int htc_rxmsg_pending_handler(struct htc_target *target,
+-				     u32 msg_look_ahead[],
+-				     int *num_pkts)
++int htc_rxmsg_pending_handler(struct htc_target *target, u32 msg_look_ahead[],
++			      int *num_pkts)
  {
-@@ -5408,6 +5417,57 @@ static int nl80211_set_wowlan(struct sk_
- 	return err;
- }
+ 	struct htc_packet *packets, *tmp_pkt;
+ 	struct htc_endpoint *endpoint;
+@@ -2388,7 +2387,6 @@ void *htc_create(struct ath6kl *ar)
  
-+static int nl80211_set_rekey_data(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct nlattr *tb[NUM_NL80211_REKEY_DATA];
-+	struct cfg80211_gtk_rekey_data rekey_data;
-+	int err;
-+
-+	if (!info->attrs[NL80211_ATTR_REKEY_DATA])
-+		return -EINVAL;
-+
-+	err = nla_parse(tb, MAX_NL80211_REKEY_DATA,
-+			nla_data(info->attrs[NL80211_ATTR_REKEY_DATA]),
-+			nla_len(info->attrs[NL80211_ATTR_REKEY_DATA]),
-+			nl80211_rekey_policy);
-+	if (err)
-+		return err;
-+
-+	if (nla_len(tb[NL80211_REKEY_DATA_REPLAY_CTR]) != NL80211_REPLAY_CTR_LEN)
-+		return -ERANGE;
-+	if (nla_len(tb[NL80211_REKEY_DATA_KEK]) != NL80211_KEK_LEN)
-+		return -ERANGE;
-+	if (nla_len(tb[NL80211_REKEY_DATA_KCK]) != NL80211_KCK_LEN)
-+		return -ERANGE;
-+
-+	memcpy(rekey_data.kek, nla_data(tb[NL80211_REKEY_DATA_KEK]),
-+	       NL80211_KEK_LEN);
-+	memcpy(rekey_data.kck, nla_data(tb[NL80211_REKEY_DATA_KCK]),
-+	       NL80211_KCK_LEN);
-+	memcpy(rekey_data.replay_ctr,
-+	       nla_data(tb[NL80211_REKEY_DATA_REPLAY_CTR]),
-+	       NL80211_REPLAY_CTR_LEN);
-+
-+	wdev_lock(wdev);
-+	if (!wdev->current_bss) {
-+		err = -ENOTCONN;
-+		goto out;
-+	}
-+
-+	if (!rdev->ops->set_rekey_data) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	err = rdev->ops->set_rekey_data(&rdev->wiphy, dev, &rekey_data);
-+ out:
-+	wdev_unlock(wdev);
-+	return err;
-+}
-+
- #define NL80211_FLAG_NEED_WIPHY		0x01
- #define NL80211_FLAG_NEED_NETDEV	0x02
- #define NL80211_FLAG_NEED_RTNL		0x04
-@@ -5939,6 +5999,14 @@ static struct genl_ops nl80211_ops[] = {
- 		.internal_flags = NL80211_FLAG_NEED_WIPHY |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_SET_REKEY_OFFLOAD,
-+		.doit = nl80211_set_rekey_data,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- };
+ 	target->dev->ar = ar;
+ 	target->dev->htc_cnxt = target;
+-	target->dev->msg_pending = htc_rxmsg_pending_handler;
+ 	target->ep_waiting = ENDPOINT_MAX;
  
- static struct genl_multicast_group nl80211_mlme_mcgrp = {
-@@ -6871,6 +6939,51 @@ nl80211_send_cqm_rssi_notify(struct cfg8
+ 	reset_ep_state(target);
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
+index ff0ed6f..fba226e 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.h
++++ b/drivers/net/wireless/ath/ath6kl/htc.h
+@@ -549,6 +549,8 @@ void htc_indicate_activity_change(struct htc_target *target,
+ 				  enum htc_endpoint_id endpoint, bool active);
+ int htc_get_rxbuf_num(struct htc_target *target, enum htc_endpoint_id endpoint);
+ int htc_add_rxbuf_multiple(struct htc_target *target, struct list_head *pktq);
++int htc_rxmsg_pending_handler(struct htc_target *target, u32 msg_look_ahead[],
++			      int *n_pkts);
  
- 	if (genlmsg_end(msg, hdr) < 0) {
- 		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
-+	return;
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
-+
-+void nl80211_gtk_rekey_notify(struct cfg80211_registered_device *rdev,
-+			      struct net_device *netdev, const u8 *bssid,
-+			      const u8 *replay_ctr, gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+	struct nlattr *rekey_attr;
-+	void *hdr;
-+
-+	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_SET_REKEY_OFFLOAD);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
-+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
-+	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, bssid);
-+
-+	rekey_attr = nla_nest_start(msg, NL80211_ATTR_REKEY_DATA);
-+	if (!rekey_attr)
-+		goto nla_put_failure;
-+
-+	NLA_PUT(msg, NL80211_REKEY_DATA_REPLAY_CTR,
-+		NL80211_REPLAY_CTR_LEN, replay_ctr);
-+
-+	nla_nest_end(msg, rekey_attr);
-+
-+	if (genlmsg_end(msg, hdr) < 0) {
-+		nlmsg_free(msg);
- 		return;
- 	}
+ static inline void set_htc_pkt_info(struct htc_packet *packet, void *context,
+ 				    u8 *buf, unsigned int len,
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.c b/drivers/net/wireless/ath/ath6kl/htc_hif.c
+index 043f85f..386bc28 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_hif.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_hif.c
+@@ -416,7 +416,8 @@ static int proc_pending_irqs(struct ath6kl_device *dev, bool *done)
+ 		 * improve performance by reducing context switching when
+ 		 * we rapidly pull packets.
+ 		 */
+-		status = dev->msg_pending(dev->htc_cnxt, &lk_ahd, &fetched);
++		status = htc_rxmsg_pending_handler(dev->htc_cnxt,
++						   &lk_ahd, &fetched);
+ 		if (status)
+ 			goto out;
  
---- a/net/wireless/mlme.c	2011-07-02 00:00:35.000000000 +0200
-+++ b/net/wireless/mlme.c	2011-07-02 00:00:44.000000000 +0200
-@@ -1084,3 +1084,14 @@ void cfg80211_cqm_pktloss_notify(struct
- 	nl80211_send_cqm_pktloss_notify(rdev, dev, peer, num_packets, gfp);
- }
- EXPORT_SYMBOL(cfg80211_cqm_pktloss_notify);
-+
-+void cfg80211_gtk_rekey_notify(struct net_device *dev, const u8 *bssid,
-+			       const u8 *replay_ctr, gfp_t gfp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	nl80211_gtk_rekey_notify(rdev, dev, bssid, replay_ctr, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_gtk_rekey_notify);
---- a/net/wireless/nl80211.h	2011-07-02 00:00:35.000000000 +0200
-+++ b/net/wireless/nl80211.h	2011-07-02 00:00:44.000000000 +0200
-@@ -109,4 +109,8 @@ nl80211_send_cqm_pktloss_notify(struct c
- 				struct net_device *netdev, const u8 *peer,
- 				u32 num_packets, gfp_t gfp);
- 
-+void nl80211_gtk_rekey_notify(struct cfg80211_registered_device *rdev,
-+			      struct net_device *netdev, const u8 *bssid,
-+			      const u8 *replay_ctr, gfp_t gfp);
-+
- #endif /* __NET_WIRELESS_NL80211_H */
-
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_hif.h b/drivers/net/wireless/ath/ath6kl/htc_hif.h
+index 5e65f1e..8a8dfdd 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_hif.h
++++ b/drivers/net/wireless/ath/ath6kl/htc_hif.h
+@@ -82,8 +82,6 @@ struct ath6kl_device {
+ 	u32 block_sz;
+ 	u32 block_mask;
+ 	struct htc_target *htc_cnxt;
+-	int (*msg_pending) (struct htc_target *target, u32 lk_ahds[],
+-			    int *npkts_fetched);
+ 	struct hif_dev_scat_sup_info hif_scat_info;
+ 	int max_rx_bndl_sz;
+ 	int max_tx_bndl_sz;
+-- 
+1.7.1
 
