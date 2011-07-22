@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:3680 "EHLO c60.cesmail.net"
+Received: from mms2.broadcom.com ([216.31.210.18]:3358 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752156Ab1G2Pzp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 11:55:45 -0400
-Message-ID: <4E32D7FE.9030402@gnu.org> (sfid-20110729_175548_001844_B3CD6667)
-Date: Fri, 29 Jul 2011 11:55:42 -0400
-From: Pavel Roskin <proski@gnu.org>
+	id S1755072Ab1GVS5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2011 14:57:34 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: "Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 27/29] staging: brcm80211: SPARC build error fix
+Date: Fri, 22 Jul 2011 20:57:14 +0200
+Message-ID: <1311361036-3175-28-git-send-email-arend@broadcom.com> (sfid-20110722_205807_923212_F152C226)
+In-Reply-To: <1311361036-3175-1-git-send-email-arend@broadcom.com>
+References: <1311361036-3175-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] lib80211: call try_module_get() in lib80211_get_crypto_ops()
-References: <20110729025007.7889.19879.stgit@mj.roinet.com> <4E3222B6.1010904@gnu.org> <CAGRGNgWo=jgOwffbvCL5SDA6TD=cKUheObSM=23+ZTNCqH+-GQ@mail.gmail.com>
-In-Reply-To: <CAGRGNgWo=jgOwffbvCL5SDA6TD=cKUheObSM=23+ZTNCqH+-GQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/28/2011 11:27 PM, Julian Calaby wrote:
+From: Pieter-Paul Giesberts <pieterpg@broadcom.com>
 
-> If I recall correctly, lib80211 is the last remainder of the
-> pre-mac80211 wireless stack. It should be annihilated with extreme
-> prejudice, but the intel centrino 2xxx drivers are so interwoven with
-> it that extracting them would be a pain in the ass - and given that
-> nobody who has those parts really cares, this hasn't happened.
+Due to missing memset function declaration.
 
-Basically, lib80211 has no consistent API.  The callers (hostap and 
-ipw2x00) get all the internals and do way too much with them.
+Cc: devel@linuxdriverproject.org
+Cc: linux-wireless@vger.kernel.org
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/otp.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Module refcounting is (presumably) done by the "key objects", i.e. the 
-structures consisting of the keys and the operations that apply to them. 
-  Something is done wrong, as there are more module puts than module gets.
-
-But the caller also gets the ops, that is the set of encryption 
-functions from a particular encryption module.  There is no locking for 
-the ops.  There is no lib80211_put_crypto_ops(), that is, the caller 
-never says it's not using the ops anymore.
-
-Possible fixes are:
-
-1) Rewrite the whole API.  Hide ops from the callers.  Enforce 
-refcounting by the keys.  The keys should hold the ops, the ops should 
-hold the modules.  That may be a lot of work, but the result will be 
-nice.  Maybe even mac80211 could use it.
-
-2) Fix key object based refcounting.  Ignore the fact that a crypto 
-module can be unloaded at a wrong time while the caller is using the 
-ops.  That may be a simple fix, but it won't be complete.  At least no 
-new bugs would be introduced.
-
-3) Same as above, but add ops-based refcounting to protect against 
-crypto module unloading.  The problem is that it's hard to find the 
-places where the callers stop using the ops.  The result would work 
-correctly, and the changes won't be too radical.  But it's hard to get 
-right.
-
-4) Merge lib80211 and lib80211_crypt_* into one module.  That solves the 
-problem completely.  Some memory would be wasted for those who use only 
-one algorithm.
-
-5) Make lib80211_crypt_* modules permanent (not unloadable).  Some 
-sysadmins may be unhappy that the modules cannot be replaced without reboot.
-
+diff --git a/drivers/staging/brcm80211/brcmsmac/otp.c b/drivers/staging/brcm80211/brcmsmac/otp.c
+index 975d80c..b6ff767 100644
+--- a/drivers/staging/brcm80211/brcmsmac/otp.c
++++ b/drivers/staging/brcm80211/brcmsmac/otp.c
+@@ -16,6 +16,7 @@
+ 
+ #include <linux/io.h>
+ #include <linux/errno.h>
++#include <linux/string.h>
+ 
+ #include <brcm_hw_ids.h>
+ #include <chipcommon.h>
 -- 
-Regards,
-Pavel Roskin
+1.7.4.1
+
+
