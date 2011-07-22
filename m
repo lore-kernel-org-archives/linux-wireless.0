@@ -1,108 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52926 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750856Ab1GMHWb (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:33395 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751338Ab1GVHrQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 03:22:31 -0400
-Message-ID: <4E1D47B2.4080706@qca.qualcomm.com> (sfid-20110713_092234_629997_468578AC)
-Date: Wed, 13 Jul 2011 10:22:26 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Fri, 22 Jul 2011 03:47:16 -0400
+Received: by vxh35 with SMTP id 35so1425687vxh.19
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2011 00:47:16 -0700 (PDT)
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@linuxdriverproject.org>,
-	<gregkh@suse.de>
-Subject: Re: [PATCH 03/24] ath6kl: add cfg80211.c
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>	 <20110713013324.8517.86411.stgit@localhost6.localdomain6> <1310531343.1143.26.camel@Joe-Laptop>
-In-Reply-To: <1310531343.1143.26.camel@Joe-Laptop>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <201107220929.35836.helmut.schaa@googlemail.com>
+References: <CAN=pzdLRaRHkg4NquUpDhEwRzq-roKQXMtMcwnr031maDSLRfw@mail.gmail.com>
+	<CAN=pzd+EFcyRnexjiMMLNR86hT_UKiePr=yCkZZk5dD4sqYSew@mail.gmail.com>
+	<CAN=pzdL596WrhmaWWE6s_ouAmR-zSr1bUki2YVzLKgE1Y2VijQ@mail.gmail.com>
+	<201107220929.35836.helmut.schaa@googlemail.com>
+Date: Fri, 22 Jul 2011 11:47:15 +0400
+Message-ID: <CAN=pzdJdFCqvif2qgq-jwDJ2h7n-nS7S8=A63BL_qBZqM7W5Xw@mail.gmail.com> (sfid-20110722_094720_641344_B7A13356)
+Subject: Re: rt2x00, AP mode, 802.11n is not working properly
+From: Stanislav Demakov <s.demakov@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/13/2011 07:29 AM, Joe Perches wrote:
-> On Wed, 2011-07-13 at 04:33 +0300, Kalle Valo wrote: 
->> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
->> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> [] 
->> +static struct ieee80211_rate ath6kl_rates[] = {
-> 
-> const?
-> 
->> +static struct ieee80211_channel ath6kl_2ghz_channels[] = {
-> 
-> const?
-> 
->> +static struct ieee80211_channel ath6kl_5ghz_a_channels[] = {
-> 
-> const?
-> 
->> +static struct ieee80211_supported_band ath6kl_band_2ghz = {
-> 
-> const?
-> 
->> +static struct ieee80211_supported_band ath6kl_band_5ghz = {
-> 
-> const?
+Thank you for the assistance, ask If you'll need anyhitng else to test.
 
-cfg80211 requires them to be non-const.
+By the way I've tested transfer speed in both directions and the results are:
 
->> +		ath6kl_err("%s: %u not spported\n", __func__, wpa_version);
->> +		ath6kl_err("%s: 0x%x not spported\n", __func__, auth_type);
-> 
-> supported
+from Server to Client: ~2.5 MB/s (after applying your patch and
+changing value 8 back to 64)
+from Client to Server: ~5.3 MB/s
 
-Fixed.
+Both machines uses 1T1R modules and connection is 65mbps (20mhz, MCS7)
+So I guess in ideal case Server to Client speed should be at least
+twice faster than it is now.
+Interesting that in G mode(54mbps) the same transmit speed is around 3.2 MB/s.
 
->> +		wait_event_interruptible_timeout(ar->event_wq,
->> +						 ar->
->> +						 tx_pending[wmi_get_control_ep
->> +							     (ar->wmi)] == 0,
->> +						 WMI_TIMEOUT);
-> 
-> I think you can ignore 80 columns for this.
-> 
-> 		wait_event_interruptible_timeout(ar->event_wq,
-> 						 ar->tx_pending[wmi_get_control_ep(ar->wmi)] == 0,
-> 						 WMI_TIMEOUT);
-> 
-> or maybe use different argument alignment when appropriate:
-> 
-> 		wait_event_interruptible_timeout(ar->event_wq,
-> 			ar->tx_pending[wmi_get_control_ep(ar->wmi)] == 0,
-> 			WMI_TIMEOUT);
-
-I took the latter approach to avoid checkpatch warnings.
-
->> +		if (sme->key_idx < WMI_MIN_KEY_INDEX
->> +		    || sme->key_idx > WMI_MAX_KEY_INDEX) {
-> 
-> I think it's more consistent with other files in drivers/net
-> to use logical continuations at EOL
-> 
-> if (sme->key_idx < WMI_MIN_KEY_INDEX ||
->     sme->key_idx > WMI_MAX_KEY_INDEX) {
-
-Yes, we just had missed that. Fixed.
-
-> 
->> +			ath6kl_err("%s: key index %d out of bounds\n", __func__,
->> +				   sme->key_idx);
-> 
-> I think it's better to use format on one line,
-> arguments on another.
-> 
-> 			ath6kl_err("%s: key index %d out of bounds\n",
-> 				    __func__, sme->key_idx);
-> 
-
-Fixed.
-
-> It seems almost all of your ath6kl_<level> logging
-> messages use __func__.  Perhaps you might as well
-> #define it to take __func__ instead of using it
-> in-place over and over.
-
-Actually I would like to get rid of __func__ usage from logging
-altogether, IMHO they just clutter the logs. I started doing that but
-haven't removed all of them yet (obviously).
-
-Kalle
+2011/7/22 Helmut Schaa <helmut.schaa@googlemail.com>:
+> Am Donnerstag, 21. Juli 2011 schrieb Stanislav Demakov:
+>> Quick note: changed .entry_num value back to 64 and the speed raised
+>> even more! Now it's about 2.5 MB/s.
+>
+> 64 is not a safe value in this case and rt2800usb_txdone_entry_check tries
+> to protect against a special case where the tx status for single frames
+> gets "lost". But at least we now know a little more about this issue.
+>
+>> But still there is still room for improvement. :)
+>> Looks like rt2800usb_txdone_entry_check was the major cause for the delay.
+>
+> Ok, thanks for trying. I'll think about a proper solution without causing
+> regressions ...
+>
+> Helmut
+>
