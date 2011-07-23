@@ -1,48 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:16149 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753462Ab1G2DCQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2011 23:02:16 -0400
-Message-ID: <4E3222B6.1010904@gnu.org> (sfid-20110729_050224_217380_ED8FC73F)
-Date: Thu, 28 Jul 2011 23:02:14 -0400
-From: Pavel Roskin <proski@gnu.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:52301 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752243Ab1GWOXM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jul 2011 10:23:12 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 09/11] ath6kl: Remove ath6kl_wmi_iterate_nodes()
+Date: Sat, 23 Jul 2011 19:43:15 +0530
+Message-ID: <1311430397-4960-9-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110723_162315_208262_F374BA05)
+In-Reply-To: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] lib80211: call try_module_get() in lib80211_get_crypto_ops()
-References: <20110729025007.7889.19879.stgit@mj.roinet.com>
-In-Reply-To: <20110729025007.7889.19879.stgit@mj.roinet.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/28/2011 10:50 PM, Pavel Roskin wrote:
-> Doing it by the caller is racy.  Some callers neglected to do so.  Fix
-> callers not to call try_module_get() after lib80211_get_crypto_ops().
->
-> When ops is copied, move lib80211_crypt_delayed_deinit() after
-> try_module_get() to avoid the risk that the module would be unloaded
-> between those calls.
->
-> Signed-off-by: Pavel Roskin<proski@gnu.org>
+Use wlan_iterate_nodes() directly.
 
-Sorry, please ignore this patch!  I didn't mean to send it.  It's not 
-complete, and I don't think I'll have time to fix it :(
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    4 ++--
+ drivers/net/wireless/ath/ath6kl/wmi.c      |    7 -------
+ drivers/net/wireless/ath/ath6kl/wmi.h      |    3 ---
+ 3 files changed, 2 insertions(+), 12 deletions(-)
 
-lib80211 has a terrible API, and the module referencing is split between 
-lib80211 and the callers.  Everything is too complicated.  Keys may be 
-freed asynchronously.  Module referencing is tied to the keys and not to 
-the ops.  I've seen the reference count for lib80211_crypt_ccmp to 
-underflow and become 4294967295 or something.
-
-Considering that lib80211 is only used by old modules, I'm even thinking 
-of making lib80211_crypt_* modules not unloadable.  It's too much work 
-to fix.
-
-What I actually intended to send is "lib80211: remove exports for 
-functions not called by other modules".  That "simplifies" the API a 
-little bit.
-
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 9eaa1b1..cf5ab55 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -833,8 +833,8 @@ void ath6kl_cfg80211_scan_complete_event(struct ath6kl *ar, int status)
+ 	}
+ 
+ 	/* Translate data to cfg80211 mgmt format */
+-	ath6kl_wmi_iterate_nodes(&ar->scan_table, ath6kl_cfg80211_scan_node,
+-				 ar->wdev->wiphy);
++	wlan_iterate_nodes(&ar->scan_table, ath6kl_cfg80211_scan_node,
++			   ar->wdev->wiphy);
+ 
+ 	cfg80211_scan_done(ar->scan_req, false);
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 6a6f79c..f5aa33d 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -386,13 +386,6 @@ int ath6kl_wmi_data_hdr_remove(struct wmi *wmi, struct sk_buff *skb)
+ 	return 0;
+ }
+ 
+-void ath6kl_wmi_iterate_nodes(struct ath6kl_node_table *scan_tbl,
+-			      void (*f) (void *arg, struct bss *),
+-			      void *arg)
+-{
+-	wlan_iterate_nodes(scan_tbl, f, arg);
+-}
+-
+ static void ath6kl_wmi_convert_bssinfo_hdr2_to_hdr(struct sk_buff *skb,
+ 						   u8 *datap)
+ {
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index a9f8f9e..fe3ddce 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -1931,9 +1931,6 @@ int ath6kl_wmi_implicit_create_pstream(struct wmi *wmi, struct sk_buff *skb,
+ 				       u8 *ac);
+ 
+ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb);
+-void ath6kl_wmi_iterate_nodes(struct ath6kl_node_table *scan_tbl,
+-			      void (*f) (void *arg, struct bss *),
+-			      void *arg);
+ struct bss *ath6kl_wmi_find_node(struct wmi *wmi, const u8 *mac_addr);
+ void ath6kl_wmi_node_free(struct wmi *wmi, const u8 *mac_addr);
+ 
 -- 
-Regards,
-Pavel Roskin
+1.7.0.4
+
