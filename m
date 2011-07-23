@@ -1,184 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:53534 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751598Ab1GUP0n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 11:26:43 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.guy@intel.com>
-Subject: [PATCH 03/25] iwlagn: kill iwlagn_setup_deferred_work
-Date: Thu, 21 Jul 2011 07:50:06 -0700
-Message-Id: <1311259828-8415-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110721_172647_499836_76A24D5F)
-In-Reply-To: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1311259828-8415-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:58836 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753136Ab1GWRU2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jul 2011 13:20:28 -0400
+Received: by ywe9 with SMTP id 9so1744635ywe.19
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jul 2011 10:20:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110723132856.10739.42301.stgit@mj.roinet.com>
+References: <20110723132856.10739.42301.stgit@mj.roinet.com>
+Date: Sat, 23 Jul 2011 20:20:27 +0300
+Message-ID: <CAFtRNNyR371zHfTy46TSbqYFs2jEJ5Ha8GRNZh7KEh97qAQTjA@mail.gmail.com> (sfid-20110723_192030_783554_5726BB27)
+Subject: Re: [PATCH 2 1/3] ath5k: remove unused and write-only structures and fields
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+2011/7/23 Pavel Roskin <proski@gnu.org>:
+> struct ath5k_avg_val is unused.
+>
+> In struct ath5k_hw, lladdr, ah_radar and ah_mac_revision are write-only,
+> rxbufsize is unused, ah_phy is write-only and referenced by unused
+> macros.
+>
+> In struct ath5k_vif, lladdr is write-only.
+>
+> Remove AR5K_TUNE_RADAR_ALERT, which has no effect.
+>
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+> Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
+> ---
+>  drivers/net/wireless/ath/ath5k/ath5k.h        |   28 -------------------------
+>  drivers/net/wireless/ath/ath5k/attach.c       |    5 +---
+>  drivers/net/wireless/ath/ath5k/base.c         |    1 -
+>  drivers/net/wireless/ath/ath5k/base.h         |    1 -
+>  drivers/net/wireless/ath/ath5k/mac80211-ops.c |    3 ---
+>  5 files changed, 1 insertions(+), 37 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+> index 277d5cb..be7b8c0 100644
+> --- a/drivers/net/wireless/ath/ath5k/ath5k.h
+> +++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+> @@ -131,13 +131,6 @@
+>  #define AR5K_REG_DISABLE_BITS(ah, _reg, _flags)                        \
+>        ath5k_hw_reg_write(ah, ath5k_hw_reg_read(ah, _reg) & ~(_flags), _reg)
+>
+> -/* Access to PHY registers */
+> -#define AR5K_PHY_READ(ah, _reg)                                        \
+> -       ath5k_hw_reg_read(ah, (ah)->ah_phy + ((_reg) << 2))
+> -
+> -#define AR5K_PHY_WRITE(ah, _reg, _val)                                 \
+> -       ath5k_hw_reg_write(ah, _val, (ah)->ah_phy + ((_reg) << 2))
+> -
+>  /* Access QCU registers per queue */
+>  #define AR5K_REG_READ_Q(ah, _reg, _queue)                              \
+>        (ath5k_hw_reg_read(ah, _reg) & (1 << _queue))                   \
+> @@ -166,7 +159,6 @@
+>  #define AR5K_TUNE_DMA_BEACON_RESP              2
+>  #define AR5K_TUNE_SW_BEACON_RESP               10
+>  #define AR5K_TUNE_ADDITIONAL_SWBA_BACKOFF      0
+> -#define AR5K_TUNE_RADAR_ALERT                  false
+>  #define AR5K_TUNE_MIN_TX_FIFO_THRES            1
+>  #define AR5K_TUNE_MAX_TX_FIFO_THRES    ((IEEE80211_MAX_FRAME_LEN / 64) + 1)
+>  #define AR5K_TUNE_REGISTER_TIMEOUT             20000
+> @@ -1013,16 +1005,6 @@ struct ath5k_nfcal_hist {
+>        s16 nfval[ATH5K_NF_CAL_HIST_MAX];       /* last few noise floors */
+>  };
+>
+> -/**
+> - * struct avg_val - Helper structure for average calculation
+> - * @avg: contains the actual average value
+> - * @avg_weight: is used internally during calculation to prevent rounding errors
+> - */
+> -struct ath5k_avg_val {
+> -       int avg;
+> -       int avg_weight;
+> -};
+> -
+>  #define ATH5K_LED_MAX_NAME_LEN 31
+>
+>  /*
+> @@ -1148,7 +1130,6 @@ struct ath5k_hw {
+>        bool                    rx_pending;     /* rx tasklet pending */
+>        bool                    tx_pending;     /* tx tasklet pending */
+>
+> -       u8                      lladdr[ETH_ALEN];
+>        u8                      bssidmask[ETH_ALEN];
+>
+>        unsigned int            led_pin,        /* GPIO pin for driving LED */
+> @@ -1156,7 +1137,6 @@ struct ath5k_hw {
+>
+>        struct work_struct      reset_work;     /* deferred chip reset */
+>
+> -       unsigned int            rxbufsize;      /* rx size based on mtu */
+>        struct list_head        rxbuf;          /* receive buffer */
+>        spinlock_t              rxbuflock;
+>        u32                     *rxlink;        /* link ptr in last RX desc */
+> @@ -1208,10 +1188,8 @@ struct ath5k_hw {
+>
+>        enum ath5k_version      ah_version;
+>        enum ath5k_radio        ah_radio;
+> -       u32                     ah_phy;
+>        u32                     ah_mac_srev;
+>        u16                     ah_mac_version;
+> -       u16                     ah_mac_revision;
+>        u16                     ah_phy_revision;
+>        u16                     ah_radio_5ghz_revision;
+>        u16                     ah_radio_2ghz_revision;
+> @@ -1279,12 +1257,6 @@ struct ath5k_hw {
+>                bool            txp_setup;
+>        } ah_txpower;
+>
+> -       struct {
+> -               bool            r_enabled;
+> -               int             r_last_alert;
+> -               struct ieee80211_channel r_last_channel;
+> -       } ah_radar;
+> -
+>        struct ath5k_nfcal_hist ah_nfcal_hist;
+>
+>        /* average beacon RSSI in our BSS (used by ANI) */
+> diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+> index f8a6b38..b0df2f6 100644
+> --- a/drivers/net/wireless/ath/ath5k/attach.c
+> +++ b/drivers/net/wireless/ath/ath5k/attach.c
+> @@ -114,7 +114,6 @@ int ath5k_hw_init(struct ath5k_hw *ah)
+>        /*
+>         * HW information
+>         */
+> -       ah->ah_radar.r_enabled = AR5K_TUNE_RADAR_ALERT;
+>        ah->ah_bwmode = AR5K_BWMODE_DEFAULT;
+>        ah->ah_txpower.txp_tpc = AR5K_TUNE_TPC_TXPOWER;
+>        ah->ah_imr = 0;
+> @@ -137,9 +136,8 @@ int ath5k_hw_init(struct ath5k_hw *ah)
+>        else
+>                ah->ah_version = AR5K_AR5212;
+>
+> -       /* Get the MAC revision */
+> +       /* Get the MAC version */
+>        ah->ah_mac_version = AR5K_REG_MS(srev, AR5K_SREV_VER);
+> -       ah->ah_mac_revision = AR5K_REG_MS(srev, AR5K_SREV_REV);
+>
+>        /* Fill the ath5k_hw struct with the needed functions */
+>        ret = ath5k_hw_init_desc_functions(ah);
+> @@ -156,7 +154,6 @@ int ath5k_hw_init(struct ath5k_hw *ah)
+>                        0xffffffff;
+>        ah->ah_radio_5ghz_revision = ath5k_hw_radio_revision(ah,
+>                        CHANNEL_5GHZ);
+> -       ah->ah_phy = AR5K_PHY(0);
+>
+>        /* Try to identify radio chip based on its srev */
+>        switch (ah->ah_radio_5ghz_revision & 0xf0) {
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index a74d286..ee06e34 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -2861,7 +2861,6 @@ ath5k_init(struct ieee80211_hw *hw)
+>        }
+>
+>        SET_IEEE80211_PERM_ADDR(hw, mac);
+> -       memcpy(&ah->lladdr, mac, ETH_ALEN);
+>        /* All MAC address bits matter for ACKs */
+>        ath5k_update_bssid_mask_and_opmode(ah, NULL);
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+> index a81f28d..5501bcb 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.h
+> +++ b/drivers/net/wireless/ath/ath5k/base.h
+> @@ -65,7 +65,6 @@ struct ath5k_vif {
+>        enum nl80211_iftype     opmode;
+>        int                     bslot;
+>        struct ath5k_buf        *bbuf; /* beacon buffer */
+> -       u8                      lladdr[ETH_ALEN];
+>  };
+>
+>  struct ath5k_vif_iter_data {
+> diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+> index 2a715ca..53d3af9 100644
+> --- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+> +++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+> @@ -137,11 +137,8 @@ ath5k_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+>        /* Any MAC address is fine, all others are included through the
+>         * filter.
+>         */
+> -       memcpy(&ah->lladdr, vif->addr, ETH_ALEN);
+>        ath5k_hw_set_lladdr(ah, vif->addr);
+>
+> -       memcpy(&avf->lladdr, vif->addr, ETH_ALEN);
+> -
+>        ath5k_update_bssid_mask_and_opmode(ah, vif);
+>        ret = 0;
+>  end:
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Since iwlagn_setup_deferred_work is always called, fold it into
-iwl_setup_deferred_work. BT related works are setup by the new
-bt_setup_deferred_work lib_ops.
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-1000.c    |    1 -
- drivers/net/wireless/iwlwifi/iwl-2000.c    |    3 +--
- drivers/net/wireless/iwlwifi/iwl-5000.c    |    2 --
- drivers/net/wireless/iwlwifi/iwl-6000.c    |    3 +--
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   10 ----------
- drivers/net/wireless/iwlwifi/iwl-agn.c     |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-agn.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-core.h    |    4 ++--
- 8 files changed, 6 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 5fa1719..01b49eb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -168,7 +168,6 @@ static int iwl1000_hw_set_hw_params(struct iwl_priv *priv)
- 
- static struct iwl_lib_ops iwl1000_lib = {
- 	.set_hw_params = iwl1000_hw_set_hw_params,
--	.setup_deferred_work = iwlagn_setup_deferred_work,
- 	.nic_config = iwl1000_nic_config,
- 	.eeprom_ops = {
- 		.regulatory_bands = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index c913410..aff555c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -167,7 +167,6 @@ static int iwl2000_hw_set_hw_params(struct iwl_priv *priv)
- 
- static struct iwl_lib_ops iwl2000_lib = {
- 	.set_hw_params = iwl2000_hw_set_hw_params,
--	.setup_deferred_work = iwlagn_setup_deferred_work,
- 	.nic_config = iwl2000_nic_config,
- 	.eeprom_ops = {
- 		.regulatory_bands = {
-@@ -187,7 +186,7 @@ static struct iwl_lib_ops iwl2000_lib = {
- static struct iwl_lib_ops iwl2030_lib = {
- 	.set_hw_params = iwl2000_hw_set_hw_params,
- 	.bt_rx_handler_setup = iwlagn_bt_rx_handler_setup,
--	.setup_deferred_work = iwlagn_bt_setup_deferred_work,
-+	.bt_setup_deferred_work = iwlagn_bt_setup_deferred_work,
- 	.cancel_deferred_work = iwlagn_bt_cancel_deferred_work,
- 	.nic_config = iwl2000_nic_config,
- 	.eeprom_ops = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 4e1204a..8c6fbd7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -320,7 +320,6 @@ static int iwl5000_hw_channel_switch(struct iwl_priv *priv,
- 
- static struct iwl_lib_ops iwl5000_lib = {
- 	.set_hw_params = iwl5000_hw_set_hw_params,
--	.setup_deferred_work = iwlagn_setup_deferred_work,
- 	.set_channel_switch = iwl5000_hw_channel_switch,
- 	.nic_config = iwl5000_nic_config,
- 	.eeprom_ops = {
-@@ -339,7 +338,6 @@ static struct iwl_lib_ops iwl5000_lib = {
- 
- static struct iwl_lib_ops iwl5150_lib = {
- 	.set_hw_params = iwl5150_hw_set_hw_params,
--	.setup_deferred_work = iwlagn_setup_deferred_work,
- 	.set_channel_switch = iwl5000_hw_channel_switch,
- 	.nic_config = iwl5000_nic_config,
- 	.eeprom_ops = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index f1fdcdc..ea48246 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -258,7 +258,6 @@ static int iwl6000_hw_channel_switch(struct iwl_priv *priv,
- 
- static struct iwl_lib_ops iwl6000_lib = {
- 	.set_hw_params = iwl6000_hw_set_hw_params,
--	.setup_deferred_work = iwlagn_setup_deferred_work,
- 	.set_channel_switch = iwl6000_hw_channel_switch,
- 	.nic_config = iwl6000_nic_config,
- 	.eeprom_ops = {
-@@ -279,7 +278,7 @@ static struct iwl_lib_ops iwl6000_lib = {
- static struct iwl_lib_ops iwl6030_lib = {
- 	.set_hw_params = iwl6000_hw_set_hw_params,
- 	.bt_rx_handler_setup = iwlagn_bt_rx_handler_setup,
--	.setup_deferred_work = iwlagn_bt_setup_deferred_work,
-+	.bt_setup_deferred_work = iwlagn_bt_setup_deferred_work,
- 	.cancel_deferred_work = iwlagn_bt_cancel_deferred_work,
- 	.set_channel_switch = iwl6000_hw_channel_switch,
- 	.nic_config = iwl6000_nic_config,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 5d6258d..339a89c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -478,14 +478,6 @@ void iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- }
- 
--void iwlagn_setup_deferred_work(struct iwl_priv *priv)
--{
--	/*
--	 * nothing need to be done here anymore
--	 * still keep for future use if needed
--	 */
--}
--
- int iwlagn_hw_valid_rtc_data_addr(u32 addr)
- {
- 	return (addr >= IWLAGN_RTC_DATA_LOWER_BOUND) &&
-@@ -1754,8 +1746,6 @@ void iwlagn_bt_rx_handler_setup(struct iwl_priv *priv)
- 
- void iwlagn_bt_setup_deferred_work(struct iwl_priv *priv)
- {
--	iwlagn_setup_deferred_work(priv);
--
- 	INIT_WORK(&priv->bt_traffic_change_work,
- 		  iwlagn_bt_traffic_change_work);
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index d50c68a..503c786 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2845,8 +2845,8 @@ static void iwl_setup_deferred_work(struct iwl_priv *priv)
- 
- 	iwl_setup_scan_deferred_work(priv);
- 
--	if (priv->cfg->lib->setup_deferred_work)
--		priv->cfg->lib->setup_deferred_work(priv);
-+	if (priv->cfg->lib->bt_setup_deferred_work)
-+		priv->cfg->lib->bt_setup_deferred_work(priv);
- 
- 	init_timer(&priv->statistics_periodic);
- 	priv->statistics_periodic.data = (unsigned long)priv;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index d9fef63..57c70b8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -162,7 +162,6 @@ int iwlagn_load_ucode_wait_alive(struct iwl_priv *priv,
- /* lib */
- void iwl_check_abort_status(struct iwl_priv *priv,
- 			    u8 frame_count, u32 status);
--void iwlagn_setup_deferred_work(struct iwl_priv *priv);
- int iwlagn_hw_valid_rtc_data_addr(u32 addr);
- int iwlagn_send_tx_power(struct iwl_priv *priv);
- void iwlagn_temperature(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 6f825d3..a2cb1f5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -85,8 +85,8 @@ struct iwl_lib_ops {
- 	int (*set_hw_params)(struct iwl_priv *priv);
- 	/* setup BT Rx handler */
- 	void (*bt_rx_handler_setup)(struct iwl_priv *priv);
--	/* setup deferred work */
--	void (*setup_deferred_work)(struct iwl_priv *priv);
-+	/* setup BT related deferred work */
-+	void (*bt_setup_deferred_work)(struct iwl_priv *priv);
- 	/* cancel deferred work */
- 	void (*cancel_deferred_work)(struct iwl_priv *priv);
- 	int (*set_channel_switch)(struct iwl_priv *priv,
 -- 
-1.7.0.4
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
