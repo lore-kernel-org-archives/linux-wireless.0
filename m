@@ -1,124 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:43303 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751092Ab1GSUu3 convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:40408 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753113Ab1GWRTa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 16:50:29 -0400
-Received: by pvg12 with SMTP id 12so4175562pvg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2011 13:50:28 -0700 (PDT)
+	Sat, 23 Jul 2011 13:19:30 -0400
+Received: by yxi11 with SMTP id 11so1749154yxi.19
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jul 2011 10:19:29 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20110719204246.GB2477@tuxdriver.com>
-References: <1310857566-2876-1-git-send-email-zajec5@gmail.com>
-	<1310857566-2876-2-git-send-email-zajec5@gmail.com>
-	<20110719204246.GB2477@tuxdriver.com>
-Date: Tue, 19 Jul 2011 22:50:28 +0200
-Message-ID: <CACna6rxZMFnFiYFkrW9xTkL_eXTXH91sEO-W=HZqoiUYLMNumQ@mail.gmail.com> (sfid-20110719_225032_062136_16E2C9BB)
-Subject: Re: [PATCH 2/4] bcma: allow setting FAST clockmode for a core
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+In-Reply-To: <20110723132903.10739.29781.stgit@mj.roinet.com>
+References: <20110723132856.10739.42301.stgit@mj.roinet.com>
+	<20110723132903.10739.29781.stgit@mj.roinet.com>
+Date: Sat, 23 Jul 2011 20:19:28 +0300
+Message-ID: <CAFtRNNyyvU4sCyJF9vjjhVGOhW4Br3S9sGfeNKrjmW2H1=x62A@mail.gmail.com> (sfid-20110723_191933_470182_761AEF24)
+Subject: Re: [PATCH 2 2/3] ath5k: remove most references to XR
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 19 lipca 2011 22:42 użytkownik John W. Linville
-<linville@tuxdriver.com> napisał:
->  CC [M]  drivers/bcma/core.o
-> drivers/bcma/core.c: In function ‘bcma_core_set_clockmode’:
-> drivers/bcma/core.c:65:22: error: ‘BCMA_CLKCTLST’ undeclared (first use in this function)
-> drivers/bcma/core.c:65:22: note: each undeclared identifier is reported only once for each function it appears in
-> drivers/bcma/core.c:65:73: error: ‘BCMA_CLKCTLST_FORCEHT’ undeclared (first use in this function)
-> drivers/bcma/core.c:69:8: error: ‘BCMA_CLKCTLST_HAVEHT’ undeclared (first use in this function)
-> drivers/bcma/core.c: In function ‘bcma_core_pll_ctl’:
-> drivers/bcma/core.c:89:35: error: ‘BCMA_CLKCTLST_EXTRESREQ’ undeclared (first use in this function)
-> drivers/bcma/core.c:90:38: error: ‘BCMA_CLKCTLST_EXTRESST’ undeclared (first use in this function)
-> drivers/bcma/core.c:93:22: error: ‘BCMA_CLKCTLST’ undeclared (first use in this function)
-> make[2]: *** [drivers/bcma/core.o] Error 1
-> make[1]: *** [drivers/bcma] Error 2
-> make: *** [drivers] Error 2
+2011/7/23 Pavel Roskin <proski@gnu.org>:
+> XR is a proprietary feature of the chipset.  It's not supported and
+> should not be supported.
+>
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+> Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
+> ---
+>  drivers/net/wireless/ath/ath5k/ath5k.h  |    4 ----
+>  drivers/net/wireless/ath/ath5k/eeprom.c |    1 -
+>  drivers/net/wireless/ath/ath5k/phy.c    |    2 --
+>  drivers/net/wireless/ath/ath5k/qcu.c    |    7 -------
+>  drivers/net/wireless/ath/ath5k/reset.c  |    8 --------
+>  5 files changed, 0 insertions(+), 22 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+> index be7b8c0..a8a7db4 100644
+> --- a/drivers/net/wireless/ath/ath5k/ath5k.h
+> +++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+> @@ -416,7 +416,6 @@ enum ath5k_driver_mode {
+>        AR5K_MODE_11A           =       0,
+>        AR5K_MODE_11B           =       1,
+>        AR5K_MODE_11G           =       2,
+> -       AR5K_MODE_XR            =       0,
+>        AR5K_MODE_MAX           =       3
+>  };
+>
+> @@ -694,12 +693,10 @@ struct ath5k_gain {
+>  #define        CHANNEL_5GHZ    0x0100  /* 5GHz channel */
+>  #define        CHANNEL_PASSIVE 0x0200  /* Only passive scan allowed */
+>  #define        CHANNEL_DYN     0x0400  /* Dynamic CCK-OFDM channel (for g operation) */
+> -#define        CHANNEL_XR      0x0800  /* XR channel */
+>
+>  #define        CHANNEL_A       (CHANNEL_5GHZ | CHANNEL_OFDM)
+>  #define        CHANNEL_B       (CHANNEL_2GHZ | CHANNEL_CCK)
+>  #define        CHANNEL_G       (CHANNEL_2GHZ | CHANNEL_OFDM)
+> -#define        CHANNEL_X       (CHANNEL_5GHZ | CHANNEL_OFDM | CHANNEL_XR)
+>
+>  #define        CHANNEL_ALL     (CHANNEL_OFDM | CHANNEL_CCK | \
+>                         CHANNEL_2GHZ | CHANNEL_5GHZ)
+> @@ -710,7 +707,6 @@ struct ath5k_gain {
+>  * Used internally for ath5k_hw_reset_tx_queue().
+>  * Also see struct struct ieee80211_channel.
+>  */
+> -#define IS_CHAN_XR(_c) ((_c->hw_value & CHANNEL_XR) != 0)
+>  #define IS_CHAN_B(_c)  ((_c->hw_value & CHANNEL_B) != 0)
+>
+>  /*
+> diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
+> index 9068b91..56cb9d4 100644
+> --- a/drivers/net/wireless/ath/ath5k/eeprom.c
+> +++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+> @@ -1782,7 +1782,6 @@ ath5k_eeprom_mode_from_channel(struct ieee80211_channel *channel)
+>  {
+>        switch (channel->hw_value & CHANNEL_MODES) {
+>        case CHANNEL_A:
+> -       case CHANNEL_XR:
+>                return AR5K_EEPROM_MODE_11A;
+>        case CHANNEL_G:
+>                return AR5K_EEPROM_MODE_11G;
+> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+> index 81e465e..b9ada88 100644
+> --- a/drivers/net/wireless/ath/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath/ath5k/phy.c
+> @@ -2408,8 +2408,6 @@ ath5k_get_max_ctl_power(struct ath5k_hw *ah,
+>        case CHANNEL_B:
+>                ctl_mode |= AR5K_CTL_11B;
+>                break;
+> -       case CHANNEL_XR:
+> -               /* Fall through */
+>        default:
+>                return;
+>        }
+> diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
+> index 65f1039..1d37675 100644
+> --- a/drivers/net/wireless/ath/ath5k/qcu.c
+> +++ b/drivers/net/wireless/ath/ath5k/qcu.c
+> @@ -185,13 +185,6 @@ int ath5k_hw_setup_tx_queue(struct ath5k_hw *ah, enum ath5k_tx_queue queue_type,
+>                case AR5K_TX_QUEUE_CAB:
+>                        queue = AR5K_TX_QUEUE_ID_CAB;
+>                        break;
+> -               case AR5K_TX_QUEUE_XR_DATA:
+> -                       if (ah->ah_version != AR5K_AR5212)
+> -                               ATH5K_ERR(ah,
+> -                                       "XR data queues only supported in"
+> -                                       " 5212!\n");
+> -                       queue = AR5K_TX_QUEUE_ID_XR_DATA;
+> -                       break;
+>                default:
+>                        return -EINVAL;
+>                }
+> diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+> index 0686c5d..5d6d3bd 100644
+> --- a/drivers/net/wireless/ath/ath5k/reset.c
+> +++ b/drivers/net/wireless/ath/ath5k/reset.c
+> @@ -1108,14 +1108,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>
+>                mode = AR5K_MODE_11B;
+>                break;
+> -       case CHANNEL_XR:
+> -               if (ah->ah_version == AR5K_AR5211) {
+> -                       ATH5K_ERR(ah,
+> -                               "XR mode not available on 5211");
+> -                       return -EINVAL;
+> -               }
+> -               mode = AR5K_MODE_XR;
+> -               break;
+>        default:
+>                ATH5K_ERR(ah,
+>                        "invalid channel: %d\n", channel->center_freq);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-I'm sorry, that's quite normal you could lost order&dependency with
-the amount of patches I've sent.
-
-As nobody objected, please apply
-[RFC][PATCH] bcma: move define of BCMA_CLKCTLST register
-It should be applied before this one.
-
-
-> On Sun, Jul 17, 2011 at 01:06:04AM +0200, Rafał Miłecki wrote:
->>
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->>  drivers/bcma/core.c       |   31 +++++++++++++++++++++++++++++++
->>  include/linux/bcma/bcma.h |    8 +++++++-
->>  2 files changed, 38 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
->> index 1ec7d45..0686b1b 100644
->> --- a/drivers/bcma/core.c
->> +++ b/drivers/bcma/core.c
->> @@ -50,3 +50,34 @@ int bcma_core_enable(struct bcma_device *core, u32 flags)
->>       return 0;
->>  }
->>  EXPORT_SYMBOL_GPL(bcma_core_enable);
->> +
->> +void bcma_core_set_clockmode(struct bcma_device *core,
->> +                          enum bcma_clkmode clkmode)
->> +{
->> +     u16 i;
->> +
->> +     WARN_ON(core->id.id != BCMA_CORE_CHIPCOMMON &&
->> +             core->id.id != BCMA_CORE_PCIE &&
->> +             core->id.id != BCMA_CORE_80211);
->> +
->> +     switch (clkmode) {
->> +     case BCMA_CLKMODE_FAST:
->> +             bcma_set32(core, BCMA_CLKCTLST, BCMA_CLKCTLST_FORCEHT);
->> +             udelay(64);
->> +             for (i = 0; i < 1500; i++) {
->> +                     if (bcma_read32(core, BCMA_CLKCTLST) &
->> +                         BCMA_CLKCTLST_HAVEHT) {
->> +                             i = 0;
->> +                             break;
->> +                     }
->> +                     udelay(10);
->> +             }
->> +             if (i)
->> +                     pr_err("HT force timeout\n");
->> +             break;
->> +     case BCMA_CLKMODE_DYNAMIC:
->> +             pr_warn("Dynamic clockmode not supported yet!\n");
->> +             break;
->> +     }
->> +}
->> +EXPORT_SYMBOL_GPL(bcma_core_set_clockmode);
->> diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
->> index 6e5dc7b..37017c1 100644
->> --- a/include/linux/bcma/bcma.h
->> +++ b/include/linux/bcma/bcma.h
->> @@ -25,6 +25,11 @@ struct bcma_chipinfo {
->>       u8 pkg;
->>  };
->>
->> +enum bcma_clkmode {
->> +     BCMA_CLKMODE_FAST,
->> +     BCMA_CLKMODE_DYNAMIC,
->> +};
->> +
->>  struct bcma_host_ops {
->>       u8 (*read8)(struct bcma_device *core, u16 offset);
->>       u16 (*read16)(struct bcma_device *core, u16 offset);
->> @@ -253,6 +258,7 @@ void bcma_awrite32(struct bcma_device *core, u16 offset, u32 value)
->>  extern bool bcma_core_is_enabled(struct bcma_device *core);
->>  extern void bcma_core_disable(struct bcma_device *core, u32 flags);
->>  extern int bcma_core_enable(struct bcma_device *core, u32 flags);
->> -
->> +extern void bcma_core_set_clockmode(struct bcma_device *core,
->> +                                 enum bcma_clkmode clkmode);
->>
->>  #endif /* LINUX_BCMA_H_ */
->> --
->> 1.7.3.4
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
 -- 
-Rafał
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
