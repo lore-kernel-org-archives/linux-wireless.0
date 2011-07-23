@@ -1,49 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:53245 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751949Ab1GULxb (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2440 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752902Ab1GWOZj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 07:53:31 -0400
-Received: by vxh35 with SMTP id 35so814193vxh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2011 04:53:30 -0700 (PDT)
+	Sat, 23 Jul 2011 10:25:39 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 08/11] ath6kl: Pass only the needed scan_table to ath6kl_wmi_iterate_nodes()
+Date: Sat, 23 Jul 2011 19:43:14 +0530
+Message-ID: <1311430397-4960-8-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110723_162552_614137_A5350BF5)
+In-Reply-To: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <201107201709.42141.helmut.schaa@googlemail.com>
-References: <CAN=pzdLRaRHkg4NquUpDhEwRzq-roKQXMtMcwnr031maDSLRfw@mail.gmail.com>
-	<201107201536.01392.helmut.schaa@googlemail.com>
-	<CAN=pzdKLtB2yz4-OhKL5gzYF0Qm2weAmNAz-0MqdFuooFNYzwQ@mail.gmail.com>
-	<201107201709.42141.helmut.schaa@googlemail.com>
-Date: Thu, 21 Jul 2011 15:53:30 +0400
-Message-ID: <CAN=pzdL7baXMVORm6CDh4Py773jbFBFkfRUKhjbL0ATZ_yvJmg@mail.gmail.com> (sfid-20110721_135334_799795_D6FC3863)
-Subject: Re: rt2x00, AP mode, 802.11n is not working properly
-From: Stanislav Demakov <s.demakov@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    2 +-
+ drivers/net/wireless/ath/ath6kl/wmi.c      |    4 ++--
+ drivers/net/wireless/ath/ath6kl/wmi.h      |    2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-So eventually, are you going to fix or discover this bug yourself?
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index d1d4794..9eaa1b1 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -833,7 +833,7 @@ void ath6kl_cfg80211_scan_complete_event(struct ath6kl *ar, int status)
+ 	}
+ 
+ 	/* Translate data to cfg80211 mgmt format */
+-	ath6kl_wmi_iterate_nodes(ar->wmi, ath6kl_cfg80211_scan_node,
++	ath6kl_wmi_iterate_nodes(&ar->scan_table, ath6kl_cfg80211_scan_node,
+ 				 ar->wdev->wiphy);
+ 
+ 	cfg80211_scan_done(ar->scan_req, false);
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 742eaa1..6a6f79c 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -386,11 +386,11 @@ int ath6kl_wmi_data_hdr_remove(struct wmi *wmi, struct sk_buff *skb)
+ 	return 0;
+ }
+ 
+-void ath6kl_wmi_iterate_nodes(struct wmi *wmi,
++void ath6kl_wmi_iterate_nodes(struct ath6kl_node_table *scan_tbl,
+ 			      void (*f) (void *arg, struct bss *),
+ 			      void *arg)
+ {
+-	wlan_iterate_nodes(&wmi->parent_dev->scan_table, f, arg);
++	wlan_iterate_nodes(scan_tbl, f, arg);
+ }
+ 
+ static void ath6kl_wmi_convert_bssinfo_hdr2_to_hdr(struct sk_buff *skb,
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 991d29f..a9f8f9e 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -1931,7 +1931,7 @@ int ath6kl_wmi_implicit_create_pstream(struct wmi *wmi, struct sk_buff *skb,
+ 				       u8 *ac);
+ 
+ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb);
+-void ath6kl_wmi_iterate_nodes(struct wmi *wmi,
++void ath6kl_wmi_iterate_nodes(struct ath6kl_node_table *scan_tbl,
+ 			      void (*f) (void *arg, struct bss *),
+ 			      void *arg);
+ struct bss *ath6kl_wmi_find_node(struct wmi *wmi, const u8 *mac_addr);
+-- 
+1.7.0.4
 
-2011/7/20 Helmut Schaa <helmut.schaa@googlemail.com>:
-> Am Mittwoch, 20. Juli 2011 schrieb Stanislav Demakov:
->> 2011/7/20 Helmut Schaa <helmut.schaa@googlemail.com>:
->> > Am Mittwoch, 20. Juli 2011 schrieb Stanislav Demakov:
->> >> I'm using hostapd 0.73 and 1T1R rt2x00 based wireless dongle to create
->> >> an AP. The problem is that since version
->> >> compat-wireless-2010-12-14.tar.bz2 802.11n mode is not working
->> >> properly. In this driver version and all later you've broken
->> >> something!
->> >
->> > So, 2010-12-14 already shows the problem you've described while 2010-12-13
->> > does not, right?
->> Yes, correct.
->
-> One major change from 12-13 to 12-14 was the queue refactoring. Haven't found
-> anything else that looks related. However, this patchset is quite big and
-> really changed the way the queues are handled in rt2x00. So it's not trivial
-> to find the root cause for your problem ...
->
-> Helmut
->
