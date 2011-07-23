@@ -1,83 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1476 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754353Ab1GEWDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 18:03:21 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 28/31] staging: brcm80211: remove external definitions
- from phy_lcn.c
-Date: Wed, 6 Jul 2011 00:02:55 +0200
-Message-ID: <1309903378-29021-29-git-send-email-arend@broadcom.com> (sfid-20110706_000355_347306_3B0D43D2)
-In-Reply-To: <1309903378-29021-1-git-send-email-arend@broadcom.com>
-References: <1309903378-29021-1-git-send-email-arend@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:15161 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752232Ab1GWOWT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jul 2011 10:22:19 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 01/11] ath6kl: Cleanup void *parent_dev in struct wmi
+Date: Sat, 23 Jul 2011 19:43:07 +0530
+Message-ID: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110723_162222_738258_D9B2F7F1)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The source file phy_lcn.c had several external definitions flagged
-by checkpatch.pl script. The patch fixes those.
-
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c   |   10 ++--------
- .../staging/brcm80211/brcmsmac/phy/phytbl_lcn.h    |    2 ++
- 2 files changed, 4 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath6kl/init.c |    2 +-
+ drivers/net/wireless/ath/ath6kl/wmi.c  |    2 +-
+ drivers/net/wireless/ath/ath6kl/wmi.h  |    4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
-index 8e98d8f..41ac681 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
-@@ -535,12 +535,6 @@ static const s8 lcnphy_gain_index_offset_for_rssi[] = {
- 	-2
- };
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index d574d08..1d6294f 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1053,7 +1053,7 @@ static int ath6kl_init(struct net_device *dev)
  
--extern const u8 spur_tbl_rev0[];
--extern const u32 dot11lcnphytbl_rx_gain_info_sz_rev1;
--extern const struct phytbl_info dot11lcnphytbl_rx_gain_info_rev1[];
--extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_bt_epa;
--extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_bt_epa_p250;
--
- struct chan_info_2064_lcnphy {
- 	uint chan;
- 	uint freq;
-@@ -991,7 +985,7 @@ static bool wlc_lcnphy_rx_iq_est(struct brcms_phy *pi, u16 num_samps,
- static bool wlc_lcnphy_calc_rx_iq_comp(struct brcms_phy *pi, u16 num_samps);
- static u16 wlc_lcnphy_get_pa_gain(struct brcms_phy *pi);
- static void wlc_lcnphy_afe_clk_init(struct brcms_phy *pi, u8 mode);
--extern void wlc_lcnphy_tx_pwr_ctrl_init(struct brcms_phy_pub *ppi);
-+static void wlc_lcnphy_tx_pwr_ctrl_init(struct brcms_phy_pub *ppi);
- static void wlc_lcnphy_radio_2064_channel_tune_4313(struct brcms_phy *pi,
- 						    u8 channel);
- 
-@@ -2275,7 +2269,7 @@ static void wlc_lcnphy_vbat_temp_sense_setup(struct brcms_phy *pi, u8 mode)
- 	udelay(999);
+ 	/* Indicate that WMI is enabled (although not ready yet) */
+ 	set_bit(WMI_ENABLED, &ar->flag);
+-	ar->wmi = ath6kl_wmi_init((void *) ar);
++	ar->wmi = ath6kl_wmi_init(ar);
+ 	if (!ar->wmi) {
+ 		ath6kl_err("failed to initialize wmi\n");
+ 		status = -EIO;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 6e4febf..9b06a82 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -2724,7 +2724,7 @@ static void ath6kl_wmi_qos_state_init(struct wmi *wmi)
+ 	spin_unlock_bh(&wmi->lock);
  }
  
--void WLBANDINITFN(wlc_lcnphy_tx_pwr_ctrl_init) (struct brcms_phy_pub *ppi)
-+static void WLBANDINITFN(wlc_lcnphy_tx_pwr_ctrl_init) (struct brcms_phy_pub *ppi)
+-void *ath6kl_wmi_init(void *dev)
++void *ath6kl_wmi_init(struct ath6kl *dev)
  {
- 	struct lcnphy_txgains tx_gains;
- 	u8 bbmult;
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phytbl_lcn.h b/drivers/staging/brcm80211/brcmsmac/phy/phytbl_lcn.h
-index 644389f..5f75e16 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phytbl_lcn.h
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phytbl_lcn.h
-@@ -22,6 +22,8 @@ extern const u32 dot11lcnphytbl_rx_gain_info_sz_rev0;
- extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313;
- extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_epa;
- extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_epa_combo;
-+extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_bt_epa;
-+extern const struct phytbl_info dot11lcn_sw_ctrl_tbl_info_4313_bt_epa_p250;
+ 	struct wmi *wmi;
  
- extern const struct phytbl_info dot11lcnphytbl_info_rev0[];
- extern const u32 dot11lcnphytbl_info_sz_rev0;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index bbaa704..afc9be9 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -114,7 +114,7 @@ struct wmi {
+ 	bool ready;
+ 	u16 stream_exist_for_ac[WMM_NUM_AC];
+ 	u8 fat_pipe_exist;
+-	void *parent_dev;
++	struct ath6kl *parent_dev;
+ 	struct wmi_stats stat;
+ 	struct ath6kl_node_table scan_table;
+ 	u8 bssid[ETH_ALEN];
+@@ -2018,7 +2018,7 @@ int ath6kl_wmi_set_pvb_cmd(struct wmi *wmi, u16 aid, bool flag);
+ int ath6kl_wmi_set_rx_frame_format_cmd(struct wmi *wmi, u8 rx_meta_version,
+ 				       bool rx_dot11_hdr, bool defrag_on_host);
+ 
+-void *ath6kl_wmi_init(void *devt);
++void *ath6kl_wmi_init(struct ath6kl *devt);
+ void ath6kl_wmi_shutdown(struct wmi *wmi);
+ 
+ #endif /* WMI_H */
 -- 
-1.7.4.1
-
+1.7.0.4
 
