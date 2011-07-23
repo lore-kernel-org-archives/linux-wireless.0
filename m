@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:57286 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751111Ab1GOPzz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2011 11:55:55 -0400
-Date: Fri, 15 Jul 2011 08:54:46 -0700 (PDT)
-Message-Id: <20110715.085446.1466613576048740142.davem@davemloft.net> (sfid-20110715_175603_351539_2C2216D3)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2011-07-15
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110715153435.GA2566@tuxdriver.com>
-References: <20110715153435.GA2566@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from c60.cesmail.net ([216.154.195.49]:40722 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751283Ab1GWU5L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jul 2011 16:57:11 -0400
+Message-ID: <20110723165710.jso0g99twk80gcsg-cebfxv@webmail.spamcop.net> (sfid-20110723_225734_815143_2CF3C8B6)
+Date: Sat, 23 Jul 2011 16:57:10 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: sedat.dilek@gmail.com, Sedat Dilek <sedat.dilek@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] ath5k: merge ath5k_hw and ath5k_softc
+References: <20110715002155.14332.3527.stgit@mj.roinet.com>
+	<CAFtRNNy3SvLXUJ8uaOibGfnynS7gwCOMW2x=cLhfPDf9aNw4vQ@mail.gmail.com>
+	<CA+icZUXFwP7QM2JY8HzCjNEAbyVhr6K1K_AMDMKE2x+5wwWvuA@mail.gmail.com>
+	<4E2733BC.3070309@gnu.org> <20110720200004.GB18231@tuxdriver.com>
+	<20110720175918.5diz6j1a9a8sk04w-cebfxv@webmail.spamcop.net>
+	<CA+icZUW8Y1SDTJYbqUSdCznU4pVpNe4nQksdNb+rXCuqvBguoA@mail.gmail.com>
+In-Reply-To: <CA+icZUW8Y1SDTJYbqUSdCznU4pVpNe4nQksdNb+rXCuqvBguoA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 15 Jul 2011 11:34:36 -0400
+Quoting Sedat Dilek <sedat.dilek@googlemail.com>:
 
-> Here is yet another batch of wireless networking changes intended
-> for 3.1, with probably a smidge more yet to come... :-)
-> 
-> This includes another Bluetooth pull, mostly some cleanups,
-> restructuring, and some minor fixes.  Along with the usual iwlagn and
-> ath9k updates, mwifiex, wl12xx, ath5k, and b43 all see significant
-> activity.  Johannes has done some housekeeping in mac80211 as well.
-> 
-> Please let me know if there are problems!
+> On Wed, Jul 20, 2011 at 11:59 PM, Pavel Roskin <proski@gnu.org> wrote:
+>> The remaining changes are minimal and will be submitted separately.
+>
+> Just a friendly reminder for the missing part v2 -> v3.
 
-Pulled, thanks John.
+It sits in my stgit queue.  It just didn't gather the critical mass to  
+be submitted.  The cleanup of the includes should be more systematic.   
+  When I see the headers, I always find something more important to  
+clean up than the includes.
 
-It seems we have one more bluetooth regression straggler for
-3.0.0, please make sure I get that soon otherwise it might
-not make it in time:
+As for renaming the functions, I think it can create some confusion.   
+We have too many functions with "init" and start" in their names.   
+It's hard to distinguish ath_init_hw from ath_init_ah.  I want to make  
+sure that the new names would stand out.
 
-http://marc.info/?l=linux-kernel&m=131072468622609&w=2
-
-Thanks.
+-- 
+Regards,
+Pavel Roskin
