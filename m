@@ -1,53 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:59435 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751393Ab1GSPZi (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:51893 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752130Ab1GWIt5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 11:25:38 -0400
-Message-ID: <4E25A1E3.9080707@gmail.com> (sfid-20110719_172552_516327_24992B84)
-Date: Tue, 19 Jul 2011 08:25:23 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Sat, 23 Jul 2011 04:49:57 -0400
+Received: by mail-pz0-f42.google.com with SMTP id 37so4932847pzk.1
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jul 2011 01:49:56 -0700 (PDT)
 MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: ath: Unable to reset channel (2412 MHz), reset status -5
-References: <4E252076.1050309@gmail.com>	<CAD2nsn12vOXv-msWR+GF7edz3Q26P-pb4H-SO4rf2RHjC7mG+w@mail.gmail.com>	<4E2525BA.4090902@gmail.com> <CAD2nsn3ifSMa_eFr2vQ0VVF9Ga-0VD3YB_beb28r+eoAHKv4kQ@mail.gmail.com>
-In-Reply-To: <CAD2nsn3ifSMa_eFr2vQ0VVF9Ga-0VD3YB_beb28r+eoAHKv4kQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20110723103725.6d5bab09@maggie>
+References: <1311412213-3825-1-git-send-email-zajec5@gmail.com>
+	<1311412213-3825-2-git-send-email-zajec5@gmail.com>
+	<20110723103725.6d5bab09@maggie>
+Date: Sat, 23 Jul 2011 10:49:55 +0200
+Message-ID: <CACna6rxZqmC-n1iQGX+KnoPDFRx4gY1gV+td0gPi2wu_WnT1XQ@mail.gmail.com> (sfid-20110723_105049_288191_AC6048EB)
+Subject: Re: [PATCH 1/2] ssb: define boardflags
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/18/2011 11:46 PM, Mohammed Shafi wrote:
-> On Tue, Jul 19, 2011 at 12:05 PM, Justin P. Mattock
-> <justinmattock@gmail.com>  wrote:
->> On 07/18/2011 11:25 PM, Mohammed Shafi wrote:
->>>
->>> On Tue, Jul 19, 2011 at 11:43 AM, Justin P. Mattock
->>> <justinmattock@gmail.com>    wrote:
->>>>
->>>> seems with the latest Mainline I am getting the ath9k carpping out after
->>>> a
->>>> while of streaming(dmesg below)..:
->>>> http://fpaste.org/D7wM/
->>>>
->>>> will try a bisect if I have the time..
->>>
->>> I will try to recreate here with 3.0.0-rc7-wl, we can get more
->>> information by ath9k debug=0xffffffff.
->>> thanks.
->>>
->>
->> cool!
->> seems to fire off randomly over here.
+W dniu 23 lipca 2011 10:37 użytkownik Michael Büsch <m@bues.ch> napisał:
+> On Sat, 23 Jul 2011 11:10:11 +0200
+> Rafał Miłecki <zajec5@gmail.com> wrote:
 >
-> I have got AR5416, will try with that.
+>> They are SPROM specific, so all should be defined in ssb code.
 >
+> Oh, well. I'm not sure.
+> Most of these currently are defined in b43 code, because they are b43-specific
+> and _not_ ssb specific. If we decide to define them in ssb, they need to be
+> removed from b43, at least.
 
-I can try the bisect, but might take a while, since external 
-activities(job). Seems this is just starting i.g. with
-3.0.0-rc1 I never saw this, but with 3.0.0-rc7-00125-gf560f66
-its making noise.
+Well, SPROM is board specific (not 80211 core specific), so I believe
+the same applies to boardflags, doesn't it? Boardflags are read from
+SPROM, so it makes sense for me.
 
-Justin P. Mattock
+I planned to remove them from b43 and b43legacy and driver_pci. Just
+wanted to provide minimal version for now, as John may want to take it
+still for 3.1.
+
+-- 
+Rafał
