@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57882 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753604Ab1GOSlx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2011 14:41:53 -0400
-Subject: Re: [PATCH 1/5] mac80211: give if_mesh a beacon
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <CAG6hwVP4pGonXgJwoRYgG0yRgPXZVOR54PvcC2-oCkMPWu14eQ@mail.gmail.com> (sfid-20110715_203716_491536_646B3EE1)
-References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
-	 <1310600747-9583-2-git-send-email-thomas@cozybit.com>
-	 <1310723140.4164.10.camel@jlt3.sipsolutions.net>
-	 <CAG6hwVP4pGonXgJwoRYgG0yRgPXZVOR54PvcC2-oCkMPWu14eQ@mail.gmail.com>
-	 (sfid-20110715_203716_491536_646B3EE1)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 15 Jul 2011 20:41:50 +0200
-Message-ID: <1310755310.4164.26.camel@jlt3.sipsolutions.net> (sfid-20110715_204156_486196_4661CD4C)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:51231 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751986Ab1GWL5p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jul 2011 07:57:45 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Cc: zajec5@gmail.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] b43: add core rev 17 used on bcma SoC.
+Date: Sat, 23 Jul 2011 13:57:34 +0200
+Message-Id: <1311422254-7104-2-git-send-email-hauke@hauke-m.de> (sfid-20110723_135805_495805_11EF4420)
+In-Reply-To: <1311422254-7104-1-git-send-email-hauke@hauke-m.de>
+References: <1311422254-7104-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-07-15 at 11:36 -0700, Thomas Pedersen wrote:
-> On Fri, Jul 15, 2011 at 2:45 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Wed, 2011-07-13 at 16:45 -0700, Thomas Pedersen wrote:
-> >
-> >> Based on Javier Cardona's "mac80211: Support beacon configuration via
-> >> nl80211 for mesh interfaces", which never made it upstream.
-> >
-> > Ok I don't get it -- this patchset seems to apply fine, so what part is
-> > dependent on Javier's patches?
-> 
-> "derived from" would have been much more accurate wording.
+This ieee80211 core was found on a Netgear wndr3400.
 
-Oh, I misunderstood, thanks.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/b43/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index d9f53b7..ea04913 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -115,6 +115,7 @@ MODULE_PARM_DESC(pio, "Use PIO accesses by default: 0=DMA, 1=PIO");
+ 
+ #ifdef CONFIG_B43_BCMA
+ static const struct bcma_device_id b43_bcma_tbl[] = {
++	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x11, BCMA_ANY_CLASS),
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x17, BCMA_ANY_CLASS),
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x18, BCMA_ANY_CLASS),
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x1D, BCMA_ANY_CLASS),
+-- 
+1.7.4.1
 
