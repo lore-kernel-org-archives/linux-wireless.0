@@ -1,269 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39510 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755381Ab1GPPgY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2011 11:36:24 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.guy@intel.com>
-Subject: [PATCH 16/18] iwlagn: move iwlagn_stop_device to transport layer
-Date: Sat, 16 Jul 2011 08:01:03 -0700
-Message-Id: <1310828463-18178-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110716_173627_987178_4ED2660B)
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:44419 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752143Ab1GWMEC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jul 2011 08:04:02 -0400
+Received: by gwaa18 with SMTP id a18so2050470gwa.19
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jul 2011 05:04:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110723072120.17363.56122.stgit@mj.roinet.com>
+References: <20110723072113.17363.59871.stgit@mj.roinet.com>
+	<20110723072120.17363.56122.stgit@mj.roinet.com>
+Date: Sat, 23 Jul 2011 15:04:01 +0300
+Message-ID: <CAFtRNNwO4-Cp429e+Vy61T9A+mCR8T-xRtpHVnOOp97CDLxnTQ@mail.gmail.com> (sfid-20110723_140408_729160_D0E7E2ED)
+Subject: Re: [PATCH 2/3] ath5k: remove most references to XR
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Could we leave the comments on ath5k.h and the rate code definitions ?
+I believe we should leave them there as reference...
 
-Since iwlagn_stop_device was the only caller to the rx_stop / tx_stop,
-these two don't need to be API any more.
+2011/7/23 Pavel Roskin <proski@gnu.org>:
+> XR is a proprietary feature of the chipset.  It's not supported and
+> should not be supported.
+>
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+> ---
+>  drivers/net/wireless/ath/ath5k/ath5k.h  |   26 --------------------------
+>  drivers/net/wireless/ath/ath5k/eeprom.c |    1 -
+>  drivers/net/wireless/ath/ath5k/phy.c    |    2 --
+>  drivers/net/wireless/ath/ath5k/qcu.c    |    7 -------
+>  drivers/net/wireless/ath/ath5k/reset.c  |    8 --------
+>  5 files changed, 0 insertions(+), 44 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+> index be7b8c0..c3a008d 100644
+> --- a/drivers/net/wireless/ath/ath5k/ath5k.h
+> +++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+> @@ -356,23 +356,6 @@ struct ath5k_srev_name {
+>  /* TODO add support to mac80211 for vendor-specific rates and modes */
+>
+>  /*
+> - * Some of this information is based on Documentation from:
+> - *
+> - * http://madwifi-project.org/wiki/ChipsetFeatures/SuperAG
+> - *
+> - * Modulation for Atheros' eXtended Range - range enhancing extension that is
+> - * supposed to double the distance an Atheros client device can keep a
+> - * connection with an Atheros access point. This is achieved by increasing
+> - * the receiver sensitivity up to, -105dBm, which is about 20dB above what
+> - * the 802.11 specifications demand. In addition, new (proprietary) data rates
+> - * are introduced: 3, 2, 1, 0.5 and 0.25 MBit/s.
+> - *
+> - * Please note that can you either use XR or TURBO but you cannot use both,
+> - * they are exclusive.
+> - *
+> - */
+> -#define MODULATION_XR          0x00000200
+> -/*
+>  * Modulation for Atheros' Turbo G and Turbo A, its supposed to provide a
+>  * throughput transmission speed up to 40Mbit/s-60Mbit/s at a 108Mbit/s
+>  * signaling rate achieved through the bonding of two 54Mbit/s 802.11g
+> @@ -416,7 +399,6 @@ enum ath5k_driver_mode {
+>        AR5K_MODE_11A           =       0,
+>        AR5K_MODE_11B           =       1,
+>        AR5K_MODE_11G           =       2,
+> -       AR5K_MODE_XR            =       0,
+>        AR5K_MODE_MAX           =       3
+>  };
+>
+> @@ -694,12 +676,10 @@ struct ath5k_gain {
+>  #define        CHANNEL_5GHZ    0x0100  /* 5GHz channel */
+>  #define        CHANNEL_PASSIVE 0x0200  /* Only passive scan allowed */
+>  #define        CHANNEL_DYN     0x0400  /* Dynamic CCK-OFDM channel (for g operation) */
+> -#define        CHANNEL_XR      0x0800  /* XR channel */
+>
+>  #define        CHANNEL_A       (CHANNEL_5GHZ | CHANNEL_OFDM)
+>  #define        CHANNEL_B       (CHANNEL_2GHZ | CHANNEL_CCK)
+>  #define        CHANNEL_G       (CHANNEL_2GHZ | CHANNEL_OFDM)
+> -#define        CHANNEL_X       (CHANNEL_5GHZ | CHANNEL_OFDM | CHANNEL_XR)
+>
+>  #define        CHANNEL_ALL     (CHANNEL_OFDM | CHANNEL_CCK | \
+>                         CHANNEL_2GHZ | CHANNEL_5GHZ)
+> @@ -710,7 +690,6 @@ struct ath5k_gain {
+>  * Used internally for ath5k_hw_reset_tx_queue().
+>  * Also see struct struct ieee80211_channel.
+>  */
+> -#define IS_CHAN_XR(_c) ((_c->hw_value & CHANNEL_XR) != 0)
+>  #define IS_CHAN_B(_c)  ((_c->hw_value & CHANNEL_B) != 0)
+>
+>  /*
+> @@ -772,11 +751,6 @@ struct ath5k_athchan_2ghz {
+>  #define ATH5K_RATE_CODE_36M    0x0D
+>  #define ATH5K_RATE_CODE_48M    0x08
+>  #define ATH5K_RATE_CODE_54M    0x0C
+> -/* XR */
+> -#define ATH5K_RATE_CODE_XR_500K        0x07
+> -#define ATH5K_RATE_CODE_XR_1M  0x02
+> -#define ATH5K_RATE_CODE_XR_2M  0x06
+> -#define ATH5K_RATE_CODE_XR_3M  0x01
+>
+>  /* adding this flag to rate_code enables short preamble */
+>  #define AR5K_SET_SHORT_PREAMBLE 0x04
+> diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
+> index 9068b91..56cb9d4 100644
+> --- a/drivers/net/wireless/ath/ath5k/eeprom.c
+> +++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+> @@ -1782,7 +1782,6 @@ ath5k_eeprom_mode_from_channel(struct ieee80211_channel *channel)
+>  {
+>        switch (channel->hw_value & CHANNEL_MODES) {
+>        case CHANNEL_A:
+> -       case CHANNEL_XR:
+>                return AR5K_EEPROM_MODE_11A;
+>        case CHANNEL_G:
+>                return AR5K_EEPROM_MODE_11G;
+> diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+> index 81e465e..b9ada88 100644
+> --- a/drivers/net/wireless/ath/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath/ath5k/phy.c
+> @@ -2408,8 +2408,6 @@ ath5k_get_max_ctl_power(struct ath5k_hw *ah,
+>        case CHANNEL_B:
+>                ctl_mode |= AR5K_CTL_11B;
+>                break;
+> -       case CHANNEL_XR:
+> -               /* Fall through */
+>        default:
+>                return;
+>        }
+> diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
+> index 65f1039..1d37675 100644
+> --- a/drivers/net/wireless/ath/ath5k/qcu.c
+> +++ b/drivers/net/wireless/ath/ath5k/qcu.c
+> @@ -185,13 +185,6 @@ int ath5k_hw_setup_tx_queue(struct ath5k_hw *ah, enum ath5k_tx_queue queue_type,
+>                case AR5K_TX_QUEUE_CAB:
+>                        queue = AR5K_TX_QUEUE_ID_CAB;
+>                        break;
+> -               case AR5K_TX_QUEUE_XR_DATA:
+> -                       if (ah->ah_version != AR5K_AR5212)
+> -                               ATH5K_ERR(ah,
+> -                                       "XR data queues only supported in"
+> -                                       " 5212!\n");
+> -                       queue = AR5K_TX_QUEUE_ID_XR_DATA;
+> -                       break;
+>                default:
+>                        return -EINVAL;
+>                }
+> diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+> index 0686c5d..5d6d3bd 100644
+> --- a/drivers/net/wireless/ath/ath5k/reset.c
+> +++ b/drivers/net/wireless/ath/ath5k/reset.c
+> @@ -1108,14 +1108,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+>
+>                mode = AR5K_MODE_11B;
+>                break;
+> -       case CHANNEL_XR:
+> -               if (ah->ah_version == AR5K_AR5211) {
+> -                       ATH5K_ERR(ah,
+> -                               "XR mode not available on 5211");
+> -                       return -EINVAL;
+> -               }
+> -               mode = AR5K_MODE_XR;
+> -               break;
+>        default:
+>                ATH5K_ERR(ah,
+>                        "invalid channel: %d\n", channel->center_freq);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c   |   39 -----------------------
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.h       |    1 -
- drivers/net/wireless/iwlwifi/iwl-dev.h       |    7 ++--
- drivers/net/wireless/iwlwifi/iwl-sv-open.c   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans.c     |   44 ++++++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-trans.h     |   13 ++-----
- 8 files changed, 52 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 4156316..e06a5c2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -2166,42 +2166,3 @@ int iwlagn_start_device(struct iwl_priv *priv)
- 	return 0;
- }
- 
--void iwlagn_stop_device(struct iwl_priv *priv)
--{
--	unsigned long flags;
--
--	/* stop and reset the on-board processor */
--	iwl_write32(priv, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
--
--	/* tell the device to stop sending interrupts */
--	spin_lock_irqsave(&priv->lock, flags);
--	iwl_disable_interrupts(priv);
--	spin_unlock_irqrestore(&priv->lock, flags);
--	trans_sync_irq(priv);
--
--	/* device going down, Stop using ICT table */
--	iwl_disable_ict(priv);
--
--	/*
--	 * If a HW restart happens during firmware loading,
--	 * then the firmware loading might call this function
--	 * and later it might be called again due to the
--	 * restart. So don't process again if the device is
--	 * already dead.
--	 */
--	if (test_bit(STATUS_DEVICE_ENABLED, &priv->status)) {
--		trans_tx_stop(priv);
--		trans_rx_stop(priv);
--
--		/* Power-down device's busmaster DMA clocks */
--		iwl_write_prph(priv, APMG_CLK_DIS_REG,
--			       APMG_CLK_VAL_DMA_CLK_RQT);
--		udelay(5);
--	}
--
--	/* Make sure (redundant) we've released our request to stay awake */
--	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
--
--	/* Stop the device, and put it in low power state */
--	iwl_apm_stop(priv);
--}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-index 06304a6..c15a1f7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-@@ -707,6 +707,6 @@ int iwlagn_run_init_ucode(struct iwl_priv *priv)
- 	iwlagn_remove_notification(priv, &calib_wait);
-  out:
- 	/* Whatever happened, stop the device */
--	iwlagn_stop_device(priv);
-+	trans_stop_device(priv);
- 	return ret;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index bd85af9..3de90c5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1782,7 +1782,7 @@ static void __iwl_down(struct iwl_priv *priv)
- 		       test_bit(STATUS_EXIT_PENDING, &priv->status) <<
- 				STATUS_EXIT_PENDING;
- 
--	iwlagn_stop_device(priv);
-+	trans_stop_device(priv);
- 
- 	dev_kfree_skb(priv->beacon_skb);
- 	priv->beacon_skb = NULL;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 0c4e145..fa32eb9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -129,7 +129,6 @@ static inline void iwl_set_calib_hdr(struct iwl_calib_hdr *hdr, u8 cmd)
- int iwl_prepare_card_hw(struct iwl_priv *priv);
- 
- int iwlagn_start_device(struct iwl_priv *priv);
--void iwlagn_stop_device(struct iwl_priv *priv);
- 
- /* tx queue */
- void iwlagn_set_wr_ptrs(struct iwl_priv *priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 34625de..cf6f4b2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1236,11 +1236,10 @@ struct iwl_trans;
-  * struct iwl_trans_ops - transport specific operations
- 
-  * @rx_init: inits the rx memory, allocate it if needed
-- * @rx_stop: stop the rx
-  * @rx_free: frees the rx memory
-  * @tx_init:inits the tx memory, allocate if needed
-- * @tx_stop: stop the tx
-  * @tx_free: frees the tx memory
-+ * @stop_device:stops the whole device (embedded CPU put to reset)
-  * @send_cmd:send a host command
-  * @send_cmd_pdu:send a host command: flags can be CMD_*
-  * @get_tx_cmd: returns a pointer to a new Tx cmd for the upper layer use
-@@ -1254,13 +1253,13 @@ struct iwl_trans;
-  */
- struct iwl_trans_ops {
- 	int (*rx_init)(struct iwl_priv *priv);
--	int (*rx_stop)(struct iwl_priv *priv);
- 	void (*rx_free)(struct iwl_priv *priv);
- 
- 	int (*tx_init)(struct iwl_priv *priv);
--	int (*tx_stop)(struct iwl_priv *priv);
- 	void (*tx_free)(struct iwl_priv *priv);
- 
-+	void (*stop_device)(struct iwl_priv *priv);
-+
- 	int (*send_cmd)(struct iwl_priv *priv, struct iwl_host_cmd *cmd);
- 
- 	int (*send_cmd_pdu)(struct iwl_priv *priv, u8 id, u32 flags, u16 len,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sv-open.c b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
-index 77ed1c2..d736a9d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sv-open.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
-@@ -407,7 +407,7 @@ static int iwl_testmode_driver(struct ieee80211_hw *hw, struct nlattr **tb)
- 
- 	case IWL_TM_CMD_APP2DEV_CFG_INIT_CALIB:
- 		iwl_testmode_cfg_init_calib(priv);
--		iwlagn_stop_device(priv);
-+		trans_stop_device(priv);
- 		break;
- 
- 	case IWL_TM_CMD_APP2DEV_LOAD_RUNTIME_FW:
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index 6b7cb73..8d45554 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -611,6 +611,46 @@ static int iwl_trans_tx_stop(struct iwl_priv *priv)
- 	return 0;
- }
- 
-+static void iwl_trans_stop_device(struct iwl_priv *priv)
-+{
-+	unsigned long flags;
-+
-+	/* stop and reset the on-board processor */
-+	iwl_write32(priv, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
-+
-+	/* tell the device to stop sending interrupts */
-+	spin_lock_irqsave(&priv->lock, flags);
-+	iwl_disable_interrupts(priv);
-+	spin_unlock_irqrestore(&priv->lock, flags);
-+	trans_sync_irq(priv);
-+
-+	/* device going down, Stop using ICT table */
-+	iwl_disable_ict(priv);
-+
-+	/*
-+	 * If a HW restart happens during firmware loading,
-+	 * then the firmware loading might call this function
-+	 * and later it might be called again due to the
-+	 * restart. So don't process again if the device is
-+	 * already dead.
-+	 */
-+	if (test_bit(STATUS_DEVICE_ENABLED, &priv->status)) {
-+		iwl_trans_tx_stop(priv);
-+		iwl_trans_rx_stop(priv);
-+
-+		/* Power-down device's busmaster DMA clocks */
-+		iwl_write_prph(priv, APMG_CLK_DIS_REG,
-+			       APMG_CLK_VAL_DMA_CLK_RQT);
-+		udelay(5);
-+	}
-+
-+	/* Make sure (redundant) we've released our request to stay awake */
-+	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
-+
-+	/* Stop the device, and put it in low power state */
-+	iwl_apm_stop(priv);
-+}
-+
- static struct iwl_tx_cmd *iwl_trans_get_tx_cmd(struct iwl_priv *priv,
- 						int txq_id)
- {
-@@ -779,13 +819,13 @@ static void iwl_trans_free(struct iwl_priv *priv)
- 
- static const struct iwl_trans_ops trans_ops = {
- 	.rx_init = iwl_trans_rx_init,
--	.rx_stop = iwl_trans_rx_stop,
- 	.rx_free = iwl_trans_rx_free,
- 
- 	.tx_init = iwl_trans_tx_init,
--	.tx_stop = iwl_trans_tx_stop,
- 	.tx_free = iwl_trans_tx_free,
- 
-+	.stop_device = iwl_trans_stop_device,
-+
- 	.send_cmd = iwl_send_cmd,
- 	.send_cmd_pdu = iwl_send_cmd_pdu,
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 8293f54..55e6c33 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -69,11 +69,6 @@ static inline int trans_rx_init(struct iwl_priv *priv)
- 	return priv->trans.ops->rx_init(priv);
- }
- 
--static inline int trans_rx_stop(struct iwl_priv *priv)
--{
--	return priv->trans.ops->rx_stop(priv);
--}
--
- static inline void trans_rx_free(struct iwl_priv *priv)
- {
- 	priv->trans.ops->rx_free(priv);
-@@ -84,14 +79,14 @@ static inline int trans_tx_init(struct iwl_priv *priv)
- 	return priv->trans.ops->tx_init(priv);
- }
- 
--static inline int trans_tx_stop(struct iwl_priv *priv)
-+static inline void trans_tx_free(struct iwl_priv *priv)
- {
--	return priv->trans.ops->tx_stop(priv);
-+	priv->trans.ops->tx_free(priv);
- }
- 
--static inline void trans_tx_free(struct iwl_priv *priv)
-+static inline void trans_stop_device(struct iwl_priv *priv)
- {
--	priv->trans.ops->tx_free(priv);
-+	priv->trans.ops->stop_device(priv);
- }
- 
- static inline int trans_send_cmd(struct iwl_priv *priv,
+
 -- 
-1.7.0.4
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
