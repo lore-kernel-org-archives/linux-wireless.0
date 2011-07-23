@@ -1,67 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar-3.linta.de ([188.40.101.200]:51508 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751305Ab1G2SSr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 14:18:47 -0400
-Date: Fri, 29 Jul 2011 18:00:42 +0200
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-pcmcia@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/3] pcmcia: add PCMCIA_DEVICE_MANF_CARD_PROD_ID3
-Message-ID: <20110729160041.GB15474@comet.dominikbrodowski.net> (sfid-20110729_201851_412008_4CE06AC5)
-References: <20110726225235.29951.70265.stgit@mj.roinet.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:15859 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752243Ab1GWOWu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jul 2011 10:22:50 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 06/11] ath6kl: Cleanup parameters of wlan_node_table_init()
+Date: Sat, 23 Jul 2011 19:43:12 +0530
+Message-ID: <1311430397-4960-6-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110723_162253_032336_E4DF4603)
+In-Reply-To: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110726225235.29951.70265.stgit@mj.roinet.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Applied all three patches to -pcmcia.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/common.h |    2 +-
+ drivers/net/wireless/ath/ath6kl/node.c   |    2 +-
+ drivers/net/wireless/ath/ath6kl/wmi.c    |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-Thanks,
-	Dominik
+diff --git a/drivers/net/wireless/ath/ath6kl/common.h b/drivers/net/wireless/ath/ath6kl/common.h
+index cc8b040..e37ae9b 100644
+--- a/drivers/net/wireless/ath/ath6kl/common.h
++++ b/drivers/net/wireless/ath/ath6kl/common.h
+@@ -155,7 +155,7 @@ void wlan_iterate_nodes(struct ath6kl_node_table *nt,
+ 			void (*f) (void *arg, struct bss *),
+ 			void *arg);
+ 
+-void wlan_node_table_init(void *wmip, struct ath6kl_node_table *nt);
++void wlan_node_table_init(struct ath6kl_node_table *nt);
+ void wlan_node_table_cleanup(struct ath6kl_node_table *nt);
+ 
+ void wlan_refresh_inactive_nodes(struct ath6kl *ar);
+diff --git a/drivers/net/wireless/ath/ath6kl/node.c b/drivers/net/wireless/ath/ath6kl/node.c
+index 9611541..7c9fbde 100644
+--- a/drivers/net/wireless/ath/ath6kl/node.c
++++ b/drivers/net/wireless/ath/ath6kl/node.c
+@@ -160,7 +160,7 @@ void wlan_iterate_nodes(struct ath6kl_node_table *nt,
+ 	spin_unlock_bh(&nt->nt_nodelock);
+ }
+ 
+-void wlan_node_table_init(void *wmi, struct ath6kl_node_table *nt)
++void wlan_node_table_init(struct ath6kl_node_table *nt)
+ {
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_NODE, "node table = 0x%lx\n",
+ 		   (unsigned long)nt);
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 50cee9b..6f145d4 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -2727,7 +2727,7 @@ void *ath6kl_wmi_init(struct ath6kl *dev)
+ 
+ 	wmi->parent_dev = dev;
+ 
+-	wlan_node_table_init(wmi, &dev->scan_table);
++	wlan_node_table_init(&dev->scan_table);
+ 	ath6kl_wmi_qos_state_init(wmi);
+ 
+ 	wmi->pwr_mode = REC_POWER;
+-- 
+1.7.0.4
 
-On Tue, Jul 26, 2011 at 06:52:35PM -0400, Pavel Roskin wrote:
-> This is needed to match wireless cards with Intersil firmware that have
-> ID 0x0156:0x0002 and the third ID "Version 01.02".  Such cards are
-> currently matched by orinoco_cs, which doesn't support WPA.  They should
-> be matched by hostap_cs.
-> 
-> The first and the second product ID vary widely, so there are few users
-> with some particular IDs.  Of those, very few can submit a patch for
-> hostap_cs or write a useful bugreport.  It's still important to support
-> their hardware properly.
-> 
-> With PCMCIA_DEVICE_MANF_CARD_PROD_ID3, it should be possible to cover
-> the remaining Intersil based designs that kept the numeric ID and the
-> "version" of the reference design.
-> 
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
-> ---
->  include/pcmcia/device_id.h |    9 +++++++++
->  1 files changed, 9 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/pcmcia/device_id.h b/include/pcmcia/device_id.h
-> index 63e5b8f..00dbfac 100644
-> --- a/include/pcmcia/device_id.h
-> +++ b/include/pcmcia/device_id.h
-> @@ -95,6 +95,15 @@
->  	.prod_id = { (v1), NULL, NULL, NULL }, \
->  	.prod_id_hash = { (vh1), 0, 0, 0 }, }
->  
-> +#define PCMCIA_DEVICE_MANF_CARD_PROD_ID3(manf, card, v3, vh3) { \
-> +	.match_flags = PCMCIA_DEV_ID_MATCH_MANF_ID| \
-> +			PCMCIA_DEV_ID_MATCH_CARD_ID| \
-> +			PCMCIA_DEV_ID_MATCH_PROD_ID3, \
-> +	.manf_id = (manf), \
-> +	.card_id = (card), \
-> +	.prod_id = { NULL, NULL, (v3), NULL }, \
-> +	.prod_id_hash = { 0, 0, (vh3), 0 }, }
-> +
->  
->  /* multi-function devices */
->  
-> 
-> _______________________________________________
-> Linux PCMCIA reimplementation list
-> http://lists.infradead.org/mailman/listinfo/linux-pcmcia
