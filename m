@@ -1,191 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4339 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932397Ab1GNV34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 17:29:56 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 06/35] staging: brcm80211: removed function declaration
- typedefs from dma.h part 1
-Date: Thu, 14 Jul 2011 14:29:02 -0700
-Message-ID: <1310678971-28952-7-git-send-email-frankyl@broadcom.com> (sfid-20110714_233009_544136_685A0BAC)
-In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
-References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:15218 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752243Ab1GWOWo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jul 2011 10:22:44 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 05/11] ath6kl: Remove ath6kl_wmi_get_current_bssid()
+Date: Sat, 23 Jul 2011 19:43:11 +0530
+Message-ID: <1311430397-4960-5-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110723_162246_815048_A1F0A655)
+In-Reply-To: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Use the bssid from ath6kl directly.
 
-Softmac related code cleanup. Typedefs are undesirable according to the
-CodingStyle document.
-
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- drivers/staging/brcm80211/brcmsmac/dma.c |   22 ++++++++++----------
- drivers/staging/brcm80211/brcmsmac/dma.h |   33 ++++++++++--------------------
- 2 files changed, 22 insertions(+), 33 deletions(-)
+ drivers/net/wireless/ath/ath6kl/node.c |    5 +----
+ drivers/net/wireless/ath/ath6kl/wmi.c  |    6 ------
+ drivers/net/wireless/ath/ath6kl/wmi.h  |    1 -
+ 3 files changed, 1 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
-index ea17671..5fd5e8c 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.c
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.c
-@@ -387,12 +387,12 @@ static bool _dma64_addrext(dma64regs_t *dma64regs);
- static inline u32 parity32(u32 data);
+diff --git a/drivers/net/wireless/ath/ath6kl/node.c b/drivers/net/wireless/ath/ath6kl/node.c
+index 533588c..9611541 100644
+--- a/drivers/net/wireless/ath/ath6kl/node.c
++++ b/drivers/net/wireless/ath/ath6kl/node.c
+@@ -176,16 +176,13 @@ void wlan_refresh_inactive_nodes(struct ath6kl *ar)
+ {
+ 	struct ath6kl_node_table *nt = &ar->scan_table;
+ 	struct bss *bss;
+-	u8 my_bssid[ETH_ALEN];
+ 	u32 now;
  
- const struct di_fcn_s dma64proc = {
--	(di_detach_t) _dma_detach,
--	(di_txinit_t) dma64_txinit,
-+	(void (*)(struct dma_pub *)) _dma_detach,
-+	(void (*)(struct dma_pub *)) dma64_txinit,
- 	(di_txreset_t) dma64_txreset,
- 	(di_txenabled_t) dma64_txenabled,
--	(di_txsuspend_t) dma64_txsuspend,
--	(di_txresume_t) dma64_txresume,
-+	(void (*)(struct dma_pub *)) dma64_txsuspend,
-+	(void (*)(struct dma_pub *)) dma64_txresume,
- 	(di_txsuspended_t) dma64_txsuspended,
- 	(di_txsuspendedidle_t) dma64_txsuspendedidle,
- 	(di_txfast_t) dma64_txfast,
-@@ -402,12 +402,12 @@ const struct di_fcn_s dma64proc = {
- 	(di_txreclaim_t) dma64_txreclaim,
- 	(di_getnexttxp_t) dma64_getnexttxp,
- 	(di_peeknexttxp_t) _dma_peeknexttxp,
--	(di_txblock_t) _dma_txblock,
--	(di_txunblock_t) _dma_txunblock,
-+	(void (*)(struct dma_pub *)) _dma_txblock,
-+	(void (*)(struct dma_pub *)) _dma_txunblock,
- 	(di_txactive_t) _dma_txactive,
--	(di_txrotate_t) dma64_txrotate,
-+	(void (*)(struct dma_pub *)) dma64_txrotate,
+-	ath6kl_wmi_get_current_bssid(ar->wmi, my_bssid);
+-
+ 	now = jiffies_to_msecs(jiffies);
+ 	bss = nt->nt_node_first;
+ 	while (bss != NULL) {
+ 		/* refresh all nodes except the current bss */
+-		if (memcmp(my_bssid, bss->ni_macaddr, sizeof(my_bssid)) != 0) {
++		if (memcmp(ar->bssid, bss->ni_macaddr, ETH_ALEN) != 0) {
+ 			if (((now - bss->ni_tstamp) > nt->nt_node_age)
+ 			    || --bss->ni_actcnt == 0) {
+ 				wlan_node_reclaim(nt, bss);
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index ff71b7f..50cee9b 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -2247,12 +2247,6 @@ int ath6kl_wmi_get_tx_pwr_cmd(struct wmi *wmi)
+ 	return ath6kl_wmi_simple_cmd(wmi, WMI_GET_TX_PWR_CMDID);
+ }
  
--	(di_rxinit_t) _dma_rxinit,
-+	(void (*)(struct dma_pub *)) _dma_rxinit,
- 	(di_rxreset_t) dma64_rxreset,
- 	(di_rxidle_t) dma64_rxidle,
- 	(di_rxstopped_t) dma64_rxstopped,
-@@ -415,14 +415,14 @@ const struct di_fcn_s dma64proc = {
- 	(di_rxenabled_t) dma64_rxenabled,
- 	(di_rx_t) _dma_rx,
- 	(di_rxfill_t) _dma_rxfill,
--	(di_rxreclaim_t) _dma_rxreclaim,
-+	(void (*)(struct dma_pub *)) _dma_rxreclaim,
- 	(di_getnextrxp_t) _dma_getnextrxp,
- 	(di_peeknextrxp_t) _dma_peeknextrxp,
- 	(di_rxparam_get_t) _dma_rx_param_get,
+-void ath6kl_wmi_get_current_bssid(struct wmi *wmi, u8 *bssid)
+-{
+-	if (bssid)
+-		memcpy(bssid, wmi->parent_dev->bssid, ETH_ALEN);
+-}
+-
+ int ath6kl_wmi_set_lpreamble_cmd(struct wmi *wmi, u8 status, u8 preamble_policy)
+ {
+ 	struct sk_buff *skb;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 1646a92..991d29f 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -1995,7 +1995,6 @@ int ath6kl_wmi_setpmkid_cmd(struct wmi *wmi, const u8 *bssid,
+ 			    const u8 *pmkid, bool set);
+ int ath6kl_wmi_set_tx_pwr_cmd(struct wmi *wmi, u8 dbM);
+ int ath6kl_wmi_get_tx_pwr_cmd(struct wmi *wmi);
+-void ath6kl_wmi_get_current_bssid(struct wmi *wmi, u8 *bssid);
  
--	(di_fifoloopbackenable_t) _dma_fifoloopbackenable,
-+	(void (*)(struct dma_pub *)) _dma_fifoloopbackenable,
- 	(di_getvar_t) _dma_getvar,
--	(di_counterreset_t) _dma_counterreset,
-+	(void (*)(struct dma_pub *)) _dma_counterreset,
- 	(di_ctrlflags_t) _dma_ctrlflags,
- 	NULL,
- 	NULL,
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.h b/drivers/staging/brcm80211/brcmsmac/dma.h
-index 9c8b9a6..69f2e94 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.h
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.h
-@@ -59,15 +59,10 @@ enum txd_range {
- };
- 
- /* dma function type */
--typedef void (*di_detach_t) (struct dma_pub *dmah);
- typedef bool(*di_txreset_t) (struct dma_pub *dmah);
- typedef bool(*di_rxreset_t) (struct dma_pub *dmah);
- typedef bool(*di_rxidle_t) (struct dma_pub *dmah);
--typedef void (*di_txinit_t) (struct dma_pub *dmah);
- typedef bool(*di_txenabled_t) (struct dma_pub *dmah);
--typedef void (*di_rxinit_t) (struct dma_pub *dmah);
--typedef void (*di_txsuspend_t) (struct dma_pub *dmah);
--typedef void (*di_txresume_t) (struct dma_pub *dmah);
- typedef bool(*di_txsuspended_t) (struct dma_pub *dmah);
- typedef bool(*di_txsuspendedidle_t) (struct dma_pub *dmah);
- typedef int (*di_txfast_t) (struct dma_pub *dmah, struct sk_buff *p,
-@@ -75,7 +70,6 @@ typedef int (*di_txfast_t) (struct dma_pub *dmah, struct sk_buff *p,
- typedef int (*di_txunframed_t) (struct dma_pub *dmah, void *p, uint len,
- 				bool commit);
- typedef void *(*di_getpos_t) (struct dma_pub *di, bool direction);
--typedef void (*di_fifoloopbackenable_t) (struct dma_pub *dmah);
- typedef bool(*di_txstopped_t) (struct dma_pub *dmah);
- typedef bool(*di_rxstopped_t) (struct dma_pub *dmah);
- typedef bool(*di_rxenable_t) (struct dma_pub *dmah);
-@@ -83,7 +77,6 @@ typedef bool(*di_rxenabled_t) (struct dma_pub *dmah);
- typedef void *(*di_rx_t) (struct dma_pub *dmah);
- typedef bool(*di_rxfill_t) (struct dma_pub *dmah);
- typedef void (*di_txreclaim_t) (struct dma_pub *dmah, enum txd_range range);
--typedef void (*di_rxreclaim_t) (struct dma_pub *dmah);
- typedef unsigned long (*di_getvar_t) (struct dma_pub *dmah,
- 				      const char *name);
- typedef void *(*di_getnexttxp_t) (struct dma_pub *dmah, enum txd_range range);
-@@ -92,11 +85,7 @@ typedef void *(*di_peeknexttxp_t) (struct dma_pub *dmah);
- typedef void *(*di_peeknextrxp_t) (struct dma_pub *dmah);
- typedef void (*di_rxparam_get_t) (struct dma_pub *dmah, u16 *rxoffset,
- 				  u16 *rxbufsize);
--typedef void (*di_txblock_t) (struct dma_pub *dmah);
--typedef void (*di_txunblock_t) (struct dma_pub *dmah);
- typedef uint(*di_txactive_t) (struct dma_pub *dmah);
--typedef void (*di_txrotate_t) (struct dma_pub *dmah);
--typedef void (*di_counterreset_t) (struct dma_pub *dmah);
- typedef uint(*di_ctrlflags_t) (struct dma_pub *dmah, uint mask, uint flags);
- typedef char *(*di_dump_t) (struct dma_pub *dmah, struct brcmu_strbuf *b,
- 			    bool dumpring);
-@@ -110,12 +99,12 @@ typedef uint(*di_txcommitted_t) (struct dma_pub *dmah);
- 
- /* dma opsvec */
- struct di_fcn_s {
--	di_detach_t detach;
--	di_txinit_t txinit;
-+	void (*detach)(struct dma_pub *dmah);
-+	void (*txinit)(struct dma_pub *dmah);
- 	di_txreset_t txreset;
- 	di_txenabled_t txenabled;
--	di_txsuspend_t txsuspend;
--	di_txresume_t txresume;
-+	void (*txsuspend)(struct dma_pub *dmah);
-+	void (*txresume)(struct dma_pub *dmah);
- 	di_txsuspended_t txsuspended;
- 	di_txsuspendedidle_t txsuspendedidle;
- 	di_txfast_t txfast;
-@@ -125,12 +114,12 @@ struct di_fcn_s {
- 	di_txreclaim_t txreclaim;
- 	di_getnexttxp_t getnexttxp;
- 	di_peeknexttxp_t peeknexttxp;
--	di_txblock_t txblock;
--	di_txunblock_t txunblock;
-+	void (*txblock) (struct dma_pub *dmah);
-+	void (*txunblock) (struct dma_pub *dmah);
- 	di_txactive_t txactive;
--	di_txrotate_t txrotate;
-+	void (*txrotate) (struct dma_pub *dmah);
- 
--	di_rxinit_t rxinit;
-+	void (*rxinit)(struct dma_pub *dmah);
- 	di_rxreset_t rxreset;
- 	di_rxidle_t rxidle;
- 	di_rxstopped_t rxstopped;
-@@ -138,14 +127,14 @@ struct di_fcn_s {
- 	di_rxenabled_t rxenabled;
- 	di_rx_t rx;
- 	di_rxfill_t rxfill;
--	di_rxreclaim_t rxreclaim;
-+	void (*rxreclaim)(struct dma_pub *dmah);
- 	di_getnextrxp_t getnextrxp;
- 	di_peeknextrxp_t peeknextrxp;
- 	di_rxparam_get_t rxparam_get;
- 
--	di_fifoloopbackenable_t fifoloopbackenable;
-+	void (*fifoloopbackenable)(struct dma_pub *dmah);
- 	di_getvar_t d_getvar;
--	di_counterreset_t counterreset;
-+	void (*counterreset)(struct dma_pub *dmah);
- 	di_ctrlflags_t ctrlflags;
- 	di_dump_t dump;
- 	di_dumptx_t dumptx;
+ int ath6kl_wmi_set_wmm_txop(struct wmi *wmi, enum wmi_txop_cfg cfg);
+ int ath6kl_wmi_set_keepalive_cmd(struct wmi *wmi, u8 keep_alive_intvl);
 -- 
-1.7.1
-
+1.7.0.4
 
