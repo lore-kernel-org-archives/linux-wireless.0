@@ -1,35 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59687 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750745Ab1GRHqS (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:40762 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752103Ab1GWOAs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2011 03:46:18 -0400
-Subject: Re: IEEE802.11 BEB Implementation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Anbarasan <anbarasans85@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20110717T202533-832@post.gmane.org> (sfid-20110717_203020_523344_08EE9078)
-References: <loom.20110717T202533-832@post.gmane.org>
-	 (sfid-20110717_203020_523344_08EE9078)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 18 Jul 2011 09:46:15 +0200
-Message-ID: <1310975175.3942.3.camel@jlt3.sipsolutions.net> (sfid-20110718_094626_906358_80FBDD2C)
-Mime-Version: 1.0
+	Sat, 23 Jul 2011 10:00:48 -0400
+Received: by pzk37 with SMTP id 37so5273640pzk.1
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jul 2011 07:00:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1311422254-7104-1-git-send-email-hauke@hauke-m.de>
+References: <1311422254-7104-1-git-send-email-hauke@hauke-m.de>
+Date: Sat, 23 Jul 2011 16:00:47 +0200
+Message-ID: <CACna6rz9gChYwT-qhdNLKt0pizrN0Qe5mfQYJpeLWNp-M3r4KQ@mail.gmail.com> (sfid-20110723_160051_671141_75E388A0)
+Subject: Re: [PATCH 1/2] b43: read correct register on bcma bus.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-07-17 at 18:29 +0000, Anbarasan wrote:
+2011/7/23 Hauke Mehrtens <hauke@hauke-m.de>:
+> This causes an databus error on a Broadcom SoC using bcma.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  drivers/net/wireless/b43/dma.c |   20 +++++++++++++++++---
+>  1 files changed, 17 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
+> index 0953ce1..646d6ae 100644
+> --- a/drivers/net/wireless/b43/dma.c
+> +++ b/drivers/net/wireless/b43/dma.c
+> @@ -795,9 +795,23 @@ static u64 supported_dma_mask(struct b43_wldev *dev)
+>        u32 tmp;
+>        u16 mmio_base;
+>
+> -       tmp = b43_read32(dev, SSB_TMSHIGH);
+> -       if (tmp & SSB_TMSHIGH_DMA64)
+> -               return DMA_BIT_MASK(64);
+> +       switch (dev->dev->bus_type) {
+> +#ifdef CONFIG_B43_BCMA
+> +       case B43_BUS_BCMA:
+> +               tmp = bcma_aread32(dev->dev->bdev, BCMA_IOST);
+> +               if (tmp & BCMA_IOST_DMA64)
+> +                       return DMA_BIT_MASK(64);
+> +               break;
+> +#endif
+> +#ifdef CONFIG_B43_SSB
+> +       case B43_BUS_SSB:
+> +               tmp = ssb_read32(dev->dev->sdev, SSB_TMSHIGH);
+> +               if (tmp & SSB_TMSHIGH_DMA64)
+> +                       return DMA_BIT_MASK(64);
+> +               break;
+> +#endif
+> +       }
+> +
+>        mmio_base = b43_dmacontroller_base(0, 0);
+>        b43_write32(dev, mmio_base + B43_DMA32_TXCTL, B43_DMA32_TXADDREXT_MASK);
+>        tmp = b43_read32(dev, mmio_base + B43_DMA32_TXCTL);
+> --
+> 1.7.4.1
 
-> Following is a comment in the file (driver/net/wireless/iwl-commands.h):
-> /*Device will automatically increase contention window by (2*CW) + 1 for each 
-> transmission retry.  Device uses cw_max as a bit mask, ANDed with new CW  value,
-> to cap the CW value.*/
-> 
-> The above is the BEB and I am looking for this implementation. I could not find
-> it. Kindly help. (I have a Intel Wireless card.)
+Ack. Code was half-correctly using b43_read32 for SSB_TMSHIGH and
+that's how I missed it. Reading non-existent register on PC resulted
+in 0xFFFFFFFF, but not bus error.
 
-Isn't "Device will" and "Device uses" obvious? The card does it, you
-cannot modify this implementation.
+Thanks Hauke.
 
-johannes
-
+-- 
+Rafał
