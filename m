@@ -1,16 +1,15 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
 Received: from mga02.intel.com ([134.134.136.20]:55055 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752441Ab1GWSBV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jul 2011 14:01:21 -0400
+	id S1752969Ab1GWSBW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jul 2011 14:01:22 -0400
 From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 05/11] iwlagn: separate firmware version warning
-Date: Sat, 23 Jul 2011 10:24:44 -0700
-Message-Id: <1311441890-19959-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110723_200137_670757_66A3E273)
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 09/11] mac80211: remove offchannel_tx API
+Date: Sat, 23 Jul 2011 10:24:48 -0700
+Message-Id: <1311441890-19959-10-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110723_200140_620347_AD03974D)
 In-Reply-To: <1311441890-19959-1-git-send-email-wey-yi.w.guy@intel.com>
 References: <1311441890-19959-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -18,103 +17,174 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We sometimes need to support new firmware API for
-a while before we can publish them since testing
-them fully takes a long time. We could keep all
-the new code private, but that causes plenty of
-problems and sometimes we can give a pre-release
-version of firmware to people who need to test.
-However, when we just bump the API version, the
-driver will warn everybody that their firmware is
-outdated, when in fact it isn't. (Currently our
-case for this doesn't really change the API but
-bumping the API version is necessary because the
-firmware isn't fully backward compatible)
-
-In order to handle this in the future, add a new
-"api_ok" version; only below this will the driver
-warn that the uCode is too old.
+For iwlwifi, I decided not to use this API since
+it just increased the complexity for little gain.
+Since nobody else intends to use it, let's kill
+it again. If anybody later needs to have it, we
+can always revive it then.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c  |   24 +++++++++++++++++-------
- drivers/net/wireless/iwlwifi/iwl-core.h |    3 +++
- 2 files changed, 20 insertions(+), 7 deletions(-)
+ include/net/mac80211.h     |   10 ----------
+ net/mac80211/cfg.c         |   39 ---------------------------------------
+ net/mac80211/driver-ops.h  |   31 -------------------------------
+ net/mac80211/ieee80211_i.h |    1 -
+ net/mac80211/status.c      |    3 ---
+ 5 files changed, 0 insertions(+), 84 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index bb16726..871d880 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -952,6 +952,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 	int err;
- 	struct iwlagn_firmware_pieces pieces;
- 	const unsigned int api_max = priv->cfg->ucode_api_max;
-+	unsigned int api_ok = priv->cfg->ucode_api_ok;
- 	const unsigned int api_min = priv->cfg->ucode_api_min;
- 	u32 api_ver;
- 	char buildstr[25];
-@@ -962,10 +963,13 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 			IWL_DEFAULT_STANDARD_PHY_CALIBRATE_TBL_SIZE,
- 	};
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9259e97..6c846df 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1896,11 +1896,6 @@ enum ieee80211_tx_sync_type {
+  *	ieee80211_remain_on_channel_expired(). This callback may sleep.
+  * @cancel_remain_on_channel: Requests that an ongoing off-channel period is
+  *	aborted before it expires. This callback may sleep.
+- * @offchannel_tx: Transmit frame on another channel, wait for a response
+- *	and return. Reliable TX status must be reported for the frame. If the
+- *	return value is 1, then the @remain_on_channel will be used with a
+- *	regular transmission (if supported.)
+- * @offchannel_tx_cancel_wait: cancel wait associated with offchannel TX
+  *
+  * @set_ringparam: Set tx and rx ring sizes.
+  *
+@@ -2019,11 +2014,6 @@ struct ieee80211_ops {
+ 				 enum nl80211_channel_type channel_type,
+ 				 int duration);
+ 	int (*cancel_remain_on_channel)(struct ieee80211_hw *hw);
+-	int (*offchannel_tx)(struct ieee80211_hw *hw, struct sk_buff *skb,
+-			     struct ieee80211_channel *chan,
+-			     enum nl80211_channel_type channel_type,
+-			     unsigned int wait);
+-	int (*offchannel_tx_cancel_wait)(struct ieee80211_hw *hw);
+ 	int (*set_ringparam)(struct ieee80211_hw *hw, u32 tx, u32 rx);
+ 	void (*get_ringparam)(struct ieee80211_hw *hw,
+ 			      u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 3d1b091..c1fa577 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1898,33 +1898,6 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
  
-+	if (!api_ok)
-+		api_ok = api_max;
-+
- 	memset(&pieces, 0, sizeof(pieces));
+ 	*cookie = (unsigned long) skb;
  
- 	if (!ucode_raw) {
--		if (priv->fw_index <= priv->cfg->ucode_api_max)
-+		if (priv->fw_index <= api_ok)
- 			IWL_ERR(priv,
- 				"request for firmware file '%s' failed.\n",
- 				priv->firmware_name);
-@@ -1011,12 +1015,18 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 			goto try_again;
+-	if (is_offchan && local->ops->offchannel_tx) {
+-		int ret;
+-
+-		IEEE80211_SKB_CB(skb)->band = chan->band;
+-
+-		mutex_lock(&local->mtx);
+-
+-		if (local->hw_offchan_tx_cookie) {
+-			mutex_unlock(&local->mtx);
+-			return -EBUSY;
+-		}
+-
+-		/* TODO: bitrate control, TX processing? */
+-		ret = drv_offchannel_tx(local, skb, chan, channel_type, wait);
+-
+-		if (ret == 0)
+-			local->hw_offchan_tx_cookie = *cookie;
+-		mutex_unlock(&local->mtx);
+-
+-		/*
+-		 * Allow driver to return 1 to indicate it wants to have the
+-		 * frame transmitted with a remain_on_channel + regular TX.
+-		 */
+-		if (ret != 1)
+-			return ret;
+-	}
+-
+ 	if (is_offchan && local->ops->remain_on_channel) {
+ 		unsigned int duration;
+ 		int ret;
+@@ -2011,18 +1984,6 @@ static int ieee80211_mgmt_tx_cancel_wait(struct wiphy *wiphy,
+ 
+ 	mutex_lock(&local->mtx);
+ 
+-	if (local->ops->offchannel_tx_cancel_wait &&
+-	    local->hw_offchan_tx_cookie == cookie) {
+-		ret = drv_offchannel_tx_cancel_wait(local);
+-
+-		if (!ret)
+-			local->hw_offchan_tx_cookie = 0;
+-
+-		mutex_unlock(&local->mtx);
+-
+-		return ret;
+-	}
+-
+ 	if (local->ops->cancel_remain_on_channel) {
+ 		cookie ^= 2;
+ 		ret = ieee80211_cancel_remain_on_channel_hw(local, cookie);
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 1425380..9001ff3 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -590,37 +590,6 @@ static inline int drv_cancel_remain_on_channel(struct ieee80211_local *local)
+ 	return ret;
+ }
+ 
+-static inline int drv_offchannel_tx(struct ieee80211_local *local,
+-				    struct sk_buff *skb,
+-				    struct ieee80211_channel *chan,
+-				    enum nl80211_channel_type channel_type,
+-				    unsigned int wait)
+-{
+-	int ret;
+-
+-	might_sleep();
+-
+-	trace_drv_offchannel_tx(local, skb, chan, channel_type, wait);
+-	ret = local->ops->offchannel_tx(&local->hw, skb, chan,
+-					channel_type, wait);
+-	trace_drv_return_int(local, ret);
+-
+-	return ret;
+-}
+-
+-static inline int drv_offchannel_tx_cancel_wait(struct ieee80211_local *local)
+-{
+-	int ret;
+-
+-	might_sleep();
+-
+-	trace_drv_offchannel_tx_cancel_wait(local);
+-	ret = local->ops->offchannel_tx_cancel_wait(&local->hw);
+-	trace_drv_return_int(local, ret);
+-
+-	return ret;
+-}
+-
+ static inline int drv_set_ringparam(struct ieee80211_local *local,
+ 				    u32 tx, u32 rx)
+ {
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 400c09b..286ac5d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1002,7 +1002,6 @@ struct ieee80211_local {
+ 	unsigned int hw_roc_duration;
+ 	u32 hw_roc_cookie;
+ 	bool hw_roc_for_tx;
+-	unsigned long hw_offchan_tx_cookie;
+ 
+ 	/* dummy netdev for use w/ NAPI */
+ 	struct net_device napi_dev;
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 1658efa..a89cca3 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -345,9 +345,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			local->hw_roc_skb_for_status = NULL;
  		}
  
--		if (api_ver != api_max)
--			IWL_ERR(priv,
--				"Firmware has old API version. Expected v%u, "
--				"got v%u. New firmware can be obtained "
--				"from http://www.intellinuxwireless.org.\n",
--				api_max, api_ver);
-+		if (api_ver < api_ok) {
-+			if (api_ok != api_max)
-+				IWL_ERR(priv, "Firmware has old API version, "
-+					"expected v%u through v%u, got v%u.\n",
-+					api_ok, api_max, api_ver);
-+			else
-+				IWL_ERR(priv, "Firmware has old API version, "
-+					"expected v%u, got v%u.\n",
-+					api_max, api_ver);
-+			IWL_ERR(priv, "New firmware can be obtained from "
-+				      "http://www.intellinuxwireless.org/.\n");
-+		}
- 	}
- 
- 	if (build)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 3e6bb73..74f043d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -192,6 +192,8 @@ struct iwl_ht_params {
-  *	(.ucode) will be added to filename before loading from disk. The
-  *	filename is constructed as fw_name_pre<api>.ucode.
-  * @ucode_api_max: Highest version of uCode API supported by driver.
-+ * @ucode_api_ok: oldest version of the uCode API that is OK to load
-+ *	without a warning, for use in transitions
-  * @ucode_api_min: Lowest version of uCode API supported by driver.
-  * @valid_tx_ant: valid transmit antenna
-  * @valid_rx_ant: valid receive antenna
-@@ -235,6 +237,7 @@ struct iwl_cfg {
- 	const char *name;
- 	const char *fw_name_pre;
- 	const unsigned int ucode_api_max;
-+	const unsigned int ucode_api_ok;
- 	const unsigned int ucode_api_min;
- 	u8   valid_tx_ant;
- 	u8   valid_rx_ant;
+-		if (cookie == local->hw_offchan_tx_cookie)
+-			local->hw_offchan_tx_cookie = 0;
+-
+ 		cfg80211_mgmt_tx_status(
+ 			skb->dev, cookie, skb->data, skb->len,
+ 			!!(info->flags & IEEE80211_TX_STAT_ACK), GFP_ATOMIC);
 -- 
 1.7.0.4
 
