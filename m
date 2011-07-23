@@ -1,57 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7743 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755772Ab1G1Rb1 (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:53427 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751471Ab1GWIQl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2011 13:31:27 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 8/9] ath9k_hw: Update the radio parameters related to high_power
-Date: Thu, 28 Jul 2011 22:59:35 +0530
-Message-ID: <1311874176-27569-8-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110728_193133_784707_25F104F7)
-In-Reply-To: <1311874176-27569-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1311874176-27569-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Sat, 23 Jul 2011 04:16:41 -0400
+Received: by pzk37 with SMTP id 37so4896337pzk.1
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jul 2011 01:16:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CACna6rzwvbdMGhR45mE90wOoM359NgcUHqsZhG54wNrJAerrgA@mail.gmail.com>
+References: <20110722090414.4e3d80a5.rdunlap@xenotime.net>
+	<1311366436-25791-1-git-send-email-linville@tuxdriver.com>
+	<CACna6rzwvbdMGhR45mE90wOoM359NgcUHqsZhG54wNrJAerrgA@mail.gmail.com>
+Date: Sat, 23 Jul 2011 10:16:39 +0200
+Message-ID: <CACna6rxcOGdF9AOLXya6K+uK40KY3aRRjmdn6=nt671Ja=QPqA@mail.gmail.com> (sfid-20110723_101744_745893_747693B4)
+Subject: Re: [PATCH] bcma: fix 'SSB_PCICORE_BFL_NOPCI' undeclared build breakage
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+W dniu 22 lipca 2011 23:35 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
+> 2011/7/22 John W. Linville <linville@tuxdriver.com>:
+>> linux-next-20110722/drivers/bcma/driver_pci.c:175: error: 'SSB_PCICORE_BFL_NOPCI' undeclared (first use in this function)
+>>
+>> Reported-by: Randy Dunlap <rdunlap@xenotime.net>
+>> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>> ---
+>>  drivers/bcma/driver_pci.c |    2 ++
+>>  1 files changed, 2 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
+>> index dc6f34a..745d264 100644
+>> --- a/drivers/bcma/driver_pci.c
+>> +++ b/drivers/bcma/driver_pci.c
+>> @@ -172,8 +172,10 @@ static bool bcma_core_pci_is_in_hostmode(struct bcma_drv_pci *pc)
+>>            chipid_top != 0x5300)
+>>                return false;
+>>
+>> +#ifdef CONFIG_SSB_DRIVER_PCICORE
+>>        if (bus->sprom.boardflags_lo & SSB_PCICORE_BFL_NOPCI)
+>>                return false;
+>> +#endif /* CONFIG_SSB_DRIVER_PCICORE */
+>>
+>>  #if 0
+>>        /* TODO: on BCMA we use address from EROM instead of magic formula */
+>
+> Huh, I've no idea why do we have such a mess with boardflags.
+>
+> SPROM is board specific, not core specific. There is no such thing
+> like core-specific boardflags.
+>
+> Currently we define boardflags in every driver that is doing to use them:
+> #define SSB_PCICORE_BFL_NOPCI           0x00000400 /* Board leaves PCI floating */
+>
+> #define SSB_GIGE_BFL_ROBOSWITCH             0x0010
+>
+> #define B43_BFL_BTCOEXIST               0x0001  /* implements Bluetooth coexistance */
+> #define B43_BFL_PACTRL                  0x0002  /* GPIO 9 controlling the PA */
+> #define B43_BFL_AIRLINEMODE             0x0004  /* implements GPIO 13 radio
+> disable indication */
+> #define B43_BFL_RSSI                    0x0008  /* software calculates nrssi slope. */
+> #define B43_BFL_ENETSPI                 0x0010  /* has ephy roboswitch spi */
+> #define B43_BFL_XTAL_NOSLOW             0x0020  /* no slow clock available */
+> #define B43_BFL_CCKHIPWR                0x0040  /* can do high power CCK transmission */
+> #define B43_BFL_ENETADM                 0x0080  /* has ADMtek switch */
+> #define B43_BFL_ENETVLAN                0x0100  /* can do vlan */
+> #define B43_BFL_AFTERBURNER             0x0200  /* supports Afterburner mode */
+> #define B43_BFL_NOPCI                   0x0400  /* leaves PCI floating */
+> #define B43_BFL_FEM                     0x0800  /* supports the Front End Module */
+> #define B43_BFL_EXTLNA                  0x1000  /* has an external LNA */
+> #define B43_BFL_HGPA                    0x2000  /* had high gain PA */
+> #define B43_BFL_BTCMOD                  0x4000  /* BFL_BTCOEXIST is given in alternate GPIOs */
+> #define B43_BFL_ALTIQ                   0x8000  /* alternate I/Q settings */
+>
+> You can see we have them duplicated.
+>
+> The real solution would be to move defines into one shared place (ssb).
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index 28b44b0..275b53d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -928,15 +928,15 @@ static const u32 ar9300Modes_high_power_tx_gain_table_2p2[][5] = {
- 	{0x0000c2e0, 0x0000f800, 0x0000f800, 0x03ccc584, 0x03ccc584},
- 	{0x0000c2e4, 0x03ff0000, 0x03ff0000, 0x03f0f800, 0x03f0f800},
- 	{0x0000c2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
--	{0x00016044, 0x056db2e6, 0x056db2e6, 0x056db2e6, 0x056db2e6},
--	{0x00016048, 0xae480001, 0xae480001, 0xae480001, 0xae480001},
--	{0x00016068, 0x6eb6db6c, 0x6eb6db6c, 0x6eb6db6c, 0x6eb6db6c},
--	{0x00016444, 0x056db2e6, 0x056db2e6, 0x056db2e6, 0x056db2e6},
--	{0x00016448, 0xae480001, 0xae480001, 0xae480001, 0xae480001},
--	{0x00016468, 0x6eb6db6c, 0x6eb6db6c, 0x6eb6db6c, 0x6eb6db6c},
--	{0x00016844, 0x056db2e6, 0x056db2e6, 0x056db2e6, 0x056db2e6},
--	{0x00016848, 0xae480001, 0xae480001, 0xae480001, 0xae480001},
--	{0x00016868, 0x6eb6db6c, 0x6eb6db6c, 0x6eb6db6c, 0x6eb6db6c},
-+	{0x00016044, 0x012492d4, 0x012492d4, 0x012492d4, 0x012492d4},
-+	{0x00016048, 0x66480001, 0x66480001, 0x66480001, 0x66480001},
-+	{0x00016068, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c},
-+	{0x00016444, 0x012492d4, 0x012492d4, 0x012492d4, 0x012492d4},
-+	{0x00016448, 0x66480001, 0x66480001, 0x66480001, 0x66480001},
-+	{0x00016468, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c},
-+	{0x00016844, 0x012492d4, 0x012492d4, 0x012492d4, 0x012492d4},
-+	{0x00016848, 0x66480001, 0x66480001, 0x66480001, 0x66480001},
-+	{0x00016868, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c},
- };
- 
- static const u32 ar9300Modes_high_ob_db_tx_gain_table_2p2[][5] = {
+John, if you are looking for a quick fix, I'd prefer to replace that
+SSB_PCICORE_BFL_NOPCI with 0x400.
+
+As I said, the real fix will change code in b43, gige, driver_pci, b43legacy.
+
 -- 
-1.7.6
-
+Rafał
