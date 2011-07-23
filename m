@@ -1,124 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from msr15.hinet.net ([168.95.4.115]:39295 "EHLO msr15.hinet.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751118Ab1GLPNH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2011 11:13:07 -0400
-From: Ali Bahar <ali@internetdog.org>
-To: Greg Kroah-Hartman <gregkh@suse.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Ali Bahar <ali@internetdog.org>
-Subject: [PATCH 1/2] staging: r8712u: Sets to SSID, and to AP MAC#, can now be done when the interface is Down.
-Date: Tue, 12 Jul 2011 23:10:55 +0800
-Message-Id: <1310483456-10543-2-git-send-email-ali@internetDog.org> (sfid-20110712_171311_730998_DC2E2DEC)
-In-Reply-To: <1310483456-10543-1-git-send-email-ali@internetDog.org>
-References: <1310483456-10543-1-git-send-email-ali@internetDog.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:15252 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752243Ab1GWOW5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jul 2011 10:22:57 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 07/11] ath6kl: Move initialization/deinitialization of scan_table to appropriate functions
+Date: Sat, 23 Jul 2011 19:43:13 +0530
+Message-ID: <1311430397-4960-7-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110723_162259_788093_CD42F4B6)
+In-Reply-To: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The original Realtek code assumed that ioctl Sets get done after the
-interface is Up. This included the set to Essid and to the AP MAC#;
-and it fit Realtek's installation procedure. But there is no such
-necessity for the adapter, and no stated requirement found
-elsewhere. Also, wireless drivers typically permit this.
+By having scan_table in struct ath6kl, it makes sense to move initialization
+to ath6kl_init() and deinitialization to ath6kl_destroy().
 
-A typical error message used to be:
-Error for wireless request "Set ESSID" (8B1A) :
-    SET failed on device wlan0 ; Operation not permitted.
-
-Signed-off-by: Ali Bahar <ali@internetDog.org>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
-Larry,
+ drivers/net/wireless/ath/ath6kl/init.c |    9 +++++++--
+ drivers/net/wireless/ath/ath6kl/wmi.c  |    2 --
+ 2 files changed, 7 insertions(+), 4 deletions(-)
 
-this matches _your_ patch, of course. So it is a good candidate for an initial
-submission -- to ensure that I don't fall foul of the process.
-
-Ali
-
----
- drivers/staging/rtl8712/drv_types.h           |    5 +++++
- drivers/staging/rtl8712/rtl871x_ioctl_linux.c |   25 +++++++++++++++++++++----
- 2 files changed, 26 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/rtl8712/drv_types.h b/drivers/staging/rtl8712/drv_types.h
-index 3bb66dc..fd50f78 100644
---- a/drivers/staging/rtl8712/drv_types.h
-+++ b/drivers/staging/rtl8712/drv_types.h
-@@ -118,6 +118,11 @@ struct dvobj_priv {
- 	struct usb_device *pusbdev;
- };
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 1d6294f..e8ec617 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1062,6 +1062,8 @@ static int ath6kl_init(struct net_device *dev)
  
-+/**
-+ * struct _adapter - the main adapter structure for this device.
-+ *
-+ * bup: True indicates that the interface is Up.
-+ */
- struct _adapter {
- 	struct	dvobj_priv dvobjpriv;
- 	struct	mlme_priv mlmepriv;
-diff --git a/drivers/staging/rtl8712/rtl871x_ioctl_linux.c b/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-index 40e6b5c..59bdab1 100644
---- a/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-+++ b/drivers/staging/rtl8712/rtl871x_ioctl_linux.c
-@@ -975,6 +975,13 @@ static int r871x_wx_set_priv(struct net_device *dev,
-  * s2. set_802_11_authentication_mode()
-  * s3. set_802_11_encryption_mode()
-  * s4. set_802_11_bssid()
-+ *
-+ * This function intends to handle the Set AP command, which specifies the
-+ * MAC# of a preferred Access Point.
-+ * Currently, the request comes via Wireless Extensions' SIOCSIWAP ioctl.
-+ *
-+ * For this operation to succeed, there is no need for the interface to be Up.
-+ *
-  */
- static int r8711_wx_set_wap(struct net_device *dev,
- 			 struct iw_request_info *info,
-@@ -992,8 +999,6 @@ static int r8711_wx_set_wap(struct net_device *dev,
- 	struct wlan_network *pnetwork = NULL;
- 	enum NDIS_802_11_AUTHENTICATION_MODE	authmode;
+ 	ath6kl_dbg(ATH6KL_DBG_TRC, "%s: got wmi @ 0x%p.\n", __func__, ar->wmi);
  
--	if (padapter->bup == false)
--		return -1;
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY) == true)
- 		return -1;
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_LINKING) == true)
-@@ -1074,6 +1079,14 @@ static int r871x_wx_set_mlme(struct net_device *dev,
- 	return ret;
++	wlan_node_table_init(&ar->scan_table);
++
+ 	/*
+ 	 * The reason we have to wait for the target here is that the
+ 	 * driver layer has to init BMI in order to set the host block
+@@ -1069,7 +1071,7 @@ static int ath6kl_init(struct net_device *dev)
+ 	 */
+ 	if (htc_wait_target(ar->htc_target)) {
+ 		status = -EIO;
+-		goto err_wmi_cleanup;
++		goto err_node_cleanup;
+ 	}
+ 
+ 	if (ath6kl_init_service_ep(ar)) {
+@@ -1142,7 +1144,8 @@ err_rxbuf_cleanup:
+ 	ath6kl_cleanup_amsdu_rxbufs(ar);
+ err_cleanup_scatter:
+ 	ath6kl_hif_cleanup_scatter(ar);
+-err_wmi_cleanup:
++err_node_cleanup:
++	wlan_node_table_cleanup(&ar->scan_table);
+ 	ath6kl_wmi_shutdown(ar->wmi);
+ 	clear_bit(WMI_ENABLED, &ar->flag);
+ 	ar->wmi = NULL;
+@@ -1289,5 +1292,7 @@ void ath6kl_destroy(struct net_device *dev, unsigned int unregister)
+ 
+ 	free_netdev(dev);
+ 
++	wlan_node_table_cleanup(&ar->scan_table);
++
+ 	ath6kl_cfg80211_deinit(ar);
  }
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 6f145d4..742eaa1 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -2727,7 +2727,6 @@ void *ath6kl_wmi_init(struct ath6kl *dev)
  
-+/**
-+ *
-+ * This function intends to handle the Set Scan command.
-+ * Currently, the request comes via Wireless Extensions' SIOCSIWSCAN ioctl.
-+ *
-+ * For this operation to succeed, the interface is brought Up beforehand.
-+ *
-+ */
- static int r8711_wx_set_scan(struct net_device *dev,
- 			struct iw_request_info *a,
- 			union iwreq_data *wrqu, char *extra)
-@@ -1169,6 +1182,12 @@ static int r8711_wx_get_scan(struct net_device *dev,
-  * s2. set_802_11_authenticaion_mode()
-  * s3. set_802_11_encryption_mode()
-  * s4. set_802_11_ssid()
-+ *
-+ * This function intends to handle the Set ESSID command.
-+ * Currently, the request comes via the Wireless Extensions' SIOCSIWESSID ioctl.
-+ *
-+ * For this operation to succeed, there is no need for the interface to be Up.
-+ *
-  */
- static int r8711_wx_set_essid(struct net_device *dev,
- 				struct iw_request_info *a,
-@@ -1184,8 +1203,6 @@ static int r8711_wx_set_essid(struct net_device *dev,
- 	struct list_head *phead;
- 	u32 len;
+ 	wmi->parent_dev = dev;
  
--	if (padapter->bup == false)
--		return -1;
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY))
- 		return -1;
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_LINKING))
+-	wlan_node_table_init(&dev->scan_table);
+ 	ath6kl_wmi_qos_state_init(wmi);
+ 
+ 	wmi->pwr_mode = REC_POWER;
+@@ -2747,6 +2746,5 @@ void ath6kl_wmi_shutdown(struct wmi *wmi)
+ 	if (!wmi)
+ 		return;
+ 
+-	wlan_node_table_cleanup(&wmi->parent_dev->scan_table);
+ 	kfree(wmi);
+ }
 -- 
-1.7.6
+1.7.0.4
 
