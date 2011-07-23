@@ -1,57 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from msr14.hinet.net ([168.95.4.114]:44937 "EHLO msr14.hinet.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751654Ab1GSQTo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 12:19:44 -0400
-Date: Wed, 20 Jul 2011 00:16:56 +0800
-From: Ali Bahar <ali@internetdog.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stefan Assmann <sassmann@redhat.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: r8712u issue
-Message-ID: <20110719161656.GA7099@internetdog.org> (sfid-20110719_181948_054950_FC8F4059)
-Reply-To: ali@internetdog.org
-References: <4E2051F3.20103@redhat.com>
- <4E205984.5040803@lwfinger.net>
- <4E23E56C.9000202@redhat.com>
- <20110718082709.GA8390@internetdog.org>
- <4E23F2E0.3050200@redhat.com>
- <4E2448D2.50502@lwfinger.net>
- <4E244AC6.2030306@redhat.com>
- <4E2454EC.1050900@lwfinger.net>
- <4E25858D.9010407@redhat.com>
- <4E25AB9F.8010607@lwfinger.net>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:44973 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751730Ab1GWJB7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jul 2011 05:01:59 -0400
+Received: by qwk3 with SMTP id 3so1455983qwk.19
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jul 2011 02:01:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E25AB9F.8010607@lwfinger.net>
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1311409276-3316-1-git-send-email-weiyi.huang@gmail.com>
+References: <1311409276-3316-1-git-send-email-weiyi.huang@gmail.com>
+Date: Sat, 23 Jul 2011 11:01:58 +0200
+Message-ID: <CA+icZUWC8SBifLJ4V+PavDkHvNxz4PeEYk3cTD8agug9icg8jQ@mail.gmail.com> (sfid-20110723_110202_810952_57954F57)
+Subject: Re: [PATCH] ath5k: remove duplicated #include
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Huang Weiyi <weiyi.huang@gmail.com>
+Cc: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	Pavel Roskin <proski@gnu.org>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 19, 2011 at 11:06:55AM -0500, Larry Finger wrote:
-> On 07/19/2011 08:24 AM, Stefan Assmann wrote:
-> >
-> >So far I can say that with scan_ssid=1 after rebooting the AP the
-> >connection is properly re-established. Looks promising.
-> 
-> Your results make sense. The driver is fairly passive in all this.
-> It gets TX requests from the MAC layer, and passes received data
-> back up to that layer. It seems likely that the MAC layer built into
-> r8712u is not keeping track of missing responses, or it is not
-> probing the AP. In either case, it would not be productive to devote
-> any effort to fixing that part when either using NetworkManager or
-> setting scan_ssid for wpa_supplicant establishes periodic scans.
-> When these fail to get response from the AP, the softmac code will
-> respond, as you see.
-> 
-> The ultimate fix will be to convert to the driver to use mac80211,
+On Sat, Jul 23, 2011 at 10:21 AM, Huang Weiyi <weiyi.huang@gmail.com> wrote:
+> Remove duplicated #include('s) in
+>  drivers/net/wireless/ath/ath5k/ahb.c
+>
+> Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
+> ---
+>  drivers/net/wireless/ath/ath5k/ahb.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
+> index ba682a0..705e0f0 100644
+> --- a/drivers/net/wireless/ath/ath5k/ahb.c
+> +++ b/drivers/net/wireless/ath/ath5k/ahb.c
+> @@ -24,7 +24,6 @@
+>  #include "debug.h"
+>  #include "base.h"
+>  #include "reg.h"
+> -#include "debug.h"
+>
+>  /* return bus cachesize in 4B word units */
+>  static void ath5k_ahb_read_cachesize(struct ath_common *common, int *csz)
+> --
+> 1.5.6.4
+>
 
-Just what I've been thinking lately. I didn't think it very worthwhile
-to invest too much into fixing the miscellany.
+[ CCing some ath5k developers and ML ]
 
-regards,
-ali
+Against which linux-version or GIT tree is this patch for?
+Recent wireless-next (here I am on linux-next) was cleaned, the
+includes list looks like this now:
 
-> which is a much better MAC layer. That is on my TODO list, but it
-> has low priority.
-> 
-> Larry
+[ drivers/net/wireless/ath/ath5k/ahb.c ]
+
+#include <linux/nl80211.h>
+#include <linux/platform_device.h>
+#include <linux/etherdevice.h>
+#include <ar231x_platform.h>
+#include "ath5k.h"
+#include "debug.h"
+#include "base.h"
+#include "reg.h"
+
+- Sedat -
