@@ -1,96 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:53799 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753086Ab1GUVqR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 17:46:17 -0400
-Received: by fxd18 with SMTP id 18so4086815fxd.11
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2011 14:46:15 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43legacy: dma: cache translation (routing bits)
-Date: Fri, 22 Jul 2011 00:25:00 +0200
-Message-Id: <1311287100-3888-1-git-send-email-zajec5@gmail.com> (sfid-20110721_234620_239837_87DD6AF4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:49515 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751508Ab1GWSBU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jul 2011 14:01:20 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 00/11] update for 3.2
+Date: Sat, 23 Jul 2011 10:24:39 -0700
+Message-Id: <1311441890-19959-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110723_200135_506784_02784006)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We enable new P2P implementation with GO powersave
+We bump firmware API version for number of new devices
+We also adjust the sensitivity value for number of devices
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-Ideally this should have been applied before:
-ssb: return correct translation bit for 64-bit DMA
+Johannes Berg (7):
+  iwlagn: reserve queue 10 for TX during scan dwell
+  iwlagn: handle GO powersave
+  iwlagn: separate firmware version warning
+  iwlagn: bump firmware API for some devices
+  iwlagn: move context init after firmware loading
+  iwlagn: support new P2P implementation
+  mac80211: remove offchannel_tx API
 
-This is because mentioned patch added TMSHIGH register read on every
-ssb_dma_translation call which affected performance.
+Wey-Yi Guy (4):
+  iwlagn: default smps mode for 1000 series device
+  iwlagn: Remove ht40 support from 5.2GHz for _bgn devices
+  iwlagn: change default sensitivity value for 5000 and 6000 series
+  iwlagn: support v2 of enhanced sensitivity table
 
-If we can live with affected performance between that 2 commits, please
-just apply this ASAP.
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-It affected performance (however I don't expect anything like making it
-90% slower) is not acceptable, please revert mentioned patch, apply this
-one and then re-apply reverted patches.
----
- drivers/net/wireless/b43legacy/b43legacy.h |    2 ++
- drivers/net/wireless/b43legacy/dma.c       |    7 ++++---
- 2 files changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/b43legacy/b43legacy.h b/drivers/net/wireless/b43legacy/b43legacy.h
-index 23583be..17a130d 100644
---- a/drivers/net/wireless/b43legacy/b43legacy.h
-+++ b/drivers/net/wireless/b43legacy/b43legacy.h
-@@ -532,6 +532,8 @@ struct b43legacy_dma {
- 
- 	struct b43legacy_dmaring *rx_ring0;
- 	struct b43legacy_dmaring *rx_ring3; /* only on core.rev < 5 */
-+
-+	u32 translation; /* Routing bits */
- };
- 
- /* Data structures for PIO transmission, per 80211 core. */
-diff --git a/drivers/net/wireless/b43legacy/dma.c b/drivers/net/wireless/b43legacy/dma.c
-index c33934a..704ee62 100644
---- a/drivers/net/wireless/b43legacy/dma.c
-+++ b/drivers/net/wireless/b43legacy/dma.c
-@@ -73,7 +73,7 @@ static void op32_fill_descriptor(struct b43legacy_dmaring *ring,
- 	addr = (u32)(dmaaddr & ~SSB_DMA_TRANSLATION_MASK);
- 	addrext = (u32)(dmaaddr & SSB_DMA_TRANSLATION_MASK)
- 		   >> SSB_DMA_TRANSLATION_SHIFT;
--	addr |= ssb_dma_translation(ring->dev->dev);
-+	addr |= ring->dev->dma.translation;
- 	ctl = (bufsize - ring->frameoffset)
- 	      & B43legacy_DMA32_DCTL_BYTECNT;
- 	if (slot == ring->nr_slots - 1)
-@@ -175,7 +175,7 @@ static void op64_fill_descriptor(struct b43legacy_dmaring *ring,
- 	addrhi = (((u64)dmaaddr >> 32) & ~SSB_DMA_TRANSLATION_MASK);
- 	addrext = (((u64)dmaaddr >> 32) & SSB_DMA_TRANSLATION_MASK)
- 		  >> SSB_DMA_TRANSLATION_SHIFT;
--	addrhi |= ssb_dma_translation(ring->dev->dev);
-+	addrhi |= ring->dev->dma.translation;
- 	if (slot == ring->nr_slots - 1)
- 		ctl0 |= B43legacy_DMA64_DCTL0_DTABLEEND;
- 	if (start)
-@@ -709,7 +709,7 @@ static int dmacontroller_setup(struct b43legacy_dmaring *ring)
- 	int err = 0;
- 	u32 value;
- 	u32 addrext;
--	u32 trans = ssb_dma_translation(ring->dev->dev);
-+	u32 trans = ring->dev->dma.translation;
- 
- 	if (ring->tx) {
- 		if (ring->type == B43legacy_DMA_64BIT) {
-@@ -1093,6 +1093,7 @@ int b43legacy_dma_init(struct b43legacy_wldev *dev)
- 		return -EOPNOTSUPP;
- #endif
- 	}
-+	dma->translation = ssb_dma_translation(dev->dev);
- 
- 	err = -ENOMEM;
- 	/* setup TX DMA channels. */
--- 
-1.7.3.4
+ drivers/net/wireless/iwlwifi/Kconfig         |   17 -
+ drivers/net/wireless/iwlwifi/iwl-1000.c      |   15 +-
+ drivers/net/wireless/iwlwifi/iwl-2000.c      |   23 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c      |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c      |   19 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c |   69 +++--
+ drivers/net/wireless/iwlwifi/iwl-agn-hw.h    |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c   |   47 +--
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c  |   30 +--
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c    |   30 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c       |  455 ++++++++++++++------------
+ drivers/net/wireless/iwlwifi/iwl-agn.h       |    1 +
+ drivers/net/wireless/iwlwifi/iwl-commands.h  |   34 ++-
+ drivers/net/wireless/iwlwifi/iwl-core.c      |    5 +
+ drivers/net/wireless/iwlwifi/iwl-core.h      |    5 +
+ drivers/net/wireless/iwlwifi/iwl-dev.h       |   32 ++-
+ drivers/net/wireless/iwlwifi/iwl-scan.c      |   19 +-
+ drivers/net/wireless/iwlwifi/iwl-trans.c     |   10 +-
+ include/net/mac80211.h                       |   10 -
+ net/mac80211/cfg.c                           |   39 ---
+ net/mac80211/driver-ops.h                    |   31 --
+ net/mac80211/ieee80211_i.h                   |    1 -
+ net/mac80211/status.c                        |    3 -
+ 23 files changed, 449 insertions(+), 462 deletions(-)
 
