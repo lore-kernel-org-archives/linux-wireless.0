@@ -1,112 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2951 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752211Ab1GEWDM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 18:03:12 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 07/31] staging: brcm80211: removed asserts from
- dhd_cdc.c and dhd_common.c
-Date: Wed, 6 Jul 2011 00:02:34 +0200
-Message-ID: <1309903378-29021-8-git-send-email-arend@broadcom.com> (sfid-20110706_000323_546418_62A78BB8)
-In-Reply-To: <1309903378-29021-1-git-send-email-arend@broadcom.com>
-References: <1309903378-29021-1-git-send-email-arend@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:15210 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752243Ab1GWOWc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jul 2011 10:22:32 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 03/11] ath6kl: Cleanup parameters for wlan_refresh_inactive_nodes()
+Date: Sat, 23 Jul 2011 19:43:09 +0530
+Message-ID: <1311430397-4960-3-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110723_162235_770127_2E507036)
+In-Reply-To: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1311430397-4960-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+And remove the reference to wmi in ath6kl_node_table.
 
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd_cdc.c    |    2 --
- drivers/staging/brcm80211/brcmfmac/dhd_common.c |   21 +++++++++------------
- 2 files changed, 9 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ath/ath6kl/common.h |    3 +--
+ drivers/net/wireless/ath/ath6kl/node.c   |    6 +++---
+ drivers/net/wireless/ath/ath6kl/wmi.c    |    2 +-
+ 3 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c b/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-index 4b8eb9c..d464606 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_cdc.c
-@@ -288,8 +288,6 @@ brcmf_proto_ioctl(struct brcmf_pub *drvr, int ifidx, struct brcmf_ioctl *ioc,
+diff --git a/drivers/net/wireless/ath/ath6kl/common.h b/drivers/net/wireless/ath/ath6kl/common.h
+index 0a3a1d8..cc8b040 100644
+--- a/drivers/net/wireless/ath/ath6kl/common.h
++++ b/drivers/net/wireless/ath/ath6kl/common.h
+@@ -88,7 +88,6 @@ enum crypto_type {
+  * is a second table for associated stations or neighbors.
+  */
+ struct ath6kl_node_table {
+-	void *nt_wmi;		/* back reference */
+ 	spinlock_t nt_nodelock;	/* on node table */
+ 	struct bss *nt_node_first;	/* information of all nodes */
+ 	struct bss *nt_node_last;	/* information of all nodes */
+@@ -159,7 +158,7 @@ void wlan_iterate_nodes(struct ath6kl_node_table *nt,
+ void wlan_node_table_init(void *wmip, struct ath6kl_node_table *nt);
+ void wlan_node_table_cleanup(struct ath6kl_node_table *nt);
  
- 	BRCMF_TRACE(("%s: Enter\n", __func__));
+-void wlan_refresh_inactive_nodes(struct ath6kl_node_table *nt);
++void wlan_refresh_inactive_nodes(struct ath6kl *ar);
  
--	ASSERT(len <= BRCMF_C_IOCTL_MAXLEN);
--
- 	if (len > BRCMF_C_IOCTL_MAXLEN)
- 		goto done;
+ struct bss *wlan_find_ssid_node(struct ath6kl_node_table *nt, u8 *ssid,
+ 				  u32 ssid_len, bool is_wpa2, bool match_ssid);
+diff --git a/drivers/net/wireless/ath/ath6kl/node.c b/drivers/net/wireless/ath/ath6kl/node.c
+index b0f9ba2..533588c 100644
+--- a/drivers/net/wireless/ath/ath6kl/node.c
++++ b/drivers/net/wireless/ath/ath6kl/node.c
+@@ -169,17 +169,17 @@ void wlan_node_table_init(void *wmi, struct ath6kl_node_table *nt)
  
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-index 12cb90d..59c2726 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-@@ -272,7 +272,6 @@ bool brcmf_c_prec_enq(struct brcmf_pub *drvr, struct pktq *q,
- 		eprec = prec;
- 	else if (pktq_full(q)) {
- 		p = brcmu_pktq_peek_tail(q, &eprec);
--		ASSERT(p);
- 		if (eprec > prec)
- 			return false;
- 	}
-@@ -280,7 +279,6 @@ bool brcmf_c_prec_enq(struct brcmf_pub *drvr, struct pktq *q,
- 	/* Evict if needed */
- 	if (eprec >= 0) {
- 		/* Detect queueing to unconfigured precedence */
--		ASSERT(!pktq_pempty(q, eprec));
- 		discard_oldest = AC_BITMAP_TST(drvr->wme_dp, eprec);
- 		if (eprec == prec && !discard_oldest)
- 			return false;	/* refuse newer (incoming) packet */
-@@ -290,9 +288,7 @@ bool brcmf_c_prec_enq(struct brcmf_pub *drvr, struct pktq *q,
- 		if (p == NULL) {
- 			BRCMF_ERROR(("%s: brcmu_pktq_penq() failed, oldest %d.",
- 				     __func__, discard_oldest));
--			ASSERT(p);
- 		}
--
- 		brcmu_pkt_buf_free_skb(p);
- 	}
+ 	spin_lock_init(&nt->nt_nodelock);
  
-@@ -300,10 +296,9 @@ bool brcmf_c_prec_enq(struct brcmf_pub *drvr, struct pktq *q,
- 	p = brcmu_pktq_penq(q, prec, pkt);
- 	if (p == NULL) {
- 		BRCMF_ERROR(("%s: brcmu_pktq_penq() failed.", __func__));
--		ASSERT(p);
- 	}
- 
--	return true;
-+	return p != NULL;
+-	nt->nt_wmi = wmi;
+ 	nt->nt_node_age = WLAN_NODE_INACT_TIMEOUT_MSEC;
  }
  
- static int
-@@ -317,14 +312,16 @@ brcmf_c_iovar_op(struct brcmf_pub *drvr, const char *name,
+-void wlan_refresh_inactive_nodes(struct ath6kl_node_table *nt)
++void wlan_refresh_inactive_nodes(struct ath6kl *ar)
+ {
++	struct ath6kl_node_table *nt = &ar->scan_table;
+ 	struct bss *bss;
+ 	u8 my_bssid[ETH_ALEN];
+ 	u32 now;
  
- 	BRCMF_TRACE(("%s: Enter\n", __func__));
+-	ath6kl_wmi_get_current_bssid(nt->nt_wmi, my_bssid);
++	ath6kl_wmi_get_current_bssid(ar->wmi, my_bssid);
  
--	ASSERT(name);
--	ASSERT(len >= 0);
-+	if (name == NULL || len <= 0)
-+		return -EINVAL;
+ 	now = jiffies_to_msecs(jiffies);
+ 	bss = nt->nt_node_first;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 2e1b411..ea123c9 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -1009,7 +1009,7 @@ static int ath6kl_wmi_scan_complete_rx(struct wmi *wmi, u8 *datap, int len)
+ 	ev = (struct wmi_scan_complete_event *) datap;
  
--	/* Get MUST have return space */
--	ASSERT(set || (arg && len));
-+	/* Set does not take qualifiers */
-+	if (set && (params || plen))
-+		return -EINVAL;
+ 	if (a_sle32_to_cpu(ev->status) == 0)
+-		wlan_refresh_inactive_nodes(&wmi->parent_dev->scan_table);
++		wlan_refresh_inactive_nodes(wmi->parent_dev);
  
--	/* Set does NOT take qualifiers */
--	ASSERT(!set || (!params && !plen));
-+	/* Get must have return space;*/
-+	if (!set && !(arg && len))
-+		return -EINVAL;
- 
- 	vi = brcmu_iovar_lookup(brcmf_iovars, name);
- 	if (vi == NULL) {
+ 	ath6kl_scan_complete_evt(wmi->parent_dev, a_sle32_to_cpu(ev->status));
+ 	wmi->is_probe_ssid = false;
 -- 
-1.7.4.1
-
+1.7.0.4
 
