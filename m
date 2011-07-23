@@ -1,608 +1,688 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f171.google.com ([209.85.215.171]:52188 "EHLO
-	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753591Ab1GZVbZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2011 17:31:25 -0400
-Received: by eye22 with SMTP id 22so1213684eye.2
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 14:31:24 -0700 (PDT)
-From: Guy Eilam <guy@wizery.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] mac80211: fix race condition between assoc_done and first EAP packet
-Date: Wed, 27 Jul 2011 00:29:32 +0300
-Message-Id: <1311715772-8855-2-git-send-email-guy@wizery.com> (sfid-20110726_233130_459018_770A6242)
-In-Reply-To: <1311715772-8855-1-git-send-email-guy@wizery.com>
-References: <1311715772-8855-1-git-send-email-guy@wizery.com>
+Received: from c60.cesmail.net ([216.154.195.49]:60606 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752516Ab1GWN3L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jul 2011 09:29:11 -0400
+Subject: [PATCH 2 3/3] ath5k: eliminate CHANNEL_* macros,
+ use AR5K_MODE_* in channel->hw_value
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+From: Pavel Roskin <proski@gnu.org>
+Date: Sat, 23 Jul 2011 09:29:09 -0400
+Message-ID: <20110723132909.10739.9568.stgit@mj.roinet.com> (sfid-20110723_152916_214965_C0D9A958)
+In-Reply-To: <20110723132856.10739.42301.stgit@mj.roinet.com>
+References: <20110723132856.10739.42301.stgit@mj.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When associating to an AP, the station might miss the first EAP
-packet that the AP sends due to a race condition between the association
-success procedure and the rx flow in mac80211.
-In such cases, the packet might fall in ieee80211_rx_h_check due to
-the fact that the relevant rx->sta wasn't allocated yet.
-Allocation of the relevant station info struct before actually
-sending the association request and setting it with a new
-dummy_sta flag solve this problem.
-The station will accept only EAP packets from the AP while it
-is in the pre-association/dummy state.
-This dummy station entry is not seen by normal sta_info_get()
-calls, only by sta_info_get_bss_rx().
-The driver is not notified for the first insertion of the
-dummy station. The driver is notified only after the association
-is complete and the dummy flag is removed from the station entry.
-That way, all the rest of the code flow should be untouched by
-this change.
+When checking for the band, use channel->band.
 
-Signed-off-by: Guy Eilam <guy@wizery.com>
+Change ath5k_hw_nic_wakeup() and ath5k_channel_ok() to take
+ieee80211_channel.  Change ath5k_hw_radio_revision() to take
+ieee80211_band.
+
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
 ---
- net/mac80211/mlme.c     |   60 +++++++++++++--
- net/mac80211/rx.c       |   20 ++++-
- net/mac80211/sta_info.c |  192 ++++++++++++++++++++++++++++++++++-------------
- net/mac80211/sta_info.h |   30 +++++++-
- 4 files changed, 240 insertions(+), 62 deletions(-)
+ drivers/net/wireless/ath/ath5k/ath5k.h  |   32 +----------
+ drivers/net/wireless/ath/ath5k/attach.c |   10 ++--
+ drivers/net/wireless/ath/ath5k/base.c   |   23 ++------
+ drivers/net/wireless/ath/ath5k/eeprom.c |    8 +--
+ drivers/net/wireless/ath/ath5k/pcu.c    |    4 +
+ drivers/net/wireless/ath/ath5k/phy.c    |   87 +++++++++++++++++--------------
+ drivers/net/wireless/ath/ath5k/qcu.c    |    2 -
+ drivers/net/wireless/ath/ath5k/reset.c  |   70 +++++++++++--------------
+ 8 files changed, 102 insertions(+), 134 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index a497718..8a2fff1 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1495,10 +1495,14 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index a8a7db4..0d413be 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -685,30 +685,6 @@ struct ath5k_gain {
+ #define AR5K_SLOT_TIME_20	880
+ #define AR5K_SLOT_TIME_MAX	0xffff
  
- 	ifmgd->aid = aid;
- 
--	sta = sta_info_alloc(sdata, cbss->bssid, GFP_KERNEL);
--	if (!sta) {
--		printk(KERN_DEBUG "%s: failed to alloc STA entry for"
--		       " the AP\n", sdata->name);
-+	mutex_lock(&sdata->local->sta_mtx);
-+	/*
-+	 * station info was already allocated and inserted before
-+	 * the association and should be available to us
-+	 */
-+	sta = sta_info_get_rx(sdata, cbss->bssid);
-+	if (WARN_ON(!sta)) {
-+		mutex_unlock(&sdata->local->sta_mtx);
- 		return false;
- 	}
- 
-@@ -1569,8 +1573,10 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 	if (elems.wmm_param)
- 		set_sta_flags(sta, WLAN_STA_WME);
- 
--	err = sta_info_insert(sta);
-+	err = sta_info_insert_notify(sta);
- 	sta = NULL;
-+	/* sta_info_insert_notify changed the mutex lock with rcu lock */
-+	rcu_read_unlock();
- 	if (err) {
- 		printk(KERN_DEBUG "%s: failed to insert STA entry for"
- 		       " the AP (error %d)\n", sdata->name, err);
-@@ -2387,15 +2393,43 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
-+/* create and insert a dummy station entry */
-+static int ieee80211_pre_assoc(struct ieee80211_sub_if_data *sdata,
-+				u8 *bssid) {
-+	struct sta_info *sta;
-+	int err;
-+
-+	sta = sta_info_alloc(sdata, bssid, GFP_KERNEL);
-+	if (!sta) {
-+		printk(KERN_DEBUG "%s: failed to alloc STA entry for"
-+			   " the AP\n", sdata->name);
-+		return -ENOMEM;
-+	}
-+
-+	sta->dummy = true;
-+
-+	err = sta_info_insert(sta);
-+	sta = NULL;
-+	if (err) {
-+		printk(KERN_DEBUG "%s: failed to insert Dummy STA entry for"
-+		       " the AP (error %d)\n", sdata->name, err);
-+		return err;
-+	}
-+
-+	return 0;
-+}
-+
- static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
- 						  struct sk_buff *skb)
- {
- 	struct ieee80211_mgmt *mgmt;
- 	struct ieee80211_rx_status *rx_status;
- 	struct ieee802_11_elems elems;
-+	struct cfg80211_bss *cbss = wk->assoc.bss;
- 	u16 status;
- 
- 	if (!skb) {
-+		sta_info_destroy_addr(wk->sdata, cbss->bssid);
- 		cfg80211_send_assoc_timeout(wk->sdata->dev, wk->filter_ta);
- 		return WORK_DONE_DESTROY;
- 	}
-@@ -2421,12 +2455,16 @@ static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
- 		if (!ieee80211_assoc_success(wk, mgmt, skb->len)) {
- 			mutex_unlock(&wk->sdata->u.mgd.mtx);
- 			/* oops -- internal error -- send timeout for now */
-+			sta_info_destroy_addr(wk->sdata, cbss->bssid);
- 			cfg80211_send_assoc_timeout(wk->sdata->dev,
- 						    wk->filter_ta);
- 			return WORK_DONE_DESTROY;
- 		}
- 
- 		mutex_unlock(&wk->sdata->u.mgd.mtx);
-+	} else {
-+		/* assoc failed - destroy the dummy station entry */
-+		sta_info_destroy_addr(wk->sdata, cbss->bssid);
- 	}
- 
- 	cfg80211_send_rx_assoc(wk->sdata->dev, skb->data, skb->len);
-@@ -2440,7 +2478,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_bss *bss = (void *)req->bss->priv;
- 	struct ieee80211_work *wk;
- 	const u8 *ssid;
--	int i;
-+	int i, err;
- 
- 	mutex_lock(&ifmgd->mtx);
- 	if (ifmgd->associated) {
-@@ -2465,6 +2503,16 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	if (!wk)
- 		return -ENOMEM;
- 
-+	/*
-+	 * create a dummy station info entry in order
-+	 * to start accepting incoming EAPOL packets from the station
-+	 */
-+	err = ieee80211_pre_assoc(sdata, req->bss->bssid);
-+	if (err) {
-+		kfree(wk);
-+		return err;
-+	}
-+
- 	ifmgd->flags &= ~IEEE80211_STA_DISABLE_11N;
- 	ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index e8e67dc..3146891 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -842,8 +842,20 @@ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
- 		      ieee80211_is_pspoll(hdr->frame_control)) &&
- 		     rx->sdata->vif.type != NL80211_IFTYPE_ADHOC &&
- 		     rx->sdata->vif.type != NL80211_IFTYPE_WDS &&
--		     (!rx->sta || !test_sta_flags(rx->sta, WLAN_STA_ASSOC))))
-+		     (!rx->sta || !test_sta_flags(rx->sta, WLAN_STA_ASSOC)))) {
-+		if (rx->sta->dummy && ieee80211_is_data(hdr->frame_control)) {
-+			u16 ethertype;
-+			u8 *payload;
-+
-+			payload = rx->skb->data +
-+				ieee80211_hdrlen(hdr->frame_control);
-+			ethertype = (payload[6] << 8) | payload[7];
-+			if (cpu_to_be16(ethertype) ==
-+				rx->sdata->control_port_protocol)
-+				return RX_CONTINUE;
-+		}
- 		return RX_DROP_MONITOR;
-+	}
- 
- 	return RX_CONTINUE;
- }
-@@ -2782,7 +2794,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 	if (ieee80211_is_data(fc)) {
- 		prev_sta = NULL;
- 
--		for_each_sta_info(local, hdr->addr2, sta, tmp) {
-+		for_each_sta_info_rx(local, hdr->addr2, sta, tmp) {
- 			if (!prev_sta) {
- 				prev_sta = sta;
- 				continue;
-@@ -2826,7 +2838,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 			continue;
- 		}
- 
--		rx.sta = sta_info_get_bss(prev, hdr->addr2);
-+		rx.sta = sta_info_get_bss_rx(prev, hdr->addr2);
- 		rx.sdata = prev;
- 		ieee80211_prepare_and_rx_handle(&rx, skb, false);
- 
-@@ -2834,7 +2846,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 	}
- 
- 	if (prev) {
--		rx.sta = sta_info_get_bss(prev, hdr->addr2);
-+		rx.sta = sta_info_get_bss_rx(prev, hdr->addr2);
- 		rx.sdata = prev;
- 
- 		if (ieee80211_prepare_and_rx_handle(&rx, skb, true))
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index b4549f2..b27a61b 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -102,6 +102,30 @@ struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
- 				    lockdep_is_held(&local->sta_mtx));
- 	while (sta) {
- 		if (sta->sdata == sdata &&
-+		    !sta->dummy &&
-+		    memcmp(sta->sta.addr, addr, ETH_ALEN) == 0)
-+			break;
-+		sta = rcu_dereference_check(sta->hnext,
-+					    rcu_read_lock_held() ||
-+					    lockdep_is_held(&local->sta_lock) ||
-+					    lockdep_is_held(&local->sta_mtx));
-+	}
-+	return sta;
-+}
-+
-+/* get a station info entry even if it is a dummy station*/
-+struct sta_info *sta_info_get_rx(struct ieee80211_sub_if_data *sdata,
-+			      const u8 *addr)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta;
-+
-+	sta = rcu_dereference_check(local->sta_hash[STA_HASH(addr)],
-+				    rcu_read_lock_held() ||
-+				    lockdep_is_held(&local->sta_lock) ||
-+				    lockdep_is_held(&local->sta_mtx));
-+	while (sta) {
-+		if (sta->sdata == sdata &&
- 		    memcmp(sta->sta.addr, addr, ETH_ALEN) == 0)
- 			break;
- 		sta = rcu_dereference_check(sta->hnext,
-@@ -129,6 +153,34 @@ struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
- 	while (sta) {
- 		if ((sta->sdata == sdata ||
- 		     (sta->sdata->bss && sta->sdata->bss == sdata->bss)) &&
-+		    !sta->dummy &&
-+		    memcmp(sta->sta.addr, addr, ETH_ALEN) == 0)
-+			break;
-+		sta = rcu_dereference_check(sta->hnext,
-+					    rcu_read_lock_held() ||
-+					    lockdep_is_held(&local->sta_lock) ||
-+					    lockdep_is_held(&local->sta_mtx));
-+	}
-+	return sta;
-+}
-+
-+/*
-+ * Get sta info either from the specified interface
-+ * or from one of its vlans (including dummy stations)
-+ */
-+struct sta_info *sta_info_get_bss_rx(struct ieee80211_sub_if_data *sdata,
-+				  const u8 *addr)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta;
-+
-+	sta = rcu_dereference_check(local->sta_hash[STA_HASH(addr)],
-+				    rcu_read_lock_held() ||
-+				    lockdep_is_held(&local->sta_lock) ||
-+				    lockdep_is_held(&local->sta_mtx));
-+	while (sta) {
-+		if ((sta->sdata == sdata ||
-+		     (sta->sdata->bss && sta->sdata->bss == sdata->bss)) &&
- 		    memcmp(sta->sta.addr, addr, ETH_ALEN) == 0)
- 			break;
- 		sta = rcu_dereference_check(sta->hnext,
-@@ -284,7 +336,8 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	return sta;
- }
- 
--static int sta_info_finish_insert(struct sta_info *sta, bool async)
-+static int sta_info_finish_insert(struct sta_info *sta,
-+				bool async, bool sta_list_add)
- {
- 	struct ieee80211_local *local = sta->local;
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-@@ -294,50 +347,55 @@ static int sta_info_finish_insert(struct sta_info *sta, bool async)
- 
- 	lockdep_assert_held(&local->sta_mtx);
- 
--	/* notify driver */
--	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--		sdata = container_of(sdata->bss,
--				     struct ieee80211_sub_if_data,
--				     u.ap);
--	err = drv_sta_add(local, sdata, &sta->sta);
--	if (err) {
--		if (!async)
--			return err;
--		printk(KERN_DEBUG "%s: failed to add IBSS STA %pM to driver (%d)"
--				  " - keeping it anyway.\n",
--		       sdata->name, sta->sta.addr, err);
--	} else {
--		sta->uploaded = true;
-+	if (!sta->dummy) {
-+		/* notify driver */
-+		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+			sdata = container_of(sdata->bss,
-+					     struct ieee80211_sub_if_data,
-+					     u.ap);
-+		err = drv_sta_add(local, sdata, &sta->sta);
-+		if (err) {
-+			if (!async)
-+				return err;
-+			printk(KERN_DEBUG "%s: failed to add IBSS STA %pM to "
-+					  "driver (%d) - keeping it anyway.\n",
-+			       sdata->name, sta->sta.addr, err);
-+		} else {
-+			sta->uploaded = true;
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
--		if (async)
--			wiphy_debug(local->hw.wiphy,
--				    "Finished adding IBSS STA %pM\n",
--				    sta->sta.addr);
-+			if (async)
-+				wiphy_debug(local->hw.wiphy,
-+					    "Finished adding IBSS STA %pM\n",
-+					    sta->sta.addr);
- #endif
-+		}
-+
-+		sdata = sta->sdata;
- 	}
- 
--	sdata = sta->sdata;
-+	if (sta_list_add) {
-+		if (!async) {
-+			local->num_sta++;
-+			local->sta_generation++;
-+			smp_mb();
- 
--	if (!async) {
--		local->num_sta++;
--		local->sta_generation++;
--		smp_mb();
-+			/* make the station visible */
-+			spin_lock_irqsave(&local->sta_lock, flags);
-+			sta_info_hash_add(local, sta);
-+			spin_unlock_irqrestore(&local->sta_lock, flags);
-+		}
- 
--		/* make the station visible */
--		spin_lock_irqsave(&local->sta_lock, flags);
--		sta_info_hash_add(local, sta);
--		spin_unlock_irqrestore(&local->sta_lock, flags);
-+		list_add(&sta->list, &local->sta_list);
- 	}
- 
--	list_add(&sta->list, &local->sta_list);
+-/* channel_flags */
+-#define	CHANNEL_CW_INT	0x0008	/* Contention Window interference detected */
+-#define	CHANNEL_CCK	0x0020	/* CCK channel */
+-#define	CHANNEL_OFDM	0x0040	/* OFDM channel */
+-#define	CHANNEL_2GHZ	0x0080	/* 2GHz channel. */
+-#define	CHANNEL_5GHZ	0x0100	/* 5GHz channel */
+-#define	CHANNEL_PASSIVE	0x0200	/* Only passive scan allowed */
+-#define	CHANNEL_DYN	0x0400	/* Dynamic CCK-OFDM channel (for g operation) */
 -
--	ieee80211_sta_debugfs_add(sta);
--	rate_control_add_sta_debugfs(sta);
+-#define	CHANNEL_A	(CHANNEL_5GHZ | CHANNEL_OFDM)
+-#define	CHANNEL_B	(CHANNEL_2GHZ | CHANNEL_CCK)
+-#define	CHANNEL_G	(CHANNEL_2GHZ | CHANNEL_OFDM)
 -
--	sinfo.filled = 0;
--	sinfo.generation = local->sta_generation;
--	cfg80211_new_sta(sdata->dev, sta->sta.addr, &sinfo, GFP_KERNEL);
-+	if (!sta->dummy) {
-+		ieee80211_sta_debugfs_add(sta);
-+		rate_control_add_sta_debugfs(sta);
- 
-+		sinfo.filled = 0;
-+		sinfo.generation = local->sta_generation;
-+		cfg80211_new_sta(sdata->dev, sta->sta.addr, &sinfo, GFP_KERNEL);
-+	}
- 
- 	return 0;
- }
-@@ -354,7 +412,7 @@ static void sta_info_finish_pending(struct ieee80211_local *local)
- 		list_del(&sta->list);
- 		spin_unlock_irqrestore(&local->sta_lock, flags);
- 
--		sta_info_finish_insert(sta, true);
-+		sta_info_finish_insert(sta, true, true);
- 
- 		spin_lock_irqsave(&local->sta_lock, flags);
- 	}
-@@ -398,7 +456,7 @@ static int sta_info_insert_adhoc(struct sta_info *sta) __acquires(RCU)
- 
- 	spin_lock_irqsave(&local->sta_lock, flags);
- 	/* check if STA exists already */
--	if (sta_info_get_bss(sdata, sta->sta.addr)) {
-+	if (sta_info_get_bss_rx(sdata, sta->sta.addr)) {
- 		spin_unlock_irqrestore(&local->sta_lock, flags);
- 		rcu_read_lock();
- 		__sta_info_free(local, sta);
-@@ -430,11 +488,13 @@ static int sta_info_insert_adhoc(struct sta_info *sta) __acquires(RCU)
-  * this function replaces the mutex lock
-  * with a RCU lock
-  */
--static int sta_info_insert_mgd(struct sta_info *sta) __acquires(RCU)
-+static int sta_info_insert_mgd(struct sta_info *sta,
-+				bool sta_list_add) __acquires(RCU)
- {
- 	struct ieee80211_local *local = sta->local;
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	unsigned long flags;
-+	struct sta_info *exist_sta;
- 	int err = 0;
- 
- 	lockdep_assert_held(&local->sta_mtx);
-@@ -450,17 +510,28 @@ static int sta_info_insert_mgd(struct sta_info *sta) __acquires(RCU)
- 	 */
- 
- 	spin_lock_irqsave(&local->sta_lock, flags);
--	/* check if STA exists already */
--	if (sta_info_get_bss(sdata, sta->sta.addr)) {
--		spin_unlock_irqrestore(&local->sta_lock, flags);
--		mutex_unlock(&local->sta_mtx);
--		rcu_read_lock();
--		return -EEXIST;
-+	/*
-+	 * check if STA exists already.
-+	 * only accept a scenario of a second call to sta_info_insert_mgd
-+	 * with a dummy station entry that was inserted earlier
-+	 * in that case - assume that the dummy station flag should
-+	 * be removed.
-+	 */
-+	exist_sta = sta_info_get_bss_rx(sdata, sta->sta.addr);
-+	if (exist_sta) {
-+		if (exist_sta == sta && sta->dummy && !sta_list_add) {
-+			sta->dummy = false;
-+		} else {
-+			spin_unlock_irqrestore(&local->sta_lock, flags);
-+			mutex_unlock(&local->sta_mtx);
-+			rcu_read_lock();
-+			return -EEXIST;
-+		}
- 	}
- 
- 	spin_unlock_irqrestore(&local->sta_lock, flags);
- 
--	err = sta_info_finish_insert(sta, false);
-+	err = sta_info_finish_insert(sta, false, sta_list_add);
- 	if (err) {
- 		mutex_unlock(&local->sta_mtx);
- 		rcu_read_lock();
-@@ -468,14 +539,15 @@ static int sta_info_insert_mgd(struct sta_info *sta) __acquires(RCU)
- 	}
- 
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
--	wiphy_debug(local->hw.wiphy, "Inserted STA %pM\n", sta->sta.addr);
-+	wiphy_debug(local->hw.wiphy, "Inserted %sSTA %pM\n",
-+			sta->dummy ? "Dummy " : "", sta->sta.addr);
- #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
- 
- 	/* move reference to rcu-protected */
- 	rcu_read_lock();
- 	mutex_unlock(&local->sta_mtx);
- 
--	if (ieee80211_vif_is_mesh(&sdata->vif))
-+	if (ieee80211_vif_is_mesh(&sdata->vif) && !sta->dummy)
- 		mesh_accept_plinks_update(sdata);
- 
- 	return 0;
-@@ -514,7 +586,7 @@ int sta_info_insert_rcu(struct sta_info *sta) __acquires(RCU)
- 
- 	mutex_lock(&local->sta_mtx);
- 
--	err = sta_info_insert_mgd(sta);
-+	err = sta_info_insert_mgd(sta, true);
- 	if (err)
- 		goto out_free;
- 
-@@ -534,6 +606,24 @@ int sta_info_insert(struct sta_info *sta)
- 	return err;
- }
- 
-+/* Caller must hold sta->local->sta_mtx */
-+int sta_info_insert_notify(struct sta_info *sta) __acquires(RCU)
-+{
-+	struct ieee80211_local *local = sta->local;
-+	int err = 0;
-+
-+	err = sta_info_insert_check(sta);
-+	if (err) {
-+		mutex_unlock(&local->sta_mtx);
-+		rcu_read_lock();
-+		return err;
-+	}
-+
-+	might_sleep();
-+
-+	return sta_info_insert_mgd(sta, false);
-+}
-+
- static inline void __bss_tim_set(struct ieee80211_if_ap *bss, u16 aid)
- {
+-#define	CHANNEL_ALL	(CHANNEL_OFDM | CHANNEL_CCK | \
+-			 CHANNEL_2GHZ | CHANNEL_5GHZ)
+-
+-#define CHANNEL_MODES		CHANNEL_ALL
+-
+-/*
+- * Used internally for ath5k_hw_reset_tx_queue().
+- * Also see struct struct ieee80211_channel.
+- */
+-#define IS_CHAN_B(_c)	((_c->hw_value & CHANNEL_B) != 0)
+-
+ /*
+  * The following structure is used to map 2GHz channels to
+  * 5GHz Atheros channels.
+@@ -965,7 +941,7 @@ enum ath5k_power_mode {
+ struct ath5k_capabilities {
  	/*
-@@ -774,7 +864,7 @@ int sta_info_destroy_addr(struct ieee80211_sub_if_data *sdata, const u8 *addr)
- 	int ret;
+ 	 * Supported PHY modes
+-	 * (ie. CHANNEL_A, CHANNEL_B, ...)
++	 * (ie. AR5K_MODE_11A, AR5K_MODE_11B, ...)
+ 	 */
+ 	DECLARE_BITMAP(cap_mode, AR5K_MODE_MAX);
  
- 	mutex_lock(&sdata->local->sta_mtx);
--	sta = sta_info_get(sdata, addr);
-+	sta = sta_info_get_rx(sdata, addr);
- 	ret = __sta_info_destroy(sta);
- 	mutex_unlock(&sdata->local->sta_mtx);
+@@ -1335,7 +1311,7 @@ void ath5k_unregister_leds(struct ath5k_hw *ah);
  
-@@ -788,7 +878,7 @@ int sta_info_destroy_addr_bss(struct ieee80211_sub_if_data *sdata,
- 	int ret;
  
- 	mutex_lock(&sdata->local->sta_mtx);
--	sta = sta_info_get_bss(sdata, addr);
-+	sta = sta_info_get_bss_rx(sdata, addr);
- 	ret = __sta_info_destroy(sta);
- 	mutex_unlock(&sdata->local->sta_mtx);
+ /* Reset Functions */
+-int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial);
++int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, struct ieee80211_channel *channel);
+ int ath5k_hw_on_hold(struct ath5k_hw *ah);
+ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	   struct ieee80211_channel *channel, bool fast, bool skip_pcu);
+@@ -1455,13 +1431,13 @@ int ath5k_hw_write_initvals(struct ath5k_hw *ah, u8 mode, bool change_channel);
  
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index a06d64e..b1b104b 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -238,10 +238,12 @@ struct sta_ampdu_mlme {
-  * @plink_timer: peer link watch timer
-  * @plink_timer_was_running: used by suspend/resume to restore timers
-  * @debugfs: debug filesystem info
-- * @sta: station information we share with the driver
-  * @dead: set to true when sta is unlinked
-  * @uploaded: set to true when sta is uploaded to the driver
-  * @lost_packets: number of consecutive lost packets
-+ * @dummy: indicate a dummy station created for receiving
-+ *	EAP frames before association
-+ * @sta: station information we share with the driver
+ /* PHY functions */
+ /* Misc PHY functions */
+-u16 ath5k_hw_radio_revision(struct ath5k_hw *ah, unsigned int chan);
++u16 ath5k_hw_radio_revision(struct ath5k_hw *ah, enum ieee80211_band band);
+ int ath5k_hw_phy_disable(struct ath5k_hw *ah);
+ /* Gain_F optimization */
+ enum ath5k_rfgain ath5k_hw_gainf_calibrate(struct ath5k_hw *ah);
+ int ath5k_hw_rfgain_opt_init(struct ath5k_hw *ah);
+ /* PHY/RF channel functions */
+-bool ath5k_channel_ok(struct ath5k_hw *ah, u16 freq, unsigned int flags);
++bool ath5k_channel_ok(struct ath5k_hw *ah, struct ieee80211_channel *channel);
+ /* PHY calibration */
+ void ath5k_hw_init_nfcal_hist(struct ath5k_hw *ah);
+ int ath5k_hw_phy_calibrate(struct ath5k_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+index b0df2f6..5606259 100644
+--- a/drivers/net/wireless/ath/ath5k/attach.c
++++ b/drivers/net/wireless/ath/ath5k/attach.c
+@@ -145,7 +145,7 @@ int ath5k_hw_init(struct ath5k_hw *ah)
+ 		goto err;
+ 
+ 	/* Bring device out of sleep and reset its units */
+-	ret = ath5k_hw_nic_wakeup(ah, 0, true);
++	ret = ath5k_hw_nic_wakeup(ah, NULL);
+ 	if (ret)
+ 		goto err;
+ 
+@@ -153,7 +153,7 @@ int ath5k_hw_init(struct ath5k_hw *ah)
+ 	ah->ah_phy_revision = ath5k_hw_reg_read(ah, AR5K_PHY_CHIP_ID) &
+ 			0xffffffff;
+ 	ah->ah_radio_5ghz_revision = ath5k_hw_radio_revision(ah,
+-			CHANNEL_5GHZ);
++			IEEE80211_BAND_5GHZ);
+ 
+ 	/* Try to identify radio chip based on its srev */
+ 	switch (ah->ah_radio_5ghz_revision & 0xf0) {
+@@ -161,14 +161,14 @@ int ath5k_hw_init(struct ath5k_hw *ah)
+ 		ah->ah_radio = AR5K_RF5111;
+ 		ah->ah_single_chip = false;
+ 		ah->ah_radio_2ghz_revision = ath5k_hw_radio_revision(ah,
+-							CHANNEL_2GHZ);
++							IEEE80211_BAND_2GHZ);
+ 		break;
+ 	case AR5K_SREV_RAD_5112:
+ 	case AR5K_SREV_RAD_2112:
+ 		ah->ah_radio = AR5K_RF5112;
+ 		ah->ah_single_chip = false;
+ 		ah->ah_radio_2ghz_revision = ath5k_hw_radio_revision(ah,
+-							CHANNEL_2GHZ);
++							IEEE80211_BAND_2GHZ);
+ 		break;
+ 	case AR5K_SREV_RAD_2413:
+ 		ah->ah_radio = AR5K_RF2413;
+@@ -205,7 +205,7 @@ int ath5k_hw_init(struct ath5k_hw *ah)
+ 			ah->ah_radio = AR5K_RF5111;
+ 			ah->ah_single_chip = false;
+ 			ah->ah_radio_2ghz_revision = ath5k_hw_radio_revision(ah,
+-								CHANNEL_2GHZ);
++							IEEE80211_BAND_2GHZ);
+ 		} else if (ah->ah_mac_version == (AR5K_SREV_AR2425 >> 4) ||
+ 			   ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4) ||
+ 			   ah->ah_phy_revision == AR5K_SREV_PHY_2425) {
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index ee06e34..dfbbd16 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -271,20 +271,18 @@ static unsigned int
+ ath5k_setup_channels(struct ath5k_hw *ah, struct ieee80211_channel *channels,
+ 		unsigned int mode, unsigned int max)
+ {
+-	unsigned int count, size, chfreq, freq, ch;
++	unsigned int count, size, freq, ch;
+ 	enum ieee80211_band band;
+ 
+ 	switch (mode) {
+ 	case AR5K_MODE_11A:
+ 		/* 1..220, but 2GHz frequencies are filtered by check_channel */
+ 		size = 220;
+-		chfreq = CHANNEL_5GHZ;
+ 		band = IEEE80211_BAND_5GHZ;
+ 		break;
+ 	case AR5K_MODE_11B:
+ 	case AR5K_MODE_11G:
+ 		size = 26;
+-		chfreq = CHANNEL_2GHZ;
+ 		band = IEEE80211_BAND_2GHZ;
+ 		break;
+ 	default:
+@@ -299,26 +297,19 @@ ath5k_setup_channels(struct ath5k_hw *ah, struct ieee80211_channel *channels,
+ 		if (freq == 0) /* mapping failed - not a standard channel */
+ 			continue;
+ 
++		/* Write channel info, needed for ath5k_channel_ok() */
++		channels[count].center_freq = freq;
++		channels[count].band = band;
++		channels[count].hw_value = mode;
++
+ 		/* Check if channel is supported by the chipset */
+-		if (!ath5k_channel_ok(ah, freq, chfreq))
++		if (!ath5k_channel_ok(ah, &channels[count]))
+ 			continue;
+ 
+ 		if (!modparam_all_channels &&
+ 		    !ath5k_is_standard_channel(ch, band))
+ 			continue;
+ 
+-		/* Write channel info and increment counter */
+-		channels[count].center_freq = freq;
+-		channels[count].band = band;
+-		switch (mode) {
+-		case AR5K_MODE_11A:
+-		case AR5K_MODE_11G:
+-			channels[count].hw_value = chfreq | CHANNEL_OFDM;
+-			break;
+-		case AR5K_MODE_11B:
+-			channels[count].hw_value = CHANNEL_B;
+-		}
+-
+ 		count++;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
+index 56cb9d4..7c9c2ab 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.c
++++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+@@ -1780,12 +1780,12 @@ ath5k_eeprom_detach(struct ath5k_hw *ah)
+ int
+ ath5k_eeprom_mode_from_channel(struct ieee80211_channel *channel)
+ {
+-	switch (channel->hw_value & CHANNEL_MODES) {
+-	case CHANNEL_A:
++	switch (channel->hw_value) {
++	case AR5K_MODE_11A:
+ 		return AR5K_EEPROM_MODE_11A;
+-	case CHANNEL_G:
++	case AR5K_MODE_11G:
+ 		return AR5K_EEPROM_MODE_11G;
+-	case CHANNEL_B:
++	case AR5K_MODE_11B:
+ 		return AR5K_EEPROM_MODE_11B;
+ 	default:
+ 		return -1;
+diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
+index 0673138..733d46c 100644
+--- a/drivers/net/wireless/ath/ath5k/pcu.c
++++ b/drivers/net/wireless/ath/ath5k/pcu.c
+@@ -152,7 +152,7 @@ unsigned int ath5k_hw_get_default_slottime(struct ath5k_hw *ah)
+ 	case AR5K_BWMODE_DEFAULT:
+ 	default:
+ 		slot_time = AR5K_INIT_SLOT_TIME_DEFAULT;
+-		if ((channel->hw_value & CHANNEL_CCK) && !ah->ah_short_slot)
++		if ((channel->hw_value == AR5K_MODE_11B) && !ah->ah_short_slot)
+ 			slot_time = AR5K_INIT_SLOT_TIME_B;
+ 		break;
+ 	}
+@@ -183,7 +183,7 @@ unsigned int ath5k_hw_get_default_sifs(struct ath5k_hw *ah)
+ 	case AR5K_BWMODE_DEFAULT:
+ 		sifs = AR5K_INIT_SIFS_DEFAULT_BG;
+ 	default:
+-		if (channel->hw_value & CHANNEL_5GHZ)
++		if (channel->band == IEEE80211_BAND_5GHZ)
+ 			sifs = AR5K_INIT_SIFS_DEFAULT_A;
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index b9ada88..227c914 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -38,7 +38,7 @@
+ /*
+  * Get the PHY Chip revision
   */
- struct sta_info {
- 	/* General information, mostly static */
-@@ -335,6 +337,9 @@ struct sta_info {
- 
- 	unsigned int lost_packets;
- 
-+	/* should be right in front of sta to be in the same cache line */
-+	bool dummy;
+-u16 ath5k_hw_radio_revision(struct ath5k_hw *ah, unsigned int chan)
++u16 ath5k_hw_radio_revision(struct ath5k_hw *ah, enum ieee80211_band band)
+ {
+ 	unsigned int i;
+ 	u32 srev;
+@@ -47,11 +47,11 @@ u16 ath5k_hw_radio_revision(struct ath5k_hw *ah, unsigned int chan)
+ 	/*
+ 	 * Set the radio chip access register
+ 	 */
+-	switch (chan) {
+-	case CHANNEL_2GHZ:
++	switch (band) {
++	case IEEE80211_BAND_2GHZ:
+ 		ath5k_hw_reg_write(ah, AR5K_PHY_SHIFT_2GHZ, AR5K_PHY(0));
+ 		break;
+-	case CHANNEL_5GHZ:
++	case IEEE80211_BAND_5GHZ:
+ 		ath5k_hw_reg_write(ah, AR5K_PHY_SHIFT_5GHZ, AR5K_PHY(0));
+ 		break;
+ 	default:
+@@ -84,14 +84,16 @@ u16 ath5k_hw_radio_revision(struct ath5k_hw *ah, unsigned int chan)
+ /*
+  * Check if a channel is supported
+  */
+-bool ath5k_channel_ok(struct ath5k_hw *ah, u16 freq, unsigned int flags)
++bool ath5k_channel_ok(struct ath5k_hw *ah, struct ieee80211_channel *channel)
+ {
++	u16 freq = channel->center_freq;
 +
- 	/* keep last! */
- 	struct ieee80211_sta sta;
- };
-@@ -435,9 +440,15 @@ rcu_dereference_protected_tid_tx(struct sta_info *sta, int tid)
- struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
- 			      const u8 *addr);
+ 	/* Check if the channel is in our supported range */
+-	if (flags & CHANNEL_2GHZ) {
++	if (channel->band == IEEE80211_BAND_2GHZ) {
+ 		if ((freq >= ah->ah_capabilities.cap_range.range_2ghz_min) &&
+ 		    (freq <= ah->ah_capabilities.cap_range.range_2ghz_max))
+ 			return true;
+-	} else if (flags & CHANNEL_5GHZ)
++	} else if (channel->band == IEEE80211_BAND_5GHZ)
+ 		if ((freq >= ah->ah_capabilities.cap_range.range_5ghz_min) &&
+ 		    (freq <= ah->ah_capabilities.cap_range.range_5ghz_max))
+ 			return true;
+@@ -224,7 +226,7 @@ static inline int ath5k_hw_write_ofdm_timings(struct ath5k_hw *ah,
+ 		ds_coef_exp, ds_coef_man, clock;
  
-+struct sta_info *sta_info_get_rx(struct ieee80211_sub_if_data *sdata,
-+			      const u8 *addr);
-+
- struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
- 				  const u8 *addr);
+ 	BUG_ON(!(ah->ah_version == AR5K_AR5212) ||
+-		!(channel->hw_value & CHANNEL_OFDM));
++		(channel->hw_value == AR5K_MODE_11B));
  
-+struct sta_info *sta_info_get_bss_rx(struct ieee80211_sub_if_data *sdata,
-+				  const u8 *addr);
-+
- static inline
- void for_each_sta_info_type_check(struct ieee80211_local *local,
- 				  const u8 *addr,
-@@ -458,6 +469,22 @@ void for_each_sta_info_type_check(struct ieee80211_local *local,
- 		_sta = nxt,						\
- 		nxt = _sta ? rcu_dereference(_sta->hnext) : NULL	\
- 	     )								\
-+	/* run code only if address matches and it's not a dummy sta */	\
-+	if (memcmp(_sta->sta.addr, (_addr), ETH_ALEN) == 0 &&\
-+		!_sta->dummy)
-+
-+#define for_each_sta_info_rx(local, _addr, _sta, nxt)			\
-+	for (/* initialise loop */\
-+		_sta = rcu_dereference(local->sta_hash[STA_HASH(_addr)]),\
-+		nxt = _sta ? rcu_dereference(_sta->hnext) : NULL;	\
-+		/* typecheck */						\
-+		for_each_sta_info_type_check(local, (_addr), _sta, nxt),\
-+		/* continue condition */				\
-+		_sta;							\
-+		/* advance loop */					\
-+		_sta = nxt,						\
-+		nxt = _sta ? rcu_dereference(_sta->hnext) : NULL	\
-+		)							   \
- 	/* compare address and run code only if it matches */		\
- 	if (memcmp(_sta->sta.addr, (_addr), ETH_ALEN) == 0)
+ 	/* Get coefficient
+ 	 * ALGO: coef = (5 * clock / carrier_freq) / 2
+@@ -298,7 +300,7 @@ static void ath5k_hw_wait_for_synth(struct ath5k_hw *ah,
+ 		u32 delay;
+ 		delay = ath5k_hw_reg_read(ah, AR5K_PHY_RX_DELAY) &
+ 			AR5K_PHY_RX_DELAY_M;
+-		delay = (channel->hw_value & CHANNEL_CCK) ?
++		delay = (channel->hw_value == AR5K_MODE_11B) ?
+ 			((delay << 2) / 22) : (delay / 10);
+ 		if (ah->ah_bwmode == AR5K_BWMODE_10MHZ)
+ 			delay = delay << 1;
+@@ -798,9 +800,9 @@ static int ath5k_hw_rfregs_init(struct ath5k_hw *ah,
+ 	}
  
-@@ -483,6 +510,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- int sta_info_insert(struct sta_info *sta);
- int sta_info_insert_rcu(struct sta_info *sta) __acquires(RCU);
- int sta_info_insert_atomic(struct sta_info *sta);
-+int sta_info_insert_notify(struct sta_info *sta)  __acquires(RCU);
+ 	/* Set Output and Driver bias current (OB/DB) */
+-	if (channel->hw_value & CHANNEL_2GHZ) {
++	if (channel->band == IEEE80211_BAND_2GHZ) {
  
- int sta_info_destroy_addr(struct ieee80211_sub_if_data *sdata,
- 			  const u8 *addr);
--- 
-1.7.4.1
-
+-		if (channel->hw_value & CHANNEL_CCK)
++		if (channel->hw_value == AR5K_MODE_11B)
+ 			ee_mode = AR5K_EEPROM_MODE_11B;
+ 		else
+ 			ee_mode = AR5K_EEPROM_MODE_11G;
+@@ -825,7 +827,7 @@ static int ath5k_hw_rfregs_init(struct ath5k_hw *ah,
+ 						AR5K_RF_DB_2GHZ, true);
+ 
+ 	/* RF5111 always needs OB/DB for 5GHz, even if we use 2GHz */
+-	} else if ((channel->hw_value & CHANNEL_5GHZ) ||
++	} else if ((channel->band == IEEE80211_BAND_5GHZ) ||
+ 			(ah->ah_radio == AR5K_RF5111)) {
+ 
+ 		/* For 11a, Turbo and XR we need to choose
+@@ -857,7 +859,7 @@ static int ath5k_hw_rfregs_init(struct ath5k_hw *ah,
+ 	if (ah->ah_radio == AR5K_RF5111) {
+ 
+ 		/* Set gain_F settings according to current step */
+-		if (channel->hw_value & CHANNEL_OFDM) {
++		if (channel->hw_value != AR5K_MODE_11B) {
+ 
+ 			AR5K_REG_WRITE_BITS(ah, AR5K_PHY_FRAME_CTL,
+ 					AR5K_PHY_FRAME_CTL_TX_CLIP,
+@@ -914,7 +916,7 @@ static int ath5k_hw_rfregs_init(struct ath5k_hw *ah,
+ 	if (ah->ah_radio == AR5K_RF5112) {
+ 
+ 		/* Set gain_F settings according to current step */
+-		if (channel->hw_value & CHANNEL_OFDM) {
++		if (channel->hw_value != AR5K_MODE_11B) {
+ 
+ 			ath5k_hw_rfb_op(ah, rf_regs, g_step->gos_param[0],
+ 						AR5K_RF_MIXGAIN_OVR, true);
+@@ -1026,7 +1028,7 @@ static int ath5k_hw_rfregs_init(struct ath5k_hw *ah,
+ 	}
+ 
+ 	if (ah->ah_radio == AR5K_RF5413 &&
+-	channel->hw_value & CHANNEL_2GHZ) {
++	channel->band == IEEE80211_BAND_2GHZ) {
+ 
+ 		ath5k_hw_rfb_op(ah, rf_regs, 1, AR5K_RF_DERBY_CHAN_SEL_MODE,
+ 									true);
+@@ -1138,7 +1140,7 @@ static int ath5k_hw_rf5111_channel(struct ath5k_hw *ah,
+ 	 */
+ 	data0 = data1 = 0;
+ 
+-	if (channel->hw_value & CHANNEL_2GHZ) {
++	if (channel->band == IEEE80211_BAND_2GHZ) {
+ 		/* Map 2GHz channel to 5GHz Atheros channel ID */
+ 		ret = ath5k_hw_rf5111_chan2athchan(
+ 			ieee80211_frequency_to_channel(channel->center_freq),
+@@ -1265,10 +1267,9 @@ static int ath5k_hw_channel(struct ath5k_hw *ah,
+ 	int ret;
+ 	/*
+ 	 * Check bounds supported by the PHY (we don't care about regulatory
+-	 * restrictions at this point). Note: hw_value already has the band
+-	 * (CHANNEL_2GHZ, or CHANNEL_5GHZ) so we inform ath5k_channel_ok()
+-	 * of the band by that */
+-	if (!ath5k_channel_ok(ah, channel->center_freq, channel->hw_value)) {
++	 * restrictions at this point).
++	 */
++	if (!ath5k_channel_ok(ah, channel)) {
+ 		ATH5K_ERR(ah,
+ 			"channel frequency (%u MHz) out of supported "
+ 			"band range\n",
+@@ -1614,7 +1615,7 @@ int ath5k_hw_phy_calibrate(struct ath5k_hw *ah,
+ 	ret = ath5k_hw_rf511x_iq_calibrate(ah);
+ 
+ 	if ((ah->ah_radio == AR5K_RF5111 || ah->ah_radio == AR5K_RF5112) &&
+-	    (channel->hw_value & CHANNEL_OFDM))
++	    (channel->hw_value != AR5K_MODE_11B))
+ 		ath5k_hw_request_rfgain_probe(ah);
+ 
+ 	return ret;
+@@ -1641,7 +1642,7 @@ ath5k_hw_set_spur_mitigation_filter(struct ath5k_hw *ah,
+ 	/* Convert current frequency to fbin value (the same way channels
+ 	 * are stored on EEPROM, check out ath5k_eeprom_bin2freq) and scale
+ 	 * up by 2 so we can compare it later */
+-	if (channel->hw_value & CHANNEL_2GHZ) {
++	if (channel->band == IEEE80211_BAND_2GHZ) {
+ 		chan_fbin = (channel->center_freq - 2300) * 10;
+ 		freq_band = AR5K_EEPROM_BAND_2GHZ;
+ 	} else {
+@@ -1703,7 +1704,7 @@ ath5k_hw_set_spur_mitigation_filter(struct ath5k_hw *ah,
+ 			spur_freq_sigma_delta = (spur_delta_phase >> 10);
+ 			symbol_width = AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz / 4;
+ 		default:
+-			if (channel->hw_value == CHANNEL_A) {
++			if (channel->band == IEEE80211_BAND_5GHZ) {
+ 				/* Both sample_freq and chip_freq are 40MHz */
+ 				spur_delta_phase = (spur_offset << 17) / 25;
+ 				spur_freq_sigma_delta =
+@@ -2226,15 +2227,20 @@ ath5k_get_chan_pcal_surrounding_piers(struct ath5k_hw *ah,
+ 	idx_l = 0;
+ 	idx_r = 0;
+ 
+-	if (!(channel->hw_value & CHANNEL_OFDM)) {
++	switch (channel->hw_value) {
++	case AR5K_EEPROM_MODE_11A:
++		pcinfo = ee->ee_pwr_cal_a;
++		mode = AR5K_EEPROM_MODE_11A;
++		break;
++	case AR5K_EEPROM_MODE_11B:
+ 		pcinfo = ee->ee_pwr_cal_b;
+ 		mode = AR5K_EEPROM_MODE_11B;
+-	} else if (channel->hw_value & CHANNEL_2GHZ) {
++		break;
++	case AR5K_EEPROM_MODE_11G:
++	default:
+ 		pcinfo = ee->ee_pwr_cal_g;
+ 		mode = AR5K_EEPROM_MODE_11G;
+-	} else {
+-		pcinfo = ee->ee_pwr_cal_a;
+-		mode = AR5K_EEPROM_MODE_11A;
++		break;
+ 	}
+ 	max = ee->ee_n_piers[mode] - 1;
+ 
+@@ -2303,15 +2309,20 @@ ath5k_get_rate_pcal_data(struct ath5k_hw *ah,
+ 	idx_l = 0;
+ 	idx_r = 0;
+ 
+-	if (!(channel->hw_value & CHANNEL_OFDM)) {
++	switch (channel->hw_value) {
++	case AR5K_MODE_11A:
++		rpinfo = ee->ee_rate_tpwr_a;
++		mode = AR5K_EEPROM_MODE_11A;
++		break;
++	case AR5K_MODE_11B:
+ 		rpinfo = ee->ee_rate_tpwr_b;
+ 		mode = AR5K_EEPROM_MODE_11B;
+-	} else if (channel->hw_value & CHANNEL_2GHZ) {
++		break;
++	case AR5K_MODE_11G:
++	default:
+ 		rpinfo = ee->ee_rate_tpwr_g;
+ 		mode = AR5K_EEPROM_MODE_11G;
+-	} else {
+-		rpinfo = ee->ee_rate_tpwr_a;
+-		mode = AR5K_EEPROM_MODE_11A;
++		break;
+ 	}
+ 	max = ee->ee_rate_target_pwr_num[mode] - 1;
+ 
+@@ -2392,20 +2403,20 @@ ath5k_get_max_ctl_power(struct ath5k_hw *ah,
+ 
+ 	ctl_mode = ath_regd_get_band_ctl(regulatory, channel->band);
+ 
+-	switch (channel->hw_value & CHANNEL_MODES) {
+-	case CHANNEL_A:
++	switch (channel->hw_value) {
++	case AR5K_MODE_11A:
+ 		if (ah->ah_bwmode == AR5K_BWMODE_40MHZ)
+ 			ctl_mode |= AR5K_CTL_TURBO;
+ 		else
+ 			ctl_mode |= AR5K_CTL_11A;
+ 		break;
+-	case CHANNEL_G:
++	case AR5K_MODE_11G:
+ 		if (ah->ah_bwmode == AR5K_BWMODE_40MHZ)
+ 			ctl_mode |= AR5K_CTL_TURBOG;
+ 		else
+ 			ctl_mode |= AR5K_CTL_11G;
+ 		break;
+-	case CHANNEL_B:
++	case AR5K_MODE_11B:
+ 		ctl_mode |= AR5K_CTL_11B;
+ 		break;
+ 	default:
+@@ -3290,7 +3301,7 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 
+ 	/* Write OFDM timings on 5212*/
+ 	if (ah->ah_version == AR5K_AR5212 &&
+-		channel->hw_value & CHANNEL_OFDM) {
++		channel->hw_value != AR5K_MODE_11B) {
+ 
+ 		ret = ath5k_hw_write_ofdm_timings(ah, channel);
+ 		if (ret)
+diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
+index 1d37675..a8b8ffa 100644
+--- a/drivers/net/wireless/ath/ath5k/qcu.c
++++ b/drivers/net/wireless/ath/ath5k/qcu.c
+@@ -537,7 +537,7 @@ int ath5k_hw_set_ifs_intervals(struct ath5k_hw *ah, unsigned int slot_time)
+ 	 *
+ 	 * Also we have different lowest rate for 802.11a
+ 	 */
+-	if (channel->hw_value & CHANNEL_5GHZ)
++	if (channel->band == IEEE80211_BAND_5GHZ)
+ 		rate = &ah->sbands[IEEE80211_BAND_5GHZ].bitrates[0];
+ 	else
+ 		rate = &ah->sbands[IEEE80211_BAND_2GHZ].bitrates[0];
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 5d6d3bd..8bc57e4 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -102,12 +102,18 @@ static void ath5k_hw_init_core_clock(struct ath5k_hw *ah)
+ 	/*
+ 	 * Set core clock frequency
+ 	 */
+-	if (channel->hw_value & CHANNEL_5GHZ)
+-		clock = 40; /* 802.11a */
+-	else if (channel->hw_value & CHANNEL_CCK)
+-		clock = 22; /* 802.11b */
+-	else
+-		clock = 44; /* 802.11g */
++	switch (channel->hw_value) {
++	case AR5K_MODE_11A:
++		clock = 40;
++		break;
++	case AR5K_MODE_11B:
++		clock = 22;
++		break;
++	case AR5K_MODE_11G:
++	default:
++		clock = 44;
++		break;
++	}
+ 
+ 	/* Use clock multiplier for non-default
+ 	 * bwmode */
+@@ -581,8 +587,9 @@ int ath5k_hw_on_hold(struct ath5k_hw *ah)
+ 
+ /*
+  * Bring up MAC + PHY Chips and program PLL
++ * Channel is NULL for the initial wakeup.
+  */
+-int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
++int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, struct ieee80211_channel *channel)
+ {
+ 	struct pci_dev *pdev = ah->pdev;
+ 	u32 turbo, mode, clock, bus_flags;
+@@ -592,7 +599,7 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 	mode = 0;
+ 	clock = 0;
+ 
+-	if ((ath5k_get_bus_type(ah) != ATH_AHB) || !initial) {
++	if ((ath5k_get_bus_type(ah) != ATH_AHB) || channel) {
+ 		/* Wakeup the device */
+ 		ret = ath5k_hw_set_power(ah, AR5K_PM_AWAKE, true, 0);
+ 		if (ret) {
+@@ -652,7 +659,7 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 
+ 	/* On initialization skip PLL programming since we don't have
+ 	 * a channel / mode set yet */
+-	if (initial)
++	if (!channel)
+ 		return 0;
+ 
+ 	if (ah->ah_version != AR5K_AR5210) {
+@@ -668,13 +675,13 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 			clock = AR5K_PHY_PLL_RF5111;		/*Zero*/
+ 		}
+ 
+-		if (flags & CHANNEL_2GHZ) {
++		if (channel->band == IEEE80211_BAND_2GHZ) {
+ 			mode |= AR5K_PHY_MODE_FREQ_2GHZ;
+ 			clock |= AR5K_PHY_PLL_44MHZ;
+ 
+-			if (flags & CHANNEL_CCK) {
++			if (channel->hw_value == AR5K_MODE_11B) {
+ 				mode |= AR5K_PHY_MODE_MOD_CCK;
+-			} else if (flags & CHANNEL_OFDM) {
++			} else {
+ 				/* XXX Dynamic OFDM/CCK is not supported by the
+ 				 * AR5211 so we set MOD_OFDM for plain g (no
+ 				 * CCK headers) operation. We need to test
+@@ -686,27 +693,16 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 					mode |= AR5K_PHY_MODE_MOD_OFDM;
+ 				else
+ 					mode |= AR5K_PHY_MODE_MOD_DYN;
+-			} else {
+-				ATH5K_ERR(ah,
+-					"invalid radio modulation mode\n");
+-				return -EINVAL;
+ 			}
+-		} else if (flags & CHANNEL_5GHZ) {
+-			mode |= AR5K_PHY_MODE_FREQ_5GHZ;
++		} else if (channel->band == IEEE80211_BAND_5GHZ) {
++			mode |= (AR5K_PHY_MODE_FREQ_5GHZ |
++				 AR5K_PHY_MODE_MOD_OFDM);
+ 
+ 			/* Different PLL setting for 5413 */
+ 			if (ah->ah_radio == AR5K_RF5413)
+ 				clock = AR5K_PHY_PLL_40MHZ_5413;
+ 			else
+ 				clock |= AR5K_PHY_PLL_40MHZ;
+-
+-			if (flags & CHANNEL_OFDM)
+-				mode |= AR5K_PHY_MODE_MOD_OFDM;
+-			else {
+-				ATH5K_ERR(ah,
+-					"invalid radio modulation mode\n");
+-				return -EINVAL;
+-			}
+ 		} else {
+ 			ATH5K_ERR(ah, "invalid radio frequency mode\n");
+ 			return -EINVAL;
+@@ -822,7 +818,7 @@ static void ath5k_hw_tweak_initval_settings(struct ath5k_hw *ah,
+ 		u32 data;
+ 		ath5k_hw_reg_write(ah, AR5K_PHY_CCKTXCTL_WORLD,
+ 				AR5K_PHY_CCKTXCTL);
+-		if (channel->hw_value & CHANNEL_5GHZ)
++		if (channel->band == IEEE80211_BAND_5GHZ)
+ 			data = 0xffb81020;
+ 		else
+ 			data = 0xffb80d20;
+@@ -905,7 +901,7 @@ static void ath5k_hw_commit_eeprom_settings(struct ath5k_hw *ah,
+ 	/* Set CCK to OFDM power delta on tx power
+ 	 * adjustment register */
+ 	if (ah->ah_phy_revision >= AR5K_SREV_PHY_5212A) {
+-		if (channel->hw_value == CHANNEL_G)
++		if (channel->hw_value == AR5K_MODE_11G)
+ 			ath5k_hw_reg_write(ah,
+ 			AR5K_REG_SM((ee->ee_cck_ofdm_gain_delta * -1),
+ 				AR5K_PHY_TX_PWR_ADJ_CCK_GAIN_DELTA) |
+@@ -1084,29 +1080,23 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 		ret = 0;
+ 	}
+ 
+-	switch (channel->hw_value & CHANNEL_MODES) {
+-	case CHANNEL_A:
+-		mode = AR5K_MODE_11A;
++	mode = channel->hw_value;
++	switch (mode) {
++	case AR5K_MODE_11A:
+ 		break;
+-	case CHANNEL_G:
+-
++	case AR5K_MODE_11G:
+ 		if (ah->ah_version <= AR5K_AR5211) {
+ 			ATH5K_ERR(ah,
+ 				"G mode not available on 5210/5211");
+ 			return -EINVAL;
+ 		}
+-
+-		mode = AR5K_MODE_11G;
+ 		break;
+-	case CHANNEL_B:
+-
++	case AR5K_MODE_11B:
+ 		if (ah->ah_version < AR5K_AR5211) {
+ 			ATH5K_ERR(ah,
+ 				"B mode not available on 5210");
+ 			return -EINVAL;
+ 		}
+-
+-		mode = AR5K_MODE_11B;
+ 		break;
+ 	default:
+ 		ATH5K_ERR(ah,
+@@ -1192,7 +1182,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	}
+ 
+ 	/* Wakeup the device */
+-	ret = ath5k_hw_nic_wakeup(ah, channel->hw_value, false);
++	ret = ath5k_hw_nic_wakeup(ah, channel);
+ 	if (ret)
+ 		return ret;
+ 
