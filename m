@@ -1,77 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f171.google.com ([209.85.215.171]:50087 "EHLO
-	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755607Ab1G2BVh convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:43509 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753113Ab1GWRWM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2011 21:21:37 -0400
+	Sat, 23 Jul 2011 13:22:12 -0400
+Received: by yxi11 with SMTP id 11so1749638yxi.19
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jul 2011 10:22:11 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4E31788F.7000307@lwfinger.net>
-References: <CAMzZzFGqPv6Nbw8J8JGNKcLA76sAs3oD6+hH9NPCjwA33fYpOQ@mail.gmail.com>
-	<20110727135353.GA16431@tuxdriver.com>
-	<CAMzZzFH8xBdiEN-rV1XE-1ZhFbzO_tcnA75Hpx_AyJ6LtWq01A@mail.gmail.com>
-	<4E31788F.7000307@lwfinger.net>
-Date: Fri, 29 Jul 2011 09:21:35 +0800
-Message-ID: <CAMzZzFF2WYGxEi5dmVKmDLG2zq4O0ZFzi65TxYGp1nAUdaVLnA@mail.gmail.com> (sfid-20110729_032155_155187_A9AEEEBA)
-Subject: Re: Oops when insmod rtl8192ce
-From: Hubert Liao <liao.hubertt@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>, wlanfae@realtek.com,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20110723093747.m71o2krisow4ows8-cebfxv@webmail.spamcop.net>
+References: <20110723072113.17363.59871.stgit@mj.roinet.com>
+	<20110723072120.17363.56122.stgit@mj.roinet.com>
+	<CAFtRNNwO4-Cp429e+Vy61T9A+mCR8T-xRtpHVnOOp97CDLxnTQ@mail.gmail.com>
+	<20110723093747.m71o2krisow4ows8-cebfxv@webmail.spamcop.net>
+Date: Sat, 23 Jul 2011 20:22:11 +0300
+Message-ID: <CAFtRNNxsszwUuv6TEt08==oPE2Dm6KBqvC-=fdNzDyz4Xd_4Fw@mail.gmail.com> (sfid-20110723_192214_403647_13E20BE0)
+Subject: Re: [PATCH 2/3] ath5k: remove most references to XR
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/7/28 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 07/28/2011 02:06 AM, hubert Liao wrote:
->>
->> 2011/7/27 John W. Linville<linville@tuxdriver.com>:
->>>
->>> On Wed, Jul 27, 2011 at 05:20:15PM +0800, hubert Liao wrote:
->>>>
->>>> Hi,
->>>>
->>>> We got an oops when insmod rtl8192ce module (the board is an ARM soc),
->>>> accroding the oops message, find it's because in rtl_pci_probe() called
->>>> _rtl_pci_find_adapter(),
->>>> in this funcation, the  pdev->bus->self is a NULL pointer .
->>>>
->>>> static boot _rtl_pci_find_adapter(strcut pci_dev *dev,
->>>>               struct ieee80211_hw *hw)
->>>> {
->>>>
->>>> struct pci_dev *bridge_pdev = pdev->bus->self;   //line 1601
->>>> ...
->>>>
->>>> pcipriv->ndis_adapter.pcibridge_vendorid = bridge_pdev->vendor;<-- [oops
->>>> here] line 1700
->>>>
->>>> ...
->>>> }
->>>>
->>>> here, I just want to know why the bus->self  is NULL?
->>>
->>> pdev is coming straight from what is passed to the PCI probe routine.
->>> It seems like pdev->bus->self should already be set before that
->>> happens.
->>>
->> Yes, I think it should be initialized when added the pci bus bridge,
->> I have checked the mach-kirkwood(my board is arch/arm/mach-kirkwood)
->> pcie related code, and I think when system initialized should call
->> kirkwood_pcie_init() ->
->>             kirkwood_pcie_scan_bus() ->
->>                            pci_scan_bus() ->
->>                                     pci_bus_add_devices()
->> if the pci_bus->self  was initialized in pci_bus_add_devices()?
->> Maybe the code is too complex for me ,  I really can not find where
->> set the “->self" member?
+2011/7/23 Pavel Roskin <proski@gnu.org>:
+> Quoting Nick Kossifidis <mickflemm@gmail.com>:
 >
-> I added a request to the bugzilla entry to post the full dmesg output there.
-> Perhaps there is some clue in the bus setup.
+>> Could we leave the comments on ath5k.h and the rate code definitions ?
+>> I believe we should leave them there as reference...
 >
-I have added the full dmesg output on bugzilla.
-thanks.
-> Larry
+> Sure. Â Version 2 has been sent.
 >
->
+
+Thanks a lot ;-)
+
+
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
