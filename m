@@ -1,78 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58716 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965400Ab1GMRui (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:40565 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738Ab1GXKei (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 13:50:38 -0400
-Subject: [PATCH] mac80211: allow driver access to TKIP RX P1K
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 13 Jul 2011 19:50:34 +0200
-Message-ID: <1310579434.3873.11.camel@jlt3.sipsolutions.net> (sfid-20110713_195041_261681_7BE54DCD)
-Mime-Version: 1.0
+	Sun, 24 Jul 2011 06:34:38 -0400
+Received: by ewy4 with SMTP id 4so2133933ewy.19
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Jul 2011 03:34:37 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] Add new device ID for Belkin
+Date: Sun, 24 Jul 2011 12:34:32 +0200
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201107241234.33980.IvDoorn@gmail.com> (sfid-20110724_123442_412291_D483527A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Eduardo Bacchi Kienetz <eduardo@kienetz.com>
 
-When the driver wants to pre-program the TKIP
-RX phase 1 key, it needs to be able to obtain
-it for the peer's TA. Add API to allow it to
-generate it.
+Belkin's Connect N150 Wireless USB Adapter, model F7D1101 version 2, uses ID 0x945b.
+Chipset info: rt: 3390, rf: 000b, rev: 3213.
+I have just bought one, which started to work perfectly after the ID was added through this patch.
 
-The generation uses a dummy on-stack context
-since it doesn't know the RX queue.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Eduardo Bacchi Kienetz <eduardo@kienetz.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- include/net/mac80211.h |   14 ++++++++++++++
- net/mac80211/tkip.c    |   11 +++++++++++
- 2 files changed, 25 insertions(+)
+ drivers/net/wireless/rt2x00/rt2800usb.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
---- a/include/net/mac80211.h	2011-07-13 19:20:36.000000000 +0200
-+++ b/include/net/mac80211.h	2011-07-13 19:24:20.000000000 +0200
-@@ -2612,6 +2612,20 @@ static inline void ieee80211_get_tkip_p1
- }
- 
- /**
-+ * ieee80211_get_tkip_rx_p1k - get a TKIP phase 1 key for RX
-+ *
-+ * This function returns the TKIP phase 1 key for the given IV32
-+ * and transmitter address.
-+ *
-+ * @keyconf: the parameter passed with the set key
-+ * @ta: TA that will be used with the key
-+ * @iv32: IV32 to get the P1K for
-+ * @p1k: a buffer to which the key will be written, as 5 u16 values
-+ */
-+void ieee80211_get_tkip_rx_p1k(struct ieee80211_key_conf *keyconf,
-+			       const u8 *ta, u32 iv32, u16 *p1k);
-+
-+/**
-  * ieee80211_get_tkip_p2k - get a TKIP phase 2 key
-  *
-  * This function computes the TKIP RC4 key for the IV values
---- a/net/mac80211/tkip.c	2011-07-13 19:20:36.000000000 +0200
-+++ b/net/mac80211/tkip.c	2011-07-13 19:20:37.000000000 +0200
-@@ -185,6 +185,17 @@ void ieee80211_get_tkip_p1k_iv(struct ie
- }
- EXPORT_SYMBOL(ieee80211_get_tkip_p1k_iv);
- 
-+void ieee80211_get_tkip_rx_p1k(struct ieee80211_key_conf *keyconf,
-+                               const u8 *ta, u32 iv32, u16 *p1k)
-+{
-+	const u8 *tk = &keyconf->key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
-+	struct tkip_ctx ctx;
-+
-+	tkip_mixing_phase1(tk, &ctx, ta, iv32);
-+	memcpy(p1k, ctx.p1k, sizeof(ctx.p1k));
-+}
-+EXPORT_SYMBOL(ieee80211_get_tkip_rx_p1k);
-+
- void ieee80211_get_tkip_p2k(struct ieee80211_key_conf *keyconf,
- 			    struct sk_buff *skb, u8 *p2k)
- {
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 59e7779..5075593 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -1054,6 +1054,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x0586, 0x341e) },
+ 	{ USB_DEVICE(0x0586, 0x343e) },
+ #ifdef CONFIG_RT2800USB_RT33XX
++	/* Belkin */
++	{ USB_DEVICE(0x050d, 0x945b) },
+ 	/* Ralink */
+ 	{ USB_DEVICE(0x148f, 0x3370) },
+ 	{ USB_DEVICE(0x148f, 0x8070) },
+-- 
+1.7.2.3
 
