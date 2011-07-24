@@ -1,68 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53433 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754219Ab1G0MOD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2011 08:14:03 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	Tony Houghton <h@realh.co.uk>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	linux-pci@vger.kernel.org
-Subject: [RFC/RFT v2 10/12] pci: aspm: add settings changed callback
-Date: Wed, 27 Jul 2011 14:14:57 +0200
-Message-Id: <1311768899-4559-11-git-send-email-sgruszka@redhat.com> (sfid-20110727_141413_252917_D90F66CE)
-In-Reply-To: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
-References: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
+Received: from shards.monkeyblade.net ([198.137.202.13]:56634 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752041Ab1GXUJ7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Jul 2011 16:09:59 -0400
+Date: Sun, 24 Jul 2011 13:08:40 -0700 (PDT)
+Message-Id: <20110724.130840.1093555047179460794.davem@davemloft.net> (sfid-20110724_221022_772024_1F68E0E5)
+To: linville@tuxdriver.com
+Cc: johannes.berg@intel.com, wey-yi.w.guy@intel.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] iwlagn: wrap suspend/resume definitions in CONFIG_PM
+ block
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1311535150-28686-1-git-send-email-linville@tuxdriver.com>
+References: <20110724.030949.1727841105144911931.davem@davemloft.net>
+	<1311535150-28686-1-git-send-email-linville@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Inform drivers that register pci_drviver->aspm_changed(), about new ASPM
-settings. Callback is only called for child (endpoint) devices.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Sun, 24 Jul 2011 15:19:10 -0400
 
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/pci/pcie/aspm.c |    5 ++++-
- include/linux/pci.h     |    3 +++
- 2 files changed, 7 insertions(+), 1 deletions(-)
+> drivers/net/wireless/iwlwifi/iwl-agn.c:3464: error: unknown field 'suspend' specified in initializer
+> drivers/net/wireless/iwlwifi/iwl-agn.c:3464: warning: initialization from incompatible pointer type
+> drivers/net/wireless/iwlwifi/iwl-agn.c:3465: error: unknown field 'resume' specified in initializer
+> drivers/net/wireless/iwlwifi/iwl-agn.c:3465: warning: initialization from incompatible pointer type
+> 
+> This was caused by commit c8ac61cf ("iwlagn: implement WoWLAN").
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 2883fc3..d7acec8 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -474,8 +474,11 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
- 	 */
- 	if (state & ASPM_STATE_L1)
- 		pcie_config_aspm_dev(parent, upstream);
--	list_for_each_entry(child, &linkbus->devices, bus_list)
-+	list_for_each_entry(child, &linkbus->devices, bus_list) {
- 		pcie_config_aspm_dev(child, dwstream);
-+		if (child->driver && child->driver->aspm_changed)
-+			child->driver->aspm_changed(child, dwstream);
-+	}
- 	if (!(state & ASPM_STATE_L1))
- 		pcie_config_aspm_dev(parent, upstream);
+Since I already minimally fixed up my build locally last night I know
+that your patch leads to a set of warnings because the methods whose
+hookup are now commented out become completely unused and they are all
+marked "static".  And recursively functions that those methods use
+become unused too.
+
+Did you turn off CONFIG_PM and test the build of this file to see
+what the compiler actually does with it?
+
+I'm checking in the following, but I expect much better from you John.
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 4b666b7..b0ae4de 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2279,6 +2279,7 @@ static void iwlagn_mac_stop(struct ieee80211_hw *hw)
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ }
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c446b5c..2110d63 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -555,6 +555,9 @@ struct pci_driver {
- 	int  (*resume_early) (struct pci_dev *dev);
- 	int  (*resume) (struct pci_dev *dev);	                /* Device woken up */
- 	void (*shutdown) (struct pci_dev *dev);
-+#ifdef CONFIG_PCIEASPM
-+	void (*aspm_changed) (struct pci_dev *dev, u32 state);
++#ifdef CONFIG_PM
+ static int iwlagn_send_patterns(struct iwl_priv *priv,
+ 				struct cfg80211_wowlan *wowlan)
+ {
+@@ -2320,6 +2321,7 @@ static int iwlagn_send_patterns(struct iwl_priv *priv,
+ 	kfree(pattern_cmd);
+ 	return err;
+ }
 +#endif
- 	struct pci_error_handlers *err_handler;
- 	struct device_driver	driver;
- 	struct pci_dynids dynids;
--- 
-1.7.1
+ 
+ static void iwlagn_mac_set_rekey_data(struct ieee80211_hw *hw,
+ 				      struct ieee80211_vif *vif,
+@@ -2352,6 +2354,7 @@ struct wowlan_key_data {
+ 	bool error, use_rsc_tsc, use_tkip;
+ };
+ 
++#ifdef CONFIG_PM
+ static void iwlagn_convert_p1k(u16 *p1k, __le16 *out)
+ {
+ 	int i;
+@@ -2739,6 +2742,7 @@ static int iwlagn_mac_resume(struct ieee80211_hw *hw)
+ 
+ 	return 1;
+ }
++#endif
+ 
+ static void iwlagn_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ {
+@@ -3461,8 +3465,10 @@ struct ieee80211_ops iwlagn_hw_ops = {
+ 	.tx = iwlagn_mac_tx,
+ 	.start = iwlagn_mac_start,
+ 	.stop = iwlagn_mac_stop,
++#ifdef CONFIG_PM
+ 	.suspend = iwlagn_mac_suspend,
+ 	.resume = iwlagn_mac_resume,
++#endif
+ 	.add_interface = iwl_mac_add_interface,
+ 	.remove_interface = iwl_mac_remove_interface,
+ 	.change_interface = iwl_mac_change_interface,
 
