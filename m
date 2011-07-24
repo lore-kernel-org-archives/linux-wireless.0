@@ -1,36 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rere.qmqm.pl ([89.167.52.164]:60552 "EHLO rere.qmqm.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754942Ab1GLU7t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2011 16:59:49 -0400
-Date: Tue, 12 Jul 2011 22:59:48 +0200
-From: =?iso-8859-2?Q?Micha=B3_Miros=B3aw?= <mirq-linux@rere.qmqm.pl>
-To: Ralf Baechle <ralf@linux-mips.org>
-Cc: Felix Fietkau <nbd@openwrt.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	ath9k-devel@venema.h4ckr.net,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: Re: [ath9k-devel] [PATCH v2 07/46] net/wireless: ath9k: fix DMA
- API usage
-Message-ID: <20110712205948.GA14399@rere.qmqm.pl> (sfid-20110712_225956_881664_9C925999)
-References: <cover.1310339688.git.mirq-linux@rere.qmqm.pl>
- <280ad9176e6532f231e054b38b952b20580874c5.1310339688.git.mirq-linux@rere.qmqm.pl>
- <4E1BCF36.2010506@openwrt.org>
- <20110712193204.GB13413@linux-mips.org>
- <20110712205316.GA13503@rere.qmqm.pl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-In-Reply-To: <20110712205316.GA13503@rere.qmqm.pl>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59082 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751912Ab1GXTWl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Jul 2011 15:22:41 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iwlagn: wrap suspend/resume definitions in CONFIG_PM block
+Date: Sun, 24 Jul 2011 15:19:10 -0400
+Message-Id: <1311535150-28686-1-git-send-email-linville@tuxdriver.com> (sfid-20110724_212256_823964_73F31E57)
+In-Reply-To: <20110724.030949.1727841105144911931.davem@davemloft.net>
+References: <20110724.030949.1727841105144911931.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 12, 2011 at 10:53:16PM +0200, Micha³ Miros³aw wrote:
-> In the case we're analysing, the ownership is on the device's side
-> until it stops writing the buffer.
+drivers/net/wireless/iwlwifi/iwl-agn.c:3464: error: unknown field 'suspend' specified in initializer
+drivers/net/wireless/iwlwifi/iwl-agn.c:3464: warning: initialization from incompatible pointer type
+drivers/net/wireless/iwlwifi/iwl-agn.c:3465: error: unknown field 'resume' specified in initializer
+drivers/net/wireless/iwlwifi/iwl-agn.c:3465: warning: initialization from incompatible pointer type
 
-Just to be clear, this should say: ... until it marks the buffer as done.
+This was caused by commit c8ac61cf ("iwlagn: implement WoWLAN").
 
-Best Regards,
-Micha³ Miros³aw
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 4b666b7..ff3e6c0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3461,8 +3461,10 @@ struct ieee80211_ops iwlagn_hw_ops = {
+ 	.tx = iwlagn_mac_tx,
+ 	.start = iwlagn_mac_start,
+ 	.stop = iwlagn_mac_stop,
++#ifdef CONFIG_PM
+ 	.suspend = iwlagn_mac_suspend,
+ 	.resume = iwlagn_mac_resume,
++#endif /* CONFIG_PM */
+ 	.add_interface = iwl_mac_add_interface,
+ 	.remove_interface = iwl_mac_remove_interface,
+ 	.change_interface = iwl_mac_change_interface,
+-- 
+1.7.4.4
+
