@@ -1,49 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:39950 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751631Ab1GTQ4F (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:43325 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752564Ab1GYUeU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2011 12:56:05 -0400
-Received: by fxd18 with SMTP id 18so2040017fxd.11
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2011 09:56:04 -0700 (PDT)
+	Mon, 25 Jul 2011 16:34:20 -0400
+Received: by qwk3 with SMTP id 3so2235626qwk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2011 13:34:19 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <477F20668A386D41ADCC57781B1F704307FFBB25D6@SC-VEXCH1.marvell.com>
-References: <20110717170310.CAD139D401C@zog.reactivated.net>
-	<477F20668A386D41ADCC57781B1F704307FFB0947D@SC-VEXCH1.marvell.com>
-	<CAGq3pz6DbsHG9JY8oZqaeRp4=EC1-sKunSuF2Q1+tfBoYbcyLg@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F704307FFBB244E@SC-VEXCH1.marvell.com>
-	<CAGq3pz4cTSZj+_MwJrxG=Ri1zELKbx2i9Hz==3_=t+aho_Y+Xg@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F704307FFBB25D6@SC-VEXCH1.marvell.com>
-Date: Wed, 20 Jul 2011 17:56:04 +0100
-Message-ID: <CAGq3pz5M54O4U1WdrqrQgCi4RnfMnw7jhE6T0wWTMT07r+tVMQ@mail.gmail.com> (sfid-20110720_185610_984089_8C48654E)
-Subject: Re: [PATCH 1/4] libertas: remove auto_deep_sleep functionality
-From: Daniel Drake <dsd@laptop.org>
-To: Bing Zhao <bzhao@marvell.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: "dcbw@redhat.com" <dcbw@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAEzeFiq2FXYKkfXjDtguryniaU7hQkJczLU98V9P3Uv5-D-P3g@mail.gmail.com>
+References: <CAEzeFio8D9aKDFX+Wzo0yceWXy_5tDKpLDFzr9FmarTXCHUOQg@mail.gmail.com>
+ <CAEzeFirXVu_pwDCb6t=ps4xskc4fFUy9gGECJgK1q7cYhLizVQ@mail.gmail.com>
+ <CAEzeFip+PCV4Ccsi6L+RSvrM_86J2=Ps6193WyC0QzVfwe64LQ@mail.gmail.com> <CAEzeFiq2FXYKkfXjDtguryniaU7hQkJczLU98V9P3Uv5-D-P3g@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 25 Jul 2011 13:33:59 -0700
+Message-ID: <CAB=NE6VT_Q5Apb_ZCfK9fSYGDtaUOwmVqeogN8HE6+SgGYek1A@mail.gmail.com> (sfid-20110725_223423_162990_74E1F197)
+Subject: Re: Testing Auto Channel Selection with hostapd in ath5k and ath9k
+To: Swaminathan Vasanth Rajaraman <swaminathanvasanth.r@gmail.com>
+Cc: mcgrof@kernel.org, linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 July 2011 03:33, Bing Zhao <bzhao@marvell.com> wrote:
-> Yeah. I didn't know that the entire wext has been removed from libertas.
->
-> Anyway, for users who need this feature we can add a module parameter to enable it with the patch below. Please let me know what you think.
+On Mon, Jul 18, 2011 at 2:14 AM, Swaminathan Vasanth Rajaraman
+<swaminathanvasanth.r@gmail.com> wrote:
+> rajaras1@kesateekkari:/etc/hostapd$ sudo hostapd hostapd.conf
+> Configuration file: hostapd.conf
+> ACS: automatic channel selection started, this may take a bit
+> ACS: offchannel TX support required
+> Segmentation fault
 
-That seems reasonable, but it would probably be preferable to
-implement it as before. Does the cfg80211 wrapper not allow for the
-power command to be implemented by drivers? Is there a
-cfg80211-friendly way of doing it exposed with the iw command?
+Can you test with the latest series I posted?
 
-
-John, please drop this patch (looks like this functionality will be
-revived soon). Also, I've resent the other patches in this series with
-minor changes.
-
-Thanks,
-Daniel
+  Luis
