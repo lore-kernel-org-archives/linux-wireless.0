@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:3729 "EHLO mail.perches.com"
+Received: from mga02.intel.com ([134.134.136.20]:36272 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755745Ab1GJJ2f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jul 2011 05:28:35 -0400
-From: Joe Perches <joe@perches.com>
-To: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 3/5] ath5k: Add missing breaks in switch/case
-Date: Sun, 10 Jul 2011 02:28:26 -0700
-Message-Id: <e554bed5c753a3fe85d3be34983a15e6110a6e35.1310289795.git.joe@perches.com> (sfid-20110710_112939_406619_7137D0DC)
-In-Reply-To: <cover.1310289795.git.joe@perches.com>
-References: <cover.1310289795.git.joe@perches.com>
+	id S1751430Ab1GYT6z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jul 2011 15:58:55 -0400
+Subject: Re: [PATCH] iwlagn: check for !priv->txq in
+ iwlagn_wait_tx_queue_empty
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Keith Packard <keithp@keithp.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1311622702-4807-1-git-send-email-keithp@keithp.com>
+References: <1311622702-4807-1-git-send-email-keithp@keithp.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 25 Jul 2011 12:21:55 -0700
+Message-ID: <1311621715.5579.138.camel@wwguy-huron> (sfid-20110725_215859_919211_7FA60710)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ath/ath5k/desc.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+On Mon, 2011-07-25 at 12:38 -0700, Keith Packard wrote:
+> If the interface is down, txq is NULL. iwlagn_wait_tx_queue_empty
+> needs to check for this case to avoid dereferencing that pointer.
+> 
+> Signed-off-by: Keith Packard <keithp@keithp.com>
+> ---
+> 
+> This is on top of v3.0
+> 
+>  drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> index f803fb6..d6ae444 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> @@ -1487,6 +1487,9 @@ int iwlagn_wait_tx_queue_empty(struct iwl_priv *priv)
+>  	unsigned long now = jiffies;
+>  	int ret = 0;
+>  
+> +	if (!priv->txq)
+> +		return 0;
+> +
+>  	/* waiting for all the tx frames complete might take a while */
+>  	for (cnt = 0; cnt < priv->hw_params.max_txq_num; cnt++) {
+>  		if (cnt == priv->cmd_queue)
 
-diff --git a/drivers/net/wireless/ath/ath5k/desc.c b/drivers/net/wireless/ath/ath5k/desc.c
-index 62172d5..f82383b 100644
---- a/drivers/net/wireless/ath/ath5k/desc.c
-+++ b/drivers/net/wireless/ath/ath5k/desc.c
-@@ -107,10 +107,13 @@ ath5k_hw_setup_2word_tx_desc(struct ath5k_hw *ah, struct ath5k_desc *desc,
- 		case AR5K_PKT_TYPE_BEACON:
- 		case AR5K_PKT_TYPE_PROBE_RESP:
- 			frame_type = AR5K_AR5210_TX_DESC_FRAME_TYPE_NO_DELAY;
-+			break;
- 		case AR5K_PKT_TYPE_PIFS:
- 			frame_type = AR5K_AR5210_TX_DESC_FRAME_TYPE_PIFS;
-+			break;
- 		default:
- 			frame_type = type;
-+			break;
- 		}
- 
- 		tx_ctl->tx_control_0 |=
--- 
-1.7.6.131.g99019
+but why you need it?, "start device" call will fail if can not allocate
+priv->txq
+
+Thanks
+Wey
 
