@@ -1,68 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c2bthomr13.btconnect.com ([213.123.20.131]:5347 "EHLO
-	mail.btconnect.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754031Ab1G1XdQ (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40878 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751223Ab1GYRSb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2011 19:33:16 -0400
-Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
-Subject: help
-To: linux-wireless@vger.kernel.org
-Date: Fri, 29 Jul 2011 00:33:13 +0100
+	Mon, 25 Jul 2011 13:18:31 -0400
+Message-ID: <4E2DA564.5070305@candelatech.com> (sfid-20110725_191834_961898_92A781D4)
+Date: Mon, 25 Jul 2011 10:18:28 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-From: "Martin Partridge" <martin_partridge@btconnect.com>
-Message-ID: <op.vzcrpnuuhgplxr@melanie> (sfid-20110729_013323_805238_F2EC1F19)
+To: Eliad Peller <eliad@wizery.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 2/2] mac80211: config hw when going back on-channel
+References: <1311607763-12603-1-git-send-email-eliad@wizery.com> <1311607763-12603-3-git-send-email-eliad@wizery.com>
+In-Reply-To: <1311607763-12603-3-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 07/25/2011 08:29 AM, Eliad Peller wrote:
+> The hw is currently not configured when going
+> back on-channel.
 
-I don't understand the last 2 steps, i'm running fedora (ok i lie its  
-Fuduntu, but to all intents and purposes its fedora) Kernel version:  
-2.6.39.3-1.fc14.i686
-i'm using a WG511v2 PCMCIA card, i've downloaded the correct firmware,  
-renamed it and modprobed everything as instructed, the bit i'm having  
-trouble with is this bit:
+I am less sure about this patch.  With the existing code,
+I think it should catch going from on channel to off
+and do the hw config properly.
 
-Enabling p54
+With your change it will also reconfig the hardware, but it will
+reconfig even if we were already on-channel (if, for instance,
+local->tmp_channel is oper-channel), right?
 
-To enable p54, you must first enable mac80211:
+Can you please explain in more detail how this code is
+broken?
 
-Networking Support --->
-   Wireless  --->
-     <M> cfg80211 - wireless configuration API
-     <M> Generic IEEE 802.11 Networking Stack (mac80211)
+Thanks,
+Ben
 
-You can then enable p54 in the kernel configuration under
+>
+> Signed-off-by: Eliad Peller<eliad@wizery.com>
+> ---
+>   net/mac80211/work.c |    3 +--
+>   1 files changed, 1 insertions(+), 2 deletions(-)
+>
+> diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+> index 3291958..e6abb15 100644
+> --- a/net/mac80211/work.c
+> +++ b/net/mac80211/work.c
+> @@ -1075,7 +1075,6 @@ static void ieee80211_work_work(struct work_struct *work)
+>   	}
+>
+>   	if (!remain_off_channel&&  local->tmp_channel) {
+> -		bool on_oper_chan = ieee80211_cfg_on_oper_channel(local);
+>   		local->tmp_channel = NULL;
+>   		/* If tmp_channel wasn't operating channel, then
+>   		 * we need to go back on-channel.
+> @@ -1085,7 +1084,7 @@ static void ieee80211_work_work(struct work_struct *work)
+>   		 * we still need to do a hardware config.  Currently,
+>   		 * we cannot be here while scanning, however.
+>   		 */
+> -		if (ieee80211_cfg_on_oper_channel(local)&&  !on_oper_chan)
+> +		if (!ieee80211_cfg_on_oper_channel(local))
+>   			ieee80211_hw_config(local, 0);
+>
+>   		/* At the least, we need to disable offchannel_ps,
 
-Device Drivers  --->
-   [*] Network device support  --->
-         Wireless LAN --->
-           [*] Wireless LAN (IEEE 802.11)
-           <M>   Softmac Prism54 support
-           <M>     Prism54 USB support
-           <M>     Prism54 PCI support
-           <M>     Prism54 SPI (stlc45xx) support
-
-where do i type this, or what does it mean? I i don't have a 'networking  
-support' menu and it's not a program, where do i find this? is it a conf  
-file? I'm no stranger to linux but this is perplexing, the card works fine  
-on windows, but i can't get it work now. I have a kernel config file in  
-/etc/sysconfig but its a bit bare, as shown below:
-
-# UPDATEDEFAULT specifies if new-kernel-pkg should make
-# new kernels the default
-UPDATEDEFAULT=yes
-
-# DEFAULTKERNEL specifies the default kernel package type
-DEFAULTKERNEL=kernel
-
-That's the whole thing.
-
-How do i enable p54 and mac80211, i'm not sure and its bloody annoying.
-
-regards
-
-Martin Partridge
 
 -- 
-Using Opera's revolutionary e-mail client: http://www.opera.com/mail/
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
