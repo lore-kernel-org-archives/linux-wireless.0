@@ -1,29 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:62538 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757234Ab1GKHmm (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38681 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752421Ab1GYSrm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 03:42:42 -0400
-Received: by qyk29 with SMTP id 29so1225735qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jul 2011 00:42:41 -0700 (PDT)
+	Mon, 25 Jul 2011 14:47:42 -0400
+Date: Mon, 25 Jul 2011 14:42:31 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
+	jonas.gorski@gmail.com, ralf@linux-mips.org, zajec5@gmail.com,
+	mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
+	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
+	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com
+Subject: Re: [PATCH v3 00/11] bcma: add support for embedded devices like
+ bcm4716
+Message-ID: <20110725184231.GB6380@tuxdriver.com> (sfid-20110725_204745_905016_EB0336A9)
+References: <1311376815-15755-1-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
-Date: Mon, 11 Jul 2011 09:42:41 +0200
-Message-ID: <CANXYrmArYjhfmJ9g6nVDXoAfSiJVFHWomGu7tuh7hkiozJReXA@mail.gmail.com> (sfid-20110711_094246_203385_CC6BC41A)
-Subject: ath9k/mac80211 transmission and descriptors
-From: =?ISO-8859-1?Q?Manuel_S=E1ez?= <manuelsaezr@gmail.com>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1311376815-15755-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Sat, Jul 23, 2011 at 01:20:04AM +0200, Hauke Mehrtens wrote:
+> This patch series adds support for embedded devices like bcm47xx to 
+> bcma. Bcma is used on bcm4716 and bcm4718 SoCs as the system bus and
+> replaced ssb used on older devices. With these patches my bcm4716 
+> device boots up till it tries to access the flash, because the serial 
+> flash chip is unsupported for now, this will be my next task. This adds 
+> support for MIPS cores, interrupt configuration and the serial console.
+> 
+> These patches are not containing all functions needed to get the SoC to 
+> fully work and support every feature, but it is a good start.
+> These patches are now integrated in OpenWrt for everyone how wants to
+> test them.
+> 
+> This was tested with a BCM4704 device (SoC with ssb bus), a BCM4716 
+> device and a pcie wireless card supported by bcma.
+> 
+> @John could you please merge this into wireless-testing. I hope Ralf is 
+> fine with it when some MIPS bits will go through wireless. This will 
+> make it much easier for Linus to merge wireless-testing and the mips 
+> tree together as there are many other changes for bcma in wireless-
+> testing.
 
-I am trying to send a frame exactly SIFS after one DTIM. I've seen
-that the PS broadcast traffic should make something similar. If I try
-to follow the same procedure I get some DMA errors.  I would like to
-understand much better all this things but I am not able to find more
-information about the tx descriptors and how the tx works. Could
-someone give me some advice on where to get more details?
+Any chance we could see an ACK from Ralf?
 
-Thank you,
-Manuel
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
