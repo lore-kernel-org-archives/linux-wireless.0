@@ -1,25 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:48265 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751645Ab1GSGNa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 02:13:30 -0400
-Message-ID: <4E252076.1050309@gmail.com> (sfid-20110719_081357_629073_77E75E13)
-Date: Mon, 18 Jul 2011 23:13:10 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+Received: from home.keithp.com ([63.227.221.253]:37713 "EHLO keithp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752078Ab1GYTnz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jul 2011 15:43:55 -0400
+From: Keith Packard <keithp@keithp.com>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] iwlagn: check for !priv->txq in iwlagn_wait_tx_queue_empty
+In-Reply-To: <1311622594.3431.0.camel@wwguy-ubuntu>
+References: <1311622702-4807-1-git-send-email-keithp@keithp.com> <1311622594.3431.0.camel@wwguy-ubuntu>
+Date: Mon, 25 Jul 2011 12:43:52 -0700
+Message-ID: <yuny5zmuow7.fsf@aiko.keithp.com> (sfid-20110725_214359_925122_341CA1AA)
 MIME-Version: 1.0
-To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: ath: Unable to reset channel (2412 MHz), reset status -5
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha1; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-seems with the latest Mainline I am getting the ath9k carpping out after 
-a while of streaming(dmesg below)..:
-http://fpaste.org/D7wM/
+--=-=-=
+Content-Transfer-Encoding: quoted-printable
 
-will try a bisect if I have the time..
+On Mon, 25 Jul 2011 12:36:34 -0700, wwguy <wey-yi.w.guy@intel.com> wrote:
 
-Justin P. Mattock
+> is this against any bug in bugzilla? please include the information in
+> description
+
+I looked in bugzilla and didn't find anything matching -- the only
+iwlagn suspend bug I could find was already resolved and completely
+different.
+
+=2D-=20
+keith.packard@intel.com
+
+--=-=-=
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iD8DBQFOLcd4Qp8BWwlsTdMRAnLxAJ4gSafBaofppYeuH5dqY602qatkuACgpak8
+PZHzXflZy/g9AUFkkaaaPSo=
+=9Nlv
+-----END PGP SIGNATURE-----
+--=-=-=--
