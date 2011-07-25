@@ -1,61 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:42721 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755125Ab1GGR21 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2011 13:28:27 -0400
-Received: by fxd18 with SMTP id 18so1287916fxd.11
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jul 2011 10:28:26 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: HT-PHY: define dummy TX power functions
-Date: Thu,  7 Jul 2011 20:06:56 +0200
-Message-Id: <1310062016-3900-1-git-send-email-zajec5@gmail.com> (sfid-20110707_192831_138754_02A811CB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:34874 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752478Ab1GYTk4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jul 2011 15:40:56 -0400
+Subject: Re: [PATCH] iwlagn: check for !priv->txq in
+ iwlagn_wait_tx_queue_empty
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Keith Packard <keithp@keithp.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1311622702-4807-1-git-send-email-keithp@keithp.com>
+References: <1311622702-4807-1-git-send-email-keithp@keithp.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 25 Jul 2011 12:36:34 -0700
+Message-ID: <1311622594.3431.0.camel@wwguy-ubuntu> (sfid-20110725_214101_164389_35FB3D15)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Without them we get Oops with NULL pointer
+On Mon, 2011-07-25 at 12:38 -0700, Keith Packard wrote:
+> If the interface is down, txq is NULL. iwlagn_wait_tx_queue_empty
+> needs to check for this case to avoid dereferencing that pointer.
+> 
+> Signed-off-by: Keith Packard <keithp@keithp.com>
+> ---
+> 
+> This is on top of v3.0
+> 
+>  drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> index f803fb6..d6ae444 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> @@ -1487,6 +1487,9 @@ int iwlagn_wait_tx_queue_empty(struct iwl_priv *priv)
+>  	unsigned long now = jiffies;
+>  	int ret = 0;
+>  
+> +	if (!priv->txq)
+> +		return 0;
+> +
+>  	/* waiting for all the tx frames complete might take a while */
+>  	for (cnt = 0; cnt < priv->hw_params.max_txq_num; cnt++) {
+>  		if (cnt == priv->cmd_queue)
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_ht.c |   12 ++++++++++--
- 1 files changed, 10 insertions(+), 2 deletions(-)
+is this against any bug in bugzilla? please include the information in
+description
 
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 30b19c6..2982103 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -373,6 +373,16 @@ static void b43_phy_ht_op_radio_write(struct b43_wldev *dev, u16 reg,
- 	b43_write16(dev, B43_MMIO_RADIO24_DATA, value);
- }
- 
-+static enum b43_txpwr_result
-+b43_phy_ht_op_recalc_txpower(struct b43_wldev *dev, bool ignore_tssi)
-+{
-+	return B43_TXPWR_RES_DONE;
-+}
-+
-+static void b43_phy_ht_op_adjust_txpower(struct b43_wldev *dev)
-+{
-+}
-+
- /**************************************************
-  * PHY ops struct.
-  **************************************************/
-@@ -391,8 +401,6 @@ const struct b43_phy_operations b43_phyops_ht = {
- 	.switch_analog		= b43_phy_ht_op_switch_analog,
- 	.switch_channel		= b43_phy_ht_op_switch_channel,
- 	.get_default_chan	= b43_phy_ht_op_get_default_chan,
--	/*
- 	.recalc_txpower		= b43_phy_ht_op_recalc_txpower,
- 	.adjust_txpower		= b43_phy_ht_op_adjust_txpower,
--	*/
- };
--- 
-1.7.3.4
+Thanks
+Wey 
 
