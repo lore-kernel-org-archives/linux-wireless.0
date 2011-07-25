@@ -1,447 +1,346 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:58949 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755561Ab1GPQ4i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2011 12:56:38 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
-	zajec5@gmail.com, linux-mips@linux-mips.org
-Cc: jonas.gorski@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
-	arend@broadcom.com, b43-dev@lists.infradead.org,
-	bernhardloos@googlemail.com, arnd@arndb.de,
-	julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 10/11] bcm47xx: add support for bcma bus
-Date: Sat, 16 Jul 2011 18:55:41 +0200
-Message-Id: <1310835342-18877-11-git-send-email-hauke@hauke-m.de> (sfid-20110716_185656_680948_E112EDD2)
-In-Reply-To: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
-References: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:55924 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752892Ab1GZAAM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jul 2011 20:00:12 -0400
+Received: by mail-pz0-f42.google.com with SMTP id 37so9320498pzk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2011 17:00:11 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 4/6] mac80211: update mesh peering frame format
+Date: Mon, 25 Jul 2011 16:59:15 -0700
+Message-Id: <1311638357-28740-5-git-send-email-thomas@cozybit.com> (sfid-20110726_020016_516356_F1B30FDD)
+In-Reply-To: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
+References: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch add support for the bcma bus. Broadcom uses only Mips 74K
-CPUs on the new SoC and on the old ons using ssb bus there are no Mips
-74K CPUs.
+This patch updates the mesh peering frames to the format specified in
+the recently ratified 802.11s standard. Several changes took place to
+make this happen:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+	- Change RX path to handle new self-protected frames
+	- Add new Peering management IE
+	- Remove old Peer Link IE
+	- Remove old plink_action field in ieee80211_mgmt header
+
+These changes by themselves would either break peering, or work by
+coincidence, so squash them all into this patch.
+
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- arch/mips/bcm47xx/Kconfig                    |   13 ++++++
- arch/mips/bcm47xx/gpio.c                     |   22 +++++++++++
- arch/mips/bcm47xx/nvram.c                    |   10 +++++
- arch/mips/bcm47xx/serial.c                   |   29 ++++++++++++++
- arch/mips/bcm47xx/setup.c                    |   53 +++++++++++++++++++++++++-
- arch/mips/bcm47xx/time.c                     |    5 ++
- arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |    8 ++++
- arch/mips/include/asm/mach-bcm47xx/gpio.h    |   41 ++++++++++++++++++++
- drivers/watchdog/bcm47xx_wdt.c               |   11 +++++
- 9 files changed, 190 insertions(+), 2 deletions(-)
+ include/linux/ieee80211.h  |   18 ---------
+ net/mac80211/ieee80211_i.h |    4 +-
+ net/mac80211/mesh.c        |   10 ++++-
+ net/mac80211/mesh_plink.c  |   87 ++++++++++++++++++++++++--------------------
+ net/mac80211/rx.c          |   18 +++++++++
+ net/mac80211/util.c        |    6 ++--
+ 6 files changed, 78 insertions(+), 65 deletions(-)
 
-diff --git a/arch/mips/bcm47xx/Kconfig b/arch/mips/bcm47xx/Kconfig
-index 0346f92..6210b8d 100644
---- a/arch/mips/bcm47xx/Kconfig
-+++ b/arch/mips/bcm47xx/Kconfig
-@@ -15,4 +15,17 @@ config BCM47XX_SSB
- 
- 	 This will generate an image with support for SSB and MIPS32 R1 instruction set.
- 
-+config BCM47XX_BCMA
-+	bool "BCMA Support for Broadcom BCM47XX"
-+	select SYS_HAS_CPU_MIPS32_R2
-+	select BCMA
-+	select BCMA_HOST_SOC
-+	select BCMA_DRIVER_MIPS
-+	select BCMA_DRIVER_PCI_HOSTMODE if PCI
-+	default y
-+	help
-+	 Add support for new Broadcom BCM47xx boards with Broadcom specific Advanced Microcontroller Bus.
-+
-+	 This will generate an image with support for BCMA and MIPS32 R2 instruction set.
-+
- endif
-diff --git a/arch/mips/bcm47xx/gpio.c b/arch/mips/bcm47xx/gpio.c
-index 3320e91..d43895b 100644
---- a/arch/mips/bcm47xx/gpio.c
-+++ b/arch/mips/bcm47xx/gpio.c
-@@ -36,6 +36,16 @@ int gpio_request(unsigned gpio, const char *tag)
- 
- 		return 0;
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 947dc3f..5ecf148 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -736,19 +736,6 @@ struct ieee80211_mgmt {
+ 					__le16 params;
+ 					__le16 reason_code;
+ 				} __attribute__((packed)) delba;
+-				struct{
+-					u8 action_code;
+-					/* capab_info for open and confirm,
+-					 * reason for close
+-					 */
+-					__le16 aux;
+-					/* Followed in plink_confirm by status
+-					 * code, AID and supported rates,
+-					 * and directly by supported rates in
+-					 * plink_open and plink_close
+-					 */
+-					u8 variable[0];
+-				} __attribute__((packed)) plink_action;
+ 				struct {
+ 					u8 action_code;
+ 					u8 variable[0];
+@@ -1198,11 +1185,6 @@ enum ieee80211_eid {
+ 	WLAN_EID_MESH_ID = 114,
+ 	WLAN_EID_LINK_METRIC_REPORT = 115,
+ 	WLAN_EID_CONGESTION_NOTIFICATION = 116,
+-	/* Note that the Peer Link IE has been replaced with the similar
+-	 * Peer Management IE.  We will keep the former definition until mesh
+-	 * code is changed to comply with latest 802.11s drafts.
+-	 */
+-	WLAN_EID_PEER_LINK = 55,  /* no longer in 802.11s drafts */
+ 	WLAN_EID_PEER_MGMT = 117,
+ 	WLAN_EID_CHAN_SWITCH_PARAM = 118,
+ 	WLAN_EID_MESH_AWAKE_WINDOW = 119,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index dda0d1a..b94b79b 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1043,7 +1043,7 @@ struct ieee802_11_elems {
+ 	struct ieee80211_ht_info *ht_info_elem;
+ 	struct ieee80211_meshconf_ie *mesh_config;
+ 	u8 *mesh_id;
+-	u8 *peer_link;
++	u8 *peering;
+ 	u8 *preq;
+ 	u8 *prep;
+ 	u8 *perr;
+@@ -1070,7 +1070,7 @@ struct ieee802_11_elems {
+ 	u8 wmm_info_len;
+ 	u8 wmm_param_len;
+ 	u8 mesh_id_len;
+-	u8 peer_link_len;
++	u8 peering_len;
+ 	u8 preq_len;
+ 	u8 prep_len;
+ 	u8 perr_len;
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index e0a19e9..a1bd372 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -662,8 +662,14 @@ static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
+ 					  struct ieee80211_rx_status *rx_status)
+ {
+ 	switch (mgmt->u.action.category) {
+-	case WLAN_CATEGORY_MESH_ACTION:
+-		mesh_rx_plink_frame(sdata, mgmt, len, rx_status);
++	case WLAN_CATEGORY_SELF_PROTECTED:
++		switch (mgmt->u.action.u.self_prot.action_code) {
++		case WLAN_SP_MESH_PEERING_OPEN:
++		case WLAN_SP_MESH_PEERING_CLOSE:
++		case WLAN_SP_MESH_PEERING_CONFIRM:
++			mesh_rx_plink_frame(sdata, mgmt, len, rx_status);
++			break;
++		}
+ 		break;
+ 	case WLAN_CATEGORY_MESH_PATH_SEL:
+ 		mesh_rx_path_sel_frame(sdata, mgmt, len);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index a598a08..e9d182a 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -19,8 +19,8 @@
+ #define mpl_dbg(fmt, args...)	do { (void)(0); } while (0)
  #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		if (gpio >= BCM47XX_CHIPCO_GPIO_LINES)
-+			return -EINVAL;
-+
-+		if (test_and_set_bit(gpio, gpio_in_use))
-+			return -EBUSY;
-+
-+		return 0;
-+#endif
+ 
+-#define PLINK_GET_LLID(p) (p + 4)
+-#define PLINK_GET_PLID(p) (p + 6)
++#define PLINK_GET_LLID(p) (p + 2)
++#define PLINK_GET_PLID(p) (p + 4)
+ 
+ #define mod_plink_timer(s, t) (mod_timer(&s->plink_timer, \
+ 				jiffies + HZ * t / 1000))
+@@ -147,9 +147,9 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 			sdata->u.mesh.ie_len);
+ 	struct ieee80211_mgmt *mgmt;
+ 	bool include_plid = false;
+-	static const u8 meshpeeringproto[] = { 0x00, 0x0F, 0xAC, 0x2A };
++	int ie_len = 4;
++	u16 peering_proto = 0;
+ 	u8 *pos;
+-	int ie_len;
+ 
+ 	if (!skb)
+ 		return -1;
+@@ -158,24 +158,23 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 	 * common action part (1)
+ 	 */
+ 	mgmt = (struct ieee80211_mgmt *)
+-		skb_put(skb, 25 + sizeof(mgmt->u.action.u.plink_action));
+-	memset(mgmt, 0, 25 + sizeof(mgmt->u.action.u.plink_action));
++		skb_put(skb, 25 + sizeof(mgmt->u.action.u.self_prot));
++	memset(mgmt, 0, 25 + sizeof(mgmt->u.action.u.self_prot));
+ 	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+ 					  IEEE80211_STYPE_ACTION);
+ 	memcpy(mgmt->da, da, ETH_ALEN);
+ 	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
+ 	memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
+-	mgmt->u.action.category = WLAN_CATEGORY_MESH_ACTION;
+-	mgmt->u.action.u.plink_action.action_code = action;
++	mgmt->u.action.category = WLAN_CATEGORY_SELF_PROTECTED;
++	mgmt->u.action.u.self_prot.action_code = action;
+ 
+-	if (action == WLAN_SP_MESH_PEERING_CLOSE)
+-		mgmt->u.action.u.plink_action.aux = reason;
+-	else {
+-		mgmt->u.action.u.plink_action.aux = cpu_to_le16(0x0);
++	if (action != WLAN_SP_MESH_PEERING_CLOSE) {
++		/* capability info */
++		pos = skb_put(skb, 2);
++		memset(pos, 0, 2);
+ 		if (action == WLAN_SP_MESH_PEERING_CONFIRM) {
+-			pos = skb_put(skb, 4);
+-			/* two-byte status code followed by two-byte AID */
+-			memset(pos, 0, 2);
++			/* AID */
++			pos = skb_put(skb, 2);
+ 			memcpy(pos + 2, &plid, 2);
+ 		}
+ 		if (mesh_add_srates_ie(skb, sdata) ||
+@@ -184,42 +183,50 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 		    mesh_add_meshid_ie(skb, sdata) ||
+ 		    mesh_add_meshconf_ie(skb, sdata))
+ 			return -1;
++	} else {	/* WLAN_SP_MESH_PEERING_CLOSE */
++		if (mesh_add_meshid_ie(skb, sdata))
++			return -1;
  	}
- 	return -EINVAL;
- }
-@@ -57,6 +67,14 @@ void gpio_free(unsigned gpio)
- 		clear_bit(gpio, gpio_in_use);
+ 
+-	/* Add Peer Link Management element */
++	/* Add Mesh Peering Management element */
+ 	switch (action) {
+ 	case WLAN_SP_MESH_PEERING_OPEN:
+-		ie_len = 6;
+ 		break;
+ 	case WLAN_SP_MESH_PEERING_CONFIRM:
+-		ie_len = 8;
++		ie_len += 2;
+ 		include_plid = true;
+ 		break;
+ 	case WLAN_SP_MESH_PEERING_CLOSE:
+-	default:
+-		if (!plid)
+-			ie_len = 8;
+-		else {
+-			ie_len = 10;
++		if (plid) {
++			ie_len += 2;
+ 			include_plid = true;
+ 		}
++		ie_len += 2;	/* reason code */
+ 		break;
++	default:
++		return -EINVAL;
+ 	}
+ 
++	if (WARN_ON(skb_tailroom(skb) < 2 + ie_len))
++		return -ENOMEM;
++
+ 	pos = skb_put(skb, 2 + ie_len);
+-	*pos++ = WLAN_EID_PEER_LINK;
++	*pos++ = WLAN_EID_PEER_MGMT;
+ 	*pos++ = ie_len;
+-	memcpy(pos, meshpeeringproto, sizeof(meshpeeringproto));
+-	pos += 4;
++	memcpy(pos, &peering_proto, 2);
++	pos += 2;
+ 	memcpy(pos, &llid, 2);
++	pos += 2;
+ 	if (include_plid) {
+-		pos += 2;
+ 		memcpy(pos, &plid, 2);
++		pos += 2;
+ 	}
+ 	if (action == WLAN_SP_MESH_PEERING_CLOSE) {
+-		pos += 2;
+ 		memcpy(pos, &reason, 2);
++		pos += 2;
+ 	}
++	if (mesh_add_vendor_ies(skb, sdata))
++		return -1;
+ 
+ 	ieee80211_tx_skb(sdata, skb);
+ 	return 0;
+@@ -437,14 +444,14 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
  		return;
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		if (gpio >= BCM47XX_CHIPCO_GPIO_LINES)
-+			return;
-+
-+		clear_bit(gpio, gpio_in_use);
-+		return;
-+#endif
  	}
- }
- EXPORT_SYMBOL(gpio_free);
-@@ -73,6 +91,10 @@ int gpio_to_irq(unsigned gpio)
- 		else
- 			return -EINVAL;
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		return bcma_core_mips_irq(bcm47xx_bus.bcma.bus.drv_cc.core) + 2;
-+#endif
+ 
+-	baseaddr = mgmt->u.action.u.plink_action.variable;
+-	baselen = (u8 *) mgmt->u.action.u.plink_action.variable - (u8 *) mgmt;
+-	if (mgmt->u.action.u.plink_action.action_code == WLAN_SP_MESH_PEERING_CONFIRM) {
++	baseaddr = mgmt->u.action.u.self_prot.variable;
++	baselen = (u8 *) mgmt->u.action.u.self_prot.variable - (u8 *) mgmt;
++	if (mgmt->u.action.u.self_prot.action_code == WLAN_SP_MESH_PEERING_CONFIRM) {
+ 		baseaddr += 4;
+ 		baselen += 4;
  	}
- 	return -EINVAL;
- }
-diff --git a/arch/mips/bcm47xx/nvram.c b/arch/mips/bcm47xx/nvram.c
-index d223dac..539228d 100644
---- a/arch/mips/bcm47xx/nvram.c
-+++ b/arch/mips/bcm47xx/nvram.c
-@@ -29,6 +29,9 @@ static void early_nvram_init(void)
- #ifdef CONFIG_BCM47XX_SSB
- 	struct ssb_mipscore *mcore_ssb;
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	struct bcma_drv_cc *bcma_cc;
-+#endif
- 	struct nvram_header *header;
- 	int i;
- 	u32 base = 0;
-@@ -44,6 +47,13 @@ static void early_nvram_init(void)
- 		lim = mcore_ssb->flash_window_size;
+ 	ieee802_11_parse_elems(baseaddr, len - baselen, &elems);
+-	if (!elems.peer_link) {
++	if (!elems.peering) {
+ 		mpl_dbg("Mesh plink: missing necessary peer link ie\n");
+ 		return;
+ 	}
+@@ -454,11 +461,11 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		return;
+ 	}
+ 
+-	ftype = mgmt->u.action.u.plink_action.action_code;
+-	ie_len = elems.peer_link_len;
+-	if ((ftype == WLAN_SP_MESH_PEERING_OPEN && ie_len != 6) ||
+-	    (ftype == WLAN_SP_MESH_PEERING_CONFIRM && ie_len != 8) ||
+-	    (ftype == WLAN_SP_MESH_PEERING_CLOSE && ie_len != 8 && ie_len != 10)) {
++	ftype = mgmt->u.action.u.self_prot.action_code;
++	ie_len = elems.peering_len;
++	if ((ftype == WLAN_SP_MESH_PEERING_OPEN && ie_len != 4) ||
++	    (ftype == WLAN_SP_MESH_PEERING_CONFIRM && ie_len != 6) ||
++	    (ftype == WLAN_SP_MESH_PEERING_CLOSE && ie_len != 6 && ie_len != 8)) {
+ 		mpl_dbg("Mesh plink: incorrect plink ie length %d %d\n",
+ 		    ftype, ie_len);
+ 		return;
+@@ -471,10 +478,10 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 	/* Note the lines below are correct, the llid in the frame is the plid
+ 	 * from the point of view of this host.
+ 	 */
+-	memcpy(&plid, PLINK_GET_LLID(elems.peer_link), 2);
++	memcpy(&plid, PLINK_GET_LLID(elems.peering), 2);
+ 	if (ftype == WLAN_SP_MESH_PEERING_CONFIRM ||
+-	    (ftype == WLAN_SP_MESH_PEERING_CLOSE && ie_len == 10))
+-		memcpy(&llid, PLINK_GET_PLID(elems.peer_link), 2);
++	    (ftype == WLAN_SP_MESH_PEERING_CLOSE && ie_len == 8))
++		memcpy(&llid, PLINK_GET_PLID(elems.peering), 2);
+ 
+ 	rcu_read_lock();
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index fe2c2a7..3fb6dea 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2220,6 +2220,24 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 			goto handled;
+ 		}
  		break;
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		bcma_cc = &bcm47xx_bus.bcma.bus.drv_cc;
-+		base = bcma_cc->pflash.window;
-+		lim = bcma_cc->pflash.window_size;
++	case WLAN_CATEGORY_SELF_PROTECTED:
++		switch (mgmt->u.action.u.self_prot.action_code) {
++		case WLAN_SP_MESH_PEERING_OPEN:
++		case WLAN_SP_MESH_PEERING_CLOSE:
++		case WLAN_SP_MESH_PEERING_CONFIRM:
++			if (!ieee80211_vif_is_mesh(&sdata->vif))
++				goto invalid;
++			if (sdata->u.mesh.security != IEEE80211_MESH_SEC_NONE)
++				/* userspace handles this frame */
++				break;
++			goto queue;
++		case WLAN_SP_MGK_INFORM:
++		case WLAN_SP_MGK_ACK:
++			if (!ieee80211_vif_is_mesh(&sdata->vif))
++				goto invalid;
++			break;
++		}
 +		break;
-+#endif
- 	}
- 
- 	off = FLASH_MIN;
-diff --git a/arch/mips/bcm47xx/serial.c b/arch/mips/bcm47xx/serial.c
-index e9258cb..2e8492b3 100644
---- a/arch/mips/bcm47xx/serial.c
-+++ b/arch/mips/bcm47xx/serial.c
-@@ -47,6 +47,31 @@ static int __init uart8250_init_ssb(void)
- }
- #endif
- 
-+#ifdef CONFIG_BCM47XX_BCMA
-+static int __init uart8250_init_bcma(void)
-+{
-+	int i;
-+	struct bcma_drv_cc *cc = &(bcm47xx_bus.bcma.bus.drv_cc);
-+
-+	memset(&uart8250_data, 0,  sizeof(uart8250_data));
-+
-+	for (i = 0; i < cc->nr_serial_ports; i++) {
-+		struct plat_serial8250_port *p = &(uart8250_data[i]);
-+		struct bcma_serial_port *bcma_port;
-+		bcma_port = &(cc->serial_ports[i]);
-+
-+		p->mapbase = (unsigned int) bcma_port->regs;
-+		p->membase = (void *) bcma_port->regs;
-+		p->irq = bcma_port->irq + 2;
-+		p->uartclk = bcma_port->baud_base;
-+		p->regshift = bcma_port->reg_shift;
-+		p->iotype = UPIO_MEM;
-+		p->flags = UPF_BOOT_AUTOCONF | UPF_SHARE_IRQ;
-+	}
-+	return platform_device_register(&uart8250_device);
-+}
-+#endif
-+
- static int __init uart8250_init(void)
- {
- 	switch (bcm47xx_active_bus_type) {
-@@ -54,6 +79,10 @@ static int __init uart8250_init(void)
- 	case BCM47XX_BUS_TYPE_SSB:
- 		return uart8250_init_ssb();
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		return uart8250_init_bcma();
-+#endif
- 	}
- 	return -EINVAL;
- }
-diff --git a/arch/mips/bcm47xx/setup.c b/arch/mips/bcm47xx/setup.c
-index 9fc92bd..612a5ec 100644
---- a/arch/mips/bcm47xx/setup.c
-+++ b/arch/mips/bcm47xx/setup.c
-@@ -29,6 +29,7 @@
- #include <linux/types.h>
- #include <linux/ssb/ssb.h>
- #include <linux/ssb/ssb_embedded.h>
-+#include <linux/bcma/bcma_soc.h>
- #include <asm/bootinfo.h>
- #include <asm/reboot.h>
- #include <asm/time.h>
-@@ -52,6 +53,11 @@ static void bcm47xx_machine_restart(char *command)
- 		ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 1);
- 		break;
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		bcma_chipco_watchdog_timer_set(&bcm47xx_bus.bcma.bus.drv_cc, 1);
-+		break;
-+#endif
- 	}
- 	while (1)
- 		cpu_relax();
-@@ -67,6 +73,11 @@ static void bcm47xx_machine_halt(void)
- 		ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 0);
- 		break;
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		bcma_chipco_watchdog_timer_set(&bcm47xx_bus.bcma.bus.drv_cc, 0);
-+		break;
-+#endif
- 	}
- 	while (1)
- 		cpu_relax();
-@@ -295,16 +306,54 @@ static void __init bcm47xx_register_ssb(void)
- }
- #endif
- 
-+#ifdef CONFIG_BCM47XX_BCMA
-+static void __init bcm47xx_register_bcma(void)
-+{
-+	int err;
-+
-+	err = bcma_host_soc_register(&bcm47xx_bus.bcma);
-+	if (err)
-+		panic("Failed to initialize BCMA bus (err %d)\n", err);
-+}
-+#endif
-+
- void __init plat_mem_setup(void)
- {
- 	struct cpuinfo_mips *c = &current_cpu_data;
- 
-+	if (c->cputype == CPU_74K) {
-+		printk(KERN_INFO "bcm47xx: using bcma bus\n");
-+#ifdef CONFIG_BCM47XX_BCMA
-+		bcm47xx_active_bus_type = BCM47XX_BUS_TYPE_BCMA;
-+		bcm47xx_register_bcma();
-+#endif
-+	} else {
-+		printk(KERN_INFO "bcm47xx: using ssb bus\n");
- #ifdef CONFIG_BCM47XX_SSB
--	bcm47xx_active_bus_type = BCM47XX_BUS_TYPE_SSB;
--	bcm47xx_register_ssb();
-+		bcm47xx_active_bus_type = BCM47XX_BUS_TYPE_SSB;
-+		bcm47xx_register_ssb();
- #endif
-+	}
- 
- 	_machine_restart = bcm47xx_machine_restart;
- 	_machine_halt = bcm47xx_machine_halt;
- 	pm_power_off = bcm47xx_machine_halt;
- }
-+
-+static int __init bcm47xx_register_bus_complete(void)
-+{
-+	switch (bcm47xx_active_bus_type) {
-+#ifdef CONFIG_BCM47XX_SSB
-+	case BCM47XX_BUS_TYPE_SSB:
-+		/* Nothing to do */
-+		break;
-+#endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		bcma_bus_register(&bcm47xx_bus.bcma.bus);
-+		break;
-+#endif
-+	}
-+	return 0;
-+}
-+device_initcall(bcm47xx_register_bus_complete);
-diff --git a/arch/mips/bcm47xx/time.c b/arch/mips/bcm47xx/time.c
-index 02a652a..c10471a 100644
---- a/arch/mips/bcm47xx/time.c
-+++ b/arch/mips/bcm47xx/time.c
-@@ -45,6 +45,11 @@ void __init plat_time_init(void)
- 		hz = ssb_cpu_clock(&bcm47xx_bus.ssb.mipscore) / 2;
- 		break;
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		hz = bcma_cpu_clock(&bcm47xx_bus.bcma.bus.drv_mips) / 2;
-+		break;
-+#endif
- 	}
- 
- 	if (!hz)
-diff --git a/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h b/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h
-index 764afea..3959485 100644
---- a/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h
-+++ b/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h
-@@ -20,17 +20,25 @@
- #define __ASM_BCM47XX_H
- 
- #include <linux/ssb/ssb.h>
-+#include <linux/bcma/bcma.h>
-+#include <linux/bcma/bcma_soc.h>
- 
- enum bcm47xx_bus_type {
- #ifdef CONFIG_BCM47XX_SSB
- 	BCM47XX_BUS_TYPE_SSB,
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	BCM47XX_BUS_TYPE_BCMA,
-+#endif
- };
- 
- union bcm47xx_bus {
- #ifdef CONFIG_BCM47XX_SSB
- 	struct ssb_bus ssb;
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	struct bcma_soc bcma;
-+#endif
- };
- 
- extern union bcm47xx_bus bcm47xx_bus;
-diff --git a/arch/mips/include/asm/mach-bcm47xx/gpio.h b/arch/mips/include/asm/mach-bcm47xx/gpio.h
-index 0c3bd1f..0dcb71a 100644
---- a/arch/mips/include/asm/mach-bcm47xx/gpio.h
-+++ b/arch/mips/include/asm/mach-bcm47xx/gpio.h
-@@ -10,6 +10,7 @@
- #define __BCM47XX_GPIO_H
- 
- #include <linux/ssb/ssb_embedded.h>
-+#include <linux/bcma/bcma.h>
- #include <asm/mach-bcm47xx/bcm47xx.h>
- 
- #define BCM47XX_EXTIF_GPIO_LINES	5
-@@ -26,6 +27,11 @@ static inline int gpio_get_value(unsigned gpio)
- 	case BCM47XX_BUS_TYPE_SSB:
- 		return ssb_gpio_in(&bcm47xx_bus.ssb, 1 << gpio);
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		return bcma_chipco_gpio_in(&bcm47xx_bus.bcma.bus.drv_cc,
-+					   1 << gpio);
-+#endif
- 	}
- 	return -EINVAL;
- }
-@@ -37,6 +43,13 @@ static inline void gpio_set_value(unsigned gpio, int value)
- 	case BCM47XX_BUS_TYPE_SSB:
- 		ssb_gpio_out(&bcm47xx_bus.ssb, 1 << gpio,
- 			     value ? 1 << gpio : 0);
-+		return;
-+#endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		bcma_chipco_gpio_out(&bcm47xx_bus.bcma.bus.drv_cc, 1 << gpio,
-+				     value ? 1 << gpio : 0);
-+		return;
- #endif
- 	}
- }
-@@ -49,6 +62,12 @@ static inline int gpio_direction_input(unsigned gpio)
- 		ssb_gpio_outen(&bcm47xx_bus.ssb, 1 << gpio, 0);
- 		return 0;
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		bcma_chipco_gpio_outen(&bcm47xx_bus.bcma.bus.drv_cc, 1 << gpio,
-+				       0);
-+		return 0;
-+#endif
- 	}
- 	return -EINVAL;
- }
-@@ -65,6 +84,16 @@ static inline int gpio_direction_output(unsigned gpio, int value)
- 		ssb_gpio_outen(&bcm47xx_bus.ssb, 1 << gpio, 1 << gpio);
- 		return 0;
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		/* first set the gpio out value */
-+		bcma_chipco_gpio_out(&bcm47xx_bus.bcma.bus.drv_cc, 1 << gpio,
-+				     value ? 1 << gpio : 0);
-+		/* then set the gpio mode */
-+		bcma_chipco_gpio_outen(&bcm47xx_bus.bcma.bus.drv_cc, 1 << gpio,
-+				       1 << gpio);
-+		return 0;
-+#endif
- 	}
- 	return -EINVAL;
- }
-@@ -78,6 +107,12 @@ static inline int gpio_intmask(unsigned gpio, int value)
- 				 value ? 1 << gpio : 0);
- 		return 0;
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		bcma_chipco_gpio_intmask(&bcm47xx_bus.bcma.bus.drv_cc,
-+					 1 << gpio, value ? 1 << gpio : 0);
-+		return 0;
-+#endif
- 	}
- 	return -EINVAL;
- }
-@@ -91,6 +126,12 @@ static inline int gpio_polarity(unsigned gpio, int value)
- 				  value ? 1 << gpio : 0);
- 		return 0;
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		bcma_chipco_gpio_polarity(&bcm47xx_bus.bcma.bus.drv_cc,
-+					  1 << gpio, value ? 1 << gpio : 0);
-+		return 0;
-+#endif
- 	}
- 	return -EINVAL;
- }
-diff --git a/drivers/watchdog/bcm47xx_wdt.c b/drivers/watchdog/bcm47xx_wdt.c
-index beacd79..febce9b 100644
---- a/drivers/watchdog/bcm47xx_wdt.c
-+++ b/drivers/watchdog/bcm47xx_wdt.c
-@@ -60,6 +60,12 @@ static inline void bcm47xx_wdt_hw_start(void)
- 		ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 0xfffffff);
- 		break;
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		bcma_chipco_watchdog_timer_set(&bcm47xx_bus.bcma.bus.drv_cc,
-+					       0xfffffff);
-+		break;
-+#endif
- 	}
- }
- 
-@@ -70,6 +76,11 @@ static inline int bcm47xx_wdt_hw_stop(void)
- 	case BCM47XX_BUS_TYPE_SSB:
- 		return ssb_watchdog_timer_set(&bcm47xx_bus.ssb, 0);
- #endif
-+#ifdef CONFIG_BCM47XX_BCMA
-+	case BCM47XX_BUS_TYPE_BCMA:
-+		bcma_chipco_watchdog_timer_set(&bcm47xx_bus.bcma.bus.drv_cc, 0);
-+		return 0;
-+#endif
- 	}
- 	return -EINVAL;
- }
+ 	case WLAN_CATEGORY_MESH_ACTION:
+ 		if (!ieee80211_vif_is_mesh(&sdata->vif))
+ 			break;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 5bfb80c..c4e77f4 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -685,9 +685,9 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
+ 			if (elen >= sizeof(struct ieee80211_meshconf_ie))
+ 				elems->mesh_config = (void *)pos;
+ 			break;
+-		case WLAN_EID_PEER_LINK:
+-			elems->peer_link = pos;
+-			elems->peer_link_len = elen;
++		case WLAN_EID_PEER_MGMT:
++			elems->peering = pos;
++			elems->peering_len = elen;
+ 			break;
+ 		case WLAN_EID_PREQ:
+ 			elems->preq = pos;
 -- 
-1.7.4.1
+1.7.6
 
