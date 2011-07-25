@@ -1,76 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41329 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754031Ab1G0MNx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2011 08:13:53 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	Tony Houghton <h@realh.co.uk>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [RFC/RFT v2 03/12] ath9k: merge common ->config_pci_powersave() checks
-Date: Wed, 27 Jul 2011 14:14:50 +0200
-Message-Id: <1311768899-4559-4-git-send-email-sgruszka@redhat.com> (sfid-20110727_141404_526793_6C63D592)
-In-Reply-To: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
-References: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:58629 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751219Ab1GYO7v (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jul 2011 10:59:51 -0400
+Received: by iyb12 with SMTP id 12so4695259iyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2011 07:59:51 -0700 (PDT)
+Message-ID: <4E2D8478.4040701@lwfinger.net> (sfid-20110725_165955_275739_A18BB7C4)
+Date: Mon, 25 Jul 2011 09:58:00 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Lubomir Schmidt <gentoo.lubomir@googlemail.com>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	'George0505' <george0505@realtek.com>
+Subject: Re: Support for Realtek 8188RU Chipset in rtl8192cu driver?
+References: <CAHFBKjfHfAvpxGhhvRFwni9EVXdSC3HA1WxMJRzVm9SxvowmWQ@mail.gmail.com>
+In-Reply-To: <CAHFBKjfHfAvpxGhhvRFwni9EVXdSC3HA1WxMJRzVm9SxvowmWQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move common checks into wrapper function. Since ASPM can be only enabled
-on PCIe devices ->is_pciexpress check is unneeded.
+On 07/25/2011 06:47 AM, Lubomir Schmidt wrote:
+> What distribution did you mean?
+>
+> The old AWUS036H had the Realtek 8187L, yes. Then there came out before nearly
+> an year the AWUS036NH and the AWUS036NEH. Both base on the Ralink 3070L Chipset
+> and have till today the best range of all devices on the market.
+> Now Alfa release the AWUS036NHR with the Realtek 8188RU and the AWUS036NHA with
+> an Atheros AR9271.
+>
+> Last year i helped to get support for the Ralink Chipsets in the 2800usb driver.
+> I got white papers and so on from the chipsets and the driver developer could
+> connect to an laptop running 24/7 and make tests with the device.
+>
+> How can i help to get support? What distribution did you prefere on the notebook
+> to connect to?
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_hw.c |    3 ---
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |    3 ---
- drivers/net/wireless/ath/ath9k/hw-ops.h    |    3 +++
- 3 files changed, 3 insertions(+), 6 deletions(-)
+If you keep dropping the Cc'd recipients, I will not answer your Emails! Note, I 
+also included linux-wireless here.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index 70a18d1..b54ab78 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -308,9 +308,6 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
- 	u8 i;
- 	u32 val;
- 
--	if (ah->is_pciexpress != true || ah->aspm_enabled != true)
--		return;
--
- 	/* Nothing to do on restore for 11N */
- 	if (!power_off /* !restore */) {
- 		if (AR_SREV_9280_20_OR_LATER(ah)) {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index e3d58bd..9cf5d13 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -518,9 +518,6 @@ static void ar9003_hw_init_mode_gain_regs(struct ath_hw *ah)
- static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
- 					 bool power_off)
- {
--	if (ah->is_pciexpress != true || ah->aspm_enabled != true)
--		return;
--
- 	/* Nothing to do on restore for 11N */
- 	if (!power_off /* !restore */) {
- 		/* set bit 19 to allow forcing of pcie core into L1 state */
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index 8c12385..dd9003e 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -24,6 +24,9 @@
- static inline void ath9k_hw_configpcipowersave(struct ath_hw *ah,
- 					       bool power_off)
- {
-+	if (ah->aspm_enabled != true)
-+		return;
-+
- 	ath9k_hw_ops(ah)->config_pci_powersave(ah, power_off);
- }
- 
--- 
-1.7.1
+I do not care what distribution you use. I can use any. As the driver from the 
+Realtek web site 
+(ftp://WebUser:wK9xBuD5@202.134.71.21/cn/wlan/RTL8188RU_linux_v3.0.2164.20110715.zip) 
+is only for kernel 2.6.38 or later, it would be better if I had a kernel that 
+new; however, I could backport the system to an older one if necessary.
+
+As I downloaded the Realtek driver while composing this Email, I need to look at 
+the driver before making any commitment.
+
+Larry
+
 
