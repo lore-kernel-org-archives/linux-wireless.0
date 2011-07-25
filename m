@@ -1,27 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56470 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752661Ab1GFMNi (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:60750 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752893Ab1GZAAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2011 08:13:38 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1QeQz3-0004CF-H1
-	for linux-wireless@vger.kernel.org; Wed, 06 Jul 2011 14:13:37 +0200
-Message-Id: <20110706121236.333408679@sipsolutions.net> (sfid-20110706_141342_026845_1465DEEF)
-Date: Wed, 06 Jul 2011 14:12:36 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 25 Jul 2011 20:00:12 -0400
+Received: by pzk37 with SMTP id 37so9320782pzk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2011 17:00:12 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
 To: linux-wireless@vger.kernel.org
-Subject: [RFC 0/2] more crypto access for drivers
-Mime-Version: 1.0
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 5/6] ieee80211: add mesh action codes
+Date: Mon, 25 Jul 2011 16:59:16 -0700
+Message-Id: <1311638357-28740-6-git-send-email-thomas@cozybit.com> (sfid-20110726_020018_469503_079AB1B7)
+In-Reply-To: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
+References: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I need these for WoWLAN GTK rekeying in the device -- comments?
 
-I haven't implemented the wakeup part yet, we might not even
-be able to and may have to reconnect on resume, still checking.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ include/linux/ieee80211.h |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 5ecf148..08b1093 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1305,6 +1305,21 @@ enum ieee80211_self_protected_actioncode {
+ 	WLAN_SP_MGK_ACK = 5,
+ };
+ 
++/* Mesh action codes */
++enum ieee80211_mesh_actioncode {
++	WLAN_MESH_ACTION_LINK_METRIC_REPORT,
++	WLAN_MESH_ACTION_HWMP_PATH_SELECTION,
++	WLAN_MESH_ACTION_GATE_ANNOUNCEMENT,
++	WLAN_MESH_ACTION_CONGESTION_CONTROL_NOTIFICATION,
++	WLAN_MESH_ACTION_MCCA_SETUP_REQUEST,
++	WLAN_MESH_ACTION_MCCA_SETUP_REPLY,
++	WLAN_MESH_ACTION_MCCA_ADVERTISEMENT_REQUEST,
++	WLAN_MESH_ACTION_MCCA_ADVERTISEMENT,
++	WLAN_MESH_ACTION_MCCA_TEARDOWN,
++	WLAN_MESH_ACTION_TBTT_ADJUSTMENT_REQUEST,
++	WLAN_MESH_ACTION_TBTT_ADJUSTMENT_RESPONSE,
++};
++
+ /* Security key length */
+ enum ieee80211_key_len {
+ 	WLAN_KEY_LEN_WEP40 = 5,
+-- 
+1.7.6
 
