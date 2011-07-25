@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36597 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754712Ab1GDKpN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 06:45:13 -0400
-Message-ID: <4E1199A9.2040008@openwrt.org> (sfid-20110704_124516_838413_3BBFF174)
-Date: Mon, 04 Jul 2011 17:44:57 +0700
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	linville@tuxdriver.com
-Subject: Re: [ath5k-devel] [PATCH 4/8] ath5k: initialize common->clockrate
-References: <1309758467-1712-1-git-send-email-nbd@openwrt.org> <1309758467-1712-2-git-send-email-nbd@openwrt.org> <1309758467-1712-3-git-send-email-nbd@openwrt.org> <1309758467-1712-4-git-send-email-nbd@openwrt.org> <CAFtRNNzHqQLYxoZBBgpyttLgXRp1SWabPdQvNr4gvRPvPpPOBw@mail.gmail.com>
-In-Reply-To: <CAFtRNNzHqQLYxoZBBgpyttLgXRp1SWabPdQvNr4gvRPvPpPOBw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:55924 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752847Ab1GZAAG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jul 2011 20:00:06 -0400
+Received: by mail-pz0-f42.google.com with SMTP id 37so9320498pzk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2011 17:00:06 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 2/6] ieee80211: introduce Self Protected Action codes
+Date: Mon, 25 Jul 2011 16:59:13 -0700
+Message-Id: <1311638357-28740-3-git-send-email-thomas@cozybit.com> (sfid-20110726_020010_287905_7A0AB7B6)
+In-Reply-To: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
+References: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-07-04 5:40 PM, Nick Kossifidis wrote:
-> 2011/7/4 Felix Fietkau<nbd@openwrt.org>:
->>  Fixes a division by zero when setting distance before activating the
->>  device for the first time.
->>
->>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
->>  ---
->>    drivers/net/wireless/ath/ath5k/base.c |    1 +
->>    1 files changed, 1 insertions(+), 0 deletions(-)
->>
->>  diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
->>  index a6623dd..a413aa7 100644
->>  --- a/drivers/net/wireless/ath/ath5k/base.c
->>  +++ b/drivers/net/wireless/ath/ath5k/base.c
->>  @@ -2422,6 +2422,7 @@ ath5k_init_softc(struct ath5k_softc *sc, const struct ath_bus_ops *bus_ops)
->>          common->ah = sc->ah;
->>          common->hw = hw;
->>          common->priv = sc;
->>  +       common->clockrate = 40;
->>
->>          /*
->>           * Cache line size is used to size and align various
->>  --
->>  1.7.3.2
->>
->
-> We better set this to 44 for g (according to docs core frequency is 44MHz for g)
-It shouldn't make a difference, since the first hardware reset will 
-reload all the settings anyway.
+802.11s introduces a new action frame category, add action codes as well
+as an entry in ieee80211_mgmt.
 
-- Felix
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ include/linux/ieee80211.h |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index a26108e..947dc3f 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -749,6 +749,10 @@ struct ieee80211_mgmt {
+ 					 */
+ 					u8 variable[0];
+ 				} __attribute__((packed)) plink_action;
++				struct {
++					u8 action_code;
++					u8 variable[0];
++				} __attribute__((packed)) self_prot;
+ 				struct{
+ 					u8 action_code;
+ 					u8 variable[0];
+@@ -1309,6 +1313,16 @@ enum ieee80211_ht_actioncode {
+ 	WLAN_HT_ACTION_ASEL_IDX_FEEDBACK = 7,
+ };
+ 
++/* Self Protected Action codes */
++enum ieee80211_self_protected_actioncode {
++	WLAN_SP_RESERVED = 0,
++	WLAN_SP_MESH_PEERING_OPEN = 1,
++	WLAN_SP_MESH_PEERING_CONFIRM = 2,
++	WLAN_SP_MESH_PEERING_CLOSE = 3,
++	WLAN_SP_MGK_INFORM = 4,
++	WLAN_SP_MGK_ACK = 5,
++};
++
+ /* Security key length */
+ enum ieee80211_key_len {
+ 	WLAN_KEY_LEN_WEP40 = 5,
+-- 
+1.7.6
+
