@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:56498 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755700Ab1G1VLx convert rfc822-to-8bit (ORCPT
+Received: from w1.fi ([128.177.27.249]:42394 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752478Ab1GYUeS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2011 17:11:53 -0400
-Received: by qwk3 with SMTP id 3so1550849qwk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2011 14:11:52 -0700 (PDT)
+	Mon, 25 Jul 2011 16:34:18 -0400
+Date: Mon, 25 Jul 2011 23:34:09 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] mac80211: be more careful in suspend/resume
+Message-ID: <20110725203409.GA11510@jm.kir.nu> (sfid-20110725_223421_422477_D90B93AB)
+References: <1310653466.3874.23.camel@jlt3.sipsolutions.net>
+ <1310654934.3874.25.camel@jlt3.sipsolutions.net>
+ <20110725195747.GA24331@jm.kir.nu>
 MIME-Version: 1.0
-In-Reply-To: <1311874176-27569-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1311874176-27569-1-git-send-email-rmanohar@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 28 Jul 2011 14:11:32 -0700
-Message-ID: <CAB=NE6WfMgGQCzWUtdnA70w-u9agG8SS-W=JKL1V0nL8Rq=TEA@mail.gmail.com> (sfid-20110728_231255_326308_A8926A0F)
-Subject: Re: [PATCH 1/9] ath9k: Dump base eeprom header for AR9003
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110725195747.GA24331@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 28, 2011 at 10:29 AM, Rajkumar Manoharan
-<rmanohar@qca.qualcomm.com> wrote:
-> Debugfs file location:
-> <debugfs_mnt>/ieee80211/phy#/ath9k/base_eeprom
->
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/debug.c |  147 ++++++++++++++++++++++++++++++++
->  1 files changed, 147 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-> index d1eb896..df71c72 100644
-> --- a/drivers/net/wireless/ath/ath9k/debug.c
-> +++ b/drivers/net/wireless/ath/ath9k/debug.c
-> @@ -1163,6 +1163,151 @@ static const struct file_operations fops_regdump = {
->        .llseek = default_llseek,/* read accesses f_pos */
->  };
->
-> +static ssize_t read_file_base_eeprom(struct file *file, char __user *user_buf,
-> +                                    size_t count, loff_t *ppos)
-> +{
-> +       struct ath_softc *sc = file->private_data;
-> +       struct ath_hw *ah = sc->sc_ah;
-> +       struct ar9300_base_eep_hdr *pBase = NULL;
-> +       unsigned int len = 0, size = 1500;
-> +       ssize_t retval = 0;
-> +       char *buf;
-> +
-> +       if (!AR_SREV_9300_20_OR_LATER(ah))
-> +               return 0;
+On Mon, Jul 25, 2011 at 10:57:47PM +0300, Jouni Malinen wrote:
+> Hmm.. This patch seems to pretty much kill P2P at least with hwsim. Many
+> of the EAPOL frames seem to be dropped at some point and the end result
+> of this is in the WPS provisioning taking 10 seconds (two 5 second
+> timeouts from the authenticator due to EAPOL frames dropped). This by
+> itself may not be enough to hit the group formation timeout, but similar
+> issue in 4-way handshake makes the authenticator miss msg 4/4 and hit
+> the state mismatch with supplicant having configured the PTK and
+> authenticator not..
+> 
+> I'm not yet sure what exactly is causing the issue, but this commit came
+> up in git bisect and reverting it from the current wireless-testing.git
+> made P2P work again in hwsim.
 
-This is really really cool stuff, but instead of doing this can we
-instead implement this as a callback design which would enable other
-hw revisions to be supported? If we do not then we need to make the
-code branch out on each type of card.
+Actually, this does not make any sense.. Neither of the modified
+functions are even called in my hwsim test. In addition, I can "fix" the
+issue by adding a printk call into the beginning of (the not even
+called) ieee80211_reconfig() function.
 
-  Luis
+This sounds like some kind of build issue, but I've now reproduced this
+issue multiple times and even after a full rebuild of the kernel to make
+sure there are no build dependency issues etc. No idea what could be
+causing this, but it looks very clear that some of the EAPOL frames get
+dropped in some of the builds and just a single printk call seems to be
+enough to move things enough to avoid this.. hwsim0 interface shows the
+EAPOL frames, so they seem to be transmitted (or well, at least
+mac80211_hwsim tries to transmit them), but the recipient does not
+report them to wpa_supplicant (mac80211 dropping the frame?).
+
+This is with x86_64 build and UML and on a new test host (i.e., new gcc
+4.5.2-8ubuntu4 from Ubuntu 11.04), so my previous tests with hwsim may
+have not had some odd issue that starts showing up now for whatever
+reason.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
