@@ -1,62 +1,367 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:39928 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753862Ab1GZVyj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2011 17:54:39 -0400
-Message-ID: <4E2F379D.9080108@gnu.org> (sfid-20110726_235444_056020_77394263)
-Date: Tue, 26 Jul 2011 17:54:37 -0400
-From: Pavel Roskin <proski@gnu.org>
-MIME-Version: 1.0
-To: Ondrej Zary <linux@rainbow-software.org>
-CC: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: hostap_cs: add ID for LG cards
-References: <201107262314.03422.linux@rainbow-software.org>
-In-Reply-To: <201107262314.03422.linux@rainbow-software.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:55924 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752547Ab1GZAAF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jul 2011 20:00:05 -0400
+Received: by mail-pz0-f42.google.com with SMTP id 37so9320498pzk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2011 17:00:04 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 1/6] mac80211: fix mesh beacon format
+Date: Mon, 25 Jul 2011 16:59:12 -0700
+Message-Id: <1311638357-28740-2-git-send-email-thomas@cozybit.com> (sfid-20110726_020008_599596_A76E3CC7)
+In-Reply-To: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
+References: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/26/2011 05:14 PM, Ondrej Zary wrote:
-> Add IDs for LG PCMCIA cards.
-> This allows LG LW1100P PCI card (with integrated CardBus bridge) to work
-> (tested with rev 3.0) and probably also LW1100N (PCMCIA).
->
-> Signed-off-by: Ondrej Zary<linux@rainbow-software.org>
+Correct ordering of IEs in the mesh beacon while removing unneeded IEs
+from mesh peering frames. Set privacy bit in capability info if security
+is enabled. Add utility functions to aid in construction
+of IEs and reduce code duplication.
 
-Acked-by: Pavel Roskin <proski@gnu.org>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/mesh.c       |  223 +++++++++++++++++++++++++++++++++------------
+ net/mac80211/mesh.h       |   14 +++
+ net/mac80211/mesh_plink.c |    7 +-
+ net/mac80211/tx.c         |   13 ++-
+ 4 files changed, 195 insertions(+), 62 deletions(-)
 
-I googled for the card name and found indications that the card uses 
-Intersil firmware and thus supportable by Hostap.
-
-The problem was reported in year 2003, first in June:
-http://osdir.com/ml/linux.drivers.hostap/2003-06/msg00159.html
-
-And then in November:
-http://osdir.com/ml/linux.linux-wlan.user/2003-11/msg00039.html
-
-It's quite disappointing that we are fixing this more than 8 years after 
-the first report, when the cards in question have become rare and 
-obsolete.  But it's still better than nothing.
-
-> --- linux-2.6.39-rc2-orig/drivers/net/wireless/hostap/hostap_cs.c	2011-04-06 03:30:43.000000000 +0200
-> +++ linux-2.6.39-rc2/drivers/net/wireless/hostap/hostap_cs.c	2011-07-26 22:17:03.000000000 +0200
-> @@ -648,6 +648,8 @@ static struct pcmcia_device_id hostap_cs
->   					 0x74c5e40d),
->   	PCMCIA_DEVICE_MANF_CARD_PROD_ID1(0x0156, 0x0002, "Intersil",
->   					 0x4b801a17),
-> +	PCMCIA_DEVICE_MANF_CARD_PROD_ID1(0x0156, 0x0002, "LG",
-> +					 0xb474d43a),
-
-What is the "pccardctl ident" output on your card?
-
-I think we may want to introduce PCMCIA_DEVICE_MANF_CARD_PROD_ID3 and match
-
-PCMCIA_DEVICE_MANF_CARD_PROD_ID3(0x0156, 0x0002, "Version 1.02", xxx)
-
-Maybe some other card would be supported too?  I doubt there are any 
-Agere or Symbol cards with "Version 1.02" in the third text ID.
-
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 29e9980..e0a19e9 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -204,36 +204,185 @@ int mesh_rmc_check(u8 *sa, struct ieee80211s_hdr *mesh_hdr,
+ 	return 0;
+ }
+ 
+-void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
++inline int
++mesh_add_meshconf_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++	u8 *pos, neighbors;
++	u8 meshconf_len = sizeof(struct ieee80211_meshconf_ie);
++
++	if (WARN_ON(skb_tailroom(skb) < 2 + meshconf_len))
++		return -ENOMEM;
++
++	pos = skb_put(skb, 2 + meshconf_len);
++	*pos++ = WLAN_EID_MESH_CONFIG;
++	*pos++ = meshconf_len;
++
++	/* Active path selection protocol ID */
++	*pos++ = ifmsh->mesh_pp_id;
++	/* Active path selection metric ID   */
++	*pos++ = ifmsh->mesh_pm_id;
++	/* Congestion control mode identifier */
++	*pos++ = ifmsh->mesh_cc_id;
++	/* Synchronization protocol identifier */
++	*pos++ = ifmsh->mesh_sp_id;
++	/* Authentication Protocol identifier */
++	*pos++ = ifmsh->mesh_auth_id;
++	/* Mesh Formation Info - number of neighbors */
++	neighbors = atomic_read(&ifmsh->mshstats.estab_plinks);
++	/* Number of neighbor mesh STAs or 15 whichever is smaller */
++	neighbors = (neighbors > 15) ? 15 : neighbors;
++	*pos++ = neighbors << 1;
++	/* Mesh capability */
++	ifmsh->accepting_plinks = mesh_plink_availables(sdata);
++	*pos = MESHCONF_CAPAB_FORWARDING;
++	*pos++ |= ifmsh->accepting_plinks ?
++	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
++	*pos++ = 0x00;
++
++	return 0;
++}
++
++inline int
++mesh_add_meshid_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++	u8 *pos;
++
++	if (WARN_ON(skb_tailroom(skb) < 2 + ifmsh->mesh_id_len))
++		return -ENOMEM;
++
++	pos = skb_put(skb, 2 + ifmsh->mesh_id_len);
++	*pos++ = WLAN_EID_MESH_ID;
++	*pos++ = ifmsh->mesh_id_len;
++	if (ifmsh->mesh_id_len)
++		memcpy(pos, ifmsh->mesh_id, ifmsh->mesh_id_len);
++
++	return 0;
++}
++
++inline int
++mesh_add_vendor_ies(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++	u8 offset, len;
++	const u8 *data;
++
++	if (!ifmsh->ie || !ifmsh->ie_len)
++		return 0;
++
++	/* fast-forward to vendor IEs */
++	offset = ieee80211_ie_split_vendor(ifmsh->ie, ifmsh->ie_len, 0);
++
++	if (offset) {
++		len = ifmsh->ie_len - offset;
++		data = ifmsh->ie + offset;
++		if (WARN_ON(skb_tailroom(skb) < len))
++			return -ENOMEM;
++		memcpy(skb_put(skb, len), data, len);
++	}
++
++	return 0;
++}
++
++inline int
++mesh_add_rsn_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++	u8 len = 0;
++	const u8 *data;
++
++	if (!ifmsh->ie || !ifmsh->ie_len)
++		return 0;
++
++	/* find RSN IE */
++	data = ifmsh->ie;
++	while (data < ifmsh->ie + ifmsh->ie_len) {
++		if (*data == WLAN_EID_RSN) {
++			len = data[1] + 2;
++			break;
++		}
++		data++;
++	}
++
++	if (len) {
++		if (WARN_ON(skb_tailroom(skb) < len))
++			return -ENOMEM;
++		memcpy(skb_put(skb, len), data, len);
++	}
++
++	return 0;
++}
++
++inline int
++mesh_add_srates_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_supported_band *sband;
+-	u8 *pos;
+-	int len, i, rate;
+-	u8 neighbors;
++	int rate;
++	u8 i, rates, *pos;
+ 
+ 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+-	len = sband->n_bitrates;
+-	if (len > 8)
+-		len = 8;
+-	pos = skb_put(skb, len + 2);
++	rates = sband->n_bitrates;
++	if (rates > 8)
++		rates = 8;
++
++	if (WARN_ON(skb_tailroom(skb) < rates + 2))
++		return -ENOMEM;
++
++	pos = skb_put(skb, rates + 2);
+ 	*pos++ = WLAN_EID_SUPP_RATES;
+-	*pos++ = len;
+-	for (i = 0; i < len; i++) {
++	*pos++ = rates;
++	for (i = 0; i < rates; i++) {
+ 		rate = sband->bitrates[i].bitrate;
+ 		*pos++ = (u8) (rate / 5);
+ 	}
+ 
+-	if (sband->n_bitrates > len) {
+-		pos = skb_put(skb, sband->n_bitrates - len + 2);
++	return 0;
++}
++
++inline int
++mesh_add_ext_srates_ie(struct sk_buff *skb,
++		       struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_supported_band *sband;
++	int rate;
++	u8 i, exrates, *pos;
++
++	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
++	exrates = sband->n_bitrates;
++	if (exrates > 8)
++		exrates -= 8;
++	else
++		exrates = 0;
++
++	if (WARN_ON(skb_tailroom(skb) < exrates + 2))
++		return -ENOMEM;
++
++	if (exrates) {
++		pos = skb_put(skb, exrates + 2);
+ 		*pos++ = WLAN_EID_EXT_SUPP_RATES;
+-		*pos++ = sband->n_bitrates - len;
+-		for (i = len; i < sband->n_bitrates; i++) {
++		*pos++ = exrates;
++		for (i = 8; i < sband->n_bitrates; i++) {
+ 			rate = sband->bitrates[i].bitrate;
+ 			*pos++ = (u8) (rate / 5);
+ 		}
+ 	}
++	return 0;
++}
++
++inline int mesh_add_ds_params_ie(struct sk_buff *skb,
++				 struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_supported_band *sband;
++	u8 *pos;
++
++	if (WARN_ON(skb_tailroom(skb) < 3))
++		return -ENOMEM;
+ 
++	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+ 	if (sband->band == IEEE80211_BAND_2GHZ) {
+ 		pos = skb_put(skb, 2 + 1);
+ 		*pos++ = WLAN_EID_DS_PARAMS;
+@@ -241,53 +390,9 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
+ 		*pos++ = ieee80211_frequency_to_channel(local->hw.conf.channel->center_freq);
+ 	}
+ 
+-	pos = skb_put(skb, 2 + sdata->u.mesh.mesh_id_len);
+-	*pos++ = WLAN_EID_MESH_ID;
+-	*pos++ = sdata->u.mesh.mesh_id_len;
+-	if (sdata->u.mesh.mesh_id_len)
+-		memcpy(pos, sdata->u.mesh.mesh_id, sdata->u.mesh.mesh_id_len);
+-
+-	pos = skb_put(skb, 2 + sizeof(struct ieee80211_meshconf_ie));
+-	*pos++ = WLAN_EID_MESH_CONFIG;
+-	*pos++ = sizeof(struct ieee80211_meshconf_ie);
+-
+-	/* Active path selection protocol ID */
+-	*pos++ = sdata->u.mesh.mesh_pp_id;
+-
+-	/* Active path selection metric ID   */
+-	*pos++ = sdata->u.mesh.mesh_pm_id;
+-
+-	/* Congestion control mode identifier */
+-	*pos++ = sdata->u.mesh.mesh_cc_id;
+-
+-	/* Synchronization protocol identifier */
+-	*pos++ = sdata->u.mesh.mesh_sp_id;
+-
+-	/* Authentication Protocol identifier */
+-	*pos++ = sdata->u.mesh.mesh_auth_id;
+-
+-	/* Mesh Formation Info - number of neighbors */
+-	neighbors = atomic_read(&sdata->u.mesh.mshstats.estab_plinks);
+-	/* Number of neighbor mesh STAs or 15 whichever is smaller */
+-	neighbors = (neighbors > 15) ? 15 : neighbors;
+-	*pos++ = neighbors << 1;
+-
+-	/* Mesh capability */
+-	sdata->u.mesh.accepting_plinks = mesh_plink_availables(sdata);
+-	*pos = MESHCONF_CAPAB_FORWARDING;
+-	*pos++ |= sdata->u.mesh.accepting_plinks ?
+-	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
+-	*pos++ = 0x00;
+-
+-	if (sdata->u.mesh.ie) {
+-		int len = sdata->u.mesh.ie_len;
+-		const u8 *data = sdata->u.mesh.ie;
+-		if (skb_tailroom(skb) > len)
+-			memcpy(skb_put(skb, len), data, len);
+-	}
++	return 0;
+ }
+ 
+-
+ static void ieee80211_mesh_path_timer(unsigned long data)
+ {
+ 	struct ieee80211_sub_if_data *sdata =
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 249e733..4c9113e 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -199,6 +199,20 @@ bool mesh_matches_local(struct ieee802_11_elems *ie,
+ void mesh_ids_set_default(struct ieee80211_if_mesh *mesh);
+ void mesh_mgmt_ies_add(struct sk_buff *skb,
+ 		struct ieee80211_sub_if_data *sdata);
++inline int mesh_add_meshconf_ie(struct sk_buff *skb,
++				struct ieee80211_sub_if_data *sdata);
++inline int mesh_add_meshid_ie(struct sk_buff *skb,
++			      struct ieee80211_sub_if_data *sdata);
++inline int mesh_add_rsn_ie(struct sk_buff *skb,
++			   struct ieee80211_sub_if_data *sdata);
++inline int mesh_add_vendor_ies(struct sk_buff *skb,
++			       struct ieee80211_sub_if_data *sdata);
++inline int mesh_add_srates_ie(struct sk_buff *skb,
++			      struct ieee80211_sub_if_data *sdata);
++inline int mesh_add_ext_srates_ie(struct sk_buff *skb,
++				  struct ieee80211_sub_if_data *sdata);
++inline int mesh_add_ds_params_ie(struct sk_buff *skb,
++				  struct ieee80211_sub_if_data *sdata);
+ void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
+ int mesh_rmc_init(struct ieee80211_sub_if_data *sdata);
+ void ieee80211s_init(void);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index f4adc09..d582059 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -195,7 +195,12 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 			memset(pos, 0, 2);
+ 			memcpy(pos + 2, &plid, 2);
+ 		}
+-		mesh_mgmt_ies_add(skb, sdata);
++		if (mesh_add_srates_ie(skb, sdata) ||
++		    mesh_add_ext_srates_ie(skb,sdata) ||
++		    mesh_add_rsn_ie(skb, sdata) ||
++		    mesh_add_meshid_ie(skb, sdata) ||
++		    mesh_add_meshconf_ie(skb, sdata))
++			return -1;
+ 	}
+ 
+ 	/* Add Peer Link Management element */
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 8cb0d2d..600c57f 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2275,13 +2275,22 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
+ 		mgmt->u.beacon.beacon_int =
+ 			cpu_to_le16(sdata->vif.bss_conf.beacon_int);
+-		mgmt->u.beacon.capab_info = 0x0; /* 0x0 for MPs */
++		mgmt->u.beacon.capab_info |= sdata->u.mesh.security
++					     ? WLAN_CAPABILITY_PRIVACY
++					     : 0;
+ 
+ 		pos = skb_put(skb, 2);
+ 		*pos++ = WLAN_EID_SSID;
+ 		*pos++ = 0x0;
+ 
+-		mesh_mgmt_ies_add(skb, sdata);
++		if (mesh_add_srates_ie(skb, sdata) ||
++		    mesh_add_ds_params_ie(skb, sdata) ||
++		    mesh_add_ext_srates_ie(skb, sdata) ||
++		    mesh_add_rsn_ie(skb, sdata) ||
++		    mesh_add_meshid_ie(skb, sdata) ||
++		    mesh_add_meshconf_ie(skb, sdata) ||
++		    mesh_add_vendor_ies(skb, sdata))
++			pr_err("o11s: couldn't add ies!\n");
+ 	} else {
+ 		WARN_ON(1);
+ 		goto out;
 -- 
-Regards,
-Pavel Roskin
+1.7.6
+
