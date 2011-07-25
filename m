@@ -1,34 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:60791 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751142Ab1GDTFO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 15:05:14 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 7470C5401D1
-	for <linux-wireless@vger.kernel.org>; Mon,  4 Jul 2011 15:12:50 -0400 (EDT)
-Subject: Compat-wireless release for 2011-07-04 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110704190512.A238340EC7@repository3.orbit-lab.org> (sfid-20110704_210536_526433_6EC50579)
-Date: Mon,  4 Jul 2011 15:05:12 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from home.keithp.com ([63.227.221.253]:53390 "EHLO keithp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752694Ab1GYTie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jul 2011 15:38:34 -0400
+From: Keith Packard <keithp@keithp.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Keith Packard <keithp@keithp.com>
+Subject: [PATCH] iwlagn: check for !priv->txq in iwlagn_wait_tx_queue_empty
+Date: Mon, 25 Jul 2011 12:38:22 -0700
+Message-Id: <1311622702-4807-1-git-send-email-keithp@keithp.com> (sfid-20110725_213900_920131_622A4E59)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + f7879b5...689a293 akpm-end   -> origin/akpm-end  (forced update)
-   daf54f1..ba466c7  akpm-start -> origin/akpm-start
-   25e9787..020901c  history    -> origin/history
- + 271b68e...96937af master     -> origin/master  (forced update)
-   daf54f1..ba466c7  stable     -> origin/stable
- * [new tag]         next-20110704 -> next-20110704
+If the interface is down, txq is NULL. iwlagn_wait_tx_queue_empty
+needs to check for this case to avoid dereferencing that pointer.
 
-compat-wireless code metrics
+Signed-off-by: Keith Packard <keithp@keithp.com>
+---
 
-    839865 - Total upstream lines of code being pulled
-      2380 - backport code changes
-      2080 - backport code additions
-       300 - backport code deletions
-      8127 - backport from compat module
-     10507 - total backport code
-    1.2510 - % of code consists of backport work
+This is on top of v3.0
+
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index f803fb6..d6ae444 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1487,6 +1487,9 @@ int iwlagn_wait_tx_queue_empty(struct iwl_priv *priv)
+ 	unsigned long now = jiffies;
+ 	int ret = 0;
+ 
++	if (!priv->txq)
++		return 0;
++
+ 	/* waiting for all the tx frames complete might take a while */
+ 	for (cnt = 0; cnt < priv->hw_params.max_txq_num; cnt++) {
+ 		if (cnt == priv->cmd_queue)
+-- 
+1.7.5.4
+
