@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34849 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758337Ab1GKSq6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 14:46:58 -0400
-Date: Mon, 11 Jul 2011 14:35:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Joe Perches <joe@perches.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/3] iwlegacy: Add missing comma between constant string
- array
-Message-ID: <20110711183542.GB2650@tuxdriver.com> (sfid-20110711_204740_958748_C68AA03D)
-References: <cover.1310187270.git.joe@perches.com>
- <36f8b5d1a32b8702941ebeda7a406188af132e9e.1310187270.git.joe@perches.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <36f8b5d1a32b8702941ebeda7a406188af132e9e.1310187270.git.joe@perches.com>
+Received: from lo.gmane.org ([80.91.229.12]:59821 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753310Ab1GZPuM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jul 2011 11:50:12 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1QljtV-0005nF-FW
+	for linux-wireless@vger.kernel.org; Tue, 26 Jul 2011 17:50:07 +0200
+Received: from gate-il06-2.motorola.com ([129.188.33.26])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 17:50:05 +0200
+Received: from btaylor1 by gate-il06-2.motorola.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 17:50:05 +0200
+To: linux-wireless@vger.kernel.org
+From: Brent Taylor <btaylor1@motorolasolutions.com>
+Subject: ATH6KL lockup during init
+Date: Tue, 26 Jul 2011 15:43:02 +0000 (UTC)
+Message-ID: <loom.20110726T174149-11@post.gmane.org> (sfid-20110726_175016_155493_2A1D9026)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-How is this array indexed?  Aren't you changing the index of the
-later strings?
+I’m a developer working with the Atheros AR6003 Wireless LAN chip.  I recently
+updated the Linux kernel on my custom board to 3.0.0 and pulled the latest
+snapshot of the ath6kl driver from
+http://git.kernel.org/?p=linux/kernel/git/kvalo/ath6kl-cleanup.git;a=summary (as
+of 2011-07-25).  I’m also using the latest firmware images from
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/firmware/ath6k.tar.gz as
+recommended by
+http://wireless.kernel.org/en/users/Drivers/ath6kl?highlight=%28ar6003%29. 
 
-On Fri, Jul 08, 2011 at 11:20:24PM -0700, Joe Perches wrote:
-> Multiple quoted strings are concatenated without comma separators.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/net/wireless/iwlegacy/iwl4965-base.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlegacy/iwl4965-base.c b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-> index 46242d2..1433466 100644
-> --- a/drivers/net/wireless/iwlegacy/iwl4965-base.c
-> +++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-> @@ -1484,7 +1484,7 @@ static const char * const desc_lookup_text[] = {
->  	"NMI_INTERRUPT_DATA_ACTION_PT",
->  	"NMI_TRM_HW_ER",
->  	"NMI_INTERRUPT_TRM",
-> -	"NMI_INTERRUPT_BREAK_POINT"
-> +	"NMI_INTERRUPT_BREAK_POINT",
->  	"DEBUG_0",
->  	"DEBUG_1",
->  	"DEBUG_2",
-> -- 
-> 1.7.6.131.g99019
-> 
-> 
+After running 'insmod ath6kl.ko', the command line hangs.  I’ve narrowed down
+the execution path to the function ath6kl_bmi_get_rx_lkahd (called from
+ath6kl_bmi_exeute after loading the OPT firmware).  The parameter value of
+"need_timeout" is set to false.  Without this timeout the function never
+returns.  The call to ath6kl_hif_read_write_sync always returns 0, and the value
+of rx_word is always 0.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+My question is: What would cause the read from address
+RX_LOOKAHEAD_VALID_ADDRESS to always return a value of 0?
+
+My custom board is using an atmel at91sam9g45 microprocessor using the SDIO bus
+on mci1.  Any information would be greatly appreciated.
+
+Thanks,
+Brent Taylor
+Senior Software Developer
+Applied Technology Department of Motorola Solutions
+btaylor1@motorolasolutions.com
+
+
