@@ -1,259 +1,333 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:16181 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755408Ab1GPPcB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2011 11:32:01 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 02/18] iwlagn: move the tasklet / irq to the transport layer
-Date: Sat, 16 Jul 2011 07:56:23 -0700
-Message-Id: <1310828199-18000-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110716_173216_180689_B8CB89AE)
-In-Reply-To: <1310828199-18000-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1310828199-18000-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:36955 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202Ab1GZRsA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jul 2011 13:48:00 -0400
+Received: by iyb12 with SMTP id 12so751172iyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 10:47:59 -0700 (PDT)
+Message-ID: <4E2EFDCC.3060604@lwfinger.net> (sfid-20110726_194804_044937_6678BCFC)
+Date: Tue, 26 Jul 2011 12:47:56 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Pavel Roskin <proski@gnu.org>
+CC: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] b43legacy: remove 64-bit DMA support
+References: <20110725213832.32510.3753.stgit@mj.roinet.com>
+In-Reply-To: <20110725213832.32510.3753.stgit@mj.roinet.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 07/25/2011 04:40 PM, Pavel Roskin wrote:
+> Devices supported by b43legacy don't support 64-bit DMA.
+>
+> Signed-off-by: Pavel Roskin<proski@gnu.org>
+> ---
+> The patch was tested on Broadcom 4306.
+>
+>   drivers/net/wireless/b43legacy/dma.c |  374 ++++++----------------------------
+>   drivers/net/wireless/b43legacy/dma.h |  107 ----------
+>   2 files changed, 71 insertions(+), 410 deletions(-)
 
-PCIe doesn't provide any ISR registration API, whereas other buses do.
-Hence, we need to move the tasklet and irq to the transport layer to allow this
-flexibility.
+Tested on BCM4303.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-ict.c |    4 +++
- drivers/net/wireless/iwlwifi/iwl-agn.c     |   39 +++++++++------------------
- drivers/net/wireless/iwlwifi/iwl-agn.h     |    1 +
- drivers/net/wireless/iwlwifi/iwl-dev.h     |    4 +++
- drivers/net/wireless/iwlwifi/iwl-trans.c   |   29 +++++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-trans.h   |    7 ++++-
- 6 files changed, 55 insertions(+), 29 deletions(-)
+ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ict.c b/drivers/net/wireless/iwlwifi/iwl-agn-ict.c
-index f1b40ec..9a2eb1e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-ict.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-ict.c
-@@ -49,6 +49,10 @@ void iwl_free_isr_ict(struct iwl_priv *priv)
- 				  priv->_agn.ict_tbl_vir,
- 				  priv->_agn.ict_tbl_dma);
- 		priv->_agn.ict_tbl_vir = NULL;
-+		memset(&priv->_agn.ict_tbl_dma, 0,
-+			sizeof(priv->_agn.ict_tbl_dma));
-+		memset(&priv->_agn.aligned_ict_tbl_dma, 0,
-+			sizeof(priv->_agn.aligned_ict_tbl_dma));
- 	}
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 38a1e4f..598f164 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -625,7 +625,7 @@ static void iwl_rx_handle(struct iwl_priv *priv)
- }
- 
- /* tasklet for iwlagn interrupt */
--static void iwl_irq_tasklet(struct iwl_priv *priv)
-+void iwl_irq_tasklet(struct iwl_priv *priv)
- {
- 	u32 inta = 0;
- 	u32 handled = 0;
-@@ -3227,9 +3227,6 @@ static void iwl_setup_deferred_work(struct iwl_priv *priv)
- 	init_timer(&priv->watchdog);
- 	priv->watchdog.data = (unsigned long)priv;
- 	priv->watchdog.function = iwl_bg_watchdog;
--
--	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
--		iwl_irq_tasklet, (unsigned long)priv);
- }
- 
- static void iwl_cancel_deferred_work(struct iwl_priv *priv)
-@@ -3548,8 +3545,6 @@ int iwl_probe(void *bus_specific, struct iwl_bus_ops *bus_ops,
- 	priv->bus.ops->set_drv_data(&priv->bus, priv);
- 	priv->bus.dev = priv->bus.ops->get_dev(&priv->bus);
- 
--	iwl_trans_register(&priv->trans);
--
- 	/* At this point both hw and priv are allocated. */
- 
- 	SET_IEEE80211_DEV(hw, priv->bus.dev);
-@@ -3558,6 +3553,10 @@ int iwl_probe(void *bus_specific, struct iwl_bus_ops *bus_ops,
- 	priv->cfg = cfg;
- 	priv->inta_mask = CSR_INI_SET_MASK;
- 
-+	err = iwl_trans_register(priv);
-+	if (err)
-+		goto out_free_priv;
-+
- 	/* is antenna coupling more than 35dB ? */
- 	priv->bt_ant_couple_ok =
- 		(iwlagn_ant_coupling > IWL_BT_ANTENNA_COUPLING_THRESHOLD) ?
-@@ -3652,15 +3651,6 @@ int iwl_probe(void *bus_specific, struct iwl_bus_ops *bus_ops,
- 	/********************
- 	 * 7. Setup services
- 	 ********************/
--	iwl_alloc_isr_ict(priv);
--
--	err = request_irq(priv->bus.irq, iwl_isr_ict, IRQF_SHARED,
--			  DRV_NAME, priv);
--	if (err) {
--		IWL_ERR(priv, "Error allocating IRQ %d\n", priv->bus.irq);
--		goto out_uninit_drv;
--	}
--
- 	iwl_setup_deferred_work(priv);
- 	iwl_setup_rx_handlers(priv);
- 	iwl_testmode_init(priv);
-@@ -3691,19 +3681,18 @@ int iwl_probe(void *bus_specific, struct iwl_bus_ops *bus_ops,
- 
- 	return 0;
- 
-- out_destroy_workqueue:
-+out_destroy_workqueue:
- 	destroy_workqueue(priv->workqueue);
- 	priv->workqueue = NULL;
--	free_irq(priv->bus.irq, priv);
--	iwl_free_isr_ict(priv);
-- out_uninit_drv:
- 	iwl_uninit_drv(priv);
-- out_free_eeprom:
-+out_free_eeprom:
- 	iwl_eeprom_free(priv);
-- out_free_traffic_mem:
-+out_free_traffic_mem:
- 	iwl_free_traffic_mem(priv);
-+	trans_free(priv);
-+out_free_priv:
- 	ieee80211_free_hw(priv->hw);
-- out:
-+out:
- 	return err;
- }
- 
-@@ -3754,7 +3743,6 @@ void __devexit iwl_remove(struct iwl_priv * priv)
- 
- 	iwl_eeprom_free(priv);
- 
--
- 	/*netif_stop_queue(dev); */
- 	flush_workqueue(priv->workqueue);
- 
-@@ -3765,13 +3753,12 @@ void __devexit iwl_remove(struct iwl_priv * priv)
- 	priv->workqueue = NULL;
- 	iwl_free_traffic_mem(priv);
- 
--	free_irq(priv->bus.irq, priv);
-+	trans_free(priv);
-+
- 	priv->bus.ops->set_drv_data(&priv->bus, NULL);
- 
- 	iwl_uninit_drv(priv);
- 
--	iwl_free_isr_ict(priv);
--
- 	dev_kfree_skb(priv->beacon_skb);
- 
- 	ieee80211_free_hw(priv->hw);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index aed86c6..7018855 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -188,6 +188,7 @@ int iwlagn_txfifo_flush(struct iwl_priv *priv, u16 flush_control);
- void iwlagn_dev_txfifo_flush(struct iwl_priv *priv, u16 flush_control);
- 
- /* rx */
-+void iwl_irq_tasklet(struct iwl_priv *priv);
- void iwlagn_rx_queue_restock(struct iwl_priv *priv);
- void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority);
- void iwlagn_rx_replenish(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 173fad2..b38b00c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1243,6 +1243,8 @@ struct iwl_trans;
-  * @tx_free: frees the tx memory
-  * @send_cmd:send a host command
-  * @send_cmd_pdu:send a host command: flags can be CMD_*
-+ * @free: release all the ressource for the transport layer itself such as
-+ *        irq, tasklet etc...
-  */
- struct iwl_trans_ops {
- 	int (*rx_init)(struct iwl_priv *priv);
-@@ -1261,6 +1263,8 @@ struct iwl_trans_ops {
- 	int (*tx)(struct iwl_priv *priv, struct sk_buff *skb,
- 		struct iwl_tx_cmd *tx_cmd, int txq_id, __le16 fc, bool ampdu,
- 		struct iwl_rxon_context *ctx);
-+
-+	void (*free)(struct iwl_priv *priv);
- };
- 
- struct iwl_trans {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index acd2a5f..ecdda6d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -705,6 +705,12 @@ static int iwl_trans_tx(struct iwl_priv *priv, struct sk_buff *skb,
- 	return 0;
- }
- 
-+static void iwl_trans_free(struct iwl_priv *priv)
-+{
-+	free_irq(priv->bus.irq, priv);
-+	iwl_free_isr_ict(priv);
-+}
-+
- static const struct iwl_trans_ops trans_ops = {
- 	.rx_init = iwl_trans_rx_init,
- 	.rx_stop = iwl_trans_rx_stop,
-@@ -719,9 +725,28 @@ static const struct iwl_trans_ops trans_ops = {
- 
- 	.get_tx_cmd = iwl_trans_get_tx_cmd,
- 	.tx = iwl_trans_tx,
-+
-+	.free = iwl_trans_free,
- };
- 
--void iwl_trans_register(struct iwl_trans *trans)
-+int iwl_trans_register(struct iwl_priv *priv)
- {
--	trans->ops = &trans_ops;
-+	int err;
-+
-+	priv->trans.ops = &trans_ops;
-+
-+	iwl_alloc_isr_ict(priv);
-+
-+	err = request_irq(priv->bus.irq, iwl_isr_ict, IRQF_SHARED,
-+		DRV_NAME, priv);
-+	if (err) {
-+		IWL_ERR(priv, "Error allocating IRQ %d\n", priv->bus.irq);
-+		iwl_free_isr_ict(priv);
-+		return err;
-+	}
-+
-+	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
-+		iwl_irq_tasklet, (unsigned long)priv);
-+
-+	return 0;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index f10bee8..f8133ea 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -115,4 +115,9 @@ static inline int trans_tx(struct iwl_priv *priv, struct sk_buff *skb,
- 	return priv->trans.ops->tx(priv, skb, tx_cmd, txq_id, fc, ampdu, ctx);
- }
- 
--void iwl_trans_register(struct iwl_trans *trans);
-+static inline void trans_free(struct iwl_priv *priv)
-+{
-+	priv->trans.ops->free(priv);
-+}
-+
-+int iwl_trans_register(struct iwl_priv *priv);
--- 
-1.7.0.4
+See some minor comments below.
 
+Larry
+
+
+> diff --git a/drivers/net/wireless/b43legacy/dma.c b/drivers/net/wireless/b43legacy/dma.c
+> index 704ee62..a23b998 100644
+> --- a/drivers/net/wireless/b43legacy/dma.c
+> +++ b/drivers/net/wireless/b43legacy/dma.c
+> @@ -42,10 +42,9 @@
+>
+>   /* 32bit DMA ops. */
+>   static
+> -struct b43legacy_dmadesc_generic *op32_idx2desc(
+> -					struct b43legacy_dmaring *ring,
+> -					int slot,
+> -					struct b43legacy_dmadesc_meta **meta)
+> +struct b43legacy_dmadesc32 *op32_idx2desc(struct b43legacy_dmaring *ring,
+> +					  int slot,
+> +					  struct b43legacy_dmadesc_meta **meta)
+>   {
+>   	struct b43legacy_dmadesc32 *desc;
+>
+> @@ -53,11 +52,11 @@ struct b43legacy_dmadesc_generic *op32_idx2desc(
+>   	desc = ring->descbase;
+>   	desc =&(desc[slot]);
+>
+> -	return (struct b43legacy_dmadesc_generic *)desc;
+> +	return (struct b43legacy_dmadesc32 *)desc;
+>   }
+>
+>   static void op32_fill_descriptor(struct b43legacy_dmaring *ring,
+> -				 struct b43legacy_dmadesc_generic *desc,
+> +				 struct b43legacy_dmadesc32 *desc,
+>   				 dma_addr_t dmaaddr, u16 bufsize,
+>   				 int start, int end, int irq)
+>   {
+> @@ -67,7 +66,7 @@ static void op32_fill_descriptor(struct b43legacy_dmaring *ring,
+>   	u32 addr;
+>   	u32 addrext;
+>
+> -	slot = (int)(&(desc->dma32) - descbase);
+> +	slot = (int)(desc - descbase);
+>   	B43legacy_WARN_ON(!(slot>= 0&&  slot<  ring->nr_slots));
+>
+>   	addr = (u32)(dmaaddr&  ~SSB_DMA_TRANSLATION_MASK);
+> @@ -87,8 +86,8 @@ static void op32_fill_descriptor(struct b43legacy_dmaring *ring,
+>   	ctl |= (addrext<<  B43legacy_DMA32_DCTL_ADDREXT_SHIFT)
+>   	&  B43legacy_DMA32_DCTL_ADDREXT_MASK;
+>
+> -	desc->dma32.control = cpu_to_le32(ctl);
+> -	desc->dma32.address = cpu_to_le32(addr);
+> +	desc->control = cpu_to_le32(ctl);
+> +	desc->address = cpu_to_le32(addr);
+>   }
+>
+>   static void op32_poke_tx(struct b43legacy_dmaring *ring, int slot)
+> @@ -128,121 +127,6 @@ static void op32_set_current_rxslot(struct b43legacy_dmaring *ring,
+>   			    (u32)(slot * sizeof(struct b43legacy_dmadesc32)));
+>   }
+>
+> -static const struct b43legacy_dma_ops dma32_ops = {
+> -	.idx2desc		= op32_idx2desc,
+> -	.fill_descriptor	= op32_fill_descriptor,
+> -	.poke_tx		= op32_poke_tx,
+> -	.tx_suspend		= op32_tx_suspend,
+> -	.tx_resume		= op32_tx_resume,
+> -	.get_current_rxslot	= op32_get_current_rxslot,
+> -	.set_current_rxslot	= op32_set_current_rxslot,
+> -};
+> -
+> -/* 64bit DMA ops. */
+> -static
+> -struct b43legacy_dmadesc_generic *op64_idx2desc(
+> -					struct b43legacy_dmaring *ring,
+> -					int slot,
+> -					struct b43legacy_dmadesc_meta
+> -					**meta)
+> -{
+> -	struct b43legacy_dmadesc64 *desc;
+> -
+> -	*meta =&(ring->meta[slot]);
+> -	desc = ring->descbase;
+> -	desc =&(desc[slot]);
+> -
+> -	return (struct b43legacy_dmadesc_generic *)desc;
+> -}
+> -
+> -static void op64_fill_descriptor(struct b43legacy_dmaring *ring,
+> -				 struct b43legacy_dmadesc_generic *desc,
+> -				 dma_addr_t dmaaddr, u16 bufsize,
+> -				 int start, int end, int irq)
+> -{
+> -	struct b43legacy_dmadesc64 *descbase = ring->descbase;
+> -	int slot;
+> -	u32 ctl0 = 0;
+> -	u32 ctl1 = 0;
+> -	u32 addrlo;
+> -	u32 addrhi;
+> -	u32 addrext;
+> -
+> -	slot = (int)(&(desc->dma64) - descbase);
+> -	B43legacy_WARN_ON(!(slot>= 0&&  slot<  ring->nr_slots));
+> -
+> -	addrlo = (u32)(dmaaddr&  0xFFFFFFFF);
+> -	addrhi = (((u64)dmaaddr>>  32)&  ~SSB_DMA_TRANSLATION_MASK);
+> -	addrext = (((u64)dmaaddr>>  32)&  SSB_DMA_TRANSLATION_MASK)
+> -		>>  SSB_DMA_TRANSLATION_SHIFT;
+> -	addrhi |= ring->dev->dma.translation;
+> -	if (slot == ring->nr_slots - 1)
+> -		ctl0 |= B43legacy_DMA64_DCTL0_DTABLEEND;
+> -	if (start)
+> -		ctl0 |= B43legacy_DMA64_DCTL0_FRAMESTART;
+> -	if (end)
+> -		ctl0 |= B43legacy_DMA64_DCTL0_FRAMEEND;
+> -	if (irq)
+> -		ctl0 |= B43legacy_DMA64_DCTL0_IRQ;
+> -	ctl1 |= (bufsize - ring->frameoffset)
+> -		&  B43legacy_DMA64_DCTL1_BYTECNT;
+> -	ctl1 |= (addrext<<  B43legacy_DMA64_DCTL1_ADDREXT_SHIFT)
+> -		&  B43legacy_DMA64_DCTL1_ADDREXT_MASK;
+> -
+> -	desc->dma64.control0 = cpu_to_le32(ctl0);
+> -	desc->dma64.control1 = cpu_to_le32(ctl1);
+> -	desc->dma64.address_low = cpu_to_le32(addrlo);
+> -	desc->dma64.address_high = cpu_to_le32(addrhi);
+> -}
+> -
+> -static void op64_poke_tx(struct b43legacy_dmaring *ring, int slot)
+> -{
+> -	b43legacy_dma_write(ring, B43legacy_DMA64_TXINDEX,
+> -			    (u32)(slot * sizeof(struct b43legacy_dmadesc64)));
+> -}
+> -
+> -static void op64_tx_suspend(struct b43legacy_dmaring *ring)
+> -{
+> -	b43legacy_dma_write(ring, B43legacy_DMA64_TXCTL,
+> -			    b43legacy_dma_read(ring, B43legacy_DMA64_TXCTL)
+> -			    | B43legacy_DMA64_TXSUSPEND);
+> -}
+> -
+> -static void op64_tx_resume(struct b43legacy_dmaring *ring)
+> -{
+> -	b43legacy_dma_write(ring, B43legacy_DMA64_TXCTL,
+> -			    b43legacy_dma_read(ring, B43legacy_DMA64_TXCTL)
+> -			&  ~B43legacy_DMA64_TXSUSPEND);
+> -}
+> -
+> -static int op64_get_current_rxslot(struct b43legacy_dmaring *ring)
+> -{
+> -	u32 val;
+> -
+> -	val = b43legacy_dma_read(ring, B43legacy_DMA64_RXSTATUS);
+> -	val&= B43legacy_DMA64_RXSTATDPTR;
+> -
+> -	return (val / sizeof(struct b43legacy_dmadesc64));
+> -}
+> -
+> -static void op64_set_current_rxslot(struct b43legacy_dmaring *ring,
+> -				    int slot)
+> -{
+> -	b43legacy_dma_write(ring, B43legacy_DMA64_RXINDEX,
+> -			    (u32)(slot * sizeof(struct b43legacy_dmadesc64)));
+> -}
+> -
+> -static const struct b43legacy_dma_ops dma64_ops = {
+> -	.idx2desc		= op64_idx2desc,
+> -	.fill_descriptor	= op64_fill_descriptor,
+> -	.poke_tx		= op64_poke_tx,
+> -	.tx_suspend		= op64_tx_suspend,
+> -	.tx_resume		= op64_tx_resume,
+> -	.get_current_rxslot	= op64_get_current_rxslot,
+> -	.set_current_rxslot	= op64_set_current_rxslot,
+> -};
+> -
+> -
+>   static inline int free_slots(struct b43legacy_dmaring *ring)
+>   {
+>   	return (ring->nr_slots - ring->used_slots);
+> @@ -358,14 +242,6 @@ return 0;
+>   static u16 b43legacy_dmacontroller_base(enum b43legacy_dmatype type,
+>   					int controller_idx)
+>   {
+> -	static const u16 map64[] = {
+> -		B43legacy_MMIO_DMA64_BASE0,
+> -		B43legacy_MMIO_DMA64_BASE1,
+> -		B43legacy_MMIO_DMA64_BASE2,
+> -		B43legacy_MMIO_DMA64_BASE3,
+> -		B43legacy_MMIO_DMA64_BASE4,
+> -		B43legacy_MMIO_DMA64_BASE5,
+> -	};
+>   	static const u16 map32[] = {
+>   		B43legacy_MMIO_DMA32_BASE0,
+>   		B43legacy_MMIO_DMA32_BASE1,
+> @@ -375,11 +251,6 @@ static u16 b43legacy_dmacontroller_base(enum b43legacy_dmatype type,
+>   		B43legacy_MMIO_DMA32_BASE5,
+>   	};
+>
+> -	if (type == B43legacy_DMA_64BIT) {
+> -		B43legacy_WARN_ON(!(controller_idx>= 0&&
+> -				  controller_idx<  ARRAY_SIZE(map64)));
+> -		return map64[controller_idx];
+> -	}
+>   	B43legacy_WARN_ON(!(controller_idx>= 0&&
+>   			controller_idx<  ARRAY_SIZE(map32)));
+>   	return map32[controller_idx];
+> @@ -491,25 +362,15 @@ static int b43legacy_dmacontroller_rx_reset(struct b43legacy_wldev *dev,
+>
+>   	might_sleep();
+>
+> -	offset = (type == B43legacy_DMA_64BIT) ?
+> -		 B43legacy_DMA64_RXCTL : B43legacy_DMA32_RXCTL;
+> +	offset = B43legacy_DMA32_RXCTL;
+>   	b43legacy_write32(dev, mmio_base + offset, 0);
+>   	for (i = 0; i<  10; i++) {
+> -		offset = (type == B43legacy_DMA_64BIT) ?
+> -			 B43legacy_DMA64_RXSTATUS : B43legacy_DMA32_RXSTATUS;
+> +		offset = B43legacy_DMA32_RXSTATUS;
+>   		value = b43legacy_read32(dev, mmio_base + offset);
+> -		if (type == B43legacy_DMA_64BIT) {
+> -			value&= B43legacy_DMA64_RXSTAT;
+> -			if (value == B43legacy_DMA64_RXSTAT_DISABLED) {
+> -				i = -1;
+> -				break;
+> -			}
+> -		} else {
+> -			value&= B43legacy_DMA32_RXSTATE;
+> -			if (value == B43legacy_DMA32_RXSTAT_DISABLED) {
+> -				i = -1;
+> -				break;
+> -			}
+> +		value&= B43legacy_DMA32_RXSTATE;
+
+I am surprised that checkpatch doesn't see the spacing around the &= as an error.
+
+> +		if (value == B43legacy_DMA32_RXSTAT_DISABLED) {
+> +			i = -1;
+> +			break;
+>   		}
+>   		msleep(1);
+>   	}
+> @@ -533,43 +394,24 @@ static int b43legacy_dmacontroller_tx_reset(struct b43legacy_wldev *dev,
+>   	might_sleep();
+>
+>   	for (i = 0; i<  10; i++) {
+> -		offset = (type == B43legacy_DMA_64BIT) ?
+> -			 B43legacy_DMA64_TXSTATUS : B43legacy_DMA32_TXSTATUS;
+> +		offset = B43legacy_DMA32_TXSTATUS;
+>   		value = b43legacy_read32(dev, mmio_base + offset);
+> -		if (type == B43legacy_DMA_64BIT) {
+> -			value&= B43legacy_DMA64_TXSTAT;
+> -			if (value == B43legacy_DMA64_TXSTAT_DISABLED ||
+> -			    value == B43legacy_DMA64_TXSTAT_IDLEWAIT ||
+> -			    value == B43legacy_DMA64_TXSTAT_STOPPED)
+> -				break;
+> -		} else {
+> -			value&= B43legacy_DMA32_TXSTATE;
+> -			if (value == B43legacy_DMA32_TXSTAT_DISABLED ||
+> -			    value == B43legacy_DMA32_TXSTAT_IDLEWAIT ||
+> -			    value == B43legacy_DMA32_TXSTAT_STOPPED)
+> -				break;
+> -		}
+> +		value&= B43legacy_DMA32_TXSTATE;
+
+Ditto.
+
+> +		if (value == B43legacy_DMA32_TXSTAT_DISABLED ||
+> +		    value == B43legacy_DMA32_TXSTAT_IDLEWAIT ||
+> +		    value == B43legacy_DMA32_TXSTAT_STOPPED)
+> +			break;
+>   		msleep(1);
+>   	}
+> -	offset = (type == B43legacy_DMA_64BIT) ? B43legacy_DMA64_TXCTL :
+> -						 B43legacy_DMA32_TXCTL;
+> +	offset = B43legacy_DMA32_TXCTL;
+>   	b43legacy_write32(dev, mmio_base + offset, 0);
+>   	for (i = 0; i<  10; i++) {
+> -		offset = (type == B43legacy_DMA_64BIT) ?
+> -			 B43legacy_DMA64_TXSTATUS : B43legacy_DMA32_TXSTATUS;
+> +		offset = B43legacy_DMA32_TXSTATUS;
+>   		value = b43legacy_read32(dev, mmio_base + offset);
+> -		if (type == B43legacy_DMA_64BIT) {
+> -			value&= B43legacy_DMA64_TXSTAT;
+> -			if (value == B43legacy_DMA64_TXSTAT_DISABLED) {
+> -				i = -1;
+> -				break;
+> -			}
+> -		} else {
+> -			value&= B43legacy_DMA32_TXSTATE;
+> -			if (value == B43legacy_DMA32_TXSTAT_DISABLED) {
+> -				i = -1;
+> -				break;
+> -			}
+> +		value&= B43legacy_DMA32_TXSTATE;
+
+Ditto.
