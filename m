@@ -1,117 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:44119 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751231Ab1GMU4g (ORCPT
+Received: from mail-ey0-f171.google.com ([209.85.215.171]:57311 "EHLO
+	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751192Ab1GZKSm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 16:56:36 -0400
-Received: by gwaa18 with SMTP id a18so2577691gwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2011 13:56:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1310209563-6405-7-git-send-email-hauke@hauke-m.de>
-References: <1310209563-6405-1-git-send-email-hauke@hauke-m.de> <1310209563-6405-7-git-send-email-hauke@hauke-m.de>
-From: Jonas Gorski <jonas.gorski@gmail.com>
-Date: Wed, 13 Jul 2011 22:56:16 +0200
-Message-ID: <CAOiHx==5TdoOw0rt-GhnRG_gKCaWpcBE=yhRAe5ufu01tp_SnQ@mail.gmail.com> (sfid-20110713_225640_432302_B6AB8E68)
-Subject: Re: [PATCH 06/11] bcma: add serial console support
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
-	zajec5@gmail.com, linux-mips@linux-mips.org, mb@bu3sch.de,
-	george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com
-Content-Type: text/plain; charset=UTF-8
+	Tue, 26 Jul 2011 06:18:42 -0400
+Received: by eye22 with SMTP id 22so398866eye.2
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 03:18:41 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH 1/2] mac80211: Stop TX BA session if buf_size is zero
+Date: Tue, 26 Jul 2011 12:18:27 +0200
+Message-Id: <1311675508-29005-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20110726_121846_239425_5ADF43A2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gOSBKdWx5IDIwMTEgMTM6MDUsIEhhdWtlIE1laHJ0ZW5zIDxoYXVrZUBoYXVrZS1tLmRlPiB3
-cm90ZToKPiBUaGlzIGFkZHMgc3VwcG9ydCBmb3Igc2VyaWFsIGNvbnNvbGUgdG8gYmNtYSwgd2hl
-biBvcGVyYXRpbmcgb24gYW4gU29DLgo+Cj4gU2lnbmVkLW9mZi1ieTogSGF1a2UgTWVocnRlbnMg
-PGhhdWtlQGhhdWtlLW0uZGU+Cj4gLS0tCj4gwqBkcml2ZXJzL2JjbWEvYmNtYV9wcml2YXRlLmgg
-wqAgwqAgwqAgwqAgwqAgfCDCoCDCoDYgKysrCj4gwqBkcml2ZXJzL2JjbWEvZHJpdmVyX2NoaXBj
-b21tb24uYyDCoCDCoCDCoHwgwqAgNjQgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-Cj4gwqBkcml2ZXJzL2JjbWEvZHJpdmVyX21pcHMuYyDCoCDCoCDCoCDCoCDCoCDCoHwgwqAgwqA5
-ICsrKysrCj4gwqBpbmNsdWRlL2xpbnV4L2JjbWEvYmNtYV9kcml2ZXJfbWlwcy5oIHwgwqAgMTEg
-KysrKysrCj4gwqA0IGZpbGVzIGNoYW5nZWQsIDkwIGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25z
-KC0pCj4KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9iY21hL2JjbWFfcHJpdmF0ZS5oIGIvZHJpdmVy
-cy9iY21hL2JjbWFfcHJpdmF0ZS5oCj4gaW5kZXggODMwMzg2Yy4uOTJlYzY3MSAxMDA2NDQKPiAt
-LS0gYS9kcml2ZXJzL2JjbWEvYmNtYV9wcml2YXRlLmgKPiArKysgYi9kcml2ZXJzL2JjbWEvYmNt
-YV9wcml2YXRlLmgKPiBAQCAtMjYsNiArMjYsMTIgQEAgaW50IF9faW5pdCBiY21hX2J1c19zY2Fu
-X2Vhcmx5KHN0cnVjdCBiY21hX2J1cyAqYnVzLAo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIHN0cnVjdCBiY21hX2RldmljZSAqY29yZSk7Cj4gwqB2b2lkIGJj
-bWFfaW5pdF9idXMoc3RydWN0IGJjbWFfYnVzICpidXMpOwo+Cj4gKy8qIGRyaXZlcl9jaGlwY29t
-bW9uLmMgKi8KPiArI2lmZGVmIENPTkZJR19CQ01BX0RSSVZFUl9NSVBTCj4gK2V4dGVybiBpbnQg
-YmNtYV9jaGlwY29fc2VyaWFsX2luaXQoc3RydWN0IGJjbWFfZHJ2X2NjICpjYywKPiArIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgc3RydWN0IGJjbWFf
-ZHJ2X21pcHNfc2VyaWFsX3BvcnQgKnBvcnRzKTsKPiArI2VuZGlmIC8qIENPTkZJR19CQ01BX0RS
-SVZFUl9NSVBTICovCj4gKwo+IMKgI2lmZGVmIENPTkZJR19CQ01BX0hPU1RfUENJCj4gwqAvKiBo
-b3N0X3BjaS5jICovCj4gwqBleHRlcm4gaW50IF9faW5pdCBiY21hX2hvc3RfcGNpX2luaXQodm9p
-ZCk7Cj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvYmNtYS9kcml2ZXJfY2hpcGNvbW1vbi5jIGIvZHJp
-dmVycy9iY21hL2RyaXZlcl9jaGlwY29tbW9uLmMKPiBpbmRleCA3MDMyMWM2Li44ODUzM2NhIDEw
-MDY0NAo+IC0tLSBhL2RyaXZlcnMvYmNtYS9kcml2ZXJfY2hpcGNvbW1vbi5jCj4gKysrIGIvZHJp
-dmVycy9iY21hL2RyaXZlcl9jaGlwY29tbW9uLmMKPiBAQCAtOTIsMyArOTIsNjcgQEAgdTMyIGJj
-bWFfY2hpcGNvX2dwaW9fcG9sYXJpdHkoc3RydWN0IGJjbWFfZHJ2X2NjICpjYywgdTMyIG1hc2ss
-IHUzMiB2YWx1ZSkKPiDCoHsKPiDCoCDCoCDCoCDCoHJldHVybiBiY21hX2NjX3dyaXRlMzJfbWFz
-a2VkKGNjLCBCQ01BX0NDX0dQSU9QT0wsIG1hc2ssIHZhbHVlKTsKPiDCoH0KPiArCj4gKyNpZmRl
-ZiBDT05GSUdfQkNNQV9EUklWRVJfTUlQUwo+ICtpbnQgYmNtYV9jaGlwY29fc2VyaWFsX2luaXQo
-c3RydWN0IGJjbWFfZHJ2X2NjICpjYywKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIHN0cnVjdCBiY21hX2Rydl9taXBzX3NlcmlhbF9wb3J0ICpwb3J0cykKPiArewo+
-ICsgwqAgwqAgwqAgaW50IG5yX3BvcnRzID0gMDsKPiArIMKgIMKgIMKgIHUzMiBwbGx0eXBlOwo+
-ICsgwqAgwqAgwqAgdW5zaWduZWQgaW50IGlycTsKPiArIMKgIMKgIMKgIHUzMiBiYXVkX2Jhc2Us
-IGRpdjsKPiArIMKgIMKgIMKgIHUzMiBpLCBuOwo+ICsgwqAgwqAgwqAgdW5zaWduZWQgaW50IGNj
-cmV2ID0gY2MtPmNvcmUtPmlkLnJldjsKPiArCj4gKyDCoCDCoCDCoCBwbGx0eXBlID0gKGNjLT5j
-YXBhYmlsaXRpZXMgJiBCQ01BX0NDX0NBUF9QTExUKTsKPiArIMKgIMKgIMKgIGlycSA9IGJjbWFf
-Y29yZV9taXBzX2lycShjYy0+Y29yZSk7Cj4gKwo+ICsgwqAgwqAgwqAgaWYgKChjY3JldiA+PSAx
-MSkgJiYgKGNjcmV2ICE9IDE1KSAmJiAoY2NyZXYgIT0gMjApKSB7Cj4gKyDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCAvKiBGaXhlZCBBTFAgY2xvY2sgKi8KPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGJh
-dWRfYmFzZSA9IDIwMDAwMDAwOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKGNjLT5jYXBh
-YmlsaXRpZXMgJiBCQ01BX0NDX0NBUF9QTVUpIHsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIC8qIEZJWE1FOiBiYXVkX2Jhc2UgaXMgZGlmZmVyZW50IGZvciBkZXZpY2VzIHdp
-dGggYSBQTVUgKi8KPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIFdBUk5fT04o
-MSk7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCB9Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBk
-aXYgPSAxOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKGNjcmV2ID49IDIxKSB7Cj4gKyDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAvKiBUdXJuIG9mZiBVQVJUIGNsb2NrIGJl
-Zm9yZSBzd2l0Y2hpbmcgY2xvY2tzb3VyY2UuICovCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCBiY21hX2NjX3dyaXRlMzIoY2MsIEJDTUFfQ0NfQ09SRUNUTCwKPiArIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgYmNtYV9j
-Y19yZWFkMzIoY2MsIEJDTUFfQ0NfQ09SRUNUTCkKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgJiB+QkNNQV9DQ19DT1JFQ1RMX1VBUlRD
-TEtFTik7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCB9Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCAvKiBTZXQgdGhlIG92ZXJyaWRlIGJpdCBzbyB3ZSBkb24ndCBkaXZpZGUgaXQgKi8KPiArIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIGJjbWFfY2Nfd3JpdGUzMihjYywgQkNNQV9DQ19DT1JFQ1RMLAo+
-ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBiY21hX2NjX3Jl
-YWQzMihjYywgQkNNQV9DQ19DT1JFQ1RMKQo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqB8IEJDTUFfQ0NfQ09SRUNUTF9VQVJUQ0xLMCk7Cj4gKyDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCBpZiAoY2NyZXYgPj0gMjEpIHsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIC8qIFJlLWVuYWJsZSB0aGUgVUFSVCBjbG9jay4gKi8KPiArIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGJjbWFfY2Nfd3JpdGUzMihjYywgQkNNQV9DQ19DT1JF
-Q1RMLAo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqBiY21hX2NjX3JlYWQzMihjYywgQkNNQV9DQ19DT1JFQ1RMKQo+ICsgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqB8IEJDTUFfQ0Nf
-Q09SRUNUTF9VQVJUQ0xLRU4pOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfQo+ICsgwqAgwqAg
-wqAgfSBlbHNlCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBwcl9lcnIoInNlcmlhbCBub3Qgc3Vw
-cG9ydGVkIG9uIHRoaXMgZGV2aWNlIGNjcmV2OiAweCV4XG4iLAo+ICsgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqBjY3Jldik7CgpEb2N1bWVudGF0aW9uL0NvZGluZ1N0eWxlIGFuZCBh
-Z2FpbiA7LSkKCj4gKwo+ICsgwqAgwqAgwqAgLyogRGV0ZXJtaW5lIHRoZSByZWdpc3RlcnMgb2Yg
-dGhlIFVBUlRzICovCj4gKyDCoCDCoCDCoCBuID0gKGNjLT5jYXBhYmlsaXRpZXMgJiBCQ01BX0ND
-X0NBUF9OUlVBUlQpOwo+ICsgwqAgwqAgwqAgZm9yIChpID0gMDsgaSA8IG47IGkrKykgewo+ICsg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgdm9pZCBfX2lvbWVtICpjY19tbWlvOwo+ICsgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgdm9pZCBfX2lvbWVtICp1YXJ0X3JlZ3M7Cj4gKwo+ICsgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgY2NfbW1pbyA9IGNjLT5jb3JlLT5idXMtPm1taW8gKwo+ICsgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgKGNjLT5jb3JlLT5jb3JlX2luZGV4ICogQkNNQV9DT1JF
-X1NJWkUpOwoKY2NfbW1pbyBpcyBjb25zdGFudCBmb3IgYWxsIHVhcnRzLCBzbyB5b3Ugc2hvdWxk
-IG1vdmUgaXQgb3V0IG9mIHRoZQpsb29wIGFuZCBjYWxjdWxhdGUgaXQgb25jZS4KCj4gKyDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCB1YXJ0X3JlZ3MgPSBjY19tbWlvICsgQkNNQV9DQ19VQVJUMF9EQVRB
-Owo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgdWFydF9yZWdzICs9IChpICogMjU2KTsKClNhbWUg
-Zm9yIHRoZSB1YXJ0X3JlZ3MgYmFzZS4gSWYgeW91IGRvbid0IG1vZGlmeSBpdCBhdCBhbGwgeW91
-IGNvdWxkCmRyb3AgdGhlIGNjX21taW8gdmFyaWFibGUgKHNpbmNlIHlvdSBvbmx5IG5lZWQgaXQg
-dG8gY2FsY3VsYXRlCnVhcnRfcmVncykgYW5kCgo+ICsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IG5yX3BvcnRzKys7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBwb3J0c1tpXS5yZWdzID0gdWFy
-dF9yZWdzOwoKdXNlIGhlcmUKIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHBvcnRzW2ldLnJlZ3MgPSB1
-YXJ0X3JlZ3MgKyAoaSAqIDI1Nik7CgpUaGlzIHdvdWxkIG1ha2UgdGhlIGNvZGUgYSBiaXQgY2xl
-YW5lciBJTUhPLgoKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHBvcnRzW2ldLmlycSA9IGlycTsK
-PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHBvcnRzW2ldLmJhdWRfYmFzZSA9IGJhdWRfYmFzZTsK
-PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHBvcnRzW2ldLnJlZ19zaGlmdCA9IDA7Cj4gKyDCoCDC
-oCDCoCB9Cj4gKwo+ICsgwqAgwqAgwqAgcmV0dXJuIG5yX3BvcnRzOwoKSXNuJ3QgbiBhbHdheXMg
-dGhlIHNhbWUgYXMgbnJfcG9ydHM/IEF0IGxlYXN0IEkgZG9uJ3Qgc2VlIGFueSBjYXNlCndoZXJl
-IGl0IGNvdWxkIGRpZmZlciwgc28geW91IHNob3VsZCBiZSBzYWZlIHdoZW4gZGlyZWN0bHkgdXNp
-bmcKbnJfcG9ydHMgaW5zdGVhZCBvZiBuLgo=
+If we receive an ADDBA response with status code 0 and a buf_size of 0
+we should stop the TX BA session as otherwise we'll end up queuing
+frames in ieee80211_tx_prep_agg forever instead of sending them out as
+non AMPDUs.
+
+This fixes a problem with AVM Fritz Stick N wireless devices where
+frames to this device are not transmitted anymore by mac80211.
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ net/mac80211/agg-tx.c |   18 +++++++-----------
+ 1 files changed, 7 insertions(+), 11 deletions(-)
+
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index c8be8ef..b7075f3 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -777,18 +777,14 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 	printk(KERN_DEBUG "switched off addBA timer for tid %d\n", tid);
+ #endif
+-
++	/*
++	 * IEEE 802.11-2007 7.3.1.14:
++	 * In an ADDBA Response frame, when the Status Code field
++	 * is set to 0, the Buffer Size subfield is set to a value
++	 * of at least 1.
++	 */
+ 	if (le16_to_cpu(mgmt->u.action.u.addba_resp.status)
+-			== WLAN_STATUS_SUCCESS) {
+-		/*
+-		 * IEEE 802.11-2007 7.3.1.14:
+-		 * In an ADDBA Response frame, when the Status Code field
+-		 * is set to 0, the Buffer Size subfield is set to a value
+-		 * of at least 1.
+-		 */
+-		if (!buf_size)
+-			goto out;
+-
++			== WLAN_STATUS_SUCCESS && buf_size) {
+ 		if (test_and_set_bit(HT_AGG_STATE_RESPONSE_RECEIVED,
+ 				     &tid_tx->state)) {
+ 			/* ignore duplicate response */
+-- 
+1.7.3.4
+
