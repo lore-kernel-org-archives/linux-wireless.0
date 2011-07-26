@@ -1,113 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f52.google.com ([209.85.212.52]:59798 "EHLO
-	mail-vw0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755287Ab1G1QSL convert rfc822-to-8bit (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:35890 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752506Ab1GZXTc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2011 12:18:11 -0400
-Received: by vws16 with SMTP id 16so3095062vws.11
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2011 09:18:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201107232235.16710.chunkeey@googlemail.com>
-References: <CAJ8GFOiTwtS7Ddjo8GR3uJMFtkBY+cFuNo3d4mX_4EwOLN9PxQ@mail.gmail.com>
-	<201107151622.43671.chunkeey@googlemail.com>
-	<CAJ8GFOiQfMvZAHh4ahCx5_ovqh4_83+a3QADVuNVRohaKyAR6A@mail.gmail.com>
-	<201107232235.16710.chunkeey@googlemail.com>
-Date: Thu, 28 Jul 2011 11:18:09 -0500
-Message-ID: <CAJ8GFOg4FL2vkF5q2Hc1GZyTk0+cfX4nnEOovFcvXiL0nZLO_w@mail.gmail.com> (sfid-20110728_181816_526644_D8FDE5A9)
-Subject: Re: carl9170: Beacons at lower Tx power than data frames?
-From: Harshal Chhaya <harshal@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, Sujith <m.sujith@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 26 Jul 2011 19:19:32 -0400
+Received: by gwaa18 with SMTP id a18so679772gwa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 16:19:32 -0700 (PDT)
+From: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
+To: jouni@qca.qualcomm.com
+Cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
+Subject: [PATCH v5 1/4] hostapd: split up channel checking into helpers
+Date: Tue, 26 Jul 2011 16:19:19 -0700
+Message-Id: <1311722362-4070-2-git-send-email-lrodriguez@qca.qualcomm.com> (sfid-20110727_011937_023398_690C205B)
+In-Reply-To: <1311722362-4070-1-git-send-email-lrodriguez@qca.qualcomm.com>
+References: <1311722362-4070-1-git-send-email-lrodriguez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 23, 2011 at 3:35 PM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> On Saturday 23 July 2011 21:22:35 Harshal Chhaya wrote:
->> On Fri, Jul 15, 2011 at 9:22 AM, Christian Lamparter
->> <chunkeey@googlemail.com> wrote:
->> > On Thursday 14 July 2011 21:37:29 Harshal Chhaya wrote:
->> >> I am working on an AP design that uses a TI-OMAP3 host processor with
->> >> an Atheros AR9170 + AR9101 WLAN chipset. We are currently using
->> >> carl9170 version 1.9.2 and carl9170 firmware version 1.9.4.
->> > One question: have you considered ath9k_htc? I would certainly recommend
->> > it over any ar9170 device.
->>
->> I was under the impression that AP mode support is better in carl9170
->> than in ath9k_htc. I had considered using AR9271 (which is a more
->> recent chipset than the AR9170) but decided against it based on my
->> understanding (which is based on the info on the wiki pages).
-> Interesting... Sujith, can you please take a look at the wiki if ath9k_htc's AP/P2P
-> infos are still up to date?
+This splits up the channel checking upon initialization
+into a few helpers. This should make this a bit easier
+to follow. This also paves the way for some initial
+ACS entry code.
 
-Sujith, Christian,
+Signed-off-by: Luis R. Rodriguez <lrodriguez@qca.qualcomm.com>
+---
+ src/ap/hostapd.h     |    6 ++
+ src/ap/hw_features.c |  148 +++++++++++++++++++++++++++-----------------------
+ 2 files changed, 86 insertions(+), 68 deletions(-)
 
-On the wiki page for carl9170, the first item in the "not working yet" list is:
-* Power Save Mode, It's implemented but buggy
+diff --git a/src/ap/hostapd.h b/src/ap/hostapd.h
+index 8d12d8b..7436823 100644
+--- a/src/ap/hostapd.h
++++ b/src/ap/hostapd.h
+@@ -30,6 +30,12 @@ struct full_dynamic_vlan;
+ enum wps_event;
+ union wps_event_data;
+ 
++enum hostapd_chan_status {
++	HOSTAPD_CHAN_VALID = 0, /* channel is ready */
++	HOSTAPD_CHAN_INVALID = 1, /* no usable channel found */
++	HOSTAPD_CHAN_ACS = 2, /* ACS work being performed */
++};
++
+ struct hostapd_probereq_cb {
+ 	int (*cb)(void *ctx, const u8 *sa, const u8 *da, const u8 *bssid,
+ 		  const u8 *ie, size_t ie_len);
+diff --git a/src/ap/hw_features.c b/src/ap/hw_features.c
+index 86f6811..887744b 100644
+--- a/src/ap/hw_features.c
++++ b/src/ap/hw_features.c
+@@ -599,6 +599,77 @@ int hostapd_check_ht_capab(struct hostapd_iface *iface)
+ 	return 0;
+ }
+ 
++static int hostapd_is_usable_chan(struct hostapd_iface *iface,
++				  int channel,
++				  int primary)
++{
++	unsigned int i;
++	struct hostapd_channel_data *chan;
++
++	for (i = 0; i < iface->current_mode->num_channels; i++) {
++		chan = &iface->current_mode->channels[i];
++		if (chan->chan == channel) {
++			if (chan->flag & HOSTAPD_CHAN_DISABLED) {
++				wpa_printf(MSG_ERROR,
++					   "%schannel [%i] (%i) is disabled for "
++					   "use in AP mode, flags: 0x%x",
++					   primary ? "" : "Configured HT40 secondary ",
++					   i, chan->chan, chan->flag);
++			} else {
++				return 1;
++			}
++		}
++	}
++
++	return 0;
++}
++
++static int hostapd_is_usable_chans(struct hostapd_iface *iface)
++{
++	if (!hostapd_is_usable_chan(iface, iface->conf->channel, 1))
++		return 0;
++
++	if (!iface->conf->secondary_channel)
++		return 1;
++
++	if (!hostapd_is_usable_chan(iface, iface->conf->secondary_channel, 0))
++		return 0;
++
++	return 1;
++}
++
++static enum hostapd_chan_status hostapd_check_chans(struct hostapd_iface *iface)
++{
++	if (iface->conf->channel) {
++		if (hostapd_is_usable_chans(iface))
++			return HOSTAPD_CHAN_VALID;
++		else
++			return HOSTAPD_CHAN_INVALID;
++	}
++
++	/*
++	 * The user set channel=0 which is used to trigger ACS,
++	 * which we do not yet support.
++	 */
++	return HOSTAPD_CHAN_INVALID;
++}
++
++static void hostapd_notify_bad_chans(struct hostapd_iface *iface)
++{
++	iface->current_mode = NULL;
++
++	hostapd_logger(iface->bss[0], NULL,
++		       HOSTAPD_MODULE_IEEE80211,
++		       HOSTAPD_LEVEL_WARNING,
++		       "Configured channel (%d) not found from the "
++		       "channel list of current mode (%d) %s",
++		       iface->conf->channel,
++		       iface->current_mode->mode,
++		       hostapd_hw_mode_txt(iface->current_mode->mode));
++	hostapd_logger(iface->bss[0], NULL, HOSTAPD_MODULE_IEEE80211,
++		       HOSTAPD_LEVEL_WARNING,
++		       "Hardware does not support configured channel");
++}
+ 
+ /**
+  * hostapd_select_hw_mode - Select the hardware mode
+@@ -610,7 +681,7 @@ int hostapd_check_ht_capab(struct hostapd_iface *iface)
+  */
+ int hostapd_select_hw_mode(struct hostapd_iface *iface)
+ {
+-	int i, j, ok;
++	int i;
+ 
+ 	if (iface->num_hw_features < 1)
+ 		return -1;
+@@ -634,75 +705,16 @@ int hostapd_select_hw_mode(struct hostapd_iface *iface)
+ 		return -2;
+ 	}
+ 
+-	ok = 0;
+-	for (j = 0; j < iface->current_mode->num_channels; j++) {
+-		struct hostapd_channel_data *chan =
+-			&iface->current_mode->channels[j];
+-		if (chan->chan == iface->conf->channel) {
+-			if (chan->flag & HOSTAPD_CHAN_DISABLED) {
+-				wpa_printf(MSG_ERROR,
+-					   "channel [%i] (%i) is disabled for "
+-					   "use in AP mode, flags: 0x%x",
+-					   j, chan->chan, chan->flag);
+-			} else {
+-				ok = 1;
+-				break;
+-			}
+-		}
+-	}
+-	if (ok && iface->conf->secondary_channel) {
+-		int sec_ok = 0;
+-		int sec_chan = iface->conf->channel +
+-			iface->conf->secondary_channel * 4;
+-		for (j = 0; j < iface->current_mode->num_channels; j++) {
+-			struct hostapd_channel_data *chan =
+-				&iface->current_mode->channels[j];
+-			if (!(chan->flag & HOSTAPD_CHAN_DISABLED) &&
+-			    (chan->chan == sec_chan)) {
+-				sec_ok = 1;
+-				break;
+-			}
+-		}
+-		if (!sec_ok) {
+-			hostapd_logger(iface->bss[0], NULL,
+-				       HOSTAPD_MODULE_IEEE80211,
+-				       HOSTAPD_LEVEL_WARNING,
+-				       "Configured HT40 secondary channel "
+-				       "(%d) not found from the channel list "
+-				       "of current mode (%d) %s",
+-				       sec_chan, iface->current_mode->mode,
+-				       hostapd_hw_mode_txt(
+-					       iface->current_mode->mode));
+-			ok = 0;
+-		}
+-	}
+-	if (iface->conf->channel == 0) {
+-		/* TODO: could request a scan of neighboring BSSes and select
+-		 * the channel automatically */
+-		wpa_printf(MSG_ERROR, "Channel not configured "
+-			   "(hw_mode/channel in hostapd.conf)");
+-		return -3;
+-	}
+-	if (ok == 0 && iface->conf->channel != 0) {
+-		hostapd_logger(iface->bss[0], NULL,
+-			       HOSTAPD_MODULE_IEEE80211,
+-			       HOSTAPD_LEVEL_WARNING,
+-			       "Configured channel (%d) not found from the "
+-			       "channel list of current mode (%d) %s",
+-			       iface->conf->channel,
+-			       iface->current_mode->mode,
+-			       hostapd_hw_mode_txt(iface->current_mode->mode));
+-		iface->current_mode = NULL;
+-	}
+-
+-	if (iface->current_mode == NULL) {
+-		hostapd_logger(iface->bss[0], NULL, HOSTAPD_MODULE_IEEE80211,
+-			       HOSTAPD_LEVEL_WARNING,
+-			       "Hardware does not support configured channel");
++	switch (hostapd_check_chans(iface)) {
++	case HOSTAPD_CHAN_VALID:
++		return 0;
++	case HOSTAPD_CHAN_ACS: /* ACS not supported yet */
++	case HOSTAPD_CHAN_INVALID:
++	default:
++		hostapd_notify_bad_chans(iface);
+ 		return -4;
++		return HOSTAPD_CHAN_INVALID;
+ 	}
+-
+-	return 0;
+ }
+ 
+ 
+-- 
+1.7.4.15.g7811d
 
-Is this still the case?
-
-I am seeing clients disconnect after a few seconds when I enable power
-saving on the clients. I can send more details if needed.
-
-
->> If AR9271 (and ath9k_htc) are more stable and preferable to the AR9170
->> w/ carl9170, please let me know.
-> AR9271 recevied a lot more testing, so it's ought to perform better.
->
->> Also, to clarify: my application is a wireless network that needs to
->> support 60-70 802.11g clients connecting to the AP using WPA2-PEAP.
->> All of the clients are battery powered and use the power save
->> mechanisms of 802.11.
-> 60-70 clients is a lot. This would rule out ath9k_htc since the firmwares
-> only supports 7/8 stations at a time and I think that's a reasonable limit
-> for any wireless network. Also, with so many stations the hardware crypto
-> will not have enough space to store all station keys and has to switch to
-> software de- and encryption.
->
->> Do you see any issues using AR9170 and carl9170 in this scenario?
-> Sorry, but I've no data about this scenario. However some time ago
-> Ben <greearb@candelatech.com> played around 128 stations on a ath9k
-> network. But I don't know if he tested any USB solutions at that time.
->
->> Also, I am running openWRT on an TI-OMAP3 processor @ 600 MHz.
-> Any word about the USB hcd? Does it support sending unaligned data dma,
-> or is it necessary to align all buffer addresses to a 4-byte boundary?
->
->> [...]
->> Here is what I have tried so far:
->>
->> 30 802.11g clients
->>
->> open mode + power save - no problems, can send data to all 30 for hrs
->> wpa2 + disable power save - no problems, can send data to all 30 for hrs
->> wpa2 + enable power save - clients connect but then randomly
->> disconnect every few seconds.
-> Is this with or without the hardware crypto enabled? Usually it's enabled by
-> default. But in your case I would give it a try to go without one. Just load
-> the module with:
->
-> nohwcrypt=1
->
-> this will help to rule out any hw limitations in this regard.
-
-Thanks for this suggestion. With h/w crypto enabled, I was limited to
-32 clients. With 'nohwcrypt=1', I can connect up to 50 clients
-(haven't tried more).
-
-However - I am curious about the limit of 32. The chip itself supports
-keys for up to 64 users (i.e. a total of 128 keys). I didn't see any
-obvious pieces of the carl9170 code that limited this number to 32.
-
-I first thought that the 'u64 usedkeys;' field in the ar9170 struct
-(carl9170.h) limited me to 32 users (each user took up two bits - one
-for tx, one for rx). But that doesn't seem to be the case.
-Any ideas why I couldn't go beyond 32 when I used h/w encryption?
-
-Thanks,
-- Harshal
-
-
-> Regards,
->        Chr
