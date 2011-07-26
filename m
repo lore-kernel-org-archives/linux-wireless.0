@@ -1,56 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49515 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751919Ab1GWSBU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jul 2011 14:01:20 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 03/11] iwlagn: Remove ht40 support from 5.2GHz for _bgn devices
-Date: Sat, 23 Jul 2011 10:24:42 -0700
-Message-Id: <1311441890-19959-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110723_200136_060746_A4691918)
-In-Reply-To: <1311441890-19959-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1311441890-19959-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:55127 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753986Ab1GZPkZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jul 2011 11:40:25 -0400
+Received: by ewy4 with SMTP id 4so519126ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 08:40:24 -0700 (PDT)
+Subject: [RFC v4 1/4] nl80211: Parse channel type attribute in an IBSS join
+ request
+From: Alexander Simon <alexander.simon@saxnet.de>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 26 Jul 2011 17:40:19 +0200
+Message-ID: <1311694819.2974.3.camel@alex-2> (sfid-20110726_174043_123552_E8DA47D6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For _bgn device, remove ht40 support for 5.2GHz, it is probably ok since
-the "band" is not support but just feel strange.
+Check if the requested HT mode can be used.
+Extend cfg80211 IBSS struct for HT mode.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Alexander Simon <alexander.simon@saxnet.de>
 ---
- drivers/net/wireless/iwlwifi/iwl-1000.c |    3 +--
- drivers/net/wireless/iwlwifi/iwl-2000.c |    3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
+ include/net/cfg80211.h |    1 +
+ net/wireless/chan.c    |    2 +-
+ net/wireless/core.h    |    3 +++
+ net/wireless/nl80211.c |   34 +++++++++++++++++++++++++++++++---
+ 4 files changed, 36 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index d502004..97b9c74 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -135,8 +135,7 @@ static int iwl1000_hw_set_hw_params(struct iwl_priv *priv)
- 	priv->hw_params.max_data_size = IWLAGN_RTC_DATA_SIZE;
- 	priv->hw_params.max_inst_size = IWLAGN_RTC_INST_SIZE;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index d17f47f..738db17 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1040,6 +1040,7 @@ struct cfg80211_ibss_params {
+ 	u8 *ssid;
+ 	u8 *bssid;
+ 	struct ieee80211_channel *channel;
++	enum nl80211_channel_type channel_type;
+ 	u8 *ie;
+ 	u8 ssid_len, ie_len;
+ 	u16 beacon_interval;
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 17cd0c0..cd630e1 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -44,7 +44,7 @@ rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
+ 	return chan;
+ }
  
--	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
--					BIT(IEEE80211_BAND_5GHZ);
-+	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ);
+-static bool can_beacon_sec_chan(struct wiphy *wiphy,
++bool can_beacon_sec_chan(struct wiphy *wiphy,
+ 				struct ieee80211_channel *chan,
+ 				enum nl80211_channel_type channel_type)
+ {
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 8672e02..a7d8e59 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -441,6 +441,9 @@ cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
+ struct ieee80211_channel *
+ rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
+ 		  int freq, enum nl80211_channel_type channel_type);
++bool can_beacon_sec_chan(struct wiphy *wiphy,
++				struct ieee80211_channel *chan,
++				enum nl80211_channel_type channel_type);
+ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
+ 		      struct wireless_dev *wdev, int freq,
+ 		      enum nl80211_channel_type channel_type);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 28d2aa1..7f3f46c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4346,12 +4346,40 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 		ibss.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
+ 	}
  
- 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
- 	if (priv->cfg->rx_with_siso_diversity)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index 0e13f0b..d557ef3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -130,8 +130,7 @@ static int iwl2000_hw_set_hw_params(struct iwl_priv *priv)
- 	priv->hw_params.max_data_size = IWL60_RTC_DATA_SIZE;
- 	priv->hw_params.max_inst_size = IWL60_RTC_INST_SIZE;
+-	ibss.channel = ieee80211_get_channel(wiphy,
+-		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]));
++	if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]) {
++		enum nl80211_channel_type channel_type;
++
++		channel_type = nla_get_u32(
++			info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
++		if (channel_type != NL80211_CHAN_NO_HT &&
++		    channel_type != NL80211_CHAN_HT20 &&
++		    channel_type != NL80211_CHAN_HT40PLUS &&
++		    channel_type != NL80211_CHAN_HT40MINUS)
++			return -EINVAL;
++		ibss.channel_type = channel_type;
++	} else {
++		ibss.channel_type = NL80211_CHAN_NO_HT;
++	}
++
++	ibss.channel = rdev_freq_to_chan(rdev,
++		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]),
++		ibss.channel_type);
+ 	if (!ibss.channel ||
++	    ibss.channel->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
+ 	    ibss.channel->flags & IEEE80211_CHAN_NO_IBSS ||
+-	    ibss.channel->flags & IEEE80211_CHAN_DISABLED)
++	    ibss.channel->flags & IEEE80211_CHAN_RADAR)
++		return -EINVAL;
++
++	/* Both channels should be able to initiate communication */
++	if ((ibss.channel_type == NL80211_CHAN_HT40PLUS ||
++	     ibss.channel_type == NL80211_CHAN_HT40MINUS) &&
++	    !can_beacon_sec_chan(&rdev->wiphy, ibss.channel,
++				 ibss.channel_type)) {
++		printk(KERN_DEBUG
++		       "cfg80211: Secondary channel not "
++		       "allowed to initiate communication\n");
+ 		return -EINVAL;
++	}
  
--	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
--					BIT(IEEE80211_BAND_5GHZ);
-+	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ);
- 
- 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
- 	if (priv->cfg->rx_with_siso_diversity)
+ 	ibss.channel_fixed = !!info->attrs[NL80211_ATTR_FREQ_FIXED];
+ 	ibss.privacy = !!info->attrs[NL80211_ATTR_PRIVACY];
 -- 
-1.7.0.4
+1.7.3.4
+
 
