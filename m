@@ -1,66 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:63916 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751358Ab1G2RWo (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:33539 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750750Ab1GZEjU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 13:22:44 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 19so2464952fxh.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jul 2011 10:22:43 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH 2/2] mac80211: Always send EAPOL frames at lowest rate
-Date: Fri, 29 Jul 2011 19:22:17 +0200
-Message-Id: <1311960137-25420-2-git-send-email-helmut.schaa@googlemail.com> (sfid-20110729_192247_438591_192FA4BB)
-In-Reply-To: <1311960137-25420-1-git-send-email-helmut.schaa@googlemail.com>
-References: <1311960137-25420-1-git-send-email-helmut.schaa@googlemail.com>
+	Tue, 26 Jul 2011 00:39:20 -0400
+Message-ID: <4E2E44F1.7040405@candelatech.com> (sfid-20110726_063930_219878_9F96AC0B)
+Date: Mon, 25 Jul 2011 21:39:13 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Eliad Peller <eliad@wizery.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 2/2] mac80211: config hw when going back on-channel
+References: <1311607763-12603-1-git-send-email-eliad@wizery.com>	<1311607763-12603-3-git-send-email-eliad@wizery.com>	<4E2DA564.5070305@candelatech.com>	<CAB3XZEcu68SZ0-cAt5-ZAvmp31mafcx856p26BRRcNOSs3Lt1A@mail.gmail.com>	<4E2DCA73.3050103@candelatech.com> <CAB3XZEdR+oT1AFW6qN88or9XG5DFazN_BgJREC77MnroEkHBcQ@mail.gmail.com>
+In-Reply-To: <CAB3XZEdR+oT1AFW6qN88or9XG5DFazN_BgJREC77MnroEkHBcQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since EAPOL frames are normal data frames they are treated by the rate
-control algorithm as such. Thus it can happen that the rate control
-algorithm chooses an inappropriate rate (minstrel_ht uses MCS rates for
-example) for the 4-way handshake and under low signal conditions the
-handshake may time out.
+On 07/25/2011 01:07 PM, Eliad Peller wrote:
+> On Mon, Jul 25, 2011 at 10:56 PM, Ben Greear<greearb@candelatech.com>  wrote:
+>> On 07/25/2011 12:16 PM, Eliad Peller wrote:
+>>>
+>>> hi Ben,
+>>>
+>>> On Mon, Jul 25, 2011 at 8:18 PM, Ben Greear<greearb@candelatech.com>
+>>>   wrote:
+>>>>
+>>>> On 07/25/2011 08:29 AM, Eliad Peller wrote:
+>>>>>
+>>>>> The hw is currently not configured when going
+>>>>> back on-channel.
+>>>>
+>>>> I am less sure about this patch.  With the existing code,
+>>>> I think it should catch going from on channel to off
+>>>> and do the hw config properly.
+>>>>
+>>> IIUC, this code is responsible for going back on-channel (if there is
+>>> no started work on the tmp_channel).
+>>>
+>>>> With your change it will also reconfig the hardware, but it will
+>>>> reconfig even if we were already on-channel (if, for instance,
+>>>> local->tmp_channel is oper-channel), right?
+>>>>
+>>>> Can you please explain in more detail how this code is
+>>>> broken?
+>>>>
+>>> we should reconfigure the hardware iff the hardware is not configured
+>>> to the operational channel.
+>>> the current code doesn't handle it (e.g. oper_channel=1,
+>>> tmp_channel=11, hw_channel=11. since
+>>> ieee80211_cfg_on_oper_channel(local) == 0, the hw won't go back
+>>> on-channel).
+>>
+>> If we are off-channel when entering that block of code, then tmp_channel
+>> != NULL, and on_oper_chan will be false.
+>>
+> right.
+>
+>> Then, we set tmp_channel to NULL, which should make
+>> ieee80211_cfg_on_oper_channel
+>> true.
+>>
+> tmp_channel is NULL, but ieee80211_cfg_on_oper_channel() also checks for:
+>
+> 	/* Check current hardware-config against oper_channel. */
+> 	if ((local->oper_channel != local->hw.conf.channel) ||
+> 	    (local->_oper_channel_type != local->hw.conf.channel_type))
+> 		return false;
+>
+>
+> so it will return false, and hw_config won't happen.
 
-To fix this issue always treat EAPOL frames the same as management
-frames and send them with the lowest available rate.
+Ahh, ok, I see your point.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- net/mac80211/rate.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletions(-)
+Your fix should be more correct than the current code, but
+I think it might still could cause hardware config when not needed.
+That isn't really a bug, just less efficient.  And, I'd have to
+look at the code in detail to be certain.  I'm trying to be on
+vacation this week, but will poke at it when I get a chance.
 
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 3d5a2cb..c307b7b 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -199,6 +199,13 @@ static void rate_control_release(struct kref *kref)
- 	kfree(ctrl_ref);
- }
- 
-+static bool rc_is_port_control(struct ieee80211_sta *pubsta,
-+			       struct ieee80211_tx_rate_control *txrc)
-+{
-+	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
-+	return sta->sdata->control_port_protocol == txrc->skb->protocol;
-+}
-+
- static bool rc_no_data_or_no_ack(struct ieee80211_tx_rate_control *txrc)
- {
- 	struct sk_buff *skb = txrc->skb;
-@@ -241,7 +248,8 @@ bool rate_control_send_low(struct ieee80211_sta *sta,
- 	struct ieee80211_supported_band *sband = txrc->sband;
- 	int mcast_rate;
- 
--	if (!sta || !priv_sta || rc_no_data_or_no_ack(txrc)) {
-+	if (!sta || !priv_sta || rc_no_data_or_no_ack(txrc) ||
-+	    rc_is_port_control(sta, txrc)) {
- 		info->control.rates[0].idx = rate_lowest_index(txrc->sband, sta);
- 		info->control.rates[0].count =
- 			(info->flags & IEEE80211_TX_CTL_NO_ACK) ?
+In the meantime, your patch is probably worth applying, and
+should probably go to stable.  Hopefully Johannes can review
+it as well, as I obviously didn't get it all right the first time!
+
+Thanks,
+Ben
+
+
 -- 
-1.7.3.4
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
