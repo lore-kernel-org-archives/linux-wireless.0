@@ -1,102 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49446 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751112Ab1GXEeS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jul 2011 00:34:18 -0400
-Message-ID: <4E2BA0C5.9030905@candelatech.com> (sfid-20110724_063435_762185_586809E8)
-Date: Sat, 23 Jul 2011 21:34:13 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Harshal Chhaya <harshal@gmail.com>
-CC: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, Sujith <m.sujith@gmail.com>
-Subject: Re: carl9170: Beacons at lower Tx power than data frames?
-References: <CAJ8GFOiTwtS7Ddjo8GR3uJMFtkBY+cFuNo3d4mX_4EwOLN9PxQ@mail.gmail.com>	<201107151622.43671.chunkeey@googlemail.com>	<CAJ8GFOiQfMvZAHh4ahCx5_ovqh4_83+a3QADVuNVRohaKyAR6A@mail.gmail.com>	<201107232235.16710.chunkeey@googlemail.com> <CAJ8GFOiJfJyziNjM60CLmzftD+UczMk72nn8hNoVpBxUoSyrBA@mail.gmail.com>
-In-Reply-To: <CAJ8GFOiJfJyziNjM60CLmzftD+UczMk72nn8hNoVpBxUoSyrBA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail.perches.com ([173.55.12.10]:4294 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753532Ab1GZQeE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jul 2011 12:34:04 -0400
+Subject: Re: [PATCH 13/29] staging: brcm80211: revisited END_FOREACH_BSS
+ macro
+From: Joe Perches <joe@perches.com>
+To: Dan Carpenter <error27@gmail.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	devel@linuxdriverproject.org, gregkh@suse.de,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20110726082658.GD3824@shale.localdomain>
+References: <1311361036-3175-1-git-send-email-arend@broadcom.com>
+	 <1311361036-3175-14-git-send-email-arend@broadcom.com>
+	 <20110726082658.GD3824@shale.localdomain>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 26 Jul 2011 09:34:01 -0700
+Message-ID: <1311698041.15386.5.camel@Joe-Laptop> (sfid-20110726_183409_146007_80C9E1B9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/23/2011 02:18 PM, Harshal Chhaya wrote:
-> On Sat, Jul 23, 2011 at 3:35 PM, Christian Lamparter
-> <chunkeey@googlemail.com>  wrote:
->> On Saturday 23 July 2011 21:22:35 Harshal Chhaya wrote:
->>> On Fri, Jul 15, 2011 at 9:22 AM, Christian Lamparter
->>> <chunkeey@googlemail.com>  wrote:
->>>> On Thursday 14 July 2011 21:37:29 Harshal Chhaya wrote:
->>>>> I am working on an AP design that uses a TI-OMAP3 host processor with
->>>>> an Atheros AR9170 + AR9101 WLAN chipset. We are currently using
->>>>> carl9170 version 1.9.2 and carl9170 firmware version 1.9.4.
->>>> One question: have you considered ath9k_htc? I would certainly recommend
->>>> it over any ar9170 device.
->>>
->>> I was under the impression that AP mode support is better in carl9170
->>> than in ath9k_htc. I had considered using AR9271 (which is a more
->>> recent chipset than the AR9170) but decided against it based on my
->>> understanding (which is based on the info on the wiki pages).
->> Interesting... Sujith, can you please take a look at the wiki if ath9k_htc's AP/P2P
->> infos are still up to date?
->
-> Thanks for following up on this. I am really interested to know if I
-> should switch to using the AR9271 (or some other similar chipset).
->
->>
->>> If AR9271 (and ath9k_htc) are more stable and preferable to the AR9170
->>> w/ carl9170, please let me know.
->> AR9271 recevied a lot more testing, so it's ought to perform better.
->>
->>> Also, to clarify: my application is a wireless network that needs to
->>> support 60-70 802.11g clients connecting to the AP using WPA2-PEAP.
->>> All of the clients are battery powered and use the power save
->>> mechanisms of 802.11.
->> 60-70 clients is a lot. This would rule out ath9k_htc since the firmwares
->> only supports 7/8 stations at a time and I think that's a reasonable limit
->> for any wireless network. Also, with so many stations the hardware crypto
->> will not have enough space to store all station keys and has to switch to
->> software de- and encryption.
->>
->>> Do you see any issues using AR9170 and carl9170 in this scenario?
->> Sorry, but I've no data about this scenario. However some time ago
->> Ben<greearb@candelatech.com>  played around 128 stations on a ath9k
->> network. But I don't know if he tested any USB solutions at that time.
->
-> I agree - ~8 clients is a reasonable number for most wireless
-> networks. However, I have a specific application where I need to
-> support 60-70 clients on a single AP. I will check with Ben on his
-> experience. Thanks for his contact info.
+On Tue, 2011-07-26 at 11:26 +0300, Dan Carpenter wrote: 
+> On Fri, Jul 22, 2011 at 08:57:00PM +0200, Arend van Spriel wrote:
+> > @@ -3345,7 +3345,7 @@ void brcms_c_init(struct brcms_c_info *wlc)
+> >  	FOREACH_BSS(wlc, i, bsscfg)
+> >  		brcms_c_set_mac(bsscfg);
+> >  		brcms_c_set_bssid(bsscfg);
+> > -	END_FOREACH_BSS
+> > +	END_FOREACH_BSS()
+> These would look nicer with a semicolon on the end.
+> 	END_FOREACH_BSS();
+> That looks like c.
+> I quite liked my way with the extra { } chars.
+> 	FOREACH_BSS(wlc, i, bsscfg) {
+> 		brcms_c_set_mac(bsscfg);
+> 		brcms_c_set_bssid(bsscfg);
+> 	} END_FOREACH_BSS();
+> Emacs gets the indenting wrong without the braces.  We use that
+> style of for each loop in the Sparse project.
 
-We haven't used USB, but we can reliably support 128 stations,
-using WPA on AR9380 and the older mini-pci chipsets.  We have hacks
-to make wpa_supplicant be much more efficient when using lots
-of virtual stations on one machine, but no significant changes
-to AP mode.
+I too think it's better with braces and it's not
+just emacs.  Anything that looks at indentation gets
+this wrong without the braces.
 
-Also, we are associating 128 virtual stations from a single or
-small number of radios.  You may get different behaviour if you
-are using 128 real radios.
+> But I'm fairly sick of this macro so at this point, I'm fine with
+> whatever.  :P
 
-You can find our hostap repository here:
-https://github.com/greearb/hostap-ct
+I'm with Dan, but I'm not sick like he is...
 
-We are trying to get our changes pushed upstream, but it's a slow
-process...
-
-The 'can-scan-one' logic requires hacks to the kernel as well, in case
-you want to use it.  Our kernel patches are here:
-http://dmz2.candelatech.com/git/?p=linux-3.0.dev.y/.git;a=summary
-
-I don't think any of our current kernel wireless patches have a chance at upstream
-acceptance, but they are fairly minimal, so the stock 3.0 kernel might
-be fine for you.
-
-Our hardware is dual-core Atom systems or better, 1GB+ RAM, etc.  These are fairly powerful,
-and we disable power saving by default.  We use software encryption to allow
-virtualization.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
