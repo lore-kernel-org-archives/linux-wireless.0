@@ -1,83 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4281 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932419Ab1GNVaC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 17:30:02 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 18/35] staging: brcm80211: use mutex instead of
- semaphore in dhd_linux.c
-Date: Thu, 14 Jul 2011 14:29:14 -0700
-Message-ID: <1310678971-28952-19-git-send-email-frankyl@broadcom.com> (sfid-20110714_233028_577269_D10C1376)
-In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
-References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:63906 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753112Ab1GZU4U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jul 2011 16:56:20 -0400
+Received: by gxk21 with SMTP id 21so583581gxk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 13:56:19 -0700 (PDT)
+Message-ID: <4E2F29F0.8040506@lwfinger.net> (sfid-20110726_225634_167900_6B718EE0)
+Date: Tue, 26 Jul 2011 15:56:16 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH] b43legacy: remove 64-bit DMA support
+References: <20110725213832.32510.3753.stgit@mj.roinet.com>	<4E2EFDCC.3060604@lwfinger.net> <CACna6ryV7ffeuC_6cZdAB_WG4+fOHSbnxiCAV2-Mmkp58o_4=A@mail.gmail.com>
+In-Reply-To: <CACna6ryV7ffeuC_6cZdAB_WG4+fOHSbnxiCAV2-Mmkp58o_4=A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+On 07/26/2011 03:05 PM, Rafał Miłecki wrote:
+> 2011/7/26 Larry Finger<Larry.Finger@lwfinger.net>:
+>> On 07/25/2011 04:40 PM, Pavel Roskin wrote:
+>>>
+>>> Devices supported by b43legacy don't support 64-bit DMA.
+>>>
+>>> Signed-off-by: Pavel Roskin<proski@gnu.org>
+>>> ---
+>>> The patch was tested on Broadcom 4306.
+>>>
+>>>   drivers/net/wireless/b43legacy/dma.c |  374
+>>> ++++++----------------------------
+>>>   drivers/net/wireless/b43legacy/dma.h |  107 ----------
+>>>   2 files changed, 71 insertions(+), 410 deletions(-)
+>>
+>> Tested on BCM4303.
+>
+> Err, BCM4303? What card is that exactly?
 
-The semaphore proto_sem has been replaced with mutex proto_block
-which lock certain code paths for one thread.
+It is a 14e4:4301 802.11b card in a PCI format. The lspci command also calls it 
+a Linksys WMP11 v2.7 802.11b Wireless-B PCI Adapter.
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index 6c8599c..310a96f 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -28,6 +28,7 @@
- #include <linux/fcntl.h>
- #include <linux/fs.h>
- #include <linux/uaccess.h>
-+#include <linux/mutex.h>
- #include <net/cfg80211.h>
- #include <defs.h>
- #include <brcmu_utils.h>
-@@ -73,7 +74,7 @@ struct brcmf_info {
- 	/* OS/stack specifics */
- 	struct brcmf_if *iflist[BRCMF_MAX_IFS];
- 
--	struct semaphore proto_sem;
-+	struct mutex proto_block;
- 	wait_queue_head_t ioctl_resp_wait;
- 
- 	/* Thread to issue ioctl for multicast */
-@@ -1312,7 +1313,7 @@ struct brcmf_pub *brcmf_attach(struct brcmf_bus *bus, uint bus_hdrlen)
- 		goto fail;
- 
- 	net->netdev_ops = NULL;
--	sema_init(&drvr_priv->proto_sem, 1);
-+	mutex_init(&drvr_priv->proto_block);
- 	/* Initialize other structure content */
- 	init_waitqueue_head(&drvr_priv->ioctl_resp_wait);
- 
-@@ -1582,7 +1583,7 @@ int brcmf_os_proto_block(struct brcmf_pub *drvr)
- 	struct brcmf_info *drvr_priv = drvr->info;
- 
- 	if (drvr_priv) {
--		down(&drvr_priv->proto_sem);
-+		mutex_lock(&drvr_priv->proto_block);
- 		return 1;
- 	}
- 	return 0;
-@@ -1593,7 +1594,7 @@ int brcmf_os_proto_unblock(struct brcmf_pub *drvr)
- 	struct brcmf_info *drvr_priv = drvr->info;
- 
- 	if (drvr_priv) {
--		up(&drvr_priv->proto_sem);
-+		mutex_unlock(&drvr_priv->proto_block);
- 		return 1;
- 	}
- 
--- 
-1.7.1
-
-
+Larry
