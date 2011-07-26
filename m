@@ -1,271 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:36541 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755008Ab1GMBgB (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:56206 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751083Ab1GZHbH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2011 21:36:01 -0400
-Subject: [PATCH 18/24] ath6kl: add node.c
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: devel@linuxdriverproject.org, gregkh@suse.de, error27@gmail.com
-Date: Wed, 13 Jul 2011 04:35:55 +0300
-Message-ID: <20110713013555.8517.42243.stgit@localhost6.localdomain6> (sfid-20110713_033606_627691_CF59EEC3)
-In-Reply-To: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
+	Tue, 26 Jul 2011 03:31:07 -0400
+Date: Tue, 26 Jul 2011 13:01:15 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	<ath9k-devel@venema.h4ckr.net>, <camilo@mesias.co.uk>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Tony Houghton <h@realh.co.uk>,
+	Adrian Chadd <adrian@freebsd.org>
+Subject: Re: [RFC/RFT 6/6] ath9k: always initialize hw registers related to
+ PCIe PM
+Message-ID: <20110726073113.GA3335@vmraj-lnx.users.atheros.com> (sfid-20110726_093112_622638_F308D069)
+References: <1311341512-2882-1-git-send-email-sgruszka@redhat.com>
+ <1311341512-2882-7-git-send-email-sgruszka@redhat.com>
+ <20110723051129.GC828@vmraj-lnx.users.atheros.com>
+ <20110725092929.GB2608@redhat.com>
+ <20110725140152.GD2608@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20110725140152.GD2608@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/node.c |  239 ++++++++++++++++++++++++++++++++
- 1 files changed, 239 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/node.c
+On Mon, Jul 25, 2011 at 04:01:52PM +0200, Stanislaw Gruszka wrote:
+> On Mon, Jul 25, 2011 at 11:29:30AM +0200, Stanislaw Gruszka wrote:
+> > On Sat, Jul 23, 2011 at 10:41:30AM +0530, Rajkumar Manoharan wrote:
+> > > > +	/* initalize PCIe PM registers if device introduce itself as PCIe */
+> > > > +	if (ah->is_pciexpress)
+> > > > +		ath9k_hw_ops(ah)->config_pci_powersave(ah, false);
+> > > > +
+> > > Use ath9k_hw_configpcipowersave wrapper instead.
+> > I changed wrapper to check ah->aspm_enabled, so if I would use it here
+> > it will not setup registers. I think I should comment that. 
+> >
+Yeah. I got it. I think ah->aspm_enabled alone is sufficient in the wrapper
+function. 
+> > > And ensure that there is no
+> > > sideeffect by changing SERDES config from __ath9k_hw_init to pci_probe.
+> > Hmm, not sure if I understand what I have to do :-(
+> > 
+> > We have something like that:
+> > 
+> > ath_pci_probe
+> >   ath9k_init_device
+> >     ath9k_init_softc
+> >       ath9k_hw_init
+> > 	__ath9k_hw_init
+> >             ath9k_hw_configpcipowersave();
+> > 
+> > I changed it this way:
+> > 
+> > ath_pci_probe
+> >   ath9k_init_device
+> >     ath9k_init_softc
+> >       ath9k_hw_init
+> > 	__ath9k_hw_init
+> > 
+> >       ath9k_init_queues
+> >       ath9k_init_btcoex
+> >    some other inits
+> >      
+> >   ath9k_hw_configpcipowersave();
+> > 
+> > Can this cause some side effects?
+> 
+> Actually this movement is not necessary, in the way things I did
+> currently. Is enough to replace ath9k_hw_configpcipowersave() by
+> ath9k_hw_ops(ah)->config_pci_powersave() in __ath9k_hw_init().
+> In such case SERDES and PCIe PM registers will be always initialized.
+> 
+> However movement would be needed if we want to initialize registers,
+> only when ASPM is enabled, hence we first need to discovery that,
+> and then eventually call ath9k_hw_configpcipowersave().
+> 
+> Which option is correct: always initialize SERDES and PCIe PM registers
+> or do it only if ASPM is enabled?
+>
+Good point. Let them configured on ASPM case. please cross check with other
+embed platform.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/node.c b/drivers/net/wireless/ath/ath6kl/node.c
-new file mode 100644
-index 0000000..6a1a997
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath6kl/node.c
-@@ -0,0 +1,239 @@
-+/*
-+ * Copyright (c) 2004-2011 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "htc.h"
-+#include "ieee80211.h"
-+#include "wmi.h"
-+#include "debug.h"
-+
-+struct bss *wlan_node_alloc(int wh_size)
-+{
-+	struct bss *ni;
-+
-+	ni = kzalloc(sizeof(struct bss), GFP_ATOMIC);
-+
-+	if ((ni != NULL) && wh_size) {
-+		ni->ni_buf = kmalloc(wh_size, GFP_ATOMIC);
-+		if (ni->ni_buf == NULL) {
-+			kfree(ni);
-+			return NULL;
-+		}
-+	}
-+
-+	return ni;
-+}
-+
-+void wlan_node_free(struct bss *ni)
-+{
-+	kfree(ni->ni_buf);
-+	kfree(ni);
-+}
-+
-+void wlan_setup_node(struct ieee80211_node_table *nt, struct bss *ni,
-+		     const u8 *mac_addr)
-+{
-+	int hash;
-+
-+	memcpy(ni->ni_macaddr, mac_addr, ETH_ALEN);
-+	hash = IEEE80211_NODE_HASH(mac_addr);
-+	ni->ni_refcnt = 1;
-+
-+	ni->ni_tstamp = jiffies_to_msecs(jiffies);
-+	ni->ni_actcnt = WLAN_NODE_INACT_CNT;
-+
-+	spin_lock_bh(&nt->nt_nodelock);
-+
-+	/* insert at the end of the node list */
-+	ni->ni_list_next = NULL;
-+	ni->ni_list_prev = nt->nt_node_last;
-+	if (nt->nt_node_last != NULL)
-+		nt->nt_node_last->ni_list_next = ni;
-+
-+	nt->nt_node_last = ni;
-+	if (nt->nt_node_first == NULL)
-+		nt->nt_node_first = ni;
-+
-+	/* insert into the hash list */
-+	ni->ni_hash_next = nt->nt_hash[hash];
-+	if (ni->ni_hash_next != NULL)
-+		nt->nt_hash[hash]->ni_hash_prev = ni;
-+
-+	ni->ni_hash_prev = NULL;
-+	nt->nt_hash[hash] = ni;
-+
-+	spin_unlock_bh(&nt->nt_nodelock);
-+}
-+
-+struct bss *wlan_find_node(struct ieee80211_node_table *nt,
-+			   const u8 *mac_addr)
-+{
-+	struct bss *ni, *found_ni = NULL;
-+	int hash;
-+
-+	spin_lock_bh(&nt->nt_nodelock);
-+
-+	hash = IEEE80211_NODE_HASH(mac_addr);
-+	for (ni = nt->nt_hash[hash]; ni; ni = ni->ni_hash_next) {
-+		if (memcmp(ni->ni_macaddr, mac_addr, ETH_ALEN) == 0) {
-+			ni->ni_refcnt++;
-+			found_ni = ni;
-+			break;
-+		}
-+	}
-+
-+	spin_unlock_bh(&nt->nt_nodelock);
-+
-+	return found_ni;
-+}
-+
-+void wlan_node_reclaim(struct ieee80211_node_table *nt, struct bss *ni)
-+{
-+	int hash;
-+
-+	spin_lock_bh(&nt->nt_nodelock);
-+
-+	if (ni->ni_list_prev == NULL)
-+		/* fix list head */
-+		nt->nt_node_first = ni->ni_list_next;
-+	else
-+		ni->ni_list_prev->ni_list_next = ni->ni_list_next;
-+
-+	if (ni->ni_list_next == NULL)
-+		/* fix list tail */
-+		nt->nt_node_last = ni->ni_list_prev;
-+	else
-+		ni->ni_list_next->ni_list_prev = ni->ni_list_prev;
-+
-+	if (ni->ni_hash_prev == NULL) {
-+		/* first in list so fix the list head */
-+		hash = IEEE80211_NODE_HASH(ni->ni_macaddr);
-+		nt->nt_hash[hash] = ni->ni_hash_next;
-+	} else {
-+		ni->ni_hash_prev->ni_hash_next = ni->ni_hash_next;
-+	}
-+
-+	if (ni->ni_hash_next != NULL)
-+		ni->ni_hash_next->ni_hash_prev = ni->ni_hash_prev;
-+
-+	wlan_node_free(ni);
-+
-+	spin_unlock_bh(&nt->nt_nodelock);
-+}
-+
-+static void wlan_node_dec_free(struct bss *ni)
-+{
-+	if ((ni->ni_refcnt--) == 1)
-+		wlan_node_free(ni);
-+}
-+
-+void wlan_free_allnodes(struct ieee80211_node_table *nt)
-+{
-+	struct bss *ni;
-+
-+	while ((ni = nt->nt_node_first) != NULL)
-+		wlan_node_reclaim(nt, ni);
-+}
-+
-+void wlan_iterate_nodes(struct ieee80211_node_table *nt,
-+			void (*f) (void *arg, struct bss *), void *arg)
-+{
-+	struct bss *ni;
-+
-+	spin_lock_bh(&nt->nt_nodelock);
-+	for (ni = nt->nt_node_first; ni; ni = ni->ni_list_next) {
-+			ni->ni_refcnt++;
-+			(*f) (arg, ni);
-+			wlan_node_dec_free(ni);
-+	}
-+	spin_unlock_bh(&nt->nt_nodelock);
-+}
-+
-+void wlan_node_table_init(void *wmi, struct ieee80211_node_table *nt)
-+{
-+	ath6kl_dbg(ATH6KL_DBG_WLAN_NODE, "node table = 0x%lx\n",
-+		   (unsigned long)nt);
-+
-+	memset(nt, 0, sizeof(struct ieee80211_node_table));
-+
-+	spin_lock_init(&nt->nt_nodelock);
-+
-+	nt->nt_wmi = wmi;
-+	nt->nt_node_age = WLAN_NODE_INACT_TIMEOUT_MSEC;
-+}
-+
-+void wlan_refresh_inactive_nodes(struct ieee80211_node_table *nt)
-+{
-+	struct bss *bss;
-+	u8 my_bssid[ETH_ALEN];
-+	u32 now;
-+
-+	wmi_get_current_bssid(nt->nt_wmi, my_bssid);
-+
-+	now = jiffies_to_msecs(jiffies);
-+	bss = nt->nt_node_first;
-+	while (bss != NULL) {
-+		/* refresh all nodes except the current bss */
-+		if (memcmp(my_bssid, bss->ni_macaddr, sizeof(my_bssid)) != 0) {
-+			if (((now - bss->ni_tstamp) > nt->nt_node_age)
-+			    || --bss->ni_actcnt == 0) {
-+				wlan_node_reclaim(nt, bss);
-+			}
-+		}
-+		bss = bss->ni_list_next;
-+	}
-+}
-+
-+void wlan_node_table_cleanup(struct ieee80211_node_table *nt)
-+{
-+	wlan_free_allnodes(nt);
-+}
-+
-+struct bss *wlan_find_ssid_node(struct ieee80211_node_table *nt, u8 * ssid,
-+				u32 ssid_len, bool is_wpa2, bool match_ssid)
-+{
-+	struct bss *ni, *found_ni = NULL;
-+	u8 *ie_ssid;
-+
-+	spin_lock_bh(&nt->nt_nodelock);
-+
-+	for (ni = nt->nt_node_first; ni; ni = ni->ni_list_next) {
-+
-+		ie_ssid = ni->ni_cie.ie_ssid;
-+
-+		if ((ie_ssid[1] <= IEEE80211_MAX_SSID_LEN) &&
-+		    (memcmp(ssid, &ie_ssid[2], ssid_len) == 0)) {
-+
-+				if (match_ssid ||
-+				    (is_wpa2 && ni->ni_cie.ie_rsn != NULL) ||
-+				    (!is_wpa2 && ni->ni_cie.ie_wpa != NULL)) {
-+					ni->ni_refcnt++;
-+					found_ni = ni;
-+					break;
-+				}
-+		}
-+	}
-+
-+	spin_unlock_bh(&nt->nt_nodelock);
-+
-+	return found_ni;
-+}
-+
-+void wlan_node_return(struct ieee80211_node_table *nt, struct bss *ni)
-+{
-+	spin_lock_bh(&nt->nt_nodelock);
-+	wlan_node_dec_free(ni);
-+	spin_unlock_bh(&nt->nt_nodelock);
-+}
-
+--
+Rajkumar
