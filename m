@@ -1,111 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:38127 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751345Ab1GGQT5 (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:44511 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752296Ab1GZUUI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2011 12:19:57 -0400
-Received: by fxd18 with SMTP id 18so1237688fxd.11
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jul 2011 09:19:56 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] b43: define firmwares for HT and LCN PHYs
-Date: Thu,  7 Jul 2011 18:58:24 +0200
-Message-Id: <1310057906-4088-1-git-send-email-zajec5@gmail.com> (sfid-20110707_182000_828818_26EF66B2)
+	Tue, 26 Jul 2011 16:20:08 -0400
+Received: by yia27 with SMTP id 27so549826yia.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 13:20:08 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <201107262031.11394.chunkeey@googlemail.com>
+References: <COL114-W9CEFD4E7F3803005186F98A4F0@phx.gbl> <COL114-W76260EA23039CA8000DB88A320@phx.gbl>
+ <CAB=NE6Wcn3-GwqPJQDXOT0JCNnZgCs1E7HecWrXpc8LS+XRyDA@mail.gmail.com> <201107262031.11394.chunkeey@googlemail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 26 Jul 2011 13:19:48 -0700
+Message-ID: <CAB=NE6WoGZfpGnNkdaLdtN+nC+aM1mxV4rkUCMarnuDonQeJeg@mail.gmail.com> (sfid-20110726_222012_304412_66985B59)
+Subject: Re: problem on ACS
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: MingAnn Ng <devil_eddie01@hotmail.com>,
+	wireless testing <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were uploading different firmwares to the hardware until finding
-responding one.
+On Tue, Jul 26, 2011 at 11:31 AM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> On Tuesday, July 26, 2011 08:21:21 PM Luis R. Rodriguez wrote:
+>
+>> Hm, as for the new values -- they look very different from what you
+>> had gotten before so the math went wrong somewhere.. gotta revise that
+>> a bit more carefully.
+>
+> well, take a close look at the patch.
+>
+>> -       factor *= (base_to_power(2, survey->noise - min_noise));
+>> +              factor += survey->noise + min_noise;
+>
+> In the original version, you substracted the min band noise from the
+> channel. Whereas now you add them together.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/main.c |   40 +++++++++++++++++++++++++++++++++++++++
- 1 files changed, 40 insertions(+), 0 deletions(-)
+Ah yes, my documentation was just off, and that is correct as the
+original intention was to use the noise as an amplifier of of the
+computed values of "business". In this case we first get the min noise
+of the band and then get the delta between the observed noise and the
+min. This ensured that the amplification factor here would yield 1 as
+2^0 is 1, and then really high values where the delta was higher.
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index ef64628..52136a4 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2159,6 +2159,8 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
- 	u32 tmshigh;
- 	int err;
- 
-+	/* Files for HT and LCN were found by trying one by one */
-+
- 	/* Get microcode */
- 	if ((rev >= 5) && (rev <= 10)) {
- 		filename = "ucode5";
-@@ -2178,6 +2180,18 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
- 			else
- 				goto err_no_ucode;
- 			break;
-+		case B43_PHYTYPE_HT:
-+			if (rev == 29)
-+				filename = "ucode29_mimo";
-+			else
-+				goto err_no_ucode;
-+			break;
-+		case B43_PHYTYPE_LCN:
-+			if (rev == 24)
-+				filename = "ucode24_mimo";
-+			else
-+				goto err_no_ucode;
-+			break;
- 		default:
- 			goto err_no_ucode;
- 		}
-@@ -2240,6 +2254,18 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
- 		else
- 			goto err_no_initvals;
- 		break;
-+	case B43_PHYTYPE_HT:
-+		if (rev == 29)
-+			filename = "ht0initvals29";
-+		else
-+			goto err_no_initvals;
-+		break;
-+	case B43_PHYTYPE_LCN:
-+		if (rev == 24)
-+			filename = "lcn0initvals24";
-+		else
-+			goto err_no_initvals;
-+		break;
- 	default:
- 		goto err_no_initvals;
- 	}
-@@ -2287,6 +2313,18 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
- 		else
- 			goto err_no_initvals;
- 		break;
-+	case B43_PHYTYPE_HT:
-+		if (rev == 29)
-+			filename = "ht0bsinitvals29";
-+		else
-+			goto err_no_initvals;
-+		break;
-+	case B43_PHYTYPE_LCN:
-+		if (rev == 24)
-+			filename = "lcn0bsinitvals24";
-+		else
-+			goto err_no_initvals;
-+		break;
- 	default:
- 		goto err_no_initvals;
- 	}
-@@ -4976,6 +5014,8 @@ static int b43_wireless_core_attach(struct b43_wldev *dev)
- #endif
- 		case B43_PHYTYPE_G:
- 		case B43_PHYTYPE_N:
-+		case B43_PHYTYPE_HT:
-+		case B43_PHYTYPE_LCN:
- 			have_2ghz_phy = 1;
- 			break;
- 		default:
--- 
-1.7.3.4
+>> > The result is almost the same as the version before applying the patch. the
+>> > -inf still fall on those channel. and those channel are indeed very busy in
+>> > my lab. Is there any other solution which I can try to get a better result
+>> > out of it?
+>> >
+>> > I haven't try on the latest patch for hostapd which you uploaded. Is the acs
+>> > application work along with hostapd to calculate the interference level?
+>>
+>> No, the ACS implementation on hostapd simply uses the internal code
+>> from hostapd so its much easier to write, the acs.git code is
+>> completely independent so adding anything there is just a bit harder,
+>> for example adding a scan prior to the ACS work. Please do try the
+>> hostapd patches to see if you get a good channel, and enable debugging
+>> to see the values you get. We do want to avoid the -inf stuff
+>> completely. Getting that means our data type is not sufficient for our
+>> data. The difficult aspect of this code is that the values range from
+>> fractional values to extremely large values..
+>
+> well, if you do a [active] scan. channel_time_tx + channel_time_busy will
+> definetly not be "zero".
 
+That's fine though, but I do also prefer to avoid TX'ign data, which
+is why I used the offchannel operation instead, but we could do
+passive scans.
+
+> Maybe we can get away by adding some threshold
+> cuts-offs. At least this would fix the -inf.
+>
+> +       factor = log2(max(1, survey->channel_time_busy - survey->channel_time_tx));
+> +       factor -= log2(max(1, survey->channel_time - survey->channel_time_tx));
+
+Hm, the threshold cut off idea sound great, however the assumption
+here is that busy time is always > tx time and active time is also
+always > tx time, this should ensure at least a value of 1 is used,
+given that we at least have to go offchannel for at least 1ms. What do
+you see that would make these values go < 1?
+
+> [However, we could also ignore channel surveys with result in a -inf]
+
+the issue might be more with the values being *too big*, not too
+small, so we'd could use a min instead, to ensure we bound our
+computation by the data type used, something like:
+
++       factor = log2(min(2^30, survey->channel_time_busy -
+survey->channel_time_tx));
++       factor -= log2(min(2^30, survey->channel_time -
+survey->channel_time_tx));
+
+In fact 2^30 is the highest value that fits into long double so lets
+stick with that, and since we have an addition I've tested we can add
+log2(2^30) + log2(2^30). I've pushed the changes into acs.git and will
+now use this same compuation for hostapd and respin those patches.
+
+  Luis
