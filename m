@@ -1,52 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:54558 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752034Ab1GGU7m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2011 16:59:42 -0400
-Received: by fxd18 with SMTP id 18so1414136fxd.11
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jul 2011 13:59:41 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] carl9170: Implement tx_frames_pending mac80211 callback function
-Date: Thu, 7 Jul 2011 23:01:25 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>
+Received: from c60.cesmail.net ([216.154.195.49]:12954 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753465Ab1GZPhS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jul 2011 11:37:18 -0400
+Subject: [PATCH 1/2] b43legacy: report core number
+To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	"John W. Linville" <linville@tuxdriver.com>
+From: Pavel Roskin <proski@gnu.org>
+Date: Tue, 26 Jul 2011 11:36:48 -0400
+Message-ID: <20110726153648.24611.49190.stgit@mj.roinet.com> (sfid-20110726_173757_428321_B21069F2)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201107072301.25725.chunkeey@googlemail.com> (sfid-20110707_225948_662084_FE3064F1)
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implementing this callback function will cause mac80211 refrain from
-going to powersave state when there are still untransmitted TX frames
-in the queues.
-
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index 28029a4..7daf47f 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -1588,6 +1588,13 @@ static void carl9170_op_sta_notify(struct ieee80211_hw *hw,
- 	}
- }
+ 0 files changed, 0 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
+index ffa4671..224991a 100644
+--- a/drivers/net/wireless/b43legacy/main.c
++++ b/drivers/net/wireless/b43legacy/main.c
+@@ -3785,7 +3785,8 @@ static int b43legacy_wireless_init(struct ssb_device *dev)
+ 	INIT_WORK(&wl->beacon_update_trigger, b43legacy_beacon_update_trigger_work);
  
-+static bool carl9170_tx_frames_pending(struct ieee80211_hw *hw)
-+{
-+	struct ar9170 *ar = hw->priv;
-+
-+	return !!atomic_read(&ar->tx_total_queued);
-+}
-+
- static const struct ieee80211_ops carl9170_ops = {
- 	.start			= carl9170_op_start,
- 	.stop			= carl9170_op_stop,
-@@ -1608,6 +1615,7 @@ static const struct ieee80211_ops carl9170_ops = {
- 	.get_survey		= carl9170_op_get_survey,
- 	.get_stats		= carl9170_op_get_stats,
- 	.ampdu_action		= carl9170_op_ampdu_action,
-+	.tx_frames_pending	= carl9170_tx_frames_pending,
- };
- 
- void *carl9170_alloc(size_t priv_size)
+ 	ssb_set_devtypedata(dev, wl);
+-	b43legacyinfo(wl, "Broadcom %04X WLAN found\n", dev->bus->chip_id);
++	b43legacyinfo(wl, "Broadcom %04X WLAN found (core revision %u)\n",
++		      dev->bus->chip_id, dev->id.revision);
+ 	err = 0;
+ out:
+ 	return err;
