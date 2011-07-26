@@ -1,80 +1,506 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44310 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752398Ab1GVFm1 (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:41067 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753749Ab1GZXTk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 01:42:27 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 00/31] *** SUBJECT HERE ***
-Date: Fri, 22 Jul 2011 08:41:33 +0300
-Message-ID: <1311313324-6766-2-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110722_074230_366557_366AB789)
-In-Reply-To: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 26 Jul 2011 19:19:40 -0400
+Received: by yia27 with SMTP id 27so672909yia.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 16:19:39 -0700 (PDT)
+From: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
+To: jouni@qca.qualcomm.com
+Cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
+Subject: [PATCH v5 3/4] hostapd: add survey dump support
+Date: Tue, 26 Jul 2011 16:19:21 -0700
+Message-Id: <1311722362-4070-4-git-send-email-lrodriguez@qca.qualcomm.com> (sfid-20110727_011944_037070_5635BE70)
+In-Reply-To: <1311722362-4070-1-git-send-email-lrodriguez@qca.qualcomm.com>
+References: <1311722362-4070-1-git-send-email-lrodriguez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-*** BLURB HERE ***
+This adds survey dump support for all frequencies
+and for specific desired frequencies. This will later
+be used by ACS code for spectrum heuristics.
 
-Kalle Valo (5):
-  ath6kl: don't force foreground scan when connected
-  ath6kl: fix atomicity in ath6kl_cfg80211_scan_node()
-  ath6kl: fix crash when interface is closed but scan is ongoing
-  ath6kl: remove dependency to wireless extensions
-  ath6kl: change aggreation timeout message from an error to a debug
-    message
+Signed-off-by: Luis R. Rodriguez <lrodriguez@qca.qualcomm.com>
+---
+ src/ap/ap_drv_ops.h          |   15 +++
+ src/ap/drv_callbacks.c       |   70 +++++++++++++++
+ src/ap/hostapd.h             |    8 ++
+ src/drivers/driver.h         |   89 +++++++++++++++++++-
+ src/drivers/driver_nl80211.c |  193 ++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 374 insertions(+), 1 deletions(-)
 
-Raja Mani (4):
-  ath6kl: Print bad trailer data only when htc fails to parse trailer
-    info
-  ath6kl: Rearrange the variable and the value position in IF condition
-  ath6kl: Avoid two memset to clear src and desr mac addr variable
-    memory in ath6kl_wmi_dot11_hdr_remove()
-  ath6kl: Use bit field macros to maintain wlan enabled and disabled
-    status
-
-Vasanthakumar Thiagarajan (22):
-  ath6kl: cleanup callbacks for different scatter gather method
-  ath6kl: Move ath6kl_sdio_async_rw_scatter() down to other hif_ops
-    functions
-  ath6kl: Remove struct hif_scatter_req_priv
-  ath6kl: Remove useless flags in hif_scatter_req
-  ath6kl: Remove endpoint reference from hif_scatter_req
-  ath6kl: Refactor refactor ath6kl_sdio_setup_scat_resource()
-  ath6kl: Cleanup ath6kl_sdio_enable_scatter()
-  ath6kl: Cleanup ath6kl_sdio_cleanup_scatter()
-  ath6kl: Move down scatter enable and cleanup functions
-  ath6kl: Merge scatter gather setup functions for two method
-  ath6kl: Moe virt_scat from hif_dev_scat_sup_info to hif_scatter_req
-  ath6kl: Refactor ath6kl_sdio_read_write_sync()
-  ath6kl: Merge scatter rw request functions into one
-  ath6kl: Remove ath6kldev_setup_msg_bndl()
-  ath6kl: Minor cleanup in ath6kldev_submit_scat_req()
-  ath6kl: Remove callback msg_pending() and used the function directly
-  ath6kl: Move bundle size from ath6kl_device to htc_target
-  ath6kl: Move block_sz and block_mask from ath6kl_device to htc_target
-  ath6kl: Move scatter information from ath6kl_device to htc_target
-  ath6kl: Bypass reading irq status based on chk_irq_status_cnt
-  ath6kl: Move chk_irq_status_cnt from ath6kl_device to htc_target
-  ath6kl: Remove unused struct ath6kl_async_reg_io_buffer
-
- drivers/net/wireless/ath/ath6kl/Kconfig    |    2 -
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   52 +++---
- drivers/net/wireless/ath/ath6kl/core.h     |    7 +-
- drivers/net/wireless/ath/ath6kl/debug.h    |    1 +
- drivers/net/wireless/ath/ath6kl/hif-ops.h  |   11 +-
- drivers/net/wireless/ath/ath6kl/hif.h      |   25 +--
- drivers/net/wireless/ath/ath6kl/htc.c      |   72 +++----
- drivers/net/wireless/ath/ath6kl/htc.h      |   16 +-
- drivers/net/wireless/ath/ath6kl/htc_hif.c  |  200 ++----------------
- drivers/net/wireless/ath/ath6kl/htc_hif.h  |   21 --
- drivers/net/wireless/ath/ath6kl/init.c     |    4 +-
- drivers/net/wireless/ath/ath6kl/main.c     |    4 +-
- drivers/net/wireless/ath/ath6kl/sdio.c     |  317 ++++++++++++++++-----------
- drivers/net/wireless/ath/ath6kl/txrx.c     |    7 +-
- drivers/net/wireless/ath/ath6kl/wmi.c      |    3 +-
- 15 files changed, 302 insertions(+), 440 deletions(-)
+diff --git a/src/ap/ap_drv_ops.h b/src/ap/ap_drv_ops.h
+index 660a36b..0075e60 100644
+--- a/src/ap/ap_drv_ops.h
++++ b/src/ap/ap_drv_ops.h
+@@ -214,4 +214,19 @@ static inline int hostapd_drv_remain_on_channel(struct hostapd_data *hapd,
+ 	return hapd->driver->remain_on_channel(hapd->drv_priv, freq, duration);
+ }
+ 
++static inline int hostapd_drv_survey_freq(struct hostapd_data *hapd,
++					  unsigned int freq)
++{
++	if (hapd->driver == NULL)
++		return -1;
++        if (!hapd->driver->get_survey)
++		return -1;
++	return hapd->driver->get_survey(hapd->drv_priv, freq);
++}
++
++static inline int hostapd_drv_survey(struct hostapd_data *hapd)
++{
++	return hostapd_drv_survey_freq(hapd, 0);
++}
++
+ #endif /* AP_DRV_OPS */
+diff --git a/src/ap/drv_callbacks.c b/src/ap/drv_callbacks.c
+index fb3e0dd..44e1147 100644
+--- a/src/ap/drv_callbacks.c
++++ b/src/ap/drv_callbacks.c
+@@ -545,6 +545,73 @@ static void hostapd_event_roc_cancel(struct hostapd_data *hapd,
+ 	/* XXX: pass err to listeners, no one yet */
+ }
+ 
++struct hostapd_channel_data *hostapd_get_mode_channel(struct hostapd_iface *iface,
++						      unsigned int freq)
++{
++	unsigned int i;
++	struct hostapd_channel_data *chan;
++
++	for (i = 0; i < iface->current_mode->num_channels; i++) {
++		chan = &iface->current_mode->channels[i];
++		if (!chan)
++			return NULL;
++		if (chan->freq == freq)
++			return chan;
++	}
++
++	return NULL;
++}
++
++static void hostapd_update_nf(struct hostapd_iface *iface,
++			      struct hostapd_channel_data *chan,
++			      struct freq_survey *survey)
++{
++	if (!iface->chans_surveyed) {
++		chan->min_nf = survey->nf;
++		iface->lowest_nf = survey->nf;
++	} else {
++		if (!chan->survey_count)
++			chan->min_nf = survey->nf;
++		else if (survey->nf < chan->min_nf)
++			chan->min_nf = survey->nf;
++		if (survey->nf < iface->lowest_nf)
++			iface->lowest_nf = survey->nf;
++	}
++}
++
++static void hostapd_event_get_survey(struct hostapd_data *hapd,
++				     struct survey_results *survey_results)
++{
++	struct hostapd_iface *iface = hapd->iface;
++	struct freq_survey *survey, *tmp;
++	struct hostapd_channel_data *chan;
++
++	if (dl_list_empty(&survey_results->survey_list)) {
++		wpa_printf(MSG_DEBUG, "ACS: no survey data received");
++                return;
++	}
++
++	dl_list_for_each_safe(survey, tmp, &survey_results->survey_list, struct freq_survey, list_member) {
++		chan = hostapd_get_mode_channel(iface, survey->freq);
++		if (!chan)
++			goto fail;
++		if (chan->flag & HOSTAPD_CHAN_DISABLED)
++			continue;
++
++		dl_list_del(&survey->list_member);
++		dl_list_add_tail(&chan->survey_list, &survey->list_member);
++
++		hostapd_update_nf(iface, chan, survey);
++
++		chan->survey_count++;
++		iface->chans_surveyed++;
++	}
++
++	return;
++fail:
++	iface->chans_surveyed = 0;
++}
++
+ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
+ 			  union wpa_event_data *data)
+ {
+@@ -647,6 +714,9 @@ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
+ 					 data->remain_on_channel.freq,
+ 					 data->remain_on_channel.duration);
+ 		break;
++	case EVENT_SURVEY:
++		hostapd_event_get_survey(hapd, &data->survey_results);
++		break;
+ 	default:
+ 		wpa_printf(MSG_DEBUG, "Unknown event %d", event);
+ 		break;
+diff --git a/src/ap/hostapd.h b/src/ap/hostapd.h
+index dedd2ce..18e582b 100644
+--- a/src/ap/hostapd.h
++++ b/src/ap/hostapd.h
+@@ -232,6 +232,14 @@ struct hostapd_iface {
+ 	/* Offchannel operation helper */
+ 	unsigned int off_channel_freq_idx;
+ 
++	/* surveying helpers */
++
++	/* number of channels surveyed */
++	unsigned int chans_surveyed;
++
++	/* lowest observed noise floor in dBm */
++	s8 lowest_nf;
++
+ 	void (*scan_cb)(struct hostapd_iface *iface);
+ 
+ 	int (*ctrl_iface_init)(struct hostapd_data *hapd);
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index 92951ae..7ebba43 100644
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -26,6 +26,7 @@
+ #define WPA_SUPPLICANT_DRIVER_VERSION 4
+ 
+ #include "common/defs.h"
++#include "list.h"
+ 
+ #define HOSTAPD_CHAN_DISABLED 0x00000001
+ #define HOSTAPD_CHAN_PASSIVE_SCAN 0x00000002
+@@ -58,6 +59,22 @@ struct hostapd_channel_data {
+ 	 * max_tx_power - maximum transmit power in dBm
+ 	 */
+ 	u8 max_tx_power;
++
++	/*
++	 * survey_count - number of surveys XXX: can we remove this and use the count of the linked list?
++	 */
++        unsigned int survey_count;
++
++	/*
++	 * survey_list - linked list of surveys
++	 */
++	struct dl_list survey_list;
++
++	/**
++	 * min_nf - minimum observed noise floor, in dBm, based on all surveyed channel data
++	 */
++	s8 min_nf;
++
+ };
+ 
+ /**
+@@ -2274,6 +2291,30 @@ struct wpa_driver_ops {
+ 	 */
+ 	void (*set_rekey_info)(void *priv, const u8 *kek, const u8 *kck,
+ 			       const u8 *replay_ctr);
++
++	/*
++	 * get_survey - Retrieve survey data
++	 * @priv: Private driver interface data
++	 * @freq: if set survey data for the specified frequency is only
++	 *	being requested. If not set all survey data is requested.
++	 * Returns: 0 on success, -1 on failure
++	 *
++	 * Use this to retreieve:
++	 *
++	 * - the observed channel noise floor
++	 * - the amount of time we have spent on the channel
++	 * - the amount of time during which we have spent on the channel that
++	 *   the radio has determined the the medium is busy and we cannot transmit
++	 * - the amount of time we have spent RX'ing data
++	 * - the amount of time we have spent TX'ing data
++	 *
++	 * This data can be use for spectrum heuristics, one example is
++	 * Automatic Channel Selection (ACS). The channel survey data is
++	 * kept on a linked list on the channel data, one entry is added
++	 * for each survey. The min_nf of the channel is updated for
++	 * each survey.
++	 */
++	int (*get_survey)(void *priv, unsigned int freq);
+ };
+ 
+ 
+@@ -2686,9 +2727,44 @@ enum wpa_event_type {
+ 	 * completed Group Key Handshake while the host (including
+ 	 * wpa_supplicant was sleeping).
+ 	 */
+-	EVENT_DRIVER_GTK_REKEY
++	EVENT_DRIVER_GTK_REKEY,
++
++	/*
++	 * EVENT_SURVEY - Received survey data
++	 *
++	 * This event gets triggered when a driver query is issued for survey
++	 * data and its returned. The returned data is stored in
++	 * struct survey_results. The results provide at most one survey
++	 * entry for each frequency and at minimum will provide survey
++	 * one survey entry for one frequency. The survey data can be
++	 * os_malloc()'d and then os_free()'d, so the event callback must
++	 * only copy data.
++	 */
++	EVENT_SURVEY,
+ };
+ 
++/**
++ * struct survey_info - channel survey info
++ *
++ * @ifidx: interface index in which this survey was observed
++ * @freq: center of frequency of the surveyed channel
++ * @nf: channel noise floor in dBm
++ * @channel_time: amount of time in ms the radio spent on the channel
++ * @channel_time_busy: amount of time in ms the radio detected some signal
++ *	that indicated to the radio the channel was not clear
++ * @channel_time_rx: amount of time the radio spent receiving data
++ * @channel_time_tx: amount of time the radio spent transmitting data
++ */
++struct freq_survey {
++	u32 ifidx;
++	unsigned int freq;
++	s8 nf;
++	u64 channel_time;
++	u64 channel_time_busy;
++	u64 channel_time_rx;
++	u64 channel_time_tx;
++	struct dl_list list_member;
++};
+ 
+ /**
+  * union wpa_event_data - Additional data for wpa_supplicant_event() calls
+@@ -3238,6 +3314,17 @@ union wpa_event_data {
+ 		const u8 *bssid;
+ 		const u8 *replay_ctr;
+ 	} driver_gtk_rekey;
++
++	/*
++	 * survey_results - survey result data for EVENT_SURVEY
++	 * @freq_filter: requested frequency survey filter, 0 if request
++	 *	was for all survey data
++	 * @survey_list: linked list of survey data
++	 */
++	struct survey_results {
++		unsigned int freq_filter;
++		struct dl_list survey_list;
++	} survey_results;
+ };
+ 
+ /**
+diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
+index 87d474e..1f26326 100644
+--- a/src/drivers/driver_nl80211.c
++++ b/src/drivers/driver_nl80211.c
+@@ -6750,6 +6750,198 @@ static int nl80211_flush_pmkid(void *priv)
+ 	return nl80211_pmkid(bss, NL80211_CMD_FLUSH_PMKSA, NULL, NULL);
+ }
+ 
++static void clean_survey_results(struct survey_results *survey_results)
++{
++	struct freq_survey *survey, *tmp;
++
++	if (dl_list_empty(&survey_results->survey_list))
++		return;
++
++	dl_list_for_each_safe(survey, tmp, &survey_results->survey_list, struct freq_survey, list_member) {
++		dl_list_del(&survey->list_member);
++		os_free(survey);
++	}
++}
++
++static void add_survey(struct nlattr **sinfo, u32 ifidx, struct dl_list *survey_list)
++{
++	struct freq_survey *survey;
++
++	survey = (struct freq_survey*) os_malloc(sizeof(struct freq_survey));
++	if  (!survey)
++		return;
++	os_memset(survey, 0, sizeof(struct freq_survey));
++
++	survey->ifidx = ifidx;
++	survey->freq = nla_get_u32(sinfo[NL80211_SURVEY_INFO_FREQUENCY]);
++	survey->nf = (int8_t) nla_get_u8(sinfo[NL80211_SURVEY_INFO_NOISE]);
++	survey->channel_time = nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME]);
++	survey->channel_time_busy = nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_BUSY]);
++	survey->channel_time_rx = nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_RX]);
++	survey->channel_time_tx = nla_get_u64(sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_TX]);
++
++	wpa_printf(MSG_DEBUG, "nl80211: Freq survey dump event  (freq=%d MHz noise=%d "
++		   "channel_time=%ld busy_time=%ld tx_time=%ld rx_time=%ld)",
++		   survey->freq,
++		   survey->nf,
++		   (unsigned long int) survey->channel_time,
++		   (unsigned long int) survey->channel_time_busy,
++		   (unsigned long int) survey->channel_time_rx,
++		   (unsigned long int) survey->channel_time_tx);
++
++	dl_list_add_tail(survey_list, &survey->list_member);
++}
++
++static int survey_check(struct nlattr **sinfo)
++{
++	if (!sinfo[NL80211_SURVEY_INFO_NOISE] ||
++	    !sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME] ||
++	    !sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_BUSY] ||
++	    !sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_TX])
++		return 0;
++	return 1;
++}
++
++static void survey_fail_reason(struct nlattr **sinfo, u32 surveyed_freq)
++{
++	wpa_printf(MSG_ERROR,
++		   "nl80211: Following survey data missing "
++		   "for freq %d MHz:",
++		   surveyed_freq);
++
++	if (!sinfo[NL80211_SURVEY_INFO_NOISE])
++		wpa_printf(MSG_ERROR, "\tnoise");
++
++	if (!sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME])
++		wpa_printf(MSG_ERROR, "\tchannel time");
++
++	if (!sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_BUSY])
++		wpa_printf(MSG_ERROR, "\tchannel busy time");
++
++	if (!sinfo[NL80211_SURVEY_INFO_CHANNEL_TIME_TX])
++		wpa_printf(MSG_ERROR, "\tchannel tx time");
++}
++
++static int check_survey_ok(struct nlattr **sinfo,
++			   u32 surveyed_freq,
++			   unsigned int freq_filter)
++{
++	int good_survey = survey_check(sinfo);
++
++	/* If no filter is specified we just drop data for any bogus survey */
++	if (!freq_filter) {
++		if (good_survey)
++			return 1;
++		/* No filter used but no usable survey data found */
++		survey_fail_reason(sinfo, surveyed_freq);
++		return 0;
++	}
++
++	if (freq_filter != surveyed_freq)
++		return 0;
++
++	if (good_survey)
++		return 1;
++	/* Filter matches now, lets be verbose why this is a bad survey */
++
++	survey_fail_reason(sinfo, surveyed_freq);
++	return 0;
++}
++
++static int survey_handler(struct nl_msg *msg, void *arg)
++{
++	struct nlattr *tb[NL80211_ATTR_MAX + 1];
++	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
++	struct nlattr *sinfo[NL80211_SURVEY_INFO_MAX + 1];
++	struct survey_results *survey_results;
++	u32 surveyed_freq = 0;
++	u32 ifidx;
++
++	static struct nla_policy survey_policy[NL80211_SURVEY_INFO_MAX + 1] = {
++		[NL80211_SURVEY_INFO_FREQUENCY] = { .type = NLA_U32 },
++		[NL80211_SURVEY_INFO_NOISE] = { .type = NLA_U8 },
++	};
++
++	survey_results = (struct survey_results *) arg;
++
++	nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
++		  genlmsg_attrlen(gnlh, 0), NULL);
++
++	ifidx = nla_get_u32(tb[NL80211_ATTR_IFINDEX]);
++
++	if (!tb[NL80211_ATTR_SURVEY_INFO])
++		return NL_SKIP;
++
++	if (nla_parse_nested(sinfo, NL80211_SURVEY_INFO_MAX,
++			     tb[NL80211_ATTR_SURVEY_INFO],
++			     survey_policy))
++		return NL_SKIP;
++
++	if (!sinfo[NL80211_SURVEY_INFO_FREQUENCY]) {
++		wpa_printf(MSG_ERROR, "nl80211: invalid survey data");
++		return NL_SKIP;
++	}
++
++	surveyed_freq = nla_get_u32(sinfo[NL80211_SURVEY_INFO_FREQUENCY]);
++
++	if (!check_survey_ok(sinfo, surveyed_freq, survey_results->freq_filter))
++		return NL_SKIP;
++
++	if (survey_results->freq_filter &&
++	    survey_results->freq_filter != surveyed_freq) {
++		wpa_printf(MSG_EXCESSIVE, "nl80211: ignoring survey data "
++			   "for freq %d MHz", surveyed_freq);
++		return NL_SKIP;
++	}
++
++	add_survey(sinfo, ifidx, &survey_results->survey_list);
++
++	return NL_SKIP;
++}
++
++static int wpa_driver_nl80211_get_survey(void *priv, unsigned int freq)
++{
++	struct i802_bss *bss = priv;
++	struct wpa_driver_nl80211_data *drv = bss->drv;
++	struct nl_msg *msg;
++	int err = -ENOBUFS;
++	union wpa_event_data data;
++	struct survey_results *survey_results;
++
++	os_memset(&data, 0, sizeof(data));
++	survey_results = &data.survey_results;
++
++	dl_list_init(&survey_results->survey_list);
++
++	msg = nlmsg_alloc();
++	if (!msg)
++		goto nla_put_failure;
++
++	genlmsg_put(msg, 0, 0, genl_family_get_id(drv->nl80211), 0, NLM_F_DUMP,
++		    NL80211_CMD_GET_SURVEY, 0);
++
++	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, drv->ifindex);
++
++	if (freq)
++		data.survey_results.freq_filter = freq;
++
++	do {
++		err = send_and_recv_msgs(drv, msg, survey_handler, survey_results);
++	} while (err > 0);
++
++	if (err) {
++		wpa_printf(MSG_ERROR, "nl80211: failed to process survey data");
++		goto out_clean;
++	}
++
++	wpa_supplicant_event(drv->ctx, EVENT_SURVEY, &data);
++
++out_clean:
++	clean_survey_results(survey_results);
++nla_put_failure:
++	return err;
++}
++
+ 
+ static void nl80211_set_rekey_info(void *priv, const u8 *kek, const u8 *kck,
+ 				   const u8 *replay_ctr)
+@@ -6859,4 +7051,5 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
+ 	.remove_pmkid = nl80211_remove_pmkid,
+ 	.flush_pmkid = nl80211_flush_pmkid,
+ 	.set_rekey_info = nl80211_set_rekey_info,
++	.get_survey = wpa_driver_nl80211_get_survey,
+ };
+-- 
+1.7.4.15.g7811d
 
