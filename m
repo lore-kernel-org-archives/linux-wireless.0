@@ -1,166 +1,238 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54741 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752486Ab1GOQSu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2011 12:18:50 -0400
-Date: Fri, 15 Jul 2011 18:18:58 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Jonathan Nieder <jrnieder@gmail.com>, ath9k-devel@venema.h4ckr.net,
-	Tony Houghton <h@realh.co.uk>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	camilo@mesias.co.uk, Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: Re: APSM, AR9285 and bus hangs
-Message-ID: <20110715161857.GA2122@redhat.com> (sfid-20110715_181854_424830_C5A39EA3)
-References: <BANLkTikFvkUj=JFrCsffz6Z78KdAEw-t0A@mail.gmail.com>
- <20110613132009.GA7133@redhat.com>
- <BANLkTi=epV40yWe0piXoaDes_F5jOV_DJQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BANLkTi=epV40yWe0piXoaDes_F5jOV_DJQ@mail.gmail.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:64124 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753079Ab1GZPnu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jul 2011 11:43:50 -0400
+Received: by ewy4 with SMTP id 4so521894ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 08:43:49 -0700 (PDT)
+Subject: Re: [RFC v4 3/4] mac80211: Add HT helper functions
+From: Alexander Simon <alexander.simon@saxnet.de>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1311694819.2974.3.camel@alex-2>
+References: <1311694819.2974.3.camel@alex-2>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 26 Jul 2011 17:43:46 +0200
+Message-ID: <1311695026.2974.6.camel@alex-2> (sfid-20110726_174353_941670_340A9305)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 14, 2011 at 08:02:54AM +0800, Adrian Chadd wrote:
-> I think the problem on these laptops is that -disabling- the APSM bits
-> causes some systems to hang.
+these can also be used from existing code.
 
-It is interesting if below patch works, people who can reproduce the
-problem please give it a try. Except testing, I'm also interested
-on comments :-)
-
+Signed-off-by: Alexander Simon <alexander.simon@saxnet.de>
 ---
->From 6f6f488156d60b44adeb68bbd0cb474b92111681 Mon Sep 17 00:00:00 2001
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-Date: Fri, 15 Jul 2011 17:50:48 +0200
-Subject: [PATCH] ath9k: skip ->config_pci_powersave quirks if PCIe port has ASPM disabled
+ net/mac80211/ieee80211_i.h |    8 +++
+ net/mac80211/util.c        |  116 +++++++++++++++++++++++++++++++++++++------
+ net/mac80211/work.c        |   29 +-----------
+ 3 files changed, 108 insertions(+), 45 deletions(-)
 
-We receive many bug reports about system hang during suspend/resume
-when ath9k driver is in use. Adrian Chadd remarked that this problem
-happens on systems that have ASPM disabled.
-
-To do not hit the bug, try to skip doing ->config_pci_powersave magic
-if PCIe downstream port device, which ath9k device is connected to, has
-ASPM disabled.
-
-This is test only patch, for now I'm interesting if it works. If so
-proper patch will need to cope with runtime ASPM setting change, and
-probably setup some ath9k registers correctly in both case ASPM is
-disabled.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_hw.c |    6 +-----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |    6 +-----
- drivers/net/wireless/ath/ath9k/hw.c        |    1 -
- drivers/net/wireless/ath/ath9k/hw.h        |    2 +-
- drivers/net/wireless/ath/ath9k/pci.c       |   20 ++++++++++++++++++++
- 5 files changed, 23 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index 9ff7c30..44d9d8d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -309,11 +309,7 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
- 	u8 i;
- 	u32 val;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 400c09b..bfb820c 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1401,6 +1401,12 @@ void ieee80211_recalc_smps(struct ieee80211_local *local);
+ size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
+ 			  const u8 *ids, int n_ids, size_t offset);
+ size_t ieee80211_ie_split_vendor(const u8 *ies, size_t ielen, size_t offset);
++u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_supported_band *sband,
++			       u16 cap);
++u8 *ieee80211_ie_build_ht_info(u8 *pos,
++				struct ieee80211_sta_ht_cap *ht_cap,
++				struct ieee80211_channel *channel,
++				enum nl80211_channel_type channel_type);
  
--	if (ah->is_pciexpress != true)
--		return;
--
--	/* Do not touch SerDes registers */
--	if (ah->config.pcie_powersave_enable == 2)
-+	if (ah->is_pciexpress != true || ah->aspm_enabled != true)
- 		return;
+ /* internal work items */
+ void ieee80211_work_init(struct ieee80211_local *local);
+@@ -1429,6 +1435,8 @@ ieee80211_get_channel_mode(struct ieee80211_local *local,
+ bool ieee80211_set_channel_type(struct ieee80211_local *local,
+ 				struct ieee80211_sub_if_data *sdata,
+ 				enum nl80211_channel_type chantype);
++enum nl80211_channel_type ieee80211_ht_info_to_channel_type(
++					struct ieee80211_ht_info *ht_info);
  
- 	/* Nothing to do on restore for 11N */
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 8efdec2..ad2bb2b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -519,11 +519,7 @@ static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
- 					 int restore,
- 					 int power_off)
- {
--	if (ah->is_pciexpress != true)
--		return;
--
--	/* Do not touch SerDes registers */
--	if (ah->config.pcie_powersave_enable == 2)
-+	if (ah->is_pciexpress != true || ah->aspm_enabled != true)
- 		return;
- 
- 	/* Nothing to do on restore for 11N */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 2a5f908..8a80e7d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -378,7 +378,6 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
- 	ah->config.additional_swba_backoff = 0;
- 	ah->config.ack_6mb = 0x0;
- 	ah->config.cwm_ignore_extcca = 0;
--	ah->config.pcie_powersave_enable = 0;
- 	ah->config.pcie_clock_req = 0;
- 	ah->config.pcie_waen = 0;
- 	ah->config.analog_shiftreg = 1;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 6acd0f9..7dd78e7 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -219,7 +219,6 @@ struct ath9k_ops_config {
- 	int additional_swba_backoff;
- 	int ack_6mb;
- 	u32 cwm_ignore_extcca;
--	u8 pcie_powersave_enable;
- 	bool pcieSerDesWrite;
- 	u8 pcie_clock_req;
- 	u32 pcie_waen;
-@@ -673,6 +672,7 @@ struct ath_hw {
- 
- 	bool sw_mgmt_crypto;
- 	bool is_pciexpress;
-+	bool aspm_enabled;
- 	bool is_monitoring;
- 	bool need_an_top2_fixup;
- 	u16 tx_trig_level;
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 3bad0b2..2f34503 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -123,6 +123,24 @@ static const struct ath_bus_ops ath_pci_bus_ops = {
- 	.extn_synch_en = ath_pci_extn_synch_enable,
- };
- 
-+static void ath_pci_check_aspm(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct pci_dev *pdev = to_pci_dev(sc->dev);
-+	struct pci_dev *parent;
-+	u8 aspm;
-+
-+	ah->aspm_enabled = false;
-+
-+	if (!pci_is_pcie(pdev))
-+		return;
-+
-+	parent = pdev->bus->self;
-+	pci_read_config_byte(parent, ATH_PCIE_CAP_LINK_CTRL, &aspm);
-+	if (aspm & (ATH_PCIE_CAP_LINK_L0S | ATH_PCIE_CAP_LINK_L1))
-+		ah->aspm_enabled = true;
-+}
-+
- static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
- 	void __iomem *mem;
-@@ -230,6 +248,8 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto err_init;
+ #ifdef CONFIG_MAC80211_NOINLINE
+ #define debug_noinline noinline
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index ddeb1b9..b62fc4e 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -983,23 +983,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 		offset = noffset;
  	}
  
-+	ath_pci_check_aspm(sc);
+-	if (sband->ht_cap.ht_supported) {
+-		u16 cap = sband->ht_cap.cap;
+-		__le16 tmp;
+-
+-		*pos++ = WLAN_EID_HT_CAPABILITY;
+-		*pos++ = sizeof(struct ieee80211_ht_cap);
+-		memset(pos, 0, sizeof(struct ieee80211_ht_cap));
+-		tmp = cpu_to_le16(cap);
+-		memcpy(pos, &tmp, sizeof(u16));
+-		pos += sizeof(u16);
+-		*pos++ = sband->ht_cap.ampdu_factor |
+-			 (sband->ht_cap.ampdu_density <<
+-				IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
+-		memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
+-		pos += sizeof(sband->ht_cap.mcs);
+-		pos += 2 + 4 + 1; /* ext info, BF cap, antsel */
+-	}
++	if (sband->ht_cap.ht_supported)
++		pos = ieee80211_ie_build_ht_cap(pos, sband, sband->ht_cap.cap);
+ 
+ 	/*
+ 	 * If adding more here, adjust code in main.c
+@@ -1522,3 +1507,100 @@ void ieee80211_disable_rssi_reports(struct ieee80211_vif *vif)
+ 	_ieee80211_enable_rssi_reports(sdata, 0, 0);
+ }
+ EXPORT_SYMBOL(ieee80211_disable_rssi_reports);
 +
- 	ath9k_hw_name(sc->sc_ah, hw_name, sizeof(hw_name));
- 	wiphy_info(hw->wiphy, "%s mem=0x%lx, irq=%d\n",
- 		   hw_name, (unsigned long)mem, pdev->irq);
++u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_supported_band *sband,
++			       u16 cap)
++{
++	__le16 tmp;
++
++	*pos++ = WLAN_EID_HT_CAPABILITY;
++	*pos++ = sizeof(struct ieee80211_ht_cap);
++	memset(pos, 0, sizeof(struct ieee80211_ht_cap));
++
++	/* capability flags */
++	tmp = cpu_to_le16(cap);
++	memcpy(pos, &tmp, sizeof(u16));
++	pos += sizeof(u16);
++
++	/* AMPDU parameters */
++	*pos++ = sband->ht_cap.ampdu_factor |
++		 (sband->ht_cap.ampdu_density <<
++			IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
++
++	/* MCS set */
++	memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
++	pos += sizeof(sband->ht_cap.mcs);
++
++	/* extended capabilities */
++	pos += sizeof(__le16);
++
++	/* BF capabilities */
++	pos += sizeof(__le32);
++
++	/* antenna selection */
++	pos += sizeof(u8);
++
++	return pos;
++}
++
++u8 *ieee80211_ie_build_ht_info(u8 *pos,
++				struct ieee80211_sta_ht_cap *ht_cap,
++				struct ieee80211_channel *channel,
++				enum nl80211_channel_type channel_type)
++{
++	struct ieee80211_ht_info *ht_info;
++	/* Build HT Information */
++	*pos++ = WLAN_EID_HT_INFORMATION;
++	*pos++ = sizeof(struct ieee80211_ht_info);
++	ht_info = (struct ieee80211_ht_info *)pos;
++	ht_info->control_chan =
++			ieee80211_frequency_to_channel(channel->center_freq);
++	switch (channel_type) {
++	case NL80211_CHAN_HT40MINUS:
++		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
++		break;
++	case NL80211_CHAN_HT40PLUS:
++		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
++		break;
++	case NL80211_CHAN_HT20:
++	default:
++		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_NONE;
++		break;
++	}
++	if (ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
++		ht_info->ht_param |= IEEE80211_HT_PARAM_CHAN_WIDTH_ANY;
++	ht_info->operation_mode = 0x0000;
++	ht_info->stbc_param = 0x0000;
++
++	/* It seems that Basic MCS set and Supported MCS set
++	   are identical for the first 10 bytes */
++	memset(&ht_info->basic_set, 0, 16);
++	memcpy(&ht_info->basic_set, &ht_cap->mcs, 10);
++
++	return pos + sizeof(struct ieee80211_ht_info);
++}
++
++enum nl80211_channel_type ieee80211_ht_info_to_channel_type(
++					struct ieee80211_ht_info *ht_info)
++{
++	enum nl80211_channel_type channel_type;
++
++	if (!ht_info)
++		return NL80211_CHAN_NO_HT;
++
++	switch (ht_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
++	case IEEE80211_HT_PARAM_CHA_SEC_NONE:
++		channel_type = NL80211_CHAN_HT20;
++		break;
++	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
++		channel_type = NL80211_CHAN_HT40PLUS;
++		break;
++	case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
++		channel_type = NL80211_CHAN_HT40MINUS;
++		break;
++	default:
++		channel_type = NL80211_CHAN_NO_HT;
++	}
++
++	return channel_type;
++}
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index 380b9a7..8d9251c 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -103,7 +103,6 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
+ 	u8 *pos;
+ 	u32 flags = channel->flags;
+ 	u16 cap = sband->ht_cap.cap;
+-	__le16 tmp;
+ 
+ 	if (!sband->ht_cap.ht_supported)
+ 		return;
+@@ -154,34 +153,8 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
+ 	}
+ 
+ 	/* reserve and fill IE */
+-
+ 	pos = skb_put(skb, sizeof(struct ieee80211_ht_cap) + 2);
+-	*pos++ = WLAN_EID_HT_CAPABILITY;
+-	*pos++ = sizeof(struct ieee80211_ht_cap);
+-	memset(pos, 0, sizeof(struct ieee80211_ht_cap));
+-
+-	/* capability flags */
+-	tmp = cpu_to_le16(cap);
+-	memcpy(pos, &tmp, sizeof(u16));
+-	pos += sizeof(u16);
+-
+-	/* AMPDU parameters */
+-	*pos++ = sband->ht_cap.ampdu_factor |
+-		 (sband->ht_cap.ampdu_density <<
+-			IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
+-
+-	/* MCS set */
+-	memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
+-	pos += sizeof(sband->ht_cap.mcs);
+-
+-	/* extended capabilities */
+-	pos += sizeof(__le16);
+-
+-	/* BF capabilities */
+-	pos += sizeof(__le32);
+-
+-	/* antenna selection */
+-	pos += sizeof(u8);
++	ieee80211_ie_build_ht_cap(pos, sband, cap);
+ }
+ 
+ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
 -- 
-1.7.1
+1.7.3.4
+
 
