@@ -1,58 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from linknet-ip-202.77.119.130.link.net.id ([202.77.119.130]:59119
-	"EHLO ppac-jak-id-1.inter-touch.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755425Ab1GDGLF (ORCPT
+Received: from mail1-out1.atlantis.sk ([80.94.52.55]:39426 "EHLO
+	mail.atlantis.sk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754860Ab1G0UTl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 02:11:05 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org
-Subject: [PATCH 7/8] ath5k: disable 32KHz sleep clock operation
-Date: Mon,  4 Jul 2011 12:47:46 +0700
-Message-Id: <1309758467-1712-7-git-send-email-nbd@openwrt.org> (sfid-20110704_081123_271265_6CB9BCF0)
-In-Reply-To: <1309758467-1712-6-git-send-email-nbd@openwrt.org>
-References: <1309758467-1712-1-git-send-email-nbd@openwrt.org>
- <1309758467-1712-2-git-send-email-nbd@openwrt.org>
- <1309758467-1712-3-git-send-email-nbd@openwrt.org>
- <1309758467-1712-4-git-send-email-nbd@openwrt.org>
- <1309758467-1712-5-git-send-email-nbd@openwrt.org>
- <1309758467-1712-6-git-send-email-nbd@openwrt.org>
+	Wed, 27 Jul 2011 16:19:41 -0400
+From: Ondrej Zary <linux@rainbow-software.org>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: hostap_cs: add ID for LG cards
+Date: Wed, 27 Jul 2011 22:19:15 +0200
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <201107262314.03422.linux@rainbow-software.org> <4E2F379D.9080108@gnu.org>
+In-Reply-To: <4E2F379D.9080108@gnu.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201107272219.23501.linux@rainbow-software.org> (sfid-20110727_222018_399087_D3D3343A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While 32 KHz sleep clock might provide some power saving benefits,
-it is also a major source of stability issues, on OpenWrt it produced
-some reproducible data bus errors on register accesses on several
-different MIPS platforms.
+On Tuesday 26 July 2011 23:54:37 Pavel Roskin wrote:
+> On 07/26/2011 05:14 PM, Ondrej Zary wrote:
+> > Add IDs for LG PCMCIA cards.
+> > This allows LG LW1100P PCI card (with integrated CardBus bridge) to work
+> > (tested with rev 3.0) and probably also LW1100N (PCMCIA).
+> >
+> > Signed-off-by: Ondrej Zary<linux@rainbow-software.org>
+> 
+> Acked-by: Pavel Roskin <proski@gnu.org>
+> 
+> I googled for the card name and found indications that the card uses 
+> Intersil firmware and thus supportable by Hostap.
+> 
+> The problem was reported in year 2003, first in June:
+> http://osdir.com/ml/linux.drivers.hostap/2003-06/msg00159.html
+> 
+> And then in November:
+> http://osdir.com/ml/linux.linux-wlan.user/2003-11/msg00039.html
 
-All the Atheros drivers that I can find do not enable this feature,
-so it makes sense to leave it disabled in ath5k as well.
+I have the card since 2003 and I was using it back then with HostAP
+(in managed mode - after much pain with linux-wlan-ng, I was surprised how
+well HostAP worked). I even flashed the card's firmware using hostap tools
+multiple times (currently v1.8.4).
+But I don't remember if I had to add card's device ID to the driver...probably
+because PCMCIA configuration was totally different back then.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath5k/reset.c |    9 ---------
- 1 files changed, 0 insertions(+), 9 deletions(-)
+> It's quite disappointing that we are fixing this more than 8 years after 
+> the first report, when the cards in question have become rare and 
+> obsolete.  But it's still better than nothing.
+> 
+> > --- linux-2.6.39-rc2-orig/drivers/net/wireless/hostap/hostap_cs.c	2011-04-06 03:30:43.000000000 +0200
+> > +++ linux-2.6.39-rc2/drivers/net/wireless/hostap/hostap_cs.c	2011-07-26 22:17:03.000000000 +0200
+> > @@ -648,6 +648,8 @@ static struct pcmcia_device_id hostap_cs
+> >   					 0x74c5e40d),
+> >   	PCMCIA_DEVICE_MANF_CARD_PROD_ID1(0x0156, 0x0002, "Intersil",
+> >   					 0x4b801a17),
+> > +	PCMCIA_DEVICE_MANF_CARD_PROD_ID1(0x0156, 0x0002, "LG",
+> > +					 0xb474d43a),
+> 
+> What is the "pccardctl ident" output on your card?
+> 
+> I think we may want to introduce PCMCIA_DEVICE_MANF_CARD_PROD_ID3 and match
+> 
+> PCMCIA_DEVICE_MANF_CARD_PROD_ID3(0x0156, 0x0002, "Version 1.02", xxx)
+> 
+> Maybe some other card would be supported too?  I doubt there are any 
+> Agere or Symbol cards with "Version 1.02" in the third text ID.
 
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 55276ce..192c0cb 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -1285,15 +1285,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 	 */
- 	ath5k_hw_dma_init(ah);
+Yes, that looks good, it would match my card too:
+  product info: "LG", "11Mbps Wireless LAN PCI Card", "Version 01.02", ""
+  manfid: 0x0156, 0x0002
+  function: 6 (network)
+
+
+---------------------------
+
+Add generic "Version 01.02" match (used by many different cards) to hostap_cs.
+
+This allows LG LW1100P PCI card (with integrated CardBus bridge) to work
+(tested with rev 3.0) and probably also LW1100N (PCMCIA).
+
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+
+--- linux-2.6.39-rc2-orig/include/pcmcia/device_id.h	2011-04-06 03:30:43.000000000 +0200
++++ linux-2.6.39-rc2/include/pcmcia/device_id.h	2011-07-27 21:43:54.000000000 +0200
+@@ -95,6 +95,14 @@
+ 	.prod_id = { (v1), NULL, NULL, NULL }, \
+ 	.prod_id_hash = { (vh1), 0, 0, 0 }, }
  
--
--	/* Enable 32KHz clock function for AR5212+ chips
--	 * Set clocks to 32KHz operation and use an
--	 * external 32KHz crystal when sleeping if one
--	 * exists */
--	if (ah->ah_version == AR5K_AR5212 &&
--	    op_mode != NL80211_IFTYPE_AP)
--		ath5k_hw_set_sleep_clock(ah, true);
--
- 	/*
- 	 * Disable beacons and reset the TSF
- 	 */
--- 
-1.7.3.2
++#define PCMCIA_DEVICE_MANF_CARD_PROD_ID3(manf, card, v3, vh3) { \
++	.match_flags = PCMCIA_DEV_ID_MATCH_MANF_ID| \
++			PCMCIA_DEV_ID_MATCH_CARD_ID| \
++			PCMCIA_DEV_ID_MATCH_PROD_ID3, \
++	.manf_id = (manf), \
++	.card_id = (card), \
++	.prod_id = { NULL, NULL, (v3), NULL }, \
++	.prod_id_hash = { 0, 0, (vh3), 0 }, }
+ 
+ /* multi-function devices */
+ 
+--- linux-2.6.39-rc2-orig/drivers/net/wireless/hostap/hostap_cs.c	2011-04-06 03:30:43.000000000 +0200
++++ linux-2.6.39-rc2/drivers/net/wireless/hostap/hostap_cs.c	2011-07-27 21:12:19.000000000 +0200
+@@ -648,6 +648,8 @@ static struct pcmcia_device_id hostap_cs
+ 					 0x74c5e40d),
+ 	PCMCIA_DEVICE_MANF_CARD_PROD_ID1(0x0156, 0x0002, "Intersil",
+ 					 0x4b801a17),
++	PCMCIA_DEVICE_MANF_CARD_PROD_ID3(0x0156, 0x0002, "Version 01.02",
++					 0x4b74baa0),
+ 	PCMCIA_MFC_DEVICE_PROD_ID12(0, "SanDisk", "ConnectPlus",
+ 				    0x7a954bd9, 0x74be00c6),
+ 	PCMCIA_DEVICE_PROD_ID123(
 
+
+-- 
+Ondrej Zary
