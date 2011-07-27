@@ -1,74 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59517 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755480Ab1GAWCA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2011 18:02:00 -0400
-Subject: [PATCH] mac80211: allow driver to impose WoWLAN restrictions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 02 Jul 2011 00:02:01 +0200
-Message-ID: <1309557721.3888.3.camel@jlt3.sipsolutions.net> (sfid-20110702_000203_146113_D1B89600)
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:64197 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754273Ab1G0MOH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jul 2011 08:14:07 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Tony Houghton <h@realh.co.uk>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	e1000-devel@lists.sourceforge.net
+Subject: [RFC/RFT v2 09/12] e1000e: use common function for disabling ASPM
+Date: Wed, 27 Jul 2011 14:14:56 +0200
+Message-Id: <1311768899-4559-10-git-send-email-sgruszka@redhat.com> (sfid-20110727_141416_912400_A69E45F9)
+In-Reply-To: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
+References: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-If the driver can't support WoWLAN in the current
-state, this patch allows it to return 1 from the
-suspend callback to do the normal deconfiguration
-instead of using suspend/resume calls. Note that
-if it does this, resume won't be called.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: e1000-devel@lists.sourceforge.net
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- include/net/mac80211.h |    4 ++++
- net/mac80211/pm.c      |   16 ++++++++++------
- 2 files changed, 14 insertions(+), 6 deletions(-)
+ drivers/net/e1000e/netdev.c |   31 +------------------------------
+ 1 files changed, 1 insertions(+), 30 deletions(-)
 
---- a/include/net/mac80211.h	2011-07-02 00:00:36.000000000 +0200
-+++ b/include/net/mac80211.h	2011-07-02 00:00:37.000000000 +0200
-@@ -1628,6 +1628,10 @@ enum ieee80211_ampdu_mlme_action {
-  *	ask the device to suspend. This is only invoked when WoWLAN is
-  *	configured, otherwise the device is deconfigured completely and
-  *	reconfigured at resume time.
-+ *	The driver may also impose special conditions under which it
-+ *	wants to use the "normal" suspend (deconfigure), say if it only
-+ *	supports WoWLAN when the device is associated. In this case, it
-+ *	must return 1 from this function.
-  *
-  * @resume: If WoWLAN was configured, this indicates that mac80211 is
-  *	now resuming its operation, after this the device must be fully
---- a/net/mac80211/pm.c	2011-07-02 00:00:36.000000000 +0200
-+++ b/net/mac80211/pm.c	2011-07-02 00:00:37.000000000 +0200
-@@ -72,15 +72,19 @@ int __ieee80211_suspend(struct ieee80211
- 	local->wowlan = wowlan && local->open_count;
- 	if (local->wowlan) {
- 		int err = drv_suspend(local, wowlan);
--		if (err) {
-+		if (err < 0) {
- 			local->quiescing = false;
- 			return err;
-+		} else if (err > 0) {
-+			WARN_ON(err != 1);
-+			local->wowlan = false;
-+		} else {
-+			list_for_each_entry(sdata, &local->interfaces, list) {
-+				cancel_work_sync(&sdata->work);
-+				ieee80211_quiesce(sdata);
-+			}
-+			goto suspend;
- 		}
--		list_for_each_entry(sdata, &local->interfaces, list) {
--			cancel_work_sync(&sdata->work);
--			ieee80211_quiesce(sdata);
--		}
--		goto suspend;
+diff --git a/drivers/net/e1000e/netdev.c b/drivers/net/e1000e/netdev.c
+index 3310c3d..62ee7e4 100644
+--- a/drivers/net/e1000e/netdev.c
++++ b/drivers/net/e1000e/netdev.c
+@@ -5358,42 +5358,13 @@ static void e1000_complete_shutdown(struct pci_dev *pdev, bool sleep,
  	}
+ }
  
- 	/* disable keys */
-
+-#ifdef CONFIG_PCIEASPM
+-static void __e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
+-{
+-	pci_disable_link_state_locked(pdev, state);
+-}
+-#else
+-static void __e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
+-{
+-	int pos;
+-	u16 reg16;
+-
+-	/*
+-	 * Both device and parent should have the same ASPM setting.
+-	 * Disable ASPM in downstream component first and then upstream.
+-	 */
+-	pos = pci_pcie_cap(pdev);
+-	pci_read_config_word(pdev, pos + PCI_EXP_LNKCTL, &reg16);
+-	reg16 &= ~state;
+-	pci_write_config_word(pdev, pos + PCI_EXP_LNKCTL, reg16);
+-
+-	if (!pdev->bus->self)
+-		return;
+-
+-	pos = pci_pcie_cap(pdev->bus->self);
+-	pci_read_config_word(pdev->bus->self, pos + PCI_EXP_LNKCTL, &reg16);
+-	reg16 &= ~state;
+-	pci_write_config_word(pdev->bus->self, pos + PCI_EXP_LNKCTL, reg16);
+-}
+-#endif
+ static void e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
+ {
+ 	dev_info(&pdev->dev, "Disabling ASPM %s %s\n",
+ 		 (state & PCIE_LINK_STATE_L0S) ? "L0s" : "",
+ 		 (state & PCIE_LINK_STATE_L1) ? "L1" : "");
+ 
+-	__e1000e_disable_aspm(pdev, state);
++	pcie_disable_aspm(pdev, state);
+ }
+ 
+ #ifdef CONFIG_PM
+-- 
+1.7.1
 
