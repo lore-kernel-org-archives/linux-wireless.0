@@ -1,136 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:2126 "EHLO mga02.intel.com"
+Received: from nbd.name ([46.4.11.11]:36951 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750879Ab1GHQUe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2011 12:20:34 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 03/21] iwlagn: add an API for RX stop
-Date: Fri,  8 Jul 2011 08:46:11 -0700
-Message-Id: <1310139989-27661-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110708_182040_059009_19B2FA22)
-In-Reply-To: <1310139989-27661-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1310139989-27661-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1754293Ab1G0NBR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jul 2011 09:01:17 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 4/4] ath9k_hw: do not limit initial tx power to 20 dbm
+Date: Wed, 27 Jul 2011 15:01:05 +0200
+Message-Id: <1311771665-59853-4-git-send-email-nbd@openwrt.org> (sfid-20110727_150120_267025_27A5C25D)
+In-Reply-To: <1311771665-59853-3-git-send-email-nbd@openwrt.org>
+References: <1311771665-59853-1-git-send-email-nbd@openwrt.org>
+ <1311771665-59853-2-git-send-email-nbd@openwrt.org>
+ <1311771665-59853-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+When testing for tx power, bypass the default limits.
 
-Rx stop moves to transport layer.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   24 +++++++-----------------
- drivers/net/wireless/iwlwifi/iwl-agn.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-dev.h     |    2 ++
- drivers/net/wireless/iwlwifi/iwl-trans.c   |   10 ++++++++++
- 4 files changed, 19 insertions(+), 18 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 90d366e..25a592a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -905,17 +905,6 @@ void iwlagn_rx_replenish_now(struct iwl_priv *priv)
- 	iwlagn_rx_queue_restock(priv);
- }
- 
--int iwlagn_rxq_stop(struct iwl_priv *priv)
--{
--
--	/* stop Rx DMA */
--	iwl_write_direct32(priv, FH_MEM_RCSR_CHNL0_CONFIG_REG, 0);
--	iwl_poll_direct_bit(priv, FH_MEM_RSSR_RX_STATUS_REG,
--			    FH_RSSR_CHNL0_RX_STATUS_CHNL_IDLE, 1000);
--
--	return 0;
--}
--
- int iwlagn_hwrate_to_mac80211_idx(u32 rate_n_flags, enum ieee80211_band band)
- {
- 	int idx = 0;
-@@ -2321,13 +2310,14 @@ void iwlagn_stop_device(struct iwl_priv *priv)
- 	 * already dead.
- 	 */
- 	if (test_bit(STATUS_DEVICE_ENABLED, &priv->status)) {
--                iwlagn_txq_ctx_stop(priv);
--                iwlagn_rxq_stop(priv);
-+		iwlagn_txq_ctx_stop(priv);
-+		priv->trans.ops->rx_stop(priv);
- 
--                /* Power-down device's busmaster DMA clocks */
--                iwl_write_prph(priv, APMG_CLK_DIS_REG, APMG_CLK_VAL_DMA_CLK_RQT);
--                udelay(5);
--        }
-+		/* Power-down device's busmaster DMA clocks */
-+		iwl_write_prph(priv, APMG_CLK_DIS_REG,
-+			       APMG_CLK_VAL_DMA_CLK_RQT);
-+		udelay(5);
-+	}
- 
- 	/* Make sure (redundant) we've released our request to stay awake */
- 	iwl_clear_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index fabab0f..0fa379b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -193,7 +193,6 @@ void iwlagn_rx_queue_restock(struct iwl_priv *priv);
- void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority);
- void iwlagn_rx_replenish(struct iwl_priv *priv);
- void iwlagn_rx_replenish_now(struct iwl_priv *priv);
--int iwlagn_rxq_stop(struct iwl_priv *priv);
- int iwlagn_hwrate_to_mac80211_idx(u32 rate_n_flags, enum ieee80211_band band);
- void iwl_setup_rx_handlers(struct iwl_priv *priv);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index a29fdd4..8611cf0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1231,12 +1231,14 @@ struct iwl_trans;
-  * struct iwl_trans_ops - transport specific operations
- 
-  * @rx_init: inits the rx memory, allocate it if needed
-+ * @rx_stop: stop the rx
-  * @rx_free: frees the rx memory
-  * @tx_init:inits the tx memory, allocate if needed
-  * @tx_free: frees the tx memory
-  */
- struct iwl_trans_ops {
- 	int (*rx_init)(struct iwl_priv *priv);
-+	int (*rx_stop)(struct iwl_priv *priv);
- 	void (*rx_free)(struct iwl_priv *priv);
- 
- 	int (*tx_init)(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index 38b43e4..c4cd363 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -188,6 +188,15 @@ static void iwl_trans_rx_free(struct iwl_priv *priv)
- 	rxq->rb_stts = NULL;
- }
- 
-+static int iwl_trans_rx_stop(struct iwl_priv *priv)
-+{
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8006ce0..a2e5763 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2432,15 +2432,18 @@ void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit, bool test)
+ 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
+ 	struct ath9k_channel *chan = ah->curchan;
+ 	struct ieee80211_channel *channel = chan->chan;
++	int reg_pwr = min_t(int, MAX_RATE_POWER, regulatory->power_limit);
++	int chan_pwr = channel->max_power * 2;
 +
-+	/* stop Rx DMA */
-+	iwl_write_direct32(priv, FH_MEM_RCSR_CHNL0_CONFIG_REG, 0);
-+	return iwl_poll_direct_bit(priv, FH_MEM_RSSR_RX_STATUS_REG,
-+			    FH_RSSR_CHNL0_RX_STATUS_CHNL_IDLE, 1000);
-+}
-+
- /* TODO:remove this code duplication */
- static inline int iwlagn_alloc_dma_ptr(struct iwl_priv *priv,
- 				    struct iwl_dma_ptr *ptr, size_t size)
-@@ -490,6 +499,7 @@ error:
++	if (test)
++		reg_pwr = chan_pwr = MAX_RATE_POWER;
  
- static const struct iwl_trans_ops trans_ops = {
- 	.rx_init = iwl_trans_rx_init,
-+	.rx_stop = iwl_trans_rx_stop,
- 	.rx_free = iwl_trans_rx_free,
+ 	regulatory->power_limit = min(limit, (u32) MAX_RATE_POWER);
  
- 	.tx_init = iwl_trans_tx_init,
+ 	ah->eep_ops->set_txpower(ah, chan,
+ 				 ath9k_regd_get_ctl(regulatory, chan),
+ 				 channel->max_antenna_gain * 2,
+-				 channel->max_power * 2,
+-				 min((u32) MAX_RATE_POWER,
+-				 (u32) regulatory->power_limit), test);
++				 chan_pwr, reg_pwr, test);
+ }
+ EXPORT_SYMBOL(ath9k_hw_set_txpowerlimit);
+ 
 -- 
-1.7.0.4
+1.7.3.2
 
