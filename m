@@ -1,69 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:63417 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754074Ab1GQRgl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2011 13:36:41 -0400
-Received: by wwe5 with SMTP id 5so2570408wwe.1
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jul 2011 10:36:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1310763624.4164.29.camel@jlt3.sipsolutions.net>
-References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
-	<1310600747-9583-2-git-send-email-thomas@cozybit.com>
-	<1310723669.4164.18.camel@jlt3.sipsolutions.net>
-	<CAG6hwVONFH+vkSasF7AaSaqvHK78wwNtZesi0RSUnuCi17d9Fw@mail.gmail.com>
-	<1310763624.4164.29.camel@jlt3.sipsolutions.net>
-Date: Sun, 17 Jul 2011 12:36:40 -0500
-Message-ID: <CAG6hwVOVJGBF87jqY-K4xnjDWcVD-RTYXfV-N9=T-5Ty1U2TdQ@mail.gmail.com> (sfid-20110717_193645_338763_4D070BBF)
-Subject: Re: [PATCH 1/5] mac80211: give if_mesh a beacon
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:6987 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754861Ab1G0TNV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jul 2011 15:13:21 -0400
+Subject: Re: [PATCH] libertas_usb: use USB interface as parent device
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Drake <dsd@laptop.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+Date: Wed, 27 Jul 2011 14:15:38 -0500
+In-Reply-To: <20110721194344.9DDC99D401C@zog.reactivated.net>
+References: <20110721194344.9DDC99D401C@zog.reactivated.net>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1311794142.17655.3.camel@dcbw.foobar.com> (sfid-20110727_211328_094195_228214F3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 15, 2011 at 2:00 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2011-07-15 at 12:30 -0700, Thomas Pedersen wrote:
->
->> >> +     if (ieee80211_vif_is_mesh(&sdata->vif))
->> >> +             rcu_assign_pointer(sdata->u.mesh.beacon, new);
->
->> The ifdef is already in ieee80211_vif_is_mesh()
->
-> Yeah but sdata->u.mesh doesn't exist without mesh configured.
->
->> > what's + 400? You can't really think the TIM IE is that long?
->>
->> No, but you're right, that number is pretty arbitrary. Maximum length
->> of mesh IEs currently (Mesh ID + Mesh Conf + Mesh Awake) is only 47.
->> Since mesh IEs have to be added during beacon time, might it make
->> sense to track the needed length in the if_mesh?
->
-> Maybe just add a comment what's included in the 400?
->
->> > Also ... since you'll need PS support eventually anyway, maybe you
->> > should refactor "struct ieee80211_if_ap" into something AP-specific
->> > (currently only VLANs) and the rest, and then use "the rest" in mesh as
->> > well to make all this code more unified.
->>
->> I like this approach much better. Are you suggesting just factoring
->> out the PS data, or taking it further and creating a generic "if which
->> beacons"?
->
-> Well, I don't think "iface which beacons" is really what we need here --
-> IBSS sends beacons as well but we don't really have PS support there and
-> it'd be different anyway. But on the other hand, if you also factor out
-> the beacon pointer, you can embed that into both. Like I said, I think
-> from struct ..._if_ap you only have the vlan list that you don't want?
+On Thu, 2011-07-21 at 20:43 +0100, Daniel Drake wrote:
+> Currently, "udevadm info -a -p /sys/class/net/wlan0" doesn't mention
+> the usb8xxx or libertas driver anywhere. This makes writing udev rules
+> a bit uncomfortable.
+> 
+> Using the USB interface as the parent device corrects the hierarchy.
+> 
+> Signed-off-by: Daniel Drake <dsd@laptop.org>
 
-I'd rather just factor all the PS data out for now, and maintain the
-beacon separately. Is there Is there any good reason we'd want to lump
-these two together? ieee80211_beacon_add_tim() for example already
-treats these as separate.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
->
-> johannes
->
->
+> ---
+>  drivers/net/wireless/libertas/if_usb.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+> index b5acc39..e368b29 100644
+> --- a/drivers/net/wireless/libertas/if_usb.c
+> +++ b/drivers/net/wireless/libertas/if_usb.c
+> @@ -324,7 +324,7 @@ static int if_usb_probe(struct usb_interface *intf,
+>  	}
+>  	kparam_unblock_sysfs_write(fw_name);
+>  
+> -	if (!(priv = lbs_add_card(cardp, &udev->dev)))
+> +	if (!(priv = lbs_add_card(cardp, &intf->dev)))
+>  		goto err_prog_firmware;
+>  
+>  	cardp->priv = priv;
+
+
