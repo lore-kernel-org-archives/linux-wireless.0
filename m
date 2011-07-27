@@ -1,110 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:35147 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932195Ab1GNR3Y (ORCPT
+Received: from mail-ey0-f171.google.com ([209.85.215.171]:47580 "EHLO
+	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754036Ab1G0J0w convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 13:29:24 -0400
-Received: by wyg8 with SMTP id 8so304384wyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2011 10:29:23 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3] mac80211: reconfigure tx on device reconfiguration
-Date: Thu, 14 Jul 2011 20:29:42 +0300
-Message-Id: <1310664582-11973-1-git-send-email-eliad@wizery.com> (sfid-20110714_192927_724513_87966210)
+	Wed, 27 Jul 2011 05:26:52 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAMzZzFGqPv6Nbw8J8JGNKcLA76sAs3oD6+hH9NPCjwA33fYpOQ@mail.gmail.com>
+References: <CAMzZzFGqPv6Nbw8J8JGNKcLA76sAs3oD6+hH9NPCjwA33fYpOQ@mail.gmail.com>
+Date: Wed, 27 Jul 2011 17:26:50 +0800
+Message-ID: <CAMzZzFGpDiFAhsLAb+SQxjbGMzBoOStF_Lr7Eb3PT6Drcf=VdA@mail.gmail.com> (sfid-20110727_112712_502840_6946C5D2)
+Subject: Oops when insmod rtl8192ce
+From: hubert Liao <liao.hubertt@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add tx_conf array to save the current tx queues
-configuration, and reconfig it on resume (ieee80211_reconfig).
-
-On resume, the driver is being reconfigured. Without
-reconfiguring the tx queues as well, the driver might
-configure the device to use wrong ac params (e.g. ps-poll
-instead of uapsd).
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-v2: edit commit message
-v3: use hw->queues, save tx conf in ieee80211_set_txq_params
-
- net/mac80211/cfg.c         |    4 ++++
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |    1 +
- net/mac80211/util.c        |    7 ++++++-
- 4 files changed, 12 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index d7ea34a..4938841 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1262,6 +1262,10 @@ static int ieee80211_set_txq_params(struct wiphy *wiphy,
- 	 */
- 	p.uapsd = false;
- 
-+	if (params->queue >= local->hw.queues)
-+		return -EINVAL;
-+
-+	local->tx_conf[params->queue] = p;
- 	if (drv_conf_tx(local, params->queue, &p)) {
- 		wiphy_debug(local->hw.wiphy,
- 			    "failed to set TX queue parameters for queue %d\n",
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 4f2e424..a976d8d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -721,6 +721,7 @@ struct ieee80211_local {
- 	struct workqueue_struct *workqueue;
- 
- 	unsigned long queue_stop_reasons[IEEE80211_MAX_QUEUES];
-+	struct ieee80211_tx_queue_params tx_conf[IEEE80211_MAX_QUEUES];
- 	/* also used to protect ampdu_ac_queue and amdpu_ac_stop_refcnt */
- 	spinlock_t queue_stop_reason_lock;
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 182cda6..6d0883a 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -917,6 +917,7 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
- 			    params.aifs, params.cw_min, params.cw_max,
- 			    params.txop, params.uapsd);
- #endif
-+		local->tx_conf[queue] = params;
- 		if (drv_conf_tx(local, queue, &params))
- 			wiphy_debug(local->hw.wiphy,
- 				    "failed to set TX queue parameters for queue %d\n",
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index faa392e..96f4cf9 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -799,6 +799,7 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
- 
- 		qparam.uapsd = false;
- 
-+		local->tx_conf[queue] = qparam;
- 		drv_conf_tx(local, queue, &qparam);
- 	}
- 
-@@ -1146,7 +1147,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 	struct ieee80211_hw *hw = &local->hw;
- 	struct ieee80211_sub_if_data *sdata;
- 	struct sta_info *sta;
--	int res;
-+	int res, i;
- 
- #ifdef CONFIG_PM
- 	if (local->suspended)
-@@ -1219,6 +1220,10 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 	/* setup RTS threshold */
- 	drv_set_rts_threshold(local, hw->wiphy->rts_threshold);
- 
-+	/* reconfigure tx conf */
-+	for (i = 0; i < hw->queues; i++)
-+		drv_conf_tx(local, i, &local->tx_conf[i]);
-+
- 	/* reconfigure hardware */
- 	ieee80211_hw_config(local, ~0);
- 
--- 
-1.7.0.4
-
+Hi,
+We got an oops when insmod rtl8192ce module (the board is an ARM soc),
+accroding the oops message, find it's because in rtl_pci_probe()
+called _rtl_pci_find_adapter(),
+in this funcation, the  pdev->bus->self is a NULL pointer .
+static boot _rtl_pci_find_adapter(strcut pci_dev *dev,
+              struct ieee80211_hw *hw)
+{
+struct pci_dev *bridge_pdev = pdev->bus->self;   //line 1601
+...
+pcipriv->ndis_adapter.pcibridge_vendorid = bridge_pdev->vendor; <--
+[oops here] line 1700
+...
+}
+here, I just want to know why the bus->self  is NULL?
+----
+[  148.186632] Unable to handle kernel NULL pointer dereference at
+virtual address 00000020
+[  148.195255] pgd = cfb40000
+[  148.198178] [00000020] *pgd=0e54d831, *pte=00000000, *ppte=00000000
+[  148.204743] Internal error: Oops: 17 [#1] PREEMPT
+[  148.209426] Modules linked in: rtl8192ce(+) rtl8192c_common rtlwifi
+[  148.215702] CPU: 0    Not tainted  (3.0.0-05684-ge371d46 #34)
+[  148.221453] PC is at rtl_pci_probe+0x398/0x1bd8 [rtlwifi]
+[  148.226827] LR is at 0x4
+[  148.229356] pc : [<bf00fdc0>]    lr : [<00000004>]    psr: 80000013
+[  148.229364] sp : cfb37d10  ip : bf012606  fp : ce518dc0
+[  148.240800] r10: ce51abbc  r9 : 00008178  r8 : cf807000
+[  148.246001] r7 : 00004000  r6 : 00000000  r5 : 00000000  r4 : 1fff7fff
+[  148.252498] r3 : 0000037c  r2 : 00000000  r1 : bf012584  r0 : 00000000
+[  148.258997] Flags: Nzcv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment user
+[  148.266108] Control: 0005397f  Table: 0fb40000  DAC: 00000015
+[  148.271826] Process insmod (pid: 650, stack limit = 0xcfb36270)
+[  148.277718] Stack: (0xcfb37d10 to 0xcfb38000)
+[  148.282061] 7d00:                                     00000000
+c018928c 00000000 ce54f870
+[  148.290212] 7d20: 00000001 cf804680 bf012584 ce518240 ce518dc0
+ce51abbc cf807060 000010ec
+[  148.298368] 7d40: 00000000 ce54f810 cfb37d90 c00f2194 00000000
+000012c7 cfb37d90 ce54f810
+[  148.306524] 7d60: cfb37d90 c00f22f8 00000109 01000000 cfb37d90
+bf043c80 cf807000 00000000
+[  148.314672] 7d80: bf043c50 cfa7df00 c054ba00 bf043c80 bf049000
+c01a8d80 bf043c80 c01a901c
+[  148.322828] 7da0: cf807068 bf043c50 cf807000 bf0439b0 bf043c80
+cf807060 cf807060 bf043c80
+[  148.330984] 7dc0: c01dce54 c01dcd04 cf807060 cf807094 bf043c80
+c01dce54 cfa7df00 c04bb780
+[  148.339140] 7de0: 00000000 c01dcee0 00000000 cfb37df8 bf043c80
+c01dc4f8 cf805c38 cf87c810
+[  148.347296] 7e00: bf043c50 cf81cb00 bf043c80 bf043c80 c04a4f0c
+c01dbd00 bf0437ac 00000000
+[  148.355452] 7e20: bf043c50 bf043c50 bf043c80 bf043c80 c04a4f0c
+cfb36000 c004e388 c01dd284
+[  148.363609] 7e40: bf043c50 cfb0c540 bf043c80 c04a4f0c cfb36000
+c01a92dc 00000001 cfb0c540
+[  148.371765] 7e60: 00000001 bf04642c cfb36000 bf049014 00000001
+c0008578 c004e460 c037204c
+[  148.379920] 7e80: c049d93c 00000000 bf04642c ffffffff 00000001
+c003d1f8 00000000 ce51e240
+[  148.388069] 7ea0: 00000001 00000001 cfb0c540 00000001 bf04642c
+00000010 bf046474 c004e388
+[  148.396225] 7ec0: c004e460 c004f62c bf046438 00000001 cfb36000
+bf046438 d0c0d6da d0bcbcfc
+[  148.404381] 7ee0: bf046550 c03786cc d0ad7000 00136709 d0bcb554
+d0bcb368 d0c0c554 cfa6a800
+[  148.412536] 7f00: 0001156c 0001225c 00000000 00000000 00000031
+00000032 00000018 00000000
+[  148.420683] 7f20: 00000010 00000000 776c7472 00696669 00000000
+00000000 00000000 00000000
+[  148.428831] 7f40: 00000000 00000000 00000000 00000000 00000000
+00000000 00000000 00000000
+[  148.436978] 7f60: 00000000 00000000 00000000 00000000 00000000
+00000000 00000000 c009b170
+[  148.445127] 7f80: 00000003 40085000 bedf0db4 00000069 00000080
+c0008ec4 cfb36000 00000000
+[  148.453283] 7fa0: 00000000 c0008d40 40085000 bedf0db4 40389008
+00136709 000b72df 00000000
+[  148.461439] 7fc0: 40085000 bedf0db4 00000069 00000080 bedf0db8
+000b72df bedf0db8 00000000
+[  148.469587] 7fe0: 00000001 bedf0a5c 0001c7e8 40326ac4 60000010
+40389008 00000000 00000000
+[  148.477783] [<bf00fdc0>] (rtl_pci_probe+0x398/0x1bd8 [rtlwifi])
+from [<c01a8d80>] (local_pci_probe+0x18/0x1c)
+[  148.487677] [<c01a8d80>] (local_pci_probe+0x18/0x1c) from
+[<c01a901c>] (pci_device_probe+0x6c/0x90)
+[  148.496701] [<c01a901c>] (pci_device_probe+0x6c/0x90) from
+[<c01dcd04>] (driver_probe_device+0x80/0x1d0)
+[  148.506156] [<c01dcd04>] (driver_probe_device+0x80/0x1d0) from
+[<c01dcee0>] (__driver_attach+0x8c/0x90)
+[  148.515521] [<c01dcee0>] (__driver_attach+0x8c/0x90) from
+[<c01dc4f8>] (bus_for_each_dev+0x60/0x94)
+[  148.524541] [<c01dc4f8>] (bus_for_each_dev+0x60/0x94) from
+[<c01dbd00>] (bus_add_driver+0xa0/0x25c)
+[  148.533561] [<c01dbd00>] (bus_add_driver+0xa0/0x25c) from
+[<c01dd284>] (driver_register+0x6c/0x154)
+[  148.542581] [<c01dd284>] (driver_register+0x6c/0x154) from
+[<c01a92dc>] (__pci_register_driver+0x38/0xa8)
+[  148.552148] [<c01a92dc>] (__pci_register_driver+0x38/0xa8) from
+[<bf049014>] (rtl92ce_module_init+0x14/0x58 [rtl8192ce])
+[  148.563007] [<bf049014>] (rtl92ce_module_init+0x14/0x58
+[rtl8192ce]) from [<c0008578>] (do_one_initcall+0x34/0x19c)
+[  148.573413] [<c0008578>] (do_one_initcall+0x34/0x19c) from
+[<c004f62c>] (sys_init_module+0xf4/0x13a4)
+[  148.582609] [<c004f62c>] (sys_init_module+0xf4/0x13a4) from
+[<c0008d40>] (ret_fast_syscall+0x0/0x2c)
+[  148.591713] Code: e598201c e2022007 e5ca2377 e59d0030 (e1d002b0)
+[  148.602704] ---[ end trace be518a2fa6d9a905 ]---
