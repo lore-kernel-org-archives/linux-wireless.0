@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:58621 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755541Ab1GANAu (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:60001 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754650Ab1G0XCh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2011 09:00:50 -0400
-Message-ID: <4E0DC4FC.2000309@candelatech.com> (sfid-20110701_150053_186426_871D9BC0)
-Date: Fri, 01 Jul 2011 06:00:44 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 27 Jul 2011 19:02:37 -0400
+Received: by yxi11 with SMTP id 11so1125697yxi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2011 16:02:37 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Crash in mlme.c, wireless-testing 2.6.39-wl + hacks
-References: <4E0CE929.7040300@candelatech.com>	 (sfid-20110630_232253_480125_B86CAA5E) <1309469454.3873.0.camel@jlt3.sipsolutions.net>	 <4E0CECDD.7040409@candelatech.com> <1309507846.3888.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1309507846.3888.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CAB=NE6WwP+S8f=MFDtuC6a97nZEGak5gfFEy9majqD9KVVSjiw@mail.gmail.com>
+References: <CAEzeFio8D9aKDFX+Wzo0yceWXy_5tDKpLDFzr9FmarTXCHUOQg@mail.gmail.com>
+ <CAEzeFirXVu_pwDCb6t=ps4xskc4fFUy9gGECJgK1q7cYhLizVQ@mail.gmail.com>
+ <CAEzeFip+PCV4Ccsi6L+RSvrM_86J2=Ps6193WyC0QzVfwe64LQ@mail.gmail.com>
+ <CAEzeFiq2FXYKkfXjDtguryniaU7hQkJczLU98V9P3Uv5-D-P3g@mail.gmail.com>
+ <CAB=NE6VT_Q5Apb_ZCfK9fSYGDtaUOwmVqeogN8HE6+SgGYek1A@mail.gmail.com>
+ <CAEzeFiq5HXyazJfAx3mRV7TBy6CVEivJY63GkF8jnCczGsUK8Q@mail.gmail.com>
+ <CAB=NE6WaRyX0yGs=6h6+2V+gUSPHoY19TTHuXBRAWqR9hw+qAw@mail.gmail.com>
+ <loom.20110727T230512-90@post.gmane.org> <CAB=NE6WwP+S8f=MFDtuC6a97nZEGak5gfFEy9majqD9KVVSjiw@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 27 Jul 2011 16:02:17 -0700
+Message-ID: <CAB=NE6U3wa88Fk03q7u17WtoJP1QmoSgJ4D27GSs0pBYGBuCTw@mail.gmail.com> (sfid-20110728_010239_982402_9A408A45)
+Subject: Re: Testing Auto Channel Selection with hostapd in ath5k and ath9k
+To: Swaminathan Vasanth <swaminathanvasanth.r@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/01/2011 01:10 AM, Johannes Berg wrote:
+On Wed, Jul 27, 2011 at 4:01 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Wed, Jul 27, 2011 at 2:18 PM, Swaminathan Vasanth
+> <swaminathanvasanth.r@gmail.com> wrote:
+>> Hi Luis,
+>>  Do you maintain any public git for ACS ? If so can you please send the
+>> repository ID? Since hostapd of Openwrt uses the hostap git namely
+>> git://w1.fi/srv/git/hostap.git for compiling and building, i think that if i can
+>> point it to the correct public ACS git, ACS might be integrated with Openwrt.
+>>  Thanks
+>> BR,
 >
->> Very little significant changes in this area, but I've a non-related
->> proprietary module loaded, and patches to various other parts of the
->> networking code.
->>
->> The full tree is here if you want to take a look, or I can send
->> you a full unified diff:
->>
->> http://dmz2.candelatech.com/git/gitweb.cgi?p=linux.wireless-testing-ct.ct/.git;a=summary
->
-> Fair enough, I don't see anything there that would impact this bug.
->
->> Seems a tricky timing related bug, possibly we're only hitting it because
->> we're testing on an older C3 processor system that is significantly slower
->> than our normal test systems.
->
-> Hm. That seems odd. I didn't see anything that lacked locking either.
->
-> I think the detail that we need to investigate is what you said before:
->
->> configured for in-kernel authentication,
->> re-configure them for supplicant, let them associate, delete one of
->> them.
->
-> but I don't see anything there either right now.
+> Can't you just point it to a local /home/foo/hostapd/.git  ?
 
-Well, would you accept a patch that checked for null bssid, and did a WARN_ON
-and bailed out if found?  Seems little harm, and we verified that the system
-otherwise remained stable with such a patch added...
+I just have a tree for ACS, with code independent from hostapd, but
+nothing for hostapd. If you *really* need this let me know and I can
+make one..
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+  Luis
