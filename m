@@ -1,39 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:57987 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751871Ab1GSQG6 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56047 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752030Ab1G0TCV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 12:06:58 -0400
-Received: by ywe9 with SMTP id 9so1843589ywe.19
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2011 09:06:58 -0700 (PDT)
-Message-ID: <4E25AB9F.8010607@lwfinger.net> (sfid-20110719_180701_864002_3C918570)
-Date: Tue, 19 Jul 2011 11:06:55 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 27 Jul 2011 15:02:21 -0400
+Date: Wed, 27 Jul 2011 14:49:21 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2011-07-27
+Message-ID: <20110727184920.GB16431@tuxdriver.com> (sfid-20110727_210244_990212_B811D2A1)
 MIME-Version: 1.0
-To: Stefan Assmann <sassmann@redhat.com>
-CC: ali@internetdog.org, wireless <linux-wireless@vger.kernel.org>
-Subject: Re: r8712u issue
-References: <4E2051F3.20103@redhat.com> <4E205984.5040803@lwfinger.net> <4E23E56C.9000202@redhat.com> <20110718082709.GA8390@internetdog.org> <4E23F2E0.3050200@redhat.com> <4E2448D2.50502@lwfinger.net> <4E244AC6.2030306@redhat.com> <4E2454EC.1050900@lwfinger.net> <4E25858D.9010407@redhat.com>
-In-Reply-To: <4E25858D.9010407@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/19/2011 08:24 AM, Stefan Assmann wrote:
->
-> So far I can say that with scan_ssid=1 after rebooting the AP the
-> connection is properly re-established. Looks promising.
+Dave,
 
-Your results make sense. The driver is fairly passive in all this. It gets TX 
-requests from the MAC layer, and passes received data back up to that layer. It 
-seems likely that the MAC layer built into r8712u is not keeping track of 
-missing responses, or it is not probing the AP. In either case, it would not be 
-productive to devote any effort to fixing that part when either using 
-NetworkManager or setting scan_ssid for wpa_supplicant establishes periodic 
-scans. When these fail to get response from the AP, the softmac code will 
-respond, as you see.
+Here is a handful of fixes intended for 3.1.  This includes a
+user-visible typo fix, a fix for a user after free in the new pn533
+NFC driver, a cfg80211 fix for a possible NULL pointer dereference,
+a fix for an invalid memory access in b43, and another b43 fix for
+a memory corruption problem.
 
-The ultimate fix will be to convert to the driver to use mac80211, which is a 
-much better MAC layer. That is on my TODO list, but it has low priority.
+On top of that b43 memory corruption fix, there is a patch to remove
+BROKEN from the B43_BCMA Kconfig entry, which is key to enabling
+support for some of the more modern Broadcom wireless hardware.
+I'm sure the Rafał (and a number of others) would love to see that
+merged while the 3.1 merge window is still open as well.
 
-Larry
+Please let me know if there are problems...
+
+Thanks!
+
+John
+
+---
+
+The following changes since commit 41bf37117b47fc5ce2aae91f6a108e7e42e0b046:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6 into for-davem (2011-07-22 17:51:16 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git for-davem
+
+Dan Carpenter (1):
+      NFC: pn533: use after free in pn533_disconnect()
+
+John W. Linville (1):
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-next-2.6 into for-davem
+
+Mihai Moldovan (1):
+      wireless: fix a typo in ignore_reg_update
+
+Pavel Roskin (1):
+      b43: fix invalid memory access in b43_ssb_remove()
+
+Rafał Miłecki (2):
+      b43: bus: fix memory corruption when setting driver's data
+      b43: bcma: drop BROKEN
+
+Sven Neumann (1):
+      cfg80211: really ignore the regulatory request
+
+ drivers/net/wireless/b43/Kconfig |    2 +-
+ drivers/net/wireless/b43/bus.c   |    2 ++
+ drivers/net/wireless/b43/main.c  |    5 +++--
+ drivers/nfc/pn533.c              |    2 +-
+ net/wireless/reg.c               |    7 ++++---
+ 5 files changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+index d2293dc..3cab843 100644
+--- a/drivers/net/wireless/b43/Kconfig
++++ b/drivers/net/wireless/b43/Kconfig
+@@ -28,7 +28,7 @@ config B43
+ 
+ config B43_BCMA
+ 	bool "Support for BCMA bus"
+-	depends on B43 && BCMA && BROKEN
++	depends on B43 && BCMA
+ 	default y
+ 
+ config B43_SSB
+diff --git a/drivers/net/wireless/b43/bus.c b/drivers/net/wireless/b43/bus.c
+index 64c3f65..05f6c7b 100644
+--- a/drivers/net/wireless/b43/bus.c
++++ b/drivers/net/wireless/b43/bus.c
+@@ -244,10 +244,12 @@ void b43_bus_set_wldev(struct b43_bus_dev *dev, void *wldev)
+ #ifdef CONFIG_B43_BCMA
+ 	case B43_BUS_BCMA:
+ 		bcma_set_drvdata(dev->bdev, wldev);
++		break;
+ #endif
+ #ifdef CONFIG_B43_SSB
+ 	case B43_BUS_SSB:
+ 		ssb_set_drvdata(dev->sdev, wldev);
++		break;
+ #endif
+ 	}
+ }
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 73fbf03..a92cde8 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -5350,6 +5350,7 @@ static void b43_ssb_remove(struct ssb_device *sdev)
+ {
+ 	struct b43_wl *wl = ssb_get_devtypedata(sdev);
+ 	struct b43_wldev *wldev = ssb_get_drvdata(sdev);
++	struct b43_bus_dev *dev = wldev->dev;
+ 
+ 	/* We must cancel any work here before unregistering from ieee80211,
+ 	 * as the ieee80211 unreg will destroy the workqueue. */
+@@ -5365,14 +5366,14 @@ static void b43_ssb_remove(struct ssb_device *sdev)
+ 		ieee80211_unregister_hw(wl->hw);
+ 	}
+ 
+-	b43_one_core_detach(wldev->dev);
++	b43_one_core_detach(dev);
+ 
+ 	if (list_empty(&wl->devlist)) {
+ 		b43_leds_unregister(wl);
+ 		/* Last core on the chip unregistered.
+ 		 * We can destroy common struct b43_wl.
+ 		 */
+-		b43_wireless_exit(wldev->dev, wl);
++		b43_wireless_exit(dev, wl);
+ 	}
+ }
+ 
+diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
+index 0372315..c77e054 100644
+--- a/drivers/nfc/pn533.c
++++ b/drivers/nfc/pn533.c
+@@ -1596,7 +1596,7 @@ static void pn533_disconnect(struct usb_interface *interface)
+ 	usb_free_urb(dev->out_urb);
+ 	kfree(dev);
+ 
+-	nfc_dev_info(&dev->interface->dev, "NXP PN533 NFC device disconnected");
++	nfc_dev_info(&interface->dev, "NXP PN533 NFC device disconnected");
+ }
+ 
+ static struct usb_driver pn533_driver = {
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 1ad0f39..02751db 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -903,7 +903,7 @@ static bool ignore_reg_update(struct wiphy *wiphy,
+ 	    initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+ 	    !is_world_regdom(last_request->alpha2)) {
+ 		REG_DBG_PRINT("Ignoring regulatory request %s "
+-			      "since the driver requires its own regulaotry "
++			      "since the driver requires its own regulatory "
+ 			      "domain to be set first",
+ 			      reg_initiator_name(initiator));
+ 		return true;
+@@ -1125,12 +1125,13 @@ void wiphy_update_regulatory(struct wiphy *wiphy,
+ 	enum ieee80211_band band;
+ 
+ 	if (ignore_reg_update(wiphy, initiator))
+-		goto out;
++		return;
++
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 		if (wiphy->bands[band])
+ 			handle_band(wiphy, band, initiator);
+ 	}
+-out:
++
+ 	reg_process_beacons(wiphy);
+ 	reg_process_ht_flags(wiphy);
+ 	if (wiphy->reg_notifier)
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
