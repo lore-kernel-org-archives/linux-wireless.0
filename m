@@ -1,85 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:61147 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751191Ab1GUSSh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2011 14:18:37 -0400
-Received: by vxh35 with SMTP id 35so1085392vxh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2011 11:18:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAN=pzd+EFcyRnexjiMMLNR86hT_UKiePr=yCkZZk5dD4sqYSew@mail.gmail.com>
-References: <CAN=pzdLRaRHkg4NquUpDhEwRzq-roKQXMtMcwnr031maDSLRfw@mail.gmail.com>
-	<CAGXE3d9HgRvdJModc3hSA25+jLktZJ3i997oq7GfZz4dUJfuvw@mail.gmail.com>
-	<CAN=pzdKHWNcvwAn3uDMzTdpvv3MkM9KNC89NuzZX=z6npBnUGg@mail.gmail.com>
-	<201107211613.01938.helmut.schaa@googlemail.com>
-	<CAN=pzdLHHgyPxEbCOGEXvbuhAYZ863fW_Rai5OWWxE8yHai1jw@mail.gmail.com>
-	<CAN=pzd+EFcyRnexjiMMLNR86hT_UKiePr=yCkZZk5dD4sqYSew@mail.gmail.com>
-Date: Thu, 21 Jul 2011 22:18:37 +0400
-Message-ID: <CAN=pzdL596WrhmaWWE6s_ouAmR-zSr1bUki2YVzLKgE1Y2VijQ@mail.gmail.com> (sfid-20110721_201841_427502_CEE01928)
-Subject: Re: rt2x00, AP mode, 802.11n is not working properly
-From: Stanislav Demakov <s.demakov@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:63632 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754223Ab1G0MOD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jul 2011 08:14:03 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Tony Houghton <h@realh.co.uk>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [RFC/RFT v2 11/12] ath9k: be prepare for dynamic ASPM settings change
+Date: Wed, 27 Jul 2011 14:14:58 +0200
+Message-Id: <1311768899-4559-12-git-send-email-sgruszka@redhat.com> (sfid-20110727_141413_783386_71A77F1A)
+In-Reply-To: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
+References: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quick note: changed .entry_num value back to 64 and the speed raised
-even more! Now it's about 2.5 MB/s.
-But still there is still room for improvement. :)
-Looks like rt2800usb_txdone_entry_check was the major cause for the delay.
+Kernel offer possibility to change ASPM settings using
+/sys/module/pcie_aspm/parameters/policy interface. As settings can be
+changed, we also need to change ath9k hw registers. Patch implement
+this by monitoring power_off state, and based on that state setup
+register when pci core inform us about ASPM change.
 
-2011/7/21 Stanislav Demakov <s.demakov@gmail.com>:
-> Just applied your patch to 2011-07-20 manually and now download speed
-> is around 1 MByte/s which is better than it was before (100-200kb/s).
->
-> Maybe you could give an advice what else should I try to change?
-> Because in 2010-12-13 version DL speed is still better and around
-> 4MByte\s.
->
-> 2011/7/21 Stanislav Demakov <s.demakov@gmail.com>:
->>>>Disabling WMM might force some clients to disable 11n, not sure though how
->> this relates.
->>
->> That's right, this is why I need it to work properly when it's enabled.
->> E.g my netbook can handle 11n without WMM and I get 65mbps, but
->> iDevices (ipad ipod) will only connect in G mode in this case.
->>
->>
->> 2011/7/21 Helmut Schaa <helmut.schaa@googlemail.com>:
->>> Am Donnerstag, 21. Juli 2011 schrieb Stanislav Demakov:
->>>> This patch won't apply on current compat-wireless-2011-07-20.tar.bz2
->>>>
->>>> (Stripping trailing CRs from patch.)
->>>> patching file b/drivers/net/wireless/rt2x00/rt2800lib.c
->>>> Hunk #1 FAILED at 4194.
->>>> 1 out of 1 hunk FAILED -- saving rejects to file
->>>> b/drivers/net/wireless/rt2x00/rt2800lib.c.rej
->>>> (Stripping trailing CRs from patch.)
->>>> patching file b/drivers/net/wireless/rt2x00/rt2800usb.c
->>>> Hunk #1 FAILED at 527.
->>>> patch unexpectedly ends in middle of line
->>>> Hunk #2 FAILED at 820.
->>>> 2 out of 2 hunks FAILED -- saving rejects to file
->>>> b/drivers/net/wireless/rt2x00/rt2800usb.c.rej
->>>>
->>>> Should I use another version of compat wireless or edit files manually?
->>>
->>> Just edit manually, it's not much ...
->>>
->>>> Also I have no stability issues, the connection is stable, but as I
->>>> said the TX speed from AP running rt2x00 (the driver is in Master
->>>> mode) to client is extremely slow in 802.11n+WMM mode.
->>>
->>> Yeah, understood. That's what I saw in STA mode as well. Now I get a stable
->>> transmit speed >20Mbps (MCS7 20Mhz).
->>>
->>>> And this is only WMM mode related, because wIthout it everything is fine.
->>>
->>> Disabling WMM might force some clients to disable 11n, not sure though how
->>> this relates.
->>>
->>> Helmut
->>>
->>
->
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ath/ath9k/hw-ops.h |    1 +
+ drivers/net/wireless/ath/ath9k/hw.h     |    1 +
+ drivers/net/wireless/ath/ath9k/pci.c    |   31 +++++++++++++++++++++++++++++++
+ 3 files changed, 33 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index dd9003e..0743e82 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -24,6 +24,7 @@
+ static inline void ath9k_hw_configpcipowersave(struct ath_hw *ah,
+ 					       bool power_off)
+ {
++	ah->power_off = power_off;
+ 	if (ah->aspm_enabled != true)
+ 		return;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 6abf26d..eb736ca 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -672,6 +672,7 @@ struct ath_hw {
+ 	bool sw_mgmt_crypto;
+ 	bool is_pciexpress;
+ 	bool aspm_enabled;
++	bool power_off;
+ 	bool is_monitoring;
+ 	bool need_an_top2_fixup;
+ 	u16 tx_trig_level;
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index a92e55f..c46920b 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -286,6 +286,34 @@ static void ath_pci_remove(struct pci_dev *pdev)
+ 	pci_release_region(pdev, 0);
+ }
+ 
++#ifdef CONFIG_PCIEASPM
++
++static void ath_pci_aspm_changed(struct pci_dev *pdev, u32 state)
++{
++	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
++	struct ath_softc *sc = hw->priv;
++	struct ath_hw *ah = sc->sc_ah;
++
++	spin_lock_irq(&sc->sc_pcu_lock);
++
++	/*
++	 * ASPM settings were changed, we have to configure PCIe PM and SERDES
++	 * registers based on current state of device and new ASPM settings.
++	 */
++	if (state & (PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1)) {
++		ah->aspm_enabled = true;
++		ath9k_hw_configpcipowersave(ah, ah->power_off);
++	} else {
++		if (!ah->power_off)
++			ath9k_hw_configpcipowersave(ah, true);
++		ah->aspm_enabled = false;
++	}
++
++	spin_unlock_irq(&sc->sc_pcu_lock);
++}
++
++#endif
++
+ #ifdef CONFIG_PM
+ 
+ static int ath_pci_suspend(struct device *device)
+@@ -365,6 +393,9 @@ static struct pci_driver ath_pci_driver = {
+ 	.id_table   = ath_pci_id_table,
+ 	.probe      = ath_pci_probe,
+ 	.remove     = ath_pci_remove,
++#ifdef CONFIG_PCIEASPM
++	.aspm_changed = ath_pci_aspm_changed,
++#endif
+ 	.driver.pm  = ATH9K_PM_OPS,
+ };
+ 
+-- 
+1.7.1
+
