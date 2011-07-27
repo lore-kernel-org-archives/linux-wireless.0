@@ -1,60 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:47383 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751005Ab1GMT4L convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 15:56:11 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 13 Jul 2011 12:56:03 -0700
-Subject: RE: [PATCH 10/11] mwifiex: add wext include
-Message-ID: <477F20668A386D41ADCC57781B1F704307FFB08C50@SC-VEXCH1.marvell.com> (sfid-20110713_215615_795956_250C039C)
-References: <20110713083908.713123063@sipsolutions.net>
- <20110713084035.355518062@sipsolutions.net>
-In-Reply-To: <20110713084035.355518062@sipsolutions.net>
-Content-Type: text/plain; charset=US-ASCII
+Received: from c60.cesmail.net ([216.154.195.49]:18145 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755392Ab1G0WLc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jul 2011 18:11:32 -0400
+Message-ID: <4E308D11.8070405@gnu.org> (sfid-20110728_001154_171885_D8B4048B)
+Date: Wed, 27 Jul 2011 18:11:29 -0400
+From: Pavel Roskin <proski@gnu.org>
 MIME-Version: 1.0
+To: Ondrej Zary <linux@rainbow-software.org>
+CC: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: hostap_cs: add ID for LG cards
+References: <201107262314.03422.linux@rainbow-software.org> <4E2F379D.9080108@gnu.org> <201107272219.23501.linux@rainbow-software.org>
+In-Reply-To: <201107272219.23501.linux@rainbow-software.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On 07/27/2011 04:19 PM, Ondrej Zary wrote:
+> On Tuesday 26 July 2011 23:54:37 Pavel Roskin wrote:
 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> In trying to remove the wext includes from mac80211
-> and cfg80211 I found that mwifiex currently uses
-> them. This is wrong, it shouldn't, but to not break
-> it completely include wext there.
-> 
-> Please remove this and fix all the resulting bugs.
+>> I think we may want to introduce PCMCIA_DEVICE_MANF_CARD_PROD_ID3 and match
+>>
+>> PCMCIA_DEVICE_MANF_CARD_PROD_ID3(0x0156, 0x0002, "Version 1.02", xxx)
+>>
+>> Maybe some other card would be supported too?  I doubt there are any
+>> Agere or Symbol cards with "Version 1.02" in the third text ID.
+>
+> Yes, that looks good, it would match my card too:
+>    product info: "LG", "11Mbps Wireless LAN PCI Card", "Version 01.02", ""
+>    manfid: 0x0156, 0x0002
+>    function: 6 (network)
 
-Thanks for pointing that out.
-I will remove the wext and fix all the resulting bugs.
+Good to know.
 
-Thanks,
-Bing
+> ---------------------------
+>
+> Add generic "Version 01.02" match (used by many different cards) to hostap_cs.
+>
+> This allows LG LW1100P PCI card (with integrated CardBus bridge) to work
+> (tested with rev 3.0) and probably also LW1100N (PCMCIA).
+>
+> Signed-off-by: Ondrej Zary<linux@rainbow-software.org>
 
-> 
-> Cc: Bing Zhao <bzhao@marvell.com>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+That's not the right way to submit patches.  Anyway, I sent 3 patches to 
+that effect yesterday.  One in for PCMCIA, the second is for hostap_cs 
+and the third is for orinoco_cs to recognize "Version 01.01" as Agere 
+firmware and to stop claiming 0x0156:0x0002 unconditionally.
 
-Acked-by: Bing Zhao <bzhao@marvell.com>
+I have no idea how interdependent series of patches that touch more than 
+one subsystem are applied, but I guess there is a standard way.
 
-> ---
->  drivers/net/wireless/mwifiex/ioctl.h |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> --- a/drivers/net/wireless/mwifiex/ioctl.h	2011-07-13 10:29:57.000000000 +0200
-> +++ b/drivers/net/wireless/mwifiex/ioctl.h	2011-07-13 10:32:42.000000000 +0200
-> @@ -20,6 +20,7 @@
->  #ifndef _MWIFIEX_IOCTL_H_
->  #define _MWIFIEX_IOCTL_H_
-> 
-> +#include <linux/wireless.h>
->  #include <net/mac80211.h>
-> 
->  enum {
-> 
-
+-- 
+Regards,
+Pavel Roskin
