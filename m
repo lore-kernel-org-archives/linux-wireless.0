@@ -1,109 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:40421 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754688Ab1GLC7N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 22:59:13 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: add cfg80211 handler for set_bitrate_mask
-Date: Mon, 11 Jul 2011 20:04:44 -0700
-Message-Id: <1310439884-26523-1-git-send-email-bzhao@marvell.com> (sfid-20110712_045916_766618_55CCD0D4)
+Received: from mx1.redhat.com ([209.132.183.28]:3230 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754024Ab1G0MN4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jul 2011 08:13:56 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Tony Houghton <h@realh.co.uk>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org
+Subject: [RFC/RFT v2 07/12] pci: aspm: add function for disabling ASPM
+Date: Wed, 27 Jul 2011 14:14:54 +0200
+Message-Id: <1311768899-4559-8-git-send-email-sgruszka@redhat.com> (sfid-20110727_141411_165391_5188DBB6)
+In-Reply-To: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
+References: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
+Add support for disabling ASPM if !CONFIG_PCIEASPM. Patch is based
+on code from e1000e.
 
-Currently, setting only legacy bitrates on 2.4GHz band
-are supported. Mode 802.11b/g/bg is enabled based on
-bitrates selection. If only CCK bitrates selected then
-802.11b mode is enabled. If only OFDM bitrates are
-selected then 802.11g mode is enabled. For both: CCK
-and OFDM rates 802.11bg mixed mode is enabled.
-
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |   54 +++++++++++++++++++++++++++++++
- 1 files changed, 54 insertions(+), 0 deletions(-)
+ drivers/pci/pcie/Makefile |    3 +--
+ drivers/pci/pcie/aspm.c   |   41 +++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-aspm.h  |    2 ++
+ 3 files changed, 44 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 4487d93..352d2c5 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -672,6 +672,59 @@ static const u32 mwifiex_cipher_suites[] = {
- };
+diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
+index 00c62df..6e20c59 100644
+--- a/drivers/pci/pcie/Makefile
++++ b/drivers/pci/pcie/Makefile
+@@ -2,8 +2,7 @@
+ # Makefile for PCI-Express PORT Driver
+ #
  
- /*
-+ * CFG802.11 operation handler for setting bit rates.
-+ *
-+ * Function selects legacy bang B/G/BG from corresponding bitrates selection.
-+ * Currently only 2.4GHz band is supported.
-+ */
-+static int mwifiex_cfg80211_set_bitrate_mask(struct wiphy *wiphy,
-+				struct net_device *dev,
-+				const u8 *peer,
-+				const struct cfg80211_bitrate_mask *mask)
+-# Build PCI Express ASPM if needed
+-obj-$(CONFIG_PCIEASPM)		+= aspm.o
++obj-y				+= aspm.o
+ 
+ pcieportdrv-y			:= portdrv_core.o portdrv_pci.o portdrv_bus.o
+ pcieportdrv-$(CONFIG_ACPI)	+= portdrv_acpi.o
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 6892601..2883fc3 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -21,6 +21,8 @@
+ #include <linux/pci-aspm.h>
+ #include "../pci.h"
+ 
++#ifdef CONFIG_PCIEASPM
++
+ #ifdef MODULE_PARAM_PREFIX
+ #undef MODULE_PARAM_PREFIX
+ #endif
+@@ -976,3 +978,42 @@ bool pcie_aspm_support_enabled(void)
+ 	return aspm_support_enabled;
+ }
+ EXPORT_SYMBOL(pcie_aspm_support_enabled);
++
++void pcie_disable_aspm(struct pci_dev *pdev, u16 state)
 +{
-+	struct mwifiex_ds_band_cfg band_cfg;
-+	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
-+	int index = 0, mode = 0, i;
-+
-+	/* Currently only 2.4GHz is supported */
-+	for (i = 0; i < mwifiex_band_2ghz.n_bitrates; i++) {
-+		/*
-+		 * Rates below 6 Mbps in the table are CCK rates; 802.11b
-+		 * and from 6 they are OFDM; 802.11G
-+		 */
-+		if (mwifiex_rates[i].bitrate == 60) {
-+			index = 1 << i;
-+			break;
-+		}
-+	}
-+
-+	if (mask->control[IEEE80211_BAND_2GHZ].legacy < index) {
-+		mode = BAND_B;
-+	} else {
-+		mode = BAND_G;
-+		if (mask->control[IEEE80211_BAND_2GHZ].legacy % index)
-+			mode |=  BAND_B;
-+	}
-+
-+	memset(&band_cfg, 0, sizeof(band_cfg));
-+	band_cfg.config_bands = mode;
-+
-+	if (priv->bss_mode == NL80211_IFTYPE_ADHOC)
-+		band_cfg.adhoc_start_band = mode;
-+
-+	band_cfg.sec_chan_offset = NO_SEC_CHANNEL;
-+
-+	if (mwifiex_set_radio_band_cfg(priv, &band_cfg))
-+		return -EFAULT;
-+
-+	wiphy_debug(wiphy, "info: device configured in 802.11%s%s mode\n",
-+				(mode & BAND_B) ? "b" : "",
-+				(mode & BAND_G) ? "g" : "");
-+
-+	return 0;
++	pci_disable_link_state_locked(pdev, state);
 +}
++EXPORT_SYMBOL(pcie_disable_aspm);
 +
-+/*
-  * CFG802.11 operation handler for disconnection request.
-  *
-  * This function does not work when there is already a disconnection
-@@ -1225,6 +1278,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
- 	.set_default_key = mwifiex_cfg80211_set_default_key,
- 	.set_power_mgmt = mwifiex_cfg80211_set_power_mgmt,
- 	.set_tx_power = mwifiex_cfg80211_set_tx_power,
-+	.set_bitrate_mask = mwifiex_cfg80211_set_bitrate_mask,
- };
++#else /* CONFIG_PCIEASPM */
++
++void pcie_disable_aspm(struct pci_dev *pdev, u16 state)
++{
++	int pos;
++	u16 reg16;
++	struct pci_dev *parent;
++
++	pos = pci_pcie_cap(pdev);
++	if (!pos)
++		return;
++	/*
++	 * Both device and parent should have the same ASPM setting.
++	 * Disable ASPM in downstream component first and then upstream.
++	 */
++
++	pci_read_config_word(pdev, pos + PCI_EXP_LNKCTL, &reg16);
++	reg16 &= ~state;
++	pci_write_config_word(pdev, pos + PCI_EXP_LNKCTL, reg16);
++
++	parent = pdev->bus->self;
++	if (WARN_ON(!parent))
++		return;
++
++	pos = pci_pcie_cap(parent);
++	pci_read_config_word(parent, pos + PCI_EXP_LNKCTL, &reg16);
++	reg16 &= ~state;
++	pci_write_config_word(parent, pos + PCI_EXP_LNKCTL, reg16);
++}
++EXPORT_SYMBOL(pcie_disable_aspm);
++
++#endif
+diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
+index 7cea7b6..f9722e6 100644
+--- a/include/linux/pci-aspm.h
++++ b/include/linux/pci-aspm.h
+@@ -55,6 +55,8 @@ static inline void pcie_no_aspm(void)
+ }
+ #endif
  
- /*
++extern void pcie_disable_aspm(struct pci_dev *pdev, u16 state);
++
+ #ifdef CONFIG_PCIEASPM_DEBUG /* this depends on CONFIG_PCIEASPM */
+ extern void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev);
+ extern void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev);
 -- 
-1.7.0.2
+1.7.1
 
