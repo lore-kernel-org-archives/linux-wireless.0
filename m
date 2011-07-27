@@ -1,37 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:61451 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755344Ab1GEKic (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 06:38:32 -0400
-Received: by bwd5 with SMTP id 5so4638557bwd.19
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2011 03:38:31 -0700 (PDT)
-Message-ID: <4E12E9A3.2070004@googlemail.com> (sfid-20110705_123835_906394_23BEA469)
-Date: Tue, 05 Jul 2011 12:38:27 +0200
-From: Dennis Borgmann <dennis.borgmann@googlemail.com>
-MIME-Version: 1.0
+Received: from lo.gmane.org ([80.91.229.12]:54371 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752246Ab1G0MwR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jul 2011 08:52:17 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Qm3ap-0007Bo-B7
+	for linux-wireless@vger.kernel.org; Wed, 27 Jul 2011 14:52:09 +0200
+Received: from gate-il27.motorola.com ([136.182.2.25])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2011 14:52:07 +0200
+Received: from btaylor1 by gate-il27.motorola.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2011 14:52:07 +0200
 To: linux-wireless@vger.kernel.org
-Subject: [ath9k,hostapd]Connection broken after some time...
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+From: Brent Taylor <btaylor1@motorolasolutions.com>
+Subject: Re: ATH6KL lockup during init
+Date: Wed, 27 Jul 2011 12:51:55 +0000 (UTC)
+Message-ID: <loom.20110727T145019-705@post.gmane.org> (sfid-20110727_145220_299089_C7F24233)
+References: <loom.20110726T174149-11@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+Fixed ... realized that I was using the wrong firmware images.  I was using an
+older image from AR6K_FW.3.0_RC.233.
 
-After asking several times on the IRC without getting any answer, I'll 
-try to use this way of asking my question.
 
-I am using wpa_supplicant 0.7.3 and hostapd in version 0.7.3 with a very 
-simple TKIP encryption on ath9k. After some time, the machine running 
-wpa_supplicant still states after "iw dev wlan0 link", that it's still 
-connected, the machine running hostapd states after "iw dev wlan0 
-station dump" that no device would be connected. I can't ping from 
-either side. Sniffing on a third machine with a monitor card and 
-wireshark shows deauthentication packets from the hostapd-machine after 
-each frame sent by the wpa_supplicant machine. Given reason in the 
-deauth-frames is "packet received from non-authenticated client".
 
-Any idea, what might be the problem?
-
-Best regards,
-Dennis
