@@ -1,407 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:58869 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755437Ab1GPQ4Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2011 12:56:16 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: ralf@linux-mips.org, linux-wireless@vger.kernel.org,
-	zajec5@gmail.com, linux-mips@linux-mips.org
-Cc: jonas.gorski@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
-	arend@broadcom.com, b43-dev@lists.infradead.org,
-	bernhardloos@googlemail.com, arnd@arndb.de,
-	julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 04/11] bcma: add SOC bus
-Date: Sat, 16 Jul 2011 18:55:35 +0200
-Message-Id: <1310835342-18877-5-git-send-email-hauke@hauke-m.de> (sfid-20110716_185626_416199_EF074D6B)
-In-Reply-To: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
-References: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52569 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753031Ab1G0XFR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jul 2011 19:05:17 -0400
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 27 Jul 2011 15:58:24 -0700
+Message-ID: <CAB=NE6UpMSRh4JCA676O3nwObX9ftVvRKu=HcWKVUFBwTLTCQg@mail.gmail.com> (sfid-20110728_010520_127613_C4B74271)
+Subject: [ANN] compat-wireless release for Linux 3.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for using bcma on a Broadcom SoC as the system
-bus. An SoC like the bcm4716 could register this bus and use it to
-searches for the bcma cores and register the devices on this bus.
+Linus flushed out Linux 3.0, the respective backport of that release
+for the 802.11, Bluetooth and Networking subsystems is available now
+[1]. Thanks for all the contributions, below are the compat.git and
+compat-wireless.git contributions, for more details please refer to
+the complete ChangeLog [2], and the stable compat-wireless page page
+[3]. I've compile tested this against 2.6.38 and loaded iwlagn
+successfully.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/Kconfig          |    4 +
- drivers/bcma/Makefile         |    1 +
- drivers/bcma/host_soc.c       |  183 +++++++++++++++++++++++++++++++++++++++++
- drivers/bcma/main.c           |    5 +
- drivers/bcma/scan.c           |   42 ++++++++-
- include/linux/bcma/bcma.h     |    4 +
- include/linux/bcma/bcma_soc.h |   16 ++++
- 7 files changed, 250 insertions(+), 5 deletions(-)
- create mode 100644 drivers/bcma/host_soc.c
- create mode 100644 include/linux/bcma/bcma_soc.h
+To discuss if we want to expand this framework to include other
+subsystems we can talk about it in person at the 2011 Linux Plumbers
+conference [4], should the BoF proposal get accepted. Farewell 2.6.x
+days.
 
-diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-index 353781b..bedbb3b 100644
---- a/drivers/bcma/Kconfig
-+++ b/drivers/bcma/Kconfig
-@@ -22,6 +22,10 @@ config BCMA_HOST_PCI
- 	bool "Support for BCMA on PCI-host bus"
- 	depends on BCMA_HOST_PCI_POSSIBLE
- 
-+config BCMA_HOST_SOC
-+	bool
-+	depends on BCMA && MIPS
-+
- config BCMA_DEBUG
- 	bool "BCMA debugging"
- 	depends on BCMA
-diff --git a/drivers/bcma/Makefile b/drivers/bcma/Makefile
-index 0d56245..42d61dd 100644
---- a/drivers/bcma/Makefile
-+++ b/drivers/bcma/Makefile
-@@ -2,6 +2,7 @@ bcma-y					+= main.o scan.o core.o
- bcma-y					+= driver_chipcommon.o driver_chipcommon_pmu.o
- bcma-y					+= driver_pci.o
- bcma-$(CONFIG_BCMA_HOST_PCI)		+= host_pci.o
-+bcma-$(CONFIG_BCMA_HOST_SOC)		+= host_soc.o
- obj-$(CONFIG_BCMA)			+= bcma.o
- 
- ccflags-$(CONFIG_BCMA_DEBUG)		:= -DDEBUG
-diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
-new file mode 100644
-index 0000000..3c381fb
---- /dev/null
-+++ b/drivers/bcma/host_soc.c
-@@ -0,0 +1,183 @@
-+/*
-+ * Broadcom specific AMBA
-+ * System on Chip (SoC) Host
-+ *
-+ * Licensed under the GNU/GPL. See COPYING for details.
-+ */
-+
-+#include "bcma_private.h"
-+#include "scan.h"
-+#include <linux/bcma/bcma.h>
-+#include <linux/bcma/bcma_soc.h>
-+
-+static u8 bcma_host_soc_read8(struct bcma_device *core, u16 offset)
-+{
-+	return readb(core->io_addr + offset);
-+}
-+
-+static u16 bcma_host_soc_read16(struct bcma_device *core, u16 offset)
-+{
-+	return readw(core->io_addr + offset);
-+}
-+
-+static u32 bcma_host_soc_read32(struct bcma_device *core, u16 offset)
-+{
-+	return readl(core->io_addr + offset);
-+}
-+
-+static void bcma_host_soc_write8(struct bcma_device *core, u16 offset,
-+				 u8 value)
-+{
-+	writeb(value, core->io_addr + offset);
-+}
-+
-+static void bcma_host_soc_write16(struct bcma_device *core, u16 offset,
-+				 u16 value)
-+{
-+	writew(value, core->io_addr + offset);
-+}
-+
-+static void bcma_host_soc_write32(struct bcma_device *core, u16 offset,
-+				 u32 value)
-+{
-+	writel(value, core->io_addr + offset);
-+}
-+
-+#ifdef CONFIG_BCMA_BLOCKIO
-+static void bcma_host_soc_block_read(struct bcma_device *core, void *buffer,
-+				     size_t count, u16 offset, u8 reg_width)
-+{
-+	void __iomem *addr = core->io_addr + offset;
-+
-+	switch (reg_width) {
-+	case sizeof(u8): {
-+		u8 *buf = buffer;
-+
-+		while (count) {
-+			*buf = __raw_readb(addr);
-+			buf++;
-+			count--;
-+		}
-+		break;
-+	}
-+	case sizeof(u16): {
-+		__le16 *buf = buffer;
-+
-+		WARN_ON(count & 1);
-+		while (count) {
-+			*buf = (__force __le16)__raw_readw(addr);
-+			buf++;
-+			count -= 2;
-+		}
-+		break;
-+	}
-+	case sizeof(u32): {
-+		__le32 *buf = buffer;
-+
-+		WARN_ON(count & 3);
-+		while (count) {
-+			*buf = (__force __le32)__raw_readl(addr);
-+			buf++;
-+			count -= 4;
-+		}
-+		break;
-+	}
-+	default:
-+		WARN_ON(1);
-+	}
-+}
-+
-+static void bcma_host_soc_block_write(struct bcma_device *core,
-+				      const void *buffer,
-+				      size_t count, u16 offset, u8 reg_width)
-+{
-+	void __iomem *addr = core->io_addr + offset;
-+
-+	switch (reg_width) {
-+	case sizeof(u8): {
-+		const u8 *buf = buffer;
-+
-+		while (count) {
-+			__raw_writeb(*buf, addr);
-+			buf++;
-+			count--;
-+		}
-+		break;
-+	}
-+	case sizeof(u16): {
-+		const __le16 *buf = buffer;
-+
-+		WARN_ON(count & 1);
-+		while (count) {
-+			__raw_writew((__force u16)(*buf), addr);
-+			buf++;
-+			count -= 2;
-+		}
-+		break;
-+	}
-+	case sizeof(u32): {
-+		const __le32 *buf = buffer;
-+
-+		WARN_ON(count & 3);
-+		while (count) {
-+			__raw_writel((__force u32)(*buf), addr);
-+			buf++;
-+			count -= 4;
-+		}
-+		break;
-+	}
-+	default:
-+		WARN_ON(1);
-+	}
-+}
-+#endif /* CONFIG_BCMA_BLOCKIO */
-+
-+static u32 bcma_host_soc_aread32(struct bcma_device *core, u16 offset)
-+{
-+	return readl(core->io_wrap + offset);
-+}
-+
-+static void bcma_host_soc_awrite32(struct bcma_device *core, u16 offset,
-+				  u32 value)
-+{
-+	writel(value, core->io_wrap + offset);
-+}
-+
-+const struct bcma_host_ops bcma_host_soc_ops = {
-+	.read8		= bcma_host_soc_read8,
-+	.read16		= bcma_host_soc_read16,
-+	.read32		= bcma_host_soc_read32,
-+	.write8		= bcma_host_soc_write8,
-+	.write16	= bcma_host_soc_write16,
-+	.write32	= bcma_host_soc_write32,
-+#ifdef CONFIG_BCMA_BLOCKIO
-+	.block_read	= bcma_host_soc_block_read,
-+	.block_write	= bcma_host_soc_block_write,
-+#endif
-+	.aread32	= bcma_host_soc_aread32,
-+	.awrite32	= bcma_host_soc_awrite32,
-+};
-+
-+int __init bcma_host_soc_register(struct bcma_soc *soc)
-+{
-+	struct bcma_bus *bus = &soc->bus;
-+	int err;
-+
-+	/* iomap only first core. We have to read some register on this core
-+	 * to scan the bus.
-+	 */
-+	bus->mmio = ioremap_nocache(BCMA_ADDR_BASE, BCMA_CORE_SIZE * 1);
-+	if (!bus->mmio)
-+		return -ENOMEM;
-+
-+	/* Host specific */
-+	bus->hosttype = BCMA_HOSTTYPE_SOC;
-+	bus->ops = &bcma_host_soc_ops;
-+
-+	/* Register */
-+	err = bcma_bus_early_register(bus, &soc->core_cc, &soc->core_mips);
-+	if (err)
-+		iounmap(bus->mmio);
-+
-+	return err;
-+}
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index e6c308c..9360b35 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -65,6 +65,10 @@ static struct bcma_device *bcma_find_core(struct bcma_bus *bus, u16 coreid)
- static void bcma_release_core_dev(struct device *dev)
- {
- 	struct bcma_device *core = container_of(dev, struct bcma_device, dev);
-+	if (core->io_addr)
-+		iounmap(core->io_addr);
-+	if (core->io_wrap)
-+		iounmap(core->io_wrap);
- 	kfree(core);
- }
- 
-@@ -92,6 +96,7 @@ static int bcma_register_cores(struct bcma_bus *bus)
- 			break;
- 		case BCMA_HOSTTYPE_NONE:
- 		case BCMA_HOSTTYPE_SDIO:
-+		case BCMA_HOSTTYPE_SOC:
- 			break;
- 		}
- 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index bf9f806..0ea390f 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -337,6 +337,16 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 			}
- 		}
- 	}
-+	if (bus->hosttype == BCMA_HOSTTYPE_SOC) {
-+		core->io_addr = ioremap_nocache(core->addr, BCMA_CORE_SIZE);
-+		if (!core->io_addr)
-+			return -ENOMEM;
-+		core->io_wrap = ioremap_nocache(core->wrap, BCMA_CORE_SIZE);
-+		if (!core->io_wrap) {
-+			iounmap(core->io_addr);
-+			return -ENOMEM;
-+		}
-+	}
- 	return 0;
- }
- 
-@@ -369,7 +379,14 @@ int bcma_bus_scan(struct bcma_bus *bus)
- 	bcma_init_bus(bus);
- 
- 	erombase = bcma_scan_read32(bus, 0, BCMA_CC_EROM);
--	eromptr = bus->mmio;
-+	if (bus->hosttype == BCMA_HOSTTYPE_SOC) {
-+		eromptr = ioremap_nocache(erombase, BCMA_CORE_SIZE);
-+		if (!eromptr)
-+			return -ENOMEM;
-+	} else {
-+		eromptr = bus->mmio;
-+	}
-+
- 	eromend = eromptr + BCMA_CORE_SIZE / sizeof(u32);
- 
- 	bcma_scan_switch_core(bus, erombase);
-@@ -404,6 +421,9 @@ int bcma_bus_scan(struct bcma_bus *bus)
- 		list_add(&core->list, &bus->cores);
- 	}
- 
-+	if (bus->hosttype == BCMA_HOSTTYPE_SOC)
-+		iounmap(eromptr);
-+
- 	return 0;
- }
- 
-@@ -414,10 +434,18 @@ int __init bcma_bus_scan_early(struct bcma_bus *bus,
- 	u32 erombase;
- 	u32 __iomem *eromptr, *eromend;
- 
--	int err, core_num = 0;
-+	int err = -ENODEV;
-+	int core_num = 0;
- 
- 	erombase = bcma_scan_read32(bus, 0, BCMA_CC_EROM);
--	eromptr = bus->mmio;
-+	if (bus->hosttype == BCMA_HOSTTYPE_SOC) {
-+		eromptr = ioremap_nocache(erombase, BCMA_CORE_SIZE);
-+		if (!eromptr)
-+			return -ENOMEM;
-+	} else {
-+		eromptr = bus->mmio;
-+	}
-+
- 	eromend = eromptr + BCMA_CORE_SIZE / sizeof(u32);
- 
- 	bcma_scan_switch_core(bus, erombase);
-@@ -447,8 +475,12 @@ int __init bcma_bus_scan_early(struct bcma_bus *bus,
- 			core->id.class);
- 
- 		list_add(&core->list, &bus->cores);
--		return 0;
-+		err = 0;
-+		break;
- 	}
- 
--	return -ENODEV;
-+	if (bus->hosttype == BCMA_HOSTTYPE_SOC)
-+		iounmap(eromptr);
-+
-+	return err;
- }
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 6bd7b7f..73fda1c 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -16,6 +16,7 @@ enum bcma_hosttype {
- 	BCMA_HOSTTYPE_NONE,
- 	BCMA_HOSTTYPE_PCI,
- 	BCMA_HOSTTYPE_SDIO,
-+	BCMA_HOSTTYPE_SOC,
- };
- 
- struct bcma_chipinfo {
-@@ -124,6 +125,9 @@ struct bcma_device {
- 	u32 addr;
- 	u32 wrap;
- 
-+	void __iomem *io_addr;
-+	void __iomem *io_wrap;
-+
- 	void *drvdata;
- 	struct list_head list;
- };
-diff --git a/include/linux/bcma/bcma_soc.h b/include/linux/bcma/bcma_soc.h
-new file mode 100644
-index 0000000..4203c55
---- /dev/null
-+++ b/include/linux/bcma/bcma_soc.h
-@@ -0,0 +1,16 @@
-+#ifndef LINUX_BCMA_SOC_H_
-+#define LINUX_BCMA_SOC_H_
-+
-+#include <linux/bcma/bcma.h>
-+
-+struct bcma_soc {
-+	struct bcma_bus bus;
-+	struct bcma_device core_cc;
-+	struct bcma_device core_mips;
-+};
-+
-+int __init bcma_host_soc_register(struct bcma_soc *soc);
-+
-+int bcma_bus_register(struct bcma_bus *bus);
-+
-+#endif /* LINUX_BCMA_SOC_H_ */
--- 
-1.7.4.1
+===============================================
+ChangeLog for compat-wireless for linux-3.0
+===============================================
 
+This is the ChangeLog for the Linux kernel project compat-wireless.
+It provides a backport of a few Linux kernel subsystems down to
+older kernels:
+
+  * 802.11
+  * Bluetooth
+  * Ethernet
+
+For more details refer to the home page:
+
+http://wireless.kernel.org/en/users/Download/stable/
+
+The compat-wireless project consists of code from three projects:
+
+  * The Linux kernel: linux-2.6-allstable.git
+  * Compat-wirelesS: compat-wireless.git
+  * Compat: compat.git
+
+The compat-wireless stable releases incorporates code from from
+each of these git trees for the respective upstream Linux kernel
+stable release. A branch called linux-2.6.3x.y exists for each
+stable release. Below we provide the ChangeLog of changes from
+the previous branched release to the new branched release.
+
+Release: linux-3.0
+
+
+Updates from the compat.git project:
+====================================
+
+git shortlog linux-2.6.39.y..linux-3.0.y
+
+Eliad Peller (1):
+      compat: add an empty implementation for pm_wakeup_event()
+
+Felix Fietkau (4):
+      compat: add an empty definition for __rcu
+      compat: backport rcu_dereference_protected
+      compat: backport rcu_access_pointer
+      compat: backport rtnl_dereference
+
+Hauke Mehrtens (23):
+      compat: backport netdev_refcnt_read.
+      compat: add support for kernel 2.6.39
+      compat: fix build for kernel < 2.6.29
+      compat: semaphore.h mpoved from asm/ to linux/
+      compat: integrate kfifo into compat.ko
+      compat: add kstrtox
+      compat: remove sdio_set_host_pm_flags
+      compat: add time_to_tm
+      compat: do not include kstrto* for kernel >= 2.6.38.4
+      compat: fix TASK_INTERRUPTIBLE missing
+      compat: backport vzalloc()
+      compat: handle fail of vmalloc()
+      compat: add missing include
+      compat: backport kfree_rcu
+      compat: backport ethtool_cmd_speed
+      compat: add header linux/printk.h
+      compat: backport rcu_dereference_raw
+      compat: backport RCU_INIT_POINTER
+      compat: remove wrong backport of kfree_rcu
+      compat: add support for kernel 3.0
+      compat: add device name in register_netdevice(dev)
+      compat: rename CONFIG_COMPAT_KERNEL_
+      compat: add KEY_WPS_BUTTON
+
+Luis R. Rodriguez (2):
+      compat: backport IRQ namespace cleanup
+      compat: empty commit for 3.0 tag changes
+
+Updates from the compat-wireless.git project:
+=============================================
+
+git shortlog linux-2.6.39.y..linux-3.0.y
+
+Hauke Mehrtens (29):
+      compat-wireless: add support for mwifiex
+      compat-wireless: backport threaded irq for wl12xx_spi
+      compat-wirless: deactivate PM support for libertas_spi for kernel < 2.6.29
+      compat-wireless: fix compile warning for wl12xx
+      compat-wireless: clean up the config file
+      compat-wireless: Remove extra config option for kfifo.
+      compat-wireless: make patches apply again
+      compat-wireless: remove ar9170
+      compat-wireless: make patches apply again
+      compat-wireless: fix build of atheros Ethernet drivers.
+      compat-wireless: update config options
+      compat-wireless: use function for setting queue_mapping
+      compat-wireless: fix compile problem with IRQF_ONESHOT
+      compat-wireless: backport multicast filter in p54 for kernel < 2.6.35
+      compat-wireless: make patches apply again
+      compat-wireless: add RTL8192SE driver
+      compat-wireless: enable RT33XX support.
+      compat-wireless: make patches apply again
+      compat-wireless: set CONFIG_COMPAT_STAGING=m
+      compat-wireless: fix building of brcm80211
+      Revert "compat-wireless: fix rfkill patches from applying"
+      compat-wireless: adapt rename of dev to sdev in b43
+      compat-wireless: revert usage of kfree_rcu
+      compat-wireless: rename CONFIG_COMPAT_KERNEL_
+      compat-wireless: add support for kernel 3.XX
+      compat-wireless: activate CARL9170_WPC by default
+      compat-wireless: activate CONFIG_RT2800{USB,PCI}_RT35XX by default.
+      compat-wireless: sync atheros-debug.mk with config.mk
+      compat-wireless: update enable-older-kernels patches
+
+Johannes Berg (1):
+      The sched_scan patches changed context for a patch.
+
+Luis R. Rodriguez (19):
+      compat-wireless: fix compilation warning for wl12xx
+      compat-wireless: refresh patches for next-20110414
+      compat-wireless: fix patches/09-threaded-irq.patch
+      compat-wireless: refresh patches
+      compat-wireless: refresh patches
+      compat-wireless: refresh patches
+      compat-wireless: refresh patches
+      compat-wireless: fix patch dealing with lbs_pr_err() / pr_err()
+      compat-wireless: fix rfkill patches from applying
+      compat-wireless: fix applying of 09-threaded-irq.patch
+      compat-wireless: refresh patches
+      compat-wireless: patch updates for updates for 3.0.1-rc1 release
+      compat-wireless: fixes for making 3.0 stable compat-wireless releases
+      compat-wireless: refresh patches for 3.0-rc3
+      compat-wireless: fix usb/Makefile patch for 3.0-rc4 release
+      compat-wireless: refresh patches for 3.0-rc4
+      compat-wireless: fix script for generating releases
+      compat-wireless: refresh patches for 3.0 final release
+      compat-wireless: dummy update for -2 release
+
+[1] http://www.orbit-lab.org/kernel/compat-wireless-3.0-stable/v3.0/compat-wireless-3.0-2.tar.bz2
+[2] http://www.orbit-lab.org/kernel/compat-wireless-3.0-stable/v3.0/ChangeLog-3.0-wireless
+[3] http://wireless.kernel.org/en/users/Download/stable
+[4] http://www.linuxplumbersconf.org/2011/ocw/proposals/771
+
+  Luis
