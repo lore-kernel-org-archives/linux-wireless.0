@@ -1,163 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:46304 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753044Ab1GMXqO (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:57474 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753292Ab1G0OhS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 19:46:14 -0400
-Received: by mail-iy0-f174.google.com with SMTP id 12so5995000iyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2011 16:46:13 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 4/5] mac80211: move RSN IE to tail of mesh beacon
-Date: Wed, 13 Jul 2011 16:45:46 -0700
-Message-Id: <1310600747-9583-5-git-send-email-thomas@cozybit.com> (sfid-20110714_014620_894940_A4078087)
-In-Reply-To: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
-References: <1310600747-9583-1-git-send-email-thomas@cozybit.com>
+	Wed, 27 Jul 2011 10:37:18 -0400
+Message-ID: <4E302299.2070309@lwfinger.net> (sfid-20110727_163721_772187_D2BADD71)
+Date: Wed, 27 Jul 2011 09:37:13 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: hubert Liao <liao.hubertt@gmail.com>
+CC: Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: Oops when insmod rtl8192ce
+References: <CAMzZzFGqPv6Nbw8J8JGNKcLA76sAs3oD6+hH9NPCjwA33fYpOQ@mail.gmail.com> <CAMzZzFGpDiFAhsLAb+SQxjbGMzBoOStF_Lr7Eb3PT6Drcf=VdA@mail.gmail.com>
+In-Reply-To: <CAMzZzFGpDiFAhsLAb+SQxjbGMzBoOStF_Lr7Eb3PT6Drcf=VdA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mesh specific beacon IEs go right before the vendor IEs. Add a
-filter that checks for custom IEs (currently just the RSN IE), which
-belong after the TIM, but before HT. Also, ensure we don't add any
-custom IEs twice in mesh_mgmt_ies_add().
+On 07/27/2011 04:26 AM, hubert Liao wrote:
+> Hi,
+> We got an oops when insmod rtl8192ce module (the board is an ARM soc),
+> accroding the oops message, find it's because in rtl_pci_probe()
+> called _rtl_pci_find_adapter(),
+> in this funcation, the  pdev->bus->self is a NULL pointer .
+> static boot _rtl_pci_find_adapter(strcut pci_dev *dev,
+>                struct ieee80211_hw *hw)
+> {
+> struct pci_dev *bridge_pdev = pdev->bus->self;   //line 1601
+> ...
+> pcipriv->ndis_adapter.pcibridge_vendorid = bridge_pdev->vendor;<--
+> [oops here] line 1700
+> ...
+> }
+> here, I just want to know why the bus->self  is NULL?
+> ----
+> [  148.186632] Unable to handle kernel NULL pointer dereference at
+> virtual address 00000020
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh.c |   68 ++++++++++++++++++++++++++++++++++++---------------
- 1 files changed, 48 insertions(+), 20 deletions(-)
+As John Linville suggested, please open a bugzilla report.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 7c10b97..d77268f 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -207,52 +207,64 @@ int mesh_rmc_check(u8 *sa, struct ieee80211s_hdr *mesh_hdr,
- 
- void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- {
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	u8 *pos;
- 	u8 neighbors;
-+	u8 offset = 0, noffset;
- 
--	pos = skb_put(skb, 2 + sdata->u.mesh.mesh_id_len);
-+	pos = skb_put(skb, 2 + ifmsh->mesh_id_len);
- 	*pos++ = WLAN_EID_MESH_ID;
--	*pos++ = sdata->u.mesh.mesh_id_len;
--	if (sdata->u.mesh.mesh_id_len)
--		memcpy(pos, sdata->u.mesh.mesh_id, sdata->u.mesh.mesh_id_len);
-+	*pos++ = ifmsh->mesh_id_len;
-+	if (ifmsh->mesh_id_len)
-+		memcpy(pos, ifmsh->mesh_id, ifmsh->mesh_id_len);
- 
- 	pos = skb_put(skb, 2 + sizeof(struct ieee80211_meshconf_ie));
- 	*pos++ = WLAN_EID_MESH_CONFIG;
- 	*pos++ = sizeof(struct ieee80211_meshconf_ie);
- 
- 	/* Active path selection protocol ID */
--	*pos++ = sdata->u.mesh.mesh_pp_id;
-+	*pos++ = ifmsh->mesh_pp_id;
- 
- 	/* Active path selection metric ID   */
--	*pos++ = sdata->u.mesh.mesh_pm_id;
-+	*pos++ = ifmsh->mesh_pm_id;
- 
- 	/* Congestion control mode identifier */
--	*pos++ = sdata->u.mesh.mesh_cc_id;
-+	*pos++ = ifmsh->mesh_cc_id;
- 
- 	/* Synchronization protocol identifier */
--	*pos++ = sdata->u.mesh.mesh_sp_id;
-+	*pos++ = ifmsh->mesh_sp_id;
- 
- 	/* Authentication Protocol identifier */
--	*pos++ = sdata->u.mesh.mesh_auth_id;
-+	*pos++ = ifmsh->mesh_auth_id;
- 
- 	/* Mesh Formation Info - number of neighbors */
--	neighbors = atomic_read(&sdata->u.mesh.mshstats.estab_plinks);
-+	neighbors = atomic_read(&ifmsh->mshstats.estab_plinks);
- 	/* Number of neighbor mesh STAs or 15 whichever is smaller */
- 	neighbors = (neighbors > 15) ? 15 : neighbors;
- 	*pos++ = neighbors << 1;
- 
- 	/* Mesh capability */
--	sdata->u.mesh.accepting_plinks = mesh_plink_availables(sdata);
-+	ifmsh->accepting_plinks = mesh_plink_availables(sdata);
- 	*pos = MESHCONF_CAPAB_FORWARDING;
--	*pos++ |= sdata->u.mesh.accepting_plinks ?
-+	*pos++ |= ifmsh->accepting_plinks ?
- 	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
- 	*pos++ = 0x00;
- 
--	if (sdata->u.mesh.ie) {
--		int len = sdata->u.mesh.ie_len;
--		const u8 *data = sdata->u.mesh.ie;
--		if (skb_tailroom(skb) > len)
--			memcpy(skb_put(skb, len), data, len);
-+	if (ifmsh->ie) {
-+		int len;
-+		const u8 *data;
-+		/* fast-forward to vendor IEs and add remaining */
-+		noffset = ieee80211_ie_split_vendor(ifmsh->ie, ifmsh->ie_len,
-+						    offset);
-+		if (noffset != offset) {
-+			len = ifmsh->ie_len - noffset;
-+			data = ifmsh->ie + noffset;
-+			if (skb_tailroom(skb) > len)
-+				memcpy(skb_put(skb, len), data, len);
-+			else
-+				printk(KERN_ERR "o11s: not enough tailroom\n");
-+			offset = noffset;
-+		}
- 	}
- }
- 
-@@ -435,8 +447,8 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_channel *channel = local->hw.conf.channel;
- 	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
--	int rates, exrates, i;
--	u8 *pos, *bcn_tail;
-+	int rates, exrates, i, len = 0;
-+	u8 *pos, *bcn_tail, offset = 0, noffset;
- 
- 	local->fif_other_bss++;
- 	/* mesh ifaces must set allmulti to forward mcast traffic */
-@@ -503,8 +515,20 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 		*pos++ = ieee80211_frequency_to_channel(channel->center_freq);
- 	}
- 
-+	/* Check for custom IEs before HT */
-+	if (ifmsh->ie_len && ifmsh->ie) {
-+		static const u8 tail_ies[] = {
-+			WLAN_EID_RSN,
-+		};
-+		noffset = ieee80211_ie_split(ifmsh->ie, ifmsh->ie_len,
-+					     tail_ies, ARRAY_SIZE(tail_ies),
-+					     offset);
-+		len = noffset - offset;
-+	}
-+
- 	/* Build beacon tail */
--	bcn_params.tail_len = 2 + exrates; /* extended rates */
-+	bcn_params.tail_len = 2 + exrates + /* extended rates */
-+			      len; /* extra IEs */
- 	pos = kmalloc(bcn_params.tail_len, GFP_KERNEL | __GFP_ZERO);
- 	if (pos == NULL) {
- 		printk(KERN_ERR "Unable to allocate mesh beacon tail\n");
-@@ -521,6 +545,10 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 		}
- 	}
- 
-+	memcpy(pos, ifmsh->ie + offset, len);
-+	pos += len;
-+	offset = noffset;
-+
- 	bcn_params.head = (char *) bcn_head;
- 	bcn_params.tail = bcn_tail;
- 	bcn_params.dtim_period = 1;	/* unused for now */
--- 
-1.7.6
+I would also like some additional information. What kernel are you using? In 
+addition, please post the 'lspci -nnk' information for your card.
+
+I also think that pdev->bus should have been setup before the initialization 
+code in rtl8192ce was called. I have not tested the driver on other than x86 and 
+x86_64 architectures because of hardware availability, thus ARM may expose some 
+problems. Is this soc little-endian?
+
+Thanks,
+Larry
 
