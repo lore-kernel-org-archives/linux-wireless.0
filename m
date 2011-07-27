@@ -1,36 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:43653 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752123Ab1GDVmR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 17:42:17 -0400
-Received: by fxd18 with SMTP id 18so5570140fxd.11
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2011 14:42:16 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Alex <alex9434@gmail.com>
-Subject: Re: carl9170: Problems setting up Virtual Interface
-Date: Mon, 4 Jul 2011 23:42:05 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <CAMJnVwmtNBrAbaL5TU-pQO+cvFn=UJC2rQroJeYASL3zJEesaw@mail.gmail.com> <201107042306.47963.chunkeey@googlemail.com> <CAMJnVwnGKH7CtxuwnTTjp+747cwLpNtp=u8VE2QAahGY9Q813Q@mail.gmail.com>
-In-Reply-To: <CAMJnVwnGKH7CtxuwnTTjp+747cwLpNtp=u8VE2QAahGY9Q813Q@mail.gmail.com>
+Received: from h5.dl5rb.org.uk ([81.2.74.5]:60556 "EHLO linux-mips.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751787Ab1G0UHu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jul 2011 16:07:50 -0400
+Date: Wed, 27 Jul 2011 21:06:57 +0100
+From: Ralf Baechle <ralf@linux-mips.org>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-mips@linux-mips.org, jonas.gorski@gmail.com,
+	zajec5@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
+	arend@broadcom.com, b43-dev@lists.infradead.org,
+	bernhardloos@googlemail.com, arnd@arndb.de,
+	julian.calaby@gmail.com, sshtylyov@mvista.com
+Subject: Re: [PATCH v3 00/11] bcma: add support for embedded devices like
+ bcm4716
+Message-ID: <20110727200657.GA15028@linux-mips.org> (sfid-20110727_220753_670771_4E37DC34)
+References: <1311376815-15755-1-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201107042342.05524.chunkeey@googlemail.com> (sfid-20110704_234220_918083_68B4084D)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1311376815-15755-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, July 04, 2011 11:23:04 PM Alex wrote:
-> # iw dev wlan0 interface add wlan1 type station
-> # iw dev wlan1-wlan0 connect AlexBox
-> command failed: Network is down (-100)
-Just start/up the interface and try again...
-this can be done by ip link or ifconfig.
+On Sat, Jul 23, 2011 at 01:20:04AM +0200, Hauke Mehrtens wrote:
 
-However, iw connect only works with unencrypted or WEP
-networks. Getting it to work with wpa_supplicant is
-more tricky since you'll have to disable scanning
-completely.
+> This patch series adds support for embedded devices like bcm47xx to 
+> bcma. Bcma is used on bcm4716 and bcm4718 SoCs as the system bus and
+> replaced ssb used on older devices. With these patches my bcm4716 
+> device boots up till it tries to access the flash, because the serial 
+> flash chip is unsupported for now, this will be my next task. This adds 
+> support for MIPS cores, interrupt configuration and the serial console.
+> 
+> These patches are not containing all functions needed to get the SoC to 
+> fully work and support every feature, but it is a good start.
+> These patches are now integrated in OpenWrt for everyone how wants to
+> test them.
+> 
+> This was tested with a BCM4704 device (SoC with ssb bus), a BCM4716 
+> device and a pcie wireless card supported by bcma.
+> 
+> @John could you please merge this into wireless-testing. I hope Ralf is 
+> fine with it when some MIPS bits will go through wireless. This will 
+> make it much easier for Linus to merge wireless-testing and the mips 
+> tree together as there are many other changes for bcma in wireless-
+> testing.
 
-Regards,
-	Chr
+John, if you want to merge the MIPS bits through the wireless tree, feel
+free to:
+
+Acked-by: Ralf Baechle <ralf@linux-mips.org>
+
+  Ralf
