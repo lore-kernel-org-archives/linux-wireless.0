@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3355 "EHLO mms2.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50484 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755062Ab1GVS5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 14:57:34 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Roland Vossen" <rvossen@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 25/29] staging: brcm80211: removed
- brcms_c_module_unregister() call in ampdu.c
-Date: Fri, 22 Jul 2011 20:57:12 +0200
-Message-ID: <1311361036-3175-26-git-send-email-arend@broadcom.com> (sfid-20110722_205757_746791_6243C9C3)
-In-Reply-To: <1311361036-3175-1-git-send-email-arend@broadcom.com>
-References: <1311361036-3175-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1753972Ab1G0MNw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jul 2011 08:13:52 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Tony Houghton <h@realh.co.uk>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	linux-pci@vger.kernel.org,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	e1000-devel@lists.sourceforge.net
+Subject: [RFC/RFT v2 00/12] ath9k: ASPM fixes
+Date: Wed, 27 Jul 2011 14:14:47 +0200
+Message-Id: <1311768899-4559-1-git-send-email-sgruszka@redhat.com> (sfid-20110727_141403_021199_BA0B4574)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+This patch series try to fix ath9k ASPM. Some of patches are cleanup
+only or do merging common code (with e1000e driver).
 
-The AMPDU module was never registered, so it does not have to be unregistered.
+With CONFIG_PCIEASPM it's possible to change ASPM settings on runtime
+via /sys/module/pcie_aspm/parameters/policy . However most drivers
+I looked at assume this setting is constant. I add a callback to pci
+driver to inform about the change, and allow driver to do needed hw
+related changes. Currently only ath9k implement the callback, but
+I think it will be useful for other drivers (i.e. iwlwifi, rtlwifi)
+that do some own ASPM handling.
 
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+These patches needs wide testing as they may work on some systems
+and not work on others, that can depend on PCIe bridges.
+
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: e1000-devel@lists.sourceforge.net
 ---
- drivers/staging/brcm80211/brcmsmac/ampdu.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/ampdu.c b/drivers/staging/brcm80211/brcmsmac/ampdu.c
-index 64bbc24..3c0fa13 100644
---- a/drivers/staging/brcm80211/brcmsmac/ampdu.c
-+++ b/drivers/staging/brcm80211/brcmsmac/ampdu.c
-@@ -243,7 +243,6 @@ void brcms_c_ampdu_detach(struct ampdu_info *ampdu)
- 	for (i = 0; i < AMPDU_INI_FREE; i++)
- 		kfree(ampdu->ini_free[i]);
- 
--	brcms_c_module_unregister(ampdu->wlc->pub, "ampdu", ampdu);
- 	kfree(ampdu);
- }
- 
--- 
-1.7.4.1
-
-
+ drivers/net/e1000e/netdev.c                |   31 ----------
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c |   12 ---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c |   12 ---
+ drivers/net/wireless/ath/ath9k/hw-ops.h    |    9 +-
+ drivers/net/wireless/ath/ath9k/hw.c        |   17 +++--
+ drivers/net/wireless/ath/ath9k/hw.h        |   12 +--
+ drivers/net/wireless/ath/ath9k/main.c      |    8 --
+ drivers/net/wireless/ath/ath9k/pci.c       |   88 ++++++++++++++++++++++-------
+ drivers/pci/pcie/Makefile                  |    3 
+ drivers/pci/pcie/aspm.c                    |   46 ++++++++++++++-
+ include/linux/pci-aspm.h                   |    2 
+ include/linux/pci.h                        |    3 
+ 12 files changed, 148 insertions(+), 95 deletions(-)
