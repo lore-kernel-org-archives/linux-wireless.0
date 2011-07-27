@@ -1,86 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:16181 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755380Ab1GPPcA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2011 11:32:00 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/18] update for 3.1
-Date: Sat, 16 Jul 2011 07:56:20 -0700
-Message-Id: <1310828199-18000-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110716_173214_222959_3B8C24B4)
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:57120 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755182Ab1G0VAa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jul 2011 17:00:30 -0400
+Received: by qyk9 with SMTP id 9so1184821qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2011 14:00:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <loom.20110727T224259-350@post.gmane.org>
+References: <COL114-W9CEFD4E7F3803005186F98A4F0@phx.gbl> <COL114-W76260EA23039CA8000DB88A320@phx.gbl>
+ <CAB=NE6Wcn3-GwqPJQDXOT0JCNnZgCs1E7HecWrXpc8LS+XRyDA@mail.gmail.com>
+ <201107262031.11394.chunkeey@googlemail.com> <CAB=NE6WoGZfpGnNkdaLdtN+nC+aM1mxV4rkUCMarnuDonQeJeg@mail.gmail.com>
+ <COL114-W2204F3FA55EF4C0D20D0C58A350@phx.gbl> <CAB=NE6WCagRUrMynd2CoAAN_LtoVkaoCYxOLE1COKx9zXgCBuQ@mail.gmail.com>
+ <loom.20110727T224259-350@post.gmane.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 27 Jul 2011 14:00:09 -0700
+Message-ID: <CAB=NE6UKkLTwkUR_r=WdUAwPRq=vTWGb4Y3FqN73RBU3_3a0Qg@mail.gmail.com> (sfid-20110727_230034_409725_E3C3F389)
+Subject: Re: problem on ACS
+To: Swaminathan Vasanth <swaminathanvasanth.r@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We are moving both tx and rx to transport layer. The work will continue
-until the pci-e transport layer is fully separated.
-We still adding more changes to make the code better after driver split
+On Wed, Jul 27, 2011 at 1:55 PM, Swaminathan Vasanth
+<swaminathanvasanth.r@gmail.com> wrote:
+>
+> Hi all,
+>  @ MingAnn Ng > If you increase the value for acs_num_req_surveys and
+> acs_roc_duration_ms, you will not get -inf as the interference value. I faced
+> this problem initially, but with more number of surveys ACS actually picks the
+> best channel.
+>  @ Luis > I got convincing results on Channel selection. I also cross verified
+> the selected channel and the channels used by the nearby AP's through Kismet.
+> With 9 AP's using different channel, ACS selected the channel which was least
+> used. Great Work Luis !
 
-Emmanuel Grumbach (10):
-  iwlagn: move Tx datapath to transport layer
-  iwlagn: move the tasklet / irq to the transport layer
-  iwlagn: move sync_irq to transport layer
-  iwlagn: move the Rx dispatching to the upper layer
-  iwlagn: add comment to tx and get_tx_cmd in iwl_trans_ops
-  iwlagn: move rx transport functions to iwl-trans-rx-pcie.c
-  iwlagn: move tx transport functions to iwl-trans-tx-pcie.c
-  iwlagn: move iwlagn_stop_device to transport layer
-  iwlagn: move all the ICT related functions to iwl-trans-rx-pcie.c
-  iwlagn: add tx start API to transport layer
+Wow, awesome, thanks for the verification of the work :) truly the
+implementation was just a rush job for an "intermediary" solution for
+people who want ACS until we get Spectral Scan ACS support upstream.
+Glad its working out as such.
 
-Fry, Donald H (1):
-  iwlagn: remove indirection for iwlagn_hw_valid_rtc_data_addr
-
-Hsu, Kenny (1):
-  iwlagn: set default of uCode ownership to driver
-
-Johannes Berg (1):
-  iwlagn: simplify TX flags assignments
-
-Wey-Yi Guy (5):
-  iwlagn: remove un-necessary file
-  iwlagn: remove dual-indirect call to simply the code
-  iwlagn: another double indirect removed
-  iwlagn: comments for iwl_cfg
-  iwlagn: calibration bitmap
-
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
- drivers/net/wireless/iwlwifi/Makefile             |    8 +-
- drivers/net/wireless/iwlwifi/iwl-1000.c           |    9 +-
- drivers/net/wireless/iwlwifi/iwl-2000.c           |   28 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c           |   16 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c           |   50 +-
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c      |   59 ++
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c       |  210 -----
- drivers/net/wireless/iwlwifi/iwl-agn-ict.c        |  306 -------
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c        |  269 +------
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c       |   93 ++
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |  227 +----
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c      |  138 +---
- drivers/net/wireless/iwlwifi/iwl-agn.c            |  469 +---------
- drivers/net/wireless/iwlwifi/iwl-agn.h            |   41 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h       |   19 +-
- drivers/net/wireless/iwlwifi/iwl-core.h           |   51 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h            |   26 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c         |   10 +-
- drivers/net/wireless/iwlwifi/iwl-hcmd.c           |  271 ------
- drivers/net/wireless/iwlwifi/iwl-prph.h           |   82 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c             |  188 +---
- drivers/net/wireless/iwlwifi/iwl-sv-open.c        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |   72 ++
- drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c  |  979 +++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c  |  808 +++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-trans.c          |  451 ++++++++++-
- drivers/net/wireless/iwlwifi/iwl-trans.h          |   43 +-
- drivers/net/wireless/iwlwifi/iwl-tx.c             |  576 ------------
- 28 files changed, 2756 insertions(+), 2745 deletions(-)
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-ict.c
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-hcmd.c
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-tx.c
-
+  Luis
