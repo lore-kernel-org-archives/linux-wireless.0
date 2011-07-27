@@ -1,77 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46755 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754164Ab1GNKL0 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:34315 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752030Ab1G0TEl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 06:11:26 -0400
-Subject: Re: [RFC 2/3] wireless: Add 40MHz Intolerance support to HT
- capablities.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1310559873-10314-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110713_142440_143428_FA651F52)
-References: <1310559873-10314-1-git-send-email-rmanohar@qca.qualcomm.com>
-	 <1310559873-10314-2-git-send-email-rmanohar@qca.qualcomm.com>
-	 (sfid-20110713_142440_143428_FA651F52)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 14 Jul 2011 12:11:24 +0200
-Message-ID: <1310638284.3874.8.camel@jlt3.sipsolutions.net> (sfid-20110714_121135_788708_82A5A7BA)
-Mime-Version: 1.0
+	Wed, 27 Jul 2011 15:04:41 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 307165401C6
+	for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2011 15:13:06 -0400 (EDT)
+Subject: Compat-wireless release for 2011-07-27 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110727190439.BB31140ED1@repository3.orbit-lab.org> (sfid-20110727_210444_205252_54D3EC64)
+Date: Wed, 27 Jul 2011 15:04:39 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-07-13 at 17:54 +0530, Rajkumar Manoharan wrote:
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + f58905a...716378b akpm-end   -> origin/akpm-end  (forced update)
+   750e069..6fd4ce8  akpm-start -> origin/akpm-start
+   6b4e664..2e8e6e6  history    -> origin/history
+ + af3027b...da623a5 master     -> origin/master  (forced update)
+   750e069..6fd4ce8  stable     -> origin/stable
+ * [new tag]         next-20110727 -> next-20110727
 
-More description would be nice. I don't think I get it.
+compat-wireless code metrics
 
-> +++ b/include/net/cfg80211.h
-> @@ -128,6 +128,8 @@ enum ieee80211_channel_flags {
->   * @beacon_found: helper to regulatory code to indicate when a beacon
->   *	has been found on this channel. Use regulatory_hint_found_beacon()
->   *	to enable this, this is useful only on 5 GHz band.
-> + * @is_40mhz_intolerant: one of the bss in this channel disallows the use of
-> + *	20/40 MHz BSS. this will be used by Intolerant Channel Report.
-
-I'm not convinced this should a channel thing here?
-
-> @@ -1746,6 +1749,7 @@ struct wiphy_wowlan_support {
->   *	add to probe request frames transmitted during a scan, must not
->   *	include fixed IEs like supported rates
->   * @coverage_class: current coverage class
-> + * @dot11FortyMHzIntolerant: Enable/Disable Forty MHz Intolerance
-
-that variable name is ... highly unusual. please make it match its
-surroundings better.
-
-> @@ -1806,6 +1810,7 @@ struct wiphy {
->  	u32 frag_threshold;
->  	u32 rts_threshold;
->  	u8 coverage_class;
-> +	bool dot11FortyMHzIntolerant;
- 
-Ok so in struct wiphy, to me means that the *driver* said it was 40MHz
-intolerant? That makes no sense, why would the driver want to say that
-*statically*? I can see maybe dynamically, but statically?
-
-> @@ -412,6 +412,7 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
->  	rdev->wiphy.frag_threshold = (u32) -1;
->  	rdev->wiphy.rts_threshold = (u32) -1;
->  	rdev->wiphy.coverage_class = 0;
-> +	rdev->wiphy.dot11FortyMHzIntolerant = false;
-
-not really necessary, but I guess it's ok.
- 
-> @@ -532,6 +533,8 @@ int wiphy_register(struct wiphy *wiphy)
->  			sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
->  			sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SGI_40;
->  		}
-> +		if (wiphy->dot11FortyMHzIntolerant)
-> +			sband->ht_cap.cap |= IEEE80211_HT_CAP_40MHZ_INTOLERANT;
-
-I don't get this. All you use this variable for is setting a
-variable ... that the driver could already have set. Seems completely
-pointless.
-
-johannes
-
+    835317 - Total upstream lines of code being pulled
