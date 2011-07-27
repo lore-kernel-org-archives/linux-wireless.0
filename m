@@ -1,56 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:32200 "EHLO c60.cesmail.net"
+Received: from nbd.name ([46.4.11.11]:36955 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751001Ab1GSVm6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 17:42:58 -0400
-Message-ID: <4E25FA60.7040807@gnu.org> (sfid-20110719_234302_063697_7FDE84C7)
-Date: Tue, 19 Jul 2011 17:42:56 -0400
-From: Pavel Roskin <proski@gnu.org>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Kernel oops in code added by "cfg80211: allow userspace to control
- supported rates in scan"
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1754382Ab1G0NBR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jul 2011 09:01:17 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 1/4] ath9k: initialize tx chainmask before testing channel tx power values
+Date: Wed, 27 Jul 2011 15:01:02 +0200
+Message-Id: <1311771665-59853-1-git-send-email-nbd@openwrt.org> (sfid-20110727_150122_406182_325DC443)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+With an uninitialized chainmask, the per-channel power will only contain
+the power limits for a single chain instead of the combined tx power.
 
-The current wireless-testing.git has a problem.  I'm trying to run 
-wpa_supplicant on an interface created by carl9170 (with nl80211 
-driver), and it oopses in nl80211_trigger_scan().  It turns out it 
-oopses here:
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@kernel.org
+---
+ drivers/net/wireless/ath/ath9k/init.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-for (i = 0; i < IEEE80211_NUM_BANDS; i++)
-       request->rates[i] = (1 << wiphy->bands[i]->n_bitrates) - 1;
-
-Here's the self-explanatory debug output I added:
-
-[  460.190157] IEEE80211_NUM_BANDS = 2
-[  460.193636] request = ffff8801246dc500
-[  460.197373] request->rates = ffff8801246dc520
-[  460.201748] wiphy = ffff8800b78b84e0
-[  460.205317] wiphy->bands = ffff8800b78b8590
-[  460.209489] i = 0, wiphy->bands[i] = ffffffffa00a80a0
-[  460.214559] i = 1, wiphy->bands[i] =           (null)
-
-wiphy->bands[1] is NULL, so wiphy->bands[1]->n_bitrates is invalid.
-
-Likewise, if I run "iwconfig wlanX scan", I get an oops in 
-cfg80211_wext_siwscan() on line 866:
-
-for (i = 0; i < IEEE80211_NUM_BANDS; i++)
-      creq->rates[i] = (1 << wiphy->bands[i]->n_bitrates) - 1;
-
-Both pieces of code were added by:
-
-commit 58389c69150e6032504dfcd3edca6b1975c8b5bc
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Mon Jul 18 18:08:35 2011 +0200
-
-     cfg80211: allow userspace to control supported rates in scan
-
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index dceaa4a..2e96346 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -669,8 +669,10 @@ static void ath9k_init_band_txpower(struct ath_softc *sc, int band)
+ static void ath9k_init_txpower_limits(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath9k_channel *curchan = ah->curchan;
+ 
++	ah->txchainmask = common->tx_chainmask;
+ 	if (ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
+ 		ath9k_init_band_txpower(sc, IEEE80211_BAND_2GHZ);
+ 	if (ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
 -- 
-Regards,
-Pavel Roskin
+1.7.3.2
+
