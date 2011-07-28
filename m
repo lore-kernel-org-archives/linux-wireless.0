@@ -1,183 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:42115 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756685Ab1GMBeM (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:35601 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754694Ab1G1PaX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2011 21:34:12 -0400
-Subject: [PATCH 07/24] ath6kl: add debug.c
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: devel@linuxdriverproject.org, gregkh@suse.de, error27@gmail.com
-Date: Wed, 13 Jul 2011 04:34:05 +0300
-Message-ID: <20110713013405.8517.51546.stgit@localhost6.localdomain6> (sfid-20110713_033416_828640_31271231)
-In-Reply-To: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6>
+	Thu, 28 Jul 2011 11:30:23 -0400
+Received: by qyk29 with SMTP id 29so2828947qyk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2011 08:30:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <loom.20110728T172403-330@post.gmane.org>
+References: <CAEzeFio8D9aKDFX+Wzo0yceWXy_5tDKpLDFzr9FmarTXCHUOQg@mail.gmail.com>
+ <CAEzeFirXVu_pwDCb6t=ps4xskc4fFUy9gGECJgK1q7cYhLizVQ@mail.gmail.com>
+ <CAEzeFip+PCV4Ccsi6L+RSvrM_86J2=Ps6193WyC0QzVfwe64LQ@mail.gmail.com>
+ <CAEzeFiq2FXYKkfXjDtguryniaU7hQkJczLU98V9P3Uv5-D-P3g@mail.gmail.com>
+ <CAB=NE6VT_Q5Apb_ZCfK9fSYGDtaUOwmVqeogN8HE6+SgGYek1A@mail.gmail.com>
+ <CAEzeFiq5HXyazJfAx3mRV7TBy6CVEivJY63GkF8jnCczGsUK8Q@mail.gmail.com>
+ <CAB=NE6WaRyX0yGs=6h6+2V+gUSPHoY19TTHuXBRAWqR9hw+qAw@mail.gmail.com>
+ <loom.20110728T153639-332@post.gmane.org> <CAB=NE6WgWyc7a++e00Unf4WOqe7WV_D0rDxVfoXsFOXv7rkgOA@mail.gmail.com>
+ <loom.20110728T172403-330@post.gmane.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 28 Jul 2011 08:30:03 -0700
+Message-ID: <CAB=NE6V4au2+fGeb==QhfGoVa747p773oUyYiSBT-SuW6PA4eA@mail.gmail.com> (sfid-20110728_173026_897371_F3360E91)
+Subject: Re: Testing Auto Channel Selection with hostapd in ath5k and ath9k
+To: Swaminathan Vasanth <swaminathanvasanth.r@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/debug.c |  151 +++++++++++++++++++++++++++++++
- 1 files changed, 151 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/debug.c
+On Thu, Jul 28, 2011 at 8:26 AM, Swaminathan Vasanth
+<swaminathanvasanth.r@gmail.com> wrote:
+>> "return -ENOTMYISSUE;"
+>
+> ;) Hmmmm, but this will do for initial testing of it with Openwrt :)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-new file mode 100644
-index 0000000..2bcbdbd
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -0,0 +1,151 @@
-+/*
-+ * Copyright (c) 2004-2011 Atheros Communications Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "core.h"
-+#include "debug.h"
-+
-+int ath6kl_printk(const char *level, const char *fmt, ...)
-+{
-+	struct va_format vaf;
-+	va_list args;
-+	int rtn;
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	rtn = printk("%sath6kl: %pV", level, &vaf);
-+
-+	va_end(args);
-+
-+	return rtn;
-+}
-+
-+#ifdef CONFIG_ATH6KL_DEBUG
-+void ath6kl_dump_registers(struct ath6kl_device *dev,
-+			   struct ath6kl_irq_proc_registers *irq_proc_reg,
-+			   struct ath6kl_irq_enable_reg *irq_enable_reg)
-+{
-+
-+	ath6kl_dbg(ATH6KL_DBG_ANY, ("<------- Register Table -------->\n"));
-+
-+	if (irq_proc_reg != NULL) {
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			"Host Int status:           0x%x\n",
-+			irq_proc_reg->host_int_status);
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			   "CPU Int status:            0x%x\n",
-+			irq_proc_reg->cpu_int_status);
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			   "Error Int status:          0x%x\n",
-+			irq_proc_reg->error_int_status);
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			   "Counter Int status:        0x%x\n",
-+			irq_proc_reg->counter_int_status);
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			   "Mbox Frame:                0x%x\n",
-+			irq_proc_reg->mbox_frame);
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			   "Rx Lookahead Valid:        0x%x\n",
-+			irq_proc_reg->rx_lkahd_valid);
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			   "Rx Lookahead 0:            0x%x\n",
-+			irq_proc_reg->rx_lkahd[0]);
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			   "Rx Lookahead 1:            0x%x\n",
-+			irq_proc_reg->rx_lkahd[1]);
-+
-+		if (dev->ar->mbox_info.gmbox_addr != 0) {
-+			/*
-+			 * If the target supports GMBOX hardware, dump some
-+			 * additional state.
-+			 */
-+			ath6kl_dbg(ATH6KL_DBG_ANY,
-+				"GMBOX Host Int status 2:   0x%x\n",
-+				irq_proc_reg->host_int_status2);
-+			ath6kl_dbg(ATH6KL_DBG_ANY,
-+				"GMBOX RX Avail:            0x%x\n",
-+				irq_proc_reg->gmbox_rx_avail);
-+			ath6kl_dbg(ATH6KL_DBG_ANY,
-+				"GMBOX lookahead alias 0:   0x%x\n",
-+				irq_proc_reg->rx_gmbox_lkahd_alias[0]);
-+			ath6kl_dbg(ATH6KL_DBG_ANY,
-+				"GMBOX lookahead alias 1:   0x%x\n",
-+				irq_proc_reg->rx_gmbox_lkahd_alias[1]);
-+		}
-+
-+	}
-+
-+	if (irq_enable_reg != NULL) {
-+		ath6kl_dbg(ATH6KL_DBG_ANY,
-+			"Int status Enable:         0x%x\n",
-+			irq_enable_reg->int_status_en);
-+		ath6kl_dbg(ATH6KL_DBG_ANY, "Counter Int status Enable: 0x%x\n",
-+			irq_enable_reg->cntr_int_status_en);
-+	}
-+	ath6kl_dbg(ATH6KL_DBG_ANY, "<------------------------------->");
-+}
-+
-+static void dump_cred_dist(struct htc_endpoint_credit_dist *ep_dist)
-+{
-+	ath6kl_dbg(ATH6KL_DBG_ANY,
-+		   "--- endpoint: %d  svc_id: 0x%X ---\n",
-+		   ep_dist->endpoint, ep_dist->svc_id);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " dist_flags     : 0x%X\n",
-+		   ep_dist->dist_flags);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_norm      : %d\n",
-+		   ep_dist->cred_norm);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_min       : %d\n",
-+		   ep_dist->cred_min);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " credits        : %d\n",
-+		   ep_dist->credits);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_assngd    : %d\n",
-+		   ep_dist->cred_assngd);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " seek_cred      : %d\n",
-+		   ep_dist->seek_cred);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_sz        : %d\n",
-+		   ep_dist->cred_sz);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_per_msg   : %d\n",
-+		   ep_dist->cred_per_msg);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " cred_to_dist   : %d\n",
-+		   ep_dist->cred_to_dist);
-+	ath6kl_dbg(ATH6KL_DBG_ANY, " txq_depth      : %d\n",
-+		   get_queue_depth(&((struct htc_endpoint *)
-+				     ep_dist->htc_rsvd)->txq));
-+	ath6kl_dbg(ATH6KL_DBG_ANY,
-+		   "----------------------------------\n");
-+}
-+
-+void dump_cred_dist_stats(struct htc_target *target)
-+{
-+	struct htc_endpoint_credit_dist *ep_list;
-+
-+	if (!AR_DBG_LVL_CHECK(ATH6KL_DBG_TRC))
-+		return;
-+
-+	list_for_each_entry(ep_list, &target->cred_dist_list, list)
-+		dump_cred_dist(ep_list);
-+
-+	ath6kl_dbg(ATH6KL_DBG_HTC_SEND, "ctxt:0x%lx dist:0x%lx\n",
-+		   (unsigned long) target->cred_dist_cntxt, NULL);
-+	ath6kl_dbg(ATH6KL_DBG_TRC, "credit distribution, "
-+		   "total : %d, free : %d\n",
-+		   target->cred_dist_cntxt->total_avail_credits,
-+		   target->cred_dist_cntxt->cur_free_credits);
-+}
-+
-+#endif
+Can't you just stuff the relevant patches into the extra patches for hostapd ?
 
+  Luis
