@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52775 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752048Ab1GSVRJ (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:53003 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755455Ab1G1TGA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 17:17:09 -0400
-Date: Tue, 19 Jul 2011 17:09:14 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [PATCH 2/4] bcma: allow setting FAST clockmode for a core
-Message-ID: <20110719210913.GD2477@tuxdriver.com> (sfid-20110719_231713_348964_D8D53EC4)
-References: <1310857566-2876-1-git-send-email-zajec5@gmail.com>
- <1310857566-2876-2-git-send-email-zajec5@gmail.com>
- <20110719204246.GB2477@tuxdriver.com>
- <CACna6rxZMFnFiYFkrW9xTkL_eXTXH91sEO-W=HZqoiUYLMNumQ@mail.gmail.com>
- <CACna6rwCNyOKN+gHESX6Qt7uKQNuPWBrsyTJ1rWzjXMULV5y6Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACna6rwCNyOKN+gHESX6Qt7uKQNuPWBrsyTJ1rWzjXMULV5y6Q@mail.gmail.com>
+	Thu, 28 Jul 2011 15:06:00 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 68ADB5401C6
+	for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2011 15:14:27 -0400 (EDT)
+Subject: Compat-wireless release for 2011-07-28 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110728190558.D27BE40ED1@repository3.orbit-lab.org> (sfid-20110728_210604_736421_EB5DDE07)
+Date: Thu, 28 Jul 2011 15:05:58 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 19, 2011 at 10:54:32PM +0200, Rafał Miłecki wrote:
-> W dniu 19 lipca 2011 22:50 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
-> > W dniu 19 lipca 2011 22:42 użytkownik John W. Linville
-> > <linville@tuxdriver.com> napisał:
-> >>  CC [M]  drivers/bcma/core.o
-> >> drivers/bcma/core.c: In function ‘bcma_core_set_clockmode’:
-> >> drivers/bcma/core.c:65:22: error: ‘BCMA_CLKCTLST’ undeclared (first use in this function)
-> >> drivers/bcma/core.c:65:22: note: each undeclared identifier is reported only once for each function it appears in
-> >> drivers/bcma/core.c:65:73: error: ‘BCMA_CLKCTLST_FORCEHT’ undeclared (first use in this function)
-> >> drivers/bcma/core.c:69:8: error: ‘BCMA_CLKCTLST_HAVEHT’ undeclared (first use in this function)
-> >> drivers/bcma/core.c: In function ‘bcma_core_pll_ctl’:
-> >> drivers/bcma/core.c:89:35: error: ‘BCMA_CLKCTLST_EXTRESREQ’ undeclared (first use in this function)
-> >> drivers/bcma/core.c:90:38: error: ‘BCMA_CLKCTLST_EXTRESST’ undeclared (first use in this function)
-> >> drivers/bcma/core.c:93:22: error: ‘BCMA_CLKCTLST’ undeclared (first use in this function)
-> >> make[2]: *** [drivers/bcma/core.o] Error 1
-> >> make[1]: *** [drivers/bcma] Error 2
-> >> make: *** [drivers] Error 2
-> >
-> > I'm sorry, that's quite normal you could lost order&dependency with
-> > the amount of patches I've sent.
-> >
-> > As nobody objected, please apply
-> > [RFC][PATCH] bcma: move define of BCMA_CLKCTLST register
-> > It should be applied before this one.
-> 
-> Could I do something to avoid such a problems in the future?
-> 
-> Should I put info about dependency in cover-letter? Should I create
-> own git tree? Should I slow down with sending patches (doing more of
-> them before sending)?
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   f831af6..06d5dce  linux-3.0.y -> origin/linux-3.0.y
+   91e9e9f..72e6376  master     -> origin/master
+ * [new tag]         compat-wireless-2011-07-27 -> compat-wireless-2011-07-27
+ * [new tag]         compat-wireless-v3.0-2 -> compat-wireless-v3.0-2
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+ * [new tag]         compat-wireless-v3.0-1 -> compat-wireless-v3.0-1
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 716378b...ec8a50d akpm-end   -> origin/akpm-end  (forced update)
+   6fd4ce8..2271220  akpm-start -> origin/akpm-start
+   2e8e6e6..e24814e  history    -> origin/history
+ + da623a5...e3293aa master     -> origin/master  (forced update)
+   6fd4ce8..2271220  stable     -> origin/stable
+ * [new tag]         next-20110728 -> next-20110728
 
-It is always good to indicate dependencies, especially on patches
-posted in a different series or when the dependency is on a patch
-posted as RFC.
+compat-wireless code metrics
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+    835315 - Total upstream lines of code being pulled
+      2400 - backport code changes
+      2094 - backport code additions
+       306 - backport code deletions
+      8162 - backport from compat module
+     10562 - total backport code
+    1.2644 - % of code consists of backport work
