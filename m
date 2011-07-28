@@ -1,49 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:3345 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752286Ab1GWNj1 convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8626 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754502Ab1G1QDQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jul 2011 09:39:27 -0400
-Message-ID: <20110723093927.fwsus06pc04wcso8-cebfxv@webmail.spamcop.net> (sfid-20110723_153930_821380_BDD7ED65)
-Date: Sat, 23 Jul 2011 09:39:27 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: sedat.dilek@gmail.com
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 3/3] ath5k: eliminate CHANNEL_* macros, use AR5K_MODE_*
-	in channel->hw_value
-References: <20110723072113.17363.59871.stgit@mj.roinet.com>
-	<20110723072126.17363.78910.stgit@mj.roinet.com>
-	<CA+icZUXivDPEANKtrb+3Ux=YJTA+Ey4iZQufuNGnyCkgx4UYpw@mail.gmail.com>
-In-Reply-To: <CA+icZUXivDPEANKtrb+3Ux=YJTA+Ey4iZQufuNGnyCkgx4UYpw@mail.gmail.com>
+	Thu, 28 Jul 2011 12:03:16 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
+	<senthilb@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC] ath9k_htc: Fix memory leaks
+Date: Thu, 28 Jul 2011 21:33:07 +0530
+Message-ID: <1311868987-19398-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110728_180319_971273_299BFE8F)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Sedat Dilek <sedat.dilek@googlemail.com>:
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-> On Sat, Jul 23, 2011 at 9:21 AM, Pavel Roskin <proski@gnu.org> wrote:
->> When checking for the band, use channel->band.
->>
->> Change ath5k_hw_nic_wakeup() and ath5k_channel_ok() to take
->> ieee80211_channel.  Change ath5k_hw_radio_revision() to take
->> ieee80211_band.
->>
->> Signed-off-by: Pavel Roskin <proski@gnu.org>
->>
->
-> Tested on Atheros AR5212 chip against linux-next (next-20110722).
->
-> Feel free to add:
->
->      Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
+need to do more review and rigorous testing. Raj pointed out that there
+are several places we are not freeing skb's when there is timeout
 
-Thank you!  You testing is valuable and encouraging.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_hst.c |   13 ++++++++-----
+ drivers/net/wireless/ath/ath9k/wmi.c     |    3 ++-
+ 2 files changed, 10 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
+index 1b90ed8..e435c9b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_hst.c
++++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
+@@ -169,13 +169,14 @@ static int htc_config_pipe_credits(struct htc_target *target)
+ 	time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
+ 	if (!time_left) {
+ 		dev_err(target->dev, "HTC credit config timeout\n");
+-		return -ETIMEDOUT;
++		ret = -ETIMEDOUT;
++		goto err;
+ 	}
+ 
+ 	return 0;
+ err:
+ 	kfree_skb(skb);
+-	return -EINVAL;
++	return ret;
+ }
+ 
+ static int htc_setup_complete(struct htc_target *target)
+@@ -204,14 +205,15 @@ static int htc_setup_complete(struct htc_target *target)
+ 	time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
+ 	if (!time_left) {
+ 		dev_err(target->dev, "HTC start timeout\n");
+-		return -ETIMEDOUT;
++		ret = -ETIMEDOUT;
++		goto err;
+ 	}
+ 
+ 	return 0;
+ 
+ err:
+ 	kfree_skb(skb);
+-	return -EINVAL;
++	return ret;
+ }
+ 
+ /* HTC APIs */
+@@ -276,7 +278,8 @@ int htc_connect_service(struct htc_target *target,
+ 	if (!time_left) {
+ 		dev_err(target->dev, "Service connection timeout for: %d\n",
+ 			service_connreq->service_id);
+-		return -ETIMEDOUT;
++		ret = -ETIMEDOUT;
++		goto err;
+ 	}
+ 
+ 	*conn_rsp_epid = target->conn_rsp_epid;
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index 35422fc..50d901d 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -334,7 +334,8 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
+ 			"Timeout waiting for WMI command: %s\n",
+ 			wmi_cmd_to_name(cmd_id));
+ 		mutex_unlock(&wmi->op_mutex);
+-		return -ETIMEDOUT;
++		ret = -ETIMEDOUT;
++		goto out;
+ 	}
+ 
+ 	mutex_unlock(&wmi->op_mutex);
 -- 
-Regards,
-Pavel Roskin
+1.7.0.4
+
