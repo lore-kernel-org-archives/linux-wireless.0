@@ -1,52 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:2126 "EHLO mga02.intel.com"
+Received: from nbd.name ([46.4.11.11]:42563 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752225Ab1GHQUl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2011 12:20:41 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 17/21] iwlagn: add CMD_ON_DEMAND flag for host command from testmode
-Date: Fri,  8 Jul 2011 08:46:25 -0700
-Message-Id: <1310139989-27661-18-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110708_182052_788355_9A255742)
-In-Reply-To: <1310139989-27661-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1310139989-27661-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1755615Ab1G1MJK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jul 2011 08:09:10 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 2/2] ath9k: use the new channel noise value for signal strength and survey info
+Date: Thu, 28 Jul 2011 14:08:57 +0200
+Message-Id: <1311854937-9411-2-git-send-email-nbd@openwrt.org> (sfid-20110728_140913_768007_BF8F6415)
+In-Reply-To: <1311854937-9411-1-git-send-email-nbd@openwrt.org>
+References: <1311854937-9411-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For all the hist command request from testmode, set the CMD_ON_DEMAND flag.
-this flag will be used later to control the uCode behavior
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-dev.h     |    1 +
- drivers/net/wireless/iwlwifi/iwl-sv-open.c |    1 +
- 2 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |    2 +-
+ drivers/net/wireless/ath/ath9k/recv.c |    4 +++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 29eb41d..b7e9fd1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -261,6 +261,7 @@ enum {
- 	CMD_SYNC = 0,
- 	CMD_ASYNC = BIT(0),
- 	CMD_WANT_SKB = BIT(1),
-+	CMD_ON_DEMAND = BIT(2),
- };
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 9098aaa..b602447 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -163,7 +163,7 @@ static void ath_update_survey_nf(struct ath_softc *sc, int channel)
  
- #define DEF_CMD_PAYLOAD_SIZE 320
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sv-open.c b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
-index 81108be..653b787 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sv-open.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
-@@ -232,6 +232,7 @@ static int iwl_testmode_ucode(struct ieee80211_hw *hw, struct nlattr **tb)
- 		return -ENOMSG;
+ 	if (chan->noisefloor) {
+ 		survey->filled |= SURVEY_INFO_NOISE_DBM;
+-		survey->noise = chan->noisefloor;
++		survey->noise = ath9k_hw_getchan_noise(ah, chan);
  	}
+ }
  
-+	cmd.flags = CMD_ON_DEMAND;
- 	cmd.id = nla_get_u8(tb[IWL_TM_ATTR_UCODE_CMD_ID]);
- 	cmd.data[0] = nla_data(tb[IWL_TM_ATTR_UCODE_CMD_DATA]);
- 	cmd.len[0] = nla_len(tb[IWL_TM_ATTR_UCODE_CMD_DATA]);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index d32e82f..bbff0ba 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -994,6 +994,8 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
+ 				   struct ieee80211_rx_status *rx_status,
+ 				   bool *decrypt_error)
+ {
++	struct ath_hw *ah = common->ah;
++
+ 	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
+ 
+ 	/*
+@@ -1014,7 +1016,7 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
+ 
+ 	rx_status->band = hw->conf.channel->band;
+ 	rx_status->freq = hw->conf.channel->center_freq;
+-	rx_status->signal = ATH_DEFAULT_NOISE_FLOOR + rx_stats->rs_rssi;
++	rx_status->signal = ah->noise + rx_stats->rs_rssi;
+ 	rx_status->antenna = rx_stats->rs_antenna;
+ 	rx_status->flag |= RX_FLAG_MACTIME_MPDU;
+ 
 -- 
-1.7.0.4
+1.7.3.2
 
