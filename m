@@ -1,85 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4218 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753643Ab1GROaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2011 10:30:23 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Roland Vossen" <rvossen@broadcom.com>,
-	linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 04/19] staging: brcm80211: fixed build issue for big
- endian platforms
-Date: Mon, 18 Jul 2011 16:29:50 +0200
-Message-ID: <1310999405-10062-5-git-send-email-arend@broadcom.com> (sfid-20110718_163051_218818_0CE2876A)
-In-Reply-To: <1310999405-10062-1-git-send-email-arend@broadcom.com>
-References: <1310999405-10062-1-git-send-email-arend@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:21367 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754138Ab1G1R3r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jul 2011 13:29:47 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 4/9] ath9k_hw: Fix incorrect Tx control power in AR9003 template
+Date: Thu, 28 Jul 2011 22:59:31 +0530
+Message-ID: <1311874176-27569-4-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110728_192950_428205_5042F86A)
+In-Reply-To: <1311874176-27569-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1311874176-27569-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+CTL power data incorrect in ctlPowerData_2G field of ar9300_eeprom.
+Setting incorrect CTL power in calibration is causing lower tx power.
+This issue was identified in HT40 mode on channel 6 & 11.
 
-Driver now builds for big endian mips platform, possibly also for other
-big endian platforms. A change was made to the R_REG and W_REG macro's.
-These macro's perform an xor (^) operation for endianess swap purposes.
-Gcc complained because an xor operation is not allowed on a pointer type.
-Fixed this by casting the pointer to an unsigned long.
-
-Cc: linux-wireless@vger.kernel.org
-Cc: devel@linuxdriverproject.org
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/staging/brcm80211/brcmsmac/dma.h   |    1 +
- drivers/staging/brcm80211/brcmsmac/types.h |    8 ++++----
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.h b/drivers/staging/brcm80211/brcmsmac/dma.h
-index 3ff109f..334f2eb 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.h
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.h
-@@ -17,6 +17,7 @@
- #ifndef	_BRCM_DMA_H_
- #define	_BRCM_DMA_H_
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index d109c25..6cfc9eb 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -307,7 +307,7 @@ static const struct ar9300_eeprom ar9300_default = {
+ 		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 		 { { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 1) } },
  
-+#include <linux/delay.h>
- #include "types.h"		/* forward structure declarations */
+-		 { { CTL(60, 1), CTL(60, 0), CTL(0, 0), CTL(0, 0) } },
++		 { { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0) } },
+ 		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
  
- /* DMA structure:
-diff --git a/drivers/staging/brcm80211/brcmsmac/types.h b/drivers/staging/brcm80211/brcmsmac/types.h
-index 6275160..55db3cd 100644
---- a/drivers/staging/brcm80211/brcmsmac/types.h
-+++ b/drivers/staging/brcm80211/brcmsmac/types.h
-@@ -304,11 +304,11 @@ do {						\
- 		switch (sizeof(*(r))) { \
- 		case sizeof(u8): \
- 			__osl_v = \
--			readb((u8 *)((r)^3)); \
-+			readb((u8 *)((unsigned long)(r)^3)); \
- 			break; \
- 		case sizeof(u16): \
- 			__osl_v = \
--			readw((u16 *)((r)^2)); \
-+			readw((u16 *)((unsigned long)(r)^2)); \
- 			break; \
- 		case sizeof(u32): \
- 			__osl_v = readl((u32 *)(r)); \
-@@ -321,10 +321,10 @@ do {						\
- 		switch (sizeof(*(r))) { \
- 		case sizeof(u8):	\
- 			writeb((u8)(v), \
--			(u8 *)((r)^3)); break; \
-+			(u8 *)((unsigned long)(r)^3)); break; \
- 		case sizeof(u16):	\
- 			writew((u16)(v), \
--			(u16 *)((r)^2)); break; \
-+			(u16 *)((unsigned long)(r)^2)); break; \
- 		case sizeof(u32):	\
- 			writel((u32)(v), \
- 			(u32 *)(r)); break; \
+@@ -884,7 +884,7 @@ static const struct ar9300_eeprom ar9300_x113 = {
+ 		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 		 { { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 1) } },
+ 
+-		 { { CTL(60, 1), CTL(60, 0), CTL(0, 0), CTL(0, 0) } },
++		 { { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0) } },
+ 		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 
+@@ -2040,7 +2040,7 @@ static const struct ar9300_eeprom ar9300_x112 = {
+ 		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 		{ { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 1) } },
+ 
+-		{ { CTL(60, 1), CTL(60, 0), CTL(0, 0), CTL(0, 0) } },
++		{ { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0) } },
+ 		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 
 -- 
-1.7.4.1
-
+1.7.6
 
