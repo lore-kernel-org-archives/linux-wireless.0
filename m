@@ -1,33 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:37574 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507Ab1GYU1t (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:7743 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755605Ab1G1RbY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2011 16:27:49 -0400
-Received: by qyk29 with SMTP id 29so1078644qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2011 13:27:48 -0700 (PDT)
+	Thu, 28 Jul 2011 13:31:24 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 7/9] ath9k_hw: Disable Walsh spatial spreading for 2 chains
+Date: Thu, 28 Jul 2011 22:59:34 +0530
+Message-ID: <1311874176-27569-7-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110728_193128_841469_6888BA6C)
+In-Reply-To: <1311874176-27569-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1311874176-27569-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <20110715173306.GE2566@tuxdriver.com>
-References: <1310399981.11331.4.camel@sven> <1310478727-12099-2-git-send-email-s.neumann@raumfeld.com>
- <20110715173306.GE2566@tuxdriver.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 25 Jul 2011 13:27:28 -0700
-Message-ID: <CAB=NE6V4ZAkjMZo37s2RqvMTAieXQMX51sE7SeU-bzoHxSZEdA@mail.gmail.com> (sfid-20110725_222752_323138_6DDD5B22)
-Subject: Re: [PATCH] cfg80211: really ignore the regulatory request
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Sven Neumann <s.neumann@raumfeld.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Daniel Mack <daniel@zonque.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 15, 2011 at 10:33 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> Luis, ping?
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Looks good, but please also add Cc: stable@kernel.org so this
-propagates to stable kernels.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+index 2339728..28b44b0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+@@ -636,7 +636,7 @@ static const u32 ar9300_2p2_baseband_postamble[][5] = {
+ 	{0x00009e44, 0x02321e27, 0x02321e27, 0x02291e27, 0x02291e27},
+ 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
+ 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
+-	{0x0000a204, 0x000037c0, 0x000037c4, 0x000037c4, 0x000037c0},
++	{0x0000a204, 0x000036c0, 0x000036c4, 0x000036c4, 0x000036c0},
+ 	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
+ 	{0x0000a22c, 0x01026a2f, 0x01026a2f, 0x01026a2f, 0x01026a2f},
+ 	{0x0000a230, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b},
+-- 
+1.7.6
 
-  Luis
