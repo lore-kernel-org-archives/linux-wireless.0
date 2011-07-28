@@ -1,47 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53665 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752847Ab1GEDLn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 23:11:43 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	mickflemm@gmail.com
-Subject: [PATCH v2 1/8] ath5k: add missing checks for rfgain probe
-Date: Tue,  5 Jul 2011 10:11:17 +0700
-Message-Id: <1309835484-26653-1-git-send-email-nbd@openwrt.org> (sfid-20110705_051154_392859_D71987B4)
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:41601 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754678Ab1G1VNK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jul 2011 17:13:10 -0400
+Received: by qwk3 with SMTP id 3so1551297qwk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2011 14:13:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1311874176-27569-4-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1311874176-27569-1-git-send-email-rmanohar@qca.qualcomm.com> <1311874176-27569-4-git-send-email-rmanohar@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 28 Jul 2011 14:12:49 -0700
+Message-ID: <CAB=NE6WsBDZTin3t6JsXm6mWYGozsbH48DO08QVYodXg3Ny-ng@mail.gmail.com> (sfid-20110728_231325_501861_13B01C7F)
+Subject: Re: [PATCH 4/9] ath9k_hw: Fix incorrect Tx control power in AR9003 template
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rfgain probe is only necessary for OFDM operation on AR5111 and AR5112.
+On Thu, Jul 28, 2011 at 10:29 AM, Rajkumar Manoharan
+<rmanohar@qca.qualcomm.com> wrote:
+> CTL power data incorrect in ctlPowerData_2G field of ar9300_eeprom.
+> Setting incorrect CTL power in calibration is causing lower tx power.
+> This issue was identified in HT40 mode on channel 6 & 11.
+>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath5k/phy.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+Is this a stable fix? If so can you please resend with a Cc:
+stable@kernel.org on the commit log message and explain why its a
+stable fix.
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 5544191..d0bfcad 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1604,11 +1604,13 @@ int ath5k_hw_phy_calibrate(struct ath5k_hw *ah,
- 	int ret;
- 
- 	if (ah->ah_radio == AR5K_RF5110)
--		ret = ath5k_hw_rf5110_calibrate(ah, channel);
--	else {
--		ret = ath5k_hw_rf511x_iq_calibrate(ah);
-+		return ath5k_hw_rf5110_calibrate(ah, channel);
-+
-+	ret = ath5k_hw_rf511x_iq_calibrate(ah);
-+
-+	if ((ah->ah_radio == AR5K_RF5112 || ah->ah_radio == AR5K_RF5112) &&
-+	    (channel->hw_value & CHANNEL_OFDM))
- 		ath5k_hw_request_rfgain_probe(ah);
--	}
- 
- 	return ret;
- }
--- 
-1.7.3.2
-
+  Luis
