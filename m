@@ -1,53 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:37260 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147Ab1GZI25 (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:39725 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752863Ab1G1BVZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2011 04:28:57 -0400
-Received: by pzk37 with SMTP id 37so467878pzk.1
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 01:28:56 -0700 (PDT)
-Date: Tue, 26 Jul 2011 11:26:59 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 13/29] staging: brcm80211: revisited END_FOREACH_BSS macro
-Message-ID: <20110726082658.GD3824@shale.localdomain> (sfid-20110726_102902_051801_4E9155B0)
-References: <1311361036-3175-1-git-send-email-arend@broadcom.com>
- <1311361036-3175-14-git-send-email-arend@broadcom.com>
+	Wed, 27 Jul 2011 21:21:25 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1311361036-3175-14-git-send-email-arend@broadcom.com>
+In-Reply-To: <4E302299.2070309@lwfinger.net>
+References: <CAMzZzFGqPv6Nbw8J8JGNKcLA76sAs3oD6+hH9NPCjwA33fYpOQ@mail.gmail.com>
+	<CAMzZzFGpDiFAhsLAb+SQxjbGMzBoOStF_Lr7Eb3PT6Drcf=VdA@mail.gmail.com>
+	<4E302299.2070309@lwfinger.net>
+Date: Thu, 28 Jul 2011 09:21:23 +0800
+Message-ID: <CAMzZzFHoQV9wo31sbEMUOv-OQZE1p1WfT8WMGnKJVjNHKvLmQw@mail.gmail.com> (sfid-20110728_032132_930656_AFBC4A58)
+Subject: Re: Oops when insmod rtl8192ce
+From: hubert Liao <liao.hubertt@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 22, 2011 at 08:57:00PM +0200, Arend van Spriel wrote:
-> @@ -3345,7 +3345,7 @@ void brcms_c_init(struct brcms_c_info *wlc)
->  	FOREACH_BSS(wlc, i, bsscfg)
->  		brcms_c_set_mac(bsscfg);
->  		brcms_c_set_bssid(bsscfg);
-> -	END_FOREACH_BSS
-> +	END_FOREACH_BSS()
+2011/7/27 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 07/27/2011 04:26 AM, hubert Liao wrote:
+>>
+>> Hi,
+>> We got an oops when insmod rtl8192ce module (the board is an ARM soc),
+>> accroding the oops message, find it's because in rtl_pci_probe()
+>> called _rtl_pci_find_adapter(),
+>> in this funcation, the  pdev->bus->self is a NULL pointer .
+>> static boot _rtl_pci_find_adapter(strcut pci_dev *dev,
+>>               struct ieee80211_hw *hw)
+>> {
+>> struct pci_dev *bridge_pdev = pdev->bus->self;   //line 1601
+>> ...
+>> pcipriv->ndis_adapter.pcibridge_vendorid = bridge_pdev->vendor;<--
+>> [oops here] line 1700
+>> ...
+>> }
+>> here, I just want to know why the bus->self  is NULL?
+>> ----
+>> [  148.186632] Unable to handle kernel NULL pointer dereference at
+>> virtual address 00000020
+>
+> As John Linville suggested, please open a bugzilla report.
+>
+Ok, I'll try it, but I am not familiar with it.
+> I would also like some additional information. What kernel are you using? In
+> addition, please post the 'lspci -nnk' information for your card.
+>
+The kernel is from the latest linus kernel git tree(3.0.0-05684-ge371d46-dirty),
+I also have tested the 2.6.38.8 stable release, it has the same problem.
 
-These would look nicer with a semicolon on the end.
+lspci -nnk
+00:00.0 Class [0580]: Device [11ab:6192] (rev 03)
+        Subsystem: Device [11ab:11ab]
+00:01.0 Class [0280]: Device [10ec:8178] (rev 01)
+        Subsystem: Device [1a3b:1178]
 
-	END_FOREACH_BSS();
+> I also think that pdev->bus should have been setup before the initialization
+> code in rtl8192ce was called. I have not tested the driver on other than x86
+> and x86_64 architectures because of hardware availability, thus ARM may
+> expose some problems. Is this soc little-endian?
+>
+Yes ,it is little-endian
 
-That looks like c.
+cat /proc/cpuinfo
+Processor       : Feroceon 88FR131 rev 1 (v5l)
+BogoMIPS        : 789.70
+Features        : swp half thumb fastmult edsp
+CPU implementer : 0x56
+CPU architecture: 5TE
+CPU variant     : 0x2
+CPU part        : 0x131
+CPU revision    : 1
 
-I quite liked my way with the extra { } chars.
+Hardware        : Marvell RD-88F6192-NAS Development Board
+Revision        : 0000
+Serial          : 0000000000000000
 
-	FOREACH_BSS(wlc, i, bsscfg) {
-		brcms_c_set_mac(bsscfg);
-		brcms_c_set_bssid(bsscfg);
-	} END_FOREACH_BSS();
-
-Emacs gets the indenting wrong without the braces.  We use that
-style of for each loop in the Sparse project.
-
-But I'm fairly sick of this macro so at this point, I'm fine with
-whatever.  :P
-
-regards,
-dan carpenter
-
+> Thanks,
+> Larry
+>
+>
