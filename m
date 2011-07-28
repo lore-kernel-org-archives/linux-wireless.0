@@ -1,61 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58700 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752938Ab1GLBCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 21:02:20 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	mickflemm@gmail.com
-Subject: [PATCH v3 2/8] ath5k: apply the synth voltage tweak only on AR5112 rev 2
-Date: Tue, 12 Jul 2011 09:01:59 +0800
-Message-Id: <1310432525-70077-2-git-send-email-nbd@openwrt.org> (sfid-20110712_030231_075566_B0872D0A)
-In-Reply-To: <1310432525-70077-1-git-send-email-nbd@openwrt.org>
-References: <1310432525-70077-1-git-send-email-nbd@openwrt.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:63856 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932136Ab1G1Xrj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jul 2011 19:47:39 -0400
+Received: by fxh19 with SMTP id 19so1724908fxh.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2011 16:47:38 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "Martin Partridge" <martin_partridge@btconnect.com>
+Subject: Re: help
+Date: Fri, 29 Jul 2011 01:47:26 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <op.vzcrpnuuhgplxr@melanie>
+In-Reply-To: <op.vzcrpnuuhgplxr@melanie>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201107290147.26919.chunkeey@googlemail.com> (sfid-20110729_014752_959678_49554EA0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Might fix some stability issues on newer chips
+On Friday, July 29, 2011 01:33:13 AM Martin Partridge wrote:
+> I don't understand the last 2 steps, i'm running fedora (ok i lie its  
+> Fuduntu, but to all intents and purposes its fedora) Kernel version:  
+> 2.6.39.3-1.fc14.i686
+recent enough. 
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
----
- drivers/net/wireless/ath/ath5k/phy.c |   19 +++++++++++--------
- 1 files changed, 11 insertions(+), 8 deletions(-)
+> i'm using a WG511v2 PCMCIA card, i've downloaded the correct firmware,  
+> renamed it and modprobed everything as instructed, the bit i'm having  
+> trouble with is this bit:
+> 
+> Enabling p54
+> 
+> To enable p54, you must first enable mac80211:
+> 
+> Networking Support --->
+>    Wireless  --->
+>      <M> cfg80211 - wireless configuration API
+>      <M> Generic IEEE 802.11 Networking Stack (mac80211)
+> 
+> You can then enable p54 in the kernel configuration under
+> 
+> Device Drivers  --->
+>    [*] Network device support  --->
+>          Wireless LAN --->
+>            [*] Wireless LAN (IEEE 802.11)
+>            <M>   Softmac Prism54 support
+>            <M>     Prism54 USB support
+>            <M>     Prism54 PCI support
+>            <M>     Prism54 SPI (stlc45xx) support
+> 
+> where do i type this, or what does it mean? I i don't have a 'networking  
+> support' menu and it's not a program, where do i find this? is it a conf  
+> file? I'm no stranger to linux but this is perplexing, the card works fine  
+> on windows, but i can't get it work now. I have a kernel config file in  
+> /etc/sysconfig but its a bit bare, as shown below:
+> 
+> # UPDATEDEFAULT specifies if new-kernel-pkg should make
+> # new kernels the default
+> UPDATEDEFAULT=yes
+> 
+> # DEFAULTKERNEL specifies the default kernel package type
+> DEFAULTKERNEL=kernel
+> 
+> That's the whole thing.
+> 
+> How do i enable p54 and mac80211, i'm not sure and its bloody annoying.
+Ah you see, you don't need to do that. This step is only necessary if you
+make your own kernel [from scratch] and you haven't enabled p54 yet. But
+since your using fedora's default 2.6.39.3-1.fc14.i686 kernel, I hope they
+have taken care of it and provided you with a fitting p54common and p54pci
+modules.
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 3f19e31..acf73a0 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -970,17 +970,20 @@ static int ath5k_hw_rfregs_init(struct ath5k_hw *ah,
- 			}
- 
- 			/* Lower synth voltage on Rev 2 */
--			ath5k_hw_rfb_op(ah, rf_regs, 2,
--					AR5K_RF_HIGH_VC_CP, true);
-+			if (ah->ah_radio == AR5K_RF5112 &&
-+			    (ah->ah_radio_5ghz_revision & AR5K_SREV_REV) > 0) {
-+				ath5k_hw_rfb_op(ah, rf_regs, 2,
-+						AR5K_RF_HIGH_VC_CP, true);
- 
--			ath5k_hw_rfb_op(ah, rf_regs, 2,
--					AR5K_RF_MID_VC_CP, true);
-+				ath5k_hw_rfb_op(ah, rf_regs, 2,
-+						AR5K_RF_MID_VC_CP, true);
- 
--			ath5k_hw_rfb_op(ah, rf_regs, 2,
--					AR5K_RF_LOW_VC_CP, true);
-+				ath5k_hw_rfb_op(ah, rf_regs, 2,
-+						AR5K_RF_LOW_VC_CP, true);
- 
--			ath5k_hw_rfb_op(ah, rf_regs, 2,
--					AR5K_RF_PUSH_UP, true);
-+				ath5k_hw_rfb_op(ah, rf_regs, 2,
-+						AR5K_RF_PUSH_UP, true);
-+			}
- 
- 			/* Decrease power consumption on 5213+ BaseBand */
- 			if (ah->ah_phy_revision >= AR5K_SREV_PHY_5212A) {
--- 
-1.7.3.2
+In fact, the device should show up right away soon as you insert the pcmcia
+card into the slot. Check networkmanager/wicd/ifconfig -a/iw list for any
+new devices. If it doesn't show up, you might want to post your `dmesg`,
+[releavant p54 extract] syslog right here. I also have a WG511v2 so it should
+work pretty much out of the box.
 
+Regards,
+	Chr
