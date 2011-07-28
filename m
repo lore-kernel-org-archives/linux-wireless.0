@@ -1,66 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:20650 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753211Ab1GVFmq (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:58936 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755287Ab1G1QSe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 01:42:46 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Subject: [PATCH 07/31] ath6kl: Cleanup ath6kl_sdio_enable_scatter()
-Date: Fri, 22 Jul 2011 08:41:40 +0300
-Message-ID: <1311313324-6766-9-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110722_074255_701731_A12EB87F)
-In-Reply-To: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
+	Thu, 28 Jul 2011 12:18:34 -0400
+Message-ID: <4E318BD0.40202@lwfinger.net> (sfid-20110728_181840_047492_4D8542FA)
+Date: Thu, 28 Jul 2011 11:18:24 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Justin Piszcz <jpiszcz@lucidpixels.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Alan Piszcz <ap@solarrain.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: 3.0: rt2800usb(Kernel PANIC) vs. rt2780sta(GOOD/2.6.38)
+References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan>
+In-Reply-To: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+On 07/27/2011 06:33 PM, Justin Piszcz wrote:
+> Hi,
+>
+> Kernel 3.0 (rt2800usb driver- horrid, and then it panics moments after, see
+> picture below)
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=301 ttl=64 time=146 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=302 ttl=64 time=274 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=303 ttl=64 time=197 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=304 ttl=64 time=115 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=305 ttl=64 time=243 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=306 ttl=64 time=265 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=307 ttl=64 time=183 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=308 ttl=64 time=201 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=309 ttl=64 time=236 ms
+>
+> Then it crashes if you use the network:
+> http://home.comcast.net/~jpiszcz/20110727/photo.JPG
+>
+> With the rt2870sta driver, the machine has been solid for months (2.6.38) with
+> consistent low pings:
+>
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=2 ttl=64 time=1.38 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=3 ttl=64 time=0.520 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=4 ttl=64 time=1.11 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=5 ttl=64 time=0.573 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=6 ttl=64 time=0.562 ms
+>
+> Can we please get the rt2870sta back into the kernel?
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/sdio.c |   16 +++-------------
- 1 files changed, 3 insertions(+), 13 deletions(-)
+No. One of the reasons for deleting rt2870sta was that having it around was 
+preventing the use of rt2800usb and it was not getting debugged.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 36f25fc..5de3884 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -342,9 +342,10 @@ static void ath6kl_sdio_cleanup_scat_resource(struct ath6kl_sdio *ar_sdio)
- }
- 
- /* setup of HIF scatter resources */
--static int ath6kl_sdio_setup_scat_resource(struct ath6kl_sdio *ar_sdio,
--					   struct hif_dev_scat_sup_info *pinfo)
-+static int ath6kl_sdio_enable_scatter(struct ath6kl *ar,
-+				      struct hif_dev_scat_sup_info *pinfo)
- {
-+	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
- 	int ret = 0;
- 
- 	/* check if host supports scatter and it meets our requirements */
-@@ -626,17 +627,6 @@ static void ath6kl_sdio_scatter_req_add(struct ath6kl *ar,
- 
- }
- 
--static int ath6kl_sdio_enable_scatter(struct ath6kl *ar,
--				      struct hif_dev_scat_sup_info *info)
--{
--	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
--	int ret;
--
--	ret = ath6kl_sdio_setup_scat_resource(ar_sdio, info);
--
--	return ret;
--}
--
- /* scatter gather read write request */
- static int ath6kl_sdio_async_rw_scatter(struct ath6kl *ar,
- 					struct hif_scatter_req *scat_req)
--- 
-1.7.1
+This problem does not happen on my device.
 
+Bus 001 Device 004: ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless 
+Adapter
+
+That device is an unbranded USB stick that I got from Ebay for $2.59. My pings are
+
+PING sonylap (192.168.1.50) 56(84) bytes of data.
+64 bytes from sonylap (192.168.1.50): icmp_req=1 ttl=64 time=13.2 ms
+64 bytes from sonylap (192.168.1.50): icmp_req=2 ttl=64 time=11.3 ms
+64 bytes from sonylap (192.168.1.50): icmp_req=3 ttl=64 time=10.3 ms
+64 bytes from sonylap (192.168.1.50): icmp_req=4 ttl=64 time=10.5 ms
+64 bytes from sonylap (192.168.1.50): icmp_req=5 ttl=64 time=11.6 ms
+64 bytes from sonylap (192.168.1.50): icmp_req=6 ttl=64 time=11.2 ms
+64 bytes from sonylap (192.168.1.50): icmp_req=7 ttl=64 time=10.1 ms
+64 bytes from sonylap (192.168.1.50): icmp_req=8 ttl=64 time=11.7 ms
+64 bytes from sonylap (192.168.1.50): icmp_req=9 ttl=64 time=10.7 ms
+64 bytes from sonylap (192.168.1.50): icmp_req=10 ttl=64 time=13.2 ms
+64 bytes from sonylap (192.168.1.50): icmp_req=11 ttl=64 time=10.2 ms
+64 bytes from sonylap (192.168.1.50): icmp_req=12 ttl=64 time=11.6 ms
+64 bytes from sonylap (192.168.1.50): icmp_req=13 ttl=64 time=10.7 ms
+64 bytes from sonylap (192.168.1.50): icmp_req=14 ttl=64 time=10.6 ms
+64 bytes from sonylap (192.168.1.50): icmp_req=15 ttl=64 time=16.0 ms
+64 bytes from sonylap (192.168.1.50): icmp_req=16 ttl=64 time=10.3 ms
+^C
+--- sonylap ping statistics ---
+16 packets transmitted, 16 received, 0% packet loss, time 15025ms
+rtt min/avg/max/mdev = 10.194/11.499/16.075/1.502 ms
+
+Performance is adequate, but not sparkling. Using tcpperf, I get 6 Mbps upload 
+speed on an 802.11n network. The output of iwconfig says that I have a speed of 
+121.5 Mbps set, but I'm only getting 1/10th of the transmit rate that I would 
+expect for that setting.
+
+@Ivo: I don't know if you saw this or not. From the photo, the kernel panics on 
+a page fault in interrupt mode. The traceback is to rt2800usb_write_tx_desc+0x4, 
+which seems to implicate the inline routine get_skb_frame_desc(). The offending 
+statement is
+
+return (struct skb_frame_desc *)&IEEE80211_SKB_CB(skb)->driver_data;
+
+Any thoughts on how either the skb or the driver_data member might not be setup 
+correctly?
+
+Thanks,
+
+Larry
