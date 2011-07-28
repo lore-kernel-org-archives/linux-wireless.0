@@ -1,218 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4296 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754140Ab1GEUGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 16:06:35 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH v2 21/21] staging: brcm80211: rename external function
- in wl_cfg80211.c
-Date: Tue, 5 Jul 2011 22:06:17 +0200
-Message-ID: <1309896377-4425-22-git-send-email-arend@broadcom.com> (sfid-20110705_220647_837128_E73C9401)
-In-Reply-To: <1309896377-4425-1-git-send-email-arend@broadcom.com>
-References: <1309896377-4425-1-git-send-email-arend@broadcom.com>
+Received: from mail1-out1.atlantis.sk ([80.94.52.55]:41181 "EHLO
+	mail.atlantis.sk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753384Ab1G1Ixd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jul 2011 04:53:33 -0400
+From: Ondrej Zary <linux@rainbow-software.org>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: hostap_cs: add ID for LG cards
+Date: Thu, 28 Jul 2011 10:53:27 +0200
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <201107262314.03422.linux@rainbow-software.org> <201107272219.23501.linux@rainbow-software.org> <4E308D11.8070405@gnu.org>
+In-Reply-To: <4E308D11.8070405@gnu.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201107281053.27521.linux@rainbow-software.org> (sfid-20110728_105337_766910_E065AB8C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Renamed external function getting rid of wl_ prefix. Removed unused
-function from the API header file wl_cfg80211.h as it was not defined.
+On Thursday 28 July 2011, Pavel Roskin wrote:
+> On 07/27/2011 04:19 PM, Ondrej Zary wrote:
+> > On Tuesday 26 July 2011 23:54:37 Pavel Roskin wrote:
+> >> I think we may want to introduce PCMCIA_DEVICE_MANF_CARD_PROD_ID3 and
+> >> match
+> >>
+> >> PCMCIA_DEVICE_MANF_CARD_PROD_ID3(0x0156, 0x0002, "Version 1.02", xxx)
+> >>
+> >> Maybe some other card would be supported too?  I doubt there are any
+> >> Agere or Symbol cards with "Version 1.02" in the third text ID.
+> >
+> > Yes, that looks good, it would match my card too:
+> >    product info: "LG", "11Mbps Wireless LAN PCI Card", "Version 01.02",
+> > "" manfid: 0x0156, 0x0002
+> >    function: 6 (network)
+>
+> Good to know.
+>
+> > ---------------------------
+> >
+> > Add generic "Version 01.02" match (used by many different cards) to
+> > hostap_cs.
+> >
+> > This allows LG LW1100P PCI card (with integrated CardBus bridge) to work
+> > (tested with rev 3.0) and probably also LW1100N (PCMCIA).
+> >
+> > Signed-off-by: Ondrej Zary<linux@rainbow-software.org>
+>
+> That's not the right way to submit patches.  Anyway, I sent 3 patches to
+> that effect yesterday.  One in for PCMCIA, the second is for hostap_cs
+> and the third is for orinoco_cs to recognize "Version 01.01" as Agere
+> firmware and to stop claiming 0x0156:0x0002 unconditionally.
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
----
- .../brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c        |    2 +-
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |   14 ++++++++------
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c   |   18 +++++++++---------
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h   |   19 +++++++++----------
- 4 files changed, 27 insertions(+), 26 deletions(-)
+Thanks, I've missed your patches.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
-index cdaa042..e229bcb 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c
-@@ -88,7 +88,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 	gInstance->func[func->num] = func;
- 
- 	if (func->num == 2) {
--		wl_cfg80211_sdio_func(func);
-+		brcmf_cfg80211_sdio_func(func);
- 		sd_trace(("F2 found, calling brcmf_sdio_probe...\n"));
- 		ret = brcmf_sdio_probe(&sdmmc_dev);
- 	}
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index 8db4609..a6dc346 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -1052,7 +1052,8 @@ static void brcmf_ethtool_get_drvinfo(struct net_device *net,
- 	sprintf(info->driver, KBUILD_MODNAME);
- 	sprintf(info->version, "%lu", drvr_priv->pub.drv_version);
- 	sprintf(info->fw_version, "%s", BCM4329_FW_NAME);
--	sprintf(info->bus_info, "%s", dev_name(&wl_cfg80211_get_sdio_func()->dev));
-+	sprintf(info->bus_info, "%s",
-+		dev_name(&brcmf_cfg80211_get_sdio_func()->dev));
- }
- 
- struct ethtool_ops brcmf_ethtool_ops = {
-@@ -1292,7 +1293,7 @@ static int brcmf_netdev_stop(struct net_device *net)
- 	struct brcmf_info *drvr_priv = *(struct brcmf_info **) netdev_priv(net);
- 
- 	DHD_TRACE(("%s: Enter\n", __func__));
--	wl_cfg80211_down();
-+	brcmf_cfg80211_down();
- 	if (drvr_priv->pub.up == 0)
- 		return 0;
- 
-@@ -1338,7 +1339,7 @@ static int brcmf_netdev_open(struct net_device *net)
- 	/* Allow transmit calls */
- 	netif_start_queue(net);
- 	drvr_priv->pub.up = 1;
--	if (unlikely(wl_cfg80211_up())) {
-+	if (unlikely(brcmf_cfg80211_up())) {
- 		DHD_ERROR(("%s: failed to bring up cfg80211\n",
- 			   __func__));
- 		return -1;
-@@ -1464,7 +1465,7 @@ struct brcmf_pub *brcmf_attach(struct brcmf_bus *bus, uint bus_hdrlen)
- 	}
- 
- 	/* Attach and link in the cfg80211 */
--	if (unlikely(wl_cfg80211_attach(net, &drvr_priv->pub))) {
-+	if (unlikely(brcmf_cfg80211_attach(net, &drvr_priv->pub))) {
- 		DHD_ERROR(("wl_cfg80211_attach failed\n"));
- 		goto fail;
- 	}
-@@ -1700,7 +1701,7 @@ void brcmf_detach(struct brcmf_pub *drvr)
- 			if (drvr->prot)
- 				brcmf_proto_detach(drvr);
- 
--			wl_cfg80211_detach();
-+			brcmf_cfg80211_detach();
- 
- 			/* && defined(DHD_GPL) */
- 			free_netdev(ifp->net);
-@@ -1824,7 +1825,8 @@ static int brcmf_host_event(struct brcmf_info *drvr_priv, int *ifidx, void *pktd
- 	ASSERT(drvr_priv->iflist[*ifidx] != NULL);
- 	ASSERT(drvr_priv->iflist[*ifidx]->net != NULL);
- 	if (drvr_priv->iflist[*ifidx]->net)
--		wl_cfg80211_event(drvr_priv->iflist[*ifidx]->net, event, *data);
-+		brcmf_cfg80211_event(drvr_priv->iflist[*ifidx]->net,
-+				     event, *data);
- 
- 	return bcmerror;
- }
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index d109de1..17a6bf0 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3440,7 +3440,7 @@ static void wl_deinit_priv(struct brcmf_cfg80211_priv *cfg_priv)
- 	brcmf_deinit_priv_mem(cfg_priv);
- }
- 
--s32 wl_cfg80211_attach(struct net_device *ndev, void *data)
-+s32 brcmf_cfg80211_attach(struct net_device *ndev, void *data)
- {
- 	struct wireless_dev *wdev;
- 	struct brcmf_cfg80211_priv *cfg_priv;
-@@ -3456,9 +3456,9 @@ s32 wl_cfg80211_attach(struct net_device *ndev, void *data)
- 		WL_ERR("wl_cfg80211_dev is invalid\n");
- 		return -ENOMEM;
- 	}
--	WL_INFO("func %p\n", wl_cfg80211_get_sdio_func());
-+	WL_INFO("func %p\n", brcmf_cfg80211_get_sdio_func());
- 	wdev = brcmf_alloc_wdev(sizeof(struct brcmf_cfg80211_iface),
--				&wl_cfg80211_get_sdio_func()->dev);
-+				&brcmf_cfg80211_get_sdio_func()->dev);
- 	if (IS_ERR(wdev))
- 		return -ENOMEM;
- 
-@@ -3485,7 +3485,7 @@ cfg80211_attach_out:
- 	return err;
- }
- 
--void wl_cfg80211_detach(void)
-+void brcmf_cfg80211_detach(void)
- {
- 	struct brcmf_cfg80211_priv *cfg_priv;
- 
-@@ -3536,7 +3536,7 @@ static s32 brcmf_event_handler(void *data)
- }
- 
- void
--wl_cfg80211_event(struct net_device *ndev,
-+brcmf_cfg80211_event(struct net_device *ndev,
- 		  const struct brcmf_event_msg *e, void *data)
- {
- 	u32 event_type = be32_to_cpu(e->event_type);
-@@ -3619,7 +3619,7 @@ static void brcmf_put_event(struct brcmf_cfg80211_event_q *e)
- 	kfree(e);
- }
- 
--void wl_cfg80211_sdio_func(void *func)
-+void brcmf_cfg80211_sdio_func(void *func)
- {
- 	cfg80211_sdio_func = (struct sdio_func *)func;
- }
-@@ -3629,7 +3629,7 @@ static void brcmf_clear_sdio_func(void)
- 	cfg80211_sdio_func = NULL;
- }
- 
--struct sdio_func *wl_cfg80211_get_sdio_func(void)
-+struct sdio_func *brcmf_cfg80211_get_sdio_func(void)
- {
- 	return cfg80211_sdio_func;
- }
-@@ -3938,7 +3938,7 @@ static s32 __brcmf_cfg80211_down(struct brcmf_cfg80211_priv *cfg_priv)
- 	return 0;
- }
- 
--s32 wl_cfg80211_up(void)
-+s32 brcmf_cfg80211_up(void)
- {
- 	struct brcmf_cfg80211_priv *cfg_priv;
- 	s32 err = 0;
-@@ -3951,7 +3951,7 @@ s32 wl_cfg80211_up(void)
- 	return err;
- }
- 
--s32 wl_cfg80211_down(void)
-+s32 brcmf_cfg80211_down(void)
- {
- 	struct brcmf_cfg80211_priv *cfg_priv;
- 	s32 err = 0;
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-index 3ee7a3f..f26d087 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -343,15 +343,14 @@ static inline struct brcmf_bss_info *next_bss(struct brcmf_scan_results *list,
- #define for_each_bss(list, bss, __i)	\
- 	for (__i = 0; __i < list->count && __i < WL_AP_MAX; __i++, bss = next_bss(list, bss))
- 
--extern s32 wl_cfg80211_attach(struct net_device *ndev, void *data);
--extern void wl_cfg80211_detach(void);
-+extern s32 brcmf_cfg80211_attach(struct net_device *ndev, void *data);
-+extern void brcmf_cfg80211_detach(void);
- /* event handler from dongle */
--extern void wl_cfg80211_event(struct net_device *ndev,
--			      const struct brcmf_event_msg *e, void *data);
--extern void wl_cfg80211_sdio_func(void *func);	/* set sdio function info */
--extern struct sdio_func *wl_cfg80211_get_sdio_func(void);
--extern s32 wl_cfg80211_up(void);	/* dongle up */
--extern s32 wl_cfg80211_down(void);	/* dongle down */
--extern void wl_cfg80211_dbg_level(u32 level);	/* set dongle
--							 debugging level */
-+extern void brcmf_cfg80211_event(struct net_device *ndev,
-+				 const struct brcmf_event_msg *e, void *data);
-+extern void brcmf_cfg80211_sdio_func(void *func); /* set sdio function info */
-+extern struct sdio_func *brcmf_cfg80211_get_sdio_func(void);
-+extern s32 brcmf_cfg80211_up(void);	/* dongle up */
-+extern s32 brcmf_cfg80211_down(void);	/* dongle down */
-+
- #endif				/* _wl_cfg80211_h_ */
+> I have no idea how interdependent series of patches that touch more than
+> one subsystem are applied, but I guess there is a standard way.
+
 -- 
-1.7.4.1
-
-
+Ondrej Zary
