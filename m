@@ -1,81 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64197 "EHLO mx1.redhat.com"
+Received: from tango.tkos.co.il ([62.219.50.35]:54884 "EHLO tango.tkos.co.il"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754273Ab1G0MOH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2011 08:14:07 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	Tony Houghton <h@realh.co.uk>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	e1000-devel@lists.sourceforge.net
-Subject: [RFC/RFT v2 09/12] e1000e: use common function for disabling ASPM
-Date: Wed, 27 Jul 2011 14:14:56 +0200
-Message-Id: <1311768899-4559-10-git-send-email-sgruszka@redhat.com> (sfid-20110727_141416_912400_A69E45F9)
-In-Reply-To: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
-References: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
+	id S1752197Ab1G1Gvr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jul 2011 02:51:47 -0400
+Date: Thu, 28 Jul 2011 09:51:11 +0300
+From: Baruch Siach <baruch@tkos.co.il>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>
+Subject: Mesh HWMP: PREQ node queue full
+Message-ID: <20110728065111.GA6734@sapphire.tkos.co.il> (sfid-20110728_085152_730577_23967176)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: e1000-devel@lists.sourceforge.net
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/e1000e/netdev.c |   31 +------------------------------
- 1 files changed, 1 insertions(+), 30 deletions(-)
+Hi linux-wireless list,
 
-diff --git a/drivers/net/e1000e/netdev.c b/drivers/net/e1000e/netdev.c
-index 3310c3d..62ee7e4 100644
---- a/drivers/net/e1000e/netdev.c
-+++ b/drivers/net/e1000e/netdev.c
-@@ -5358,42 +5358,13 @@ static void e1000_complete_shutdown(struct pci_dev *pdev, bool sleep,
- 	}
- }
- 
--#ifdef CONFIG_PCIEASPM
--static void __e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
--{
--	pci_disable_link_state_locked(pdev, state);
--}
--#else
--static void __e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
--{
--	int pos;
--	u16 reg16;
--
--	/*
--	 * Both device and parent should have the same ASPM setting.
--	 * Disable ASPM in downstream component first and then upstream.
--	 */
--	pos = pci_pcie_cap(pdev);
--	pci_read_config_word(pdev, pos + PCI_EXP_LNKCTL, &reg16);
--	reg16 &= ~state;
--	pci_write_config_word(pdev, pos + PCI_EXP_LNKCTL, reg16);
--
--	if (!pdev->bus->self)
--		return;
--
--	pos = pci_pcie_cap(pdev->bus->self);
--	pci_read_config_word(pdev->bus->self, pos + PCI_EXP_LNKCTL, &reg16);
--	reg16 &= ~state;
--	pci_write_config_word(pdev->bus->self, pos + PCI_EXP_LNKCTL, reg16);
--}
--#endif
- static void e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
- {
- 	dev_info(&pdev->dev, "Disabling ASPM %s %s\n",
- 		 (state & PCIE_LINK_STATE_L0S) ? "L0s" : "",
- 		 (state & PCIE_LINK_STATE_L1) ? "L1" : "");
- 
--	__e1000e_disable_aspm(pdev, state);
-+	pcie_disable_aspm(pdev, state);
- }
- 
- #ifdef CONFIG_PM
+I'm testing the mesh capabilities (specifically, MPP) of the latest kernel 
+(3.0). My driver is ath9k on AR9390 chip. My two APs are configured 
+identically as follows:
+
+----- mesh.sh start
+#!/bin/sh
+
+iw dev wlan1 interface add mesh0 type mp mesh_id wavmesh
+ip link set mesh0 addr $(cat /etc/network/mesh0.mac)
+
+brctl addbr br0
+brctl addif br0 eth0
+brctl addif br0 mesh0
+
+ifconfig mesh0 down up
+ifconfig eth0 0.0.0.0
+ifconfig br0 up
+----- mesh.sh end
+
+When transferring traffic from a machine behind one eth0 to a machine behind 
+the other eth0, I see the following on the console (of both APs, only 
+different MACs):
+
+Mesh HWMP: sending PREP to 02:92:ca:39:48:72
+Mesh HWMP: sending PREQ to 02:92:ca:39:48:72
+Mesh HWMP: received PREP from 02:92:ca:39:48:72
+Mesh HWMP: received PREQ from 02:92:ca:39:48:72
+Mesh HWMP: PREQ is for us
+Mesh HWMP: replying to the PREQ
+Mesh HWMP: sending PREP to 02:92:ca:39:48:72
+mesh_queue_preq: 40 callbacks suppressed
+Mesh HWMP: PREQ node queue full
+Mesh HWMP: PREQ node queue full
+Mesh HWMP: PREQ node queue full
+Mesh HWMP: PREQ node queue full
+Mesh HWMP: PREQ node queue full
+Mesh HWMP: PREQ node queue full
+Mesh HWMP: PREQ node queue full
+Mesh HWMP: PREQ node queue full
+Mesh HWMP: PREQ node queue full
+Mesh HWMP: PREQ node queue full
+
+Any suggestion?
+
+baruch
+
 -- 
-1.7.1
-
+                                                     ~. .~   Tk Open Systems
+=}------------------------------------------------ooO--U--Ooo------------{=
+   - baruch@tkos.co.il - tel: +972.2.679.5364, http://www.tkos.co.il -
