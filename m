@@ -1,44 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:3158 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753379Ab1GVFnm (ORCPT
+Received: from mail-ey0-f171.google.com ([209.85.215.171]:48495 "EHLO
+	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752732Ab1G1HGx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 01:43:42 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH 24/31] ath6kl: Rearrange the variable and the value position in IF condition
-Date: Fri, 22 Jul 2011 08:41:57 +0300
-Message-ID: <1311313324-6766-26-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110722_074345_976275_F7F5A726)
-In-Reply-To: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1311313324-6766-1-git-send-email-kvalo@qca.qualcomm.com>
+	Thu, 28 Jul 2011 03:06:53 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20110727135353.GA16431@tuxdriver.com>
+References: <CAMzZzFGqPv6Nbw8J8JGNKcLA76sAs3oD6+hH9NPCjwA33fYpOQ@mail.gmail.com>
+	<20110727135353.GA16431@tuxdriver.com>
+Date: Thu, 28 Jul 2011 15:06:52 +0800
+Message-ID: <CAMzZzFH8xBdiEN-rV1XE-1ZhFbzO_tcnA75Hpx_AyJ6LtWq01A@mail.gmail.com> (sfid-20110728_090720_211463_2C44E6BA)
+Subject: Re: Oops when insmod rtl8192ce
+From: hubert Liao <liao.hubertt@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: wlanfae@realtek.com, Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+2011/7/27 John W. Linville <linville@tuxdriver.com>:
+> On Wed, Jul 27, 2011 at 05:20:15PM +0800, hubert Liao wrote:
+>> Hi,
+>>
+>> We got an oops when insmod rtl8192ce module (the board is an ARM soc),
+>> accroding the oops message, find it's because in rtl_pci_probe() called
+>> _rtl_pci_find_adapter(),
+>> in this funcation, the  pdev->bus->self is a NULL pointer .
+>>
+>> static boot _rtl_pci_find_adapter(strcut pci_dev *dev,
+>>               struct ieee80211_hw *hw)
+>> {
+>>
+>> struct pci_dev *bridge_pdev = pdev->bus->self;   //line 1601
+>> ...
+>>
+>> pcipriv->ndis_adapter.pcibridge_vendorid = bridge_pdev->vendor; <-- [oops
+>> here] line 1700
+>>
+>> ...
+>> }
+>>
+>> here, I just want to know why the bus->self  is NULL?
+>
+> pdev is coming straight from what is passed to the PCI probe routine.
+> It seems like pdev->bus->self should already be set before that
+> happens.
+>
+Yes, I think it should be initialized when added the pci bus bridge,
+I have checked the mach-kirkwood(my board is arch/arm/mach-kirkwood)
+pcie related code, and I think when system initialized should call
+kirkwood_pcie_init() ->
+            kirkwood_pcie_scan_bus() ->
+                           pci_scan_bus() ->
+                                    pci_bus_add_devices()
+if the pci_bus->self  was initialized in pci_bus_add_devices()?
+Maybe the code is too complex for me ,  I really can not find where
+set the “->self" member?
 
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/htc.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-index 9d9948e..5580e22 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc.c
-@@ -1229,7 +1229,7 @@ static void htc_proc_cred_rpt(struct htc_target *target,
- 			endpoint->ep_st.cred_rpt_from_other += 1;
- 		}
- 
--		if (ENDPOINT_0 == rpt->eid)
-+		if (rpt->eid == ENDPOINT_0)
- 			/* always give endpoint 0 credits back */
- 			endpoint->cred_dist.credits += rpt->credits;
- 		else {
--- 
-1.7.1
-
+> Please open a bug at bugzilla.kernel.org to help us keep track of
+> this -- thanks!
+>
+I have committed it the url,
+https://bugzilla.kernel.org/show_bug.cgi?id=40212
+> John
+> --
+> John W. Linville                Someday the world will need a hero, and you
+> linville@tuxdriver.com                  might be all we have.  Be ready.
+>
