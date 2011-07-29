@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:3718 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755494Ab1GJJ2c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jul 2011 05:28:32 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	linux-usb@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	alsa-devel@alsa-project.org
-Subject: [PATCH 0/5] treewide: Add missing breaks in switch/case
-Date: Sun, 10 Jul 2011 02:28:23 -0700
-Message-Id: <cover.1310289795.git.joe@perches.com> (sfid-20110710_112939_941150_F3621486)
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:52651 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752651Ab1G2VUm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jul 2011 17:20:42 -0400
+MIME-Version: 1.0
+In-Reply-To: <20110727.222247.2000159983502866405.davem@davemloft.net>
+References: <20110727184920.GB16431@tuxdriver.com>
+	<20110727.222247.2000159983502866405.davem@davemloft.net>
+Date: Fri, 29 Jul 2011 23:20:41 +0200
+Message-ID: <CACna6rzSuTnTXidC-1EOMkddmU9pcSpisNQxrMWba8-4qL=BOA@mail.gmail.com> (sfid-20110729_232101_468549_F484E06D)
+Subject: Re: pull request: wireless-next-2.6 2011-07-27
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Found by grep.  Uncompiled/untested.
+2011/7/28 David Miller <davem@davemloft.net>:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Wed, 27 Jul 2011 14:49:21 -0400
+>
+>> Here is a handful of fixes intended for 3.1.  This includes a
+>> user-visible typo fix, a fix for a user after free in the new pn533
+>> NFC driver, a cfg80211 fix for a possible NULL pointer dereference,
+>> a fix for an invalid memory access in b43, and another b43 fix for
+>> a memory corruption problem.
+>>
+>> On top of that b43 memory corruption fix, there is a patch to remove
+>> BROKEN from the B43_BCMA Kconfig entry, which is key to enabling
+>> support for some of the more modern Broadcom wireless hardware.
+>> I'm sure the Rafał (and a number of others) would love to see that
+>> merged while the 3.1 merge window is still open as well.
+>>
+>> Please let me know if there are problems...
+>
+> Yep, removing BROKEN from b43 seems reasonable.
+>
+> Pulled, thanks!
 
-Joe Perches (5):
-  gpio-tps65910.c: Add missing breaks in switch/case
-  tps65910-irq: Add missing breaks in switch/case
-  ath5k: Add missing breaks in switch/case
-  fusb300_udc: Add missing breaks in switch/case
-  dbri: Add missing breaks in switch/case
-
- drivers/gpio/gpio-tps65910.c          |    2 ++
- drivers/mfd/tps65910-irq.c            |    2 ++
- drivers/net/wireless/ath/ath5k/desc.c |    3 +++
- drivers/usb/gadget/fusb300_udc.c      |    3 +++
- sound/sparc/dbri.c                    |    5 +++++
- 5 files changed, 15 insertions(+), 0 deletions(-)
+Thanks a lot John and David, hope to get some testers now :)
 
 -- 
-1.7.6.131.g99019
-
+Rafał
