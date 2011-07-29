@@ -1,157 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15077 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754036Ab1G0MNx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2011 08:13:53 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	Tony Houghton <h@realh.co.uk>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [RFC/RFT v2 02/12] ath9k: remove ->config_pci_powersave() redundant argument
-Date: Wed, 27 Jul 2011 14:14:49 +0200
-Message-Id: <1311768899-4559-3-git-send-email-sgruszka@redhat.com> (sfid-20110727_141409_279361_7FDDB5CE)
-In-Reply-To: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
-References: <1311768899-4559-1-git-send-email-sgruszka@redhat.com>
+Received: from isilmar-3.linta.de ([188.40.101.200]:51508 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751305Ab1G2SSr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jul 2011 14:18:47 -0400
+Date: Fri, 29 Jul 2011 18:00:42 +0200
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-pcmcia@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] pcmcia: add PCMCIA_DEVICE_MANF_CARD_PROD_ID3
+Message-ID: <20110729160041.GB15474@comet.dominikbrodowski.net> (sfid-20110729_201851_412008_4CE06AC5)
+References: <20110726225235.29951.70265.stgit@mj.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110726225235.29951.70265.stgit@mj.roinet.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We always call ->config_pci_powersave() with both restore and power_off
-arguments equal to 0 or both equal to 1, so merge them into one
-argument.
+Applied all three patches to -pcmcia.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_hw.c |    5 ++---
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |    5 ++---
- drivers/net/wireless/ath/ath9k/hw-ops.h    |    5 ++---
- drivers/net/wireless/ath/ath9k/hw.c        |    2 +-
- drivers/net/wireless/ath/ath9k/hw.h        |    3 +--
- drivers/net/wireless/ath/ath9k/main.c      |    6 +++---
- 6 files changed, 11 insertions(+), 15 deletions(-)
+Thanks,
+	Dominik
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index 44d9d8d..70a18d1 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -303,8 +303,7 @@ static void ar9002_hw_init_mode_gain_regs(struct ath_hw *ah)
-  * register as the other analog registers.  Hence the 9 writes.
-  */
- static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
--					 int restore,
--					 int power_off)
-+					 bool power_off)
- {
- 	u8 i;
- 	u32 val;
-@@ -313,7 +312,7 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
- 		return;
- 
- 	/* Nothing to do on restore for 11N */
--	if (!restore) {
-+	if (!power_off /* !restore */) {
- 		if (AR_SREV_9280_20_OR_LATER(ah)) {
- 			/*
- 			 * AR9280 2.0 or later chips use SerDes values from the
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index ad2bb2b..e3d58bd 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -516,14 +516,13 @@ static void ar9003_hw_init_mode_gain_regs(struct ath_hw *ah)
-  * register as the other analog registers.  Hence the 9 writes.
-  */
- static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
--					 int restore,
--					 int power_off)
-+					 bool power_off)
- {
- 	if (ah->is_pciexpress != true || ah->aspm_enabled != true)
- 		return;
- 
- 	/* Nothing to do on restore for 11N */
--	if (!restore) {
-+	if (!power_off /* !restore */) {
- 		/* set bit 19 to allow forcing of pcie core into L1 state */
- 		REG_SET_BIT(ah, AR_PCIE_PM_CTRL, AR_PCIE_PM_CTRL_ENA);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index cb29e88..8c12385 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -22,10 +22,9 @@
- /* Hardware core and driver accessible callbacks */
- 
- static inline void ath9k_hw_configpcipowersave(struct ath_hw *ah,
--					       int restore,
--					       int power_off)
-+					       bool power_off)
- {
--	ath9k_hw_ops(ah)->config_pci_powersave(ah, restore, power_off);
-+	ath9k_hw_ops(ah)->config_pci_powersave(ah, power_off);
- }
- 
- static inline void ath9k_hw_rxena(struct ath_hw *ah)
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 6bda08e..4ef7313 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -597,7 +597,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 
- 
- 	if (ah->is_pciexpress)
--		ath9k_hw_configpcipowersave(ah, 0, 0);
-+		ath9k_hw_configpcipowersave(ah, false);
- 	else
- 		ath9k_hw_disablepcie(ah);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 7dd78e7..2f25577 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -601,8 +601,7 @@ struct ath_hw_private_ops {
-  */
- struct ath_hw_ops {
- 	void (*config_pci_powersave)(struct ath_hw *ah,
--				     int restore,
--				     int power_off);
-+				     bool power_off);
- 	void (*rx_enable)(struct ath_hw *ah);
- 	void (*set_desc_link)(void *ds, u32 link);
- 	bool (*calibrate)(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 9098aaa..651f633 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -887,7 +887,7 @@ static void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	ath9k_ps_wakeup(sc);
- 	spin_lock_bh(&sc->sc_pcu_lock);
- 
--	ath9k_hw_configpcipowersave(ah, 0, 0);
-+	ath9k_hw_configpcipowersave(ah, false);
- 
- 	if (!ah->curchan)
- 		ah->curchan = ath9k_cmn_get_curchannel(sc->hw, ah);
-@@ -967,7 +967,7 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 
- 	ath9k_hw_phy_disable(ah);
- 
--	ath9k_hw_configpcipowersave(ah, 1, 1);
-+	ath9k_hw_configpcipowersave(ah, true);
- 
- 	spin_unlock_bh(&sc->sc_pcu_lock);
- 	ath9k_ps_restore(sc);
-@@ -1066,7 +1066,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	init_channel = ath9k_cmn_get_curchannel(hw, ah);
- 
- 	/* Reset SERDES registers */
--	ath9k_hw_configpcipowersave(ah, 0, 0);
-+	ath9k_hw_configpcipowersave(ah, false);
- 
- 	/*
- 	 * The basic interface to setting the hardware in a good
--- 
-1.7.1
-
+On Tue, Jul 26, 2011 at 06:52:35PM -0400, Pavel Roskin wrote:
+> This is needed to match wireless cards with Intersil firmware that have
+> ID 0x0156:0x0002 and the third ID "Version 01.02".  Such cards are
+> currently matched by orinoco_cs, which doesn't support WPA.  They should
+> be matched by hostap_cs.
+> 
+> The first and the second product ID vary widely, so there are few users
+> with some particular IDs.  Of those, very few can submit a patch for
+> hostap_cs or write a useful bugreport.  It's still important to support
+> their hardware properly.
+> 
+> With PCMCIA_DEVICE_MANF_CARD_PROD_ID3, it should be possible to cover
+> the remaining Intersil based designs that kept the numeric ID and the
+> "version" of the reference design.
+> 
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+> ---
+>  include/pcmcia/device_id.h |    9 +++++++++
+>  1 files changed, 9 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/pcmcia/device_id.h b/include/pcmcia/device_id.h
+> index 63e5b8f..00dbfac 100644
+> --- a/include/pcmcia/device_id.h
+> +++ b/include/pcmcia/device_id.h
+> @@ -95,6 +95,15 @@
+>  	.prod_id = { (v1), NULL, NULL, NULL }, \
+>  	.prod_id_hash = { (vh1), 0, 0, 0 }, }
+>  
+> +#define PCMCIA_DEVICE_MANF_CARD_PROD_ID3(manf, card, v3, vh3) { \
+> +	.match_flags = PCMCIA_DEV_ID_MATCH_MANF_ID| \
+> +			PCMCIA_DEV_ID_MATCH_CARD_ID| \
+> +			PCMCIA_DEV_ID_MATCH_PROD_ID3, \
+> +	.manf_id = (manf), \
+> +	.card_id = (card), \
+> +	.prod_id = { NULL, NULL, (v3), NULL }, \
+> +	.prod_id_hash = { 0, 0, (vh3), 0 }, }
+> +
+>  
+>  /* multi-function devices */
+>  
+> 
+> _______________________________________________
+> Linux PCMCIA reimplementation list
+> http://lists.infradead.org/mailman/listinfo/linux-pcmcia
