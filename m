@@ -1,58 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:42394 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752478Ab1GYUeS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2011 16:34:18 -0400
-Date: Mon, 25 Jul 2011 23:34:09 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] mac80211: be more careful in suspend/resume
-Message-ID: <20110725203409.GA11510@jm.kir.nu> (sfid-20110725_223421_422477_D90B93AB)
-References: <1310653466.3874.23.camel@jlt3.sipsolutions.net>
- <1310654934.3874.25.camel@jlt3.sipsolutions.net>
- <20110725195747.GA24331@jm.kir.nu>
+Received: from tango.tkos.co.il ([62.219.50.35]:35779 "EHLO tango.tkos.co.il"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754867Ab1G2HSI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jul 2011 03:18:08 -0400
+Date: Fri, 29 Jul 2011 10:17:43 +0300
+From: Baruch Siach <baruch@tkos.co.il>
+To: Javier Cardona <javier@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Mesh HWMP: PREQ node queue full
+Message-ID: <20110729071742.GB24030@tarshish> (sfid-20110729_091812_531768_EE8CBB5A)
+References: <20110728065111.GA6734@sapphire.tkos.co.il>
+ <CAPjQAd_KCc+TtTMeJmhD8WdqooUHWqttdASDpwB0DdrXfXWkRA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110725195747.GA24331@jm.kir.nu>
+In-Reply-To: <CAPjQAd_KCc+TtTMeJmhD8WdqooUHWqttdASDpwB0DdrXfXWkRA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 25, 2011 at 10:57:47PM +0300, Jouni Malinen wrote:
-> Hmm.. This patch seems to pretty much kill P2P at least with hwsim. Many
-> of the EAPOL frames seem to be dropped at some point and the end result
-> of this is in the WPS provisioning taking 10 seconds (two 5 second
-> timeouts from the authenticator due to EAPOL frames dropped). This by
-> itself may not be enough to hit the group formation timeout, but similar
-> issue in 4-way handshake makes the authenticator miss msg 4/4 and hit
-> the state mismatch with supplicant having configured the PTK and
-> authenticator not..
-> 
-> I'm not yet sure what exactly is causing the issue, but this commit came
-> up in git bisect and reverting it from the current wireless-testing.git
-> made P2P work again in hwsim.
+Hi Javier,
 
-Actually, this does not make any sense.. Neither of the modified
-functions are even called in my hwsim test. In addition, I can "fix" the
-issue by adding a printk call into the beginning of (the not even
-called) ieee80211_reconfig() function.
+On Thu, Jul 28, 2011 at 11:47:44AM -0700, Javier Cardona wrote:
+> Thanks for reporting.  Is 02:92:ca:39:48:72 the address of the mesh
+> gate or the address of the external proxied node?
 
-This sounds like some kind of build issue, but I've now reproduced this
-issue multiple times and even after a full rebuild of the kernel to make
-sure there are no build dependency issues etc. No idea what could be
-causing this, but it looks very clear that some of the EAPOL frames get
-dropped in some of the builds and just a single printk call seems to be
-enough to move things enough to avoid this.. hwsim0 interface shows the
-EAPOL frames, so they seem to be transmitted (or well, at least
-mac80211_hwsim tries to transmit them), but the recipient does not
-report them to wpa_supplicant (mac80211 dropping the frame?).
+This is the MAC address of the mesh gate (i.e. the other AP). What is 
+"external proxied node"?
 
-This is with x86_64 build and UML and on a new test host (i.e., new gcc
-4.5.2-8ubuntu4 from Ubuntu 11.04), so my previous tests with hwsim may
-have not had some odd issue that starts showing up now for whatever
-reason.
+baruch
+
+> On Wed, Jul 27, 2011 at 11:51 PM, Baruch Siach <baruch@tkos.co.il> wrote:
+> > Hi linux-wireless list,
+> >
+> > I'm testing the mesh capabilities (specifically, MPP) of the latest kernel
+> > (3.0). My driver is ath9k on AR9390 chip. My two APs are configured
+> > identically as follows:
+> >
+> > ----- mesh.sh start
+> > #!/bin/sh
+> >
+> > iw dev wlan1 interface add mesh0 type mp mesh_id wavmesh
+> > ip link set mesh0 addr $(cat /etc/network/mesh0.mac)
+> >
+> > brctl addbr br0
+> > brctl addif br0 eth0
+> > brctl addif br0 mesh0
+> >
+> > ifconfig mesh0 down up
+> > ifconfig eth0 0.0.0.0
+> > ifconfig br0 up
+> > ----- mesh.sh end
+> >
+> > When transferring traffic from a machine behind one eth0 to a machine behind
+> > the other eth0, I see the following on the console (of both APs, only
+> > different MACs):
+> >
+> > Mesh HWMP: sending PREP to 02:92:ca:39:48:72
+> > Mesh HWMP: sending PREQ to 02:92:ca:39:48:72
+> > Mesh HWMP: received PREP from 02:92:ca:39:48:72
+> > Mesh HWMP: received PREQ from 02:92:ca:39:48:72
+> > Mesh HWMP: PREQ is for us
+> > Mesh HWMP: replying to the PREQ
+> > Mesh HWMP: sending PREP to 02:92:ca:39:48:72
+> > mesh_queue_preq: 40 callbacks suppressed
+> > Mesh HWMP: PREQ node queue full
+> > Mesh HWMP: PREQ node queue full
+> > Mesh HWMP: PREQ node queue full
+> > Mesh HWMP: PREQ node queue full
+> > Mesh HWMP: PREQ node queue full
+> > Mesh HWMP: PREQ node queue full
+> > Mesh HWMP: PREQ node queue full
+> > Mesh HWMP: PREQ node queue full
+> > Mesh HWMP: PREQ node queue full
+> > Mesh HWMP: PREQ node queue full
+> >
+> > Any suggestion?
+> >
+> > baruch
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+                                                     ~. .~   Tk Open Systems
+=}------------------------------------------------ooO--U--Ooo------------{=
+   - baruch@tkos.co.il - tel: +972.2.679.5364, http://www.tkos.co.il -
