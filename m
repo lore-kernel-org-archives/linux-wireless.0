@@ -1,81 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:37482 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753507Ab1GLM4T convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:57772 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755676Ab1G2KUW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2011 08:56:19 -0400
-References: <cover.1310339688.git.mirq-linux@rere.qmqm.pl> <280ad9176e6532f231e054b38b952b20580874c5.1310339688.git.mirq-linux@rere.qmqm.pl> <4E1BCF36.2010506@openwrt.org> <20110712095541.GA6236@rere.qmqm.pl>
-In-Reply-To: <20110712095541.GA6236@rere.qmqm.pl>
-Mime-Version: 1.0 (iPhone Mail 8H7)
-Content-Type: text/plain;
-	charset=utf-8
-Message-Id: <B4765EFC-B5C9-4E2D-BE00-ED5519D13A4E@nbd.name> (sfid-20110712_145637_072138_086917D2)
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>
-From: Felix Fietkau <nbd@nbd.name>
-Subject: Re: [ath9k-devel] [PATCH v2 07/46] net/wireless: ath9k: fix DMA API usage
-Date: Tue, 12 Jul 2011 20:54:32 +0800
-To: =?utf-8?Q?Micha=C5=82_Miros=C5=82aw?= <mirq-linux@rere.qmqm.pl>
+	Fri, 29 Jul 2011 06:20:22 -0400
+Received: by wyg8 with SMTP id 8so55190wyg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jul 2011 03:20:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAGXE3d9gX0LQjHiYB6vpD8AvfdrwOr5DZs=sGxZzHYW5RSZHsQ@mail.gmail.com>
+References: <CAGXE3d9gX0LQjHiYB6vpD8AvfdrwOr5DZs=sGxZzHYW5RSZHsQ@mail.gmail.com>
+Date: Fri, 29 Jul 2011 15:50:21 +0530
+Message-ID: <CAD2nsn1KzOkZ1r9ekoSJOwZNACeOqv7i83uDygMbC6u4Hx5yqA@mail.gmail.com> (sfid-20110729_122029_715663_CB10B893)
+Subject: Re: mac80211 + hostapd: EAPOL frames rate selection
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	hostap@lists.shmoo.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12.07.2011, at 17:55, Michał Mirosław <mirq-linux@rere.qmqm.pl> wrote:
+On Fri, Jul 29, 2011 at 2:44 PM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> Hi,
+>
+Hi Helmut,
 
-> On Tue, Jul 12, 2011 at 12:36:06PM +0800, Felix Fietkau wrote:
->> On 2011-07-11 8:52 AM, Michał Mirosław wrote:
->>> Also constify buf_addr for ath9k_hw_process_rxdesc_edma() to verify
->>> assumptions --- dma_sync_single_for_device() call can be removed.
->>> 
->>> Signed-off-by: Michał Mirosław<mirq-linux@rere.qmqm.pl>
->>> ---
->>> drivers/net/wireless/ath/ath9k/ar9003_mac.c |    4 ++--
->>> drivers/net/wireless/ath/ath9k/ar9003_mac.h |    2 +-
->>> drivers/net/wireless/ath/ath9k/recv.c       |   10 +++-------
->>> 3 files changed, 6 insertions(+), 10 deletions(-)
->>> 
->>> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
->>> index 70dc8ec..c5f46d5 100644
->>> --- a/drivers/net/wireless/ath/ath9k/recv.c
->>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
->>> @@ -684,15 +684,11 @@ static bool ath_edma_get_buffers(struct ath_softc *sc,
->>>    BUG_ON(!bf);
->>> 
->>>    dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
->>> -                common->rx_bufsize, DMA_FROM_DEVICE);
->>> +                common->rx_bufsize, DMA_BIDIRECTIONAL);
->>> 
->>>    ret = ath9k_hw_process_rxdesc_edma(ah, NULL, skb->data);
->>> -    if (ret == -EINPROGRESS) {
->>> -        /*let device gain the buffer again*/
->>> -        dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
->>> -                common->rx_bufsize, DMA_FROM_DEVICE);
->>> +    if (ret == -EINPROGRESS)
->>>        return false;
->>> -    }
->>> 
->>>    __skb_unlink(skb,&rx_edma->rx_fifo);
->>>    if (ret == -EINVAL) {
->> I have strong doubts about this change. On most MIPS devices,
->> dma_sync_single_for_cpu is a no-op, whereas
->> dma_sync_single_for_device flushes the cache range. With this
->> change, the CPU could cache the DMA status part behind skb->data and
->> that cache entry would not be flushed inbetween calls to this
->> functions on the same buffer, likely leading to rx stalls.
-> 
-> You're suggesting a platform implementation bug then. If the platform is not
-> cache-coherent, it should invalidate relevant CPU cache lines for sync_to_cpu
-> and unmap cases. Do other devices show such symptoms on MIPS systems?
-> 
-> I'm not familiar with the platform internals, so we should ask MIPS people.
-I only mentioned MIPS to describe the potential side effect of this change. From my current understanding of the DMA API, it would be wrong on other platforms as well. I believe the _for_device function needs to be used to transfer ownership of the buffer back to the device, before calling _for_cpu again later for another read.
-This is definitely required in this case, because when the return code is -EINPROGRESS, the driver waits for the hardware to complete this buffer, and the next call has to fetch the memory again after the device has updated it.
-This is handled properly by the current code without your change.
+> I just noticed that EAPOL frames generated by hostapd during the 4-way
+> handshake are sent out by mac80211 using a rate as selected by the rc
+> algorithm for data frames. In my case minstrel_ht selects a MCS rate for
+> 11n clients which sometimes results in a 4-way handshake timeout under
+> low signal conditions.
 
-- Felix
+I am occasionally seeing this issue in ath9k Station under  heavy
+traffic conditions
+and low signal(only when I the distance between STA and AP is very
+much significant),
+some times I could no recreate the issue. I use ath9k-rate control and
+I still found that the
+EAPOL frames are being sent at lower rate.
+with the sniffer capture there are lot of retries for 2nd message.
+the timeout comes after 2nd message
+
+>
+> I haven't found anything in 802.11-2007 if EAPOL frames have to be sent
+> at a low rate but I'd argue that it makes sense to send them at a basic
+> rate just like it's done for management frames.
+>
+> We've got a nice little helper in mac80211 (rate_control_send_low) that
+> allows the rc algorithm to check if a frame should be sent at a low rate.
+> I thought I'd hook in there and just check skb->protocol to force EAPOL
+> frames to the lowest rate. However, this didn't work out because in AP
+> mode the EAPOL frames are injected through a monitor interface and as
+> such skb->protocol is never initialized (ieee80211_monitor_start_xmit).
+>
+> The injected frames however already have an 802.11 header and therefore
+> figuring out the ethertype of the injected frame is not as straightforward as
+> I liked it to be :(
+>
+> Can I always be sure that an injected data frame (!=nullfunc) has a rfc1042
+> header following after the 802.11 header?
+>
+> Another option would be to let hostapd specify a fixed tx rate in the radiotap
+> header (and extend mac80211 to understand it). However, since some drivers
+> also make use of skb->protocol (to forbid aggregation for example) it sounds
+> more sane to initialize it also for injected frames.
+
+in ath9k Raj pointed out that we are not doing aggregation if the
+frame is of EAPOL, I can
+check if I am missing something.
+
+
+>
+> Any other ideas?
+>
+> Thanks,
+> Helmut
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at �http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+-- 
+shafi
