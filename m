@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40864 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752271Ab1GEOi4 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:58509 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752603Ab1G2D2D convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 10:38:56 -0400
-Message-Id: <20110705143538.696899280@sipsolutions.net> (sfid-20110705_163900_388383_7D4E7E1D)
-Date: Tue, 05 Jul 2011 16:35:38 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/3] first step towards GTK rekey offload
-Mime-Version: 1.0
+	Thu, 28 Jul 2011 23:28:03 -0400
+Received: by iyb12 with SMTP id 12so3524172iyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2011 20:28:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4E3222B6.1010904@gnu.org>
+References: <20110729025007.7889.19879.stgit@mj.roinet.com> <4E3222B6.1010904@gnu.org>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 29 Jul 2011 13:27:42 +1000
+Message-ID: <CAGRGNgWo=jgOwffbvCL5SDA6TD=cKUheObSM=23+ZTNCqH+-GQ@mail.gmail.com> (sfid-20110729_052808_140623_FF548066)
+Subject: Re: [PATCH] lib80211: call try_module_get() in lib80211_get_crypto_ops()
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches are a first step to allow devices
-to implement GTK rekeying while suspended (or
-really at any time).
+Pavel,
 
-The key iteration (first patch) is necessary as
-we need to load a different firmware image, and
-I don't want to do double-bookkeeping (tracking
-all keys in the driver).
+On Fri, Jul 29, 2011 at 13:02, Pavel Roskin <proski@gnu.org> wrote:
+> lib80211 has a terrible API, and the module referencing is split between
+> lib80211 and the callers.  Everything is too complicated.  Keys may be freed
+> asynchronously.  Module referencing is tied to the keys and not to the ops.
+>  I've seen the reference count for lib80211_crypt_ccmp to underflow and
+> become 4294967295 or something.
 
-The second and third patch allow wpa_supplicant
-to give the necessary information to the driver
-to implement GTK rekeying.
+If I recall correctly, lib80211 is the last remainder of the
+pre-mac80211 wireless stack. It should be annihilated with extreme
+prejudice, but the intel centrino 2xxx drivers are so interwoven with
+it that extracting them would be a pain in the ass - and given that
+nobody who has those parts really cares, this hasn't happened.
 
-Note that for iwlwifi this isn't yet sufficient
-as it also needs access to the CCMP PN/TKIP IVs
-to encrypt the GTK rekey reply frame correctly.
-However, I have only tested with CCMP so I'll
-submit those patches only when I've also tested
-TKIP.
+That said, bugs are bugs and they should be fixed.
 
-johannes
+Thanks,
 
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
