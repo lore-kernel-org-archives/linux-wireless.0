@@ -1,54 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4307 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932390Ab1GNV34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 17:29:56 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 21/35] staging: brcm80211: use native error code in
- brcmf_c_pattern_atoh()
-Date: Thu, 14 Jul 2011 14:29:17 -0700
-Message-ID: <1310678971-28952-22-git-send-email-frankyl@broadcom.com> (sfid-20110714_233235_282343_C5CCDB2B)
-In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
-References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:41041 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752108Ab1G2P4m (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jul 2011 11:56:42 -0400
+Received: by yxi11 with SMTP id 11so2313558yxi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jul 2011 08:56:42 -0700 (PDT)
+Message-ID: <4E32D836.4080308@lwfinger.net> (sfid-20110729_175646_108605_D73F8C71)
+Date: Fri, 29 Jul 2011 10:56:38 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Lubomir Schmidt <gentoo.lubomir@googlemail.com>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	'George0505' <george0505@realtek.com>
+Subject: Re: Support for Realtek 8188RU Chipset in rtl8192cu driver?
+References: <CAHFBKjfHfAvpxGhhvRFwni9EVXdSC3HA1WxMJRzVm9SxvowmWQ@mail.gmail.com>
+In-Reply-To: <CAHFBKjfHfAvpxGhhvRFwni9EVXdSC3HA1WxMJRzVm9SxvowmWQ@mail.gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------060706090804010205060904"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+This is a multi-part message in MIME format.
+--------------060706090804010205060904
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The function brcmf_c_pattern_atoh() returned meaningless -1 value.
-These have been replaced by linux error code -EINVAL.
+On 07/25/2011 06:47 AM, Lubomir Schmidt wrote:
+> What distribution did you mean?
+>
+> The old AWUS036H had the Realtek 8187L, yes. Then there came out before nearly
+> an year the AWUS036NH and the AWUS036NEH. Both base on the Ralink 3070L Chipset
+> and have till today the best range of all devices on the market.
+> Now Alfa release the AWUS036NHR with the Realtek 8188RU and the AWUS036NHA with
+> an Atheros AR9271.
+>
+> Last year i helped to get support for the Ralink Chipsets in the 2800usb driver.
+> I got white papers and so on from the chipsets and the driver developer could
+> connect to an laptop running 24/7 and make tests with the device.
+>
+> How can i help to get support? What distribution did you prefere on the notebook
+> to connect to?
 
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd_common.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+When I looked at the driver, it turned out to be the driver for the RTL8192CU 
+with new additional device IDs. Please try the attached patch for any 2.6.39 or 
+later kernel. Meanwhile, I will see what other changes have been made to the driver.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-index 1e757b7..4412893 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-@@ -841,12 +841,12 @@ static int brcmf_c_pattern_atoh(char *src, char *dst)
- 	int i;
- 	if (strncmp(src, "0x", 2) != 0 && strncmp(src, "0X", 2) != 0) {
- 		BRCMF_ERROR(("Mask invalid format. Needs to start with 0x\n"));
--		return -1;
-+		return -EINVAL;
- 	}
- 	src = src + 2;		/* Skip past 0x */
- 	if (strlen(src) % 2 != 0) {
- 		BRCMF_ERROR(("Mask invalid format. Length must be even.\n"));
--		return -1;
-+		return -EINVAL;
- 	}
- 	for (i = 0; *src != '\0'; i++) {
- 		char num[3];
--- 
-1.7.1
+This is a ping on the previous mail. Did the patch work?
 
+Larry
 
+--------------060706090804010205060904
+Content-Type: text/plain;
+ name="rtl8192cu_add_new_device"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="rtl8192cu_add_new_device"
+
+SW5kZXg6IHdpcmVsZXNzLXRlc3RpbmctbmV3L2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0bHdp
+ZmkvcnRsODE5MmN1L3N3LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gd2lyZWxlc3MtdGVzdGluZy1u
+ZXcub3JpZy9kcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJjdS9zdy5jCisr
+KyB3aXJlbGVzcy10ZXN0aW5nLW5ldy9kcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0
+bDgxOTJjdS9zdy5jCkBAIC0yODEsNiArMjgxLDggQEAgc3RhdGljIHN0cnVjdCB1c2JfZGV2
+aWNlX2lkIHJ0bDgxOTJjX3VzYgogCXtSVExfVVNCX0RFVklDRShVU0JfVkVOREVSX0lEX1JF
+QUxURUssIDB4ODE3ZCwgcnRsOTJjdV9oYWxfY2ZnKX0sCiAJLyogODE4OENFLVZBVSBVU0Ig
+bWluQ2FyZCAoYi9nIG1vZGUgb25seSkgKi8KIAl7UlRMX1VTQl9ERVZJQ0UoVVNCX1ZFTkRF
+Ul9JRF9SRUFMVEVLLCAweDgxN2UsIHJ0bDkyY3VfaGFsX2NmZyl9LAorCS8qIDgxODhSVSBp
+biBBbGZhIEFXVVMwMzZOSFIgKi8KKwl7UlRMX1VTQl9ERVZJQ0UoVVNCX1ZFTkRFUl9JRF9S
+RUFMVEVLLCAweDgxN2YsIHJ0bDkyY3VfaGFsX2NmZyl9LAogCS8qIDgxODggQ29tYm8gZm9y
+IEJDNCAqLwogCXtSVExfVVNCX0RFVklDRShVU0JfVkVOREVSX0lEX1JFQUxURUssIDB4ODc1
+NCwgcnRsOTJjdV9oYWxfY2ZnKX0sCiAK
+--------------060706090804010205060904--
