@@ -1,104 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1431 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754291Ab1GEWDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 18:03:21 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 16/31] staging: brcm80211: remove checkpatch warnings
- 'suspect code indent'
-Date: Wed, 6 Jul 2011 00:02:43 +0200
-Message-ID: <1309903378-29021-17-git-send-email-arend@broadcom.com> (sfid-20110706_000415_746581_55467A87)
-In-Reply-To: <1309903378-29021-1-git-send-email-arend@broadcom.com>
-References: <1309903378-29021-1-git-send-email-arend@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:64120 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754147Ab1G2MJ2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jul 2011 08:09:28 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 07/13] ath9k: Remove virtual wiphy specific frame type
+Date: Fri, 29 Jul 2011 17:38:14 +0530
+Message-ID: <1311941300-2590-7-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110729_140931_654290_9F825559)
+In-Reply-To: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver sources contained a couple of checkpatch warnings of the
-given class. These have been cleaned up.
+This patch cleanups virtual wiphy specific frametype structure
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    3 +--
- drivers/staging/brcm80211/brcmsmac/bmac.c        |    4 ----
- drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |    3 +--
- drivers/staging/brcm80211/brcmsmac/phy/phy_n.c   |    5 +----
- 4 files changed, 3 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    3 ---
+ drivers/net/wireless/ath/ath9k/rc.h    |    6 ------
+ drivers/net/wireless/ath/ath9k/xmit.c  |    6 ++----
+ 3 files changed, 2 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 17a6bf0..12c6ee3 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3605,8 +3605,7 @@ brcmf_enq_event(struct brcmf_cfg80211_priv *cfg_priv, u32 event,
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 964fb97..8ac356c 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -216,7 +216,6 @@ struct ath_buf_state {
+ 	u8 bf_type;
+ 	u8 bfs_paprd;
+ 	unsigned long bfs_paprd_timestamp;
+-	enum ath9k_internal_frame_type bfs_ftype;
+ };
  
- 	e->etype = event;
- 	memcpy(&e->emsg, msg, sizeof(struct brcmf_event_msg));
--	if (data) {
--	}
-+
- 	brcmf_lock_eq(cfg_priv);
- 	list_add_tail(&e->eq_list, &cfg_priv->eq_list);
- 	brcmf_unlock_eq(cfg_priv);
-diff --git a/drivers/staging/brcm80211/brcmsmac/bmac.c b/drivers/staging/brcm80211/brcmsmac/bmac.c
-index 6f1203c..412611e 100644
---- a/drivers/staging/brcm80211/brcmsmac/bmac.c
-+++ b/drivers/staging/brcm80211/brcmsmac/bmac.c
-@@ -318,10 +318,6 @@ bool brcms_c_dpc(struct brcms_c_info *wlc, bool bounded)
- 		brcms_c_update_beacon(wlc);
- 	}
+ struct ath_buf {
+@@ -272,8 +271,6 @@ struct ath_node {
+ struct ath_tx_control {
+ 	struct ath_txq *txq;
+ 	struct ath_node *an;
+-	int if_id;
+-	enum ath9k_internal_frame_type frame_type;
+ 	u8 paprd;
+ };
  
--	/* PMQ entry addition */
--	if (macintstatus & MI_PMQ) {
--	}
+diff --git a/drivers/net/wireless/ath/ath9k/rc.h b/drivers/net/wireless/ath/ath9k/rc.h
+index c3d8502..b7a4bcd 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.h
++++ b/drivers/net/wireless/ath/ath9k/rc.h
+@@ -221,12 +221,6 @@ struct ath_rate_priv {
+ 	struct ath_rc_stats rcstats[RATE_TABLE_SIZE];
+ };
+ 
+-enum ath9k_internal_frame_type {
+-	ATH9K_IFT_NOT_INTERNAL,
+-	ATH9K_IFT_PAUSE,
+-	ATH9K_IFT_UNPAUSE
+-};
 -
- 	/* tx status */
- 	if (macintstatus & MI_TFS) {
- 		if (brcms_b_txstatus(wlc->hw, bounded, &fatal))
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-index 8850d6d..c4e9069 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -2249,8 +2249,7 @@ wlc_phy_txpower_get_current(struct brcms_phy_pub *ppi, struct tx_power *power,
+ #ifdef CONFIG_ATH9K_RATE_CONTROL
+ int ath_rate_control_register(void);
+ void ath_rate_control_unregister(void);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 7810b92..5aae838 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1776,7 +1776,6 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+ 		INIT_LIST_HEAD(&bf_head);
+ 		list_add_tail(&bf->list, &bf_head);
  
- 		power->tx_power_max_rate_ind[0] = pi->tx_power_max_rate_ind;
- 		power->tx_power_max_rate_ind[1] = pi->tx_power_max_rate_ind;
--	} else if (!pi->hwpwrctrl) {
--	} else if (pi->sh->up) {
-+	} else if (pi->hwpwrctrl && pi->sh->up) {
+-		bf->bf_state.bfs_ftype = txctl->frame_type;
+ 		bf->bf_state.bfs_paprd = txctl->paprd;
  
- 		wlc_phyreg_enter(ppi);
- 		if (ISLCNPHY(pi)) {
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
-index bc66c7f..151dc3c 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
-@@ -20996,10 +20996,8 @@ s16 wlc_phy_tempsense_nphy(struct brcms_phy *pi)
- 		write_radio_reg(pi, RADIO_2056_SYN_TEMPPROCSENSE, 0x01);
+ 		if (bf->bf_state.bfs_paprd)
+@@ -1875,7 +1874,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ /*****************/
  
- 		wlc_phy_poll_rssi_nphy(pi, NPHY_RSSI_SEL_IQ, radio_temp, 1);
--		if (NREV_GE(pi->pubpi.phy_rev, 7)) {
--		} else {
-+		if (NREV_LT(pi->pubpi.phy_rev, 7))
- 			write_radio_reg(pi, RADIO_2056_SYN_TEMPPROCSENSE, 0x05);
--		}
- 
- 		wlc_phy_poll_rssi_nphy(pi, NPHY_RSSI_SEL_IQ, radio_temp2, 1);
- 		if (NREV_GE(pi->pubpi.phy_rev, 7)) {
-@@ -24578,7 +24576,6 @@ static void wlc_phy_calc_rx_iq_comp_nphy(struct brcms_phy *pi, u8 core_mask)
- 		}
- 
- 		new_comp = old_comp;
--	} else if (cal_retry > 0) {
+ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+-			    int tx_flags, int ftype, struct ath_txq *txq)
++			    int tx_flags, struct ath_txq *txq)
+ {
+ 	struct ieee80211_hw *hw = sc->hw;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+@@ -1960,8 +1959,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 			complete(&sc->paprd_complete);
+ 	} else {
+ 		ath_debug_stat_tx(sc, bf, ts, txq);
+-		ath_tx_complete(sc, skb, tx_flags,
+-				bf->bf_state.bfs_ftype, txq);
++		ath_tx_complete(sc, skb, tx_flags, txq);
  	}
- 
- 	wlc_phy_rx_iq_coeffs_nphy(pi, 1, &new_comp);
+ 	/* At this point, skb (bf->bf_mpdu) is consumed...make sure we don't
+ 	 * accidentally reference it later.
 -- 
-1.7.4.1
-
+1.7.6
 
