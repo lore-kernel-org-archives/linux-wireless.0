@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44477 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754451Ab1GVNrk (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:54919 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752476Ab1G2R4k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 09:47:40 -0400
-Date: Fri, 22 Jul 2011 09:39:25 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	ralf@linux-mips.org, linux-wireless@vger.kernel.org,
-	linux-mips@linux-mips.org, jonas.gorski@gmail.com, mb@bu3sch.de,
-	george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com
-Subject: Re: [PATCH v2 00/11] bcma: add support for embedded devices like
- bcm4716
-Message-ID: <20110722133925.GA10938@tuxdriver.com> (sfid-20110722_154743_069058_48679EA4)
-References: <1310835342-18877-1-git-send-email-hauke@hauke-m.de>
- <CACna6ryjYGuLc5c88eke=gjgwQyVD+A9afM6zCRhqV1THHgWvA@mail.gmail.com>
- <4E2933A0.40200@hauke-m.de>
+	Fri, 29 Jul 2011 13:56:40 -0400
+Received: by gwaa12 with SMTP id a12so657496gwa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jul 2011 10:56:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4E2933A0.40200@hauke-m.de>
+In-Reply-To: <4E32F338.8040901@openwrt.org>
+References: <1311960137-25420-1-git-send-email-helmut.schaa@googlemail.com>
+	<1311960137-25420-2-git-send-email-helmut.schaa@googlemail.com>
+	<4E32F338.8040901@openwrt.org>
+Date: Fri, 29 Jul 2011 19:56:39 +0200
+Message-ID: <CAGXE3d9hNajZ0C=aVrA9Qf=aRAfZGR6ChVR36yrTqWrLEyP2+A@mail.gmail.com> (sfid-20110729_195731_389841_D1589CD9)
+Subject: Re: [PATCH 2/2] mac80211: Always send EAPOL frames at lowest rate
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 22, 2011 at 10:24:00AM +0200, Hauke Mehrtens wrote:
-> On 07/22/2011 12:30 AM, Rafał Miłecki wrote:
-> > 2011/7/16 Hauke Mehrtens <hauke@hauke-m.de>:
+On Fri, Jul 29, 2011 at 7:51 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2011-07-29 7:22 PM, Helmut Schaa wrote:
+>>
+>> Since EAPOL frames are normal data frames they are treated by the rate
+>> control algorithm as such. Thus it can happen that the rate control
+>> algorithm chooses an inappropriate rate (minstrel_ht uses MCS rates for
+>> example) for the 4-way handshake and under low signal conditions the
+>> handshake may time out.
+>>
+>> To fix this issue always treat EAPOL frames the same as management
+>> frames and send them with the lowest available rate.
+>
+> Have you tried preventing minstrel_ht from using EAPOL frames for probing
+> different rates instead of forcing it to use the lowest rate?
 
-> >> @Ralf: Could you please merger this into the mips tree so that it will be in linux-3.1.
-> > 
-> > ML for bcma is linux-wireless. Should we pass that patches "via" Ralf
-> > or John? Using linux-wireless (and John's tree) makes more sense to
-> > me, as we will work on the same tree and will get less merge
-> > conflicts. However don't take me as Linux development style guru, just
-> > my POV.
+Nope. I'll give it a try soon.
 
-> I talked about this with Florian Fainelli and he said that the patches
-> should rather pass Ralf then John, but merging would be easier when they
-> are passing John. I do not have a problem with both solutions and
-> rebasing it to an other tree is no problem for me.
-> John and Ralf, who wants to take these patches? ;-)
-
-I don't really care -- I figured Ralf was taking them due to the MIPS arch bits.
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Thanks,
+Helmut
