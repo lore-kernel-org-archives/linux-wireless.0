@@ -1,62 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43459 "EHLO mx1.redhat.com"
+Received: from c60.cesmail.net ([216.154.195.49]:18354 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750758Ab1GRHtL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2011 03:49:11 -0400
-Message-ID: <4E23E56C.9000202@redhat.com> (sfid-20110718_094915_662478_B49C4840)
-Date: Mon, 18 Jul 2011 09:49:00 +0200
-From: Stefan Assmann <sassmann@redhat.com>
+	id S1753462Ab1G2DMh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jul 2011 23:12:37 -0400
+Message-ID: <4E322518.9060209@gnu.org> (sfid-20110729_051247_618265_172A6F76)
+Date: Thu, 28 Jul 2011 23:12:24 -0400
+From: Pavel Roskin <proski@gnu.org>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: wireless <linux-wireless@vger.kernel.org>, ali@internetdog.org
-Subject: Re: r8712u issue
-References: <4E2051F3.20103@redhat.com> <4E205984.5040803@lwfinger.net>
-In-Reply-To: <4E205984.5040803@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Martin Partridge <martin_partridge@btconnect.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: help
+References: <op.vzcrpnuuhgplxr@melanie>
+In-Reply-To: <op.vzcrpnuuhgplxr@melanie>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15.07.2011 17:15, Larry Finger wrote:
-> On 07/15/2011 09:42 AM, Stefan Assmann wrote:
->> Hi Larry,
->>
->> I'm wondering if you're looking into any issues concerning the
->> driver. The problem I'm currently facing is that the driver does not
->> recognize any network disconnects. So whenever the network goes down the
->> driver will still report it's connected and thus doesn't reconnect when
->> the network is up again.
->>
->> Btw I'm using a 0bda:8172 usb adapter with 2.6.39.
->> Thanks for your help!
-> 
-> I need more details. What distro? How are you controlling the network? If 
-> NetworkManager, what version?
+Hello!
 
-The system is a headless debian squeeze with a self build vanilla 2.6.39
-kernel. The network is handled by debian scripts I just added the following
-to /etc/network/interfaces:
-auto wlan0
-iface wlan0 inet dhcp
-wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+Please use meaningful subjects for the list posts.
 
-No NM involved.
+On 07/28/2011 07:33 PM, Martin Partridge wrote:
+>
+> I don't understand the last 2 steps, i'm running fedora (ok i lie its
+> Fuduntu, but to all intents and purposes its fedora) Kernel version:
+> 2.6.39.3-1.fc14.i686
 
-> When this situation occurs, what is output to the dmesg log?
+Please always give information about the location of the documentation 
+if you have any problems with it.
 
-Sorry, I don't have the output at hand but IIRC basically nothing special
-occurred in dmesg. The interface even keeps it's IP although the wireless
-was long gone.
+> Enabling p54
+>
+> To enable p54, you must first enable mac80211:
 
-> 
-> I do not see this situation on my system/device. Whenever the connection is 
-> dropped, NM reconnects.
-> 
-> There are a recent patches that might have an effect. Can you build your own kernel?
+I used Google and found this text on the linux-wireless wiki:
+http://linuxwireless.org/en/users/Drivers/p54
 
-Sure, just let me know what to test.
+I rephrased the text to make it more clear that it only applied to 
+configuring the kernel.
 
-Ccing Ali Bahar to this reply, since he has seen something similar.
-Ali, if I can help with testing please let me know. And no rush in case
-you're busy with something else atm. I appreciate the help.
+Since you are using a precompiled kernel, you don't have that option.
 
-  Stefan
+> I have a kernel config
+> file in /etc/sysconfig but its a bit bare, as shown below:
+
+That's something totally different.  The wiki talks about compile-time 
+configuration.
+
+> How do i enable p54 and mac80211, i'm not sure and its bloody annoying.
+
+You only need to check if the modules are present in the kernel you are 
+using.  You can do that by running "modprobe p54".
+
+-- 
+Regards,
+Pavel Roskin
