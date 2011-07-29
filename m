@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:58669 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753383Ab1GMNih (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 09:38:37 -0400
-Date: Wed, 13 Jul 2011 19:08:08 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Joe Perches <joe@perches.com>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <devel@linuxdriverproject.org>,
-	<gregkh@suse.de>
-Subject: Re: [PATCH 11/24] ath6kl: add htc.c
-Message-ID: <20110713133807.GA3424@vasanth-laptop> (sfid-20110713_153842_313126_374CD6C0)
-References: <20110713013023.8517.15940.stgit@localhost6.localdomain6> <20110713013444.8517.89603.stgit@localhost6.localdomain6> <1310531449.1143.29.camel@Joe-Laptop> <4E1D4D63.8000909@qca.qualcomm.com> <1310560384.1662.11.camel@Joe-Laptop>
+Received: from nbd.name ([46.4.11.11]:42106 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752476Ab1G2SF4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jul 2011 14:05:56 -0400
+Message-ID: <4E32F681.6020900@openwrt.org> (sfid-20110729_200559_955917_D0F09412)
+Date: Fri, 29 Jul 2011 20:05:53 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1310560384.1662.11.camel@Joe-Laptop>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2] mac80211: Always send EAPOL frames at lowest rate
+References: <1311960137-25420-1-git-send-email-helmut.schaa@googlemail.com> <1311960137-25420-2-git-send-email-helmut.schaa@googlemail.com> <4E32F338.8040901@openwrt.org> <CAGXE3d9hNajZ0C=aVrA9Qf=aRAfZGR6ChVR36yrTqWrLEyP2+A@mail.gmail.com> <CAGXE3d-k37U5g7Leq135SzwxgXjdqsJ7-h9kLyoUc1QtbT0w-w@mail.gmail.com>
+In-Reply-To: <CAGXE3d-k37U5g7Leq135SzwxgXjdqsJ7-h9kLyoUc1QtbT0w-w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 13, 2011 at 05:33:04AM -0700, Joe Perches wrote:
-> On Wed, 2011-07-13 at 10:46 +0300, Kalle Valo wrote:
-> > On 07/13/2011 07:30 AM, Joe Perches wrote:
-> > > On Wed, 2011-07-13 at 04:34 +0300, Kalle Valo wrote: 
-> > >> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> > >> diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-> > > [] 
-> > >> +static void htc_tx_comp_update(struct htc_target *target,
-> > >> +			       struct htc_endpoint *endpoint,
-> > >> +			       struct htc_packet *packet)
-> > >> +{
-> > > [] 
-> > >> 	ath6kl_dbg(ATH6KL_DBG_HTC_SEND, "ctxt:0x%lx dist:0x%lx\n",
-> > >> +		(unsigned long) target->cred_dist_cntxt,
-> > >> +		(unsigned long *) &target->cred_dist_list);
-> > > compiler warning?
-> > I haven't seen any. But all these unsigned long casts will be removed
-> > anyway.
-> 
-> You need to update debug.h [08/24]
-> 
-> > diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
-> []
-> > +extern int ath6kl_printk(const char *level, const char *fmt, ...);
-> 
-> You're not seeing compiler warnings for mismatched
-> arguments because this should to be:
-> 
-> extern __attribute__((format (printf, 2, 3)))
-> int ath6kl_printk(const char *level, const char *fmt, ...);
+On 2011-07-29 8:00 PM, Helmut Schaa wrote:
+> On Fri, Jul 29, 2011 at 7:56 PM, Helmut Schaa
+> <helmut.schaa@googlemail.com>  wrote:
+>>  On Fri, Jul 29, 2011 at 7:51 PM, Felix Fietkau<nbd@openwrt.org>  wrote:
+>>>  On 2011-07-29 7:22 PM, Helmut Schaa wrote:
+>>>>
+>>>>  Since EAPOL frames are normal data frames they are treated by the rate
+>>>>  control algorithm as such. Thus it can happen that the rate control
+>>>>  algorithm chooses an inappropriate rate (minstrel_ht uses MCS rates for
+>>>>  example) for the 4-way handshake and under low signal conditions the
+>>>>  handshake may time out.
+>>>>
+>>>>  To fix this issue always treat EAPOL frames the same as management
+>>>>  frames and send them with the lowest available rate.
+>>>
+>>>  Have you tried preventing minstrel_ht from using EAPOL frames for probing
+>>>  different rates instead of forcing it to use the lowest rate?
+>>
+>>  Nope. I'll give it a try soon.
+>
+> Felix, what rate is used by minstrel_ht if there are no statistics yet? MCS0?
+Yes, rates default to lowest until better ones are available.
 
-Right, format attribute exposes quite a few mismatch in format
-string, we'll address them in next version. Thanks for pointing this out
-
-Vasanth
+- Felix
