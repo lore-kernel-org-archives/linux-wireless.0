@@ -1,151 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4338 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932396Ab1GNV34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 17:29:56 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 07/35] staging: brcm80211: removed function declaration
- typedefs from dma.h part 2
-Date: Thu, 14 Jul 2011 14:29:03 -0700
-Message-ID: <1310678971-28952-8-git-send-email-frankyl@broadcom.com> (sfid-20110714_233017_204199_58E0435B)
-In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
-References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:58741 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752831Ab1G2VEi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jul 2011 17:04:38 -0400
+Received: by pzk37 with SMTP id 37so6945628pzk.1
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jul 2011 14:04:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1311376815-15755-7-git-send-email-hauke@hauke-m.de>
+References: <1311376815-15755-1-git-send-email-hauke@hauke-m.de>
+	<1311376815-15755-7-git-send-email-hauke@hauke-m.de>
+Date: Fri, 29 Jul 2011 23:04:37 +0200
+Message-ID: <CACna6rxMA9KDuWSPLmdNsS=zNJawkbX5-KYrRWq3Jn25gWhX7A@mail.gmail.com> (sfid-20110729_230441_150762_00559F13)
+Subject: Re: [PATCH 06/11] bcma: add serial console support
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-mips@linux-mips.org, jonas.gorski@gmail.com,
+	ralf@linux-mips.org, mb@bu3sch.de, george@znau.edu.ua,
+	arend@broadcom.com, b43-dev@lists.infradead.org,
+	bernhardloos@googlemail.com, arnd@arndb.de,
+	julian.calaby@gmail.com, sshtylyov@mvista.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+2011/7/23 Hauke Mehrtens <hauke@hauke-m.de>:
+> This adds support for serial console to bcma, when operating on an SoC.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  drivers/bcma/bcma_private.h                 |    8 ++++
+>  drivers/bcma/driver_chipcommon.c            |   48 +++++++++++++++++++++++++++
+>  drivers/bcma/driver_chipcommon_pmu.c        |   26 ++++++++++++++
+>  drivers/bcma/driver_mips.c                  |    1 +
+>  include/linux/bcma/bcma_driver_chipcommon.h |   14 ++++++++
+>  5 files changed, 97 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+> index b97633d..22d3052 100644
+> --- a/drivers/bcma/bcma_private.h
+> +++ b/drivers/bcma/bcma_private.h
+> @@ -29,6 +29,14 @@ void bcma_init_bus(struct bcma_bus *bus);
+>  /* sprom.c */
+>  int bcma_sprom_get(struct bcma_bus *bus);
+>
+> +/* driver_chipcommon.c */
+> +#ifdef CONFIG_BCMA_DRIVER_MIPS
+> +void bcma_chipco_serial_init(struct bcma_drv_cc *cc);
+> +#endif /* CONFIG_BCMA_DRIVER_MIPS */
+> +
+> +/* driver_chipcommon_pmu.c */
+> +u32 bcma_pmu_alp_clock(struct bcma_drv_cc *cc);
+> +
+>  #ifdef CONFIG_BCMA_HOST_PCI
+>  /* host_pci.c */
+>  extern int __init bcma_host_pci_init(void);
 
-Softmac related code cleanup. Typedefs are undesirable according to the
-CodingStyle document.
+Not sure, what do you think about this, feel free to comment.
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/dma.c |   22 ++++++++++----------
- drivers/staging/brcm80211/brcmsmac/dma.h |   33 ++++++++++--------------------
- 2 files changed, 22 insertions(+), 33 deletions(-)
+My idea was to use bcma_private.h for bcma-internal functions. For
+example, support for PCI host or SoC host, is something "internal" (as
+I call it) for bcma. Drivers in theory could be separated modules and
+I use include/linux/bcma/driver_*.h for them.
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
-index 5fd5e8c..3e732c8 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.c
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.c
-@@ -389,16 +389,16 @@ static inline u32 parity32(u32 data);
- const struct di_fcn_s dma64proc = {
- 	(void (*)(struct dma_pub *)) _dma_detach,
- 	(void (*)(struct dma_pub *)) dma64_txinit,
--	(di_txreset_t) dma64_txreset,
--	(di_txenabled_t) dma64_txenabled,
-+	(bool(*)(struct dma_pub *)) dma64_txreset,
-+	(bool(*)(struct dma_pub *)) dma64_txenabled,
- 	(void (*)(struct dma_pub *)) dma64_txsuspend,
- 	(void (*)(struct dma_pub *)) dma64_txresume,
--	(di_txsuspended_t) dma64_txsuspended,
--	(di_txsuspendedidle_t) dma64_txsuspendedidle,
-+	(bool(*)(struct dma_pub *)) dma64_txsuspended,
-+	(bool(*)(struct dma_pub *)) dma64_txsuspendedidle,
- 	(di_txfast_t) dma64_txfast,
- 	(di_txunframed_t) dma64_txunframed,
- 	(di_getpos_t) dma64_getpos,
--	(di_txstopped_t) dma64_txstopped,
-+	(bool(*)(struct dma_pub *)) dma64_txstopped,
- 	(di_txreclaim_t) dma64_txreclaim,
- 	(di_getnexttxp_t) dma64_getnexttxp,
- 	(di_peeknexttxp_t) _dma_peeknexttxp,
-@@ -408,13 +408,13 @@ const struct di_fcn_s dma64proc = {
- 	(void (*)(struct dma_pub *)) dma64_txrotate,
- 
- 	(void (*)(struct dma_pub *)) _dma_rxinit,
--	(di_rxreset_t) dma64_rxreset,
--	(di_rxidle_t) dma64_rxidle,
--	(di_rxstopped_t) dma64_rxstopped,
--	(di_rxenable_t) _dma_rxenable,
--	(di_rxenabled_t) dma64_rxenabled,
-+	(bool(*)(struct dma_pub *)) dma64_rxreset,
-+	(bool(*)(struct dma_pub *)) dma64_rxidle,
-+	(bool(*)(struct dma_pub *)) dma64_rxstopped,
-+	(bool(*)(struct dma_pub *)) _dma_rxenable,
-+	(bool(*)(struct dma_pub *)) dma64_rxenabled,
- 	(di_rx_t) _dma_rx,
--	(di_rxfill_t) _dma_rxfill,
-+	(bool(*)(struct dma_pub *)) _dma_rxfill,
- 	(void (*)(struct dma_pub *)) _dma_rxreclaim,
- 	(di_getnextrxp_t) _dma_getnextrxp,
- 	(di_peeknextrxp_t) _dma_peeknextrxp,
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.h b/drivers/staging/brcm80211/brcmsmac/dma.h
-index 69f2e94..6d6dbd8 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.h
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.h
-@@ -59,23 +59,12 @@ enum txd_range {
- };
- 
- /* dma function type */
--typedef bool(*di_txreset_t) (struct dma_pub *dmah);
--typedef bool(*di_rxreset_t) (struct dma_pub *dmah);
--typedef bool(*di_rxidle_t) (struct dma_pub *dmah);
--typedef bool(*di_txenabled_t) (struct dma_pub *dmah);
--typedef bool(*di_txsuspended_t) (struct dma_pub *dmah);
--typedef bool(*di_txsuspendedidle_t) (struct dma_pub *dmah);
- typedef int (*di_txfast_t) (struct dma_pub *dmah, struct sk_buff *p,
- 			    bool commit);
- typedef int (*di_txunframed_t) (struct dma_pub *dmah, void *p, uint len,
- 				bool commit);
- typedef void *(*di_getpos_t) (struct dma_pub *di, bool direction);
--typedef bool(*di_txstopped_t) (struct dma_pub *dmah);
--typedef bool(*di_rxstopped_t) (struct dma_pub *dmah);
--typedef bool(*di_rxenable_t) (struct dma_pub *dmah);
--typedef bool(*di_rxenabled_t) (struct dma_pub *dmah);
- typedef void *(*di_rx_t) (struct dma_pub *dmah);
--typedef bool(*di_rxfill_t) (struct dma_pub *dmah);
- typedef void (*di_txreclaim_t) (struct dma_pub *dmah, enum txd_range range);
- typedef unsigned long (*di_getvar_t) (struct dma_pub *dmah,
- 				      const char *name);
-@@ -101,16 +90,16 @@ typedef uint(*di_txcommitted_t) (struct dma_pub *dmah);
- struct di_fcn_s {
- 	void (*detach)(struct dma_pub *dmah);
- 	void (*txinit)(struct dma_pub *dmah);
--	di_txreset_t txreset;
--	di_txenabled_t txenabled;
-+	bool (*txreset)(struct dma_pub *dmah);
-+	bool (*txenabled)(struct dma_pub *dmah);
- 	void (*txsuspend)(struct dma_pub *dmah);
- 	void (*txresume)(struct dma_pub *dmah);
--	di_txsuspended_t txsuspended;
--	di_txsuspendedidle_t txsuspendedidle;
-+	bool (*txsuspended)(struct dma_pub *dmah);
-+	bool (*txsuspendedidle)(struct dma_pub *dmah);
- 	di_txfast_t txfast;
- 	di_txunframed_t txunframed;
- 	di_getpos_t getpos;
--	di_txstopped_t txstopped;
-+	bool (*txstopped)(struct dma_pub *dmah);
- 	di_txreclaim_t txreclaim;
- 	di_getnexttxp_t getnexttxp;
- 	di_peeknexttxp_t peeknexttxp;
-@@ -120,13 +109,13 @@ struct di_fcn_s {
- 	void (*txrotate) (struct dma_pub *dmah);
- 
- 	void (*rxinit)(struct dma_pub *dmah);
--	di_rxreset_t rxreset;
--	di_rxidle_t rxidle;
--	di_rxstopped_t rxstopped;
--	di_rxenable_t rxenable;
--	di_rxenabled_t rxenabled;
-+	bool (*rxreset)(struct dma_pub *dmah);
-+	bool (*rxidle)(struct dma_pub *dmah);
-+	bool (*rxstopped)(struct dma_pub *dmah);
-+	bool (*rxenable)(struct dma_pub *dmah);
-+	bool (*rxenabled)(struct dma_pub *dmah);
- 	di_rx_t rx;
--	di_rxfill_t rxfill;
-+	bool (*rxfill)(struct dma_pub *dmah);
- 	void (*rxreclaim)(struct dma_pub *dmah);
- 	di_getnextrxp_t getnextrxp;
- 	di_peeknextrxp_t peeknextrxp;
+If following this schema, declarations of
+bcma_pmu_alp_clock
+bcma_host_pci_init
+should be in include/linux/bcma/bcma_driver_chipcommon.h
+
 -- 
-1.7.1
-
-
+Rafał
