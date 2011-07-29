@@ -1,76 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1635 "EHLO mms1.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:35065 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755079Ab1GVS5h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 14:57:37 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: "Arend van Spriel" <arend@broadcom.com>,
-	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 28/29] staging: brcm80211: remove target platform
- limitations for drivers
-Date: Fri, 22 Jul 2011 20:57:15 +0200
-Message-ID: <1311361036-3175-29-git-send-email-arend@broadcom.com> (sfid-20110722_205746_826102_49CD0DDE)
-In-Reply-To: <1311361036-3175-1-git-send-email-arend@broadcom.com>
-References: <1311361036-3175-1-git-send-email-arend@broadcom.com>
+	id S1752033Ab1G2RwA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jul 2011 13:52:00 -0400
+Message-ID: <4E32F338.8040901@openwrt.org> (sfid-20110729_195204_976377_898929BF)
+Date: Fri, 29 Jul 2011 19:51:52 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2] mac80211: Always send EAPOL frames at lowest rate
+References: <1311960137-25420-1-git-send-email-helmut.schaa@googlemail.com> <1311960137-25420-2-git-send-email-helmut.schaa@googlemail.com>
+In-Reply-To: <1311960137-25420-2-git-send-email-helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several issue have been reported building the driver on big endian
-systems. Following commits were done on driver Kconfig:
+On 2011-07-29 7:22 PM, Helmut Schaa wrote:
+> Since EAPOL frames are normal data frames they are treated by the rate
+> control algorithm as such. Thus it can happen that the rate control
+> algorithm chooses an inappropriate rate (minstrel_ht uses MCS rates for
+> example) for the 4-way handshake and under low signal conditions the
+> handshake may time out.
+>
+> To fix this issue always treat EAPOL frames the same as management
+> frames and send them with the lowest available rate.
+Have you tried preventing minstrel_ht from using EAPOL frames for 
+probing different rates instead of forcing it to use the lowest rate?
 
-d462039 Staging: brcm80211: disable drivers except for X86 or MIPS platforms
-15e5201 Staging: brcm80211: disable drivers for PPC platforms
-
-These problems have been resolved so the added 'depends' lines in
-the Kconfig have been removed.
-
-Compile tested it for following architectures:
-little endian
-	x86
-	x86_64
-	arm
-	mips
-big endian
-	ppc64
-	sparc64
-	mips
-
-Cc: devel@linuxdriverproject.org
-Cc: linux-wireless@vger.kernel.org
-Reported-by: David Miller <davem@davemloft.net>
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Reported-by: Greg Kroah-Hartman <gregkh@suse.de>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/Kconfig |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/Kconfig b/drivers/staging/brcm80211/Kconfig
-index 379cf16..f4cf9b2 100644
---- a/drivers/staging/brcm80211/Kconfig
-+++ b/drivers/staging/brcm80211/Kconfig
-@@ -7,7 +7,6 @@ config BRCMSMAC
- 	default n
- 	depends on PCI
- 	depends on WLAN && MAC80211
--	depends on X86 || MIPS
- 	select BRCMUTIL
- 	select FW_LOADER
- 	select CRC_CCITT
-@@ -21,7 +20,6 @@ config BRCMFMAC
- 	default n
- 	depends on MMC
- 	depends on WLAN && CFG80211
--	depends on X86 || MIPS
- 	select BRCMUTIL
- 	select FW_LOADER
- 	select WIRELESS_EXT
--- 
-1.7.4.1
-
-
+- Felix
