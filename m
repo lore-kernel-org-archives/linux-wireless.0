@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54564 "EHLO mx1.redhat.com"
+Received: from nbd.name ([46.4.11.11]:55102 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754981Ab1G0TNY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2011 15:13:24 -0400
-Subject: Re: [PATCH] libertas_usb: program OLPC EC wakeup mask for
- wake-on-WLAN
-From: Dan Williams <dcbw@redhat.com>
-To: Daniel Drake <dsd@laptop.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-Date: Wed, 27 Jul 2011 14:16:05 -0500
-In-Reply-To: <20110727161900.DE2109D401C@zog.reactivated.net>
-References: <20110727161900.DE2109D401C@zog.reactivated.net>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1311794166.17655.4.camel@dcbw.foobar.com> (sfid-20110727_211346_430219_2CA6CFD8)
-Mime-Version: 1.0
+	id S932068Ab1G2Mly (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jul 2011 08:41:54 -0400
+Message-ID: <4E32AA85.1030204@openwrt.org> (sfid-20110729_144157_233090_F659D559)
+Date: Fri, 29 Jul 2011 14:41:41 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 11/13] ath9k_hw: Disable Walsh spatial spreading for
+ 2 chains
+References: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com> <1311941300-2590-11-git-send-email-rmanohar@qca.qualcomm.com>
+In-Reply-To: <1311941300-2590-11-git-send-email-rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-07-27 at 17:19 +0100, Daniel Drake wrote:
-> OLPC power management code has recently gone upstream. This piece
-> completes the puzzle for libertas_usb, which now programs the OLPC EC
-> for wlan wakeups when they have been requested.
-> 
-> Signed-off-by: Daniel Drake <dsd@laptop.org>
-
-Acked-by: Dan Williams <dcbw@redhat.com>
-
+On 2011-07-29 2:08 PM, Rajkumar Manoharan wrote:
+> Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
 > ---
->  drivers/net/wireless/libertas/if_usb.c |    9 +++++++++
->  1 files changed, 9 insertions(+), 0 deletions(-)
-> 
-> Depends on some patches that were into Linus's tree yesterday.
-> 
-> diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-> index b5acc39..8f73e80 100644
-> --- a/drivers/net/wireless/libertas/if_usb.c
-> +++ b/drivers/net/wireless/libertas/if_usb.c
-> @@ -1112,6 +1112,15 @@ static int if_usb_suspend(struct usb_interface *intf, pm_message_t message)
->  	if (priv->psstate != PS_STATE_FULL_POWER)
->  		return -1;
->  
-> +#ifdef CONFIG_OLPC
-> +	if (machine_is_olpc()) {
-> +		if (priv->wol_criteria == EHS_REMOVE_WAKEUP)
-> +			olpc_ec_wakeup_clear(EC_SCI_SRC_WLAN);
-> +		else
-> +			olpc_ec_wakeup_set(EC_SCI_SRC_WLAN);
-> +	}
-> +#endif
-> +
->  	ret = lbs_suspend(priv);
->  	if (ret)
->  		goto out;
+>   .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+> index 2339728..28b44b0 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+> @@ -636,7 +636,7 @@ static const u32 ar9300_2p2_baseband_postamble[][5] = {
+>   	{0x00009e44, 0x02321e27, 0x02321e27, 0x02291e27, 0x02291e27},
+>   	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
+>   	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
+> -	{0x0000a204, 0x000037c0, 0x000037c4, 0x000037c4, 0x000037c0},
+> +	{0x0000a204, 0x000036c0, 0x000036c4, 0x000036c4, 0x000036c0},
+>   	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
+>   	{0x0000a22c, 0x01026a2f, 0x01026a2f, 0x01026a2f, 0x01026a2f},
+>   	{0x0000a230, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b},
+That patch makes no sense, it disables Walsh spatial spreading in the 
+initvals, but the driver still enables it in ar9003_hw_set_channel_regs.
+By the way, why should we disable Walsh spatial spreading?
 
-
+- Felix
