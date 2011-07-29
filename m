@@ -1,97 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:15408 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752051Ab1GKOoW (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:14691 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755619Ab1G2MIu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 10:44:22 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Fri, 29 Jul 2011 08:08:50 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
-	<senthilb@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH] ath9k: remove an unnecessary function declaration
-Date: Mon, 11 Jul 2011 20:14:14 +0530
-Message-ID: <1310395454-2645-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110711_164426_654250_62F1363D)
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 05/13] ath9k: Dump base eeprom header
+Date: Fri, 29 Jul 2011 17:38:12 +0530
+Message-ID: <1311941300-2590-5-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110729_140853_776852_51D56F80)
+In-Reply-To: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Debugfs file location:
+<debugfs_mnt>/ieee80211/phy#/ath9k/base_eeprom
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/rc.c |   50 ++++++++++++++++------------------
- 1 files changed, 24 insertions(+), 26 deletions(-)
+ drivers/net/wireless/ath/ath9k/debug.c |   30 ++++++++++++++++++++++++++++++
+ 1 files changed, 30 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index e7fe4d9..c04a6c3 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -379,7 +379,30 @@ static const struct ath_rate_table ar5416_11g_ratetable = {
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index d1eb896..cdd370c 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1163,6 +1163,34 @@ static const struct file_operations fops_regdump = {
+ 	.llseek = default_llseek,/* read accesses f_pos */
  };
  
- static int ath_rc_get_rateindex(const struct ath_rate_table *rate_table,
--				struct ieee80211_tx_rate *rate);
-+				struct ieee80211_tx_rate *rate)
++static ssize_t read_file_base_eeprom(struct file *file, char __user *user_buf,
++				     size_t count, loff_t *ppos)
 +{
-+	int rix = 0, i = 0;
-+	static const int mcs_rix_off[] = { 7, 15, 20, 21, 22, 23 };
++	struct ath_softc *sc = file->private_data;
++	struct ath_hw *ah = sc->sc_ah;
++	u32 len = 0, size = 1500;
++	ssize_t retval = 0;
++	char *buf;
 +
-+	if (!(rate->flags & IEEE80211_TX_RC_MCS))
-+		return rate->idx;
++	buf = kzalloc(size, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
 +
-+	while (i < ARRAY_SIZE(mcs_rix_off) && rate->idx > mcs_rix_off[i]) {
-+		rix++; i++;
-+	}
++	len = ah->eep_ops->dump_eeprom(ah, true, buf, len, size);
 +
-+	rix += rate->idx + rate_table->mcs_start;
++	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	kfree(buf);
 +
-+	if ((rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) &&
-+	    (rate->flags & IEEE80211_TX_RC_SHORT_GI))
-+		rix = rate_table->info[rix].ht_index;
-+	else if (rate->flags & IEEE80211_TX_RC_SHORT_GI)
-+		rix = rate_table->info[rix].sgi_index;
-+	else if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
-+		rix = rate_table->info[rix].cw40index;
-+
-+	return rix;
++	return retval;
 +}
++
++static const struct file_operations fops_base_eeprom = {
++	.read = read_file_base_eeprom,
++	.open = ath9k_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ int ath9k_init_debug(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -1206,6 +1234,8 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 			    &ah->config.cwm_ignore_extcca);
+ 	debugfs_create_file("regdump", S_IRUSR, sc->debug.debugfs_phy, sc,
+ 			    &fops_regdump);
++	debugfs_create_file("base_eeprom", S_IRUSR, sc->debug.debugfs_phy, sc,
++			    &fops_base_eeprom);
  
- static void ath_rc_sort_validrates(const struct ath_rate_table *rate_table,
- 				   struct ath_rate_priv *ath_rc_priv)
-@@ -1080,31 +1103,6 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 
- }
- 
--static int ath_rc_get_rateindex(const struct ath_rate_table *rate_table,
--				struct ieee80211_tx_rate *rate)
--{
--	int rix = 0, i = 0;
--	static const int mcs_rix_off[] = { 7, 15, 20, 21, 22, 23 };
--
--	if (!(rate->flags & IEEE80211_TX_RC_MCS))
--		return rate->idx;
--
--	while (i < ARRAY_SIZE(mcs_rix_off) && rate->idx > mcs_rix_off[i]) {
--		rix++; i++;
--	}
--
--	rix += rate->idx + rate_table->mcs_start;
--
--	if ((rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) &&
--	    (rate->flags & IEEE80211_TX_RC_SHORT_GI))
--		rix = rate_table->info[rix].ht_index;
--	else if (rate->flags & IEEE80211_TX_RC_SHORT_GI)
--		rix = rate_table->info[rix].sgi_index;
--	else if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
--		rix = rate_table->info[rix].cw40index;
--
--	return rix;
--}
- 
- static void ath_rc_tx_status(struct ath_softc *sc,
- 			     struct ath_rate_priv *ath_rc_priv,
+ 	debugfs_create_u32("gpio_mask", S_IRUSR | S_IWUSR,
+ 			   sc->debug.debugfs_phy, &sc->sc_ah->gpio_mask);
 -- 
-1.7.0.4
+1.7.6
 
