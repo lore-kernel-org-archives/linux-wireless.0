@@ -1,91 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:62929 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992Ab1GDFYR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 01:24:17 -0400
-Date: Mon, 4 Jul 2011 10:54:11 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Forest Bond <forest@alittletooquiet.net>
-CC: Mohammed Shafi <shafi.wireless@gmail.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: ath9k_htc fails to initialize TL-WN721N with compat-wireless
- 3.0-rc4-1
-Message-ID: <20110704052410.GA1364@vmraj-lnx.users.atheros.com> (sfid-20110704_072426_245244_96BD3FD1)
-References: <20110701133553.GA7125@alittletooquiet.net>
- <BANLkTikByepHZoEE2b65CrgUmpBmcxiTgw@mail.gmail.com>
- <BANLkTimUs65_Sw=pwF-J8gPjyrNcs2qnOw@mail.gmail.com>
- <20110701173237.GC7125@alittletooquiet.net>
+Received: from c60.cesmail.net ([216.154.195.49]:3680 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752156Ab1G2Pzp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jul 2011 11:55:45 -0400
+Message-ID: <4E32D7FE.9030402@gnu.org> (sfid-20110729_175548_001844_B3CD6667)
+Date: Fri, 29 Jul 2011 11:55:42 -0400
+From: Pavel Roskin <proski@gnu.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <20110701173237.GC7125@alittletooquiet.net>
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] lib80211: call try_module_get() in lib80211_get_crypto_ops()
+References: <20110729025007.7889.19879.stgit@mj.roinet.com> <4E3222B6.1010904@gnu.org> <CAGRGNgWo=jgOwffbvCL5SDA6TD=cKUheObSM=23+ZTNCqH+-GQ@mail.gmail.com>
+In-Reply-To: <CAGRGNgWo=jgOwffbvCL5SDA6TD=cKUheObSM=23+ZTNCqH+-GQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 01, 2011 at 01:32:37PM -0400, Forest Bond wrote:
-> Hi shafi,
-> 
-> [Sorry for the duplicate, lost the Cc's the first time around.]
-> 
-> On Fri, Jul 01, 2011 at 07:39:40PM +0530, Mohammed Shafi wrote:
-> > On Fri, Jul 1, 2011 at 7:31 PM, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
-> > > On Fri, Jul 1, 2011 at 7:05 PM, Forest Bond <forest@alittletooquiet.net> wrote:
-> > >> Now the module loads fine and appears to load the firmware correctly, but the
-> > >> interface never comes up.  Here's what happens when I insert the device:
-> > >>
-> > >> [  206.657723] Compat-wireless backport release: compat-wireless-v3.0-rc4-1
-> > >> [  206.657732] Backport based on linux-2.6-allstable.git v3.0-rc4
-> > >> [  206.864667] Calling CRDA to update world regulatory domain
-> > >> [  207.714633] usb 5-7: ath9k_htc: Transferred FW: htc_9271.fw, size: 51288
-> > >> [  207.861037] ath9k_htc 5-7:1.0: ath9k_htc: HTC initialized with 33 credits
-> > >>
-> > >> At this point the interface is not visible in the output of ifconfig.  Something
-> > >> has gone wrong with USB, because lsusb hangs until I unplug the device, at which
-> > >> point I see the following in dmesg:
-> > >>
-> > >> [  225.464212] usb 5-7: USB disconnect, address 5
-> > >> [  225.592282] ath: Reading Magic # failed
-> > >> [  225.592310] ath: no band has been marked as supported in EEPROM
-> > >> [  225.592315] ath: Unable to initialize hardware; initialization status: -22
-> > >> [  225.592321] ath: Unable to initialize hardware; initialization status: -22
-> > >> [  225.592336] Failed to initialize the device
-> > >> [  225.592400] ath9k_htc: probe of 5-7:1.0 failed with error -22
-> > >> [  225.712249] usbcore: registered new interface driver ath9k_htc
-> > >
-> > > something wrong in reading EEPROM, please post the kernel log for
-> > > sudo modprobe ath9k_htc debug debug=0x404
-> > 
-> > please do
-> > sudo modprobe ath9k_htc debug=0xffffffff
-> > this will give lots of information
-> 
-> [   98.421395] Compat-wireless backport release: compat-wireless-v3.0-rc4-1
-> [   98.421405] Backport based on linux-2.6-allstable.git v3.0-rc4
-> [   98.638709] Calling CRDA to update world regulatory domain
-> [   99.219353] usbcore: registered new interface driver ath9k_htc
-> [  103.829197] usb 5-7: new high speed USB device using ehci_hcd and address 5
-> [  103.985215] usb 5-7: configuration #1 chosen from 1 choice
-> [  104.288053] usb 5-7: ath9k_htc: Transferred FW: htc_9271.fw, size: 51288
-> [  104.448323] ath9k_htc 5-7:1.0: ath9k_htc: HTC initialized with 33 credits
-> [  104.453395] ath: UNDEFINED -> AWAKE
-> [  104.454654] ath: serialize_regmode is 0
-> [  104.686218] ath: Timeout waiting for WMI command: WMI_REG_WRITE_CMDID
-> [  104.686240] ath: REGISTER WRITE FAILED, multi len: 9
-> [  104.901237] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [  104.901259] ath: REGISTER READ FAILED: (0x9c00, -110)
-> [  104.901276] ath: Reading from EEPROM, not flash
-> [  105.136983] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [  105.137000] ath: Multiple REGISTER READ FAILED (count: 8)
-> [  105.408496] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [  105.408513] ath: Multiple REGISTER READ FAILED (count: 8)
-> [  105.676507] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-> [  105.676524] ath: Multiple REGISTER READ FAILED (count: 8)
-> [  105.911084] ath: Timeout waiting for WMI command: WMI_REG_READ_CMDID
-Please share your PID/VID.
+On 07/28/2011 11:27 PM, Julian Calaby wrote:
 
---
-Rajkumar
+> If I recall correctly, lib80211 is the last remainder of the
+> pre-mac80211 wireless stack. It should be annihilated with extreme
+> prejudice, but the intel centrino 2xxx drivers are so interwoven with
+> it that extracting them would be a pain in the ass - and given that
+> nobody who has those parts really cares, this hasn't happened.
+
+Basically, lib80211 has no consistent API.  The callers (hostap and 
+ipw2x00) get all the internals and do way too much with them.
+
+Module refcounting is (presumably) done by the "key objects", i.e. the 
+structures consisting of the keys and the operations that apply to them. 
+  Something is done wrong, as there are more module puts than module gets.
+
+But the caller also gets the ops, that is the set of encryption 
+functions from a particular encryption module.  There is no locking for 
+the ops.  There is no lib80211_put_crypto_ops(), that is, the caller 
+never says it's not using the ops anymore.
+
+Possible fixes are:
+
+1) Rewrite the whole API.  Hide ops from the callers.  Enforce 
+refcounting by the keys.  The keys should hold the ops, the ops should 
+hold the modules.  That may be a lot of work, but the result will be 
+nice.  Maybe even mac80211 could use it.
+
+2) Fix key object based refcounting.  Ignore the fact that a crypto 
+module can be unloaded at a wrong time while the caller is using the 
+ops.  That may be a simple fix, but it won't be complete.  At least no 
+new bugs would be introduced.
+
+3) Same as above, but add ops-based refcounting to protect against 
+crypto module unloading.  The problem is that it's hard to find the 
+places where the callers stop using the ops.  The result would work 
+correctly, and the changes won't be too radical.  But it's hard to get 
+right.
+
+4) Merge lib80211 and lib80211_crypt_* into one module.  That solves the 
+problem completely.  Some memory would be wasted for those who use only 
+one algorithm.
+
+5) Make lib80211_crypt_* modules permanent (not unloadable).  Some 
+sysadmins may be unhappy that the modules cannot be replaced without reboot.
+
+-- 
+Regards,
+Pavel Roskin
