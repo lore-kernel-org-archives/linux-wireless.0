@@ -1,316 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:33715 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755696Ab1GGLZ3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2011 07:25:29 -0400
-Received: by wyg8 with SMTP id 8so566731wyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jul 2011 04:25:28 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] wl12xx: start/stop queues according to global per-AC counters
-Date: Thu,  7 Jul 2011 14:25:23 +0300
-Message-Id: <1310037923-3149-1-git-send-email-arik@wizery.com> (sfid-20110707_132533_497299_8B090608)
+Received: from mx1.redhat.com ([209.132.183.28]:8908 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752681Ab1G2N56 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jul 2011 09:57:58 -0400
+Date: Fri, 29 Jul 2011 15:59:08 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	camilo@mesias.co.uk, Jonathan Nieder <jrnieder@gmail.com>,
+	Tony Houghton <h@realh.co.uk>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>
+Subject: [PATCH] ath9k: skip ->config_pci_powersave() if PCIe port has ASPM
+ disabled
+Message-ID: <20110729135908.GC2280@redhat.com> (sfid-20110729_155802_250909_C1D7C28D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Split tx_queue_count to count per-AC skb's queued, instead of relying on
-the skb-queue len. The skb queues used were only valid in STA-mode, as
-AP-mode uses per-link queues.
+We receive many bug reports about system hang during suspend/resume
+when ath9k driver is in use. Adrian Chadd remarked that this problem
+happens on systems that have ASPM disabled.
 
-This fixes a major regression in AP-mode, caused by the patch
-"wl12xx: implement Tx watermarks per AC". With that patch applied, we
-effectively had no regulation of Tx queues in AP-mode. Therefore a
-sustained high rate of Tx could cause exhaustion of the skb memory pool.
+To do not hit the bug, skip doing ->config_pci_powersave magic if PCIe
+downstream port device, which ath9k device is connected to, has ASPM
+disabled.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Bug was introduced by:
+
+commit 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f
+Author: Vivek Natarajan <vnatarajan@atheros.com>
+Date:   Mon Apr 5 14:48:04 2010 +0530
+
+    ath9k: Add support for newer AR9285 chipsets.
+
+Patch should address:
+https://bugzilla.kernel.org/show_bug.cgi?id=37462
+https://bugzilla.kernel.org/show_bug.cgi?id=37082
+https://bugzilla.redhat.com/show_bug.cgi?id=697157
+
+however I did not receive confirmation about that, except from Camilo
+Mesias, whose system stops hang regularly with this patch (but still
+hangs from time to time, but this is probably some other bug).
+
+Tested-by: Camilo Mesias <camilo@mesias.co.uk>
+Cc: stable@kernel.org # 2.6.35+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/wl12xx/debugfs.c |    8 ++++++--
- drivers/net/wireless/wl12xx/main.c    |   13 +++++++------
- drivers/net/wireless/wl12xx/ps.c      |    9 ++++++---
- drivers/net/wireless/wl12xx/tx.c      |   33 +++++++++++++++++++++------------
- drivers/net/wireless/wl12xx/tx.h      |   10 ++++++++++
- drivers/net/wireless/wl12xx/wl12xx.h  |    2 +-
- 6 files changed, 51 insertions(+), 24 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c |    6 +-----
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c |    6 +-----
+ drivers/net/wireless/ath/ath9k/hw.c        |   11 +++++++++--
+ drivers/net/wireless/ath/ath9k/hw.h        |    3 ++-
+ drivers/net/wireless/ath/ath9k/pci.c       |   27 +++++++++++++++++++++++++++
+ 5 files changed, 40 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index 70c9e4c..4ba00e1 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -30,6 +30,7 @@
- #include "acx.h"
- #include "ps.h"
- #include "io.h"
-+#include "tx.h"
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index 9ff7c30..44d9d8d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -309,11 +309,7 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
+ 	u8 i;
+ 	u32 val;
  
- /* ms */
- #define WL1271_DEBUGFS_STATS_LIFETIME 1000
-@@ -233,7 +234,7 @@ static ssize_t tx_queue_len_read(struct file *file, char __user *userbuf,
- 	char buf[20];
- 	int res;
+-	if (ah->is_pciexpress != true)
+-		return;
+-
+-	/* Do not touch SerDes registers */
+-	if (ah->config.pcie_powersave_enable == 2)
++	if (ah->is_pciexpress != true || ah->aspm_enabled != true)
+ 		return;
  
--	queue_len = wl->tx_queue_count;
-+	queue_len = wl1271_tx_total_queue_count(wl);
- 
- 	res = scnprintf(buf, sizeof(buf), "%u\n", queue_len);
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
-@@ -344,7 +345,10 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
- 	DRIVER_STATE_PRINT_INT(tx_allocated_blocks[3]);
- 	DRIVER_STATE_PRINT_INT(tx_frames_cnt);
- 	DRIVER_STATE_PRINT_LHEX(tx_frames_map[0]);
--	DRIVER_STATE_PRINT_INT(tx_queue_count);
-+	DRIVER_STATE_PRINT_INT(tx_queue_count[0]);
-+	DRIVER_STATE_PRINT_INT(tx_queue_count[1]);
-+	DRIVER_STATE_PRINT_INT(tx_queue_count[2]);
-+	DRIVER_STATE_PRINT_INT(tx_queue_count[3]);
- 	DRIVER_STATE_PRINT_INT(tx_packets_count);
- 	DRIVER_STATE_PRINT_INT(tx_results_count);
- 	DRIVER_STATE_PRINT_LHEX(flags);
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 166287f..a457615 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -951,7 +951,7 @@ irqreturn_t wl1271_irq(int irq, void *cookie)
- 			/* Check if any tx blocks were freed */
- 			spin_lock_irqsave(&wl->wl_lock, flags);
- 			if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags) &&
--			    wl->tx_queue_count) {
-+			    wl1271_tx_total_queue_count(wl) > 0) {
- 				spin_unlock_irqrestore(&wl->wl_lock, flags);
- 				/*
- 				 * In order to avoid starvation of the TX path,
-@@ -999,7 +999,7 @@ out:
- 	/* In case TX was not handled here, queue TX work */
- 	clear_bit(WL1271_FLAG_TX_PENDING, &wl->flags);
- 	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags) &&
--	    wl->tx_queue_count)
-+	    wl1271_tx_total_queue_count(wl) > 0)
- 		ieee80211_queue_work(wl->hw, &wl->tx_work);
- 	spin_unlock_irqrestore(&wl->wl_lock, flags);
- 
-@@ -1382,13 +1382,13 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- 	spin_lock_irqsave(&wl->wl_lock, flags);
- 
--	wl->tx_queue_count++;
-+	wl->tx_queue_count[q]++;
- 
- 	/*
- 	 * The workqueue is slow to process the tx_queue and we need stop
- 	 * the queue here, otherwise the queue will get too long.
- 	 */
--	if (skb_queue_len(&wl->tx_queue[q]) >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
-+	if (wl->tx_queue_count[q] >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
- 		wl1271_debug(DEBUG_TX, "op_tx: stopping queues for q %d", q);
- 		ieee80211_stop_queue(wl->hw, mapping);
- 		set_bit(q, &wl->stopped_queues_map);
-@@ -1417,10 +1417,11 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- int wl1271_tx_dummy_packet(struct wl1271 *wl)
+ 	/* Nothing to do on restore for 11N */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 8efdec2..ad2bb2b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -519,11 +519,7 @@ static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
+ 					 int restore,
+ 					 int power_off)
  {
- 	unsigned long flags;
-+	int q = wl1271_tx_get_queue(skb_get_queue_mapping(wl->dummy_packet));
+-	if (ah->is_pciexpress != true)
+-		return;
+-
+-	/* Do not touch SerDes registers */
+-	if (ah->config.pcie_powersave_enable == 2)
++	if (ah->is_pciexpress != true || ah->aspm_enabled != true)
+ 		return;
  
- 	spin_lock_irqsave(&wl->wl_lock, flags);
- 	set_bit(WL1271_FLAG_DUMMY_PACKET_PENDING, &wl->flags);
--	wl->tx_queue_count++;
-+	wl->tx_queue_count[q]++;
- 	spin_unlock_irqrestore(&wl->wl_lock, flags);
- 
- 	/* The FW is low on RX memory blocks, so send the dummy packet asap */
-@@ -3538,7 +3539,7 @@ static bool wl1271_tx_frames_pending(struct ieee80211_hw *hw)
- 		goto out;
- 
- 	/* packets are considered pending if in the TX queue or the FW */
--	ret = (wl->tx_queue_count > 0) || (wl->tx_frames_cnt > 0);
-+	ret = (wl1271_tx_total_queue_count(wl) > 0) || (wl->tx_frames_cnt > 0);
- 
- 	/* the above is appropriate for STA mode for PS purposes */
- 	WARN_ON(wl->bss_type != BSS_TYPE_STA_BSS);
-diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
-index d3e377d..d1dc0cc 100644
---- a/drivers/net/wireless/wl12xx/ps.c
-+++ b/drivers/net/wireless/wl12xx/ps.c
-@@ -193,24 +193,27 @@ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
- 
- static void wl1271_ps_filter_frames(struct wl1271 *wl, u8 hlid)
- {
--	int i, filtered = 0;
-+	int i;
- 	struct sk_buff *skb;
- 	struct ieee80211_tx_info *info;
- 	unsigned long flags;
-+	int filtered[NUM_TX_QUEUES];
- 
- 	/* filter all frames currently the low level queus for this hlid */
- 	for (i = 0; i < NUM_TX_QUEUES; i++) {
-+		filtered[i] = 0;
- 		while ((skb = skb_dequeue(&wl->links[hlid].tx_queue[i]))) {
- 			info = IEEE80211_SKB_CB(skb);
- 			info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
- 			info->status.rates[0].idx = -1;
- 			ieee80211_tx_status(wl->hw, skb);
--			filtered++;
-+			filtered[i]++;
- 		}
- 	}
- 
- 	spin_lock_irqsave(&wl->wl_lock, flags);
--	wl->tx_queue_count -= filtered;
-+	for (i = 0; i < NUM_TX_QUEUES; i++)
-+		wl->tx_queue_count[i] -= filtered[i];
- 	spin_unlock_irqrestore(&wl->wl_lock, flags);
- 
- 	wl1271_handle_tx_low_watermark(wl);
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index ef54cee..6f4959d 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -448,8 +448,7 @@ void wl1271_handle_tx_low_watermark(struct wl1271 *wl)
- 
- 	for (i = 0; i < NUM_TX_QUEUES; i++) {
- 		if (test_bit(i, &wl->stopped_queues_map) &&
--		    skb_queue_len(&wl->tx_queue[i]) <=
--						WL1271_TX_QUEUE_LOW_WATERMARK) {
-+		    wl->tx_queue_count[i] <= WL1271_TX_QUEUE_LOW_WATERMARK) {
- 			/* firmware buffer has space, restart queues */
- 			spin_lock_irqsave(&wl->wl_lock, flags);
- 			ieee80211_wake_queue(wl->hw,
-@@ -498,8 +497,9 @@ static struct sk_buff *wl1271_sta_skb_dequeue(struct wl1271 *wl)
- 
- out:
- 	if (skb) {
-+		int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
- 		spin_lock_irqsave(&wl->wl_lock, flags);
--		wl->tx_queue_count--;
-+		wl->tx_queue_count[q]--;
- 		spin_unlock_irqrestore(&wl->wl_lock, flags);
- 	}
- 
-@@ -535,9 +535,10 @@ static struct sk_buff *wl1271_ap_skb_dequeue(struct wl1271 *wl)
- 	}
- 
- 	if (skb) {
-+		int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
- 		wl->last_tx_hlid = h;
- 		spin_lock_irqsave(&wl->wl_lock, flags);
--		wl->tx_queue_count--;
-+		wl->tx_queue_count[q]--;
- 		spin_unlock_irqrestore(&wl->wl_lock, flags);
- 	} else {
- 		wl->last_tx_hlid = 0;
-@@ -558,9 +559,12 @@ static struct sk_buff *wl1271_skb_dequeue(struct wl1271 *wl)
- 
- 	if (!skb &&
- 	    test_and_clear_bit(WL1271_FLAG_DUMMY_PACKET_PENDING, &wl->flags)) {
-+		int q;
-+
- 		skb = wl->dummy_packet;
-+		q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
- 		spin_lock_irqsave(&wl->wl_lock, flags);
--		wl->tx_queue_count--;
-+		wl->tx_queue_count[q]--;
- 		spin_unlock_irqrestore(&wl->wl_lock, flags);
- 	}
- 
-@@ -585,7 +589,7 @@ static void wl1271_skb_queue_head(struct wl1271 *wl, struct sk_buff *skb)
- 	}
- 
- 	spin_lock_irqsave(&wl->wl_lock, flags);
--	wl->tx_queue_count++;
-+	wl->tx_queue_count[q]++;
- 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 	/* Nothing to do on restore for 11N */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8006ce0..8dcefe7 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -318,6 +318,14 @@ static void ath9k_hw_disablepcie(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_PCIE_SERDES2, 0x00000000);
  }
  
-@@ -799,23 +803,26 @@ void wl1271_tx_complete(struct wl1271 *wl)
- void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid)
- {
- 	struct sk_buff *skb;
--	int i, total = 0;
-+	int i;
- 	unsigned long flags;
- 	struct ieee80211_tx_info *info;
-+	int total[NUM_TX_QUEUES];
- 
- 	for (i = 0; i < NUM_TX_QUEUES; i++) {
-+		total[i] = 0;
- 		while ((skb = skb_dequeue(&wl->links[hlid].tx_queue[i]))) {
- 			wl1271_debug(DEBUG_TX, "link freeing skb 0x%p", skb);
- 			info = IEEE80211_SKB_CB(skb);
- 			info->status.rates[0].idx = -1;
- 			info->status.rates[0].count = 0;
- 			ieee80211_tx_status(wl->hw, skb);
--			total++;
-+			total[i]++;
- 		}
- 	}
- 
- 	spin_lock_irqsave(&wl->wl_lock, flags);
--	wl->tx_queue_count -= total;
-+	for (i = 0; i < NUM_TX_QUEUES; i++)
-+		wl->tx_queue_count[i] -= total[i];
- 	spin_unlock_irqrestore(&wl->wl_lock, flags);
- 
- 	wl1271_handle_tx_low_watermark(wl);
-@@ -850,10 +857,10 @@ void wl1271_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
- 					ieee80211_tx_status(wl->hw, skb);
- 				}
- 			}
-+			wl->tx_queue_count[i] = 0;
- 		}
- 	}
- 
--	wl->tx_queue_count = 0;
- 	wl->stopped_queues_map = 0;
- 
- 	/*
-@@ -907,8 +914,10 @@ void wl1271_tx_flush(struct wl1271 *wl)
- 	while (!time_after(jiffies, timeout)) {
- 		mutex_lock(&wl->mutex);
- 		wl1271_debug(DEBUG_TX, "flushing tx buffer: %d %d",
--			     wl->tx_frames_cnt, wl->tx_queue_count);
--		if ((wl->tx_frames_cnt == 0) && (wl->tx_queue_count == 0)) {
-+			     wl->tx_frames_cnt,
-+			     wl1271_tx_total_queue_count(wl));
-+		if ((wl->tx_frames_cnt == 0) &&
-+		    (wl1271_tx_total_queue_count(wl) == 0)) {
- 			mutex_unlock(&wl->mutex);
- 			return;
- 		}
-diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
-index f79d3c0..117d737 100644
---- a/drivers/net/wireless/wl12xx/tx.h
-+++ b/drivers/net/wireless/wl12xx/tx.h
-@@ -198,6 +198,16 @@ static inline int wl1271_tx_get_mac80211_queue(int queue)
- 	}
- }
- 
-+static inline int wl1271_tx_total_queue_count(struct wl1271 *wl)
++static void ath9k_hw_aspm_init(struct ath_hw *ah)
 +{
-+	int i, count = 0;
++	struct ath_common *common = ath9k_hw_common(ah);
 +
-+	for (i = 0; i < NUM_TX_QUEUES; i++)
-+		count += wl->tx_queue_count[i];
-+
-+	return count;
++	if (common->bus_ops->aspm_init)
++		common->bus_ops->aspm_init(common);
 +}
 +
- void wl1271_tx_work(struct work_struct *work);
- void wl1271_tx_work_locked(struct wl1271 *wl);
- void wl1271_tx_complete(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 49aee9f..f60a9e1 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -436,7 +436,7 @@ struct wl1271 {
+ /* This should work for all families including legacy */
+ static bool ath9k_hw_chip_test(struct ath_hw *ah)
+ {
+@@ -378,7 +386,6 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
+ 	ah->config.additional_swba_backoff = 0;
+ 	ah->config.ack_6mb = 0x0;
+ 	ah->config.cwm_ignore_extcca = 0;
+-	ah->config.pcie_powersave_enable = 0;
+ 	ah->config.pcie_clock_req = 0;
+ 	ah->config.pcie_waen = 0;
+ 	ah->config.analog_shiftreg = 1;
+@@ -598,7 +605,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
  
- 	/* Frames scheduled for transmission, not handled yet */
- 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
--	int tx_queue_count;
-+	int tx_queue_count[NUM_TX_QUEUES];
- 	long stopped_queues_map;
  
- 	/* Frames received, not handled yet by mac80211 */
+ 	if (ah->is_pciexpress)
+-		ath9k_hw_configpcipowersave(ah, 0, 0);
++		ath9k_hw_aspm_init(ah);
+ 	else
+ 		ath9k_hw_disablepcie(ah);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 6acd0f9..c798890 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -219,7 +219,6 @@ struct ath9k_ops_config {
+ 	int additional_swba_backoff;
+ 	int ack_6mb;
+ 	u32 cwm_ignore_extcca;
+-	u8 pcie_powersave_enable;
+ 	bool pcieSerDesWrite;
+ 	u8 pcie_clock_req;
+ 	u32 pcie_waen;
+@@ -673,6 +672,7 @@ struct ath_hw {
+ 
+ 	bool sw_mgmt_crypto;
+ 	bool is_pciexpress;
++	bool aspm_enabled;
+ 	bool is_monitoring;
+ 	bool need_an_top2_fixup;
+ 	u16 tx_trig_level;
+@@ -874,6 +874,7 @@ struct ath_bus_ops {
+ 	bool (*eeprom_read)(struct ath_common *common, u32 off, u16 *data);
+ 	void (*bt_coex_prep)(struct ath_common *common);
+ 	void (*extn_synch_en)(struct ath_common *common);
++	void (*aspm_init)(struct ath_common *common);
+ };
+ 
+ static inline struct ath_common *ath9k_hw_common(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 3bad0b2..be4ea13 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -16,6 +16,7 @@
+ 
+ #include <linux/nl80211.h>
+ #include <linux/pci.h>
++#include <linux/pci-aspm.h>
+ #include <linux/ath9k_platform.h>
+ #include "ath9k.h"
+ 
+@@ -115,12 +116,38 @@ static void ath_pci_extn_synch_enable(struct ath_common *common)
+ 	pci_write_config_byte(pdev, sc->sc_ah->caps.pcie_lcr_offset, lnkctl);
+ }
+ 
++static void ath_pci_aspm_init(struct ath_common *common)
++{
++	struct ath_softc *sc = (struct ath_softc *) common->priv;
++	struct ath_hw *ah = sc->sc_ah;
++	struct pci_dev *pdev = to_pci_dev(sc->dev);
++	struct pci_dev *parent;
++	int pos;
++	u8 aspm;
++
++	if (!pci_is_pcie(pdev))
++		return;
++
++	parent = pdev->bus->self;
++	if (WARN_ON(!parent))
++		return;
++
++	pos = pci_pcie_cap(parent);
++	pci_read_config_byte(parent, pos +  PCI_EXP_LNKCTL, &aspm);
++	if (aspm & (PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1)) {
++		ah->aspm_enabled = true;
++		/* Initialize PCIe PM and SERDES registers. */
++		ath9k_hw_configpcipowersave(ah, 0, 0);
++	}
++}
++
+ static const struct ath_bus_ops ath_pci_bus_ops = {
+ 	.ath_bus_type = ATH_PCI,
+ 	.read_cachesize = ath_pci_read_cachesize,
+ 	.eeprom_read = ath_pci_eeprom_read,
+ 	.bt_coex_prep = ath_pci_bt_coex_prep,
+ 	.extn_synch_en = ath_pci_extn_synch_enable,
++	.aspm_init = ath_pci_aspm_init,
+ };
+ 
+ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 -- 
-1.7.4.1
-
+1.7.1
