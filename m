@@ -1,52 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:50291 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752337Ab1GFLCg convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:57498 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753080Ab1G2VnI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2011 07:02:36 -0400
-Received: by gxk21 with SMTP id 21so2576846gxk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2011 04:02:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4E143FCF.8030201@darav.de>
-References: <4E143FCF.8030201@darav.de>
-Date: Wed, 6 Jul 2011 13:02:35 +0200
-Message-ID: <CAGXE3d-nsc3qS1pyayUqZg9AB-572FFhoB+r_ZWP9B6n=xhYHA@mail.gmail.com> (sfid-20110706_130239_808581_D61AB296)
-Subject: Re: RALINK rt2800pci , Patch for Device [1814:539f]
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Carsten Rietzschel <cr7@darav.de>
-Cc: IvDoorn@gmail.com, gwingerde@gmail.com,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 29 Jul 2011 17:43:08 -0400
+Received: by mail-iy0-f174.google.com with SMTP id 12so4402910iyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jul 2011 14:43:08 -0700 (PDT)
+From: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
+To: jouni@qca.qualcomm.com
+Cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
+Subject: [PATCH v7 1/4] hostapd: split up channel checking into helpers
+Date: Fri, 29 Jul 2011 14:42:57 -0700
+Message-Id: <1311975780-26602-2-git-send-email-lrodriguez@qca.qualcomm.com> (sfid-20110729_234314_656157_21F9DECB)
+In-Reply-To: <1311975780-26602-1-git-send-email-lrodriguez@qca.qualcomm.com>
+References: <1311975780-26602-1-git-send-email-lrodriguez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nice.
+This splits up the channel checking upon initialization
+into a few helpers. This should make this a bit easier
+to follow. This also paves the way for some initial
+ACS entry code.
 
-On Wed, Jul 6, 2011 at 12:58 PM, Carsten Rietzschel <cr7@darav.de> wrote:
-> Hello together,
->
-> attached find a small patch for the RALINK wireless driver.
-> It's just adding one PCI-ID for:
->
-> 02:00.0 Network controller [0280]: Ralink corp. Device [1814:539f]
->    Subsystem: Hewlett-Packard Company Device [103c:1637]
->    Flags: bus master, fast devsel, latency 0, IRQ 17
->    Memory at f0100000 (32-bit, non-prefetchable) [size=64K]
->    Capabilities: [40] Power Management version 3
->    Capabilities: [50] MSI: Enable- Count=1/32 Maskable- 64bit+
->    Capabilities: [70] Express Endpoint, MSI 00
->    Capabilities: [100] Advanced Error Reporting
->    Capabilities: [140] Device Serial Number 00-00-b2-7f-05-da-f8-c0
->    Kernel driver in use: rt2800pci
->    Kernel modules: rt2800pci
->
-> It's for instance used in the HP DM1Z (Fusion) Netbook.
-> I use this patch now for several weeks - starting with 2.3.29 up to
-> 3.0-rc2 kernel. No problems so far.
->
-> *Signed*-*off*-by: Carsten Rietzschel <cr7 [at] darav [dot] de>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@qca.qualcomm.com>
+---
+ src/ap/hostapd.h     |    6 ++
+ src/ap/hw_features.c |  148 +++++++++++++++++++++++++++-----------------------
+ 2 files changed, 86 insertions(+), 68 deletions(-)
 
-That should be "Signed-off-by:". Mind to resubmit?
+diff --git a/src/ap/hostapd.h b/src/ap/hostapd.h
+index 8d12d8b..7436823 100644
+--- a/src/ap/hostapd.h
++++ b/src/ap/hostapd.h
+@@ -30,6 +30,12 @@ struct full_dynamic_vlan;
+ enum wps_event;
+ union wps_event_data;
+ 
++enum hostapd_chan_status {
++	HOSTAPD_CHAN_VALID = 0, /* channel is ready */
++	HOSTAPD_CHAN_INVALID = 1, /* no usable channel found */
++	HOSTAPD_CHAN_ACS = 2, /* ACS work being performed */
++};
++
+ struct hostapd_probereq_cb {
+ 	int (*cb)(void *ctx, const u8 *sa, const u8 *da, const u8 *bssid,
+ 		  const u8 *ie, size_t ie_len);
+diff --git a/src/ap/hw_features.c b/src/ap/hw_features.c
+index 86f6811..887744b 100644
+--- a/src/ap/hw_features.c
++++ b/src/ap/hw_features.c
+@@ -599,6 +599,77 @@ int hostapd_check_ht_capab(struct hostapd_iface *iface)
+ 	return 0;
+ }
+ 
++static int hostapd_is_usable_chan(struct hostapd_iface *iface,
++				  int channel,
++				  int primary)
++{
++	unsigned int i;
++	struct hostapd_channel_data *chan;
++
++	for (i = 0; i < iface->current_mode->num_channels; i++) {
++		chan = &iface->current_mode->channels[i];
++		if (chan->chan == channel) {
++			if (chan->flag & HOSTAPD_CHAN_DISABLED) {
++				wpa_printf(MSG_ERROR,
++					   "%schannel [%i] (%i) is disabled for "
++					   "use in AP mode, flags: 0x%x",
++					   primary ? "" : "Configured HT40 secondary ",
++					   i, chan->chan, chan->flag);
++			} else {
++				return 1;
++			}
++		}
++	}
++
++	return 0;
++}
++
++static int hostapd_is_usable_chans(struct hostapd_iface *iface)
++{
++	if (!hostapd_is_usable_chan(iface, iface->conf->channel, 1))
++		return 0;
++
++	if (!iface->conf->secondary_channel)
++		return 1;
++
++	if (!hostapd_is_usable_chan(iface, iface->conf->secondary_channel, 0))
++		return 0;
++
++	return 1;
++}
++
++static enum hostapd_chan_status hostapd_check_chans(struct hostapd_iface *iface)
++{
++	if (iface->conf->channel) {
++		if (hostapd_is_usable_chans(iface))
++			return HOSTAPD_CHAN_VALID;
++		else
++			return HOSTAPD_CHAN_INVALID;
++	}
++
++	/*
++	 * The user set channel=0 which is used to trigger ACS,
++	 * which we do not yet support.
++	 */
++	return HOSTAPD_CHAN_INVALID;
++}
++
++static void hostapd_notify_bad_chans(struct hostapd_iface *iface)
++{
++	iface->current_mode = NULL;
++
++	hostapd_logger(iface->bss[0], NULL,
++		       HOSTAPD_MODULE_IEEE80211,
++		       HOSTAPD_LEVEL_WARNING,
++		       "Configured channel (%d) not found from the "
++		       "channel list of current mode (%d) %s",
++		       iface->conf->channel,
++		       iface->current_mode->mode,
++		       hostapd_hw_mode_txt(iface->current_mode->mode));
++	hostapd_logger(iface->bss[0], NULL, HOSTAPD_MODULE_IEEE80211,
++		       HOSTAPD_LEVEL_WARNING,
++		       "Hardware does not support configured channel");
++}
+ 
+ /**
+  * hostapd_select_hw_mode - Select the hardware mode
+@@ -610,7 +681,7 @@ int hostapd_check_ht_capab(struct hostapd_iface *iface)
+  */
+ int hostapd_select_hw_mode(struct hostapd_iface *iface)
+ {
+-	int i, j, ok;
++	int i;
+ 
+ 	if (iface->num_hw_features < 1)
+ 		return -1;
+@@ -634,75 +705,16 @@ int hostapd_select_hw_mode(struct hostapd_iface *iface)
+ 		return -2;
+ 	}
+ 
+-	ok = 0;
+-	for (j = 0; j < iface->current_mode->num_channels; j++) {
+-		struct hostapd_channel_data *chan =
+-			&iface->current_mode->channels[j];
+-		if (chan->chan == iface->conf->channel) {
+-			if (chan->flag & HOSTAPD_CHAN_DISABLED) {
+-				wpa_printf(MSG_ERROR,
+-					   "channel [%i] (%i) is disabled for "
+-					   "use in AP mode, flags: 0x%x",
+-					   j, chan->chan, chan->flag);
+-			} else {
+-				ok = 1;
+-				break;
+-			}
+-		}
+-	}
+-	if (ok && iface->conf->secondary_channel) {
+-		int sec_ok = 0;
+-		int sec_chan = iface->conf->channel +
+-			iface->conf->secondary_channel * 4;
+-		for (j = 0; j < iface->current_mode->num_channels; j++) {
+-			struct hostapd_channel_data *chan =
+-				&iface->current_mode->channels[j];
+-			if (!(chan->flag & HOSTAPD_CHAN_DISABLED) &&
+-			    (chan->chan == sec_chan)) {
+-				sec_ok = 1;
+-				break;
+-			}
+-		}
+-		if (!sec_ok) {
+-			hostapd_logger(iface->bss[0], NULL,
+-				       HOSTAPD_MODULE_IEEE80211,
+-				       HOSTAPD_LEVEL_WARNING,
+-				       "Configured HT40 secondary channel "
+-				       "(%d) not found from the channel list "
+-				       "of current mode (%d) %s",
+-				       sec_chan, iface->current_mode->mode,
+-				       hostapd_hw_mode_txt(
+-					       iface->current_mode->mode));
+-			ok = 0;
+-		}
+-	}
+-	if (iface->conf->channel == 0) {
+-		/* TODO: could request a scan of neighboring BSSes and select
+-		 * the channel automatically */
+-		wpa_printf(MSG_ERROR, "Channel not configured "
+-			   "(hw_mode/channel in hostapd.conf)");
+-		return -3;
+-	}
+-	if (ok == 0 && iface->conf->channel != 0) {
+-		hostapd_logger(iface->bss[0], NULL,
+-			       HOSTAPD_MODULE_IEEE80211,
+-			       HOSTAPD_LEVEL_WARNING,
+-			       "Configured channel (%d) not found from the "
+-			       "channel list of current mode (%d) %s",
+-			       iface->conf->channel,
+-			       iface->current_mode->mode,
+-			       hostapd_hw_mode_txt(iface->current_mode->mode));
+-		iface->current_mode = NULL;
+-	}
+-
+-	if (iface->current_mode == NULL) {
+-		hostapd_logger(iface->bss[0], NULL, HOSTAPD_MODULE_IEEE80211,
+-			       HOSTAPD_LEVEL_WARNING,
+-			       "Hardware does not support configured channel");
++	switch (hostapd_check_chans(iface)) {
++	case HOSTAPD_CHAN_VALID:
++		return 0;
++	case HOSTAPD_CHAN_ACS: /* ACS not supported yet */
++	case HOSTAPD_CHAN_INVALID:
++	default:
++		hostapd_notify_bad_chans(iface);
+ 		return -4;
++		return HOSTAPD_CHAN_INVALID;
+ 	}
+-
+-	return 0;
+ }
+ 
+ 
+-- 
+1.7.4.15.g7811d
 
-Otherwise no objections from my side :)
-Helmut
