@@ -1,62 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4795 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750987Ab1GSRjF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2011 13:39:05 -0400
-Message-ID: <4E25C12F.3080804@redhat.com> (sfid-20110719_193909_783986_02C8AA9C)
-Date: Tue, 19 Jul 2011 19:38:55 +0200
-From: Stefan Assmann <sassmann@redhat.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:57692 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752350Ab1G2QHq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jul 2011 12:07:46 -0400
+Received: by fxh19 with SMTP id 19so2411588fxh.19
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jul 2011 09:07:45 -0700 (PDT)
+Message-ID: <4E32DAC6.7030308@gmail.com> (sfid-20110729_180749_792189_724BE704)
+Date: Fri, 29 Jul 2011 18:07:34 +0200
+From: p4u <hakais@gmail.com>
 MIME-Version: 1.0
-To: ali@internetdog.org
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: r8712u issue
-References: <4E23E56C.9000202@redhat.com> <20110718082709.GA8390@internetdog.org> <4E23F2E0.3050200@redhat.com> <4E2448D2.50502@lwfinger.net> <4E244AC6.2030306@redhat.com> <4E2454EC.1050900@lwfinger.net> <4E25858D.9010407@redhat.com> <4E25AB9F.8010607@lwfinger.net> <20110719161656.GA7099@internetdog.org> <4E25BBF4.1010003@redhat.com> <20110719173203.GA7406@internetdog.org>
-In-Reply-To: <20110719173203.GA7406@internetdog.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Dan Williams <dcbw@redhat.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: IBSS channel support
+References: <4E32D144.6050304@gmail.com> <1311954873.3084.2.camel@dcbw.foobar.com>
+In-Reply-To: <1311954873.3084.2.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19.07.2011 19:32, Ali Bahar wrote:
-> On Tue, Jul 19, 2011 at 07:16:36PM +0200, Stefan Assmann wrote:
->> On 19.07.2011 18:16, Ali Bahar wrote:
->>> On Tue, Jul 19, 2011 at 11:06:55AM -0500, Larry Finger wrote:
->>>> On 07/19/2011 08:24 AM, Stefan Assmann wrote:
->>>>>
->>>>> So far I can say that with scan_ssid=1 after rebooting the AP the
->>>>> connection is properly re-established. Looks promising.
->>>>
->>>> Your results make sense. The driver is fairly passive in all this.
->>>> It gets TX requests from the MAC layer, and passes received data
->>>> back up to that layer. It seems likely that the MAC layer built into
->>>> r8712u is not keeping track of missing responses, or it is not
->>>> probing the AP. In either case, it would not be productive to devote
->>>> any effort to fixing that part when either using NetworkManager or
->>>> setting scan_ssid for wpa_supplicant establishes periodic scans.
->>>> When these fail to get response from the AP, the softmac code will
->>>> respond, as you see.
->>>>
->>>> The ultimate fix will be to convert to the driver to use mac80211,
->>>
->>> Just what I've been thinking lately. I didn't think it very worthwhile
->>> to invest too much into fixing the miscellany.
+Thanks.
+I think I can use it
+
+On 29/07/11 17:54, Dan Williams wrote:
+> On Fri, 2011-07-29 at 17:27 +0200, p4u wrote:
+>> Hi,
+>> This is my first mail to this list, I'm Pau from Barcelona working in
+>> guifi.net (wireless community)
+>> First of all I want to say thank you guys for your amazing job :-)
 >>
->> Agreed! Maybe we could add a note to the documentation to make the
->> behaviour more obvious.
-> 
-> There's documentation?! ;-|
-> 
-> ... The following could be an option:
-> http://linuxwireless.org/en/users/Drivers/rtl819x
+>> Now, I have a little question. Using command "iw phy phy0 info" I can
+>> see that IBSS mode is only avaiable in some channels for 5ghz spectrum.
+>> I have been looking for information about it, but I cannot find from
+>> what depends if some channel can by used in IBSS mode or not. So I think
+>> it depends on the driver and on the regdomain, is it right?
+> Yes.
+>
+>> Also I'm working in some scripts, and I need to know if a channel has
+>> IBSS support or not. The only way I found is with iw command, but pharse
+>> this data is very dirty. Furthermore I can read in the end of iw help:
+>>
+>> "Do NOT screenscrape this tool, we don't consider its output stable."
+>>
+>> So I need another way to get this information. Any idea?
+> Couldn't you use the CRDA database?  That's got bits that indicate
+> whether or not some channels allow IBSS in your domain or not.
+>
+> http://wireless.kernel.org/download/wireless-regdb/
+>
+> Dan
+>
+>
 
-Good idea!
 
-> 
-> Larry's the author, and so it's _his_ call. _I_ am just tackling
-> whatever problems I run into; at the moment, that happens to be the
-> r8712u driver.
+-- 
+./p4u
 
-Right, my statement wasn't directed strictly to you, I was just
-thinking of how to improve the situation. :)
-
-  Stefan
