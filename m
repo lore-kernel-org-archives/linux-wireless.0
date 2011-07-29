@@ -1,41 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7743 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755605Ab1G1RbY (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:43279 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752527Ab1G2TE0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2011 13:31:24 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 7/9] ath9k_hw: Disable Walsh spatial spreading for 2 chains
-Date: Thu, 28 Jul 2011 22:59:34 +0530
-Message-ID: <1311874176-27569-7-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110728_193128_841469_6888BA6C)
-In-Reply-To: <1311874176-27569-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1311874176-27569-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 29 Jul 2011 15:04:26 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 53737540268
+	for <linux-wireless@vger.kernel.org>; Fri, 29 Jul 2011 15:12:55 -0400 (EDT)
+Subject: Compat-wireless release for 2011-07-29 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110729190424.A0EAB40ED1@repository3.orbit-lab.org> (sfid-20110729_210429_379687_36D84BE3)
+Date: Fri, 29 Jul 2011 15:04:24 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + ec8a50d...d7c6e83 akpm-end   -> origin/akpm-end  (forced update)
+   2271220..55f9c40  akpm-start -> origin/akpm-start
+   e24814e..3374342  history    -> origin/history
+ + e3293aa...cf684c9 master     -> origin/master  (forced update)
+   2271220..55f9c40  stable     -> origin/stable
+ * [new tag]         next-20110729 -> next-20110729
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index 2339728..28b44b0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -636,7 +636,7 @@ static const u32 ar9300_2p2_baseband_postamble[][5] = {
- 	{0x00009e44, 0x02321e27, 0x02321e27, 0x02291e27, 0x02291e27},
- 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
- 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
--	{0x0000a204, 0x000037c0, 0x000037c4, 0x000037c4, 0x000037c0},
-+	{0x0000a204, 0x000036c0, 0x000036c4, 0x000036c4, 0x000036c0},
- 	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
- 	{0x0000a22c, 0x01026a2f, 0x01026a2f, 0x01026a2f, 0x01026a2f},
- 	{0x0000a230, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b},
--- 
-1.7.6
+compat-wireless code metrics
 
+    835332 - Total upstream lines of code being pulled
