@@ -1,60 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:56947 "EHLO
-	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754505Ab1GDOhY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 10:37:24 -0400
-Message-ID: <20110704173721.41945e5und30zo08@www.81.fi> (sfid-20110704_163729_857670_CDA04883)
-Date: Mon, 04 Jul 2011 17:37:21 +0300
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: Walter Goldens <goldenstranger@yahoo.com>
-Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>
-Subject: Re: [PATCH 3/6] zd1211rw: only update HW beacon if new beacon
- differs from currect
-References: <1309610075.77698.YahooMailClassic@web161606.mail.bf1.yahoo.com>
-In-Reply-To: <1309610075.77698.YahooMailClassic@web161606.mail.bf1.yahoo.com>
+Received: from c60.cesmail.net ([216.154.195.49]:9385 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932096Ab1G2Cuq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jul 2011 22:50:46 -0400
+Subject: [PATCH] lib80211: remove exports for functions not called by other
+ modules
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+From: Pavel Roskin <proski@gnu.org>
+Date: Thu, 28 Jul 2011 22:50:44 -0400
+Message-ID: <20110729025044.7949.95137.stgit@mj.roinet.com> (sfid-20110729_045050_005665_5299258B)
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Walter Goldens <goldenstranger@yahoo.com>:
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+ include/net/lib80211.h  |    3 ---
+ net/wireless/lib80211.c |   15 +++++++++------
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
->
->
-> --- On Mon, 6/20/11, Jussi Kivilinna <jussi.kivilinna@mbnet.fi> wrote:
->
->> This appears to make device work in AP-mode
->> (dtim_period=1) somewhat more stable.
->>
->> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
->
-> Jussi,
->
-> I ran a hostapd AP with a zd1211b device, and while the stability is  
-> relatively OK, throughput appears to be below-par. The most I was  
-> able to get was about 3.5 megabits. Do you experience any throughput  
-> issues yourself and what is the average speed you see when you  
-> transfer files?
-
-I have throughput issue when doing transfers in both directions at  
-same time. I get 17-19 Mbps when transfering in one direction only.  
-However if I start download and upload at sametime, zd1211rw AP can  
-only do tx at about 3.5 Mbps when other end is not zd1211rw too. With  
-zd1211rw at both ends tx average 8-10 Mbps. Same problem exists when  
-using zd1211rw device on b43 AP.
-
--Jussi
-
->
-> Walter
->
-
-
-
-
-
+diff --git a/include/net/lib80211.h b/include/net/lib80211.h
+index 848cce1..659c269 100644
+--- a/include/net/lib80211.h
++++ b/include/net/lib80211.h
+@@ -117,10 +117,7 @@ void lib80211_crypt_info_free(struct lib80211_crypt_info *info);
+ int lib80211_register_crypto_ops(struct lib80211_crypto_ops *ops);
+ int lib80211_unregister_crypto_ops(struct lib80211_crypto_ops *ops);
+ struct lib80211_crypto_ops *lib80211_get_crypto_ops(const char *name);
+-void lib80211_crypt_deinit_entries(struct lib80211_crypt_info *, int);
+-void lib80211_crypt_deinit_handler(unsigned long);
+ void lib80211_crypt_delayed_deinit(struct lib80211_crypt_info *info,
+ 				    struct lib80211_crypt_data **crypt);
+-void lib80211_crypt_quiescing(struct lib80211_crypt_info *info);
+ 
+ #endif /* LIB80211_H */
+diff --git a/net/wireless/lib80211.c b/net/wireless/lib80211.c
+index 3268fac..a55c27b 100644
+--- a/net/wireless/lib80211.c
++++ b/net/wireless/lib80211.c
+@@ -41,6 +41,11 @@ struct lib80211_crypto_alg {
+ static LIST_HEAD(lib80211_crypto_algs);
+ static DEFINE_SPINLOCK(lib80211_crypto_lock);
+ 
++static void lib80211_crypt_deinit_entries(struct lib80211_crypt_info *info,
++					  int force);
++static void lib80211_crypt_quiescing(struct lib80211_crypt_info *info);
++static void lib80211_crypt_deinit_handler(unsigned long data);
++
+ const char *print_ssid(char *buf, const char *ssid, u8 ssid_len)
+ {
+ 	const char *s = ssid;
+@@ -111,7 +116,8 @@ void lib80211_crypt_info_free(struct lib80211_crypt_info *info)
+ }
+ EXPORT_SYMBOL(lib80211_crypt_info_free);
+ 
+-void lib80211_crypt_deinit_entries(struct lib80211_crypt_info *info, int force)
++static void lib80211_crypt_deinit_entries(struct lib80211_crypt_info *info,
++					  int force)
+ {
+ 	struct lib80211_crypt_data *entry, *next;
+ 	unsigned long flags;
+@@ -131,10 +137,9 @@ void lib80211_crypt_deinit_entries(struct lib80211_crypt_info *info, int force)
+ 	}
+ 	spin_unlock_irqrestore(info->lock, flags);
+ }
+-EXPORT_SYMBOL(lib80211_crypt_deinit_entries);
+ 
+ /* After this, crypt_deinit_list won't accept new members */
+-void lib80211_crypt_quiescing(struct lib80211_crypt_info *info)
++static void lib80211_crypt_quiescing(struct lib80211_crypt_info *info)
+ {
+ 	unsigned long flags;
+ 
+@@ -142,9 +147,8 @@ void lib80211_crypt_quiescing(struct lib80211_crypt_info *info)
+ 	info->crypt_quiesced = 1;
+ 	spin_unlock_irqrestore(info->lock, flags);
+ }
+-EXPORT_SYMBOL(lib80211_crypt_quiescing);
+ 
+-void lib80211_crypt_deinit_handler(unsigned long data)
++static void lib80211_crypt_deinit_handler(unsigned long data)
+ {
+ 	struct lib80211_crypt_info *info = (struct lib80211_crypt_info *)data;
+ 	unsigned long flags;
+@@ -160,7 +164,6 @@ void lib80211_crypt_deinit_handler(unsigned long data)
+ 	}
+ 	spin_unlock_irqrestore(info->lock, flags);
+ }
+-EXPORT_SYMBOL(lib80211_crypt_deinit_handler);
+ 
+ void lib80211_crypt_delayed_deinit(struct lib80211_crypt_info *info,
+ 				    struct lib80211_crypt_data **crypt)
