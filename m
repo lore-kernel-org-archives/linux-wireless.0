@@ -1,82 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:63856 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932136Ab1G1Xrj (ORCPT
+Received: from fallback-out2.mxes.net ([216.86.168.191]:11802 "EHLO
+	fallback-in2.mxes.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751443Ab1G3RUa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2011 19:47:39 -0400
-Received: by fxh19 with SMTP id 19so1724908fxh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2011 16:47:38 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "Martin Partridge" <martin_partridge@btconnect.com>
-Subject: Re: help
-Date: Fri, 29 Jul 2011 01:47:26 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <op.vzcrpnuuhgplxr@melanie>
-In-Reply-To: <op.vzcrpnuuhgplxr@melanie>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201107290147.26919.chunkeey@googlemail.com> (sfid-20110729_014752_959678_49554EA0)
+	Sat, 30 Jul 2011 13:20:30 -0400
+Received: from mxout-07.mxes.net (mxout-07.mxes.net [216.86.168.182])
+	by fallback-in1.mxes.net (Postfix) with ESMTP id 06AF52FDBF9
+	for <linux-wireless@vger.kernel.org>; Sat, 30 Jul 2011 13:14:38 -0400 (EDT)
+Received: from home.eagach.dyndns.org (unknown [81.187.127.120])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by smtp.mxes.net (Postfix) with ESMTPSA id D61FF22E1FB
+	for <linux-wireless@vger.kernel.org>; Sat, 30 Jul 2011 13:14:35 -0400 (EDT)
+Date: Sat, 30 Jul 2011 18:14:33 +0100
+From: Laurence Darby <ldarby@tuffmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: I'm confused and angry
+Message-Id: <20110730181433.50bd32db.ldarby@tuffmail.com> (sfid-20110730_192035_874331_4782FF6D)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, July 29, 2011 01:33:13 AM Martin Partridge wrote:
-> I don't understand the last 2 steps, i'm running fedora (ok i lie its  
-> Fuduntu, but to all intents and purposes its fedora) Kernel version:  
-> 2.6.39.3-1.fc14.i686
-recent enough. 
 
-> i'm using a WG511v2 PCMCIA card, i've downloaded the correct firmware,  
-> renamed it and modprobed everything as instructed, the bit i'm having  
-> trouble with is this bit:
-> 
-> Enabling p54
-> 
-> To enable p54, you must first enable mac80211:
-> 
-> Networking Support --->
->    Wireless  --->
->      <M> cfg80211 - wireless configuration API
->      <M> Generic IEEE 802.11 Networking Stack (mac80211)
-> 
-> You can then enable p54 in the kernel configuration under
-> 
-> Device Drivers  --->
->    [*] Network device support  --->
->          Wireless LAN --->
->            [*] Wireless LAN (IEEE 802.11)
->            <M>   Softmac Prism54 support
->            <M>     Prism54 USB support
->            <M>     Prism54 PCI support
->            <M>     Prism54 SPI (stlc45xx) support
-> 
-> where do i type this, or what does it mean? I i don't have a 'networking  
-> support' menu and it's not a program, where do i find this? is it a conf  
-> file? I'm no stranger to linux but this is perplexing, the card works fine  
-> on windows, but i can't get it work now. I have a kernel config file in  
-> /etc/sysconfig but its a bit bare, as shown below:
-> 
-> # UPDATEDEFAULT specifies if new-kernel-pkg should make
-> # new kernels the default
-> UPDATEDEFAULT=yes
-> 
-> # DEFAULTKERNEL specifies the default kernel package type
-> DEFAULTKERNEL=kernel
-> 
-> That's the whole thing.
-> 
-> How do i enable p54 and mac80211, i'm not sure and its bloody annoying.
-Ah you see, you don't need to do that. This step is only necessary if you
-make your own kernel [from scratch] and you haven't enabled p54 yet. But
-since your using fedora's default 2.6.39.3-1.fc14.i686 kernel, I hope they
-have taken care of it and provided you with a fitting p54common and p54pci
-modules.
+Is there an obvious list of consumer products (NOT chipsets) that
+hostapd supports that I'm missing? 
 
-In fact, the device should show up right away soon as you insert the pcmcia
-card into the slot. Check networkmanager/wicd/ifconfig -a/iw list for any
-new devices. If it doesn't show up, you might want to post your `dmesg`,
-[releavant p54 extract] syslog right here. I also have a WG511v2 so it should
-work pretty much out of the box.
+I want to make a wireless Access Point, using either a USB dongle, PCI
+card, or PCIE x1 card.  I have already got a DHCP server and NAT in
+both my desktop PC and router, I don't want to pay for an expensive
+external wireless router which would be a 3rd DHCP and NAT.
 
-Regards,
-	Chr
+None of the consumer devices' websites say which chipset they use, and none
+the chipset manufactures' sites say what consumer products use their
+chipset, so I can't just search for devices that support this.
+
+I've foolishly just bought a Netgear WNA1100, because it was "close
+enough" to a Netgear WNA1000, which possibly supports AP mode, but that
+wasn't available.
+
+I thought it got away with it, because this page:
+http://linuxwireless.org/en/users/Drivers/ath9k_htc says that driver
+supports AP mode.
+
+I've upgraded to Linux 3.0 and installed the htc_9271.fw firmware, and
+the device shows up in /proc/net/dev, but now hostapd is giving me the
+errors:
+
+rfkill: Cannot open RFKILL control device
+Hardware does not support configured mode
+wlan0: IEEE 802.11 Hardware does not support configured mode (2)
+Could not select hw_mode and channel. (-2)
+wlan0: Unable to setup interface.
+rmdir[ctrl_interface]: No such file or directory
+
+Does this device and driver support AP mode or not?  If the driver
+doesn't, then the web page is wrong.  
+
+If the driver does but the device doesn't, then the website should make
+that clear.
+
+I'm not bothered at all if the WNA1100 was a waste of money, it's the
+amount of time I've wasted on this so far.
+
+Please CC me on any responses, I'm not subscribed.
+
+Thanks,
+Laurence
