@@ -1,45 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:46022 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751870Ab1GTRRd (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:38845 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752265Ab1G3Sqz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2011 13:17:33 -0400
-Received: by fxd18 with SMTP id 18so2060516fxd.11
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2011 10:17:32 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org, Pavel Roskin <proski@gnu.org>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 0/3 V3] b43 & ssb & bcma: DMA special (translation) bits
-Date: Wed, 20 Jul 2011 19:56:11 +0200
-Message-Id: <1311184574-3665-1-git-send-email-zajec5@gmail.com> (sfid-20110720_191736_808810_E196B4AB)
+	Sat, 30 Jul 2011 14:46:55 -0400
+Received: by qyk29 with SMTP id 29so377268qyk.19
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jul 2011 11:46:55 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <4E33F30D.80807@swiss-wireless.com.ar>
+References: <4E33F30D.80807@swiss-wireless.com.ar>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sat, 30 Jul 2011 11:46:35 -0700
+Message-ID: <CAB=NE6UhGqi5xcq2Gm_DfzNya+xj2xbNf4gpRbpeR2YzwW3NVQ@mail.gmail.com> (sfid-20110730_204700_302316_34CB7E90)
+Subject: Re: What about long distance links in 5.8GHz with ath5k?
+To: Beat Meier <mbe_ml@swiss-wireless.com.ar>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As result of the latest discussion I'm sending patches cleaning whole
-DMA translation situation.
+On Sat, Jul 30, 2011 at 5:03 AM, Beat Meier
+<mbe_ml@swiss-wireless.com.ar> wrote:
+> Hello
+>
+> I try to use the new ath5k drivers instead of madwifi with long distance
+> links (8km-20km) at 5.8GHz
+> I have not found how to configure the distance settings link in madwifi and
+> I have really bad throughout
+> with ath5k driver as client using wpa_supplicant.
+>
+> Client: Alix board with voyage-0.7.5 (wpa_supplicant 0.7.3), Radio WL54AGP23
+> (168C:001B)
+> Server: wrap board with voyage-0.5.0 (madwifi-0.9.4 / hostapd 0.5.5), Radio
+> WL54AGP23(168C:001B)
+>
+> Output of the 8km link tests:
+> The rate is set fix to 24M on both sites for iperf tests
+>
+> Signal on sta (ath5k driver): -60dbm       iperf server running on sta:
+> 9Mbps
+> Signal on ap (madwifi driver): -64dbm   (-65dbm noise -96)  iperf server
+> running on ap: 400kbps-1.2Mbps
+>
+> Signal on sta (madwifi driver): -51dbm (-42dbm noise -85)   iperf server
+> running on sta: 12.5Mbps
+> Signal on ap (madwifi driver): -53dbm (-54dbm noise -96)   iperf server
+> running on ap: 10.3Mbps
+>
+> If I use ath5k on server with hostapd i.e. voyage-0.7.5 the client does
+> connect and disconnect there
+> is no link established...
+>
+> Any hints/solutions/experiences?
 
-As Michael explained, there are not 64-bit DMA devices supported by
-drivers using ssb_dma_translation. This way we can just fix this
-function without fear of regressing b43legacy or b44.
+Have you tried
 
-Also drop additng some defines by 3/3. They should be (and were) added
-in the separated patch that really makes use of them.
+        iw phy <phyname> set distance <distance>
 
-Rafał Miłecki (3):
-  ssb: return correct translation bit for 64-bit DMA
-  bcma: inform drivers about translation bits needed for the core
-  b43: bcma: get DMA translation bits
-
- drivers/bcma/core.c            |   16 ++++++++++++++++
- drivers/net/wireless/b43/dma.c |   11 ++++++++---
- drivers/ssb/main.c             |    5 ++++-
- include/linux/bcma/bcma.h      |    5 +++++
- 4 files changed, 33 insertions(+), 4 deletions(-)
-
--- 
-1.7.3.4
-
+ Luis
