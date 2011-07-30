@@ -1,418 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f52.google.com ([209.85.161.52]:42756 "EHLO
-	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751400Ab1GTRKR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2011 13:10:17 -0400
-Received: by fxd18 with SMTP id 18so2053243fxd.11
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2011 10:10:16 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by blech.mobile (Postfix) with ESMTP id 689AD1002D4
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2011 19:10:13 +0200 (CEST)
-Received: from blech.mobile ([127.0.0.1])
-	by localhost (localhost [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id gt57xC7V6l6J for <linux-wireless@vger.kernel.org>;
-	Wed, 20 Jul 2011 19:10:12 +0200 (CEST)
-Received: from blech.localnet (localhost [127.0.0.1])
-	by blech.mobile (Postfix) with ESMTP id AA05A1002D3
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2011 19:10:12 +0200 (CEST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFT v2] p54: improve site survey
-Date: Wed, 20 Jul 2011 19:10:12 +0200
-References: <201107012013.26485.chunkeey@googlemail.com>
-In-Reply-To: <201107012013.26485.chunkeey@googlemail.com>
+Received: from lucidpixels.com ([72.73.18.11]:46789 "EHLO lucidpixels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751785Ab1G3Ock (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jul 2011 10:32:40 -0400
+Date: Sat, 30 Jul 2011 10:32:39 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Alan Piszcz <ap@solarrain.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
+In-Reply-To: <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan>
+Message-ID: <alpine.DEB.2.02.1107301031560.4925@p34.internal.lan> (sfid-20110730_163302_647200_DEBD367D)
+References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan> <4E318BD0.40202@lwfinger.net> <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan>
+ <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201107201910.12570.chunkeey@googlemail.com> (sfid-20110720_191022_513153_60B084E6)
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware keeps track of channel usage. This data can
-be used by the automatic channel selection to find the best
-channel.
 
-Survey data from wlan4
-		frequency:					5200 MHz [in use]
-		noise:						-91 dBm
-		channel active time:			811909 ms
-		channel busy time:				63395 ms
-		channel transmit time:			59636 ms
-Survey data from wlan4
-		frequency:					5210 MHz
-		noise:						-91 dBm
-		channel active time:			121 ms
-		channel busy time:				119 ms
-		channel transmit time:			0 ms
----
-diff --git a/drivers/net/wireless/p54/eeprom.c b/drivers/net/wireless/p54/eeprom.c
-index 54cc0bb..8b6f363 100644
---- a/drivers/net/wireless/p54/eeprom.c
-+++ b/drivers/net/wireless/p54/eeprom.c
-@@ -145,6 +145,7 @@ static int p54_fill_band_bitrates(struct ieee80211_hw *dev,
- 
- static int p54_generate_band(struct ieee80211_hw *dev,
- 			     struct p54_channel_list *list,
-+			     unsigned int *chan_num,
- 			     enum ieee80211_band band)
- {
- 	struct p54_common *priv = dev->priv;
-@@ -190,7 +191,14 @@ static int p54_generate_band(struct ieee80211_hw *dev,
- 
- 		tmp->channels[j].band = chan->band;
- 		tmp->channels[j].center_freq = chan->freq;
-+		priv->survey[*chan_num].channel = &tmp->channels[j];
-+		priv->survey[*chan_num].filled = SURVEY_INFO_NOISE_DBM |
-+			SURVEY_INFO_CHANNEL_TIME |
-+			SURVEY_INFO_CHANNEL_TIME_BUSY |
-+			SURVEY_INFO_CHANNEL_TIME_TX;
-+		tmp->channels[j].hw_value = (*chan_num);
- 		j++;
-+		(*chan_num)++;
- 	}
- 
- 	if (j == 0) {
-@@ -263,7 +271,7 @@ static int p54_generate_channel_lists(struct ieee80211_hw *dev)
- {
- 	struct p54_common *priv = dev->priv;
- 	struct p54_channel_list *list;
--	unsigned int i, j, max_channel_num;
-+	unsigned int i, j, k, max_channel_num;
- 	int ret = 0;
- 	u16 freq;
- 
-@@ -283,6 +291,13 @@ static int p54_generate_channel_lists(struct ieee80211_hw *dev)
- 		ret = -ENOMEM;
- 		goto free;
- 	}
-+	priv->chan_num = max_channel_num;
-+	priv->survey = kzalloc(sizeof(struct survey_info) * max_channel_num,
-+			       GFP_KERNEL);
-+	if (!priv->survey) {
-+		ret = -ENOMEM;
-+		goto free;
-+	}
- 
- 	list->max_entries = max_channel_num;
- 	list->channels = kzalloc(sizeof(struct p54_channel_entry) *
-@@ -321,8 +336,9 @@ static int p54_generate_channel_lists(struct ieee80211_hw *dev)
- 	sort(list->channels, list->entries, sizeof(struct p54_channel_entry),
- 	     p54_compare_channels, NULL);
- 
-+	k = 0;
- 	for (i = 0, j = 0; i < IEEE80211_NUM_BANDS; i++) {
--		if (p54_generate_band(dev, list, i) == 0)
-+		if (p54_generate_band(dev, list, &k, i) == 0)
- 			j++;
- 	}
- 	if (j == 0) {
-@@ -335,6 +351,10 @@ free:
- 		kfree(list->channels);
- 		kfree(list);
- 	}
-+	if (ret) {
-+		kfree(priv->survey);
-+		priv->survey = NULL;
-+	}
- 
- 	return ret;
- }
-@@ -853,10 +873,12 @@ err:
- 	kfree(priv->output_limit);
- 	kfree(priv->curve_data);
- 	kfree(priv->rssi_db);
-+	kfree(priv->survey);
- 	priv->iq_autocal = NULL;
- 	priv->output_limit = NULL;
- 	priv->curve_data = NULL;
- 	priv->rssi_db = NULL;
-+	priv->survey = NULL;
- 
- 	wiphy_err(dev->wiphy, "eeprom parse failed!\n");
- 	return err;
-diff --git a/drivers/net/wireless/p54/fwio.c b/drivers/net/wireless/p54/fwio.c
-index b6a061c..1bee007 100644
---- a/drivers/net/wireless/p54/fwio.c
-+++ b/drivers/net/wireless/p54/fwio.c
-@@ -385,6 +385,7 @@ int p54_setup_mac(struct p54_common *priv)
- 		setup->v2.osc_start_delay = cpu_to_le16(65535);
- 	}
- 	p54_tx(priv, skb);
-+	priv->phy_idle = mode != P54_FILTER_TYPE_HIBERNATE;
- 	return 0;
- }
- 
-@@ -626,6 +627,7 @@ int p54_set_ps(struct p54_common *priv)
- 	psm->exclude[0] = WLAN_EID_TIM;
- 
- 	p54_tx(priv, skb);
-+	priv->phy_ps = mode != P54_PSM_CAM;
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
-index a5a6d9e..c354393 100644
---- a/drivers/net/wireless/p54/main.c
-+++ b/drivers/net/wireless/p54/main.c
-@@ -278,6 +278,41 @@ static void p54_remove_interface(struct ieee80211_hw *dev,
- 	mutex_unlock(&priv->conf_mutex);
- }
- 
-+static int p54_wait_for_stats(struct ieee80211_hw *dev)
-+{
-+	struct p54_common *priv = dev->priv;
-+	int ret;
-+
-+	priv->update_stats = true;
-+	ret = p54_fetch_statistics(priv);
-+	if (ret)
-+		return ret;
-+
-+	ret = wait_for_completion_interruptible_timeout(&priv->stat_comp, HZ);
-+	if (ret == 0)
-+		return -ETIMEDOUT;
-+
-+	return 0;
-+}
-+
-+static void p54_reset_stats(struct p54_common *priv)
-+{
-+	struct ieee80211_channel *chan = priv->curchan;
-+
-+	if (priv->curchan) {
-+		struct survey_info *info = &priv->survey[chan->hw_value];
-+
-+		/* only reset channel statistics. */
-+		info->channel_time = 0;
-+		info->channel_time_busy = 0;
-+		info->channel_time_tx = 0;
-+	}
-+
-+	priv->survey_raw.active = 0;
-+	priv->survey_raw.cca = 0;
-+	priv->survey_raw.tx = 0;
-+}
-+
- static int p54_config(struct ieee80211_hw *dev, u32 changed)
- {
- 	int ret = 0;
-@@ -288,16 +323,22 @@ static int p54_config(struct ieee80211_hw *dev, u32 changed)
- 	if (changed & IEEE80211_CONF_CHANGE_POWER)
- 		priv->output_power = conf->power_level << 2;
- 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
-+		WARN_ON(p54_wait_for_stats(dev));
- 		ret = p54_scan(priv, P54_SCAN_EXIT, 0);
- 		if (ret)
- 			goto out;
-+		priv->curchan = priv->hw->conf.channel;
-+		p54_reset_stats(priv);
-+		WARN_ON(p54_fetch_statistics(priv));
- 	}
- 	if (changed & IEEE80211_CONF_CHANGE_PS) {
-+		WARN_ON(p54_wait_for_stats(dev));
- 		ret = p54_set_ps(priv);
- 		if (ret)
- 			goto out;
- 	}
- 	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
-+		WARN_ON(p54_wait_for_stats(dev));
- 		ret = p54_setup_mac(priv);
- 		if (ret)
- 			goto out;
-@@ -541,14 +582,30 @@ static int p54_get_survey(struct ieee80211_hw *dev, int idx,
- 				struct survey_info *survey)
- {
- 	struct p54_common *priv = dev->priv;
--	struct ieee80211_conf *conf = &dev->conf;
-+	struct ieee80211_channel *chan;
-+	int err;
-+
-+	if (idx == 0) {
-+		mutex_lock(&priv->conf_mutex);
-+		err = p54_wait_for_stats(dev);
-+		mutex_unlock(&priv->conf_mutex);
-+		if (err)
-+			return err;
-+	}
- 
--	if (idx != 0)
-+	if (idx >= priv->chan_num)
- 		return -ENOENT;
- 
--	survey->channel = conf->channel;
--	survey->filled = SURVEY_INFO_NOISE_DBM;
--	survey->noise = clamp_t(s8, priv->noise, -128, 127);
-+	memcpy(survey, &priv->survey[idx], sizeof(*survey));
-+
-+	survey->noise = priv->survey[idx].noise;
-+	survey->channel_time = priv->survey[idx].channel_time;
-+	survey->channel_time_busy = priv->survey[idx].channel_time_busy;
-+	survey->channel_time_tx = priv->survey[idx].channel_time_tx;
-+
-+	chan = dev->conf.channel;
-+	if (chan && chan->hw_value == idx)
-+		survey->filled |= SURVEY_INFO_IN_USE;
- 
- 	return 0;
- }
-@@ -686,11 +743,14 @@ struct ieee80211_hw *p54_init_common(size_t priv_data_len)
- 
- 	mutex_init(&priv->conf_mutex);
- 	mutex_init(&priv->eeprom_mutex);
-+	init_completion(&priv->stat_comp);
- 	init_completion(&priv->eeprom_comp);
- 	init_completion(&priv->beacon_comp);
- 	INIT_DELAYED_WORK(&priv->work, p54_work);
- 
- 	memset(&priv->mc_maclist[0], ~0, ETH_ALEN);
-+	priv->curchan = NULL;
-+	p54_reset_stats(priv);
- 	return dev;
- }
- EXPORT_SYMBOL_GPL(p54_init_common);
-@@ -730,11 +790,13 @@ void p54_free_common(struct ieee80211_hw *dev)
- 	kfree(priv->curve_data);
- 	kfree(priv->rssi_db);
- 	kfree(priv->used_rxkeys);
-+	kfree(priv->survey);
- 	priv->iq_autocal = NULL;
- 	priv->output_limit = NULL;
- 	priv->curve_data = NULL;
- 	priv->rssi_db = NULL;
- 	priv->used_rxkeys = NULL;
-+	priv->survey = NULL;
- 	ieee80211_free_hw(dev);
- }
- EXPORT_SYMBOL_GPL(p54_free_common);
-diff --git a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
-index 799d05e..32e6bd1 100644
---- a/drivers/net/wireless/p54/p54.h
-+++ b/drivers/net/wireless/p54/p54.h
-@@ -199,6 +199,24 @@ struct p54_common {
- 	u8 tx_diversity_mask;
- 	unsigned int output_power;
- 	struct p54_rssi_db_entry *cur_rssi;
-+	struct ieee80211_channel *curchan;
-+	struct survey_info *survey;
-+	unsigned int chan_num;
-+	struct completion stat_comp;
-+	bool update_stats;
-+	struct {
-+		unsigned int timestamp;
-+
-+		unsigned int cached_cca;
-+		unsigned int cached_tx;
-+		unsigned int cached_rssi;
-+
-+		u64 active;
-+		u64 cca;
-+		u64 tx;
-+		u64 rssi;
-+	} survey_raw;
-+
- 	int noise;
- 	/* calibration, output power limit and rssi<->dBm conversation data */
- 	struct pda_iq_autocal_entry *iq_autocal;
-@@ -220,6 +238,8 @@ struct p54_common {
- 	u32 basic_rate_mask;
- 	u16 aid;
- 	u8 coverage_class;
-+	bool phy_idle;
-+	bool phy_ps;
- 	bool powersave_override;
- 	__le32 beacon_req_id;
- 	struct completion beacon_comp;
-diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
-index 042842e..573ca97 100644
---- a/drivers/net/wireless/p54/txrx.c
-+++ b/drivers/net/wireless/p54/txrx.c
-@@ -507,6 +507,8 @@ static void p54_rx_stats(struct p54_common *priv, struct sk_buff *skb)
- 	struct p54_hdr *hdr = (struct p54_hdr *) skb->data;
- 	struct p54_statistics *stats = (struct p54_statistics *) hdr->data;
- 	struct sk_buff *tmp;
-+	struct ieee80211_channel *chan;
-+	unsigned int i, rssi, tx, cca, dtime, dtotal, dcca, dtx, drssi, unit;
- 	u32 tsf32;
- 
- 	if (unlikely(priv->mode == NL80211_IFTYPE_UNSPECIFIED))
-@@ -522,9 +524,79 @@ static void p54_rx_stats(struct p54_common *priv, struct sk_buff *skb)
- 	priv->stats.dot11FCSErrorCount = le32_to_cpu(stats->rx_bad_fcs);
- 
- 	priv->noise = p54_rssi_to_dbm(priv, le32_to_cpu(stats->noise));
-+	cca = le32_to_cpu(stats->sample_cca);
-+	tx = le32_to_cpu(stats->sample_tx);
-+	rssi = 0;
-+	for (i = 0; i < ARRAY_SIZE(stats->sample_noise); i++)
-+		rssi += le32_to_cpu(stats->sample_noise[i]);
-+
-+	dcca = cca - priv->survey_raw.cached_cca;
-+	drssi = rssi - priv->survey_raw.cached_rssi;
-+	dtx = tx - priv->survey_raw.cached_tx;
-+	dtotal = dcca + drssi + dtx;
-+	dtime = tsf32 - priv->survey_raw.timestamp;
-+
-+	if (priv->phy_ps || priv->phy_idle) {
-+		priv->survey_raw.timestamp = tsf32;
-+		priv->survey_raw.cached_cca = cca;
-+		priv->survey_raw.cached_tx = tx;
-+		priv->survey_raw.cached_rssi = rssi;
-+		goto out;
-+	}
-+
-+	/* only once one needed, or every 900 ms */
-+	if (priv->update_stats || dtime >= 900000) {
-+		/*
-+		 * STSW450X LMAC API page 26 - 3.8 Statistics
-+		 * "The exact measurement period can be derived from the
-+		 * timestamp memeber"
-+		 */
-+		priv->survey_raw.timestamp = tsf32;
-+		priv->update_stats = false;
-+
-+		/*
-+		 * STSW450X LMAC API page 26 - 3.8.1 Noise histogram
-+		 * The LMAC samples RSSI, CCA and transmit state at regular
-+		 * periods (typically 8 times per 1k [as in 1024] usec.
-+		 */
-+
-+		if (dtotal) {
-+			/* 1024 usec / 8 times = 128 usec / time */
-+			unit = dtime / dtotal;
-+
-+			priv->survey_raw.active += dtotal * unit;
-+
-+			if (dcca) {
-+				priv->survey_raw.cca += dcca * unit;
-+				priv->survey_raw.cached_cca = cca;
-+			}
-+
-+			if (dtx) {
-+				priv->survey_raw.tx += dtx * unit;
-+				priv->survey_raw.cached_tx = tx;
-+			}
-+
-+			if (drssi) {
-+				priv->survey_raw.rssi += drssi * unit;
-+				priv->survey_raw.cached_rssi = rssi;
-+			}
-+		}
-+	}
-+
-+	chan = priv->curchan;
-+	if (chan) {
-+		struct survey_info *survey = &priv->survey[chan->hw_value];
-+		survey->noise = clamp_t(s8, priv->noise, -128, 127);
-+		survey->channel_time = priv->survey_raw.active / 1024;
-+		survey->channel_time_tx = priv->survey_raw.tx / 1024;
-+		survey->channel_time_busy = priv->survey_raw.cca / 1024 +
-+			survey->channel_time_tx;
-+	}
- 
-+out:
- 	tmp = p54_find_and_unlink_skb(priv, hdr->req_id);
- 	dev_kfree_skb_any(tmp);
-+	complete(&priv->stat_comp);
- }
- 
- static void p54_rx_trap(struct p54_common *priv, struct sk_buff *skb)
+
+On Sat, 30 Jul 2011, Justin Piszcz wrote:
+
+>
+>
+> On Sat, 30 Jul 2011, Justin Piszcz wrote:
+>
+>> 
+>> 
+>> On Sat, 30 Jul 2011, Stanislaw Gruszka wrote:
+>> 
+>>> We should clear skb->data not skb itself. Bug was introduced by:
+>>> commit 0b8004aa12d13ec750d102ba4082a95f0107c649 "rt2x00: Properly
+>>> reserve room for descriptors in skbs".
+>>> 
+>>> Cc: stable@kernel.org # 2.6.36+
+>>> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+>>> ---
+>>> drivers/net/wireless/rt2x00/rt2800lib.c |    3 +--
+>>> 1 files changed, 1 insertions(+), 2 deletions(-)
+>>> 
+>>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c 
+>>> b/drivers/net/wireless/rt2x00/rt2800lib.c
+>>> index 75d2c6c..f94d669 100644
+>>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>>> @@ -703,8 +703,7 @@ void rt2800_write_beacon(struct queue_entry *entry, 
+>>> struct txentry_desc *txdesc)
+>>> 	/*
+>>> 	 * Add space for the TXWI in front of the skb.
+>>> 	 */
+>>> -	skb_push(entry->skb, TXWI_DESC_SIZE);
+>>> -	memset(entry->skb, 0, TXWI_DESC_SIZE);
+>>> +	memset(skb_push(entry->skb, TXWI_DESC_SIZE), 0, TXWI_DESC_SIZE);
+>>>
+>>> 	/*
+>>> 	 * Register descriptor details in skb frame descriptor.
+>>> -- 
+>>> 1.7.4
+>>> 
+>> 
+>> Hi,
+>> 
+>> Testing w/ Linux kernel 3.0:
+>> 
+>> # patch -p1 < ../patch3
+>> patching file drivers/net/wireless/rt2x00/rt2800lib.c
+>> Hunk #1 succeeded at 784 (offset 81 lines).
+>> 
+>> Compiled/installed.
+>> 
+>> Will reboot shortly, need to run a backup first, thanks.
+>> 
+>> Justin.
+>> 
+>> 
+>
+> Hi,
+>
+> Patched, its working, latency is MUCH better than before the patch!
+>
+> PING atomw.internal.lan (192.168.0.2) 56(84) bytes of data.
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=1 ttl=64 time=0.535 
+> ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=2 ttl=64 time=0.589 
+> ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=3 ttl=64 time=48.8 
+> ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=4 ttl=64 time=1.14 
+> ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=5 ttl=64 time=64.5 
+> ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=6 ttl=64 time=0.582 
+> ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=7 ttl=64 time=80.6 
+> ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=8 ttl=64 time=51.9 
+> ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=9 ttl=64 time=35.5 
+> ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=10 ttl=64 time=0.614 
+> ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=11 ttl=64 time=0.497 
+> ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=12 ttl=64 time=41.5 
+> ms
+>
+> $ uptime
+> 10:19:18 up 5 min,  2 users,  load average: 1.32, 1.02, 0.47
+>
+> It hasn't crashed yet, if you don't hear from me/stating it has crashed 
+> again,
+> then you can assume its stable, I'll let you know if anything happens.
+>
+
+Hmm..
+
+The joy was short lived :(
+$ ssh: connect to host atomw port 22: No route to host
+
+Going to see if there is a dump now.
+
+Justin.
+
