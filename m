@@ -1,46 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:38446 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751313Ab1G0FU4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2011 01:20:56 -0400
-Date: Wed, 27 Jul 2011 10:49:50 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Brent Taylor <btaylor1@motorolasolutions.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: ATH6KL lockup during init
-Message-ID: <20110727051949.GA19410@vasanth-laptop> (sfid-20110727_072059_675893_7288CF44)
-References: <loom.20110726T174149-11@post.gmane.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <loom.20110726T174149-11@post.gmane.org>
+Received: from mx1.redhat.com ([209.132.183.28]:56232 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752958Ab1G3WFG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jul 2011 18:05:06 -0400
+Subject: Re: linux-firmware: pull request for Libertas cf8381 firmware
+From: Dan Williams <dcbw@redhat.com>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Sat, 30 Jul 2011 17:09:11 -0500
+In-Reply-To: <1311977201.20983.14.camel@i7.infradead.org>
+References: <1310429270.3122.12.camel@dcbw.foobar.com>
+	 <1311977201.20983.14.camel@i7.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1312063754.6921.4.camel@dcbw.foobar.com> (sfid-20110731_000515_279655_9E42873E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 26, 2011 at 03:43:02PM +0000, Brent Taylor wrote:
-> I’m a developer working with the Atheros AR6003 Wireless LAN chip.  I recently
-> updated the Linux kernel on my custom board to 3.0.0 and pulled the latest
-> snapshot of the ath6kl driver from
-> http://git.kernel.org/?p=linux/kernel/git/kvalo/ath6kl-cleanup.git;a=summary (as
-> of 2011-07-25).  I’m also using the latest firmware images from
-> http://www.kernel.org/pub/linux/kernel/people/mcgrof/firmware/ath6k.tar.gz as
-> recommended by
-> http://wireless.kernel.org/en/users/Drivers/ath6kl?highlight=%28ar6003%29. 
+On Fri, 2011-07-29 at 23:06 +0100, David Woodhouse wrote:
+> On Mon, 2011-07-11 at 19:07 -0500, Dan Williams wrote:
+> > 
+> > Please pull/merge from:
+> > 
+> > git://anongit.freedesktop.org/~dcbw/linux-firmware
 > 
-
-These are fine.
-
-> After running 'insmod ath6kl.ko', the command line hangs.  I’ve narrowed down
-> the execution path to the function ath6kl_bmi_get_rx_lkahd (called from
-> ath6kl_bmi_exeute after loading the OPT firmware).  The parameter value of
-> "need_timeout" is set to false.  Without this timeout the function never
-> returns.  The call to ath6kl_hif_read_write_sync always returns 0, and the value
-> of rx_word is always 0.
+> I'd very much prefer it to have a signed-off-by from someone who
+> actually owns the firmware, but at the very least from yourself.
 > 
-> My question is: What would cause the read from address
-> RX_LOOKAHEAD_VALID_ADDRESS to always return a value of 0?
+> And please keep the WHENCE file up to date.
 
-Odd, we have never seen this sort of issues. Can you please give
-the kernel debug output with BMI debug enabled (debug_mask=0x10).
+My bad.  Done.  Please pull, thanks!
 
-Vasanth
+Dan
+
+
+
