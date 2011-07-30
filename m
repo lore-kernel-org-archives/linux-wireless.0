@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35868 "EHLO nbd.name"
+Received: from mout9.freenet.de ([195.4.92.99]:50003 "EHLO mout9.freenet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751256Ab1GIENS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jul 2011 00:13:18 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 9/9] ath9k_hw: add a missing delay for an analog register
-Date: Sat,  9 Jul 2011 11:12:54 +0700
-Message-Id: <1310184774-32913-9-git-send-email-nbd@openwrt.org> (sfid-20110709_061324_999523_5A84E0F5)
-In-Reply-To: <1310184774-32913-8-git-send-email-nbd@openwrt.org>
-References: <1310184774-32913-1-git-send-email-nbd@openwrt.org>
- <1310184774-32913-2-git-send-email-nbd@openwrt.org>
- <1310184774-32913-3-git-send-email-nbd@openwrt.org>
- <1310184774-32913-4-git-send-email-nbd@openwrt.org>
- <1310184774-32913-5-git-send-email-nbd@openwrt.org>
- <1310184774-32913-6-git-send-email-nbd@openwrt.org>
- <1310184774-32913-7-git-send-email-nbd@openwrt.org>
- <1310184774-32913-8-git-send-email-nbd@openwrt.org>
+	id S1752457Ab1G3UCH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jul 2011 16:02:07 -0400
+Message-ID: <4E346396.9030707@01019freenet.de> (sfid-20110730_220214_714752_8351D120)
+Date: Sat, 30 Jul 2011 22:03:34 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+MIME-Version: 1.0
+To: Jouni Malinen <j@w1.fi>
+CC: Helmut Schaa <helmut.schaa@googlemail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2] mac80211: Always send EAPOL frames at lowest rate
+References: <1311960137-25420-1-git-send-email-helmut.schaa@googlemail.com> <1311960137-25420-2-git-send-email-helmut.schaa@googlemail.com> <20110730182810.GA2743@jm.kir.nu>
+In-Reply-To: <20110730182810.GA2743@jm.kir.nu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR_AN_SYNTH9 is in the analog shift register range and thus needs to be
-written using the ath9k_hw_analog_shift_rmw function.
+Jouni Malinen schrieb:
+> On Fri, Jul 29, 2011 at 07:22:17PM +0200, Helmut Schaa wrote:
+>> Since EAPOL frames are normal data frames they are treated by the
+>> rate control algorithm as such. Thus it can happen that the rate
+>> control algorithm chooses an inappropriate rate (minstrel_ht uses
+>> MCS rates for example) for the 4-way handshake and under low signal
+>> conditions the handshake may time out.
+>> 
+>> To fix this issue always treat EAPOL frames the same as management 
+>> frames and send them with the lowest available rate.
+> 
+> I don't think that this should be applied for the reasons given (and 
+> alternative mechanisms proposed) in the discussion.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9002_phy.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+I tested it with AP (rt2860) (with STA rt3572sta) under load and
+couldn't see any improvement. The first PTK-rekeying didn't work as
+usual. Or should it be applied to STA?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-index ac8b35c..3cbbb03 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-@@ -131,8 +131,9 @@ static int ar9002_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- 			channelSel = CHANSEL_5G(freq);
- 
- 			/* RefDivA setting */
--			REG_RMW_FIELD(ah, AR_AN_SYNTH9,
--				      AR_AN_SYNTH9_REFDIVA, refDivA);
-+			ath9k_hw_analog_shift_rmw(ah, AR_AN_SYNTH9,
-+				      AR_AN_SYNTH9_REFDIVA,
-+				      AR_AN_SYNTH9_REFDIVA_S, refDivA);
- 
- 		}
- 
--- 
-1.7.3.2
 
+Andreas
