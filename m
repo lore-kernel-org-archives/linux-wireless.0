@@ -1,43 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:54832 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751934Ab1GZUFF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2011 16:05:05 -0400
-Received: by pzk37 with SMTP id 37so1382542pzk.1
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 13:05:04 -0700 (PDT)
+Received: from lucidpixels.com ([72.73.18.11]:40364 "EHLO lucidpixels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751893Ab1G3OUW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jul 2011 10:20:22 -0400
+Date: Sat, 30 Jul 2011 10:20:20 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Alan Piszcz <ap@solarrain.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
+In-Reply-To: <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan>
+Message-ID: <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan> (sfid-20110730_162027_484210_29FF383D)
+References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan> <4E318BD0.40202@lwfinger.net> <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan>
 MIME-Version: 1.0
-In-Reply-To: <4E2EFDCC.3060604@lwfinger.net>
-References: <20110725213832.32510.3753.stgit@mj.roinet.com>
-	<4E2EFDCC.3060604@lwfinger.net>
-Date: Tue, 26 Jul 2011 22:05:04 +0200
-Message-ID: <CACna6ryV7ffeuC_6cZdAB_WG4+fOHSbnxiCAV2-Mmkp58o_4=A@mail.gmail.com> (sfid-20110726_220511_273458_73B76312)
-Subject: Re: [PATCH] b43legacy: remove 64-bit DMA support
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/7/26 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 07/25/2011 04:40 PM, Pavel Roskin wrote:
->>
->> Devices supported by b43legacy don't support 64-bit DMA.
->>
->> Signed-off-by: Pavel Roskin<proski@gnu.org>
->> ---
->> The patch was tested on Broadcom 4306.
->>
->>  drivers/net/wireless/b43legacy/dma.c |  374
->> ++++++----------------------------
->>  drivers/net/wireless/b43legacy/dma.h |  107 ----------
->>  2 files changed, 71 insertions(+), 410 deletions(-)
+
+
+On Sat, 30 Jul 2011, Justin Piszcz wrote:
+
 >
-> Tested on BCM4303.
+>
+> On Sat, 30 Jul 2011, Stanislaw Gruszka wrote:
+>
+>> We should clear skb->data not skb itself. Bug was introduced by:
+>> commit 0b8004aa12d13ec750d102ba4082a95f0107c649 "rt2x00: Properly
+>> reserve room for descriptors in skbs".
+>> 
+>> Cc: stable@kernel.org # 2.6.36+
+>> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+>> ---
+>> drivers/net/wireless/rt2x00/rt2800lib.c |    3 +--
+>> 1 files changed, 1 insertions(+), 2 deletions(-)
+>> 
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c 
+>> b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> index 75d2c6c..f94d669 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> @@ -703,8 +703,7 @@ void rt2800_write_beacon(struct queue_entry *entry, 
+>> struct txentry_desc *txdesc)
+>> 	/*
+>> 	 * Add space for the TXWI in front of the skb.
+>> 	 */
+>> -	skb_push(entry->skb, TXWI_DESC_SIZE);
+>> -	memset(entry->skb, 0, TXWI_DESC_SIZE);
+>> +	memset(skb_push(entry->skb, TXWI_DESC_SIZE), 0, TXWI_DESC_SIZE);
+>>
+>> 	/*
+>> 	 * Register descriptor details in skb frame descriptor.
+>> -- 
+>> 1.7.4
+>> 
+>
+> Hi,
+>
+> Testing w/ Linux kernel 3.0:
+>
+> # patch -p1 < ../patch3
+> patching file drivers/net/wireless/rt2x00/rt2800lib.c
+> Hunk #1 succeeded at 784 (offset 81 lines).
+>
+> Compiled/installed.
+>
+> Will reboot shortly, need to run a backup first, thanks.
+>
+> Justin.
+>
+>
 
-Err, BCM4303? What card is that exactly?
+Hi,
 
--- 
-Rafał
+Patched, its working, latency is MUCH better than before the patch!
+
+PING atomw.internal.lan (192.168.0.2) 56(84) bytes of data.
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=1 ttl=64 time=0.535 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=2 ttl=64 time=0.589 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=3 ttl=64 time=48.8 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=4 ttl=64 time=1.14 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=5 ttl=64 time=64.5 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=6 ttl=64 time=0.582 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=7 ttl=64 time=80.6 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=8 ttl=64 time=51.9 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=9 ttl=64 time=35.5 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=10 ttl=64 time=0.614 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=11 ttl=64 time=0.497 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=12 ttl=64 time=41.5 ms
+
+$ uptime
+  10:19:18 up 5 min,  2 users,  load average: 1.32, 1.02, 0.47
+
+It hasn't crashed yet, if you don't hear from me/stating it has crashed again,
+then you can assume its stable, I'll let you know if anything happens.
+
+Justin.
+
