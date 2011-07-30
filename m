@@ -1,21 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([72.73.18.11]:46789 "EHLO lucidpixels.com"
+Received: from lucidpixels.com ([72.73.18.11]:37480 "EHLO lucidpixels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751785Ab1G3Ock (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jul 2011 10:32:40 -0400
-Date: Sat, 30 Jul 2011 10:32:39 -0400 (EDT)
+	id S1752397Ab1G3RK1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jul 2011 13:10:27 -0400
+Date: Sat, 30 Jul 2011 13:10:26 -0400 (EDT)
 From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-cc: Larry Finger <Larry.Finger@lwfinger.net>,
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
 	Ivo van Doorn <IvDoorn@gmail.com>,
 	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
 	Alan Piszcz <ap@solarrain.com>,
 	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
 Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
-In-Reply-To: <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan>
-Message-ID: <alpine.DEB.2.02.1107301031560.4925@p34.internal.lan> (sfid-20110730_163302_647200_DEBD367D)
-References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan> <4E318BD0.40202@lwfinger.net> <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan>
- <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan>
+In-Reply-To: <alpine.DEB.2.02.1107301305590.4925@p34.internal.lan>
+Message-ID: <alpine.DEB.2.02.1107301310070.4925@p34.internal.lan> (sfid-20110730_191032_355617_51E962B8)
+References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan> <4E318BD0.40202@lwfinger.net> <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan> <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan>
+ <alpine.DEB.2.02.1107301031560.4925@p34.internal.lan> <4E341DC4.9010107@01019freenet.de> <alpine.DEB.2.02.1107301305590.4925@p34.internal.lan>
 MIME-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
@@ -27,102 +28,57 @@ On Sat, 30 Jul 2011, Justin Piszcz wrote:
 
 >
 >
-> On Sat, 30 Jul 2011, Justin Piszcz wrote:
+> On Sat, 30 Jul 2011, Andreas Hartmann wrote:
 >
+>> Hi Justin,
+>> 
+>> if you want to test, if the module works stable, run this script for one
+>> or two hours. It will stress the driver and the hardware.
+>> 
+>> If it doesn't crash and if the throughput is stable, you can hope, that
+>> the driver is ok for daily work.
 >> 
 >> 
->> On Sat, 30 Jul 2011, Stanislaw Gruszka wrote:
+>> #!/bin/sh
 >> 
->>> We should clear skb->data not skb itself. Bug was introduced by:
->>> commit 0b8004aa12d13ec750d102ba4082a95f0107c649 "rt2x00: Properly
->>> reserve room for descriptors in skbs".
->>> 
->>> Cc: stable@kernel.org # 2.6.36+
->>> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
->>> ---
->>> drivers/net/wireless/rt2x00/rt2800lib.c |    3 +--
->>> 1 files changed, 1 insertions(+), 2 deletions(-)
->>> 
->>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c 
->>> b/drivers/net/wireless/rt2x00/rt2800lib.c
->>> index 75d2c6c..f94d669 100644
->>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->>> @@ -703,8 +703,7 @@ void rt2800_write_beacon(struct queue_entry *entry, 
->>> struct txentry_desc *txdesc)
->>> 	/*
->>> 	 * Add space for the TXWI in front of the skb.
->>> 	 */
->>> -	skb_push(entry->skb, TXWI_DESC_SIZE);
->>> -	memset(entry->skb, 0, TXWI_DESC_SIZE);
->>> +	memset(skb_push(entry->skb, TXWI_DESC_SIZE), 0, TXWI_DESC_SIZE);
->>>
->>> 	/*
->>> 	 * Register descriptor details in skb frame descriptor.
->>> -- 
->>> 1.7.4
->>> 
+>> dest="server" # set the servername
 >> 
->> Hi,
+>> while true ; do
+>> netperf -t TCP_MAERTS -H $dest
+>> netperf -t TCP_STREAM -H $dest
+>> netperf -t TCP_SENDFILE -H $dest
+>> done
 >> 
->> Testing w/ Linux kernel 3.0:
 >> 
->> # patch -p1 < ../patch3
->> patching file drivers/net/wireless/rt2x00/rt2800lib.c
->> Hunk #1 succeeded at 784 (offset 81 lines).
+>> Start the script on the client. On the server start netserver.
+>> You get netperf from http://www.netperf.org/netperf/
 >> 
->> Compiled/installed.
 >> 
->> Will reboot shortly, need to run a backup first, thanks.
->> 
->> Justin.
->> 
+>> Andreas
 >> 
 >
-> Hi,
+> Hello Andreas,
 >
-> Patched, its working, latency is MUCH better than before the patch!
+> Thanks for the suggestion; however, it is crashing repeatedly after about 
+> 5-10 minutes, so it is not needed yet.
 >
-> PING atomw.internal.lan (192.168.0.2) 56(84) bytes of data.
-> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=1 ttl=64 time=0.535 
-> ms
-> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=2 ttl=64 time=0.589 
-> ms
-> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=3 ttl=64 time=48.8 
-> ms
-> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=4 ttl=64 time=1.14 
-> ms
-> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=5 ttl=64 time=64.5 
-> ms
-> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=6 ttl=64 time=0.582 
-> ms
-> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=7 ttl=64 time=80.6 
-> ms
-> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=8 ttl=64 time=51.9 
-> ms
-> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=9 ttl=64 time=35.5 
-> ms
-> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=10 ttl=64 time=0.614 
-> ms
-> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=11 ttl=64 time=0.497 
-> ms
-> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=12 ttl=64 time=41.5 
-> ms
+> Here you go, crash 2:
+> http://home.comcast.net/~jpiszcz/20110730/2630-rt2800usb-crash2p1.jpg
+> http://home.comcast.net/~jpiszcz/20110730/2630-rt2800usb-crash2p2.jpg
 >
-> $ uptime
-> 10:19:18 up 5 min,  2 users,  load average: 1.32, 1.02, 0.47
->
-> It hasn't crashed yet, if you don't hear from me/stating it has crashed 
-> again,
-> then you can assume its stable, I'll let you know if anything happens.
+> Justin.
 >
 
-Hmm..
+(This is with the patch provided earlier)
 
-The joy was short lived :(
-$ ssh: connect to host atomw port 22: No route to host
-
-Going to see if there is a dump now.
+atom:/usr/src/linux# cd drivers/net/wireless/rt2x00/
+atom:/usr/src/linux/drivers/net/wireless/rt2x00# grep 'memset(skb_push(entry->skb, TXWI_DESC_SIZE), 0, TXWI_DESC_SIZE)' rt2800lib.c
+         memset(skb_push(entry->skb, TXWI_DESC_SIZE), 0, TXWI_DESC_SIZE);
+atom:/usr/src/linux/drivers/net/wireless/rt2x00# cat /usr/src/linux/.version
+2
+atom:/usr/src/linux/drivers/net/wireless/rt2x00# uname -a
+Linux atom 3.0.0 #2 SMP Sat Jul 30 08:34:18 EDT 2011 x86_64 GNU/Linux
+atom:/usr/src/linux/drivers/net/wireless/rt2x00#
 
 Justin.
 
