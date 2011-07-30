@@ -1,90 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:60457 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756475Ab1GANut (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:45546 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752265Ab1G3Sji convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2011 09:50:49 -0400
-Date: Fri, 01 Jul 2011 08:50:48 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: akpm@linux-foundation.org, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192de: Replace loops calling udelay with
- single mdelay
-Message-ID: <4e0dd0b8.irNTM3ZWqD8ljlYa%Larry.Finger@lwfinger.net> (sfid-20110701_155055_637313_D9292F87)
+	Sat, 30 Jul 2011 14:39:38 -0400
+Received: by qyk9 with SMTP id 9so2674924qyk.19
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jul 2011 11:39:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <20110730181433.50bd32db.ldarby@tuffmail.com>
+References: <20110730181433.50bd32db.ldarby@tuffmail.com>
+Date: Sat, 30 Jul 2011 20:39:37 +0200
+Message-ID: <CA+icZUURFL1AgYZ=64zqgvU1DTjmp=22Qesp2pM86-OOyRjmVw@mail.gmail.com> (sfid-20110730_203940_503419_4ED965A7)
+Subject: Re: I'm confused and angry
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Laurence Darby <ldarby@tuffmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are a number of loops to implement delays. These are replaced with
-single calls to mdelay().
+Hi,
 
-The need for a fix was noted by Andrew Morton <akpm@linux-foundation.org>.
+On Sat, Jul 30, 2011 at 7:14 PM, Laurence Darby <ldarby@tuffmail.com> wrote:
+>
+> Is there an obvious list of consumer products (NOT chipsets) that
+> hostapd supports that I'm missing?
+>
+> I want to make a wireless Access Point, using either a USB dongle, PCI
+> card, or PCIE x1 card.  I have already got a DHCP server and NAT in
+> both my desktop PC and router, I don't want to pay for an expensive
+> external wireless router which would be a 3rd DHCP and NAT.
+>
+> None of the consumer devices' websites say which chipset they use, and none
+> the chipset manufactures' sites say what consumer products use their
+> chipset, so I can't just search for devices that support this.
+>
+> I've foolishly just bought a Netgear WNA1100, because it was "close
+> enough" to a Netgear WNA1000, which possibly supports AP mode, but that
+> wasn't available.
+>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+A different hardware-revision can mean that vendor has changed wifi-chip :-).
+So, better ask before you buy new hardware.
 
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-@@ -932,7 +932,7 @@ bool rtl92d_phy_config_rf_with_headerfil
- 					  enum rf_content content,
- 					  enum radio_path rfpath)
- {
--	int i, j;
-+	int i;
- 	u32 *radioa_array_table;
- 	u32 *radiob_array_table;
- 	u16 radioa_arraylen, radiob_arraylen;
-@@ -974,13 +974,10 @@ bool rtl92d_phy_config_rf_with_headerfil
- 				mdelay(50);
- 			} else if (radioa_array_table[i] == 0xfd) {
- 				/* delay_ms(5); */
--				for (j = 0; j < 100; j++)
--					udelay(MAX_STALL_TIME);
-+				mdelay(5);
- 			} else if (radioa_array_table[i] == 0xfc) {
- 				/* delay_ms(1); */
--				for (j = 0; j < 20; j++)
--					udelay(MAX_STALL_TIME);
--
-+				mdelay(1);
- 			} else if (radioa_array_table[i] == 0xfb) {
- 				udelay(50);
- 			} else if (radioa_array_table[i] == 0xfa) {
-@@ -1004,12 +1001,10 @@ bool rtl92d_phy_config_rf_with_headerfil
- 				mdelay(50);
- 			} else if (radiob_array_table[i] == 0xfd) {
- 				/* delay_ms(5); */
--				for (j = 0; j < 100; j++)
--					udelay(MAX_STALL_TIME);
-+				mdelay(5);
- 			} else if (radiob_array_table[i] == 0xfc) {
- 				/* delay_ms(1); */
--				for (j = 0; j < 20; j++)
--					udelay(MAX_STALL_TIME);
-+				mdelay(1);
- 			} else if (radiob_array_table[i] == 0xfb) {
- 				udelay(50);
- 			} else if (radiob_array_table[i] == 0xfa) {
-@@ -1276,7 +1271,7 @@ static void rtl92d_phy_switch_wirelessba
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	u8 i, value8;
-+	u8 value8;
- 
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, ("==>\n"));
- 	rtlhal->bandset = band;
-@@ -1321,8 +1316,7 @@ static void rtl92d_phy_switch_wirelessba
- 		rtl_write_byte(rtlpriv, (rtlhal->interfaceindex ==
- 			0 ? REG_MAC0 : REG_MAC1), value8);
- 	}
--	for (i = 0; i < 20; i++)
--		udelay(MAX_STALL_TIME);
-+	mdelay(1);
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, ("<==Switch Band OK.\n"));
- }
- 
+> I thought it got away with it, because this page:
+> http://linuxwireless.org/en/users/Drivers/ath9k_htc says that driver
+> supports AP mode.
+>
+
+AFAICS, people on #linux-wireless dont recommend USB-devices as the
+interface can be a bottleneck.
+
+> I've upgraded to Linux 3.0 and installed the htc_9271.fw firmware, and
+> the device shows up in /proc/net/dev, but now hostapd is giving me the
+> errors:
+>
+> rfkill: Cannot open RFKILL control device
+> Hardware does not support configured mode
+> wlan0: IEEE 802.11 Hardware does not support configured mode (2)
+> Could not select hw_mode and channel. (-2)
+> wlan0: Unable to setup interface.
+> rmdir[ctrl_interface]: No such file or directory
+>
+
+Please, send full dmesg, lspci/lsusb outputs, etc.
+What software do you use to connect to AP from client?
+Personally, I have no HostAP(d) in use, but interested people might
+want to see its config files, the same for the kernel.
+
+> Does this device and driver support AP mode or not?  If the driver
+> doesn't, then the web page is wrong.
+>
+> If the driver does but the device doesn't, then the website should make
+> that clear.
+>
+
+And of course, docs could be enhanced.
+It's a wiki, feel free to join and correct.
+
+> I'm not bothered at all if the WNA1100 was a waste of money, it's the
+> amount of time I've wasted on this so far.
+>
+
+Maybe a business solution with an anual or longterm contract can help
+(if money does not count).
+
+> Please CC me on any responses, I'm not subscribed.
+>
+
+You can try to ask on IRC, try joining #linux-wireless (freenode) and
+ask there (note, it's sometimes a very silent channel).
+But please, be nice and polite :-).
+
+- Sedat -
+
+> Thanks,
+> Laurence
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
