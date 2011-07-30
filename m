@@ -1,67 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34851 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758342Ab1GKSq6 (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:60920 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750887Ab1G3LO3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2011 14:46:58 -0400
-Date: Mon, 11 Jul 2011 14:35:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Joe Perches <joe@perches.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] iwlagn: Add missing comma between constant string
- array
-Message-ID: <20110711183550.GC2650@tuxdriver.com> (sfid-20110711_204724_362813_E61F19F2)
-References: <cover.1310187270.git.joe@perches.com>
- <2c8a6e15b0f320e4b4b761ae6434862fc3c15924.1310187270.git.joe@perches.com>
+	Sat, 30 Jul 2011 07:14:29 -0400
+Received: by fxh19 with SMTP id 19so3024243fxh.19
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jul 2011 04:14:27 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: problem on ACS
+Date: Sat, 30 Jul 2011 13:17:14 +0200
+Cc: MingAnn Ng <devil_eddie01@hotmail.com>, nbd@openwrt.org,
+	wireless testing <linux-wireless@vger.kernel.org>
+References: <COL114-W9CEFD4E7F3803005186F98A4F0@phx.gbl> <COL114-W54CACDD9B23D044E0916368A370@phx.gbl> <CAB=NE6Xc_9DcCz2KfFwR8x2wK5uUt61cH-rP5rNA+-B8XK2gYQ@mail.gmail.com>
+In-Reply-To: <CAB=NE6Xc_9DcCz2KfFwR8x2wK5uUt61cH-rP5rNA+-B8XK2gYQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2c8a6e15b0f320e4b4b761ae6434862fc3c15924.1310187270.git.joe@perches.com>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201107301317.14486.chunkeey@googlemail.com> (sfid-20110730_131434_412634_EF94E05C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-How is this array indexed?  Aren't you changing the index of the 
-later strings?
+On Friday 29 July 2011 22:50:54 Luis R. Rodriguez wrote:
+> On Fri, Jul 29, 2011 at 12:39 AM, MingAnn Ng <devil_eddie01@hotmail.com> wrote:
+> > Survey 2 from wlan0:
+> >  noise:    -84 dBm
+> >  channel active time:  12 ms
+> >  channel busy time:  0 ms
+> >  channel receive time:  0 ms
+> >  channel transmit time:  0 ms
+> >  interference factor:  9223372036854775815.000000
+> 
+> This is caused by log2(0), this if fixed as follows:
 
-On Fri, Jul 08, 2011 at 11:20:25PM -0700, Joe Perches wrote:
-> Multiple quoted strings are concatenated without comma separators.
-> 
-> Make the array const while there.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-agn.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> index 7e6c463..de1a0c1 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> @@ -1563,7 +1563,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
->  	release_firmware(ucode_raw);
+> diff --git a/src/ap/acs.c b/src/ap/acs.c
+> index aa5498e..04b1e31 100644
+> --- a/src/ap/acs.c
+> +++ b/src/ap/acs.c
+> @@ -125,7 +125,7 @@ static u64 min(u64 a, u64 b)
+>   */
+>  static u64 log2_sane(u64 val)
+>  {
+> -	return log2(min(1073741824, val));
+> +	return return (!val) ? 0 : log2(min(1073741824, val));
 >  }
->  
-> -static const char *desc_lookup_text[] = {
-> +static const char * const desc_lookup_text[] = {
->  	"OK",
->  	"FAIL",
->  	"BAD_PARAM",
-> @@ -1587,7 +1587,7 @@ static const char *desc_lookup_text[] = {
->  	"NMI_INTERRUPT_DATA_ACTION_PT",
->  	"NMI_TRM_HW_ER",
->  	"NMI_INTERRUPT_TRM",
-> -	"NMI_INTERRUPT_BREAK_POINT"
-> +	"NMI_INTERRUPT_BREAK_POINT",
->  	"DEBUG_0",
->  	"DEBUG_1",
->  	"DEBUG_2",
-> -- 
-> 1.7.6.131.g99019
 > 
 > 
+> I'll send a new version of the last patch with this fix, thanks for
+> reporting this.
+Wait a sec... I guess you misunderstood my post about the cut-off.
+I meant that you can cut of at the bottom by using log2(max(1, val)).
+This ensures that the log2 will always be >= 0 anyway. In fact log2(1) = 0.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Regards,
+	Chr
