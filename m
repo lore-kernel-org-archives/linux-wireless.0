@@ -1,86 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:8030 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752281Ab1GMMYg (ORCPT
+Received: from w1.fi ([128.177.27.249]:52985 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752271Ab1G3S2X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 08:24:36 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [RFC 2/3] wireless: Add 40MHz Intolerance support to HT capablities.
-Date: Wed, 13 Jul 2011 17:54:32 +0530
-Message-ID: <1310559873-10314-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110713_142440_143428_FA651F52)
-In-Reply-To: <1310559873-10314-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1310559873-10314-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Sat, 30 Jul 2011 14:28:23 -0400
+Date: Sat, 30 Jul 2011 21:28:10 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2] mac80211: Always send EAPOL frames at lowest rate
+Message-ID: <20110730182810.GA2743@jm.kir.nu> (sfid-20110730_202829_689676_BE43E3CD)
+References: <1311960137-25420-1-git-send-email-helmut.schaa@googlemail.com>
+ <1311960137-25420-2-git-send-email-helmut.schaa@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1311960137-25420-2-git-send-email-helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- include/net/cfg80211.h |    5 +++++
- net/wireless/core.c    |    3 +++
- 2 files changed, 8 insertions(+), 0 deletions(-)
+On Fri, Jul 29, 2011 at 07:22:17PM +0200, Helmut Schaa wrote:
+> Since EAPOL frames are normal data frames they are treated by the rate
+> control algorithm as such. Thus it can happen that the rate control
+> algorithm chooses an inappropriate rate (minstrel_ht uses MCS rates for
+> example) for the 4-way handshake and under low signal conditions the
+> handshake may time out.
+> 
+> To fix this issue always treat EAPOL frames the same as management
+> frames and send them with the lowest available rate.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 4bf101b..eaa9dee 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -128,6 +128,8 @@ enum ieee80211_channel_flags {
-  * @beacon_found: helper to regulatory code to indicate when a beacon
-  *	has been found on this channel. Use regulatory_hint_found_beacon()
-  *	to enable this, this is useful only on 5 GHz band.
-+ * @is_40mhz_intolerant: one of the bss in this channel disallows the use of
-+ *	20/40 MHz BSS. this will be used by Intolerant Channel Report.
-  * @orig_mag: internal use
-  * @orig_mpwr: internal use
-  */
-@@ -139,6 +141,7 @@ struct ieee80211_channel {
- 	int max_antenna_gain;
- 	int max_power;
- 	bool beacon_found;
-+	bool is_40mhz_intolerant;
- 	u32 orig_flags;
- 	int orig_mag, orig_mpwr;
- };
-@@ -1746,6 +1749,7 @@ struct wiphy_wowlan_support {
-  *	add to probe request frames transmitted during a scan, must not
-  *	include fixed IEs like supported rates
-  * @coverage_class: current coverage class
-+ * @dot11FortyMHzIntolerant: Enable/Disable Forty MHz Intolerance
-  * @fw_version: firmware version for ethtool reporting
-  * @hw_version: hardware version for ethtool reporting
-  * @max_num_pmkids: maximum number of PMKIDs supported by device
-@@ -1806,6 +1810,7 @@ struct wiphy {
- 	u32 frag_threshold;
- 	u32 rts_threshold;
- 	u8 coverage_class;
-+	bool dot11FortyMHzIntolerant;
- 
- 	char fw_version[ETHTOOL_BUSINFO_LEN];
- 	u32 hw_version;
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 880dbe2..e4b9321 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -412,6 +412,7 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
- 	rdev->wiphy.frag_threshold = (u32) -1;
- 	rdev->wiphy.rts_threshold = (u32) -1;
- 	rdev->wiphy.coverage_class = 0;
-+	rdev->wiphy.dot11FortyMHzIntolerant = false;
- 
- 	return &rdev->wiphy;
- }
-@@ -532,6 +533,8 @@ int wiphy_register(struct wiphy *wiphy)
- 			sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
- 			sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SGI_40;
- 		}
-+		if (wiphy->dot11FortyMHzIntolerant)
-+			sband->ht_cap.cap |= IEEE80211_HT_CAP_40MHZ_INTOLERANT;
- 
- 		/*
- 		 * Since we use a u32 for rate bitmaps in
+I don't think that this should be applied for the reasons given (and
+alternative mechanisms proposed) in the discussion.
+
 -- 
-1.7.6
-
+Jouni Malinen                                            PGP id EFC895FA
