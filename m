@@ -1,174 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4332 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932394Ab1GNV34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2011 17:29:56 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 09/35] staging: brcm80211: removed function declaration
- typedefs from dma.h part 4
-Date: Thu, 14 Jul 2011 14:29:05 -0700
-Message-ID: <1310678971-28952-10-git-send-email-frankyl@broadcom.com> (sfid-20110714_233116_615684_2040F3CB)
-In-Reply-To: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
-References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mxout-07.mxes.net ([216.86.168.182]:12359 "EHLO
+	mxout-07.mxes.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752404Ab1G3T7e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jul 2011 15:59:34 -0400
+Date: Sat, 30 Jul 2011 20:59:31 +0100
+From: Laurence Darby <ldarby@tuffmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: I'm no longer confused and angry
+Message-Id: <20110730205931.3cc8a004.ldarby@tuffmail.com> (sfid-20110730_215942_375862_E44F83EA)
+In-Reply-To: <4E344F90.4040003@lwfinger.net>
+References: <20110730181433.50bd32db.ldarby@tuffmail.com>
+	<4E3442ED.90206@lwfinger.net>
+	<20110730191422.3b2931ba.ldarby@tuffmail.com>
+	<4E344F90.4040003@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="Multipart=_Sat__30_Jul_2011_20_59_31_+0100_Cl+IX.uIEEd_Xnx7"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+This is a multi-part message in MIME format.
 
-Softmac related code cleanup. Typedefs are undesirable according to the
-CodingStyle document.
+--Multipart=_Sat__30_Jul_2011_20_59_31_+0100_Cl+IX.uIEEd_Xnx7
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/dma.c |   24 ++++++------
- drivers/staging/brcm80211/brcmsmac/dma.h |   60 ++++++++++-------------------
- 2 files changed, 33 insertions(+), 51 deletions(-)
+Larry Finger wrote:
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
-index ebc0848..517dc61 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.c
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.c
-@@ -395,13 +395,13 @@ const struct di_fcn_s dma64proc = {
- 	(void (*)(struct dma_pub *)) dma64_txresume,
- 	(bool(*)(struct dma_pub *)) dma64_txsuspended,
- 	(bool(*)(struct dma_pub *)) dma64_txsuspendedidle,
--	(di_txfast_t) dma64_txfast,
--	(di_txunframed_t) dma64_txunframed,
--	(di_getpos_t) dma64_getpos,
-+	(int (*)(struct dma_pub *, struct sk_buff *, bool)) dma64_txfast,
-+	(int (*)(struct dma_pub *, void *, uint, bool)) dma64_txunframed,
-+	(void *(*)(struct dma_pub *, bool)) dma64_getpos,
- 	(bool(*)(struct dma_pub *)) dma64_txstopped,
--	(di_txreclaim_t) dma64_txreclaim,
--	(di_getnexttxp_t) dma64_getnexttxp,
--	(di_peeknexttxp_t) _dma_peeknexttxp,
-+	(void (*)(struct dma_pub *, enum txd_range)) dma64_txreclaim,
-+	(void *(*)(struct dma_pub *, enum txd_range)) dma64_getnexttxp,
-+	(void *(*)(struct dma_pub *)) _dma_peeknexttxp,
- 	(void (*)(struct dma_pub *)) _dma_txblock,
- 	(void (*)(struct dma_pub *)) _dma_txunblock,
- 	(uint (*)(struct dma_pub *)) _dma_txactive,
-@@ -413,17 +413,17 @@ const struct di_fcn_s dma64proc = {
- 	(bool(*)(struct dma_pub *)) dma64_rxstopped,
- 	(bool(*)(struct dma_pub *)) _dma_rxenable,
- 	(bool(*)(struct dma_pub *)) dma64_rxenabled,
--	(di_rx_t) _dma_rx,
-+	(void *(*)(struct dma_pub *)) _dma_rx,
- 	(bool(*)(struct dma_pub *)) _dma_rxfill,
- 	(void (*)(struct dma_pub *)) _dma_rxreclaim,
--	(di_getnextrxp_t) _dma_getnextrxp,
--	(di_peeknextrxp_t) _dma_peeknextrxp,
--	(di_rxparam_get_t) _dma_rx_param_get,
-+	(void *(*)(struct dma_pub *, bool)) _dma_getnextrxp,
-+	(void *(*)(struct dma_pub *)) _dma_peeknextrxp,
-+	(void (*)(struct dma_pub *, u16 *, u16 *)) _dma_rx_param_get,
- 
- 	(void (*)(struct dma_pub *)) _dma_fifoloopbackenable,
--	(di_getvar_t) _dma_getvar,
-+	(unsigned long (*)(struct dma_pub *, const char *)) _dma_getvar,
- 	(void (*)(struct dma_pub *)) _dma_counterreset,
--	(di_ctrlflags_t) _dma_ctrlflags,
-+	(uint (*)(struct dma_pub *, uint, uint)) _dma_ctrlflags,
- 	NULL,
- 	NULL,
- 	NULL,
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.h b/drivers/staging/brcm80211/brcmsmac/dma.h
-index 5dc7e0b..3ff109f 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.h
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.h
-@@ -58,30 +58,6 @@ enum txd_range {
- 	DMA_RANGE_TRANSFERED
- };
- 
--/* dma function type */
--typedef int (*di_txfast_t) (struct dma_pub *dmah, struct sk_buff *p,
--			    bool commit);
--typedef int (*di_txunframed_t) (struct dma_pub *dmah, void *p, uint len,
--				bool commit);
--typedef void *(*di_getpos_t) (struct dma_pub *di, bool direction);
--typedef void *(*di_rx_t) (struct dma_pub *dmah);
--typedef void (*di_txreclaim_t) (struct dma_pub *dmah, enum txd_range range);
--typedef unsigned long (*di_getvar_t) (struct dma_pub *dmah,
--				      const char *name);
--typedef void *(*di_getnexttxp_t) (struct dma_pub *dmah, enum txd_range range);
--typedef void *(*di_getnextrxp_t) (struct dma_pub *dmah, bool forceall);
--typedef void *(*di_peeknexttxp_t) (struct dma_pub *dmah);
--typedef void *(*di_peeknextrxp_t) (struct dma_pub *dmah);
--typedef void (*di_rxparam_get_t) (struct dma_pub *dmah, u16 *rxoffset,
--				  u16 *rxbufsize);
--typedef uint(*di_ctrlflags_t) (struct dma_pub *dmah, uint mask, uint flags);
--typedef char *(*di_dump_t) (struct dma_pub *dmah, struct brcmu_strbuf *b,
--			    bool dumpring);
--typedef char *(*di_dumptx_t) (struct dma_pub *dmah, struct brcmu_strbuf *b,
--			      bool dumpring);
--typedef char *(*di_dumprx_t) (struct dma_pub *dmah, struct brcmu_strbuf *b,
--			      bool dumpring);
--
- /* dma opsvec */
- struct di_fcn_s {
- 	void (*detach)(struct dma_pub *dmah);
-@@ -92,13 +68,14 @@ struct di_fcn_s {
- 	void (*txresume)(struct dma_pub *dmah);
- 	bool (*txsuspended)(struct dma_pub *dmah);
- 	bool (*txsuspendedidle)(struct dma_pub *dmah);
--	di_txfast_t txfast;
--	di_txunframed_t txunframed;
--	di_getpos_t getpos;
-+	int (*txfast)(struct dma_pub *dmah, struct sk_buff *p, bool commit);
-+	int (*txunframed)(struct dma_pub *dmah, void *p, uint len, bool commit);
-+
-+	void *(*getpos)(struct dma_pub *di, bool direction);
- 	bool (*txstopped)(struct dma_pub *dmah);
--	di_txreclaim_t txreclaim;
--	di_getnexttxp_t getnexttxp;
--	di_peeknexttxp_t peeknexttxp;
-+	void (*txreclaim)(struct dma_pub *dmah, enum txd_range range);
-+	void *(*getnexttxp)(struct dma_pub *dmah, enum txd_range range);
-+	void *(*peeknexttxp) (struct dma_pub *dmah);
- 	void (*txblock) (struct dma_pub *dmah);
- 	void (*txunblock) (struct dma_pub *dmah);
- 	uint (*txactive)(struct dma_pub *dmah);
-@@ -110,20 +87,25 @@ struct di_fcn_s {
- 	bool (*rxstopped)(struct dma_pub *dmah);
- 	bool (*rxenable)(struct dma_pub *dmah);
- 	bool (*rxenabled)(struct dma_pub *dmah);
--	di_rx_t rx;
-+	void *(*rx)(struct dma_pub *dmah);
- 	bool (*rxfill)(struct dma_pub *dmah);
- 	void (*rxreclaim)(struct dma_pub *dmah);
--	di_getnextrxp_t getnextrxp;
--	di_peeknextrxp_t peeknextrxp;
--	di_rxparam_get_t rxparam_get;
-+	void *(*getnextrxp)(struct dma_pub *dmah, bool forceall);
-+	void *(*peeknextrxp)(struct dma_pub *dmah);
-+	void (*rxparam_get)(struct dma_pub *dmah, u16 *rxoffset,
-+			    u16 *rxbufsize);
- 
- 	void (*fifoloopbackenable)(struct dma_pub *dmah);
--	di_getvar_t d_getvar;
-+	unsigned long (*d_getvar)(struct dma_pub *dmah, const char *name);
-+
- 	void (*counterreset)(struct dma_pub *dmah);
--	di_ctrlflags_t ctrlflags;
--	di_dump_t dump;
--	di_dumptx_t dumptx;
--	di_dumprx_t dumprx;
-+	uint (*ctrlflags)(struct dma_pub *dmah, uint mask, uint flags);
-+	char *(*dump)(struct dma_pub *dmah, struct brcmu_strbuf *b,
-+		      bool dumpring);
-+	char *(*dumptx)(struct dma_pub *dmah, struct brcmu_strbuf *b,
-+			bool dumpring);
-+	char *(*dumprx)(struct dma_pub *dmah, struct brcmu_strbuf *b,
-+			bool dumpring);
- 	uint (*rxactive)(struct dma_pub *dmah);
- 	uint (*txpending)(struct dma_pub *dmah);
- 	uint (*txcommitted)(struct dma_pub *dmah);
--- 
-1.7.1
+> On 07/30/2011 01:14 PM, Laurence Darby wrote:
+> >
+> > I have now enabled rfkill.  The hostapd error message is now:
+> >
+> > Hardware does not support configured mode
+> > wlan0: IEEE 802.11 Hardware does not support configured mode (2)
+> > Could not select hw_mode and channel. (-2)
+> > wlan0: Unable to setup interface.
+> > rmdir[ctrl_interface]: No such file or directory
+> 
+> Please post your hostapd.conf. I don't have any ath9k hardware and
+> cannot check that it works with, but other wireless devices work with
+> 
+> interface=wlan0
+> driver=nl80211
+> hw_mode=g
+> channel=1
+> ssid=test2
+> #wpa=2
+> #wpa_key_mgmt=WPA-PSK
+> #wpa_pairwise=CCMP
+> #wpa_passphrase="deleted"
+> 
+> Larry
 
+Ah, thanks, that does work and my other devices can see it now!
 
+I was using the unmodified hostapd.conf, which has hw_mode=a, but
+this device only supports modes b,g & n.  That is what the error is
+talking about, not the Master/Ad-Hoc mode which I thought it was trying
+to configure (which it is as well, actually).  Would be good if the
+error message included the mode it's trying to configure, instead of
+"(2)", that would definitely have stopped me getting confused here.
+
+Some more reasons I didn't think this supported AP mode:
+http://linuxwireless.org/en/users/Drivers has 'no' for AP support for
+the ath9k_htc, that conflicts with the driver page, and
+
+ # iwconfig wlan0 mode Managed
+
+works, while
+
+ # iwconfig wlan0 mode Master
+always gives:
+Error for wireless request "Set Mode" (8B06) :
+    SET failed on device wlan0 ; Invalid argument.
+
+With hostapd running, iwconfig says:
+
+wlan0     IEEE 802.11bgn  Mode:Master  Frequency:2.412 GHz  Tx-Power=20
+dBm Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Power Management:off
+          
+and reverts to Mode:Managed if I stop hostapd, so I'm not sure why
+iwconfig can't change it...
+
+Ok, http://linuxwireless.org/en/users/Documentation/hostapd does say
+that hw_mode needs to be set correctly, but it wasn't obvious enough
+that's what the problem was.  The error and solution could be added to
+where ./hostapd gets started.  Also, it refers to a
+hostapd-minimal.conf, I couldn't see that anywhere, that's why I used
+the default hostapd.conf.
+
+Laurence
+
+--Multipart=_Sat__30_Jul_2011_20_59_31_+0100_Cl+IX.uIEEd_Xnx7
+Content-Type: application/octet-stream;
+ name="hostapd.conf"
+Content-Disposition: attachment;
+ filename="hostapd.conf"
+Content-Transfer-Encoding: base64
+
+aW50ZXJmYWNlPXdsYW4wCmRyaXZlcj1ubDgwMjExCmh3X21vZGU9YgpjaGFubmVsPTEKc3NpZD10
+ZXN0Mgo=
+
+--Multipart=_Sat__30_Jul_2011_20_59_31_+0100_Cl+IX.uIEEd_Xnx7--
