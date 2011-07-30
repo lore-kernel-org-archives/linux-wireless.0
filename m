@@ -1,34 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:37965 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755606Ab1GGTF1 (ORCPT
+Received: from cpsmtpb-ews08.kpnxchange.com ([213.75.39.13]:2350 "EHLO
+	cpsmtpb-ews08.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751941Ab1G3NrK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2011 15:05:27 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id E31EE540055
-	for <linux-wireless@vger.kernel.org>; Thu,  7 Jul 2011 15:13:09 -0400 (EDT)
-Subject: Compat-wireless release for 2011-07-07 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110707190525.DCB0340EC8@repository3.orbit-lab.org> (sfid-20110707_210532_398151_BF243A9B)
-Date: Thu,  7 Jul 2011 15:05:25 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Sat, 30 Jul 2011 09:47:10 -0400
+Message-ID: <4E340A0C.5040604@gmail.com> (sfid-20110730_154745_317600_B0AAE203)
+Date: Sat, 30 Jul 2011 15:41:32 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	Justin Piszcz <jpiszcz@lucidpixels.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Alan Piszcz <ap@solarrain.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
+References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan> <4E318BD0.40202@lwfinger.net> <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com>
+In-Reply-To: <20110730113255.GB2847@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + f56bf2e...b7f0c5f akpm-end   -> origin/akpm-end  (forced update)
-   fe0d422..de3796e  akpm-start -> origin/akpm-start
-   16311e6..c9adaf5  history    -> origin/history
- + 2a5addf...47f2a8c master     -> origin/master  (forced update)
-   fe0d422..de3796e  stable     -> origin/stable
- * [new tag]         next-20110707 -> next-20110707
+On 07/30/11 13:32, Stanislaw Gruszka wrote:
+> We should clear skb->data not skb itself. Bug was introduced by:
+> commit 0b8004aa12d13ec750d102ba4082a95f0107c649 "rt2x00: Properly
+> reserve room for descriptors in skbs".
+> 
+> Cc: stable@kernel.org # 2.6.36+
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-compat-wireless code metrics
+Ouch. Good catch. Let me go find a brown paper bag now :-(
 
-    832112 - Total upstream lines of code being pulled
-      2380 - backport code changes
-      2080 - backport code additions
-       300 - backport code deletions
-      8127 - backport from compat module
-     10507 - total backport code
-    1.2627 - % of code consists of backport work
+Not sure if this is the source of Justin's problems, though.
+
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    3 +--
+>  1 files changed, 1 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 75d2c6c..f94d669 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -703,8 +703,7 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+>  	/*
+>  	 * Add space for the TXWI in front of the skb.
+>  	 */
+> -	skb_push(entry->skb, TXWI_DESC_SIZE);
+> -	memset(entry->skb, 0, TXWI_DESC_SIZE);
+> +	memset(skb_push(entry->skb, TXWI_DESC_SIZE), 0, TXWI_DESC_SIZE);
+>  
+>  	/*
+>  	 * Register descriptor details in skb frame descriptor.
+
+
+-- 
+---
+Gertjan
