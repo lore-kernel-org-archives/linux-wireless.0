@@ -1,72 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53419 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750970Ab1GVXUf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 19:20:35 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-mips@linux-mips.org
-Cc: jonas.gorski@gmail.com, ralf@linux-mips.org, zajec5@gmail.com,
-	mb@bu3sch.de, george@znau.edu.ua, arend@broadcom.com,
-	b43-dev@lists.infradead.org, bernhardloos@googlemail.com,
-	arnd@arndb.de, julian.calaby@gmail.com, sshtylyov@mvista.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 02/11] bcma: move initializing of struct bcma_bus to own function.
-Date: Sat, 23 Jul 2011 01:20:06 +0200
-Message-Id: <1311376815-15755-3-git-send-email-hauke@hauke-m.de> (sfid-20110723_012039_518334_DE30FDD9)
-In-Reply-To: <1311376815-15755-1-git-send-email-hauke@hauke-m.de>
-References: <1311376815-15755-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:46231 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751480Ab1G3OCa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jul 2011 10:02:30 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20110730113255.GB2847@redhat.com>
+References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan>
+	<4E318BD0.40202@lwfinger.net>
+	<20110730113009.GA2847@redhat.com>
+	<20110730113255.GB2847@redhat.com>
+Date: Sat, 30 Jul 2011 16:02:27 +0200
+Message-ID: <CAOZOX0UqOF-y6h2=-Jxpw=Nn2MJDAWumwy-SBsYsHVUX9mMayw@mail.gmail.com> (sfid-20110730_160256_279867_4088E0B2)
+Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Justin Piszcz <jpiszcz@lucidpixels.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Alan Piszcz <ap@solarrain.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes it possible to use this code in some other method.
+On Sat, Jul 30, 2011 at 1:32 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> We should clear skb->data not skb itself. Bug was introduced by:
+> commit 0b8004aa12d13ec750d102ba4082a95f0107c649 "rt2x00: Properly
+> reserve room for descriptors in skbs".
+>
+> Cc: stable@kernel.org # 2.6.36+
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Acked-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/scan.c |   17 +++++++++++------
- 1 files changed, 11 insertions(+), 6 deletions(-)
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 4012d8d..7970553 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -312,15 +312,10 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 	return 0;
- }
- 
--int bcma_bus_scan(struct bcma_bus *bus)
-+static void bcma_init_bus(struct bcma_bus *bus)
- {
--	u32 erombase;
--	u32 __iomem *eromptr, *eromend;
--
- 	s32 tmp;
- 
--	int err;
--
- 	INIT_LIST_HEAD(&bus->cores);
- 	bus->nr_cores = 0;
- 
-@@ -330,6 +325,16 @@ int bcma_bus_scan(struct bcma_bus *bus)
- 	bus->chipinfo.id = (tmp & BCMA_CC_ID_ID) >> BCMA_CC_ID_ID_SHIFT;
- 	bus->chipinfo.rev = (tmp & BCMA_CC_ID_REV) >> BCMA_CC_ID_REV_SHIFT;
- 	bus->chipinfo.pkg = (tmp & BCMA_CC_ID_PKG) >> BCMA_CC_ID_PKG_SHIFT;
-+}
-+
-+int bcma_bus_scan(struct bcma_bus *bus)
-+{
-+	u32 erombase;
-+	u32 __iomem *eromptr, *eromend;
-+
-+	int err;
-+
-+	bcma_init_bus(bus);
- 
- 	erombase = bcma_scan_read32(bus, 0, BCMA_CC_EROM);
- 	eromptr = bus->mmio;
--- 
-1.7.4.1
-
+> ---
+> †drivers/net/wireless/rt2x00/rt2800lib.c | † †3 +--
+> †1 files changed, 1 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 75d2c6c..f94d669 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -703,8 +703,7 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+> † † † †/*
+> † † † † * Add space for the TXWI in front of the skb.
+> † † † † */
+> - † † † skb_push(entry->skb, TXWI_DESC_SIZE);
+> - † † † memset(entry->skb, 0, TXWI_DESC_SIZE);
+> + † † † memset(skb_push(entry->skb, TXWI_DESC_SIZE), 0, TXWI_DESC_SIZE);
+>
+> † † † †/*
+> † † † † * Register descriptor details in skb frame descriptor.
+> --
+> 1.7.4
+>
+>
