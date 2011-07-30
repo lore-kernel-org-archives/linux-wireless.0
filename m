@@ -1,27 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:51767 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751476Ab1GXTCq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jul 2011 15:02:46 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 5974F5403BF
-	for <linux-wireless@vger.kernel.org>; Sun, 24 Jul 2011 15:11:05 -0400 (EDT)
-Subject: Compat-wireless release for 2011-07-24 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110724190245.570CC40ED1@repository3.orbit-lab.org> (sfid-20110724_210249_695380_FE6F6D29)
-Date: Sun, 24 Jul 2011 15:02:45 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mout2.freenet.de ([195.4.92.92]:37684 "EHLO mout2.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751572Ab1G3PES (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jul 2011 11:04:18 -0400
+Message-ID: <4E341DC4.9010107@01019freenet.de> (sfid-20110730_170422_694952_A5CA2220)
+Date: Sat, 30 Jul 2011 17:05:40 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+MIME-Version: 1.0
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+CC: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Alan Piszcz <ap@solarrain.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
+References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan> <4E318BD0.40202@lwfinger.net> <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan> <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan> <alpine.DEB.2.02.1107301031560.4925@p34.internal.lan>
+In-Reply-To: <alpine.DEB.2.02.1107301031560.4925@p34.internal.lan>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Justin,
 
-compat-wireless code metrics
+if you want to test, if the module works stable, run this script for one
+or two hours. It will stress the driver and the hardware.
 
-    835352 - Total upstream lines of code being pulled
-      2400 - backport code changes
-      2094 - backport code additions
-       306 - backport code deletions
-      8162 - backport from compat module
-     10562 - total backport code
-    1.2644 - % of code consists of backport work
+If it doesn't crash and if the throughput is stable, you can hope, that
+the driver is ok for daily work.
+
+
+#!/bin/sh
+
+dest="server" # set the servername
+
+while true ; do
+netperf -t TCP_MAERTS -H $dest
+netperf -t TCP_STREAM -H $dest
+netperf -t TCP_SENDFILE -H $dest
+done
+
+
+Start the script on the client. On the server start netserver.
+You get netperf from http://www.netperf.org/netperf/
+
+
+Andreas
