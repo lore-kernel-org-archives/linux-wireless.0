@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:46304 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752815Ab1GMXqH (ORCPT
+Received: from mxout-07.mxes.net ([216.86.168.182]:37552 "EHLO
+	mxout-07.mxes.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752271Ab1G3SOZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2011 19:46:07 -0400
-Received: by iyb12 with SMTP id 12so5995000iyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2011 16:46:06 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 0/5] mac80211: mesh beaconing
-Date: Wed, 13 Jul 2011 16:45:42 -0700
-Message-Id: <1310600747-9583-1-git-send-email-thomas@cozybit.com> (sfid-20110714_014611_337942_6AC9E17F)
+	Sat, 30 Jul 2011 14:14:25 -0400
+Date: Sat, 30 Jul 2011 19:14:22 +0100
+From: Laurence Darby <ldarby@tuffmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: I'm confused and angry
+Message-Id: <20110730191422.3b2931ba.ldarby@tuffmail.com> (sfid-20110730_201428_710580_A9C817CF)
+In-Reply-To: <4E3442ED.90206@lwfinger.net>
+References: <20110730181433.50bd32db.ldarby@tuffmail.com>
+	<4E3442ED.90206@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, mesh beacons have IEs either missing or in the wrong order. Update
-the mesh beacon to the proper format specified in 802.11s draft 12.0. This
-patch set will be part of a greater effort to update the mesh stack in mac80211
-in anticipation of the ratification of the 802.11s standard.
+Larry Finger wrote:
 
-Thomas Pedersen (5):
-  mac80211: give if_mesh a beacon
-  mac80211: correct mesh beacon head
-  mac80211: Ext. Supported Rates go in mesh beacon tail
-  mac80211: move RSN IE to tail of mesh beacon
-  mac80211: mesh beacon includes TIM IE
+> 
+> I'm pissed off about the attitude.
+> 
+> A lot of people spend a lot of time making things work. You
+> misconfigure your damned system, and then you go off like this!!!!!
+> 
+> Read the fucking error message. You have not enabled RFKILL.
 
- net/mac80211/cfg.c         |   31 ++++++--
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mesh.c        |  185 ++++++++++++++++++++++++++++++++------------
- net/mac80211/tx.c          |   51 ++++++------
- 4 files changed, 187 insertions(+), 81 deletions(-)
 
--- 
-1.7.6
+I have now enabled rfkill.  The hostapd error message is now:
 
+Hardware does not support configured mode
+wlan0: IEEE 802.11 Hardware does not support configured mode (2)
+Could not select hw_mode and channel. (-2)
+wlan0: Unable to setup interface.
+rmdir[ctrl_interface]: No such file or directory
+
+Now what?
