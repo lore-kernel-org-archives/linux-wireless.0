@@ -1,64 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:60682 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752260Ab1GVIYI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2011 04:24:08 -0400
-Message-ID: <4E2933A0.40200@hauke-m.de> (sfid-20110722_102419_252528_C5236C6B)
-Date: Fri, 22 Jul 2011 10:24:00 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from lucidpixels.com ([72.73.18.11]:55635 "EHLO lucidpixels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751320Ab1G3Ljk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jul 2011 07:39:40 -0400
+Date: Sat, 30 Jul 2011 07:39:39 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Alan Piszcz <ap@solarrain.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
+In-Reply-To: <20110730113255.GB2847@redhat.com>
+Message-ID: <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan> (sfid-20110730_133954_130200_BF62E81A)
+References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan> <4E318BD0.40202@lwfinger.net> <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	ralf@linux-mips.org, "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, linux-mips@linux-mips.org,
-	jonas.gorski@gmail.com, mb@bu3sch.de, george@znau.edu.ua,
-	arend@broadcom.com, b43-dev@lists.infradead.org,
-	bernhardloos@googlemail.com, arnd@arndb.de,
-	julian.calaby@gmail.com, sshtylyov@mvista.com
-Subject: Re: [PATCH v2 00/11] bcma: add support for embedded devices like
- bcm4716
-References: <1310835342-18877-1-git-send-email-hauke@hauke-m.de> <CACna6ryjYGuLc5c88eke=gjgwQyVD+A9afM6zCRhqV1THHgWvA@mail.gmail.com>
-In-Reply-To: <CACna6ryjYGuLc5c88eke=gjgwQyVD+A9afM6zCRhqV1THHgWvA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/22/2011 12:30 AM, Rafał Miłecki wrote:
-> 2011/7/16 Hauke Mehrtens <hauke@hauke-m.de>:
->> This patch series adds support for embedded devices like bcm47xx to
->> bcma. Bcma is used on bcm4716 and bcm4718 SoCs as the system bus and
->> replaced ssb used on older devices. With these patches my bcm4716
->> device boots up till it tries to access the flash, because the serial
->> flash chip is unsupported for now, this will be my next task. This adds
->> support for MIPS cores, interrupt configuration and the serial console.
->>
->> These patches are not containing all functions needed to get the SoC to
->> fully work and support every feature, but it is a good start.
->> These patches are now integrated in OpenWrt for everyone how wants to
->> test them.
->>
->> This was tested with a BCM4704 device (SoC with ssb bus), a BCM4716
->> device and a pcie wireless card supported by bcma.
->>
->>
->> @Rafał: If you are fine with the bcma patches could you please give
->> your Signed-off on them.
->>
->> @Ralf: Could you please merger this into the mips tree so that it will be in linux-3.1.
-> 
-> ML for bcma is linux-wireless. Should we pass that patches "via" Ralf
-> or John? Using linux-wireless (and John's tree) makes more sense to
-> me, as we will work on the same tree and will get less merge
-> conflicts. However don't take me as Linux development style guru, just
-> my POV.
-> 
+
+
+On Sat, 30 Jul 2011, Stanislaw Gruszka wrote:
+
+> We should clear skb->data not skb itself. Bug was introduced by:
+> commit 0b8004aa12d13ec750d102ba4082a95f0107c649 "rt2x00: Properly
+> reserve room for descriptors in skbs".
+>
+> Cc: stable@kernel.org # 2.6.36+
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+> drivers/net/wireless/rt2x00/rt2800lib.c |    3 +--
+> 1 files changed, 1 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 75d2c6c..f94d669 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -703,8 +703,7 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+> 	/*
+> 	 * Add space for the TXWI in front of the skb.
+> 	 */
+> -	skb_push(entry->skb, TXWI_DESC_SIZE);
+> -	memset(entry->skb, 0, TXWI_DESC_SIZE);
+> +	memset(skb_push(entry->skb, TXWI_DESC_SIZE), 0, TXWI_DESC_SIZE);
+>
+> 	/*
+> 	 * Register descriptor details in skb frame descriptor.
+> -- 
+> 1.7.4
+>
+
 Hi,
 
-Thank you for your reviewing.
+Testing w/ Linux kernel 3.0:
 
-I talked about this with Florian Fainelli and he said that the patches
-should rather pass Ralf then John, but merging would be easier when they
-are passing John. I do not have a problem with both solutions and
-rebasing it to an other tree is no problem for me.
-John and Ralf, who wants to take these patches? ;-)
+# patch -p1 < ../patch3
+patching file drivers/net/wireless/rt2x00/rt2800lib.c
+Hunk #1 succeeded at 784 (offset 81 lines).
 
-Hauke
+Compiled/installed.
+
+Will reboot shortly, need to run a backup first, thanks.
+
+Justin.
+
