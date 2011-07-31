@@ -1,74 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2953 "EHLO mms1.broadcom.com"
+Received: from lucidpixels.com ([72.73.18.11]:41030 "EHLO lucidpixels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753857Ab1GEWDU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2011 18:03:20 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 31/31] staging: brcm80211: added newlines to some debug
- macros in bcmsdh_sdmmc.c
-Date: Wed, 6 Jul 2011 00:02:58 +0200
-Message-ID: <1309903378-29021-32-git-send-email-arend@broadcom.com> (sfid-20110706_000332_862898_57110949)
-In-Reply-To: <1309903378-29021-1-git-send-email-arend@broadcom.com>
-References: <1309903378-29021-1-git-send-email-arend@broadcom.com>
+	id S1752851Ab1GaKJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jul 2011 06:09:55 -0400
+Date: Sun, 31 Jul 2011 06:09:53 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Adam Cozzette <acozzette@cs.hmc.edu>
+cc: Andreas Hartmann <andihartmann@01019freenet.de>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Alan Piszcz <ap@solarrain.com>, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
+In-Reply-To: <20110731033916.GA7182@[192.168.0.12]>
+Message-ID: <alpine.DEB.2.02.1107310609210.21194@p34.internal.lan> (sfid-20110731_121019_444038_A16E7E0D)
+References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan> <4E318BD0.40202@lwfinger.net> <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan> <alpine.DEB.2.02.1107301310070.4925@p34.internal.lan>
+ <20110731033916.GA7182@[192.168.0.12]>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some macros were missing a terminating '\n' character. This commit fixes
-those.
 
-Reported-by: Dan Carpenter <error27@gmail.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 6567363..38bd9ba 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -220,7 +220,7 @@ static int brcmf_sdioh_enablefuncs(struct sdioh_info *sd)
- 	sdio_release_host(gInstance->func[1]);
- 	if (err_ret) {
- 		sd_err(("brcmf_sdioh_enablefuncs: Failed to enable F1 "
--			"Err: 0x%08x", err_ret));
-+			"Err: 0x%08x\n", err_ret));
- 	}
- 
- 	return false;
-@@ -671,7 +671,7 @@ brcmf_sdioh_request_byte(struct sdioh_info *sd, uint rw, uint func,
- 						if (err_ret)
- 							sd_err(("request_byte: "
- 								"enable F2 "
--								"failed:%d",
-+								"failed:%d\n",
- 								 err_ret));
- 					} else {
- 						/* Disable Function 2 */
-@@ -681,7 +681,7 @@ brcmf_sdioh_request_byte(struct sdioh_info *sd, uint rw, uint func,
- 						if (err_ret)
- 							sd_err(("request_byte: "
- 								"Disab F2 "
--								"failed:%d",
-+								"failed:%d\n",
- 								 err_ret));
- 					}
- 					sdio_release_host(gInstance->func[2]);
-@@ -789,7 +789,7 @@ brcmf_sdioh_request_word(struct sdioh_info *sd, uint cmd_type, uint rw,
- 	sdio_release_host(gInstance->func[func]);
- 
- 	if (err_ret) {
--		sd_err(("brcmf: Failed to %s word, Err: 0x%08x",
-+		sd_err(("brcmf: Failed to %s word, Err: 0x%08x\n",
- 			rw ? "Write" : "Read", err_ret));
- 	}
- 
--- 
-1.7.4.1
+On Sat, 30 Jul 2011, Adam Cozzette wrote:
 
+> On Sat, Jul 30, 2011 at 01:10:26PM -0400, Justin Piszcz wrote:
+>> (This is with the patch provided earlier)
+>>
+>> atom:/usr/src/linux# cd drivers/net/wireless/rt2x00/
+>> atom:/usr/src/linux/drivers/net/wireless/rt2x00# grep 'memset(skb_push(entry->skb, TXWI_DESC_SIZE), 0, TXWI_DESC_SIZE)' rt2800lib.c
+>>         memset(skb_push(entry->skb, TXWI_DESC_SIZE), 0, TXWI_DESC_SIZE);
+>> atom:/usr/src/linux/drivers/net/wireless/rt2x00# cat /usr/src/linux/.version
+>> 2
+>> atom:/usr/src/linux/drivers/net/wireless/rt2x00# uname -a
+>> Linux atom 3.0.0 #2 SMP Sat Jul 30 08:34:18 EDT 2011 x86_64 GNU/Linux
+>> atom:/usr/src/linux/drivers/net/wireless/rt2x00#
+>>
+>> Justin.
+>
+> The last two images you posted show rt2800_txdone in the stack trace. I couldn't
+> find any such function in the source and unless I'm mistaken, it was renamed in
+> commit 8f66bbb5 back in May. Are you sure that the most recent code is what is
+> actually running when you run into this problem?
+>
+> -- 
+> Adam Cozzette
+> Harvey Mudd College
+>
+
+Hi,
+
+Here is the .config used (3.0):
+http://home.comcast.net/~jpiszcz/20110731/config-3.0.txt
+
+Justin.
 
