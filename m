@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:42543 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750975Ab1GJLL7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jul 2011 07:11:59 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: 3.0-rc6-git6: Reported regressions from 2.6.39
-Date: Sun, 10 Jul 2011 13:12:27 +0200
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-References: <Y7LyOsOBwFM.A.kJG.kBYGOB@chimera> <1310295277.3942.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1310295277.3942.1.camel@jlt3.sipsolutions.net>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:39712 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757Ab1GaJ3D (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jul 2011 05:29:03 -0400
+Received: by fxh19 with SMTP id 19so3588961fxh.19
+        for <linux-wireless@vger.kernel.org>; Sun, 31 Jul 2011 02:29:01 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Re: [PATCH 2/2] mac80211: Always send EAPOL frames at lowest rate
+Date: Sun, 31 Jul 2011 11:26:51 +0200
+Message-ID: <1512659.Djma8rlNlO@helmutmobil.site> (sfid-20110731_112949_743930_5BF606DC)
+In-Reply-To: <20110730182810.GA2743@jm.kir.nu>
+References: <1311960137-25420-1-git-send-email-helmut.schaa@googlemail.com> <1311960137-25420-2-git-send-email-helmut.schaa@googlemail.com> <20110730182810.GA2743@jm.kir.nu>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201107101312.27466.rjw@sisk.pl> (sfid-20110710_131232_991204_EF48C319)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, July 10, 2011, Johannes Berg wrote:
-> On Sun, 2011-07-10 at 12:19 +0200, Rafael J. Wysocki wrote:
+Am Samstag, 30. Juli 2011, 21:28:10 schrieb Jouni Malinen:
+> On Fri, Jul 29, 2011 at 07:22:17PM +0200, Helmut Schaa wrote:
+> > Since EAPOL frames are normal data frames they are treated by the rate
+> > control algorithm as such. Thus it can happen that the rate control
+> > algorithm chooses an inappropriate rate (minstrel_ht uses MCS rates for
+> > example) for the 4-way handshake and under low signal conditions the
+> > handshake may time out.
+> > 
+> > To fix this issue always treat EAPOL frames the same as management
+> > frames and send them with the lowest available rate.
 > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38702
-> > Subject		: 3.0.0-rc4-git6 - INFO: possible circular locking dependency detected - (&rdev->mtx){+.+.+.}, at: [<ffffffffa00e27e0>] cfg80211_netdev_notifier_call+0x275/0x4ff [cfg80211]
-> > Submitter	: Miles Lane <miles.lane@gmail.com>
-> > Date		: 2011-06-26 21:54 (15 days old)
-> > Message-ID	: <BANLkTikztsFnPkJZ7VxRC-zsitwCCvVmeg@mail.gmail.com>
-> > References	: http://marc.info/?l=linux-kernel&m=130912559804336&w=2
-> 
-> Should be fixed by c10841ca722a0bc960dc541c51582773f9a24f98 which was
-> part of John's latest pull request and is in net-2.6 now on its way up.
+> I don't think that this should be applied for the reasons given (and
+> alternative mechanisms proposed) in the discussion.
 
-Thanks, closing.
+Agreed, I'll do some more tests with Felix suggestion to prevent minstrel_ht
+from rate sampling on EAPOL frames.
 
-Rafael
+John, please drop this one.
+
+Thanks,
+Helmut
