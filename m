@@ -1,42 +1,21 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42831 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751153Ab1G2P1E (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:60426 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752685Ab1GaTCa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2011 11:27:04 -0400
-Received: by fxh19 with SMTP id 19so2382959fxh.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jul 2011 08:27:03 -0700 (PDT)
-Message-ID: <4E32D144.6050304@gmail.com> (sfid-20110729_172709_209159_B8526302)
-Date: Fri, 29 Jul 2011 17:27:00 +0200
-From: p4u <hakais@gmail.com>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: IBSS channel support
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 31 Jul 2011 15:02:30 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 7851E54252F
+	for <linux-wireless@vger.kernel.org>; Sun, 31 Jul 2011 15:11:04 -0400 (EDT)
+Subject: Compat-wireless release for 2011-07-31 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110731190229.99BA340ED1@repository3.orbit-lab.org> (sfid-20110731_210234_682415_AC1AA964)
+Date: Sun, 31 Jul 2011 15:02:29 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-This is my first mail to this list, I'm Pau from Barcelona working in 
-guifi.net (wireless community)
-First of all I want to say thank you guys for your amazing job :-)
 
-Now, I have a little question. Using command "iw phy phy0 info" I can 
-see that IBSS mode is only avaiable in some channels for 5ghz spectrum. 
-I have been looking for information about it, but I cannot find from 
-what depends if some channel can by used in IBSS mode or not. So I think 
-it depends on the driver and on the regdomain, is it right?
+compat-wireless code metrics
 
-Also I'm working in some scripts, and I need to know if a channel has 
-IBSS support or not. The only way I found is with iw command, but pharse 
-this data is very dirty. Furthermore I can read in the end of iw help:
-
-"Do NOT screenscrape this tool, we don't consider its output stable."
-
-So I need another way to get this information. Any idea?
-
-Thank you.
-
--- 
-./p4u
-
+    835332 - Total upstream lines of code being pulled
