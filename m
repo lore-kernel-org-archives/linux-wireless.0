@@ -1,29 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38487 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756952Ab1GDJ4i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2011 05:56:38 -0400
-Message-ID: <4E118E3F.7000408@openwrt.org> (sfid-20110704_115641_104276_E951E728)
-Date: Mon, 04 Jul 2011 16:56:15 +0700
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:56204 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751185Ab1GaHCc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jul 2011 03:02:32 -0400
+Received: by qwk3 with SMTP id 3so2381129qwk.19
+        for <linux-wireless@vger.kernel.org>; Sun, 31 Jul 2011 00:02:31 -0700 (PDT)
 MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	ath5k-devel@lists.ath5k.org
-Subject: Re: [PATCH 1/8] ath5k: add missing checks for rfgain probe
-References: <1309758467-1712-1-git-send-email-nbd@openwrt.org> <CAFtRNNzEUZ7LfgQ=XQjrjtj382puuaJhx=mHnFJhjt0Act6o_Q@mail.gmail.com>
-In-Reply-To: <CAFtRNNzEUZ7LfgQ=XQjrjtj382puuaJhx=mHnFJhjt0Act6o_Q@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CAC9WiBhiBBwoBR3p23wnO5LFSe0agRMkquvy9RjhmEs8NbYGfg@mail.gmail.com>
+References: <CAC9WiBhiBBwoBR3p23wnO5LFSe0agRMkquvy9RjhmEs8NbYGfg@mail.gmail.com>
+Date: Sun, 31 Jul 2011 09:02:31 +0200
+Message-ID: <CAOZOX0UxwbsF1Lg6vRqEx5_rM3MYKcYSSpddPmUcCih0O3EKdA@mail.gmail.com> (sfid-20110731_090235_895464_994D5AA2)
+Subject: Re: v3.0 wants a firmware for rt2870 but v2.6.39 needn't
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Francis Moreau <francis.moro@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-07-04 4:48 PM, Nick Kossifidis wrote:
-> 2011/7/4 Felix Fietkau<nbd@openwrt.org>:
->>  rfgain probe is only necessary for OFDM operation on AR5112 and no other
->>  radio chips
->>
->
-> It's also available on RF5111 (with AR5211 or AR5212)...
-Oh, right, missed that. Will send a v2.
+Hi,
 
-- Felix
+> I've just updated my kernel to 3.0 and now my wireless card using a
+> rt2870 chip doesn't work anymore.
+>
+> It wants now a firmware rt2870.bin whereas this wasn't needed for older kernels.
+>
+> Is this expected ? If so why the firmware is now mandatory whereas it
+> wasn't previously ?
+
+rt2870 has always needed firmware, but what you didn't notice is that you
+are not using the same driver as before. Previous kernels contained 2
+drivers for the rt2870 chipset. Namely rt2800usb (as part of rt2x00) and
+rt2870 (inside the staging directory). For 3.0 the rt2870 from the staging
+directory has been removed, so now you are forced to use rt2800usb.
+
+Both drivers needed firmware, however rt2870 had the firmware compiled
+into the driver, while rt2800usb needed the firmware as separate file (as is
+the preferred behavior for drivers which need firmware).
+
+So you should just the rt2870.bin file from the linux-firmware package
+to get started with the driver.
+
+Ivo
