@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:44772 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752412Ab1GZKSn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2011 06:18:43 -0400
-Received: by ewy4 with SMTP id 4so266516ewy.19
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2011 03:18:42 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH 2/2] mac80211: Don't use a buf_size=0 in ADDBA requests
-Date: Tue, 26 Jul 2011 12:18:28 +0200
-Message-Id: <1311675508-29005-2-git-send-email-helmut.schaa@googlemail.com> (sfid-20110726_121846_792692_2D742EB9)
-In-Reply-To: <1311675508-29005-1-git-send-email-helmut.schaa@googlemail.com>
-References: <1311675508-29005-1-git-send-email-helmut.schaa@googlemail.com>
+Received: from mout1.freenet.de ([195.4.92.91]:38253 "EHLO mout1.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751185Ab1GaHL4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jul 2011 03:11:56 -0400
+Message-ID: <4E350095.5050002@01019freenet.de> (sfid-20110731_091159_153251_9C209371)
+Date: Sun, 31 Jul 2011 09:13:25 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: Jouni Malinen <j@w1.fi>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2] mac80211: Always send EAPOL frames at lowest rate
+References: <1311960137-25420-1-git-send-email-helmut.schaa@googlemail.com> <20110730182810.GA2743@jm.kir.nu> <4E346396.9030707@01019freenet.de> <201107302232.28582.chunkeey@googlemail.com>
+In-Reply-To: <201107302232.28582.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to 802.11-2007, 7.3.1.14 it is compliant to use a buf_size of
-0 in ADDBA requests. But some devices (AVM Fritz Stick N) arn't able to
-handle that correctly and will reply with an ADDBA reponse with a
-buf_size of 0 which in turn will disallow BA sessions for these
-devices.
+Christian Lamparter schrieb:
+> On Saturday 30 July 2011 22:03:34 Andreas Hartmann wrote:
+>> Jouni Malinen schrieb:
+>>> On Fri, Jul 29, 2011 at 07:22:17PM +0200, Helmut Schaa wrote:
+>>>> Since EAPOL frames are normal data frames they are treated by the
+>>>> rate control algorithm as such. Thus it can happen that the rate
+>>>> control algorithm chooses an inappropriate rate (minstrel_ht uses
+>>>> MCS rates for example) for the 4-way handshake and under low signal
+>>>> conditions the handshake may time out.
+>>>>
+>>>> To fix this issue always treat EAPOL frames the same as management 
+>>>> frames and send them with the lowest available rate.
+>>>
+>>> I don't think that this should be applied for the reasons given (and 
+>>> alternative mechanisms proposed) in the discussion.
+>>
+>> I tested it with AP (rt2860) (with STA rt3572sta) under load and
+>> couldn't see any improvement. The first PTK-rekeying didn't work as
+>> usual. Or should it be applied to STA?
+> 
+> might be a shot into the dark. But who's assigning a proper frame sequence
+> to each eapol? Hostapd certainly can't because it doesn't know what's the
+> current sequence at the moment... and mac80211 won't assign one because
+> the frame is injected by a monitor interface. So when the receiver gets the
+> EAPOL it might drops it because the empty sequence might be not in the
+> BA window anymore. Does this sound reasonable, or did I miss something?
 
-To work around this problem, if the hardware doesn't specify an upper
-limit for the number of subframes in an AMPDU send the maximum 0x40 by
-default in ADDBA requests.
+Meanwhile I tested with the patch on both sides, AP (rt2800pci / rt2860)
+and STA (ath9k / ar9582) and compat-wireless-2011-07-28. The result is
+unchanged the same: the first ptk rekeying (4 way handshake) just didn't
+work.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- net/mac80211/agg-tx.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+Another thing: I don't think, that the wireless modules are the reason
+of the problem. If I'm using the following test setup, I get no problem
+at all:
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index b7075f3..13dbd00 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -345,7 +345,9 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
- 	/* send AddBA request */
- 	ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
- 				     tid_tx->dialog_token, start_seq_num,
--				     local->hw.max_tx_aggregation_subframes,
-+				     local->hw.max_tx_aggregation_subframes ?
-+				     local->hw.max_tx_aggregation_subframes :
-+				     0x40,
- 				     tid_tx->timeout);
- }
- 
--- 
-1.7.3.4
+AP: (rt2800pci / rt2860 - without patch)
+STA: (rt3572 / rt3572sta - used without wpa_supplicant, but just
+rt3572sta stack - rt3572sta ships with an own WPA2-PSK-stack)
 
+-> Why is it working without any problems, if wpa_supplicant isn't used
+at all?
+
+
+Andreas
