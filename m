@@ -1,63 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:8160 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754331Ab1HLTYp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 15:24:45 -0400
-Message-ID: <4E457DF3.4020808@qca.qualcomm.com> (sfid-20110812_212450_770707_8C331902)
-Date: Fri, 12 Aug 2011 22:24:35 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from c60.cesmail.net ([216.154.195.49]:29380 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753349Ab1HAUi7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Aug 2011 16:38:59 -0400
+Received: from mj.roinet.com (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
+	by smtprelay1.cesmail.net (Postfix) with ESMTPSA id 821CC34C8A
+	for <linux-wireless@vger.kernel.org>; Mon,  1 Aug 2011 16:43:49 -0400 (EDT)
+Message-ID: <4E370ECF.80509@gnu.org> (sfid-20110801_223903_050924_B8A10FCB)
+Date: Mon, 01 Aug 2011 16:38:39 -0400
+From: Pavel Roskin <proski@gnu.org>
 MIME-Version: 1.0
-To: Greg KH <gregkh@suse.de>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	<linux-next@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: linux-next: build failure after merge of the final tree (wireless
- & staging trees related)
-References: <20110811155529.e5f47afa0504c4ddef58ab37@canb.auug.org.au> <4E438D56.5020801@qca.qualcomm.com> <20110811141604.GA14763@suse.de> <4E43FA61.1010301@qca.qualcomm.com> <20110812121216.28e6979b44bacb651849640b@canb.auug.org.au> <20110812135101.GA2286@tuxdriver.com> <4E453502.4000401@qca.qualcomm.com> <20110812173255.GE14182@suse.de>
-In-Reply-To: <20110812173255.GE14182@suse.de>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Compat-wireless release for 2011-08-01 is (NOT) baked
+References: <20110801190401.100CA40ED1@repository3.orbit-lab.org>
+In-Reply-To: <20110801190401.100CA40ED1@repository3.orbit-lab.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/12/2011 08:32 PM, Greg KH wrote:
-> On Fri, Aug 12, 2011 at 05:13:22PM +0300, Kalle Valo wrote:
->> On 08/12/2011 04:51 PM, John W. Linville wrote:
->>> On Fri, Aug 12, 2011 at 12:12:16PM +1000, Stephen Rothwell wrote:
->>>> On Thu, 11 Aug 2011 18:50:57 +0300 Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->>>>>
->>>>> Yes, please delete ath6kl from staging for the 3.2 release as the
->>>>> cleanup version is now in wireless-next.
->>>>>
->>>>> Thank you everyone and sorry for the mess.
->>>>
->>>> I think that the removal should be done in the wirelesss tree so that
->>>> Linus' tree is not broken during the next merge window.
->>>>
->>>> I have added the removal patch as a merge fixup one the merge of the
->>>> wireless tree for today.
->>>
->>> Makes sense to me -- probably also is more sane if there is some fool
->>> out there relying on the ath6kl driver in staging that doesn't know
->>> about the switch to the wireless tree.
->>
->> Ok, I'll send a patch to John which removes the staging driver.
-> 
-> Ok, that is fine with me as well.
+On 08/01/2011 03:04 PM, Compat-wireless cronjob account wrote:
+>  From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+>   + d7c6e83...c39a889 akpm-end   ->  origin/akpm-end  (forced update)
+>     55f9c40..3da3f87  akpm-start ->  origin/akpm-start
+>   + cf684c9...346346f master     ->  origin/master  (forced update)
+>     55f9c40..3da3f87  stable     ->  origin/stable
+>   * [new tag]         next-20110801 ->  next-20110801
+> /usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-Stephen&Greg: sorry, I accidentally sent you a 1.8 MB patch. I didn't
-look at the size of the patch at all until I started to wonder why I
-don't see it on linux-wireless. Man that driver was huge!
+Something must be failing.
+The last tarball is compat-wireless-2011-07-28.
 
-John, please take the patch from master.kernel.org:
-
-/pub/linux/kernel/people/kvalo/ath6kl/staging-remove-ath6kl.patch
-
-It will be available via HTTP once the mirrors have synced up:
-
-http://www.kernel.org/pub/linux/kernel/people/kvalo/ath6kl/staging-remove-ath6kl.patch
-
-Kalle
+-- 
+Regards,
+Pavel Roskin
