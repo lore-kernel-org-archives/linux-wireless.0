@@ -1,106 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:42902 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753317Ab1H2IxL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 04:53:11 -0400
-From: Vivek Natarajan <nataraja@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <hostap@lists.shmoo.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] cfg80211/nl80211: Indicate roaming feature capability to userspace.
-Date: Mon, 29 Aug 2011 14:23:03 +0530
-Message-ID: <1314607983-4918-1-git-send-email-nataraja@qca.qualcomm.com> (sfid-20110829_105315_822735_FCD504E6)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:28866 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753134Ab1HAUYx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Aug 2011 16:24:53 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv pointer
+Date: Mon,  1 Aug 2011 12:46:57 -0700
+Message-Id: <1312228017-12061-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110801_222457_795007_6A0FBBC5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the rssi of the current AP drops, both wpa_supplicant and the
-firmware may do a background scan to find a better AP and try to
-associate. Since firmware based roaming is faster, inform
-wpa_supplicant to avoid roaming and let the firmware decide to
-roam if necessary.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-For fullmac drivers like ath6kl, it is just enough to provide the
-ESSID and the firmware will decide on the BSSID. Since it is not
-possible to do pre-auth during roaming for fullmac drivers, the
-wpa_supplicant needs to completely disconnect with the old AP and
-reconnect with the new AP. This consumes lot of time and it is
-better to leave the roaming decision to the firmware.
+This bug has been introduced by:
+d593411084a56124aa9d80aafa15db8463b2d8f7
+Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date:   Mon Jul 11 10:48:51 2011 +0300
 
-Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
+    iwlagn: simplify the bus architecture
+
+Revert part of the buggy patch: dev_get_drvdata will now return
+iwl_priv as it did before the patch.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Tested-by: Daniel Halperin <dhalperi@cs.washington.edu>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- include/linux/nl80211.h |    5 +++++
- include/net/cfg80211.h  |    3 +++
- net/wireless/nl80211.c  |    4 ++++
- 3 files changed, 12 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-pci.c |   18 +++++++++---------
+ 1 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 0343504..f2d75e3 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1045,6 +1045,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_STA_WME: Nested attribute containing the wme configuration
-  *	of the station, see &enum nl80211_sta_wme_attr.
-  *
-+ * @NL80211_ATTR_ROAM_SUPPORT: Indicates whether the firmware is capable of
-+ *	roaming to another AP in the same ESS if the signal lever is low.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1257,6 +1260,8 @@ enum nl80211_attrs {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index fb7e436..69d4ec4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -134,6 +134,7 @@ static void iwl_pci_apm_config(struct iwl_bus *bus)
+ static void iwl_pci_set_drv_data(struct iwl_bus *bus, void *drv_data)
+ {
+ 	bus->drv_data = drv_data;
++	pci_set_drvdata(IWL_BUS_GET_PCI_DEV(bus), drv_data);
+ }
  
- 	NL80211_ATTR_STA_WME,
+ static void iwl_pci_get_hw_id(struct iwl_bus *bus, char buf[],
+@@ -454,8 +455,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		pci_write_config_word(pdev, PCI_COMMAND, pci_cmd);
+ 	}
  
-+	NL80211_ATTR_ROAM_SUPPORT,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+-	pci_set_drvdata(pdev, bus);
+-
+ 	bus->dev = &pdev->dev;
+ 	bus->irq = pdev->irq;
+ 	bus->ops = &pci_ops;
+@@ -494,11 +493,12 @@ static void iwl_pci_down(struct iwl_bus *bus)
  
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 50eb84e..cba062d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1619,6 +1619,8 @@ struct cfg80211_ops {
-  * @WIPHY_FLAG_MESH_AUTH: The device supports mesh authentication by routing
-  *	auth frames to userspace. See @NL80211_MESH_SETUP_USERSPACE_AUTH.
-  * @WIPHY_FLAG_SUPPORTS_SCHED_SCAN: The device supports scheduled scans.
-+ * @WIPHY_FLAG_SUPPORTS_FW_ROAM: The device supports roaming feature in the
-+ *	firmware.
-  */
- enum wiphy_flags {
- 	WIPHY_FLAG_CUSTOM_REGULATORY		= BIT(0),
-@@ -1633,6 +1635,7 @@ enum wiphy_flags {
- 	WIPHY_FLAG_MESH_AUTH			= BIT(10),
- 	WIPHY_FLAG_SUPPORTS_SCHED_SCAN		= BIT(11),
- 	WIPHY_FLAG_ENFORCE_COMBINATIONS		= BIT(12),
-+	WIPHY_FLAG_SUPPORTS_FW_ROAM		= BIT(13),
- };
+ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
+ {
+-	struct iwl_bus *bus = pci_get_drvdata(pdev);
++	struct iwl_priv *priv = pci_get_drvdata(pdev);
++	void *bus_specific = priv->bus->bus_specific;
  
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index bddb559..ad13903 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -189,6 +189,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 					 .len = IEEE80211_MAX_DATA_LEN },
- 	[NL80211_ATTR_IE_ASSOC_RESP] = { .type = NLA_BINARY,
- 					 .len = IEEE80211_MAX_DATA_LEN },
-+	[NL80211_ATTR_ROAM_SUPPORT] = { .type = NLA_FLAG },
- };
+-	iwl_remove(bus->drv_data);
++	iwl_remove(priv);
  
- /* policy for the key attributes */
-@@ -720,6 +721,9 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 	if (dev->wiphy.flags & WIPHY_FLAG_MESH_AUTH)
- 		NLA_PUT_FLAG(msg, NL80211_ATTR_SUPPORT_MESH_AUTH);
+-	iwl_pci_down(bus);
++	iwl_pci_down(bus_specific);
+ }
  
-+	if (dev->wiphy.flags & WIPHY_FLAG_SUPPORTS_FW_ROAM)
-+		NLA_PUT_FLAG(msg, NL80211_ATTR_ROAM_SUPPORT);
-+
- 	NLA_PUT(msg, NL80211_ATTR_CIPHER_SUITES,
- 		sizeof(u32) * dev->wiphy.n_cipher_suites,
- 		dev->wiphy.cipher_suites);
+ #ifdef CONFIG_PM
+@@ -506,20 +506,20 @@ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
+ static int iwl_pci_suspend(struct device *device)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(device);
+-	struct iwl_bus *bus = pci_get_drvdata(pdev);
++	struct iwl_priv *priv = pci_get_drvdata(pdev);
+ 
+ 	/* Before you put code here, think about WoWLAN. You cannot check here
+ 	 * whether WoWLAN is enabled or not, and your code will run even if
+ 	 * WoWLAN is enabled - don't kill the NIC, someone may need it in Sx.
+ 	 */
+ 
+-	return iwl_suspend(bus->drv_data);
++	return iwl_suspend(priv);
+ }
+ 
+ static int iwl_pci_resume(struct device *device)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(device);
+-	struct iwl_bus *bus = pci_get_drvdata(pdev);
++	struct iwl_priv *priv = pci_get_drvdata(pdev);
+ 
+ 	/* Before you put code here, think about WoWLAN. You cannot check here
+ 	 * whether WoWLAN is enabled or not, and your code will run even if
+@@ -532,7 +532,7 @@ static int iwl_pci_resume(struct device *device)
+ 	 */
+ 	pci_write_config_byte(pdev, PCI_CFG_RETRY_TIMEOUT, 0x00);
+ 
+-	return iwl_resume(bus->drv_data);
++	return iwl_resume(priv);
+ }
+ 
+ static SIMPLE_DEV_PM_OPS(iwl_dev_pm_ops, iwl_pci_suspend, iwl_pci_resume);
 -- 
 1.7.1
 
