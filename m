@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:22128 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752063Ab1HVPKL (ORCPT
+Received: from mail-ey0-f171.google.com ([209.85.215.171]:53902 "EHLO
+	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753328Ab1HARjM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 11:10:11 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <kvalo@adurom.com>
-Subject: [PATCH 1/3] ath6kl: Remove unused meta_v2 from ath6kl_data_tx()
-Date: Mon, 22 Aug 2011 20:40:20 +0530
-Message-ID: <1314025822-8004-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110822_171019_577185_B7790E3B)
+	Mon, 1 Aug 2011 13:39:12 -0400
+Received: by eye22 with SMTP id 22so4734418eye.2
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Aug 2011 10:39:11 -0700 (PDT)
+From: Vasily Khoruzhick <anarsoul@gmail.com>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [PATCH 1/2] libertas: disable functionality when interface is down
+Date: Mon, 1 Aug 2011 20:38:39 +0300
+Cc: Daniel Drake <dsd@laptop.org>, linville@tuxdriver.com,
+	dcbw@redhat.com, linux-wireless@vger.kernel.org
+References: <20110801154313.8C9389D401F@zog.reactivated.net>
+In-Reply-To: <20110801154313.8C9389D401F@zog.reactivated.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201108012038.40155.anarsoul@gmail.com> (sfid-20110801_193916_803019_19A49660)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/txrx.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+On Monday 01 August 2011 18:43:13 Daniel Drake wrote:
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index ba33370..fffd929 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -239,7 +239,6 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 	u16 htc_tag = ATH6KL_DATA_PKT_TAG;
- 	u8 ac = 99 ; /* initialize to unmapped ac */
- 	bool chk_adhoc_ps_mapping = false, more_data = false;
--	struct wmi_tx_meta_v2 meta_v2;
- 	int ret;
- 
- 	ath6kl_dbg(ATH6KL_DBG_WLAN_TX,
-@@ -262,8 +261,6 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 	}
- 
- 	if (test_bit(WMI_ENABLED, &ar->flag)) {
--		memset(&meta_v2, 0, sizeof(meta_v2));
--
- 		if (skb_headroom(skb) < dev->needed_headroom) {
- 			WARN_ON(1);
- 			goto fail_tx;
--- 
-1.7.0.4
+Hi, Daniel
 
+> Modify the driver so that it does not function when the interface is
+> down, in preparation for runtime power management.
+> 
+> No commands can be run while the interface is down, so the ndo_dev_stop
+> routine now directly does all necessary work (including asking the device
+> to disconnect from the network and disabling multicast functionality)
+> directly.
+> 
+> power_save and power_restore hooks are added meaning that card drivers
+> can take steps to turn the device off when the interface is down.
+
+You mean completely off? And firmware needs to be reloaded after power up?
+
+> The MAC address can now only be changed when all interfaces are down;
+> the new address will be programmed when an interface gets brought up.
+> This matches mac80211 behaviour.
+> 
+> Also, some small cleanups/simplifications were made in the surrounding
+> device handling logic.
+
+Regards
+Vasily
