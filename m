@@ -1,67 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:45660 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751249Ab1HZFuH (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:59960 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752442Ab1HAL4c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 01:50:07 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
-	<senthilb@qca.qualcomm.com>, <rmanohar@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH] ath9k: minor cleanup in ani
-Date: Fri, 26 Aug 2011 11:19:57 +0530
-Message-ID: <1314337797-5439-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110826_075012_903041_3E3ADD1C)
+	Mon, 1 Aug 2011 07:56:32 -0400
+Received: by pzk37 with SMTP id 37so11372511pzk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Aug 2011 04:56:32 -0700 (PDT)
+Date: Mon, 1 Aug 2011 14:54:30 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Franky Lin <frankyl@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 18/35] staging: brcm80211: use mutex instead of semaphore
+ in dhd_linux.c
+Message-ID: <20110801115430.GH5575@shale.localdomain> (sfid-20110801_135646_971190_97D1538C)
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+ <1310678971-28952-19-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1310678971-28952-19-git-send-email-frankyl@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Thu, Jul 14, 2011 at 02:29:14PM -0700, Franky Lin wrote:
+> From: Arend van Spriel <arend@broadcom.com>
+> 
+> The semaphore proto_sem has been replaced with mutex proto_block
+> which lock certain code paths for one thread.
+> 
 
-removed a function declaration, removed a variable, renamed a variable
+This one doesn't apply any more after the 3.1 merge window.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ani.c |    2 +-
- drivers/net/wireless/ath/ath9k/ani.h |    5 +----
- 2 files changed, 2 insertions(+), 5 deletions(-)
+It was modified in 1380516599 "Merge branch 'staging-next' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-2.6"
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index bfb6481..d969a11 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -643,7 +643,7 @@ static bool ath9k_hw_ani_read_counters(struct ath_hw *ah)
- 	listenTime = ath_hw_get_listen_time(common);
- 
- 	if (listenTime <= 0) {
--		ah->stats.ast_ani_lneg++;
-+		ah->stats.ast_ani_lneg_or_lzero++;
- 		ath9k_ani_restart(ah);
- 		return false;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
-index dbab5b9..a547005 100644
---- a/drivers/net/wireless/ath/ath9k/ani.h
-+++ b/drivers/net/wireless/ath/ath9k/ani.h
-@@ -148,8 +148,7 @@ struct ar5416Stats {
- 	u32 ast_ani_ofdmerrs;
- 	u32 ast_ani_cckerrs;
- 	u32 ast_ani_reset;
--	u32 ast_ani_lzero;
--	u32 ast_ani_lneg;
-+	u32 ast_ani_lneg_or_lzero;
- 	u32 avgbrssi;
- 	struct ath9k_mib_stats ast_mibstats;
- };
-@@ -159,7 +158,5 @@ void ath9k_enable_mib_counters(struct ath_hw *ah);
- void ath9k_hw_disable_mib_counters(struct ath_hw *ah);
- void ath9k_hw_ani_setup(struct ath_hw *ah);
- void ath9k_hw_ani_init(struct ath_hw *ah);
--int ath9k_hw_get_ani_channel_idx(struct ath_hw *ah,
--				 struct ath9k_channel *chan);
- 
- #endif /* ANI_H */
--- 
-1.7.0.4
-
+regards,
+dan carpenter
