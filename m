@@ -1,56 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58085 "EHLO
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:36636 "EHLO
 	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756480Ab1HTAb1 (ORCPT
+	with ESMTP id S1753598Ab1HARuE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Aug 2011 20:31:27 -0400
-Received: by fxh19 with SMTP id 19so2243216fxh.19
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Aug 2011 17:31:25 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Panu Avakul <avakulpa@gmail.com>
-Subject: bison++ detection (was: Problem Building carl9170)
-Date: Wed, 17 Aug 2011 11:44:27 +0200
-Cc: linux-wireless@vger.kernel.org, cmake@cmake.org
-References: <CAFHVRfdha1e-+E+hTKPv2JAu5ywOkNo+we2k5FUGtdtRDTV4Aw@mail.gmail.com> <CAFHVRfcUANEJpG6y+XYw_6SYFdxGG8S+Zf3YU+6257KQP9P3Pw@mail.gmail.com> <CAFHVRfdetBxqp4DzHPpT--oJAiWX6LgBaz=nhLa8YBB=V_yXxA@mail.gmail.com>
-In-Reply-To: <CAFHVRfdetBxqp4DzHPpT--oJAiWX6LgBaz=nhLa8YBB=V_yXxA@mail.gmail.com>
+	Mon, 1 Aug 2011 13:50:04 -0400
+Received: by fxh19 with SMTP id 19so4773528fxh.19
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Aug 2011 10:50:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201108171144.27282.chunkeey@googlemail.com> (sfid-20110820_023130_113656_04DE3840)
+In-Reply-To: <201108012038.40155.anarsoul@gmail.com>
+References: <20110801154313.8C9389D401F@zog.reactivated.net>
+	<201108012038.40155.anarsoul@gmail.com>
+Date: Mon, 1 Aug 2011 18:50:03 +0100
+Message-ID: <CAGq3pz50EamvOmsshmZaPp5-ToW8eVi78r-BdDG-rX2154sH2A@mail.gmail.com> (sfid-20110801_195008_452233_794545CC)
+Subject: Re: [PATCH 1/2] libertas: disable functionality when interface is down
+From: Daniel Drake <dsd@laptop.org>
+To: Vasily Khoruzhick <anarsoul@gmail.com>
+Cc: libertas-dev@lists.infradead.org, linville@tuxdriver.com,
+	dcbw@redhat.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, August 17, 2011 03:03:16 AM Panu Avakul wrote:
-> Hello, some one in the cmake mailing list point out to me that
-> In line 296 of the CMakeCache.txt
-> FIND_PACKAGE_MESSAGE_DETAILS_BISON:INTERNAL=[/usr/bin/bison][vbison++
-> Version 1.21.9-1, adapted from GNU bison by coetmeur@icdc.fr
-> Maintained by Magnus Ekdahl <magnus@debian.org>()]
+On 1 August 2011 18:38, Vasily Khoruzhick <anarsoul@gmail.com> wrote:
+>> power_save and power_restore hooks are added meaning that card drivers
+>> can take steps to turn the device off when the interface is down.
 >
-> There is a \n character in it.
-> I went to tried use command bison --version and it print out the same
-> lines in two separate line and that might be where the parsing problem
-> came from.
-I don't think that the \n is a problem, because my bison prints lots of
-them as well.
+> You mean completely off? And firmware needs to be reloaded after power up?
 
-$ bison --version
-> bison (GNU Bison) 2.4.1
-> Written by Robert Corbett and Richard Stallman.
->
-> Copyright (C) 2008 Free Software Foundation, Inc.
-> This is free software; see the source for copying conditions.  There is NO
-> warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-But apparently, bison++ is not compatible with bison files we use [actually,
-the build system kconfig was taken from the linux kernel]. I would suggest to
-try the original non-plusplus bison: http://packages.ubuntu.com/natty/bison
+Yep, exactly like that. Same as various mac80211-based drivers.
 
-Anyway, carl9170 uses cmake's own bison detection script from
-/usr/share/cmake-2.8/Modules/FindBISON.cmake
-So I guess there should be a note somewhere that the current
-FindBISON.cmake does not work with bison++ very well and it
-should be able to detect the incompatible bison++ in the
-future. 
+The 2nd patch in this series implements it for libertas_sdio, the
+other libertas interfaces have their behaviour as before.
 
-Regards,
-	Chr
+Daniel
