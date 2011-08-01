@@ -1,176 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:52194 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751998Ab1HIXqf (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:63152 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753392Ab1HACce (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 19:46:35 -0400
-Received: by mail-iy0-f170.google.com with SMTP id 16so23646iye.1
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 16:46:35 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH 8/8] {nl,cfg,mac}80211: let userspace make meshif mesh gate
-Date: Tue,  9 Aug 2011 16:45:11 -0700
-Message-Id: <1312933511-9486-9-git-send-email-thomas@cozybit.com> (sfid-20110810_014640_415109_FD1419AC)
-In-Reply-To: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
-References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
+	Sun, 31 Jul 2011 22:32:34 -0400
+Received: by vws1 with SMTP id 1so4135244vws.19
+        for <linux-wireless@vger.kernel.org>; Sun, 31 Jul 2011 19:32:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAJ8GFOgmsVyeGqYhfMoS+qPVx5cp53C94hr=GL0wPYUwQH5zwg@mail.gmail.com>
+References: <CAJ8GFOg4A4JwC8qdF6e7rRCRETnfrPm5Zv60_8Cm1xpbJJNQpg@mail.gmail.com>
+	<201107312112.55357.chunkeey@googlemail.com>
+	<CAJ8GFOgmsVyeGqYhfMoS+qPVx5cp53C94hr=GL0wPYUwQH5zwg@mail.gmail.com>
+Date: Mon, 1 Aug 2011 10:32:34 +0800
+Message-ID: <CAJ-VmongjbU80_VXAajrEAdt5ZZCWRtZrO3b1zKcEEH=nWqQTw@mail.gmail.com> (sfid-20110801_043245_819015_30A130D5)
+Subject: Re: carl9170: How do I change value of retries for long packets?
+From: Adrian Chadd <adrian@freebsd.org>
+To: Harshal Chhaya <harshal@gmail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+On 1 August 2011 10:29, Harshal Chhaya <harshal@gmail.com> wrote:
 
-Allow userspace to set NL80211_MESHCONF_GATE_ANNOUNCEMENTS attribute,
-which will advertise this mesh node as being a mesh gate.
-NL80211_HWMP_ROOTMODE must be set or this will do nothing.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- include/linux/nl80211.h       |    5 +++++
- include/net/cfg80211.h        |    5 +++++
- net/mac80211/cfg.c            |    4 ++++
- net/mac80211/debugfs_netdev.c |    3 +++
- net/mac80211/mesh_hwmp.c      |    5 ++++-
- net/wireless/mesh.c           |    1 +
- net/wireless/nl80211.c        |    7 +++++++
- 7 files changed, 29 insertions(+), 1 deletions(-)
+>>> However, I did find some very helpful information in the debug files
+>>> in 'debugfs' including the number of retries.
+>>> The current value is 4 for long packets and 7 for short packets.
+>> I don't think that the term "short packets" is what you think it is. :D
+>
+> From what I understand, short packets are smaller than the
+> RTSThreshold and long packets are larger than that value. Since my
+> RTSThreshold is undefined, I imagine all my data packets are 'long
+> packets'.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 63ad64b..af2d768 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1836,6 +1836,10 @@ enum nl80211_mntr_flags {
-  * @NL80211_MESHCONF_HWMP_RANN_INTERVAL:  The interval of time (in TUs) between
-  * root announcements are transmitted.
-  *
-+ * @NL80211_MESHCONF_GATE_ANNOUNCEMENTS: Advertise that this mesh station has
-+ * access to a broader network beyond the MBSS.  This is done via Root
-+ * Announcement frames.
-+ *
-  * @NL80211_MESHCONF_ATTR_MAX: highest possible mesh configuration attribute
-  *
-  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
-@@ -1858,6 +1862,7 @@ enum nl80211_meshconf_params {
- 	NL80211_MESHCONF_HWMP_ROOTMODE,
- 	NL80211_MESHCONF_ELEMENT_TTL,
- 	NL80211_MESHCONF_HWMP_RANN_INTERVAL,
-+	NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
- 
- 	/* keep last */
- 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 207e508..7254157 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -684,6 +684,11 @@ struct mesh_config {
- 	u16 dot11MeshHWMPnetDiameterTraversalTime;
- 	u8  dot11MeshHWMPRootMode;
- 	u16 dot11MeshHWMPRannInterval;
-+	/* This is missnamed in draft 12.0: dot11MeshGateAnnouncementProtocol
-+	 * set to true only means that the station will announce others it's a
-+	 * mesh gate, but not necessarily using the gate announcement protocol.
-+	 * Still keeping the same nomenclature to be in sync with the spec. */
-+	bool  dot11MeshGateAnnouncementProtocol;
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 9995c83..7d17a91 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1137,6 +1137,10 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
- 		conf->dot11MeshHWMPRootMode = nconf->dot11MeshHWMPRootMode;
- 		ieee80211_mesh_root_setup(ifmsh);
- 	}
-+	if (_chg_mesh_attr(NL80211_MESHCONF_GATE_ANNOUNCEMENTS, mask)) {
-+		conf->dot11MeshGateAnnouncementProtocol =
-+			nconf->dot11MeshGateAnnouncementProtocol;
-+	}
- 	if (_chg_mesh_attr(NL80211_MESHCONF_HWMP_RANN_INTERVAL, mask)) {
- 		conf->dot11MeshHWMPRannInterval =
- 			nconf->dot11MeshHWMPRannInterval;
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index bac9443..6e8eab7 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -372,6 +372,8 @@ IEEE80211_IF_FILE(min_discovery_timeout,
- 		u.mesh.mshcfg.min_discovery_timeout, DEC);
- IEEE80211_IF_FILE(dot11MeshHWMPRootMode,
- 		u.mesh.mshcfg.dot11MeshHWMPRootMode, DEC);
-+IEEE80211_IF_FILE(dot11MeshGateAnnouncementProtocol,
-+		u.mesh.mshcfg.dot11MeshGateAnnouncementProtocol, DEC);
- IEEE80211_IF_FILE(dot11MeshHWMPRannInterval,
- 		u.mesh.mshcfg.dot11MeshHWMPRannInterval, DEC);
- #endif
-@@ -489,6 +491,7 @@ static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
- 	MESHPARAMS_ADD(min_discovery_timeout);
- 	MESHPARAMS_ADD(dot11MeshHWMPRootMode);
- 	MESHPARAMS_ADD(dot11MeshHWMPRannInterval);
-+	MESHPARAMS_ADD(dot11MeshGateAnnouncementProtocol);
- #undef MESHPARAMS_ADD
- }
- #endif
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index d6dd460..ec920dd 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -1044,8 +1044,11 @@ mesh_path_tx_root_frame(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	u32 interval = ifmsh->mshcfg.dot11MeshHWMPRannInterval;
-+	u8 flags;
- 
--	mesh_path_sel_frame_tx(MPATH_RANN, 0, sdata->vif.addr,
-+	flags = (ifmsh->mshcfg.dot11MeshGateAnnouncementProtocol)
-+			? RANN_FLAG_IS_GATE : 0;
-+	mesh_path_sel_frame_tx(MPATH_RANN, flags, sdata->vif.addr,
- 			       cpu_to_le32(++ifmsh->sn),
- 			       0, NULL, 0, broadcast_addr,
- 			       0, sdata->u.mesh.mshcfg.element_ttl,
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index b5a39d4..4423e64 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -51,6 +51,7 @@ const struct mesh_config default_mesh_config = {
- 	.path_refresh_time = MESH_PATH_REFRESH_TIME,
- 	.min_discovery_timeout = MESH_MIN_DISCOVERY_TIMEOUT,
- 	.dot11MeshHWMPRannInterval = MESH_RANN_INTERVAL,
-+	.dot11MeshGateAnnouncementProtocol = false,
- };
- 
- const struct mesh_setup default_mesh_setup = {
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 40cab48..59f6c31 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2957,6 +2957,8 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
- 			cur_params.dot11MeshHWMPRootMode);
- 	NLA_PUT_U16(msg, NL80211_MESHCONF_HWMP_RANN_INTERVAL,
- 			cur_params.dot11MeshHWMPRannInterval);
-+	NLA_PUT_U8(msg, NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
-+			cur_params.dot11MeshGateAnnouncementProtocol);
- 	nla_nest_end(msg, pinfoattr);
- 	genlmsg_end(msg, hdr);
- 	return genlmsg_reply(msg, info);
-@@ -2986,6 +2988,7 @@ static const struct nla_policy nl80211_meshconf_params_policy[NL80211_MESHCONF_A
- 	[NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME] = { .type = NLA_U16 },
- 	[NL80211_MESHCONF_HWMP_ROOTMODE] = { .type = NLA_U8 },
- 	[NL80211_MESHCONF_HWMP_RANN_INTERVAL] = { .type = NLA_U16 },
-+	[NL80211_MESHCONF_GATE_ANNOUNCEMENTS] = { .type = NLA_U8 },
- };
- 
- static const struct nla_policy
-@@ -3068,6 +3071,10 @@ do {\
- 			dot11MeshHWMPRannInterval, mask,
- 			NL80211_MESHCONF_HWMP_RANN_INTERVAL,
- 			nla_get_u16);
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg,
-+			dot11MeshGateAnnouncementProtocol, mask,
-+			NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
-+			nla_get_u8);
- 	if (mask_out)
- 		*mask_out = mask;
- 
--- 
-1.7.6
+If it's even peripherally related to the Atheros MAC terminology, then
+that's the number of RTS retries and then entire packet retries.
 
+Ie:
+
+* short would be "how many times to try sending an RTS, expecting to
+hear an CTS in response but not hearing it."
+* long would be "how many times to try sending the whole packet,
+expecting an ACK in response, but not hearing it."
+
+
+
+Adrian
