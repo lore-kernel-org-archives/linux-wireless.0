@@ -1,63 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:35889 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753439Ab1HTMDy (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:60264 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753254Ab1HAI1F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Aug 2011 08:03:54 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v4] ath9k_hw: Disable Walsh spatial spreading for 2 chains
-Date: Sat, 20 Aug 2011 17:34:19 +0530
-Message-ID: <1313841859-8521-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110820_140403_448848_39A6C5DB)
+	Mon, 1 Aug 2011 04:27:05 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Mon, 1 Aug 2011 10:27:02 +0200
+Message-ID: <CAC9WiBipw7i8eaOSYuWwXmed6ddQOgwFRbV0-cOiqHZcVt_-Tg@mail.gmail.com> (sfid-20110801_102721_484874_DBE67CD2)
+Subject: v3.0: WARNING: at fs/sysfs/dir.c:455 sysfs_add_one
+From: Francis Moreau <francis.moro@gmail.com>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Walsh bit is disabled for regulatory consideration.
+Hello,
 
-FCC limit for walsh enable is lower than that for walsh disable. So
-disabling walsh bit will not limit tx power/affect tx power even in
-cases where we are not FCC limited (most client cards). If the tx
-power is not FCC limited, then enabling/disabling walsh bit will
-not affect Avg. EVM/overall performance in any visible manner.
+This is triggering a couple of time on my laptop when plugging my
+wireless ralink 2870 USB adapter or after resuming the system:
 
-Cc: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c        |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Aug  1 09:08:40 tsunami kernel: [18606.523463] Freezing remaining
+freezable tasks ... (elapsed 0.01 seconds) done.
+Aug  1 09:08:40 tsunami kernel: [18613.301110] Suspending console(s)
+(use no_console_suspend to debug)
+Aug  1 09:08:40 tsunami kernel: [18613.322450] Disabling non-boot CPUs ...
+Aug  1 09:08:40 tsunami kernel: [18613.326533] Broke affinity for irq 12
+Aug  1 09:08:40 tsunami kernel: [18613.326563] Broke affinity for irq 23
+Aug  1 09:08:40 tsunami kernel: [18613.648409] usb usb1: root hub lost
+power or was reset
+Aug  1 09:08:40 tsunami kernel: [18613.652424] usb usb2: root hub lost
+power or was reset
+Aug  1 09:08:40 tsunami kernel: [18615.155053] rt2800usb 2-1.3:1.0: no
+reset_resume for driver rt2800usb?
+Aug  1 09:08:40 tsunami kernel: [18615.351794] Restarting tasks ... done.
+Aug  1 10:12:50 tsunami kernel: [22466.153450] ------------[ cut here
+]------------
+Aug  1 10:12:50 tsunami kernel: [22466.153460] WARNING: at
+fs/sysfs/dir.c:455 sysfs_add_one+0xc1/0xf0()
+Aug  1 10:12:50 tsunami kernel: [22466.153463] Hardware name: Vostro 3500
+Aug  1 10:12:50 tsunami kernel: [22466.153466] sysfs: cannot create
+duplicate filename '/bus/usb/drivers/usb/2-1.3'
+Aug  1 10:12:50 tsunami kernel: [22466.153469] Modules linked in:
+zcache(PC) sit tunnel4 fuse af_packet ipv6 snd_hda_codec_hdmi
+snd_hda_codec_idt arc4 brcmsmac(C) rt2800usb rt2800lib rt2x00usb r
+t2x00lib brcmutil(C) uvcvideo mac80211 snd_hda_intel snd_hda_codec
+snd_hwdep videodev snd_seq_dummy snd_seq_oss r8169 sg iTCO_wdt sr_mod
+dell_laptop dcdbas media v4l2_compat_ioctl32 iTCO_vendor_
+support mii snd_seq_midi_event intel_ips snd_seq snd_seq_device
+snd_pcm_oss snd_pcm cfg80211 rfkill snd_timer snd_mixer_oss snd
+soundcore snd_page_alloc mei(C) i2c_i801 crc_ccitt i915 drm_kms_he
+lper drm i2c_algo_bit i2c_core coretemp binfmt_misc cpufreq_ondemand
+cpufreq_conservative cpufreq_powersave acpi_cpufreq freq_table mperf
+nvram dell_wmi sparse_keymap dm_mod joydev evdev video b
+attery wmi kvm_intel kvm ata_piix ahci libahci libata sd_mod scsi_mod
+crc_t10dif ext4 jbd2 crc16 uhci_hcd ohci_hcd ehci_hcd usbhid hid
+usbcore
+Aug  1 10:12:50 tsunami kernel: [22466.153570] Pid: 54, comm: khubd
+Tainted: P         C  3.0.0+-desktop #34
+Aug  1 10:12:50 tsunami kernel: [22466.153573] Call Trace:
+Aug  1 10:12:50 tsunami kernel: [22466.153582]  [<ffffffff8106197f>]
+warn_slowpath_common+0x7f/0xc0
+Aug  1 10:12:50 tsunami kernel: [22466.153587]  [<ffffffff81061a76>]
+warn_slowpath_fmt+0x46/0x50
+Aug  1 10:12:50 tsunami kernel: [22466.153592]  [<ffffffff811d0fc1>]
+sysfs_add_one+0xc1/0xf0
+Aug  1 10:12:50 tsunami kernel: [22466.153598]  [<ffffffff811d165b>]
+sysfs_do_create_link+0x13b/0x210
+Aug  1 10:12:50 tsunami kernel: [22466.153605]  [<ffffffff810897e5>] ?
+__blocking_notifier_call_chain+0x65/0x80
+Aug  1 10:12:50 tsunami kernel: [22466.153611]  [<ffffffff811d1763>]
+sysfs_create_link+0x13/0x20
+Aug  1 10:12:50 tsunami kernel: [22466.153616]  [<ffffffff813047c2>]
+driver_sysfs_add+0x52/0xb0
+Aug  1 10:12:50 tsunami kernel: [22466.153623]  [<ffffffff81304972>]
+driver_probe_device+0x82/0x2c0
+Aug  1 10:12:50 tsunami kernel: [22466.153629]  [<ffffffff81304bb0>] ?
+driver_probe_device+0x2c0/0x2c0
+Aug  1 10:12:50 tsunami kernel: [22466.153634]  [<ffffffff81304c03>]
+__device_attach+0x53/0x60
+Aug  1 10:12:50 tsunami kernel: [22466.153641]  [<ffffffff81303958>]
+bus_for_each_drv+0x68/0x90
+Aug  1 10:12:50 tsunami kernel: [22466.153646]  [<ffffffff81304e77>]
+device_attach+0xa7/0xc0
+Aug  1 10:12:50 tsunami kernel: [22466.153651]  [<ffffffff813036ed>]
+bus_probe_device+0x2d/0x50
+Aug  1 10:12:50 tsunami kernel: [22466.153657]  [<ffffffff813024e9>]
+device_add+0x619/0x710
+Aug  1 10:12:50 tsunami kernel: [22466.153679]  [<ffffffffa000c7b9>] ?
+usb_cache_string+0x99/0xb0 [usbcore]
+Aug  1 10:12:50 tsunami kernel: [22466.153713]  [<ffffffffa0002753>]
+usb_new_device+0x173/0x240 [usbcore]
+Aug  1 10:12:50 tsunami kernel: [22466.153734]  [<ffffffffa0005548>]
+hub_thread+0xdb8/0x1780 [usbcore]
+Aug  1 10:12:50 tsunami kernel: [22466.153743]  [<ffffffff81059ea3>] ?
+perf_event_task_sched_out+0x33/0xa0
+Aug  1 10:12:50 tsunami kernel: [22466.153752]  [<ffffffff81083db0>] ?
+wake_up_bit+0x40/0x40
+Aug  1 10:12:50 tsunami kernel: [22466.153772]  [<ffffffffa0004790>] ?
+hub_disconnect+0x100/0x100 [usbcore]
+Aug  1 10:12:50 tsunami kernel: [22466.153779]  [<ffffffff81083866>]
+kthread+0x96/0xa0
+Aug  1 10:12:50 tsunami kernel: [22466.153789]  [<ffffffff81436ca4>]
+kernel_thread_helper+0x4/0x10
+Aug  1 10:12:50 tsunami kernel: [22466.153797]  [<ffffffff810837d0>] ?
+kthread_worker_fn+0x190/0x190
+Aug  1 10:12:50 tsunami kernel: [22466.153804]  [<ffffffff81436ca0>] ?
+gs_change+0x13/0x13
+Aug  1 10:12:50 tsunami kernel: [22466.153809] ---[ end trace
+ae985b8b8f50099d ]---
+Aug  1 10:12:50 tsunami kernel: [22466.153828] usb: probe of 2-1.3
+failed with error 0
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index a0aadad..f2c6f23 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -636,7 +636,7 @@ static const u32 ar9300_2p2_baseband_postamble[][5] = {
- 	{0x00009e44, 0x02321e27, 0x02321e27, 0x02291e27, 0x02291e27},
- 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
- 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
--	{0x0000a204, 0x000037c0, 0x000037c4, 0x000037c4, 0x000037c0},
-+	{0x0000a204, 0x000036c0, 0x000036c4, 0x000036c4, 0x000036c0},
- 	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
- 	{0x0000a22c, 0x01026a2f, 0x01026a2f, 0x01026a2f, 0x01026a2f},
- 	{0x0000a230, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b},
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index a0aaa68..dbe0b58 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -482,7 +482,7 @@ static void ar9003_hw_set_channel_regs(struct ath_hw *ah,
- 		(REG_READ(ah, AR_PHY_GEN_CTRL) & AR_PHY_GC_ENABLE_DAC_FIFO);
- 
- 	/* Enable 11n HT, 20 MHz */
--	phymode = AR_PHY_GC_HT_EN | AR_PHY_GC_SINGLE_HT_LTF1 | AR_PHY_GC_WALSH |
-+	phymode = AR_PHY_GC_HT_EN | AR_PHY_GC_SINGLE_HT_LTF1 |
- 		  AR_PHY_GC_SHORT_GI_40 | enableDacFifo;
- 
- 	/* Configure baseband for dynamic 20/40 operation */
+Thanks
 -- 
-1.7.6
-
+Francis
