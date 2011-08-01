@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:29671 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752857Ab1H3OOa (ORCPT
+Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:41202 "HELO
+	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752243Ab1HAV72 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 10:14:30 -0400
-Date: Tue, 30 Aug 2011 17:13:19 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 07/20] ath6kl: Implement mgmt_tx
-Message-ID: <20110830141319.GC8163@jouni.qca.qualcomm.com> (sfid-20110830_161433_237046_CDAB3589)
-References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
- <1314620641-24257-8-git-send-email-jouni@qca.qualcomm.com>
- <4E5CABF8.901@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4E5CABF8.901@qca.qualcomm.com>
+	Mon, 1 Aug 2011 17:59:28 -0400
+Date: Mon, 1 Aug 2011 14:52:46 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-wireless@vger.kernel.org
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Ivo van Doorn <IvDoorn@gmail.com>
+Subject: Re: linux-next: Tree for Aug 1 (wireless/rt2x00)
+Message-Id: <20110801145246.da67280d.rdunlap@xenotime.net> (sfid-20110801_235946_322663_48C324F1)
+In-Reply-To: <20110801144732.7f5204b219f628f2a2a63b0c@canb.auug.org.au>
+References: <20110801144732.7f5204b219f628f2a2a63b0c@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 30, 2011 at 12:23:04PM +0300, Kalle Valo wrote:
-> On 08/29/2011 03:23 PM, Jouni Malinen wrote:
-> > +static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
+On Mon, 1 Aug 2011 14:47:32 +1000 Stephen Rothwell wrote:
 
-> > +	id = ar->send_action_id++;
-> > +	if (id == 0)
-> > +		id = ar->send_action_id++;
+> Hi all,
 
-> > +	*cookie = id;
-> > +	return ath6kl_wmi_send_action_cmd(ar->wmi, id, chan->center_freq, wait,
-> > +					  buf, len);
+When CONFIG_RT2X00_LIB_CRYPTO is not enabled:
 
-> I don't understand the "if (id == 0)" check. It would be nice to get a
-> comment giving some background info about the situation.
+drivers/net/wireless/rt2x00/rt2x00queue.c:476: error: too many arguments to function 'rt2x00crypto_create_tx_descriptor'
 
-0 is a reserved value in the target implementation and shall not be used
-in the WMI command. I'll add a comment on this.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+CONFIG_RT2X00=m
+# CONFIG_RT2400PCI is not set
+CONFIG_RT2500PCI=m
+# CONFIG_RT61PCI is not set
+# CONFIG_RT2800PCI is not set
+CONFIG_RT2X00_LIB_PCI=m
+CONFIG_RT2X00_LIB=m
+CONFIG_RT2X00_LIB_LEDS=y
+# CONFIG_RT2X00_DEBUG is not set
+
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
