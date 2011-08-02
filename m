@@ -1,91 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42770 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754675Ab1H2SPX (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:45427 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751848Ab1HBXrB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 14:15:23 -0400
-Date: Mon, 29 Aug 2011 14:12:38 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Joe Perches <joe@perches.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] ath: Make ath_printk void not int and remove unused
- struct ath_common *
-Message-ID: <20110829181237.GB1406@tuxdriver.com> (sfid-20110829_201544_278490_49F4033E)
-References: <cover.1314347556.git.joe@perches.com>
- <78869fcd8172cd02266b66a71aadbd0c0efbdebc.1314347556.git.joe@perches.com>
+	Tue, 2 Aug 2011 19:47:01 -0400
+Message-ID: <4E388C71.5080808@lwfinger.net> (sfid-20110803_014719_454009_38C3C877)
+Date: Tue, 02 Aug 2011 18:46:57 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <78869fcd8172cd02266b66a71aadbd0c0efbdebc.1314347556.git.joe@perches.com>
+To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
+CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtl8192cu: add USB ID for Belkin n300 Micro USB wireless
+ adapter
+References: <201108022229.58532.s.L-H@gmx.de> <4E386FB9.2040507@lwfinger.net> <201108030035.50214.s.L-H@gmx.de> <201108030120.21059.s.L-H@gmx.de>
+In-Reply-To: <201108030120.21059.s.L-H@gmx.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 26, 2011 at 01:56:39AM -0700, Joe Perches wrote:
-> Changing the return type and removing the unused argument from
-> ath_printk reduces code size.
-> 
-> Add an __always_unused struct ath_common * to the macros
-> that call ath_printk to avoid unused variable warnings.
-> 
-> $ size drivers/net/wireless/ath/built-in.o*
->    text	   data	    bss	    dec	    hex	filename
-> 1159859	  16235	 212000	1388094	 152e3e	drivers/net/wireless/ath/built-in.o.new
-> 1164175	  16235	 212032	1392442	 153f3a	drivers/net/wireless/ath/built-in.o.old
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/net/wireless/ath/ath.h  |   27 ++++++++++++++++-----------
->  drivers/net/wireless/ath/main.c |    8 ++------
->  2 files changed, 18 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-> index a3f8505..9891fb6 100644
-> --- a/drivers/net/wireless/ath/ath.h
-> +++ b/drivers/net/wireless/ath/ath.h
-> @@ -178,24 +178,29 @@ bool ath_hw_keyreset(struct ath_common *common, u16 entry);
->  void ath_hw_cycle_counters_update(struct ath_common *common);
->  int32_t ath_hw_get_listen_time(struct ath_common *common);
->  
-> -extern __attribute__((format (printf, 3, 4)))
-> -int ath_printk(const char *level, struct ath_common *common,
-> -	       const char *fmt, ...);
-> +extern __attribute__((format (printf, 2, 3)))
-> +void ath_printk(const char *level, const char *fmt, ...);
-> +
-> +#define _ath_printk(level, common, fmt, ...)			\
-> +do {								\
-> +	__always_unused struct ath_common *unused = common;	\
-> +	ath_printk(level, fmt, ##__VA_ARGS__);			\
-> +} while (0)
->  
->  #define ath_emerg(common, fmt, ...)				\
-> -	ath_printk(KERN_EMERG, common, fmt, ##__VA_ARGS__)
-> +	_ath_printk(KERN_EMERG, common, fmt, ##__VA_ARGS__)
->  #define ath_alert(common, fmt, ...)				\
-> -	ath_printk(KERN_ALERT, common, fmt, ##__VA_ARGS__)
-> +	_ath_printk(KERN_ALERT, common, fmt, ##__VA_ARGS__)
->  #define ath_crit(common, fmt, ...)				\
-> -	ath_printk(KERN_CRIT, common, fmt, ##__VA_ARGS__)
-> +	_ath_printk(KERN_CRIT, common, fmt, ##__VA_ARGS__)
->  #define ath_err(common, fmt, ...)				\
-> -	ath_printk(KERN_ERR, common, fmt, ##__VA_ARGS__)
-> +	_ath_printk(KERN_ERR, common, fmt, ##__VA_ARGS__)
->  #define ath_warn(common, fmt, ...)				\
-> -	ath_printk(KERN_WARNING, common, fmt, ##__VA_ARGS__)
-> +	_ath_printk(KERN_WARNING, common, fmt, ##__VA_ARGS__)
->  #define ath_notice(common, fmt, ...)				\
-> -	ath_printk(KERN_NOTICE, common, fmt, ##__VA_ARGS__)
-> +	_ath_printk(KERN_NOTICE, common, fmt, ##__VA_ARGS__)
->  #define ath_info(common, fmt, ...)				\
-> -	ath_printk(KERN_INFO, common, fmt, ##__VA_ARGS__)
-> +	_ath_printk(KERN_INFO, common, fmt, ##__VA_ARGS__)
->  
->  /**
->   * enum ath_debug_level - atheros wireless debug level
+On 08/02/2011 06:20 PM, Stefan Lippers-Hollmann wrote:
+>
+> So at least the reported Oops is not specific to 050d:2103, but happens
+> for any USB ID injected at runtime through sysfs and therefore appears
+> to be a general issue with rtl8192cu.
 
-Any reason to preserve all these "common" args?
+As your system and mine are both x86_64, I had hoped to use your dump to find 
+the offending statement. Unfortunately, the codes don't exactly match. I'll 
+duplicate your experiment here and send you a trial patch.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Thanks for the report.
+
+Larry
