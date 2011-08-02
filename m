@@ -1,47 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2230 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751429Ab1HVOPr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 10:15:47 -0400
-Message-ID: <4E526487.1030609@broadcom.com> (sfid-20110822_161550_231142_917BDCF8)
-Date: Mon, 22 Aug 2011 16:15:35 +0200
-From: "Roland Vossen" <rvossen@broadcom.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:46204 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755479Ab1HBVwg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2011 17:52:36 -0400
+Date: Tue, 02 Aug 2011 16:52:33 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: gentoo.lubomir@googlemail.com, s.L-H@gmx.de,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl892cu: New USB IDs
+Message-ID: <4e3871a1.eNDdeH4ZkLsNMODL%Larry.Finger@lwfinger.net> (sfid-20110802_235239_845962_6E8D50F7)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"networkmanager-list@gnome.org" <networkmanager-list@gnome.org>
-Subject: Re: brcmsmac driver only works when sitting next to the AP
-References: <20110814121646.GA5188@stt008.linux.site>
- <4E4A5641.4020604@broadcom.com>
- <1313509211.2065.36.camel@dcbw.foobar.com>
- <4E4B9A45.5090507@broadcom.com> <4E4CC85A.7010504@broadcom.com>
- <4E4E73F4.4040105@broadcom.com>
- <20110819152140.GA7506@stt008.linux.site>
- <CAKprTDEUVa6ouH92G_8UMo20wYNnrhu76c_XAPYDtbCbRjqdLw@mail.gmail.com>
- <4E52297D.9090301@broadcom.com>
- <20110822112737.GA5936@stt008.linux.site>
- <4E525235.7060501@broadcom.com>
- <CAKprTDHO+Hh4g3WjGijDhPtzY5PiqR0GQ_zg8Uw46-qOVXpCRQ@mail.gmail.com>
-In-Reply-To: <CAKprTDHO+Hh4g3WjGijDhPtzY5PiqR0GQ_zg8Uw46-qOVXpCRQ@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This patch fixes several problems in the USB_DEVICE table, including missing IDs,
+reversed vendor/product codes, and a duplicate ID.
 
->> Would you happen to know if with kernel 2.6.39, the brcmsmac driver was
->> active as well (and not a different driver) ?
->
-> I expressely used the brcmsmac because it was newer, easier to setup
-> than the others... and it's open source :-)
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-just to make sure: so you were already using brcmsmac in 2.6.39 ?
-
-Thanks, Roland.
-
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+@@ -281,6 +281,8 @@ static struct usb_device_id rtl8192c_usb
+ 	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x817d, rtl92cu_hal_cfg)},
+ 	/* 8188CE-VAU USB minCard (b/g mode only) */
+ 	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x817e, rtl92cu_hal_cfg)},
++	/* 8188RU in Alfa AWUS036NHR */
++	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x817f, rtl92cu_hal_cfg)},
+ 	/* 8188 Combo for BC4 */
+ 	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x8754, rtl92cu_hal_cfg)},
+ 
+@@ -303,20 +305,23 @@ static struct usb_device_id rtl8192c_usb
+ 	{RTL_USB_DEVICE(0x0eb0, 0x9071, rtl92cu_hal_cfg)}, /*NO Brand - Etop*/
+ 	/* HP - Lite-On ,8188CUS Slim Combo */
+ 	{RTL_USB_DEVICE(0x103c, 0x1629, rtl92cu_hal_cfg)},
++	{RTL_USB_DEVICE(0x13d3, 0x3357, rtl92cu_hal_cfg)}, /* AzureWave */
+ 	{RTL_USB_DEVICE(0x2001, 0x3308, rtl92cu_hal_cfg)}, /*D-Link - Alpha*/
+ 	{RTL_USB_DEVICE(0x2019, 0xab2a, rtl92cu_hal_cfg)}, /*Planex - Abocom*/
+ 	{RTL_USB_DEVICE(0x2019, 0xed17, rtl92cu_hal_cfg)}, /*PCI - Edimax*/
+ 	{RTL_USB_DEVICE(0x20f4, 0x648b, rtl92cu_hal_cfg)}, /*TRENDnet - Cameo*/
+ 	{RTL_USB_DEVICE(0x7392, 0x7811, rtl92cu_hal_cfg)}, /*Edimax - Edimax*/
+-	{RTL_USB_DEVICE(0x3358, 0x13d3, rtl92cu_hal_cfg)}, /*Azwave 8188CE-VAU*/
++	{RTL_USB_DEVICE(0x13d3, 0x3358, rtl92cu_hal_cfg)}, /*Azwave 8188CE-VAU*/
+ 	/* Russian customer -Azwave (8188CE-VAU  b/g mode only) */
+-	{RTL_USB_DEVICE(0x3359, 0x13d3, rtl92cu_hal_cfg)},
++	{RTL_USB_DEVICE(0x13d3, 0x3359, rtl92cu_hal_cfg)},
++	{RTL_USB_DEVICE(0x4855, 0x0090, rtl92cu_hal_cfg)}, /* Feixun */
++	{RTL_USB_DEVICE(0x4855, 0x0091, rtl92cu_hal_cfg)}, /* NetweeN-Feixun */
++	{RTL_USB_DEVICE(0x9846, 0x9041, rtl92cu_hal_cfg)}, /* Netgear Cameo */
+ 
+ 	/****** 8192CU ********/
+ 	{RTL_USB_DEVICE(0x0586, 0x341f, rtl92cu_hal_cfg)}, /*Zyxel -Abocom*/
+ 	{RTL_USB_DEVICE(0x07aa, 0x0056, rtl92cu_hal_cfg)}, /*ATKK-Gemtek*/
+ 	{RTL_USB_DEVICE(0x07b8, 0x8178, rtl92cu_hal_cfg)}, /*Funai -Abocom*/
+-	{RTL_USB_DEVICE(0x07b8, 0x8178, rtl92cu_hal_cfg)}, /*Abocom -Abocom*/
+ 	{RTL_USB_DEVICE(0x2001, 0x3307, rtl92cu_hal_cfg)}, /*D-Link-Cameo*/
+ 	{RTL_USB_DEVICE(0x2001, 0x3309, rtl92cu_hal_cfg)}, /*D-Link-Alpha*/
+ 	{RTL_USB_DEVICE(0x2001, 0x330a, rtl92cu_hal_cfg)}, /*D-Link-Alpha*/
