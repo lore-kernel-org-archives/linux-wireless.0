@@ -1,92 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39707 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750855Ab1HXLUr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 07:20:47 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/3] compat: add mac_pton()
-Date: Wed, 24 Aug 2011 13:20:37 +0200
-Message-Id: <1314184839-13279-1-git-send-email-hauke@hauke-m.de> (sfid-20110824_132050_935211_8E891124)
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:40007 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751056Ab1HBWcX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2011 18:32:23 -0400
+Received: by fxh19 with SMTP id 19so12050fxh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 15:32:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201108030012.20241.anarsoul@gmail.com>
+References: <201108021312.23153.anarsoul@gmail.com>
+	<201108022309.07783.anarsoul@gmail.com>
+	<CAGq3pz6R=8eRNRME-X9e-S12cWvRq_-xvcjCa7KXyRfE0sJ8gw@mail.gmail.com>
+	<201108030012.20241.anarsoul@gmail.com>
+Date: Tue, 2 Aug 2011 23:32:21 +0100
+Message-ID: <CAGq3pz7gzgaZU2TfVHy5Q6AdKuob2zavPosgXTJtkovtmWpuow@mail.gmail.com> (sfid-20110803_003226_417361_373BB4FB)
+Subject: Re: [PATCH 1/2] libertas: add ability to power off card on suspend
+From: Daniel Drake <dsd@laptop.org>
+To: Vasily Khoruzhick <anarsoul@gmail.com>
+Cc: libertas-dev@lists.infradead.org, linville@tuxdriver.com,
+	dcbw@redhat.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 2 August 2011 22:12, Vasily Khoruzhick <anarsoul@gmail.com> wrote:
+> Now generic libertas driver controls power, not if_spi. So it should be able
+> to turn off card before going suspend. Messing with power in if_* and generic
+> part does not look like a good idea to me.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/Makefile            |    1 +
- compat/compat-3.0.c        |   37 +++++++++++++++++++++++++++++++++++++
- include/linux/compat-3.0.h |    2 ++
- 3 files changed, 40 insertions(+), 0 deletions(-)
- create mode 100644 compat/compat-3.0.c
+But there's no way your approach will bring good results. Userspace
+won't see any interface state change, but the entire hardware and
+firmware will be fully reset. Things will get very confused.
 
-diff --git a/compat/Makefile b/compat/Makefile
-index e2a6add..8e3739c 100644
---- a/compat/Makefile
-+++ b/compat/Makefile
-@@ -33,4 +33,5 @@ compat-$(CONFIG_COMPAT_KERNEL_2_6_38) += compat-2.6.38.o
- compat-$(CONFIG_COMPAT_KERNEL_2_6_39) += \
- 	compat-2.6.39.o \
- 	kstrtox.o
-+compat-$(CONFIG_COMPAT_KERNEL_3_0) += compat-3.0.o
- 
-diff --git a/compat/compat-3.0.c b/compat/compat-3.0.c
-new file mode 100644
-index 0000000..312eea0
---- /dev/null
-+++ b/compat/compat-3.0.c
-@@ -0,0 +1,37 @@
-+/*
-+ * Copyright 2011    Hauke Mehrtens <hauke@hauke-m.de>
-+ * Copyright 2011    Alexey Dobriyan <adobriyan@gmail.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * Compatibility file for Linux wireless for kernels 3.0.
-+ */
-+
-+#include <linux/compat.h>
-+#include <linux/if_ether.h>
-+
-+int mac_pton(const char *s, u8 *mac)
-+{
-+	int i;
-+
-+	/* XX:XX:XX:XX:XX:XX */
-+	if (strlen(s) < 3 * ETH_ALEN - 1)
-+		return 0;
-+
-+	/* Don't dirty result unless string is valid MAC. */
-+	for (i = 0; i < ETH_ALEN; i++) {
-+		if (!strchr("0123456789abcdefABCDEF", s[i * 3]))
-+			return 0;
-+		if (!strchr("0123456789abcdefABCDEF", s[i * 3 + 1]))
-+			return 0;
-+		if (i != ETH_ALEN - 1 && s[i * 3 + 2] != ':')
-+			return 0;
-+	}
-+	for (i = 0; i < ETH_ALEN; i++) {
-+		mac[i] = (hex_to_bin(s[i * 3]) << 4) | hex_to_bin(s[i * 3 + 1]);
-+	}
-+	return 1;
-+}
-+EXPORT_SYMBOL(mac_pton);
-diff --git a/include/linux/compat-3.0.h b/include/linux/compat-3.0.h
-index 667ea38..7954ddb 100644
---- a/include/linux/compat-3.0.h
-+++ b/include/linux/compat-3.0.h
-@@ -46,6 +46,8 @@ struct bcma_device_id {
- #define BCMA_ANY_CLASS		0xFF
- #endif /* BCMA_CORE */
- 
-+int mac_pton(const char *s, u8 *mac);
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)) */
- 
- #endif /* LINUX_3_0_COMPAT_H */
--- 
-1.7.4.1
+A lot of the stuff done in stop_iface is not relevant for the suspend
+case. e.g. If commands were queued before suspend, they should execute
+after resume. stop_iface is designed to run when the userspace-visible
+interfaces are brought down - by running it while they are still up,
+you will confuse things.
 
+You are battling with a general suspend/resume problem which should be
+handled by suspend/resume handlers alone. libertas already has plenty
+of experience in this area which you can build upon.
+
+Daniel
