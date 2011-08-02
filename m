@@ -1,95 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4811 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755191Ab1HZNT5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 09:19:57 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 11/13] staging: brcm80211: removed unused phy logging
-Date: Fri, 26 Aug 2011 15:19:38 +0200
-Message-ID: <1314364780-9462-12-git-send-email-rvossen@broadcom.com> (sfid-20110826_152019_520618_86D7E008)
-In-Reply-To: <1314364780-9462-1-git-send-email-rvossen@broadcom.com>
-References: <1314364780-9462-1-git-send-email-rvossen@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55319 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753886Ab1HBPC3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2011 11:02:29 -0400
+Date: Tue, 2 Aug 2011 10:54:01 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: revert patch request
+Message-ID: <20110802145401.GC14167@tuxdriver.com> (sfid-20110802_170232_739542_390F0885)
+References: <E9954878DD1FB34FAE5187FB88C58A3501995533C7@orsmsx506.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <E9954878DD1FB34FAE5187FB88C58A3501995533C7@orsmsx506.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Macro's were not used so they were removed.
+On Tue, Aug 02, 2011 at 07:41:28AM -0700, Guy, Wey-Yi W wrote:
+> Hi John,
+> 
+> 
+> 
+> I need to revert one of my patch back in 2.6.39, what is the best way to
+> 
+> do it since that area of code was changed after that.
+> 
+> 
+> 
+> 
+> 
+> commit 9dc2153315650eae220898668b6aa56a25c130be
+> 
+> Author: Wey-Yi Guy <wey-yi.w.guy@intel.com<mailto:wey-yi.w.guy@intel.com>>
+> 
+> Date:   Mon Jan 17 11:05:52 2011 -0800
+> 
+> 
+> 
+>     iwlwifi: always support idle mode for agn devices
+> 
+> 
+> 
+>     For agn devices, always support idle mode which help power
+> 
+>     consumption in idle unassociated state.
+> 
+> 
+> 
+>     Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com<mailto:wey-yi.w.guy@intel.com>>
+> 
+> 
+> 
+> 
+> 
+> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2312
+> 
+> 
+> 
+> Thanks
+> 
+> Wey
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c |    4 ----
- drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |    2 --
- drivers/staging/brcm80211/brcmsmac/phy/phy_int.h |   16 ----------------
- 3 files changed, 0 insertions(+), 22 deletions(-)
+Perhaps you can resolve the conflicts w/ the revert and just post
+it as a patch.  The changelog should indicate what you are reverting
+(and why), of course.
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-index 9b787e6..01829db 100644
---- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-@@ -105,8 +105,6 @@ MODULE_DEVICE_TABLE(pci, brcms_pci_id_table);
- #ifdef BCMDBG
- static int msglevel = 0xdeadbeef;
- module_param(msglevel, int, 0);
--static int phymsglevel = 0xdeadbeef;
--module_param(phymsglevel, int, 0);
- #endif				/* BCMDBG */
- 
- #define HW_TO_WL(hw)	 (hw->priv)
-@@ -1282,8 +1280,6 @@ static int __init brcms_module_init(void)
- #ifdef BCMDBG
- 	if (msglevel != 0xdeadbeef)
- 		brcm_msg_level = msglevel;
--	if (phymsglevel != 0xdeadbeef)
--		phyhal_msg_level = phymsglevel;
- #endif				/* BCMDBG */
- 
- 	error = pci_register_driver(&brcms_pci_driver);
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-index 3d54a39..bd602de 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -27,8 +27,6 @@
- #include "phy_lcn.h"
- #include "phyreg_n.h"
- 
--u32 phyhal_msg_level = PHYHAL_ERROR;
--
- struct chan_info_basic {
- 	u16 chan;
- 	u16 freq;
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h b/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h
-index 7ec2ad2..a06e719 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h
-@@ -23,22 +23,6 @@
- 
- #define	PHY_VERSION			{ 1, 82, 8, 0 }
- 
--#define PHYHAL_ERROR	0x0001
--#define PHYHAL_TRACE	0x0002
--#define PHYHAL_INFORM	0x0004
--
--extern u32 phyhal_msg_level;
--
--#define PHY_INFORM_ON()		(phyhal_msg_level & PHYHAL_INFORM)
--#define PHY_THERMAL_ON()	(phyhal_msg_level & PHYHAL_THERMAL)
--#define PHY_CAL_ON()		(phyhal_msg_level & PHYHAL_CAL)
--
--#ifdef BOARD_TYPE
--#define BOARDTYPE(_type) BOARD_TYPE
--#else
--#define BOARDTYPE(_type) _type
--#endif
--
- #define LCNXN_BASEREV		16
- 
- struct phy_shim_info;
+Thanks!
+
+John
 -- 
-1.7.4.1
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
