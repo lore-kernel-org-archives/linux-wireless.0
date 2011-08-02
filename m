@@ -1,68 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:49117 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751561Ab1HMUeY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 16:34:24 -0400
-Received: by fxh19 with SMTP id 19so2919137fxh.19
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Aug 2011 13:34:23 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Bernd Schubert <bernd.schubert@fastmail.fm>
-Subject: Re: carl9170 does not like all frequencies
-Date: Sat, 13 Aug 2011 22:34:16 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <j26l8a$ea9$1@dough.gmane.org>
-In-Reply-To: <j26l8a$ea9$1@dough.gmane.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201108132234.16886.chunkeey@googlemail.com> (sfid-20110813_223429_811700_89E7B2CE)
+Received: from mga11.intel.com ([192.55.52.93]:27422 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753721Ab1HBQaX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2011 12:30:23 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH update for 3.1] iwlagn: 5000 do not support idle mode
+Date: Tue,  2 Aug 2011 08:51:55 -0700
+Message-Id: <1312300315-24183-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110802_183027_495203_168438BB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 13 August 2011 22:02:18 Bernd Schubert wrote:
-> I bought a new usb wifi device with 2 antennas to get a better
-> connection to my router.
-So, you are saying that there was something wrong with the old
-stick as well, right!?
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> From point of few of connection strength that worked out very well, from
-> point of view of connection stability that is total disaster so far.
-Sure, you are affected by constant "loud" noise on the frequency/band.
-The hardware is unable to finish the noise floor calibration and therefore
-gives up.
+5000 series has issue supporting power save idle mode:
 
-> With Ubuntus 2.6.38-something it connects and then entirely fails after
-> sending a few bytes. So I checked git log and noticed carl9170 is being
-> used in recent kernels and connection issues have been fixed in 3.1-git.
-what commits are you talking about?
+commit	9dc2153315650eae220898668b6aa56a25c130be
 
-> > [ 1058.936551] cfg80211: Calling CRDA to update world regulatory domain
-> > [ 1058.945510] cfg80211: World regulatory domain updated:
-> > [ 1058.945519] cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> > [ 1058.945529] cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> > [ 1058.945538] cfg80211:     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-> > [ 1058.945547] cfg80211:     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-> > [ 1058.945555] cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> > [ 1058.945563] cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> > [ 1058.945604] cfg80211: Calling CRDA for country: 97
-> > [ 1061.373997] ieee80211 phy1: channel change: 2417 -> 2422 failed (2).
-> > [ 1061.682115] ieee80211 phy1: channel change: -1 -> 2422 failed (2).
-> > [ 1061.682132] usb 10-1.2: restart device (7)
-> > [ 1062.096523] cfg80211: Calling CRDA to update world regulatory domain
-> > [ 1062.105469] cfg80211: World regulatory domain updated:
-> 
-> 
-> Any idea what is going on here? Do I need a crda tool? Or is something
-> else failing?
-Yes, you need crda, if you haven't installed it already.
+iwlwifi: always support idle mode for agn devices
 
-> Update: While writing this up and after I plugged in my zd1211rw device,
-> eventually also my tp-link carl9170 device connected a few minutes
-> later. Do I always have to wait for 20 minutes to get a connection now?
-That's odd. TP-Link does not sell any AR9170 anymore, in fact they dropped it
-more than a year ago and replaced the line-up with AR7010+AR9287? so where
-did you get this obsolete device?
+For agn devices, always support idle mode which help power
+consumption in idle unassociated state.
 
-Regards,
-	Chr
+the above changes cause 5000 become not stable when power management is "on"
+
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2312
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+these patches are also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+ drivers/net/wireless/iwlwifi/iwl-5000.c  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-core.h  |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-power.c |    3 ++-
+ 3 files changed, 5 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 3eeb12e..c95cefd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -365,6 +365,7 @@ static struct iwl_base_params iwl5000_base_params = {
+ 	.chain_noise_scale = 1000,
+ 	.wd_timeout = IWL_LONG_WD_TIMEOUT,
+ 	.max_event_log_size = 512,
++	.no_idle_support = true,
+ };
+ static struct iwl_ht_params iwl5000_ht_params = {
+ 	.ht_greenfield_support = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 3e6bb73..02817a4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -135,6 +135,7 @@ struct iwl_mod_params {
+  * @temperature_kelvin: temperature report by uCode in kelvin
+  * @max_event_log_size: size of event log buffer size for ucode event logging
+  * @shadow_reg_enable: HW shadhow register bit
++ * @no_idle_support: do not support idle mode
+  */
+ struct iwl_base_params {
+ 	int eeprom_size;
+@@ -156,6 +157,7 @@ struct iwl_base_params {
+ 	bool temperature_kelvin;
+ 	u32 max_event_log_size;
+ 	const bool shadow_reg_enable;
++	const bool no_idle_support;
+ };
+ /*
+  * @advanced_bt_coexist: support advanced bt coexist
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index 3ec619c..cd64df0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -349,7 +349,8 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
+ 
+ 	if (priv->wowlan)
+ 		iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_5, dtimper);
+-	else if (priv->hw->conf.flags & IEEE80211_CONF_IDLE)
++	else if (!priv->cfg->base_params->no_idle_support &&
++		 priv->hw->conf.flags & IEEE80211_CONF_IDLE)
+ 		iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_5, 20);
+ 	else if (iwl_tt_is_low_power_state(priv)) {
+ 		/* in thermal throttling low power state */
+-- 
+1.7.0.4
+
