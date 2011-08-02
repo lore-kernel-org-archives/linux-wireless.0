@@ -1,97 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24354 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026Ab1HMSDx (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:38932 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751953Ab1HBLdY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 14:03:53 -0400
-Date: Sat, 13 Aug 2011 23:34:14 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Adrian Chadd <adrian@freebsd.org>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 02/11] ath9k: Fix rx overrun interrupt storm
-Message-ID: <20110813180413.GA16149@vmraj-lnx.users.atheros.com> (sfid-20110813_200357_118586_62C5A5F1)
-References: <1313211498-14442-1-git-send-email-rmanohar@qca.qualcomm.com>
- <1313211498-14442-2-git-send-email-rmanohar@qca.qualcomm.com>
- <CAJ-VmokWVzcYPwgNkMn+CcH8mEzsCAyzM3wEEMBFmUc6dg7KmQ@mail.gmail.com>
+	Tue, 2 Aug 2011 07:33:24 -0400
+Received: by iyb12 with SMTP id 12so7974559iyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 04:33:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <CAJ-VmokWVzcYPwgNkMn+CcH8mEzsCAyzM3wEEMBFmUc6dg7KmQ@mail.gmail.com>
+In-Reply-To: <20110802112314.GA2688@redhat.com>
+References: <20110802112314.GA2688@redhat.com>
+Date: Tue, 2 Aug 2011 13:33:23 +0200
+Message-ID: <CAOZOX0VkM93sL6y0+z_7amQ7pmbkn6D5goW2NEuJpezD2V6tcg@mail.gmail.com> (sfid-20110802_133327_637325_C269C389)
+Subject: Re: [PATCH] rt2x00: fix usage of NULL queue
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 13, 2011 at 06:51:28PM +0800, Adrian Chadd wrote:
-> I did this in FreeBSD to fix RXEOL storms, but I was receiving them
-> because I had phyerr's enabled (for radar) and the PCU list end had
-> actually been hit.
-> So I added code which kicks off a PCU stop/start in the RX handler
-> (once whatever packets were in the RX queue) so that the PCU receive
-> would then begin again.
+On Tue, Aug 2, 2011 at 1:29 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> We may call rt2x00queue_pause_queue(queue) with queue == NULL. Bug
+> was introduced by commit 62fe778412b36791b7897cfa139342906fbbf07b
+> "rt2x00: Fix stuck queue in tx failure case" .
 >
-Nice. But why are you doing PCU stop/start for every RXEOL?
-> Were you seeing it occur because you hit the end of the RX descriptor
-> list? Or some other reason?
+> Cc: stable@kernel.org # 3.0+
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00mac.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
 >
-Yes. The RXORN/RXEOL intr issue was observed with AR9280 chip, while
-running stress test.
-> I ask because I'm seeing issues with an AR9280 (SR71-E) on FreeBSD,
-> where the PCU stops RX for some reason, and constantly fires off
-> RXEOLs. Warm resets don't fix it, I have to do a cold reset to fix it.
-> :(
-Are you still facing the issue after restarting pcu recv?
-> 
-> 
-> Adrian
-> 
-> On 13 August 2011 12:58, Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
-> > Whenever RXEOL is received, both RXORN and RXEOL got cleared
-> > to avoid rx overrun interrupt storm. This was handled only for
-> > edma chips. The same scenario was also observered with AR9280,
-> > doing frequent channel type switch b/w HT20/40 with bidi traffic
-> > that is causing failure to stop rx dma. This patch clears
-> > the RXEOL & RXORN interrupts for all chips.
-> >
-> > ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020
-> > DMADBG_7=0x000062c0
-> > ath: Could not stop RX, we could be confusing the DMA engine when we
-> > start RX up
-> > ------------[ cut here ]------------
-> > WARNING: at drivers/net/wireless/ath/ath9k/recv.c:532
-> > ath_stoprecv+0x110/0x120 [ath9k]()
-> > Call Trace:
-> >  [<ffffffff8104a55a>] warn_slowpath_common+0x7a/0xb0
-> >  [<ffffffff8104a5a5>] warn_slowpath_null+0x15/0x20
-> >  [<ffffffffa0560380>] ath_stoprecv+0x110/0x120 [ath9k]
-> >  [<ffffffffa055e6fa>] ath_reset+0x6a/0x200 [ath9k]
-> >
-> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> > ---
-> >  drivers/net/wireless/ath/ath9k/main.c |    8 +++-----
-> >  1 files changed, 3 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> > index 1e7fe8c..097c1eb 100644
-> > --- a/drivers/net/wireless/ath/ath9k/main.c
-> > +++ b/drivers/net/wireless/ath/ath9k/main.c
-> > @@ -826,11 +826,9 @@ irqreturn_t ath_isr(int irq, void *dev)
-> >        if (status & ATH9K_INT_TXURN)
-> >                ath9k_hw_updatetxtriglevel(ah, true);
-> >
-> > -       if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
-> > -               if (status & ATH9K_INT_RXEOL) {
-> > -                       ah->imask &= ~(ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
-> > -                       ath9k_hw_set_interrupts(ah, ah->imask);
-> > -               }
-> > +       if (status & ATH9K_INT_RXEOL) {
-> > +               ah->imask &= ~(ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
-> > +               ath9k_hw_set_interrupts(ah, ah->imask);
-> >        }
-> >
-> >        if (status & ATH9K_INT_MIB) {
-> > --
-> > 1.7.6
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+> index 8efab39..4ccf238 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+> @@ -113,7 +113,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>         * due to possible race conditions in mac80211.
+>         */
+>        if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
+> -               goto exit_fail;
+> +               goto exit_free_skb;
+>
+>        /*
+>         * Use the ATIM queue if appropriate and present.
+> @@ -127,7 +127,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>                ERROR(rt2x00dev,
+>                      "Attempt to send packet over invalid queue %d.\n"
+>                      "Please file bug report to %s.\n", qid, DRV_PROJECT);
+> -               goto exit_fail;
+> +               goto exit_free_skb;
+>        }
+>
+>        /*
+> @@ -159,6 +159,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>
+>  exit_fail:
+>        rt2x00queue_pause_queue(queue);
+> + exit_free_skb:
+>        dev_kfree_skb_any(skb);
+>  }
+>  EXPORT_SYMBOL_GPL(rt2x00mac_tx);
+> --
+> 1.7.1
+>
