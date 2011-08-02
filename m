@@ -1,59 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:63661 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751037Ab1H2Ld0 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:42060 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752675Ab1HBDpN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 07:33:26 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [RFC v2] mac80211: stop tx before doing hw config and rate update
-Date: Mon, 29 Aug 2011 17:03:55 +0530
-Message-ID: <1314617635-27936-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110829_133330_022892_AF43ED6F)
+	Mon, 1 Aug 2011 23:45:13 -0400
+Message-ID: <4E3772C5.70606@lwfinger.net> (sfid-20110802_054535_161594_8A871CA1)
+Date: Mon, 01 Aug 2011 22:45:09 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Jaroslaw Fedewicz <jafd@netstyle.com.ua>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [Bug?] Machine hangs, rtl8192se possible cause
+References: <CAFdoEiT54o+NQKO=dAcOXgyf6GJ1E51w_H_p7PJyRmynz8Sbzg@mail.gmail.com>	<4E36C693.6000705@lwfinger.net> <CAFdoEiRBPMx0C+YXwd4-Q=_nHpOb+r2+GspwujZrPh6S4tDwEQ@mail.gmail.com>
+In-Reply-To: <CAFdoEiRBPMx0C+YXwd4-Q=_nHpOb+r2+GspwujZrPh6S4tDwEQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The assumption is that during the hw config, transmission was
-already stopped by mac80211. But during channel type change,
-the mac80211 continue to transmit frames. The driver like ath9k
-does chip reset while doing channel set. This could leads to
-buffer overflow at driver side. And also after configuring the channel
-and before doing rate updation, the frames are continued to xmit
-with older rates. This patch ensures that the frames are always
-xmitted with updated rates and avoid buffer overflow.
+On 08/01/2011 06:10 PM, Jaroslaw Fedewicz wrote:
+>
+> I'm using a fairly recent version of kernel from git (I think from
+> before yesterday). The mysterious hangs were there from the beginning,
+> but it also might be partly because ATI driver was messed up too at
+> these times. Later, ati appeared fixed but the hangs wouldn't go away.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
-v2: Removed new stop queue reason code by netif
- net/mac80211/mlme.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+If that git tree is linux-2.6, or its new name, from Linus, then you have the 
+latest source.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 60a6f27..a1deb33 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -232,6 +232,9 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 		WARN_ON(!ieee80211_set_channel_type(local, sdata, channel_type));
- 	}
- 
-+	netif_tx_stop_all_queues(sdata->dev);
-+
-+	drv_flush(local, false);
- 	/* channel_type change automatically detected */
- 	ieee80211_hw_config(local, 0);
- 
-@@ -245,6 +248,8 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 		rcu_read_unlock();
- 	}
- 
-+	netif_tx_wake_all_queues(sdata->dev);
-+
- 	ht_opmode = le16_to_cpu(hti->operation_mode);
- 
- 	/* if bss configuration changed store the new one */
--- 
-1.7.6.1
+> I don't think it's a panic proper, though. Nothing ever gets logged
+> along the lines of "panic". Even if I happen to have a text mode
+> console, it just freezes. If I have a panic or an oops proper, I'm
+> also kicked out of X11 to see it by the KMS. But not in this case.
+>
+> (Also, the laptop has neither Caps Lock nor Num Lock nor Scroll Lock
+> LEDs, so I can't see if they blink.)
 
+A kernel panic never logs anything to the disk. The only place you will see it 
+is on the logging console, or in netconsole output.
+
+> What raised my suspicions is that I've never seen this happen when
+> rtl8192se wasn't compiled at all or was not loaded.
+>
+> The most problematic thing is that it does not hang right away. Most
+> of the time, I see the machine go into the catatonia after quite a
+> while, and as it is not the laptop I do most of my work on, I usually
+> see it hanged when screen PM has already kicked in. So I cannot really
+> read what the log might say on the matter.
+>
+> I cannot also trigger the freeze reliably. Most of the time it happens
+> "when you are not looking at it", and it usually happens either during
+> or just after high load averages and low to none network activity (a
+> typical scenario: build a firefox from sources, go outside, come home
+> 4 hours later, the laptop is turned on but dead by hanging; no
+> messages as the screen is obviously off; a less typical scenario is to
+> freeze during startup).
+>
+> I'm the last person ever to suggest anything on the subject, but could
+> it be a problem in the card's power management?
+
+Not likely. I have three different cards with differing configurations that I 
+have run for extended periods without seeing your problem. One of them is the 
+same as yours.
+
+Until you get some kind of dump from the system, I'm not sure what can be done.
+
+Larry
