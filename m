@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:37649 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755021Ab1HJVXs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 17:23:48 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH] ath9k: avoid sending a-mpdu packets to sleeping stations
-Date: Wed, 10 Aug 2011 15:23:35 -0600
-Message-Id: <1313011415-95547-1-git-send-email-nbd@openwrt.org> (sfid-20110810_232351_193574_5DF0506C)
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:44841 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755254Ab1HBUtq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2011 16:49:46 -0400
+Message-ID: <4E3862E6.508@lwfinger.net> (sfid-20110802_224951_150497_B0832228)
+Date: Tue, 02 Aug 2011 15:49:42 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>,
+	John W Linville <linville@tuxdriver.com>
+CC: geert@linux-m68k.org, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: Fix build errors on sh4 architecture
+References: <4e3855e4.8qPfeuR18XtAq7Vs%Larry.Finger@lwfinger.net> <4E385BFA.90406@openwrt.org>
+In-Reply-To: <4E385BFA.90406@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the driver gets a tx status report for an A-MPDU sent to a station that
-just went to sleep, that leaves a race condition where this tx status can
-trigger another A-MPDU transmission.
-To fix this, check if the station is sleeping before queueing the tid.
+On 08/02/2011 03:20 PM, Felix Fietkau wrote:
+> On 2011-08-02 9:54 PM, Larry Finger wrote:
+>> When rtlwifi is built for the sh4 architecture, build errors of the following
+>> type occur. An explicit reference to<linux/io.h> should fix these. I have not
+>> setup the cross-build environment, thus this patch is untested on that platform.
+>> It does not cause any problems on i386 or x86_64.
+>>
+>> v3.0/sh4/sh-allmodconfig v3.0/sh4/sh-allyesconfig
+>> src/drivers/net/wireless/rtlwifi/rtl8192c/../pci.h:290: error: implicit
+>> declaration of function 'outl': 4 errors in 2 logs
+>> v3.0/sh4/sh-allmodconfig v3.0/sh4/sh-allyesconfig
+>> src/drivers/net/wireless/rtlwifi/rtl8192c/../pci.h:295: error: implicit
+>> declaration of function 'outb': 4 errors in 2 logs
+>> v3.0/sh4/sh-allmodconfig v3.0/sh4/sh-allyesconfig
+>> src/drivers/net/wireless/rtlwifi/rtl8192c/../pci.h:300: error: implicit
+>> declaration of function 'inb': 4 errors in 2 logs
+>> v3.0/sh4/sh-allmodconfig v3.0/sh4/sh-allyesconfig
+>> src/drivers/net/wireless/rtlwifi/rtl8192c/../pci.h:305: error: implicit
+>> declaration of function 'inw': 4 errors in 2 logs
+>>
+>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>> Cc: Geert Uytterhoeven<geert@linux-m68k.org>
+>> ---
+>>
+>> John,
+>>
+>> I'm not sure where this goes. I guess that 3.2 would be OK, unless someone
+>> actually tries to build it on sh4. The only time I have seen the errors is
+>> in Geert's listing of errors and warnings.
+> I looked at the code that uses raw port access, and it looks to me like this is
+> just a bunch of x86 specific hacks to mess with the ASPM settings of the PCI
+> bridge. This code should probably be either #ifdef'd, removed or rewritten. I
+> doubt it'll work properly on other architectures.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+Thanks Felix.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index e815e82..e1d1e90 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -551,7 +551,8 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		if (clear_filter)
- 			tid->ac->clear_ps_filter = true;
- 		list_splice(&bf_pending, &tid->buf_q);
--		ath_tx_queue_tid(txq, tid);
-+		if (!an->sleeping)
-+			ath_tx_queue_tid(txq, tid);
- 		spin_unlock_bh(&txq->axq_lock);
- 	}
- 
-@@ -1413,7 +1414,8 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
- 		 */
- 		TX_STAT_INC(txctl->txq->axq_qnum, a_queued_sw);
- 		list_add_tail(&bf->list, &tid->buf_q);
--		ath_tx_queue_tid(txctl->txq, tid);
-+		if (!txctl->an || !txctl->an->sleeping)
-+			ath_tx_queue_tid(txctl->txq, tid);
- 		return;
- 	}
- 
--- 
-1.7.3.2
+John,
 
+I'll take another look at this. Please drop the patch.
+
+Larry
