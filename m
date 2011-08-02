@@ -1,131 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:23187 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753376Ab1HKGtS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 02:49:18 -0400
-From: Kevin Fang <chienf@qca.qualcomm.com>
-Cc: <linux-wireless@vger.kernel.org>, <kvalo@qca.qualcomm.com>,
-	Kevin Fang <chienf@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH 6/7] ath6kl: data path for supporting HIF USB on AR6004
-Date: Thu, 11 Aug 2011 14:48:14 +0800
-Message-ID: <1313045295-16202-6-git-send-email-kevin.fang@qca.qualcomm.com> (sfid-20110811_084921_505953_7B48DA5A)
-In-Reply-To: <1313045295-16202-1-git-send-email-kevin.fang@qca.qualcomm.com>
-References: <1313045295-16202-1-git-send-email-kevin.fang@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:32409 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754628Ab1HBQqm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2011 12:46:42 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/1] iwlagn: 5000 do not support idle mode
+Date: Tue,  2 Aug 2011 09:08:37 -0700
+Message-Id: <1312301317-1894-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110802_184649_048459_29234FAD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For optimizing htc packet with usb on the AR6004.
-And handling padding data on the AR6004.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Signed-off-by: Kevin Fang <kevin.fang@qca.qualcomm.com>
+5000 series has issue supporting power save idle mode:
+
+commit	9dc2153315650eae220898668b6aa56a25c130be
+
+iwlwifi: always support idle mode for agn devices
+
+For agn devices, always support idle mode which help power
+consumption in idle unassociated state.
+
+the above changes cause 5000 become not stable when power management is "on"
+
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2312
+
+Cc: stable@kernel.org #2.6.39, #3.0.0
+Reported-by: Devin J Pohly <djpohly+iwl@gmail.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath6kl/htc.h  |    8 ++++++++
- drivers/net/wireless/ath/ath6kl/txrx.c |   12 ++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.h  |    3 +++
- 3 files changed, 23 insertions(+), 0 deletions(-)
+these patches are also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
-index 2f18017..4b6980a 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.h
-+++ b/drivers/net/wireless/ath/ath6kl/htc.h
-@@ -308,6 +308,14 @@ struct htc_packet {
- 
- 	void (*completion) (struct htc_target *, struct htc_packet *);
- 	struct htc_target *context;
-+
-+	/*
-+	 * optimization for network-oriented data, the HTC packet
-+	 * can pass the network buffer corresponding to the HTC packet
-+	 * lower layers may optimized the transfer knowing this is
-+	 * a network buffer
-+	 */
-+	struct sk_buff *netbufcontext;
+ drivers/net/wireless/iwlwifi/iwl-5000.c  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-core.h  |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-power.c |    3 ++-
+ 3 files changed, 5 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index e816c27..f1c3f49 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -421,6 +421,7 @@ static struct iwl_base_params iwl5000_base_params = {
+ 	.chain_noise_scale = 1000,
+ 	.wd_timeout = IWL_LONG_WD_TIMEOUT,
+ 	.max_event_log_size = 512,
++	.no_idle_support = true,
  };
+ static struct iwl_ht_params iwl5000_ht_params = {
+ 	.ht_greenfield_support = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index a54d416..b76996a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -195,6 +195,7 @@ struct iwl_mod_params {
+  * @temperature_kelvin: temperature report by uCode in kelvin
+  * @max_event_log_size: size of event log buffer size for ucode event logging
+  * @shadow_reg_enable: HW shadhow register bit
++ * @no_idle_support: do not support idle mode
+  */
+ struct iwl_base_params {
+ 	int eeprom_size;
+@@ -216,6 +217,7 @@ struct iwl_base_params {
+ 	bool temperature_kelvin;
+ 	u32 max_event_log_size;
+ 	const bool shadow_reg_enable;
++	const bool no_idle_support;
+ };
+ /*
+  * @advanced_bt_coexist: support advanced bt coexist
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index 595c930..aea7905 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -355,7 +355,8 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
  
- enum htc_send_full_action {
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 2712cf0..a02808c 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -216,6 +216,7 @@ int ath6kl_control_tx(void *devt, struct sk_buff *skb,
- 	cookie->map_no = 0;
- 	set_htc_pkt_info(&cookie->htc_pkt, cookie, skb->data, skb->len,
- 			 eid, ATH6KL_CONTROL_PKT_TAG);
-+	cookie->htc_pkt.netbufcontext = skb;
+ 	dtimper = priv->hw->conf.ps_dtim_period ?: 1;
  
- 	/*
- 	 * This interface is asynchronous, if there is an error, cleanup
-@@ -324,6 +325,7 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 	cookie->map_no = map_no;
- 	set_htc_pkt_info(&cookie->htc_pkt, cookie, skb->data, skb->len,
- 			 eid, htc_tag);
-+	cookie->htc_pkt.netbufcontext = skb;
- 
- 	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, __func__, skb->data, skb->len);
- 
-@@ -692,6 +694,8 @@ void ath6kl_rx_refill(struct htc_target *target, enum htc_endpoint_id endpoint)
- 		packet = (struct htc_packet *) skb->head;
- 		set_htc_rxpkt_info(packet, skb, skb->data,
- 				ATH6KL_BUFFER_SIZE, endpoint);
-+		packet->netbufcontext = skb;
-+
- 		list_add_tail(&packet->list, &queue);
- 	}
- 
-@@ -712,6 +716,8 @@ void ath6kl_refill_amsdu_rxbufs(struct ath6kl *ar, int count)
- 		packet = (struct htc_packet *) skb->head;
- 		set_htc_rxpkt_info(packet, skb, skb->data,
- 				   ATH6KL_AMSDU_BUFFER_SIZE, 0);
-+		packet->netbufcontext = skb;
-+
- 		spin_lock_bh(&ar->lock);
- 		list_add_tail(&packet->list, &ar->amsdu_rx_buffer_queue);
- 		spin_unlock_bh(&ar->lock);
-@@ -1016,6 +1022,7 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 	struct wmi_data_hdr *dhdr;
- 	int min_hdr_len;
- 	u8 meta_type, dot11_hdr = 0;
-+	u8 pad_before_data_start;
- 	int status = packet->status;
- 	enum htc_endpoint_id ept = packet->endpoint;
- 	bool is_amsdu, prev_ps, ps_state = false;
-@@ -1164,6 +1171,9 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 	seq_no = wmi_data_hdr_get_seqno(dhdr);
- 	meta_type = wmi_data_hdr_get_meta(dhdr);
- 	dot11_hdr = wmi_data_hdr_get_dot11(dhdr);
-+	pad_before_data_start =
-+		(dhdr->info3 >> WMI_DATA_HDR_PAD_BEFORE_DATA_SHIFT)
-+			& WMI_DATA_HDR_PAD_BEFORE_DATA_MASK;
- 
- 	ath6kl_wmi_data_hdr_remove(ar->wmi, skb);
- 
-@@ -1183,6 +1193,8 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 		break;
- 	}
- 
-+	skb_pull(skb, pad_before_data_start);
-+
- 	if (dot11_hdr)
- 		status = ath6kl_wmi_dot11_hdr_remove(ar->wmi, skb);
- 	else if (!is_amsdu)
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index fe3ddce..4b5fae8 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -181,6 +181,9 @@ enum wmi_data_hdr_data_type {
- #define WMI_DATA_HDR_META_MASK      0x7
- #define WMI_DATA_HDR_META_SHIFT     13
- 
-+#define WMI_DATA_HDR_PAD_BEFORE_DATA_MASK               0xFF
-+#define WMI_DATA_HDR_PAD_BEFORE_DATA_SHIFT              0x8
-+
- struct wmi_data_hdr {
- 	s8 rssi;
- 
+-	if (priv->hw->conf.flags & IEEE80211_CONF_IDLE)
++	if (!priv->cfg->base_params->no_idle_support &&
++	     priv->hw->conf.flags & IEEE80211_CONF_IDLE)
+ 		iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_5, 20);
+ 	else if (iwl_tt_is_low_power_state(priv)) {
+ 		/* in thermal throttling low power state */
 -- 
 1.7.0.4
 
