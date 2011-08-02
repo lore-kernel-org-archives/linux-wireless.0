@@ -1,45 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta21.charter.net ([216.33.127.81]:43834 "EHLO
-	mta21.charter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752003Ab1H1NcQ (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:59939 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755023Ab1HBTFX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Aug 2011 09:32:16 -0400
-Message-ID: <RpYE1h00E3pHlLY05pYEzN@farmergreg.com> (sfid-20110828_153220_783554_1BFAEBE6)
-From: y@farmergreg.com
-To: sgruszka@redhat.com, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Dietsche <Gregory.Dietsche@cuw.edu>
-Subject: [PATCH 2/2 v2] iwlegacy: change IWL_ERR to IWL_DEBUG_HT in iwl4965_rs_tl_turn_on_agg_for_tid
-Date: Sun, 28 Aug 2011 08:32:10 -0500
-In-Reply-To: <1314537977-20097-2-git-send-email-Gregory.Dietsche@cuw.edu>
-References: <1314537977-20097-2-git-send-email-Gregory.Dietsche@cuw.edu>
+	Tue, 2 Aug 2011 15:05:23 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 858995401C6
+	for <linux-wireless@vger.kernel.org>; Tue,  2 Aug 2011 15:13:59 -0400 (EDT)
+Subject: Compat-wireless release for 2011-08-02 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110802190520.6479D40ED1@repository3.orbit-lab.org> (sfid-20110802_210526_164079_5F862364)
+Date: Tue,  2 Aug 2011 15:05:20 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + c39a889...64b0481 akpm-end   -> origin/akpm-end  (forced update)
+   3da3f87..cfe2234  akpm-start -> origin/akpm-start
+ + 346346f...c2ad60b master     -> origin/master  (forced update)
+   3da3f87..cfe2234  stable     -> origin/stable
+ * [new tag]         next-20110802 -> next-20110802
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-This message should be a debug message and not an error. So
-change it from IWL_ERR to IWL_DEBUG_HT.
+compat-wireless code metrics
 
-Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
----
- drivers/net/wireless/iwlegacy/iwl-4965-rs.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-index 9b65153..a0b60ee 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-@@ -373,7 +373,7 @@ static int iwl4965_rs_tl_turn_on_agg_for_tid(struct iwl_priv *priv,
- 			ieee80211_stop_tx_ba_session(sta, tid);
- 		}
- 	} else {
--		IWL_ERR(priv, "Aggregation not enabled for tid %d "
-+		IWL_DEBUG_HT(priv, "Aggregation not enabled for tid %d "
- 			"because load = %u\n", tid, load);
- 	}
- 	return ret;
--- 
-1.7.5.4
-
+    835334 - Total upstream lines of code being pulled
