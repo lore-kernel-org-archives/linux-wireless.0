@@ -1,414 +1,411 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:23164 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752503Ab1HKGsu (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:41237 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752314Ab1HBJEk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 02:48:50 -0400
-From: Kevin Fang <chienf@qca.qualcomm.com>
-Cc: <linux-wireless@vger.kernel.org>, <kvalo@qca.qualcomm.com>,
-	Kevin Fang <chienf@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH 1/7] ath6kl: Add beginning of AR6004 initialisation support
-Date: Thu, 11 Aug 2011 14:48:09 +0800
-Message-ID: <1313045295-16202-1-git-send-email-kevin.fang@qca.qualcomm.com> (sfid-20110811_084854_696352_5B9F7596)
+	Tue, 2 Aug 2011 05:04:40 -0400
+Received: by fxh19 with SMTP id 19so5418552fxh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 02:04:39 -0700 (PDT)
+From: Vasily Khoruzhick <anarsoul@gmail.com>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [PATCH 2/2] libertas: implement if_sdio runtime power management
+Date: Tue, 2 Aug 2011 12:04:08 +0300
+Cc: Daniel Drake <dsd@laptop.org>, linville@tuxdriver.com,
+	dcbw@redhat.com, linux-wireless@vger.kernel.org
+References: <20110801154327.D0BB09D4020@zog.reactivated.net>
+In-Reply-To: <20110801154327.D0BB09D4020@zog.reactivated.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201108021204.08632.anarsoul@gmail.com> (sfid-20110802_110444_168562_34FF1EC4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add AR6004 support on the ath6kl driver.
-There are two different kinds of interface on the AR6004, sdio and usb.
-Add board data, firmware and corresponding hw address for the AR6004
+On Monday 01 August 2011 18:43:27 Daniel Drake wrote:
+> The SDIO card is now fully powered down when the network interface is
+> brought down.
+> 
+> Signed-off-by: Daniel Drake <dsd@laptop.org>
+> ---
+>  drivers/net/wireless/libertas/if_sdio.c |  277
+> +++++++++++++++++++------------ 1 files changed, 171 insertions(+), 106
+> deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_sdio.c
+> b/drivers/net/wireless/libertas/if_sdio.c index 387786e..c962e21 100644
+> --- a/drivers/net/wireless/libertas/if_sdio.c
+> +++ b/drivers/net/wireless/libertas/if_sdio.c
+> @@ -39,6 +39,7 @@
+>  #include <linux/mmc/sdio_ids.h>
+>  #include <linux/mmc/sdio.h>
+>  #include <linux/mmc/host.h>
+> +#include <linux/pm_runtime.h>
+> 
+>  #include "host.h"
+>  #include "decl.h"
+> @@ -47,6 +48,8 @@
+>  #include "cmd.h"
+>  #include "if_sdio.h"
+> 
+> +static void if_sdio_interrupt(struct sdio_func *func);
+> +
+>  /* The if_sdio_remove() callback function is called when
+>   * user removes this module from kernel space or ejects
+>   * the card from the slot. The driver handles these 2 cases
+> @@ -757,6 +760,136 @@ out:
+>  	return ret;
+>  }
+> 
+> +/********************************************************************/
+> +/* Power management                                                 */
+> +/********************************************************************/
+> +
+> +static int if_sdio_power_on(struct if_sdio_card *card)
+> +{
+> +	struct sdio_func *func = card->func;
+> +	struct lbs_private *priv = card->priv;
+> +	struct mmc_host *host = func->card->host;
+> +	int ret;
+> +
+> +	sdio_claim_host(func);
+> +
+> +	ret = sdio_enable_func(func);
+> +	if (ret)
+> +		goto release;
+> +
+> +	/* For 1-bit transfers to the 8686 model, we need to enable the
+> +	 * interrupt flag in the CCCR register. Set the MMC_QUIRK_LENIENT_FN0
+> +	 * bit to allow access to non-vendor registers. */
+> +	if ((card->model == MODEL_8686) &&
+> +	    (host->caps & MMC_CAP_SDIO_IRQ) &&
+> +	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
+> +		u8 reg;
+> +
+> +		func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
+> +		reg = sdio_f0_readb(func, SDIO_CCCR_IF, &ret);
+> +		if (ret)
+> +			goto disable;
+> +
+> +		reg |= SDIO_BUS_ECSI;
+> +		sdio_f0_writeb(func, reg, SDIO_CCCR_IF, &ret);
+> +		if (ret)
+> +			goto disable;
+> +	}
+> +
+> +	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
+> +	if (ret)
+> +		goto disable;
+> +
+> +	card->ioport |= sdio_readb(func, IF_SDIO_IOPORT + 1, &ret) << 8;
+> +	if (ret)
+> +		goto disable;
+> +
+> +	card->ioport |= sdio_readb(func, IF_SDIO_IOPORT + 2, &ret) << 16;
+> +	if (ret)
+> +		goto disable;
+> +
+> +	sdio_release_host(func);
+> +	ret = if_sdio_prog_firmware(card);
+> +	sdio_claim_host(func);
+> +	if (ret)
+> +		goto disable;
+> +
+> +	/*
+> +	 * Get rx_unit if the chip is SD8688 or newer.
+> +	 * SD8385 & SD8686 do not have rx_unit.
+> +	 */
+> +	if ((card->model != MODEL_8385)
+> +			&& (card->model != MODEL_8686))
+> +		card->rx_unit = if_sdio_read_rx_unit(card);
+> +	else
+> +		card->rx_unit = 0;
+> +
+> +	/*
+> +	 * Set up the interrupt handler late.
+> +	 *
+> +	 * If we set it up earlier, the (buggy) hardware generates a spurious
+> +	 * interrupt, even before the interrupt has been enabled, with
+> +	 * CCCR_INTx = 0.
+> +	 *
+> +	 * We register the interrupt handler late so that we can handle any
+> +	 * spurious interrupts, and also to avoid generation of that known
+> +	 * spurious interrupt in the first place.
+> +	 */
+> +	ret = sdio_claim_irq(func, if_sdio_interrupt);
+> +	if (ret)
+> +		goto disable;
+> +
+> +	/*
+> +	 * Enable interrupts now that everything is set up
+> +	 */
+> +	sdio_writeb(func, 0x0f, IF_SDIO_H_INT_MASK, &ret);
+> +	if (ret)
+> +		goto release_irq;
+> +
+> +	sdio_release_host(func);
+> +
+> +	/*
+> +	 * FUNC_INIT is required for SD8688 WLAN/BT multiple functions
+> +	 */
+> +	if (card->model == MODEL_8688) {
+> +		struct cmd_header cmd;
+> +
+> +		memset(&cmd, 0, sizeof(cmd));
+> +
+> +		lbs_deb_sdio("send function INIT command\n");
+> +		if (__lbs_cmd(priv, CMD_FUNC_INIT, &cmd, sizeof(cmd),
+> +				lbs_cmd_copyback, (unsigned long) &cmd))
+> +			netdev_alert(priv->dev, "CMD_FUNC_INIT cmd failed\n");
+> +	}
+> +
+> +	priv->fw_ready = 1;
+> +
+> +	return 0;
+> +
+> +release_irq:
+> +	sdio_release_irq(func);
+> +disable:
+> +	sdio_disable_func(func);
+> +release:
+> +	sdio_release_host(func);
+> +	return ret;
+> +}
+> +
+> +static int if_sdio_power_off(struct if_sdio_card *card)
+> +{
+> +	struct sdio_func *func = card->func;
+> +	struct lbs_private *priv = card->priv;
+> +
+> +	priv->fw_ready = 0;
+> +
+> +	sdio_claim_host(func);
+> +	sdio_release_irq(func);
+> +	sdio_disable_func(func);
+> +	sdio_release_host(func);
+> +	return 0;
+> +}
+> +
+> +
+>  /*******************************************************************/
+>  /* Libertas callbacks                                              */
+>  /*******************************************************************/
+> @@ -923,6 +1056,32 @@ static void if_sdio_reset_card(struct lbs_private
+> *priv) schedule_work(&card_reset_work);
+>  }
+> 
+> +static int if_sdio_power_save(struct lbs_private *priv)
+> +{
+> +	struct if_sdio_card *card = priv->card;
+> +	int ret;
+> +
+> +	flush_workqueue(card->workqueue);
+> +
+> +	ret = if_sdio_power_off(card);
+> +
+> +	/* Let runtime PM know the card is powered off */
+> +	pm_runtime_put_sync(&card->func->dev);
+> +
+> +	return ret;
+> +}
+> +
+> +static int if_sdio_power_restore(struct lbs_private *priv)
+> +{
+> +	struct if_sdio_card *card = priv->card;
+> +
+> +	/* Make sure the card will not be powered off by runtime PM */
+> +	pm_runtime_get_sync(&card->func->dev);
+> +
+> +	return if_sdio_power_on(card);
+> +}
+> +
+> +
+>  /*******************************************************************/
+>  /* SDIO callbacks                                                  */
+>  /*******************************************************************/
+> @@ -976,7 +1135,6 @@ static int if_sdio_probe(struct sdio_func *func,
+>  	int ret, i;
+>  	unsigned int model;
+>  	struct if_sdio_packet *packet;
+> -	struct mmc_host *host = func->card->host;
+> 
+>  	lbs_deb_enter(LBS_DEB_SDIO);
+> 
+> @@ -1033,45 +1191,6 @@ static int if_sdio_probe(struct sdio_func *func,
+>  		goto free;
+>  	}
+> 
+> -	sdio_claim_host(func);
+> -
+> -	ret = sdio_enable_func(func);
+> -	if (ret)
+> -		goto release;
+> -
+> -	/* For 1-bit transfers to the 8686 model, we need to enable the
+> -	 * interrupt flag in the CCCR register. Set the MMC_QUIRK_LENIENT_FN0
+> -	 * bit to allow access to non-vendor registers. */
+> -	if ((card->model == MODEL_8686) &&
+> -	    (host->caps & MMC_CAP_SDIO_IRQ) &&
+> -	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
+> -		u8 reg;
+> -
+> -		func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
+> -		reg = sdio_f0_readb(func, SDIO_CCCR_IF, &ret);
+> -		if (ret)
+> -			goto release_int;
+> -
+> -		reg |= SDIO_BUS_ECSI;
+> -		sdio_f0_writeb(func, reg, SDIO_CCCR_IF, &ret);
+> -		if (ret)
+> -			goto release_int;
+> -	}
+> -
+> -	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
+> -	if (ret)
+> -		goto release_int;
+> -
+> -	card->ioport |= sdio_readb(func, IF_SDIO_IOPORT + 1, &ret) << 8;
+> -	if (ret)
+> -		goto release_int;
+> -
+> -	card->ioport |= sdio_readb(func, IF_SDIO_IOPORT + 2, &ret) << 16;
+> -	if (ret)
+> -		goto release_int;
+> -
+> -	sdio_release_host(func);
+> -
+>  	sdio_set_drvdata(func, card);
+> 
+>  	lbs_deb_sdio("class = 0x%X, vendor = 0x%X, "
+> @@ -1079,14 +1198,11 @@ static int if_sdio_probe(struct sdio_func *func,
+>  			func->class, func->vendor, func->device,
+>  			model, (unsigned)card->ioport);
+> 
+> -	ret = if_sdio_prog_firmware(card);
+> -	if (ret)
+> -		goto reclaim;
+> 
+>  	priv = lbs_add_card(card, &func->dev);
+>  	if (!priv) {
+>  		ret = -ENOMEM;
+> -		goto reclaim;
+> +		goto free;
+>  	}
+> 
+>  	card->priv = priv;
+> @@ -1097,62 +1213,21 @@ static int if_sdio_probe(struct sdio_func *func,
+>  	priv->exit_deep_sleep = if_sdio_exit_deep_sleep;
+>  	priv->reset_deep_sleep_wakeup = if_sdio_reset_deep_sleep_wakeup;
+>  	priv->reset_card = if_sdio_reset_card;
+> +	priv->power_save = if_sdio_power_save;
+> +	priv->power_restore = if_sdio_power_restore;
+> 
+> -	sdio_claim_host(func);
+> -
+> -	/*
+> -	 * Get rx_unit if the chip is SD8688 or newer.
+> -	 * SD8385 & SD8686 do not have rx_unit.
+> -	 */
+> -	if ((card->model != MODEL_8385)
+> -			&& (card->model != MODEL_8686))
+> -		card->rx_unit = if_sdio_read_rx_unit(card);
+> -	else
+> -		card->rx_unit = 0;
+> -
+> -	/*
+> -	 * Set up the interrupt handler late.
+> -	 *
+> -	 * If we set it up earlier, the (buggy) hardware generates a spurious
+> -	 * interrupt, even before the interrupt has been enabled, with
+> -	 * CCCR_INTx = 0.
+> -	 *
+> -	 * We register the interrupt handler late so that we can handle any
+> -	 * spurious interrupts, and also to avoid generation of that known
+> -	 * spurious interrupt in the first place.
+> -	 */
+> -	ret = sdio_claim_irq(func, if_sdio_interrupt);
+> -	if (ret)
+> -		goto disable;
+> -
+> -	/*
+> -	 * Enable interrupts now that everything is set up
+> -	 */
+> -	sdio_writeb(func, 0x0f, IF_SDIO_H_INT_MASK, &ret);
+> -	sdio_release_host(func);
+> +	ret = if_sdio_power_on(card);
 
-Signed-off-by: Kevin Fang <kevin.fang@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/bmi.h    |    2 +-
- drivers/net/wireless/ath/ath6kl/core.h   |    7 ++
- drivers/net/wireless/ath/ath6kl/init.c   |  136 ++++++++++++++++++++++--------
- drivers/net/wireless/ath/ath6kl/main.c   |    3 +-
- drivers/net/wireless/ath/ath6kl/target.h |   16 +++-
- 5 files changed, 123 insertions(+), 41 deletions(-)
+Why do you power on card here? Maybe it's possible do it in lbs_start_card?
 
-diff --git a/drivers/net/wireless/ath/ath6kl/bmi.h b/drivers/net/wireless/ath/ath6kl/bmi.h
-index 83546d7..3d55c9a 100644
---- a/drivers/net/wireless/ath/ath6kl/bmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/bmi.h
-@@ -140,7 +140,7 @@
- 
- #define TARGET_VERSION_SENTINAL 0xffffffff
- #define TARGET_TYPE_AR6003	3
--
-+#define TARGET_TYPE_AR6004      5
- #define BMI_ROMPATCH_INSTALL               9
- /*
-  * Semantics: Install a ROM Patch.
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 7417022..214d114 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -74,6 +74,13 @@
- #define AR6003_REV3_DEFAULT_BOARD_DATA_FILE	\
- 	"ath6k/AR6003/hw2.1.1/bdata.SD31.bin"
- 
-+/* AR6004 1.0 definitions */
-+#define AR6004_REV1_VERSION                 0x30000623
-+#define AR6004_REV1_FIRMWARE_FILE           "ath6k/AR6004/hw6.1/fw.ram.bin"
-+#define AR6004_REV1_BOARD_DATA_FILE         "ath6k/AR6004/hw6.1/bdata.bin"
-+#define AR6004_REV1_DEFAULT_BOARD_DATA_FILE "ath6k/AR6004/hw6.1/bdata.DB132.bin"
-+#define AR6004_REV1_EPPING_FIRMWARE_FILE "ath6k/AR6004/hw6.1/endpointping.bin"
-+
- /* Per STA data, used in AP mode */
- #define STA_PS_AWAKE		BIT(0)
- #define	STA_PS_SLEEP		BIT(1)
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 9d10322..df15bfa 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -114,7 +114,9 @@ static inline u32 ath6kl_get_hi_item_addr(struct ath6kl *ar,
- 	u32 addr = 0;
- 
- 	if (ar->target_type == TARGET_TYPE_AR6003)
--		addr = ATH6KL_HI_START_ADDR + item_offset;
-+		addr = ATH6KL_AR6003_HI_START_ADDR + item_offset;
-+	else if (ar->target_type == TARGET_TYPE_AR6004)
-+		addr = ATH6KL_AR6004_HI_START_ADDR + item_offset;
- 
- 	return addr;
- }
-@@ -127,12 +129,12 @@ static int ath6kl_set_host_app_area(struct ath6kl *ar)
- 	/* Fetch the address of the host_app_area_s
- 	 * instance in the host interest area */
- 	address = ath6kl_get_hi_item_addr(ar, HI_ITEM(hi_app_host_interest));
--	address = TARG_VTOP(address);
-+	address = TARG_VTOP(ar->target_type, address);
- 
- 	if (ath6kl_read_reg_diag(ar, &address, &data))
- 		return -EIO;
- 
--	address = TARG_VTOP(data);
-+	address = TARG_VTOP(ar->target_type, data);
- 	host_app_area.wmi_protocol_ver = WMI_PROTOCOL_VERSION;
- 	if (ath6kl_access_datadiag(ar, address,
- 				(u8 *)&host_app_area,
-@@ -370,7 +372,7 @@ static void ath6kl_dump_target_assert_info(struct ath6kl *ar)
- 
- 	/* the reg dump pointer is copied to the host interest area */
- 	address = ath6kl_get_hi_item_addr(ar, HI_ITEM(hi_failure_state));
--	address = TARG_VTOP(address);
-+	address = TARG_VTOP(ar->target_type, address);
- 
- 	/* read RAM location through diagnostic window */
- 	status = ath6kl_read_reg_diag(ar, &address, &regdump_loc);
-@@ -382,8 +384,7 @@ static void ath6kl_dump_target_assert_info(struct ath6kl *ar)
- 
- 	ath6kl_dbg(ATH6KL_DBG_TRC, "location of register dump data: 0x%X\n",
- 		regdump_loc);
--
--	regdump_loc = TARG_VTOP(regdump_loc);
-+	regdump_loc = TARG_VTOP(ar->target_type, regdump_loc);
- 
- 	/* fetch register dump data */
- 	status = ath6kl_access_datadiag(ar,
-@@ -518,10 +519,14 @@ int ath6kl_configure_target(struct ath6kl *ar)
- 	 * but possible in theory.
- 	 */
- 
--	if (ar->target_type == TARGET_TYPE_AR6003) {
-+	if (ar->target_type == TARGET_TYPE_AR6003 ||
-+	    ar->target_type == TARGET_TYPE_AR6004) {
- 		if (ar->version.target_ver == AR6003_REV2_VERSION) {
- 			param = AR6003_REV2_BOARD_EXT_DATA_ADDRESS;
- 			ram_reserved_size =  AR6003_REV2_RAM_RESERVE_SIZE;
-+		} else if (ar->version.target_ver == AR6004_REV1_VERSION) {
-+			param = AR6004_REV1_BOARD_EXT_DATA_ADDRESS;
-+			ram_reserved_size =  AR6004_REV1_RAM_RESERVE_SIZE;
- 		} else {
- 			param = AR6003_REV3_BOARD_EXT_DATA_ADDRESS;
- 			ram_reserved_size =  AR6003_REV3_RAM_RESERVE_SIZE;
-@@ -614,7 +619,8 @@ int ath6kl_unavail_ev(struct ath6kl *ar)
- static u32 ath6kl_get_load_address(u32 target_ver, enum addr_type type)
- {
- 	WARN_ON(target_ver != AR6003_REV2_VERSION &&
--		target_ver != AR6003_REV3_VERSION);
-+		target_ver != AR6003_REV3_VERSION &&
-+		target_ver != AR6004_REV1_VERSION);
- 
- 	switch (type) {
- 	case DATASET_PATCH_ADDR:
-@@ -664,6 +670,9 @@ static int ath6kl_fetch_board_file(struct ath6kl *ar)
- 	case AR6003_REV2_VERSION:
- 		filename = AR6003_REV2_BOARD_DATA_FILE;
- 		break;
-+	case AR6004_REV1_VERSION:
-+		filename = AR6004_REV1_BOARD_DATA_FILE;
-+		break;
- 	default:
- 		filename = AR6003_REV3_BOARD_DATA_FILE;
- 		break;
-@@ -684,6 +693,9 @@ static int ath6kl_fetch_board_file(struct ath6kl *ar)
- 	case AR6003_REV2_VERSION:
- 		filename = AR6003_REV2_DEFAULT_BOARD_DATA_FILE;
- 		break;
-+	case AR6004_REV1_VERSION:
-+		filename = AR6004_REV1_DEFAULT_BOARD_DATA_FILE;
-+		break;
- 	default:
- 		filename = AR6003_REV3_DEFAULT_BOARD_DATA_FILE;
- 		break;
-@@ -707,6 +719,7 @@ static int ath6kl_fetch_board_file(struct ath6kl *ar)
- static int ath6kl_upload_board_file(struct ath6kl *ar)
- {
- 	u32 board_address, board_ext_address, param;
-+	u32 board_data_size, board_ext_data_size;
- 	int ret;
- 
- 	if (ar->fw_board == NULL) {
-@@ -715,11 +728,24 @@ static int ath6kl_upload_board_file(struct ath6kl *ar)
- 			return ret;
- 	}
- 
--	/* Determine where in Target RAM to write Board Data */
--	ath6kl_bmi_read(ar,
--			ath6kl_get_hi_item_addr(ar,
--			HI_ITEM(hi_board_data)),
--			(u8 *) &board_address, 4);
-+	/*
-+	 * Determine where in Target RAM to write Board Data.
-+	 * For AR6004, host determine Target RAM address for
-+	 * writing board data.
-+	 */
-+	if (ar->target_type == TARGET_TYPE_AR6004) {
-+		board_address = AR6004_REV1_BOARD_DATA_ADDRESS;
-+		ath6kl_bmi_write(ar,
-+				ath6kl_get_hi_item_addr(ar,
-+				HI_ITEM(hi_board_data)),
-+				(u8 *) &board_address, 4);
-+	} else {
-+		ath6kl_bmi_read(ar,
-+				ath6kl_get_hi_item_addr(ar,
-+				HI_ITEM(hi_board_data)),
-+				(u8 *) &board_address, 4);
-+	}
-+
- 	ath6kl_dbg(ATH6KL_DBG_TRC, "board data download addr: 0x%x\n",
- 		   board_address);
- 
-@@ -737,13 +763,28 @@ static int ath6kl_upload_board_file(struct ath6kl *ar)
- 		return -EINVAL;
- 	}
- 
--	if (ar->fw_board_len == (AR6003_BOARD_DATA_SZ +
--				 AR6003_BOARD_EXT_DATA_SZ)) {
-+	switch (ar->target_type) {
-+	case TARGET_TYPE_AR6003:
-+		board_data_size = AR6003_BOARD_DATA_SZ;
-+		board_ext_data_size = AR6003_BOARD_EXT_DATA_SZ;
-+		break;
-+	case TARGET_TYPE_AR6004:
-+		board_data_size = AR6004_BOARD_DATA_SZ;
-+		board_ext_data_size = AR6004_BOARD_EXT_DATA_SZ;
-+		break;
-+	default:
-+		WARN_ON(1);
-+		return -EINVAL;
-+		break;
-+	}
-+
-+	if (ar->fw_board_len == (board_data_size +
-+				 board_ext_data_size)) {
-+
- 		/* write extended board data */
- 		ret = ath6kl_bmi_write(ar, board_ext_address,
--				       ar->fw_board + AR6003_BOARD_DATA_SZ,
--				       AR6003_BOARD_EXT_DATA_SZ);
--
-+				       ar->fw_board + board_data_size,
-+				       board_ext_data_size);
- 		if (ret) {
- 			ath6kl_err("Failed to write extended board data: %d\n",
- 				   ret);
-@@ -751,21 +792,22 @@ static int ath6kl_upload_board_file(struct ath6kl *ar)
- 		}
- 
- 		/* record that extended board data is initialized */
--		param = (AR6003_BOARD_EXT_DATA_SZ << 16) | 1;
-+		param = (board_ext_data_size << 16) | 1;
-+
- 		ath6kl_bmi_write(ar,
- 				 ath6kl_get_hi_item_addr(ar,
- 				 HI_ITEM(hi_board_ext_data_config)),
- 				 (unsigned char *) &param, 4);
- 	}
- 
--	if (ar->fw_board_len < AR6003_BOARD_DATA_SZ) {
-+	if (ar->fw_board_len < board_data_size) {
- 		ath6kl_err("Too small board file: %zu\n", ar->fw_board_len);
- 		ret = -EINVAL;
- 		return ret;
- 	}
- 
- 	ret = ath6kl_bmi_write(ar, board_address, ar->fw_board,
--			       AR6003_BOARD_DATA_SZ);
-+			       board_data_size);
- 
- 	if (ret) {
- 		ath6kl_err("Board file bmi write failed: %d\n", ret);
-@@ -792,6 +834,10 @@ static int ath6kl_upload_otp(struct ath6kl *ar)
- 	case AR6003_REV2_VERSION:
- 		filename = AR6003_REV2_OTP_FILE;
- 		break;
-+	case AR6004_REV1_VERSION:
-+		ath6kl_dbg(ATH6KL_DBG_TRC, "AR6004 doesn't need OTP file\n");
-+		return 0;
-+		break;
- 	default:
- 		filename = AR6003_REV3_OTP_FILE;
- 		break;
-@@ -836,6 +882,9 @@ static int ath6kl_upload_firmware(struct ath6kl *ar)
- 	case AR6003_REV2_VERSION:
- 		filename = AR6003_REV2_FIRMWARE_FILE;
- 		break;
-+	case AR6004_REV1_VERSION:
-+		filename = AR6004_REV1_FIRMWARE_FILE;
-+		break;
- 	default:
- 		filename = AR6003_REV3_FIRMWARE_FILE;
- 		break;
-@@ -860,11 +909,15 @@ static int ath6kl_upload_firmware(struct ath6kl *ar)
- 		return ret;
- 	}
- 
--	/* Set starting address for firmware */
--	address = ath6kl_get_load_address(ar->version.target_ver,
--					  APP_START_OVERRIDE_ADDR);
--	ath6kl_bmi_set_app_start(ar, address);
--
-+	/*
-+	 * Set starting address for firmware
-+	 * Don't need to setup app_start override addr on AR6004
-+	 */
-+	if (ar->target_type != TARGET_TYPE_AR6004) {
-+		address = ath6kl_get_load_address(ar->version.target_ver,
-+						  APP_START_OVERRIDE_ADDR);
-+		ath6kl_bmi_set_app_start(ar, address);
-+	}
- 	return ret;
- }
- 
-@@ -878,6 +931,10 @@ static int ath6kl_upload_patch(struct ath6kl *ar)
- 	case AR6003_REV2_VERSION:
- 		filename = AR6003_REV2_PATCH_FILE;
- 		break;
-+	case AR6004_REV1_VERSION:
-+		/* FIXME: implement for AR6004 */
-+		return 0;
-+		break;
- 	default:
- 		filename = AR6003_REV3_PATCH_FILE;
- 		break;
-@@ -916,7 +973,8 @@ static int ath6kl_init_upload(struct ath6kl *ar)
- 	u32 param, options, sleep, address;
- 	int status = 0;
- 
--	if (ar->target_type != TARGET_TYPE_AR6003)
-+	if (ar->target_type != TARGET_TYPE_AR6003 &&
-+		ar->target_type != TARGET_TYPE_AR6004)
- 		return -EINVAL;
- 
- 	/* temporarily disable system sleep */
-@@ -948,18 +1006,22 @@ static int ath6kl_init_upload(struct ath6kl *ar)
- 		   options, sleep);
- 
- 	/* program analog PLL register */
--	status = ath6kl_bmi_reg_write(ar, ATH6KL_ANALOG_PLL_REGISTER,
--				      0xF9104001);
--	if (status)
--		return status;
-+	/* no need to control 40/44MHz clock on AR6004 */
-+	if (ar->target_type != TARGET_TYPE_AR6004) {
-+		status = ath6kl_bmi_reg_write(ar, ATH6KL_ANALOG_PLL_REGISTER,
-+					      0xF9104001);
- 
--	/* Run at 80/88MHz by default */
--	param = SM(CPU_CLOCK_STANDARD, 1);
-+		if (status)
-+			return status;
- 
--	address = RTC_BASE_ADDRESS + CPU_CLOCK_ADDRESS;
--	status = ath6kl_bmi_reg_write(ar, address, param);
--	if (status)
--		return status;
-+		/* Run at 80/88MHz by default */
-+		param = SM(CPU_CLOCK_STANDARD, 1);
-+
-+		address = RTC_BASE_ADDRESS + CPU_CLOCK_ADDRESS;
-+		status = ath6kl_bmi_reg_write(ar, address, param);
-+		if (status)
-+			return status;
-+	}
- 
- 	param = 0;
- 	address = RTC_BASE_ADDRESS + LPO_CAL_ADDRESS;
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index c336eae..3cee0e3 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -305,7 +305,8 @@ static void ath6kl_reset_device(struct ath6kl *ar, u32 target_type,
- 	u32 address;
- 	u32 data;
- 
--	if (target_type != TARGET_TYPE_AR6003)
-+	if (target_type != TARGET_TYPE_AR6003 &&
-+		target_type != TARGET_TYPE_AR6004)
- 		return;
- 
- 	data = cold_reset ? RESET_CONTROL_COLD_RST : RESET_CONTROL_MBOX_RST;
-diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
-index 519a013..53e2c78 100644
---- a/drivers/net/wireless/ath/ath6kl/target.h
-+++ b/drivers/net/wireless/ath/ath6kl/target.h
-@@ -20,6 +20,9 @@
- #define AR6003_BOARD_DATA_SZ		1024
- #define AR6003_BOARD_EXT_DATA_SZ	768
- 
-+#define AR6004_BOARD_DATA_SZ     7168
-+#define AR6004_BOARD_EXT_DATA_SZ 0
-+
- #define RESET_CONTROL_ADDRESS		0x00000000
- #define RESET_CONTROL_COLD_RST		0x00000100
- #define RESET_CONTROL_MBOX_RST		0x00000004
-@@ -135,7 +138,8 @@
-  * between the two, and is intended to remain constant (with additions only
-  * at the end).
-  */
--#define ATH6KL_HI_START_ADDR           0x00540600
-+#define ATH6KL_AR6003_HI_START_ADDR           0x00540600
-+#define ATH6KL_AR6004_HI_START_ADDR           0x00400800
- 
- /*
-  * These are items that the Host may need to access
-@@ -314,7 +318,12 @@ struct host_interest {
- #define HI_OPTION_FW_MODE_SHIFT        0xC
- 
- /* Convert a Target virtual address into a Target physical address */
--#define TARG_VTOP(vaddr)   (vaddr & 0x001fffff)
-+#define AR6003_VTOP(vaddr) ((vaddr) & 0x001fffff)
-+#define AR6004_VTOP(vaddr) (vaddr)
-+
-+#define TARG_VTOP(target_type, vaddr) \
-+	(((target_type) == TARGET_TYPE_AR6003) ? AR6003_VTOP(vaddr) : \
-+	(((target_type) == TARGET_TYPE_AR6004) ? AR6004_VTOP(vaddr) : 0))
- 
- #define AR6003_REV2_APP_START_OVERRIDE          0x944C00
- #define AR6003_REV2_APP_LOAD_ADDRESS            0x543180
-@@ -328,4 +337,7 @@ struct host_interest {
- #define AR6003_REV3_DATASET_PATCH_ADDRESS       0x57FF74
- #define AR6003_REV3_RAM_RESERVE_SIZE            512
- 
-+#define AR6004_REV1_BOARD_DATA_ADDRESS          0x435400
-+#define AR6004_REV1_BOARD_EXT_DATA_ADDRESS      0x437000
-+#define AR6004_REV1_RAM_RESERVE_SIZE            11264
- #endif
--- 
-1.7.0.4
+>  	if (ret)
+> -		goto reclaim;
+> -
+> -	priv->fw_ready = 1;
+> -
+> -	/*
+> -	 * FUNC_INIT is required for SD8688 WLAN/BT multiple functions
+> -	 */
+> -	if (card->model == MODEL_8688) {
+> -		struct cmd_header cmd;
+> -
+> -		memset(&cmd, 0, sizeof(cmd));
+> -
+> -		lbs_deb_sdio("send function INIT command\n");
+> -		if (__lbs_cmd(priv, CMD_FUNC_INIT, &cmd, sizeof(cmd),
+> -				lbs_cmd_copyback, (unsigned long) &cmd))
+> -			netdev_alert(priv->dev, "CMD_FUNC_INIT cmd failed\n");
+> -	}
+> +		goto err_activate_card;
+> 
+>  	ret = lbs_start_card(priv);
+> +	if_sdio_power_off(card);
 
+Same for power off.
+
+>  	if (ret)
+>  		goto err_activate_card;
+> 
+> +	/* Tell PM core that we don't need the card to be powered now */
+> +	pm_runtime_put_noidle(&func->dev);
+> +
+>  out:
+>  	lbs_deb_leave_args(LBS_DEB_SDIO, "ret %d", ret);
+> 
+> @@ -1161,14 +1236,6 @@ out:
+>  err_activate_card:
+>  	flush_workqueue(card->workqueue);
+>  	lbs_remove_card(priv);
+> -reclaim:
+> -	sdio_claim_host(func);
+> -release_int:
+> -	sdio_release_irq(func);
+> -disable:
+> -	sdio_disable_func(func);
+> -release:
+> -	sdio_release_host(func);
+>  free:
+>  	destroy_workqueue(card->workqueue);
+>  	while (card->packets) {
+> @@ -1195,6 +1262,9 @@ static void if_sdio_remove(struct sdio_func *func)
+> 
+>  	card = sdio_get_drvdata(func);
+> 
+> +	/* Undo decrement done above in if_sdio_probe */
+> +	pm_runtime_get_noresume(&func->dev);
+> +
+>  	if (user_rmmod && (card->model == MODEL_8688)) {
+>  		/*
+>  		 * FUNC_SHUTDOWN is required for SD8688 WLAN/BT
+> @@ -1219,11 +1289,6 @@ static void if_sdio_remove(struct sdio_func *func)
+>  	flush_workqueue(card->workqueue);
+>  	destroy_workqueue(card->workqueue);
+> 
+> -	sdio_claim_host(func);
+> -	sdio_release_irq(func);
+> -	sdio_disable_func(func);
+> -	sdio_release_host(func);
+> -
+>  	while (card->packets) {
+>  		packet = card->packets;
+>  		card->packets = card->packets->next;
+
+Regards
+Vasily
