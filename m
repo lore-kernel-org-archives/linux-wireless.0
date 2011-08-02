@@ -1,75 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44119 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752437Ab1HRFFu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Aug 2011 01:05:50 -0400
-Message-ID: <810b521f028c03b74ef357f22bd5d5ab.squirrel@mail.candelatech.com> (sfid-20110818_070554_360631_B5C54BC5)
-In-Reply-To: <6FA32078-B95C-47B6-98C8-17DE81CE5FE5@comsys.rwth-aachen.de>
-References: <6FA32078-B95C-47B6-98C8-17DE81CE5FE5@comsys.rwth-aachen.de>
-Date: Wed, 17 Aug 2011 22:05:42 -0700 (PDT)
-Subject: Re: Multiple virtual interfaces, ath9k
-From: greearb@candelatech.com
-To: "Hanno Wirtz" <hanno.wirtz@comsys.rwth-aachen.de>
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from server19320154104.serverpool.info ([193.201.54.104]:41248 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755395Ab1HBVPh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2011 17:15:37 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat-wireless: make patches apply again
+Date: Tue,  2 Aug 2011 23:15:15 +0200
+Message-Id: <1312319715-25979-1-git-send-email-hauke@hauke-m.de> (sfid-20110802_231540_125010_36C0A1D1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hi,
->
-> I am having problems with the operation of multiple virtual interfaces.
-> A short scenario description :
 
-Please post your hostapd configs for the two virtual APs.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/01-netdev.patch |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-Every virtual station must be on the same channel.  APs must
-be configured for the same channel, and stations must be able to
-associate with an AP on the same channel...
-
-Thanks,
-Ben
-
->
-> I would like to provide two independent wifi networks at my device, both
-> using a virtual AP interface.
-> Furthermore, I would like to dynamically associate to (multiple) other
-> networks using dynamically created STA interfaces.
-> This results in two AP interfaces that are permanently active and at least
-> one (up to 5) STA interface(s) that run(s) concurrently.
-> I use Ubuntu kernel 3.1-rc2 with compat-wireless-3.1, the machine has an
-> Atheros AR9285 wireless chip.
->
->>From what I read, this should be possible, and in fact *some*
->> combinations work, i.e. 2 AP interfaces, 1 AP + 1 STA and 2 STA
->> interfaces.
-> However, adding a STA interface or an AP interface respectively, causes
-> the connections to all associated stations to be terminated in the case of
-> AP interfaces.
-> In the case of STA interfaces, no working association to a network is
-> possible.
-> The debug output in /var/log/syslog and in
-> /sys/kernel/debug/ieee80211/phy*/ath9k is rather inconclusive to me, as I
-> only seem to find notifications and
-> statistics. The only thing I found so far that could be the cause for such
-> behavior is the "ieee80211_iface_combination" structure in
-> compat-wireless,
-> in which the number, types and allowed combination of virtual interfaces
-> is set.
->
-> I would be happy to work on the driver code itself, however I am a bit
-> clueless where to start and what actual *errors* to search and fix.
-> If anyone could point me to something, that would help me a lot. If that
-> helps, I can post complete syslog and debug traces tomorrow.
->
-> Thanks a lot in advance,
->
-> Hanno
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/patches/01-netdev.patch b/patches/01-netdev.patch
+index 244e03e..c0e938c 100644
+--- a/patches/01-netdev.patch
++++ b/patches/01-netdev.patch
+@@ -45,10 +45,10 @@ without creating a headache on maintenance of the pathes.
+  	retval = rndis_set_oid(usbdev, OID_GEN_CURRENT_PACKET_FILTER, &tmp,
+ --- a/net/mac80211/iface.c
+ +++ b/net/mac80211/iface.c
+-@@ -698,7 +698,12 @@ static const struct net_device_ops ieee8
+- static void ieee80211_if_setup(struct net_device *dev)
++@@ -699,7 +699,12 @@ static void ieee80211_if_setup(struct ne
+  {
+  	ether_setup(dev);
++ 	dev->priv_flags &= ~IFF_TX_SKB_SHARING;
+ -	dev->netdev_ops = &ieee80211_dataif_ops;
+ +	netdev_attach_ops(dev, &ieee80211_dataif_ops);
+ +#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+@@ -59,7 +59,7 @@ without creating a headache on maintenance of the pathes.
+  	dev->destructor = free_netdev;
+  }
+  
+-@@ -845,7 +850,7 @@ static void ieee80211_setup_sdata(struct
++@@ -846,7 +851,7 @@ static void ieee80211_setup_sdata(struct
+  	/* and set some type-dependent values */
+  	sdata->vif.type = type;
+  	sdata->vif.p2p = false;
+@@ -68,7 +68,7 @@ without creating a headache on maintenance of the pathes.
+  	sdata->wdev.iftype = type;
+  
+  	sdata->control_port_protocol = cpu_to_be16(ETH_P_PAE);
+-@@ -884,7 +889,7 @@ static void ieee80211_setup_sdata(struct
++@@ -885,7 +890,7 @@ static void ieee80211_setup_sdata(struct
+  		break;
+  	case NL80211_IFTYPE_MONITOR:
+  		sdata->dev->type = ARPHRD_IEEE80211_RADIOTAP;
+@@ -77,7 +77,7 @@ without creating a headache on maintenance of the pathes.
+  		sdata->u.mntr_flags = MONITOR_FLAG_CONTROL |
+  				      MONITOR_FLAG_OTHER_BSS;
+  		break;
+-@@ -1135,6 +1140,8 @@ int ieee80211_if_add(struct ieee80211_lo
++@@ -1136,6 +1141,8 @@ int ieee80211_if_add(struct ieee80211_lo
+  		return -ENOMEM;
+  	dev_net_set(ndev, wiphy_net(local->hw.wiphy));
+  
+@@ -86,7 +86,7 @@ without creating a headache on maintenance of the pathes.
+  	ndev->needed_headroom = local->tx_headroom +
+  				4*6 /* four MAC addresses */
+  				+ 2 + 2 + 2 + 2 /* ctl, dur, seq, qos */
+-@@ -1143,6 +1150,7 @@ int ieee80211_if_add(struct ieee80211_lo
++@@ -1144,6 +1151,7 @@ int ieee80211_if_add(struct ieee80211_lo
+  				- ETH_HLEN /* ethernet hard_header_len */
+  				+ IEEE80211_ENCRYPT_HEADROOM;
+  	ndev->needed_tailroom = IEEE80211_ENCRYPT_TAILROOM;
+@@ -314,10 +314,10 @@ without creating a headache on maintenance of the pathes.
+  {
+  	struct bnep_session *s = netdev_priv(dev);
+  	struct sock *sk = s->sock->sk;
+-@@ -231,7 +235,7 @@ void bnep_net_setup(struct net_device *d
+- 	dev->addr_len = ETH_ALEN;
++@@ -232,7 +236,7 @@ void bnep_net_setup(struct net_device *d
+  
+  	ether_setup(dev);
++ 	dev->priv_flags &= ~IFF_TX_SKB_SHARING;
+ -	dev->netdev_ops = &bnep_netdev_ops;
+ +	netdev_attach_ops(dev, &bnep_netdev_ops);
+  
+-- 
+1.7.4.1
 
