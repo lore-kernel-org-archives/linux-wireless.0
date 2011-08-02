@@ -1,57 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:38243 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750795Ab1HYDdF convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:56162 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751743Ab1HBHYa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 23:33:05 -0400
-MIME-Version: 1.0
-In-Reply-To: <20110822.123326.1795268471389412471.davem@davemloft.net>
-References: <20110822190136.GJ2534@tuxdriver.com>
-	<20110822.123326.1795268471389412471.davem@davemloft.net>
-Date: Thu, 25 Aug 2011 11:33:05 +0800
-Message-ID: <CAAJw_ZtFw5FxPy+boe_99mKQi7yt3yfGE6FqWrzmUD3T-y1v8w@mail.gmail.com> (sfid-20110825_053326_440962_5E2B51B0)
-Subject: Re: pull request: wireless 2011-08-22
-From: Jeff Chua <jeff.chua.linux@gmail.com>
-To: David Miller <davem@davemloft.net>, IvDoorn@gmail.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 2 Aug 2011 03:24:30 -0400
+Received: by wyg8 with SMTP id 8so2114464wyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 00:24:29 -0700 (PDT)
+From: Ido Yariv <ido@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>
+Subject: [PATCH 2/2] wl12xx: Fix validation of pm_runtime_get_sync return value
+Date: Tue,  2 Aug 2011 10:24:18 +0300
+Message-Id: <1312269858-30434-2-git-send-email-ido@wizery.com> (sfid-20110802_092434_898436_31FC6CE6)
+In-Reply-To: <1312269858-30434-1-git-send-email-ido@wizery.com>
+References: <1312269858-30434-1-git-send-email-ido@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 23, 2011 at 3:33 AM, David Miller <davem@davemloft.net> wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Mon, 22 Aug 2011 15:01:37 -0400
->
->> This is a batch of fixes intended for 3.1.  Included is rewrite of an
->> earlier iwlagn fix that was revealed to be flawed (bad pointer access
->> during module unload), a fix for a memory leak, and a trio of rt2x00
->> fixes with detailed changelogs.  These have all been in linux-next
->> for the last week with no reported complaints.
->>
->> Please let me know if there are problems!
->
-> Pulled, thanks John.
+wl1271_sdio_power_on checks if the return value of pm_runtime_get_sync
+is non-zero, and if so bails out.
+However, pm_runtime_get_sync can return a positive number which does not
+suggest an error has occurred. This is problematic for two reasons:
 
-I'm using the rt2800usb module for the Buffalo WLI-UC-GNM using ad-hoc mode.
+1. The function will needlessly bail out without decrementing back the
+   runtime PM reference counter.
+2. wl1271_power_on only checks if wl1271_power_on return value is
+   negative. This means that wl1271_power_on will continue even if
+   wl1271_sdio_power_on bailed out. As a result, sdio transactions will
+   be initiated without properly enabling the sdio function and claiming
+   the host. This could even lead to a kernel panic.
 
-T:  Bus=01 Lev=02 Prnt=02 Port=01 Cnt=01 Dev#=  3 Spd=480  MxCh= 0
-D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
-P:  Vendor=0411 ProdID=01a2 Rev= 1.01
-S:  Manufacturer=Ralink
-S:  Product=802.11 n WLAN
+Fix this by only checking that the return value of pm_runtime_get_sync
+is non-negative.
 
-It works ok, but after idling for a while, it does not response, and
-module needs to unloaded and modprobe again to make it work.
+Signed-off-by: Ido Yariv <ido@wizery.com>
+---
+ drivers/net/wireless/wl12xx/sdio.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-The same mac80211 and cfg80211 works for iwlagn and no problem with
-idling timeout.
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index 5cf18c2..fb1fd5a 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -164,7 +164,7 @@ static int wl1271_sdio_power_on(struct wl1271 *wl)
+ 	/* If enabled, tell runtime PM not to power off the card */
+ 	if (pm_runtime_enabled(&func->dev)) {
+ 		ret = pm_runtime_get_sync(&func->dev);
+-		if (ret)
++		if (ret < 0)
+ 			goto out;
+ 	} else {
+ 		/* Runtime PM is disabled: power up the card manually */
+-- 
+1.7.4.1
 
-Is there any parameter to control the rt2800usb to make turn off power saving?
-
-I've tried "iwconfig lwan0 power timeout 0 power off" but no effect.
-
-Linux 3.1.0-rc3 with commit caca9510ff4e5d842c0589110243d60927836222.
-
-Thanks,
-Jeff.
