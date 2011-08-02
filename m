@@ -1,81 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4954 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751199Ab1HXWag (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 18:30:36 -0400
-Date: Wed, 24 Aug 2011 15:28:01 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-cc: "Brett Rudley" <brudley@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: [PATCH v2] Move brcm80211 to mainline
-Message-ID: <20110824222801.GA5280@broadcom.com> (sfid-20110825_003039_378819_FA5E4138)
-References: <20110707002034.GA17885@broadcom.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:34915 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753250Ab1HBKyI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2011 06:54:08 -0400
+Received: by fxh19 with SMTP id 19so5502095fxh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 03:54:07 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20110707002034.GA17885@broadcom.com>
-Content-Type: text/plain;
- charset=us-ascii
+In-Reply-To: <1312280832-27675-1-git-send-email-anarsoul@gmail.com>
+References: <201108021312.23153.anarsoul@gmail.com>
+	<1312280832-27675-1-git-send-email-anarsoul@gmail.com>
+Date: Tue, 2 Aug 2011 11:54:07 +0100
+Message-ID: <CAGq3pz4bQ_2eQbVye==3Xqq3gK4PV6+JJXoHX0TXz=Y7kWC0wQ@mail.gmail.com> (sfid-20110802_125430_963045_F3E5CAED)
+Subject: Re: [PATCH 1/2] libertas: add ability to power off card on suspend
+From: Daniel Drake <dsd@laptop.org>
+To: Vasily Khoruzhick <anarsoul@gmail.com>
+Cc: libertas-dev@lists.infradead.org, linville@tuxdriver.com,
+	dcbw@redhat.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the latest series of cleanup patches merged in by Greg KH, I'd like to
-once again propose moving brcm80211 out of staging and into mainline.
+On 2 August 2011 11:27, Vasily Khoruzhick <anarsoul@gmail.com> wrote:
+> Could be usefull if it's not possible to keep power on the card
+> when host goes into suspend.
 
-I've put together a patch to add a copy of the current sources from
-staging-next into wireless-testing:drivers/net/wireless/brcm80211.
+If it's not possible to keep power during suspend, then I don't see
+why you need to explicitly turn it off on the way down.
 
-The patch is somewhat large, so I've posted the patch at:
+If power can be maintained, this is going to confuse userspace. If the
+network interface is up while you go into suspend, this code would
+kick in and power down the device. Then, during resume, it would power
+it up again. During this whole time, the network interface has
+remained UP, so userspace isn't aware that anything has happened. But,
+since the hardware has been powered off and on again, it has lost all
+state (association, encryption keys, etc).
 
-http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=get&target=0001-wireless-testing-add-brcm80211.patch
+The way we handle this in libertas_sdio is that if we don't want the
+card powered during suspend, we ask the MMC layer to remove the
+device. This causes the remove function to be run, and the interface
+disappears. During resume, it gets probed again from scratch, which
+then prompts userspace into deciding which network to connect to,
+reprogramming keys, etc.
 
-Changes from the previous version:
-
-V2:
-- Resolve checkpatch issues
-- Fix issues on big-endian platforms (MIPS BE, PPC, and SPARC)
-- Cleanup architecture-specific code
-- Fix power save, locking, and scan issues in brcmfmac
-- Elimimnate 'void *' casts in brcmsmac
-- Fix entry for brcm80211 drivers in drivers/net/wireless/Kconfig
-- Use cordic and crc8 kernel library functions
-- General code cleanup, restructuring, and dead code removal
-
-The only difference between these sources and the ones in staging-next are:
-	- necessary Kconfig and Makefile adjustments for the new driver location
-	- one cleanup of a checkpatch warning (as indicated below)
-
-The brcmsmac driver has been verified to work on x86 (both 32- and 64-bit), PPC
-(64-bit), SPARC, MIPS BE, and ARM.  The brcmfmac driver has been verified to
-work on x86 32-bit and ARM (additional testing is in progress, but getting a
-working sdio controller on some of the other platforms has been challenging).
-
-The drivers compile cleanly for x86 (32- and 64-bit), PPC (32- and 64-bit),
-SPAR, MIPS BE, MIPS LE, and ARM.
-
-Thanks,
----
-Henry Ptasinski
-henryp@broadcom.com
-
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm8021
-index 05dad9f..73e5841 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.c
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.c
-@@ -815,7 +815,7 @@ struct sk_buff *dma_rx(struct dma_pub *pub)
-                tail = head;
-                while ((resid > 0) && (p = _dma_getnextrxp(di, false))) {
-                        tail->next = p;
--                       pkt_len = min(resid, (int)di->rxbufsize);
-+                       pkt_len = min_t(int, resid, (int)di->rxbufsize);
-                        __skb_trim(p, pkt_len);
- 
-                        tail = p;
-
-
+Daniel
