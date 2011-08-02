@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:42158 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754797Ab1H2Tnm convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:33272 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750938Ab1HBGjh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 15:43:42 -0400
-Received: by yie30 with SMTP id 30so3823447yie.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 12:43:41 -0700 (PDT)
+	Tue, 2 Aug 2011 02:39:37 -0400
+Received: by fxh19 with SMTP id 19so5302377fxh.19
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Aug 2011 23:39:36 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1314598866.4562.2.camel@jlt3.sipsolutions.net>
-References: <1314265865-20208-1-git-send-email-arik@wizery.com> <1314598866.4562.2.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Mon, 29 Aug 2011 22:43:24 +0300
-Message-ID: <CA+XVXfeA-8PSwMyib1Sk-EJXDTjJ3hMiRVQExNsumfSc_jS3tA@mail.gmail.com> (sfid-20110829_214350_935306_F1A82117)
-Subject: Re: [PATCH 1/2] mac80211: add flag to indicate HW only Tx-agg support
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+In-Reply-To: <4825B8A2C4E264489E57869F0DCFB22344563F4ABE@hasmsx502.ger.corp.intel.com>
+References: <1312228017-12061-1-git-send-email-wey-yi.w.guy@intel.com>
+ <CALSq=BYkKhJN=GU0RUJ2viibsy5yG78x-D-td0zP+rqWCy=AiQ@mail.gmail.com> <4825B8A2C4E264489E57869F0DCFB22344563F4ABE@hasmsx502.ger.corp.intel.com>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Mon, 1 Aug 2011 23:39:16 -0700
+Message-ID: <CALSq=BZ2CoF=+Zw-si5oc8No9MLTP1YoZCzfoT9TX1XEaLnq1A@mail.gmail.com> (sfid-20110802_083943_047984_4F00B613)
+Subject: Re: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv pointer
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 29, 2011 at 09:21, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2011-08-25 at 12:51 +0300, Arik Nemtsov wrote:
->> When this flag is set, Tx aggregations will not be initiated even
->> if the hardware supports A-MPDU aggregation in general. This flag
->> is required for devices supporting (partial) software Rx-aggregation.
+ACK, you're right.
+
+2011/8/1 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
 >>
->> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->> ---
->>  include/net/mac80211.h |    4 ++++
->>  net/mac80211/agg-tx.c  |    3 ++-
->>  net/mac80211/debugfs.c |    2 ++
->>  net/mac80211/tx.c      |    3 ++-
->>  4 files changed, 10 insertions(+), 2 deletions(-)
+>> On Mon, Aug 1, 2011 at 12:46 PM, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
+>> > From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> >
+>> > This bug has been introduced by:
+>> > d593411084a56124aa9d80aafa15db8463b2d8f7
+>> > Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> > Date:   Mon Jul 11 10:48:51 2011 +0300
+>> >
+>> >    iwlagn: simplify the bus architecture
+>> >
 >>
->> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
->> index 2f01d84..b21a5bb 100644
->> --- a/include/net/mac80211.h
->> +++ b/include/net/mac80211.h
->> @@ -1094,6 +1094,9 @@ enum sta_notify_cmd {
->>   *   stations based on the PM bit of incoming frames.
->>   *   Use ieee80211_start_ps()/ieee8021_end_ps() to manually configure
->>   *   the PS mode of connected stations.
->> + *
->> + * @IEEE80211_HW_TX_AMPDU_IN_HW_ONLY: The device handles TX aggregation
->> + *   strictly in HW. Packets should not be aggregated in software.
+>> Believe this fix needs to go to 3.0-stable too.
+>>
 >
-> In addition to the discussion with Helmut -- this is also misleading
-> since mac80211 doesn't, right now, aggregate anything in software -- it
-> just handles session setup (which is what you don't want).
-
-Sure. I'll rename it to something like
-IEEE80211_HW_TX_AMPDU_SETUP_IN_HW (and change the description).
-
-Arik
+> The buggy patch hasn't made it to 3.0. The bug was introduced in 3.1
+> ---------------------------------------------------------------------
+> Intel Israel (74) Limited
+>
+> This e-mail and any attachments may contain confidential material for
+> the sole use of the intended recipient(s). Any review or distribution
+> by others is strictly prohibited. If you are not the intended
+> recipient, please contact the sender and delete all copies.
+>
