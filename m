@@ -1,98 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13330 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:37218 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751277Ab1HPJ1m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2011 05:27:42 -0400
-Date: Tue, 16 Aug 2011 11:26:11 +0200
+	id S1753754Ab1HBL2R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2011 07:28:17 -0400
+Date: Tue, 2 Aug 2011 13:29:02 +0200
 From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH 05/60] iwlagn: introduce struct iwl-shared - known by all
- layers
-Message-ID: <20110816092610.GB6085@redhat.com> (sfid-20110816_112748_894808_6BBC57D7)
-References: <1313257116-2697-6-git-send-email-wey-yi.w.guy@intel.com>
- <20110815081010.GA3317@redhat.com>
- <20110815084355.GB3317@redhat.com>
- <1313414020.15170.32.camel@wwguy-huron>
- <20110815142144.GA15718@redhat.com>
- <1313416005.15170.35.camel@wwguy-huron>
- <20110815144359.GA15719@redhat.com>
- <1313417422.15170.39.camel@wwguy-huron>
- <20110815151231.GB15718@redhat.com>
- <1313422152.15170.43.camel@wwguy-huron>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] rt2x00: fix usage of NULL queue
+Message-ID: <20110802112314.GA2688@redhat.com> (sfid-20110802_132821_565252_087A0D88)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1313422152.15170.43.camel@wwguy-huron>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 15, 2011 at 08:29:12AM -0700, Guy, Wey-Yi wrote:
-> On Mon, 2011-08-15 at 08:12 -0700, Stanislaw Gruszka wrote:
-> > On Mon, Aug 15, 2011 at 07:10:22AM -0700, Guy, Wey-Yi wrote:
-> > > On Mon, 2011-08-15 at 07:44 -0700, Stanislaw Gruszka wrote:
-> > > > On Mon, Aug 15, 2011 at 06:46:45AM -0700, Guy, Wey-Yi wrote:
-> > > > > On Mon, 2011-08-15 at 07:21 -0700, Stanislaw Gruszka wrote:
-> > > > > > On Mon, Aug 15, 2011 at 06:13:39AM -0700, Guy, Wey-Yi wrote:
-> > > > > > > now we are working on separate iwlagn driver into two layers (upper and
-> > > > > > > lower), the lower layer contains both bus and transport sub-layer which
-> > > > > > > is hw dependent, and the upper layer should be bus/hw independent. by
-> > > > > > > doing so, the single driver can handle different bus and different core
-> > > > > > > architecture. Having the share data structure (priv->shrd->foo) between
-> > > > > > > two layers is for that reason (loosely couple).
-> > > > > > 
-> > > > > > You did not explained reason for introducing iwl_shared structure,
-> > > > > > actually you confirmed it is useless. You should simply share iwl_priv
-> > > > > > on any layer you have.
-> > > > > > 
-> > > > > > Stanislaw
-> > > > > 
-> > > > > It is not true, I mean "boring" but not "useless", it does not make
-> > > > > sense share all the priv with lower layer.
-> > > > 
-> > > > Why? Even if there are some fields that you will use only on
-> > > > upper layer, it does not mean that pointer to priv structure
-> > > > could not be passed to lower layer.
-> > > > 
-> > > why, if we doing that, lower layer need to know how to reference the
-> > > priv which I don't believe it is a good design. I want to make the upper
-> > > and lower layer as loose as possible and it is flexible for new
-> > > architecture.
-> > 
-> > Providing more abstraction layers than needed is worse.
-> 
-> I don't really see any issues with it
+We may call rt2x00queue_pause_queue(queue) with queue == NULL. Bug
+was introduced by commit 62fe778412b36791b7897cfa139342906fbbf07b
+"rt2x00: Fix stuck queue in tx failure case" .
 
-It make driver more complex than it could be.
+Cc: stable@kernel.org # 3.0+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
->  and I don't believe it will cause
-> problem if we do it right. by doing so, we will improve the flexibility.
-
-It does not offer any more flexibility than sharing iwl_priv, it
-is actually less flexible.
-
-> > > > > think about I also mention
-> > > > > different core architecture, that mean we can have different upper layer
-> > > > > which has different priv; but shrd is always common to all different
-> > > > > upper layer to share with lower layer.
-> > > > 
-> > > > What different upper layer? Non mac80211, if so you should write
-> > > > separate driver for it.
-> > > 
-> > > not mac80211, it is still part of driver, but different upper layer
-> > > might/can contain different system flow. that is why I mention different
-> > > core architecture. now we are doing preparation work so you did not see
-> > > the new stuff yet.
-> > 
-> > Can we get opinion from Johannes about that, and eventually ACKs/NACKs
-> > for patches?
-> > 
-> 
-> it is pure iwlagn driver changes and not impact mac80211 at all.
-> Johannes already in the loop and he understand the changes.
-
-I'm asking about Johannes opinion, not your opinion about his opinion :-)
-
-Stanislaw
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 8efab39..4ccf238 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -113,7 +113,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	 * due to possible race conditions in mac80211.
+ 	 */
+ 	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
+-		goto exit_fail;
++		goto exit_free_skb;
+ 
+ 	/*
+ 	 * Use the ATIM queue if appropriate and present.
+@@ -127,7 +127,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		ERROR(rt2x00dev,
+ 		      "Attempt to send packet over invalid queue %d.\n"
+ 		      "Please file bug report to %s.\n", qid, DRV_PROJECT);
+-		goto exit_fail;
++		goto exit_free_skb;
+ 	}
+ 
+ 	/*
+@@ -159,6 +159,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 
+  exit_fail:
+ 	rt2x00queue_pause_queue(queue);
++ exit_free_skb:
+ 	dev_kfree_skb_any(skb);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00mac_tx);
+-- 
+1.7.1
