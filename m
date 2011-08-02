@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1469 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752147Ab1HXKqK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 06:46:10 -0400
-Message-ID: <4E54D660.4090407@broadcom.com> (sfid-20110824_124614_060586_1A7F7A50)
-Date: Wed, 24 Aug 2011 12:45:52 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:59375 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755152Ab1HBVMw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2011 17:12:52 -0400
+Received: by fxh19 with SMTP id 19so193198fxh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 14:12:51 -0700 (PDT)
+From: Vasily Khoruzhick <anarsoul@gmail.com>
+To: Daniel Drake <dsd@laptop.org>
+Subject: Re: [PATCH 1/2] libertas: add ability to power off card on suspend
+Date: Wed, 3 Aug 2011 00:12:19 +0300
+Cc: libertas-dev@lists.infradead.org, linville@tuxdriver.com,
+	dcbw@redhat.com, linux-wireless@vger.kernel.org
+References: <201108021312.23153.anarsoul@gmail.com> <201108022309.07783.anarsoul@gmail.com> <CAGq3pz6R=8eRNRME-X9e-S12cWvRq_-xvcjCa7KXyRfE0sJ8gw@mail.gmail.com>
+In-Reply-To: <CAGq3pz6R=8eRNRME-X9e-S12cWvRq_-xvcjCa7KXyRfE0sJ8gw@mail.gmail.com>
 MIME-Version: 1.0
-To: "Greg KH" <greg@kroah.com>
-cc: "Greg KH" <gregkh@suse.de>, "Dan Carpenter" <error27@gmail.com>,
-	"sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCHv2 00/82] staging: brcm80211: resubmit previously
- posted patches
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
- <CA+icZUUBokLgtn3K3uG7qcNLzy4pfdT4fGYWPtoOy_MQVy8VuA@mail.gmail.com>
- <20110808145334.GA7659@shale.localdomain>
- <4E400A92.7060905@broadcom.com> <20110808163232.GA26352@suse.de>
- <4E4010EB.2020606@broadcom.com> <20110823200141.GA602@kroah.com>
-In-Reply-To: <20110823200141.GA602@kroah.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201108030012.20241.anarsoul@gmail.com> (sfid-20110802_231255_564605_EF9E5C4A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/23/2011 10:01 PM, Greg KH wrote:
-> On Mon, Aug 08, 2011 at 06:38:03PM +0200, Arend van Spriel wrote:
->> On 08/08/2011 06:32 PM, Greg KH wrote:
->>> No, as you sent it is fine with me.
->>>
->>> I'll start going through the huge backlog of staging patches this week,
->>> as the merge window just opened up a few hours ago.
->> Will keep my fingers crossed tonight ;-)
-> All 82 applied just fine, you can uncross your fingers now :)
->
-> greg k-h
+On Tuesday 02 August 2011 23:32:27 Daniel Drake wrote:
+> On 2 August 2011 21:09, Vasily Khoruzhick <anarsoul@gmail.com> wrote:
+> > Because no one puts interface down before suspend?
+> > I just re-tested - if interface is up - kernel does not put it down
+> > before suspend, so I got a lot of timeouts and errors on dmesg after
+> > resume.
+> 
+> I can't see how this would have been influenced by my work.
 
-Yeah. It was starting to hurt after a week or so :-)
+Now generic libertas driver controls power, not if_spi. So it should be able 
+to turn off card before going suspend. Messing with power in if_* and generic 
+part does not look like a good idea to me.
 
-Gr. AvS
+> Your resume handler should already be fixing up the hardware state so
+> that it can be operated (regardless of any power saving that might
+> come into effect), or otherwise your suspend handler should cause the
+> device to be removed so that it can be reprobed completely during
+> resume.
 
--- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
+My resume handler calls lbs_suspend to detach device, and it expects that 
+lbs_suspend will disable card power.
+ 
+> Daniel
 
-
+Regards
+Vasily
