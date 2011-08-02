@@ -1,237 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:60594 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751318Ab1HHMJk (ORCPT
+Received: from mailout-de.gmx.net ([213.165.64.22]:57309 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753419Ab1HBXUa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 08:09:40 -0400
-Received: by fxh19 with SMTP id 19so5309324fxh.19
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 05:09:38 -0700 (PDT)
-From: Alexander Simon <an.alexsimon@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] mac80211: Add HT helper functions
-Date: Mon, 08 Aug 2011 14:09:36 +0200
-Message-ID: <2346835.BL4CqEnUDP@alex-1> (sfid-20110808_140943_617659_52176005)
-In-Reply-To: <1888623.Vt5VZUN2cU@alex-1>
-References: <1888623.Vt5VZUN2cU@alex-1>
+	Tue, 2 Aug 2011 19:20:30 -0400
+From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] rtl8192cu: add USB ID for Belkin n300 Micro USB wireless adapter
+Date: Wed, 3 Aug 2011 01:20:18 +0200
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <201108022229.58532.s.L-H@gmx.de> <4E386FB9.2040507@lwfinger.net> <201108030035.50214.s.L-H@gmx.de>
+In-Reply-To: <201108030035.50214.s.L-H@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201108030120.21059.s.L-H@gmx.de> (sfid-20110803_012036_232390_1B0C0290)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-these can also be used from existing code.
+Hi
 
-Signed-off-by: Alexander Simon <alexander.simon@saxnet.de>
----
- net/mac80211/ieee80211_i.h |    8 +++
- net/mac80211/util.c        |  116 +++++++++++++++++++++++++++++++++++++------
- net/mac80211/work.c        |   29 +-----------
- 3 files changed, 108 insertions(+), 45 deletions(-)
+On Wednesday 03 August 2011, Stefan Lippers-Hollmann wrote:
+> On Wednesday 03 August 2011, Larry Finger wrote:
+> > On 08/02/2011 03:43 PM, Stefan Lippers-Hollmann wrote:
+> > > On Tuesday 02 August 2011, Stefan Lippers-Hollmann wrote:
+> > > [1]	http://aptosid.com/index.php?name=PNphpBB2&file=viewtopic&t=1550&start=0
+> > > [2]	http://pastebin.com/ppZJ0GmU
+[...]
+> - no Oops if his USB ID is compiled into the module, that only happens
+>   if he tries to inject it into an unpatched kernel with:
+>   echo -n "050d 2103">  /sys/bus/usb/drivers/rtl8192cu/new_id
+>   (and I'm reluctant to raise this as potential issue completely, due
+>   to the tainted kernel condition on his system).
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 400c09b..bfb820c 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1401,6 +1401,12 @@ void ieee80211_recalc_smps(struct ieee80211_local *local);
- size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
- 			  const u8 *ids, int n_ids, size_t offset);
- size_t ieee80211_ie_split_vendor(const u8 *ies, size_t ielen, size_t offset);
-+u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_supported_band *sband,
-+			       u16 cap);
-+u8 *ieee80211_ie_build_ht_info(u8 *pos,
-+				struct ieee80211_sta_ht_cap *ht_cap,
-+				struct ieee80211_channel *channel,
-+				enum nl80211_channel_type channel_type);
- 
- /* internal work items */
- void ieee80211_work_init(struct ieee80211_local *local);
-@@ -1429,6 +1435,8 @@ ieee80211_get_channel_mode(struct ieee80211_local *local,
- bool ieee80211_set_channel_type(struct ieee80211_local *local,
- 				struct ieee80211_sub_if_data *sdata,
- 				enum nl80211_channel_type chantype);
-+enum nl80211_channel_type ieee80211_ht_info_to_channel_type(
-+					struct ieee80211_ht_info *ht_info);
- 
- #ifdef CONFIG_MAC80211_NOINLINE
- #define debug_noinline noinline
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index ddeb1b9..b62fc4e 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -983,23 +983,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
- 		offset = noffset;
- 	}
- 
--	if (sband->ht_cap.ht_supported) {
--		u16 cap = sband->ht_cap.cap;
--		__le16 tmp;
--
--		*pos++ = WLAN_EID_HT_CAPABILITY;
--		*pos++ = sizeof(struct ieee80211_ht_cap);
--		memset(pos, 0, sizeof(struct ieee80211_ht_cap));
--		tmp = cpu_to_le16(cap);
--		memcpy(pos, &tmp, sizeof(u16));
--		pos += sizeof(u16);
--		*pos++ = sband->ht_cap.ampdu_factor |
--			 (sband->ht_cap.ampdu_density <<
--				IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
--		memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
--		pos += sizeof(sband->ht_cap.mcs);
--		pos += 2 + 4 + 1; /* ext info, BF cap, antsel */
--	}
-+	if (sband->ht_cap.ht_supported)
-+		pos = ieee80211_ie_build_ht_cap(pos, sband, sband->ht_cap.cap);
- 
- 	/*
- 	 * If adding more here, adjust code in main.c
-@@ -1522,3 +1507,100 @@ void ieee80211_disable_rssi_reports(struct ieee80211_vif *vif)
- 	_ieee80211_enable_rssi_reports(sdata, 0, 0);
- }
- EXPORT_SYMBOL(ieee80211_disable_rssi_reports);
-+
-+u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_supported_band *sband,
-+			       u16 cap)
-+{
-+	__le16 tmp;
-+
-+	*pos++ = WLAN_EID_HT_CAPABILITY;
-+	*pos++ = sizeof(struct ieee80211_ht_cap);
-+	memset(pos, 0, sizeof(struct ieee80211_ht_cap));
-+
-+	/* capability flags */
-+	tmp = cpu_to_le16(cap);
-+	memcpy(pos, &tmp, sizeof(u16));
-+	pos += sizeof(u16);
-+
-+	/* AMPDU parameters */
-+	*pos++ = sband->ht_cap.ampdu_factor |
-+		 (sband->ht_cap.ampdu_density <<
-+			IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
-+
-+	/* MCS set */
-+	memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
-+	pos += sizeof(sband->ht_cap.mcs);
-+
-+	/* extended capabilities */
-+	pos += sizeof(__le16);
-+
-+	/* BF capabilities */
-+	pos += sizeof(__le32);
-+
-+	/* antenna selection */
-+	pos += sizeof(u8);
-+
-+	return pos;
-+}
-+
-+u8 *ieee80211_ie_build_ht_info(u8 *pos,
-+				struct ieee80211_sta_ht_cap *ht_cap,
-+				struct ieee80211_channel *channel,
-+				enum nl80211_channel_type channel_type)
-+{
-+	struct ieee80211_ht_info *ht_info;
-+	/* Build HT Information */
-+	*pos++ = WLAN_EID_HT_INFORMATION;
-+	*pos++ = sizeof(struct ieee80211_ht_info);
-+	ht_info = (struct ieee80211_ht_info *)pos;
-+	ht_info->control_chan =
-+			ieee80211_frequency_to_channel(channel->center_freq);
-+	switch (channel_type) {
-+	case NL80211_CHAN_HT40MINUS:
-+		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
-+		break;
-+	case NL80211_CHAN_HT40PLUS:
-+		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
-+		break;
-+	case NL80211_CHAN_HT20:
-+	default:
-+		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_NONE;
-+		break;
-+	}
-+	if (ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
-+		ht_info->ht_param |= IEEE80211_HT_PARAM_CHAN_WIDTH_ANY;
-+	ht_info->operation_mode = 0x0000;
-+	ht_info->stbc_param = 0x0000;
-+
-+	/* It seems that Basic MCS set and Supported MCS set
-+	   are identical for the first 10 bytes */
-+	memset(&ht_info->basic_set, 0, 16);
-+	memcpy(&ht_info->basic_set, &ht_cap->mcs, 10);
-+
-+	return pos + sizeof(struct ieee80211_ht_info);
-+}
-+
-+enum nl80211_channel_type ieee80211_ht_info_to_channel_type(
-+					struct ieee80211_ht_info *ht_info)
-+{
-+	enum nl80211_channel_type channel_type;
-+
-+	if (!ht_info)
-+		return NL80211_CHAN_NO_HT;
-+
-+	switch (ht_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-+	case IEEE80211_HT_PARAM_CHA_SEC_NONE:
-+		channel_type = NL80211_CHAN_HT20;
-+		break;
-+	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-+		channel_type = NL80211_CHAN_HT40PLUS;
-+		break;
-+	case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
-+		channel_type = NL80211_CHAN_HT40MINUS;
-+		break;
-+	default:
-+		channel_type = NL80211_CHAN_NO_HT;
-+	}
-+
-+	return channel_type;
-+}
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 380b9a7..8d9251c 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -103,7 +103,6 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
- 	u8 *pos;
- 	u32 flags = channel->flags;
- 	u16 cap = sband->ht_cap.cap;
--	__le16 tmp;
- 
- 	if (!sband->ht_cap.ht_supported)
- 		return;
-@@ -154,34 +153,8 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
- 	}
- 
- 	/* reserve and fill IE */
--
- 	pos = skb_put(skb, sizeof(struct ieee80211_ht_cap) + 2);
--	*pos++ = WLAN_EID_HT_CAPABILITY;
--	*pos++ = sizeof(struct ieee80211_ht_cap);
--	memset(pos, 0, sizeof(struct ieee80211_ht_cap));
--
--	/* capability flags */
--	tmp = cpu_to_le16(cap);
--	memcpy(pos, &tmp, sizeof(u16));
--	pos += sizeof(u16);
--
--	/* AMPDU parameters */
--	*pos++ = sband->ht_cap.ampdu_factor |
--		 (sband->ht_cap.ampdu_density <<
--			IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
--
--	/* MCS set */
--	memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
--	pos += sizeof(sband->ht_cap.mcs);
--
--	/* extended capabilities */
--	pos += sizeof(__le16);
--
--	/* BF capabilities */
--	pos += sizeof(__le32);
--
--	/* antenna selection */
--	pos += sizeof(u8);
-+	ieee80211_ie_build_ht_cap(pos, sband, cap);
- }
- 
- static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
--- 
-1.7.3.4
+I can reproduce the reported Oops by injecting a (wrong) USB ID into 
+rtl8192cu myself on an untainted system. For reproducing the Oops, I 
+inject an unknown (wrong, the device I'm abusing for this test is a 
+Netgear WG111T, Atheros AR5523 based - no linux driver exists for this 
+device and no module claims its device IDs 0x1385 0x4251) USB ID 
+through sysfs facilities into rtl8192cu; all tests with kernel 
+3.0 + current -stable queue:
 
+# cat /proc/sys/kernel/tainted
+0
+# modprobe rtl8192cu
+# echo -n "1385 4251" > /sys/bus/usb/drivers/rtl8192cu/new_id
+[hotplug device]
+# dmesg
+[...]
+[   86.420998] usbcore: registered new interface driver rtl8192cu
+[  110.778029] usb 1-7: new high speed USB device number 5 using ehci_hcd
+[  110.893824] usb 1-7: New USB device found, idVendor=1385, idProduct=4251
+[  110.893830] usb 1-7: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[  110.893836] usb 1-7: Product: WG111T
+[  110.893841] usb 1-7: Manufacturer: Atheros Communications Inc
+[  110.893845] usb 1-7: SerialNumber: 1.0
+[  110.894760] BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
+[  110.894903] IP: [<ffffffffa0604747>] rtl_usb_probe+0x19b/0x74d [rtlwifi]
+[  110.895012] PGD 0 
+[  110.895012] Oops: 0000 [#1] PREEMPT SMP 
+[  110.895012] CPU 0 
+[  110.895012] Modules linked in: rtl8192cu rtl8192c_common rtlwifi mac80211 cfg80211 rfkill cpufreq_stats cpufreq_ondemand cpufreq_powersave cpufreq_conservative ppdev lp cpufreq_performance af_packet fuse nls_utf8 ntfs powernow_k8 freq_table mperf tda18218 af9013 ir_lirc_codec lirc_dev ir_sony_decoder ir_jvc_decoder ir_rc6_decoder ir_rc5_decoder ir_nec_decoder dvb_usb_af9015 dvb_usb dvb_core rc_core edac_core snd_intel8x0 snd_ac97_codec ac97_bus snd_pcm snd_seq snd_timer snd_seq_device radeon parport_pc ttm drm_kms_helper drm i2c_algo_bit k8temp pcspkr evdev psmouse edac_mce_amd serio_raw power_supply parport snd i2c_nforce2 i2c_core button soundcore processor snd_page_alloc ext4 mbcache jbd2 crc16 dm_mod btrfs zlib_deflate crc32c libcrc32c sg sr_mod sd_mod cdrom crc_t10dif ata_generic usbhid hid floppy thermal fan firewire_ohci pata_acpi firewire_core crc_itu_t pata_amd sata_nv e1000 libata ohci_hcd forcedeth scsi_mod ehci_hcd usbcore ssb mmc_core pcmcia pcmcia_core [last unloaded: scsi_wait_scan]
+[  110.895012] 
+[  110.895012] Pid: 577, comm: khubd Not tainted 3.0-0.slh.6-aptosid-amd64 #1 MICRO-STAR INTERNATIONAL CO., LTD MS-7185/MS-7185
+[  110.895012] RIP: 0010:[<ffffffffa0604747>]  [<ffffffffa0604747>] rtl_usb_probe+0x19b/0x74d [rtlwifi]
+[  110.895012] RSP: 0018:ffff88011da77a60  EFLAGS: 00010246
+[  110.895012] RAX: 0000000000000000 RBX: ffff88011fc09ca0 RCX: 0000000000000000
+[  110.895012] RDX: ffffffffa0608618 RSI: ffffffffa0607819 RDI: ffff88011fc08520
+[  110.895012] RBP: ffff88011f0a7088 R08: 000000000000ffff R09: 000000000000ffff
+[  110.895012] R10: 0000000000000000 R11: 000000000000fffb R12: ffff88011d5a6c30
+[  110.895012] R13: ffff88011fd54090 R14: ffff88011fc08520 R15: ffff88011fc09ca0
+[  110.895012] FS:  00007f6e9e1d37a0(0000) GS:ffff880127c00000(0000) knlGS:0000000000000000
+[  110.895012] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[  110.895012] CR2: 0000000000000018 CR3: 000000011fe0f000 CR4: 00000000000006f0
+[  110.895012] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  110.895012] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[  110.895012] Process khubd (pid: 577, threadinfo ffff88011da76000, task ffff88011dc5b700)
+[  110.895012] Stack:
+[  110.895012]  0000000000000246 ffffffff8129f3d2 ffff88011fd54090 ffff88011f0a7000
+[  110.895012]  ffff88011f0a7088 ffff88011d5a6c30 ffff88011f0a7000 ffffffffa0639528
+[  110.895012]  ffff88011fd54090 ffff88011d5a6c00 0000000000000000 ffffffffa0051f05
+[  110.895012] Call Trace:
+[  110.895012]  [<ffffffff8129f3d2>] ? __pm_runtime_set_status+0x132/0x1e0
+[  110.895012]  [<ffffffffa0051f05>] ? usb_probe_interface+0xe5/0x1e0 [usbcore]
+[  110.895012]  [<ffffffff8129657f>] ? driver_probe_device+0x6f/0x190
+[  110.895012]  [<ffffffff81296740>] ? __driver_attach+0xa0/0xa0
+[  110.895012]  [<ffffffff812952d3>] ? bus_for_each_drv+0x53/0x80
+[  110.895012]  [<ffffffff812964cf>] ? device_attach+0x9f/0xc0
+[  110.895012]  [<ffffffff81295c7d>] ? bus_probe_device+0x2d/0x50
+[  110.895012]  [<ffffffff81293f8d>] ? device_add+0x5ad/0x670
+[  110.895012]  [<ffffffff812927b2>] ? dev_set_name+0x42/0x50
+[  110.895012]  [<ffffffffa0050577>] ? usb_set_configuration+0x5d7/0x6d0 [usbcore]
+[  110.895012]  [<ffffffffa005904b>] ? generic_probe+0x3b/0xa0 [usbcore]
+[  110.895012]  [<ffffffff8129657f>] ? driver_probe_device+0x6f/0x190
+[  110.895012]  [<ffffffff81296740>] ? __driver_attach+0xa0/0xa0
+[  110.895012]  [<ffffffff812952d3>] ? bus_for_each_drv+0x53/0x80
+[  110.895012]  [<ffffffff812964cf>] ? device_attach+0x9f/0xc0
+[  110.895012]  [<ffffffff81295c7d>] ? bus_probe_device+0x2d/0x50
+[  110.895012]  [<ffffffff81293f8d>] ? device_add+0x5ad/0x670
+[  110.895012]  [<ffffffffa0048cd2>] ? usb_new_device+0x122/0x1b0 [usbcore]
+[  110.895012]  [<ffffffffa0049cb0>] ? hub_thread+0x7c0/0x1310 [usbcore]
+[  110.895012]  [<ffffffff813c8ed7>] ? schedule+0x2b7/0x860
+[  110.895012]  [<ffffffff81044616>] ? try_to_wake_up+0x1b6/0x270
+[  110.895012]  [<ffffffff8106a020>] ? abort_exclusive_wait+0xb0/0xb0
+[  110.895012]  [<ffffffffa00494f0>] ? usb_remote_wakeup+0x40/0x40 [usbcore]
+[  110.895012]  [<ffffffff8106985e>] ? kthread+0x7e/0x90
+[  110.895012]  [<ffffffff813cd1a4>] ? kernel_thread_helper+0x4/0x10
+[  110.895012]  [<ffffffff810697e0>] ? kthread_worker_fn+0x180/0x180
+[  110.895012]  [<ffffffff813cd1a0>] ? gs_change+0x13/0x13
+[  110.895012] Code: 29 60 a0 48 c7 83 60 06 00 00 70 29 60 a0 48 c7 83 68 06 00 00 50 29 60 a0 48 c7 83 70 06 00 00 f0 2b 60 a0 49 8b 87 38 27 00 00 
+[  110.895012]  8b 40 18 ff 50 10 49 8b 87 38 27 00 00 4c 89 f7 48 8b 40 18 
+[  110.895012] RIP  [<ffffffffa0604747>] rtl_usb_probe+0x19b/0x74d [rtlwifi]
+[  110.895012]  RSP <ffff88011da77a60>
+[  110.895012] CR2: 0000000000000018
+[  110.944291] ---[ end trace aa8fb4280a86af53 ]---
+# cat /proc/sys/kernel/tainted
+128
+
+The same procedure (after rebooting) doesn't result in an Oops with 
+other modules, although they can't initialize this 'unknown' device 
+either, using rt2500usb as example:
+# cat /proc/sys/kernel/tainted
+0
+# modprobe rt2500usb
+# echo -n "1385 4251" > /sys/bus/usb/drivers/rt2500usb/new_id
+[hotplug device]
+# dmesg
+[...]
+[  112.676033] usb 1-7: new high speed USB device number 5 using ehci_hcd
+[  112.791945] usb 1-7: New USB device found, idVendor=1385, idProduct=4251
+[  112.791951] usb 1-7: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[  112.791957] usb 1-7: Product: WG111T
+[  112.791961] usb 1-7: Manufacturer: Atheros Communications Inc
+[  112.791965] usb 1-7: SerialNumber: 1.0
+[  112.895037] usb 1-7: reset high speed USB device number 5 using ehci_hcd
+[  113.108950] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x09 failed for offset 0x0000 with error -32.
+[  113.208947] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x04d0 with error -32.
+[  113.308946] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x04ce with error -32.
+[  113.408950] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x04d0 with error -32.
+[  113.508946] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x04ce with error -32.
+[  113.608450] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x0400 with error -32.
+[  113.608457] phy0 -> rt2500usb_init_eeprom: Error - Invalid RT chipset detected.
+[  113.608463] phy0 -> rt2x00lib_probe_dev: Error - Failed to allocate device.
+[everything fine, as expected no issues - the wrong device just can't 
+ get initialized]
+# cat /proc/sys/kernel/tainted
+0
+# reboot
+
+So at least the reported Oops is not specific to 050d:2103, but happens
+for any USB ID injected at runtime through sysfs and therefore appears
+to be a general issue with rtl8192cu.
+
+Regards
+	Stefan Lippers-Hollmann
