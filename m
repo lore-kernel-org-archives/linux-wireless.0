@@ -1,201 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:45315 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750822Ab1HBK2O (ORCPT
+Received: from AShevkov.infinet.ru ([91.191.225.92]:49318 "EHLO
+	AShevkov.infinet.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753318Ab1HBPkA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 06:28:14 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 19so5482579fxh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 03:28:14 -0700 (PDT)
-From: Vasily Khoruzhick <anarsoul@gmail.com>
-To: libertas-dev@lists.infradead.org, Daniel Drake <dsd@laptop.org>,
-	linville@tuxdriver.com, dcbw@redhat.com,
-	linux-wireless@vger.kernel.org
-Cc: Vasily Khoruzhick <anarsoul@gmail.com>
-Subject: [PATCH 2/2] libertas: implement if_spi runtime power management
-Date: Tue,  2 Aug 2011 13:27:12 +0300
-Message-Id: <1312280832-27675-2-git-send-email-anarsoul@gmail.com> (sfid-20110802_122817_977108_2C08F0D5)
-In-Reply-To: <1312280832-27675-1-git-send-email-anarsoul@gmail.com>
-References: <201108021312.23153.anarsoul@gmail.com>
- <1312280832-27675-1-git-send-email-anarsoul@gmail.com>
+	Tue, 2 Aug 2011 11:40:00 -0400
+From: Alex Hacker <hacker@epn.ru>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Alex Hacker <hacker@epn.ru>
+Subject: [PATCH] ath9k: Misprint in ar9003_phy.h. Fix a misprint wich can cause incorrect calibration process.
+Date: Tue,  2 Aug 2011 21:00:34 +0600
+Message-Id: <1312297234-24166-1-git-send-email-hacker@epn.ru> (sfid-20110802_174003_783602_86850B10)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The SPI card is now fully powered down when the network
-interface is brought down.
-
-Signed-off-by: Vasily Khoruzhick <anarsoul@gmail.com>
 ---
- drivers/net/wireless/libertas/if_spi.c |   80 +++++++++++++++++--------------
- 1 files changed, 44 insertions(+), 36 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-index 9a1468c..c07db7d 100644
---- a/drivers/net/wireless/libertas/if_spi.c
-+++ b/drivers/net/wireless/libertas/if_spi.c
-@@ -1113,21 +1113,39 @@ static void if_spi_resume_worker(struct work_struct *work)
- 	card = container_of(work, struct if_spi_card, resume_work);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 6de3f0b..5c59042 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -850,7 +850,7 @@
+ #define AR_PHY_TPC_11_B1         (AR_SM1_BASE + 0x220)
+ #define AR_PHY_PDADC_TAB_1       (AR_SM1_BASE + 0x240)
+ #define AR_PHY_TX_IQCAL_STATUS_B1   (AR_SM1_BASE + 0x48c)
+-#define AR_PHY_TX_IQCAL_CORR_COEFF_B1(_i)    (AR_SM_BASE + 0x450 + ((_i) << 2))
++#define AR_PHY_TX_IQCAL_CORR_COEFF_B1(_i)    (AR_SM1_BASE + 0x450 + ((_i) << 2))
  
- 	if (card->suspended) {
--		if (card->pdata->setup)
--			card->pdata->setup(card->spi);
--
--		/* Init card ... */
--		if_spi_init_card(card);
--
--		enable_irq(card->spi->irq);
--
--		/* And resume it ... */
- 		lbs_resume(card->priv);
- 
- 		card->suspended = 0;
- 	}
- }
- 
-+static int if_spi_power_save(struct lbs_private *priv)
-+{
-+	struct if_spi_card *card = priv->card;
-+
-+	flush_workqueue(card->workqueue);
-+	disable_irq(card->spi->irq);
-+	card->pdata->teardown(card->spi);
-+	priv->fw_ready = 0;
-+
-+	return 0;
-+}
-+
-+static int if_spi_power_restore(struct lbs_private *priv)
-+{
-+	struct if_spi_card *card = priv->card;
-+	int ret;
-+
-+	card->pdata->setup(card->spi);
-+	ret = if_spi_init_card(card);
-+	if (ret)
-+		return ret;
-+	enable_irq(card->spi->irq);
-+	priv->fw_ready = 1;
-+
-+	return 0;
-+}
-+
- static int __devinit if_spi_probe(struct spi_device *spi)
- {
- 	struct if_spi_card *card;
-@@ -1142,17 +1160,11 @@ static int __devinit if_spi_probe(struct spi_device *spi)
- 		goto out;
- 	}
- 
--	if (pdata->setup) {
--		err = pdata->setup(spi);
--		if (err)
--			goto out;
--	}
--
- 	/* Allocate card structure to represent this specific device */
- 	card = kzalloc(sizeof(struct if_spi_card), GFP_KERNEL);
- 	if (!card) {
- 		err = -ENOMEM;
--		goto teardown;
-+		goto out;
- 	}
- 	spi_set_drvdata(spi, card);
- 	card->pdata = pdata;
-@@ -1163,13 +1175,6 @@ static int __devinit if_spi_probe(struct spi_device *spi)
- 	INIT_LIST_HEAD(&card->data_packet_list);
- 	spin_lock_init(&card->buffer_lock);
- 
--	/* Initialize the SPI Interface Unit */
--
--	/* Firmware load */
--	err = if_spi_init_card(card);
--	if (err)
--		goto free_card;
--
- 	/*
- 	 * Register our card with libertas.
- 	 * This will call alloc_etherdev.
-@@ -1180,13 +1185,16 @@ static int __devinit if_spi_probe(struct spi_device *spi)
- 		goto free_card;
- 	}
- 	card->priv = priv;
--	priv->setup_fw_on_resume = 1;
- 	priv->card = card;
- 	priv->hw_host_to_card = if_spi_host_to_card;
-+	if (pdata->setup && pdata->teardown) {
-+		priv->power_save = if_spi_power_save;
-+		priv->power_restore = if_spi_power_restore;
-+	}
- 	priv->enter_deep_sleep = NULL;
- 	priv->exit_deep_sleep = NULL;
- 	priv->reset_deep_sleep_wakeup = NULL;
--	priv->fw_ready = 1;
-+	priv->disable_on_suspend = 1;
- 
- 	/* Initialize interrupt handling stuff. */
- 	card->workqueue = create_workqueue("libertas_spi");
-@@ -1200,6 +1208,13 @@ static int __devinit if_spi_probe(struct spi_device *spi)
- 		goto terminate_workqueue;
- 	}
- 
-+	/* Disable IRQ, hw is not ready yet */
-+	disable_irq(spi->irq);
-+
-+	err = if_spi_power_restore(priv);
-+	if (err)
-+		goto release_irq;
-+
- 	/*
- 	 * Start the card.
- 	 * This will call register_netdev, and we'll start
-@@ -1207,13 +1222,16 @@ static int __devinit if_spi_probe(struct spi_device *spi)
- 	 */
- 	err = lbs_start_card(priv);
- 	if (err)
--		goto release_irq;
-+		goto teardown;
-+	if_spi_power_save(priv);
- 
- 	lbs_deb_spi("Finished initializing WLAN module.\n");
- 
- 	/* successful exit */
- 	goto out;
- 
-+teardown:
-+	if_spi_power_save(priv);
- release_irq:
- 	free_irq(spi->irq, card);
- terminate_workqueue:
-@@ -1222,9 +1240,6 @@ terminate_workqueue:
- 	lbs_remove_card(priv); /* will call free_netdev */
- free_card:
- 	free_if_spi_card(card);
--teardown:
--	if (pdata->teardown)
--		pdata->teardown(spi);
- out:
- 	lbs_deb_leave_args(LBS_DEB_SPI, "err %d\n", err);
- 	return err;
-@@ -1247,8 +1262,6 @@ static int __devexit libertas_spi_remove(struct spi_device *spi)
- 	cancel_work_sync(&card->packet_work);
- 	flush_workqueue(card->workqueue);
- 	destroy_workqueue(card->workqueue);
--	if (card->pdata->teardown)
--		card->pdata->teardown(spi);
- 	free_if_spi_card(card);
- 	lbs_deb_leave(LBS_DEB_SPI);
- 	return 0;
-@@ -1261,11 +1274,6 @@ static int if_spi_suspend(struct device *dev)
- 
- 	if (!card->suspended) {
- 		lbs_suspend(card->priv);
--		flush_workqueue(card->workqueue);
--		disable_irq(spi->irq);
--
--		if (card->pdata->teardown)
--			card->pdata->teardown(spi);
- 		card->suspended = 1;
- 	}
- 
+ /*
+  * Channel 2 Register Map
 -- 
-1.7.5.rc3
+1.7.4
 
