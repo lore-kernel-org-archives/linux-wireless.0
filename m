@@ -1,102 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail01.spothost.nl ([77.74.49.150]:35672 "EHLO
-	webmail01.spothost.nl" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751875Ab1HIPMv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 11:12:51 -0400
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:36758 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755456Ab1HBVke convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2011 17:40:34 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Tue, 2 Aug 2011 14:38:36 -0700
+Subject: RE: [PATCH] mwifiex: remove redundant variable scan_table_idx
+Message-ID: <477F20668A386D41ADCC57781B1F704307FFCC682F@SC-VEXCH1.marvell.com> (sfid-20110802_234039_079342_363E3DDF)
+References: <1311305158-15534-1-git-send-email-bzhao@marvell.com>
+ <1311305158-15534-2-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1311305158-15534-2-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Tue, 09 Aug 2011 15:12:50 +0000
-From: kc@cobradevil.org
-To: <kc@cobradevil.org>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8192cu sometimes it can authenticate to ap
-In-Reply-To: <34676454425401d650be733a43191a53@cobradevil.org>
-References: <b3059ba2eac66b7ef0ec17c8fe81a1e6@cobradevil.org>
- <34676454425401d650be733a43191a53@cobradevil.org>
-Message-ID: <532595cb4d5ef910de54a4736ba76185@cobradevil.org> (sfid-20110809_171258_642036_3EE90F58)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
+Hi John,
 
-not sure what is happening but so far i have the following results:
-i downloaded the latest bleeding edge wireless from 
-http://wireless.kernel.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
-I installed kernel headers and build-essentials end run:
-./scripts/driver-select rtlwifi
-make && make install
+> -----Original Message-----
+> From: Bing Zhao [mailto:bzhao@marvell.com]
+> Sent: Thursday, July 21, 2011 8:26 PM
+> To: linux-wireless@vger.kernel.org
+> Cc: John W. Linville; Amitkumar Karwar; Kiran Divekar; Yogesh Powar; Frank Huang; Bing Zhao
+> Subject: [PATCH] mwifiex: remove redundant variable scan_table_idx
+> 
+> mwifiex_get_bss_info() routine updates variable 'info->scan_table_idx'
+> but it is never used.
 
-i downloaded the firmware from 
-http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git
+Could you please take this patch if it looks OK?
 
-Running on Ubuntu maverick kernel 2.6.35-30 update 56 i get sometimes 
-an authenticated message when running wpa_supplicant -Dnl80211 -c 
-/etc/wpa_supplicant.conf -i wlan0 but most times it will timeout
-Running on Ubuntu natty kernel 2.6.38-10 update 46 i always get the 
-authenticated message when running wpa_supplicant -Dnl80211 -c 
-/etc/wpa_supplicant.conf -i wlan0
+Thanks,
+Bing
 
-only when using dhcp request on two accespoint i get different results 
-on the natty driver but that has todo with: 
-https://bugzilla.kernel.org/show_bug.cgi?id=38012 when applied i can 
-connect two both accespoints.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> ---
+>  drivers/net/wireless/mwifiex/ioctl.h     |    1 -
+>  drivers/net/wireless/mwifiex/sta_ioctl.c |   12 ------------
+>  2 files changed, 0 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
+> index bd9e074..e0b68e7 100644
+> --- a/drivers/net/wireless/mwifiex/ioctl.h
+> +++ b/drivers/net/wireless/mwifiex/ioctl.h
+> @@ -134,7 +134,6 @@ struct mwifiex_ver_ext {
+>  struct mwifiex_bss_info {
+>  	u32 bss_mode;
+>  	struct mwifiex_802_11_ssid ssid;
+> -	u32 scan_table_idx;
+>  	u32 bss_chan;
+>  	u32 region_code;
+>  	u32 media_connected;
+> diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+> index 10ef9e9..fd764b3 100644
+> --- a/drivers/net/wireless/mwifiex/sta_ioctl.c
+> +++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+> @@ -376,7 +376,6 @@ int mwifiex_get_bss_info(struct mwifiex_private *priv,
+>  {
+>  	struct mwifiex_adapter *adapter = priv->adapter;
+>  	struct mwifiex_bssdescriptor *bss_desc;
+> -	s32 tbl_idx;
+> 
+>  	if (!info)
+>  		return -1;
+> @@ -394,17 +393,6 @@ int mwifiex_get_bss_info(struct mwifiex_private *priv,
+> 
+>  	info->region_code = adapter->region_code;
+> 
+> -	/* Scan table index if connected */
+> -	info->scan_table_idx = 0;
+> -	if (priv->media_connected) {
+> -		tbl_idx =
+> -			mwifiex_find_ssid_in_list(priv, &bss_desc->ssid,
+> -						  bss_desc->mac_address,
+> -						  priv->bss_mode);
+> -		if (tbl_idx >= 0)
+> -			info->scan_table_idx = tbl_idx;
+> -	}
+> -
+>  	info->media_connected = priv->media_connected;
+> 
+>  	info->max_power_level = priv->max_tx_power_level;
+> --
+> 1.7.0.2
 
-Any ideas why it does not work on the maverick kernel?
-
-Also when stopping the wpa_supplicant with ctrl+c and restart i first 
-have to replug the device before it tries todo anything with the card.
-
-With kind regards
-
-William
-
-
-On Tue, 09 Aug 2011 11:07:56 +0000, kc@cobradevil.org wrote:
-
-> Hi all,
->
-> Have installed natty and also installed the snapshot.
->
-> After compile and installed the rtlwifi driver the wpa_supplicant 
-> works
-> like a charm every time with all three sticks.
-> So i think it is something in the compat layer or userland utilities?
->
-> Anyone an idea?
-> I would like this to work with the maverick kernel 2.6.35 because we
-> cannot upgrade right now.
->
-> With kind regards
->
-> William
->
-> On Tue, 09 Aug 2011 09:16:12 +0000, kc@cobradevil.org [2]wrote:
->
->> Hello all, i have three usb sticks with the the id: 0bda:8176 I am
->> running ubuntu maverick with the compat tree from 2011-08-08
->> (downloaded this morning) and i also tried several others (dates 
->> from
->> 15 juli 2011). The main problem is that sometimes i get a connection
->> and it works like a charm and then all of the sudden i don't get any
->> connection at all and running wpa_supplicant says time out. i really
->> have no idea whats wrong so if someone could help me out. is there a
->> way to get debugging from the rtlwifi drivers? i got the firmware 
->> from:
->> http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git 
->> [1]
->> [1] With kind regards William
->
-> Links:
-> ------
-> [1] 
-> http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git
-> [3]
-
-
-Links:
-------
-[1] http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git
-[2] mailto:kc@cobradevil.org
-[3] http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git
