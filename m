@@ -1,51 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:56842 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750722Ab1HIT3L (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:44611 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752872Ab1HBJqK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 15:29:11 -0400
-Received: by mail-ey0-f172.google.com with SMTP id 4so516679eye.17
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 12:29:03 -0700 (PDT)
-Subject: Re: [PATCH 07/40] wl12xx: wl12xx-fw-3 - update acx commands
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1312881233-9366-8-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-	 <1312881233-9366-8-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 09 Aug 2011 22:29:01 +0300
-Message-ID: <1312918141.2407.239.camel@cumari> (sfid-20110809_212916_164368_D7EC8329)
-Mime-Version: 1.0
+	Tue, 2 Aug 2011 05:46:10 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAGXE3d9ynyJX2eAr2bfwOc_PdDNEwVHDVsA_Jx1ReBht=eVuYw@mail.gmail.com>
+References: <CAGXE3d9ynyJX2eAr2bfwOc_PdDNEwVHDVsA_Jx1ReBht=eVuYw@mail.gmail.com>
+Date: Tue, 2 Aug 2011 11:46:09 +0200
+Message-ID: <CAL1gcdNpRfznieegeSCLxeUP_0LRZmnzh91A8d3=+2VM1+S+8Q@mail.gmail.com> (sfid-20110802_114632_943200_EA558E15)
+Subject: Re: [PATCH] rt2x00: Fix compilation without CONFIG_RT2X00_LIB_CRYPTO
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Randy Dunlap <rdunlap@xenotime.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
-> Update the acx commands according to the new fw api.
-> 
-> The main change in most of the ACXs is the addition
-> of a new role_id/link_id field, which is required
-> for multi-role operation.
-> 
-> Currently, we don't really support multi-role, as
-> most of our data (inside wl) is global.
-> As the current fw doesn't support concurrent roles
-> yet, keep it this way and add wl->role_id and
-> wl->sta_hlid to save the active role/link.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
+On Tue, Aug 2, 2011 at 11:43 AM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> This was introduced by commit
+> 77b5621bac4a56b83b9081f48d4e7d1accdde400 (rt2x00: Don't use queue entry
+> as parameter when creating TX descriptor.)
+>
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+
+OK. You beat me to it.
+
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
 > ---
+> Sending directly to John as I assume this should go through the wireless tree?
+>
+>  drivers/net/wireless/rt2x00/rt2x00lib.h |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h
+> b/drivers/net/wireless/rt2x00/rt2x00lib.h
+> index 15cdc7e..4cdf247 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00lib.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
+> @@ -355,7 +355,8 @@ static inline enum cipher
+> rt2x00crypto_key_to_cipher(struct ieee80211_key_conf *
+>        return CIPHER_NONE;
+>  }
+>
+> -static inline void rt2x00crypto_create_tx_descriptor(struct queue_entry *entry,
+> +static inline void rt2x00crypto_create_tx_descriptor(struct
+> rt2x00_dev *rt2x00dev,
+> +                                                    struct sk_buff *skb,
+>                                                     struct txentry_desc *txdesc)
+>  {
+>  }
+> --
+> 1.7.3.4
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Same thing here as with the previous patch.  Can you use wl12xx instead
-of wl1271 for the new (or renamed or re-argumented) functions and
-structs?
-
-Otherwise I don't have any other comments to this patch.  There's
-something I want to discuss with you about the role_id stuff, but I
-think it's easier to do over IRC. ;)
 
 
 -- 
-Cheers,
-Luca.
-
+---
+Gertjan
