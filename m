@@ -1,247 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:32966 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753860Ab1HVVus (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 17:50:48 -0400
-Received: by yxj19 with SMTP id 19so3844690yxj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Aug 2011 14:50:48 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Subject: [PATCH 2/5] rtlwifi: rtl8192ce: Convert to use the new rate-mapping routine in rtlwifi
-Date: Mon, 22 Aug 2011 16:50:15 -0500
-Message-Id: <1314049818-21839-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20110822_235058_236902_7D03CF69)
-In-Reply-To: <1314049818-21839-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1314049818-21839-1-git-send-email-Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:58626 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755367Ab1HBVkY convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2011 17:40:24 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Date: Tue, 2 Aug 2011 14:37:30 -0700
+Subject: RE: [PATCH v2] mwifiex: remove remaining wext usages
+Message-ID: <477F20668A386D41ADCC57781B1F704307FFCC682E@SC-VEXCH1.marvell.com> (sfid-20110802_234030_224837_B43AE43C)
+References: <1311305158-15534-1-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1311305158-15534-1-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>
----
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.c  |   30 ++++----
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |  116 ++------------------------
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.h |    8 +-
- 3 files changed, 27 insertions(+), 127 deletions(-)
+Hi John,
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-index 373dc78..4c34c4c 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-@@ -318,21 +318,21 @@ static struct rtl_hal_cfg rtl92ce_hal_cfg = {
- 	.maps[RTL_IMR_ROK] = IMR_ROK,
- 	.maps[RTL_IBSS_INT_MASKS] = (IMR_BCNINT | IMR_TBDOK | IMR_TBDER),
- 
--	.maps[RTL_RC_CCK_RATE1M] = DESC92C_RATE1M,
--	.maps[RTL_RC_CCK_RATE2M] = DESC92C_RATE2M,
--	.maps[RTL_RC_CCK_RATE5_5M] = DESC92C_RATE5_5M,
--	.maps[RTL_RC_CCK_RATE11M] = DESC92C_RATE11M,
--	.maps[RTL_RC_OFDM_RATE6M] = DESC92C_RATE6M,
--	.maps[RTL_RC_OFDM_RATE9M] = DESC92C_RATE9M,
--	.maps[RTL_RC_OFDM_RATE12M] = DESC92C_RATE12M,
--	.maps[RTL_RC_OFDM_RATE18M] = DESC92C_RATE18M,
--	.maps[RTL_RC_OFDM_RATE24M] = DESC92C_RATE24M,
--	.maps[RTL_RC_OFDM_RATE36M] = DESC92C_RATE36M,
--	.maps[RTL_RC_OFDM_RATE48M] = DESC92C_RATE48M,
--	.maps[RTL_RC_OFDM_RATE54M] = DESC92C_RATE54M,
--
--	.maps[RTL_RC_HT_RATEMCS7] = DESC92C_RATEMCS7,
--	.maps[RTL_RC_HT_RATEMCS15] = DESC92C_RATEMCS15,
-+	.maps[RTL_RC_CCK_RATE1M] = DESC92_RATE1M,
-+	.maps[RTL_RC_CCK_RATE2M] = DESC92_RATE2M,
-+	.maps[RTL_RC_CCK_RATE5_5M] = DESC92_RATE5_5M,
-+	.maps[RTL_RC_CCK_RATE11M] = DESC92_RATE11M,
-+	.maps[RTL_RC_OFDM_RATE6M] = DESC92_RATE6M,
-+	.maps[RTL_RC_OFDM_RATE9M] = DESC92_RATE9M,
-+	.maps[RTL_RC_OFDM_RATE12M] = DESC92_RATE12M,
-+	.maps[RTL_RC_OFDM_RATE18M] = DESC92_RATE18M,
-+	.maps[RTL_RC_OFDM_RATE24M] = DESC92_RATE24M,
-+	.maps[RTL_RC_OFDM_RATE36M] = DESC92_RATE36M,
-+	.maps[RTL_RC_OFDM_RATE48M] = DESC92_RATE48M,
-+	.maps[RTL_RC_OFDM_RATE54M] = DESC92_RATE54M,
-+
-+	.maps[RTL_RC_HT_RATEMCS7] = DESC92_RATEMCS7,
-+	.maps[RTL_RC_HT_RATEMCS15] = DESC92_RATEMCS15,
- };
- 
- DEFINE_PCI_DEVICE_TABLE(rtl92ce_pci_ids) = {
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-index 230bbe9..4fb5ae2 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-@@ -48,104 +48,6 @@ static u8 _rtl92ce_map_hwqueue_to_fwqueue(struct sk_buff *skb, u8 hw_queue)
- 	return skb->priority;
- }
- 
--static int _rtl92ce_rate_mapping(bool isht, u8 desc_rate, bool first_ampdu)
--{
--	int rate_idx;
--
--	if (first_ampdu) {
--		if (false == isht) {
--			switch (desc_rate) {
--			case DESC92C_RATE1M:
--				rate_idx = 0;
--				break;
--			case DESC92C_RATE2M:
--				rate_idx = 1;
--				break;
--			case DESC92C_RATE5_5M:
--				rate_idx = 2;
--				break;
--			case DESC92C_RATE11M:
--				rate_idx = 3;
--				break;
--			case DESC92C_RATE6M:
--				rate_idx = 4;
--				break;
--			case DESC92C_RATE9M:
--				rate_idx = 5;
--				break;
--			case DESC92C_RATE12M:
--				rate_idx = 6;
--				break;
--			case DESC92C_RATE18M:
--				rate_idx = 7;
--				break;
--			case DESC92C_RATE24M:
--				rate_idx = 8;
--				break;
--			case DESC92C_RATE36M:
--				rate_idx = 9;
--				break;
--			case DESC92C_RATE48M:
--				rate_idx = 10;
--				break;
--			case DESC92C_RATE54M:
--				rate_idx = 11;
--				break;
--			default:
--				rate_idx = 0;
--				break;
--			}
--		} else {
--			rate_idx = 11;
--		}
--
--		return rate_idx;
--	}
--
--	switch (desc_rate) {
--	case DESC92C_RATE1M:
--		rate_idx = 0;
--		break;
--	case DESC92C_RATE2M:
--		rate_idx = 1;
--		break;
--	case DESC92C_RATE5_5M:
--		rate_idx = 2;
--		break;
--	case DESC92C_RATE11M:
--		rate_idx = 3;
--		break;
--	case DESC92C_RATE6M:
--		rate_idx = 4;
--		break;
--	case DESC92C_RATE9M:
--		rate_idx = 5;
--		break;
--	case DESC92C_RATE12M:
--		rate_idx = 6;
--		break;
--	case DESC92C_RATE18M:
--		rate_idx = 7;
--		break;
--	case DESC92C_RATE24M:
--		rate_idx = 8;
--		break;
--	case DESC92C_RATE36M:
--		rate_idx = 9;
--		break;
--	case DESC92C_RATE48M:
--		rate_idx = 10;
--		break;
--	case DESC92C_RATE54M:
--		rate_idx = 11;
--		break;
--	default:
--		rate_idx = 11;
--		break;
--	}
--	return rate_idx;
--}
--
- static u8 _rtl92c_query_rxpwrpercentage(char antpower)
- {
- 	if ((antpower <= -100) || (antpower >= 20))
-@@ -336,8 +238,8 @@ static void _rtl92ce_query_rxphystatus(struct ieee80211_hw *hw,
- 		pstats->rxpower = rx_pwr_all;
- 		pstats->recvsignalpower = rx_pwr_all;
- 
--		if (pdesc->rxht && pdesc->rxmcs >= DESC92C_RATEMCS8 &&
--		    pdesc->rxmcs <= DESC92C_RATEMCS15)
-+		if (pdesc->rxht && pdesc->rxmcs >= DESC92_RATEMCS8 &&
-+		    pdesc->rxmcs <= DESC92_RATEMCS15)
- 			max_spatial_stream = 2;
- 		else
- 			max_spatial_stream = 1;
-@@ -670,12 +572,10 @@ bool rtl92ce_rx_query_desc(struct ieee80211_hw *hw,
- 	if (stats->decrypted)
- 		rx_status->flag |= RX_FLAG_DECRYPTED;
- 
--	rx_status->rate_idx = _rtl92ce_rate_mapping((bool)
--						    GET_RX_DESC_RXHT(pdesc),
--						    (u8)
--						    GET_RX_DESC_RXMCS(pdesc),
--						    (bool)
--						    GET_RX_DESC_PAGGR(pdesc));
-+	rx_status->rate_idx = rtlwifi_rate_mapping(hw,
-+				(bool)GET_RX_DESC_RXHT(pdesc),
-+				(u8)GET_RX_DESC_RXMCS(pdesc),
-+				(bool)GET_RX_DESC_PAGGR(pdesc));
- 
- 	rx_status->mactime = GET_RX_DESC_TSFL(pdesc);
- 	if (phystatus) {
-@@ -768,7 +668,7 @@ void rtl92ce_tx_fill_desc(struct ieee80211_hw *hw,
- 		SET_TX_DESC_RTS_BW(pdesc, 0);
- 		SET_TX_DESC_RTS_SC(pdesc, tcb_desc->rts_sc);
- 		SET_TX_DESC_RTS_SHORT(pdesc,
--				      ((tcb_desc->rts_rate <= DESC92C_RATE54M) ?
-+				      ((tcb_desc->rts_rate <= DESC92_RATE54M) ?
- 				       (tcb_desc->rts_use_shortpreamble ? 1 : 0)
- 				       : (tcb_desc->rts_use_shortgi ? 1 : 0)));
- 
-@@ -886,7 +786,7 @@ void rtl92ce_tx_fill_cmddesc(struct ieee80211_hw *hw,
- 	if (firstseg)
- 		SET_TX_DESC_OFFSET(pdesc, USB_HWDESC_HEADER_LEN);
- 
--	SET_TX_DESC_TX_RATE(pdesc, DESC92C_RATE1M);
-+	SET_TX_DESC_TX_RATE(pdesc, DESC92_RATE1M);
- 
- 	SET_TX_DESC_SEQ(pdesc, 0);
- 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h
-index 0f11771..81ae642 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h
-@@ -538,10 +538,10 @@ do {							\
- } while (0);
- 
- #define RX_HAL_IS_CCK_RATE(_pdesc)\
--	(_pdesc->rxmcs == DESC92C_RATE1M ||		\
--	 _pdesc->rxmcs == DESC92C_RATE2M ||		\
--	 _pdesc->rxmcs == DESC92C_RATE5_5M ||		\
--	 _pdesc->rxmcs == DESC92C_RATE11M)
-+	(_pdesc->rxmcs == DESC92_RATE1M ||		\
-+	 _pdesc->rxmcs == DESC92_RATE2M ||		\
-+	 _pdesc->rxmcs == DESC92_RATE5_5M ||		\
-+	 _pdesc->rxmcs == DESC92_RATE11M)
- 
- struct rx_fwinfo_92c {
- 	u8 gain_trsw[4];
--- 
-1.7.3.4
+> Subject: [PATCH v2] mwifiex: remove remaining wext usages
+> 
+> replace IW_MAX_AP & IW_CUSTOM_MAX with local definitions
+> and remove usage of struct iw_statistics.
+
+Could you please take this patch if it looks OK?
+
+Thanks,
+Bing
+
+> 
+> Cc: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> ---
+> v2: removed dependency on Johannes Berg's patches so that it can be
+>     applied directly. Subject also changed.
+> 
+> v1: [PATCH] mwifiex: remove wireless.h inclusion and fix resulting bugs
+>     patch depends on Johannes Berg's patches:
+>     [PATCH 01/11] cfg80211: split wext compatibility to separate header
+>     [PATCH 10/11] mwifiex: add wext include
+> 
+>  drivers/net/wireless/mwifiex/cfg80211.c  |    2 +-
+>  drivers/net/wireless/mwifiex/init.c      |    4 ++--
+>  drivers/net/wireless/mwifiex/ioctl.h     |    4 +++-
+>  drivers/net/wireless/mwifiex/main.h      |    6 +++---
+>  drivers/net/wireless/mwifiex/scan.c      |    6 +++---
+>  drivers/net/wireless/mwifiex/sta_event.c |    6 +++---
+>  drivers/net/wireless/mwifiex/sta_ioctl.c |   18 ++++--------------
+>  7 files changed, 19 insertions(+), 27 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+> index 352d2c5..c979a90 100644
+> --- a/drivers/net/wireless/mwifiex/cfg80211.c
+> +++ b/drivers/net/wireless/mwifiex/cfg80211.c
+> @@ -547,7 +547,7 @@ mwifiex_dump_station_info(struct mwifiex_private *priv,
+>  	sinfo->tx_bytes = priv->stats.tx_bytes;
+>  	sinfo->rx_packets = priv->stats.rx_packets;
+>  	sinfo->tx_packets = priv->stats.tx_packets;
+> -	sinfo->signal = priv->w_stats.qual.level;
+> +	sinfo->signal = priv->qual_level;
+>  	sinfo->txrate.legacy = rate.rate;
+> 
+>  	return ret;
+> diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+> index 3f1559e..a57c8de 100644
+> --- a/drivers/net/wireless/mwifiex/init.c
+> +++ b/drivers/net/wireless/mwifiex/init.c
+> @@ -156,7 +156,7 @@ static int mwifiex_allocate_adapter(struct mwifiex_adapter *adapter)
+>  	struct mwifiex_bssdescriptor *temp_scan_table;
+> 
+>  	/* Allocate buffer to store the BSSID list */
+> -	buf_size = sizeof(struct mwifiex_bssdescriptor) * IW_MAX_AP;
+> +	buf_size = sizeof(struct mwifiex_bssdescriptor) * MWIFIEX_MAX_AP;
+>  	temp_scan_table = kzalloc(buf_size, GFP_KERNEL);
+>  	if (!temp_scan_table) {
+>  		dev_err(adapter->dev, "%s: failed to alloc temp_scan_table\n",
+> @@ -224,7 +224,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
+> 
+>  	adapter->num_in_scan_table = 0;
+>  	memset(adapter->scan_table, 0,
+> -	       (sizeof(struct mwifiex_bssdescriptor) * IW_MAX_AP));
+> +	       (sizeof(struct mwifiex_bssdescriptor) * MWIFIEX_MAX_AP));
+>  	adapter->scan_probes = 1;
+> 
+>  	memset(adapter->bcn_buf, 0, sizeof(adapter->bcn_buf));
+> diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
+> index f6bcc86..bd9e074 100644
+> --- a/drivers/net/wireless/mwifiex/ioctl.h
+> +++ b/drivers/net/wireless/mwifiex/ioctl.h
+> @@ -307,10 +307,12 @@ struct mwifiex_ds_read_eeprom {
+>  	u8 value[MAX_EEPROM_DATA];
+>  };
+> 
+> +#define IEEE_MAX_IE_SIZE		256
+> +
+>  struct mwifiex_ds_misc_gen_ie {
+>  	u32 type;
+>  	u32 len;
+> -	u8 ie_data[IW_CUSTOM_MAX];
+> +	u8 ie_data[IEEE_MAX_IE_SIZE];
+>  };
+> 
+>  struct mwifiex_ds_misc_cmd {
+> diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+> index 2215c3c..e6db047 100644
+> --- a/drivers/net/wireless/mwifiex/main.h
+> +++ b/drivers/net/wireless/mwifiex/main.h
+> @@ -54,6 +54,8 @@ struct mwifiex_drv_mode {
+>  };
+> 
+> 
+> +#define MWIFIEX_MAX_AP				64
+> +
+>  #define MWIFIEX_DEFAULT_WATCHDOG_TIMEOUT	(5 * HZ)
+> 
+>  #define MWIFIEX_TIMER_10S			10000
+> @@ -246,8 +248,6 @@ struct ieee_types_obss_scan_param {
+> 
+>  #define MWIFIEX_SUPPORTED_RATES_EXT             32
+> 
+> -#define IEEE_MAX_IE_SIZE			256
+> -
+>  struct ieee_types_vendor_specific {
+>  	struct ieee_types_vendor_header vend_hdr;
+>  	u8 data[IEEE_MAX_IE_SIZE - sizeof(struct ieee_types_vendor_header)];
+> @@ -468,7 +468,7 @@ struct mwifiex_private {
+>  	struct dentry *dfs_dev_dir;
+>  #endif
+>  	u8 nick_name[16];
+> -	struct iw_statistics w_stats;
+> +	u8 qual_level, qual_noise;
+>  	u16 current_key_index;
+>  	struct semaphore async_sem;
+>  	u8 scan_pending_on_block;
+> diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+> index 6f88c8a..1fdfd41 100644
+> --- a/drivers/net/wireless/mwifiex/scan.c
+> +++ b/drivers/net/wireless/mwifiex/scan.c
+> @@ -2308,7 +2308,7 @@ int mwifiex_scan_networks(struct mwifiex_private *priv,
+> 
+>  	if (!keep_previous_scan) {
+>  		memset(adapter->scan_table, 0x00,
+> -		       sizeof(struct mwifiex_bssdescriptor) * IW_MAX_AP);
+> +		       sizeof(struct mwifiex_bssdescriptor) * MWIFIEX_MAX_AP);
+>  		adapter->num_in_scan_table = 0;
+>  		adapter->bcn_buf_end = adapter->bcn_buf;
+>  	}
+> @@ -2430,7 +2430,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+>  		scan_rsp = &resp->params.scan_resp;
+> 
+> 
+> -	if (scan_rsp->number_of_sets > IW_MAX_AP) {
+> +	if (scan_rsp->number_of_sets > MWIFIEX_MAX_AP) {
+>  		dev_err(adapter->dev, "SCAN_RESP: too many AP returned (%d)\n",
+>  		       scan_rsp->number_of_sets);
+>  		ret = -1;
+> @@ -2542,7 +2542,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+>  		if (bss_idx == num_in_table) {
+>  			/* Range check the bss_idx, keep it limited to
+>  			   the last entry */
+> -			if (bss_idx == IW_MAX_AP)
+> +			if (bss_idx == MWIFIEX_MAX_AP)
+>  				bss_idx--;
+>  			else
+>  				num_in_table++;
+> diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+> index fc265ca..6e8b198 100644
+> --- a/drivers/net/wireless/mwifiex/sta_event.c
+> +++ b/drivers/net/wireless/mwifiex/sta_event.c
+> @@ -130,8 +130,8 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv)
+>  	if (netif_carrier_ok(priv->netdev))
+>  		netif_carrier_off(priv->netdev);
+>  	/* Reset wireless stats signal info */
+> -	priv->w_stats.qual.level = 0;
+> -	priv->w_stats.qual.noise = 0;
+> +	priv->qual_level = 0;
+> +	priv->qual_noise = 0;
+>  }
+> 
+>  /*
+> @@ -301,7 +301,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+>  		dev_dbg(adapter->dev, "event: BGS_REPORT\n");
+>  		/* Clear the previous scan result */
+>  		memset(adapter->scan_table, 0x00,
+> -		       sizeof(struct mwifiex_bssdescriptor) * IW_MAX_AP);
+> +		       sizeof(struct mwifiex_bssdescriptor) * MWIFIEX_MAX_AP);
+>  		adapter->num_in_scan_table = 0;
+>  		adapter->bcn_buf_end = adapter->bcn_buf;
+>  		ret = mwifiex_send_cmd_async(priv,
+> diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+> index c34ff8c..10ef9e9 100644
+> --- a/drivers/net/wireless/mwifiex/sta_ioctl.c
+> +++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+> @@ -1280,9 +1280,9 @@ int mwifiex_get_signal_info(struct mwifiex_private *priv,
+> 
+>  	if (!status) {
+>  		if (signal->selector & BCN_RSSI_AVG_MASK)
+> -			priv->w_stats.qual.level = signal->bcn_rssi_avg;
+> +			priv->qual_level = signal->bcn_rssi_avg;
+>  		if (signal->selector & BCN_NF_AVG_MASK)
+> -			priv->w_stats.qual.noise = signal->bcn_nf_avg;
+> +			priv->qual_noise = signal->bcn_nf_avg;
+>  	}
+> 
+>  	return status;
+> @@ -1341,18 +1341,8 @@ int
+>  mwifiex_get_stats_info(struct mwifiex_private *priv,
+>  		       struct mwifiex_ds_get_stats *log)
+>  {
+> -	int ret;
+> -
+> -	ret = mwifiex_send_cmd_sync(priv, HostCmd_CMD_802_11_GET_LOG,
+> +	return mwifiex_send_cmd_sync(priv, HostCmd_CMD_802_11_GET_LOG,
+>  				    HostCmd_ACT_GEN_GET, 0, log);
+> -
+> -	if (!ret) {
+> -		priv->w_stats.discard.fragment = log->fcs_error;
+> -		priv->w_stats.discard.retries = log->retry;
+> -		priv->w_stats.discard.misc = log->ack_failure;
+> -	}
+> -
+> -	return ret;
+>  }
+> 
+>  /*
+> @@ -1594,7 +1584,7 @@ mwifiex_set_gen_ie(struct mwifiex_private *priv, u8 *ie, int ie_len)
+>  {
+>  	struct mwifiex_ds_misc_gen_ie gen_ie;
+> 
+> -	if (ie_len > IW_CUSTOM_MAX)
+> +	if (ie_len > IEEE_MAX_IE_SIZE)
+>  		return -EFAULT;
+> 
+>  	gen_ie.type = MWIFIEX_IE_TYPE_GEN_IE;
+> --
+> 1.7.0.2
 
