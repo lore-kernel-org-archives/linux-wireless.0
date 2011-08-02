@@ -1,78 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:20880 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751043Ab1HMSo0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 14:44:26 -0400
-Subject: Re: [PATCH 00/11]  update for 3.2
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 13 Aug 2011 11:04:33 -0700
-Message-ID: <1313258673.15170.20.camel@wwguy-huron> (sfid-20110813_204428_727988_6BE22C71)
-Mime-Version: 1.0
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:60037 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754004Ab1HBLqf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2011 07:46:35 -0400
+Received: by iyb12 with SMTP id 12so7985560iyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 04:46:35 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110802112314.GA2688@redhat.com>
+References: <20110802112314.GA2688@redhat.com>
+Date: Tue, 2 Aug 2011 13:46:35 +0200
+Message-ID: <CAL1gcdPtN2nnFgwC2u2keMgUOo+kkzDuwfL95e6q3PSPJ2TSmQ@mail.gmail.com> (sfid-20110802_134639_160403_37EDC845)
+Subject: Re: [PATCH] rt2x00: fix usage of NULL queue
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Tue, Aug 2, 2011 at 1:29 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> We may call rt2x00queue_pause_queue(queue) with queue == NULL. Bug
+> was introduced by commit 62fe778412b36791b7897cfa139342906fbbf07b
+> "rt2x00: Fix stuck queue in tx failure case" .
+>
+> Cc: stable@kernel.org # 3.0+
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Please ignore this patch set, I don't mean to send it.
-The only patch I need to send is the "handle GO powersave" path.
+Good catch.
 
-I will send the single patch separated.
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Sorry for the mistake.
-
-Wey
-
-
-On Sat, 2011-08-13 at 09:17 -0700, Guy, Wey-Yi W wrote:
-> We enable new P2P implementation with GO powersave
-> We bump firmware API version for number of new devices
-> We also adjust the sensitivity value for number of devices
-> 
-> 
-> Johannes Berg (7):
->   iwlagn: reserve queue 10 for TX during scan dwell
->   iwlagn: handle GO powersave
->   iwlagn: separate firmware version warning
->   iwlagn: bump firmware API for some devices
->   iwlagn: move context init after firmware loading
->   iwlagn: support new P2P implementation
->   mac80211: remove offchannel_tx API
-> 
-> Wey-Yi Guy (4):
->   iwlagn: default smps mode for 1000 series device
->   iwlagn: Remove ht40 support from 5.2GHz for _bgn devices
->   iwlagn: change default sensitivity value for 5000 and 6000 series
->   iwlagn: support v2 of enhanced sensitivity table
-> 
->  drivers/net/wireless/iwlwifi/Kconfig         |   17 -
->  drivers/net/wireless/iwlwifi/iwl-1000.c      |   15 +-
->  drivers/net/wireless/iwlwifi/iwl-2000.c      |   23 +-
->  drivers/net/wireless/iwlwifi/iwl-5000.c      |   12 +-
->  drivers/net/wireless/iwlwifi/iwl-6000.c      |   19 +-
->  drivers/net/wireless/iwlwifi/iwl-agn-calib.c |   69 +++--
->  drivers/net/wireless/iwlwifi/iwl-agn-hw.h    |    4 +-
->  drivers/net/wireless/iwlwifi/iwl-agn-lib.c   |   47 +--
->  drivers/net/wireless/iwlwifi/iwl-agn-rxon.c  |   28 +--
->  drivers/net/wireless/iwlwifi/iwl-agn-tx.c    |   30 +-
->  drivers/net/wireless/iwlwifi/iwl-agn.c       |  455 ++++++++++++++------------
->  drivers/net/wireless/iwlwifi/iwl-agn.h       |    1 +
->  drivers/net/wireless/iwlwifi/iwl-commands.h  |   34 ++-
->  drivers/net/wireless/iwlwifi/iwl-core.c      |    5 +
->  drivers/net/wireless/iwlwifi/iwl-core.h      |    5 +
->  drivers/net/wireless/iwlwifi/iwl-dev.h       |   32 ++-
->  drivers/net/wireless/iwlwifi/iwl-scan.c      |   19 +-
->  drivers/net/wireless/iwlwifi/iwl-trans.c     |   10 +-
->  include/net/mac80211.h                       |   10 -
->  net/mac80211/cfg.c                           |   39 ---
->  net/mac80211/driver-ops.h                    |   31 --
->  net/mac80211/ieee80211_i.h                   |    1 -
->  net/mac80211/status.c                        |    3 -
->  23 files changed, 449 insertions(+), 460 deletions(-)
-> 
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00mac.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+> index 8efab39..4ccf238 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+> @@ -113,7 +113,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>         * due to possible race conditions in mac80211.
+>         */
+>        if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
+> -               goto exit_fail;
+> +               goto exit_free_skb;
+>
+>        /*
+>         * Use the ATIM queue if appropriate and present.
+> @@ -127,7 +127,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>                ERROR(rt2x00dev,
+>                      "Attempt to send packet over invalid queue %d.\n"
+>                      "Please file bug report to %s.\n", qid, DRV_PROJECT);
+> -               goto exit_fail;
+> +               goto exit_free_skb;
+>        }
+>
+>        /*
+> @@ -159,6 +159,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>
+>  exit_fail:
+>        rt2x00queue_pause_queue(queue);
+> + exit_free_skb:
+>        dev_kfree_skb_any(skb);
+>  }
+>  EXPORT_SYMBOL_GPL(rt2x00mac_tx);
+> --
+> 1.7.1
+>
 
 
+
+-- 
+---
+Gertjan
