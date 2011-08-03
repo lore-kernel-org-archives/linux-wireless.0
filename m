@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41506 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750773Ab1H0HPB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Aug 2011 03:15:01 -0400
-Message-ID: <4E58996F.6010303@openwrt.org> (sfid-20110827_091519_347493_55BD5D57)
-Date: Sat, 27 Aug 2011 09:14:55 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:37168 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752629Ab1HCJUT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2011 05:20:19 -0400
+Received: by wyg8 with SMTP id 8so397477wyg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2011 02:20:18 -0700 (PDT)
 MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k_hw: Set default slottime as 9us
-References: <1314424379-1206-1-git-send-email-rmanohar@qca.qualcomm.com> <4E588E3B.9000007@openwrt.org> <20110827065256.GA3082@vmraj-lnx.users.atheros.com> <4E589704.3090807@openwrt.org> <20110827070912.GA3140@vmraj-lnx.users.atheros.com>
-In-Reply-To: <20110827070912.GA3140@vmraj-lnx.users.atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1312345838-26609-1-git-send-email-hacker@epn.ru>
+References: <1312345838-26609-1-git-send-email-hacker@epn.ru>
+Date: Wed, 3 Aug 2011 14:50:17 +0530
+Message-ID: <CAD2nsn1KHx3tqewEz38wr_YO_10UvjT8=k5v9uZonsMcCx4g4w@mail.gmail.com> (sfid-20110803_112023_023917_25D90E22)
+Subject: Re: [PATCH] ath9k: fix a misprint which can lead to incorrect calibration
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Alex Hacker <hacker@epn.ru>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-08-27 9:09 AM, Rajkumar Manoharan wrote:
-> On Sat, Aug 27, 2011 at 09:04:36AM +0200, Felix Fietkau wrote:
->>  On 2011-08-27 8:52 AM, Rajkumar Manoharan wrote:
->>  >On Sat, Aug 27, 2011 at 08:27:07AM +0200, Felix Fietkau wrote:
->>  >>  On 2011-08-27 7:52 AM, Rajkumar Manoharan wrote:
->>  >>  >Initialize 9us slot time as that is what is used mostly
->>  >>  >(for non-ERP cases) and also to be in sync with initvals.
->>  >>  >
->>  >>  >Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
->>  >>  Why does it matter, mac80211 tells the driver to reconfigure it
->>  >>  anyway. Also, why use the stupid ATH9K_SLOT_TIME_* enums? I think we
->>  >>  should simply remove those.
->>  >>
->>  >In most of the case, mac80211 set as 9us and also initval uses 9us.
->>  >The what is the problem of setting 9us as default. If you want to
->>  >remove ATH9K_SLOT_TIME_* enums, ath9k should not set slottime till
->>  >it got configured.
->>  I don't see a problem with the change aside from the fact that it
->>  should not make any difference at all, so I don't really see any
->>  point to it.
->>
-> I doubt that using long slottime might affect random backoff. so let it
-> to be in sync with initval till it is altered. am i right?
-If you want to get this change in, I don't care. I'm just saying it 
-doesn't get left at the default long enough for it to matter in any way.
+On Wed, Aug 3, 2011 at 10:00 AM, Alex Hacker <hacker@epn.ru> wrote:
+>
+> Signed-off-by: Alex Hacker <hacker@epn.ru>
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9003_phy.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+> index 6de3f0b..5c59042 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+> @@ -850,7 +850,7 @@
+>  #define AR_PHY_TPC_11_B1         (AR_SM1_BASE + 0x220)
+>  #define AR_PHY_PDADC_TAB_1       (AR_SM1_BASE + 0x240)
+>  #define AR_PHY_TX_IQCAL_STATUS_B1   (AR_SM1_BASE + 0x48c)
+> -#define AR_PHY_TX_IQCAL_CORR_COEFF_B1(_i)    (AR_SM_BASE + 0x450 + ((_i) << 2))
+> +#define AR_PHY_TX_IQCAL_CORR_COEFF_B1(_i)    (AR_SM1_BASE + 0x450 + ((_i) << 2))
 
-- Felix
+Hi Alex,
+
+please send this patch cc'ing stable@kernel.org, as this will fix
+AR9003 chip sets calibration
+
+-- 
+shafi
