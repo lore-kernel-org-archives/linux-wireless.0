@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:60407 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753145Ab1HaFRG (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:37655 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754691Ab1HCO3o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 01:17:06 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2] ath9k_hw: Fix rx latency of 11a mode
-Date: Wed, 31 Aug 2011 10:47:30 +0530
-Message-ID: <1314767850-1112-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110831_071710_925464_3919E6E2)
+	Wed, 3 Aug 2011 10:29:44 -0400
+Received: by qyk38 with SMTP id 38so189466qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2011 07:29:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Wed, 3 Aug 2011 16:29:43 +0200
+Message-ID: <CANXYrmDKMracGuUKY4HWmAdoc_sa19fGXO8J+EqcNkMs5+k2Fg@mail.gmail.com> (sfid-20110803_162957_497084_B9F5D01E)
+Subject: trying to implement the HCF
+From: =?ISO-8859-1?Q?Manuel_S=E1ez?= <manuelsaezr@gmail.com>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rx latecy to start signal(usec) of 11a is 41 not 37 and
-also corrected the rx delay in quarter rate.
+Hi all,
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+I am trying to implement the HCF with a AR9280 chip. I already changed
+the beacons in order to include the 'CF parameter set' every n DTIM. I
+was glad to discover that after this message the AR_NAV register was
+automatically updated  with the information of the "CFP duration
+remaining" and the driver started to buffer the new outgoing frames. I
+was not able to find where this is done in the driver so I guess it is
+a hardware thing. Please correct me if I am wrong. The bad news are
+that the driver/hardware updates the register in the next beacon (that
+is not that bad for me for the moment, I will try to change the
+register manually later).
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 3a16ba2..308847d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -975,7 +975,10 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 	if (ah->misc_mode != 0)
- 		REG_SET_BIT(ah, AR_PCU_MISC, ah->misc_mode);
- 
--	rx_lat = 37;
-+	if (IS_CHAN_A_FAST_CLOCK(ah, chan))
-+		rx_lat = 41;
-+	else
-+		rx_lat = 37;
- 	tx_lat = 54;
- 
- 	if (IS_CHAN_HALF_RATE(chan)) {
-@@ -989,7 +992,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		sifstime = 32;
- 	} else if (IS_CHAN_QUARTER_RATE(chan)) {
- 		eifs = 340;
--		rx_lat *= 4;
-+		rx_lat = (rx_lat * 4) - 1;
- 		tx_lat *= 4;
- 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		    tx_lat += 22;
--- 
-1.7.6.1
+I got to send the first CF-poll just after the DTIM that indicates the
+start of a CFP. I just saw the procedure for the CAB traffic and used
+the flag IEEE80211_TX_CTL_SEND_AFTER_DTIM. The next step I would like
+to try is to prepare the next CF-poll frame in order to send it SIFS
+after the answer or PIFS if no answer arrived. I configured the fourth
+queue to use it with this kind of traffic. Is is possible to schedule
+the transmission of one frame? I tried to have a look at the tx
+descriptors in the code and in the web, but I don't understand them
+(there is no much information and unfortunately I am far from being a
+linux expert). Any advice?
 
+Sorry for my english, the more german I learn, the less english I can :-p.
+
+Thank you in advance
