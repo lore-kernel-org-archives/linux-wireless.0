@@ -1,68 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:23187 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752954Ab1HKGtM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 02:49:12 -0400
-From: Kevin Fang <chienf@qca.qualcomm.com>
-Cc: <linux-wireless@vger.kernel.org>, <kvalo@qca.qualcomm.com>,
-	Kevin Fang <chienf@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH 3/7] ath6kl: Add hif type field to identify target hif type
-Date: Thu, 11 Aug 2011 14:48:11 +0800
-Message-ID: <1313045295-16202-3-git-send-email-kevin.fang@qca.qualcomm.com> (sfid-20110811_084914_906805_4F273599)
-In-Reply-To: <1313045295-16202-1-git-send-email-kevin.fang@qca.qualcomm.com>
-References: <1313045295-16202-1-git-send-email-kevin.fang@qca.qualcomm.com>
+Received: from c60.cesmail.net ([216.154.195.49]:37660 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755130Ab1HCS0c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2011 14:26:32 -0400
+Message-ID: <4E3992D5.1070403@gnu.org> (sfid-20110803_202637_728568_9D2628FC)
+Date: Wed, 03 Aug 2011 14:26:29 -0400
+From: Pavel Roskin <proski@gnu.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Kalle Valo <kvalo@adurom.com>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/2] b43legacy: report core number
+References: <20110726153648.24611.49190.stgit@mj.roinet.com> <4E2EE403.5090207@lwfinger.net> <4E2EE66C.8030308@gnu.org> <87d3gmsd5w.fsf@purkki.adurom.net>
+In-Reply-To: <87d3gmsd5w.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a hif type field on the ath6kl structure to
-distinguish between sdio or usb interface.
+On 08/03/2011 11:55 AM, Kalle Valo wrote:
+> Pavel Roskin<proski@gnu.org>  writes:
+>
+>>>> 0 files changed, 0 insertions(+), 0 deletions(-)
+>>>
+>>> Very informative diffstat! :)
+>>
+>> That happens if "stg mail" is run from a directory that is not above
+>> the changed files.  I'll try to get it fixed.
+>
+> Is stgit still alive? I haven't seen a release for a long time.
 
-Signed-off-by: Kevin Fang <kevin.fang@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/core.h |    6 ++++++
- drivers/net/wireless/ath/ath6kl/sdio.c |    1 +
- 2 files changed, 7 insertions(+), 0 deletions(-)
+I hate to go too far offtopic, but anyway, StGIT is pretty much usable, 
+even though it's not under active development anymore.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 0f7b0c0..768c349 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -369,6 +369,11 @@ struct ath6kl_req_key {
- #define SKIP_SCAN	     11
- #define WLAN_ENABLED	     12
- 
-+enum hif_type {
-+	HIF_TYPE_SDIO,
-+	HIF_TYPE_USB
-+};
-+
- struct ath6kl {
- 	struct device *dev;
- 	struct net_device *net_dev;
-@@ -378,6 +383,7 @@ struct ath6kl {
- 	int tx_pending[ENDPOINT_MAX];
- 	int total_tx_data_pend;
- 	struct htc_target *htc_target;
-+	enum hif_type hif_type;
- 	void *hif_priv;
- 	spinlock_t lock;
- 	struct semaphore sem;
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 0fb06fc..e5a5563 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -884,6 +884,7 @@ static int ath6kl_sdio_probe(struct sdio_func *func,
- 
- 	ar_sdio->ar = ar;
- 	ar->hif_priv = ar_sdio;
-+	ar->hif_type = HIF_TYPE_SDIO;
- 	ar->hif_ops = &ath6kl_sdio_ops;
- 
- 	ath6kl_sdio_set_mbox_info(ar);
 -- 
-1.7.0.4
-
+Regards,
+Pavel Roskin
