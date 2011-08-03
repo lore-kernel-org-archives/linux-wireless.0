@@ -1,103 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:37211 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693Ab1HXPzI (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:56012 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752930Ab1HCJQa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 11:55:08 -0400
-Received: by gxk21 with SMTP id 21so970857gxk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 08:55:07 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: b43-dev@lists.infradead.org, David Woodhouse <dwmw2@infradead.org>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [RFT][PATCH] b43: use 8K buffers for 64-bit DMA to workaround hardware bug
-Date: Wed, 24 Aug 2011 17:57:18 +0200
-Message-Id: <1314201438-12125-1-git-send-email-zajec5@gmail.com> (sfid-20110824_175511_258981_C4139D46)
+	Wed, 3 Aug 2011 05:16:30 -0400
+Received: by ywn13 with SMTP id 13so332376ywn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2011 02:16:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4E38DDB3.1030801@candelatech.com>
+References: <4E38DDB3.1030801@candelatech.com>
+Date: Wed, 3 Aug 2011 17:16:29 +0800
+Message-ID: <CAJ-Vmon2Xwv3VqDhH9EouGiYgr0wfoEh3_41D4EscmForRDgaA@mail.gmail.com> (sfid-20110803_111646_525647_D019F420)
+Subject: Re: Bridging wired to STA interfaces.
+From: Adrian Chadd <adrian@freebsd.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
-David: can you give it a try?
----
- drivers/net/wireless/b43/dma.c |   33 ++++++++++++++++++++-------------
- drivers/net/wireless/b43/dma.h |    3 ++-
- 2 files changed, 22 insertions(+), 14 deletions(-)
+How do you propose handling the case where people will hook up >1 device?
+Print out a very loud warning? :-)
 
-diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
-index 5151c7f..ee583b2 100644
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -386,36 +386,43 @@ static inline
- 
- static int alloc_ringmemory(struct b43_dmaring *ring)
- {
--	gfp_t flags = GFP_KERNEL;
--
- 	/* The specs call for 4K buffers for 30- and 32-bit DMA with 4K
--	 * alignment and 8K buffers for 64-bit DMA with 8K alignment. Testing
--	 * has shown that 4K is sufficient for the latter as long as the buffer
--	 * does not cross an 8K boundary.
--	 *
--	 * For unknown reasons - possibly a hardware error - the BCM4311 rev
-+	 * alignment and 8K buffers for 64-bit DMA with 8K alignment.
-+	 * In practice we could use smaller buffers for the latter, but the
-+	 * alignment is really important because of the hardware bug. If bit
-+	 * 0x00001000 is used in DMA address, some hardware (like BCM4331)
-+	 * copies that bit into B43_DMA64_RXSTATUS and we get false values from
-+	 * B43_DMA64_RXSTATDPTR. Let's just use 8K buffers even if we don't use
-+	 * more than 256 slots for ring.
-+	 */
-+	u16 ring_mem_size = (ring->type == B43_DMA_64BIT) ?
-+				B43_DMA64_RINGMEMSIZE : B43_DMA32_RINGMEMSIZE;
-+
-+	/* For unknown reasons - possibly a hardware error - the BCM4311 rev
- 	 * 02, which uses 64-bit DMA, needs the ring buffer in very low memory,
- 	 * which accounts for the GFP_DMA flag below.
--	 *
--	 * The flags here must match the flags in free_ringmemory below!
- 	 */
-+	gfp_t flags = GFP_KERNEL;
- 	if (ring->type == B43_DMA_64BIT)
- 		flags |= GFP_DMA;
-+
- 	ring->descbase = dma_alloc_coherent(ring->dev->dev->dma_dev,
--					    B43_DMA_RINGMEMSIZE,
--					    &(ring->dmabase), flags);
-+					    ring_mem_size, &(ring->dmabase),
-+					    flags);
- 	if (!ring->descbase) {
- 		b43err(ring->dev->wl, "DMA ringmemory allocation failed\n");
- 		return -ENOMEM;
- 	}
--	memset(ring->descbase, 0, B43_DMA_RINGMEMSIZE);
-+	memset(ring->descbase, 0, ring_mem_size);
- 
- 	return 0;
- }
- 
- static void free_ringmemory(struct b43_dmaring *ring)
- {
--	dma_free_coherent(ring->dev->dev->dma_dev, B43_DMA_RINGMEMSIZE,
-+	u16 ring_mem_size = (ring->type == B43_DMA_64BIT) ?
-+				B43_DMA64_RINGMEMSIZE : B43_DMA32_RINGMEMSIZE;
-+	dma_free_coherent(ring->dev->dev->dma_dev, ring_mem_size,
- 			  ring->descbase, ring->dmabase);
- }
- 
-diff --git a/drivers/net/wireless/b43/dma.h b/drivers/net/wireless/b43/dma.h
-index 546d19c..55244e7 100644
---- a/drivers/net/wireless/b43/dma.h
-+++ b/drivers/net/wireless/b43/dma.h
-@@ -161,7 +161,8 @@ struct b43_dmadesc_generic {
- } __packed;
- 
- /* Misc DMA constants */
--#define B43_DMA_RINGMEMSIZE		PAGE_SIZE
-+#define B43_DMA32_RINGMEMSIZE		4096
-+#define B43_DMA64_RINGMEMSIZE		8192
- /* Offset of frame with actual data */
- #define B43_DMA0_RX_FW598_FO		38
- #define B43_DMA0_RX_FW351_FO		30
--- 
-1.7.3.4
+I did something like this a while ago for a company and their first
+request was exactly that - "Customer X now wants two devices in a
+vehicle hooked up to the wireless, it doesn't work, what do we do?"
 
+
+Adrian
+
+
+On 3 August 2011 13:33, Ben Greear <greearb@candelatech.com> wrote:
+> We have some interest in being able to bridge wired systems to
+> (virtual) STA interfaces, primarily for using third-party
+> traffic generation tools over virtual stations.
+>
+> I was thinking of writing a sta-bridge module that mapped
+> incoming packets on a wired interface to a STA with MAC
+> that matched the source MAC of the packet.  All packets
+> received on the STA would be forwarded un-modified out
+> the wired port.
+>
+> I think this would allow someone to create a STA interface
+> with MAC matching a PC connected to the wired port and effectively
+> have it be a transparent bridge between STA and PC.
+>
+> Has anyone attempted something like this before?
+>
+> Any interest in having this feature in the upstream kernel?
+>
+> Thanks,
+> Ben
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
