@@ -1,76 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:47899 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752843Ab1HLXCI (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:46461 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753267Ab1HCAHz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 19:02:08 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 19so2590914fxh.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 16:02:07 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/2] b43: HT-PHY: init: add some AFE (Analog Frontend) operation
-Date: Sat, 13 Aug 2011 01:41:12 +0200
-Message-Id: <1313192472-12066-2-git-send-email-zajec5@gmail.com> (sfid-20110813_010212_973760_519DD702)
-In-Reply-To: <1313192472-12066-1-git-send-email-zajec5@gmail.com>
-References: <1313192472-12066-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 2 Aug 2011 20:07:55 -0400
+Date: Tue, 02 Aug 2011 17:06:37 -0700 (PDT)
+Message-Id: <20110802.170637.389945963010848876.davem@davemloft.net> (sfid-20110803_020815_327919_D848710A)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-next 2011-08-02
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110802.143955.1785360722763378138.davem@davemloft.net>
+References: <20110802181131.GH14167@tuxdriver.com>
+	<20110802.143955.1785360722763378138.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: David Miller <davem@davemloft.net>
+Date: Tue, 02 Aug 2011 14:39:55 -0700 (PDT)
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_ht.c |   26 ++++++++++++++++++++++++++
- 1 files changed, 26 insertions(+), 0 deletions(-)
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Tue, 2 Aug 2011 14:11:31 -0400
+> 
+>> Here are a few more fixes intended for 3.1.  Dan Carpenter gives us an
+>> off-by-one fix in the scan trigger code for nl80211.  Felix gives us a
+>> fix for tx power initialization for ath9k.  Larry fixes an oops on ARM
+>> by rewriting some init code to avoid checking something that doesn't get
+>> initialized on ARM.  This round's big hero is Stanislaw, who gives us a
+>> brown paper bag fix for some skb handling in rt2x00, an ath9k fix to
+>> avoid hangs on systems w/ ASPM disabled, and an iwlegacy fix to ensure
+>> that tx power settings are applied properly.
+>> 
+>> Please let me know if there are problems!
+> 
+> I'll pull this, but I think once you've sent me all of your features
+> for the merge window you should drop "-next" from the name of the
+> tree and/or branches you ask me to pull from.
+> 
+> This makes it entirely clear that you're sending me bug fixes and not
+> features and cleanups.
 
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 2b7507b..80c448d 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -169,6 +169,28 @@ static void b43_phy_ht_zero_extg(struct b43_wldev *dev)
- 		b43_phy_write(dev, B43_PHY_EXTG(base[i] + 0xc), 0);
- }
- 
-+/* Some unknown AFE (Analog Frondned) op */
-+static void b43_phy_ht_afe_unk1(struct b43_wldev *dev)
-+{
-+	u8 i;
-+
-+	const u16 ctl_regs[3][2] = {
-+		{ B43_PHY_HT_AFE_CTL1, B43_PHY_HT_AFE_CTL2 },
-+		{ B43_PHY_HT_AFE_CTL3, B43_PHY_HT_AFE_CTL4 },
-+		{ B43_PHY_HT_AFE_CTL5, B43_PHY_HT_AFE_CTL6},
-+	};
-+
-+	for (i = 0; i < 3; i++) {
-+		/* TODO: verify masks&sets */
-+		b43_phy_set(dev, ctl_regs[i][1], 0x4);
-+		b43_phy_set(dev, ctl_regs[i][0], 0x4);
-+		b43_phy_mask(dev, ctl_regs[i][1], ~0x1);
-+		b43_phy_set(dev, ctl_regs[i][0], 0x1);
-+		b43_httab_write(dev, B43_HTTAB16(8, 5 + (i * 0x10)), 0);
-+		b43_phy_mask(dev, ctl_regs[i][0], ~0x4);
-+	}
-+}
-+
- static void b43_phy_ht_bphy_init(struct b43_wldev *dev)
- {
- 	unsigned int i;
-@@ -332,6 +354,10 @@ static int b43_phy_ht_op_init(struct b43_wldev *dev)
- 
- 	/* TODO: Some ops here */
- 
-+	b43_phy_ht_afe_unk1(dev);
-+
-+	/* TODO: Some ops here */
-+
- 	b43_phy_maskset(dev, 0x0280, 0xff00, 0x3e);
- 	b43_phy_maskset(dev, 0x0283, 0xff00, 0x3e);
- 	b43_phy_maskset(dev, B43_PHY_OFDM(0x0141), 0xff00, 0x46);
--- 
-1.7.3.4
+Well, this thing is not based upon the plain net GIT tree, because
+when I pull it I get a bunch of things from Linus's tree which are
+not in the net tree yet.
 
+Please fix this up.
+
+Thanks.
