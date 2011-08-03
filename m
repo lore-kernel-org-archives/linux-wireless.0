@@ -1,45 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44216 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751477Ab1HXOa1 (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:47625 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752956Ab1HCVFw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 10:30:27 -0400
-Date: Wed, 24 Aug 2011 20:00:40 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <kvalo@adurom.com>
-Subject: Re: [PATCH 1/3] ath6kl: Add initial debugfs changes
-Message-ID: <20110824143039.GA25267@vasanth-laptop> (sfid-20110824_163031_249644_3B9F3069)
-References: <1314195936-25227-1-git-send-email-vthiagar@qca.qualcomm.com>
+	Wed, 3 Aug 2011 17:05:52 -0400
+Message-ID: <4E39B82C.2010108@lwfinger.net> (sfid-20110803_230556_969535_F757185A)
+Date: Wed, 03 Aug 2011 16:05:48 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1314195936-25227-1-git-send-email-vthiagar@qca.qualcomm.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alan Piszcz <ap@solarrain.com>
+Subject: Re: Linux Wireless USB-Stick Question
+References: <alpine.DEB.2.02.1108031550100.4278@p34.internal.lan>
+In-Reply-To: <alpine.DEB.2.02.1108031550100.4278@p34.internal.lan>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 24, 2011 at 07:55:34PM +0530, Vasanthakumar Thiagarajan wrote:
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/Kconfig |    6 ++++++
->  drivers/net/wireless/ath/ath6kl/core.h  |    1 +
->  drivers/net/wireless/ath/ath6kl/debug.c |   13 +++++++++++++
->  drivers/net/wireless/ath/ath6kl/debug.h |    9 +++++++++
->  drivers/net/wireless/ath/ath6kl/init.c  |    6 ++++++
->  5 files changed, 35 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath6kl/Kconfig b/drivers/net/wireless/ath/ath6kl/Kconfig
-> index 3d5f8be..ea9387b 100644
-> --- a/drivers/net/wireless/ath/ath6kl/Kconfig
-> +++ b/drivers/net/wireless/ath/ath6kl/Kconfig
-> @@ -13,3 +13,9 @@ config ATH6KL_DEBUG
->  	depends on ATH6KL
->  	---help---
->  	  Enables debug support
-> +config ATH6KL_DEBUGFS
-> +	bool "ath6kl debugfs"
-> +	depends on ATH6KL_DEBUG && DEBUG_FS
+On 08/03/2011 02:53 PM, Justin Piszcz wrote:
+> Hi,
+>
+> Under Windows, you can achieve 10-15MiB/s..
+>
+> Under Linux, even with 150mbps USB wireless adapters, the max never appears to
+> go above > 3-4MiB/s, to work around this, order more USB-wifi ticks and run them
+> in parallel far away from each other with USB
+> extenders:
+>
+> box1:
+> -------------
+> wlan0 IEEE 802.11bg ESSID:"hidden"
+> Bit Rate=54 Mb/s Tx-Power=20 dBm
+> wlan1 IEEE 802.11bgn ESSID:"hidden"
+> Bit Rate=58.5 Mb/s Tx-Power=20 dBm
+> wlan2 IEEE 802.11bgn ESSID:"hidden"
+> Bit Rate=39 Mb/s Tx-Power=20 dBm
+>
+> box2:
+> -------------
+> wlan0 IEEE 802.11bgn ESSID:"hidden"
+> Bit Rate=58.5 Mb/s Tx-Power=20 dBm
+> wlan1 IEEE 802.11bgn ESSID:"hidden"
+> Bit Rate=52 Mb/s Tx-Power=20 dBm
+> wlan2 IEEE 802.11bgn ESSID:"hidden"
+> Bit Rate=52 Mb/s Tx-Power=20 dBm
+>
+> But I was curious if anyone had achieved > 10 MiB/s with any wireless adapter
+> with Linux?
+>
+> Also, those native Linux USB adapters (carl) work good, so far.
+> With the patch provided earlier for the rt2800usb driver, it is no longer
+> crashing under 3.0 so I put two of them on a single box plus a carl based one,
+> now I get better I/O, e.g. 4MiB/s x 6 = 24MiB/s.
 
-ATH6KL_DEBUGFS can be independent of ATH6KL_DEBUG. I'll send v2
-fixing this.
+On a 150 Mbps connection running the following script
 
-Vasanth
+#!/bin/sh
+
+dest="sonylap" # set the servername
+
+while true ; do
+netperf -t TCP_MAERTS -H $dest
+netperf -t TCP_STREAM -H $dest
+netperf -t TCP_SENDFILE -H $dest
+done
+
+I get the following for a D-Link DWA-130 containing a Realtek RTL8192SU with 
+driver r8712u:
+
+finger@larrylap:~/bcm_git/vendor-driver/5.10.56.46> ~/netperf.sh
+TCP MAERTS TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to sonylap (192.168.1.50) 
+port 0 AF_INET
+Recv   Send    Send
+Socket Socket  Message  Elapsed
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
+
+  87380  16384  16384    10.04      53.52
+TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to sonylap (192.168.1.50) 
+port 0 AF_INET
+Recv   Send    Send
+Socket Socket  Message  Elapsed
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
+
+  87380  16384  16384    10.03      55.58
+TCP SENDFILE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to sonylap 
+(192.168.1.50) port 0 AF_INET
+Recv   Send    Send
+Socket Socket  Message  Elapsed
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
+
+  87380  16384  16384    10.06      65.26
+
+I claim that 50-65 Mbps is pretty good.
+
+We get better than 10 Mbps with lots of different adapters.
+
+Larry
