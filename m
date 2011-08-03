@@ -1,44 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:60973 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751823Ab1HWIme (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 04:42:34 -0400
-Received: by mail-bw0-f49.google.com with SMTP id 17so6861133bke.22
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 01:42:33 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3.1] wl12xx: add max_sched_scan_ssids value to the hw description
-Date: Tue, 23 Aug 2011 11:42:25 +0300
-Message-Id: <1314088945-19848-1-git-send-email-coelho@ti.com> (sfid-20110823_104237_748216_D5C091FB)
+Received: from mx1.redhat.com ([209.132.183.28]:49737 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753379Ab1HCSdg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2011 14:33:36 -0400
+Date: Wed, 3 Aug 2011 20:33:50 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Andreas Hartmann <andihartmann@01019freenet.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Alan Piszcz <ap@solarrain.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
+Message-ID: <20110803183349.GA5956@redhat.com> (sfid-20110803_203341_424166_65AB5EBC)
+References: <20110730113009.GA2847@redhat.com>
+ <20110730113255.GB2847@redhat.com>
+ <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan>
+ <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan>
+ <alpine.DEB.2.02.1107301031560.4925@p34.internal.lan>
+ <4E341DC4.9010107@01019freenet.de>
+ <alpine.DEB.2.02.1107301305590.4925@p34.internal.lan>
+ <20110803160050.GA18882@redhat.com>
+ <alpine.DEB.2.02.1108031328030.9421@p34.internal.lan>
+ <alpine.DEB.2.02.1108031339280.9421@p34.internal.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.02.1108031339280.9421@p34.internal.lan>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After commit 5a865ba, we require a separate value to indicate the
-number of supported SSIDs in scheduled scans.  This patch adds a
-proper value to the wl12xx driver.
+On Wed, Aug 03, 2011 at 01:44:10PM -0400, Justin Piszcz wrote:
+> Tested that patch:
+> 
+> 1. The driver no longer automatically loads, I had to manually modprobe it.
+This must be some other problem not related with patch.
 
-This fixes a regression in 3.1-rc3 where scheduled scans were not
-working properly with the wl12xx driver.
+> 2. After loading, I get this (keep getting these)
+> 
+> [  384.054538] phy0 -> rt2800_txdone: Error - Data pending
+> [  384.072773] phy0 -> rt2800_txdone: Error - Data pending
+> [  384.096545] phy0 -> rt2800_txdone: Error - Data pending
+> [  384.117301] phy0 -> rt2800_txdone: Error - Data pending
+> [  384.537586] phy0 -> rt2800_txdone: Error - Data pending
+> [  384.555716] phy0 -> rt2800_txdone: Error - Data pending
+> [  384.573903] phy0 -> rt2800_txdone: Error - Data pending
+> [  384.599465] phy0 -> rt2800_txdone: Error - Data pending
+> [  384.618523] phy0 -> rt2800_txdone: Error - Data pending
+You can remove line
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/main.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ERROR(rt2x00dev, "Data pending\n");
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index e58c22d..b70ae40 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -4283,6 +4283,7 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC) | BIT(NL80211_IFTYPE_AP);
- 	wl->hw->wiphy->max_scan_ssids = 1;
-+	wl->hw->wiphy->max_sched_scan_ssids = 1;
- 	/*
- 	 * Maximum length of elements in scanning probe request templates
- 	 * should be the maximum length possible for a template, without
--- 
-1.7.1
+from rt2800_txdone to stop seeing this. It's kinda interesting
+how frequent this happens.
 
+> No crash yet, but bad ping again too (always with the rt2800usb) driver:
+> 
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=1 ttl=64 time=53.1 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=2 ttl=64 time=285 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=3 ttl=64 time=89.6 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=4 ttl=64 time=120 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=5 ttl=64 time=42.2 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=6 ttl=64 time=156 ms
+> 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=7 ttl=64 time=77.2 ms
+
+I think patch could have site effect to not run tx queue while we have pending
+data on it. Do you have such ping times always (i.e. after a 5 minutes, 10
+minutes, 20  ... ) or just randomly?
+
+Stanislaw
