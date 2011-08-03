@@ -1,64 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:48375 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753051Ab1HYBlU (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:54051 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754568Ab1HCTHs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 21:41:20 -0400
-Received: by mail-yw0-f46.google.com with SMTP id 7so1335324ywf.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 18:41:20 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH 5/9] mac80211: Remove redundant mesh path expiration checks
-Date: Wed, 24 Aug 2011 18:40:48 -0700
-Message-Id: <1314236452-7226-6-git-send-email-thomas@cozybit.com> (sfid-20110825_034122_637073_68ECC5AF)
-In-Reply-To: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
-References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
+	Wed, 3 Aug 2011 15:07:48 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id F19E25401C6
+	for <linux-wireless@vger.kernel.org>; Wed,  3 Aug 2011 15:16:27 -0400 (EDT)
+Subject: Compat-wireless release for 2011-08-03 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110803190746.AF9ED40ED4@repository3.orbit-lab.org> (sfid-20110803_210751_604633_06425784)
+Date: Wed,  3 Aug 2011 15:07:46 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   72e6376..9276969  master     -> origin/master
+git.kernel.org[0: 149.20.20.136]: errno=Connection timed out
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   468b47d..29f7643  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 64b0481...0b0ed41 akpm-end   -> origin/akpm-end  (forced update)
+   cfe2234..c027a47  akpm-start -> origin/akpm-start
+ + c2ad60b...8d79bd3 master     -> origin/master  (forced update)
+   cfe2234..c027a47  stable     -> origin/stable
+ * [new tag]         next-20110803 -> next-20110803
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_pathtbl.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
+compat-wireless code metrics
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 3c96e55..562b150 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -359,8 +359,7 @@ struct mesh_path *mesh_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
- 				memcmp(dst, mpath->dst, ETH_ALEN) == 0) {
- 			if (MPATH_EXPIRED(mpath)) {
- 				spin_lock_bh(&mpath->state_lock);
--				if (MPATH_EXPIRED(mpath))
--					mpath->flags &= ~MESH_PATH_ACTIVE;
-+				mpath->flags &= ~MESH_PATH_ACTIVE;
- 				spin_unlock_bh(&mpath->state_lock);
- 			}
- 			return mpath;
-@@ -386,8 +385,7 @@ struct mesh_path *mpp_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
- 		    memcmp(dst, mpath->dst, ETH_ALEN) == 0) {
- 			if (MPATH_EXPIRED(mpath)) {
- 				spin_lock_bh(&mpath->state_lock);
--				if (MPATH_EXPIRED(mpath))
--					mpath->flags &= ~MESH_PATH_ACTIVE;
-+				mpath->flags &= ~MESH_PATH_ACTIVE;
- 				spin_unlock_bh(&mpath->state_lock);
- 			}
- 			return mpath;
-@@ -420,8 +418,7 @@ struct mesh_path *mesh_path_lookup_by_idx(int idx, struct ieee80211_sub_if_data
- 		if (j++ == idx) {
- 			if (MPATH_EXPIRED(node->mpath)) {
- 				spin_lock_bh(&node->mpath->state_lock);
--				if (MPATH_EXPIRED(node->mpath))
--					node->mpath->flags &= ~MESH_PATH_ACTIVE;
-+				node->mpath->flags &= ~MESH_PATH_ACTIVE;
- 				spin_unlock_bh(&node->mpath->state_lock);
- 			}
- 			return node->mpath;
--- 
-1.7.4.1
-
+    835398 - Total upstream lines of code being pulled
+      2400 - backport code changes
+      2094 - backport code additions
+       306 - backport code deletions
+      8182 - backport from compat module
+     10582 - total backport code
+    1.2667 - % of code consists of backport work
