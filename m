@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:60401 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751091Ab1HOXNw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 19:13:52 -0400
-Received: by qwk3 with SMTP id 3so2700423qwk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2011 16:13:52 -0700 (PDT)
+Received: from lucidpixels.com ([72.73.18.11]:34272 "EHLO lucidpixels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755569Ab1HCTxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2011 15:53:52 -0400
+Date: Wed, 3 Aug 2011 15:53:51 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+cc: Alan Piszcz <ap@solarrain.com>
+Subject: Linux Wireless USB-Stick Question
+Message-ID: <alpine.DEB.2.02.1108031550100.4278@p34.internal.lan> (sfid-20110803_215357_351476_08F6A2CE)
 MIME-Version: 1.0
-In-Reply-To: <CA+7oygcN-RykWDg8=h9uKDgnKPFgmaY-cxt3QRZD4ZuVnMRmgw@mail.gmail.com>
-References: <CA+7oygcN-RykWDg8=h9uKDgnKPFgmaY-cxt3QRZD4ZuVnMRmgw@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Tue, 16 Aug 2011 01:13:32 +0200
-Message-ID: <CA+XFjir3+8DQSZDXO74dbULnDuTyiHqVmYxd2-PDJcZy585i2A@mail.gmail.com> (sfid-20110816_011356_026898_E9EBEACF)
-Subject: Re: any way to activate a scan in Atheros' monitor mode?
-To: George Nychis <gnychis@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Why would you want to do a conventional AP scan in monitor mode? If
-you just want to channel hop, you can directly call nl80211 to change
-the channel repeatedly. (Calling iwconfig is the worst idea, as
-iwconfig uses the old wext interface, which is then basically
-translated to nl80211 commands in the kernel, before being sent to the
-device/driver.)
+Hi,
 
-Also, you can always have a managed interface open in the background,
-and do scanning on that.
+Under Windows, you can achieve 10-15MiB/s..
 
-On Mon, Aug 15, 2011 at 11:03 PM, George Nychis <gnychis@gmail.com> wrote:
-> Is there anything out of the box, before I go hacking, that supports
-> initiating a channel scan for an ath9k card when in monitoring mode?
-> Right now, I am implementing a wrapper around iwconfig to increment
-> the channel, but its a little fuzzy when it's implemented at a higher
-> layer with delays to change the channel that I can't account for.
->
-> - George
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Under Linux, even with 150mbps USB wireless adapters, the max never 
+appears to go above > 3-4MiB/s, to work around this, order more 
+USB-wifi ticks and run them in parallel far away from each other with USB
+extenders:
 
+box1:
+-------------
+wlan0     IEEE 802.11bg  ESSID:"hidden"
+           Bit Rate=54 Mb/s   Tx-Power=20 dBm
+wlan1     IEEE 802.11bgn  ESSID:"hidden"
+           Bit Rate=58.5 Mb/s   Tx-Power=20 dBm
+wlan2     IEEE 802.11bgn  ESSID:"hidden"
+           Bit Rate=39 Mb/s   Tx-Power=20 dBm
 
+box2:
+-------------
+wlan0     IEEE 802.11bgn  ESSID:"hidden"
+           Bit Rate=58.5 Mb/s   Tx-Power=20 dBm
+wlan1     IEEE 802.11bgn  ESSID:"hidden"
+           Bit Rate=52 Mb/s   Tx-Power=20 dBm
+wlan2     IEEE 802.11bgn  ESSID:"hidden"
+           Bit Rate=52 Mb/s   Tx-Power=20 dBm
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+But I was curious if anyone had achieved > 10 MiB/s with any wireless 
+adapter with Linux?
+
+Also, those native Linux USB adapters (carl) work good, so far.
+With the patch provided earlier for the rt2800usb driver, it is no longer 
+crashing under 3.0 so I put two of them on a single box plus a carl based 
+one, now I get better I/O, e.g. 4MiB/s x 6 = 24MiB/s.
+
+Justin.
