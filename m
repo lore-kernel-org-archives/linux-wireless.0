@@ -1,38 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:54051 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754568Ab1HCTHs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2011 15:07:48 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id F19E25401C6
-	for <linux-wireless@vger.kernel.org>; Wed,  3 Aug 2011 15:16:27 -0400 (EDT)
-Subject: Compat-wireless release for 2011-08-03 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110803190746.AF9ED40ED4@repository3.orbit-lab.org> (sfid-20110803_210751_604633_06425784)
-Date: Wed,  3 Aug 2011 15:07:46 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from lucidpixels.com ([72.73.18.11]:37731 "EHLO lucidpixels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755142Ab1HCSmG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2011 14:42:06 -0400
+Date: Wed, 3 Aug 2011 14:42:04 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+cc: Andreas Hartmann <andihartmann@01019freenet.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Alan Piszcz <ap@solarrain.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
+In-Reply-To: <alpine.DEB.2.02.1108031433570.9421@p34.internal.lan>
+Message-ID: <alpine.DEB.2.02.1108031441140.9421@p34.internal.lan> (sfid-20110803_204232_156891_59B45D08)
+References: <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan> <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan> <alpine.DEB.2.02.1107301031560.4925@p34.internal.lan>
+ <4E341DC4.9010107@01019freenet.de> <alpine.DEB.2.02.1107301305590.4925@p34.internal.lan> <20110803160050.GA18882@redhat.com> <alpine.DEB.2.02.1108031328030.9421@p34.internal.lan> <alpine.DEB.2.02.1108031339280.9421@p34.internal.lan> <20110803183349.GA5956@redhat.com>
+ <alpine.DEB.2.02.1108031433570.9421@p34.internal.lan>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   72e6376..9276969  master     -> origin/master
-git.kernel.org[0: 149.20.20.136]: errno=Connection timed out
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   468b47d..29f7643  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 64b0481...0b0ed41 akpm-end   -> origin/akpm-end  (forced update)
-   cfe2234..c027a47  akpm-start -> origin/akpm-start
- + c2ad60b...8d79bd3 master     -> origin/master  (forced update)
-   cfe2234..c027a47  stable     -> origin/stable
- * [new tag]         next-20110803 -> next-20110803
 
-compat-wireless code metrics
 
-    835398 - Total upstream lines of code being pulled
-      2400 - backport code changes
-      2094 - backport code additions
-       306 - backport code deletions
-      8182 - backport from compat module
-     10582 - total backport code
-    1.2667 - % of code consists of backport work
+On Wed, 3 Aug 2011, Justin Piszcz wrote:
+
+>
+>
+> On Wed, 3 Aug 2011, Stanislaw Gruszka wrote:
+>
+>> On Wed, Aug 03, 2011 at 01:44:10PM -0400, Justin Piszcz wrote:
+>>> Tested that patch:
+>>>
+
+Hi,
+
+[ 3552.765072] phy0 -> rt2800_txdone: Error - Data pending
+[ 3552.774580] phy0 -> rt2800_txdone: Error - Data pending
+[ 3985.215031] ieee80211 phy0: wlan0: No probe response from AP (hidden) after 500ms, disconnecting.
+[ 3985.262684] cfg80211: Calling CRDA for country: XX
+[ 4011.806042] wlan0: authenticate with (hidden) (try 1)
+[ 4011.807577] wlan0: authenticated
+[ 4011.824287] wlan0: associate with (hidden) (try 1)
+[ 4011.828180] wlan0: RX ReassocResp from (hidden) (capab=0x431 status=0 aid=2)
+[ 4011.828189] wlan0: associated
+[ 4035.209032] ieee80211 phy0: wlan0: No probe response from AP (hidden) after 500ms, disconnecting.
+[ 4035.248719] cfg80211: Calling CRDA to update world regulatory domain
+[ 4061.777466] wlan0: authenticate with (hidden) (try 1)
+[ 4061.786410] wlan0: authenticated
+[ 4061.818460] wlan0: associate with (hidden) (try 1)
+[ 4061.822059] wlan0: RX ReassocResp from (hidden) (capab=0x431 status=0 aid=2)
+[ 4061.822068] wlan0: associated
+
+Saw this on the rt2800usb driver (w/ your patch), is this normal?
+
+Justin.
+
