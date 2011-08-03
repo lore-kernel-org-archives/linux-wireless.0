@@ -1,33 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34740 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751422Ab1HJNhI (ORCPT
+Received: from nm20.bullet.mail.ukl.yahoo.com ([217.146.183.194]:45854 "HELO
+	nm20.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753872Ab1HCOf0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 09:37:08 -0400
-Subject: Re: [PATCH 1/6] mac80211: fix mesh beacon format
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <1312919418-32196-2-git-send-email-thomas@cozybit.com> (sfid-20110809_215155_359071_854103B9)
-References: <1312919418-32196-1-git-send-email-thomas@cozybit.com>
-	 <1312919418-32196-2-git-send-email-thomas@cozybit.com>
-	 (sfid-20110809_215155_359071_854103B9)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 10 Aug 2011 15:37:04 +0200
-Message-ID: <1312983424.4325.0.camel@jlt3.sipsolutions.net> (sfid-20110810_153712_181018_06A3A096)
-Mime-Version: 1.0
+	Wed, 3 Aug 2011 10:35:26 -0400
+From: Marek Lindner <lindner_marek@yahoo.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Marek Lindner <lindner_marek@yahoo.de>
+Subject: [PATCHv2] ath9k: remove eeprom txgain override for minor version < 19
+Date: Wed,  3 Aug 2011 16:35:16 +0200
+Message-Id: <1312382116-27257-1-git-send-email-lindner_marek@yahoo.de> (sfid-20110803_163530_050849_10247422)
+In-Reply-To: <1312359372-5586-1-git-send-email-lindner_marek@yahoo.de>
+References: <1312359372-5586-1-git-send-email-lindner_marek@yahoo.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-09 at 12:50 -0700, Thomas Pedersen wrote:
+ath9k_hw_4k_get_eeprom() overrides the eeprom value for txgain if the
+minor version is not 19 or above with a value of 0.
+ar9002_hw_init_mode_gain_regs() relies on this information to
+determine whether this is a high power wifi card or not. The override
+caused the driver to always use the 'normal' power tables even for
+high power devices if their minor version was not high enough. Thus
+leading to reduced power output.
 
-> -		mgmt->u.beacon.capab_info = 0x0; /* 0x0 for MPs */
-> +		mgmt->u.beacon.capab_info |= sdata->u.mesh.security
-> +					     ? WLAN_CAPABILITY_PRIVACY : 0;
+This isn't needed for the AR9285; the check originated with the 
+AR9280 setup code which requires the EEPROM version check.
 
-This should, I believe, warn if you run with sparse (make C=1
-M=net/mac80211 or your favourite invocation) -- there's an endian error
-here.
+Signed-off-by: Marek Lindner <lindner_marek@yahoo.de>
+---
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index 5b1e894..10f3072 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -237,10 +237,7 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
+ 	case EEP_ANT_DIV_CTL1:
+ 		return pModal->antdiv_ctl1;
+ 	case EEP_TXGAIN_TYPE:
+-		if (ver_minor >= AR5416_EEP_MINOR_VER_19)
+-			return pBase->txGainType;
+-		else
+-			return AR5416_EEP_TXGAIN_ORIGINAL;
++		return pBase->txGainType;
+ 	default:
+ 		return 0;
+ 	}
+-- 
+1.7.5.3
 
