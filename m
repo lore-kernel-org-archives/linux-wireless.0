@@ -1,175 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:61795 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754881Ab1HWI7r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 04:59:47 -0400
-Received: by ewy4 with SMTP id 4so2176522ewy.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 01:59:46 -0700 (PDT)
+Received: from lucidpixels.com ([72.73.18.11]:59220 "EHLO lucidpixels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754149Ab1HCRoM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2011 13:44:12 -0400
+Date: Wed, 3 Aug 2011 13:44:10 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+cc: Andreas Hartmann <andihartmann@01019freenet.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Alan Piszcz <ap@solarrain.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
+In-Reply-To: <alpine.DEB.2.02.1108031328030.9421@p34.internal.lan>
+Message-ID: <alpine.DEB.2.02.1108031339280.9421@p34.internal.lan> (sfid-20110803_194434_661770_8490F000)
+References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan> <4E318BD0.40202@lwfinger.net> <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan> <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan>
+ <alpine.DEB.2.02.1107301031560.4925@p34.internal.lan> <4E341DC4.9010107@01019freenet.de> <alpine.DEB.2.02.1107301305590.4925@p34.internal.lan> <20110803160050.GA18882@redhat.com> <alpine.DEB.2.02.1108031328030.9421@p34.internal.lan>
 MIME-Version: 1.0
-In-Reply-To: <4E5367AA.8040406@broadcom.com>
-References: <20110814121646.GA5188@stt008.linux.site>
-	<4E4A5641.4020604@broadcom.com>
-	<1313509211.2065.36.camel@dcbw.foobar.com>
-	<4E4B9A45.5090507@broadcom.com>
-	<4E4CC85A.7010504@broadcom.com>
-	<4E4E73F4.4040105@broadcom.com>
-	<20110819152140.GA7506@stt008.linux.site>
-	<CAKprTDEUVa6ouH92G_8UMo20wYNnrhu76c_XAPYDtbCbRjqdLw@mail.gmail.com>
-	<4E52297D.9090301@broadcom.com>
-	<20110822112737.GA5936@stt008.linux.site>
-	<4E525235.7060501@broadcom.com>
-	<CAKprTDHO+Hh4g3WjGijDhPtzY5PiqR0GQ_zg8Uw46-qOVXpCRQ@mail.gmail.com>
-	<4E525FC7.4070802@broadcom.com>
-	<CAKprTDF0iFSAkYZiLQFLX+KumyLbzNUvHocKJyzK37Kv_79EFA@mail.gmail.com>
-	<4E5367AA.8040406@broadcom.com>
-Date: Tue, 23 Aug 2011 10:59:45 +0200
-Message-ID: <CAKprTDFret5n-AH_B_Hu6E0+B4FEGJQ=jjYbGNy8ZD5R8ReFCg@mail.gmail.com> (sfid-20110823_110005_449451_DCBBD322)
-Subject: Re: brcmsmac driver only works when sitting next to the AP
-From: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
-To: Roland Vossen <rvossen@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	"networkmanager-list@gnome.org" <networkmanager-list@gnome.org>
-Content-Type: multipart/mixed; boundary=0015174bdb52cf54da04ab286a5c
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---0015174bdb52cf54da04ab286a5c
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
 
-2011/8/23 Roland Vossen <rvossen@broadcom.com>:
-> Hello Camale=F3n,
+
+On Wed, 3 Aug 2011, Justin Piszcz wrote:
+
 >
->>> $ iw wlan0 scan
->>
->> root@stt300:~# iw wlan0 scan
->> command failed: Device or resource busy (-16)
 >
-> couple more requests:
+> On Wed, 3 Aug 2011, Stanislaw Gruszka wrote:
 >
-> can you send me the output of 'sudo ps -A' ?
+>> On Sat, Jul 30, 2011 at 01:07:11PM -0400, Justin Piszcz wrote:
+>>> Here you go, crash 2:
+>>> http://home.comcast.net/~jpiszcz/20110730/2630-rt2800usb-crash2p1.jpg
+>>> http://home.comcast.net/~jpiszcz/20110730/2630-rt2800usb-crash2p2.jpg
+>> 
+>> Here is next (draw) patch to test:
 >
-> can you issue a '$ iwlist channel' and a '$ iwlist scanning' ?
+> Thanks,
+>
+> # patch -p1 < ../patch4
+> patching file drivers/net/wireless/rt2x00/rt2800lib.c
+> patching file drivers/net/wireless/rt2x00/rt2800lib.h
+> patching file drivers/net/wireless/rt2x00/rt2800usb.c
+> patching file drivers/net/wireless/rt2x00/rt2x00queue.c
+> patching file drivers/net/wireless/rt2x00/rt2x00usb.c
+> #
+>
+> I'll give this driver one more chance (quickly) and let you know if it 
+> crashes
+> afterwards (usually crashes in 5-10 minutes), but most likely I am going to
+> move over to some other wireless usb sticks, got a couple think penguin usb
+> wifi sticks that use the carl driver, 'open source' wireless usb sticks, 
+> going to give them a try next.
+>
+> Also got some other ones as well, hopefully one of them will work without
+> 900ms of lag.  The rt2870sta was the best driver in 2.6.38.x series that I
+> have ever used for wireless USB sticks.
+>
+> Justin.
+>
+>
 
-Sure, see them attached to this e-mail.
+Hi,
 
-P.S: I still have the working kernel 2.6.39 available in my system and
-can boot with it, just in case you want to  make any comparison.
+Tested that patch:
 
-Greetings,
+1. The driver no longer automatically loads, I had to manually modprobe it.
+2. After loading, I get this (keep getting these)
 
---=20
-Camale=F3n
+[  384.054538] phy0 -> rt2800_txdone: Error - Data pending
+[  384.072773] phy0 -> rt2800_txdone: Error - Data pending
+[  384.096545] phy0 -> rt2800_txdone: Error - Data pending
+[  384.117301] phy0 -> rt2800_txdone: Error - Data pending
+[  384.537586] phy0 -> rt2800_txdone: Error - Data pending
+[  384.555716] phy0 -> rt2800_txdone: Error - Data pending
+[  384.573903] phy0 -> rt2800_txdone: Error - Data pending
+[  384.599465] phy0 -> rt2800_txdone: Error - Data pending
+[  384.618523] phy0 -> rt2800_txdone: Error - Data pending
 
---0015174bdb52cf54da04ab286a5c
-Content-Type: text/plain; charset=US-ASCII; name="ps-A.txt"
-Content-Disposition: attachment; filename="ps-A.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gron7c3x0
+No crash yet, but bad ping again too (always with the rt2800usb) driver:
 
-cm9vdEBzdHQzMDA6fiMgcHMgLUEKICBQSUQgVFRZICAgICAgICAgIFRJTUUgQ01ECiAgICAxID8g
-ICAgICAgIDAwOjAwOjAwIGluaXQKICAgIDIgPyAgICAgICAgMDA6MDA6MDAga3RocmVhZGQKICAg
-IDMgPyAgICAgICAgMDA6MDA6MDAga3NvZnRpcnFkLzAKICAgIDQgPyAgICAgICAgMDA6MDA6MDAg
-a3dvcmtlci8wOjAKICAgIDUgPyAgICAgICAgMDA6MDA6MDAga3dvcmtlci91OjAKICAgIDYgPyAg
-ICAgICAgMDA6MDA6MDAgbWlncmF0aW9uLzAKICAgIDcgPyAgICAgICAgMDA6MDA6MDAgd2F0Y2hk
-b2cvMAogICAgOCA/ICAgICAgICAwMDowMDowMCBtaWdyYXRpb24vMQogICAgOSA/ICAgICAgICAw
-MDowMDowMCBrd29ya2VyLzE6MAogICAxMCA/ICAgICAgICAwMDowMDowMCBrc29mdGlycWQvMQog
-ICAxMSA/ICAgICAgICAwMDowMDowMCBrd29ya2VyLzA6MQogICAxMiA/ICAgICAgICAwMDowMDow
-MCB3YXRjaGRvZy8xCiAgIDEzID8gICAgICAgIDAwOjAwOjAwIGNwdXNldAogICAxNCA/ICAgICAg
-ICAwMDowMDowMCBraGVscGVyCiAgIDE1ID8gICAgICAgIDAwOjAwOjAwIG5ldG5zCiAgIDE2ID8g
-ICAgICAgIDAwOjAwOjAwIHN5bmNfc3VwZXJzCiAgIDE3ID8gICAgICAgIDAwOjAwOjAwIGJkaS1k
-ZWZhdWx0CiAgIDE4ID8gICAgICAgIDAwOjAwOjAwIGtpbnRlZ3JpdHlkCiAgIDE5ID8gICAgICAg
-IDAwOjAwOjAwIGtibG9ja2QKICAgMjAgPyAgICAgICAgMDA6MDA6MDAga3dvcmtlci8xOjEKICAg
-MjEgPyAgICAgICAgMDA6MDA6MDAga2h1bmd0YXNrZAogICAyMiA/ICAgICAgICAwMDowMDowMCBr
-c3dhcGQwCiAgIDIzID8gICAgICAgIDAwOjAwOjAwIGtzbWQKICAgMjQgPyAgICAgICAgMDA6MDA6
-MDAga2h1Z2VwYWdlZAogICAyNSA/ICAgICAgICAwMDowMDowMCBmc25vdGlmeV9tYXJrCiAgIDI2
-ID8gICAgICAgIDAwOjAwOjAwIGNyeXB0bwogICAyOSA/ICAgICAgICAwMDowMDowMCBrd29ya2Vy
-LzA6MgogIDEyOCA/ICAgICAgICAwMDowMDowMCBhdGFfc2ZmCiAgMTMwID8gICAgICAgIDAwOjAw
-OjAwIHNjc2lfZWhfMAogIDEzMSA/ICAgICAgICAwMDowMDowMCBzY3NpX2VoXzEKICAxMzIgPyAg
-ICAgICAgMDA6MDA6MDAgc2NzaV9laF8yCiAgMTMzID8gICAgICAgIDAwOjAwOjAwIHNjc2lfZWhf
-MwogIDEzNCA/ICAgICAgICAwMDowMDowMCBrd29ya2VyL3U6MQogIDEzNSA/ICAgICAgICAwMDow
-MDowMCBrd29ya2VyL3U6MgogIDEzNiA/ICAgICAgICAwMDowMDowMCBrd29ya2VyL3U6MwogIDEz
-NyA/ICAgICAgICAwMDowMDowMCBrd29ya2VyL3U6NAogIDE2OSA/ICAgICAgICAwMDowMDowMCBy
-ZWlzZXJmcwogIDIzMCA/ICAgICAgICAwMDowMDowMCB1ZGV2ZAogIDQyNCA/ICAgICAgICAwMDow
-MDowMCBrcHNtb3VzZWQKICA0MzAgPyAgICAgICAgMDA6MDA6MDAga3dvcmtlci8xOjIKICA0NjIg
-PyAgICAgICAgMDA6MDA6MDAga2h1YmQKICA0NjYgPyAgICAgICAgMDA6MDA6MDAgY2ZnODAyMTEK
-ICA0OTEgPyAgICAgICAgMDA6MDA6MDAgaGQtYXVkaW8wCiAgOTcxID8gICAgICAgIDAwOjAwOjAw
-IHJwY2JpbmQKIDExMDUgPyAgICAgICAgMDA6MDA6MDAgcnN5c2xvZ2QKIDExMzAgPyAgICAgICAg
-MDA6MDA6MDAgZGJ1cy1kYWVtb24KIDExNDEgPyAgICAgICAgMDA6MDA6MDAgYWNwaV9mYWtla2V5
-ZAogMTE0NSA/ICAgICAgICAwMDowMDowMCBOZXR3b3JrTWFuYWdlcgogMTE1NCA/ICAgICAgICAw
-MDowMDowMCBtb2RlbS1tYW5hZ2VyCiAxMTU5ID8gICAgICAgIDAwOjAwOjAwIHBvbGtpdGQKIDEx
-NjQgPyAgICAgICAgMDA6MDA6MDAgZmx1c2gtODowCiAxMTY4ID8gICAgICAgIDAwOjAwOjAwIHdw
-YV9zdXBwbGljYW50CiAxMTc2ID8gICAgICAgIDAwOjAwOjAwIGdkbTMKIDExODggPyAgICAgICAg
-MDA6MDA6MDAgZ2RtLXNpbXBsZS1zbGF2CiAxMTkyID8gICAgICAgIDAwOjAwOjAwIGFjcGlkCiAx
-MjA1ID8gICAgICAgIDAwOjAwOjAwIGFuYWNyb24KIDEyMDkgdHR5NyAgICAgMDA6MDA6MDEgWG9y
-ZwogMTIyMSA/ICAgICAgICAwMDowMDowMCBhdGQKIDEyMzMgPyAgICAgICAgMDA6MDA6MDAgYXZh
-aGktZGFlbW9uCiAxMjM0ID8gICAgICAgIDAwOjAwOjAwIGF2YWhpLWRhZW1vbgogMTI0NCA/ICAg
-ICAgICAwMDowMDowMCBibHVldG9vdGhkCiAxMjQ5ID8gICAgICAgIDAwOjAwOjAwIGwyY2FwCiAx
-MjU0ID8gICAgICAgIDAwOjAwOjAwIGtyZmNvbW1kCiAxMzA3ID8gICAgICAgIDAwOjAwOjAwIGNy
-b24KIDEzMzQgPyAgICAgICAgMDA6MDA6MDAgdWRldmQKIDEzMzUgPyAgICAgICAgMDA6MDA6MDAg
-dWRldmQKIDEzMzkgPyAgICAgICAgMDA6MDA6MDAgY3Vwc2QKIDEzOTUgPyAgICAgICAgMDA6MDA6
-MDAgZ2RtLXNlc3Npb24td29yCiAxNTk5ID8gICAgICAgIDAwOjAwOjAwIGNvbnNvbGUta2l0LWRh
-ZQogMTY2NyA/ICAgICAgICAwMDowMDowMCBrYXVkaXRkCiAxNjgxID8gICAgICAgIDAwOjAwOjAw
-IGV4aW00CiAxNjg4ID8gICAgICAgIDAwOjAwOjAwIHgtc2Vzc2lvbi1tYW5hZwogMTcwNSA/ICAg
-ICAgICAwMDowMDowMCBrZXJuZWxvb3BzCiAxNzk1ID8gICAgICAgIDAwOjAwOjAwIHNzaGQKIDE4
-MjAgPyAgICAgICAgMDA6MDA6MDAgc3NoLWFnZW50CiAxODIzID8gICAgICAgIDAwOjAwOjAwIGRi
-dXMtbGF1bmNoCiAxODI0ID8gICAgICAgIDAwOjAwOjAwIGRidXMtZGFlbW9uCiAxODQ1IHR0eTEg
-ICAgIDAwOjAwOjAwIGdldHR5CiAxODQ2IHR0eTIgICAgIDAwOjAwOjAwIGdldHR5CiAxODQ3IHR0
-eTMgICAgIDAwOjAwOjAwIGdldHR5CiAxODQ4IHR0eTQgICAgIDAwOjAwOjAwIGdldHR5CiAxODQ5
-IHR0eTUgICAgIDAwOjAwOjAwIGdldHR5CiAxODUwIHR0eTYgICAgIDAwOjAwOjAwIGdldHR5CiAx
-ODU1ID8gICAgICAgIDAwOjAwOjAwIGdjb25mZC0yCiAxODYxID8gICAgICAgIDAwOjAwOjAwIGdu
-b21lLWtleXJpbmctZAogMTg2MyA/ICAgICAgICAwMDowMDowMCBnbm9tZS1wb3dlci1tYW4KIDE4
-NjUgPyAgICAgICAgMDA6MDA6MDAgZ25vbWUtc2V0dGluZ3MtCiAxODc0ID8gICAgICAgIDAwOjAw
-OjAwIHVwb3dlcmQKIDE5NDggPyAgICAgICAgMDA6MDA6MDAgZ3Zmc2QKIDE5NTEgPyAgICAgICAg
-MDA6MDA6MDAgbWV0YWNpdHkKIDE5NTUgPyAgICAgICAgMDA6MDA6MDAgZ3Zmcy1nZHUtdm9sdW1l
-CiAxOTU3ID8gICAgICAgIDAwOjAwOjAwIHVkaXNrcy1kYWVtb24KIDE5NTggPyAgICAgICAgMDA6
-MDA6MDAgZ25vbWUtcGFuZWwKIDE5NTkgPyAgICAgICAgMDA6MDA6MDAgdWRpc2tzLWRhZW1vbgog
-MTk2MiA/ICAgICAgICAwMDowMDowMCBndmZzLWdwaG90bzItdm8KIDE5NjQgPyAgICAgICAgMDA6
-MDA6MDAgZ3Zmcy1hZmMtdm9sdW1lCiAxOTY3ID8gICAgICAgIDAwOjAwOjAxIG5hdXRpbHVzCiAx
-OTY5ID8gICAgICAgIDAwOjAwOjAwIGJvbm9iby1hY3RpdmF0aQogMTk3MSA/ICAgICAgICAwMDow
-MDowMCBrZXJuZWxvb3BzLWFwcGwKIDE5NzIgPyAgICAgICAgMDA6MDA6MDAgcHl0aG9uCiAxOTc1
-ID8gICAgICAgIDAwOjAwOjAwIGJsdWV0b290aC1hcHBsZQogMTk4NCA/ICAgICAgICAwMDowMDow
-MCBtaXhlcl9hcHBsZXQyCiAxOTg1ID8gICAgICAgIDAwOjAwOjAwIGdkdS1ub3RpZmljYXRpbwog
-MTk4NiA/ICAgICAgICAwMDowMDowMCBldm9sdXRpb24tYWxhcm0KIDE5ODggPyAgICAgICAgMDA6
-MDA6MDAgcG9sa2l0LWdub21lLWF1CiAxOTkzID8gICAgICAgIDAwOjAwOjAwIG5tLWFwcGxldAog
-MTk5NCA/ICAgICAgICAwMDowMDowMCB1cGRhdGUtbm90aWZpZXIKIDE5OTYgPyAgICAgICAgMDA6
-MDA6MDAgZ25vbWUtc2NyZWVuc2F2CiAyMDA4ID8gICAgICAgIDAwOjAwOjAwIGUtY2FsZW5kYXIt
-ZmFjdAogMjAxMyA/ICAgICAgICAwMDowMDowMCBndmZzZC10cmFzaAogMjAzMyA/ICAgICAgICAw
-MDowMDowMCBndmZzZC1idXJuCiAyMDQxID8gICAgICAgIDAwOjAwOjAwIGd2ZnNkLW1ldGFkYXRh
-CiAyMDQ4ID8gICAgICAgIDAwOjAwOjAwIGFwdGQKIDIwNTYgPyAgICAgICAgMDA6MDA6MDEgZ25v
-bWUtdGVybWluYWwKIDIwNjEgPyAgICAgICAgMDA6MDA6MDAgZ25vbWUtcHR5LWhlbHBlCiAyMDYy
-IHB0cy8wICAgIDAwOjAwOjAwIGJhc2gKIDIxMTAgcHRzLzAgICAgMDA6MDA6MDAgc3UKIDIxMTgg
-cHRzLzAgICAgMDA6MDA6MDAgYmFzaAogMjE2NyBwdHMvMCAgICAwMDowMDowMCBwcwo=
---0015174bdb52cf54da04ab286a5c
-Content-Type: text/plain; charset=US-ASCII; name="iwlist_channel.txt"
-Content-Disposition: attachment; filename="iwlist_channel.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gron7mb91
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=1 ttl=64 time=53.1 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=2 ttl=64 time=285 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=3 ttl=64 time=89.6 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=4 ttl=64 time=120 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=5 ttl=64 time=42.2 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=6 ttl=64 time=156 ms
+64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=7 ttl=64 time=77.2 ms
 
-cm9vdEBzdHQzMDA6fiMgaXdsaXN0IGNoYW5uZWwKbG8gICAgICAgIG5vIGZyZXF1ZW5jeSBpbmZv
-cm1hdGlvbi4KCmV0aDAgICAgICBubyBmcmVxdWVuY3kgaW5mb3JtYXRpb24uCgp3bGFuMCAgICAg
-MTMgY2hhbm5lbHMgaW4gdG90YWw7IGF2YWlsYWJsZSBmcmVxdWVuY2llcyA6CiAgICAgICAgICBD
-aGFubmVsIDAxIDogMi40MTIgR0h6CiAgICAgICAgICBDaGFubmVsIDAyIDogMi40MTcgR0h6CiAg
-ICAgICAgICBDaGFubmVsIDAzIDogMi40MjIgR0h6CiAgICAgICAgICBDaGFubmVsIDA0IDogMi40
-MjcgR0h6CiAgICAgICAgICBDaGFubmVsIDA1IDogMi40MzIgR0h6CiAgICAgICAgICBDaGFubmVs
-IDA2IDogMi40MzcgR0h6CiAgICAgICAgICBDaGFubmVsIDA3IDogMi40NDIgR0h6CiAgICAgICAg
-ICBDaGFubmVsIDA4IDogMi40NDcgR0h6CiAgICAgICAgICBDaGFubmVsIDA5IDogMi40NTIgR0h6
-CiAgICAgICAgICBDaGFubmVsIDEwIDogMi40NTcgR0h6CiAgICAgICAgICBDaGFubmVsIDExIDog
-Mi40NjIgR0h6CiAgICAgICAgICBDaGFubmVsIDEyIDogMi40NjcgR0h6CiAgICAgICAgICBDaGFu
-bmVsIDEzIDogMi40NzIgR0h6Cgo=
---0015174bdb52cf54da04ab286a5c
-Content-Type: text/plain; charset=US-ASCII; name="iwlist_scanning.txt"
-Content-Disposition: attachment; filename="iwlist_scanning.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gron7wki2
+(Have another machine, testing the carl driver kernel 3.0 on it)
 
-cm9vdEBzdHQzMDA6fiMgaXdsaXN0IHNjYW5uaW5nCmxvICAgICAgICBJbnRlcmZhY2UgZG9lc24n
-dCBzdXBwb3J0IHNjYW5uaW5nLgoKZXRoMCAgICAgIEludGVyZmFjZSBkb2Vzbid0IHN1cHBvcnQg
-c2Nhbm5pbmcuCgp3bGFuMCAgICAgSW50ZXJmYWNlIGRvZXNuJ3Qgc3VwcG9ydCBzY2FubmluZyA6
-IERldmljZSBvciByZXNvdXJjZSBidXN5Cgo=
---0015174bdb52cf54da04ab286a5c--
+Not having too much luck there either.
+
+[586342.990975] carl9170: Unknown symbol __ieee80211_get_tx_led_name (err 0)
+[586342.991059] carl9170: Unknown symbol __ieee80211_get_assoc_led_name (err 0)
+[586459.214057] carl9170: Unknown symbol __ieee80211_get_tx_led_name (err 0)
+[586459.214131] carl9170: Unknown symbol __ieee80211_get_assoc_led_name (err 0)
+
+Justin.
+
