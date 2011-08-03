@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:37846 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755751Ab1HaVvL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 17:51:11 -0400
-Received: by qyk15 with SMTP id 15so2762085qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 14:51:10 -0700 (PDT)
-From: Bill Jordan <bjordan@rajant.com>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	nbd@openwrt.org, linville@tuxdriver.com
-Cc: Bill Jordan <bjordan@rajant.com>
-Subject: [PATCH] ath9k: ath9k_hw_set_txpowerlimit sets previous txpower
-Date: Wed, 31 Aug 2011 17:51:00 -0400
-Message-Id: <1314827460-17724-1-git-send-email-bjordan@rajant.com> (sfid-20110831_235114_774536_1E786783)
+Received: from c60.cesmail.net ([216.154.195.49]:9873 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753834Ab1HCFEA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2011 01:04:00 -0400
+Subject: [PATCH 3/3] compat: don't define genl_register_mc_group() for Linux
+ 2.6.22 and older
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+From: Pavel Roskin <proski@gnu.org>
+Date: Wed, 03 Aug 2011 01:03:46 -0400
+Message-ID: <20110803050346.10364.36072.stgit@mj.roinet.com> (sfid-20110803_070403_687379_E6D8B8FF)
+In-Reply-To: <20110803050333.10364.78012.stgit@mj.roinet.com>
+References: <20110803050333.10364.78012.stgit@mj.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit 9c204b46c7af93e334114bea1f5eeaa6fea9ba07
-(ath9k_hw: do not limit initial tx power to 20 dbm),
-setting of txpower was broken.
+compat-2.6.23.h has a different definition of genl_register_mc_group().
+Likewise, don't define genl_unregister_mc_group() for old kernels.
 
-This patch fixes it by initializing reg_pwr from the new
-power limit, not the previous value.
-
-Signed-off-by: Bill Jordan <bjordan@rajant.com>
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
- drivers/net/wireless/ath/ath9k/hw.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ include/linux/compat-2.6.37.h |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 3a16ba2..fae1f30 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2447,13 +2447,13 @@ void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit, bool test)
- 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	struct ath9k_channel *chan = ah->curchan;
- 	struct ieee80211_channel *channel = chan->chan;
--	int reg_pwr = min_t(int, MAX_RATE_POWER, regulatory->power_limit);
-+	int reg_pwr = min_t(int, MAX_RATE_POWER, limit);
- 	int chan_pwr = channel->max_power * 2;
+diff --git a/include/linux/compat-2.6.37.h b/include/linux/compat-2.6.37.h
+index d375746..78b0b38 100644
+--- a/include/linux/compat-2.6.37.h
++++ b/include/linux/compat-2.6.37.h
+@@ -91,8 +91,11 @@ int genl_unregister_family(struct genl_family *family);
  
- 	if (test)
- 		reg_pwr = chan_pwr = MAX_RATE_POWER;
+ #define genlmsg_reply(_msg, _info) genlmsg_reply(_msg, (_info)->info)
+ #define genlmsg_put(_skb, _pid, _seq, _fam, _flags, _cmd) genlmsg_put(_skb, _pid, _seq, &(_fam)->family, _flags, _cmd)
++
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
+ #define genl_register_mc_group(_fam, _grp) genl_register_mc_group(&(_fam)->family, _grp)
+ #define genl_unregister_mc_group(_fam, _grp) genl_unregister_mc_group(&(_fam)->family, _grp)
++#endif
  
--	regulatory->power_limit = min(limit, (u32) MAX_RATE_POWER);
-+	regulatory->power_limit = reg_pwr;
  
- 	ah->eep_ops->set_txpower(ah, chan,
- 				 ath9k_regd_get_ctl(regulatory, chan),
--- 
-1.7.6
-
+ extern void led_blink_set(struct led_classdev *led_cdev,
