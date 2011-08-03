@@ -1,46 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41900 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750738Ab1H3JGV (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:62476 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752885Ab1HCQfL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 05:06:21 -0400
-Message-ID: <4E5CA807.4090105@qca.qualcomm.com> (sfid-20110830_110629_561150_36340236)
-Date: Tue, 30 Aug 2011 12:06:15 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Wed, 3 Aug 2011 12:35:11 -0400
+Received: by pzk37 with SMTP id 37so325448pzk.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2011 09:35:10 -0700 (PDT)
 MIME-Version: 1.0
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 04/20] ath6kl: Use change_station() to authorize/unauthorize
- STAs
-References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com> <1314620641-24257-5-git-send-email-jouni@qca.qualcomm.com>
-In-Reply-To: <1314620641-24257-5-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <20110729071742.GB24030@tarshish>
+References: <20110728065111.GA6734@sapphire.tkos.co.il> <CAPjQAd_KCc+TtTMeJmhD8WdqooUHWqttdASDpwB0DdrXfXWkRA@mail.gmail.com>
+ <20110729071742.GB24030@tarshish>
+From: Javier Cardona <javier@cozybit.com>
+Date: Wed, 3 Aug 2011 09:34:46 -0700
+Message-ID: <CAPjQAd8gHCZTcG-Ejd7PyHWEE3aZLWQ_KW007PSZB0R2UAS+0w@mail.gmail.com> (sfid-20110803_184108_943726_B78F797E)
+Subject: Re: Mesh HWMP: PREQ node queue full
+To: Baruch Siach <baruch@tkos.co.il>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/29/2011 03:23 PM, Jouni Malinen wrote:
-> --- a/drivers/net/wireless/ath/ath6kl/wmi.h
-> +++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-> @@ -1804,6 +1804,21 @@ struct wmi_tx_complete_event {
->  
->  /* Used with WMI_AP_SET_NUM_STA_CMDID */
->  
-> +/*
-> + * Used with WMI_AP_SET_MLME_CMDID
-> + */
-> +struct wmi_ap_set_mlme_cmd {
-> +	u8 mac[ETH_ALEN];
-> +	u16 reason;		/* 802.11 reason code */
-> +	u8 cmd;			/* operation to perform */
-> +/* MLME Commands */
-> +#define WMI_AP_MLME_ASSOC       1   /* associate station */
-> +#define WMI_AP_DISASSOC         2   /* disassociate station */
-> +#define WMI_AP_DEAUTH           3   /* deauthenticate station */
-> +#define WMI_AP_MLME_AUTHORIZE   4   /* authorize station */
-> +#define WMI_AP_MLME_UNAUTHORIZE 5   /* unauthorize station */
-> +} __packed;
+On Fri, Jul 29, 2011 at 12:17 AM, Baruch Siach <baruch@tkos.co.il> wrote:
+> Hi Javier,
+>
+> On Thu, Jul 28, 2011 at 11:47:44AM -0700, Javier Cardona wrote:
+>> Thanks for reporting.  Is 02:92:ca:39:48:72 the address of the mesh
+>> gate or the address of the external proxied node?
+>
+> This is the MAC address of the mesh gate (i.e. the other AP).
 
-Needs an endian annotation for u16. Also defines inside a struct are
-IMHO a bit awkward.
+We'll look into it.
 
-Kalle
+> What is "external proxied node"?
+
+The node outside the mesh you were trying to reach.
+
+Javier
+
+> baruch
+>
+>> On Wed, Jul 27, 2011 at 11:51 PM, Baruch Siach <baruch@tkos.co.il> wrote:
+>> > Hi linux-wireless list,
+>> >
+>> > I'm testing the mesh capabilities (specifically, MPP) of the latest kernel
+>> > (3.0). My driver is ath9k on AR9390 chip. My two APs are configured
+>> > identically as follows:
+>> >
+>> > ----- mesh.sh start
+>> > #!/bin/sh
+>> >
+>> > iw dev wlan1 interface add mesh0 type mp mesh_id wavmesh
+>> > ip link set mesh0 addr $(cat /etc/network/mesh0.mac)
+>> >
+>> > brctl addbr br0
+>> > brctl addif br0 eth0
+>> > brctl addif br0 mesh0
+>> >
+>> > ifconfig mesh0 down up
+>> > ifconfig eth0 0.0.0.0
+>> > ifconfig br0 up
+>> > ----- mesh.sh end
+>> >
+>> > When transferring traffic from a machine behind one eth0 to a machine behind
+>> > the other eth0, I see the following on the console (of both APs, only
+>> > different MACs):
+>> >
+>> > Mesh HWMP: sending PREP to 02:92:ca:39:48:72
+>> > Mesh HWMP: sending PREQ to 02:92:ca:39:48:72
+>> > Mesh HWMP: received PREP from 02:92:ca:39:48:72
+>> > Mesh HWMP: received PREQ from 02:92:ca:39:48:72
+>> > Mesh HWMP: PREQ is for us
+>> > Mesh HWMP: replying to the PREQ
+>> > Mesh HWMP: sending PREP to 02:92:ca:39:48:72
+>> > mesh_queue_preq: 40 callbacks suppressed
+>> > Mesh HWMP: PREQ node queue full
+>> > Mesh HWMP: PREQ node queue full
+>> > Mesh HWMP: PREQ node queue full
+>> > Mesh HWMP: PREQ node queue full
+>> > Mesh HWMP: PREQ node queue full
+>> > Mesh HWMP: PREQ node queue full
+>> > Mesh HWMP: PREQ node queue full
+>> > Mesh HWMP: PREQ node queue full
+>> > Mesh HWMP: PREQ node queue full
+>> > Mesh HWMP: PREQ node queue full
+>> >
+>> > Any suggestion?
+>> >
+>> > baruch
+>
+> --
+>                                                     ~. .~   Tk Open Systems
+> =}------------------------------------------------ooO--U--Ooo------------{=
+>   - baruch@tkos.co.il - tel: +972.2.679.5364, http://www.tkos.co.il -
+>
+
+
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
