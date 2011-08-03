@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54931 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750773Ab1H0HEo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Aug 2011 03:04:44 -0400
-Message-ID: <4E589704.3090807@openwrt.org> (sfid-20110827_090455_656197_1A0C06C2)
-Date: Sat, 27 Aug 2011 09:04:36 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33512 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753151Ab1HCOCg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2011 10:02:36 -0400
+Date: Wed, 3 Aug 2011 09:48:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH v2] mwifiex: remove remaining wext usages
+Message-ID: <20110803134815.GA30439@tuxdriver.com> (sfid-20110803_160240_191640_46DB6E04)
+References: <1311305158-15534-1-git-send-email-bzhao@marvell.com>
+ <477F20668A386D41ADCC57781B1F704307FFCC682E@SC-VEXCH1.marvell.com>
 MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k_hw: Set default slottime as 9us
-References: <1314424379-1206-1-git-send-email-rmanohar@qca.qualcomm.com> <4E588E3B.9000007@openwrt.org> <20110827065256.GA3082@vmraj-lnx.users.atheros.com>
-In-Reply-To: <20110827065256.GA3082@vmraj-lnx.users.atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <477F20668A386D41ADCC57781B1F704307FFCC682E@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-08-27 8:52 AM, Rajkumar Manoharan wrote:
-> On Sat, Aug 27, 2011 at 08:27:07AM +0200, Felix Fietkau wrote:
->>  On 2011-08-27 7:52 AM, Rajkumar Manoharan wrote:
->>  >Initialize 9us slot time as that is what is used mostly
->>  >(for non-ERP cases) and also to be in sync with initvals.
->>  >
->>  >Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
->>  Why does it matter, mac80211 tells the driver to reconfigure it
->>  anyway. Also, why use the stupid ATH9K_SLOT_TIME_* enums? I think we
->>  should simply remove those.
->>
-> In most of the case, mac80211 set as 9us and also initval uses 9us.
-> The what is the problem of setting 9us as default. If you want to
-> remove ATH9K_SLOT_TIME_* enums, ath9k should not set slottime till
-> it got configured.
-I don't see a problem with the change aside from the fact that it should 
-not make any difference at all, so I don't really see any point to it.
+On Tue, Aug 02, 2011 at 02:37:30PM -0700, Bing Zhao wrote:
+> Hi John,
+> 
+> > Subject: [PATCH v2] mwifiex: remove remaining wext usages
+> > 
+> > replace IW_MAX_AP & IW_CUSTOM_MAX with local definitions
+> > and remove usage of struct iw_statistics.
+> 
+> Could you please take this patch if it looks OK?
 
-- Felix
+There merge window is still open -- I'm not merging anything but fixes
+right now.  I'll be happy to take this one when I start merging to
+wireless-next again, after the release of 3.1-rc1.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
