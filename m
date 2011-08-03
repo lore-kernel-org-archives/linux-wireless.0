@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:48375 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753085Ab1HYBld (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 21:41:33 -0400
-Received: by mail-yw0-f46.google.com with SMTP id 7so1335324ywf.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 18:41:33 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH 8/9] mac80211: Don't take the mesh path resize lock when deleting an mpath
-Date: Wed, 24 Aug 2011 18:40:51 -0700
-Message-Id: <1314236452-7226-9-git-send-email-thomas@cozybit.com> (sfid-20110825_034135_559740_5A0AB59C)
-In-Reply-To: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
-References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
+Received: from lucidpixels.com ([72.73.18.11]:40369 "EHLO lucidpixels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753195Ab1HCScd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2011 14:32:33 -0400
+Date: Wed, 3 Aug 2011 14:32:32 -0400 (EDT)
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+cc: Andreas Hartmann <andihartmann@01019freenet.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Alan Piszcz <ap@solarrain.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
+In-Reply-To: <alpine.DEB.2.02.1108031339280.9421@p34.internal.lan>
+Message-ID: <alpine.DEB.2.02.1108031351300.9421@p34.internal.lan> (sfid-20110803_203237_803531_87CEA1CE)
+References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan> <4E318BD0.40202@lwfinger.net> <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan> <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan>
+ <alpine.DEB.2.02.1107301031560.4925@p34.internal.lan> <4E341DC4.9010107@01019freenet.de> <alpine.DEB.2.02.1107301305590.4925@p34.internal.lan> <20110803160050.GA18882@redhat.com> <alpine.DEB.2.02.1108031328030.9421@p34.internal.lan>
+ <alpine.DEB.2.02.1108031339280.9421@p34.internal.lan>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
 
-The mesh path resize lock is only needed to protect addition or removal
-of buckets on the hash table, not nodes on those buckets.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_pathtbl.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+On Wed, 3 Aug 2011, Justin Piszcz wrote:
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 9d9e1ac..4bfbe31 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -905,8 +905,8 @@ int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata)
- 	int hash_idx;
- 	int err = 0;
- 
--	read_lock_bh(&pathtbl_resize_lock);
--	tbl = resize_dereference_mesh_paths();
-+	rcu_read_lock();
-+	tbl = rcu_dereference(mesh_paths);
- 	hash_idx = mesh_table_hash(addr, sdata, tbl);
- 	bucket = &tbl->hash_buckets[hash_idx];
- 
-@@ -924,7 +924,7 @@ int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata)
- enddel:
- 	mesh_paths_generation++;
- 	spin_unlock_bh(&tbl->hashwlock[hash_idx]);
--	read_unlock_bh(&pathtbl_resize_lock);
-+	rcu_read_unlock();
- 	return err;
- }
- 
--- 
-1.7.4.1
+>
+>
+> On Wed, 3 Aug 2011, Justin Piszcz wrote:
+>
 
+For the rt2800usb driver:
+
+It has not crashed in 1hr with the 3.0 kernel:
+
+[ 1027.102856] phy0 -> rt2800_txdone: Error - Data pending
+[ 1027.110496] phy0 -> rt2800_txdone: Error - Data pending
+[ 1027.114880] phy0 -> rt2800_txdone: Error - Data pending
+[ 1027.117616] phy0 -> rt2800_txdone: Error - Data pending
+[ 1027.120272] phy0 -> rt2800_txdone: Error - Data pending
+[ 1027.143371] phy0 -> rt2800_txdone: Error - Data pending
+[ 1027.147252] phy0 -> rt2800_txdone: Error - Data pending
+[ 1027.150505] phy0 -> rt2800_txdone: Error - Data pending
+[ 1027.153541] phy0 -> rt2800_txdone: Error - Data pending
+[ 1027.156118] phy0 -> rt2800_txdone: Error - Data pending
+[ 1027.167250] phy0 -> rt2800_txdone: Error - Data pending
+[ 1089.588039] phy0 -> rt2800_txdone: Error - Data pending
+[ 1089.623248] phy0 -> rt2800_txdone: Error - Data pending
+[ 1089.626370] phy0 -> rt2800_txdone: Error - Data pending
+
+Will reboot again and see if it auto-loads (or if a manual modprobe is 
+necessary)..
+
+Justin.
