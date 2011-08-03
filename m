@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54094 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752417Ab1HSBZ1 (ORCPT
+Received: from nm7.bullet.mail.ukl.yahoo.com ([217.146.182.248]:47728 "HELO
+	nm7.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752825Ab1HCIQV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Aug 2011 21:25:27 -0400
-To: Pavel Ivanov <paivanof@gmail.com>
-Subject: Re: [PATCH] ath9k: make driver usable standalone
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- format=flowed
-Date: Fri, 19 Aug 2011 03:25:18 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dan Williams <dcbw@redhat.com>,
-	=?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@venema.h4ckr.net>,
-	<linux-kernel@vger.kernel.org>
-In-Reply-To: <CAG1a4ruH=ctPfAT0-axtckHds=SbjUWRV0Zb=ZTSM+QxV7PZ-w@mail.gmail.com>
- (sfid-20110819_005700_042279_0AD5140A)
-References: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com>
- <CA+XFjipM1Qup3bcJos_ikwzoaWoa3GdYqK0WBUqEHBNR6V6LfQ@mail.gmail.com>
- <CAG1a4rsyfPrrrf-mzt3HAM6YHHjaHTcd2rbtYiwqLkUCP=j8pQ@mail.gmail.com>
- <CA+XFjipsVukKYchfmDv48PAKsD2PUxT+7E8epRuKFynGwk=Bag@mail.gmail.com>
- <CAG1a4rvQTA7UgxLOxu_cC88grjHttyjPD_4kyDhb7Y9FcBBkLQ@mail.gmail.com>
- <1313695217.23920.4.camel@dcbw.foobar.com>
- <CAG1a4rvqdB8y9ARQ=FckArm3UVG7=LFqF25kqYUYL0Uw7QNV8g@mail.gmail.com>
- <1313699724.23920.18.camel@dcbw.foobar.com>
- <CAG1a4ruH=ctPfAT0-axtckHds=SbjUWRV0Zb=ZTSM+QxV7PZ-w@mail.gmail.com>
- (sfid-20110819_005700_042279_0AD5140A)
-Message-ID: <e77f44f3b510e72d19e4130c85d3dc11@secure.sipsolutions.net>
+	Wed, 3 Aug 2011 04:16:21 -0400
+From: Marek Lindner <lindner_marek@yahoo.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Marek Lindner <lindner_marek@yahoo.de>
+Subject: [PATCH] ath9k: remove eeprom txgain override for minor version < 19
+Date: Wed,  3 Aug 2011 10:16:12 +0200
+Message-Id: <1312359372-5586-1-git-send-email-lindner_marek@yahoo.de> (sfid-20110803_101626_367539_9B49D579)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 18 Aug 2011 18:56:11 -0400, Pavel Ivanov wrote:
->> Or, since I'm a NetworkManager developer, is there something that 
->> you're
->> not sure how to make NM do, or are you just looking to experiment?
->
-> I want to make the wireless work when kernel is compiled without
-> WIRELESS_EXT. Last time I tried it Ubuntu (I guess I should say
-> NetworkManager) wasn't able to discover any wireless networks in our
-> area and wasn't able to connect to my default network. Was it 
-> supposed
-> to do that?
+ath9k_hw_4k_get_eeprom() overrides the eeprom value for txgain if the
+minor version is not 19 or above with a value of 0.
+ar9002_hw_init_mode_gain_regs() relies on this information to
+determine whether this is a high power wifi card or not. The override
+caused the driver to always use the 'normal' power tables even for
+high power devices if their minor version was not high enough. Thus
+leading to reduced power output.
 
-*sigh*
+Signed-off-by: Marek Lindner <lindner_marek@yahoo.de>
+---
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
 
-Please quote properly and delete stuff you're not replying to.
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index 5b1e894..10f3072 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -237,10 +237,7 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
+ 	case EEP_ANT_DIV_CTL1:
+ 		return pModal->antdiv_ctl1;
+ 	case EEP_TXGAIN_TYPE:
+-		if (ver_minor >= AR5416_EEP_MINOR_VER_19)
+-			return pBase->txGainType;
+-		else
+-			return AR5416_EEP_TXGAIN_ORIGINAL;
++		return pBase->txGainType;
+ 	default:
+ 		return 0;
+ 	}
+-- 
+1.7.5.3
 
-Also, have you discovered CONFIG_CFG80211_WEXT yet? It's even "default 
-y", so how did you manage to mess it up?
-
-johannes
