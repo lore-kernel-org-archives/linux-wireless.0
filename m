@@ -1,30 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36601 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753221Ab1HYPgH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 11:36:07 -0400
-Message-ID: <4E566BE3.3080907@openwrt.org> (sfid-20110825_173620_102133_30A91475)
-Date: Thu, 25 Aug 2011 17:36:03 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:52776 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753747Ab1HDUIC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Aug 2011 16:08:02 -0400
+Received: by yia27 with SMTP id 27so1305694yia.19
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Aug 2011 13:08:02 -0700 (PDT)
+Message-ID: <4E3AFC1F.6040708@lwfinger.net> (sfid-20110804_220807_470114_57C0665D)
+Date: Thu, 04 Aug 2011 15:07:59 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] ath9k_hw: Fix slottime with coverage class
-References: <1314283522-6143-1-git-send-email-rmanohar@qca.qualcomm.com> <1314283522-6143-2-git-send-email-rmanohar@qca.qualcomm.com>
-In-Reply-To: <1314283522-6143-2-git-send-email-rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Anthony Bourguignon <contact+kernel@toniob.net>
+CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: rt2x00: Add rt2870 device id
+References: <1312487142.4832.8.camel@moss>
+In-Reply-To: <1312487142.4832.8.camel@moss>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-08-25 4:45 PM, Rajkumar Manoharan wrote:
-> The commit b6ba41bb27eb9810d54e2301355ce56fd0e94a1a updates
-> acktimeout wihout updating slottime when coverage class is defined
-> as per IEEE 802.11-2007 17.3.8.6.
+On 08/04/2011 02:45 PM, Anthony Bourguignon wrote:
+> Hello,
 >
-> Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
-I intentionally left the coverage class out of the hw slot time setting, 
-because increasing slot time too much causes severe throughput issues. 
-I've observed this even with relatively minor coverage class settings 
-(e.g. for 2 km) on AR9160 and AR9280. I haven't tested AR9380 though.
+> Dvico ships WiFi usb keys with some of their tvix hardware. The vendor
+> id is related to dvico and not known from the rt2800usb driver. The
+> chipset is found to be a rt2870. You'll find enclosed a patch to handle
+> theses usb keys. I've tested it on a vanilla 3.0 kernel and the key is
+> recognize and working perfectly.
 
-- Felix
+Please read and follow the instructions in Documentation/SubmittingPatches. 
+There are several things wrong here including no "Signed-off-by" line and the 
+patch should be in-line, not as an attachment.
+
+For wireless devices, the patch should be sent to John Linville 
+<linville@tuxdriver.com> with the mailing lists as Cc.
+
+Thanks for posting this info and good luck with the patch preparation.
+
+Larry
