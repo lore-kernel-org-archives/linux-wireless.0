@@ -1,40 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:36362 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753421Ab1HQOFM (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:10292 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755042Ab1HDRpC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2011 10:05:12 -0400
-Received: by mail-pz0-f47.google.com with SMTP id 2so1601250pzk.34
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2011 07:05:10 -0700 (PDT)
-Subject: Re: [PATCH v3 02/40] wl12xx: Use a single fw for both STA and AP
- roles
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1313567149-26475-1-git-send-email-eliad@wizery.com>
-References: <1313567149-26475-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 17 Aug 2011 07:05:08 -0700
-Message-ID: <1313589908.2920.3.camel@cambuci> (sfid-20110817_160516_263865_9E8AF977)
-Mime-Version: 1.0
+	Thu, 4 Aug 2011 13:45:02 -0400
+Date: Thu, 4 Aug 2011 23:15:20 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 11/13] ath9k_hw: Disable Walsh spatial spreading for 2
+ chains
+Message-ID: <20110804174519.GB26255@vmraj-lnx.users.atheros.com> (sfid-20110804_194512_304605_014001BF)
+References: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <1311941300-2590-11-git-send-email-rmanohar@qca.qualcomm.com>
+ <4E32AA85.1030204@openwrt.org>
+ <20110802094610.GA1235@vmraj-lnx.users.atheros.com>
+ <4E3834CC.8010001@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4E3834CC.8010001@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-08-17 at 10:45 +0300, Eliad Peller wrote:
-> From: Arik Nemtsov <arik@wizery.com>
-> 
-> Firmware >= 6/7.3.0.0.75 (wl127x/wl128x) supports both
-> STA and AP roles.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
-> v3: s/WL1271/WL127X in spi.c
+On Tue, Aug 02, 2011 at 07:33:00PM +0200, Felix Fietkau wrote:
+> On 2011-08-02 11:46 AM, Rajkumar Manoharan wrote:
+> >On Fri, Jul 29, 2011 at 02:41:41PM +0200, Felix Fietkau wrote:
+> >> On 2011-07-29 2:08 PM, Rajkumar Manoharan wrote:
+> >> >Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+> >> >---
+> >> >   .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
+> >> >   1 files changed, 1 insertions(+), 1 deletions(-)
+> >> >
+> >> >diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+> >> >index 2339728..28b44b0 100644
+> >> >--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+> >> >+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+> >> >@@ -636,7 +636,7 @@ static const u32 ar9300_2p2_baseband_postamble[][5] = {
+> >> >   	{0x00009e44, 0x02321e27, 0x02321e27, 0x02291e27, 0x02291e27},
+> >> >   	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
+> >> >   	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
+> >> >-	{0x0000a204, 0x000037c0, 0x000037c4, 0x000037c4, 0x000037c0},
+> >> >+	{0x0000a204, 0x000036c0, 0x000036c4, 0x000036c4, 0x000036c0},
+> >> >   	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
+> >> >   	{0x0000a22c, 0x01026a2f, 0x01026a2f, 0x01026a2f, 0x01026a2f},
+> >> >   	{0x0000a230, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b},
+> >> That patch makes no sense, it disables Walsh spatial spreading in
+> >> the initvals, but the driver still enables it in
+> >> ar9003_hw_set_channel_regs.
+> >> By the way, why should we disable Walsh spatial spreading?
+> >>
+> >The initval table is filled with default values recommended in register spec.
+> >This patch does that. And these default value can be altered during chip bringup
+> >based on chip family.
+> OK, then the patch description should probably mention that this
+> change has no effect and does not actually disable this feature in
+> general, since the driver unconditionally enables it elsewhere.
+>
+Felix,
 
-Ah, nice that you fixed this.  I had actually seen this problem (I
-always compile the SPI module) and I had already fixed it in my tree.
+The Walsh bit is disabled for regulatory consideration. 
 
--- 
-Cheers,
-Luca.
+In the FCC rulings, only transmissions that are completely non-coherent, are
+allowed to waive the array gain contribution to EIRP for multi-transmit configurations.
+The use of 2-stream with 2 transmit and use of 3-steam with 3 transmit qualifies
+for this spatial multiplexing MIMO classification as long as the streams are
+directly mapped to each radio (not Walsh spread prior to splitting to multiple radios)
 
+And also Walsh has to be disabled in ar9003_hw_set_channel_regs.
+Thanks for finding out. Will send followup patch.
+
+--
+Rajkumar
