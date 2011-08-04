@@ -1,64 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout7.freenet.de ([195.4.92.97]:50794 "EHLO mout7.freenet.de"
+Received: from mx1.redhat.com ([209.132.183.28]:32138 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752824Ab1HIKIY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 06:08:24 -0400
-Message-ID: <4E410718.8090205@01019freenet.de> (sfid-20110809_120828_064918_CA0A2963)
-Date: Tue, 09 Aug 2011 12:08:24 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+	id S1754865Ab1HDPJ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Aug 2011 11:09:26 -0400
+Date: Thu, 4 Aug 2011 17:09:31 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alan Piszcz <ap@solarrain.com>
+Subject: Re: Linux Wireless USB-Stick Question
+Message-ID: <20110804150930.GA4202@redhat.com> (sfid-20110804_170946_141173_0C6315B8)
+References: <alpine.DEB.2.02.1108031550100.4278@p34.internal.lan>
 MIME-Version: 1.0
-To: Dane Shih <daneshih1981@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: AR9285 Wireless 80211n mode get only 25Mbit with Linux 2.6.38.8
- and compat-wireless-2.6.38.2-2
-References: <CAH-LUqry4TKAvnojAo39QfT-Wy_BN94SYJEiCCRX4hrb=RcfwQ@mail.gmail.com> <4E40D58A.4000901@01019freenet.de> <CAH-LUqojjVCqbg_rQYNCU6Ge2D2ekNWoq03MDKKidqwrNqod0g@mail.gmail.com>
-In-Reply-To: <CAH-LUqojjVCqbg_rQYNCU6Ge2D2ekNWoq03MDKKidqwrNqod0g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.02.1108031550100.4278@p34.internal.lan>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dane Shih schrieb:
-> thanks
-> kernel upgrade to 3.0
-> and install compat-wireless_3.0_stable_releases ath9k  driver
-
-Well, I'm using the original drivers from 3.0.
-
-> [  4] local 192.168.100.254 port 5001 connected with 192.168.100.47 port 49230
-> [ ID] Interval       Transfer     Bandwidth
-> [  4]  0.0- 2.1 sec  10.0 MBytes  40.5 Mbits/sec
-> [  5] local 192.168.100.254 port 5001 connected with 192.168.100.47 port 49231
-> [  5]  0.0- 6.4 sec  30.0 MBytes  39.2 Mbits/sec
-
-Where does this output come from? I don't know it. You could use netperf
-for testing the bandwith.
-
-#!/bin/sh
-
-dest="your_srv" # set the servername
-
-while true ; do
-netperf -t TCP_MAERTS -H $dest
-netperf -t TCP_STREAM -H $dest
-netperf -t TCP_SENDFILE -H $dest
-done
-
-Start netserver on the server side before you start this script (script
-can be stopped with CTRL-C).
-
-I'm using hostapd from hostapd git from 21.04.2011.
-
+On Wed, Aug 03, 2011 at 03:53:51PM -0400, Justin Piszcz wrote:
+> Under Windows, you can achieve 10-15MiB/s..
 > 
-> 80211n  maxinum throughput 40Mbit
+> Under Linux, even with 150mbps USB wireless adapters, the max never
+> appears to go above > 3-4MiB/s, to work around this, order more
+> USB-wifi ticks and run them in parallel far away from each other
+> with USB
+> extenders:
 > 
-> what i should be check
+> box1:
+> -------------
+> wlan0     IEEE 802.11bg  ESSID:"hidden"
+>           Bit Rate=54 Mb/s   Tx-Power=20 dBm
+> wlan1     IEEE 802.11bgn  ESSID:"hidden"
+>           Bit Rate=58.5 Mb/s   Tx-Power=20 dBm
+> wlan2     IEEE 802.11bgn  ESSID:"hidden"
+>           Bit Rate=39 Mb/s   Tx-Power=20 dBm
 > 
-> another question
-> wireless client also get  100 MBit/s
+> box2:
+> -------------
+> wlan0     IEEE 802.11bgn  ESSID:"hidden"
+>           Bit Rate=58.5 Mb/s   Tx-Power=20 dBm
+> wlan1     IEEE 802.11bgn  ESSID:"hidden"
+>           Bit Rate=52 Mb/s   Tx-Power=20 dBm
+> wlan2     IEEE 802.11bgn  ESSID:"hidden"
+>           Bit Rate=52 Mb/s   Tx-Power=20 dBm
 > 
-> thanks
+> But I was curious if anyone had achieved > 10 MiB/s with any
+> wireless adapter with Linux?
 
-Sorry - I don't understand you :-(.
+Well, if your AP which you are connected from Windows host
+has linux based firmware (what is most probable), then linux
+is capable to transfer also at 10-15 MiB/s :-)
 
+But yes, I never achieved more than 10MB/s on linux station.
+Best results I have is about 7.5MB/s on 2.4 GHz networks and
+10MB/s on 5GHz .
 
-Andreas
+Stanislaw
+
