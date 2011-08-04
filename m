@@ -1,442 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3202 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753044Ab1HHN7a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:30 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 71/82] staging: brcm80211: remove dead client
- interrupt code from brcmfmac
-Date: Mon, 8 Aug 2011 15:58:55 +0200
-Message-ID: <1312811946-16713-72-git-send-email-arend@broadcom.com> (sfid-20110808_160120_159082_50CEAACB)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:45345 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750849Ab1HDU4M convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Aug 2011 16:56:12 -0400
+Received: by fxh19 with SMTP id 19so2110944fxh.19
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Aug 2011 13:56:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CALSq=BZ2CoF=+Zw-si5oc8No9MLTP1YoZCzfoT9TX1XEaLnq1A@mail.gmail.com>
+References: <1312228017-12061-1-git-send-email-wey-yi.w.guy@intel.com>
+ <CALSq=BYkKhJN=GU0RUJ2viibsy5yG78x-D-td0zP+rqWCy=AiQ@mail.gmail.com>
+ <4825B8A2C4E264489E57869F0DCFB22344563F4ABE@hasmsx502.ger.corp.intel.com> <CALSq=BZ2CoF=+Zw-si5oc8No9MLTP1YoZCzfoT9TX1XEaLnq1A@mail.gmail.com>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Thu, 4 Aug 2011 13:55:51 -0700
+Message-ID: <CALSq=BYY8-fAqATwJaFNvzwpSo4WWXbH=pRXn0oknqKXH=4X2A@mail.gmail.com> (sfid-20110804_225616_431111_1FADD567)
+Subject: Re: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv pointer
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+I may have spoken too soon. I didn't try until today, and I get the
+following on remove module:
 
-In fullmac, brcmf_sdcard_intr_enable/disable is a legacy layer and
-doesn't really enable/disable any interrupt. This patch removes the
-corresponding code.
-
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |   10 --
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |  109 +--------------------
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |   53 +----------
- drivers/staging/brcm80211/brcmfmac/sdio_host.h    |   20 ----
- 4 files changed, 3 insertions(+), 189 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-index 6cabda5..3a6c015 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-@@ -53,16 +53,6 @@ brcmf_sdcard_iovar_op(struct brcmf_sdio_dev *sdiodev, const char *name,
- 				    len, set);
- }
- 
--int brcmf_sdcard_intr_enable(struct brcmf_sdio_dev *sdiodev)
--{
--	return brcmf_sdioh_interrupt_set(sdiodev->sdioh, true);
--}
--
--int brcmf_sdcard_intr_disable(struct brcmf_sdio_dev *sdiodev)
--{
--	return brcmf_sdioh_interrupt_set(sdiodev->sdioh, false);
--}
--
- int brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev,
- 			  void (*fn)(void *), void *argh)
- {
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index edcd98e..db43b09 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -34,8 +34,6 @@
- #include "dhd_dbg.h"
- #include "wl_cfg80211.h"
- 
--#define CLIENT_INTR		0x100	/* Get rid of this! */
--
- #if !defined(SDIO_VENDOR_ID_BROADCOM)
- #define SDIO_VENDOR_ID_BROADCOM		0x02d0
- #endif				/* !defined(SDIO_VENDOR_ID_BROADCOM) */
-@@ -46,11 +44,6 @@
- #define SDIO_DEVICE_ID_BROADCOM_4329	0x4329
- #endif		/* !defined(SDIO_DEVICE_ID_BROADCOM_4329) */
- 
--struct sdos_info {
--	struct sdioh_info *sd;
--	spinlock_t lock;
--};
--
- static void brcmf_sdioh_irqhandler(struct sdio_func *func);
- static void brcmf_sdioh_irqhandler_f2(struct sdio_func *func);
- static int brcmf_sdioh_get_cisaddr(struct sdioh_info *sd, u32 regaddr);
-@@ -174,14 +167,8 @@ struct sdioh_info *brcmf_sdioh_attach(void *bar0)
- 		BRCMF_ERROR(("sdioh_attach: out of memory\n"));
- 		return NULL;
- 	}
--	if (brcmf_sdioh_osinit(sd) != 0) {
--		BRCMF_ERROR(("%s:sdioh_sdmmc_osinit() failed\n", __func__));
--		kfree(sd);
--		return NULL;
--	}
- 
- 	sd->num_funcs = 2;
--	sd->use_client_ints = true;
- 	sd->client_block_size[0] = 64;
- 
- 	gInstance->sd = sd;
-@@ -234,9 +221,6 @@ extern int brcmf_sdioh_detach(struct sdioh_info *sd)
- 		sdio_disable_func(gInstance->func[1]);
- 		sdio_release_host(gInstance->func[1]);
- 
--		/* deregister irq */
--		brcmf_sdioh_osfree(sd);
--
- 		kfree(sd);
- 	}
- 	return 0;
-@@ -304,7 +288,6 @@ extern int brcmf_sdioh_interrupt_deregister(struct sdioh_info *sd)
- enum {
- 	IOV_MSGLEVEL = 1,
- 	IOV_BLOCKSIZE,
--	IOV_USEINTS,
- 	IOV_NUMINTS,
- 	IOV_DEVREG,
- 	IOV_HCIREGS,
-@@ -314,7 +297,6 @@ enum {
- const struct brcmu_iovar sdioh_iovars[] = {
- 	{"sd_blocksize", IOV_BLOCKSIZE, 0, IOVT_UINT32, 0},/* ((fn << 16) |
- 								 size) */
--	{"sd_ints", IOV_USEINTS, 0, IOVT_BOOL, 0},
- 	{"sd_numints", IOV_NUMINTS, 0, IOVT_UINT32, 0},
- 	{"sd_devreg", IOV_DEVREG, 0, IOVT_BUFFER, sizeof(struct brcmf_sdreg)}
- 	,
-@@ -429,20 +411,6 @@ brcmf_sdioh_iovar_op(struct sdioh_info *si, const char *name,
- 		memcpy(arg, &int_val, val_size);
- 		break;
- 
--	case IOV_GVAL(IOV_USEINTS):
--		int_val = (s32) si->use_client_ints;
--		memcpy(arg, &int_val, val_size);
--		break;
--
--	case IOV_SVAL(IOV_USEINTS):
--		si->use_client_ints = (bool) int_val;
--		if (si->use_client_ints)
--			si->intmask |= CLIENT_INTR;
--		else
--			si->intmask &= ~CLIENT_INTR;
--
--		break;
--
- 	case IOV_GVAL(IOV_NUMINTS):
- 		int_val = (s32) si->intrcount;
- 		memcpy(arg, &int_val, val_size);
-@@ -881,20 +849,6 @@ extern int brcmf_sdioh_abort(struct sdioh_info *sd, uint func)
- 	return 0;
- }
- 
--/* Disable device interrupt */
--void brcmf_sdioh_dev_intr_off(struct sdioh_info *sd)
--{
--	BRCMF_TRACE(("%s: %d\n", __func__, sd->use_client_ints));
--	sd->intmask &= ~CLIENT_INTR;
--}
--
--/* Enable device interrupt */
--void brcmf_sdioh_dev_intr_on(struct sdioh_info *sd)
--{
--	BRCMF_TRACE(("%s: %d\n", __func__, sd->use_client_ints));
--	sd->intmask |= CLIENT_INTR;
--}
--
- /* Read client card reg */
- int
- brcmf_sdioh_card_regread(struct sdioh_info *sd, int func, u32 regaddr,
-@@ -929,15 +883,8 @@ static void brcmf_sdioh_irqhandler(struct sdio_func *func)
- 
- 	sdio_release_host(gInstance->func[0]);
- 
--	if (sd->use_client_ints) {
--		sd->intrcount++;
--		(sd->intr_handler) (sd->intr_handler_arg);
--	} else {
--		BRCMF_ERROR(("brcmf: ***IRQHandler\n"));
--
--		BRCMF_ERROR(("%s: Not ready for intr: enabled %d, handler %p\n",
--			__func__, sd->client_intr_enabled, sd->intr_handler));
--	}
-+	sd->intrcount++;
-+	(sd->intr_handler) (sd->intr_handler_arg);
- 
- 	sdio_claim_host(gInstance->func[0]);
- }
-@@ -1060,58 +1007,6 @@ static int brcmf_sdio_resume(struct device *dev)
- }
- #endif		/* CONFIG_PM_SLEEP */
- 
--int brcmf_sdioh_osinit(struct sdioh_info *sd)
--{
--	struct sdos_info *sdos;
--
--	sdos = kmalloc(sizeof(struct sdos_info), GFP_ATOMIC);
--	sd->sdos_info = (void *)sdos;
--	if (sdos == NULL)
--		return -ENOMEM;
--
--	sdos->sd = sd;
--	spin_lock_init(&sdos->lock);
--	return 0;
--}
--
--void brcmf_sdioh_osfree(struct sdioh_info *sd)
--{
--	struct sdos_info *sdos;
--
--	sdos = (struct sdos_info *)sd->sdos_info;
--	kfree(sdos);
--}
--
--/* Interrupt enable/disable */
--int brcmf_sdioh_interrupt_set(struct sdioh_info *sd, bool enable)
--{
--	unsigned long flags;
--	struct sdos_info *sdos;
--
--	BRCMF_TRACE(("%s: %s\n", __func__, enable ? "Enabling" : "Disabling"));
--
--	sdos = (struct sdos_info *)sd->sdos_info;
--
--	if (enable && !(sd->intr_handler && sd->intr_handler_arg)) {
--		BRCMF_ERROR(("%s: no handler registered, will not enable\n",
--			__func__));
--		return -EINVAL;
--	}
--
--	/* Ensure atomicity for enable/disable calls */
--	spin_lock_irqsave(&sdos->lock, flags);
--
--	sd->client_intr_enabled = enable;
--	if (enable)
--		brcmf_sdioh_dev_intr_on(sd);
--	else
--		brcmf_sdioh_dev_intr_off(sd);
--
--	spin_unlock_irqrestore(&sdos->lock, flags);
--
--	return 0;
--}
--
- /*
-  * module init
- */
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 349107c..eb3cf10 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -655,7 +655,6 @@ struct brcmf_bus {
- 	bool intr;		/* Use interrupts */
- 	bool poll;		/* Use polling */
- 	bool ipend;		/* Device interrupt is pending */
--	bool intdis;		/* Interrupts disabled by isr */
- 	uint intrcount;		/* Count of device interrupt callbacks */
- 	uint lastintrs;		/* Count as of last watchdog timer */
- 	uint spurious;		/* Count of spurious interrupts */
-@@ -1272,9 +1271,6 @@ int brcmf_sdbrcm_bussleep(struct brcmf_bus *bus, bool sleep)
- 		if (bus->dpc_sched || bus->rxskip || pktq_len(&bus->txq))
- 			return -EBUSY;
- 
--		/* Disable SDIO interrupts (no longer interested) */
--		brcmf_sdcard_intr_disable(bus->sdiodev);
--
- 		/* Make sure the controller has the bus up */
- 		brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
- 
-@@ -1334,12 +1330,6 @@ int brcmf_sdbrcm_bussleep(struct brcmf_bus *bus, bool sleep)
- 
- 		/* Change state */
- 		bus->sleeping = false;
--
--		/* Enable interrupts again */
--		if (bus->intr && (bus->drvr->busstate == BRCMF_BUS_DATA)) {
--			bus->intdis = false;
--			brcmf_sdcard_intr_enable(bus->sdiodev);
--		}
- 	}
- 
- 	return 0;
-@@ -2612,15 +2602,6 @@ static int brcmf_sdbrcm_doiovar(struct brcmf_bus *bus,
- 
- 	case IOV_SVAL(IOV_INTR):
- 		bus->intr = bool_val;
--		bus->intdis = false;
--		if (bus->drvr->up) {
--			BRCMF_INTR(("%s: %s SDIO interrupts\n", __func__,
--				    bus->intr ? "enable" : "disable"));
--			if (bus->intr)
--				brcmf_sdcard_intr_enable(bus->sdiodev);
--			else
--				brcmf_sdcard_intr_disable(bus->sdiodev);
--		}
- 		break;
- 
- 	case IOV_GVAL(IOV_POLLRATE):
-@@ -3294,7 +3275,6 @@ void brcmf_sdbrcm_bus_stop(struct brcmf_bus *bus, bool enforce_mutex)
- 
- 	/* Turn off the bus (F2), free any pending packets */
- 	BRCMF_INTR(("%s: disable SDIO interrupts\n", __func__));
--	brcmf_sdcard_intr_disable(bus->sdiodev);
- 	brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_0, SDIO_CCCR_IOEx,
- 			 SDIO_FUNC_ENABLE_1, NULL);
- 
-@@ -3411,17 +3391,6 @@ int brcmf_sdbrcm_bus_init(struct brcmf_pub *drvr, bool enforce_mutex)
- 
- 		/* Set bus state according to enable result */
- 		drvr->busstate = BRCMF_BUS_DATA;
--
--		bus->intdis = false;
--		if (bus->intr) {
--			BRCMF_INTR(("%s: enable SDIO device interrupts\n",
--				    __func__));
--			brcmf_sdcard_intr_enable(bus->sdiodev);
--		} else {
--			BRCMF_INTR(("%s: disable SDIO interrupts\n", __func__));
--			brcmf_sdcard_intr_disable(bus->sdiodev);
--		}
--
- 	}
- 
- 	else {
-@@ -4854,17 +4823,6 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_bus *bus)
- 	bus->intstatus = intstatus;
- 
- clkwait:
--	/* Re-enable interrupts to detect new device events (mailbox, rx frame)
--	 * or clock availability.  (Allows tx loop to check ipend if desired.)
--	 * (Unless register access seems hosed, as we may not be able to ACK...)
--	 */
--	if (bus->intr && bus->intdis && !brcmf_sdcard_regfail(bus->sdiodev)) {
--		BRCMF_INTR(("%s: enable SDIO interrupts, rxdone %d"
--			    " framecnt %d\n", __func__, rxdone, framecnt));
--		bus->intdis = false;
--		brcmf_sdcard_intr_enable(bus->sdiodev);
--	}
--
- 	if (DATAOK(bus) && bus->ctrl_frame_stat &&
- 		(bus->clkstate == CLK_AVAIL)) {
- 		int ret, i;
-@@ -4982,14 +4940,9 @@ void brcmf_sdbrcm_isr(void *arg)
- 	}
- 
- 	/* Disable additional interrupts (is this needed now)? */
--	if (bus->intr)
--		BRCMF_INTR(("%s: disable SDIO interrupts\n", __func__));
--	else
-+	if (!bus->intr)
- 		BRCMF_ERROR(("brcmf_sdbrcm_isr() w/o interrupt configured!\n"));
- 
--	brcmf_sdcard_intr_disable(bus->sdiodev);
--	bus->intdis = true;
--
- #if defined(SDIO_ISR_THREAD)
- 	BRCMF_TRACE(("Calling brcmf_sdbrcm_dpc() from %s\n", __func__));
- 	while (brcmf_sdbrcm_dpc(bus))
-@@ -5305,8 +5258,6 @@ extern bool brcmf_sdbrcm_bus_watchdog(struct brcmf_pub *drvr)
- 			if (intstatus) {
- 				bus->pollcnt++;
- 				bus->ipend = true;
--				if (bus->intr)
--					brcmf_sdcard_intr_disable(bus->sdiodev);
- 
- 				bus->dpc_sched = true;
- 				brcmf_sdbrcm_sched_dpc(bus);
-@@ -5555,7 +5506,6 @@ void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
- 	/* Register interrupt callback, but mask it (not operational yet). */
- 	BRCMF_INTR(("%s: disable SDIO interrupts (not interested yet)\n",
- 		    __func__));
--	brcmf_sdcard_intr_disable(bus->sdiodev);
- 	ret = brcmf_sdcard_intr_reg(bus->sdiodev, brcmf_sdbrcm_isr, bus);
- 	if (ret != 0) {
- 		BRCMF_ERROR(("%s: FAILED: sdcard_intr_reg returned %d\n",
-@@ -5804,7 +5754,6 @@ static void brcmf_sdbrcm_release(struct brcmf_bus *bus)
- 
- 	if (bus) {
- 		/* De-register interrupt handler */
--		brcmf_sdcard_intr_disable(bus->sdiodev);
- 		brcmf_sdcard_intr_dereg(bus->sdiodev);
- 
- 		if (bus->drvr) {
-diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-index 3c97af4..4fcba2a 100644
---- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-@@ -124,18 +124,14 @@ struct brcmf_sdreg {
- 
- struct sdioh_info {
- 	struct osl_info *osh;		/* osh handler */
--	bool client_intr_enabled;	/* interrupt connnected flag */
- 	bool intr_handler_valid; /* client driver interrupt handler valid */
- 	void (*intr_handler)(void *);	/* registered interrupt handler */
- 	void *intr_handler_arg;	/* argument to call interrupt handler */
--	u16 intmask;		/* Current active interrupts */
--	void *sdos_info;	/* Pointer to per-OS private data */
- 
- 	uint irq;		/* Client irq */
- 	int intrcount;		/* Client interrupts */
- 	bool sd_blockmode;	/* sd_blockmode == false => 64 Byte Cmd 53s. */
- 	/*  Must be on for sd_multiblock to be effective */
--	bool use_client_ints;	/* If this is false, make sure to restore */
- 	int client_block_size[SDIOD_MAX_IOFUNCS];	/* Blocksize */
- 	u8 num_funcs;	/* Supported funcs on client */
- 	u32 com_cis_ptr;
-@@ -161,10 +157,6 @@ struct brcmf_sdio_dev {
- 	void *bus;
- };
- 
--/* Enable/disable SD interrupt */
--extern int brcmf_sdcard_intr_enable(struct brcmf_sdio_dev *sdiodev);
--extern int brcmf_sdcard_intr_disable(struct brcmf_sdio_dev *sdiodev);
--
- /* Register/deregister device interrupt handler. */
- extern int
- brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev,
-@@ -278,14 +270,6 @@ extern int brcmf_sdio_remove(struct brcmf_sdio_dev *sdiodev);
- /* Function to return current window addr */
- extern u32 brcmf_sdcard_cur_sbwad(struct brcmf_sdio_dev *sdiodev);
- 
--/* Allocate/init/free per-OS private data */
--extern int  brcmf_sdioh_osinit(struct sdioh_info *sd);
--extern void brcmf_sdioh_osfree(struct sdioh_info *sd);
--
--/* Core interrupt enable/disable of device interrupts */
--extern void brcmf_sdioh_dev_intr_on(struct sdioh_info *sd);
--extern void brcmf_sdioh_dev_intr_off(struct sdioh_info *sd);
--
- /* attach, return handler on success, NULL if failed.
-  *  The handler shall be provided by all subsequent calls. No local cache
-  *  cfghdl points to the starting address of pci device mapped memory
-@@ -299,10 +283,6 @@ brcmf_sdioh_interrupt_register(struct sdioh_info *si,
- 
- extern int brcmf_sdioh_interrupt_deregister(struct sdioh_info *si);
- 
--/* enable or disable SD interrupt */
--extern int
--brcmf_sdioh_interrupt_set(struct sdioh_info *si, bool enable_disable);
--
- /* read or write one byte using cmd52 */
- extern int
- brcmf_sdioh_request_byte(struct sdioh_info *si, uint rw, uint fnc, uint addr,
--- 
-1.7.4.1
+Aug  4 13:51:42 testbed11 kernel: [   45.321809] iwlwifi: connector
+callback deregistered
+Aug  4 13:51:42 testbed11 kernel: [   45.550202] *pde = 00000000
+Aug  4 13:51:42 testbed11 kernel: [   45.550249] Modules linked in:
+arc4 iwlagn(-) mac80211 cfg80211 i915 fbcon tileblit font bitblit
+softcursor drm_kms_helper drm i2c_algo_bit cfbcopyarea i2c_core
+intel_agp intel_gtt dcdbas loop video cfbimgblt cfbfillrect agpgart
+evdev sg sr_mod sd_mod cdrom usbhid hid e1000e ahci libahci uhci_hcd
+Aug  4 13:51:42 testbed11 kernel: [   45.550488]
+Aug  4 13:51:42 testbed11 kernel: [   45.550501] Pid: 1022, comm:
+rmmod Tainted: G        W   3.0.0-csitool+ #46 Dell Inc. Inspiron
+530/0RY007
+Aug  4 13:51:42 testbed11 kernel: [   45.550558] EIP:
+0060:[<c032cf08>] EFLAGS: 00010202 CPU: 0
+Aug  4 13:51:42 testbed11 kernel: [   45.550588] EIP is at
+pci_disable_msi+0x18/0x40
+Aug  4 13:51:42 testbed11 kernel: [   45.550613] EAX: 00000001 EBX:
+fddfe000 ECX: 000017db EDX: 000017da
+Aug  4 13:51:42 testbed11 kernel: [   45.550647] ESI: f3ec6350 EDI:
+f3ec6360 EBP: f4201e98 ESP: f4201e94
+Aug  4 13:51:42 testbed11 kernel: [   45.550680]  DS: 007b ES: 007b
+FS: 00d8 GS: 0033 SS: 0068
+Aug  4 13:51:42 testbed11 kernel: [   45.550760]  f3ec6340 f4201eac
+f85036af f4d53460 f4d53400 f4d53518 f4201ecc c0323394
+Aug  4 13:51:42 testbed11 kernel: [   45.550824]  f8516010 f8515fe0
+f4201ecc f4d53460 f8516010 f4d53494 f4201edc c039281b
+Aug  4 13:51:42 testbed11 kernel: [   45.550887]  f4d53460 f8516010
+f4201ef0 c03928f7 00000000 f8516010 c06167a0 f4201f04
+Aug  4 13:51:42 testbed11 kernel: [   45.550973]  [<f85036af>]
+iwl_pci_remove+0x27/0x7f [iwlagn]
+Aug  4 13:51:42 testbed11 kernel: [   45.551005]  [<c0323394>]
+pci_device_remove+0x44/0x100
+Aug  4 13:51:42 testbed11 kernel: [   45.551036]  [<c039281b>]
+__device_release_driver+0x5b/0xb0
+Aug  4 13:51:42 testbed11 kernel: [   45.551066]  [<c03928f7>]
+driver_detach+0x87/0x90
+Aug  4 13:51:42 testbed11 kernel: [   45.551093]  [<c0391b43>]
+bus_remove_driver+0x63/0xa0
+Aug  4 13:51:42 testbed11 kernel: [   45.551121]  [<c0392fa9>]
+driver_unregister+0x49/0x80
+Aug  4 13:51:42 testbed11 kernel: [   45.551150]  [<c0254a04>] ?
+sysfs_remove_file+0x14/0x20
+Aug  4 13:51:42 testbed11 kernel: [   45.551179]  [<c0323672>]
+pci_unregister_driver+0x32/0x80
+Aug  4 13:51:42 testbed11 kernel: [   45.551216]  [<f84f27e2>]
+iwl_pci_unregister_driver+0x12/0x20 [iwlagn]
+Aug  4 13:51:42 testbed11 kernel: [   45.551257]  [<f8503475>]
+iwl_exit+0xd/0x14 [iwlagn]
+Aug  4 13:51:42 testbed11 kernel: [   45.551286]  [<c01752d1>]
+sys_delete_module+0x121/0x1d0
+Aug  4 13:51:42 testbed11 kernel: [   45.551316]  [<c01e2052>] ?
+do_munmap+0x212/0x2a0
+Aug  4 13:51:42 testbed11 kernel: [   45.551344]  [<c04871cc>]
+sysenter_do_call+0x12/0x22
+Aug  4 13:51:42 testbed11 kernel: [   45.551726] ---[ end trace
+cdd7f97709a5fcfb ]---
 
 
+On Mon, Aug 1, 2011 at 11:39 PM, Daniel Halperin
+<dhalperi@cs.washington.edu> wrote:
+>
+> ACK, you're right.
+>
+> 2011/8/1 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
+> >>
+> >> On Mon, Aug 1, 2011 at 12:46 PM, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
+> >> > From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> >> >
+> >> > This bug has been introduced by:
+> >> > d593411084a56124aa9d80aafa15db8463b2d8f7
+> >> > Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> >> > Date:   Mon Jul 11 10:48:51 2011 +0300
+> >> >
+> >> >    iwlagn: simplify the bus architecture
+> >> >
+> >>
+> >> Believe this fix needs to go to 3.0-stable too.
+> >>
+> >
+> > The buggy patch hasn't made it to 3.0. The bug was introduced in 3.1
+> > ---------------------------------------------------------------------
+> > Intel Israel (74) Limited
+> >
+> > This e-mail and any attachments may contain confidential material for
+> > the sole use of the intended recipient(s). Any review or distribution
+> > by others is strictly prohibited. If you are not the intended
+> > recipient, please contact the sender and delete all copies.
+> >
