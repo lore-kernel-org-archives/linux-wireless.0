@@ -1,138 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23946 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750747Ab1HZGxY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 02:53:24 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [RESEND PATCH 00/60] update for 3.2
-Date: Thu, 25 Aug 2011 23:10:32 -0700
-Message-Id: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085328_202960_577402B3)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:35807 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754734Ab1HDRxu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Aug 2011 13:53:50 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v3 11/13] ath9k_hw: Disable Walsh spatial spreading for 2 chains
+Date: Thu, 4 Aug 2011 23:24:07 +0530
+Message-ID: <1312480447-27483-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110804_195358_326113_372C4A42)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We make a lot of changes to separate out the transport layer and bus layer
-We also add a special SKU for 2000 series
+The Walsh bit is disabled for regulatory consideration.
 
-Daniel Halperin (1):
-  iwlagn: fix compile warnings when CONFIG_PM_SLEEP is not set
+As per the FCC rulings, only transmissions that are completely
+non-coherent, are allowed to waive the array gain contribution
+to EIRP for multi-transmit configurations. The use of 2-stream
+with 2 transmit and use of 3-steam with 3 transmit qualifies
+for this spatial multiplexing MIMO classification as long as
+the streams are directly mapped to each radio (not Walsh spread
+prior to splitting to multiple radios)
 
-Emmanuel Grumbach (52):
-  iwlagn: use iwl_get_debug_level instead of iwl_debug_level
-  iwlagn: introduce iwl-shared.h
-  iwlagn: introduce struct iwl-shared - known by all layers
-  iwlagn: debug_level moves to struct iwl_shared
-  iwlagn: hw_params moves to iwl_shared
-  iwlagn: cmd_queue moves to iwl_shared
-  iwlagn: workqueue moves to iwl_shared
-  iwlagn: priv->status moves to iwl_shared
-  iwlagn: priv->lock moves to iwl_shared
-  iwlagn: priv->mutex moves to iwl_shared
-  iwlagn: modify the debug macro to be usable by all the layers
-  iwlagn: add IWL_DEBUG_FW_ERRORS
-  iwlagn: priv->sta_lock moves to iwl_shared
-  iwlagn: bus layer chooses its transport layer
-  iwlagn: add comments to iwl_bus / iwl_trans
-  iwlagn: transport handler can register debugfs entries
-  iwlagn: iwl_rx_queue moves to the iwl_trans_pcie
-  iwlagn: move iwl_suspend / iwl_resume to the transport layer
-  iwlagn: move ISR related data to transport layer
-  iwlagn: move the NIC error flow to the transport layer
-  iwlagn: move isr_statistics to transport layer
-  iwlagn: reclaim the packets in transport layer
-  iwlagn: move reclaim related functions
-  iwlagn: move scd_bc_tbls and scd_base_addr to iwl_trans_pcie
-  iwlagn: fix the check of IWLAGN_FIRST_AMPDU_QUEUE
-  iwlagn: move all iwl_is_XXX helpers to iwl-shared.h
-  iwlagn: move iwl_free_pages to iwl-shared.h
-  iwlagn: transport layer should receive iwl_trans
-  iwlagn: move hcmd_lock to transport layer
-  iwlagn: move dump_csr and dump_fh to transport layer
-  iwlagn: remove references to priv from the transport layer
-  iwlagn: remove unused parameters from hw_params
-  iwlagn: iwl-dev.h doesn't include iwl-fh.h any more
-  iwlagn: move Keep Warm to transport layer
-  iwlagn: add missing includes
-  iwlagn: all function iwl-io.c receive iwl_bus
-  iwlagn: iwl-pci doesn't include iwl-dev any more
-  iwlagn: iwl_tid_data moves to iwl-shared
-  iwlagn: remove dereferences of priv from transport
-  iwlagn: stop the device before freeing it
-  iwlagn: upper layer stores iwl_rxon_context in skb's CB
-  iwlagn: set tx_fifo for ampdu in transport layer
-  iwlagn: upper layer uses slabs to allocate tx cmds
-  iwlagn: move the mapping ac to queue / fifo to transport
-  iwlagn: allocate resources for TX BA session in transport
-  iwlagn: move the check_empty logic to the transport layer
-  iwlagn: move the disable agg logic to transport layer
-  iwlagn: cosmetics in iwl-trans.h
-  iwlagn: move wait_for_tx_queue_empty to transport layer
-  iwlagn: move check_stuck_queue to transport layer
-  iwlagn: move the stop / wake queue logic to transport layer
-  iwlagn: move tx queues to transport layer
+Cc: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c        |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Wey-Yi Guy (7):
-  iwlagn: Rename iwlcore prefix
-  iwlagn: remove out-dated comments
-  iwlagn: enable 11n aggregation without checking traffic load
-  iwlagn: support small form factor SKU of 6205
-  iwlagn: more comments for bt channel inhibition
-  iwlagn: add comments to module parameters
-  iwlagn: adding special "D" SKU for 2000 series
-
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
-
- drivers/net/wireless/iwlwifi/iwl-1000.c           |   42 +-
- drivers/net/wireless/iwlwifi/iwl-2000.c           |   51 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c           |   72 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c           |   60 +-
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c      |   43 +-
- drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c     |    6 +-
- drivers/net/wireless/iwlwifi/iwl-agn-hw.h         |   13 -
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c        |  676 +--------
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c         |   92 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c       |   60 +-
- drivers/net/wireless/iwlwifi/iwl-agn-sta.c        |   84 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tt.c         |   68 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |  914 ++++++------
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c      |   52 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c            |  870 ++++--------
- drivers/net/wireless/iwlwifi/iwl-agn.h            |   63 +-
- drivers/net/wireless/iwlwifi/iwl-bus.h            |   34 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h       |    6 +-
- drivers/net/wireless/iwlwifi/iwl-core.c           |  283 ++---
- drivers/net/wireless/iwlwifi/iwl-core.h           |  118 +--
- drivers/net/wireless/iwlwifi/iwl-debug.h          |   40 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c        |  412 +-----
- drivers/net/wireless/iwlwifi/iwl-dev.h            |  326 +----
- drivers/net/wireless/iwlwifi/iwl-devtrace.h       |    2 +
- drivers/net/wireless/iwlwifi/iwl-eeprom.c         |   62 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.h         |    1 -
- drivers/net/wireless/iwlwifi/iwl-fh.h             |   20 +-
- drivers/net/wireless/iwlwifi/iwl-helpers.h        |   91 +--
- drivers/net/wireless/iwlwifi/iwl-io.c             |  192 ++--
- drivers/net/wireless/iwlwifi/iwl-io.h             |   61 +-
- drivers/net/wireless/iwlwifi/iwl-led.c            |   11 +-
- drivers/net/wireless/iwlwifi/iwl-pci.c            |   43 +-
- drivers/net/wireless/iwlwifi/iwl-pci.h            |  116 ++
- drivers/net/wireless/iwlwifi/iwl-power.c          |   19 +-
- drivers/net/wireless/iwlwifi/iwl-prph.h           |    4 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c             |   42 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c           |   97 +-
- drivers/net/wireless/iwlwifi/iwl-shared.h         |  430 ++++++
- drivers/net/wireless/iwlwifi/iwl-sta.c            |  106 +-
- drivers/net/wireless/iwlwifi/iwl-sta.h            |    4 +-
- drivers/net/wireless/iwlwifi/iwl-sv-open.c        |   21 +-
- drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |  314 ++++-
- drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c  |  862 +++++++++---
- drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c  |  507 +++++--
- drivers/net/wireless/iwlwifi/iwl-trans.c          | 1615 ++++++++++++++++-----
- drivers/net/wireless/iwlwifi/iwl-trans.h          |  216 ++-
- 46 files changed, 4909 insertions(+), 4312 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-pci.h
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-shared.h
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+index 2339728..28b44b0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+@@ -636,7 +636,7 @@ static const u32 ar9300_2p2_baseband_postamble[][5] = {
+ 	{0x00009e44, 0x02321e27, 0x02321e27, 0x02291e27, 0x02291e27},
+ 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
+ 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
+-	{0x0000a204, 0x000037c0, 0x000037c4, 0x000037c4, 0x000037c0},
++	{0x0000a204, 0x000036c0, 0x000036c4, 0x000036c4, 0x000036c0},
+ 	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
+ 	{0x0000a22c, 0x01026a2f, 0x01026a2f, 0x01026a2f, 0x01026a2f},
+ 	{0x0000a230, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b},
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 1baca8e..c906e9e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -482,7 +482,7 @@ static void ar9003_hw_set_channel_regs(struct ath_hw *ah,
+ 		(REG_READ(ah, AR_PHY_GEN_CTRL) & AR_PHY_GC_ENABLE_DAC_FIFO);
+ 
+ 	/* Enable 11n HT, 20 MHz */
+-	phymode = AR_PHY_GC_HT_EN | AR_PHY_GC_SINGLE_HT_LTF1 | AR_PHY_GC_WALSH |
++	phymode = AR_PHY_GC_HT_EN | AR_PHY_GC_SINGLE_HT_LTF1 |
+ 		  AR_PHY_GC_SHORT_GI_40 | enableDacFifo;
+ 
+ 	/* Configure baseband for dynamic 20/40 operation */
+-- 
+1.7.6
 
