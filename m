@@ -1,61 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:56748 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751554Ab1H0VbU convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:49320 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756223Ab1HDAoG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Aug 2011 17:31:20 -0400
-Date: Sat, 27 Aug 2011 23:31:11 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] b43: Fix smatch warning
-Message-ID: <20110827233111.6480df17@milhouse> (sfid-20110827_233126_188746_74F19B38)
-In-Reply-To: <4E59426F.1050401@lwfinger.net>
-References: <1314469560-28255-1-git-send-email-Larry.Finger@lwfinger.net>
-	<20110827205404.62de7b31@milhouse>
-	<4E59426F.1050401@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 3 Aug 2011 20:44:06 -0400
+Message-ID: <4E39EB52.1090401@candelatech.com> (sfid-20110804_024410_060046_A41400F5)
+Date: Wed, 03 Aug 2011 17:44:02 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Sam Leffler <sleffler@google.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Bridging wired to STA interfaces.
+References: <4E38DDB3.1030801@candelatech.com> <CA+yqC4YvAMLaao4dy2aXM7H5zPXySk4eAUZ2KSM4QnP+kQqF-A@mail.gmail.com>
+In-Reply-To: <CA+yqC4YvAMLaao4dy2aXM7H5zPXySk4eAUZ2KSM4QnP+kQqF-A@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 27 Aug 2011 14:15:59 -0500
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+On 08/03/2011 03:37 PM, Sam Leffler wrote:
+> On Tue, Aug 2, 2011 at 10:33 PM, Ben Greear<greearb@candelatech.com>  wrote:
+>> We have some interest in being able to bridge wired systems to
+>> (virtual) STA interfaces, primarily for using third-party
+>> traffic generation tools over virtual stations.
+>>
+>> I was thinking of writing a sta-bridge module that mapped
+>> incoming packets on a wired interface to a STA with MAC
+>> that matched the source MAC of the packet.  All packets
+>> received on the STA would be forwarded un-modified out
+>> the wired port.
+>>
+>> I think this would allow someone to create a STA interface
+>> with MAC matching a PC connected to the wired port and effectively
+>> have it be a transparent bridge between STA and PC.
+>>
+>> Has anyone attempted something like this before?
+>>
+>> Any interest in having this feature in the upstream kernel?
+>
+> You've just described what's done in several products and it is indeed
+> useful.  The main issue is supporting it can incur overhead so you may
+> want to make it a compile-time option.
 
-> On 08/27/2011 01:54 PM, Michael Büsch wrote:
-> > On Sat, 27 Aug 2011 13:26:00 -0500
-> > Larry Finger<Larry.Finger@lwfinger.net>  wrote:
-> >
-> >>    CHECK   drivers/net/wireless/b43/main.c
-> >> drivers/net/wireless/b43/main.c +4115 b43_wireless_core_stop(7) warn: variable dereferenced before check 'dev'
-> >
-> >> This is next material.
-> >
-> > -next, just because the bug is not in the current kernel?
-> > Or because you think this is harmless?
-> >
-> > I'm not sure whether this is harmless. It effectively is that kind
-> > of bug that triggers dangerous compiler optimizations.
-> > I think the compiler has some freedom to assume dev can not be NULL when
-> > the function is entered and thus optimize out the !dev check.
-> 
-> No, the check has to be left in due to the changing of dev in the routine 
-> followed by a 'goto redo'.
+I got some basic functionality working today with some
+user-space bridging code I've already written for other purposes...
 
-I think the compiler is still free to emit the !dev check twice.
-Or the other way around: Emit it correctly for the "goto" case and
-don't emit it for the function-enter case (and directly check dev->status).
+Can you think of any reason (beyond a bit of performance) that
+this should be in the kernel?
 
-> In fact, a bug in the original code is unlikely, but my patch did add one. I 
-> think the code should be
-> 
-> 	if (!dev)
-> 		return NULL;
-> 	wl = dev->wl;
-> redo:
+My target hardware is fast enough that copying through user-space
+at moderate (ie, fast as STA can go) speeds isn't too big of a deal, but
+if someone wanted to run this on weak hardware, that might be reason
+enough...  It might also make it easier to filter our management frames
+(EAPOL, etc), but we should be able to do that easily enough in user-space
+with a small bit of work.
 
-yes
+Thanks,
+Ben
+
+>
+> -Sam
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
 -- 
-Greetings, Michael.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
