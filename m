@@ -1,51 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:52071 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751826Ab1HXUkA convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17106 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915Ab1HDN4u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 16:40:00 -0400
-Received: by pzk37 with SMTP id 37so1277374pzk.1
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 13:40:00 -0700 (PDT)
+	Thu, 4 Aug 2011 09:56:50 -0400
+From: <rmani@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH 1/2] ath6kl: Fix crash during the connection process
+Date: Thu, 4 Aug 2011 19:26:29 +0530
+Message-ID: <1312466190-2394-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20110804_155654_701274_D6E17704)
 MIME-Version: 1.0
-In-Reply-To: <20110824184453.GK9770@tuxdriver.com>
-References: <1313785375-32709-1-git-send-email-javier@cozybit.com> <20110824184453.GK9770@tuxdriver.com>
-From: Javier Cardona <javier@cozybit.com>
-Date: Wed, 24 Aug 2011 13:39:40 -0700
-Message-ID: <CAPjQAd9q-nurAmHdE=mB0OOJrPeObRAxtSJfNDDQg+3MzP+kvg@mail.gmail.com> (sfid-20110824_224004_432382_12DD56CE)
-Subject: Re: [PATCH] mac80211: remove mesh paths when an interface is removed
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Thomas Pedersen <thomas@cozybit.com>, devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 24, 2011 at 11:44 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Fri, Aug 19, 2011 at 01:22:55PM -0700, Javier Cardona wrote:
->> When an interface is removed, the mesh paths associated with it should
->> also be removed.
->>
->> This fixes a bug we observed when reloading a device driver module
->> without reloading mac80211s.
->>
->> Signed-off-by: Javier Cardona <javier@cozybit.com>
->
->  CC [M]  net/mac80211/mesh_pathtbl.o
-> net/mac80211/mesh_pathtbl.c: In function ‘mpp_path_flush’:
-> net/mac80211/mesh_pathtbl.c:862:8: error: invalid type argument of ‘->’ (have ‘rwlock_t’)
-> make[1]: *** [net/mac80211/mesh_pathtbl.o] Error 1
-> make: *** [net/mac80211/] Error 2
+From: Raja Mani <rmani@qca.qualcomm.com>
 
-Sorry! I'll include the revised patch in a larger pathset to be
-submitted later today.
+Sometimes, the network manager is failing to connect to the AP due
+to the below kernel crash message. The reason behind this,
+after issuing the connect command to the chip, the chip is sending
+disconnect event and then immediately one connect event to the host
+in some random cases.
 
-Cheers,
+The host driver resets all states (including cfg80211 state machine)
+when it receives disconnect event from the chip. But, still the host
+driver reports the next received connect event to cfg80211, at that time
+cfg80211 SME state would have been in IDLE state, which was causing
+the below kernel crash.
 
-Javier
+Now, host driver's sme state machine is checked every time before
+delivering connect event to cfg80211
 
+  WARNING: at net/wireless/sme.c:517 cfg80211_connect_result+0x10d/0x120()
+  [..]
+  Call Trace:
+  [<c0145732>] warn_slowpath_common+0x72/0xa0
+  [<c05d676d>] ? cfg80211_connect_result+0x10d/0x120
+  [<c05d676d>] ? cfg80211_connect_result+0x10d/0x120
+  [<c0145782>] warn_slowpath_null+0x22/0x30
+  [<c05d676d>] cfg80211_connect_result+0x10d/0x120
+  [<f83ff497>] ath6kl_cfg80211_connect_event+0x427/0x4f0 [ath6kl]
+  [<c035d26a>] ? put_dec+0x2a/0xa0
+  [<c035d645>] ? number+0x365/0x380
+  [<c0154675>] ? mod_timer+0x135/0x260
+  [<c035e00e>] ? format_decode+0x2fe/0x370
+  [<c01263c8>] ? default_spin_lock_flags+0x8/0x10
+  [<c05fd91f>] ? _raw_spin_lock_irqsave+0x2f/0x50
+  [<c0146032>] ? console_unlock+0x172/0x1c0
+  [<f8402659>] ath6kl_connect_event+0x89/0x400 [ath6kl]
+  [<f840826e>] ath6kl_wmi_control_rx+0x98e/0x1d60 [ath6kl]
+  [<c01335b5>] ? __wake_up+0x45/0x60
+  [<f84053aa>] ath6kl_rx+0x56a/0x770 [ath6kl]
+  [<c04d0242>] ? mmc_release_host+0x22/0x40
+  [<c04d9329>] ? sdio_release_host+0x19/0x30
+  [<f840a27a>] ? ath6kl_sdio_read_write_sync+0x7a/0xc0 [ath6kl]
+  [<f83f82b1>] do_rx_completion+0x41/0x50 [ath6kl]
+  [<f83faa6a>] htc_rxmsg_pending_handler+0x6ba/0xbd0 [ath6kl]
+  [<f8404bb0>] ? ath6kl_tx_data_cleanup+0x30/0x30 [ath6kl]
+  [<f840a1c0>] ? ath6kl_sdio_irq_handler+0x30/0x70 [ath6kl]
+  [<f83f7cd5>] ath6kldev_intr_bh_handler+0x2a5/0x630 [ath6kl]
+  [<f840a1c0>] ath6kl_sdio_irq_handler+0x30/0x70 [ath6kl]
+  [<c04d97c7>] sdio_irq_thread+0xc7/0x2d0
+  [<c013aeb0>] ? default_wake_function+0x10/0x20
+  [<c012fc98>] ? __wake_up_common+0x48/0x70
+  [<c04d9700>] ? sdio_claim_irq+0x200/0x200
+  [<c0163854>] kthread+0x74/0x80
+  [<c01637e0>] ? kthread_worker_fn+0x160/0x160
+  [<c0604c06>] kernel_thread_helper+0x6/0x10
+
+ Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index dc299a6..14559ff 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -559,14 +559,14 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
+ 		return;
+ 	}
+ 
+-	if (!test_bit(CONNECTED, &ar->flag)) {
++	if (ar->sme_state == SME_CONNECTING) {
+ 		/* inform connect result to cfg80211 */
+-		ar->sme_state = SME_DISCONNECTED;
++		ar->sme_state = SME_CONNECTED;
+ 		cfg80211_connect_result(ar->net_dev, bssid,
+ 					assoc_req_ie, assoc_req_len,
+ 					assoc_resp_ie, assoc_resp_len,
+ 					WLAN_STATUS_SUCCESS, GFP_KERNEL);
+-	} else {
++	} else if (ar->sme_state == SME_CONNECTED) {
+ 		/* inform roam event to cfg80211 */
+ 		cfg80211_roamed(ar->net_dev, ibss_ch, bssid,
+ 				assoc_req_ie, assoc_req_len,
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+1.7.4.1
+
