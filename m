@@ -1,53 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:48364 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751395Ab1HXLd4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 07:33:56 -0400
-Date: Wed, 24 Aug 2011 14:31:39 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Luciano Coelho <coelho@ti.com>, Shahar Levi <shahar_levi@ti.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"open list:WL1271 WIRELESS D..." <linux-wireless@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org
-Subject: [patch -next] wl12xx: fix recent change to wl1271_tm_cmd_nvs_push()
-Message-ID: <20110824113139.GE5975@shale.localdomain> (sfid-20110824_133401_818251_26EB6073)
+Received: from mx1.redhat.com ([209.132.183.28]:21001 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752568Ab1HDMqr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Aug 2011 08:46:47 -0400
+Date: Thu, 4 Aug 2011 14:46:54 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] rt2x00: rt2800usb: fix races in tx queue
+Message-ID: <20110804124653.GB5739@redhat.com> (sfid-20110804_144650_786822_8F06B158)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bc765bf3b9a "wl12xx: 1281/1283 support - Loading FW & NVS" had two
-problems.  The condition was written so that it failed if "len" was
-not equal to sizeof(struct wl1271_nvs_file).  Also we need to release
-the locks on these new error paths.
+We can perform parallel putting new entries in a queue
+(rt2x00queue_write_tx_frame()) and removing entries after finishing
+transmitting (rt2800usb_work_txdone()). There are cases when txdone
+may process an entry that was not fully send and nullify entry->skb.
+What in a result crash the kernel in rt2800usb_write_tx_desc() or
+rt2800usb_get_txwi() or other place where entry->skb is used.
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+To fix stop processing entries in txdone, which flags do not indicate
+transition was finished.
 
-diff --git a/drivers/net/wireless/wl12xx/testmode.c b/drivers/net/wireless/wl12xx/testmode.c
-index 88add68..10c1762 100644
---- a/drivers/net/wireless/wl12xx/testmode.c
-+++ b/drivers/net/wireless/wl12xx/testmode.c
-@@ -208,11 +208,17 @@ static int wl1271_tm_cmd_nvs_push(struct wl1271 *wl, struct nlattr *tb[])
+Also change flags as soon as we get confirmation transmision is done.
+
+Reported-and-tested-by: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: stable@kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |   36 ++++++++++++++++++++++--------
+ drivers/net/wireless/rt2x00/rt2x00usb.c |    6 ++--
+ 2 files changed, 29 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 5075593..edd0518 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -500,14 +500,14 @@ static bool rt2800usb_txdone_entry_check(struct queue_entry *entry, u32 reg)
+ 	return true;
+ }
  
- 	kfree(wl->nvs);
+-static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
++static int rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct data_queue *queue;
+ 	struct queue_entry *entry;
+ 	u32 reg;
+ 	u8 qid;
  
--	if ((wl->chip.id == CHIP_ID_1283_PG20) &&
--	    (len != sizeof(struct wl128x_nvs_file)))
--		return -EINVAL;
--	else if (len != sizeof(struct wl1271_nvs_file))
--		return -EINVAL;
-+	if (wl->chip.id == CHIP_ID_1283_PG20) {
-+		if (len != sizeof(struct wl128x_nvs_file)) {
-+			ret = -EINVAL;
-+			goto out;
-+		}
-+	} else {
-+		if (len != sizeof(struct wl1271_nvs_file)) {
-+			ret = -EINVAL;
-+			goto out;
-+		}
-+	}
+-	while (kfifo_get(&rt2x00dev->txstatus_fifo, &reg)) {
++	while (kfifo_peek(&rt2x00dev->txstatus_fifo, &reg)) {
  
- 	wl->nvs = kzalloc(len, GFP_KERNEL);
- 	if (!wl->nvs) {
+ 		/* TX_STA_FIFO_PID_QUEUE is a 2-bit field, thus
+ 		 * qid is guaranteed to be one of the TX QIDs
+@@ -517,25 +517,39 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
+ 		if (unlikely(!queue)) {
+ 			WARNING(rt2x00dev, "Got TX status for an unavailable "
+ 					   "queue %u, dropping\n", qid);
+-			continue;
++			goto next_reg;
+ 		}
+ 
+ 		/*
+ 		 * Inside each queue, we process each entry in a chronological
+ 		 * order. We first check that the queue is not empty.
+ 		 */
+-		entry = NULL;
+-		while (!rt2x00queue_empty(queue)) {
++		while (1) {
++			entry = NULL;
++
++			if (rt2x00queue_empty(queue))
++				break;
++
+ 			entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
++
++			if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags) ||
++			    !test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags)) {
++				WARNING(rt2x00dev, "Data pending for entry %u"
++					"in queue %u\n", entry->entry_idx, qid);
++				return 1;
++			}
++
+ 			if (rt2800usb_txdone_entry_check(entry, reg))
+ 				break;
+ 		}
+ 
+-		if (!entry || rt2x00queue_empty(queue))
+-			break;
+-
+-		rt2800_txdone_entry(entry, reg);
++		if (entry)
++			rt2800_txdone_entry(entry, reg);
++next_reg:
++		kfifo_skip(&rt2x00dev->txstatus_fifo);
+ 	}
++
++	return 0;
+ }
+ 
+ static void rt2800usb_work_txdone(struct work_struct *work)
+@@ -545,7 +559,8 @@ static void rt2800usb_work_txdone(struct work_struct *work)
+ 	struct data_queue *queue;
+ 	struct queue_entry *entry;
+ 
+-	rt2800usb_txdone(rt2x00dev);
++	if (rt2800usb_txdone(rt2x00dev))
++		goto out;
+ 
+ 	/*
+ 	 * Process any trailing TX status reports for IO failures,
+@@ -569,6 +584,7 @@ static void rt2800usb_work_txdone(struct work_struct *work)
+ 		}
+ 	}
+ 
++out:
+ 	/*
+ 	 * The hw may delay sending the packet after DMA complete
+ 	 * if the medium is busy, thus the TX_STA_FIFO entry is
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index b6b4542..46c6d36 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -265,14 +265,14 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
+ 	if (!test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
+ 		return;
+ 
+-	if (rt2x00dev->ops->lib->tx_dma_done)
+-		rt2x00dev->ops->lib->tx_dma_done(entry);
+-
+ 	/*
+ 	 * Report the frame as DMA done
+ 	 */
+ 	rt2x00lib_dmadone(entry);
+ 
++	if (rt2x00dev->ops->lib->tx_dma_done)
++		rt2x00dev->ops->lib->tx_dma_done(entry);
++
+ 	/*
+ 	 * Check if the frame was correctly uploaded
+ 	 */
+-- 
+1.7.1
+
