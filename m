@@ -1,151 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:64805 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755077Ab1H2UX0 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:59240 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751675Ab1HDHzW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 16:23:26 -0400
-Received: by gxk21 with SMTP id 21so5113786gxk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 13:23:26 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Subject: [PATCH v3 6/7] mac80211: Consolidate {mesh,mpp}_path_flush into one function
-Date: Mon, 29 Aug 2011 13:23:08 -0700
-Message-Id: <1314649389-7115-7-git-send-email-javier@cozybit.com> (sfid-20110829_222331_654548_3BD52355)
-In-Reply-To: <1314649389-7115-1-git-send-email-javier@cozybit.com>
-References: <1314649389-7115-1-git-send-email-javier@cozybit.com>
+	Thu, 4 Aug 2011 03:55:22 -0400
+Received: by wwe5 with SMTP id 5so1624165wwe.1
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Aug 2011 00:55:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1312444052-31691-1-git-send-email-hacker@epn.ru>
+References: <1312444052-31691-1-git-send-email-hacker@epn.ru>
+Date: Thu, 4 Aug 2011 13:25:21 +0530
+Message-ID: <CAD2nsn2jDG-7ipaAar5QwiT2E_LN1EdAttJTdBKio_jXqy=83w@mail.gmail.com> (sfid-20110804_095525_779024_4FD4C665)
+Subject: Re: [PATCH v2] ath9k: fix a misprint which leads to incorrect calibration
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Alex Hacker <hacker@epn.ru>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	stable@kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+On Thu, Aug 4, 2011 at 1:17 PM, Alex Hacker <hacker@epn.ru> wrote:
+> This patch addresses an issue with incorrect HW register
+> AR_PHY_TX_IQCAL_CORR_COEFF_B1 definition which leads to incorrect clibration.
+>
+> Cc: stable@kernel.org
+> Signed-off-by: Alex Hacker <hacker@epn.ru>
 
----
-v2: - Fix extra space (checkpatch)
-    - Add lockdep check for RCU
+thanks Alex!
 
- net/mac80211/mesh_pathtbl.c |   65 +++++++++++++++++-------------------------
- 1 files changed, 26 insertions(+), 39 deletions(-)
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9003_phy.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+> index 6de3f0b..5c59042 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+> @@ -850,7 +850,7 @@
+>  #define AR_PHY_TPC_11_B1         (AR_SM1_BASE + 0x220)
+>  #define AR_PHY_PDADC_TAB_1       (AR_SM1_BASE + 0x240)
+>  #define AR_PHY_TX_IQCAL_STATUS_B1   (AR_SM1_BASE + 0x48c)
+> -#define AR_PHY_TX_IQCAL_CORR_COEFF_B1(_i)    (AR_SM_BASE + 0x450 + ((_i) << 2))
+> +#define AR_PHY_TX_IQCAL_CORR_COEFF_B1(_i)    (AR_SM1_BASE + 0x450 + ((_i) << 2))
+>
+>  /*
+>  * Channel 2 Register Map
+> --
+> 1.7.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index ea9e34a..3c03be9 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -790,35 +790,6 @@ void mesh_plink_broken(struct sta_info *sta)
- 	rcu_read_unlock();
- }
- 
--/**
-- * mesh_path_flush_by_nexthop - Deletes mesh paths if their next hop matches
-- *
-- * @sta - mesh peer to match
-- *
-- * RCU notes: this function is called when a mesh plink transitions from
-- * PLINK_ESTAB to any other state, since PLINK_ESTAB state is the only one that
-- * allows path creation. This will happen before the sta can be freed (because
-- * sta_info_destroy() calls this) so any reader in a rcu read block will be
-- * protected against the plink disappearing.
-- */
--void mesh_path_flush_by_nexthop(struct sta_info *sta)
--{
--	struct mesh_table *tbl;
--	struct mesh_path *mpath;
--	struct mpath_node *node;
--	struct hlist_node *p;
--	int i;
--
--	rcu_read_lock();
--	tbl = rcu_dereference(mesh_paths);
--	for_each_mesh_entry(tbl, p, node, i) {
--		mpath = node->mpath;
--		if (rcu_dereference(mpath->next_hop) == sta)
--			mesh_path_del(mpath->dst, mpath->sdata);
--	}
--	rcu_read_unlock();
--}
--
- static void mesh_path_node_reclaim(struct rcu_head *rp)
- {
- 	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
-@@ -845,7 +816,18 @@ static void __mesh_path_del(struct mesh_table *tbl, struct mpath_node *node)
- 	atomic_dec(&tbl->entries);
- }
- 
--static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
-+/**
-+ * mesh_path_flush_by_nexthop - Deletes mesh paths if their next hop matches
-+ *
-+ * @sta - mesh peer to match
-+ *
-+ * RCU notes: this function is called when a mesh plink transitions from
-+ * PLINK_ESTAB to any other state, since PLINK_ESTAB state is the only one that
-+ * allows path creation. This will happen before the sta can be freed (because
-+ * sta_info_destroy() calls this) so any reader in a rcu read block will be
-+ * protected against the plink disappearing.
-+ */
-+void mesh_path_flush_by_nexthop(struct sta_info *sta)
- {
- 	struct mesh_table *tbl;
- 	struct mesh_path *mpath;
-@@ -857,7 +839,7 @@ static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
- 	tbl = rcu_dereference(mesh_paths);
- 	for_each_mesh_entry(tbl, p, node, i) {
- 		mpath = node->mpath;
--		if (mpath->sdata == sdata) {
-+		if (rcu_dereference(mpath->next_hop) == sta) {
- 			spin_lock_bh(&tbl->hashwlock[i]);
- 			__mesh_path_del(tbl, node);
- 			spin_unlock_bh(&tbl->hashwlock[i]);
-@@ -866,24 +848,23 @@ static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
- 	rcu_read_unlock();
- }
- 
--static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
-+static void table_flush_by_iface(struct mesh_table *tbl,
-+				 struct ieee80211_sub_if_data *sdata)
- {
--	struct mesh_table *tbl;
- 	struct mesh_path *mpath;
- 	struct mpath_node *node;
- 	struct hlist_node *p;
- 	int i;
- 
--	read_lock_bh(&pathtbl_resize_lock);
--	tbl = rcu_dereference_protected(mpp_paths,
--					lockdep_is_held(pathtbl_resize_lock));
-+	WARN_ON(!rcu_read_lock_held());
- 	for_each_mesh_entry(tbl, p, node, i) {
- 		mpath = node->mpath;
-+		if (mpath->sdata != sdata)
-+			continue;
- 		spin_lock_bh(&tbl->hashwlock[i]);
- 		__mesh_path_del(tbl, node);
- 		spin_unlock_bh(&tbl->hashwlock[i]);
- 	}
--	read_unlock_bh(&pathtbl_resize_lock);
- }
- 
- /**
-@@ -896,8 +877,14 @@ static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
-  */
- void mesh_path_flush_by_iface(struct ieee80211_sub_if_data *sdata)
- {
--	mesh_path_flush(sdata);
--	mpp_path_flush(sdata);
-+	struct mesh_table *tbl;
-+
-+	rcu_read_lock();
-+	tbl = rcu_dereference(mesh_paths);
-+	table_flush_by_iface(tbl, sdata);
-+	tbl = rcu_dereference(mpp_paths);
-+	table_flush_by_iface(tbl, sdata);
-+	rcu_read_unlock();
- }
- 
- /**
+
+
 -- 
-1.7.6
-
+shafi
