@@ -1,140 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:52179 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753302Ab1H2OPw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 10:15:52 -0400
-Received: by ewy4 with SMTP id 4so2369935ewy.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 07:15:50 -0700 (PDT)
-From: Alexander Simon <an.alexsimon@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 1/4] nl80211: Parse channel type attribute in an IBSS join request
-Date: Mon, 29 Aug 2011 16:15:47 +0200
-Message-ID: <2053881.ENil2Dy3QM@alex-1> (sfid-20110829_161556_944174_8A64BBCC)
+Received: from mout4.freenet.de ([195.4.92.94]:34359 "EHLO mout4.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751631Ab1HDRLg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Aug 2011 13:11:36 -0400
+Message-ID: <4E3AD2B9.6010905@01019freenet.de> (sfid-20110804_191142_423609_B9DF1A54)
+Date: Thu, 04 Aug 2011 19:11:21 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Justin Piszcz <jpiszcz@lucidpixels.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Alan Piszcz <ap@solarrain.com>
+Subject: Re: Linux Wireless USB-Stick Question
+References: <alpine.DEB.2.02.1108031550100.4278@p34.internal.lan> <4E39B82C.2010108@lwfinger.net>
+In-Reply-To: <4E39B82C.2010108@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check if the requested HT mode can be used.
-Extend cfg80211 IBSS struct for HT mode.
-
-Signed-off-by: Alexander Simon <alexander.simon@saxnet.de>
----
- include/net/cfg80211.h |   11 +++++++++++
- net/wireless/chan.c    |   11 ++++++-----
- net/wireless/nl80211.c |   30 +++++++++++++++++++++++++++---
- 3 files changed, 44 insertions(+), 8 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 88112ca..6d6e4b1 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1085,6 +1085,7 @@ struct cfg80211_ibss_params {
- 	u8 *ssid;
- 	u8 *bssid;
- 	struct ieee80211_channel *channel;
-+	enum nl80211_channel_type channel_type;
- 	u8 *ie;
- 	u8 ssid_len, ie_len;
- 	u16 beacon_interval;
-@@ -3086,6 +3087,16 @@ void cfg80211_cqm_pktloss_notify(struct net_device *dev,
- void cfg80211_gtk_rekey_notify(struct net_device *dev, const u8 *bssid,
- 			       const u8 *replay_ctr, gfp_t gfp);
- 
-+/**
-+ * cfg80211_can_use_ext_chan - test if ht40 on extension channel can be used
-+ * @wiphy: the wiphy
-+ * @chan: main channel
-+ * @channel_type: HT mode
-+ */
-+bool cfg80211_can_use_ext_chan(struct wiphy *wiphy,
-+			       struct ieee80211_channel *chan,
-+			       enum nl80211_channel_type channel_type);
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 17cd0c0..8a9ab99 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -44,9 +44,9 @@ rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
- 	return chan;
- }
- 
--static bool can_beacon_sec_chan(struct wiphy *wiphy,
--				struct ieee80211_channel *chan,
--				enum nl80211_channel_type channel_type)
-+bool cfg80211_can_use_ext_chan(struct wiphy *wiphy,
-+			       struct ieee80211_channel *chan,
-+			       enum nl80211_channel_type channel_type)
- {
- 	struct ieee80211_channel *sec_chan;
- 	int diff;
-@@ -75,6 +75,7 @@ static bool can_beacon_sec_chan(struct wiphy *wiphy,
- 
- 	return true;
- }
-+EXPORT_SYMBOL(cfg80211_can_use_ext_chan);
- 
- int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
- 		      struct wireless_dev *wdev, int freq,
-@@ -109,8 +110,8 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
- 		switch (channel_type) {
- 		case NL80211_CHAN_HT40PLUS:
- 		case NL80211_CHAN_HT40MINUS:
--			if (!can_beacon_sec_chan(&rdev->wiphy, chan,
--						 channel_type)) {
-+			if (!cfg80211_can_use_ext_chan(&rdev->wiphy, chan,
-+						       channel_type)) {
- 				printk(KERN_DEBUG
- 				       "cfg80211: Secondary channel not "
- 				       "allowed to initiate communication\n");
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index bddb559..50589df 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4468,11 +4468,35 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 		ibss.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
- 	}
- 
--	ibss.channel = ieee80211_get_channel(wiphy,
--		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]));
-+	if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]) {
-+		enum nl80211_channel_type channel_type;
-+
-+		channel_type = nla_get_u32(
-+			info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
-+		if (channel_type != NL80211_CHAN_NO_HT &&
-+		    channel_type != NL80211_CHAN_HT20 &&
-+		    channel_type != NL80211_CHAN_HT40PLUS &&
-+		    channel_type != NL80211_CHAN_HT40MINUS)
-+			return -EINVAL;
-+		ibss.channel_type = channel_type;
-+	} else {
-+		ibss.channel_type = NL80211_CHAN_NO_HT;
-+	}
-+
-+	ibss.channel = rdev_freq_to_chan(rdev,
-+		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]),
-+		ibss.channel_type);
- 	if (!ibss.channel ||
-+	    ibss.channel->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
- 	    ibss.channel->flags & IEEE80211_CHAN_NO_IBSS ||
--	    ibss.channel->flags & IEEE80211_CHAN_DISABLED)
-+	    ibss.channel->flags & IEEE80211_CHAN_RADAR)
-+		return -EINVAL;
-+
-+	/* Both channels should be able to initiate communication */
-+	if ((ibss.channel_type == NL80211_CHAN_HT40PLUS ||
-+	     ibss.channel_type == NL80211_CHAN_HT40MINUS) &&
-+	    !cfg80211_can_use_ext_chan(&rdev->wiphy, ibss.channel,
-+				       ibss.channel_type))
- 		return -EINVAL;
- 
- 	ibss.channel_fixed = !!info->attrs[NL80211_ATTR_FREQ_FIXED];
--- 
-1.7.3.4
+Larry Finger schrieb:
+> On 08/03/2011 02:53 PM, Justin Piszcz wrote:
+>> Hi,
+>>
+>> Under Windows, you can achieve 10-15MiB/s..
+>>
+>> Under Linux, even with 150mbps USB wireless adapters, the max never
+>> appears to
+>> go above > 3-4MiB/s, to work around this, order more USB-wifi ticks
+>> and run them
+>> in parallel far away from each other with USB
+>> extenders:
+>>
+>> box1:
+>> -------------
+>> wlan0 IEEE 802.11bg ESSID:"hidden"
+>> Bit Rate=54 Mb/s Tx-Power=20 dBm
+>> wlan1 IEEE 802.11bgn ESSID:"hidden"
+>> Bit Rate=58.5 Mb/s Tx-Power=20 dBm
+>> wlan2 IEEE 802.11bgn ESSID:"hidden"
+>> Bit Rate=39 Mb/s Tx-Power=20 dBm
+>>
+>> box2:
+>> -------------
+>> wlan0 IEEE 802.11bgn ESSID:"hidden"
+>> Bit Rate=58.5 Mb/s Tx-Power=20 dBm
+>> wlan1 IEEE 802.11bgn ESSID:"hidden"
+>> Bit Rate=52 Mb/s Tx-Power=20 dBm
+>> wlan2 IEEE 802.11bgn ESSID:"hidden"
+>> Bit Rate=52 Mb/s Tx-Power=20 dBm
+>>
+>> But I was curious if anyone had achieved > 10 MiB/s with any wireless
+>> adapter
+>> with Linux?
+>>
+>> Also, those native Linux USB adapters (carl) work good, so far.
+>> With the patch provided earlier for the rt2800usb driver, it is no longer
+>> crashing under 3.0 so I put two of them on a single box plus a carl
+>> based one,
+>> now I get better I/O, e.g. 4MiB/s x 6 = 24MiB/s.
+> 
+> On a 150 Mbps connection running the following script
+> 
+> #!/bin/sh
+> 
+> dest="sonylap" # set the servername
+> 
+> while true ; do
+> netperf -t TCP_MAERTS -H $dest
+> netperf -t TCP_STREAM -H $dest
+> netperf -t TCP_SENDFILE -H $dest
+> done
+> 
+> I get the following for a D-Link DWA-130 containing a Realtek RTL8192SU
+> with driver r8712u:
+> 
+> finger@larrylap:~/bcm_git/vendor-driver/5.10.56.46> ~/netperf.sh
+> TCP MAERTS TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to sonylap
+> (192.168.1.50) port 0 AF_INET
+> Recv   Send    Send
+> Socket Socket  Message  Elapsed
+> Size   Size    Size     Time     Throughput
+> bytes  bytes   bytes    secs.    10^6bits/sec
+> 
+>  87380  16384  16384    10.04      53.52
+> TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to sonylap
+> (192.168.1.50) port 0 AF_INET
+> Recv   Send    Send
+> Socket Socket  Message  Elapsed
+> Size   Size    Size     Time     Throughput
+> bytes  bytes   bytes    secs.    10^6bits/sec
+> 
+>  87380  16384  16384    10.03      55.58
+> TCP SENDFILE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to sonylap
+> (192.168.1.50) port 0 AF_INET
+> Recv   Send    Send
+> Socket Socket  Message  Elapsed
+> Size   Size    Size     Time     Throughput
+> bytes  bytes   bytes    secs.    10^6bits/sec
+> 
+>  87380  16384  16384    10.06      65.26
+> 
+> I claim that 50-65 Mbps is pretty good.
 
 
+This means about half of fast ethernet (5-6,5 MB/s). It's too
+insufficient for 802.11n / 40 MHz.
+
+
+rt3572sta (Linksys WUSB600N v2) against rt2860 based AP (rt2800pci) -
+from one room to another:
+
+Do 4. Aug 18:48:27 CEST 2011
+TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to srv (1.1.1.1)
+port 0 AF_INET
+Recv   Send    Send
+Socket Socket  Message  Elapsed
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
+
+ 87380  16384  16384    10.07      82.51
+TCP MAERTS TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to srv (1.1.1.1)
+port 0 AF_INET
+Recv   Send    Send
+Socket Socket  Message  Elapsed
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
+
+ 87380  16384  16384    10.02     128.94
+TCP SENDFILE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to srv (1.1.1.1)
+port 0 AF_INET
+Recv   Send    Send
+Socket Socket  Message  Elapsed
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
+
+ 87380  16384  16384    10.09      77.47
+
+rt2800usb doesn't work at all with WUSB600N v2.
+
+
+
+ar9285 (ath9k) against rt2860 based AP (rt2800pci) - through reinforced
+concrete floor:
+
+Do 4. Aug 19:03:04 CEST 2011
+TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to srv (1.1.1.1)
+port 0 AF_INET
+Recv   Send    Send
+Socket Socket  Message  Elapsed
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
+
+ 87380  16384  16384    10.10      80.23
+TCP MAERTS TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to srv (1.1.1.1)
+port 0 AF_INET
+Recv   Send    Send
+Socket Socket  Message  Elapsed
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
+
+ 87380  16384  16384    10.06      80.82
+TCP SENDFILE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to srv (1.1.1.1)
+port 0 AF_INET
+Recv   Send    Send
+Socket Socket  Message  Elapsed
+Size   Size    Size     Time     Throughput
+bytes  bytes   bytes    secs.    10^6bits/sec
+
+ 87380  16384  16384    10.10      78.51
+
+
+-> there is room for optimization! I don't think, that the rt3572sta is
+the best solution absolutely seen :-). Unfortunately, I don't have a
+windows machine to compare ... . Maybe, I could get one to test ... .
+
+
+
+Andreas
