@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:56545 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754464Ab1H2Rhz convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:60395 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751395Ab1HEIfm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 13:37:55 -0400
-Received: by pzk37 with SMTP id 37so8797116pzk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 10:37:54 -0700 (PDT)
+	Fri, 5 Aug 2011 04:35:42 -0400
+Date: Fri, 5 Aug 2011 14:06:02 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 11/13] ath9k_hw: Disable Walsh spatial spreading for 2
+ chains
+Message-ID: <20110805083601.GA6702@vmraj-lnx.users.atheros.com> (sfid-20110805_103547_008489_505FBB19)
+References: <1312480447-27483-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <4E3AE3A0.2000308@openwrt.org>
+ <20110805025452.GA28266@vmraj-lnx.users.atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <CACna6rwU4RuYuiAFjXFDH-c+EFsKtKFmB1Sh8kXdb9EoUt4abg@mail.gmail.com>
-References: <CACna6rwU4RuYuiAFjXFDH-c+EFsKtKFmB1Sh8kXdb9EoUt4abg@mail.gmail.com>
-Date: Mon, 29 Aug 2011 19:37:54 +0200
-Message-ID: <CACna6ryacjVaC=WUv1Ni2mhJMgCb4uU0tMWALsWoSvCVS+EM7Q@mail.gmail.com> (sfid-20110829_193758_329719_8A265F96)
-Subject: Re: Looking for BCM43228
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20110805025452.GA28266@vmraj-lnx.users.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 29 sierpnia 2011 19:28 użytkownik Rafał Miłecki
-<zajec5@gmail.com> napisał:
-> I'm looking for 14e4:4359 card which is BCM43228 chipset based.
->
-> According to Ubuntu [0] it can be found in Dell's notebooks:
-> 1) Dell Latitude E5420m
-> 2) Dell Latitude E5520m
-> 3) Dell Latitude E6220
->
-> Ubuntu user Marc Legris provided a prove this card is really used by
-> Dell. See any of his launchpad reports for lspci [1] [2] [3].
->
-> I've search on ebay and polish similar site, no results so far. Ofc
-> I'm not interested in buying the whole laptop just for WiFi card. I'll
-> be contacting Dell in next days to see if they can offer me a card.
+On Fri, Aug 05, 2011 at 08:24:53AM +0530, Rajkumar Manoharan wrote:
+> On Thu, Aug 04, 2011 at 08:23:28PM +0200, Felix Fietkau wrote:
+> > On 2011-08-04 7:54 PM, Rajkumar Manoharan wrote:
+> > >The Walsh bit is disabled for regulatory consideration.
+> > >
+> > >As per the FCC rulings, only transmissions that are completely
+> > >non-coherent, are allowed to waive the array gain contribution
+> > >to EIRP for multi-transmit configurations. The use of 2-stream
+> > >with 2 transmit and use of 3-steam with 3 transmit qualifies
+> > >for this spatial multiplexing MIMO classification as long as
+> > >the streams are directly mapped to each radio (not Walsh spread
+> > >prior to splitting to multiple radios)
+> > I think ath9k does not waive the array gain contribution. I haven't
+> > checked AR9003, but on AR9002 and older, it explicitly includes the
+> > array gain contribution in the tx power limit calculation. I'm not
+> > sure that unconditionally disabling spatial spreading is the right
+> > way to deal with this.
+> >
+> We might violate the FCC rule with 2x2 config(3dB higher at 2-stream)
+> if this bit is enabled. Based on chainmask we can disable Walsh bit.
 
-P.S.
-Ofc I've checked this site, but they are offering only modems for
-E6220 and nothing at all for E5420/E5520. I've been searching in
-Shop for Home & Home Office › Accessories › Parts & Upgrades › Parts & Upgrades
+This change does not affect 3x3, since we don't use 2-chain for 2-stream.
+And Walsh mode would follow INI setting for 2x2 or 3x3 config.
 
--- 
-Rafał
+--
+Rajkumar
