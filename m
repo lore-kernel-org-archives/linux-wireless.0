@@ -1,50 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:19452 "EHLO mga14.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:36058 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752333Ab1HONxr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 09:53:47 -0400
-Subject: Re: [PATCH 05/60] iwlagn: introduce struct iwl-shared - known by
- all layers
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-In-Reply-To: <20110815084355.GB3317@redhat.com>
-References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1313257116-2697-6-git-send-email-wey-yi.w.guy@intel.com>
-	 <20110815081010.GA3317@redhat.com>  <20110815084355.GB3317@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 15 Aug 2011 06:13:39 -0700
-Message-ID: <1313414020.15170.32.camel@wwguy-huron> (sfid-20110815_155350_052755_CD3BE8DC)
-Mime-Version: 1.0
+	id S1753374Ab1HELLq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Aug 2011 07:11:46 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Tony Houghton <h@realh.co.uk>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
+	<lrodriguez@atheros.com>
+Subject: [PATCH -next 6/8] e1000e: use common function for disabling ASPM
+Date: Fri,  5 Aug 2011 13:10:37 +0200
+Message-Id: <1312542639-4274-7-git-send-email-sgruszka@redhat.com> (sfid-20110805_131148_808861_207879FE)
+In-Reply-To: <1312542639-4274-1-git-send-email-sgruszka@redhat.com>
+References: <1312542639-4274-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: e1000-devel@lists.sourceforge.net
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/e1000e/netdev.c |   31 +------------------------------
+ 1 files changed, 1 insertions(+), 30 deletions(-)
 
-On Mon, 2011-08-15 at 01:43 -0700, Stanislaw Gruszka wrote:
-> On Mon, Aug 15, 2011 at 10:10:11AM +0200, Stanislaw Gruszka wrote:
-> > What for are you doing this? These changes through patch 60 seems
-> > have no sense.
-> I mean only these containing priv->foo to priv->shrd->foo transastruction.
-> 
-> Stanislaw
-
-iwlagn driver is under major transformation now. As you know, we split
-the iwlwifi driver into iwlagn and iwlegacy which is the first step to
-prepare the transformation.
-
-now we are working on separate iwlagn driver into two layers (upper and
-lower), the lower layer contains both bus and transport sub-layer which
-is hw dependent, and the upper layer should be bus/hw independent. by
-doing so, the single driver can handle different bus and different core
-architecture.  Having the share data structure (priv->shrd->foo) between
-two layers is for that reason (loosely couple).
-
-Hope this answer the questions why we have so much "looks boring"
-patches, those are the preparation work  for upcoming new stuffs.
-
-Tanks
-Wey
+diff --git a/drivers/net/e1000e/netdev.c b/drivers/net/e1000e/netdev.c
+index 3310c3d..62ee7e4 100644
+--- a/drivers/net/e1000e/netdev.c
++++ b/drivers/net/e1000e/netdev.c
+@@ -5358,42 +5358,13 @@ static void e1000_complete_shutdown(struct pci_dev *pdev, bool sleep,
+ 	}
+ }
+ 
+-#ifdef CONFIG_PCIEASPM
+-static void __e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
+-{
+-	pci_disable_link_state_locked(pdev, state);
+-}
+-#else
+-static void __e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
+-{
+-	int pos;
+-	u16 reg16;
+-
+-	/*
+-	 * Both device and parent should have the same ASPM setting.
+-	 * Disable ASPM in downstream component first and then upstream.
+-	 */
+-	pos = pci_pcie_cap(pdev);
+-	pci_read_config_word(pdev, pos + PCI_EXP_LNKCTL, &reg16);
+-	reg16 &= ~state;
+-	pci_write_config_word(pdev, pos + PCI_EXP_LNKCTL, reg16);
+-
+-	if (!pdev->bus->self)
+-		return;
+-
+-	pos = pci_pcie_cap(pdev->bus->self);
+-	pci_read_config_word(pdev->bus->self, pos + PCI_EXP_LNKCTL, &reg16);
+-	reg16 &= ~state;
+-	pci_write_config_word(pdev->bus->self, pos + PCI_EXP_LNKCTL, reg16);
+-}
+-#endif
+ static void e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
+ {
+ 	dev_info(&pdev->dev, "Disabling ASPM %s %s\n",
+ 		 (state & PCIE_LINK_STATE_L0S) ? "L0s" : "",
+ 		 (state & PCIE_LINK_STATE_L1) ? "L1" : "");
+ 
+-	__e1000e_disable_aspm(pdev, state);
++	pcie_disable_aspm(pdev, state);
+ }
+ 
+ #ifdef CONFIG_PM
+-- 
+1.7.1
 
