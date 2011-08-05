@@ -1,76 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:65241 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752201Ab1HBPMF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 11:12:05 -0400
-Subject: Re: revert patch request
-From: wwguy <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20110802145401.GC14167@tuxdriver.com>
-References: <E9954878DD1FB34FAE5187FB88C58A3501995533C7@orsmsx506.amr.corp.intel.com>
-	 <20110802145401.GC14167@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 02 Aug 2011 08:07:33 -0700
-Message-ID: <1312297653.1713.0.camel@wwguy-ubuntu> (sfid-20110802_171209_939008_43A616DA)
-Mime-Version: 1.0
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:47697 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754857Ab1HEQNm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Aug 2011 12:13:42 -0400
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.02.1108040400570.4278@p34.internal.lan>
+References: <20110730113009.GA2847@redhat.com>
+	<20110730113255.GB2847@redhat.com>
+	<alpine.DEB.2.02.1107300736010.4925@p34.internal.lan>
+	<alpine.DEB.2.02.1107301015340.4925@p34.internal.lan>
+	<alpine.DEB.2.02.1107301031560.4925@p34.internal.lan>
+	<4E341DC4.9010107@01019freenet.de>
+	<alpine.DEB.2.02.1107301305590.4925@p34.internal.lan>
+	<20110803160050.GA18882@redhat.com>
+	<alpine.DEB.2.02.1108031328030.9421@p34.internal.lan>
+	<alpine.DEB.2.02.1108031339280.9421@p34.internal.lan>
+	<20110803183349.GA5956@redhat.com>
+	<alpine.DEB.2.02.1108040400570.4278@p34.internal.lan>
+Date: Fri, 5 Aug 2011 09:13:41 -0700
+Message-ID: <CAJu5p2cP7T3_kcCOM9+h3Xf_V4S0qg0tUztD_7JzkGz0ek2STQ@mail.gmail.com> (sfid-20110805_181401_988961_4867268B)
+Subject: Re: [rt2x00-users] [PATCH] rt2x00: rt2800: fix zeroing skb structure
+From: Aleksandar Milivojevic <alex@milivojevic.org>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Andreas Hartmann <andihartmann@01019freenet.de>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	Alan Piszcz <ap@solarrain.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-02 at 07:54 -0700, John W. Linville wrote:
-> On Tue, Aug 02, 2011 at 07:41:28AM -0700, Guy, Wey-Yi W wrote:
-> > Hi John,
-> > 
-> > 
-> > 
-> > I need to revert one of my patch back in 2.6.39, what is the best way to
-> > 
-> > do it since that area of code was changed after that.
-> > 
-> > 
-> > 
-> > 
-> > 
-> > commit 9dc2153315650eae220898668b6aa56a25c130be
-> > 
-> > Author: Wey-Yi Guy <wey-yi.w.guy@intel.com<mailto:wey-yi.w.guy@intel.com>>
-> > 
-> > Date:   Mon Jan 17 11:05:52 2011 -0800
-> > 
-> > 
-> > 
-> >     iwlwifi: always support idle mode for agn devices
-> > 
-> > 
-> > 
-> >     For agn devices, always support idle mode which help power
-> > 
-> >     consumption in idle unassociated state.
-> > 
-> > 
-> > 
-> >     Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com<mailto:wey-yi.w.guy@intel.com>>
-> > 
-> > 
-> > 
-> > 
-> > 
-> > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2312
-> > 
-> > 
-> > 
-> > Thanks
-> > 
-> > Wey
-> 
-> Perhaps you can resolve the conflicts w/ the revert and just post
-> it as a patch.  The changelog should indicate what you are reverting
-> (and why), of course.
-> 
-Thanks, I will try that
+On Thu, Aug 4, 2011 at 1:03 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+> Aug  3 22:47:12 atom kernel: [26120.279774] wlan0: deauthenticated from
+> hidden (Reason: 2)
 
-Wey
+Thinking about it, I'm also seeing similar "deauthenticated" message
+in kernel logs on my system infrequently (with Linksys WUSB600N, hw
+rev 1, rt2870 chip).  About few times a day, if I leave my system on
+24/7.  In my case, the reason code listed is "3".  Most times it
+re-authenticates with AP automatically, though sometimes it gives up
+and I need to tell it manually to try to re-connect to AP (using
+NetworkManager).
 
-
-
-
+Haven't gave it much thought before, as I usually have this system
+powered on for only few hours at a time, not long enough for problem
+to occur.  Unless I forget to power it off and it stays on overnight
+(and then by the morning, it's bound to have at least few
+"deauthenticated" messages logged).
