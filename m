@@ -1,30 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:49600 "HELO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755278Ab1HaU1Q convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 16:27:16 -0400
-Received: by mail-yw0-f46.google.com with SMTP id 7so1126994ywf.33
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 13:27:15 -0700 (PDT)
-From: Matthew Frazier <mlfrazie@ncsu.edu>
-Content-Type: text/plain; charset=us-ascii
-Subject: Status of BCM4331
-Date: Wed, 31 Aug 2011 16:27:14 -0400
-Message-Id: <D23A4EC8-E27C-476C-BA73-64EAB4E81B62@ncsu.edu> (sfid-20110831_222719_562028_8AE2B240)
-To: linux-wireless@vger.kernel.org
-Mime-Version: 1.0 (Apple Message framework v1244.3)
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:37481 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751807Ab1HEJqc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Aug 2011 05:46:32 -0400
+Received: by fxh19 with SMTP id 19so2649182fxh.19
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Aug 2011 02:46:31 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kvalo@adurom.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCHv2 2/2] mac80211: Don't use a buf_size=0 in ADDBA requests
+Date: Fri,  5 Aug 2011 11:46:19 +0200
+Message-Id: <1312537579-18950-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20110805_114635_482839_AB63725E)
+In-Reply-To: <1311675508-29005-2-git-send-email-helmut.schaa@googlemail.com>
+References: <1311675508-29005-2-git-send-email-helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, Linux wireless people.
+According to 802.11-2007, 7.3.1.14 it is compliant to use a buf_size of
+0 in ADDBA requests. But some devices (AVM Fritz Stick N) arn't able to
+handle that correctly and will reply with an ADDBA reponse with a
+buf_size of 0 which in turn will disallow BA sessions for these
+devices.
 
-On the b43 device list[1], you have support for the BCM4331 listed as "Soon (3.2+)". Does this mean "it will be in 3.2," "we will start working on it after 3.2," or something else?
+To work around this problem, initialize hw.max_tx_aggregation_subframes
+to the maximum AMPDU buffer size 0x40.
 
-Also, just out of curiosity, what are you working on specifically with regards to the BCM4331? What still needs to be done before the BCM4331 can be used? (And does Broadcom have any plans to support it with the broadcom-sta driver?)
+Using 0 as default for the bufsize was introduced in commit
+5dd36bc933e8be84f8369ac64505a2938f9ce036 (mac80211: allow advertising
+correct maximum aggregate size).
 
-[1] http://wireless.kernel.org/en/users/Drivers/b43
---
-Thanks,
-Matthew Frazier
-North Carolina State University
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+
+ net/mac80211/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 866f269..104fdd9 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -608,6 +608,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	local->hw.max_rates = 1;
+ 	local->hw.max_report_rates = 0;
+ 	local->hw.max_rx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
++	local->hw.max_tx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
+ 	local->hw.conf.long_frame_max_tx_count = wiphy->retry_long;
+ 	local->hw.conf.short_frame_max_tx_count = wiphy->retry_short;
+ 	local->user_power_level = -1;
+-- 
+1.7.3.4
 
