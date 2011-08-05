@@ -1,69 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3348 "EHLO mms1.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:49437 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751513Ab1HMHrt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 03:47:49 -0400
-Message-ID: <4E462C07.3050004@broadcom.com> (sfid-20110813_094803_201867_EE84A559)
-Date: Sat, 13 Aug 2011 09:47:19 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1751612Ab1HEJs5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Aug 2011 05:48:57 -0400
+Message-ID: <4E3BBC7F.9040902@openwrt.org> (sfid-20110805_114912_067115_94C05561)
+Date: Fri, 05 Aug 2011 11:48:47 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/14] staging: brcm80211: brcmfmac driver cleanup
-References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
- <CACna6rztueomzzas=hQjfj6htD=SHFhrtFPSqbviqVDwaihJ9w@mail.gmail.com>
- <4E4555AD.7040809@broadcom.com>
- <CACna6rx_d4btykdK7AMwFxeFMs_MxjHEHvR6coxaZkfqkQVafA@mail.gmail.com>
-In-Reply-To: <CACna6rx_d4btykdK7AMwFxeFMs_MxjHEHvR6coxaZkfqkQVafA@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 11/13] ath9k_hw: Disable Walsh spatial spreading for
+ 2 chains
+References: <1312480447-27483-1-git-send-email-rmanohar@qca.qualcomm.com> <4E3AE3A0.2000308@openwrt.org> <20110805025452.GA28266@vmraj-lnx.users.atheros.com> <20110805083601.GA6702@vmraj-lnx.users.atheros.com>
+In-Reply-To: <20110805083601.GA6702@vmraj-lnx.users.atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/12/2011 10:04 PM, Rafał Miłecki wrote:
-> W dniu 12 sierpnia 2011 18:32 użytkownik Arend van Spriel
-> <arend@broadcom.com>  napisał:
->> On 08/12/2011 04:02 PM, Rafał Miłecki wrote:
->>> 2011/8/12 Arend van Spriel<arend@broadcom.com>:
->>>> Several cleanup patches to reduce code for the brcmfmac driver and
->>>> get rid of a remaining checkpatch warning. The driver sources should
->>>> be clear from checkpatch issue now.
->>>>
->>>> This series applies to staging-next and depends on the following patch
->>>> set:
->>> Are you testing patches on some hardware? Or just compile-testing?
->>>
->>> I believe this driver is meant to support BCM4329, which is not PCI(e)
->>> board. What adapter do you use?
->>>
->>> I've heard about Arasan adapter. Have you tried it? Is that something
->>> reachable from arasan.com?
->> Our brcm80211 source tree under drivers/staging contain two drivers. The
->> brcmsmac driver currently supporting the PCI(e) cards with bcm43224,
->> bcm43225, and bcm4313 chips and the brcmfmac driver currently supporting the
->> SDIO card with bcm4329 chip. brcmsmac is a mac80211 driver and brcmfmac is a
->> cfg80211 driver.
->>
->> We indeed use the Arasan adapter and both drivers are running in nightly
->> test cycle testing our common internal repository. So the drivers are
->> functionally tested on the x86 platforms (32 and 64 bit). Also looking at
->> sparc64 and powerpc64 but not in a nightly cycle.
-> Is there a chance you can donate me with such a adapter and card?
+On 2011-08-05 10:36 AM, Rajkumar Manoharan wrote:
+> On Fri, Aug 05, 2011 at 08:24:53AM +0530, Rajkumar Manoharan wrote:
+>>  On Thu, Aug 04, 2011 at 08:23:28PM +0200, Felix Fietkau wrote:
+>>  >  On 2011-08-04 7:54 PM, Rajkumar Manoharan wrote:
+>>  >  >The Walsh bit is disabled for regulatory consideration.
+>>  >  >
+>>  >  >As per the FCC rulings, only transmissions that are completely
+>>  >  >non-coherent, are allowed to waive the array gain contribution
+>>  >  >to EIRP for multi-transmit configurations. The use of 2-stream
+>>  >  >with 2 transmit and use of 3-steam with 3 transmit qualifies
+>>  >  >for this spatial multiplexing MIMO classification as long as
+>>  >  >the streams are directly mapped to each radio (not Walsh spread
+>>  >  >prior to splitting to multiple radios)
+>>  >  I think ath9k does not waive the array gain contribution. I haven't
+>>  >  checked AR9003, but on AR9002 and older, it explicitly includes the
+>>  >  array gain contribution in the tx power limit calculation. I'm not
+>>  >  sure that unconditionally disabling spatial spreading is the right
+>>  >  way to deal with this.
+>>  >
+>>  We might violate the FCC rule with 2x2 config(3dB higher at 2-stream)
+>>  if this bit is enabled. Based on chainmask we can disable Walsh bit.
+>
+> This change does not affect 3x3, since we don't use 2-chain for 2-stream.
+> And Walsh mode would follow INI setting for 2x2 or 3x3 config.
+The thing is, on many channels the the card is allowed to transmit at up 
+to 27 dBm, and often the hardware does not even get close to that. Why 
+limit tx power by disabling this bit in cases where it's not even close 
+to going over the limit.
+How about disabling it only if the combined txpower is within x dBm of 
+the regulatory limit, or simply adding the same kind of multi-chain 
+limit calculation that is being used on AR9280?
 
-Hi Rafał,
-
-If your interest is getting SDIO supported in bcma this card is not very 
-useful to you. The bcm4329 is using the SSB interconnect.
-
-Gr. AvS
-
--- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
-
-
+- Felix
