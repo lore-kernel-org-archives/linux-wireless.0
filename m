@@ -1,53 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40907 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752643Ab1H3SPC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 14:15:02 -0400
-Date: Tue, 30 Aug 2011 11:14:52 -0700
-From: Greg KH <gregkh@suse.de>
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Dan Carpenter <error27@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-Subject: Re: [PATCH v2] Move brcm80211 to mainline
-Message-ID: <20110830181452.GA24769@suse.de> (sfid-20110830_201507_094479_41A7C3CB)
-References: <20110707002034.GA17885@broadcom.com>
- <20110824222801.GA5280@broadcom.com>
- <CACna6rwG6qNpaOu4QeOvs0L3LVETRt9w5=Ec-L2NJ5gXOAM=nw@mail.gmail.com>
- <20110827143513.GN3775@shale.localdomain>
- <20110827145003.GA9405@suse.de>
- <CACna6ryfZoahr1FPbZ_syBFhWnfRprEs=95y=piCGXXm_Cu+LQ@mail.gmail.com>
- <20110827152144.GA10126@suse.de>
- <20110830014257.GI15771@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110830014257.GI15771@broadcom.com>
+Received: from external1.orbit-lab.org ([128.6.192.131]:48881 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753845Ab1HETEc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Aug 2011 15:04:32 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id B4F07540055
+	for <linux-wireless@vger.kernel.org>; Fri,  5 Aug 2011 15:13:16 -0400 (EDT)
+Subject: Compat-wireless release for 2011-08-05 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110805190431.40BD240ED4@repository3.orbit-lab.org> (sfid-20110805_210441_195406_159BFF5D)
+Date: Fri,  5 Aug 2011 15:04:28 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 29, 2011 at 06:42:57PM -0700, Henry Ptasinski wrote:
-> The brcmsmac driver has architectural alignment with our drivers for other
-> operating systems, and we intend to to enhance and maintain this driver in 
-> parallel with drivers for other operating systems.  Maintaining alignment
-> between our Linux driver and drivers for other operating systems allows us to
-> leverage feature and chip support across all platforms.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + acc40a7...a05e18f akpm-end   -> origin/akpm-end  (forced update)
+   ed8f373..53d1e65  akpm-start -> origin/akpm-start
+ + 94edca8...3927df3 master     -> origin/master  (forced update)
+   ed8f373..53d1e65  stable     -> origin/stable
+ * [new tag]         next-20110805 -> next-20110805
 
-Just curious, if you really are going to try to do this, how are you
-going to handle the issue when others change the in-kernel driver in
-ways that you are not going to be allowed to make to your "internal"
-copy of the driver?
+compat-wireless code metrics
 
-Also, how are you going to handle any GPL-only changes that happen to
-the code as well?  Do you have some process in place to ensure that all
-contributions will have the proper copyright releases on it to allow you
-to make the same changes to your internal versions?
-
-This all is a very difficult and time-consuming task, are you sure you
-are all up to it and have properly discussed it with your legal team,
-management team, and with the kernel community?
-
-thanks,
-
-greg k-h
+    835398 - Total upstream lines of code being pulled
+      2400 - backport code changes
+      2094 - backport code additions
+       306 - backport code deletions
+      8182 - backport from compat module
+     10582 - total backport code
+    1.2667 - % of code consists of backport work
