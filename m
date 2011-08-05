@@ -1,48 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:49090 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752630Ab1HQXUo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2011 19:20:44 -0400
-Message-ID: <4E4C4CC2.2070702@lwfinger.net> (sfid-20110818_012110_160878_847538A8)
-Date: Wed, 17 Aug 2011 18:20:34 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Valdis.Kletnieks@vt.edu
-CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	Pavel Ivanov <paivanof@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ath9k: make driver usable standalone
-References: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com> <CA+XFjipM1Qup3bcJos_ikwzoaWoa3GdYqK0WBUqEHBNR6V6LfQ@mail.gmail.com> <CAG1a4rsyfPrrrf-mzt3HAM6YHHjaHTcd2rbtYiwqLkUCP=j8pQ@mail.gmail.com>            <CA+XFjipsVukKYchfmDv48PAKsD2PUxT+7E8epRuKFynGwk=Bag@mail.gmail.com> <24649.1313621503@turing-police.cc.vt.edu>
-In-Reply-To: <24649.1313621503@turing-police.cc.vt.edu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:26050 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754934Ab1HELL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Aug 2011 07:11:27 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Tony Houghton <h@realh.co.uk>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
+	<lrodriguez@atheros.com>
+Subject: [PATCH -next 7/8] pci: aspm: add settings changed callback
+Date: Fri,  5 Aug 2011 13:10:38 +0200
+Message-Id: <1312542639-4274-8-git-send-email-sgruszka@redhat.com> (sfid-20110805_131130_550820_34B98470)
+In-Reply-To: <1312542639-4274-1-git-send-email-sgruszka@redhat.com>
+References: <1312542639-4274-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/17/2011 05:51 PM, Valdis.Kletnieks@vt.edu wrote:
-> On Wed, 17 Aug 2011 18:25:49 +0200, Gábor Stefanik said:
->
->> Iwconfig and iwlist are themselves deprecated. Iw is the new wireless
->> configuration tool.
->
-> Somebody better tell Fedora Rawhide - as of the version released on July 27,
-> their 'initscripts' RPM was still using iwconfig in /etc/sysconfig/network-scripts/ifup-wireless
->
-> So don't be quite so fast to be declaring WIRELESS_EXT dead just yet.
+Inform drivers that register pci_drviver->aspm_changed(), about new ASPM
+settings. Callback is only called for child (endpoint) devices.
 
-Well, any distro is free to include any package they want. They can even devote 
-resources to maintaining it after it is abandoned. Given the feelings among 
-developers about the WEXT methods, I doubt that will happen.
+Currently this will be used in ath9k driver. In the future we most
+likely will use it in iwlwifi and rtlwifi drivers and possibly some
+others that needs to do own ASPM related quirks.
 
-The distro is also including one of the drivers that need WEXT, which is what 
-the OP refused to do. If and when all such drivers are converted or removed, the 
-distro is still free to patch in the WEXT code, but again I doubt that will happen.
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/pci/pcie/aspm.c |    5 ++++-
+ include/linux/pci.h     |    3 +++
+ 2 files changed, 7 insertions(+), 1 deletions(-)
 
-Anyone using deprecated methods has been warned.
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 2883fc3..d7acec8 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -474,8 +474,11 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
+ 	 */
+ 	if (state & ASPM_STATE_L1)
+ 		pcie_config_aspm_dev(parent, upstream);
+-	list_for_each_entry(child, &linkbus->devices, bus_list)
++	list_for_each_entry(child, &linkbus->devices, bus_list) {
+ 		pcie_config_aspm_dev(child, dwstream);
++		if (child->driver && child->driver->aspm_changed)
++			child->driver->aspm_changed(child, dwstream);
++	}
+ 	if (!(state & ASPM_STATE_L1))
+ 		pcie_config_aspm_dev(parent, upstream);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c446b5c..2110d63 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -555,6 +555,9 @@ struct pci_driver {
+ 	int  (*resume_early) (struct pci_dev *dev);
+ 	int  (*resume) (struct pci_dev *dev);	                /* Device woken up */
+ 	void (*shutdown) (struct pci_dev *dev);
++#ifdef CONFIG_PCIEASPM
++	void (*aspm_changed) (struct pci_dev *dev, u32 state);
++#endif
+ 	struct pci_error_handlers *err_handler;
+ 	struct device_driver	driver;
+ 	struct pci_dynids dynids;
+-- 
+1.7.1
 
-Larry
