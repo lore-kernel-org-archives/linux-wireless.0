@@ -1,99 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1683 "EHLO mms2.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59770 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752086Ab1HHN7W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:22 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 06/82] staging: brcm80211: removed function
- declaration typedefs from aiutils.h
-Date: Mon, 8 Aug 2011 15:57:50 +0200
-Message-ID: <1312811946-16713-7-git-send-email-arend@broadcom.com> (sfid-20110808_160236_546755_AFB079C6)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1753537Ab1HELLb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Aug 2011 07:11:31 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Tony Houghton <h@realh.co.uk>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
+	<lrodriguez@atheros.com>
+Subject: [PATCH -next 8/8] ath9k: be prepare for dynamic ASPM settings change
+Date: Fri,  5 Aug 2011 13:10:39 +0200
+Message-Id: <1312542639-4274-9-git-send-email-sgruszka@redhat.com> (sfid-20110805_131134_292523_FEBFA88A)
+In-Reply-To: <1312542639-4274-1-git-send-email-sgruszka@redhat.com>
+References: <1312542639-4274-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Kernel offer possibility to change ASPM settings using
+/sys/module/pcie_aspm/parameters/policy interface. As settings can be
+changed, we also need to change ath9k hw registers. Patch implement
+this by monitoring power_off state, and based on that state setup
+register when pci core inform us about ASPM change.
 
-Softmac related code cleanup. Typedefs are undesirable according to the
-CodingStyle document.
-
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/staging/brcm80211/brcmsmac/aiutils.c |    6 +++---
- drivers/staging/brcm80211/brcmsmac/aiutils.h |   16 ++++++----------
- 2 files changed, 9 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw-ops.h |    1 +
+ drivers/net/wireless/ath/ath9k/hw.h     |    1 +
+ drivers/net/wireless/ath/ath9k/main.c   |    3 +-
+ drivers/net/wireless/ath/ath9k/pci.c    |   38 +++++++++++++++++++++++++++++++
+ 4 files changed, 42 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
-index a25901e..5a5fc4b 100644
---- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
-@@ -1279,9 +1279,9 @@ ai_register_intr_callback(struct si_pub *sih, void *intrsoff_fn,
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index dd9003e..0743e82 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -24,6 +24,7 @@
+ static inline void ath9k_hw_configpcipowersave(struct ath_hw *ah,
+ 					       bool power_off)
+ {
++	ah->power_off = power_off;
+ 	if (ah->aspm_enabled != true)
+ 		return;
  
- 	sii = SI_INFO(sih);
- 	sii->intr_arg = intr_arg;
--	sii->intrsoff_fn = (si_intrsoff_t) intrsoff_fn;
--	sii->intrsrestore_fn = (si_intrsrestore_t) intrsrestore_fn;
--	sii->intrsenabled_fn = (si_intrsenabled_t) intrsenabled_fn;
-+	sii->intrsoff_fn = (u32 (*)(void *)) intrsoff_fn;
-+	sii->intrsrestore_fn = (void (*) (void *, u32)) intrsrestore_fn;
-+	sii->intrsenabled_fn = (bool (*)(void *)) intrsenabled_fn;
- 	/* save current core id.  when this function called, the current core
- 	 * must be the core which provides driver functions(il, et, wl, etc.)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index f28f339..cb388ff 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -672,6 +672,7 @@ struct ath_hw {
+ 	bool sw_mgmt_crypto;
+ 	bool is_pciexpress;
+ 	bool aspm_enabled;
++	bool power_off;
+ 	bool is_monitoring;
+ 	bool need_an_top2_fixup;
+ 	u16 tx_trig_level;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index b0389c3..a7e3c5c 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1065,6 +1065,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 
+ 	init_channel = ath9k_cmn_get_curchannel(hw, ah);
+ 
++	spin_lock_bh(&sc->sc_pcu_lock);
++
+ 	/* Reset SERDES registers */
+ 	ath9k_hw_configpcipowersave(ah, false);
+ 
+@@ -1075,7 +1077,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	 * be followed by initialization of the appropriate bits
+ 	 * and then setup of the interrupt mask.
  	 */
-diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
-index e245c27..f881b44 100644
---- a/drivers/staging/brcm80211/brcmsmac/aiutils.h
-+++ b/drivers/staging/brcm80211/brcmsmac/aiutils.h
-@@ -425,8 +425,6 @@ struct si_pub {
- #define CCPLL_ENAB(sih)		((sih)->cccaps & CC_CAP_PLL_MASK)
- #endif
+-	spin_lock_bh(&sc->sc_pcu_lock);
+ 	r = ath9k_hw_reset(ah, init_channel, ah->caldata, false);
+ 	if (r) {
+ 		ath_err(common,
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 67a2c96..c585180 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -285,6 +285,41 @@ static void ath_pci_remove(struct pci_dev *pdev)
+ 	pci_release_region(pdev, 0);
+ }
  
--typedef void (*gpio_handler_t) (u32 stat, void *arg);
--
- /* External PA enable mask */
- #define GPIO_CTRL_EPA_EN_MASK 0x40
++#ifdef CONFIG_PCIEASPM
++
++static void ath_pci_aspm_changed(struct pci_dev *pdev, u32 state)
++{
++	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
++	struct ath_softc *sc = hw->priv;
++	struct ath_hw *ah = sc->sc_ah;
++
++	spin_lock_irq(&sc->sc_pcu_lock);
++
++	/*
++	 * ASPM settings were changed, we have to configure PCIe PM and SERDES
++	 * registers based on current state of device and new ASPM settings.
++	 */
++	if (state & (PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1)) {
++		ah->aspm_enabled = true;
++		ath9k_hw_configpcipowersave(ah, ah->power_off);
++	} else {
++		if (ah->power_off == false) {
++			/*
++			 * Device is enabled, but since we disable ASPM we also
++			 * setup PCIe PM registers in off state.
++			 */
++			ath9k_hw_configpcipowersave(ah, true);
++			/* But track real power_off value. */
++			ah->power_off = false;
++		}
++		ah->aspm_enabled = false;
++	}
++
++	spin_unlock_irq(&sc->sc_pcu_lock);
++}
++
++#endif
++
+ #ifdef CONFIG_PM
  
-@@ -444,14 +442,10 @@ typedef void (*gpio_handler_t) (u32 stat, void *arg);
- #define	IS_SIM(chippkg)	\
- 	((chippkg == HDLSIM_PKG_ID) || (chippkg == HWSIM_PKG_ID))
- 
--typedef u32(*si_intrsoff_t) (void *intr_arg);
--typedef void (*si_intrsrestore_t) (void *intr_arg, u32 arg);
--typedef bool(*si_intrsenabled_t) (void *intr_arg);
--
- struct gpioh_item {
- 	void *arg;
- 	bool level;
--	gpio_handler_t handler;
-+	void (*handler) (u32 stat, void *arg);
- 	u32 event;
- 	struct gpioh_item *next;
+ static int ath_pci_suspend(struct device *device)
+@@ -364,6 +399,9 @@ static struct pci_driver ath_pci_driver = {
+ 	.id_table   = ath_pci_id_table,
+ 	.probe      = ath_pci_probe,
+ 	.remove     = ath_pci_remove,
++#ifdef CONFIG_PCIEASPM
++	.aspm_changed = ath_pci_aspm_changed,
++#endif
+ 	.driver.pm  = ATH9K_PM_OPS,
  };
-@@ -462,9 +456,11 @@ struct si_info {
- 	void *pbus;		/* handle to bus (pci/sdio/..) */
- 	uint dev_coreid;	/* the core provides driver functions */
- 	void *intr_arg;		/* interrupt callback function arg */
--	si_intrsoff_t intrsoff_fn;	/* turns chip interrupts off */
--	si_intrsrestore_t intrsrestore_fn; /* restore chip interrupts */
--	si_intrsenabled_t intrsenabled_fn; /* check if interrupts are enabled */
-+	u32 (*intrsoff_fn) (void *intr_arg); /* turns chip interrupts off */
-+	/* restore chip interrupts */
-+	void (*intrsrestore_fn) (void *intr_arg, u32 arg);
-+	/* check if interrupts are enabled */
-+	bool (*intrsenabled_fn) (void *intr_arg);
- 
- 	void *pch;		/* PCI/E core handle */
  
 -- 
-1.7.4.1
-
+1.7.1
 
