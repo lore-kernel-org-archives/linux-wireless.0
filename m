@@ -1,139 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:52328 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752702Ab1HIJOD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 05:14:03 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 24so210690wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:03 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 17/40] wl12xx: add ROC/CROC commands
-Date: Tue,  9 Aug 2011 12:13:30 +0300
-Message-Id: <1312881233-9366-18-git-send-email-eliad@wizery.com> (sfid-20110809_111456_472317_599A547B)
-In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+Received: from mx1.redhat.com ([209.132.183.28]:51197 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751612Ab1HELLW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Aug 2011 07:11:22 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Tony Houghton <h@realh.co.uk>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
+	<lrodriguez@atheros.com>
+Subject: [PATCH -next 5/8] ath9k: use common function for disabling ASPM
+Date: Fri,  5 Aug 2011 13:10:36 +0200
+Message-Id: <1312542639-4274-6-git-send-email-sgruszka@redhat.com> (sfid-20110805_131124_581364_40A2575E)
+In-Reply-To: <1312542639-4274-1-git-send-email-sgruszka@redhat.com>
+References: <1312542639-4274-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add structs and functions to support the ROC/CROC commands.
+Disable ASPM using common function, this works also with
+CONFIG_PCIEASPM=y.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/wl12xx/cmd.c |   72 +++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/cmd.h |    9 +++++
- 2 files changed, 81 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/pci.c |   23 +++--------------------
+ 1 files changed, 3 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index 94942c1..3091351 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -1478,6 +1478,78 @@ int wl12xx_cmd_stop_fwlog(struct wl1271 *wl)
- out_free:
- 	kfree(cmd);
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 7d94b64..67a2c96 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -110,33 +110,16 @@ static void ath_pci_aspm_init(struct ath_common *common)
+ 	int pos;
+ 	u8 aspm;
  
- out:
- 	return ret;
- }
-+
-+static int wl1271_cmd_roc(struct wl1271 *wl, u8 role_id)
-+{
-+	struct wl1271_cmd_roc *cmd;
-+	int ret = 0;
-+
-+	wl1271_debug(DEBUG_CMD, "cmd roc %d (%d)", wl->channel, wl->band);
-+
-+	if (WARN_ON(role_id == WL1271_INVALID_ROLE_ID))
-+		return -EINVAL;
-+
-+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-+	if (!cmd) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	cmd->role_id = role_id;
-+	cmd->channel = wl->channel;
-+	switch (wl->band) {
-+	case IEEE80211_BAND_2GHZ:
-+		cmd->band = RADIO_BAND_2_4GHZ;
-+		break;
-+	case IEEE80211_BAND_5GHZ:
-+		cmd->band = RADIO_BAND_5GHZ;
-+		break;
-+	default:
-+		wl1271_warning("roc - unknown band: %d", (int)wl->band);
-+		cmd->band = RADIO_BAND_2_4GHZ;
-+		break;
-+	}
-+
-+
-+	ret = wl1271_cmd_send(wl, CMD_REMAIN_ON_CHANNEL, cmd, sizeof(*cmd), 0);
-+	if (ret < 0) {
-+		wl1271_error("failed to send ROC command");
-+		goto out_free;
-+	}
-+
-+out_free:
-+	kfree(cmd);
-+
-+out:
-+	return ret;
-+}
-+
-+static int wl1271_cmd_croc(struct wl1271 *wl, u8 role_id)
-+{
-+	struct wl1271_cmd_header *cmd;
-+	int ret = 0;
-+
-+	wl1271_debug(DEBUG_CMD, "cmd croc");
-+
-+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-+	if (!cmd) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	ret = wl1271_cmd_send(wl, CMD_CANCEL_REMAIN_ON_CHANNEL, cmd,
-+			      sizeof(*cmd), 0);
-+	if (ret < 0) {
-+		wl1271_error("failed to send ROC command");
-+		goto out_free;
-+	}
-+
-+out_free:
-+	kfree(cmd);
-+
-+out:
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/wl12xx/cmd.h b/drivers/net/wireless/wl12xx/cmd.h
-index 3734244..0ba4537 100644
---- a/drivers/net/wireless/wl12xx/cmd.h
-+++ b/drivers/net/wireless/wl12xx/cmd.h
-@@ -570,12 +570,21 @@ struct wl1271_cmd_set_peer_state {
+-	pos = pci_pcie_cap(pdev);
+-	if (!pos)
++	if (!pci_is_pcie(pdev))
+ 		return;
  
- 	u8 hlid;
- 	u8 state;
- 	u8 padding[2];
- } __packed;
+-	parent = pdev->bus->self;
+-
+ 	if (ah->btcoex_hw.scheme != ATH_BTCOEX_CFG_NONE) {
+ 		/* Bluetooth coexistance requires disabling ASPM. */
+-		pci_read_config_byte(pdev, pos + PCI_EXP_LNKCTL, &aspm);
+-		aspm &= ~(PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
+-		pci_write_config_byte(pdev, pos + PCI_EXP_LNKCTL, aspm);
+-
+-		/*
+-		 * Both upstream and downstream PCIe components should
+-		 * have the same ASPM settings.
+-		 */
+-		if (WARN_ON(!parent))
+-			return;
+-
+-		pos = pci_pcie_cap(parent);
+-		pci_read_config_byte(parent, pos + PCI_EXP_LNKCTL, &aspm);
+-		aspm &= ~(PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
+-		pci_write_config_byte(parent, pos + PCI_EXP_LNKCTL, aspm);
+-
++		pcie_disable_aspm(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
+ 		return;
+ 	}
  
-+struct wl1271_cmd_roc {
-+	struct wl1271_cmd_header header;
-+
-+	u8 role_id;
-+	u8 channel;
-+	u8 band;
-+	u8 padding;
-+};
-+
- enum wl1271_ssid_type {
- 	WL1271_SSID_TYPE_PUBLIC = 0,
- 	WL1271_SSID_TYPE_HIDDEN = 1,
- 	WL1271_SSID_TYPE_ANY = 2,
- };
++	parent = pdev->bus->self;
+ 	if (WARN_ON(!parent))
+ 		return;
  
 -- 
-1.7.6.401.g6a319
+1.7.1
 
