@@ -1,52 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27818 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751137Ab1HXQIR (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:43895 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756633Ab1HFTp4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 12:08:17 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
-	<senthilb@qca.qualcomm.com>, <rmanohar@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	<stable@kernel.org>
-Subject: [PATCH v2] ath9k: Fix PS wrappers in ath9k_set_coverage_class
-Date: Wed, 24 Aug 2011 21:38:07 +0530
-Message-ID: <1314202087-18296-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110824_180820_557917_A83BE7C1)
+	Sat, 6 Aug 2011 15:45:56 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+CC: Pavel Roskin <proski@gnu.org>,
+	Daniel Halperin <dhalperi@cs.washington.edu>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Sat, 6 Aug 2011 22:45:50 +0300
+Subject: RE: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv
+ pointer
+Message-ID: <4825B8A2C4E264489E57869F0DCFB22344564A2BB0@hasmsx502.ger.corp.intel.com> (sfid-20110806_214559_620901_5A995BB4)
+References: <1312228017-12061-1-git-send-email-wey-yi.w.guy@intel.com>
+	<CALSq=BYkKhJN=GU0RUJ2viibsy5yG78x-D-td0zP+rqWCy=AiQ@mail.gmail.com>
+	<4825B8A2C4E264489E57869F0DCFB22344563F4ABE@hasmsx502.ger.corp.intel.com>
+	<CALSq=BZ2CoF=+Zw-si5oc8No9MLTP1YoZCzfoT9TX1XEaLnq1A@mail.gmail.com>
+	<CALSq=BYY8-fAqATwJaFNvzwpSo4WWXbH=pRXn0oknqKXH=4X2A@mail.gmail.com>
+	<1312499702.15170.17.camel@wwguy-huron>	<20110805225051.435fe1b0@mj>
+	<E9954878DD1FB34FAE5187FB88C58A350199604D92@orsmsx506.amr.corp.intel.com>
+ <CANUX_P3p3mqUjJrynivna5Fu4iv8DDdH-rY53Y36tHRVewSSuQ@mail.gmail.com>
+In-Reply-To: <CANUX_P3p3mqUjJrynivna5Fu4iv8DDdH-rY53Y36tHRVewSSuQ@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On top of my previous patch of course (which actually fixed the previous bug, but added the one you are facing now...).
 
-this callback is called during suspend/resume and also via iw command.
-it configures parameters like sifs, slottime, acktimeout in
-ath9k_hw_init_global_settings where few REG_READ, REG_RMW are also done
-and hence the need for PS wrappers
+Thanks,
+       Emmanuel
 
-Cc: stable@kernel.org
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 781af25..2486f5c 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2285,7 +2285,11 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
- 
- 	mutex_lock(&sc->mutex);
- 	ah->coverage_class = coverage_class;
-+
-+	ath9k_ps_wakeup(sc);
- 	ath9k_hw_init_global_settings(ah);
-+	ath9k_ps_restore(sc);
-+
- 	mutex_unlock(&sc->mutex);
- }
- 
--- 
-1.7.0.4
+> -----Original Message-----
+> From: Emmanuel Grumbach [mailto:egrumbach@gmail.com]
+> Sent: Saturday, August 06, 2011 10:44 PM
+> To: Guy, Wey-Yi W
+> Cc: Pavel Roskin; Grumbach, Emmanuel; Daniel Halperin;
+> linville@tuxdriver.com; linux-wireless@vger.kernel.org
+> Subject: Re: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv
+> pointer
+> 
+> Can you please try that one ?
+> I don't have my machine near me, and don't want to crash it remotely, so I
+> didn't test it. I will test in on Sunday.
+> 
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c
+> b/drivers/net/wireless/iwlwifi/iwl-pci.c
+> index 69d4ec4..2fdbffa 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-pci.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+> @@ -478,27 +478,22 @@ out_no_pci:
+>  	return err;
+>  }
+> 
+> -static void iwl_pci_down(struct iwl_bus *bus) -{
+> -	struct iwl_pci_bus *pci_bus = (struct iwl_pci_bus *) bus-
+> >bus_specific;
+> -
+> -	pci_disable_msi(pci_bus->pci_dev);
+> -	pci_iounmap(pci_bus->pci_dev, pci_bus->hw_base);
+> -	pci_release_regions(pci_bus->pci_dev);
+> -	pci_disable_device(pci_bus->pci_dev);
+> -	pci_set_drvdata(pci_bus->pci_dev, NULL);
+> -
+> -	kfree(bus);
+> -}
+> -
+>  static void __devexit iwl_pci_remove(struct pci_dev *pdev)  {
+>  	struct iwl_priv *priv = pci_get_drvdata(pdev);
+> -	void *bus_specific = priv->bus->bus_specific;
+> +	struct iwl_bus *bus = priv->bus;
+> +	struct iwl_pci_bus *pci_bus = IWL_BUS_GET_PCI_BUS(bus);
+> +	struct pci_dev *pci_dev = IWL_BUS_GET_PCI_DEV(bus);
+> 
+>  	iwl_remove(priv);
+> 
+> -	iwl_pci_down(bus_specific);
+> +	pci_disable_msi(pci_dev);
+> +	pci_iounmap(pci_dev, pci_bus->hw_base);
+> +	pci_release_regions(pci_dev);
+> +	pci_disable_device(pci_dev);
+> +	pci_set_drvdata(pci_dev, NULL);
+> +
+> +	kfree(bus);
+>  }
+> 
+>  #ifdef CONFIG_PM
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
