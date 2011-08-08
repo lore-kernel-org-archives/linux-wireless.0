@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1813 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752656Ab1HWMOR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 08:14:17 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 5/8] staging: brcm80211: fix rtnl_lock issue when
- bringing down brcmfmac
-Date: Tue, 23 Aug 2011 14:13:57 +0200
-Message-ID: <1314101640-4229-6-git-send-email-arend@broadcom.com> (sfid-20110823_141429_584378_8E67E2BF)
-In-Reply-To: <1314101640-4229-1-git-send-email-arend@broadcom.com>
-References: <1314101640-4229-1-git-send-email-arend@broadcom.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:44539 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754184Ab1HHSre convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 14:47:34 -0400
+Received: by wwf5 with SMTP id 5so1894813wwf.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 11:47:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1312809868.4372.33.camel@jlt3.sipsolutions.net>
+References: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
+	<1311638357-28740-5-git-send-email-thomas@cozybit.com>
+	<1312809868.4372.33.camel@jlt3.sipsolutions.net>
+Date: Mon, 8 Aug 2011 11:47:32 -0700
+Message-ID: <CAG6hwVN4i5Yh_ea0j3kvPyznUuZmfxog2OzK1Y74eveU2kR6Dg@mail.gmail.com> (sfid-20110808_204737_967765_F392AC10)
+Subject: Re: [PATCH 4/6] mac80211: update mesh peering frame format
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When bringing down the netdevice interface a deadlock occurred
-sporadically due to the rtnl_lock being held by a task that was
-waiting for another task trying to get the lock. This patch fixes
-that issue.
+On Mon, Aug 8, 2011 at 6:24 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2011-07-25 at 16:59 -0700, Thomas Pedersen wrote:
+>
+>> -#define PLINK_GET_LLID(p) (p + 4)
+>> -#define PLINK_GET_PLID(p) (p + 6)
+>> +#define PLINK_GET_LLID(p) (p + 2)
+>> +#define PLINK_GET_PLID(p) (p + 4)
+>
+> This is a more tangential comment -- but I'd feel more comfortable with
+> the code if these macros were removed and some structs overlaid the IEs
+> instead. But definitely not as part of this patch -- hence tangential.
+>
 
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+Sounds good, I'll make a note.
+>> +     case WLAN_CATEGORY_SELF_PROTECTED:
+>> +             switch (mgmt->u.action.u.self_prot.action_code) {
+>> +             case WLAN_SP_MESH_PEERING_OPEN:
+>> +             case WLAN_SP_MESH_PEERING_CLOSE:
+>> +             case WLAN_SP_MESH_PEERING_CONFIRM:
+>> +                     if (!ieee80211_vif_is_mesh(&sdata->vif))
+>> +                             goto invalid;
+>> +                     if (sdata->u.mesh.security != IEEE80211_MESH_SEC_NONE)
+>> +                             /* userspace handles this frame */
+>
+> Will this compile in the CONFIG_MAC80211_MESH=n case? It seems like it
+> might not? Do you routinely test that?
+>
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 95d6944..f9742b0 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3189,7 +3189,14 @@ static void brcmf_term_iscan(struct brcmf_cfg80211_priv *cfg_priv)
- 	if (cfg_priv->iscan_on && iscan->tsk) {
- 		iscan->state = WL_ISCAN_STATE_IDLE;
- 		send_sig(SIGTERM, iscan->tsk, 1);
-+
-+		/*
-+		 * The iscan task may want to acquire the rtnl_lock
-+		 * so release it here upon stopping the task.
-+		 */
-+		rtnl_unlock();
- 		kthread_stop(iscan->tsk);
-+		rtnl_lock();
- 		iscan->tsk = NULL;
- 
- 		/* Abort iscan running in FW */
--- 
-1.7.4.1
+Yes. The CONFIG_MAC80211_MESH check around the ieee80211_if_mesh was
+removed in c80d545da3f7c0e534ccd4a780f322f80a92cff1
+> johannes
 
-
+>
+>
