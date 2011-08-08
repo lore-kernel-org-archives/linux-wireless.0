@@ -1,63 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:58299 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753231Ab1HLCf3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 22:35:29 -0400
-Received: by mail-iy0-f170.google.com with SMTP id 16so609089iye.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 19:35:28 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v3 2/6] ieee80211: introduce Self Protected Action codes
-Date: Thu, 11 Aug 2011 19:35:11 -0700
-Message-Id: <1313116515-26166-2-git-send-email-thomas@cozybit.com> (sfid-20110812_043531_478127_233015BB)
-In-Reply-To: <1313116515-26166-1-git-send-email-thomas@cozybit.com>
-References: <1313116515-26166-1-git-send-email-thomas@cozybit.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:1798 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753181Ab1HHN7d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:33 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 52/82] staging: brcm80211: absorb brcmf_sdcard_detach
+ into brcmf_sdio_remove
+Date: Mon, 8 Aug 2011 15:58:36 +0200
+Message-ID: <1312811946-16713-53-git-send-email-arend@broadcom.com> (sfid-20110808_160056_507233_C9818F9B)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-802.11s introduces a new action frame category, add action codes as well
-as an entry in ieee80211_mgmt.
+From: Franky Lin <frankyl@broadcom.com>
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+To increase code readability of brcmfmac
+
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- include/linux/ieee80211.h |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c    |   32 ++++++++++-------------
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h |    3 --
+ 2 files changed, 14 insertions(+), 21 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 54c8789..5c00a63 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -749,6 +749,10 @@ struct ieee80211_mgmt {
- 					 */
- 					u8 variable[0];
- 				} __attribute__((packed)) plink_action;
-+				struct {
-+					u8 action_code;
-+					u8 variable[0];
-+				} __attribute__((packed)) self_prot;
- 				struct{
- 					u8 action_code;
- 					u8 variable[0];
-@@ -1309,6 +1313,16 @@ enum ieee80211_ht_actioncode {
- 	WLAN_HT_ACTION_ASEL_IDX_FEEDBACK = 7,
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 6f88bd2..0cd449d 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -57,19 +57,6 @@ static struct brcmf_sdioh_driver drvinfo = { NULL, NULL };
+ 
+ module_param(sd_f2_blocksize, int, 0);
+ 
+-int brcmf_sdcard_detach(struct brcmf_sdio_card *card)
+-{
+-	if (card != NULL) {
+-		if (card->sdioh) {
+-			brcmf_sdioh_detach(card->sdioh);
+-			card->sdioh = NULL;
+-		}
+-		kfree(card);
+-	}
+-
+-	return 0;
+-}
+-
+ int
+ brcmf_sdcard_iovar_op(struct brcmf_sdio_card *card, const char *name,
+ 		void *params, int plen, void *arg, int len, bool set)
+@@ -441,7 +428,6 @@ int brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 
+ 	sdiodev->card->sdioh = brcmf_sdioh_attach((void *)0);
+ 	if (!sdiodev->card->sdioh) {
+-		brcmf_sdcard_detach(sdiodev->card);
+ 		ret = -ENODEV;
+ 		goto out;
+ 	}
+@@ -466,8 +452,8 @@ int brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 	}
+ 
+ out:
+-	if ((ret) && (sdiodev->card))
+-		brcmf_sdcard_detach(sdiodev->card);
++	if (ret)
++		brcmf_sdio_remove(sdiodev);
+ 
+ 	return ret;
+ }
+@@ -475,8 +461,18 @@ EXPORT_SYMBOL(brcmf_sdio_probe);
+ 
+ int brcmf_sdio_remove(struct brcmf_sdio_dev *sdiodev)
+ {
+-	drvinfo.detach(sdiodev->bus);
+-	brcmf_sdcard_detach(sdiodev->card);
++	if (sdiodev->bus) {
++		drvinfo.detach(sdiodev->bus);
++		sdiodev->bus = NULL;
++	}
++
++	if (sdiodev->card) {
++		if (sdiodev->card->sdioh)
++			brcmf_sdioh_detach(sdiodev->card->sdioh);
++		kfree(sdiodev->card);
++		sdiodev->card = NULL;
++	}
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(brcmf_sdio_remove);
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index 68b6843..cf3b8fc 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -136,9 +136,6 @@ struct brcmf_sdio_dev {
+ 	void *bus;
  };
  
-+/* Self Protected Action codes */
-+enum ieee80211_self_protected_actioncode {
-+	WLAN_SP_RESERVED = 0,
-+	WLAN_SP_MESH_PEERING_OPEN = 1,
-+	WLAN_SP_MESH_PEERING_CONFIRM = 2,
-+	WLAN_SP_MESH_PEERING_CLOSE = 3,
-+	WLAN_SP_MGK_INFORM = 4,
-+	WLAN_SP_MGK_ACK = 5,
-+};
-+
- /* Security key length */
- enum ieee80211_key_len {
- 	WLAN_KEY_LEN_WEP40 = 5,
+-/* Detach - freeup resources allocated in attach */
+-extern int brcmf_sdcard_detach(struct brcmf_sdio_card *card);
+-
+ /* Enable/disable SD interrupt */
+ extern int brcmf_sdcard_intr_enable(struct brcmf_sdio_card *card);
+ extern int brcmf_sdcard_intr_disable(struct brcmf_sdio_card *card);
 -- 
 1.7.4.1
+
 
