@@ -1,161 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:54440 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752829Ab1HIJOd (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:60594 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751318Ab1HHMJk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 05:14:33 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 24so210739wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:32 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 33/40] wl12xx: track freed packets in FW by AC
-Date: Tue,  9 Aug 2011 12:13:46 +0300
-Message-Id: <1312881233-9366-34-git-send-email-eliad@wizery.com> (sfid-20110809_111443_502009_C48F5FFC)
-In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	Mon, 8 Aug 2011 08:09:40 -0400
+Received: by fxh19 with SMTP id 19so5309324fxh.19
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 05:09:38 -0700 (PDT)
+From: Alexander Simon <an.alexsimon@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] mac80211: Add HT helper functions
+Date: Mon, 08 Aug 2011 14:09:36 +0200
+Message-ID: <2346835.BL4CqEnUDP@alex-1> (sfid-20110808_140943_617659_52176005)
+In-Reply-To: <1888623.Vt5VZUN2cU@alex-1>
+References: <1888623.Vt5VZUN2cU@alex-1>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+these can also be used from existing code.
 
-Track the number of freed packets in each AC when receiving an interrupt
-from the FW. This paves the way for tracking allocated packets per AC.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Alexander Simon <alexander.simon@saxnet.de>
 ---
- drivers/net/wireless/wl12xx/main.c   |   16 +++++++++++++++-
- drivers/net/wireless/wl12xx/tx.c     |    2 ++
- drivers/net/wireless/wl12xx/wl12xx.h |    8 ++++++--
- 3 files changed, 23 insertions(+), 3 deletions(-)
+ net/mac80211/ieee80211_i.h |    8 +++
+ net/mac80211/util.c        |  116 +++++++++++++++++++++++++++++++++++++------
+ net/mac80211/work.c        |   29 +-----------
+ 3 files changed, 108 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index b223c27..3bfd772 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -810,22 +810,32 @@ static void wl1271_irq_update_links_status(struct wl1271 *wl,
- static void wl1271_fw_status(struct wl1271 *wl,
- 			     struct wl1271_fw_status *status)
- {
- 	struct timespec ts;
- 	u32 old_tx_blk_count = wl->tx_blocks_available;
- 	int avail, freed_blocks;
-+	int i;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 400c09b..bfb820c 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1401,6 +1401,12 @@ void ieee80211_recalc_smps(struct ieee80211_local *local);
+ size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
+ 			  const u8 *ids, int n_ids, size_t offset);
+ size_t ieee80211_ie_split_vendor(const u8 *ies, size_t ielen, size_t offset);
++u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_supported_band *sband,
++			       u16 cap);
++u8 *ieee80211_ie_build_ht_info(u8 *pos,
++				struct ieee80211_sta_ht_cap *ht_cap,
++				struct ieee80211_channel *channel,
++				enum nl80211_channel_type channel_type);
  
- 	wl1271_raw_read(wl, FW_STATUS_ADDR, status, sizeof(*status), false);
+ /* internal work items */
+ void ieee80211_work_init(struct ieee80211_local *local);
+@@ -1429,6 +1435,8 @@ ieee80211_get_channel_mode(struct ieee80211_local *local,
+ bool ieee80211_set_channel_type(struct ieee80211_local *local,
+ 				struct ieee80211_sub_if_data *sdata,
+ 				enum nl80211_channel_type chantype);
++enum nl80211_channel_type ieee80211_ht_info_to_channel_type(
++					struct ieee80211_ht_info *ht_info);
  
- 	wl1271_debug(DEBUG_IRQ, "intr: 0x%x (fw_rx_counter = %d, "
- 		     "drv_rx_counter = %d, tx_results_counter = %d)",
- 		     status->intr,
- 		     status->fw_rx_counter,
- 		     status->drv_rx_counter,
- 		     status->tx_results_counter);
+ #ifdef CONFIG_MAC80211_NOINLINE
+ #define debug_noinline noinline
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index ddeb1b9..b62fc4e 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -983,23 +983,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 		offset = noffset;
+ 	}
  
-+	for (i = 0; i < NUM_TX_QUEUES; i++) {
-+		/* prevent wrap-around in freed-packets counter */
-+		wl->tx_allocated_pkts -=
-+				(status->tx_released_pkts[i] -
-+				wl->tx_pkts_freed[i] + 256) % 256;
+-	if (sband->ht_cap.ht_supported) {
+-		u16 cap = sband->ht_cap.cap;
+-		__le16 tmp;
+-
+-		*pos++ = WLAN_EID_HT_CAPABILITY;
+-		*pos++ = sizeof(struct ieee80211_ht_cap);
+-		memset(pos, 0, sizeof(struct ieee80211_ht_cap));
+-		tmp = cpu_to_le16(cap);
+-		memcpy(pos, &tmp, sizeof(u16));
+-		pos += sizeof(u16);
+-		*pos++ = sband->ht_cap.ampdu_factor |
+-			 (sband->ht_cap.ampdu_density <<
+-				IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
+-		memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
+-		pos += sizeof(sband->ht_cap.mcs);
+-		pos += 2 + 4 + 1; /* ext info, BF cap, antsel */
+-	}
++	if (sband->ht_cap.ht_supported)
++		pos = ieee80211_ie_build_ht_cap(pos, sband, sband->ht_cap.cap);
+ 
+ 	/*
+ 	 * If adding more here, adjust code in main.c
+@@ -1522,3 +1507,100 @@ void ieee80211_disable_rssi_reports(struct ieee80211_vif *vif)
+ 	_ieee80211_enable_rssi_reports(sdata, 0, 0);
+ }
+ EXPORT_SYMBOL(ieee80211_disable_rssi_reports);
 +
-+		wl->tx_pkts_freed[i] = status->tx_released_pkts[i];
++u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_supported_band *sband,
++			       u16 cap)
++{
++	__le16 tmp;
++
++	*pos++ = WLAN_EID_HT_CAPABILITY;
++	*pos++ = sizeof(struct ieee80211_ht_cap);
++	memset(pos, 0, sizeof(struct ieee80211_ht_cap));
++
++	/* capability flags */
++	tmp = cpu_to_le16(cap);
++	memcpy(pos, &tmp, sizeof(u16));
++	pos += sizeof(u16);
++
++	/* AMPDU parameters */
++	*pos++ = sband->ht_cap.ampdu_factor |
++		 (sband->ht_cap.ampdu_density <<
++			IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
++
++	/* MCS set */
++	memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
++	pos += sizeof(sband->ht_cap.mcs);
++
++	/* extended capabilities */
++	pos += sizeof(__le16);
++
++	/* BF capabilities */
++	pos += sizeof(__le32);
++
++	/* antenna selection */
++	pos += sizeof(u8);
++
++	return pos;
++}
++
++u8 *ieee80211_ie_build_ht_info(u8 *pos,
++				struct ieee80211_sta_ht_cap *ht_cap,
++				struct ieee80211_channel *channel,
++				enum nl80211_channel_type channel_type)
++{
++	struct ieee80211_ht_info *ht_info;
++	/* Build HT Information */
++	*pos++ = WLAN_EID_HT_INFORMATION;
++	*pos++ = sizeof(struct ieee80211_ht_info);
++	ht_info = (struct ieee80211_ht_info *)pos;
++	ht_info->control_chan =
++			ieee80211_frequency_to_channel(channel->center_freq);
++	switch (channel_type) {
++	case NL80211_CHAN_HT40MINUS:
++		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
++		break;
++	case NL80211_CHAN_HT40PLUS:
++		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
++		break;
++	case NL80211_CHAN_HT20:
++	default:
++		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_NONE;
++		break;
++	}
++	if (ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
++		ht_info->ht_param |= IEEE80211_HT_PARAM_CHAN_WIDTH_ANY;
++	ht_info->operation_mode = 0x0000;
++	ht_info->stbc_param = 0x0000;
++
++	/* It seems that Basic MCS set and Supported MCS set
++	   are identical for the first 10 bytes */
++	memset(&ht_info->basic_set, 0, 16);
++	memcpy(&ht_info->basic_set, &ht_cap->mcs, 10);
++
++	return pos + sizeof(struct ieee80211_ht_info);
++}
++
++enum nl80211_channel_type ieee80211_ht_info_to_channel_type(
++					struct ieee80211_ht_info *ht_info)
++{
++	enum nl80211_channel_type channel_type;
++
++	if (!ht_info)
++		return NL80211_CHAN_NO_HT;
++
++	switch (ht_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
++	case IEEE80211_HT_PARAM_CHA_SEC_NONE:
++		channel_type = NL80211_CHAN_HT20;
++		break;
++	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
++		channel_type = NL80211_CHAN_HT40PLUS;
++		break;
++	case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
++		channel_type = NL80211_CHAN_HT40MINUS;
++		break;
++	default:
++		channel_type = NL80211_CHAN_NO_HT;
 +	}
 +
- 	freed_blocks = le32_to_cpu(status->total_released_blks) -
- 		       wl->tx_blocks_freed;
- 	wl->tx_blocks_freed = le32_to_cpu(status->total_released_blks);
++	return channel_type;
++}
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index 380b9a7..8d9251c 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -103,7 +103,6 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
+ 	u8 *pos;
+ 	u32 flags = channel->flags;
+ 	u16 cap = sband->ht_cap.cap;
+-	__le16 tmp;
  
- 	wl->tx_allocated_blocks -= freed_blocks;
+ 	if (!sband->ht_cap.ht_supported)
+ 		return;
+@@ -154,34 +153,8 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
+ 	}
  
-@@ -1913,13 +1923,13 @@ out:
- 	return ret;
+ 	/* reserve and fill IE */
+-
+ 	pos = skb_put(skb, sizeof(struct ieee80211_ht_cap) + 2);
+-	*pos++ = WLAN_EID_HT_CAPABILITY;
+-	*pos++ = sizeof(struct ieee80211_ht_cap);
+-	memset(pos, 0, sizeof(struct ieee80211_ht_cap));
+-
+-	/* capability flags */
+-	tmp = cpu_to_le16(cap);
+-	memcpy(pos, &tmp, sizeof(u16));
+-	pos += sizeof(u16);
+-
+-	/* AMPDU parameters */
+-	*pos++ = sband->ht_cap.ampdu_factor |
+-		 (sband->ht_cap.ampdu_density <<
+-			IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
+-
+-	/* MCS set */
+-	memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
+-	pos += sizeof(sband->ht_cap.mcs);
+-
+-	/* extended capabilities */
+-	pos += sizeof(__le16);
+-
+-	/* BF capabilities */
+-	pos += sizeof(__le32);
+-
+-	/* antenna selection */
+-	pos += sizeof(u8);
++	ieee80211_ie_build_ht_cap(pos, sband, cap);
  }
  
- static void __wl1271_op_remove_interface(struct wl1271 *wl,
- 					 bool reset_tx_queues)
- {
--	int ret;
-+	int ret, i;
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 remove interface");
- 
- 	/* because of hardware recovery, we may get here twice */
- 	if (wl->state != WL1271_STATE_ON)
- 		return;
-@@ -2027,12 +2037,16 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
- 	 * get executed before all these vars have been reset.
- 	 */
- 	wl->flags = 0;
- 
- 	wl->tx_blocks_freed = 0;
- 
-+	wl->tx_allocated_pkts = 0;
-+	for (i = 0; i < NUM_TX_QUEUES; i++)
-+		wl->tx_pkts_freed[i] = 0;
-+
- 	wl1271_debugfs_reset(wl);
- 
- 	kfree(wl->fw_status);
- 	wl->fw_status = NULL;
- 	kfree(wl->tx_res_if);
- 	wl->tx_res_if = NULL;
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 52a9ae9..4a40bc4 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -219,12 +219,14 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
- 
- 		desc->id = id;
- 
- 		wl->tx_blocks_available -= total_blocks;
- 		wl->tx_allocated_blocks += total_blocks;
- 
-+		wl->tx_allocated_pkts++;
-+
- 		if (wl->bss_type == BSS_TYPE_AP_BSS)
- 			wl->links[hlid].allocated_blks += total_blocks;
- 
- 		ret = 0;
- 
- 		wl1271_debug(DEBUG_TX,
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index dfe08e5..3e2e0b3 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -265,14 +265,14 @@ struct wl1271_fw_status {
- 	/* Cumulative counter of total released mem blocks since FW-reset */
- 	__le32 total_released_blks;
- 
- 	/* Size (in Memory Blocks) of TX pool */
- 	__le32 tx_total;
- 
--	/* Cumulative counter of released mem-blocks per AC */
--	u8 tx_released_blks[NUM_TX_QUEUES];
-+	/* Cumulative counter of released packets per AC */
-+	u8 tx_released_pkts[NUM_TX_QUEUES];
- 
- 	/* Cumulative counter of freed MBs per HLID */
- 	u8 tx_lnk_free_blks[WL1271_MAX_LINKS];
- 
- 	/* Cumulative counter of released Voice memory blocks */
- 	u8 tx_voice_released_blks;
-@@ -420,12 +420,16 @@ struct wl1271 {
- 	/* Accounting for allocated / available TX blocks on HW */
- 	u32 tx_blocks_freed;
- 	u32 tx_blocks_available;
- 	u32 tx_allocated_blocks;
- 	u32 tx_results_count;
- 
-+	/* Accounting for allocated / available Tx packets in HW */
-+	u32 tx_pkts_freed[NUM_TX_QUEUES];
-+	u32 tx_allocated_pkts;
-+
- 	/* Transmitted TX packets counter for chipset interface */
- 	u32 tx_packets_count;
- 
- 	/* Time-offset between host and chipset clocks */
- 	s64 time_offset;
- 
+ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
 -- 
-1.7.6.401.g6a319
+1.7.3.4
 
