@@ -1,52 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52623 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754020Ab1H3Oao (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 10:30:44 -0400
-Date: Tue, 30 Aug 2011 17:30:39 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Raja Mani <rmani@qca.qualcomm.com>
-CC: <kvalo@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 08/20] ath6kl: Request P2P capabilities during target init
-Message-ID: <20110830143039.GE8163@jouni.qca.qualcomm.com> (sfid-20110830_163048_392151_D39B9B35)
-References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
- <1314620641-24257-9-git-send-email-jouni@qca.qualcomm.com>
- <4E5CB2B9.1090606@qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39810 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751023Ab1HHJ3P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 05:29:15 -0400
+Date: Mon, 8 Aug 2011 11:29:15 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Justin Piszcz <jpiszcz@lucidpixels.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: rt2800usb: fix races in tx queue
+Message-ID: <20110808092914.GA2168@redhat.com> (sfid-20110808_112918_553384_6B7214D8)
+References: <20110804124653.GB5739@redhat.com>
+ <CAOZOX0Xpv9OPqx2Y3GnajhmDvx3GyL1xTAjEOYjOToWcQxB6bA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4E5CB2B9.1090606@qca.qualcomm.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAOZOX0Xpv9OPqx2Y3GnajhmDvx3GyL1xTAjEOYjOToWcQxB6bA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 30, 2011 at 03:21:53PM +0530, Raja Mani wrote:
-> On Monday 29 August 2011 05:53 PM, Jouni Malinen wrote:
-> >+	ret = ath6kl_wmi_info_req_cmd(ar->wmi, P2P_FLAG_CAPABILITIES_REQ |
-> >+				      P2P_FLAG_MACADDR_REQ |
-> >+				      P2P_FLAG_HMODEL_REQ);
-> >+	if (ret) {
-> >+		printk(KERN_DEBUG "ath6l: Failed to request P2P capabilities "
-> >+		       "(%d) - assuming P2P not supported\n", ret);
+Hi Ivo
+
+On Sat, Aug 06, 2011 at 01:06:51PM +0200, Ivo Van Doorn wrote:
+> On Thu, Aug 4, 2011 at 2:46 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> > -static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
+> > +static int rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
+> >  {
+> >        struct data_queue *queue;
+> >        struct queue_entry *entry;
+> >        u32 reg;
+> >        u8 qid;
+> >
+> > -       while (kfifo_get(&rt2x00dev->txstatus_fifo, &reg)) {
+> > +       while (kfifo_peek(&rt2x00dev->txstatus_fifo, &reg)) {
 > 
-> Is it possible to use ath6kl_dbg() instead of printk here ?
+> I'm not too sure about this change, why do you need to do kfifo_peek
+> and add gotos to the end of the while-loop to remove the item from the queue?
+> There is no condition in which the obtained value from kfifo-peek
+> will require it to be read again later (because when the value couldn't be
+> handled we are throwing it away anyway using kfifo_skip).
 
-Sure.
+There is new case (see below) where it is needed. I can get rid of goto,
+that will make code a bit cleaner. There is place for optimization, mainly
+make tx_status fifo per queue, but for now I just want to fix kernel crashes.
 
-> Should it be ath6kl_err() ?
-> 
-> Another question is , Don't you have to assign error code (may be
-> -EIO) to 'status' variable in case of error ? not sure whether error
-> code assignment needed here or not..
+> >                /* TX_STA_FIFO_PID_QUEUE is a 2-bit field, thus
+> >                 * qid is guaranteed to be one of the TX QIDs
+> > @@ -517,25 +517,39 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
+> >                if (unlikely(!queue)) {
+> >                        WARNING(rt2x00dev, "Got TX status for an unavailable "
+> >                                           "queue %u, dropping\n", qid);
+> > -                       continue;
+> > +                       goto next_reg;
+> >                }
+> >
+> >                /*
+> >                 * Inside each queue, we process each entry in a chronological
+> >                 * order. We first check that the queue is not empty.
+> >                 */
+> > -               entry = NULL;
+> > -               while (!rt2x00queue_empty(queue)) {
+> > +               while (1) {
+> > +                       entry = NULL;
+> > +
+> > +                       if (rt2x00queue_empty(queue))
+> > +                               break;
+> > +
+> >                        entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
+> > +
+> > +                       if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags) ||
+> > +                           !test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags)) {
+> > +                               WARNING(rt2x00dev, "Data pending for entry %u"
+> > +                                       "in queue %u\n", entry->entry_idx, qid);
+> > +                               return 1;
 
-No, this is not a fatal error. The driver will just run without P2P
-support if the firmware does not support the new P2P commands. I'm not
-yet sure what will be the exact mechanism for doing this, i.e., this may
-be done either based on the firmware version or the result of this
-command. Though, it should be noted that the target returns the
-capabilities with a separate event message, so we would need to block
-somehow during hardware init to have the information available for
-cfg80211 registration. Anyway, the patch to actually start advertising
-support for P2P is not included in the patch series.
+Here is part of code where we exit the loop (and whole function) and do
+not remove head "reg" from tx_status fifo - and read it again when
+_txdone work is called next time.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Stanislaw
