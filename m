@@ -1,88 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:59573 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750838Ab1H0H3Y convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Aug 2011 03:29:24 -0400
+Received: from mms2.broadcom.com ([216.31.210.18]:1778 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753163Ab1HHN7d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:33 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 38/82] staging: brcm80211: fixed build issue for big
+ endian platforms
+Date: Mon, 8 Aug 2011 15:58:22 +0200
+Message-ID: <1312811946-16713-39-git-send-email-arend@broadcom.com> (sfid-20110808_160102_229782_5941D4F4)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <4E576637.4020209@broadcom.com>
-References: <927eab8b5c950c13991911cd4c16457a5d618bc7.1314252671.git.joe@perches.com>
-	<CACna6ryWtZG9obyj0w=d5jrF-y1pYNmanhkze2F429kHCLCi=A@mail.gmail.com>
-	<1314349357.9624.3.camel@Joe-Laptop>
-	<CACna6rwvaxd4i0Gh0hFRsXhHKBBLgn+SeMEdM62qf=mT7aCzpA@mail.gmail.com>
-	<4E576637.4020209@broadcom.com>
-Date: Sat, 27 Aug 2011 09:29:23 +0200
-Message-ID: <CACna6rxc=Kpy+_S2BE7tui_oy-C7vCUQDHDa5XQ+jLp0p=vG8Q@mail.gmail.com> (sfid-20110827_092951_664323_2FCC5D6E)
-Subject: Re: [PATCH] staging: brcmfmac: Consolidate debugging macros
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Joe Perches <joe@perches.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	Greg KH <gregkh@suse.de>, Kan Yan <kanyan@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 26 sierpnia 2011 11:24 użytkownik Arend van Spriel
-<arend@broadcom.com> napisał:
-> On 08/26/2011 11:19 AM, Rafał Miłecki wrote:
->>
->> W dniu 26 sierpnia 2011 11:02 użytkownik Joe Perches<joe@perches.com>
->>  napisał:
->>>
->>> On Fri, 2011-08-26 at 10:55 +0200, Rafał Miłecki wrote:
->>>>
->>>> 2011/8/25 Joe Perches<joe@perches.com>:
->>>>>
->>>>> Convert multiple BRCMF_<debug_level>  macros to a single
->>>>> brcmf_dbg(level, fmt, ...) macro.
->>>>
->>>> I'm not sure if that "_dbg" suffix is a really good choice. You use
->>>> "_dbg" for all the kinds of messages, while "DEBUG" is already one
->>>> kind of messages.
->>>
->>> No, not really.  These _are_ debugging uses.
->>>
->>> The #include is called dhd_dbg.h and
->>> the whole block is guarded by
->>>
->>> #if defined(BCMDBG)
->>>
->>>> We have also other types like EMERG, ALERT, CRIT,
->>>> ERR, WARNING, NOTICE, INFO and DEBUG.
->>>
->>> Except for the last, those aren't debugging uses,
->>> these are.
->>
->> It makes sense, maybe some messages should be just always printed. It
->> seems some of they may be important for common-user having problem
->> with his card. Just few random ones:
->> brcmf_dbg(ERROR, "device attach failed\n");
->> brcmf_dbg(ERROR, "Failed to enable F1 Err: 0x%08x\n", err_ret);
->> brcmf_dbg(ERROR, "MACEVENT: %s [unsupported version -->  brcmf
->> version:%d dongle version:%d]\n",
->> brcmf_dbg(ERROR, "mismatched OUI, bailing\n");
->> brcmf_dbg(ERROR, "brcmf_net_attach failed, err %d\n",
->> brcmf_dbg(ERROR, "failed to bring up cfg80211\n");
->> brcmf_dbg(ERROR, "HT Avail request error: %d\n", err);
->
-> Hi Rafał,
->
-> The feedback from Greg was that no user would be interested in it so we
-> cleaned it up and put it under Kconfig option.
+From: Roland Vossen <rvossen@broadcom.com>
 
-Having messages like "Entered xxx function" are really useless for
-common user, but I believe errors should be printed, to let use known
-sth is wrong.
+Driver now builds for big endian mips platform, possibly also for other
+big endian platforms. A change was made to the R_REG and W_REG macro's.
+These macro's perform an xor (^) operation for endianess swap purposes.
+Gcc complained because an xor operation is not allowed on a pointer type.
+Fixed this by casting the pointer to an unsigned long.
 
-Did Greg really mean all that messages? Including error ones? Greg?
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/dma.h   |    1 +
+ drivers/staging/brcm80211/brcmsmac/types.h |    8 ++++----
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/staging/brcm80211/brcmsmac/dma.h b/drivers/staging/brcm80211/brcmsmac/dma.h
+index 3ff109f..334f2eb 100644
+--- a/drivers/staging/brcm80211/brcmsmac/dma.h
++++ b/drivers/staging/brcm80211/brcmsmac/dma.h
+@@ -17,6 +17,7 @@
+ #ifndef	_BRCM_DMA_H_
+ #define	_BRCM_DMA_H_
+ 
++#include <linux/delay.h>
+ #include "types.h"		/* forward structure declarations */
+ 
+ /* DMA structure:
+diff --git a/drivers/staging/brcm80211/brcmsmac/types.h b/drivers/staging/brcm80211/brcmsmac/types.h
+index e0880a0..ab97718 100644
+--- a/drivers/staging/brcm80211/brcmsmac/types.h
++++ b/drivers/staging/brcm80211/brcmsmac/types.h
+@@ -305,11 +305,11 @@ do {						\
+ 		switch (sizeof(*(r))) { \
+ 		case sizeof(u8): \
+ 			__osl_v = \
+-			readb((u8 *)((r)^3)); \
++			readb((u8 *)((unsigned long)(r)^3)); \
+ 			break; \
+ 		case sizeof(u16): \
+ 			__osl_v = \
+-			readw((u16 *)((r)^2)); \
++			readw((u16 *)((unsigned long)(r)^2)); \
+ 			break; \
+ 		case sizeof(u32): \
+ 			__osl_v = readl((u32 *)(r)); \
+@@ -322,10 +322,10 @@ do {						\
+ 		switch (sizeof(*(r))) { \
+ 		case sizeof(u8):	\
+ 			writeb((u8)(v), \
+-			(u8 *)((r)^3)); break; \
++			(u8 *)((unsigned long)(r)^3)); break; \
+ 		case sizeof(u16):	\
+ 			writew((u16)(v), \
+-			(u16 *)((r)^2)); break; \
++			(u16 *)((unsigned long)(r)^2)); break; \
+ 		case sizeof(u32):	\
+ 			writel((u32)(v), \
+ 			(u32 *)(r)); break; \
 -- 
-Rafał
+1.7.4.1
+
+
