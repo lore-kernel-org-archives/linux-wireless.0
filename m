@@ -1,183 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3115 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752679Ab1HLNfO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 09:35:14 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 01/14] staging: brcm80211: use wait queues instead of
- semaphores in wl_cfg80211.c
-Date: Fri, 12 Aug 2011 15:34:48 +0200
-Message-ID: <1313156101-16817-2-git-send-email-arend@broadcom.com> (sfid-20110812_154257_283537_2F355015)
-In-Reply-To: <1313156101-16817-1-git-send-email-arend@broadcom.com>
-References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:45286 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823Ab1HHIqq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 04:46:46 -0400
+Subject: Re: [PATCHv2 2/2] mac80211: Don't use a buf_size=0 in ADDBA
+ requests
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>
+In-Reply-To: <CAGXE3d9EwS8wMZRYUxAz5FqiTzRZiAATmOcWaG17vbcqryH7ZQ@mail.gmail.com> (sfid-20110808_104107_910363_06EB83BE)
+References: <1311675508-29005-2-git-send-email-helmut.schaa@googlemail.com>
+	 <1312537579-18950-1-git-send-email-helmut.schaa@googlemail.com>
+	 <1312792163.4372.5.camel@jlt3.sipsolutions.net>
+	 <CAGXE3d9EwS8wMZRYUxAz5FqiTzRZiAATmOcWaG17vbcqryH7ZQ@mail.gmail.com>
+	 (sfid-20110808_104107_910363_06EB83BE)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 08 Aug 2011 10:46:41 +0200
+Message-ID: <1312793201.4372.9.camel@jlt3.sipsolutions.net> (sfid-20110808_104649_817525_456BC459)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In wl_cfg80211.c two semaphores were used to trigger a task to process
-an event. The wait queues are better suited for that purpose. This also
-removes checkpatch warning on sema_init() calls in this source file.
+On Mon, 2011-08-08 at 10:40 +0200, Helmut Schaa wrote:
+> On Mon, Aug 8, 2011 at 10:29 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > So, are you saying the problem with getting 0 in replies is solved by
+> > not sending 0 in requests?
+> 
+> This specific device always replies with a buf_size=0 _if_ we send an
+> ADDBA request
+> with a buf_size=0.
+> 
+> The first patch in this series solves a problem were mac80211 would
+> buffer frames to
+> this STA forever when the ADDBA response contains a buf_size=0 since the BA
+> session is stuck in an intermediate state.
+> 
+> However, the AVM Fritz Stick N client behaves correctly if we're using
+> a buf_size != 0
+> in the ADDBA request. This is a bug in the Fritz Stick Windows driver
+> (it should use
+> the default size of its rx reorder buffer if the ADDBA request
+> contains 0). However, this
+> bug can be worked around by using a buf_size != 0 in ADDBA requests. And that's
+> what the second patch does.
+> 
+> Hope this clarifies my intention :)
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   49 +++++++++++++++-------
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h |    5 +-
- 2 files changed, 36 insertions(+), 18 deletions(-)
+Yes, thanks.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index bc1e1a9..833defb 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3162,7 +3162,7 @@ static void brcmf_deinit_priv_mem(struct brcmf_cfg80211_priv *cfg_priv)
- 
- static s32 brcmf_create_event_handler(struct brcmf_cfg80211_priv *cfg_priv)
- {
--	sema_init(&cfg_priv->event_sync, 0);
-+	init_waitqueue_head(&cfg_priv->event_waitq);
- 	cfg_priv->event_tsk = kthread_run(brcmf_event_handler, cfg_priv,
- 					  "wl_event_handler");
- 	if (IS_ERR(cfg_priv->event_tsk)) {
-@@ -3224,7 +3224,7 @@ static s32 brcmf_wakeup_iscan(struct brcmf_cfg80211_iscan_ctrl *iscan)
- {
- 	if (likely(iscan->state != WL_ISCAN_STATE_IDLE)) {
- 		WL_SCAN("wake up iscan\n");
--		up(&iscan->sync);
-+		wake_up(&iscan->waitq);
- 		return 0;
- 	}
- 
-@@ -3330,13 +3330,19 @@ static s32 brcmf_iscan_thread(void *data)
- 			(struct brcmf_cfg80211_iscan_ctrl *)data;
- 	struct brcmf_cfg80211_priv *cfg_priv = iscan_to_cfg(iscan);
- 	struct brcmf_cfg80211_iscan_eloop *el = &iscan->el;
-+	DECLARE_WAITQUEUE(wait, current);
- 	u32 status;
- 	int err = 0;
- 
- 	sched_setscheduler(current, SCHED_FIFO, &param);
- 	allow_signal(SIGTERM);
- 	status = BRCMF_SCAN_RESULTS_PARTIAL;
--	while (likely(!down_interruptible(&iscan->sync))) {
-+	add_wait_queue(&iscan->waitq, &wait);
-+	while (1) {
-+		prepare_to_wait(&iscan->waitq, &wait, TASK_INTERRUPTIBLE);
-+
-+		schedule();
-+
- 		if (kthread_should_stop())
- 			break;
- 		if (iscan->timer_on) {
-@@ -3353,6 +3359,7 @@ static s32 brcmf_iscan_thread(void *data)
- 		rtnl_unlock();
- 		el->handler[status](cfg_priv);
- 	}
-+	finish_wait(&iscan->waitq, &wait);
- 	if (iscan->timer_on) {
- 		del_timer_sync(&iscan->timer);
- 		iscan->timer_on = 0;
-@@ -3380,7 +3387,7 @@ static s32 brcmf_invoke_iscan(struct brcmf_cfg80211_priv *cfg_priv)
- 
- 	if (cfg_priv->iscan_on && !iscan->tsk) {
- 		iscan->state = WL_ISCAN_STATE_IDLE;
--		sema_init(&iscan->sync, 0);
-+		init_waitqueue_head(&iscan->waitq);
- 		iscan->tsk = kthread_run(brcmf_iscan_thread, iscan, "wl_iscan");
- 		if (IS_ERR(iscan->tsk)) {
- 			WL_ERR("Could not create iscan thread\n");
-@@ -3528,7 +3535,7 @@ void brcmf_cfg80211_detach(void)
- 
- static void brcmf_wakeup_event(struct brcmf_cfg80211_priv *cfg_priv)
- {
--	up(&cfg_priv->event_sync);
-+	wake_up(&cfg_priv->event_waitq);
- }
- 
- static s32 brcmf_event_handler(void *data)
-@@ -3537,27 +3544,39 @@ static s32 brcmf_event_handler(void *data)
- 			(struct brcmf_cfg80211_priv *)data;
- 	struct sched_param param = {.sched_priority = MAX_RT_PRIO - 1 };
- 	struct brcmf_cfg80211_event_q *e;
-+	DECLARE_WAITQUEUE(wait, current);
- 
- 	sched_setscheduler(current, SCHED_FIFO, &param);
- 	allow_signal(SIGTERM);
--	while (likely(!down_interruptible(&cfg_priv->event_sync))) {
-+	add_wait_queue(&cfg_priv->event_waitq, &wait);
-+	while (1) {
-+		prepare_to_wait(&cfg_priv->event_waitq, &wait,
-+				TASK_INTERRUPTIBLE);
-+
-+		schedule();
-+
- 		if (kthread_should_stop())
- 			break;
-+
- 		e = brcmf_deq_event(cfg_priv);
- 		if (unlikely(!e)) {
- 			WL_ERR("event queue empty...\n");
--			BUG();
-+			continue;
- 		}
--		WL_INFO("event type (%d)\n", e->etype);
--		if (cfg_priv->el.handler[e->etype])
--			cfg_priv->el.handler[e->etype](cfg_priv,
--						       cfg_to_ndev(cfg_priv),
--						       &e->emsg, e->edata);
--		else
--			WL_INFO("Unknown Event (%d): ignoring\n", e->etype);
- 
--		brcmf_put_event(e);
-+		do {
-+			WL_INFO("event type (%d)\n", e->etype);
-+			if (cfg_priv->el.handler[e->etype])
-+				cfg_priv->el.handler[e->etype](cfg_priv,
-+					cfg_to_ndev(cfg_priv),
-+					&e->emsg, e->edata);
-+			else
-+				WL_INFO("Unknown Event (%d): ignoring\n",
-+					e->etype);
-+			brcmf_put_event(e);
-+		} while ((e = brcmf_deq_event(cfg_priv)));
- 	}
-+	finish_wait(&cfg_priv->event_waitq, &wait);
- 	WL_INFO("was terminated\n");
- 	return 0;
- }
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-index ff5c19a..049138b 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -249,7 +249,7 @@ struct brcmf_cfg80211_iscan_ctrl {
- 	u32 timer_on;
- 	s32 state;
- 	struct task_struct *tsk;
--	struct semaphore sync;
-+	wait_queue_head_t waitq;
- 	struct brcmf_cfg80211_iscan_eloop el;
- 	void *data;
- 	s8 ioctl_buf[BRCMF_C_IOCTL_SMLEN];
-@@ -295,13 +295,12 @@ struct brcmf_cfg80211_priv {
- 						 cfg80211 layer */
- 	struct brcmf_cfg80211_ie ie;	/* information element object for
- 					 internal purpose */
--	struct semaphore event_sync;	/* for synchronization of main event
--					 thread */
- 	struct brcmf_cfg80211_profile *profile;	/* holding dongle profile */
- 	struct brcmf_cfg80211_iscan_ctrl *iscan;	/* iscan controller */
- 	struct brcmf_cfg80211_connect_info conn_info; /* association info */
- 	struct brcmf_cfg80211_pmk_list *pmk_list;	/* wpa2 pmk list */
- 	struct task_struct *event_tsk;	/* task of main event handler thread */
-+	wait_queue_head_t event_waitq;	/* wait queue for main event handling */
- 	unsigned long status;		/* current dongle status */
- 	void *pub;
- 	u32 channel;		/* current channel */
--- 
-1.7.4.1
-
+johannes
 
