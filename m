@@ -1,84 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:46403 "EHLO lo.gmane.org"
+Received: from mms3.broadcom.com ([216.31.210.19]:3107 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752762Ab1HQCzI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2011 22:55:08 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1QtWHZ-0004F4-6c
-	for linux-wireless@vger.kernel.org; Wed, 17 Aug 2011 04:55:05 +0200
-Received: from bl8-68-47.dsl.telepac.pt ([85.241.68.47])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2011 04:55:05 +0200
-Received: from vitor.dominor by bl8-68-47.dsl.telepac.pt with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2011 04:55:05 +0200
-To: linux-wireless@vger.kernel.org
-From: =?utf-8?b?VsOtdG9y?= Ferreira <vitor.dominor@gmail.com>
-Subject: Re: [PATCH V3 3.2 2/2] b43: fix DMA on some bugged hardware
-Date: Wed, 17 Aug 2011 02:49:36 +0000 (UTC)
-Message-ID: <loom.20110817T044544-76@post.gmane.org> (sfid-20110817_045510_781411_1B5C315A)
-References: <1313345797-5441-2-git-send-email-zajec5@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1752458Ab1HHN7Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:25 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 08/82] staging: brcm80211: removed function
+ declaration typedefs from dma.h part 2
+Date: Mon, 8 Aug 2011 15:57:52 +0200
+Message-ID: <1312811946-16713-9-git-send-email-arend@broadcom.com> (sfid-20110808_160222_860733_EE8AAB7E)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greetings! I'm a grateful Linux end-user, following up on the success of this
-patch.
-I can confirm that after applying the following patches:
-- RESEND-3.2-1-2-ssb-fix-DMA-translation-for-some-specific-boards.patch
-- RFC-RFT-V2-2-2-b43-fix-DMA-on-some-bugged-hardware.patch
-- v2-08-46-net-wireless-b43-fix-DMA-direction-for-RX-buffers.patch
-to a 3.0.1 fedora patched kernel, the problem reporting to these patches has
-been solved (as far as I am concerned).
+From: Roland Vossen <rvossen@broadcom.com>
 
-More than a year ago, when I started using Linux on my personal laptop, I
-noticed that if I enabled the feature of Intel VT in the laptop BIOS (it comes
-disabled by default), that it would trigger the b43 fatal DMA error, which is
-described in many posts in different forums like this:
-http://forums.fedoraforum.org/showthread.php?t=235182. The b43 driver would
-encounter this error and stop working from then on, until I restarted the
-computer and disabled Intel VT. This error would only occur if I enabled that
-feature.
+Softmac related code cleanup. Typedefs are undesirable according to the
+CodingStyle document.
 
-Recently, while searching again for a possible solution for this issue, I
-stumbled on your submitted patches in May to address the DMA issue. Then, in the
-b43 supported devices table, I found that my Broadcom wireless card (14e4:4315 -
-LP-r1) is now fully supported since kernel version 3.0. However, incidently I
-had received the kernel 3.0 as a Fedora kernel update and upon enabling again
-Intel VT, the DMA error presented itself still, not better not worse. Again, I
-found your recent patches to address the DMA error and followed its developpment
-on the mailing list throughout the last few days.
-Seeing the initial successful tests on 64-bit affected systems, I decided to
-give them a shot on my own system.
-To do so, I updated my 3.0 kernel to the latest in its series (3.0.3rc1?,
-2.6.40.3 in fedora versioning) and downloaded the latest bleeding edge
-compat-wireless (yesterday) and I applied the above patches to it without
-problems. By the way, for anyone using Fedora and reading this, know that in
-order to compile compat-wireless with Fedora patched 3.0.x kernel I had to
-change the line #if (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)) to #if
-(LINUX_VERSION_CODE < KERNEL_VERSION(2,6,40)) in the file
-include/linux/compat-3.0.h.
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/dma.c |   22 ++++++++++----------
+ drivers/staging/brcm80211/brcmsmac/dma.h |   33 ++++++++++--------------------
+ 2 files changed, 22 insertions(+), 33 deletions(-)
 
-Right now, I am writing this with Intel VT enabled and a stable wireless
-connection to my home AP, using the b43 driver. So, I am showing here my
-appreciation and thanking for your great work in crushing a pesky bug that was
-perhaps the only one stopping my computer from being fully Linux compatible (HP
-Pavilion dv5t). Continue your great work!
+diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
+index 5fd5e8c..3e732c8d 100644
+--- a/drivers/staging/brcm80211/brcmsmac/dma.c
++++ b/drivers/staging/brcm80211/brcmsmac/dma.c
+@@ -389,16 +389,16 @@ static inline u32 parity32(u32 data);
+ const struct di_fcn_s dma64proc = {
+ 	(void (*)(struct dma_pub *)) _dma_detach,
+ 	(void (*)(struct dma_pub *)) dma64_txinit,
+-	(di_txreset_t) dma64_txreset,
+-	(di_txenabled_t) dma64_txenabled,
++	(bool(*)(struct dma_pub *)) dma64_txreset,
++	(bool(*)(struct dma_pub *)) dma64_txenabled,
+ 	(void (*)(struct dma_pub *)) dma64_txsuspend,
+ 	(void (*)(struct dma_pub *)) dma64_txresume,
+-	(di_txsuspended_t) dma64_txsuspended,
+-	(di_txsuspendedidle_t) dma64_txsuspendedidle,
++	(bool(*)(struct dma_pub *)) dma64_txsuspended,
++	(bool(*)(struct dma_pub *)) dma64_txsuspendedidle,
+ 	(di_txfast_t) dma64_txfast,
+ 	(di_txunframed_t) dma64_txunframed,
+ 	(di_getpos_t) dma64_getpos,
+-	(di_txstopped_t) dma64_txstopped,
++	(bool(*)(struct dma_pub *)) dma64_txstopped,
+ 	(di_txreclaim_t) dma64_txreclaim,
+ 	(di_getnexttxp_t) dma64_getnexttxp,
+ 	(di_peeknexttxp_t) _dma_peeknexttxp,
+@@ -408,13 +408,13 @@ const struct di_fcn_s dma64proc = {
+ 	(void (*)(struct dma_pub *)) dma64_txrotate,
+ 
+ 	(void (*)(struct dma_pub *)) _dma_rxinit,
+-	(di_rxreset_t) dma64_rxreset,
+-	(di_rxidle_t) dma64_rxidle,
+-	(di_rxstopped_t) dma64_rxstopped,
+-	(di_rxenable_t) _dma_rxenable,
+-	(di_rxenabled_t) dma64_rxenabled,
++	(bool(*)(struct dma_pub *)) dma64_rxreset,
++	(bool(*)(struct dma_pub *)) dma64_rxidle,
++	(bool(*)(struct dma_pub *)) dma64_rxstopped,
++	(bool(*)(struct dma_pub *)) _dma_rxenable,
++	(bool(*)(struct dma_pub *)) dma64_rxenabled,
+ 	(di_rx_t) _dma_rx,
+-	(di_rxfill_t) _dma_rxfill,
++	(bool(*)(struct dma_pub *)) _dma_rxfill,
+ 	(void (*)(struct dma_pub *)) _dma_rxreclaim,
+ 	(di_getnextrxp_t) _dma_getnextrxp,
+ 	(di_peeknextrxp_t) _dma_peeknextrxp,
+diff --git a/drivers/staging/brcm80211/brcmsmac/dma.h b/drivers/staging/brcm80211/brcmsmac/dma.h
+index 69f2e94..6d6dbd8 100644
+--- a/drivers/staging/brcm80211/brcmsmac/dma.h
++++ b/drivers/staging/brcm80211/brcmsmac/dma.h
+@@ -59,23 +59,12 @@ enum txd_range {
+ };
+ 
+ /* dma function type */
+-typedef bool(*di_txreset_t) (struct dma_pub *dmah);
+-typedef bool(*di_rxreset_t) (struct dma_pub *dmah);
+-typedef bool(*di_rxidle_t) (struct dma_pub *dmah);
+-typedef bool(*di_txenabled_t) (struct dma_pub *dmah);
+-typedef bool(*di_txsuspended_t) (struct dma_pub *dmah);
+-typedef bool(*di_txsuspendedidle_t) (struct dma_pub *dmah);
+ typedef int (*di_txfast_t) (struct dma_pub *dmah, struct sk_buff *p,
+ 			    bool commit);
+ typedef int (*di_txunframed_t) (struct dma_pub *dmah, void *p, uint len,
+ 				bool commit);
+ typedef void *(*di_getpos_t) (struct dma_pub *di, bool direction);
+-typedef bool(*di_txstopped_t) (struct dma_pub *dmah);
+-typedef bool(*di_rxstopped_t) (struct dma_pub *dmah);
+-typedef bool(*di_rxenable_t) (struct dma_pub *dmah);
+-typedef bool(*di_rxenabled_t) (struct dma_pub *dmah);
+ typedef void *(*di_rx_t) (struct dma_pub *dmah);
+-typedef bool(*di_rxfill_t) (struct dma_pub *dmah);
+ typedef void (*di_txreclaim_t) (struct dma_pub *dmah, enum txd_range range);
+ typedef unsigned long (*di_getvar_t) (struct dma_pub *dmah,
+ 				      const char *name);
+@@ -101,16 +90,16 @@ typedef uint(*di_txcommitted_t) (struct dma_pub *dmah);
+ struct di_fcn_s {
+ 	void (*detach)(struct dma_pub *dmah);
+ 	void (*txinit)(struct dma_pub *dmah);
+-	di_txreset_t txreset;
+-	di_txenabled_t txenabled;
++	bool (*txreset)(struct dma_pub *dmah);
++	bool (*txenabled)(struct dma_pub *dmah);
+ 	void (*txsuspend)(struct dma_pub *dmah);
+ 	void (*txresume)(struct dma_pub *dmah);
+-	di_txsuspended_t txsuspended;
+-	di_txsuspendedidle_t txsuspendedidle;
++	bool (*txsuspended)(struct dma_pub *dmah);
++	bool (*txsuspendedidle)(struct dma_pub *dmah);
+ 	di_txfast_t txfast;
+ 	di_txunframed_t txunframed;
+ 	di_getpos_t getpos;
+-	di_txstopped_t txstopped;
++	bool (*txstopped)(struct dma_pub *dmah);
+ 	di_txreclaim_t txreclaim;
+ 	di_getnexttxp_t getnexttxp;
+ 	di_peeknexttxp_t peeknexttxp;
+@@ -120,13 +109,13 @@ struct di_fcn_s {
+ 	void (*txrotate) (struct dma_pub *dmah);
+ 
+ 	void (*rxinit)(struct dma_pub *dmah);
+-	di_rxreset_t rxreset;
+-	di_rxidle_t rxidle;
+-	di_rxstopped_t rxstopped;
+-	di_rxenable_t rxenable;
+-	di_rxenabled_t rxenabled;
++	bool (*rxreset)(struct dma_pub *dmah);
++	bool (*rxidle)(struct dma_pub *dmah);
++	bool (*rxstopped)(struct dma_pub *dmah);
++	bool (*rxenable)(struct dma_pub *dmah);
++	bool (*rxenabled)(struct dma_pub *dmah);
+ 	di_rx_t rx;
+-	di_rxfill_t rxfill;
++	bool (*rxfill)(struct dma_pub *dmah);
+ 	void (*rxreclaim)(struct dma_pub *dmah);
+ 	di_getnextrxp_t getnextrxp;
+ 	di_peeknextrxp_t peeknextrxp;
+-- 
+1.7.4.1
 
-Just a side note... Curiously with Intel VT, the b43 driver would start and work
-for some short time before it crashed, while the wl proprietary driver (from
-Broadcom) would not even fully load.
-
-Right now, I am writing this with Intel VT enabled and a stable wireless
-connection to my home AP, using the b43 driver. So, I am showing here my
-appreciation and thanking for your great work in crushing a pesky bug that was
-perhaps the only one stopping my computer from being fully Linux compatible (HP
-Pavilion dv5t). Continue your great work!
-
-Just a side note... Curiously with Intel VT, the b43 driver would start and work
-for some short time before it crashed, while the wl proprietary driver (from
-Broadcom) would not even fully load.
 
