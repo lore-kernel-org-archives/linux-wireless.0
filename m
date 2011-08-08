@@ -1,121 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:47899 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752539Ab1HLXCG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 19:02:06 -0400
-Received: by fxh19 with SMTP id 19so2590914fxh.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 16:02:04 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] b43: HT-PHY: init: add missing PHY mask/set ops
-Date: Sat, 13 Aug 2011 01:41:11 +0200
-Message-Id: <1313192472-12066-1-git-send-email-zajec5@gmail.com> (sfid-20110813_010210_862184_E2EF7BE7)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60924 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750868Ab1HHV1h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 17:27:37 -0400
+Message-ID: <4E4054C2.3010407@hauke-m.de> (sfid-20110808_232741_762193_517DBD9B)
+Date: Mon, 08 Aug 2011 23:27:30 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] b43: read correct register on bcma bus.
+References: <1311422254-7104-1-git-send-email-hauke@hauke-m.de>	<CACna6rz9gChYwT-qhdNLKt0pizrN0Qe5mfQYJpeLWNp-M3r4KQ@mail.gmail.com> <CACna6ryBgAg0TCH1NbD-scvQgnqA_XTkmtLuUf7s75S3maBj_Q@mail.gmail.com>
+In-Reply-To: <CACna6ryBgAg0TCH1NbD-scvQgnqA_XTkmtLuUf7s75S3maBj_Q@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MMIO hacks were used to trick ndis&wl. For example following:
- phy_read(0x0280) -> 0xffff
-phy_write(0x0280) <- 0xff3e
-***
- phy_read(0x0280) -> 0x0000
-phy_write(0x0280) <- 0x003e
-was translated to mask 0xff00 and set 0x3e.
+On 08/08/2011 10:41 AM, Rafał Miłecki wrote:
+> W dniu 23 lipca 2011 16:00 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
+>> 2011/7/23 Hauke Mehrtens <hauke@hauke-m.de>:
+>>> This causes an databus error on a Broadcom SoC using bcma.
+>>>
+>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>>> ---
+>>>  drivers/net/wireless/b43/dma.c |   20 +++++++++++++++++---
+>>>  1 files changed, 17 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
+>>> index 0953ce1..646d6ae 100644
+>>> --- a/drivers/net/wireless/b43/dma.c
+>>> +++ b/drivers/net/wireless/b43/dma.c
+>>> @@ -795,9 +795,23 @@ static u64 supported_dma_mask(struct b43_wldev *dev)
+>>>        u32 tmp;
+>>>        u16 mmio_base;
+>>>
+>>> -       tmp = b43_read32(dev, SSB_TMSHIGH);
+>>> -       if (tmp & SSB_TMSHIGH_DMA64)
+>>> -               return DMA_BIT_MASK(64);
+>>> +       switch (dev->dev->bus_type) {
+>>> +#ifdef CONFIG_B43_BCMA
+>>> +       case B43_BUS_BCMA:
+>>> +               tmp = bcma_aread32(dev->dev->bdev, BCMA_IOST);
+>>> +               if (tmp & BCMA_IOST_DMA64)
+>>> +                       return DMA_BIT_MASK(64);
+>>> +               break;
+>>> +#endif
+>>> +#ifdef CONFIG_B43_SSB
+>>> +       case B43_BUS_SSB:
+>>> +               tmp = ssb_read32(dev->dev->sdev, SSB_TMSHIGH);
+>>> +               if (tmp & SSB_TMSHIGH_DMA64)
+>>> +                       return DMA_BIT_MASK(64);
+>>> +               break;
+>>> +#endif
+>>> +       }
+>>> +
+>>>        mmio_base = b43_dmacontroller_base(0, 0);
+>>>        b43_write32(dev, mmio_base + B43_DMA32_TXCTL, B43_DMA32_TXADDREXT_MASK);
+>>>        tmp = b43_read32(dev, mmio_base + B43_DMA32_TXCTL);
+>>> --
+>>> 1.7.4.1
+>>
+>> Ack. Code was half-correctly using b43_read32 for SSB_TMSHIGH and
+>> that's how I missed it. Reading non-existent register on PC resulted
+>> in 0xFFFFFFFF, but not bus error.
+>>
+>> Thanks Hauke.
+> 
+> There is not support for SoC in 3.1-rc1, but reading SSB_TMSHIGH on
+> PC/laptop still can be dangerous, can't it? It didn't blow my machine,
+> but don't know what will happen on other, including notebooks.
+> 
+> Should we take this patch as fix for 3.1?
+> 
+I would be for adding this to 3.1 as it does exactly the same for ssb
+devices and bcma based device were not supported with kernel versions
+before 3.1. On an bcma devices we are reading some memory and do not
+know what could happen because of this. On pci devices we haven't seen
+any problem yet because the cpu does not have a problem with reading
+this address, but under some not "normal" conditions this could be a
+problem.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_ht.c |   46 +++++++++++++++++++++++++++++++++----
- 1 files changed, 41 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 84811b0..2b7507b 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -291,15 +291,19 @@ static void b43_phy_ht_op_prepare_structs(struct b43_wldev *dev)
- 
- static int b43_phy_ht_op_init(struct b43_wldev *dev)
- {
-+	u8 i;
- 	u16 tmp;
- 
- 	b43_phy_ht_tables_init(dev);
- 
--	/* TODO: PHY ops on regs 0x0be, 0x23f 0x240 0x241 */
-+	b43_phy_mask(dev, 0x0be, ~0x2);
-+	b43_phy_set(dev, 0x23f, 0x7ff);
-+	b43_phy_set(dev, 0x240, 0x7ff);
-+	b43_phy_set(dev, 0x241, 0x7ff);
- 
- 	b43_phy_ht_zero_extg(dev);
- 
--	/* TODO: PHY op on reg B43_PHY_EXTG(0) */
-+	b43_phy_mask(dev, B43_PHY_EXTG(0), ~0x3);
- 
- 	b43_phy_write(dev, B43_PHY_HT_AFE_CTL1, 0);
- 	b43_phy_write(dev, B43_PHY_HT_AFE_CTL3, 0);
-@@ -315,14 +319,35 @@ static int b43_phy_ht_op_init(struct b43_wldev *dev)
- 	if (0) /* TODO: condition */
- 		; /* TODO: PHY op on reg 0x217 */
- 
--	; /* TODO: PHY op on reg 0xb0 */
-+	b43_phy_read(dev, 0xb0); /* TODO: what for? */
-+	b43_phy_set(dev, 0xb0, 0x1);
- 
--	; /* TODO: PHY ops on regs 0xb1, 0x32f, 0x077, 0x0b4, 0x17e */
-+	b43_phy_set(dev, 0xb1, 0x91);
-+	b43_phy_write(dev, 0x32f, 0x0003);
-+	b43_phy_write(dev, 0x077, 0x0010);
-+	b43_phy_write(dev, 0x0b4, 0x0258);
-+	b43_phy_mask(dev, 0x17e, ~0x4000);
- 
- 	b43_phy_write(dev, 0x0b9, 0x0072);
- 
- 	/* TODO: Some ops here */
- 
-+	b43_phy_maskset(dev, 0x0280, 0xff00, 0x3e);
-+	b43_phy_maskset(dev, 0x0283, 0xff00, 0x3e);
-+	b43_phy_maskset(dev, B43_PHY_OFDM(0x0141), 0xff00, 0x46);
-+	b43_phy_maskset(dev, 0x0283, 0xff00, 0x40);
-+
-+	/* TODO: Some ops here */
-+
-+	b43_phy_maskset(dev, B43_PHY_OFDM(0x24), 0x3f, 0xd);
-+	b43_phy_maskset(dev, B43_PHY_OFDM(0x64), 0x3f, 0xd);
-+	b43_phy_maskset(dev, B43_PHY_OFDM(0xa4), 0x3f, 0xd);
-+
-+	b43_phy_set(dev, B43_PHY_EXTG(0x060), 0x1);
-+	b43_phy_set(dev, B43_PHY_EXTG(0x064), 0x1);
-+	b43_phy_set(dev, B43_PHY_EXTG(0x080), 0x1);
-+	b43_phy_set(dev, B43_PHY_EXTG(0x084), 0x1);
-+
- 	/* Copy some tables entries */
- 	tmp = b43_httab_read(dev, B43_HTTAB16(7, 0x144));
- 	b43_httab_write(dev, B43_HTTAB16(7, 0x14a), tmp);
-@@ -340,7 +365,18 @@ static int b43_phy_ht_op_init(struct b43_wldev *dev)
- 
- 	b43_mac_phy_clock_set(dev, true);
- 
--	/* TODO: Some ops here */
-+	for (i = 0; i < 2; i++) {
-+		tmp = b43_phy_read(dev, B43_PHY_EXTG(0));
-+		b43_phy_set(dev, B43_PHY_EXTG(0), 0x3);
-+		b43_phy_set(dev, B43_PHY_EXTG(3), i ? 0x20 : 0x1);
-+		/* FIXME: wait for some bit to be cleared (find out which) */
-+		b43_phy_read(dev, B43_PHY_EXTG(4));
-+		b43_phy_write(dev, B43_PHY_EXTG(0), tmp);
-+	}
-+
-+	/* TODO: PHY op on reg 0xb0 */
-+
-+	/* TODO: PHY ops on regs 0x40e, 0x44e, 0x48e */
- 
- 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
- 		b43_phy_ht_bphy_init(dev);
--- 
-1.7.3.4
-
+Hauke
