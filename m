@@ -1,38 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:46994 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753634Ab1HZTFT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 15:05:19 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 52643540237
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 15:14:38 -0400 (EDT)
-Subject: Compat-wireless release for 2011-08-26 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110826190518.004D240631@repository3.orbit-lab.org> (sfid-20110826_210523_194484_CE11D042)
-Date: Fri, 26 Aug 2011 15:05:17 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mms3.broadcom.com ([216.31.210.19]:3255 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753281Ab1HHN7f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:35 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 70/82] staging: brcm80211: remove dead code from
+ brcmfmac
+Date: Mon, 8 Aug 2011 15:58:54 +0200
+Message-ID: <1312811946-16713-71-git-send-email-arend@broadcom.com> (sfid-20110808_160052_568780_A64AC500)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   3e4dd06..d32228d  master     -> origin/master
- * [new tag]         compat-wireless-2011-08-25 -> compat-wireless-2011-08-25
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   55a12f9..40f7615  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 27a730b...da24751 akpm-end   -> origin/akpm-end  (forced update)
-   caca951..b4ca46e  akpm-start -> origin/akpm-start
- + 0060a16...fa16964 master     -> origin/master  (forced update)
-   caca951..b4ca46e  stable     -> origin/stable
- * [new tag]         next-20110826 -> next-20110826
+From: Franky Lin <frankyl@broadcom.com>
 
-compat-wireless code metrics
+brcmf_sdcrad_cfg_read_word and brcmf_sdcard_cfg_write_word are
+not used by anyone.
 
-    803468 - Total upstream lines of code being pulled
-      2397 - backport code changes
-      2086 - backport code additions
-       311 - backport code deletions
-      8431 - backport from compat module
-     10828 - total backport code
-    1.3477 - % of code consists of backport work
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c    |   35 ------------------------
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h |    9 ------
+ 2 files changed, 0 insertions(+), 44 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 31e6728..6cabda5 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -120,41 +120,6 @@ brcmf_sdcard_cfg_write(struct brcmf_sdio_dev *sdiodev, uint fnc_num, u32 addr,
+ 		     __func__, fnc_num, addr, data));
+ }
+ 
+-u32 brcmf_sdcard_cfg_read_word(struct brcmf_sdio_dev *sdiodev, uint fnc_num,
+-			       u32 addr, int *err)
+-{
+-	int status;
+-	u32 data = 0;
+-
+-	status = brcmf_sdioh_request_word(sdiodev->sdioh, SDIOH_CMD_TYPE_NORMAL,
+-		SDIOH_READ, fnc_num, addr, &data, 4);
+-
+-	if (err)
+-		*err = status;
+-
+-	BRCMF_INFO(("%s:fun = %d, addr = 0x%x, u32data = 0x%x\n",
+-		     __func__, fnc_num, addr, data));
+-
+-	return data;
+-}
+-
+-void
+-brcmf_sdcard_cfg_write_word(struct brcmf_sdio_dev *sdiodev, uint fnc_num,
+-			    u32 addr, u32 data, int *err)
+-{
+-	int status;
+-
+-	status =
+-	    brcmf_sdioh_request_word(sdiodev->sdioh, SDIOH_CMD_TYPE_NORMAL,
+-			       SDIOH_WRITE, fnc_num, addr, &data, 4);
+-
+-	if (err)
+-		*err = status;
+-
+-	BRCMF_INFO(("%s:fun = %d, addr = 0x%x, u32data = 0x%x\n",
+-		     __func__, fnc_num, addr, data));
+-}
+-
+ int brcmf_sdcard_cis_read(struct brcmf_sdio_dev *sdiodev, uint func, u8 * cis,
+ 			  uint length)
+ {
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index b82a462..3c97af4 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -183,15 +183,6 @@ extern u8 brcmf_sdcard_cfg_read(struct brcmf_sdio_dev *sdiodev, uint func,
+ extern void brcmf_sdcard_cfg_write(struct brcmf_sdio_dev *sdiodev, uint func,
+ 				   u32 addr, u8 data, int *err);
+ 
+-/* Read/Write 4bytes from/to cfg space */
+-extern u32
+-brcmf_sdcard_cfg_read_word(struct brcmf_sdio_dev *sdiodev, uint fnc_num,
+-			   u32 addr, int *err);
+-
+-extern void brcmf_sdcard_cfg_write_word(struct brcmf_sdio_dev *sdiodev,
+-					uint fnc_num, u32 addr,
+-					u32 data, int *err);
+-
+ /* Read CIS content for specified function.
+  *   fn:     function whose CIS is being requested (0 is common CIS)
+  *   cis:    pointer to memory location to place results
+-- 
+1.7.4.1
+
+
