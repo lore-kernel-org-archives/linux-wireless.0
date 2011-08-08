@@ -1,56 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:60013 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750843Ab1HHTUO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 15:20:14 -0400
-Received: by qyk38 with SMTP id 38so1799327qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 12:20:13 -0700 (PDT)
-From: Bill Jordan <bjordan@rajant.com>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Cc: Bill Jordan <bjordan@rajant.com>
-Subject: [PATCH] ath: Fix hardware decryption of WEP
-Date: Mon,  8 Aug 2011 15:19:53 -0400
-Message-Id: <1312831193-8691-1-git-send-email-bjordan@rajant.com> (sfid-20110808_212018_791510_A30EEDE9)
+Received: from mms3.broadcom.com ([216.31.210.19]:3122 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752554Ab1HHN7Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:25 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 09/82] staging: brcm80211: removed function
+ declaration typedefs from dma.h part 3
+Date: Mon, 8 Aug 2011 15:57:53 +0200
+Message-ID: <1312811946-16713-10-git-send-email-arend@broadcom.com> (sfid-20110808_160135_542741_AC06B282)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The first 4 hardware key indexes are reserved for WEP, but
-never programmed. The result was that WEP always used
-software decryption.
+From: Roland Vossen <rvossen@broadcom.com>
 
-Signed-off-by: Bill Jordan <bjordan@rajant.com>
+Softmac related code cleanup. Typedefs are undesirable according to the
+CodingStyle document.
+
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/key.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/dma.c |    8 ++++----
+ drivers/staging/brcm80211/brcmsmac/dma.h |   12 ++++--------
+ 2 files changed, 8 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/key.c b/drivers/net/wireless/ath/key.c
-index 17b0efd..73177f1 100644
---- a/drivers/net/wireless/ath/key.c
-+++ b/drivers/net/wireless/ath/key.c
-@@ -501,7 +501,11 @@ int ath_key_config(struct ath_common *common,
- 	if (key->keylen)
- 		memcpy(hk.kv_val, key->key, key->keylen);
+diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
+index 3e732c8d..ebc0848 100644
+--- a/drivers/staging/brcm80211/brcmsmac/dma.c
++++ b/drivers/staging/brcm80211/brcmsmac/dma.c
+@@ -404,7 +404,7 @@ const struct di_fcn_s dma64proc = {
+ 	(di_peeknexttxp_t) _dma_peeknexttxp,
+ 	(void (*)(struct dma_pub *)) _dma_txblock,
+ 	(void (*)(struct dma_pub *)) _dma_txunblock,
+-	(di_txactive_t) _dma_txactive,
++	(uint (*)(struct dma_pub *)) _dma_txactive,
+ 	(void (*)(struct dma_pub *)) dma64_txrotate,
  
--	if (!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
-+	if (hk.kv_type == ATH_CIPHER_WEP) {
-+		if (key->keyidx >= IEEE80211_WEP_NKID)
-+			return -EOPNOTSUPP;
-+		idx = key->keyidx;
-+	} else if (!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
- 		switch (vif->type) {
- 		case NL80211_IFTYPE_AP:
- 			memcpy(gmac, vif->addr, ETH_ALEN);
-@@ -577,8 +581,6 @@ EXPORT_SYMBOL(ath_key_config);
- void ath_key_delete(struct ath_common *common, struct ieee80211_key_conf *key)
- {
- 	ath_hw_keyreset(common, key->hw_key_idx);
--	if (key->hw_key_idx < IEEE80211_WEP_NKID)
--		return;
+ 	(void (*)(struct dma_pub *)) _dma_rxinit,
+@@ -427,9 +427,9 @@ const struct di_fcn_s dma64proc = {
+ 	NULL,
+ 	NULL,
+ 	NULL,
+-	(di_rxactive_t) _dma_rxactive,
+-	(di_txpending_t) _dma_txpending,
+-	(di_txcommitted_t) _dma_txcommitted,
++	(uint (*)(struct dma_pub *)) _dma_rxactive,
++	(uint (*)(struct dma_pub *)) _dma_txpending,
++	(uint (*)(struct dma_pub *)) _dma_txcommitted,
+ 	39
+ };
  
- 	clear_bit(key->hw_key_idx, common->keymap);
- 	if (key->cipher != WLAN_CIPHER_SUITE_TKIP)
+diff --git a/drivers/staging/brcm80211/brcmsmac/dma.h b/drivers/staging/brcm80211/brcmsmac/dma.h
+index 6d6dbd8..5dc7e0b 100644
+--- a/drivers/staging/brcm80211/brcmsmac/dma.h
++++ b/drivers/staging/brcm80211/brcmsmac/dma.h
+@@ -74,7 +74,6 @@ typedef void *(*di_peeknexttxp_t) (struct dma_pub *dmah);
+ typedef void *(*di_peeknextrxp_t) (struct dma_pub *dmah);
+ typedef void (*di_rxparam_get_t) (struct dma_pub *dmah, u16 *rxoffset,
+ 				  u16 *rxbufsize);
+-typedef uint(*di_txactive_t) (struct dma_pub *dmah);
+ typedef uint(*di_ctrlflags_t) (struct dma_pub *dmah, uint mask, uint flags);
+ typedef char *(*di_dump_t) (struct dma_pub *dmah, struct brcmu_strbuf *b,
+ 			    bool dumpring);
+@@ -82,9 +81,6 @@ typedef char *(*di_dumptx_t) (struct dma_pub *dmah, struct brcmu_strbuf *b,
+ 			      bool dumpring);
+ typedef char *(*di_dumprx_t) (struct dma_pub *dmah, struct brcmu_strbuf *b,
+ 			      bool dumpring);
+-typedef uint(*di_rxactive_t) (struct dma_pub *dmah);
+-typedef uint(*di_txpending_t) (struct dma_pub *dmah);
+-typedef uint(*di_txcommitted_t) (struct dma_pub *dmah);
+ 
+ /* dma opsvec */
+ struct di_fcn_s {
+@@ -105,7 +101,7 @@ struct di_fcn_s {
+ 	di_peeknexttxp_t peeknexttxp;
+ 	void (*txblock) (struct dma_pub *dmah);
+ 	void (*txunblock) (struct dma_pub *dmah);
+-	di_txactive_t txactive;
++	uint (*txactive)(struct dma_pub *dmah);
+ 	void (*txrotate) (struct dma_pub *dmah);
+ 
+ 	void (*rxinit)(struct dma_pub *dmah);
+@@ -128,9 +124,9 @@ struct di_fcn_s {
+ 	di_dump_t dump;
+ 	di_dumptx_t dumptx;
+ 	di_dumprx_t dumprx;
+-	di_rxactive_t rxactive;
+-	di_txpending_t txpending;
+-	di_txcommitted_t txcommitted;
++	uint (*rxactive)(struct dma_pub *dmah);
++	uint (*txpending)(struct dma_pub *dmah);
++	uint (*txcommitted)(struct dma_pub *dmah);
+ 	uint endnum;
+ };
+ 
 -- 
-1.7.4.4
+1.7.4.1
+
 
