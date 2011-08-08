@@ -1,73 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45450 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754615Ab1HaHxY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 03:53:24 -0400
-Subject: Re: [PATCH] nl80211/cfg80211: add ssid filtering for sched_scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1314776962.2296.540.camel@cumari>
-References: <1314707979-26484-1-git-send-email-coelho@ti.com>
-	 <1314713812.4011.33.camel@jlt3.sipsolutions.net>
-	 <1314718038.2296.460.camel@cumari>
-	 <1314720557.4011.41.camel@jlt3.sipsolutions.net>
-	 <1314770941.2296.507.camel@cumari>
-	 <1314771627.4161.9.camel@jlt3.sipsolutions.net>
-	 <1314775816.2296.531.camel@cumari>
-	 <1314776396.4161.19.camel@jlt3.sipsolutions.net>
-	 <1314776962.2296.540.camel@cumari>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 31 Aug 2011 09:53:18 +0200
-Message-ID: <1314777198.4161.20.camel@jlt3.sipsolutions.net> (sfid-20110831_095327_725277_2680941D)
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:1862 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753411Ab1HHN7j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:39 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 78/82] staging: brcm80211: removed watchdog function
+ from softmac
+Date: Mon, 8 Aug 2011 15:59:02 +0200
+Message-ID: <1312811946-16713-79-git-send-email-arend@broadcom.com> (sfid-20110808_155958_955108_DAFD7FB5)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-08-31 at 10:49 +0300, Luciano Coelho wrote:
+From: Roland Vossen <rvossen@broadcom.com>
 
-> Whitelisting and blacklisting the same SSID would be one of the
-> "illegal" cases that we may want to reject with -EINVAL.
-> 
-> But my idea was that you could do this:
-> 
-> MATCH={SSID=foo} and
-> NOT_MATCH={BSSID=00:01:02:03:04:05}
-> 
-> or
-> 
-> MATCH={BSSID=00:01:02:03:04:05} and
-> NOT_MATCH={SSID=foo}
-> 
-> or, making more sense:
-> 
-> MATCH={BSSID=00:01:02:03:04:05} and
-> NOT_MATCH={MIN_RSSI=-70}
-> 
-> My point is that many of these combinations might not make sense, but
-> generalizing the API allows for cases that *do* make sense but we have
-> not thought of yet.
+Code cleanup. Watchdog function served no purpose since it had an empty body.
 
-Good point :)
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.c |   14 +-------------
+ drivers/staging/brcm80211/brcmsmac/main.c        |   11 ++---------
+ drivers/staging/brcm80211/brcmsmac/main.h        |    2 --
+ drivers/staging/brcm80211/brcmsmac/pub.h         |    5 ++---
+ 4 files changed, 5 insertions(+), 27 deletions(-)
 
-> > > I also prefer using match/not_match (couldn't find a better antonym),
-> > > because "filter" is ambiguous (let-through or leave-out?).
-> > 
-> > agree.
-> 
-> We could also use a single list like this:
-> 
-> FILTER={1={MATCH=true, SSID=foo}, 2={MATCH=false, BSSID=...}
-> 
-> But then we're becoming a bit too "netfiltery". :P What do you think?
-
-Heh. Don't really care :)
-
-I guess the thing to keep in mind is that it's all an optimisation and
-if a device can't support certain combinations it doesn't really
-matter :)
-
-johannes
+diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
+index 7f6a490..a4d46dd 100644
+--- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
+@@ -61,8 +61,6 @@ static void _brcms_timer(struct brcms_timer *t);
+ static int ieee_hw_init(struct ieee80211_hw *hw);
+ static int ieee_hw_rate_init(struct ieee80211_hw *hw);
+ 
+-static int wl_linux_watchdog(void *ctx);
+-
+ /* Flags we support */
+ #define MAC_FILTERS (FIF_PROMISC_IN_BSS | \
+ 	FIF_ALLMULTI | \
+@@ -828,7 +826,7 @@ static struct brcms_info *brcms_attach(u16 vendor, u16 device,
+ 	wl->irq = irq;
+ 
+ 	/* register module */
+-	brcms_c_module_register(wl->pub, "linux", wl, wl_linux_watchdog, NULL);
++	brcms_c_module_register(wl->pub, "linux", wl, NULL);
+ 
+ 	if (ieee_hw_init(hw)) {
+ 		wiphy_err(wl->wiphy, "wl%d: %s: ieee_hw_init failed!\n", unit,
+@@ -1701,16 +1699,6 @@ void brcms_free_timer(struct brcms_info *wl, struct brcms_timer *t)
+ 
+ }
+ 
+-/*
+- * runs in software irq context
+- *
+- * precondition: perimeter lock is not acquired
+- */
+-static int wl_linux_watchdog(void *ctx)
+-{
+-	return 0;
+-}
+-
+ struct firmware_hdr {
+ 	u32 offset;
+ 	u32 len;
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index d011ed6..bdc7fb4 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -5374,12 +5374,6 @@ static void brcms_c_watchdog(void *arg)
+ 			cfg->tk_cm_bt--;
+ 	END_FOREACH_BSS()
+ 
+-	/* Call any registered watchdog handlers */
+-	for (i = 0; i < BRCMS_MAXMODULES; i++) {
+-		if (wlc->modulecb[i].watchdog_fn)
+-			wlc->modulecb[i].watchdog_fn(wlc->modulecb[i].hdl);
+-	}
+-
+ 	if (BRCMS_ISNPHY(wlc->band) && !wlc->pub->tempsense_disable &&
+ 	    ((wlc->pub->now - wlc->tempsense_lasttime) >=
+ 	     BRCMS_TEMPSENSE_PERIOD)) {
+@@ -6325,8 +6319,8 @@ _brcms_c_ioctl(struct brcms_c_info *wlc, int cmd, void *arg, int len,
+  * register watchdog and down handlers.
+  */
+ int brcms_c_module_register(struct brcms_pub *pub,
+-		const char *name, void *hdl,
+-		int (*w_fn)(void *handle), int (*d_fn)(void *handle))
++			    const char *name, void *hdl,
++			    int (*d_fn)(void *handle))
+ {
+ 	struct brcms_c_info *wlc = (struct brcms_c_info *) pub->wlc;
+ 	int i;
+@@ -6337,7 +6331,6 @@ int brcms_c_module_register(struct brcms_pub *pub,
+ 			strncpy(wlc->modulecb[i].name, name,
+ 				sizeof(wlc->modulecb[i].name) - 1);
+ 			wlc->modulecb[i].hdl = hdl;
+-			wlc->modulecb[i].watchdog_fn = w_fn;
+ 			wlc->modulecb[i].down_fn = d_fn;
+ 			return 0;
+ 		}
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
+index 0fd061b..e2febe0 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.h
++++ b/drivers/staging/brcm80211/brcmsmac/main.h
+@@ -462,8 +462,6 @@ struct modulecb {
+ 	const struct brcmu_iovar *iovars;
+ 	/* handle passed when handler 'doiovar' is called */
+ 	void *hdl;
+-	/* watchdog handler */
+-	int (*watchdog_fn)(void *handle);
+ 
+ 	/* IOVar handler
+ 	 *
+diff --git a/drivers/staging/brcm80211/brcmsmac/pub.h b/drivers/staging/brcm80211/brcmsmac/pub.h
+index bfbb261..40efee6 100644
+--- a/drivers/staging/brcm80211/brcmsmac/pub.h
++++ b/drivers/staging/brcm80211/brcmsmac/pub.h
+@@ -614,9 +614,8 @@ extern void brcms_c_set_ps_ctrl(struct brcms_c_info *wlc);
+ extern void brcms_c_mctrl(struct brcms_c_info *wlc, u32 mask, u32 val);
+ 
+ extern int brcms_c_module_register(struct brcms_pub *pub,
+-			       const char *name, void *hdl,
+-			       int (*watchdog_fn)(void *handle),
+-			       int (*down_fn)(void *handle));
++				   const char *name, void *hdl,
++				   int (*down_fn)(void *handle));
+ 
+ extern int brcms_c_module_unregister(struct brcms_pub *pub, const char *name,
+ 				 void *hdl);
+-- 
+1.7.4.1
 
 
