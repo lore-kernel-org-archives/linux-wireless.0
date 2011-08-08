@@ -1,17 +1,17 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3242 "EHLO MMS3.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1856 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753233Ab1HHN7f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:35 -0400
+	id S1753389Ab1HHN7i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:38 -0400
 From: "Arend van Spriel" <arend@broadcom.com>
 To: gregkh@suse.de
 cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
 	"Roland Vossen" <rvossen@broadcom.com>,
 	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 64/82] staging: brcm80211: removed void * from softmac
- phy
-Date: Mon, 8 Aug 2011 15:58:48 +0200
-Message-ID: <1312811946-16713-65-git-send-email-arend@broadcom.com> (sfid-20110808_160040_297419_AD19EA47)
+Subject: [PATCHv2 76/82] staging: brcm80211: removed void * from ai_
+ functions
+Date: Mon, 8 Aug 2011 15:59:00 +0200
+Message-ID: <1312811946-16713-77-git-send-email-arend@broadcom.com> (sfid-20110808_160006_719466_76701837)
 In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
 References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
@@ -21,346 +21,226 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Roland Vossen <rvossen@broadcom.com>
 
-Code cleanup. Replacing void * by other pointer types improves code
-readability and enforces stronger type checking.
+Code cleanup. Replaced void * by less generic pointer types.
 
-Reported-by: Julian Calaby <julian.calaby@gmail.com>
 Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
 Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/brcm80211/brcmsmac/main.c        |    7 ++-
- drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |   13 +++---
- drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h |   11 ++++-
- drivers/staging/brcm80211/brcmsmac/phy/phy_int.h |    5 +-
- drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c |    7 +--
- drivers/staging/brcm80211/brcmsmac/phy/phy_n.c   |   47 ++++++++-------------
- drivers/staging/brcm80211/brcmsmac/phy_shim.c    |    7 ++-
- drivers/staging/brcm80211/brcmsmac/phy_shim.h    |    6 ++-
- 8 files changed, 50 insertions(+), 53 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/aiutils.c |   46 +++++++++++++-------------
+ drivers/staging/brcm80211/brcmsmac/aiutils.h |    5 +--
+ drivers/staging/brcm80211/brcmsmac/pmu.c     |    4 +-
+ 3 files changed, 26 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index e7a166f..f5f914f 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -4528,9 +4528,10 @@ int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device, uint unit,
- 		    xmtfifo_sz[(wlc_hw->corerev - XMTFIFOTBL_STARTREV)];
- 
- 		/* Get a phy for this band */
--		wlc_hw->band->pi = wlc_phy_attach(wlc_hw->phy_sh,
--			(void *)regs, brcms_b_bandtype(wlc_hw), vars,
--			wlc->wiphy);
-+		wlc_hw->band->pi =
-+			wlc_phy_attach(wlc_hw->phy_sh, regs,
-+				       brcms_b_bandtype(wlc_hw), vars,
-+				       wlc->wiphy);
- 		if (wlc_hw->band->pi == NULL) {
- 			wiphy_err(wiphy, "wl%d: brcms_b_attach: wlc_phy_"
- 				  "attach failed\n", unit);
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-index 22f7bfc..831c2fe 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -123,7 +123,7 @@ const u8 ofdm_rate_lookup[] = {
- 
- static void wlc_set_phy_uninitted(struct brcms_phy *pi);
- static u32 wlc_phy_get_radio_ver(struct brcms_phy *pi);
--static void wlc_phy_timercb_phycal(void *arg);
-+static void wlc_phy_timercb_phycal(struct brcms_phy *pi);
- 
- static bool wlc_phy_noise_calc_phy(struct brcms_phy *pi, u32 *cmplx_pwr,
- 				   s8 *pwr_ant);
-@@ -509,7 +509,7 @@ struct shared_phy *wlc_phy_shared_attach(struct shared_phy_params *shp)
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+index 9cfb492..3d392a3 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+@@ -483,16 +483,16 @@ static void ai_hwfixup(struct si_info *sii)
  }
  
- struct brcms_phy_pub *
--wlc_phy_attach(struct shared_phy *sh, void *regs, int bandtype,
-+wlc_phy_attach(struct shared_phy *sh, struct d11regs *regs, int bandtype,
- 	       char *vars, struct wiphy *wiphy)
+ /* parse the enumeration rom to identify all cores */
+-void ai_scan(struct si_pub *sih, void *regs)
++void ai_scan(struct si_pub *sih, struct chipcregs *cc)
  {
- 	struct brcms_phy *pi;
-@@ -539,7 +539,7 @@ wlc_phy_attach(struct shared_phy *sh, void *regs, int bandtype,
- 	if (pi == NULL)
+ 	struct si_info *sii = SI_INFO(sih);
+-	struct chipcregs *cc = (struct chipcregs *) regs;
+ 	u32 erombase, *eromptr, *eromlim;
++	void *regs = cc;
+ 
+ 	erombase = R_REG(&cc->eromptr);
+ 
+ 	/* Set wrappers address */
+-	sii->curwrap = (void *)((unsigned long)regs + SI_CORE_SIZE);
++	sii->curwrap = (void *)((unsigned long)cc + SI_CORE_SIZE);
+ 
+ 	/* Now point the window at the erom */
+ 	pci_write_config_dword(sii->pbus, PCI_BAR0_WIN, erombase);
+@@ -671,7 +671,10 @@ void ai_scan(struct si_pub *sih, void *regs)
+ 
+ /*
+  * This function changes the logical "focus" to the indicated core.
+- * Return the current core's virtual address.
++ * Return the current core's virtual address. Since each core starts with the
++ * same set of registers (BIST, clock control, etc), the returned address
++ * contains the first register of this 'common' register block (not to be
++ * confused with 'common core').
+  */
+ void *ai_setcoreidx(struct si_pub *sih, uint coreidx)
+ {
+@@ -864,8 +867,7 @@ static struct si_info *ai_doattach(struct si_info *sii, void *regs,
+ 				   struct pci_dev *sdh,
+ 				   char **vars, uint *varsz);
+ static bool ai_buscore_prep(struct si_info *sii);
+-static bool ai_buscore_setup(struct si_info *sii, struct chipcregs *cc,
+-			     u32 savewin, uint *origidx, void *regs);
++static bool ai_buscore_setup(struct si_info *sii, u32 savewin, uint *origidx);
+ static void ai_nvram_process(struct si_info *sii, char *pvars);
+ 
+ /* dev path concatenation util */
+@@ -916,12 +918,12 @@ static bool ai_buscore_prep(struct si_info *sii)
+ }
+ 
+ static bool
+-ai_buscore_setup(struct si_info *sii, struct chipcregs *cc, u32 savewin,
+-		 uint *origidx, void *regs)
++ai_buscore_setup(struct si_info *sii, u32 savewin, uint *origidx)
+ {
+ 	bool pci, pcie;
+ 	uint i;
+ 	uint pciidx, pcieidx, pcirev, pcierev;
++	struct chipcregs *cc;
+ 
+ 	cc = ai_setcoreidx(&sii->pub, SI_CC_IDX);
+ 
+@@ -977,7 +979,7 @@ ai_buscore_setup(struct si_info *sii, struct chipcregs *cc, u32 savewin,
+ 
+ 		/* find the core idx before entering this func. */
+ 		if ((savewin && (savewin == sii->coresba[i])) ||
+-		    (regs == sii->regs[i]))
++		    (cc == sii->regs[i]))
+ 			*origidx = i;
+ 	}
+ 
+@@ -1003,9 +1005,8 @@ ai_buscore_setup(struct si_info *sii, struct chipcregs *cc, u32 savewin,
+ 	/* fixup necessary chip/core configurations */
+ 	if (SI_FAST(sii)) {
+ 		if (!sii->pch) {
+-			sii->pch = (void *)pcicore_init(
+-				&sii->pub, sii->pbus,
+-				(void *)PCIEREGS(sii));
++			sii->pch = pcicore_init(&sii->pub, sii->pbus,
++						(void *)PCIEREGS(sii));
+ 			if (sii->pch == NULL)
+ 				return false;
+ 		}
+@@ -1108,7 +1109,7 @@ static struct si_info *ai_doattach(struct si_info *sii,
+ 	if (socitype == SOCI_AI) {
+ 		SI_MSG(("Found chip type AI (0x%08x)\n", w));
+ 		/* pass chipc address instead of original core base */
+-		ai_scan(&sii->pub, (void *)cc);
++		ai_scan(&sii->pub, cc);
+ 	} else {
+ 		SI_ERROR(("Found chip of unknown type (0x%08x)\n", w));
  		return NULL;
- 	pi->wiphy = wiphy;
--	pi->regs = (struct d11regs *) regs;
-+	pi->regs = regs;
- 	pi->sh = sh;
- 	pi->phy_init_por = true;
- 	pi->phy_wreg_limit = PHY_WREG_LIMIT;
-@@ -720,9 +720,8 @@ u32 wlc_phy_get_coreflags(struct brcms_phy_pub *pih)
- 	return pi->pubpi.coreflags;
- }
- 
--static void wlc_phy_timercb_phycal(void *arg)
-+static void wlc_phy_timercb_phycal(struct brcms_phy *pi)
- {
--	struct brcms_phy *pi = (struct brcms_phy *) arg;
- 	uint delay = 5;
- 
- 	if (PHY_PERICAL_MPHASE_PENDING(pi)) {
-@@ -2619,9 +2618,9 @@ void wlc_phy_compute_dB(u32 *cmplx_pwr, s8 *p_cmplx_pwr_dB, u8 core)
+@@ -1120,13 +1121,13 @@ static struct si_info *ai_doattach(struct si_info *sii,
  	}
- }
- 
--void wlc_phy_rssi_compute(struct brcms_phy_pub *pih, void *ctx)
-+void wlc_phy_rssi_compute(struct brcms_phy_pub *pih,
-+			  struct brcms_d11rxhdr *wlc_rxhdr)
- {
--	struct brcms_d11rxhdr *wlc_rxhdr = (struct brcms_d11rxhdr *) ctx;
- 	struct d11rxhdr *rxh = &wlc_rxhdr->rxhdr;
- 	int rssi = le16_to_cpu(rxh->PhyRxStatus_1) & PRXS1_JSSI_MASK;
- 	uint radioid = pih->radioid;
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h b/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h
-index d2faba2..42e0cf0 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h
-@@ -103,6 +103,9 @@
- 
- #define	BRCMS_RSSI_INVALID	 0	/* invalid RSSI value */
- 
-+struct d11regs;
-+struct phy_shim_info;
-+
- struct txpwr_limits {
- 	u8 cck[BRCMS_NUM_RATES_CCK];
- 	u8 ofdm[BRCMS_NUM_RATES_OFDM];
-@@ -160,7 +163,7 @@ struct brcms_chanvec {
- 
- struct shared_phy_params {
- 	struct si_pub *sih;
--	void *physhim;
-+	struct phy_shim_info *physhim;
- 	uint unit;
- 	uint corerev;
- 	uint bustype;
-@@ -181,7 +184,8 @@ struct shared_phy_params {
- 
- 
- extern struct shared_phy *wlc_phy_shared_attach(struct shared_phy_params *shp);
--extern struct brcms_phy_pub *wlc_phy_attach(struct shared_phy *sh, void *regs,
-+extern struct brcms_phy_pub *wlc_phy_attach(struct shared_phy *sh,
-+					    struct d11regs *regs,
- 					    int bandtype, char *vars,
- 					    struct wiphy *wiphy);
- extern void wlc_phy_detach(struct brcms_phy_pub *ppi);
-@@ -209,7 +213,8 @@ extern void wlc_phy_chanspec_radio_set(struct brcms_phy_pub *ppi,
- extern u16 wlc_phy_bw_state_get(struct brcms_phy_pub *ppi);
- extern void wlc_phy_bw_state_set(struct brcms_phy_pub *ppi, u16 bw);
- 
--extern void wlc_phy_rssi_compute(struct brcms_phy_pub *pih, void *ctx);
-+extern void wlc_phy_rssi_compute(struct brcms_phy_pub *pih,
-+				 struct brcms_d11rxhdr *wlc_rxhdr);
- extern void wlc_phy_por_inform(struct brcms_phy_pub *ppi);
- extern void wlc_phy_noise_sample_intr(struct brcms_phy_pub *ppi);
- extern bool wlc_phy_bist_check_phy(struct brcms_phy_pub *ppi);
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h b/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h
-index 25ea003..bcc6d83 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h
-@@ -41,6 +41,8 @@ extern u32 phyhal_msg_level;
- 
- #define LCNXN_BASEREV		16
- 
-+struct phy_shim_info;
-+
- struct brcms_phy_srom_fem {
- 	/* TSSI positive slope, 1: positive, 0: negative */
- 	u8 tssipos;
-@@ -546,7 +548,7 @@ struct shared_phy {
- 	struct brcms_phy *phy_head;
- 	uint unit;
- 	struct si_pub *sih;
--	void *physhim;
-+	struct phy_shim_info *physhim;
- 	uint corerev;
- 	u32 machwcap;
- 	bool up;
-@@ -611,7 +613,6 @@ struct brcms_phy {
- 	struct brcms_phy_pub pubpi_ro;
- 	struct shared_phy *sh;
- 	struct phy_func_ptr pi_fptr;
--	void *pi_ptr;
- 
- 	union {
- 		struct brcms_phy_lcnphy *pi_lcnphy;
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
-index 3d140eb..dcf626e5 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c
-@@ -1041,7 +1041,7 @@ void wlc_lcnphy_read_table(struct brcms_phy *pi, struct phytbl_info *pti)
- 
- static void
- wlc_lcnphy_common_read_table(struct brcms_phy *pi, u32 tbl_id,
--			     const void *tbl_ptr, u32 tbl_len,
-+			     const u16 *tbl_ptr, u32 tbl_len,
- 			     u32 tbl_width, u32 tbl_offset)
- {
- 	struct phytbl_info tab;
-@@ -1055,7 +1055,7 @@ wlc_lcnphy_common_read_table(struct brcms_phy *pi, u32 tbl_id,
- 
- static void
- wlc_lcnphy_common_write_table(struct brcms_phy *pi, u32 tbl_id,
--			      const void *tbl_ptr, u32 tbl_len,
-+			      const u16 *tbl_ptr, u32 tbl_len,
- 			      u32 tbl_width, u32 tbl_offset)
- {
- 
-@@ -1965,13 +1965,12 @@ wlc_lcnphy_tx_iqlo_cal(struct brcms_phy *pi,
- 	write_phy_reg(pi, 0x93d, 0xc0);
- 
- 	wlc_lcnphy_common_write_table(pi, LCNPHY_TBL_ID_IQLOCAL,
--				      (const void *)
- 				      lcnphy_iqcal_loft_gainladder,
- 				      ARRAY_SIZE(lcnphy_iqcal_loft_gainladder),
- 				      16, 0);
- 
- 	wlc_lcnphy_common_write_table(pi, LCNPHY_TBL_ID_IQLOCAL,
--				      (const void *)lcnphy_iqcal_ir_gainladder,
-+				      lcnphy_iqcal_ir_gainladder,
- 				      ARRAY_SIZE(
- 					      lcnphy_iqcal_ir_gainladder), 16,
- 				      32);
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
-index fb64597..2e8aa64 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
-@@ -18627,11 +18627,10 @@ wlc_phy_adjust_min_noisevar_nphy(struct brcms_phy *pi, int ntones,
- 			offset = (tone_id >= 0) ?
- 				 ((tone_id *
- 				   2) + 1) : (tbllen + (tone_id * 2) + 1);
--			wlc_phy_table_write_nphy(pi, NPHY_TBL_ID_NOISEVAR, 1,
--						 offset, 32,
--						 (void *)&pi->
--						 nphy_saved_noisevars.
--						 min_noise_vars[i]);
-+			wlc_phy_table_write_nphy(
-+				pi, NPHY_TBL_ID_NOISEVAR, 1,
-+				offset, 32,
-+				&pi->nphy_saved_noisevars.min_noise_vars[i]);
- 		}
- 
- 		pi->nphy_saved_noisevars.bufcount = 0;
-@@ -18652,8 +18651,7 @@ wlc_phy_adjust_min_noisevar_nphy(struct brcms_phy *pi, int ntones,
- 						&pi->nphy_saved_noisevars.
- 						min_noise_vars[i]);
- 			wlc_phy_table_write_nphy(pi, NPHY_TBL_ID_NOISEVAR, 1,
--						 offset, 32,
--						 (void *)&noise_var_buf[i]);
-+						 offset, 32, &noise_var_buf[i]);
- 			pi->nphy_saved_noisevars.bufcount++;
- 		}
- 
-@@ -19296,8 +19294,7 @@ static void wlc_phy_restorecal_nphy(struct brcms_phy *pi)
- 		loft_comp = &pi->calibration_cache.txcal_coeffs_5G[5];
+ 	/* bus/core/clk setup */
+ 	origidx = SI_CC_IDX;
+-	if (!ai_buscore_setup(sii, cc, savewin, &origidx, regs)) {
++	if (!ai_buscore_setup(sii, savewin, &origidx)) {
+ 		SI_ERROR(("si_doattach: si_buscore_setup failed\n"));
+ 		goto exit;
  	}
  
--	wlc_phy_table_write_nphy(pi, NPHY_TBL_ID_IQLOCAL, 4, 80, 16,
--				 (void *)tbl_ptr);
-+	wlc_phy_table_write_nphy(pi, NPHY_TBL_ID_IQLOCAL, 4, 80, 16, tbl_ptr);
- 
- 	if (NREV_GE(pi->pubpi.phy_rev, 3)) {
- 		txcal_coeffs_bphy[0] = tbl_ptr[0];
-@@ -24307,7 +24304,7 @@ static void wlc_phy_tx_iq_war_nphy(struct brcms_phy *pi)
- {
- 	struct nphy_iq_comp tx_comp;
- 
--	wlc_phy_table_read_nphy(pi, 15, 4, 0x50, 16, (void *)&tx_comp);
-+	wlc_phy_table_read_nphy(pi, 15, 4, 0x50, 16, &tx_comp);
- 
- 	wlapi_bmac_write_shm(pi->sh->physhim, M_20IN40_IQ, tx_comp.a0);
- 	wlapi_bmac_write_shm(pi->sh->physhim, M_20IN40_IQ + 2, tx_comp.b0);
-@@ -28684,23 +28681,15 @@ wlc_phy_txpwr_index_nphy(struct brcms_phy *pi, u8 core_mask, s8 txpwrindex,
- 			wlc_phy_table_write_nphy(pi, 15, 1, 87, 16, &m1m2);
- 
- 			if (restore_cals) {
--
--				wlc_phy_table_write_nphy(pi, 15, 2,
--							 (80 + 2 * core), 16,
--							 (void *)&pi->
--							 nphy_txpwrindex[core].
--							 iqcomp_a);
--
--				wlc_phy_table_write_nphy(pi, 15, 1, (85 + core),
--							 16,
--							 &pi->
--							 nphy_txpwrindex[core].
--							 locomp);
--				wlc_phy_table_write_nphy(pi, 15, 1, (93 + core),
--							 16,
--							 (void *)&pi->
--							 nphy_txpwrindex[core].
--							 locomp);
-+				wlc_phy_table_write_nphy(
-+					pi, 15, 2, (80 + 2 * core), 16,
-+					&pi->nphy_txpwrindex[core].iqcomp_a);
-+				wlc_phy_table_write_nphy(
-+					pi, 15, 1, (85 + core), 16,
-+					&pi->nphy_txpwrindex[core].locomp);
-+				wlc_phy_table_write_nphy(
-+					pi, 15, 1, (93 + core), 16,
-+					&pi->nphy_txpwrindex[core].locomp);
- 			}
- 
- 			wlc_phy_txpwrctrl_enable_nphy(pi, pi->nphy_txpwrctrl);
-@@ -28743,13 +28732,13 @@ wlc_phy_txpwr_index_nphy(struct brcms_phy *pi, u8 core_mask, s8 txpwrindex,
- 
- 				wlc_phy_table_read_nphy(pi, 15, 2,
- 							(80 + 2 * core), 16,
--							(void *)&pi->
-+							&pi->
- 							nphy_txpwrindex[core].
- 							iqcomp_a);
- 
- 				wlc_phy_table_read_nphy(pi, 15, 1, (85 + core),
- 							16,
--							(void *)&pi->
-+							&pi->
- 							nphy_txpwrindex[core].
- 							locomp);
- 
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy_shim.c b/drivers/staging/brcm80211/brcmsmac/phy_shim.c
-index a882139..ec88867 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy_shim.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy_shim.c
-@@ -59,11 +59,12 @@ void wlc_phy_shim_detach(struct phy_shim_info *physhim)
+ 	/* Init nvram from sprom/otp if they exist */
+-	if (srom_var_init(&sii->pub, regs, vars, varsz)) {
++	if (srom_var_init(&sii->pub, cc, vars, varsz)) {
+ 		SI_ERROR(("si_doattach: srom_var_init failed: bad srom\n"));
+ 		goto exit;
+ 	}
+@@ -1327,9 +1328,9 @@ void *ai_switch_core(struct si_pub *sih, uint coreid, uint *origidx,
+ 		 */
+ 		*origidx = coreid;
+ 		if (coreid == CC_CORE_ID)
+-			return (void *)CCREGS_FAST(sii);
++			return CCREGS_FAST(sii);
+ 		else if (coreid == sih->buscoretype)
+-			return (void *)PCIEREGS(sii);
++			return PCIEREGS(sii);
+ 	}
+ 	INTR_OFF(sii, *intr_val);
+ 	*origidx = sii->curidx;
+@@ -1553,9 +1554,8 @@ ai_slowclk_freq(struct si_info *sii, bool max_freq, struct chipcregs *cc)
+ 	return 0;
  }
  
- struct wlapi_timer *wlapi_init_timer(struct phy_shim_info *physhim,
--				     void (*fn) (void *arg), void *arg,
--				     const char *name)
-+				     void (*fn)(struct brcms_phy *pi),
-+				     void *arg, const char *name)
+-static void ai_clkctl_setdelay(struct si_info *sii, void *chipcregs)
++static void ai_clkctl_setdelay(struct si_info *sii, struct chipcregs *cc)
  {
- 	return (struct wlapi_timer *)
--			brcms_init_timer(physhim->wl, fn, arg, name);
-+			brcms_init_timer(physhim->wl, (void (*)(void *))fn,
-+					 arg, name);
- }
+-	struct chipcregs *cc = (struct chipcregs *) chipcregs;
+ 	uint slowmaxfreq, pll_delay, slowclk;
+ 	uint pll_on_delay, fref_sel_delay;
  
- void wlapi_free_timer(struct phy_shim_info *physhim, struct wlapi_timer *t)
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy_shim.h b/drivers/staging/brcm80211/brcmsmac/phy_shim.h
-index a35e1ed..14c56f9 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy_shim.h
-+++ b/drivers/staging/brcm80211/brcmsmac/phy_shim.h
-@@ -122,14 +122,16 @@
- #define BRCMS_N_TXRX_CHAIN0		0
- #define BRCMS_N_TXRX_CHAIN1		1
+@@ -1611,7 +1611,7 @@ void ai_clkctl_init(struct si_pub *sih)
+ 		SET_REG(&cc->system_clk_ctl, SYCC_CD_MASK,
+ 			(ILP_DIV_1MHZ << SYCC_CD_SHIFT));
  
-+struct brcms_phy;
-+
- extern struct phy_shim_info *wlc_phy_shim_attach(struct brcms_hardware *wlc_hw,
- 						void *wl, void *wlc);
- extern void wlc_phy_shim_detach(struct phy_shim_info *physhim);
+-	ai_clkctl_setdelay(sii, (void *)cc);
++	ai_clkctl_setdelay(sii, cc);
  
- /* PHY to WL utility functions */
- extern struct wlapi_timer *wlapi_init_timer(struct phy_shim_info *physhim,
--					    void (*fn) (void *arg), void *arg,
--					    const char *name);
-+					    void (*fn) (struct brcms_phy *pi),
-+					    void *arg, const char *name);
- extern void wlapi_free_timer(struct phy_shim_info *physhim,
- 			     struct wlapi_timer *t);
- extern void wlapi_add_timer(struct phy_shim_info *physhim,
+ 	if (!fast)
+ 		ai_setcoreidx(sih, origidx);
+@@ -1979,7 +1979,7 @@ void ai_pci_down(struct si_pub *sih)
+ void ai_pci_setup(struct si_pub *sih, uint coremask)
+ {
+ 	struct si_info *sii;
+-	void *regs = NULL;
++	struct sbpciregs *regs = NULL;
+ 	u32 siflag = 0, w;
+ 	uint idx = 0;
+ 
+@@ -2025,7 +2025,7 @@ void ai_pci_setup(struct si_pub *sih, uint coremask)
+ int ai_pci_fixcfg(struct si_pub *sih)
+ {
+ 	uint origidx;
+-	void *regs = NULL;
++	struct sbpciregs *regs = NULL;
+ 
+ 	struct si_info *sii = SI_INFO(sih);
+ 
+@@ -2095,7 +2095,7 @@ void ai_epa_4313war(struct si_pub *sih)
+ 	sii = SI_INFO(sih);
+ 	origidx = ai_coreidx(sih);
+ 
+-	cc = (struct chipcregs *) ai_setcore(sih, CC_CORE_ID, 0);
++	cc = ai_setcore(sih, CC_CORE_ID, 0);
+ 
+ 	/* EPA Fix */
+ 	W_REG(&cc->gpiocontrol,
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+index 101ab92..84c6901 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+@@ -468,7 +468,7 @@ struct si_info {
+ 	/* check if interrupts are enabled */
+ 	bool (*intrsenabled_fn) (void *intr_arg);
+ 
+-	void *pch;		/* PCI/E core handle */
++	struct pcicore_info *pch; /* PCI/E core handle */
+ 
+ 	char *vars;
+ 	uint varsz;
+@@ -495,15 +495,12 @@ struct si_info {
+ };
+ 
+ /* AMBA Interconnect exported externs */
+-extern void ai_scan(struct si_pub *sih, void *regs);
+-
+ extern uint ai_flag(struct si_pub *sih);
+ extern void ai_setint(struct si_pub *sih, int siflag);
+ extern uint ai_coreidx(struct si_pub *sih);
+ extern uint ai_corevendor(struct si_pub *sih);
+ extern uint ai_corerev(struct si_pub *sih);
+ extern bool ai_iscoreup(struct si_pub *sih);
+-extern void *ai_setcoreidx(struct si_pub *sih, uint coreidx);
+ extern u32 ai_core_cflags(struct si_pub *sih, u32 mask, u32 val);
+ extern void ai_core_cflags_wo(struct si_pub *sih, u32 mask, u32 val);
+ extern u32 ai_core_sflags(struct si_pub *sih, u32 mask, u32 val);
+diff --git a/drivers/staging/brcm80211/brcmsmac/pmu.c b/drivers/staging/brcm80211/brcmsmac/pmu.c
+index f5e1085..cdeaa4e 100644
+--- a/drivers/staging/brcm80211/brcmsmac/pmu.c
++++ b/drivers/staging/brcm80211/brcmsmac/pmu.c
+@@ -320,8 +320,8 @@ void si_pmu_spuravoid(struct si_pub *sih, u8 spuravoid)
+ 	uint origidx, intr_val;
+ 
+ 	/* Remember original core before switch to chipc */
+-	cc = (struct chipcregs *) ai_switch_core(sih, CC_CORE_ID, &origidx,
+-					    &intr_val);
++	cc = (struct chipcregs *)
++			ai_switch_core(sih, CC_CORE_ID, &origidx, &intr_val);
+ 
+ 	/* update the pll changes */
+ 	si_pmu_spuravoid_pllupdate(sih, cc, spuravoid);
 -- 
 1.7.4.1
 
