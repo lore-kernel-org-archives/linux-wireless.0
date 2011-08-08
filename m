@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57231 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751939Ab1HLRaR (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52486 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751080Ab1HHIld (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 13:30:17 -0400
-Date: Fri, 12 Aug 2011 13:17:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org, Paul Stewart <pstew@google.com>
-Subject: Re: [PATCH] ath9k_hw: Fix STA (AR9485) bringup issue due to
- incorrect MAC address
-Message-ID: <20110812171734.GD2286@tuxdriver.com> (sfid-20110812_193021_000144_E73B0D64)
-References: <1312914178-9601-1-git-send-email-senthilb@qca.qualcomm.com>
- <CAB=NE6Uzp4M9SNgti9hpob=Q49cJTwhuG5qnY3vgg9Mqjb-OCA@mail.gmail.com>
- <CAB=NE6W7LsHzTg_=MSEozKfXOiQt_Z7mB1pQ772m_FqsanTjVw@mail.gmail.com>
- <20110809184415.GB10104@senthil-lnx.users.atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110809184415.GB10104@senthil-lnx.users.atheros.com>
+	Mon, 8 Aug 2011 04:41:33 -0400
+Subject: Re: IBSS channel support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: p4u <hakais@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4E32D144.6050304@gmail.com> (sfid-20110729_172709_209159_B8526302)
+References: <4E32D144.6050304@gmail.com>
+	 (sfid-20110729_172709_209159_B8526302)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 08 Aug 2011 10:41:30 +0200
+Message-ID: <1312792890.4372.8.camel@jlt3.sipsolutions.net> (sfid-20110808_104136_108749_1D81F0E5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 10, 2011 at 12:14:16AM +0530, Senthil Balasubramanian wrote:
-> On Tue, Aug 09, 2011 at 11:32:17AM -0700, Luis R. Rodriguez wrote:
-> > On Tue, Aug 9, 2011 at 11:31 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > > On Tue, Aug 9, 2011 at 11:22 AM, Senthil Balasubramanian
-> > > <senthilb@qca.qualcomm.com> wrote:
-> > >> Due to some recent optimization done in the way the mac address
-> > >> bytes are written into the OTP memory, some AR9485 chipsets were
-> > >> forced to use the first byte from the eeprom template and as AR9485
-> > >> happens to use generic eeprom template which has 0x1 as the first
-> > >> byte causes issues in bringing up the card.
-> > >>
-> > >> So fixed the eeprom template accordingly to address the issue.
-> > >>
-> > >> Cc: Paul Stewart <pstew@google.com>
-> > >> Signed-off-by: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-> > >
-> > > I don't follow the description too well, all I can tell from it is
-> > > that there is an issue if the template has 0x01 set instead of 0x0 but
-> > > it doesn't tell me why.
-> The leading byte is 1 which is obviously incorrect for mac address.
-> The reason why 1 is chosen by the driver for mac address is due to
-> the way the OTP write was optimized and so the driver has taken the
-> first byte alone from the template and the remaining from OTP.
+On Fri, 2011-07-29 at 17:27 +0200, p4u wrote:
+> Hi,
+> This is my first mail to this list, I'm Pau from Barcelona working in 
+> guifi.net (wireless community)
+> First of all I want to say thank you guys for your amazing job :-)
 > 
-> > 
-> > Is this not a stable fix?
-> Oops.. Yes it is. Let me cc to stable. thanks for the stable reminder :-(
+> Now, I have a little question. Using command "iw phy phy0 info" I can 
+> see that IBSS mode is only avaiable in some channels for 5ghz spectrum. 
+> I have been looking for information about it, but I cannot find from 
+> what depends if some channel can by used in IBSS mode or not. So I think 
+> it depends on the driver and on the regdomain, is it right?
+> 
+> Also I'm working in some scripts, and I need to know if a channel has 
+> IBSS support or not. The only way I found is with iw command, but pharse 
+> this data is very dirty. Furthermore I can read in the end of iw help:
+> 
+> "Do NOT screenscrape this tool, we don't consider its output stable."
+> 
+> So I need another way to get this information. Any idea?
 
-Are you goint to resubmit a patch w/ a better changelog and
-Cc: stable@kernel.org?
+Copy bits of the wpa_supplicant or iw code into your code to get this
+information. That said, iw output _should_ be fairly stable, in this
+area.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+johannes
+
