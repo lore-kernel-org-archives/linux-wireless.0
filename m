@@ -1,66 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:45496 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750767Ab1HXT1a convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 15:27:30 -0400
-Received: by wyg24 with SMTP id 24so1103963wyg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 12:27:29 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:1758 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753124Ab1HHN7c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:32 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 31/82] staging: brcm80211: move sdio related variables
+ to dhd_sdio.c
+Date: Mon, 8 Aug 2011 15:58:15 +0200
+Message-ID: <1312811946-16713-32-git-send-email-arend@broadcom.com> (sfid-20110808_155953_422033_FC3AD6AF)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1314213161-8871-1-git-send-email-linville@tuxdriver.com>
-References: <1314213161-8871-1-git-send-email-linville@tuxdriver.com>
-Date: Wed, 24 Aug 2011 12:27:29 -0700
-Message-ID: <CAG6hwVNvLREnnZQ0t8UaKZ7Q1nn-4kx=z_1nPzVG89a5NMWFpg@mail.gmail.com> (sfid-20110824_212733_932008_16573636)
-Subject: Re: [PATCH] mac80211: refactor skb copy to failq in mesh_path_move_to_queue
-From: Thomas Pedersen <thomas@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 24, 2011 at 12:12 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> This seems a bit less awkward, and avoids the following warning:
->
->  CC [M]  net/mac80211/mesh_pathtbl.o
-> net/mac80211/mesh_pathtbl.c: In function ‘mesh_path_move_to_queue’:
-> net/mac80211/mesh_pathtbl.c:291:24: warning: ‘cp_skb’ may be used uninitialized in this function
+From: Franky Lin <frankyl@broadcom.com>
 
-cp_skb was initialized to NULL in v2 of "mac80211:  mesh gate implementation'
+In fullmac some variables are used by sdio layer declared in
+dhd_linux.c. Move them to dhd_sdio.c for clean up.
 
->
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-> Does it matter if the copy ends-up on the failq before the original goes
-> to the gateq?
->
->  net/mac80211/mesh_pathtbl.c |    8 ++++----
->  1 files changed, 4 insertions(+), 4 deletions(-)
->
-> diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-> index 75e4b60..b5caf5b 100644
-> --- a/net/mac80211/mesh_pathtbl.c
-> +++ b/net/mac80211/mesh_pathtbl.c
-> @@ -307,14 +307,14 @@ static void mesh_path_move_to_queue(struct mesh_path *gate_mpath,
->
->        while (num_skbs--) {
->                skb = __skb_dequeue(&failq);
-> -               if (copy)
-> +               if (copy) {
->                        cp_skb = skb_copy(skb, GFP_ATOMIC);
-> +                       if (cp_skb)
-> +                               __skb_queue_tail(&failq, cp_skb);
-> +               }
->
->                prepare_for_gate(skb, gate_mpath->dst, gate_mpath);
->                __skb_queue_tail(&gateq, skb);
-> -
-> -               if (copy && cp_skb)
-> -                       __skb_queue_tail(&failq, cp_skb);
->        }
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd.h       |   13 -------------
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |   22 ----------------------
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |   18 ++++++++++++++++++
+ 3 files changed, 18 insertions(+), 35 deletions(-)
 
-However, this does look nicer. Please be sure to apply the version
-submitted on 11 August.
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index 537eb00..1f203fb 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -669,12 +669,6 @@ extern atomic_t brcmf_mmc_suspend;
+  * Insmod parameters for debug/test
+  */
+ 
+-/* Use interrupts */
+-extern uint brcmf_intr;
+-
+-/* Use polling */
+-extern uint brcmf_poll;
+-
+ /* ARP offload agent mode */
+ extern uint brcmf_arp_mode;
+ 
+@@ -696,13 +690,6 @@ extern uint brcmf_roam;
+ /* Roaming mode control */
+ extern uint brcmf_radio_up;
+ 
+-/* Initial idletime ticks (may be -1 for immediate idle, 0 for no idle) */
+-extern int brcmf_idletime;
+-#define BRCMF_IDLETIME_TICKS 1
+-
+-/* SDIO Drive Strength */
+-extern uint brcmf_sdiod_drive_strength;
+-
+ /* Override to force tx queueing all the time */
+ extern uint brcmf_force_tx_queueing;
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 7e9c86b..f3eaef1 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -115,8 +115,6 @@ module_param(brcmf_pkt_filter_init, uint, 0);
+ uint brcmf_master_mode = true;
+ module_param(brcmf_master_mode, uint, 0);
+ 
+-module_param(brcmf_dongle_memsize, int, 0);
+-
+ /* Contorl fw roaming */
+ uint brcmf_roam = 1;
+ 
+@@ -132,26 +130,6 @@ module_param_string(iface_name, iface_name, IFNAMSIZ, 0);
+ /* IOCTL response timeout */
+ int brcmf_ioctl_timeout_msec = IOCTL_RESP_TIMEOUT;
+ 
+-/* Idle timeout for backplane clock */
+-int brcmf_idletime = BRCMF_IDLETIME_TICKS;
+-module_param(brcmf_idletime, int, 0);
+-
+-/* Use polling */
+-uint brcmf_poll;
+-module_param(brcmf_poll, uint, 0);
+-
+-/* Use interrupts */
+-uint brcmf_intr = true;
+-module_param(brcmf_intr, uint, 0);
+-
+-/* SDIO Drive Strength (in milliamps) */
+-uint brcmf_sdiod_drive_strength = 6;
+-module_param(brcmf_sdiod_drive_strength, uint, 0);
+-
+-/* Tx/Rx bounds */
+-module_param(brcmf_txbound, uint, 0);
+-module_param(brcmf_rxbound, uint, 0);
+-
+ #ifdef SDTEST
+ /* Echo packet generator (pkts/s) */
+ uint brcmf_pktgen;
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 9b549c2..4235040 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -838,11 +838,29 @@ module_param(brcmf_console_ms, uint, 0);
+ /* Tx/Rx bounds */
+ uint brcmf_txbound;
+ uint brcmf_rxbound;
++module_param(brcmf_txbound, uint, 0);
++module_param(brcmf_rxbound, uint, 0);
+ uint brcmf_txminmax;
+ 
++int brcmf_idletime = 1;
++module_param(brcmf_idletime, int, 0);
++
++/* SDIO Drive Strength (in milliamps) */
++uint brcmf_sdiod_drive_strength = 6;
++module_param(brcmf_sdiod_drive_strength, uint, 0);
++
++/* Use polling */
++uint brcmf_poll;
++module_param(brcmf_poll, uint, 0);
++
++/* Use interrupts */
++uint brcmf_intr = true;
++module_param(brcmf_intr, uint, 0);
++
+ /* override the RAM size if possible */
+ #define DONGLE_MIN_MEMSIZE (128 * 1024)
+ int brcmf_dongle_memsize;
++module_param(brcmf_dongle_memsize, int, 0);
+ 
+ static bool brcmf_alignctl;
+ 
+-- 
+1.7.4.1
 
-Thomas
+
