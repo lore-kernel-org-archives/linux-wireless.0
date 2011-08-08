@@ -1,44 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:16480 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751005Ab1HXOIn convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:34933 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752702Ab1HHMDD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 10:08:43 -0400
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: Alexander Diewald <alex@diewald.cc>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-Date: Wed, 24 Aug 2011 07:08:36 -0700
-Subject: RE: [iwlagn] System crash on dell e6420 using iwlagn from
- kernel-git
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A3501998B9CD3@orsmsx506.amr.corp.intel.com> (sfid-20110824_160846_216922_0DD89C45)
-References: <2EBB96D0C3577D479C54D1243926388D07AE5FFE@mail.ecs-exchange.de>
-In-Reply-To: <2EBB96D0C3577D479C54D1243926388D07AE5FFE@mail.ecs-exchange.de>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 8 Aug 2011 08:03:03 -0400
+Received: by fxh19 with SMTP id 19so5303498fxh.19
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 05:03:02 -0700 (PDT)
+From: Alexander Simon <alexander.simon@saxnet.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/4] nl80211: Parse channel type attribute in an IBSS join request
+Date: Mon, 08 Aug 2011 14:02:58 +0200
+Message-ID: <1888623.Vt5VZUN2cU@alex-1> (sfid-20110808_140308_710112_10A3AC18)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alex,
+Check if the requested HT mode can be used.
+Extend cfg80211 IBSS struct for HT mode.
 
-I am on vacation now and I will asking the right people in the team to look into this problem and get back to you.
+Signed-off-by: Alexander Simon <alexander.simon@saxnet.de>
+---
 
-Thanks
-Wey
+As there were no replies for my RFC post, i am resending this as PATCH.
 
------Original Message-----
-From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Alexander Diewald
-Sent: Wednesday, August 24, 2011 5:42 AM
-To: linux-wireless@vger.kernel.org
-Subject: [iwlagn] System crash on dell e6420 using iwlagn from kernel-git
+ include/net/cfg80211.h |    1 +
+ net/wireless/chan.c    |    2 +-
+ net/wireless/core.h    |    3 +++
+ net/wireless/nl80211.c |   34 +++++++++++++++++++++++++++++++---
+ 4 files changed, 36 insertions(+), 4 deletions(-)
 
-Hi everyone,
-
-I'm currently testing out the git repository of the linux kernel.
-Unfortunately my system (Gentoo) always crashes shortly after the Networkmanager service is started. Not starting the service or using the radio killswitch is the only possibility to get the system up. I already tested versions 0.8.4 and 0.9rc3 of Networkmanager resulting in the same error. This behavior came up with using the git-Version of the kernel whereas it was working in the 3.0.x releases.
-The really bad news is that I cannot send a detailed trace with this message as the relevant parts of the log message are gone due the following hardreset. But luckily once a trace remained, which is from the older rc1 but still describing the same problem. Unfortunately no debugging symbols were active when this trace was generated.
-I've also attached some information about my system.
-I hope you can help me out. Thanks.
-
-Best regards,
-Alexander Diewald
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index d17f47f..738db17 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1040,6 +1040,7 @@ struct cfg80211_ibss_params {
+ 	u8 *ssid;
+ 	u8 *bssid;
+ 	struct ieee80211_channel *channel;
++	enum nl80211_channel_type channel_type;
+ 	u8 *ie;
+ 	u8 ssid_len, ie_len;
+ 	u16 beacon_interval;
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 17cd0c0..cd630e1 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -44,7 +44,7 @@ rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
+ 	return chan;
+ }
+ 
+-static bool can_beacon_sec_chan(struct wiphy *wiphy,
++bool can_beacon_sec_chan(struct wiphy *wiphy,
+ 				struct ieee80211_channel *chan,
+ 				enum nl80211_channel_type channel_type)
+ {
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 8672e02..a7d8e59 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -441,6 +441,9 @@ cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
+ struct ieee80211_channel *
+ rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
+ 		  int freq, enum nl80211_channel_type channel_type);
++bool can_beacon_sec_chan(struct wiphy *wiphy,
++				struct ieee80211_channel *chan,
++				enum nl80211_channel_type channel_type);
+ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
+ 		      struct wireless_dev *wdev, int freq,
+ 		      enum nl80211_channel_type channel_type);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 28d2aa1..7f3f46c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4346,12 +4346,40 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 		ibss.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
+ 	}
+ 
+-	ibss.channel = ieee80211_get_channel(wiphy,
+-		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]));
++	if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]) {
++		enum nl80211_channel_type channel_type;
++
++		channel_type = nla_get_u32(
++			info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
++		if (channel_type != NL80211_CHAN_NO_HT &&
++		    channel_type != NL80211_CHAN_HT20 &&
++		    channel_type != NL80211_CHAN_HT40PLUS &&
++		    channel_type != NL80211_CHAN_HT40MINUS)
++			return -EINVAL;
++		ibss.channel_type = channel_type;
++	} else {
++		ibss.channel_type = NL80211_CHAN_NO_HT;
++	}
++
++	ibss.channel = rdev_freq_to_chan(rdev,
++		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]),
++		ibss.channel_type);
+ 	if (!ibss.channel ||
++	    ibss.channel->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
+ 	    ibss.channel->flags & IEEE80211_CHAN_NO_IBSS ||
+-	    ibss.channel->flags & IEEE80211_CHAN_DISABLED)
++	    ibss.channel->flags & IEEE80211_CHAN_RADAR)
++		return -EINVAL;
++
++	/* Both channels should be able to initiate communication */
++	if ((ibss.channel_type == NL80211_CHAN_HT40PLUS ||
++	     ibss.channel_type == NL80211_CHAN_HT40MINUS) &&
++	    !can_beacon_sec_chan(&rdev->wiphy, ibss.channel,
++				 ibss.channel_type)) {
++		printk(KERN_DEBUG
++		       "cfg80211: Secondary channel not "
++		       "allowed to initiate communication\n");
+ 		return -EINVAL;
++	}
+ 
+ 	ibss.channel_fixed = !!info->attrs[NL80211_ATTR_FREQ_FIXED];
+ 	ibss.privacy = !!info->attrs[NL80211_ATTR_PRIVACY];
+-- 
+1.7.3.4
