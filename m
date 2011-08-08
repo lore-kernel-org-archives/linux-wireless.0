@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay3-d.mail.gandi.net ([217.70.183.195]:60582 "EHLO
-	relay3-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753129Ab1HQCvu (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:35690 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750843Ab1HHTPt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2011 22:51:50 -0400
-Date: Tue, 16 Aug 2011 19:51:43 -0700
-From: Josh Triplett <josh@joshtriplett.org>
-To: linux-wireless@vger.kernel.org
-Cc: Jamey Sharp <jamey@minilop.net>
-Subject: EINVAL when setting 802.11a channel in Ad-Hoc mode
-Message-ID: <20110817025141.GA4529@leaf> (sfid-20110817_045153_283507_FC25B957)
+	Mon, 8 Aug 2011 15:15:49 -0400
+Received: by wwf5 with SMTP id 5so1916270wwf.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 12:15:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1312830630.4372.40.camel@jlt3.sipsolutions.net>
+References: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
+	<1311638357-28740-5-git-send-email-thomas@cozybit.com>
+	<1312809868.4372.33.camel@jlt3.sipsolutions.net>
+	<CAG6hwVN4i5Yh_ea0j3kvPyznUuZmfxog2OzK1Y74eveU2kR6Dg@mail.gmail.com>
+	<1312830630.4372.40.camel@jlt3.sipsolutions.net>
+Date: Mon, 8 Aug 2011 12:15:48 -0700
+Message-ID: <CAG6hwVOF1Ve5-u1_wWMu9DM=sV3+soBUmOHxQFip++JJYzbFYA@mail.gmail.com> (sfid-20110808_211552_778176_283B13B4)
+Subject: Re: [PATCH 4/6] mac80211: update mesh peering frame format
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We're trying to run 802.11a in Ad-Hoc mode.  However, when we get to the
-point of setting the channel, we almost always get EINVAL back from the
-kernel.  We ran the following series of commands:
+On Mon, Aug 8, 2011 at 12:10 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2011-08-08 at 11:47 -0700, Thomas Pedersen wrote:
+>
+>> >> +     case WLAN_CATEGORY_SELF_PROTECTED:
+>> >> +             switch (mgmt->u.action.u.self_prot.action_code) {
+>> >> +             case WLAN_SP_MESH_PEERING_OPEN:
+>> >> +             case WLAN_SP_MESH_PEERING_CLOSE:
+>> >> +             case WLAN_SP_MESH_PEERING_CONFIRM:
+>> >> +                     if (!ieee80211_vif_is_mesh(&sdata->vif))
+>> >> +                             goto invalid;
+>> >> +                     if (sdata->u.mesh.security != IEEE80211_MESH_SEC_NONE)
+>> >> +                             /* userspace handles this frame */
+>> >
+>> > Will this compile in the CONFIG_MAC80211_MESH=n case? It seems like it
+>> > might not? Do you routinely test that?
+>> >
+>>
+>> Yes. The CONFIG_MAC80211_MESH check around the ieee80211_if_mesh was
+>> removed in c80d545da3f7c0e534ccd4a780f322f80a92cff1
+>
+> I mean the "sdata->u.mesh.security" dereference. I know vif_is_mesh() is
+> always available, but I thought u.mesh wasn't?
+>
 
-wlan=wlan3
-iwconfig $wlan mode Ad-Hoc
-ifconfig $wlan up
-iwconfig $wlan essid PSAS-flight-computer
-iwconfig $wlan channel 36
+Sorry, I should have been more explicit. sdata->u.mesh is now always
+available since the above commit.
 
-The channel command almost always got back an EINVAL.  This occurred on
-three different wifi chipsets: a USB ar9170 (with either carl9170 or the
-older ar9170usb driver), a USB rt2800usb, and iwlwifi with a Lenovo
-X220.  In the former two cases, it occurs on both x86 (the
-aforementioned X220) and powerpc (an MPC5200).
-
-More strangely, the channel command would *sometimes* successfully set
-the channel without error.
-
-Have we done something wrong with the sequence of commands above?  Why
-might we get EINVAL when setting a valid channel?  What next steps
-should we take to debug this?
-
-Currently about to compile in function_graph tracing and start walking
-through the execution of SIOCSIWFREQ looking for what generates the
-EINVAL.
-
-- Josh Triplett
+> johannes
+>
+>
