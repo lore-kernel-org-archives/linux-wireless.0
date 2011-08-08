@@ -1,143 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:36843 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751547Ab1HTImP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Aug 2011 04:42:15 -0400
-Message-ID: <4E4F7364.2060609@pengutronix.de> (sfid-20110820_104221_985508_F868CDC8)
-Date: Sat, 20 Aug 2011 10:42:12 +0200
-From: Marc Kleine-Budde <mkl@pengutronix.de>
+Received: from mms1.broadcom.com ([216.31.210.17]:2817 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752870Ab1HHN70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:26 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 23/82] staging: brcm80211: fix for checkpatch 'avoid
+ externs in c file' warning
+Date: Mon, 8 Aug 2011 15:58:07 +0200
+Message-ID: <1312811946-16713-24-git-send-email-arend@broadcom.com> (sfid-20110808_160204_644111_C8BEE756)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: Netdev@vger.kernel.org, Stanislaw Gruszka <sgruszka@redhat.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: BUG: rt2x00usb: Vendor Request 0x07 failed
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigF6C5B7397CA007367ABA40D4"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigF6C5B7397CA007367ABA40D4
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+From: Roland Vossen <rvossen@broadcom.com>
 
-Hello,
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c    |   10 ++--------
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |    4 ++--
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h |    1 +
+ 3 files changed, 5 insertions(+), 10 deletions(-)
 
-I'm a running a sheeva plug (ARM/kirkwood) with a rt2800 USB stick in AP =
-mode.
-Bus 001 Device 002: ID 1737:0071 Linksys WUSB600N v1 Dual-Band Wireless-N=
- Network Adapter [Ralink RT2870]
-
-kernel is v3.0.3 +
-http://www.spinics.net/lists/linux-wireless/msg74377.html
-(see http://git.pengutronix.de/?p=3Dmkl/linux-2.6.git;a=3Dshortlog;h=3Dre=
-fs/heads/wireless/rt2x00/v3.0.3)
-
-With the patch the oops is gone, but after a few hours it fails with:
-
-[30971.764840] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0=
-x07 failed for offset 0x0438 with error -71.
-[30975.519840] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0=
-x06 failed for offset 0x0408 with error -71.
-[30978.890840] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0=
-x06 failed for offset 0x0408 with error -71.
-[30982.389845] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0=
-x07 failed for offset 0x0438 with error -71.
-[30987.200842] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0=
-x07 failed for offset 0x101c with error -71.
-[30990.795843] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0=
-x07 failed for offset 0x101c with error -71.
-=2E..
-[31306.426842] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0=
-x07 failed for offset 0x101c with error -71.
-[31306.437366] phy0 -> rt2x00usb_regbusy_read: Error - Indirect register =
-access failed: offset=3D0x0000101c, value=3D0xc003ec28
-[31309.647841] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0=
-x06 failed for offset 0x6888 with error -71.
-=2E.
-[31838.105841] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0=
-x07 failed for offset 0x101c with error -71.
-[31838.116386] phy0 -> rt2x00usb_regbusy_read: Error - Indirect register =
-access failed: offset=3D0x0000101c, value=3D0xc003ec28
-[31841.327840] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0=
-x07 failed for offset 0x101c with error -71.
-=2E..
-[32043.619842] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0=
-x07 failed for offset 0x101c with error -71.
-[32046.830843] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0=
-x07 failed for offset 0x101c with error -71.
-[32048.956352] INFO: task hostapd:1499 blocked for more than 120 seconds.=
-
-[32048.962920] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disable=
-s this message.
-[32048.970801] hostapd         D c02d85e0     0  1499      1 0x00000000
-[32048.977234] [<c02d85e0>] (schedule+0x478/0x4e8) from [<c02d9370>] (__m=
-utex_lock_slowpath+0x64/0x88)
-[32048.986352] [<c02d9370>] (__mutex_lock_slowpath+0x64/0x88) from [<bf37=
-8f5c>] (rt2x00usb_vendor_request_buff+0x24/0xb8 [rt2x00usb])
-[32048.998185] [<bf378f5c>] (rt2x00usb_vendor_request_buff+0x24/0xb8 [rt2=
-x00usb]) from [<bf38d034>] (rt2x00usb_register_read+0x34/0x44 [rt2800usb]=
-)
-[32049.011243] [<bf38d034>] (rt2x00usb_register_read+0x34/0x44 [rt2800usb=
-]) from [<bf381d74>] (rt2800_config_shared_key+0xc4/0x11c [rt2800lib])
-[32049.023958] [<bf381d74>] (rt2800_config_shared_key+0xc4/0x11c [rt2800l=
-ib]) from [<bf36aac0>] (rt2x00mac_set_key+0x138/0x14c [rt2x00lib])
-[32049.036410] [<bf36aac0>] (rt2x00mac_set_key+0x138/0x14c [rt2x00lib]) f=
-rom [<bf34379c>] (ieee80211_key_disable_hw_accel+0x80/0xd0 [mac80211])
-[32049.049221] [<bf34379c>] (ieee80211_key_disable_hw_accel+0x80/0xd0 [ma=
-c80211]) from [<bf343810>] (__ieee80211_key_destroy+0x24/0x6c [mac80211])=
-
-[32049.062285] [<bf343810>] (__ieee80211_key_destroy+0x24/0x6c [mac80211]=
-) from [<bf343bf4>] (ieee80211_key_link+0x10c/0x134 [mac80211])
-[32049.074471] [<bf343bf4>] (ieee80211_key_link+0x10c/0x134 [mac80211]) f=
-rom [<bf33c3f8>] (ieee80211_add_key+0x104/0x130 [mac80211])
-[32049.086392] [<bf33c3f8>] (ieee80211_add_key+0x104/0x130 [mac80211]) fr=
-om [<bf306cc8>] (nl80211_new_key+0xec/0x110 [cfg80211])
-[32049.097834] [<bf306cc8>] (nl80211_new_key+0xec/0x110 [cfg80211]) from =
-[<c027542c>] (genl_rcv_msg+0x1bc/0x204)
-[32049.107835] [<c027542c>] (genl_rcv_msg+0x1bc/0x204) from [<c02748e0>] =
-(netlink_rcv_skb+0x50/0xac)
-[32049.116769] [<c02748e0>] (netlink_rcv_skb+0x50/0xac) from [<c0275264>]=
- (genl_rcv+0x18/0x24)
-[32049.125172] [<c0275264>] (genl_rcv+0x18/0x24) from [<c02742ac>] (netli=
-nk_unicast+0x230/0x2cc)
-[32049.133754] [<c02742ac>] (netlink_unicast+0x230/0x2cc) from [<c027466c=
->] (netlink_sendmsg+0x28c/0x324)
-[32049.143132] [<c027466c>] (netlink_sendmsg+0x28c/0x324) from [<c0242a78=
->] (sock_sendmsg+0xac/0xd4)
-[32049.152067] [<c0242a78>] (sock_sendmsg+0xac/0xd4) from [<c0243d50>] (_=
-_sys_sendmsg+0x1c4/0x258)
-[32049.160829] [<c0243d50>] (__sys_sendmsg+0x1c4/0x258) from [<c0244830>]=
- (sys_sendmsg+0x3c/0x60)
-[32049.169510] [<c0244830>] (sys_sendmsg+0x3c/0x60) from [<c002fbc0>] (re=
-t_fast_syscall+0x0/0x2c)
-
-The vendor requests 0x06 and 0x07 keep failing with some rt2x00usb_regbus=
-y_read.
-
-cheers,
-Marc
---=20
-Pengutronix e.K.                  | Marc Kleine-Budde           |
-Industrial Linux Solutions        | Phone: +49-231-2826-924     |
-Vertretung West/Dortmund          | Fax:   +49-5121-206917-5555 |
-Amtsgericht Hildesheim, HRA 2686  | http://www.pengutronix.de   |
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index f4e72ed..fb3ab63 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -103,16 +103,8 @@ static struct brcmf_sdioh_driver drvinfo = { NULL, NULL };
+ 
+ module_param(sd_msglevel, uint, 0);
+ 
+-extern uint sd_f2_blocksize;
+ module_param(sd_f2_blocksize, int, 0);
+ 
+-/* forward declarations */
+-int brcmf_sdio_probe(struct device *dev);
+-EXPORT_SYMBOL(brcmf_sdio_probe);
+-
+-int brcmf_sdio_remove(struct device *dev);
+-EXPORT_SYMBOL(brcmf_sdio_remove);
+-
+ struct brcmf_sdio_card*
+ brcmf_sdcard_attach(void *cfghdl, u32 *regsva, uint irq)
+ {
+@@ -590,6 +582,7 @@ err:
+ 
+ 	return -ENODEV;
+ }
++EXPORT_SYMBOL(brcmf_sdio_probe);
+ 
+ int brcmf_sdio_remove(struct device *dev)
+ {
+@@ -619,6 +612,7 @@ int brcmf_sdio_remove(struct device *dev)
+ 	kfree(sdhc);
+ 	return 0;
+ }
++EXPORT_SYMBOL(brcmf_sdio_remove);
+ 
+ int brcmf_sdio_register(struct brcmf_sdioh_driver *driver)
+ {
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 4ba9d7d..b0a9862 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -423,7 +423,7 @@ static int _brcmf_set_mac_address(struct brcmf_info *drvr_priv, int ifidx, u8 *a
+ }
+ 
+ #ifdef SOFTAP
+-extern struct net_device *ap_net_dev;
++static struct net_device *ap_net_dev;
+ #endif
+ 
+ /* Virtual interfaces only ((ifp && ifp->info && ifp->idx == true) */
+@@ -469,7 +469,7 @@ static void brcmf_op_if(struct brcmf_if *ifp)
+ #ifdef SOFTAP
+ 				/* semaphore that the soft AP CODE
+ 					 waits on */
+-				extern struct semaphore ap_eth_sema;
++				struct semaphore ap_eth_sema;
+ 
+ 				/* save ptr to wl0.1 netdev for use
+ 					 in wl_iw.c  */
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index d345472..ad67955 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -341,6 +341,7 @@ extern int brcmf_sdioh_abort(struct sdioh_info *si, uint fnc);
+ extern void brcmf_sdio_wdtmr_enable(bool enable);
+ 
+ extern uint sd_msglevel;	/* Debug message level */
++extern uint sd_f2_blocksize;
+ 
+ extern struct brcmf_sdmmc_instance *gInstance;
+ 
+-- 
+1.7.4.1
 
 
---------------enigF6C5B7397CA007367ABA40D4
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iEYEARECAAYFAk5Pc2QACgkQjTAFq1RaXHMSFACfSupX4PDPKzZxrJmzwyew5B8C
-79sAn1AApNkGSbVQJU8jm0wV8miuqg7f
-=UUcI
------END PGP SIGNATURE-----
-
---------------enigF6C5B7397CA007367ABA40D4--
