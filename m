@@ -1,140 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:49393 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752365Ab1HYLXk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 07:23:40 -0400
-Received: by wwf5 with SMTP id 5so2258797wwf.1
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 04:23:39 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 2/3] nl80211/cfg80211: add STA WME parameters
-Date: Thu, 25 Aug 2011 14:24:53 +0300
-Message-Id: <1314271494-8756-2-git-send-email-eliad@wizery.com> (sfid-20110825_132349_576682_0FD51052)
-In-Reply-To: <1314271494-8756-1-git-send-email-eliad@wizery.com>
-References: <1314271494-8756-1-git-send-email-eliad@wizery.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:3133 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753035Ab1HHN7a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:30 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 41/82] staging: brcm80211: removed global variable
+ from sdio fullmac
+Date: Mon, 8 Aug 2011 15:58:25 +0200
+Message-ID: <1312811946-16713-42-git-send-email-arend@broadcom.com> (sfid-20110808_160122_078994_BDB81ADE)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add new NL80211_ATTR_STA_WME nested attribute that contains
-wme params needed by the low-level driver (uapsd_queues and
-max_sp).
+From: Roland Vossen <rvossen@broadcom.com>
 
-Add these params to the station_parameters struct as well.
+Code cleanup. bus->card is assigned in brcmf_sdbrcm_probe (before
+brcmf_sdbrcm_probe_attach()). Since w_sdreg32() and r_sdreg32() are called
+only after that assignment, they can safely use bus->card. Thus there
+is no instance left where brcmf_sdcard_reg_read() or brcmf_sdcard_reg_write()
+is called with a NULL parameter, so the mechanism in bcmsdh.c that deals with
+a NULL pointer could be deleted.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
-v2: consider WIPHY_FLAG_AP_UAPSD before parsing wme params.
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c   |   31 -------------------------
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |    9 ++++---
+ 2 files changed, 5 insertions(+), 35 deletions(-)
 
- include/linux/nl80211.h |   21 +++++++++++++++++++++
- include/net/cfg80211.h  |    2 ++
- net/wireless/nl80211.c  |   28 ++++++++++++++++++++++++++++
- 3 files changed, 51 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 075497e..6e2ff33 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1044,6 +1044,8 @@ enum nl80211_commands {
-  *
-  * @NL80211_ATTR_SUPPORT_AP_UAPSD: the device supports uapsd when working
-  *	as AP.
-+ * @NL80211_ATTR_STA_WME: Nested attribute containing the wme configuration
-+ *	of the station, see &enum nl80211_sta_wme_attr.
-  *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -1256,6 +1258,7 @@ enum nl80211_attrs {
- 	NL80211_ATTR_IE_ASSOC_RESP,
- 
- 	NL80211_ATTR_SUPPORT_AP_UAPSD,
-+	NL80211_ATTR_STA_WME,
- 
- 	/* add attributes here, update the policy in nl80211.c */
- 
-@@ -2487,4 +2490,22 @@ enum nl80211_hidden_ssid {
- 	NL80211_HIDDEN_SSID_ZERO_CONTENTS
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index fb3ab63..916d41f 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -89,9 +89,6 @@ struct sdio_hc {
+ 	bool oob_irq_registered;
  };
  
-+/**
-+ * enum nl80211_sta_wme_attr - station WME attributes
-+ * @__NL80211_STA_WME_INVALID: invalid number for nested attribute
-+ * @NL80211_STA_WME_QUEUES: bitmap of uapsd queues.
-+ * @NL80211_STA_WME_MAX_SP: max service period.
-+ * @__NL80211_STA_WME_AFTER_LAST: internal
-+ * @NL80211_STA_WME_MAX: highest station WME attribute
-+ */
-+enum nl80211_sta_wme_attr {
-+	__NL80211_STA_WME_INVALID,
-+	NL80211_STA_WME_UAPSD_QUEUES,
-+	NL80211_STA_WME_MAX_SP,
-+
-+	/* keep last */
-+	__NL80211_STA_WME_AFTER_LAST,
-+	NL80211_STA_WME_MAX = __NL80211_STA_WME_AFTER_LAST - 1
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 707f95d..9818a84 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -452,6 +452,8 @@ struct station_parameters {
- 	u8 plink_action;
- 	u8 plink_state;
- 	struct ieee80211_ht_cap *ht_capa;
-+	u8 uapsd_queues;
-+	u8 max_sp;
- };
+-/* local copy of bcm sd handler */
+-static struct brcmf_sdio_card *l_card;
+-
+ const uint brcmf_sdio_msglevel = BRCMF_SD_ERROR_VAL;
  
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a1854ec..6ea9ffe 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2547,6 +2547,12 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 	return err;
+ static struct sdio_hc *sdhcinfo;
+@@ -116,9 +113,6 @@ brcmf_sdcard_attach(void *cfghdl, u32 *regsva, uint irq)
+ 		return NULL;
+ 	}
+ 
+-	/* save the handler locally */
+-	l_card = card;
+-
+ 	card->sdioh = brcmf_sdioh_attach(cfghdl, irq);
+ 	if (!card->sdioh) {
+ 		brcmf_sdcard_detach(card);
+@@ -144,7 +138,6 @@ int brcmf_sdcard_detach(struct brcmf_sdio_card *card)
+ 		kfree(card);
+ 	}
+ 
+-	l_card = NULL;
+ 	return 0;
  }
  
-+static struct nla_policy
-+nl80211_sta_wme_policy[NL80211_STA_WME_MAX + 1] __read_mostly = {
-+	[NL80211_STA_WME_UAPSD_QUEUES] = { .type = NLA_U8 },
-+	[NL80211_STA_WME_MAX_SP] = { .type = NLA_U8 },
-+};
-+
- static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-@@ -2592,6 +2598,28 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 	if (parse_station_flags(info, &params))
- 		return -EINVAL;
+@@ -184,9 +177,6 @@ u8 brcmf_sdcard_cfg_read(struct brcmf_sdio_card *card, uint fnc_num, u32 addr,
+ 	s32 retry = 0;
+ 	u8 data = 0;
  
-+	/* parse WME attributes if sta is WME capable */
-+	if ((rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) &&
-+	    (params.sta_flags_set & NL80211_STA_FLAG_WME) &&
-+	    info->attrs[NL80211_ATTR_STA_WME]) {
-+		struct nlattr *tb[NL80211_STA_WME_MAX + 1];
-+		struct nlattr *nla;
-+
-+		nla = info->attrs[NL80211_ATTR_STA_WME];
-+		err = nla_parse_nested(tb, NL80211_STA_WME_MAX, nla,
-+				       nl80211_sta_wme_policy);
-+		if (err)
-+			return err;
-+
-+		if (tb[NL80211_STA_WME_UAPSD_QUEUES])
-+			params.uapsd_queues =
-+			     nla_get_u8(tb[NL80211_STA_WME_UAPSD_QUEUES]);
-+
-+		if (tb[NL80211_STA_WME_MAX_SP])
-+			params.max_sp =
-+			     nla_get_u8(tb[NL80211_STA_WME_MAX_SP]);
-+	}
-+
- 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
- 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN &&
- 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT &&
+-	if (!card)
+-		card = l_card;
+-
+ 	do {
+ 		if (retry)	/* wait for 1 ms till bus get settled down */
+ 			udelay(1000);
+@@ -211,9 +201,6 @@ brcmf_sdcard_cfg_write(struct brcmf_sdio_card *card, uint fnc_num, u32 addr,
+ 	int status;
+ 	s32 retry = 0;
+ 
+-	if (!card)
+-		card = l_card;
+-
+ 	do {
+ 		if (retry)	/* wait for 1 ms till bus get settled down */
+ 			udelay(1000);
+@@ -235,9 +222,6 @@ u32 brcmf_sdcard_cfg_read_word(struct brcmf_sdio_card *card, uint fnc_num,
+ 	int status;
+ 	u32 data = 0;
+ 
+-	if (!card)
+-		card = l_card;
+-
+ 	status = brcmf_sdioh_request_word(card->sdioh, SDIOH_CMD_TYPE_NORMAL,
+ 		SDIOH_READ, fnc_num, addr, &data, 4);
+ 
+@@ -256,9 +240,6 @@ brcmf_sdcard_cfg_write_word(struct brcmf_sdio_card *card, uint fnc_num,
+ {
+ 	int status;
+ 
+-	if (!card)
+-		card = l_card;
+-
+ 	status =
+ 	    brcmf_sdioh_request_word(card->sdioh, SDIOH_CMD_TYPE_NORMAL,
+ 			       SDIOH_WRITE, fnc_num, addr, &data, 4);
+@@ -280,9 +261,6 @@ int brcmf_sdcard_cis_read(struct brcmf_sdio_card *card, uint func, u8 * cis,
+ 	bool ascii = func & ~0xf;
+ 	func &= 0x7;
+ 
+-	if (!card)
+-		card = l_card;
+-
+ 	status = brcmf_sdioh_cis_read(card->sdioh, func, cis, length);
+ 
+ 	if (ascii) {
+@@ -334,9 +312,6 @@ u32 brcmf_sdcard_reg_read(struct brcmf_sdio_card *card, u32 addr, uint size)
+ 
+ 	BRCMF_SD_INFO(("%s:fun = 1, addr = 0x%x, ", __func__, addr));
+ 
+-	if (!card)
+-		card = l_card;
+-
+ 	if (bar0 != card->sbwad) {
+ 		if (brcmf_sdcard_set_sbaddr_window(card, bar0))
+ 			return 0xFFFFFFFF;
+@@ -386,9 +361,6 @@ u32 brcmf_sdcard_reg_write(struct brcmf_sdio_card *card, u32 addr, uint size,
+ 	BRCMF_SD_INFO(("%s:fun = 1, addr = 0x%x, uint%ddata = 0x%x\n",
+ 		     __func__, addr, size * 8, data));
+ 
+-	if (!card)
+-		card = l_card;
+-
+ 	if (bar0 != card->sbwad) {
+ 		err = brcmf_sdcard_set_sbaddr_window(card, bar0);
+ 		if (err)
+@@ -522,9 +494,6 @@ int brcmf_sdcard_query_device(struct brcmf_sdio_card *card)
+ 
+ u32 brcmf_sdcard_cur_sbwad(struct brcmf_sdio_card *card)
+ {
+-	if (!card)
+-		card = l_card;
+-
+ 	return card->sbwad;
+ }
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 346274b..8d4c48f 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -889,7 +889,7 @@ r_sdreg32(struct brcmf_bus *bus, u32 *regvar, u32 reg_offset, u32 *retryvar)
+ {
+ 	*retryvar = 0;
+ 	do {
+-		*regvar = brcmf_sdcard_reg_read(NULL,
++		*regvar = brcmf_sdcard_reg_read(bus->card,
+ 				bus->ci->buscorebase + reg_offset, sizeof(u32));
+ 	} while (brcmf_sdcard_regfail(bus->card) &&
+ 		 (++(*retryvar) <= retry_limit));
+@@ -907,7 +907,8 @@ w_sdreg32(struct brcmf_bus *bus, u32 regval, u32 reg_offset, u32 *retryvar)
+ {
+ 	*retryvar = 0;
+ 	do {
+-		brcmf_sdcard_reg_write(NULL, bus->ci->buscorebase + reg_offset,
++		brcmf_sdcard_reg_write(bus->card,
++				       bus->ci->buscorebase + reg_offset,
+ 				       sizeof(u32), regval);
+ 	} while (brcmf_sdcard_regfail(bus->card) &&
+ 		 (++(*retryvar) <= retry_limit));
+@@ -5682,8 +5683,8 @@ brcmf_sdbrcm_probe_attach(struct brcmf_bus *bus, void *card, u32 regsva,
+ 	/* Set core control so an SDIO reset does a backplane reset */
+ 	reg_addr = bus->ci->buscorebase +
+ 		   offsetof(struct sdpcmd_regs, corecontrol);
+-	reg_val = brcmf_sdcard_reg_read(NULL, reg_addr, sizeof(u32));
+-	brcmf_sdcard_reg_write(NULL, reg_addr, sizeof(u32),
++	reg_val = brcmf_sdcard_reg_read(bus->card, reg_addr, sizeof(u32));
++	brcmf_sdcard_reg_write(bus->card, reg_addr, sizeof(u32),
+ 			       reg_val | CC_BPRESEN);
+ 
+ 	brcmu_pktq_init(&bus->txq, (PRIOMASK + 1), TXQLEN);
 -- 
-1.7.6.401.g6a319
+1.7.4.1
+
 
