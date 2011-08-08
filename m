@@ -1,73 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:50801 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754543Ab1HJSmW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 14:42:22 -0400
-Received: by fxh19 with SMTP id 19so1145218fxh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 11:42:21 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Michael Buesch <m@bues.ch>
-Subject: [RFC][RFT][PATCH V2 1/2] ssb: fix DMA translation for some specific boards
-Date: Wed, 10 Aug 2011 20:35:38 +0200
-Message-Id: <1313001339-11211-1-git-send-email-zajec5@gmail.com> (sfid-20110810_204225_400116_2D83BA7F)
+Received: from mms1.broadcom.com ([216.31.210.17]:2492 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752740Ab1HHQLO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 12:11:14 -0400
+Message-ID: <4E400A92.7060905@broadcom.com> (sfid-20110808_181117_484253_F9319269)
+Date: Mon, 8 Aug 2011 18:10:58 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: "Dan Carpenter" <error27@gmail.com>
+cc: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCHv2 00/82] staging: brcm80211: resubmit previously
+ posted patches
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+ <CA+icZUUBokLgtn3K3uG7qcNLzy4pfdT4fGYWPtoOy_MQVy8VuA@mail.gmail.com>
+ <20110808145334.GA7659@shale.localdomain>
+In-Reply-To: <20110808145334.GA7659@shale.localdomain>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Michael Buesch <m@bues.ch>
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/ssb/main.c |   24 +++++++++++++++++++++---
- 1 files changed, 21 insertions(+), 3 deletions(-)
+On 08/08/2011 04:53 PM, Dan Carpenter wrote:
+> On Mon, Aug 08, 2011 at 04:29:49PM +0200, Sedat Dilek wrote:
+>> 2. Using "staging/brcm80211" would also save some chars (and is more
+>> common to me).
+> No one would complain if the prefix were "staging/brcm80211" but
+> actually the way Arend has it is prefered.
+>
+> git log --pretty=oneline --author=gregkh drivers/staging/
 
-diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-index 6ec6e09..87067b8 100644
---- a/drivers/ssb/main.c
-+++ b/drivers/ssb/main.c
-@@ -1260,16 +1260,34 @@ void ssb_device_disable(struct ssb_device *dev, u32 core_specific_flags)
- }
- EXPORT_SYMBOL(ssb_device_disable);
- 
-+/* Some chipsets need routing known for PCIe and 64-bit DMA */
-+static bool ssb_dma_translation_special_bit(struct ssb_device *dev)
-+{
-+	u16 chip_id = dev->bus->chip_id;
-+
-+	if (dev->id.coreid == SSB_DEV_80211) {
-+		return (chip_id == 0x4322 || chip_id == 43221 ||
-+			chip_id == 43231 || chip_id == 43222);
-+	}
-+
-+	return 0;
-+}
-+
- u32 ssb_dma_translation(struct ssb_device *dev)
- {
- 	switch (dev->bus->bustype) {
- 	case SSB_BUSTYPE_SSB:
- 		return 0;
- 	case SSB_BUSTYPE_PCI:
--		if (ssb_read32(dev, SSB_TMSHIGH) & SSB_TMSHIGH_DMA64)
-+		if (pci_is_pcie(dev->bus->host_pci) &&
-+		    ssb_read32(dev, SSB_TMSHIGH) & SSB_TMSHIGH_DMA64) {
- 			return SSB_PCIE_DMA_H32;
--		else
--			return SSB_PCI_DMA;
-+		} else {
-+			if (ssb_dma_translation_special_bit(dev))
-+				return SSB_PCIE_DMA_H32;
-+			else
-+				return SSB_PCI_DMA;
-+		}
- 	default:
- 		__ssb_dma_not_implemented(dev);
- 	}
+Nice. Learning something today about --author filter.
+>> 3. "PATCH v2" should be with a space?
+> git am doesn't care.  It strips everything out correctly.
+>
+>> 4. Something like "for-3.1" would clearly indicate for which
+>> kernel-release this mega-series is for (also "staging" could be
+>> dropped as it is known where the driver is managed)
+>>
+>> $ git format-patch --signoff --cover-letter --subject-prefix="PATCH v2
+>> for-3.1" -82 (or whatever $FIRST..$LAST)
+
+I actually would think this all is for 3.2 as 3.1 has already been 
+merged hence 3.1-rc1 and only bug fixes are to be merged into 3.1.
+
+> Everything was explained in the cover letter, so I think it's ok.
+>
+> regards,
+> dan carpenter
+
+Thanks. I leave it as it is unless Greg sees good reasons to change any 
+conventions here.
+
+Gr. AvS
+
 -- 
-1.7.1
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
 
