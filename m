@@ -1,51 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:37088 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750751Ab1HXXHt (ORCPT
+Received: from w1.fi ([128.177.27.249]:44518 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751023Ab1HHJAf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 19:07:49 -0400
-Received: by wyg24 with SMTP id 24so1231399wyg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 16:07:48 -0700 (PDT)
-Date: Thu, 25 Aug 2011 02:05:31 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] Move brcm80211 to mainline
-Message-ID: <20110824230531.GJ5975@shale.localdomain> (sfid-20110825_010753_438540_1B0E43B9)
-References: <20110707002034.GA17885@broadcom.com>
- <20110824222801.GA5280@broadcom.com>
+	Mon, 8 Aug 2011 05:00:35 -0400
+Date: Mon, 8 Aug 2011 12:00:24 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211_hwsim: Fix RX status reporting for HT
+Message-ID: <20110808090024.GA4260@jm.kir.nu> (sfid-20110808_110038_174327_CE5B0DE3)
+References: <20110806200700.GA13221@jm.kir.nu>
+ <1312792388.4372.6.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110824222801.GA5280@broadcom.com>
+In-Reply-To: <1312792388.4372.6.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 24, 2011 at 03:28:01PM -0700, Henry Ptasinski wrote:
-> diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm8021
-> index 05dad9f..73e5841 100644
-> --- a/drivers/staging/brcm80211/brcmsmac/dma.c
-> +++ b/drivers/staging/brcm80211/brcmsmac/dma.c
-> @@ -815,7 +815,7 @@ struct sk_buff *dma_rx(struct dma_pub *pub)
->                 tail = head;
->                 while ((resid > 0) && (p = _dma_getnextrxp(di, false))) {
->                         tail->next = p;
-> -                       pkt_len = min(resid, (int)di->rxbufsize);
-> +                       pkt_len = min_t(int, resid, (int)di->rxbufsize);
+On Mon, Aug 08, 2011 at 10:33:08AM +0200, Johannes Berg wrote:
+> On Sat, 2011-08-06 at 23:07 +0300, Jouni Malinen wrote:
+> > RX_FLAG_HT must be included when reporting MCS rates. Without
+> > this, mac80211 ended up dropping any frame sent at MCS index 12
+> > or higher and that resulted in oddly random looking errors in
+> > mac80211_hwsim tests.
+> 
+> This "solved" the timing thing you ran into with the unrelated
+> suspend/resume patch then I guess?
 
-This isn't right.  It should be:
-			pkt_len = min_t(uint, resid, di->rxbufsize);
+Yes, it did. This was indeed the reason for semi-random dropping of
+EAPOL frames and the randomness part made it difficult to figure out
+what on earth was happening.
 
-Casting it to int would mean that high values of ->rxbufsize would be
-treated as lower than "resid".
-
->                         __skb_trim(p, pkt_len);
->  
->                         tail = p;
-
-regards,
-dan carpenter
-
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
