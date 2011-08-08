@@ -1,85 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21880 "EHLO mx1.redhat.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:3805 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751629Ab1HJNcz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 09:32:55 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Justin Piszcz <jpiszcz@lucidpixels.com>, stable@kernel.org
-Subject: [PATCH 3/3] rt2x00: fix crash in rt2800usb_get_txwi
-Date: Wed, 10 Aug 2011 15:32:24 +0200
-Message-Id: <1312983144-16156-3-git-send-email-sgruszka@redhat.com> (sfid-20110810_153258_360991_6A91E54E)
-In-Reply-To: <1312983144-16156-1-git-send-email-sgruszka@redhat.com>
-References: <1312983144-16156-1-git-send-email-sgruszka@redhat.com>
+	id S1752479Ab1HHMq4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 08:46:56 -0400
+Message-ID: <4E3FDAB4.7000200@broadcom.com> (sfid-20110808_144700_349464_7DE6B22E)
+Date: Mon, 8 Aug 2011 14:46:44 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "gregkh@suse.de" <gregkh@suse.de>
+cc: "Dan Carpenter" <error27@gmail.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 18/35] staging: brcm80211: use mutex instead of
+ semaphore in dhd_linux.c
+References: <1310678971-28952-1-git-send-email-frankyl@broadcom.com>
+ <1310678971-28952-19-git-send-email-frankyl@broadcom.com>
+ <20110801115430.GH5575@shale.localdomain>
+In-Reply-To: <20110801115430.GH5575@shale.localdomain>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch should fix this oops:
+On 08/01/2011 01:54 PM, Dan Carpenter wrote:
+> On Thu, Jul 14, 2011 at 02:29:14PM -0700, Franky Lin wrote:
+>> From: Arend van Spriel<arend@broadcom.com>
+>>
+>> The semaphore proto_sem has been replaced with mutex proto_block
+>> which lock certain code paths for one thread.
+>>
+> This one doesn't apply any more after the 3.1 merge window.
+>
+> It was modified in 1380516599 "Merge branch 'staging-next' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-2.6"
+>
+> regards,
+> dan carpenter
 
-BUG: unable to handle kernel NULL pointer dereference at 000000a0
-IP: [<f81b30c9>] rt2800usb_get_txwi+0x19/0x70 [rt2800usb]
-*pdpt = 0000000000000000 *pde = f000ff53f000ff53
-Oops: 0000 [#1] SMP
-Pid: 198, comm: kworker/u:3 Tainted: G        W   3.0.0-wl+ #9 LENOVO 6369CTO/6369CTO
-EIP: 0060:[<f81b30c9>] EFLAGS: 00010283 CPU: 1
-EIP is at rt2800usb_get_txwi+0x19/0x70 [rt2800usb]
-EAX: 00000000 EBX: f465e140 ECX: f4494960 EDX: ef24c5f8
-ESI: 810f21f5 EDI: f1da9960 EBP: f4581e80 ESP: f4581e70
- DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-Process kworker/u:3 (pid: 198, ti=f4580000 task=f4494960 task.ti=f4580000)
-Call Trace:
- [<f804790f>] rt2800_txdone_entry+0x2f/0xf0 [rt2800lib]
- [<c045110d>] ? warn_slowpath_common+0x7d/0xa0
- [<f81b3a38>] ? rt2800usb_work_txdone+0x288/0x360 [rt2800usb]
- [<f81b3a38>] ? rt2800usb_work_txdone+0x288/0x360 [rt2800usb]
- [<f81b3a13>] rt2800usb_work_txdone+0x263/0x360 [rt2800usb]
- [<c046a8d6>] process_one_work+0x186/0x440
- [<c046a85a>] ? process_one_work+0x10a/0x440
- [<f81b37b0>] ? rt2800usb_probe_hw+0x120/0x120 [rt2800usb]
- [<c046c283>] worker_thread+0x133/0x310
- [<c04885db>] ? trace_hardirqs_on+0xb/0x10
- [<c046c150>] ? manage_workers+0x1e0/0x1e0
- [<c047054c>] kthread+0x7c/0x90
- [<c04704d0>] ? __init_kthread_worker+0x60/0x60
- [<c0826b42>] kernel_thread_helper+0x6/0x1
+Hi Greg,
 
-Oops might happen because we check rt2x00queue_empty(queue) twice,
-but this condition can change and we can process entry in
-rt2800_txdone_entry(), which was already processed by
-rt2800usb_txdone_entry_check() -> rt2x00lib_txdone_noinfo() and
-has nullify entry->skb .
+Not sure what your plan is with our pending patches, but given the 
+feedback from Dan could you drop all of them so I can resubmit them.
 
-Reported-by: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: stable@kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+Gr. AvS
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index d137812..cd54721 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -538,12 +538,11 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
- 			entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
- 			if (rt2800usb_txdone_entry_check(entry, reg))
- 				break;
-+			entry = NULL;
- 		}
- 
--		if (!entry || rt2x00queue_empty(queue))
--			break;
--
--		rt2800_txdone_entry(entry, reg);
-+		if (entry)
-+			rt2800_txdone_entry(entry, reg);
- 	}
- }
- 
 -- 
-1.7.1
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
 
