@@ -1,102 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:49106 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752163Ab1HRFT1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Aug 2011 01:19:27 -0400
+Received: from mms2.broadcom.com ([216.31.210.18]:1675 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751525Ab1HHN7W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:22 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend Van Spriel" <arend@LB-BUN-53.bun.broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 01/82] staging: brcm80211: fix compile error on
+ non-x86 archs since 3.0 kernel
+Date: Mon, 8 Aug 2011 15:57:45 +0200
+Message-ID: <1312811946-16713-2-git-send-email-arend@broadcom.com> (sfid-20110808_155927_205501_49E08466)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAG1a4rvQTA7UgxLOxu_cC88grjHttyjPD_4kyDhb7Y9FcBBkLQ@mail.gmail.com>
-References: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com>
-	<CA+XFjipM1Qup3bcJos_ikwzoaWoa3GdYqK0WBUqEHBNR6V6LfQ@mail.gmail.com>
-	<CAG1a4rsyfPrrrf-mzt3HAM6YHHjaHTcd2rbtYiwqLkUCP=j8pQ@mail.gmail.com>
-	<CA+XFjipsVukKYchfmDv48PAKsD2PUxT+7E8epRuKFynGwk=Bag@mail.gmail.com>
-	<CAG1a4rvQTA7UgxLOxu_cC88grjHttyjPD_4kyDhb7Y9FcBBkLQ@mail.gmail.com>
-Date: Thu, 18 Aug 2011 13:19:26 +0800
-Message-ID: <CAJ-VmomF_NNEwhNw2o_H2=efm2ZR3LaiF7rim616-SQyo-5CFA@mail.gmail.com> (sfid-20110818_071943_481606_23EF5B21)
-Subject: Re: [PATCH] ath9k: make driver usable standalone
-From: Adrian Chadd <adrian@freebsd.org>
-To: Pavel Ivanov <paivanof@gmail.com>
-Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Distributions? Using deprecated APIs?
+From: Arend Van Spriel <arend@LB-BUN-53.bun.broadcom.com>
 
-That's unpossible! :-)
+Since the arrival of kernel version 3.0 in the staging tree it
+turns out compile error occurs for sparc64, powerpc, and arm
+platforms. This patch fixes that issue.
+
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/types.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/types.h b/drivers/staging/brcm80211/brcmsmac/types.h
+index bbf2189..823b5e4 100644
+--- a/drivers/staging/brcm80211/brcmsmac/types.h
++++ b/drivers/staging/brcm80211/brcmsmac/types.h
+@@ -18,6 +18,7 @@
+ #define _BRCM_TYPES_H_
+ 
+ #include <linux/types.h>
++#include <linux/io.h>
+ 
+ /* Bus types */
+ #define	SI_BUS			0	/* SOC Interconnect */
+-- 
+1.7.4.1
 
 
-
-Adrian
-
-2011/8/18 Pavel Ivanov <paivanof@gmail.com>:
->> Iwconfig and iwlist are themselves deprecated. Iw is the new wireless
->> configuration tool.
->
-> I've just tried to use iw and it didn't quite work for me. Maybe it's
-> interfering with something installed in Ubuntu by default but
-> connect/disconnect commands didn't seem to do anything. And why these
-> commands can be executed only as root?
-> Well, maybe in Ubuntu 11.10 it will work better.
->
->
-> Pavel
->
->
-> 2011/8/17 Gábor Stefanik <netrolller.3d@gmail.com>:
->> 2011/8/17 Pavel Ivanov <paivanof@gmail.com>:
->>>> WIRELESS_EXT is not required for configuring wireless on recent
->>>> kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
->>>
->>> Since what version it's deprecated? Do user-space tools know about this new API?
->>>
->>> Neither iwconfig nor iwlist worked for me without WIRELESS_EXT.
->>>
->>>
->>> Pavel
->>>
->>
->> Iwconfig and iwlist are themselves deprecated. Iw is the new wireless
->> configuration tool.
->>
->>>
->>> 2011/8/17 Gábor Stefanik <netrolller.3d@gmail.com>:
->>>> On Wed, Aug 17, 2011 at 5:28 AM, Pavel Ivanov <paivanof@gmail.com> wrote:
->>>>> When ath9k is the only wireless driver included in the build
->>>>> WIRELESS_EXT configuration option becomes undefined. Because of that
->>>>> driver becomes essentially unusable as you can't actually connect to
->>>>> any WiFi network. By including WIRELESS_EXT into Kconfig we ensure
->>>>> that build with ath9k and without other drivers (having WIRELESS_EXT
->>>>> selected in their Kconfig) is actually usable.
->>>>
->>>> WIRELESS_EXT is not required for configuring wireless on recent
->>>> kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
->>>>
->>>>>
->>>>> Signed-off-by: Pavel Ivanov <paivanof@gmail.com>
->>>>> ---
->>>>>
->>>>> diff --git a/drivers/net/wireless/ath/ath9k/Kconfig
->>>>> b/drivers/net/wireless/ath/ath9k/Kconfig
->>>>> index d9c08c6..2573f77 100644
->>>>> --- a/drivers/net/wireless/ath/ath9k/Kconfig
->>>>> +++ b/drivers/net/wireless/ath/ath9k/Kconfig
->>>>> @@ -11,6 +11,7 @@ config ATH9K
->>>>>        select LEDS_CLASS
->>>>>        select NEW_LEDS
->>>>>        select ATH9K_COMMON
->>>>> +       select WIRELESS_EXT
->>>>>        ---help---
->>>>>          This module adds support for wireless adapters based on
->>>>>          Atheros IEEE 802.11n AR5008, AR9001 and AR9002 family
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
