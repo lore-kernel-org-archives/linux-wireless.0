@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:61096 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752008Ab1HOL1q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 07:27:46 -0400
-Date: Mon, 15 Aug 2011 14:25:35 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Dan Williams <dcbw@redhat.com>, Daniel Drake <dsd@laptop.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"open list:MARVELL LIBERTAS..." <libertas-dev@lists.infradead.org>,
-	"open list:NETWORKING [WIREL..." <linux-wireless@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org
-Subject: [patch -next] libertas: handle mesh networks in lbs_iface_active()
-Message-ID: <20110815112535.GC10560@shale.localdomain> (sfid-20110815_132751_745952_2C90B6F5)
+Received: from mms2.broadcom.com ([216.31.210.18]:1865 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753422Ab1HHN7j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:39 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 77/82] staging: brcm80211: removed
+ brcms_c_module_unregister() call in ampdu.c
+Date: Mon, 8 Aug 2011 15:59:01 +0200
+Message-ID: <1312811946-16713-78-git-send-email-arend@broadcom.com> (sfid-20110808_160000_894263_308078EF)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There was an extra semicolon so the if condition wasn't used.  We
-checked "priv->dev" twice instead of "priv->mesh_dev".
+From: Roland Vossen <rvossen@broadcom.com>
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+The AMPDU module was never registered, so it does not have to be unregistered.
+
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
-Compile tested only.
+ drivers/staging/brcm80211/brcmsmac/ampdu.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 8148389..b9ff0dc 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -190,8 +190,8 @@ static inline int lbs_iface_active(struct lbs_private *priv)
- 	int r;
+diff --git a/drivers/staging/brcm80211/brcmsmac/ampdu.c b/drivers/staging/brcm80211/brcmsmac/ampdu.c
+index 64bbc24..3c0fa13 100644
+--- a/drivers/staging/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/staging/brcm80211/brcmsmac/ampdu.c
+@@ -243,7 +243,6 @@ void brcms_c_ampdu_detach(struct ampdu_info *ampdu)
+ 	for (i = 0; i < AMPDU_INI_FREE; i++)
+ 		kfree(ampdu->ini_free[i]);
  
- 	r = netif_running(priv->dev);
--	if (priv->mesh_dev);
--		r |= netif_running(priv->dev);
-+	if (priv->mesh_dev)
-+		r |= netif_running(priv->mesh_dev);
- 
- 	return r;
+-	brcms_c_module_unregister(ampdu->wlc->pub, "ampdu", ampdu);
+ 	kfree(ampdu);
  }
+ 
+-- 
+1.7.4.1
+
+
