@@ -1,30 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:55072 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754116Ab1HLTP1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 15:15:27 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id F12CB5425A2
-	for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 15:24:22 -0400 (EDT)
-Subject: Compat-wireless release for 2011-08-12 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110812190556.6707F40ED5@repository3.orbit-lab.org> (sfid-20110812_211532_794526_961D1976)
-Date: Fri, 12 Aug 2011 15:05:56 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mms2.broadcom.com ([216.31.210.18]:1768 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753143Ab1HHN7d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:33 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Sukesh Srikakula" <sukeshs@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 25/82] staging: brcm80211: brcmfmac: Enabling FW
+ roaming by default
+Date: Mon, 8 Aug 2011 15:58:09 +0200
+Message-ID: <1312811946-16713-26-git-send-email-arend@broadcom.com> (sfid-20110808_155952_870368_0D5C6542)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-git.kernel.org[0: 149.20.20.136]: errno=Connection timed out
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
- * [new branch]      linux-3.1.y -> origin/linux-3.1.y
-   132434e..15df614  master     -> origin/master
- * [new tag]         compat-wireless-v3.1-rc1-1 -> compat-wireless-v3.1-rc1-1
-fatal: Unable to look up git.kernel.org (port 9418) (Name or service not known)
+From: Sukesh Srikakula <sukeshs@broadcom.com>
 
-compat-wireless code metrics
+With this patch, FW roaming will be enabled by default in
+brcmfmac driver
 
-    786825 - Total upstream lines of code being pulled
-ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
-rsync: connection unexpectedly closed (0 bytes received so far) [sender]
-rsync error: unexplained error (code 255) at io.c(600) [sender=3.0.6]
+Signed-off-by: Sukesh Srikakula <sukeshs@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+index d4d7c52..a915b6e 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -3414,7 +3414,7 @@ static s32 wl_init_priv(struct brcmf_cfg80211_priv *cfg_priv)
+ #endif /* WL_POWERSAVE_DISABLED */
+ 	cfg_priv->iscan_on = true;	/* iscan on & off switch.
+ 				 we enable iscan per default */
+-	cfg_priv->roam_on = false;	/* roam on & off switch.
++	cfg_priv->roam_on = true;	/* roam on & off switch.
+ 				 we enable roam per default */
+ 
+ 	cfg_priv->iscan_kickstart = false;
+-- 
+1.7.4.1
+
+
