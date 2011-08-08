@@ -1,58 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:48851 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755274Ab1HKMaE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 08:30:04 -0400
-Received: by gwaa12 with SMTP id a12so1261532gwa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 05:30:03 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:3078 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752975Ab1HHN7a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:30 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 42/82] staging: brcm80211: replace simple_strtoul
+ usage in brcmsmac
+Date: Mon, 8 Aug 2011 15:58:26 +0200
+Message-ID: <1312811946-16713-43-git-send-email-arend@broadcom.com> (sfid-20110808_155940_617726_1C72C1C2)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1313063593.2407.850.camel@cumari>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-	<1312881233-9366-38-git-send-email-eliad@wizery.com>
-	<1313063593.2407.850.camel@cumari>
-Date: Thu, 11 Aug 2011 15:30:03 +0300
-Message-ID: <CAB3XZEfoAwocZodtGxRbWAax9BZBZkiU27jPBDAafHvEefNmYQ@mail.gmail.com> (sfid-20110811_143008_419614_7712CBF2)
-Subject: Re: [PATCH 37/40] wl12xx: don't wait for disconnection event
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 11, 2011 at 2:53 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote:
->> Sometimes the fw doesn't send the DISCONNECT_EVENT_COMPLETE_ID
->> on station role stop, so don't wait for it.
->
-> Why? A bug? Or any good reason for it?
->
-i'm still waiting for a definite answer answer from the fw guys about
-the expected behavior.
+The usage of simple_strtoul is not preferred. Instead kstrtoul
+should be used. This patch fixes this for the brcmsmac driver.
 
->
->> diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
->> index 9ef8621..ad926d2 100644
->> --- a/drivers/net/wireless/wl12xx/cmd.c
->> +++ b/drivers/net/wireless/wl12xx/cmd.c
->> @@ -640,18 +640,12 @@ int wl1271_cmd_role_stop_sta(struct wl1271 *wl)
->>       ret = wl1271_cmd_send(wl, CMD_ROLE_STOP, cmd, sizeof(*cmd), 0);
->>       if (ret < 0) {
->>               wl1271_error("failed to initiate cmd role stop");
->>               goto out_free;
->>       }
->>
->> -     ret = wl1271_cmd_wait_for_event(wl, DISCONNECT_EVENT_COMPLETE_ID);
->> -     if (ret < 0) {
->> -             wl1271_error("cmd role stop sta event completion error");
->> -             goto out_free;
->> -     }
->> -
->
-> Can't this cause possible race conditions in the firmware if, for
-> instance, we stop and start the sta role quickly?
->
-according to the fw guys, it should work.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/main.c        |   16 +++++++++-------
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |    7 ++++---
+ 2 files changed, 13 insertions(+), 10 deletions(-)
 
-Eliad.
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 5c97778..001a1f7 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -4287,16 +4287,17 @@ int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device, uint unit,
+ #endif
+ 	if (bustype != SI_BUS) {
+ 		char *var;
++		unsigned long res;
+ 
+ 		var = getvar(vars, "vendid");
+-		if (var) {
+-			vendor = (u16) simple_strtoul(var, NULL, 0);
++		if (var && !kstrtoul(var, 0, &res)) {
++			vendor = (u16)res;
+ 			wiphy_err(wiphy, "Overriding vendor id = 0x%x\n",
+ 				  vendor);
+ 		}
+ 		var = getvar(vars, "devid");
+-		if (var) {
+-			u16 devid = (u16) simple_strtoul(var, NULL, 0);
++		if (var && !kstrtoul(var, 0, &res)) {
++			u16 devid = (u16)res;
+ 			if (devid != 0xffff) {
+ 				device = devid;
+ 				wiphy_err(wiphy, "Overriding device id = 0x%x"
+@@ -9596,10 +9597,11 @@ char *getvar(char *vars, const char *name)
+ int getintvar(char *vars, const char *name)
+ {
+ 	char *val;
++	unsigned long res;
+ 
+ 	val = getvar(vars, name);
+-	if (val == NULL)
+-		return 0;
++	if (val && !kstrtoul(val, 0, &res))
++		return res;
+ 
+-	return simple_strtoul(val, NULL, 0);
++	return 0;
+ }
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+index 582df4a..22f7bfc 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -174,12 +174,13 @@ char *phy_getvar(struct brcms_phy *pi, const char *name)
+ int phy_getintvar(struct brcms_phy *pi, const char *name)
+ {
+ 	char *val;
++	unsigned long res;
+ 
+ 	val = PHY_GETVAR(pi, name);
+-	if (val == NULL)
+-		return 0;
++	if (val && !kstrtoul(val, 0, &res))
++		return res;
+ 
+-	return simple_strtoul(val, NULL, 0);
++	return 0;
+ }
+ 
+ void wlc_phyreg_enter(struct brcms_phy_pub *pih)
+-- 
+1.7.4.1
+
+
