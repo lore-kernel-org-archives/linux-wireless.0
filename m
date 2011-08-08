@@ -1,61 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:34298 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751303Ab1HOIOc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 04:14:32 -0400
-Received: by pzk37 with SMTP id 37so2551799pzk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2011 01:14:32 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:1683 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752086Ab1HHN7W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:22 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 06/82] staging: brcm80211: removed function
+ declaration typedefs from aiutils.h
+Date: Mon, 8 Aug 2011 15:57:50 +0200
+Message-ID: <1312811946-16713-7-git-send-email-arend@broadcom.com> (sfid-20110808_160236_546755_AFB079C6)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+XFjio4gg5zO-gx+6v2rLGidziNY-rUachmdt02VwE9tX_SWQ@mail.gmail.com>
-References: <1313357250-8292-1-git-send-email-zajec5@gmail.com>
-	<1313357250-8292-2-git-send-email-zajec5@gmail.com>
-	<CA+XFjio4gg5zO-gx+6v2rLGidziNY-rUachmdt02VwE9tX_SWQ@mail.gmail.com>
-Date: Mon, 15 Aug 2011 10:14:31 +0200
-Message-ID: <CACna6ry7g3WCf=tuiOm8C7k81jo-NMOrkyBLsa++hTCJR9RtuA@mail.gmail.com> (sfid-20110815_101437_427412_696F6E91)
-Subject: Re: [PATCH 2/3] b43: LCN-PHY: implement disabling radio
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 15 sierpnia 2011 01:24 użytkownik Gábor Stefanik
-<netrolller.3d@gmail.com> napisał:
-> 2011/8/14 Rafał Miłecki <zajec5@gmail.com>:
->> wl reads radio version, then disables it. That's how we found it in MMIO
->> dump:
->>  radio_read(0x0000) -> 0x0031 <-- RADIO READ WITHOUT 0x200 SET!
->>  radio_read(0x0001) -> 0x0064 <-- RADIO READ WITHOUT 0x200 SET!
->>  radio_read(0x0002) -> 0x0020 <-- RADIO READ WITHOUT 0x200 SET!
->>  read32 0xfaafc120 -> 0x04000400
->>  phy_read(0x044d) -> 0x0000
->> phy_write(0x044d) <- 0x0000
->>  phy_read(0x044c) -> 0x1fff
->> phy_write(0x044c) <- 0x1fff
->>  phy_read(0x04b7) -> 0x0000
->> phy_write(0x04b7) <- 0x0000
->>  phy_read(0x04b1) -> 0x0000
->> phy_write(0x04b1) <- 0x0000
->>  phy_read(0x04b0) -> 0x7dff
->> phy_write(0x04b0) <- 0x7dff
->>  phy_read(0x04fa) -> 0x0000
->> phy_write(0x04fa) <- 0x0000
->>  phy_read(0x04f9) -> 0x007f
->> phy_write(0x04f9) <- 0x007f
->
-> Doesn't brcm80211 support this PHY?
+From: Roland Vossen <rvossen@broadcom.com>
 
-They do, but I still have some stuff RE-ed anyway. That stuff comes
-from my tests of MMIO hacks I've done before using them on BCM4331.
+Softmac related code cleanup. Typedefs are undesirable according to the
+CodingStyle document.
 
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/aiutils.c |    6 +++---
+ drivers/staging/brcm80211/brcmsmac/aiutils.h |   16 ++++++----------
+ 2 files changed, 9 insertions(+), 13 deletions(-)
 
-> (Because then, reverse-engineering wl is pointless.)
-
-(Unless that's fun for you ;) )
-
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+index a25901e..5a5fc4b 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+@@ -1279,9 +1279,9 @@ ai_register_intr_callback(struct si_pub *sih, void *intrsoff_fn,
+ 
+ 	sii = SI_INFO(sih);
+ 	sii->intr_arg = intr_arg;
+-	sii->intrsoff_fn = (si_intrsoff_t) intrsoff_fn;
+-	sii->intrsrestore_fn = (si_intrsrestore_t) intrsrestore_fn;
+-	sii->intrsenabled_fn = (si_intrsenabled_t) intrsenabled_fn;
++	sii->intrsoff_fn = (u32 (*)(void *)) intrsoff_fn;
++	sii->intrsrestore_fn = (void (*) (void *, u32)) intrsrestore_fn;
++	sii->intrsenabled_fn = (bool (*)(void *)) intrsenabled_fn;
+ 	/* save current core id.  when this function called, the current core
+ 	 * must be the core which provides driver functions(il, et, wl, etc.)
+ 	 */
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+index e245c27..f881b44 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+@@ -425,8 +425,6 @@ struct si_pub {
+ #define CCPLL_ENAB(sih)		((sih)->cccaps & CC_CAP_PLL_MASK)
+ #endif
+ 
+-typedef void (*gpio_handler_t) (u32 stat, void *arg);
+-
+ /* External PA enable mask */
+ #define GPIO_CTRL_EPA_EN_MASK 0x40
+ 
+@@ -444,14 +442,10 @@ typedef void (*gpio_handler_t) (u32 stat, void *arg);
+ #define	IS_SIM(chippkg)	\
+ 	((chippkg == HDLSIM_PKG_ID) || (chippkg == HWSIM_PKG_ID))
+ 
+-typedef u32(*si_intrsoff_t) (void *intr_arg);
+-typedef void (*si_intrsrestore_t) (void *intr_arg, u32 arg);
+-typedef bool(*si_intrsenabled_t) (void *intr_arg);
+-
+ struct gpioh_item {
+ 	void *arg;
+ 	bool level;
+-	gpio_handler_t handler;
++	void (*handler) (u32 stat, void *arg);
+ 	u32 event;
+ 	struct gpioh_item *next;
+ };
+@@ -462,9 +456,11 @@ struct si_info {
+ 	void *pbus;		/* handle to bus (pci/sdio/..) */
+ 	uint dev_coreid;	/* the core provides driver functions */
+ 	void *intr_arg;		/* interrupt callback function arg */
+-	si_intrsoff_t intrsoff_fn;	/* turns chip interrupts off */
+-	si_intrsrestore_t intrsrestore_fn; /* restore chip interrupts */
+-	si_intrsenabled_t intrsenabled_fn; /* check if interrupts are enabled */
++	u32 (*intrsoff_fn) (void *intr_arg); /* turns chip interrupts off */
++	/* restore chip interrupts */
++	void (*intrsrestore_fn) (void *intr_arg, u32 arg);
++	/* check if interrupts are enabled */
++	bool (*intrsenabled_fn) (void *intr_arg);
+ 
+ 	void *pch;		/* PCI/E core handle */
+ 
 -- 
-Rafał
+1.7.4.1
+
+
