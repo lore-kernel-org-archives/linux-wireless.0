@@ -1,28 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33493 "EHLO nbd.name"
+Received: from mms3.broadcom.com ([216.31.210.19]:3237 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750838Ab1H0G1S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Aug 2011 02:27:18 -0400
-Message-ID: <4E588E3B.9000007@openwrt.org> (sfid-20110827_082727_554422_208ADAB4)
-Date: Sat, 27 Aug 2011 08:27:07 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1753232Ab1HHN7f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:35 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 62/82] staging: brcm80211: revert removal of atomic
+ initialization
+Date: Mon, 8 Aug 2011 15:58:46 +0200
+Message-ID: <1312811946-16713-63-git-send-email-arend@broadcom.com> (sfid-20110808_160048_179240_D4FC8E38)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k_hw: Set default slottime as 9us
-References: <1314424379-1206-1-git-send-email-rmanohar@qca.qualcomm.com>
-In-Reply-To: <1314424379-1206-1-git-send-email-rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-08-27 7:52 AM, Rajkumar Manoharan wrote:
-> Initialize 9us slot time as that is what is used mostly
-> (for non-ERP cases) and also to be in sync with initvals.
->
-> Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
-Why does it matter, mac80211 tells the driver to reconfigure it anyway. 
-Also, why use the stupid ATH9K_SLOT_TIME_* enums? I think we should 
-simply remove those.
+From: Franky Lin <frankyl@broadcom.com>
 
-- Felix
+The commit "staging: brcm80211: remove code for unsupported chip"
+unintentionally got rid of initialization of the atomic variable
+brcmf_mmc_suspend. The patch restore that particular piece of code.
+
+Reported-by: Dan Carpenter <error27@gmail.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 16ea6e8..2a9efc3 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -980,6 +980,8 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 			return -ENOMEM;
+ 		sdiodev->func1 = func;
+ 		dev_set_drvdata(&func->card->dev, sdiodev);
++
++		atomic_set(&brcmf_mmc_suspend, false);
+ 	}
+ 
+ 	gInstance->func[func->num] = func;
+-- 
+1.7.4.1
+
+
