@@ -1,57 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50164 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899Ab1HHJWX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 05:22:23 -0400
-Subject: Re: [PATCH] nl80211: Indicate driver-based offchannel TX on
- mgmt_tx_cancel_wait
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20110808091030.GA4749@jouni.qca.qualcomm.com>
-References: <20110808091030.GA4749@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 08 Aug 2011 11:22:15 +0200
-Message-ID: <1312795335.4372.13.camel@jlt3.sipsolutions.net> (sfid-20110808_112226_584732_711A60F8)
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:2825 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753184Ab1HHN7g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:36 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 50/82] staging: brcm80211: remove BRCMF_SD_* debug
+ macros from brcmfmac
+Date: Mon, 8 Aug 2011 15:58:34 +0200
+Message-ID: <1312811946-16713-51-git-send-email-arend@broadcom.com> (sfid-20110808_160016_201277_DA541D65)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-08-08 at 12:10 +0300, Jouni Malinen wrote:
-> Drivers that support frame transmission with mgmt_tx() may not support
-> driver-based offchannel TX. Use mgmt_tx_cancel_wait instead of mgmt_tx
-> when figuring out whether to indicate support for this with
-> NL80211_ATTR_OFFCHANNEL_TX_OK.
+From: Franky Lin <frankyl@broadcom.com>
 
-Seems fine to me, I guess the driver in question isn't in the tree yet
-so no need for Cc: stable?
+Use unified debug macros BRCMF_* in fullmac.
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c    |   50 ++++++-----------------
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h |    1 -
+ 2 files changed, 13 insertions(+), 38 deletions(-)
 
-> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
-> ---
->  net/wireless/nl80211.c |    3 +--
->  1 files changed, 1 insertions(+), 2 deletions(-)
-> 
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index ec8444e..ca76977 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -871,8 +871,7 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
->  		NLA_PUT_U32(msg, NL80211_ATTR_MAX_REMAIN_ON_CHANNEL_DURATION,
->  			    dev->wiphy.max_remain_on_channel_duration);
->  
-> -	/* for now at least assume all drivers have it */
-> -	if (dev->ops->mgmt_tx)
-> +	if (dev->ops->mgmt_tx_cancel_wait)
->  		NLA_PUT_FLAG(msg, NL80211_ATTR_OFFCHANNEL_TX_OK);
->  
->  	if (mgmt_stypes) {
-> -- 
-> 1.7.4.1
-> 
-> 
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 0953160..53dfecd 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -34,28 +34,6 @@
+ 
+ #define SDIOH_API_ACCESS_RETRY_LIMIT	2
+ 
+-#define BRCMF_SD_ERROR_VAL	0x0001	/* Error */
+-#define BRCMF_SD_INFO_VAL		0x0002	/* Info */
+-
+-
+-#ifdef BCMDBG
+-#define BRCMF_SD_ERROR(x) \
+-	do { \
+-		if ((brcmf_sdio_msglevel & BRCMF_SD_ERROR_VAL) && \
+-		    net_ratelimit()) \
+-			printk x; \
+-	} while (0)
+-#define BRCMF_SD_INFO(x)	\
+-	do { \
+-		if ((brcmf_sdio_msglevel & BRCMF_SD_INFO_VAL) && \
+-		    net_ratelimit()) \
+-			printk x; \
+-	} while (0)
+-#else				/* BCMDBG */
+-#define BRCMF_SD_ERROR(x)
+-#define BRCMF_SD_INFO(x)
+-#endif				/* BCMDBG */
+-
+ #define SDIOH_CMD_TYPE_NORMAL   0	/* Normal command */
+ #define SDIOH_CMD_TYPE_APPEND   1	/* Append command */
+ #define SDIOH_CMD_TYPE_CUTTHRU  2	/* Cut-through command */
+@@ -72,8 +50,6 @@ struct brcmf_sdio_card {
+ 	u32 sbwad;		/* Save backplane window address */
+ };
+ 
+-const uint brcmf_sdio_msglevel = BRCMF_SD_ERROR_VAL;
+-
+ /* driver info, initialized when brcmf_sdio_register is called */
+ static struct brcmf_sdioh_driver drvinfo = { NULL, NULL };
+ 
+@@ -88,7 +64,7 @@ brcmf_sdcard_attach(void *cfghdl, u32 *regsva)
+ 
+ 	card = kzalloc(sizeof(struct brcmf_sdio_card), GFP_ATOMIC);
+ 	if (card == NULL) {
+-		BRCMF_SD_ERROR(("sdcard_attach: out of memory"));
++		BRCMF_ERROR(("sdcard_attach: out of memory"));
+ 		return NULL;
+ 	}
+ 
+@@ -167,7 +143,7 @@ u8 brcmf_sdcard_cfg_read(struct brcmf_sdio_card *card, uint fnc_num, u32 addr,
+ 	if (err)
+ 		*err = status;
+ 
+-	BRCMF_SD_INFO(("%s:fun = %d, addr = 0x%x, u8data = 0x%x\n",
++	BRCMF_INFO(("%s:fun = %d, addr = 0x%x, u8data = 0x%x\n",
+ 		     __func__, fnc_num, addr, data));
+ 
+ 	return data;
+@@ -191,7 +167,7 @@ brcmf_sdcard_cfg_write(struct brcmf_sdio_card *card, uint fnc_num, u32 addr,
+ 	if (err)
+ 		*err = status;
+ 
+-	BRCMF_SD_INFO(("%s:fun = %d, addr = 0x%x, u8data = 0x%x\n",
++	BRCMF_INFO(("%s:fun = %d, addr = 0x%x, u8data = 0x%x\n",
+ 		     __func__, fnc_num, addr, data));
+ }
+ 
+@@ -207,7 +183,7 @@ u32 brcmf_sdcard_cfg_read_word(struct brcmf_sdio_card *card, uint fnc_num,
+ 	if (err)
+ 		*err = status;
+ 
+-	BRCMF_SD_INFO(("%s:fun = %d, addr = 0x%x, u32data = 0x%x\n",
++	BRCMF_INFO(("%s:fun = %d, addr = 0x%x, u32data = 0x%x\n",
+ 		     __func__, fnc_num, addr, data));
+ 
+ 	return data;
+@@ -226,7 +202,7 @@ brcmf_sdcard_cfg_write_word(struct brcmf_sdio_card *card, uint fnc_num,
+ 	if (err)
+ 		*err = status;
+ 
+-	BRCMF_SD_INFO(("%s:fun = %d, addr = 0x%x, u32data = 0x%x\n",
++	BRCMF_INFO(("%s:fun = %d, addr = 0x%x, u32data = 0x%x\n",
+ 		     __func__, fnc_num, addr, data));
+ }
+ 
+@@ -247,7 +223,7 @@ int brcmf_sdcard_cis_read(struct brcmf_sdio_card *card, uint func, u8 * cis,
+ 			 into the provided buffer. */
+ 		tmp_buf = kmalloc(length, GFP_ATOMIC);
+ 		if (tmp_buf == NULL) {
+-			BRCMF_SD_ERROR(("%s: out of memory\n", __func__));
++			BRCMF_ERROR(("%s: out of memory\n", __func__));
+ 			return -ENOMEM;
+ 		}
+ 		memcpy(tmp_buf, cis, length);
+@@ -289,7 +265,7 @@ u32 brcmf_sdcard_reg_read(struct brcmf_sdio_card *card, u32 addr, uint size)
+ 	u32 word = 0;
+ 	uint bar0 = addr & ~SBSDIO_SB_OFT_ADDR_MASK;
+ 
+-	BRCMF_SD_INFO(("%s:fun = 1, addr = 0x%x, ", __func__, addr));
++	BRCMF_INFO(("%s:fun = 1, addr = 0x%x, ", __func__, addr));
+ 
+ 	if (bar0 != card->sbwad) {
+ 		if (brcmf_sdcard_set_sbaddr_window(card, bar0))
+@@ -307,7 +283,7 @@ u32 brcmf_sdcard_reg_read(struct brcmf_sdio_card *card, u32 addr, uint size)
+ 
+ 	card->regfail = (status != 0);
+ 
+-	BRCMF_SD_INFO(("u32data = 0x%x\n", word));
++	BRCMF_INFO(("u32data = 0x%x\n", word));
+ 
+ 	/* if ok, return appropriately masked word */
+ 	if (status == 0) {
+@@ -325,7 +301,7 @@ u32 brcmf_sdcard_reg_read(struct brcmf_sdio_card *card, u32 addr, uint size)
+ 	}
+ 
+ 	/* otherwise, bad sdio access or invalid size */
+-	BRCMF_SD_ERROR(("%s: error reading addr 0x%04x size %d\n", __func__,
++	BRCMF_ERROR(("%s: error reading addr 0x%04x size %d\n", __func__,
+ 		      addr, size));
+ 	return 0xFFFFFFFF;
+ }
+@@ -337,7 +313,7 @@ u32 brcmf_sdcard_reg_write(struct brcmf_sdio_card *card, u32 addr, uint size,
+ 	uint bar0 = addr & ~SBSDIO_SB_OFT_ADDR_MASK;
+ 	int err = 0;
+ 
+-	BRCMF_SD_INFO(("%s:fun = 1, addr = 0x%x, uint%ddata = 0x%x\n",
++	BRCMF_INFO(("%s:fun = 1, addr = 0x%x, uint%ddata = 0x%x\n",
+ 		     __func__, addr, size * 8, data));
+ 
+ 	if (bar0 != card->sbwad) {
+@@ -359,7 +335,7 @@ u32 brcmf_sdcard_reg_write(struct brcmf_sdio_card *card, u32 addr, uint size,
+ 	if (status == 0)
+ 		return 0;
+ 
+-	BRCMF_SD_ERROR(("%s: error writing 0x%08x to addr 0x%04x size %d\n",
++	BRCMF_ERROR(("%s: error writing 0x%08x to addr 0x%04x size %d\n",
+ 		      __func__, data, addr, size));
+ 	return 0xFFFFFFFF;
+ }
+@@ -383,7 +359,7 @@ brcmf_sdcard_recv_buf(struct brcmf_sdio_card *card, u32 addr, uint fn,
+ 	uint bar0 = addr & ~SBSDIO_SB_OFT_ADDR_MASK;
+ 	int err = 0;
+ 
+-	BRCMF_SD_INFO(("%s:fun = %d, addr = 0x%x, size = %d\n",
++	BRCMF_INFO(("%s:fun = %d, addr = 0x%x, size = %d\n",
+ 		     __func__, fn, addr, nbytes));
+ 
+ 	/* Async not implemented yet */
+@@ -423,7 +399,7 @@ brcmf_sdcard_send_buf(struct brcmf_sdio_card *card, u32 addr, uint fn,
+ 	uint bar0 = addr & ~SBSDIO_SB_OFT_ADDR_MASK;
+ 	int err = 0;
+ 
+-	BRCMF_SD_INFO(("%s:fun = %d, addr = 0x%x, size = %d\n",
++	BRCMF_INFO(("%s:fun = %d, addr = 0x%x, size = %d\n",
+ 		     __func__, fn, addr, nbytes));
+ 
+ 	/* Async not implemented yet */
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index 9853e74..5e7552e 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -18,7 +18,6 @@
+ #define	_BRCM_SDH_H_
+ 
+ #include <linux/skbuff.h>
+-extern const uint brcmf_sdio_msglevel;
+ 
+ #define SDIO_FUNC_0		0
+ #define SDIO_FUNC_1		1
+-- 
+1.7.4.1
 
 
