@@ -1,194 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:37604 "EHLO mga01.intel.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1675 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751805Ab1HMQ6B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 12:58:01 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 11/13] iwlagn: support v2 of enhanced sensitivity table
-Date: Sat, 13 Aug 2011 09:18:06 -0700
-Message-Id: <1313252287-22858-12-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_185814_180633_FF77312C)
-In-Reply-To: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1753122Ab1HHN7c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:32 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 10/82] staging: brcm80211: removed function
+ declaration typedefs from dma.h part 4
+Date: Mon, 8 Aug 2011 15:57:54 +0200
+Message-ID: <1312811946-16713-11-git-send-email-arend@broadcom.com> (sfid-20110808_155946_607484_8969BA04)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for v2 of enhanced sensitivity table for 2000 series products
+From: Roland Vossen <rvossen@broadcom.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Softmac related code cleanup. Typedefs are undesirable according to the
+CodingStyle document.
+
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-2000.c      |    2 +
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c |   69 +++++++++++++++++--------
- drivers/net/wireless/iwlwifi/iwl-commands.h  |   34 +++++++++----
- drivers/net/wireless/iwlwifi/iwl-core.h      |    2 +
- 4 files changed, 74 insertions(+), 33 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/dma.c |   24 ++++++------
+ drivers/staging/brcm80211/brcmsmac/dma.h |   60 ++++++++++-------------------
+ 2 files changed, 33 insertions(+), 51 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index cdc7428..06f53b3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -222,6 +222,7 @@ static struct iwl_base_params iwl2000_base_params = {
- 	.wd_timeout = IWL_DEF_WD_TIMEOUT,
- 	.max_event_log_size = 512,
- 	.shadow_reg_enable = true,
-+	.hd_v2 = true,
+diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
+index ebc0848..517dc61 100644
+--- a/drivers/staging/brcm80211/brcmsmac/dma.c
++++ b/drivers/staging/brcm80211/brcmsmac/dma.c
+@@ -395,13 +395,13 @@ const struct di_fcn_s dma64proc = {
+ 	(void (*)(struct dma_pub *)) dma64_txresume,
+ 	(bool(*)(struct dma_pub *)) dma64_txsuspended,
+ 	(bool(*)(struct dma_pub *)) dma64_txsuspendedidle,
+-	(di_txfast_t) dma64_txfast,
+-	(di_txunframed_t) dma64_txunframed,
+-	(di_getpos_t) dma64_getpos,
++	(int (*)(struct dma_pub *, struct sk_buff *, bool)) dma64_txfast,
++	(int (*)(struct dma_pub *, void *, uint, bool)) dma64_txunframed,
++	(void *(*)(struct dma_pub *, bool)) dma64_getpos,
+ 	(bool(*)(struct dma_pub *)) dma64_txstopped,
+-	(di_txreclaim_t) dma64_txreclaim,
+-	(di_getnexttxp_t) dma64_getnexttxp,
+-	(di_peeknexttxp_t) _dma_peeknexttxp,
++	(void (*)(struct dma_pub *, enum txd_range)) dma64_txreclaim,
++	(void *(*)(struct dma_pub *, enum txd_range)) dma64_getnexttxp,
++	(void *(*)(struct dma_pub *)) _dma_peeknexttxp,
+ 	(void (*)(struct dma_pub *)) _dma_txblock,
+ 	(void (*)(struct dma_pub *)) _dma_txunblock,
+ 	(uint (*)(struct dma_pub *)) _dma_txactive,
+@@ -413,17 +413,17 @@ const struct di_fcn_s dma64proc = {
+ 	(bool(*)(struct dma_pub *)) dma64_rxstopped,
+ 	(bool(*)(struct dma_pub *)) _dma_rxenable,
+ 	(bool(*)(struct dma_pub *)) dma64_rxenabled,
+-	(di_rx_t) _dma_rx,
++	(void *(*)(struct dma_pub *)) _dma_rx,
+ 	(bool(*)(struct dma_pub *)) _dma_rxfill,
+ 	(void (*)(struct dma_pub *)) _dma_rxreclaim,
+-	(di_getnextrxp_t) _dma_getnextrxp,
+-	(di_peeknextrxp_t) _dma_peeknextrxp,
+-	(di_rxparam_get_t) _dma_rx_param_get,
++	(void *(*)(struct dma_pub *, bool)) _dma_getnextrxp,
++	(void *(*)(struct dma_pub *)) _dma_peeknextrxp,
++	(void (*)(struct dma_pub *, u16 *, u16 *)) _dma_rx_param_get,
+ 
+ 	(void (*)(struct dma_pub *)) _dma_fifoloopbackenable,
+-	(di_getvar_t) _dma_getvar,
++	(unsigned long (*)(struct dma_pub *, const char *)) _dma_getvar,
+ 	(void (*)(struct dma_pub *)) _dma_counterreset,
+-	(di_ctrlflags_t) _dma_ctrlflags,
++	(uint (*)(struct dma_pub *, uint, uint)) _dma_ctrlflags,
+ 	NULL,
+ 	NULL,
+ 	NULL,
+diff --git a/drivers/staging/brcm80211/brcmsmac/dma.h b/drivers/staging/brcm80211/brcmsmac/dma.h
+index 5dc7e0b..3ff109f 100644
+--- a/drivers/staging/brcm80211/brcmsmac/dma.h
++++ b/drivers/staging/brcm80211/brcmsmac/dma.h
+@@ -58,30 +58,6 @@ enum txd_range {
+ 	DMA_RANGE_TRANSFERED
  };
  
- 
-@@ -241,6 +242,7 @@ static struct iwl_base_params iwl2030_base_params = {
- 	.wd_timeout = IWL_LONG_WD_TIMEOUT,
- 	.max_event_log_size = 512,
- 	.shadow_reg_enable = true,
-+	.hd_v2 = true,
- };
- 
- static struct iwl_ht_params iwl2000_ht_params = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-calib.c b/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-index 72d6297..1789e3a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-@@ -505,28 +505,53 @@ static int iwl_enhance_sensitivity_write(struct iwl_priv *priv)
- 
- 	iwl_prepare_legacy_sensitivity_tbl(priv, data, &cmd.enhance_table[0]);
- 
--	cmd.enhance_table[HD_INA_NON_SQUARE_DET_OFDM_INDEX] =
--		HD_INA_NON_SQUARE_DET_OFDM_DATA;
--	cmd.enhance_table[HD_INA_NON_SQUARE_DET_CCK_INDEX] =
--		HD_INA_NON_SQUARE_DET_CCK_DATA;
--	cmd.enhance_table[HD_CORR_11_INSTEAD_OF_CORR_9_EN_INDEX] =
--		HD_CORR_11_INSTEAD_OF_CORR_9_EN_DATA;
--	cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_INDEX] =
--		HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_DATA;
--	cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_INDEX] =
--		HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_DATA;
--	cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_SLOPE_INDEX] =
--		HD_OFDM_NON_SQUARE_DET_SLOPE_DATA;
--	cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_INTERCEPT_INDEX] =
--		HD_OFDM_NON_SQUARE_DET_INTERCEPT_DATA;
--	cmd.enhance_table[HD_CCK_NON_SQUARE_DET_SLOPE_MRC_INDEX] =
--		HD_CCK_NON_SQUARE_DET_SLOPE_MRC_DATA;
--	cmd.enhance_table[HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_INDEX] =
--		HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_DATA;
--	cmd.enhance_table[HD_CCK_NON_SQUARE_DET_SLOPE_INDEX] =
--		HD_CCK_NON_SQUARE_DET_SLOPE_DATA;
--	cmd.enhance_table[HD_CCK_NON_SQUARE_DET_INTERCEPT_INDEX] =
--		HD_CCK_NON_SQUARE_DET_INTERCEPT_DATA;
-+	if (priv->cfg->base_params->hd_v2) {
-+		cmd.enhance_table[HD_INA_NON_SQUARE_DET_OFDM_INDEX] =
-+			HD_INA_NON_SQUARE_DET_OFDM_DATA_V2;
-+		cmd.enhance_table[HD_INA_NON_SQUARE_DET_CCK_INDEX] =
-+			HD_INA_NON_SQUARE_DET_CCK_DATA_V2;
-+		cmd.enhance_table[HD_CORR_11_INSTEAD_OF_CORR_9_EN_INDEX] =
-+			HD_CORR_11_INSTEAD_OF_CORR_9_EN_DATA_V2;
-+		cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_INDEX] =
-+			HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_DATA_V2;
-+		cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_INDEX] =
-+			HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_DATA_V2;
-+		cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_SLOPE_INDEX] =
-+			HD_OFDM_NON_SQUARE_DET_SLOPE_DATA_V2;
-+		cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_INTERCEPT_INDEX] =
-+			HD_OFDM_NON_SQUARE_DET_INTERCEPT_DATA_V2;
-+		cmd.enhance_table[HD_CCK_NON_SQUARE_DET_SLOPE_MRC_INDEX] =
-+			HD_CCK_NON_SQUARE_DET_SLOPE_MRC_DATA_V2;
-+		cmd.enhance_table[HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_INDEX] =
-+			HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_DATA_V2;
-+		cmd.enhance_table[HD_CCK_NON_SQUARE_DET_SLOPE_INDEX] =
-+			HD_CCK_NON_SQUARE_DET_SLOPE_DATA_V2;
-+		cmd.enhance_table[HD_CCK_NON_SQUARE_DET_INTERCEPT_INDEX] =
-+			HD_CCK_NON_SQUARE_DET_INTERCEPT_DATA_V2;
-+	} else {
-+		cmd.enhance_table[HD_INA_NON_SQUARE_DET_OFDM_INDEX] =
-+			HD_INA_NON_SQUARE_DET_OFDM_DATA_V1;
-+		cmd.enhance_table[HD_INA_NON_SQUARE_DET_CCK_INDEX] =
-+			HD_INA_NON_SQUARE_DET_CCK_DATA_V1;
-+		cmd.enhance_table[HD_CORR_11_INSTEAD_OF_CORR_9_EN_INDEX] =
-+			HD_CORR_11_INSTEAD_OF_CORR_9_EN_DATA_V1;
-+		cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_INDEX] =
-+			HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_DATA_V1;
-+		cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_INDEX] =
-+			HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_DATA_V1;
-+		cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_SLOPE_INDEX] =
-+			HD_OFDM_NON_SQUARE_DET_SLOPE_DATA_V1;
-+		cmd.enhance_table[HD_OFDM_NON_SQUARE_DET_INTERCEPT_INDEX] =
-+			HD_OFDM_NON_SQUARE_DET_INTERCEPT_DATA_V1;
-+		cmd.enhance_table[HD_CCK_NON_SQUARE_DET_SLOPE_MRC_INDEX] =
-+			HD_CCK_NON_SQUARE_DET_SLOPE_MRC_DATA_V1;
-+		cmd.enhance_table[HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_INDEX] =
-+			HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_DATA_V1;
-+		cmd.enhance_table[HD_CCK_NON_SQUARE_DET_SLOPE_INDEX] =
-+			HD_CCK_NON_SQUARE_DET_SLOPE_DATA_V1;
-+		cmd.enhance_table[HD_CCK_NON_SQUARE_DET_INTERCEPT_INDEX] =
-+			HD_CCK_NON_SQUARE_DET_INTERCEPT_DATA_V1;
-+	}
- 
- 	/* Update uCode's "work" table, and copy it to DSP */
- 	cmd.control = SENSITIVITY_CMD_CONTROL_WORK_TABLE;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 5769ca5..4e92d56 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -3067,17 +3067,29 @@ struct iwl_missed_beacon_notif {
- /* number of additional entries for enhanced tbl */
- #define ENHANCE_HD_TABLE_ENTRIES  (ENHANCE_HD_TABLE_SIZE - HD_TABLE_SIZE)
- 
--#define HD_INA_NON_SQUARE_DET_OFDM_DATA			cpu_to_le16(0)
--#define HD_INA_NON_SQUARE_DET_CCK_DATA			cpu_to_le16(0)
--#define HD_CORR_11_INSTEAD_OF_CORR_9_EN_DATA		cpu_to_le16(0)
--#define HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_DATA		cpu_to_le16(668)
--#define HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_DATA	cpu_to_le16(4)
--#define HD_OFDM_NON_SQUARE_DET_SLOPE_DATA		cpu_to_le16(486)
--#define HD_OFDM_NON_SQUARE_DET_INTERCEPT_DATA		cpu_to_le16(37)
--#define HD_CCK_NON_SQUARE_DET_SLOPE_MRC_DATA		cpu_to_le16(853)
--#define HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_DATA	cpu_to_le16(4)
--#define HD_CCK_NON_SQUARE_DET_SLOPE_DATA		cpu_to_le16(476)
--#define HD_CCK_NON_SQUARE_DET_INTERCEPT_DATA		cpu_to_le16(99)
-+#define HD_INA_NON_SQUARE_DET_OFDM_DATA_V1		cpu_to_le16(0)
-+#define HD_INA_NON_SQUARE_DET_CCK_DATA_V1		cpu_to_le16(0)
-+#define HD_CORR_11_INSTEAD_OF_CORR_9_EN_DATA_V1		cpu_to_le16(0)
-+#define HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_DATA_V1	cpu_to_le16(668)
-+#define HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_DATA_V1	cpu_to_le16(4)
-+#define HD_OFDM_NON_SQUARE_DET_SLOPE_DATA_V1		cpu_to_le16(486)
-+#define HD_OFDM_NON_SQUARE_DET_INTERCEPT_DATA_V1	cpu_to_le16(37)
-+#define HD_CCK_NON_SQUARE_DET_SLOPE_MRC_DATA_V1		cpu_to_le16(853)
-+#define HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_DATA_V1	cpu_to_le16(4)
-+#define HD_CCK_NON_SQUARE_DET_SLOPE_DATA_V1		cpu_to_le16(476)
-+#define HD_CCK_NON_SQUARE_DET_INTERCEPT_DATA_V1		cpu_to_le16(99)
+-/* dma function type */
+-typedef int (*di_txfast_t) (struct dma_pub *dmah, struct sk_buff *p,
+-			    bool commit);
+-typedef int (*di_txunframed_t) (struct dma_pub *dmah, void *p, uint len,
+-				bool commit);
+-typedef void *(*di_getpos_t) (struct dma_pub *di, bool direction);
+-typedef void *(*di_rx_t) (struct dma_pub *dmah);
+-typedef void (*di_txreclaim_t) (struct dma_pub *dmah, enum txd_range range);
+-typedef unsigned long (*di_getvar_t) (struct dma_pub *dmah,
+-				      const char *name);
+-typedef void *(*di_getnexttxp_t) (struct dma_pub *dmah, enum txd_range range);
+-typedef void *(*di_getnextrxp_t) (struct dma_pub *dmah, bool forceall);
+-typedef void *(*di_peeknexttxp_t) (struct dma_pub *dmah);
+-typedef void *(*di_peeknextrxp_t) (struct dma_pub *dmah);
+-typedef void (*di_rxparam_get_t) (struct dma_pub *dmah, u16 *rxoffset,
+-				  u16 *rxbufsize);
+-typedef uint(*di_ctrlflags_t) (struct dma_pub *dmah, uint mask, uint flags);
+-typedef char *(*di_dump_t) (struct dma_pub *dmah, struct brcmu_strbuf *b,
+-			    bool dumpring);
+-typedef char *(*di_dumptx_t) (struct dma_pub *dmah, struct brcmu_strbuf *b,
+-			      bool dumpring);
+-typedef char *(*di_dumprx_t) (struct dma_pub *dmah, struct brcmu_strbuf *b,
+-			      bool dumpring);
+-
+ /* dma opsvec */
+ struct di_fcn_s {
+ 	void (*detach)(struct dma_pub *dmah);
+@@ -92,13 +68,14 @@ struct di_fcn_s {
+ 	void (*txresume)(struct dma_pub *dmah);
+ 	bool (*txsuspended)(struct dma_pub *dmah);
+ 	bool (*txsuspendedidle)(struct dma_pub *dmah);
+-	di_txfast_t txfast;
+-	di_txunframed_t txunframed;
+-	di_getpos_t getpos;
++	int (*txfast)(struct dma_pub *dmah, struct sk_buff *p, bool commit);
++	int (*txunframed)(struct dma_pub *dmah, void *p, uint len, bool commit);
 +
-+#define HD_INA_NON_SQUARE_DET_OFDM_DATA_V2		cpu_to_le16(1)
-+#define HD_INA_NON_SQUARE_DET_CCK_DATA_V2		cpu_to_le16(1)
-+#define HD_CORR_11_INSTEAD_OF_CORR_9_EN_DATA_V2		cpu_to_le16(1)
-+#define HD_OFDM_NON_SQUARE_DET_SLOPE_MRC_DATA_V2	cpu_to_le16(600)
-+#define HD_OFDM_NON_SQUARE_DET_INTERCEPT_MRC_DATA_V2	cpu_to_le16(40)
-+#define HD_OFDM_NON_SQUARE_DET_SLOPE_DATA_V2		cpu_to_le16(486)
-+#define HD_OFDM_NON_SQUARE_DET_INTERCEPT_DATA_V2	cpu_to_le16(45)
-+#define HD_CCK_NON_SQUARE_DET_SLOPE_MRC_DATA_V2		cpu_to_le16(853)
-+#define HD_CCK_NON_SQUARE_DET_INTERCEPT_MRC_DATA_V2	cpu_to_le16(60)
-+#define HD_CCK_NON_SQUARE_DET_SLOPE_DATA_V2		cpu_to_le16(476)
-+#define HD_CCK_NON_SQUARE_DET_INTERCEPT_DATA_V2		cpu_to_le16(99)
++	void *(*getpos)(struct dma_pub *di, bool direction);
+ 	bool (*txstopped)(struct dma_pub *dmah);
+-	di_txreclaim_t txreclaim;
+-	di_getnexttxp_t getnexttxp;
+-	di_peeknexttxp_t peeknexttxp;
++	void (*txreclaim)(struct dma_pub *dmah, enum txd_range range);
++	void *(*getnexttxp)(struct dma_pub *dmah, enum txd_range range);
++	void *(*peeknexttxp) (struct dma_pub *dmah);
+ 	void (*txblock) (struct dma_pub *dmah);
+ 	void (*txunblock) (struct dma_pub *dmah);
+ 	uint (*txactive)(struct dma_pub *dmah);
+@@ -110,20 +87,25 @@ struct di_fcn_s {
+ 	bool (*rxstopped)(struct dma_pub *dmah);
+ 	bool (*rxenable)(struct dma_pub *dmah);
+ 	bool (*rxenabled)(struct dma_pub *dmah);
+-	di_rx_t rx;
++	void *(*rx)(struct dma_pub *dmah);
+ 	bool (*rxfill)(struct dma_pub *dmah);
+ 	void (*rxreclaim)(struct dma_pub *dmah);
+-	di_getnextrxp_t getnextrxp;
+-	di_peeknextrxp_t peeknextrxp;
+-	di_rxparam_get_t rxparam_get;
++	void *(*getnextrxp)(struct dma_pub *dmah, bool forceall);
++	void *(*peeknextrxp)(struct dma_pub *dmah);
++	void (*rxparam_get)(struct dma_pub *dmah, u16 *rxoffset,
++			    u16 *rxbufsize);
  
- 
- /* Control field in struct iwl_sensitivity_cmd */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 74f043d..c246861 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -135,6 +135,7 @@ struct iwl_mod_params {
-  * @temperature_kelvin: temperature report by uCode in kelvin
-  * @max_event_log_size: size of event log buffer size for ucode event logging
-  * @shadow_reg_enable: HW shadhow register bit
-+ * @hd_v2: v2 of enhanced sensitivity value, used for 2000 series and up
-  */
- struct iwl_base_params {
- 	int eeprom_size;
-@@ -156,6 +157,7 @@ struct iwl_base_params {
- 	bool temperature_kelvin;
- 	u32 max_event_log_size;
- 	const bool shadow_reg_enable;
-+	const bool hd_v2;
- };
- /*
-  * @advanced_bt_coexist: support advanced bt coexist
+ 	void (*fifoloopbackenable)(struct dma_pub *dmah);
+-	di_getvar_t d_getvar;
++	unsigned long (*d_getvar)(struct dma_pub *dmah, const char *name);
++
+ 	void (*counterreset)(struct dma_pub *dmah);
+-	di_ctrlflags_t ctrlflags;
+-	di_dump_t dump;
+-	di_dumptx_t dumptx;
+-	di_dumprx_t dumprx;
++	uint (*ctrlflags)(struct dma_pub *dmah, uint mask, uint flags);
++	char *(*dump)(struct dma_pub *dmah, struct brcmu_strbuf *b,
++		      bool dumpring);
++	char *(*dumptx)(struct dma_pub *dmah, struct brcmu_strbuf *b,
++			bool dumpring);
++	char *(*dumprx)(struct dma_pub *dmah, struct brcmu_strbuf *b,
++			bool dumpring);
+ 	uint (*rxactive)(struct dma_pub *dmah);
+ 	uint (*txpending)(struct dma_pub *dmah);
+ 	uint (*txcommitted)(struct dma_pub *dmah);
 -- 
-1.7.0.4
+1.7.4.1
+
 
