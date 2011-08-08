@@ -1,61 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:57533 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752258Ab1H3S3W (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 14:29:22 -0400
-Received: by iabu26 with SMTP id u26so1804709iab.19
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 11:29:22 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Subject: [PATCH] mac80211: Defer tranmission of mesh path errors
-Date: Tue, 30 Aug 2011 11:29:14 -0700
-Message-Id: <1314728954-22646-1-git-send-email-javier@cozybit.com> (sfid-20110830_202927_625112_814087D2)
-In-Reply-To: <1314706867.4011.25.camel@jlt3.sipsolutions.net>
-References: <1314706867.4011.25.camel@jlt3.sipsolutions.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:1790 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753176Ab1HHN7d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:33 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 55/82] staging: brcm80211: fixed checkpatch warnings
+ for brcmutil dir
+Date: Mon, 8 Aug 2011 15:58:39 +0200
+Message-ID: <1312811946-16713-56-git-send-email-arend@broadcom.com> (sfid-20110808_160059_430924_A607F038)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Under failure conditions, the mesh stack sends PERR messages to the
-previous sender of the failed frame.  This happens in the tx feedback
-path, in which the transmission queue lock may be taken.  Avoid a
-deadlock by sending the path error via the pending queue.
+From: Roland Vossen <rvossen@broadcom.com>
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Most of them being 'line longer than 80 chars' type of warning.
+
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/mac80211/mesh_hwmp.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ drivers/staging/brcm80211/brcmutil/utils.c |    9 ++++++---
+ drivers/staging/brcm80211/brcmutil/wifi.c  |   23 +++++++++++++++--------
+ 2 files changed, 21 insertions(+), 11 deletions(-)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index fd4f76a..f760679 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -209,6 +209,10 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
-  * @target_sn: SN of the broken destination
-  * @target_rcode: reason code for this PERR
-  * @ra: node this frame is addressed to
-+ *
-+ * Note: This function may be called from the tx feedback path, possibly with
-+ * the transmission queue lock taken.  To avoid a deadlock we don't transmit
-+ * the frame directly but add it to the pending queue instead.
-  */
- int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn,
- 		       __le16 target_rcode, const u8 *ra,
-@@ -263,7 +267,8 @@ int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn,
- 	pos += 4;
- 	memcpy(pos, &target_rcode, 2);
+diff --git a/drivers/staging/brcm80211/brcmutil/utils.c b/drivers/staging/brcm80211/brcmutil/utils.c
+index 4b08157..7b4d658 100644
+--- a/drivers/staging/brcm80211/brcmutil/utils.c
++++ b/drivers/staging/brcm80211/brcmutil/utils.c
+@@ -489,8 +489,8 @@ static const u8 crc8_table[256] = {
+ };
  
--	ieee80211_tx_skb(sdata, skb);
-+	/* see note in function header */
-+	ieee80211_add_pending_skb(local, skb);
- 	return 0;
+ u8 brcmu_crc8(u8 *pdata,	/* pointer to array of data to process */
+-			 uint nbytes,	/* number of input data bytes to process */
+-			 u8 crc	/* either CRC8_INIT_VALUE or previous return value */
++	      uint nbytes,	/* number of input data bytes to process */
++	      u8 crc	/* either CRC8_INIT_VALUE or previous return value */
+ 	) {
+ 	/* loop over the buffer data */
+ 	while (nbytes-- > 0)
+@@ -586,7 +586,10 @@ brcmu_format_flags(const struct brcmu_bit_desc *bd, u32 flags, char *buf,
  }
+ EXPORT_SYMBOL(brcmu_format_flags);
+ 
+-/* print bytes formatted as hex to a string. return the resulting string length */
++/*
++ * print bytes formatted as hex to a string. return the resulting
++ * string length
++ */
+ int brcmu_format_hex(char *str, const void *bytes, int len)
+ {
+ 	int i;
+diff --git a/drivers/staging/brcm80211/brcmutil/wifi.c b/drivers/staging/brcm80211/brcmutil/wifi.c
+index 1bce888..636515c 100644
+--- a/drivers/staging/brcm80211/brcmutil/wifi.c
++++ b/drivers/staging/brcm80211/brcmutil/wifi.c
+@@ -43,9 +43,9 @@ bool brcmu_chspec_malformed(u16 chanspec)
+ EXPORT_SYMBOL(brcmu_chspec_malformed);
+ 
+ /*
+- * This function returns the channel number that control traffic is being sent on, for legacy
+- * channels this is just the channel number, for 40MHZ channels it is the upper or lowre 20MHZ
+- * sideband depending on the chanspec selected
++ * This function returns the channel number that control traffic is being sent
++ * on, for legacy channels this is just the channel number, for 40MHZ channels
++ * it is the upper or lower 20MHZ sideband depending on the chanspec selected.
+  */
+ u8 brcmu_chspec_ctlchan(u16 chspec)
+ {
+@@ -55,15 +55,22 @@ u8 brcmu_chspec_ctlchan(u16 chspec)
+ 	if (CHSPEC_CTL_SB(chspec) == WL_CHANSPEC_CTL_SB_NONE) {
+ 		return CHSPEC_CHANNEL(chspec);
+ 	} else {
+-		/* we only support 40MHZ with sidebands */
+-		/* chanspec channel holds the centre frequency, use that and the
+-		 * side band information to reconstruct the control channel number
++		/*
++		 * we only support 40MHZ with sidebands. chanspec channel holds
++		 * the centre frequency, use that and the side band information
++		 * to reconstruct the control channel number
+ 		 */
+ 		if (CHSPEC_CTL_SB(chspec) == WL_CHANSPEC_CTL_SB_UPPER)
+-			/* control chan is the upper 20 MHZ SB of the 40MHZ channel */
++			/*
++			 * control chan is the upper 20 MHZ SB of the
++			 * 40MHZ channel
++			 */
+ 			ctl_chan = UPPER_20_SB(CHSPEC_CHANNEL(chspec));
+ 		else
+-			/* control chan is the lower 20 MHZ SB of the 40MHZ channel */
++			/*
++			 * control chan is the lower 20 MHZ SB of the
++			 * 40MHZ channel
++			 */
+ 			ctl_chan = LOWER_20_SB(CHSPEC_CHANNEL(chspec));
+ 	}
  
 -- 
-1.7.6
+1.7.4.1
+
 
