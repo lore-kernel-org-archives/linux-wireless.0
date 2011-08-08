@@ -1,40 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4713 "EHLO mx1.redhat.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1852 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753171Ab1HYPJB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 11:09:01 -0400
-Date: Thu, 25 Aug 2011 17:07:24 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] cfg80211: document wiphy->registered
-Message-ID: <20110825150723.GA32259@redhat.com> (sfid-20110825_173712_245474_EAEB9290)
-References: <1313150459-13234-1-git-send-email-sgruszka@redhat.com>
- <1314248784.5054.44.camel@jlt3.sipsolutions.net>
+	id S1753381Ab1HHN7i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:38 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 73/82] staging: brcm80211: cleanup to get rid of 'over
+ 80 character' line
+Date: Mon, 8 Aug 2011 15:58:57 +0200
+Message-ID: <1312811946-16713-74-git-send-email-arend@broadcom.com> (sfid-20110808_160028_563746_6ED09919)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1314248784.5054.44.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- include/net/cfg80211.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+One checkpatch warning was remaining in the brcmsmac driver. The
+code has been restructured to get rid of this last checkpatch
+warning.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 791dd10..f226552 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1784,6 +1784,7 @@ struct wiphy_wowlan_support {
-  * @debugfsdir: debugfs directory used for this wiphy, will be renamed
-  *	automatically on wiphy renames
-  * @dev: (virtual) struct device for this wiphy
-+ * @registered: helps synchronize suspend/resume with wiphy unregister
-  * @wext: wireless extension handlers
-  * @priv: driver private data (sized according to wiphy_new() parameter)
-  * @interface_modes: bitmask of interfaces types valid for this wiphy,
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/main.c |   11 +++++------
+ 1 files changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index f5f914f..2a139aa 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -6253,14 +6253,13 @@ _brcms_c_ioctl(struct brcms_c_info *wlc, int cmd, void *arg, int len,
+ 
+ 			/* merge rateset coming in with the current mcsset */
+ 			if (N_ENAB(wlc->pub)) {
++				struct brcms_bss_info *mcsset_bss;
+ 				if (bsscfg->associated)
+-					memcpy(rs.mcs,
+-					       &current_bss->rateset.mcs[0],
+-					       MCSSET_LEN);
++					mcsset_bss = current_bss;
+ 				else
+-					memcpy(rs.mcs,
+-					       &wlc->default_bss->rateset.mcs[0],
+-					       MCSSET_LEN);
++					mcsset_bss = wlc->default_bss;
++				memcpy(rs.mcs, &mcsset_bss->rateset.mcs[0],
++				       MCSSET_LEN);
+ 			}
+ 
+ 			bcmerror = brcms_c_set_rateset(wlc, &rs);
 -- 
-1.7.1
+1.7.4.1
+
 
