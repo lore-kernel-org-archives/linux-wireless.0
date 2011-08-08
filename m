@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47943 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755842Ab1H3SAY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 14:00:24 -0400
-Date: Tue, 30 Aug 2011 13:50:55 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Peter =?iso-8859-1?Q?H=FCwe?= <PeterHuewe@gmx.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] net/mac80211/debugfs: Convert to kstrou8_from_user
-Message-ID: <20110830175054.GB2660@tuxdriver.com> (sfid-20110830_200049_838624_5BE8F1F9)
-References: <1307478974-32727-1-git-send-email-peterhuewe@gmx.de>
- <201108282152.32180.PeterHuewe@gmx.de>
+Received: from mms3.broadcom.com ([216.31.210.19]:3290 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752485Ab1HHQ2t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 12:28:49 -0400
+Message-ID: <4E400EB6.5000508@broadcom.com> (sfid-20110808_182852_360017_48158171)
+Date: Mon, 8 Aug 2011 18:28:38 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <201108282152.32180.PeterHuewe@gmx.de>
+To: "gregkh@suse.de" <gregkh@suse.de>
+cc: "Arend van Spriel" <arend@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCHv2 01/82] staging: brcm80211: fix compile error on
+ non-x86 archs since 3.0 kernel
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+ <1312811946-16713-2-git-send-email-arend@broadcom.com>
+In-Reply-To: <1312811946-16713-2-git-send-email-arend@broadcom.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 28, 2011 at 09:52:31PM +0200, Peter Hüwe wrote:
-> Am Dienstag 07 Juni 2011, 22:36:14 schrieb Peter Huewe:
-> > This patch replaces the code for getting an number from a
-> > userspace buffer by a simple call to kstrou8_from_user.
-> > This makes it easier to read and less error prone.
-> > 
-> > Since the old buffer was only 10 bytes long and the value is masked by a
-> > nibble-mask anyway, we don't need to use kstrtoul but rather kstrtou8.
-> > 
-> > Kernel Version: v3.0-rc2
-> > 
-> > Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
-> 
-> Any updates on this one?
-> Still applies to the latest linus' tree
+On 08/08/2011 03:57 PM, Arend van Spriel wrote:
+> From: Arend Van Spriel<arend@broadcom.com>
+>
+> Since the arrival of kernel version 3.0 in the staging tree it
+> turns out compile error occurs for sparc64, powerpc, and arm
+> platforms. This patch fixes that issue.
+>
 
-I merged it to wireless-next yesterday.
+Hi Greg,
 
-Thanks for the reminder!
+Actually, the error was also on MIPS which is enabled in Kconfig. Can 
+this one also go to 3.1 ie. Linus' tree?
 
-John
+Gr. AvS
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
+
