@@ -1,542 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:60424 "EHLO mga02.intel.com"
+Received: from nbd.name ([46.4.11.11]:59422 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751492Ab1HMSS3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 14:18:29 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 04/60] iwlagn: introduce iwl-shared.h
-Date: Sat, 13 Aug 2011 10:37:40 -0700
-Message-Id: <1313257116-2697-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_204257_348152_975E3722)
-In-Reply-To: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1752485Ab1HHHVH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 03:21:07 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: zajec5@gmail.com, Larry.Finger@lwfinger.net,
+	b43-dev@lists.infradead.org
+Subject: [RFC] b43: reload phy and bss settings after core restarts
+Date: Mon,  8 Aug 2011 09:20:51 +0200
+Message-Id: <1312788051-76406-1-git-send-email-nbd@openwrt.org> (sfid-20110808_092113_415573_D8A295CD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+b43_op_config and b43_op_bss_info_changed apply many settings by directly
+writing to hardware registers. These settings are lost as soon as the core
+is restarted and the initvals are reloaded. This was discovered because
+restarting hostapd led to the beacon interval getting set to ~33s (see
+https://dev.openwrt.org/ticket/8033 for more information).
 
-It will hold declaration of functions and forward declaration of struct that
-are used by several layers.
-This will allow modules not to include iwl_priv. iwl_bus and iwl_trans are
-still visible to all.
-
-All the layers share the module parameters, move the struct to iwl-shared.h.
-Also add all module parameters to iwl_mod_params instead of having them as
-global static. This includes
-
-* debug_level
-* ant_coupling
-* bt_ch_announce
-* wanted_ucode_alternative
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-1000.c     |    1 +
- drivers/net/wireless/iwlwifi/iwl-2000.c     |    1 +
- drivers/net/wireless/iwlwifi/iwl-5000.c     |    1 +
- drivers/net/wireless/iwlwifi/iwl-6000.c     |    1 +
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    3 +
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    1 +
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   32 +++++----
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 -
- drivers/net/wireless/iwlwifi/iwl-core.c     |    3 +-
- drivers/net/wireless/iwlwifi/iwl-core.h     |   24 -------
- drivers/net/wireless/iwlwifi/iwl-debug.h    |    1 -
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    9 ++-
- drivers/net/wireless/iwlwifi/iwl-led.c      |    1 +
- drivers/net/wireless/iwlwifi/iwl-pci.c      |    5 +-
- drivers/net/wireless/iwlwifi/iwl-power.c    |    1 +
- drivers/net/wireless/iwlwifi/iwl-rx.c       |    1 +
- drivers/net/wireless/iwlwifi/iwl-shared.h   |  100 +++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-trans.c    |    1 +
- 18 files changed, 140 insertions(+), 48 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-shared.h
+ drivers/net/wireless/b43/main.c |   42 ++++++++++++++++++++++++++++++++++----
+ 1 files changed, 37 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 683f5bf..0ed7252 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -44,6 +44,7 @@
- #include "iwl-agn.h"
- #include "iwl-helpers.h"
- #include "iwl-agn-hw.h"
-+#include "iwl-shared.h"
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 85d6a1f..3c00c44 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -320,6 +320,10 @@ static void b43_wireless_core_exit(struct b43_wldev *dev);
+ static int b43_wireless_core_init(struct b43_wldev *dev);
+ static struct b43_wldev * b43_wireless_core_stop(struct b43_wldev *dev);
+ static int b43_wireless_core_start(struct b43_wldev *dev);
++static void b43_op_bss_info_changed(struct ieee80211_hw *hw,
++				    struct ieee80211_vif *vif,
++				    struct ieee80211_bss_conf *conf,
++				    u32 changed);
  
- /* Highest firmware API version supported */
- #define IWL1000_UCODE_API_MAX 6
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index 75ae860..3c1b8a5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -45,6 +45,7 @@
- #include "iwl-helpers.h"
- #include "iwl-agn-hw.h"
- #include "iwl-6000-hw.h"
-+#include "iwl-shared.h"
- 
- /* Highest firmware API version supported */
- #define IWL2030_UCODE_API_MAX 6
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 58481c1..01f50d3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -47,6 +47,7 @@
- #include "iwl-agn-hw.h"
- #include "iwl-5000-hw.h"
- #include "iwl-trans.h"
-+#include "iwl-shared.h"
- 
- /* Highest firmware API version supported */
- #define IWL5000_UCODE_API_MAX 5
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index d1333b8..439cec4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -46,6 +46,7 @@
- #include "iwl-agn-hw.h"
- #include "iwl-6000-hw.h"
- #include "iwl-trans.h"
-+#include "iwl-shared.h"
- 
- /* Highest firmware API version supported */
- #define IWL6000_UCODE_API_MAX 4
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 4edb6cf..dd95f47 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -40,6 +40,7 @@
- #include "iwl-agn.h"
- #include "iwl-sta.h"
- #include "iwl-trans.h"
-+#include "iwl-shared.h"
- 
- static inline u32 iwlagn_get_scd_ssn(struct iwlagn_tx_resp *tx_resp)
+ static int b43_ratelimit(struct b43_wl *wl)
  {
-@@ -609,6 +610,8 @@ struct iwl_mod_params iwlagn_mod_params = {
- 	.bt_coex_active = true,
- 	.no_sleep_autoadjust = true,
- 	.power_level = IWL_POWER_INDEX_1,
-+	.bt_ch_announce = 1,
-+	.wanted_ucode_alternative = 1,
- 	/* the rest are 0 by default */
- };
+@@ -3778,14 +3782,24 @@ static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 	int antenna;
+ 	int err = 0;
++	bool reload_bss = false;
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 7b13ea2..ea13489 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -31,6 +31,7 @@
- #include "iwl-agn-calib.h"
- #include "iwl-helpers.h"
- #include "iwl-trans.h"
-+#include "iwl-shared.h"
+ 	mutex_lock(&wl->mutex);
  
- static int iwlagn_disable_bss(struct iwl_priv *priv,
- 			      struct iwl_rxon_context *ctx,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 9fd98cb..0e4ef47 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -52,6 +52,7 @@
- #include "iwl-sta.h"
- #include "iwl-agn-calib.h"
- #include "iwl-agn.h"
-+#include "iwl-shared.h"
- #include "iwl-bus.h"
- #include "iwl-trans.h"
++	dev = wl->current_dev;
++
+ 	/* Switch the band (if necessary). This might change the active core. */
+ 	err = b43_switch_band(wl, conf->channel);
+ 	if (err)
+ 		goto out_unlock_mutex;
+-	dev = wl->current_dev;
++
++	/* Need to reload all settings if the core changed */
++	if (dev != wl->current_dev) {
++		dev = wl->current_dev;
++		changed = ~0;
++		reload_bss = true;
++	}
++
+ 	phy = &dev->phy;
  
-@@ -80,9 +81,6 @@ MODULE_VERSION(DRV_VERSION);
- MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
- MODULE_LICENSE("GPL");
+ 	if (conf_is_ht(conf))
+@@ -3846,6 +3860,9 @@ out_mac_enable:
+ out_unlock_mutex:
+ 	mutex_unlock(&wl->mutex);
  
--static int iwlagn_ant_coupling;
--static bool iwlagn_bt_ch_announce = 1;
--
- void iwl_update_chain_flags(struct iwl_priv *priv)
- {
- 	struct iwl_rxon_context *ctx;
-@@ -819,8 +817,6 @@ static int iwlagn_load_legacy_firmware(struct iwl_priv *priv,
- 	return 0;
++	if (wl->vif && reload_bss)
++		b43_op_bss_info_changed(hw, wl->vif, &wl->vif->bss_conf, ~0);
++
+ 	return err;
  }
  
--static int iwlagn_wanted_ucode_alternative = 1;
--
- static int iwlagn_load_firmware(struct iwl_priv *priv,
- 				const struct firmware *ucode_raw,
- 				struct iwlagn_firmware_pieces *pieces,
-@@ -830,7 +826,8 @@ static int iwlagn_load_firmware(struct iwl_priv *priv,
- 	struct iwl_ucode_tlv *tlv;
- 	size_t len = ucode_raw->size;
- 	const u8 *data;
--	int wanted_alternative = iwlagn_wanted_ucode_alternative, tmp;
-+	int wanted_alternative = iwlagn_mod_params.wanted_ucode_alternative;
-+	int tmp;
- 	u64 alternatives;
- 	u32 tlv_len;
- 	enum iwl_ucode_tlv_type tlv_type;
-@@ -1620,7 +1617,7 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
- 	}
+@@ -3934,7 +3951,8 @@ static void b43_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changed & BSS_CHANGED_BEACON_INT &&
+ 	    (b43_is_mode(wl, NL80211_IFTYPE_AP) ||
+ 	     b43_is_mode(wl, NL80211_IFTYPE_MESH_POINT) ||
+-	     b43_is_mode(wl, NL80211_IFTYPE_ADHOC)))
++	     b43_is_mode(wl, NL80211_IFTYPE_ADHOC)) &&
++	    conf->beacon_int)
+ 		b43_set_beacon_int(dev, conf->beacon_int);
  
- 	/* enable/disable bt channel inhibition */
--	priv->bt_ch_announce = iwlagn_bt_ch_announce;
-+	priv->bt_ch_announce = iwlagn_mod_params.bt_ch_announce;
+ 	if (changed & BSS_CHANGED_BASIC_RATES)
+@@ -4702,6 +4720,9 @@ static int b43_op_add_interface(struct ieee80211_hw *hw,
+  out_mutex_unlock:
+ 	mutex_unlock(&wl->mutex);
  
- #ifdef CONFIG_IWLWIFI_DEBUG
- 	if (!(iwl_get_debug_level(priv) & IWL_DL_FW_ERRORS) && !full_log)
-@@ -3681,11 +3678,12 @@ int iwl_probe(struct iwl_bus *bus, struct iwl_cfg *cfg)
- 
- 	/* is antenna coupling more than 35dB ? */
- 	priv->bt_ant_couple_ok =
--		(iwlagn_ant_coupling > IWL_BT_ANTENNA_COUPLING_THRESHOLD) ?
--		true : false;
-+		(iwlagn_mod_params.ant_coupling >
-+			IWL_BT_ANTENNA_COUPLING_THRESHOLD) ?
-+			true : false;
- 
- 	/* enable/disable bt channel inhibition */
--	priv->bt_ch_announce = iwlagn_bt_ch_announce;
-+	priv->bt_ch_announce = iwlagn_mod_params.bt_ch_announce;
- 	IWL_DEBUG_INFO(priv, "BT channel inhibition is %s\n",
- 		       (priv->bt_ch_announce) ? "On" : "Off");
- 
-@@ -3926,7 +3924,8 @@ module_exit(iwl_exit);
- module_init(iwl_init);
- 
- #ifdef CONFIG_IWLWIFI_DEBUG
--module_param_named(debug, iwl_debug_level, uint, S_IRUGO | S_IWUSR);
-+module_param_named(debug, iwlagn_mod_params.debug_level, uint,
-+		   S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(debug, "debug output mask");
- #endif
- 
-@@ -3942,16 +3941,19 @@ MODULE_PARM_DESC(amsdu_size_8K, "enable 8K amsdu size");
- module_param_named(fw_restart, iwlagn_mod_params.restart_fw, int, S_IRUGO);
- MODULE_PARM_DESC(fw_restart, "restart firmware in case of error");
- 
--module_param_named(ucode_alternative, iwlagn_wanted_ucode_alternative, int,
--		   S_IRUGO);
-+module_param_named(ucode_alternative,
-+		   iwlagn_mod_params.wanted_ucode_alternative,
-+		   int, S_IRUGO);
- MODULE_PARM_DESC(ucode_alternative,
- 		 "specify ucode alternative to use from ucode file");
- 
--module_param_named(antenna_coupling, iwlagn_ant_coupling, int, S_IRUGO);
-+module_param_named(antenna_coupling, iwlagn_mod_params.ant_coupling,
-+		   int, S_IRUGO);
- MODULE_PARM_DESC(antenna_coupling,
- 		 "specify antenna coupling in dB (defualt: 0 dB)");
- 
--module_param_named(bt_ch_inhibition, iwlagn_bt_ch_announce, bool, S_IRUGO);
-+module_param_named(bt_ch_inhibition, iwlagn_mod_params.bt_ch_announce,
-+		   bool, S_IRUGO);
- MODULE_PARM_DESC(bt_ch_inhibition,
- 		 "Disable BT channel inhibition (default: enable)");
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index a2f2f28..ea2a5fe 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -108,8 +108,6 @@ extern struct iwl_cfg iwl105_bgn_cfg;
- extern struct iwl_cfg iwl135_bg_cfg;
- extern struct iwl_cfg iwl135_bgn_cfg;
- 
--extern struct iwl_mod_params iwlagn_mod_params;
--
- extern struct ieee80211_ops iwlagn_hw_ops;
- 
- int iwl_reset_ict(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 0d8fd5b..6c11f0d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -42,11 +42,10 @@
- #include "iwl-sta.h"
- #include "iwl-agn.h"
- #include "iwl-helpers.h"
-+#include "iwl-shared.h"
- #include "iwl-agn.h"
- #include "iwl-trans.h"
- 
--u32 iwl_debug_level;
--
- const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
- 
- #define MAX_BIT_RATE_40_MHZ 150 /* Mbps */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 01f9c09..e63de03 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -101,23 +101,6 @@ struct iwl_lib_ops {
- 	void (*temperature)(struct iwl_priv *priv);
- };
- 
--struct iwl_mod_params {
--	int sw_crypto;		/* def: 0 = using hardware encryption */
--	int num_of_queues;	/* def: HW dependent */
--	int disable_11n;	/* def: 0 = 11n capabilities enabled */
--	int amsdu_size_8K;	/* def: 1 = enable 8K amsdu size */
--	int antenna;  		/* def: 0 = both antennas (use diversity) */
--	int restart_fw;		/* def: 1 = restart firmware */
--	bool plcp_check;	/* def: true = enable plcp health check */
--	bool ack_check;		/* def: false = disable ack health check */
--	bool wd_disable;	/* def: false = enable stuck queue check */
--	bool bt_coex_active;	/* def: true = enable bt coex */
--	int led_mode;		/* def: 0 = system default */
--	bool no_sleep_autoadjust; /* def: true = disable autoadjust */
--	bool power_save;	/* def: false = disable power save */
--	int power_level;	/* def: 1 = power level */
--};
--
- /*
-  * @max_ll_items: max number of OTP blocks
-  * @shadow_ram_support: shadow support for OTP memory
-@@ -387,13 +370,6 @@ u32 iwl_usecs_to_beacons(struct iwl_priv *priv, u32 usec, u32 beacon_interval);
- __le32 iwl_add_beacon_time(struct iwl_priv *priv, u32 base,
- 			   u32 addon, u32 beacon_interval);
- 
--#ifdef CONFIG_PM
--int iwl_suspend(struct iwl_priv *priv);
--int iwl_resume(struct iwl_priv *priv);
--#endif /* !CONFIG_PM */
--
--int iwl_probe(struct iwl_bus *bus, struct iwl_cfg *cfg);
--void __devexit iwl_remove(struct iwl_priv * priv);
- 
- /*****************************************************
- *  Error Handling Debugging
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index f9a407e..0869eaa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -30,7 +30,6 @@
- #define __iwl_debug_h__
- 
- struct iwl_priv;
--extern u32 iwl_debug_level;
- 
- #define IWL_ERR(p, f, a...) dev_err(p->bus->dev, f, ## a)
- #define IWL_WARN(p, f, a...) dev_warn(p->bus->dev, f, ## a)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 9d6d791..b2e5ca7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -49,6 +49,7 @@
- #include "iwl-agn-tt.h"
- #include "iwl-bus.h"
- #include "iwl-trans.h"
-+#include "iwl-shared.h"
- 
- #define DRV_NAME        "iwlagn"
- 
-@@ -1515,7 +1516,7 @@ struct iwl_priv {
- #ifdef CONFIG_IWLWIFI_DEBUG
- 	/* debugging info */
- 	u32 debug_level; /* per device debugging will override global
--			    iwl_debug_level if set */
-+			    iwlagn_mod_params.debug_level if set */
- #endif /* CONFIG_IWLWIFI_DEBUG */
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	/* debugfs */
-@@ -1564,6 +1565,8 @@ static inline void iwl_txq_ctx_deactivate(struct iwl_priv *priv, int txq_id)
- 	clear_bit(txq_id, &priv->txq_ctx_active_msk);
++	if (err == 0)
++		b43_op_bss_info_changed(hw, vif, &vif->bss_conf, ~0);
++
+ 	return err;
  }
  
-+extern struct iwl_mod_params iwlagn_mod_params;
+@@ -4772,6 +4793,9 @@ static int b43_op_start(struct ieee80211_hw *hw)
+  out_mutex_unlock:
+ 	mutex_unlock(&wl->mutex);
+ 
++	/* reload configuration */
++	b43_op_config(hw, ~0);
 +
- #ifdef CONFIG_IWLWIFI_DEBUG
- /*
-  * iwl_get_debug_level: Return active debug level for device
-@@ -1577,12 +1580,12 @@ static inline u32 iwl_get_debug_level(struct iwl_priv *priv)
- 	if (priv->debug_level)
- 		return priv->debug_level;
- 	else
--		return iwl_debug_level;
-+		return iwlagn_mod_params.debug_level;
+ 	return err;
  }
- #else
- static inline u32 iwl_get_debug_level(struct iwl_priv *priv)
- {
--	return iwl_debug_level;
-+	return iwlagn_mod_params.debug_level;
+ 
+@@ -4928,10 +4952,18 @@ out:
+ 	if (err)
+ 		wl->current_dev = NULL; /* Failed to init the dev. */
+ 	mutex_unlock(&wl->mutex);
+-	if (err)
++
++	if (err) {
+ 		b43err(wl, "Controller restart FAILED\n");
+-	else
+-		b43info(wl, "Controller restarted\n");
++		return;
++	}
++
++	/* reload configuration */
++	b43_op_config(wl->hw, ~0);
++	if (wl->vif)
++		b43_op_bss_info_changed(wl->hw, wl->vif, &wl->vif->bss_conf, ~0);
++
++	b43info(wl, "Controller restarted\n");
  }
- #endif
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
-index a67ae56..8623c98 100644
---- a/drivers/net/wireless/iwlwifi/iwl-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-led.c
-@@ -41,6 +41,7 @@
- #include "iwl-agn.h"
- #include "iwl-io.h"
- #include "iwl-trans.h"
-+#include "iwl-shared.h"
- 
- /* Throughput		OFF time(ms)	ON time (ms)
-  *	>300			25		25
-diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
-index fb7e436..be8102a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-pci.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
-@@ -64,8 +64,11 @@
- #include <linux/pci-aspm.h>
- 
- #include "iwl-bus.h"
-+#include "iwl-shared.h"
- #include "iwl-agn.h"
--#include "iwl-core.h"
-+
-+/* TODO: iwl_set_bit and friends should be implemented in bus layer
-+ * this would allow us not to include iwl-io.h here */
- #include "iwl-io.h"
- 
- /* PCI registers */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
-index 3ec619c..40958e1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-power.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-power.c
-@@ -43,6 +43,7 @@
- #include "iwl-debug.h"
- #include "iwl-power.h"
- #include "iwl-trans.h"
-+#include "iwl-shared.h"
- 
- /*
-  * Setting power level allows the card to go to sleep when not busy.
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 8e31400..8b3a089 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -40,6 +40,7 @@
- #include "iwl-helpers.h"
- #include "iwl-agn-calib.h"
- #include "iwl-agn.h"
-+#include "iwl-shared.h"
- 
- 
- /******************************************************************************
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-new file mode 100644
-index 0000000..5d48d05
---- /dev/null
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -0,0 +1,100 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2007 - 2011 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-+ * USA
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called LICENSE.GPL.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2005 - 2011 Intel Corporation. All rights reserved.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ *****************************************************************************/
-+#ifndef __iwl_shared_h__
-+#define __iwl_shared_h__
-+
-+struct iwl_cfg;
-+struct iwl_priv;
-+
-+extern struct iwl_mod_params iwlagn_mod_params;
-+
-+struct iwl_mod_params {
-+	int sw_crypto;		/* def: 0 = using hardware encryption */
-+	int num_of_queues;	/* def: HW dependent */
-+	int disable_11n;	/* def: 0 = 11n capabilities enabled */
-+	int amsdu_size_8K;	/* def: 1 = enable 8K amsdu size */
-+	int antenna;		/* def: 0 = both antennas (use diversity) */
-+	int restart_fw;		/* def: 1 = restart firmware */
-+	bool plcp_check;	/* def: true = enable plcp health check */
-+	bool ack_check;		/* def: false = disable ack health check */
-+	bool wd_disable;	/* def: false = enable stuck queue check */
-+	bool bt_coex_active;	/* def: true = enable bt coex */
-+	int led_mode;		/* def: 0 = system default */
-+	bool no_sleep_autoadjust; /* def: true = disable autoadjust */
-+	bool power_save;	/* def: false = disable power save */
-+	int power_level;	/* def: 1 = power level */
-+	u32 debug_level;	/* levels are IWL_DL_* */
-+	int ant_coupling;
-+	bool bt_ch_announce;
-+	int wanted_ucode_alternative;
-+};
-+
-+#ifdef CONFIG_PM
-+int iwl_suspend(struct iwl_priv *priv);
-+int iwl_resume(struct iwl_priv *priv);
-+#endif /* !CONFIG_PM */
-+
-+int iwl_probe(struct iwl_bus *bus, struct iwl_cfg *cfg);
-+void __devexit iwl_remove(struct iwl_priv * priv);
-+
-+#endif /* #__iwl_shared_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index 3001bfb..e4a70fe 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -68,6 +68,7 @@
- /*TODO remove uneeded includes when the transport layer tx_free will be here */
- #include "iwl-agn.h"
- #include "iwl-core.h"
-+#include "iwl-shared.h"
- 
- static int iwl_trans_rx_alloc(struct iwl_priv *priv)
- {
+ static int b43_setup_bands(struct b43_wldev *dev,
 -- 
-1.7.0.4
+1.7.3.2
 
