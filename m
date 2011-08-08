@@ -1,190 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38048 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752016Ab1HMSSw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 14:18:52 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 58/60] iwlagn: move check_stuck_queue to transport layer
-Date: Sat, 13 Aug 2011 10:38:34 -0700
-Message-Id: <1313257116-2697-59-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_201927_701388_092B267D)
-In-Reply-To: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:46819 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752945Ab1HHO3u convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 10:29:50 -0400
+Received: by qwk3 with SMTP id 3so765105qwk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 07:29:49 -0700 (PDT)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+Date: Mon, 8 Aug 2011 16:29:49 +0200
+Message-ID: <CA+icZUUBokLgtn3K3uG7qcNLzy4pfdT4fGYWPtoOy_MQVy8VuA@mail.gmail.com> (sfid-20110808_162953_434712_E00E4E23)
+Subject: Re: [PATCHv2 00/82] staging: brcm80211: resubmit previously posted patches
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Mon, Aug 8, 2011 at 3:57 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> Before and during the 3.1 merge window three patch series were posted. Feedback
+> from Dan Carpenter learned that some of the patches did not apply after 3.1
+> merges. Therefor the series are resubmitted here with some changes as described
+> below.
+>
+> [PATCHv2 01/82] fixes a compilation error due to missing <linux/io.h> include
+> since 3.1-rc1.
+>
+> Series "[PATCH 00/35] staging: brcm80211: code cleanup and bugfix":
+>  [PATCH 17/35] has been merged with later patch to remove checkpatch warning.
+>  [PATCH 33/35] was removed as it caused regression for brcmfmac driver.
+>
+> Series "[PATCH 00/19] checkpatch changes and brcmfmac cleanup"
+>  Resubmitted as before.
+>
+> Series "[PATCH 00/29] staging: brcm80211: cleanup checkpatch warnings"
+>  [PATCH 09/29] has been rephrased to apropriately describe what changed.
+>  [PATCH 13/29] was merged with [PATCH 17/35] from the first series.
+>
+> [PATCHv2 80/82] fixes a compiler warning for ARM platform since 3.1-rc1.
+>
+> Arend Van Spriel (1):
+>  staging: brcm80211: fix compile error on non-x86 archs since 3.0
+>    kernel
+>
 
-This one is really transport related.
+Personally, I have no broadcom wifi-card.
 
-==== moves Stanislaw's code to BSD area ====
+First of all, it won't hurt to add some URLs (for example <marc.info>)
+for your previous postings, so interested people can easily follow.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c    |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-core.c   |   26 +++-----------------------
- drivers/net/wireless/iwlwifi/iwl-shared.h |    3 +++
- drivers/net/wireless/iwlwifi/iwl-trans.c  |   28 ++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-trans.h  |    6 ++++++
- 5 files changed, 42 insertions(+), 25 deletions(-)
+Just some suggestions for subject-prefix:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 3f39c5f..5119e45 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3255,8 +3255,8 @@ static int iwl_set_hw_params(struct iwl_priv *priv)
- 		priv->cfg->base_params->num_of_ampdu_queues;
- 	hw_params(priv).shadow_reg_enable =
- 		priv->cfg->base_params->shadow_reg_enable;
--	hw_params(priv).sku =
--		priv->cfg->sku;
-+	hw_params(priv).sku = priv->cfg->sku;
-+	hw_params(priv).wd_timeout = priv->cfg->base_params->wd_timeout;
- 
- 	/* Device-specific setup */
- 	return priv->cfg->lib->set_hw_params(priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index d7fde63..7aef3b6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1724,32 +1724,12 @@ int iwl_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	return err;
- }
- 
--/*
-- * On every watchdog tick we check (latest) time stamp. If it does not
-- * change during timeout period and queue is not empty we reset firmware.
-- */
--static int iwl_check_stuck_queue(struct iwl_priv *priv, int cnt)
-+static inline int iwl_check_stuck_queue(struct iwl_priv *priv, int txq)
- {
--	struct iwl_tx_queue *txq = &priv->txq[cnt];
--	struct iwl_queue *q = &txq->q;
--	unsigned long timeout;
--	int ret;
--
--	if (q->read_ptr == q->write_ptr) {
--		txq->time_stamp = jiffies;
--		return 0;
--	}
--
--	timeout = txq->time_stamp +
--		  msecs_to_jiffies(priv->cfg->base_params->wd_timeout);
--
--	if (time_after(jiffies, timeout)) {
--		IWL_ERR(priv, "Queue %d stuck for %u ms.\n",
--				q->id, priv->cfg->base_params->wd_timeout);
--		ret = iwl_force_reset(priv, IWL_FW_RESET, false);
-+	if (iwl_trans_check_stuck_queue(trans(priv), txq)) {
-+		int ret = iwl_force_reset(priv, IWL_FW_RESET, false);
- 		return (ret == -EAGAIN) ? 0 : 1;
- 	}
--
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 0bd6f7d..17a02a7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -147,6 +147,7 @@ struct iwl_mod_params {
-  * @sw_crypto: 0 for hw, 1 for sw
-  * @max_xxx_size: for ucode uses
-  * @ct_kill_threshold: temperature threshold
-+ * @wd_timeout: TX queues watchdog timeout
-  * @calib_init_cfg: setup initial calibrations for the hw
-  * @calib_rt_cfg: setup runtime calibrations for the hw
-  * @struct iwl_sensitivity_ranges: range of sensitivity values
-@@ -169,6 +170,8 @@ struct iwl_hw_params {
- 	u32 ct_kill_threshold; /* value in hw-dependent units */
- 	u32 ct_kill_exit_threshold; /* value in hw-dependent units */
- 				    /* for 1000, 6000 series and up */
-+	unsigned int wd_timeout;
-+
- 	u32 calib_init_cfg;
- 	u32 calib_rt_cfg;
- 	const struct iwl_sensitivity_ranges *sens;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index 7b868c7..6461704 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -1475,6 +1475,33 @@ static int iwl_trans_pcie_wait_tx_queue_empty(struct iwl_trans *trans)
- 	return ret;
- }
- 
-+/*
-+ * On every watchdog tick we check (latest) time stamp. If it does not
-+ * change during timeout period and queue is not empty we reset firmware.
-+ */
-+static int iwl_trans_pcie_check_stuck_queue(struct iwl_trans *trans, int cnt)
-+{
-+	struct iwl_tx_queue *txq = &priv(trans)->txq[cnt];
-+	struct iwl_queue *q = &txq->q;
-+	unsigned long timeout;
-+
-+	if (q->read_ptr == q->write_ptr) {
-+		txq->time_stamp = jiffies;
-+		return 0;
-+	}
-+
-+	timeout = txq->time_stamp +
-+		  msecs_to_jiffies(hw_params(trans).wd_timeout);
-+
-+	if (time_after(jiffies, timeout)) {
-+		IWL_ERR(trans, "Queue %d stuck for %u ms.\n", q->id,
-+			hw_params(trans).wd_timeout);
-+		return 1;
-+	}
-+
-+	return 0;
-+}
-+
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- /* create and remove of files */
- #define DEBUGFS_ADD_FILE(name, parent, mode) do {			\
-@@ -2055,6 +2082,7 @@ const struct iwl_trans_ops trans_ops_pcie = {
- 	.dbgfs_register = iwl_trans_pcie_dbgfs_register,
- 
- 	.wait_tx_queue_empty = iwl_trans_pcie_wait_tx_queue_empty,
-+	.check_stuck_queue = iwl_trans_pcie_check_stuck_queue,
- 
- 	.suspend = iwl_trans_pcie_suspend,
- 	.resume = iwl_trans_pcie_resume,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 45d6dff..6edf2e0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -101,6 +101,7 @@ struct iwl_device_cmd;
-  * @kick_nic: remove the RESET from the embedded CPU and let it run
-  * @free: release all the ressource for the transport layer itself such as
-  *        irq, tasklet etc...
-+ * @check_stuck_queue: check if a specific queue is stuck
-  * @wait_tx_queue_empty: wait until all tx queues are empty
-  * @dbgfs_register: add the dbgfs files under this directory. Files will be
-  *	automatically deleted.
-@@ -143,6 +144,7 @@ struct iwl_trans_ops {
- 	void (*free)(struct iwl_trans *trans);
- 
- 	int (*dbgfs_register)(struct iwl_trans *trans, struct dentry* dir);
-+	int (*check_stuck_queue)(struct iwl_trans *trans, int q);
- 	int (*wait_tx_queue_empty)(struct iwl_trans *trans);
- 
- 	int (*suspend)(struct iwl_trans *trans);
-@@ -259,6 +261,10 @@ static inline int iwl_trans_wait_tx_queue_empty(struct iwl_trans *trans)
- 	return trans->ops->wait_tx_queue_empty(trans);
- }
- 
-+static inline int iwl_trans_check_stuck_queue(struct iwl_trans *trans, int q)
-+{
-+	return trans->ops->check_stuck_queue(trans, q);
-+}
- static inline int iwl_trans_dbgfs_register(struct iwl_trans *trans,
- 					    struct dentry *dir)
- {
--- 
-1.7.0.4
+1. Drop "staging" from subject-lines? Saves some chars.
+2. Using "staging/brcm80211" would also save some chars (and is more
+common to me).
+3. "PATCH v2" should be with a space?
+4. Something like "for-3.1" would clearly indicate for which
+kernel-release this mega-series is for (also "staging" could be
+dropped as it is known where the driver is managed)
 
+$ git format-patch --signoff --cover-letter --subject-prefix="PATCH v2
+for-3.1" -82 (or whatever $FIRST..$LAST)
+
+- Sedat -
