@@ -1,104 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:50048 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750900Ab1HME7L (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 00:59:11 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 11/11] ath9k: Dump modal noisefloor calibration history
-Date: Sat, 13 Aug 2011 10:28:18 +0530
-Message-ID: <1313211498-14442-11-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110813_065913_682488_BED2C90D)
-In-Reply-To: <1313211498-14442-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1313211498-14442-1-git-send-email-rmanohar@qca.qualcomm.com>
+Received: from mail.tpi.com ([70.99.223.143]:4900 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752079Ab1HHRbY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 13:31:24 -0400
+Message-ID: <4E401D62.80800@canonical.com> (sfid-20110808_193127_241996_1C940441)
+Date: Mon, 08 Aug 2011 11:31:14 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: mcgrof@gmail.com
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH] crda - Add nested support for libnl-1, libnl-2.0, and libnl-3.0
+Content-Type: multipart/mixed;
+ boundary="------------070608090609070308020903"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Debugfs file location:
-<debugfs_mnt>/ieee80211/phy#/ath9k/dump_nfcal
+This is a multi-part message in MIME format.
+--------------070608090609070308020903
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/debug.c |   55 ++++++++++++++++++++++++++++++++
- 1 files changed, 55 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 9bec3b8..da45f32 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1163,6 +1163,59 @@ static const struct file_operations fops_regdump = {
- 	.llseek = default_llseek,/* read accesses f_pos */
- };
- 
-+static ssize_t read_file_dump_nfcal(struct file *file, char __user *user_buf,
-+				    size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath9k_nfcal_hist *h = sc->caldata.nfCalHist;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ieee80211_conf *conf = &common->hw->conf;
-+	u32 len = 0, size = 1500;
-+	u32 i, j;
-+	ssize_t retval = 0;
-+	char *buf;
-+	u8 chainmask = (ah->rxchainmask << 3) | ah->rxchainmask;
-+	u8 nread;
-+
-+	buf = kzalloc(size, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	len += snprintf(buf + len, size - len,
-+			"Channel Noise Floor : %d\n", ah->noise);
-+	len += snprintf(buf + len, size - len,
-+			"Chain | privNF | # Readings | NF Readings\n");
-+	for (i = 0; i < NUM_NF_READINGS; i++) {
-+		if (!(chainmask & (1 << i)) ||
-+		    ((i >= AR5416_MAX_CHAINS) && !conf_is_ht40(conf)))
-+			continue;
-+
-+		nread = AR_PHY_CCA_FILTERWINDOW_LENGTH - h[i].invalidNFcount;
-+		len += snprintf(buf + len, size - len, " %d\t %d\t %d\t\t",
-+				i, h[i].privNF, nread);
-+		for (j = 0; j < nread; j++)
-+			len += snprintf(buf + len, size - len,
-+					" %d", h[i].nfCalBuffer[j]);
-+		len += snprintf(buf + len, size - len, "\n");
-+	}
-+
-+	if (len > size)
-+		len = size;
-+
-+	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	kfree(buf);
-+
-+	return retval;
-+}
-+
-+static const struct file_operations fops_dump_nfcal = {
-+	.read = read_file_dump_nfcal,
-+	.open = ath9k_debugfs_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- static ssize_t read_file_base_eeprom(struct file *file, char __user *user_buf,
- 				     size_t count, loff_t *ppos)
- {
-@@ -1262,6 +1315,8 @@ int ath9k_init_debug(struct ath_hw *ah)
- 			    &ah->config.cwm_ignore_extcca);
- 	debugfs_create_file("regdump", S_IRUSR, sc->debug.debugfs_phy, sc,
- 			    &fops_regdump);
-+	debugfs_create_file("dump_nfcal", S_IRUSR, sc->debug.debugfs_phy, sc,
-+			    &fops_dump_nfcal);
- 	debugfs_create_file("base_eeprom", S_IRUSR, sc->debug.debugfs_phy, sc,
- 			    &fops_base_eeprom);
- 	debugfs_create_file("modal_eeprom", S_IRUSR, sc->debug.debugfs_phy, sc,
+libnl-3.0 is the version used for Ubuntu Oneiric.
 -- 
-1.7.6
+Tim Gardner tim.gardner@canonical.com
 
+--------------070608090609070308020903
+Content-Type: text/x-patch;
+ name="0001-Add-nested-support-for-libnl-1-libnl-2.0-and-libnl-3.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-Add-nested-support-for-libnl-1-libnl-2.0-and-libnl-3.pa";
+ filename*1="tch"
+
+>From 339e3811bbb140253fc7c8225322a51420046df6 Mon Sep 17 00:00:00 2001
+From: Tim Gardner <tim.gardner@canonical.com>
+Date: Mon, 8 Aug 2011 10:49:49 -0600
+Subject: [PATCH] Add nested support for libnl-1, libnl-2.0, and libnl-3.0
+
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+---
+ Makefile |   21 ++++++++++++++-------
+ crda.c   |    4 ++--
+ 2 files changed, 16 insertions(+), 9 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index b8bc7d3..084d8e5 100644
+--- a/Makefile
++++ b/Makefile
+@@ -47,15 +47,22 @@ INSTALL ?= install
+ 
+ NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
+ NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
++NL3FOUND := $(shell pkg-config --atleast-version=3 libnl-3.0 && echo Y)
+ 
+-ifeq ($(NL1FOUND),Y)
+-NLLIBNAME = libnl-1
+-endif
+-
+-ifeq ($(NL2FOUND),Y)
+-CFLAGS += -DCONFIG_LIBNL20
++ifeq ($(NL3FOUND),Y)
++CFLAGS += -DCONFIG_LIBNL30
+ NLLIBS += -lnl-genl
+-NLLIBNAME = libnl-2.0
++NLLIBNAME = libnl-3.0
++else
++	ifeq ($(NL2FOUND),Y)
++	CFLAGS += -DCONFIG_LIBNL20
++	NLLIBS += -lnl-genl
++	NLLIBNAME = libnl-2.0
++	else
++		ifeq ($(NL1FOUND),Y)
++		NLLIBNAME = libnl-1
++		endif
++	endif
+ endif
+ 
+ ifeq ($(NLLIBNAME),)
+diff --git a/crda.c b/crda.c
+index d2ba29a..6857e3f 100644
+--- a/crda.c
++++ b/crda.c
+@@ -21,7 +21,7 @@
+ #include "regdb.h"
+ #include "reglib.h"
+ 
+-#ifndef CONFIG_LIBNL20
++#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30)
+ /* libnl 2.0 compatibility code */
+ static inline struct nl_handle *nl_socket_alloc(void)
+ {
+@@ -44,7 +44,7 @@ static inline int __genl_ctrl_alloc_cache(struct nl_handle *h, struct nl_cache *
+ 
+ #define genl_ctrl_alloc_cache __genl_ctrl_alloc_cache
+ #define nl_sock nl_handle
+-#endif /* CONFIG_LIBNL20 */
++#endif /* CONFIG_LIBNL20 && CONFIG_LIBNL30 */
+ 
+ struct nl80211_state {
+ 	struct nl_sock *nl_sock;
+-- 
+1.7.0.4
+
+
+--------------070608090609070308020903--
