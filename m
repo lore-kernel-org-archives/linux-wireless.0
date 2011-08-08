@@ -1,93 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:37798 "EHLO e4.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753560Ab1HOPiJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 11:38:09 -0400
-Date: Mon, 15 Aug 2011 08:37:59 -0700
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Subject: Re: 3.1-rc1-git9: Reported regressions 2.6.39 -> 3.0
-Message-ID: <20110815153759.GF2389@linux.vnet.ibm.com> (sfid-20110815_173831_120013_E174D600)
-Reply-To: paulmck@linux.vnet.ibm.com
-References: <xuTC4jRtHbB.A.l4H.gMCSOB@chimera>
+Received: from cpsmtpb-ews08.kpnxchange.com ([213.75.39.13]:1985 "EHLO
+	cpsmtpb-ews08.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753418Ab1HHUz6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 16:55:58 -0400
+Message-ID: <4E404D5C.30401@gmail.com> (sfid-20110808_225602_104443_947320A1)
+Date: Mon, 08 Aug 2011 22:55:56 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <xuTC4jRtHbB.A.l4H.gMCSOB@chimera>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Ivo Van Doorn <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Justin Piszcz <jpiszcz@lucidpixels.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] rt2x00: rt2800usb: fix races in tx queue
+References: <20110804124653.GB5739@redhat.com> <CAOZOX0Xpv9OPqx2Y3GnajhmDvx3GyL1xTAjEOYjOToWcQxB6bA@mail.gmail.com> <20110808092914.GA2168@redhat.com> <20110808093512.GB2168@redhat.com>
+In-Reply-To: <20110808093512.GB2168@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 14, 2011 at 09:02:27PM +0200, Rafael J. Wysocki wrote:
-> [NOTE:
->  We already have a bug entry for tracking regressions from 3.0:
-> 
->  http://bugzilla.kernel.org/show_bug.cgi?id=40982
-> 
->  but there are no reports linked to it, mostly because Maciej is on vacation,
->  but also because the frequency of reporting regressions has been low
->  recently.  So, if you're seeing a regression from 3.0, please let us know.]
-> 
-> This message contains a list of some post-2.6.39 regressions introduced before
-> 3.0, for which there are no fixes in the mainline known to the tracking team.
-> If any of them have been fixed already, please let us know.
-> 
-> If you know of any other unresolved post-2.6.39 regressions, please let us know
-> either and we'll add them to the list.  Also, please let us know if any
-> of the entries below are invalid.
-> 
-> Each entry from the list will be sent additionally in an automatic reply to
-> this message with CCs to the people involved in reporting and handling the
-> issue.
-> 
-> 
-> Listed regressions statistics:
-> 
->   Date          Total  Pending  Unresolved
->   ----------------------------------------
->   2011-08-14       63       22          19
-> 
-> 
-> Unresolved regressions
-> ----------------------
-> 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40282
-> Subject		: IP forwarding regression since 3.0-rc6
-> Submitter	: Stephan Seitz <stse+lkml@fsing.rootsland.net>
-> Date		: 2011-07-25 12:51 (21 days old)
-> Message-ID	: <20110725T141145.GA.2ae38.stse@fsing.rootsland.net>
-> References	: http://marc.info/?l=linux-kernel&m=131159880004908&w=2
-> 
-> 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40172
-> Subject		: lockdep trace from post 3.0.
-> Submitter	: Dave Jones <davej@redhat.com>
-> Date		: 2011-07-24 1:32 (22 days old)
-> Message-ID	: <20110724013257.GA6777@redhat.com>
-> References	: http://marc.info/?l=linux-kernel&m=131147120206819&w=2
-> 
-> 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40092
-> Subject		: RCU stall in linux-3.0.0
-> Submitter	: Philip Armstrong <phil@kantaka.co.uk>
-> Date		: 2011-07-25 21:44 (21 days old)
+Hi Stanislaw,
 
-This one was due the the CPU's idea of the current time getting way
-out of sync (as in more than a minute's worth of disagreement, which is
-pretty impressive when you think about it).  So what happened is that
-one CPU decided that the current grace period was a full minute old
-immediately, and thus started screaming piteously.  John Stultz provided
-a configuration workaround, and he and Thomas Gleixner would be working
-out the long-term fix.
+On 08/08/11 11:35, Stanislaw Gruszka wrote:
+> We can perform parallel putting new entries in a queue
+> (rt2x00queue_write_tx_frame()) and removing entries after
+> finishing transmitting (rt2800usb_work_txdone()). There are
+> cases when txdone may process an entry that was not fully
+> send and nullify entry->skb. What in a result crash the kernel
+> in rt2800usb_write_tx_desc() or rt2800usb_get_txwi() or other
+> place where entry->skb is used.
+> 
+> To fix stop processing entries in txdone, which flags do not
+> indicate transition was finished.
+> 
+> Reported-and-tested-by: Justin Piszcz <jpiszcz@lucidpixels.com>
+> Cc: stable@kernel.org
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-							Thanx, Paul
+Sorry for responding this late. I just didn't find the bandwidth to look at this earlier :-(
+
+First of all, I don't think stable should be cc-ed on this particular patch. Although the ideas
+of the patch are certainly applicable to the stable trees, this patch will simply not apply to
+3.0 or earlier, since the code you are patching has been moved around between 3.0 and 3.1.
+
+Second, I think it would be appropriate to split the patch in 2, or maybe 3, parts:
+	1. The hunk to rt2x00usb to reverse the entry flag handling and the tx dma done handling.
+	2. The hunk that checks that the entry on which the TX status is being reported has
+           already been properly completed its TX done handling.
+	3. The remainder, i.e. the retrying of handling a TX status report if the entry hasn't been
+           fully completed its TX done handling yet. 
+
+The code in this area has been proven to be very fragile, so I prefer to make mini changes to it in
+small steps, so that we can properly bisect which change exactly has caused a problem.
+
+See further down for more thoughts.
+
+> ---
+> v1 -> v2: remove goto 
+> 
+>  drivers/net/wireless/rt2x00/rt2800usb.c |   33 +++++++++++++++++++++++-------
+>  drivers/net/wireless/rt2x00/rt2x00usb.c |    6 ++--
+>  2 files changed, 28 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index 5075593..670a30d 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -500,14 +500,14 @@ static bool rt2800usb_txdone_entry_check(struct queue_entry *entry, u32 reg)
+>  	return true;
+>  }
+>  
+> -static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
+> +static int rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
+>  {
+>  	struct data_queue *queue;
+>  	struct queue_entry *entry;
+>  	u32 reg;
+>  	u8 qid;
+>  
+> -	while (kfifo_get(&rt2x00dev->txstatus_fifo, &reg)) {
+> +	while (kfifo_peek(&rt2x00dev->txstatus_fifo, &reg)) {
+>  
+>  		/* TX_STA_FIFO_PID_QUEUE is a 2-bit field, thus
+>  		 * qid is guaranteed to be one of the TX QIDs
+> @@ -517,6 +517,7 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
+>  		if (unlikely(!queue)) {
+>  			WARNING(rt2x00dev, "Got TX status for an unavailable "
+>  					   "queue %u, dropping\n", qid);
+> +			kfifo_skip(&rt2x00dev->txstatus_fifo);
+>  			continue;
+>  		}
+>  
+> @@ -524,18 +525,32 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
+>  		 * Inside each queue, we process each entry in a chronological
+>  		 * order. We first check that the queue is not empty.
+>  		 */
+> -		entry = NULL;
+> -		while (!rt2x00queue_empty(queue)) {
+> +		while (1) {
+> +			entry = NULL;
+> +
+> +			if (rt2x00queue_empty(queue))
+> +				break;
+> +
+
+Do we really have to change this in a while (1) loop? I really hate those kind of
+loops, as it is quite easy to make an uneducated change later on and create a never
+ending loop. I don't think it is necessary to change the while loop conditions, if
+you just move the entry = NULL assignment to the end of the loop. Then you can keep
+the original while condition.
+
+>  			entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
+> +
+> +			if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags) ||
+> +			    !test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags)) {
+> +				WARNING(rt2x00dev, "Data pending for entry %u"
+> +					"in queue %u\n", entry->entry_idx, qid);
+> +				return 1;
+> +			}
+> +
+
+Do we have to do this check inside the while loop?
+Wouldn't it be enough to keep the loop as-is and have this check done after the while
+loop, on the found entry?
+
+>  			if (rt2800usb_txdone_entry_check(entry, reg))
+>  				break;
+>  		}
+>  
+> -		if (!entry || rt2x00queue_empty(queue))
+> -			break;
+> +		if (entry)
+> +			rt2800_txdone_entry(entry, reg);
+>  
+> -		rt2800_txdone_entry(entry, reg);
+> +		kfifo_skip(&rt2x00dev->txstatus_fifo);
+>  	}
+> +
+> +	return 0;
+>  }
+>  
+>  static void rt2800usb_work_txdone(struct work_struct *work)
+> @@ -545,7 +560,8 @@ static void rt2800usb_work_txdone(struct work_struct *work)
+>  	struct data_queue *queue;
+>  	struct queue_entry *entry;
+>  
+> -	rt2800usb_txdone(rt2x00dev);
+> +	if (rt2800usb_txdone(rt2x00dev))
+> +		goto out;
+>  
+>  	/*
+>  	 * Process any trailing TX status reports for IO failures,
+> @@ -569,6 +585,7 @@ static void rt2800usb_work_txdone(struct work_struct *work)
+>  		}
+>  	}
+>  
+> +out:
+>  	/*
+>  	 * The hw may delay sending the packet after DMA complete
+>  	 * if the medium is busy, thus the TX_STA_FIFO entry is
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+> index b6b4542..46c6d36 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+> @@ -265,14 +265,14 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
+>  	if (!test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
+>  		return;
+>  
+> -	if (rt2x00dev->ops->lib->tx_dma_done)
+> -		rt2x00dev->ops->lib->tx_dma_done(entry);
+> -
+>  	/*
+>  	 * Report the frame as DMA done
+>  	 */
+>  	rt2x00lib_dmadone(entry);
+>  
+> +	if (rt2x00dev->ops->lib->tx_dma_done)
+> +		rt2x00dev->ops->lib->tx_dma_done(entry);
+> +
+>  	/*
+>  	 * Check if the frame was correctly uploaded
+>  	 */
+
+---
+Gertjan
