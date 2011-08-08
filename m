@@ -1,242 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39724 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755110Ab1HXLUx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 07:20:53 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3] compat: add crc8 lib
-Date: Wed, 24 Aug 2011 13:20:39 +0200
-Message-Id: <1314184839-13279-3-git-send-email-hauke@hauke-m.de> (sfid-20110824_132112_847646_BB72B0AD)
-In-Reply-To: <1314184839-13279-1-git-send-email-hauke@hauke-m.de>
-References: <1314184839-13279-1-git-send-email-hauke@hauke-m.de>
+Received: from mms1.broadcom.com ([216.31.210.17]:2825 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752830Ab1HHN70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:59:26 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCHv2 43/82] staging: brcm80211: remove private timeout
+ functions in fullmac
+Date: Mon, 8 Aug 2011 15:58:27 +0200
+Message-ID: <1312811946-16713-44-git-send-email-arend@broadcom.com> (sfid-20110808_160203_492579_CCE3F95D)
+In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-compat/crc8.c was copied from lib/crc8.c and include/linux/crc8.h was
-copied from include/linux/crc8.h
+From: Franky Lin <frankyl@broadcom.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Use kernel timer macros to replace current private timeout functions
+used in dhd_sdio.c
+
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- compat/Makefile      |    3 +-
- compat/crc8.c        |   86 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/crc8.h |  101 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 189 insertions(+), 1 deletions(-)
- create mode 100644 compat/crc8.c
- create mode 100644 include/linux/crc8.h
+ drivers/staging/brcm80211/brcmfmac/dhd.h       |   10 ----
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |   58 ------------------------
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |   18 +++++---
+ 3 files changed, 11 insertions(+), 75 deletions(-)
 
-diff --git a/compat/Makefile b/compat/Makefile
-index 31e4459..2fb1893 100644
---- a/compat/Makefile
-+++ b/compat/Makefile
-@@ -35,5 +35,6 @@ compat-$(CONFIG_COMPAT_KERNEL_2_6_39) += \
- 	kstrtox.o
- compat-$(CONFIG_COMPAT_KERNEL_3_0) += compat-3.0.o
- compat-$(CONFIG_COMPAT_KERNEL_3_1) += \
--	cordic.o
-+	cordic.o \
-+	crc8.o
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index f3633fe..1fe9d69 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -614,13 +614,6 @@ struct brcmf_if_event {
+ 	u8 bssidx;
+ };
  
-diff --git a/compat/crc8.c b/compat/crc8.c
-new file mode 100644
-index 0000000..87b59ca
---- /dev/null
-+++ b/compat/crc8.c
-@@ -0,0 +1,86 @@
-+/*
-+ * Copyright (c) 2011 Broadcom Corporation
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
-+
-+#include <linux/module.h>
-+#include <linux/crc8.h>
-+#include <linux/printk.h>
-+
-+/*
-+ * crc8_populate_msb - fill crc table for given polynomial in reverse bit order.
-+ *
-+ * table:	table to be filled.
-+ * polynomial:	polynomial for which table is to be filled.
-+ */
-+void crc8_populate_msb(u8 table[CRC8_TABLE_SIZE], u8 polynomial)
-+{
-+	int i, j;
-+	const u8 msbit = 0x80;
-+	u8 t = msbit;
-+
-+	table[0] = 0;
-+
-+	for (i = 1; i < CRC8_TABLE_SIZE; i *= 2) {
-+		t = (t << 1) ^ (t & msbit ? polynomial : 0);
-+		for (j = 0; j < i; j++)
-+			table[i+j] = table[j] ^ t;
+-struct brcmf_timeout {
+-	u32 limit;		/* Expiration time (usec) */
+-	u32 increment;	/* Current expiration increment (usec) */
+-	u32 elapsed;		/* Current elapsed time (usec) */
+-	u32 tick;		/* O/S tick time (usec) */
+-};
+-
+ struct bcmevent_name {
+ 	uint event;
+ 	const char *name;
+@@ -783,9 +776,6 @@ extern int brcmf_os_proto_unblock(struct brcmf_pub *drvr);
+ extern int brcmf_write_to_file(struct brcmf_pub *drvr, u8 *buf, int size);
+ #endif				/* BCMDBG */
+ 
+-extern void brcmf_timeout_start(struct brcmf_timeout *tmo, uint usec);
+-extern int brcmf_timeout_expired(struct brcmf_timeout *tmo);
+-
+ extern int brcmf_ifname2idx(struct brcmf_info *drvr_priv, char *name);
+ extern int brcmf_c_host_event(struct brcmf_info *drvr_priv, int *idx,
+ 			      void *pktdata, struct brcmf_event_msg *,
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 0d86819..07ceaf9 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -143,64 +143,6 @@ static int brcmf_host_event(struct brcmf_info *drvr_priv, int *ifidx, void *pktd
+ 			    struct brcmf_event_msg *event_ptr,
+ 			    void **data_ptr);
+ 
+-/*
+- * Generalized timeout mechanism.  Uses spin sleep with exponential
+- * back-off until
+- * the sleep time reaches one jiffy, then switches over to task delay.  Usage:
+- *
+- *      brcmf_timeout_start(&tmo, usec);
+- *      while (!brcmf_timeout_expired(&tmo))
+- *              if (poll_something())
+- *                      break;
+- *      if (brcmf_timeout_expired(&tmo))
+- *              fatal();
+- */
+-
+-void brcmf_timeout_start(struct brcmf_timeout *tmo, uint usec)
+-{
+-	tmo->limit = usec;
+-	tmo->increment = 0;
+-	tmo->elapsed = 0;
+-	tmo->tick = 1000000 / HZ;
+-}
+-
+-int brcmf_timeout_expired(struct brcmf_timeout *tmo)
+-{
+-	/* Does nothing the first call */
+-	if (tmo->increment == 0) {
+-		tmo->increment = 1;
+-		return 0;
+-	}
+-
+-	if (tmo->elapsed >= tmo->limit)
+-		return 1;
+-
+-	/* Add the delay that's about to take place */
+-	tmo->elapsed += tmo->increment;
+-
+-	if (tmo->increment < tmo->tick) {
+-		udelay(tmo->increment);
+-		tmo->increment *= 2;
+-		if (tmo->increment > tmo->tick)
+-			tmo->increment = tmo->tick;
+-	} else {
+-		wait_queue_head_t delay_wait;
+-		DECLARE_WAITQUEUE(wait, current);
+-		int pending;
+-		init_waitqueue_head(&delay_wait);
+-		add_wait_queue(&delay_wait, &wait);
+-		set_current_state(TASK_INTERRUPTIBLE);
+-		schedule_timeout(1);
+-		pending = signal_pending(current);
+-		remove_wait_queue(&delay_wait, &wait);
+-		set_current_state(TASK_RUNNING);
+-		if (pending)
+-			return 1;	/* Interrupted */
+-	}
+-
+-	return 0;
+-}
+-
+ static int brcmf_net2idx(struct brcmf_info *drvr_priv, struct net_device *net)
+ {
+ 	int i = 0;
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 8d4c48f..b38525c 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3306,7 +3306,7 @@ void brcmf_sdbrcm_bus_stop(struct brcmf_bus *bus, bool enforce_mutex)
+ int brcmf_sdbrcm_bus_init(struct brcmf_pub *drvr, bool enforce_mutex)
+ {
+ 	struct brcmf_bus *bus = drvr->bus;
+-	struct brcmf_timeout tmo;
++	unsigned long timeout;
+ 	uint retries = 0;
+ 	u8 ready, enable;
+ 	int err, ret = 0;
+@@ -3358,16 +3358,20 @@ int brcmf_sdbrcm_bus_init(struct brcmf_pub *drvr, bool enforce_mutex)
+ 	brcmf_sdcard_cfg_write(bus->card, SDIO_FUNC_0, SDIO_CCCR_IOEx, enable,
+ 			       NULL);
+ 
+-	/* Give the dongle some time to do its thing and set IOR2 */
+-	brcmf_timeout_start(&tmo, BRCMF_WAIT_F2RDY * 1000);
+-
++	timeout = jiffies + msecs_to_jiffies(BRCMF_WAIT_F2RDY);
+ 	ready = 0;
+-	while (ready != enable && !brcmf_timeout_expired(&tmo))
++	while (enable != ready) {
+ 		ready = brcmf_sdcard_cfg_read(bus->card, SDIO_FUNC_0,
+ 					      SDIO_CCCR_IORx, NULL);
++		if (time_after(jiffies, timeout))
++			break;
++		else if (time_after(jiffies, timeout - BRCMF_WAIT_F2RDY + 50))
++			/* prevent busy waiting if it takes too long */
++			msleep_interruptible(20);
 +	}
-+}
-+EXPORT_SYMBOL(crc8_populate_msb);
-+
-+/*
-+ * crc8_populate_lsb - fill crc table for given polynomial in regular bit order.
-+ *
-+ * table:	table to be filled.
-+ * polynomial:	polynomial for which table is to be filled.
-+ */
-+void crc8_populate_lsb(u8 table[CRC8_TABLE_SIZE], u8 polynomial)
-+{
-+	int i, j;
-+	u8 t = 1;
-+
-+	table[0] = 0;
-+
-+	for (i = (CRC8_TABLE_SIZE >> 1); i; i >>= 1) {
-+		t = (t >> 1) ^ (t & 1 ? polynomial : 0);
-+		for (j = 0; j < CRC8_TABLE_SIZE; j += 2*i)
-+			table[i+j] = table[j] ^ t;
-+	}
-+}
-+EXPORT_SYMBOL(crc8_populate_lsb);
-+
-+/*
-+ * crc8 - calculate a crc8 over the given input data.
-+ *
-+ * table: crc table used for calculation.
-+ * pdata: pointer to data buffer.
-+ * nbytes: number of bytes in data buffer.
-+ * crc:	previous returned crc8 value.
-+ */
-+u8 crc8(const u8 table[CRC8_TABLE_SIZE], u8 *pdata, size_t nbytes, u8 crc)
-+{
-+	/* loop over the buffer data */
-+	while (nbytes-- > 0)
-+		crc = table[(crc ^ *pdata++) & 0xff];
-+
-+	return crc;
-+}
-+EXPORT_SYMBOL(crc8);
-+
-+MODULE_DESCRIPTION("CRC8 (by Williams, Ross N.) function");
-+MODULE_AUTHOR("Broadcom Corporation");
-+MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/include/linux/crc8.h b/include/linux/crc8.h
-new file mode 100644
-index 0000000..13c8dab
---- /dev/null
-+++ b/include/linux/crc8.h
-@@ -0,0 +1,101 @@
-+/*
-+ * Copyright (c) 2011 Broadcom Corporation
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+#ifndef __CRC8_H_
-+#define __CRC8_H_
-+
-+#include <linux/types.h>
-+
-+/* see usage of this value in crc8() description */
-+#define CRC8_INIT_VALUE		0xFF
-+
-+/*
-+ * Return value of crc8() indicating valid message+crc. This is true
-+ * if a CRC is inverted before transmission. The CRC computed over the
-+ * whole received bitstream is _table[x], where x is the bit pattern
-+ * of the modification (almost always 0xff).
-+ */
-+#define CRC8_GOOD_VALUE(_table)	(_table[0xFF])
-+
-+/* required table size for crc8 algorithm */
-+#define CRC8_TABLE_SIZE			256
-+
-+/* helper macro assuring right table size is used */
-+#define DECLARE_CRC8_TABLE(_table) \
-+	static u8 _table[CRC8_TABLE_SIZE]
-+
-+/**
-+ * crc8_populate_lsb - fill crc table for given polynomial in regular bit order.
-+ *
-+ * @table:	table to be filled.
-+ * @polynomial:	polynomial for which table is to be filled.
-+ *
-+ * This function fills the provided table according the polynomial provided for
-+ * regular bit order (lsb first). Polynomials in CRC algorithms are typically
-+ * represented as shown below.
-+ *
-+ *	poly = x^8 + x^7 + x^6 + x^4 + x^2 + 1
-+ *
-+ * For lsb first direction x^7 maps to the lsb. So the polynomial is as below.
-+ *
-+ * - lsb first: poly = 10101011(1) = 0xAB
-+ */
-+void crc8_populate_lsb(u8 table[CRC8_TABLE_SIZE], u8 polynomial);
-+
-+/**
-+ * crc8_populate_msb - fill crc table for given polynomial in reverse bit order.
-+ *
-+ * @table:	table to be filled.
-+ * @polynomial:	polynomial for which table is to be filled.
-+ *
-+ * This function fills the provided table according the polynomial provided for
-+ * reverse bit order (msb first). Polynomials in CRC algorithms are typically
-+ * represented as shown below.
-+ *
-+ *	poly = x^8 + x^7 + x^6 + x^4 + x^2 + 1
-+ *
-+ * For msb first direction x^7 maps to the msb. So the polynomial is as below.
-+ *
-+ * - msb first: poly = (1)11010101 = 0xD5
-+ */
-+void crc8_populate_msb(u8 table[CRC8_TABLE_SIZE], u8 polynomial);
-+
-+/**
-+ * crc8() - calculate a crc8 over the given input data.
-+ *
-+ * @table:	crc table used for calculation.
-+ * @pdata:	pointer to data buffer.
-+ * @nbytes:	number of bytes in data buffer.
-+ * @crc:	previous returned crc8 value.
-+ *
-+ * The CRC8 is calculated using the polynomial given in crc8_populate_msb()
-+ * or crc8_populate_lsb().
-+ *
-+ * The caller provides the initial value (either %CRC8_INIT_VALUE
-+ * or the previous returned value) to allow for processing of
-+ * discontiguous blocks of data.  When generating the CRC the
-+ * caller is responsible for complementing the final return value
-+ * and inserting it into the byte stream.  When validating a byte
-+ * stream (including CRC8), a final return value of %CRC8_GOOD_VALUE
-+ * indicates the byte stream data can be considered valid.
-+ *
-+ * Reference:
-+ * "A Painless Guide to CRC Error Detection Algorithms", ver 3, Aug 1993
-+ * Williams, Ross N., ross<at>ross.net
-+ * (see URL http://www.ross.net/crc/download/crc_v3.txt).
-+ */
-+u8 crc8(const u8 table[CRC8_TABLE_SIZE], u8 *pdata, size_t nbytes, u8 crc);
-+
-+#endif /* __CRC8_H_ */
+ 
+-	BRCMF_INFO(("%s: enable 0x%02x, ready 0x%02x (waited %uus)\n",
+-		    __func__, enable, ready, tmo.elapsed));
++	BRCMF_INFO(("%s: enable 0x%02x, ready 0x%02x\n",
++		    __func__, enable, ready));
+ 
+ 	/* If F2 successfully enabled, set core and enable interrupts */
+ 	if (ready == enable) {
 -- 
 1.7.4.1
+
 
