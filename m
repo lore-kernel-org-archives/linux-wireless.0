@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:49194 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750768Ab1H3HV2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56346 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750954Ab1HHTKb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 03:21:28 -0400
-Date: Tue, 30 Aug 2011 12:51:57 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v7 3/4] ath9k: merge reset related functions
-Message-ID: <20110830072155.GA2456@vmraj-lnx.users.atheros.com> (sfid-20110830_092132_383261_D260A6FB)
-References: <1314643245-59142-1-git-send-email-nbd@openwrt.org>
- <1314643245-59142-2-git-send-email-nbd@openwrt.org>
- <1314643245-59142-3-git-send-email-nbd@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1314643245-59142-3-git-send-email-nbd@openwrt.org>
+	Mon, 8 Aug 2011 15:10:31 -0400
+Subject: Re: [PATCH 4/6] mac80211: update mesh peering frame format
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <CAG6hwVN4i5Yh_ea0j3kvPyznUuZmfxog2OzK1Y74eveU2kR6Dg@mail.gmail.com> (sfid-20110808_204803_654787_1BCECA1A)
+References: <1311638357-28740-1-git-send-email-thomas@cozybit.com>
+	 <1311638357-28740-5-git-send-email-thomas@cozybit.com>
+	 <1312809868.4372.33.camel@jlt3.sipsolutions.net>
+	 <CAG6hwVN4i5Yh_ea0j3kvPyznUuZmfxog2OzK1Y74eveU2kR6Dg@mail.gmail.com>
+	 (sfid-20110808_204803_654787_1BCECA1A)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 08 Aug 2011 21:10:30 +0200
+Message-ID: <1312830630.4372.40.camel@jlt3.sipsolutions.net> (sfid-20110808_211034_973592_4BC8E601)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 29, 2011 at 08:40:44PM +0200, Felix Fietkau wrote:
-> +
-> +	if (!hchan) {
-> +		fastcc = false;
-> +		flush = true;
-> +		hchan = ah->curchan;
-> +	}
-> +
-> +	if (fastcc && !ath9k_hw_check_alive(ah))
-> +		fastcc = false;
-> +
-> +	if (!ath_prepare_reset(sc, retry_tx, flush))
-> +		fastcc = false;
-> +
-> +	ath_dbg(common, ATH_DBG_CONFIG,
-> +		"Reset to %u MHz, HT40: %d fastcc: %d\n",
-> +		hchan->channel, !!(hchan->channelFlags & (CHANNEL_HT40MINUS |
-> +							  CHANNEL_HT40PLUS)),
-> +		fastcc);
-> +
-> +	r = ath9k_hw_reset(ah, hchan, caldata, fastcc);
-> +	if (r) {
-> +		ath_err(common,
-> +			"Unable to reset channel, reset status %d\n", r);
-> +		goto out;
-> +	}
-> +
-> +	if (!ath_complete_reset(sc, true))
-> +		r = -EIO;
-> +
-> +out:
->  	spin_unlock_bh(&sc->sc_pcu_lock);
-> +	return 0;
-> +}
-Return proper error code.
+On Mon, 2011-08-08 at 11:47 -0700, Thomas Pedersen wrote:
 
---
-Rajkumar
+> >> +     case WLAN_CATEGORY_SELF_PROTECTED:
+> >> +             switch (mgmt->u.action.u.self_prot.action_code) {
+> >> +             case WLAN_SP_MESH_PEERING_OPEN:
+> >> +             case WLAN_SP_MESH_PEERING_CLOSE:
+> >> +             case WLAN_SP_MESH_PEERING_CONFIRM:
+> >> +                     if (!ieee80211_vif_is_mesh(&sdata->vif))
+> >> +                             goto invalid;
+> >> +                     if (sdata->u.mesh.security != IEEE80211_MESH_SEC_NONE)
+> >> +                             /* userspace handles this frame */
+> >
+> > Will this compile in the CONFIG_MAC80211_MESH=n case? It seems like it
+> > might not? Do you routinely test that?
+> >
+> 
+> Yes. The CONFIG_MAC80211_MESH check around the ieee80211_if_mesh was
+> removed in c80d545da3f7c0e534ccd4a780f322f80a92cff1
+
+I mean the "sdata->u.mesh.security" dereference. I know vif_is_mesh() is
+always available, but I thought u.mesh wasn't?
+
+johannes
+
