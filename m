@@ -1,81 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from db3ehsobe001.messaging.microsoft.com ([213.199.154.139]:45116
-	"EHLO DB3EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751983Ab1HQCTm convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2011 22:19:42 -0400
-From: Lin Tony-B19295 <B19295@freescale.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: Hauke Mehrtens <hauke@hauke-m.de>,
-	"mcgrof@gmail.com" <mcgrof@gmail.com>,
-	"rodrigue@qca.qualcomm.com" <rodrigue@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rmani@qca.qualcomm.com" <rmani@qca.qualcomm.com>
-Subject: RE: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
-Date: Wed, 17 Aug 2011 02:19:37 +0000
-Message-ID: <97D3A72708D04647A5AC84A04996E5B5195ADD@039-SN1MPN1-002.039d.mgd.msft.net> (sfid-20110817_041945_554264_E1D25A47)
-References: <1313060347-665-1-git-send-email-hauke@hauke-m.de>
- <97D3A72708D04647A5AC84A04996E5B5193114@039-SN1MPN1-002.039d.mgd.msft.net>
- <4E496CA7.7000604@hauke-m.de> <4E49BAB1.7060303@qca.qualcomm.com>
- <97D3A72708D04647A5AC84A04996E5B5195381@039-SN1MPN1-002.039d.mgd.msft.net>
- <4E4A7159.3090004@qca.qualcomm.com>
-In-Reply-To: <4E4A7159.3090004@qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:38857 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753295Ab1HHXbP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 19:31:15 -0400
+Received: by iye16 with SMTP id 16so9873546iye.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 16:31:15 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Subject: [PATCH] mac80211: fix erroneous clearing of MESH_PATH_SN_VALID flag
+Date: Mon,  8 Aug 2011 16:30:50 -0700
+Message-Id: <1312846250-14612-1-git-send-email-javier@cozybit.com> (sfid-20110809_013121_432434_11262D9A)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle:
+When a PREQ or PREP is received from an intermediate node, it contains
+useful information for path selection but it doesn't include the
+originator's sequence number.   Therefore, when updating the mesh path
+to that intermediate node, we should not set the MESH_PATH_SN_VALID
+flag.  BUT, if the flag is set, it should not be unset as we might have
+received a valid sequence number for that intermediate node in the past.
 
-> -----Original Message-----
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] On Behalf Of Kalle Valo
-> Sent: Tuesday, August 16, 2011 9:32 PM
-> To: Lin Tony-B19295
-> Cc: Hauke Mehrtens; mcgrof@gmail.com; rodrigue@qca.qualcomm.com; linux-
-> wireless@vger.kernel.org; rmani@qca.qualcomm.com
-> Subject: Re: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
-> 
-> Hi Tony,
-> 
-> On 08/15/2011 09:59 PM, Lin Tony-B19295 wrote:
-> >
-> > 	Some questions regarding this ath6kl driver.
-> > 	Does it support all AR6003 card family? As I know there're several
-> > types of AR6003 cards
-> 
-> hw2.1.1 is supported and I'm using that for testing. The driver also
-> supports hw2.0 but I haven't tested that so there might be some issues.
-> hw1.0 is not supported.
-> 
-> > 	Does it support master mode?
-> 
-> Not yet, but hopefully in the near future.
-> 
-> > I tried the driver, seems it doesn't. need your confirmation.
-> > 		root@freescale ~$ iwconfig wlan0 mode master
-> > 		Error for wireless request "Set Mode" (8B06) :
-> >     		SET failed on device wlan0 ; Invalid argument.
-> 
-> Like Julian said, you need to use hostapd.
-> 
-> > 	Does it support suspend/resume well? From my experiments, seems not.
-> After resuming, connection is lost.
-> 
-> I have a patch pending to add suspend support and will send it as soon as
-> I find some free time. But the wifi connection will be lost in resume
-> anyway. If you want to maintain the connection to AP during suspend then
-> you are looking for wowlan support which ath6kl doesn't currently support.
-> 
+This issue was reported, fixed and tested by Ya Bo (游波) and Pedro
+Larbig (ASPj).
 
-Do you have any plan supporting it?
-Thanks for your help
-Besides, the performance seems not good. I got only 5Mb/s station->station performance. While another driver released from your AE could reach at least 10Mb/s, do you have any idea?
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ net/mac80211/mesh_hwmp.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-> Kalle
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in the body of a message to majordomo@vger.kernel.org More majordomo info
-> at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 8404fa5..3d8e55a 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -449,7 +449,6 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
+ 
+ 		if (fresh_info) {
+ 			mesh_path_assign_nexthop(mpath, sta);
+-			mpath->flags &= ~MESH_PATH_SN_VALID;
+ 			mpath->metric = last_hop_metric;
+ 			mpath->exp_time = time_after(mpath->exp_time, exp_time)
+ 					  ?  mpath->exp_time : exp_time;
+-- 
+1.7.6
 
