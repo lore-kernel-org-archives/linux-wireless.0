@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:34967 "EHLO
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:38552 "EHLO
 	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753075Ab1HIPEg (ORCPT
+	with ESMTP id S1751455Ab1HHM0b convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 11:04:36 -0400
+	Mon, 8 Aug 2011 08:26:31 -0400
 MIME-Version: 1.0
-From: Pavel Ivanov <paivanof@gmail.com>
-Date: Tue, 9 Aug 2011 11:04:05 -0400
-Message-ID: <CAG1a4rtHedO66ot4B7TWmKG5_mrnSS78O74_xxmgXk7UeoX_gA@mail.gmail.com> (sfid-20110809_170444_326855_06DB6AF4)
-Subject: Cannot easily set CONFIG_WIRELESS_EXT in kernel 3.0 build
-To: linux-kbuild@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAMuHMdU0Cba9xFjfD6Fq1MqE5xZeDnsdN8qipmR6jQH9J6X4vQ@mail.gmail.com>
+References: <201107230012.p6N0CZSM002466@hera.kernel.org>
+	<CAMuHMdU0Cba9xFjfD6Fq1MqE5xZeDnsdN8qipmR6jQH9J6X4vQ@mail.gmail.com>
+Date: Mon, 8 Aug 2011 14:26:30 +0200
+Message-ID: <CACna6ryx4k5fFmqbDPZ3pdDA_SbjZQQVaJNQyALkx0i8+S-7hA@mail.gmail.com> (sfid-20110808_142636_657060_B6036F5A)
+Subject: Re: b43: LCN-PHY add place for new PHY support
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+W dniu 8 sierpnia 2011 13:57 użytkownik Geert Uytterhoeven
+<geert@linux-m68k.org> napisał:
+> On Sat, Jul 23, 2011 at 02:12, Linux Kernel Mailing List
+> <linux-kernel@vger.kernel.org> wrote:
+>> Gitweb:     http://git.kernel.org/linus/1d738e64f3d957d56c1b51e64ebdef986a8760e3
+>> Commit:     1d738e64f3d957d56c1b51e64ebdef986a8760e3
+>> Parent:     0cd20a278e1ef9da9f6a987942794c9d65af8c4d
+>> Author:     Rafał Miłecki <zajec5@gmail.com>
+>> AuthorDate: Thu Jul 7 15:25:27 2011 +0200
+>> Committer:  John W. Linville <linville@tuxdriver.com>
+>> CommitDate: Fri Jul 8 11:11:25 2011 -0400
+>
+>> diff --git a/drivers/net/wireless/b43/phy_lcn.h b/drivers/net/wireless/b43/phy_lcn.h
+>> new file mode 100644
+>> index 0000000..c046c2a
+>> --- /dev/null
+>> +++ b/drivers/net/wireless/b43/phy_lcn.h
+>
+>> \ No newline at end of file
+>
+> Woops...
+>
+> gcc/cpp also complains:
+>
+> drivers/net/wireless/b43/phy_lcn.h:14:28: warning: no newline at end of file
 
-I've tried to build and install kernel 3.0. The standard Ubuntu
-configuration worked very well. But after I ran 'make localmodconfig',
-rebuilt and rebooted my wireless didn't work. After some investigation
-I've found that option CONFIG_WIRELESS_EXT is no longer set in .config
-file. But no matter how I tried to include it in .config file it was
-automatically deleted by 'make oldconfig' and again kernel compiled
-without it. Then I've found that if I include in the build some
-(completely unnecessary to me) wireless module which has 'select
-WIRELESS_EXT' in its Kconfig then it stays in .config file and
-resulting kernel works very well with my WiFi network. In fact even if
-I add 'select WIRELESS_EXT' to Kconfig of the driver for my wireless
-card (ath9k) everything works as well.
+Sorry, I didn't know we want empty lines at the end. I also don't
+think it's mentioned in kernel's CodingStyle.
 
-I'd think that such behavior is a bug, although I don't know on which
-side. Either on the side of wireless drivers which all have to have
-'select WIRELESS_EXT' in their Kconfig files or on the side of kbuild
-system which doesn't allow me to set CONFIG_WIRELESS_EXT unless some
-driver requires it. Interestingly enough requiring WIRELESS_EXT works
-only with drivers, because I've tried to add CONFIG_LIBIPW (it
-requires WIRELESS_EXT too) but it was automatically deleted from
-.config file along with CONFIG_WIRELESS_EXT. So I couldn't include
-only this library.
+I'll fix that when doing LCN stuff, if you agree separated patch is not needed.
 
-Could you tell me if this is indeed a bug or am I missing something here?
-I'm not subscribed to the lists so please add me in CC.
+My gcc didn't complain :|
 
-
-Pavel
+-- 
+Rafał
