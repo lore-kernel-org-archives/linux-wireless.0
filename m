@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3252 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753919Ab1HVWOJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 18:14:09 -0400
-Date: Mon, 22 Aug 2011 15:13:52 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: "Tomasz Figa" <tomasz.figa@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>, hharte@broadcom.com
-Subject: Re: BCM4325 support in brcm80211 or newer versions of bcm4329
- driver
-Message-ID: <20110822221352.GJ2250@broadcom.com> (sfid-20110823_001412_808525_5B6C6AD6)
-References: <1514181.3grperja2F@flatron>
-MIME-Version: 1.0
-In-Reply-To: <1514181.3grperja2F@flatron>
-Content-Type: text/plain;
- charset=us-ascii
+Received: from server19320154104.serverpool.info ([193.201.54.104]:48404 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750807Ab1HIVAI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2011 17:00:08 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat-wireless: remove include of compat-2.6.h in cfg80211.h
+Date: Tue,  9 Aug 2011 22:59:41 +0200
+Message-Id: <1312923582-31850-1-git-send-email-hauke@hauke-m.de> (sfid-20110809_230013_525429_B303F5F6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 14, 2011 at 11:31:09AM -0700, Tomasz Figa wrote:
-> Hi,
-> 
-> I'm looking into running current Linux kernel on a platform equipped with the
-> BCM4325 full mac combo chip, but unfortunately the shipped DHD driver (v.
-> 4.217.*) is outdated and designed for stock 2.6.29 kernel with much hardcoding
-> done to glue everything together.
-> 
-> I did some reasearch and it led me to a newer version of the DHD driver,
-> designed for BCM4329 (v. 4.218), which after some modifications (BCD protocol
-> version 2, some event IDs, etc.) started to work on my hardware, with one
-> exception: waiting for RxCtrl after sending an "iscanresults" request times
-> out. I'm attaching driver debug output at the bottom of this message.
-> 
-> A bit more details about my hardware: a Samsung S3C6410-based board connected
-> to a BCM4325 chip using 4-bit SDIO interface, without dedicated IRQ pin (using
-> SDIO IRQ feature), so undefining of OOB_INTR_ONLY and HW_OOB and defining of
-> SDIO_ISR_THREAD was needed.
-> 
-> Do you have any suggestions?
+The header file linux/compat-2.6.h is inclued through -include
+$(M)/include/linux/compat-2.6.h in the main Makefile for a long time. This
+includes all the compat-*.h files backporting some stuff needed to
+compile on older kernels. We do not have to add this include into
+cfg80211.h any more.
 
-Tom,
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/98-add-compat-wireless.patch |   30 ------------------------------
+ 1 files changed, 0 insertions(+), 30 deletions(-)
+ delete mode 100644 patches/98-add-compat-wireless.patch
 
-The brcmfmac driver (in staging) doesn't yet support the BCM4325.  As you
-found, there are a variety of older driver sources available in other repos.
-You can contact Howard Harte <hharte@broadcom.com> to see about a combination
-of those sources and firmware that will support your platform in the near term.
-
-- Henry
-
+diff --git a/patches/98-add-compat-wireless.patch b/patches/98-add-compat-wireless.patch
+deleted file mode 100644
+index 76def9a..0000000
+--- a/patches/98-add-compat-wireless.patch
++++ /dev/null
+@@ -1,30 +0,0 @@
+-
+-This patch file includes the changes required to add
+-compat-wireless support. Besides all the patches in this
+-directory we have our own compat-2.6.*.[ch] files which
+-help backport more. These the respective compat-2.6.2x.c
+-files get compiled and enabled if you are on older kernels
+-to bring in support for new features when possible.
+-
+-Lastly, the cfg80211.h change is what allows us to
+-get all compat-2.6.*.h files included. Its our only
+-point of entry through compat code. It works because
+-all drivers we are supporting through there one way
+-or another depend on cfg80211. New wireless drivers
+-are either mac80211 drivers or cfg80211 drivers, and
+-all mac80211 drivesr are cfg80211 drivers.
+-
+-If your driver is not a cfg80211 driver you must
+-ensure you include compat.h then. I think we
+-added compat.h also for ssb, I forget.
+-
+---- a/include/net/cfg80211.h
+-+++ b/include/net/cfg80211.h
+-@@ -23,6 +23,7 @@
+- /* remove once we remove the wext stuff */
+- #include <net/iw_handler.h>
+- #include <linux/wireless.h>
+-+#include <linux/compat-2.6.h>
+- 
+- 
+- /**
+-- 
+1.7.4.1
 
