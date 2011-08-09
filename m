@@ -1,71 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:51354 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754531Ab1HKJRn (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:35863 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751812Ab1HIJNt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 05:17:43 -0400
-Received: by mail-bw0-f51.google.com with SMTP id r19so835187bka.38
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 02:17:42 -0700 (PDT)
-Subject: Re: [PATCH 33/40] wl12xx: track freed packets in FW by AC
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1312881233-9366-34-git-send-email-eliad@wizery.com>
+	Tue, 9 Aug 2011 05:13:49 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 5so2430702wwf.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:13:49 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 09/40] wl12xx: enable/disable role on interface add/remove
+Date: Tue,  9 Aug 2011 12:13:22 +0300
+Message-Id: <1312881233-9366-10-git-send-email-eliad@wizery.com> (sfid-20110809_111352_583384_D65FF08A)
+In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
 References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-	 <1312881233-9366-34-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 11 Aug 2011 12:17:38 +0300
-Message-ID: <1313054258.2407.820.camel@cumari> (sfid-20110811_111747_775224_8C940074)
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
-> From: Arik Nemtsov <arik@wizery.com>
-> 
-> Track the number of freed packets in each AC when receiving an interrupt
-> from the FW. This paves the way for tracking allocated packets per AC.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
->  drivers/net/wireless/wl12xx/main.c   |   16 +++++++++++++++-
->  drivers/net/wireless/wl12xx/tx.c     |    2 ++
->  drivers/net/wireless/wl12xx/wl12xx.h |    8 ++++++--
->  3 files changed, 23 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> index b223c27..3bfd772 100644
-> --- a/drivers/net/wireless/wl12xx/main.c
-> +++ b/drivers/net/wireless/wl12xx/main.c
-> @@ -810,22 +810,32 @@ static void wl1271_irq_update_links_status(struct wl1271 *wl,
->  static void wl1271_fw_status(struct wl1271 *wl,
->  			     struct wl1271_fw_status *status)
->  {
->  	struct timespec ts;
->  	u32 old_tx_blk_count = wl->tx_blocks_available;
->  	int avail, freed_blocks;
-> +	int i;
->  
->  	wl1271_raw_read(wl, FW_STATUS_ADDR, status, sizeof(*status), false);
->  
->  	wl1271_debug(DEBUG_IRQ, "intr: 0x%x (fw_rx_counter = %d, "
->  		     "drv_rx_counter = %d, tx_results_counter = %d)",
->  		     status->intr,
->  		     status->fw_rx_counter,
->  		     status->drv_rx_counter,
->  		     status->tx_results_counter);
->  
-> +	for (i = 0; i < NUM_TX_QUEUES; i++) {
-> +		/* prevent wrap-around in freed-packets counter */
-> +		wl->tx_allocated_pkts -=
-> +				(status->tx_released_pkts[i] -
-> +				wl->tx_pkts_freed[i] + 256) % 256;
+According to the new multi-role flow, we have to enable the
+role before using (starting) it, and disable it on cleanup
+(after it's no longer needed).
 
-Isn't the "+ 256" useless here, since you'll mod the result anyway? 
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   38 ++++++++++++++++++++++++++++++++++++
+ 1 files changed, 38 insertions(+), 0 deletions(-)
 
-
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index a348d18..ba0470f 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1770,12 +1770,27 @@ static int wl1271_op_start(struct ieee80211_hw *hw)
+ 
+ static void wl1271_op_stop(struct ieee80211_hw *hw)
+ {
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 stop");
+ }
+ 
++static u8 wl1271_get_role_type(struct wl1271 *wl)
++{
++	switch (wl->bss_type) {
++	case BSS_TYPE_AP_BSS:
++		return WL1271_ROLE_AP;
++
++	case BSS_TYPE_STA_BSS:
++		return WL1271_ROLE_STA;
++
++	default:
++		wl1271_info("invalid bss_type: %d", wl->bss_type);
++	}
++	return 0xff;
++}
++
+ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 				   struct ieee80211_vif *vif)
+ {
+ 	struct wl1271 *wl = hw->priv;
+ 	struct wiphy *wiphy = hw->wiphy;
+ 	int retries = WL1271_BOOT_RETRIES;
+@@ -1836,12 +1851,17 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 			goto power_off;
+ 
+ 		ret = wl1271_boot(wl);
+ 		if (ret < 0)
+ 			goto power_off;
+ 
++		ret = wl1271_cmd_role_enable(wl, wl1271_get_role_type(wl),
++					     &wl->role_id);
++		if (ret < 0)
++			goto irq_disable;
++
+ 		ret = wl1271_hw_init(wl);
+ 		if (ret < 0)
+ 			goto irq_disable;
+ 
+ 		booted = true;
+ 		break;
+@@ -1900,12 +1920,13 @@ out:
+ 	return ret;
+ }
+ 
+ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+ 					 bool reset_tx_queues)
+ {
++	int ret;
+ 
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 remove interface");
+ 
+ 	/* because of hardware recovery, we may get here twice */
+ 	if (wl->state != WL1271_STATE_ON)
+ 		return;
+@@ -1924,12 +1945,29 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+ 		wl->scan.state = WL1271_SCAN_STATE_IDLE;
+ 		memset(wl->scan.scanned_ch, 0, sizeof(wl->scan.scanned_ch));
+ 		wl->scan.req = NULL;
+ 		ieee80211_scan_completed(wl->hw, true);
+ 	}
+ 
++	if (!test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags)) {
++		/* disable active roles */
++		ret = wl1271_ps_elp_wakeup(wl);
++		if (ret < 0) {
++			/*
++			 * do nothing. we are going to power off the chip
++			 * anyway. handle this case when we'll really
++			 * support multi-role...
++			 */
++		}
++		wl1271_cmd_role_disable(wl, &wl->role_id);
++
++		wl1271_ps_elp_sleep(wl);
++	}
++
++	wl->sta_hlid = WL1271_INVALID_LINK_ID;
++
+ 	/*
+ 	 * this must be before the cancel_work calls below, so that the work
+ 	 * functions don't perform further work.
+ 	 */
+ 	wl->state = WL1271_STATE_OFF;
+ 
 -- 
-Cheers,
-Luca.
+1.7.6.401.g6a319
 
