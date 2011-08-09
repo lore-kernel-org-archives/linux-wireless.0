@@ -1,170 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1713 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753376Ab1HHN7i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:38 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 72/82] staging: brcm80211: remove function pointer of
- interrupt isr in brcmfmac
-Date: Mon, 8 Aug 2011 15:58:56 +0200
-Message-ID: <1312811946-16713-73-git-send-email-arend@broadcom.com> (sfid-20110808_160009_541140_140CDDB7)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:52328 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752790Ab1HIJOW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2011 05:14:22 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 24so210690wyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:21 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 27/40] wl12xx: support IBSS vif type
+Date: Tue,  9 Aug 2011 12:13:40 +0300
+Message-Id: <1312881233-9366-28-git-send-email-eliad@wizery.com> (sfid-20110809_111429_437899_A0E5B2A7)
+In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+Start IBSS role when the interface type is IBSS.
+As with sta role, use the dev role until the role
+is started.
 
-The use of function pointer of bus interrupt isr is no longer needed
-in fullmac as there is only one available isr.
-
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |    5 ++---
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   19 +++----------------
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |    3 ++-
- drivers/staging/brcm80211/brcmfmac/sdio_host.h    |   10 +++-------
- 4 files changed, 10 insertions(+), 27 deletions(-)
+ drivers/net/wireless/wl12xx/main.c   |   33 ++++++++++++++++++++++++++++-----
+ drivers/net/wireless/wl12xx/scan.c   |    9 ++++++++-
+ drivers/net/wireless/wl12xx/tx.c     |    3 ++-
+ drivers/net/wireless/wl12xx/wl12xx.h |    1 +
+ 4 files changed, 39 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-index 3a6c015..c9893e9 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-@@ -53,10 +53,9 @@ brcmf_sdcard_iovar_op(struct brcmf_sdio_dev *sdiodev, const char *name,
- 				    len, set);
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 6a87086..d81a735 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1760,12 +1760,15 @@ static u8 wl1271_get_role_type(struct wl1271 *wl)
+ 	case BSS_TYPE_AP_BSS:
+ 		return WL1271_ROLE_AP;
+ 
+ 	case BSS_TYPE_STA_BSS:
+ 		return WL1271_ROLE_STA;
+ 
++	case BSS_TYPE_IBSS:
++		return WL1271_ROLE_IBSS;
++
+ 	default:
+ 		wl1271_info("invalid bss_type: %d", wl->bss_type);
+ 	}
+ 	return 0xff;
  }
  
--int brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev,
--			  void (*fn)(void *), void *argh)
-+int brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev)
- {
--	return brcmf_sdioh_interrupt_register(sdiodev->sdioh, fn, argh);
-+	return brcmf_sdioh_interrupt_register(sdiodev->sdioh);
+@@ -1832,13 +1835,14 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 			goto power_off;
+ 
+ 		ret = wl1271_boot(wl);
+ 		if (ret < 0)
+ 			goto power_off;
+ 
+-		if (wl->bss_type == BSS_TYPE_STA_BSS) {
++		if (wl->bss_type == BSS_TYPE_STA_BSS ||
++		    wl->bss_type == BSS_TYPE_IBSS) {
+ 			ret = wl1271_cmd_role_enable(wl,
+ 							 WL1271_ROLE_DEVICE,
+ 							 &wl->dev_role_id);
+ 			if (ret < 0)
+ 				goto irq_disable;
+ 		}
+@@ -2055,12 +2059,13 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
+ 	cancel_work_sync(&wl->recovery_work);
  }
  
- int brcmf_sdcard_intr_dereg(struct brcmf_sdio_dev *sdiodev)
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index db43b09..1256847 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -228,19 +228,9 @@ extern int brcmf_sdioh_detach(struct sdioh_info *sd)
- 
- /* Configure callback to client when we receive client interrupt */
- extern int
--brcmf_sdioh_interrupt_register(struct sdioh_info *sd, void (*fn)(void *),
--			       void *argh)
-+brcmf_sdioh_interrupt_register(struct sdioh_info *sd)
+ static int wl1271_join(struct wl1271 *wl, bool set_assoc)
  {
- 	BRCMF_TRACE(("%s: Entering\n", __func__));
--	if (fn == NULL) {
--		BRCMF_ERROR(("%s: interrupt handler is NULL, not registering\n",
--			__func__));
--		return -EINVAL;
--	}
--
--	sd->intr_handler = fn;
--	sd->intr_handler_arg = argh;
--	sd->intr_handler_valid = true;
+ 	int ret;
++	bool is_ibss = (wl->bss_type == BSS_TYPE_IBSS);
  
- 	/* register and unmask irq */
- 	if (gInstance->func[2]) {
-@@ -277,10 +267,6 @@ extern int brcmf_sdioh_interrupt_deregister(struct sdioh_info *sd)
- 		sdio_release_host(gInstance->func[2]);
+ 	/*
+ 	 * One of the side effects of the JOIN command is that is clears
+ 	 * WPA/WPA2 keys from the chipset. Performing a JOIN while associated
+ 	 * to a WPA/WPA2 access point will therefore kill the data-path.
+ 	 * Currently the only valid scenario for JOIN during association
+@@ -2071,13 +2076,16 @@ static int wl1271_join(struct wl1271 *wl, bool set_assoc)
+ 	if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
+ 		wl1271_info("JOIN while associated.");
+ 
+ 	if (set_assoc)
+ 		set_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags);
+ 
+-	ret = wl1271_cmd_role_start_sta(wl);
++	if (is_ibss)
++		ret = wl1271_cmd_role_start_ibss(wl);
++	else
++		ret = wl1271_cmd_role_start_sta(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+ 	if (!test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
+ 		goto out;
+ 
+@@ -3093,12 +3101,13 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
+ 					struct ieee80211_vif *vif,
+ 					struct ieee80211_bss_conf *bss_conf,
+ 					u32 changed)
+ {
+ 	bool do_join = false, set_assoc = false;
+ 	bool is_ibss = (wl->bss_type == BSS_TYPE_IBSS);
++	bool ibss_joined = false;
+ 	u32 sta_rate_set = 0;
+ 	int ret;
+ 	struct ieee80211_sta *sta;
+ 	bool sta_exists = false;
+ 	struct ieee80211_sta_ht_cap sta_ht_cap;
+ 
+@@ -3106,20 +3115,34 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
+ 		ret = wl1271_bss_beacon_info_changed(wl, vif, bss_conf,
+ 						     changed);
+ 		if (ret < 0)
+ 			goto out;
  	}
  
--	sd->intr_handler_valid = false;
--	sd->intr_handler = NULL;
--	sd->intr_handler_arg = NULL;
--
- 	return 0;
- }
+-	if ((changed & BSS_CHANGED_BEACON_INT)  && is_ibss)
++	if (changed & BSS_CHANGED_IBSS) {
++		if (bss_conf->ibss_joined) {
++			set_bit(WL1271_FLAG_IBSS_JOINED, &wl->flags);
++			ibss_joined = true;
++		} else {
++			if (test_and_clear_bit(WL1271_FLAG_IBSS_JOINED,
++					       &wl->flags)) {
++				wl1271_unjoin(wl);
++				wl1271_cmd_role_start_dev(wl);
++				wl1271_roc(wl, wl->dev_role_id);
++			}
++		}
++	}
++
++	if ((changed & BSS_CHANGED_BEACON_INT) && ibss_joined)
+ 		do_join = true;
  
-@@ -877,6 +863,7 @@ brcmf_sdioh_card_regread(struct sdioh_info *sd, int func, u32 regaddr,
- static void brcmf_sdioh_irqhandler(struct sdio_func *func)
+ 	/* Need to update the SSID (for filtering etc) */
+-	if ((changed & BSS_CHANGED_BEACON) && is_ibss)
++	if ((changed & BSS_CHANGED_BEACON) && ibss_joined)
+ 		do_join = true;
+ 
+-	if ((changed & BSS_CHANGED_BEACON_ENABLED) && is_ibss) {
++	if ((changed & BSS_CHANGED_BEACON_ENABLED) && ibss_joined) {
+ 		wl1271_debug(DEBUG_ADHOC, "ad-hoc beaconing: %s",
+ 			     bss_conf->enable_beacon ? "enabled" : "disabled");
+ 
+ 		if (bss_conf->enable_beacon)
+ 			wl->set_bss_type = BSS_TYPE_IBSS;
+ 		else
+diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+index 52f2b6b..bb90002 100644
+--- a/drivers/net/wireless/wl12xx/scan.c
++++ b/drivers/net/wireless/wl12xx/scan.c
+@@ -31,12 +31,13 @@
+ 
+ void wl1271_scan_complete_work(struct work_struct *work)
  {
- 	struct sdioh_info *sd;
-+	struct brcmf_sdio_dev *sdiodev = dev_get_drvdata(&func->card->dev);
+ 	struct delayed_work *dwork;
+ 	struct wl1271 *wl;
+ 	int ret;
++	bool is_sta, is_ibss;
  
- 	BRCMF_TRACE(("brcmf: ***IRQHandler\n"));
- 	sd = gInstance->sd;
-@@ -884,7 +871,7 @@ static void brcmf_sdioh_irqhandler(struct sdio_func *func)
- 	sdio_release_host(gInstance->func[0]);
+ 	dwork = container_of(work, struct delayed_work, work);
+ 	wl = container_of(dwork, struct wl1271, scan_complete_work);
  
- 	sd->intrcount++;
--	(sd->intr_handler) (sd->intr_handler_arg);
-+	brcmf_sdbrcm_isr(sdiodev->bus);
+ 	wl1271_debug(DEBUG_SCAN, "Scanning complete");
  
- 	sdio_claim_host(gInstance->func[0]);
- }
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index eb3cf10..74c9d4e 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -5424,6 +5424,7 @@ void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
- 		goto fail;
+@@ -56,13 +57,19 @@ void wl1271_scan_complete_work(struct work_struct *work)
+ 	if (ret < 0)
+ 		goto out;
+ 
+ 	if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags)) {
+ 		/* restore hardware connection monitoring template */
+ 		wl1271_cmd_build_ap_probe_req(wl, wl->probereq);
+-	} else {
++	}
++
++	/* return to ROC if needed */
++	is_sta = (wl->bss_type == BSS_TYPE_STA_BSS);
++	is_ibss = (wl->bss_type == BSS_TYPE_IBSS);
++	if ((is_sta && !test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags)) ||
++	    (is_ibss && !test_bit(WL1271_FLAG_IBSS_JOINED, &wl->flags))) {
+ 		/* restore remain on channel */
+ 		wl1271_cmd_role_start_dev(wl);
+ 		wl1271_roc(wl, wl->dev_role_id);
  	}
- 	bus->sdiodev = sdiodev;
-+	sdiodev->bus = bus;
- 	bus->bus = BRCMF_BUS;
- 	bus->tx_seq = SDPCM_SEQUENCE_WRAP - 1;
- 	bus->usebufpool = false;	/* Use bufpool if allocated,
-@@ -5506,7 +5507,7 @@ void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
- 	/* Register interrupt callback, but mask it (not operational yet). */
- 	BRCMF_INTR(("%s: disable SDIO interrupts (not interested yet)\n",
- 		    __func__));
--	ret = brcmf_sdcard_intr_reg(bus->sdiodev, brcmf_sdbrcm_isr, bus);
-+	ret = brcmf_sdcard_intr_reg(bus->sdiodev);
- 	if (ret != 0) {
- 		BRCMF_ERROR(("%s: FAILED: sdcard_intr_reg returned %d\n",
- 			     __func__, ret));
-diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-index 4fcba2a..c5a68c0 100644
---- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-@@ -124,9 +124,6 @@ struct brcmf_sdreg {
+ 	wl1271_ps_elp_sleep(wl);
  
- struct sdioh_info {
- 	struct osl_info *osh;		/* osh handler */
--	bool intr_handler_valid; /* client driver interrupt handler valid */
--	void (*intr_handler)(void *);	/* registered interrupt handler */
--	void *intr_handler_arg;	/* argument to call interrupt handler */
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index d99922c..52a9ae9 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -384,13 +384,14 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
  
- 	uint irq;		/* Client irq */
- 	int intrcount;		/* Client interrupts */
-@@ -159,8 +156,7 @@ struct brcmf_sdio_dev {
+ 	if (wl12xx_is_dummy_packet(wl, skb))
+ 		hlid = wl->system_hlid;
+ 	else if (wl->bss_type == BSS_TYPE_AP_BSS)
+ 		hlid = wl1271_tx_get_hlid(wl, skb);
+ 	else
+-		if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
++		if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags) ||
++		    test_bit(WL1271_FLAG_IBSS_JOINED, &wl->flags))
+ 			hlid = wl->sta_hlid;
+ 		else
+ 			hlid = wl->dev_hlid;
  
- /* Register/deregister device interrupt handler. */
- extern int
--brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev,
--		      void (*fn)(void *), void *argh);
-+brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev);
+ 	if (hlid == WL1271_INVALID_LINK_ID) {
+ 		wl1271_error("invalid hlid. dropping skb 0x%p", skb);
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 97a40c3..dfe08e5 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -321,12 +321,13 @@ struct wl1271_ap_key {
+ 	u32 tx_seq_32;
+ 	u16 tx_seq_16;
+ };
  
- extern int brcmf_sdcard_intr_dereg(struct brcmf_sdio_dev *sdiodev);
- 
-@@ -278,8 +274,7 @@ extern struct sdioh_info *brcmf_sdioh_attach(void *cfghdl);
- extern int brcmf_sdioh_detach(struct sdioh_info *si);
- 
- extern int
--brcmf_sdioh_interrupt_register(struct sdioh_info *si,
--			       void (*sdioh_cb_fn)(void *), void *argh);
-+brcmf_sdioh_interrupt_register(struct sdioh_info *si);
- 
- extern int brcmf_sdioh_interrupt_deregister(struct sdioh_info *si);
- 
-@@ -328,4 +323,5 @@ extern struct brcmf_sdmmc_instance *gInstance;
- extern void *brcmf_sdbrcm_probe(u16 bus_no, u16 slot, u16 func, uint bustype,
- 				u32 regsva, struct brcmf_sdio_dev *sdiodev);
- extern void brcmf_sdbrcm_disconnect(void *ptr);
-+extern void brcmf_sdbrcm_isr(void *arg);
- #endif				/* _BRCM_SDH_H_ */
+ enum wl12xx_flags {
+ 	WL1271_FLAG_STA_ASSOCIATED,
++	WL1271_FLAG_IBSS_JOINED,
+ 	WL1271_FLAG_ROC,
+ 	WL1271_FLAG_GPIO_POWER,
+ 	WL1271_FLAG_TX_QUEUE_STOPPED,
+ 	WL1271_FLAG_TX_PENDING,
+ 	WL1271_FLAG_IN_ELP,
+ 	WL1271_FLAG_ELP_REQUESTED,
 -- 
-1.7.4.1
-
+1.7.6.401.g6a319
 
