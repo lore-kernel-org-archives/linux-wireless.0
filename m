@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:45471 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752390Ab1HPAdE (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:37556 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751134Ab1HIDHG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 20:33:04 -0400
-Message-ID: <4E49BAB1.7060303@qca.qualcomm.com> (sfid-20110816_023311_437025_270E193E)
-Date: Mon, 15 Aug 2011 17:32:49 -0700
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 8 Aug 2011 23:07:06 -0400
+Received: by pzk37 with SMTP id 37so9335550pzk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 20:07:05 -0700 (PDT)
 MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: Lin Tony-B19295 <B19295@freescale.com>,
-	"mcgrof@gmail.com" <mcgrof@gmail.com>,
-	"rodrigue@qca.qualcomm.com" <rodrigue@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	<rmani@qca.qualcomm.com>
-Subject: Re: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
-References: <1313060347-665-1-git-send-email-hauke@hauke-m.de> <97D3A72708D04647A5AC84A04996E5B5193114@039-SN1MPN1-002.039d.mgd.msft.net> <4E496CA7.7000604@hauke-m.de>
-In-Reply-To: <4E496CA7.7000604@hauke-m.de>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <CAJ-Vmo=SED0RLmQot2yAeAmv53Yitn+RV31tf2zWOmBHXzq_0w@mail.gmail.com>
+References: <CAH-LUqry4TKAvnojAo39QfT-Wy_BN94SYJEiCCRX4hrb=RcfwQ@mail.gmail.com>
+	<CAJ-Vmo=SED0RLmQot2yAeAmv53Yitn+RV31tf2zWOmBHXzq_0w@mail.gmail.com>
+Date: Tue, 9 Aug 2011 11:07:05 +0800
+Message-ID: <CAH-LUqrHifnWY=V-p6zs0RPoLtqQadVysQ6ZLj0tEXXbuF_e+w@mail.gmail.com> (sfid-20110809_050723_183618_9EDE555B)
+Subject: Re: AR9285 Wireless 80211n mode get only 25Mbit with Linux 2.6.38.8
+ and compat-wireless-2.6.38.2-2
+From: Dane Shih <daneshih1981@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/15/2011 11:59 AM, Hauke Mehrtens wrote:
-> On 08/15/2011 07:06 AM, Lin Tony-B19295 wrote:
->> Where can I get corresponding firmware?
->>
->> tony
-> 
-> Hi tony,
-> 
-> there is a firmware for these devices in the linux-firmware git [0], but
-> I do not know if it still works with this driver.
-> 
-> Probably some of the ath6kl developer could help you more than me.
+2011/8/9 Adrian Chadd <adrian@freebsd.org>:
+> On 9 August 2011 11:00, Dane Shih <daneshih1981@gmail.com> wrote:
+>
+>> /etc/modprobe.d/ath9.conf
+>> options ath9k nohwcrypt=1
+>> modprobe -v ath9k
+>
+> Out of curiousity, why are you using nohwcrypt=1 ?
+>
+>
+> adrian
+>
 
-Yes, the firmware in linux-firmware should work. If not, please report
-it to linux-wireless mailing list.
-
-Kalle
+http://ubuntuforums.org/showthread.php?t=1746326
+http://www.fedoraforum.org/forum/showthread.php?t=252404
