@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:52129 "EHLO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751884Ab1HJK1p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 06:27:45 -0400
-Received: by mail-fx0-f41.google.com with SMTP id 9so1110020fxg.14
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 03:27:44 -0700 (PDT)
-Subject: Re: [PATCH 08/40] wl12xx: wl12xx-fw-3 - update commands & events
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAB3XZEf-TyTfuF_p6WcZVn2T7_3A+K75GeYLAOOzHcx12qX7mA@mail.gmail.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-	 <1312881233-9366-9-git-send-email-eliad@wizery.com>
-	 <1312967955.2407.452.camel@cumari>
-	 <CAB3XZEf-TyTfuF_p6WcZVn2T7_3A+K75GeYLAOOzHcx12qX7mA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 10 Aug 2011 13:27:41 +0300
-Message-ID: <1312972061.2407.474.camel@cumari> (sfid-20110810_122748_636098_FA60FF55)
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:4304 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752388Ab1HIJu5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2011 05:50:57 -0400
+Date: Tue, 9 Aug 2011 11:50:51 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Justin Piszcz <jpiszcz@lucidpixels.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] rt2x00: rt2800usb: fix races in tx queue
+Message-ID: <20110809095050.GD2152@redhat.com> (sfid-20110809_115100_685709_9E4BE636)
+References: <20110804124653.GB5739@redhat.com>
+ <CAOZOX0Xpv9OPqx2Y3GnajhmDvx3GyL1xTAjEOYjOToWcQxB6bA@mail.gmail.com>
+ <20110808092914.GA2168@redhat.com>
+ <20110808093512.GB2168@redhat.com>
+ <4E404D5C.30401@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E404D5C.30401@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-08-10 at 13:24 +0300, Eliad Peller wrote: 
-> On Wed, Aug 10, 2011 at 12:19 PM, Luciano Coelho <coelho@ti.com> wrote:
-> > On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote:
-> >> +enum wl1271_cmd_lid_key_type {
-> >> +     UNICAST_LID_TYPE     = 0,
-> >> +     BROADCAST_LID_TYPE   = 1,
-> >> +     WEP_DEFAULT_LID_TYPE = 2
-> >> +};
-> >
-> > Doesn't LID_TYPE_UNICAST, LID_TYPE_BROADCAST and so on look better?
-> >
-> it does, but i didn't touch this struct (it wasn't in the context diff
-> expected, so it looks like it was deleted and re-added), and i should
-> avoid adding more stuff (changing all the existing uses of this enum)
-> to this already-too-big patch.
+Hello Gertjan 
 
-Right, right.  I didn't realize that this was actually moved, not added
-here.
+On Mon, Aug 08, 2011 at 10:55:56PM +0200, Gertjan van Wingerde wrote:
+> Sorry for responding this late. I just didn't find the bandwidth to look at this earlier :-(
+> 
+> First of all, I don't think stable should be cc-ed on this particular patch. Although the ideas
+> of the patch are certainly applicable to the stable trees, this patch will simply not apply to
+> 3.0 or earlier, since the code you are patching has been moved around between 3.0 and 3.1.
 
--- 
-Cheers,
-Luca.
+CCing stable mean that we want that fix in stable kernel, not that patch
+have to apply cleanly. When greg-kh will be applying patch on stable tries,
+I'll provide proper backport.
 
+> Second, I think it would be appropriate to split the patch in 2, or maybe 3, parts:
+> 	1. The hunk to rt2x00usb to reverse the entry flag handling and the tx dma done handling.
+> 	2. The hunk that checks that the entry on which the TX status is being reported has
+>            already been properly completed its TX done handling.
+> 	3. The remainder, i.e. the retrying of handling a TX status report if the entry hasn't been
+>            fully completed its TX done handling yet. 
+> 
+> The code in this area has been proven to be very fragile, so I prefer to make mini changes to it in
+> small steps, so that we can properly bisect which change exactly has caused a problem.
+> 
+> See further down for more thoughts.
+
+Thanks for comments. I'll repost small patch that should fix the bug
+and don't do things you dislike.
+
+Stanislaw
