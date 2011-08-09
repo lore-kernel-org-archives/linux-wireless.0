@@ -1,145 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7151 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756017Ab1H3TDI (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:38993 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751642Ab1HIF33 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 15:03:08 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH v2 12/22] ath6kl: Report received Probe Request frames to cfg80211
-Date: Tue, 30 Aug 2011 21:58:01 +0300
-Message-ID: <1314730691-12089-13-git-send-email-jouni@qca.qualcomm.com> (sfid-20110830_210312_566508_57024BB9)
-In-Reply-To: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
+	Tue, 9 Aug 2011 01:29:29 -0400
+Received: by wwf5 with SMTP id 5so2275198wwf.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 22:29:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAH-LUqry4TKAvnojAo39QfT-Wy_BN94SYJEiCCRX4hrb=RcfwQ@mail.gmail.com>
+References: <CAH-LUqry4TKAvnojAo39QfT-Wy_BN94SYJEiCCRX4hrb=RcfwQ@mail.gmail.com>
+Date: Tue, 9 Aug 2011 10:59:27 +0530
+Message-ID: <CAD2nsn3kmo5rau17oRA83pBJRjw9cmsTQeONV5wAu9xck9xXRA@mail.gmail.com> (sfid-20110809_072932_474388_029EF3C8)
+Subject: Re: AR9285 Wireless 80211n mode get only 25Mbit with Linux 2.6.38.8
+ and compat-wireless-2.6.38.2-2
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Dane Shih <daneshih1981@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Adrian Chadd <adrian@freebsd.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   19 +++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/core.h     |    1 +
- drivers/net/wireless/ath/ath6kl/init.c     |    7 +++++++
- drivers/net/wireless/ath/ath6kl/wmi.c      |   20 ++++++++++++++++----
- 4 files changed, 43 insertions(+), 4 deletions(-)
+On Tue, Aug 9, 2011 at 8:30 AM, Dane Shih <daneshih1981@gmail.com> wrote:
+> hi all
+>
+> i try to setup AR9285 Wireless  ap mode on fedora 12
+>
+> but it seem not stable when setup Master mode use hostapd
+> so ...i upgrade kernel to  2.6.38.8
+> it's better, no more disconnect
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 78b1788..6033959 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1740,6 +1740,24 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
- 					  buf, len);
- }
- 
-+static void ath6kl_mgmt_frame_register(struct wiphy *wiphy,
-+				       struct net_device *dev,
-+				       u16 frame_type, bool reg)
-+{
-+	struct ath6kl *ar = ath6kl_priv(dev);
-+
-+	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: frame_type=0x%x reg=%d\n",
-+		   __func__, frame_type, reg);
-+	if (frame_type == IEEE80211_STYPE_PROBE_REQ) {
-+		/*
-+		 * Note: This notification callback is not allowed to sleep, so
-+		 * we cannot send WMI_PROBE_REQ_REPORT_CMD here. Instead, we
-+		 * hardcode target to report Probe Request frames all the time.
-+		 */
-+		ar->probe_req_report = reg;
-+	}
-+}
-+
- static struct cfg80211_ops ath6kl_cfg80211_ops = {
- 	.change_virtual_intf = ath6kl_cfg80211_change_iface,
- 	.scan = ath6kl_cfg80211_scan,
-@@ -1770,6 +1788,7 @@ static struct cfg80211_ops ath6kl_cfg80211_ops = {
- 	.remain_on_channel = ath6kl_remain_on_channel,
- 	.cancel_remain_on_channel = ath6kl_cancel_remain_on_channel,
- 	.mgmt_tx = ath6kl_mgmt_tx,
-+	.mgmt_frame_register = ath6kl_mgmt_frame_register,
- };
- 
- struct wireless_dev *ath6kl_cfg80211_init(struct device *dev)
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 3872edb..99cabd2 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -457,6 +457,7 @@ struct ath6kl {
- 	struct dentry *debugfs_phy;
- 
- 	u32 send_action_id;
-+	bool probe_req_report;
- 	u16 next_chan;
- };
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 48c82e9..3b99ae2 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -471,6 +471,13 @@ static int ath6kl_target_config_wlan_params(struct ath6kl *ar)
- 			   ret);
- 	}
- 
-+	/* Enable Probe Request reporting for P2P */
-+	ret = ath6kl_wmi_probe_report_req_cmd(ar->wmi, true);
-+	if (ret) {
-+		ath6kl_dbg(ATH6KL_DBG_TRC, "failed to enable Probe Request "
-+			   "reporting (%d)\n", ret);
-+	}
-+
- 	return status;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index bbe3e8d..9b2a182 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -499,18 +499,30 @@ static int ath6kl_wmi_tx_status_event_rx(u8 *datap, int len)
- 	return 0;
- }
- 
--static int ath6kl_wmi_rx_probe_req_event_rx(u8 *datap, int len)
-+static int ath6kl_wmi_rx_probe_req_event_rx(struct wmi *wmi, u8 *datap, int len)
- {
- 	struct wmi_p2p_rx_probe_req_event *ev;
-+	u32 freq;
- 	u16 dlen;
-+	struct ath6kl *ar = wmi->parent_dev;
- 
- 	if (len < sizeof(*ev))
- 		return -EINVAL;
- 
- 	ev = (struct wmi_p2p_rx_probe_req_event *) datap;
-+	freq = le32_to_cpu(ev->freq);
- 	dlen = le16_to_cpu(ev->len);
--	ath6kl_dbg(ATH6KL_DBG_WMI, "rx_probe_req: len=%u\n",
--		   dlen);
-+	if (datap + len < ev->data + dlen) {
-+		ath6kl_err("invalid wmi_p2p_rx_probe_req_event: "
-+			   "len=%d dlen=%u\n", len, dlen);
-+		return -EINVAL;
-+	}
-+	ath6kl_dbg(ATH6KL_DBG_WMI, "rx_probe_req: len=%u freq=%u "
-+		   "probe_req_report=%d\n",
-+		   dlen, freq, ar->probe_req_report);
-+
-+	if (ar->probe_req_report || ar->nw_type == AP_NETWORK)
-+		cfg80211_rx_mgmt(ar->net_dev, freq, ev->data, dlen, GFP_ATOMIC);
- 
- 	return 0;
- }
-@@ -3045,7 +3057,7 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
- 		break;
- 	case WMI_RX_PROBE_REQ_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_RX_PROBE_REQ_EVENTID\n");
--		ret = ath6kl_wmi_rx_probe_req_event_rx(datap, len);
-+		ret = ath6kl_wmi_rx_probe_req_event_rx(wmi, datap, len);
- 		break;
- 	case WMI_P2P_CAPABILITIES_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_P2P_CAPABILITIES_EVENTID\n");
+please try to with the latest stable compat-wirelesss
+http://linuxwireless.org/en/users/Download/stable/#compat-wireless_3.0_stable_releases
+also the development version of hostapd
+git://w1.fi/srv/git/hostap.git
+
+>
+> but ap mode in 80211n
+>
+> hostapd.conf
+>
+> nterface=wlan0
+> driver=nl80211
+> ssid=test
+> hw_mode=g
+> wme_enabled=1
+> ieee80211n=1
+> ht_capab=HT40+
+> channel=7
+> auth_algs=3
+> ignore_broadcast_ssid=0
+>
+> throughput only 20Mbits
+
+also please try to add more ht_capab like shortGI, STBC etc, please
+use channel 1 for HT40+
+
+>
+> install compat-wireless-2.6.38.2-2 on linux
+>
+> /etc/modprobe.d/ath9.conf
+> options ath9k nohwcrypt=1
+> modprobe -v ath9k
+> insmod /lib/modules/2.6.38.8/updates/net/wireless/cfg80211.ko
+> insmod /lib/modules/2.6.38.8/updates/drivers/net/wireless/ath/ath.ko
+> insmod /lib/modules/2.6.38.8/updates/drivers/net/wireless/ath/ath9k/ath9k_hw.ko
+> insmod /lib/modules/2.6.38.8/updates/drivers/net/wireless/ath/ath9k/ath9k_common.ko
+> insmod /lib/modules/2.6.38.8/updates/net/mac80211/mac80211.ko
+> insmod /lib/modules/2.6.38.8/updates/drivers/net/wireless/ath/ath9k/ath9k.ko
+> nohwcrypt=1
+
+
+I don't know why we should do this, its better to use default hardware
+encryption, does it cause any issues.
+
+>
+> i get maxinum speed is 25Mbit
+> my pc mac acccess another AP maxinum 50Mbit
+>
+> setup AR9285 Wireless calint maxinum 30Mbit
+> AR9285 spec is 150Mbits
+>
+> thanks for any advice
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
 -- 
-1.7.4.1
-
+shafi
