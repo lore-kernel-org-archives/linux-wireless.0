@@ -1,32 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:33738 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932142Ab1HCXj1 (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:53933 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754337Ab1HIRoA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2011 19:39:27 -0400
-Date: Wed, 03 Aug 2011 16:38:06 -0700 (PDT)
-Message-Id: <20110803.163806.1160463770968078206.davem@davemloft.net> (sfid-20110804_013955_712353_02C9D01E)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2011-08-03
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110803144754.GB30439@tuxdriver.com>
-References: <20110803144754.GB30439@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 9 Aug 2011 13:44:00 -0400
+Received: by qwk3 with SMTP id 3so129383qwk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 10:43:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE6600131D0E347@dnce02.ent.ti.com>
+References: <AC090B9732AB2B4DB7FF476E907FE6600131D0E347@dnce02.ent.ti.com>
+Date: Tue, 9 Aug 2011 14:43:59 -0300
+Message-ID: <CAK3JMAa=1kuP7CRRMBLxZtMromYbDMz18W6ZT=1KoSCD=tfFkQ@mail.gmail.com> (sfid-20110809_194411_068851_56DC16DA)
+Subject: Re: [RFC] NFC: NCI protocol proposal
+From: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+To: "Elias, Ilan" <ilane@ti.com>
+Cc: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
+	"samuel@sortiz.org" <samuel@sortiz.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 3 Aug 2011 10:47:55 -0400
-
-> The following changes since commit 28f4881cbf9ce285edfc245a8990af36d21c062f:
-> 
->   bnx2x: Clear MDIO access warning during first driver load (2011-08-03 03:22:18 -0700)
-> 
-> are available in the git repository at:
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
-> 
-
-Looks a lot better, pulled, thanks!
+SGkgSWxhbiwKCjIwMTEvOC85IEVsaWFzLCBJbGFuIDxpbGFuZUB0aS5jb20+OgoKPiBXZSB3b3Vs
+ZCBsaWtlIHRvIGltcGxlbWVudCB0aGUgTkZDIENvbnRyb2xsZXIgSW50ZXJmYWNlIChOQ0kpIHBy
+b3RvY29sIGZvciB0aGUgTkZDIHN1YnN5c3RlbS4KPiBUaGUgTkNJIGlzIGEgc3RhbmRhcmQgY29t
+bXVuaWNhdGlvbiBwcm90b2NvbCBiZXR3ZWVuIGFuIE5GQyBDb250cm9sbGVyIChORkNDKSBhbmQg
+YSBEZXZpY2UgSG9zdCAoREgpLCBkZWZpbmVkIGJ5IHRoZSBORkMgRm9ydW0uCj4KPiBUaGUgTkNJ
+IHByb3RvY29sIGltcGxlbWVudGF0aW9uIHdpbGwgYmUgY2hpcCBpbmRlcGVuZGVudCBhbmQgcmVz
+cG9uc2libGUgZm9yOgo+IMKgIMKgIMKgIMKgLSBSZXNldCwgaW5pdGlhbGl6YXRpb24gYW5kIGNv
+bmZpZ3VyYXRpb24gb2YgdGhlIE5GQyBjb250cm9sbGVyCj4gwqAgwqAgwqAgwqAtIFNlbmRpbmcg
+Y29tbWFuZHMvZGF0YSB0byB0aGUgTkZDIGNvbnRyb2xsZXIKPiDCoCDCoCDCoCDCoC0gUmVjZWl2
+aW5nIHJlc3BvbnNlcy9ub3RpZmljYXRpb25zL2RhdGEgZnJvbSB0aGUgTkZDIGNvbnRyb2xsZXIK
+PiDCoCDCoCDCoCDCoC0gRmxvdyBjb250cm9sIGZvciBDb250cm9sIGFuZCBEYXRhIE1lc3NhZ2Vz
+Cj4gwqAgwqAgwqAgwqAtIFNlZ21lbnRhdGlvbiBhbmQgcmVhc3NlbWJseSBmb3IgQ29udHJvbCBh
+bmQgRGF0YSBNZXNzYWdlcwo+IMKgIMKgIMKgIMKgLSBBbiBhZGRyZXNzaW5nIHNjaGVtZSBmb3Ig
+TkZDIEV4ZWN1dGlvbiBFbnZpcm9ubWVudHMgKE5GQ0VFKSwgZS5nLiDCoCDCoCBzZWN1cmUgZWxl
+bWVudAo+IMKgIMKgIMKgIMKgLSBBbiBhZGRyZXNzaW5nIHNjaGVtZSBmb3IgUmVtb3RlIE5GQyBF
+bmRwb2ludHMgKE5GQ0VFIG9yIFJGIHRhcmdldHMpIMKgICh2aWEgbG9naWNhbCBjb25uZWN0aW9u
+cykKPgo+IFRoZSBOQ0kgcHJvdG9jb2wgd2lsbCBiZSBhZGRlZCB0byB0aGUgTkZDIHN1YnN5c3Rl
+bSBiZWxvdyB0aGUgTkZDIGNvcmU6Cj4KPiArLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0rCj4gfCDCoCDCoCDCoCDCoCDCoCDCoCDCoFVTRVIgU1BBQ0UgwqAgwqAgwqAgwqAg
+wqAgwqAgwqB8Cj4gKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tKwo+IMKg
+IMKgIF4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBeCj4gwqAgwqAgfCBsb3ct
+bGV2ZWwgwqAgwqAgwqAgwqAgwqAgwqAgwqB8IGNvbnRyb2wKPiDCoCDCoCB8IGRhdGEgZXhjaGFu
+Z2UgwqAgwqAgwqAgwqAgwqB8IG9wZXJhdGlvbnMKPiDCoCDCoCB8IMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgfAo+IMKgIMKgIHwgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqB2Cj4gwqAgwqAgfCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCstLS0tLS0tLS0t
+LSsKPiDCoCDCoCB8IEFGX05GQyDCoCDCoCDCoCDCoCDCoCB8IMKgbmV0bGluayDCoHwKPiDCoCDC
+oCB8IHNvY2tldCDCoCDCoCDCoCDCoCDCoCArLS0tLS0tLS0tLS0rCj4gwqAgwqAgfCByYXcgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBeCj4gwqAgwqAgfCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoHwKPiDCoCDCoCB2IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgdgo+ICstLS0tLS0tLS0rIMKgIMKgIMKgIMKgIMKgIMKgICstLS0tLS0tLS0tLSsKPiB8
+IHJhd3NvY2sgfCA8LS0tLS0tLS0tPiB8IE5GQyBjb3JlIMKgfAo+ICstLS0tLS0tLS0rIMKgIMKg
+IMKgIMKgIMKgIMKgICstLS0tLS0tLS0tLSsKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoF4KPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoHwKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoHYKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCstLS0tLS0tLS0tLSsK
+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHwgTkNJIGNvcmUgwqB8Cj4gwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqArLS0tLS0tLS0tLS0rCj4gwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBeCj4gwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqB8Cj4gwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBWCj4g
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqArLS0tLS0tLS0tLS0r
+Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqB8IMKgZHJpdmVy
+IMKgIHwKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCstLS0t
+LS0tLS0tLSsKPgo+IFRoZSBkcml2ZXIgd2lsbCByZWdpc3RlciBpdHNlbGYgdG8gdGhlIE5DSSBj
+b3JlLCBhbmQgaW4gdHVybiB0aGUgTkNJIGNvcmUgd2lsbCByZWdpc3RlciBpdHNlbGYgdG8gdGhl
+IE5GQyBjb3JlLgoKSXQgc291bmRzIHZlcnkgZ29vZCBmb3IgbWUuIFRoaXMgaXMgdGhlIHNhbWUg
+YXJjaGl0ZWN0dXJlIFNhbXVlbCBpcwppbXBsZW1lbnRpbmcgZm9yIHRoZSBORkMgSENJLgoKPgo+
+IFdlIG5lZWQgdG8gYWRkIHRoZSBmb2xsb3dpbmcgMiBjb250cm9sIG9wZXJhdGlvbnMgKHZpYSBn
+ZW5lcmljIG5ldGxpbmspOgo+IMKgIMKgIMKgIMKgLSBEZXZfdXAsIHdoaWNoIHR1cm4gb24gdGhl
+IE5GQyBjb250cm9sbGVyICh0aGlzIG9wZXJhdGlvbiBtYXkgdGFrZSBhIMKgIGZldyBzZWNvbmRz
+LCBhcyBpdCBjYW4gZG93bmxvYWQgbmV3IEZXIHRvIHRoZSBORkMgY29udHJvbGxlcikKPiDCoCDC
+oCDCoCDCoC0gRGV2X2Rvd24sIHdoaWNoIHR1cm4gb2ZmIHRoZSBORkMgY29udHJvbGxlcgo+IFRo
+ZSBkZXZfdXAvZG93biBhcHByb2FjaCB3YXMgYWxzbyB1c2VkIHdpdGggSENJIHByb3RvY29sIGlu
+IHRoZSBCbHVlWiBwcm9qZWN0LgoKSSBhbSBub3QgY29tcGxldGVseSBjb252aW5jZWQgdGhhdCB3
+ZSBuZWVkIHRoZSBkZXYgdXAvZG93bi4gV2h5IGlzIGl0Cm5vdCBwb3NzaWJsZSB0byBsb2FkIHRo
+ZSBGVyBpbiB0aGUgcHJvYmU/Cgo+Cj4gV2Ugc3VnZ2VzdCBwbGFjaW5nIHRoZSBOQ0kgY29kZSBp
+biB0aGUgbmV0XG5mYyBmb2xkZXIgKGJlc2lkZSB0aGUgTkZDIGNvZGUpLCBhcyBpdCdzIGEgZ2Vu
+ZXJpYyBhbmQgY2hpcCBpbmRlcGVuZGVudCBwcm90b2NvbCwgYW5kIG5vdCBhIGRyaXZlcgo+IFRo
+aXMgYXBwcm9hY2ggd2FzIGFsc28gdXNlZCB3aXRoIEhDSSBwcm90b2NvbCBpbiB0aGUgQmx1ZVog
+cHJvamVjdC4KPiBUaGUgZHJpdmVyIGl0c2VsZiB3aWxsIGJlIGxvY2F0ZWQgYXQgZHJpdmVyc1xu
+ZmMgZm9sZGVyLgoKSSBhZ3JlZS4KCgpMYXVybwo=
