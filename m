@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f171.google.com ([209.85.215.171]:53902 "EHLO
-	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753328Ab1HARjM (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:1468 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752951Ab1HIL13 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2011 13:39:12 -0400
-Received: by eye22 with SMTP id 22so4734418eye.2
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Aug 2011 10:39:11 -0700 (PDT)
-From: Vasily Khoruzhick <anarsoul@gmail.com>
-To: libertas-dev@lists.infradead.org
-Subject: Re: [PATCH 1/2] libertas: disable functionality when interface is down
-Date: Mon, 1 Aug 2011 20:38:39 +0300
-Cc: Daniel Drake <dsd@laptop.org>, linville@tuxdriver.com,
-	dcbw@redhat.com, linux-wireless@vger.kernel.org
-References: <20110801154313.8C9389D401F@zog.reactivated.net>
-In-Reply-To: <20110801154313.8C9389D401F@zog.reactivated.net>
+	Tue, 9 Aug 2011 07:27:29 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH] ath6kl: Include scatterlist.h in hif.h to fix compilation error
+Date: Tue, 9 Aug 2011 16:57:34 +0530
+Message-ID: <1312889254-30996-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110809_132732_652578_25F0368B)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201108012038.40155.anarsoul@gmail.com> (sfid-20110801_193916_803019_19A49660)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 01 August 2011 18:43:13 Daniel Drake wrote:
+drivers/net/wireless/ath/ath6kl/hif.h:194: error: array type has incomplete element type
+commit b7f080cfe223b3b7424872639d153695615a9255 exposes this issue. scatterlist.h used to
+get included from dma-mapping.h<-dmaengine.h<-skbuff.h.
 
-Hi, Daniel
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/hif.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> Modify the driver so that it does not function when the interface is
-> down, in preparation for runtime power management.
-> 
-> No commands can be run while the interface is down, so the ndo_dev_stop
-> routine now directly does all necessary work (including asking the device
-> to disconnect from the network and disabling multicast functionality)
-> directly.
-> 
-> power_save and power_restore hooks are added meaning that card drivers
-> can take steps to turn the device off when the interface is down.
+diff --git a/drivers/net/wireless/ath/ath6kl/hif.h b/drivers/net/wireless/ath/ath6kl/hif.h
+index 465876f..abd8798 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif.h
++++ b/drivers/net/wireless/ath/ath6kl/hif.h
+@@ -19,6 +19,7 @@
+ 
+ #include "common.h"
+ #include "core.h"
++#include <linux/scatterlist.h>
+ 
+ #define BUS_REQUEST_MAX_NUM                64
+ #define HIF_MBOX_BLOCK_SIZE                128
+-- 
+1.7.0.4
 
-You mean completely off? And firmware needs to be reloaded after power up?
-
-> The MAC address can now only be changed when all interfaces are down;
-> the new address will be programmed when an interface gets brought up.
-> This matches mac80211 behaviour.
-> 
-> Also, some small cleanups/simplifications were made in the surrounding
-> device handling logic.
-
-Regards
-Vasily
