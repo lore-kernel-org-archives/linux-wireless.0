@@ -1,64 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46176 "EHLO nbd.name"
+Received: from cantor2.suse.de ([195.135.220.15]:60423 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754662Ab1HKBA4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 21:00:56 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	jouni@qca.qualcomm.com
-Subject: [PATCH] cfg80211: fix a crash in nl80211_send_station
-Date: Wed, 10 Aug 2011 19:00:33 -0600
-Message-Id: <1313024433-35053-1-git-send-email-nbd@openwrt.org> (sfid-20110811_030113_656755_E43F427D)
+	id S1753155Ab1HIPJ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2011 11:09:29 -0400
+Message-ID: <4E414DA7.7020406@suse.cz> (sfid-20110809_170933_539421_1160CB2A)
+Date: Tue, 09 Aug 2011 17:09:27 +0200
+From: Michal Marek <mmarek@suse.cz>
+MIME-Version: 1.0
+To: Pavel Ivanov <paivanof@gmail.com>
+Cc: linux-kbuild@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Cannot easily set CONFIG_WIRELESS_EXT in kernel 3.0 build
+References: <CAG1a4rtHedO66ot4B7TWmKG5_mrnSS78O74_xxmgXk7UeoX_gA@mail.gmail.com>
+In-Reply-To: <CAG1a4rtHedO66ot4B7TWmKG5_mrnSS78O74_xxmgXk7UeoX_gA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 leaves sinfo->assoc_req_ies uninitialized, causing a random
-pointer memory access in nl80211_send_station.
-Instead of checking if the pointer is null, use sinfo->filled, like
-the rest of the fields.
+On 9.8.2011 17:04, Pavel Ivanov wrote:
+> I'd think that such behavior is a bug, although I don't know on which
+> side. Either on the side of wireless drivers which all have to have
+> 'select WIRELESS_EXT' in their Kconfig files or on the side of kbuild
+> system which doesn't allow me to set CONFIG_WIRELESS_EXT unless some
+> driver requires it. Interestingly enough requiring WIRELESS_EXT works
+> only with drivers, because I've tried to add CONFIG_LIBIPW (it
+> requires WIRELESS_EXT too)
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- include/net/cfg80211.h |    4 +++-
- net/wireless/nl80211.c |    2 +-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+Both WIRELESS_EXT and LIBIPW are symbols without prompt, so they cannot
+be selected by the user directly. Drivers that need CONFIG_WIRELESS_EXT
+have to select it.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 779e300..96876d3 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -421,6 +421,7 @@ struct station_parameters {
-  * @STATION_INFO_RX_BITRATE: @rxrate fields are filled
-  * @STATION_INFO_BSS_PARAM: @bss_param filled
-  * @STATION_INFO_CONNECTED_TIME: @connected_time filled
-+ * @STATION_INFO_ASSOC_REQ_IES: @assoc_req_ies filled
-  */
- enum station_info_flags {
- 	STATION_INFO_INACTIVE_TIME	= 1<<0,
-@@ -439,7 +440,8 @@ enum station_info_flags {
- 	STATION_INFO_SIGNAL_AVG		= 1<<13,
- 	STATION_INFO_RX_BITRATE		= 1<<14,
- 	STATION_INFO_BSS_PARAM          = 1<<15,
--	STATION_INFO_CONNECTED_TIME	= 1<<16
-+	STATION_INFO_CONNECTED_TIME	= 1<<16,
-+	STATION_INFO_ASSOC_REQ_IES	= 1<<17
- };
- 
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ca76977..253e563 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2236,7 +2236,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
- 	}
- 	nla_nest_end(msg, sinfoattr);
- 
--	if (sinfo->assoc_req_ies)
-+	if (sinfo->filled & STATION_INFO_ASSOC_REQ_IES)
- 		NLA_PUT(msg, NL80211_ATTR_IE, sinfo->assoc_req_ies_len,
- 			sinfo->assoc_req_ies);
- 
--- 
-1.7.3.2
-
+Michal
