@@ -1,32 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44242 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756965Ab1HaSAX (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:41707 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751785Ab1HIDwB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 14:00:23 -0400
-Date: Wed, 31 Aug 2011 13:45:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ath9k_hw: Fix rx latency of 11a mode
-Message-ID: <20110831174512.GC2474@tuxdriver.com> (sfid-20110831_200027_014284_961A62D2)
-References: <1314767850-1112-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Mon, 8 Aug 2011 23:52:01 -0400
+Received: by ywf7 with SMTP id 7so646300ywf.19
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 20:52:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1314767850-1112-1-git-send-email-rmanohar@qca.qualcomm.com>
+In-Reply-To: <CAH-LUqrVkiriXSfdqTw_L_AxnCVbSHQLrLzWMkriiRv9dmT2Xw@mail.gmail.com>
+References: <CAH-LUqry4TKAvnojAo39QfT-Wy_BN94SYJEiCCRX4hrb=RcfwQ@mail.gmail.com>
+	<CAJ-Vmo=SED0RLmQot2yAeAmv53Yitn+RV31tf2zWOmBHXzq_0w@mail.gmail.com>
+	<CAH-LUqrHifnWY=V-p6zs0RPoLtqQadVysQ6ZLj0tEXXbuF_e+w@mail.gmail.com>
+	<CAJ-VmokNRqHu005G_-_Zt4Ftgg0UL+AHBXpN39So5WNKt1m2=g@mail.gmail.com>
+	<CAH-LUqrVkiriXSfdqTw_L_AxnCVbSHQLrLzWMkriiRv9dmT2Xw@mail.gmail.com>
+Date: Tue, 9 Aug 2011 11:52:00 +0800
+Message-ID: <CAJ-VmokHnUeu1pfv5jjwy=wRHmr=5=sgxf2KeprFNXCq88U7Nw@mail.gmail.com> (sfid-20110809_055205_651602_99E64AC6)
+Subject: Re: AR9285 Wireless 80211n mode get only 25Mbit with Linux 2.6.38.8
+ and compat-wireless-2.6.38.2-2
+From: Adrian Chadd <adrian@freebsd.org>
+To: Dane Shih <daneshih1981@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 31, 2011 at 10:47:30AM +0530, Rajkumar Manoharan wrote:
-> Rx latecy to start signal(usec) of 11a is 41 not 37 and
-> also corrected the rx delay in quarter rate.
-> 
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+On 9 August 2011 11:18, Dane Shih <daneshih1981@gmail.com> wrote:
+> just look  throughput
+> in my tests,  throughput not growing when enable the parameter
 
-Do you still want 'ath9k_hw: Fix slottime with coverage class" merged
-as well?
+Right, so it's not likely the hwcrypt parameter. I was just checking. :)
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
+Adrian
