@@ -1,87 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:35455 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752446Ab1HYSpb convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59587 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752430Ab1HIMNm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 14:45:31 -0400
-Received: by pzk37 with SMTP id 37so2890921pzk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 11:45:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5d9c06a899229693c241d11aeb88dc90@secure.sipsolutions.net>
-References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
- <1314236452-7226-2-git-send-email-thomas@cozybit.com> <f72a42677c7419161cc9b7f79d93e812@secure.sipsolutions.net>
- <CAPjQAd_Wxpu=Kt6+PKcffNiqredMpPZ2-xWrq_jSsSCzNLBvZQ@mail.gmail.com> <5d9c06a899229693c241d11aeb88dc90@secure.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Thu, 25 Aug 2011 11:45:11 -0700
-Message-ID: <CAPjQAd9gdreTe-wYFV+fg7X9opZ-m4EeBiqM5r_nBQ_jNrV_zA@mail.gmail.com> (sfid-20110825_204534_624382_9A2D0847)
-Subject: Re: [PATCH 1/9] mac80211: Fix RCU pointer dereference in mesh_path_discard_frame()
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Thomas Pedersen <thomas@cozybit.com>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 9 Aug 2011 08:13:42 -0400
+Subject: Re: [RFC 1/2] mac80211: fix remain_off_channel regression
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1311607763-12603-2-git-send-email-eliad@wizery.com> (sfid-20110725_172946_527229_E71DD0F8)
+References: <1311607763-12603-1-git-send-email-eliad@wizery.com>
+	 <1311607763-12603-2-git-send-email-eliad@wizery.com>
+	 (sfid-20110725_172946_527229_E71DD0F8)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 09 Aug 2011 14:13:40 +0200
+Message-ID: <1312892020.4109.26.camel@jlt3.sipsolutions.net> (sfid-20110809_141345_643026_200C3379)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 25, 2011 at 11:21 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 25 Aug 2011 11:16:50 -0700, Javier Cardona wrote:
->>
->> On Wed, Aug 24, 2011 at 7:08 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->>>
->>> On Wed, 24 Aug 2011 18:40:44 -0700, Thomas Pedersen wrote:
->>>
->>>>                da = hdr->addr3;
->>>>                ra = hdr->addr1;
->>>> +               rcu_read_lock();
->>>>                mpath = mesh_path_lookup(da, sdata);
->>>> +               rcu_read_unlock();
->>>>                if (mpath)
->>>>                        sn = ++mpath->sn;
->>>>                mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl,
->>>> skb->data,
->>>
->>> You've got to be kidding. Didn't I just explain RCU :)
->>
->> The patch was prepared before your RCU session :(
->> Just to confirm I got it right before we resubmit: given that not only
->> the path table accessed inside mesh_path_lookup() but also the mpaths
->> themselves are RCU protected, the right fix should have been
->>
->>               da = hdr->addr3;
->>               ra = hdr->addr1;
->> +             rcu_read_lock();
->>               mpath = mesh_path_lookup(da, sdata);
->>               if (mpath)
->>                       sn = ++mpath->sn;
->> +             rcu_read_unlock();
->>               mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl,
->> skb->data,
->>
->> Correct?
->
-> Frankly, I'm not sure, since you modify the mpath->sn you probably need to
-> hold a real lock, otherwise ++mpath->sn can race against itself in this very
-> function.
+On Mon, 2011-07-25 at 18:29 +0300, Eliad Peller wrote:
+> i'm not familiar enough with the off_channel flow,
+> but this one looks completely broken - we should
+> remain_off_channel if the work was started, and
+> the work's channel and channel_type are the same
+> as local->tmp_channel and local->tmp_channel_type.
+> 
+> however, if wk->chan_type and local->tmp_channel_type
+> coexist (e.g. have the same channel type), we won't
+> remain_off_channel.
+> 
+> this behavior was introduced by commit da2fd1f
+> ("mac80211: Allow work items to use existing
+> channel type.")
 
-Oh, I see.  That's a different issue from what I was originally trying
-to fix (unprotected access to the path table inside the lookup
-function).  But you are completely right.  Changing the math sequence
-number requires taking the mpath state lock:
+Yeah this seems obvious.
 
-             da = hdr->addr3;
-             ra = hdr->addr1;
-+           rcu_read_lock();
-             mpath = mesh_path_lookup(da, sdata);
--             if (mpath)
-+             if (mpath) {
-+                    spin_lock_bh(&mpath->state_lock);
-                      sn = ++mpath->sn;
-+                    spin_unlock_bh(&mpath->state_lock);
-+           }
-+           rcu_read_unlock();
-             mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl, skb->data,
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Thanks,
+Now that I look at ieee80211_work_ct_coexists() itself again though it
+seems to do HT20 wrong?
 
-Javier
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
+>  net/mac80211/work.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+> index a94b312..3291958 100644
+> --- a/net/mac80211/work.c
+> +++ b/net/mac80211/work.c
+> @@ -1068,8 +1068,8 @@ static void ieee80211_work_work(struct work_struct *work)
+>  			continue;
+>  		if (wk->chan != local->tmp_channel)
+>  			continue;
+> -		if (ieee80211_work_ct_coexists(wk->chan_type,
+> -					       local->tmp_channel_type))
+> +		if (!ieee80211_work_ct_coexists(wk->chan_type,
+> +						local->tmp_channel_type))
+>  			continue;
+>  		remain_off_channel = true;
+>  	}
+
+
