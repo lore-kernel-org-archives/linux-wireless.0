@@ -1,70 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48607 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751037Ab1H2M3o (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:35863 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752812Ab1HIJOb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 08:29:44 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH 14/20] ath6kl: Report received Action frames to cfg80211
-Date: Mon, 29 Aug 2011 15:23:55 +0300
-Message-ID: <1314620641-24257-15-git-send-email-jouni@qca.qualcomm.com> (sfid-20110829_142947_441812_DA7A48B9)
-In-Reply-To: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 9 Aug 2011 05:14:31 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 5so2430702wwf.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:31 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 32/40] wl12xx: don't remove key if hlid was already deleted
+Date: Tue,  9 Aug 2011 12:13:45 +0300
+Message-Id: <1312881233-9366-33-git-send-email-eliad@wizery.com> (sfid-20110809_111436_913633_E7368E9D)
+In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/wmi.c |   15 ++++++++++++---
- 1 files changed, 12 insertions(+), 3 deletions(-)
+When wep key was removed after disconnection, sta_hlid was invalid,
+and it resulted in a fw crash.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 535205c..fae43d4 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -552,17 +552,26 @@ static int ath6kl_wmi_p2p_capabilities_event_rx(u8 *datap, int len)
- 	return 0;
- }
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index c873f24..b223c27 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2590,12 +2590,17 @@ static int wl1271_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
+ 		   will be cleared automatically on next CMD_JOIN. Ignore the
+ 		   request silently, as we dont want the mac80211 to emit
+ 		   an error message. */
+ 		if (action == KEY_REMOVE && !is_broadcast_ether_addr(addr))
+ 			return 0;
  
--static int ath6kl_wmi_rx_action_event_rx(u8 *datap, int len)
-+static int ath6kl_wmi_rx_action_event_rx(struct wmi *wmi, u8 *datap, int len)
- {
- 	struct wmi_rx_action_event *ev;
-+	u32 freq;
- 	u16 dlen;
-+	struct ath6kl *ar = wmi->parent_dev;
- 
- 	if (len < sizeof(*ev))
- 		return -EINVAL;
- 
- 	ev = (struct wmi_rx_action_event *) datap;
-+	freq = le32_to_cpu(ev->freq);
- 	dlen = le16_to_cpu(ev->len);
--	ath6kl_dbg(ATH6KL_DBG_WMI, "rx_action: len=%u\n", dlen);
-+	if (datap + len < ev->data + dlen) {
-+		ath6kl_err("invalid wmi_rx_action_event: "
-+			   "len=%d dlen=%u\n", len, dlen);
-+		return -EINVAL;
-+	}
-+	ath6kl_dbg(ATH6KL_DBG_WMI, "rx_action: len=%u freq=%u\n", dlen, freq);
-+	cfg80211_rx_mgmt(ar->net_dev, freq, ev->data, dlen, GFP_ATOMIC);
- 
- 	return 0;
- }
-@@ -3088,7 +3097,7 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
- 		break;
- 	case WMI_RX_ACTION_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_RX_ACTION_EVENTID\n");
--		ret = ath6kl_wmi_rx_action_event_rx(datap, len);
-+		ret = ath6kl_wmi_rx_action_event_rx(wmi, datap, len);
- 		break;
- 	case WMI_P2P_INFO_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_P2P_INFO_EVENTID\n");
++		/* don't remove key if hlid was already deleted */
++		if (action == KEY_REMOVE &&
++		    wl->sta_hlid == WL1271_INVALID_LINK_ID)
++			return 0;
++
+ 		ret = wl1271_cmd_set_sta_key(wl, action,
+ 					     id, key_type, key_size,
+ 					     key, addr, tx_seq_32,
+ 					     tx_seq_16);
+ 		if (ret < 0)
+ 			return ret;
 -- 
-1.7.4.1
+1.7.6.401.g6a319
 
