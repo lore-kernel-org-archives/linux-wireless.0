@@ -1,75 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:52799 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752830Ab1HLSMK convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41552 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753310Ab1HILqo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 14:12:10 -0400
-Received: by wwe5 with SMTP id 5so5067492wwe.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 11:12:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1313152101.4022.3.camel@jlt3.sipsolutions.net>
-References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
-	<1313117641-27351-1-git-send-email-thomas@cozybit.com>
-	<1313152101.4022.3.camel@jlt3.sipsolutions.net>
-Date: Fri, 12 Aug 2011 11:12:08 -0700
-Message-ID: <CAG6hwVN+D+XXAR9B8ZAb2hf_OFKwE875tm=OAS7iytx32uU9MA@mail.gmail.com> (sfid-20110812_201214_170990_2D164F59)
-Subject: Re: [PATCH v2 1/8] mac80211: improve mpath debugging
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Javier Cardona <javier@cozybit.com>, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 9 Aug 2011 07:46:44 -0400
+Subject: Re: [RFC] mac80211: fix resuming when device is gone
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1312890325.4109.23.camel@jlt3.sipsolutions.net> (sfid-20110809_134530_731807_FBE4BB9A)
+References: <20110808141900.GA25857@redhat.com>
+	 <1312819106.4372.37.camel@jlt3.sipsolutions.net>
+	 <20110809092314.GA2152@redhat.com>
+	 <1312882082.4109.2.camel@jlt3.sipsolutions.net>
+	 <20110809093909.GB2152@redhat.com>
+	 <1312883113.4109.5.camel@jlt3.sipsolutions.net>
+	 <20110809113620.GA2488@redhat.com>
+	 <1312890237.4109.22.camel@jlt3.sipsolutions.net>
+	 (sfid-20110809_134410_503974_BF250E46)  <1312890325.4109.23.camel@jlt3.sipsolutions.net>
+	 (sfid-20110809_134530_731807_FBE4BB9A)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 09 Aug 2011 13:46:42 +0200
+Message-ID: <1312890402.4109.24.camel@jlt3.sipsolutions.net> (sfid-20110809_134700_866928_217B169E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 12, 2011 at 5:28 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2011-08-11 at 19:53 -0700, Thomas Pedersen wrote:
->
->> +#ifdef CONFIG_MAC80211_VERBOSE_MPATH_DEBUG
->> +static inline void mpath_dbg(const char *fmt, ...)
->> +{
->> +     struct va_format vaf;
->> +     va_list args;
->> +
->> +     va_start(args, fmt);
->> +
->> +     vaf.fmt = fmt;
->> +     vaf.va = &args;
->> +
->> +     printk(KERN_DEBUG "%pV", &vaf);
->> +     va_end(args);
->> +     return;
->> +}
->> +#else
->> +static inline void mpath_dbg(const char *fmt, ...)
->> +{
->> +     return;
->> +}
->> +#endif
->
-> Oh, maybe that's too complicated after all... How about
->
-> #ifdef ...
-> #define ...
-> #else
-> static inline void mpath_dbg(const char *fmt, ...)
->        __attribute__ ((format (printf, 1, 2)))
-> {
-> }
-> #endif
->
-> Definitely want the format attribute, that was my whole point :)
+On Tue, 2011-08-09 at 13:45 +0200, Johannes Berg wrote:
+> On Tue, 2011-08-09 at 13:43 +0200, Johannes Berg wrote:
+> 
+> > > Yes, but __ieee80211_resume() calls directly ieee80211_reconfig().
+> > 
+> > Sure. Just trying to make sure I understand where it's coming from. So
+> > wiphy_unregister() is still running, before device_del(), but then we
+> > get the resume from the core...
+> > 
+> > Shouldn't we implement this logic you just did in cfg80211 instead?
+> 
+> Although I guess until wiphy_unregister() returns, drivers must still
+> expect callbacks, which clearly mac80211 didn't handle correctly here
+> with the timer...
 
-Oh I see. Looking at it again, my function above doesn't even have any
-argument checking :P. Didn't know about that __attribute__ etiher,
-thanks!
+Actually...
 
-> Bah, maybe it all doesn't matter, in which case maybe the first version
-> is better.
+Doesn't that just mean we need to reorder the code in _free_hw()? If we
+do the timer stuff after wiphy_unregister(), we should be OK, and
+prevent other, similar problems in the future too.
 
-Sure, let's go with the first one.
->
-> johannes
->
->
+johannes
+
