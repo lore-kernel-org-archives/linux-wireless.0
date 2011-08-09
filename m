@@ -1,39 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:49532 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751934Ab1HWOpI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 10:45:08 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1QvsDx-0007zV-Ow
-	for linux-wireless@vger.kernel.org; Tue, 23 Aug 2011 16:45:05 +0200
-Received: from ii143133.directconnect.no ([84.247.143.133])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 16:45:05 +0200
-Received: from ltson36 by ii143133.directconnect.no with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 16:45:05 +0200
-To: linux-wireless@vger.kernel.org
-From: Le Thanh Tu <ltson36@yahoo.com>
-Subject: Re: [PATCH 7/9] =?utf-8?b?YXRoOWtfaHc6?= set 5 GHz half/quarter channels on AR9002 using fractional mode
-Date: Tue, 23 Aug 2011 14:24:42 +0000 (UTC)
-Message-ID: <loom.20110823T161900-38@post.gmane.org> (sfid-20110823_164512_082242_A2EDC41E)
-References: <1310184774-32913-1-git-send-email-nbd@openwrt.org> <1310184774-32913-2-git-send-email-nbd@openwrt.org> <1310184774-32913-3-git-send-email-nbd@openwrt.org> <1310184774-32913-4-git-send-email-nbd@openwrt.org> <1310184774-32913-5-git-send-email-nbd@openwrt.org> <1310184774-32913-6-git-send-email-nbd@openwrt.org> <1310184774-32913-7-git-send-email-nbd@openwrt.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:35863 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752647Ab1HIJNz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2011 05:13:55 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 5so2430702wwf.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:13:54 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 12/40] wl12xx: wl12xx-fw-3 - rx/tx changes
+Date: Tue,  9 Aug 2011 12:13:25 +0300
+Message-Id: <1312881233-9366-13-git-send-email-eliad@wizery.com> (sfid-20110809_111400_531702_94903929)
+In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have added the patches for Half/Quarter Channel (10/5 MHz channel BW) on 
-AR9220 on ATH9k.
-But I do not know how to activate the Half/Quarter Channel for testing.
-How to activate the Half/Quarter Channel ?
+Update the rx/tx descriptors according to the new fw api.
 
-Thank a lot in advance
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/rx.h     |    7 ++-----
+ drivers/net/wireless/wl12xx/tx.c     |   15 +++++++++++----
+ drivers/net/wireless/wl12xx/tx.h     |   14 ++++----------
+ drivers/net/wireless/wl12xx/wl12xx.h |    2 +-
+ 4 files changed, 18 insertions(+), 20 deletions(-)
 
-Le
-
-Felix Fietkau <nbd@...> writes:
-
+diff --git a/drivers/net/wireless/wl12xx/rx.h b/drivers/net/wireless/wl12xx/rx.h
+index 5ca482b..87d4827 100644
+--- a/drivers/net/wireless/wl12xx/rx.h
++++ b/drivers/net/wireless/wl12xx/rx.h
+@@ -83,13 +83,13 @@
+  * RX Descriptor status
+  *
+  * Bits 0-2 - error code
+  * Bits 3-5 - process_id tag (AP mode FW)
+  * Bits 6-7 - reserved
+  */
+-#define WL1271_RX_DESC_STATUS_MASK      0x07
++#define WL1271_RX_DESC_STATUS_MASK      0x03
+ 
+ #define WL1271_RX_DESC_SUCCESS          0x00
+ #define WL1271_RX_DESC_DECRYPT_FAIL     0x01
+ #define WL1271_RX_DESC_MIC_FAIL         0x02
+ #define WL1271_RX_DESC_DRIVER_RX_Q_FAIL 0x03
+ 
+@@ -116,16 +116,13 @@ struct wl1271_rx_descriptor {
+ 	u8  rate;
+ 	u8  channel;
+ 	s8  rssi;
+ 	u8  snr;
+ 	__le32 timestamp;
+ 	u8  packet_class;
+-	union {
+-		u8  process_id; /* STA FW */
+-		u8  hlid; /* AP FW */
+-	} __packed;
++	u8  hlid;
+ 	u8  pad_len;
+ 	u8  reserved;
+ } __packed;
+ 
+ void wl1271_rx(struct wl1271 *wl, struct wl1271_fw_status *status);
+ u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 43f21a3..2b17692 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -273,24 +273,23 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 	} else {
+ 		/* configure the tx attributes */
+ 		tx_attr =
+ 			wl->session_counter << TX_HW_ATTR_OFST_SESSION_COUNTER;
+ 	}
+ 
+-	if (wl->bss_type != BSS_TYPE_AP_BSS) {
+-		desc->aid = hlid;
++	desc->hlid = hlid;
+ 
++	if (wl->bss_type != BSS_TYPE_AP_BSS) {
+ 		/* if the packets are destined for AP (have a STA entry)
+ 		   send them with AP rate policies, otherwise use default
+ 		   basic rates */
+ 		if (control->control.sta)
+ 			rate_idx = ACX_TX_AP_FULL_RATE;
+ 		else
+ 			rate_idx = ACX_TX_BASIC_RATE;
+ 	} else {
+-		desc->hlid = hlid;
+ 		switch (hlid) {
+ 		case WL1271_AP_GLOBAL_HLID:
+ 			rate_idx = ACX_TX_AP_MODE_MGMT_RATE;
+ 			break;
+ 		case WL1271_AP_BROADCAST_HLID:
+ 			rate_idx = ACX_TX_AP_MODE_BCST_RATE;
+@@ -372,13 +371,21 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
+ 		}
+ 	}
+ 
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS)
+ 		hlid = wl1271_tx_get_hlid(skb);
+ 	else
+-		hlid = TX_HW_DEFAULT_AID;
++		if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
++			hlid = wl->sta_hlid;
++		else
++			hlid = wl->dev_hlid;
++
++	if (hlid == WL1271_INVALID_LINK_ID) {
++		wl1271_error("invalid hlid. dropping skb 0x%p", skb);
++		return -EINVAL;
++	}
+ 
+ 	ret = wl1271_tx_allocate(wl, skb, extra, buf_offset, hlid);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	wl1271_tx_fill_hdr(wl, skb, extra, info, hlid);
+diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
+index 5d719b5..b712d7b 100644
+--- a/drivers/net/wireless/wl12xx/tx.h
++++ b/drivers/net/wireless/wl12xx/tx.h
+@@ -26,15 +26,12 @@
+ #define __TX_H__
+ 
+ #define TX_HW_BLOCK_SIZE                 252
+ 
+ #define TX_HW_MGMT_PKT_LIFETIME_TU       2000
+ #define TX_HW_AP_MODE_PKT_LIFETIME_TU    8000
+-/* The chipset reference driver states, that the "aid" value 1
+- * is for infra-BSS, but is still always used */
+-#define TX_HW_DEFAULT_AID                1
+ 
+ #define TX_HW_ATTR_SAVE_RETRIES          BIT(0)
+ #define TX_HW_ATTR_HEADER_PAD            BIT(1)
+ #define TX_HW_ATTR_SESSION_COUNTER       (BIT(2) | BIT(3) | BIT(4))
+ #define TX_HW_ATTR_RATE_POLICY           (BIT(5) | BIT(6) | BIT(7) | \
+ 					  BIT(8) | BIT(9))
+@@ -113,30 +110,27 @@ struct wl1271_tx_hw_descr {
+ 	/* Bitwise fields - see TX_ATTR... definitions above. */
+ 	__le16 tx_attr;
+ 	/* Packet identifier used also in the Tx-Result. */
+ 	u8 id;
+ 	/* The packet TID value (as User-Priority) */
+ 	u8 tid;
+-	union {
+-		/* STA - Identifier of the remote STA in IBSS, 1 in infra-BSS */
+-		u8 aid;
+-		/* AP - host link ID (HLID) */
+-		u8 hlid;
+-	} __packed;
++	/* host link ID (HLID) */
++	u8 hlid;
+ 	u8 reserved;
+ } __packed;
+ 
+ enum wl1271_tx_hw_res_status {
+ 	TX_SUCCESS          = 0,
+ 	TX_HW_ERROR         = 1,
+ 	TX_DISABLED         = 2,
+ 	TX_RETRY_EXCEEDED   = 3,
+ 	TX_TIMEOUT          = 4,
+ 	TX_KEY_NOT_FOUND    = 5,
+ 	TX_PEER_NOT_FOUND   = 6,
+-	TX_SESSION_MISMATCH = 7
++	TX_SESSION_MISMATCH = 7,
++	TX_LINK_NOT_VALID   = 8,
+ };
+ 
+ struct wl1271_tx_hw_res_descr {
+ 	/* Packet Identifier - same value used in the Tx descriptor.*/
+ 	u8 id;
+ 	/* The status of the transmission, indicating success or one of
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index b47cd06..a732932 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -156,13 +156,13 @@ extern u32 wl12xx_debug_level;
+  */
+ #define WL1271_PS_STA_MAX_BLOCKS  (2 * 9)
+ 
+ #define WL1271_AP_BSS_INDEX        0
+ #define WL1271_AP_DEF_BEACON_EXP   20
+ 
+-#define ACX_TX_DESCRIPTORS         32
++#define ACX_TX_DESCRIPTORS         16
+ 
+ #define WL1271_AGGR_BUFFER_SIZE (4 * PAGE_SIZE)
+ 
+ enum wl1271_state {
+ 	WL1271_STATE_OFF,
+ 	WL1271_STATE_ON,
+-- 
+1.7.6.401.g6a319
 
