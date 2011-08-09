@@ -1,411 +1,278 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:41237 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752314Ab1HBJEk (ORCPT
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:50784 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753240Ab1HIKVs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 05:04:40 -0400
-Received: by fxh19 with SMTP id 19so5418552fxh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 02:04:39 -0700 (PDT)
-From: Vasily Khoruzhick <anarsoul@gmail.com>
-To: libertas-dev@lists.infradead.org
-Subject: Re: [PATCH 2/2] libertas: implement if_sdio runtime power management
-Date: Tue, 2 Aug 2011 12:04:08 +0300
-Cc: Daniel Drake <dsd@laptop.org>, linville@tuxdriver.com,
-	dcbw@redhat.com, linux-wireless@vger.kernel.org
-References: <20110801154327.D0BB09D4020@zog.reactivated.net>
-In-Reply-To: <20110801154327.D0BB09D4020@zog.reactivated.net>
+	Tue, 9 Aug 2011 06:21:48 -0400
+Message-ID: <4E410A34.1050508@pengutronix.de> (sfid-20110809_122157_687382_174DCDFE)
+Date: Tue, 09 Aug 2011 12:21:40 +0200
+From: Marc Kleine-Budde <mkl@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201108021204.08632.anarsoul@gmail.com> (sfid-20110802_110444_168562_34FF1EC4)
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+CC: Netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: BUG: null pointer deref in rt2800usb_get_txwi
+References: <4E40EE85.3020208@pengutronix.de> <CAL1gcdMTmSZGRzdek1zSS58ha9c7nUXxXBo5P41r22_wgiaMEA@mail.gmail.com>
+In-Reply-To: <CAL1gcdMTmSZGRzdek1zSS58ha9c7nUXxXBo5P41r22_wgiaMEA@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig96221B5F300E280EF3526BC2"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 01 August 2011 18:43:27 Daniel Drake wrote:
-> The SDIO card is now fully powered down when the network interface is
-> brought down.
-> 
-> Signed-off-by: Daniel Drake <dsd@laptop.org>
-> ---
->  drivers/net/wireless/libertas/if_sdio.c |  277
-> +++++++++++++++++++------------ 1 files changed, 171 insertions(+), 106
-> deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_sdio.c
-> b/drivers/net/wireless/libertas/if_sdio.c index 387786e..c962e21 100644
-> --- a/drivers/net/wireless/libertas/if_sdio.c
-> +++ b/drivers/net/wireless/libertas/if_sdio.c
-> @@ -39,6 +39,7 @@
->  #include <linux/mmc/sdio_ids.h>
->  #include <linux/mmc/sdio.h>
->  #include <linux/mmc/host.h>
-> +#include <linux/pm_runtime.h>
-> 
->  #include "host.h"
->  #include "decl.h"
-> @@ -47,6 +48,8 @@
->  #include "cmd.h"
->  #include "if_sdio.h"
-> 
-> +static void if_sdio_interrupt(struct sdio_func *func);
-> +
->  /* The if_sdio_remove() callback function is called when
->   * user removes this module from kernel space or ejects
->   * the card from the slot. The driver handles these 2 cases
-> @@ -757,6 +760,136 @@ out:
->  	return ret;
->  }
-> 
-> +/********************************************************************/
-> +/* Power management                                                 */
-> +/********************************************************************/
-> +
-> +static int if_sdio_power_on(struct if_sdio_card *card)
-> +{
-> +	struct sdio_func *func = card->func;
-> +	struct lbs_private *priv = card->priv;
-> +	struct mmc_host *host = func->card->host;
-> +	int ret;
-> +
-> +	sdio_claim_host(func);
-> +
-> +	ret = sdio_enable_func(func);
-> +	if (ret)
-> +		goto release;
-> +
-> +	/* For 1-bit transfers to the 8686 model, we need to enable the
-> +	 * interrupt flag in the CCCR register. Set the MMC_QUIRK_LENIENT_FN0
-> +	 * bit to allow access to non-vendor registers. */
-> +	if ((card->model == MODEL_8686) &&
-> +	    (host->caps & MMC_CAP_SDIO_IRQ) &&
-> +	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
-> +		u8 reg;
-> +
-> +		func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
-> +		reg = sdio_f0_readb(func, SDIO_CCCR_IF, &ret);
-> +		if (ret)
-> +			goto disable;
-> +
-> +		reg |= SDIO_BUS_ECSI;
-> +		sdio_f0_writeb(func, reg, SDIO_CCCR_IF, &ret);
-> +		if (ret)
-> +			goto disable;
-> +	}
-> +
-> +	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
-> +	if (ret)
-> +		goto disable;
-> +
-> +	card->ioport |= sdio_readb(func, IF_SDIO_IOPORT + 1, &ret) << 8;
-> +	if (ret)
-> +		goto disable;
-> +
-> +	card->ioport |= sdio_readb(func, IF_SDIO_IOPORT + 2, &ret) << 16;
-> +	if (ret)
-> +		goto disable;
-> +
-> +	sdio_release_host(func);
-> +	ret = if_sdio_prog_firmware(card);
-> +	sdio_claim_host(func);
-> +	if (ret)
-> +		goto disable;
-> +
-> +	/*
-> +	 * Get rx_unit if the chip is SD8688 or newer.
-> +	 * SD8385 & SD8686 do not have rx_unit.
-> +	 */
-> +	if ((card->model != MODEL_8385)
-> +			&& (card->model != MODEL_8686))
-> +		card->rx_unit = if_sdio_read_rx_unit(card);
-> +	else
-> +		card->rx_unit = 0;
-> +
-> +	/*
-> +	 * Set up the interrupt handler late.
-> +	 *
-> +	 * If we set it up earlier, the (buggy) hardware generates a spurious
-> +	 * interrupt, even before the interrupt has been enabled, with
-> +	 * CCCR_INTx = 0.
-> +	 *
-> +	 * We register the interrupt handler late so that we can handle any
-> +	 * spurious interrupts, and also to avoid generation of that known
-> +	 * spurious interrupt in the first place.
-> +	 */
-> +	ret = sdio_claim_irq(func, if_sdio_interrupt);
-> +	if (ret)
-> +		goto disable;
-> +
-> +	/*
-> +	 * Enable interrupts now that everything is set up
-> +	 */
-> +	sdio_writeb(func, 0x0f, IF_SDIO_H_INT_MASK, &ret);
-> +	if (ret)
-> +		goto release_irq;
-> +
-> +	sdio_release_host(func);
-> +
-> +	/*
-> +	 * FUNC_INIT is required for SD8688 WLAN/BT multiple functions
-> +	 */
-> +	if (card->model == MODEL_8688) {
-> +		struct cmd_header cmd;
-> +
-> +		memset(&cmd, 0, sizeof(cmd));
-> +
-> +		lbs_deb_sdio("send function INIT command\n");
-> +		if (__lbs_cmd(priv, CMD_FUNC_INIT, &cmd, sizeof(cmd),
-> +				lbs_cmd_copyback, (unsigned long) &cmd))
-> +			netdev_alert(priv->dev, "CMD_FUNC_INIT cmd failed\n");
-> +	}
-> +
-> +	priv->fw_ready = 1;
-> +
-> +	return 0;
-> +
-> +release_irq:
-> +	sdio_release_irq(func);
-> +disable:
-> +	sdio_disable_func(func);
-> +release:
-> +	sdio_release_host(func);
-> +	return ret;
-> +}
-> +
-> +static int if_sdio_power_off(struct if_sdio_card *card)
-> +{
-> +	struct sdio_func *func = card->func;
-> +	struct lbs_private *priv = card->priv;
-> +
-> +	priv->fw_ready = 0;
-> +
-> +	sdio_claim_host(func);
-> +	sdio_release_irq(func);
-> +	sdio_disable_func(func);
-> +	sdio_release_host(func);
-> +	return 0;
-> +}
-> +
-> +
->  /*******************************************************************/
->  /* Libertas callbacks                                              */
->  /*******************************************************************/
-> @@ -923,6 +1056,32 @@ static void if_sdio_reset_card(struct lbs_private
-> *priv) schedule_work(&card_reset_work);
->  }
-> 
-> +static int if_sdio_power_save(struct lbs_private *priv)
-> +{
-> +	struct if_sdio_card *card = priv->card;
-> +	int ret;
-> +
-> +	flush_workqueue(card->workqueue);
-> +
-> +	ret = if_sdio_power_off(card);
-> +
-> +	/* Let runtime PM know the card is powered off */
-> +	pm_runtime_put_sync(&card->func->dev);
-> +
-> +	return ret;
-> +}
-> +
-> +static int if_sdio_power_restore(struct lbs_private *priv)
-> +{
-> +	struct if_sdio_card *card = priv->card;
-> +
-> +	/* Make sure the card will not be powered off by runtime PM */
-> +	pm_runtime_get_sync(&card->func->dev);
-> +
-> +	return if_sdio_power_on(card);
-> +}
-> +
-> +
->  /*******************************************************************/
->  /* SDIO callbacks                                                  */
->  /*******************************************************************/
-> @@ -976,7 +1135,6 @@ static int if_sdio_probe(struct sdio_func *func,
->  	int ret, i;
->  	unsigned int model;
->  	struct if_sdio_packet *packet;
-> -	struct mmc_host *host = func->card->host;
-> 
->  	lbs_deb_enter(LBS_DEB_SDIO);
-> 
-> @@ -1033,45 +1191,6 @@ static int if_sdio_probe(struct sdio_func *func,
->  		goto free;
->  	}
-> 
-> -	sdio_claim_host(func);
-> -
-> -	ret = sdio_enable_func(func);
-> -	if (ret)
-> -		goto release;
-> -
-> -	/* For 1-bit transfers to the 8686 model, we need to enable the
-> -	 * interrupt flag in the CCCR register. Set the MMC_QUIRK_LENIENT_FN0
-> -	 * bit to allow access to non-vendor registers. */
-> -	if ((card->model == MODEL_8686) &&
-> -	    (host->caps & MMC_CAP_SDIO_IRQ) &&
-> -	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
-> -		u8 reg;
-> -
-> -		func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
-> -		reg = sdio_f0_readb(func, SDIO_CCCR_IF, &ret);
-> -		if (ret)
-> -			goto release_int;
-> -
-> -		reg |= SDIO_BUS_ECSI;
-> -		sdio_f0_writeb(func, reg, SDIO_CCCR_IF, &ret);
-> -		if (ret)
-> -			goto release_int;
-> -	}
-> -
-> -	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
-> -	if (ret)
-> -		goto release_int;
-> -
-> -	card->ioport |= sdio_readb(func, IF_SDIO_IOPORT + 1, &ret) << 8;
-> -	if (ret)
-> -		goto release_int;
-> -
-> -	card->ioport |= sdio_readb(func, IF_SDIO_IOPORT + 2, &ret) << 16;
-> -	if (ret)
-> -		goto release_int;
-> -
-> -	sdio_release_host(func);
-> -
->  	sdio_set_drvdata(func, card);
-> 
->  	lbs_deb_sdio("class = 0x%X, vendor = 0x%X, "
-> @@ -1079,14 +1198,11 @@ static int if_sdio_probe(struct sdio_func *func,
->  			func->class, func->vendor, func->device,
->  			model, (unsigned)card->ioport);
-> 
-> -	ret = if_sdio_prog_firmware(card);
-> -	if (ret)
-> -		goto reclaim;
-> 
->  	priv = lbs_add_card(card, &func->dev);
->  	if (!priv) {
->  		ret = -ENOMEM;
-> -		goto reclaim;
-> +		goto free;
->  	}
-> 
->  	card->priv = priv;
-> @@ -1097,62 +1213,21 @@ static int if_sdio_probe(struct sdio_func *func,
->  	priv->exit_deep_sleep = if_sdio_exit_deep_sleep;
->  	priv->reset_deep_sleep_wakeup = if_sdio_reset_deep_sleep_wakeup;
->  	priv->reset_card = if_sdio_reset_card;
-> +	priv->power_save = if_sdio_power_save;
-> +	priv->power_restore = if_sdio_power_restore;
-> 
-> -	sdio_claim_host(func);
-> -
-> -	/*
-> -	 * Get rx_unit if the chip is SD8688 or newer.
-> -	 * SD8385 & SD8686 do not have rx_unit.
-> -	 */
-> -	if ((card->model != MODEL_8385)
-> -			&& (card->model != MODEL_8686))
-> -		card->rx_unit = if_sdio_read_rx_unit(card);
-> -	else
-> -		card->rx_unit = 0;
-> -
-> -	/*
-> -	 * Set up the interrupt handler late.
-> -	 *
-> -	 * If we set it up earlier, the (buggy) hardware generates a spurious
-> -	 * interrupt, even before the interrupt has been enabled, with
-> -	 * CCCR_INTx = 0.
-> -	 *
-> -	 * We register the interrupt handler late so that we can handle any
-> -	 * spurious interrupts, and also to avoid generation of that known
-> -	 * spurious interrupt in the first place.
-> -	 */
-> -	ret = sdio_claim_irq(func, if_sdio_interrupt);
-> -	if (ret)
-> -		goto disable;
-> -
-> -	/*
-> -	 * Enable interrupts now that everything is set up
-> -	 */
-> -	sdio_writeb(func, 0x0f, IF_SDIO_H_INT_MASK, &ret);
-> -	sdio_release_host(func);
-> +	ret = if_sdio_power_on(card);
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig96221B5F300E280EF3526BC2
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Why do you power on card here? Maybe it's possible do it in lbs_start_card?
+Hello Gertjan,
 
->  	if (ret)
-> -		goto reclaim;
-> -
-> -	priv->fw_ready = 1;
-> -
-> -	/*
-> -	 * FUNC_INIT is required for SD8688 WLAN/BT multiple functions
-> -	 */
-> -	if (card->model == MODEL_8688) {
-> -		struct cmd_header cmd;
-> -
-> -		memset(&cmd, 0, sizeof(cmd));
-> -
-> -		lbs_deb_sdio("send function INIT command\n");
-> -		if (__lbs_cmd(priv, CMD_FUNC_INIT, &cmd, sizeof(cmd),
-> -				lbs_cmd_copyback, (unsigned long) &cmd))
-> -			netdev_alert(priv->dev, "CMD_FUNC_INIT cmd failed\n");
-> -	}
-> +		goto err_activate_card;
-> 
->  	ret = lbs_start_card(priv);
-> +	if_sdio_power_off(card);
+On 08/09/2011 11:01 AM, Gertjan van Wingerde wrote:
+> Hi Marc,
+>=20
+> On Tue, Aug 9, 2011 at 10:23 AM, Marc Kleine-Budde <mkl@pengutronix.de>=
+ wrote:
+>> Hello,
+>>
+>> I'm a running a sheeva plug (ARM/kirkwood) with a rt2800 USB stick in =
+AP mode.
+>> Bus 001 Device 002: ID 1737:0071 Linksys WUSB600N v1 Dual-Band Wireles=
+s-N Network Adapter [Ralink RT2870]
+>>
+>> kernel is v3.0.1 +
+>> 00898a47269ae5e6dda04defad00234b96692d95 rt2x00: fix usage of NULL que=
+ue
+>> b52398b6e4522176dd125722c72c301015d24520 rt2x00: rt2800: fix zeroing s=
+kb structure
+>>
+>> Which is here for reference:
+>> (http://git.pengutronix.de/?p=3Dmkl/linux-2.6.git;a=3Dshortlog;h=3Dref=
+s/heads/wireless/rt2x00/v3.0.1)
+>>
+>> The Kernel crashes after ~1d with this oopses:
+>> (Same oops with stock v3.0.0 and v3.0.1)
+>>
+>> [69638.429744] Unable to handle kernel NULL pointer dereference at vir=
+tual address 000000ac
+>> [69638.438515] pgd =3D c0004000
+>> [69638.441322] [000000ac] *pgd=3D00000000
+>> [69638.444974] Internal error: Oops: 17 [#1]
+>> [69638.449001] Modules linked in: nfsd nfs lockd fscache auth_rpcgss n=
+fs_acl sunrpc bridge ipv6 stp ext2 arc4 rt2800usb rt2800lib crc_ccitt rt2=
+x00usb rt2x00
+>> lib mac80211 cfg80211 rfkill hmac sha1_generic mv_cesa aes_generic ext=
+4 mbcache jbd2 mmc_block ehci_hcd mvsdio usbcore mmc_core mv643xx_eth lib=
+phy inet_lro
+>> [69638.476620] CPU: 0    Not tainted  (3.0.1-100-bs-kirkwood+ #3)
+>> [69638.482489] PC is at rt2800usb_get_txwi+0x10/0x1c [rt2800usb]
+>> [69638.488273] LR is at rt2800_txdone_entry+0x34/0xe0 [rt2800lib]
+>> [69638.494131] pc : [<bf1bb194>]    lr : [<bf1affa4>]    psr: 80000013=
 
-Same for power off.
+>> [69638.494136] sp : de44df08  ip : 00000001  fp : 00000022
+>> [69638.505672] r10: 0000000e  r9 : 00000001  r8 : 0000003c
+>> [69638.510914] r7 : 00000000  r6 : de6aafc0  r5 : 818c22fd  r4 : de6d9=
+9c8
+>> [69638.517472] r3 : 00000000  r2 : 00000000  r1 : 818c22fd  r0 : de6d9=
+9c8
+>> [69638.524030] Flags: Nzcv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Se=
+gment kernel
+>> [69638.531371] Control: 0005397f  Table: 0105c000  DAC: 00000017
+>> [69638.537144] Process kworker/u:0 (pid: 2089, stack limit =3D 0xde44c=
+270)
+>> [69638.543614] Stack: (0xde44df08 to 0xde44e000)
+>> [69638.547997] df00:                   00000000 818c22fd 00000000 de6a=
+afc0 de6d99c8 818c22fd
+>> [69638.556221] df20: df958eb4 bf1b0128 c041a384 de6aafc0 df959600 de6a=
+b3c4 de6ab3c4 c043defc
+>> [69638.564443] df40: 00000089 00000012 00000000 bf1bba00 de6ab3c4 c043=
+defc 00000000 df8b86a0
+>> [69638.572666] df60: df959600 bf1bb9e8 de6ab3c4 c043defc 00000089 0000=
+0012 00000000 c005beac
+>> [69638.580881] df80: df8b86a0 df959605 00000081 df8b86a0 de44c000 c043=
+defc c043def4 df8b86b0
+>> [69638.589103] dfa0: 00000089 c043defc 00000000 c005ca38 de4c7f30 df8b=
+86a0 c005c878 00000013
+>> [69638.597325] dfc0: 00000000 00000000 00000000 c005fdcc 00000000 0000=
+0000 df8b86a0 00000000
+>> [69638.605542] dfe0: de44dfe0 de44dfe0 de4c7f30 c005fd50 c0030a94 c003=
+0a94 ebfffffe e3500000
+>> [69638.613787] [<bf1bb194>] (rt2800usb_get_txwi+0x10/0x1c [rt2800usb])=
+ from [<bf1affa4>] (rt2800_txdone_entry+0x34/0xe0 [rt2800lib])
+>> [69638.625518] [<bf1affa4>] (rt2800_txdone_entry+0x34/0xe0 [rt2800lib]=
+) from [<bf1b0128>] (rt2800_txdone+0xd8/0x124 [rt2800lib])
+>> [69638.636894] [<bf1b0128>] (rt2800_txdone+0xd8/0x124 [rt2800lib]) fro=
+m [<bf1bba00>] (rt2800usb_work_txdone+0x18/0x110 [rt2800usb])
+>> [69638.648522] [<bf1bba00>] (rt2800usb_work_txdone+0x18/0x110 [rt2800u=
+sb]) from [<c005beac>] (process_one_work+0x240/0x404)
+>> [69638.659451] [<c005beac>] (process_one_work+0x240/0x404) from [<c005=
+ca38>] (worker_thread+0x1c0/0x2e0)
+>> [69638.668722] [<c005ca38>] (worker_thread+0x1c0/0x2e0) from [<c005fdc=
+c>] (kthread+0x7c/0x84)
+>> [69638.677036] [<c005fdcc>] (kthread+0x7c/0x84) from [<c0030a94>] (ker=
+nel_thread_exit+0x0/0x8)
+>> [69638.685433] Code: e5903008 e5933008 e3530010 e590300c (e59300ac)
+>> [69638.691726] ---[ end trace 99d4053be7f17aef ]---
+>>
+>> [69638.699949] Unable to handle kernel paging request at virtual addre=
+ss fffffffc
+>> [69638.707210] pgd =3D c0004000
+>> [69638.709930] [fffffffc] *pgd=3D1fffe831, *pte=3D00000000, *ppte=3D00=
+000000
+>> [69638.716244] Internal error: Oops: 17 [#2]
+>> [69638.720270] Modules linked in: nfsd nfs lockd fscache auth_rpcgss n=
+fs_acl sunrpc bridge ipv6 stp ext2 arc4 rt2800usb rt2800lib crc_ccitt rt2=
+x00usb rt2x00lib mac80211 cfg80211 rfkill hmac sha1_generic mv_cesa aes_g=
+eneric ext4 mbcache jbd2 mmc_block ehci_hcd mvsdio usbcore mmc_core mv643=
+xx_eth libphy inet_lro
+>> [69638.747890] CPU: 0    Tainted: G      D      (3.0.1-100-bs-kirkwood=
++ #3)
+>> [69638.754628] PC is at kthread_data+0x4/0xc
+>> [69638.758650] LR is at wq_worker_sleeping+0xc/0xc0
+>> [69638.763292] pc : [<c005ffbc>]    lr : [<c005cbb8>]    psr: 20000093=
 
->  	if (ret)
->  		goto err_activate_card;
-> 
-> +	/* Tell PM core that we don't need the card to be powered now */
-> +	pm_runtime_put_noidle(&func->dev);
-> +
->  out:
->  	lbs_deb_leave_args(LBS_DEB_SDIO, "ret %d", ret);
-> 
-> @@ -1161,14 +1236,6 @@ out:
->  err_activate_card:
->  	flush_workqueue(card->workqueue);
->  	lbs_remove_card(priv);
-> -reclaim:
-> -	sdio_claim_host(func);
-> -release_int:
-> -	sdio_release_irq(func);
-> -disable:
-> -	sdio_disable_func(func);
-> -release:
-> -	sdio_release_host(func);
->  free:
->  	destroy_workqueue(card->workqueue);
->  	while (card->packets) {
-> @@ -1195,6 +1262,9 @@ static void if_sdio_remove(struct sdio_func *func)
-> 
->  	card = sdio_get_drvdata(func);
-> 
-> +	/* Undo decrement done above in if_sdio_probe */
-> +	pm_runtime_get_noresume(&func->dev);
-> +
->  	if (user_rmmod && (card->model == MODEL_8688)) {
->  		/*
->  		 * FUNC_SHUTDOWN is required for SD8688 WLAN/BT
-> @@ -1219,11 +1289,6 @@ static void if_sdio_remove(struct sdio_func *func)
->  	flush_workqueue(card->workqueue);
->  	destroy_workqueue(card->workqueue);
-> 
-> -	sdio_claim_host(func);
-> -	sdio_release_irq(func);
-> -	sdio_disable_func(func);
-> -	sdio_release_host(func);
-> -
->  	while (card->packets) {
->  		packet = card->packets;
->  		card->packets = card->packets->next;
+>> [69638.763297] sp : de44dc68  ip : c03f1958  fp : de44dcf4
+>> [69638.774833] r10: de44c000  r9 : de755d2c  r8 : 00000001
+>> [69638.780084] r7 : df819ac0  r6 : de755da8  r5 : c03f1910  r4 : 00000=
+000
+>> [69638.786641] r3 : 00000000  r2 : 93c085a9  r1 : 00000000  r0 : de755=
+c20
+>> [69638.793199] Flags: nzCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  S=
+egment user
+>> [69638.800454] Control: 0005397f  Table: 1fa78000  DAC: 00000015
+>> [69638.806226] Process kworker/u:0 (pid: 2089, stack limit =3D 0xde44c=
+270)
+>> [69638.812696] Stack: (0xde44dc68 to 0xde44e000)
+>> [69638.817079] dc60:                   de755c20 c02d84c8 de7583e0 c012=
+28b4 00000000 00000000
+>> [69638.825293] dc80: 00000003 c0048920 00393830 de755c50 0ecbd14a 0000=
+0000 0ecbd14a 00000000
+>> [69638.833507] dca0: c03f1dcc c0061c4c 0ecbd14a 00000000 de755c20 debe=
+0840 00000001 c041c348
+>> [69638.841722] dcc0: de755c20 c0046ffc de755c20 00000001 00000000 de75=
+5c20 ffffffff de44dcfc
+>> [69638.849945] dce0: df819ac0 00000001 de755d2c de755d2c de755c18 c004=
+8920 bf1bb194 de44dcfc
+>> [69638.858168] dd00: de44dcfc de755d74 de44dd1c de44dec0 de44c000 0000=
+0001 bf1bb196 de44dd72
+>> [69638.866390] dd20: bf1bb194 00000000 00000017 c0033024 de44c270 0000=
+000b 00000001 de44c000
+>> [69638.874606] dd40: 65000001 33303935 20383030 33393565 38303033 3533=
+6520 31303033 35652030
+>> [69638.882827] dd60: 30333039 28206330 33393565 63613030 00002029 0000=
+0017 00000022 000000ac
+>> [69638.891041] dd80: 00000017 00000000 de44dec0 00000000 00000013 0000=
+0017 00000022 c02d5af8
+>> [69638.899257] dda0: de755c20 c0036430 40000013 c0038fc0 c0038f74 def7=
+6020 00000f40 c0035840
+>> [69638.907479] ddc0: dee26460 df900574 df900400 bf010dac ffdf5000 ffdf=
+56e0 00000010 df900524
+>> [69638.915702] dde0: 40000013 df9004e4 00000003 00000010 60000093 c025=
+4124 df9004e4 00000006
+>> [69638.923916] de00: 00000017 c03ec210 000000ac de44dec0 0000003c 0000=
+0013 0000000e c002a1cc
+>> [69638.932130] de20: 00000080 00000000 df900598 00000000 de6b4418 df90=
+04e4 c04196a0 de44c000
+>> [69638.940344] de40: 00000000 00000001 00000080 00000003 0000012c c025=
+41c0 c043ccf0 0069ca19
+>> [69638.948558] de60: 00000000 00000001 0000000c de44c000 c043cce4 0000=
+003c 00000001 00000003
+>> [69638.956773] de80: 00000001 c004af7c de8960a0 de755c50 c03f1958 c03f=
+5fb8 0000000a 00000014
+>> [69638.964987] dea0: df958eb4 0000000b 00000000 ffffffff de44def4 de6a=
+afc0 00000000 c002f7ac
+>> [69638.973201] dec0: de6d99c8 818c22fd 00000000 00000000 de6d99c8 818c=
+22fd de6aafc0 00000000
+>> [69638.981415] dee0: 0000003c 00000001 0000000e 00000022 00000001 de44=
+df08 bf1affa4 bf1bb194
+>> [69638.989631] df00: 80000013 ffffffff 00000000 818c22fd 00000000 de6a=
+afc0 de6d99c8 818c22fd
+>> [69638.997854] df20: df958eb4 bf1b0128 c041a384 de6aafc0 df959600 de6a=
+b3c4 de6ab3c4 c043defc
+>> [69639.006076] df40: 00000089 00000012 00000000 bf1bba00 de6ab3c4 c043=
+defc 00000000 df8b86a0
+>> [69639.014291] df60: df959600 bf1bb9e8 de6ab3c4 c043defc 00000089 0000=
+0012 00000000 c005beac
+>> [69639.022514] df80: df8b86a0 df959605 00000081 df8b86a0 de44c000 c043=
+defc c043def4 df8b86b0
+>> [69639.030737] dfa0: 00000089 c043defc 00000000 c005ca38 de4c7f30 df8b=
+86a0 c005c878 00000013
+>> [69639.038958] dfc0: 00000000 00000000 00000000 c005fdcc 00000000 0000=
+0000 df8b86a0 00000001
+>> [69639.047175] dfe0: de44dfe0 de44dfe0 de4c7f30 c005fd50 c0030a94 c003=
+0a94 ebfffffe e3500000
+>> [69639.055402] [<c005ffbc>] (kthread_data+0x4/0xc) from [<c005cbb8>] (=
+wq_worker_sleeping+0xc/0xc0)
+>> [69639.064148] [<c005cbb8>] (wq_worker_sleeping+0xc/0xc0) from [<c02d8=
+4c8>] (schedule+0xe8/0x4e8)
+>> [69639.072806] [<c02d84c8>] (schedule+0xe8/0x4e8) from [<c0048920>] (d=
+o_exit+0x6b8/0x6f8)
+>> [69639.080764] [<c0048920>] (do_exit+0x6b8/0x6f8) from [<c0033024>] (d=
+ie+0x2e4/0x324)
+>> [69639.088378] [<c0033024>] (die+0x2e4/0x324) from [<c02d5af8>] (__do_=
+kernel_fault.part.5+0x54/0x74)
+>> [69639.097301] [<c02d5af8>] (__do_kernel_fault.part.5+0x54/0x74) from =
+[<c0036430>] (do_page_fault+0x260/0x27c)
+>> [69639.107091] [<c0036430>] (do_page_fault+0x260/0x27c) from [<c002a1c=
+c>] (do_DataAbort+0x34/0x98)
+>> [69639.115839] [<c002a1cc>] (do_DataAbort+0x34/0x98) from [<c002f7ac>]=
+ (__dabt_svc+0x4c/0x60)
+>> [69639.124139] Exception stack(0xde44dec0 to 0xde44df08)
+>> [69639.129219] dec0: de6d99c8 818c22fd 00000000 00000000 de6d99c8 818c=
+22fd de6aafc0 00000000
+>> [69639.137433] dee0: 0000003c 00000001 0000000e 00000022 00000001 de44=
+df08 bf1affa4 bf1bb194
+>> [69639.145643] df00: 80000013 ffffffff
+>> [69639.149165] [<c002f7ac>] (__dabt_svc+0x4c/0x60) from [<bf1bb194>] (=
+rt2800usb_get_txwi+0x10/0x1c [rt2800usb])
+>> [69639.159060] [<bf1bb194>] (rt2800usb_get_txwi+0x10/0x1c [rt2800usb])=
+ from [<bf1affa4>] (rt2800_txdone_entry+0x34/0xe0 [rt2800lib])
+>> [69639.170786] [<bf1affa4>] (rt2800_txdone_entry+0x34/0xe0 [rt2800lib]=
+) from [<bf1b0128>] (rt2800_txdone+0xd8/0x124 [rt2800lib])
+>> [69639.182164] [<bf1b0128>] (rt2800_txdone+0xd8/0x124 [rt2800lib]) fro=
+m [<bf1bba00>] (rt2800usb_work_txdone+0x18/0x110 [rt2800usb])
+>> [69639.193789] [<bf1bba00>] (rt2800usb_work_txdone+0x18/0x110 [rt2800u=
+sb]) from [<c005beac>] (process_one_work+0x240/0x404)
+>> [69639.204711] [<c005beac>] (process_one_work+0x240/0x404) from [<c005=
+ca38>] (worker_thread+0x1c0/0x2e0)
+>> [69639.213980] [<c005ca38>] (worker_thread+0x1c0/0x2e0) from [<c005fdc=
+c>] (kthread+0x7c/0x84)
+>> [69639.222293] [<c005fdcc>] (kthread+0x7c/0x84) from [<c0030a94>] (ker=
+nel_thread_exit+0x0/0x8)
+>> [69639.230685] Code: c03f42e8 c02dea14 c02dbd08 e590315c (e5130004)
+>> [69639.237041] ---[ end trace 99d4053be7f17af0 ]---
+>=20
+> There is a patch from Stanislaw floating around that ought to fix this =
+crash.
+> You can find the crash at:
+patch? :)
+> http://marc.info/?l=3Dlinux-wireless&m=3D131279612304597&w=3D2
+>=20
+> However, there is still some discussion on the patch and some more
+> tweaking of the patch may be required.
 
-Regards
-Vasily
+Thanks for the patch.
+It's currently compiling - I'll complain it crashes again :)
+
+Marc
+--=20
+Pengutronix e.K.                  | Marc Kleine-Budde           |
+Industrial Linux Solutions        | Phone: +49-231-2826-924     |
+Vertretung West/Dortmund          | Fax:   +49-5121-206917-5555 |
+Amtsgericht Hildesheim, HRA 2686  | http://www.pengutronix.de   |
+
+
+--------------enig96221B5F300E280EF3526BC2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEARECAAYFAk5BCjcACgkQjTAFq1RaXHNHSwCdEG7wKTl7FWNZxzZbKHozQ7El
+gyIAn1xeXl3Ifo1tQhYXNRqYOZ9Miabe
+=+y6l
+-----END PGP SIGNATURE-----
+
+--------------enig96221B5F300E280EF3526BC2--
