@@ -1,44 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45454 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754877Ab1HaHya (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:52328 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752836Ab1HIJOh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 03:54:30 -0400
-Subject: Re: [PATCH] nl80211/cfg80211: add ssid filtering for sched_scan
-From: Johannes Berg <johannes@sipsolutions.net>
+	Tue, 9 Aug 2011 05:14:37 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 24so210690wyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:36 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
 To: Luciano Coelho <coelho@ti.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1314777198.4161.20.camel@jlt3.sipsolutions.net> (sfid-20110831_095327_725277_2680941D)
-References: <1314707979-26484-1-git-send-email-coelho@ti.com>
-	 <1314713812.4011.33.camel@jlt3.sipsolutions.net>
-	 <1314718038.2296.460.camel@cumari>
-	 <1314720557.4011.41.camel@jlt3.sipsolutions.net>
-	 <1314770941.2296.507.camel@cumari>
-	 <1314771627.4161.9.camel@jlt3.sipsolutions.net>
-	 <1314775816.2296.531.camel@cumari>
-	 <1314776396.4161.19.camel@jlt3.sipsolutions.net>
-	 <1314776962.2296.540.camel@cumari>
-	 <1314777198.4161.20.camel@jlt3.sipsolutions.net>
-	 (sfid-20110831_095327_725277_2680941D)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 31 Aug 2011 09:54:24 +0200
-Message-ID: <1314777264.4161.21.camel@jlt3.sipsolutions.net> (sfid-20110831_095433_229424_4DBE5F11)
-Mime-Version: 1.0
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 35/40] wl12xx: handle wrap-around overflow in released Tx blocks FW counter
+Date: Tue,  9 Aug 2011 12:13:48 +0300
+Message-Id: <1312881233-9366-36-git-send-email-eliad@wizery.com> (sfid-20110809_111449_530128_EE52B5A2)
+In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-08-31 at 09:53 +0200, Johannes Berg wrote:
+From: Arik Nemtsov <arik@wizery.com>
 
-> > MATCH={BSSID=00:01:02:03:04:05} and
-> > NOT_MATCH={MIN_RSSI=-70}
+When the FW Tx released blocks counter wraps around, we should correct
+our calculation of released blocks. Otherwise we add a large negative
+figure to our driver freed blocks counter
 
-Actually does that really make sense?
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   11 +++++++++--
+ 1 files changed, 9 insertions(+), 2 deletions(-)
 
-I suspect you'd want something like
-
-MATCH SSID="foo" && RSSI >= -70
-
-where the && part isn't really expressed now?
-
-johannes
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 755415a..c8e9ba6 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -830,14 +830,21 @@ static void wl1271_fw_status(struct wl1271 *wl,
+ 				(status->tx_released_pkts[i] -
+ 				wl->tx_pkts_freed[i] + 256) % 256;
+ 
+ 		wl->tx_pkts_freed[i] = status->tx_released_pkts[i];
+ 	}
+ 
+-	freed_blocks = le32_to_cpu(status->total_released_blks) -
+-		       wl->tx_blocks_freed;
++	/* prevent wrap-around in total blocks counter */
++	if (likely(wl->tx_blocks_freed <=
++		   le32_to_cpu(status->total_released_blks)))
++		freed_blocks = le32_to_cpu(status->total_released_blks) -
++			       wl->tx_blocks_freed;
++	else
++		freed_blocks = 0x100000000LL - wl->tx_blocks_freed +
++			       le32_to_cpu(status->total_released_blks);
++
+ 	wl->tx_blocks_freed = le32_to_cpu(status->total_released_blks);
+ 
+ 	wl->tx_allocated_blocks -= freed_blocks;
+ 
+ 	avail = le32_to_cpu(status->tx_total) - wl->tx_allocated_blocks;
+ 
+-- 
+1.7.6.401.g6a319
 
