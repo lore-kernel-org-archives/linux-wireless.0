@@ -1,33 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41772 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754173Ab1HQQgn (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:41880 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751785Ab1HIVwW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2011 12:36:43 -0400
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: Re: ~3.1-rc1 mac80211 =?UTF-8?Q?regression=3F=20NULL=20pointer=20?=  =?UTF-8?Q?dereference=2C=20memcpy=2C=20nla=5Fput?=
+	Tue, 9 Aug 2011 17:52:22 -0400
+Received: by qyk34 with SMTP id 34so263740qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 14:52:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- format=flowed
-Date: Wed, 17 Aug 2011 18:36:40 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-In-Reply-To: <CACna6rzdoAgoW8B11bpdqNAi1Gz2T6AV4g-m5WGz9X0izhCDOQ@mail.gmail.com>
- (sfid-20110817_181438_086831_98729AB8)
-References: <CACna6rzdoAgoW8B11bpdqNAi1Gz2T6AV4g-m5WGz9X0izhCDOQ@mail.gmail.com>
- (sfid-20110817_181438_086831_98729AB8)
-Message-ID: <599203fe1d78132e3855f9626db7817b@secure.sipsolutions.net>
+In-Reply-To: <1312923582-31850-2-git-send-email-hauke@hauke-m.de>
+References: <1312923582-31850-1-git-send-email-hauke@hauke-m.de> <1312923582-31850-2-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 9 Aug 2011 14:52:02 -0700
+Message-ID: <CAB=NE6W7AVfZ4oYOe+vAT-cCMsq5u_sFbkP31TCkqKLu=UPKKA@mail.gmail.com> (sfid-20110809_235226_448857_9F26E3B7)
+Subject: Re: [PATCH 2/2] compat-wireless: add cfg80211-wext.h
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 17 Aug 2011 18:14:32 +0200, Rafał Miłecki wrote:
-> I've problem with my BCM43224 and BCM43225 cards. They stopped to 
-> work
-> around 3.1-rc1 and I suspect it's mac80211 regression.
+On Tue, Aug 9, 2011 at 1:59 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> This file was spitted out of include/net/cfg80211.h so we should
+> also ship it.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Already fixed in wireless-testing, but I don't remember the patch 
-title.
+Thanks, applied and pushed!
 
-johannes
+  Luis
