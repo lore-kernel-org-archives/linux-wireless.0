@@ -1,264 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:54095 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753039Ab1HNKSI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 06:18:08 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 24so2967072wyg.19
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:18:07 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 34/40] wl12xx: schedule TX packets according to FW packet occupancy
-Date: Sun, 14 Aug 2011 13:17:33 +0300
-Message-Id: <1313317059-16567-35-git-send-email-eliad@wizery.com> (sfid-20110814_121813_635529_74AD79AD)
-In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
-References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+Received: from mx1.redhat.com ([209.132.183.28]:32693 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752329Ab1HIPaS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2011 11:30:18 -0400
+Date: Tue, 9 Aug 2011 17:30:17 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: fix resuming when device is gone
+Message-ID: <20110809152935.GA2302@redhat.com> (sfid-20110809_173023_596721_722B2C21)
+References: <1312819106.4372.37.camel@jlt3.sipsolutions.net>
+ <20110809092314.GA2152@redhat.com>
+ <1312882082.4109.2.camel@jlt3.sipsolutions.net>
+ <20110809093909.GB2152@redhat.com>
+ <1312883113.4109.5.camel@jlt3.sipsolutions.net>
+ <20110809113620.GA2488@redhat.com>
+ <1312890237.4109.22.camel@jlt3.sipsolutions.net>
+ <1312890325.4109.23.camel@jlt3.sipsolutions.net>
+ <1312890402.4109.24.camel@jlt3.sipsolutions.net>
+ <1312890463.4109.25.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1312890463.4109.25.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On Tue, Aug 09, 2011 at 01:47:43PM +0200, Johannes Berg wrote:
+> On Tue, 2011-08-09 at 13:46 +0200, Johannes Berg wrote:
+> > On Tue, 2011-08-09 at 13:45 +0200, Johannes Berg wrote:
+> > > On Tue, 2011-08-09 at 13:43 +0200, Johannes Berg wrote:
+> > > 
+> > > > > Yes, but __ieee80211_resume() calls directly ieee80211_reconfig().
+> > > > 
+> > > > Sure. Just trying to make sure I understand where it's coming from. So
+> > > > wiphy_unregister() is still running, before device_del(), but then we
+> > > > get the resume from the core...
+> > > > 
+> > > > Shouldn't we implement this logic you just did in cfg80211 instead?
+> > > 
+> > > Although I guess until wiphy_unregister() returns, drivers must still
+> > > expect callbacks, which clearly mac80211 didn't handle correctly here
+> > > with the timer...
+> > 
+> > Actually...
+> > 
+> > Doesn't that just mean we need to reorder the code in _free_hw()?
+> 
+> I mean ieee80211_unregister_hw().
+> 
+> >  If we
+> > do the timer stuff after wiphy_unregister(), we should be OK, and
+> > prevent other, similar problems in the future too.
 
-When selecting packets for transmission, prefer the ACs that are least
-occupied in the FW. When packets for multiple ACs are present in the FW,
-it decides which to transmit according to WMM QoS parameters.
+There are some debugfs dependencies, so moving wiphy_unregister() before
+del_timer_sync(&local->work_timer); in ieee80211_unregister_hw() gave me
+a crash. I moved sta_info_stop(local); after
+wiphy_unregister(local->hw.wiphy); but this alone do not solve the
+problem, ->resume callback can be called after wiphy_unregister().
+Below patch fixes the problem (it also protect ->suspend, in case device
+gone during suspend process):
 
-With these changes, lower priority ACs should not be starved when higher
-priority traffic is present.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-v2: consider the priority of the queues
-
- drivers/net/wireless/wl12xx/debugfs.c |    4 ++
- drivers/net/wireless/wl12xx/main.c    |    7 ++-
- drivers/net/wireless/wl12xx/tx.c      |   71 ++++++++++++++++++++++-----------
- drivers/net/wireless/wl12xx/wl12xx.h  |    2 +-
- 4 files changed, 57 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index 3102652..d59354f 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -337,12 +337,16 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
- #define DRIVER_STATE_PRINT_STR(x)  DRIVER_STATE_PRINT(x, "%s")
- #define DRIVER_STATE_PRINT_LHEX(x) DRIVER_STATE_PRINT(x, "0x%lx")
- #define DRIVER_STATE_PRINT_HEX(x)  DRIVER_STATE_PRINT(x, "0x%x")
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 866f269..acb4423 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1012,7 +1012,6 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 	cancel_work_sync(&local->reconfig_filter);
  
- 	DRIVER_STATE_PRINT_INT(tx_blocks_available);
- 	DRIVER_STATE_PRINT_INT(tx_allocated_blocks);
-+	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[0]);
-+	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[1]);
-+	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[2]);
-+	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[3]);
- 	DRIVER_STATE_PRINT_INT(tx_frames_cnt);
- 	DRIVER_STATE_PRINT_LHEX(tx_frames_map[0]);
- 	DRIVER_STATE_PRINT_INT(tx_queue_count[0]);
- 	DRIVER_STATE_PRINT_INT(tx_queue_count[1]);
- 	DRIVER_STATE_PRINT_INT(tx_queue_count[2]);
- 	DRIVER_STATE_PRINT_INT(tx_queue_count[3]);
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 479977d..869b8c3 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -824,13 +824,13 @@ static void wl12xx_fw_status(struct wl1271 *wl,
- 		     status->fw_rx_counter,
- 		     status->drv_rx_counter,
- 		     status->tx_results_counter);
+ 	ieee80211_clear_tx_pending(local);
+-	sta_info_stop(local);
+ 	rate_control_deinitialize(local);
  
- 	for (i = 0; i < NUM_TX_QUEUES; i++) {
- 		/* prevent wrap-around in freed-packets counter */
--		wl->tx_allocated_pkts -=
-+		wl->tx_allocated_pkts[i] -=
- 				(status->tx_released_pkts[i] -
- 				wl->tx_pkts_freed[i]) & 0xff;
+ 	if (skb_queue_len(&local->skb_queue) ||
+@@ -1024,6 +1023,7 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
  
- 		wl->tx_pkts_freed[i] = status->tx_released_pkts[i];
+ 	destroy_workqueue(local->workqueue);
+ 	wiphy_unregister(local->hw.wiphy);
++	sta_info_stop(local);
+ 	ieee80211_wep_free(local);
+ 	ieee80211_led_exit(local);
+ 	kfree(local->int_scan_req);
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 645437c..453fcc6 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -616,6 +616,9 @@ int wiphy_register(struct wiphy *wiphy)
+ 	if (res)
+ 		goto out_rm_dev;
+ 
++	rtnl_lock();
++	rdev->wiphy.registered = true;
++	rtnl_unlock();
+ 	return 0;
+ 
+ out_rm_dev:
+@@ -647,6 +650,10 @@ void wiphy_unregister(struct wiphy *wiphy)
+ {
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
+ 
++	rtnl_lock();
++	rdev->wiphy.registered = false;
++	rtnl_unlock();
++
+ 	rfkill_unregister(rdev->rfkill);
+ 
+ 	/* protect the device list */
+@@ -690,6 +697,7 @@ void wiphy_unregister(struct wiphy *wiphy)
+ 	reg_device_remove(wiphy);
+ 
+ 	cfg80211_rdev_list_generation++;
++	rdev->wiphy.registered = false;
+ 	device_del(&rdev->wiphy.dev);
+ 
+ 	mutex_unlock(&cfg80211_mutex);
+diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
+index c6e4ca6..107516b 100644
+--- a/net/wireless/sysfs.c
++++ b/net/wireless/sysfs.c
+@@ -93,7 +93,10 @@ static int wiphy_suspend(struct device *dev, pm_message_t state)
+ 
+ 	if (rdev->ops->suspend) {
+ 		rtnl_lock();
+-		ret = rdev->ops->suspend(&rdev->wiphy, rdev->wowlan);
++		if (rdev->wiphy.registered)
++			ret = rdev->ops->suspend(&rdev->wiphy, rdev->wowlan);
++		else
++			ret = -ENODEV;
+ 		rtnl_unlock();
  	}
  
-@@ -2057,15 +2057,16 @@ deinit:
- 	 * get executed before all these vars have been reset.
- 	 */
- 	wl->flags = 0;
+@@ -112,7 +115,10 @@ static int wiphy_resume(struct device *dev)
  
- 	wl->tx_blocks_freed = 0;
- 
--	wl->tx_allocated_pkts = 0;
--	for (i = 0; i < NUM_TX_QUEUES; i++)
-+	for (i = 0; i < NUM_TX_QUEUES; i++) {
- 		wl->tx_pkts_freed[i] = 0;
-+		wl->tx_allocated_pkts[i] = 0;
-+	}
- 
- 	wl1271_debugfs_reset(wl);
- 
- 	kfree(wl->fw_status);
- 	wl->fw_status = NULL;
- 	kfree(wl->tx_res_if);
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 7dd6d8b..ccbcd0a 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -202,13 +202,13 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
- 				u32 buf_offset, u8 hlid)
- {
- 	struct wl1271_tx_hw_descr *desc;
- 	u32 total_len = skb->len + sizeof(struct wl1271_tx_hw_descr) + extra;
- 	u32 len;
- 	u32 total_blocks;
--	int id, ret = -EBUSY;
-+	int id, ret = -EBUSY, ac;
- 
- 	/* we use 1 spare block */
- 	u32 spare_blocks = 1;
- 
- 	if (buf_offset + total_len > WL1271_AGGR_BUFFER_SIZE)
- 		return -EAGAIN;
-@@ -239,13 +239,14 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
- 
- 		desc->id = id;
- 
- 		wl->tx_blocks_available -= total_blocks;
- 		wl->tx_allocated_blocks += total_blocks;
- 
--		wl->tx_allocated_pkts++;
-+		ac = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
-+		wl->tx_allocated_pkts[ac]++;
- 
- 		if (wl->bss_type == BSS_TYPE_AP_BSS)
- 			wl->links[hlid].allocated_blks += total_blocks;
- 
- 		ret = 0;
- 
-@@ -482,27 +483,51 @@ void wl1271_handle_tx_low_watermark(struct wl1271 *wl)
- 			clear_bit(i, &wl->stopped_queues_map);
- 			spin_unlock_irqrestore(&wl->wl_lock, flags);
- 		}
- 	}
- }
- 
-+static struct sk_buff_head *wl1271_select_queue(struct wl1271 *wl,
-+						struct sk_buff_head *queues)
-+{
-+	int i, q = -1, ac;
-+	u32 min_pkts = 0xffffffff;
-+
-+	/*
-+	 * Find a non-empty ac where:
-+	 * 1. There are packets to transmit
-+	 * 2. The FW has the least allocated blocks
-+	 *
-+	 * We prioritize the ACs according to VO>VI>BE>BK
-+	 */
-+	for (i = 0; i < NUM_TX_QUEUES; i++) {
-+		ac = wl1271_tx_get_queue(i);
-+		if (!skb_queue_empty(&queues[ac]) &&
-+		    (wl->tx_allocated_pkts[ac] < min_pkts)) {
-+			q = ac;
-+			min_pkts = wl->tx_allocated_pkts[q];
-+		}
-+	}
-+
-+	if (q == -1)
-+		return NULL;
-+
-+	return &queues[q];
-+}
-+
- static struct sk_buff *wl1271_sta_skb_dequeue(struct wl1271 *wl)
- {
- 	struct sk_buff *skb = NULL;
- 	unsigned long flags;
-+	struct sk_buff_head *queue;
- 
--	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_VO]);
--	if (skb)
-+	queue = wl1271_select_queue(wl, wl->tx_queue);
-+	if (!queue)
- 		goto out;
--	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_VI]);
--	if (skb)
--		goto out;
--	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_BE]);
--	if (skb)
--		goto out;
--	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_BK]);
-+
-+	skb = skb_dequeue(queue);
- 
- out:
- 	if (skb) {
- 		int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
- 		spin_lock_irqsave(&wl->wl_lock, flags);
- 		wl->tx_queue_count[q]--;
-@@ -514,35 +539,35 @@ out:
- 
- static struct sk_buff *wl1271_ap_skb_dequeue(struct wl1271 *wl)
- {
- 	struct sk_buff *skb = NULL;
- 	unsigned long flags;
- 	int i, h, start_hlid;
-+	struct sk_buff_head *queue;
- 
- 	/* start from the link after the last one */
- 	start_hlid = (wl->last_tx_hlid + 1) % AP_MAX_LINKS;
- 
- 	/* dequeue according to AC, round robin on each link */
- 	for (i = 0; i < AP_MAX_LINKS; i++) {
- 		h = (start_hlid + i) % AP_MAX_LINKS;
- 
--		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_VO]);
--		if (skb)
--			goto out;
--		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_VI]);
--		if (skb)
--			goto out;
--		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_BE]);
--		if (skb)
--			goto out;
--		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_BK]);
-+		/* only consider connected stations */
-+		if (h >= WL1271_AP_STA_HLID_START &&
-+		    !test_bit(h - WL1271_AP_STA_HLID_START, wl->ap_hlid_map))
-+			continue;
-+
-+		queue = wl1271_select_queue(wl, wl->links[h].tx_queue);
-+		if (!queue)
-+			continue;
-+
-+		skb = skb_dequeue(queue);
- 		if (skb)
--			goto out;
-+			break;
+ 	if (rdev->ops->resume) {
+ 		rtnl_lock();
+-		ret = rdev->ops->resume(&rdev->wiphy);
++		if (rdev->wiphy.registered)
++			ret = rdev->ops->resume(&rdev->wiphy);
++		else
++			ret = -ENODEV;
+ 		rtnl_unlock();
  	}
  
--out:
- 	if (skb) {
- 		int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
- 		wl->last_tx_hlid = h;
- 		spin_lock_irqsave(&wl->wl_lock, flags);
- 		wl->tx_queue_count[q]--;
- 		spin_unlock_irqrestore(&wl->wl_lock, flags);
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 24b4025..6118df5 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -421,13 +421,13 @@ struct wl1271 {
- 	u32 tx_blocks_available;
- 	u32 tx_allocated_blocks;
- 	u32 tx_results_count;
- 
- 	/* Accounting for allocated / available Tx packets in HW */
- 	u32 tx_pkts_freed[NUM_TX_QUEUES];
--	u32 tx_allocated_pkts;
-+	u32 tx_allocated_pkts[NUM_TX_QUEUES];
- 
- 	/* Transmitted TX packets counter for chipset interface */
- 	u32 tx_packets_count;
- 
- 	/* Time-offset between host and chipset clocks */
- 	s64 time_offset;
--- 
-1.7.6.401.g6a319
+
+
 
