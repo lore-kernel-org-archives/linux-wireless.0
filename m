@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:54361 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751398Ab1HYMie (ORCPT
+Received: from webmail01.spothost.nl ([77.74.49.150]:37477 "EHLO
+	webmail01.spothost.nl" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753075Ab1HIJaf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 08:38:34 -0400
-Received: by qwk3 with SMTP id 3so1236964qwk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 05:38:34 -0700 (PDT)
+	Tue, 9 Aug 2011 05:30:35 -0400
+Received: from webmail.spothost.nl (localhost.localdomain [127.0.0.1])
+	by webmail01.spothost.nl (8.13.8/8.13.8) with ESMTP id p799GCIG001755
+	for <linux-wireless@vger.kernel.org>; Tue, 9 Aug 2011 11:16:13 +0200
 MIME-Version: 1.0
-In-Reply-To: <CAGXE3d9mB_jjg38Mmf+B-1RYXjFp0h2hJDkRa+c2wO_OG+BDSw@mail.gmail.com>
-References: <1314265865-20208-1-git-send-email-arik@wizery.com> <CAGXE3d9mB_jjg38Mmf+B-1RYXjFp0h2hJDkRa+c2wO_OG+BDSw@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 25 Aug 2011 15:38:19 +0300
-Message-ID: <CA+XVXfd4fjtvptRJdcfqYHCkwwreFk7WfGdq9uSjVYpF6zKWcw@mail.gmail.com> (sfid-20110825_143837_970237_519987A2)
-Subject: Re: [PATCH 1/2] mac80211: add flag to indicate HW only Tx-agg support
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Tue, 09 Aug 2011 09:16:12 +0000
+From: kc@cobradevil.org
+To: <linux-wireless@vger.kernel.org>
+Subject: rtl8192cu sometimes it can authenticate to ap
+Message-ID: <b3059ba2eac66b7ef0ec17c8fe81a1e6@cobradevil.org> (sfid-20110809_113038_749548_AC3C4D97)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 25, 2011 at 15:18, Helmut Schaa <helmut.schaa@googlemail.com> wrote:
-> Hi,
->
-> On Thu, Aug 25, 2011 at 11:51 AM, Arik Nemtsov <arik@wizery.com> wrote:
->> When this flag is set, Tx aggregations will not be initiated even
->> if the hardware supports A-MPDU aggregation in general. This flag
->> is required for devices supporting (partial) software Rx-aggregation.
->
-> Is the hardware unable to do TX aggregation?
-> Or is it just not implemented?
-> Or is it entirely done in hw?
+Hello all,
 
-Tx aggregations are done entirely in HW.
+i have three usb sticks with the the id:
+0bda:8176
 
->
-> Instead of cluttering mac80211 with hw flags you could also just disallow tx
-> aggregation sessions in the ampdu_action callback in the driver.
+I am running ubuntu maverick with the compat tree from 2011-08-08 
+(downloaded this morning) and i also tried several others (dates from 15 
+juli 2011).
+The main problem is that sometimes i get a connection and it works like 
+a charm and then all of the sudden i don't get any connection at all and 
+running wpa_supplicant says time out.
 
-Well the driver is doing some pretty heavy lifting before even calling
-the ampdu_action callback. Namely, ieee80211_start_tx_ba_session()
-doesn't call it. AFAICT, the return from the callback is only used as
-an indication that Tx BA session are temporary unavailable, and
-mac80211 should try again. This is not the case here.
+i really have no idea whats wrong so if someone could help me out.
+is there a way to get debugging from the rtlwifi drivers?
 
-Regards,
-Arik
+i got the firmware from: 
+http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git
+
+With kind regards
+
+William
+
