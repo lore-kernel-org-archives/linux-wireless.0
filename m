@@ -1,92 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2796 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752758Ab1HHN70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:26 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Sukesh Srikakula" <sukeshs@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 29/82] staging: brcm80211: brcmfmac: Fixed issues with
- iscan
-Date: Mon, 8 Aug 2011 15:58:13 +0200
-Message-ID: <1312811946-16713-30-git-send-email-arend@broadcom.com> (sfid-20110808_160228_654754_8EAC8D99)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:37156 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751016Ab1HINL6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2011 09:11:58 -0400
+Received: by fxh19 with SMTP id 19so30694fxh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 06:11:57 -0700 (PDT)
+From: Guy Eilam <guy@wizery.com>
+To: coelho@ti.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] wl12xx: use 2 spare TX blocks for GEM cipher
+Date: Tue,  9 Aug 2011 16:09:43 +0300
+Message-Id: <1312895383-3624-1-git-send-email-guy@wizery.com> (sfid-20110809_151201_729210_EEA2A6F0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sukesh Srikakula <sukeshs@broadcom.com>
+Add tx_spare_blocks member to the wl1271 struct
+for more generic configuration of the amount
+of spare TX blocks that should be used.
+The default value is 1.
+In case GEM cipher is used by the STA, we need
+2 spare TX blocks instead of just 1.
 
-Disabling the interface doesn't terminate undergoing
-iscan in FW. When the interface is enabled immediately,
-first scan request is returning the stale scan results,
-which are populated during the earlier iscan. These stale
-scan results are causing random failures with chromium
-auto test cases.
-
-With this patch, iscan will be terminated in FW whenever
-iscan thread is terminated by the host driver.
-
-Signed-off-by: Sukesh Srikakula <sukeshs@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Guy Eilam <guy@wizery.com>
 ---
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   14 ++++++++++++--
- 1 files changed, 12 insertions(+), 2 deletions(-)
+ drivers/net/wireless/wl12xx/main.c   |   12 ++++++++++++
+ drivers/net/wireless/wl12xx/tx.c     |    4 +---
+ drivers/net/wireless/wl12xx/tx.h     |    1 +
+ drivers/net/wireless/wl12xx/wl12xx.h |    3 +++
+ 4 files changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 8423aad..cf57087 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -709,10 +709,14 @@ static s32 brcmf_do_iscan(struct brcmf_cfg80211_priv *cfg_priv)
- 	}
- 	brcmf_set_mpc(ndev, 0);
- 	cfg_priv->iscan_kickstart = true;
--	brcmf_run_iscan(iscan, &ssid, BRCMF_SCAN_ACTION_START);
-+	err = brcmf_run_iscan(iscan, &ssid, BRCMF_SCAN_ACTION_START);
-+	if (err) {
-+		brcmf_set_mpc(ndev, 1);
-+		cfg_priv->iscan_kickstart = false;
-+		return err;
-+	}
- 	mod_timer(&iscan->timer, jiffies + iscan->timer_ms * HZ / 1000);
- 	iscan->timer_on = 1;
--
- 	return err;
- }
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 1c56137..1d2b3e9 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2736,6 +2736,17 @@ static int wl1271_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
+ 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+ 		};
  
-@@ -3165,12 +3169,17 @@ static void brcmf_destroy_event_handler(struct brcmf_cfg80211_priv *cfg_priv)
- static void brcmf_term_iscan(struct brcmf_cfg80211_priv *cfg_priv)
- {
- 	struct brcmf_cfg80211_iscan_ctrl *iscan = cfg_to_iscan(cfg_priv);
-+	struct brcmf_ssid ssid;
- 
- 	if (cfg_priv->iscan_on && iscan->tsk) {
- 		iscan->state = WL_ISCAN_STATE_IDLE;
- 		send_sig(SIGTERM, iscan->tsk, 1);
- 		kthread_stop(iscan->tsk);
- 		iscan->tsk = NULL;
++		/*
++		 * A STA set to GEM cipher requires 2 tx spare blocks.
++		 * Return to default value when GEM cipher key is removed
++		 */
++		if (key_type == KEY_GEM) {
++			if (action == KEY_ADD_OR_REPLACE)
++				wl->tx_spare_blocks = 2;
++			else if (action == KEY_REMOVE)
++				wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
++		}
 +
-+		/* Abort iscan running in FW */
-+		memset(&ssid, 0, sizeof(ssid));
-+		brcmf_run_iscan(iscan, &ssid, WL_SCAN_ACTION_ABORT);
- 	}
- }
+ 		addr = sta ? sta->addr : bcast_addr;
  
-@@ -3237,6 +3246,7 @@ brcmf_get_iscan_results(struct brcmf_cfg80211_iscan_ctrl *iscan, u32 *status,
- 	WL_SCAN("results->count = %d\n", results->count);
- 	WL_SCAN("results->buflen = %d\n", results->buflen);
- 	*status = le32_to_cpu(list_buf->status);
-+	WL_SCAN("status = %d\n", *status);
- 	*bss_list = results;
+ 		if (is_zero_ether_addr(addr)) {
+@@ -4916,6 +4927,7 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	wl->tx_security_seq = 0;
+ 	wl->tx_security_last_seq_lsb = 0;
+ 	wl->active_sta_count = 0;
++	wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
  
- 	return err;
+ 	setup_timer(&wl->rx_streaming_timer, wl1271_rx_streaming_timer,
+ 		    (unsigned long) wl);
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 367809e..47ca361 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -200,9 +200,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 	u32 len;
+ 	u32 total_blocks;
+ 	int id, ret = -EBUSY, ac;
+-
+-	/* we use 1 spare block */
+-	u32 spare_blocks = 1;
++	u32 spare_blocks = wl->tx_spare_blocks;
+ 
+ 	if (buf_offset + total_len > WL1271_AGGR_BUFFER_SIZE)
+ 		return -EAGAIN;
+diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
+index e2f9150..bdbae8d 100644
+--- a/drivers/net/wireless/wl12xx/tx.h
++++ b/drivers/net/wireless/wl12xx/tx.h
+@@ -25,6 +25,7 @@
+ #ifndef __TX_H__
+ #define __TX_H__
+ 
++#define TX_HW_BLOCK_SPARE_DEFAULT        1
+ #define TX_HW_BLOCK_SIZE                 252
+ 
+ #define TX_HW_MGMT_PKT_LIFETIME_TU       2000
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index f528f61..3d847b5 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -459,6 +459,9 @@ struct wl1271 {
+ 	u32 tx_allocated_blocks;
+ 	u32 tx_results_count;
+ 
++	/* amount of spare TX blocks to use */
++	u32 tx_spare_blocks;
++
+ 	/* Accounting for allocated / available Tx packets in HW */
+ 	u32 tx_pkts_freed[NUM_TX_QUEUES];
+ 	u32 tx_allocated_pkts[NUM_TX_QUEUES];
 -- 
 1.7.4.1
-
 
