@@ -1,94 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33115 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754282Ab1HKHPG (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:35863 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752855Ab1HIJOo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 03:15:06 -0400
-Message-ID: <4E43816D.6080005@candelatech.com> (sfid-20110811_091510_515293_921D1FDD)
-Date: Thu, 11 Aug 2011 00:14:53 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Sam Leffler <sleffler@google.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Bridging wired to STA interfaces.
-References: <4E38DDB3.1030801@candelatech.com> <CA+yqC4YvAMLaao4dy2aXM7H5zPXySk4eAUZ2KSM4QnP+kQqF-A@mail.gmail.com> <4E39EB52.1090401@candelatech.com> <CA+yqC4a1xCPM4WN5U5Oth9PUqGSg+h6qZ4u2sV80h3zcEtzazg@mail.gmail.com>
-In-Reply-To: <CA+yqC4a1xCPM4WN5U5Oth9PUqGSg+h6qZ4u2sV80h3zcEtzazg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 9 Aug 2011 05:14:44 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 5so2430702wwf.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:44 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 39/40] wl12xx: AP-mode - prevent Tx to stale/invalid stations
+Date: Tue,  9 Aug 2011 12:13:52 +0300
+Message-Id: <1312881233-9366-40-git-send-email-eliad@wizery.com> (sfid-20110809_111452_862915_E8C8AE7E)
+In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/09/2011 11:11 AM, Sam Leffler wrote:
-> On Wed, Aug 3, 2011 at 5:44 PM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 08/03/2011 03:37 PM, Sam Leffler wrote:
->>>
->>> On Tue, Aug 2, 2011 at 10:33 PM, Ben Greear<greearb@candelatech.com>
->>>   wrote:
->>>>
->>>> We have some interest in being able to bridge wired systems to
->>>> (virtual) STA interfaces, primarily for using third-party
->>>> traffic generation tools over virtual stations.
->>>>
->>>> I was thinking of writing a sta-bridge module that mapped
->>>> incoming packets on a wired interface to a STA with MAC
->>>> that matched the source MAC of the packet.  All packets
->>>> received on the STA would be forwarded un-modified out
->>>> the wired port.
->>>>
->>>> I think this would allow someone to create a STA interface
->>>> with MAC matching a PC connected to the wired port and effectively
->>>> have it be a transparent bridge between STA and PC.
->>>>
->>>> Has anyone attempted something like this before?
->>>>
->>>> Any interest in having this feature in the upstream kernel?
->>>
->>> You've just described what's done in several products and it is indeed
->>> useful.  The main issue is supporting it can incur overhead so you may
->>> want to make it a compile-time option.
->>
->> I got some basic functionality working today with some
->> user-space bridging code I've already written for other purposes...
->>
->> Can you think of any reason (beyond a bit of performance) that
->> this should be in the kernel?
->
-> Doing it in user space seems fine to start.  All the examples I can
-> think of are on minimal embedded platforms where taking the user-space
-> hit is infeasible.  All the wireless devices that are interesting can
-> do this in h/w w/ only minimal kernel support (except for the vif
-> setup).
->
-> FWIW the overhead I was referring to is in the kernel.  A many-to-1
-> mapping of STA<->AP can be more expensive to support than 1-1.  But
-> since you already support multi-sta you're already paying the price.
->
->>
->> My target hardware is fast enough that copying through user-space
->> at moderate (ie, fast as STA can go) speeds isn't too big of a deal, but
->> if someone wanted to run this on weak hardware, that might be reason
->> enough...  It might also make it easier to filter our management frames
->> (EAPOL, etc), but we should be able to do that easily enough in user-space
->> with a small bit of work.
->
-> Setting up and tearing down the sta's in response to wired traffic was
-> always the fun part.  Everything else was straightforward from what I
-> can recall.
+From: Arik Nemtsov <arik@wizery.com>
 
-I think I'll just force user to create an STA with matching MAC (for the
-MAC of the PC/whatever to be bridged).  Ath9k and ath5k can support at
-least 128 stations, so that will be plenty for our uses...
+Don't pollute the queues with Tx directed to invalid stations. This
+can happen during recovery.
 
-We saw some problems changing MAC on STA after they were created, but
-it seems to be ok if we just create it with correct STA the first time,
-and we'll try to figure out why changing MAC was acting weird as well.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   20 +++++++++++++++++---
+ 1 files changed, 17 insertions(+), 3 deletions(-)
 
-Thanks,
-Ben
-
->
-> -Sam
-
-
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index e3c77da..7d0bcd2 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -775,13 +775,19 @@ static void wl1271_irq_ps_regulate_link(struct wl1271 *wl, u8 hlid, u8 tx_pkts)
+ 	else if (fw_ps && tx_pkts >= WL1271_PS_STA_MAX_PACKETS)
+ 		wl1271_ps_link_start(wl, hlid, true);
+ }
+ 
+ bool wl1271_is_active_sta(struct wl1271 *wl, u8 hlid)
+ {
+-	int id = hlid - WL1271_AP_STA_HLID_START;
++	int id;
++
++	/* global/broadcast "stations" are always active */
++	if (hlid < WL1271_AP_STA_HLID_START)
++		return true;
++
++	id = hlid - WL1271_AP_STA_HLID_START;
+ 	return test_bit(id, wl->ap_hlid_map);
+ }
+ 
+ static void wl1271_irq_update_links_status(struct wl1271 *wl,
+ 					   struct wl1271_fw_status *status)
+ {
+@@ -1483,12 +1489,19 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		ieee80211_stop_queue(wl->hw, mapping);
+ 		set_bit(q, &wl->stopped_queues_map);
+ 	}
+ 
+ 	/* queue the packet */
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
++		if (!wl1271_is_active_sta(wl, hlid)) {
++			wl1271_debug(DEBUG_TX, "DROP skb hlid %d q %d",
++				     hlid, q);
++			dev_kfree_skb(skb);
++			goto out;
++		}
++
+ 		wl1271_debug(DEBUG_TX, "queue skb hlid %d q %d", hlid, q);
+ 		skb_queue_tail(&wl->links[hlid].tx_queue[q], skb);
+ 	} else {
+ 		skb_queue_tail(&wl->tx_queue[q], skb);
+ 	}
+ 
+@@ -1498,12 +1511,13 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	 */
+ 
+ 	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags) &&
+ 	    !test_bit(WL1271_FLAG_TX_PENDING, &wl->flags))
+ 		ieee80211_queue_work(wl->hw, &wl->tx_work);
+ 
++out:
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+ }
+ 
+ int wl1271_tx_dummy_packet(struct wl1271 *wl)
+ {
+ 	unsigned long flags;
+@@ -3660,13 +3674,13 @@ static int wl1271_allocate_sta(struct wl1271 *wl,
+ 	if (id >= AP_MAX_STATIONS) {
+ 		wl1271_warning("could not allocate HLID - too much stations");
+ 		return -EBUSY;
+ 	}
+ 
+ 	wl_sta = (struct wl1271_station *)sta->drv_priv;
+-	__set_bit(id, wl->ap_hlid_map);
++	set_bit(id, wl->ap_hlid_map);
+ 	wl_sta->hlid = WL1271_AP_STA_HLID_START + id;
+ 	*hlid = wl_sta->hlid;
+ 	memcpy(wl->links[wl_sta->hlid].addr, sta->addr, ETH_ALEN);
+ 	return 0;
+ }
+ 
+@@ -3674,13 +3688,13 @@ static void wl1271_free_sta(struct wl1271 *wl, u8 hlid)
+ {
+ 	int id = hlid - WL1271_AP_STA_HLID_START;
+ 
+ 	if (WARN_ON(!test_bit(id, wl->ap_hlid_map)))
+ 		return;
+ 
+-	__clear_bit(id, wl->ap_hlid_map);
++	clear_bit(id, wl->ap_hlid_map);
+ 	memset(wl->links[hlid].addr, 0, ETH_ALEN);
+ 	wl->links[hlid].ba_bitmap = 0;
+ 	wl1271_tx_reset_link_queues(wl, hlid);
+ 	__clear_bit(hlid, &wl->ap_ps_map);
+ 	__clear_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
+ }
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.6.401.g6a319
+
