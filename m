@@ -1,43 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:61734 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753734Ab1HLTIl (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:52742 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751634Ab1HIXqZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 15:08:41 -0400
-Received: by vws1 with SMTP id 1so2690672vws.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 12:08:40 -0700 (PDT)
-Message-ID: <4E457A30.3010701@lwfinger.net> (sfid-20110812_210852_017270_FA3796F4)
-Date: Fri, 12 Aug 2011 14:08:32 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Franky Lin <frankyl@broadcom.com>
-CC: Arend van Spriel <arend@broadcom.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 01/14] staging: brcm80211: use wait queues instead of
- semaphores in wl_cfg80211.c
-References: <1313156101-16817-1-git-send-email-arend@broadcom.com> <1313156101-16817-2-git-send-email-arend@broadcom.com> <CACna6rzmaxzezN-OPTLvXyFOZOsoq6XCds4P-FOEz27FzJz+Jg@mail.gmail.com> <4E455877.6090901@broadcom.com> <4E45781E.8070508@broadcom.com>
-In-Reply-To: <4E45781E.8070508@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 9 Aug 2011 19:46:25 -0400
+Received: by ywf7 with SMTP id 7so362259ywf.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 16:46:24 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH 1/8] mac80211: improve mpath debugging
+Date: Tue,  9 Aug 2011 16:45:04 -0700
+Message-Id: <1312933511-9486-2-git-send-email-thomas@cozybit.com> (sfid-20110810_014627_733166_3404E236)
+In-Reply-To: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
+References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/12/2011 01:59 PM, Franky Lin wrote:
-> If you are refering to this line
->  >>> + } while ((e = brcmf_deq_event(cfg_priv)));
->
-> The extra parentheses are added to fix a compiler warning:
-> drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c: In function
-> ‘brcmf_event_handler’:
-> drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c:3576: warning: suggest
-> parentheses around assignment used as truth value
+From: Javier Cardona <javier@cozybit.com>
 
-Does checkpatch allow that assignment in the while statement? I would expect it 
-to want you to
+make hwmp_dbg print the relevant sdata->name by default and improve
+formatting. Also add mpath_dbg macro for debugging of mesh path
+operations.
 
-		e = brcmf_deq_event(cfg_priv);
-	} while (e);
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ net/mac80211/Kconfig        |   13 +++++++++++++
+ net/mac80211/mesh_hwmp.c    |   23 ++++++++++++-----------
+ net/mac80211/mesh_pathtbl.c |    6 ++++++
+ 3 files changed, 31 insertions(+), 11 deletions(-)
 
-Larry
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index f5fdfcb..d1886b5 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -199,6 +199,19 @@ config MAC80211_VERBOSE_MPL_DEBUG
+ 
+ 	  Do not select this option.
+ 
++config MAC80211_VERBOSE_MPATH_DEBUG
++	bool "Verbose mesh path debugging"
++	depends on MAC80211_DEBUG_MENU
++	depends on MAC80211_MESH
++	---help---
++	  Selecting this option causes mac80211 to print out very
++	  verbose mesh path selection debugging messages (when mac80211
++	  is taking part in a mesh network).
++	  It should not be selected on production systems as those
++	  messages are remotely triggerable.
++
++	  Do not select this option.
++
+ config MAC80211_VERBOSE_MHWMP_DEBUG
+ 	bool "Verbose mesh HWMP routing debugging"
+ 	depends on MAC80211_DEBUG_MENU
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 2e528b0..14803ae 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -11,7 +11,8 @@
+ #include "mesh.h"
+ 
+ #ifdef CONFIG_MAC80211_VERBOSE_MHWMP_DEBUG
+-#define mhwmp_dbg(fmt, args...)   printk(KERN_DEBUG "Mesh HWMP: " fmt, ##args)
++#define mhwmp_dbg(fmt, args...) \
++	printk(KERN_DEBUG "Mesh HWMP (%s): " fmt "\n", sdata->name, ##args)
+ #else
+ #define mhwmp_dbg(fmt, args...)   do { (void)(0); } while (0)
+ #endif
+@@ -137,19 +138,19 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+ 
+ 	switch (action) {
+ 	case MPATH_PREQ:
+-		mhwmp_dbg("sending PREQ to %pM\n", target);
++		mhwmp_dbg("sending PREQ to %pM", target);
+ 		ie_len = 37;
+ 		pos = skb_put(skb, 2 + ie_len);
+ 		*pos++ = WLAN_EID_PREQ;
+ 		break;
+ 	case MPATH_PREP:
+-		mhwmp_dbg("sending PREP to %pM\n", target);
++		mhwmp_dbg("sending PREP to %pM", target);
+ 		ie_len = 31;
+ 		pos = skb_put(skb, 2 + ie_len);
+ 		*pos++ = WLAN_EID_PREP;
+ 		break;
+ 	case MPATH_RANN:
+-		mhwmp_dbg("sending RANN from %pM\n", orig_addr);
++		mhwmp_dbg("sending RANN from %pM", orig_addr);
+ 		ie_len = sizeof(struct ieee80211_rann_ie);
+ 		pos = skb_put(skb, 2 + ie_len);
+ 		*pos++ = WLAN_EID_RANN;
+@@ -493,10 +494,10 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	orig_sn = PREQ_IE_ORIG_SN(preq_elem);
+ 	target_flags = PREQ_IE_TARGET_F(preq_elem);
+ 
+-	mhwmp_dbg("received PREQ from %pM\n", orig_addr);
++	mhwmp_dbg("received PREQ from %pM", orig_addr);
+ 
+ 	if (memcmp(target_addr, sdata->vif.addr, ETH_ALEN) == 0) {
+-		mhwmp_dbg("PREQ is for us\n");
++		mhwmp_dbg("PREQ is for us");
+ 		forward = false;
+ 		reply = true;
+ 		metric = 0;
+@@ -532,7 +533,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		lifetime = PREQ_IE_LIFETIME(preq_elem);
+ 		ttl = ifmsh->mshcfg.element_ttl;
+ 		if (ttl != 0) {
+-			mhwmp_dbg("replying to the PREQ\n");
++			mhwmp_dbg("replying to the PREQ");
+ 			mesh_path_sel_frame_tx(MPATH_PREP, 0, target_addr,
+ 				cpu_to_le32(target_sn), 0, orig_addr,
+ 				cpu_to_le32(orig_sn), mgmt->sa, 0, ttl,
+@@ -552,7 +553,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 			ifmsh->mshstats.dropped_frames_ttl++;
+ 			return;
+ 		}
+-		mhwmp_dbg("forwarding the PREQ from %pM\n", orig_addr);
++		mhwmp_dbg("forwarding the PREQ from %pM", orig_addr);
+ 		--ttl;
+ 		flags = PREQ_IE_FLAGS(preq_elem);
+ 		preq_id = PREQ_IE_PREQ_ID(preq_elem);
+@@ -587,7 +588,7 @@ static void hwmp_prep_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	u8 next_hop[ETH_ALEN];
+ 	u32 target_sn, orig_sn, lifetime;
+ 
+-	mhwmp_dbg("received PREP from %pM\n", PREP_IE_ORIG_ADDR(prep_elem));
++	mhwmp_dbg("received PREP from %pM", PREP_IE_ORIG_ADDR(prep_elem));
+ 
+ 	/* Note that we divert from the draft nomenclature and denominate
+ 	 * destination to what the draft refers to as origininator. So in this
+@@ -798,7 +799,7 @@ static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
+ 
+ 	preq_node = kmalloc(sizeof(struct mesh_preq_queue), GFP_ATOMIC);
+ 	if (!preq_node) {
+-		mhwmp_dbg("could not allocate PREQ node\n");
++		mhwmp_dbg("could not allocate PREQ node");
+ 		return;
+ 	}
+ 
+@@ -807,7 +808,7 @@ static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
+ 		spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
+ 		kfree(preq_node);
+ 		if (printk_ratelimit())
+-			mhwmp_dbg("PREQ node queue full\n");
++			mhwmp_dbg("PREQ node queue full");
+ 		return;
+ 	}
+ 
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 3ef6ad4..819d8e4 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -17,6 +17,12 @@
+ #include "ieee80211_i.h"
+ #include "mesh.h"
+ 
++#ifdef CONFIG_MAC80211_VERBOSE_MPATH_DEBUG
++#define mpath_dbg(fmt, args...)	printk(KERN_DEBUG fmt, ##args)
++#else
++#define mpath_dbg(fmt, args...)	do { (void)(0); } while (0)
++#endif
++
+ /* There will be initially 2^INIT_PATHS_SIZE_ORDER buckets */
+ #define INIT_PATHS_SIZE_ORDER	2
+ 
+-- 
+1.7.6
+
