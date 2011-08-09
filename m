@@ -1,95 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1971 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750768Ab1HKQx2 convert rfc822-to-8bit (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:34967 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753075Ab1HIPEg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 12:53:28 -0400
-Message-ID: <4E4408F6.2040606@broadcom.com> (sfid-20110811_185331_842212_7A17A3E2)
-Date: Thu, 11 Aug 2011 18:53:10 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	Tue, 9 Aug 2011 11:04:36 -0400
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] bcma: implement BCM4331 workaround for external PA
- lines
-References: <1313055255-3088-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1313055255-3088-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+From: Pavel Ivanov <paivanof@gmail.com>
+Date: Tue, 9 Aug 2011 11:04:05 -0400
+Message-ID: <CAG1a4rtHedO66ot4B7TWmKG5_mrnSS78O74_xxmgXk7UeoX_gA@mail.gmail.com> (sfid-20110809_170444_326855_06DB6AF4)
+Subject: Cannot easily set CONFIG_WIRELESS_EXT in kernel 3.0 build
+To: linux-kbuild@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/11/2011 11:34 AM, Rafał Miłecki wrote:
-> We need to disable ext. PA lines for reading SPROM. It's disabled by
-> default, but this patch allows using bcma after loading wl, which leaves
-> workaround enabled.
->
-> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
-> ---
->   drivers/bcma/driver_chipcommon_pmu.c        |   20 +++++++++++++++++++-
->   drivers/bcma/sprom.c                        |    6 ++++++
->   include/linux/bcma/bcma_driver_chipcommon.h |   18 ++++++++++++++++++
->   3 files changed, 43 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-> index 5940c81..a3854ff 100644
-> --- a/drivers/bcma/driver_chipcommon_pmu.c
-> +++ b/drivers/bcma/driver_chipcommon_pmu.c
-> @@ -90,6 +90,24 @@ void bcma_pmu_swreg_init(struct bcma_drv_cc *cc)
->   	}
->   }
->
-> +/* Disable to allow reading SPROM. Don't know the adventages of enabling it. */
-> +void bcma_chipco_bcm4331_exp_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable)
+Hi,
 
-Would 'ext_pa' iso 'exp_pa' be better here?
+I've tried to build and install kernel 3.0. The standard Ubuntu
+configuration worked very well. But after I ran 'make localmodconfig',
+rebuilt and rebooted my wireless didn't work. After some investigation
+I've found that option CONFIG_WIRELESS_EXT is no longer set in .config
+file. But no matter how I tried to include it in .config file it was
+automatically deleted by 'make oldconfig' and again kernel compiled
+without it. Then I've found that if I include in the build some
+(completely unnecessary to me) wireless module which has 'select
+WIRELESS_EXT' in its Kconfig then it stays in .config file and
+resulting kernel works very well with my WiFi network. In fact even if
+I add 'select WIRELESS_EXT' to Kconfig of the driver for my wireless
+card (ath9k) everything works as well.
 
-> +{
-> +	struct bcma_bus *bus = cc->core->bus;
-> +	u32 val;
-> +
-> +	val = bcma_cc_read32(cc, BCMA_CC_CHIPCTL);
-> +	if (enable) {
-> +		val |= BCMA_CHIPCTL_4331_EXTPA_EN;
-> +		if (bus->chipinfo.pkg == 9 || bus->chipinfo.pkg == 11)
-> +			val |= BCMA_CHIPCTL_4331_EXTPA_ON_GPIO2_5;
-> +	} else {
-> +		val&= ~BCMA_CHIPCTL_4331_EXTPA_EN;
-> +		val&= ~BCMA_CHIPCTL_4331_EXTPA_ON_GPIO2_5;
-> +	}
-> +	bcma_cc_write32(cc, BCMA_CC_CHIPCTL, val);
-> +}
-> +
->   void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
->   {
->   	struct bcma_bus *bus = cc->core->bus;
-> @@ -99,7 +117,7 @@ void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
->   		bcma_chipco_chipctl_maskset(cc, 0, ~0, 0x7);
->   		break;
->   	case 0x4331:
-> -		pr_err("Enabling Ext PA lines not implemented\n");
-> +		/* BCM4331 workaround is SPROM-related, we put it in sprom.c */
->   		break;
->   	case 43224:
->   		if (bus->chipinfo.rev == 0) {
-> diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
-> index 8b5b785..94c6b3f 100644
-> --- a/drivers/bcma/sprom.c
-> +++ b/drivers/bcma/sprom.c
-> @@ -152,6 +152,9 @@ int bcma_sprom_get(struct bcma_bus *bus)
->   	if (!sprom)
->   		return -ENOMEM;
->
-> +	if (bus->chipinfo.id == 0x4331)
-> +		bcma_chipco_bcm4331_exp_pa_lines_ctl(&bus->drv_cc, false);
-> +
-dito here.
+I'd think that such behavior is a bug, although I don't know on which
+side. Either on the side of wireless drivers which all have to have
+'select WIRELESS_EXT' in their Kconfig files or on the side of kbuild
+system which doesn't allow me to set CONFIG_WIRELESS_EXT unless some
+driver requires it. Interestingly enough requiring WIRELESS_EXT works
+only with drivers, because I've tried to add CONFIG_LIBIPW (it
+requires WIRELESS_EXT too) but it was automatically deleted from
+.config file along with CONFIG_WIRELESS_EXT. So I couldn't include
+only this library.
 
-Gr. AvS
-
--- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
+Could you tell me if this is indeed a bug or am I missing something here?
+I'm not subscribed to the lists so please add me in CC.
 
 
+Pavel
