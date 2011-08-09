@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5638 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753087Ab1H2LLr (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46411 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752699Ab1HIJ32 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 07:11:47 -0400
-Date: Mon, 29 Aug 2011 16:41:31 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<rodrigue@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: Re: [PATCH] ath9k: fix checks for first subframe delimiter padding
-Message-ID: <20110829111130.GB29376@vasanth-laptop> (sfid-20110829_131150_645886_D4A28E95)
-References: <1314615061-6354-1-git-send-email-nbd@openwrt.org> <20110829110427.GA29376@vasanth-laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20110829110427.GA29376@vasanth-laptop>
+	Tue, 9 Aug 2011 05:29:28 -0400
+Subject: Re: [RFC] mac80211: fix resuming when device is gone
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1312882082.4109.2.camel@jlt3.sipsolutions.net> (sfid-20110809_112809_793622_99974450)
+References: <20110808141900.GA25857@redhat.com>
+	 <1312819106.4372.37.camel@jlt3.sipsolutions.net>
+	 <20110809092314.GA2152@redhat.com>
+	 <1312882082.4109.2.camel@jlt3.sipsolutions.net>
+	 (sfid-20110809_112809_793622_99974450)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 09 Aug 2011 11:29:26 +0200
+Message-ID: <1312882166.4109.3.camel@jlt3.sipsolutions.net> (sfid-20110809_112931_309434_98770D94)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 29, 2011 at 04:34:28PM +0530, Vasanthakumar Thiagarajan wrote:
-> On Mon, Aug 29, 2011 at 12:51:01PM +0200, Felix Fietkau wrote:
-> > The commit "ath9k_hw: Fix exceed transmission burst-time of 5GHz" added
-> > a padding of 60 delimiters on the first subframe to work around an issue
-> > on AR9380, but it lacked the checks to prevent it from being applied to
-> > pre-AR9380, enterprise AR9380 or AR9580+
-> > 
-> > Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> > Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> > ---
-> >  drivers/net/wireless/ath/ath9k/reg.h  |    1 +
-> >  drivers/net/wireless/ath/ath9k/xmit.c |    4 +++-
-> >  2 files changed, 4 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-> > index a3b8bbc..989514a 100644
-> > --- a/drivers/net/wireless/ath/ath9k/reg.h
-> > +++ b/drivers/net/wireless/ath/ath9k/reg.h
-> > @@ -1131,6 +1131,7 @@ enum {
-> >  #define AR_INTR_PRIO_ASYNC_ENABLE (AR_SREV_9340(ah) ? 0x4094 : 0x40d4)
-> >  #define AR_ENT_OTP		  0x40d8
-> >  #define AR_ENT_OTP_CHAIN2_DISABLE               0x00020000
-> > +#define AR_ENT_OTP_MIN_PKT_SIZE_DISABLE		0x00800000
-> >  #define AR_ENT_OTP_MPSD		0x00800000
+On Tue, 2011-08-09 at 11:28 +0200, Johannes Berg wrote:
+
+> > I think I was unclear. The sta_cleanup timer callback, namely
+> > sta_info_cleanup(), can operate on freed memory. On
+> > ieee80211_unregister_hw() -> sta_info_stop() we delete this timer, but
+> > rdev/wiphy/local/hw structure is not freed. It's keep by reference
+> > counter. 
 > 
-> Looks like AR_ENT_OTP_MPSD was defined for this purpose,
-> unfortunately it so difficult to understand anything from this
-> macro. Can you also this redundant definition?
+> You mean by device_del(&rdev->wiphy.dev) right?
+> 
+> > Then if ieee80211_reconfig() is called, we schedule
+> > sta_cleanup timer. After that, when sysfs drop reference counter we
+> > free rdev. Then sta_info_cleanup() crash kernel.
+> 
+> Ok let me get this straight -- even after device_del() we get a resume
+> callback from the core subsystem? That doesn't seem right.
 
-I mean, Can you also remove this redundant definition?, thanks.
+Or .. what else called ieee80211_reconfig()?
 
-Vasanth
+johannes
+
