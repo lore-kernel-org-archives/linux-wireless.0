@@ -1,57 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from filtteri1.pp.htv.fi ([213.243.153.184]:44405 "EHLO
-	filtteri1.pp.htv.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803Ab1HXXxZ (ORCPT
+Received: from webmail01.spothost.nl ([77.74.49.150]:48939 "EHLO
+	webmail01.spothost.nl" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752438Ab1HILH6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 19:53:25 -0400
-In-Reply-To: <20110824231851.GG5280@broadcom.com>
-References: <20110707002034.GA17885@broadcom.com> <20110824222801.GA5280@broadcom.com> <C7234C0A-9839-4150-8B25-F6A6771377A1@iki.fi> <20110824231851.GG5280@broadcom.com>
-Mime-Version: 1.0 (Apple Message framework v753.1)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Message-Id: <AACF29F3-C672-4DE4-8064-496662A40CB7@iki.fi> (sfid-20110825_015328_239808_783D7F2D)
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Aaro Koskinen <aaro.koskinen@iki.fi>
-Subject: Re: [PATCH v2] Move brcm80211 to mainline
-Date: Thu, 25 Aug 2011 02:54:22 +0300
-To: Henry Ptasinski <henryp@broadcom.com>
+	Tue, 9 Aug 2011 07:07:58 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Tue, 09 Aug 2011 11:07:56 +0000
+From: kc@cobradevil.org
+To: <linux-wireless@vger.kernel.org>
+Cc: <kc@cobradevil.org>
+Subject: Re: rtl8192cu sometimes it can authenticate to ap
+In-Reply-To: <b3059ba2eac66b7ef0ec17c8fe81a1e6@cobradevil.org>
+References: <b3059ba2eac66b7ef0ec17c8fe81a1e6@cobradevil.org>
+Message-ID: <34676454425401d650be733a43191a53@cobradevil.org> (sfid-20110809_130801_644826_409C38E8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi all,
 
-On 25.8.2011, at 2.18, Henry Ptasinski wrote:
-> On Wed, Aug 24, 2011 at 04:10:31PM -0700, Aaro Koskinen wrote:
->> On 25.8.2011, at 1.28, Henry Ptasinski wrote:
->>> The drivers compile cleanly for x86 (32- and 64-bit), PPC (32- and
->>> 64-bit),
->>> SPAR, MIPS BE, MIPS LE, and ARM.
->>
->> Are you sure the compilation is even enabled on all of those  
->> platforms?
->>
->> E.g.:
->>
->>> +config BRCMSMAC
->>> +       tristate "Broadcom IEEE802.11n PCIe SoftMAC WLAN driver"
->>> +       default n
->>> +       depends on PCI
->>> +       depends on WLAN && MAC80211
->>> +       depends on X86 || MIPS
->>            ^^^^^^^^^^^^^^^^^^^^^^
->>
->> Why this?
+Have installed natty and also installed the snapshot.
+
+After compile and installed the rtlwifi driver the wpa_supplicant works 
+like a charm every time with all three sticks.
+So i think it is something in the compat layer or userland utilities?
+
+Anyone an idea?
+I would like this to work with the maverick kernel 2.6.35 because we 
+cannot upgrade right now.
+
+With kind regards
+
+William
+
+On Tue, 09 Aug 2011 09:16:12 +0000, kc@cobradevil.org wrote:
+
+> Hello all,
 >
-> See my other message.  Wrong link to the patch.  Correct link:
+> i have three usb sticks with the the id:
+> 0bda:8176
 >
-> http://linuxwireless.org/en/users/Drivers/brcm80211? 
-> action=AttachFile&do=get&target=0001-wireless-testing-add-brcm80211- 
-> v2.patch
+> I am running ubuntu maverick with the compat tree from 2011-08-08
+> (downloaded this morning) and i also tried several others (dates from 
+> 15
+> juli 2011).
+> The main problem is that sometimes i get a connection and it works 
+> like
+> a charm and then all of the sudden i don't get any connection at all 
+> and
+> running wpa_supplicant says time out.
+>
+> i really have no idea whats wrong so if someone could help me out.
+> is there a way to get debugging from the rtlwifi drivers?
+>
+> i got the firmware from:
+> http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git 
+> [1]
+>
+> With kind regards
+>
+> William
 
-Thanks. The second version builds for ARM, but there's quite a few  
-sparse warnings....
 
-A.
-
+Links:
+------
+[1] http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git
