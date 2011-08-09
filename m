@@ -1,40 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63743 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751028Ab1HQEv5 (ORCPT
+Received: from smtp-out.google.com ([74.125.121.67]:55808 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752848Ab1HISLy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2011 00:51:57 -0400
-Message-ID: <4E4B48E4.7060809@qca.qualcomm.com> (sfid-20110817_065208_118606_FA6B97E5)
-Date: Tue, 16 Aug 2011 21:51:48 -0700
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Tue, 9 Aug 2011 14:11:54 -0400
+Received: from wpaz17.hot.corp.google.com (wpaz17.hot.corp.google.com [172.24.198.81])
+	by smtp-out.google.com with ESMTP id p79IBm2p005562
+	for <linux-wireless@vger.kernel.org>; Tue, 9 Aug 2011 11:11:48 -0700
+Received: from yxl11 (yxl11.prod.google.com [10.190.3.203])
+	by wpaz17.hot.corp.google.com with ESMTP id p79IBltq009241
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 9 Aug 2011 11:11:47 -0700
+Received: by yxl11 with SMTP id 11so256456yxl.21
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 11:11:46 -0700 (PDT)
 MIME-Version: 1.0
-To: Lin Tony-B19295 <B19295@freescale.com>
-CC: Hauke Mehrtens <hauke@hauke-m.de>,
-	"mcgrof@gmail.com" <mcgrof@gmail.com>,
-	"rodrigue@qca.qualcomm.com" <rodrigue@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rmani@qca.qualcomm.com" <rmani@qca.qualcomm.com>
-Subject: Re: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
-References: <1313060347-665-1-git-send-email-hauke@hauke-m.de> <97D3A72708D04647A5AC84A04996E5B5193114@039-SN1MPN1-002.039d.mgd.msft.net> <4E496CA7.7000604@hauke-m.de> <4E49BAB1.7060303@qca.qualcomm.com> <97D3A72708D04647A5AC84A04996E5B5195381@039-SN1MPN1-002.039d.mgd.msft.net> <4E4A7159.3090004@qca.qualcomm.com> <97D3A72708D04647A5AC84A04996E5B5195ADD@039-SN1MPN1-002.039d.mgd.msft.net> <4E4B437A.1070200@qca.qualcomm.com> <97D3A72708D04647A5AC84A04996E5B5195BE5@039-SN1MPN1-002.039d.mgd.msft.net>
-In-Reply-To: <97D3A72708D04647A5AC84A04996E5B5195BE5@039-SN1MPN1-002.039d.mgd.msft.net>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <4E39EB52.1090401@candelatech.com>
+References: <4E38DDB3.1030801@candelatech.com>
+	<CA+yqC4YvAMLaao4dy2aXM7H5zPXySk4eAUZ2KSM4QnP+kQqF-A@mail.gmail.com>
+	<4E39EB52.1090401@candelatech.com>
+Date: Tue, 9 Aug 2011 11:11:46 -0700
+Message-ID: <CA+yqC4a1xCPM4WN5U5Oth9PUqGSg+h6qZ4u2sV80h3zcEtzazg@mail.gmail.com> (sfid-20110809_201158_047651_D8DC247F)
+Subject: Re: Bridging wired to STA interfaces.
+From: Sam Leffler <sleffler@google.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/16/2011 09:44 PM, Lin Tony-B19295 wrote:
->>> Besides, the performance seems not good. I got only 5Mb/s
->>> station->station performance. While another driver released from your
->>> AE could reach at least 10Mb/s, do you have any idea?
+On Wed, Aug 3, 2011 at 5:44 PM, Ben Greear <greearb@candelatech.com> wrote:
+> On 08/03/2011 03:37 PM, Sam Leffler wrote:
 >>
->> That sounds quite low. Can you describe your test setup in detail, please?
->> That would help to understand the issue.
+>> On Tue, Aug 2, 2011 at 10:33 PM, Ben Greear<greearb@candelatech.com>
+>>  wrote:
+>>>
+>>> We have some interest in being able to bridge wired systems to
+>>> (virtual) STA interfaces, primarily for using third-party
+>>> traffic generation tools over virtual stations.
+>>>
+>>> I was thinking of writing a sta-bridge module that mapped
+>>> incoming packets on a wired interface to a STA with MAC
+>>> that matched the source MAC of the packet.  All packets
+>>> received on the STA would be forwarded un-modified out
+>>> the wired port.
+>>>
+>>> I think this would allow someone to create a STA interface
+>>> with MAC matching a PC connected to the wired port and effectively
+>>> have it be a transparent bridge between STA and PC.
+>>>
+>>> Has anyone attempted something like this before?
+>>>
+>>> Any interest in having this feature in the upstream kernel?
 >>
-> Both PC and board are connected to an AP. And set PC as host, 'iperf -s'
-> Set board as client, 'iperf -c pc ipaddr -t 100000 -w 1M -i 3'
-> If using another package, I get 23Mb/s
+>> You've just described what's done in several products and it is indeed
+>> useful.  The main issue is supporting it can incur overhead so you may
+>> want to make it a compile-time option.
+>
+> I got some basic functionality working today with some
+> user-space bridging code I've already written for other purposes...
+>
+> Can you think of any reason (beyond a bit of performance) that
+> this should be in the kernel?
 
-What wifi settings do you use? (11n, encryption, frequency, etc)
+Doing it in user space seems fine to start.  All the examples I can
+think of are on minimal embedded platforms where taking the user-space
+hit is infeasible.  All the wireless devices that are interesting can
+do this in h/w w/ only minimal kernel support (except for the vif
+setup).
 
-Does dmesg show anything suspicious?
+FWIW the overhead I was referring to is in the kernel.  A many-to-1
+mapping of STA<->AP can be more expensive to support than 1-1.  But
+since you already support multi-sta you're already paying the price.
 
-Kalle
+>
+> My target hardware is fast enough that copying through user-space
+> at moderate (ie, fast as STA can go) speeds isn't too big of a deal, but
+> if someone wanted to run this on weak hardware, that might be reason
+> enough...  It might also make it easier to filter our management frames
+> (EAPOL, etc), but we should be able to do that easily enough in user-space
+> with a small bit of work.
+
+Setting up and tearing down the sta's in response to wired traffic was
+always the fun part.  Everything else was straightforward from what I
+can recall.
+
+-Sam
