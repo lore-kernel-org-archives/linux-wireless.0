@@ -1,103 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3255 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753281Ab1HHN7f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:35 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 70/82] staging: brcm80211: remove dead code from
- brcmfmac
-Date: Mon, 8 Aug 2011 15:58:54 +0200
-Message-ID: <1312811946-16713-71-git-send-email-arend@broadcom.com> (sfid-20110808_160052_568780_A64AC500)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:12804 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754081Ab1HIRHo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2011 13:07:44 -0400
+Date: Tue, 9 Aug 2011 20:07:36 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Bill Jordan <bjordan@rajant.com>
+CC: Felix Fietkau <nbd@openwrt.org>, <ath9k-devel@lists.ath9k.org>,
+	<linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>
+Subject: Re: [ath9k-devel] [PATCH] ath: Fix hardware decryption of WEP
+Message-ID: <20110809170736.GC19300@jouni.qca.qualcomm.com> (sfid-20110809_190748_358772_311FAB04)
+References: <1312831193-8691-1-git-send-email-bjordan@rajant.com>
+ <4E4095C2.3010607@openwrt.org>
+ <20110809080400.GB2961@jouni.qca.qualcomm.com>
+ <CAFKp-_eykU7RPzcfEPg0a+eXie-uCFreFa-er+NfeVoT543BTA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAFKp-_eykU7RPzcfEPg0a+eXie-uCFreFa-er+NfeVoT543BTA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On Tue, Aug 09, 2011 at 11:58:33AM -0400, Bill Jordan wrote:
+> I was attempting to fix WEP AP mode.  I was surprised to find that received
+> data packets were decrypted in software.
 
-brcmf_sdcrad_cfg_read_word and brcmf_sdcard_cfg_write_word are
-not used by anyone.
+Ah, I see. This is bit problematic when keeping in mind that there could
+be multiple BSSes in use with different set of WEP configuration. If you
+put one of them in the key indexes 0..3, you may not be able to use the
+other BSSes correctly (in theory, it could be possible with some hacks
+when only a single WEP key is configured per BSS, but I don't think it
+is worth the effort to do that for WEP). As such, there would need to be
+code that is capable of dynamically kicking out the key cache entries
+0..3 should another BSS be set up. I don't think mac80211 has support
+for this at the moment, so that may require considerable amount of extra
+work. And again, it is questionable whether there is really any good
+justification for doing this with WEP that is not even allowed to be
+used with HT and as such, is limited in throughput anyway.
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c    |   35 ------------------------
- drivers/staging/brcm80211/brcmfmac/sdio_host.h |    9 ------
- 2 files changed, 0 insertions(+), 44 deletions(-)
+> I thought WEP should be programming the first 4 hardware keys based
+> on code in ath9k_rx_skb_postprocess:
+> 	} else if (ieee80211_has_protected(fc)
+> 		   && !decrypt_error && skb->len >= hdrlen + 4) {
+> 		keyix = skb->data[hdrlen + 3] >> 6;
+> 
+> 		if (test_bit(keyix, common->keymap))
+> 			rxs->flag |= RX_FLAG_DECRYPTED;
+> 	}
+> 
+> This code only works if the first 4 hardware keys are used.
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-index 31e6728..6cabda5 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-@@ -120,41 +120,6 @@ brcmf_sdcard_cfg_write(struct brcmf_sdio_dev *sdiodev, uint fnc_num, u32 addr,
- 		     __func__, fnc_num, addr, data));
- }
- 
--u32 brcmf_sdcard_cfg_read_word(struct brcmf_sdio_dev *sdiodev, uint fnc_num,
--			       u32 addr, int *err)
--{
--	int status;
--	u32 data = 0;
--
--	status = brcmf_sdioh_request_word(sdiodev->sdioh, SDIOH_CMD_TYPE_NORMAL,
--		SDIOH_READ, fnc_num, addr, &data, 4);
--
--	if (err)
--		*err = status;
--
--	BRCMF_INFO(("%s:fun = %d, addr = 0x%x, u32data = 0x%x\n",
--		     __func__, fnc_num, addr, data));
--
--	return data;
--}
--
--void
--brcmf_sdcard_cfg_write_word(struct brcmf_sdio_dev *sdiodev, uint fnc_num,
--			    u32 addr, u32 data, int *err)
--{
--	int status;
--
--	status =
--	    brcmf_sdioh_request_word(sdiodev->sdioh, SDIOH_CMD_TYPE_NORMAL,
--			       SDIOH_WRITE, fnc_num, addr, &data, 4);
--
--	if (err)
--		*err = status;
--
--	BRCMF_INFO(("%s:fun = %d, addr = 0x%x, u32data = 0x%x\n",
--		     __func__, fnc_num, addr, data));
--}
--
- int brcmf_sdcard_cis_read(struct brcmf_sdio_dev *sdiodev, uint func, u8 * cis,
- 			  uint length)
- {
-diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-index b82a462..3c97af4 100644
---- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-@@ -183,15 +183,6 @@ extern u8 brcmf_sdcard_cfg_read(struct brcmf_sdio_dev *sdiodev, uint func,
- extern void brcmf_sdcard_cfg_write(struct brcmf_sdio_dev *sdiodev, uint func,
- 				   u32 addr, u8 data, int *err);
- 
--/* Read/Write 4bytes from/to cfg space */
--extern u32
--brcmf_sdcard_cfg_read_word(struct brcmf_sdio_dev *sdiodev, uint fnc_num,
--			   u32 addr, int *err);
--
--extern void brcmf_sdcard_cfg_write_word(struct brcmf_sdio_dev *sdiodev,
--					uint fnc_num, u32 addr,
--					u32 data, int *err);
--
- /* Read CIS content for specified function.
-  *   fn:     function whose CIS is being requested (0 is common CIS)
-  *   cis:    pointer to memory location to place results
+There are some semi-odd hacks needed for figuring out whether the frame
+was really decrypted in some cases (i.e., whether the flag in RX
+descriptor is valid). This is one of those corner cases..
+
+> In order to support dynamic WEP keys, all WEP decryption must be done
+> in software? Am I understanding that correctly?
+
+Not with dynamic WEP keys. With those, the AP does not really receive
+any broadcast/multicast frames and only the per-station individual key
+is used for RX at the AP. As such, hardware can pick the correct key
+based on the transmitter address.
+
+The most problematic case with key cache and support for multiple BSSes
+is use of static WEP where the different BSSes have conflicting needs
+for finding the key on RX processing if the different BSSes share the
+same key index (and especially if they use multiple key indexes). While
+it would be theoretically possible to improve this, it is way too easy
+to break some other corner cases unless you are very careful with the
+key cache use in the driver. As such, I don't really want to spend the
+time reviewing this type of changes without a good justification for the
+improvement (and anything with WEP in it is unlikely to be considered
+good justification in 2011 ;-).
+
 -- 
-1.7.4.1
-
-
+Jouni Malinen                                            PGP id EFC895FA
