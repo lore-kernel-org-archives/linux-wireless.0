@@ -1,79 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:46760 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751293Ab1HTIgE convert rfc822-to-8bit (ORCPT
+Received: from bear.ext.ti.com ([192.94.94.41]:50832 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753115Ab1HIPEl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Aug 2011 04:36:04 -0400
+	Tue, 9 Aug 2011 11:04:41 -0400
+From: "Elias, Ilan" <ilane@ti.com>
+To: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
+	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
+	"samuel@sortiz.org" <samuel@sortiz.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 9 Aug 2011 17:04:29 +0200
+Subject: [RFC] NFC: NCI protocol proposal
+Message-ID: <AC090B9732AB2B4DB7FF476E907FE6600131D0E347@dnce02.ent.ti.com> (sfid-20110809_170444_843589_B6792DE6)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6XmMJk8mKAM-LB5Jh3ZV1k57RMsCzQ19Z+Ly-BFmk8cVQ@mail.gmail.com>
-References: <CAB=NE6XmMJk8mKAM-LB5Jh3ZV1k57RMsCzQ19Z+Ly-BFmk8cVQ@mail.gmail.com>
-Date: Sat, 20 Aug 2011 11:36:03 +0300
-Message-ID: <CAFtRNNwMBnd6CVJn9UYSu58E-EpAS7p0Qh=ZtfJHfdtS-wKxjg@mail.gmail.com> (sfid-20110820_103646_336243_D7E47D01)
-Subject: Re: Linux wireless summit videoes from LinuxCon 2011
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/8/20 Luis R. Rodriguez <mcgrof@gmail.com>:
-> For those that could not make it to the 2011 Linux wireless summit at
-> LinuxCon Vancouver we have up 3 videoes on YouTube:
->
-> 1) [RFC] 802.11 DFS design on mac80211 / ath9k
->
-> http://www.youtube.com/watch?v=_yyFiLFx4Mg
->
-> Saxnet present their latest effort on design for a DFS architecture
-> for mac80211 and for ath9k. This is from LinuxCon 2011 this week.
-> Saxnet did an awesome job. If this design works for certification it
-> could mean lowering the entry price for AP vendors looking to pass DFS
-> testing. This work is under review now.
->
-> 2) 802.11s on LInux mac80211
->
-> 802.11s Mesh Networking was ratified by IEEE for integration into
-> 802.11. Javier Cardona has been leading its implementation and support
-> on mac80211. In this session he reviews 802.11s with open and
-> encrypted environments. 802.11s uses a different encryption algorithm
-> called "simultaneous authentication of equals", Javier reviews work
-> needed to integrate the userspace application required supporting this
-> encryption mechanism on hostapd / wpa_supplicant.
->
-> 3) wmediumd for mac80211_hwsim
->
-> Javier Cardona explains what Cozybit used to test the 802.11s code
-> implemented in mac80211. He used extensions to mac80211_hwsim that
-> allow links to be lossy. Cozybit also wrote a daemon to communicate to
-> mac80211_hwsim to statically or dynamically alter the characteristics
-> of the links. Right now mac80211_hwsim only accounts for packet loss
-> between links but extensions can be made to also add latency later. He
-> also demos a Java application used to create your topology for
-> mac80211_hwsim. Researchers should get a chubby with this framework --
-> you can extend this to do really cool shit, all in software with no
-> hardware.
->
-> --
->
-> Kudos to Saxnet and Cozybit for their presentations and *awesome* work
-> on coding up stuff and doing a great job at explaining all this to us.
->
-> Nothing else was recorded, sorry :) If you loose the links you'll be
-> able to find them here:
->
-> http://wireless.kernel.org/en/users/Documentation#YouTube_Documentation
->
->  Luis
+Hi Lauro, Aloisio, Samuel, all,
 
-Thanks a lot !
+We would like to implement the NFC Controller Interface (NCI) protocol for the NFC subsystem.
+The NCI is a standard communication protocol between an NFC Controller (NFCC) and a Device Host (DH), defined by the NFC Forum.
 
-Is it possible to have the presentations uploaded on the wiki also ?
+The NCI protocol implementation will be chip independent and responsible for:
+	- Reset, initialization and configuration of the NFC controller
+	- Sending commands/data to the NFC controller
+	- Receiving responses/notifications/data from the NFC controller
+	- Flow control for Control and Data Messages
+	- Segmentation and reassembly for Control and Data Messages
+	- An addressing scheme for NFC Execution Environments (NFCEE), e.g. 	secure element
+	- An addressing scheme for Remote NFC Endpoints (NFCEE or RF targets) 	(via logical connections)
 
+The NCI protocol will be added to the NFC subsystem below the NFC core:
+ 
++--------------------------------------+
+|              USER SPACE              |
++--------------------------------------+
+     ^                        ^
+     | low-level              | control
+     | data exchange          | operations
+     |                        |
+     |                        v
+     |                  +-----------+
+     | AF_NFC           |  netlink  |
+     | socket           +-----------+
+     | raw                    ^
+     |                        |
+     v                        v
++---------+             +-----------+
+| rawsock | <---------> | NFC core  |
++---------+             +-----------+
+                	            ^
+                              |
+                              v
+              	      +-----------+
+                        | NCI core  |
+                        +-----------+
+				      ^
+				      |
+				      V
+			      +-----------+
+			      |  driver   |
+			      +-----------+
 
+The driver will register itself to the NCI core, and in turn the NCI core will register itself to the NFC core.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+We need to add the following 2 control operations (via generic netlink):
+	- Dev_up, which turn on the NFC controller (this operation may take a 	few seconds, as it can download new FW to the NFC controller)
+	- Dev_down, which turn off the NFC controller
+The dev_up/down approach was also used with HCI protocol in the BlueZ project.
+
+We suggest placing the NCI code in the net\nfc folder (beside the NFC code), as it's a generic and chip independent protocol, and not a driver.
+This approach was also used with HCI protocol in the BlueZ project.
+The driver itself will be located at drivers\nfc folder.
+
+The NCI code will be divided in a few files, e.g. nci_core, nci_rsp, nci_ntf etc.
+
+We'll appreciate your comments.
+
+Thanks & BR
+Ilan Elias
+Texas Instruments
