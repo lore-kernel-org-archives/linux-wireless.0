@@ -1,156 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:57309 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753419Ab1HBXUa convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54721 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752906Ab1HIMhG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 19:20:30 -0400
-From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] rtl8192cu: add USB ID for Belkin n300 Micro USB wireless adapter
-Date: Wed, 3 Aug 2011 01:20:18 +0200
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <201108022229.58532.s.L-H@gmx.de> <4E386FB9.2040507@lwfinger.net> <201108030035.50214.s.L-H@gmx.de>
-In-Reply-To: <201108030035.50214.s.L-H@gmx.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201108030120.21059.s.L-H@gmx.de> (sfid-20110803_012036_232390_1B0C0290)
+	Tue, 9 Aug 2011 08:37:06 -0400
+Subject: Re: [PATCH v2 2/2] mac80211: fix race condition between assoc_done
+ and first EAP packet
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Guy Eilam <guy@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1311762139-18252-1-git-send-email-guy@wizery.com> (sfid-20110727_122441_437167_3B74A86C)
+References: <1311762139-18252-1-git-send-email-guy@wizery.com>
+	 (sfid-20110727_122441_437167_3B74A86C)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 09 Aug 2011 14:37:04 +0200
+Message-ID: <1312893424.4109.41.camel@jlt3.sipsolutions.net> (sfid-20110809_143711_029617_6859EF7A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+On Wed, 2011-07-27 at 13:22 +0300, Guy Eilam wrote:
 
-On Wednesday 03 August 2011, Stefan Lippers-Hollmann wrote:
-> On Wednesday 03 August 2011, Larry Finger wrote:
-> > On 08/02/2011 03:43 PM, Stefan Lippers-Hollmann wrote:
-> > > On Tuesday 02 August 2011, Stefan Lippers-Hollmann wrote:
-> > > [1]	http://aptosid.com/index.php?name=PNphpBB2&file=viewtopic&t=1550&start=0
-> > > [2]	http://pastebin.com/ppZJ0GmU
-[...]
-> - no Oops if his USB ID is compiled into the module, that only happens
->   if he tries to inject it into an unpatched kernel with:
->   echo -n "050d 2103">  /sys/bus/usb/drivers/rtl8192cu/new_id
->   (and I'm reluctant to raise this as potential issue completely, due
->   to the tainted kernel condition on his system).
+> +++ b/net/mac80211/mlme.c
+> @@ -1495,10 +1495,14 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+>  
+>  	ifmgd->aid = aid;
+>  
+> -	sta = sta_info_alloc(sdata, cbss->bssid, GFP_KERNEL);
+> -	if (!sta) {
+> -		printk(KERN_DEBUG "%s: failed to alloc STA entry for"
+> -		       " the AP\n", sdata->name);
+> +	mutex_lock(&sdata->local->sta_mtx);
+> +	/*
+> +	 * station info was already allocated and inserted before
+> +	 * the association and should be available to us
+> +	 */
+> +	sta = sta_info_get_rx(sdata, cbss->bssid);
+> +	if (WARN_ON(!sta)) {
+> +		mutex_unlock(&sdata->local->sta_mtx);
+>  		return false;
+>  	}
+>  
+> @@ -1569,8 +1573,10 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+>  	if (elems.wmm_param)
+>  		set_sta_flags(sta, WLAN_STA_WME);
+>  
+> -	err = sta_info_insert(sta);
+> +	err = sta_info_insert_notify(sta);
 
-I can reproduce the reported Oops by injecting a (wrong) USB ID into 
-rtl8192cu myself on an untainted system. For reproducing the Oops, I 
-inject an unknown (wrong, the device I'm abusing for this test is a 
-Netgear WG111T, Atheros AR5523 based - no linux driver exists for this 
-device and no module claims its device IDs 0x1385 0x4251) USB ID 
-through sysfs facilities into rtl8192cu; all tests with kernel 
-3.0 + current -stable queue:
+I think I'd prefer if you could just call sta_info_insert() again with
+the existing station entry?
 
-# cat /proc/sys/kernel/tainted
-0
-# modprobe rtl8192cu
-# echo -n "1385 4251" > /sys/bus/usb/drivers/rtl8192cu/new_id
-[hotplug device]
-# dmesg
-[...]
-[   86.420998] usbcore: registered new interface driver rtl8192cu
-[  110.778029] usb 1-7: new high speed USB device number 5 using ehci_hcd
-[  110.893824] usb 1-7: New USB device found, idVendor=1385, idProduct=4251
-[  110.893830] usb 1-7: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-[  110.893836] usb 1-7: Product: WG111T
-[  110.893841] usb 1-7: Manufacturer: Atheros Communications Inc
-[  110.893845] usb 1-7: SerialNumber: 1.0
-[  110.894760] BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
-[  110.894903] IP: [<ffffffffa0604747>] rtl_usb_probe+0x19b/0x74d [rtlwifi]
-[  110.895012] PGD 0 
-[  110.895012] Oops: 0000 [#1] PREEMPT SMP 
-[  110.895012] CPU 0 
-[  110.895012] Modules linked in: rtl8192cu rtl8192c_common rtlwifi mac80211 cfg80211 rfkill cpufreq_stats cpufreq_ondemand cpufreq_powersave cpufreq_conservative ppdev lp cpufreq_performance af_packet fuse nls_utf8 ntfs powernow_k8 freq_table mperf tda18218 af9013 ir_lirc_codec lirc_dev ir_sony_decoder ir_jvc_decoder ir_rc6_decoder ir_rc5_decoder ir_nec_decoder dvb_usb_af9015 dvb_usb dvb_core rc_core edac_core snd_intel8x0 snd_ac97_codec ac97_bus snd_pcm snd_seq snd_timer snd_seq_device radeon parport_pc ttm drm_kms_helper drm i2c_algo_bit k8temp pcspkr evdev psmouse edac_mce_amd serio_raw power_supply parport snd i2c_nforce2 i2c_core button soundcore processor snd_page_alloc ext4 mbcache jbd2 crc16 dm_mod btrfs zlib_deflate crc32c libcrc32c sg sr_mod sd_mod cdrom crc_t10dif ata_generic usbhid hid floppy thermal fan firewire_ohci pata_acpi firewire_core crc_itu_t pata_amd sata_nv e1000 libata ohci_hcd forcedeth scsi_mod ehci_hcd usbcore ssb mmc_core pcmcia pcmcia_core [last unloaded: scsi_wait_scan]
-[  110.895012] 
-[  110.895012] Pid: 577, comm: khubd Not tainted 3.0-0.slh.6-aptosid-amd64 #1 MICRO-STAR INTERNATIONAL CO., LTD MS-7185/MS-7185
-[  110.895012] RIP: 0010:[<ffffffffa0604747>]  [<ffffffffa0604747>] rtl_usb_probe+0x19b/0x74d [rtlwifi]
-[  110.895012] RSP: 0018:ffff88011da77a60  EFLAGS: 00010246
-[  110.895012] RAX: 0000000000000000 RBX: ffff88011fc09ca0 RCX: 0000000000000000
-[  110.895012] RDX: ffffffffa0608618 RSI: ffffffffa0607819 RDI: ffff88011fc08520
-[  110.895012] RBP: ffff88011f0a7088 R08: 000000000000ffff R09: 000000000000ffff
-[  110.895012] R10: 0000000000000000 R11: 000000000000fffb R12: ffff88011d5a6c30
-[  110.895012] R13: ffff88011fd54090 R14: ffff88011fc08520 R15: ffff88011fc09ca0
-[  110.895012] FS:  00007f6e9e1d37a0(0000) GS:ffff880127c00000(0000) knlGS:0000000000000000
-[  110.895012] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[  110.895012] CR2: 0000000000000018 CR3: 000000011fe0f000 CR4: 00000000000006f0
-[  110.895012] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[  110.895012] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[  110.895012] Process khubd (pid: 577, threadinfo ffff88011da76000, task ffff88011dc5b700)
-[  110.895012] Stack:
-[  110.895012]  0000000000000246 ffffffff8129f3d2 ffff88011fd54090 ffff88011f0a7000
-[  110.895012]  ffff88011f0a7088 ffff88011d5a6c30 ffff88011f0a7000 ffffffffa0639528
-[  110.895012]  ffff88011fd54090 ffff88011d5a6c00 0000000000000000 ffffffffa0051f05
-[  110.895012] Call Trace:
-[  110.895012]  [<ffffffff8129f3d2>] ? __pm_runtime_set_status+0x132/0x1e0
-[  110.895012]  [<ffffffffa0051f05>] ? usb_probe_interface+0xe5/0x1e0 [usbcore]
-[  110.895012]  [<ffffffff8129657f>] ? driver_probe_device+0x6f/0x190
-[  110.895012]  [<ffffffff81296740>] ? __driver_attach+0xa0/0xa0
-[  110.895012]  [<ffffffff812952d3>] ? bus_for_each_drv+0x53/0x80
-[  110.895012]  [<ffffffff812964cf>] ? device_attach+0x9f/0xc0
-[  110.895012]  [<ffffffff81295c7d>] ? bus_probe_device+0x2d/0x50
-[  110.895012]  [<ffffffff81293f8d>] ? device_add+0x5ad/0x670
-[  110.895012]  [<ffffffff812927b2>] ? dev_set_name+0x42/0x50
-[  110.895012]  [<ffffffffa0050577>] ? usb_set_configuration+0x5d7/0x6d0 [usbcore]
-[  110.895012]  [<ffffffffa005904b>] ? generic_probe+0x3b/0xa0 [usbcore]
-[  110.895012]  [<ffffffff8129657f>] ? driver_probe_device+0x6f/0x190
-[  110.895012]  [<ffffffff81296740>] ? __driver_attach+0xa0/0xa0
-[  110.895012]  [<ffffffff812952d3>] ? bus_for_each_drv+0x53/0x80
-[  110.895012]  [<ffffffff812964cf>] ? device_attach+0x9f/0xc0
-[  110.895012]  [<ffffffff81295c7d>] ? bus_probe_device+0x2d/0x50
-[  110.895012]  [<ffffffff81293f8d>] ? device_add+0x5ad/0x670
-[  110.895012]  [<ffffffffa0048cd2>] ? usb_new_device+0x122/0x1b0 [usbcore]
-[  110.895012]  [<ffffffffa0049cb0>] ? hub_thread+0x7c0/0x1310 [usbcore]
-[  110.895012]  [<ffffffff813c8ed7>] ? schedule+0x2b7/0x860
-[  110.895012]  [<ffffffff81044616>] ? try_to_wake_up+0x1b6/0x270
-[  110.895012]  [<ffffffff8106a020>] ? abort_exclusive_wait+0xb0/0xb0
-[  110.895012]  [<ffffffffa00494f0>] ? usb_remote_wakeup+0x40/0x40 [usbcore]
-[  110.895012]  [<ffffffff8106985e>] ? kthread+0x7e/0x90
-[  110.895012]  [<ffffffff813cd1a4>] ? kernel_thread_helper+0x4/0x10
-[  110.895012]  [<ffffffff810697e0>] ? kthread_worker_fn+0x180/0x180
-[  110.895012]  [<ffffffff813cd1a0>] ? gs_change+0x13/0x13
-[  110.895012] Code: 29 60 a0 48 c7 83 60 06 00 00 70 29 60 a0 48 c7 83 68 06 00 00 50 29 60 a0 48 c7 83 70 06 00 00 f0 2b 60 a0 49 8b 87 38 27 00 00 
-[  110.895012]  8b 40 18 ff 50 10 49 8b 87 38 27 00 00 4c 89 f7 48 8b 40 18 
-[  110.895012] RIP  [<ffffffffa0604747>] rtl_usb_probe+0x19b/0x74d [rtlwifi]
-[  110.895012]  RSP <ffff88011da77a60>
-[  110.895012] CR2: 0000000000000018
-[  110.944291] ---[ end trace aa8fb4280a86af53 ]---
-# cat /proc/sys/kernel/tainted
-128
+>  	sta = NULL;
+> +	/* sta_info_insert_notify changed the mutex lock with rcu lock */
+> +	rcu_read_unlock();
 
-The same procedure (after rebooting) doesn't result in an Oops with 
-other modules, although they can't initialize this 'unknown' device 
-either, using rt2500usb as example:
-# cat /proc/sys/kernel/tainted
-0
-# modprobe rt2500usb
-# echo -n "1385 4251" > /sys/bus/usb/drivers/rt2500usb/new_id
-[hotplug device]
-# dmesg
-[...]
-[  112.676033] usb 1-7: new high speed USB device number 5 using ehci_hcd
-[  112.791945] usb 1-7: New USB device found, idVendor=1385, idProduct=4251
-[  112.791951] usb 1-7: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-[  112.791957] usb 1-7: Product: WG111T
-[  112.791961] usb 1-7: Manufacturer: Atheros Communications Inc
-[  112.791965] usb 1-7: SerialNumber: 1.0
-[  112.895037] usb 1-7: reset high speed USB device number 5 using ehci_hcd
-[  113.108950] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x09 failed for offset 0x0000 with error -32.
-[  113.208947] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x04d0 with error -32.
-[  113.308946] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x04ce with error -32.
-[  113.408950] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x04d0 with error -32.
-[  113.508946] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x04ce with error -32.
-[  113.608450] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x0400 with error -32.
-[  113.608457] phy0 -> rt2500usb_init_eeprom: Error - Invalid RT chipset detected.
-[  113.608463] phy0 -> rt2x00lib_probe_dev: Error - Failed to allocate device.
-[everything fine, as expected no issues - the wrong device just can't 
- get initialized]
-# cat /proc/sys/kernel/tainted
-0
-# reboot
+This was previously part of sta_info_insert() right?
 
-So at least the reported Oops is not specific to 050d:2103, but happens
-for any USB ID injected at runtime through sysfs and therefore appears
-to be a general issue with rtl8192cu.
+> +++ b/net/mac80211/rx.c
+> @@ -842,8 +842,21 @@ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
+>  		      ieee80211_is_pspoll(hdr->frame_control)) &&
+>  		     rx->sdata->vif.type != NL80211_IFTYPE_ADHOC &&
+>  		     rx->sdata->vif.type != NL80211_IFTYPE_WDS &&
+> -		     (!rx->sta || !test_sta_flags(rx->sta, WLAN_STA_ASSOC))))
+> +		     (!rx->sta || !test_sta_flags(rx->sta, WLAN_STA_ASSOC)))) {
+> +		if (rx->sta && rx->sta->dummy &&
+> +		    ieee80211_is_data(hdr->frame_control)) {
+> +			u16 ethertype;
+> +			u8 *payload;
+> +
+> +			payload = rx->skb->data +
+> +				ieee80211_hdrlen(hdr->frame_control);
+> +			ethertype = (payload[6] << 8) | payload[7];
+> +			if (cpu_to_be16(ethertype) ==
+> +				rx->sdata->control_port_protocol)
 
-Regards
-	Stefan Lippers-Hollmann
+Is there a frame length check here? Also can you just indent the
+rx->sdata part with four spaces instead of a tab so it's more clearly
+part of the if please.
+
+> +++ b/net/mac80211/sta_info.c
+> @@ -102,6 +102,30 @@ struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
+>  				    lockdep_is_held(&local->sta_mtx));
+>  	while (sta) {
+>  		if (sta->sdata == sdata &&
+> +		    !sta->dummy &&
+
+maybe put those on one line
+
+> @@ -450,17 +510,28 @@ static int sta_info_insert_mgd(struct sta_info *sta) __acquires(RCU)
+>  	 */
+>  
+>  	spin_lock_irqsave(&local->sta_lock, flags);
+> -	/* check if STA exists already */
+> -	if (sta_info_get_bss(sdata, sta->sta.addr)) {
+> -		spin_unlock_irqrestore(&local->sta_lock, flags);
+> -		mutex_unlock(&local->sta_mtx);
+> -		rcu_read_lock();
+> -		return -EEXIST;
+> +	/*
+> +	 * check if STA exists already.
+> +	 * only accept a scenario of a second call to sta_info_insert_mgd
+> +	 * with a dummy station entry that was inserted earlier
+> +	 * in that case - assume that the dummy station flag should
+> +	 * be removed.
+> +	 */
+> +	exist_sta = sta_info_get_bss_rx(sdata, sta->sta.addr);
+> +	if (exist_sta) {
+> +		if (exist_sta == sta && sta->dummy && !sta_list_add) {
+> +			sta->dummy = false;
+
+two things: why "sta_list_add"? I think it can be implicit.
+
+Secondly, I think sta->dummy must only be set to false in
+finish_insert(), when it would typically add it into the hash table etc.
+to preserve the right order of things and not introduce races with
+finding a non-dummy station that hasn't been fully inserted yet.
+
+>  #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+> -	wiphy_debug(local->hw.wiphy, "Inserted STA %pM\n", sta->sta.addr);
+> +	wiphy_debug(local->hw.wiphy, "Inserted %sSTA %pM\n",
+> +			sta->dummy ? "Dummy " : "", sta->sta.addr);
+>  #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
+
+I think you should lowercase "dummy" in debug messages where it's and
+adjective :)
+ 
+>  	/* move reference to rcu-protected */
+>  	rcu_read_lock();
+>  	mutex_unlock(&local->sta_mtx);
+>  
+> -	if (ieee80211_vif_is_mesh(&sdata->vif))
+> +	if (ieee80211_vif_is_mesh(&sdata->vif) && !sta->dummy)
+>  		mesh_accept_plinks_update(sdata);
+
+why this? can't have a dummy on mesh anyway, no?
+ 
+> @@ -435,9 +440,15 @@ rcu_dereference_protected_tid_tx(struct sta_info *sta, int tid)
+>  struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
+>  			      const u8 *addr);
+>  
+> +struct sta_info *sta_info_get_rx(struct ieee80211_sub_if_data *sdata,
+> +			      const u8 *addr);
+> +
+>  struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
+>  				  const u8 *addr);
+>  
+> +struct sta_info *sta_info_get_bss_rx(struct ieee80211_sub_if_data *sdata,
+> +				  const u8 *addr);
+> +
+>  static inline
+>  void for_each_sta_info_type_check(struct ieee80211_local *local,
+>  				  const u8 *addr,
+> @@ -458,6 +469,22 @@ void for_each_sta_info_type_check(struct ieee80211_local *local,
+>  		_sta = nxt,						\
+>  		nxt = _sta ? rcu_dereference(_sta->hnext) : NULL	\
+>  	     )								\
+> +	/* run code only if address matches and it's not a dummy sta */	\
+> +	if (memcmp(_sta->sta.addr, (_addr), ETH_ALEN) == 0 &&\
+
+please keep the backslashes lined up
+
+Ok the only real problem is the place where you set dummy=false, but I'd
+also make the patch & code simpler by making it more implicit -- instead
+of having the sta_list_add argument everywhere I'd just check if it's a
+dummy being re-inserted etc. 
+
+johannes
+
