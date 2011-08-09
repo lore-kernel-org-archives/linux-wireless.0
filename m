@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:43115 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751039Ab1H0S0S (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:50245 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751593Ab1HIJmh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Aug 2011 14:26:18 -0400
-Received: by gwaa12 with SMTP id a12so3742882gwa.19
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Aug 2011 11:26:17 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] b43: Fix smatch warning
-Date: Sat, 27 Aug 2011 13:26:00 -0500
-Message-Id: <1314469560-28255-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20110827_202623_767222_ADBD0B9E)
-To: linville@tuxdriver.com
+	Tue, 9 Aug 2011 05:42:37 -0400
+Received: by mail-ey0-f169.google.com with SMTP id 22so3565347eye.28
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:42:36 -0700 (PDT)
+Subject: Re: Making sense of cfg80211_scan_request.n_ssids
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Daniel Drake <dsd@laptop.org>, Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1312882809.4109.4.camel@jlt3.sipsolutions.net>
+References: <CAGq3pz40rsMudofq6Njr0_h1G=EqEigGL-NkODj8Rb6h2bMGMQ@mail.gmail.com>
+	 <4E3875BE.9070504@gnu.org>
+	 (sfid-20110803_001012_532868_0AAF0D7E)  <1312792639.4372.7.camel@jlt3.sipsolutions.net>
+	 <1312882560.2407.139.camel@cumari>
+	 <1312882809.4109.4.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 09 Aug 2011 12:42:33 +0300
+Message-ID: <1312882953.2407.140.camel@cumari> (sfid-20110809_114240_466852_21F9A7AC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  CHECK   drivers/net/wireless/b43/main.c
-drivers/net/wireless/b43/main.c +4115 b43_wireless_core_stop(7) warn: variable dereferenced before check 'dev'
+On Tue, 2011-08-09 at 11:40 +0200, Johannes Berg wrote: 
+> On Tue, 2011-08-09 at 12:36 +0300, Luciano Coelho wrote:
+> 
+> > > Yeah. "iw dev eth0 scan passive" will cause n_ssids to be 0.
+> > 
+> > I think the question was slightly different.  As I understand, Daniel
+> > wants to know why the n_ssids is 1 even if no SSID is passed from user
+> > space.
+> 
+> Well, actually, in the iw scan/iwlist scan case an SSID _is_ passed from
+> userspace: the zero-length wildcard SSID. I made iw do that because an
+> active scan is more useful :-)
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Yep, I can't agree more. :)
 
-John,
 
-This is next material.
-
-Larry
----
-
- drivers/net/wireless/b43/main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 0628901..2680684 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4131,13 +4131,14 @@ out_unlock:
-  * because the core might be gone away while we unlocked the mutex. */
- static struct b43_wldev * b43_wireless_core_stop(struct b43_wldev *dev)
- {
--	struct b43_wl *wl = dev->wl;
-+	struct b43_wl *wl;
- 	struct b43_wldev *orig_dev;
- 	u32 mask;
- 
- redo:
- 	if (!dev || b43_status(dev) < B43_STAT_STARTED)
- 		return dev;
-+	wl = dev->wl;
- 
- 	/* Cancel work. Unlock to avoid deadlocks. */
- 	mutex_unlock(&wl->mutex);
 -- 
-1.7.3.4
+Cheers,
+Luca.
 
