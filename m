@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:43470 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753135Ab1H2OTU (ORCPT
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:48614 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753111Ab1HILyM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 10:19:20 -0400
-Received: by mail-bw0-f49.google.com with SMTP id 17so6628508bke.22
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 07:19:18 -0700 (PDT)
-Subject: Re: Problem with wl1271
+	Tue, 9 Aug 2011 07:54:12 -0400
+Received: by mail-ey0-f172.google.com with SMTP id 4so4992761eye.17
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 04:54:10 -0700 (PDT)
+Subject: Re: [PATCH 01/40] wl12xx: Revert "wl12xx: schedule TX packets
+ according to FW occupancy"
 From: Luciano Coelho <coelho@ti.com>
-To: Ilya Ledvich <ilya@compulab.co.il>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>,
-	linux-wireless@vger.kernel.org,
-	Igor Grinberg <grinberg@compulab.co.il>
-In-Reply-To: <4E5B9B44.6080508@compulab.co.il>
-References: <4E5B9B44.6080508@compulab.co.il>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1312881233-9366-2-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	 <1312881233-9366-2-git-send-email-eliad@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 29 Aug 2011 17:19:15 +0300
-Message-ID: <1314627555.2296.353.camel@cumari> (sfid-20110829_161923_150405_0D07F482)
+Date: Tue, 09 Aug 2011 14:54:07 +0300
+Message-ID: <1312890847.2407.158.camel@cumari> (sfid-20110809_135415_912998_C62CC304)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-08-29 at 16:59 +0300, Ilya Ledvich wrote: 
-> Hi,
+On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
+> From: Arik Nemtsov <arik@wizery.com>
+> 
+> This does not make sense in 7.3 firmware - we don't use Tx blocks to
+> measure FW occupancy anymore.
 
-Hi Ilya,
+Should we be more precise about the firmware versions here? Maybe
+mentioning >= 7.3.0.0.75 for wl128x and >= 6.3.0.0.75 for wl127x would
+be good?
 
-[...]
-
-
-> I load the wl12xx_sdio module and then set the interface up; no obvious 
-> error
-> is seen. When I run any other command (e.g. interface down/up, iwlist scan).
-> I have "/wl1271: ERROR ELP wakeup timeout!/" error. Then the driver 
-> tries to
-> recover the chip; this eventually leads to the
-> "/wl1271: ERROR sdio read failed (-110)/" error. The log file for
-> ifconfig wlan0 up - down - up sequence is attached.
-
-This looks like an SDIO power management problem.  Do you have
-CONFIG_PM_RUNTIME enabled in your kernel?
-
-Can you send us your .config and the patch where you modified the
-board-cm-t35.c file?
+Should we also add a file, eg. called firmware.txt, in order to make it
+easy for people to know which firmware they need to use for that
+specific version? Of course we already have the fw-3 thingy, and we
+should try to keep the kernel mainline always in sync with the
+linux-firmware mainline, but maybe being more explicit would help users
+of older kernels... It seems to be a recurring problem.
 
 -- 
 Cheers,
