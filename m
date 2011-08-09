@@ -1,96 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:62948 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751612Ab1HDXx1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Aug 2011 19:53:27 -0400
-Subject: Re: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv
- pointer
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Daniel Halperin <dhalperi@cs.washington.edu>,
-	emmanuel.grumbach@intel.com
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <CALSq=BYY8-fAqATwJaFNvzwpSo4WWXbH=pRXn0oknqKXH=4X2A@mail.gmail.com>
-References: <1312228017-12061-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <CALSq=BYkKhJN=GU0RUJ2viibsy5yG78x-D-td0zP+rqWCy=AiQ@mail.gmail.com>
-	 <4825B8A2C4E264489E57869F0DCFB22344563F4ABE@hasmsx502.ger.corp.intel.com>
-	 <CALSq=BZ2CoF=+Zw-si5oc8No9MLTP1YoZCzfoT9TX1XEaLnq1A@mail.gmail.com>
-	 <CALSq=BYY8-fAqATwJaFNvzwpSo4WWXbH=pRXn0oknqKXH=4X2A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 04 Aug 2011 16:15:02 -0700
-Message-ID: <1312499702.15170.17.camel@wwguy-huron> (sfid-20110805_015335_485243_EC78CFBA)
-Mime-Version: 1.0
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:35863 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751425Ab1HIJNb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2011 05:13:31 -0400
+Received: by wwf5 with SMTP id 5so2430702wwf.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:13:30 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 00/40] wl12xx: move to wl12xx-fw-3
+Date: Tue,  9 Aug 2011 12:13:13 +0300
+Message-Id: <1312881233-9366-1-git-send-email-eliad@wizery.com> (sfid-20110809_111335_437223_C230AA37)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel,
+The new wl12xx fw (ver 7.3.0.0.75) had some major api changes.
+The main change was the addition of multi-role concept, which
+will later allow using multiple vifs concurrently.
 
-On Thu, 2011-08-04 at 13:55 -0700, Daniel Halperin wrote:
-> I may have spoken too soon. I didn't try until today, and I get the
-> following on remove module:
-> 
-> Aug  4 13:51:42 testbed11 kernel: [   45.321809] iwlwifi: connector
-> callback deregistered
-> Aug  4 13:51:42 testbed11 kernel: [   45.550202] *pde = 00000000
-> Aug  4 13:51:42 testbed11 kernel: [   45.550249] Modules linked in:
-> arc4 iwlagn(-) mac80211 cfg80211 i915 fbcon tileblit font bitblit
-> softcursor drm_kms_helper drm i2c_algo_bit cfbcopyarea i2c_core
-> intel_agp intel_gtt dcdbas loop video cfbimgblt cfbfillrect agpgart
-> evdev sg sr_mod sd_mod cdrom usbhid hid e1000e ahci libahci uhci_hcd
-> Aug  4 13:51:42 testbed11 kernel: [   45.550488]
-> Aug  4 13:51:42 testbed11 kernel: [   45.550501] Pid: 1022, comm:
-> rmmod Tainted: G        W   3.0.0-csitool+ #46 Dell Inc. Inspiron
-> 530/0RY007
-> Aug  4 13:51:42 testbed11 kernel: [   45.550558] EIP:
-> 0060:[<c032cf08>] EFLAGS: 00010202 CPU: 0
-> Aug  4 13:51:42 testbed11 kernel: [   45.550588] EIP is at
-> pci_disable_msi+0x18/0x40
-> Aug  4 13:51:42 testbed11 kernel: [   45.550613] EAX: 00000001 EBX:
-> fddfe000 ECX: 000017db EDX: 000017da
-> Aug  4 13:51:42 testbed11 kernel: [   45.550647] ESI: f3ec6350 EDI:
-> f3ec6360 EBP: f4201e98 ESP: f4201e94
-> Aug  4 13:51:42 testbed11 kernel: [   45.550680]  DS: 007b ES: 007b
-> FS: 00d8 GS: 0033 SS: 0068
-> Aug  4 13:51:42 testbed11 kernel: [   45.550760]  f3ec6340 f4201eac
-> f85036af f4d53460 f4d53400 f4d53518 f4201ecc c0323394
-> Aug  4 13:51:42 testbed11 kernel: [   45.550824]  f8516010 f8515fe0
-> f4201ecc f4d53460 f8516010 f4d53494 f4201edc c039281b
-> Aug  4 13:51:42 testbed11 kernel: [   45.550887]  f4d53460 f8516010
-> f4201ef0 c03928f7 00000000 f8516010 c06167a0 f4201f04
-> Aug  4 13:51:42 testbed11 kernel: [   45.550973]  [<f85036af>]
-> iwl_pci_remove+0x27/0x7f [iwlagn]
-> Aug  4 13:51:42 testbed11 kernel: [   45.551005]  [<c0323394>]
-> pci_device_remove+0x44/0x100
-> Aug  4 13:51:42 testbed11 kernel: [   45.551036]  [<c039281b>]
-> __device_release_driver+0x5b/0xb0
-> Aug  4 13:51:42 testbed11 kernel: [   45.551066]  [<c03928f7>]
-> driver_detach+0x87/0x90
-> Aug  4 13:51:42 testbed11 kernel: [   45.551093]  [<c0391b43>]
-> bus_remove_driver+0x63/0xa0
-> Aug  4 13:51:42 testbed11 kernel: [   45.551121]  [<c0392fa9>]
-> driver_unregister+0x49/0x80
-> Aug  4 13:51:42 testbed11 kernel: [   45.551150]  [<c0254a04>] ?
-> sysfs_remove_file+0x14/0x20
-> Aug  4 13:51:42 testbed11 kernel: [   45.551179]  [<c0323672>]
-> pci_unregister_driver+0x32/0x80
-> Aug  4 13:51:42 testbed11 kernel: [   45.551216]  [<f84f27e2>]
-> iwl_pci_unregister_driver+0x12/0x20 [iwlagn]
-> Aug  4 13:51:42 testbed11 kernel: [   45.551257]  [<f8503475>]
-> iwl_exit+0xd/0x14 [iwlagn]
-> Aug  4 13:51:42 testbed11 kernel: [   45.551286]  [<c01752d1>]
-> sys_delete_module+0x121/0x1d0
-> Aug  4 13:51:42 testbed11 kernel: [   45.551316]  [<c01e2052>] ?
-> do_munmap+0x212/0x2a0
-> Aug  4 13:51:42 testbed11 kernel: [   45.551344]  [<c04871cc>]
-> sysenter_do_call+0x12/0x22
-> Aug  4 13:51:42 testbed11 kernel: [   45.551726] ---[ end trace
-> cdd7f97709a5fcfb ]---
-> 
-> 
-Could you look into this, we need to fix it for 3.1
+Consequently, this design change caused api changes for most
+of the api commands, as a new role_id had to be added.
 
-Thanks
-Wey
+This patchset migrates the fw to use the new fw api (a new
+fw filename is used, as there is no backward compatability
+with older firmwares).
 
+Additional patchsets will follow, with further bugfixes
+and new features (e.g. p2p support).
+
+Arik Nemtsov (17):
+  wl12xx: Revert "wl12xx: schedule TX packets according to FW
+    occupancy"
+  wl12xx: Use a single fw for both STA and AP roles
+  wl12xx: use 1 spare block in all cases
+  wl12xx: handle dummy packet event also in ap mode
+  wl12xx: fix session counter
+  wl12xx: use dynamic hlids for AP-mode
+  wl12xx: re-enable block ack session support
+  wl12xx: AP-mode - set STA HT capabilities when adding a STA
+  wl12xx: AP-mode - configure STA HT rates on join
+  wl12xx: AP-mode - configure HT rate support to the FW
+  wl12xx: track freed packets in FW by AC
+  wl12xx: schedule TX packets according to FW packet occupancy
+  wl12xx: handle wrap-around overflow in released Tx blocks FW counter
+  wl12xx: enable AP advanced functionality
+  wl12xx: set the AP-started flag only after setting keys
+  wl12xx: AP-mode - prevent Tx to stale/invalid stations
+  wl12xx: fix tx_queue_count spurious increment
+
+Eliad Peller (23):
+  wl12xx: temporarily disable 11n and advanced ap functions
+  wl12xx: remove rx filtering stuff
+  wl12xx: wl12xx-fw-3 - Update fw status struct
+  wl12xx: wl12xx-fw-3 - update acx commands
+  wl12xx: wl12xx-fw-3 - update commands & events
+  wl12xx: enable/disable role on interface add/remove
+  wl12xx: add device role commands
+  wl12xx: wl12xx-fw-3 - update scan cmd api
+  wl12xx: wl12xx-fw-3 - rx/tx changes
+  wl12xx: wl12xx-fw-3 - change max/default template size
+  wl12xx: use wl1271_acx_beacon_filter_opt for both sta and ap
+  wl12xx: add set_rate_mgmt_params acx
+  wl12xx: add system_hlid
+  wl12xx: add ROC/CROC commands
+  wl12xx: replace dummy_join with ROC/CROC commands
+  wl12xx: update BT coex configuration params
+  wl12xx: call wl1271_cmd_set_peer_state() in AP mode
+  wl12xx: don't remove key if hlid was already deleted
+  wl12xx: add wl1271_cmd_role_start_ibss()
+  wl12xx: support IBSS vif type
+  wl12xx: use ap_bcast_hlid for recorded keys
+  wl12xx: don't remove key if hlid was already deleted
+  wl12xx: don't wait for disconnection event
+
+ drivers/net/wireless/wl12xx/acx.c          |  325 ++++------
+ drivers/net/wireless/wl12xx/acx.h          |  395 +++++--------
+ drivers/net/wireless/wl12xx/boot.c         |   16 +-
+ drivers/net/wireless/wl12xx/cmd.c          |  802 ++++++++++++++++++-------
+ drivers/net/wireless/wl12xx/cmd.h          |  337 ++++++-----
+ drivers/net/wireless/wl12xx/conf.h         |  345 ++++-------
+ drivers/net/wireless/wl12xx/debugfs.c      |   17 +-
+ drivers/net/wireless/wl12xx/event.c        |    6 +-
+ drivers/net/wireless/wl12xx/event.h        |   83 +--
+ drivers/net/wireless/wl12xx/init.c         |   96 +--
+ drivers/net/wireless/wl12xx/io.h           |    1 -
+ drivers/net/wireless/wl12xx/main.c         |  915 ++++++++++++++++-----------
+ drivers/net/wireless/wl12xx/ps.c           |    4 +-
+ drivers/net/wireless/wl12xx/reg.h          |   75 ---
+ drivers/net/wireless/wl12xx/rx.c           |   17 +-
+ drivers/net/wireless/wl12xx/rx.h           |   10 +-
+ drivers/net/wireless/wl12xx/scan.c         |   38 +-
+ drivers/net/wireless/wl12xx/scan.h         |   25 +-
+ drivers/net/wireless/wl12xx/sdio.c         |    2 -
+ drivers/net/wireless/wl12xx/spi.c          |    2 -
+ drivers/net/wireless/wl12xx/tx.c           |  107 ++--
+ drivers/net/wireless/wl12xx/tx.h           |   16 +-
+ drivers/net/wireless/wl12xx/wl12xx.h       |  148 +++---
+ drivers/net/wireless/wl12xx/wl12xx_80211.h |   25 -
+ 24 files changed, 2002 insertions(+), 1805 deletions(-)
+
+-- 
+1.7.6.401.g6a319
 
