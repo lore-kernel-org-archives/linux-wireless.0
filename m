@@ -1,313 +1,258 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:31394 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752004Ab1HMSSt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 14:18:49 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 56/60] iwlagn: cosmetics in iwl-trans.h
-Date: Sat, 13 Aug 2011 10:38:32 -0700
-Message-Id: <1313257116-2697-57-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_201934_118053_31789BEB)
-In-Reply-To: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:35863 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752812Ab1HIJOf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2011 05:14:35 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 5so2430702wwf.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:34 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 34/40] wl12xx: schedule TX packets according to FW packet occupancy
+Date: Tue,  9 Aug 2011 12:13:47 +0300
+Message-Id: <1312881233-9366-35-git-send-email-eliad@wizery.com> (sfid-20110809_111448_250557_9D33AA78)
+In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Arik Nemtsov <arik@wizery.com>
 
-Remove a few dereferences of priv from the transport layer while
-at it.
+When selecting packets for transmission, prefer the ACs that are least
+occupied in the FW. When packets for multiple ACs are present in the FW,
+it decides which to transmit according to WMM QoS parameters.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+With these changes, lower priority ACs should not be starved when higher
+priority traffic is present.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |    8 ++--
- drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c  |   48 ++++++++++----------
- drivers/net/wireless/iwlwifi/iwl-trans.c          |   14 +++---
- drivers/net/wireless/iwlwifi/iwl-trans.h          |   16 +++---
- 5 files changed, 44 insertions(+), 44 deletions(-)
+ drivers/net/wireless/wl12xx/debugfs.c |    4 ++
+ drivers/net/wireless/wl12xx/main.c    |    7 ++-
+ drivers/net/wireless/wl12xx/tx.c      |   67 +++++++++++++++++++++-----------
+ drivers/net/wireless/wl12xx/wl12xx.h  |    2 +-
+ 4 files changed, 53 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 034a55a..ed1ac78 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2562,7 +2562,7 @@ static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
- 	case IEEE80211_AMPDU_TX_OPERATIONAL:
- 		buf_size = min_t(int, buf_size, LINK_QUAL_AGG_FRAME_LIMIT_DEF);
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index 3102652..d59354f 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -337,12 +337,16 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
+ #define DRIVER_STATE_PRINT_STR(x)  DRIVER_STATE_PRINT(x, "%s")
+ #define DRIVER_STATE_PRINT_LHEX(x) DRIVER_STATE_PRINT(x, "0x%lx")
+ #define DRIVER_STATE_PRINT_HEX(x)  DRIVER_STATE_PRINT(x, "0x%x")
  
--		iwl_trans_txq_agg_setup(trans(priv), ctx->ctxid, iwl_sta_id(sta),
-+		iwl_trans_tx_agg_setup(trans(priv), ctx->ctxid, iwl_sta_id(sta),
- 				tid, buf_size);
+ 	DRIVER_STATE_PRINT_INT(tx_blocks_available);
+ 	DRIVER_STATE_PRINT_INT(tx_allocated_blocks);
++	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[0]);
++	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[1]);
++	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[2]);
++	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[3]);
+ 	DRIVER_STATE_PRINT_INT(tx_frames_cnt);
+ 	DRIVER_STATE_PRINT_LHEX(tx_frames_map[0]);
+ 	DRIVER_STATE_PRINT_INT(tx_queue_count[0]);
+ 	DRIVER_STATE_PRINT_INT(tx_queue_count[1]);
+ 	DRIVER_STATE_PRINT_INT(tx_queue_count[2]);
+ 	DRIVER_STATE_PRINT_INT(tx_queue_count[3]);
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 3bfd772..755415a 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -823,13 +823,13 @@ static void wl1271_fw_status(struct wl1271 *wl,
+ 		     status->fw_rx_counter,
+ 		     status->drv_rx_counter,
+ 		     status->tx_results_counter);
  
- 		/*
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
-index a310831..abb2ce6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
-@@ -194,15 +194,15 @@ int iwl_trans_pcie_tx_agg_disable(struct iwl_trans *trans,
- 				  enum iwl_rxon_context_id ctx, int sta_id,
- 				  int tid);
- void iwl_trans_set_wr_ptrs(struct iwl_trans *trans, int txq_id, u32 index);
--void iwl_trans_tx_queue_set_status(struct iwl_priv *priv,
-+void iwl_trans_tx_queue_set_status(struct iwl_trans *trans,
- 			     struct iwl_tx_queue *txq,
- 			     int tx_fifo_id, int scd_retry);
- int iwl_trans_pcie_tx_agg_alloc(struct iwl_trans *trans,
- 				enum iwl_rxon_context_id ctx, int sta_id,
- 				int tid, u16 *ssn);
--void iwl_trans_pcie_txq_agg_setup(struct iwl_priv *priv,
--					enum iwl_rxon_context_id ctx,
--					int sta_id, int tid, int frame_limit);
-+void iwl_trans_pcie_tx_agg_setup(struct iwl_trans *trans,
-+				 enum iwl_rxon_context_id ctx,
-+				 int sta_id, int tid, int frame_limit);
- void iwlagn_txq_free_tfd(struct iwl_trans *trans, struct iwl_tx_queue *txq,
- 	int index);
- int iwl_tx_queue_reclaim(struct iwl_trans *trans, int txq_id, int index,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-index 7bb86eb..8713233 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-@@ -403,14 +403,15 @@ void iwl_trans_set_wr_ptrs(struct iwl_trans *trans,
- 	iwl_write_prph(bus(trans), SCD_QUEUE_RDPTR(txq_id), index);
- }
+ 	for (i = 0; i < NUM_TX_QUEUES; i++) {
+ 		/* prevent wrap-around in freed-packets counter */
+-		wl->tx_allocated_pkts -=
++		wl->tx_allocated_pkts[i] -=
+ 				(status->tx_released_pkts[i] -
+ 				wl->tx_pkts_freed[i] + 256) % 256;
  
--void iwl_trans_tx_queue_set_status(struct iwl_priv *priv,
-+void iwl_trans_tx_queue_set_status(struct iwl_trans *trans,
- 					struct iwl_tx_queue *txq,
- 					int tx_fifo_id, int scd_retry)
+ 		wl->tx_pkts_freed[i] = status->tx_released_pkts[i];
+ 	}
+ 
+@@ -2037,15 +2037,16 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+ 	 * get executed before all these vars have been reset.
+ 	 */
+ 	wl->flags = 0;
+ 
+ 	wl->tx_blocks_freed = 0;
+ 
+-	wl->tx_allocated_pkts = 0;
+-	for (i = 0; i < NUM_TX_QUEUES; i++)
++	for (i = 0; i < NUM_TX_QUEUES; i++) {
+ 		wl->tx_pkts_freed[i] = 0;
++		wl->tx_allocated_pkts[i] = 0;
++	}
+ 
+ 	wl1271_debugfs_reset(wl);
+ 
+ 	kfree(wl->fw_status);
+ 	wl->fw_status = NULL;
+ 	kfree(wl->tx_res_if);
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 4a40bc4..d184da1 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -182,13 +182,13 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 				u32 buf_offset, u8 hlid)
  {
- 	int txq_id = txq->q.id;
--	int active = test_bit(txq_id, &priv->txq_ctx_active_msk) ? 1 : 0;
-+	int active =
-+		test_bit(txq_id, &priv(trans)->txq_ctx_active_msk) ? 1 : 0;
+ 	struct wl1271_tx_hw_descr *desc;
+ 	u32 total_len = skb->len + sizeof(struct wl1271_tx_hw_descr) + extra;
+ 	u32 len;
+ 	u32 total_blocks;
+-	int id, ret = -EBUSY;
++	int id, ret = -EBUSY, ac;
  
--	iwl_write_prph(bus(priv), SCD_QUEUE_STATUS_BITS(txq_id),
-+	iwl_write_prph(bus(trans), SCD_QUEUE_STATUS_BITS(txq_id),
- 			(active << SCD_QUEUE_STTS_REG_POS_ACTIVE) |
- 			(tx_fifo_id << SCD_QUEUE_STTS_REG_POS_TXF) |
- 			(1 << SCD_QUEUE_STTS_REG_POS_WSL) |
-@@ -418,7 +419,7 @@ void iwl_trans_tx_queue_set_status(struct iwl_priv *priv,
+ 	/* we use 1 spare block */
+ 	u32 spare_blocks = 1;
  
- 	txq->sched_retry = scd_retry;
+ 	if (buf_offset + total_len > WL1271_AGGR_BUFFER_SIZE)
+ 		return -EAGAIN;
+@@ -219,13 +219,14 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
  
--	IWL_DEBUG_INFO(priv, "%s %s Queue %d on FIFO %d\n",
-+	IWL_DEBUG_INFO(trans, "%s %s Queue %d on FIFO %d\n",
- 		       active ? "Activate" : "Deactivate",
- 		       scd_retry ? "BA" : "AC/CMD", txq_id, tx_fifo_id);
+ 		desc->id = id;
+ 
+ 		wl->tx_blocks_available -= total_blocks;
+ 		wl->tx_allocated_blocks += total_blocks;
+ 
+-		wl->tx_allocated_pkts++;
++		ac = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
++		wl->tx_allocated_pkts[ac]++;
+ 
+ 		if (wl->bss_type == BSS_TYPE_AP_BSS)
+ 			wl->links[hlid].allocated_blks += total_blocks;
+ 
+ 		ret = 0;
+ 
+@@ -477,27 +478,47 @@ void wl1271_handle_tx_low_watermark(struct wl1271 *wl)
+ 			clear_bit(i, &wl->stopped_queues_map);
+ 			spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 		}
+ 	}
  }
-@@ -434,16 +435,15 @@ static inline int get_fifo_from_tid(struct iwl_trans_pcie *trans_pcie,
- 	return -EINVAL;
- }
  
--void iwl_trans_pcie_txq_agg_setup(struct iwl_priv *priv,
--				  enum iwl_rxon_context_id ctx, int sta_id,
--				  int tid, int frame_limit)
-+void iwl_trans_pcie_tx_agg_setup(struct iwl_trans *trans,
-+				 enum iwl_rxon_context_id ctx, int sta_id,
-+				 int tid, int frame_limit)
++static struct sk_buff_head *wl1271_select_queue(struct wl1271 *wl,
++						struct sk_buff_head *queues)
++{
++	int i, q = -1;
++	u32 min_pkts = 0xffffffff;
++
++	/*
++	 * Find a non-empty ac where:
++	 * 1. There are packets to transmit
++	 * 2. The FW has the least allocated blocks
++	 */
++	for (i = 0; i < NUM_TX_QUEUES; i++)
++		if (!skb_queue_empty(&queues[i]) &&
++		    (wl->tx_allocated_pkts[i] < min_pkts)) {
++			q = i;
++			min_pkts = wl->tx_allocated_pkts[q];
++		}
++
++	if (q == -1)
++		return NULL;
++
++	return &queues[q];
++}
++
+ static struct sk_buff *wl1271_sta_skb_dequeue(struct wl1271 *wl)
  {
- 	int tx_fifo, txq_id, ssn_idx;
- 	u16 ra_tid;
+ 	struct sk_buff *skb = NULL;
  	unsigned long flags;
- 	struct iwl_tid_data *tid_data;
++	struct sk_buff_head *queue;
  
--	struct iwl_trans *trans = trans(priv);
- 	struct iwl_trans_pcie *trans_pcie =
- 		IWL_TRANS_GET_PCIE_TRANS(trans);
+-	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_VO]);
+-	if (skb)
+-		goto out;
+-	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_VI]);
+-	if (skb)
++	queue = wl1271_select_queue(wl, wl->tx_queue);
++	if (!queue)
+ 		goto out;
+-	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_BE]);
+-	if (skb)
+-		goto out;
+-	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_BK]);
++
++	skb = skb_dequeue(queue);
  
-@@ -458,15 +458,15 @@ void iwl_trans_pcie_txq_agg_setup(struct iwl_priv *priv,
- 		return;
- 	}
+ out:
+ 	if (skb) {
+ 		int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+ 		spin_lock_irqsave(&wl->wl_lock, flags);
+ 		wl->tx_queue_count[q]--;
+@@ -509,35 +530,35 @@ out:
  
--	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
--	tid_data = &priv->shrd->tid_data[sta_id][tid];
-+	spin_lock_irqsave(&trans->shrd->sta_lock, flags);
-+	tid_data = &trans->shrd->tid_data[sta_id][tid];
- 	ssn_idx = SEQ_TO_SN(tid_data->seq_number);
- 	txq_id = tid_data->agg.txq_id;
--	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
-+	spin_unlock_irqrestore(&trans->shrd->sta_lock, flags);
- 
- 	ra_tid = BUILD_RAxTID(sta_id, tid);
- 
--	spin_lock_irqsave(&priv->shrd->lock, flags);
-+	spin_lock_irqsave(&trans->shrd->lock, flags);
- 
- 	/* Stop this Tx queue before configuring it */
- 	iwlagn_tx_queue_stop_scheduler(trans, txq_id);
-@@ -475,19 +475,19 @@ void iwl_trans_pcie_txq_agg_setup(struct iwl_priv *priv,
- 	iwlagn_tx_queue_set_q2ratid(trans, ra_tid, txq_id);
- 
- 	/* Set this queue as a chain-building queue */
--	iwl_set_bits_prph(bus(priv), SCD_QUEUECHAIN_SEL, (1<<txq_id));
-+	iwl_set_bits_prph(bus(trans), SCD_QUEUECHAIN_SEL, (1<<txq_id));
- 
- 	/* enable aggregations for the queue */
--	iwl_set_bits_prph(bus(priv), SCD_AGGR_SEL, (1<<txq_id));
-+	iwl_set_bits_prph(bus(trans), SCD_AGGR_SEL, (1<<txq_id));
- 
- 	/* Place first TFD at index corresponding to start sequence number.
- 	 * Assumes that ssn_idx is valid (!= 0xFFF) */
--	priv->txq[txq_id].q.read_ptr = (ssn_idx & 0xff);
--	priv->txq[txq_id].q.write_ptr = (ssn_idx & 0xff);
-+	priv(trans)->txq[txq_id].q.read_ptr = (ssn_idx & 0xff);
-+	priv(trans)->txq[txq_id].q.write_ptr = (ssn_idx & 0xff);
- 	iwl_trans_set_wr_ptrs(trans, txq_id, ssn_idx);
- 
- 	/* Set up Tx window size and frame limit for this queue */
--	iwl_write_targ_mem(bus(priv), trans_pcie->scd_base_addr +
-+	iwl_write_targ_mem(bus(trans), trans_pcie->scd_base_addr +
- 			SCD_CONTEXT_QUEUE_OFFSET(txq_id) +
- 			sizeof(u32),
- 			((frame_limit <<
-@@ -497,15 +497,16 @@ void iwl_trans_pcie_txq_agg_setup(struct iwl_priv *priv,
- 			SCD_QUEUE_CTX_REG2_FRAME_LIMIT_POS) &
- 			SCD_QUEUE_CTX_REG2_FRAME_LIMIT_MSK));
- 
--	iwl_set_bits_prph(bus(priv), SCD_INTERRUPT_MASK, (1 << txq_id));
-+	iwl_set_bits_prph(bus(trans), SCD_INTERRUPT_MASK, (1 << txq_id));
- 
- 	/* Set up Status area in SRAM, map to Tx DMA/FIFO, activate the queue */
--	iwl_trans_tx_queue_set_status(priv, &priv->txq[txq_id], tx_fifo, 1);
-+	iwl_trans_tx_queue_set_status(trans, &priv(trans)->txq[txq_id],
-+					tx_fifo, 1);
- 
--	priv->txq[txq_id].sta_id = sta_id;
--	priv->txq[txq_id].tid = tid;
-+	priv(trans)->txq[txq_id].sta_id = sta_id;
-+	priv(trans)->txq[txq_id].tid = tid;
- 
--	spin_unlock_irqrestore(&priv->shrd->lock, flags);
-+	spin_unlock_irqrestore(&trans->shrd->lock, flags);
- }
- 
- /*
-@@ -574,8 +575,7 @@ void iwl_trans_pcie_txq_agg_disable(struct iwl_trans *trans, int txq_id)
- 
- 	iwl_clear_bits_prph(bus(trans), SCD_INTERRUPT_MASK, (1 << txq_id));
- 	iwl_txq_ctx_deactivate(priv(trans), txq_id);
--	iwl_trans_tx_queue_set_status(priv(trans),
--					&priv(trans)->txq[txq_id], 0, 0);
-+	iwl_trans_tx_queue_set_status(trans, &priv(trans)->txq[txq_id], 0, 0);
- }
- 
- int iwl_trans_pcie_tx_agg_disable(struct iwl_trans *trans,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index ab35fd8..9b0ecd4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -774,7 +774,7 @@ static int iwl_trans_pcie_start_device(struct iwl_trans *trans)
- 	struct iwl_trans_pcie *trans_pcie =
- 		IWL_TRANS_GET_PCIE_TRANS(trans);
- 
--	priv->shrd->ucode_owner = IWL_OWNERSHIP_DRIVER;
-+	trans->shrd->ucode_owner = IWL_OWNERSHIP_DRIVER;
- 	trans_pcie->ac_to_queue[IWL_RXON_CTX_BSS] = iwlagn_bss_ac_to_queue;
- 	trans_pcie->ac_to_queue[IWL_RXON_CTX_PAN] = iwlagn_pan_ac_to_queue;
- 
-@@ -784,7 +784,7 @@ static int iwl_trans_pcie_start_device(struct iwl_trans *trans)
- 	trans_pcie->mcast_queue[IWL_RXON_CTX_BSS] = 0;
- 	trans_pcie->mcast_queue[IWL_RXON_CTX_PAN] = IWL_IPAN_MCAST_QUEUE;
- 
--	if ((hw_params(priv).sku & EEPROM_SKU_CAP_AMT_ENABLE) &&
-+	if ((hw_params(trans).sku & EEPROM_SKU_CAP_AMT_ENABLE) &&
- 	     iwl_trans_pcie_prepare_card_hw(trans)) {
- 		IWL_WARN(trans, "Exit HW not ready\n");
- 		return -EIO;
-@@ -862,7 +862,7 @@ static void iwl_trans_pcie_tx_start(struct iwl_trans *trans)
- 		a += 4)
- 		iwl_write_targ_mem(bus(trans), a, 0);
- 	for (; a < trans_pcie->scd_base_addr +
--	       SCD_TRANS_TBL_OFFSET_QUEUE(hw_params(priv).max_txq_num);
-+	       SCD_TRANS_TBL_OFFSET_QUEUE(hw_params(trans).max_txq_num);
- 	       a += 4)
- 		iwl_write_targ_mem(bus(trans), a, 0);
- 
-@@ -881,11 +881,11 @@ static void iwl_trans_pcie_tx_start(struct iwl_trans *trans)
- 			   reg_val | FH_TX_CHICKEN_BITS_SCD_AUTO_RETRY_EN);
- 
- 	iwl_write_prph(bus(trans), SCD_QUEUECHAIN_SEL,
--		SCD_QUEUECHAIN_SEL_ALL(priv));
-+		SCD_QUEUECHAIN_SEL_ALL(trans));
- 	iwl_write_prph(bus(trans), SCD_AGGR_SEL, 0);
- 
- 	/* initiate the queues */
--	for (i = 0; i < hw_params(priv).max_txq_num; i++) {
-+	for (i = 0; i < hw_params(trans).max_txq_num; i++) {
- 		iwl_write_prph(bus(trans), SCD_QUEUE_RDPTR(i), 0);
- 		iwl_write_direct32(bus(trans), HBUS_TARG_WRPTR, 0 | (i << 8));
- 		iwl_write_targ_mem(bus(trans), trans_pcie->scd_base_addr +
-@@ -941,7 +941,7 @@ static void iwl_trans_pcie_tx_start(struct iwl_trans *trans)
- 
- 		if (ac != IWL_AC_UNSET)
- 			iwl_set_swq_id(&priv->txq[i], ac, i);
--		iwl_trans_tx_queue_set_status(priv, &priv->txq[i], fifo, 0);
-+		iwl_trans_tx_queue_set_status(trans, &priv->txq[i], fifo, 0);
- 	}
- 
- 	spin_unlock_irqrestore(&trans->shrd->lock, flags);
-@@ -2017,7 +2017,7 @@ const struct iwl_trans_ops trans_ops_pcie = {
- 
- 	.tx_agg_disable = iwl_trans_pcie_tx_agg_disable,
- 	.tx_agg_alloc = iwl_trans_pcie_tx_agg_alloc,
--	.txq_agg_setup = iwl_trans_pcie_txq_agg_setup,
-+	.tx_agg_setup = iwl_trans_pcie_tx_agg_setup,
- 
- 	.kick_nic = iwl_trans_pcie_kick_nic,
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 1fd6bde..c92c9fe 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -95,7 +95,7 @@ struct iwl_device_cmd;
-  * @tx: send an skb
-  * @reclaim: free packet until ssn. Returns a list of freed packets.
-  * @tx_agg_alloc: allocate resources for a TX BA session
-- * @txq_agg_setup: setup a tx queue for AMPDU - will be called once the HW is
-+ * @tx_agg_setup: setup a tx queue for AMPDU - will be called once the HW is
-  *                 ready and a successful ADDBA response has been received.
-  * @tx_agg_disable: de-configure a Tx queue to send AMPDUs
-  * @kick_nic: remove the RESET from the embedded CPU and let it run
-@@ -128,14 +128,14 @@ struct iwl_trans_ops {
- 			struct sk_buff_head *skbs);
- 
- 	int (*tx_agg_disable)(struct iwl_trans *trans,
--			       enum iwl_rxon_context_id ctx, int sta_id,
--			       int tid);
-+			      enum iwl_rxon_context_id ctx, int sta_id,
-+			      int tid);
- 	int (*tx_agg_alloc)(struct iwl_trans *trans,
- 			    enum iwl_rxon_context_id ctx, int sta_id, int tid,
- 			    u16 *ssn);
--	void (*txq_agg_setup)(struct iwl_priv *priv,
--			      enum iwl_rxon_context_id ctx, int sta_id,
--			      int tid, int frame_limit);
-+	void (*tx_agg_setup)(struct iwl_trans *trans,
-+			     enum iwl_rxon_context_id ctx, int sta_id, int tid,
-+			     int frame_limit);
- 
- 	void (*kick_nic)(struct iwl_trans *trans);
- 
-@@ -233,12 +233,12 @@ static inline int iwl_trans_tx_agg_alloc(struct iwl_trans *trans,
- }
- 
- 
--static inline void iwl_trans_txq_agg_setup(struct iwl_trans *trans,
-+static inline void iwl_trans_tx_agg_setup(struct iwl_trans *trans,
- 					   enum iwl_rxon_context_id ctx,
- 					   int sta_id, int tid,
- 					   int frame_limit)
+ static struct sk_buff *wl1271_ap_skb_dequeue(struct wl1271 *wl)
  {
--	trans->ops->txq_agg_setup(priv(trans), ctx, sta_id, tid, frame_limit);
-+	trans->ops->tx_agg_setup(trans, ctx, sta_id, tid, frame_limit);
- }
+ 	struct sk_buff *skb = NULL;
+ 	unsigned long flags;
+ 	int i, h, start_hlid;
++	struct sk_buff_head *queue;
  
- static inline void iwl_trans_kick_nic(struct iwl_trans *trans)
+ 	/* start from the link after the last one */
+ 	start_hlid = (wl->last_tx_hlid + 1) % AP_MAX_LINKS;
+ 
+ 	/* dequeue according to AC, round robin on each link */
+ 	for (i = 0; i < AP_MAX_LINKS; i++) {
+ 		h = (start_hlid + i) % AP_MAX_LINKS;
+ 
+-		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_VO]);
+-		if (skb)
+-			goto out;
+-		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_VI]);
+-		if (skb)
+-			goto out;
+-		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_BE]);
+-		if (skb)
+-			goto out;
+-		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_BK]);
++		/* only consider connected stations */
++		if (h >= WL1271_AP_STA_HLID_START &&
++		    !test_bit(h - WL1271_AP_STA_HLID_START, wl->ap_hlid_map))
++			continue;
++
++		queue = wl1271_select_queue(wl, wl->links[h].tx_queue);
++		if (!queue)
++			continue;
++
++		skb = skb_dequeue(queue);
+ 		if (skb)
+-			goto out;
++			break;
+ 	}
+ 
+-out:
+ 	if (skb) {
+ 		int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+ 		wl->last_tx_hlid = h;
+ 		spin_lock_irqsave(&wl->wl_lock, flags);
+ 		wl->tx_queue_count[q]--;
+ 		spin_unlock_irqrestore(&wl->wl_lock, flags);
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 3e2e0b3..c3996b2 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -422,13 +422,13 @@ struct wl1271 {
+ 	u32 tx_blocks_available;
+ 	u32 tx_allocated_blocks;
+ 	u32 tx_results_count;
+ 
+ 	/* Accounting for allocated / available Tx packets in HW */
+ 	u32 tx_pkts_freed[NUM_TX_QUEUES];
+-	u32 tx_allocated_pkts;
++	u32 tx_allocated_pkts[NUM_TX_QUEUES];
+ 
+ 	/* Transmitted TX packets counter for chipset interface */
+ 	u32 tx_packets_count;
+ 
+ 	/* Time-offset between host and chipset clocks */
+ 	s64 time_offset;
 -- 
-1.7.0.4
+1.7.6.401.g6a319
 
