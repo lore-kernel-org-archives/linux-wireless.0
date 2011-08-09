@@ -1,85 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:43752 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1749667Ab1HRECG convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:52194 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751441Ab1HIXqX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Aug 2011 00:02:06 -0400
-MIME-Version: 1.0
-In-Reply-To: <CA+XFjipsVukKYchfmDv48PAKsD2PUxT+7E8epRuKFynGwk=Bag@mail.gmail.com>
-References: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com>
- <CA+XFjipM1Qup3bcJos_ikwzoaWoa3GdYqK0WBUqEHBNR6V6LfQ@mail.gmail.com>
- <CAG1a4rsyfPrrrf-mzt3HAM6YHHjaHTcd2rbtYiwqLkUCP=j8pQ@mail.gmail.com> <CA+XFjipsVukKYchfmDv48PAKsD2PUxT+7E8epRuKFynGwk=Bag@mail.gmail.com>
-From: Pavel Ivanov <paivanof@gmail.com>
-Date: Thu, 18 Aug 2011 00:01:34 -0400
-Message-ID: <CAG1a4rvQTA7UgxLOxu_cC88grjHttyjPD_4kyDhb7Y9FcBBkLQ@mail.gmail.com> (sfid-20110818_060225_676943_C8A3BD0D)
-Subject: Re: [PATCH] ath9k: make driver usable standalone
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 9 Aug 2011 19:46:23 -0400
+Received: by iye16 with SMTP id 16so23646iye.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 16:46:22 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH 0/8] mac80211: add mesh gate forwarding
+Date: Tue,  9 Aug 2011 16:45:03 -0700
+Message-Id: <1312933511-9486-1-git-send-email-thomas@cozybit.com> (sfid-20110810_014627_179580_420ABEA3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Iwconfig and iwlist are themselves deprecated. Iw is the new wireless
-> configuration tool.
+Javier Cardona (8):
+  mac80211: improve mpath debugging
+  mac80211: fix mpath timer NULL function
+  mac80211: mesh locking fixes
+  mac80211: fix mesh path flushing
+  mac80211: mesh gate implementation
+  {nl,mac}80211: add missing root mode meshconf entries
+  {nl,cfg,mac}80211: let userspace set RANN interval
+  {nl,cfg,mac}80211: let userspace make meshif mesh gate
 
-I've just tried to use iw and it didn't quite work for me. Maybe it's
-interfering with something installed in Ubuntu by default but
-connect/disconnect commands didn't seem to do anything. And why these
-commands can be executed only as root?
-Well, maybe in Ubuntu 11.10 it will work better.
+ include/linux/ieee80211.h     |    4 +
+ include/linux/nl80211.h       |    9 ++
+ include/net/cfg80211.h        |    6 +
+ net/mac80211/Kconfig          |   13 ++
+ net/mac80211/cfg.c            |    8 +
+ net/mac80211/debugfs_netdev.c |    8 +-
+ net/mac80211/ieee80211_i.h    |    1 +
+ net/mac80211/mesh.c           |    6 +-
+ net/mac80211/mesh.h           |   12 ++-
+ net/mac80211/mesh_hwmp.c      |   77 +++++++----
+ net/mac80211/mesh_pathtbl.c   |  303 ++++++++++++++++++++++++++++++++++++++++-
+ net/wireless/mesh.c           |    3 +
+ net/wireless/nl80211.c        |   15 ++
+ 13 files changed, 431 insertions(+), 34 deletions(-)
 
+-- 
+1.7.6
 
-Pavel
-
-
-2011/8/17 Gábor Stefanik <netrolller.3d@gmail.com>:
-> 2011/8/17 Pavel Ivanov <paivanof@gmail.com>:
->>> WIRELESS_EXT is not required for configuring wireless on recent
->>> kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
->>
->> Since what version it's deprecated? Do user-space tools know about this new API?
->>
->> Neither iwconfig nor iwlist worked for me without WIRELESS_EXT.
->>
->>
->> Pavel
->>
->
-> Iwconfig and iwlist are themselves deprecated. Iw is the new wireless
-> configuration tool.
->
->>
->> 2011/8/17 Gábor Stefanik <netrolller.3d@gmail.com>:
->>> On Wed, Aug 17, 2011 at 5:28 AM, Pavel Ivanov <paivanof@gmail.com> wrote:
->>>> When ath9k is the only wireless driver included in the build
->>>> WIRELESS_EXT configuration option becomes undefined. Because of that
->>>> driver becomes essentially unusable as you can't actually connect to
->>>> any WiFi network. By including WIRELESS_EXT into Kconfig we ensure
->>>> that build with ath9k and without other drivers (having WIRELESS_EXT
->>>> selected in their Kconfig) is actually usable.
->>>
->>> WIRELESS_EXT is not required for configuring wireless on recent
->>> kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
->>>
->>>>
->>>> Signed-off-by: Pavel Ivanov <paivanof@gmail.com>
->>>> ---
->>>>
->>>> diff --git a/drivers/net/wireless/ath/ath9k/Kconfig
->>>> b/drivers/net/wireless/ath/ath9k/Kconfig
->>>> index d9c08c6..2573f77 100644
->>>> --- a/drivers/net/wireless/ath/ath9k/Kconfig
->>>> +++ b/drivers/net/wireless/ath/ath9k/Kconfig
->>>> @@ -11,6 +11,7 @@ config ATH9K
->>>>        select LEDS_CLASS
->>>>        select NEW_LEDS
->>>>        select ATH9K_COMMON
->>>> +       select WIRELESS_EXT
->>>>        ---help---
->>>>          This module adds support for wireless adapters based on
->>>>          Atheros IEEE 802.11n AR5008, AR9001 and AR9002 family
