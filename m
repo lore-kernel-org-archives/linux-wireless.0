@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:34915 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753250Ab1HBKyI (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:52194 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751662Ab1HIXq0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 06:54:08 -0400
-Received: by fxh19 with SMTP id 19so5502095fxh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 03:54:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1312280832-27675-1-git-send-email-anarsoul@gmail.com>
-References: <201108021312.23153.anarsoul@gmail.com>
-	<1312280832-27675-1-git-send-email-anarsoul@gmail.com>
-Date: Tue, 2 Aug 2011 11:54:07 +0100
-Message-ID: <CAGq3pz4bQ_2eQbVye==3Xqq3gK4PV6+JJXoHX0TXz=Y7kWC0wQ@mail.gmail.com> (sfid-20110802_125430_963045_F3E5CAED)
-Subject: Re: [PATCH 1/2] libertas: add ability to power off card on suspend
-From: Daniel Drake <dsd@laptop.org>
-To: Vasily Khoruzhick <anarsoul@gmail.com>
-Cc: libertas-dev@lists.infradead.org, linville@tuxdriver.com,
-	dcbw@redhat.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 9 Aug 2011 19:46:26 -0400
+Received: by mail-iy0-f170.google.com with SMTP id 16so23646iye.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 16:46:26 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH 2/8] mac80211: fix mpath timer NULL function
+Date: Tue,  9 Aug 2011 16:45:05 -0700
+Message-Id: <1312933511-9486-3-git-send-email-thomas@cozybit.com> (sfid-20110810_014630_742743_C66E2414)
+In-Reply-To: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
+References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 August 2011 11:27, Vasily Khoruzhick <anarsoul@gmail.com> wrote:
-> Could be usefull if it's not possible to keep power on the card
-> when host goes into suspend.
+From: Javier Cardona <javier@cozybit.com>
 
-If it's not possible to keep power during suspend, then I don't see
-why you need to explicitly turn it off on the way down.
+If we have an mpath whose timer has not been initialized, don't try to
+delete it.
 
-If power can be maintained, this is going to confuse userspace. If the
-network interface is up while you go into suspend, this code would
-kick in and power down the device. Then, during resume, it would power
-it up again. During this whole time, the network interface has
-remained UP, so userspace isn't aware that anything has happened. But,
-since the hardware has been powered off and on again, it has lost all
-state (association, encryption keys, etc).
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ net/mac80211/mesh_pathtbl.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-The way we handle this in libertas_sdio is that if we don't want the
-card powered during suspend, we ask the MMC layer to remove the
-device. This causes the remove function to be run, and the interface
-disappears. During resume, it gets probed again from scratch, which
-then prompts userspace into deciding which network to connect to,
-reprogramming keys, etc.
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 819d8e4..89f469b 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -619,7 +619,8 @@ static void mesh_path_node_reclaim(struct rcu_head *rp)
+ 	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
+ 	struct ieee80211_sub_if_data *sdata = node->mpath->sdata;
+ 
+-	del_timer_sync(&node->mpath->timer);
++	if (node->mpath->timer.function)
++		del_timer_sync(&node->mpath->timer);
+ 	atomic_dec(&sdata->u.mesh.mpaths);
+ 	kfree(node->mpath);
+ 	kfree(node);
+@@ -768,7 +769,8 @@ static void mesh_path_node_free(struct hlist_node *p, bool free_leafs)
+ 	mpath = node->mpath;
+ 	hlist_del_rcu(p);
+ 	if (free_leafs) {
+-		del_timer_sync(&mpath->timer);
++		if (mpath->timer.function)
++			del_timer_sync(&mpath->timer);
+ 		kfree(mpath);
+ 	}
+ 	kfree(node);
+-- 
+1.7.6
 
-Daniel
