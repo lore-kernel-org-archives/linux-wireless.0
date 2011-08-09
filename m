@@ -1,71 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:48886 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751798Ab1HQS1Y convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7902 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751799Ab1HISpu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2011 14:27:24 -0400
-Received: by pzk37 with SMTP id 37so1500744pzk.1
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2011 11:27:24 -0700 (PDT)
+	Tue, 9 Aug 2011 14:45:50 -0400
+Date: Wed, 10 Aug 2011 00:14:16 +0530
+From: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Paul Stewart <pstew@google.com>
+Subject: Re: [PATCH] ath9k_hw: Fix STA (AR9485) bringup issue due to
+ incorrect MAC address
+Message-ID: <20110809184415.GB10104@senthil-lnx.users.atheros.com> (sfid-20110809_204553_487831_B5F8B997)
+References: <1312914178-9601-1-git-send-email-senthilb@qca.qualcomm.com>
+ <CAB=NE6Uzp4M9SNgti9hpob=Q49cJTwhuG5qnY3vgg9Mqjb-OCA@mail.gmail.com>
+ <CAB=NE6W7LsHzTg_=MSEozKfXOiQt_Z7mB1pQ772m_FqsanTjVw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4E3420E9.6080603@lwfinger.net>
-References: <4E3420E9.6080603@lwfinger.net>
-Date: Wed, 17 Aug 2011 20:27:23 +0200
-Message-ID: <CACna6ryErHY+OyAnvc9+MYArb5mXpSdadOPADsQOBz796UqSUw@mail.gmail.com> (sfid-20110817_202727_916753_5149B98C)
-Subject: Re: Report on bcma with 14e4:4353 (BCM43224)
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAB=NE6W7LsHzTg_=MSEozKfXOiQt_Z7mB1pQ772m_FqsanTjVw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 30 lipca 2011 17:19 użytkownik Larry Finger
-<Larry.Finger@lwfinger.net> napisał:
-> I'm using a recent pull from wireless-testing - 'git describe' results in
-> master-2011-07-26-150-g4ea94a9.
->
-> The driver is working well with reasonable performance. Using tcpperf, I get
-> 8-10 Mb/s upload on an 802.11g connection. The connection has been up for 17
-> hours with no disconnects.
+On Tue, Aug 09, 2011 at 11:32:17AM -0700, Luis R. Rodriguez wrote:
+> On Tue, Aug 9, 2011 at 11:31 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > On Tue, Aug 9, 2011 at 11:22 AM, Senthil Balasubramanian
+> > <senthilb@qca.qualcomm.com> wrote:
+> >> Due to some recent optimization done in the way the mac address
+> >> bytes are written into the OTP memory, some AR9485 chipsets were
+> >> forced to use the first byte from the eeprom template and as AR9485
+> >> happens to use generic eeprom template which has 0x1 as the first
+> >> byte causes issues in bringing up the card.
+> >>
+> >> So fixed the eeprom template accordingly to address the issue.
+> >>
+> >> Cc: Paul Stewart <pstew@google.com>
+> >> Signed-off-by: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+> >
+> > I don't follow the description too well, all I can tell from it is
+> > that there is an issue if the template has 0x01 set instead of 0x0 but
+> > it doesn't tell me why.
+The leading byte is 1 which is obviously incorrect for mac address.
+The reason why 1 is chosen by the driver for mac address is due to
+the way the OTP write was optimized and so the driver has taken the
+first byte alone from the template and the remaining from OTP.
 
-Thanks for your testing, I appreciate it! I was busy recently with
-other stuff, so didn't have much time to reply and test everything
-myself.
-
-
-> A minor annoyance is that the driver does not autoload on boot and had to be
-> manually modprobed. AFAIK, I don't have any blacklisting or other
-> configuration parameters that would cause this. Furthermore, I don't see
-> anything in the driver code that would cause this. Does autoload work on
-> your system?
-
-I've everything blacklisted (ssb, bcma, b43, wl, brcmsmac), so I
-didn't even notice that. However I got some reports (2 of them) that
-b43 doesn't auto load. I've to take a look at it, however I've no idea
-yet on what may be causing it.
-
-
-> A more serious problem is that the driver does not work on my 802.11n AP
-> that is set for "up to 270 Mbps at 2.4 GHz". It will authenticate and
-> associate, but the throughput is minimal. It also gets the "PHY transmission
-> error" messages. None occur with 802.11g. I would guess some kind of error
-> in the HT40 settings.
-
-My network (AP) is set up to work in 802.11g mode and I've performed
-first tests today. Not good:
-[ ID] Interval       Transfer     Bandwidth
-[  4]  0.0-124.5 sec  10.8 MBytes    724 Kbits/sec
-I've noticed that connection dies when I force network rate to 54M.
-Same for 48M and 9M. Connection works fine for 1M, 2M, 11M.
-So this is again OFDM vs. CCK problem.
-
-I didn't see any "PHY transmission error" messages however (maybe it's
-matter of firmware? 666.2 here).
-
-
-Could you take a look if anything has changed in phy_ctl1 in recent
-drivers? Do you have any other suspicions?
-
--- 
-Rafał
+> 
+> Is this not a stable fix?
+Oops.. Yes it is. Let me cc to stable. thanks for the stable reminder :-(
+> 
+>   Luis
