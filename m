@@ -1,680 +1,367 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1792 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753166Ab1HHN7d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:33 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 47/82] staging: brcm80211: get rid of sd debug message
- macro in fullmac
-Date: Mon, 8 Aug 2011 15:58:31 +0200
-Message-ID: <1312811946-16713-48-git-send-email-arend@broadcom.com> (sfid-20110808_160107_327140_C37C206A)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:35863 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752814Ab1HIJOj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2011 05:14:39 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 5so2430702wwf.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:38 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 36/40] wl12xx: enable AP advanced functionality
+Date: Tue,  9 Aug 2011 12:13:49 +0300
+Message-Id: <1312881233-9366-37-git-send-email-eliad@wizery.com> (sfid-20110809_111445_707542_79754FFA)
+In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+From: Arik Nemtsov <arik@wizery.com>
 
-Use BRCMF_* instead of sd_* as debug message interface
+This adjusts FW TX block allocation for connected stations in PS.
+Firmware congestion is measured in allocated packets instead of blocks.
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Allow a link in PS to queue up to 2 packets to the FW.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |    2 -
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |  222 ++++++++-------------
- drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    1 -
- 3 files changed, 82 insertions(+), 143 deletions(-)
+ drivers/net/wireless/wl12xx/main.c   |   48 +++++++++++++++++-----------------
+ drivers/net/wireless/wl12xx/ps.c     |    4 +-
+ drivers/net/wireless/wl12xx/tx.c     |   19 +++++--------
+ drivers/net/wireless/wl12xx/wl12xx.h |   25 ++++++++++--------
+ 4 files changed, 48 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-index 916d41f..310d4fd 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-@@ -98,8 +98,6 @@ static struct brcmf_sdioh_driver drvinfo = { NULL, NULL };
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index c8e9ba6..9f60f0f 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -751,64 +751,73 @@ static int wl1271_plt_init(struct wl1271 *wl)
+ 	kfree(wl->target_mem_map);
+ 	wl->target_mem_map = NULL;
  
- /* Module parameters specific to each host-controller driver */
- 
--module_param(sd_msglevel, uint, 0);
--
- module_param(sd_f2_blocksize, int, 0);
- 
- struct brcmf_sdio_card*
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 846b6be..4ffd934 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -46,56 +46,6 @@
- #define SDIO_DEVICE_ID_BROADCOM_4329	0x4329
- #endif		/* !defined(SDIO_DEVICE_ID_BROADCOM_4329) */
- 
--/* Common msglevel constants */
--#define SDH_ERROR_VAL		0x0001	/* Error */
--#define SDH_TRACE_VAL		0x0002	/* Trace */
--#define SDH_INFO_VAL		0x0004	/* Info */
--#define SDH_DEBUG_VAL		0x0008	/* Debug */
--#define SDH_DATA_VAL		0x0010	/* Data */
--#define SDH_CTRL_VAL		0x0020	/* Control Regs */
--#define SDH_LOG_VAL		0x0040	/* Enable bcmlog */
--#define SDH_DMA_VAL		0x0080	/* DMA */
--
--#ifdef BCMDBG
--#define sd_err(x)	\
--	do { \
--		if ((sd_msglevel & SDH_ERROR_VAL) && net_ratelimit()) \
--			printk x; \
--	} while (0)
--#define sd_trace(x)	\
--	do { \
--		if ((sd_msglevel & SDH_TRACE_VAL) && net_ratelimit()) \
--			printk x; \
--	} while (0)
--#define sd_info(x)	\
--	do { \
--		if ((sd_msglevel & SDH_INFO_VAL) && net_ratelimit()) \
--			printk x; \
--	} while (0)
--#define sd_debug(x)	\
--	do { \
--		if ((sd_msglevel & SDH_DEBUG_VAL) && net_ratelimit()) \
--			printk x; \
--	} while (0)
--#define sd_data(x)	\
--	do { \
--		if ((sd_msglevel & SDH_DATA_VAL) && net_ratelimit()) \
--			printk x; \
--	} while (0)
--#define sd_ctrl(x)	\
--	do { \
--		if ((sd_msglevel & SDH_CTRL_VAL) && net_ratelimit()) \
--			printk x; \
--	} while (0)
--#else
--#define sd_err(x)
--#define sd_trace(x)
--#define sd_info(x)
--#define sd_debug(x)
--#define sd_data(x)
--#define sd_ctrl(x)
--#endif
--
- struct sdos_info {
- 	struct sdioh_info *sd;
- 	spinlock_t lock;
-@@ -115,8 +65,6 @@ static int brcmf_sdio_resume(struct device *dev);
- 
- uint sd_f2_blocksize = 512;	/* Default blocksize */
- 
--uint sd_msglevel = 0x01;
--
- struct brcmf_sdmmc_instance *gInstance;
- static atomic_t brcmf_mmc_suspend;
- 
-@@ -177,12 +125,12 @@ static int brcmf_sdioh_enablefuncs(struct sdioh_info *sd)
- 	u32 fbraddr;
- 	u8 func;
- 
--	sd_trace(("%s\n", __func__));
-+	BRCMF_TRACE(("%s\n", __func__));
- 
- 	/* Get the Card's common CIS address */
- 	sd->com_cis_ptr = brcmf_sdioh_get_cisaddr(sd, SDIO_CCCR_CIS);
- 	sd->func_cis_ptr[0] = sd->com_cis_ptr;
--	sd_info(("%s: Card's Common CIS Ptr = 0x%x\n", __func__,
-+	BRCMF_INFO(("%s: Card's Common CIS Ptr = 0x%x\n", __func__,
- 		 sd->com_cis_ptr));
- 
- 	/* Get the Card's function CIS (for each function) */
-@@ -190,12 +138,12 @@ static int brcmf_sdioh_enablefuncs(struct sdioh_info *sd)
- 	     func <= sd->num_funcs; func++, fbraddr += SDIOD_FBR_SIZE) {
- 		sd->func_cis_ptr[func] =
- 		    brcmf_sdioh_get_cisaddr(sd, SDIO_FBR_CIS + fbraddr);
--		sd_info(("%s: Function %d CIS Ptr = 0x%x\n", __func__, func,
-+		BRCMF_INFO(("%s: Function %d CIS Ptr = 0x%x\n", __func__, func,
- 			 sd->func_cis_ptr[func]));
- 	}
- 
- 	sd->func_cis_ptr[0] = sd->com_cis_ptr;
--	sd_info(("%s: Card's Common CIS Ptr = 0x%x\n", __func__,
-+	BRCMF_INFO(("%s: Card's Common CIS Ptr = 0x%x\n", __func__,
- 		 sd->com_cis_ptr));
- 
- 	/* Enable Function 1 */
-@@ -203,7 +151,7 @@ static int brcmf_sdioh_enablefuncs(struct sdioh_info *sd)
- 	err_ret = sdio_enable_func(gInstance->func[1]);
- 	sdio_release_host(gInstance->func[1]);
- 	if (err_ret)
--		sd_err(("brcmf_sdioh_enablefuncs: Failed to enable F1 "
-+		BRCMF_ERROR(("brcmf_sdioh_enablefuncs: Failed to enable F1 "
- 			"Err: 0x%08x\n", err_ret));
- 
- 	return false;
-@@ -217,20 +165,20 @@ struct sdioh_info *brcmf_sdioh_attach(void *bar0, uint irq)
- 	struct sdioh_info *sd;
- 	int err_ret;
- 
--	sd_trace(("%s\n", __func__));
-+	BRCMF_TRACE(("%s\n", __func__));
- 
- 	if (gInstance == NULL) {
--		sd_err(("%s: SDIO Device not present\n", __func__));
-+		BRCMF_ERROR(("%s: SDIO Device not present\n", __func__));
- 		return NULL;
- 	}
- 
- 	sd = kzalloc(sizeof(struct sdioh_info), GFP_ATOMIC);
- 	if (sd == NULL) {
--		sd_err(("sdioh_attach: out of memory\n"));
-+		BRCMF_ERROR(("sdioh_attach: out of memory\n"));
- 		return NULL;
- 	}
- 	if (brcmf_sdioh_osinit(sd) != 0) {
--		sd_err(("%s:sdioh_sdmmc_osinit() failed\n", __func__));
-+		BRCMF_ERROR(("%s:sdioh_sdmmc_osinit() failed\n", __func__));
- 		kfree(sd);
- 		return NULL;
- 	}
-@@ -247,7 +195,7 @@ struct sdioh_info *brcmf_sdioh_attach(void *bar0, uint irq)
- 	sd->client_block_size[1] = 64;
- 	err_ret = sdio_set_block_size(gInstance->func[1], 64);
- 	if (err_ret)
--		sd_err(("brcmf_sdioh_attach: Failed to set F1 blocksize\n"));
-+		BRCMF_ERROR(("%s: Failed to set F1 blocksize\n", __func__));
- 
- 	/* Release host controller F1 */
- 	sdio_release_host(gInstance->func[1]);
-@@ -260,8 +208,8 @@ struct sdioh_info *brcmf_sdioh_attach(void *bar0, uint irq)
- 		err_ret =
- 		    sdio_set_block_size(gInstance->func[2], sd_f2_blocksize);
- 		if (err_ret)
--			sd_err(("brcmf_sdioh_attach: Failed to set F2 blocksize"
--				" to %d\n", sd_f2_blocksize));
-+			BRCMF_ERROR(("%s: Failed to set F2 blocksize"
-+				" to %d\n", __func__, sd_f2_blocksize));
- 
- 		/* Release host controller F2 */
- 		sdio_release_host(gInstance->func[2]);
-@@ -269,13 +217,13 @@ struct sdioh_info *brcmf_sdioh_attach(void *bar0, uint irq)
- 
- 	brcmf_sdioh_enablefuncs(sd);
- 
--	sd_trace(("%s: Done\n", __func__));
-+	BRCMF_TRACE(("%s: Done\n", __func__));
- 	return sd;
+ 	return ret;
  }
  
- extern int brcmf_sdioh_detach(struct sdioh_info *sd)
+-#if 0
+-static void wl1271_irq_ps_regulate_link(struct wl1271 *wl, u8 hlid, u8 tx_blks)
++static void wl1271_irq_ps_regulate_link(struct wl1271 *wl, u8 hlid, u8 tx_pkts)
  {
--	sd_trace(("%s\n", __func__));
-+	BRCMF_TRACE(("%s\n", __func__));
+ 	bool fw_ps;
  
- 	if (sd) {
+ 	/* only regulate station links */
+ 	if (hlid < WL1271_AP_STA_HLID_START)
+ 		return;
  
-@@ -302,9 +250,9 @@ extern int
- brcmf_sdioh_interrupt_register(struct sdioh_info *sd, void (*fn)(void *),
- 			       void *argh)
+ 	fw_ps = test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
+ 
+ 	/*
+ 	 * Wake up from high level PS if the STA is asleep with too little
+-	 * blocks in FW or if the STA is awake.
++	 * packets in FW or if the STA is awake.
+ 	 */
+-	if (!fw_ps || tx_blks < WL1271_PS_STA_MAX_BLOCKS)
++	if (!fw_ps || tx_pkts < WL1271_PS_STA_MAX_PACKETS)
+ 		wl1271_ps_link_end(wl, hlid);
+ 
+ 	/* Start high-level PS if the STA is asleep with enough blocks in FW */
+-	else if (fw_ps && tx_blks >= WL1271_PS_STA_MAX_BLOCKS)
++	else if (fw_ps && tx_pkts >= WL1271_PS_STA_MAX_PACKETS)
+ 		wl1271_ps_link_start(wl, hlid, true);
+ }
+ 
++bool wl1271_is_active_sta(struct wl1271 *wl, u8 hlid)
++{
++	int id = hlid - WL1271_AP_STA_HLID_START;
++	return test_bit(id, wl->ap_hlid_map);
++}
++
+ static void wl1271_irq_update_links_status(struct wl1271 *wl,
+-				       struct wl1271_fw_ap_status *status)
++					   struct wl1271_fw_status *status)
  {
--	sd_trace(("%s: Entering\n", __func__));
-+	BRCMF_TRACE(("%s: Entering\n", __func__));
- 	if (fn == NULL) {
--		sd_err(("%s: interrupt handler is NULL, not registering\n",
-+		BRCMF_ERROR(("%s: interrupt handler is NULL, not registering\n",
- 			__func__));
- 		return -EINVAL;
+ 	u32 cur_fw_ps_map;
+-	u8 hlid;
++	u8 hlid, cnt;
++
++	/* TODO: also use link_fast_bitmap here */
+ 
+ 	cur_fw_ps_map = le32_to_cpu(status->link_ps_bitmap);
+ 	if (wl->ap_fw_ps_map != cur_fw_ps_map) {
+ 		wl1271_debug(DEBUG_PSM,
+ 			     "link ps prev 0x%x cur 0x%x changed 0x%x",
+ 			     wl->ap_fw_ps_map, cur_fw_ps_map,
+ 			     wl->ap_fw_ps_map ^ cur_fw_ps_map);
+ 
+ 		wl->ap_fw_ps_map = cur_fw_ps_map;
  	}
-@@ -331,7 +279,7 @@ brcmf_sdioh_interrupt_register(struct sdioh_info *sd, void (*fn)(void *),
  
- extern int brcmf_sdioh_interrupt_deregister(struct sdioh_info *sd)
+ 	for (hlid = WL1271_AP_STA_HLID_START; hlid < AP_MAX_LINKS; hlid++) {
+-		u8 cnt = status->tx_lnk_free_blks[hlid] -
+-			wl->links[hlid].prev_freed_blks;
++		if (!wl1271_is_active_sta(wl, hlid))
++			continue;
+ 
+-		wl->links[hlid].prev_freed_blks =
+-			status->tx_lnk_free_blks[hlid];
+-		wl->links[hlid].allocated_blks -= cnt;
++		cnt = status->tx_lnk_free_pkts[hlid] -
++		      wl->links[hlid].prev_freed_pkts;
++
++		wl->links[hlid].prev_freed_pkts =
++			status->tx_lnk_free_pkts[hlid];
++		wl->links[hlid].allocated_pkts -= cnt;
+ 
+ 		wl1271_irq_ps_regulate_link(wl, hlid,
+-					    wl->links[hlid].allocated_blks);
++					    wl->links[hlid].allocated_pkts);
+ 	}
+ }
+-#endif
+ 
+ static void wl1271_fw_status(struct wl1271 *wl,
+ 			     struct wl1271_fw_status *status)
  {
--	sd_trace(("%s: Entering\n", __func__));
-+	BRCMF_TRACE(("%s: Entering\n", __func__));
+ 	struct timespec ts;
+ 	u32 old_tx_blk_count = wl->tx_blocks_available;
+@@ -861,17 +870,14 @@ static void wl1271_fw_status(struct wl1271 *wl,
  
- 	if (gInstance->func[1]) {
- 		/* register and unmask irq */
-@@ -367,7 +315,6 @@ enum {
+ 	/* if more blocks are available now, tx work can be scheduled */
+ 	if (wl->tx_blocks_available > old_tx_blk_count)
+ 		clear_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags);
+ 
+ 	/* for AP update num of allocated TX blocks per link and ps status */
+-	if (wl->bss_type == BSS_TYPE_AP_BSS) {
+-#if 0
++	if (wl->bss_type == BSS_TYPE_AP_BSS)
+ 		wl1271_irq_update_links_status(wl, status);
+-#endif
+-	}
+ 
+ 	/* update the host-chipset time offset */
+ 	getnstimeofday(&ts);
+ 	wl->time_offset = (timespec_to_ns(&ts) >> 10) -
+ 		(s64)le32_to_cpu(status->fw_localtime);
+ }
+@@ -3676,18 +3682,12 @@ static void wl1271_free_sta(struct wl1271 *wl, u8 hlid)
+ 	wl->links[hlid].ba_bitmap = 0;
+ 	wl1271_tx_reset_link_queues(wl, hlid);
+ 	__clear_bit(hlid, &wl->ap_ps_map);
+ 	__clear_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
+ }
+ 
+-bool wl1271_is_active_sta(struct wl1271 *wl, u8 hlid)
+-{
+-	int id = hlid - WL1271_AP_STA_HLID_START;
+-	return test_bit(id, wl->ap_hlid_map);
+-}
+-
+ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
+ 			     struct ieee80211_vif *vif,
+ 			     struct ieee80211_sta *sta)
+ {
+ 	struct wl1271 *wl = hw->priv;
+ 	int ret = 0;
+diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
+index 3548377..4b720b1 100644
+--- a/drivers/net/wireless/wl12xx/ps.c
++++ b/drivers/net/wireless/wl12xx/ps.c
+@@ -223,14 +223,14 @@ void wl1271_ps_link_start(struct wl1271 *wl, u8 hlid, bool clean_queues)
+ {
+ 	struct ieee80211_sta *sta;
+ 
+ 	if (test_bit(hlid, &wl->ap_ps_map))
+ 		return;
+ 
+-	wl1271_debug(DEBUG_PSM, "start mac80211 PSM on hlid %d blks %d "
+-		     "clean_queues %d", hlid, wl->links[hlid].allocated_blks,
++	wl1271_debug(DEBUG_PSM, "start mac80211 PSM on hlid %d pkts %d "
++		     "clean_queues %d", hlid, wl->links[hlid].allocated_pkts,
+ 		     clean_queues);
+ 
+ 	rcu_read_lock();
+ 	sta = ieee80211_find_sta(wl->vif, wl->links[hlid].addr);
+ 	if (!sta) {
+ 		wl1271_error("could not find sta %pM for starting ps",
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index d184da1..a180c16 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -120,33 +120,31 @@ static void wl1271_tx_ap_update_inconnection_sta(struct wl1271 *wl,
+ 	hdr = (struct ieee80211_hdr *)(skb->data +
+ 				       sizeof(struct wl1271_tx_hw_descr));
+ 	if (ieee80211_is_auth(hdr->frame_control))
+ 		wl1271_acx_set_inconnection_sta(wl, hdr->addr1);
+ }
+ 
+-#if 0
+ static void wl1271_tx_regulate_link(struct wl1271 *wl, u8 hlid)
+ {
+ 	bool fw_ps;
+-	u8 tx_blks;
++	u8 tx_pkts;
+ 
+ 	/* only regulate station links */
+ 	if (hlid < WL1271_AP_STA_HLID_START)
+ 		return;
+ 
+ 	fw_ps = test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
+-	tx_blks = wl->links[hlid].allocated_blks;
++	tx_pkts = wl->links[hlid].allocated_pkts;
+ 
+ 	/*
+ 	 * if in FW PS and there is enough data in FW we can put the link
+ 	 * into high-level PS and clean out its TX queues.
+ 	 */
+-	if (fw_ps && tx_blks >= WL1271_PS_STA_MAX_BLOCKS)
++	if (fw_ps && tx_pkts >= WL1271_PS_STA_MAX_PACKETS)
+ 		wl1271_ps_link_start(wl, hlid, true);
+ }
+-#endif
+ 
+ u8 wl1271_tx_get_hlid(struct wl1271 *wl, struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *control = IEEE80211_SKB_CB(skb);
+ 
+ 	if (control->control.sta) {
+@@ -222,14 +220,15 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 		wl->tx_blocks_available -= total_blocks;
+ 		wl->tx_allocated_blocks += total_blocks;
+ 
+ 		ac = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+ 		wl->tx_allocated_pkts[ac]++;
+ 
+-		if (wl->bss_type == BSS_TYPE_AP_BSS)
+-			wl->links[hlid].allocated_blks += total_blocks;
++		if (wl->bss_type == BSS_TYPE_AP_BSS &&
++		    hlid >= WL1271_AP_STA_HLID_START)
++			wl->links[hlid].allocated_pkts++;
+ 
+ 		ret = 0;
+ 
+ 		wl1271_debug(DEBUG_TX,
+ 			     "tx_allocate: size: %d, blocks: %d, id: %d",
+ 			     total_len, total_blocks, id);
+@@ -406,15 +405,13 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
+ 		return ret;
+ 
+ 	wl1271_tx_fill_hdr(wl, skb, extra, info, hlid);
+ 
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
+ 		wl1271_tx_ap_update_inconnection_sta(wl, skb);
+-#if 0
+ 		wl1271_tx_regulate_link(wl, hlid);
+-#endif
+ 	} else {
+ 		wl1271_tx_update_filters(wl, skb);
+ 	}
+ 
+ 	/*
+ 	 * The length of each packet is stored in terms of
+@@ -876,14 +873,14 @@ void wl1271_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
+ 	struct ieee80211_tx_info *info;
+ 
+ 	/* TX failure */
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
+ 		for (i = 0; i < AP_MAX_LINKS; i++) {
+ 			wl1271_tx_reset_link_queues(wl, i);
+-			wl->links[i].allocated_blks = 0;
+-			wl->links[i].prev_freed_blks = 0;
++			wl->links[i].allocated_pkts = 0;
++			wl->links[i].prev_freed_pkts = 0;
+ 		}
+ 
+ 		wl->last_tx_hlid = 0;
+ 	} else {
+ 		for (i = 0; i < NUM_TX_QUEUES; i++) {
+ 			while ((skb = skb_dequeue(&wl->tx_queue[i]))) {
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index c3996b2..2563201 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -149,21 +149,20 @@ extern u32 wl12xx_debug_level;
+  * TODO: we currently don't support multirole. remove
+  * this constant from the code when we do.
+  */
+ #define WL1271_AP_STA_HLID_START   3
+ 
+ /*
+- * When in AP-mode, we allow (at least) this number of mem-blocks
++ * When in AP-mode, we allow (at least) this number of packets
+  * to be transmitted to FW for a STA in PS-mode. Only when packets are
+  * present in the FW buffers it will wake the sleeping STA. We want to put
+  * enough packets for the driver to transmit all of its buffered data before
+- * the STA goes to sleep again. But we don't want to take too much mem-blocks
++ * the STA goes to sleep again. But we don't want to take too much memory
+  * as it might hurt the throughput of active STAs.
+- * The number of blocks (18) is enough for 2 large packets.
+  */
+-#define WL1271_PS_STA_MAX_BLOCKS  (2 * 9)
++#define WL1271_PS_STA_MAX_PACKETS  2
+ 
+ #define WL1271_AP_BSS_INDEX        0
+ #define WL1271_AP_DEF_BEACON_EXP   20
+ 
+ #define ACX_TX_DESCRIPTORS         16
+ 
+@@ -234,14 +233,18 @@ struct wl1271_stats {
+ 
+ #define NUM_TX_QUEUES              4
+ #define NUM_RX_PKT_DESC            8
+ 
+ #define AP_MAX_STATIONS            5
+ 
+-/* Broadcast and Global links + links to stations */
+-#define AP_MAX_LINKS               (AP_MAX_STATIONS + 2)
++/* Broadcast and Global links + system link + links to stations */
++/*
++ * TODO: when WL1271_AP_STA_HLID_START is no longer constant, change all
++ * the places that use this.
++ */
++#define AP_MAX_LINKS               (AP_MAX_STATIONS + 3)
+ 
+ /* FW status registers */
+ struct wl1271_fw_status {
+ 	__le32 intr;
+ 	u8  fw_rx_counter;
+ 	u8  drv_rx_counter;
+@@ -268,14 +271,14 @@ struct wl1271_fw_status {
+ 	/* Size (in Memory Blocks) of TX pool */
+ 	__le32 tx_total;
+ 
+ 	/* Cumulative counter of released packets per AC */
+ 	u8 tx_released_pkts[NUM_TX_QUEUES];
+ 
+-	/* Cumulative counter of freed MBs per HLID */
+-	u8 tx_lnk_free_blks[WL1271_MAX_LINKS];
++	/* Cumulative counter of freed packets per HLID */
++	u8 tx_lnk_free_pkts[WL1271_MAX_LINKS];
+ 
+ 	/* Cumulative counter of released Voice memory blocks */
+ 	u8 tx_voice_released_blks;
+ 	u8 padding_1[7];
+ 	__le32 log_start_addr;
+ } __packed;
+@@ -349,15 +352,15 @@ enum wl12xx_flags {
  };
  
- const struct brcmu_iovar sdioh_iovars[] = {
--	{"sd_msglevel", IOV_MSGLEVEL, 0, IOVT_UINT32, 0},
- 	{"sd_blocksize", IOV_BLOCKSIZE, 0, IOVT_UINT32, 0},/* ((fn << 16) |
- 								 size) */
- 	{"sd_ints", IOV_USEINTS, 0, IOVT_BOOL, 0},
-@@ -401,7 +348,7 @@ brcmf_sdioh_iovar_op(struct sdioh_info *si, const char *name,
- 	if (!set && !(arg && len))
- 		return -EINVAL;
+ struct wl1271_link {
+ 	/* AP-mode - TX queue per AC in link */
+ 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
  
--	sd_trace(("%s: Enter (%s %s)\n", __func__, (set ? "set" : "get"),
-+	BRCMF_TRACE(("%s: Enter (%s %s)\n", __func__, (set ? "set" : "get"),
- 		  name));
+-	/* accounting for allocated / available TX blocks in FW */
+-	u8 allocated_blks;
+-	u8 prev_freed_blks;
++	/* accounting for allocated / freed packets in FW */
++	u8 allocated_pkts;
++	u8 prev_freed_pkts;
  
- 	vi = brcmu_iovar_lookup(sdioh_iovars, name);
-@@ -434,15 +381,6 @@ brcmf_sdioh_iovar_op(struct sdioh_info *si, const char *name,
+ 	u8 addr[ETH_ALEN];
  
- 	actionid = set ? IOV_SVAL(vi->varid) : IOV_GVAL(vi->varid);
- 	switch (actionid) {
--	case IOV_GVAL(IOV_MSGLEVEL):
--		int_val = (s32) sd_msglevel;
--		memcpy(arg, &int_val, val_size);
--		break;
--
--	case IOV_SVAL(IOV_MSGLEVEL):
--		sd_msglevel = int_val;
--		break;
--
- 	case IOV_GVAL(IOV_BLOCKSIZE):
- 		if ((u32) int_val > si->num_funcs) {
- 			bcmerror = -EINVAL;
-@@ -580,7 +518,7 @@ static int brcmf_sdioh_get_cisaddr(struct sdioh_info *sd, u32 regaddr)
- 	for (i = 0; i < 3; i++) {
- 		if ((brcmf_sdioh_card_regread(sd, 0, regaddr, 1, &regdata)) !=
- 		    SUCCESS)
--			sd_err(("%s: Can't read!\n", __func__));
-+			BRCMF_ERROR(("%s: Can't read!\n", __func__));
- 
- 		*ptr++ = (u8) regdata;
- 		regaddr++;
-@@ -600,21 +538,21 @@ brcmf_sdioh_cis_read(struct sdioh_info *sd, uint func, u8 *cisd, u32 length)
- 	u32 foo;
- 	u8 *cis = cisd;
- 
--	sd_trace(("%s: Func = %d\n", __func__, func));
-+	BRCMF_TRACE(("%s: Func = %d\n", __func__, func));
- 
- 	if (!sd->func_cis_ptr[func]) {
- 		memset(cis, 0, length);
--		sd_err(("%s: no func_cis_ptr[%d]\n", __func__, func));
-+		BRCMF_ERROR(("%s: no func_cis_ptr[%d]\n", __func__, func));
- 		return -ENOTSUPP;
- 	}
- 
--	sd_err(("%s: func_cis_ptr[%d]=0x%04x\n", __func__, func,
-+	BRCMF_ERROR(("%s: func_cis_ptr[%d]=0x%04x\n", __func__, func,
- 		sd->func_cis_ptr[func]));
- 
- 	for (count = 0; count < length; count++) {
- 		offset = sd->func_cis_ptr[func] + count;
- 		if (brcmf_sdioh_card_regread(sd, 0, offset, 1, &foo) < 0) {
--			sd_err(("%s: regread failed: Can't read CIS\n",
-+			BRCMF_ERROR(("%s: regread failed: Can't read CIS\n",
- 				__func__));
- 			return -EIO;
- 		}
-@@ -632,7 +570,7 @@ brcmf_sdioh_request_byte(struct sdioh_info *sd, uint rw, uint func,
- {
- 	int err_ret;
- 
--	sd_info(("%s: rw=%d, func=%d, addr=0x%05x\n", __func__, rw, func,
-+	BRCMF_INFO(("%s: rw=%d, func=%d, addr=0x%05x\n", __func__, rw, func,
- 		 regaddr));
- 
- 	BRCMF_PM_RESUME_WAIT(sdioh_request_byte_wait);
-@@ -652,7 +590,8 @@ brcmf_sdioh_request_byte(struct sdioh_info *sd, uint rw, uint func,
- 						    sdio_enable_func
- 						    (gInstance->func[2]);
- 						if (err_ret)
--							sd_err(("request_byte: "
-+							BRCMF_ERROR((
-+								"request_byte: "
- 								"enable F2 "
- 								"failed:%d\n",
- 								 err_ret));
-@@ -662,7 +601,8 @@ brcmf_sdioh_request_byte(struct sdioh_info *sd, uint rw, uint func,
- 						    sdio_disable_func
- 						    (gInstance->func[2]);
- 						if (err_ret)
--							sd_err(("request_byte: "
-+							BRCMF_ERROR((
-+								"request_byte: "
- 								"Disab F2 "
- 								"failed:%d\n",
- 								 err_ret));
-@@ -683,7 +623,7 @@ brcmf_sdioh_request_byte(struct sdioh_info *sd, uint rw, uint func,
- 					    regaddr, &err_ret);
- 				sdio_release_host(gInstance->func[func]);
- 			} else if (regaddr < 0xF0) {
--				sd_err(("brcmf: F0 Wr:0x%02x: write "
-+				BRCMF_ERROR(("brcmf: F0 Wr:0x%02x: write "
- 					"disallowed\n", regaddr));
- 			} else {
- 				/* Claim host controller, perform F0 write,
-@@ -719,7 +659,7 @@ brcmf_sdioh_request_byte(struct sdioh_info *sd, uint rw, uint func,
- 	}
- 
- 	if (err_ret)
--		sd_err(("brcmf: Failed to %s byte F%d:@0x%05x=%02x, "
-+		BRCMF_ERROR(("brcmf: Failed to %s byte F%d:@0x%05x=%02x, "
- 			"Err: %d\n", rw ? "Write" : "Read", func, regaddr,
- 			*byte, err_ret));
- 
-@@ -733,11 +673,11 @@ brcmf_sdioh_request_word(struct sdioh_info *sd, uint cmd_type, uint rw,
- 	int err_ret = -EIO;
- 
- 	if (func == 0) {
--		sd_err(("%s: Only CMD52 allowed to F0.\n", __func__));
-+		BRCMF_ERROR(("%s: Only CMD52 allowed to F0.\n", __func__));
- 		return -EINVAL;
- 	}
- 
--	sd_info(("%s: cmd_type=%d, rw=%d, func=%d, addr=0x%05x, nbytes=%d\n",
-+	BRCMF_INFO(("%s: cmd_type=%d, rw=%d, func=%d, addr=0x%05x, nbytes=%d\n",
- 		 __func__, cmd_type, rw, func, addr, nbytes));
- 
- 	BRCMF_PM_RESUME_WAIT(sdioh_request_word_wait);
-@@ -753,7 +693,8 @@ brcmf_sdioh_request_word(struct sdioh_info *sd, uint cmd_type, uint rw,
- 			sdio_writew(gInstance->func[func], (*word & 0xFFFF),
- 				    addr, &err_ret);
- 		else
--			sd_err(("%s: Invalid nbytes: %d\n", __func__, nbytes));
-+			BRCMF_ERROR(("%s: Invalid nbytes: %d\n",
-+				     __func__, nbytes));
- 	} else {		/* CMD52 Read */
- 		if (nbytes == 4)
- 			*word =
-@@ -763,14 +704,15 @@ brcmf_sdioh_request_word(struct sdioh_info *sd, uint cmd_type, uint rw,
- 			    sdio_readw(gInstance->func[func], addr,
- 				       &err_ret) & 0xFFFF;
- 		else
--			sd_err(("%s: Invalid nbytes: %d\n", __func__, nbytes));
-+			BRCMF_ERROR(("%s: Invalid nbytes: %d\n",
-+				     __func__, nbytes));
- 	}
- 
- 	/* Release host controller */
- 	sdio_release_host(gInstance->func[func]);
- 
- 	if (err_ret)
--		sd_err(("brcmf: Failed to %s word, Err: 0x%08x\n",
-+		BRCMF_ERROR(("brcmf: Failed to %s word, Err: 0x%08x\n",
- 			rw ? "Write" : "Read", err_ret));
- 
- 	return err_ret;
-@@ -786,7 +728,7 @@ brcmf_sdioh_request_packet(struct sdioh_info *sd, uint fix_inc, uint write,
- 
- 	struct sk_buff *pnext;
- 
--	sd_trace(("%s: Enter\n", __func__));
-+	BRCMF_TRACE(("%s: Enter\n", __func__));
- 
- 	BRCMF_PM_RESUME_WAIT(sdioh_request_packet_wait);
- 	BRCMF_PM_RESUME_RETURN_ERROR(-EIO);
-@@ -817,15 +759,15 @@ brcmf_sdioh_request_packet(struct sdioh_info *sd, uint fix_inc, uint write,
- 		}
- 
- 		if (err_ret) {
--			sd_err(("%s: %s FAILED %p[%d], addr=0x%05x, pkt_len=%d,"
--				 "ERR=0x%08x\n", __func__,
-+			BRCMF_ERROR(("%s: %s FAILED %p[%d], addr=0x%05x, "
-+				 "pkt_len=%d, ERR=0x%08x\n", __func__,
- 				 (write) ? "TX" : "RX",
- 				 pnext, SGCount, addr, pkt_len, err_ret));
- 		} else {
--			sd_trace(("%s: %s xfr'd %p[%d], addr=0x%05x, len=%d\n",
--				  __func__,
--				  (write) ? "TX" : "RX",
--				  pnext, SGCount, addr, pkt_len));
-+			BRCMF_TRACE(("%s: %s xfr'd %p[%d], addr=0x%05x, "
-+				     "len=%d\n", __func__,
-+				     (write) ? "TX" : "RX",
-+				     pnext, SGCount, addr, pkt_len));
- 		}
- 
- 		if (!fifo)
-@@ -837,7 +779,7 @@ brcmf_sdioh_request_packet(struct sdioh_info *sd, uint fix_inc, uint write,
- 	/* Release host controller */
- 	sdio_release_host(gInstance->func[func]);
- 
--	sd_trace(("%s: Exit\n", __func__));
-+	BRCMF_TRACE(("%s: Exit\n", __func__));
- 	return err_ret;
- }
- 
-@@ -864,18 +806,18 @@ brcmf_sdioh_request_buffer(struct sdioh_info *sd, uint pio_dma, uint fix_inc,
- 	int Status;
- 	struct sk_buff *mypkt = NULL;
- 
--	sd_trace(("%s: Enter\n", __func__));
-+	BRCMF_TRACE(("%s: Enter\n", __func__));
- 
- 	BRCMF_PM_RESUME_WAIT(sdioh_request_buffer_wait);
- 	BRCMF_PM_RESUME_RETURN_ERROR(-EIO);
- 	/* Case 1: we don't have a packet. */
- 	if (pkt == NULL) {
--		sd_data(("%s: Creating new %s Packet, len=%d\n",
-+		BRCMF_DATA(("%s: Creating new %s Packet, len=%d\n",
- 			 __func__, write ? "TX" : "RX", buflen_u));
- 		mypkt = brcmu_pkt_buf_get_skb(buflen_u);
- 		if (!mypkt) {
--			sd_err(("%s: brcmu_pkt_buf_get_skb failed: len %d\n",
--				__func__, buflen_u));
-+			BRCMF_ERROR(("%s: brcmu_pkt_buf_get_skb failed: "
-+				     "len %d\n", __func__, buflen_u));
- 			return -EIO;
- 		}
- 
-@@ -896,12 +838,12 @@ brcmf_sdioh_request_buffer(struct sdioh_info *sd, uint pio_dma, uint fix_inc,
- 		 * Case 2: We have a packet, but it is unaligned.
- 		 * In this case, we cannot have a chain (pkt->next == NULL)
- 		 */
--		sd_data(("%s: Creating aligned %s Packet, len=%d\n",
-+		BRCMF_DATA(("%s: Creating aligned %s Packet, len=%d\n",
- 			 __func__, write ? "TX" : "RX", pkt->len));
- 		mypkt = brcmu_pkt_buf_get_skb(pkt->len);
- 		if (!mypkt) {
--			sd_err(("%s: brcmu_pkt_buf_get_skb failed: len %d\n",
--				__func__, pkt->len));
-+			BRCMF_ERROR(("%s: brcmu_pkt_buf_get_skb failed: "
-+				     "len %d\n", __func__, pkt->len));
- 			return -EIO;
- 		}
- 
-@@ -919,7 +861,7 @@ brcmf_sdioh_request_buffer(struct sdioh_info *sd, uint pio_dma, uint fix_inc,
- 		brcmu_pkt_buf_free_skb(mypkt);
- 	} else {		/* case 3: We have a packet and
- 				 it is aligned. */
--		sd_data(("%s: Aligned %s Packet, direct DMA\n",
-+		BRCMF_DATA(("%s: Aligned %s Packet, direct DMA\n",
- 			 __func__, write ? "Tx" : "Rx"));
- 		Status = brcmf_sdioh_request_packet(sd, fix_inc, write, func,
- 						    addr, pkt);
-@@ -932,27 +874,27 @@ brcmf_sdioh_request_buffer(struct sdioh_info *sd, uint pio_dma, uint fix_inc,
- extern int brcmf_sdioh_abort(struct sdioh_info *sd, uint func)
- {
- 	char t_func = (char)func;
--	sd_trace(("%s: Enter\n", __func__));
-+	BRCMF_TRACE(("%s: Enter\n", __func__));
- 
- 	/* issue abort cmd52 command through F0 */
- 	brcmf_sdioh_request_byte(sd, SDIOH_WRITE, SDIO_FUNC_0, SDIO_CCCR_ABORT,
- 			   &t_func);
- 
--	sd_trace(("%s: Exit\n", __func__));
-+	BRCMF_TRACE(("%s: Exit\n", __func__));
- 	return 0;
- }
- 
- /* Disable device interrupt */
- void brcmf_sdioh_dev_intr_off(struct sdioh_info *sd)
- {
--	sd_trace(("%s: %d\n", __func__, sd->use_client_ints));
-+	BRCMF_TRACE(("%s: %d\n", __func__, sd->use_client_ints));
- 	sd->intmask &= ~CLIENT_INTR;
- }
- 
- /* Enable device interrupt */
- void brcmf_sdioh_dev_intr_on(struct sdioh_info *sd)
- {
--	sd_trace(("%s: %d\n", __func__, sd->use_client_ints));
-+	BRCMF_TRACE(("%s: %d\n", __func__, sd->use_client_ints));
- 	sd->intmask |= CLIENT_INTR;
- }
- 
-@@ -968,14 +910,14 @@ brcmf_sdioh_card_regread(struct sdioh_info *sd, int func, u32 regaddr,
- 		brcmf_sdioh_request_byte(sd, SDIOH_READ, func, regaddr, &temp);
- 		*data = temp;
- 		*data &= 0xff;
--		sd_data(("%s: byte read data=0x%02x\n", __func__, *data));
-+		BRCMF_DATA(("%s: byte read data=0x%02x\n", __func__, *data));
- 	} else {
- 		brcmf_sdioh_request_word(sd, 0, SDIOH_READ, func, regaddr, data,
- 				   regsize);
- 		if (regsize == 2)
- 			*data &= 0xffff;
- 
--		sd_data(("%s: word read data=0x%08x\n", __func__, *data));
-+		BRCMF_DATA(("%s: word read data=0x%08x\n", __func__, *data));
- 	}
- 
- 	return SUCCESS;
-@@ -985,7 +927,7 @@ static void brcmf_sdioh_irqhandler(struct sdio_func *func)
- {
- 	struct sdioh_info *sd;
- 
--	sd_trace(("brcmf: ***IRQHandler\n"));
-+	BRCMF_TRACE(("brcmf: ***IRQHandler\n"));
- 	sd = gInstance->sd;
- 
- 	sdio_release_host(gInstance->func[0]);
-@@ -994,9 +936,9 @@ static void brcmf_sdioh_irqhandler(struct sdio_func *func)
- 		sd->intrcount++;
- 		(sd->intr_handler) (sd->intr_handler_arg);
- 	} else {
--		sd_err(("brcmf: ***IRQHandler\n"));
-+		BRCMF_ERROR(("brcmf: ***IRQHandler\n"));
- 
--		sd_err(("%s: Not ready for intr: enabled %d, handler %p\n",
-+		BRCMF_ERROR(("%s: Not ready for intr: enabled %d, handler %p\n",
- 			__func__, sd->client_intr_enabled, sd->intr_handler));
- 	}
- 
-@@ -1008,7 +950,7 @@ static void brcmf_sdioh_irqhandler_f2(struct sdio_func *func)
- {
- 	struct sdioh_info *sd;
- 
--	sd_trace(("brcmf: ***IRQHandlerF2\n"));
-+	BRCMF_TRACE(("brcmf: ***IRQHandlerF2\n"));
- 
- 	sd = gInstance->sd;
- }
-@@ -1018,11 +960,11 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- {
- 	int ret = 0;
- 	static struct sdio_func sdio_func_0;
--	sd_trace(("sdio_probe: %s Enter\n", __func__));
--	sd_trace(("sdio_probe: func->class=%x\n", func->class));
--	sd_trace(("sdio_vendor: 0x%04x\n", func->vendor));
--	sd_trace(("sdio_device: 0x%04x\n", func->device));
--	sd_trace(("Function#: 0x%04x\n", func->num));
-+	BRCMF_TRACE(("sdio_probe: %s Enter\n", __func__));
-+	BRCMF_TRACE(("sdio_probe: func->class=%x\n", func->class));
-+	BRCMF_TRACE(("sdio_vendor: 0x%04x\n", func->vendor));
-+	BRCMF_TRACE(("sdio_device: 0x%04x\n", func->device));
-+	BRCMF_TRACE(("Function#: 0x%04x\n", func->num));
- 
- 	if (func->num == 1) {
- 		sdio_func_0.num = 0;
-@@ -1034,7 +976,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 
- 	if (func->num == 2) {
- 		brcmf_cfg80211_sdio_func(func);
--		sd_trace(("F2 found, calling brcmf_sdio_probe...\n"));
-+		BRCMF_TRACE(("F2 found, calling brcmf_sdio_probe...\n"));
- 		ret = brcmf_sdio_probe(&sdmmc_dev);
- 	}
- 
-@@ -1043,14 +985,14 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 
- static void brcmf_ops_sdio_remove(struct sdio_func *func)
- {
--	sd_trace(("%s Enter\n", __func__));
--	sd_info(("func->class=%x\n", func->class));
--	sd_info(("sdio_vendor: 0x%04x\n", func->vendor));
--	sd_info(("sdio_device: 0x%04x\n", func->device));
--	sd_info(("Function#: 0x%04x\n", func->num));
-+	BRCMF_TRACE(("%s Enter\n", __func__));
-+	BRCMF_INFO(("func->class=%x\n", func->class));
-+	BRCMF_INFO(("sdio_vendor: 0x%04x\n", func->vendor));
-+	BRCMF_INFO(("sdio_device: 0x%04x\n", func->device));
-+	BRCMF_INFO(("Function#: 0x%04x\n", func->num));
- 
- 	if (func->num == 2) {
--		sd_trace(("F2 found, calling brcmf_sdio_remove...\n"));
-+		BRCMF_TRACE(("F2 found, calling brcmf_sdio_remove...\n"));
- 		brcmf_sdio_remove(&sdmmc_dev);
- 	}
- }
-@@ -1062,19 +1004,19 @@ static int brcmf_sdio_suspend(struct device *dev)
- 	mmc_pm_flag_t sdio_flags;
- 	int ret = 0;
- 
--	sd_trace(("%s\n", __func__));
-+	BRCMF_TRACE(("%s\n", __func__));
- 
- 	atomic_set(&brcmf_mmc_suspend, true);
- 
- 	sdio_flags = sdio_get_host_pm_caps(gInstance->func[1]);
- 	if (!(sdio_flags & MMC_PM_KEEP_POWER)) {
--		sd_err(("Host can't keep power while suspended\n"));
-+		BRCMF_ERROR(("Host can't keep power while suspended\n"));
- 		return -EINVAL;
- 	}
- 
- 	ret = sdio_set_host_pm_flags(gInstance->func[1], MMC_PM_KEEP_POWER);
- 	if (ret) {
--		sd_err(("Failed to set pm_flags\n"));
-+		BRCMF_ERROR(("Failed to set pm_flags\n"));
- 		return ret;
- 	}
- 
-@@ -1119,12 +1061,12 @@ int brcmf_sdioh_interrupt_set(struct sdioh_info *sd, bool enable)
- 	unsigned long flags;
- 	struct sdos_info *sdos;
- 
--	sd_trace(("%s: %s\n", __func__, enable ? "Enabling" : "Disabling"));
-+	BRCMF_TRACE(("%s: %s\n", __func__, enable ? "Enabling" : "Disabling"));
- 
- 	sdos = (struct sdos_info *)sd->sdos_info;
- 
- 	if (enable && !(sd->intr_handler && sd->intr_handler_arg)) {
--		sd_err(("%s: no handler registered, will not enable\n",
-+		BRCMF_ERROR(("%s: no handler registered, will not enable\n",
- 			__func__));
- 		return -EINVAL;
- 	}
-@@ -1149,7 +1091,7 @@ int brcmf_sdioh_interrupt_set(struct sdioh_info *sd, bool enable)
- int brcmf_sdio_function_init(void)
- {
- 	int error = 0;
--	sd_trace(("brcmf_sdio_function_init: %s Enter\n", __func__));
-+	BRCMF_TRACE(("brcmf_sdio_function_init: %s Enter\n", __func__));
- 
- 	gInstance = kzalloc(sizeof(struct brcmf_sdmmc_instance), GFP_KERNEL);
- 	if (!gInstance)
-@@ -1166,7 +1108,7 @@ int brcmf_sdio_function_init(void)
- */
- void brcmf_sdio_function_cleanup(void)
- {
--	sd_trace(("%s Enter\n", __func__));
-+	BRCMF_TRACE(("%s Enter\n", __func__));
- 
- 	sdio_unregister_driver(&brcmf_sdmmc_driver);
- 
-diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-index ad67955..c33720d 100644
---- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-@@ -340,7 +340,6 @@ extern int brcmf_sdioh_abort(struct sdioh_info *si, uint fnc);
- /* Watchdog timer interface for pm ops */
- extern void brcmf_sdio_wdtmr_enable(bool enable);
- 
--extern uint sd_msglevel;	/* Debug message level */
- extern uint sd_f2_blocksize;
- 
- extern struct brcmf_sdmmc_instance *gInstance;
+ 	/* bitmap of TIDs where RX BA sessions are active for this link */
+ 	u8 ba_bitmap;
+ };
 -- 
-1.7.4.1
-
+1.7.6.401.g6a319
 
