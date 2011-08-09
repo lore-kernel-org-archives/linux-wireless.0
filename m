@@ -1,58 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:50634 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751162Ab1HXWCy (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:40120 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753892Ab1HIQhj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 18:02:54 -0400
-Date: Wed, 24 Aug 2011 17:02:52 -0500
+	Tue, 9 Aug 2011 12:37:39 -0400
+Received: by gxk21 with SMTP id 21so121611gxk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 09:37:38 -0700 (PDT)
+Message-ID: <4E41624E.3010904@lwfinger.net> (sfid-20110809_183751_301880_6086A737)
+Date: Tue, 09 Aug 2011 11:37:34 -0500
 From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: zajec5@gmail.com, Michael Buesch <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [RFC/RFT] b43: Relax requirement for descriptors to be in the DMA zone
-Message-ID: <4e55750c.GPPIrbNLynUMWY/U%Larry.Finger@lwfinger.net> (sfid-20110825_000305_798492_90DE6918)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: kc@cobradevil.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtl8192cu sometimes it can authenticate to ap
+References: <b3059ba2eac66b7ef0ec17c8fe81a1e6@cobradevil.org> <34676454425401d650be733a43191a53@cobradevil.org> <532595cb4d5ef910de54a4736ba76185@cobradevil.org>
+In-Reply-To: <532595cb4d5ef910de54a4736ba76185@cobradevil.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When 64-bit DMA was first used, there were problems with the
-BCM4311 (14e4:4311). The problem was "fixed" by using the GFP_DMA
-flag in the allocation of coherent ring descriptor memory.
+On 08/09/2011 10:12 AM, kc@cobradevil.org wrote:
+> Hello all,
+>
+> not sure what is happening but so far i have the following results:
+> i downloaded the latest bleeding edge wireless from
+> http://wireless.kernel.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
+> I installed kernel headers and build-essentials end run:
+> ./scripts/driver-select rtlwifi
+> make && make install
+>
+> i downloaded the firmware from
+> http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git
+>
+> Running on Ubuntu maverick kernel 2.6.35-30 update 56 i get sometimes an
+> authenticated message when running wpa_supplicant -Dnl80211 -c
+> /etc/wpa_supplicant.conf -i wlan0 but most times it will timeout
+> Running on Ubuntu natty kernel 2.6.38-10 update 46 i always get the
+> authenticated message when running wpa_supplicant -Dnl80211 -c
+> /etc/wpa_supplicant.conf -i wlan0
+>
+> only when using dhcp request on two accespoint i get different results on the
+> natty driver but that has todo with:
+> https://bugzilla.kernel.org/show_bug.cgi?id=38012 when applied i can connect two
+> both accespoints.
+>
+> Any ideas why it does not work on the maverick kernel?
 
-The original problem is now believed to have been due to bugs in
-the 64-bit DMA implementation in the rest of the kernel, and that
-those bugs have been fixed. Accordingly, the requirement for the
-descriptors to be in the DMA zone is relaxed.
+How does it work at all with a 2.6.38 kernel? Driver rtl8192cu was not added to 
+the kernel until 2.6 39.
 
-Bounce buffers are left in the DMA zone.
+> Also when stopping the wpa_supplicant with ctrl+c and restart i first have to
+> replug the device before it tries todo anything with the card.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+What info is in the dmesg output in this case?
 
-John,
-
-This material is for next.
+To debug the authentication case, run wpa_supplicant with the "-ddd" and "-f 
+wpa_supplicant.log" switches. That way you will get a log of what is going wrong.
 
 Larry
----
-
-Index: wireless-testing-new/drivers/net/wireless/b43/dma.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/b43/dma.c
-+++ wireless-testing-new/drivers/net/wireless/b43/dma.c
-@@ -393,14 +393,7 @@ static int alloc_ringmemory(struct b43_d
- 	 * has shown that 4K is sufficient for the latter as long as the buffer
- 	 * does not cross an 8K boundary.
- 	 *
--	 * For unknown reasons - possibly a hardware error - the BCM4311 rev
--	 * 02, which uses 64-bit DMA, needs the ring buffer in very low memory,
--	 * which accounts for the GFP_DMA flag below.
--	 *
--	 * The flags here must match the flags in free_ringmemory below!
- 	 */
--	if (ring->type == B43_DMA_64BIT)
--		flags |= GFP_DMA;
- 	ring->descbase = dma_alloc_coherent(ring->dev->dev->dma_dev,
- 					    B43_DMA_RINGMEMSIZE,
- 					    &(ring->dmabase), flags);
