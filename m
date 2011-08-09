@@ -1,58 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20225 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753693Ab1HZPZ5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 11:25:57 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>, stable@kernel.org
-Subject: [PATCH] iwlegacy: fix BUG_ON(info->control.rates[0].idx < 0)
-Date: Fri, 26 Aug 2011 17:24:59 +0200
-Message-Id: <1314372299-13319-1-git-send-email-sgruszka@redhat.com> (sfid-20110826_172600_932771_31E54834)
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:45123 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750839Ab1HIDCQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2011 23:02:16 -0400
+Received: by yie30 with SMTP id 30so1304066yie.19
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 20:02:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAH-LUqry4TKAvnojAo39QfT-Wy_BN94SYJEiCCRX4hrb=RcfwQ@mail.gmail.com>
+References: <CAH-LUqry4TKAvnojAo39QfT-Wy_BN94SYJEiCCRX4hrb=RcfwQ@mail.gmail.com>
+Date: Tue, 9 Aug 2011 11:02:15 +0800
+Message-ID: <CAJ-Vmo=SED0RLmQot2yAeAmv53Yitn+RV31tf2zWOmBHXzq_0w@mail.gmail.com> (sfid-20110809_050218_277231_4634464A)
+Subject: Re: AR9285 Wireless 80211n mode get only 25Mbit with Linux 2.6.38.8
+ and compat-wireless-2.6.38.2-2
+From: Adrian Chadd <adrian@freebsd.org>
+To: Dane Shih <daneshih1981@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When trying to connect to 5GHz we can provide negative index to
-mac80211 what trigger BUG_ON. Reason of iwl-3945-rs malfunction
-on 5GHz is unknown and needs further investigation. For now, to
-do not trigger a bug, correct value and just print WARNING.
+On 9 August 2011 11:00, Dane Shih <daneshih1981@gmail.com> wrote:
 
-Address bug:
-https://bugzilla.redhat.com/show_bug.cgi?id=730653
+> /etc/modprobe.d/ath9.conf
+> options ath9k nohwcrypt=1
+> modprobe -v ath9k
 
-Reported-and-tested-by: Jan Teichmann <jan.teichmann@gmail.com>
-Cc: stable@kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/iwl-3945-rs.c |   13 ++++++++-----
- 1 files changed, 8 insertions(+), 5 deletions(-)
+Out of curiousity, why are you using nohwcrypt=1 ?
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-index 977bd24..164bcae 100644
---- a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
-@@ -822,12 +822,15 @@ static void iwl3945_rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
- 
-  out:
- 
--	rs_sta->last_txrate_idx = index;
--	if (sband->band == IEEE80211_BAND_5GHZ)
--		info->control.rates[0].idx = rs_sta->last_txrate_idx -
--				IWL_FIRST_OFDM_RATE;
--	else
-+	if (sband->band == IEEE80211_BAND_5GHZ) {
-+		if (WARN_ON_ONCE(index < IWL_FIRST_OFDM_RATE))
-+			index = IWL_FIRST_OFDM_RATE;
-+		rs_sta->last_txrate_idx = index;
-+		info->control.rates[0].idx = index - IWL_FIRST_OFDM_RATE;
-+	} else {
-+		rs_sta->last_txrate_idx = index;
- 		info->control.rates[0].idx = rs_sta->last_txrate_idx;
-+	}
- 
- 	IWL_DEBUG_RATE(priv, "leave: %d\n", index);
- }
--- 
-1.7.1
 
+adrian
