@@ -1,63 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3559 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753477Ab1HONen (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 09:34:43 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 09/15] staging: brcm80211: fix off-by-one error in swap
- functions
-Date: Mon, 15 Aug 2011 15:34:21 +0200
-Message-ID: <1313415267-5264-10-git-send-email-arend@broadcom.com> (sfid-20110815_153457_279615_C97AF254)
-In-Reply-To: <1313415267-5264-1-git-send-email-arend@broadcom.com>
-References: <1313415267-5264-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:47616 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752855Ab1HIJOr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2011 05:14:47 -0400
+Received: by wwe5 with SMTP id 5so2048819wwe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:46 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 40/40] wl12xx: fix tx_queue_count spurious increment
+Date: Tue,  9 Aug 2011 12:13:53 +0300
+Message-Id: <1312881233-9366-41-git-send-email-eliad@wizery.com> (sfid-20110809_111451_038264_5C7EBB5F)
+In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Henry Ptasinski <henryp@broadcom.com>
+From: Arik Nemtsov <arik@wizery.com>
 
-The original implementation iterated over the data in buf+1 through buf+size,
-whereas it should have been over the data in buf through buf+size-1.
+Only increment the queue count after actually queuing the skb. This
+avoids a spurious increment is case of dropped packets.
 
-Tested on Mac G5 PPC and BCM63281.
+Also move the Tx-watermark checking code after the packet is enqueued.
+This makes the count more accurate - it includes the just-queued
+packet.
 
-Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Tested-by: Jonas Gorski <jonas.gorski@gmail.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/staging/brcm80211/brcmsmac/srom.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |   24 ++++++++++++------------
+ 1 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/srom.c b/drivers/staging/brcm80211/brcmsmac/srom.c
-index 060f06f..7a17f59 100644
---- a/drivers/staging/brcm80211/brcmsmac/srom.c
-+++ b/drivers/staging/brcm80211/brcmsmac/srom.c
-@@ -880,13 +880,15 @@ int srom_var_init(struct si_pub *sih, void *curmap, char **vars, uint *count)
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 7d0bcd2..e63a516 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1475,24 +1475,12 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
  
- static inline void ltoh16_buf(u16 *buf, unsigned int size)
- {
--	for (size /= 2; size; size--)
-+	size /= 2;
-+	while (size--)
- 		*(buf + size) = le16_to_cpu(*(buf + size));
- }
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS)
+ 		hlid = wl1271_tx_get_hlid(wl, skb);
  
- static inline void htol16_buf(u16 *buf, unsigned int size)
- {
--	for (size /= 2; size; size--)
-+	size /= 2;
-+	while (size--)
- 		*(buf + size) = cpu_to_le16(*(buf + size));
- }
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
  
+-	wl->tx_queue_count[q]++;
+-
+-	/*
+-	 * The workqueue is slow to process the tx_queue and we need stop
+-	 * the queue here, otherwise the queue will get too long.
+-	 */
+-	if (wl->tx_queue_count[q] >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
+-		wl1271_debug(DEBUG_TX, "op_tx: stopping queues for q %d", q);
+-		ieee80211_stop_queue(wl->hw, mapping);
+-		set_bit(q, &wl->stopped_queues_map);
+-	}
+-
+ 	/* queue the packet */
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
+ 		if (!wl1271_is_active_sta(wl, hlid)) {
+ 			wl1271_debug(DEBUG_TX, "DROP skb hlid %d q %d",
+ 				     hlid, q);
+ 			dev_kfree_skb(skb);
+@@ -1502,12 +1490,24 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		wl1271_debug(DEBUG_TX, "queue skb hlid %d q %d", hlid, q);
+ 		skb_queue_tail(&wl->links[hlid].tx_queue[q], skb);
+ 	} else {
+ 		skb_queue_tail(&wl->tx_queue[q], skb);
+ 	}
+ 
++	wl->tx_queue_count[q]++;
++
++	/*
++	 * The workqueue is slow to process the tx_queue and we need stop
++	 * the queue here, otherwise the queue will get too long.
++	 */
++	if (wl->tx_queue_count[q] >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
++		wl1271_debug(DEBUG_TX, "op_tx: stopping queues for q %d", q);
++		ieee80211_stop_queue(wl->hw, mapping);
++		set_bit(q, &wl->stopped_queues_map);
++	}
++
+ 	/*
+ 	 * The chip specific setup must run before the first TX packet -
+ 	 * before that, the tx_work will not be initialized!
+ 	 */
+ 
+ 	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags) &&
 -- 
-1.7.4.1
-
+1.7.6.401.g6a319
 
