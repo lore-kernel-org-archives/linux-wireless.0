@@ -1,82 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout9.freenet.de ([195.4.92.99]:52884 "EHLO mout9.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751657Ab1HXL7x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 07:59:53 -0400
-Message-Id: <201108241159.p7OBxipD003869@mail.maya.org> (sfid-20110824_135956_740605_B76C0831)
-Date: Wed, 24 Aug 2011 13:59:49 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:41550 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753272Ab1HILp0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2011 07:45:26 -0400
+Subject: Re: [RFC] mac80211: fix resuming when device is gone
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Stanislaw Gruszka <sgruszka@redhat.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [compat-wireless-3.1-rc1-1] rt2800usb crashes the machine
-In-Reply-To: <20110824090340.GA2277@redhat.com>
-References: <4E536DD8.6030308@01019freenet.de>
-	<20110824090340.GA2277@redhat.com>
+In-Reply-To: <1312890237.4109.22.camel@jlt3.sipsolutions.net> (sfid-20110809_134410_503974_BF250E46)
+References: <20110808141900.GA25857@redhat.com>
+	 <1312819106.4372.37.camel@jlt3.sipsolutions.net>
+	 <20110809092314.GA2152@redhat.com>
+	 <1312882082.4109.2.camel@jlt3.sipsolutions.net>
+	 <20110809093909.GB2152@redhat.com>
+	 <1312883113.4109.5.camel@jlt3.sipsolutions.net>
+	 <20110809113620.GA2488@redhat.com>
+	 <1312890237.4109.22.camel@jlt3.sipsolutions.net>
+	 (sfid-20110809_134410_503974_BF250E46)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 09 Aug 2011 13:45:25 +0200
+Message-ID: <1312890325.4109.23.camel@jlt3.sipsolutions.net> (sfid-20110809_134530_731807_FBE4BB9A)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Stanislaw,
+On Tue, 2011-08-09 at 13:43 +0200, Johannes Berg wrote:
 
-thank you for spending your time for this problem!
+> > Yes, but __ieee80211_resume() calls directly ieee80211_reconfig().
+> 
+> Sure. Just trying to make sure I understand where it's coming from. So
+> wiphy_unregister() is still running, before device_del(), but then we
+> get the resume from the core...
+> 
+> Shouldn't we implement this logic you just did in cfg80211 instead?
 
-Am Wed, 24 Aug 2011 11:03:41 +0200
-schrieb Stanislaw Gruszka <sgruszka@redhat.com>:
+Although I guess until wiphy_unregister() returns, drivers must still
+expect callbacks, which clearly mac80211 didn't handle correctly here
+with the timer...
 
-> On Tue, Aug 23, 2011 at 11:07:36AM +0200, Andreas Hartmann wrote:
-> > using rt2800usb with a Linksys WUSB600N v2 (rt3572) crashes the complete
-> > machine (SMP, Core i5, linux 3.0) on unloading the module after using it
-> > for a short period of time:
-> > - 2 times netperf -t TCP_MAERTS -H host
-> > - 2 times netperf -t TCP_STREAM -H host
-> > 
-> > The error message in /var/log/messages is:
-> > 
-> > phy0 -> rt2800_wait_wpdma_ready: Error - WPDMA TX/RX busy, aborting
-> > 
-> > After the crash, you have to hard reset the machine.
-> Did you hibernate machine anytime before the rmmod ?
+johannes
 
-No, there was no suspend / resume done with this module at all.
-
-I think, the problem of this hang is located elsewhere. To get more
-information, I switched on debugging of the rt2x00-driver and did the
-tests again. During the tests, I get tons of these warnings
-in /var/log/messages:
-
-
-Aug 24 13:01:55 pc kernel: [22286.549510] phy0 -> rt2800usb_txdone_entry_check: Warning - TX status report missed for queue 2 entry 36
-Aug 24 13:01:55 pc kernel: [22286.549530] phy0 -> rt2800usb_txdone_entry_check: Warning - TX status report missed for queue 2 entry 37
-Aug 24 13:01:55 pc kernel: [22286.549546] phy0 -> rt2800usb_txdone_entry_check: Warning - TX status report missed for queue 2 entry 39
-Aug 24 13:01:55 pc kernel: [22286.549560] phy0 -> rt2800usb_txdone_entry_check: Warning - TX status report missed for queue 2 entry 40
-Aug 24 13:01:55 pc kernel: [22286.550511] phy0 -> rt2800usb_txdone_entry_check: Warning - TX status report missed for queue 2 entry 42
-Aug 24 13:01:55 pc kernel: [22286.550749] phy0 -> rt2800usb_txdone_entry_check: Warning - TX status report missed for queue 2 entry 44
-Aug 24 13:01:55 pc kernel: [22286.550766] phy0 -> rt2800usb_txdone_entry_check: Warning - TX status report missed for queue 2 entry 46
-Aug 24 13:01:55 pc kernel: [22286.550780] phy0 -> rt2800usb_txdone_entry_check: Warning - TX status report missed for queue 2 entry 47
-Aug 24 13:01:55 pc kernel: [22286.551756] phy0 -> rt2800usb_txdone_entry_check: Warning - TX status report missed for queue 2 entry 48
-Aug 24 13:01:55 pc kernel: [22286.552006] phy0 -> rt2800usb_txdone_entry_check: Warning - TX status report missed for queue 2 entry 50
-Aug 24 13:01:55 pc kernel: [22286.552032] phy0 -> rt2800usb_txdone_entry_check: Warning - TX status report missed for queue 2 entry 52
-
-(about 144/s)
-
-Another entry is:
-
-Aug 24 12:59:46 pc kernel: [22157.608241] phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 0 status timed out, invoke forced tx handler
-
-The measured throughput is:
-
-- to STA (-> where rt2800usb runs) is about 4 MB/s.
-- from STA is about 1 _k_B/s.
-
-The Linksys WUSB600N V2 dongle should have a throughput of about 10 M/s
-in both directions! I think, if the handling of the queues is fixed,
-the problem of the hanging machine will be gone, too!
-
-
-If I should test some patches or if you want need some more information
-- please ask, I'll try to provide them!
-
-
-Kind regards,
-Andreas
