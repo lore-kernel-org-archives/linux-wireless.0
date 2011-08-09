@@ -1,29 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:42565 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756017Ab1H3TEk (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:62252 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751080Ab1HITvb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 15:04:40 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 9E17554029F
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 15:14:02 -0400 (EDT)
-Subject: Compat-wireless release for 2011-08-30 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110830190437.6167840643@repository3.orbit-lab.org> (sfid-20110830_210443_529499_6FC78E5D)
-Date: Tue, 30 Aug 2011 15:04:37 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 9 Aug 2011 15:51:31 -0400
+Received: by yie30 with SMTP id 30so247663yie.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 12:51:31 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH 5/6] ieee80211: add mesh action codes
+Date: Tue,  9 Aug 2011 12:50:17 -0700
+Message-Id: <1312919418-32196-6-git-send-email-thomas@cozybit.com> (sfid-20110809_215135_222247_BB168719)
+In-Reply-To: <1312919418-32196-1-git-send-email-thomas@cozybit.com>
+References: <1312919418-32196-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 9cb9083...722ebe1 akpm-end   -> origin/akpm-end  (forced update)
-   c11a7e2..0f43dd5  akpm-start -> origin/akpm-start
- + fa1de6f...b4b9191 master     -> origin/master  (forced update)
-   c11a7e2..0f43dd5  stable     -> origin/stable
- * [new tag]         next-20110830 -> next-20110830
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- * [new tag]         v3.1-rc4   -> v3.1-rc4
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ include/linux/ieee80211.h |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
 
-compat-wireless code metrics
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 2417b90..311df71 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1305,6 +1305,21 @@ enum ieee80211_self_protected_actioncode {
+ 	WLAN_SP_MGK_ACK = 5,
+ };
+ 
++/* Mesh action codes */
++enum ieee80211_mesh_actioncode {
++	WLAN_MESH_ACTION_LINK_METRIC_REPORT,
++	WLAN_MESH_ACTION_HWMP_PATH_SELECTION,
++	WLAN_MESH_ACTION_GATE_ANNOUNCEMENT,
++	WLAN_MESH_ACTION_CONGESTION_CONTROL_NOTIFICATION,
++	WLAN_MESH_ACTION_MCCA_SETUP_REQUEST,
++	WLAN_MESH_ACTION_MCCA_SETUP_REPLY,
++	WLAN_MESH_ACTION_MCCA_ADVERTISEMENT_REQUEST,
++	WLAN_MESH_ACTION_MCCA_ADVERTISEMENT,
++	WLAN_MESH_ACTION_MCCA_TEARDOWN,
++	WLAN_MESH_ACTION_TBTT_ADJUSTMENT_REQUEST,
++	WLAN_MESH_ACTION_TBTT_ADJUSTMENT_RESPONSE,
++};
++
+ /* Security key length */
+ enum ieee80211_key_len {
+ 	WLAN_KEY_LEN_WEP40 = 5,
+-- 
+1.7.6
 
-    806187 - Total upstream lines of code being pulled
