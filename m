@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37371 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:58193 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752763Ab1H2Mah (ORCPT
+	with ESMTP id S1753674Ab1HIQDv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 08:30:37 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	Edward Lu <shaol@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-Subject: [PATCH 19/20] ath6kl: Do not clear CONNECT bit setting in AP mode for STA disconnect
-Date: Mon, 29 Aug 2011 15:24:00 +0300
-Message-ID: <1314620641-24257-20-git-send-email-jouni@qca.qualcomm.com> (sfid-20110829_143040_539475_0B05BABD)
-In-Reply-To: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
+	Tue, 9 Aug 2011 12:03:51 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
+	<senthilb@qca.qualcomm.com>, <rmanohar@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Subject: [PATCH] ath9k: optimize rate control statistics
+Date: Tue, 9 Aug 2011 21:33:43 +0530
+Message-ID: <1312905823-2878-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110809_180404_378205_3781BF46)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Edward Lu <elu@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Signed-off-by: Edward Lu <elu@qca.qualcomm.com>
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+for the ease of debugging, we display only the rate control statistics
+for currently operating mode and bandwidth
+
+Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: "Balasubramanian, senthilkumar" <senthilb@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath6kl/main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/rc.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index a19caec..69a1b451 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -1284,7 +1284,8 @@ void ath6kl_disconnect_event(struct ath6kl *ar, u8 reason, u8 *bssid,
- 			cfg80211_del_sta(ar->net_dev, bssid, GFP_KERNEL);
- 		}
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index c04a6c3..9e3649a 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1484,7 +1484,7 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
+ 	if (rc->rate_table == NULL)
+ 		return 0;
  
--		clear_bit(CONNECTED, &ar->flag);
-+		if (memcmp(ar->net_dev->dev_addr, bssid, ETH_ALEN) == 0)
-+			clear_bit(CONNECTED, &ar->flag);
- 		return;
- 	}
+-	max = 80 + rc->rate_table->rate_cnt * 1024 + 1;
++	max = 80 + rc->rate_table_size * 1024 + 1;
+ 	buf = kmalloc(max, GFP_KERNEL);
+ 	if (buf == NULL)
+ 		return -ENOMEM;
+@@ -1494,7 +1494,7 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
+ 		       "HT", "MCS", "Rate",
+ 		       "Success", "Retries", "XRetries", "PER");
  
+-	for (i = 0; i < rc->rate_table->rate_cnt; i++) {
++	for (i = 0; i < rc->rate_table_size; i++) {
+ 		u32 ratekbps = rc->rate_table->info[i].ratekbps;
+ 		struct ath_rc_stats *stats = &rc->rcstats[i];
+ 		char mcs[5];
 -- 
-1.7.4.1
+1.7.0.4
 
