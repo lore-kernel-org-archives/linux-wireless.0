@@ -1,370 +1,438 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:36108 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753039Ab1HNKSL (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:34596 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751250Ab1HITv2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 06:18:11 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 5so4060970wwf.1
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:18:11 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 36/40] wl12xx: enable AP advanced functionality
-Date: Sun, 14 Aug 2011 13:17:35 +0300
-Message-Id: <1313317059-16567-37-git-send-email-eliad@wizery.com> (sfid-20110814_121815_909514_8F10E2E7)
-In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
-References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+	Tue, 9 Aug 2011 15:51:28 -0400
+Received: by yie30 with SMTP id 30so247622yie.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 12:51:27 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH 3/6] mac80211: update mesh peering frame codes
+Date: Tue,  9 Aug 2011 12:50:15 -0700
+Message-Id: <1312919418-32196-4-git-send-email-thomas@cozybit.com> (sfid-20110809_215131_287712_68B0A2A6)
+In-Reply-To: <1312919418-32196-1-git-send-email-thomas@cozybit.com>
+References: <1312919418-32196-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Have the mesh peering frames use the self-protected action and reason codes
+specified in 802.11s and defined in ieee80211.h. Remove the local enums.
 
-This adjusts FW TX block allocation for connected stations in PS.
-Firmware congestion is measured in allocated packets instead of blocks.
-
-Allow a link in PS to queue up to 2 packets to the FW.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- drivers/net/wireless/wl12xx/main.c   |   54 +++++++++++++++++-----------------
- drivers/net/wireless/wl12xx/ps.c     |    4 +-
- drivers/net/wireless/wl12xx/tx.c     |   19 +++++-------
- drivers/net/wireless/wl12xx/wl12xx.h |   25 +++++++++-------
- 4 files changed, 51 insertions(+), 51 deletions(-)
+ net/mac80211/mesh_plink.c |  154 +++++++++++++++++++++------------------------
+ 1 files changed, 73 insertions(+), 81 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 7be7fc6..3d323b8 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -752,64 +752,73 @@ static int wl1271_plt_init(struct wl1271 *wl)
- 	kfree(wl->target_mem_map);
- 	wl->target_mem_map = NULL;
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index d582059..a598a08 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -25,29 +25,12 @@
+ #define mod_plink_timer(s, t) (mod_timer(&s->plink_timer, \
+ 				jiffies + HZ * t / 1000))
  
- 	return ret;
- }
- 
--#if 0
--static void wl1271_irq_ps_regulate_link(struct wl1271 *wl, u8 hlid, u8 tx_blks)
-+static void wl12xx_irq_ps_regulate_link(struct wl1271 *wl, u8 hlid, u8 tx_pkts)
- {
- 	bool fw_ps;
- 
- 	/* only regulate station links */
- 	if (hlid < WL1271_AP_STA_HLID_START)
- 		return;
- 
- 	fw_ps = test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
- 
- 	/*
- 	 * Wake up from high level PS if the STA is asleep with too little
--	 * blocks in FW or if the STA is awake.
-+	 * packets in FW or if the STA is awake.
- 	 */
--	if (!fw_ps || tx_blks < WL1271_PS_STA_MAX_BLOCKS)
-+	if (!fw_ps || tx_pkts < WL1271_PS_STA_MAX_PACKETS)
- 		wl1271_ps_link_end(wl, hlid);
- 
- 	/* Start high-level PS if the STA is asleep with enough blocks in FW */
--	else if (fw_ps && tx_blks >= WL1271_PS_STA_MAX_BLOCKS)
-+	else if (fw_ps && tx_pkts >= WL1271_PS_STA_MAX_PACKETS)
- 		wl1271_ps_link_start(wl, hlid, true);
- }
- 
--static void wl1271_irq_update_links_status(struct wl1271 *wl,
--				       struct wl1271_fw_ap_status *status)
-+bool wl1271_is_active_sta(struct wl1271 *wl, u8 hlid)
-+{
-+	int id = hlid - WL1271_AP_STA_HLID_START;
-+	return test_bit(id, wl->ap_hlid_map);
-+}
-+
-+static void wl12xx_irq_update_links_status(struct wl1271 *wl,
-+					   struct wl12xx_fw_status *status)
- {
- 	u32 cur_fw_ps_map;
--	u8 hlid;
-+	u8 hlid, cnt;
-+
-+	/* TODO: also use link_fast_bitmap here */
- 
- 	cur_fw_ps_map = le32_to_cpu(status->link_ps_bitmap);
- 	if (wl->ap_fw_ps_map != cur_fw_ps_map) {
- 		wl1271_debug(DEBUG_PSM,
- 			     "link ps prev 0x%x cur 0x%x changed 0x%x",
- 			     wl->ap_fw_ps_map, cur_fw_ps_map,
- 			     wl->ap_fw_ps_map ^ cur_fw_ps_map);
- 
- 		wl->ap_fw_ps_map = cur_fw_ps_map;
- 	}
- 
- 	for (hlid = WL1271_AP_STA_HLID_START; hlid < AP_MAX_LINKS; hlid++) {
--		u8 cnt = status->tx_lnk_free_blks[hlid] -
--			wl->links[hlid].prev_freed_blks;
-+		if (!wl1271_is_active_sta(wl, hlid))
-+			continue;
- 
--		wl->links[hlid].prev_freed_blks =
--			status->tx_lnk_free_blks[hlid];
--		wl->links[hlid].allocated_blks -= cnt;
-+		cnt = status->tx_lnk_free_pkts[hlid] -
-+		      wl->links[hlid].prev_freed_pkts;
- 
--		wl1271_irq_ps_regulate_link(wl, hlid,
--					    wl->links[hlid].allocated_blks);
-+		wl->links[hlid].prev_freed_pkts =
-+			status->tx_lnk_free_pkts[hlid];
-+		wl->links[hlid].allocated_pkts -= cnt;
-+
-+		wl12xx_irq_ps_regulate_link(wl, hlid,
-+					    wl->links[hlid].allocated_pkts);
- 	}
- }
--#endif
- 
- static void wl12xx_fw_status(struct wl1271 *wl,
- 			     struct wl12xx_fw_status *status)
- {
- 	struct timespec ts;
- 	u32 old_tx_blk_count = wl->tx_blocks_available;
-@@ -862,17 +871,14 @@ static void wl12xx_fw_status(struct wl1271 *wl,
- 
- 	/* if more blocks are available now, tx work can be scheduled */
- 	if (wl->tx_blocks_available > old_tx_blk_count)
- 		clear_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags);
- 
- 	/* for AP update num of allocated TX blocks per link and ps status */
--	if (wl->bss_type == BSS_TYPE_AP_BSS) {
--#if 0
--		wl1271_irq_update_links_status(wl, status);
--#endif
--	}
-+	if (wl->bss_type == BSS_TYPE_AP_BSS)
-+		wl12xx_irq_update_links_status(wl, status);
- 
- 	/* update the host-chipset time offset */
- 	getnstimeofday(&ts);
- 	wl->time_offset = (timespec_to_ns(&ts) >> 10) -
- 		(s64)le32_to_cpu(status->fw_localtime);
- }
-@@ -3708,18 +3714,12 @@ static void wl1271_free_sta(struct wl1271 *wl, u8 hlid)
- 	wl->links[hlid].ba_bitmap = 0;
- 	wl1271_tx_reset_link_queues(wl, hlid);
- 	__clear_bit(hlid, &wl->ap_ps_map);
- 	__clear_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
- }
- 
--bool wl1271_is_active_sta(struct wl1271 *wl, u8 hlid)
--{
--	int id = hlid - WL1271_AP_STA_HLID_START;
--	return test_bit(id, wl->ap_hlid_map);
--}
+-/* Peer link cancel reasons, all subject to ANA approval */
+-#define MESH_LINK_CANCELLED			2
+-#define MESH_MAX_NEIGHBORS			3
+-#define MESH_CAPABILITY_POLICY_VIOLATION	4
+-#define MESH_CLOSE_RCVD				5
+-#define MESH_MAX_RETRIES			6
+-#define MESH_CONFIRM_TIMEOUT			7
+-#define MESH_SECURITY_ROLE_NEGOTIATION_DIFFERS	8
+-#define MESH_SECURITY_AUTHENTICATION_IMPOSSIBLE	9
+-#define MESH_SECURITY_FAILED_VERIFICATION	10
 -
- static int wl1271_op_sta_add(struct ieee80211_hw *hw,
- 			     struct ieee80211_vif *vif,
- 			     struct ieee80211_sta *sta)
- {
- 	struct wl1271 *wl = hw->priv;
- 	int ret = 0;
-diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
-index 3548377..4b720b1 100644
---- a/drivers/net/wireless/wl12xx/ps.c
-+++ b/drivers/net/wireless/wl12xx/ps.c
-@@ -223,14 +223,14 @@ void wl1271_ps_link_start(struct wl1271 *wl, u8 hlid, bool clean_queues)
- {
- 	struct ieee80211_sta *sta;
+ #define dot11MeshMaxRetries(s) (s->u.mesh.mshcfg.dot11MeshMaxRetries)
+ #define dot11MeshRetryTimeout(s) (s->u.mesh.mshcfg.dot11MeshRetryTimeout)
+ #define dot11MeshConfirmTimeout(s) (s->u.mesh.mshcfg.dot11MeshConfirmTimeout)
+ #define dot11MeshHoldingTimeout(s) (s->u.mesh.mshcfg.dot11MeshHoldingTimeout)
+ #define dot11MeshMaxPeerLinks(s) (s->u.mesh.mshcfg.dot11MeshMaxPeerLinks)
  
- 	if (test_bit(hlid, &wl->ap_ps_map))
+-enum plink_frame_type {
+-	PLINK_OPEN = 1,
+-	PLINK_CONFIRM,
+-	PLINK_CLOSE
+-};
+-
+ enum plink_event {
+ 	PLINK_UNDEFINED,
+ 	OPN_ACPT,
+@@ -157,8 +140,8 @@ void mesh_plink_deactivate(struct sta_info *sta)
+ }
+ 
+ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+-		enum plink_frame_type action, u8 *da, __le16 llid, __le16 plid,
+-		__le16 reason) {
++		enum ieee80211_self_protected_actioncode action,
++		u8 *da, __le16 llid, __le16 plid, __le16 reason) {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400 +
+ 			sdata->u.mesh.ie_len);
+@@ -185,11 +168,11 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 	mgmt->u.action.category = WLAN_CATEGORY_MESH_ACTION;
+ 	mgmt->u.action.u.plink_action.action_code = action;
+ 
+-	if (action == PLINK_CLOSE)
++	if (action == WLAN_SP_MESH_PEERING_CLOSE)
+ 		mgmt->u.action.u.plink_action.aux = reason;
+ 	else {
+ 		mgmt->u.action.u.plink_action.aux = cpu_to_le16(0x0);
+-		if (action == PLINK_CONFIRM) {
++		if (action == WLAN_SP_MESH_PEERING_CONFIRM) {
+ 			pos = skb_put(skb, 4);
+ 			/* two-byte status code followed by two-byte AID */
+ 			memset(pos, 0, 2);
+@@ -205,14 +188,14 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* Add Peer Link Management element */
+ 	switch (action) {
+-	case PLINK_OPEN:
++	case WLAN_SP_MESH_PEERING_OPEN:
+ 		ie_len = 6;
+ 		break;
+-	case PLINK_CONFIRM:
++	case WLAN_SP_MESH_PEERING_CONFIRM:
+ 		ie_len = 8;
+ 		include_plid = true;
+ 		break;
+-	case PLINK_CLOSE:
++	case WLAN_SP_MESH_PEERING_CLOSE:
+ 	default:
+ 		if (!plid)
+ 			ie_len = 8;
+@@ -233,7 +216,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 		pos += 2;
+ 		memcpy(pos, &plid, 2);
+ 	}
+-	if (action == PLINK_CLOSE) {
++	if (action == WLAN_SP_MESH_PEERING_CLOSE) {
+ 		pos += 2;
+ 		memcpy(pos, &reason, 2);
+ 	}
+@@ -327,21 +310,21 @@ static void mesh_plink_timer(unsigned long data)
+ 			++sta->plink_retries;
+ 			mod_plink_timer(sta, sta->plink_timeout);
+ 			spin_unlock_bh(&sta->lock);
+-			mesh_plink_frame_tx(sdata, PLINK_OPEN, sta->sta.addr, llid,
+-					    0, 0);
++			mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_OPEN,
++					    sta->sta.addr, llid, 0, 0);
+ 			break;
+ 		}
+-		reason = cpu_to_le16(MESH_MAX_RETRIES);
++		reason = cpu_to_le16(WLAN_REASON_MESH_MAX_RETRIES);
+ 		/* fall through on else */
+ 	case NL80211_PLINK_CNF_RCVD:
+ 		/* confirm timer */
+ 		if (!reason)
+-			reason = cpu_to_le16(MESH_CONFIRM_TIMEOUT);
++			reason = cpu_to_le16(WLAN_REASON_MESH_CONFIRM_TIMEOUT);
+ 		sta->plink_state = NL80211_PLINK_HOLDING;
+ 		mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata));
+ 		spin_unlock_bh(&sta->lock);
+-		mesh_plink_frame_tx(sdata, PLINK_CLOSE, sta->sta.addr, llid, plid,
+-				    reason);
++		mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
++				    sta->sta.addr, llid, plid, reason);
+ 		break;
+ 	case NL80211_PLINK_HOLDING:
+ 		/* holding timer */
+@@ -401,7 +384,7 @@ int mesh_plink_open(struct sta_info *sta)
+ 	mpl_dbg("Mesh plink: starting establishment with %pM\n",
+ 		sta->sta.addr);
+ 
+-	return mesh_plink_frame_tx(sdata, PLINK_OPEN,
++	return mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_OPEN,
+ 				   sta->sta.addr, llid, 0, 0);
+ }
+ 
+@@ -427,7 +410,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 	struct ieee802_11_elems elems;
+ 	struct sta_info *sta;
+ 	enum plink_event event;
+-	enum plink_frame_type ftype;
++	enum ieee80211_self_protected_actioncode ftype;
+ 	size_t baselen;
+ 	bool deactivated, matches_local = true;
+ 	u8 ie_len;
+@@ -456,7 +439,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 
+ 	baseaddr = mgmt->u.action.u.plink_action.variable;
+ 	baselen = (u8 *) mgmt->u.action.u.plink_action.variable - (u8 *) mgmt;
+-	if (mgmt->u.action.u.plink_action.action_code == PLINK_CONFIRM) {
++	if (mgmt->u.action.u.plink_action.action_code == WLAN_SP_MESH_PEERING_CONFIRM) {
+ 		baseaddr += 4;
+ 		baselen += 4;
+ 	}
+@@ -473,15 +456,15 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 
+ 	ftype = mgmt->u.action.u.plink_action.action_code;
+ 	ie_len = elems.peer_link_len;
+-	if ((ftype == PLINK_OPEN && ie_len != 6) ||
+-	    (ftype == PLINK_CONFIRM && ie_len != 8) ||
+-	    (ftype == PLINK_CLOSE && ie_len != 8 && ie_len != 10)) {
++	if ((ftype == WLAN_SP_MESH_PEERING_OPEN && ie_len != 6) ||
++	    (ftype == WLAN_SP_MESH_PEERING_CONFIRM && ie_len != 8) ||
++	    (ftype == WLAN_SP_MESH_PEERING_CLOSE && ie_len != 8 && ie_len != 10)) {
+ 		mpl_dbg("Mesh plink: incorrect plink ie length %d %d\n",
+ 		    ftype, ie_len);
  		return;
+ 	}
  
--	wl1271_debug(DEBUG_PSM, "start mac80211 PSM on hlid %d blks %d "
--		     "clean_queues %d", hlid, wl->links[hlid].allocated_blks,
-+	wl1271_debug(DEBUG_PSM, "start mac80211 PSM on hlid %d pkts %d "
-+		     "clean_queues %d", hlid, wl->links[hlid].allocated_pkts,
- 		     clean_queues);
+-	if (ftype != PLINK_CLOSE && (!elems.mesh_id || !elems.mesh_config)) {
++	if (ftype != WLAN_SP_MESH_PEERING_CLOSE && (!elems.mesh_id || !elems.mesh_config)) {
+ 		mpl_dbg("Mesh plink: missing necessary ie\n");
+ 		return;
+ 	}
+@@ -489,13 +472,14 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 	 * from the point of view of this host.
+ 	 */
+ 	memcpy(&plid, PLINK_GET_LLID(elems.peer_link), 2);
+-	if (ftype == PLINK_CONFIRM || (ftype == PLINK_CLOSE && ie_len == 10))
++	if (ftype == WLAN_SP_MESH_PEERING_CONFIRM ||
++	    (ftype == WLAN_SP_MESH_PEERING_CLOSE && ie_len == 10))
+ 		memcpy(&llid, PLINK_GET_PLID(elems.peer_link), 2);
  
  	rcu_read_lock();
- 	sta = ieee80211_find_sta(wl->vif, wl->links[hlid].addr);
- 	if (!sta) {
- 		wl1271_error("could not find sta %pM for starting ps",
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index ccbcd0a..0f15785 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -120,33 +120,31 @@ static void wl1271_tx_ap_update_inconnection_sta(struct wl1271 *wl,
- 	hdr = (struct ieee80211_hdr *)(skb->data +
- 				       sizeof(struct wl1271_tx_hw_descr));
- 	if (ieee80211_is_auth(hdr->frame_control))
- 		wl1271_acx_set_inconnection_sta(wl, hdr->addr1);
- }
  
--#if 0
- static void wl1271_tx_regulate_link(struct wl1271 *wl, u8 hlid)
- {
- 	bool fw_ps;
--	u8 tx_blks;
-+	u8 tx_pkts;
- 
- 	/* only regulate station links */
- 	if (hlid < WL1271_AP_STA_HLID_START)
+ 	sta = sta_info_get(sdata, mgmt->sa);
+-	if (!sta && ftype != PLINK_OPEN) {
++	if (!sta && ftype != WLAN_SP_MESH_PEERING_OPEN) {
+ 		mpl_dbg("Mesh plink: cls or cnf from unknown peer\n");
+ 		rcu_read_unlock();
  		return;
+@@ -514,30 +498,30 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
  
- 	fw_ps = test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
--	tx_blks = wl->links[hlid].allocated_blks;
-+	tx_pkts = wl->links[hlid].allocated_pkts;
- 
- 	/*
- 	 * if in FW PS and there is enough data in FW we can put the link
- 	 * into high-level PS and clean out its TX queues.
- 	 */
--	if (fw_ps && tx_blks >= WL1271_PS_STA_MAX_BLOCKS)
-+	if (fw_ps && tx_pkts >= WL1271_PS_STA_MAX_PACKETS)
- 		wl1271_ps_link_start(wl, hlid, true);
- }
--#endif
- 
- static bool wl12xx_is_dummy_packet(struct wl1271 *wl, struct sk_buff *skb)
- {
- 	return wl->dummy_packet == skb;
- }
- 
-@@ -242,14 +240,15 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
- 		wl->tx_blocks_available -= total_blocks;
- 		wl->tx_allocated_blocks += total_blocks;
- 
- 		ac = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
- 		wl->tx_allocated_pkts[ac]++;
- 
--		if (wl->bss_type == BSS_TYPE_AP_BSS)
--			wl->links[hlid].allocated_blks += total_blocks;
-+		if (wl->bss_type == BSS_TYPE_AP_BSS &&
-+		    hlid >= WL1271_AP_STA_HLID_START)
-+			wl->links[hlid].allocated_pkts++;
- 
- 		ret = 0;
- 
- 		wl1271_debug(DEBUG_TX,
- 			     "tx_allocate: size: %d, blocks: %d, id: %d",
- 			     total_len, total_blocks, id);
-@@ -411,15 +410,13 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
- 		return ret;
- 
- 	wl1271_tx_fill_hdr(wl, skb, extra, info, hlid);
- 
- 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
- 		wl1271_tx_ap_update_inconnection_sta(wl, skb);
--#if 0
- 		wl1271_tx_regulate_link(wl, hlid);
--#endif
- 	} else {
- 		wl1271_tx_update_filters(wl, skb);
+ 	/* Now we will figure out the appropriate event... */
+ 	event = PLINK_UNDEFINED;
+-	if (ftype != PLINK_CLOSE && (!mesh_matches_local(&elems, sdata))) {
++	if (ftype != WLAN_SP_MESH_PEERING_CLOSE &&
++	    (!mesh_matches_local(&elems, sdata))) {
+ 		matches_local = false;
+ 		switch (ftype) {
+-		case PLINK_OPEN:
++		case WLAN_SP_MESH_PEERING_OPEN:
+ 			event = OPN_RJCT;
+ 			break;
+-		case PLINK_CONFIRM:
++		case WLAN_SP_MESH_PEERING_CONFIRM:
+ 			event = CNF_RJCT;
+ 			break;
+-		case PLINK_CLOSE:
+-			/* avoid warning */
++		default:
+ 			break;
+ 		}
  	}
  
- 	/*
- 	 * The length of each packet is stored in terms of
-@@ -885,14 +882,14 @@ void wl1271_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
- 	struct ieee80211_tx_info *info;
+ 	if (!sta && !matches_local) {
+ 		rcu_read_unlock();
+-		reason = cpu_to_le16(MESH_CAPABILITY_POLICY_VIOLATION);
++		reason = cpu_to_le16(WLAN_REASON_MESH_CONFIG);
+ 		llid = 0;
+-		mesh_plink_frame_tx(sdata, PLINK_CLOSE, mgmt->sa, llid,
+-				    plid, reason);
++		mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
++				    mgmt->sa, llid, plid, reason);
+ 		return;
+ 	} else if (!sta) {
+-		/* ftype == PLINK_OPEN */
++		/* ftype == WLAN_SP_MESH_PEERING_OPEN */
+ 		u32 rates;
  
- 	/* TX failure */
- 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
- 		for (i = 0; i < AP_MAX_LINKS; i++) {
- 			wl1271_tx_reset_link_queues(wl, i);
--			wl->links[i].allocated_blks = 0;
--			wl->links[i].prev_freed_blks = 0;
-+			wl->links[i].allocated_pkts = 0;
-+			wl->links[i].prev_freed_pkts = 0;
- 		}
+ 		rcu_read_unlock();
+@@ -562,21 +546,21 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 	} else if (matches_local) {
+ 		spin_lock_bh(&sta->lock);
+ 		switch (ftype) {
+-		case PLINK_OPEN:
++		case WLAN_SP_MESH_PEERING_OPEN:
+ 			if (!mesh_plink_free_count(sdata) ||
+ 			    (sta->plid && sta->plid != plid))
+ 				event = OPN_IGNR;
+ 			else
+ 				event = OPN_ACPT;
+ 			break;
+-		case PLINK_CONFIRM:
++		case WLAN_SP_MESH_PEERING_CONFIRM:
+ 			if (!mesh_plink_free_count(sdata) ||
+ 			    (sta->llid != llid || sta->plid != plid))
+ 				event = CNF_IGNR;
+ 			else
+ 				event = CNF_ACPT;
+ 			break;
+-		case PLINK_CLOSE:
++		case WLAN_SP_MESH_PEERING_CLOSE:
+ 			if (sta->plink_state == NL80211_PLINK_ESTAB)
+ 				/* Do not check for llid or plid. This does not
+ 				 * follow the standard but since multiple plinks
+@@ -625,10 +609,12 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			sta->llid = llid;
+ 			mesh_plink_timer_set(sta, dot11MeshRetryTimeout(sdata));
+ 			spin_unlock_bh(&sta->lock);
+-			mesh_plink_frame_tx(sdata, PLINK_OPEN, sta->sta.addr, llid,
+-					    0, 0);
+-			mesh_plink_frame_tx(sdata, PLINK_CONFIRM, sta->sta.addr,
+-					    llid, plid, 0);
++			mesh_plink_frame_tx(sdata,
++					    WLAN_SP_MESH_PEERING_OPEN,
++					    sta->sta.addr, llid, 0, 0);
++			mesh_plink_frame_tx(sdata,
++					    WLAN_SP_MESH_PEERING_CONFIRM,
++					    sta->sta.addr, llid, plid, 0);
+ 			break;
+ 		default:
+ 			spin_unlock_bh(&sta->lock);
+@@ -640,10 +626,10 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		switch (event) {
+ 		case OPN_RJCT:
+ 		case CNF_RJCT:
+-			reason = cpu_to_le16(MESH_CAPABILITY_POLICY_VIOLATION);
++			reason = cpu_to_le16(WLAN_REASON_MESH_CONFIG);
+ 		case CLS_ACPT:
+ 			if (!reason)
+-				reason = cpu_to_le16(MESH_CLOSE_RCVD);
++				reason = cpu_to_le16(WLAN_REASON_MESH_CLOSE);
+ 			sta->reason = reason;
+ 			sta->plink_state = NL80211_PLINK_HOLDING;
+ 			if (!mod_plink_timer(sta,
+@@ -652,8 +638,9 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
  
- 		wl->last_tx_hlid = 0;
- 	} else {
- 		for (i = 0; i < NUM_TX_QUEUES; i++) {
- 			while ((skb = skb_dequeue(&wl->tx_queue[i]))) {
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 6118df5..61a7c21 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -149,21 +149,20 @@ extern u32 wl12xx_debug_level;
-  * TODO: we currently don't support multirole. remove
-  * this constant from the code when we do.
-  */
- #define WL1271_AP_STA_HLID_START   3
+ 			llid = sta->llid;
+ 			spin_unlock_bh(&sta->lock);
+-			mesh_plink_frame_tx(sdata, PLINK_CLOSE, sta->sta.addr, llid,
+-					    plid, reason);
++			mesh_plink_frame_tx(sdata,
++					    WLAN_SP_MESH_PEERING_CLOSE,
++					    sta->sta.addr, llid, plid, reason);
+ 			break;
+ 		case OPN_ACPT:
+ 			/* retry timer is left untouched */
+@@ -661,8 +648,9 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			sta->plid = plid;
+ 			llid = sta->llid;
+ 			spin_unlock_bh(&sta->lock);
+-			mesh_plink_frame_tx(sdata, PLINK_CONFIRM, sta->sta.addr, llid,
+-					    plid, 0);
++			mesh_plink_frame_tx(sdata,
++					    WLAN_SP_MESH_PEERING_CONFIRM,
++					    sta->sta.addr, llid, plid, 0);
+ 			break;
+ 		case CNF_ACPT:
+ 			sta->plink_state = NL80211_PLINK_CNF_RCVD;
+@@ -682,10 +670,10 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		switch (event) {
+ 		case OPN_RJCT:
+ 		case CNF_RJCT:
+-			reason = cpu_to_le16(MESH_CAPABILITY_POLICY_VIOLATION);
++			reason = cpu_to_le16(WLAN_REASON_MESH_CONFIG);
+ 		case CLS_ACPT:
+ 			if (!reason)
+-				reason = cpu_to_le16(MESH_CLOSE_RCVD);
++				reason = cpu_to_le16(WLAN_REASON_MESH_CLOSE);
+ 			sta->reason = reason;
+ 			sta->plink_state = NL80211_PLINK_HOLDING;
+ 			if (!mod_plink_timer(sta,
+@@ -694,14 +682,15 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
  
- /*
-- * When in AP-mode, we allow (at least) this number of mem-blocks
-+ * When in AP-mode, we allow (at least) this number of packets
-  * to be transmitted to FW for a STA in PS-mode. Only when packets are
-  * present in the FW buffers it will wake the sleeping STA. We want to put
-  * enough packets for the driver to transmit all of its buffered data before
-- * the STA goes to sleep again. But we don't want to take too much mem-blocks
-+ * the STA goes to sleep again. But we don't want to take too much memory
-  * as it might hurt the throughput of active STAs.
-- * The number of blocks (18) is enough for 2 large packets.
-  */
--#define WL1271_PS_STA_MAX_BLOCKS  (2 * 9)
-+#define WL1271_PS_STA_MAX_PACKETS  2
+ 			llid = sta->llid;
+ 			spin_unlock_bh(&sta->lock);
+-			mesh_plink_frame_tx(sdata, PLINK_CLOSE, sta->sta.addr, llid,
+-					    plid, reason);
++			mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
++					    sta->sta.addr, llid, plid, reason);
+ 			break;
+ 		case OPN_ACPT:
+ 			llid = sta->llid;
+ 			spin_unlock_bh(&sta->lock);
+-			mesh_plink_frame_tx(sdata, PLINK_CONFIRM, sta->sta.addr, llid,
+-					    plid, 0);
++			mesh_plink_frame_tx(sdata,
++					    WLAN_SP_MESH_PEERING_CONFIRM,
++					    sta->sta.addr, llid, plid, 0);
+ 			break;
+ 		case CNF_ACPT:
+ 			del_timer(&sta->plink_timer);
+@@ -722,10 +711,10 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		switch (event) {
+ 		case OPN_RJCT:
+ 		case CNF_RJCT:
+-			reason = cpu_to_le16(MESH_CAPABILITY_POLICY_VIOLATION);
++			reason = cpu_to_le16(WLAN_REASON_MESH_CONFIG);
+ 		case CLS_ACPT:
+ 			if (!reason)
+-				reason = cpu_to_le16(MESH_CLOSE_RCVD);
++				reason = cpu_to_le16(WLAN_REASON_MESH_CLOSE);
+ 			sta->reason = reason;
+ 			sta->plink_state = NL80211_PLINK_HOLDING;
+ 			if (!mod_plink_timer(sta,
+@@ -734,8 +723,9 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
  
- #define WL1271_AP_BSS_INDEX        0
- #define WL1271_AP_DEF_BEACON_EXP   20
- 
- #define ACX_TX_DESCRIPTORS         16
- 
-@@ -234,14 +233,18 @@ struct wl1271_stats {
- 
- #define NUM_TX_QUEUES              4
- #define NUM_RX_PKT_DESC            8
- 
- #define AP_MAX_STATIONS            5
- 
--/* Broadcast and Global links + links to stations */
--#define AP_MAX_LINKS               (AP_MAX_STATIONS + 2)
-+/* Broadcast and Global links + system link + links to stations */
-+/*
-+ * TODO: when WL1271_AP_STA_HLID_START is no longer constant, change all
-+ * the places that use this.
-+ */
-+#define AP_MAX_LINKS               (AP_MAX_STATIONS + 3)
- 
- /* FW status registers */
- struct wl12xx_fw_status {
- 	__le32 intr;
- 	u8  fw_rx_counter;
- 	u8  drv_rx_counter;
-@@ -268,14 +271,14 @@ struct wl12xx_fw_status {
- 	/* Size (in Memory Blocks) of TX pool */
- 	__le32 tx_total;
- 
- 	/* Cumulative counter of released packets per AC */
- 	u8 tx_released_pkts[NUM_TX_QUEUES];
- 
--	/* Cumulative counter of freed MBs per HLID */
--	u8 tx_lnk_free_blks[WL12XX_MAX_LINKS];
-+	/* Cumulative counter of freed packets per HLID */
-+	u8 tx_lnk_free_pkts[WL12XX_MAX_LINKS];
- 
- 	/* Cumulative counter of released Voice memory blocks */
- 	u8 tx_voice_released_blks;
- 	u8 padding_1[7];
- 	__le32 log_start_addr;
- } __packed;
-@@ -348,15 +351,15 @@ enum wl12xx_flags {
- };
- 
- struct wl1271_link {
- 	/* AP-mode - TX queue per AC in link */
- 	struct sk_buff_head tx_queue[NUM_TX_QUEUES];
- 
--	/* accounting for allocated / available TX blocks in FW */
--	u8 allocated_blks;
--	u8 prev_freed_blks;
-+	/* accounting for allocated / freed packets in FW */
-+	u8 allocated_pkts;
-+	u8 prev_freed_pkts;
- 
- 	u8 addr[ETH_ALEN];
- 
- 	/* bitmap of TIDs where RX BA sessions are active for this link */
- 	u8 ba_bitmap;
- };
+ 			llid = sta->llid;
+ 			spin_unlock_bh(&sta->lock);
+-			mesh_plink_frame_tx(sdata, PLINK_CLOSE, sta->sta.addr, llid,
+-					    plid, reason);
++			mesh_plink_frame_tx(sdata,
++					    WLAN_SP_MESH_PEERING_CLOSE,
++					    sta->sta.addr, llid, plid, reason);
+ 			break;
+ 		case OPN_ACPT:
+ 			del_timer(&sta->plink_timer);
+@@ -745,8 +735,9 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+ 			mpl_dbg("Mesh plink with %pM ESTABLISHED\n",
+ 				sta->sta.addr);
+-			mesh_plink_frame_tx(sdata, PLINK_CONFIRM, sta->sta.addr, llid,
+-					    plid, 0);
++			mesh_plink_frame_tx(sdata,
++					    WLAN_SP_MESH_PEERING_CONFIRM,
++					    sta->sta.addr, llid, plid, 0);
+ 			break;
+ 		default:
+ 			spin_unlock_bh(&sta->lock);
+@@ -757,7 +748,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 	case NL80211_PLINK_ESTAB:
+ 		switch (event) {
+ 		case CLS_ACPT:
+-			reason = cpu_to_le16(MESH_CLOSE_RCVD);
++			reason = cpu_to_le16(WLAN_REASON_MESH_CLOSE);
+ 			sta->reason = reason;
+ 			deactivated = __mesh_plink_deactivate(sta);
+ 			sta->plink_state = NL80211_PLINK_HOLDING;
+@@ -766,14 +757,15 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			spin_unlock_bh(&sta->lock);
+ 			if (deactivated)
+ 				ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+-			mesh_plink_frame_tx(sdata, PLINK_CLOSE, sta->sta.addr, llid,
+-					    plid, reason);
++			mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
++					    sta->sta.addr, llid, plid, reason);
+ 			break;
+ 		case OPN_ACPT:
+ 			llid = sta->llid;
+ 			spin_unlock_bh(&sta->lock);
+-			mesh_plink_frame_tx(sdata, PLINK_CONFIRM, sta->sta.addr, llid,
+-					    plid, 0);
++			mesh_plink_frame_tx(sdata,
++					    WLAN_SP_MESH_PEERING_CONFIRM,
++					    sta->sta.addr, llid, plid, 0);
+ 			break;
+ 		default:
+ 			spin_unlock_bh(&sta->lock);
+@@ -795,8 +787,8 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			llid = sta->llid;
+ 			reason = sta->reason;
+ 			spin_unlock_bh(&sta->lock);
+-			mesh_plink_frame_tx(sdata, PLINK_CLOSE, sta->sta.addr,
+-					    llid, plid, reason);
++			mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
++					    sta->sta.addr, llid, plid, reason);
+ 			break;
+ 		default:
+ 			spin_unlock_bh(&sta->lock);
 -- 
-1.7.6.401.g6a319
+1.7.6
 
