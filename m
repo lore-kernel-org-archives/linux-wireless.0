@@ -1,50 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1675 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751525Ab1HHN7W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:22 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend Van Spriel" <arend@LB-BUN-53.bun.broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 01/82] staging: brcm80211: fix compile error on
- non-x86 archs since 3.0 kernel
-Date: Mon, 8 Aug 2011 15:57:45 +0200
-Message-ID: <1312811946-16713-2-git-send-email-arend@broadcom.com> (sfid-20110808_155927_205501_49E08466)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:60288 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752641Ab1HIL7b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2011 07:59:31 -0400
+Received: by eyg24 with SMTP id 24so3485551eyg.16
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 04:59:28 -0700 (PDT)
+Subject: Re: [PATCH 02/40] wl12xx: Use a single fw for both STA and AP roles
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1312881233-9366-3-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	 <1312881233-9366-3-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 09 Aug 2011 14:59:25 +0300
+Message-ID: <1312891165.2407.163.camel@cumari> (sfid-20110809_135934_548130_589A20EF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend Van Spriel <arend@LB-BUN-53.bun.broadcom.com>
+On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
+> From: Arik Nemtsov <arik@wizery.com>
+> 
+> The new wl12xx fw supports both STA and AP roles.
 
-Since the arrival of kernel version 3.0 in the staging tree it
-turns out compile error occurs for sparc64, powerpc, and arm
-platforms. This patch fixes that issue.
+Again, let's be more explicit here about the firmware versions.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/types.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/types.h b/drivers/staging/brcm80211/brcmsmac/types.h
-index bbf2189..823b5e4 100644
---- a/drivers/staging/brcm80211/brcmsmac/types.h
-+++ b/drivers/staging/brcm80211/brcmsmac/types.h
-@@ -18,6 +18,7 @@
- #define _BRCM_TYPES_H_
- 
- #include <linux/types.h>
-+#include <linux/io.h>
- 
- /* Bus types */
- #define	SI_BUS			0	/* SOC Interconnect */
+> diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+> index 6c080e9..21c5f95 100644
+> --- a/drivers/net/wireless/wl12xx/wl12xx.h
+> +++ b/drivers/net/wireless/wl12xx/wl12xx.h
+> @@ -127,16 +127,14 @@ extern u32 wl12xx_debug_level;
+>  				  CFG_RX_MGMT_EN | CFG_RX_DATA_EN | \
+>  				  CFG_RX_CTL_EN | CFG_RX_AUTH_EN | \
+>  				  CFG_RX_ASSOC_EN)
+>  
+> 
+> 
+> -#define WL1271_FW_NAME "ti-connectivity/wl1271-fw-2.bin"
+> -#define WL128X_FW_NAME "ti-connectivity/wl128x-fw.bin"
+> -#define WL127X_AP_FW_NAME "ti-connectivity/wl1271-fw-ap.bin"
+> -#define WL128X_AP_FW_NAME "ti-connectivity/wl128x-fw-ap.bin"
+> +#define WL1271_FW_NAME "ti-connectivity/wl1271-fw-3.bin"
+> +#define WL128X_FW_NAME "ti-connectivity/wl128x-fw-3.bin"
+
+Should we use this opportunity to change the macro to WL127X_FW_NAME and
+the file name to wl127x-fw.bin?
+
+
 -- 
-1.7.4.1
-
+Cheers,
+Luca.
 
