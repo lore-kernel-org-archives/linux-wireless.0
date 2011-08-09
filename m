@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3729 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754504Ab1HVXSC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 19:18:02 -0400
-Date: Mon, 22 Aug 2011 16:17:52 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: "Tomasz Figa" <tomasz.figa@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>,
-	"Howard Harte" <hharte@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: Re: BCM4325 support in brcm80211 or newer versions of bcm4329
- driver
-Message-ID: <20110822231752.GU2250@broadcom.com> (sfid-20110823_011808_414185_52EA6610)
-References: <1514181.3grperja2F@flatron>
- <20110822221352.GJ2250@broadcom.com> <1555247.YGCuatTnBA@flatron>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:35388 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751652Ab1HIScR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2011 14:32:17 -0400
+Received: by qwk3 with SMTP id 3so150550qwk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 11:32:16 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1555247.YGCuatTnBA@flatron>
-Content-Type: text/plain;
- charset=us-ascii
+In-Reply-To: <1312914178-9601-1-git-send-email-senthilb@qca.qualcomm.com>
+References: <1312914178-9601-1-git-send-email-senthilb@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 9 Aug 2011 11:31:56 -0700
+Message-ID: <CAB=NE6Uzp4M9SNgti9hpob=Q49cJTwhuG5qnY3vgg9Mqjb-OCA@mail.gmail.com> (sfid-20110809_203222_018871_4B4C4FFE)
+Subject: Re: [PATCH] ath9k_hw: Fix STA (AR9485) bringup issue due to incorrect
+ MAC address
+To: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Paul Stewart <pstew@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 22, 2011 at 04:02:40PM -0700, Tomasz Figa wrote:
-> Thanks for your response.
-> 
-> Well, I already found that this chip isn't supported yet. Basically, what I'm
-> into is getting it or any other driver compatible with Linux 3.0 and
-> Android 2.3 to work with our hardware. The problem is that the newest
-> firmware-driver pair I can get for this chip is 4.217.95.x and it would require
-> pretty much work to make it compatible with our software target, because
-> the driver was designed for Linux 2.6.32 sources specific for this hardware
-> with much hardcoding done.
-> 
-> I'm already in contact with Franky Lin <frankyl@broadcom.com> about our issue,
-> should I also discuss this topic with Howard?
+On Tue, Aug 9, 2011 at 11:22 AM, Senthil Balasubramanian
+<senthilb@qca.qualcomm.com> wrote:
+> Due to some recent optimization done in the way the mac address
+> bytes are written into the OTP memory, some AR9485 chipsets were
+> forced to use the first byte from the eeprom template and as AR9485
+> happens to use generic eeprom template which has 0x1 as the first
+> byte causes issues in bringing up the card.
+>
+> So fixed the eeprom template accordingly to address the issue.
+>
+> Cc: Paul Stewart <pstew@google.com>
+> Signed-off-by: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
 
-Yes, please ping Howard for more assistance.
+I don't follow the description too well, all I can tell from it is
+that there is an issue if the template has 0x01 set instead of 0x0 but
+it doesn't tell me why.
 
-Thanks,
-- Henry
-
-
+ Luis
