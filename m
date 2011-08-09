@@ -1,56 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:58014 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751628Ab1HYQD1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 12:03:27 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 5so2547982wwf.1
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 09:03:27 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/5] wl12xx: don't queue a new dummy packet if one is already pending
-Date: Thu, 25 Aug 2011 19:04:30 +0300
-Message-Id: <1314288270-22380-5-git-send-email-eliad@wizery.com> (sfid-20110825_180329_956132_01F7E304)
-In-Reply-To: <1314288270-22380-1-git-send-email-eliad@wizery.com>
-References: <1314288270-22380-1-git-send-email-eliad@wizery.com>
+Received: from mout7.freenet.de ([195.4.92.97]:50794 "EHLO mout7.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752824Ab1HIKIY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2011 06:08:24 -0400
+Message-ID: <4E410718.8090205@01019freenet.de> (sfid-20110809_120828_064918_CA0A2963)
+Date: Tue, 09 Aug 2011 12:08:24 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+MIME-Version: 1.0
+To: Dane Shih <daneshih1981@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: AR9285 Wireless 80211n mode get only 25Mbit with Linux 2.6.38.8
+ and compat-wireless-2.6.38.2-2
+References: <CAH-LUqry4TKAvnojAo39QfT-Wy_BN94SYJEiCCRX4hrb=RcfwQ@mail.gmail.com> <4E40D58A.4000901@01019freenet.de> <CAH-LUqojjVCqbg_rQYNCU6Ge2D2ekNWoq03MDKKidqwrNqod0g@mail.gmail.com>
+In-Reply-To: <CAH-LUqojjVCqbg_rQYNCU6Ge2D2ekNWoq03MDKKidqwrNqod0g@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Dane Shih schrieb:
+> thanks
+> kernel upgrade to 3.0
+> and install compat-wireless_3.0_stable_releases ath9k  driver
 
-The firmware only asks for one dummy packet at a time, but sometimes we
-are unable to provide it before a FW timer expires. When this happens,
-the FW will re-request the dummy packet. If a packet is still queued in
-the driver queues, do nothing in this case.
+Well, I'm using the original drivers from 3.0.
 
-This prevents spurious dummy packets from clogging up the VO AC.
+> [  4] local 192.168.100.254 port 5001 connected with 192.168.100.47 port 49230
+> [ ID] Interval       Transfer     Bandwidth
+> [  4]  0.0- 2.1 sec  10.0 MBytes  40.5 Mbits/sec
+> [  5] local 192.168.100.254 port 5001 connected with 192.168.100.47 port 49231
+> [  5]  0.0- 6.4 sec  30.0 MBytes  39.2 Mbits/sec
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
+Where does this output come from? I don't know it. You could use netperf
+for testing the bandwith.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index f1fd991..aeb4cc5 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1540,7 +1540,13 @@ out:
- int wl1271_tx_dummy_packet(struct wl1271 *wl)
- {
- 	unsigned long flags;
--	int q = wl1271_tx_get_queue(skb_get_queue_mapping(wl->dummy_packet));
-+	int q;
-+
-+	/* no need to queue a new dummy packet if one is already pending */
-+	if (test_bit(WL1271_FLAG_DUMMY_PACKET_PENDING, &wl->flags))
-+		return 0;
-+
-+	q = wl1271_tx_get_queue(skb_get_queue_mapping(wl->dummy_packet));
- 
- 	spin_lock_irqsave(&wl->wl_lock, flags);
- 	set_bit(WL1271_FLAG_DUMMY_PACKET_PENDING, &wl->flags);
--- 
-1.7.6.401.g6a319
+#!/bin/sh
 
+dest="your_srv" # set the servername
+
+while true ; do
+netperf -t TCP_MAERTS -H $dest
+netperf -t TCP_STREAM -H $dest
+netperf -t TCP_SENDFILE -H $dest
+done
+
+Start netserver on the server side before you start this script (script
+can be stopped with CTRL-C).
+
+I'm using hostapd from hostapd git from 21.04.2011.
+
+> 
+> 80211n  maxinum throughput 40Mbit
+> 
+> what i should be check
+> 
+> another question
+> wireless client also get  100 MBit/s
+> 
+> thanks
+
+Sorry - I don't understand you :-(.
+
+
+Andreas
