@@ -1,56 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52277 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751891Ab1HEN3h (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:35863 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752812Ab1HIJO1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2011 09:29:37 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Madhan Jaganathan <madhanj@qca.qualcomm.com>
-Subject: [PATCH 3/3] ath9k_hw: Fix incorrect spur_freq_sd for AR9003
-Date: Fri, 5 Aug 2011 18:59:42 +0530
-Message-ID: <1312550982-21914-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110805_152940_424271_6BD8BB0D)
-In-Reply-To: <1312550982-21914-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1312550982-21914-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 9 Aug 2011 05:14:27 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 5so2430702wwf.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:27 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 30/40] wl12xx: AP-mode - configure HT rate support to the FW
+Date: Tue,  9 Aug 2011 12:13:43 +0300
+Message-Id: <1312881233-9366-31-git-send-email-eliad@wizery.com> (sfid-20110809_111434_470674_78EA13D6)
+In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Spur frequency was incorrectly computed with 10Mhz offset
-which could cause the filter would not notch out the spur
-and also this could improve rx sensitivity in HT40.
+From: Arik Nemtsov <arik@wizery.com>
 
-Cc: Madhan Jaganathan <madhanj@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Unconditionally configure HT rate support to the FW on all ACs
+when starting the AP.
+
+When 11n support is disabled by usermode (hostapd), each STA joining
+the AP will appear as a non-HT STA. This will stop us from accidentally
+transmitting using MCS rates.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/wl12xx/conf.h |    5 +++++
+ drivers/net/wireless/wl12xx/init.c |    3 +++
+ 2 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index c906e9e..dbe0b58 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -370,7 +370,7 @@ static void ar9003_hw_spur_ofdm_work(struct ath_hw *ah,
- 			else
- 				spur_subchannel_sd = 0;
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index a92df6e..b0a63b2 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -438,12 +438,17 @@ struct conf_rx_settings {
  
--			spur_freq_sd = ((freq_offset + 10) << 9) / 11;
-+			spur_freq_sd = (freq_offset << 9) / 11;
+ #define CONF_TX_OFDM_RATES (CONF_HW_BIT_RATE_6MBPS |             \
+ 	CONF_HW_BIT_RATE_12MBPS | CONF_HW_BIT_RATE_24MBPS |      \
+ 	CONF_HW_BIT_RATE_36MBPS | CONF_HW_BIT_RATE_48MBPS |      \
+ 	CONF_HW_BIT_RATE_54MBPS)
  
- 		} else {
- 			if (REG_READ_FIELD(ah, AR_PHY_GEN_CTRL,
-@@ -379,7 +379,7 @@ static void ar9003_hw_spur_ofdm_work(struct ath_hw *ah,
- 			else
- 				spur_subchannel_sd = 1;
++#define CONF_TX_MCS_RATES (CONF_HW_BIT_RATE_MCS_0 |              \
++	CONF_HW_BIT_RATE_MCS_1 | CONF_HW_BIT_RATE_MCS_2 |        \
++	CONF_HW_BIT_RATE_MCS_3 | CONF_HW_BIT_RATE_MCS_4 |        \
++	CONF_HW_BIT_RATE_MCS_5 | CONF_HW_BIT_RATE_MCS_6 |        \
++	CONF_HW_BIT_RATE_MCS_7)
  
--			spur_freq_sd = ((freq_offset - 10) << 9) / 11;
-+			spur_freq_sd = (freq_offset << 9) / 11;
+ /*
+  * Default rates for management traffic when operating in AP mode. This
+  * should be configured according to the basic rate set of the AP
+  */
+ #define CONF_TX_AP_DEFAULT_MGMT_RATES  (CONF_HW_BIT_RATE_1MBPS | \
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index 67cd603..4a4736e 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -507,12 +507,15 @@ int wl1271_init_ap_rates(struct wl1271 *wl)
+ 	 */
+ 	if ((wl->basic_rate_set & CONF_TX_OFDM_RATES))
+ 		supported_rates = CONF_TX_OFDM_RATES;
+ 	else
+ 		supported_rates = CONF_TX_AP_ENABLED_RATES;
  
- 		}
- 
++	/* unconditionally enable HT rates */
++	supported_rates |= CONF_TX_MCS_RATES;
++
+ 	/* configure unicast TX rate classes */
+ 	for (i = 0; i < wl->conf.tx.ac_conf_count; i++) {
+ 		rc.enabled_rates = supported_rates;
+ 		rc.short_retry_limit = 10;
+ 		rc.long_retry_limit = 10;
+ 		rc.aflags = 0;
 -- 
-1.7.6
+1.7.6.401.g6a319
 
