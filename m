@@ -1,43 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:48358 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752318Ab1HYPrP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 11:47:15 -0400
-Date: Thu, 25 Aug 2011 08:47:05 -0700
-From: Greg KH <greg@kroah.com>
-To: Joe Perches <joe@perches.com>
-Cc: Henry Ptasinski <henryp@broadcom.com>,
-	linux-kernel@vger.kernel.org, Brett Rudley <brudley@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	devel@linuxdriverproject.org, Greg KH <gregkh@suse.de>,
-	Kan Yan <kanyan@broadcom.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org
-Subject: Re: [PATCH] staging: brcmfmac: Consolidate debugging macros
-Message-ID: <20110825154705.GA6567@kroah.com> (sfid-20110825_174730_854678_12984E4E)
-References: <927eab8b5c950c13991911cd4c16457a5d618bc7.1314252671.git.joe@perches.com>
+Received: from mx1.redhat.com ([209.132.183.28]:25514 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751109Ab1HJN2Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2011 09:28:16 -0400
+Date: Wed, 10 Aug 2011 15:28:01 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Justin Piszcz <jpiszcz@lucidpixels.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] rt2x00: rt2800usb: fix races in tx queue
+Message-ID: <20110810132759.GA5652@redhat.com> (sfid-20110810_152820_244687_6F8D233D)
+References: <20110804124653.GB5739@redhat.com>
+ <CAOZOX0Xpv9OPqx2Y3GnajhmDvx3GyL1xTAjEOYjOToWcQxB6bA@mail.gmail.com>
+ <20110808092914.GA2168@redhat.com>
+ <20110808093512.GB2168@redhat.com>
+ <4E404D5C.30401@gmail.com>
+ <20110809095050.GD2152@redhat.com>
+ <20110809112624.GA2281@redhat.com>
+ <20110809154540.GB2302@redhat.com>
+ <20110810103904.GA8079@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <927eab8b5c950c13991911cd4c16457a5d618bc7.1314252671.git.joe@perches.com>
+In-Reply-To: <20110810103904.GA8079@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 24, 2011 at 11:16:48PM -0700, Joe Perches wrote:
-> Convert multiple BRCMF_<debug_level> macros to a single
-> brcmf_dbg(level, fmt, ...) macro.
-> 
-> Remove the now unnecessary double parentheses in the uses
-> of the old macros when converting to brcmf_dbg.
-> 
-> Delete all uses of "%s: [fmt]", __func__, args... and move
-> the "%s: ", __func__ to the macro for consistency.
-> 
-> Coalesce long formats.
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
+On Wed, Aug 10, 2011 at 12:39:04PM +0200, Stanislaw Gruszka wrote:
+> This patch crashes as well. I have to debug this issue a bit more ...
 
-Applied, thanks.
+Figured this out, while(1) change helped in my original patch, without
+that we can have ops in rt2800usb_get_txwi. I'm going to post reworked
+patches now.
 
-greg k-h
+Stanislaw 
