@@ -1,56 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52140 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752709Ab1HJR1I (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:51666 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751393Ab1HJABn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 13:27:08 -0400
-Subject: Re: [PATCH 1/2] ssb: fix DMA translation for some specific boards
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael =?ISO-8859-1?Q?B=FCsch?= <m@bues.ch>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-In-Reply-To: <20110810184406.6cad6d17@milhouse> (sfid-20110810_184423_775264_26C1F383)
-References: <1312992688-6976-1-git-send-email-zajec5@gmail.com>
-	 <20110810184028.3cb9c532@milhouse>
-	 <CACna6rxBof9T+vaZ=wHZJcXY12XVrYvFbHEdXk1+=_LAwjmtig@mail.gmail.com>
-	 <20110810184406.6cad6d17@milhouse> (sfid-20110810_184423_775264_26C1F383)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 10 Aug 2011 19:27:03 +0200
-Message-ID: <1312997223.4325.24.camel@jlt3.sipsolutions.net> (sfid-20110810_192712_208582_E81541AE)
-Mime-Version: 1.0
+	Tue, 9 Aug 2011 20:01:43 -0400
+Received: by qwk3 with SMTP id 3so276292qwk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 17:01:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1312808606.4372.16.camel@jlt3.sipsolutions.net>
+References: <1311695709.2974.15.camel@alex-2> <1312808606.4372.16.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 9 Aug 2011 17:01:21 -0700
+Message-ID: <CAB=NE6XWzWieSZ1ktqAM7_gMqNYrF4xuX8BNQM2aH1KQ2TSESQ@mail.gmail.com> (sfid-20110810_020147_741101_1D13D916)
+Subject: Re: mac80211: ibss.c, missing regdom check?
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Alexander Simon <alexander.simon@saxnet.de>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-08-10 at 18:44 +0200, Michael Büsch wrote:
+On Mon, Aug 8, 2011 at 6:03 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2011-07-26 at 17:55 +0200, Alexander Simon wrote:
+>
+>> When we want to join an IBSS, we first fire a scan. When a network is
+>> found, then we join it.
+>> This happens in ieee80211_sta_find_ibss when we call
+>> ieee80211_sta_join_ibss.
+>>
+>> But in both functions there is no check if we are allowed to do IBSS on
+>> that channel.
+>> Is this intended?
+>> I could join an existing network on channel 8 with a modified crda
+>> having the NO-IBSS flag on all 2.4GHz channels.
+>
+> Sounds like there ought to be a check -- but what do we do in that case?
+> Just create the network elsewhere and hope the other one merges? Luis?
 
-> > >> +     if (dev->id.coreid == SSB_DEV_80211)
-> > >> +             return (chip_id == 0x4322 || chip_id == 43221 ||
-> > >> +                     chip_id == 43231 || chip_id == 43222);
-> > >> +     return 0;
-> > >> +}
-> > >
-> > > ACK, apart from this coding style violation (missing curly braces).
-> > 
-> > From kernel CodingStyle:
-> > > Do not unnecessarily use braces where a single statement will do.
-> > >
-> > > if (condition)
-> > > 	action();
-> > 
-> > I guess simple "return" (even when using line break) is still like
-> > single statement...
-> > Am I wrong?
-> > 
-> 
-> Last time I checked this only applied to single-line-statements.
-> Maybe it changed, though.
+Indeed, additionally based on the htcaps we must also ensure that we
+follow the exisitng regulatory rules. A base example is provided
+through ieee80211_enable_ht(). A similar check will be implemented to
+start Mesh for example. This must also ensure that when you set the
+channel type with iw, say, iw dev wlan0 set freq 2412 HT20 that you
+switch to using only HT20 and not HT40. If you do not set HT20 or HT40
+then you should not use HT on an IBSS.
 
-Just sidestep the issue and invert the test ;-)
-(However, CodingStyle says nothing about single lines, only statements,
-and I tend to agree)
+Let me know if you are up to try the changes otherwise I can work on them.
 
-johannes
-
-
+  Luis
