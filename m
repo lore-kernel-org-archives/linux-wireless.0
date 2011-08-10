@@ -1,38 +1,275 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:44892 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750989Ab1HYHSt (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:50801 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754543Ab1HJSme (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 03:18:49 -0400
-Received: by mail-bw0-f45.google.com with SMTP id zv3so2044458bkb.18
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 00:18:48 -0700 (PDT)
-Subject: Re: [PATCH v3] wl12xx: use 2 spare TX blocks for GEM cipher
-From: Luciano Coelho <coelho@ti.com>
-To: Guy Eilam <guy@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1313513352-32316-1-git-send-email-guy@wizery.com>
-References: <1313513352-32316-1-git-send-email-guy@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 25 Aug 2011 10:18:44 +0300
-Message-ID: <1314256724.2296.246.camel@cumari> (sfid-20110825_091859_235789_B94BD33E)
-Mime-Version: 1.0
+	Wed, 10 Aug 2011 14:42:34 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 19so1145218fxh.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 11:42:33 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [RFC][RFT][PATCH V2 2/2] b43: fix DMA on some bugged hardware
+Date: Wed, 10 Aug 2011 20:35:39 +0200
+Message-Id: <1313001339-11211-2-git-send-email-zajec5@gmail.com> (sfid-20110810_204237_492710_624F6566)
+In-Reply-To: <1313001339-11211-1-git-send-email-zajec5@gmail.com>
+References: <1313001339-11211-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-16 at 19:49 +0300, Guy Eilam wrote: 
-> Add tx_spare_blocks member to the wl1271 struct
-> for more generic configuration of the amount
-> of spare TX blocks that should be used.
-> The default value is 1.
-> In case GEM cipher is used by the STA, we need
-> 2 spare TX blocks instead of just 1.
-> 
-> Signed-off-by: Guy Eilam <guy@wizery.com>
-> ---
+Some hardware with 64-bit DMA uses lower address word for setting
+routing (translation) bit. Add workaround for such boards.
 
-Applied, thanks!
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+This requires testing on at least 1 normal 64-bit DMA card and 1 32-bit
+DMA card. So far it was tested only on my 14e4:4329 where it fixed DMA.
+---
+ drivers/net/wireless/b43/b43.h |    1 +
+ drivers/net/wireless/b43/dma.c |  113 +++++++++++++++++++++++++++-------------
+ drivers/net/wireless/b43/dma.h |    6 ++
+ 3 files changed, 84 insertions(+), 36 deletions(-)
 
+diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+index c818b0b..3aee322 100644
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -594,6 +594,7 @@ struct b43_dma {
+ 	struct b43_dmaring *rx_ring;
+ 
+ 	u32 translation; /* Routing bits */
++	bool translation_in_low; /* Should translation bit go into low addr? */
+ 	bool parity; /* Check for parity */
+ };
+ 
+diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
+index 0953ce1..547851c 100644
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -47,6 +47,38 @@
+  * into separate slots. */
+ #define TX_SLOTS_PER_FRAME	2
+ 
++static u32 b43_dma_address(struct b43_dma *dma, dma_addr_t dmaaddr,
++			   enum b43_addrtype addrtype)
++{
++	u32 uninitialized_var(addr);
++
++	switch (addrtype) {
++	case B43_DMA_ADDR_LOW:
++		addr = dmaaddr & 0xFFFFFFFF;
++		if (dma->translation_in_low) {
++			addr &= ~SSB_DMA_TRANSLATION_MASK;
++			addr |= dma->translation;
++		}
++		break;
++	case B43_DMA_ADDR_HIGH:
++		addr = dmaaddr >> 32;
++		if (!dma->translation_in_low) {
++			addr &= ~SSB_DMA_TRANSLATION_MASK;
++			addr |= dma->translation;
++		}
++		break;
++	case B43_DMA_ADDR_EXT:
++		if (dma->translation_in_low)
++			addr = dmaaddr & 0xFFFFFFFF;
++		else
++			addr = dmaaddr >> 32;
++		addr &= SSB_DMA_TRANSLATION_MASK;
++		addr >>= SSB_DMA_TRANSLATION_SHIFT;
++		break;
++	}
++
++	return addr;
++}
+ 
+ /* 32bit DMA ops. */
+ static
+@@ -77,10 +109,9 @@ static void op32_fill_descriptor(struct b43_dmaring *ring,
+ 	slot = (int)(&(desc->dma32) - descbase);
+ 	B43_WARN_ON(!(slot >= 0 && slot < ring->nr_slots));
+ 
+-	addr = (u32) (dmaaddr & ~SSB_DMA_TRANSLATION_MASK);
+-	addrext = (u32) (dmaaddr & SSB_DMA_TRANSLATION_MASK)
+-	    >> SSB_DMA_TRANSLATION_SHIFT;
+-	addr |= ring->dev->dma.translation;
++	addr = b43_dma_address(&ring->dev->dma, dmaaddr, B43_DMA_ADDR_LOW);
++	addrext = b43_dma_address(&ring->dev->dma, dmaaddr, B43_DMA_ADDR_EXT);
++
+ 	ctl = bufsize & B43_DMA32_DCTL_BYTECNT;
+ 	if (slot == ring->nr_slots - 1)
+ 		ctl |= B43_DMA32_DCTL_DTABLEEND;
+@@ -170,11 +201,10 @@ static void op64_fill_descriptor(struct b43_dmaring *ring,
+ 	slot = (int)(&(desc->dma64) - descbase);
+ 	B43_WARN_ON(!(slot >= 0 && slot < ring->nr_slots));
+ 
+-	addrlo = (u32) (dmaaddr & 0xFFFFFFFF);
+-	addrhi = (((u64) dmaaddr >> 32) & ~SSB_DMA_TRANSLATION_MASK);
+-	addrext = (((u64) dmaaddr >> 32) & SSB_DMA_TRANSLATION_MASK)
+-	    >> SSB_DMA_TRANSLATION_SHIFT;
+-	addrhi |= ring->dev->dma.translation;
++	addrlo = b43_dma_address(&ring->dev->dma, dmaaddr, B43_DMA_ADDR_LOW);
++	addrhi = b43_dma_address(&ring->dev->dma, dmaaddr, B43_DMA_ADDR_HIGH);
++	addrext = b43_dma_address(&ring->dev->dma, dmaaddr, B43_DMA_ADDR_EXT);
++
+ 	if (slot == ring->nr_slots - 1)
+ 		ctl0 |= B43_DMA64_DCTL0_DTABLEEND;
+ 	if (start)
+@@ -658,41 +688,37 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
+ 	int err = 0;
+ 	u32 value;
+ 	u32 addrext;
+-	u32 trans = ring->dev->dma.translation;
+ 	bool parity = ring->dev->dma.parity;
++	u32 addrlo;
++	u32 addrhi;
+ 
+ 	if (ring->tx) {
+ 		if (ring->type == B43_DMA_64BIT) {
+ 			u64 ringbase = (u64) (ring->dmabase);
++			addrext = b43_dma_address(&ring->dev->dma, ringbase, B43_DMA_ADDR_EXT);
++			addrlo = b43_dma_address(&ring->dev->dma, ringbase, B43_DMA_ADDR_LOW);
++			addrhi = b43_dma_address(&ring->dev->dma, ringbase, B43_DMA_ADDR_HIGH);
+ 
+-			addrext = ((ringbase >> 32) & SSB_DMA_TRANSLATION_MASK)
+-			    >> SSB_DMA_TRANSLATION_SHIFT;
+ 			value = B43_DMA64_TXENABLE;
+ 			value |= (addrext << B43_DMA64_TXADDREXT_SHIFT)
+ 			    & B43_DMA64_TXADDREXT_MASK;
+ 			if (!parity)
+ 				value |= B43_DMA64_TXPARITYDISABLE;
+ 			b43_dma_write(ring, B43_DMA64_TXCTL, value);
+-			b43_dma_write(ring, B43_DMA64_TXRINGLO,
+-				      (ringbase & 0xFFFFFFFF));
+-			b43_dma_write(ring, B43_DMA64_TXRINGHI,
+-				      ((ringbase >> 32) &
+-				       ~SSB_DMA_TRANSLATION_MASK)
+-				      | trans);
++			b43_dma_write(ring, B43_DMA64_TXRINGLO, addrlo);
++			b43_dma_write(ring, B43_DMA64_TXRINGHI, addrhi);
+ 		} else {
+ 			u32 ringbase = (u32) (ring->dmabase);
++			addrext = b43_dma_address(&ring->dev->dma, ringbase, B43_DMA_ADDR_EXT);
++			addrlo = b43_dma_address(&ring->dev->dma, ringbase, B43_DMA_ADDR_LOW);
+ 
+-			addrext = (ringbase & SSB_DMA_TRANSLATION_MASK)
+-			    >> SSB_DMA_TRANSLATION_SHIFT;
+ 			value = B43_DMA32_TXENABLE;
+ 			value |= (addrext << B43_DMA32_TXADDREXT_SHIFT)
+ 			    & B43_DMA32_TXADDREXT_MASK;
+ 			if (!parity)
+ 				value |= B43_DMA32_TXPARITYDISABLE;
+ 			b43_dma_write(ring, B43_DMA32_TXCTL, value);
+-			b43_dma_write(ring, B43_DMA32_TXRING,
+-				      (ringbase & ~SSB_DMA_TRANSLATION_MASK)
+-				      | trans);
++			b43_dma_write(ring, B43_DMA32_TXRING, addrlo);
+ 		}
+ 	} else {
+ 		err = alloc_initial_descbuffers(ring);
+@@ -700,9 +726,10 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
+ 			goto out;
+ 		if (ring->type == B43_DMA_64BIT) {
+ 			u64 ringbase = (u64) (ring->dmabase);
++			addrext = b43_dma_address(&ring->dev->dma, ringbase, B43_DMA_ADDR_EXT);
++			addrlo = b43_dma_address(&ring->dev->dma, ringbase, B43_DMA_ADDR_LOW);
++			addrhi = b43_dma_address(&ring->dev->dma, ringbase, B43_DMA_ADDR_HIGH);
+ 
+-			addrext = ((ringbase >> 32) & SSB_DMA_TRANSLATION_MASK)
+-			    >> SSB_DMA_TRANSLATION_SHIFT;
+ 			value = (ring->frameoffset << B43_DMA64_RXFROFF_SHIFT);
+ 			value |= B43_DMA64_RXENABLE;
+ 			value |= (addrext << B43_DMA64_RXADDREXT_SHIFT)
+@@ -710,19 +737,15 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
+ 			if (!parity)
+ 				value |= B43_DMA64_RXPARITYDISABLE;
+ 			b43_dma_write(ring, B43_DMA64_RXCTL, value);
+-			b43_dma_write(ring, B43_DMA64_RXRINGLO,
+-				      (ringbase & 0xFFFFFFFF));
+-			b43_dma_write(ring, B43_DMA64_RXRINGHI,
+-				      ((ringbase >> 32) &
+-				       ~SSB_DMA_TRANSLATION_MASK)
+-				      | trans);
++			b43_dma_write(ring, B43_DMA64_RXRINGLO, addrlo);
++			b43_dma_write(ring, B43_DMA64_RXRINGHI, addrhi);
+ 			b43_dma_write(ring, B43_DMA64_RXINDEX, ring->nr_slots *
+ 				      sizeof(struct b43_dmadesc64));
+ 		} else {
+ 			u32 ringbase = (u32) (ring->dmabase);
++			addrext = b43_dma_address(&ring->dev->dma, ringbase, B43_DMA_ADDR_EXT);
++			addrlo = b43_dma_address(&ring->dev->dma, ringbase, B43_DMA_ADDR_LOW);
+ 
+-			addrext = (ringbase & SSB_DMA_TRANSLATION_MASK)
+-			    >> SSB_DMA_TRANSLATION_SHIFT;
+ 			value = (ring->frameoffset << B43_DMA32_RXFROFF_SHIFT);
+ 			value |= B43_DMA32_RXENABLE;
+ 			value |= (addrext << B43_DMA32_RXADDREXT_SHIFT)
+@@ -730,9 +753,7 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
+ 			if (!parity)
+ 				value |= B43_DMA32_RXPARITYDISABLE;
+ 			b43_dma_write(ring, B43_DMA32_RXCTL, value);
+-			b43_dma_write(ring, B43_DMA32_RXRING,
+-				      (ringbase & ~SSB_DMA_TRANSLATION_MASK)
+-				      | trans);
++			b43_dma_write(ring, B43_DMA32_RXRING, addrlo);
+ 			b43_dma_write(ring, B43_DMA32_RXINDEX, ring->nr_slots *
+ 				      sizeof(struct b43_dmadesc32));
+ 		}
+@@ -1052,6 +1073,25 @@ static int b43_dma_set_mask(struct b43_wldev *dev, u64 mask)
+ 	return 0;
+ }
+ 
++/* Some hardware with 64-bit DMA seems to be bugged and looks for translation
++ * bit in low address word instead of high one.
++ */
++static bool b43_dma_translation_in_low_word(struct b43_wldev *dev,
++					    enum b43_dmatype type)
++{
++	if (type != B43_DMA_64BIT)
++		return 1;
++
++#ifdef CONFIG_B43_SSB
++	if (dev->dev->bus_type == B43_BUS_SSB &&
++	    dev->dev->sdev->bus->bustype == SSB_BUSTYPE_PCI &&
++	    !(dev->dev->sdev->bus->host_pci->is_pcie &&
++	      ssb_read32(dev->dev->sdev, SSB_TMSHIGH) & SSB_TMSHIGH_DMA64))
++			return 1;
++#endif
++	return 0;
++}
++
+ int b43_dma_init(struct b43_wldev *dev)
+ {
+ 	struct b43_dma *dma = &dev->dma;
+@@ -1077,6 +1117,7 @@ int b43_dma_init(struct b43_wldev *dev)
+ 		break;
+ #endif
+ 	}
++	dma->translation_in_low = b43_dma_translation_in_low_word(dev, type);
+ 
+ 	dma->parity = true;
+ #ifdef CONFIG_B43_BCMA
+diff --git a/drivers/net/wireless/b43/dma.h b/drivers/net/wireless/b43/dma.h
+index cdf8709..1a5313d 100644
+--- a/drivers/net/wireless/b43/dma.h
++++ b/drivers/net/wireless/b43/dma.h
+@@ -212,6 +212,12 @@ enum b43_dmatype {
+ 	B43_DMA_64BIT	= 64,
+ };
+ 
++enum b43_addrtype {
++	B43_DMA_ADDR_LOW,
++	B43_DMA_ADDR_HIGH,
++	B43_DMA_ADDR_EXT,
++};
++
+ struct b43_dmaring {
+ 	/* Lowlevel DMA ops. */
+ 	const struct b43_dma_ops *ops;
 -- 
-Cheers,
-Luca.
+1.7.1
 
