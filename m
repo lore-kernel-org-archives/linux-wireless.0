@@ -1,116 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:25290 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756017Ab1H3TDt (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:54360 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752034Ab1HJPtC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 15:03:49 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	Edward Lu <shaol@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-Subject: [PATCH v2 17/22] ath6kl: Fix a typo in ath6k context
-Date: Tue, 30 Aug 2011 21:58:06 +0300
-Message-ID: <1314730691-12089-18-git-send-email-jouni@qca.qualcomm.com> (sfid-20110830_210353_246742_5399B9B6)
-In-Reply-To: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 10 Aug 2011 11:49:02 -0400
+Received: by eyx24 with SMTP id 24so898330eyx.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 08:49:00 -0700 (PDT)
+Subject: Re: [PATCH 2/4] cfg80211: Add cfg80211_get_bss_ht to also match HT
+ configuration
+From: Alexander Simon <alexander.simon@saxnet.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1312984428.4325.10.camel@jlt3.sipsolutions.net>
+References: <1888623.Vt5VZUN2cU@alex-1>  <8106144.ZkUl7u1lz4@alex-1>
+	 (sfid-20110808_140459_252308_3B0F09A2)  <1312984428.4325.10.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Aug 2011 17:48:41 +0200
+Message-ID: <1312991321.3128.34.camel@alex-2> (sfid-20110810_174910_272073_1D1E1ABD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Edward Lu <elu@qca.qualcomm.com>
+Am Mittwoch, den 10.08.2011, 15:53 +0200 schrieb Johannes Berg:
+> On Mon, 2011-08-08 at 14:04 +0200, Alexander Simon wrote:
+> 
+> > +struct cfg80211_bss *cfg80211_get_bss_ht(struct wiphy *wiphy,
+> > +					  struct ieee80211_channel *channel,
+> > +					  const u8 *bssid,
+> > +					  const u8 *ssid, size_t ssid_len,
+> > +					  u16 capa_mask, u16 capa_val,
+> > +				       enum nl80211_channel_type channel_type);
+> 
+> indentation? Also, you really need kernel-doc for this.
+Pardon me, but I don't know what you mean... I just browsed
+Documentation/networking. Could you point me the exact file, please?
+> 
+> > +++ b/net/wireless/chan.c
+> > @@ -75,6 +75,7 @@ bool can_beacon_sec_chan(struct wiphy *wiphy,
+> >  
+> >  	return true;
+> >  }
+> > +EXPORT_SYMBOL(can_beacon_sec_chan);
+> 
+> You've got to be kidding, if you export it you really need to give it a
+> decent name. Besides, you don't have to export it in this patch.
+I intended to export this instead of writing ieee80211_can_use_ext_chan
+first.
+Ok, to summarize this: I should use this instead of my own
+ieee80211_can_use_ext_chan in mac80211 (as in your reply in 4/4), but
+when I export this I need to rename it. Does cfg80211_can_use_ext_chan
+sound well?
+> 
+> >  int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
+> >  		      struct wireless_dev *wdev, int freq,
+> > diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+> > index 2936cb8..ff5b736 100644
+> > --- a/net/wireless/scan.c
+> > +++ b/net/wireless/scan.c
+> > @@ -364,6 +364,19 @@ struct cfg80211_bss *cfg80211_get_bss(struct wiphy
+> > *wiphy,
+> >  				      const u8 *ssid, size_t ssid_len,
+> >  				      u16 capa_mask, u16 capa_val)
+> >  {
+> > +	/* call HT version with no HT requirements */
+> > +	return cfg80211_get_bss_ht(wiphy, channel, bssid, ssid, ssid_len,
+> > +				   capa_mask, capa_val, NL80211_CHAN_NO_HT);
+> > +}
+> > +EXPORT_SYMBOL(cfg80211_get_bss);
+> 
+> I don't like the semantics of this. Why is NO_HT indicating "don't care
+> about HT"? How then do you really find a NO_HT BSS?
+> 
+> Also, this raises a more fundamental question -- didn't you earlier say
+> you wanted to be able to connect with any IBSS, even non-HT ones, but
+> now it must match?
+This is only used for fixed channel mode. As we would only join a
+matching HT mode, I have to pass it here.
+How about second parameter, "bool match_ht"?
+> 
+> johannes
+> 
 
-Signed-off-by: Edward Lu <elu@qca.qualcomm.com>
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   13 +++++++------
- drivers/net/wireless/ath/ath6kl/core.h     |    2 +-
- drivers/net/wireless/ath/ath6kl/init.c     |    2 +-
- 3 files changed, 9 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 72735ee..af8e9cc 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -168,7 +168,8 @@ static int ath6kl_set_auth_type(struct ath6kl *ar,
- static int ath6kl_set_cipher(struct ath6kl *ar, u32 cipher, bool ucast)
- {
- 	u8 *ar_cipher = ucast ? &ar->prwise_crypto : &ar->grp_crypto;
--	u8 *ar_cipher_len = ucast ? &ar->prwise_crypto_len : &ar->grp_crpto_len;
-+	u8 *ar_cipher_len = ucast ? &ar->prwise_crypto_len :
-+		&ar->grp_crypto_len;
- 
- 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: cipher 0x%x, ucast %u\n",
- 		   __func__, cipher, ucast);
-@@ -371,14 +372,14 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 		   __func__,
- 		   ar->auth_mode, ar->dot11_auth_mode, ar->prwise_crypto,
- 		   ar->prwise_crypto_len, ar->grp_crypto,
--		   ar->grp_crpto_len, ar->ch_hint);
-+		   ar->grp_crypto_len, ar->ch_hint);
- 
- 	ar->reconnect_flag = 0;
- 	status = ath6kl_wmi_connect_cmd(ar->wmi, ar->nw_type,
- 					ar->dot11_auth_mode, ar->auth_mode,
- 					ar->prwise_crypto,
- 					ar->prwise_crypto_len,
--					ar->grp_crypto, ar->grp_crpto_len,
-+					ar->grp_crypto, ar->grp_crypto_len,
- 					ar->ssid_len, ar->ssid,
- 					ar->req_bssid, ar->ch_hint,
- 					ar->connect_ctrl_flags);
-@@ -688,7 +689,7 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
- 					ar->prwise_crypto,
- 					ar->prwise_crypto_len,
- 					ar->grp_crypto,
--					ar->grp_crpto_len,
-+					ar->grp_crypto_len,
- 					ar->ssid_len,
- 					ar->ssid,
- 					ar->req_bssid,
-@@ -1277,13 +1278,13 @@ static int ath6kl_cfg80211_join_ibss(struct wiphy *wiphy,
- 		   __func__,
- 		   ar->auth_mode, ar->dot11_auth_mode, ar->prwise_crypto,
- 		   ar->prwise_crypto_len, ar->grp_crypto,
--		   ar->grp_crpto_len, ar->ch_hint);
-+		   ar->grp_crypto_len, ar->ch_hint);
- 
- 	status = ath6kl_wmi_connect_cmd(ar->wmi, ar->nw_type,
- 					ar->dot11_auth_mode, ar->auth_mode,
- 					ar->prwise_crypto,
- 					ar->prwise_crypto_len,
--					ar->grp_crypto, ar->grp_crpto_len,
-+					ar->grp_crypto, ar->grp_crypto_len,
- 					ar->ssid_len, ar->ssid,
- 					ar->req_bssid, ar->ch_hint,
- 					ar->connect_ctrl_flags);
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 99cabd2..60e2291 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -380,7 +380,7 @@ struct ath6kl {
- 	u8 prwise_crypto;
- 	u8 prwise_crypto_len;
- 	u8 grp_crypto;
--	u8 grp_crpto_len;
-+	u8 grp_crypto_len;
- 	u8 def_txkey_index;
- 	struct ath6kl_wep_key wep_key_list[WMI_MAX_KEY_INDEX + 1];
- 	u8 bssid[ETH_ALEN];
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 3b99ae2..32b7ef5 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -85,7 +85,7 @@ void ath6kl_init_profile_info(struct ath6kl *ar)
- 	ar->prwise_crypto = NONE_CRYPT;
- 	ar->prwise_crypto_len = 0;
- 	ar->grp_crypto = NONE_CRYPT;
--	ar->grp_crpto_len = 0;
-+	ar->grp_crypto_len = 0;
- 	memset(ar->wep_key_list, 0, sizeof(ar->wep_key_list));
- 	memset(ar->req_bssid, 0, sizeof(ar->req_bssid));
- 	memset(ar->bssid, 0, sizeof(ar->bssid));
--- 
-1.7.4.1
 
