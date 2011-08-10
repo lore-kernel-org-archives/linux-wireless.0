@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52351 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753116Ab1HNLiZ (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:54480 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751922Ab1HJO5b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 07:38:25 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/4] ath6kl: Release ar->lock right afer updating net_stats in ath6kl_rx()
-Date: Sun, 14 Aug 2011 17:08:33 +0530
-Message-ID: <1313321916-29685-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110814_133834_791573_8CBC3068)
+	Wed, 10 Aug 2011 10:57:31 -0400
+Received: by gwaa12 with SMTP id a12so707344gwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 07:57:30 -0700 (PDT)
+Message-ID: <4E429C57.1040101@lwfinger.net> (sfid-20110810_165734_392543_434A4F62)
+Date: Wed, 10 Aug 2011 09:57:27 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: kc@cobradevil.org
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8192cu sometimes it can authenticate to ap
+References: <b3059ba2eac66b7ef0ec17c8fe81a1e6@cobradevil.org> <34676454425401d650be733a43191a53@cobradevil.org> <532595cb4d5ef910de54a4736ba76185@cobradevil.org> <4E41624E.3010904@lwfinger.net> <d3faeaf2e881a324b0ad3102c10e6131@cobradevil.org>
+In-Reply-To: <d3faeaf2e881a324b0ad3102c10e6131@cobradevil.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This lock is intended to protect stats there, not neccessary to
-hold it beyond that.
+On 08/10/2011 08:32 AM, kc@cobradevil.org wrote:
+> Hello Larry,
+>
+> did you receive my last email with the log files?
+> i'm not sure if that the right information so if you need more the please let me
+> know.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/txrx.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Yes, I got them.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 167bdb9..d546051 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1044,13 +1044,13 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 	ar->net_stats.rx_packets++;
- 	ar->net_stats.rx_bytes += packet->act_len;
- 
-+	spin_unlock_bh(&ar->lock);
-+
- 	skb_put(skb, packet->act_len + HTC_HDR_LENGTH);
- 	skb_pull(skb, HTC_HDR_LENGTH);
- 
- 	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, __func__, skb->data, skb->len);
- 
--	spin_unlock_bh(&ar->lock);
--
- 	skb->dev = ar->net_dev;
- 
- 	if (!test_bit(WMI_ENABLED, &ar->flag)) {
--- 
-1.7.0.4
+So far, the only conclusion from them is that you should install the CRDA 
+package. That is not the cause of your problem, but it needs to be done.
 
+I can duplicate the problem here and find that it occurs between 3.0 and 
+3.1-rc1. I first tried to bisect testing only drivers/net/wireless/rtlwifi, 
+net/mac80211 and net/wireless directories. That led to an impossible "bad" 
+commit, thus I'm having to bisect the whole tree.
+
+I'll let you know what I find.
+
+Larry
