@@ -1,79 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:43983 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753861Ab1H3N6U (ORCPT
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:60603 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751343Ab1HJMbZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 09:58:20 -0400
-Message-ID: <4E5CEC79.3090802@freedesktop.org> (sfid-20110830_155825_987711_F1F3ACBA)
-Date: Tue, 30 Aug 2011 09:58:17 -0400
-From: Jim Gettys <jg@freedesktop.org>
-MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: Tom Herbert <therbert@google.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Dave Taht <dave.taht@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Andrew McGregor <andrewmcgr@gmail.com>,
-	Matt Smith <smithm@qca.qualcomm.com>,
-	Kevin Hayes <hayes@qca.qualcomm.com>,
-	Derek Smithies <derek@indranet.co.nz>, netdev@vger.kernel.org
-Subject: Re: BQL crap and wireless
-References: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com> <CAB=NE6VwWu5+Hk7=3ghkgiXss9kCqGyS-RWPYtyHRhDsx5r2rA@mail.gmail.com> <CAA93jw7c+Nxc6ZbWZWsQ+F78AoPWU=quSRaOUpT0yRcwJOXsGQ@mail.gmail.com> <4E5C3B47.1050809@freedesktop.org> <CA+mtBx-j_+mrNpntR7CfYOromDnM-ZGzvebpUCjC8Qf14X6u9g@mail.gmail.com> <CAJ-Vmonwur-SXddNwjPEidCMqes+PwbRWFBddfdwTp2jOMu64g@mail.gmail.com>
-In-Reply-To: <CAJ-Vmonwur-SXddNwjPEidCMqes+PwbRWFBddfdwTp2jOMu64g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 10 Aug 2011 08:31:25 -0400
+Received: by mail-bw0-f50.google.com with SMTP id zu5so405384bkb.23
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 05:31:23 -0700 (PDT)
+Subject: Re: [PATCH 15/40] wl12xx: add set_rate_mgmt_params acx
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1312881233-9366-16-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	 <1312881233-9366-16-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Aug 2011 15:31:19 +0300
+Message-ID: <1312979479.2407.578.camel@cumari> (sfid-20110810_143128_239228_61F0BC1F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/29/2011 11:42 PM, Adrian Chadd wrote:
-> On 30 August 2011 11:34, Tom Herbert <therbert@google.com> wrote:
->
->> The generalization of BQL would be to set the queue limit in terms of
->> a cost function implemented by the driver.  The cost function would
->> most likely be an estimate of time to transmit a packet.  So C(P)
->> could represent cost of a packet, sum(C(P) for P queued) is aggregate
->> cost of queue packets, and queue limit is the maximum cost sum.  For
->> wired Ethernet, number of bytes in packet might be a reasonable
->> function (although framing cost could be included, but I'm not sure
->> that would make a material difference).  For wireless, maybe the
->> function could be more complex possibly taking multicast, previous
->> history of transmission times, or other arbitrary characteristics of
->> the packet into account...
->>
->> I can post a new patch with this generalization if this is interesting.
-> As I said before, I think this is the kind of thing the rate control
-> code needs to get its dirty hands into.
->
-> With 802.11 you have to care about the PHY side of things too, so your
-> cost suddenly would include the PER for combinations of {remote node,
-> antenna setup, TX rate, sub-frame length, aggregate length}, etc. Do
-> you choose that up front and then match a cost to it, or do you
-> involve the rate control code in deciding a "good enough" way of
-> handling what's on the queue by making rate decisions, then implement
-> random/weighted/etc drop of what's left? Do you do some weighted/etc
-> drop beforehand in the face of congestion, then pass what's left to
-> the rate control code, then discard the rest?
->
-> C(P) is going to be quite variable - a full frame retransmit of a 4ms
-> long aggregate frame is SUM(exponential backoff, grab the air,
-> preamble, header, 4ms, etc. for each pass.)
->
-It's not clear to me that doing heroic measures to compute the cost is
-going to be worthwhile due to the rate at which the costs can change on
-wireless; just getting into the rough ballpark may be enough. But
-buffering algorithms and AQM algorithms are going to need an estimate of
-the *time* it will take to transmit data, more than # of bytes or packets.
+On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
+> +int wl1271_acx_set_rate_mgmt_params(struct wl1271 *wl)
+> +{
+> +	struct wl1271_acx_set_rate_mgmt_params *acx = NULL;
+> +	struct conf_rate_policy_settings *conf = &wl->conf.rate;
+> +	int ret;
+> +
+> +	wl1271_debug(DEBUG_ACX, "acx set rate mgmt params");
+> +	BUILD_BUG_ON(sizeof(conf->rate_retry_policy) !=
+> +		     sizeof(acx->rate_retry_policy));
+> +	BUILD_BUG_ON(sizeof(*acx) % 4);
 
-Ultimately, if the queue starts builds, we'll need an AQM algorithm to
-control the buffer growth.
+I guess you shouldn't need these anymore?
 
-Hopefully we can start testing SFB and other possibilities in CeroWrt
-soon; Kathleen Nichols and Van Jacobson have been making some progress
-on an algorithm called "RED light" which is based on the observed
-transfer rate as well.  The eBDP algorithm in debloat testing also
-helps, which Van pointed us at late last year when this came up (though
-John Linville says eBDP needs rework before it can go upstream). We
-didn't want to start testing SFB and other options while we were aware
-of other problems in the wireless driver itself; Andrew and Felix's work
-with Dave have apparently brought that problem to a decent point. 
-                - Jim
+
+> +	ret = wl1271_cmd_configure(wl, ACX_SET_RATE_MAMAGEMENT_PARAMS,
+
+Typo, should be MANAGEMENT.  This should be fixed already where
+declared, in patch 07.
+
+
+> +#define ACX_RATE_MGMT_ALL_PARAMS 0xff
+> +#define ACX_RATE_MGMT_NUM_OF_RATES 13
+> +struct wl1271_acx_set_rate_mgmt_params {
+> +	struct acx_header header;
+> +
+> +	/* the param we configure */
+
+This comment doesn't seem very meaningful.
+
+
+> +	u8 index;
+> +	u8 padding1; /* MISSING */
+> +	__le16 rate_retry_score;
+> +	__le16 per_add;
+> +	__le16 per_th1;
+> +	__le16 per_th2;
+> +	__le16 max_per;
+> +	u8 inverse_curiosity_factor;
+> +	u8 tx_fail_low_th;
+> +	u8 tx_fail_high_th;
+> +	u8 per_alpha_shift;
+> +	u8 per_add_shift;
+> +	u8 per_beta1_shift;
+> +	u8 per_beta2_shift;
+> +	u8 rate_check_up;
+> +	u8 rate_check_down;
+> +	u8 rate_retry_policy[ACX_RATE_MGMT_NUM_OF_RATES];
+> +	u8 padding2[2]; /* MISSING */
+> +} __packed;
+
+Now that you found what was MISSING, please remove from here and inform
+the firmware people so they can fix it on their side.
+
+
+> @@ -1324,9 +1343,10 @@ struct conf_drv_settings {
+>  	struct conf_memory_settings mem_wl127x;
+>  	struct conf_memory_settings mem_wl128x;
+>  	struct conf_fm_coex fm_coex;
+>  	struct conf_rx_streaming_settings rx_streaming;
+>  	struct conf_fwlog fwlog;
+>  	u8 hci_io_ds;
+> +	struct conf_rate_policy_settings rate;
+>  };
+
+The new struct could come before hci_io_ds, since there's no need to
+keep backwards compatibility here yet.
+
+
+-- 
+Cheers,
+Luca.
 
