@@ -1,80 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:56670 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754129Ab1H2RqE (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:58979 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751582Ab1HJQSK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 13:46:04 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [RFC v3] mac80211: stop tx before doing hw config and rate update
-Date: Mon, 29 Aug 2011 23:16:27 +0530
-Message-ID: <1314639987-5927-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110829_194608_686526_977D010F)
+	Wed, 10 Aug 2011 12:18:10 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 19so1024245fxh.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 09:18:10 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/2] b43: fix DMA on some bugged hardware
+Date: Wed, 10 Aug 2011 18:11:28 +0200
+Message-Id: <1312992688-6976-2-git-send-email-zajec5@gmail.com> (sfid-20110810_181814_979713_F19C6863)
+In-Reply-To: <1312992688-6976-1-git-send-email-zajec5@gmail.com>
+References: <1312992688-6976-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The assumption is that during the hw config, transmission was
-already stopped by mac80211. But during channel type change,
-the mac80211 continue to transmit frames. The driver like ath9k
-does chip reset while doing channel set. This could leads to
-buffer overflow at driver side. And also after configuring the channel
-and before calling rate updation, the frames are continued to xmit
-with older rates. This patch ensures that the frames are always
-xmitted with updated rates and avoid buffer overflow.
+Some hardware with 64-bit DMA uses lower address word for setting
+routing (translation) bit. Add workaround for such boards.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
-v2: Removed new stop queue reason code by netif
-v3: Replaced netif by ieee80211_queue_stop and call synchronize_net
-    before flush
+ drivers/net/wireless/b43/b43.h |    1 +
+ drivers/net/wireless/b43/dma.c |   52 ++++++++++++++++++++++++++++++----------
+ 2 files changed, 40 insertions(+), 13 deletions(-)
 
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |   10 ++++++++++
- 2 files changed, 11 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c204cee..8db9f9a 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -670,6 +670,7 @@ enum queue_stop_reason {
- 	IEEE80211_QUEUE_STOP_REASON_AGGREGATION,
- 	IEEE80211_QUEUE_STOP_REASON_SUSPEND,
- 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
-+	IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE,
+diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+index c818b0b..3aee322 100644
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -594,6 +594,7 @@ struct b43_dma {
+ 	struct b43_dmaring *rx_ring;
+ 
+ 	u32 translation; /* Routing bits */
++	bool translation_in_low; /* Should translation bit go into low addr? */
+ 	bool parity; /* Check for parity */
  };
  
- #ifdef CONFIG_MAC80211_LEDS
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 60a6f27..5b51390 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -232,6 +232,13 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 		WARN_ON(!ieee80211_set_channel_type(local, sdata, channel_type));
+diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
+index 0953ce1..9a2b678 100644
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -174,7 +174,10 @@ static void op64_fill_descriptor(struct b43_dmaring *ring,
+ 	addrhi = (((u64) dmaaddr >> 32) & ~SSB_DMA_TRANSLATION_MASK);
+ 	addrext = (((u64) dmaaddr >> 32) & SSB_DMA_TRANSLATION_MASK)
+ 	    >> SSB_DMA_TRANSLATION_SHIFT;
+-	addrhi |= ring->dev->dma.translation;
++	if (ring->dev->dma.translation_in_low)
++		addrlo |= ring->dev->dma.translation;
++	else
++		addrhi |= ring->dev->dma.translation;
+ 	if (slot == ring->nr_slots - 1)
+ 		ctl0 |= B43_DMA64_DCTL0_DTABLEEND;
+ 	if (start)
+@@ -656,10 +659,12 @@ static int alloc_initial_descbuffers(struct b43_dmaring *ring)
+ static int dmacontroller_setup(struct b43_dmaring *ring)
+ {
+ 	int err = 0;
++	int tmp;
+ 	u32 value;
+ 	u32 addrext;
+ 	u32 trans = ring->dev->dma.translation;
+ 	bool parity = ring->dev->dma.parity;
++	u32 addrs[2];
+ 
+ 	if (ring->tx) {
+ 		if (ring->type == B43_DMA_64BIT) {
+@@ -673,12 +678,14 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
+ 			if (!parity)
+ 				value |= B43_DMA64_TXPARITYDISABLE;
+ 			b43_dma_write(ring, B43_DMA64_TXCTL, value);
+-			b43_dma_write(ring, B43_DMA64_TXRINGLO,
+-				      (ringbase & 0xFFFFFFFF));
+-			b43_dma_write(ring, B43_DMA64_TXRINGHI,
+-				      ((ringbase >> 32) &
+-				       ~SSB_DMA_TRANSLATION_MASK)
+-				      | trans);
++
++			addrs[0] = ringbase & 0xFFFFFFFF;
++			addrs[1] = ringbase >> 32;
++			tmp = ring->dev->dma.translation_in_low ? 0 : 1;
++			addrs[tmp] &= ~SSB_DMA_TRANSLATION_MASK;
++			addrs[tmp] |= trans;
++			b43_dma_write(ring, B43_DMA64_TXRINGLO, addrs[0]);
++			b43_dma_write(ring, B43_DMA64_TXRINGHI, addrs[1]);
+ 		} else {
+ 			u32 ringbase = (u32) (ring->dmabase);
+ 
+@@ -710,12 +717,15 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
+ 			if (!parity)
+ 				value |= B43_DMA64_RXPARITYDISABLE;
+ 			b43_dma_write(ring, B43_DMA64_RXCTL, value);
+-			b43_dma_write(ring, B43_DMA64_RXRINGLO,
+-				      (ringbase & 0xFFFFFFFF));
+-			b43_dma_write(ring, B43_DMA64_RXRINGHI,
+-				      ((ringbase >> 32) &
+-				       ~SSB_DMA_TRANSLATION_MASK)
+-				      | trans);
++
++			addrs[0] = ringbase & 0xFFFFFFFF;
++			addrs[1] = ringbase >> 32;
++			tmp = ring->dev->dma.translation_in_low ? 0 : 1;
++			addrs[tmp] &= ~SSB_DMA_TRANSLATION_MASK;
++			addrs[tmp] |= trans;
++			b43_dma_write(ring, B43_DMA64_RXRINGLO, addrs[0]);
++			b43_dma_write(ring, B43_DMA64_RXRINGHI, addrs[1]);
++
+ 			b43_dma_write(ring, B43_DMA64_RXINDEX, ring->nr_slots *
+ 				      sizeof(struct b43_dmadesc64));
+ 		} else {
+@@ -1052,6 +1062,21 @@ static int b43_dma_set_mask(struct b43_wldev *dev, u64 mask)
+ 	return 0;
+ }
+ 
++/* Some hardware with 64-bit DMA seems to be bugged and looks for translation
++ * bit in low address word instead of high one.
++ */
++static bool b43_dma_translation_in_low_word(struct b43_wldev *dev)
++{
++#ifdef CONFIG_B43_SSB
++	if (dev->dev->bus_type == B43_BUS_SSB &&
++	    dev->dev->sdev->bus->bustype == SSB_BUSTYPE_PCI &&
++	    !(dev->dev->sdev->bus->host_pci->is_pcie &&
++	      ssb_read32(dev->dev->sdev, SSB_TMSHIGH) & SSB_TMSHIGH_DMA64))
++			return 1;
++#endif
++	return 0;
++}
++
+ int b43_dma_init(struct b43_wldev *dev)
+ {
+ 	struct b43_dma *dma = &dev->dma;
+@@ -1077,6 +1102,7 @@ int b43_dma_init(struct b43_wldev *dev)
+ 		break;
+ #endif
  	}
++	dma->translation_in_low = b43_dma_translation_in_low_word(dev);
  
-+	ieee80211_stop_queues_by_reason(&sdata->local->hw,
-+			IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
-+
-+	/* flush out all packets */
-+	synchronize_net();
-+
-+	drv_flush(local, false);
- 	/* channel_type change automatically detected */
- 	ieee80211_hw_config(local, 0);
- 
-@@ -245,6 +252,9 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 		rcu_read_unlock();
- 	}
- 
-+	ieee80211_wake_queues_by_reason(&sdata->local->hw,
-+			IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
-+
- 	ht_opmode = le16_to_cpu(hti->operation_mode);
- 
- 	/* if bss configuration changed store the new one */
+ 	dma->parity = true;
+ #ifdef CONFIG_B43_BCMA
 -- 
-1.7.6.1
+1.7.1
 
