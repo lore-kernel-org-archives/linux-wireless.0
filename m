@@ -1,153 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:48532 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772Ab1HLMsa (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:53472 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753046Ab1HJJxe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 08:48:30 -0400
-Received: by fxh19 with SMTP id 19so2284482fxh.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 05:48:29 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2 4/4] b43: HT-PHY: init: init BPHY and upload 0x1a table
-Date: Fri, 12 Aug 2011 15:27:34 +0200
-Message-Id: <1313155654-8988-4-git-send-email-zajec5@gmail.com> (sfid-20110812_144834_130846_F8AA967D)
+	Wed, 10 Aug 2011 05:53:34 -0400
+Received: by ywf7 with SMTP id 7so541909ywf.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 02:53:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1312967955.2407.452.camel@cumari>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	<1312881233-9366-9-git-send-email-eliad@wizery.com>
+	<1312967955.2407.452.camel@cumari>
+Date: Wed, 10 Aug 2011 12:53:33 +0300
+Message-ID: <CAB3XZEcdxPhw=L4EA6ZJVnEOw6EZTu+WfZR8NJj_vrPMmU6-vQ@mail.gmail.com> (sfid-20110810_115340_527845_FDAF1AA7)
+Subject: Re: [PATCH 08/40] wl12xx: wl12xx-fw-3 - update commands & events
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+hi Luca,
 
-Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
----
-BPHY is something partially known from N-PHY.
+thanks for your (ongoing) reviews.
+i'll apply your comments in the next version.
+anyway, regarding some of non-trivial comments:
 
-This 0x1a table with 0xc0 offset is a little tricky. We already upload
-something like that earlier, but this is needed to stop radio going crazy
-and transmissint crap.
+On Wed, Aug 10, 2011 at 12:19 PM, Luciano Coelho <coelho@ti.com> wrote:
+> On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote:
+>> † † † /* unmask required mbox events †*/
+>> † † † wl->event_mask = BSS_LOSE_EVENT_ID |
+>> † † † † † † † SCAN_COMPLETE_EVENT_ID |
+>> † † † † † † † PS_REPORT_EVENT_ID |
+>> - † † † † † † JOIN_EVENT_COMPLETE_ID |
+>> † † † † † † † DISCONNECT_EVENT_COMPLETE_ID |
+>> † † † † † † † RSSI_SNR_TRIGGER_0_EVENT_ID |
+>> † † † † † † † PSPOLL_DELIVERY_FAILURE_EVENT_ID |
+>> † † † † † † † SOFT_GEMINI_SENSE_EVENT_ID |
+>> † † † † † † † PERIODIC_SCAN_REPORT_EVENT_ID |
+>> - † † † † † † PERIODIC_SCAN_COMPLETE_EVENT_ID;
+>> + † † † † † † PERIODIC_SCAN_COMPLETE_EVENT_ID |
+>> + † † † † † † DUMMY_PACKET_EVENT_ID |
+>> + † † † † † † PEER_REMOVE_COMPLETE_EVENT_ID |
+>> + † † † † † † BA_SESSION_RX_CONSTRAINT_EVENT_ID |
+>> + † † † † † † REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID;
+>>
+>> † † † if (wl->bss_type == BSS_TYPE_AP_BSS)
+>> - † † † † † † wl->event_mask |= STA_REMOVE_COMPLETE_EVENT_ID |
+>> - † † † † † † † † † † † † † † † INACTIVE_STA_EVENT_ID |
+>> + † † † † † † wl->event_mask |= INACTIVE_STA_EVENT_ID |
+>> † † † † † † † † † † † † † † † † MAX_TX_RETRY_EVENT_ID;
+>
+> Do we really need to mask this stuff separately?
+>
+we thought of masking the needed events according to the active role.
+anyway, i since there is no overlapping, and in the future there will
+be multiple roles, i guess we can just unmask them all together.
 
-V2: limit line to 80 chars
----
- drivers/net/wireless/b43/phy_ht.c        |   26 ++++++++++++++++++++
- drivers/net/wireless/b43/tables_phy_ht.c |   39 ++++++++++++++++++++++++++++++
- drivers/net/wireless/b43/tables_phy_ht.h |    3 ++
- 3 files changed, 68 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 2ea7b08..84811b0 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -169,6 +169,24 @@ static void b43_phy_ht_zero_extg(struct b43_wldev *dev)
- 		b43_phy_write(dev, B43_PHY_EXTG(base[i] + 0xc), 0);
- }
- 
-+static void b43_phy_ht_bphy_init(struct b43_wldev *dev)
-+{
-+	unsigned int i;
-+	u16 val;
-+
-+	val = 0x1E1F;
-+	for (i = 0; i < 16; i++) {
-+		b43_phy_write(dev, B43_PHY_N_BMODE(0x88 + i), val);
-+		val -= 0x202;
-+	}
-+	val = 0x3E3F;
-+	for (i = 0; i < 16; i++) {
-+		b43_phy_write(dev, B43_PHY_N_BMODE(0x98 + i), val);
-+		val -= 0x202;
-+	}
-+	b43_phy_write(dev, B43_PHY_N_BMODE(0x38), 0x668);
-+}
-+
- /**************************************************
-  * Channel switching ops.
-  **************************************************/
-@@ -322,6 +340,14 @@ static int b43_phy_ht_op_init(struct b43_wldev *dev)
- 
- 	b43_mac_phy_clock_set(dev, true);
- 
-+	/* TODO: Some ops here */
-+
-+	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
-+		b43_phy_ht_bphy_init(dev);
-+
-+	b43_httab_write_bulk(dev, B43_HTTAB32(0x1a, 0xc0),
-+			B43_HTTAB_1A_C0_LATE_SIZE, b43_httab_0x1a_0xc0_late);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/b43/tables_phy_ht.c b/drivers/net/wireless/b43/tables_phy_ht.c
-index 9681af5..677d217 100644
---- a/drivers/net/wireless/b43/tables_phy_ht.c
-+++ b/drivers/net/wireless/b43/tables_phy_ht.c
-@@ -574,6 +574,42 @@ static const u32 b43_httab_0x24[] = {
- 	0x005d0582, 0x005805d6, 0x0053062e, 0x004e068c,
- };
- 
-+/* Some late-init table */
-+const u32 b43_httab_0x1a_0xc0_late[] = {
-+	0x10f90040, 0x10e10040, 0x10e1003c, 0x10c9003d,
-+	0x10b9003c, 0x10a9003d, 0x10a1003c, 0x1099003b,
-+	0x1091003b, 0x1089003a, 0x1081003a, 0x10790039,
-+	0x10710039, 0x1069003a, 0x1061003b, 0x1059003d,
-+	0x1051003f, 0x10490042, 0x1049003e, 0x1049003b,
-+	0x1041003e, 0x1041003b, 0x1039003e, 0x1039003b,
-+	0x10390038, 0x10390035, 0x1031003a, 0x10310036,
-+	0x10310033, 0x1029003a, 0x10290037, 0x10290034,
-+	0x10290031, 0x10210039, 0x10210036, 0x10210033,
-+	0x10210030, 0x1019003c, 0x10190039, 0x10190036,
-+	0x10190033, 0x10190030, 0x1019002d, 0x1019002b,
-+	0x10190028, 0x1011003a, 0x10110036, 0x10110033,
-+	0x10110030, 0x1011002e, 0x1011002b, 0x10110029,
-+	0x10110027, 0x10110024, 0x10110022, 0x10110020,
-+	0x1011001f, 0x1011001d, 0x1009003a, 0x10090037,
-+	0x10090034, 0x10090031, 0x1009002e, 0x1009002c,
-+	0x10090029, 0x10090027, 0x10090025, 0x10090023,
-+	0x10090021, 0x1009001f, 0x1009001d, 0x1009001b,
-+	0x1009001a, 0x10090018, 0x10090017, 0x10090016,
-+	0x10090015, 0x10090013, 0x10090012, 0x10090011,
-+	0x10090010, 0x1009000f, 0x1009000f, 0x1009000e,
-+	0x1009000d, 0x1009000c, 0x1009000c, 0x1009000b,
-+	0x1009000a, 0x1009000a, 0x10090009, 0x10090009,
-+	0x10090008, 0x10090008, 0x10090007, 0x10090007,
-+	0x10090007, 0x10090006, 0x10090006, 0x10090005,
-+	0x10090005, 0x10090005, 0x10090005, 0x10090004,
-+	0x10090004, 0x10090004, 0x10090004, 0x10090003,
-+	0x10090003, 0x10090003, 0x10090003, 0x10090003,
-+	0x10090003, 0x10090002, 0x10090002, 0x10090002,
-+	0x10090002, 0x10090002, 0x10090002, 0x10090002,
-+	0x10090002, 0x10090002, 0x10090001, 0x10090001,
-+	0x10090001, 0x10090001, 0x10090001, 0x10090001,
-+};
-+
- /**************************************************
-  * R/W ops.
-  **************************************************/
-@@ -768,6 +804,9 @@ void b43_httab_write_bulk(struct b43_wldev *dev, u32 offset,
- 	} while (0)
- void b43_phy_ht_tables_init(struct b43_wldev *dev)
- {
-+	BUILD_BUG_ON(ARRAY_SIZE(b43_httab_0x1a_0xc0_late) !=
-+			B43_HTTAB_1A_C0_LATE_SIZE);
-+
- 	httab_upload(dev, B43_HTTAB16(0x12, 0), b43_httab_0x12);
- 	httab_upload(dev, B43_HTTAB16(0x27, 0), b43_httab_0x27);
- 	httab_upload(dev, B43_HTTAB16(0x26, 0), b43_httab_0x26);
-diff --git a/drivers/net/wireless/b43/tables_phy_ht.h b/drivers/net/wireless/b43/tables_phy_ht.h
-index c68b0fa..1b5ef2b 100644
---- a/drivers/net/wireless/b43/tables_phy_ht.h
-+++ b/drivers/net/wireless/b43/tables_phy_ht.h
-@@ -20,4 +20,7 @@ void b43_httab_write_bulk(struct b43_wldev *dev, u32 offset,
- 
- void b43_phy_ht_tables_init(struct b43_wldev *dev);
- 
-+#define B43_HTTAB_1A_C0_LATE_SIZE		128
-+extern const u32 b43_httab_0x1a_0xc0_late[];
-+
- #endif /* B43_TABLES_PHY_HT_H_ */
--- 
-1.7.3.4
+>> -int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type)
+>> +int wl1271_cmd_role_enable(struct wl1271 *wl, u8 role_type, u8 *role_id)
+>
+> s/wl1271_cmd_role_enable/wl12xx_cmd_role_enable/
+>
+> Same thing for wl1271_cmd_role_disable and all the other functions whose
+> declaration changed.
+>
+> I was thinking that we could use the role_id directly from the wl struct
+> here, but then I changed my mind, because I think it's not good that the
+> cmd functions themselves change the wl struct. †At some point we need to
+> split the HW-related part of wl (phy) from the context-related elements
 
+well, that exactly our plan. after applying the all the pending series
+we'll start splitting up wl into global and per-vif data, in order to
+support multiple vifs.
+
+> (vif). †For most of the cases, if not all, the cmd functions only use
+> the HW-related elements.
+>
+every command that takes role_id as param is basically per-vif, so i
+guess you're wrong here :)
+
+> Anyway, this small detour just supports the usage of role_id as a
+> separate argument instead of taking it from wl. ;)
+>
+right :)
+
+>> +
+>> + † † † memcpy(cmd->mac_address, wl->mac_addr, ETH_ALEN);
+>
+> To keep aligned with my comment about phy vs. vif context, I think it
+> would be nicer to pass the MAC address as an argument to this function
+> as well. †When we implement multirole, we will need different MAC
+> addresses for each role, so we can't really use the value from wl.
+>
+you are right, but let's leave it for a later stage.
+(i have some patch that replaces all the wl->mac_addr to vif->addr)
+
+>> +static int wl1271_allocate_link(struct wl1271 *wl, u8 *hlid)
+>> +{
+>> + † † u8 alloced = find_first_zero_bit(wl->links_map, WL1271_MAX_LINKS);
+>
+> This is *very* netpicky, but could you call this variable "link" or
+> something instead of "alloced"? Alloced is annoying to read because of
+> the missing apostrophe! :P
+>
+whatever :)
+
+>> +int wl1271_cmd_role_stop_sta(struct wl1271 *wl)
+>> +{
+
+>> +
+>> + † † cmd->role_id = wl->role_id;
+>> + † † cmd->disc_type = WL1271_DISC_IMMEDIATE;
+>> + † † cmd->reason = cpu_to_le16(1); /* STATUS_UNSPECIFIED */
+>
+> Isn't there a more reasonable reason? :) In any case, this should at
+> least be in an enum together with the other possible reasons instead of
+> hardcoded here.
+>
+in fact, i think it has meaning only if we configure the disassoc
+template, so we can just delete it.
+
+
+again, thanks for your reviews.
+i'll just apply all the required changes instead of ACKing each one :)
+
+Eliad.
