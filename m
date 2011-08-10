@@ -1,50 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:38180 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754879Ab1HWOEl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34743 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750866Ab1HJNia (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 10:04:41 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
-	<senthilb@qca.qualcomm.com>, <rmanohar@qca.qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH] ath9k: Fix PS wrappers in ath9k_set_coverage_class
-Date: Tue, 23 Aug 2011 19:34:33 +0530
-Message-ID: <1314108273-3787-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110823_160445_665429_0E3C4409)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 10 Aug 2011 09:38:30 -0400
+Subject: Re: [PATCH 1/8] mac80211: improve mpath debugging
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org,
+	Javier Cardona <javier@cozybit.com>, linville@tuxdriver.com
+In-Reply-To: <1312933511-9486-2-git-send-email-thomas@cozybit.com> (sfid-20110810_014656_188483_29CF88BD)
+References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
+	 <1312933511-9486-2-git-send-email-thomas@cozybit.com>
+	 (sfid-20110810_014656_188483_29CF88BD)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Aug 2011 15:38:27 +0200
+Message-ID: <1312983507.4325.1.camel@jlt3.sipsolutions.net> (sfid-20110810_153832_472660_F04398D5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Tue, 2011-08-09 at 16:45 -0700, Thomas Pedersen wrote:
 
-this callback is called during suspend/resume and also via iw command.
-it configures parameters like sifs, slottime, acktimeout in
-ath9k_hw_init_global_settings where few REG_READ, REG_RMW are also done
-and hence the need for PS wrappers
+> +#ifdef CONFIG_MAC80211_VERBOSE_MPATH_DEBUG
+> +#define mpath_dbg(fmt, args...)	printk(KERN_DEBUG fmt, ##args)
+> +#else
+> +#define mpath_dbg(fmt, args...)	do { (void)(0); } while (0)
+> +#endif
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+Maybe this should be a static inline for checking the fmt args even when
+it's compiled out?
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 781af25..2486f5c 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2285,7 +2285,11 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
- 
- 	mutex_lock(&sc->mutex);
- 	ah->coverage_class = coverage_class;
-+
-+	ath9k_ps_wakeup(sc);
- 	ath9k_hw_init_global_settings(ah);
-+	ath9k_ps_restore(sc);
-+
- 	mutex_unlock(&sc->mutex);
- }
- 
--- 
-1.7.0.4
+johannes
 
