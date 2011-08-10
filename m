@@ -1,43 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:38387 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755352Ab1HaMbN (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:50261 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752564Ab1HJSal convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 08:31:13 -0400
-Received: by gwaa12 with SMTP id a12so6670gwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 05:31:13 -0700 (PDT)
+	Wed, 10 Aug 2011 14:30:41 -0400
+Received: by gya6 with SMTP id 6so844248gya.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 11:30:40 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1314792948.4161.23.camel@jlt3.sipsolutions.net>
-References: <1314558661-28454-1-git-send-email-nbd@openwrt.org>
-	<1314792948.4161.23.camel@jlt3.sipsolutions.net>
-Date: Wed, 31 Aug 2011 14:31:13 +0200
-Message-ID: <CAGXE3d-_hSmii3GsZF3jqOfP1amrMeL+GtJ605z406nRjA_z7g@mail.gmail.com> (sfid-20110831_143117_694859_6A7245A8)
-Subject: Re: [PATCH] mac80211: retry sending failed BAR frames later instead
- of tearing down aggr
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
+In-Reply-To: <1312983144-16156-1-git-send-email-sgruszka@redhat.com>
+References: <1312983144-16156-1-git-send-email-sgruszka@redhat.com>
+Date: Wed, 10 Aug 2011 20:30:40 +0200
+Message-ID: <CAOZOX0VnGAAhQ7AAy+1hefNryc+x0gukH5CWB72BoOaGJDrbTg@mail.gmail.com> (sfid-20110810_203045_137705_569A6743)
+Subject: Re: [PATCH 1/3] rt2x00: fix crash in rt2800usb_write_tx_desc
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Justin Piszcz <jpiszcz@lucidpixels.com>, stable@kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 31, 2011 at 2:15 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2011-08-28 at 21:11 +0200, Felix Fietkau wrote:
->> Unfortunately failed BAR tx attempts happen more frequently than I
->> expected, and the resulting aggregation teardowns cause performance
->> issues, as the aggregation session does not always get re-established
->> properly.
+On Wed, Aug 10, 2011 at 3:32 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> Patch should fix this oops:
+>
+> BUG: unable to handle kernel NULL pointer dereference at 000000a0
+> IP: [<f8e06078>] rt2800usb_write_tx_desc+0x18/0xc0 [rt2800usb]
+> *pdpt = 000000002408c001 *pde = 0000000024079067 *pte = 0000000000000000
+> Oops: 0000 [#1] SMP
+> EIP: 0060:[<f8e06078>] EFLAGS: 00010282 CPU: 0
+> EIP is at rt2800usb_write_tx_desc+0x18/0xc0 [rt2800usb]
+> EAX: 00000035 EBX: ef2bef10 ECX: 00000000 EDX: d40958a0
+> ESI: ef1865f8 EDI: ef1865f8 EBP: d4095878 ESP: d409585c
+>  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+> Call Trace:
+>  [<f8da5e85>] rt2x00queue_write_tx_frame+0x155/0x300 [rt2x00lib]
+>  [<f8da424c>] rt2x00mac_tx+0x7c/0x370 [rt2x00lib]
+>  [<c04882b2>] ? mark_held_locks+0x62/0x90
+>  [<c081f645>] ? _raw_spin_unlock_irqrestore+0x35/0x60
+>  [<c04884ba>] ? trace_hardirqs_on_caller+0x5a/0x170
+>  [<c04885db>] ? trace_hardirqs_on+0xb/0x10
+>  [<f8d618ac>] __ieee80211_tx+0x5c/0x1e0 [mac80211]
+>  [<f8d631fc>] ieee80211_tx+0xbc/0xe0 [mac80211]
+>  [<f8d63163>] ? ieee80211_tx+0x23/0xe0 [mac80211]
+>  [<f8d632e1>] ieee80211_xmit+0xc1/0x200 [mac80211]
+>  [<f8d63220>] ? ieee80211_tx+0xe0/0xe0 [mac80211]
+>  [<c0487d45>] ? lock_release_holdtime+0x35/0x1b0
+>  [<f8d63986>] ? ieee80211_subif_start_xmit+0x446/0x5f0 [mac80211]
+>  [<f8d637dd>] ieee80211_subif_start_xmit+0x29d/0x5f0 [mac80211]
+>  [<f8d63924>] ? ieee80211_subif_start_xmit+0x3e4/0x5f0 [mac80211]
+>  [<c0760188>] ? sock_setsockopt+0x6a8/0x6f0
+>  [<c0760000>] ? sock_setsockopt+0x520/0x6f0
+>  [<c076daef>] dev_hard_start_xmit+0x2ef/0x650
+>
+> Oops might happen because we perform parallel putting new entries in a
+> queue (rt2x00queue_write_tx_frame()) and removing entries after
+> finishing transmitting (rt2800usb_work_txdone()). There are cases when
+> _txdone may process an entry that was not fully send and nullify
+> entry->skb .
+>
+> To fix check in _txdone if entry has flags that indicate pending
+> transmission and wait until flags get cleared.
+>
+> Reported-by: Justin Piszcz <jpiszcz@lucidpixels.com>
+> Cc: stable@kernel.org
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Felix, so this also happens with ath9k (not only rt2800pci)?
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-> I find this curious. How can tons of traffic go through, but BAR frames
-> fail? These are unicast and should be retried a bunch...
-
-As I said before I could only reproduce this very seldom and the failure
-was always just a temporary one. Only one or two AMPDUs failed for
-whatever reason and the following BAR as well. Afterwards traffic was
-going through again.
-
-Helmut
+> ---
+>  drivers/net/wireless/rt2x00/rt2800usb.c |   13 ++++++++++++-
+>  1 files changed, 12 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index 5075593..d137812 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -464,6 +464,15 @@ static bool rt2800usb_txdone_entry_check(struct queue_entry *entry, u32 reg)
+>        int wcid, ack, pid;
+>        int tx_wcid, tx_ack, tx_pid;
+>
+> +       if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags) ||
+> +           !test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags)) {
+> +               WARNING(entry->queue->rt2x00dev,
+> +                       "Data pending for entry %u in queue %u\n",
+> +                       entry->entry_idx, entry->queue->qid);
+> +               cond_resched();
+> +               return false;
+> +       }
+> +
+>        wcid    = rt2x00_get_field32(reg, TX_STA_FIFO_WCID);
+>        ack     = rt2x00_get_field32(reg, TX_STA_FIFO_TX_ACK_REQUIRED);
+>        pid     = rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE);
+> @@ -558,8 +567,10 @@ static void rt2800usb_work_txdone(struct work_struct *work)
+>                while (!rt2x00queue_empty(queue)) {
+>                        entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
+>
+> -                       if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
+> +                       if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags) ||
+> +                           !test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags))
+>                                break;
+> +
+>                        if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
+>                                rt2x00lib_txdone_noinfo(entry, TXDONE_FAILURE);
+>                        else if (rt2x00queue_status_timeout(entry))
+> --
+> 1.7.1
+>
+>
