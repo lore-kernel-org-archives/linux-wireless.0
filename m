@@ -1,72 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:56749 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753490Ab1HFK4C (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42779 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751191Ab1HJNsB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Aug 2011 06:56:02 -0400
-Received: by mail-iy0-f170.google.com with SMTP id 16so5329995iye.1
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Aug 2011 03:56:02 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
+	Wed, 10 Aug 2011 09:48:01 -0400
+Subject: Re: [PATCH 8/8] {nl,cfg,mac}80211: let userspace make meshif mesh
+ gate
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
 Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 2/2] rtlwifi: Remove raw read/write routines from header
-Date: Sat,  6 Aug 2011 05:55:19 -0500
-Message-Id: <1312628119-12640-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20110806_125609_103478_1B6783CF)
-In-Reply-To: <1312628119-12640-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1312628119-12640-1-git-send-email-Larry.Finger@lwfinger.net>
+	Javier Cardona <javier@cozybit.com>, linville@tuxdriver.com
+In-Reply-To: <1312933511-9486-9-git-send-email-thomas@cozybit.com> (sfid-20110810_014706_804427_DAE2F672)
+References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
+	 <1312933511-9486-9-git-send-email-thomas@cozybit.com>
+	 (sfid-20110810_014706_804427_DAE2F672)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Aug 2011 15:47:58 +0200
+Message-ID: <1312984078.4325.5.camel@jlt3.sipsolutions.net> (sfid-20110810_154807_487536_3627F6DE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that the driver no longer uses the raw r/w routines, remove their definitions.
+On Tue, 2011-08-09 at 16:45 -0700, Thomas Pedersen wrote:
+> From: Javier Cardona <javier@cozybit.com>
+> 
+> Allow userspace to set NL80211_MESHCONF_GATE_ANNOUNCEMENTS attribute,
+> which will advertise this mesh node as being a mesh gate.
+> NL80211_HWMP_ROOTMODE must be set or this will do nothing.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/pci.h |   26 --------------------------
- 1 files changed, 0 insertions(+), 26 deletions(-)
+IMHO it should be rejected instead of doing nothing.
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.h b/drivers/net/wireless/rtlwifi/pci.h
-index c53c620..a24e505 100644
---- a/drivers/net/wireless/rtlwifi/pci.h
-+++ b/drivers/net/wireless/rtlwifi/pci.h
-@@ -212,7 +212,6 @@ struct mp_adapter {
- 	u16 pcibridge_vendorid;
- 	u16 pcibridge_deviceid;
- 
--	u32 pcicfg_addrport;
- 	u8 num4bytes;
- 
- 	u8 pcibridge_pciehdr_offset;
-@@ -273,29 +272,4 @@ static inline void pci_write32_async(struct rtl_priv *rtlpriv,
- 	writel(val, (u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
- }
- 
--static inline void rtl_pci_raw_write_port_ulong(u32 port, u32 val)
--{
--	outl(val, port);
--}
--
--static inline void rtl_pci_raw_write_port_uchar(u32 port, u8 val)
--{
--	outb(val, port);
--}
--
--static inline void rtl_pci_raw_read_port_uchar(u32 port, u8 *pval)
--{
--	*pval = inb(port);
--}
--
--static inline void rtl_pci_raw_read_port_ushort(u32 port, u16 *pval)
--{
--	*pval = inw(port);
--}
--
--static inline void rtl_pci_raw_read_port_ulong(u32 port, u32 *pval)
--{
--	*pval = inl(port);
--}
--
- #endif
--- 
-1.7.3.4
+johannes
 
