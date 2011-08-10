@@ -1,66 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46678 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756017Ab1H3TEp (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:58825 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751651Ab1HJWKb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 15:04:45 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH v2 21/22] ath6kl: Return error from wmi.c instead of -EIO in ath6kl_cfg80211_scan
-Date: Tue, 30 Aug 2011 21:58:10 +0300
-Message-ID: <1314730691-12089-22-git-send-email-jouni@qca.qualcomm.com> (sfid-20110830_210448_699223_7E615370)
-In-Reply-To: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 10 Aug 2011 18:10:31 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 97743540406
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 18:19:23 -0400 (EDT)
+Subject: Compat-wireless release for 2011-08-10 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110810190523.985D340EA1@repository3.orbit-lab.org> (sfid-20110811_001034_884503_AA17C97D)
+Date: Wed, 10 Aug 2011 15:05:03 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+fatal: Unable to look up git.kernel.org (port 9418) (Name or service not known)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 2136899..e867a7a 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -759,12 +759,13 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
- 		return -EIO;
- 
- 	if (!ar->usr_bss_filter) {
--		if (ath6kl_wmi_bssfilter_cmd(ar->wmi,
--					     (test_bit(CONNECTED, &ar->flag) ?
--					     ALL_BUT_BSS_FILTER :
--					     ALL_BSS_FILTER), 0) != 0) {
-+		ret = ath6kl_wmi_bssfilter_cmd(
-+			ar->wmi,
-+			(test_bit(CONNECTED, &ar->flag) ?
-+			 ALL_BUT_BSS_FILTER : ALL_BSS_FILTER), 0);
-+		if (ret) {
- 			ath6kl_err("couldn't set bss filtering\n");
--			return -EIO;
-+			return ret;
- 		}
- 	}
- 
-@@ -807,11 +808,10 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
- 			channels[i] = request->channels[i]->center_freq;
- 	}
- 
--	if (ath6kl_wmi_startscan_cmd(ar->wmi, WMI_LONG_SCAN, 0,
--				     false, 0, 0, n_channels, channels) != 0) {
-+	ret = ath6kl_wmi_startscan_cmd(ar->wmi, WMI_LONG_SCAN, 0,
-+				       false, 0, 0, n_channels, channels);
-+	if (ret)
- 		ath6kl_err("wmi_startscan_cmd failed\n");
--		ret = -EIO;
--	}
- 
- 	ar->scan_req = request;
- 
--- 
-1.7.4.1
+compat-wireless code metrics
 
+    835756 - Total upstream lines of code being pulled
+ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
+rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+rsync error: unexplained error (code 255) at io.c(600) [sender=3.0.6]
