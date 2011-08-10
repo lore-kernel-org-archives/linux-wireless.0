@@ -1,188 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews08.kpnxchange.com ([213.75.39.13]:1985 "EHLO
-	cpsmtpb-ews08.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753418Ab1HHUz6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56235 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752444Ab1HJOD4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 16:55:58 -0400
-Message-ID: <4E404D5C.30401@gmail.com> (sfid-20110808_225602_104443_947320A1)
-Date: Mon, 08 Aug 2011 22:55:56 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: Ivo Van Doorn <ivdoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Justin Piszcz <jpiszcz@lucidpixels.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] rt2x00: rt2800usb: fix races in tx queue
-References: <20110804124653.GB5739@redhat.com> <CAOZOX0Xpv9OPqx2Y3GnajhmDvx3GyL1xTAjEOYjOToWcQxB6bA@mail.gmail.com> <20110808092914.GA2168@redhat.com> <20110808093512.GB2168@redhat.com>
-In-Reply-To: <20110808093512.GB2168@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 10 Aug 2011 10:03:56 -0400
+Subject: Re: [PATCH 4/4] mac80211: Add HT operation modes for IBSS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alexander Simon <an.alexsimon@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <3091493.N5vzNRrbMZ@alex-1> (sfid-20110808_141034_452490_4BA26D5D)
+References: <1888623.Vt5VZUN2cU@alex-1>  <3091493.N5vzNRrbMZ@alex-1>
+	 (sfid-20110808_141034_452490_4BA26D5D)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Aug 2011 16:03:53 +0200
+Message-ID: <1312985033.4325.19.camel@jlt3.sipsolutions.net> (sfid-20110810_160402_220596_CFF9FC4A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
-
-On 08/08/11 11:35, Stanislaw Gruszka wrote:
-> We can perform parallel putting new entries in a queue
-> (rt2x00queue_write_tx_frame()) and removing entries after
-> finishing transmitting (rt2800usb_work_txdone()). There are
-> cases when txdone may process an entry that was not fully
-> send and nullify entry->skb. What in a result crash the kernel
-> in rt2800usb_write_tx_desc() or rt2800usb_get_txwi() or other
-> place where entry->skb is used.
+On Mon, 2011-08-08 at 14:10 +0200, Alexander Simon wrote:
+> This means setting channel into HT mode and adding HT IEs in beacons.
+> Check if regdom allows this first.
 > 
-> To fix stop processing entries in txdone, which flags do not
-> indicate transition was finished.
-> 
-> Reported-and-tested-by: Justin Piszcz <jpiszcz@lucidpixels.com>
-> Cc: stable@kernel.org
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> If joining another HT network, use its HT mode.
+> If joining a non-HT network, use HT mode given by iw.
+> Join as legacy if neither iw nor remote beacon set an HT mode.
 
-Sorry for responding this late. I just didn't find the bandwidth to look at this earlier :-(
+Do we really want this? I'm wondering if we shouldn't always do HT IBSS
+when joining, even if you didn't ask for it? Not really sure though.
+Thoughts? Are we joining as HT20 if you didn't ask for HT40? And are we
+joining as HT20 if you asked for HT40- but the network is HT40+?
 
-First of all, I don't think stable should be cc-ed on this particular patch. Although the ideas
-of the patch are certainly applicable to the stable trees, this patch will simply not apply to
-3.0 or earlier, since the code you are patching has been moved around between 3.0 and 3.1.
+> If we receive a beacon from another station within our BSSID with a different HT
+> mode than us, we switch to its HT mode. If there are several stations with
+> different HT modes, it may take some time until all will have the same mode.
+> There is no way we can distinguish the "older" station.
 
-Second, I think it would be appropriate to split the patch in 2, or maybe 3, parts:
-	1. The hunk to rt2x00usb to reverse the entry flag handling and the tx dma done handling.
-	2. The hunk that checks that the entry on which the TX status is being reported has
-           already been properly completed its TX done handling.
-	3. The remainder, i.e. the retrying of handling a TX status report if the entry hasn't been
-           fully completed its TX done handling yet. 
+Actually, you can ... the highest TSF should win.
 
-The code in this area has been proven to be very fragile, so I prefer to make mini changes to it in
-small steps, so that we can properly bisect which change exactly has caused a problem.
+> Except for fixed channel mode, HT mode is also fixed. Join or merge ONLY if
+> channel AND HT mode matches.
 
-See further down for more thoughts.
+makes sense.
 
-> ---
-> v1 -> v2: remove goto 
-> 
->  drivers/net/wireless/rt2x00/rt2800usb.c |   33 +++++++++++++++++++++++-------
->  drivers/net/wireless/rt2x00/rt2x00usb.c |    6 ++--
->  2 files changed, 28 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index 5075593..670a30d 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -500,14 +500,14 @@ static bool rt2800usb_txdone_entry_check(struct queue_entry *entry, u32 reg)
->  	return true;
->  }
+> +++ b/net/mac80211/ibss.c
+> @@ -35,6 +35,76 @@
 >  
-> -static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
-> +static int rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
->  {
->  	struct data_queue *queue;
->  	struct queue_entry *entry;
->  	u32 reg;
->  	u8 qid;
+>  #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
 >  
-> -	while (kfifo_get(&rt2x00dev->txstatus_fifo, &reg)) {
-> +	while (kfifo_peek(&rt2x00dev->txstatus_fifo, &reg)) {
->  
->  		/* TX_STA_FIFO_PID_QUEUE is a 2-bit field, thus
->  		 * qid is guaranteed to be one of the TX QIDs
-> @@ -517,6 +517,7 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
->  		if (unlikely(!queue)) {
->  			WARNING(rt2x00dev, "Got TX status for an unavailable "
->  					   "queue %u, dropping\n", qid);
-> +			kfifo_skip(&rt2x00dev->txstatus_fifo);
->  			continue;
->  		}
->  
-> @@ -524,18 +525,32 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
->  		 * Inside each queue, we process each entry in a chronological
->  		 * order. We first check that the queue is not empty.
->  		 */
-> -		entry = NULL;
-> -		while (!rt2x00queue_empty(queue)) {
-> +		while (1) {
-> +			entry = NULL;
+> +static bool ieee80211_can_use_ext_chan(struct ieee80211_sub_if_data *sdata,
+> +				       struct ieee80211_channel *channel,
+> +				       enum nl80211_channel_type channel_type)
+> +{
+> +	/* check if we are legally allowed to use HT extension channel */
+> +	if ((channel_type == NL80211_CHAN_HT40PLUS) ||
+> +			(channel_type == NL80211_CHAN_HT40MINUS)) {
+> +		int sec_freq = channel->center_freq +
+> +			     (channel_type == NL80211_CHAN_HT40PLUS ? 20 : -20);
+> +		struct ieee80211_channel *sec_chan =
+> +			     ieee80211_get_channel(sdata->wdev.wiphy, sec_freq);
+> +		if (!sec_chan || sec_chan->flags & (IEEE80211_CHAN_DISABLED |
+> +					   IEEE80211_CHAN_PASSIVE_SCAN |
+> +					   IEEE80211_CHAN_NO_IBSS |
+> +					   IEEE80211_CHAN_RADAR)) {
+> +			return false;
+> +		}
+> +	}
+> +	return true;
+> +}
+
+Isn't that already a function in cfg80211 that you could rename &
+export?
+
+> +static void ieee80211_update_ht_elems(struct ieee80211_sub_if_data *sdata,
+> +				      struct ieee80211_mgmt *mgmt,
+> +				      struct ieee80211_ht_info *ht_info)
+> +{
+> +	struct ieee80211_local *local = sdata->local;
+> +	struct ieee80211_supported_band *sband =
+> +			local->hw.wiphy->bands[local->oper_channel->band];
+> +	enum nl80211_channel_type channel_type =
+> +			ieee80211_ht_info_to_channel_type(ht_info);
 > +
-> +			if (rt2x00queue_empty(queue))
-> +				break;
+> +	if (!ieee80211_can_use_ext_chan(sdata, local->oper_channel, channel_type))
+> +		channel_type = NL80211_CHAN_HT20;
 > +
-
-Do we really have to change this in a while (1) loop? I really hate those kind of
-loops, as it is quite easy to make an uneducated change later on and create a never
-ending loop. I don't think it is necessary to change the while loop conditions, if
-you just move the entry = NULL assignment to the end of the loop. Then you can keep
-the original while condition.
-
->  			entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
+> +	if (channel_type != local->_oper_channel_type) {
+> +		struct sk_buff *skb = rcu_dereference_protected(
+> +				sdata->u.ibss.presp,
+> +				lockdep_is_held(&ifibss->mtx));
+> +		struct sk_buff *nskb;
+> +		u8 *ht_ie;
 > +
-> +			if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags) ||
-> +			    !test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags)) {
-> +				WARNING(rt2x00dev, "Data pending for entry %u"
-> +					"in queue %u\n", entry->entry_idx, qid);
-> +				return 1;
-> +			}
+> +		/* update HT IE. If not yet existing, create one */
+> +		nskb = skb_copy(skb, GFP_ATOMIC);
+> +		ht_ie = (u8 *)cfg80211_find_ie(WLAN_EID_HT_CAPABILITY,
+> +					       (const u8 *)(nskb->data + 24 +
+> +							sizeof(mgmt->u.beacon)),
+> +					       nskb->len - 24 -
+> +							sizeof(mgmt->u.beacon));
+> +		if (!ht_ie)
+> +			ht_ie = skb_put(nskb, 4 +
+> +					      sizeof(struct ieee80211_ht_cap) +
+> +					      sizeof(struct ieee80211_ht_info));
 > +
+> +		ht_ie = ieee80211_ie_build_ht_cap(ht_ie, sband,
+> +						  sband->ht_cap.cap);
+> +		ht_ie = ieee80211_ie_build_ht_info(ht_ie, &sband->ht_cap,
+> +					     local->oper_channel, channel_type);
+> +		rcu_assign_pointer(sdata->u.ibss.presp, nskb);
+> +		kfree_skb(skb);
 
-Do we have to do this check inside the while loop?
-Wouldn't it be enough to keep the loop as-is and have this check done after the while
-loop, on the found entry?
+RCU race here.
 
->  			if (rt2800usb_txdone_entry_check(entry, reg))
->  				break;
->  		}
+> @@ -104,8 +175,17 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
 >  
-> -		if (!entry || rt2x00queue_empty(queue))
-> -			break;
-> +		if (entry)
-> +			rt2800_txdone_entry(entry, reg);
+>  	sdata->drop_unencrypted = capability & WLAN_CAPABILITY_PRIVACY ? 1 : 0;
 >  
-> -		rt2800_txdone_entry(entry, reg);
-> +		kfifo_skip(&rt2x00dev->txstatus_fifo);
->  	}
+> +	/* entering a legacy IBSS. Use given HT configuration. */
+> +	if (channel_type == NL80211_CHAN_NO_HT)
+> +		channel_type = ifibss->channel_type;
+>  	local->oper_channel = chan;
+> -	WARN_ON(!ieee80211_set_channel_type(local, sdata, NL80211_CHAN_NO_HT));
 > +
-> +	return 0;
->  }
->  
->  static void rt2800usb_work_txdone(struct work_struct *work)
-> @@ -545,7 +560,8 @@ static void rt2800usb_work_txdone(struct work_struct *work)
->  	struct data_queue *queue;
->  	struct queue_entry *entry;
->  
-> -	rt2800usb_txdone(rt2x00dev);
-> +	if (rt2800usb_txdone(rt2x00dev))
-> +		goto out;
->  
->  	/*
->  	 * Process any trailing TX status reports for IO failures,
-> @@ -569,6 +585,7 @@ static void rt2800usb_work_txdone(struct work_struct *work)
->  		}
->  	}
->  
-> +out:
->  	/*
->  	 * The hw may delay sending the packet after DMA complete
->  	 * if the medium is busy, thus the TX_STA_FIFO entry is
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-> index b6b4542..46c6d36 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-> @@ -265,14 +265,14 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
->  	if (!test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
->  		return;
->  
-> -	if (rt2x00dev->ops->lib->tx_dma_done)
-> -		rt2x00dev->ops->lib->tx_dma_done(entry);
-> -
->  	/*
->  	 * Report the frame as DMA done
->  	 */
->  	rt2x00lib_dmadone(entry);
->  
-> +	if (rt2x00dev->ops->lib->tx_dma_done)
-> +		rt2x00dev->ops->lib->tx_dma_done(entry);
-> +
->  	/*
->  	 * Check if the frame was correctly uploaded
->  	 */
+> +	/* if phy is on a different extension channel, setting ht40 will fail */
+> +	if (!ieee80211_set_channel_type(local, sdata, channel_type)) {
+> +		channel_type = NL80211_CHAN_HT20;
+> +		WARN_ON(!ieee80211_set_channel_type(local, sdata,
+> +				                                 channel_type));
+> +	}
 
----
-Gertjan
+indentation
+
+> @@ -404,7 +525,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+>  		ieee80211_sta_join_ibss(sdata, bss);
+>  		supp_rates = ieee80211_sta_get_rates(local, elems, band);
+>  		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
+> -				       supp_rates, GFP_KERNEL);
+> +				    supp_rates, elems->ht_cap_elem, GFP_KERNEL);
+
+indentation
+
+johannes
+
