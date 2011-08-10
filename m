@@ -1,228 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:50219 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752626Ab1HLCy0 (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:38936 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752735Ab1HJK0j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 22:54:26 -0400
-Received: by mail-iy0-f170.google.com with SMTP id 16so634961iye.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 19:54:26 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v2 7/8] {nl,cfg,mac}80211: let userspace set RANN interval
-Date: Thu, 11 Aug 2011 19:54:00 -0700
-Message-Id: <1313117641-27351-7-git-send-email-thomas@cozybit.com> (sfid-20110812_045439_276533_E434820A)
-In-Reply-To: <1313117641-27351-1-git-send-email-thomas@cozybit.com>
-References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
- <1313117641-27351-1-git-send-email-thomas@cozybit.com>
+	Wed, 10 Aug 2011 06:26:39 -0400
+Received: by mail-bw0-f45.google.com with SMTP id zv3so405344bkb.18
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 03:26:37 -0700 (PDT)
+Subject: Re: [PATCH 08/40] wl12xx: wl12xx-fw-3 - update commands & events
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAB3XZEcdxPhw=L4EA6ZJVnEOw6EZTu+WfZR8NJj_vrPMmU6-vQ@mail.gmail.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	 <1312881233-9366-9-git-send-email-eliad@wizery.com>
+	 <1312967955.2407.452.camel@cumari>
+	 <CAB3XZEcdxPhw=L4EA6ZJVnEOw6EZTu+WfZR8NJj_vrPMmU6-vQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Aug 2011 13:26:34 +0300
+Message-ID: <1312971994.2407.473.camel@cumari> (sfid-20110810_122643_287083_95106A8F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+On Wed, 2011-08-10 at 12:53 +0300, Eliad Peller wrote: 
+> hi Luca,
+> 
+> thanks for your (ongoing) reviews.
+> i'll apply your comments in the next version.
 
-Allow userspace to set Root Announcement Interval for our mesh
-interface. Also, RANN interval is now in proper units of TUs.
+Thanks.  It will still take some time for me to finish going through all
+these 40 patches, as I don't want to starve my other workqueues. ;)
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
-v2:
-	- use TU_TO_EXP_TIME macrot (Johannes)
- include/linux/nl80211.h       |    4 ++++
- include/net/cfg80211.h        |    1 +
- net/mac80211/cfg.c            |    4 ++++
- net/mac80211/debugfs_netdev.c |    3 +++
- net/mac80211/mesh.c           |    3 ++-
- net/mac80211/mesh.h           |    1 -
- net/mac80211/mesh_hwmp.c      |    8 ++++----
- net/wireless/mesh.c           |    2 ++
- net/wireless/nl80211.c        |    7 +++++++
- 9 files changed, 27 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 8ad70dc..63ad64b 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1833,6 +1833,9 @@ enum nl80211_mntr_flags {
-  * @NL80211_MESHCONF_ELEMENT_TTL: specifies the value of TTL field set at a
-  * source mesh point for path selection elements.
-  *
-+ * @NL80211_MESHCONF_HWMP_RANN_INTERVAL:  The interval of time (in TUs) between
-+ * root announcements are transmitted.
-+ *
-  * @NL80211_MESHCONF_ATTR_MAX: highest possible mesh configuration attribute
-  *
-  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
-@@ -1854,6 +1857,7 @@ enum nl80211_meshconf_params {
- 	NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME,
- 	NL80211_MESHCONF_HWMP_ROOTMODE,
- 	NL80211_MESHCONF_ELEMENT_TTL,
-+	NL80211_MESHCONF_HWMP_RANN_INTERVAL,
- 
- 	/* keep last */
- 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 779e300..de101d9 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -691,6 +691,7 @@ struct mesh_config {
- 	u16 dot11MeshHWMPpreqMinInterval;
- 	u16 dot11MeshHWMPnetDiameterTraversalTime;
- 	u8  dot11MeshHWMPRootMode;
-+	u16 dot11MeshHWMPRannInterval;
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index c1fa577..9995c83 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1137,6 +1137,10 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
- 		conf->dot11MeshHWMPRootMode = nconf->dot11MeshHWMPRootMode;
- 		ieee80211_mesh_root_setup(ifmsh);
- 	}
-+	if (_chg_mesh_attr(NL80211_MESHCONF_HWMP_RANN_INTERVAL, mask)) {
-+		conf->dot11MeshHWMPRannInterval =
-+			nconf->dot11MeshHWMPRannInterval;
-+	}
- 	return 0;
- }
- 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 75ece3d..bac9443 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -372,6 +372,8 @@ IEEE80211_IF_FILE(min_discovery_timeout,
- 		u.mesh.mshcfg.min_discovery_timeout, DEC);
- IEEE80211_IF_FILE(dot11MeshHWMPRootMode,
- 		u.mesh.mshcfg.dot11MeshHWMPRootMode, DEC);
-+IEEE80211_IF_FILE(dot11MeshHWMPRannInterval,
-+		u.mesh.mshcfg.dot11MeshHWMPRannInterval, DEC);
- #endif
- 
- 
-@@ -486,6 +488,7 @@ static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
- 	MESHPARAMS_ADD(path_refresh_time);
- 	MESHPARAMS_ADD(min_discovery_timeout);
- 	MESHPARAMS_ADD(dot11MeshHWMPRootMode);
-+	MESHPARAMS_ADD(dot11MeshHWMPRannInterval);
- #undef MESHPARAMS_ADD
- }
- #endif
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index e120fef..28ab510 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -537,7 +537,8 @@ static void ieee80211_mesh_rootpath(struct ieee80211_sub_if_data *sdata)
- 
- 	mesh_path_tx_root_frame(sdata);
- 	mod_timer(&ifmsh->mesh_path_root_timer,
--		  round_jiffies(jiffies + IEEE80211_MESH_RANN_INTERVAL));
-+		  round_jiffies(TU_TO_EXP_TIME(
-+				  ifmsh->mshcfg.dot11MeshHWMPRannInterval)));
- }
- 
- #ifdef CONFIG_PM
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 9d9116e..2027207 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -175,7 +175,6 @@ struct mesh_rmc {
- 
- #define IEEE80211_MESH_PEER_INACTIVITY_LIMIT (1800 * HZ)
- #define IEEE80211_MESH_HOUSEKEEPING_INTERVAL (60 * HZ)
--#define IEEE80211_MESH_RANN_INTERVAL	     (1 * HZ)
- 
- #define MESH_DEFAULT_BEACON_INTERVAL		1000 	/* in 1024 us units */
- 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 7b517c4..ae3de75 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -695,7 +695,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 	u8 ttl, flags, hopcount;
- 	u8 *orig_addr;
- 	u32 orig_sn, metric;
--	u32 interval = cpu_to_le32(IEEE80211_MESH_RANN_INTERVAL);
-+	u32 interval = ifmsh->mshcfg.dot11MeshHWMPRannInterval;
- 	bool root_is_gate;
- 
- 	ttl = rann->rann_ttl;
-@@ -743,7 +743,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 		mesh_path_sel_frame_tx(MPATH_RANN, flags, orig_addr,
- 				       cpu_to_le32(orig_sn),
- 				       0, NULL, 0, broadcast_addr,
--				       hopcount, ttl, interval,
-+				       hopcount, ttl, cpu_to_le32(interval),
- 				       cpu_to_le32(metric + mpath->metric),
- 				       0, sdata);
- 		mpath->sn = orig_sn;
-@@ -1044,11 +1044,11 @@ void
- mesh_path_tx_root_frame(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
--	u32 interval = cpu_to_le32(IEEE80211_MESH_RANN_INTERVAL);
-+	u32 interval = ifmsh->mshcfg.dot11MeshHWMPRannInterval;
- 
- 	mesh_path_sel_frame_tx(MPATH_RANN, 0, sdata->vif.addr,
- 			       cpu_to_le32(++ifmsh->sn),
- 			       0, NULL, 0, broadcast_addr,
- 			       0, sdata->u.mesh.mshcfg.element_ttl,
--			       interval, 0, 0, sdata);
-+			       cpu_to_le32(interval), 0, 0, sdata);
- }
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 5c11608..b5a39d4 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -12,6 +12,7 @@
- #define MESH_HOLD_T 		100
- 
- #define MESH_PATH_TIMEOUT	5000
-+#define MESH_RANN_INTERVAL      5000
- 
- /*
-  * Minimum interval between two consecutive PREQs originated by the same
-@@ -49,6 +50,7 @@ const struct mesh_config default_mesh_config = {
- 	.dot11MeshHWMPmaxPREQretries = MESH_MAX_PREQ_RETRIES,
- 	.path_refresh_time = MESH_PATH_REFRESH_TIME,
- 	.min_discovery_timeout = MESH_MIN_DISCOVERY_TIMEOUT,
-+	.dot11MeshHWMPRannInterval = MESH_RANN_INTERVAL,
- };
- 
- const struct mesh_setup default_mesh_setup = {
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index cd5994f..d39a5a1 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2958,6 +2958,8 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
- 			cur_params.dot11MeshHWMPnetDiameterTraversalTime);
- 	NLA_PUT_U8(msg, NL80211_MESHCONF_HWMP_ROOTMODE,
- 			cur_params.dot11MeshHWMPRootMode);
-+	NLA_PUT_U16(msg, NL80211_MESHCONF_HWMP_RANN_INTERVAL,
-+			cur_params.dot11MeshHWMPRannInterval);
- 	nla_nest_end(msg, pinfoattr);
- 	genlmsg_end(msg, hdr);
- 	return genlmsg_reply(msg, info);
-@@ -2986,6 +2988,7 @@ static const struct nla_policy nl80211_meshconf_params_policy[NL80211_MESHCONF_A
- 	[NL80211_MESHCONF_HWMP_PREQ_MIN_INTERVAL] = { .type = NLA_U16 },
- 	[NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME] = { .type = NLA_U16 },
- 	[NL80211_MESHCONF_HWMP_ROOTMODE] = { .type = NLA_U8 },
-+	[NL80211_MESHCONF_HWMP_RANN_INTERVAL] = { .type = NLA_U16 },
- };
- 
- static const struct nla_policy
-@@ -3064,6 +3067,10 @@ do {\
- 			dot11MeshHWMPRootMode, mask,
- 			NL80211_MESHCONF_HWMP_ROOTMODE,
- 			nla_get_u8);
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg,
-+			dot11MeshHWMPRannInterval, mask,
-+			NL80211_MESHCONF_HWMP_RANN_INTERVAL,
-+			nla_get_u16);
- 	if (mask_out)
- 		*mask_out = mask;
- 
+> On Wed, Aug 10, 2011 at 12:19 PM, Luciano Coelho <coelho@ti.com> wrote:
+> > On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote:
+> >>       /* unmask required mbox events  */
+> >>       wl->event_mask = BSS_LOSE_EVENT_ID |
+> >>               SCAN_COMPLETE_EVENT_ID |
+> >>               PS_REPORT_EVENT_ID |
+> >> -             JOIN_EVENT_COMPLETE_ID |
+> >>               DISCONNECT_EVENT_COMPLETE_ID |
+> >>               RSSI_SNR_TRIGGER_0_EVENT_ID |
+> >>               PSPOLL_DELIVERY_FAILURE_EVENT_ID |
+> >>               SOFT_GEMINI_SENSE_EVENT_ID |
+> >>               PERIODIC_SCAN_REPORT_EVENT_ID |
+> >> -             PERIODIC_SCAN_COMPLETE_EVENT_ID;
+> >> +             PERIODIC_SCAN_COMPLETE_EVENT_ID |
+> >> +             DUMMY_PACKET_EVENT_ID |
+> >> +             PEER_REMOVE_COMPLETE_EVENT_ID |
+> >> +             BA_SESSION_RX_CONSTRAINT_EVENT_ID |
+> >> +             REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID;
+> >>
+> >>       if (wl->bss_type == BSS_TYPE_AP_BSS)
+> >> -             wl->event_mask |= STA_REMOVE_COMPLETE_EVENT_ID |
+> >> -                               INACTIVE_STA_EVENT_ID |
+> >> +             wl->event_mask |= INACTIVE_STA_EVENT_ID |
+> >>                                 MAX_TX_RETRY_EVENT_ID;
+> >
+> > Do we really need to mask this stuff separately?
+> >
+> we thought of masking the needed events according to the active role.
+> anyway, i since there is no overlapping, and in the future there will
+> be multiple roles, i guess we can just unmask them all together.
+
+Yes, that was my point.  I think we don't need to care about unmasking
+different events for different roles, because the events shouldn't be
+sent in the wrong roles.
+
+Actually, I started wondering why do we need an event mask at all! Okay,
+someone will say, for power-saving blahblah, but do we really have any
+real use case where we can use this feature in a smart way?
+
+
+> >> -int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type)
+> >> +int wl1271_cmd_role_enable(struct wl1271 *wl, u8 role_type, u8 *role_id)
+> >
+> > s/wl1271_cmd_role_enable/wl12xx_cmd_role_enable/
+> >
+> > Same thing for wl1271_cmd_role_disable and all the other functions whose
+> > declaration changed.
+> >
+> > I was thinking that we could use the role_id directly from the wl struct
+> > here, but then I changed my mind, because I think it's not good that the
+> > cmd functions themselves change the wl struct.  At some point we need to
+> > split the HW-related part of wl (phy) from the context-related elements
+> 
+> well, that exactly our plan. after applying the all the pending series
+> we'll start splitting up wl into global and per-vif data, in order to
+> support multiple vifs.
+
+Of course, I don't really see many different other options here. ;)
+
+
+> > (vif).  For most of the cases, if not all, the cmd functions only use
+> > the HW-related elements.
+> >
+> every command that takes role_id as param is basically per-vif, so i
+> guess you're wrong here :)
+
+Right, but what I meant was *before* your patchset.  And also I meant
+the elements that are needed to send the command itself (like wl->flags,
+wl->cmd_box_addr), not the elements that will actually go into the cmd
+parameters.  Anyway, what matters here is that we're aligned. :)
+
+
+> >> +
+> >> +       memcpy(cmd->mac_address, wl->mac_addr, ETH_ALEN);
+> >
+> > To keep aligned with my comment about phy vs. vif context, I think it
+> > would be nicer to pass the MAC address as an argument to this function
+> > as well.  When we implement multirole, we will need different MAC
+> > addresses for each role, so we can't really use the value from wl.
+> >
+> you are right, but let's leave it for a later stage.
+> (i have some patch that replaces all the wl->mac_addr to vif->addr)
+
+Okay, when I wrote this I had actually not seen the other many commands
+that take stuff from the wl struct.  Let's do it all together.
+
+
+> again, thanks for your reviews.
+> i'll just apply all the required changes instead of ACKing each one :)
+
+Yeah, easier like that.
+
 -- 
-1.7.4.1
+Cheers,
+Luca.
 
