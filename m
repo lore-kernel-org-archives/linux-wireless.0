@@ -1,30 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:37917 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754770Ab1H2TIW (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:44768 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753455Ab1HJL7Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 15:08:22 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 2E39454022F
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 15:15:29 -0400 (EDT)
-Subject: Compat-wireless release for 2011-08-29 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110829190613.4266940631@repository3.orbit-lab.org> (sfid-20110829_210825_664790_319F40BD)
-Date: Mon, 29 Aug 2011 15:06:13 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 10 Aug 2011 07:59:24 -0400
+Received: by yxj19 with SMTP id 19so591622yxj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 04:59:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <loom.20110810T133554-589@post.gmane.org>
+References: <loom.20110810T133554-589@post.gmane.org>
+From: Arik Nemtsov <anamtsov@gmail.com>
+Date: Wed, 10 Aug 2011 14:59:09 +0300
+Message-ID: <CA+XVXfeaz+44f-X5vcWSpuBh-XNeK99bvzg_wXJJDpOs1=nF1A@mail.gmail.com> (sfid-20110810_135928_225415_9E9AE10F)
+Subject: Re: Problem bringing up wlan0 interface up with mainline wl1271
+ drivers on Panda Board with 2.6.39 Kernel
+To: "amit.gemini@sasken.com" <amit.gemini@sasken.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + da24751...9cb9083 akpm-end   -> origin/akpm-end  (forced update)
-   b4ca46e..c11a7e2  akpm-start -> origin/akpm-start
- + fa16964...fa1de6f master     -> origin/master  (forced update)
-   b4ca46e..c11a7e2  stable     -> origin/stable
- * [new tag]         next-20110829 -> next-20110829
+Hey Amit,
 
-compat-wireless code metrics
+On Wed, Aug 10, 2011 at 14:38, amit.gemini@sasken.com
+<amit.gemini@sasken.com> wrote:
+> I am using Panda Board with 2.6.39 Kernel
+>
+> when ever i insert the driver , error comes out "wl1271: ERROR could not get nvs
+> file: -2"
+>
 
-    804917 - Total upstream lines of code being pulled
-ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
-rsync: connection unexpectedly closed (0 bytes received so far) [sender]
-rsync error: unexplained error (code 255) at io.c(601) [sender=3.0.7]
+You should put a NVS file in the same folder as your FW file. You can
+read more about it in
+http://linuxwireless.org/en/users/Drivers/wl12xx.
+
+If you're having further issues we're on IRC - #wl12xx on freenode.
+
+Arik
