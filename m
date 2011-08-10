@@ -1,155 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:54157 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755024Ab1H2UXV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42775 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768Ab1HJNrO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 16:23:21 -0400
-Received: by mail-pz0-f42.google.com with SMTP id 37so9020873pzk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 13:23:21 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Subject: [PATCH v3 2/7] mac80211: Remove mesh paths when an interface is removed
-Date: Mon, 29 Aug 2011 13:23:04 -0700
-Message-Id: <1314649389-7115-3-git-send-email-javier@cozybit.com> (sfid-20110829_222325_459175_4C0FADE7)
-In-Reply-To: <1314649389-7115-1-git-send-email-javier@cozybit.com>
-References: <1314649389-7115-1-git-send-email-javier@cozybit.com>
+	Wed, 10 Aug 2011 09:47:14 -0400
+Subject: Re: [PATCH 7/8] {nl,cfg,mac}80211: let userspace set RANN interval
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org,
+	Javier Cardona <javier@cozybit.com>, linville@tuxdriver.com
+In-Reply-To: <1312933511-9486-8-git-send-email-thomas@cozybit.com> (sfid-20110810_014705_414621_0792BFAD)
+References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
+	 <1312933511-9486-8-git-send-email-thomas@cozybit.com>
+	 (sfid-20110810_014705_414621_0792BFAD)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Aug 2011 15:47:11 +0200
+Message-ID: <1312984031.4325.4.camel@jlt3.sipsolutions.net> (sfid-20110810_154722_272384_AAFB2A13)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When an interface is removed, the mesh paths associated with it should
-also be removed.
+On Tue, 2011-08-09 at 16:45 -0700, Thomas Pedersen wrote:
 
-This fixes a bug we observed when reloading a device driver module
-without reloading mac80211s.
+>  	mod_timer(&ifmsh->mesh_path_root_timer,
+> -		  round_jiffies(jiffies + IEEE80211_MESH_RANN_INTERVAL));
+> +		  round_jiffies(jiffies +
+> +			  usecs_to_jiffies(ifmsh->mshcfg.dot11MeshHWMPRannInterval * 1024)));
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/cfg.c          |    2 +-
- net/mac80211/iface.c        |    6 ++++++
- net/mac80211/mesh.h         |    2 +-
- net/mac80211/mesh_pathtbl.c |   40 +++++++++++++++++++++++++++++++++++++++-
- 4 files changed, 47 insertions(+), 3 deletions(-)
+TU_TO_EXP_TIME ?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 0baaaec..5c0d8fa 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -921,7 +921,7 @@ static int ieee80211_del_mpath(struct wiphy *wiphy, struct net_device *dev,
- 	if (dst)
- 		return mesh_path_del(dst, sdata);
- 
--	mesh_path_flush(sdata);
-+	mesh_path_flush_by_iface(sdata);
- 	return 0;
- }
- 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 556e7e6..eaa80a3 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1214,6 +1214,9 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
- 	list_del_rcu(&sdata->list);
- 	mutex_unlock(&sdata->local->iflist_mtx);
- 
-+	if (ieee80211_vif_is_mesh(&sdata->vif))
-+		mesh_path_flush_by_iface(sdata);
-+
- 	synchronize_rcu();
- 	unregister_netdevice(sdata->dev);
- }
-@@ -1233,6 +1236,9 @@ void ieee80211_remove_interfaces(struct ieee80211_local *local)
- 	list_for_each_entry_safe(sdata, tmp, &local->interfaces, list) {
- 		list_del(&sdata->list);
- 
-+		if (ieee80211_vif_is_mesh(&sdata->vif))
-+			mesh_path_flush_by_iface(sdata);
-+
- 		unregister_netdevice_queue(sdata->dev, &unreg_list);
- 	}
- 	mutex_unlock(&local->iflist_mtx);
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 2027207..57a2ad0 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -238,7 +238,6 @@ struct mesh_path *mesh_path_lookup_by_idx(int idx,
- 		struct ieee80211_sub_if_data *sdata);
- void mesh_path_fix_nexthop(struct mesh_path *mpath, struct sta_info *next_hop);
- void mesh_path_expire(struct ieee80211_sub_if_data *sdata);
--void mesh_path_flush(struct ieee80211_sub_if_data *sdata);
- void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
- 		struct ieee80211_mgmt *mgmt, size_t len);
- int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata);
-@@ -275,6 +274,7 @@ void mesh_pathtbl_unregister(void);
- int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata);
- void mesh_path_timer(unsigned long data);
- void mesh_path_flush_by_nexthop(struct sta_info *sta);
-+void mesh_path_flush_by_iface(struct ieee80211_sub_if_data *sdata);
- void mesh_path_discard_frame(struct sk_buff *skb,
- 		struct ieee80211_sub_if_data *sdata);
- void mesh_path_quiesce(struct ieee80211_sub_if_data *sdata);
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index c92fd70..1c8c420 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -821,7 +821,7 @@ void mesh_path_flush_by_nexthop(struct sta_info *sta)
- 	rcu_read_unlock();
- }
- 
--void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
-+static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
- {
- 	struct mesh_table *tbl;
- 	struct mesh_path *mpath;
-@@ -850,6 +850,44 @@ static void mesh_path_node_reclaim(struct rcu_head *rp)
- 	kfree(node);
- }
- 
-+static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct mesh_table *tbl;
-+	struct mesh_path *mpath;
-+	struct mpath_node *node;
-+	struct hlist_node *p;
-+	int i;
-+
-+	read_lock_bh(&pathtbl_resize_lock);
-+	tbl = rcu_dereference_protected(mpp_paths,
-+					lockdep_is_held(pathtbl_resize_lock));
-+	for_each_mesh_entry(tbl, p, node, i) {
-+		mpath = node->mpath;
-+		if (mpath->sdata != sdata)
-+			continue;
-+		spin_lock_bh(&tbl->hashwlock[i]);
-+		spin_lock_bh(&mpath->state_lock);
-+		call_rcu(&node->rcu, mesh_path_node_reclaim);
-+		atomic_dec(&tbl->entries);
-+		spin_unlock_bh(&tbl->hashwlock[i]);
-+	}
-+	read_unlock_bh(&pathtbl_resize_lock);
-+}
-+
-+/**
-+ * mesh_path_flush_by_iface - Deletes all mesh paths associated with a given iface
-+ *
-+ * This function deletes both mesh paths as well as mesh portal paths.
-+ *
-+ * @sdata - interface data to match
-+ *
-+ */
-+void mesh_path_flush_by_iface(struct ieee80211_sub_if_data *sdata)
-+{
-+	mesh_path_flush(sdata);
-+	mpp_path_flush(sdata);
-+}
-+
- /**
-  * mesh_path_del - delete a mesh path from the table
-  *
--- 
-1.7.6
+johannes
 
