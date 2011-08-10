@@ -1,29 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:50396 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779Ab1HOF4g (ORCPT
+Received: from cosmos.phy.tufts.edu ([130.64.83.16]:44107 "EHLO
+	cosmos.phy.tufts.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752252Ab1HJAsI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 01:56:36 -0400
-Date: Sun, 14 Aug 2011 22:56:33 -0700 (PDT)
-Message-Id: <20110814.225633.1354751384914126321.davem@davemloft.net> (sfid-20110815_075653_495861_141E00FB)
-To: justinmattock@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: ip_rt_bug: 10.0.0.52 -> 255.255.255.255, ?
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <4E48B4B6.8000603@gmail.com>
-References: <4E4898F5.8050605@gmail.com>
-	<20110814.224536.1330937123770047026.davem@davemloft.net>
-	<4E48B4B6.8000603@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 9 Aug 2011 20:48:08 -0400
+Date: Tue, 09 Aug 2011 20:29:18 -0400
+Message-Id: <E1Qqwfe-0003TG-KL@cosmos.phy.tufts.edu> (sfid-20110810_024812_287408_201E3589)
+From: Ken Olum <kdo@cosmos.phy.tufts.edu>
+To: linux-wireless@vger.kernel.org
+cc: kdo@cosmos.phy.tufts.edu
+Subject: depmod doesn't prefer uncompressed file and updates directory
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-Date: Sun, 14 Aug 2011 22:55:02 -0700
+First, thanks for all your work in making these drivers available.
+Indeed, downloading a new atl1c driver solved a problem where my
+Attansic 2062 would quit working when I tried to send a bunch of data.
 
-> Oh.. guess I will wait for those to be put into the Mainline
-> then. Thanks for the info!
+I encountered a problem which is doubtless not your fault, but still
+you could perhaps help out future users by warning of it in your
+installation instructions.  I'm using Mandriva 2010.2.  When I said
+"make install", my atl1c driver was installed in 
+/lib/modules/.../updates/drivers/net/atl1c/atl1c.ko, just as you said
+it would be.  But when I said depmod and modprobe, modprobe loaded my
+old version from /lib/modules/.../kernel/drivers/net/atl1c/atl1c.ko.gz .
+Apparently confusion resulted from the fact that the filenames were
+different because one was compressed and the other wasn't.  When I
+compressed the new driver, the problem was fixed.
 
-It is in mainline.
+                                        Ken Olum
