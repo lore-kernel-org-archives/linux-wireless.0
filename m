@@ -1,76 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:52590 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750770Ab1HXWRd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 18:17:33 -0400
-Date: Thu, 25 Aug 2011 00:17:15 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: John W Linville <linville@tuxdriver.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, zajec5@gmail.com,
-	Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT] b43: Relax requirement for descriptors to be in the
- DMA zone
-Message-ID: <20110825001715.4806077c@milhouse> (sfid-20110825_001740_420753_78A3137A)
-In-Reply-To: <4e55750c.GPPIrbNLynUMWY/U%Larry.Finger@lwfinger.net>
-References: <4e55750c.GPPIrbNLynUMWY/U%Larry.Finger@lwfinger.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:42789 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768Ab1HJNub (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2011 09:50:31 -0400
+Subject: Re: [PATCH 1/4] nl80211: Parse channel type attribute in an IBSS
+ join request
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alexander Simon <alexander.simon@saxnet.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1888623.Vt5VZUN2cU@alex-1> (sfid-20110808_140308_710112_10A3AC18)
+References: <1888623.Vt5VZUN2cU@alex-1>
+	 (sfid-20110808_140308_710112_10A3AC18)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Aug 2011 15:50:28 +0200
+Message-ID: <1312984228.4325.7.camel@jlt3.sipsolutions.net> (sfid-20110810_155034_131491_B0EA910E)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 24 Aug 2011 17:02:52 -0500
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-
-> When 64-bit DMA was first used, there were problems with the
-> BCM4311 (14e4:4311). The problem was "fixed" by using the GFP_DMA
-> flag in the allocation of coherent ring descriptor memory.
+On Mon, 2011-08-08 at 14:02 +0200, Alexander Simon wrote:
+> Check if the requested HT mode can be used.
+> Extend cfg80211 IBSS struct for HT mode.
 > 
-> The original problem is now believed to have been due to bugs in
-> the 64-bit DMA implementation in the rest of the kernel, and that
-> those bugs have been fixed. Accordingly, the requirement for the
-> descriptors to be in the DMA zone is relaxed.
-> 
-> Bounce buffers are left in the DMA zone.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Signed-off-by: Alexander Simon <alexander.simon@saxnet.de>
 > ---
 > 
-> John,
-> 
-> This material is for next.
+> As there were no replies for my RFC post, i am resending this as PATCH.
 
-John, please apply this even though it's marked RFC, unless somebody
-objects in reasonable time, which I don't expect.
+I was on vacation ;-)
 
-You can also add
-
-Signed-off-by: Michael Buesch <m@bues.ch>
-
-if you desire.
-
-> Index: wireless-testing-new/drivers/net/wireless/b43/dma.c
-> ===================================================================
-> --- wireless-testing-new.orig/drivers/net/wireless/b43/dma.c
-> +++ wireless-testing-new/drivers/net/wireless/b43/dma.c
-> @@ -393,14 +393,7 @@ static int alloc_ringmemory(struct b43_d
->  	 * has shown that 4K is sufficient for the latter as long as the buffer
->  	 * does not cross an 8K boundary.
->  	 *
-> -	 * For unknown reasons - possibly a hardware error - the BCM4311 rev
-> -	 * 02, which uses 64-bit DMA, needs the ring buffer in very low memory,
-> -	 * which accounts for the GFP_DMA flag below.
-> -	 *
-> -	 * The flags here must match the flags in free_ringmemory below!
->  	 */
-> -	if (ring->type == B43_DMA_64BIT)
-> -		flags |= GFP_DMA;
->  	ring->descbase = dma_alloc_coherent(ring->dev->dev->dma_dev,
->  					    B43_DMA_RINGMEMSIZE,
->  					    &(ring->dmabase), flags);
-> 
+> +	ibss.channel = rdev_freq_to_chan(rdev,
+> +		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]),
+> +		ibss.channel_type);
+>  	if (!ibss.channel ||
+> +	    ibss.channel->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
+>  	    ibss.channel->flags & IEEE80211_CHAN_NO_IBSS ||
+> -	    ibss.channel->flags & IEEE80211_CHAN_DISABLED)
+> +	    ibss.channel->flags & IEEE80211_CHAN_RADAR)
+> +		return -EINVAL;
+> +
+> +	/* Both channels should be able to initiate communication */
+> +	if ((ibss.channel_type == NL80211_CHAN_HT40PLUS ||
+> +	     ibss.channel_type == NL80211_CHAN_HT40MINUS) &&
+> +	    !can_beacon_sec_chan(&rdev->wiphy, ibss.channel,
+> +				 ibss.channel_type)) {
+> +		printk(KERN_DEBUG
+> +		       "cfg80211: Secondary channel not "
+> +		       "allowed to initiate communication\n");
 
 
+remove the printk please
 
--- 
-Greetings, Michael.
+johannes
+
