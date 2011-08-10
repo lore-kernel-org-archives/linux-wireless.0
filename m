@@ -1,62 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:54095 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753006Ab1HNKSD (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:58979 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751709Ab1HJQSI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 06:18:03 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 24so2967072wyg.19
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:18:02 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 31/40] wl12xx: use ap_bcast_hlid for recorded keys
-Date: Sun, 14 Aug 2011 13:17:30 +0300
-Message-Id: <1313317059-16567-32-git-send-email-eliad@wizery.com> (sfid-20110814_121806_521099_970B8E1A)
-In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
-References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+	Wed, 10 Aug 2011 12:18:08 -0400
+Received: by fxh19 with SMTP id 19so1024245fxh.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 09:18:07 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Michael Buesch <m@bues.ch>
+Subject: [PATCH 1/2] ssb: fix DMA translation for some specific boards
+Date: Wed, 10 Aug 2011 18:11:27 +0200
+Message-Id: <1312992688-6976-1-git-send-email-zajec5@gmail.com> (sfid-20110810_181812_272355_F52D985D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-when the key was recorded, wl->ap_bcast_hlid was invalid
-(since the role wasn't started), so when configuring the
-key we need to use the current ap_bcast_hlid.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Michael Buesch <m@bues.ch>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/wl12xx/main.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ drivers/ssb/main.c |   22 +++++++++++++++++++---
+ 1 files changed, 19 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 053751e..f4f0011 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2530,20 +2530,25 @@ static int wl1271_ap_init_hwenc(struct wl1271 *wl)
- {
- 	int i, ret = 0;
- 	struct wl1271_ap_key *key;
- 	bool wep_key_added = false;
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index 6ec6e09..dac2c0b 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -1260,16 +1260,32 @@ void ssb_device_disable(struct ssb_device *dev, u32 core_specific_flags)
+ }
+ EXPORT_SYMBOL(ssb_device_disable);
  
- 	for (i = 0; i < MAX_NUM_KEYS; i++) {
-+		u8 hlid;
- 		if (wl->recorded_ap_keys[i] == NULL)
- 			break;
- 
- 		key = wl->recorded_ap_keys[i];
-+		hlid = key->hlid;
-+		if (hlid == WL12XX_INVALID_LINK_ID)
-+			hlid = wl->ap_bcast_hlid;
++/* Some chipsets need routing known for PCIe and 64-bit DMA */
++static bool ssb_dma_translation_special_bit(struct ssb_device *dev)
++{
++	u16 chip_id = dev->bus->chip_id;
 +
- 		ret = wl1271_cmd_set_ap_key(wl, KEY_ADD_OR_REPLACE,
- 					    key->id, key->key_type,
- 					    key->key_size, key->key,
--					    key->hlid, key->tx_seq_32,
-+					    hlid, key->tx_seq_32,
- 					    key->tx_seq_16);
- 		if (ret < 0)
- 			goto out;
- 
- 		if (key->key_type == KEY_WEP)
- 			wep_key_added = true;
++	if (dev->id.coreid == SSB_DEV_80211)
++		return (chip_id == 0x4322 || chip_id == 43221 ||
++			chip_id == 43231 || chip_id == 43222);
++	return 0;
++}
++
+ u32 ssb_dma_translation(struct ssb_device *dev)
+ {
+ 	switch (dev->bus->bustype) {
+ 	case SSB_BUSTYPE_SSB:
+ 		return 0;
+ 	case SSB_BUSTYPE_PCI:
+-		if (ssb_read32(dev, SSB_TMSHIGH) & SSB_TMSHIGH_DMA64)
++		if (pci_is_pcie(dev->bus->host_pci) &&
++		    ssb_read32(dev, SSB_TMSHIGH) & SSB_TMSHIGH_DMA64) {
+ 			return SSB_PCIE_DMA_H32;
+-		else
+-			return SSB_PCI_DMA;
++		} else {
++			if (ssb_dma_translation_special_bit(dev))
++				return SSB_PCIE_DMA_H32;
++			else
++				return SSB_PCI_DMA;
++		}
+ 	default:
+ 		__ssb_dma_not_implemented(dev);
+ 	}
 -- 
-1.7.6.401.g6a319
+1.7.1
 
