@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56936 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753528Ab1HYPcU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 11:32:20 -0400
-Message-ID: <4E566AFA.8050203@openwrt.org> (sfid-20110825_173227_059432_55F333D4)
-Date: Thu, 25 Aug 2011 17:32:10 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] ath9k_hw: Fix rx latency of 11a mode
-References: <1314283522-6143-1-git-send-email-rmanohar@qca.qualcomm.com>
-In-Reply-To: <1314283522-6143-1-git-send-email-rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:35198 "EHLO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753636Ab1HJM5t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2011 08:57:49 -0400
+Received: by mail-bw0-f50.google.com with SMTP id zu5so437106bkb.37
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 05:57:47 -0700 (PDT)
+Subject: Re: [PATCH 17/40] wl12xx: add ROC/CROC commands
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1312881233-9366-18-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	 <1312881233-9366-18-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Aug 2011 15:57:43 +0300
+Message-ID: <1312981063.2407.591.camel@cumari> (sfid-20110810_145753_044450_57A2BD0A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-08-25 4:45 PM, Rajkumar Manoharan wrote:
-> Rx latecy to start signal(usec) of 11a is 41 not 37 and
-> also corrected the rx delay in quarter rate.
->
-> Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
-> ---
->   drivers/net/wireless/ath/ath9k/hw.c |    7 +++++--
->   1 files changed, 5 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-> index 88100cc..d4dce6b 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.c
-> +++ b/drivers/net/wireless/ath/ath9k/hw.c
-> @@ -974,7 +974,10 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
->   	if (ah->misc_mode != 0)
->   		REG_SET_BIT(ah, AR_PCU_MISC, ah->misc_mode);
->
-> -	rx_lat = 37;
-> +	if (IS_CHAN_A_FAST_CLOCK(ah, chan))
-> +		rx_lat = 41;
-> +	else
-> +		rx_lat = 37;
->   	tx_lat = 54;
->
->   	if (IS_CHAN_HALF_RATE(chan)) {
-> @@ -988,7 +991,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
->   		sifstime = 32;
->   	} else if (IS_CHAN_QUARTER_RATE(chan)) {
->   		eifs = 340;
-> -		rx_lat *= 4;
-> +		rx_lat *= 4 - 1;
-That looks a bit weird. Did you mean to change it to *= 3 or was this 
-just mistyped because you wanted to subtract one after the multiplication?
+On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
+> +static int wl1271_cmd_roc(struct wl1271 *wl, u8 role_id)
+> +{
+> +	struct wl1271_cmd_roc *cmd;
+> +	int ret = 0;
+> +
+> +	wl1271_debug(DEBUG_CMD, "cmd roc %d (%d)", wl->channel, wl->band);
+> +
+> +	if (WARN_ON(role_id == WL1271_INVALID_ROLE_ID))
+> +		return -EINVAL;
+> +
+> +	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+> +	if (!cmd) {
+> +		ret = -ENOMEM;
+> +		goto out;
+> +	}
+> +
+> +	cmd->role_id = role_id;
+> +	cmd->channel = wl->channel;
+> +	switch (wl->band) {
+> +	case IEEE80211_BAND_2GHZ:
+> +		cmd->band = RADIO_BAND_2_4GHZ;
+> +		break;
+> +	case IEEE80211_BAND_5GHZ:
+> +		cmd->band = RADIO_BAND_5GHZ;
+> +		break;
+> +	default:
+> +		wl1271_warning("roc - unknown band: %d", (int)wl->band);
+> +		cmd->band = RADIO_BAND_2_4GHZ;
+> +		break;
 
-- Felix
+Are you sure it's better to choose 2.4GHz here instead of bailing out?
+
+
+-- 
+Cheers,
+Luca.
+
