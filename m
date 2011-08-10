@@ -1,142 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1862 "EHLO mms2.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:55700 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753411Ab1HHN7j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:39 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 78/82] staging: brcm80211: removed watchdog function
- from softmac
-Date: Mon, 8 Aug 2011 15:59:02 +0200
-Message-ID: <1312811946-16713-79-git-send-email-arend@broadcom.com> (sfid-20110808_155958_955108_DAFD7FB5)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+	id S1754680Ab1HJS7m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2011 14:59:42 -0400
+Message-ID: <4E42D50E.2000608@openwrt.org> (sfid-20110810_205945_610760_45805686)
+Date: Wed, 10 Aug 2011 12:59:26 -0600
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Marek Lindner <lindner_marek@yahoo.de>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCHv2] ath9k: remove eeprom txgain override for minor version
+ < 19
+References: <1312359372-5586-1-git-send-email-lindner_marek@yahoo.de> <1312382116-27257-1-git-send-email-lindner_marek@yahoo.de> <20110810175826.GB25266@tuxdriver.com>
+In-Reply-To: <20110810175826.GB25266@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
-
-Code cleanup. Watchdog function served no purpose since it had an empty body.
-
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c |   14 +-------------
- drivers/staging/brcm80211/brcmsmac/main.c        |   11 ++---------
- drivers/staging/brcm80211/brcmsmac/main.h        |    2 --
- drivers/staging/brcm80211/brcmsmac/pub.h         |    5 ++---
- 4 files changed, 5 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-index 7f6a490..a4d46dd 100644
---- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-@@ -61,8 +61,6 @@ static void _brcms_timer(struct brcms_timer *t);
- static int ieee_hw_init(struct ieee80211_hw *hw);
- static int ieee_hw_rate_init(struct ieee80211_hw *hw);
- 
--static int wl_linux_watchdog(void *ctx);
--
- /* Flags we support */
- #define MAC_FILTERS (FIF_PROMISC_IN_BSS | \
- 	FIF_ALLMULTI | \
-@@ -828,7 +826,7 @@ static struct brcms_info *brcms_attach(u16 vendor, u16 device,
- 	wl->irq = irq;
- 
- 	/* register module */
--	brcms_c_module_register(wl->pub, "linux", wl, wl_linux_watchdog, NULL);
-+	brcms_c_module_register(wl->pub, "linux", wl, NULL);
- 
- 	if (ieee_hw_init(hw)) {
- 		wiphy_err(wl->wiphy, "wl%d: %s: ieee_hw_init failed!\n", unit,
-@@ -1701,16 +1699,6 @@ void brcms_free_timer(struct brcms_info *wl, struct brcms_timer *t)
- 
- }
- 
--/*
-- * runs in software irq context
-- *
-- * precondition: perimeter lock is not acquired
-- */
--static int wl_linux_watchdog(void *ctx)
--{
--	return 0;
--}
--
- struct firmware_hdr {
- 	u32 offset;
- 	u32 len;
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index d011ed6..bdc7fb4 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -5374,12 +5374,6 @@ static void brcms_c_watchdog(void *arg)
- 			cfg->tk_cm_bt--;
- 	END_FOREACH_BSS()
- 
--	/* Call any registered watchdog handlers */
--	for (i = 0; i < BRCMS_MAXMODULES; i++) {
--		if (wlc->modulecb[i].watchdog_fn)
--			wlc->modulecb[i].watchdog_fn(wlc->modulecb[i].hdl);
--	}
--
- 	if (BRCMS_ISNPHY(wlc->band) && !wlc->pub->tempsense_disable &&
- 	    ((wlc->pub->now - wlc->tempsense_lasttime) >=
- 	     BRCMS_TEMPSENSE_PERIOD)) {
-@@ -6325,8 +6319,8 @@ _brcms_c_ioctl(struct brcms_c_info *wlc, int cmd, void *arg, int len,
-  * register watchdog and down handlers.
-  */
- int brcms_c_module_register(struct brcms_pub *pub,
--		const char *name, void *hdl,
--		int (*w_fn)(void *handle), int (*d_fn)(void *handle))
-+			    const char *name, void *hdl,
-+			    int (*d_fn)(void *handle))
- {
- 	struct brcms_c_info *wlc = (struct brcms_c_info *) pub->wlc;
- 	int i;
-@@ -6337,7 +6331,6 @@ int brcms_c_module_register(struct brcms_pub *pub,
- 			strncpy(wlc->modulecb[i].name, name,
- 				sizeof(wlc->modulecb[i].name) - 1);
- 			wlc->modulecb[i].hdl = hdl;
--			wlc->modulecb[i].watchdog_fn = w_fn;
- 			wlc->modulecb[i].down_fn = d_fn;
- 			return 0;
- 		}
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
-index 0fd061b..e2febe0 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.h
-+++ b/drivers/staging/brcm80211/brcmsmac/main.h
-@@ -462,8 +462,6 @@ struct modulecb {
- 	const struct brcmu_iovar *iovars;
- 	/* handle passed when handler 'doiovar' is called */
- 	void *hdl;
--	/* watchdog handler */
--	int (*watchdog_fn)(void *handle);
- 
- 	/* IOVar handler
- 	 *
-diff --git a/drivers/staging/brcm80211/brcmsmac/pub.h b/drivers/staging/brcm80211/brcmsmac/pub.h
-index bfbb261..40efee6 100644
---- a/drivers/staging/brcm80211/brcmsmac/pub.h
-+++ b/drivers/staging/brcm80211/brcmsmac/pub.h
-@@ -614,9 +614,8 @@ extern void brcms_c_set_ps_ctrl(struct brcms_c_info *wlc);
- extern void brcms_c_mctrl(struct brcms_c_info *wlc, u32 mask, u32 val);
- 
- extern int brcms_c_module_register(struct brcms_pub *pub,
--			       const char *name, void *hdl,
--			       int (*watchdog_fn)(void *handle),
--			       int (*down_fn)(void *handle));
-+				   const char *name, void *hdl,
-+				   int (*down_fn)(void *handle));
- 
- extern int brcms_c_module_unregister(struct brcms_pub *pub, const char *name,
- 				 void *hdl);
--- 
-1.7.4.1
-
-
+On 2011-08-10 11:58 AM, John W. Linville wrote:
+> On Wed, Aug 03, 2011 at 04:35:16PM +0200, Marek Lindner wrote:
+>>  ath9k_hw_4k_get_eeprom() overrides the eeprom value for txgain if the
+>>  minor version is not 19 or above with a value of 0.
+>>  ar9002_hw_init_mode_gain_regs() relies on this information to
+>>  determine whether this is a high power wifi card or not. The override
+>>  caused the driver to always use the 'normal' power tables even for
+>>  high power devices if their minor version was not high enough. Thus
+>>  leading to reduced power output.
+>>
+>>  This isn't needed for the AR9285; the check originated with the
+>>  AR9280 setup code which requires the EEPROM version check.
+>>
+>>  Signed-off-by: Marek Lindner<lindner_marek@yahoo.de>
+>>  ---
+>>   drivers/net/wireless/ath/ath9k/eeprom_4k.c |    5 +----
+>>   1 files changed, 1 insertions(+), 4 deletions(-)
+>>
+>>  diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+>>  index 5b1e894..10f3072 100644
+>>  --- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+>>  +++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+>>  @@ -237,10 +237,7 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
+>>   	case EEP_ANT_DIV_CTL1:
+>>   		return pModal->antdiv_ctl1;
+>>   	case EEP_TXGAIN_TYPE:
+>>  -		if (ver_minor>= AR5416_EEP_MINOR_VER_19)
+>>  -			return pBase->txGainType;
+>>  -		else
+>>  -			return AR5416_EEP_TXGAIN_ORIGINAL;
+>>  +		return pBase->txGainType;
+>>   	default:
+>>   		return 0;
+>>   	}
+>
+> Any chance for an ACK from someone from Atheros on the ath9k team?
+Acked-by: Felix Fietkau <nbd@openwrt.org>
