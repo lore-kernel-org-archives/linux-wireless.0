@@ -1,259 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37404 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753928Ab1HaK0c (ORCPT
+Received: from bues.ch ([80.190.117.144]:36241 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753890Ab1HJTLv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 06:26:32 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2] ath6kl: Add debugfs interface to dump diagnostic registers
-Date: Wed, 31 Aug 2011 15:56:27 +0530
-Message-ID: <1314786387-18969-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110831_122643_393930_0E5929A5)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 10 Aug 2011 15:11:51 -0400
+Date: Wed, 10 Aug 2011 21:11:30 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [RFC][RFT][PATCH V2 2/2] b43: fix DMA on some bugged hardware
+Message-ID: <20110810211130.4943d75d@milhouse> (sfid-20110810_211154_929392_5F35EACD)
+In-Reply-To: <1313001339-11211-2-git-send-email-zajec5@gmail.com>
+References: <1313001339-11211-1-git-send-email-zajec5@gmail.com>
+	<1313001339-11211-2-git-send-email-zajec5@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To dump a particular register, echo reg_addr > <debugfs_root>/ieee80211/phyX/ath6kl/reg_addr,
-to dump the entire register set, echo 0 > <debugfs_root>/ieee80211/phyX/ath6kl/reg_addr, and
-register values will be available at <debugfs_root>/ieee80211/phyX/ath6kl/reg_dump.
+On Wed, 10 Aug 2011 20:35:39 +0200
+Rafał Miłecki <zajec5@gmail.com> wrote:
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/core.h  |    1 +
- drivers/net/wireless/ath/ath6kl/debug.c |  189 +++++++++++++++++++++++++++++++
- 2 files changed, 190 insertions(+), 0 deletions(-)
+> Some hardware with 64-bit DMA uses lower address word for setting
+> routing (translation) bit. Add workaround for such boards.
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> This requires testing on at least 1 normal 64-bit DMA card and 1 32-bit
+> DMA card. So far it was tested only on my 14e4:4329 where it fixed DMA.
+> ---
 
-V2 -- Fix endian related sparse warnings
-   -- Address Kalle's comments
+Looks good. I didn't test it, though.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 61d3142..15d9dc5 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -477,6 +477,7 @@ struct ath6kl {
- 		spinlock_t fwlog_lock;
- 		void *fwlog_tmp;
- 		u32 fwlog_mask;
-+		unsigned int dbgfs_diag_reg;
- 	} debug;
- #endif /* CONFIG_ATH6KL_DEBUG */
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index 9608692..576eda8 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -54,6 +54,27 @@ int ath6kl_printk(const char *level, const char *fmt, ...)
- }
- 
- #ifdef CONFIG_ATH6KL_DEBUG
-+
-+#define REG_OUTPUT_LEN_PER_LINE	25
-+#define REGTYPE_STR_LEN		100
-+
-+struct ath6kl_diag_reg_info {
-+	u32 reg_start;
-+	u32 reg_end;
-+	const char *reg_info;
-+};
-+
-+static const struct ath6kl_diag_reg_info diag_reg[] = {
-+	{ 0x20000, 0x200fc, "General DMA and Rx registers" },
-+	{ 0x28000, 0x28900, "MAC PCU register & keycache" },
-+	{ 0x20800, 0x20a40, "QCU" },
-+	{ 0x21000, 0x212f0, "DCU" },
-+	{ 0x4000,  0x42e4, "RTC" },
-+	{ 0x540000, 0x540000 + (256 * 1024), "RAM" },
-+	{ 0x29800, 0x2B210, "Base Band" },
-+	{ 0x1C000, 0x1C748, "Analog" },
-+};
-+
- void ath6kl_dump_registers(struct ath6kl_device *dev,
- 			   struct ath6kl_irq_proc_registers *irq_proc_reg,
- 			   struct ath6kl_irq_enable_reg *irq_enable_reg)
-@@ -533,6 +554,170 @@ static const struct file_operations fops_credit_dist_stats = {
- 	.llseek = default_llseek,
- };
- 
-+static unsigned long ath6kl_get_num_reg(void)
-+{
-+	int i;
-+	unsigned long n_reg = 0;
-+
-+	for (i = 0; i < ARRAY_SIZE(diag_reg); i++)
-+		n_reg = n_reg +
-+		     (diag_reg[i].reg_end - diag_reg[i].reg_start) / 4 + 1;
-+
-+	return n_reg;
-+}
-+
-+static bool ath6kl_dbg_is_diag_reg_valid(u32 reg_addr)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(diag_reg); i++) {
-+		if (reg_addr >= diag_reg[i].reg_start &&
-+		    reg_addr <= diag_reg[i].reg_end)
-+			return true;
-+	}
-+
-+	ath6kl_warn("Given address is not in the valid chip address range\n");
-+	return false;
-+}
-+
-+static ssize_t read_file_reg_read(struct file *file, char __user *user_buf,
-+				  size_t count, loff_t *ppos)
-+{
-+	struct ath6kl *ar = file->private_data;
-+	u8 buf[50];
-+	unsigned int len = 0;
-+
-+	if (ar->debug.dbgfs_diag_reg)
-+		len += scnprintf(buf + len, sizeof(buf) - len, "0x%u\n",
-+				ar->debug.dbgfs_diag_reg);
-+	else
-+		len += scnprintf(buf + len, sizeof(buf) - len,
-+				 "All diag registers\n");
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static ssize_t write_file_reg_read(struct file *file,
-+				   const char __user *user_buf,
-+				   size_t count, loff_t *ppos)
-+{
-+	struct ath6kl *ar = file->private_data;
-+	u8 buf[50];
-+	unsigned int len;
-+	unsigned long reg_addr;
-+
-+	len = min(count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, len))
-+		return -EFAULT;
-+
-+	buf[len] = '\0';
-+
-+	if (strict_strtoul(buf, 0, &reg_addr))
-+		return -EINVAL;
-+
-+	if ((reg_addr % 4) != 0)
-+		return -EINVAL;
-+
-+	if (reg_addr && !ath6kl_dbg_is_diag_reg_valid(reg_addr))
-+		return -EINVAL;
-+
-+	ar->debug.dbgfs_diag_reg = reg_addr;
-+
-+	return count;
-+}
-+
-+static const struct file_operations fops_diag_reg_read = {
-+	.read = read_file_reg_read,
-+	.write = write_file_reg_read,
-+	.open = ath6kl_debugfs_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
-+static int ath6kl_regdump_open(struct inode *inode, struct file *file)
-+{
-+	struct ath6kl *ar = inode->i_private;
-+	u8 *buf;
-+	unsigned long int reg_len;
-+	unsigned int len = 0, n_reg;
-+	u32 addr, reg_val;
-+	int i, status;
-+
-+	/* Dump all the registers if no register is specified */
-+	if (!ar->debug.dbgfs_diag_reg)
-+		n_reg = ath6kl_get_num_reg();
-+	else
-+		n_reg = 1;
-+
-+	reg_len = n_reg * REG_OUTPUT_LEN_PER_LINE;
-+	if (n_reg > 1)
-+		reg_len += REGTYPE_STR_LEN;
-+
-+	buf = vmalloc(reg_len);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	if (n_reg == 1) {
-+		addr = ar->debug.dbgfs_diag_reg;
-+
-+		status = ath6kl_diag_read32(ar,
-+				TARG_VTOP(ar->target_type, addr),
-+				&reg_val);
-+		if (status)
-+			goto fail_reg_read;
-+
-+		len += scnprintf(buf + len, reg_len - len,
-+				 "0x%06x 0x%08x\n", addr, reg_val);
-+		goto done;
-+	}
-+
-+	for (i = 0; i < ARRAY_SIZE(diag_reg); i++) {
-+		len += scnprintf(buf + len, reg_len - len,
-+				"%s\n", diag_reg[i].reg_info);
-+		for (addr = diag_reg[i].reg_start;
-+		     addr <= diag_reg[i].reg_end; addr += 4) {
-+			status = ath6kl_diag_read32(ar,
-+					TARG_VTOP(ar->target_type, addr),
-+					&reg_val);
-+			if (status)
-+				goto fail_reg_read;
-+
-+			len += scnprintf(buf + len, reg_len - len,
-+					"0x%06x 0x%08x\n", addr, reg_val);
-+		}
-+	}
-+
-+done:
-+	file->private_data = buf;
-+	return 0;
-+
-+fail_reg_read:
-+	ath6kl_warn("Unable to read memory:%u\n", addr);
-+	vfree(buf);
-+	return -EIO;
-+}
-+
-+static ssize_t ath6kl_regdump_read(struct file *file, char __user *user_buf,
-+				  size_t count, loff_t *ppos)
-+{
-+	u8 *buf = file->private_data;
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
-+}
-+
-+static int ath6kl_regdump_release(struct inode *inode, struct file *file)
-+{
-+	vfree(file->private_data);
-+	return 0;
-+}
-+
-+static const struct file_operations fops_reg_dump = {
-+	.open = ath6kl_regdump_open,
-+	.read = ath6kl_regdump_read,
-+	.release = ath6kl_regdump_release,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- int ath6kl_debug_init(struct ath6kl *ar)
- {
- 	ar->debug.fwlog_buf.buf = vmalloc(ATH6KL_FWLOG_SIZE);
-@@ -566,6 +751,10 @@ int ath6kl_debug_init(struct ath6kl *ar)
- 
- 	debugfs_create_file("credit_dist_stats", S_IRUSR, ar->debugfs_phy, ar,
- 			    &fops_credit_dist_stats);
-+	debugfs_create_file("reg_addr", S_IRUSR, ar->debugfs_phy, ar,
-+			    &fops_diag_reg_read);
-+	debugfs_create_file("reg_dump", S_IRUSR, ar->debugfs_phy, ar,
-+			    &fops_reg_dump);
- 
- 	debugfs_create_file("fwlog", S_IRUSR, ar->debugfs_phy, ar,
- 			    &fops_fwlog);
 -- 
-1.7.0.4
-
+Greetings, Michael.
