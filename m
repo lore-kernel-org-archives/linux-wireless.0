@@ -1,115 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:1579 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22859 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753384Ab1H2I4w (ORCPT
+	with ESMTP id S1751720Ab1HJUym (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 04:56:52 -0400
-From: Vivek Natarajan <nataraja@qca.qualcomm.com>
-To: <jouni@qca.qualcomm.com>
-CC: <hostap@lists.shmoo.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wpa_supplicant: Modify bgscan based roaming behaviour.
-Date: Mon, 29 Aug 2011 14:26:45 +0530
-Message-ID: <1314608205-4995-1-git-send-email-nataraja@qca.qualcomm.com> (sfid-20110829_105655_571554_23D37D69)
+	Wed, 10 Aug 2011 16:54:42 -0400
+Date: Wed, 10 Aug 2011 23:54:35 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/3] nl80211/cfg80211: Add crypto settings into NEW_BEACON
+Message-ID: <20110810205435.GA3806@jouni.qca.qualcomm.com> (sfid-20110810_225446_063080_04516653)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cancel background scan based roaming behavior if the driver
-is capable of handling roaming in the firmware. For fullmac
-drivers like ath6kl, the roaming logic is handled in the
-firmware and for supplicant to initiate roam, the station
-has to disconnect completely and then reconnect with the
-new AP which takes a longer time without preauth.
+This removes need from drivers to parse the beacon tail/head data
+to figure out what crypto settings are to be used in AP mode in case
+the Beacon and Probe Response frames are fully constructed in the
+driver/firmware.
 
-Currently, if the supplicant also tries to roam, all requests
-are rejected by cfg80211 resulting in a spam of log.
-
-Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- src/drivers/driver.h         |    2 ++
- src/drivers/driver_nl80211.c |    9 +++++++++
- src/drivers/nl80211_copy.h   |    1 +
- wpa_supplicant/events.c      |    7 +++++++
- 4 files changed, 19 insertions(+), 0 deletions(-)
+ include/linux/nl80211.h |   25 ++++++++++-------
+ include/net/cfg80211.h  |   66 +++++++++++++++++++++++++---------------------
+ net/wireless/nl80211.c  |   21 +++++++++++++++
+ 3 files changed, 72 insertions(+), 40 deletions(-)
 
-diff --git a/src/drivers/driver.h b/src/drivers/driver.h
-index 67c5631..804ce93 100644
---- a/src/drivers/driver.h
-+++ b/src/drivers/driver.h
-@@ -675,6 +675,8 @@ struct wpa_driver_capa {
- #define WPA_DRIVER_FLAGS_EAPOL_TX_STATUS		0x00010000
- /* Driver indicates TX status events for Deauth/Disassoc frames */
- #define WPA_DRIVER_FLAGS_DEAUTH_TX_STATUS		0x00020000
-+/* Driver supports roaming in firmware */
-+#define WPA_DRIVER_FLAGS_FW_ROAMING			0x00040000
- 	unsigned int flags;
- 
- 	int max_scan_ssids;
-diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
-index e49e714..5fbf46b 100644
---- a/src/drivers/driver_nl80211.c
-+++ b/src/drivers/driver_nl80211.c
-@@ -1640,6 +1640,7 @@ struct wiphy_info_data {
- 	int connect_supported;
- 	int offchan_tx_supported;
- 	int max_remain_on_chan;
-+	int fw_roam;
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 227ee9a..580fcdc 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -163,7 +163,10 @@
+  *	%NL80211_ATTR_BEACON_HEAD and %NL80211_ATTR_BEACON_TAIL attributes.
+  *	Following attributes are provided for drivers that generate full Beacon
+  *	and Probe Response frames internally: %NL80211_ATTR_SSID,
+- *	%NL80211_ATTR_HIDDEN_SSID.
++ *	%NL80211_ATTR_HIDDEN_SSID, %NL80211_ATTR_CIPHERS_PAIRWISE,
++ *	%NL80211_ATTR_CIPHER_GROUP, %NL80211_ATTR_WPA_VERSIONS,
++ *	%NL80211_ATTR_AKM_SUITES, %NL80211_ATTR_PRIVACY,
++ *	%NL80211_ATTR_AUTH_TYPE.
+  * @NL80211_CMD_NEW_BEACON: add a new beacon to an access point interface,
+  *	parameters are like for %NL80211_CMD_SET_BEACON.
+  * @NL80211_CMD_DEL_BEACON: remove the beacon, stop sending it
+@@ -845,18 +848,20 @@ enum nl80211_commands {
+  * @NL80211_ATTR_STATUS_CODE: StatusCode for the %NL80211_CMD_CONNECT
+  *	event (u16)
+  * @NL80211_ATTR_PRIVACY: Flag attribute, used with connect(), indicating
+- *	that protected APs should be used.
++ *	that protected APs should be used. This is also used with NEW_BEACON to
++ *	indicate that the BSS is to use protection.
+  *
+- * @NL80211_ATTR_CIPHERS_PAIRWISE: Used with CONNECT and ASSOCIATE to
+- *	indicate which unicast key ciphers will be used with the connection
++ * @NL80211_ATTR_CIPHERS_PAIRWISE: Used with CONNECT, ASSOCIATE, and NEW_BEACON
++ *	to indicate which unicast key ciphers will be used with the connection
+  *	(an array of u32).
+- * @NL80211_ATTR_CIPHER_GROUP: Used with CONNECT and ASSOCIATE to indicate
+- *	which group key cipher will be used with the connection (a u32).
+- * @NL80211_ATTR_WPA_VERSIONS: Used with CONNECT and ASSOCIATE to indicate
+- *	which WPA version(s) the AP we want to associate with is using
++ * @NL80211_ATTR_CIPHER_GROUP: Used with CONNECT, ASSOCIATE, and NEW_BEACON to
++ *	indicate which group key cipher will be used with the connection (a
++ *	u32).
++ * @NL80211_ATTR_WPA_VERSIONS: Used with CONNECT, ASSOCIATE, and NEW_BEACON to
++ *	indicate which WPA version(s) the AP we want to associate with is using
+  *	(a u32 with flags from &enum nl80211_wpa_versions).
+- * @NL80211_ATTR_AKM_SUITES: Used with CONNECT and ASSOCIATE to indicate
+- *	which key management algorithm(s) to use (an array of u32).
++ * @NL80211_ATTR_AKM_SUITES: Used with CONNECT, ASSOCIATE, and NEW_BEACON to
++ *	indicate which key management algorithm(s) to use (an array of u32).
+  *
+  * @NL80211_ATTR_REQ_IE: (Re)association request information elements as
+  *	sent out by the card, for ROAM and successful CONNECT events.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 27c5eec..e530e9b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -334,6 +334,36 @@ struct survey_info {
  };
  
- 
-@@ -1695,6 +1696,9 @@ static int wiphy_info_handler(struct nl_msg *msg, void *arg)
- 	if (tb[NL80211_ATTR_OFFCHANNEL_TX_OK])
- 		info->offchan_tx_supported = 1;
- 
-+	if (tb[NL80211_ATTR_ROAM_SUPPORT])
-+		info->fw_roam = 1;
+ /**
++ * struct cfg80211_crypto_settings - Crypto settings
++ * @wpa_versions: indicates which, if any, WPA versions are enabled
++ *	(from enum nl80211_wpa_versions)
++ * @cipher_group: group key cipher suite (or 0 if unset)
++ * @n_ciphers_pairwise: number of AP supported unicast ciphers
++ * @ciphers_pairwise: unicast key cipher suites
++ * @n_akm_suites: number of AKM suites
++ * @akm_suites: AKM suites
++ * @control_port: Whether user space controls IEEE 802.1X port, i.e.,
++ *	sets/clears %NL80211_STA_FLAG_AUTHORIZED. If true, the driver is
++ *	required to assume that the port is unauthorized until authorized by
++ *	user space. Otherwise, port is marked authorized by default.
++ * @control_port_ethertype: the control port protocol that should be
++ *	allowed through even on unauthorized ports
++ * @control_port_no_encrypt: TRUE to prevent encryption of control port
++ *	protocol frames.
++ */
++struct cfg80211_crypto_settings {
++	u32 wpa_versions;
++	u32 cipher_group;
++	int n_ciphers_pairwise;
++	u32 ciphers_pairwise[NL80211_MAX_NR_CIPHER_SUITES];
++	int n_akm_suites;
++	u32 akm_suites[NL80211_MAX_NR_AKM_SUITES];
++	bool control_port;
++	__be16 control_port_ethertype;
++	bool control_port_no_encrypt;
++};
 +
- 	if (tb[NL80211_ATTR_MAX_REMAIN_ON_CHANNEL_DURATION])
- 		info->max_remain_on_chan =
- 			nla_get_u32(tb[NL80211_ATTR_MAX_REMAIN_ON_CHANNEL_DURATION]);
-@@ -1768,6 +1772,11 @@ static int wpa_driver_nl80211_capa(struct wpa_driver_nl80211_data *drv)
- 		drv->capa.flags |= WPA_DRIVER_FLAGS_OFFCHANNEL_TX;
- 	}
++/**
+  * struct beacon_parameters - beacon parameters
+  *
+  * Used to configure the beacon for an interface.
+@@ -350,6 +380,9 @@ struct survey_info {
+  *	user space)
+  * @ssid_len: length of @ssid
+  * @hidden_ssid: whether to hide the SSID in Beacon/Probe Response frames
++ * @crypto: crypto settings
++ * @privacy: the BSS uses privacy
++ * @auth_type: Authentication type (algorithm)
+  */
+ struct beacon_parameters {
+ 	u8 *head, *tail;
+@@ -358,6 +391,9 @@ struct beacon_parameters {
+ 	const u8 *ssid;
+ 	size_t ssid_len;
+ 	enum nl80211_hidden_ssid hidden_ssid;
++	struct cfg80211_crypto_settings crypto;
++	bool privacy;
++	enum nl80211_auth_type auth_type;
+ };
  
-+	if (info.fw_roam) {
-+		wpa_printf(MSG_DEBUG, "nl80211: Using driver-based roaming");
-+		drv->capa.flags |= WPA_DRIVER_FLAGS_FW_ROAMING;
-+	}
+ /**
+@@ -906,36 +942,6 @@ const u8 *ieee80211_bss_get_ie(struct cfg80211_bss *bss, u8 ie);
+ 
+ 
+ /**
+- * struct cfg80211_crypto_settings - Crypto settings
+- * @wpa_versions: indicates which, if any, WPA versions are enabled
+- *	(from enum nl80211_wpa_versions)
+- * @cipher_group: group key cipher suite (or 0 if unset)
+- * @n_ciphers_pairwise: number of AP supported unicast ciphers
+- * @ciphers_pairwise: unicast key cipher suites
+- * @n_akm_suites: number of AKM suites
+- * @akm_suites: AKM suites
+- * @control_port: Whether user space controls IEEE 802.1X port, i.e.,
+- *	sets/clears %NL80211_STA_FLAG_AUTHORIZED. If true, the driver is
+- *	required to assume that the port is unauthorized until authorized by
+- *	user space. Otherwise, port is marked authorized by default.
+- * @control_port_ethertype: the control port protocol that should be
+- *	allowed through even on unauthorized ports
+- * @control_port_no_encrypt: TRUE to prevent encryption of control port
+- *	protocol frames.
+- */
+-struct cfg80211_crypto_settings {
+-	u32 wpa_versions;
+-	u32 cipher_group;
+-	int n_ciphers_pairwise;
+-	u32 ciphers_pairwise[NL80211_MAX_NR_CIPHER_SUITES];
+-	int n_akm_suites;
+-	u32 akm_suites[NL80211_MAX_NR_AKM_SUITES];
+-	bool control_port;
+-	__be16 control_port_ethertype;
+-	bool control_port_no_encrypt;
+-};
+-
+-/**
+  * struct cfg80211_auth_request - Authentication request data
+  *
+  * This structure provides information needed to complete IEEE 802.11
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c2d7a9a..8388861 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -23,6 +23,12 @@
+ #include "nl80211.h"
+ #include "reg.h"
+ 
++static bool nl80211_valid_auth_type(enum nl80211_auth_type auth_type);
++static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
++				   struct genl_info *info,
++				   struct cfg80211_crypto_settings *settings,
++				   int cipher_limit);
 +
- 	drv->capa.flags |= WPA_DRIVER_FLAGS_SANE_ERROR_CODES;
- 	drv->capa.flags |= WPA_DRIVER_FLAGS_SET_KEYS_AFTER_ASSOC_DONE;
- 	if (info.p2p_supported)
-diff --git a/src/drivers/nl80211_copy.h b/src/drivers/nl80211_copy.h
-index 3769303..ca05807 100644
---- a/src/drivers/nl80211_copy.h
-+++ b/src/drivers/nl80211_copy.h
-@@ -1252,6 +1252,7 @@ enum nl80211_attrs {
- 	NL80211_ATTR_IE_PROBE_RESP,
- 	NL80211_ATTR_IE_ASSOC_RESP,
+ static int nl80211_pre_doit(struct genl_ops *ops, struct sk_buff *skb,
+ 			    struct genl_info *info);
+ static void nl80211_post_doit(struct genl_ops *ops, struct sk_buff *skb,
+@@ -2039,6 +2045,21 @@ static int nl80211_addset_beacon(struct sk_buff *skb, struct genl_info *info)
+ 				return -EINVAL;
+ 		}
  
-+	NL80211_ATTR_ROAM_SUPPORT,
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/wpa_supplicant/events.c b/wpa_supplicant/events.c
-index a307eda..57c987b 100644
---- a/wpa_supplicant/events.c
-+++ b/wpa_supplicant/events.c
-@@ -718,6 +718,13 @@ void wpa_supplicant_connect(struct wpa_supplicant *wpa_s,
- 		return;
- 	}
- 
-+	if ((wpa_s->current_ssid == ssid) &&
-+	    (wpa_s->drv_flags & WPA_DRIVER_FLAGS_FW_ROAMING)) {
-+		wpa_dbg(wpa_s, MSG_DEBUG, "Cancel supplicant roaming as "
-+				"driver has the capability");
-+		return;
-+	}
++		params.privacy = !!info->attrs[NL80211_ATTR_PRIVACY];
 +
- 	/*
- 	 * Do not trigger new association unless the BSSID has changed or if
- 	 * reassociation is requested. If we are in process of associating with
++		if (info->attrs[NL80211_ATTR_AUTH_TYPE]) {
++			params.auth_type = nla_get_u32(
++				info->attrs[NL80211_ATTR_AUTH_TYPE]);
++			if (!nl80211_valid_auth_type(params.auth_type))
++				return -EINVAL;
++		} else
++			params.auth_type = NL80211_AUTHTYPE_AUTOMATIC;
++
++		err = nl80211_crypto_settings(rdev, info, &params.crypto,
++					      NL80211_MAX_NR_CIPHER_SUITES);
++		if (err)
++			return err;
++
+ 		call = rdev->ops->add_beacon;
+ 		break;
+ 	case NL80211_CMD_SET_BEACON:
 -- 
-1.7.1
+1.7.4.1
 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
