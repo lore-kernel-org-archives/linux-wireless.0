@@ -1,101 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:61195 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751689Ab1HXPxj convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:49341 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753233Ab1HJPQL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 11:53:39 -0400
-Received: by wyg24 with SMTP id 24so942120wyg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 08:53:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20110823194545.GF9770@tuxdriver.com>
-References: <4e472623.xXZaXUueNVRpfmG+%Larry.Finger@lwfinger.net>
-	<CAD2nsn2sO+Lj+DntbFVa8QMYq8eTtFqdX06aQGHtNEbnbVTJzQ@mail.gmail.com>
-	<20110823194545.GF9770@tuxdriver.com>
-Date: Wed, 24 Aug 2011 21:23:38 +0530
-Message-ID: <CAD2nsn1VuMvrWtXCq66HuOz8VLDWPnoTy2=p1v36fWohJx8QUA@mail.gmail.com> (sfid-20110824_175348_647583_D2D4267C)
-Subject: Re: [RFC/RFT] ath9k_htc: Fix memory leak
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: lrodriguez@atheros.com, vasanth@atheros.com,
-	senthilkumar@atheros.com, ath9k-devel@venema.h4ckr.net,
-	linux-wireless@vger.kernel.org, rmanohar@qca.qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 10 Aug 2011 11:16:11 -0400
+Received: by mail-fx0-f48.google.com with SMTP id 7so1615723fxg.35
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 08:16:09 -0700 (PDT)
+Subject: Re: [PATCH 20/40] wl12xx: update BT coex configuration params
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1312881233-9366-21-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	 <1312881233-9366-21-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Aug 2011 18:16:06 +0300
+Message-ID: <1312989366.2407.701.camel@cumari> (sfid-20110810_171621_275213_2CC8D211)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 24, 2011 at 1:15 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Mon, Aug 15, 2011 at 05:56:33PM +0530, Mohammed Shafi wrote:
->> On Sun, Aug 14, 2011 at 7:04 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> > Kmemleak shows the following kind of memory leak for ath9k_htc:
->> >
->> > unreferenced object 0xffff88004542f200 (size 512):
->> >  comm "khubd", pid 977, jiffies 4317632516 (age 16855.868s)
->> >  hex dump (first 32 bytes):
->> >    00 00 00 0a 00 00 00 00 00 02 01 05 00 00 02 01  ................
->> >    00 00 00 00 00 00 81 38 02 00 00 00 33 33 30 30  .......8....3300
->> >  backtrace:
->> >    [<ffffffff81122d77>] create_object+0x127/0x2b0
->> >    [<ffffffff813580b1>] kmemleak_alloc+0x21/0x50
->> >    [<ffffffff8111f383>] __kmalloc_node_track_caller+0x153/0x220
->> >    [<ffffffff812b703e>] __alloc_skb+0x7e/0x170
->> >    [<ffffffffa0833331>] htc_connect_service+0x111/0x200 [ath9k_htc]
->> >    [<ffffffffa083bb90>] ath9k_init_htc_services+0x240/0x2b0 [ath9k_htc]
->> >    [<ffffffffa083c1ca>] ath9k_htc_probe_device+0xea/0xa50 [ath9k_htc]
->> >    [<ffffffffa08338dc>] ath9k_htc_hw_init+0xc/0x30 [ath9k_htc]
->> >    [<ffffffffa08356ba>] ath9k_hif_usb_probe+0x1ca/0x420 [ath9k_htc]
->> >    [<ffffffffa00a2279>] usb_probe_interface+0xb9/0x160 [usbcore]
->> >    [<ffffffff81279379>] driver_probe_device+0x89/0x1a0
->> >    [<ffffffff8127958b>] __device_attach+0x4b/0x60
->> >    [<ffffffff81278024>] bus_for_each_drv+0x64/0x90
->> >    [<ffffffff81279231>] device_attach+0xa1/0xb0
->> >    [<ffffffff81278a25>] bus_probe_device+0x25/0x40
->> >    [<ffffffff81276d2a>] device_add+0x55a/0x630
->> >
->> > The device is a TP-Link TL-WN722N. The output from lsusb is "ID 0cf3:9271
->> > Atheros Communications, Inc. AR9271 802.11n".
->> >
->> > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> > Cc: Stable <stable@kernel.org>
->> > ---
->> >
->> > This patch certainly fixes a leak. I'm testing to see if there are
->> > others.
->>
->> Hi Larry,
->>
->> thanks for finding this.
->> I remember seeing this memleaks sometime back and thought this patch
->> might help(i think same as yours with some more corner cases)
->> https://patchwork.kernel.org/patch/1016752/
->> but I found there were still some memory leaks, I was unsure where I
->> am missing. if you are sure that this addresses the issue, we can send
->> a patch.
->
-> Ping?  Is this the patch we want?  Or something else?
+On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
+> -	 * Defines whether the SG will force WLAN host to enter/exit PSM
+> +	 * The maximum time WLAN can gain the antenna for
+> +	 * in WLAN PSM / BT master/slave BR
 
-Hi John,
-
-the complete patch is posted
-http://www.spinics.net/lists/linux-wireless/msg75134.html
-Vasanth said that at some scenario's with the above patch it may cause
-some panics.
-based on the maintainers concerns/doubts lets drop this patch. myself
-and Larry still noticed few more memory leaks. I think we better drop
-this patch and fix it completely/tested. as I am with some other
-critical tasks we will soon address this.
-
-Larry if you have any thoughts, please share.
-
->
-> John
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
->
+"WLAN can gain the antenna for"... for what?
 
 
+> +	/*
+> +	 * The maximum time WLAN can gain the antenna for
+> +	 * in WLAN PSM / BT master/slave EDR
+
+Same here.
+
+
+> +	/* ??? */
+
+[...]
+
+> +	/* ??? */
+
+Can you figure out what this is? If not, add a "TODO: explain these
+values".
+
+
+> +	 * The threshold (percent) of max consequtive beacon misses before
+
+s/consequtive/consecutive/
+
+
+> +	/* ??? */
+
+Same as above.
+
+
+> +	CONF_SG_GENERAL_USAGE_BIT_MAP,
+
+
+
+> +	 * Number of consequent BT voice frames not interrupted by WLAN
+
+s/consequent/consecutive/
+
+
+
+> @@ -357,17 +354,12 @@ static int wl1271_sta_hw_init(struct wl1271 *wl)
+>  
+>  	/* Beacon filtering */
+>  	ret = wl1271_init_beacon_filter(wl);
+>  	if (ret < 0)
+>  		return ret;
+>  
+> -	/* FM WLAN coexistence */
+> -	ret = wl1271_acx_fm_coex(wl);
+> -	if (ret < 0)
+> -		return ret;
+> -
+
+I guess this means that FM/WLAN coex is not used anymore.  Can you say
+it in the commit log too?
 
 -- 
-shafi
+Cheers,
+Luca.
+
