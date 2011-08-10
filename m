@@ -1,51 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:31475 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750889Ab1HaOam convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 10:30:42 -0400
-From: "Sumangala, Suraj" <surajs@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>,
-	"Balasubramanian, senthilkumar" <senthilb@qca.qualcomm.com>,
-	"Mehta, Vipin" <vipimeht@qca.qualcomm.com>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [RFC] nl80211: Added NL80211 commands for Bluetooth-WiFi coex
-Date: Wed, 31 Aug 2011 14:30:40 +0000
-Message-ID: <480687D4EEFE7447A2E09AADFF6673621AF7CF14@nasanexd02a.na.qualcomm.com> (sfid-20110831_163044_609843_97145A3A)
-References: <1314771915-8848-1-git-send-email-surajs@qca.qualcomm.com>,<1314774883.4161.18.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1314774883.4161.18.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:54666 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754844Ab1HJTpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2011 15:45:52 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
+	johannes@sipsolutions.net
+Subject: [PATCH 1/2] mac80211: make ieee80211_send_bar available for drivers
+Date: Wed, 10 Aug 2011 13:45:26 -0600
+Message-Id: <1313005527-83182-1-git-send-email-nbd@openwrt.org> (sfid-20110810_214559_691911_CE82CCA2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-________________________________________
-From: Johannes Berg [johannes@sipsolutions.net]
-Sent: Wednesday, August 31, 2011 12:44 PM
-To: Sumangala, Suraj
-Cc: linville@tuxdriver.com; ath6kl-devel; Balasubramanian, senthilkumar; Mehta, Vipin; Valo, Kalle; linux-wireless@vger.kernel.org
-Subject: Re: [RFC] nl80211: Added NL80211 commands for Bluetooth-WiFi coex
+To properly maintain the peer's block ack window, the driver needs to be
+able to control the new starting sequence number that is sent along with
+the BlockAckReq frame.
 
-On Wed, 2011-08-31 at 11:55 +0530, Suraj Sumangala wrote:
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ include/net/mac80211.h     |   13 +++++++++++++
+ net/mac80211/agg-tx.c      |    4 +++-
+ net/mac80211/ieee80211_i.h |    1 -
+ net/mac80211/status.c      |    2 +-
+ 4 files changed, 17 insertions(+), 3 deletions(-)
 
-
-> +     NL80211_CMD_BTCOEX_INQ,
-> +     NL80211_CMD_BTCOEX_SCO,
-> +     NL80211_CMD_BTCOEX_A2DP,
-> +     NL80211_CMD_BTCOEX_ACL_ROLE,
-
- > Why do you need all these commands and not just one BT config command
- > that gives everything? Need to see more of the implementation but that
- > seems pointless.
-
-One reason I went this way is because some of the events for which commands are generated has different associated parameters associated with it.
-But, I do understand your point and there is scope to club similar commands together.
-I guess I will send another set of patches along with the cfg80211 callbacks.
-
--Suraj
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2f01d84..03e5ad8 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3218,6 +3218,19 @@ void ieee80211_remain_on_channel_expired(struct ieee80211_hw *hw);
+ void ieee80211_stop_rx_ba_session(struct ieee80211_vif *vif, u16 ba_rx_bitmap,
+ 				  const u8 *addr);
+ 
++/**
++ * ieee80211_send_bar - send a BlockAckReq frame
++ *
++ * can be used to flush pending frames from the peer's aggregation reorder
++ * buffer.
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ * @ra: the peer's destination address
++ * @tid: the TID of the aggregation session
++ * @ssn: the new starting sequence number for the receiver
++ */
++void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn);
++
+ /* Rate control API */
+ 
+ /**
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index b7075f3..62d61fb 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -106,8 +106,9 @@ static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_tx_skb(sdata, skb);
+ }
+ 
+-void ieee80211_send_bar(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid, u16 ssn)
++void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn)
+ {
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_bar *bar;
+@@ -135,6 +136,7 @@ void ieee80211_send_bar(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid, u1
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+ 	ieee80211_tx_skb(sdata, skb);
+ }
++EXPORT_SYMBOL(ieee80211_send_bar);
+ 
+ void ieee80211_assign_tid_tx(struct sta_info *sta, int tid,
+ 			     struct tid_ampdu_tx *tid_tx)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 286ac5d..9ea38b5 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1248,7 +1248,6 @@ struct ieee80211_tx_status_rtap_hdr {
+ void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
+ 				       struct ieee80211_ht_cap *ht_cap_ie,
+ 				       struct ieee80211_sta_ht_cap *ht_cap);
+-void ieee80211_send_bar(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid, u16 ssn);
+ void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
+ 			  const u8 *da, u16 tid,
+ 			  u16 initiator, u16 reason_code);
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index a89cca3..95e0a8b 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -239,7 +239,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			tid = qc[0] & 0xf;
+ 			ssn = ((le16_to_cpu(hdr->seq_ctrl) + 0x10)
+ 						& IEEE80211_SCTL_SEQ);
+-			ieee80211_send_bar(sta->sdata, hdr->addr1,
++			ieee80211_send_bar(&sta->sdata->vif, hdr->addr1,
+ 					   tid, ssn);
+ 		}
+ 
+-- 
+1.7.3.2
 
