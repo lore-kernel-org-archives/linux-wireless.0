@@ -1,77 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:58339 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751425Ab1HIJLU convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:36601 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751283Ab1HJTyh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 05:11:20 -0400
-Received: by pzk37 with SMTP id 37so9785591pzk.1
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:11:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4E40D58A.4000901@01019freenet.de>
-References: <CAH-LUqry4TKAvnojAo39QfT-Wy_BN94SYJEiCCRX4hrb=RcfwQ@mail.gmail.com>
-	<4E40D58A.4000901@01019freenet.de>
-Date: Tue, 9 Aug 2011 17:11:19 +0800
-Message-ID: <CAH-LUqojjVCqbg_rQYNCU6Ge2D2ekNWoq03MDKKidqwrNqod0g@mail.gmail.com> (sfid-20110809_111128_598097_3AB0CF20)
-Subject: Re: AR9285 Wireless 80211n mode get only 25Mbit with Linux 2.6.38.8
- and compat-wireless-2.6.38.2-2
-From: Dane Shih <daneshih1981@gmail.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
+	Wed, 10 Aug 2011 15:54:37 -0400
+Received: by mail-fx0-f50.google.com with SMTP id 2so1500583fxh.23
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 12:54:35 -0700 (PDT)
+Subject: Re: [PATCH 23/40] wl12xx: re-enable block ack session support
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1312881233-9366-24-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	 <1312881233-9366-24-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Aug 2011 22:54:32 +0300
+Message-ID: <1313006072.2407.731.camel@cumari> (sfid-20110810_215440_408637_EE1D9398)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-thanks
-kernel upgrade to 3.0
-and install compat-wireless_3.0_stable_releases ath9k  driver
+On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
+> diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+> index 6885568..02b9c7e 100644
+> --- a/drivers/net/wireless/wl12xx/acx.c
+> +++ b/drivers/net/wireless/wl12xx/acx.c
+> @@ -1320,25 +1320,21 @@ int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
+>         acx = kzalloc(sizeof(*acx), GFP_KERNEL);
+>         if (!acx) {
+>                 ret = -ENOMEM;
+>                 goto out;
+>         }
+>  
+> -       /* Allow HT Operation ? */
+>         if (allow_ht_operation) {
+> -               ht_capabilites =
+> -                       WL1271_ACX_FW_CAP_HT_OPERATION;
+> -               if (ht_cap->cap & IEEE80211_HT_CAP_GRN_FLD)
+> -                       ht_capabilites |=
+> -                               WL1271_ACX_FW_CAP_GREENFIELD_FRAME_FORMAT;
+> -               if (ht_cap->cap & IEEE80211_HT_CAP_SGI_20)
+> -                       ht_capabilites |=
+> -                               WL1271_ACX_FW_CAP_SHORT_GI_FOR_20MHZ_PACKETS;
+> -               if (ht_cap->cap & IEEE80211_HT_CAP_LSIG_TXOP_PROT)
+> -                       ht_capabilites |=
+> -                               WL1271_ACX_FW_CAP_LSIG_TXOP_PROTECTION;
+> +               /* no need to translate capabilities - use the spec values */
+> +               ht_capabilites = ht_cap->cap;
+> +
+> +               /*
+> +                * this bit is not employed by the spec but only by FW to
+> +                * indicate peer HT support
+> +                */
+> +               ht_capabilites |= WL12XX_HT_CAP_HT_OPERRATION;
 
-[  4] local 192.168.100.254 port 5001 connected with 192.168.100.47 port 49230
-[ ID] Interval       Transfer     Bandwidth
-[  4]  0.0- 2.1 sec  10.0 MBytes  40.5 Mbits/sec
-[  5] local 192.168.100.254 port 5001 connected with 192.168.100.47 port 49231
-[  5]  0.0- 6.4 sec  30.0 MBytes  39.2 Mbits/sec
-
-80211n  maxinum throughput 40Mbit
-
-what i should be check
-
-another question
-wireless client also get  100 MBit/s
-
-thanks
+Typo, OPERATION.
 
 
+>  /* setup BA session receiver setting in the FW. */
+> -int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index, u16 ssn,
+> -                                       bool enable)
+> +int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
+> +                                        u16 ssn, bool enable, u8 peer_hlid)
+
+Indentation.
 
 
-2011/8/9 Andreas Hartmann <andihartmann@01019freenet.de>:
-> Dane Shih schrieb:
->> hi all
->>
->> i try to setup AR9285 Wireless  ap mode on fedora 12
->>
->> but it seem not stable when setup Master mode use hostapd
->> so ...i upgrade kernel to  2.6.38.8
->> it's better, no more disconnect
->>
->> but ap mode in 80211n
->>
->> hostapd.conf
->>
->> nterface=wlan0
->> driver=nl80211
->> ssid=test
->> hw_mode=g
->> wme_enabled=1
->> ieee80211n=1
->> ht_capab=HT40+
->
-> I'm using
->
-> ht_capab=[HT40+][SHORT-GI-40][DSSS_CCK-40][TX-STBC][RX-STBC1][MAX-AMSDU-3839]
-> channel=1
->
-> with this chip and get about 100 MBit/s (kernel 3.0 or 2.6.39)
->
->
-> Andreas
->
+> -       /* Single link for now */
+> -       acx->link_id = 1;
+> +       acx->hlid = peer_hlid;
+>         acx->tid = tid_index;
+>         acx->enable = enable;
+> -       acx->win_size = 0;
+> +       acx->win_size = RX_BA_WIN_SIZE;
+
+Shouldn't we put this one in the conf structure as well?
+
+
+> diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+> index ac6194e..ba70f38 100644
+> --- a/drivers/net/wireless/wl12xx/acx.h
+> +++ b/drivers/net/wireless/wl12xx/acx.h
+> @@ -894,33 +894,26 @@ struct wl1271_acx_rssi_snr_avg_weights {
+>         u8 rssi_beacon;
+>         u8 rssi_data;
+>         u8 snr_beacon;
+>         u8 snr_data;
+>  };
+>  
+> +
+> +/* special capability bit (not employed by the 802.11n spec) */
+> +#define WL12XX_HT_CAP_HT_OPERRATION BIT(16)
+
+Same typo as earlier.
+
+
+> @@ -1215,13 +1191,13 @@ enum {
+>         ACX_FRAG_CFG                = 0x004F,
+>         ACX_BET_ENABLE              = 0x0050,
+>         ACX_RSSI_SNR_TRIGGER        = 0x0051,
+>         ACX_RSSI_SNR_WEIGHTS        = 0x0052,
+>         ACX_KEEP_ALIVE_MODE         = 0x0053,
+>         ACX_SET_KEEP_ALIVE_CONFIG   = 0x0054,
+> -       ACX_BA_SESSION_POLICY_CFG   = 0x0055,
+> +       ACX_BA_SESSION_INITIATOR_POLICY = 0x0055,
+
+Use ACX_BA_SESSION_INIT_POLICY to keep it small.  Unless you want to
+realign all the values.
+
+
+> @@ -1295,17 +1271,15 @@ int wl1271_acx_rssi_snr_trigger(struct wl1271 *wl, bool enable,
+>  int wl1271_acx_rssi_snr_avg_weights(struct wl1271 *wl);
+>  int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
+>                                     struct ieee80211_sta_ht_cap *ht_cap,
+>                                     bool allow_ht_operation);
+>  int wl1271_acx_set_ht_information(struct wl1271 *wl,
+>                                    u16 ht_operation_mode);
+> -int wl1271_acx_set_ba_session(struct wl1271 *wl,
+> -                             enum ieee80211_back_parties direction,
+> -                             u8 tid_index, u8 policy);
+> -int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index, u16 ssn,
+> -                                      bool enable);
+> +int wl1271_acx_set_ba_initiator_policy(struct wl1271 *wl);
+> +int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
+> +                                        u16 ssn, bool enable, u8 peer_hlid);
+
+Indentation.
+
+
+-- 
+Cheers,
+Luca.
+
