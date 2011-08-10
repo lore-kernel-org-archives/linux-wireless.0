@@ -1,167 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:50902 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751154Ab1HNXY3 convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:60429 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753980Ab1HJSby convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 19:24:29 -0400
-Received: by qwk3 with SMTP id 3so2250083qwk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 16:24:28 -0700 (PDT)
+	Wed, 10 Aug 2011 14:31:54 -0400
+Received: by iye16 with SMTP id 16so1641193iye.1
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 11:31:53 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1313357250-8292-2-git-send-email-zajec5@gmail.com>
-References: <1313357250-8292-1-git-send-email-zajec5@gmail.com> <1313357250-8292-2-git-send-email-zajec5@gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 15 Aug 2011 01:24:07 +0200
-Message-ID: <CA+XFjio4gg5zO-gx+6v2rLGidziNY-rUachmdt02VwE9tX_SWQ@mail.gmail.com> (sfid-20110815_012432_811512_E38F290F)
-Subject: Re: [PATCH 2/3] b43: LCN-PHY: implement disabling radio
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1312983144-16156-3-git-send-email-sgruszka@redhat.com>
+References: <1312983144-16156-1-git-send-email-sgruszka@redhat.com>
+	<1312983144-16156-3-git-send-email-sgruszka@redhat.com>
+Date: Wed, 10 Aug 2011 20:31:53 +0200
+Message-ID: <CAOZOX0UJu18AR_=Yk3VZbubShmq17k6bBksjYv6+nijduH+-Nw@mail.gmail.com> (sfid-20110810_203157_449726_7D279C3F)
+Subject: Re: [PATCH 3/3] rt2x00: fix crash in rt2800usb_get_txwi
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Justin Piszcz <jpiszcz@lucidpixels.com>, stable@kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/8/14 Rafał Miłecki <zajec5@gmail.com>:
-> wl reads radio version, then disables it. That's how we found it in MMIO
-> dump:
->  radio_read(0x0000) -> 0x0031 <-- RADIO READ WITHOUT 0x200 SET!
->  radio_read(0x0001) -> 0x0064 <-- RADIO READ WITHOUT 0x200 SET!
->  radio_read(0x0002) -> 0x0020 <-- RADIO READ WITHOUT 0x200 SET!
->  read32 0xfaafc120 -> 0x04000400
->  phy_read(0x044d) -> 0x0000
-> phy_write(0x044d) <- 0x0000
->  phy_read(0x044c) -> 0x1fff
-> phy_write(0x044c) <- 0x1fff
->  phy_read(0x04b7) -> 0x0000
-> phy_write(0x04b7) <- 0x0000
->  phy_read(0x04b1) -> 0x0000
-> phy_write(0x04b1) <- 0x0000
->  phy_read(0x04b0) -> 0x7dff
-> phy_write(0x04b0) <- 0x7dff
->  phy_read(0x04fa) -> 0x0000
-> phy_write(0x04fa) <- 0x0000
->  phy_read(0x04f9) -> 0x007f
-> phy_write(0x04f9) <- 0x007f
+On Wed, Aug 10, 2011 at 3:32 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> Patch should fix this oops:
+>
+> BUG: unable to handle kernel NULL pointer dereference at 000000a0
+> IP: [<f81b30c9>] rt2800usb_get_txwi+0x19/0x70 [rt2800usb]
+> *pdpt = 0000000000000000 *pde = f000ff53f000ff53
+> Oops: 0000 [#1] SMP
+> Pid: 198, comm: kworker/u:3 Tainted: G � � � �W � 3.0.0-wl+ #9 LENOVO 6369CTO/6369CTO
+> EIP: 0060:[<f81b30c9>] EFLAGS: 00010283 CPU: 1
+> EIP is at rt2800usb_get_txwi+0x19/0x70 [rt2800usb]
+> EAX: 00000000 EBX: f465e140 ECX: f4494960 EDX: ef24c5f8
+> ESI: 810f21f5 EDI: f1da9960 EBP: f4581e80 ESP: f4581e70
+> �DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+> Process kworker/u:3 (pid: 198, ti=f4580000 task=f4494960 task.ti=f4580000)
+> Call Trace:
+> �[<f804790f>] rt2800_txdone_entry+0x2f/0xf0 [rt2800lib]
+> �[<c045110d>] ? warn_slowpath_common+0x7d/0xa0
+> �[<f81b3a38>] ? rt2800usb_work_txdone+0x288/0x360 [rt2800usb]
+> �[<f81b3a38>] ? rt2800usb_work_txdone+0x288/0x360 [rt2800usb]
+> �[<f81b3a13>] rt2800usb_work_txdone+0x263/0x360 [rt2800usb]
+> �[<c046a8d6>] process_one_work+0x186/0x440
+> �[<c046a85a>] ? process_one_work+0x10a/0x440
+> �[<f81b37b0>] ? rt2800usb_probe_hw+0x120/0x120 [rt2800usb]
+> �[<c046c283>] worker_thread+0x133/0x310
+> �[<c04885db>] ? trace_hardirqs_on+0xb/0x10
+> �[<c046c150>] ? manage_workers+0x1e0/0x1e0
+> �[<c047054c>] kthread+0x7c/0x90
+> �[<c04704d0>] ? __init_kthread_worker+0x60/0x60
+> �[<c0826b42>] kernel_thread_helper+0x6/0x1
+>
+> Oops might happen because we check rt2x00queue_empty(queue) twice,
+> but this condition can change and we can process entry in
+> rt2800_txdone_entry(), which was already processed by
+> rt2800usb_txdone_entry_check() -> rt2x00lib_txdone_noinfo() and
+> has nullify entry->skb .
+>
+> Reported-by: Justin Piszcz <jpiszcz@lucidpixels.com>
+> Cc: stable@kernel.org
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Doesn't brcm80211 support this PHY? (Because then, reverse-engineering
-wl is pointless.)
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
->
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 > ---
-> OFC, MMIO hacks were used to find masks & sets.
+> �drivers/net/wireless/rt2x00/rt2800usb.c | � �7 +++----
+> �1 files changed, 3 insertions(+), 4 deletions(-)
 >
-> Sets were taken from:
->>>> Switch Radio(OFF) start
->  phy_read(0x044d) -> 0x0000
-> phy_write(0x044d) <- 0x0000
->  phy_read(0x044c) -> 0x0000
-> phy_write(0x044c) <- 0x1f00
->  phy_read(0x04b7) -> 0x0000
-> phy_write(0x04b7) <- 0x0000
->  phy_read(0x04b1) -> 0x0000
-> phy_write(0x04b1) <- 0x0000
->  phy_read(0x04b0) -> 0x0000
-> phy_write(0x04b0) <- 0x0808
->  phy_read(0x04fa) -> 0x0000
-> phy_write(0x04fa) <- 0x0000
->  phy_read(0x04f9) -> 0x0000
-> phy_write(0x04f9) <- 0x0008
->>>> Switch Radio(OFF) end
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index d137812..cd54721 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -538,12 +538,11 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
+> � � � � � � � � � � � �entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
+> � � � � � � � � � � � �if (rt2800usb_txdone_entry_check(entry, reg))
+> � � � � � � � � � � � � � � � �break;
+> + � � � � � � � � � � � entry = NULL;
+> � � � � � � � �}
 >
-> Masks were taken from:
->  phy_read(0x044d) -> 0xffff
-> phy_write(0x044d) <- 0x83ff
->  phy_read(0x044c) -> 0xffff
-> phy_write(0x044c) <- 0xffff
->  phy_read(0x04b7) -> 0xffff
-> phy_write(0x04b7) <- 0x80ff
->  phy_read(0x04b1) -> 0xffff
-> phy_write(0x04b1) <- 0xdfff
->  phy_read(0x04b0) -> 0xffff
-> phy_write(0x04b0) <- 0xffff
->  phy_read(0x04fa) -> 0xffff
-> phy_write(0x04fa) <- 0xfff7
->  phy_read(0x04f9) -> 0xffff
-> phy_write(0x04f9) <- 0xffff
-> ---
->  drivers/net/wireless/b43/phy_lcn.c |   23 +++++++++++++++++++++++
->  drivers/net/wireless/b43/phy_lcn.h |    9 +++++++++
->  2 files changed, 32 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/b43/phy_lcn.c b/drivers/net/wireless/b43/phy_lcn.c
-> index 03944ad..69a93b5 100644
-> --- a/drivers/net/wireless/b43/phy_lcn.c
-> +++ b/drivers/net/wireless/b43/phy_lcn.c
-> @@ -60,6 +60,27 @@ static void b43_phy_lcn_op_prepare_structs(struct b43_wldev *dev)
->        memset(phy_lcn, 0, sizeof(*phy_lcn));
->  }
->
-> +static void b43_phy_lcn_op_software_rfkill(struct b43_wldev *dev,
-> +                                       bool blocked)
-> +{
-> +       if (b43_read32(dev, B43_MMIO_MACCTL) & B43_MACCTL_ENABLED)
-> +               b43err(dev->wl, "MAC not suspended\n");
-> +
-> +       if (blocked) {
-> +               b43_phy_mask(dev, B43_PHY_LCN_RF_CTL2, ~0x7c00);
-> +               b43_phy_set(dev, B43_PHY_LCN_RF_CTL1, 0x1f00);
-> +
-> +               b43_phy_mask(dev, B43_PHY_LCN_RF_CTL5, ~0x7f00);
-> +               b43_phy_mask(dev, B43_PHY_LCN_RF_CTL4, ~0x2);
-> +               b43_phy_set(dev, B43_PHY_LCN_RF_CTL3, 0x808);
-> +
-> +               b43_phy_mask(dev, B43_PHY_LCN_RF_CTL7, ~0x8);
-> +               b43_phy_set(dev, B43_PHY_LCN_RF_CTL6, 0x8);
-> +       } else {
-> +               /* TODO */
-> +       }
-> +}
-> +
->  static unsigned int b43_phy_lcn_op_get_default_chan(struct b43_wldev *dev)
->  {
->        if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
-> @@ -92,7 +113,9 @@ const struct b43_phy_operations b43_phyops_lcn = {
->        .phy_maskset            = b43_phy_lcn_op_maskset,
->        .radio_read             = b43_phy_lcn_op_radio_read,
->        .radio_write            = b43_phy_lcn_op_radio_write,
-> +       */
->        .software_rfkill        = b43_phy_lcn_op_software_rfkill,
-> +       /*
->        .switch_analog          = b43_phy_lcn_op_switch_analog,
->        .switch_channel         = b43_phy_lcn_op_switch_channel,
->        */
-> diff --git a/drivers/net/wireless/b43/phy_lcn.h b/drivers/net/wireless/b43/phy_lcn.h
-> index 9e1b291..89f13b2 100644
-> --- a/drivers/net/wireless/b43/phy_lcn.h
-> +++ b/drivers/net/wireless/b43/phy_lcn.h
-> @@ -4,6 +4,15 @@
->  #include "phy_common.h"
->
->
-> +#define B43_PHY_LCN_RF_CTL1                    B43_PHY_OFDM(0x04C)
-> +#define B43_PHY_LCN_RF_CTL2                    B43_PHY_OFDM(0x04D)
-> +#define B43_PHY_LCN_RF_CTL3                    B43_PHY_OFDM(0x0B0)
-> +#define B43_PHY_LCN_RF_CTL4                    B43_PHY_OFDM(0x0B1)
-> +#define B43_PHY_LCN_RF_CTL5                    B43_PHY_OFDM(0x0B7)
-> +#define B43_PHY_LCN_RF_CTL6                    B43_PHY_OFDM(0x0F9)
-> +#define B43_PHY_LCN_RF_CTL7                    B43_PHY_OFDM(0x0FA)
-> +
-> +
->  struct b43_phy_lcn {
->  };
+> - � � � � � � � if (!entry || rt2x00queue_empty(queue))
+> - � � � � � � � � � � � break;
+> -
+> - � � � � � � � rt2800_txdone_entry(entry, reg);
+> + � � � � � � � if (entry)
+> + � � � � � � � � � � � rt2800_txdone_entry(entry, reg);
+> � � � �}
+> �}
 >
 > --
-> 1.7.3.4
+> 1.7.1
 >
 >
-> _______________________________________________
-> b43-dev mailing list
-> b43-dev@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/b43-dev
->
-
-
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
