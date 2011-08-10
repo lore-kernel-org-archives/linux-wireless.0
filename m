@@ -1,35 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout6.freenet.de ([195.4.92.96]:42219 "EHLO mout6.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751399Ab1HQGUi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2011 02:20:38 -0400
-Message-ID: <4E4B5DC5.9090304@01019freenet.de> (sfid-20110817_082043_445634_6FDA201D)
-Date: Wed, 17 Aug 2011 08:20:53 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:54302 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753328Ab1HJUkz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2011 16:40:55 -0400
+Received: by wyg24 with SMTP id 24so987074wyg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 13:40:54 -0700 (PDT)
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: Ivo Van Doorn <ivdoorn@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 7 more packets after each beacon frame
-References: <4E4AB695.5070300@01019freenet.de> <CAOZOX0UsRxT9ECdUC7OL2toJUb+PitGhxCifTyD8hWYwt6R_zg@mail.gmail.com> <4E4ACD10.7000807@01019freenet.de> <CAGXE3d-hb2MnLW+NhxCBhUSGTNSs5ki9-6wo5uQGSJbFdEB5KA@mail.gmail.com>
-In-Reply-To: <CAGXE3d-hb2MnLW+NhxCBhUSGTNSs5ki9-6wo5uQGSJbFdEB5KA@mail.gmail.com>
+In-Reply-To: <1313007274.4016.2.camel@jlt3.sipsolutions.net>
+References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
+	<1312933511-9486-2-git-send-email-thomas@cozybit.com>
+	<1312983507.4325.1.camel@jlt3.sipsolutions.net>
+	<CAG6hwVN27E=bt_-Ocv2JagUPmtZAWux17Lm3cV24be9TfM1BDQ@mail.gmail.com>
+	<1313007274.4016.2.camel@jlt3.sipsolutions.net>
+Date: Wed, 10 Aug 2011 13:40:54 -0700
+Message-ID: <CAG6hwVOw8RZDZfEKoxTSK50taq2o7hLE_wUVNWW_k7kH3gfkVA@mail.gmail.com> (sfid-20110810_224102_899609_BD2CC0E2)
+Subject: Re: [PATCH 1/8] mac80211: improve mpath debugging
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Javier Cardona <javier@cozybit.com>, linville@tuxdriver.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helmut Schaa schrieb:
-> On Tue, Aug 16, 2011 at 10:03 PM, Andreas Hartmann
-> <andihartmann@01019freenet.de> wrote:
->>> When examining my own AP (rt2860 based) with another STA in monitor
->>> mode, I can see always 7 packets after each beacon frame:
-> 
-> That looks quite odd. Maybe some garbage ended up in the beacon slots
-> after the first beacon.
-> Do you use multiple virtual interfaces?
+On Wed, Aug 10, 2011 at 1:14 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2011-08-10 at 13:11 -0700, Thomas Pedersen wrote:
+>> On Wed, Aug 10, 2011 at 6:38 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Tue, 2011-08-09 at 16:45 -0700, Thomas Pedersen wrote:
+>> >
+>> >> +#ifdef CONFIG_MAC80211_VERBOSE_MPATH_DEBUG
+>> >> +#define mpath_dbg(fmt, args...)      printk(KERN_DEBUG fmt, ##args)
+>> >> +#else
+>> >> +#define mpath_dbg(fmt, args...)      do { (void)(0); } while (0)
+>> >> +#endif
+>> >
+>> > Maybe this should be a static inline for checking the fmt args even when
+>> > it's compiled out?
+>> >
+>> I don't really see the point, since all this would give us is the
+>> compiler checking whether a const char * was passed as an argument to
+>> fmt, right?
+>
+> No, if you annotate it correctly gcc will also check that the arguments
+> match, and warn if you do
+>
+> mpath_dbg("foo: %s", 7)
+>
+> for example :-)
 
-I removed _all_ of my network devices (but lo) and tested again (on a
-now clean machine :-)). The complete module stack for rt2800pci was
-unloaded and loaded again. I could see the same odd packages again.
+Ah, well OK. The next version will include this change.
 
-
-Andreas
+Thomas
