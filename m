@@ -1,82 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:55904 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751827Ab1HKLDI convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:35458 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753512Ab1HJLc6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 07:03:08 -0400
-Received: by iye16 with SMTP id 16so1092276iye.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 04:03:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1312986698.2407.668.camel@cumari>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-	<1312881233-9366-19-git-send-email-eliad@wizery.com>
-	<1312986698.2407.668.camel@cumari>
-Date: Thu, 11 Aug 2011 14:03:06 +0300
-Message-ID: <CAB3XZEcOEE3=1a5zHcAPxFTya0rhTeZHaDtGRCEm=7fMbe8ZAQ@mail.gmail.com> (sfid-20110811_130312_385886_DD12A1F1)
-Subject: Re: [PATCH 18/40] wl12xx: replace dummy_join with ROC/CROC commands
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
+	Wed, 10 Aug 2011 07:32:58 -0400
+Received: by fxd18 with SMTP id 18so817741fxd.25
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 04:32:56 -0700 (PDT)
+Subject: Re: [PATCH 09/40] wl12xx: enable/disable role on interface
+ add/remove
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1312881233-9366-10-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	 <1312881233-9366-10-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Aug 2011 14:32:53 +0300
+Message-ID: <1312975973.2407.545.camel@cumari> (sfid-20110810_133302_142207_2CE44FB4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 10, 2011 at 5:31 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote:
->> The ROC command asks the fw stay on the channel of the given
->> hlid. it currently has 2 primary functions:
->>
->> 1. Allow tx/rx from the device role.
->>
->> In order to tx/rx packets while the stations is not associated
->> (e.g. auth req/resp), the device role has to be used, along
->> with ROC on its link.
->>
->> Keep the logic similiar to the one used in dummy_join. However,
->> since we can't scan while we ROC, we add CROC before starting
->> a scan, and ROC again (if needed) on scan complete.
->>
->> 2. Keeping the antenna for a specific link.
->>
->> We ROC until the connection was completed (after EAPOLs exchange)
->> in order to prevent BT coex operations from taking the antenna
->> and failing the connection (after this stage, psm can be used).
->>
->> During association, we ROC on the station role, and then CROC
->> the device role, thus assuring being ROC during all the connection
->> process.
->
-> Nice explanations.  I was wondering if we should have this somewhere in
-> the code too, so that it's easier to figure out what is going on without
-> digging into git logs...
->
->
->> Replace the WL1271_FLAG_JOINED with a new WL1271_FLAG_ROC,
->> indicating the fw was configured to ROC. Add a roc bitmap
->> to indicate what roles are currently ROCed.
->
-> Is it really possible to be ROCed in more than one role? They could be
-> running on different channels, so how could we physically ROC more than
-> once at the same time?
->
-we can do multiple ROCs on the same channel (for different roles).
-e.g. during connection, we ROC (concurrently) on the device and station roles.
+On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
+> +static u8 wl1271_get_role_type(struct wl1271 *wl)
+> +{
+> +	switch (wl->bss_type) {
+> +	case BSS_TYPE_AP_BSS:
+> +		return WL1271_ROLE_AP;
+> +
+> +	case BSS_TYPE_STA_BSS:
+> +		return WL1271_ROLE_STA;
+> +
+> +	default:
+> +		wl1271_info("invalid bss_type: %d", wl->bss_type);
+> +	}
+> +	return 0xff;
+> +}
+> +
+>  static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+>  				   struct ieee80211_vif *vif)
+>  {
+>  	struct wl1271 *wl = hw->priv;
+>  	struct wiphy *wiphy = hw->wiphy;
+>  	int retries = WL1271_BOOT_RETRIES;
+> @@ -1836,12 +1851,17 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+>  			goto power_off;
+>  
+>  		ret = wl1271_boot(wl);
+>  		if (ret < 0)
+>  			goto power_off;
+>  
+> +		ret = wl1271_cmd_role_enable(wl, wl1271_get_role_type(wl),
+> +					     &wl->role_id);
+> +		if (ret < 0)
+> +			goto irq_disable;
+> +
 
->
->> Add wl1271_roc/croc functions in order to wrap the roc/croc
->> commands while taking care of the roc bitmap.
->>
->> The current ROC/CROC state-machine is a bit complicated. In
->> the future we'll probably want to use wpa_supplicant to control
->> the ROC during connection.
->
-> But when we have multirole, we may have several instances of
-> wpa_supplicant/hostap running, so there may be some conflicts of
-> interest there.  I think it's better to keep ROCing in a centralized
-> place (ie. the driver).
->
-still, some of the logic (i.e. ROC until connection) should be in the
-supplicant.
-of course the driver will have to organize it all (e.g. return -EBUSY).
+This doesn't look right, because if the type is invalid, you will return
+0xff and it will still be sent anyway to the firmware via
+CMD_ROLE_ENABLE.  It will _probably_ still work as expected, because the
+firmware will hopefully return an error to that command and we will fail
+the op_add_interface.  But this will be ugly, because we'll print
+"firmware boot failed", which is not true and so on.
 
-Eliad.
+Maybe you should add a role_type to wl (we will most likely need it in
+the vif struct later anyway) or somehow merge this with the existing
+bss_type.  At least you could check the role type in the same "switch
+(vif->type)".
+
+
+> static void __wl1271_op_remove_interface(struct wl1271 *wl,
+>  					 bool reset_tx_queues)
+>  {
+> +	int ret;
+>  
+>  	wl1271_debug(DEBUG_MAC80211, "mac80211 remove interface");
+>  
+>  	/* because of hardware recovery, we may get here twice */
+>  	if (wl->state != WL1271_STATE_ON)
+>  		return;
+> @@ -1924,12 +1945,29 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+>  		wl->scan.state = WL1271_SCAN_STATE_IDLE;
+>  		memset(wl->scan.scanned_ch, 0, sizeof(wl->scan.scanned_ch));
+>  		wl->scan.req = NULL;
+>  		ieee80211_scan_completed(wl->hw, true);
+>  	}
+>  
+> +	if (!test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags)) {
+> +		/* disable active roles */
+> +		ret = wl1271_ps_elp_wakeup(wl);
+> +		if (ret < 0) {
+> +			/*
+> +			 * do nothing. we are going to power off the chip
+> +			 * anyway. handle this case when we'll really
+> +			 * support multi-role...
+> +			 */
+> +		}
+> +		wl1271_cmd_role_disable(wl, &wl->role_id);
+
+Okay, we can do nothing for now, but should we then at least skip the
+wl1271_cmd_role_disable() call? I guess that will also fail if we could
+not wake up...
+
+-- 
+Cheers,
+Luca.
+
