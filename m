@@ -1,67 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3693 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755078Ab1HZNTv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 09:19:51 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 03/13] staging: brcm80211: remove usage of macro
- WL11N_20MHZONLY
-Date: Fri, 26 Aug 2011 15:19:30 +0200
-Message-ID: <1314364780-9462-4-git-send-email-rvossen@broadcom.com> (sfid-20110826_152045_400456_4B8EE9C1)
-In-Reply-To: <1314364780-9462-1-git-send-email-rvossen@broadcom.com>
-References: <1314364780-9462-1-git-send-email-rvossen@broadcom.com>
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:63269 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752980Ab1HJQm7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2011 12:42:59 -0400
+Received: by pzk37 with SMTP id 37so2118554pzk.1
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 09:42:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20110810184028.3cb9c532@milhouse>
+References: <1312992688-6976-1-git-send-email-zajec5@gmail.com>
+	<20110810184028.3cb9c532@milhouse>
+Date: Wed, 10 Aug 2011 18:42:59 +0200
+Message-ID: <CACna6rxBof9T+vaZ=wHZJcXY12XVrYvFbHEdXk1+=_LAwjmtig@mail.gmail.com> (sfid-20110810_184301_999229_CD8A8A8A)
+Subject: Re: [PATCH 1/2] ssb: fix DMA translation for some specific boards
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+W dniu 10 sierpnia 2011 18:40 użytkownik Michael Büsch <m@bues.ch> napisał:
+> On Wed, 10 Aug 2011 18:11:27 +0200
+>> +/* Some chipsets need routing known for PCIe and 64-bit DMA */
+>> +static bool ssb_dma_translation_special_bit(struct ssb_device *dev)
+>> +{
+>> +     u16 chip_id = dev->bus->chip_id;
+>> +
+>> +     if (dev->id.coreid == SSB_DEV_80211)
+>> +             return (chip_id == 0x4322 || chip_id == 43221 ||
+>> +                     chip_id == 43231 || chip_id == 43222);
+>> +     return 0;
+>> +}
+>
+> ACK, apart from this coding style violation (missing curly braces).
 
-The macro WL11N_20MHZONLY is never defined so code #ifdef'ed by
-it has been removed.
+>From kernel CodingStyle:
+> Do not unnecessarily use braces where a single statement will do.
+>
+> if (condition)
+> 	action();
 
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/include/brcmu_wifi.h |   14 --------------
- 1 files changed, 0 insertions(+), 14 deletions(-)
+I guess simple "return" (even when using line break) is still like
+single statement...
+Am I wrong?
 
-diff --git a/drivers/staging/brcm80211/include/brcmu_wifi.h b/drivers/staging/brcm80211/include/brcmu_wifi.h
-index 717d885..0ab432d 100644
---- a/drivers/staging/brcm80211/include/brcmu_wifi.h
-+++ b/drivers/staging/brcm80211/include/brcmu_wifi.h
-@@ -96,18 +96,6 @@
- #define CHSPEC_CHANNEL(chspec)	((u8)((chspec) & WL_CHANSPEC_CHAN_MASK))
- #define CHSPEC_BAND(chspec)	((chspec) & WL_CHANSPEC_BAND_MASK)
- 
--#ifdef WL11N_20MHZONLY
--
--#define CHSPEC_CTL_SB(chspec)	WL_CHANSPEC_CTL_SB_NONE
--#define CHSPEC_BW(chspec)	WL_CHANSPEC_BW_20
--#define CHSPEC_IS10(chspec)	0
--#define CHSPEC_IS20(chspec)	1
--#ifndef CHSPEC_IS40
--#define CHSPEC_IS40(chspec)	0
--#endif
--
--#else				/* !WL11N_20MHZONLY */
--
- #define CHSPEC_CTL_SB(chspec)	((chspec) & WL_CHANSPEC_CTL_SB_MASK)
- #define CHSPEC_BW(chspec)	((chspec) & WL_CHANSPEC_BW_MASK)
- 
-@@ -122,8 +110,6 @@
- 	(((chspec) & WL_CHANSPEC_BW_MASK) == WL_CHANSPEC_BW_40)
- #endif
- 
--#endif				/* !WL11N_20MHZONLY */
--
- #define CHSPEC_IS5G(chspec) \
- 	(((chspec) & WL_CHANSPEC_BAND_MASK) == WL_CHANSPEC_BAND_5G)
- 
 -- 
-1.7.4.1
-
-
+Rafał
