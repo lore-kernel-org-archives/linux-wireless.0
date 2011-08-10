@@ -1,43 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:64020 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750881Ab1HJUL1 convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:50801 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754543Ab1HJSmW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 16:11:27 -0400
-Received: by wyg24 with SMTP id 24so971187wyg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 13:11:25 -0700 (PDT)
+	Wed, 10 Aug 2011 14:42:22 -0400
+Received: by fxh19 with SMTP id 19so1145218fxh.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 11:42:21 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Michael Buesch <m@bues.ch>
+Subject: [RFC][RFT][PATCH V2 1/2] ssb: fix DMA translation for some specific boards
+Date: Wed, 10 Aug 2011 20:35:38 +0200
+Message-Id: <1313001339-11211-1-git-send-email-zajec5@gmail.com> (sfid-20110810_204225_400116_2D83BA7F)
 MIME-Version: 1.0
-In-Reply-To: <1312983507.4325.1.camel@jlt3.sipsolutions.net>
-References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
-	<1312933511-9486-2-git-send-email-thomas@cozybit.com>
-	<1312983507.4325.1.camel@jlt3.sipsolutions.net>
-Date: Wed, 10 Aug 2011 13:11:25 -0700
-Message-ID: <CAG6hwVN27E=bt_-Ocv2JagUPmtZAWux17Lm3cV24be9TfM1BDQ@mail.gmail.com> (sfid-20110810_221135_440235_0ED46F8C)
-Subject: Re: [PATCH 1/8] mac80211: improve mpath debugging
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Javier Cardona <javier@cozybit.com>, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 10, 2011 at 6:38 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2011-08-09 at 16:45 -0700, Thomas Pedersen wrote:
->
->> +#ifdef CONFIG_MAC80211_VERBOSE_MPATH_DEBUG
->> +#define mpath_dbg(fmt, args...) † † †printk(KERN_DEBUG fmt, ##args)
->> +#else
->> +#define mpath_dbg(fmt, args...) † † †do { (void)(0); } while (0)
->> +#endif
->
-> Maybe this should be a static inline for checking the fmt args even when
-> it's compiled out?
->
-I don't really see the point, since all this would give us is the
-compiler checking whether a const char * was passed as an argument to
-fmt, right?
-> johannes
->
->
+Signed-off-by: Michael Buesch <m@bues.ch>
+Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
+---
+ drivers/ssb/main.c |   24 +++++++++++++++++++++---
+ 1 files changed, 21 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index 6ec6e09..87067b8 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -1260,16 +1260,34 @@ void ssb_device_disable(struct ssb_device *dev, u32 core_specific_flags)
+ }
+ EXPORT_SYMBOL(ssb_device_disable);
+ 
++/* Some chipsets need routing known for PCIe and 64-bit DMA */
++static bool ssb_dma_translation_special_bit(struct ssb_device *dev)
++{
++	u16 chip_id = dev->bus->chip_id;
++
++	if (dev->id.coreid == SSB_DEV_80211) {
++		return (chip_id == 0x4322 || chip_id == 43221 ||
++			chip_id == 43231 || chip_id == 43222);
++	}
++
++	return 0;
++}
++
+ u32 ssb_dma_translation(struct ssb_device *dev)
+ {
+ 	switch (dev->bus->bustype) {
+ 	case SSB_BUSTYPE_SSB:
+ 		return 0;
+ 	case SSB_BUSTYPE_PCI:
+-		if (ssb_read32(dev, SSB_TMSHIGH) & SSB_TMSHIGH_DMA64)
++		if (pci_is_pcie(dev->bus->host_pci) &&
++		    ssb_read32(dev, SSB_TMSHIGH) & SSB_TMSHIGH_DMA64) {
+ 			return SSB_PCIE_DMA_H32;
+-		else
+-			return SSB_PCI_DMA;
++		} else {
++			if (ssb_dma_translation_special_bit(dev))
++				return SSB_PCIE_DMA_H32;
++			else
++				return SSB_PCI_DMA;
++		}
+ 	default:
+ 		__ssb_dma_not_implemented(dev);
+ 	}
+-- 
+1.7.1
+
