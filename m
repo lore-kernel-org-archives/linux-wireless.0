@@ -1,48 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm7.bullet.mail.ukl.yahoo.com ([217.146.182.248]:47728 "HELO
-	nm7.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752825Ab1HCIQV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2011 04:16:21 -0400
-From: Marek Lindner <lindner_marek@yahoo.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Marek Lindner <lindner_marek@yahoo.de>
-Subject: [PATCH] ath9k: remove eeprom txgain override for minor version < 19
-Date: Wed,  3 Aug 2011 10:16:12 +0200
-Message-Id: <1312359372-5586-1-git-send-email-lindner_marek@yahoo.de> (sfid-20110803_101626_367539_9B49D579)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53070 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751253Ab1HKK7P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2011 06:59:15 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat-wireless: do not build libertas_sdio for kernel < 2.6.32
+Date: Thu, 11 Aug 2011 12:59:07 +0200
+Message-Id: <1313060347-665-2-git-send-email-hauke@hauke-m.de> (sfid-20110811_125918_841137_FA272088)
+In-Reply-To: <1313060347-665-1-git-send-email-hauke@hauke-m.de>
+References: <1313060347-665-1-git-send-email-hauke@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k_hw_4k_get_eeprom() overrides the eeprom value for txgain if the
-minor version is not 19 or above with a value of 0.
-ar9002_hw_init_mode_gain_regs() relies on this information to
-determine whether this is a high power wifi card or not. The override
-caused the driver to always use the 'normal' power tables even for
-high power devices if their minor version was not high enough. Thus
-leading to reduced power output.
+if_sdio.c needs some new power management functions not available in
+older kernel functions. When building for older kernel I get these
+compiler errors:
 
-Signed-off-by: Marek Lindner <lindner_marek@yahoo.de>
+/drivers/net/wireless/libertas/if_sdio.c: In function ‘if_sdio_power_save’:
+/drivers/net/wireless/libertas/if_sdio.c:1071:2: error: implicit declaration of function ‘pm_runtime_put_sync’
+/drivers/net/wireless/libertas/if_sdio.c: In function ‘if_sdio_power_restore’:
+/drivers/net/wireless/libertas/if_sdio.c:1081:2: error: implicit declaration of function ‘pm_runtime_get_sync’
+/drivers/net/wireless/libertas/if_sdio.c: In function ‘if_sdio_probe’:
+/drivers/net/wireless/libertas/if_sdio.c:1231:2: error: implicit declaration of function ‘pm_runtime_put_noidle’
+/drivers/net/wireless/libertas/if_sdio.c: In function ‘if_sdio_remove’:
+/drivers/net/wireless/libertas/if_sdio.c:1268:2: error: implicit declaration of function ‘pm_runtime_get_noresume’
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath9k/eeprom_4k.c |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
+ config.mk                              |    9 +++------
+ patches/08-rename-config-options.patch |    9 +++++++++
+ 2 files changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 5b1e894..10f3072 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -237,10 +237,7 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
- 	case EEP_ANT_DIV_CTL1:
- 		return pModal->antdiv_ctl1;
- 	case EEP_TXGAIN_TYPE:
--		if (ver_minor >= AR5416_EEP_MINOR_VER_19)
--			return pBase->txGainType;
--		else
--			return AR5416_EEP_TXGAIN_ORIGINAL;
-+		return pBase->txGainType;
- 	default:
- 		return 0;
- 	}
+diff --git a/config.mk b/config.mk
+index 27d4daf..e2bffeb 100644
+--- a/config.mk
++++ b/config.mk
+@@ -555,13 +555,10 @@ endif #CONFIG_CRC7
+ 
+ CONFIG_MWIFIEX_SDIO=m
+ 
+-ifdef CONFIG_COMPAT_KERNEL_2_6_27
+-CONFIG_LIBERTAS_SDIO=n
+-NEED_LIBERTAS=n
+-else #CONFIG_COMPAT_KERNEL_2_6_27
+-CONFIG_LIBERTAS_SDIO=m
++ifndef CONFIG_COMPAT_KERNEL_2_6_32
++CONFIG_COMPAT_LIBERTAS_SDIO=m
+ NEED_LIBERTAS=y
+-endif #CONFIG_COMPAT_KERNEL_2_6_27
++endif #CONFIG_COMPAT_KERNEL_2_6_32
+ 
+ CONFIG_IWM=m
+ # CONFIG_IWM_DEBUG=y
+diff --git a/patches/08-rename-config-options.patch b/patches/08-rename-config-options.patch
+index 70ca190..5505018 100644
+--- a/patches/08-rename-config-options.patch
++++ b/patches/08-rename-config-options.patch
+@@ -59,6 +59,15 @@ CONFIG_BT_HIDP does not build with older kernel versions.
+  
+  	{0}
+  };
++--- a/drivers/net/wireless/libertas/Makefile
+++++ b/drivers/net/wireless/libertas/Makefile
++@@ -16,5 +16,5 @@ libertas_spi-objs += if_spi.o
++ obj-$(CONFIG_LIBERTAS)     += libertas.o
++ obj-$(CONFIG_LIBERTAS_USB) += usb8xxx.o
++ obj-$(CONFIG_LIBERTAS_CS)  += libertas_cs.o
++-obj-$(CONFIG_LIBERTAS_SDIO) += libertas_sdio.o
+++obj-$(CONFIG_COMPAT_LIBERTAS_SDIO) += libertas_sdio.o
++ obj-$(CONFIG_LIBERTAS_SPI) += libertas_spi.o
+ --- a/drivers/net/wireless/zd1211rw/Makefile
+ +++ b/drivers/net/wireless/zd1211rw/Makefile
+ @@ -1,4 +1,4 @@
 -- 
-1.7.5.3
+1.7.4.1
 
