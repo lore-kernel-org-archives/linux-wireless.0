@@ -1,76 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33041 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750855Ab1HXLQl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 07:16:41 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat-wireless: make patches apply again
-Date: Wed, 24 Aug 2011 13:15:41 +0200
-Message-Id: <1314184541-12706-1-git-send-email-hauke@hauke-m.de> (sfid-20110824_131645_113418_D297DAAC)
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:52504 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754824Ab1HKKfe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2011 06:35:34 -0400
+Received: by wwf5 with SMTP id 5so1904068wwf.1
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 03:35:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110811021554.GA24567@internetdog.org>
+References: <6264DDFA6754194CAB6452BFF5202C330F5F2115@SXGM-401.fg.rbc.com>
+	<CAPoLzpe0OYq677NooOY5F7PyvbNobOXXCuSnoaF7ZVc0cJkjAw@mail.gmail.com>
+	<20110811021554.GA24567@internetdog.org>
+Date: Thu, 11 Aug 2011 06:35:32 -0400
+Message-ID: <CAPoLzpeQF_xO_4eT2CKfp9cXKWUopssHjCkXd3_b0e8EAn8e_w@mail.gmail.com> (sfid-20110811_123538_365675_131CF586)
+Subject: Re: brcmsmac: fifo 0: descriptor error
+From: Pedram Navid <pedram.navid@gmail.com>
+To: ali@internetdog.org
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Thank you Ali, I apologize, this is my first time reporting a bug
+through a mailing list.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/29-sdio_no_suspend.patch |   20 ++++++++++----------
- 1 files changed, 10 insertions(+), 10 deletions(-)
+Both lines repeat almost every second until I either run ifconfig
+wlan0 down or remove the module completely. I have since downgraded to
+2.6.39 and am using the wl module and don't seem to have any problems.
+I still have the 3.0 Kernel available if anyone would like me to test
+further.
 
-diff --git a/patches/29-sdio_no_suspend.patch b/patches/29-sdio_no_suspend.patch
-index 843e617..ef14f08 100644
---- a/patches/29-sdio_no_suspend.patch
-+++ b/patches/29-sdio_no_suspend.patch
-@@ -86,7 +86,7 @@ suspend and resume that are not backported.
-  
- --- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
- +++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
--@@ -127,7 +127,7 @@ static int brcmf_ops_sdio_probe(struct s
-+@@ -49,7 +49,7 @@ static int brcmf_ops_sdio_probe(struct s
-  				const struct sdio_device_id *id);
-  static void brcmf_ops_sdio_remove(struct sdio_func *func);
-  
-@@ -95,30 +95,30 @@ suspend and resume that are not backported.
-  static int brcmf_sdio_suspend(struct device *dev);
-  static int brcmf_sdio_resume(struct device *dev);
-  #endif /* CONFIG_PM */
--@@ -157,7 +157,7 @@ static const struct sdio_device_id brcmf
-+@@ -62,7 +62,7 @@ static const struct sdio_device_id brcmf
-  	{ /* end: all zeroes */ },
-  };
-  
---#ifdef CONFIG_PM
--+#if defined(CONFIG_PM) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-+-#ifdef CONFIG_PM_SLEEP
-++#if defined(CONFIG_PM_SLEEP) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-  static const struct dev_pm_ops brcmf_sdio_pm_ops = {
-  	.suspend	= brcmf_sdio_suspend,
-  	.resume		= brcmf_sdio_resume,
--@@ -169,7 +169,7 @@ static struct sdio_driver brcmf_sdmmc_dr
-+@@ -74,7 +74,7 @@ static struct sdio_driver brcmf_sdmmc_dr
-  	.remove = brcmf_ops_sdio_remove,
-  	.name = "brcmfmac",
-  	.id_table = brcmf_sdmmc_ids,
---#ifdef CONFIG_PM
--+#if defined(CONFIG_PM) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-+-#ifdef CONFIG_PM_SLEEP
-++#if defined(CONFIG_PM_SLEEP) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-  	.drv = {
-  		.pm = &brcmf_sdio_pm_ops,
-  	},
--@@ -1081,7 +1081,7 @@ static void brcmf_ops_sdio_remove(struct
-+@@ -640,7 +640,7 @@ static void brcmf_ops_sdio_remove(struct
-  }
-  
-  
---#ifdef CONFIG_PM
--+#if defined(CONFIG_PM) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-+-#ifdef CONFIG_PM_SLEEP
-++#if defined(CONFIG_PM_SLEEP) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-  static int brcmf_sdio_suspend(struct device *dev)
-  {
-  	mmc_pm_flag_t sdio_flags;
--- 
-1.7.4.1
-
+On Wed, Aug 10, 2011 at 10:15 PM, Ali Bahar <ali@internetdog.org> wrote:
+> Hi Pedram,
+>
+> you must use a meaningful Subject-line for your email.
+> Hopefully, this'll attract the attention of the couple of Broadcom guys
+> who are on this list.
+>
+> Also,
+>
+>
+> On Wed, Aug 10, 2011 at 06:48:45PM -0400, Pedram Navid wrote:
+>> Hello,
+>>
+>> I'd like to report a bug I have not been able to find elsewhere. I am on
+>> a fresh Arch install with linux 3.0.1-1, using the brcmsmac module.
+>> Initially, the wireless works for a few days. At some point, it will
+>> stop, outputing the following error repeatedly:
+>>
+>> Aug  7 09:55:27 localhost kernel: [  825.796697] ieee80211 phy0: wl0:
+>> fifo 0: descriptor error
+>> Aug  7 09:55:27 localhost kernel: [  825.796713] ieee80211 phy0: wl0:
+>> fatal error, re-initializing
+>
+> You may wish to note which of these lines repeat. Do both repeat, or
+> only the "re-initializing" line? (It may be easier to just paste a few
+> lines into your mail.)
+>
+> later,
+> ali
+>
+>
+>> I can rmmod brcmsmac, reboot, shutdown, give it a few days, and start
+>> over and it will sometimes work. Other times, it will persist with the
+>> fifo errors. Please let me know you need additional log files. I had
+>> this problem since 2.6.38 and reinstalled Arch twice, thinking it was
+>> something with my setup that was done incorrectly but haven't been
+>> able to figure it out. I can't find another case of this error on the
+>> internet.
+>>
+>> #    lspci -vnn | grep 14e4
+>> 05:00.0 Network controller [0280]: Broadcom Corporation
+>> 802.11b/g/n Wireless LAN Controller [14e4:4727] (rev 01)
+>>        Subsystem: Broadcom Corporation Device [14e4:0510]
+>>
+>>  #  lsmod  | grep brc
+>> brcmsmac              594624  0
+>> brcmutil                6563  1 brcmsmac
+>> mac80211              215605  1 brcmsmac
+>> cfg80211              160516  2 brcmsmac,mac80211
+>> crc_ccitt               1331  1 brcmsmac
+>>
+>> Thank you
+>> Pedram
+>
