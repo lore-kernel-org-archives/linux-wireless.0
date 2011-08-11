@@ -1,51 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:50858 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753515Ab1HWW2N (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:34870 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753875Ab1HKJl0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 18:28:13 -0400
-Date: Tue, 23 Aug 2011 15:26:14 -0700
-From: Greg KH <greg@kroah.com>
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: driverdevel <devel@driverdev.osuosl.org>,
-	linux-wireless@vger.kernel.org, gregkh@suse.de
-Subject: Re: [PATCH] staging: brcmsmac, fix build for SMP disabled
-Message-ID: <20110823222614.GA20158@kroah.com> (sfid-20110824_002829_727270_2CC7215C)
-References: <20110823145659.a22e1860.rdunlap@xenotime.net>
+	Thu, 11 Aug 2011 05:41:26 -0400
+Received: by yxj19 with SMTP id 19so1186877yxj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 02:41:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110823145659.a22e1860.rdunlap@xenotime.net>
+In-Reply-To: <1313054258.2407.820.camel@cumari>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	<1312881233-9366-34-git-send-email-eliad@wizery.com>
+	<1313054258.2407.820.camel@cumari>
+Date: Thu, 11 Aug 2011 12:41:25 +0300
+Message-ID: <CAB3XZEemkaz-dsyhq6x6rPLNvFj9+t=jPr9JtvcuzmRNG-8Y1g@mail.gmail.com> (sfid-20110811_114129_331630_8661E6C6)
+Subject: Re: [PATCH 33/40] wl12xx: track freed packets in FW by AC
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 23, 2011 at 02:56:59PM -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <rdunlap@xenotime.net>
-> 
-> Fix build when CONFIG_SMP is not enabled.
-> Fixes many build errors (subset listed here):
-> 
-> drivers/staging/brcm80211/brcmsmac/ampdu.c: In function 'brcms_c_ampdu_dotxstatus':
-> drivers/staging/brcm80211/brcmsmac/ampdu.c:833: error: implicit declaration of function 'readb'
-> drivers/staging/brcm80211/brcmsmac/ampdu.c:833: error: implicit declaration of function 'readw'
-> drivers/staging/brcm80211/brcmsmac/ampdu.c:833: error: implicit declaration of function 'readl'
-> drivers/staging/brcm80211/brcmsmac/main.c: In function 'brcms_c_init':
-> drivers/staging/brcm80211/brcmsmac/main.c:494: error: implicit declaration of function 'writeb'
-> drivers/staging/brcm80211/brcmsmac/main.c:494: error: implicit declaration of function 'writew'
-> drivers/staging/brcm80211/brcmsmac/main.c:494: error: implicit declaration of function 'writel'
-> drivers/staging/brcm80211/brcmsmac/main.c:529: error: implicit declaration of function 'readb'
-> drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c: In function 'wlc_radioreg_exit':
-> drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c:208: error: implicit declaration of function 'readb'
-> drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c:208: error: implicit declaration of function 'readw'
-> drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c: In function 'wlc_lcnphy_idle_tssi_est':
-> drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c:2080: error: implicit declaration of function 'readb'
-> drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c: In function 'wlc_lcnphy_samp_cap':
-> drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c:3837: error: implicit declaration of function 'writeb'
-> vers/staging/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_init_nphy':
-> drivers/staging/brcm80211/brcmsmac/phy/phy_n.c:14561: error: implicit declaration of function 'readb'
-> 
-> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+On Thu, Aug 11, 2011 at 12:17 PM, Luciano Coelho <coelho@ti.com> wrote:
+> On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote:
+>> From: Arik Nemtsov <arik@wizery.com>
+>>
+>> Track the number of freed packets in each AC when receiving an interrupt
+>> from the FW. This paves the way for tracking allocated packets per AC.
+>>
+>> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> ---
+>>  drivers/net/wireless/wl12xx/main.c   |   16 +++++++++++++++-
+>>  drivers/net/wireless/wl12xx/tx.c     |    2 ++
+>>  drivers/net/wireless/wl12xx/wl12xx.h |    8 ++++++--
+>>  3 files changed, 23 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+>> index b223c27..3bfd772 100644
+>> --- a/drivers/net/wireless/wl12xx/main.c
+>> +++ b/drivers/net/wireless/wl12xx/main.c
+>> @@ -810,22 +810,32 @@ static void wl1271_irq_update_links_status(struct wl1271 *wl,
+>>  static void wl1271_fw_status(struct wl1271 *wl,
+>>                            struct wl1271_fw_status *status)
+>>  {
+>>       struct timespec ts;
+>>       u32 old_tx_blk_count = wl->tx_blocks_available;
+>>       int avail, freed_blocks;
+>> +     int i;
+>>
+>>       wl1271_raw_read(wl, FW_STATUS_ADDR, status, sizeof(*status), false);
+>>
+>>       wl1271_debug(DEBUG_IRQ, "intr: 0x%x (fw_rx_counter = %d, "
+>>                    "drv_rx_counter = %d, tx_results_counter = %d)",
+>>                    status->intr,
+>>                    status->fw_rx_counter,
+>>                    status->drv_rx_counter,
+>>                    status->tx_results_counter);
+>>
+>> +     for (i = 0; i < NUM_TX_QUEUES; i++) {
+>> +             /* prevent wrap-around in freed-packets counter */
+>> +             wl->tx_allocated_pkts -=
+>> +                             (status->tx_released_pkts[i] -
+>> +                             wl->tx_pkts_freed[i] + 256) % 256;
+>
+> Isn't the "+ 256" useless here, since you'll mod the result anyway?
+>
+modulus of negative numbers is not well defined.
 
-No longer applies as I took a different patch that resolves this a few
-hours ago :(
-
-greg k-h
+Eliad.
