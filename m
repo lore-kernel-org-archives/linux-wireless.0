@@ -1,57 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:44725 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751131Ab1HKF5T (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:55701 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753938Ab1HKUyk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 01:57:19 -0400
-Received: by mail-bw0-f45.google.com with SMTP id zv3so774967bkb.4
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 22:57:17 -0700 (PDT)
-Subject: Re: [PATCH 1/2] wl12xx: Remove obsolete testmode NVS push command
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>
-In-Reply-To: <1312269858-30434-1-git-send-email-ido@wizery.com>
-References: <1312269858-30434-1-git-send-email-ido@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 11 Aug 2011 08:57:14 +0300
-Message-ID: <1313042234.2407.758.camel@cumari> (sfid-20110811_075722_764342_BAB37A00)
-Mime-Version: 1.0
+	Thu, 11 Aug 2011 16:54:40 -0400
+Received: by ywf7 with SMTP id 7so1590346ywf.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 13:54:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1313062720.2407.848.camel@cumari>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+ <1312881233-9366-35-git-send-email-eliad@wizery.com> <1313062720.2407.848.camel@cumari>
+From: Arik Nemtsov <anamtsov@gmail.com>
+Date: Thu, 11 Aug 2011 23:54:24 +0300
+Message-ID: <CA+XVXfeXfxtv1UO+tFjub6+n2P8dtcHyaHo0gpgv=kETwVRJHA@mail.gmail.com> (sfid-20110811_225443_235882_1E540DB5)
+Subject: Re: [PATCH 34/40] wl12xx: schedule TX packets according to FW packet occupancy
+To: Luciano Coelho <coelho@ti.com>
+Cc: Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-02 at 10:24 +0300, Ido Yariv wrote: 
-> The testmode NVS push command is no longer in use. In addition, it has
-> several implementation issues that prevent it from working correctly:
-> 
-> 1. wl1271_tm_cmd_configure relies on wl->chip.id being set. However,
->    since the device was not necessarily booted by the time the function
->    is called, wl->chip.id will be initialized to 0.
-> 2. The NVS file is fetched by calling request_firmware() before it is
->    possible to push an NVS file.
-> 3. The maximum allowed size of nl binary payloads is not sufficient for
->    pushing NVS files.
-> 4. Pushing 128x NVS files will always fail due to a bug in the
->    validation code.
-> 5. In case the pushed NVS file is found invalid, the mutex will be kept
->    locked and the nvs member will become a dangling pointer.
-> 
-> Since this feature is not being used, remove it completely instead of
-> fixing it.
-> 
-> Signed-off-by: Ido Yariv <ido@wizery.com>
-> ---
+On Thu, Aug 11, 2011 at 14:38, Luciano Coelho <coelho@ti.com> wrote:
+> On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote:
+>> +static struct sk_buff_head *wl1271_select_queue(struct wl1271 *wl,
+>> +                                             struct sk_buff_head *queues)
+>> +{
+>> +     int i, q = -1;
+>> +     u32 min_pkts = 0xffffffff;
+>> +
+>> +     /*
+>> +      * Find a non-empty ac where:
+>> +      * 1. There are packets to transmit
+>> +      * 2. The FW has the least allocated blocks
+>> +      */
+>> +     for (i = 0; i < NUM_TX_QUEUES; i++)
+>> +             if (!skb_queue_empty(&queues[i]) &&
+>> +                 (wl->tx_allocated_pkts[i] < min_pkts)) {
+>> +                     q = i;
+>> +                     min_pkts = wl->tx_allocated_pkts[q];
+>> +             }
+>> +
+>> +     if (q == -1)
+>> +             return NULL;
+>> +
+>> +     return &queues[q];
+>> +}
+>
+> This is a nice algorithm, but now, if all queues have the same number of
+> allocated packets in the FW, we'll start with BE, because the enum is
+> like this:
+>
+> enum conf_tx_ac {
+> CONF_TX_AC_BE = 0,         /* best effort / legacy */
+> CONF_TX_AC_BK = 1,         /* background */
+> CONF_TX_AC_VI = 2,         /* video */
+> CONF_TX_AC_VO = 3,         /* voice */
+> CONF_TX_AC_CTS2SELF = 4,   /* fictitious AC, follows AC_VO */
+> CONF_TX_AC_ANY_TID = 0x1f
+> };
+>
+> ...and you select the first queue in case two or more are similarly
+> full.
+>
+> Maybe you could make the for loop go backwards instead? Or changing the
+> < to <= in the comparison would also work.
 
-Acked-by: Luciano Coelho <coelho@ti.com>
+sure we can change it to <=. VO is usually a higher priority than BK.
 
-John, could you please take these two patches into 3.1?
+>
+> Another option would be to fix the enum so that it goes from higher prio
+> to lower prio.  If the firmware doesn't care about the actual order of
+> the queues and actually respects our ac_conf, this would probably be the
+> best solution, because we could even get rid of wl1271_tx_get_queue()
+> and wl1271_tx_get_mac80211_queue().
 
-The first one is removing an obsolete feature that was badly broken
-(causing security risks) and the second one is a power management bug
-fix, without which suspend doesn't work properly with the wl12xx driver.
+I suspect the FW is using these constants, so we wouldn't want to touch those.
 
-Thanks!
+>
+> Now something else came to my mind.  Could it also happen that the other
+> queues would still be starved? Let's say we keep getting packets
+> continuously for the first queue we choose exactly at the interval it
+> takes the FW to empty that queue.  Meanwhile, we're getting some packets
+> for other queues.  In this case, we would keep selecting the same AC
+> because all the queues would be empty and we would keep choosing the
+> first one.
+>
 
--- 
-Cheers,
-Luca.
+That is a theoretical starvation condition (among several others).
+This was there before this patch as well. The ratio of packet
+throughput/FW memory/air throughput has to be just right for this to
+happen, and it doesn't occur with current hardware. We'll handle this
+when the problem arises (at the cost of added complexity).
 
+Arik
+
+> Maybe we should still once in a while check the other queues?
+>
+> Or am I missing something again?
+>
+> --
+> Cheers,
+> Luca.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
