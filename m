@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from filtteri1.pp.htv.fi ([213.243.153.184]:48492 "EHLO
-	filtteri1.pp.htv.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750751Ab1HXXJe (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:44674 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753279Ab1HKIsE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 19:09:34 -0400
-In-Reply-To: <20110824222801.GA5280@broadcom.com>
-References: <20110707002034.GA17885@broadcom.com> <20110824222801.GA5280@broadcom.com>
-Mime-Version: 1.0 (Apple Message framework v753.1)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Message-Id: <C7234C0A-9839-4150-8B25-F6A6771377A1@iki.fi> (sfid-20110825_010937_265889_8324462C)
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	Thu, 11 Aug 2011 04:48:04 -0400
+Received: by gya6 with SMTP id 6so1170704gya.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 01:48:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4E43816D.6080005@candelatech.com>
+References: <4E38DDB3.1030801@candelatech.com>
+	<CA+yqC4YvAMLaao4dy2aXM7H5zPXySk4eAUZ2KSM4QnP+kQqF-A@mail.gmail.com>
+	<4E39EB52.1090401@candelatech.com>
+	<CA+yqC4a1xCPM4WN5U5Oth9PUqGSg+h6qZ4u2sV80h3zcEtzazg@mail.gmail.com>
+	<4E43816D.6080005@candelatech.com>
+Date: Thu, 11 Aug 2011 16:48:02 +0800
+Message-ID: <CAJ-VmomygMyc-DxP7btY7yitiZ4Esw17goEo0BXcC8Bj_toqbQ@mail.gmail.com> (sfid-20110811_104808_920045_F1069BE4)
+Subject: Re: Bridging wired to STA interfaces.
+From: Adrian Chadd <adrian@freebsd.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Sam Leffler <sleffler@google.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Aaro Koskinen <aaro.koskinen@iki.fi>
-Subject: Re: [PATCH v2] Move brcm80211 to mainline
-Date: Thu, 25 Aug 2011 02:10:31 +0300
-To: Henry Ptasinski <henryp@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 11 August 2011 15:14, Ben Greear <greearb@candelatech.com> wrote:
 
-On 25.8.2011, at 1.28, Henry Ptasinski wrote:
-> The brcmsmac driver has been verified to work on x86 (both 32- and  
-> 64-bit), PPC
-> (64-bit), SPARC, MIPS BE, and ARM.  The brcmfmac driver has been  
-> verified to
-> work on x86 32-bit and ARM (additional testing is in progress, but  
-> getting a
-> working sdio controller on some of the other platforms has been  
-> challenging).
+> I think I'll just force user to create an STA with matching MAC (for the
+> MAC of the PC/whatever to be bridged).  Ath9k and ath5k can support at
+> least 128 stations, so that will be plenty for our uses...
 >
-> The drivers compile cleanly for x86 (32- and 64-bit), PPC (32- and  
-> 64-bit),
-> SPAR, MIPS BE, MIPS LE, and ARM.
+> We saw some problems changing MAC on STA after they were created, but
+> it seems to be ok if we just create it with correct STA the first time,
+> and we'll try to figure out why changing MAC was acting weird as well.
 
-Are you sure the compilation is even enabled on all of those platforms?
+Oh wow, that's a cool use of multi-STA support. Now I want to get it
+working in FreeBSD.
 
-E.g.:
+I think I may need to corner you sometime and sort out exactly how
+this works. Nice thinking Ben!
 
- > +config BRCMSMAC
- > +       tristate "Broadcom IEEE802.11n PCIe SoftMAC WLAN driver"
- > +       default n
- > +       depends on PCI
- > +       depends on WLAN && MAC80211
- > +       depends on X86 || MIPS
-           ^^^^^^^^^^^^^^^^^^^^^^
 
-Why this?
-
-A.
-
+Adrian
