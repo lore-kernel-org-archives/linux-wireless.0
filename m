@@ -1,48 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:56210 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753812Ab1HIMsf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 08:48:35 -0400
-Received: by gxk21 with SMTP id 21so1278666gxk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 05:48:35 -0700 (PDT)
+Received: from cantor2.suse.de ([195.135.220.15]:54548 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751379Ab1HKOSm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2011 10:18:42 -0400
+Date: Thu, 11 Aug 2011 07:16:04 -0700
+From: Greg KH <gregkh@suse.de>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Raja Mani <rmani@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: linux-next: build failure after merge of the final tree
+ (wireless & staging trees related)
+Message-ID: <20110811141604.GA14763@suse.de> (sfid-20110811_161857_682957_AAF187C2)
+References: <20110811155529.e5f47afa0504c4ddef58ab37@canb.auug.org.au>
+ <4E438D56.5020801@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1312892020.4109.26.camel@jlt3.sipsolutions.net>
-References: <1311607763-12603-1-git-send-email-eliad@wizery.com>
-	<1311607763-12603-2-git-send-email-eliad@wizery.com>
-	<1312892020.4109.26.camel@jlt3.sipsolutions.net>
-Date: Tue, 9 Aug 2011 15:48:34 +0300
-Message-ID: <CAB3XZEeFZ-1Ne2gyZSUtHsZz8vMHX7HYxyWZLBd1-v7yTi5mRQ@mail.gmail.com> (sfid-20110809_144841_041857_2661FA93)
-Subject: Re: [RFC 1/2] mac80211: fix remain_off_channel regression
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E438D56.5020801@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 9, 2011 at 3:13 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2011-07-25 at 18:29 +0300, Eliad Peller wrote:
->> i'm not familiar enough with the off_channel flow,
->> but this one looks completely broken - we should
->> remain_off_channel if the work was started, and
->> the work's channel and channel_type are the same
->> as local->tmp_channel and local->tmp_channel_type.
->>
->> however, if wk->chan_type and local->tmp_channel_type
->> coexist (e.g. have the same channel type), we won't
->> remain_off_channel.
->>
->> this behavior was introduced by commit da2fd1f
->> ("mac80211: Allow work items to use existing
->> channel type.")
->
-> Yeah this seems obvious.
->
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
->
-> Now that I look at ieee80211_work_ct_coexists() itself again though it
-> seems to do HT20 wrong?
->
-hmm... yeah.
-and also HT40 seems wrong (e.g. HT40 + NO_HT).
+On Thu, Aug 11, 2011 at 11:05:42AM +0300, Kalle Valo wrote:
+> Hi Stephen,
+> 
+> On 08/11/2011 08:55 AM, Stephen Rothwell wrote:
+> > After merging the final tree, today's linux-next build (powerpc
+> > allyesconfig) failed like this:
+> > 
+> > drivers/staging/built-in.o: In function `aggr_recv_delba_req_evt':
+> > (.opd+0x23a60): multiple definition of `aggr_recv_delba_req_evt'
+> > drivers/net/built-in.o:(.opd+0x79980): first defined here
+> > drivers/staging/built-in.o: In function `.wlan_node_reclaim':
+> > (.text+0x303360): multiple definition of `.wlan_node_reclaim'
+> > drivers/net/built-in.o:(.text+0xdd0618): first defined here
+> > drivers/staging/built-in.o: In function `aggr_init':
+> > (.opd+0x23a00): multiple definition of `aggr_init'
+> > drivers/net/built-in.o:(.opd+0x79968): first defined here
+> > drivers/staging/built-in.o: In function `.aggr_recv_delba_req_evt':
+> > (.text+0x302614): multiple definition of `.aggr_recv_delba_req_evt'
+> > drivers/net/built-in.o:(.text+0xdc8b60): first defined here
+> > drivers/staging/built-in.o: In function `.wlan_node_table_cleanup':
+> > (.text+0x303888): multiple definition of `.wlan_node_table_cleanup'
+> > drivers/net/built-in.o:(.text+0xdd0a6c): first defined here
+> > 
+> > You get the idea. :-(  So, the ath6kl driver now exists in the wireless
+> > tree and the staging tree.
+> > 
+> > I applied this patch for today (I have elided the part from "rm -rf
+> > drivers/staging/ath6kl"):
+> 
+> Oh man, sorry about this (again). I did compile both drivers at the same
+> time, but only as modules and didn't realise the conflicts also with the
+> staging driver.
+> 
+> Yes, the cleaned up version of ath6kl is now in wireless-next and the
+> staging version can be removed in 3.2. Greg, how do you want to handle
+> removal of the staging version? Should I send a patch to you removing
+> it? Or should I send the patch to John?
+
+Just tell me.  Should I really delete drivers/staging/ath6kl/ for the
+3.2 kernel release?  If so, I'll gladly do so in my tree so linux-next
+will be fine for issues like this in the future.
+
+greg k-h
