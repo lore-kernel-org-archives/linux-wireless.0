@@ -1,37 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52718 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751194Ab1HXUaM (ORCPT
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:51331 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753596Ab1HKLxS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 16:30:12 -0400
-Date: Wed, 24 Aug 2011 16:25:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Thomas Pedersen <thomas@cozybit.com>
+	Thu, 11 Aug 2011 07:53:18 -0400
+Received: by mail-bw0-f49.google.com with SMTP id 17so1117663bke.8
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 04:53:17 -0700 (PDT)
+Subject: Re: [PATCH 37/40] wl12xx: don't wait for disconnection event
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: refactor skb copy to failq in
- mesh_path_move_to_queue
-Message-ID: <20110824202556.GM9770@tuxdriver.com> (sfid-20110824_223015_800320_C00F28F1)
-References: <1314213161-8871-1-git-send-email-linville@tuxdriver.com>
- <CAG6hwVNvLREnnZQ0t8UaKZ7Q1nn-4kx=z_1nPzVG89a5NMWFpg@mail.gmail.com>
- <20110824193224.GL9770@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110824193224.GL9770@tuxdriver.com>
+In-Reply-To: <1312881233-9366-38-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	 <1312881233-9366-38-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 11 Aug 2011 14:53:13 +0300
+Message-ID: <1313063593.2407.850.camel@cumari> (sfid-20110811_135321_816510_0A8ABF8E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 24, 2011 at 03:32:24PM -0400, John W. Linville wrote:
-> On Wed, Aug 24, 2011 at 12:27:29PM -0700, Thomas Pedersen wrote:
+On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
+> Sometimes the fw doesn't send the DISCONNECT_EVENT_COMPLETE_ID
+> on station role stop, so don't wait for it.
 
-> > However, this does look nicer. Please be sure to apply the version
-> > submitted on 11 August.
-> 
-> You just told me yesterday to apply the 9 August version???
+Why? A bug? Or any good reason for it?
 
-In any case, that is what I applied.  Please review it and submit
-fixup patches for anything that needs to be different.
 
-John
+> diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+> index 9ef8621..ad926d2 100644
+> --- a/drivers/net/wireless/wl12xx/cmd.c
+> +++ b/drivers/net/wireless/wl12xx/cmd.c
+> @@ -640,18 +640,12 @@ int wl1271_cmd_role_stop_sta(struct wl1271 *wl)
+>  	ret = wl1271_cmd_send(wl, CMD_ROLE_STOP, cmd, sizeof(*cmd), 0);
+>  	if (ret < 0) {
+>  		wl1271_error("failed to initiate cmd role stop");
+>  		goto out_free;
+>  	}
+>  
+> -	ret = wl1271_cmd_wait_for_event(wl, DISCONNECT_EVENT_COMPLETE_ID);
+> -	if (ret < 0) {
+> -		wl1271_error("cmd role stop sta event completion error");
+> -		goto out_free;
+> -	}
+> -
+
+Can't this cause possible race conditions in the firmware if, for
+instance, we stop and start the sta role quickly?
+
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Cheers,
+Luca.
+
