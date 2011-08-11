@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:60972 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750695Ab1HINhf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50617 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751068Ab1HKNXz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 09:37:35 -0400
-Received: by mail-ew0-f44.google.com with SMTP id 19so1729832ewy.3
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 06:37:19 -0700 (PDT)
-Subject: Re: [PATCH 06/40] wl12xx: wl12xx-fw-3 - Update fw status struct
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1312881233-9366-7-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-	 <1312881233-9366-7-git-send-email-eliad@wizery.com>
+	Thu, 11 Aug 2011 09:23:55 -0400
+Subject: Re: commit 50d3dfb72 corrupt memory
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20110811131937.GA4903@redhat.com>
+References: <20110811131937.GA4903@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 09 Aug 2011 16:37:16 +0300
-Message-ID: <1312897036.2407.186.camel@cumari> (sfid-20110809_153737_883461_A721A5B7)
+Date: Thu, 11 Aug 2011 15:23:50 +0200
+Message-ID: <1313069030.3992.8.camel@jlt3.sipsolutions.net> (sfid-20110811_152358_615705_46AF1180)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
-> Update the fw status struct according to the new fw api.
-> All the roles use the same struct now.
+On Thu, 2011-08-11 at 15:19 +0200, Stanislaw Gruszka wrote:
+> My system crash when try to connet to wireless network since
 > 
-> The memory accounting was changed a bit according to
-> the struct changes.
+> commit 50d3dfb728e987790cf3d973aaf5fba2433771d8
+> Author: Jouni Malinen <jouni@qca.qualcomm.com>
+> Date:   Mon Aug 8 12:11:52 2011 +0300
 > 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+>     cfg80211/nl80211: Send AssocReq IEs to user space in AP mode
+> 
+> assoc_req_ies is not initialized hence NLA_PUT may write
+> on random address. I think station_info->filled should be
+> used for check.
 
-I don't think we need the "wl12xx-fw-3 - " in the title of any of these
-patches...
+Yeah, see [PATCH] cfg80211: fix a crash in nl80211_send_station from
+Felix.
 
--- 
-Cheers,
-Luca.
+johannes
 
