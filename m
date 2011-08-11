@@ -1,78 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:26456 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751550Ab1HXRC2 convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:63329 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753875Ab1HKIzR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 13:02:28 -0400
-From: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
-To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Alexander Diewald <alex@diewald.cc>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-Date: Wed, 24 Aug 2011 10:02:26 -0700
-Subject: RE: [iwlagn] System crash on dell e6420 using iwlagn from
- kernel-git
-Message-ID: <C5A7FB31FD9AEA42B600BDC3C74F8E000C8BF9C9@orsmsx511.amr.corp.intel.com> (sfid-20110824_190232_776170_BAF9B957)
-References: <2EBB96D0C3577D479C54D1243926388D07AE5FFE@mail.ecs-exchange.de>
- <E9954878DD1FB34FAE5187FB88C58A3501998B9CD3@orsmsx506.amr.corp.intel.com>
-In-Reply-To: <E9954878DD1FB34FAE5187FB88C58A3501998B9CD3@orsmsx506.amr.corp.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 11 Aug 2011 04:55:17 -0400
+Received: by fxh19 with SMTP id 19so1520964fxh.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 01:55:15 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] bcma: implement BCM4331 workaround for external PA lines
+Date: Thu, 11 Aug 2011 11:34:15 +0200
+Message-Id: <1313055255-3088-1-git-send-email-zajec5@gmail.com> (sfid-20110811_105526_679436_007DB684)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alex,
+We need to disable ext. PA lines for reading SPROM. It's disabled by
+default, but this patch allows using bcma after loading wl, which leaves
+workaround enabled.
 
-I see that there's a null pointer dereference in one of the iwlagn functions. 
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/bcma/driver_chipcommon_pmu.c        |   20 +++++++++++++++++++-
+ drivers/bcma/sprom.c                        |    6 ++++++
+ include/linux/bcma/bcma_driver_chipcommon.h |   18 ++++++++++++++++++
+ 3 files changed, 43 insertions(+), 1 deletions(-)
 
-Can you point me to the kernel tree you're using?
+diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
+index 5940c81..a3854ff 100644
+--- a/drivers/bcma/driver_chipcommon_pmu.c
++++ b/drivers/bcma/driver_chipcommon_pmu.c
+@@ -90,6 +90,24 @@ void bcma_pmu_swreg_init(struct bcma_drv_cc *cc)
+ 	}
+ }
+ 
++/* Disable to allow reading SPROM. Don't know the adventages of enabling it. */
++void bcma_chipco_bcm4331_exp_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable)
++{
++	struct bcma_bus *bus = cc->core->bus;
++	u32 val;
++
++	val = bcma_cc_read32(cc, BCMA_CC_CHIPCTL);
++	if (enable) {
++		val |= BCMA_CHIPCTL_4331_EXTPA_EN;
++		if (bus->chipinfo.pkg == 9 || bus->chipinfo.pkg == 11)
++			val |= BCMA_CHIPCTL_4331_EXTPA_ON_GPIO2_5;
++	} else {
++		val &= ~BCMA_CHIPCTL_4331_EXTPA_EN;
++		val &= ~BCMA_CHIPCTL_4331_EXTPA_ON_GPIO2_5;
++	}
++	bcma_cc_write32(cc, BCMA_CC_CHIPCTL, val);
++}
++
+ void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
+ {
+ 	struct bcma_bus *bus = cc->core->bus;
+@@ -99,7 +117,7 @@ void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
+ 		bcma_chipco_chipctl_maskset(cc, 0, ~0, 0x7);
+ 		break;
+ 	case 0x4331:
+-		pr_err("Enabling Ext PA lines not implemented\n");
++		/* BCM4331 workaround is SPROM-related, we put it in sprom.c */
+ 		break;
+ 	case 43224:
+ 		if (bus->chipinfo.rev == 0) {
+diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
+index 8b5b785..94c6b3f 100644
+--- a/drivers/bcma/sprom.c
++++ b/drivers/bcma/sprom.c
+@@ -152,6 +152,9 @@ int bcma_sprom_get(struct bcma_bus *bus)
+ 	if (!sprom)
+ 		return -ENOMEM;
+ 
++	if (bus->chipinfo.id == 0x4331)
++		bcma_chipco_bcm4331_exp_pa_lines_ctl(&bus->drv_cc, false);
++
+ 	/* Most cards have SPROM moved by additional offset 0x30 (48 dwords).
+ 	 * According to brcm80211 this applies to cards with PCIe rev >= 6
+ 	 * TODO: understand this condition and use it */
+@@ -159,6 +162,9 @@ int bcma_sprom_get(struct bcma_bus *bus)
+ 		BCMA_CC_SPROM_PCIE6;
+ 	bcma_sprom_read(bus, offset, sprom);
+ 
++	if (bus->chipinfo.id == 0x4331)
++		bcma_chipco_bcm4331_exp_pa_lines_ctl(&bus->drv_cc, true);
++
+ 	err = bcma_sprom_valid(sprom);
+ 	if (err)
+ 		goto out;
+diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
+index 6083725..18efb6c 100644
+--- a/include/linux/bcma/bcma_driver_chipcommon.h
++++ b/include/linux/bcma/bcma_driver_chipcommon.h
+@@ -283,6 +283,22 @@
+ #define BCMA_CC_PPL_PCHI_OFF		5
+ #define BCMA_CC_PPL_PCHI_MASK		0x0000003f
+ 
++/* BCM4331 ChipControl numbers. */
++#define BCMA_CHIPCTL_4331_BT_COEXIST		BIT(0)	/* 0 disable */
++#define BCMA_CHIPCTL_4331_SECI			BIT(1)	/* 0 SECI is disabled (JATG functional) */
++#define BCMA_CHIPCTL_4331_EXT_LNA		BIT(2)	/* 0 disable */
++#define BCMA_CHIPCTL_4331_SPROM_GPIO13_15	BIT(3)	/* sprom/gpio13-15 mux */
++#define BCMA_CHIPCTL_4331_EXTPA_EN		BIT(4)	/* 0 ext pa disable, 1 ext pa enabled */
++#define BCMA_CHIPCTL_4331_GPIOCLK_ON_SPROMCS	BIT(5)	/* set drive out GPIO_CLK on sprom_cs pin */
++#define BCMA_CHIPCTL_4331_PCIE_MDIO_ON_SPROMCS	BIT(6)	/* use sprom_cs pin as PCIE mdio interface */
++#define BCMA_CHIPCTL_4331_EXTPA_ON_GPIO2_5	BIT(7)	/* aband extpa will be at gpio2/5 and sprom_dout */
++#define BCMA_CHIPCTL_4331_OVR_PIPEAUXCLKEN	BIT(8)	/* override core control on pipe_AuxClkEnable */
++#define BCMA_CHIPCTL_4331_OVR_PIPEAUXPWRDOWN	BIT(9)	/* override core control on pipe_AuxPowerDown */
++#define BCMA_CHIPCTL_4331_PCIE_AUXCLKEN		BIT(10)	/* pcie_auxclkenable */
++#define BCMA_CHIPCTL_4331_PCIE_PIPE_PLLDOWN	BIT(11)	/* pcie_pipe_pllpowerdown */
++#define BCMA_CHIPCTL_4331_BT_SHD0_ON_GPIO4	BIT(16)	/* enable bt_shd0 at gpio4 */
++#define BCMA_CHIPCTL_4331_BT_SHD1_ON_GPIO5	BIT(17)	/* enable bt_shd1 at gpio5 */
++
+ /* Data for the PMU, if available.
+  * Check availability with ((struct bcma_chipcommon)->capabilities & BCMA_CC_CAP_PMU)
+  */
+@@ -342,6 +358,8 @@ extern void bcma_core_chipcommon_init(struct bcma_drv_cc *cc);
+ extern void bcma_chipco_suspend(struct bcma_drv_cc *cc);
+ extern void bcma_chipco_resume(struct bcma_drv_cc *cc);
+ 
++void bcma_chipco_bcm4331_exp_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable);
++
+ extern void bcma_chipco_watchdog_timer_set(struct bcma_drv_cc *cc,
+ 					  u32 ticks);
+ 
+-- 
+1.7.3.4
 
-Thanks,
-Meenakshi
-
->-----Original Message-----
->From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
->owner@vger.kernel.org] On Behalf Of Guy, Wey-Yi W
->Sent: Wednesday, August 24, 2011 7:09 AM
->To: Alexander Diewald; linux-wireless@vger.kernel.org
->Cc: Guy, Wey-Yi W
->Subject: RE: [iwlagn] System crash on dell e6420 using iwlagn from kernel-git
->
->Hi Alex,
->
->I am on vacation now and I will asking the right people in the team to look into
->this problem and get back to you.
->
->Thanks
->Wey
->
->-----Original Message-----
->From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
->owner@vger.kernel.org] On Behalf Of Alexander Diewald
->Sent: Wednesday, August 24, 2011 5:42 AM
->To: linux-wireless@vger.kernel.org
->Subject: [iwlagn] System crash on dell e6420 using iwlagn from kernel-git
->
->Hi everyone,
->
->I'm currently testing out the git repository of the linux kernel.
->Unfortunately my system (Gentoo) always crashes shortly after the
->Networkmanager service is started. Not starting the service or using the radio
->killswitch is the only possibility to get the system up. I already tested versions
->0.8.4 and 0.9rc3 of Networkmanager resulting in the same error. This behavior
->came up with using the git-Version of the kernel whereas it was working in
->the 3.0.x releases.
->The really bad news is that I cannot send a detailed trace with this message as
->the relevant parts of the log message are gone due the following hardreset.
->But luckily once a trace remained, which is from the older rc1 but still
->describing the same problem. Unfortunately no debugging symbols were
->active when this trace was generated.
->I've also attached some information about my system.
->I hope you can help me out. Thanks.
->
->Best regards,
->Alexander Diewald
->--
->To unsubscribe from this list: send the line "unsubscribe linux-wireless" in the
->body of a message to majordomo@vger.kernel.org More majordomo info at
->http://vger.kernel.org/majordomo-info.html
