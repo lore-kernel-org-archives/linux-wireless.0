@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:48472 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754952Ab1HZQh2 (ORCPT
+Received: from webmail01.spothost.nl ([77.74.49.150]:42728 "EHLO
+	webmail01.spothost.nl" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751259Ab1HKOYD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 12:37:28 -0400
-Date: Fri, 26 Aug 2011 12:36:20 -0400 (EDT)
-Message-Id: <20110826.123620.2128524809929669115.davem@davemloft.net> (sfid-20110826_183732_967858_6F2B17AE)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2011-08-26
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110826151758.GH2579@tuxdriver.com>
-References: <20110826151758.GH2579@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 11 Aug 2011 10:24:03 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Thu, 11 Aug 2011 14:23:56 +0000
+From: kc@cobradevil.org
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8192cu sometimes it can authenticate to ap
+In-Reply-To: <4E429C57.1040101@lwfinger.net>
+References: <b3059ba2eac66b7ef0ec17c8fe81a1e6@cobradevil.org>
+ <34676454425401d650be733a43191a53@cobradevil.org>
+ <532595cb4d5ef910de54a4736ba76185@cobradevil.org>
+ <4E41624E.3010904@lwfinger.net>
+ <d3faeaf2e881a324b0ad3102c10e6131@cobradevil.org>
+ <4E429C57.1040101@lwfinger.net>
+Message-ID: <30cc9c22bb40fb1e2bd2b9ef4692d167@cobradevil.org> (sfid-20110811_162407_244434_52EEF038)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 26 Aug 2011 11:17:58 -0400
 
-> Here is a round of fixes intended for 3.1...
-> 
-> The biggest portion are Bluetooth fixes.  Gustavo describes them
-> thusly:
-> 
-> 	Some fixes for 3.1! It looks a lot of fixes but some of them
-> 	are the same fix applied to different files. Here we have a
-> 	fix for a wrong timer value from Chen Ganir, a lock balance
-> 	fix from Dan Carpenter, regression fix with the HCI Reset
-> 	command from Szymon Janc, a fix to not show error messages on
-> 	btusb device disconnect from Paul Bolle. Support for Toshiba
-> 	AR30XX from Ricardo Mendoza. And finally a bunch of fixes
-> 	from Peter Hurley, there are some lost wake up, deadlocks and
-> 	memort leaks fixes. Most of them fixes regressions introduced
-> 	by the move to the kthread API.
-> 
-> In addition, we have a locking fix for carl9170, a bcma fix to enable
-> driver loading via udev, a wl12xx fix to properly advertise the
-> maximum number of SSIDs for scanning, another wl12xx fix to properly
-> check a return code in order to avoid a possible oops, and a third
-> wl12xx fix to remove a broken testmode function with locking problems
-> (among others).  Also included is a suspend/resume fix for ath9k,
-> a fix for reading improper MAC addresses on ath9k, a suspend/resume
-> fix for mac80211, and a suspend/resume fix for rt2x00 as well.
 
-Pulled, thanks John!
+On Wed, 10 Aug 2011 09:57:27 -0500, Larry Finger wrote:
+> On 08/10/2011 08:32 AM, kc@cobradevil.org wrote:
+>> Hello Larry,
+>>
+>> did you receive my last email with the log files?
+>> i'm not sure if that the right information so if you need more the 
+>> please let me
+>> know.
+>
+> Yes, I got them.
+>
+> So far, the only conclusion from them is that you should install the
+> CRDA package. That is not the cause of your problem, but it needs to
+> be done.
+>
+> I can duplicate the problem here and find that it occurs between 3.0
+> and 3.1-rc1. I first tried to bisect testing only
+> drivers/net/wireless/rtlwifi, net/mac80211 and net/wireless
+> directories. That led to an impossible "bad" commit, thus I'm having
+> to bisect the whole tree.
+
+I have now tried several compat files til may 28 but none of them seems 
+to work with maverick at all. Do i need some updated files on the client 
+to be able to use the new compat tree?
+
+I thought that the compat tree would work without changes on kernel 
+from > 2.6.30 is that right?
+
+>
+> I'll let you know what I find.
+>
+> Larry
+
