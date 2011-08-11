@@ -1,180 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2803 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753088Ab1HHN7b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:31 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 46/82] staging: brcm80211: remove code for unsupported
- chip
-Date: Mon, 8 Aug 2011 15:58:30 +0200
-Message-ID: <1312811946-16713-47-git-send-email-arend@broadcom.com> (sfid-20110808_160133_549470_9303DC13)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53067 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751827Ab1HKK7P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2011 06:59:15 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
+Date: Thu, 11 Aug 2011 12:59:06 +0200
+Message-Id: <1313060347-665-1-git-send-email-hauke@hauke-m.de> (sfid-20110811_125919_958026_E5331877)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+ath6kl is now in the kernel main area and not in staging any more.
 
-Currently fullmac only support bcm4329. Remove dead code for
-unsupported chip.
-
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   40 +-------------------
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |   17 +--------
- 2 files changed, 3 insertions(+), 54 deletions(-)
+ Makefile                                |    1 -
+ config.mk                               |   15 +++------
+ patches/01-netdev.patch                 |   17 +++++++++--
+ patches/34-backport-bin_attribute.patch |   47 -------------------------------
+ scripts/admin-update.sh                 |    4 +-
+ 5 files changed, 21 insertions(+), 63 deletions(-)
+ delete mode 100644 patches/34-backport-bin_attribute.patch
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index d6f0f92..846b6be 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -34,36 +34,17 @@
- #include "dhd_dbg.h"
- #include "wl_cfg80211.h"
+diff --git a/Makefile b/Makefile
+index 9c95292..463a56c 100644
+--- a/Makefile
++++ b/Makefile
+@@ -33,7 +33,6 @@ obj-$(CONFIG_COMPAT_NETWORK_MODULES) += drivers/net/
+ obj-$(CONFIG_COMPAT_VAR_MODULES) +=  drivers/ssb/ drivers/bcma/ drivers/misc/eeprom/
  
--#define BLOCK_SIZE_64 64
--#define BLOCK_SIZE_512 512
--#define BLOCK_SIZE_4318 64
--#define BLOCK_SIZE_4328 512
+ ifeq ($(CONFIG_STAGING_EXCLUDE_BUILD),)
+-obj-$(CONFIG_COMPAT_STAGING) += drivers/staging/ath6kl/
+ obj-$(CONFIG_COMPAT_STAGING) += drivers/staging/brcm80211/
+ endif
+ 
+diff --git a/config.mk b/config.mk
+index 786891d..27d4daf 100644
+--- a/config.mk
++++ b/config.mk
+@@ -570,24 +570,19 @@ CONFIG_IWM=m
+ CONFIG_BT_HCIBTSDIO=m
+ CONFIG_BT_MRVL_SDIO=m
+ 
++ifndef CONFIG_COMPAT_KERNEL_2_6_27
++CONFIG_ATH6KL=m
++# CONFIG_ATH6KL_DEBUG=y
++endif #CONFIG_COMPAT_KERNEL_2_6_27
++
+ ifdef CONFIG_COMPAT_STAGING
+ ifdef CONFIG_WIRELESS_EXT
+-# CONFIG_ATH6KL_DISABLE_TARGET_DBGLOGS is not set
+-# CONFIG_ATH6KL_ENABLE_COEXISTENCE is not set
+-# CONFIG_ATH6KL_ENABLE_HOST_DEBUG is not set
+-CONFIG_ATH6KL_ENABLE_TARGET_DEBUG_PRINTS=y
+-# CONFIG_ATH6KL_HCI_BRIDGE is not set
+-# CONFIG_ATH6KL_HTC_RAW_INTERFACE is not set
+-# CONFIG_ATH6KL_SKIP_ABI_VERSION_CHECK is not set
+-CONFIG_ATH6KL_VIRTUAL_SCATTER_GATHER=y
+-CONFIG_ATH6K_LEGACY=m
+ 
+ CONFIG_BRCMFMAC=m
+ 
+ endif #CONFIG_WIRELESS_EXT
+ endif #CONFIG_COMPAT_STAGING
+ 
 -
--/* private bus modes */
--#define SDIOH_MODE_SD4		2
--
- #define CLIENT_INTR		0x100	/* Get rid of this! */
+ endif #CONFIG_MMC
  
- #if !defined(SDIO_VENDOR_ID_BROADCOM)
- #define SDIO_VENDOR_ID_BROADCOM		0x02d0
- #endif				/* !defined(SDIO_VENDOR_ID_BROADCOM) */
+ CONFIG_RTLWIFI=m
+diff --git a/patches/01-netdev.patch b/patches/01-netdev.patch
+index f8395c8..d500584 100644
+--- a/patches/01-netdev.patch
++++ b/patches/01-netdev.patch
+@@ -32,6 +32,17 @@ without creating a headache on maintenance of the pathes.
+  	net->watchdog_timeo = TX_TIMEOUT_JIFFIES;
+  	net->ethtool_ops = &usbnet_ethtool_ops;
+  
++--- a/drivers/net/wireless/ath/ath6kl/main.c
+++++ b/drivers/net/wireless/ath/ath6kl/main.c
++@@ -1325,7 +1325,7 @@ static struct net_device_ops ath6kl_netd
++ 
++ void init_netdev(struct net_device *dev)
++ {
++-	dev->netdev_ops = &ath6kl_netdev_ops;
+++	netdev_attach_ops(dev, &ath6kl_netdev_ops);
++ 	dev->watchdog_timeo = ATH6KL_TX_TIMEOUT;
++ 
++ 	dev->needed_headroom = ETH_HLEN;
+ --- a/drivers/net/wireless/rndis_wlan.c
+ +++ b/drivers/net/wireless/rndis_wlan.c
+ @@ -3439,7 +3439,7 @@ static int rndis_wlan_bind(struct usbnet
+@@ -217,7 +228,7 @@ without creating a headache on maintenance of the pathes.
+  	wdev->netdev = ndev;
+ --- a/drivers/net/wireless/libertas/main.c
+ +++ b/drivers/net/wireless/libertas/main.c
+-@@ -836,7 +836,7 @@ struct lbs_private *lbs_add_card(void *c
++@@ -916,7 +916,7 @@ struct lbs_private *lbs_add_card(void *c
+  	wdev->netdev = dev;
+  	priv->dev = dev;
+  
+@@ -228,7 +239,7 @@ without creating a headache on maintenance of the pathes.
+  	dev->flags |= IFF_BROADCAST | IFF_MULTICAST;
+ --- a/drivers/net/wireless/libertas/mesh.c
+ +++ b/drivers/net/wireless/libertas/mesh.c
+-@@ -1011,7 +1011,7 @@ static int lbs_add_mesh(struct lbs_priva
++@@ -1018,7 +1018,7 @@ static int lbs_add_mesh(struct lbs_priva
+  	mesh_dev->ieee80211_ptr = mesh_wdev;
+  	priv->mesh_dev = mesh_dev;
+  
+@@ -256,7 +267,7 @@ without creating a headache on maintenance of the pathes.
+  #define LBS_DEB_LEAVE	0x00000002
+ --- a/drivers/net/wireless/mac80211_hwsim.c
+ +++ b/drivers/net/wireless/mac80211_hwsim.c
+-@@ -1230,7 +1230,7 @@ static const struct net_device_ops hwsim
++@@ -1236,7 +1236,7 @@ static const struct net_device_ops hwsim
+  
+  static void hwsim_mon_setup(struct net_device *dev)
+  {
+diff --git a/patches/34-backport-bin_attribute.patch b/patches/34-backport-bin_attribute.patch
+deleted file mode 100644
+index 1ca0b4d..0000000
+--- a/patches/34-backport-bin_attribute.patch
++++ /dev/null
+@@ -1,47 +0,0 @@
+---- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+-+++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+-@@ -317,12 +317,20 @@ static void ar6000_refill_amsdu_rxbufs(s
+- static void ar6000_cleanup_amsdu_rxbufs(struct ar6_softc *ar);
+- 
+- static ssize_t
+-+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,34))
+- ar6000_sysfs_bmi_read(struct file *fp, struct kobject *kobj,
+-+#else
+-+ar6000_sysfs_bmi_read(struct kobject *kobj,
+-+#endif
+-                       struct bin_attribute *bin_attr,
+-                       char *buf, loff_t pos, size_t count);
+- 
+- static ssize_t
+-+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,34))
+- ar6000_sysfs_bmi_write(struct file *fp, struct kobject *kobj,
+-+#else
+-+ar6000_sysfs_bmi_write(struct kobject *kobj,
+-+#endif
+-                        struct bin_attribute *bin_attr,
+-                        char *buf, loff_t pos, size_t count);
+- 
+-@@ -755,7 +763,11 @@ static struct bin_attribute bmi_attr = {
+- };
+- 
+- static ssize_t
+-+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,34))
+- ar6000_sysfs_bmi_read(struct file *fp, struct kobject *kobj,
+-+#else
+-+ar6000_sysfs_bmi_read(struct kobject *kobj,
+-+#endif
+-                       struct bin_attribute *bin_attr,
+-                       char *buf, loff_t pos, size_t count)
+- {
+-@@ -782,7 +794,11 @@ ar6000_sysfs_bmi_read(struct file *fp, s
+- }
+- 
+- static ssize_t
+-+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,34))
+- ar6000_sysfs_bmi_write(struct file *fp, struct kobject *kobj,
+-+#else
+-+ar6000_sysfs_bmi_write(struct kobject *kobj,
+-+#endif
+-                        struct bin_attribute *bin_attr,
+-                        char *buf, loff_t pos, size_t count)
+- {
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 3040275..87b7e5f 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -218,6 +218,7 @@ fi
+ DRIVERS="drivers/net/wireless/ath"
+ DRIVERS="$DRIVERS drivers/net/wireless/ath/carl9170"
+ DRIVERS="$DRIVERS drivers/net/wireless/ath/ath5k"
++DRIVERS="$DRIVERS drivers/net/wireless/ath/ath6kl"
+ DRIVERS="$DRIVERS drivers/net/wireless/ath/ath9k"
+ DRIVERS="$DRIVERS drivers/ssb"
+ DRIVERS="$DRIVERS drivers/bcma"
+@@ -247,8 +248,7 @@ DRIVERS="$DRIVERS drivers/net/wireless/orinoco"
+ DRIVERS="$DRIVERS drivers/net/wireless/mwifiex"
  
--#define SDIO_DEVICE_ID_BROADCOM_DEFAULT	0x0000
--
- #define DMA_ALIGN_MASK	0x03
+ # Staging drivers
+-STAGING_DRIVERS="drivers/staging/ath6kl"
+-STAGING_DRIVERS="$STAGING_DRIVERS drivers/staging/brcm80211"
++STAGING_DRIVERS="drivers/staging/brcm80211"
  
--#if !defined(SDIO_DEVICE_ID_BROADCOM_4325_SDGWB)
--#define SDIO_DEVICE_ID_BROADCOM_4325_SDGWB	0x0492	/* BCM94325SDGWB */
--#endif		/* !defined(SDIO_DEVICE_ID_BROADCOM_4325_SDGWB) */
--#if !defined(SDIO_DEVICE_ID_BROADCOM_4325)
--#define SDIO_DEVICE_ID_BROADCOM_4325	0x0493
--#endif		/* !defined(SDIO_DEVICE_ID_BROADCOM_4325) */
- #if !defined(SDIO_DEVICE_ID_BROADCOM_4329)
- #define SDIO_DEVICE_ID_BROADCOM_4329	0x4329
- #endif		/* !defined(SDIO_DEVICE_ID_BROADCOM_4329) */
--#if !defined(SDIO_DEVICE_ID_BROADCOM_4319)
--#define SDIO_DEVICE_ID_BROADCOM_4319	0x4319
--#endif		/* !defined(SDIO_DEVICE_ID_BROADCOM_4329) */
- 
- /* Common msglevel constants */
- #define SDH_ERROR_VAL		0x0001	/* Error */
-@@ -136,12 +117,6 @@ uint sd_f2_blocksize = 512;	/* Default blocksize */
- 
- uint sd_msglevel = 0x01;
- 
--/* module param defaults */
--static int clockoverride;
--
--module_param(clockoverride, int, 0644);
--MODULE_PARM_DESC(clockoverride, "SDIO card clock override");
--
- struct brcmf_sdmmc_instance *gInstance;
- static atomic_t brcmf_mmc_suspend;
- 
-@@ -149,12 +124,7 @@ struct device sdmmc_dev;
- 
- /* devices we support, null terminated */
- static const struct sdio_device_id brcmf_sdmmc_ids[] = {
--	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_DEFAULT)},
--	{SDIO_DEVICE
--	 (SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4325_SDGWB)},
--	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4325)},
- 	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4329)},
--	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4319)},
- 	{ /* end: all zeroes */ },
- };
- 
-@@ -498,10 +468,10 @@ brcmf_sdioh_iovar_op(struct sdioh_info *si, const char *name,
- 				maxsize = 32;
- 				break;
- 			case 1:
--				maxsize = BLOCK_SIZE_4318;
-+				maxsize = 64;
- 				break;
- 			case 2:
--				maxsize = BLOCK_SIZE_4328;
-+				maxsize = 512;
- 				break;
- 			default:
- 				maxsize = 0;
-@@ -1058,12 +1028,6 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 		sdio_func_0.num = 0;
- 		sdio_func_0.card = func->card;
- 		gInstance->func[0] = &sdio_func_0;
--		if (func->device == 0x4) {	/* 4318 */
--			gInstance->func[2] = NULL;
--			sd_trace(("NIC found, calling brcmf_sdio_probe...\n"));
--			ret = brcmf_sdio_probe(&sdmmc_dev);
--		}
--		atomic_set(&brcmf_mmc_suspend, false);
- 	}
- 
- 	gInstance->func[func->num] = func;
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 83bb0ea..c816339 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -1273,8 +1273,7 @@ int brcmf_sdbrcm_bussleep(struct brcmf_bus *bus, bool sleep)
- 			SBSDIO_FORCE_HW_CLKREQ_OFF, NULL);
- 
- 		/* Isolate the bus */
--		if (bus->ci->chip != BCM4329_CHIP_ID
--		    && bus->ci->chip != BCM4319_CHIP_ID) {
-+		if (bus->ci->chip != BCM4329_CHIP_ID) {
- 			brcmf_sdcard_cfg_write(card, SDIO_FUNC_1,
- 				SBSDIO_DEVICE_CTL,
- 				SBSDIO_DEVCTL_PADS_ISO, NULL);
-@@ -5401,12 +5400,8 @@ done:
- 
- static bool brcmf_sdbrcm_chipmatch(u16 chipid)
- {
--	if (chipid == BCM4325_CHIP_ID)
--		return true;
- 	if (chipid == BCM4329_CHIP_ID)
- 		return true;
--	if (chipid == BCM4319_CHIP_ID)
--		return true;
- 	return false;
- }
- 
-@@ -5461,22 +5456,12 @@ static void *brcmf_sdbrcm_probe(u16 venid, u16 devid, u16 bus_no,
- 
- 	/* Check the Device ID and make sure it's one that we support */
- 	switch (devid) {
--	case BCM4325_D11DUAL_ID:	/* 4325 802.11a/g id */
--	case BCM4325_D11G_ID:	/* 4325 802.11g 2.4Ghz band id */
--	case BCM4325_D11A_ID:	/* 4325 802.11a 5Ghz band id */
--		BRCMF_INFO(("%s: found 4325 Dongle\n", __func__));
--		break;
- 	case BCM4329_D11NDUAL_ID:	/* 4329 802.11n dualband device */
- 	case BCM4329_D11N2G_ID:	/* 4329 802.11n 2.4G device */
- 	case BCM4329_D11N5G_ID:	/* 4329 802.11n 5G device */
- 	case 0x4329:
- 		BRCMF_INFO(("%s: found 4329 Dongle\n", __func__));
- 		break;
--	case BCM4319_D11N_ID:	/* 4319 802.11n id */
--	case BCM4319_D11N2G_ID:	/* 4319 802.11n2g id */
--	case BCM4319_D11N5G_ID:	/* 4319 802.11n5g id */
--		BRCMF_INFO(("%s: found 4319 Dongle\n", __func__));
--		break;
- 	case 0:
- 		BRCMF_INFO(("%s: allow device id 0, will check chip"
- 			    " internals\n", __func__));
+ # Ethernet drivers
+ DRIVERS="$DRIVERS drivers/net/atl1c"
 -- 
 1.7.4.1
-
 
