@@ -1,75 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15639 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751281Ab1HJNcr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 09:32:47 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Justin Piszcz <jpiszcz@lucidpixels.com>, stable@kernel.org
-Subject: [PATCH 2/3] rt2x00: fix order of entry flags modification
-Date: Wed, 10 Aug 2011 15:32:23 +0200
-Message-Id: <1312983144-16156-2-git-send-email-sgruszka@redhat.com> (sfid-20110810_153251_349267_2ECAFA20)
-In-Reply-To: <1312983144-16156-1-git-send-email-sgruszka@redhat.com>
-References: <1312983144-16156-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:34237 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754070Ab1HKVYT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2011 17:24:19 -0400
+Received: by fxh19 with SMTP id 19so1948045fxh.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 14:24:18 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/2] b43: include HT-PHY in some common code
+Date: Fri, 12 Aug 2011 00:03:25 +0200
+Message-Id: <1313100206-25922-1-git-send-email-zajec5@gmail.com> (sfid-20110811_232422_759709_43FAE71C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In rt2800usb_work_txdone we check flags in order:
 
-- ENTRY_OWNER_DEVICE_DATA
-- ENTRY_DATA_STATUS_PENDING
-- ENTRY_DATA_IO_FAILED
-
-Modify flags in separate order in rt2x00usb_interrupt_txdone, to avoid
-processing entries in _txdone with wrong flags or skip processing
-ready entries.
-
-Reported-by: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: stable@kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00usb.c |   17 +++++++----------
- 1 files changed, 7 insertions(+), 10 deletions(-)
+ drivers/net/wireless/b43/main.c |    1 +
+ drivers/net/wireless/b43/xmit.c |    1 +
+ 2 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index b6b4542..7fbb55c 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -262,23 +262,20 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
- 	struct queue_entry *entry = (struct queue_entry *)urb->context;
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 
--	if (!test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
-+	if (!test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
- 		return;
--
--	if (rt2x00dev->ops->lib->tx_dma_done)
--		rt2x00dev->ops->lib->tx_dma_done(entry);
--
--	/*
--	 * Report the frame as DMA done
--	 */
--	rt2x00lib_dmadone(entry);
--
- 	/*
- 	 * Check if the frame was correctly uploaded
- 	 */
- 	if (urb->status)
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
-+	/*
-+	 * Report the frame as DMA done
-+	 */
-+	rt2x00lib_dmadone(entry);
- 
-+	if (rt2x00dev->ops->lib->tx_dma_done)
-+		rt2x00dev->ops->lib->tx_dma_done(entry);
- 	/*
- 	 * Schedule the delayed work for reading the TX status
- 	 * from the device.
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 654c21e..1adadc8 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2949,6 +2949,7 @@ static void b43_rate_memory_init(struct b43_wldev *dev)
+ 	case B43_PHYTYPE_G:
+ 	case B43_PHYTYPE_N:
+ 	case B43_PHYTYPE_LP:
++	case B43_PHYTYPE_HT:
+ 		b43_rate_memory_write(dev, B43_OFDM_RATE_6MB, 1);
+ 		b43_rate_memory_write(dev, B43_OFDM_RATE_12MB, 1);
+ 		b43_rate_memory_write(dev, B43_OFDM_RATE_18MB, 1);
+diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+index 5b82409..b8de62c 100644
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -797,6 +797,7 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+ 		break;
+ 	case B43_PHYTYPE_N:
+ 	case B43_PHYTYPE_LP:
++	case B43_PHYTYPE_HT:
+ 		/* chanid is the SHM channel cookie. Which is the plain
+ 		 * channel number in b43. */
+ 		if (chanstat & B43_RX_CHAN_5GHZ) {
 -- 
-1.7.1
+1.7.3.4
 
