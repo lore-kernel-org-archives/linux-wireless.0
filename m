@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25609 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751924Ab1HHO21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 10:28:27 -0400
-Date: Mon, 8 Aug 2011 16:28:16 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Justin Piszcz <jpiszcz@lucidpixels.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: rt2800usb: fix races in tx queue
-Message-ID: <20110808142815.GA25877@redhat.com> (sfid-20110808_162830_443216_C78B21CF)
-References: <20110804124653.GB5739@redhat.com>
- <CAOZOX0Xpv9OPqx2Y3GnajhmDvx3GyL1xTAjEOYjOToWcQxB6bA@mail.gmail.com>
- <20110808092914.GA2168@redhat.com>
- <CAOZOX0WM2gzOETSsJ1hR623ie1_eqcfS13bDoLxrJugcZ-Si4g@mail.gmail.com>
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:34065 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754203Ab1HKAOP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2011 20:14:15 -0400
+Received: by pzk37 with SMTP id 37so2698680pzk.1
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 17:14:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAOZOX0WM2gzOETSsJ1hR623ie1_eqcfS13bDoLxrJugcZ-Si4g@mail.gmail.com>
+In-Reply-To: <1313001339-11211-2-git-send-email-zajec5@gmail.com>
+References: <1313001339-11211-1-git-send-email-zajec5@gmail.com>
+	<1313001339-11211-2-git-send-email-zajec5@gmail.com>
+Date: Thu, 11 Aug 2011 02:14:14 +0200
+Message-ID: <CACna6rynj+OXL1R6jwgnCzReuO+=piOX3LTC9UujDTg4DNBVUw@mail.gmail.com> (sfid-20110811_021420_952130_1D402803)
+Subject: Re: [RFC][RFT][PATCH V2 2/2] b43: fix DMA on some bugged hardware
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 08, 2011 at 11:43:55AM +0200, Ivo Van Doorn wrote:
-> Well but for what reason would we want to read the register again? If
-> we found an status report
-> for a queue which does not have pending items, then in this change it
-> would mean that the
-> status report is intended for a TX frame which has yet to be enqueued
-> to the hardware.
-> 
-> Obviously this means a mismatch between the TX status report and the
-> actual frame to which it
-> is being connected.
+W dniu 10 sierpnia 2011 20:35 użytkownik Rafał Miłecki
+<zajec5@gmail.com> napisał:
+> Some hardware with 64-bit DMA uses lower address word for setting
+> routing (translation) bit. Add workaround for such boards.
+>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> This requires testing on at least 1 normal 64-bit DMA card and 1 32-bit
+> DMA card. So far it was tested only on my 14e4:4329 where it fixed DMA.
 
-Ok, I will rewrite patch to skip TX status fifo reg if entry is pending.
+14e4:4353 (BCM43224), 64-bit DMA, still works :)
 
-Stanislaw
+The rest will follow tomorrow.
+
+-- 
+Rafał
