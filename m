@@ -1,68 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:42060 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752675Ab1HBDpN (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:52792 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751864Ab1HKMbH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2011 23:45:13 -0400
-Message-ID: <4E3772C5.70606@lwfinger.net> (sfid-20110802_054535_161594_8A871CA1)
-Date: Mon, 01 Aug 2011 22:45:09 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 11 Aug 2011 08:31:07 -0400
+Received: by ywf7 with SMTP id 7so1255516ywf.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 05:31:07 -0700 (PDT)
 MIME-Version: 1.0
-To: Jaroslaw Fedewicz <jafd@netstyle.com.ua>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [Bug?] Machine hangs, rtl8192se possible cause
-References: <CAFdoEiT54o+NQKO=dAcOXgyf6GJ1E51w_H_p7PJyRmynz8Sbzg@mail.gmail.com>	<4E36C693.6000705@lwfinger.net> <CAFdoEiRBPMx0C+YXwd4-Q=_nHpOb+r2+GspwujZrPh6S4tDwEQ@mail.gmail.com>
-In-Reply-To: <CAFdoEiRBPMx0C+YXwd4-Q=_nHpOb+r2+GspwujZrPh6S4tDwEQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1313063838.2407.852.camel@cumari>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	<1313063838.2407.852.camel@cumari>
+Date: Thu, 11 Aug 2011 15:31:06 +0300
+Message-ID: <CAB3XZEcpWrXxm9TfHjLO260LH8bAr2_FMsiBfhwRyb8BKcuxpw@mail.gmail.com> (sfid-20110811_143110_772347_2DABC4C3)
+Subject: Re: [PATCH 00/40] wl12xx: move to wl12xx-fw-3
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/01/2011 06:10 PM, Jaroslaw Fedewicz wrote:
+On Thu, Aug 11, 2011 at 2:57 PM, Luciano Coelho <coelho@ti.com> wrote:
+> On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote:
+>> The new wl12xx fw (ver 7.3.0.0.75) had some major api changes.
+>> The main change was the addition of multi-role concept, which
+>> will later allow using multiple vifs concurrently.
+>>
+>> Consequently, this design change caused api changes for most
+>> of the api commands, as a new role_id had to be added.
+>>
+>> This patchset migrates the fw to use the new fw api (a new
+>> fw filename is used, as there is no backward compatability
+>> with older firmwares).
 >
-> I'm using a fairly recent version of kernel from git (I think from
-> before yesterday). The mysterious hangs were there from the beginning,
-> but it also might be partly because ATI driver was messed up too at
-> these times. Later, ati appeared fixed but the hangs wouldn't go away.
-
-If that git tree is linux-2.6, or its new name, from Linus, then you have the 
-latest source.
-
-> I don't think it's a panic proper, though. Nothing ever gets logged
-> along the lines of "panic". Even if I happen to have a text mode
-> console, it just freezes. If I have a panic or an oops proper, I'm
-> also kicked out of X11 to see it by the KMS. But not in this case.
+> Okay, I'm done with my review! Lots of small nitpicking, but this in
+> general looks very good! Thanks a lot for the good work, guys!
 >
-> (Also, the laptop has neither Caps Lock nor Num Lock nor Scroll Lock
-> LEDs, so I can't see if they blink.)
+thanks a lot for your review.
+i'm working on fixing all the issues, and i'll resubmit.
 
-A kernel panic never logs anything to the disk. The only place you will see it 
-is on the logging console, or in netconsole output.
-
-> What raised my suspicions is that I've never seen this happen when
-> rtl8192se wasn't compiled at all or was not loaded.
->
-> The most problematic thing is that it does not hang right away. Most
-> of the time, I see the machine go into the catatonia after quite a
-> while, and as it is not the laptop I do most of my work on, I usually
-> see it hanged when screen PM has already kicked in. So I cannot really
-> read what the log might say on the matter.
->
-> I cannot also trigger the freeze reliably. Most of the time it happens
-> "when you are not looking at it", and it usually happens either during
-> or just after high load averages and low to none network activity (a
-> typical scenario: build a firefox from sources, go outside, come home
-> 4 hours later, the laptop is turned on but dead by hanging; no
-> messages as the screen is obviously off; a less typical scenario is to
-> freeze during startup).
->
-> I'm the last person ever to suggest anything on the subject, but could
-> it be a problem in the card's power management?
-
-Not likely. I have three different cards with differing configurations that I 
-have run for extended periods without seeing your problem. One of them is the 
-same as yours.
-
-Until you get some kind of dump from the system, I'm not sure what can be done.
-
-Larry
+Eliad.
