@@ -1,42 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:44061 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751742Ab1HaIIR (ORCPT
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:58038 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753538Ab1HKL5X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 04:08:17 -0400
-Received: by mail-ew0-f43.google.com with SMTP id 20so279360ewy.2
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 01:08:12 -0700 (PDT)
-Subject: Re: [PATCH] nl80211/cfg80211: add ssid filtering for sched_scan
+	Thu, 11 Aug 2011 07:57:23 -0400
+Received: by mail-bw0-f44.google.com with SMTP id r4so873343bka.3
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 04:57:21 -0700 (PDT)
+Subject: Re: [PATCH 00/40] wl12xx: move to wl12xx-fw-3
 From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1314777198.4161.20.camel@jlt3.sipsolutions.net>
-References: <1314707979-26484-1-git-send-email-coelho@ti.com>
-	 <1314713812.4011.33.camel@jlt3.sipsolutions.net>
-	 <1314718038.2296.460.camel@cumari>
-	 <1314720557.4011.41.camel@jlt3.sipsolutions.net>
-	 <1314770941.2296.507.camel@cumari>
-	 <1314771627.4161.9.camel@jlt3.sipsolutions.net>
-	 <1314775816.2296.531.camel@cumari>
-	 <1314776396.4161.19.camel@jlt3.sipsolutions.net>
-	 <1314776962.2296.540.camel@cumari>
-	 <1314777198.4161.20.camel@jlt3.sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 31 Aug 2011 11:08:08 +0300
-Message-ID: <1314778088.2296.553.camel@cumari> (sfid-20110831_100822_661247_C70A14FC)
+Date: Thu, 11 Aug 2011 14:57:18 +0300
+Message-ID: <1313063838.2407.852.camel@cumari> (sfid-20110811_135726_782257_FCBCA4CE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-08-31 at 09:53 +0200, Johannes Berg wrote: 
-> I guess the thing to keep in mind is that it's all an optimisation and
-> if a device can't support certain combinations it doesn't really
-> matter :)
+On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
+> The new wl12xx fw (ver 7.3.0.0.75) had some major api changes.
+> The main change was the addition of multi-role concept, which
+> will later allow using multiple vifs concurrently.
+> 
+> Consequently, this design change caused api changes for most
+> of the api commands, as a new role_id had to be added.
+> 
+> This patchset migrates the fw to use the new fw api (a new
+> fw filename is used, as there is no backward compatability
+> with older firmwares).
 
-Yeah, it must be clear in the implementation that the device may send
-things that are not really following the filtering rules.  We can't
-avoid that anyway, because some other entity may start a scan and mangle
-with our BSS cache.
+Okay, I'm done with my review! Lots of small nitpicking, but this in
+general looks very good! Thanks a lot for the good work, guys!
+
 
 -- 
 Cheers,
