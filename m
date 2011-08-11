@@ -1,145 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56235 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752444Ab1HJOD4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 10:03:56 -0400
-Subject: Re: [PATCH 4/4] mac80211: Add HT operation modes for IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Simon <an.alexsimon@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <3091493.N5vzNRrbMZ@alex-1> (sfid-20110808_141034_452490_4BA26D5D)
-References: <1888623.Vt5VZUN2cU@alex-1>  <3091493.N5vzNRrbMZ@alex-1>
-	 (sfid-20110808_141034_452490_4BA26D5D)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 10 Aug 2011 16:03:53 +0200
-Message-ID: <1312985033.4325.19.camel@jlt3.sipsolutions.net> (sfid-20110810_160402_220596_CFF9FC4A)
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:46176 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754662Ab1HKBA4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2011 21:00:56 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	jouni@qca.qualcomm.com
+Subject: [PATCH] cfg80211: fix a crash in nl80211_send_station
+Date: Wed, 10 Aug 2011 19:00:33 -0600
+Message-Id: <1313024433-35053-1-git-send-email-nbd@openwrt.org> (sfid-20110811_030113_656755_E43F427D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-08-08 at 14:10 +0200, Alexander Simon wrote:
-> This means setting channel into HT mode and adding HT IEs in beacons.
-> Check if regdom allows this first.
-> 
-> If joining another HT network, use its HT mode.
-> If joining a non-HT network, use HT mode given by iw.
-> Join as legacy if neither iw nor remote beacon set an HT mode.
+mac80211 leaves sinfo->assoc_req_ies uninitialized, causing a random
+pointer memory access in nl80211_send_station.
+Instead of checking if the pointer is null, use sinfo->filled, like
+the rest of the fields.
 
-Do we really want this? I'm wondering if we shouldn't always do HT IBSS
-when joining, even if you didn't ask for it? Not really sure though.
-Thoughts? Are we joining as HT20 if you didn't ask for HT40? And are we
-joining as HT20 if you asked for HT40- but the network is HT40+?
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ include/net/cfg80211.h |    4 +++-
+ net/wireless/nl80211.c |    2 +-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-> If we receive a beacon from another station within our BSSID with a different HT
-> mode than us, we switch to its HT mode. If there are several stations with
-> different HT modes, it may take some time until all will have the same mode.
-> There is no way we can distinguish the "older" station.
-
-Actually, you can ... the highest TSF should win.
-
-> Except for fixed channel mode, HT mode is also fixed. Join or merge ONLY if
-> channel AND HT mode matches.
-
-makes sense.
-
-> +++ b/net/mac80211/ibss.c
-> @@ -35,6 +35,76 @@
->  
->  #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
->  
-> +static bool ieee80211_can_use_ext_chan(struct ieee80211_sub_if_data *sdata,
-> +				       struct ieee80211_channel *channel,
-> +				       enum nl80211_channel_type channel_type)
-> +{
-> +	/* check if we are legally allowed to use HT extension channel */
-> +	if ((channel_type == NL80211_CHAN_HT40PLUS) ||
-> +			(channel_type == NL80211_CHAN_HT40MINUS)) {
-> +		int sec_freq = channel->center_freq +
-> +			     (channel_type == NL80211_CHAN_HT40PLUS ? 20 : -20);
-> +		struct ieee80211_channel *sec_chan =
-> +			     ieee80211_get_channel(sdata->wdev.wiphy, sec_freq);
-> +		if (!sec_chan || sec_chan->flags & (IEEE80211_CHAN_DISABLED |
-> +					   IEEE80211_CHAN_PASSIVE_SCAN |
-> +					   IEEE80211_CHAN_NO_IBSS |
-> +					   IEEE80211_CHAN_RADAR)) {
-> +			return false;
-> +		}
-> +	}
-> +	return true;
-> +}
-
-Isn't that already a function in cfg80211 that you could rename &
-export?
-
-> +static void ieee80211_update_ht_elems(struct ieee80211_sub_if_data *sdata,
-> +				      struct ieee80211_mgmt *mgmt,
-> +				      struct ieee80211_ht_info *ht_info)
-> +{
-> +	struct ieee80211_local *local = sdata->local;
-> +	struct ieee80211_supported_band *sband =
-> +			local->hw.wiphy->bands[local->oper_channel->band];
-> +	enum nl80211_channel_type channel_type =
-> +			ieee80211_ht_info_to_channel_type(ht_info);
-> +
-> +	if (!ieee80211_can_use_ext_chan(sdata, local->oper_channel, channel_type))
-> +		channel_type = NL80211_CHAN_HT20;
-> +
-> +	if (channel_type != local->_oper_channel_type) {
-> +		struct sk_buff *skb = rcu_dereference_protected(
-> +				sdata->u.ibss.presp,
-> +				lockdep_is_held(&ifibss->mtx));
-> +		struct sk_buff *nskb;
-> +		u8 *ht_ie;
-> +
-> +		/* update HT IE. If not yet existing, create one */
-> +		nskb = skb_copy(skb, GFP_ATOMIC);
-> +		ht_ie = (u8 *)cfg80211_find_ie(WLAN_EID_HT_CAPABILITY,
-> +					       (const u8 *)(nskb->data + 24 +
-> +							sizeof(mgmt->u.beacon)),
-> +					       nskb->len - 24 -
-> +							sizeof(mgmt->u.beacon));
-> +		if (!ht_ie)
-> +			ht_ie = skb_put(nskb, 4 +
-> +					      sizeof(struct ieee80211_ht_cap) +
-> +					      sizeof(struct ieee80211_ht_info));
-> +
-> +		ht_ie = ieee80211_ie_build_ht_cap(ht_ie, sband,
-> +						  sband->ht_cap.cap);
-> +		ht_ie = ieee80211_ie_build_ht_info(ht_ie, &sband->ht_cap,
-> +					     local->oper_channel, channel_type);
-> +		rcu_assign_pointer(sdata->u.ibss.presp, nskb);
-> +		kfree_skb(skb);
-
-RCU race here.
-
-> @@ -104,8 +175,17 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
->  
->  	sdata->drop_unencrypted = capability & WLAN_CAPABILITY_PRIVACY ? 1 : 0;
->  
-> +	/* entering a legacy IBSS. Use given HT configuration. */
-> +	if (channel_type == NL80211_CHAN_NO_HT)
-> +		channel_type = ifibss->channel_type;
->  	local->oper_channel = chan;
-> -	WARN_ON(!ieee80211_set_channel_type(local, sdata, NL80211_CHAN_NO_HT));
-> +
-> +	/* if phy is on a different extension channel, setting ht40 will fail */
-> +	if (!ieee80211_set_channel_type(local, sdata, channel_type)) {
-> +		channel_type = NL80211_CHAN_HT20;
-> +		WARN_ON(!ieee80211_set_channel_type(local, sdata,
-> +				                                 channel_type));
-> +	}
-
-indentation
-
-> @@ -404,7 +525,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
->  		ieee80211_sta_join_ibss(sdata, bss);
->  		supp_rates = ieee80211_sta_get_rates(local, elems, band);
->  		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
-> -				       supp_rates, GFP_KERNEL);
-> +				    supp_rates, elems->ht_cap_elem, GFP_KERNEL);
-
-indentation
-
-johannes
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 779e300..96876d3 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -421,6 +421,7 @@ struct station_parameters {
+  * @STATION_INFO_RX_BITRATE: @rxrate fields are filled
+  * @STATION_INFO_BSS_PARAM: @bss_param filled
+  * @STATION_INFO_CONNECTED_TIME: @connected_time filled
++ * @STATION_INFO_ASSOC_REQ_IES: @assoc_req_ies filled
+  */
+ enum station_info_flags {
+ 	STATION_INFO_INACTIVE_TIME	= 1<<0,
+@@ -439,7 +440,8 @@ enum station_info_flags {
+ 	STATION_INFO_SIGNAL_AVG		= 1<<13,
+ 	STATION_INFO_RX_BITRATE		= 1<<14,
+ 	STATION_INFO_BSS_PARAM          = 1<<15,
+-	STATION_INFO_CONNECTED_TIME	= 1<<16
++	STATION_INFO_CONNECTED_TIME	= 1<<16,
++	STATION_INFO_ASSOC_REQ_IES	= 1<<17
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ca76977..253e563 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2236,7 +2236,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ 	}
+ 	nla_nest_end(msg, sinfoattr);
+ 
+-	if (sinfo->assoc_req_ies)
++	if (sinfo->filled & STATION_INFO_ASSOC_REQ_IES)
+ 		NLA_PUT(msg, NL80211_ATTR_IE, sinfo->assoc_req_ies_len,
+ 			sinfo->assoc_req_ies);
+ 
+-- 
+1.7.3.2
 
