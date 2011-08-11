@@ -1,47 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:37629 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755349Ab1HaVSN convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:38525 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768Ab1HKNlW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 17:18:13 -0400
-Received: by pzk37 with SMTP id 37so1898250pzk.1
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 14:18:12 -0700 (PDT)
+	Thu, 11 Aug 2011 09:41:22 -0400
+Received: by fxh19 with SMTP id 19so1666514fxh.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 06:41:21 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 4/3] b43: support new RX header, noticed to be used in 598.314+ fw
+Date: Thu, 11 Aug 2011 16:20:23 +0200
+Message-Id: <1313072423-15512-4-git-send-email-zajec5@gmail.com> (sfid-20110811_154126_068002_3F7DE227)
 MIME-Version: 1.0
-In-Reply-To: <4E5E9E16.3030306@lwfinger.net>
-References: <D23A4EC8-E27C-476C-BA73-64EAB4E81B62@ncsu.edu>
-	<4E5E9E16.3030306@lwfinger.net>
-Date: Wed, 31 Aug 2011 23:18:12 +0200
-Message-ID: <CACna6rzWHjwZi3jyhyPmPcjCjTTGJSSb0Y-g9PKT0_aQ=Tm-PA@mail.gmail.com> (sfid-20110831_231816_513809_D23197E0)
-Subject: Re: Status of BCM4331
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Matthew Frazier <mlfrazie@ncsu.edu>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/8/31 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 08/31/2011 03:27 PM, Matthew Frazier wrote:
->>
->> Hello, Linux wireless people.
->>
->> On the b43 device list[1], you have support for the BCM4331 listed as
->> "Soon (3.2+)". Does this mean "it will be in 3.2," "we will start working on
->> it after 3.2," or something else?
->
-> Support for that chip will be in kernel 3.2. In fact, the code now in the
-> wireless testing git tree handles that chip without any other changes (as of
-> the August 30 update).
 
-Matthew: you should just apply one more patch to make performance on
-BCM4331 much better:
-http://files.zajec.net/0001-b43-ctl1-on-all-new-PHYs.patch
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/pio.c  |   10 +++++++++-
+ drivers/net/wireless/b43/xmit.c |   21 ++++++++++++++++-----
+ drivers/net/wireless/b43/xmit.h |   19 ++++++++++++++++---
+ 3 files changed, 41 insertions(+), 9 deletions(-)
 
-This patch still waits for updating specs [1] before going mainline
-(ping Larry about that ;) )
-
-[1] http://bcm-v4.sipsolutions.net/802.11/PHY/TxControl1
-
+diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
+index 6e4228c..ce8a4bd 100644
+--- a/drivers/net/wireless/b43/pio.c
++++ b/drivers/net/wireless/b43/pio.c
+@@ -676,7 +676,15 @@ data_ready:
+ 		goto rx_error;
+ 	}
+ 
+-	macstat = le32_to_cpu(rxhdr->mac_status);
++	switch (dev->fw.hdr_format) {
++	case B43_FW_HDR_598:
++		macstat = le32_to_cpu(rxhdr->format_598.mac_status);
++		break;
++	case B43_FW_HDR_410:
++	case B43_FW_HDR_351:
++		macstat = le32_to_cpu(rxhdr->format_351.mac_status);
++		break;
++	}
+ 	if (macstat & B43_RX_MAC_FCSERR) {
+ 		if (!(q->dev->wl->filter_flags & FIF_FCSFAIL)) {
+ 			/* Drop frames with failed FCS. */
+diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+index b02170d..5b82409 100644
+--- a/drivers/net/wireless/b43/xmit.c
++++ b/drivers/net/wireless/b43/xmit.c
+@@ -653,8 +653,9 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+ 	struct ieee80211_hdr *wlhdr;
+ 	const struct b43_rxhdr_fw4 *rxhdr = _rxhdr;
+ 	__le16 fctl;
+-	u16 phystat0, phystat3, chanstat, mactime;
+-	u32 macstat;
++	u16 phystat0, phystat3;
++	u16 uninitialized_var(chanstat), uninitialized_var(mactime);
++	u32 uninitialized_var(macstat);
+ 	u16 chanid;
+ 	u16 phytype;
+ 	int padding;
+@@ -664,9 +665,19 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+ 	/* Get metadata about the frame from the header. */
+ 	phystat0 = le16_to_cpu(rxhdr->phy_status0);
+ 	phystat3 = le16_to_cpu(rxhdr->phy_status3);
+-	macstat = le32_to_cpu(rxhdr->mac_status);
+-	mactime = le16_to_cpu(rxhdr->mac_time);
+-	chanstat = le16_to_cpu(rxhdr->channel);
++	switch (dev->fw.hdr_format) {
++	case B43_FW_HDR_598:
++		macstat = le32_to_cpu(rxhdr->format_598.mac_status);
++		mactime = le16_to_cpu(rxhdr->format_598.mac_time);
++		chanstat = le16_to_cpu(rxhdr->format_598.channel);
++		break;
++	case B43_FW_HDR_410:
++	case B43_FW_HDR_351:
++		macstat = le32_to_cpu(rxhdr->format_351.mac_status);
++		mactime = le16_to_cpu(rxhdr->format_351.mac_time);
++		chanstat = le16_to_cpu(rxhdr->format_351.channel);
++		break;
++	}
+ 	phytype = chanstat & B43_RX_CHAN_PHYTYPE;
+ 
+ 	if (unlikely(macstat & B43_RX_MAC_FCSERR)) {
+diff --git a/drivers/net/wireless/b43/xmit.h b/drivers/net/wireless/b43/xmit.h
+index dccf7c1..dc37297 100644
+--- a/drivers/net/wireless/b43/xmit.h
++++ b/drivers/net/wireless/b43/xmit.h
+@@ -250,9 +250,22 @@ struct b43_rxhdr_fw4 {
+ 	} __packed;
+ 	__le16 phy_status2;	/* PHY RX Status 2 */
+ 	__le16 phy_status3;	/* PHY RX Status 3 */
+-	__le32 mac_status;	/* MAC RX status */
+-	__le16 mac_time;
+-	__le16 channel;
++	union {
++		/* Tested with 598.314, 644.1001 and 666.2 */
++		struct {
++			PAD_BYTES(1);
++			__le32 mac_status;	/* MAC RX status */
++			__le16 mac_time;
++			__le16 channel;
++		} format_598 __packed;
++
++		/* Tested with 351.126, 410.2160, 478.104 and 508.* */
++		struct {
++			__le32 mac_status;	/* MAC RX status */
++			__le16 mac_time;
++			__le16 channel;
++		} format_351 __packed;
++	} __packed;
+ } __packed;
+ 
+ /* PHY RX Status 0 */
 -- 
-Rafał
+1.7.3.4
+
