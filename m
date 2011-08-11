@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:44772 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752895Ab1HZGxf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 02:53:35 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 31/60] iwlagn: fix the check of IWLAGN_FIRST_AMPDU_QUEUE
-Date: Thu, 25 Aug 2011 23:11:03 -0700
-Message-Id: <1314339092-20797-32-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085418_044102_870B3C6E)
-In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:41929 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752028Ab1HKOhI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2011 10:37:08 -0400
+Received: by yxj19 with SMTP id 19so1339241yxj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 07:37:07 -0700 (PDT)
+Message-ID: <4E43E910.7090001@lwfinger.net> (sfid-20110811_163715_025408_565190EA)
+Date: Thu, 11 Aug 2011 09:37:04 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: kc@cobradevil.org
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8192cu sometimes it can authenticate to ap
+References: <b3059ba2eac66b7ef0ec17c8fe81a1e6@cobradevil.org> <34676454425401d650be733a43191a53@cobradevil.org> <532595cb4d5ef910de54a4736ba76185@cobradevil.org> <4E41624E.3010904@lwfinger.net> <d3faeaf2e881a324b0ad3102c10e6131@cobradevil.org> <4E429C57.1040101@lwfinger.net> <30cc9c22bb40fb1e2bd2b9ef4692d167@cobradevil.org>
+In-Reply-To: <30cc9c22bb40fb1e2bd2b9ef4692d167@cobradevil.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 08/11/2011 09:23 AM, kc@cobradevil.org wrote:
+> I have now tried several compat files til may 28 but none of them seems to work
+> with maverick at all. Do i need some updated files on the client to be able to
+> use the new compat tree?
+>
+> I thought that the compat tree would work without changes on kernel from >
+> 2.6.30 is that right?
 
-BUILD_BUG_ON(ARRAY_SIZE(iwlagn_ipan_queue_to_tx_fifo) !=
-						IWLAGN_FIRST_AMPDU_QUEUE);
+I have no idea what maverick is. I suppose it to be some release of Ubuntu, but 
+you really need to specify a kernel version, not a release name. Many of us do 
+not use any Debian-based systems for very good reasons.
 
-This check can be buggy. IWLAGN_FIRST_AMPDU_QUEUE has to be greater than the
-ARRAY_SIZE of iwlagn_ipan_queue_to_tx_fifo.
+The compat tree will work without changes on any kernel on which it will 
+compile, AS LONG AS THE REST OF THE KERNEL DOES NOT BREAK THE WIRELESS.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+My full bisection ended up in am impossible result.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index 0e04b51..a2950a4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -875,9 +875,9 @@ static void iwl_trans_pcie_tx_start(struct iwl_priv *priv)
- 	/* reset to 0 to enable all the queue first */
- 	priv->txq_ctx_active_msk = 0;
- 
--	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_default_queue_to_tx_fifo) !=
-+	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_default_queue_to_tx_fifo) <
- 						IWLAGN_FIRST_AMPDU_QUEUE);
--	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_ipan_queue_to_tx_fifo) !=
-+	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_ipan_queue_to_tx_fifo) <
- 						IWLAGN_FIRST_AMPDU_QUEUE);
- 
- 	for (i = 0; i < IWLAGN_FIRST_AMPDU_QUEUE; i++) {
--- 
-1.7.0.4
+The only other thing I can add at the moment, is that rtl8192cu works with WEP 
+encryption, thus the part that broke is WPA and WPA2.
 
+Larry
