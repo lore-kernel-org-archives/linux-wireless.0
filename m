@@ -1,52 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from que21.charter.net ([209.225.8.22]:64126 "EHLO que21.charter.net"
+Received: from bues.ch ([80.190.117.144]:35389 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752638Ab1H2Nmw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 09:42:52 -0400
-Message-ID: <4E5B9533.6000109@cuw.edu> (sfid-20110829_154257_714805_8EE03AC4)
-Date: Mon, 29 Aug 2011 08:33:39 -0500
-From: Greg Dietsche <gregory.dietsche@cuw.edu>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] iwlegacy: change IWL_WARN to IWL_DEBUG_HT in iwl4965_tx_agg_start
-References: <1314537977-20097-1-git-send-email-Gregory.Dietsche@cuw.edu> <20110829122013.GA3597@redhat.com>
-In-Reply-To: <20110829122013.GA3597@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1751067Ab1HKOzm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2011 10:55:42 -0400
+Date: Thu, 11 Aug 2011 16:55:22 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH 4/3] b43: support new RX header, noticed to be used in
+ 598.314+ fw
+Message-ID: <20110811165522.254311b0@milhouse> (sfid-20110811_165550_257379_CC8D2452)
+In-Reply-To: <1313072423-15512-4-git-send-email-zajec5@gmail.com>
+References: <1313072423-15512-4-git-send-email-zajec5@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+On Thu, 11 Aug 2011 16:20:23 +0200
+Rafał Miłecki <zajec5@gmail.com> wrote:
 
-On 08/29/2011 07:20 AM, Stanislaw Gruszka wrote:
-> On Sun, Aug 28, 2011 at 08:26:16AM -0500, Greg Dietsche wrote:
->    
->> This message should be a debug message and not a warning. So
->> change it from IWL_WARN to IWL_DEBUG_HT.
->>      
-> I'm currently doing massive iwlegacy driver cleanup. Would be easier
-> for me to apply these patches on top of my changes instead of rebase
-> my patches. I will queue these two patches and post them together with
-> my pending patches.
->
->    
-That sounds good to me. I have the 4065 card in my laptop and want to 
-learn how it works. If you want someone to test your changes, I'm willing.
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+>  drivers/net/wireless/b43/pio.c  |   10 +++++++++-
+>  drivers/net/wireless/b43/xmit.c |   21 ++++++++++++++++-----
+>  drivers/net/wireless/b43/xmit.h |   19 ++++++++++++++++---
+>  3 files changed, 41 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
+> index 6e4228c..ce8a4bd 100644
+> --- a/drivers/net/wireless/b43/pio.c
+> +++ b/drivers/net/wireless/b43/pio.c
+> @@ -676,7 +676,15 @@ data_ready:
+>  		goto rx_error;
+>  	}
+>  
+> -	macstat = le32_to_cpu(rxhdr->mac_status);
+> +	switch (dev->fw.hdr_format) {
+> +	case B43_FW_HDR_598:
+> +		macstat = le32_to_cpu(rxhdr->format_598.mac_status);
+> +		break;
+> +	case B43_FW_HDR_410:
+> +	case B43_FW_HDR_351:
+> +		macstat = le32_to_cpu(rxhdr->format_351.mac_status);
+> +		break;
+> +	}
+>  	if (macstat & B43_RX_MAC_FCSERR) {
+>  		if (!(q->dev->wl->filter_flags & FIF_FCSFAIL)) {
+>  			/* Drop frames with failed FCS. */
+> diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
+> index b02170d..5b82409 100644
+> --- a/drivers/net/wireless/b43/xmit.c
+> +++ b/drivers/net/wireless/b43/xmit.c
+> @@ -653,8 +653,9 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+>  	struct ieee80211_hdr *wlhdr;
+>  	const struct b43_rxhdr_fw4 *rxhdr = _rxhdr;
+>  	__le16 fctl;
+> -	u16 phystat0, phystat3, chanstat, mactime;
+> -	u32 macstat;
+> +	u16 phystat0, phystat3;
+> +	u16 uninitialized_var(chanstat), uninitialized_var(mactime);
+> +	u32 uninitialized_var(macstat);
+>  	u16 chanid;
+>  	u16 phytype;
+>  	int padding;
+> @@ -664,9 +665,19 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
+>  	/* Get metadata about the frame from the header. */
+>  	phystat0 = le16_to_cpu(rxhdr->phy_status0);
+>  	phystat3 = le16_to_cpu(rxhdr->phy_status3);
+> -	macstat = le32_to_cpu(rxhdr->mac_status);
+> -	mactime = le16_to_cpu(rxhdr->mac_time);
+> -	chanstat = le16_to_cpu(rxhdr->channel);
+> +	switch (dev->fw.hdr_format) {
+> +	case B43_FW_HDR_598:
+> +		macstat = le32_to_cpu(rxhdr->format_598.mac_status);
+> +		mactime = le16_to_cpu(rxhdr->format_598.mac_time);
+> +		chanstat = le16_to_cpu(rxhdr->format_598.channel);
+> +		break;
+> +	case B43_FW_HDR_410:
+> +	case B43_FW_HDR_351:
+> +		macstat = le32_to_cpu(rxhdr->format_351.mac_status);
+> +		mactime = le16_to_cpu(rxhdr->format_351.mac_time);
+> +		chanstat = le16_to_cpu(rxhdr->format_351.channel);
+> +		break;
+> +	}
+>  	phytype = chanstat & B43_RX_CHAN_PHYTYPE;
+>  
+>  	if (unlikely(macstat & B43_RX_MAC_FCSERR)) {
+> diff --git a/drivers/net/wireless/b43/xmit.h b/drivers/net/wireless/b43/xmit.h
+> index dccf7c1..dc37297 100644
+> --- a/drivers/net/wireless/b43/xmit.h
+> +++ b/drivers/net/wireless/b43/xmit.h
+> @@ -250,9 +250,22 @@ struct b43_rxhdr_fw4 {
+>  	} __packed;
+>  	__le16 phy_status2;	/* PHY RX Status 2 */
+>  	__le16 phy_status3;	/* PHY RX Status 3 */
+> -	__le32 mac_status;	/* MAC RX status */
+> -	__le16 mac_time;
+> -	__le16 channel;
+> +	union {
+> +		/* Tested with 598.314, 644.1001 and 666.2 */
+> +		struct {
+> +			PAD_BYTES(1);
+> +			__le32 mac_status;	/* MAC RX status */
+> +			__le16 mac_time;
+> +			__le16 channel;
+> +		} format_598 __packed;
 
-I have six other patches that are trivial in nature for the iwlegacy 
-driver. One of those also applies to the iwlagn driver, so seven patches 
-in total. They remove some null checks that aren't necessary and also 
-cleanup a few unused variables. There are two patches in the set that 
-I'm not 100% sure about. They remove null checks and I haven't been able 
-to prove to myself that they are correct. However, if they aren't 
-correct, then there are some null checks in other places that need to be 
-added....
+Is this really a 1 byte padding here? This misalignes all fields from mac_status on.
+Doesn't matter much, as the struct is packed, but it looks weird and worth
+to re-check this.
 
-Anyway, I can hold off on these until you've done your cleanup and see 
-what still applies, or if you have a tree someplace, I'd be happy to 
-rebase them for you. I've been running them on my laptop for a few days 
-now with no problems.
-
-Thanks,
-Greg
+-- 
+Greetings, Michael.
