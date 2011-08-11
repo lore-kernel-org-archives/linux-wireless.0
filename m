@@ -1,45 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:47160 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753257Ab1H3OSC (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:55610 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751984Ab1HKTFI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 10:18:02 -0400
-Date: Tue, 30 Aug 2011 17:16:39 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 10/20] ath6kl: Use set_appie command to add Probe Request
- IEs
-Message-ID: <20110830141639.GD8163@jouni.qca.qualcomm.com> (sfid-20110830_161810_065489_EB39AA23)
-References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
- <1314620641-24257-11-git-send-email-jouni@qca.qualcomm.com>
- <4E5CACB2.1060304@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4E5CACB2.1060304@qca.qualcomm.com>
+	Thu, 11 Aug 2011 15:05:08 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 63B8654253F
+	for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 15:14:03 -0400 (EDT)
+Subject: Compat-wireless release for 2011-08-11 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110811190506.7C1ED40ED3@repository3.orbit-lab.org> (sfid-20110811_210511_876288_AA7776EB)
+Date: Thu, 11 Aug 2011 15:05:06 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 30, 2011 at 12:26:10PM +0300, Kalle Valo wrote:
-> On 08/29/2011 03:23 PM, Jouni Malinen wrote:
-> > --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> > +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> > @@ -776,6 +776,15 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   9276969..132434e  master     -> origin/master
+ * [new tag]         compat-wireless-2011-08-09 -> compat-wireless-2011-08-09
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 9b1d78b...32d22cf akpm-end   -> origin/akpm-end  (forced update)
+   2f84dd7..068ef73  akpm-start -> origin/akpm-start
+ + 9be355d...5e07273 master     -> origin/master  (forced update)
+   2f84dd7..068ef73  stable     -> origin/stable
+ * [new tag]         next-20110811 -> next-20110811
 
-> > +	if (request->ie) {
-> > +		if (ath6kl_wmi_set_appie_cmd(ar->wmi, WMI_FRAME_PROBE_REQ,
-> > +					     request->ie, request->ie_len)) {
-> > +			ath6kl_err("failed to set Probe Request appie for "
-> > +				   "scan");
-> > +			return -EIO;
-> > +		}
-> > +	}
-> 
-> I would prefer to return the original error code from the wmi call.
+compat-wireless code metrics
 
-I followed the style used in this function with
-ath6kl_wmi_startscan_cmd(), but sure, returning the error code from
-wmi.c sounds reasonable.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+    786825 - Total upstream lines of code being pulled
