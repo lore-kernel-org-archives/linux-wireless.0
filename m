@@ -1,56 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wondertoys-mx.wondertoys.net ([206.117.179.246]:44488 "EHLO
-	labridge.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752991Ab1HYCp5 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:23187 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753376Ab1HKGtQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 22:45:57 -0400
-Subject: Re: [PATCH v2] Move brcm80211 to mainline
-From: Joe Perches <joe@perches.com>
-To: Greg KH <gregkh@suse.de>
-Cc: Henry Ptasinski <henryp@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-In-Reply-To: <20110825022352.GA4876@suse.de>
-References: <20110707002034.GA17885@broadcom.com>
-	 <20110824222801.GA5280@broadcom.com> <20110824225357.GA2224@suse.de>
-	 <20110824231746.GF5280@broadcom.com> <1314230068.15882.15.camel@Joe-Laptop>
-	 <20110825004211.GC7577@broadcom.com>  <20110825022352.GA4876@suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 24 Aug 2011 19:45:55 -0700
-Message-ID: <1314240355.15882.28.camel@Joe-Laptop> (sfid-20110825_044611_738996_0B087519)
-Mime-Version: 1.0
+	Thu, 11 Aug 2011 02:49:16 -0400
+From: Kevin Fang <chienf@qca.qualcomm.com>
+Cc: <linux-wireless@vger.kernel.org>, <kvalo@qca.qualcomm.com>,
+	Kevin Fang <chienf@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+Subject: [PATCH 5/7] ath6kl: roll back tx complete and tx complete multi for USB
+Date: Thu, 11 Aug 2011 14:48:13 +0800
+Message-ID: <1313045295-16202-5-git-send-email-kevin.fang@qca.qualcomm.com> (sfid-20110811_084919_585468_4151D4DB)
+In-Reply-To: <1313045295-16202-1-git-send-email-kevin.fang@qca.qualcomm.com>
+References: <1313045295-16202-1-git-send-email-kevin.fang@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-08-24 at 19:23 -0700, Greg KH wrote:
-> On Wed, Aug 24, 2011 at 05:42:11PM -0700, Henry Ptasinski wrote:
-> > On Wed, Aug 24, 2011 at 04:54:28PM -0700, Joe Perches wrote:
-> > > On Wed, 2011-08-24 at 16:17 -0700, Henry Ptasinski wrote:
-> > > > Augh.  I included the wrong link.  Correct link:
-> > > > http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=get&target=0001-wireless-testing-add-brcm80211-v2.patch
-> > > 
-> > > Can't you post the patch with git format-patch -M instead?
-> > 
-> > This patch drops in a new copy of all the files, as there's been significant
-> > change since the last time staging-next and wireless-testing were in sync.
-> > (Deleting the existing files from staging will be a separate step.)
-> > 
-> > I can generate a two-patch series instead: one to catch up wireless-testing
-> > with all the changes that have been applied to the brcm80211 drivers in
-> > staging, and then a second patch with a 'git mv' plus necessary
-> > Kconfig/Makefile changes. The first patch would still be quite large, but I'm
-> > ok with either approach.
-> Don't worry about that now, the real thing is a review of the code.
+For usb on the AR6004, it needs both tx complete and
+tx complete multi function. Therefore roll it back for usb usage.
 
-A 2.8MB patch is _way_ too large to review.
+Signed-off-by: Kevin Fang <kevin.fang@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/core.h |    3 ++-
+ drivers/net/wireless/ath/ath6kl/htc.c  |    2 +-
+ drivers/net/wireless/ath/ath6kl/htc.h  |    2 ++
+ drivers/net/wireless/ath/ath6kl/init.c |    1 +
+ drivers/net/wireless/ath/ath6kl/txrx.c |    5 +++--
+ 5 files changed, 9 insertions(+), 4 deletions(-)
 
-The reviewing should take place of posted patches
-to staging, not wireless-testing.
-
-And I believe that's not an RFC patch, but the actual
-patch to be applied.
-
-If so, I think that the right way to do that is not
-copy but a merge.
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 768c349..f5cebc9 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -495,7 +495,8 @@ void init_netdev(struct net_device *dev);
+ void ath6kl_cookie_init(struct ath6kl *ar);
+ void ath6kl_cookie_cleanup(struct ath6kl *ar);
+ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet);
+-void ath6kl_tx_complete(void *context, struct list_head *packet_queue);
++void ath6kl_tx_complete(struct htc_target *context,
++						struct list_head *packet_queue);
+ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
+ 					       struct htc_packet *packet);
+ void ath6kl_stop_txrx(struct ath6kl *ar);
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index a8dc5c3..f0c17ad 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -111,7 +111,7 @@ static void htc_tx_complete(struct htc_endpoint *endpoint,
+ 		   "send complete ep %d, (%d pkts)\n",
+ 		   endpoint->eid, get_queue_depth(txq));
+ 
+-	ath6kl_tx_complete(endpoint->target->dev->ar, txq);
++	ath6kl_tx_complete(endpoint->target, txq);
+ }
+ 
+ static void htc_tx_comp_handler(struct htc_target *target,
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
+index 8ce0c2c..2f18017 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.h
++++ b/drivers/net/wireless/ath/ath6kl/htc.h
+@@ -316,12 +316,14 @@ enum htc_send_full_action {
+ };
+ 
+ struct htc_ep_callbacks {
++	void (*tx_complete) (struct htc_target *, struct htc_packet *);
+ 	void (*rx) (struct htc_target *, struct htc_packet *);
+ 	void (*rx_refill) (struct htc_target *, enum htc_endpoint_id endpoint);
+ 	enum htc_send_full_action (*tx_full) (struct htc_target *,
+ 					      struct htc_packet *);
+ 	struct htc_packet *(*rx_allocthresh) (struct htc_target *,
+ 					      enum htc_endpoint_id, int);
++	void (*tx_comp_multi) (struct htc_target *, struct list_head *);
+ 	int rx_alloc_thresh;
+ 	int rx_refill_thresh;
+ };
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 5cc2697..ef0f97b 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -202,6 +202,7 @@ static int ath6kl_init_service_ep(struct ath6kl *ar)
+ 	memset(&connect, 0, sizeof(connect));
+ 
+ 	/* these fields are the same for all service endpoints */
++	connect.ep_cb.tx_comp_multi = ath6kl_tx_complete;
+ 	connect.ep_cb.rx = ath6kl_rx;
+ 	connect.ep_cb.rx_refill = ath6kl_rx_refill;
+ 	connect.ep_cb.tx_full = ath6kl_tx_queue_full;
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 167bdb9..2712cf0 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -496,9 +496,10 @@ static void ath6kl_tx_clear_node_map(struct ath6kl *ar,
+ 	}
+ }
+ 
+-void ath6kl_tx_complete(void *context, struct list_head *packet_queue)
++void ath6kl_tx_complete(struct htc_target *target,
++				struct list_head *packet_queue)
+ {
+-	struct ath6kl *ar = context;
++	struct ath6kl *ar = target->dev->ar;
+ 	struct sk_buff_head skb_queue;
+ 	struct htc_packet *packet;
+ 	struct sk_buff *skb;
+-- 
+1.7.0.4
 
