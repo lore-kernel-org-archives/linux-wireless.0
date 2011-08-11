@@ -1,102 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:47625 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752956Ab1HCVFw (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:58826 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026Ab1HKEjq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2011 17:05:52 -0400
-Message-ID: <4E39B82C.2010108@lwfinger.net> (sfid-20110803_230556_969535_F757185A)
-Date: Wed, 03 Aug 2011 16:05:48 -0500
+	Thu, 11 Aug 2011 00:39:46 -0400
+Received: by mail-iy0-f170.google.com with SMTP id 16so530042iye.1
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 21:39:46 -0700 (PDT)
+Message-ID: <4E435D0E.80702@lwfinger.net> (sfid-20110811_063949_705987_B5A0A18B)
+Date: Wed, 10 Aug 2011 23:39:42 -0500
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Alan Piszcz <ap@solarrain.com>
-Subject: Re: Linux Wireless USB-Stick Question
-References: <alpine.DEB.2.02.1108031550100.4278@p34.internal.lan>
-In-Reply-To: <alpine.DEB.2.02.1108031550100.4278@p34.internal.lan>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [RFC][RFT][PATCH V2 2/2] b43: fix DMA on some bugged hardware
+References: <1313001339-11211-1-git-send-email-zajec5@gmail.com>	<1313001339-11211-2-git-send-email-zajec5@gmail.com> <CACna6rynj+OXL1R6jwgnCzReuO+=piOX3LTC9UujDTg4DNBVUw@mail.gmail.com>
+In-Reply-To: <CACna6rynj+OXL1R6jwgnCzReuO+=piOX3LTC9UujDTg4DNBVUw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/03/2011 02:53 PM, Justin Piszcz wrote:
-> Hi,
+On 08/10/2011 07:14 PM, Rafał Miłecki wrote:
+> W dniu 10 sierpnia 2011 20:35 użytkownik Rafał Miłecki
+> <zajec5@gmail.com>  napisał:
+>> Some hardware with 64-bit DMA uses lower address word for setting
+>> routing (translation) bit. Add workaround for such boards.
+>>
+>> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
+>> ---
+>> This requires testing on at least 1 normal 64-bit DMA card and 1 32-bit
+>> DMA card. So far it was tested only on my 14e4:4329 where it fixed DMA.
 >
-> Under Windows, you can achieve 10-15MiB/s..
+> 14e4:4353 (BCM43224), 64-bit DMA, still works :)
 >
-> Under Linux, even with 150mbps USB wireless adapters, the max never appears to
-> go above > 3-4MiB/s, to work around this, order more USB-wifi ticks and run them
-> in parallel far away from each other with USB
-> extenders:
->
-> box1:
-> -------------
-> wlan0 IEEE 802.11bg ESSID:"hidden"
-> Bit Rate=54 Mb/s Tx-Power=20 dBm
-> wlan1 IEEE 802.11bgn ESSID:"hidden"
-> Bit Rate=58.5 Mb/s Tx-Power=20 dBm
-> wlan2 IEEE 802.11bgn ESSID:"hidden"
-> Bit Rate=39 Mb/s Tx-Power=20 dBm
->
-> box2:
-> -------------
-> wlan0 IEEE 802.11bgn ESSID:"hidden"
-> Bit Rate=58.5 Mb/s Tx-Power=20 dBm
-> wlan1 IEEE 802.11bgn ESSID:"hidden"
-> Bit Rate=52 Mb/s Tx-Power=20 dBm
-> wlan2 IEEE 802.11bgn ESSID:"hidden"
-> Bit Rate=52 Mb/s Tx-Power=20 dBm
->
-> But I was curious if anyone had achieved > 10 MiB/s with any wireless adapter
-> with Linux?
->
-> Also, those native Linux USB adapters (carl) work good, so far.
-> With the patch provided earlier for the rt2800usb driver, it is no longer
-> crashing under 3.0 so I put two of them on a single box plus a carl based one,
-> now I get better I/O, e.g. 4MiB/s x 6 = 24MiB/s.
+> The rest will follow tomorrow.
 
-On a 150 Mbps connection running the following script
-
-#!/bin/sh
-
-dest="sonylap" # set the servername
-
-while true ; do
-netperf -t TCP_MAERTS -H $dest
-netperf -t TCP_STREAM -H $dest
-netperf -t TCP_SENDFILE -H $dest
-done
-
-I get the following for a D-Link DWA-130 containing a Realtek RTL8192SU with 
-driver r8712u:
-
-finger@larrylap:~/bcm_git/vendor-driver/5.10.56.46> ~/netperf.sh
-TCP MAERTS TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to sonylap (192.168.1.50) 
-port 0 AF_INET
-Recv   Send    Send
-Socket Socket  Message  Elapsed
-Size   Size    Size     Time     Throughput
-bytes  bytes   bytes    secs.    10^6bits/sec
-
-  87380  16384  16384    10.04      53.52
-TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to sonylap (192.168.1.50) 
-port 0 AF_INET
-Recv   Send    Send
-Socket Socket  Message  Elapsed
-Size   Size    Size     Time     Throughput
-bytes  bytes   bytes    secs.    10^6bits/sec
-
-  87380  16384  16384    10.03      55.58
-TCP SENDFILE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to sonylap 
-(192.168.1.50) port 0 AF_INET
-Recv   Send    Send
-Socket Socket  Message  Elapsed
-Size   Size    Size     Time     Throughput
-bytes  bytes   bytes    secs.    10^6bits/sec
-
-  87380  16384  16384    10.06      65.26
-
-I claim that 50-65 Mbps is pretty good.
-
-We get better than 10 Mbps with lots of different adapters.
+Tested with 14e4:4311 (64-bit) and 14e4:4318 (32-bit). The ssb changes were also 
+tested with b43legacy.
 
 Larry
