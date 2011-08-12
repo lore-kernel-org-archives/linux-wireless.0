@@ -1,188 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:50219 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753871Ab1HLCy3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 22:54:29 -0400
-Received: by mail-iy0-f170.google.com with SMTP id 16so634961iye.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 19:54:28 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	johannes@sipsolutions.net, linville@tuxdriver.com
-Subject: [PATCH v2 8/8] {nl,cfg,mac}80211: let userspace make meshif mesh gate
-Date: Thu, 11 Aug 2011 19:54:01 -0700
-Message-Id: <1313117641-27351-8-git-send-email-thomas@cozybit.com> (sfid-20110812_045439_806530_4F24B761)
-In-Reply-To: <1313117641-27351-1-git-send-email-thomas@cozybit.com>
-References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
- <1313117641-27351-1-git-send-email-thomas@cozybit.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:1918 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751526Ab1HLNfM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Aug 2011 09:35:12 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 02/14] staging: brcm80211: remove iovar IOV_BLOCKSIZE in
+ brcmfmac
+Date: Fri, 12 Aug 2011 15:34:49 +0200
+Message-ID: <1313156101-16817-3-git-send-email-arend@broadcom.com> (sfid-20110812_153522_287747_9F1AD863)
+In-Reply-To: <1313156101-16817-1-git-send-email-arend@broadcom.com>
+References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+From: Franky Lin <frankyl@broadcom.com>
 
-Allow userspace to set NL80211_MESHCONF_GATE_ANNOUNCEMENTS attribute,
-which will advertise this mesh node as being a mesh gate.
-dot11MeshHWMPRootMode must be set as root announcements are used to
-indicate we're a mesh gate. Set this if user forgot for now.
+Iovar IOV_BLOCKSIZE code is not actually setting the sdio
+function's block size. Use cur_blksize provided by mmc core where
+necessary.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- include/linux/nl80211.h       |    5 +++++
- include/net/cfg80211.h        |    5 +++++
- net/mac80211/cfg.c            |   12 ++++++++++++
- net/mac80211/debugfs_netdev.c |    3 +++
- net/mac80211/mesh_hwmp.c      |    5 ++++-
- net/wireless/mesh.c           |    1 +
- net/wireless/nl80211.c        |    7 +++++++
- 7 files changed, 37 insertions(+), 1 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   52 ---------------------
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |   31 +------------
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    1 -
+ 3 files changed, 1 insertions(+), 83 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 63ad64b..af2d768 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1836,6 +1836,10 @@ enum nl80211_mntr_flags {
-  * @NL80211_MESHCONF_HWMP_RANN_INTERVAL:  The interval of time (in TUs) between
-  * root announcements are transmitted.
-  *
-+ * @NL80211_MESHCONF_GATE_ANNOUNCEMENTS: Advertise that this mesh station has
-+ * access to a broader network beyond the MBSS.  This is done via Root
-+ * Announcement frames.
-+ *
-  * @NL80211_MESHCONF_ATTR_MAX: highest possible mesh configuration attribute
-  *
-  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
-@@ -1858,6 +1862,7 @@ enum nl80211_meshconf_params {
- 	NL80211_MESHCONF_HWMP_ROOTMODE,
- 	NL80211_MESHCONF_ELEMENT_TTL,
- 	NL80211_MESHCONF_HWMP_RANN_INTERVAL,
-+	NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
- 
- 	/* keep last */
- 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index de101d9..b2e01ca 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -692,6 +692,11 @@ struct mesh_config {
- 	u16 dot11MeshHWMPnetDiameterTraversalTime;
- 	u8  dot11MeshHWMPRootMode;
- 	u16 dot11MeshHWMPRannInterval;
-+	/* This is missnamed in draft 12.0: dot11MeshGateAnnouncementProtocol
-+	 * set to true only means that the station will announce others it's a
-+	 * mesh gate, but not necessarily using the gate announcement protocol.
-+	 * Still keeping the same nomenclature to be in sync with the spec. */
-+	bool  dot11MeshGateAnnouncementProtocol;
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 9995c83..6ab67ab 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1137,6 +1137,18 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
- 		conf->dot11MeshHWMPRootMode = nconf->dot11MeshHWMPRootMode;
- 		ieee80211_mesh_root_setup(ifmsh);
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 1256847..a2fba4f 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -169,14 +169,12 @@ struct sdioh_info *brcmf_sdioh_attach(void *bar0)
  	}
-+	if (_chg_mesh_attr(NL80211_MESHCONF_GATE_ANNOUNCEMENTS, mask)) {
-+		/* our current gate announcement implementation rides on root
-+		 * announcements, so require this ifmsh to also be a root node
-+		 * */
-+		if (nconf->dot11MeshGateAnnouncementProtocol &&
-+		    !conf->dot11MeshHWMPRootMode) {
-+			conf->dot11MeshHWMPRootMode = 1;
-+			ieee80211_mesh_root_setup(ifmsh);
-+		}
-+		conf->dot11MeshGateAnnouncementProtocol =
-+			nconf->dot11MeshGateAnnouncementProtocol;
-+	}
- 	if (_chg_mesh_attr(NL80211_MESHCONF_HWMP_RANN_INTERVAL, mask)) {
- 		conf->dot11MeshHWMPRannInterval =
- 			nconf->dot11MeshHWMPRannInterval;
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index bac9443..6e8eab7 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -372,6 +372,8 @@ IEEE80211_IF_FILE(min_discovery_timeout,
- 		u.mesh.mshcfg.min_discovery_timeout, DEC);
- IEEE80211_IF_FILE(dot11MeshHWMPRootMode,
- 		u.mesh.mshcfg.dot11MeshHWMPRootMode, DEC);
-+IEEE80211_IF_FILE(dot11MeshGateAnnouncementProtocol,
-+		u.mesh.mshcfg.dot11MeshGateAnnouncementProtocol, DEC);
- IEEE80211_IF_FILE(dot11MeshHWMPRannInterval,
- 		u.mesh.mshcfg.dot11MeshHWMPRannInterval, DEC);
- #endif
-@@ -489,6 +491,7 @@ static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
- 	MESHPARAMS_ADD(min_discovery_timeout);
- 	MESHPARAMS_ADD(dot11MeshHWMPRootMode);
- 	MESHPARAMS_ADD(dot11MeshHWMPRannInterval);
-+	MESHPARAMS_ADD(dot11MeshGateAnnouncementProtocol);
- #undef MESHPARAMS_ADD
- }
- #endif
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index ae3de75..fd4f76a 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -1045,8 +1045,11 @@ mesh_path_tx_root_frame(struct ieee80211_sub_if_data *sdata)
+ 
+ 	sd->num_funcs = 2;
+-	sd->client_block_size[0] = 64;
+ 
+ 	gInstance->sd = sd;
+ 
+ 	/* Claim host controller */
+ 	sdio_claim_host(gInstance->func[1]);
+ 
+-	sd->client_block_size[1] = 64;
+ 	err_ret = sdio_set_block_size(gInstance->func[1], 64);
+ 	if (err_ret)
+ 		BRCMF_ERROR(("%s: Failed to set F1 blocksize\n", __func__));
+@@ -188,7 +186,6 @@ struct sdioh_info *brcmf_sdioh_attach(void *bar0)
+ 		/* Claim host controller F2 */
+ 		sdio_claim_host(gInstance->func[2]);
+ 
+-		sd->client_block_size[2] = sd_f2_blocksize;
+ 		err_ret =
+ 		    sdio_set_block_size(gInstance->func[2], sd_f2_blocksize);
+ 		if (err_ret)
+@@ -273,7 +270,6 @@ extern int brcmf_sdioh_interrupt_deregister(struct sdioh_info *sd)
+ /* IOVar table */
+ enum {
+ 	IOV_MSGLEVEL = 1,
+-	IOV_BLOCKSIZE,
+ 	IOV_NUMINTS,
+ 	IOV_DEVREG,
+ 	IOV_HCIREGS,
+@@ -281,8 +277,6 @@ enum {
+ };
+ 
+ const struct brcmu_iovar sdioh_iovars[] = {
+-	{"sd_blocksize", IOV_BLOCKSIZE, 0, IOVT_UINT32, 0},/* ((fn << 16) |
+-								 size) */
+ 	{"sd_numints", IOV_NUMINTS, 0, IOVT_UINT32, 0},
+ 	{"sd_devreg", IOV_DEVREG, 0, IOVT_BUFFER, sizeof(struct brcmf_sdreg)}
+ 	,
+@@ -346,52 +340,6 @@ brcmf_sdioh_iovar_op(struct sdioh_info *si, const char *name,
+ 
+ 	actionid = set ? IOV_SVAL(vi->varid) : IOV_GVAL(vi->varid);
+ 	switch (actionid) {
+-	case IOV_GVAL(IOV_BLOCKSIZE):
+-		if ((u32) int_val > si->num_funcs) {
+-			bcmerror = -EINVAL;
+-			break;
+-		}
+-		int_val = (s32) si->client_block_size[int_val];
+-		memcpy(arg, &int_val, val_size);
+-		break;
+-
+-	case IOV_SVAL(IOV_BLOCKSIZE):
+-		{
+-			uint func = ((u32) int_val >> 16);
+-			uint blksize = (u16) int_val;
+-			uint maxsize;
+-
+-			if (func > si->num_funcs) {
+-				bcmerror = -EINVAL;
+-				break;
+-			}
+-
+-			switch (func) {
+-			case 0:
+-				maxsize = 32;
+-				break;
+-			case 1:
+-				maxsize = 64;
+-				break;
+-			case 2:
+-				maxsize = 512;
+-				break;
+-			default:
+-				maxsize = 0;
+-			}
+-			if (blksize > maxsize) {
+-				bcmerror = -EINVAL;
+-				break;
+-			}
+-			if (!blksize)
+-				blksize = maxsize;
+-
+-			/* Now set it */
+-			si->client_block_size[func] = blksize;
+-
+-			break;
+-		}
+-
+ 	case IOV_GVAL(IOV_RXCHAIN):
+ 		int_val = false;
+ 		memcpy(arg, &int_val, val_size);
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 74c9d4e..6e1fe5c 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3168,24 +3168,6 @@ brcmf_sdbrcm_bus_iovar_op(struct brcmf_pub *drvr, const char *name,
+ 		bcmerror = brcmf_sdcard_iovar_op(bus->sdiodev, name, params,
+ 						 plen, arg, len, set);
+ 
+-		/* Similar check for blocksize change */
+-		if (set && strcmp(name, "sd_blocksize") == 0) {
+-			s32 fnum = 2;
+-			if (brcmf_sdcard_iovar_op
+-			    (bus->sdiodev, "sd_blocksize", &fnum, sizeof(s32),
+-			     &bus->blocksize, sizeof(s32),
+-			     false) != 0) {
+-				bus->blocksize = 0;
+-				BRCMF_ERROR(("%s: fail on %s get\n", __func__,
+-					     "sd_blocksize"));
+-			} else {
+-				BRCMF_INFO(("%s: noted sd_blocksize update,"
+-					    " value now %d\n", __func__,
+-					    bus->blocksize));
+-			}
+-		}
+-		bus->roundup = min(max_roundup, bus->blocksize);
+-
+ 		if (bus->idletime == BRCMF_IDLE_IMMEDIATE &&
+ 		    !bus->dpc_sched) {
+ 			bus->activity = false;
+@@ -5679,8 +5661,6 @@ fail:
+ 
+ static bool brcmf_sdbrcm_probe_init(struct brcmf_bus *bus)
  {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	u32 interval = ifmsh->mshcfg.dot11MeshHWMPRannInterval;
-+	u8 flags;
+-	s32 fnum;
+-
+ 	BRCMF_TRACE(("%s: Enter\n", __func__));
  
--	mesh_path_sel_frame_tx(MPATH_RANN, 0, sdata->vif.addr,
-+	flags = (ifmsh->mshcfg.dot11MeshGateAnnouncementProtocol)
-+			? RANN_FLAG_IS_GATE : 0;
-+	mesh_path_sel_frame_tx(MPATH_RANN, flags, sdata->vif.addr,
- 			       cpu_to_le32(++ifmsh->sn),
- 			       0, NULL, 0, broadcast_addr,
- 			       0, sdata->u.mesh.mshcfg.element_ttl,
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index b5a39d4..4423e64 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -51,6 +51,7 @@ const struct mesh_config default_mesh_config = {
- 	.path_refresh_time = MESH_PATH_REFRESH_TIME,
- 	.min_discovery_timeout = MESH_MIN_DISCOVERY_TIMEOUT,
- 	.dot11MeshHWMPRannInterval = MESH_RANN_INTERVAL,
-+	.dot11MeshGateAnnouncementProtocol = false,
- };
+ #ifdef SDTEST
+@@ -5705,16 +5685,7 @@ static bool brcmf_sdbrcm_probe_init(struct brcmf_bus *bus)
+ 	bus->idleclock = BRCMF_IDLE_ACTIVE;
  
- const struct mesh_setup default_mesh_setup = {
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d39a5a1..2ce7ffa 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2960,6 +2960,8 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
- 			cur_params.dot11MeshHWMPRootMode);
- 	NLA_PUT_U16(msg, NL80211_MESHCONF_HWMP_RANN_INTERVAL,
- 			cur_params.dot11MeshHWMPRannInterval);
-+	NLA_PUT_U8(msg, NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
-+			cur_params.dot11MeshGateAnnouncementProtocol);
- 	nla_nest_end(msg, pinfoattr);
- 	genlmsg_end(msg, hdr);
- 	return genlmsg_reply(msg, info);
-@@ -2989,6 +2991,7 @@ static const struct nla_policy nl80211_meshconf_params_policy[NL80211_MESHCONF_A
- 	[NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME] = { .type = NLA_U16 },
- 	[NL80211_MESHCONF_HWMP_ROOTMODE] = { .type = NLA_U8 },
- 	[NL80211_MESHCONF_HWMP_RANN_INTERVAL] = { .type = NLA_U16 },
-+	[NL80211_MESHCONF_GATE_ANNOUNCEMENTS] = { .type = NLA_U8 },
- };
+ 	/* Query the F2 block size, set roundup accordingly */
+-	fnum = 2;
+-	if (brcmf_sdcard_iovar_op(bus->sdiodev, "sd_blocksize", &fnum,
+-				  sizeof(s32), &bus->blocksize,
+-				  sizeof(s32), false) != 0) {
+-		bus->blocksize = 0;
+-		BRCMF_ERROR(("%s: fail on %s get\n", __func__, "sd_blocksize"));
+-	} else {
+-		BRCMF_INFO(("%s: Initial value for %s is %d\n",
+-			    __func__, "sd_blocksize", bus->blocksize));
+-	}
++	bus->blocksize = bus->sdiodev->func2->cur_blksize;
+ 	bus->roundup = min(max_roundup, bus->blocksize);
  
- static const struct nla_policy
-@@ -3071,6 +3074,10 @@ do {\
- 			dot11MeshHWMPRannInterval, mask,
- 			NL80211_MESHCONF_HWMP_RANN_INTERVAL,
- 			nla_get_u16);
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg,
-+			dot11MeshGateAnnouncementProtocol, mask,
-+			NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
-+			nla_get_u8);
- 	if (mask_out)
- 		*mask_out = mask;
- 
+ 	/* Query if bus module supports packet chaining,
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index c5a68c0..c61a186 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -129,7 +129,6 @@ struct sdioh_info {
+ 	int intrcount;		/* Client interrupts */
+ 	bool sd_blockmode;	/* sd_blockmode == false => 64 Byte Cmd 53s. */
+ 	/*  Must be on for sd_multiblock to be effective */
+-	int client_block_size[SDIOD_MAX_IOFUNCS];	/* Blocksize */
+ 	u8 num_funcs;	/* Supported funcs on client */
+ 	u32 com_cis_ptr;
+ 	u32 func_cis_ptr[SDIOD_MAX_IOFUNCS];
 -- 
 1.7.4.1
+
 
