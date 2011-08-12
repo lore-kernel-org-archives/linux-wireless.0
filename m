@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:32854 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754898Ab1HWOAO (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:61734 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753734Ab1HLTIl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 10:00:14 -0400
-Date: Tue, 23 Aug 2011 09:49:32 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [PATCH] b43: HT-PHY: init: add missing small-tables writes
-Message-ID: <20110823134932.GB9770@tuxdriver.com> (sfid-20110823_160018_065796_B675FCAF)
-References: <1313250844-4526-1-git-send-email-zajec5@gmail.com>
- <CACna6rwoyPuwnzcw4BR5dmOiX9ogsTbquaG6qwRMZtLZytNnoA@mail.gmail.com>
+	Fri, 12 Aug 2011 15:08:41 -0400
+Received: by vws1 with SMTP id 1so2690672vws.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 12:08:40 -0700 (PDT)
+Message-ID: <4E457A30.3010701@lwfinger.net> (sfid-20110812_210852_017270_FA3796F4)
+Date: Fri, 12 Aug 2011 14:08:32 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACna6rwoyPuwnzcw4BR5dmOiX9ogsTbquaG6qwRMZtLZytNnoA@mail.gmail.com>
+To: Franky Lin <frankyl@broadcom.com>
+CC: Arend van Spriel <arend@broadcom.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 01/14] staging: brcm80211: use wait queues instead of
+ semaphores in wl_cfg80211.c
+References: <1313156101-16817-1-git-send-email-arend@broadcom.com> <1313156101-16817-2-git-send-email-arend@broadcom.com> <CACna6rzmaxzezN-OPTLvXyFOZOsoq6XCds4P-FOEz27FzJz+Jg@mail.gmail.com> <4E455877.6090901@broadcom.com> <4E45781E.8070508@broadcom.com>
+In-Reply-To: <4E45781E.8070508@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 23, 2011 at 02:45:51PM +0200, Rafał Miłecki wrote:
-> W dniu 13 sierpnia 2011 17:54 użytkownik Rafał Miłecki
-> <zajec5@gmail.com> napisał:
-> >
-> > Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> > ---
-> > John: this one depends on
-> > [RFC][PATCH] b43: HT-PHY: allow writing longer tables with a single call
-> > , please apply the one above.
-> 
-> John, I've asked you to apply the mentioned patch before this one. By
-> applying *just* this one you've broken build for ppl trying *BROKEN*
-> HT support.
+On 08/12/2011 01:59 PM, Franky Lin wrote:
+> If you are refering to this line
+>  >>> + } while ((e = brcmf_deq_event(cfg_priv)));
+>
+> The extra parentheses are added to fix a compiler warning:
+> drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c: In function
+> ‘brcmf_event_handler’:
+> drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c:3576: warning: suggest
+> parentheses around assignment used as truth value
 
-Please, _please_, _PLEASE_ stop doing this.  I process a lot of
-patches, and sometimes I will miss these directives.
+Does checkpatch allow that assignment in the while statement? I would expect it 
+to want you to
 
-If your patch is not RFC, then don't post it as RFC.  If you post
-a patch as "Request For Comment" and I don't have any comments,
-I'm going to delete it.  If you later decide it is no longer RFC,
-then I've probably already deleted it.  So you need to re-post the
-patch as just "PATCH".
+		e = brcmf_deq_event(cfg_priv);
+	} while (e);
 
-I no longer have "b43: HT-PHY: allow writing longer tables with a
-single call".  If it is needed, then you need to repost it.
-
-John
-
-P.S.  In general, it is best to post patches with dependencies as a series.
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Larry
