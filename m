@@ -1,31 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cosmos.phy.tufts.edu ([130.64.83.16]:44107 "EHLO
-	cosmos.phy.tufts.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752252Ab1HJAsI (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:38327 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753228Ab1HLKej (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 20:48:08 -0400
-Date: Tue, 09 Aug 2011 20:29:18 -0400
-Message-Id: <E1Qqwfe-0003TG-KL@cosmos.phy.tufts.edu> (sfid-20110810_024812_287408_201E3589)
-From: Ken Olum <kdo@cosmos.phy.tufts.edu>
-To: linux-wireless@vger.kernel.org
-cc: kdo@cosmos.phy.tufts.edu
-Subject: depmod doesn't prefer uncompressed file and updates directory
+	Fri, 12 Aug 2011 06:34:39 -0400
+Received: by fxh19 with SMTP id 19so2219714fxh.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 03:34:38 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/4] b43: HT-PHY: init: zero EXTG registers
+Date: Fri, 12 Aug 2011 13:13:44 +0200
+Message-Id: <1313147627-8713-1-git-send-email-zajec5@gmail.com> (sfid-20110812_123454_792795_A7165455)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-First, thanks for all your work in making these drivers available.
-Indeed, downloading a new atl1c driver solved a problem where my
-Attansic 2062 would quit working when I tried to send a bunch of data.
 
-I encountered a problem which is doubtless not your fault, but still
-you could perhaps help out future users by warning of it in your
-installation instructions.  I'm using Mandriva 2010.2.  When I said
-"make install", my atl1c driver was installed in 
-/lib/modules/.../updates/drivers/net/atl1c/atl1c.ko, just as you said
-it would be.  But when I said depmod and modprobe, modprobe loaded my
-old version from /lib/modules/.../kernel/drivers/net/atl1c/atl1c.ko.gz .
-Apparently confusion resulted from the fact that the filenames were
-different because one was compressed and the other wasn't.  When I
-compressed the new driver, the problem was fixed.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+I've simply chcked what ndis does after uploading PHY tables:
+ phy_read(0x00be) -> 0x0002
+phy_write(0x00be) <- 0x0000
+ phy_read(0x023f) -> 0x0000
+phy_write(0x023f) <- 0x07ff
+ phy_read(0x0240) -> 0x0000
+phy_write(0x0240) <- 0x07ff
+ phy_read(0x0241) -> 0x0000
+phy_write(0x0241) <- 0x07ff
 
-                                        Ken Olum
+phy_write(0x0840) <- 0x0000
+phy_write(0x0841) <- 0x0000
+phy_write(0x0842) <- 0x0000
+phy_write(0x0843) <- 0x0000
+
+phy_write(0x0860) <- 0x0000
+phy_write(0x0861) <- 0x0000
+phy_write(0x0862) <- 0x0000
+phy_write(0x0863) <- 0x0000
+
+phy_write(0x0880) <- 0x0000
+phy_write(0x0881) <- 0x0000
+phy_write(0x0882) <- 0x0000
+phy_write(0x0883) <- 0x0000
+
+phy_write(0x084c) <- 0x0000
+phy_write(0x086c) <- 0x0000
+phy_write(0x088c) <- 0x0000
+---
+ drivers/net/wireless/b43/phy_ht.c |   22 ++++++++++++++++++++++
+ 1 files changed, 22 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
+index 7c40919..99b3035 100644
+--- a/drivers/net/wireless/b43/phy_ht.c
++++ b/drivers/net/wireless/b43/phy_ht.c
+@@ -152,6 +152,24 @@ static void b43_radio_2059_init(struct b43_wldev *dev)
+ }
+ 
+ /**************************************************
++ * Various PHY ops
++ **************************************************/
++
++static void b43_phy_ht_zero_extg(struct b43_wldev *dev)
++{
++	u8 i, j;
++	u16 base[] = { 0x40, 0x60, 0x80 };
++
++	for (i = 0; i < ARRAY_SIZE(base); i++) {
++		for (j = 0; j < 4; j++)
++			b43_phy_write(dev, B43_PHY_EXTG(base[i] + j), 0);
++	}
++
++	for (i = 0; i < ARRAY_SIZE(base); i++)
++		b43_phy_write(dev, B43_PHY_EXTG(base[i] + 0xc), 0);
++}
++
++/**************************************************
+  * Channel switching ops.
+  **************************************************/
+ 
+@@ -257,6 +275,10 @@ static int b43_phy_ht_op_init(struct b43_wldev *dev)
+ {
+ 	b43_phy_ht_tables_init(dev);
+ 
++	/* TODO: PHY ops on regs 0x0be, 0x23f 0x240 0x241 */
++
++	b43_phy_ht_zero_extg(dev);
++
+ 	return 0;
+ }
+ 
+-- 
+1.7.3.4
+
