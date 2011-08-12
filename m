@@ -1,106 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([72.73.18.11]:49717 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751226Ab1HDIDM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Aug 2011 04:03:12 -0400
-Date: Thu, 4 Aug 2011 04:03:11 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-cc: Andreas Hartmann <andihartmann@01019freenet.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Alan Piszcz <ap@solarrain.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
-In-Reply-To: <20110803183349.GA5956@redhat.com>
-Message-ID: <alpine.DEB.2.02.1108040400570.4278@p34.internal.lan> (sfid-20110804_100355_205894_523C6C0F)
-References: <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan> <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan> <alpine.DEB.2.02.1107301031560.4925@p34.internal.lan>
- <4E341DC4.9010107@01019freenet.de> <alpine.DEB.2.02.1107301305590.4925@p34.internal.lan> <20110803160050.GA18882@redhat.com> <alpine.DEB.2.02.1108031328030.9421@p34.internal.lan> <alpine.DEB.2.02.1108031339280.9421@p34.internal.lan>
- <20110803183349.GA5956@redhat.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:34042 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752885Ab1HLPng convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Aug 2011 11:43:36 -0400
+Received: by ywf7 with SMTP id 7so2015205ywf.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 08:43:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+In-Reply-To: <4E45435E.9020900@hauke-m.de>
+References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
+	<CACna6rztueomzzas=hQjfj6htD=SHFhrtFPSqbviqVDwaihJ9w@mail.gmail.com>
+	<4E45435E.9020900@hauke-m.de>
+Date: Fri, 12 Aug 2011 17:43:35 +0200
+Message-ID: <CACna6rxANkxwOJ6QqhaQw0hnx=h8bnSqEMxppj7wadLcuyvwBA@mail.gmail.com> (sfid-20110812_174339_554912_EED94B0B)
+Subject: Re: [PATCH 00/14] staging: brcm80211: brcmfmac driver cleanup
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>, gregkh@suse.de,
+	devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+W dniu 12 sierpnia 2011 17:14 użytkownik Hauke Mehrtens
+<hauke@hauke-m.de> napisał:
+> On 08/12/2011 04:02 PM, Rafał Miłecki wrote:
+>> 2011/8/12 Arend van Spriel <arend@broadcom.com>:
+>>> Several cleanup patches to reduce code for the brcmfmac driver and
+>>> get rid of a remaining checkpatch warning. The driver sources should
+>>> be clear from checkpatch issue now.
+>>>
+>>> This series applies to staging-next and depends on the following patch set:
+>>
+>> Are you testing patches on some hardware? Or just compile-testing?
+>>
+>> I believe this driver is meant to support BCM4329, which is not PCI(e)
+>> board. What adapter do you use?
+>>
+>> I've heard about Arasan adapter. Have you tried it? Is that something
+>> reachable from arasan.com?
+>>
+>
+> Is there also a softmac version of the BCM4329 available? The wl driver
+> shipped with the vendor firmware of my BCM4716 device detects one of the
+> wifi chips as BCM4329. I think it is the one in the BCM4716 and that is
+> already supported by b43. Or is this a wrong information?
+>
+> Here is the output of the kernel log:
+> eth0: Broadcom BCM47XX 10/100/1000 Mbps Ethernet Controller 5.10.144.3
+> eth1: Broadcom BCM4329 802.11 Wireless Controller 5.10.144.5
+> PCI: Enabling device 01:01.0 (0000 -> 0002)
+> eth2: Broadcom BCMa8d8 802.11 Wireless Controller 5.10.144.5
 
+Please, try lspci and if you can, b43. I believe that is 14e4:4329
+which is BCM4321.
 
-On Wed, 3 Aug 2011, Stanislaw Gruszka wrote:
+Why wl can't properly print chipset name - ask Broadcom.
 
-> On Wed, Aug 03, 2011 at 01:44:10PM -0400, Justin Piszcz wrote:
-> > Tested that patch:
-> > 
-> > 1. The driver no longer automatically loads, I had to manually modprobe it.
-> This must be some other problem not related with patch.
-> 
-> > 2. After loading, I get this (keep getting these)
-> > 
-> > [  384.054538] phy0 -> rt2800_txdone: Error - Data pending
-> > [  384.072773] phy0 -> rt2800_txdone: Error - Data pending
-> > [  384.096545] phy0 -> rt2800_txdone: Error - Data pending
-> > [  384.117301] phy0 -> rt2800_txdone: Error - Data pending
-> > [  384.537586] phy0 -> rt2800_txdone: Error - Data pending
-> > [  384.555716] phy0 -> rt2800_txdone: Error - Data pending
-> > [  384.573903] phy0 -> rt2800_txdone: Error - Data pending
-> > [  384.599465] phy0 -> rt2800_txdone: Error - Data pending
-> > [  384.618523] phy0 -> rt2800_txdone: Error - Data pending
-> You can remove line
-> 
-> ERROR(rt2x00dev, "Data pending\n");
-> 
-> from rt2800_txdone to stop seeing this. It's kinda interesting
-> how frequent this happens.
-> 
-> > No crash yet, but bad ping again too (always with the rt2800usb) driver:
-> > 
-> > 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=1 ttl=64 time=53.1 ms
-> > 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=2 ttl=64 time=285 ms
-> > 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=3 ttl=64 time=89.6 ms
-> > 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=4 ttl=64 time=120 ms
-> > 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=5 ttl=64 time=42.2 ms
-> > 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=6 ttl=64 time=156 ms
-> > 64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=7 ttl=64 time=77.2 ms
-> 
-> I think patch could have site effect to not run tx queue while we have pending
-> data on it. Do you have such ping times always (i.e. after a 5 minutes, 10
-> minutes, 20  ... ) or just randomly?
-> 
-> Stanislaw
-
-Hi,
-
-So the patch is good but did not solve the problem, after several hours, the
-main USB wireless stick went off-line:
-
-Aug  3 22:02:16 atom kernel: [23424.597037] phy0 -> rt2800_txdone: Error - Data pending
-Aug  3 22:02:16 atom kernel: [23424.597168] phy0 -> rt2800_txdone: Error - Data pending
-Aug  3 22:02:16 atom kernel: [23424.598047] phy0 -> rt2800_txdone: Error - Data pending
-Aug  3 22:02:16 atom kernel: [23424.598411] phy0 -> rt2800_txdone: Error - Data pending
-Aug  3 22:02:16 atom kernel: [23424.599414] phy0 -> rt2800_txdone: Error - Data pending
-Aug  3 22:02:16 atom kernel: [23424.599549] phy0 -> rt2800_txdone: Error - Data pending
-Aug  3 22:02:16 atom kernel: [23424.599664] phy0 -> rt2800_txdone: Error - Data pending
-Aug  3 22:47:12 atom kernel: [26120.279774] wlan0: deauthenticated from hidden (Reason: 2)
-Aug  3 22:47:13 atom kernel: [26121.728581] wlan0: authenticate with hidden (try 1)
-Aug  3 22:47:13 atom kernel: [26121.730109] wlan0: authenticated
-Aug  3 22:47:13 atom kernel: [26121.745088] wlan0: associate with hidden (try 1)
-Aug  3 22:47:13 atom kernel: [26121.750738] wlan0: RX ReassocResp from hidden (capab=0x431 status=0 aid=2)
-Aug  3 22:47:13 atom kernel: [26121.750746] wlan0: associated
-Aug  3 22:47:14 atom kernel: [26121.845641] wlan0: Wrong control channel in association response: configured center-freq: 2417 hti-cfreq: 2437  hti->control_chan: 6 band: 0.  Disabling HT.
-
-
-( at this point wlan0 is offline )
-
-$ ssh atomw
-ssh: connect to host atomw port 22: No route to host
-
-BUT: It did not crash the kernel; however, interestingly (I have two of these
-sticks), now phy1 starts showing the same symptoms wlan0 had (phy0).
-
-Aug  3 22:49:46 atom kernel: [26274.088150] phy1 -> rt2800_txdone: Error - Data pending
-Aug  3 22:49:46 atom kernel: [26274.147869] phy1 -> rt2800_txdone: Error - Data pending
-Aug  3 22:49:46 atom kernel: [26274.152743] phy1 -> rt2800_txdone: Error - Data pending
-
-Are these sticks just incomptabile with the rt2800usb driver?
-
-Justin.
-
+-- 
+Rafał
