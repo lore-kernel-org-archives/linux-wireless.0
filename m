@@ -1,64 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50456 "EHLO nbd.name"
+Received: from mms1.broadcom.com ([216.31.210.17]:3220 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751436Ab1H2KbN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 06:31:13 -0400
-Message-ID: <4E5B6A6B.7070801@openwrt.org> (sfid-20110829_123117_395322_1A634A04)
-Date: Mon, 29 Aug 2011 12:31:07 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1752503Ab1HLNft (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Aug 2011 09:35:49 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 14/14] staging: brcm80211: remove unused func parameter
+ in wl_cfg80211 of fullmac
+Date: Fri, 12 Aug 2011 15:35:01 +0200
+Message-ID: <1313156101-16817-15-git-send-email-arend@broadcom.com> (sfid-20110812_154257_120441_22A8DF26)
+In-Reply-To: <1313156101-16817-1-git-send-email-arend@broadcom.com>
+References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	rodrigue@qca.qualcomm.com
-Subject: Re: [PATCH v4 2/3] ath9k: merge reset related functions
-References: <1314611896-97031-1-git-send-email-nbd@openwrt.org> <1314611896-97031-2-git-send-email-nbd@openwrt.org> <20110829102809.GA331@vmraj-lnx.users.atheros.com>
-In-Reply-To: <20110829102809.GA331@vmraj-lnx.users.atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-08-29 12:28 PM, Rajkumar Manoharan wrote:
-> On Mon, Aug 29, 2011 at 11:58:15AM +0200, Felix Fietkau wrote:
->>  reduces unnecessary code duplication
->>
->>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
->>  ---
->>   drivers/net/wireless/ath/ath9k/main.c |  258 +++++++++++++--------------------
->>   1 files changed, 100 insertions(+), 158 deletions(-)
->>
->>  diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->>  index 085ec20..4c3671a 100644
->>  --- a/drivers/net/wireless/ath/ath9k/main.c
->>  +++ b/drivers/net/wireless/ath/ath9k/main.c
->>  @@ -212,83 +212,45 @@ static int ath_update_survey_stats(struct ath_softc *sc)
->>   	return ret;
->>   }
->>
->>  -/*
->>  - * Set/change channels.  If the channel is really being changed, it's done
->>  - * by reseting the chip.  To accomplish this we must first cleanup any pending
->>  - * DMA, then restart stuff.
->>  -*/
->>  -static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
->>  -		    struct ath9k_channel *hchan)
->>  +static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool flush)
->>   {
->>   	struct ath_hw *ah = sc->sc_ah;
->>  -	struct ath_common *common = ath9k_hw_common(ah);
->>  -	struct ieee80211_conf *conf =&common->hw->conf;
->>  -	bool fastcc = true, stopped;
->>  -	struct ieee80211_channel *channel = hw->conf.channel;
->>  -	struct ath9k_hw_cal_data *caldata = NULL;
->>  -	int r;
->>  +	bool ret;
->>
->>  -	if (sc->sc_flags&  SC_OP_INVALID)
->>  -		return -EIO;
->>  +	ieee80211_stop_queues(sc->hw);
->>
->>   	sc->hw_busy_count = 0;
->>  -
->>  -	del_timer_sync(&common->ani.timer);
->
-> ani timer never be stopped. why did you remove from ath_prepare_reset?
-Must have overlooked it, will send a v5.
+From: Franky Lin <frankyl@broadcom.com>
+
+Get rid of some unused void *data parameter
+
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   24 +++++++++++-----------
+ 1 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+index def1f77..6c604cf 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -117,7 +117,7 @@ static void brcmf_init_eloop_handler(struct brcmf_cfg80211_event_loop *el);
+ static struct brcmf_cfg80211_event_q *
+ brcmf_deq_event(struct brcmf_cfg80211_priv *cfg_priv);
+ static s32 brcmf_enq_event(struct brcmf_cfg80211_priv *cfg_priv, u32 type,
+-			  const struct brcmf_event_msg *msg, void *data);
++			  const struct brcmf_event_msg *msg);
+ static void brcmf_put_event(struct brcmf_cfg80211_event_q *e);
+ static void brcmf_wakeup_event(struct brcmf_cfg80211_priv *cfg_priv);
+ static s32 brcmf_notify_connect_status(struct brcmf_cfg80211_priv *cfg_priv,
+@@ -134,11 +134,11 @@ static s32 brcmf_notify_scan_status(struct brcmf_cfg80211_priv *cfg_priv,
+ 				    void *data);
+ static s32 brcmf_bss_connect_done(struct brcmf_cfg80211_priv *cfg_priv,
+ 				  struct net_device *ndev,
+-				  const struct brcmf_event_msg *e, void *data,
++				  const struct brcmf_event_msg *e,
+ 				  bool completed);
+ static s32 brcmf_bss_roaming_done(struct brcmf_cfg80211_priv *cfg_priv,
+ 				  struct net_device *ndev,
+-				  const struct brcmf_event_msg *e, void *data);
++				  const struct brcmf_event_msg *e);
+ static s32 brcmf_notify_mic_status(struct brcmf_cfg80211_priv *cfg_priv,
+ 				   struct net_device *ndev,
+ 				   const struct brcmf_event_msg *e, void *data);
+@@ -2631,7 +2631,7 @@ brcmf_notify_connect_status(struct brcmf_cfg80211_priv *cfg_priv,
+ 			clear_bit(WL_STATUS_CONNECTING, &cfg_priv->status);
+ 			set_bit(WL_STATUS_CONNECTED, &cfg_priv->status);
+ 		} else
+-			brcmf_bss_connect_done(cfg_priv, ndev, e, data, true);
++			brcmf_bss_connect_done(cfg_priv, ndev, e, true);
+ 	} else if (brcmf_is_linkdown(cfg_priv, e)) {
+ 		WL_CONN("Linkdown\n");
+ 		if (brcmf_is_ibssmode(cfg_priv)) {
+@@ -2640,7 +2640,7 @@ brcmf_notify_connect_status(struct brcmf_cfg80211_priv *cfg_priv,
+ 				&cfg_priv->status))
+ 				brcmf_link_down(cfg_priv);
+ 		} else {
+-			brcmf_bss_connect_done(cfg_priv, ndev, e, data, false);
++			brcmf_bss_connect_done(cfg_priv, ndev, e, false);
+ 			if (test_and_clear_bit(WL_STATUS_CONNECTED,
+ 				&cfg_priv->status)) {
+ 				cfg80211_disconnected(ndev, 0, NULL, 0,
+@@ -2653,7 +2653,7 @@ brcmf_notify_connect_status(struct brcmf_cfg80211_priv *cfg_priv,
+ 		if (brcmf_is_ibssmode(cfg_priv))
+ 			clear_bit(WL_STATUS_CONNECTING, &cfg_priv->status);
+ 		else
+-			brcmf_bss_connect_done(cfg_priv, ndev, e, data, false);
++			brcmf_bss_connect_done(cfg_priv, ndev, e, false);
+ 	}
+ 
+ 	return err;
+@@ -2670,9 +2670,9 @@ brcmf_notify_roaming_status(struct brcmf_cfg80211_priv *cfg_priv,
+ 
+ 	if (event == BRCMF_E_ROAM && status == BRCMF_E_STATUS_SUCCESS) {
+ 		if (test_bit(WL_STATUS_CONNECTED, &cfg_priv->status))
+-			brcmf_bss_roaming_done(cfg_priv, ndev, e, data);
++			brcmf_bss_roaming_done(cfg_priv, ndev, e);
+ 		else
+-			brcmf_bss_connect_done(cfg_priv, ndev, e, data, true);
++			brcmf_bss_connect_done(cfg_priv, ndev, e, true);
+ 	}
+ 
+ 	return err;
+@@ -2883,7 +2883,7 @@ update_bss_info_out:
+ static s32
+ brcmf_bss_roaming_done(struct brcmf_cfg80211_priv *cfg_priv,
+ 		       struct net_device *ndev,
+-		       const struct brcmf_event_msg *e, void *data)
++		       const struct brcmf_event_msg *e)
+ {
+ 	struct brcmf_cfg80211_connect_info *conn_info = cfg_to_conn(cfg_priv);
+ 	struct wiphy *wiphy = cfg_to_wiphy(cfg_priv);
+@@ -2927,7 +2927,7 @@ brcmf_bss_roaming_done(struct brcmf_cfg80211_priv *cfg_priv,
+ static s32
+ brcmf_bss_connect_done(struct brcmf_cfg80211_priv *cfg_priv,
+ 		       struct net_device *ndev, const struct brcmf_event_msg *e,
+-		       void *data, bool completed)
++		       bool completed)
+ {
+ 	struct brcmf_cfg80211_connect_info *conn_info = cfg_to_conn(cfg_priv);
+ 	s32 err = 0;
+@@ -3587,7 +3587,7 @@ brcmf_cfg80211_event(struct net_device *ndev,
+ 	u32 event_type = be32_to_cpu(e->event_type);
+ 	struct brcmf_cfg80211_priv *cfg_priv = ndev_to_cfg(ndev);
+ 
+-	if (likely(!brcmf_enq_event(cfg_priv, event_type, e, data)))
++	if (likely(!brcmf_enq_event(cfg_priv, event_type, e)))
+ 		brcmf_wakeup_event(cfg_priv);
+ }
+ 
+@@ -3637,7 +3637,7 @@ static struct brcmf_cfg80211_event_q *brcmf_deq_event(
+ 
+ static s32
+ brcmf_enq_event(struct brcmf_cfg80211_priv *cfg_priv, u32 event,
+-		const struct brcmf_event_msg *msg, void *data)
++		const struct brcmf_event_msg *msg)
+ {
+ 	struct brcmf_cfg80211_event_q *e;
+ 	s32 err = 0;
+-- 
+1.7.4.1
+
+
