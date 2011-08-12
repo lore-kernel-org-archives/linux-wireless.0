@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4781 "EHLO mms2.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:4842 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755153Ab1HZNT5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 09:19:57 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
+	id S1751996Ab1HLNfN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Aug 2011 09:35:13 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
 To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 01/13] staging: brcm80211: remove unused definition flag
- from top Makefile
-Date: Fri, 26 Aug 2011 15:19:28 +0200
-Message-ID: <1314364780-9462-2-git-send-email-rvossen@broadcom.com> (sfid-20110826_152017_046942_B38C64F4)
-In-Reply-To: <1314364780-9462-1-git-send-email-rvossen@broadcom.com>
-References: <1314364780-9462-1-git-send-email-rvossen@broadcom.com>
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 05/14] staging: brcm80211: remove wext traces in fullmac
+Date: Fri, 12 Aug 2011 15:34:52 +0200
+Message-ID: <1313156101-16817-6-git-send-email-arend@broadcom.com> (sfid-20110812_153525_616893_0510CCB1)
+In-Reply-To: <1313156101-16817-1-git-send-email-arend@broadcom.com>
+References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+From: Franky Lin <frankyl@broadcom.com>
 
-The use of the definition BCMDMA32 was already removed from the
-source code, but it was still defined in the top-level Makefile.
-This patch removes it.
+wext support code have been removed a while ago. This patch removes the
+traces left behind.
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/brcm80211/Makefile |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ drivers/staging/brcm80211/Kconfig                |    2 --
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    1 -
+ 2 files changed, 0 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/Makefile b/drivers/staging/brcm80211/Makefile
-index 8b01f5e..f41c047 100644
---- a/drivers/staging/brcm80211/Makefile
-+++ b/drivers/staging/brcm80211/Makefile
-@@ -16,7 +16,6 @@
- # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- 
- # common flags
--subdir-ccflags-y					:= -DBCMDMA32
- subdir-ccflags-$(CONFIG_BRCMDBG)	+= -DBCMDBG
- 
- obj-$(CONFIG_BRCMUTIL)	+= brcmutil/
+diff --git a/drivers/staging/brcm80211/Kconfig b/drivers/staging/brcm80211/Kconfig
+index f4cf9b2..621570a 100644
+--- a/drivers/staging/brcm80211/Kconfig
++++ b/drivers/staging/brcm80211/Kconfig
+@@ -22,8 +22,6 @@ config BRCMFMAC
+ 	depends on WLAN && CFG80211
+ 	select BRCMUTIL
+ 	select FW_LOADER
+-	select WIRELESS_EXT
+-	select WEXT_PRIV
+ 	---help---
+ 	  This module adds support for embedded wireless adapters based on
+ 	  Broadcom IEEE802.11n FullMAC chipsets.  This driver uses the kernel's
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+index 833defb..def1f77 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -21,7 +21,6 @@
+ #include <linux/netdevice.h>
+ #include <linux/sched.h>
+ #include <linux/etherdevice.h>
+-#include <linux/wireless.h>
+ #include <linux/ieee80211.h>
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/uaccess.h>
 -- 
 1.7.4.1
 
