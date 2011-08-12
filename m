@@ -1,108 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:39293 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752980Ab1HYBli (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:65377 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757Ab1HLUET convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 21:41:38 -0400
-Received: by yxj19 with SMTP id 19so1335823yxj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 18:41:37 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH 9/9] mac80211: Consolidate mesh path duplicated functions
-Date: Wed, 24 Aug 2011 18:40:52 -0700
-Message-Id: <1314236452-7226-10-git-send-email-thomas@cozybit.com> (sfid-20110825_034140_279040_3E7E69D2)
-In-Reply-To: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
-References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
+	Fri, 12 Aug 2011 16:04:19 -0400
+Received: by ywf7 with SMTP id 7so2190460ywf.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 13:04:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4E4555AD.7040809@broadcom.com>
+References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
+	<CACna6rztueomzzas=hQjfj6htD=SHFhrtFPSqbviqVDwaihJ9w@mail.gmail.com>
+	<4E4555AD.7040809@broadcom.com>
+Date: Fri, 12 Aug 2011 22:04:18 +0200
+Message-ID: <CACna6rx_d4btykdK7AMwFxeFMs_MxjHEHvR6coxaZkfqkQVafA@mail.gmail.com> (sfid-20110812_220423_733515_9071C442)
+Subject: Re: [PATCH 00/14] staging: brcm80211: brcmfmac driver cleanup
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+W dniu 12 sierpnia 2011 18:32 użytkownik Arend van Spriel
+<arend@broadcom.com> napisał:
+> On 08/12/2011 04:02 PM, Rafał Miłecki wrote:
+>>
+>> 2011/8/12 Arend van Spriel<arend@broadcom.com>:
+>>>
+>>> Several cleanup patches to reduce code for the brcmfmac driver and
+>>> get rid of a remaining checkpatch warning. The driver sources should
+>>> be clear from checkpatch issue now.
+>>>
+>>> This series applies to staging-next and depends on the following patch
+>>> set:
+>>
+>> Are you testing patches on some hardware? Or just compile-testing?
+>>
+>> I believe this driver is meant to support BCM4329, which is not PCI(e)
+>> board. What adapter do you use?
+>>
+>> I've heard about Arasan adapter. Have you tried it? Is that something
+>> reachable from arasan.com?
+>
+> Our brcm80211 source tree under drivers/staging contain two drivers. The
+> brcmsmac driver currently supporting the PCI(e) cards with bcm43224,
+> bcm43225, and bcm4313 chips and the brcmfmac driver currently supporting the
+> SDIO card with bcm4329 chip. brcmsmac is a mac80211 driver and brcmfmac is a
+> cfg80211 driver.
+>
+> We indeed use the Arasan adapter and both drivers are running in nightly
+> test cycle testing our common internal repository. So the drivers are
+> functionally tested on the x86 platforms (32 and 64 bit). Also looking at
+> sparc64 and powerpc64 but not in a nightly cycle.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_pathtbl.c |   52 ++++++++++++++-----------------------------
- 1 files changed, 17 insertions(+), 35 deletions(-)
+Is there a chance you can donate me with such a adapter and card?
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 4bfbe31..4891cf1 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -335,25 +335,14 @@ static void mesh_path_move_to_queue(struct mesh_path *gate_mpath,
- }
- 
- 
--/**
-- * mesh_path_lookup - look up a path in the mesh path table
-- * @dst: hardware address (ETH_ALEN length) of destination
-- * @sdata: local subif
-- *
-- * Returns: pointer to the mesh path structure, or NULL if not found
-- *
-- * Locking: must be called within a read rcu section.
-- */
--struct mesh_path *mesh_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
-+static struct mesh_path *path_lookup(struct mesh_table *tbl, u8 *dst,
-+					  struct ieee80211_sub_if_data *sdata)
- {
- 	struct mesh_path *mpath;
- 	struct hlist_node *n;
- 	struct hlist_head *bucket;
--	struct mesh_table *tbl;
- 	struct mpath_node *node;
- 
--	tbl = rcu_dereference(mesh_paths);
--
- 	bucket = &tbl->hash_buckets[mesh_table_hash(dst, sdata, tbl)];
- 	hlist_for_each_entry_rcu(node, n, bucket, list) {
- 		mpath = node->mpath;
-@@ -370,30 +359,23 @@ struct mesh_path *mesh_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
- 	return NULL;
- }
- 
--struct mesh_path *mpp_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
-+/**
-+ * mesh_path_lookup - look up a path in the mesh path table
-+ * @dst: hardware address (ETH_ALEN length) of destination
-+ * @sdata: local subif
-+ *
-+ * Returns: pointer to the mesh path structure, or NULL if not found
-+ *
-+ * Locking: must be called within a read rcu section.
-+ */
-+struct mesh_path *mesh_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
- {
--	struct mesh_path *mpath;
--	struct hlist_node *n;
--	struct hlist_head *bucket;
--	struct mesh_table *tbl;
--	struct mpath_node *node;
--
--	tbl = rcu_dereference(mpp_paths);
-+	return path_lookup(rcu_dereference(mesh_paths), dst, sdata);
-+}
- 
--	bucket = &tbl->hash_buckets[mesh_table_hash(dst, sdata, tbl)];
--	hlist_for_each_entry_rcu(node, n, bucket, list) {
--		mpath = node->mpath;
--		if (mpath->sdata == sdata &&
--		    memcmp(dst, mpath->dst, ETH_ALEN) == 0) {
--			if (MPATH_EXPIRED(mpath)) {
--				spin_lock_bh(&mpath->state_lock);
--				mpath->flags &= ~MESH_PATH_ACTIVE;
--				spin_unlock_bh(&mpath->state_lock);
--			}
--			return mpath;
--		}
--	}
--	return NULL;
-+struct mesh_path *mpp_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
-+{
-+	return path_lookup(rcu_dereference(mpp_paths), dst, sdata);
- }
- 
- 
 -- 
-1.7.4.1
-
+Rafał
