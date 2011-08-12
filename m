@@ -1,48 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:43950 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753308Ab1HLC15 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 22:27:57 -0400
-Received: by iye16 with SMTP id 16so598268iye.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 19:27:56 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:1919 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751298Ab1HLNfM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Aug 2011 09:35:12 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 09/14] staging: brcm80211: absorb brcmf_sdioh_abort into
+ brcmf_sdcard_abort
+Date: Fri, 12 Aug 2011 15:34:56 +0200
+Message-ID: <1313156101-16817-10-git-send-email-arend@broadcom.com> (sfid-20110812_153517_042549_B7E7A550)
+In-Reply-To: <1313156101-16817-1-git-send-email-arend@broadcom.com>
+References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Reply-To: robert@ocallahan.org
-In-Reply-To: <CAJ-Vmont2OdEGFqBKOen8XW+fTvA2xBgVr1h9vSeOBcQrE_FxA@mail.gmail.com>
-References: <CAOp6jLa2xGcyg-rmE78FTpi11SbBq+EkWhXc+5na5QuebuFSBg@mail.gmail.com>
-	<CAJ-Vmont2OdEGFqBKOen8XW+fTvA2xBgVr1h9vSeOBcQrE_FxA@mail.gmail.com>
-Date: Fri, 12 Aug 2011 14:27:56 +1200
-Message-ID: <CAOp6jLbp_Fvf8u9CxdhsK0vqJTHvhean7qp+vumuM+S_3-PApA@mail.gmail.com> (sfid-20110812_042800_290421_A0C1B19C)
-Subject: Re: [ath9k-devel] Packet loss regression with Atheros AR9280 adapter
-From: "Robert O'Callahan" <robert@ocallahan.org>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 12, 2011 at 2:25 PM, Adrian Chadd <adrian@freebsd.org> wrote:
-> On 11 August 2011 21:53, Robert O'Callahan <robert@ocallahan.org> wrote:
-> > Running Fedora 15's 2.6.40 kernel with compat-wireless (built from August 8
-> > tarball), I get persistent and quite severe packet loss with the AR9280 on
-> > my desktop machine. This started happening since I upgraded from Fedora 13
-> > to 15. Same box works fine running Windows 7, and other devices on the same
-> > network have no problems. The AP is in the same room as the AR9280, about
-> > three metres away. I have tried various versions of compat-wireless, passing
-> > nohwcrypt=1 to ath9k, and limiting the rate to 1Mb/s, all to no avail.
-> >
-> > How can I help debug this? Last 500 lines of dmesg attached.
->
-> Are you able to run an earlier version of compat-wireless, see if it
-> is a problem?
+From: Franky Lin <frankyl@broadcom.com>
 
-Anything I can get building with this kernel, I guess. Any particular
-version I should try?
+brcmfmac wrapper function cleanup
 
-Rob
---
-"If we claim to be without sin, we deceive ourselves and the truth is
-not in us. If we confess our sins, he is faithful and just and will
-forgive us our sins and purify us from all unrighteousness. If we
-claim we have not sinned, we make him out to be a liar and his word is
-not in us." [1 John 1:8-10]
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |   11 ++++++++++-
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   14 --------------
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    3 ---
+ 3 files changed, 10 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 6c1b57d..8bb84a9 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -21,6 +21,7 @@
+ #include <linux/pci_ids.h>
+ #include <linux/sched.h>
+ #include <linux/completion.h>
++#include <linux/mmc/sdio.h>
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/card.h>
+ 
+@@ -476,7 +477,15 @@ int brcmf_sdcard_rwdata(struct brcmf_sdio_dev *sdiodev, uint rw, u32 addr,
+ 
+ int brcmf_sdcard_abort(struct brcmf_sdio_dev *sdiodev, uint fn)
+ {
+-	return brcmf_sdioh_abort(sdiodev, fn);
++	char t_func = (char)fn;
++	BRCMF_TRACE(("%s: Enter\n", __func__));
++
++	/* issue abort cmd52 command through F0 */
++	brcmf_sdioh_request_byte(sdiodev, SDIOH_WRITE, SDIO_FUNC_0,
++				 SDIO_CCCR_ABORT, &t_func);
++
++	BRCMF_TRACE(("%s: Exit\n", __func__));
++	return 0;
+ }
+ 
+ u32 brcmf_sdcard_cur_sbwad(struct brcmf_sdio_dev *sdiodev)
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 1dfad3e..d7648f8 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -576,20 +576,6 @@ brcmf_sdioh_request_buffer(struct brcmf_sdio_dev *sdiodev, uint pio_dma,
+ 	return Status;
+ }
+ 
+-/* this function performs "abort" for both of host & device */
+-extern int brcmf_sdioh_abort(struct brcmf_sdio_dev *sdiodev, uint func)
+-{
+-	char t_func = (char)func;
+-	BRCMF_TRACE(("%s: Enter\n", __func__));
+-
+-	/* issue abort cmd52 command through F0 */
+-	brcmf_sdioh_request_byte(sdiodev, SDIOH_WRITE, SDIO_FUNC_0,
+-				 SDIO_CCCR_ABORT, &t_func);
+-
+-	BRCMF_TRACE(("%s: Exit\n", __func__));
+-	return 0;
+-}
+-
+ /* Read client card reg */
+ int
+ brcmf_sdioh_card_regread(struct brcmf_sdio_dev *sdiodev, int func, u32 regaddr,
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index d980307..555f17b 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -273,9 +273,6 @@ extern int brcmf_sdioh_cfg_read(struct brcmf_sdio_dev *sdiodev, uint fuc,
+ extern int brcmf_sdioh_cfg_write(struct brcmf_sdio_dev *sdiodev, uint fuc,
+ 				 u32 addr, u8 *data);
+ 
+-/* Issue abort to the specified function and clear controller as needed */
+-extern int brcmf_sdioh_abort(struct brcmf_sdio_dev *sdiodev, uint fnc);
+-
+ /* Watchdog timer interface for pm ops */
+ extern void brcmf_sdio_wdtmr_enable(struct brcmf_sdio_dev *sdiodev,
+ 				    bool enable);
+-- 
+1.7.4.1
+
+
