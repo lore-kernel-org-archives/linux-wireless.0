@@ -1,264 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:43968 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753860Ab1HVVuq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 17:50:46 -0400
-Received: by mail-gy0-f174.google.com with SMTP id 6so3903756gya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Aug 2011 14:50:46 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Subject: [PATCH 1/5] rtlwifi: Install updated rate-mapping routine
-Date: Mon, 22 Aug 2011 16:50:14 -0500
-Message-Id: <1314049818-21839-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20110822_235057_700730_E5B311B6)
-In-Reply-To: <1314049818-21839-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1314049818-21839-1-git-send-email-Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
+Received: from mx1.redhat.com ([209.132.183.28]:10400 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750932Ab1HLMCG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Aug 2011 08:02:06 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>, stable@kernel.org
+Subject: [PATCH] mac80211: fix suspend/resume races with unregister hw
+Date: Fri, 12 Aug 2011 14:00:59 +0200
+Message-Id: <1313150459-13234-1-git-send-email-sgruszka@redhat.com> (sfid-20110812_140214_188182_D41F97F0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation for fixing the rate-mapping situation, place a driver-agnostic
-version in rtlwifi. This one contains the updated rate incormation.
+Do not call ->suspend, ->resume methods after we unregister wiphy. Also
+delete sta_clanup timer after we finish wiphy unregister to avoid this:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>
+WARNING: at lib/debugobjects.c:262 debug_print_object+0x85/0xa0()
+Hardware name: 6369CTO
+ODEBUG: free active (active state 0) object type: timer_list hint: sta_info_cleanup+0x0/0x180 [mac80211]
+Modules linked in: aes_i586 aes_generic fuse bridge stp llc autofs4 sunrpc cpufreq_ondemand acpi_cpufreq mperf ext2 dm_mod uinput thinkpad_acpi hwmon sg arc4 rt2800usb rt2800lib crc_ccitt rt2x00usb rt2x00lib mac80211 cfg80211 i2c_i801 iTCO_wdt iTCO_vendor_support e1000e ext4 mbcache jbd2 sd_mod crc_t10dif sr_mod cdrom yenta_socket ahci libahci pata_acpi ata_generic ata_piix i915 drm_kms_helper drm i2c_algo_bit video [last unloaded: microcode]
+Pid: 5663, comm: pm-hibernate Not tainted 3.1.0-rc1-wl+ #19
+Call Trace:
+ [<c0454cfd>] warn_slowpath_common+0x6d/0xa0
+ [<c05e05e5>] ? debug_print_object+0x85/0xa0
+ [<c05e05e5>] ? debug_print_object+0x85/0xa0
+ [<c0454dae>] warn_slowpath_fmt+0x2e/0x30
+ [<c05e05e5>] debug_print_object+0x85/0xa0
+ [<f8a808e0>] ? sta_info_alloc+0x1a0/0x1a0 [mac80211]
+ [<c05e0bd2>] debug_check_no_obj_freed+0xe2/0x180
+ [<c051175b>] kfree+0x8b/0x150
+ [<f8a126ae>] cfg80211_dev_free+0x7e/0x90 [cfg80211]
+ [<f8a13afd>] wiphy_dev_release+0xd/0x10 [cfg80211]
+ [<c068d959>] device_release+0x19/0x80
+ [<c05d06ba>] kobject_release+0x7a/0x1c0
+ [<c07646a8>] ? rtnl_unlock+0x8/0x10
+ [<f8a13adb>] ? wiphy_resume+0x6b/0x80 [cfg80211]
+ [<c05d0640>] ? kobject_del+0x30/0x30
+ [<c05d1a6d>] kref_put+0x2d/0x60
+ [<c05d056d>] kobject_put+0x1d/0x50
+ [<c08015f4>] ? mutex_lock+0x14/0x40
+ [<c068d60f>] put_device+0xf/0x20
+ [<c069716a>] dpm_resume+0xca/0x160
+ [<c04912bd>] hibernation_snapshot+0xcd/0x260
+ [<c04903df>] ? freeze_processes+0x3f/0x90
+ [<c049151b>] hibernate+0xcb/0x1e0
+ [<c048fdc0>] ? pm_async_store+0x40/0x40
+ [<c048fe60>] state_store+0xa0/0xb0
+ [<c048fdc0>] ? pm_async_store+0x40/0x40
+ [<c05d0200>] kobj_attr_store+0x20/0x30
+ [<c0575ea4>] sysfs_write_file+0x94/0xf0
+ [<c051e26a>] vfs_write+0x9a/0x160
+ [<c0575e10>] ? sysfs_open_file+0x200/0x200
+ [<c051e3fd>] sys_write+0x3d/0x70
+ [<c080959f>] sysenter_do_call+0x12/0x28
+
+Cc: stable@kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/rtlwifi/base.c |  161 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/rtlwifi/base.h |    2 +
- drivers/net/wireless/rtlwifi/wifi.h |   35 ++++++++
- 3 files changed, 198 insertions(+), 0 deletions(-)
+ include/net/cfg80211.h |    3 +++
+ net/mac80211/main.c    |    2 +-
+ net/wireless/core.c    |    7 +++++++
+ net/wireless/sysfs.c   |    6 ++++--
+ 4 files changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
-index 0b598db..098fc55 100644
---- a/drivers/net/wireless/rtlwifi/base.c
-+++ b/drivers/net/wireless/rtlwifi/base.c
-@@ -664,6 +664,167 @@ static u8 _rtl_get_highest_n_rate(struct ieee80211_hw *hw)
- 	return hw_rate;
- }
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ab12440..97db267 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1875,6 +1875,9 @@ struct wiphy {
+ 	 * you need use set_wiphy_dev() (see below) */
+ 	struct device dev;
  
-+/* mac80211's rate_idx is like this:
-+ *
-+ * 2.4G band:rx_status->band == IEEE80211_BAND_2GHZ
-+ *
-+ * B/G rate:
-+ * (rx_status->flag & RX_FLAG_HT) = 0,
-+ * DESC92_RATE1M-->DESC92_RATE54M ==> idx is 0-->11,
-+ *
-+ * N rate:
-+ * (rx_status->flag & RX_FLAG_HT) = 1,
-+ * DESC92_RATEMCS0-->DESC92_RATEMCS15 ==> idx is 0-->15
-+ *
-+ * 5G band:rx_status->band == IEEE80211_BAND_5GHZ
-+ * A rate:
-+ * (rx_status->flag & RX_FLAG_HT) = 0,
-+ * DESC92_RATE6M-->DESC92_RATE54M ==> idx is 0-->7,
-+ *
-+ * N rate:
-+ * (rx_status->flag & RX_FLAG_HT) = 1,
-+ * DESC92_RATEMCS0-->DESC92_RATEMCS15 ==> idx is 0-->15
-+ */
-+int rtlwifi_rate_mapping(struct ieee80211_hw *hw,
-+			 bool isht, u8 desc_rate, bool first_ampdu)
-+{
-+	int rate_idx;
++	/* protects ->resume, ->suspend sysfs callbacks against unregister hw */
++	bool registered;
 +
-+	if (false == isht) {
-+		if (IEEE80211_BAND_2GHZ == hw->conf.channel->band) {
-+			switch (desc_rate) {
-+			case DESC92_RATE1M:
-+				rate_idx = 0;
-+				break;
-+			case DESC92_RATE2M:
-+				rate_idx = 1;
-+				break;
-+			case DESC92_RATE5_5M:
-+				rate_idx = 2;
-+				break;
-+			case DESC92_RATE11M:
-+				rate_idx = 3;
-+				break;
-+			case DESC92_RATE6M:
-+				rate_idx = 4;
-+				break;
-+			case DESC92_RATE9M:
-+				rate_idx = 5;
-+				break;
-+			case DESC92_RATE12M:
-+				rate_idx = 6;
-+				break;
-+			case DESC92_RATE18M:
-+				rate_idx = 7;
-+				break;
-+			case DESC92_RATE24M:
-+				rate_idx = 8;
-+				break;
-+			case DESC92_RATE36M:
-+				rate_idx = 9;
-+				break;
-+			case DESC92_RATE48M:
-+				rate_idx = 10;
-+				break;
-+			case DESC92_RATE54M:
-+				rate_idx = 11;
-+				break;
-+			default:
-+				rate_idx = 0;
-+				break;
-+			}
-+		} else {
-+			switch (desc_rate) {
-+			case DESC92_RATE6M:
-+				rate_idx = 0;
-+				break;
-+			case DESC92_RATE9M:
-+				rate_idx = 1;
-+				break;
-+			case DESC92_RATE12M:
-+				rate_idx = 2;
-+				break;
-+			case DESC92_RATE18M:
-+				rate_idx = 3;
-+				break;
-+			case DESC92_RATE24M:
-+				rate_idx = 4;
-+				break;
-+			case DESC92_RATE36M:
-+				rate_idx = 5;
-+				break;
-+			case DESC92_RATE48M:
-+				rate_idx = 6;
-+				break;
-+			case DESC92_RATE54M:
-+				rate_idx = 7;
-+				break;
-+			default:
-+				rate_idx = 0;
-+				break;
-+			}
-+		}
-+
-+	} else {
-+
-+		switch (desc_rate) {
-+		case DESC92_RATEMCS0:
-+			rate_idx = 0;
-+			break;
-+		case DESC92_RATEMCS1:
-+			rate_idx = 1;
-+			break;
-+		case DESC92_RATEMCS2:
-+			rate_idx = 2;
-+			break;
-+		case DESC92_RATEMCS3:
-+			rate_idx = 3;
-+			break;
-+		case DESC92_RATEMCS4:
-+			rate_idx = 4;
-+			break;
-+		case DESC92_RATEMCS5:
-+			rate_idx = 5;
-+			break;
-+		case DESC92_RATEMCS6:
-+			rate_idx = 6;
-+			break;
-+		case DESC92_RATEMCS7:
-+			rate_idx = 7;
-+			break;
-+		case DESC92_RATEMCS8:
-+			rate_idx = 8;
-+			break;
-+		case DESC92_RATEMCS9:
-+			rate_idx = 9;
-+			break;
-+		case DESC92_RATEMCS10:
-+			rate_idx = 10;
-+			break;
-+		case DESC92_RATEMCS11:
-+			rate_idx = 11;
-+			break;
-+		case DESC92_RATEMCS12:
-+			rate_idx = 12;
-+			break;
-+		case DESC92_RATEMCS13:
-+			rate_idx = 13;
-+			break;
-+		case DESC92_RATEMCS14:
-+			rate_idx = 14;
-+			break;
-+		case DESC92_RATEMCS15:
-+			rate_idx = 15;
-+			break;
-+		default:
-+			rate_idx = 0;
-+			break;
-+		}
-+	}
-+	return rate_idx;
-+}
-+EXPORT_SYMBOL(rtlwifi_rate_mapping);
-+
- void rtl_get_tcb_desc(struct ieee80211_hw *hw,
- 		      struct ieee80211_tx_info *info,
- 		      struct ieee80211_sta *sta,
-diff --git a/drivers/net/wireless/rtlwifi/base.h b/drivers/net/wireless/rtlwifi/base.h
-index a91f3ee..4ae9059 100644
---- a/drivers/net/wireless/rtlwifi/base.h
-+++ b/drivers/net/wireless/rtlwifi/base.h
-@@ -140,4 +140,6 @@ u8 *rtl_find_ie(u8 *data, unsigned int len, u8 ie);
- void rtl_recognize_peer(struct ieee80211_hw *hw, u8 *data, unsigned int len);
- u8 rtl_tid_to_ac(struct ieee80211_hw *hw, u8 tid);
- extern struct attribute_group rtl_attribute_group;
-+int rtlwifi_rate_mapping(struct ieee80211_hw *hw,
-+			 bool isht, u8 desc_rate, bool first_ampdu);
- #endif
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index d3c3ffd..8a90919 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -386,6 +386,41 @@ enum rtl_hal_state {
- 	_HAL_STATE_START = 1,
- };
+ 	/* dir in debugfs: ieee80211/<wiphyname> */
+ 	struct dentry *debugfsdir;
  
-+enum rtl_desc92_rate {
-+	DESC92_RATE1M = 0x00,
-+	DESC92_RATE2M = 0x01,
-+	DESC92_RATE5_5M = 0x02,
-+	DESC92_RATE11M = 0x03,
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 104fdd9..a5809a1 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1013,7 +1013,6 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 	cancel_work_sync(&local->reconfig_filter);
+ 
+ 	ieee80211_clear_tx_pending(local);
+-	sta_info_stop(local);
+ 	rate_control_deinitialize(local);
+ 
+ 	if (skb_queue_len(&local->skb_queue) ||
+@@ -1025,6 +1024,7 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 
+ 	destroy_workqueue(local->workqueue);
+ 	wiphy_unregister(local->hw.wiphy);
++	sta_info_stop(local);
+ 	ieee80211_wep_free(local);
+ 	ieee80211_led_exit(local);
+ 	kfree(local->int_scan_req);
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 645437c..c148651 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -616,6 +616,9 @@ int wiphy_register(struct wiphy *wiphy)
+ 	if (res)
+ 		goto out_rm_dev;
+ 
++	rtnl_lock();
++	rdev->wiphy.registered = true;
++	rtnl_unlock();
+ 	return 0;
+ 
+ out_rm_dev:
+@@ -647,6 +650,10 @@ void wiphy_unregister(struct wiphy *wiphy)
+ {
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
+ 
++	rtnl_lock();
++	rdev->wiphy.registered = false;
++	rtnl_unlock();
 +
-+	DESC92_RATE6M = 0x04,
-+	DESC92_RATE9M = 0x05,
-+	DESC92_RATE12M = 0x06,
-+	DESC92_RATE18M = 0x07,
-+	DESC92_RATE24M = 0x08,
-+	DESC92_RATE36M = 0x09,
-+	DESC92_RATE48M = 0x0a,
-+	DESC92_RATE54M = 0x0b,
-+
-+	DESC92_RATEMCS0 = 0x0c,
-+	DESC92_RATEMCS1 = 0x0d,
-+	DESC92_RATEMCS2 = 0x0e,
-+	DESC92_RATEMCS3 = 0x0f,
-+	DESC92_RATEMCS4 = 0x10,
-+	DESC92_RATEMCS5 = 0x11,
-+	DESC92_RATEMCS6 = 0x12,
-+	DESC92_RATEMCS7 = 0x13,
-+	DESC92_RATEMCS8 = 0x14,
-+	DESC92_RATEMCS9 = 0x15,
-+	DESC92_RATEMCS10 = 0x16,
-+	DESC92_RATEMCS11 = 0x17,
-+	DESC92_RATEMCS12 = 0x18,
-+	DESC92_RATEMCS13 = 0x19,
-+	DESC92_RATEMCS14 = 0x1a,
-+	DESC92_RATEMCS15 = 0x1b,
-+	DESC92_RATEMCS15_SG = 0x1c,
-+	DESC92_RATEMCS32 = 0x20,
-+};
-+
- enum rtl_var_map {
- 	/*reg map */
- 	SYS_ISO_CTRL = 0,
+ 	rfkill_unregister(rdev->rfkill);
+ 
+ 	/* protect the device list */
+diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
+index c6e4ca6..ff57459 100644
+--- a/net/wireless/sysfs.c
++++ b/net/wireless/sysfs.c
+@@ -93,7 +93,8 @@ static int wiphy_suspend(struct device *dev, pm_message_t state)
+ 
+ 	if (rdev->ops->suspend) {
+ 		rtnl_lock();
+-		ret = rdev->ops->suspend(&rdev->wiphy, rdev->wowlan);
++		if (rdev->wiphy.registered)
++			ret = rdev->ops->suspend(&rdev->wiphy, rdev->wowlan);
+ 		rtnl_unlock();
+ 	}
+ 
+@@ -112,7 +113,8 @@ static int wiphy_resume(struct device *dev)
+ 
+ 	if (rdev->ops->resume) {
+ 		rtnl_lock();
+-		ret = rdev->ops->resume(&rdev->wiphy);
++		if (rdev->wiphy.registered)
++			ret = rdev->ops->resume(&rdev->wiphy);
+ 		rtnl_unlock();
+ 	}
+ 
 -- 
-1.7.3.4
+1.7.1
 
