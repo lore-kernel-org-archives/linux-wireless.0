@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:54833 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752063Ab1HVN4S (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:43950 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753308Ab1HLC15 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 09:56:18 -0400
-Message-ID: <4E525FF7.6070904@qca.qualcomm.com> (sfid-20110822_155625_902340_F0E7399E)
-Date: Mon, 22 Aug 2011 19:26:07 +0530
-From: mohammed <mohammed@qca.qualcomm.com>
+	Thu, 11 Aug 2011 22:27:57 -0400
+Received: by iye16 with SMTP id 16so598268iye.1
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 19:27:56 -0700 (PDT)
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<rodrigue@qca.qualcomm.com>, <senthilb@qca.qualcomm.com>,
-	<rmanohar@qca.qualcomm.com>, <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] ath9k_htc: Fix few possible memory leaks
-References: <1313942085-6238-1-git-send-email-mohammed@qca.qualcomm.com> <20110822052918.GA30951@vasanth-laptop>
-In-Reply-To: <20110822052918.GA30951@vasanth-laptop>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Reply-To: robert@ocallahan.org
+In-Reply-To: <CAJ-Vmont2OdEGFqBKOen8XW+fTvA2xBgVr1h9vSeOBcQrE_FxA@mail.gmail.com>
+References: <CAOp6jLa2xGcyg-rmE78FTpi11SbBq+EkWhXc+5na5QuebuFSBg@mail.gmail.com>
+	<CAJ-Vmont2OdEGFqBKOen8XW+fTvA2xBgVr1h9vSeOBcQrE_FxA@mail.gmail.com>
+Date: Fri, 12 Aug 2011 14:27:56 +1200
+Message-ID: <CAOp6jLbp_Fvf8u9CxdhsK0vqJTHvhean7qp+vumuM+S_3-PApA@mail.gmail.com> (sfid-20110812_042800_290421_A0C1B19C)
+Subject: Re: [ath9k-devel] Packet loss regression with Atheros AR9280 adapter
+From: "Robert O'Callahan" <robert@ocallahan.org>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 22 August 2011 10:59 AM, Vasanthakumar Thiagarajan wrote:
-> On Sun, Aug 21, 2011 at 09:24:45PM +0530, Mohammed Shafi Shajakhan wrote:
->> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->>
->> still there are few other memory leaks which will be fixed
->> very soon
->>
->> Cc: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
->> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
->> ---
->>   drivers/net/wireless/ath/ath9k/htc_hst.c |   13 ++++++++-----
->>   drivers/net/wireless/ath/ath9k/wmi.c     |    3 ++-
->>   2 files changed, 10 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
->> index 1b90ed8..e435c9b 100644
->> --- a/drivers/net/wireless/ath/ath9k/htc_hst.c
->> +++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
->> @@ -169,13 +169,14 @@ static int htc_config_pipe_credits(struct htc_target *target)
->>   	time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
->>   	if (!time_left) {
->>   		dev_err(target->dev, "HTC credit config timeout\n");
->> -		return -ETIMEDOUT;
->> +		ret = -ETIMEDOUT;
->> +		goto err;
+On Fri, Aug 12, 2011 at 2:25 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+> On 11 August 2011 21:53, Robert O'Callahan <robert@ocallahan.org> wrote:
+> > Running Fedora 15's 2.6.40 kernel with compat-wireless (built from August 8
+> > tarball), I get persistent and quite severe packet loss with the AR9280 on
+> > my desktop machine. This started happening since I upgraded from Fedora 13
+> > to 15. Same box works fine running Windows 7, and other devices on the same
+> > network have no problems. The AP is in the same room as the AR9280, about
+> > three metres away. I have tried various versions of compat-wireless, passing
+> > nohwcrypt=1 to ath9k, and limiting the rate to 1Mb/s, all to no avail.
+> >
+> > How can I help debug this? Last 500 lines of dmesg attached.
 >
-> Are you sure we have to free the skb upon timeout?. It looks like
-> it is already taken care in ath9k_htc_txcompletion_cb(). The same
-> may apply to your other changes as well.
+> Are you able to run an earlier version of compat-wireless, see if it
+> is a problem?
 
+Anything I can get building with this kernel, I guess. Any particular
+version I should try?
 
-Vasanth thanks for your review, I haven't and not aware of that code 
-flow/callback. I will check into that.
-
-thanks,
-shafi
-
->
-> Vasanth
-
+Rob
+--
+"If we claim to be without sin, we deceive ourselves and the truth is
+not in us. If we confess our sins, he is faithful and just and will
+forgive us our sins and purify us from all unrighteousness. If we
+claim we have not sinned, we make him out to be a liar and his word is
+not in us." [1 John 1:8-10]
