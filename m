@@ -1,58 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:52118 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753806Ab1HLT1O (ORCPT
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:43391 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751513Ab1HLHeX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 15:27:14 -0400
-Received: by gwaa12 with SMTP id a12so2182110gwa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 12:27:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1313175799.4022.23.camel@jlt3.sipsolutions.net>
-References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
- <1312933511-9486-9-git-send-email-thomas@cozybit.com> <1312984078.4325.5.camel@jlt3.sipsolutions.net>
- <CAG6hwVNFUyt7VBEiaNpCoGFmt4eMbvexKA0pUtGi3sj3mwHgZQ@mail.gmail.com>
- <1313141481.4022.1.camel@jlt3.sipsolutions.net> <CAG6hwVMAkkv_OAemfEEGx9Tu3PmTqYq7vvBABw45omOXEx_p4A@mail.gmail.com>
- <1313175799.4022.23.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Fri, 12 Aug 2011 12:26:51 -0700
-Message-ID: <CAPjQAd-fWbavhPPfvKQjdo=kkd3iegKiCyBrfvDXqeJ1z8HbRA@mail.gmail.com> (sfid-20110812_212718_646058_F286B919)
-Subject: Re: [PATCH 8/8] {nl,cfg,mac}80211: let userspace make meshif mesh gate
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Thomas Pedersen <thomas@cozybit.com>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 12 Aug 2011 03:34:23 -0400
+Received: by mail-bw0-f46.google.com with SMTP id 11so1913157bke.5
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 00:34:22 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: Add support to RX packets payload alignment
+From: Luciano Coelho <coelho@ti.com>
+To: Shahar Levi <shahar_levi@ti.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1310633427-15882-1-git-send-email-shahar_levi@ti.com>
+References: <1310633427-15882-1-git-send-email-shahar_levi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 12 Aug 2011 10:34:17 +0300
+Message-ID: <1313134457.2407.943.camel@cumari> (sfid-20110812_093426_747843_E981C8BB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 12, 2011 at 12:03 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2011-08-12 at 12:00 -0700, Thomas Pedersen wrote:
->
->> iw mesh0 set mesh_param mesh_hwmp_rootmode=1
->> iw mesh0 set mesh_param mesh_gate_announcements=1
->>
->> And the connection between the two would only be apparent to someone
->> familiar with our limited implementation.
+On Thu, 2011-07-14 at 11:50 +0300, Shahar Levi wrote: 
+> In case of QoS packets the packet payload isn't aligned to
+> 4 bytes. In that case the mac80211 layer take care of that
+> via memmove() in ieee80211_deliver_skb().
+> Add support of copy packets from aggregation buffer to the
+> skbs with packet payload aligned care. In case of QoS packets
+> copy the packets in offset of 2 bytes guarantee payload aligned
+> to 4 bytes.
+> 
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> ---
 
-The draft defines three different ways to advertise gate over the
-mesh, leaving the implementers choice of which one(s) to implement.
-We chose the one that was best suited for the most common usage
-scenario.  I would not call that a limited implementation but rather
-"an efficient implementation of a bloated spec" :)
-
-> Hmm. I wonder if it then makes sense to allow changing this on the fly
-> at all?
-
-Yes it does.  Gate announcements should only go out if a node has some
-other interface connected to an external network.  If the external
-interface goes down, one would want to stop gate announcements
-immediately without bringing down the mesh interface.
-
-Javier
-
-
+Applied and pushed, thanks!
 
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+Cheers,
+Luca.
+
