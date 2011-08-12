@@ -1,82 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:35912 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751343Ab1HMCIy (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:39088 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751196Ab1HLOHN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 22:08:54 -0400
-Received: by ywf7 with SMTP id 7so2344134ywf.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 19:08:53 -0700 (PDT)
-Message-ID: <4E45DCB2.5020905@lwfinger.net> (sfid-20110813_040857_658908_59D2FAD6)
-Date: Fri, 12 Aug 2011 21:08:50 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 12 Aug 2011 10:07:13 -0400
+Received: by pzk37 with SMTP id 37so1211712pzk.1
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 07:07:13 -0700 (PDT)
 MIME-Version: 1.0
-To: Roman Krylov <volyrkr@gmail.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8192* wifi driver
-References: <4E45A973.6060305@gmail.com> <4E45AF82.5040407@lwfinger.net> <4E45D65F.6000306@gmail.com>
-In-Reply-To: <4E45D65F.6000306@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1313156101-16817-2-git-send-email-arend@broadcom.com>
+References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
+	<1313156101-16817-2-git-send-email-arend@broadcom.com>
+Date: Fri, 12 Aug 2011 16:07:13 +0200
+Message-ID: <CACna6rzmaxzezN-OPTLvXyFOZOsoq6XCds4P-FOEz27FzJz+Jg@mail.gmail.com> (sfid-20110812_160717_619510_6EB7A21B)
+Subject: Re: [PATCH 01/14] staging: brcm80211: use wait queues instead of
+ semaphores in wl_cfg80211.c
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/12/2011 08:41 PM, Roman Krylov wrote:
-> Hi Larry,
-> I can't figure out why this happens, this is what I see in dmesg with the
-> drivers supplied with the kernel:
->
-> rtl8192cu 1-6:1.0: usb_probe_interface
-> rtl8192cu 1-6:1.0: usb_probe_interface - got id
-> rtl8192cu: MAC address: 00:08:a1:ca:6a:33
-> rtl8192cu: Board Type 0
-> rtl8192cu: rx_max_size 15360, rx_urb_num 8, in_ep 1
-> ieee80211 phy1: Selected rate control algorithm 'rtl_rc'
-> drivers/usb/core/inode.c: creating file '004'
-> hub 1-0:1.0: state 7 ports 8 chg 0000 evt 0040
-> udev: renamed network interface wlan0 to wlan3
-> rtl8192cu: MAC auto ON okay!
-> rtl8192cu: Tx queue select: 0x05
-> rtl8192c: Loading firmware file rtlwifi/rtl8192cufw.bin
-> ADDRCONF(NETDEV_UP): wlan3: link is not ready
->
-> Though I can see the list of networks in NetworkManager, but I cannot connect to
-> any of these networks.
-> So I'm stuck with what I have.
-> It probably did not compile on your computer because you were cross-compiling.
-> Thanks,
-
-Do NOT drop the mailing list. ALWAYS Reply All. I do not do private debugging 
-unless you are paying!
-
-The dmesg fragment showed no reason for a failure to even try to connect. On my 
-system, I get
-
-[24756.876119] usb 1-2: new high speed USB device number 7 using ehci_hcd
-[24757.467946] rtl8192cu: MAC address: 00:1f:1f:c8:8e:cb
-[24757.467968] rtl8192cu: Board Type 0
-[24757.507037] rtlwifi: rx_max_size 15360, rx_urb_num 8, in_ep 1
-[24757.510400] ieee80211 phy5: Selected rate control algorithm 'rtl_rc'
-[24757.520562] usbcore: registered new interface driver rtl8192cu
-[24757.605980] udev[1038]: renamed network interface wlan0 to wlan5
-[24757.693068] rtl8192cu: MAC auto ON okay!
-[24757.776251] rtl8192cu: Tx queue select: 0x05
-[24757.780586] rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
-[24758.527878] ADDRCONF(NETDEV_UP): wlan5: link is not ready
-[24761.249067] wlan5: authenticate with c0:3f:0e:be:2b:44 (try 1)
-[24761.254431] wlan5: authenticated
-[24761.254540] wlan5: associate with c0:3f:0e:be:2b:44 (try 1)
-[24761.266899] wlan5: RX AssocResp from c0:3f:0e:be:2b:44 (capab=0x411 status=0 
-aid=2)
-[24761.266912] wlan5: associated
-[24761.289844] ADDRCONF(NETDEV_CHANGE): wlan5: link becomes ready
-
-It looks exactly like your output through the "link is not ready" message. At 
-that point, NetworkManager starts the authentication process.
-
-What do you see in the NM log file? It should be at /var/log/NetworkManager?
-
-I would also like to see the output of the 'iwlist scan' command when run as root.
-
-Larry
-
-
-
+MjAxMS84LzEyIEFyZW5kIHZhbiBTcHJpZWwgPGFyZW5kQGJyb2FkY29tLmNvbT46Cj4gQEAgLTM1
+MzcsMjcgKzM1NDQsMzkgQEAgc3RhdGljIHMzMiBicmNtZl9ldmVudF9oYW5kbGVyKHZvaWQgKmRh
+dGEpCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAoc3RydWN0IGJyY21mX2Nm
+ZzgwMjExX3ByaXYgKilkYXRhOwo+IMKgIMKgIMKgIMKgc3RydWN0IHNjaGVkX3BhcmFtIHBhcmFt
+ID0gey5zY2hlZF9wcmlvcml0eSA9IE1BWF9SVF9QUklPIC0gMSB9Owo+IMKgIMKgIMKgIMKgc3Ry
+dWN0IGJyY21mX2NmZzgwMjExX2V2ZW50X3EgKmU7Cj4gKyDCoCDCoCDCoCBERUNMQVJFX1dBSVRR
+VUVVRSh3YWl0LCBjdXJyZW50KTsKPgo+IMKgIMKgIMKgIMKgc2NoZWRfc2V0c2NoZWR1bGVyKGN1
+cnJlbnQsIFNDSEVEX0ZJRk8sICZwYXJhbSk7Cj4gwqAgwqAgwqAgwqBhbGxvd19zaWduYWwoU0lH
+VEVSTSk7Cj4gLSDCoCDCoCDCoCB3aGlsZSAobGlrZWx5KCFkb3duX2ludGVycnVwdGlibGUoJmNm
+Z19wcml2LT5ldmVudF9zeW5jKSkpIHsKPiArIMKgIMKgIMKgIGFkZF93YWl0X3F1ZXVlKCZjZmdf
+cHJpdi0+ZXZlbnRfd2FpdHEsICZ3YWl0KTsKPiArIMKgIMKgIMKgIHdoaWxlICgxKSB7Cj4gKyDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCBwcmVwYXJlX3RvX3dhaXQoJmNmZ19wcml2LT5ldmVudF93YWl0
+cSwgJndhaXQsCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCBUQVNLX0lOVEVSUlVQVElCTEUpOwo+ICsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNjaGVk
+dWxlKCk7Cj4gKwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgaWYgKGt0aHJlYWRfc2hvdWxkX3N0
+b3AoKSkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoGJyZWFrOwo+ICsKPiDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoGUgPSBicmNtZl9kZXFfZXZlbnQoY2ZnX3ByaXYpOwo+IMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgaWYgKHVubGlrZWx5KCFlKSkgewo+IMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgV0xfRVJSKCJldmVudCBxdWV1ZSBlbXB0eS4uLlxuIik7Cj4g
+LSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBCVUcoKTsKPiArIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIGNvbnRpbnVlOwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+fQo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgV0xfSU5GTygiZXZlbnQgdHlwZSAoJWQpXG4iLCBl
+LT5ldHlwZSk7Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpZiAoY2ZnX3ByaXYtPmVsLmhhbmRs
+ZXJbZS0+ZXR5cGVdKQo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY2ZnX3By
+aXYtPmVsLmhhbmRsZXJbZS0+ZXR5cGVdKGNmZ19wcml2LAo+IC0gwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqBjZmdfdG9fbmRldihjZmdfcHJpdiksCj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCZl
+LT5lbXNnLCBlLT5lZGF0YSk7Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCBlbHNlCj4gLSDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBXTF9JTkZPKCJVbmtub3duIEV2ZW50ICglZCk6
+IGlnbm9yaW5nXG4iLCBlLT5ldHlwZSk7Cj4KPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGJyY21m
+X3B1dF9ldmVudChlKTsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGRvIHsKPiArIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIFdMX0lORk8oImV2ZW50IHR5cGUgKCVkKVxuIiwgZS0+
+ZXR5cGUpOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKGNmZ19wcml2
+LT5lbC5oYW5kbGVyW2UtPmV0eXBlXSkKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIGNmZ19wcml2LT5lbC5oYW5kbGVyW2UtPmV0eXBlXShjZmdfcHJpdiwK
+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIGNmZ190b19uZGV2KGNmZ19wcml2KSwKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgICZlLT5lbXNnLCBlLT5lZGF0YSk7Cj4gKyDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBlbHNlCj4gKyDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBXTF9JTkZPKCJVbmtub3duIEV2ZW50ICglZCk6
+IGlnbm9yaW5nXG4iLAo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgZS0+ZXR5cGUpOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgYnJjbWZfcHV0X2V2ZW50KGUpOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfSB3
+aGlsZSAoKGUgPSBicmNtZl9kZXFfZXZlbnQoY2ZnX3ByaXYpKSk7CgppZiAoKCgoKGNhcmVfY29k
+aW5nX3N0eWxlKSkpKSkKZml4KCk7Cgo6LSkKCi0tIApSYWZhxYIK
