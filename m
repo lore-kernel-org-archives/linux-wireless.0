@@ -1,65 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:45305 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753939Ab1HQP4t convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:50219 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753840Ab1HLCyS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2011 11:56:49 -0400
-MIME-Version: 1.0
-In-Reply-To: <CA+XFjipM1Qup3bcJos_ikwzoaWoa3GdYqK0WBUqEHBNR6V6LfQ@mail.gmail.com>
-References: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com>
- <CA+XFjipM1Qup3bcJos_ikwzoaWoa3GdYqK0WBUqEHBNR6V6LfQ@mail.gmail.com>
-From: Pavel Ivanov <paivanof@gmail.com>
-Date: Wed, 17 Aug 2011 11:56:18 -0400
-Message-ID: <CAG1a4rsyfPrrrf-mzt3HAM6YHHjaHTcd2rbtYiwqLkUCP=j8pQ@mail.gmail.com> (sfid-20110817_175706_771963_E636E6FE)
-Subject: Re: [PATCH] ath9k: make driver usable standalone
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 11 Aug 2011 22:54:18 -0400
+Received: by mail-iy0-f170.google.com with SMTP id 16so634961iye.1
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 19:54:17 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH v2 3/8] mac80211: mesh locking fixes
+Date: Thu, 11 Aug 2011 19:53:56 -0700
+Message-Id: <1313117641-27351-3-git-send-email-thomas@cozybit.com> (sfid-20110812_045429_388901_5A821DA4)
+In-Reply-To: <1313117641-27351-1-git-send-email-thomas@cozybit.com>
+References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
+ <1313117641-27351-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> WIRELESS_EXT is not required for configuring wireless on recent
-> kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
+From: Javier Cardona <javier@cozybit.com>
 
-Since what version it's deprecated? Do user-space tools know about this new API?
+mesh_queue_preq is invoked invoked from both user (work queue) and
+softirq (timer) context, so the _bh version of spinlock needs to be
+used. Also, the mpath->state_lock should be softirq safe as well.
 
-Neither iwconfig nor iwlist worked for me without WIRELESS_EXT.
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ net/mac80211/mesh_pathtbl.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 7d050af..0d80d7d 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -670,12 +670,12 @@ int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata)
+ 		mpath = node->mpath;
+ 		if (mpath->sdata == sdata &&
+ 		    memcmp(addr, mpath->dst, ETH_ALEN) == 0) {
+-			spin_lock(&mpath->state_lock);
++			spin_lock_bh(&mpath->state_lock);
+ 			mpath->flags |= MESH_PATH_RESOLVING;
+ 			hlist_del_rcu(&node->list);
+ 			call_rcu(&node->rcu, mesh_path_node_reclaim);
+ 			atomic_dec(&tbl->entries);
+-			spin_unlock(&mpath->state_lock);
++			spin_unlock_bh(&mpath->state_lock);
+ 			goto enddel;
+ 		}
+ 	}
+-- 
+1.7.4.1
 
-Pavel
-
-
-2011/8/17 Gábor Stefanik <netrolller.3d@gmail.com>:
-> On Wed, Aug 17, 2011 at 5:28 AM, Pavel Ivanov <paivanof@gmail.com> wrote:
->> When ath9k is the only wireless driver included in the build
->> WIRELESS_EXT configuration option becomes undefined. Because of that
->> driver becomes essentially unusable as you can't actually connect to
->> any WiFi network. By including WIRELESS_EXT into Kconfig we ensure
->> that build with ath9k and without other drivers (having WIRELESS_EXT
->> selected in their Kconfig) is actually usable.
->
-> WIRELESS_EXT is not required for configuring wireless on recent
-> kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
->
->>
->> Signed-off-by: Pavel Ivanov <paivanof@gmail.com>
->> ---
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/Kconfig
->> b/drivers/net/wireless/ath/ath9k/Kconfig
->> index d9c08c6..2573f77 100644
->> --- a/drivers/net/wireless/ath/ath9k/Kconfig
->> +++ b/drivers/net/wireless/ath/ath9k/Kconfig
->> @@ -11,6 +11,7 @@ config ATH9K
->>        select LEDS_CLASS
->>        select NEW_LEDS
->>        select ATH9K_COMMON
->> +       select WIRELESS_EXT
->>        ---help---
->>          This module adds support for wireless adapters based on
->>          Atheros IEEE 802.11n AR5008, AR9001 and AR9002 family
