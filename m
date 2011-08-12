@@ -1,89 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:55903 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755381Ab1HYVHp convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:47120 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750889Ab1HLUdG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 17:07:45 -0400
-Received: by qyk38 with SMTP id 38so3736185qyk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 14:07:45 -0700 (PDT)
+	Fri, 12 Aug 2011 16:33:06 -0400
+Received: by yxj19 with SMTP id 19so2204881yxj.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 13:33:05 -0700 (PDT)
+Message-ID: <4E458DFD.4060208@lwfinger.net> (sfid-20110812_223314_756583_0C25AC2C)
+Date: Fri, 12 Aug 2011 15:33:01 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <CAOiHx=narxG2WG1+8jDTah=u=XQ337K7UZZgd8Fv9xksufkEKw@mail.gmail.com>
-References: <20110707002034.GA17885@broadcom.com>
-	<20110824222801.GA5280@broadcom.com>
-	<CAOiHx=mfqv9CPNRsZ0pbXMfkDstyNcioqww77EDvU35q0CGMWw@mail.gmail.com>
-	<20110825002032.GA7577@broadcom.com>
-	<CAOiHx=narxG2WG1+8jDTah=u=XQ337K7UZZgd8Fv9xksufkEKw@mail.gmail.com>
-Date: Thu, 25 Aug 2011 23:07:44 +0200
-Message-ID: <CACna6rxRG_yPsCMG3tNTiHp5GratUn8qYiDYKxa85vuaBLjCtw@mail.gmail.com> (sfid-20110825_230749_339659_A66A9308)
-Subject: Re: [PATCH v2] Move brcm80211 to mainline
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Jonas Gorski <jonas.gorski@gmail.com>
-Cc: Henry Ptasinski <henryp@broadcom.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Stefan Assmann <sassmann@kpanic.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: add module parameter to set global debug level
+References: <1313176963-17141-1-git-send-email-sassmann@kpanic.de>
+In-Reply-To: <1313176963-17141-1-git-send-email-sassmann@kpanic.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/8/25 Jonas Gorski <jonas.gorski@gmail.com>:
-> Hi,
+On 08/12/2011 02:22 PM, Stefan Assmann wrote:
+> Adding a module parameter to allow setting the global debug level.
+> No need to recompile the module anymore to set the debug level.
 >
-> On 25 August 2011 02:20, Henry Ptasinski <henryp@broadcom.com> wrote:
->> On Wed, Aug 24, 2011 at 04:41:54PM -0700, Jonas Gorski wrote:
->>> Hi Henry,
->>>
->>> On 25 August 2011 00:28, Henry Ptasinski <henryp@broadcom.com> wrote:
->>> > With the latest series of cleanup patches merged in by Greg KH, I'd like to
->>> > once again propose moving brcm80211 out of staging and into mainline.
->>>
->>> While I like the Idea of brcm80211 going mainline, I'd like to throw
->>> in the suggestion that brcm80211 should be made a bcma/ssb driver
->>> first (AFACT brcmfmac would use ssb, not bcma, therefore both).
->>>
->>> My reasoning is that it needs to be done eventually anyway, and the
->>> earlier this is done the less work it will be in the long term, also
->>> it would reduce the duplicate code in bcma, ssb, and brcm80211.
->>>
->>> Of course this is just a suggestion, and it's yours and Greg's call
->>> whether you agree with me or not (since it's quite late in the game to
->>> add a new TODO, and I suspect a rather big one).
->>
->> We started converting brcmsmac to bcma, but bcma is evolving rapidly in the
->> wireless-testing tree.  Since wireless-testing and staging-next only get in
->> sync during a kernel merge, the version of bcma we have to work with in staging
->> is usually quit outdated.  Unless Greg and John want to come up with a process
->> for keeping bcma consistent between their two repos, I don't really see how we
->> can productively use bcma until we cross over.  We do intend to switch to using
->> bcma as soon as possible.
+> Signed-off-by: Stefan Assmann<sassmann@kpanic.de>
+> ---
+>   drivers/net/wireless/rtlwifi/debug.c |    6 +++++-
+>   1 files changed, 5 insertions(+), 1 deletions(-)
 >
-> Okay, then no objections from me. The keeping in sync is a valid
-> reason. I'm looking forward to seeing your bcma patches :-)
+> diff --git a/drivers/net/wireless/rtlwifi/debug.c b/drivers/net/wireless/rtlwifi/debug.c
+> index 5fa7385..1d82639 100644
+> --- a/drivers/net/wireless/rtlwifi/debug.c
+> +++ b/drivers/net/wireless/rtlwifi/debug.c
+> @@ -28,12 +28,16 @@
 >
->> I believe the only SB bus functions that brcmfmac uses are the core reset and
->> disable functions, and only when initializing the chip to download firmware
->> (all other management of the bus is handled by the on-chip CPU).  Is it
->> possible to use those funtions from ssb, without the ssb module trying to
->> manage the bus?
+>   #include "wifi.h"
 >
-> I haven't really looked at how much the brcmfmac driver uses ssb; I
-> just saw s(s)b_* stuff in there and remembered that ssb supports SDIO
-> host, so I assumed that there's part of the stack hidden in brcmfmac.
-> But if it's only core reset and disable, then what Michael said
-> applies ;-)
+> +static unsigned int debug = DBG_EMERG;
+> +module_param(debug, uint, 0);
+> +MODULE_PARM_DESC(debug, "Set global debug level for rtlwifi (uint)");
 
-Still, is there any good reason for duplicating that code?
+As the system puts a (uint) following the description when the modinfo command 
+is used, the one above is redundant. Replace it with (0,2-5) instead. I have no 
+idea why there is a hole in the debug levels, but I hesitate to close it. Also, 
+send patches to John Linville with Cc to wireless.
 
-I think that it's not only about duplicating enable/disable/reset.
-What about managing sliding window? Reading available cores? Clocks
-management? Requesting & releasing device? Interrupts management?
+Thanks for doing this. I'll sign off on it when you send V2.
 
-About the code quality, short question: is the duplication of the code
-done on purpose between dhd_siod.c and bcmsdh.c? Two identical
-functions:
-brcmf_sdcard_set_sbaddr_window
-brcmf_sdbrcm_set_siaddr_window
+Larry
 
--- 
-Rafał
+> +
+>   void rtl_dbgp_flag_init(struct ieee80211_hw *hw)
+>   {
+>   	struct rtl_priv *rtlpriv = rtl_priv(hw);
+>   	u8 i;
+>
+> -	rtlpriv->dbg.global_debuglevel = DBG_EMERG;
+> +	rtlpriv->dbg.global_debuglevel = debug;
+>
+>   	rtlpriv->dbg.global_debugcomponents =
+>   	    COMP_ERR | COMP_FW | COMP_INIT | COMP_RECV | COMP_SEND |
+
