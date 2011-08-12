@@ -1,30 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:36850 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751999Ab1HBF7o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 01:59:44 -0400
-To: Brent Taylor <btaylor1@motorolasolutions.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ATH6KL lockup during init
-References: <loom.20110726T174149-11@post.gmane.org>
-	<loom.20110727T145019-705@post.gmane.org>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 02 Aug 2011 08:59:42 +0300
-In-Reply-To: <loom.20110727T145019-705@post.gmane.org> (Brent Taylor's message of "Wed\, 27 Jul 2011 12\:51\:55 +0000 \(UTC\)")
-Message-ID: <87hb60s69d.fsf@purkki.adurom.net> (sfid-20110802_075948_977371_DE2C9394)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:56341 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750735Ab1HLFOJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Aug 2011 01:14:09 -0400
+Subject: Re: [PATCH 2/9] drivers/net/wireless/wl12xx: add missing kfree
+From: Luciano Coelho <coelho@ti.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Julia Lawall <julia@diku.dk>
+In-Reply-To: <1312802283-9107-2-git-send-email-julia@diku.dk>
+References: <1312802283-9107-2-git-send-email-julia@diku.dk>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 12 Aug 2011 08:14:01 +0300
+Message-ID: <1313126041.2407.911.camel@cumari> (sfid-20110812_071413_225173_A73C2335)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brent Taylor <btaylor1@motorolasolutions.com> writes:
+On Mon, 2011-08-08 at 13:17 +0200, Julia Lawall wrote: 
+> From: Julia Lawall <julia@diku.dk>
+> 
+> In each case, the freed data should be freed in the error handling code as
+> well.
 
-> Fixed ... realized that I was using the wrong firmware images. I was
-> using an older image from AR6K_FW.3.0_RC.233.
+[...]
 
-Good that your issue was solved and thanks for letting us now. But
-nevertheless the driver should not lockup in there's a problem with
-firmware, ath6kl is definitely buggy here.
+> Signed-off-by: Julia Lawall <julia@diku.dk>
+> 
+> ---
+
+John, since you took Julia's patch for wl1251 into 3.1, could you also
+take this patch into it, please?
+
+Acked-by: Luciano Coelho <coelho@ti.com>
 
 -- 
-Kalle Valo
+Cheers,
+Luca.
+
