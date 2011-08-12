@@ -1,132 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:46339 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750790Ab1HOSbG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 14:31:06 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] comapt-wireless: make patches apply again
-Date: Mon, 15 Aug 2011 20:30:54 +0200
-Message-Id: <1313433054-30868-1-git-send-email-hauke@hauke-m.de> (sfid-20110815_203110_691967_39364DD5)
+Received: from mga11.intel.com ([192.55.52.93]:48076 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753734Ab1HLStC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Aug 2011 14:49:02 -0400
+Subject: Re: [PATCH -next 0/8] ath9k: ASPM fixes
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Reply-To: jeffrey.t.kirsher@intel.com
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"Allan, Bruce W" <bruce.w.allan@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	"camilo@mesias.co.uk" <camilo@mesias.co.uk>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Tony Houghton <h@realh.co.uk>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	Adrian Chadd <adrian@freebsd.org>,
+	"lrodriguez@atheros.com" <lrodriguez@atheros.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Date: Fri, 12 Aug 2011 11:49:00 -0700
+In-Reply-To: <20110812123509.GA13328@redhat.com>
+References: <1312542639-4274-1-git-send-email-sgruszka@redhat.com>
+	 <20110811160847.GD2566@tuxdriver.com> <20110812123509.GA13328@redhat.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-+aPHRAbGFkpcEWad7b6W"
+Message-ID: <1313174941.2115.8.camel@jtkirshe-mobl> (sfid-20110812_204909_765839_F09BADA0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/16-bluetooth.patch |   26 +++++++++++++-------------
- 1 files changed, 13 insertions(+), 13 deletions(-)
+--=-+aPHRAbGFkpcEWad7b6W
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/patches/16-bluetooth.patch b/patches/16-bluetooth.patch
-index 8d0ba3e..b6d251a 100644
---- a/patches/16-bluetooth.patch
-+++ b/patches/16-bluetooth.patch
-@@ -90,8 +90,8 @@ here still, but for now we keep this here.
- +	capi_ctr_reseted(ctrl);
- +#endif
-  
-- 	kthread_stop(session->task);
-- }
-+ 	atomic_inc(&session->terminate);
-+ 	wake_up_process(session->task);
- --- a/net/bluetooth/hci_sock.c
- +++ b/net/bluetooth/hci_sock.c
- @@ -547,7 +547,11 @@ drop:
-@@ -199,7 +199,7 @@ here still, but for now we keep this here.
-  	}
-  
-  	/* Wakeup user-space polling for socket errors */
--@@ -863,6 +880,70 @@ static void hidp_close(struct hid_device
-+@@ -865,6 +882,70 @@ static void hidp_close(struct hid_device
-  {
-  }
-  
-@@ -270,7 +270,7 @@ here still, but for now we keep this here.
-  static int hidp_parse(struct hid_device *hid)
-  {
-  	struct hidp_session *session = hid->driver_data;
--@@ -947,7 +1028,9 @@ static int hidp_setup_hid(struct hidp_se
-+@@ -949,7 +1030,9 @@ static int hidp_setup_hid(struct hidp_se
-  	hid->dev.parent = hidp_get_device(session);
-  	hid->ll_driver = &hidp_hid_driver;
-  
-@@ -280,7 +280,7 @@ here still, but for now we keep this here.
-  	hid->hid_output_raw_report = hidp_output_raw_report;
-  
-  	return 0;
--@@ -958,6 +1041,7 @@ fault:
-+@@ -960,6 +1043,7 @@ fault:
-  
-  	return err;
-  }
-@@ -288,7 +288,7 @@ here still, but for now we keep this here.
-  
-  int hidp_add_connection(struct hidp_connadd_req *req, struct socket *ctrl_sock, struct socket *intr_sock)
-  {
--@@ -977,6 +1061,39 @@ int hidp_add_connection(struct hidp_conn
-+@@ -979,6 +1063,39 @@ int hidp_add_connection(struct hidp_conn
-  
-  	BT_DBG("rd_data %p rd_size %d", req->rd_data, req->rd_size);
-  
-@@ -328,7 +328,7 @@ here still, but for now we keep this here.
-  	down_write(&hidp_session_sem);
-  
-  	s = __hidp_get_session(&bt_sk(ctrl_sock->sk)->dst);
--@@ -1010,6 +1127,7 @@ int hidp_add_connection(struct hidp_conn
-+@@ -1012,6 +1129,7 @@ int hidp_add_connection(struct hidp_conn
-  	session->flags   = req->flags & (1 << HIDP_BLUETOOTH_VENDOR_ID);
-  	session->idle_to = req->idle_to;
-  
-@@ -336,7 +336,7 @@ here still, but for now we keep this here.
-  	if (req->rd_size > 0) {
-  		err = hidp_setup_hid(session, req);
-  		if (err && err != -ENODEV)
--@@ -1021,6 +1139,16 @@ int hidp_add_connection(struct hidp_conn
-+@@ -1023,6 +1141,16 @@ int hidp_add_connection(struct hidp_conn
-  		if (err < 0)
-  			goto purge;
-  	}
-@@ -374,10 +374,10 @@ here still, but for now we keep this here.
- +	if (session->hid)
- +		hid_free_device(session->hid);
- +#endif
-- 	input_free_device(session->input);
-  	kfree(session);
-  	return err;
--@@ -1180,6 +1314,7 @@ int hidp_get_conninfo(struct hidp_connin
-+ }
-+@@ -1179,6 +1313,7 @@ int hidp_get_conninfo(struct hidp_connin
-  	return err;
-  }
-  
-@@ -385,7 +385,7 @@ here still, but for now we keep this here.
-  static const struct hid_device_id hidp_table[] = {
-  	{ HID_BLUETOOTH_DEVICE(HID_ANY_ID, HID_ANY_ID) },
-  	{ }
--@@ -1189,6 +1324,7 @@ static struct hid_driver hidp_driver = {
-+@@ -1188,6 +1323,7 @@ static struct hid_driver hidp_driver = {
-  	.name = "generic-bluetooth",
-  	.id_table = hidp_table,
-  };
-@@ -393,7 +393,7 @@ here still, but for now we keep this here.
-  
-  static int __init hidp_init(void)
-  {
--@@ -1196,11 +1332,14 @@ static int __init hidp_init(void)
-+@@ -1195,11 +1331,14 @@ static int __init hidp_init(void)
-  
-  	BT_INFO("HIDP (Human Interface Emulation) ver %s", VERSION);
-  
-@@ -408,7 +408,7 @@ here still, but for now we keep this here.
-  	if (ret)
-  		goto err_drv;
-  
--@@ -1208,13 +1347,16 @@ static int __init hidp_init(void)
-+@@ -1207,13 +1346,16 @@ static int __init hidp_init(void)
-  err_drv:
-  	hid_unregister_driver(&hidp_driver);
-  err:
--- 
-1.7.4.1
+On Fri, 2011-08-12 at 05:35 -0700, Stanislaw Gruszka wrote:
+> On Thu, Aug 11, 2011 at 12:08:48PM -0400, John W. Linville wrote:
+> > On Fri, Aug 05, 2011 at 01:10:31PM +0200, Stanislaw Gruszka wrote:
+> > > This patch series try to fix ath9k ASPM. Some of patches are cleanup
+> > > only or do merging common code (with e1000e driver).
+> > >=20
+> > > With CONFIG_PCIEASPM it's possible to change ASPM settings on runtime
+> > > via /sys/module/pcie_aspm/parameters/policy . However most drivers
+> > > I looked at assume this setting is constant. I add a callback to pci
+> > > driver to inform about the change, and allow driver to do needed hw
+> > > related changes. Currently only ath9k implement the callback, but
+> > > I think it will be useful for other drivers i.e. iwlwifi, rtlwifi
+> > > that do some own ASPM handling.
+> > >=20
+> > > Would be nice to get some testing on patches on different
+> > > platforms with ath9k devices on kernel compiled with CONFIG_PCIEASPM
+> > > (default) and mixing up commands:
+> > >=20
+> > > echo powersave > /sys/module/pcie_aspm/parameters/policy =20
+> > > echo performance > /sys/module/pcie_aspm/parameters/policy =20
+> > > ifconfig wlan0 down
+> > > ifconfig wlan0 up
+> > > pm-suspend
+> > >=20
+> > > Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+> > > Cc: linux-pci@vger.kernel.org
+> > > Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> > > Cc: e1000-devel@lists.sourceforge.net
+> > > ---
+> > >  drivers/net/e1000e/netdev.c                |   31 ----------
+> > >  drivers/net/wireless/ath/ath9k/ar9002_hw.c |   12 ---
+> > >  drivers/net/wireless/ath/ath9k/ar9003_hw.c |   12 ---
+> > >  drivers/net/wireless/ath/ath9k/hw-ops.h    |    9 +-
+> > >  drivers/net/wireless/ath/ath9k/hw.c        |   17 +++--
+> > >  drivers/net/wireless/ath/ath9k/hw.h        |   12 +--
+> > >  drivers/net/wireless/ath/ath9k/main.c      |    8 --
+> > >  drivers/net/wireless/ath/ath9k/pci.c       |   88 ++++++++++++++++++=
+++++-------
+> > >  drivers/pci/pcie/Makefile                  |    3=20
+> > >  drivers/pci/pcie/aspm.c                    |   46 ++++++++++++++-
+> > >  include/linux/pci-aspm.h                   |    2=20
+> > >  include/linux/pci.h                        |    3=20
+> > >  12 files changed, 148 insertions(+), 95 deletions(-)
+> >=20
+> > I'm happy to take patches 1-3 through my tree.  But maybe patches 4-8
+> > should go through a PCI tree?  Or at least get some ACKS from the
+> > appropriate maintainers to take these changes through the wireless
+> > trees?
+>=20
+> Getting ACKs from Jesse and Jeff would be best since ath9k patches
+> 5 and 8 depends on 1-3. But, crap, seems my scripts does not eval Cc
+> from email body to actual Cc list. Not sure if pci and e1000 guys
+> saw these patches. If not, I'm gona repost this set and Cc it
+> fully to pci and e1000 guys.
+>=20
+> Stanislaw
+
+I did see the patches, sorry for not responding.  I wanted Bruce Allan
+<bruce.w.allan@intel.com> to review the e1000e changes to ensure he did
+not have any issues.  To me the change looks fine based on the aspm
+changes.
+
+--=-+aPHRAbGFkpcEWad7b6W
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQEcBAABAgAGBQJORXWcAAoJECTsCADr/EWUxk4H/3QZw+AtAMQ2WB4GZkUxi/fX
+tNOAQBsNUVNNsDSsQlyGUIBr/9mVLx7TrVjQ1QKvTBieW8xNKC148lZnobHqPd39
+3g+qWiTAX4W6dpbHPvm+uKEKzyz2FTIsOhBt9g8Y73Y2NL1c8Lb8B+13/GkTdhl1
+/JfZFIBvd6+gGwsccDITo7qLstuZlQGVboUuUjjTAdsvTXLqjL5AFqC9gaLjOkd5
+OIXurtgGN/Tlu7n8N2WC2Pq2kDx9hxJiEOk/tGv5xZ8EwHRfq7NuryFnxnvVCEQy
+PUWBNq6K/faP6nUH/5VcE+hnnf6MYvTN3/WoANq5Wsy/ukyiO1v9kAXoIjcxgCQ=
+=G85S
+-----END PGP SIGNATURE-----
+
+--=-+aPHRAbGFkpcEWad7b6W--
 
