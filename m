@@ -1,124 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:52328 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752745Ab1HIJOR (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:58610 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750791Ab1HLGLL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 05:14:17 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 24so210690wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:16 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 24/40] wl12xx: call wl1271_cmd_set_peer_state() in AP mode
-Date: Tue,  9 Aug 2011 12:13:37 +0300
-Message-Id: <1312881233-9366-25-git-send-email-eliad@wizery.com> (sfid-20110809_111421_379369_9E07D54D)
-In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	Fri, 12 Aug 2011 02:11:11 -0400
+Date: Thu, 11 Aug 2011 23:10:06 -0700 (PDT)
+Message-Id: <20110811.231006.537740938354501949.davem@davemloft.net> (sfid-20110812_081126_904869_F8D96A5B)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2011-08-11
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110811182018.GF2566@tuxdriver.com>
+References: <20110811182018.GF2566@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After adding a station, call wl1271_cmd_set_peer_state().
-This is required for 11n support.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 11 Aug 2011 14:20:19 -0400
 
-Change wl1271_cmd_set_peer_state() prototype to get hlid
-as param.
+> This is a little batch of patches intended for 3.1.
+> 
+> Included is a fix for a typo that incorrectly calibrated an ath9k phy,
+> a fix for an skb leak in ath5k, a fix for a bus error on some Broadcom
+> SoC using b43, a fix for a memory leak in wl1251, and another pair
+> of calibration fixes for ath9k. A handful of device ID updates are
+> included as well.
+> 
+> Please let me know if there are problems!
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/cmd.c  |    6 +++---
- drivers/net/wireless/wl12xx/cmd.h  |    2 +-
- drivers/net/wireless/wl12xx/main.c |    6 +++++-
- 3 files changed, 9 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index 6ef9d13..7cf4d53 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -1318,26 +1318,26 @@ int wl1271_cmd_set_ap_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
- 
- out:
- 	kfree(cmd);
- 	return ret;
- }
- 
--int wl1271_cmd_set_peer_state(struct wl1271 *wl)
-+int wl1271_cmd_set_peer_state(struct wl1271 *wl, u8 hlid)
- {
- 	struct wl1271_cmd_set_peer_state *cmd;
- 	int ret = 0;
- 
--	wl1271_debug(DEBUG_CMD, "cmd set sta state (hlid=%d)", wl->sta_hlid);
-+	wl1271_debug(DEBUG_CMD, "cmd set sta state (hlid=%d)", hlid);
- 
- 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
- 	if (!cmd) {
- 		ret = -ENOMEM;
- 		goto out;
- 	}
- 
--	cmd->hlid = wl->sta_hlid;
-+	cmd->hlid = hlid;
- 	cmd->state = WL1271_CMD_STA_STATE_CONNECTED;
- 
- 	ret = wl1271_cmd_send(wl, CMD_SET_PEER_STATE, cmd, sizeof(*cmd), 0);
- 	if (ret < 0) {
- 		wl1271_error("failed to send set STA state command");
- 		goto out_free;
-diff --git a/drivers/net/wireless/wl12xx/cmd.h b/drivers/net/wireless/wl12xx/cmd.h
-index 6f2a831..2ae2d73 100644
---- a/drivers/net/wireless/wl12xx/cmd.h
-+++ b/drivers/net/wireless/wl12xx/cmd.h
-@@ -67,13 +67,13 @@ int wl1271_cmd_set_default_wep_key(struct wl1271 *wl, u8 id, u8 hlid);
- int wl1271_cmd_set_sta_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
- 			   u8 key_size, const u8 *key, const u8 *addr,
- 			   u32 tx_seq_32, u16 tx_seq_16);
- int wl1271_cmd_set_ap_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
- 			  u8 key_size, const u8 *key, u8 hlid, u32 tx_seq_32,
- 			  u16 tx_seq_16);
--int wl1271_cmd_set_peer_state(struct wl1271 *wl);
-+int wl1271_cmd_set_peer_state(struct wl1271 *wl, u8 hlid);
- int wl1271_roc(struct wl1271 *wl, u8 role_id);
- int wl1271_croc(struct wl1271 *wl, u8 role_id);
- int wl1271_cmd_add_peer(struct wl1271 *wl, struct ieee80211_sta *sta, u8 hlid);
- int wl1271_cmd_remove_peer(struct wl1271 *wl, u8 hlid);
- int wl12xx_cmd_config_fwlog(struct wl1271 *wl);
- int wl12xx_cmd_start_fwlog(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index e523f0b..6a87086 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -391,13 +391,13 @@ static int wl1271_check_operstate(struct wl1271 *wl, unsigned char operstate)
- 	if (operstate != IF_OPER_UP)
- 		return 0;
- 
- 	if (test_and_set_bit(WL1271_FLAG_STA_STATE_SENT, &wl->flags))
- 		return 0;
- 
--	ret = wl1271_cmd_set_peer_state(wl);
-+	ret = wl1271_cmd_set_peer_state(wl, wl->sta_hlid);
- 	if (ret < 0)
- 		return ret;
- 
- 	wl1271_croc(wl, wl->role_id);
- 
- 	wl1271_info("Association completed.");
-@@ -3641,12 +3641,16 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
- 		goto out_free_sta;
- 
- 	ret = wl1271_cmd_add_peer(wl, sta, hlid);
- 	if (ret < 0)
- 		goto out_sleep;
- 
-+	ret = wl1271_cmd_set_peer_state(wl, hlid);
-+	if (ret < 0)
-+		goto out_sleep;
-+
- out_sleep:
- 	wl1271_ps_elp_sleep(wl);
- 
- out_free_sta:
- 	if (ret < 0)
- 		wl1271_free_sta(wl, hlid);
--- 
-1.7.6.401.g6a319
-
+Pulled, thanks John.
