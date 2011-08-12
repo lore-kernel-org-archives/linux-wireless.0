@@ -1,79 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3093 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752982Ab1HHN7a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:30 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 20/82] staging: brcm80211: remove duplicated code from
- brcmf_init_iscan
-Date: Mon, 8 Aug 2011 15:58:04 +0200
-Message-ID: <1312811946-16713-21-git-send-email-arend@broadcom.com> (sfid-20110808_155941_134880_0193676B)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:58299 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753802Ab1HLCff (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2011 22:35:35 -0400
+Received: by mail-iy0-f170.google.com with SMTP id 16so609089iye.1
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 19:35:35 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH v3 5/6] ieee80211: add mesh action codes
+Date: Thu, 11 Aug 2011 19:35:14 -0700
+Message-Id: <1313116515-26166-5-git-send-email-thomas@cozybit.com> (sfid-20110812_043538_076979_773C751E)
+In-Reply-To: <1313116515-26166-1-git-send-email-thomas@cozybit.com>
+References: <1313116515-26166-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Part of the code in brcmf_init_scan was identical to the code in
-brcmf_invoke_iscan and has been replaced by a call to it.
-
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   15 ++++-----------
- 1 files changed, 4 insertions(+), 11 deletions(-)
+ include/linux/ieee80211.h |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index e9ccf06..a69fa93 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3343,7 +3343,6 @@ static void brcmf_iscan_timer(unsigned long data)
- static s32 brcmf_invoke_iscan(struct brcmf_cfg80211_priv *cfg_priv)
- {
- 	struct brcmf_cfg80211_iscan_ctrl *iscan = cfg_to_iscan(cfg_priv);
--	int err = 0;
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 2417b90..311df71 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1305,6 +1305,21 @@ enum ieee80211_self_protected_actioncode {
+ 	WLAN_SP_MGK_ACK = 5,
+ };
  
- 	if (cfg_priv->iscan_on && !iscan->tsk) {
- 		iscan->state = WL_ISCAN_STATE_IDLE;
-@@ -3356,7 +3355,7 @@ static s32 brcmf_invoke_iscan(struct brcmf_cfg80211_priv *cfg_priv)
- 		}
- 	}
- 
--	return err;
-+	return 0;
- }
- 
- static void brcmf_init_iscan_eloop(struct brcmf_cfg80211_iscan_eloop *el)
-@@ -3376,20 +3375,14 @@ static s32 brcmf_init_iscan(struct brcmf_cfg80211_priv *cfg_priv)
- 
- 	if (cfg_priv->iscan_on) {
- 		iscan->dev = cfg_to_ndev(cfg_priv);
--		iscan->state = WL_ISCAN_STATE_IDLE;
- 		brcmf_init_iscan_eloop(&iscan->el);
- 		iscan->timer_ms = WL_ISCAN_TIMER_INTERVAL_MS;
- 		init_timer(&iscan->timer);
- 		iscan->timer.data = (unsigned long) iscan;
- 		iscan->timer.function = brcmf_iscan_timer;
--		sema_init(&iscan->sync, 0);
--		iscan->tsk = kthread_run(brcmf_iscan_thread, iscan, "wl_iscan");
--		if (IS_ERR(iscan->tsk)) {
--			WL_ERR("Could not create iscan thread\n");
--			iscan->tsk = NULL;
--			return -ENOMEM;
--		}
--		iscan->data = cfg_priv;
-+		err = brcmf_invoke_iscan(cfg_priv);
-+		if (!err)
-+			iscan->data = cfg_priv;
- 	}
- 
- 	return err;
++/* Mesh action codes */
++enum ieee80211_mesh_actioncode {
++	WLAN_MESH_ACTION_LINK_METRIC_REPORT,
++	WLAN_MESH_ACTION_HWMP_PATH_SELECTION,
++	WLAN_MESH_ACTION_GATE_ANNOUNCEMENT,
++	WLAN_MESH_ACTION_CONGESTION_CONTROL_NOTIFICATION,
++	WLAN_MESH_ACTION_MCCA_SETUP_REQUEST,
++	WLAN_MESH_ACTION_MCCA_SETUP_REPLY,
++	WLAN_MESH_ACTION_MCCA_ADVERTISEMENT_REQUEST,
++	WLAN_MESH_ACTION_MCCA_ADVERTISEMENT,
++	WLAN_MESH_ACTION_MCCA_TEARDOWN,
++	WLAN_MESH_ACTION_TBTT_ADJUSTMENT_REQUEST,
++	WLAN_MESH_ACTION_TBTT_ADJUSTMENT_RESPONSE,
++};
++
+ /* Security key length */
+ enum ieee80211_key_len {
+ 	WLAN_KEY_LEN_WEP40 = 5,
 -- 
 1.7.4.1
-
 
