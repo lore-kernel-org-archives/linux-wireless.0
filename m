@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47710 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752560Ab1HaFLm (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:52118 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753806Ab1HLT1O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 01:11:42 -0400
-Subject: Re: [PATCH] mac80211: Defer tranmission of mesh path errors
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
-	jlopex@gmail.com
-In-Reply-To: <CAPjQAd-CLvvn_1efsC_FjgoPSkyxiXC3c9yDGFzgPC4ts9Ay3w@mail.gmail.com> (sfid-20110831_035119_097014_0B067F99)
-References: <1314706867.4011.25.camel@jlt3.sipsolutions.net>
-	 <1314728954-22646-1-git-send-email-javier@cozybit.com>
-	 <1314729813.4011.43.camel@jlt3.sipsolutions.net>
-	 <CAPjQAd9Fyu-MQSvi+aa4VwwWBTo_Brf=jCvAEnLdQZaJvjvu=Q@mail.gmail.com>
-	 <CAPjQAd-CLvvn_1efsC_FjgoPSkyxiXC3c9yDGFzgPC4ts9Ay3w@mail.gmail.com>
-	 (sfid-20110831_035119_097014_0B067F99)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 31 Aug 2011 07:11:34 +0200
-Message-ID: <1314767494.4161.2.camel@jlt3.sipsolutions.net> (sfid-20110831_071148_081369_68DC4780)
-Mime-Version: 1.0
+	Fri, 12 Aug 2011 15:27:14 -0400
+Received: by gwaa12 with SMTP id a12so2182110gwa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 12:27:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1313175799.4022.23.camel@jlt3.sipsolutions.net>
+References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
+ <1312933511-9486-9-git-send-email-thomas@cozybit.com> <1312984078.4325.5.camel@jlt3.sipsolutions.net>
+ <CAG6hwVNFUyt7VBEiaNpCoGFmt4eMbvexKA0pUtGi3sj3mwHgZQ@mail.gmail.com>
+ <1313141481.4022.1.camel@jlt3.sipsolutions.net> <CAG6hwVMAkkv_OAemfEEGx9Tu3PmTqYq7vvBABw45omOXEx_p4A@mail.gmail.com>
+ <1313175799.4022.23.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Fri, 12 Aug 2011 12:26:51 -0700
+Message-ID: <CAPjQAd-fWbavhPPfvKQjdo=kkd3iegKiCyBrfvDXqeJ1z8HbRA@mail.gmail.com> (sfid-20110812_212718_646058_F286B919)
+Subject: Re: [PATCH 8/8] {nl,cfg,mac}80211: let userspace make meshif mesh gate
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Thomas Pedersen <thomas@cozybit.com>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-30 at 18:50 -0700, Javier Cardona wrote:
+On Fri, Aug 12, 2011 at 12:03 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2011-08-12 at 12:00 -0700, Thomas Pedersen wrote:
+>
+>> iw mesh0 set mesh_param mesh_hwmp_rootmode=1
+>> iw mesh0 set mesh_param mesh_gate_announcements=1
+>>
+>> And the connection between the two would only be apparent to someone
+>> familiar with our limited implementation.
 
-> The stress tests do trigger perrs and, with this change, we see a
-> warning due to missing info->control.vif
-> 
-> [14202.988077] ------------[ cut here ]------------
-> [14202.988351] WARNING: at net/mac80211/util.c:358
-> ieee80211_add_pending_skb+0x97/0xa0()
+The draft defines three different ways to advertise gate over the
+mesh, leaving the implementers choice of which one(s) to implement.
+We chose the one that was best suited for the most common usage
+scenario.  I would not call that a limited implementation but rather
+"an efficient implementation of a bloated spec" :)
 
-Interesting. Ok, that means we can't just use add_pending_skb(), we need
-to do some setup before, all the setup that ieee80211_tx_skb() and
-ieee80211_xmit() would do up to ieee80211_tx()...
+> Hmm. I wonder if it then makes sense to allow changing this on the fly
+> at all?
 
-I guess we need a little bit of helper code to enable this.
+Yes it does.  Gate announcements should only go out if a node has some
+other interface connected to an external network.  If the external
+interface goes down, one would want to stop gate announcements
+immediately without bringing down the mesh interface.
 
-johannes
+Javier
 
+
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
