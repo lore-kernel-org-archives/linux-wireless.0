@@ -1,90 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6839 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:4192 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755550Ab1HRN7U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Aug 2011 09:59:20 -0400
-Date: Thu, 18 Aug 2011 15:57:07 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	id S1754522Ab1HLAJ7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2011 20:09:59 -0400
+From: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
+To: Bo Nilsson <mr.bonilsson@gmail.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 05/60] iwlagn: introduce struct iwl-shared - known by all
- layers
-Message-ID: <20110818135705.GA4167@redhat.com> (sfid-20110818_155924_184892_CB5A8041)
-References: <1313417422.15170.39.camel@wwguy-huron>
- <20110815151231.GB15718@redhat.com>
- <1313422152.15170.43.camel@wwguy-huron>
- <20110816092610.GB6085@redhat.com>
- <1313503443.6823.9.camel@wwguy-ubuntu>
- <20110816151256.GA4932@redhat.com>
- <4825B8A2C4E264489E57869F0DCFB22344565DF754@hasmsx502.ger.corp.intel.com>
- <20110817151626.GA1552@redhat.com>
- <1313613400.6823.23.camel@wwguy-ubuntu>
- <4825B8A2C4E264489E57869F0DCFB22344565DFFDE@hasmsx502.ger.corp.intel.com>
+Date: Thu, 11 Aug 2011 17:09:58 -0700
+Subject: RE: ipw2200
+Message-ID: <C5A7FB31FD9AEA42B600BDC3C74F8E000C5DB12D@orsmsx511.amr.corp.intel.com> (sfid-20110812_021003_412653_8D5B7EAD)
+References: <CAPH1DO2bWghrK5zPquB52bLbLLSDQZ44kuaFjubbVFWEjNteNg@mail.gmail.com>
+In-Reply-To: <CAPH1DO2bWghrK5zPquB52bLbLLSDQZ44kuaFjubbVFWEjNteNg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4825B8A2C4E264489E57869F0DCFB22344565DFFDE@hasmsx502.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 18, 2011 at 07:49:04AM +0300, Grumbach, Emmanuel wrote:
-> > 
-> > On Wed, 2011-08-17 at 08:16 -0700, Stanislaw Gruszka wrote:
-> > > On Tue, Aug 16, 2011 at 07:23:52PM +0300, Grumbach, Emmanuel wrote:
-> > > > > Simply by adding to iwl_priv different struct ops/data for each
-> > upper
-> > > > > layer you will have. You need to have the same thing to clue with
-> > > > > mac80211, whatever upper layer will be. Otherwise, if mac80211
-> > clue
-> > > > > have to be different, new hardware probably needs different
-> > driver.
-> > > > >
-> > > >
-> > > > I would be reluctant to have all the data / ops needed by all the
-> > possible HW
-> > > > all the time in priv. I don't think it is a good idea to have
-> > unallocated pointers
-> > > > for a bus that don't need the rings...
-> > >
-> > > Not sure why there would be any unallocated pointers.
-> > >
-> > > > Instead, I think that having a HW specific area that is allocated
-> > for each HW is much
-> > > > nicer and reliable. This is what this patch series is all about.
-> > > > Furthermore, I don't want the HW layer to dereference iwl_priv,
-There is no reason for prohibiting dereferencing. Especially if that
-would make code more complex it should not be done. Look for example
-at net_device, it does not prohibit anything, but device drivers don't
-use fields that are not intended to use by them i.e ->napi_list, and
-use some other fields i.e. ->dev_addr . Note, this is very flexible,
-net_device works with all range of different devices from 10Gbit
-Ethernet to wifi.
+Hi Bo,
 
-If you want differentiate between layers in iwl_priv, it's enough to use
-comments like that: 
+The device you're referring to is an old Intel device, but no longer supported by Intel. The source is part of the Linux kernel tree, and has not changed by the developers since maintenance on it has stopped.
 
-struct iwl_priv {
-/* upper layer private fields */ 
-struct ieee80211_hw *hw;
-...
-/* public fields, can be used by hw layer and upper layer */
-struct mutex mutex;
-...
-}
+Also, it appears that a firmware reload occurred with the device. I'm not entirely familiar with this code base, but based on my knowledge of the iwlagn driver, the driver will reload firmware when it encounters several physical layer errors that it cannot recover from. Perhaps the ipw2200 has a similar behaviour.
 
-> > > We discussed with Wey upper and lower layer, term HW layer confuse me
-> > > even more here.
-> 
-> By HW layers I meant lower layers, since these are HW specific
-So this should be handled by something like that:
+That said, I have a few questions to ask:
 
-struct iwl_priv {
-	...
-	void *hw_priv;
-}
+1) what is the result of this firmware reload? 
+2) Are you still connected to the AP?
+3) Are you able to pass traffic?
 
-Yes, so simple :-)
+Thanks,
+Meenakshi
 
-Stanislaw
+>-----Original Message-----
+>From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+>owner@vger.kernel.org] On Behalf Of Bo Nilsson
+>Sent: Thursday, August 11, 2011 1:16 PM
+>To: linux-wireless@vger.kernel.org
+>Subject: ipw2200
+>
+>Is linux braking down? I never had a problem like this before. I will have to go
+>back to debian 5 and see if that is stable still.
+>
+>root@debian:/home/bo# dmesg | grep ipw2200
+>[    3.664058] ipw2200: Intel(R) PRO/Wireless 2200/2915 Network
+>Driver, 1.2.2kmprq
+>[    3.664062] ipw2200: Copyright(c) 2003-2006 Intel Corporation
+>[    3.954370] ipw2200 0000:02:06.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+>[    3.956831] ipw2200: Detected Intel PRO/Wireless 2200BG Network
+>Connection
+>[    3.956881] ipw2200 0000:02:06.0: firmware: requesting ipw2200-bss.fw
+>[    4.590967] ipw2200: Detected geography ZZR (14 802.11bg channels,
+>0 802.11a channels)
+>[  251.494725] ipw2200: Firmware error detected.  Restarting.
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-wireless" in the
+>body of a message to majordomo@vger.kernel.org More majordomo info at
+>http://vger.kernel.org/majordomo-info.html
