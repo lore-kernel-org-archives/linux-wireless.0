@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:58038 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753538Ab1HKL5X (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:50219 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753813Ab1HLCyU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 07:57:23 -0400
-Received: by mail-bw0-f44.google.com with SMTP id r4so873343bka.3
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 04:57:21 -0700 (PDT)
-Subject: Re: [PATCH 00/40] wl12xx: move to wl12xx-fw-3
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 11 Aug 2011 14:57:18 +0300
-Message-ID: <1313063838.2407.852.camel@cumari> (sfid-20110811_135726_782257_FCBCA4CE)
-Mime-Version: 1.0
+	Thu, 11 Aug 2011 22:54:20 -0400
+Received: by mail-iy0-f170.google.com with SMTP id 16so634961iye.1
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 19:54:20 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH v2 4/8] mac80211: fix mesh path flushing
+Date: Thu, 11 Aug 2011 19:53:57 -0700
+Message-Id: <1313117641-27351-4-git-send-email-thomas@cozybit.com> (sfid-20110812_045426_353677_D5E72AEF)
+In-Reply-To: <1313117641-27351-1-git-send-email-thomas@cozybit.com>
+References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
+ <1313117641-27351-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
-> The new wl12xx fw (ver 7.3.0.0.75) had some major api changes.
-> The main change was the addition of multi-role concept, which
-> will later allow using multiple vifs concurrently.
-> 
-> Consequently, this design change caused api changes for most
-> of the api commands, as a new role_id had to be added.
-> 
-> This patchset migrates the fw to use the new fw api (a new
-> fw filename is used, as there is no backward compatability
-> with older firmwares).
+From: Javier Cardona <javier@cozybit.com>
 
-Okay, I'm done with my review! Lots of small nitpicking, but this in
-general looks very good! Thanks a lot for the good work, guys!
+Previously, mpaths were never flushed since the mpath is not active once
+we call this function.
 
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ net/mac80211/mesh_pathtbl.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 0d80d7d..b5f2a14 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -751,8 +751,7 @@ void mesh_path_flush_pending(struct mesh_path *mpath)
+ {
+ 	struct sk_buff *skb;
+ 
+-	while ((skb = skb_dequeue(&mpath->frame_queue)) &&
+-			(mpath->flags & MESH_PATH_ACTIVE))
++	while ((skb = skb_dequeue(&mpath->frame_queue)) != NULL)
+ 		mesh_path_discard_frame(skb, mpath->sdata);
+ }
+ 
 -- 
-Cheers,
-Luca.
+1.7.4.1
 
