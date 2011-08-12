@@ -1,118 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:34886 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753189Ab1HVTaG convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 15:30:06 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: "wharms@bfs.de" <wharms@bfs.de>
-CC: Julia Lawall <julia@diku.dk>,
-	Pierre Louis Aublin <pierre-louis.aublin@inria.fr>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Mon, 22 Aug 2011 12:29:23 -0700
-Subject: RE: [PATCH 4/4] drivers/net/wireless/mwifiex/scan.c: test the
- just-initialized value
-Message-ID: <477F20668A386D41ADCC57781B1F70430802DD7B8C@SC-VEXCH1.marvell.com> (sfid-20110822_213009_765507_AF63F799)
-References: <1314021636-11528-4-git-send-email-julia@diku.dk>
- <4E52638C.8080407@inria.fr> <Pine.LNX.4.64.1108221615450.10948@ask.diku.dk>
- <477F20668A386D41ADCC57781B1F70430802DD7B7E@SC-VEXCH1.marvell.com>
- <4E52A966.3090502@bfs.de>
-In-Reply-To: <4E52A966.3090502@bfs.de>
-Content-Type: text/plain; charset=US-ASCII
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4366 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752389Ab1HLNb7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Aug 2011 09:31:59 -0400
+Date: Fri, 12 Aug 2011 16:31:50 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/3] nl80211/cfg80211: Add extra IE configuration to AP
+ mode setup
+Message-ID: <20110812133150.GA2408@jouni.qca.qualcomm.com> (sfid-20110812_153202_945657_CA2AE134)
+References: <20110810205556.GA3821@jouni.qca.qualcomm.com>
+ <1313152228.4022.4.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1313152228.4022.4.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Am 22.08.2011 21:02, schrieb Bing Zhao:
-> > Hi Julia,
-> >
-> > Thanks for the patch.
-> >
-> >> -----Original Message-----
-> >> From: Julia Lawall [mailto:julia@diku.dk]
-> >> Sent: Monday, August 22, 2011 7:16 AM
-> >> To: Pierre Louis Aublin
-> >> Cc: Bing Zhao; kernel-janitors@vger.kernel.org; John W. Linville; linux-wireless@vger.kernel.org;
-> >> netdev@vger.kernel.org; linux-kernel@vger.kernel.org
-> >> Subject: [PATCH 4/4] drivers/net/wireless/mwifiex/scan.c: test the just-initialized value
-> >>
-> >> From: Julia Lawall <julia@diku.dk>
-> >>
-> >> Test the just-initialized value rather than some other one.
-> >>
-> >> The semantic match that finds this problem is as follows:
-> >> (http://coccinelle.lip6.fr/)
-> >>
-> >> // <smpl>
-> >> @r@
-> >> identifier x,y,f!={PTR_ERR,ERR_PTR,ERR_CAST};
-> >> statement S;
-> >> @@
-> >>
-> >> x = f(...);
-> >> (
-> >> if (\(x == NULL\|IS_ERR(x)\)) S
-> >> |
-> >> *if (\(y == NULL\|IS_ERR(y)\))
-> >>  { ... when != x
-> >>    return ...; }
-> >> )
-> >> // </smpl>
-> >>
-> >> Signed-off-by: Julia Lawall <julia@diku.dk>
-> >
-> > Acked-by: Bing Zhao <bzhao@marvell.com>
-> >
-> >
-> > Thanks,
-> > Bing
-> >
-> >>
-> >> ---
-> >>  drivers/net/wireless/mwifiex/scan.c |    4 ++--
-> >>  1 file changed, 2 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-> >> index b28241c..37ca2f9 100644
-> >> --- a/drivers/net/wireless/mwifiex/scan.c
-> >> +++ b/drivers/net/wireless/mwifiex/scan.c
-> >> @@ -1480,8 +1480,8 @@ mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
-> >>  		return -ENOMEM;
-> >>  	}
-> >>  	beacon_ie = kzalloc(ie_len, GFP_KERNEL);
-> >> -	if (!bss_desc) {
-> >> -		dev_err(priv->adapter->dev, " failed to alloc bss_desc\n");
-> >> +	if (!beacon_ie) {
-> >> +		dev_err(priv->adapter->dev, " failed to alloc beacon_ie\n");
-> >>  		return -ENOMEM;
-> >>  	}
-> >>  	memcpy(beacon_ie, ie_buf, ie_len);
-> > --
+On Fri, Aug 12, 2011 at 02:30:28PM +0200, Johannes Berg wrote:
+> On Wed, 2011-08-10 at 23:55 +0300, Jouni Malinen wrote:
+> > The NL80211_CMD_NEW_BEACON command is, in practice, requesting AP mode
+> > operations to be started. Add new attributes to provide extra IEs
+> > (e.g., WPS IE, P2P IE) for drivers that build Beacon, Probe Response,
+> > and (Re)Association Response frames internally (likely in firmware).
 > 
-> 
-> this looks like a case for kmemdup()
+> Out of curiosity, how would such a driver implement WPS to start with?
 
-Hi Walter,
+These new attributes are provided to allow that to be done easily, i.e.,
+the driver will request the firmware to add the extra IEs (WPS/P2P IE)
+to the frames that need them. Whenever the IEs change, a _SET_BEACON
+command is used to update the IE contents (just like we do with the full
+Beacon template). I'm assuming here that the driver (or well, firmware)
+is building rest of the IEs both based on internal knowledge of the
+channel and security policy (the newly added attributes). This is
+similar to how WPS is normally run with many drivers that use private
+WEXT ioctls and the new attributes allow them to move to nl80211 more
+easily.
 
-You are right. I believe there are some more cases where kmemdup can be used.
-
-Hi John,
-
-Please apply Julia's patch as I will send a separate patch later to address Walter's comment. Thanks.
-
-> 
-> just my 2 cents,
-
-Thanks a lot for your 2 cents.
-
-Bing
-
-> 
-> re,
->  wh
-> 
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
