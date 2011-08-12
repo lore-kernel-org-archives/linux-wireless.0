@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54940 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753556Ab1H2NW3 (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:48771 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750830Ab1HLHUI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 09:22:29 -0400
-Subject: Re: [RFC] mac80211: add IBSS merge support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Ivan Seskar <seskar@winlab.rutgers.edu>
-In-Reply-To: <1314297201-19007-1-git-send-email-lrodriguez@qca.qualcomm.com> (sfid-20110825_203358_141791_DD74CE54)
-References: <1314297201-19007-1-git-send-email-lrodriguez@qca.qualcomm.com>
-	 (sfid-20110825_203358_141791_DD74CE54)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 29 Aug 2011 15:22:23 +0200
-Message-ID: <1314624143.8959.1.camel@jlt3.sipsolutions.net> (sfid-20110829_152235_853948_F2520A0C)
-Mime-Version: 1.0
+	Fri, 12 Aug 2011 03:20:08 -0400
+From: Nishant Sarmukadam <nishants@marvell.com>
+To: linux-wireless@vger.kernel.org, buytenh@wantstofly.org
+Cc: nishants@marvell.com
+Subject: [PATCH] mwl8k: Traffic to clients gets affected when one client leaves a cyrpto bss
+Date: Fri, 12 Aug 2011 12:20:21 +0530
+Message-Id: <1313131821-31322-1-git-send-email-nishants@marvell.com> (sfid-20110812_092012_437265_685D6004)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-08-25 at 11:33 -0700, Luis R. Rodriguez wrote:
-> From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-> 
-> When you try to create an IBSS network with a lot of nodes
-> you typically end up with split networks due to the fact that
-> some nodes for one reason or another end up not listening to
-> beacons from the node others do with a higher TSF. What ends
-> up happening is you split the IBSS network and these do not
-> converge. To address this you can force the BSSID as well as
-> the SSID but if you just want to specify the SSID you can
-> use the ibss_merge knob to force an IBSS merge by focing the
-> BSSID to be based on the passed SSID.
-> 
-> Cc: Jouni Malinen <jouni@qca.qualcomm.com>
-> Cc: Ivan Seskar <seskar@winlab.rutgers.edu>
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-> ---
-> 
-> Ivan, I think this is what you were looking for but an alternative to this
-> problem is to specify the BSSID every time you want to create your own large
-> IBSS network, this would mean that its a requirement and also means we
-> acknowledge a limitation by IEEE's adhoc definition. Is there any reason
-> forcing a BSSID on the experimenter is not an equally good solution?
+When a client disassociates from a crypto enabled bss, data traffic to
+other clients connected to the bss is stalled. This was due to a boolean
+variable used to keep track if HW crypto is enabled i.e. if set key has
+been called to add a key.  This flag was being reset every time delete
+key was called e.g when a station leaves the bss. Once the flag is
+reset, rx status flags were not being set for connected clients which
+disrupts traffic to these clients. Fix this issue by not resetting the
+flag since we do not need to reset this flag during the life time of the
+bss.
 
-Even setting "fixed-bssid" is acknowledging that already, but I really
-see no reason for this to live in the kernel.
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index da36dbf..771280a 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -4097,9 +4097,6 @@ static int mwl8k_set_key(struct ieee80211_hw *hw,
+ 
+ 		if (rc)
+ 			goto out;
+-
+-		mwl8k_vif->is_hw_crypto_enabled = false;
+-
+ 	}
+ out:
+ 	return rc;
+-- 
+1.6.0.3
 
