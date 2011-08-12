@@ -1,114 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:56791 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754879Ab1HWOGs convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:34338 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753932Ab1HLAdl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 10:06:48 -0400
-Received: by ewy4 with SMTP id 4so59313ewy.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 07:06:47 -0700 (PDT)
+	Thu, 11 Aug 2011 20:33:41 -0400
+Received: by wwe5 with SMTP id 5so4566537wwe.1
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 17:33:40 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4E538DC3.7060906@broadcom.com>
-References: <20110822112737.GA5936@stt008.linux.site>
-	<4E525235.7060501@broadcom.com>
-	<CAKprTDHO+Hh4g3WjGijDhPtzY5PiqR0GQ_zg8Uw46-qOVXpCRQ@mail.gmail.com>
-	<4E525FC7.4070802@broadcom.com>
-	<CAKprTDF0iFSAkYZiLQFLX+KumyLbzNUvHocKJyzK37Kv_79EFA@mail.gmail.com>
-	<4E5367AA.8040406@broadcom.com>
-	<CAKprTDFret5n-AH_B_Hu6E0+B4FEGJQ=jjYbGNy8ZD5R8ReFCg@mail.gmail.com>
-	<4E53728B.3030803@broadcom.com>
-	<20110823095348.GA5383@stt008.linux.site>
-	<4E538309.1040203@broadcom.com>
-	<20110823105341.GA5604@stt008.linux.site>
-	<4E538DC3.7060906@broadcom.com>
-Date: Tue, 23 Aug 2011 16:06:46 +0200
-Message-ID: <CAKprTDHVcEgZvNE6Ububoaf1WH+LAcHD35YriNaj47JnsVL=Xg@mail.gmail.com> (sfid-20110823_160650_502021_5527FB28)
-Subject: Re: brcmsmac driver only works when sitting next to the AP
-From: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
-To: Roland Vossen <rvossen@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	"networkmanager-list@gnome.org" <networkmanager-list@gnome.org>
+In-Reply-To: <20110811222624.GJ8119@broadcom.com>
+References: <6264DDFA6754194CAB6452BFF5202C330F5F2115@SXGM-401.fg.rbc.com>
+	<CAPoLzpe0OYq677NooOY5F7PyvbNobOXXCuSnoaF7ZVc0cJkjAw@mail.gmail.com>
+	<20110811021554.GA24567@internetdog.org>
+	<CAPoLzpeQF_xO_4eT2CKfp9cXKWUopssHjCkXd3_b0e8EAn8e_w@mail.gmail.com>
+	<20110811222624.GJ8119@broadcom.com>
+Date: Thu, 11 Aug 2011 20:33:38 -0400
+Message-ID: <CAPoLzpeuPy9T7Q471pBz7A-RLuZykjo-apadm-nGjVdQhM9-7Q@mail.gmail.com> (sfid-20110812_023344_968761_4DD5FE8A)
+Subject: Re: brcmsmac: fifo 0: descriptor error
+From: Pedram Navid <pedram.navid@gmail.com>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: "ali@internetdog.org" <ali@internetdog.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/8/23 Roland Vossen <rvossen@broadcom.com>:
-> Hi Camaleón,
->
->>> Would you be able/willing to make debug related changes to our driver
->>> and build it ? I can tell you what changes to make.
+Hi Henry,
+
+I have filed this as bug 40972 along with the answers to your
+questions: https://bugzilla.kernel.org/show_bug.cgi?id=40972
+
+In short, yes, the error does appear immediately after a full
+power-off shutdown as soon as I bring the interface up after loading
+the module. Not always, but more often than not.
+
+I am running 32-bit but have used 64bit prior. I reinstalled my system
+thinking that it was a problem with 64-bit libraries. The full lsmod
+is on the bug report.
+
+I am currently running fine again. I will keep my laptop on throughout
+the day in the hopes that it goes down. Let me know if you need
+anything else.
+
+Thanks so much
+Pedram
+
+On Thu, Aug 11, 2011 at 6:26 PM, Henry Ptasinski <henryp@broadcom.com> wrote:
+> On Thu, Aug 11, 2011 at 03:35:32AM -0700, Pedram Navid wrote:
+>> Thank you Ali, I apologize, this is my first time reporting a bug
+>> through a mailing list.
 >>
->> I can try whataver you want me to try :-)
+>> Both lines repeat almost every second until I either run ifconfig
+>> wlan0 down or remove the module completely. I have since downgraded to
+>> 2.6.39 and am using the wl module and don't seem to have any problems.
+>> I still have the 3.0 Kernel available if anyone would like me to test
+>> further.
 >>
->> Just provide some guidance on what are the required steps.
->>
+>> On Wed, Aug 10, 2011 at 10:15 PM, Ali Bahar <ali@internetdog.org> wrote:
+>> > Hi Pedram,
+>> >
+>> > you must use a meaningful Subject-line for your email.
+>> > Hopefully, this'll attract the attention of the couple of Broadcom guys
+>> > who are on this list.
+>> >
+>> > Also,
+>> >
+>> >
+>> > On Wed, Aug 10, 2011 at 06:48:45PM -0400, Pedram Navid wrote:
+>> >> Hello,
+>> >>
+>> >> I'd like to report a bug I have not been able to find elsewhere. I am on
+>> >> a fresh Arch install with linux 3.0.1-1, using the brcmsmac module.
+>> >> Initially, the wireless works for a few days. At some point, it will
+>> >> stop, outputing the following error repeatedly:
+>> >>
+>> >> Aug  7 09:55:27 localhost kernel: [  825.796697] ieee80211 phy0: wl0:
+>> >> fifo 0: descriptor error
+>> >> Aug  7 09:55:27 localhost kernel: [  825.796713] ieee80211 phy0: wl0:
+>> >> fatal error, re-initializing
+>> >
+>> > You may wish to note which of these lines repeat. Do both repeat, or
+>> > only the "re-initializing" line? (It may be easier to just paste a few
+>> > lines into your mail.)
+>> >
+>> > later,
+>> > ali
+>> >
+>> >
+>> >> I can rmmod brcmsmac, reboot, shutdown, give it a few days, and start
+>> >> over and it will sometimes work. Other times, it will persist with the
+>> >> fifo errors.
 >
-> that is great. Ok, do you have the kernel sources on your system ? If so, cd
-> to the root of the source tree and issue these commands to build the driver:
+> Just to be clear:  You can power off the machine, and immediately after
+> starting up again you see these error messages?
 >
-> make SUBDIRS=drivers/staging/brcm80211 clean
-> make SUBDIRS=drivers/staging/brcm80211 modules
-
-Done!
-
-> if that works, do a 'modprobe mac80211' followed by a 'insmod
-> drivers/staging/brcm80211/brcmutil/brcmutil.ko'
-
-root@stt300:/usr/src/linux-source-3.0.0# insmod
-drivers/staging/brcm80211/brcmutil/brcmutil.ko
-insmod: can't read 'drivers/staging/brcm80211/brcmutil/brcmutil.ko':
-No such file or directory
-
-Ah, okay...
-
-root@stt300:/usr/src/linux-source-3.0.0# insmod
-drivers/staging/brcm80211/util/brcmutil.ko
-root@stt300:/usr/src/linux-source-3.0.0#
-
-> followed by a 'insmod drivers/staging/brcm80211/brcmsmac/brcmsmac.ko'.
-
-Mmm... this one returned an error:
-
-root@stt300:/usr/src/linux-source-3.0.0# insmod
-drivers/staging/brcm80211/brcmsmac/brcmsmac.ko
-insmod: error inserting
-'drivers/staging/brcm80211/brcmsmac/brcmsmac.ko': -1 Unknown symbol in
-module
-
-And dmesg shows:
-
-[16235.934894] brcmsmac: Unknown symbol bcm_chspec_malformed (err 0)
-[16235.934985] brcmsmac: Unknown symbol bcm_pktq_init (err 0)
-[16235.935035] brcmsmac: Unknown symbol bcm_bitcount (err 0)
-[16235.935092] brcmsmac: Unknown symbol bcm_pktq_peek_tail (err 0)
-[16235.935130] brcmsmac: Unknown symbol bcm_pktq_mdeq (err 0)
-[16235.935283] brcmsmac: Unknown symbol bcm_pktq_pdeq (err 0)
-[16235.935329] brcmsmac: Unknown symbol bcm_chspec_ctlchan (err 0)
-[16235.935375] brcmsmac: Unknown symbol bcm_pkt_buf_free_skb (err 0)
-[16235.935414] brcmsmac: Unknown symbol bcm_iovar_lencheck (err 0)
-[16235.935457] brcmsmac: Unknown symbol bcm_pkttotlen (err 0)
-[16235.935519] brcmsmac: Unknown symbol bcm_ether_atoe (err 0)
-[16235.935581] brcmsmac: Unknown symbol bcm_crc8 (err 0)
-[16235.935636] brcmsmac: Unknown symbol bcm_pkt_buf_get_skb (err 0)
-[16235.935677] brcmsmac: Unknown symbol bcm_pktq_penq_head (err 0)
-[16235.935735] brcmsmac: Unknown symbol bcm_pktq_pdeq_tail (err 0)
-[16235.935774] brcmsmac: Unknown symbol bcm_pktq_pflush (err 0)
-[16235.935827] brcmsmac: Unknown symbol bcm_pktq_penq (err 0)
-[16235.935882] brcmsmac: Unknown symbol bcm_pktq_flush (err 0)
-
-> Btw, I will assume until further notice that you disable network-manager
-> prior to loading the driver.
-
-Yes.
-
-> Let me know how this goes, then we can take it to the next level.
+>> >> Please let me know you need additional log files. I had
+>> >> this problem since 2.6.38 and reinstalled Arch twice, thinking it was
+>> >> something with my setup that was done incorrectly but haven't been
+>> >> able to figure it out. I can't find another case of this error on the
+>> >> internet.
 >
-> Thanks, Roland.
-
-Greetings,
-
--- 
-Camaleón
+> Can you provide some details about the network setup where you see this issue
+> (band, channel, a/b/g/n, security enabled/disabled) and the host (cpu, 32- or
+> 64-bit kernel).
+>
+>> >>
+>> >> #    lspci -vnn | grep 14e4
+>> >> 05:00.0 Network controller [0280]: Broadcom Corporation
+>> >> 802.11b/g/n Wireless LAN Controller [14e4:4727] (rev 01)
+>> >>        Subsystem: Broadcom Corporation Device [14e4:0510]
+>> >>
+>> >>  #  lsmod  | grep brc
+>> >> brcmsmac              594624  0
+>> >> brcmutil                6563  1 brcmsmac
+>> >> mac80211              215605  1 brcmsmac
+>> >> cfg80211              160516  2 brcmsmac,mac80211
+>> >> crc_ccitt               1331  1 brcmsmac
+>
+> Can you provide the full output of lsmod?
+>
+> Also, can you file this as a bug in bugzilla.kernel.org to make it easier for
+> us to track?  CC henryp@broadcom.com and rvossen@broadcom.com on the bug.
+>
+> Thanks,
+> - Henry
+>
+>
+>
