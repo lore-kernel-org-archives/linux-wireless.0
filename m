@@ -1,147 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:49718 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754390Ab1H0ASj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 20:18:39 -0400
-Received: by mail-yw0-f46.google.com with SMTP id 7so3294733ywf.19
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 17:18:39 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Subject: [PATCH v2 5/8] mac80211: Don't iterate twice over all mpaths when once in sufficient
-Date: Fri, 26 Aug 2011 17:18:11 -0700
-Message-Id: <1314404294-4233-6-git-send-email-javier@cozybit.com> (sfid-20110827_021842_234619_DDDDE98A)
-In-Reply-To: <1314404294-4233-1-git-send-email-javier@cozybit.com>
-References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
- <1314404294-4233-1-git-send-email-javier@cozybit.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:1921 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751968Ab1HLNfM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Aug 2011 09:35:12 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 08/14] staging: brcm80211: absorb
+ brcmf_sdioh_interrupt_deregister into brcmf_sdcard_intr_dereg
+Date: Fri, 12 Aug 2011 15:34:55 +0200
+Message-ID: <1313156101-16817-9-git-send-email-arend@broadcom.com> (sfid-20110812_153522_812933_C03953AF)
+In-Reply-To: <1313156101-16817-1-git-send-email-arend@broadcom.com>
+References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_pathtbl.c |   64 +++++++++++++++++++++++++------------------
- 1 files changed, 37 insertions(+), 27 deletions(-)
+From: Franky Lin <frankyl@broadcom.com>
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 598249e..ea9e34a 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -49,7 +49,9 @@ int mesh_paths_generation;
+brcmfmac wrapper function cleanup
+
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |    8 ++++++-
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   22 ---------------------
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    2 -
+ 3 files changed, 7 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index e5cf138..6c1b57d 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -189,7 +189,13 @@ int brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev)
  
- /* This lock will have the grow table function as writer and add / delete nodes
-  * as readers. When reading the table (i.e. doing lookups) we are well protected
-- * by RCU
-+ * by RCU.  We need to take this lock when modying the number of buckets
-+ * on one of the path tables but we don't need to if adding or removing mpaths
-+ * from hash buckets.
-  */
- static DEFINE_RWLOCK(pathtbl_resize_lock);
- 
-@@ -817,6 +819,32 @@ void mesh_path_flush_by_nexthop(struct sta_info *sta)
- 	rcu_read_unlock();
- }
- 
-+static void mesh_path_node_reclaim(struct rcu_head *rp)
-+{
-+	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
-+	struct ieee80211_sub_if_data *sdata = node->mpath->sdata;
-+
-+	del_timer_sync(&node->mpath->timer);
-+	atomic_dec(&sdata->u.mesh.mpaths);
-+	kfree(node->mpath);
-+	kfree(node);
-+}
-+
-+/* needs to be called with the corresponding hashwlock taken */
-+static void __mesh_path_del(struct mesh_table *tbl, struct mpath_node *node)
-+{
-+	struct mesh_path *mpath;
-+	mpath = node->mpath;
-+	spin_lock(&mpath->state_lock);
-+	mpath->flags |= MESH_PATH_RESOLVING;
-+	if (mpath->is_gate)
-+		mesh_gate_del(tbl, mpath);
-+	hlist_del_rcu(&node->list);
-+	call_rcu(&node->rcu, mesh_path_node_reclaim);
-+	spin_unlock(&mpath->state_lock);
-+	atomic_dec(&tbl->entries);
-+}
-+
- static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
+ int brcmf_sdcard_intr_dereg(struct brcmf_sdio_dev *sdiodev)
  {
- 	struct mesh_table *tbl;
-@@ -829,23 +857,15 @@ static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
- 	tbl = rcu_dereference(mesh_paths);
- 	for_each_mesh_entry(tbl, p, node, i) {
- 		mpath = node->mpath;
--		if (mpath->sdata == sdata)
--			mesh_path_del(mpath->dst, mpath->sdata);
-+		if (mpath->sdata == sdata) {
-+			spin_lock_bh(&tbl->hashwlock[i]);
-+			__mesh_path_del(tbl, node);
-+			spin_unlock_bh(&tbl->hashwlock[i]);
-+		}
- 	}
- 	rcu_read_unlock();
+-	return brcmf_sdioh_interrupt_deregister(sdiodev);
++	BRCMF_TRACE(("%s: Entering\n", __func__));
++
++	sdio_claim_host(sdiodev->func[1]);
++	sdio_release_irq(sdiodev->func[1]);
++	sdio_release_host(sdiodev->func[1]);
++
++	return 0;
  }
  
--static void mesh_path_node_reclaim(struct rcu_head *rp)
+ u8 brcmf_sdcard_cfg_read(struct brcmf_sdio_dev *sdiodev, uint fnc_num, u32 addr,
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 2e7d3ce..1dfad3e 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -190,28 +190,6 @@ void brcmf_sdioh_detach(struct brcmf_sdio_dev *sdiodev)
+ 
+ }
+ 
+-int brcmf_sdioh_interrupt_deregister(struct brcmf_sdio_dev *sdiodev)
 -{
--	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
--	struct ieee80211_sub_if_data *sdata = node->mpath->sdata;
+-	BRCMF_TRACE(("%s: Entering\n", __func__));
 -
--	del_timer_sync(&node->mpath->timer);
--	atomic_dec(&sdata->u.mesh.mpaths);
--	kfree(node->mpath);
--	kfree(node);
+-	if (sdiodev->func[1]) {
+-		/* register and unmask irq */
+-		sdio_claim_host(sdiodev->func[1]);
+-		sdio_release_irq(sdiodev->func[1]);
+-		sdio_release_host(sdiodev->func[1]);
+-	}
+-
+-	if (sdiodev->func[2]) {
+-		/* Claim host controller F2 */
+-		sdio_claim_host(sdiodev->func[2]);
+-		sdio_release_irq(sdiodev->func[2]);
+-		/* Release host controller F2 */
+-		sdio_release_host(sdiodev->func[2]);
+-	}
+-
+-	return 0;
 -}
 -
- static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
- {
- 	struct mesh_table *tbl;
-@@ -859,12 +879,8 @@ static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
- 					lockdep_is_held(pathtbl_resize_lock));
- 	for_each_mesh_entry(tbl, p, node, i) {
- 		mpath = node->mpath;
--		if (mpath->sdata != sdata)
--			continue;
- 		spin_lock_bh(&tbl->hashwlock[i]);
--		hlist_del_rcu(&node->list);
--		call_rcu(&node->rcu, mesh_path_node_reclaim);
--		atomic_dec(&tbl->entries);
-+		__mesh_path_del(tbl, node);
- 		spin_unlock_bh(&tbl->hashwlock[i]);
- 	}
- 	read_unlock_bh(&pathtbl_resize_lock);
-@@ -912,14 +928,7 @@ int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata)
- 		mpath = node->mpath;
- 		if (mpath->sdata == sdata &&
- 		    memcmp(addr, mpath->dst, ETH_ALEN) == 0) {
--			spin_lock_bh(&mpath->state_lock);
--			if (mpath->is_gate)
--				mesh_gate_del(tbl, mpath);
--			mpath->flags |= MESH_PATH_RESOLVING;
--			hlist_del_rcu(&node->list);
--			call_rcu(&node->rcu, mesh_path_node_reclaim);
--			atomic_dec(&tbl->entries);
--			spin_unlock_bh(&mpath->state_lock);
-+			__mesh_path_del(tbl, node);
- 			goto enddel;
- 		}
- 	}
-@@ -1160,6 +1169,7 @@ void mesh_path_expire(struct ieee80211_sub_if_data *sdata)
- 		    (!(mpath->flags & MESH_PATH_FIXED)) &&
- 		     time_after(jiffies, mpath->exp_time + MESH_PATH_EXPIRE))
- 			mesh_path_del(mpath->dst, mpath->sdata);
-+	}
- 	rcu_read_unlock();
- }
+ extern int
+ brcmf_sdioh_cfg_read(struct brcmf_sdio_dev *sdiodev, uint fnc_num, u32 addr,
+ 		     u8 *data)
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index bdbf411..d980307 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -247,8 +247,6 @@ extern u32 brcmf_sdcard_cur_sbwad(struct brcmf_sdio_dev *sdiodev);
+ extern int brcmf_sdioh_attach(struct brcmf_sdio_dev *sdiodev);
+ extern void brcmf_sdioh_detach(struct brcmf_sdio_dev *sdiodev);
  
+-extern int brcmf_sdioh_interrupt_deregister(struct brcmf_sdio_dev *sdiodev);
+-
+ /* read or write one byte using cmd52 */
+ extern int brcmf_sdioh_request_byte(struct brcmf_sdio_dev *sdiodev, uint rw,
+ 				    uint fnc, uint addr, u8 *byte);
 -- 
-1.7.6
+1.7.4.1
+
 
