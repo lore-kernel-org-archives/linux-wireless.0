@@ -1,59 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1379 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753707Ab1HLTJm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 15:09:42 -0400
-Message-ID: <4E457A6B.8020802@broadcom.com> (sfid-20110812_210944_196791_E9BA06BF)
-Date: Fri, 12 Aug 2011 21:09:31 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Arend van Spriel" <arend@broadcom.com>
-cc: "gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCHv2 01/14] staging: brcm80211: use wait queues instead
- of semaphores in wl_cfg80211.c
-References: <1313156101-16817-2-git-send-email-arend@broadcom.com>
- <1313175933-4323-1-git-send-email-arend@broadcom.com>
- <4E457A0B.2090707@broadcom.com>
-In-Reply-To: <4E457A0B.2090707@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:40199 "EHLO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751513Ab1HLHeh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Aug 2011 03:34:37 -0400
+Received: by mail-bw0-f45.google.com with SMTP id zv3so2207409bkb.18
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 00:34:35 -0700 (PDT)
+Subject: Re: [PATCH] wl12xx: fixes for hw_pg_ver and chip id reporting
+From: Luciano Coelho <coelho@ti.com>
+To: Gery Kahn <geryk@ti.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>
+In-Reply-To: <1310988109-13729-1-git-send-email-geryk@ti.com>
+References: <1310988109-13729-1-git-send-email-geryk@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 12 Aug 2011 10:34:32 +0300
+Message-ID: <1313134472.2407.944.camel@cumari> (sfid-20110812_093439_950662_EABEC182)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/12/2011 09:07 PM, Arend van Spriel wrote:
-> On 08/12/2011 09:05 PM, Arend van Spriel wrote:
->> In wl_cfg80211.c two semaphores were used to trigger a task to process
->> an event. The wait queues are better suited for that purpose. This also
->> removes checkpatch warning on sema_init() calls in this source file.
->>
->> Reviewed-by: Rafal Milecki<zajec5@gmail.com>
->> Reviewed-by: Roland Vossen<rvossen@broadcom.com>
->> Reviewed-by: Franky Lin<frankyl@broadcom.com>
->> Signed-off-by: Arend van Spriel<arend@broadcom.com>
->> ---
->> Hi Greg,
->>
->> This patch replaces the original submitted [01/14] patch identified by:
->>
->> Message-ID:<1313156101-16817-2-git-send-email-arend@broadcom.com>
->>
->> Gr. AvS
->> ---
-> I should have compiled it before sending v2. Please drop this one and
-> stick with the original patch.
->
-> Gr. AvS
->
+On Mon, 2011-07-18 at 14:21 +0300, Gery Kahn wrote: 
+> Fix the value of PG version for 128x at sysfs, remove write permissions
+> from PG version (hw_pg_ver) in sysfs and add remove files
+> (hw_pg_ver,bt_coex_state) from sysfs while freeing hardware.
+> New macro names for register Fuse_data_2_1 depend on architecture.
+> Propagate chip id through wiphy in PLT mode which still not work of
+> a bug in ethtool.
+> 
+> 
+> Signed-off-by: Gery Kahn <geryk@ti.com>
+> ---
 
-Or have people vote which version they prefer. I prefer v2.
-
-Gr. AvS
+Applied and pushed, thanks Gery.
 
 -- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
-
+Cheers,
+Luca.
 
