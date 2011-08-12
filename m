@@ -1,52 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:35863 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752812Ab1HIJOb (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56037 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751130Ab1HLM2Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 05:14:31 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 5so2430702wwf.1
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:31 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 32/40] wl12xx: don't remove key if hlid was already deleted
-Date: Tue,  9 Aug 2011 12:13:45 +0300
-Message-Id: <1312881233-9366-33-git-send-email-eliad@wizery.com> (sfid-20110809_111436_913633_E7368E9D)
-In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	Fri, 12 Aug 2011 08:28:24 -0400
+Subject: Re: [PATCH v2 1/8] mac80211: improve mpath debugging
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org,
+	Javier Cardona <javier@cozybit.com>, linville@tuxdriver.com
+In-Reply-To: <1313117641-27351-1-git-send-email-thomas@cozybit.com> (sfid-20110812_045445_878175_972148C7)
+References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
+	 <1313117641-27351-1-git-send-email-thomas@cozybit.com>
+	 (sfid-20110812_045445_878175_972148C7)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 12 Aug 2011 14:28:21 +0200
+Message-ID: <1313152101.4022.3.camel@jlt3.sipsolutions.net> (sfid-20110812_142827_987995_3A019B3D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When wep key was removed after disconnection, sta_hlid was invalid,
-and it resulted in a fw crash.
+On Thu, 2011-08-11 at 19:53 -0700, Thomas Pedersen wrote:
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+> +#ifdef CONFIG_MAC80211_VERBOSE_MPATH_DEBUG
+> +static inline void mpath_dbg(const char *fmt, ...)
+> +{
+> +	struct va_format vaf;
+> +	va_list args;
+> +
+> +	va_start(args, fmt);
+> +
+> +	vaf.fmt = fmt;
+> +	vaf.va = &args;
+> +
+> +	printk(KERN_DEBUG "%pV", &vaf);
+> +	va_end(args);
+> +	return;
+> +}
+> +#else
+> +static inline void mpath_dbg(const char *fmt, ...)
+> +{
+> +	return;
+> +}
+> +#endif
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index c873f24..b223c27 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2590,12 +2590,17 @@ static int wl1271_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
- 		   will be cleared automatically on next CMD_JOIN. Ignore the
- 		   request silently, as we dont want the mac80211 to emit
- 		   an error message. */
- 		if (action == KEY_REMOVE && !is_broadcast_ether_addr(addr))
- 			return 0;
- 
-+		/* don't remove key if hlid was already deleted */
-+		if (action == KEY_REMOVE &&
-+		    wl->sta_hlid == WL1271_INVALID_LINK_ID)
-+			return 0;
-+
- 		ret = wl1271_cmd_set_sta_key(wl, action,
- 					     id, key_type, key_size,
- 					     key, addr, tx_seq_32,
- 					     tx_seq_16);
- 		if (ret < 0)
- 			return ret;
--- 
-1.7.6.401.g6a319
+Oh, maybe that's too complicated after all... How about
+
+#ifdef ...
+#define ...
+#else
+static inline void mpath_dbg(const char *fmt, ...)
+	__attribute__ ((format (printf, 1, 2)))
+{
+}
+#endif
+
+Definitely want the format attribute, that was my whole point :)
+
+Bah, maybe it all doesn't matter, in which case maybe the first version
+is better.
+
+johannes
 
