@@ -1,147 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46054 "EHLO nbd.name"
+Received: from mx1.redhat.com ([209.132.183.28]:13595 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751718Ab1H0Wcg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Aug 2011 18:32:36 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 4/5] ath9k: move seqno allocation in the tx path to ath_tx_setup_buffer
-Date: Sun, 28 Aug 2011 00:32:24 +0200
-Message-Id: <1314484345-7018-4-git-send-email-nbd@openwrt.org> (sfid-20110828_003244_620445_06E01A25)
-In-Reply-To: <1314484345-7018-3-git-send-email-nbd@openwrt.org>
-References: <1314484345-7018-1-git-send-email-nbd@openwrt.org>
- <1314484345-7018-2-git-send-email-nbd@openwrt.org>
- <1314484345-7018-3-git-send-email-nbd@openwrt.org>
+	id S1751130Ab1HLMDI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Aug 2011 08:03:08 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>, stable@kernel.org
+Subject: [PATCH] rt2x00: do not drop usb dev reference counter on suspend
+Date: Fri, 12 Aug 2011 14:02:04 +0200
+Message-Id: <1313150524-13290-1-git-send-email-sgruszka@redhat.com> (sfid-20110812_140314_509819_9D9A107E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c |   42 ++++++++++++++++++---------------
- 1 files changed, 23 insertions(+), 19 deletions(-)
+When hibernating ->resume may not be called by usb core, but disconnect
+and probe instead, so we do not increase the counter after decreasing
+it in ->supend. As a result we free memory early, and get crash when
+unplugging usb dongle.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index b7f7198..00e9191 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1714,17 +1714,19 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len)
- 
- }
- 
--static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
-+static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
- 					   struct ath_txq *txq,
-+					   struct ath_atx_tid *tid,
- 					   struct sk_buff *skb)
+BUG: unable to handle kernel paging request at 6b6b6b9f
+IP: [<c06909b0>] driver_sysfs_remove+0x10/0x30
+*pdpt = 0000000034f21001 *pde = 0000000000000000
+Pid: 20, comm: khubd Not tainted 3.1.0-rc1-wl+ #20 LENOVO 6369CTO/6369CTO
+EIP: 0060:[<c06909b0>] EFLAGS: 00010202 CPU: 1
+EIP is at driver_sysfs_remove+0x10/0x30
+EAX: 6b6b6b6b EBX: f52bba34 ECX: 00000000 EDX: 6b6b6b6b
+ESI: 6b6b6b6b EDI: c0a0ea20 EBP: f61c9e68 ESP: f61c9e64
+ DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+Process khubd (pid: 20, ti=f61c8000 task=f6138270 task.ti=f61c8000)
+Call Trace:
+ [<c06909ef>] __device_release_driver+0x1f/0xa0
+ [<c0690b20>] device_release_driver+0x20/0x40
+ [<c068fd64>] bus_remove_device+0x84/0xe0
+ [<c068e12a>] ? device_remove_attrs+0x2a/0x80
+ [<c068e267>] device_del+0xe7/0x170
+ [<c06d93d4>] usb_disconnect+0xd4/0x180
+ [<c06d9d61>] hub_thread+0x691/0x1600
+ [<c0473260>] ? wake_up_bit+0x30/0x30
+ [<c0442a39>] ? complete+0x49/0x60
+ [<c06d96d0>] ? hub_disconnect+0xd0/0xd0
+ [<c06d96d0>] ? hub_disconnect+0xd0/0xd0
+ [<c0472eb4>] kthread+0x74/0x80
+ [<c0472e40>] ? kthread_worker_fn+0x150/0x150
+ [<c0809b3e>] kernel_thread_helper+0x6/0x10
+
+Cc: stable@kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00usb.c |   14 +-------------
+ 1 files changed, 1 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 7fbb55c..1e31050 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -871,18 +871,8 @@ int rt2x00usb_suspend(struct usb_interface *usb_intf, pm_message_t state)
  {
--	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_frame_info *fi = get_frame_info(skb);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ath_buf *bf;
- 	struct ath_desc *ds;
- 	int frm_type;
-+	u16 seqno;
- 
- 	bf = ath_tx_get_buffer(sc);
- 	if (!bf) {
-@@ -1734,6 +1736,13 @@ static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
- 
- 	ATH_TXBUF_RESET(bf);
- 
-+	if (tid) {
-+		seqno = tid->seq_next;
-+		hdr->seq_ctrl = cpu_to_le16(tid->seq_next << IEEE80211_SEQ_SEQ_SHIFT);
-+		INCR(tid->seq_next, IEEE80211_SEQ_MAX);
-+		bf->bf_state.seqno = seqno;
-+	}
-+
- 	bf->bf_flags = setup_tx_flags(skb);
- 	bf->bf_mpdu = skb;
- 
-@@ -1770,15 +1779,15 @@ static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
- }
- 
- /* FIXME: tx power */
--static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
-+static int ath_tx_start_dma(struct ath_softc *sc, struct sk_buff *skb,
- 			     struct ath_tx_control *txctl)
- {
--	struct sk_buff *skb = bf->bf_mpdu;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct list_head bf_head;
- 	struct ath_atx_tid *tid = NULL;
--	u16 seqno;
-+	struct ath_buf *bf;
-+	int ret = 0;
- 	u8 tidno;
- 
- 	spin_lock_bh(&txctl->txq->axq_lock);
-@@ -1788,15 +1797,15 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
- 			IEEE80211_QOS_CTL_TID_MASK;
- 		tid = ATH_AN_2_TID(txctl->an, tidno);
- 
--		seqno = tid->seq_next;
--		hdr->seq_ctrl = cpu_to_le16(tid->seq_next << IEEE80211_SEQ_SEQ_SHIFT);
--		INCR(tid->seq_next, IEEE80211_SEQ_MAX);
+ 	struct ieee80211_hw *hw = usb_get_intfdata(usb_intf);
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+-	int retval;
 -
--		bf->bf_state.seqno = seqno;
--
- 		WARN_ON(tid->ac->txq != txctl->txq);
- 	}
+-	retval = rt2x00lib_suspend(rt2x00dev, state);
+-	if (retval)
+-		return retval;
  
-+	bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb);
-+	if (unlikely(!bf)) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
- 	if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) && tid) {
- 		/*
- 		 * Try aggregation if it's a unicast data frame
-@@ -1822,7 +1831,9 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
- 		ath_tx_send_normal(sc, txctl->txq, tid, &bf_head);
- 	}
- 
-+out:
- 	spin_unlock_bh(&txctl->txq->axq_lock);
-+	return ret;
- }
- 
- /* Upon failure caller should free skb */
-@@ -1835,7 +1846,6 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct ieee80211_vif *vif = info->control.vif;
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_txq *txq = txctl->txq;
--	struct ath_buf *bf;
- 	int padpos, padsize;
- 	int frmlen = skb->len + FCS_LEN;
- 	int q;
-@@ -1882,10 +1892,6 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	 * info are no longer valid (overwritten by the ath_frame_info data.
- 	 */
- 
--	bf = ath_tx_setup_buffer(hw, txctl->txq, skb);
--	if (unlikely(!bf))
--		return -ENOMEM;
--
- 	q = skb_get_queue_mapping(skb);
- 	spin_lock_bh(&txq->axq_lock);
- 	if (txq == sc->tx.txq_map[q] &&
-@@ -1895,9 +1901,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	}
- 	spin_unlock_bh(&txq->axq_lock);
- 
--	ath_tx_start_dma(sc, bf, txctl);
+-	/*
+-	 * Decrease usbdev refcount.
+-	 */
+-	usb_put_dev(interface_to_usbdev(usb_intf));
 -
 -	return 0;
-+	return ath_tx_start_dma(sc, skb, txctl);
++	return rt2x00lib_suspend(rt2x00dev, state);
  }
+ EXPORT_SYMBOL_GPL(rt2x00usb_suspend);
  
- /*****************/
+@@ -891,8 +881,6 @@ int rt2x00usb_resume(struct usb_interface *usb_intf)
+ 	struct ieee80211_hw *hw = usb_get_intfdata(usb_intf);
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 
+-	usb_get_dev(interface_to_usbdev(usb_intf));
+-
+ 	return rt2x00lib_resume(rt2x00dev);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00usb_resume);
 -- 
-1.7.3.2
+1.7.1
 
