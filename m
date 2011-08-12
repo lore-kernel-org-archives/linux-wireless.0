@@ -1,34 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from w1.fi ([128.177.27.249]:54482 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752208Ab1HTPGY (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:3118 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753734Ab1HLS76 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Aug 2011 11:06:24 -0400
-Date: Sat, 20 Aug 2011 08:06:11 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: Mark mandatory rates as basic
-Message-ID: <20110820150611.GA11915@jm.kir.nu> (sfid-20110820_170629_240055_3F56ED39)
-References: <1313841275-7868-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Fri, 12 Aug 2011 14:59:58 -0400
+Message-ID: <4E45781E.8070508@broadcom.com> (sfid-20110812_210000_621652_80FEA6FE)
+Date: Fri, 12 Aug 2011 11:59:42 -0700
+From: "Franky Lin" <frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1313841275-7868-1-git-send-email-rmanohar@qca.qualcomm.com>
+To: "Arend van Spriel" <arend@broadcom.com>
+cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 01/14] staging: brcm80211: use wait queues instead
+ of semaphores in wl_cfg80211.c
+References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
+ <1313156101-16817-2-git-send-email-arend@broadcom.com>
+ <CACna6rzmaxzezN-OPTLvXyFOZOsoq6XCds4P-FOEz27FzJz+Jg@mail.gmail.com>
+ <4E455877.6090901@broadcom.com>
+In-Reply-To: <4E455877.6090901@broadcom.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 20, 2011 at 05:24:35PM +0530, Rajkumar Manoharan wrote:
-> Currently mac80211 announces a supported rate set with
-> no basic rates. This patch marks the mandatory rates as
-> basic while constructing supported rate element.
+On 08/12/2011 09:44 AM, Arend van Spriel wrote:
+> On 08/12/2011 04:07 PM, Rafał Miłecki wrote:
+>> 2011/8/12 Arend van Spriel<arend@broadcom.com>:
+>>> @@ -3537,27 +3544,39 @@ static s32 brcmf_event_handler(void *data)
+>>>                          (struct brcmf_cfg80211_priv *)data;
+>>>          struct sched_param param = {.sched_priority = MAX_RT_PRIO - 1 };
+>>>          struct brcmf_cfg80211_event_q *e;
+>>> +       DECLARE_WAITQUEUE(wait, current);
+>>>
+>>>          sched_setscheduler(current, SCHED_FIFO,&param);
+>>>          allow_signal(SIGTERM);
+>>> -       while (likely(!down_interruptible(&cfg_priv->event_sync))) {
+>>> +       add_wait_queue(&cfg_priv->event_waitq,&wait);
+>>> +       while (1) {
+>>> +               prepare_to_wait(&cfg_priv->event_waitq,&wait,
+>>> +                               TASK_INTERRUPTIBLE);
+>>> +
+>>> +               schedule();
+>>> +
+>>>                  if (kthread_should_stop())
+>>>                          break;
+>>> +
+>>>                  e = brcmf_deq_event(cfg_priv);
+>>>                  if (unlikely(!e)) {
+>>>                          WL_ERR("event queue empty...\n");
+>>> -                       BUG();
+>>> +                       continue;
+>>>                  }
+>>> -               WL_INFO("event type (%d)\n", e->etype);
+>>> -               if (cfg_priv->el.handler[e->etype])
+>>> -                       cfg_priv->el.handler[e->etype](cfg_priv,
+>>> -                                                      cfg_to_ndev(cfg_priv),
+>>> -&e->emsg, e->edata);
+>>> -               else
+>>> -                       WL_INFO("Unknown Event (%d): ignoring\n", e->etype);
+>>>
+>>> -               brcmf_put_event(e);
+>>> +               do {
+>>> +                       WL_INFO("event type (%d)\n", e->etype);
+>>> +                       if (cfg_priv->el.handler[e->etype])
+>>> +                               cfg_priv->el.handler[e->etype](cfg_priv,
+>>> +                                       cfg_to_ndev(cfg_priv),
+>>> +&e->emsg, e->edata);
+>>> +                       else
+>>> +                               WL_INFO("Unknown Event (%d): ignoring\n",
+>>> +                                       e->etype);
+>>> +                       brcmf_put_event(e);
+>>> +               } while ((e = brcmf_deq_event(cfg_priv)));
+>> if (((((care_coding_style)))))
+>> fix();
+>>
+>> :-)
+>>
+>
+> I assume you refer to the indents above. Not sure what exactly happened
+> there, but the patch email as I received it looks. Could it be a mail
+> reader issue?
 
-Why would you want to do that? I did not check the mesh use case but
-neither Probe Request nor (Re)Association Request frames use the 0x80
-flag in the rates - the basic rate set comes from the AP, not the non-AP
-STA.. For mesh, I think that only Mesh Peering Open and Mesh Peering
-Confirm frames indicate basic rate set, so the first patch of the patch
-may or may not be correct depending on whether it applies only to those
-frames.
+Hi Rafał,
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+If you are refering to this line
+ >>> +               } while ((e = brcmf_deq_event(cfg_priv)));
+
+The extra parentheses are added to fix a compiler warning:
+	drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c: In function 
+‘brcmf_event_handler’:
+	drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c:3576: warning: suggest 
+parentheses around assignment used as truth value
+
+Thanks
+Franky
+
+
