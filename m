@@ -1,83 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60432 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752695Ab1H2Fyd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 01:54:33 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:50219 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753886Ab1HLCyY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2011 22:54:24 -0400
+Received: by mail-iy0-f170.google.com with SMTP id 16so634961iye.1
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 19:54:24 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v2 3/4] ath9k: only fill antenna diversity hw ops on chips that support it
-Date: Mon, 29 Aug 2011 07:54:21 +0200
-Message-Id: <1314597262-49427-3-git-send-email-nbd@openwrt.org> (sfid-20110829_075453_193212_561FDC8A)
-In-Reply-To: <1314597262-49427-2-git-send-email-nbd@openwrt.org>
-References: <1314597262-49427-1-git-send-email-nbd@openwrt.org>
- <1314597262-49427-2-git-send-email-nbd@openwrt.org>
+Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH v2 6/8] {nl,mac}80211: add missing root mode debugfs entries
+Date: Thu, 11 Aug 2011 19:53:59 -0700
+Message-Id: <1313117641-27351-6-git-send-email-thomas@cozybit.com> (sfid-20110812_045431_573153_2BEC6C1E)
+In-Reply-To: <1313117641-27351-1-git-send-email-thomas@cozybit.com>
+References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
+ <1313117641-27351-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+From: Javier Cardona <javier@cozybit.com>
+
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9002_phy.c |    6 ++++--
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |    6 ++++--
- drivers/net/wireless/ath/ath9k/hw-ops.h     |    6 ++++--
- 3 files changed, 12 insertions(+), 6 deletions(-)
+ net/mac80211/debugfs_netdev.c |    2 +-
+ net/wireless/nl80211.c        |    1 +
+ 2 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-index 3cbbb03..38e91f8 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-@@ -570,8 +570,10 @@ void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
- 	priv_ops->compute_pll_control = ar9002_hw_compute_pll_control;
- 	priv_ops->do_getnf = ar9002_hw_do_getnf;
- 
--	ops->antdiv_comb_conf_get = ar9002_hw_antdiv_comb_conf_get;
--	ops->antdiv_comb_conf_set = ar9002_hw_antdiv_comb_conf_set;
-+	if (AR_SREV_9285(ah)) {
-+		ops->antdiv_comb_conf_get = ar9002_hw_antdiv_comb_conf_get;
-+		ops->antdiv_comb_conf_set = ar9002_hw_antdiv_comb_conf_set;
-+	}
- 
- 	ar9002_hw_set_nf_limits(ah);
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 9ea7c0d..75ece3d 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -485,7 +485,7 @@ static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
+ 	MESHPARAMS_ADD(dot11MeshHWMPmaxPREQretries);
+ 	MESHPARAMS_ADD(path_refresh_time);
+ 	MESHPARAMS_ADD(min_discovery_timeout);
+-
++	MESHPARAMS_ADD(dot11MeshHWMPRootMode);
+ #undef MESHPARAMS_ADD
  }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 33edb56..e837792 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1283,8 +1283,10 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
- 	priv_ops->ani_cache_ini_regs = ar9003_hw_ani_cache_ini_regs;
- 	priv_ops->set_radar_params = ar9003_hw_set_radar_params;
+ #endif
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ca76977..cd5994f 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2985,6 +2985,7 @@ static const struct nla_policy nl80211_meshconf_params_policy[NL80211_MESHCONF_A
+ 	[NL80211_MESHCONF_HWMP_ACTIVE_PATH_TIMEOUT] = { .type = NLA_U32 },
+ 	[NL80211_MESHCONF_HWMP_PREQ_MIN_INTERVAL] = { .type = NLA_U16 },
+ 	[NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME] = { .type = NLA_U16 },
++	[NL80211_MESHCONF_HWMP_ROOTMODE] = { .type = NLA_U8 },
+ };
  
--	ops->antdiv_comb_conf_get = ar9003_hw_antdiv_comb_conf_get;
--	ops->antdiv_comb_conf_set = ar9003_hw_antdiv_comb_conf_set;
-+	if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
-+		ops->antdiv_comb_conf_get = ar9003_hw_antdiv_comb_conf_get;
-+		ops->antdiv_comb_conf_set = ar9003_hw_antdiv_comb_conf_set;
-+	}
- 
- 	ar9003_hw_set_nf_limits(ah);
- 	ar9003_hw_set_radar_conf(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index dd9003e..530ed33 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -121,13 +121,15 @@ static inline void ath9k_hw_set_clrdmask(struct ath_hw *ah, void *ds, bool val)
- static inline void ath9k_hw_antdiv_comb_conf_get(struct ath_hw *ah,
- 		struct ath_hw_antcomb_conf *antconf)
- {
--	ath9k_hw_ops(ah)->antdiv_comb_conf_get(ah, antconf);
-+	if (ath9k_hw_ops(ah)->antdiv_comb_conf_get)
-+		ath9k_hw_ops(ah)->antdiv_comb_conf_get(ah, antconf);
- }
- 
- static inline void ath9k_hw_antdiv_comb_conf_set(struct ath_hw *ah,
- 		struct ath_hw_antcomb_conf *antconf)
- {
--	ath9k_hw_ops(ah)->antdiv_comb_conf_set(ah, antconf);
-+	if (ath9k_hw_ops(ah)->antdiv_comb_conf_set)
-+		ath9k_hw_ops(ah)->antdiv_comb_conf_set(ah, antconf);
- }
- 
- /* Private hardware call ops */
+ static const struct nla_policy
 -- 
-1.7.3.2
-
+1.7.4.
