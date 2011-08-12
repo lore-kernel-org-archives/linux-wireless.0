@@ -1,93 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:35863 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752740Ab1HIJOL (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:52799 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752830Ab1HLSMK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 05:14:11 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 5so2430702wwf.1
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:11 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 21/40] wl12xx: fix session counter
-Date: Tue,  9 Aug 2011 12:13:34 +0300
-Message-Id: <1312881233-9366-22-git-send-email-eliad@wizery.com> (sfid-20110809_111540_082462_B602C5CC)
-In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	Fri, 12 Aug 2011 14:12:10 -0400
+Received: by wwe5 with SMTP id 5so5067492wwe.1
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 11:12:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1313152101.4022.3.camel@jlt3.sipsolutions.net>
+References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
+	<1313117641-27351-1-git-send-email-thomas@cozybit.com>
+	<1313152101.4022.3.camel@jlt3.sipsolutions.net>
+Date: Fri, 12 Aug 2011 11:12:08 -0700
+Message-ID: <CAG6hwVN+D+XXAR9B8ZAb2hf_OFKwE875tm=OAS7iytx32uU9MA@mail.gmail.com> (sfid-20110812_201214_170990_2D164F59)
+Subject: Re: [PATCH v2 1/8] mac80211: improve mpath debugging
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Javier Cardona <javier@cozybit.com>, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On Fri, Aug 12, 2011 at 5:28 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2011-08-11 at 19:53 -0700, Thomas Pedersen wrote:
+>
+>> +#ifdef CONFIG_MAC80211_VERBOSE_MPATH_DEBUG
+>> +static inline void mpath_dbg(const char *fmt, ...)
+>> +{
+>> +     struct va_format vaf;
+>> +     va_list args;
+>> +
+>> +     va_start(args, fmt);
+>> +
+>> +     vaf.fmt = fmt;
+>> +     vaf.va = &args;
+>> +
+>> +     printk(KERN_DEBUG "%pV", &vaf);
+>> +     va_end(args);
+>> +     return;
+>> +}
+>> +#else
+>> +static inline void mpath_dbg(const char *fmt, ...)
+>> +{
+>> +     return;
+>> +}
+>> +#endif
+>
+> Oh, maybe that's too complicated after all... How about
+>
+> #ifdef ...
+> #define ...
+> #else
+> static inline void mpath_dbg(const char *fmt, ...)
+>        __attribute__ ((format (printf, 1, 2)))
+> {
+> }
+> #endif
+>
+> Definitely want the format attribute, that was my whole point :)
 
-Increment the session counter on every join command.
+Oh I see. Looking at it again, my function above doesn't even have any
+argument checking :P. Didn't know about that __attribute__ etiher,
+thanks!
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/cmd.c  |   12 +++++++++++-
- drivers/net/wireless/wl12xx/main.c |    1 +
- 2 files changed, 12 insertions(+), 1 deletions(-)
+> Bah, maybe it all doesn't matter, in which case maybe the first version
+> is better.
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index 918c46b..3bbee10 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -455,12 +455,22 @@ static void wl1271_free_link(struct wl1271 *wl, u8 *hlid)
- 		return;
- 
- 	__clear_bit(*hlid, wl->links_map);
- 	*hlid = WL1271_INVALID_LINK_ID;
- }
- 
-+static int wl1271_get_new_session_id(struct wl1271 *wl)
-+{
-+	if (wl->session_counter >= SESSION_COUNTER_MAX)
-+		wl->session_counter = 0;
-+
-+	wl->session_counter++;
-+
-+	return wl->session_counter;
-+}
-+
- int wl1271_cmd_role_start_dev(struct wl1271 *wl)
- {
- 	struct wl1271_cmd_role_start *cmd;
- 	int ret;
- 
- 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-@@ -577,13 +587,13 @@ int wl1271_cmd_role_start_sta(struct wl1271 *wl)
- 	if (wl->sta_hlid == WL1271_INVALID_LINK_ID) {
- 		ret = wl1271_allocate_link(wl, &wl->sta_hlid);
- 		if (ret)
- 			goto out_free;
- 	}
- 	cmd->sta.hlid = wl->sta_hlid;
--	cmd->sta.session = wl->session_counter;
-+	cmd->sta.session = wl1271_get_new_session_id(wl);
- 	cmd->sta.remote_rates = cpu_to_le32(wl->rate_set);
- 
- 	wl1271_debug(DEBUG_CMD, "role start: roleid=%d, hlid=%d, session=%d "
- 		     "basic_rate_set: 0x%x, remote_rates: 0x%x",
- 		     wl->role_id, cmd->sta.hlid, cmd->sta.session,
- 		     wl->basic_rate_set, wl->rate_set);
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 9fed917..ea4e89f 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -4414,12 +4414,13 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
- 	wl->tx_security_last_seq_lsb = 0;
- 	wl->role_id = WL1271_INVALID_ROLE_ID;
- 	wl->system_hlid = WL1271_SYSTEM_HLID;
- 	wl->sta_hlid = WL1271_INVALID_LINK_ID;
- 	wl->dev_role_id = WL1271_INVALID_ROLE_ID;
- 	wl->dev_hlid = WL1271_INVALID_LINK_ID;
-+	wl->session_counter = 0;
- 	setup_timer(&wl->rx_streaming_timer, wl1271_rx_streaming_timer,
- 		    (unsigned long) wl);
- 	wl->fwlog_size = 0;
- 	init_waitqueue_head(&wl->fwlog_waitq);
- 
- 	memset(wl->links_map, 0, sizeof(wl->links_map));
--- 
-1.7.6.401.g6a319
-
+Sure, let's go with the first one.
+>
+> johannes
+>
+>
