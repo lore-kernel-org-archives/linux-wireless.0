@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1814 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752636Ab1HWMOR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 08:14:17 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 6/8] staging: brcm80211: bugfix for exception on Sparc
- platforms
-Date: Tue, 23 Aug 2011 14:13:58 +0200
-Message-ID: <1314101640-4229-7-git-send-email-arend@broadcom.com> (sfid-20110823_141433_646723_1D961D7D)
-In-Reply-To: <1314101640-4229-1-git-send-email-arend@broadcom.com>
-References: <1314101640-4229-1-git-send-email-arend@broadcom.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:48046 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751821Ab1HLCdY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2011 22:33:24 -0400
+Received: by yxj19 with SMTP id 19so1714406yxj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 19:33:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAOp6jLbp_Fvf8u9CxdhsK0vqJTHvhean7qp+vumuM+S_3-PApA@mail.gmail.com>
+References: <CAOp6jLa2xGcyg-rmE78FTpi11SbBq+EkWhXc+5na5QuebuFSBg@mail.gmail.com>
+	<CAJ-Vmont2OdEGFqBKOen8XW+fTvA2xBgVr1h9vSeOBcQrE_FxA@mail.gmail.com>
+	<CAOp6jLbp_Fvf8u9CxdhsK0vqJTHvhean7qp+vumuM+S_3-PApA@mail.gmail.com>
+Date: Fri, 12 Aug 2011 10:33:23 +0800
+Message-ID: <CAJ-Vmok7AjuUNPRqoL+ybm22UYjaPvJ4AjU4GXmzsxzZV1ZW5w@mail.gmail.com> (sfid-20110812_043327_913762_471ED2E5)
+Subject: Re: [ath9k-devel] Packet loss regression with Atheros AR9280 adapter
+From: Adrian Chadd <adrian@freebsd.org>
+To: robert@ocallahan.org
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+On 12 August 2011 10:27, Robert O'Callahan <robert@ocallahan.org> wrote:
 
-Problem would pop up during driver load on a Sun Fire V120 and manifested
-itself as an exception. This was caused by int* pointers provided to memcpy()
-that were not aligned on an int boundary. The pointer type provided to
-memcpy() is used by the compiler for optimization purposes. Fix was to cast
-the int* pointers to void* pointers.
+> Anything I can get building with this kernel, I guess. Any particular
+> version I should try?
 
-Bernhard R. Link and David S. Miller provided valuable feedback, thanks gents.
+I'd suggest going back a month at a time
+(http://www.orbit-lab.org/kernel/compat-wireless-2.6/2011/), try each
+until you find one that works, then report "compat-wireless X works,
+compat-wireless Y doesn't". That'll be a good way to test multiple
+copies of the development wireless tree.
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/main.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+If someone Fedora-clued knows which version(s) of the wireless code
+are involved with Robert's good and bad behaviour reports, that'll
+also help.
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index c625c25..7e729d29 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -6111,9 +6111,12 @@ _brcms_c_ioctl(struct brcms_c_info *wlc, int cmd, void *arg, int len,
- 	/* default argument is generic integer */
- 	pval = arg ? (int *)arg : NULL;
- 
--	/* This will prevent the misaligned access */
-+	/*
-+	 * This will prevent misaligned access. The (void *) cast prevents a
-+	 * memcpy alignment issue on e.g. Sparc64 platforms.
-+	 */
- 	if (pval && (u32) len >= sizeof(val))
--		memcpy(&val, pval, sizeof(val));
-+		memcpy((void *)&val, (void *)pval, sizeof(val));
- 	else
- 		val = 0;
- 
--- 
-1.7.4.1
+Anything to kick-start a git bisect :-)
+
+Ciao,
 
 
+Adrian
