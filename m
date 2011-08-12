@@ -1,366 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:58299 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753231Ab1HLCf1 (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:64744 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750912Ab1HLPQl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 22:35:27 -0400
-Received: by iye16 with SMTP id 16so609089iye.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 19:35:26 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH v3 1/6] mac80211: fix mesh beacon format
-Date: Thu, 11 Aug 2011 19:35:10 -0700
-Message-Id: <1313116515-26166-1-git-send-email-thomas@cozybit.com> (sfid-20110812_043530_401376_8195EFC9)
+	Fri, 12 Aug 2011 11:16:41 -0400
+Received: by yie30 with SMTP id 30so2015019yie.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 08:16:41 -0700 (PDT)
+Message-ID: <4E4543D5.9070006@lwfinger.net> (sfid-20110812_171644_930381_54EB5B60)
+Date: Fri, 12 Aug 2011 10:16:37 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH V2 4/4] b43: HT-PHY: init: init BPHY and upload 0x1a table
+References: <1313155654-8988-4-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1313155654-8988-4-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct ordering of IEs in the mesh beacon while removing unneeded IEs
-from mesh peering frames. Set privacy bit in capability info if security
-is enabled. Add utility functions to aid in construction
-of IEs and reduce code duplication.
+On 08/12/2011 08:27 AM, Rafał Miłecki wrote:
+>
+> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
+> ---
+> BPHY is something partially known from N-PHY.
+>
+> This 0x1a table with 0xc0 offset is a little tricky. We already upload
+> something like that earlier, but this is needed to stop radio going crazy
+> and transmissint crap.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh.c       |  223 +++++++++++++++++++++++++++++++++------------
- net/mac80211/mesh.h       |   14 +++
- net/mac80211/mesh_plink.c |    7 +-
- net/mac80211/tx.c         |   14 +++-
- 4 files changed, 196 insertions(+), 62 deletions(-)
+I don't care that the commit message contains "crap", but others might. I do, 
+however, want you to change from the nonexistent "transmissint" to 
+"transmission" or "transmitting", whichever you mean.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 29e9980..1990869 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -204,36 +204,185 @@ int mesh_rmc_check(u8 *sa, struct ieee80211s_hdr *mesh_hdr,
- 	return 0;
- }
- 
--void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
-+int
-+mesh_add_meshconf_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	u8 *pos, neighbors;
-+	u8 meshconf_len = sizeof(struct ieee80211_meshconf_ie);
-+
-+	if (skb_tailroom(skb) < 2 + meshconf_len)
-+		return -ENOMEM;
-+
-+	pos = skb_put(skb, 2 + meshconf_len);
-+	*pos++ = WLAN_EID_MESH_CONFIG;
-+	*pos++ = meshconf_len;
-+
-+	/* Active path selection protocol ID */
-+	*pos++ = ifmsh->mesh_pp_id;
-+	/* Active path selection metric ID   */
-+	*pos++ = ifmsh->mesh_pm_id;
-+	/* Congestion control mode identifier */
-+	*pos++ = ifmsh->mesh_cc_id;
-+	/* Synchronization protocol identifier */
-+	*pos++ = ifmsh->mesh_sp_id;
-+	/* Authentication Protocol identifier */
-+	*pos++ = ifmsh->mesh_auth_id;
-+	/* Mesh Formation Info - number of neighbors */
-+	neighbors = atomic_read(&ifmsh->mshstats.estab_plinks);
-+	/* Number of neighbor mesh STAs or 15 whichever is smaller */
-+	neighbors = (neighbors > 15) ? 15 : neighbors;
-+	*pos++ = neighbors << 1;
-+	/* Mesh capability */
-+	ifmsh->accepting_plinks = mesh_plink_availables(sdata);
-+	*pos = MESHCONF_CAPAB_FORWARDING;
-+	*pos++ |= ifmsh->accepting_plinks ?
-+	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
-+	*pos++ = 0x00;
-+
-+	return 0;
-+}
-+
-+int
-+mesh_add_meshid_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	u8 *pos;
-+
-+	if (skb_tailroom(skb) < 2 + ifmsh->mesh_id_len)
-+		return -ENOMEM;
-+
-+	pos = skb_put(skb, 2 + ifmsh->mesh_id_len);
-+	*pos++ = WLAN_EID_MESH_ID;
-+	*pos++ = ifmsh->mesh_id_len;
-+	if (ifmsh->mesh_id_len)
-+		memcpy(pos, ifmsh->mesh_id, ifmsh->mesh_id_len);
-+
-+	return 0;
-+}
-+
-+int
-+mesh_add_vendor_ies(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	u8 offset, len;
-+	const u8 *data;
-+
-+	if (!ifmsh->ie || !ifmsh->ie_len)
-+		return 0;
-+
-+	/* fast-forward to vendor IEs */
-+	offset = ieee80211_ie_split_vendor(ifmsh->ie, ifmsh->ie_len, 0);
-+
-+	if (offset) {
-+		len = ifmsh->ie_len - offset;
-+		data = ifmsh->ie + offset;
-+		if (skb_tailroom(skb) < len)
-+			return -ENOMEM;
-+		memcpy(skb_put(skb, len), data, len);
-+	}
-+
-+	return 0;
-+}
-+
-+int
-+mesh_add_rsn_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	u8 len = 0;
-+	const u8 *data;
-+
-+	if (!ifmsh->ie || !ifmsh->ie_len)
-+		return 0;
-+
-+	/* find RSN IE */
-+	data = ifmsh->ie;
-+	while (data < ifmsh->ie + ifmsh->ie_len) {
-+		if (*data == WLAN_EID_RSN) {
-+			len = data[1] + 2;
-+			break;
-+		}
-+		data++;
-+	}
-+
-+	if (len) {
-+		if (skb_tailroom(skb) < len)
-+			return -ENOMEM;
-+		memcpy(skb_put(skb, len), data, len);
-+	}
-+
-+	return 0;
-+}
-+
-+int
-+mesh_add_srates_ie(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
--	u8 *pos;
--	int len, i, rate;
--	u8 neighbors;
-+	int rate;
-+	u8 i, rates, *pos;
- 
- 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
--	len = sband->n_bitrates;
--	if (len > 8)
--		len = 8;
--	pos = skb_put(skb, len + 2);
-+	rates = sband->n_bitrates;
-+	if (rates > 8)
-+		rates = 8;
-+
-+	if (skb_tailroom(skb) < rates + 2)
-+		return -ENOMEM;
-+
-+	pos = skb_put(skb, rates + 2);
- 	*pos++ = WLAN_EID_SUPP_RATES;
--	*pos++ = len;
--	for (i = 0; i < len; i++) {
-+	*pos++ = rates;
-+	for (i = 0; i < rates; i++) {
- 		rate = sband->bitrates[i].bitrate;
- 		*pos++ = (u8) (rate / 5);
- 	}
- 
--	if (sband->n_bitrates > len) {
--		pos = skb_put(skb, sband->n_bitrates - len + 2);
-+	return 0;
-+}
-+
-+int
-+mesh_add_ext_srates_ie(struct sk_buff *skb,
-+		       struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband;
-+	int rate;
-+	u8 i, exrates, *pos;
-+
-+	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+	exrates = sband->n_bitrates;
-+	if (exrates > 8)
-+		exrates -= 8;
-+	else
-+		exrates = 0;
-+
-+	if (skb_tailroom(skb) < exrates + 2)
-+		return -ENOMEM;
-+
-+	if (exrates) {
-+		pos = skb_put(skb, exrates + 2);
- 		*pos++ = WLAN_EID_EXT_SUPP_RATES;
--		*pos++ = sband->n_bitrates - len;
--		for (i = len; i < sband->n_bitrates; i++) {
-+		*pos++ = exrates;
-+		for (i = 8; i < sband->n_bitrates; i++) {
- 			rate = sband->bitrates[i].bitrate;
- 			*pos++ = (u8) (rate / 5);
- 		}
- 	}
-+	return 0;
-+}
-+
-+int mesh_add_ds_params_ie(struct sk_buff *skb,
-+			  struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband;
-+	u8 *pos;
-+
-+	if (skb_tailroom(skb) < 3)
-+		return -ENOMEM;
- 
-+	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
- 	if (sband->band == IEEE80211_BAND_2GHZ) {
- 		pos = skb_put(skb, 2 + 1);
- 		*pos++ = WLAN_EID_DS_PARAMS;
-@@ -241,53 +390,9 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 		*pos++ = ieee80211_frequency_to_channel(local->hw.conf.channel->center_freq);
- 	}
- 
--	pos = skb_put(skb, 2 + sdata->u.mesh.mesh_id_len);
--	*pos++ = WLAN_EID_MESH_ID;
--	*pos++ = sdata->u.mesh.mesh_id_len;
--	if (sdata->u.mesh.mesh_id_len)
--		memcpy(pos, sdata->u.mesh.mesh_id, sdata->u.mesh.mesh_id_len);
--
--	pos = skb_put(skb, 2 + sizeof(struct ieee80211_meshconf_ie));
--	*pos++ = WLAN_EID_MESH_CONFIG;
--	*pos++ = sizeof(struct ieee80211_meshconf_ie);
--
--	/* Active path selection protocol ID */
--	*pos++ = sdata->u.mesh.mesh_pp_id;
--
--	/* Active path selection metric ID   */
--	*pos++ = sdata->u.mesh.mesh_pm_id;
--
--	/* Congestion control mode identifier */
--	*pos++ = sdata->u.mesh.mesh_cc_id;
--
--	/* Synchronization protocol identifier */
--	*pos++ = sdata->u.mesh.mesh_sp_id;
--
--	/* Authentication Protocol identifier */
--	*pos++ = sdata->u.mesh.mesh_auth_id;
--
--	/* Mesh Formation Info - number of neighbors */
--	neighbors = atomic_read(&sdata->u.mesh.mshstats.estab_plinks);
--	/* Number of neighbor mesh STAs or 15 whichever is smaller */
--	neighbors = (neighbors > 15) ? 15 : neighbors;
--	*pos++ = neighbors << 1;
--
--	/* Mesh capability */
--	sdata->u.mesh.accepting_plinks = mesh_plink_availables(sdata);
--	*pos = MESHCONF_CAPAB_FORWARDING;
--	*pos++ |= sdata->u.mesh.accepting_plinks ?
--	    MESHCONF_CAPAB_ACCEPT_PLINKS : 0x00;
--	*pos++ = 0x00;
--
--	if (sdata->u.mesh.ie) {
--		int len = sdata->u.mesh.ie_len;
--		const u8 *data = sdata->u.mesh.ie;
--		if (skb_tailroom(skb) > len)
--			memcpy(skb_put(skb, len), data, len);
--	}
-+	return 0;
- }
- 
--
- static void ieee80211_mesh_path_timer(unsigned long data)
- {
- 	struct ieee80211_sub_if_data *sdata =
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 249e733..b794360 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -199,6 +199,20 @@ bool mesh_matches_local(struct ieee802_11_elems *ie,
- void mesh_ids_set_default(struct ieee80211_if_mesh *mesh);
- void mesh_mgmt_ies_add(struct sk_buff *skb,
- 		struct ieee80211_sub_if_data *sdata);
-+int mesh_add_meshconf_ie(struct sk_buff *skb,
-+			 struct ieee80211_sub_if_data *sdata);
-+int mesh_add_meshid_ie(struct sk_buff *skb,
-+		       struct ieee80211_sub_if_data *sdata);
-+int mesh_add_rsn_ie(struct sk_buff *skb,
-+		    struct ieee80211_sub_if_data *sdata);
-+int mesh_add_vendor_ies(struct sk_buff *skb,
-+			struct ieee80211_sub_if_data *sdata);
-+int mesh_add_srates_ie(struct sk_buff *skb,
-+		       struct ieee80211_sub_if_data *sdata);
-+int mesh_add_ext_srates_ie(struct sk_buff *skb,
-+			   struct ieee80211_sub_if_data *sdata);
-+int mesh_add_ds_params_ie(struct sk_buff *skb,
-+			  struct ieee80211_sub_if_data *sdata);
- void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
- int mesh_rmc_init(struct ieee80211_sub_if_data *sdata);
- void ieee80211s_init(void);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index f4adc09..e4113f2 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -195,7 +195,12 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 			memset(pos, 0, 2);
- 			memcpy(pos + 2, &plid, 2);
- 		}
--		mesh_mgmt_ies_add(skb, sdata);
-+		if (mesh_add_srates_ie(skb, sdata) ||
-+		    mesh_add_ext_srates_ie(skb, sdata) ||
-+		    mesh_add_rsn_ie(skb, sdata) ||
-+		    mesh_add_meshid_ie(skb, sdata) ||
-+		    mesh_add_meshconf_ie(skb, sdata))
-+			return -1;
- 	}
- 
- 	/* Add Peer Link Management element */
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 69fd494..0107263 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2295,13 +2295,23 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
- 		mgmt->u.beacon.beacon_int =
- 			cpu_to_le16(sdata->vif.bss_conf.beacon_int);
--		mgmt->u.beacon.capab_info = 0x0; /* 0x0 for MPs */
-+		mgmt->u.beacon.capab_info |= cpu_to_le16(
-+			sdata->u.mesh.security ? WLAN_CAPABILITY_PRIVACY : 0);
- 
- 		pos = skb_put(skb, 2);
- 		*pos++ = WLAN_EID_SSID;
- 		*pos++ = 0x0;
- 
--		mesh_mgmt_ies_add(skb, sdata);
-+		if (mesh_add_srates_ie(skb, sdata) ||
-+		    mesh_add_ds_params_ie(skb, sdata) ||
-+		    mesh_add_ext_srates_ie(skb, sdata) ||
-+		    mesh_add_rsn_ie(skb, sdata) ||
-+		    mesh_add_meshid_ie(skb, sdata) ||
-+		    mesh_add_meshconf_ie(skb, sdata) ||
-+		    mesh_add_vendor_ies(skb, sdata)) {
-+			pr_err("o11s: couldn't add ies!\n");
-+			goto out;
-+		}
- 	} else {
- 		WARN_ON(1);
- 		goto out;
--- 
-1.7.4.1
+Other than that, ACK. Note, I have no HT device, thus I have done no testing.
+
+Larry
+
+
+>
+> V2: limit line to 80 chars
+> ---
+>   drivers/net/wireless/b43/phy_ht.c        |   26 ++++++++++++++++++++
+>   drivers/net/wireless/b43/tables_phy_ht.c |   39 ++++++++++++++++++++++++++++++
+>   drivers/net/wireless/b43/tables_phy_ht.h |    3 ++
+>   3 files changed, 68 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
+> index 2ea7b08..84811b0 100644
+> --- a/drivers/net/wireless/b43/phy_ht.c
+> +++ b/drivers/net/wireless/b43/phy_ht.c
+> @@ -169,6 +169,24 @@ static void b43_phy_ht_zero_extg(struct b43_wldev *dev)
+>   		b43_phy_write(dev, B43_PHY_EXTG(base[i] + 0xc), 0);
+>   }
+>
+> +static void b43_phy_ht_bphy_init(struct b43_wldev *dev)
+> +{
+> +	unsigned int i;
+> +	u16 val;
+> +
+> +	val = 0x1E1F;
+> +	for (i = 0; i<  16; i++) {
+> +		b43_phy_write(dev, B43_PHY_N_BMODE(0x88 + i), val);
+> +		val -= 0x202;
+> +	}
+> +	val = 0x3E3F;
+> +	for (i = 0; i<  16; i++) {
+> +		b43_phy_write(dev, B43_PHY_N_BMODE(0x98 + i), val);
+> +		val -= 0x202;
+> +	}
+> +	b43_phy_write(dev, B43_PHY_N_BMODE(0x38), 0x668);
+> +}
+> +
+>   /**************************************************
+>    * Channel switching ops.
+>    **************************************************/
+> @@ -322,6 +340,14 @@ static int b43_phy_ht_op_init(struct b43_wldev *dev)
+>
+>   	b43_mac_phy_clock_set(dev, true);
+>
+> +	/* TODO: Some ops here */
+> +
+> +	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
+> +		b43_phy_ht_bphy_init(dev);
+> +
+> +	b43_httab_write_bulk(dev, B43_HTTAB32(0x1a, 0xc0),
+> +			B43_HTTAB_1A_C0_LATE_SIZE, b43_httab_0x1a_0xc0_late);
+> +
+>   	return 0;
+>   }
+>
+> diff --git a/drivers/net/wireless/b43/tables_phy_ht.c b/drivers/net/wireless/b43/tables_phy_ht.c
+> index 9681af5..677d217 100644
+> --- a/drivers/net/wireless/b43/tables_phy_ht.c
+> +++ b/drivers/net/wireless/b43/tables_phy_ht.c
+> @@ -574,6 +574,42 @@ static const u32 b43_httab_0x24[] = {
+>   	0x005d0582, 0x005805d6, 0x0053062e, 0x004e068c,
+>   };
+>
+> +/* Some late-init table */
+> +const u32 b43_httab_0x1a_0xc0_late[] = {
+> +	0x10f90040, 0x10e10040, 0x10e1003c, 0x10c9003d,
+> +	0x10b9003c, 0x10a9003d, 0x10a1003c, 0x1099003b,
+> +	0x1091003b, 0x1089003a, 0x1081003a, 0x10790039,
+> +	0x10710039, 0x1069003a, 0x1061003b, 0x1059003d,
+> +	0x1051003f, 0x10490042, 0x1049003e, 0x1049003b,
+> +	0x1041003e, 0x1041003b, 0x1039003e, 0x1039003b,
+> +	0x10390038, 0x10390035, 0x1031003a, 0x10310036,
+> +	0x10310033, 0x1029003a, 0x10290037, 0x10290034,
+> +	0x10290031, 0x10210039, 0x10210036, 0x10210033,
+> +	0x10210030, 0x1019003c, 0x10190039, 0x10190036,
+> +	0x10190033, 0x10190030, 0x1019002d, 0x1019002b,
+> +	0x10190028, 0x1011003a, 0x10110036, 0x10110033,
+> +	0x10110030, 0x1011002e, 0x1011002b, 0x10110029,
+> +	0x10110027, 0x10110024, 0x10110022, 0x10110020,
+> +	0x1011001f, 0x1011001d, 0x1009003a, 0x10090037,
+> +	0x10090034, 0x10090031, 0x1009002e, 0x1009002c,
+> +	0x10090029, 0x10090027, 0x10090025, 0x10090023,
+> +	0x10090021, 0x1009001f, 0x1009001d, 0x1009001b,
+> +	0x1009001a, 0x10090018, 0x10090017, 0x10090016,
+> +	0x10090015, 0x10090013, 0x10090012, 0x10090011,
+> +	0x10090010, 0x1009000f, 0x1009000f, 0x1009000e,
+> +	0x1009000d, 0x1009000c, 0x1009000c, 0x1009000b,
+> +	0x1009000a, 0x1009000a, 0x10090009, 0x10090009,
+> +	0x10090008, 0x10090008, 0x10090007, 0x10090007,
+> +	0x10090007, 0x10090006, 0x10090006, 0x10090005,
+> +	0x10090005, 0x10090005, 0x10090005, 0x10090004,
+> +	0x10090004, 0x10090004, 0x10090004, 0x10090003,
+> +	0x10090003, 0x10090003, 0x10090003, 0x10090003,
+> +	0x10090003, 0x10090002, 0x10090002, 0x10090002,
+> +	0x10090002, 0x10090002, 0x10090002, 0x10090002,
+> +	0x10090002, 0x10090002, 0x10090001, 0x10090001,
+> +	0x10090001, 0x10090001, 0x10090001, 0x10090001,
+> +};
+> +
+>   /**************************************************
+>    * R/W ops.
+>    **************************************************/
+> @@ -768,6 +804,9 @@ void b43_httab_write_bulk(struct b43_wldev *dev, u32 offset,
+>   	} while (0)
+>   void b43_phy_ht_tables_init(struct b43_wldev *dev)
+>   {
+> +	BUILD_BUG_ON(ARRAY_SIZE(b43_httab_0x1a_0xc0_late) !=
+> +			B43_HTTAB_1A_C0_LATE_SIZE);
+> +
+>   	httab_upload(dev, B43_HTTAB16(0x12, 0), b43_httab_0x12);
+>   	httab_upload(dev, B43_HTTAB16(0x27, 0), b43_httab_0x27);
+>   	httab_upload(dev, B43_HTTAB16(0x26, 0), b43_httab_0x26);
+> diff --git a/drivers/net/wireless/b43/tables_phy_ht.h b/drivers/net/wireless/b43/tables_phy_ht.h
+> index c68b0fa..1b5ef2b 100644
+> --- a/drivers/net/wireless/b43/tables_phy_ht.h
+> +++ b/drivers/net/wireless/b43/tables_phy_ht.h
+> @@ -20,4 +20,7 @@ void b43_httab_write_bulk(struct b43_wldev *dev, u32 offset,
+>
+>   void b43_phy_ht_tables_init(struct b43_wldev *dev);
+>
+> +#define B43_HTTAB_1A_C0_LATE_SIZE		128
+> +extern const u32 b43_httab_0x1a_0xc0_late[];
+> +
+>   #endif /* B43_TABLES_PHY_HT_H_ */
 
