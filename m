@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:4192 "EHLO mga11.intel.com"
+Received: from lo.gmane.org ([80.91.229.12]:35056 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754522Ab1HLAJ7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 20:09:59 -0400
-From: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
-To: Bo Nilsson <mr.bonilsson@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 11 Aug 2011 17:09:58 -0700
-Subject: RE: ipw2200
-Message-ID: <C5A7FB31FD9AEA42B600BDC3C74F8E000C5DB12D@orsmsx511.amr.corp.intel.com> (sfid-20110812_021003_412653_8D5B7EAD)
-References: <CAPH1DO2bWghrK5zPquB52bLbLLSDQZ44kuaFjubbVFWEjNteNg@mail.gmail.com>
-In-Reply-To: <CAPH1DO2bWghrK5zPquB52bLbLLSDQZ44kuaFjubbVFWEjNteNg@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S1751083Ab1HMIzO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2011 04:55:14 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Qs9zn-0000Ek-Jn
+	for linux-wireless@vger.kernel.org; Sat, 13 Aug 2011 10:55:08 +0200
+Received: from 69-84-127-230-dhcp.mia.fl.atlanticbb.net ([69.84.127.230])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Aug 2011 10:55:07 +0200
+Received: from orlandojperdomo by 69-84-127-230-dhcp.mia.fl.atlanticbb.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Aug 2011 10:55:07 +0200
+To: linux-wireless@vger.kernel.org
+From: Orlando Perdomo <orlandojperdomo@yahoo.com>
+Subject: Re: what dictates the firmware directory of compat-wireless firmware?
+Date: Sat, 13 Aug 2011 08:50:30 +0000 (UTC)
+Message-ID: <loom.20110813T104536-587@post.gmane.org> (sfid-20110813_105522_423959_60F76541)
+References: <BANLkTimDudEKPEjTrWxm1wNA00Cmyot+sA@mail.gmail.com> <BANLkTi=cx1CJkuBgvKkd9tm1u2hu7WGYYA@mail.gmail.com> <BANLkTika=8VetqGXMX7XbsVRM9dBe7AUKA@mail.gmail.com> <BANLkTi=k_HQ2jh5dAeHs5PzWNmUtyhViNQ@mail.gmail.com> <BANLkTikPBuY4Dt=2XSBrR4s5Au-LaWhNiA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bo,
+George Nychis <gnychis@...> writes:
 
-The device you're referring to is an old Intel device, but no longer supported by Intel. The source is part of the Linux kernel tree, and has not changed by the developers since maintenance on it has stopped.
+> 
+> > If android hacked udev into the init deamon then you will have to
+> > modify the init daemon too but I doubt that they would have kept udev
+> > rules statically in the init daemon, so try to find the udev rules.
+> >
+> 
+> I haven't been able to find any other udev rules on the Android
+> filesystem.  I have done a ton of digging for any udev information on
+> Android, without any luck.  I have asked on the Android mailing list,
+> we'll see how that goes.
+> 
+> In the mean time, the compat_firmware.sh script is pretty straight
+> forward.  My process on Android is continually monitoring the USB
+> devices connected, I could perform the same actions that
+> compat_firmware.sh does to dump the firmware into "/data"
+> 
+> Thanks for the udev related pointers in compat-wireless!
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@...
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+I'm having a similar problem with another USB driver to a chipset that requires 
+firmware. I have managed to compiler the driver using the compat-wireless method 
+for the device but can not figure out where to put the firmware. George from the 
+last post it seems you have a work around. Could you elaborate, give more 
+details? ...dump firmware into "/data". Thanks
 
-Also, it appears that a firmware reload occurred with the device. I'm not entirely familiar with this code base, but based on my knowledge of the iwlagn driver, the driver will reload firmware when it encounters several physical layer errors that it cannot recover from. Perhaps the ipw2200 has a similar behaviour.
 
-That said, I have a few questions to ask:
 
-1) what is the result of this firmware reload? 
-2) Are you still connected to the AP?
-3) Are you able to pass traffic?
-
-Thanks,
-Meenakshi
-
->-----Original Message-----
->From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
->owner@vger.kernel.org] On Behalf Of Bo Nilsson
->Sent: Thursday, August 11, 2011 1:16 PM
->To: linux-wireless@vger.kernel.org
->Subject: ipw2200
->
->Is linux braking down? I never had a problem like this before. I will have to go
->back to debian 5 and see if that is stable still.
->
->root@debian:/home/bo# dmesg | grep ipw2200
->[    3.664058] ipw2200: Intel(R) PRO/Wireless 2200/2915 Network
->Driver, 1.2.2kmprq
->[    3.664062] ipw2200: Copyright(c) 2003-2006 Intel Corporation
->[    3.954370] ipw2200 0000:02:06.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
->[    3.956831] ipw2200: Detected Intel PRO/Wireless 2200BG Network
->Connection
->[    3.956881] ipw2200 0000:02:06.0: firmware: requesting ipw2200-bss.fw
->[    4.590967] ipw2200: Detected geography ZZR (14 802.11bg channels,
->0 802.11a channels)
->[  251.494725] ipw2200: Firmware error detected.  Restarting.
->--
->To unsubscribe from this list: send the line "unsubscribe linux-wireless" in the
->body of a message to majordomo@vger.kernel.org More majordomo info at
->http://vger.kernel.org/majordomo-info.html
