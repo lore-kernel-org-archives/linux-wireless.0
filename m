@@ -1,540 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:63329 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751564Ab1HNWoH (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:59326 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750912Ab1HMIao convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 18:44:07 -0400
-Received: by fxh19 with SMTP id 19so3282757fxh.19
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 15:44:05 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 4/3] b43: LCN-PHY: add init tables
-Date: Mon, 15 Aug 2011 01:23:09 +0200
-Message-Id: <1313364189-9745-4-git-send-email-zajec5@gmail.com> (sfid-20110815_004419_795101_A85E1106)
+	Sat, 13 Aug 2011 04:30:44 -0400
+Received: by iye16 with SMTP id 16so3192365iye.1
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Aug 2011 01:30:44 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <4E462C07.3050004@broadcom.com>
+References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
+	<CACna6rztueomzzas=hQjfj6htD=SHFhrtFPSqbviqVDwaihJ9w@mail.gmail.com>
+	<4E4555AD.7040809@broadcom.com>
+	<CACna6rx_d4btykdK7AMwFxeFMs_MxjHEHvR6coxaZkfqkQVafA@mail.gmail.com>
+	<4E462C07.3050004@broadcom.com>
+Date: Sat, 13 Aug 2011 10:30:43 +0200
+Message-ID: <CACna6rwFh9WLW9zWs8i6HxSXRkceJ1=Y6Maeek+D0t4iYfwg0g@mail.gmail.com> (sfid-20110813_103048_287512_4F43A126)
+Subject: Re: [PATCH 00/14] staging: brcm80211: brcmfmac driver cleanup
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-They were taken from MMIO dump with few RegExps and vim.
+W dniu 13 sierpnia 2011 09:47 użytkownik Arend van Spriel
+<arend@broadcom.com> napisał:
+> On 08/12/2011 10:04 PM, Rafał Miłecki wrote:
+>>
+>> W dniu 12 sierpnia 2011 18:32 użytkownik Arend van Spriel
+>> <arend@broadcom.com>  napisał:
+>>>
+>>> On 08/12/2011 04:02 PM, Rafał Miłecki wrote:
+>>>>
+>>>> 2011/8/12 Arend van Spriel<arend@broadcom.com>:
+>>>>>
+>>>>> Several cleanup patches to reduce code for the brcmfmac driver and
+>>>>> get rid of a remaining checkpatch warning. The driver sources should
+>>>>> be clear from checkpatch issue now.
+>>>>>
+>>>>> This series applies to staging-next and depends on the following patch
+>>>>> set:
+>>>>
+>>>> Are you testing patches on some hardware? Or just compile-testing?
+>>>>
+>>>> I believe this driver is meant to support BCM4329, which is not PCI(e)
+>>>> board. What adapter do you use?
+>>>>
+>>>> I've heard about Arasan adapter. Have you tried it? Is that something
+>>>> reachable from arasan.com?
+>>>
+>>> Our brcm80211 source tree under drivers/staging contain two drivers. The
+>>> brcmsmac driver currently supporting the PCI(e) cards with bcm43224,
+>>> bcm43225, and bcm4313 chips and the brcmfmac driver currently supporting
+>>> the
+>>> SDIO card with bcm4329 chip. brcmsmac is a mac80211 driver and brcmfmac
+>>> is a
+>>> cfg80211 driver.
+>>>
+>>> We indeed use the Arasan adapter and both drivers are running in nightly
+>>> test cycle testing our common internal repository. So the drivers are
+>>> functionally tested on the x86 platforms (32 and 64 bit). Also looking at
+>>> sparc64 and powerpc64 but not in a nightly cycle.
+>>
+>> Is there a chance you can donate me with such a adapter and card?
+>
+> Hi Rafał,
+>
+> If your interest is getting SDIO supported in bcma this card is not very
+> useful to you. The bcm4329 is using the SSB interconnect.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-Magic RegExps were:
-:%s/phy_write(0x0455) <- \([0-9a-fA-Fx]*\)\n\(phy_write(0x0456) <- [0-9a-fA-Fx]*\nphy_write(0x0456) <- [0-9a-fA-Fx]*\)/\rstatic const u16 b43_lcntab_\1[] = {\r\2/
-:%s/phy_write(0x0455) <- \([0-9a-fA-Fx]*\)\n\(phy_write(0x0457) <- [0-9a-fA-Fx]*\nphy_write(0x0456) <- [0-9a-fA-Fx]*\)/\rstatic const u32 b43_lcntab_\1[] = {\r\2/
+That surprised me, interesting. I've never dig into brcmfmac code.
 
-:%s/phy_write(0x0456) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- \([0-9a-fA-Fx]*\)/\t\1, \2, \3, \4, \5, \6,/
-:%s/phy_write(0x0456) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- \([0-9a-fA-Fx]*\)/\t\1, \2, \3, \4, \5,/
-:%s/phy_write(0x0456) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- \([0-9a-fA-Fx]*\)/\t\1, \2, \3, \4,/
-:%s/phy_write(0x0456) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- \([0-9a-fA-Fx]*\)/\t\1, \2, \3,/
-:%s/phy_write(0x0456) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- \([0-9a-fA-Fx]*\)/\t\1, \2,/
+This still should be possible to adopt brcmfmac to use ssb, right? A
+first random ssb-related function: dhdsdio_chip_resetcore. It
+duplicates ssb code.
 
-:%s/phy_write(0x0457) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- 0x\([0-9a-fA-F]*\)\nphy_write(0x0457) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- 0x\([0-9a-fA-F]*\)\nphy_write(0x0457) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- 0x\([0-9a-fA-F]*\)\nphy_write(0x0457) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- 0x\([0-9a-fA-F]*\)/\t\1\2, \3\4, \5\6, \7\8,/
-:%s/phy_write(0x0457) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- 0x\([0-9a-fA-F]*\)\nphy_write(0x0457) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- 0x\([0-9a-fA-F]*\)\nphy_write(0x0457) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- 0x\([0-9a-fA-F]*\)/\t\1\2, \3\4, \5\6,/
-:%s/phy_write(0x0457) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- 0x\([0-9a-fA-F]*\)\nphy_write(0x0457) <- \([0-9a-fA-Fx]*\)\nphy_write(0x0456) <- 0x\([0-9a-fA-F]*\)/\t\1\2, \3\4,/
+I'm still willing to help in brcmfmac development.
 
-:%s/^b43_lcntab_0x\([0-9a-fA-F]*\)_0x\([0-9a-fA-F]*\)/lcntab_upload(dev, B43_lcnTABx(0x\1, 0x\2), b43_lcntab_0x\1_0x\2);/
-:%s/^b43_lcntab_0x\([0-9a-fA-F]*\)/lcntab_upload(dev, B43_lcnTABx(0x\1, 0), b43_lcntab_0x\1);/
-
-The rest was adjusted manually.
----
- drivers/net/wireless/b43/phy_lcn.h        |    3 +
- drivers/net/wireless/b43/tables_phy_lcn.c |  432 +++++++++++++++++++++++++++++
- drivers/net/wireless/b43/tables_phy_lcn.h |   16 +
- 3 files changed, 451 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_lcn.h b/drivers/net/wireless/b43/phy_lcn.h
-index 371e07d..25f06e8 100644
---- a/drivers/net/wireless/b43/phy_lcn.h
-+++ b/drivers/net/wireless/b43/phy_lcn.h
-@@ -8,6 +8,9 @@
- #define B43_PHY_LCN_AFE_CTL2			B43_PHY_OFDM(0x03C)
- #define B43_PHY_LCN_RF_CTL1			B43_PHY_OFDM(0x04C)
- #define B43_PHY_LCN_RF_CTL2			B43_PHY_OFDM(0x04D)
-+#define B43_PHY_LCN_TABLE_ADDR			B43_PHY_OFDM(0x055) /* Table address */
-+#define B43_PHY_LCN_TABLE_DATALO		B43_PHY_OFDM(0x056) /* Table data low */
-+#define B43_PHY_LCN_TABLE_DATAHI		B43_PHY_OFDM(0x057) /* Table data high */
- #define B43_PHY_LCN_RF_CTL3			B43_PHY_OFDM(0x0B0)
- #define B43_PHY_LCN_RF_CTL4			B43_PHY_OFDM(0x0B1)
- #define B43_PHY_LCN_RF_CTL5			B43_PHY_OFDM(0x0B7)
-diff --git a/drivers/net/wireless/b43/tables_phy_lcn.c b/drivers/net/wireless/b43/tables_phy_lcn.c
-index 40c1d09..0a58428 100644
---- a/drivers/net/wireless/b43/tables_phy_lcn.c
-+++ b/drivers/net/wireless/b43/tables_phy_lcn.c
-@@ -25,10 +25,442 @@
- #include "phy_common.h"
- #include "phy_lcn.h"
- 
-+static const u16 b43_lcntab_0x02[] = {
-+	0x014d, 0x014d, 0x014d, 0x014d, 0x014d, 0x014d,
-+	0x014d, 0x014d, 0x014d, 0x014d, 0x014d, 0x014d,
-+	0x014d, 0x014d, 0x014d, 0x014d, 0x014d, 0x014d,
-+	0x014d, 0x014d, 0x014d, 0x014d, 0x014d, 0x014d,
-+	0x014d, 0x014d, 0x014d, 0x014d, 0x014d, 0x014d,
-+	0x014d, 0x014d, 0x014d, 0x014d, 0x014d, 0x014d,
-+	0x014d, 0x014d, 0x014d, 0x014d, 0x014d, 0x014d,
-+	0x014d, 0x014d, 0x014d, 0x014d, 0x014d, 0x014d,
-+	0x014d, 0x014d, 0x014d, 0x014d, 0x014d, 0x014d,
-+	0x014d, 0x014d, 0x014d, 0x014d, 0x014d, 0x014d,
-+	0x014d, 0x014d, 0x014d, 0x014d,
-+};
-+
-+static const u16 b43_lcntab_0x01[] = {
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000,
-+};
-+
-+static const u32 b43_lcntab_0x0b[] = {
-+	0x000141f8, 0x000021f8, 0x000021fb, 0x000041fb,
-+	0x0001fedb, 0x0000217b, 0x00002133, 0x000040eb,
-+	0x0001fea3, 0x0000024b,
-+};
-+
-+static const u32 b43_lcntab_0x0c[] = {
-+	0x00100001, 0x00200010, 0x00300001, 0x00400010,
-+	0x00500022, 0x00600122, 0x00700222, 0x00800322,
-+	0x00900422, 0x00a00522, 0x00b00622, 0x00c00722,
-+	0x00d00822, 0x00f00922, 0x00100a22, 0x00200b22,
-+	0x00300c22, 0x00400d22, 0x00500e22, 0x00600f22,
-+};
-+
-+static const u32 b43_lcntab_0x0d[] = {
-+	0x00000000, 0x00000000, 0x10000000, 0x00000000,
-+	0x20000000, 0x00000000, 0x30000000, 0x00000000,
-+	0x40000000, 0x00000000, 0x50000000, 0x00000000,
-+	0x60000000, 0x00000000, 0x70000000, 0x00000000,
-+	0x80000000, 0x00000000, 0x90000000, 0x00000008,
-+	0xa0000000, 0x00000008, 0xb0000000, 0x00000008,
-+	0xc0000000, 0x00000008, 0xd0000000, 0x00000008,
-+	0xe0000000, 0x00000008, 0xf0000000, 0x00000008,
-+	0x00000000, 0x00000009, 0x10000000, 0x00000009,
-+	0x20000000, 0x00000019, 0x30000000, 0x00000019,
-+	0x40000000, 0x00000019, 0x50000000, 0x00000019,
-+	0x60000000, 0x00000019, 0x70000000, 0x00000019,
-+	0x80000000, 0x00000019, 0x90000000, 0x00000019,
-+	0xa0000000, 0x00000019, 0xb0000000, 0x00000019,
-+	0xc0000000, 0x00000019, 0xd0000000, 0x00000019,
-+	0xe0000000, 0x00000019, 0xf0000000, 0x00000019,
-+	0x00000000, 0x0000001a, 0x10000000, 0x0000001a,
-+	0x20000000, 0x0000001a, 0x30000000, 0x0000001a,
-+	0x40000000, 0x0000001a, 0x50000000, 0x00000002,
-+	0x60000000, 0x00000002, 0x70000000, 0x00000002,
-+	0x80000000, 0x00000002, 0x90000000, 0x00000002,
-+	0xa0000000, 0x00000002, 0xb0000000, 0x00000002,
-+	0xc0000000, 0x0000000a, 0xd0000000, 0x0000000a,
-+	0xe0000000, 0x0000000a, 0xf0000000, 0x0000000a,
-+	0x00000000, 0x0000000b, 0x10000000, 0x0000000b,
-+	0x20000000, 0x0000000b, 0x30000000, 0x0000000b,
-+	0x40000000, 0x0000000b, 0x50000000, 0x0000001b,
-+	0x60000000, 0x0000001b, 0x70000000, 0x0000001b,
-+	0x80000000, 0x0000001b, 0x90000000, 0x0000001b,
-+	0xa0000000, 0x0000001b, 0xb0000000, 0x0000001b,
-+	0xc0000000, 0x0000001b, 0xd0000000, 0x0000001b,
-+	0xe0000000, 0x0000001b, 0xf0000000, 0x0000001b,
-+	0x00000000, 0x0000001c, 0x10000000, 0x0000001c,
-+	0x20000000, 0x0000001c, 0x30000000, 0x0000001c,
-+	0x40000000, 0x0000001c, 0x50000000, 0x0000001c,
-+	0x60000000, 0x0000001c, 0x70000000, 0x0000001c,
-+	0x80000000, 0x0000001c, 0x90000000, 0x0000001c,
-+};
-+
-+static const u16 b43_lcntab_0x0e[] = {
-+	0x0401, 0x0402, 0x0403, 0x0404, 0x0405, 0x0406,
-+	0x0407, 0x0408, 0x0409, 0x040a, 0x058b, 0x058c,
-+	0x058d, 0x058e, 0x058f, 0x0090, 0x0091, 0x0092,
-+	0x0193, 0x0194, 0x0195, 0x0196, 0x0197, 0x0198,
-+	0x0199, 0x019a, 0x019b, 0x019c, 0x019d, 0x019e,
-+	0x019f, 0x01a0, 0x01a1, 0x01a2, 0x01a3, 0x01a4,
-+	0x01a5, 0x0000,
-+};
-+
-+static const u16 b43_lcntab_0x0f[] = {
-+	0x000a, 0x0009, 0x0006, 0x0005, 0x000a, 0x0009,
-+	0x0006, 0x0005, 0x000a, 0x0009, 0x0006, 0x0005,
-+	0x000a, 0x0009, 0x0006, 0x0005, 0x000a, 0x0009,
-+	0x0006, 0x0005, 0x000a, 0x0009, 0x0006, 0x0005,
-+	0x000a, 0x0009, 0x0006, 0x0005, 0x000a, 0x0009,
-+	0x0006, 0x0005, 0x000a, 0x0009, 0x0006, 0x0005,
-+	0x000a, 0x0009, 0x0006, 0x0005, 0x000a, 0x0009,
-+	0x0006, 0x0005, 0x000a, 0x0009, 0x0006, 0x0005,
-+	0x000a, 0x0009, 0x0006, 0x0005, 0x000a, 0x0009,
-+	0x0006, 0x0005, 0x000a, 0x0009, 0x0006, 0x0005,
-+	0x000a, 0x0009, 0x0006, 0x0005,
-+};
-+
-+static const u16 b43_lcntab_0x10[] = {
-+	0x005f, 0x0036, 0x0029, 0x001f, 0x005f, 0x0036,
-+	0x0029, 0x001f, 0x005f, 0x0036, 0x0029, 0x001f,
-+	0x005f, 0x0036, 0x0029, 0x001f,
-+};
-+
-+static const u16 b43_lcntab_0x11[] = {
-+	0x0009, 0x000f, 0x0014, 0x0018, 0x00fe, 0x0007,
-+	0x000b, 0x000f, 0x00fb, 0x00fe, 0x0001, 0x0005,
-+	0x0008, 0x000b, 0x000e, 0x0011, 0x0014, 0x0017,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0003, 0x0006, 0x0009, 0x000c, 0x000f,
-+	0x0012, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0003,
-+	0x0006, 0x0009, 0x000c, 0x000f, 0x0012, 0x0015,
-+	0x0018, 0x001b, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0003, 0x00eb, 0x0000, 0x0000,
-+};
-+
-+static const u32 b43_lcntab_0x12[] = {
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000004, 0x00000000, 0x00000004, 0x00000008,
-+	0x00000001, 0x00000005, 0x00000009, 0x0000000d,
-+	0x0000004d, 0x0000008d, 0x0000000d, 0x0000004d,
-+	0x0000008d, 0x000000cd, 0x0000004f, 0x0000008f,
-+	0x000000cf, 0x000000d3, 0x00000113, 0x00000513,
-+	0x00000913, 0x00000953, 0x00000d53, 0x00001153,
-+	0x00001193, 0x00005193, 0x00009193, 0x0000d193,
-+	0x00011193, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000004,
-+	0x00000000, 0x00000004, 0x00000008, 0x00000001,
-+	0x00000005, 0x00000009, 0x0000000d, 0x0000004d,
-+	0x0000008d, 0x0000000d, 0x0000004d, 0x0000008d,
-+	0x000000cd, 0x0000004f, 0x0000008f, 0x000000cf,
-+	0x000000d3, 0x00000113, 0x00000513, 0x00000913,
-+	0x00000953, 0x00000d53, 0x00001153, 0x00005153,
-+	0x00009153, 0x0000d153, 0x00011153, 0x00015153,
-+	0x00019153, 0x0001d153, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+};
-+
-+static const u16 b43_lcntab_0x14[] = {
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0002, 0x0003, 0x0001, 0x0003, 0x0002, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0002, 0x0003,
-+	0x0001, 0x0003, 0x0002, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001, 0x0001, 0x0001, 0x0001, 0x0001,
-+	0x0001, 0x0001,
-+};
-+
-+static const u16 b43_lcntab_0x17[] = {
-+	0x001a, 0x0034, 0x004e, 0x0068, 0x009c, 0x00d0,
-+	0x00ea, 0x0104, 0x0034, 0x0068, 0x009c, 0x00d0,
-+	0x0138, 0x01a0, 0x01d4, 0x0208, 0x004e, 0x009c,
-+	0x00ea, 0x0138, 0x01d4, 0x0270, 0x02be, 0x030c,
-+	0x0068, 0x00d0, 0x0138, 0x01a0, 0x0270, 0x0340,
-+	0x03a8, 0x0410, 0x0018, 0x009c, 0x00d0, 0x0104,
-+	0x00ea, 0x0138, 0x0186, 0x00d0, 0x0104, 0x0104,
-+	0x0138, 0x016c, 0x016c, 0x01a0, 0x0138, 0x0186,
-+	0x0186, 0x01d4, 0x0222, 0x0222, 0x0270, 0x0104,
-+	0x0138, 0x016c, 0x0138, 0x016c, 0x01a0, 0x01d4,
-+	0x01a0, 0x01d4, 0x0208, 0x0208, 0x023c, 0x0186,
-+	0x01d4, 0x0222, 0x01d4, 0x0222, 0x0270, 0x02be,
-+	0x0270, 0x02be, 0x030c, 0x030c, 0x035a, 0x0036,
-+	0x006c, 0x00a2, 0x00d8, 0x0144, 0x01b0, 0x01e6,
-+	0x021c, 0x006c, 0x00d8, 0x0144, 0x01b0, 0x0288,
-+	0x0360, 0x03cc, 0x0438, 0x00a2, 0x0144, 0x01e6,
-+	0x0288, 0x03cc, 0x0510, 0x05b2, 0x0654, 0x00d8,
-+	0x01b0, 0x0288, 0x0360, 0x0510, 0x06c0, 0x0798,
-+	0x0870, 0x0018, 0x0144, 0x01b0, 0x021c, 0x01e6,
-+	0x0288, 0x032a, 0x01b0, 0x021c, 0x021c, 0x0288,
-+	0x02f4, 0x02f4, 0x0360, 0x0288, 0x032a, 0x032a,
-+	0x03cc, 0x046e, 0x046e, 0x0510, 0x021c, 0x0288,
-+	0x02f4, 0x0288, 0x02f4, 0x0360, 0x03cc, 0x0360,
-+	0x03cc, 0x0438, 0x0438, 0x04a4, 0x032a, 0x03cc,
-+	0x046e, 0x03cc, 0x046e, 0x0510, 0x05b2, 0x0510,
-+	0x05b2, 0x0654, 0x0654, 0x06f6,
-+};
-+
-+static const u16 b43_lcntab_0x00[] = {
-+	0x0200, 0x0300, 0x0400, 0x0600, 0x0800, 0x0b00,
-+	0x1000, 0x1001, 0x1002, 0x1003, 0x1004, 0x1005,
-+	0x1006, 0x1007, 0x1707, 0x2007, 0x2d07, 0x4007,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0200, 0x0300, 0x0400, 0x0600,
-+	0x0800, 0x0b00, 0x1000, 0x1001, 0x1002, 0x1003,
-+	0x1004, 0x1005, 0x1006, 0x1007, 0x1707, 0x2007,
-+	0x2d07, 0x4007, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x4000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-+};
-+
-+static const u32 b43_lcntab_0x18[] = {
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+	0x00080000, 0x00080000, 0x00080000, 0x00080000,
-+};
-+
-+/**************************************************
-+ * R/W ops.
-+ **************************************************/
-+
-+u32 b43_lcntab_read(struct b43_wldev *dev, u32 offset)
-+{
-+	u32 type, value;
-+
-+	type = offset & B43_LCNTAB_TYPEMASK;
-+	offset &= ~B43_LCNTAB_TYPEMASK;
-+	B43_WARN_ON(offset > 0xFFFF);
-+
-+	switch (type) {
-+	case B43_LCNTAB_8BIT:
-+		b43_phy_write(dev, B43_PHY_LCN_TABLE_ADDR, offset);
-+		value = b43_phy_read(dev, B43_PHY_LCN_TABLE_DATALO) & 0xFF;
-+		break;
-+	case B43_LCNTAB_16BIT:
-+		b43_phy_write(dev, B43_PHY_LCN_TABLE_ADDR, offset);
-+		value = b43_phy_read(dev, B43_PHY_LCN_TABLE_DATALO);
-+		break;
-+	case B43_LCNTAB_32BIT:
-+		b43_phy_write(dev, B43_PHY_LCN_TABLE_ADDR, offset);
-+		value = b43_phy_read(dev, B43_PHY_LCN_TABLE_DATAHI);
-+		value <<= 16;
-+		value |= b43_phy_read(dev, B43_PHY_LCN_TABLE_DATALO);
-+		break;
-+	default:
-+		B43_WARN_ON(1);
-+		value = 0;
-+	}
-+
-+	return value;
-+}
-+
-+void b43_lcntab_read_bulk(struct b43_wldev *dev, u32 offset,
-+			  unsigned int nr_elements, void *_data)
-+{
-+	u32 type;
-+	u8 *data = _data;
-+	unsigned int i;
-+
-+	type = offset & B43_LCNTAB_TYPEMASK;
-+	offset &= ~B43_LCNTAB_TYPEMASK;
-+	B43_WARN_ON(offset > 0xFFFF);
-+
-+	b43_phy_write(dev, B43_PHY_LCN_TABLE_ADDR, offset);
-+
-+	for (i = 0; i < nr_elements; i++) {
-+		switch (type) {
-+		case B43_LCNTAB_8BIT:
-+			*data = b43_phy_read(dev,
-+					     B43_PHY_LCN_TABLE_DATALO) & 0xFF;
-+			data++;
-+			break;
-+		case B43_LCNTAB_16BIT:
-+			*((u16 *)data) = b43_phy_read(dev,
-+						      B43_PHY_LCN_TABLE_DATALO);
-+			data += 2;
-+			break;
-+		case B43_LCNTAB_32BIT:
-+			*((u32 *)data) = b43_phy_read(dev,
-+						      B43_PHY_LCN_TABLE_DATAHI);
-+			*((u32 *)data) <<= 16;
-+			*((u32 *)data) |= b43_phy_read(dev,
-+						B43_PHY_LCN_TABLE_DATALO);
-+			data += 4;
-+			break;
-+		default:
-+			B43_WARN_ON(1);
-+		}
-+	}
-+}
-+
-+void b43_lcntab_write(struct b43_wldev *dev, u32 offset, u32 value)
-+{
-+	u32 type;
-+
-+	type = offset & B43_LCNTAB_TYPEMASK;
-+	offset &= 0xFFFF;
-+
-+	switch (type) {
-+	case B43_LCNTAB_8BIT:
-+		B43_WARN_ON(value & ~0xFF);
-+		b43_phy_write(dev, B43_PHY_LCN_TABLE_ADDR, offset);
-+		b43_phy_write(dev, B43_PHY_LCN_TABLE_DATALO, value);
-+		break;
-+	case B43_LCNTAB_16BIT:
-+		B43_WARN_ON(value & ~0xFFFF);
-+		b43_phy_write(dev, B43_PHY_LCN_TABLE_ADDR, offset);
-+		b43_phy_write(dev, B43_PHY_LCN_TABLE_DATALO, value);
-+		break;
-+	case B43_LCNTAB_32BIT:
-+		b43_phy_write(dev, B43_PHY_LCN_TABLE_ADDR, offset);
-+		b43_phy_write(dev, B43_PHY_LCN_TABLE_DATAHI, value >> 16);
-+		b43_phy_write(dev, B43_PHY_LCN_TABLE_DATALO, value & 0xFFFF);
-+		break;
-+	default:
-+		B43_WARN_ON(1);
-+	}
-+
-+	return;
-+}
-+
-+void b43_lcntab_write_bulk(struct b43_wldev *dev, u32 offset,
-+			   unsigned int nr_elements, const void *_data)
-+{
-+	u32 type, value;
-+	const u8 *data = _data;
-+	unsigned int i;
-+
-+	type = offset & B43_LCNTAB_TYPEMASK;
-+	offset &= ~B43_LCNTAB_TYPEMASK;
-+	B43_WARN_ON(offset > 0xFFFF);
-+
-+	b43_phy_write(dev, B43_PHY_LCN_TABLE_ADDR, offset);
-+
-+	for (i = 0; i < nr_elements; i++) {
-+		switch (type) {
-+		case B43_LCNTAB_8BIT:
-+			value = *data;
-+			data++;
-+			B43_WARN_ON(value & ~0xFF);
-+			b43_phy_write(dev, B43_PHY_LCN_TABLE_DATALO, value);
-+			break;
-+		case B43_LCNTAB_16BIT:
-+			value = *((u16 *)data);
-+			data += 2;
-+			B43_WARN_ON(value & ~0xFFFF);
-+			b43_phy_write(dev, B43_PHY_LCN_TABLE_DATALO, value);
-+			break;
-+		case B43_LCNTAB_32BIT:
-+			value = *((u32 *)data);
-+			data += 4;
-+			b43_phy_write(dev, B43_PHY_LCN_TABLE_DATAHI,
-+				      value >> 16);
-+			b43_phy_write(dev, B43_PHY_LCN_TABLE_DATALO,
-+				      value & 0xFFFF);
-+			break;
-+		default:
-+			B43_WARN_ON(1);
-+		}
-+	}
-+}
-+
- /**************************************************
-  * Tables ops.
-  **************************************************/
- 
-+#define lcntab_upload(dev, offset, data) do { \
-+		b43_lcntab_write_bulk(dev, offset, ARRAY_SIZE(data), data); \
-+	} while (0)
- void b43_phy_lcn_tables_init(struct b43_wldev *dev)
- {
-+	lcntab_upload(dev, B43_LCNTAB16(0x02, 0), b43_lcntab_0x02);
-+	lcntab_upload(dev, B43_LCNTAB16(0x01, 0), b43_lcntab_0x01);
-+	lcntab_upload(dev, B43_LCNTAB32(0x0b, 0), b43_lcntab_0x0b);
-+	lcntab_upload(dev, B43_LCNTAB32(0x0c, 0), b43_lcntab_0x0c);
-+	lcntab_upload(dev, B43_LCNTAB32(0x0d, 0), b43_lcntab_0x0d);
-+	lcntab_upload(dev, B43_LCNTAB16(0x0e, 0), b43_lcntab_0x0e);
-+	lcntab_upload(dev, B43_LCNTAB16(0x0f, 0), b43_lcntab_0x0f);
-+	lcntab_upload(dev, B43_LCNTAB16(0x10, 0), b43_lcntab_0x10);
-+	lcntab_upload(dev, B43_LCNTAB16(0x11, 0), b43_lcntab_0x11);
-+	lcntab_upload(dev, B43_LCNTAB32(0x12, 0), b43_lcntab_0x12);
-+	lcntab_upload(dev, B43_LCNTAB16(0x14, 0), b43_lcntab_0x14);
-+	lcntab_upload(dev, B43_LCNTAB16(0x17, 0), b43_lcntab_0x17);
-+	lcntab_upload(dev, B43_LCNTAB16(0x00, 0), b43_lcntab_0x00);
-+	lcntab_upload(dev, B43_LCNTAB32(0x18, 0), b43_lcntab_0x18);
- }
-diff --git a/drivers/net/wireless/b43/tables_phy_lcn.h b/drivers/net/wireless/b43/tables_phy_lcn.h
-index 5e31b15..b6471e8 100644
---- a/drivers/net/wireless/b43/tables_phy_lcn.h
-+++ b/drivers/net/wireless/b43/tables_phy_lcn.h
-@@ -1,6 +1,22 @@
- #ifndef B43_TABLES_PHY_LCN_H_
- #define B43_TABLES_PHY_LCN_H_
- 
-+/* The LCN-PHY tables. */
-+#define B43_LCNTAB_TYPEMASK		0xF0000000
-+#define B43_LCNTAB_8BIT			0x10000000
-+#define B43_LCNTAB_16BIT		0x20000000
-+#define B43_LCNTAB_32BIT		0x30000000
-+#define B43_LCNTAB8(table, offset)	(((table) << 10) | (offset) | B43_LCNTAB_8BIT)
-+#define B43_LCNTAB16(table, offset)	(((table) << 10) | (offset) | B43_LCNTAB_16BIT)
-+#define B43_LCNTAB32(table, offset)	(((table) << 10) | (offset) | B43_LCNTAB_32BIT)
-+
-+u32 b43_lcntab_read(struct b43_wldev *dev, u32 offset);
-+void b43_lcntab_read_bulk(struct b43_wldev *dev, u32 offset,
-+			  unsigned int nr_elements, void *_data);
-+void b43_lcntab_write(struct b43_wldev *dev, u32 offset, u32 value);
-+void b43_lcntab_write_bulk(struct b43_wldev *dev, u32 offset,
-+			   unsigned int nr_elements, const void *_data);
-+
- void b43_phy_lcn_tables_init(struct b43_wldev *dev);
- 
- #endif /* B43_TABLES_PHY_LCN_H_ */
 -- 
-1.7.3.4
-
+Rafał
