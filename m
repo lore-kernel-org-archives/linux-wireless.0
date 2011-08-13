@@ -1,76 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43724 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753116Ab1HNLik (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 07:38:40 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/4] ath6kl: Cleanup ath6kl_wmi_data_hdr_remove()
-Date: Sun, 14 Aug 2011 17:08:35 +0530
-Message-ID: <1313321916-29685-3-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110814_133845_158297_FA468645)
-In-Reply-To: <1313321916-29685-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1313321916-29685-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:35412 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751666Ab1HMQ56 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2011 12:57:58 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/13] iwlagn: separate firmware version warning
+Date: Sat, 13 Aug 2011 09:17:59 -0700
+Message-Id: <1313252287-22858-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_191257_139144_C7FB5088)
+In-Reply-To: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/txrx.c |    3 +--
- drivers/net/wireless/ath/ath6kl/wmi.c  |   10 ----------
- drivers/net/wireless/ath/ath6kl/wmi.h  |    1 -
- 3 files changed, 1 insertions(+), 13 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index fb67c24..5d3d4b6 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1162,8 +1162,7 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 	seq_no = wmi_data_hdr_get_seqno(dhdr);
- 	meta_type = wmi_data_hdr_get_meta(dhdr);
- 	dot11_hdr = wmi_data_hdr_get_dot11(dhdr);
--
--	ath6kl_wmi_data_hdr_remove(ar->wmi, skb);
-+	skb_pull(skb, sizeof(struct wmi_data_hdr));
+We sometimes need to support new firmware API for
+a while before we can publish them since testing
+them fully takes a long time. We could keep all
+the new code private, but that causes plenty of
+problems and sometimes we can give a pre-release
+version of firmware to people who need to test.
+However, when we just bump the API version, the
+driver will warn everybody that their firmware is
+outdated, when in fact it isn't. (Currently our
+case for this doesn't really change the API but
+bumping the API version is necessary because the
+firmware isn't fully backward compatible)
+
+In order to handle this in the future, add a new
+"api_ok" version; only below this will the driver
+warn that the uCode is too old.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |   24 +++++++++++++++++-------
+ drivers/net/wireless/iwlwifi/iwl-core.h |    3 +++
+ 2 files changed, 20 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index bb16726..871d880 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -952,6 +952,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	int err;
+ 	struct iwlagn_firmware_pieces pieces;
+ 	const unsigned int api_max = priv->cfg->ucode_api_max;
++	unsigned int api_ok = priv->cfg->ucode_api_ok;
+ 	const unsigned int api_min = priv->cfg->ucode_api_min;
+ 	u32 api_ver;
+ 	char buildstr[25];
+@@ -962,10 +963,13 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 			IWL_DEFAULT_STANDARD_PHY_CALIBRATE_TBL_SIZE,
+ 	};
  
- 	switch (meta_type) {
- 	case WMI_META_VERSION_1:
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index f5aa33d..13b1a20 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -376,16 +376,6 @@ int ath6kl_wmi_dot3_2_dix(struct sk_buff *skb)
- 	return 0;
- }
++	if (!api_ok)
++		api_ok = api_max;
++
+ 	memset(&pieces, 0, sizeof(pieces));
  
--int ath6kl_wmi_data_hdr_remove(struct wmi *wmi, struct sk_buff *skb)
--{
--	if (WARN_ON(skb == NULL))
--		return -EINVAL;
--
--	skb_pull(skb, sizeof(struct wmi_data_hdr));
--
--	return 0;
--}
--
- static void ath6kl_wmi_convert_bssinfo_hdr2_to_hdr(struct sk_buff *skb,
- 						   u8 *datap)
- {
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index fe3ddce..8fa5d6e 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -1925,7 +1925,6 @@ int ath6kl_wmi_data_hdr_add(struct wmi *wmi, struct sk_buff *skb,
+ 	if (!ucode_raw) {
+-		if (priv->fw_index <= priv->cfg->ucode_api_max)
++		if (priv->fw_index <= api_ok)
+ 			IWL_ERR(priv,
+ 				"request for firmware file '%s' failed.\n",
+ 				priv->firmware_name);
+@@ -1011,12 +1015,18 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 			goto try_again;
+ 		}
  
- int ath6kl_wmi_dot11_hdr_remove(struct wmi *wmi, struct sk_buff *skb);
- int ath6kl_wmi_dot3_2_dix(struct sk_buff *skb);
--int ath6kl_wmi_data_hdr_remove(struct wmi *wmi, struct sk_buff *skb);
- int ath6kl_wmi_implicit_create_pstream(struct wmi *wmi, struct sk_buff *skb,
- 				       u32 layer2_priority, bool wmm_enabled,
- 				       u8 *ac);
+-		if (api_ver != api_max)
+-			IWL_ERR(priv,
+-				"Firmware has old API version. Expected v%u, "
+-				"got v%u. New firmware can be obtained "
+-				"from http://www.intellinuxwireless.org.\n",
+-				api_max, api_ver);
++		if (api_ver < api_ok) {
++			if (api_ok != api_max)
++				IWL_ERR(priv, "Firmware has old API version, "
++					"expected v%u through v%u, got v%u.\n",
++					api_ok, api_max, api_ver);
++			else
++				IWL_ERR(priv, "Firmware has old API version, "
++					"expected v%u, got v%u.\n",
++					api_max, api_ver);
++			IWL_ERR(priv, "New firmware can be obtained from "
++				      "http://www.intellinuxwireless.org/.\n");
++		}
+ 	}
+ 
+ 	if (build)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 3e6bb73..74f043d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -192,6 +192,8 @@ struct iwl_ht_params {
+  *	(.ucode) will be added to filename before loading from disk. The
+  *	filename is constructed as fw_name_pre<api>.ucode.
+  * @ucode_api_max: Highest version of uCode API supported by driver.
++ * @ucode_api_ok: oldest version of the uCode API that is OK to load
++ *	without a warning, for use in transitions
+  * @ucode_api_min: Lowest version of uCode API supported by driver.
+  * @valid_tx_ant: valid transmit antenna
+  * @valid_rx_ant: valid receive antenna
+@@ -235,6 +237,7 @@ struct iwl_cfg {
+ 	const char *name;
+ 	const char *fw_name_pre;
+ 	const unsigned int ucode_api_max;
++	const unsigned int ucode_api_ok;
+ 	const unsigned int ucode_api_min;
+ 	u8   valid_tx_ant;
+ 	u8   valid_rx_ant;
 -- 
 1.7.0.4
 
