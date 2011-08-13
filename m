@@ -1,61 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34944 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753479Ab1HJSAQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 14:00:16 -0400
-Date: Wed, 10 Aug 2011 13:58:27 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Marek Lindner <lindner_marek@yahoo.de>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCHv2] ath9k: remove eeprom txgain override for minor version
- < 19
-Message-ID: <20110810175826.GB25266@tuxdriver.com> (sfid-20110810_200020_214789_DD463600)
-References: <1312359372-5586-1-git-send-email-lindner_marek@yahoo.de>
- <1312382116-27257-1-git-send-email-lindner_marek@yahoo.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1312382116-27257-1-git-send-email-lindner_marek@yahoo.de>
+Received: from mga02.intel.com ([134.134.136.20]:11393 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752057Ab1HMSSy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2011 14:18:54 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 35/60] iwlagn: move hcmd_lock to transport layer
+Date: Sat, 13 Aug 2011 10:38:11 -0700
+Message-Id: <1313257116-2697-36-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_204257_549256_E5B224BC)
+In-Reply-To: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 03, 2011 at 04:35:16PM +0200, Marek Lindner wrote:
-> ath9k_hw_4k_get_eeprom() overrides the eeprom value for txgain if the
-> minor version is not 19 or above with a value of 0.
-> ar9002_hw_init_mode_gain_regs() relies on this information to
-> determine whether this is a high power wifi card or not. The override
-> caused the driver to always use the 'normal' power tables even for
-> high power devices if their minor version was not high enough. Thus
-> leading to reduced power output.
-> 
-> This isn't needed for the AR9285; the check originated with the 
-> AR9280 setup code which requires the EEPROM version check.
-> 
-> Signed-off-by: Marek Lindner <lindner_marek@yahoo.de>
-> ---
->  drivers/net/wireless/ath/ath9k/eeprom_4k.c |    5 +----
->  1 files changed, 1 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-> index 5b1e894..10f3072 100644
-> --- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-> +++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-> @@ -237,10 +237,7 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
->  	case EEP_ANT_DIV_CTL1:
->  		return pModal->antdiv_ctl1;
->  	case EEP_TXGAIN_TYPE:
-> -		if (ver_minor >= AR5416_EEP_MINOR_VER_19)
-> -			return pBase->txGainType;
-> -		else
-> -			return AR5416_EEP_TXGAIN_ORIGINAL;
-> +		return pBase->txGainType;
->  	default:
->  		return 0;
->  	}
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Any chance for an ACK from someone from Atheros on the ath9k team?
+Since it is needed for host commands only, it is needed in transport layer only
 
-John
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c           |    1 -
+ drivers/net/wireless/iwlwifi/iwl-dev.h           |    1 -
+ drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c |   10 +++++-----
+ drivers/net/wireless/iwlwifi/iwl-trans.c         |    1 +
+ drivers/net/wireless/iwlwifi/iwl-trans.h         |    2 ++
+ 5 files changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 7fa782d..65117e6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3123,7 +3123,6 @@ static int iwl_init_drv(struct iwl_priv *priv)
+ 	int ret;
+ 
+ 	spin_lock_init(&priv->shrd->sta_lock);
+-	spin_lock_init(&priv->hcmd_lock);
+ 
+ 	mutex_init(&priv->shrd->mutex);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index b1277cf..ad564b8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1180,7 +1180,6 @@ struct iwl_priv {
+ 	u8 mgmt_tx_ant;
+ 
+ 	/* spinlock */
+-	spinlock_t hcmd_lock;	/* protect hcmd */
+ 	spinlock_t reg_lock;	/* protect hw register access */
+ 
+ 	/*TODO: remove these pointers - use bus(priv) instead */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
+index 49845c7..a706993 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
+@@ -601,10 +601,10 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 		return -EIO;
+ 	}
+ 
+-	spin_lock_irqsave(&priv->hcmd_lock, flags);
++	spin_lock_irqsave(&trans->hcmd_lock, flags);
+ 
+ 	if (iwl_queue_space(q) < ((cmd->flags & CMD_ASYNC) ? 2 : 1)) {
+-		spin_unlock_irqrestore(&priv->hcmd_lock, flags);
++		spin_unlock_irqrestore(&trans->hcmd_lock, flags);
+ 
+ 		IWL_ERR(trans, "No space in command queue\n");
+ 		is_ct_kill = iwl_check_for_ct_kill(priv);
+@@ -713,7 +713,7 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	iwl_txq_update_write_ptr(priv, txq);
+ 
+  out:
+-	spin_unlock_irqrestore(&priv->hcmd_lock, flags);
++	spin_unlock_irqrestore(&trans->hcmd_lock, flags);
+ 	return idx;
+ }
+ 
+@@ -796,7 +796,7 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+ 	} else if (meta->callback)
+ 		meta->callback(priv, cmd, pkt);
+ 
+-	spin_lock_irqsave(&priv->hcmd_lock, flags);
++	spin_lock_irqsave(&trans->hcmd_lock, flags);
+ 
+ 	iwl_hcmd_queue_reclaim(priv, txq_id, index);
+ 
+@@ -809,7 +809,7 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+ 
+ 	meta->flags = 0;
+ 
+-	spin_unlock_irqrestore(&priv->hcmd_lock, flags);
++	spin_unlock_irqrestore(&trans->hcmd_lock, flags);
+ }
+ 
+ const char *get_cmd_string(u8 cmd)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+index b448e79..73883fe 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -1284,6 +1284,7 @@ static struct iwl_trans *iwl_trans_pcie_alloc(struct iwl_shared *shrd)
+ 		iwl_trans->ops = &trans_ops_pcie;
+ 		iwl_trans->shrd = shrd;
+ 		trans_pcie->trans = iwl_trans;
++		spin_lock_init(&iwl_trans->hcmd_lock);
+ 	}
+ 
+ 	return iwl_trans;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index da6cc59..78bd2f6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -146,10 +146,12 @@ struct iwl_trans_ops {
+  * struct iwl_trans - transport common data
+  * @ops - pointer to iwl_trans_ops
+  * @shrd - pointer to iwl_shared which holds shared data from the upper layer
++ * @hcmd_lock: protects HCMD
+  */
+ struct iwl_trans {
+ 	const struct iwl_trans_ops *ops;
+ 	struct iwl_shared *shrd;
++	spinlock_t hcmd_lock;
+ 
+ 	/* pointer to trans specific struct */
+ 	/*Ensure that this pointer will always be aligned to sizeof pointer */
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
