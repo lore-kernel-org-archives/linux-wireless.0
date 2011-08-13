@@ -1,67 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:64658 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755432Ab1HYVXX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 17:23:23 -0400
-Received: by vxi9 with SMTP id 9so2071926vxi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 14:23:22 -0700 (PDT)
-Message-ID: <4E56BD45.6080308@lwfinger.net> (sfid-20110825_232327_078764_B793B4CA)
-Date: Thu, 25 Aug 2011 16:23:17 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Henry Ptasinski <henryp@broadcom.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-Subject: Re: [PATCH v2] Move brcm80211 to mainline
-References: <20110707002034.GA17885@broadcom.com>	<20110824222801.GA5280@broadcom.com> <CACna6rwG6qNpaOu4QeOvs0L3LVETRt9w5=Ec-L2NJ5gXOAM=nw@mail.gmail.com>
-In-Reply-To: <CACna6rwG6qNpaOu4QeOvs0L3LVETRt9w5=Ec-L2NJ5gXOAM=nw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga01.intel.com ([192.55.52.88]:35412 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751201Ab1HMQ54 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2011 12:57:56 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 00/11]  update for 3.2
+Date: Sat, 13 Aug 2011 09:17:55 -0700
+Message-Id: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_185805_747806_8D470C04)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/25/2011 03:55 PM, Rafał Miłecki wrote:
-> 2011/8/25 Henry Ptasinski<henryp@broadcom.com>:
->> With the latest series of cleanup patches merged in by Greg KH, I'd like to
->> once again propose moving brcm80211 out of staging and into mainline.
->
-> Henry: a simple question, please explain it to me, what brcmsmac does
-> provide that b43 doesn't?
->
-> brcmsmac doesn't support SSB and duplicates BCMA support (doesn't make
-> use of bcma module)
-> brmcsmac doesn't support older PHYs like G/LP
-> brmcsmac doesn't support recent HT-PHY
-> brmcsmac doesn't support AP or monitor mode
-> all of that is supported by b43
->
-> The one thing brcmsmac is better at, is support for 14e4:4727 card
-> (BCM4313). I've already started work on support of this card in b43,
-> hope to get it working soon.
->
->
-> You mostly just duplicate support for cards that are already supported by b43.
+We enable new P2P implementation with GO powersave
+We bump firmware API version for number of new devices
+We also adjust the sensitivity value for number of devices
 
-I am certainly looking forward to the answer to this question.
 
-My %0.02 contribution: When brcmsmac (or its predecessor) first appeared, b43 
-supported none of the newest Broadcom hardware. Since then, Rafał has done a 
-super job of extending b43, and as he pointed out, the community driver is 
-arguably better than the one contributed by Broadcom.
+Johannes Berg (7):
+  iwlagn: reserve queue 10 for TX during scan dwell
+  iwlagn: handle GO powersave
+  iwlagn: separate firmware version warning
+  iwlagn: bump firmware API for some devices
+  iwlagn: move context init after firmware loading
+  iwlagn: support new P2P implementation
+  mac80211: remove offchannel_tx API
 
-I would like to see the Broadcom engineers concentrate on two things: (1) adding 
-their new devices to b43, and (2) try to get their lawyers to allow the 
-community to redistribute their firmware. It would also be nice if they opened 
-the wl source. I cannot imagine many secrets contained within. Those changes 
-would overcome a lot of the bad will that has been built up in the community. 
-There are many users that reject a particular model of computer merely because 
-it has a Broadcom device included.
+Wey-Yi Guy (4):
+  iwlagn: default smps mode for 1000 series device
+  iwlagn: Remove ht40 support from 5.2GHz for _bgn devices
+  iwlagn: change default sensitivity value for 5000 and 6000 series
+  iwlagn: support v2 of enhanced sensitivity table
 
-Larry
+ drivers/net/wireless/iwlwifi/Kconfig         |   17 -
+ drivers/net/wireless/iwlwifi/iwl-1000.c      |   15 +-
+ drivers/net/wireless/iwlwifi/iwl-2000.c      |   23 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c      |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c      |   19 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c |   69 +++--
+ drivers/net/wireless/iwlwifi/iwl-agn-hw.h    |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c   |   47 +--
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c  |   28 +--
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c    |   30 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c       |  455 ++++++++++++++------------
+ drivers/net/wireless/iwlwifi/iwl-agn.h       |    1 +
+ drivers/net/wireless/iwlwifi/iwl-commands.h  |   34 ++-
+ drivers/net/wireless/iwlwifi/iwl-core.c      |    5 +
+ drivers/net/wireless/iwlwifi/iwl-core.h      |    5 +
+ drivers/net/wireless/iwlwifi/iwl-dev.h       |   32 ++-
+ drivers/net/wireless/iwlwifi/iwl-scan.c      |   19 +-
+ drivers/net/wireless/iwlwifi/iwl-trans.c     |   10 +-
+ include/net/mac80211.h                       |   10 -
+ net/mac80211/cfg.c                           |   39 ---
+ net/mac80211/driver-ops.h                    |   31 --
+ net/mac80211/ieee80211_i.h                   |    1 -
+ net/mac80211/status.c                        |    3 -
+ 23 files changed, 449 insertions(+), 460 deletions(-)
+
