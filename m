@@ -1,84 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:32942 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753535Ab1HJLpI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 07:45:08 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Qr7Df-0005x1-IL
-	for linux-wireless@vger.kernel.org; Wed, 10 Aug 2011 13:45:07 +0200
-Received: from 203.200.200.74.ill-bgl.static.vsnl.net.in ([203.200.200.74.ill-bgl.static.vsnl.net.in])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 13:45:07 +0200
-Received: from amit.gemini by 203.200.200.74.ill-bgl.static.vsnl.net.in with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 13:45:07 +0200
-To: linux-wireless@vger.kernel.org
-From: =?utf-8?b?YW1pdC5nZW1pbmlAc2Fza2VuLmNvbQ==?=
-	<amit.gemini@sasken.com>
-Subject: Problem bringing up wlan0 interface up with mainline wl1271 drivers on Panda Board with 2.6.39 Kernel
-Date: Wed, 10 Aug 2011 11:38:20 +0000 (UTC)
-Message-ID: <loom.20110810T133554-589@post.gmane.org> (sfid-20110810_134513_166734_B2CFD2CE)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:49117 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751561Ab1HMUeY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2011 16:34:24 -0400
+Received: by fxh19 with SMTP id 19so2919137fxh.19
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Aug 2011 13:34:23 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Bernd Schubert <bernd.schubert@fastmail.fm>
+Subject: Re: carl9170 does not like all frequencies
+Date: Sat, 13 Aug 2011 22:34:16 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <j26l8a$ea9$1@dough.gmane.org>
+In-Reply-To: <j26l8a$ea9$1@dough.gmane.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201108132234.16886.chunkeey@googlemail.com> (sfid-20110813_223429_811700_89E7B2CE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am using Panda Board with 2.6.39 Kernel
+On Saturday 13 August 2011 22:02:18 Bernd Schubert wrote:
+> I bought a new usb wifi device with 2 antennas to get a better
+> connection to my router.
+So, you are saying that there was something wrong with the old
+stick as well, right!?
 
-when ever i insert the driver , error comes out "wl1271: ERROR could not get nvs
-file: -2"
+> From point of few of connection strength that worked out very well, from
+> point of view of connection stability that is total disaster so far.
+Sure, you are affected by constant "loud" noise on the frequency/band.
+The hardware is unable to finish the noise floor calibration and therefore
+gives up.
 
-as you can see from the logs...
+> With Ubuntus 2.6.38-something it connects and then entirely fails after
+> sending a few bytes. So I checked git log and noticed carl9170 is being
+> used in recent kernels and connection issues have been fixed in 3.1-git.
+what commits are you talking about?
 
-/ # insmod file-sys-2.6.39/lib/modules/2.6.39/kernel/net/wireless/cfg80211.ko 
-[   18.853088] cfg80211: Calling CRDA to update world regulatory domain
-/ # insmod file-sys-2.6.39/lib/modules/2.6.39/kernel/net/mac80211/mac80211.ko 
-/ # insmod file-sys-2.6.39/lib/modules/2.6.39/kernel/drivers/net/wireless/wl12xx
-/wl12xx.ko 
-/ # insmod file-sys-2.6.39/lib/modules/2.6.39/kernel/drivers/net/wireless/wl12xx
-/wl12xx_sdio.ko 
-[  112.121643] wl1271: ERROR could not get nvs file: -2
-[  112.137634] wl1271_sdio mmc1:0001:2: wlan0: Features changed: 0x00004800 ->
-0x00004000
-[  112.148712] wl1271: loaded
-[  112.151550] wl1271: initialized
-/ # ifconfig -a
-lo        Link encap:Local Loopback  
-          LOOPBACK  MTU:16436  Metric:1
-          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:0 
-          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+> > [ 1058.936551] cfg80211: Calling CRDA to update world regulatory domain
+> > [ 1058.945510] cfg80211: World regulatory domain updated:
+> > [ 1058.945519] cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> > [ 1058.945529] cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> > [ 1058.945538] cfg80211:     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+> > [ 1058.945547] cfg80211:     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+> > [ 1058.945555] cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> > [ 1058.945563] cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> > [ 1058.945604] cfg80211: Calling CRDA for country: 97
+> > [ 1061.373997] ieee80211 phy1: channel change: 2417 -> 2422 failed (2).
+> > [ 1061.682115] ieee80211 phy1: channel change: -1 -> 2422 failed (2).
+> > [ 1061.682132] usb 10-1.2: restart device (7)
+> > [ 1062.096523] cfg80211: Calling CRDA to update world regulatory domain
+> > [ 1062.105469] cfg80211: World regulatory domain updated:
+> 
+> 
+> Any idea what is going on here? Do I need a crda tool? Or is something
+> else failing?
+Yes, you need crda, if you haven't installed it already.
 
-wlan0     Link encap:Ethernet  HWaddr 00:00:00:00:00:00  
-          BROADCAST MULTICAST  MTU:1500  Metric:1
-          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000 
-          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+> Update: While writing this up and after I plugged in my zd1211rw device,
+> eventually also my tp-link carl9170 device connected a few minutes
+> later. Do I always have to wait for 20 minutes to get a connection now?
+That's odd. TP-Link does not sell any AR9170 anymore, in fact they dropped it
+more than a year ago and replaced the line-up with AR7010+AR9287? so where
+did you get this obsolete device?
 
-/ #  ifconfig wlan0 hw ether 00:22:33:44:55:66
-/ #  ifconfig wlan0 hw ether 00:22:33:44:55:D1
-/ # ifconfig -a
-lo        Link encap:Local Loopback  
-          LOOPBACK  MTU:16436  Metric:1
-          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:0 
-          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
-
-wlan0     Link encap:Ethernet  HWaddr 00:22:33:44:55:D1  
-          BROADCAST MULTICAST  MTU:1500  Metric:1
-          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000 
-          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
-
-/ # ifconfig wlan0 down
-/ # ifconfig wlan0 up
-[  427.125793] wl1271: ERROR could not get firmware: -2
-[  488.123046] wl1271: ERROR could not get firmware: -2
-
-
+Regards,
+	Chr
