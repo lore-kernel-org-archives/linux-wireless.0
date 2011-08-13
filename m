@@ -1,60 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:40843 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754081Ab1HYRq6 convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:44066 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750956Ab1HMQYP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 13:46:58 -0400
-Received: by pzk37 with SMTP id 37so2815971pzk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 10:46:58 -0700 (PDT)
+	Sat, 13 Aug 2011 12:24:15 -0400
+Received: by iye16 with SMTP id 16so3880364iye.1
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Aug 2011 09:24:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1314248900.5054.45.camel@jlt3.sipsolutions.net>
-References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
- <1314236452-7226-3-git-send-email-thomas@cozybit.com> <1314248900.5054.45.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Thu, 25 Aug 2011 10:46:38 -0700
-Message-ID: <CAPjQAd9EXmRE8vWFRD0gmiWtoMpz47iFGQttGLxDL-ht8Bawgg@mail.gmail.com> (sfid-20110825_194702_089717_86845AAB)
-Subject: Re: [PATCH 2/9] mac80211: Limit amount of HWMP frames and forwarded
- data packets in queues on mesh interfaces
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Thomas Pedersen <thomas@cozybit.com>,
-	linux-wireless@vger.kernel.org,
-	Pedro Larbig <pedro.larbig@carhs.de>, linville@tuxdriver.com
+In-Reply-To: <4E46A18F.6030508@gmail.com>
+References: <4E46A18F.6030508@gmail.com>
+Date: Sat, 13 Aug 2011 17:24:15 +0100
+Message-ID: <CAH07hy=3Pa9tn2qzAkpAbiPsEL-RjHajZsUUqdSO=ZqYYe+8CQ@mail.gmail.com> (sfid-20110813_182419_559970_9272517B)
+Subject: Set Beacon
+From: =?ISO-8859-1?Q?Carlos_Guimar=E3es?= <asc2.cemg@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 24, 2011 at 10:08 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2011-08-24 at 18:40 -0700, Thomas Pedersen wrote:
->> From: Pedro Larbig <pedro.larbig@carhs.de>
->>
->> To avoid contention problems in a mesh network's high load areas, this patch
->> adds a 2-stage packet dropping mechanism:
->> * If the transmit queue for HWMP frames is filled with 256 or more packets,
->> additional HWMP frames will be dropped
->> * If the transmit queue for forwarded packets is at 384 or more, drop those,
->> too
->
->> +     /* Frames going through ieee80211_tx_skb will be on the voice queue,
->> +      * Therefor we need to check only IEEE80211_AC_VO */
->> +     if (unlikely(skb_queue_len(&local->pending[IEEE80211_AC_VO]) >=
->> +        MESH_MGMT_QUEUE_LEN)) {
->> +             kfree_skb(skb);
->> +             I802_DEBUG_INC(local->tx_handlers_drop_mesh_mgmt);
->> +             return;
->> +     }
->
-> I still don't think this should be done. If the HW queue is full, we
-> will get a stop_queue from the driver, this could also tell mesh to stop
-> forwarding or so.
+Hi,
 
-Oh, I see, ieee80211_stop_queue().
+I'm using NL80211_CMD_SET_BEACON command to set a specific Information
+Element to AP Beacon frames. To develop my code I'm using Ubuntu wiht
+kernel 2.6.38 and everything works fine. However, when I deploy my
+application it does not set the IE to the AP Beacon frames.
 
-Thanks!
+The machines I'm using to deploy have kernel 2.6.39-2-686-pae and the
+following NIC card:
+   *-network:1
+        description: Wireless interface
+        product: AR922X Wireless Network Adapter
+        vendor: Atheros Communications Inc.
+        physical id: 4
+        bus info: pci@0000:02:04.0
+        logical name: ath1
+        version: 01
+        width: 32 bits
+        clock: 66MHz
+        capabilities: pm bus_master cap_list ethernet physical wireless
+logical
+        configuration: broadcast=yes driver=ath9k
+driverversion=2.6.39-2-686-pae firmware=N/A ip=192.168.1.2 latency=168
+link=yes multicast=yes
 
-Javier
+I have no more ideias how to fix this problem.
 
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+I'm using the next code to do that:
+int set_beacon(const char *interface, meta_message_ptr &mih_msg)
+{
+	struct nl_sock *nl_handle = NULL;
+	struct nl_cache *nl_cache = NULL;
+	struct genl_family *nl80211 = NULL;
+	struct nl_msg *msg;
+	mih::frame_vla fm;
+
+	if (connect((void **) &nl_handle,
+	            (void **) &nl_cache,
+	            (void **) &nl80211) < 0) {
+		ODTONE_LOG(1, "Falhei no connect");
+		return -1;
+	}
+
+	// Create and send message
+	if ((msg = nlmsg_alloc()) == NULL) {
+		ODTONE_LOG(1, "Falhei no alloc");
+		return -1;
+	}
+
+	// Set MIH Information Element
+	mih_msg->get_frame(fm);
+	uint8 *tail = (uint8 *)calloc(fm.get()->length() + 2, sizeof(uint8));
+	memset(tail, 51, 1);									// Set Tag
+	memset(tail + 1, fm.get()->length(), 1);				// Set Length
+	memcpy(tail + 2, fm.get()->get(), fm.get()->length());	// Set Value
+
+	genlmsg_put(msg, 0, 0, genl_family_get_id(nl80211), 0, 0,
+NL80211_CMD_SET_BEACON, 0);
+	NLA_PUT(msg, NL80211_ATTR_BEACON_TAIL, fm.get()->length() + 2, tail);
+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, if_nametoindex(interface));
+
+	if(send_and_receive(nl_handle, msg, NULL, NULL) < 0) {
+nla_put_failure:
+		nlmsg_free(msg);
+		ODTONE_LOG(1, "Falhei no send");
+		return -1;
+	}
+
+	nlmsg_free(msg);
+	ODTONE_LOG(1, "Set beacon");
+	return 0;
+}
+
+Best regards,
+Carlos Guimarães
