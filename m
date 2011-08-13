@@ -1,97 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12060 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753439Ab1HTLyJ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24354 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026Ab1HMSDx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Aug 2011 07:54:09 -0400
+	Sat, 13 Aug 2011 14:03:53 -0400
+Date: Sat, 13 Aug 2011 23:34:14 +0530
 From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [RFC] mac80211: Mark mandatory rates as basic
-Date: Sat, 20 Aug 2011 17:24:35 +0530
-Message-ID: <1313841275-7868-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110820_135415_748038_FB02B99D)
+To: Adrian Chadd <adrian@freebsd.org>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 02/11] ath9k: Fix rx overrun interrupt storm
+Message-ID: <20110813180413.GA16149@vmraj-lnx.users.atheros.com> (sfid-20110813_200357_118586_62C5A5F1)
+References: <1313211498-14442-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <1313211498-14442-2-git-send-email-rmanohar@qca.qualcomm.com>
+ <CAJ-VmokWVzcYPwgNkMn+CcH8mEzsCAyzM3wEEMBFmUc6dg7KmQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <CAJ-VmokWVzcYPwgNkMn+CcH8mEzsCAyzM3wEEMBFmUc6dg7KmQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently mac80211 announces a supported rate set with
-no basic rates. This patch marks the mandatory rates as
-basic while constructing supported rate element.
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- include/net/cfg80211.h |    3 +++
- net/mac80211/mesh.c    |    5 ++++-
- net/mac80211/util.c    |    6 +++++-
- net/mac80211/work.c    |    6 +++++-
- 4 files changed, 17 insertions(+), 3 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d86a15d..bb9000a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -167,6 +167,9 @@ enum ieee80211_rate_flags {
- 	IEEE80211_RATE_ERP_G		= 1<<4,
- };
- 
-+#define IEEE80211_ALL_MANDATORY_RATES \
-+	(IEEE80211_RATE_MANDATORY_A | IEEE80211_RATE_MANDATORY_B | \
-+	 IEEE80211_RATE_MANDATORY_G)
- /**
-  * struct ieee80211_rate - bitrate definition
-  *
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 29e9980..9b429dd 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -221,7 +221,10 @@ void mesh_mgmt_ies_add(struct sk_buff *skb, struct ieee80211_sub_if_data *sdata)
- 	*pos++ = len;
- 	for (i = 0; i < len; i++) {
- 		rate = sband->bitrates[i].bitrate;
--		*pos++ = (u8) (rate / 5);
-+		*pos = (u8) (rate / 5);
-+		if (sband->bitrates[i].flags & IEEE80211_ALL_MANDATORY_RATES)
-+			*pos |= 0x80;
-+		pos++;
- 	}
- 
- 	if (sband->n_bitrates > len) {
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index ce916ff..8b32b57 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -758,7 +758,11 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
- 	for (i = 0; i < sband->n_bitrates; i++) {
- 		if ((BIT(i) & rate_mask) == 0)
- 			continue; /* skip rate */
--		rates[num_rates++] = (u8) (sband->bitrates[i].bitrate / 5);
-+		rates[num_rates] = (u8) (sband->bitrates[i].bitrate / 5);
-+		/* Mark as basic rates */
-+		if (sband->bitrates[i].flags & IEEE80211_ALL_MANDATORY_RATES)
-+			rates[num_rates] |= 0x80;
-+		num_rates++;
- 	}
- 
- 	supp_rates_len = min_t(int, num_rates, 8);
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 380b9a7..8647201 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -295,7 +295,11 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
- 	for (i = 0; i < sband->n_bitrates; i++) {
- 		if (BIT(i) & rates) {
- 			int rate = sband->bitrates[i].bitrate;
--			*pos++ = (u8) (rate / 5);
-+			*pos = (u8) (rate / 5);
-+			if (sband->bitrates[i].flags &
-+				IEEE80211_ALL_MANDATORY_RATES)
-+				*pos |= 0x80;
-+			pos++;
- 			if (++count == 8)
- 				break;
- 		}
--- 
-1.7.6
-
+On Sat, Aug 13, 2011 at 06:51:28PM +0800, Adrian Chadd wrote:
+> I did this in FreeBSD to fix RXEOL storms, but I was receiving them
+> because I had phyerr's enabled (for radar) and the PCU list end had
+> actually been hit.
+> So I added code which kicks off a PCU stop/start in the RX handler
+> (once whatever packets were in the RX queue) so that the PCU receive
+> would then begin again.
+>
+Nice. But why are you doing PCU stop/start for every RXEOL?
+> Were you seeing it occur because you hit the end of the RX descriptor
+> list? Or some other reason?
+>
+Yes. The RXORN/RXEOL intr issue was observed with AR9280 chip, while
+running stress test.
+> I ask because I'm seeing issues with an AR9280 (SR71-E) on FreeBSD,
+> where the PCU stops RX for some reason, and constantly fires off
+> RXEOLs. Warm resets don't fix it, I have to do a cold reset to fix it.
+> :(
+Are you still facing the issue after restarting pcu recv?
+> 
+> 
+> Adrian
+> 
+> On 13 August 2011 12:58, Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
+> > Whenever RXEOL is received, both RXORN and RXEOL got cleared
+> > to avoid rx overrun interrupt storm. This was handled only for
+> > edma chips. The same scenario was also observered with AR9280,
+> > doing frequent channel type switch b/w HT20/40 with bidi traffic
+> > that is causing failure to stop rx dma. This patch clears
+> > the RXEOL & RXORN interrupts for all chips.
+> >
+> > ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020
+> > DMADBG_7=0x000062c0
+> > ath: Could not stop RX, we could be confusing the DMA engine when we
+> > start RX up
+> > ------------[ cut here ]------------
+> > WARNING: at drivers/net/wireless/ath/ath9k/recv.c:532
+> > ath_stoprecv+0x110/0x120 [ath9k]()
+> > Call Trace:
+> >  [<ffffffff8104a55a>] warn_slowpath_common+0x7a/0xb0
+> >  [<ffffffff8104a5a5>] warn_slowpath_null+0x15/0x20
+> >  [<ffffffffa0560380>] ath_stoprecv+0x110/0x120 [ath9k]
+> >  [<ffffffffa055e6fa>] ath_reset+0x6a/0x200 [ath9k]
+> >
+> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> > ---
+> >  drivers/net/wireless/ath/ath9k/main.c |    8 +++-----
+> >  1 files changed, 3 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> > index 1e7fe8c..097c1eb 100644
+> > --- a/drivers/net/wireless/ath/ath9k/main.c
+> > +++ b/drivers/net/wireless/ath/ath9k/main.c
+> > @@ -826,11 +826,9 @@ irqreturn_t ath_isr(int irq, void *dev)
+> >        if (status & ATH9K_INT_TXURN)
+> >                ath9k_hw_updatetxtriglevel(ah, true);
+> >
+> > -       if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
+> > -               if (status & ATH9K_INT_RXEOL) {
+> > -                       ah->imask &= ~(ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
+> > -                       ath9k_hw_set_interrupts(ah, ah->imask);
+> > -               }
+> > +       if (status & ATH9K_INT_RXEOL) {
+> > +               ah->imask &= ~(ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
+> > +               ath9k_hw_set_interrupts(ah, ah->imask);
+> >        }
+> >
+> >        if (status & ATH9K_INT_MIB) {
+> > --
+> > 1.7.6
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
