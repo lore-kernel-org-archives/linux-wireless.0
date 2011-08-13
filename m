@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36914 "EHLO nbd.name"
+Received: from mga02.intel.com ([134.134.136.20]:60424 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751054Ab1H0XxA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Aug 2011 19:53:00 -0400
-Message-ID: <4E598358.9090209@openwrt.org> (sfid-20110828_015306_498285_6AB0A219)
-Date: Sun, 28 Aug 2011 01:52:56 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k_hw: Update IFS parameters properly
-References: <1314436569-6855-1-git-send-email-rmanohar@qca.qualcomm.com> <4E597D8F.4050506@openwrt.org>
-In-Reply-To: <4E597D8F.4050506@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1751977Ab1HMSSo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2011 14:18:44 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 24/60] iwlagn: support small form factor SKU of 6205
+Date: Sat, 13 Aug 2011 10:38:00 -0700
+Message-Id: <1313257116-2697-25-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_201943_164389_4D1B2FC6)
+In-Reply-To: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-08-28 1:28 AM, Felix Fietkau wrote:
-> On 2011-08-27 11:16 AM, Rajkumar Manoharan wrote:
->>  Configure IFS parameters read from chip in case of
->>  full rate channel and non-AR9287 v1.3+. And also
->>  read the ack and cts timeouts from chip and increase the
->>  timeout when coverage class is defined. For half/Quarter
->>  rate channel, IFS values needs to be reconfigured.
->>  This patch removes the 2GHz workaround done for
->>  acktimeout(64 us) because of reading acktime from chip.
->>  The mentioned IFS parameters for AR9287 v1.3+ was
->>  verified in HT40 2-chanin mode.
->>
->>  @@ -1018,23 +1018,27 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
->>    			sifstime = 10;
->>    	}
->>
->>  -	/* As defined by IEEE 802.11-2007 17.3.8.6 */
->>  -	acktimeout = slottime + sifstime + 3 * ah->coverage_class;
->>  +	if (AR_SREV_9287(ah)&&   AR_SREV_9287_13_OR_LATER(ah)) {
->>  +		/* Verified values (us) in 2chanin HT40 mode */
->>  +		acktimeout = 64;
->>  +		ctstimeout = 48;
->>  +	} else {
->>  +		acktimeout = MS(REG_READ(ah, AR_TIME_OUT), AR_TIME_OUT_ACK)/
->>  +				common->clockrate;
->>  +		ctstimeout = MS(REG_READ(ah, AR_TIME_OUT), AR_TIME_OUT_CTS)/
->>  +				common->clockrate;
->>  +	}
-> Why this mess of partially reused values from initvals? I think it's
-> much better to just override these based on the standard 802.11 values,
-> and selectively add the 64-usec-minimum workaround for 2.4 ghz as needed.
-Just sent a smaller, less intrusive patch to replace this one.
+Different subsystem ID
 
-- Felix
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c |    6 ++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.h  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-pci.c  |    1 +
+ 3 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index c0dca8b..3965c3d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -397,6 +397,12 @@ struct iwl_cfg iwl6005_2bg_cfg = {
+ 	IWL_DEVICE_6005,
+ };
+ 
++struct iwl_cfg iwl6005_2agn_sff_cfg = {
++	.name = "Intel(R) Centrino(R) Advanced-N 6205S AGN",
++	IWL_DEVICE_6005,
++	.ht_params = &iwl6000_ht_params,
++};
++
+ #define IWL_DEVICE_6030						\
+ 	.fw_name_pre = IWL6030_FW_PRE,				\
+ 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,		\
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index ea2a5fe..d2fa77a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -76,6 +76,7 @@ extern struct iwl_cfg iwl5150_abg_cfg;
+ extern struct iwl_cfg iwl6005_2agn_cfg;
+ extern struct iwl_cfg iwl6005_2abg_cfg;
+ extern struct iwl_cfg iwl6005_2bg_cfg;
++extern struct iwl_cfg iwl6005_2agn_sff_cfg;
+ extern struct iwl_cfg iwl1030_bgn_cfg;
+ extern struct iwl_cfg iwl1030_bg_cfg;
+ extern struct iwl_cfg iwl6030_2agn_cfg;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index 4b99090..191c16a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -260,6 +260,7 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+ 	{IWL_PCI_DEVICE(0x0082, 0x1326, iwl6005_2abg_cfg)},
+ 	{IWL_PCI_DEVICE(0x0085, 0x1311, iwl6005_2agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0085, 0x1316, iwl6005_2abg_cfg)},
++	{IWL_PCI_DEVICE(0x0082, 0xC020, iwl6005_2agn_sff_cfg)},
+ 
+ /* 6x30 Series */
+ 	{IWL_PCI_DEVICE(0x008A, 0x5305, iwl1030_bgn_cfg)},
+-- 
+1.7.0.4
+
