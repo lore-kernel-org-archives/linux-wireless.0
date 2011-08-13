@@ -1,67 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3242 "EHLO mms2.broadcom.com"
+Received: from mga02.intel.com ([134.134.136.20]:12459 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751832Ab1HSOch (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Aug 2011 10:32:37 -0400
-Message-ID: <4E4E73F4.4040105@broadcom.com> (sfid-20110819_163241_142772_6213AFD6)
-Date: Fri, 19 Aug 2011 16:32:20 +0200
-From: "Roland Vossen" <rvossen@broadcom.com>
-MIME-Version: 1.0
-To: "Dan Williams" <dcbw@redhat.com>,
-	=?UTF-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"networkmanager-list@gnome.org" <networkmanager-list@gnome.org>
-Subject: Re: brcmsmac driver only works when sitting next to the AP
-References: <20110814121646.GA5188@stt008.linux.site>
- <4E4A5641.4020604@broadcom.com>
- <1313509211.2065.36.camel@dcbw.foobar.com>
- <4E4B9A45.5090507@broadcom.com> <4E4CC85A.7010504@broadcom.com>
-In-Reply-To: <4E4CC85A.7010504@broadcom.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	id S1752045Ab1HMSSy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2011 14:18:54 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 33/60] iwlagn: move iwl_free_pages to iwl-shared.h
+Date: Sat, 13 Aug 2011 10:38:09 -0700
+Message-Id: <1313257116-2697-34-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_204257_796392_F5379D8D)
+In-Reply-To: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hello Dan,
->
-> can you reply ?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-So much for responsiveness.
+This helper is used by the transport and the upper layer.
+Kill __iwl_free_pages which was used in the transport only.
 
-Camaleon, would you be able to provide additional logs as requested in 
-one of my previous mails ?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h           |    9 ---------
+ drivers/net/wireless/iwlwifi/iwl-scan.c          |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-shared.h        |    5 +++++
+ drivers/net/wireless/iwlwifi/iwl-sta.c           |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans.c         |    3 ++-
+ 6 files changed, 11 insertions(+), 14 deletions(-)
 
-Thanks, Roland.
-
->
-> Thanks, Roland.
->
-> On 08/17/2011 12:39 PM, Roland Vossen wrote:
->>>> 'Aug 14 13:39:02 stt300 NetworkManager[1181]:
->>>> supplicant_interface_acquire: assertion `mgr_state ==
->>>> NM_SUPPLICANT_MANAGER_STATE_IDLE' failed'
->>>>
->>>> I also see many 'wpa_supplicant[1204]: Failed to initiate AP scan' messages.
->>>>
->>>> There are no 'Failed to initiate AP scan' messages before the 'assertion
->>>> failed' message. I do not know if the 2nd message is a byproduct of the
->>>> 1st result. Regardless, a failed assertion is serious. I cc'ed the
->>>> network manager mailing list.
->>
->>> Yeah, the scanning issues are almost certainly what's causing stuff to
->>> fail; which obviously seems like a driver issue at this point.
->>
->> Well, the 1st sign that something goes wrong is the assert message in
->> NetworkManager. After that, the scans are the next things that go wrong.
->> So I don't understand why you think that this is a driver problem, I
->> would rather say this is a Network manager problem. Could you explain ?
->>
->> Thanks, Roland.
->
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index f3de4a3..b1277cf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1507,13 +1507,4 @@ static inline int is_channel_ibss(const struct iwl_channel_info *ch)
+ 	return ((ch->flags & EEPROM_CHANNEL_IBSS)) ? 1 : 0;
+ }
+ 
+-static inline void __iwl_free_pages(struct iwl_priv *priv, struct page *page)
+-{
+-	__free_pages(page, hw_params(priv).rx_page_order);
+-}
+-
+-static inline void iwl_free_pages(struct iwl_priv *priv, unsigned long page)
+-{
+-	free_pages(page, hw_params(priv).rx_page_order);
+-}
+ #endif				/* __iwl_dev_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 2bb94f7..fc5af34 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -91,7 +91,7 @@ static int iwl_send_scan_abort(struct iwl_priv *priv)
+ 		ret = -EIO;
+ 	}
+ 
+-	iwl_free_pages(priv, cmd.reply_page);
++	iwl_free_pages(priv->shrd, cmd.reply_page);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index ff4c04f..1229eb3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -229,6 +229,11 @@ static inline u32 iwl_get_debug_level(struct iwl_shared *shrd)
+ }
+ #endif
+ 
++static inline void iwl_free_pages(struct iwl_shared *shrd, unsigned long page)
++{
++	free_pages(page, shrd->hw_params.rx_page_order);
++}
++
+ struct iwl_rx_mem_buffer {
+ 	dma_addr_t page_dma;
+ 	struct page *page;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 1154e48..26b2bd4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -177,7 +177,7 @@ int iwl_send_add_sta(struct iwl_priv *priv,
+ 		pkt = (struct iwl_rx_packet *)cmd.reply_page;
+ 		ret = iwl_process_add_sta_resp(priv, sta, pkt, true);
+ 	}
+-	iwl_free_pages(priv, cmd.reply_page);
++	iwl_free_pages(priv->shrd, cmd.reply_page);
+ 
+ 	return ret;
+ }
+@@ -455,7 +455,7 @@ static int iwl_send_remove_station(struct iwl_priv *priv,
+ 			break;
+ 		}
+ 	}
+-	iwl_free_pages(priv, cmd.reply_page);
++	iwl_free_pages(priv->shrd, cmd.reply_page);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
+index 6107e66..8ba9a46 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
+@@ -1023,7 +1023,7 @@ cancel:
+ 	}
+ fail:
+ 	if (cmd->reply_page) {
+-		iwl_free_pages(priv, cmd->reply_page);
++		iwl_free_pages(priv->shrd, cmd->reply_page);
+ 		cmd->reply_page = 0;
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+index b080e69..8956008 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -129,7 +129,8 @@ static void iwl_trans_rxq_free_rx_bufs(struct iwl_trans *trans)
+ 			dma_unmap_page(bus(trans)->dev, rxq->pool[i].page_dma,
+ 				PAGE_SIZE << hw_params(trans).rx_page_order,
+ 				DMA_FROM_DEVICE);
+-			__iwl_free_pages(priv(trans), rxq->pool[i].page);
++			__free_pages(rxq->pool[i].page,
++				     hw_params(trans).rx_page_order);
+ 			rxq->pool[i].page = NULL;
+ 		}
+ 		list_add_tail(&rxq->pool[i].list, &rxq->rx_used);
+-- 
+1.7.0.4
 
