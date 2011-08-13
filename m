@@ -1,33 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:64650 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750919Ab1HYMy1 (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:59485 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752103Ab1HMDjk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 08:54:27 -0400
-Received: by yxj19 with SMTP id 19so1702687yxj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 05:54:26 -0700 (PDT)
+	Fri, 12 Aug 2011 23:39:40 -0400
+Received: by ywf7 with SMTP id 7so2368039ywf.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 20:39:40 -0700 (PDT)
+Message-ID: <4E45F1AB.3060701@gmail.com> (sfid-20110813_053942_999880_565FFDF8)
+Date: Fri, 12 Aug 2011 23:38:19 -0400
+From: Roman Krylov <volyrkr@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+XVXfd4fjtvptRJdcfqYHCkwwreFk7WfGdq9uSjVYpF6zKWcw@mail.gmail.com>
-References: <1314265865-20208-1-git-send-email-arik@wizery.com>
-	<CAGXE3d9mB_jjg38Mmf+B-1RYXjFp0h2hJDkRa+c2wO_OG+BDSw@mail.gmail.com>
-	<CA+XVXfd4fjtvptRJdcfqYHCkwwreFk7WfGdq9uSjVYpF6zKWcw@mail.gmail.com>
-Date: Thu, 25 Aug 2011 14:54:26 +0200
-Message-ID: <CAGXE3d-XCYi2nB_P-ncC=ZOX683J=5C2YNGOfcnz531nY44_Jw@mail.gmail.com> (sfid-20110825_145430_830991_37ECE649)
-Subject: Re: [PATCH 1/2] mac80211: add flag to indicate HW only Tx-agg support
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Subject: Re: rtl8192* wifi driver
+References: <4E45A973.6060305@gmail.com> <4E45AF82.5040407@lwfinger.net> <4E45D65F.6000306@gmail.com> <4E45DCB2.5020905@lwfinger.net> <4E45EA54.5010500@gmail.com> <4E45EF30.3070103@lwfinger.net>
+In-Reply-To: <4E45EF30.3070103@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 25, 2011 at 2:38 PM, Arik Nemtsov <arik@wizery.com> wrote:
-> Tx aggregations are done entirely in HW.
 
-Then your patch makes sense :)
-
-Might be worth to note that in the commit message though.
-
-Thanks,
-Helmut
+> What is your ESSID? Two lines up, I see 'Auto bhn 310' and one line up I see 
+> 'bhn 310'. Based on my logs, those two should be the same. I'll set one of my 
+> APs to the first ESSID and see if I can connect.
+The first one 'Auto bhn 310' is NetworkManager's alias, the essid is 'bhn 310'.
+> I found the problem in the driver you sent. One needs to add
+>
+> #include <linux/interrupt.h>
+>
+> to file include/osdep_service.h. Once I did that, it built and works.
+This is probably due some changes in 3.1 since 3.0.1.
