@@ -1,61 +1,383 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:65371 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751283Ab1HKP7G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 11:59:06 -0400
-Received: by yxj19 with SMTP id 19so1398661yxj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 08:59:05 -0700 (PDT)
-Message-ID: <4E43FC46.4030703@lwfinger.net> (sfid-20110811_175910_250211_4364FC5C)
-Date: Thu, 11 Aug 2011 10:59:02 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: kc@cobradevil.org
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8192cu sometimes it can authenticate to ap
-References: <b3059ba2eac66b7ef0ec17c8fe81a1e6@cobradevil.org> <34676454425401d650be733a43191a53@cobradevil.org> <532595cb4d5ef910de54a4736ba76185@cobradevil.org> <4E41624E.3010904@lwfinger.net> <d3faeaf2e881a324b0ad3102c10e6131@cobradevil.org> <4E429C57.1040101@lwfinger.net> <30cc9c22bb40fb1e2bd2b9ef4692d167@cobradevil.org> <4E43E910.7090001@lwfinger.net> <5dbd023b5dea7586dc45393c140316ad@cobradevil.org>
-In-Reply-To: <5dbd023b5dea7586dc45393c140316ad@cobradevil.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:31394 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751996Ab1HMSSx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2011 14:18:53 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 59/60] iwlagn: move the stop / wake queue logic to transport layer
+Date: Sat, 13 Aug 2011 10:38:35 -0700
+Message-Id: <1313257116-2697-60-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_201923_795227_4C8249DE)
+In-Reply-To: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/11/2011 09:42 AM, kc@cobradevil.org wrote:
->
->
-> On Thu, 11 Aug 2011 09:37:04 -0500, Larry Finger wrote:
->> On 08/11/2011 09:23 AM, kc@cobradevil.org wrote:
->>> I have now tried several compat files til may 28 but none of them seems to work
->>> with maverick at all. Do i need some updated files on the client to be able to
->>> use the new compat tree?
->>>
->>> I thought that the compat tree would work without changes on kernel from >
->>> 2.6.30 is that right?
->>
->> I have no idea what maverick is. I suppose it to be some release of
->> Ubuntu, but you really need to specify a kernel version, not a release
->> name. Many of us do not use any Debian-based systems for very good
->> reasons.
->
-> Sorry for that. The kernel is 2.6.35 but your answer makes it clear it should
-> work with no extra userland tools.
->>
->> The compat tree will work without changes on any kernel on which it
->> will compile, AS LONG AS THE REST OF THE KERNEL DOES NOT BREAK THE
->> WIRELESS.
->>
->> My full bisection ended up in am impossible result.
->>
->> The only other thing I can add at the moment, is that rtl8192cu works
->> with WEP encryption, thus the part that broke is WPA and WPA2.
->
-> Ok but did the driver work before with wpa and or wpa2?
-> If so do you have an idea which date the compat file should be?
->
-> If not then i will have to wait for a fix but i can tell people whats wrong.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-It works with wireless-testing kernel 3.0, but not with 3.1-rc1. There were no 
-changes in rtl8192cu in the interum - this problem has me baffled for the 
-moment. According to the NetworkManager log, the device authenticates correctly, 
-but it never manages to get an IP.
+priv->mac80211_registered and priv->hw needed to move to shared.
+stop_queue API was added in order to allow the upper layer to stop
+the SW queues for regulatory purposes.
 
-Larry
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c         |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c            |    9 ++--
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |    2 -
+ drivers/net/wireless/iwlwifi/iwl-helpers.h        |   61 ---------------------
+ drivers/net/wireless/iwlwifi/iwl-shared.h         |    6 ++
+ drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |   61 +++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-trans.c          |   14 ++++--
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |    8 +++
+ 9 files changed, 93 insertions(+), 74 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
+index 495f936..92ba8cd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
+@@ -209,7 +209,7 @@ static void iwl_perform_ct_kill_task(struct iwl_priv *priv,
+ {
+ 	if (stop) {
+ 		IWL_DEBUG_TEMP(priv, "Stop all queues\n");
+-		if (priv->mac80211_registered)
++		if (priv->shrd->mac80211_registered)
+ 			ieee80211_stop_queues(priv->hw);
+ 		IWL_DEBUG_TEMP(priv,
+ 				"Schedule 5 seconds CT_KILL Timer\n");
+@@ -217,7 +217,7 @@ static void iwl_perform_ct_kill_task(struct iwl_priv *priv,
+ 			  jiffies + CT_KILL_EXIT_DURATION * HZ);
+ 	} else {
+ 		IWL_DEBUG_TEMP(priv, "Wake all queues\n");
+-		if (priv->mac80211_registered)
++		if (priv->shrd->mac80211_registered)
+ 			ieee80211_wake_queues(priv->hw);
+ 	}
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 9969a76..44e408e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -803,7 +803,7 @@ void iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+ 			    iwl_is_associated_ctx(ctx) && ctx->vif &&
+ 			    ctx->vif->type == NL80211_IFTYPE_STATION) {
+ 				ctx->last_tx_rejected = true;
+-				iwl_stop_queue(priv, &priv->txq[txq_id]);
++				iwl_trans_stop_queue(trans(priv), txq_id);
+ 
+ 				IWL_DEBUG_TX_REPLY(priv,
+ 					   "TXQ %d status %s (0x%08x) "
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 5119e45..0c701ab 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1520,7 +1520,7 @@ static void __iwl_down(struct iwl_priv *priv)
+ 	if (!exit_pending)
+ 		clear_bit(STATUS_EXIT_PENDING, &priv->shrd->status);
+ 
+-	if (priv->mac80211_registered)
++	if (priv->shrd->mac80211_registered)
+ 		ieee80211_stop_queues(priv->hw);
+ 
+ 	/* Clear out all status bits but a few that are stable across reset */
+@@ -1864,7 +1864,7 @@ static int iwl_mac_setup_register(struct iwl_priv *priv,
+ 		IWL_ERR(priv, "Failed to register hw (error %d)\n", ret);
+ 		return ret;
+ 	}
+-	priv->mac80211_registered = 1;
++	priv->shrd->mac80211_registered = 1;
+ 
+ 	return 0;
+ }
+@@ -3307,6 +3307,7 @@ int iwl_probe(struct iwl_bus *bus, const struct iwl_trans_ops *trans_ops,
+ 	priv->shrd = &priv->_shrd;
+ 	priv->shrd->bus = bus;
+ 	priv->shrd->priv = priv;
++	priv->shrd->hw = hw;
+ 	bus_set_drv_data(priv->bus, priv->shrd);
+ 
+ 	priv->shrd->trans = trans_ops->alloc(priv->shrd);
+@@ -3482,9 +3483,9 @@ void __devexit iwl_remove(struct iwl_priv * priv)
+ 	iwl_testmode_cleanup(priv);
+ 	iwl_leds_exit(priv);
+ 
+-	if (priv->mac80211_registered) {
++	if (priv->shrd->mac80211_registered) {
+ 		ieee80211_unregister_hw(priv->hw);
+-		priv->mac80211_registered = 0;
++		priv->shrd->mac80211_registered = 0;
+ 	}
+ 
+ 	iwl_tt_exit(priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index c4b4476..80dad8f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1183,8 +1183,6 @@ struct iwl_priv {
+ 	/* Indication if ieee80211_ops->open has been called */
+ 	u8 is_open;
+ 
+-	u8 mac80211_registered;
+-
+ 	/* eeprom -- this is in the card's little endian byte order */
+ 	u8 *eeprom;
+ 	int    nvm_device_type;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+index 7f92d14..d3feac9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
++++ b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+@@ -64,67 +64,6 @@ static inline int iwl_queue_dec_wrap(int index, int n_bd)
+ 	return --index & (n_bd - 1);
+ }
+ 
+-/*
+- * we have 8 bits used like this:
+- *
+- * 7 6 5 4 3 2 1 0
+- * | | | | | | | |
+- * | | | | | | +-+-------- AC queue (0-3)
+- * | | | | | |
+- * | +-+-+-+-+------------ HW queue ID
+- * |
+- * +---------------------- unused
+- */
+-static inline void iwl_set_swq_id(struct iwl_tx_queue *txq, u8 ac, u8 hwq)
+-{
+-	BUG_ON(ac > 3);   /* only have 2 bits */
+-	BUG_ON(hwq > 31); /* only use 5 bits */
+-
+-	txq->swq_id = (hwq << 2) | ac;
+-}
+-
+-static inline void iwl_wake_queue(struct iwl_priv *priv,
+-				  struct iwl_tx_queue *txq)
+-{
+-	u8 queue = txq->swq_id;
+-	u8 ac = queue & 3;
+-	u8 hwq = (queue >> 2) & 0x1f;
+-
+-	if (unlikely(!priv->mac80211_registered))
+-		return;
+-
+-	if (test_and_clear_bit(hwq, priv->queue_stopped))
+-		if (atomic_dec_return(&priv->queue_stop_count[ac]) <= 0)
+-			ieee80211_wake_queue(priv->hw, ac);
+-}
+-
+-static inline void iwl_stop_queue(struct iwl_priv *priv,
+-				  struct iwl_tx_queue *txq)
+-{
+-	u8 queue = txq->swq_id;
+-	u8 ac = queue & 3;
+-	u8 hwq = (queue >> 2) & 0x1f;
+-
+-	if (unlikely(!priv->mac80211_registered))
+-		return;
+-
+-	if (!test_and_set_bit(hwq, priv->queue_stopped))
+-		if (atomic_inc_return(&priv->queue_stop_count[ac]) > 0)
+-			ieee80211_stop_queue(priv->hw, ac);
+-}
+-
+-#ifdef ieee80211_stop_queue
+-#undef ieee80211_stop_queue
+-#endif
+-
+-#define ieee80211_stop_queue DO_NOT_USE_ieee80211_stop_queue
+-
+-#ifdef ieee80211_wake_queue
+-#undef ieee80211_wake_queue
+-#endif
+-
+-#define ieee80211_wake_queue DO_NOT_USE_ieee80211_wake_queue
+-
+ static inline void iwl_enable_rfkill_int(struct iwl_priv *priv)
+ {
+ 	IWL_DEBUG_ISR(priv, "Enabling rfkill interrupt\n");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 17a02a7..8b8cd54 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -243,6 +243,12 @@ struct iwl_shared {
+ 	spinlock_t sta_lock;
+ 	struct mutex mutex;
+ 
++	/*these 2 shouldn't really be here, but they are needed for
++	 * iwl_queue_stop, which is called from the upper layer too
++	 */
++	u8 mac80211_registered;
++	struct ieee80211_hw *hw;
++
+ 	struct iwl_tid_data tid_data[IWLAGN_STATION_COUNT][IWL_MAX_TID_COUNT];
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
+index abb2ce6..255b326 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
+@@ -240,4 +240,65 @@ static inline void iwl_enable_interrupts(struct iwl_trans *trans)
+ 	iwl_write32(bus(trans), CSR_INT_MASK, trans_pcie->inta_mask);
+ }
+ 
++/*
++ * we have 8 bits used like this:
++ *
++ * 7 6 5 4 3 2 1 0
++ * | | | | | | | |
++ * | | | | | | +-+-------- AC queue (0-3)
++ * | | | | | |
++ * | +-+-+-+-+------------ HW queue ID
++ * |
++ * +---------------------- unused
++ */
++static inline void iwl_set_swq_id(struct iwl_tx_queue *txq, u8 ac, u8 hwq)
++{
++	BUG_ON(ac > 3);   /* only have 2 bits */
++	BUG_ON(hwq > 31); /* only use 5 bits */
++
++	txq->swq_id = (hwq << 2) | ac;
++}
++
++static inline void iwl_wake_queue(struct iwl_trans *trans,
++				  struct iwl_tx_queue *txq)
++{
++	u8 queue = txq->swq_id;
++	u8 ac = queue & 3;
++	u8 hwq = (queue >> 2) & 0x1f;
++
++	if (unlikely(!trans->shrd->mac80211_registered))
++		return;
++
++	if (test_and_clear_bit(hwq, priv(trans)->queue_stopped))
++		if (atomic_dec_return(&priv(trans)->queue_stop_count[ac]) <= 0)
++			ieee80211_wake_queue(trans->shrd->hw, ac);
++}
++
++static inline void iwl_stop_queue(struct iwl_trans *trans,
++				  struct iwl_tx_queue *txq)
++{
++	u8 queue = txq->swq_id;
++	u8 ac = queue & 3;
++	u8 hwq = (queue >> 2) & 0x1f;
++
++	if (unlikely(!trans->shrd->mac80211_registered))
++		return;
++
++	if (!test_and_set_bit(hwq, priv(trans)->queue_stopped))
++		if (atomic_inc_return(&priv(trans)->queue_stop_count[ac]) > 0)
++			ieee80211_stop_queue(trans->shrd->hw, ac);
++}
++
++#ifdef ieee80211_stop_queue
++#undef ieee80211_stop_queue
++#endif
++
++#define ieee80211_stop_queue DO_NOT_USE_ieee80211_stop_queue
++
++#ifdef ieee80211_wake_queue
++#undef ieee80211_wake_queue
++#endif
++
++#define ieee80211_wake_queue DO_NOT_USE_ieee80211_wake_queue
++
+ #endif /* __iwl_trans_int_pcie_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+index 6461704..cce57d5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -1228,7 +1228,7 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 			txq->need_update = 1;
+ 			iwl_txq_update_write_ptr(trans, txq);
+ 		} else {
+-			iwl_stop_queue(priv(trans), txq);
++			iwl_stop_queue(trans, txq);
+ 		}
+ 	}
+ 	return 0;
+@@ -1286,7 +1286,7 @@ static int iwlagn_txq_check_empty(struct iwl_trans *trans,
+ 			iwl_stop_tx_ba_trans_ready(priv(trans),
+ 						   NUM_IWL_RXON_CTX,
+ 						   sta_id, tid);
+-			iwl_wake_queue(priv(trans), &priv(trans)->txq[txq_id]);
++			iwl_wake_queue(trans, &priv(trans)->txq[txq_id]);
+ 		}
+ 		break;
+ 	case IWL_EMPTYING_HW_QUEUE_ADDBA:
+@@ -1345,7 +1345,7 @@ static void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
+ 				ssn , tfd_num, txq_id, txq->swq_id);
+ 		freed = iwl_tx_queue_reclaim(trans, txq_id, tfd_num, skbs);
+ 		if (iwl_queue_space(&txq->q) > txq->q.low_mark && cond)
+-			iwl_wake_queue(priv(trans), txq);
++			iwl_wake_queue(trans, txq);
+ 	}
+ 
+ 	iwl_free_tfds_in_queue(trans, sta_id, tid, freed);
+@@ -1423,7 +1423,7 @@ static void iwl_trans_pcie_wake_any_queue(struct iwl_trans *trans,
+ 			ac,
+ 			(atomic_read(&priv(trans)->queue_stop_count[ac]) > 0)
+ 			      ? "stopped" : "awake");
+-		iwl_wake_queue(priv(trans), &priv(trans)->txq[txq_id]);
++		iwl_wake_queue(trans, &priv(trans)->txq[txq_id]);
+ 	}
+ }
+ 
+@@ -1446,6 +1446,11 @@ static struct iwl_trans *iwl_trans_pcie_alloc(struct iwl_shared *shrd)
+ 	return iwl_trans;
+ }
+ 
++static void iwl_trans_pcie_stop_queue(struct iwl_trans *trans, int txq_id)
++{
++	iwl_stop_queue(trans, &priv(trans)->txq[txq_id]);
++}
++
+ #define IWL_FLUSH_WAIT_MS	2000
+ 
+ static int iwl_trans_pcie_wait_tx_queue_empty(struct iwl_trans *trans)
+@@ -2078,6 +2083,7 @@ const struct iwl_trans_ops trans_ops_pcie = {
+ 	.kick_nic = iwl_trans_pcie_kick_nic,
+ 
+ 	.free = iwl_trans_pcie_free,
++	.stop_queue = iwl_trans_pcie_stop_queue,
+ 
+ 	.dbgfs_register = iwl_trans_pcie_dbgfs_register,
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 6edf2e0..7a2daa8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -101,6 +101,7 @@ struct iwl_device_cmd;
+  * @kick_nic: remove the RESET from the embedded CPU and let it run
+  * @free: release all the ressource for the transport layer itself such as
+  *        irq, tasklet etc...
++ * @stop_queue: stop a specific queue
+  * @check_stuck_queue: check if a specific queue is stuck
+  * @wait_tx_queue_empty: wait until all tx queues are empty
+  * @dbgfs_register: add the dbgfs files under this directory. Files will be
+@@ -143,6 +144,8 @@ struct iwl_trans_ops {
+ 
+ 	void (*free)(struct iwl_trans *trans);
+ 
++	void (*stop_queue)(struct iwl_trans *trans, int q);
++
+ 	int (*dbgfs_register)(struct iwl_trans *trans, struct dentry* dir);
+ 	int (*check_stuck_queue)(struct iwl_trans *trans, int q);
+ 	int (*wait_tx_queue_empty)(struct iwl_trans *trans);
+@@ -256,6 +259,11 @@ static inline void iwl_trans_free(struct iwl_trans *trans)
+ 	trans->ops->free(trans);
+ }
+ 
++static inline void iwl_trans_stop_queue(struct iwl_trans *trans, int q)
++{
++	trans->ops->stop_queue(trans, q);
++}
++
+ static inline int iwl_trans_wait_tx_queue_empty(struct iwl_trans *trans)
+ {
+ 	return trans->ops->wait_tx_queue_empty(trans);
+-- 
+1.7.0.4
+
