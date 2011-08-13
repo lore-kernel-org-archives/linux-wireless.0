@@ -1,328 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44717 "EHLO nbd.name"
+Received: from mga01.intel.com ([192.55.52.88]:30543 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752153Ab1H3HoS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 03:44:18 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	rmanohar@qca.qualcomm.com, shafi.wireless@gmail.com,
-	vthiagar@qca.qualcomm.com
-Subject: [PATCH v8 1/4] ath9k: eliminate common->{rx,tx}_chainmask
-Date: Tue, 30 Aug 2011 09:44:03 +0200
-Message-Id: <1314690246-76945-1-git-send-email-nbd@openwrt.org> (sfid-20110830_094422_539126_4B9321E2)
+	id S1751722Ab1HMQ57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2011 12:57:59 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 09/13] mac80211: remove offchannel_tx API
+Date: Sat, 13 Aug 2011 09:18:03 -0700
+Message-Id: <1313252287-22858-9-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_185813_689743_D35187DA)
+In-Reply-To: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-we already have ah->{rx,tx}chainmask for the same purpose
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+For iwlwifi, I decided not to use this API since
+it just increased the complexity for little gain.
+Since nobody else intends to use it, let's kill
+it again. If anybody later needs to have it, we
+can always revive it then.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath.h                |    3 ---
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c |    4 ++--
- drivers/net/wireless/ath/ath9k/beacon.c       |    2 +-
- drivers/net/wireless/ath/ath9k/debug.c        |   20 ++++++++++----------
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    7 ++-----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    3 +--
- drivers/net/wireless/ath/ath9k/hw.c           |    5 ++---
- drivers/net/wireless/ath/ath9k/init.c         |    9 ++-------
- drivers/net/wireless/ath/ath9k/main.c         |    7 +++----
- drivers/net/wireless/ath/ath9k/xmit.c         |    8 ++++----
- 10 files changed, 27 insertions(+), 41 deletions(-)
+ include/net/mac80211.h     |   10 ----------
+ net/mac80211/cfg.c         |   39 ---------------------------------------
+ net/mac80211/driver-ops.h  |   31 -------------------------------
+ net/mac80211/ieee80211_i.h |    1 -
+ net/mac80211/status.c      |    3 ---
+ 5 files changed, 0 insertions(+), 84 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 17c4b56..f6b77c2 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -140,9 +140,6 @@ struct ath_common {
- 	u8 curbssid[ETH_ALEN];
- 	u8 bssidmask[ETH_ALEN];
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9259e97..6c846df 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1896,11 +1896,6 @@ enum ieee80211_tx_sync_type {
+  *	ieee80211_remain_on_channel_expired(). This callback may sleep.
+  * @cancel_remain_on_channel: Requests that an ongoing off-channel period is
+  *	aborted before it expires. This callback may sleep.
+- * @offchannel_tx: Transmit frame on another channel, wait for a response
+- *	and return. Reliable TX status must be reported for the frame. If the
+- *	return value is 1, then the @remain_on_channel will be used with a
+- *	regular transmission (if supported.)
+- * @offchannel_tx_cancel_wait: cancel wait associated with offchannel TX
+  *
+  * @set_ringparam: Set tx and rx ring sizes.
+  *
+@@ -2019,11 +2014,6 @@ struct ieee80211_ops {
+ 				 enum nl80211_channel_type channel_type,
+ 				 int duration);
+ 	int (*cancel_remain_on_channel)(struct ieee80211_hw *hw);
+-	int (*offchannel_tx)(struct ieee80211_hw *hw, struct sk_buff *skb,
+-			     struct ieee80211_channel *chan,
+-			     enum nl80211_channel_type channel_type,
+-			     unsigned int wait);
+-	int (*offchannel_tx_cancel_wait)(struct ieee80211_hw *hw);
+ 	int (*set_ringparam)(struct ieee80211_hw *hw, u32 tx, u32 rx);
+ 	void (*get_ringparam)(struct ieee80211_hw *hw,
+ 			      u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 3d1b091..c1fa577 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1898,33 +1898,6 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
  
--	u8 tx_chainmask;
--	u8 rx_chainmask;
+ 	*cookie = (unsigned long) skb;
+ 
+-	if (is_offchan && local->ops->offchannel_tx) {
+-		int ret;
 -
- 	u32 rx_bufsize;
+-		IEEE80211_SKB_CB(skb)->band = chan->band;
+-
+-		mutex_lock(&local->mtx);
+-
+-		if (local->hw_offchan_tx_cookie) {
+-			mutex_unlock(&local->mtx);
+-			return -EBUSY;
+-		}
+-
+-		/* TODO: bitrate control, TX processing? */
+-		ret = drv_offchannel_tx(local, skb, chan, channel_type, wait);
+-
+-		if (ret == 0)
+-			local->hw_offchan_tx_cookie = *cookie;
+-		mutex_unlock(&local->mtx);
+-
+-		/*
+-		 * Allow driver to return 1 to indicate it wants to have the
+-		 * frame transmitted with a remain_on_channel + regular TX.
+-		 */
+-		if (ret != 1)
+-			return ret;
+-	}
+-
+ 	if (is_offchan && local->ops->remain_on_channel) {
+ 		unsigned int duration;
+ 		int ret;
+@@ -2011,18 +1984,6 @@ static int ieee80211_mgmt_tx_cancel_wait(struct wiphy *wiphy,
  
- 	u32 keymax;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index f80d1d6..bb2214f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -113,7 +113,7 @@ static int ar9003_get_training_power_5g(struct ath_hw *ah)
- 	if (delta > scale)
- 		return -1;
+ 	mutex_lock(&local->mtx);
  
--	switch (get_streams(common->tx_chainmask)) {
-+	switch (get_streams(ah->txchainmask)) {
- 	case 1:
- 		delta = 6;
- 		break;
-@@ -126,7 +126,7 @@ static int ar9003_get_training_power_5g(struct ath_hw *ah)
- 	default:
- 		delta = 0;
- 		ath_dbg(common, ATH_DBG_CALIBRATE,
--		"Invalid tx-chainmask: %u\n", common->tx_chainmask);
-+		"Invalid tx-chainmask: %u\n", ah->txchainmask);
- 	}
- 
- 	power += delta;
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 086c9c8..0c757c9 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -107,7 +107,7 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
- 	series[0].Tries = 1;
- 	series[0].Rate = rate;
- 	series[0].ChSel = ath_txchainmask_reduction(sc,
--			common->tx_chainmask, series[0].Rate);
-+			ah->txchainmask, series[0].Rate);
- 	series[0].RateFlags = (ctsrate) ? ATH9K_RATESERIES_RTS_CTS : 0;
- 	ath9k_hw_set11n_ratescenario(ah, ds, ds, 0, ctsrate, ctsduration,
- 				     series, 4, 0);
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index e1f1a96..4062e077 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -95,11 +95,11 @@ static ssize_t read_file_tx_chainmask(struct file *file, char __user *user_buf,
- 			     size_t count, loff_t *ppos)
- {
- 	struct ath_softc *sc = file->private_data;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
- 	char buf[32];
- 	unsigned int len;
- 
--	len = sprintf(buf, "0x%08x\n", common->tx_chainmask);
-+	len = sprintf(buf, "0x%08x\n", ah->txchainmask);
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-	if (local->ops->offchannel_tx_cancel_wait &&
+-	    local->hw_offchan_tx_cookie == cookie) {
+-		ret = drv_offchannel_tx_cancel_wait(local);
+-
+-		if (!ret)
+-			local->hw_offchan_tx_cookie = 0;
+-
+-		mutex_unlock(&local->mtx);
+-
+-		return ret;
+-	}
+-
+ 	if (local->ops->cancel_remain_on_channel) {
+ 		cookie ^= 2;
+ 		ret = ieee80211_cancel_remain_on_channel_hw(local, cookie);
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 1425380..9001ff3 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -590,37 +590,6 @@ static inline int drv_cancel_remain_on_channel(struct ieee80211_local *local)
+ 	return ret;
  }
  
-@@ -107,7 +107,7 @@ static ssize_t write_file_tx_chainmask(struct file *file, const char __user *use
- 			     size_t count, loff_t *ppos)
- {
- 	struct ath_softc *sc = file->private_data;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
- 	unsigned long mask;
- 	char buf[32];
- 	ssize_t len;
-@@ -120,8 +120,8 @@ static ssize_t write_file_tx_chainmask(struct file *file, const char __user *use
- 	if (strict_strtoul(buf, 0, &mask))
- 		return -EINVAL;
- 
--	common->tx_chainmask = mask;
--	sc->sc_ah->caps.tx_chainmask = mask;
-+	ah->txchainmask = mask;
-+	ah->caps.tx_chainmask = mask;
- 	return count;
- }
- 
-@@ -138,11 +138,11 @@ static ssize_t read_file_rx_chainmask(struct file *file, char __user *user_buf,
- 			     size_t count, loff_t *ppos)
- {
- 	struct ath_softc *sc = file->private_data;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
- 	char buf[32];
- 	unsigned int len;
- 
--	len = sprintf(buf, "0x%08x\n", common->rx_chainmask);
-+	len = sprintf(buf, "0x%08x\n", ah->rxchainmask);
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
- 
-@@ -150,7 +150,7 @@ static ssize_t write_file_rx_chainmask(struct file *file, const char __user *use
- 			     size_t count, loff_t *ppos)
- {
- 	struct ath_softc *sc = file->private_data;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
- 	unsigned long mask;
- 	char buf[32];
- 	ssize_t len;
-@@ -163,8 +163,8 @@ static ssize_t write_file_rx_chainmask(struct file *file, const char __user *use
- 	if (strict_strtoul(buf, 0, &mask))
- 		return -EINVAL;
- 
--	common->rx_chainmask = mask;
--	sc->sc_ah->caps.rx_chainmask = mask;
-+	ah->rxchainmask = mask;
-+	ah->caps.rx_chainmask = mask;
- 	return count;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 9cf42f6..966661c 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -509,8 +509,8 @@ static void setup_ht_cap(struct ath9k_htc_priv *priv,
- 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
- 
- 	/* ath9k_htc supports only 1 or 2 stream devices */
--	tx_streams = ath9k_cmn_count_streams(common->tx_chainmask, 2);
--	rx_streams = ath9k_cmn_count_streams(common->rx_chainmask, 2);
-+	tx_streams = ath9k_cmn_count_streams(priv->ah->txchainmask, 2);
-+	rx_streams = ath9k_cmn_count_streams(priv->ah->rxchainmask, 2);
- 
- 	ath_dbg(common, ATH_DBG_CONFIG,
- 		"TX streams %d, RX streams: %d\n",
-@@ -601,9 +601,6 @@ static void ath9k_init_misc(struct ath9k_htc_priv *priv)
- {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 
--	common->tx_chainmask = priv->ah->caps.tx_chainmask;
--	common->rx_chainmask = priv->ah->caps.rx_chainmask;
+-static inline int drv_offchannel_tx(struct ieee80211_local *local,
+-				    struct sk_buff *skb,
+-				    struct ieee80211_channel *chan,
+-				    enum nl80211_channel_type channel_type,
+-				    unsigned int wait)
+-{
+-	int ret;
 -
- 	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
- 
- 	priv->ah->opmode = NL80211_IFTYPE_STATION;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 0248024..379f6ba 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -826,8 +826,7 @@ void ath9k_htc_ani_work(struct work_struct *work)
- 		if (longcal || shortcal)
- 			common->ani.caldone =
- 				ath9k_hw_calibrate(ah, ah->curchan,
--						   common->rx_chainmask,
--						   longcal);
-+						   ah->rxchainmask, longcal);
- 
- 		ath9k_htc_ps_restore(priv);
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 3ccadeb..d63f9c8 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1470,9 +1470,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	u64 tsf = 0;
- 	int i, r;
- 
--	ah->txchainmask = common->tx_chainmask;
--	ah->rxchainmask = common->rx_chainmask;
+-	might_sleep();
 -
- 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
- 		return -EIO;
- 
-@@ -2086,6 +2083,8 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 
- 	pCap->tx_chainmask = fixup_chainmask(chip_chainmask, pCap->tx_chainmask);
- 	pCap->rx_chainmask = fixup_chainmask(chip_chainmask, pCap->rx_chainmask);
-+	ah->txchainmask = pCap->tx_chainmask;
-+	ah->rxchainmask = pCap->rx_chainmask;
- 
- 	ah->misc_mode |= AR_PCU_MIC_NEW_LOC_ENA;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index d7761d1..31ef501 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -270,8 +270,8 @@ static void setup_ht_cap(struct ath_softc *sc,
- 
- 	/* set up supported mcs set */
- 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
--	tx_streams = ath9k_cmn_count_streams(common->tx_chainmask, max_streams);
--	rx_streams = ath9k_cmn_count_streams(common->rx_chainmask, max_streams);
-+	tx_streams = ath9k_cmn_count_streams(ah->txchainmask, max_streams);
-+	rx_streams = ath9k_cmn_count_streams(ah->rxchainmask, max_streams);
- 
- 	ath_dbg(common, ATH_DBG_CONFIG,
- 		"TX streams %d, RX streams: %d\n",
-@@ -506,9 +506,6 @@ static void ath9k_init_misc(struct ath_softc *sc)
- 		sc->sc_flags |= SC_OP_RXAGGR;
- 	}
- 
--	common->tx_chainmask = sc->sc_ah->caps.tx_chainmask;
--	common->rx_chainmask = sc->sc_ah->caps.rx_chainmask;
+-	trace_drv_offchannel_tx(local, skb, chan, channel_type, wait);
+-	ret = local->ops->offchannel_tx(&local->hw, skb, chan,
+-					channel_type, wait);
+-	trace_drv_return_int(local, ret);
 -
- 	ath9k_hw_set_diversity(sc->sc_ah, true);
- 	sc->rx.defant = ath9k_hw_getdefantenna(sc->sc_ah);
- 
-@@ -645,10 +642,8 @@ static void ath9k_init_band_txpower(struct ath_softc *sc, int band)
- static void ath9k_init_txpower_limits(struct ath_softc *sc)
+-	return ret;
+-}
+-
+-static inline int drv_offchannel_tx_cancel_wait(struct ieee80211_local *local)
+-{
+-	int ret;
+-
+-	might_sleep();
+-
+-	trace_drv_offchannel_tx_cancel_wait(local);
+-	ret = local->ops->offchannel_tx_cancel_wait(&local->hw);
+-	trace_drv_return_int(local, ret);
+-
+-	return ret;
+-}
+-
+ static inline int drv_set_ringparam(struct ieee80211_local *local,
+ 				    u32 tx, u32 rx)
  {
- 	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath9k_channel *curchan = ah->curchan;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 400c09b..286ac5d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1002,7 +1002,6 @@ struct ieee80211_local {
+ 	unsigned int hw_roc_duration;
+ 	u32 hw_roc_cookie;
+ 	bool hw_roc_for_tx;
+-	unsigned long hw_offchan_tx_cookie;
  
--	ah->txchainmask = common->tx_chainmask;
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
- 		ath9k_init_band_txpower(sc, IEEE80211_BAND_2GHZ);
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 7ac1c21..085ec20 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -318,7 +318,6 @@ static void ath_paprd_activate(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath9k_hw_cal_data *caldata = ah->caldata;
--	struct ath_common *common = ath9k_hw_common(ah);
- 	int chain;
- 
- 	if (!caldata || !caldata->paprd_done)
-@@ -327,7 +326,7 @@ static void ath_paprd_activate(struct ath_softc *sc)
- 	ath9k_ps_wakeup(sc);
- 	ar9003_paprd_enable(ah, false);
- 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
--		if (!(common->tx_chainmask & BIT(chain)))
-+		if (!(ah->txchainmask & BIT(chain)))
- 			continue;
- 
- 		ar9003_paprd_populate_single_table(ah, caldata, chain);
-@@ -414,7 +413,7 @@ void ath_paprd_calibrate(struct work_struct *work)
- 	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
- 
- 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
--		if (!(common->tx_chainmask & BIT(chain)))
-+		if (!(ah->txchainmask & BIT(chain)))
- 			continue;
- 
- 		chain_ok = 0;
-@@ -535,7 +534,7 @@ void ath_ani_calibrate(unsigned long data)
- 	if (longcal || shortcal) {
- 		common->ani.caldone =
- 			ath9k_hw_calibrate(ah, ah->curchan,
--						common->rx_chainmask, longcal);
-+						ah->rxchainmask, longcal);
- 	}
- 
- 	ath9k_ps_restore(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 68066c5..49b93c2 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1633,7 +1633,7 @@ u8 ath_txchainmask_reduction(struct ath_softc *sc, u8 chainmask, u32 rate)
- 
- static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len)
- {
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
- 	struct ath9k_11n_rate_series series[4];
- 	struct sk_buff *skb;
- 	struct ieee80211_tx_info *tx_info;
-@@ -1693,7 +1693,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len)
- 			/* MCS rates */
- 			series[i].Rate = rix | 0x80;
- 			series[i].ChSel = ath_txchainmask_reduction(sc,
--					common->tx_chainmask, series[i].Rate);
-+					ah->txchainmask, series[i].Rate);
- 			series[i].PktDuration = ath_pkt_duration(sc, rix, len,
- 				 is_40, is_sgi, is_sp);
- 			if (rix < 8 && (tx_info->flags & IEEE80211_TX_CTL_STBC))
-@@ -1718,10 +1718,10 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len)
+ 	/* dummy netdev for use w/ NAPI */
+ 	struct net_device napi_dev;
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 1658efa..a89cca3 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -345,9 +345,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			local->hw_roc_skb_for_status = NULL;
  		}
  
- 		if (bf->bf_state.bfs_paprd)
--			series[i].ChSel = common->tx_chainmask;
-+			series[i].ChSel = ah->txchainmask;
- 		else
- 			series[i].ChSel = ath_txchainmask_reduction(sc,
--					common->tx_chainmask, series[i].Rate);
-+					ah->txchainmask, series[i].Rate);
- 
- 		series[i].PktDuration = ath9k_hw_computetxtime(sc->sc_ah,
- 			phy, rate->bitrate * 100, len, rix, is_sp);
+-		if (cookie == local->hw_offchan_tx_cookie)
+-			local->hw_offchan_tx_cookie = 0;
+-
+ 		cfg80211_mgmt_tx_status(
+ 			skb->dev, cookie, skb->data, skb->len,
+ 			!!(info->flags & IEEE80211_TX_STAT_ACK), GFP_ATOMIC);
 -- 
-1.7.3.2
+1.7.0.4
 
