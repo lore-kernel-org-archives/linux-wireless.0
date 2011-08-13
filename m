@@ -1,50 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wondertoys-mx.wondertoys.net ([206.117.179.246]:39031 "EHLO
-	labridge.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751248Ab1HZJCk (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:35912 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751343Ab1HMCIy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 05:02:40 -0400
-Subject: Re: [PATCH] staging: brcmfmac: Consolidate debugging macros
-From: Joe Perches <joe@perches.com>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Henry Ptasinski <henryp@broadcom.com>,
-	linux-kernel@vger.kernel.org, Brett Rudley <brudley@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	devel@linuxdriverproject.org, Greg KH <gregkh@suse.de>,
-	Kan Yan <kanyan@broadcom.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org
-In-Reply-To: <CACna6ryWtZG9obyj0w=d5jrF-y1pYNmanhkze2F429kHCLCi=A@mail.gmail.com>
-References: <927eab8b5c950c13991911cd4c16457a5d618bc7.1314252671.git.joe@perches.com>
-	 <CACna6ryWtZG9obyj0w=d5jrF-y1pYNmanhkze2F429kHCLCi=A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 26 Aug 2011 02:02:37 -0700
-Message-ID: <1314349357.9624.3.camel@Joe-Laptop> (sfid-20110826_110256_931866_84C68AA5)
-Mime-Version: 1.0
+	Fri, 12 Aug 2011 22:08:54 -0400
+Received: by ywf7 with SMTP id 7so2344134ywf.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 19:08:53 -0700 (PDT)
+Message-ID: <4E45DCB2.5020905@lwfinger.net> (sfid-20110813_040857_658908_59D2FAD6)
+Date: Fri, 12 Aug 2011 21:08:50 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Roman Krylov <volyrkr@gmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8192* wifi driver
+References: <4E45A973.6060305@gmail.com> <4E45AF82.5040407@lwfinger.net> <4E45D65F.6000306@gmail.com>
+In-Reply-To: <4E45D65F.6000306@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-08-26 at 10:55 +0200, Rafał Miłecki wrote:
-> 2011/8/25 Joe Perches <joe@perches.com>:
-> > Convert multiple BRCMF_<debug_level> macros to a single
-> > brcmf_dbg(level, fmt, ...) macro.
-> I'm not sure if that "_dbg" suffix is a really good choice. You use
-> "_dbg" for all the kinds of messages, while "DEBUG" is already one
-> kind of messages.
+On 08/12/2011 08:41 PM, Roman Krylov wrote:
+> Hi Larry,
+> I can't figure out why this happens, this is what I see in dmesg with the
+> drivers supplied with the kernel:
+>
+> rtl8192cu 1-6:1.0: usb_probe_interface
+> rtl8192cu 1-6:1.0: usb_probe_interface - got id
+> rtl8192cu: MAC address: 00:08:a1:ca:6a:33
+> rtl8192cu: Board Type 0
+> rtl8192cu: rx_max_size 15360, rx_urb_num 8, in_ep 1
+> ieee80211 phy1: Selected rate control algorithm 'rtl_rc'
+> drivers/usb/core/inode.c: creating file '004'
+> hub 1-0:1.0: state 7 ports 8 chg 0000 evt 0040
+> udev: renamed network interface wlan0 to wlan3
+> rtl8192cu: MAC auto ON okay!
+> rtl8192cu: Tx queue select: 0x05
+> rtl8192c: Loading firmware file rtlwifi/rtl8192cufw.bin
+> ADDRCONF(NETDEV_UP): wlan3: link is not ready
+>
+> Though I can see the list of networks in NetworkManager, but I cannot connect to
+> any of these networks.
+> So I'm stuck with what I have.
+> It probably did not compile on your computer because you were cross-compiling.
+> Thanks,
 
-No, not really.  These _are_ debugging uses.
+Do NOT drop the mailing list. ALWAYS Reply All. I do not do private debugging 
+unless you are paying!
 
-The #include is called dhd_dbg.h and
-the whole block is guarded by
+The dmesg fragment showed no reason for a failure to even try to connect. On my 
+system, I get
 
-#if defined(BCMDBG)
+[24756.876119] usb 1-2: new high speed USB device number 7 using ehci_hcd
+[24757.467946] rtl8192cu: MAC address: 00:1f:1f:c8:8e:cb
+[24757.467968] rtl8192cu: Board Type 0
+[24757.507037] rtlwifi: rx_max_size 15360, rx_urb_num 8, in_ep 1
+[24757.510400] ieee80211 phy5: Selected rate control algorithm 'rtl_rc'
+[24757.520562] usbcore: registered new interface driver rtl8192cu
+[24757.605980] udev[1038]: renamed network interface wlan0 to wlan5
+[24757.693068] rtl8192cu: MAC auto ON okay!
+[24757.776251] rtl8192cu: Tx queue select: 0x05
+[24757.780586] rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
+[24758.527878] ADDRCONF(NETDEV_UP): wlan5: link is not ready
+[24761.249067] wlan5: authenticate with c0:3f:0e:be:2b:44 (try 1)
+[24761.254431] wlan5: authenticated
+[24761.254540] wlan5: associate with c0:3f:0e:be:2b:44 (try 1)
+[24761.266899] wlan5: RX AssocResp from c0:3f:0e:be:2b:44 (capab=0x411 status=0 
+aid=2)
+[24761.266912] wlan5: associated
+[24761.289844] ADDRCONF(NETDEV_CHANGE): wlan5: link becomes ready
 
-> We have also other types like EMERG, ALERT, CRIT,
-> ERR, WARNING, NOTICE, INFO and DEBUG.
+It looks exactly like your output through the "link is not ready" message. At 
+that point, NetworkManager starts the authentication process.
 
-Except for the last, those aren't debugging uses,
-these are.
+What do you see in the NM log file? It should be at /var/log/NetworkManager?
+
+I would also like to see the output of the 'iwlist scan' command when run as root.
+
+Larry
 
 
 
