@@ -1,34 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wondertoys-mx.wondertoys.net ([206.117.179.246]:34115 "EHLO
-	labridge.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750803Ab1HXXya (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 19:54:30 -0400
-Subject: Re: [PATCH v2] Move brcm80211 to mainline
-From: Joe Perches <joe@perches.com>
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: Greg KH <gregkh@suse.de>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-In-Reply-To: <20110824231746.GF5280@broadcom.com>
-References: <20110707002034.GA17885@broadcom.com>
-	 <20110824222801.GA5280@broadcom.com> <20110824225357.GA2224@suse.de>
-	 <20110824231746.GF5280@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 24 Aug 2011 16:54:28 -0700
-Message-ID: <1314230068.15882.15.camel@Joe-Laptop> (sfid-20110825_015433_830226_C49A7664)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:16165 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751321Ab1HMSSs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2011 14:18:48 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 26/60] iwlagn: add comments to module parameters
+Date: Sat, 13 Aug 2011 10:38:02 -0700
+Message-Id: <1313257116-2697-27-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_204257_847994_FC931E89)
+In-Reply-To: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-08-24 at 16:17 -0700, Henry Ptasinski wrote:
-> Augh.  I included the wrong link.  Correct link:
-> http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=get&target=0001-wireless-testing-add-brcm80211-v2.patch
+Add more comments to iwl_mod_params
 
-Can't you post the patch with git format-patch -M instead?
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-shared.h |   56 ++++++++++++++++++++---------
+ 1 files changed, 39 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 6c20d03..fd9a922 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -74,26 +74,48 @@ struct iwl_trans_ops;
+ 
+ extern struct iwl_mod_params iwlagn_mod_params;
+ 
++/**
++ * struct iwl_mod_params
++ * @sw_crypto: using hardware encryption, default = 0
++ * @num_of_queues: number of tx queue, HW dependent
++ * @disable_11n: 11n capabilities enabled, default = 0
++ * @amsdu_size_8K: enable 8K amsdu size, default = 1
++ * @antenna: both antennas (use diversity), default = 0
++ * @restart_fw: restart firmware, default = 1
++ * @plcp_check: enable plcp health check, default = true
++ * @ack_check: disable ack health check, default = false
++ * @wd_disable: enable stuck queue check, default = false
++ * @bt_coex_active: enable bt coex, default = true
++ * @led_mode: system default, default = 0
++ * @no_sleep_autoadjust: disable autoadjust, default = true
++ * @power_save: disable power save, default = false
++ * @power_level: power level, default = 1
++ * @debug_level: levels are IWL_DL_*
++ * @ant_coupling: antenna coupling in dB, default = 0
++ * @bt_ch_announce: BT channel inhibition, default = enable
++ * @wanted_ucode_alternative: ucode alternative to use, default = 1
++ * @auto_agg: enable agg. without check, default = true
++ */
+ struct iwl_mod_params {
+-	int sw_crypto;		/* def: 0 = using hardware encryption */
+-	int num_of_queues;	/* def: HW dependent */
+-	int disable_11n;	/* def: 0 = 11n capabilities enabled */
+-	int amsdu_size_8K;	/* def: 1 = enable 8K amsdu size */
+-	int antenna;		/* def: 0 = both antennas (use diversity) */
+-	int restart_fw;		/* def: 1 = restart firmware */
+-	bool plcp_check;	/* def: true = enable plcp health check */
+-	bool ack_check;		/* def: false = disable ack health check */
+-	bool wd_disable;	/* def: false = enable stuck queue check */
+-	bool bt_coex_active;	/* def: true = enable bt coex */
+-	int led_mode;		/* def: 0 = system default */
+-	bool no_sleep_autoadjust; /* def: true = disable autoadjust */
+-	bool power_save;	/* def: false = disable power save */
+-	int power_level;	/* def: 1 = power level */
+-	u32 debug_level;	/* levels are IWL_DL_* */
++	int sw_crypto;
++	int num_of_queues;
++	int disable_11n;
++	int amsdu_size_8K;
++	int antenna;
++	int restart_fw;
++	bool plcp_check;
++	bool ack_check;
++	bool wd_disable;
++	bool bt_coex_active;
++	int led_mode;
++	bool no_sleep_autoadjust;
++	bool power_save;
++	int power_level;
++	u32 debug_level;
+ 	int ant_coupling;
+-	bool bt_ch_announce;	/* def: enable = BT channel inhibition */
++	bool bt_ch_announce;
+ 	int wanted_ucode_alternative;
+-	bool auto_agg;		/* def: true = enable agg. without check */
++	bool auto_agg;
+ };
+ 
+ /**
+-- 
+1.7.0.4
 
