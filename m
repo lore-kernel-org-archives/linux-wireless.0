@@ -1,194 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51923 "EHLO mga09.intel.com"
+Received: from nbd.name ([46.4.11.11]:52137 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752010Ab1HMSSv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 14:18:51 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 57/60] iwlagn: move wait_for_tx_queue_empty to transport layer
-Date: Sat, 13 Aug 2011 10:38:33 -0700
-Message-Id: <1313257116-2697-58-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_201939_168690_9F038288)
-In-Reply-To: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1750956Ab1HMQF7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2011 12:05:59 -0400
+Message-ID: <4E46A0D9.3090906@openwrt.org> (sfid-20110813_180603_104713_78273B78)
+Date: Sat, 13 Aug 2011 10:05:45 -0600
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Alexander Simon <alexander.simon@saxnet.de>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/4] mac80211: Add HT operation modes for IBSS
+References: <1888623.Vt5VZUN2cU@alex-1> <1312990268.3128.22.camel@alex-2> <1313152536.4022.9.camel@jlt3.sipsolutions.net> <2276990.7uHyxQX4MO@alex-1>
+In-Reply-To: <2276990.7uHyxQX4MO@alex-1>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 2011-08-12 8:25 AM, Alexander Simon wrote:
+>>  Ok, that makes sense. So you need the get_bss_ht() only for fixed mode I
+>>  guess.
+> Exactly.
+>>
+>>  >  This should answer your last questions:
+>>  >  When not fixed, the BSSID configuration always is preferred. Thus, we
+>>  >  would join as HT40 even though not requested.
+>>  >  So, when we requsted HT40-, but the IBSS is HT40+, we would work on -.
+>>
+>>  ? I think I know what you mean but your example seems .. the wrong way
+>>  around?
+> Damn, you're right. We would work on HT+, not -, as the BSS config is
+> preferred.
+>>
+>>  >  I wanted to have the opportunity to start HT on an existing IBSS.
+>>
+>>  Well that should always be OK?
+>>
+>>  >  The problem is that legacy station may "kill" the HT configuration:
+>>  >  If STA A starts in HT IBSS and lets say Windows STA B joins, B would
+>>  >  advertise that IBSS as non-HT as it ignores our HT IE.
+>>  >  Then, if STA A dies and STA C joins, it will be non-HT.
+>>
+>>  mac80211 is STA C? Would it be a problem to use HT if the IBSS was
+>>  previously non-HT? The old members will ignore it, but other new HT
+>>  members may work OK? IOW -- is it not possible to have a mixed HT/non-HT
+>>  IBSS?
+> Basically, as to my knowledge, the only difference is that we add HI IEs. Non-
+> HT stations will ignore these, of course.
+> A mixed network should be no problem - as long as Greenfield is turned off
+> (and i don't turn in on anywhere).
+>
+> To proceed with basics: I follow a very simple approach (for non-fixed freq):
+> Use current BSS HT settings. If none exists, use iw config. If no iw config,
+> no HT.
+What's the point of disabling HT in that case. Since it's a superset of 
+normal A/B/G mode, we could just leave it enabled (defaulting to HT20) 
+instead of reconfiguring based on beacons at a later point in time.
 
-This one is really transport related.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   33 +---------------------------
- drivers/net/wireless/iwlwifi/iwl-agn.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-trans.c   |   32 +++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-trans.h   |    8 ++++++
- 5 files changed, 42 insertions(+), 34 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 359bd90..7c036b9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -634,37 +634,6 @@ int iwlagn_manage_ibss_station(struct iwl_priv *priv,
- 				  vif->bss_conf.bssid);
- }
- 
--#define IWL_FLUSH_WAIT_MS	2000
--
--int iwlagn_wait_tx_queue_empty(struct iwl_priv *priv)
--{
--	struct iwl_tx_queue *txq;
--	struct iwl_queue *q;
--	int cnt;
--	unsigned long now = jiffies;
--	int ret = 0;
--
--	/* waiting for all the tx frames complete might take a while */
--	for (cnt = 0; cnt < hw_params(priv).max_txq_num; cnt++) {
--		if (cnt == priv->shrd->cmd_queue)
--			continue;
--		txq = &priv->txq[cnt];
--		q = &txq->q;
--		while (q->read_ptr != q->write_ptr && !time_after(jiffies,
--		       now + msecs_to_jiffies(IWL_FLUSH_WAIT_MS)))
--				msleep(1);
--
--		if (q->read_ptr != q->write_ptr) {
--			IWL_ERR(priv, "fail to flush all tx fifo queues\n");
--			ret = -ETIMEDOUT;
--			break;
--		}
--	}
--	return ret;
--}
--
--#define IWL_TX_QUEUE_MSK	0xfffff
--
- /**
-  * iwlagn_txfifo_flush: send REPLY_TXFIFO_FLUSH command to uCode
-  *
-@@ -715,7 +684,7 @@ void iwlagn_dev_txfifo_flush(struct iwl_priv *priv, u16 flush_control)
- 		goto done;
- 	}
- 	IWL_DEBUG_INFO(priv, "wait transmit/flush all frames\n");
--	iwlagn_wait_tx_queue_empty(priv);
-+	iwl_trans_wait_tx_queue_empty(trans(priv));
- done:
- 	ieee80211_wake_queues(priv->hw);
- 	mutex_unlock(&priv->shrd->mutex);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index ed1ac78..3f39c5f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2830,7 +2830,7 @@ static void iwlagn_mac_flush(struct ieee80211_hw *hw, bool drop)
- 		}
- 	}
- 	IWL_DEBUG_MAC80211(priv, "wait transmit/flush all frames\n");
--	iwlagn_wait_tx_queue_empty(priv);
-+	iwl_trans_wait_tx_queue_empty(trans(priv));
- done:
- 	mutex_unlock(&priv->shrd->mutex);
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 2b94a10..a7b4948 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -102,7 +102,6 @@ int iwlagn_hw_valid_rtc_data_addr(u32 addr);
- int iwlagn_send_tx_power(struct iwl_priv *priv);
- void iwlagn_temperature(struct iwl_priv *priv);
- u16 iwlagn_eeprom_calib_version(struct iwl_priv *priv);
--int iwlagn_wait_tx_queue_empty(struct iwl_priv *priv);
- int iwlagn_txfifo_flush(struct iwl_priv *priv, u16 flush_control);
- void iwlagn_dev_txfifo_flush(struct iwl_priv *priv, u16 flush_control);
- int iwlagn_send_beacon_cmd(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index 9b0ecd4..7b868c7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -1446,6 +1446,35 @@ static struct iwl_trans *iwl_trans_pcie_alloc(struct iwl_shared *shrd)
- 	return iwl_trans;
- }
- 
-+#define IWL_FLUSH_WAIT_MS	2000
-+
-+static int iwl_trans_pcie_wait_tx_queue_empty(struct iwl_trans *trans)
-+{
-+	struct iwl_tx_queue *txq;
-+	struct iwl_queue *q;
-+	int cnt;
-+	unsigned long now = jiffies;
-+	int ret = 0;
-+
-+	/* waiting for all the tx frames complete might take a while */
-+	for (cnt = 0; cnt < hw_params(trans).max_txq_num; cnt++) {
-+		if (cnt == trans->shrd->cmd_queue)
-+			continue;
-+		txq = &priv(trans)->txq[cnt];
-+		q = &txq->q;
-+		while (q->read_ptr != q->write_ptr && !time_after(jiffies,
-+		       now + msecs_to_jiffies(IWL_FLUSH_WAIT_MS)))
-+			msleep(1);
-+
-+		if (q->read_ptr != q->write_ptr) {
-+			IWL_ERR(trans, "fail to flush all tx fifo queues\n");
-+			ret = -ETIMEDOUT;
-+			break;
-+		}
-+	}
-+	return ret;
-+}
-+
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- /* create and remove of files */
- #define DEBUGFS_ADD_FILE(name, parent, mode) do {			\
-@@ -2024,6 +2053,9 @@ const struct iwl_trans_ops trans_ops_pcie = {
- 	.free = iwl_trans_pcie_free,
- 
- 	.dbgfs_register = iwl_trans_pcie_dbgfs_register,
-+
-+	.wait_tx_queue_empty = iwl_trans_pcie_wait_tx_queue_empty,
-+
- 	.suspend = iwl_trans_pcie_suspend,
- 	.resume = iwl_trans_pcie_resume,
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index c92c9fe..45d6dff 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -101,6 +101,7 @@ struct iwl_device_cmd;
-  * @kick_nic: remove the RESET from the embedded CPU and let it run
-  * @free: release all the ressource for the transport layer itself such as
-  *        irq, tasklet etc...
-+ * @wait_tx_queue_empty: wait until all tx queues are empty
-  * @dbgfs_register: add the dbgfs files under this directory. Files will be
-  *	automatically deleted.
-  * @suspend: stop the device unless WoWLAN is configured
-@@ -142,6 +143,8 @@ struct iwl_trans_ops {
- 	void (*free)(struct iwl_trans *trans);
- 
- 	int (*dbgfs_register)(struct iwl_trans *trans, struct dentry* dir);
-+	int (*wait_tx_queue_empty)(struct iwl_trans *trans);
-+
- 	int (*suspend)(struct iwl_trans *trans);
- 	int (*resume)(struct iwl_trans *trans);
- };
-@@ -251,6 +254,11 @@ static inline void iwl_trans_free(struct iwl_trans *trans)
- 	trans->ops->free(trans);
- }
- 
-+static inline int iwl_trans_wait_tx_queue_empty(struct iwl_trans *trans)
-+{
-+	return trans->ops->wait_tx_queue_empty(trans);
-+}
-+
- static inline int iwl_trans_dbgfs_register(struct iwl_trans *trans,
- 					    struct dentry *dir)
- {
--- 
-1.7.0.4
-
+- Felix
