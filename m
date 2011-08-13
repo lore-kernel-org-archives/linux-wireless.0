@@ -1,178 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:2067 "EHLO mga01.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:53019 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753054Ab1HZGxh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 02:53:37 -0400
+	id S1751314Ab1HMStD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2011 14:49:03 -0400
 From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
 	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 39/60] iwlagn: iwl-dev.h doesn't include iwl-fh.h any more
-Date: Thu, 25 Aug 2011 23:11:11 -0700
-Message-Id: <1314339092-20797-40-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085433_471999_DA0D713F)
-In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+Subject: [PATCH 01/01 for 3.2] iwlagn: handle GO powersave
+Date: Sat, 13 Aug 2011 11:09:12 -0700
+Message-Id: <1313258952-23205-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_204908_700148_4302763E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Berg, Johannes <johannes.berg@intel.com>
 
-Since iwl-fh.h contains transport related data, it shouldn't be included by the
-upper layer.
-Only the transport layer and iwl-agn-ucode.c includes it.
+In order to implement support for GO powersave on
+the P2P client side, the ucode needs to know what
+GO we're trying to authenticate/associate with,
+it needs to have a station entry and the BSSID in
+the RXON set.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Implement the new mac80211 callbacks to give this
+data to the device.
+
+Since this is also useful for the device when a
+normal connection is established, also program it
+with the information in that case.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-hw.h         |   13 -------------
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c      |    1 +
- drivers/net/wireless/iwlwifi/iwl-agn.c            |    4 ++++
- drivers/net/wireless/iwlwifi/iwl-commands.h       |    1 +
- drivers/net/wireless/iwlwifi/iwl-dev.h            |    1 -
- drivers/net/wireless/iwlwifi/iwl-fh.h             |   18 ++++++++++++------
- drivers/net/wireless/iwlwifi/iwl-sv-open.c        |    1 -
- drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |    2 ++
- 8 files changed, 20 insertions(+), 21 deletions(-)
+these patches are also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hw.h b/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
-index 47c4304..33951a1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
-@@ -95,17 +95,4 @@
- #define IWLAGN_NUM_AMPDU_QUEUES		9
- #define IWLAGN_FIRST_AMPDU_QUEUE	11
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    5 ++
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   68 +++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    3 +
+ 3 files changed, 76 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index d562e93..7b13ea2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -434,6 +434,10 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 	if (!ctx->is_active)
+ 		return 0;
  
--/* Fixed (non-configurable) rx data from phy */
--
--/**
-- * struct iwlagn_schedq_bc_tbl scheduler byte count table
-- *	base physical address provided by SCD_DRAM_BASE_ADDR
-- * @tfd_offset  0-12 - tx command byte count
-- *	       12-16 - station index
-- */
--struct iwlagn_scd_bc_tbl {
--	__le16 tfd_offset[TFD_QUEUE_BC_SIZE];
--} __packed;
--
--
- #endif /* __iwl_agn_hw_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-index a094b66..033f595 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-@@ -40,6 +40,7 @@
- #include "iwl-agn.h"
- #include "iwl-agn-calib.h"
- #include "iwl-trans.h"
-+#include "iwl-fh.h"
++	/* override BSSID if necessary due to preauth */
++	if (ctx->preauth_bssid)
++		memcpy(ctx->staging.bssid_addr, ctx->bssid, ETH_ALEN);
++
+ 	/* always get timestamp with Rx frame */
+ 	ctx->staging.flags |= RXON_FLG_TSF2HOST_MSK;
  
- static struct iwl_wimax_coex_event_entry cu_priorities[COEX_NUM_OF_EVENTS] = {
- 	{COEX_CU_UNASSOC_IDLE_RP, COEX_CU_UNASSOC_IDLE_WP,
+@@ -895,6 +899,7 @@ void iwlagn_bss_info_changed(struct ieee80211_hw *hw,
+ 		if (!priv->disable_chain_noise_cal)
+ 			iwlagn_chain_noise_reset(priv);
+ 		priv->start_calib = 1;
++		WARN_ON(ctx->preauth_bssid);
+ 	}
+ 
+ 	if (changes & BSS_CHANGED_IBSS) {
 diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 6143743..5d26962 100644
+index c5a1612..6960b8c 100644
 --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
 +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3189,6 +3189,10 @@ static u32 iwl_hw_detect(struct iwl_priv *priv)
- 	return iwl_read32(priv, CSR_HW_REV);
+@@ -3330,6 +3330,72 @@ static int iwl_mac_cancel_remain_on_channel(struct ieee80211_hw *hw)
+ 	return 0;
  }
  
-+/* Size of one Rx buffer in host DRAM */
-+#define IWL_RX_BUF_SIZE_4K (4 * 1024)
-+#define IWL_RX_BUF_SIZE_8K (8 * 1024)
++static int iwl_mac_tx_sync(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			   const u8 *bssid, enum ieee80211_tx_sync_type type)
++{
++	struct iwl_priv *priv = hw->priv;
++	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
++	struct iwl_rxon_context *ctx = vif_priv->ctx;
++	int ret;
++	u8 sta_id;
 +
- static int iwl_set_hw_params(struct iwl_priv *priv)
- {
- 	if (iwlagn_mod_params.amsdu_size_8K)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 1426b2f..5625289 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -3911,6 +3911,7 @@ struct iwlagn_wowlan_kek_kck_material_cmd {
-  * Union of all expected notifications/responses:
++	mutex_lock(&priv->shrd->mutex);
++
++	if (iwl_is_associated_ctx(ctx)) {
++		ret = 0;
++		goto out;
++	}
++
++	if (ctx->preauth_bssid || test_bit(STATUS_SCAN_HW, &priv->shrd->status)) {
++		ret = -EBUSY;
++		goto out;
++	}
++
++	ret = iwl_add_station_common(priv, ctx, bssid, true, NULL, &sta_id);
++	if (ret)
++		goto out;
++
++	if (WARN_ON(sta_id != ctx->ap_sta_id)) {
++		ret = -EIO;
++		goto out_remove_sta;
++	}
++
++	memcpy(ctx->bssid, bssid, ETH_ALEN);
++	ctx->preauth_bssid = true;
++
++	ret = iwlagn_commit_rxon(priv, ctx);
++
++	if (ret == 0)
++		goto out;
++
++ out_remove_sta:
++	iwl_remove_station(priv, sta_id, bssid);
++ out:
++	mutex_unlock(&priv->shrd->mutex);
++	return ret;
++}
++
++static void iwl_mac_finish_tx_sync(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif,
++				   const u8 *bssid,
++				   enum ieee80211_tx_sync_type type)
++{
++	struct iwl_priv *priv = hw->priv;
++	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
++	struct iwl_rxon_context *ctx = vif_priv->ctx;
++
++	mutex_lock(&priv->shrd->mutex);
++
++	if (iwl_is_associated_ctx(ctx))
++		goto out;
++
++	iwl_remove_station(priv, ctx->ap_sta_id, bssid);
++	ctx->preauth_bssid = false;
++	/* no need to commit */
++ out:
++	mutex_unlock(&priv->shrd->mutex);
++}
++
+ /*****************************************************************************
   *
-  *****************************************************************************/
-+#define FH_RSCSR_FRAME_SIZE_MSK	(0x00003FFF)	/* bits 0-13 */
+  * driver setup and teardown
+@@ -3535,6 +3601,8 @@ struct ieee80211_ops iwlagn_hw_ops = {
+ 	.rssi_callback = iwl_mac_rssi_callback,
+ 	CFG80211_TESTMODE_CMD(iwl_testmode_cmd)
+ 	CFG80211_TESTMODE_DUMP(iwl_testmode_dump)
++	.tx_sync = iwl_mac_tx_sync,
++	.finish_tx_sync = iwl_mac_finish_tx_sync,
+ };
  
- struct iwl_rx_packet {
- 	/*
+ static u32 iwl_hw_detect(struct iwl_priv *priv)
 diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index de293cf..abc0118 100644
+index 42c360e..9d6d791 100644
 --- a/drivers/net/wireless/iwlwifi/iwl-dev.h
 +++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -41,7 +41,6 @@
- #include "iwl-eeprom.h"
- #include "iwl-csr.h"
- #include "iwl-prph.h"
--#include "iwl-fh.h"
- #include "iwl-debug.h"
- #include "iwl-agn-hw.h"
- #include "iwl-led.h"
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
-index 0ad60b3..c1b8837 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
-@@ -266,8 +266,6 @@
- #define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_NO_INT_VAL    (0x00000000)
- #define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_INT_HOST_VAL  (0x00001000)
+@@ -1174,6 +1174,9 @@ struct iwl_rxon_context {
+ 		u8 extension_chan_offset;
+ 	} ht;
  
--#define FH_RSCSR_FRAME_SIZE_MSK	(0x00003FFF)	/* bits 0-13 */
--
- /**
-  * Rx Shared Status Registers (RSSR)
-  *
-@@ -422,10 +420,6 @@
- #define RX_FREE_BUFFERS 64
- #define RX_LOW_WATERMARK 8
- 
--/* Size of one Rx buffer in host DRAM */
--#define IWL_RX_BUF_SIZE_4K (4 * 1024)
--#define IWL_RX_BUF_SIZE_8K (8 * 1024)
--
- /**
-  * struct iwl_rb_status - reseve buffer status
-  * 	host memory mapped FH registers
-@@ -508,4 +502,16 @@ struct iwl_tfd {
- /* Keep Warm Size */
- #define IWL_KW_SIZE 0x1000	/* 4k */
- 
-+/* Fixed (non-configurable) rx data from phy */
++	u8 bssid[ETH_ALEN];
++	bool preauth_bssid;
 +
-+/**
-+ * struct iwlagn_schedq_bc_tbl scheduler byte count table
-+ *	base physical address provided by SCD_DRAM_BASE_ADDR
-+ * @tfd_offset  0-12 - tx command byte count
-+ *	       12-16 - station index
-+ */
-+struct iwlagn_scd_bc_tbl {
-+	__le16 tfd_offset[TFD_QUEUE_BC_SIZE];
-+} __packed;
-+
- #endif /* !__iwl_fh_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sv-open.c b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
-index 4d4358a..15c9be8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sv-open.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
-@@ -72,7 +72,6 @@
- #include "iwl-dev.h"
- #include "iwl-core.h"
- #include "iwl-debug.h"
--#include "iwl-fh.h"
- #include "iwl-io.h"
- #include "iwl-agn.h"
- #include "iwl-testmode.h"
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
-index 59c6b3c..af2d478 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
-@@ -29,6 +29,8 @@
- #ifndef __iwl_trans_int_pcie_h__
- #define __iwl_trans_int_pcie_h__
- 
-+#include "iwl-fh.h"
-+
- /*This file includes the declaration that are internal to the
-  * trans_pcie layer */
+ 	bool last_tx_rejected;
+ };
  
 -- 
 1.7.0.4
