@@ -1,220 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40556 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751115Ab1H2J60 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 05:58:26 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	rmanohar@qca.qualcomm.com
-Subject: [PATCH v4 3/3] ath9k: implement .get_antenna and .set_antenna
-Date: Mon, 29 Aug 2011 11:58:16 +0200
-Message-Id: <1314611896-97031-3-git-send-email-nbd@openwrt.org> (sfid-20110829_115834_760497_C70E9DEF)
-In-Reply-To: <1314611896-97031-2-git-send-email-nbd@openwrt.org>
-References: <1314611896-97031-1-git-send-email-nbd@openwrt.org>
- <1314611896-97031-2-git-send-email-nbd@openwrt.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50048 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750900Ab1HME7L (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2011 00:59:11 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 11/11] ath9k: Dump modal noisefloor calibration history
+Date: Sat, 13 Aug 2011 10:28:18 +0530
+Message-ID: <1313211498-14442-11-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110813_065913_682488_BED2C90D)
+In-Reply-To: <1313211498-14442-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1313211498-14442-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On MIMO chips this can be used to enable/disable hardware chains, ensuring
-that the MCS information is updated accordingly.
-On non-MIMO chips with rx diversity (e.g. 9285), this configures the rx
-input antenna.
+Debugfs file location:
+<debugfs_mnt>/ieee80211/phy#/ath9k/dump_nfcal
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +
- drivers/net/wireless/ath/ath9k/init.c  |   32 +++++++++++---
- drivers/net/wireless/ath/ath9k/main.c  |   71 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
- 4 files changed, 99 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath9k/debug.c |   55 ++++++++++++++++++++++++++++++++
+ 1 files changed, 55 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 5d9a9aa..56f0907 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -647,6 +647,7 @@ struct ath_softc {
- 	struct ath_descdma txsdma;
- 
- 	struct ath_ant_comb ant_comb;
-+	u8 ant_tx, ant_rx;
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 9bec3b8..da45f32 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1163,6 +1163,59 @@ static const struct file_operations fops_regdump = {
+ 	.llseek = default_llseek,/* read accesses f_pos */
  };
  
- void ath9k_tasklet(unsigned long data);
-@@ -668,6 +669,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
- 		    const struct ath_bus_ops *bus_ops);
- void ath9k_deinit_device(struct ath_softc *sc);
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw);
-+void ath9k_reload_chainmask_settings(struct ath_softc *sc);
- 
- void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw);
- bool ath9k_uses_beacons(int type);
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 31ef501..55cd59b 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -652,9 +652,22 @@ static void ath9k_init_txpower_limits(struct ath_softc *sc)
- 	ah->curchan = curchan;
- }
- 
-+void ath9k_reload_chainmask_settings(struct ath_softc *sc)
++static ssize_t read_file_dump_nfcal(struct file *file, char __user *user_buf,
++				    size_t count, loff_t *ppos)
 +{
-+	if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT))
-+		return;
-+
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
-+		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
-+		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
-+}
-+
-+
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- {
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_softc *sc = file->private_data;
 +	struct ath_hw *ah = sc->sc_ah;
++	struct ath9k_nfcal_hist *h = sc->caldata.nfCalHist;
 +	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
- 		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
-@@ -692,6 +705,16 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->sta_data_size = sizeof(struct ath_node);
- 	hw->vif_data_size = sizeof(struct ath_vif);
- 
-+	hw->wiphy->available_antennas_rx = BIT(ah->caps.max_rxchains) - 1;
-+	hw->wiphy->available_antennas_tx = BIT(ah->caps.max_txchains) - 1;
++	struct ieee80211_conf *conf = &common->hw->conf;
++	u32 len = 0, size = 1500;
++	u32 i, j;
++	ssize_t retval = 0;
++	char *buf;
++	u8 chainmask = (ah->rxchainmask << 3) | ah->rxchainmask;
++	u8 nread;
 +
-+	/* single chain devices with rx diversity */
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
-+		hw->wiphy->available_antennas_rx = BIT(0) | BIT(1);
++	buf = kzalloc(size, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
 +
-+	sc->ant_rx = hw->wiphy->available_antennas_rx;
-+	sc->ant_tx = hw->wiphy->available_antennas_tx;
-+
- #ifdef CONFIG_ATH9K_RATE_CONTROL
- 	hw->rate_control_algorithm = "ath9k_rate_control";
- #endif
-@@ -703,12 +726,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
- 			&sc->sbands[IEEE80211_BAND_5GHZ];
- 
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
--		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
--			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
--		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
--			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
--	}
-+	ath9k_reload_chainmask_settings(sc);
- 
- 	SET_IEEE80211_PERM_ADDR(hw, common->macaddr);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 4c3671a..c4e1429 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -268,6 +268,22 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 			ath_start_ani(common);
- 	}
- 
-+	if (ath9k_hw_ops(ah)->antdiv_comb_conf_get && sc->ant_rx != 3) {
-+		struct ath_hw_antcomb_conf div_ant_conf;
-+		u8 lna_conf;
-+
-+		ath9k_hw_antdiv_comb_conf_get(ah, &div_ant_conf);
-+
-+		if (sc->ant_rx == 1)
-+			lna_conf = ATH_ANT_DIV_COMB_LNA1;
-+		else
-+			lna_conf = ATH_ANT_DIV_COMB_LNA2;
-+		div_ant_conf.main_lna_conf = lna_conf;
-+		div_ant_conf.alt_lna_conf = lna_conf;
-+
-+		ath9k_hw_antdiv_comb_conf_set(ah, &div_ant_conf);
-+	}
-+
- 	ieee80211_wake_queues(sc->hw);
- 
- 	return true;
-@@ -2362,6 +2378,59 @@ static int ath9k_get_stats(struct ieee80211_hw *hw,
- 	return 0;
- }
- 
-+static u32 fill_chainmask(u32 cap, u32 new)
-+{
-+	u32 filled = 0;
-+	int i;
-+
-+	for (i = 0; cap && new; i++, cap >>= 1) {
-+		if (!(cap & BIT(0)))
++	len += snprintf(buf + len, size - len,
++			"Channel Noise Floor : %d\n", ah->noise);
++	len += snprintf(buf + len, size - len,
++			"Chain | privNF | # Readings | NF Readings\n");
++	for (i = 0; i < NUM_NF_READINGS; i++) {
++		if (!(chainmask & (1 << i)) ||
++		    ((i >= AR5416_MAX_CHAINS) && !conf_is_ht40(conf)))
 +			continue;
 +
-+		if (new & BIT(0))
-+			filled |= BIT(i);
-+
-+		new >>= 1;
++		nread = AR_PHY_CCA_FILTERWINDOW_LENGTH - h[i].invalidNFcount;
++		len += snprintf(buf + len, size - len, " %d\t %d\t %d\t\t",
++				i, h[i].privNF, nread);
++		for (j = 0; j < nread; j++)
++			len += snprintf(buf + len, size - len,
++					" %d", h[i].nfCalBuffer[j]);
++		len += snprintf(buf + len, size - len, "\n");
 +	}
 +
-+	return filled;
++	if (len > size)
++		len = size;
++
++	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	kfree(buf);
++
++	return retval;
 +}
 +
-+static int ath9k_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	struct ath_hw *ah = sc->sc_ah;
++static const struct file_operations fops_dump_nfcal = {
++	.read = read_file_dump_nfcal,
++	.open = ath9k_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
 +
-+	if (!rx_ant || !tx_ant)
-+		return -EINVAL;
-+
-+	sc->ant_rx = rx_ant;
-+	sc->ant_tx = tx_ant;
-+
-+	if (ah->caps.rx_chainmask == 1)
-+		return 0;
-+
-+	/* AR9100 runs into calibration issues if not all rx chains are enabled */
-+	if (AR_SREV_9100(ah))
-+		ah->rxchainmask = 0x7;
-+	else
-+		ah->rxchainmask = fill_chainmask(ah->caps.rx_chainmask, rx_ant);
-+
-+	ah->txchainmask = fill_chainmask(ah->caps.tx_chainmask, tx_ant);
-+	ath9k_reload_chainmask_settings(sc);
-+
-+	return 0;
-+}
-+
-+static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
-+{
-+	struct ath_softc *sc = hw->priv;
-+
-+	*tx_ant = sc->ant_tx;
-+	*rx_ant = sc->ant_rx;
-+	return 0;
-+}
-+
- struct ieee80211_ops ath9k_ops = {
- 	.tx 		    = ath9k_tx,
- 	.start 		    = ath9k_start,
-@@ -2388,4 +2457,6 @@ struct ieee80211_ops ath9k_ops = {
- 	.tx_frames_pending  = ath9k_tx_frames_pending,
- 	.tx_last_beacon     = ath9k_tx_last_beacon,
- 	.get_stats	    = ath9k_get_stats,
-+	.set_antenna	    = ath9k_set_antenna,
-+	.get_antenna	    = ath9k_get_antenna,
- };
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index ad5f9bd..7e1265c 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1956,7 +1956,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 			ath_rx_ps(sc, skb);
- 		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 
--		if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
-+		if ((ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) && sc->ant_rx == 3)
- 			ath_ant_comb_scan(sc, &rs);
- 
- 		ieee80211_rx(hw, skb);
+ static ssize_t read_file_base_eeprom(struct file *file, char __user *user_buf,
+ 				     size_t count, loff_t *ppos)
+ {
+@@ -1262,6 +1315,8 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 			    &ah->config.cwm_ignore_extcca);
+ 	debugfs_create_file("regdump", S_IRUSR, sc->debug.debugfs_phy, sc,
+ 			    &fops_regdump);
++	debugfs_create_file("dump_nfcal", S_IRUSR, sc->debug.debugfs_phy, sc,
++			    &fops_dump_nfcal);
+ 	debugfs_create_file("base_eeprom", S_IRUSR, sc->debug.debugfs_phy, sc,
+ 			    &fops_base_eeprom);
+ 	debugfs_create_file("modal_eeprom", S_IRUSR, sc->debug.debugfs_phy, sc,
 -- 
-1.7.3.2
+1.7.6
 
