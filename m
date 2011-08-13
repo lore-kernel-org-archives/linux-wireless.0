@@ -1,73 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:26288 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751742Ab1HVMgr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 08:36:47 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH] ath9k: Send legacy rated frames as unaggregated
-Date: Mon, 22 Aug 2011 18:07:12 +0530
-Message-ID: <1314016632-1742-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110822_143651_101159_C0E307D6)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:21700 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751351Ab1HMQmf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2011 12:42:35 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 2/2] iwlagn: sysfs couldn't find the priv pointer
+Date: Sat, 13 Aug 2011 09:02:44 -0700
+Message-Id: <1313251364-6633-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_184244_399097_001F2CC6)
+In-Reply-To: <1313251364-6633-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1313251364-6633-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the aggregation is formed till the aggregation limit
-is reached and the rate lookup is done for the first frame alone.
-But there can be a legacy rated frames in tid queue. This patch
-limits the subframe addition based on last MRR's rate and sends
-the legacy rated frames as unaggregated one.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+This bug has been introduced by:
+d593411084a56124aa9d80aafa15db8463b2d8f7
+Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date:   Mon Jul 11 10:48:51 2011 +0300
+
+    iwlagn: simplify the bus architecture
+
+Revert part of the buggy patch: dev_get_drvdata will now return
+iwl_priv as it did before the patch.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c |   23 ++++++++++++++++++++++-
- 1 files changed, 22 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-pci.c |   39 ++++++++++++++------------------
+ 1 files changed, 17 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 2062672..41d9184 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -571,6 +571,26 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		ath_reset(sc, false);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index fb7e436..2fdbffa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -134,6 +134,7 @@ static void iwl_pci_apm_config(struct iwl_bus *bus)
+ static void iwl_pci_set_drv_data(struct iwl_bus *bus, void *drv_data)
+ {
+ 	bus->drv_data = drv_data;
++	pci_set_drvdata(IWL_BUS_GET_PCI_DEV(bus), drv_data);
  }
  
-+static bool ath_lookup_lecacy(struct ath_buf *bf)
-+{
-+	struct sk_buff *skb;
-+	struct ieee80211_tx_info *tx_info;
-+	struct ieee80211_tx_rate *rates;
-+
-+	skb = bf->bf_mpdu;
-+	tx_info = IEEE80211_SKB_CB(skb);
-+	rates = tx_info->control.rates;
-+
-+	/*
-+	 * Checking the last MRR's flag is sufficient to
-+	 * determine legacy or not
-+	 */
-+	if (!(rates[3].flags & IEEE80211_TX_RC_MCS))
-+		return true;
-+
-+	return false;
-+}
-+
- static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
- 			   struct ath_atx_tid *tid)
- {
-@@ -750,7 +770,8 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
- 		al_delta = ATH_AGGR_DELIM_SZ + fi->framelen;
+ static void iwl_pci_get_hw_id(struct iwl_bus *bus, char buf[],
+@@ -454,8 +455,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		pci_write_config_word(pdev, PCI_COMMAND, pci_cmd);
+ 	}
  
- 		if (nframes &&
--		    (aggr_limit < (al + bpad + al_delta + prev_al))) {
-+		    ((aggr_limit < (al + bpad + al_delta + prev_al)) ||
-+		     ath_lookup_lecacy(bf))) {
- 			status = ATH_AGGR_LIMITED;
- 			break;
- 		}
+-	pci_set_drvdata(pdev, bus);
+-
+ 	bus->dev = &pdev->dev;
+ 	bus->irq = pdev->irq;
+ 	bus->ops = &pci_ops;
+@@ -479,26 +478,22 @@ out_no_pci:
+ 	return err;
+ }
+ 
+-static void iwl_pci_down(struct iwl_bus *bus)
+-{
+-	struct iwl_pci_bus *pci_bus = (struct iwl_pci_bus *) bus->bus_specific;
+-
+-	pci_disable_msi(pci_bus->pci_dev);
+-	pci_iounmap(pci_bus->pci_dev, pci_bus->hw_base);
+-	pci_release_regions(pci_bus->pci_dev);
+-	pci_disable_device(pci_bus->pci_dev);
+-	pci_set_drvdata(pci_bus->pci_dev, NULL);
+-
+-	kfree(bus);
+-}
+-
+ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
+ {
+-	struct iwl_bus *bus = pci_get_drvdata(pdev);
++	struct iwl_priv *priv = pci_get_drvdata(pdev);
++	struct iwl_bus *bus = priv->bus;
++	struct iwl_pci_bus *pci_bus = IWL_BUS_GET_PCI_BUS(bus);
++	struct pci_dev *pci_dev = IWL_BUS_GET_PCI_DEV(bus);
+ 
+-	iwl_remove(bus->drv_data);
++	iwl_remove(priv);
+ 
+-	iwl_pci_down(bus);
++	pci_disable_msi(pci_dev);
++	pci_iounmap(pci_dev, pci_bus->hw_base);
++	pci_release_regions(pci_dev);
++	pci_disable_device(pci_dev);
++	pci_set_drvdata(pci_dev, NULL);
++
++	kfree(bus);
+ }
+ 
+ #ifdef CONFIG_PM
+@@ -506,20 +501,20 @@ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
+ static int iwl_pci_suspend(struct device *device)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(device);
+-	struct iwl_bus *bus = pci_get_drvdata(pdev);
++	struct iwl_priv *priv = pci_get_drvdata(pdev);
+ 
+ 	/* Before you put code here, think about WoWLAN. You cannot check here
+ 	 * whether WoWLAN is enabled or not, and your code will run even if
+ 	 * WoWLAN is enabled - don't kill the NIC, someone may need it in Sx.
+ 	 */
+ 
+-	return iwl_suspend(bus->drv_data);
++	return iwl_suspend(priv);
+ }
+ 
+ static int iwl_pci_resume(struct device *device)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(device);
+-	struct iwl_bus *bus = pci_get_drvdata(pdev);
++	struct iwl_priv *priv = pci_get_drvdata(pdev);
+ 
+ 	/* Before you put code here, think about WoWLAN. You cannot check here
+ 	 * whether WoWLAN is enabled or not, and your code will run even if
+@@ -532,7 +527,7 @@ static int iwl_pci_resume(struct device *device)
+ 	 */
+ 	pci_write_config_byte(pdev, PCI_CFG_RETRY_TIMEOUT, 0x00);
+ 
+-	return iwl_resume(bus->drv_data);
++	return iwl_resume(priv);
+ }
+ 
+ static SIMPLE_DEV_PM_OPS(iwl_dev_pm_ops, iwl_pci_suspend, iwl_pci_resume);
 -- 
-1.7.6
+1.7.1
 
