@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:45801 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751010Ab1HIGf0 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:3509 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750900Ab1HME6L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 02:35:26 -0400
-Received: by iye16 with SMTP id 16so10445247iye.1
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 23:35:26 -0700 (PDT)
+	Sat, 13 Aug 2011 00:58:11 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 03/11] ath9k: Re-enable RXOEL interrupt after processing rx buffers
+Date: Sat, 13 Aug 2011 10:28:10 +0530
+Message-ID: <1313211498-14442-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110813_065817_678980_8F69897F)
+In-Reply-To: <1313211498-14442-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1313211498-14442-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1312819173.4372.39.camel@jlt3.sipsolutions.net>
-References: <1312811422-24911-1-git-send-email-eliad@wizery.com>
-	<1312819145.4372.38.camel@jlt3.sipsolutions.net>
-	<1312819173.4372.39.camel@jlt3.sipsolutions.net>
-Date: Tue, 9 Aug 2011 09:35:25 +0300
-Message-ID: <CAB3XZEfPXa+Mz8V7KxedK3pKq8Q9_S4GMcAHTf1if5N3T_kBEA@mail.gmail.com> (sfid-20110809_083531_597069_A3325C3E)
-Subject: Re: [PATCH] mac80211: clear sta.drv_priv on reconfiguration
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 8, 2011 at 6:59 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2011-08-08 at 17:59 +0200, Johannes Berg wrote:
->> On Mon, 2011-08-08 at 16:50 +0300, Eliad Peller wrote:
->> > drivers might assume sta.drv_priv is clear while
->> > the sta is added, so clear it on reconfinguration.
->>
->>
->> Seems fine,
->> Acked-by: Johannes Berg <johannes@sipsolutions.net>
->
-> Does this address a current bug? If so, Cc stable?
->
-not any current bug that i'm aware of.
-i encountered it during the development of another patch.
+Once RXEOL was disabled, it never be enabled again. This patch
+re-enables rxeol at the end of rx tasklet.
 
-Eliad.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 7409402..c0c66e0 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1978,5 +1978,10 @@ requeue:
+ 
+ 	spin_unlock_bh(&sc->rx.rxbuflock);
+ 
++	if (!(ah->imask & ATH9K_INT_RXEOL)) {
++		ah->imask |= (ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
++		ath9k_hw_set_interrupts(ah, ah->imask);
++	}
++
+ 	return 0;
+ }
+-- 
+1.7.6
+
