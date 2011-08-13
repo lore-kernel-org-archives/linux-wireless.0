@@ -1,135 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:58161 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751318Ab1HHMKK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 08:10:10 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1QqOen-00068S-CK
-	for linux-wireless@vger.kernel.org; Mon, 08 Aug 2011 14:10:09 +0200
-Received: from d67-193-214-242.home3.cgocable.net ([67.193.214.242])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 14:10:09 +0200
-Received: from brian by d67-193-214-242.home3.cgocable.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 14:10:09 +0200
-To: linux-wireless@vger.kernel.org
-From: "Brian J. Murrell" <brian@interlinx.bc.ca>
-Subject: WDS link predictably and reproducibly dropping packets
-Date: Mon, 08 Aug 2011 08:04:30 -0400
-Message-ID: <j1ojcf$3t4$1@dough.gmane.org> (sfid-20110808_141013_498124_575BCA52)
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigBA08568B533416A1D8C219A3"
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:33317 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750860Ab1HMFA5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2011 01:00:57 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 08/11] ath9k: Move ath9k_init_crypto to common
+Date: Sat, 13 Aug 2011 10:28:15 +0530
+Message-ID: <1313211498-14442-8-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110813_070102_464893_E74F5B24)
+In-Reply-To: <1313211498-14442-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1313211498-14442-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigBA08568B533416A1D8C219A3
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h        |    1 -
+ drivers/net/wireless/ath/ath9k/common.c       |   26 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/common.h       |    1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |   21 +------------------
+ drivers/net/wireless/ath/ath9k/init.c         |   27 +------------------------
+ drivers/net/wireless/ath/ath9k/pci.c          |    2 +-
+ 6 files changed, 30 insertions(+), 48 deletions(-)
 
-I have a WDS link set up between two OpenWRT routers (both running linux
-2.6.32.27) which is working 99.5% of the time.
-
-What I have observed though is that for a certain traffic pattern, some
-packets from the WDS "client" to the WAP will be dropped.  And the same
-packets are dropped every time for the same, repeated traffic pattern.
-
-To demonstrate, observe the following two tcpdump outputs.  The first
-one is on the wlan0 interface of the WAP that has the machine 10.75.22.8
-attached to it:
-
-07:52:22.384590 ARP, Request who-has 10.75.22.3 tell 10.75.22.7, length 4=
-6
-07:52:22.386280 ARP, Reply 10.75.22.3 is-at 00:1f:c6:c4:92:6a, length 46
-07:52:50.886934 IP 10.75.22.8.5060 > 10.75.22.7.5061: SIP, length: 546
-07:52:50.898629 IP 10.75.22.7.5061 > 10.75.22.8.5060: SIP, length: 405
-07:52:51.237342 IP 10.75.22.8.5060 > 10.75.22.7.5060: SIP, length: 548
-07:52:51.248542 IP 10.75.22.7.5060 > 10.75.22.8.5060: SIP, length: 406
-07:52:51.886604 IP 10.75.22.8.5060 > 10.75.22.7.5061: SIP, length: 546
-07:52:51.898423 IP 10.75.22.7.5061 > 10.75.22.8.5060: SIP, length: 405
-07:52:52.236755 IP 10.75.22.8.5060 > 10.75.22.7.5060: SIP, length: 548
-07:52:52.248264 IP 10.75.22.7.5060 > 10.75.22.8.5060: SIP, length: 406
-07:52:52.889511 IP 10.75.22.8.5060 > 10.75.22.7.5061: SIP, length: 546
-07:52:52.900097 IP 10.75.22.7.5061 > 10.75.22.8.5060: SIP, length: 405
-07:52:53.237169 IP 10.75.22.8.5060 > 10.75.22.7.5060: SIP, length: 548
-07:52:53.248262 IP 10.75.22.7.5060 > 10.75.22.8.5060: SIP, length: 406
-07:52:53.886426 IP 10.75.22.8.5060 > 10.75.22.7.5061: SIP, length: 546
-07:52:53.898475 IP 10.75.22.7.5061 > 10.75.22.8.5060: SIP, length: 405
-07:52:54.236719 IP 10.75.22.8.5060 > 10.75.22.7.5060: SIP, length: 548
-07:52:54.248371 IP 10.75.22.7.5060 > 10.75.22.8.5060: SIP, length: 406
-07:52:55.893321 ARP, Request who-has 10.75.22.8 tell 10.75.22.7, length 4=
-6
-07:52:55.894993 ARP, Reply 10.75.22.8 is-at 00:1f:c6:c4:92:6a, length 46
-07:53:03.900624 IP 10.75.22.8.5060 > 10.75.22.7.5061: SIP, length: 546
-07:53:03.911426 IP 10.75.22.7.5061 > 10.75.22.8.5060: SIP, length: 405
-07:53:04.251006 IP 10.75.22.8.5060 > 10.75.22.7.5060: SIP, length: 548
-07:53:04.261785 IP 10.75.22.7.5060 > 10.75.22.8.5060: SIP, length: 406
-
-This second dump is the WDS client which has 10.75.22.7 attached to it.
-
-07:52:22.395846 ARP, Request who-has 10.75.22.3 tell 10.75.22.7, length 4=
-6
-07:52:22.396162 ARP, Reply 10.75.22.3 is-at 00:1f:c6:c4:92:6a, length 46
-07:52:50.896432 IP 10.75.22.8.5060 > 10.75.22.7.5061: SIP, length: 546
-07:52:51.246838 IP 10.75.22.8.5060 > 10.75.22.7.5060: SIP, length: 548
-07:52:51.896097 IP 10.75.22.8.5060 > 10.75.22.7.5061: SIP, length: 546
-07:52:52.246233 IP 10.75.22.8.5060 > 10.75.22.7.5060: SIP, length: 548
-07:52:52.895512 IP 10.75.22.8.5060 > 10.75.22.7.5061: SIP, length: 546
-07:52:53.246649 IP 10.75.22.8.5060 > 10.75.22.7.5060: SIP, length: 548
-07:52:53.895898 IP 10.75.22.8.5060 > 10.75.22.7.5061: SIP, length: 546
-07:52:53.909528 IP 10.75.22.7.5061 > 10.75.22.8.5060: SIP, length: 405
-07:52:54.246180 IP 10.75.22.8.5060 > 10.75.22.7.5060: SIP, length: 548
-07:52:54.259596 IP 10.75.22.7.5060 > 10.75.22.8.5060: SIP, length: 406
-07:52:55.904269 ARP, Request who-has 10.75.22.8 tell 10.75.22.7, length 4=
-6
-07:52:55.904553 ARP, Reply 10.75.22.8 is-at 00:1f:c6:c4:92:6a, length 46
-07:53:03.909995 IP 10.75.22.8.5060 > 10.75.22.7.5061: SIP, length: 546
-07:53:03.922490 IP 10.75.22.7.5061 > 10.75.22.8.5060: SIP, length: 405
-07:53:04.260380 IP 10.75.22.8.5060 > 10.75.22.7.5060: SIP, length: 548
-07:53:04.272948 IP 10.75.22.7.5060 > 10.75.22.8.5060: SIP, length: 406
-
-10.75.22.8 and 10.75.22.3 are the same machine, just using multiple IP
-addresses as "service" addresses.
-
-So as you can see in the first two packets of both dumps, there is a
-successful round trip across the WDS link.  A number of seconds later,
-10.75.22.8 sends some packets across the WDS link to 10.75.22.7 which
-are all successfully received across the link and 10.75.22.7 responds to
-them, trying to send packets back to 10.75.22.8 but those fail to reach
-the WAP where 10.75.22.8 is.  This happens 6 times, and then magically,
-the 7th time, the return traffic makes it and then it continues to make
-it fully round trip until this pattern starts all over again,
-
-It is worth mentioning that this period of time where those packets are
-being dropped, other traffic between those two hosts is wholly
-successful.  While this packet dropping is happening, 10.75.22.3 is
-successfully pinging 10.75.22.7 at a 1 second interval and not a single
-ICMP packet is dropped.
-
-Any thoughts as to what is going on with this specific traffic being
-dropped?
-
-Thanx,
-b.
-
-
---------------enigBA08568B533416A1D8C219A3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iEYEARECAAYFAk4/0M4ACgkQl3EQlGLyuXAuFACgvkctsnPcHw6oiBZgLzhR3DMZ
-WE0AoMxLvsuJZCxi11BOdaeO3bxW4uiU
-=6HFH
------END PGP SIGNATURE-----
-
---------------enigBA08568B533416A1D8C219A3--
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 4b08a3d..3a893e1 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -663,7 +663,6 @@ extern int led_blink;
+ extern bool is_ath9k_unloaded;
+ 
+ irqreturn_t ath_isr(int irq, void *dev);
+-void ath9k_init_crypto(struct ath_softc *sc);
+ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 		    const struct ath_bus_ops *bus_ops);
+ void ath9k_deinit_device(struct ath_softc *sc);
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+index fa6bd2d..dc705a2 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -169,6 +169,32 @@ void ath9k_cmn_update_txpow(struct ath_hw *ah, u16 cur_txpow,
+ }
+ EXPORT_SYMBOL(ath9k_cmn_update_txpow);
+ 
++void ath9k_cmn_init_crypto(struct ath_hw *ah)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	int i = 0;
++
++	/* Get the hardware key cache size. */
++	common->keymax = AR_KEYTABLE_SIZE;
++
++	/*
++	 * Check whether the separate key cache entries
++	 * are required to handle both tx+rx MIC keys.
++	 * With split mic keys the number of stations is limited
++	 * to 27 otherwise 59.
++	 */
++	if (ah->misc_mode & AR_PCU_MIC_NEW_LOC_ENA)
++		common->crypt_caps |= ATH_CRYPT_CAP_MIC_COMBINED;
++
++	/*
++	 * Reset the key cache since some parts do not
++	 * reset the contents on initial power up.
++	 */
++	for (i = 0; i < common->keymax; i++)
++		ath_hw_keyreset(common, (u16) i);
++}
++EXPORT_SYMBOL(ath9k_cmn_init_crypto);
++
+ static int __init ath9k_cmn_init(void)
+ {
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index 77ec288..ad14fec 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -62,3 +62,4 @@ void ath9k_cmn_btcoex_bt_stomp(struct ath_common *common,
+ 				  enum ath_stomp_type stomp_type);
+ void ath9k_cmn_update_txpow(struct ath_hw *ah, u16 cur_txpow,
+ 			    u16 new_txpow, u16 *txpower);
++void ath9k_cmn_init_crypto(struct ath_hw *ah);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 19aa5b7..9cf42f6 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -572,25 +572,6 @@ err:
+ 	return -EINVAL;
+ }
+ 
+-static void ath9k_init_crypto(struct ath9k_htc_priv *priv)
+-{
+-	struct ath_common *common = ath9k_hw_common(priv->ah);
+-	int i = 0;
+-
+-	/* Get the hardware key cache size. */
+-	common->keymax = AR_KEYTABLE_SIZE;
+-
+-	if (priv->ah->misc_mode & AR_PCU_MIC_NEW_LOC_ENA)
+-		common->crypt_caps |= ATH_CRYPT_CAP_MIC_COMBINED;
+-
+-	/*
+-	 * Reset the key cache since some parts do not
+-	 * reset the contents on initial power up.
+-	 */
+-	for (i = 0; i < common->keymax; i++)
+-		ath_hw_keyreset(common, (u16) i);
+-}
+-
+ static void ath9k_init_channels_rates(struct ath9k_htc_priv *priv)
+ {
+ 	if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ) {
+@@ -720,7 +701,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 	for (i = 0; i < ATH9K_HTC_MAX_BCN_VIF; i++)
+ 		priv->cur_beacon_conf.bslot[i] = NULL;
+ 
+-	ath9k_init_crypto(priv);
++	ath9k_cmn_init_crypto(ah);
+ 	ath9k_init_channels_rates(priv);
+ 	ath9k_init_misc(priv);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index db38a58..d7761d1 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -404,31 +404,6 @@ fail:
+ 	return error;
+ }
+ 
+-void ath9k_init_crypto(struct ath_softc *sc)
+-{
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-	int i = 0;
+-
+-	/* Get the hardware key cache size. */
+-	common->keymax = AR_KEYTABLE_SIZE;
+-
+-	/*
+-	 * Reset the key cache since some parts do not
+-	 * reset the contents on initial power up.
+-	 */
+-	for (i = 0; i < common->keymax; i++)
+-		ath_hw_keyreset(common, (u16) i);
+-
+-	/*
+-	 * Check whether the separate key cache entries
+-	 * are required to handle both tx+rx MIC keys.
+-	 * With split mic keys the number of stations is limited
+-	 * to 27 otherwise 59.
+-	 */
+-	if (sc->sc_ah->misc_mode & AR_PCU_MIC_NEW_LOC_ENA)
+-		common->crypt_caps |= ATH_CRYPT_CAP_MIC_COMBINED;
+-}
+-
+ static int ath9k_init_btcoex(struct ath_softc *sc)
+ {
+ 	struct ath_txq *txq;
+@@ -630,7 +605,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	if (ret)
+ 		goto err_btcoex;
+ 
+-	ath9k_init_crypto(sc);
++	ath9k_cmn_init_crypto(sc->sc_ah);
+ 	ath9k_init_misc(sc);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 5685cf1..b4205fa 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -338,7 +338,7 @@ static int ath_pci_resume(struct device *device)
+ 	   * semi-random values after suspend/resume.
+ 	   */
+ 	ath9k_ps_wakeup(sc);
+-	ath9k_init_crypto(sc);
++	ath9k_cmn_init_crypto(sc->sc_ah);
+ 	ath9k_ps_restore(sc);
+ 
+ 	sc->ps_idle = true;
+-- 
+1.7.6
 
