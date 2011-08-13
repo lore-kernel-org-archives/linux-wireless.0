@@ -1,34 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18880 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751124Ab1H0LQO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Aug 2011 07:16:14 -0400
-Date: Sat, 27 Aug 2011 16:46:42 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Adrian Chadd <adrian@freebsd.org>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Add debugfs support for mac/baseband samples
-Message-ID: <20110827111641.GA17693@vmraj-lnx.users.atheros.com> (sfid-20110827_131621_980112_69863ECD)
-References: <1314442067-11799-1-git-send-email-rmanohar@qca.qualcomm.com>
- <CAJ-Vmo=wLETTSy0i3uz3Zj5w+_o+AouzD=nJzFk9KnERK+g7Cg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAJ-Vmo=wLETTSy0i3uz3Zj5w+_o+AouzD=nJzFk9KnERK+g7Cg@mail.gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:20880 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751043Ab1HMSo0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2011 14:44:26 -0400
+Subject: Re: [PATCH 00/11]  update for 3.2
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 13 Aug 2011 11:04:33 -0700
+Message-ID: <1313258673.15170.20.camel@wwguy-huron> (sfid-20110813_204428_727988_6BE22C71)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 27, 2011 at 06:52:50PM +0800, Adrian Chadd wrote:
-> On 27 August 2011 18:47, Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
-> > This patch keep track of number of samples that includes
-> > DMA debugs registers, PCU observe, CR, channel noise,
-> > cycle conters, noisefloor history buffer and last N number
-> > of tx and rx descriptor status. These samples are grouped
-> 
-> Is this written in a way that makes it easy to conditionally compile
-> them in/out?
->
-Yes ofcourse.
+Hi John,
 
---
-Rajkumar
+Please ignore this patch set, I don't mean to send it.
+The only patch I need to send is the "handle GO powersave" path.
+
+I will send the single patch separated.
+
+Sorry for the mistake.
+
+Wey
+
+
+On Sat, 2011-08-13 at 09:17 -0700, Guy, Wey-Yi W wrote:
+> We enable new P2P implementation with GO powersave
+> We bump firmware API version for number of new devices
+> We also adjust the sensitivity value for number of devices
+> 
+> 
+> Johannes Berg (7):
+>   iwlagn: reserve queue 10 for TX during scan dwell
+>   iwlagn: handle GO powersave
+>   iwlagn: separate firmware version warning
+>   iwlagn: bump firmware API for some devices
+>   iwlagn: move context init after firmware loading
+>   iwlagn: support new P2P implementation
+>   mac80211: remove offchannel_tx API
+> 
+> Wey-Yi Guy (4):
+>   iwlagn: default smps mode for 1000 series device
+>   iwlagn: Remove ht40 support from 5.2GHz for _bgn devices
+>   iwlagn: change default sensitivity value for 5000 and 6000 series
+>   iwlagn: support v2 of enhanced sensitivity table
+> 
+>  drivers/net/wireless/iwlwifi/Kconfig         |   17 -
+>  drivers/net/wireless/iwlwifi/iwl-1000.c      |   15 +-
+>  drivers/net/wireless/iwlwifi/iwl-2000.c      |   23 +-
+>  drivers/net/wireless/iwlwifi/iwl-5000.c      |   12 +-
+>  drivers/net/wireless/iwlwifi/iwl-6000.c      |   19 +-
+>  drivers/net/wireless/iwlwifi/iwl-agn-calib.c |   69 +++--
+>  drivers/net/wireless/iwlwifi/iwl-agn-hw.h    |    4 +-
+>  drivers/net/wireless/iwlwifi/iwl-agn-lib.c   |   47 +--
+>  drivers/net/wireless/iwlwifi/iwl-agn-rxon.c  |   28 +--
+>  drivers/net/wireless/iwlwifi/iwl-agn-tx.c    |   30 +-
+>  drivers/net/wireless/iwlwifi/iwl-agn.c       |  455 ++++++++++++++------------
+>  drivers/net/wireless/iwlwifi/iwl-agn.h       |    1 +
+>  drivers/net/wireless/iwlwifi/iwl-commands.h  |   34 ++-
+>  drivers/net/wireless/iwlwifi/iwl-core.c      |    5 +
+>  drivers/net/wireless/iwlwifi/iwl-core.h      |    5 +
+>  drivers/net/wireless/iwlwifi/iwl-dev.h       |   32 ++-
+>  drivers/net/wireless/iwlwifi/iwl-scan.c      |   19 +-
+>  drivers/net/wireless/iwlwifi/iwl-trans.c     |   10 +-
+>  include/net/mac80211.h                       |   10 -
+>  net/mac80211/cfg.c                           |   39 ---
+>  net/mac80211/driver-ops.h                    |   31 --
+>  net/mac80211/ieee80211_i.h                   |    1 -
+>  net/mac80211/status.c                        |    3 -
+>  23 files changed, 449 insertions(+), 460 deletions(-)
+> 
+
+
