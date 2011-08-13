@@ -1,40 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:34065 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754203Ab1HKAOP convert rfc822-to-8bit (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:61664 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753045Ab1HMDij (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 20:14:15 -0400
-Received: by pzk37 with SMTP id 37so2698680pzk.1
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 17:14:14 -0700 (PDT)
+	Fri, 12 Aug 2011 23:38:39 -0400
+Received: by yie30 with SMTP id 30so2383738yie.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 20:38:39 -0700 (PDT)
+Message-ID: <4E45F1BB.7010709@lwfinger.net> (sfid-20110813_053843_120324_9E92C548)
+Date: Fri, 12 Aug 2011 22:38:35 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1313001339-11211-2-git-send-email-zajec5@gmail.com>
-References: <1313001339-11211-1-git-send-email-zajec5@gmail.com>
-	<1313001339-11211-2-git-send-email-zajec5@gmail.com>
-Date: Thu, 11 Aug 2011 02:14:14 +0200
-Message-ID: <CACna6rynj+OXL1R6jwgnCzReuO+=piOX3LTC9UujDTg4DNBVUw@mail.gmail.com> (sfid-20110811_021420_952130_1D402803)
-Subject: Re: [RFC][RFT][PATCH V2 2/2] b43: fix DMA on some bugged hardware
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: Roman Krylov <volyrkr@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtl8192* wifi driver
+References: <4E45A973.6060305@gmail.com> <4E45AF82.5040407@lwfinger.net> <4E45D65F.6000306@gmail.com> <4E45DCB2.5020905@lwfinger.net> <4E45EA54.5010500@gmail.com>
+In-Reply-To: <4E45EA54.5010500@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 10 sierpnia 2011 20:35 użytkownik Rafał Miłecki
-<zajec5@gmail.com> napisał:
-> Some hardware with 64-bit DMA uses lower address word for setting
-> routing (translation) bit. Add workaround for such boards.
+On 08/12/2011 10:07 PM, Roman Krylov wrote:
 >
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> This requires testing on at least 1 normal 64-bit DMA card and 1 32-bit
-> DMA card. So far it was tested only on my 14e4:4329 where it fixed DMA.
+>> What do you see in the NM log file? It should be at /var/log/NetworkManager?
+>>
+>> I would also like to see the output of the 'iwlist scan' command when run as
+>> root.
+>>
+>> Larry
+> Aug 12 21:26:11 volyrkr NetworkManager: <info> Activation (wlan3/wireless):
+> connection 'Auto bhn 310' has security, and secrets exist. No new secrets needed.
+> Aug 12 21:26:11 volyrkr NetworkManager: <info> Config: added 'ssid' value 'bhn 310'
+> Aug 12 21:26:11 volyrkr NetworkManager: <info> Config: added 'scan_ssid' value '1'
+> Aug 12 21:26:11 volyrkr NetworkManager: <info> Config: added 'key_mgmt' value
+> 'NONE'
+> Aug 12 21:26:11 volyrkr NetworkManager: <info> Config: added 'auth_alg' value
+> 'OPEN'
+> Aug 12 21:26:11 volyrkr NetworkManager: <info> Config: added 'wep_key0' value
+> '<omitted>'
+> Aug 12 21:26:11 volyrkr NetworkManager: <info> Config: added 'wep_key1' value
+> '<omitted>'
+> Aug 12 21:26:11 volyrkr NetworkManager: <info> Config: added 'wep_tx_keyidx'
+> value '0'
+> Aug 12 21:26:11 volyrkr NetworkManager: <info> Activation (wlan3) Stage 2 of 5
+> (Device Configure) complete.
+> Aug 12 21:26:11 volyrkr NetworkManager: <info> Config: set interface ap_scan to 1
+> Aug 12 21:26:11 volyrkr NetworkManager: <info> (wlan3): supplicant connection
+> state: inactive -> scanning
+> Aug 12 21:26:36 volyrkr NetworkManager: <info> Activation (wlan3/wireless):
+> association took too long.
+> Aug 12 21:26:36 volyrkr NetworkManager: <info> (wlan3): device state change: 5
+> -> 9 (reason 7)
+> Aug 12 21:26:36 volyrkr NetworkManager: <info> Activation (wlan3) failed for
+> access point (bhn 310)
 
-14e4:4353 (BCM43224), 64-bit DMA, still works :)
+It worked here:
 
-The rest will follow tomorrow.
+Aug 12 22:35:15 larrylap NetworkManager[3258]: <info> Activation 
+(wlan5/wireless): connection 'Auto bhn 310' has security, and secrets exist.  No 
+new secrets
+  needed.
+Aug 12 22:35:15 larrylap NetworkManager[3258]: <info> Config: added 'ssid' value 
+'Auto bhn 310'
+Aug 12 22:35:15 larrylap NetworkManager[3258]: <info> Config: added 'scan_ssid' 
+value '1'
+Aug 12 22:35:15 larrylap NetworkManager[3258]: <info> Config: added 'key_mgmt' 
+value 'NONE'
+Aug 12 22:35:15 larrylap NetworkManager[3258]: <info> Config: added 'wep_key0' 
+value '<omitted>'
+Aug 12 22:35:15 larrylap NetworkManager[3258]: <info> Config: added 
+'wep_tx_keyidx' value '0'
+Aug 12 22:35:15 larrylap NetworkManager[3258]: <info> Activation (wlan5) Stage 2 
+of 5 (Device Configure) complete.
+Aug 12 22:35:15 larrylap NetworkManager[3258]: <info> Config: set interface 
+ap_scan to 1
+Aug 12 22:35:15 larrylap NetworkManager[3258]: <info> (wlan5): supplicant 
+connection state:  disconnected -> scanning
+Aug 12 22:35:16 larrylap NetworkManager[3258]: <info> (wlan5): supplicant 
+connection state:  scanning -> associating
+Aug 12 22:35:16 larrylap NetworkManager[3258]: <info> (wlan5): supplicant 
+connection state:  associating -> associated
+Aug 12 22:35:16 larrylap NetworkManager[3258]: <info> (wlan5): supplicant 
+connection state:  associated -> completed
+Aug 12 22:35:16 larrylap NetworkManager[3258]: <info> Activation 
+(wlan5/wireless) Stage 2 of 5 (Device Configure) successful.  Connected to 
+wireless network 'Auto bhn 310'.
 
--- 
-Rafał
+Something is wrong with your configuration. I suggest killing the connection in 
+NM and remake it. Do you use KDE or Gnome? My tests were with KDE.
+
+Larry
+
