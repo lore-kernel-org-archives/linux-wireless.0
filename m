@@ -1,132 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:11393 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752057Ab1HMSSy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 14:18:54 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 35/60] iwlagn: move hcmd_lock to transport layer
-Date: Sat, 13 Aug 2011 10:38:11 -0700
-Message-Id: <1313257116-2697-36-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_204257_549256_E5B224BC)
-In-Reply-To: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:55381 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752750Ab1HNKRX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Aug 2011 06:17:23 -0400
+Received: by wwf5 with SMTP id 5so4061056wwf.1
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:17:22 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 09/40] wl12xx: enable/disable role on interface add/remove
+Date: Sun, 14 Aug 2011 13:17:08 +0300
+Message-Id: <1313317059-16567-10-git-send-email-eliad@wizery.com> (sfid-20110814_121727_401725_D370F2A2)
+In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+According to the new multi-role flow, we have to enable the
+role before using (starting) it, and disable it on cleanup
+(after it's no longer needed).
 
-Since it is needed for host commands only, it is needed in transport layer only
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c           |    1 -
- drivers/net/wireless/iwlwifi/iwl-dev.h           |    1 -
- drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c |   10 +++++-----
- drivers/net/wireless/iwlwifi/iwl-trans.c         |    1 +
- drivers/net/wireless/iwlwifi/iwl-trans.h         |    2 ++
- 5 files changed, 8 insertions(+), 7 deletions(-)
+v2: consider WL12XX_INVALID_ROLE_TYPE, skip cmd on wake-up error.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 7fa782d..65117e6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3123,7 +3123,6 @@ static int iwl_init_drv(struct iwl_priv *priv)
- 	int ret;
+ drivers/net/wireless/wl12xx/main.c |   41 ++++++++++++++++++++++++++++++++++++
+ 1 files changed, 41 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 4689d0b..3e77f59 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1776,19 +1776,35 @@ static int wl1271_op_start(struct ieee80211_hw *hw)
  
- 	spin_lock_init(&priv->shrd->sta_lock);
--	spin_lock_init(&priv->hcmd_lock);
- 
- 	mutex_init(&priv->shrd->mutex);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index b1277cf..ad564b8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1180,7 +1180,6 @@ struct iwl_priv {
- 	u8 mgmt_tx_ant;
- 
- 	/* spinlock */
--	spinlock_t hcmd_lock;	/* protect hcmd */
- 	spinlock_t reg_lock;	/* protect hw register access */
- 
- 	/*TODO: remove these pointers - use bus(priv) instead */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-index 49845c7..a706993 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-@@ -601,10 +601,10 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 		return -EIO;
- 	}
- 
--	spin_lock_irqsave(&priv->hcmd_lock, flags);
-+	spin_lock_irqsave(&trans->hcmd_lock, flags);
- 
- 	if (iwl_queue_space(q) < ((cmd->flags & CMD_ASYNC) ? 2 : 1)) {
--		spin_unlock_irqrestore(&priv->hcmd_lock, flags);
-+		spin_unlock_irqrestore(&trans->hcmd_lock, flags);
- 
- 		IWL_ERR(trans, "No space in command queue\n");
- 		is_ct_kill = iwl_check_for_ct_kill(priv);
-@@ -713,7 +713,7 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	iwl_txq_update_write_ptr(priv, txq);
- 
-  out:
--	spin_unlock_irqrestore(&priv->hcmd_lock, flags);
-+	spin_unlock_irqrestore(&trans->hcmd_lock, flags);
- 	return idx;
+ static void wl1271_op_stop(struct ieee80211_hw *hw)
+ {
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 stop");
  }
  
-@@ -796,7 +796,7 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- 	} else if (meta->callback)
- 		meta->callback(priv, cmd, pkt);
++static u8 wl12xx_get_role_type(struct wl1271 *wl)
++{
++	switch (wl->bss_type) {
++	case BSS_TYPE_AP_BSS:
++		return WL1271_ROLE_AP;
++
++	case BSS_TYPE_STA_BSS:
++		return WL1271_ROLE_STA;
++
++	default:
++		wl1271_error("invalid bss_type: %d", wl->bss_type);
++	}
++	return WL12XX_INVALID_ROLE_TYPE;
++}
++
+ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 				   struct ieee80211_vif *vif)
+ {
+ 	struct wl1271 *wl = hw->priv;
+ 	struct wiphy *wiphy = hw->wiphy;
+ 	int retries = WL1271_BOOT_RETRIES;
+ 	int ret = 0;
++	u8 role_type;
+ 	bool booted = false;
  
--	spin_lock_irqsave(&priv->hcmd_lock, flags);
-+	spin_lock_irqsave(&trans->hcmd_lock, flags);
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 add interface type %d mac %pM",
+ 		     vif->type, vif->addr);
  
- 	iwl_hcmd_queue_reclaim(priv, txq_id, index);
- 
-@@ -809,7 +809,7 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- 
- 	meta->flags = 0;
- 
--	spin_unlock_irqrestore(&priv->hcmd_lock, flags);
-+	spin_unlock_irqrestore(&trans->hcmd_lock, flags);
- }
- 
- const char *get_cmd_string(u8 cmd)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index b448e79..73883fe 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -1284,6 +1284,7 @@ static struct iwl_trans *iwl_trans_pcie_alloc(struct iwl_shared *shrd)
- 		iwl_trans->ops = &trans_ops_pcie;
- 		iwl_trans->shrd = shrd;
- 		trans_pcie->trans = iwl_trans;
-+		spin_lock_init(&iwl_trans->hcmd_lock);
+ 	mutex_lock(&wl->mutex);
+@@ -1823,12 +1839,17 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		break;
+ 	default:
+ 		ret = -EOPNOTSUPP;
+ 		goto out;
  	}
  
- 	return iwl_trans;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index da6cc59..78bd2f6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -146,10 +146,12 @@ struct iwl_trans_ops {
-  * struct iwl_trans - transport common data
-  * @ops - pointer to iwl_trans_ops
-  * @shrd - pointer to iwl_shared which holds shared data from the upper layer
-+ * @hcmd_lock: protects HCMD
-  */
- struct iwl_trans {
- 	const struct iwl_trans_ops *ops;
- 	struct iwl_shared *shrd;
-+	spinlock_t hcmd_lock;
++	role_type = wl12xx_get_role_type(wl);
++	if (role_type == WL12XX_INVALID_ROLE_TYPE) {
++		ret = -EINVAL;
++		goto out;
++	}
+ 	memcpy(wl->mac_addr, vif->addr, ETH_ALEN);
  
- 	/* pointer to trans specific struct */
- 	/*Ensure that this pointer will always be aligned to sizeof pointer */
+ 	if (wl->state != WL1271_STATE_OFF) {
+ 		wl1271_error("cannot start because not in off state: %d",
+ 			     wl->state);
+ 		ret = -EBUSY;
+@@ -1842,12 +1863,16 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 			goto power_off;
+ 
+ 		ret = wl1271_boot(wl);
+ 		if (ret < 0)
+ 			goto power_off;
+ 
++		ret = wl12xx_cmd_role_enable(wl, role_type, &wl->role_id);
++		if (ret < 0)
++			goto irq_disable;
++
+ 		ret = wl1271_hw_init(wl);
+ 		if (ret < 0)
+ 			goto irq_disable;
+ 
+ 		booted = true;
+ 		break;
+@@ -1906,12 +1931,13 @@ out:
+ 	return ret;
+ }
+ 
+ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+ 					 bool reset_tx_queues)
+ {
++	int ret;
+ 
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 remove interface");
+ 
+ 	/* because of hardware recovery, we may get here twice */
+ 	if (wl->state != WL1271_STATE_ON)
+ 		return;
+@@ -1930,12 +1956,27 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+ 		wl->scan.state = WL1271_SCAN_STATE_IDLE;
+ 		memset(wl->scan.scanned_ch, 0, sizeof(wl->scan.scanned_ch));
+ 		wl->scan.req = NULL;
+ 		ieee80211_scan_completed(wl->hw, true);
+ 	}
+ 
++	if (!test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags)) {
++		/* disable active roles */
++		ret = wl1271_ps_elp_wakeup(wl);
++		if (ret < 0)
++			goto deinit;
++
++		ret = wl12xx_cmd_role_disable(wl, &wl->role_id);
++		if (ret < 0)
++			goto deinit;
++
++		wl1271_ps_elp_sleep(wl);
++	}
++deinit:
++	wl->sta_hlid = WL12XX_INVALID_LINK_ID;
++
+ 	/*
+ 	 * this must be before the cancel_work calls below, so that the work
+ 	 * functions don't perform further work.
+ 	 */
+ 	wl->state = WL1271_STATE_OFF;
+ 
 -- 
-1.7.0.4
+1.7.6.401.g6a319
 
