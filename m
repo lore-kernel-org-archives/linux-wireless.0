@@ -1,80 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53471 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754424Ab1HOPOE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 11:14:04 -0400
-Date: Mon, 15 Aug 2011 17:12:32 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH 05/60] iwlagn: introduce struct iwl-shared - known by all
- layers
-Message-ID: <20110815151231.GB15718@redhat.com> (sfid-20110815_171409_585690_40675E38)
-References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
- <1313257116-2697-6-git-send-email-wey-yi.w.guy@intel.com>
- <20110815081010.GA3317@redhat.com>
- <20110815084355.GB3317@redhat.com>
- <1313414020.15170.32.camel@wwguy-huron>
- <20110815142144.GA15718@redhat.com>
- <1313416005.15170.35.camel@wwguy-huron>
- <20110815144359.GA15719@redhat.com>
- <1313417422.15170.39.camel@wwguy-huron>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1313417422.15170.39.camel@wwguy-huron>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:65029 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753044Ab1HNKSJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Aug 2011 06:18:09 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 24so2967085wyg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:18:09 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 35/40] wl12xx: handle wrap-around overflow in released Tx blocks FW counter
+Date: Sun, 14 Aug 2011 13:17:34 +0300
+Message-Id: <1313317059-16567-36-git-send-email-eliad@wizery.com> (sfid-20110814_121823_365470_929297C8)
+In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 15, 2011 at 07:10:22AM -0700, Guy, Wey-Yi wrote:
-> On Mon, 2011-08-15 at 07:44 -0700, Stanislaw Gruszka wrote:
-> > On Mon, Aug 15, 2011 at 06:46:45AM -0700, Guy, Wey-Yi wrote:
-> > > On Mon, 2011-08-15 at 07:21 -0700, Stanislaw Gruszka wrote:
-> > > > On Mon, Aug 15, 2011 at 06:13:39AM -0700, Guy, Wey-Yi wrote:
-> > > > > now we are working on separate iwlagn driver into two layers (upper and
-> > > > > lower), the lower layer contains both bus and transport sub-layer which
-> > > > > is hw dependent, and the upper layer should be bus/hw independent. by
-> > > > > doing so, the single driver can handle different bus and different core
-> > > > > architecture. Having the share data structure (priv->shrd->foo) between
-> > > > > two layers is for that reason (loosely couple).
-> > > > 
-> > > > You did not explained reason for introducing iwl_shared structure,
-> > > > actually you confirmed it is useless. You should simply share iwl_priv
-> > > > on any layer you have.
-> > > > 
-> > > > Stanislaw
-> > > 
-> > > It is not true, I mean "boring" but not "useless", it does not make
-> > > sense share all the priv with lower layer.
-> > 
-> > Why? Even if there are some fields that you will use only on
-> > upper layer, it does not mean that pointer to priv structure
-> > could not be passed to lower layer.
-> > 
-> why, if we doing that, lower layer need to know how to reference the
-> priv which I don't believe it is a good design. I want to make the upper
-> and lower layer as loose as possible and it is flexible for new
-> architecture.
+From: Arik Nemtsov <arik@wizery.com>
 
-Providing more abstraction layers than needed is worse.
+When the FW Tx released blocks counter wraps around, we should correct
+our calculation of released blocks. Otherwise we add a large negative
+figure to our driver freed blocks counter
 
-> > > think about I also mention
-> > > different core architecture, that mean we can have different upper layer
-> > > which has different priv; but shrd is always common to all different
-> > > upper layer to share with lower layer.
-> > 
-> > What different upper layer? Non mac80211, if so you should write
-> > separate driver for it.
-> 
-> not mac80211, it is still part of driver, but different upper layer
-> might/can contain different system flow. that is why I mention different
-> core architecture. now we are doing preparation work so you did not see
-> the new stuff yet.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   11 +++++++++--
+ 1 files changed, 9 insertions(+), 2 deletions(-)
 
-Can we get opinion from Johannes about that, and eventually ACKs/NACKs
-for patches?
-
-Stanislaw
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 869b8c3..7be7fc6 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -831,14 +831,21 @@ static void wl12xx_fw_status(struct wl1271 *wl,
+ 				(status->tx_released_pkts[i] -
+ 				wl->tx_pkts_freed[i]) & 0xff;
+ 
+ 		wl->tx_pkts_freed[i] = status->tx_released_pkts[i];
+ 	}
+ 
+-	freed_blocks = le32_to_cpu(status->total_released_blks) -
+-		       wl->tx_blocks_freed;
++	/* prevent wrap-around in total blocks counter */
++	if (likely(wl->tx_blocks_freed <=
++		   le32_to_cpu(status->total_released_blks)))
++		freed_blocks = le32_to_cpu(status->total_released_blks) -
++			       wl->tx_blocks_freed;
++	else
++		freed_blocks = 0x100000000LL - wl->tx_blocks_freed +
++			       le32_to_cpu(status->total_released_blks);
++
+ 	wl->tx_blocks_freed = le32_to_cpu(status->total_released_blks);
+ 
+ 	wl->tx_allocated_blocks -= freed_blocks;
+ 
+ 	avail = le32_to_cpu(status->tx_total) - wl->tx_allocated_blocks;
+ 
+-- 
+1.7.6.401.g6a319
 
