@@ -1,76 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:43832 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751117Ab1HHJL7 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:55381 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753044Ab1HNKSQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 05:11:59 -0400
-Date: Mon, 8 Aug 2011 12:11:52 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] cfg80211/nl80211: Send AssocReq IEs to user space in AP mode
-Message-ID: <20110808091152.GA4769@jouni.qca.qualcomm.com> (sfid-20110808_111201_902515_DD3EDF8C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 14 Aug 2011 06:18:16 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 5so4061056wwf.1
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:18:16 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 39/40] wl12xx: AP-mode - prevent Tx to stale/invalid stations
+Date: Sun, 14 Aug 2011 13:17:38 +0300
+Message-Id: <1313317059-16567-40-git-send-email-eliad@wizery.com> (sfid-20110814_121825_276688_4036AF60)
+In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When user space SME/MLME (e.g., hostapd) is not used in AP mode, the
-IEs from the (Re)Association Request frame that was processed in
-firmware need to be made available for user space (e.g., RSN IE for
-hostapd). Allow this to be done with cfg80211_new_sta().
+From: Arik Nemtsov <arik@wizery.com>
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Don't pollute the queues with Tx directed to invalid stations. This
+can happen during recovery.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- include/net/cfg80211.h |    8 ++++++++
- net/wireless/nl80211.c |    4 ++++
- 2 files changed, 12 insertions(+), 0 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |   20 +++++++++++++++++---
+ 1 files changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d17f47f..51ba1af 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -536,6 +536,11 @@ struct sta_bss_parameters {
-  *	This number should increase every time the list of stations
-  *	changes, i.e. when a station is added or removed, so that
-  *	userspace can tell whether it got a consistent snapshot.
-+ * @assoc_req_ies: IEs from (Re)Association Request.
-+ *	This is used only when in AP mode with drivers that do not use
-+ *	user space MLME/SME implementation. The information is provided for
-+ *	the cfg80211_new_sta() calls to notify user space of the IEs.
-+ * @assoc_req_ies_len: Length of assoc_req_ies buffer in octets.
-  */
- struct station_info {
- 	u32 filled;
-@@ -558,6 +563,9 @@ struct station_info {
- 	struct sta_bss_parameters bss_param;
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index cf5835b..6c56bef 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -776,13 +776,19 @@ static void wl12xx_irq_ps_regulate_link(struct wl1271 *wl, u8 hlid, u8 tx_pkts)
+ 	else if (fw_ps && tx_pkts >= WL1271_PS_STA_MAX_PACKETS)
+ 		wl1271_ps_link_start(wl, hlid, true);
+ }
  
- 	int generation;
+ bool wl1271_is_active_sta(struct wl1271 *wl, u8 hlid)
+ {
+-	int id = hlid - WL1271_AP_STA_HLID_START;
++	int id;
 +
-+	const u8 *assoc_req_ies;
-+	size_t assoc_req_ies_len;
- };
++	/* global/broadcast "stations" are always active */
++	if (hlid < WL1271_AP_STA_HLID_START)
++		return true;
++
++	id = hlid - WL1271_AP_STA_HLID_START;
+ 	return test_bit(id, wl->ap_hlid_map);
+ }
  
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e83e7fe..ec8444e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2237,6 +2237,10 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ static void wl12xx_irq_update_links_status(struct wl1271 *wl,
+ 					   struct wl12xx_fw_status *status)
+ {
+@@ -1490,12 +1496,19 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		ieee80211_stop_queue(wl->hw, mapping);
+ 		set_bit(q, &wl->stopped_queues_map);
  	}
- 	nla_nest_end(msg, sinfoattr);
  
-+	if (sinfo->assoc_req_ies)
-+		NLA_PUT(msg, NL80211_ATTR_IE, sinfo->assoc_req_ies_len,
-+			sinfo->assoc_req_ies);
+ 	/* queue the packet */
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
++		if (!wl1271_is_active_sta(wl, hlid)) {
++			wl1271_debug(DEBUG_TX, "DROP skb hlid %d q %d",
++				     hlid, q);
++			dev_kfree_skb(skb);
++			goto out;
++		}
 +
- 	return genlmsg_end(msg, hdr);
+ 		wl1271_debug(DEBUG_TX, "queue skb hlid %d q %d", hlid, q);
+ 		skb_queue_tail(&wl->links[hlid].tx_queue[q], skb);
+ 	} else {
+ 		skb_queue_tail(&wl->tx_queue[q], skb);
+ 	}
  
-  nla_put_failure:
+@@ -1505,12 +1518,13 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	 */
+ 
+ 	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags) &&
+ 	    !test_bit(WL1271_FLAG_TX_PENDING, &wl->flags))
+ 		ieee80211_queue_work(wl->hw, &wl->tx_work);
+ 
++out:
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+ }
+ 
+ int wl1271_tx_dummy_packet(struct wl1271 *wl)
+ {
+ 	unsigned long flags;
+@@ -3692,13 +3706,13 @@ static int wl1271_allocate_sta(struct wl1271 *wl,
+ 	if (id >= AP_MAX_STATIONS) {
+ 		wl1271_warning("could not allocate HLID - too much stations");
+ 		return -EBUSY;
+ 	}
+ 
+ 	wl_sta = (struct wl1271_station *)sta->drv_priv;
+-	__set_bit(id, wl->ap_hlid_map);
++	set_bit(id, wl->ap_hlid_map);
+ 	wl_sta->hlid = WL1271_AP_STA_HLID_START + id;
+ 	*hlid = wl_sta->hlid;
+ 	memcpy(wl->links[wl_sta->hlid].addr, sta->addr, ETH_ALEN);
+ 	return 0;
+ }
+ 
+@@ -3706,13 +3720,13 @@ static void wl1271_free_sta(struct wl1271 *wl, u8 hlid)
+ {
+ 	int id = hlid - WL1271_AP_STA_HLID_START;
+ 
+ 	if (WARN_ON(!test_bit(id, wl->ap_hlid_map)))
+ 		return;
+ 
+-	__clear_bit(id, wl->ap_hlid_map);
++	clear_bit(id, wl->ap_hlid_map);
+ 	memset(wl->links[hlid].addr, 0, ETH_ALEN);
+ 	wl->links[hlid].ba_bitmap = 0;
+ 	wl1271_tx_reset_link_queues(wl, hlid);
+ 	__clear_bit(hlid, &wl->ap_ps_map);
+ 	__clear_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
+ }
 -- 
-1.7.4.1
+1.7.6.401.g6a319
 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
