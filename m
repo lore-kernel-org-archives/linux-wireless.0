@@ -1,136 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:47162 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753144Ab1HSQFD convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:36108 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752817Ab1HNKR1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Aug 2011 12:05:03 -0400
-Received: by mail-pz0-f42.google.com with SMTP id 37so5043872pzk.1
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Aug 2011 09:05:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CADPsn1ba2y3ofBkE11jkF=sQF+6rcZY=VV9Zgdmo3kjOxs+pdQ@mail.gmail.com>
-References: <CADPsn1ba2y3ofBkE11jkF=sQF+6rcZY=VV9Zgdmo3kjOxs+pdQ@mail.gmail.com>
-Date: Fri, 19 Aug 2011 17:05:03 +0100
-Message-ID: <CADPsn1a03ZrjEJubkxACBqxwQFdbXLN-cA2K8jAb1Oy-tuFe7Q@mail.gmail.com> (sfid-20110819_180517_071341_01511C56)
-Subject: Re: Question about failure of scanning with ath6kl.ko
-From: Sangwook Lee <sangwook.lee@linaro.org>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 14 Aug 2011 06:17:27 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 5so4060970wwf.1
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:17:27 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 12/40] wl12xx: update rx/tx
+Date: Sun, 14 Aug 2011 13:17:11 +0300
+Message-Id: <1313317059-16567-13-git-send-email-eliad@wizery.com> (sfid-20110814_124257_150798_62B3AB5B)
+In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The reason about failure of scanning is that Kernel bug with scan
-complete function as like:
+Update the rx/tx descriptors according to the new fw api
+(fw >= 6/7.3.0.0.75)
 
-===================================================================
-in_atomic(): 1, irqs_disabled(): 0, pid: 4704, name: ksdioirqd/mmc1
-[<c003d484>] (unwind_backtrace+0x0/0xf8) from [<c00c8648>]
-(__kmalloc+0x104/0x184)
-[<c00c8648>] (__kmalloc+0x104/0x184) from [<c033cb58>]
-(cfg80211_inform_bss_frame+0x64/0x1f4)
-[<c033cb58>] (cfg80211_inform_bss_frame+0x64/0x1f4) from [<bf05c908>]
-(ar6k_cfg80211_scan_node+0xcc/0x138 [ath6kl])
-[<bf05c908>] (ar6k_cfg80211_scan_node+0xcc/0x138 [ath6kl]) from
-[<bf072e58>] (wlan_iterate_nodes+0x5c/0x94 [ath6kl])
-[<bf072e58>] (wlan_iterate_nodes+0x5c/0x94 [ath6kl]) from [<bf05d0e8>]
-(ar6k_cfg80211_scanComplete_event+0x5c/0x104 [ath6kl])
-[<bf05d0e8>] (ar6k_cfg80211_scanComplete_event+0x5c/0x104 [ath6kl])
-from [<bf0627b8>] (ar6000_scanComplete_event+0x14/0xa8 [ath6kl])
-[<bf0627b8>] (ar6000_scanComplete_event+0x14/0xa8 [ath6kl]) from
-[<bf06f564>] (wmi_control_rx+0xdf4/0x22d8 [ath6kl])
-[<bf06f564>] (wmi_control_rx+0xdf4/0x22d8 [ath6kl]) from [<bf0615d0>]
-(ar6000_rx+0x300/0x604 [ath6kl])
-[<bf0615d0>] (ar6000_rx+0x300/0x604 [ath6kl]) from [<bf0542f8>]
-(DoRecvCompletion+0xc4/0x104 [ath6kl])
-[<bf0542f8>] (DoRecvCompletion+0xc4/0x104 [ath6kl]) from [<bf055cf8>]
-(HTCRecvMessagePendingHandler+0xca8/0x1370 [ath6kl])
-[<bf055cf8>] (HTCRecvMessagePendingHandler+0xca8/0x1370 [ath6kl]) from
-[<bf051d34>] (DevDsrHandler+0x198/0x72c [ath6kl])
-[<bf051d34>] (DevDsrHandler+0x198/0x72c [ath6kl]) from [<bf073750>]
-(hifIRQHandler+0x50/0xdc [ath6kl])
-[<bf073750>] (hifIRQHandler+0x50/0xdc [ath6kl]) from [<c0263dd8>]
-(sdio_irq_thread+0xac/0x2a0)
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/rx.h     |    7 ++-----
+ drivers/net/wireless/wl12xx/tx.c     |   15 +++++++++++----
+ drivers/net/wireless/wl12xx/tx.h     |   14 ++++----------
+ drivers/net/wireless/wl12xx/wl12xx.h |    2 +-
+ 4 files changed, 18 insertions(+), 20 deletions(-)
 
-======================================================================
-If anyone give me any advice, that would be great!!
+diff --git a/drivers/net/wireless/wl12xx/rx.h b/drivers/net/wireless/wl12xx/rx.h
+index 00c1c1d..86ba6b1 100644
+--- a/drivers/net/wireless/wl12xx/rx.h
++++ b/drivers/net/wireless/wl12xx/rx.h
+@@ -83,13 +83,13 @@
+  * RX Descriptor status
+  *
+  * Bits 0-2 - error code
+  * Bits 3-5 - process_id tag (AP mode FW)
+  * Bits 6-7 - reserved
+  */
+-#define WL1271_RX_DESC_STATUS_MASK      0x07
++#define WL1271_RX_DESC_STATUS_MASK      0x03
+ 
+ #define WL1271_RX_DESC_SUCCESS          0x00
+ #define WL1271_RX_DESC_DECRYPT_FAIL     0x01
+ #define WL1271_RX_DESC_MIC_FAIL         0x02
+ #define WL1271_RX_DESC_DRIVER_RX_Q_FAIL 0x03
+ 
+@@ -118,16 +118,13 @@ struct wl1271_rx_descriptor {
+ 	u8  rate;
+ 	u8  channel;
+ 	s8  rssi;
+ 	u8  snr;
+ 	__le32 timestamp;
+ 	u8  packet_class;
+-	union {
+-		u8  process_id; /* STA FW */
+-		u8  hlid; /* AP FW */
+-	} __packed;
++	u8  hlid;
+ 	u8  pad_len;
+ 	u8  reserved;
+ } __packed;
+ 
+ void wl12xx_rx(struct wl1271 *wl, struct wl12xx_fw_status *status);
+ u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index f497336..23ce7aa 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -273,24 +273,23 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 	} else {
+ 		/* configure the tx attributes */
+ 		tx_attr =
+ 			wl->session_counter << TX_HW_ATTR_OFST_SESSION_COUNTER;
+ 	}
+ 
+-	if (wl->bss_type != BSS_TYPE_AP_BSS) {
+-		desc->aid = hlid;
++	desc->hlid = hlid;
+ 
++	if (wl->bss_type != BSS_TYPE_AP_BSS) {
+ 		/* if the packets are destined for AP (have a STA entry)
+ 		   send them with AP rate policies, otherwise use default
+ 		   basic rates */
+ 		if (control->control.sta)
+ 			rate_idx = ACX_TX_AP_FULL_RATE;
+ 		else
+ 			rate_idx = ACX_TX_BASIC_RATE;
+ 	} else {
+-		desc->hlid = hlid;
+ 		switch (hlid) {
+ 		case WL1271_AP_GLOBAL_HLID:
+ 			rate_idx = ACX_TX_AP_MODE_MGMT_RATE;
+ 			break;
+ 		case WL1271_AP_BROADCAST_HLID:
+ 			rate_idx = ACX_TX_AP_MODE_BCST_RATE;
+@@ -372,13 +371,21 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
+ 		}
+ 	}
+ 
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS)
+ 		hlid = wl1271_tx_get_hlid(skb);
+ 	else
+-		hlid = TX_HW_DEFAULT_AID;
++		if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
++			hlid = wl->sta_hlid;
++		else
++			hlid = wl->dev_hlid;
++
++	if (hlid == WL12XX_INVALID_LINK_ID) {
++		wl1271_error("invalid hlid. dropping skb 0x%p", skb);
++		return -EINVAL;
++	}
+ 
+ 	ret = wl1271_tx_allocate(wl, skb, extra, buf_offset, hlid);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	wl1271_tx_fill_hdr(wl, skb, extra, info, hlid);
+diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
+index 5d719b5..b712d7b 100644
+--- a/drivers/net/wireless/wl12xx/tx.h
++++ b/drivers/net/wireless/wl12xx/tx.h
+@@ -26,15 +26,12 @@
+ #define __TX_H__
+ 
+ #define TX_HW_BLOCK_SIZE                 252
+ 
+ #define TX_HW_MGMT_PKT_LIFETIME_TU       2000
+ #define TX_HW_AP_MODE_PKT_LIFETIME_TU    8000
+-/* The chipset reference driver states, that the "aid" value 1
+- * is for infra-BSS, but is still always used */
+-#define TX_HW_DEFAULT_AID                1
+ 
+ #define TX_HW_ATTR_SAVE_RETRIES          BIT(0)
+ #define TX_HW_ATTR_HEADER_PAD            BIT(1)
+ #define TX_HW_ATTR_SESSION_COUNTER       (BIT(2) | BIT(3) | BIT(4))
+ #define TX_HW_ATTR_RATE_POLICY           (BIT(5) | BIT(6) | BIT(7) | \
+ 					  BIT(8) | BIT(9))
+@@ -113,30 +110,27 @@ struct wl1271_tx_hw_descr {
+ 	/* Bitwise fields - see TX_ATTR... definitions above. */
+ 	__le16 tx_attr;
+ 	/* Packet identifier used also in the Tx-Result. */
+ 	u8 id;
+ 	/* The packet TID value (as User-Priority) */
+ 	u8 tid;
+-	union {
+-		/* STA - Identifier of the remote STA in IBSS, 1 in infra-BSS */
+-		u8 aid;
+-		/* AP - host link ID (HLID) */
+-		u8 hlid;
+-	} __packed;
++	/* host link ID (HLID) */
++	u8 hlid;
+ 	u8 reserved;
+ } __packed;
+ 
+ enum wl1271_tx_hw_res_status {
+ 	TX_SUCCESS          = 0,
+ 	TX_HW_ERROR         = 1,
+ 	TX_DISABLED         = 2,
+ 	TX_RETRY_EXCEEDED   = 3,
+ 	TX_TIMEOUT          = 4,
+ 	TX_KEY_NOT_FOUND    = 5,
+ 	TX_PEER_NOT_FOUND   = 6,
+-	TX_SESSION_MISMATCH = 7
++	TX_SESSION_MISMATCH = 7,
++	TX_LINK_NOT_VALID   = 8,
+ };
+ 
+ struct wl1271_tx_hw_res_descr {
+ 	/* Packet Identifier - same value used in the Tx descriptor.*/
+ 	u8 id;
+ 	/* The status of the transmission, indicating success or one of
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index ab46664..93e689d 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -156,13 +156,13 @@ extern u32 wl12xx_debug_level;
+  */
+ #define WL1271_PS_STA_MAX_BLOCKS  (2 * 9)
+ 
+ #define WL1271_AP_BSS_INDEX        0
+ #define WL1271_AP_DEF_BEACON_EXP   20
+ 
+-#define ACX_TX_DESCRIPTORS         32
++#define ACX_TX_DESCRIPTORS         16
+ 
+ #define WL1271_AGGR_BUFFER_SIZE (4 * PAGE_SIZE)
+ 
+ enum wl1271_state {
+ 	WL1271_STATE_OFF,
+ 	WL1271_STATE_ON,
+-- 
+1.7.6.401.g6a319
 
-Thanks
-Sangwook
-
-
-
-
-On 17 August 2011 16:51, Sangwook Lee <sangwook.lee@linaro.org> wrote:
-> Hello
->
-> I am using customised board using AR6003 WLAN.
-> After running insmod ath6kl.ko, ifconfig up and then iwconfig scan as
-> like the following,
-> It seems not to work.
->
-> ath6kl driver :
->       from 3.0 staging directory.
-> Firmware images :
->      from http://www.kernel.org/pub/linux/kernel/people/mcgrof/firmware/ath6k.tar.gz
-> Log message:
-> -------------------------Start of Log
-> ---------------------------------------------
-> root@linaro-alip:~# insmod ath6kl.ko
-> ath6kl: module is from the staging directory, the quality is unknown,
-> you have been warned.
-> BUG: spinlock bad magic on CPU#1, insmod/4686
->  lock: bf08683c, .magic: 00000000, .owner: insmod/4686, .owner_cpu: 1
-> [<c003d484>] (unwind_backtrace+0x0/0xf8) from [<c0191a8c>]
-> (do_raw_spin_unlock+0x84/0xc4)
-> [<c0191a8c>] (do_raw_spin_unlock+0x84/0xc4) from [<c035b9fc>]
-> (_raw_spin_unlock+0x8/0x30)
-> [<c035b9fc>] (_raw_spin_unlock+0x8/0x30) from [<bf0950e0>]
-> (ar6000_init_module+0xe0/0x1a0 [ath6kl)
-> [<bf0950e0>] (ar6000_init_module+0xe0/0x1a0 [ath6kl]) from
-> [<c003167c>] (do_one_initcall+0x34/0x1)
-> [<c003167c>] (do_one_initcall+0x34/0x174) from [<c008bee8>]
-> (sys_init_module+0xf0/0x19c0)
-> [<c008bee8>] (sys_init_module+0xf0/0x19c0) from [<c0037040>]
-> (ret_fast_syscall+0x0/0x30)
-> root@linaro-alip:~# mmc1: queuing unknown CIS tuple 0x01 (3 bytes)
-> mmc1: queuing unknown CIS tuple 0x1a (5 bytes)
-> mmc1: queuing unknown CIS tuple 0x1b (8 bytes)
-> mmc1: queuing unknown CIS tuple 0x14 (0 bytes)
-> mmc1: queuing unknown CIS tuple 0x80 (1 bytes)
-> mmc1: queuing unknown CIS tuple 0x81 (1 bytes)
-> mmc1: queuing unknown CIS tuple 0x82 (1 bytes)
-> mmc1: new high speed SDIO card at address 0001
-> AR6000: Unsupported configuration opcode: 3
-> AR6000: Unsupported configuration opcode: 3
-> HIF Interrupt processing is SYNC ONLY
-> AR6000: Unsupported configuration opcode: 7
-> AR6000: Unsupported configuration opcode: 5
-> In aggr_init..
-> going out of aggr_init..status OK
-> AR6K: Temporary WAR to avoid SDIO CRC error
-> ar6000_init() Got WMI @ 0xed2b1c00.
->  Target Ready: credits: 11 credit size: 1664
-> HIF-SCATTER Enabled: max scatter req : 4 entries: 16
-> AR6K: HIF layer supports scatter requests (max scatter items:16: maxlen:32768)
-> AR6K: max recv: 32768 max send: 12288
-> ar6000_init() WMI is ready
-> wmi_control_rx() : Unknown id 0x101e
-> AR6000 Reg Code = 0x61
-> ar6000: Multicast filter not supported
-> ar6000: Multicast filter not supported
-> ar6000: Multicast filter not supported
-> ADDRCONF(NETDEV_UP): wlan0: link is not ready
->
-> root@linaro-alip:~# ifconfig wlan0 up
-> ar6000: Multicast filter not supported
-> root@linaro-alip:~# iwlist wlan0 scan
-> wlan0     Interface doesn't support scanning : Device or resource busy
->
-> ------------------------------End of log --------------------------------------
->
-> One more, my board is using 26Mhz for WLAN. which source code or
-> configuration file do I put this
-> information into ?
->
-> Thanks
-> Sangwook
->
