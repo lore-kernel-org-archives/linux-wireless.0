@@ -1,72 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58675 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755307Ab1HDRzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Aug 2011 13:55:41 -0400
-Message-ID: <4E3ADD14.6030802@openwrt.org> (sfid-20110804_195619_829907_E413AD71)
-Date: Thu, 04 Aug 2011 19:55:32 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 11/13] ath9k_hw: Disable Walsh spatial spreading for
- 2 chains
-References: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com> <1311941300-2590-11-git-send-email-rmanohar@qca.qualcomm.com> <4E32AA85.1030204@openwrt.org> <20110802094610.GA1235@vmraj-lnx.users.atheros.com> <4E3834CC.8010001@openwrt.org> <20110804174519.GB26255@vmraj-lnx.users.atheros.com>
-In-Reply-To: <20110804174519.GB26255@vmraj-lnx.users.atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:55381 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752844Ab1HNKR3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Aug 2011 06:17:29 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 5so4061056wwf.1
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:17:28 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 13/40] wl12xx: change max/default template size
+Date: Sun, 14 Aug 2011 13:17:12 +0300
+Message-Id: <1313317059-16567-14-git-send-email-eliad@wizery.com> (sfid-20110814_121736_210923_AE2AAEF3)
+In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-08-04 7:45 PM, Rajkumar Manoharan wrote:
-> On Tue, Aug 02, 2011 at 07:33:00PM +0200, Felix Fietkau wrote:
->>  On 2011-08-02 11:46 AM, Rajkumar Manoharan wrote:
->>  >On Fri, Jul 29, 2011 at 02:41:41PM +0200, Felix Fietkau wrote:
->>  >>  On 2011-07-29 2:08 PM, Rajkumar Manoharan wrote:
->>  >>  >Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
->>  >>  >---
->>  >>  >    .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
->>  >>  >    1 files changed, 1 insertions(+), 1 deletions(-)
->>  >>  >
->>  >>  >diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
->>  >>  >index 2339728..28b44b0 100644
->>  >>  >--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
->>  >>  >+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
->>  >>  >@@ -636,7 +636,7 @@ static const u32 ar9300_2p2_baseband_postamble[][5] = {
->>  >>  >    	{0x00009e44, 0x02321e27, 0x02321e27, 0x02291e27, 0x02291e27},
->>  >>  >    	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
->>  >>  >    	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
->>  >>  >-	{0x0000a204, 0x000037c0, 0x000037c4, 0x000037c4, 0x000037c0},
->>  >>  >+	{0x0000a204, 0x000036c0, 0x000036c4, 0x000036c4, 0x000036c0},
->>  >>  >    	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
->>  >>  >    	{0x0000a22c, 0x01026a2f, 0x01026a2f, 0x01026a2f, 0x01026a2f},
->>  >>  >    	{0x0000a230, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b},
->>  >>  That patch makes no sense, it disables Walsh spatial spreading in
->>  >>  the initvals, but the driver still enables it in
->>  >>  ar9003_hw_set_channel_regs.
->>  >>  By the way, why should we disable Walsh spatial spreading?
->>  >>
->>  >The initval table is filled with default values recommended in register spec.
->>  >This patch does that. And these default value can be altered during chip bringup
->>  >based on chip family.
->>  OK, then the patch description should probably mention that this
->>  change has no effect and does not actually disable this feature in
->>  general, since the driver unconditionally enables it elsewhere.
->>
-> Felix,
->
-> The Walsh bit is disabled for regulatory consideration.
->
-> In the FCC rulings, only transmissions that are completely non-coherent, are
-> allowed to waive the array gain contribution to EIRP for multi-transmit configurations.
-> The use of 2-stream with 2 transmit and use of 3-steam with 3 transmit qualifies
-> for this spatial multiplexing MIMO classification as long as the streams are
-> directly mapped to each radio (not Walsh spread prior to splitting to multiple radios)
->
-> And also Walsh has to be disabled in ar9003_hw_set_channel_regs.
-> Thanks for finding out. Will send followup patch.
-Wouldn't that only be relevant if the regdomain/country setting is a FCC 
-one *and* the configured tx power is close to the limit?
-It seems to me that if either of those is not the case, it should be 
-valid to keep walsh spatial spreading enabled.
+The max template size was increased in the new fw.
+However, we should use the max size only when needed, as it
+consumes some of the chip's memory.
 
-- Felix
+Thus, by default initialize the templates to the default size.
+Initialize to the maximum size only when required.
+
+Use WL1271_CMD_TEMPL_DFLT_SIZE instead of some of the
+predefined structs, as some of them didn't account
+for additional IEs that might be added to the template.
+
+Delete structs defintions not used after these changes.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/cmd.h          |    3 ++-
+ drivers/net/wireless/wl12xx/init.c         |   18 +++++++-----------
+ drivers/net/wireless/wl12xx/main.c         |    2 +-
+ drivers/net/wireless/wl12xx/wl12xx_80211.h |   25 -------------------------
+ 4 files changed, 10 insertions(+), 38 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/cmd.h b/drivers/net/wireless/wl12xx/cmd.h
+index 16e0a87..6950759 100644
+--- a/drivers/net/wireless/wl12xx/cmd.h
++++ b/drivers/net/wireless/wl12xx/cmd.h
+@@ -169,13 +169,14 @@ enum cmd_templ {
+ 
+ 	CMD_TEMPL_MAX = 0xff
+ };
+ 
+ /* unit ms */
+ #define WL1271_COMMAND_TIMEOUT     2000
+-#define WL1271_CMD_TEMPL_MAX_SIZE  252
++#define WL1271_CMD_TEMPL_DFLT_SIZE 252
++#define WL1271_CMD_TEMPL_MAX_SIZE  548
+ #define WL1271_EVENT_TIMEOUT       750
+ 
+ struct wl1271_cmd_header {
+ 	__le16 id;
+ 	__le16 status;
+ 	/* payload */
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index 76e6f37..683c8d1 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -36,19 +36,19 @@
+ int wl1271_sta_init_templates_config(struct wl1271 *wl)
+ {
+ 	int ret, i;
+ 
+ 	/* send empty templates for fw memory reservation */
+ 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_2_4, NULL,
+-				      WL1271_CMD_TEMPL_MAX_SIZE,
++				      WL1271_CMD_TEMPL_DFLT_SIZE,
+ 				      0, WL1271_RATE_AUTOMATIC);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_5,
+-				      NULL, WL1271_CMD_TEMPL_MAX_SIZE, 0,
++				      NULL, WL1271_CMD_TEMPL_DFLT_SIZE, 0,
+ 				      WL1271_RATE_AUTOMATIC);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_NULL_DATA, NULL,
+ 				      sizeof(struct wl12xx_null_data_template),
+@@ -67,21 +67,19 @@ int wl1271_sta_init_templates_config(struct wl1271 *wl)
+ 				      (struct wl12xx_qos_null_data_template),
+ 				      0, WL1271_RATE_AUTOMATIC);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_PROBE_RESPONSE, NULL,
+-				      sizeof
+-				      (struct wl12xx_probe_resp_template),
++				      WL1271_CMD_TEMPL_DFLT_SIZE,
+ 				      0, WL1271_RATE_AUTOMATIC);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_BEACON, NULL,
+-				      sizeof
+-				      (struct wl12xx_beacon_template),
++				      WL1271_CMD_TEMPL_DFLT_SIZE,
+ 				      0, WL1271_RATE_AUTOMATIC);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_ARP_RSP, NULL,
+ 				      sizeof
+@@ -89,13 +87,13 @@ int wl1271_sta_init_templates_config(struct wl1271 *wl)
+ 				      0, WL1271_RATE_AUTOMATIC);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	for (i = 0; i < CMD_TEMPL_KLV_IDX_MAX; i++) {
+ 		ret = wl1271_cmd_template_set(wl, CMD_TEMPL_KLV, NULL,
+-					      WL1271_CMD_TEMPL_MAX_SIZE, i,
++					      WL1271_CMD_TEMPL_DFLT_SIZE, i,
+ 					      WL1271_RATE_AUTOMATIC);
+ 		if (ret < 0)
+ 			return ret;
+ 	}
+ 
+ 	return 0;
+@@ -188,21 +186,19 @@ static int wl1271_ap_init_templates_config(struct wl1271 *wl)
+ 
+ 	/*
+ 	 * Put very large empty placeholders for all templates. These
+ 	 * reserve memory for later.
+ 	 */
+ 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_AP_PROBE_RESPONSE, NULL,
+-				      sizeof
+-				      (struct wl12xx_probe_resp_template),
++				      WL1271_CMD_TEMPL_MAX_SIZE,
+ 				      0, WL1271_RATE_AUTOMATIC);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_AP_BEACON, NULL,
+-				      sizeof
+-				      (struct wl12xx_beacon_template),
++				      WL1271_CMD_TEMPL_MAX_SIZE,
+ 				      0, WL1271_RATE_AUTOMATIC);
+ 	if (ret < 0)
+ 		return ret;
+ 
+ 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_DEAUTH_AP, NULL,
+ 				      sizeof
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 7b0b7c3..1389c5c 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -4263,13 +4263,13 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 	wl->hw->wiphy->max_scan_ssids = 1;
+ 	/*
+ 	 * Maximum length of elements in scanning probe request templates
+ 	 * should be the maximum length possible for a template, without
+ 	 * the IEEE80211 header of the template
+ 	 */
+-	wl->hw->wiphy->max_scan_ie_len = WL1271_CMD_TEMPL_MAX_SIZE -
++	wl->hw->wiphy->max_scan_ie_len = WL1271_CMD_TEMPL_DFLT_SIZE -
+ 			sizeof(struct ieee80211_header);
+ 
+ 	/* make sure all our channels fit in the scanned_ch bitmask */
+ 	BUILD_BUG_ON(ARRAY_SIZE(wl1271_channels) +
+ 		     ARRAY_SIZE(wl1271_channels_5ghz) >
+ 		     WL1271_MAX_CHANNELS);
+diff --git a/drivers/net/wireless/wl12xx/wl12xx_80211.h b/drivers/net/wireless/wl12xx/wl12xx_80211.h
+index f334ea0..f7971d3 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx_80211.h
++++ b/drivers/net/wireless/wl12xx/wl12xx_80211.h
+@@ -102,24 +102,12 @@ struct wl12xx_ie_country {
+ 	struct country_triplet triplets[MAX_COUNTRY_TRIPLETS];
+ } __packed;
+ 
+ 
+ /* Templates */
+ 
+-struct wl12xx_beacon_template {
+-	struct ieee80211_header header;
+-	__le32 time_stamp[2];
+-	__le16 beacon_interval;
+-	__le16 capability;
+-	struct wl12xx_ie_ssid ssid;
+-	struct wl12xx_ie_rates rates;
+-	struct wl12xx_ie_rates ext_rates;
+-	struct wl12xx_ie_ds_params ds_params;
+-	struct wl12xx_ie_country country;
+-} __packed;
+-
+ struct wl12xx_null_data_template {
+ 	struct ieee80211_header header;
+ } __packed;
+ 
+ struct wl12xx_ps_poll_template {
+ 	__le16 fc;
+@@ -143,25 +131,12 @@ struct wl12xx_arp_rsp_template {
+ 	u8 sender_hw[ETH_ALEN];
+ 	__be32 sender_ip;
+ 	u8 target_hw[ETH_ALEN];
+ 	__be32 target_ip;
+ } __packed;
+ 
+-
+-struct wl12xx_probe_resp_template {
+-	struct ieee80211_header header;
+-	__le32 time_stamp[2];
+-	__le16 beacon_interval;
+-	__le16 capability;
+-	struct wl12xx_ie_ssid ssid;
+-	struct wl12xx_ie_rates rates;
+-	struct wl12xx_ie_rates ext_rates;
+-	struct wl12xx_ie_ds_params ds_params;
+-	struct wl12xx_ie_country country;
+-} __packed;
+-
+ struct wl12xx_disconn_template {
+ 	struct ieee80211_header header;
+ 	__le16 disconn_reason;
+ } __packed;
+ 
+ #endif
+-- 
+1.7.6.401.g6a319
+
