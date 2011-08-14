@@ -1,80 +1,264 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:40829 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751570Ab1HQVnn (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:54095 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753039Ab1HNKSI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2011 17:43:43 -0400
-Subject: [PATCH] Add uevent to bcma bus, to autoload drivers.
-From: David Woodhouse <dwmw2@infradead.org>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Date: Wed, 17 Aug 2011 15:43:37 -0600
-In-Reply-To: <CACna6ryErHY+OyAnvc9+MYArb5mXpSdadOPADsQOBz796UqSUw@mail.gmail.com>
-References: <4E3420E9.6080603@lwfinger.net>
-	 <CACna6ryErHY+OyAnvc9+MYArb5mXpSdadOPADsQOBz796UqSUw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1313617419.3990.134.camel@shinybook.infradead.org> (sfid-20110817_234346_952840_27959D21)
-Mime-Version: 1.0
+	Sun, 14 Aug 2011 06:18:08 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 24so2967072wyg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:18:07 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 34/40] wl12xx: schedule TX packets according to FW packet occupancy
+Date: Sun, 14 Aug 2011 13:17:33 +0300
+Message-Id: <1313317059-16567-35-git-send-email-eliad@wizery.com> (sfid-20110814_121813_635529_74AD79AD)
+In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
---
-On Wed, 2011-08-17 at 20:27 +0200, Rafał Miłecki wrote:
-> > A minor annoyance is that the driver does not autoload on boot and had to be
-> > manually modprobed. AFAIK, I don't have any blacklisting or other
-> > configuration parameters that would cause this. Furthermore, I don't see
-> > anything in the driver code that would cause this. Does autoload work on
-> > your system?
->
-> I've everything blacklisted (ssb, bcma, b43, wl, brcmsmac), so I
-> didn't even notice that. However I got some reports (2 of them) that
-> b43 doesn't auto load. I've to take a look at it, however I've no idea
-> yet on what may be causing it.
+From: Arik Nemtsov <arik@wizery.com>
 
-The lack of uevent causes it. While looking, I note that suspend/resume
-methods are also lacking from bcma.
+When selecting packets for transmission, prefer the ACs that are least
+occupied in the FW. When packets for multiple ACs are present in the FW,
+it decides which to transmit according to WMM QoS parameters.
 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 7072216..8c09c3e 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -15,6 +15,7 @@ MODULE_LICENSE("GPL");
- static int bcma_bus_match(struct device *dev, struct device_driver *drv);
- static int bcma_device_probe(struct device *dev);
- static int bcma_device_remove(struct device *dev);
-+static int bcma_device_uevent(struct device *dev, struct kobj_uevent_env *env);
+With these changes, lower priority ACs should not be starved when higher
+priority traffic is present.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+v2: consider the priority of the queues
+
+ drivers/net/wireless/wl12xx/debugfs.c |    4 ++
+ drivers/net/wireless/wl12xx/main.c    |    7 ++-
+ drivers/net/wireless/wl12xx/tx.c      |   71 ++++++++++++++++++++++-----------
+ drivers/net/wireless/wl12xx/wl12xx.h  |    2 +-
+ 4 files changed, 57 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index 3102652..d59354f 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -337,12 +337,16 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
+ #define DRIVER_STATE_PRINT_STR(x)  DRIVER_STATE_PRINT(x, "%s")
+ #define DRIVER_STATE_PRINT_LHEX(x) DRIVER_STATE_PRINT(x, "0x%lx")
+ #define DRIVER_STATE_PRINT_HEX(x)  DRIVER_STATE_PRINT(x, "0x%x")
  
- static ssize_t manuf_show(struct device *dev, struct device_attribute *attr, char *buf)
+ 	DRIVER_STATE_PRINT_INT(tx_blocks_available);
+ 	DRIVER_STATE_PRINT_INT(tx_allocated_blocks);
++	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[0]);
++	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[1]);
++	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[2]);
++	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[3]);
+ 	DRIVER_STATE_PRINT_INT(tx_frames_cnt);
+ 	DRIVER_STATE_PRINT_LHEX(tx_frames_map[0]);
+ 	DRIVER_STATE_PRINT_INT(tx_queue_count[0]);
+ 	DRIVER_STATE_PRINT_INT(tx_queue_count[1]);
+ 	DRIVER_STATE_PRINT_INT(tx_queue_count[2]);
+ 	DRIVER_STATE_PRINT_INT(tx_queue_count[3]);
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 479977d..869b8c3 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -824,13 +824,13 @@ static void wl12xx_fw_status(struct wl1271 *wl,
+ 		     status->fw_rx_counter,
+ 		     status->drv_rx_counter,
+ 		     status->tx_results_counter);
+ 
+ 	for (i = 0; i < NUM_TX_QUEUES; i++) {
+ 		/* prevent wrap-around in freed-packets counter */
+-		wl->tx_allocated_pkts -=
++		wl->tx_allocated_pkts[i] -=
+ 				(status->tx_released_pkts[i] -
+ 				wl->tx_pkts_freed[i]) & 0xff;
+ 
+ 		wl->tx_pkts_freed[i] = status->tx_released_pkts[i];
+ 	}
+ 
+@@ -2057,15 +2057,16 @@ deinit:
+ 	 * get executed before all these vars have been reset.
+ 	 */
+ 	wl->flags = 0;
+ 
+ 	wl->tx_blocks_freed = 0;
+ 
+-	wl->tx_allocated_pkts = 0;
+-	for (i = 0; i < NUM_TX_QUEUES; i++)
++	for (i = 0; i < NUM_TX_QUEUES; i++) {
+ 		wl->tx_pkts_freed[i] = 0;
++		wl->tx_allocated_pkts[i] = 0;
++	}
+ 
+ 	wl1271_debugfs_reset(wl);
+ 
+ 	kfree(wl->fw_status);
+ 	wl->fw_status = NULL;
+ 	kfree(wl->tx_res_if);
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 7dd6d8b..ccbcd0a 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -202,13 +202,13 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 				u32 buf_offset, u8 hlid)
  {
-@@ -49,6 +50,7 @@ static struct bus_type bcma_bus_type = {
- 	.match		= bcma_bus_match,
- 	.probe		= bcma_device_probe,
- 	.remove		= bcma_device_remove,
-+	.uevent		= bcma_device_uevent,
- 	.dev_attrs	= bcma_device_attrs,
- };
+ 	struct wl1271_tx_hw_descr *desc;
+ 	u32 total_len = skb->len + sizeof(struct wl1271_tx_hw_descr) + extra;
+ 	u32 len;
+ 	u32 total_blocks;
+-	int id, ret = -EBUSY;
++	int id, ret = -EBUSY, ac;
  
-@@ -295,6 +297,16 @@ static int bcma_device_remove(struct device *dev)
- 	return 0;
+ 	/* we use 1 spare block */
+ 	u32 spare_blocks = 1;
+ 
+ 	if (buf_offset + total_len > WL1271_AGGR_BUFFER_SIZE)
+ 		return -EAGAIN;
+@@ -239,13 +239,14 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 
+ 		desc->id = id;
+ 
+ 		wl->tx_blocks_available -= total_blocks;
+ 		wl->tx_allocated_blocks += total_blocks;
+ 
+-		wl->tx_allocated_pkts++;
++		ac = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
++		wl->tx_allocated_pkts[ac]++;
+ 
+ 		if (wl->bss_type == BSS_TYPE_AP_BSS)
+ 			wl->links[hlid].allocated_blks += total_blocks;
+ 
+ 		ret = 0;
+ 
+@@ -482,27 +483,51 @@ void wl1271_handle_tx_low_watermark(struct wl1271 *wl)
+ 			clear_bit(i, &wl->stopped_queues_map);
+ 			spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 		}
+ 	}
  }
  
-+static int bcma_device_uevent(struct device *dev, struct kobj_uevent_env *env)
++static struct sk_buff_head *wl1271_select_queue(struct wl1271 *wl,
++						struct sk_buff_head *queues)
 +{
-+	struct bcma_device *core = container_of(dev, struct bcma_device, dev);
++	int i, q = -1, ac;
++	u32 min_pkts = 0xffffffff;
 +
-+	return add_uevent_var(env,
-+			      "MODALIAS=bcma:m%04Xid%04Xrev%02Xcl%02X",
-+			      core->id.manuf, core->id.id,
-+			      core->id.rev, core->id.class);
++	/*
++	 * Find a non-empty ac where:
++	 * 1. There are packets to transmit
++	 * 2. The FW has the least allocated blocks
++	 *
++	 * We prioritize the ACs according to VO>VI>BE>BK
++	 */
++	for (i = 0; i < NUM_TX_QUEUES; i++) {
++		ac = wl1271_tx_get_queue(i);
++		if (!skb_queue_empty(&queues[ac]) &&
++		    (wl->tx_allocated_pkts[ac] < min_pkts)) {
++			q = ac;
++			min_pkts = wl->tx_allocated_pkts[q];
++		}
++	}
++
++	if (q == -1)
++		return NULL;
++
++	return &queues[q];
 +}
 +
- static int __init bcma_modinit(void)
+ static struct sk_buff *wl1271_sta_skb_dequeue(struct wl1271 *wl)
  {
- 	int err;
-
+ 	struct sk_buff *skb = NULL;
+ 	unsigned long flags;
++	struct sk_buff_head *queue;
+ 
+-	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_VO]);
+-	if (skb)
++	queue = wl1271_select_queue(wl, wl->tx_queue);
++	if (!queue)
+ 		goto out;
+-	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_VI]);
+-	if (skb)
+-		goto out;
+-	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_BE]);
+-	if (skb)
+-		goto out;
+-	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_BK]);
++
++	skb = skb_dequeue(queue);
+ 
+ out:
+ 	if (skb) {
+ 		int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+ 		spin_lock_irqsave(&wl->wl_lock, flags);
+ 		wl->tx_queue_count[q]--;
+@@ -514,35 +539,35 @@ out:
+ 
+ static struct sk_buff *wl1271_ap_skb_dequeue(struct wl1271 *wl)
+ {
+ 	struct sk_buff *skb = NULL;
+ 	unsigned long flags;
+ 	int i, h, start_hlid;
++	struct sk_buff_head *queue;
+ 
+ 	/* start from the link after the last one */
+ 	start_hlid = (wl->last_tx_hlid + 1) % AP_MAX_LINKS;
+ 
+ 	/* dequeue according to AC, round robin on each link */
+ 	for (i = 0; i < AP_MAX_LINKS; i++) {
+ 		h = (start_hlid + i) % AP_MAX_LINKS;
+ 
+-		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_VO]);
+-		if (skb)
+-			goto out;
+-		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_VI]);
+-		if (skb)
+-			goto out;
+-		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_BE]);
+-		if (skb)
+-			goto out;
+-		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_BK]);
++		/* only consider connected stations */
++		if (h >= WL1271_AP_STA_HLID_START &&
++		    !test_bit(h - WL1271_AP_STA_HLID_START, wl->ap_hlid_map))
++			continue;
++
++		queue = wl1271_select_queue(wl, wl->links[h].tx_queue);
++		if (!queue)
++			continue;
++
++		skb = skb_dequeue(queue);
+ 		if (skb)
+-			goto out;
++			break;
+ 	}
+ 
+-out:
+ 	if (skb) {
+ 		int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+ 		wl->last_tx_hlid = h;
+ 		spin_lock_irqsave(&wl->wl_lock, flags);
+ 		wl->tx_queue_count[q]--;
+ 		spin_unlock_irqrestore(&wl->wl_lock, flags);
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 24b4025..6118df5 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -421,13 +421,13 @@ struct wl1271 {
+ 	u32 tx_blocks_available;
+ 	u32 tx_allocated_blocks;
+ 	u32 tx_results_count;
+ 
+ 	/* Accounting for allocated / available Tx packets in HW */
+ 	u32 tx_pkts_freed[NUM_TX_QUEUES];
+-	u32 tx_allocated_pkts;
++	u32 tx_allocated_pkts[NUM_TX_QUEUES];
+ 
+ 	/* Transmitted TX packets counter for chipset interface */
+ 	u32 tx_packets_count;
+ 
+ 	/* Time-offset between host and chipset clocks */
+ 	s64 time_offset;
 -- 
-dwmw2
+1.7.6.401.g6a319
 
