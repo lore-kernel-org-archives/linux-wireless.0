@@ -1,40 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:35902 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756021Ab1HWUhL (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:65029 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752750Ab1HNKRJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 16:37:11 -0400
-Received: by iye16 with SMTP id 16so726166iye.1
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 13:37:10 -0700 (PDT)
-From: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	florian@openwrt.org, "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH 0/2] ath9k: AR9580 support
-Date: Tue, 23 Aug 2011 13:37:05 -0700
-Message-Id: <1314131827-29565-1-git-send-email-lrodriguez@qca.qualcomm.com> (sfid-20110823_223715_448923_F3B89FA7)
+	Sun, 14 Aug 2011 06:17:09 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 24so2967085wyg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:17:08 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 03/40] wl12xx: use 1 spare block in all cases
+Date: Sun, 14 Aug 2011 13:17:02 +0300
+Message-Id: <1313317059-16567-4-git-send-email-eliad@wizery.com> (sfid-20110814_121716_543029_B13485D9)
+In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+From: Arik Nemtsov <arik@wizery.com>
 
-This adds AR9580 support to ath9k. Thanks to Florian for the
-help with testing.
+Remove support for firmwares that require 2 spare blocks for packet TX
+(and delete the WL12XX_QUIRK_USE_2_SPARE_BLOCKS quirk definition)
 
-Luis R. Rodriguez (2):
-  ath9k_hw: add AR9580 support
-  ath9k: add AR9580 support
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+v2: delete WL12XX_QUIRK_USE_2_SPARE_BLOCKS
 
- drivers/net/wireless/ath/ath9k/ar9003_hw.c         |   81 +
- drivers/net/wireless/ath/ath9k/ar9003_mac.c        |    3 +-
- .../net/wireless/ath/ath9k/ar9580_1p0_initvals.h   | 1673 ++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.c                |    1 +
- drivers/net/wireless/ath/ath9k/hw.h                |    1 +
- drivers/net/wireless/ath/ath9k/pci.c               |    1 +
- drivers/net/wireless/ath/ath9k/reg.h               |   14 +
- 7 files changed, 1773 insertions(+), 1 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
+ drivers/net/wireless/wl12xx/boot.c   |   10 ----------
+ drivers/net/wireless/wl12xx/tx.c     |    7 ++-----
+ drivers/net/wireless/wl12xx/wl12xx.h |    6 ------
+ 3 files changed, 2 insertions(+), 21 deletions(-)
 
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index a816f2f..930a638 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -104,22 +104,12 @@ static void wl1271_boot_set_ecpu_ctrl(struct wl1271 *wl, u32 flag)
+ 
+ static unsigned int wl12xx_get_fw_ver_quirks(struct wl1271 *wl)
+ {
+ 	unsigned int quirks = 0;
+ 	unsigned int *fw_ver = wl->chip.fw_ver;
+ 
+-	/* Only for wl127x */
+-	if ((fw_ver[FW_VER_CHIP] == FW_VER_CHIP_WL127X) &&
+-	    /* Check STA version */
+-	    (((fw_ver[FW_VER_IF_TYPE] == FW_VER_IF_TYPE_STA) &&
+-	      (fw_ver[FW_VER_MINOR] < FW_VER_MINOR_1_SPARE_STA_MIN)) ||
+-	     /* Check AP version */
+-	     ((fw_ver[FW_VER_IF_TYPE] == FW_VER_IF_TYPE_AP) &&
+-	      (fw_ver[FW_VER_MINOR] < FW_VER_MINOR_1_SPARE_AP_MIN))))
+-		quirks |= WL12XX_QUIRK_USE_2_SPARE_BLOCKS;
+-
+ 	/* Only new station firmwares support routing fw logs to the host */
+ 	if ((fw_ver[FW_VER_IF_TYPE] == FW_VER_IF_TYPE_STA) &&
+ 	    (fw_ver[FW_VER_MINOR] < FW_VER_MINOR_FWLOG_STA_MIN))
+ 		quirks |= WL12XX_QUIRK_FWLOG_NOT_IMPLEMENTED;
+ 
+ 	/* This feature is not yet supported for AP mode */
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 0696aed..c67340f 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -166,18 +166,15 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ {
+ 	struct wl1271_tx_hw_descr *desc;
+ 	u32 total_len = skb->len + sizeof(struct wl1271_tx_hw_descr) + extra;
+ 	u32 len;
+ 	u32 total_blocks;
+ 	int id, ret = -EBUSY;
+-	u32 spare_blocks;
+ 
+-	if (unlikely(wl->quirks & WL12XX_QUIRK_USE_2_SPARE_BLOCKS))
+-		spare_blocks = 2;
+-	else
+-		spare_blocks = 1;
++	/* we use 1 spare block */
++	u32 spare_blocks = 1;
+ 
+ 	if (buf_offset + total_len > WL1271_AGGR_BUFFER_SIZE)
+ 		return -EAGAIN;
+ 
+ 	/* allocate free identifier for the packet */
+ 	id = wl1271_alloc_tx_id(wl, skb);
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index dc0013e..0bdeae5 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -653,18 +653,12 @@ size_t wl12xx_copy_fwlog(struct wl1271 *wl, u8 *memblock, size_t maxlen);
+ 
+ /* Quirks */
+ 
+ /* Each RX/TX transaction requires an end-of-transaction transfer */
+ #define WL12XX_QUIRK_END_OF_TRANSACTION		BIT(0)
+ 
+-/*
+- * Older firmwares use 2 spare TX blocks
+- * (for STA < 6.1.3.50.58 or for AP < 6.2.0.0.47)
+- */
+-#define WL12XX_QUIRK_USE_2_SPARE_BLOCKS		BIT(1)
+-
+ /* WL128X requires aggregated packets to be aligned to the SDIO block size */
+ #define WL12XX_QUIRK_BLOCKSIZE_ALIGNMENT	BIT(2)
+ 
+ /*
+  * WL127X AP mode requires Low Power DRPw (LPD) enable to reduce power
+  * consumption
 -- 
-1.7.4.15.g7811d
+1.7.6.401.g6a319
 
