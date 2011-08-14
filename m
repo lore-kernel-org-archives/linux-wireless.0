@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:54440 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752745Ab1HIJOS (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:55782 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753243Ab1HNLvy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 05:14:18 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 24so210739wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:18 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 25/40] wl12xx: don't remove key if hlid was already deleted
-Date: Tue,  9 Aug 2011 12:13:38 +0300
-Message-Id: <1312881233-9366-26-git-send-email-eliad@wizery.com> (sfid-20110809_111426_490221_C97963A5)
-In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	Sun, 14 Aug 2011 07:51:54 -0400
+From: "Elias, Ilan" <ilane@ti.com>
+To: Samuel Ortiz <samuel@sortiz.org>
+CC: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
+	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Sun, 14 Aug 2011 13:51:43 +0200
+Subject: RE: [RFC] NFC: NCI protocol proposal
+Message-ID: <AC090B9732AB2B4DB7FF476E907FE6600131D89563@dnce02.ent.ti.com> (sfid-20110814_135202_871534_C1507698)
+References: <AC090B9732AB2B4DB7FF476E907FE6600131D0E347@dnce02.ent.ti.com>
+ <1313086096.8413.11.camel@sortiz-mobl>
+In-Reply-To: <1313086096.8413.11.camel@sortiz-mobl>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If hlid was already removed, there is no need to remove
-its key (it might cause a fw crash, as the key is invalid).
+Hi Samuel,
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/cmd.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+> > We would like to implement the NFC Controller Interface (NCI) protocol
+> > for the NFC subsystem.
+> > The NCI is a standard communication protocol between an NFC Controller
+> > (NFCC) and a Device Host (DH), defined by the NFC Forum.
+> Just as a side note to our previous thread: As far as I know, NCI is still
+> a draft (very close to the final version though) and as a consequence only
+> available to NFC Forum members.
+You're correct. We estimate it will be official by e/o this year.
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index 7cf4d53..41dee4f 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -1200,12 +1200,16 @@ int wl1271_cmd_set_sta_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
- 		       u8 key_size, const u8 *key, const u8 *addr,
- 		       u32 tx_seq_32, u16 tx_seq_16)
- {
- 	struct wl1271_cmd_set_keys *cmd;
- 	int ret = 0;
- 
-+	/* hlid might have already been deleted */
-+	if (wl->sta_hlid == WL1271_INVALID_LINK_ID)
-+		return 0;
-+
- 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
- 	if (!cmd) {
- 		ret = -ENOMEM;
- 		goto out;
- 	}
- 
--- 
-1.7.6.401.g6a319
+> > The NCI protocol implementation will be chip independent and responsible
+> > for:
+> > 	- Reset, initialization and configuration of the NFC controller
+> > 	- Sending commands/data to the NFC controller
+> > 	- Receiving responses/notifications/data from the NFC controller
+> > 	- Flow control for Control and Data Messages
+> > 	- Segmentation and reassembly for Control and Data Messages
+> > 	- An addressing scheme for NFC Execution Environments (NFCEE), e.g.
+> >	secure element
+> > 	- An addressing scheme for Remote NFC Endpoints (NFCEE or RF
+> > targets) 	(via logical connections)
+> Could you give us some more details about those last 2 points ?
+As specified in the NCI spec, NFC Execution Environment (NFCEE) is an environment where NFC applications are executed (e.g. secure element).
+NCI provides features to allow DH to NFCEE communication. NCI therefore includes methods to discover and enumerate connected NFCEEs and the Interfaces they support, and to establish connections between DH and NFCEE Interfaces.
+A logical connection is a connection between the Device Host (DH) and the NFC Controller (NFCC) that is used for communication towards a target, either NFCEE or Remote NFC Endpoint. More than one Logical Connection MAY exist to the same target.
+
+> Out of curiosity, is this NCI HW of yours based on the TRF7970A
+> chipset ? 
+No, it's a new TI combo device, not in the market yet.
+
+Thanks & BR
+Ilan
 
