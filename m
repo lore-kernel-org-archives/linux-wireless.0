@@ -1,122 +1,229 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:38525 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750768Ab1HKNlW (ORCPT
+Received: from ogre.sisk.pl ([217.79.144.158]:40749 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751177Ab1HNTka convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 09:41:22 -0400
-Received: by fxh19 with SMTP id 19so1666514fxh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 06:41:21 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 4/3] b43: support new RX header, noticed to be used in 598.314+ fw
-Date: Thu, 11 Aug 2011 16:20:23 +0200
-Message-Id: <1313072423-15512-4-git-send-email-zajec5@gmail.com> (sfid-20110811_154126_068002_3F7DE227)
+	Sun, 14 Aug 2011 15:40:30 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: 3.1-rc1-git9: Reported regressions 2.6.39 -> 3.0
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <xuTC4jRtHbB.A.l4H.gMCSOB@chimera> (sfid-20110814_214051_018684_1D683D95)
+Date: Sun, 14 Aug 2011 21:02:27 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+[NOTE:
+ We already have a bug entry for tracking regressions from 3.0:
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/pio.c  |   10 +++++++++-
- drivers/net/wireless/b43/xmit.c |   21 ++++++++++++++++-----
- drivers/net/wireless/b43/xmit.h |   19 ++++++++++++++++---
- 3 files changed, 41 insertions(+), 9 deletions(-)
+ http://bugzilla.kernel.org/show_bug.cgi?id=40982
 
-diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
-index 6e4228c..ce8a4bd 100644
---- a/drivers/net/wireless/b43/pio.c
-+++ b/drivers/net/wireless/b43/pio.c
-@@ -676,7 +676,15 @@ data_ready:
- 		goto rx_error;
- 	}
- 
--	macstat = le32_to_cpu(rxhdr->mac_status);
-+	switch (dev->fw.hdr_format) {
-+	case B43_FW_HDR_598:
-+		macstat = le32_to_cpu(rxhdr->format_598.mac_status);
-+		break;
-+	case B43_FW_HDR_410:
-+	case B43_FW_HDR_351:
-+		macstat = le32_to_cpu(rxhdr->format_351.mac_status);
-+		break;
-+	}
- 	if (macstat & B43_RX_MAC_FCSERR) {
- 		if (!(q->dev->wl->filter_flags & FIF_FCSFAIL)) {
- 			/* Drop frames with failed FCS. */
-diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-index b02170d..5b82409 100644
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -653,8 +653,9 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
- 	struct ieee80211_hdr *wlhdr;
- 	const struct b43_rxhdr_fw4 *rxhdr = _rxhdr;
- 	__le16 fctl;
--	u16 phystat0, phystat3, chanstat, mactime;
--	u32 macstat;
-+	u16 phystat0, phystat3;
-+	u16 uninitialized_var(chanstat), uninitialized_var(mactime);
-+	u32 uninitialized_var(macstat);
- 	u16 chanid;
- 	u16 phytype;
- 	int padding;
-@@ -664,9 +665,19 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
- 	/* Get metadata about the frame from the header. */
- 	phystat0 = le16_to_cpu(rxhdr->phy_status0);
- 	phystat3 = le16_to_cpu(rxhdr->phy_status3);
--	macstat = le32_to_cpu(rxhdr->mac_status);
--	mactime = le16_to_cpu(rxhdr->mac_time);
--	chanstat = le16_to_cpu(rxhdr->channel);
-+	switch (dev->fw.hdr_format) {
-+	case B43_FW_HDR_598:
-+		macstat = le32_to_cpu(rxhdr->format_598.mac_status);
-+		mactime = le16_to_cpu(rxhdr->format_598.mac_time);
-+		chanstat = le16_to_cpu(rxhdr->format_598.channel);
-+		break;
-+	case B43_FW_HDR_410:
-+	case B43_FW_HDR_351:
-+		macstat = le32_to_cpu(rxhdr->format_351.mac_status);
-+		mactime = le16_to_cpu(rxhdr->format_351.mac_time);
-+		chanstat = le16_to_cpu(rxhdr->format_351.channel);
-+		break;
-+	}
- 	phytype = chanstat & B43_RX_CHAN_PHYTYPE;
- 
- 	if (unlikely(macstat & B43_RX_MAC_FCSERR)) {
-diff --git a/drivers/net/wireless/b43/xmit.h b/drivers/net/wireless/b43/xmit.h
-index dccf7c1..dc37297 100644
---- a/drivers/net/wireless/b43/xmit.h
-+++ b/drivers/net/wireless/b43/xmit.h
-@@ -250,9 +250,22 @@ struct b43_rxhdr_fw4 {
- 	} __packed;
- 	__le16 phy_status2;	/* PHY RX Status 2 */
- 	__le16 phy_status3;	/* PHY RX Status 3 */
--	__le32 mac_status;	/* MAC RX status */
--	__le16 mac_time;
--	__le16 channel;
-+	union {
-+		/* Tested with 598.314, 644.1001 and 666.2 */
-+		struct {
-+			PAD_BYTES(1);
-+			__le32 mac_status;	/* MAC RX status */
-+			__le16 mac_time;
-+			__le16 channel;
-+		} format_598 __packed;
-+
-+		/* Tested with 351.126, 410.2160, 478.104 and 508.* */
-+		struct {
-+			__le32 mac_status;	/* MAC RX status */
-+			__le16 mac_time;
-+			__le16 channel;
-+		} format_351 __packed;
-+	} __packed;
- } __packed;
- 
- /* PHY RX Status 0 */
--- 
-1.7.3.4
+ but there are no reports linked to it, mostly because Maciej is on vacation,
+ but also because the frequency of reporting regressions has been low
+ recently.  So, if you're seeing a regression from 3.0, please let us know.]
+
+This message contains a list of some post-2.6.39 regressions introduced before
+3.0, for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
+
+If you know of any other unresolved post-2.6.39 regressions, please let us know
+either and we'll add them to the list.  Also, please let us know if any
+of the entries below are invalid.
+
+Each entry from the list will be sent additionally in an automatic reply to
+this message with CCs to the people involved in reporting and handling the
+issue.
+
+
+Listed regressions statistics:
+
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2011-08-14       63       22          19
+
+
+Unresolved regressions
+----------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40282
+Subject		: IP forwarding regression since 3.0-rc6
+Submitter	: Stephan Seitz <stse+lkml@fsing.rootsland.net>
+Date		: 2011-07-25 12:51 (21 days old)
+Message-ID	: <20110725T141145.GA.2ae38.stse@fsing.rootsland.net>
+References	: http://marc.info/?l=linux-kernel&m=131159880004908&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40172
+Subject		: lockdep trace from post 3.0.
+Submitter	: Dave Jones <davej@redhat.com>
+Date		: 2011-07-24 1:32 (22 days old)
+Message-ID	: <20110724013257.GA6777@redhat.com>
+References	: http://marc.info/?l=linux-kernel&m=131147120206819&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40092
+Subject		: RCU stall in linux-3.0.0
+Submitter	: Philip Armstrong <phil@kantaka.co.uk>
+Date		: 2011-07-25 21:44 (21 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40072
+Subject		: suspend/resume problems w/ kernel 3.0 and a *docked* ThinkPad T400, unless iwlagn unloaded
+Submitter	: Toralf Förster <toralf.foerster@gmx.de>
+Date		: 2011-07-23 19:27 (23 days old)
+Message-ID	: <201107232127.34255.toralf.foerster@gmx.de>
+References	: http://marc.info/?l=linux-kernel&m=131144928023465&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39972
+Subject		: [regression] Radeon multi-screen
+Submitter	: Robert Piasek <dagger@gentoo.org>
+Date		: 2011-07-25 14:04 (21 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39922
+Subject		: WIFI becomes EXTREMELY slow ( ath9k ) making the connection unusable
+Submitter	: Lukasz Olszewski <lcpak@epoczta.pl>
+Date		: 2011-07-24 09:20 (22 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39912
+Subject		: WARNING: at drivers/tty/tty_ldisc.c:766 tty_ldisc_reinit+0x7d/0x90()
+Submitter	: Vegard Nossum <vegard.nossum@gmail.com>
+Date		: 2011-07-19 11:33 (27 days old)
+Message-ID	: <CAOMGZ=HS2EPkYD=5HfkSPpwPqHB5V3q0vaFmoZ8Hh+pMM9phrQ@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=131107522914558&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39902
+Subject		: ath: Unable to reset channel (2412 MHz), reset status -5
+Submitter	: Justin P. Mattock <justinmattock@gmail.com>
+Date		: 2011-07-19 6:13 (27 days old)
+Message-ID	: <4E252076.1050309@gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=131105603428323&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39832
+Subject		: HDA ATI HDMI: no sound with 3.0 - 2.6.39.3 works
+Submitter	: Andreas Steinmetz <ast@domdv.de>
+Date		: 2011-07-23 01:36 (23 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39732
+Subject		: JBD: Spotted dirty metadata buffer (dev = dm-2, blocknr = 2512725). There's a risk of filesystem corruption in case of system crash.
+Submitter	: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
+Date		: 2011-07-22 04:22 (24 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39412
+Subject		: Win Vista and Win2K8 guests' network breaks down
+Submitter	: Jay Ren <yongjie.ren@intel.com>
+Date		: 2011-07-15 15:31 (31 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39342
+Subject		: [3.0.0-rc6-git7] possible recursive locking at cache_alloc_refill
+Submitter	: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+Date		: 2011-07-11 12:37 (35 days old)
+Message-ID	: <201107112137.FAD00545.SHtLOFOJOMFQFV@I-love.SAKURA.ne.jp>
+References	: http://marc.info/?l=linux-kernel&m=131038788902151&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39192
+Subject		: firmware_install fails with parallel make
+Submitter	: Ambroz Bizjak <ambrop7@gmail.com>
+Date		: 2011-07-12 09:35 (34 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39132
+Subject		: Starting with 3.0.0-rc6, masquerading seems to be broken.
+Submitter	: David Hill <hilld@binarystorm.net>
+Date		: 2011-07-10 19:45 (36 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38922
+Subject		: Lenovo T420 (Sandy Bridge) Crashes on SD Card gpt partition writing and io errors on insert
+Submitter	: Peter Vollmer <vollmerpeter@googlemail.com>
+Date		: 2011-07-07 17:33 (39 days old)
+First-Bad-Commit: http://git.kernel.org/linus/a3c7778f8153b9e4eceea6738973280b9e63c618
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38622
+Subject		: [radeon cayman regresion] artefacts on screen
+Submitter	: Marek Hobler, &apos;neutrinus&apos; <kernellist@neutrinus.com>
+Date		: 2011-07-01 09:35 (45 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38612
+Subject		: Boot time warnings in APIC
+Submitter	: Bill Huey <bill.huey@gmail.com>
+Date		: 2011-07-01 06:44 (45 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38582
+Subject		: T510 43495KG won't resume with 32bit installation
+Submitter	: Marc Koschewski <marc@osknowledge.org>
+Date		: 2011-06-30 22:39 (46 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37432
+Subject		: sdhci-pci fails on 3.0.0-rc1 on Dell E6510
+Submitter	: Oliver Hartkopp <socketcan@hartkopp.net>
+Date		: 2011-06-07 20:06 (69 days old)
+First-Bad-Commit: http://git.kernel.org/linus/da7822e5ad71ec9b745b412639f1e5e0ba795a20
+References	: http://article.gmane.org/gmane.linux.kernel.mmc/8442
+		  https://lkml.org/lkml/2011/6/23/660
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40062
+Subject		: USB related "unable to handle kernel paging request" in 3.0.0-rc7
+Submitter	: Tino Keitel <tino.keitel@tikei.de>
+Date		: 2011-07-22 19:27 (24 days old)
+Message-ID	: <20110722192722.GA9369@x61.home>
+References	: http://marc.info/?l=linux-kernel&m=131136334621623&w=2
+Patch		: https://lkml.org/lkml/2011/8/2/174
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39882
+Subject		: Kernel oops when turning bluetooth mouse on
+Submitter	: Lamarque V. Souza <lamarque@gmail.com>
+Date		: 2011-07-24 02:09 (22 days old)
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=66632
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37872
+Subject		: CPU lockup during boot
+Submitter	: Bruno Wolff III <bruno@wolff.to>
+Date		: 2011-06-19 15:00 (57 days old)
+Patch		: https://bugzilla.kernel.org/show_bug.cgi?id=37872#c16
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions introduced
+between 2.6.39 and 3.0, unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=36912
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
 
