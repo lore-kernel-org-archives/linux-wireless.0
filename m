@@ -1,201 +1,262 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4842 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751526Ab1HLNfR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 09:35:17 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 12/14] staging: brcm80211: remove unused parameter from
- data interface in fullmac
-Date: Fri, 12 Aug 2011 15:34:59 +0200
-Message-ID: <1313156101-16817-13-git-send-email-arend@broadcom.com> (sfid-20110812_153534_371767_154B56D8)
-In-Reply-To: <1313156101-16817-1-git-send-email-arend@broadcom.com>
-References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:65029 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752864Ab1HNKRe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Aug 2011 06:17:34 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 24so2967085wyg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:17:34 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 16/40] wl12xx: add system_hlid
+Date: Sun, 14 Aug 2011 13:17:15 +0300
+Message-Id: <1313317059-16567-17-git-send-email-eliad@wizery.com> (sfid-20110814_121739_823537_90AEBB52)
+In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+system_hlid is a const hlid (always 0), used by the fw and driver
+for packets which are not bound to specific role (e.g. dynamic
+memory packets).
+indicate it as always allocated.
 
-Remove redundant complete function pointer in send/recv buffer interface.
-
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c    |   10 +------
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |   31 +++++++++--------------
- drivers/staging/brcm80211/brcmfmac/sdio_host.h |   10 +------
- 3 files changed, 16 insertions(+), 35 deletions(-)
+v2: remove memset, refactor wl1271_tx_get_hlid
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-index 824208f..0c845c9 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-@@ -385,10 +385,7 @@ bool brcmf_sdcard_regfail(struct brcmf_sdio_dev *sdiodev)
- int
- brcmf_sdcard_recv_buf(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- 		      uint flags,
--		      u8 *buf, uint nbytes, struct sk_buff *pkt,
--		      void (*complete)(void *handle, int status,
--				       bool sync_waiting),
--		      void *handle)
-+		      u8 *buf, uint nbytes, struct sk_buff *pkt)
+ drivers/net/wireless/wl12xx/main.c   |    9 ++++++-
+ drivers/net/wireless/wl12xx/tx.c     |   40 +++++++++++++++++++++------------
+ drivers/net/wireless/wl12xx/tx.h     |    2 +-
+ drivers/net/wireless/wl12xx/wl12xx.h |    2 +
+ 4 files changed, 36 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 3db191d..e4081e2 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1488,13 +1488,13 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	u8 hlid = 0;
+ 
+ 	mapping = skb_get_queue_mapping(skb);
+ 	q = wl1271_tx_get_queue(mapping);
+ 
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS)
+-		hlid = wl1271_tx_get_hlid(skb);
++		hlid = wl12xx_tx_get_hlid_ap(wl, skb);
+ 
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
+ 
+ 	wl->tx_queue_count[q]++;
+ 
+ 	/*
+@@ -2066,12 +2066,15 @@ deinit:
+ 	wl->sched_scanning = false;
+ 	wl->role_id = WL12XX_INVALID_ROLE_ID;
+ 	wl->dev_role_id = WL12XX_INVALID_ROLE_ID;
+ 	memset(wl->roles_map, 0, sizeof(wl->roles_map));
+ 	memset(wl->links_map, 0, sizeof(wl->links_map));
+ 
++	/* The system link is always allocated */
++	__set_bit(WL12XX_SYSTEM_HLID, wl->links_map);
++
+ 	/*
+ 	 * this is performed after the cancel_work calls and the associated
+ 	 * mutex_lock, so that wl1271_op_add_interface does not accidentally
+ 	 * get executed before all these vars have been reset.
+ 	 */
+ 	wl->flags = 0;
+@@ -4404,20 +4407,24 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	wl->quirks = 0;
+ 	wl->platform_quirks = 0;
+ 	wl->sched_scanning = false;
+ 	wl->tx_security_seq = 0;
+ 	wl->tx_security_last_seq_lsb = 0;
+ 	wl->role_id = WL12XX_INVALID_ROLE_ID;
++	wl->system_hlid = WL12XX_SYSTEM_HLID;
+ 	wl->sta_hlid = WL12XX_INVALID_LINK_ID;
+ 	wl->dev_role_id = WL12XX_INVALID_ROLE_ID;
+ 	wl->dev_hlid = WL12XX_INVALID_LINK_ID;
+ 	setup_timer(&wl->rx_streaming_timer, wl1271_rx_streaming_timer,
+ 		    (unsigned long) wl);
+ 	wl->fwlog_size = 0;
+ 	init_waitqueue_head(&wl->fwlog_waitq);
+ 
++	/* The system link is always allocated */
++	__set_bit(WL12XX_SYSTEM_HLID, wl->links_map);
++
+ 	memset(wl->tx_frames_map, 0, sizeof(wl->tx_frames_map));
+ 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
+ 		wl->tx_frames[i] = NULL;
+ 
+ 	spin_lock_init(&wl->wl_lock);
+ 
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 23ce7aa..ffdaf97 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -129,33 +129,55 @@ static void wl1271_tx_regulate_link(struct wl1271 *wl, u8 hlid)
+ 	 */
+ 	if (fw_ps && tx_blks >= WL1271_PS_STA_MAX_BLOCKS)
+ 		wl1271_ps_link_start(wl, hlid, true);
+ }
+ #endif
+ 
+-u8 wl1271_tx_get_hlid(struct sk_buff *skb)
++static bool wl12xx_is_dummy_packet(struct wl1271 *wl, struct sk_buff *skb)
++{
++	return wl->dummy_packet == skb;
++}
++
++u8 wl12xx_tx_get_hlid_ap(struct wl1271 *wl, struct sk_buff *skb)
  {
- 	int status;
- 	uint incr_fix;
-@@ -426,10 +423,7 @@ brcmf_sdcard_recv_buf(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
+ 	struct ieee80211_tx_info *control = IEEE80211_SKB_CB(skb);
  
- int
- brcmf_sdcard_send_buf(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
--		      uint flags, u8 *buf, uint nbytes, void *pkt,
--		      void (*complete)(void *handle, int status,
--				       bool sync_waiting),
--		      void *handle)
-+		      uint flags, u8 *buf, uint nbytes, struct sk_buff *pkt)
- {
- 	uint incr_fix;
- 	uint width;
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 1d487db..60e7a814 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -941,10 +941,7 @@ static uint brcmf_process_nvram_vars(char *varbuf, uint len);
- static void brcmf_sdbrcm_setmemsize(struct brcmf_bus *bus, int mem_size);
- static int brcmf_sdbrcm_send_buf(struct brcmf_bus *bus, u32 addr, uint fn,
- 			       uint flags, u8 *buf, uint nbytes,
--			       struct sk_buff *pkt,
--			       void (*complete)(void *handle, int status,
--						      bool sync_waiting),
--			       void *handle);
-+			       struct sk_buff *pkt);
+ 	if (control->control.sta) {
+ 		struct wl1271_station *wl_sta;
  
- static bool brcmf_sdbrcm_download_firmware(struct brcmf_bus *bus, void *card);
- static int  _brcmf_sdbrcm_download_firmware(struct brcmf_bus *bus);
-@@ -1413,7 +1410,7 @@ static int brcmf_sdbrcm_txpkt(struct brcmf_bus *bus, struct sk_buff *pkt,
- 	do {
- 		ret = brcmf_sdbrcm_send_buf(bus,
- 			brcmf_sdcard_cur_sbwad(bus->sdiodev),
--			SDIO_FUNC_2, F2SYNC, frame, len, pkt, NULL, NULL);
-+			SDIO_FUNC_2, F2SYNC, frame, len, pkt);
- 		bus->f2txdata++;
+ 		wl_sta = (struct wl1271_station *)
+ 				control->control.sta->drv_priv;
+ 		return wl_sta->hlid;
+ 	} else {
+ 		struct ieee80211_hdr *hdr;
  
- 		if (ret < 0) {
-@@ -1731,7 +1728,7 @@ brcmf_sdbrcm_bus_txctl(struct brcmf_bus *bus, unsigned char *msg, uint msglen)
- 			ret = brcmf_sdbrcm_send_buf(bus,
- 				brcmf_sdcard_cur_sbwad(bus->sdiodev),
- 				SDIO_FUNC_2,
--				F2SYNC, frame, len, NULL, NULL, NULL);
-+				F2SYNC, frame, len, NULL);
- 
- 			if (ret < 0) {
- 				/* On failure, abort the command and
-@@ -3493,7 +3490,7 @@ brcmf_sdbrcm_read_control(struct brcmf_bus *bus, u8 *hdr, uint len, uint doff)
- 				brcmf_sdcard_cur_sbwad(bus->sdiodev),
- 				SDIO_FUNC_2,
- 				F2SYNC, (bus->rxctl + firstread), rdlen,
--				NULL, NULL, NULL);
-+				NULL);
- 	bus->f2rxdata++;
- 
- 	/* Control frame failures need retransmission */
-@@ -3657,13 +3654,13 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_bus *bus, u8 rxseq)
- 					brcmf_sdcard_cur_sbwad(bus->sdiodev),
- 					SDIO_FUNC_2,
- 					F2SYNC, (u8 *) pfirst->data, dlen,
--					pfirst, NULL, NULL);
-+					pfirst);
- 		} else if (bus->dataptr) {
- 			errcode = brcmf_sdcard_recv_buf(bus->sdiodev,
- 					brcmf_sdcard_cur_sbwad(bus->sdiodev),
- 					SDIO_FUNC_2,
- 					F2SYNC, bus->dataptr, dlen,
--					NULL, NULL, NULL);
-+					NULL);
- 			sublen = (u16) brcmu_pktfrombuf(pfirst, 0, dlen,
- 						bus->dataptr);
- 			if (sublen != dlen) {
-@@ -4032,7 +4029,7 @@ brcmf_sdbrcm_readframes(struct brcmf_bus *bus, uint maxframes, bool *finished)
- 							bus->sdiodev),
- 						SDIO_FUNC_2, F2SYNC,
- 						rxbuf, rdlen,
--						pkt, NULL, NULL);
-+						pkt);
- 				bus->f2rxdata++;
- 
- 				if (sdret < 0) {
-@@ -4195,7 +4192,7 @@ brcmf_sdbrcm_readframes(struct brcmf_bus *bus, uint maxframes, bool *finished)
- 		sdret = brcmf_sdcard_recv_buf(bus->sdiodev,
- 				brcmf_sdcard_cur_sbwad(bus->sdiodev),
- 				SDIO_FUNC_2, F2SYNC, bus->rxhdr, firstread,
--				NULL, NULL, NULL);
-+				NULL);
- 		bus->f2rxhdrs++;
- 
- 		if (sdret < 0) {
-@@ -4352,7 +4349,7 @@ brcmf_sdbrcm_readframes(struct brcmf_bus *bus, uint maxframes, bool *finished)
- 		sdret = brcmf_sdcard_recv_buf(bus->sdiodev,
- 				brcmf_sdcard_cur_sbwad(bus->sdiodev),
- 				SDIO_FUNC_2, F2SYNC, ((u8 *) (pkt->data)),
--				rdlen, pkt, NULL, NULL);
-+				rdlen, pkt);
- 		bus->f2rxdata++;
- 
- 		if (sdret < 0) {
-@@ -4689,7 +4686,7 @@ clkwait:
- 		ret = brcmf_sdbrcm_send_buf(bus,
- 			brcmf_sdcard_cur_sbwad(bus->sdiodev),
- 			SDIO_FUNC_2, F2SYNC, (u8 *) bus->ctrl_frame_buf,
--			(u32) bus->ctrl_frame_len, NULL, NULL, NULL);
-+			(u32) bus->ctrl_frame_len, NULL);
- 
- 		if (ret < 0) {
- 			/* On failure, abort the command and
-@@ -5885,14 +5882,10 @@ err:
- 
- static int
- brcmf_sdbrcm_send_buf(struct brcmf_bus *bus, u32 addr, uint fn, uint flags,
--		    u8 *buf, uint nbytes, struct sk_buff *pkt,
--		    void (*complete)(void *handle, int status,
--				     bool sync_waiting),
--		    void *handle)
-+		    u8 *buf, uint nbytes, struct sk_buff *pkt)
- {
- 	return brcmf_sdcard_send_buf
--		(bus->sdiodev, addr, fn, flags, buf, nbytes, pkt, complete,
--		 handle);
-+		(bus->sdiodev, addr, fn, flags, buf, nbytes, pkt);
++		if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags))
++			return wl->system_hlid;
++
+ 		hdr = (struct ieee80211_hdr *)skb->data;
+ 		if (ieee80211_is_mgmt(hdr->frame_control))
+ 			return WL1271_AP_GLOBAL_HLID;
+ 		else
+ 			return WL1271_AP_BROADCAST_HLID;
+ 	}
  }
  
- int brcmf_bus_devreset(struct brcmf_pub *drvr, u8 flag)
-diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-index dc588e7..03ae16a 100644
---- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-@@ -188,16 +188,10 @@ extern bool brcmf_sdcard_regfail(struct brcmf_sdio_dev *sdiodev);
-  */
- extern int
- brcmf_sdcard_send_buf(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
--		      uint flags, u8 *buf, uint nbytes, void *pkt,
--		      void (*complete)(void *handle, int status,
--				       bool sync_waiting),
--		      void *handle);
-+		      uint flags, u8 *buf, uint nbytes, struct sk_buff *pkt);
- extern int
- brcmf_sdcard_recv_buf(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
--		      uint flags, u8 *buf, uint nbytes, struct sk_buff *pkt,
--		      void (*complete)(void *handle, int status,
--				       bool sync_waiting),
--		      void *handle);
-+		      uint flags, u8 *buf, uint nbytes, struct sk_buff *pkt);
++static u8 wl1271_tx_get_hlid(struct wl1271 *wl, struct sk_buff *skb)
++{
++	if (wl12xx_is_dummy_packet(wl, skb))
++		return wl->system_hlid;
++
++	if (wl->bss_type == BSS_TYPE_AP_BSS)
++		return wl12xx_tx_get_hlid_ap(wl, skb);
++
++	if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
++		return wl->sta_hlid;
++	else
++		return wl->dev_hlid;
++}
++
+ static unsigned int wl12xx_calc_packet_alignment(struct wl1271 *wl,
+ 						unsigned int packet_length)
+ {
+ 	if (wl->quirks & WL12XX_QUIRK_BLOCKSIZE_ALIGNMENT)
+ 		return ALIGN(packet_length, WL12XX_BUS_BLOCK_SIZE);
+ 	else
+@@ -218,17 +240,12 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 		wl1271_free_tx_id(wl, id);
+ 	}
  
- /* Flags bits */
+ 	return ret;
+ }
+ 
+-static bool wl12xx_is_dummy_packet(struct wl1271 *wl, struct sk_buff *skb)
+-{
+-	return wl->dummy_packet == skb;
+-}
+-
+ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 			      u32 extra, struct ieee80211_tx_info *control,
+ 			      u8 hlid)
+ {
+ 	struct timespec ts;
+ 	struct wl1271_tx_hw_descr *desc;
+@@ -368,20 +385,13 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct sk_buff *skb,
+ 			if (ret < 0)
+ 				return ret;
+ 			wl->default_key = idx;
+ 		}
+ 	}
+ 
+-	if (wl->bss_type == BSS_TYPE_AP_BSS)
+-		hlid = wl1271_tx_get_hlid(skb);
+-	else
+-		if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
+-			hlid = wl->sta_hlid;
+-		else
+-			hlid = wl->dev_hlid;
+-
++	hlid = wl1271_tx_get_hlid(wl, skb);
+ 	if (hlid == WL12XX_INVALID_LINK_ID) {
+ 		wl1271_error("invalid hlid. dropping skb 0x%p", skb);
+ 		return -EINVAL;
+ 	}
+ 
+ 	ret = wl1271_tx_allocate(wl, skb, extra, buf_offset, hlid);
+@@ -561,13 +571,13 @@ static void wl1271_skb_queue_head(struct wl1271 *wl, struct sk_buff *skb)
+ 	unsigned long flags;
+ 	int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+ 
+ 	if (wl12xx_is_dummy_packet(wl, skb)) {
+ 		set_bit(WL1271_FLAG_DUMMY_PACKET_PENDING, &wl->flags);
+ 	} else if (wl->bss_type == BSS_TYPE_AP_BSS) {
+-		u8 hlid = wl1271_tx_get_hlid(skb);
++		u8 hlid = wl1271_tx_get_hlid(wl, skb);
+ 		skb_queue_head(&wl->links[hlid].tx_queue[q], skb);
+ 
+ 		/* make sure we dequeue the same packet next time */
+ 		wl->last_tx_hlid = (hlid + AP_MAX_LINKS - 1) % AP_MAX_LINKS;
+ 	} else {
+ 		skb_queue_head(&wl->tx_queue[q], skb);
+diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
+index b712d7b..7da35c0 100644
+--- a/drivers/net/wireless/wl12xx/tx.h
++++ b/drivers/net/wireless/wl12xx/tx.h
+@@ -207,11 +207,11 @@ void wl1271_tx_work_locked(struct wl1271 *wl);
+ void wl1271_tx_complete(struct wl1271 *wl);
+ void wl1271_tx_reset(struct wl1271 *wl, bool reset_tx_queues);
+ void wl1271_tx_flush(struct wl1271 *wl);
+ u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
+ u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set);
+ u32 wl1271_tx_min_rate_get(struct wl1271 *wl);
+-u8 wl1271_tx_get_hlid(struct sk_buff *skb);
++u8 wl12xx_tx_get_hlid_ap(struct wl1271 *wl, struct sk_buff *skb);
+ void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid);
+ void wl1271_handle_tx_low_watermark(struct wl1271 *wl);
+ 
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 93e689d..089304d 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -138,12 +138,13 @@ extern u32 wl12xx_debug_level;
+ #define WL1271_DEFAULT_DTIM_PERIOD 1
+ 
+ #define WL12XX_MAX_ROLES           4
+ #define WL12XX_MAX_LINKS           8
+ #define WL12XX_INVALID_ROLE_ID     0xff
+ #define WL12XX_INVALID_LINK_ID     0xff
++#define WL12XX_SYSTEM_HLID         0
+ #define WL1271_AP_GLOBAL_HLID      0
+ #define WL1271_AP_BROADCAST_HLID   1
+ #define WL1271_AP_STA_HLID_START   2
+ 
+ /*
+  * When in AP-mode, we allow (at least) this number of mem-blocks
+@@ -392,12 +393,13 @@ struct wl1271 {
+ 	u8 set_bss_type;
+ 	u8 ssid[IEEE80211_MAX_SSID_LEN + 1];
+ 	u8 ssid_len;
+ 	int channel;
+ 	u8 role_id;
+ 	u8 dev_role_id;
++	u8 system_hlid;
+ 	u8 sta_hlid;
+ 	u8 dev_hlid;
+ 
+ 	unsigned long links_map[BITS_TO_LONGS(WL12XX_MAX_LINKS)];
+ 	unsigned long roles_map[BITS_TO_LONGS(WL12XX_MAX_ROLES)];
  
 -- 
-1.7.4.1
-
+1.7.6.401.g6a319
 
