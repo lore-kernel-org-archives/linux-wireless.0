@@ -1,132 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:40254 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753215Ab1HXSER convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:50538 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752646Ab1HNKNh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 14:04:17 -0400
-Received: by wwf5 with SMTP id 5so1498299wwf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 11:04:16 -0700 (PDT)
+	Sun, 14 Aug 2011 06:13:37 -0400
+Received: by iye16 with SMTP id 16so5265510iye.1
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:13:36 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20110824174835.GH9770@tuxdriver.com>
-References: <1313942085-6238-1-git-send-email-mohammed@qca.qualcomm.com>
-	<20110824174835.GH9770@tuxdriver.com>
-Date: Wed, 24 Aug 2011 23:34:15 +0530
-Message-ID: <CAD2nsn1JmdrTHRgv51t1oFuOUe3MdyhT+uN_+GWX3LycuiJNtw@mail.gmail.com> (sfid-20110824_200424_558785_DF771CA6)
-Subject: Re: [PATCH] ath9k_htc: Fix few possible memory leaks
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, rodrigue@qca.qualcomm.com,
-	senthilb@qca.qualcomm.com, rmanohar@qca.qualcomm.com,
-	Larry.Finger@lwfinger.net
-Content-Type: text/plain; charset=ISO-8859-1
+Reply-To: robert@ocallahan.org
+In-Reply-To: <1313234481.2052.7.camel@localhost.localdomain>
+References: <1313234481.2052.7.camel@localhost.localdomain>
+Date: Sun, 14 Aug 2011 22:13:36 +1200
+Message-ID: <CAOp6jLanq8n6hODm2SCJm8MRmgrrGdQaQ_dhNYS5sviVOri9Pw@mail.gmail.com> (sfid-20110814_121341_983645_796062DD)
+Subject: Re: [ath9k-devel] Packet loss regression with Atheros AR9280
+From: "Robert O'Callahan" <robert@ocallahan.org>
+To: Jan Sundman <jan.sundman@aland.net>
+Cc: ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 24, 2011 at 11:18 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> Is this intended for 3.1?  Should it be Cc: stable@kernel.org as well?
+On Sat, Aug 13, 2011 at 11:21 PM, Jan Sundman <jan.sundman@aland.net> wrote:
+> "iwconfig wlan0 power off" seems to fix it so I added this to my startup
+> script and this fixes it. This is of course not a optimal solution but
+> may point you in the right direction on fixing the problem.
 
-Hi John,
+That doesn't help with my problem. Thanks for the idea though.
 
-sorry for the inconvenience, please drop this patch
-as discussed in the thread
-http://comments.gmane.org/gmane.linux.kernel.wireless.general/75206
-thanks!
-
->
-> On Sun, Aug 21, 2011 at 09:24:45PM +0530, Mohammed Shafi Shajakhan wrote:
->> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
->>
->> still there are few other memory leaks which will be fixed
->> very soon
->>
->> Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
->> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> ---
->>  drivers/net/wireless/ath/ath9k/htc_hst.c |   13 ++++++++-----
->>  drivers/net/wireless/ath/ath9k/wmi.c     |    3 ++-
->>  2 files changed, 10 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
->> index 1b90ed8..e435c9b 100644
->> --- a/drivers/net/wireless/ath/ath9k/htc_hst.c
->> +++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
->> @@ -169,13 +169,14 @@ static int htc_config_pipe_credits(struct htc_target *target)
->>       time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
->>       if (!time_left) {
->>               dev_err(target->dev, "HTC credit config timeout\n");
->> -             return -ETIMEDOUT;
->> +             ret = -ETIMEDOUT;
->> +             goto err;
->>       }
->>
->>       return 0;
->>  err:
->>       kfree_skb(skb);
->> -     return -EINVAL;
->> +     return ret;
->>  }
->>
->>  static int htc_setup_complete(struct htc_target *target)
->> @@ -204,14 +205,15 @@ static int htc_setup_complete(struct htc_target *target)
->>       time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
->>       if (!time_left) {
->>               dev_err(target->dev, "HTC start timeout\n");
->> -             return -ETIMEDOUT;
->> +             ret = -ETIMEDOUT;
->> +             goto err;
->>       }
->>
->>       return 0;
->>
->>  err:
->>       kfree_skb(skb);
->> -     return -EINVAL;
->> +     return ret;
->>  }
->>
->>  /* HTC APIs */
->> @@ -276,7 +278,8 @@ int htc_connect_service(struct htc_target *target,
->>       if (!time_left) {
->>               dev_err(target->dev, "Service connection timeout for: %d\n",
->>                       service_connreq->service_id);
->> -             return -ETIMEDOUT;
->> +             ret = -ETIMEDOUT;
->> +             goto err;
->>       }
->>
->>       *conn_rsp_epid = target->conn_rsp_epid;
->> diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
->> index 35422fc..50d901d 100644
->> --- a/drivers/net/wireless/ath/ath9k/wmi.c
->> +++ b/drivers/net/wireless/ath/ath9k/wmi.c
->> @@ -334,7 +334,8 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
->>                       "Timeout waiting for WMI command: %s\n",
->>                       wmi_cmd_to_name(cmd_id));
->>               mutex_unlock(&wmi->op_mutex);
->> -             return -ETIMEDOUT;
->> +             ret = -ETIMEDOUT;
->> +             goto out;
->>       }
->>
->>       mutex_unlock(&wmi->op_mutex);
->> --
->> 1.7.0.4
->>
->>
->
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
--- 
-shafi
+Rob
+--
+"If we claim to be without sin, we deceive ourselves and the truth is
+not in us. If we confess our sins, he is faithful and just and will
+forgive us our sins and purify us from all unrighteousness. If we
+claim we have not sinned, we make him out to be a liar and his word is
+not in us." [1 John 1:8-10]
