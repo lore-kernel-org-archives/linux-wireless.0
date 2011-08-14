@@ -1,34 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49652 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751218Ab1H3Gdz (ORCPT
+Received: from bues.ch ([80.190.117.144]:39896 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753932Ab1HNRLD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 02:33:55 -0400
-Subject: Re: [PATCH v2] mac80211: add flag to indicate HW only Tx-agg setup
- support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-In-Reply-To: <1314685958-24855-1-git-send-email-arik@wizery.com> (sfid-20110830_083313_960988_FD30FB1C)
-References: <1314685958-24855-1-git-send-email-arik@wizery.com>
-	 (sfid-20110830_083313_960988_FD30FB1C)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 30 Aug 2011 08:33:52 +0200
-Message-ID: <1314686032.4011.18.camel@jlt3.sipsolutions.net> (sfid-20110830_083357_029497_B1EEBA9F)
+	Sun, 14 Aug 2011 13:11:03 -0400
+Date: Sun, 14 Aug 2011 19:10:37 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH V2 3.2 2/2] b43: fix DMA on some bugged hardware
+Message-ID: <20110814191037.043b0839@milhouse> (sfid-20110814_191110_031784_4852384D)
+In-Reply-To: <1313343581-4395-2-git-send-email-zajec5@gmail.com>
+References: <1313343581-4395-1-git-send-email-zajec5@gmail.com>
+	<1313343581-4395-2-git-send-email-zajec5@gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-30 at 09:32 +0300, Arik Nemtsov wrote:
-> When this flag is set, Tx A-MPDU sessions will not be started by
-> mac80211. This flag is required for devices that support Tx A-MPDU setup
-> in hardware.
+On Sun, 14 Aug 2011 19:39:41 +0200
+Rafał Miłecki <zajec5@gmail.com> wrote:
+
+> Some hardware with 64-bit DMA uses lower address word for setting
+> routing (translation) bit. Add workaround for such boards.
 > 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 > ---
-> v2: changed flag name and description to clear up its purpose
+> V2: use (u64) to fix compilation on 32-bit systems
 
-Thanks :)
+Note that there are the upper_32_bits() and lower_32_bits()
+macros in kernel.h to address this problem.
 
-johannes
-
+-- 
+Greetings, Michael.
