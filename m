@@ -1,327 +1,323 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38939 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754689Ab1H2Sk4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 14:40:56 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	rmanohar@qca.qualcomm.com
-Subject: [PATCH v7 1/4] ath9k: eliminate common->{rx,tx}_chainmask
-Date: Mon, 29 Aug 2011 20:40:42 +0200
-Message-Id: <1314643245-59142-1-git-send-email-nbd@openwrt.org> (sfid-20110829_204103_107778_83F600F1)
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:65029 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752646Ab1HNKRF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Aug 2011 06:17:05 -0400
+Received: by wyg24 with SMTP id 24so2967085wyg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:17:04 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 01/40] wl12xx: Revert "wl12xx: schedule TX packets according to FW occupancy"
+Date: Sun, 14 Aug 2011 13:17:00 +0300
+Message-Id: <1313317059-16567-2-git-send-email-eliad@wizery.com> (sfid-20110814_121712_451305_7A76E333)
+In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-we already have ah->{rx,tx}chainmask for the same purpose
+From: Arik Nemtsov <arik@wizery.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+This does not make sense in fw >= 6/7.3.0.0.75 (wl127x/wl128x) -
+we don't use Tx blocks to measure FW occupancy anymore.
+
+This reverts commit 9e374a37b6fa2310b71d3c5657cd0c1e693120c6.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath.h                |    3 ---
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c |    4 ++--
- drivers/net/wireless/ath/ath9k/beacon.c       |    2 +-
- drivers/net/wireless/ath/ath9k/debug.c        |   20 ++++++++++----------
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    7 ++-----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    3 +--
- drivers/net/wireless/ath/ath9k/hw.c           |    5 ++---
- drivers/net/wireless/ath/ath9k/init.c         |    9 ++-------
- drivers/net/wireless/ath/ath9k/main.c         |    7 +++----
- drivers/net/wireless/ath/ath9k/xmit.c         |    8 ++++----
- 10 files changed, 27 insertions(+), 41 deletions(-)
+ drivers/net/wireless/wl12xx/debugfs.c |    5 +--
+ drivers/net/wireless/wl12xx/main.c    |   30 ++++-----------
+ drivers/net/wireless/wl12xx/tx.c      |   68 +++++++++++----------------------
+ drivers/net/wireless/wl12xx/wl12xx.h  |    2 +-
+ 4 files changed, 33 insertions(+), 72 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 17c4b56..f6b77c2 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -140,9 +140,6 @@ struct ath_common {
- 	u8 curbssid[ETH_ALEN];
- 	u8 bssidmask[ETH_ALEN];
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index 37934b5..3b5f240 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -336,16 +336,13 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
+ #define DRIVER_STATE_PRINT_INT(x)  DRIVER_STATE_PRINT(x, "%d")
+ #define DRIVER_STATE_PRINT_STR(x)  DRIVER_STATE_PRINT(x, "%s")
+ #define DRIVER_STATE_PRINT_LHEX(x) DRIVER_STATE_PRINT(x, "0x%lx")
+ #define DRIVER_STATE_PRINT_HEX(x)  DRIVER_STATE_PRINT(x, "0x%x")
  
--	u8 tx_chainmask;
--	u8 rx_chainmask;
--
- 	u32 rx_bufsize;
+ 	DRIVER_STATE_PRINT_INT(tx_blocks_available);
+-	DRIVER_STATE_PRINT_INT(tx_allocated_blocks[0]);
+-	DRIVER_STATE_PRINT_INT(tx_allocated_blocks[1]);
+-	DRIVER_STATE_PRINT_INT(tx_allocated_blocks[2]);
+-	DRIVER_STATE_PRINT_INT(tx_allocated_blocks[3]);
++	DRIVER_STATE_PRINT_INT(tx_allocated_blocks);
+ 	DRIVER_STATE_PRINT_INT(tx_frames_cnt);
+ 	DRIVER_STATE_PRINT_LHEX(tx_frames_map[0]);
+ 	DRIVER_STATE_PRINT_INT(tx_queue_count[0]);
+ 	DRIVER_STATE_PRINT_INT(tx_queue_count[1]);
+ 	DRIVER_STATE_PRINT_INT(tx_queue_count[2]);
+ 	DRIVER_STATE_PRINT_INT(tx_queue_count[3]);
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 98258fe..f91875e 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -821,30 +821,19 @@ static void wl1271_irq_update_links_status(struct wl1271 *wl,
  
- 	u32 keymax;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index f80d1d6..bb2214f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -113,7 +113,7 @@ static int ar9003_get_training_power_5g(struct ath_hw *ah)
- 	if (delta > scale)
- 		return -1;
- 
--	switch (get_streams(common->tx_chainmask)) {
-+	switch (get_streams(ah->txchainmask)) {
- 	case 1:
- 		delta = 6;
- 		break;
-@@ -126,7 +126,7 @@ static int ar9003_get_training_power_5g(struct ath_hw *ah)
- 	default:
- 		delta = 0;
- 		ath_dbg(common, ATH_DBG_CALIBRATE,
--		"Invalid tx-chainmask: %u\n", common->tx_chainmask);
-+		"Invalid tx-chainmask: %u\n", ah->txchainmask);
+ 		wl1271_irq_ps_regulate_link(wl, hlid,
+ 					    wl->links[hlid].allocated_blks);
  	}
- 
- 	power += delta;
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 086c9c8..0c757c9 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -107,7 +107,7 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
- 	series[0].Tries = 1;
- 	series[0].Rate = rate;
- 	series[0].ChSel = ath_txchainmask_reduction(sc,
--			common->tx_chainmask, series[0].Rate);
-+			ah->txchainmask, series[0].Rate);
- 	series[0].RateFlags = (ctsrate) ? ATH9K_RATESERIES_RTS_CTS : 0;
- 	ath9k_hw_set11n_ratescenario(ah, ds, ds, 0, ctsrate, ctsduration,
- 				     series, 4, 0);
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index e1f1a96..4062e077 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -95,11 +95,11 @@ static ssize_t read_file_tx_chainmask(struct file *file, char __user *user_buf,
- 			     size_t count, loff_t *ppos)
- {
- 	struct ath_softc *sc = file->private_data;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
- 	char buf[32];
- 	unsigned int len;
- 
--	len = sprintf(buf, "0x%08x\n", common->tx_chainmask);
-+	len = sprintf(buf, "0x%08x\n", ah->txchainmask);
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
  }
  
-@@ -107,7 +107,7 @@ static ssize_t write_file_tx_chainmask(struct file *file, const char __user *use
- 			     size_t count, loff_t *ppos)
- {
- 	struct ath_softc *sc = file->private_data;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
- 	unsigned long mask;
- 	char buf[32];
- 	ssize_t len;
-@@ -120,8 +120,8 @@ static ssize_t write_file_tx_chainmask(struct file *file, const char __user *use
- 	if (strict_strtoul(buf, 0, &mask))
- 		return -EINVAL;
- 
--	common->tx_chainmask = mask;
--	sc->sc_ah->caps.tx_chainmask = mask;
-+	ah->txchainmask = mask;
-+	ah->caps.tx_chainmask = mask;
- 	return count;
- }
- 
-@@ -138,11 +138,11 @@ static ssize_t read_file_rx_chainmask(struct file *file, char __user *user_buf,
- 			     size_t count, loff_t *ppos)
- {
- 	struct ath_softc *sc = file->private_data;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
- 	char buf[32];
- 	unsigned int len;
- 
--	len = sprintf(buf, "0x%08x\n", common->rx_chainmask);
-+	len = sprintf(buf, "0x%08x\n", ah->rxchainmask);
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
- 
-@@ -150,7 +150,7 @@ static ssize_t write_file_rx_chainmask(struct file *file, const char __user *use
- 			     size_t count, loff_t *ppos)
- {
- 	struct ath_softc *sc = file->private_data;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
- 	unsigned long mask;
- 	char buf[32];
- 	ssize_t len;
-@@ -163,8 +163,8 @@ static ssize_t write_file_rx_chainmask(struct file *file, const char __user *use
- 	if (strict_strtoul(buf, 0, &mask))
- 		return -EINVAL;
- 
--	common->rx_chainmask = mask;
--	sc->sc_ah->caps.rx_chainmask = mask;
-+	ah->rxchainmask = mask;
-+	ah->caps.rx_chainmask = mask;
- 	return count;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 9cf42f6..966661c 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -509,8 +509,8 @@ static void setup_ht_cap(struct ath9k_htc_priv *priv,
- 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
- 
- 	/* ath9k_htc supports only 1 or 2 stream devices */
--	tx_streams = ath9k_cmn_count_streams(common->tx_chainmask, 2);
--	rx_streams = ath9k_cmn_count_streams(common->rx_chainmask, 2);
-+	tx_streams = ath9k_cmn_count_streams(priv->ah->txchainmask, 2);
-+	rx_streams = ath9k_cmn_count_streams(priv->ah->rxchainmask, 2);
- 
- 	ath_dbg(common, ATH_DBG_CONFIG,
- 		"TX streams %d, RX streams: %d\n",
-@@ -601,9 +601,6 @@ static void ath9k_init_misc(struct ath9k_htc_priv *priv)
- {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 
--	common->tx_chainmask = priv->ah->caps.tx_chainmask;
--	common->rx_chainmask = priv->ah->caps.rx_chainmask;
+-static u32 wl1271_tx_allocated_blocks(struct wl1271 *wl)
+-{
+-	int i;
+-	u32 total_alloc_blocks = 0;
 -
- 	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
- 
- 	priv->ah->opmode = NL80211_IFTYPE_STATION;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 0248024..379f6ba 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -826,8 +826,7 @@ void ath9k_htc_ani_work(struct work_struct *work)
- 		if (longcal || shortcal)
- 			common->ani.caldone =
- 				ath9k_hw_calibrate(ah, ah->curchan,
--						   common->rx_chainmask,
--						   longcal);
-+						   ah->rxchainmask, longcal);
- 
- 		ath9k_htc_ps_restore(priv);
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 3ccadeb..d63f9c8 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1470,9 +1470,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	u64 tsf = 0;
- 	int i, r;
- 
--	ah->txchainmask = common->tx_chainmask;
--	ah->rxchainmask = common->rx_chainmask;
+-	for (i = 0; i < NUM_TX_QUEUES; i++)
+-		total_alloc_blocks += wl->tx_allocated_blocks[i];
 -
- 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
- 		return -EIO;
+-	return total_alloc_blocks;
+-}
+-
+ static void wl1271_fw_status(struct wl1271 *wl,
+ 			     struct wl1271_fw_full_status *full_status)
+ {
+ 	struct wl1271_fw_common_status *status = &full_status->common;
+ 	struct timespec ts;
+ 	u32 old_tx_blk_count = wl->tx_blocks_available;
+-	u32 freed_blocks = 0, ac_freed_blocks;
++	u32 freed_blocks = 0;
+ 	int i;
  
-@@ -2086,6 +2083,8 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
+ 		wl1271_raw_read(wl, FW_STATUS_ADDR, status,
+ 				sizeof(struct wl1271_fw_ap_status), false);
+ 	} else {
+@@ -858,29 +847,27 @@ static void wl1271_fw_status(struct wl1271 *wl,
+ 		     status->fw_rx_counter,
+ 		     status->drv_rx_counter,
+ 		     status->tx_results_counter);
  
- 	pCap->tx_chainmask = fixup_chainmask(chip_chainmask, pCap->tx_chainmask);
- 	pCap->rx_chainmask = fixup_chainmask(chip_chainmask, pCap->rx_chainmask);
-+	ah->txchainmask = pCap->tx_chainmask;
-+	ah->rxchainmask = pCap->rx_chainmask;
+ 	/* update number of available TX blocks */
+ 	for (i = 0; i < NUM_TX_QUEUES; i++) {
+-		ac_freed_blocks = le32_to_cpu(status->tx_released_blks[i]) -
+-				  wl->tx_blocks_freed[i];
+-		freed_blocks += ac_freed_blocks;
+-
+-		wl->tx_allocated_blocks[i] -= ac_freed_blocks;
++		freed_blocks += le32_to_cpu(status->tx_released_blks[i]) -
++				wl->tx_blocks_freed[i];
  
- 	ah->misc_mode |= AR_PCU_MIC_NEW_LOC_ENA;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index d7761d1..31ef501 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -270,8 +270,8 @@ static void setup_ht_cap(struct ath_softc *sc,
- 
- 	/* set up supported mcs set */
- 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
--	tx_streams = ath9k_cmn_count_streams(common->tx_chainmask, max_streams);
--	rx_streams = ath9k_cmn_count_streams(common->rx_chainmask, max_streams);
-+	tx_streams = ath9k_cmn_count_streams(ah->txchainmask, max_streams);
-+	rx_streams = ath9k_cmn_count_streams(ah->rxchainmask, max_streams);
- 
- 	ath_dbg(common, ATH_DBG_CONFIG,
- 		"TX streams %d, RX streams: %d\n",
-@@ -506,9 +506,6 @@ static void ath9k_init_misc(struct ath_softc *sc)
- 		sc->sc_flags |= SC_OP_RXAGGR;
+ 		wl->tx_blocks_freed[i] =
+ 			le32_to_cpu(status->tx_released_blks[i]);
  	}
  
--	common->tx_chainmask = sc->sc_ah->caps.tx_chainmask;
--	common->rx_chainmask = sc->sc_ah->caps.rx_chainmask;
--
- 	ath9k_hw_set_diversity(sc->sc_ah, true);
- 	sc->rx.defant = ath9k_hw_getdefantenna(sc->sc_ah);
++	wl->tx_allocated_blocks -= freed_blocks;
++
+ 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
+ 		/* Update num of allocated TX blocks per link and ps status */
+ 		wl1271_irq_update_links_status(wl, &full_status->ap);
+ 		wl->tx_blocks_available += freed_blocks;
+ 	} else {
+-		int avail = full_status->sta.tx_total -
+-			    wl1271_tx_allocated_blocks(wl);
++		int avail = full_status->sta.tx_total - wl->tx_allocated_blocks;
  
-@@ -645,10 +642,8 @@ static void ath9k_init_band_txpower(struct ath_softc *sc, int band)
- static void ath9k_init_txpower_limits(struct ath_softc *sc)
+ 		/*
+ 		 * The FW might change the total number of TX memblocks before
+ 		 * we get a notification about blocks being released. Thus, the
+ 		 * available blocks calculation might yield a temporary result
+ 		 * which is lower than the actual available blocks. Keeping in
+@@ -2010,12 +1997,13 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+ 	wl->band = IEEE80211_BAND_2GHZ;
+ 
+ 	wl->rx_counter = 0;
+ 	wl->psm_entry_retry = 0;
+ 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
+ 	wl->tx_blocks_available = 0;
++	wl->tx_allocated_blocks = 0;
+ 	wl->tx_results_count = 0;
+ 	wl->tx_packets_count = 0;
+ 	wl->time_offset = 0;
+ 	wl->session_counter = 0;
+ 	wl->rate_set = CONF_TX_RATE_MASK_BASIC;
+ 	wl->vif = NULL;
+@@ -2030,16 +2018,14 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+ 	 * this is performed after the cancel_work calls and the associated
+ 	 * mutex_lock, so that wl1271_op_add_interface does not accidentally
+ 	 * get executed before all these vars have been reset.
+ 	 */
+ 	wl->flags = 0;
+ 
+-	for (i = 0; i < NUM_TX_QUEUES; i++) {
++	for (i = 0; i < NUM_TX_QUEUES; i++)
+ 		wl->tx_blocks_freed[i] = 0;
+-		wl->tx_allocated_blocks[i] = 0;
+-	}
+ 
+ 	wl1271_debugfs_reset(wl);
+ 
+ 	kfree(wl->fw_status);
+ 	wl->fw_status = NULL;
+ 	kfree(wl->tx_res_if);
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 48fde96..0696aed 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -165,13 +165,13 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 				u32 buf_offset, u8 hlid)
  {
- 	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath9k_channel *curchan = ah->curchan;
+ 	struct wl1271_tx_hw_descr *desc;
+ 	u32 total_len = skb->len + sizeof(struct wl1271_tx_hw_descr) + extra;
+ 	u32 len;
+ 	u32 total_blocks;
+-	int id, ret = -EBUSY, ac;
++	int id, ret = -EBUSY;
+ 	u32 spare_blocks;
  
--	ah->txchainmask = common->tx_chainmask;
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
- 		ath9k_init_band_txpower(sc, IEEE80211_BAND_2GHZ);
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 7ac1c21..085ec20 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -318,7 +318,6 @@ static void ath_paprd_activate(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath9k_hw_cal_data *caldata = ah->caldata;
--	struct ath_common *common = ath9k_hw_common(ah);
- 	int chain;
- 
- 	if (!caldata || !caldata->paprd_done)
-@@ -327,7 +326,7 @@ static void ath_paprd_activate(struct ath_softc *sc)
- 	ath9k_ps_wakeup(sc);
- 	ar9003_paprd_enable(ah, false);
- 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
--		if (!(common->tx_chainmask & BIT(chain)))
-+		if (!(ah->txchainmask & BIT(chain)))
- 			continue;
- 
- 		ar9003_paprd_populate_single_table(ah, caldata, chain);
-@@ -414,7 +413,7 @@ void ath_paprd_calibrate(struct work_struct *work)
- 	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
- 
- 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
--		if (!(common->tx_chainmask & BIT(chain)))
-+		if (!(ah->txchainmask & BIT(chain)))
- 			continue;
- 
- 		chain_ok = 0;
-@@ -535,7 +534,7 @@ void ath_ani_calibrate(unsigned long data)
- 	if (longcal || shortcal) {
- 		common->ani.caldone =
- 			ath9k_hw_calibrate(ah, ah->curchan,
--						common->rx_chainmask, longcal);
-+						ah->rxchainmask, longcal);
- 	}
- 
- 	ath9k_ps_restore(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 68066c5..49b93c2 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1633,7 +1633,7 @@ u8 ath_txchainmask_reduction(struct ath_softc *sc, u8 chainmask, u32 rate)
- 
- static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len)
- {
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
- 	struct ath9k_11n_rate_series series[4];
- 	struct sk_buff *skb;
- 	struct ieee80211_tx_info *tx_info;
-@@ -1693,7 +1693,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len)
- 			/* MCS rates */
- 			series[i].Rate = rix | 0x80;
- 			series[i].ChSel = ath_txchainmask_reduction(sc,
--					common->tx_chainmask, series[i].Rate);
-+					ah->txchainmask, series[i].Rate);
- 			series[i].PktDuration = ath_pkt_duration(sc, rix, len,
- 				 is_40, is_sgi, is_sp);
- 			if (rix < 8 && (tx_info->flags & IEEE80211_TX_CTL_STBC))
-@@ -1718,10 +1718,10 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len)
+ 	if (unlikely(wl->quirks & WL12XX_QUIRK_USE_2_SPARE_BLOCKS))
+ 		spare_blocks = 2;
+ 	else
+ 		spare_blocks = 1;
+@@ -203,15 +203,13 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 			desc->wl127x_mem.total_mem_blocks = total_blocks;
  		}
  
- 		if (bf->bf_state.bfs_paprd)
--			series[i].ChSel = common->tx_chainmask;
-+			series[i].ChSel = ah->txchainmask;
- 		else
- 			series[i].ChSel = ath_txchainmask_reduction(sc,
--					common->tx_chainmask, series[i].Rate);
-+					ah->txchainmask, series[i].Rate);
+ 		desc->id = id;
  
- 		series[i].PktDuration = ath9k_hw_computetxtime(sc->sc_ah,
- 			phy, rate->bitrate * 100, len, rix, is_sp);
+ 		wl->tx_blocks_available -= total_blocks;
+-
+-		ac = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+-		wl->tx_allocated_blocks[ac] += total_blocks;
++		wl->tx_allocated_blocks += total_blocks;
+ 
+ 		if (wl->bss_type == BSS_TYPE_AP_BSS)
+ 			wl->links[hlid].allocated_blks += total_blocks;
+ 
+ 		ret = 0;
+ 
+@@ -456,47 +454,27 @@ void wl1271_handle_tx_low_watermark(struct wl1271 *wl)
+ 			clear_bit(i, &wl->stopped_queues_map);
+ 			spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 		}
+ 	}
+ }
+ 
+-static struct sk_buff_head *wl1271_select_queue(struct wl1271 *wl,
+-						struct sk_buff_head *queues)
+-{
+-	int i, q = -1;
+-	u32 min_blks = 0xffffffff;
+-
+-	/*
+-	 * Find a non-empty ac where:
+-	 * 1. There are packets to transmit
+-	 * 2. The FW has the least allocated blocks
+-	 */
+-	for (i = 0; i < NUM_TX_QUEUES; i++)
+-		if (!skb_queue_empty(&queues[i]) &&
+-		    (wl->tx_allocated_blocks[i] < min_blks)) {
+-			q = i;
+-			min_blks = wl->tx_allocated_blocks[q];
+-		}
+-
+-	if (q == -1)
+-		return NULL;
+-
+-	return &queues[q];
+-}
+-
+ static struct sk_buff *wl1271_sta_skb_dequeue(struct wl1271 *wl)
+ {
+ 	struct sk_buff *skb = NULL;
+ 	unsigned long flags;
+-	struct sk_buff_head *queue;
+ 
+-	queue = wl1271_select_queue(wl, wl->tx_queue);
+-	if (!queue)
++	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_VO]);
++	if (skb)
+ 		goto out;
+-
+-	skb = skb_dequeue(queue);
++	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_VI]);
++	if (skb)
++		goto out;
++	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_BE]);
++	if (skb)
++		goto out;
++	skb = skb_dequeue(&wl->tx_queue[CONF_TX_AC_BK]);
+ 
+ out:
+ 	if (skb) {
+ 		int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+ 		spin_lock_irqsave(&wl->wl_lock, flags);
+ 		wl->tx_queue_count[q]--;
+@@ -508,35 +486,35 @@ out:
+ 
+ static struct sk_buff *wl1271_ap_skb_dequeue(struct wl1271 *wl)
+ {
+ 	struct sk_buff *skb = NULL;
+ 	unsigned long flags;
+ 	int i, h, start_hlid;
+-	struct sk_buff_head *queue;
+ 
+ 	/* start from the link after the last one */
+ 	start_hlid = (wl->last_tx_hlid + 1) % AP_MAX_LINKS;
+ 
+ 	/* dequeue according to AC, round robin on each link */
+ 	for (i = 0; i < AP_MAX_LINKS; i++) {
+ 		h = (start_hlid + i) % AP_MAX_LINKS;
+ 
+-		/* only consider connected stations */
+-		if (h >= WL1271_AP_STA_HLID_START &&
+-		    !test_bit(h - WL1271_AP_STA_HLID_START, wl->ap_hlid_map))
+-			continue;
+-
+-		queue = wl1271_select_queue(wl, wl->links[h].tx_queue);
+-		if (!queue)
+-			continue;
+-
+-		skb = skb_dequeue(queue);
++		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_VO]);
+ 		if (skb)
+-			break;
++			goto out;
++		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_VI]);
++		if (skb)
++			goto out;
++		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_BE]);
++		if (skb)
++			goto out;
++		skb = skb_dequeue(&wl->links[h].tx_queue[CONF_TX_AC_BK]);
++		if (skb)
++			goto out;
+ 	}
+ 
++out:
+ 	if (skb) {
+ 		int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+ 		wl->last_tx_hlid = h;
+ 		spin_lock_irqsave(&wl->wl_lock, flags);
+ 		wl->tx_queue_count[q]--;
+ 		spin_unlock_irqrestore(&wl->wl_lock, flags);
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 0bc2935..5b00a84 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -421,13 +421,13 @@ struct wl1271 {
+ 
+ 	struct wl1271_acx_mem_map *target_mem_map;
+ 
+ 	/* Accounting for allocated / available TX blocks on HW */
+ 	u32 tx_blocks_freed[NUM_TX_QUEUES];
+ 	u32 tx_blocks_available;
+-	u32 tx_allocated_blocks[NUM_TX_QUEUES];
++	u32 tx_allocated_blocks;
+ 	u32 tx_results_count;
+ 
+ 	/* Transmitted TX packets counter for chipset interface */
+ 	u32 tx_packets_count;
+ 
+ 	/* Time-offset between host and chipset clocks */
 -- 
-1.7.3.2
+1.7.6.401.g6a319
 
