@@ -1,103 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout9.freenet.de ([195.4.92.99]:52652 "EHLO mout9.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751503Ab1HPUDO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2011 16:03:14 -0400
-Message-ID: <4E4ACD10.7000807@01019freenet.de> (sfid-20110816_220318_614153_C0B57DB8)
-Date: Tue, 16 Aug 2011 22:03:28 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:34162 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753243Ab1HNUsb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Aug 2011 16:48:31 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 19so3255053fxh.19
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 13:48:30 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/3] b43: LCN-PHY: implement disabling radio
+Date: Sun, 14 Aug 2011 23:27:29 +0200
+Message-Id: <1313357250-8292-2-git-send-email-zajec5@gmail.com> (sfid-20110814_224835_872124_7ECFFD7B)
+In-Reply-To: <1313357250-8292-1-git-send-email-zajec5@gmail.com>
+References: <1313357250-8292-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: 7 more packets after each beacon frame
-References: <4E4AB695.5070300@01019freenet.de> <CAOZOX0UsRxT9ECdUC7OL2toJUb+PitGhxCifTyD8hWYwt6R_zg@mail.gmail.com>
-In-Reply-To: <CAOZOX0UsRxT9ECdUC7OL2toJUb+PitGhxCifTyD8hWYwt6R_zg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ivo Van Doorn schrieb:
-> Hi,
-> 
->> When examining my own AP (rt2860 based) with another STA in monitor
->> mode, I can see always 7 packets after each beacon frame:
-> 
-> Well if it is an AP with a rt2860 chipset, then it probably isn't
-> using the rt2x00 drivers,
+wl reads radio version, then disables it. That's how we found it in MMIO
+dump:
+ radio_read(0x0000) -> 0x0031 <-- RADIO READ WITHOUT 0x200 SET!
+ radio_read(0x0001) -> 0x0064 <-- RADIO READ WITHOUT 0x200 SET!
+ radio_read(0x0002) -> 0x0020 <-- RADIO READ WITHOUT 0x200 SET!
+ read32 0xfaafc120 -> 0x04000400
+ phy_read(0x044d) -> 0x0000
+phy_write(0x044d) <- 0x0000
+ phy_read(0x044c) -> 0x1fff
+phy_write(0x044c) <- 0x1fff
+ phy_read(0x04b7) -> 0x0000
+phy_write(0x04b7) <- 0x0000
+ phy_read(0x04b1) -> 0x0000
+phy_write(0x04b1) <- 0x0000
+ phy_read(0x04b0) -> 0x7dff
+phy_write(0x04b0) <- 0x7dff
+ phy_read(0x04fa) -> 0x0000
+phy_write(0x04fa) <- 0x0000
+ phy_read(0x04f9) -> 0x007f
+phy_write(0x04f9) <- 0x007f
 
-I'm using rt2800pci driver (from compat-wireless-2011-08-08).
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+OFC, MMIO hacks were used to find masks & sets.
 
+Sets were taken from:
+>>> Switch Radio(OFF) start
+ phy_read(0x044d) -> 0x0000
+phy_write(0x044d) <- 0x0000
+ phy_read(0x044c) -> 0x0000
+phy_write(0x044c) <- 0x1f00
+ phy_read(0x04b7) -> 0x0000
+phy_write(0x04b7) <- 0x0000
+ phy_read(0x04b1) -> 0x0000
+phy_write(0x04b1) <- 0x0000
+ phy_read(0x04b0) -> 0x0000
+phy_write(0x04b0) <- 0x0808
+ phy_read(0x04fa) -> 0x0000
+phy_write(0x04fa) <- 0x0000
+ phy_read(0x04f9) -> 0x0000
+phy_write(0x04f9) <- 0x0008
+>>> Switch Radio(OFF) end
 
-Aug 16 20:33:24 pc kernel: [52436.719073] cfg80211: Calling CRDA to
-update world regulatory domain
-Aug 16 20:33:24 pc kernel: [52436.740378] cfg80211: World regulatory
-domain updated:
-Aug 16 20:33:24 pc kernel: [52436.740383] cfg80211:     (start_freq -
-end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-Aug 16 20:33:24 pc kernel: [52436.740386] cfg80211:     (2402000 KHz -
-2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-Aug 16 20:33:24 pc kernel: [52436.740389] cfg80211:     (2457000 KHz -
-2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-Aug 16 20:33:24 pc kernel: [52436.740391] cfg80211:     (2474000 KHz -
-2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-Aug 16 20:33:24 pc kernel: [52436.740393] cfg80211:     (5170000 KHz -
-5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-Aug 16 20:33:24 pc kernel: [52436.740396] cfg80211:     (5735000 KHz -
-5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-Aug 16 20:33:24 pc kernel: [52436.750023] cfg80211: Calling CRDA for
-country: DE
-Aug 16 20:33:24 pc kernel: [52436.756976] cfg80211: Regulatory domain
-changed to country: DE
-Aug 16 20:33:24 pc kernel: [52436.756981] cfg80211:     (start_freq -
-end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-Aug 16 20:33:24 pc kernel: [52436.756983] cfg80211:     (2400000 KHz -
-2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
-Aug 16 20:33:24 pc kernel: [52436.756986] cfg80211:     (5150000 KHz -
-5350000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-Aug 16 20:33:24 pc kernel: [52436.756988] cfg80211:     (5470000 KHz -
-5725000 KHz @ 40000 KHz), (N/A, 2698 mBm)
-Aug 16 20:33:24 pc kernel: [52436.825208] rt2800pci 0000:03:07.0: PCI
-INT A -> GSI 21 (level, low) -> IRQ 21
-Aug 16 20:33:24 pc kernel: [52436.835011] phy0 -> rt2x00_set_chip: Info
-- Chipset detected - rt: 2860, rf: 0002, rev: 0103.
-Aug 16 20:33:24 pc kernel: [52436.844383] ieee80211 phy0: Selected rate
-control algorithm 'minstrel_ht'
-Aug 16 20:33:24 pc kernel: [52436.845258] Registered led device:
-rt2800pci-phy0::radio
-Aug 16 20:33:24 pc kernel: [52436.845276] Registered led device:
-rt2800pci-phy0::assoc
-Aug 16 20:33:24 pc kernel: [52436.845293] Registered led device:
-rt2800pci-phy0::quality
-Aug 16 20:33:24 pc kernel: [52436.863893] udev: renamed network
-interface wlan0 to wlan1
-Aug 16 20:33:24 pc ifup:     wlan1     device: RaLink RT2800 802.11n PCI
-Aug 16 20:33:24 pc ifup:               No configuration found for wlan1
-Aug 16 20:33:26 pc kernel: [52438.868947] phy0 ->
-rt2x00lib_request_firmware: Info - Loading firmware file 'rt2860.bin'.
-Aug 16 20:33:26 pc kernel: [52438.873544] phy0 ->
-rt2x00lib_request_firmware: Info - Firmware detected - version: 0.34.
-Aug 16 20:33:26 pc kernel: [52438.900652] phy0 -> rt2800pci_mcu_status:
-Error - MCU request failed, no response from hardware
-Aug 16 20:33:26 pc kernel: [52438.907351] phy0 -> rt2x00mac_conf_tx:
-Info - Configured TX queue 0 - CWmin: 3, CWmax: 4, Aifs: 2, TXop: 102.
-Aug 16 20:33:26 pc kernel: [52438.907373] phy0 -> rt2x00mac_conf_tx:
-Info - Configured TX queue 1 - CWmin: 4, CWmax: 5, Aifs: 2, TXop: 188.
-Aug 16 20:33:26 pc kernel: [52438.907390] phy0 -> rt2x00mac_conf_tx:
-Info - Configured TX queue 2 - CWmin: 5, CWmax: 10, Aifs: 3, TXop: 0.
-Aug 16 20:33:26 pc kernel: [52438.907407] phy0 -> rt2x00mac_conf_tx:
-Info - Configured TX queue 3 - CWmin: 5, CWmax: 10, Aifs: 7, TXop: 0.
+Masks were taken from:
+ phy_read(0x044d) -> 0xffff
+phy_write(0x044d) <- 0x83ff
+ phy_read(0x044c) -> 0xffff
+phy_write(0x044c) <- 0xffff
+ phy_read(0x04b7) -> 0xffff
+phy_write(0x04b7) <- 0x80ff
+ phy_read(0x04b1) -> 0xffff
+phy_write(0x04b1) <- 0xdfff
+ phy_read(0x04b0) -> 0xffff
+phy_write(0x04b0) <- 0xffff
+ phy_read(0x04fa) -> 0xffff
+phy_write(0x04fa) <- 0xfff7
+ phy_read(0x04f9) -> 0xffff
+phy_write(0x04f9) <- 0xffff
+---
+ drivers/net/wireless/b43/phy_lcn.c |   23 +++++++++++++++++++++++
+ drivers/net/wireless/b43/phy_lcn.h |    9 +++++++++
+ 2 files changed, 32 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/b43/phy_lcn.c b/drivers/net/wireless/b43/phy_lcn.c
+index 03944ad..69a93b5 100644
+--- a/drivers/net/wireless/b43/phy_lcn.c
++++ b/drivers/net/wireless/b43/phy_lcn.c
+@@ -60,6 +60,27 @@ static void b43_phy_lcn_op_prepare_structs(struct b43_wldev *dev)
+ 	memset(phy_lcn, 0, sizeof(*phy_lcn));
+ }
+ 
++static void b43_phy_lcn_op_software_rfkill(struct b43_wldev *dev,
++					bool blocked)
++{
++	if (b43_read32(dev, B43_MMIO_MACCTL) & B43_MACCTL_ENABLED)
++		b43err(dev->wl, "MAC not suspended\n");
++
++	if (blocked) {
++		b43_phy_mask(dev, B43_PHY_LCN_RF_CTL2, ~0x7c00);
++		b43_phy_set(dev, B43_PHY_LCN_RF_CTL1, 0x1f00);
++
++		b43_phy_mask(dev, B43_PHY_LCN_RF_CTL5, ~0x7f00);
++		b43_phy_mask(dev, B43_PHY_LCN_RF_CTL4, ~0x2);
++		b43_phy_set(dev, B43_PHY_LCN_RF_CTL3, 0x808);
++
++		b43_phy_mask(dev, B43_PHY_LCN_RF_CTL7, ~0x8);
++		b43_phy_set(dev, B43_PHY_LCN_RF_CTL6, 0x8);
++	} else {
++		/* TODO */
++	}
++}
++
+ static unsigned int b43_phy_lcn_op_get_default_chan(struct b43_wldev *dev)
+ {
+ 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
+@@ -92,7 +113,9 @@ const struct b43_phy_operations b43_phyops_lcn = {
+ 	.phy_maskset		= b43_phy_lcn_op_maskset,
+ 	.radio_read		= b43_phy_lcn_op_radio_read,
+ 	.radio_write		= b43_phy_lcn_op_radio_write,
++	*/
+ 	.software_rfkill	= b43_phy_lcn_op_software_rfkill,
++	/*
+ 	.switch_analog		= b43_phy_lcn_op_switch_analog,
+ 	.switch_channel		= b43_phy_lcn_op_switch_channel,
+ 	*/
+diff --git a/drivers/net/wireless/b43/phy_lcn.h b/drivers/net/wireless/b43/phy_lcn.h
+index 9e1b291..89f13b2 100644
+--- a/drivers/net/wireless/b43/phy_lcn.h
++++ b/drivers/net/wireless/b43/phy_lcn.h
+@@ -4,6 +4,15 @@
+ #include "phy_common.h"
+ 
+ 
++#define B43_PHY_LCN_RF_CTL1			B43_PHY_OFDM(0x04C)
++#define B43_PHY_LCN_RF_CTL2			B43_PHY_OFDM(0x04D)
++#define B43_PHY_LCN_RF_CTL3			B43_PHY_OFDM(0x0B0)
++#define B43_PHY_LCN_RF_CTL4			B43_PHY_OFDM(0x0B1)
++#define B43_PHY_LCN_RF_CTL5			B43_PHY_OFDM(0x0B7)
++#define B43_PHY_LCN_RF_CTL6			B43_PHY_OFDM(0x0F9)
++#define B43_PHY_LCN_RF_CTL7			B43_PHY_OFDM(0x0FA)
++
++
+ struct b43_phy_lcn {
+ };
+ 
+-- 
+1.7.3.4
 
-> so no idea what those extra frames would be.
-
-They are coming up exactly with the starting of hostapd.
-
-> Can't they come from another client somewhere which is responding to the AP?
-
-None of my clients have been running as supplicant during the
-measurement. There can't be seen any MAC or IP addresses in this
-package. But they're sent on exactly this channel the AP (hostapd) is
-configured on.
-
-
-Andreas
