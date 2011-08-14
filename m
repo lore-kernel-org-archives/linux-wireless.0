@@ -1,55 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:41560 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752069Ab1HHL5J convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:54095 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752720Ab1HNKRH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 07:57:09 -0400
-MIME-Version: 1.0
-In-Reply-To: <201107230012.p6N0CZSM002466@hera.kernel.org>
-References: <201107230012.p6N0CZSM002466@hera.kernel.org>
-Date: Mon, 8 Aug 2011 13:57:08 +0200
-Message-ID: <CAMuHMdU0Cba9xFjfD6Fq1MqE5xZeDnsdN8qipmR6jQH9J6X4vQ@mail.gmail.com> (sfid-20110808_135725_536650_183704C3)
-Subject: Re: b43: LCN-PHY add place for new PHY support
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Sun, 14 Aug 2011 06:17:07 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 24so2967072wyg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:17:06 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 02/40] wl12xx: Use a single fw for both STA and AP roles
+Date: Sun, 14 Aug 2011 13:17:01 +0300
+Message-Id: <1313317059-16567-3-git-send-email-eliad@wizery.com> (sfid-20110814_121713_780784_F32266F9)
+In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 23, 2011 at 02:12, Linux Kernel Mailing List
-<linux-kernel@vger.kernel.org> wrote:
-> Gitweb:     http://git.kernel.org/linus/1d738e64f3d957d56c1b51e64ebdef986a8760e3
-> Commit:     1d738e64f3d957d56c1b51e64ebdef986a8760e3
-> Parent:     0cd20a278e1ef9da9f6a987942794c9d65af8c4d
-> Author:     Rafał Miłecki <zajec5@gmail.com>
-> AuthorDate: Thu Jul 7 15:25:27 2011 +0200
-> Committer:  John W. Linville <linville@tuxdriver.com>
-> CommitDate: Fri Jul 8 11:11:25 2011 -0400
+From: Arik Nemtsov <arik@wizery.com>
 
-> diff --git a/drivers/net/wireless/b43/phy_lcn.h b/drivers/net/wireless/b43/phy_lcn.h
-> new file mode 100644
-> index 0000000..c046c2a
-> --- /dev/null
-> +++ b/drivers/net/wireless/b43/phy_lcn.h
+Firmware >= 6/7.3.0.0.75 (wl127x/wl128x) supports both
+STA and AP roles.
 
-> \ No newline at end of file
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+v2: s/WL1271/WL127X
 
-Woops...
+ drivers/net/wireless/wl12xx/main.c   |   31 +++++--------------------------
+ drivers/net/wireless/wl12xx/sdio.c   |    4 +---
+ drivers/net/wireless/wl12xx/spi.c    |    2 --
+ drivers/net/wireless/wl12xx/wl12xx.h |    7 ++-----
+ 4 files changed, 8 insertions(+), 36 deletions(-)
 
-gcc/cpp also complains:
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index f91875e..7b29573 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1040,31 +1040,16 @@ EXPORT_SYMBOL_GPL(wl1271_irq);
+ static int wl1271_fetch_firmware(struct wl1271 *wl)
+ {
+ 	const struct firmware *fw;
+ 	const char *fw_name;
+ 	int ret;
+ 
+-	switch (wl->bss_type) {
+-	case BSS_TYPE_AP_BSS:
+-		if (wl->chip.id == CHIP_ID_1283_PG20)
+-			fw_name = WL128X_AP_FW_NAME;
+-		else
+-			fw_name = WL127X_AP_FW_NAME;
+-		break;
+-	case BSS_TYPE_IBSS:
+-	case BSS_TYPE_STA_BSS:
+-		if (wl->chip.id == CHIP_ID_1283_PG20)
+-			fw_name = WL128X_FW_NAME;
+-		else
+-			fw_name	= WL1271_FW_NAME;
+-		break;
+-	default:
+-		wl1271_error("no compatible firmware for bss_type %d",
+-			     wl->bss_type);
+-		return -EINVAL;
+-	}
++	if (wl->chip.id == CHIP_ID_1283_PG20)
++		fw_name = WL128X_FW_NAME;
++	else
++		fw_name	= WL127X_FW_NAME;
+ 
+ 	wl1271_debug(DEBUG_BOOT, "booting firmware %s", fw_name);
+ 
+ 	ret = request_firmware(&fw, fw_name, wl1271_wl_to_dev(wl));
+ 
+ 	if (ret < 0) {
+@@ -1087,13 +1072,12 @@ static int wl1271_fetch_firmware(struct wl1271 *wl)
+ 		wl1271_error("could not allocate memory for the firmware");
+ 		ret = -ENOMEM;
+ 		goto out;
+ 	}
+ 
+ 	memcpy(wl->fw, fw->data, wl->fw_len);
+-	wl->fw_bss_type = wl->bss_type;
+ 	ret = 0;
+ 
+ out:
+ 	release_firmware(fw);
+ 
+ 	return ret;
+@@ -1358,14 +1342,13 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
+ 	default:
+ 		wl1271_warning("unsupported chip id: 0x%x", wl->chip.id);
+ 		ret = -ENODEV;
+ 		goto out;
+ 	}
+ 
+-	/* Make sure the firmware type matches the BSS type */
+-	if (wl->fw == NULL || wl->fw_bss_type != wl->bss_type) {
++	if (wl->fw == NULL) {
+ 		ret = wl1271_fetch_firmware(wl);
+ 		if (ret < 0)
+ 			goto out;
+ 	}
+ 
+ 	/* No NVS from netlink, try to get it from the filesystem */
+@@ -1793,15 +1776,12 @@ static int wl1271_op_start(struct ieee80211_hw *hw)
+ 	 * initializing the firmware. The MAC address cannot be changed
+ 	 * after boot, and without the proper MAC address, the firmware
+ 	 * will not function properly.
+ 	 *
+ 	 * The MAC address is first known when the corresponding interface
+ 	 * is added. That is where we will initialize the hardware.
+-	 *
+-	 * In addition, we currently have different firmwares for AP and managed
+-	 * operation. We will know which to boot according to interface type.
+ 	 */
+ 
+ 	return 0;
+ }
+ 
+ static void wl1271_op_stop(struct ieee80211_hw *hw)
+@@ -4390,13 +4370,12 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	wl->vif = NULL;
+ 	wl->flags = 0;
+ 	wl->sg_enabled = true;
+ 	wl->hw_pg_ver = -1;
+ 	wl->bss_type = MAX_BSS_TYPE;
+ 	wl->set_bss_type = MAX_BSS_TYPE;
+-	wl->fw_bss_type = MAX_BSS_TYPE;
+ 	wl->last_tx_hlid = 0;
+ 	wl->ap_ps_map = 0;
+ 	wl->ap_fw_ps_map = 0;
+ 	wl->quirks = 0;
+ 	wl->platform_quirks = 0;
+ 	wl->sched_scanning = false;
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index 5cf18c2..ac2e566 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -409,10 +409,8 @@ static void __exit wl1271_exit(void)
+ module_init(wl1271_init);
+ module_exit(wl1271_exit);
+ 
+ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
+ MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
+-MODULE_FIRMWARE(WL1271_FW_NAME);
++MODULE_FIRMWARE(WL127X_FW_NAME);
+ MODULE_FIRMWARE(WL128X_FW_NAME);
+-MODULE_FIRMWARE(WL127X_AP_FW_NAME);
+-MODULE_FIRMWARE(WL128X_AP_FW_NAME);
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index e0b3736..7314795 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -485,9 +485,7 @@ module_exit(wl1271_exit);
+ 
+ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
+ MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
+ MODULE_FIRMWARE(WL1271_FW_NAME);
+ MODULE_FIRMWARE(WL128X_FW_NAME);
+-MODULE_FIRMWARE(WL127X_AP_FW_NAME);
+-MODULE_FIRMWARE(WL128X_AP_FW_NAME);
+ MODULE_ALIAS("spi:wl1271");
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 5b00a84..dc0013e 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -127,16 +127,14 @@ extern u32 wl12xx_debug_level;
+ 				  CFG_RX_MGMT_EN | CFG_RX_DATA_EN | \
+ 				  CFG_RX_CTL_EN | CFG_RX_AUTH_EN | \
+ 				  CFG_RX_ASSOC_EN)
+ 
+ 
+ 
+-#define WL1271_FW_NAME "ti-connectivity/wl1271-fw-2.bin"
+-#define WL128X_FW_NAME "ti-connectivity/wl128x-fw.bin"
+-#define WL127X_AP_FW_NAME "ti-connectivity/wl1271-fw-ap.bin"
+-#define WL128X_AP_FW_NAME "ti-connectivity/wl128x-fw-ap.bin"
++#define WL127X_FW_NAME "ti-connectivity/wl127x-fw-3.bin"
++#define WL128X_FW_NAME "ti-connectivity/wl128x-fw-3.bin"
+ 
+ /*
+  * wl127x and wl128x are using the same NVS file name. However, the
+  * ini parameters between them are different.  The driver validates
+  * the correct NVS size in wl1271_boot_upload_nvs().
+  */
+@@ -402,13 +400,12 @@ struct wl1271 {
+ 
+ 	int cmd_box_addr;
+ 	int event_box_addr;
+ 
+ 	u8 *fw;
+ 	size_t fw_len;
+-	u8 fw_bss_type;
+ 	void *nvs;
+ 	size_t nvs_len;
+ 
+ 	s8 hw_pg_ver;
+ 
+ 	u8 bssid[ETH_ALEN];
+-- 
+1.7.6.401.g6a319
 
-drivers/net/wireless/b43/phy_lcn.h:14:28: warning: no newline at end of file
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
