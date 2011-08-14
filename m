@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:46281 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751096Ab1HITvW (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:38087 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752272Ab1HNCjY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 15:51:22 -0400
-Received: by gxk21 with SMTP id 21so246333gxk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 12:51:21 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH 0/6] mac80211: mesh frame formats
-Date: Tue,  9 Aug 2011 12:50:12 -0700
-Message-Id: <1312919418-32196-1-git-send-email-thomas@cozybit.com> (sfid-20110809_215125_741317_8D9BE114)
+	Sat, 13 Aug 2011 22:39:24 -0400
+Received: by yxj19 with SMTP id 19so2692262yxj.19
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Aug 2011 19:39:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110813184140.GC16149@vmraj-lnx.users.atheros.com>
+References: <1313211498-14442-1-git-send-email-rmanohar@qca.qualcomm.com>
+	<CAJ-Vmo=yP7q33FBwDCCnu3f+=E6ONuLK+xj6ye-26bSW_kgtdQ@mail.gmail.com>
+	<20110813184140.GC16149@vmraj-lnx.users.atheros.com>
+Date: Sun, 14 Aug 2011 10:39:23 +0800
+Message-ID: <CAJ-Vmo=O5fWb6P=WdVQF64vk+j--pmsnQzV158Bfi2i2rPDJ6w@mail.gmail.com> (sfid-20110814_043930_215665_B1AC8E81)
+Subject: Re: [PATCH 01/11] ath9k_hw: Fix exceed transmission burst-time of 5GHz
+From: Adrian Chadd <adrian@freebsd.org>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Resubmitting all of these since some are now v2/3, and others just really far
-down the queue.
+On 14 August 2011 02:42, Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
 
-Thomas Pedersen (6):
-  mac80211: fix mesh beacon format
-  ieee80211: introduce Self Protected Action codes
-  mac80211: update mesh peering frame codes
-  mac80211: update mesh peering frame format
-  ieee80211: add mesh action codes
-  mac80211: update mesh path selection frame format
+>> FreeBSD doesn't (yet) enable that bit. ath9k doesn't seem to enable
+>> that bit, either in code or in the ar5008/ar9001/ar9002/ar9003
+>> initvals.
+>>
+> Correct. So the frames that are exceeding txop limit are not filtered.
+> The issue was originally observed while measuring XPABIAS5 signal of
+> AR9380 at 5GHz HT20 MCS0. It exceeds the 4ms limit due to WAR delimits.
 
- include/linux/ieee80211.h   |   47 +++++----
- net/mac80211/ieee80211_i.h  |    4 +-
- net/mac80211/mesh.c         |  242 +++++++++++++++++++++++++++++++------------
- net/mac80211/mesh.h         |   33 +++++--
- net/mac80211/mesh_hwmp.c    |   59 ++++++-----
- net/mac80211/mesh_pathtbl.c |    8 +-
- net/mac80211/mesh_plink.c   |  238 +++++++++++++++++++++---------------------
- net/mac80211/rx.c           |   23 ++++-
- net/mac80211/tx.c           |   14 ++-
- net/mac80211/util.c         |    6 +-
- 10 files changed, 425 insertions(+), 249 deletions(-)
+Ah, makes sense now. Well, we (collectively) should likely figure out
+how to teach the rate control and TX code how to not exceed TXOP in
+general.
+Do packets that exceed TXOP get marked as filtered?
 
--- 
-1.7.6
+Thanks for finding that. :)
 
+
+
+Adrian
