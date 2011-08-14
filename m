@@ -1,89 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:35412 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751725Ab1HMQ57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 12:57:59 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 10/13] iwlagn: change default sensitivity value for 5000 and 6000 series
-Date: Sat, 13 Aug 2011 09:18:04 -0700
-Message-Id: <1313252287-22858-10-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_185815_251188_C6020107)
-In-Reply-To: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:65029 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752957Ab1HNKSB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Aug 2011 06:18:01 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 24so2967085wyg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:18:01 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 30/40] wl12xx: AP-mode - configure HT rate support to the FW
+Date: Sun, 14 Aug 2011 13:17:29 +0300
+Message-Id: <1313317059-16567-31-git-send-email-eliad@wizery.com> (sfid-20110814_121805_968976_D5D76D86)
+In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update the default sensitivity value for both 5000 and 6000 series devices
+From: Arik Nemtsov <arik@wizery.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Unconditionally configure HT rate support to the FW on all ACs
+when starting the AP.
+
+When 11n support is disabled by usermode (hostapd), each STA joining
+the AP will appear as a non-HT STA. This will stop us from accidentally
+transmitting using MCS rates.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-5000.c |   12 ++++++------
- drivers/net/wireless/iwlwifi/iwl-6000.c |    8 ++++----
- 2 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/net/wireless/wl12xx/conf.h |    5 +++++
+ drivers/net/wireless/wl12xx/init.c |    3 +++
+ 2 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 3eeb12e..58481c1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -84,12 +84,12 @@ static void iwl5000_nic_config(struct iwl_priv *priv)
- }
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index 76b5c62..82f205c 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -438,12 +438,17 @@ struct conf_rx_settings {
  
- static struct iwl_sensitivity_ranges iwl5000_sensitivity = {
--	.min_nrg_cck = 95,
-+	.min_nrg_cck = 100,
- 	.max_nrg_cck = 0, /* not used, set to 0 */
- 	.auto_corr_min_ofdm = 90,
- 	.auto_corr_min_ofdm_mrc = 170,
--	.auto_corr_min_ofdm_x1 = 120,
--	.auto_corr_min_ofdm_mrc_x1 = 240,
-+	.auto_corr_min_ofdm_x1 = 105,
-+	.auto_corr_min_ofdm_mrc_x1 = 220,
+ #define CONF_TX_OFDM_RATES (CONF_HW_BIT_RATE_6MBPS |             \
+ 	CONF_HW_BIT_RATE_12MBPS | CONF_HW_BIT_RATE_24MBPS |      \
+ 	CONF_HW_BIT_RATE_36MBPS | CONF_HW_BIT_RATE_48MBPS |      \
+ 	CONF_HW_BIT_RATE_54MBPS)
  
- 	.auto_corr_max_ofdm = 120,
- 	.auto_corr_max_ofdm_mrc = 210,
-@@ -98,10 +98,10 @@ static struct iwl_sensitivity_ranges iwl5000_sensitivity = {
++#define CONF_TX_MCS_RATES (CONF_HW_BIT_RATE_MCS_0 |              \
++	CONF_HW_BIT_RATE_MCS_1 | CONF_HW_BIT_RATE_MCS_2 |        \
++	CONF_HW_BIT_RATE_MCS_3 | CONF_HW_BIT_RATE_MCS_4 |        \
++	CONF_HW_BIT_RATE_MCS_5 | CONF_HW_BIT_RATE_MCS_6 |        \
++	CONF_HW_BIT_RATE_MCS_7)
  
- 	.auto_corr_min_cck = 125,
- 	.auto_corr_max_cck = 200,
--	.auto_corr_min_cck_mrc = 170,
-+	.auto_corr_min_cck_mrc = 200,
- 	.auto_corr_max_cck_mrc = 400,
--	.nrg_th_cck = 95,
--	.nrg_th_ofdm = 95,
-+	.nrg_th_cck = 100,
-+	.nrg_th_ofdm = 100,
+ /*
+  * Default rates for management traffic when operating in AP mode. This
+  * should be configured according to the basic rate set of the AP
+  */
+ #define CONF_TX_AP_DEFAULT_MGMT_RATES  (CONF_HW_BIT_RATE_1MBPS | \
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index a374c21..b13bebe 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -512,12 +512,15 @@ int wl1271_init_ap_rates(struct wl1271 *wl)
+ 	 */
+ 	if ((wl->basic_rate_set & CONF_TX_OFDM_RATES))
+ 		supported_rates = CONF_TX_OFDM_RATES;
+ 	else
+ 		supported_rates = CONF_TX_AP_ENABLED_RATES;
  
- 	.barker_corr_th_min = 190,
- 	.barker_corr_th_min_mrc = 390,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 12838c0..544581a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -114,7 +114,7 @@ static void iwl6000_nic_config(struct iwl_priv *priv)
- }
- 
- static struct iwl_sensitivity_ranges iwl6000_sensitivity = {
--	.min_nrg_cck = 97,
-+	.min_nrg_cck = 110,
- 	.max_nrg_cck = 0, /* not used, set to 0 */
- 	.auto_corr_min_ofdm = 80,
- 	.auto_corr_min_ofdm_mrc = 128,
-@@ -130,11 +130,11 @@ static struct iwl_sensitivity_ranges iwl6000_sensitivity = {
- 	.auto_corr_max_cck = 175,
- 	.auto_corr_min_cck_mrc = 160,
- 	.auto_corr_max_cck_mrc = 310,
--	.nrg_th_cck = 97,
--	.nrg_th_ofdm = 100,
-+	.nrg_th_cck = 110,
-+	.nrg_th_ofdm = 110,
- 
- 	.barker_corr_th_min = 190,
--	.barker_corr_th_min_mrc = 390,
-+	.barker_corr_th_min_mrc = 336,
- 	.nrg_th_cca = 62,
- };
- 
++	/* unconditionally enable HT rates */
++	supported_rates |= CONF_TX_MCS_RATES;
++
+ 	/* configure unicast TX rate classes */
+ 	for (i = 0; i < wl->conf.tx.ac_conf_count; i++) {
+ 		rc.enabled_rates = supported_rates;
+ 		rc.short_retry_limit = 10;
+ 		rc.long_retry_limit = 10;
+ 		rc.aflags = 0;
 -- 
-1.7.0.4
+1.7.6.401.g6a319
 
