@@ -1,39 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:63560 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754046Ab1HaGkv (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42349 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753008Ab1HNMfn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 02:40:51 -0400
-Date: Wed, 31 Aug 2011 09:38:30 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: emmanuel.grumbach@intel.com
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"open list:INTEL WIRELESS WI..." <linux-wireless@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org
-Subject: [patch -next 2/2] iwlwifi: signedness bug in
- iwl_trans_pcie_tx_agg_alloc()
-Message-ID: <20110831063830.GD3705@shale.localdomain> (sfid-20110831_084055_359954_A06E38F2)
+	Sun, 14 Aug 2011 08:35:43 -0400
+Received: by fxh19 with SMTP id 19so3116870fxh.19
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 05:35:42 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Vladimir Menshakov <vladimir.menshakov@gmail.com>
+Subject: Re: carl9170 AP mode stops working in 3.0.x
+Date: Sun, 14 Aug 2011 14:35:36 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <CAL5UyxpC40VyXstqneP2MZFUTni6C2WBWsGHBYL=CZfJt5Fd2g@mail.gmail.com>
+In-Reply-To: <CAL5UyxpC40VyXstqneP2MZFUTni6C2WBWsGHBYL=CZfJt5Fd2g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201108141435.37157.chunkeey@googlemail.com> (sfid-20110814_143552_236170_C28EE158)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-unsigned shorts and unsigned chars are never == -1.
+On Sunday 14 August 2011 12:46:31 Vladimir Menshakov wrote:
+> I've been using TL-WN821Nv2 dongle as AP for a year or so. I'm using
+> linux x86_64 desktop + hostapd. After upgrading to linux
+> 3.0/compat-wireless-3.0-1/2, my AP started freezing after a while
+> (Maybe several minutes or so).
+> What I've tried so far:
+> 1) switching hostapd in b/g mode.
+> 2) checked /sys/.../power/autosuspend and various power-saving
+> features. (Seems to be unsupported by my device anyway)
+> 3) upgrading to firmware-1.9.4 + latest compat-wireless version.
+> 
+> Sometimes restarting hostapd helps, sometimes not. I don't see any
+> relevant error messages or something suspicious in logs. (Tried
+> raising hostapd logs to maximum verbosity)
+> The last good configuration was 2.6.39-r3 + compat-wireless-stable-39.1
+> 
+> How could I help you find/debug this problem? I saw other complaint on
+> the mail list and I guess it's similar issue.
+http://kernel.org/pub/software/scm/git/docs/git-bisect.html
+[I haven't noticed any problems with carl9170 AP, so I need
+to know what commit broke the driver [shouldn't be too many]]
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+What other complaint are you referring to? [got a link?]
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-index 5dd6a6d..ea6a0bc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-@@ -535,7 +535,7 @@ int iwl_trans_pcie_tx_agg_alloc(struct iwl_trans *trans,
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_tid_data *tid_data;
- 	unsigned long flags;
--	u16 txq_id;
-+	int txq_id;
- 	struct iwl_priv *priv = priv(trans);
- 
- 	txq_id = iwlagn_txq_ctx_activate_free(trans);
+Regards,
+	Chr
