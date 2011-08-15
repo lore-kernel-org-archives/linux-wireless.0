@@ -1,97 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:53356 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750984Ab1HIOi5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 10:38:57 -0400
-Received: by wyg24 with SMTP id 24so35597wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 07:38:56 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:53471 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754424Ab1HOPOE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2011 11:14:04 -0400
+Date: Mon, 15 Aug 2011 17:12:32 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Subject: Re: [PATCH 05/60] iwlagn: introduce struct iwl-shared - known by all
+ layers
+Message-ID: <20110815151231.GB15718@redhat.com> (sfid-20110815_171409_585690_40675E38)
+References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1313257116-2697-6-git-send-email-wey-yi.w.guy@intel.com>
+ <20110815081010.GA3317@redhat.com>
+ <20110815084355.GB3317@redhat.com>
+ <1313414020.15170.32.camel@wwguy-huron>
+ <20110815142144.GA15718@redhat.com>
+ <1313416005.15170.35.camel@wwguy-huron>
+ <20110815144359.GA15719@redhat.com>
+ <1313417422.15170.39.camel@wwguy-huron>
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P3p3mqUjJrynivna5Fu4iv8DDdH-rY53Y36tHRVewSSuQ@mail.gmail.com>
-References: <1312228017-12061-1-git-send-email-wey-yi.w.guy@intel.com>
-	<CALSq=BYkKhJN=GU0RUJ2viibsy5yG78x-D-td0zP+rqWCy=AiQ@mail.gmail.com>
-	<4825B8A2C4E264489E57869F0DCFB22344563F4ABE@hasmsx502.ger.corp.intel.com>
-	<CALSq=BZ2CoF=+Zw-si5oc8No9MLTP1YoZCzfoT9TX1XEaLnq1A@mail.gmail.com>
-	<CALSq=BYY8-fAqATwJaFNvzwpSo4WWXbH=pRXn0oknqKXH=4X2A@mail.gmail.com>
-	<1312499702.15170.17.camel@wwguy-huron>
-	<20110805225051.435fe1b0@mj>
-	<E9954878DD1FB34FAE5187FB88C58A350199604D92@orsmsx506.amr.corp.intel.com>
-	<CANUX_P3p3mqUjJrynivna5Fu4iv8DDdH-rY53Y36tHRVewSSuQ@mail.gmail.com>
-Date: Tue, 9 Aug 2011 20:08:56 +0530
-Message-ID: <CAD2nsn105hyUW0WjN-iggdorxk0wsm7r1EHzN1-MeaMjovQG5A@mail.gmail.com> (sfid-20110809_163901_293109_79BEEE5A)
-Subject: Re: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv pointer
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Pavel Roskin <proski@gnu.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Daniel Halperin <dhalperi@cs.washington.edu>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1313417422.15170.39.camel@wwguy-huron>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 7, 2011 at 1:13 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> Can you please try that one ?
-> I don't have my machine near me, and don't want to crash it remotely,
-> so I didn't test it. I will test in on Sunday.
+On Mon, Aug 15, 2011 at 07:10:22AM -0700, Guy, Wey-Yi wrote:
+> On Mon, 2011-08-15 at 07:44 -0700, Stanislaw Gruszka wrote:
+> > On Mon, Aug 15, 2011 at 06:46:45AM -0700, Guy, Wey-Yi wrote:
+> > > On Mon, 2011-08-15 at 07:21 -0700, Stanislaw Gruszka wrote:
+> > > > On Mon, Aug 15, 2011 at 06:13:39AM -0700, Guy, Wey-Yi wrote:
+> > > > > now we are working on separate iwlagn driver into two layers (upper and
+> > > > > lower), the lower layer contains both bus and transport sub-layer which
+> > > > > is hw dependent, and the upper layer should be bus/hw independent. by
+> > > > > doing so, the single driver can handle different bus and different core
+> > > > > architecture. Having the share data structure (priv->shrd->foo) between
+> > > > > two layers is for that reason (loosely couple).
+> > > > 
+> > > > You did not explained reason for introducing iwl_shared structure,
+> > > > actually you confirmed it is useless. You should simply share iwl_priv
+> > > > on any layer you have.
+> > > > 
+> > > > Stanislaw
+> > > 
+> > > It is not true, I mean "boring" but not "useless", it does not make
+> > > sense share all the priv with lower layer.
+> > 
+> > Why? Even if there are some fields that you will use only on
+> > upper layer, it does not mean that pointer to priv structure
+> > could not be passed to lower layer.
+> > 
+> why, if we doing that, lower layer need to know how to reference the
+> priv which I don't believe it is a good design. I want to make the upper
+> and lower layer as loose as possible and it is flexible for new
+> architecture.
 
-Hi Emmanuel,
+Providing more abstraction layers than needed is worse.
 
-I also got the same kernel panic when unloading the iwlagn module for
-my inbuilt laptop card and i tried the attached patch and it seems to
-fix it.
+> > > think about I also mention
+> > > different core architecture, that mean we can have different upper layer
+> > > which has different priv; but shrd is always common to all different
+> > > upper layer to share with lower layer.
+> > 
+> > What different upper layer? Non mac80211, if so you should write
+> > separate driver for it.
+> 
+> not mac80211, it is still part of driver, but different upper layer
+> might/can contain different system flow. that is why I mention different
+> core architecture. now we are doing preparation work so you did not see
+> the new stuff yet.
 
+Can we get opinion from Johannes about that, and eventually ACKs/NACKs
+for patches?
 
->
->
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c
-> b/drivers/net/wireless/iwlwifi/iwl-pci.c
-> index 69d4ec4..2fdbffa 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-pci.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
-> @@ -478,27 +478,22 @@ out_no_pci:
->        return err;
->  }
->
-> -static void iwl_pci_down(struct iwl_bus *bus)
-> -{
-> -       struct iwl_pci_bus *pci_bus = (struct iwl_pci_bus *) bus->bus_specific;
-> -
-> -       pci_disable_msi(pci_bus->pci_dev);
-> -       pci_iounmap(pci_bus->pci_dev, pci_bus->hw_base);
-> -       pci_release_regions(pci_bus->pci_dev);
-> -       pci_disable_device(pci_bus->pci_dev);
-> -       pci_set_drvdata(pci_bus->pci_dev, NULL);
-> -
-> -       kfree(bus);
-> -}
-> -
->  static void __devexit iwl_pci_remove(struct pci_dev *pdev)
->  {
->        struct iwl_priv *priv = pci_get_drvdata(pdev);
-> -       void *bus_specific = priv->bus->bus_specific;
-> +       struct iwl_bus *bus = priv->bus;
-> +       struct iwl_pci_bus *pci_bus = IWL_BUS_GET_PCI_BUS(bus);
-> +       struct pci_dev *pci_dev = IWL_BUS_GET_PCI_DEV(bus);
->
->        iwl_remove(priv);
->
-> -       iwl_pci_down(bus_specific);
-> +       pci_disable_msi(pci_dev);
-> +       pci_iounmap(pci_dev, pci_bus->hw_base);
-> +       pci_release_regions(pci_dev);
-> +       pci_disable_device(pci_dev);
-> +       pci_set_drvdata(pci_dev, NULL);
-> +
-> +       kfree(bus);
->  }
->
->  #ifdef CONFIG_PM
->
+Stanislaw
 
-
-
--- 
-shafi
