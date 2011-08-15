@@ -1,111 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61321 "EHLO mx1.redhat.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2722 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751832Ab1HRTRq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Aug 2011 15:17:46 -0400
-Subject: Re: [PATCH] ath9k: make driver usable standalone
-From: Dan Williams <dcbw@redhat.com>
-To: Pavel Ivanov <paivanof@gmail.com>
-Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	linux-kernel@vger.kernel.org
-Date: Thu, 18 Aug 2011 14:20:15 -0500
-In-Reply-To: <CAG1a4rvQTA7UgxLOxu_cC88grjHttyjPD_4kyDhb7Y9FcBBkLQ@mail.gmail.com>
-References: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com>
-	 <CA+XFjipM1Qup3bcJos_ikwzoaWoa3GdYqK0WBUqEHBNR6V6LfQ@mail.gmail.com>
-	 <CAG1a4rsyfPrrrf-mzt3HAM6YHHjaHTcd2rbtYiwqLkUCP=j8pQ@mail.gmail.com>
-	 <CA+XFjipsVukKYchfmDv48PAKsD2PUxT+7E8epRuKFynGwk=Bag@mail.gmail.com>
-	 <CAG1a4rvQTA7UgxLOxu_cC88grjHttyjPD_4kyDhb7Y9FcBBkLQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1313695217.23920.4.camel@dcbw.foobar.com> (sfid-20110818_211805_619332_60E7F934)
-Mime-Version: 1.0
+	id S1753493Ab1HONet (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2011 09:34:49 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 05/15] staging: brcm80211: void * cleanup in fullmac
+Date: Mon, 15 Aug 2011 15:34:17 +0200
+Message-ID: <1313415267-5264-6-git-send-email-arend@broadcom.com> (sfid-20110815_153504_291782_C3E59D5E)
+In-Reply-To: <1313415267-5264-1-git-send-email-arend@broadcom.com>
+References: <1313415267-5264-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-08-18 at 00:01 -0400, Pavel Ivanov wrote:
-> > Iwconfig and iwlist are themselves deprecated. Iw is the new wireless
-> > configuration tool.
-> 
-> I've just tried to use iw and it didn't quite work for me. Maybe it's
-> interfering with something installed in Ubuntu by default but
+From: Franky Lin <frankyl@broadcom.com>
 
-Ubuntu installs NetworkManager by default, so if you want to manually
-control the wifi card you'll have to tell NM to ignore the wifi device,
-or turn NM off temporarily.
+Remove improper usage of void * in dhd_linux.c and dhd_sdio.c
 
-> connect/disconnect commands didn't seem to do anything. And why these
-> commands can be executed only as root?
+Reported-by: Julian Calaby <julian.calaby@gmail.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd.h       |    5 +++--
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |   14 +++++++-------
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |    6 +++---
+ 3 files changed, 13 insertions(+), 12 deletions(-)
 
-Because poking and configuring hardware is a privileged operation; tools
-like NetworkManager selectively poke holes through that wall and often
-require administrator passwords to do it, but at the end of the day its
-an operation that can affect security and stability, and that means it
-needs to be privileged.
-
-In the end, you probably want to be using wpa_supplicant instead of
-trying to configure stuff with iw directly.
-
-Dan
-
-> Well, maybe in Ubuntu 11.10 it will work better.
-> 
-> 
-> Pavel
-> 
-> 
-> 2011/8/17 Gábor Stefanik <netrolller.3d@gmail.com>:
-> > 2011/8/17 Pavel Ivanov <paivanof@gmail.com>:
-> >>> WIRELESS_EXT is not required for configuring wireless on recent
-> >>> kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
-> >>
-> >> Since what version it's deprecated? Do user-space tools know about this new API?
-> >>
-> >> Neither iwconfig nor iwlist worked for me without WIRELESS_EXT.
-> >>
-> >>
-> >> Pavel
-> >>
-> >
-> > Iwconfig and iwlist are themselves deprecated. Iw is the new wireless
-> > configuration tool.
-> >
-> >>
-> >> 2011/8/17 Gábor Stefanik <netrolller.3d@gmail.com>:
-> >>> On Wed, Aug 17, 2011 at 5:28 AM, Pavel Ivanov <paivanof@gmail.com> wrote:
-> >>>> When ath9k is the only wireless driver included in the build
-> >>>> WIRELESS_EXT configuration option becomes undefined. Because of that
-> >>>> driver becomes essentially unusable as you can't actually connect to
-> >>>> any WiFi network. By including WIRELESS_EXT into Kconfig we ensure
-> >>>> that build with ath9k and without other drivers (having WIRELESS_EXT
-> >>>> selected in their Kconfig) is actually usable.
-> >>>
-> >>> WIRELESS_EXT is not required for configuring wireless on recent
-> >>> kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
-> >>>
-> >>>>
-> >>>> Signed-off-by: Pavel Ivanov <paivanof@gmail.com>
-> >>>> ---
-> >>>>
-> >>>> diff --git a/drivers/net/wireless/ath/ath9k/Kconfig
-> >>>> b/drivers/net/wireless/ath/ath9k/Kconfig
-> >>>> index d9c08c6..2573f77 100644
-> >>>> --- a/drivers/net/wireless/ath/ath9k/Kconfig
-> >>>> +++ b/drivers/net/wireless/ath/ath9k/Kconfig
-> >>>> @@ -11,6 +11,7 @@ config ATH9K
-> >>>>        select LEDS_CLASS
-> >>>>        select NEW_LEDS
-> >>>>        select ATH9K_COMMON
-> >>>> +       select WIRELESS_EXT
-> >>>>        ---help---
-> >>>>          This module adds support for wireless adapters based on
-> >>>>          Atheros IEEE 802.11n AR5008, AR9001 and AR9002 family
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index ae8a9a6..ee09c17 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -760,8 +760,9 @@ extern int brcmf_c_host_event(struct brcmf_info *drvr_priv, int *idx,
+ 
+ extern void brcmf_c_init(void);
+ 
+-extern int brcmf_add_if(struct brcmf_info *drvr_priv, int ifidx, void *handle,
+-		      char *name, u8 *mac_addr, u32 flags, u8 bssidx);
++extern int brcmf_add_if(struct brcmf_info *drvr_priv, int ifidx,
++			struct net_device *net, char *name, u8 *mac_addr,
++			u32 flags, u8 bssidx);
+ extern void brcmf_del_if(struct brcmf_info *drvr_priv, int ifidx);
+ 
+ /* Send packet to dongle via data channel */
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index ca26cc1..b8f9922 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -978,7 +978,7 @@ static int brcmf_netdev_ioctl_entry(struct net_device *net, struct ifreq *ifr,
+ 		return -1;
+ 
+ 	if (cmd == SIOCETHTOOL)
+-		return brcmf_ethtool(drvr_priv, (void *)ifr->ifr_data);
++		return brcmf_ethtool(drvr_priv, ifr->ifr_data);
+ 
+ 	if (cmd != SIOCDEVPRIVATE)
+ 		return -EOPNOTSUPP;
+@@ -1140,12 +1140,12 @@ static int brcmf_netdev_open(struct net_device *net)
+ }
+ 
+ int
+-brcmf_add_if(struct brcmf_info *drvr_priv, int ifidx, void *handle, char *name,
+-	   u8 *mac_addr, u32 flags, u8 bssidx)
++brcmf_add_if(struct brcmf_info *drvr_priv, int ifidx, struct net_device *net,
++	     char *name, u8 *mac_addr, u32 flags, u8 bssidx)
+ {
+ 	struct brcmf_if *ifp;
+ 
+-	BRCMF_TRACE(("%s: idx %d, handle->%p\n", __func__, ifidx, handle));
++	BRCMF_TRACE(("%s: idx %d, handle->%p\n", __func__, ifidx, net));
+ 
+ 	ifp = drvr_priv->iflist[ifidx];
+ 	if (!ifp) {
+@@ -1163,12 +1163,12 @@ brcmf_add_if(struct brcmf_info *drvr_priv, int ifidx, void *handle, char *name,
+ 	if (mac_addr != NULL)
+ 		memcpy(&ifp->mac_addr, mac_addr, ETH_ALEN);
+ 
+-	if (handle == NULL) {
++	if (net == NULL) {
+ 		ifp->state = BRCMF_E_IF_ADD;
+ 		ifp->idx = ifidx;
+ 		wake_up(&drvr_priv->sysioc_waitq);
+ 	} else
+-		ifp->net = (struct net_device *)handle;
++		ifp->net = net;
+ 
+ 	return 0;
+ }
+@@ -1228,7 +1228,7 @@ struct brcmf_pub *brcmf_attach(struct brcmf_bus *bus, uint bus_hdrlen)
+ 			strcat(net->name, "%d");
+ 	}
+ 
+-	if (brcmf_add_if(drvr_priv, 0, (void *)net, net->name, NULL, 0, 0) ==
++	if (brcmf_add_if(drvr_priv, 0, net, net->name, NULL, 0, 0) ==
+ 	    BRCMF_BAD_IF)
+ 		goto fail;
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index cc321d6..7632a0e 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -910,7 +910,7 @@ static int brcmf_sdbrcm_send_buf(struct brcmf_bus *bus, u32 addr, uint fn,
+ 			       uint flags, u8 *buf, uint nbytes,
+ 			       struct sk_buff *pkt);
+ 
+-static bool brcmf_sdbrcm_download_firmware(struct brcmf_bus *bus, void *card);
++static bool brcmf_sdbrcm_download_firmware(struct brcmf_bus *bus);
+ static int  _brcmf_sdbrcm_download_firmware(struct brcmf_bus *bus);
+ 
+ static int brcmf_sdbrcm_download_code_file(struct brcmf_bus *bus);
+@@ -3100,7 +3100,7 @@ int brcmf_sdbrcm_bus_init(struct brcmf_pub *drvr, bool enforce_mutex)
+ 
+ 	/* try to download image and nvram to the dongle */
+ 	if (drvr->busstate == BRCMF_BUS_DOWN) {
+-		if (!(brcmf_sdbrcm_download_firmware(bus, bus->sdiodev)))
++		if (!(brcmf_sdbrcm_download_firmware(bus)))
+ 			return -1;
+ 	}
+ 
+@@ -5122,7 +5122,7 @@ static bool brcmf_sdbrcm_probe_init(struct brcmf_bus *bus)
+ }
+ 
+ static bool
+-brcmf_sdbrcm_download_firmware(struct brcmf_bus *bus, void *card)
++brcmf_sdbrcm_download_firmware(struct brcmf_bus *bus)
+ {
+ 	bool ret;
+ 
+-- 
+1.7.4.1
 
 
