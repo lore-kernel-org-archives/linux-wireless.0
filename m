@@ -1,67 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22839 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752448Ab1HIKBm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 06:01:42 -0400
-Date: Tue, 9 Aug 2011 12:01:12 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Justin Piszcz <jpiszcz@lucidpixels.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: rt2800usb: fix races in tx queue
-Message-ID: <20110809100110.GE2152@redhat.com> (sfid-20110809_120146_286689_3276AF13)
-References: <20110804124653.GB5739@redhat.com>
- <CAOZOX0Xpv9OPqx2Y3GnajhmDvx3GyL1xTAjEOYjOToWcQxB6bA@mail.gmail.com>
- <20110808092914.GA2168@redhat.com>
- <CAOZOX0WM2gzOETSsJ1hR623ie1_eqcfS13bDoLxrJugcZ-Si4g@mail.gmail.com>
- <4E404AE5.1030307@gmail.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:65315 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751528Ab1HOUKD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2011 16:10:03 -0400
+Received: by vxi9 with SMTP id 9so4133155vxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2011 13:10:03 -0700 (PDT)
+Message-ID: <4E497D17.3040305@lwfinger.net> (sfid-20110815_221007_324881_F5475AA7)
+Date: Mon, 15 Aug 2011 15:09:59 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E404AE5.1030307@gmail.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: Hosting wl driver, part of GPL package
+References: <CACna6rwvjRm+yLyz-sbQjmot8ErhfLN5E0NgtW3kbgjPy+JwLA@mail.gmail.com> <CAFtRNNzb9c_PskJ+9SJKpM2VryzHthii2SsiMc4Pp8ifn6u19A@mail.gmail.com>
+In-Reply-To: <CAFtRNNzb9c_PskJ+9SJKpM2VryzHthii2SsiMc4Pp8ifn6u19A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 08, 2011 at 10:45:25PM +0200, Gertjan van Wingerde wrote:
-> >> Here is part of code where we exit the loop (and whole function) and do
-> >> not remove head "reg" from tx_status fifo - and read it again when
-> >> _txdone work is called next time.
-> > 
-> > Well but for what reason would we want to read the register again? If
-> > we found an status report
-> > for a queue which does not have pending items, then in this change it
-> > would mean that the
-> > status report is intended for a TX frame which has yet to be enqueued
-> > to the hardware.
-> > 
-> > Obviously this means a mismatch between the TX status report and the
-> > actual frame to which it
-> > is being connected.
-> 
-> Hmm, if I understood the patch description correctly, then there may be a race in the code,
-> where we actually read the TX status report before we have had the chance to handle the TX done
-> URB interrupt. As far as I understood it, it are not spurious TX status reports for frames that
-> were never submitted to the HW.
-> If that is really the case then it is quite reasonable to wait a little bit until the TX done
-> code has been executed and then process the TX status report again. 
-> However, we must be damn sure that this is really what happens.
-> 
-> Stanislaw, please confirm (or deny) that my understanding is correct.
+On 08/15/2011 03:02 PM, Nick Kossifidis wrote:
+>
+> You could apply for space at www.kernel.org...
+>
+> https://accounts.kernel.org/
+>
+> If you don't want to go through the process I can upload them for you
+> in my space...
+> http://www.kernel.org/pub/linux/kernel/people/mickflemm/
+>
+> I also think you can attach files on http://wireless.kernel.org but
+> I'm not sure.
 
+I have an account at kernel.org. The problem there is that these are not open 
+source, thus we would need special permission to upload them.
 
-In this loop
-
-                while (!rt2x00queue_empty(queue)) {
-                        entry = rt2x00queue_get_entry(queue,Q_INDEX_DONE);
-                        if (rt2800usb_txdone_entry_check(entry, reg))
-                                break;
-                }
-we can process entry that is currently added to tx queue and nulify skb.
-
-This can happen if we return false from rt2800usb_txdone_entry_check(),
-so only when reg does not match ((wcid != tx_wcid) || (ack != tx_ack) ||
-(pid != tx_pid)), or previous entry is ENTRY_DATA_IO_FAILED.
-
-Stanislaw
+Larry
