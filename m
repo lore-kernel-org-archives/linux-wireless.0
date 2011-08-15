@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3593 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753309Ab1HHQiR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 12:38:17 -0400
-Message-ID: <4E4010EB.2020606@broadcom.com> (sfid-20110808_183821_022963_DF04916C)
-Date: Mon, 8 Aug 2011 18:38:03 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:37744 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751287Ab1HOTAA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2011 15:00:00 -0400
+Message-ID: <4E496CA7.7000604@hauke-m.de> (sfid-20110815_210005_009194_0B2212F0)
+Date: Mon, 15 Aug 2011 20:59:51 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-To: "Greg KH" <gregkh@suse.de>
-cc: "Dan Carpenter" <error27@gmail.com>,
-	"sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCHv2 00/82] staging: brcm80211: resubmit previously
- posted patches
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
- <CA+icZUUBokLgtn3K3uG7qcNLzy4pfdT4fGYWPtoOy_MQVy8VuA@mail.gmail.com>
- <20110808145334.GA7659@shale.localdomain>
- <4E400A92.7060905@broadcom.com> <20110808163232.GA26352@suse.de>
-In-Reply-To: <20110808163232.GA26352@suse.de>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: Lin Tony-B19295 <B19295@freescale.com>
+CC: "mcgrof@gmail.com" <mcgrof@gmail.com>,
+	"lrodriguez@atheros.com" <lrodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	kvalo@qca.qualcomm.com, rmani@qca.qualcomm.com
+Subject: Re: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
+References: <1313060347-665-1-git-send-email-hauke@hauke-m.de> <97D3A72708D04647A5AC84A04996E5B5193114@039-SN1MPN1-002.039d.mgd.msft.net>
+In-Reply-To: <97D3A72708D04647A5AC84A04996E5B5193114@039-SN1MPN1-002.039d.mgd.msft.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/08/2011 06:32 PM, Greg KH wrote:
-> No, as you sent it is fine with me.
->
-> I'll start going through the huge backlog of staging patches this week,
-> as the merge window just opened up a few hours ago.
+On 08/15/2011 07:06 AM, Lin Tony-B19295 wrote:
+> Where can I get corresponding firmware?
+> 
+> tony
+> 
+>> -----Original Message-----
+>> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+>> owner@vger.kernel.org] On Behalf Of Hauke Mehrtens
+>> Sent: Thursday, August 11, 2011 6:59 PM
+>> To: mcgrof@gmail.com; lrodriguez@atheros.com
+>> Cc: linux-wireless@vger.kernel.org; Hauke Mehrtens
+>> Subject: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
+>>
+>> ath6kl is now in the kernel main area and not in staging any more.
+>>
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>> ---
+>>  Makefile                                |    1 -
+>>  config.mk                               |   15 +++------
+>>  patches/01-netdev.patch                 |   17 +++++++++--
+>>  patches/34-backport-bin_attribute.patch |   47 -------------------------
 
-Will keep my fingers crossed tonight ;-)
+Hi tony,
 
-> thanks,
->
-> greg k-h
->
+there is a firmware for these devices in the linux-firmware git [0], but
+I do not know if it still works with this driver.
 
-Gr. AvS
+Probably some of the ath6kl developer could help you more than me.
 
--- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
+Hauke
 
-
+[0]:
+https://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git;a=summary
