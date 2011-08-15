@@ -1,73 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:36694 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753541Ab1HNRAf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 13:00:35 -0400
-Received: by fxh19 with SMTP id 19so3189617fxh.19
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 10:00:34 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Michael Buesch <m@bues.ch>
-Subject: [PATCH RESEND 3.2 1/2] ssb: fix DMA translation for some specific boards
-Date: Sun, 14 Aug 2011 19:39:40 +0200
-Message-Id: <1313343581-4395-1-git-send-email-zajec5@gmail.com> (sfid-20110814_190039_382762_2E0A3F5B)
+Received: from mms3.broadcom.com ([216.31.210.19]:3555 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753467Ab1HONem (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2011 09:34:42 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 10/15] staging: brcm80211: Remove swaps in R_REG and
+ W_REG macros
+Date: Mon, 15 Aug 2011 15:34:22 +0200
+Message-ID: <1313415267-5264-11-git-send-email-arend@broadcom.com> (sfid-20110815_153501_693263_CFE8EB98)
+In-Reply-To: <1313415267-5264-1-git-send-email-arend@broadcom.com>
+References: <1313415267-5264-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Michael Buesch <m@bues.ch>
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/ssb/main.c |   24 +++++++++++++++++++++---
- 1 files changed, 21 insertions(+), 3 deletions(-)
+From: Henry Ptasinski <henryp@broadcom.com>
 
-diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-index 29c7d4f..d0cbdb0 100644
---- a/drivers/ssb/main.c
-+++ b/drivers/ssb/main.c
-@@ -1260,16 +1260,34 @@ void ssb_device_disable(struct ssb_device *dev, u32 core_specific_flags)
- }
- EXPORT_SYMBOL(ssb_device_disable);
+Swapping the addresses is unnecessary, since the swaps are handled by the
+underlying platform code (i.e. readb() etc. handle any necessary swapping).
+
+Tested on Mac G5 PPC and BCM63281.
+
+Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Tested-by: Jonas Gorski <jonas.gorski@gmail.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/types.h |   19 ++++---------------
+ 1 files changed, 4 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/types.h b/drivers/staging/brcm80211/brcmsmac/types.h
+index c0d41cc..ad874a7 100644
+--- a/drivers/staging/brcm80211/brcmsmac/types.h
++++ b/drivers/staging/brcm80211/brcmsmac/types.h
+@@ -329,28 +329,17 @@ do {						\
+  * location are defined in only one spot. This reduces the risk of the
+  * programmer trying to use an unsupported transaction size on a register.
+  *
+- * For big endian operation, a byte swap has to be done. Eg, when attempting
+- * to read byte address 0, byte 3 should be read. This is accomplished
+- * using an xor ('^') operator.
+  */
  
-+/* Some chipsets need routing known for PCIe and 64-bit DMA */
-+static bool ssb_dma_translation_special_bit(struct ssb_device *dev)
-+{
-+	u16 chip_id = dev->bus->chip_id;
-+
-+	if (dev->id.coreid == SSB_DEV_80211) {
-+		return (chip_id == 0x4322 || chip_id == 43221 ||
-+			chip_id == 43231 || chip_id == 43222);
-+	}
-+
-+	return 0;
-+}
-+
- u32 ssb_dma_translation(struct ssb_device *dev)
- {
- 	switch (dev->bus->bustype) {
- 	case SSB_BUSTYPE_SSB:
- 		return 0;
- 	case SSB_BUSTYPE_PCI:
--		if (ssb_read32(dev, SSB_TMSHIGH) & SSB_TMSHIGH_DMA64)
-+		if (pci_is_pcie(dev->bus->host_pci) &&
-+		    ssb_read32(dev, SSB_TMSHIGH) & SSB_TMSHIGH_DMA64) {
- 			return SSB_PCIE_DMA_H32;
--		else
--			return SSB_PCI_DMA;
-+		} else {
-+			if (ssb_dma_translation_special_bit(dev))
-+				return SSB_PCIE_DMA_H32;
-+			else
-+				return SSB_PCI_DMA;
-+		}
- 	default:
- 		__ssb_dma_not_implemented(dev);
- 	}
+-#ifndef __BIG_ENDIAN
+-#define SWP2(r)	(r)
+-#define SWP3(r) (r)
+-#else
+-#define SWP2(r)	((unsigned long)(r)^2)
+-#define SWP3(r)	((unsigned long)(r)^3)
+-#endif /* __BIG_ENDIAN */
+-
+ #define R_REG(r) \
+ 	({ \
+ 		__typeof(*(r)) __osl_v; \
+ 		switch (sizeof(*(r))) { \
+ 		case sizeof(u8): \
+-			__osl_v = readb((u8 *)(SWP3(r))); \
++			__osl_v = readb((u8 *)(r)); \
+ 			break; \
+ 		case sizeof(u16): \
+-			__osl_v = readw((u16 *)(SWP2(r))); \
++			__osl_v = readw((u16 *)(r)); \
+ 			break; \
+ 		case sizeof(u32): \
+ 			__osl_v = readl((u32 *)(r)); \
+@@ -362,10 +351,10 @@ do {						\
+ #define W_REG(r, v) do { \
+ 		switch (sizeof(*(r))) { \
+ 		case sizeof(u8):	\
+-			writeb((u8)(v), (u8 *)(SWP3(r))); \
++			writeb((u8)(v), (u8 *)(r)); \
+ 			break; \
+ 		case sizeof(u16):	\
+-			writew((u16)(v), (u16 *)(SWP2(r))); \
++			writew((u16)(v), (u16 *)(r)); \
+ 			break; \
+ 		case sizeof(u32):	\
+ 			writel((u32)(v), (u32 *)(r)); \
 -- 
-1.7.3.4
+1.7.4.1
+
 
