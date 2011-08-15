@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:51194 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754673Ab1HaUsZ (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:55584 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752017Ab1HOGKA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 16:48:25 -0400
-Received: by gxk21 with SMTP id 21so903652gxk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 13:48:25 -0700 (PDT)
-Message-ID: <4E5E9E16.3030306@lwfinger.net> (sfid-20110831_224829_825885_C88F07AA)
-Date: Wed, 31 Aug 2011 15:48:22 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 15 Aug 2011 02:10:00 -0400
+Message-ID: <4E48B824.4020209@gmail.com> (sfid-20110815_081020_583501_583A659F)
+Date: Sun, 14 Aug 2011 23:09:40 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-To: Matthew Frazier <mlfrazie@ncsu.edu>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Status of BCM4331
-References: <D23A4EC8-E27C-476C-BA73-64EAB4E81B62@ncsu.edu>
-In-Reply-To: <D23A4EC8-E27C-476C-BA73-64EAB4E81B62@ncsu.edu>
+To: David Miller <davem@davemloft.net>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: ip_rt_bug: 10.0.0.52 -> 255.255.255.255, ?
+References: <4E4898F5.8050605@gmail.com> <20110814.224536.1330937123770047026.davem@davemloft.net> <4E48B4B6.8000603@gmail.com> <20110814.225633.1354751384914126321.davem@davemloft.net>
+In-Reply-To: <20110814.225633.1354751384914126321.davem@davemloft.net>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/31/2011 03:27 PM, Matthew Frazier wrote:
-> Hello, Linux wireless people.
+On 08/14/2011 10:56 PM, David Miller wrote:
+> From: "Justin P. Mattock"<justinmattock@gmail.com>
+> Date: Sun, 14 Aug 2011 22:55:02 -0700
 >
-> On the b43 device list[1], you have support for the BCM4331 listed as "Soon (3.2+)". Does this mean "it will be in 3.2," "we will start working on it after 3.2," or something else?
+>> Oh.. guess I will wait for those to be put into the Mainline
+>> then. Thanks for the info!
+>
+> It is in mainline.
+>
 
-Support for that chip will be in kernel 3.2. In fact, the code now in the 
-wireless testing git tree handles that chip without any other changes (as of the 
-August 30 update).
+alright.. I see it now. I pulled on thurs/fri but never went any further 
+with the build after that. will clean and build when I get a chance and 
+run it.
 
-> Also, just out of curiosity, what are you working on specifically with regards to the BCM4331? What still needs to be done before the BCM4331 can be used? (And does Broadcom have any plans to support it with the broadcom-sta driver?)
+Thanks again!
 
-The object has been to make it work at all. It uses a new interface between the 
-chip and the host, and is different than any device previously supported by b43. 
-There will be additional improvements to improve the performance, and perhaps 
-the stability.
-
-None of us are qualified to speak regarding Broadcom's plans.
-
-Larry
-
-
+Justin P. Mattock
