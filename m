@@ -1,88 +1,316 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:64327 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753781Ab1HXTCo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 15:02:44 -0400
-Received: by yxj19 with SMTP id 19so1102250yxj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 12:02:43 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [RFC 3/3] mac80211: set HT capabilities for mesh peer
-Date: Wed, 24 Aug 2011 12:02:19 -0700
-Message-Id: <1314212539-23669-4-git-send-email-thomas@cozybit.com> (sfid-20110824_210247_482564_DD2743E1)
-In-Reply-To: <1314212539-23669-1-git-send-email-thomas@cozybit.com>
-References: <1314212539-23669-1-git-send-email-thomas@cozybit.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:2705 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753297Ab1HONei (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2011 09:34:38 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 01/15] staging: brcm80211: got rid of several void
+ pointers for softmac PCI
+Date: Mon, 15 Aug 2011 15:34:13 +0200
+Message-ID: <1313415267-5264-2-git-send-email-arend@broadcom.com> (sfid-20110815_153445_979548_69A0399C)
+In-Reply-To: <1313415267-5264-1-git-send-email-arend@broadcom.com>
+References: <1313415267-5264-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh_plink.c |   17 ++++++++++++-----
- 1 files changed, 12 insertions(+), 5 deletions(-)
+From: Roland Vossen <rvossen@broadcom.com>
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 8f068b1..e9dd761 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -76,11 +76,15 @@ static inline void mesh_plink_fsm_restart(struct sta_info *sta)
-  *       on it in the lifecycle management section!
-  */
- static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
--					 u8 *hw_addr, u32 rates)
-+					 u8 *hw_addr, u32 rates,
-+					 struct ieee802_11_elems *elems)
+Code cleanup. Replace void * related to PCI functionality by less generic
+pointer types.
+
+Reported-by: Julian Calaby <julian.calaby@gmail.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/aiutils.c |   10 +++--
+ drivers/staging/brcm80211/brcmsmac/aiutils.h |    2 +-
+ drivers/staging/brcm80211/brcmsmac/dma.c     |    2 +-
+ drivers/staging/brcm80211/brcmsmac/nicpci.c  |   61 +++++++++++---------------
+ drivers/staging/brcm80211/brcmsmac/nicpci.h  |   30 ++++++++-----
+ 5 files changed, 53 insertions(+), 52 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+index 3d392a3..c9c41a5 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+@@ -1850,7 +1850,7 @@ int ai_devpath(struct si_pub *sih, char *path, int size)
+ 		return -1;
+ 
+ 	slen = snprintf(path, (size_t) size, "pci/%u/%u/",
+-		((struct pci_dev *)((SI_INFO(sih))->pbus))->bus->number,
++		(((SI_INFO(sih))->pbus))->bus->number,
+ 		PCI_SLOT(((struct pci_dev *)((SI_INFO(sih))->pbus))->devfn));
+ 
+ 	if (slen < 0 || slen >= size) {
+@@ -2025,8 +2025,7 @@ void ai_pci_setup(struct si_pub *sih, uint coremask)
+ int ai_pci_fixcfg(struct si_pub *sih)
  {
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband;
- 	struct sta_info *sta;
+ 	uint origidx;
+-	struct sbpciregs *regs = NULL;
+-
++	void *regs = NULL;
+ 	struct si_info *sii = SI_INFO(sih);
  
-+	sband = local->hw.wiphy->bands[local->oper_channel->band];
-+
- 	if (local->num_sta >= MESH_MAX_PLINKS)
- 		return NULL;
+ 	/* Fixup PI in SROM shadow area to enable the correct PCI core access */
+@@ -2035,7 +2034,10 @@ int ai_pci_fixcfg(struct si_pub *sih)
  
-@@ -90,6 +94,9 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
+ 	/* check 'pi' is correct and fix it if not */
+ 	regs = ai_setcore(&sii->pub, sii->pub.buscoretype, 0);
+-	pcicore_fixcfg(sii->pch, regs);
++	if (sii->pub.buscoretype == PCIE_CORE_ID)
++		pcicore_fixcfg_pcie(sii->pch, (struct sbpcieregs *)regs);
++	else if (sii->pub.buscoretype == PCI_CORE_ID)
++		pcicore_fixcfg_pci(sii->pch, (struct sbpciregs *)regs);
  
- 	sta->flags = WLAN_STA_AUTHORIZED | WLAN_STA_AUTH;
- 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
-+	if (elems->ht_cap_elem)
-+		ieee80211_ht_cap_ie_to_sta_ht_cap(sband, elems->ht_cap_elem,
-+						  &sta->sta.ht_cap);
- 	rate_control_rate_init(sta);
+ 	/* restore the original index */
+ 	ai_setcoreidx(&sii->pub, origidx);
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+index 84c6901..7ea42af 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+@@ -459,7 +459,7 @@ struct gpioh_item {
+ /* misc si info needed by some of the routines */
+ struct si_info {
+ 	struct si_pub pub;	/* back plane public state (must be first) */
+-	void *pbus;		/* handle to bus (pci/sdio/..) */
++	struct pci_dev *pbus;	/* handle to pci bus */
+ 	uint dev_coreid;	/* the core provides driver functions */
+ 	void *intr_arg;		/* interrupt callback function arg */
+ 	u32 (*intrsoff_fn) (void *intr_arg); /* turns chip interrupts off */
+diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
+index 64d7639..10a25d2 100644
+--- a/drivers/staging/brcm80211/brcmsmac/dma.c
++++ b/drivers/staging/brcm80211/brcmsmac/dma.c
+@@ -252,7 +252,7 @@ struct dma_info {
+ 	uint *msg_level;	/* message level pointer */
+ 	char name[MAXNAMEL];	/* callers name for diag msgs */
  
- 	return sta;
-@@ -251,8 +258,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+-	void *pbus;		/* bus handle */
++	struct pci_dev *pbus;		/* bus handle */
+ 
+ 	bool dma64;	/* this dma engine is operating in 64-bit mode */
+ 	bool addrext;	/* this dma engine supports DmaExtendedAddrChanges */
+diff --git a/drivers/staging/brcm80211/brcmsmac/nicpci.c b/drivers/staging/brcm80211/brcmsmac/nicpci.c
+index 8249ea9..2d46e70 100644
+--- a/drivers/staging/brcm80211/brcmsmac/nicpci.c
++++ b/drivers/staging/brcm80211/brcmsmac/nicpci.c
+@@ -245,7 +245,8 @@ static void pcie_war_pci_setup(struct pcicore_info *pi);
+ /* Initialize the PCI core.
+  * It's caller's responsibility to make sure that this is done only once
+  */
+-void *pcicore_init(struct si_pub *sih, void *pdev, void *regs)
++struct pcicore_info *pcicore_init(struct si_pub *sih, struct pci_dev *pdev,
++				  void *regs)
+ {
+ 	struct pcicore_info *pi;
+ 
+@@ -271,7 +272,7 @@ void *pcicore_init(struct si_pub *sih, void *pdev, void *regs)
+ 	return pi;
  }
  
- void mesh_neighbour_update(u8 *hw_addr, u32 rates,
--		struct ieee80211_sub_if_data *sdata,
--		struct ieee802_11_elems *elems)
-+			   struct ieee80211_sub_if_data *sdata,
-+			   struct ieee802_11_elems *elems)
+-void pcicore_deinit(void *pch)
++void pcicore_deinit(struct pcicore_info *pch)
  {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
-@@ -269,7 +276,7 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
- 					elems->ie_start, elems->total_len,
- 					GFP_KERNEL);
- 		else
--			sta = mesh_plink_alloc(sdata, hw_addr, rates);
-+			sta = mesh_plink_alloc(sdata, hw_addr, rates, elems);
- 		if (!sta)
- 			return;
- 		if (sta_info_insert_rcu(sta)) {
-@@ -560,7 +567,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		}
+ 	kfree(pch);
+ }
+@@ -279,7 +280,7 @@ void pcicore_deinit(void *pch)
+ /* return cap_offset if requested capability exists in the PCI config space */
+ /* Note that it's caller's responsibility to make sure it's a pci bus */
+ u8
+-pcicore_find_pci_capability(void *dev, u8 req_cap_id,
++pcicore_find_pci_capability(struct pci_dev *dev, u8 req_cap_id,
+ 			    unsigned char *buf, u32 *buflen)
+ {
+ 	u8 cap_id;
+@@ -484,9 +485,8 @@ pcie_mdiowrite(struct pcicore_info *pi, uint physmedia, uint regaddr, uint val)
+ }
  
- 		rates = ieee80211_sta_get_rates(local, &elems, rx_status->band);
--		sta = mesh_plink_alloc(sdata, mgmt->sa, rates);
-+		sta = mesh_plink_alloc(sdata, mgmt->sa, rates, &elems);
- 		if (!sta) {
- 			mpl_dbg("Mesh plink error: plink table full\n");
- 			return;
+ /* ***** Support functions ***** */
+-static u8 pcie_clkreq(void *pch, u32 mask, u32 val)
++static u8 pcie_clkreq(struct pcicore_info *pi, u32 mask, u32 val)
+ {
+-	struct pcicore_info *pi = pch;
+ 	u32 reg_val;
+ 	u8 offset;
+ 
+@@ -536,7 +536,7 @@ static void pcie_clkreq_upd(struct pcicore_info *pi, uint state)
+ 	switch (state) {
+ 	case SI_DOATTACH:
+ 		if (PCIE_ASPM(sih))
+-			pcie_clkreq((void *)pi, 1, 0);
++			pcie_clkreq(pi, 1, 0);
+ 		break;
+ 	case SI_PCIDOWN:
+ 		if (sih->buscorerev == 6) {	/* turn on serdes PLL down */
+@@ -547,7 +547,7 @@ static void pcie_clkreq_upd(struct pcicore_info *pi, uint state)
+ 				   offsetof(struct chipcregs, chipcontrol_data),
+ 				   ~0x40, 0);
+ 		} else if (pi->pcie_pr42767) {
+-			pcie_clkreq((void *)pi, 1, 1);
++			pcie_clkreq(pi, 1, 1);
+ 		}
+ 		break;
+ 	case SI_PCIUP:
+@@ -559,7 +559,7 @@ static void pcie_clkreq_upd(struct pcicore_info *pi, uint state)
+ 				   offsetof(struct chipcregs, chipcontrol_data),
+ 				   ~0x40, 0x40);
+ 		} else if (PCIE_ASPM(sih)) {	/* disable clkreq */
+-			pcie_clkreq((void *)pi, 1, 0);
++			pcie_clkreq(pi, 1, 0);
+ 		}
+ 		break;
+ 	}
+@@ -729,9 +729,8 @@ static void pcie_war_pci_setup(struct pcicore_info *pi)
+ }
+ 
+ /* ***** Functions called during driver state changes ***** */
+-void pcicore_attach(void *pch, char *pvars, int state)
++void pcicore_attach(struct pcicore_info *pi, char *pvars, int state)
+ {
+-	struct pcicore_info *pi = pch;
+ 	struct si_pub *sih = pi->sih;
+ 
+ 	/* Determine if this board needs override */
+@@ -753,20 +752,16 @@ void pcicore_attach(void *pch, char *pvars, int state)
+ 
+ }
+ 
+-void pcicore_hwup(void *pch)
++void pcicore_hwup(struct pcicore_info *pi)
+ {
+-	struct pcicore_info *pi = pch;
+-
+ 	if (!pi || !PCIE_PUB(pi->sih))
+ 		return;
+ 
+ 	pcie_war_pci_setup(pi);
+ }
+ 
+-void pcicore_up(void *pch, int state)
++void pcicore_up(struct pcicore_info *pi, int state)
+ {
+-	struct pcicore_info *pi = pch;
+-
+ 	if (!pi || !PCIE_PUB(pi->sih))
+ 		return;
+ 
+@@ -779,9 +774,8 @@ void pcicore_up(void *pch, int state)
+ /* When the device is going to enter D3 state
+  * (or the system is going to enter S3/S4 states)
+  */
+-void pcicore_sleep(void *pch)
++void pcicore_sleep(struct pcicore_info *pi)
+ {
+-	struct pcicore_info *pi = pch;
+ 	u32 w;
+ 
+ 	if (!pi || !PCIE_ASPM(pi->sih))
+@@ -794,10 +788,8 @@ void pcicore_sleep(void *pch)
+ 	pi->pcie_pr42767 = false;
+ }
+ 
+-void pcicore_down(void *pch, int state)
++void pcicore_down(struct pcicore_info *pi, int state)
+ {
+-	struct pcicore_info *pi = pch;
+-
+ 	if (!pi || !PCIE_PUB(pi->sih))
+ 		return;
+ 
+@@ -808,21 +800,12 @@ void pcicore_down(void *pch, int state)
+ }
+ 
+ /* precondition: current core is sii->buscoretype */
+-void pcicore_fixcfg(void *pch, void *regs)
++static void pcicore_fixcfg(struct pcicore_info *pi, u16 *reg16)
+ {
+-	struct pcicore_info *pi = pch;
+ 	struct si_info *sii = SI_INFO(pi->sih);
+-	struct sbpciregs *pciregs = regs;
+-	struct sbpcieregs *pcieregs = regs;
+-	u16 val16, *reg16 = NULL;
++	u16 val16;
+ 	uint pciidx;
+ 
+-	/* check 'pi' is correct and fix it if not */
+-	if (sii->pub.buscoretype == PCIE_CORE_ID)
+-		reg16 = &pcieregs->sprom[SRSH_PI_OFFSET];
+-	else if (sii->pub.buscoretype == PCI_CORE_ID)
+-		reg16 = &pciregs->sprom[SRSH_PI_OFFSET];
+-
+ 	pciidx = ai_coreidx(&sii->pub);
+ 	val16 = R_REG(reg16);
+ 	if (((val16 & SRSH_PI_MASK) >> SRSH_PI_SHIFT) != (u16)pciidx) {
+@@ -832,11 +815,19 @@ void pcicore_fixcfg(void *pch, void *regs)
+ 	}
+ }
+ 
++void pcicore_fixcfg_pci(struct pcicore_info *pi, struct sbpciregs *pciregs)
++{
++	pcicore_fixcfg(pi, &pciregs->sprom[SRSH_PI_OFFSET]);
++}
++
++void pcicore_fixcfg_pcie(struct pcicore_info *pi, struct sbpcieregs *pcieregs)
++{
++	pcicore_fixcfg(pi, &pcieregs->sprom[SRSH_PI_OFFSET]);
++}
++
+ /* precondition: current core is pci core */
+-void pcicore_pci_setup(void *pch, void *regs)
++void pcicore_pci_setup(struct pcicore_info *pi, struct sbpciregs *pciregs)
+ {
+-	struct pcicore_info *pi = pch;
+-	struct sbpciregs *pciregs = regs;
+ 	u32 w;
+ 
+ 	OR_REG(&pciregs->sbtopci2, SBTOPCI_PREF | SBTOPCI_BURST);
+diff --git a/drivers/staging/brcm80211/brcmsmac/nicpci.h b/drivers/staging/brcm80211/brcmsmac/nicpci.h
+index f71f842..3082db0 100644
+--- a/drivers/staging/brcm80211/brcmsmac/nicpci.h
++++ b/drivers/staging/brcm80211/brcmsmac/nicpci.h
+@@ -70,16 +70,24 @@
+ #define SRSH_PI_MASK	0xf000	/* bit 15:12 */
+ #define SRSH_PI_SHIFT	12	/* bit 15:12 */
+ 
+-extern void *pcicore_init(struct si_pub *sih, void *pdev, void *regs);
+-extern void pcicore_deinit(void *pch);
+-extern void pcicore_attach(void *pch, char *pvars, int state);
+-extern void pcicore_hwup(void *pch);
+-extern void pcicore_up(void *pch, int state);
+-extern void pcicore_sleep(void *pch);
+-extern void pcicore_down(void *pch, int state);
+-extern u8 pcicore_find_pci_capability(void *dev, u8 req_cap_id,
+-					 unsigned char *buf, u32 *buflen);
+-extern void pcicore_fixcfg(void *pch, void *regs);
+-extern void pcicore_pci_setup(void *pch, void *regs);
++struct sbpciregs;
++struct sbpcieregs;
++
++extern struct pcicore_info *pcicore_init(struct si_pub *sih,
++					 struct pci_dev *pdev, void *regs);
++extern void pcicore_deinit(struct pcicore_info *pch);
++extern void pcicore_attach(struct pcicore_info *pch, char *pvars, int state);
++extern void pcicore_hwup(struct pcicore_info *pch);
++extern void pcicore_up(struct pcicore_info *pch, int state);
++extern void pcicore_sleep(struct pcicore_info *pch);
++extern void pcicore_down(struct pcicore_info *pch, int state);
++extern u8 pcicore_find_pci_capability(struct pci_dev *dev, u8 req_cap_id,
++				      unsigned char *buf, u32 *buflen);
++extern void pcicore_fixcfg_pci(struct pcicore_info *pch,
++			       struct sbpciregs *pciregs);
++extern void pcicore_fixcfg_pcie(struct pcicore_info *pch,
++				struct sbpcieregs *pciregs);
++extern void pcicore_pci_setup(struct pcicore_info *pch,
++			      struct sbpciregs *pciregs);
+ 
+ #endif /* _BRCM_NICPCI_H_ */
 -- 
 1.7.4.1
+
 
