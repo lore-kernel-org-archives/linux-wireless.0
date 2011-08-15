@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:37101 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750882Ab1H0Ohc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Aug 2011 10:37:32 -0400
-Received: by pzk37 with SMTP id 37so5840266pzk.1
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Aug 2011 07:37:31 -0700 (PDT)
-Date: Sat, 27 Aug 2011 17:35:13 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Henry Ptasinski <henryp@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-Subject: Re: [PATCH v2] Move brcm80211 to mainline
-Message-ID: <20110827143513.GN3775@shale.localdomain> (sfid-20110827_163736_221766_D74BAE53)
-References: <20110707002034.GA17885@broadcom.com>
- <20110824222801.GA5280@broadcom.com>
- <CACna6rwG6qNpaOu4QeOvs0L3LVETRt9w5=Ec-L2NJ5gXOAM=nw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACna6rwG6qNpaOu4QeOvs0L3LVETRt9w5=Ec-L2NJ5gXOAM=nw@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:21026 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751798Ab1HOWth (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2011 18:49:37 -0400
+Subject: Re: [patch] libertas: remove some dead code in
+ if_spi_prog_helper_firmware()
+From: Dan Williams <dcbw@redhat.com>
+To: Dan Carpenter <error27@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"open list:MARVELL LIBERTAS..." <libertas-dev@lists.infradead.org>,
+	"open list:NETWORKING [WIREL..." <linux-wireless@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org
+Date: Mon, 15 Aug 2011 17:51:54 -0500
+In-Reply-To: <20110806142344.GA10373@mwanda>
+References: <20110806142344.GA10373@mwanda>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1313448716.6103.14.camel@dcbw.foobar.com> (sfid-20110816_004941_626653_49BE630B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 25, 2011 at 10:55:26PM +0200, Rafał Miłecki wrote:
-> 2011/8/25 Henry Ptasinski <henryp@broadcom.com>:
-> > With the latest series of cleanup patches merged in by Greg KH, I'd like to
-> > once again propose moving brcm80211 out of staging and into mainline.
+On Sat, 2011-08-06 at 07:23 -0700, Dan Carpenter wrote:
+> We always hit the goto and skip the printk().  The original code does
+> the right thing even though it looks messy.
 > 
-> Henry: a simple question, please explain it to me, what brcmsmac does
-> provide that b43 doesn't?
->
+> Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-Wow.  Why are we only having this discussion now?  Somewhere along
-the line, there has been a massive communications failure.  What
-happened here?  Henry, did you know about the b43 driver?  Can
-someone explain what's going on?
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-regards,
-dan carpenter
+> 
+> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+> index e0286cf..622ae6d 100644
+> --- a/drivers/net/wireless/libertas/if_spi.c
+> +++ b/drivers/net/wireless/libertas/if_spi.c
+> @@ -531,10 +531,6 @@ static int if_spi_prog_helper_firmware(struct if_spi_card *card,
+>  		goto out;
+>  	err = spu_write_u16(card, IF_SPI_CARD_INT_CAUSE_REG,
+>  				IF_SPI_CIC_CMD_DOWNLOAD_OVER);
+> -		goto out;
+> -
+> -	lbs_deb_spi("waiting for helper to boot...\n");
+> -
+>  out:
+>  	if (err)
+>  		pr_err("failed to load helper firmware (err=%d)\n", err);
+
 
