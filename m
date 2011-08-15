@@ -1,253 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4768 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755168Ab1HZNT5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 09:19:57 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 07/13] staging: brcm80211: removed unused code in dma.c
-Date: Fri, 26 Aug 2011 15:19:34 +0200
-Message-ID: <1314364780-9462-8-git-send-email-rvossen@broadcom.com> (sfid-20110826_152017_616069_2BCFC0CC)
-In-Reply-To: <1314364780-9462-1-git-send-email-rvossen@broadcom.com>
-References: <1314364780-9462-1-git-send-email-rvossen@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2744 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752286Ab1HOICo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2011 04:02:44 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH 2/4] ath6kl: Avoid finding bss presence in cfg80211 scan list
+Date: Mon, 15 Aug 2011 01:04:01 -0700
+Message-ID: <1313395443-5392-3-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110815_100248_828336_E15E0DD1)
+In-Reply-To: <1313395443-5392-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1313395443-5392-1-git-send-email-kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code cleanup. Preprocessor symbol BCMDMASGLISTOSL was never defined.
+From: Raja Mani <rmani@qca.qualcomm.com>
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Connect event handler function is always reporting BSS info
+to CFG80211 layer first and then followed by connect event is passed.
+
+Before these steps, BSS presence is retrieved from CFG80211 layer,
+but it is not used. Hence, removing that part.
+
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/staging/brcm80211/brcmsmac/dma.c |  138 +++++-------------------------
- 1 files changed, 22 insertions(+), 116 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   21 ---------------------
+ 1 files changed, 0 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
-index 05dad9f..e53088e 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.c
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.c
-@@ -207,18 +207,6 @@ static uint dma_msg_level;
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 201398e..e88b519 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -425,8 +425,6 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
+ 	unsigned char *ptr_ie_buf = ie_buf;
+ 	unsigned char *ieeemgmtbuf = NULL;
+ 	u8 source_mac[ETH_ALEN];
+-	u16 capa_mask;
+-	u16 capa_val;
  
- #define	DI_INFO(dmah)	((dma_info_t *)dmah)
+ 	/* capinfo + listen interval */
+ 	u8 assoc_req_ie_offset = sizeof(u16) + sizeof(u16);
+@@ -459,24 +457,6 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
+ 		}
+ 	}
  
--/* One physical DMA segment */
--struct dma_seg {
--	unsigned long addr;
--	u32 length;
--};
--
--struct dma_seg_map {
--	uint origsize;	/* Size of the virtual packet */
--	uint nsegs;
--	struct dma_seg segs[MAX_DMA_SEGS];
--};
--
- /*
-  * DMA Descriptor
-  * Descriptors are only read by the hardware, never written back.
-@@ -261,7 +249,6 @@ struct dma_info {
- 	u16 txout;		/* index of next descriptor to post */
- 	/* pointer to parallel array of pointers to packets */
- 	struct sk_buff **txp;
--	struct dma_seg_map *txp_dmah;	/* DMA MAP meta-data handle */
- 	/* Aligned physical address of descriptor ring */
- 	unsigned long txdpa;
- 	/* Original physical address of descriptor ring */
-@@ -278,7 +265,6 @@ struct dma_info {
- 	u16 rxout;	/* index of next descriptor to post */
- 	/* pointer to parallel array of pointers to packets */
- 	struct sk_buff **rxp;
--	struct dma_seg_map *rxp_dmah;	/* DMA MAP meta-data handle */
- 	/* Aligned physical address of descriptor ring */
- 	unsigned long rxdpa;
- 	/* Original physical address of descriptor ring */
-@@ -312,16 +298,6 @@ struct dma_info {
- 	bool aligndesc_4k;
- };
- 
--/*
-- * DMA Scatter-gather list is supported. Note this is limited to TX
-- * direction only
-- */
--#ifdef BCMDMASGLISTOSL
--#define DMASGLIST_ENAB true
--#else
--#define DMASGLIST_ENAB false
--#endif				/* BCMDMASGLISTOSL */
--
- /* descriptor bumping macros */
- /* faster than %, but n must be power of 2 */
- #define	XXD(x, n)	((x) & ((n) - 1))
-@@ -524,23 +500,6 @@ struct dma_pub *dma_attach(char *name, struct si_pub *sih,
- 		   di->ddoffsethigh, di->dataoffsetlow, di->dataoffsethigh,
- 		   di->addrext));
- 
--	/* allocate DMA mapping vectors */
--	if (DMASGLIST_ENAB) {
--		if (ntxd) {
--			size = ntxd * sizeof(struct dma_seg_map);
--			di->txp_dmah = kzalloc(size, GFP_ATOMIC);
--			if (di->txp_dmah == NULL)
--				goto fail;
--		}
--
--		if (nrxd) {
--			size = nrxd * sizeof(struct dma_seg_map);
--			di->rxp_dmah = kzalloc(size, GFP_ATOMIC);
--			if (di->rxp_dmah == NULL)
--				goto fail;
--		}
+-	if (nw_type & ADHOC_NETWORK) {
+-		capa_mask = WLAN_CAPABILITY_IBSS;
+-		capa_val = WLAN_CAPABILITY_IBSS;
+-	} else {
+-		capa_mask = WLAN_CAPABILITY_ESS;
+-		capa_val = WLAN_CAPABILITY_ESS;
 -	}
 -
- 	return (struct dma_pub *) di;
- 
-  fail:
-@@ -635,12 +594,6 @@ void dma_detach(struct dma_pub *pub)
- 	kfree(di->txp);
- 	kfree(di->rxp);
- 
--	/* free tx packet DMA handles */
--	kfree(di->txp_dmah);
+-	/* Before informing the join/connect event, make sure that
+-	 * bss entry is present in scan list, if it not present
+-	 * construct and insert into scan list, otherwise that
+-	 * event will be dropped on the way by cfg80211, due to
+-	 * this keys will not be plumbed in case of WEP and
+-	 * application will not be aware of join/connect status. */
+-	bss = cfg80211_get_bss(ar->wdev->wiphy, NULL, bssid,
+-			       ar->wdev->ssid, ar->wdev->ssid_len,
+-			       capa_mask, capa_val);
 -
--	/* free rx packet DMA handles */
--	kfree(di->rxp_dmah);
--
- 	/* free our private info structure */
- 	kfree(di);
- 
-@@ -910,10 +863,6 @@ bool dma_rxfill(struct dma_pub *pub)
- 		 */
- 		*(u32 *) (p->data) = 0;
- 
--		if (DMASGLIST_ENAB)
--			memset(&di->rxp_dmah[rxout], 0,
--				sizeof(struct dma_seg_map));
--
- 		pa = pci_map_single(di->pbus, p->data,
- 			di->rxbufsize, PCI_DMA_FROMDEVICE);
- 
-@@ -1265,9 +1214,6 @@ int dma_txfast(struct dma_pub *pub, struct sk_buff *p0, bool commit)
- 	 * allocating and initializing transmit descriptor entries.
- 	 */
- 	for (p = p0; p; p = next) {
--		uint nsegs, j;
--		struct dma_seg_map *map;
--
- 		data = p->data;
- 		len = p->len;
- 		next = p->next;
-@@ -1280,53 +1226,25 @@ int dma_txfast(struct dma_pub *pub, struct sk_buff *p0, bool commit)
- 			continue;
- 
- 		/* get physical address of buffer start */
--		if (DMASGLIST_ENAB)
--			memset(&di->txp_dmah[txout], 0,
--				sizeof(struct dma_seg_map));
--
- 		pa = pci_map_single(di->pbus, data, len, PCI_DMA_TODEVICE);
- 
--		if (DMASGLIST_ENAB) {
--			map = &di->txp_dmah[txout];
--
--			/* See if all the segments can be accounted for */
--			if (map->nsegs >
--			    (uint) (di->ntxd - NTXDACTIVE(di->txin, di->txout) -
--				    1))
--				goto outoftxd;
--
--			nsegs = map->nsegs;
--		} else
--			nsegs = 1;
--
--		for (j = 1; j <= nsegs; j++) {
--			flags = 0;
--			if (p == p0 && j == 1)
--				flags |= D64_CTRL1_SOF;
-+		flags = 0;
-+		if (p == p0)
-+			flags |= D64_CTRL1_SOF;
- 
--			/* With a DMA segment list, Descriptor table is filled
--			 * using the segment list instead of looping over
--			 * buffers in multi-chain DMA. Therefore, EOF for SGLIST
--			 * is when end of segment list is reached.
--			 */
--			if ((!DMASGLIST_ENAB && next == NULL) ||
--			    (DMASGLIST_ENAB && j == nsegs))
--				flags |= (D64_CTRL1_IOC | D64_CTRL1_EOF);
--			if (txout == (di->ntxd - 1))
--				flags |= D64_CTRL1_EOT;
--
--			if (DMASGLIST_ENAB) {
--				len = map->segs[j - 1].length;
--				pa = map->segs[j - 1].addr;
--			}
--			dma64_dd_upd(di, di->txd64, pa, txout, &flags, len);
-+		/* With a DMA segment list, Descriptor table is filled
-+		 * using the segment list instead of looping over
-+		 * buffers in multi-chain DMA. Therefore, EOF for SGLIST
-+		 * is when end of segment list is reached.
-+		 */
-+		if (next == NULL)
-+			flags |= (D64_CTRL1_IOC | D64_CTRL1_EOF);
-+		if (txout == (di->ntxd - 1))
-+			flags |= D64_CTRL1_EOT;
- 
--			txout = NEXTTXD(txout);
--		}
-+		dma64_dd_upd(di, di->txd64, pa, txout, &flags, len);
- 
--		/* See above. No need to loop over individual buffers */
--		if (DMASGLIST_ENAB)
--			break;
-+		txout = NEXTTXD(txout);
+ 	/*
+ 	 * Earlier we were updating the cfg about bss by making a beacon frame
+ 	 * only if the entry for bss is not there. This can have some issue if
+@@ -527,7 +507,6 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
+ 	ieeemgmtbuf = kzalloc(size, GFP_ATOMIC);
+ 	if (!ieeemgmtbuf) {
+ 		ath6kl_err("ieee mgmt buf alloc error\n");
+-		cfg80211_put_bss(bss);
+ 		return;
  	}
  
- 	/* if last txd eof not set, fix it */
-@@ -1414,31 +1332,19 @@ struct sk_buff *dma_getnexttxp(struct dma_pub *pub, enum txd_range range)
- 
- 	for (i = start; i != end && !txp; i = NEXTTXD(i)) {
- 		unsigned long pa;
--		struct dma_seg_map *map = NULL;
--		uint size, j, nsegs;
-+		uint size;
- 
- 		pa = cpu_to_le32(di->txd64[i].addrlow) - di->dataoffsetlow;
- 
--		if (DMASGLIST_ENAB) {
--			map = &di->txp_dmah[i];
--			size = map->origsize;
--			nsegs = map->nsegs;
--		} else {
--			size =
--			    (cpu_to_le32(di->txd64[i].ctrl2) &
--			     D64_CTRL2_BC_MASK);
--			nsegs = 1;
--		}
-+		size =
-+		    (cpu_to_le32(di->txd64[i].ctrl2) &
-+		     D64_CTRL2_BC_MASK);
- 
--		for (j = nsegs; j > 0; j--) {
--			di->txd64[i].addrlow = 0xdeadbeef;
--			di->txd64[i].addrhigh = 0xdeadbeef;
-+		di->txd64[i].addrlow = 0xdeadbeef;
-+		di->txd64[i].addrhigh = 0xdeadbeef;
- 
--			txp = di->txp[i];
--			di->txp[i] = NULL;
--			if (j > 1)
--				i = NEXTTXD(i);
--		}
-+		txp = di->txp[i];
-+		di->txp[i] = NULL;
- 
- 		pci_unmap_single(di->pbus, pa, size, PCI_DMA_TODEVICE);
- 	}
 -- 
-1.7.4.1
-
+1.7.1
 
