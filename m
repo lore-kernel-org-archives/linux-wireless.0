@@ -1,156 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3244 "EHLO MMS3.broadcom.com"
+Received: from mga09.intel.com ([134.134.136.24]:23745 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753252Ab1HHN7f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:35 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 66/82] staging: brcm80211: placed suspend flag in
- gInstance in brcmfmac
-Date: Mon, 8 Aug 2011 15:58:50 +0200
-Message-ID: <1312811946-16713-67-git-send-email-arend@broadcom.com> (sfid-20110808_160037_523856_13477E84)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1754015Ab1HOO0v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2011 10:26:51 -0400
+Subject: Re: [PATCH 05/60] iwlagn: introduce struct iwl-shared - known by
+ all layers
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+In-Reply-To: <20110815142144.GA15718@redhat.com>
+References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1313257116-2697-6-git-send-email-wey-yi.w.guy@intel.com>
+	 <20110815081010.GA3317@redhat.com> <20110815084355.GB3317@redhat.com>
+	 <1313414020.15170.32.camel@wwguy-huron> <20110815142144.GA15718@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 15 Aug 2011 06:46:45 -0700
+Message-ID: <1313416005.15170.35.camel@wwguy-huron> (sfid-20110815_162704_290540_622EA1EA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On Mon, 2011-08-15 at 07:21 -0700, Stanislaw Gruszka wrote:
+> On Mon, Aug 15, 2011 at 06:13:39AM -0700, Guy, Wey-Yi wrote:
+> > now we are working on separate iwlagn driver into two layers (upper and
+> > lower), the lower layer contains both bus and transport sub-layer which
+> > is hw dependent, and the upper layer should be bus/hw independent. by
+> > doing so, the single driver can handle different bus and different core
+> > architecture. Having the share data structure (priv->shrd->foo) between
+> > two layers is for that reason (loosely couple).
+> 
+> You did not explained reason for introducing iwl_shared structure,
+> actually you confirmed it is useless. You should simply share iwl_priv
+> on any layer you have.
+> 
+> Stanislaw
 
-One of the steps to remove global variable. gInstance will be
-replaced by brcmf_sdio_dev in the upcoming patch.
+It is not true, I mean "boring" but not "useless", it does not make
+sense share all the priv with lower layer. think about I also mention
+different core architecture, that mean we can have different upper layer
+which has different priv; but shrd is always common to all different
+upper layer to share with lower layer.
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   35 ++++++++++-----------
- drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    1 +
- 2 files changed, 18 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 2a9efc3..edcd98e 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -66,7 +66,6 @@ static int brcmf_sdio_resume(struct device *dev);
- uint sd_f2_blocksize = 512;	/* Default blocksize */
- 
- struct brcmf_sdmmc_instance *gInstance;
--static atomic_t brcmf_mmc_suspend;
- 
- /* devices we support, null terminated */
- static const struct sdio_device_id brcmf_sdmmc_ids[] = {
-@@ -100,17 +99,17 @@ DECLARE_WAIT_QUEUE_HEAD(sdioh_request_byte_wait);
- DECLARE_WAIT_QUEUE_HEAD(sdioh_request_word_wait);
- DECLARE_WAIT_QUEUE_HEAD(sdioh_request_packet_wait);
- DECLARE_WAIT_QUEUE_HEAD(sdioh_request_buffer_wait);
--#define BRCMF_PM_RESUME_WAIT(a) do { \
-+#define BRCMF_PM_RESUME_WAIT(a, b) do { \
- 		int retry = 0; \
--		while (atomic_read(&brcmf_mmc_suspend) && retry++ != 30) { \
-+		while (atomic_read(&b->suspend) && retry++ != 30) { \
- 			wait_event_timeout(a, false, HZ/100); \
- 		} \
- 	}	while (0)
--#define BRCMF_PM_RESUME_RETURN_ERROR(a)	\
--	do { if (atomic_read(&brcmf_mmc_suspend)) return a; } while (0)
-+#define BRCMF_PM_RESUME_RETURN_ERROR(a, b)	\
-+	do { if (atomic_read(&b->suspend)) return a; } while (0)
- #else
--#define BRCMF_PM_RESUME_WAIT(a)
--#define BRCMF_PM_RESUME_RETURN_ERROR(a)
-+#define BRCMF_PM_RESUME_WAIT(a, b)
-+#define BRCMF_PM_RESUME_RETURN_ERROR(a, b)
- #endif		/* CONFIG_PM_SLEEP */
- 
- static int
-@@ -571,8 +570,8 @@ brcmf_sdioh_request_byte(struct sdioh_info *sd, uint rw, uint func,
- 	BRCMF_INFO(("%s: rw=%d, func=%d, addr=0x%05x\n", __func__, rw, func,
- 		 regaddr));
- 
--	BRCMF_PM_RESUME_WAIT(sdioh_request_byte_wait);
--	BRCMF_PM_RESUME_RETURN_ERROR(-EIO);
-+	BRCMF_PM_RESUME_WAIT(sdioh_request_byte_wait, gInstance);
-+	BRCMF_PM_RESUME_RETURN_ERROR(-EIO, gInstance);
- 	if (rw) {		/* CMD52 Write */
- 		if (func == 0) {
- 			/* Can only directly write to some F0 registers.
-@@ -678,8 +677,8 @@ brcmf_sdioh_request_word(struct sdioh_info *sd, uint cmd_type, uint rw,
- 	BRCMF_INFO(("%s: cmd_type=%d, rw=%d, func=%d, addr=0x%05x, nbytes=%d\n",
- 		 __func__, cmd_type, rw, func, addr, nbytes));
- 
--	BRCMF_PM_RESUME_WAIT(sdioh_request_word_wait);
--	BRCMF_PM_RESUME_RETURN_ERROR(-EIO);
-+	BRCMF_PM_RESUME_WAIT(sdioh_request_word_wait, gInstance);
-+	BRCMF_PM_RESUME_RETURN_ERROR(-EIO, gInstance);
- 	/* Claim host controller */
- 	sdio_claim_host(gInstance->func[func]);
- 
-@@ -728,8 +727,8 @@ brcmf_sdioh_request_packet(struct sdioh_info *sd, uint fix_inc, uint write,
- 
- 	BRCMF_TRACE(("%s: Enter\n", __func__));
- 
--	BRCMF_PM_RESUME_WAIT(sdioh_request_packet_wait);
--	BRCMF_PM_RESUME_RETURN_ERROR(-EIO);
-+	BRCMF_PM_RESUME_WAIT(sdioh_request_packet_wait, gInstance);
-+	BRCMF_PM_RESUME_RETURN_ERROR(-EIO, gInstance);
- 
- 	/* Claim host controller */
- 	sdio_claim_host(gInstance->func[func]);
-@@ -806,8 +805,8 @@ brcmf_sdioh_request_buffer(struct sdioh_info *sd, uint pio_dma, uint fix_inc,
- 
- 	BRCMF_TRACE(("%s: Enter\n", __func__));
- 
--	BRCMF_PM_RESUME_WAIT(sdioh_request_buffer_wait);
--	BRCMF_PM_RESUME_RETURN_ERROR(-EIO);
-+	BRCMF_PM_RESUME_WAIT(sdioh_request_buffer_wait, gInstance);
-+	BRCMF_PM_RESUME_RETURN_ERROR(-EIO, gInstance);
- 	/* Case 1: we don't have a packet. */
- 	if (pkt == NULL) {
- 		BRCMF_DATA(("%s: Creating new %s Packet, len=%d\n",
-@@ -981,7 +980,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 		sdiodev->func1 = func;
- 		dev_set_drvdata(&func->card->dev, sdiodev);
- 
--		atomic_set(&brcmf_mmc_suspend, false);
-+		atomic_set(&gInstance->suspend, false);
- 	}
- 
- 	gInstance->func[func->num] = func;
-@@ -1029,7 +1028,7 @@ static int brcmf_sdio_suspend(struct device *dev)
- 
- 	BRCMF_TRACE(("%s\n", __func__));
- 
--	atomic_set(&brcmf_mmc_suspend, true);
-+	atomic_set(&gInstance->suspend, true);
- 
- 	sdio_flags = sdio_get_host_pm_caps(gInstance->func[1]);
- 	if (!(sdio_flags & MMC_PM_KEEP_POWER)) {
-@@ -1056,7 +1055,7 @@ static int brcmf_sdio_resume(struct device *dev)
- 
- 	sdiodev = dev_get_drvdata(&func->card->dev);
- 	brcmf_sdio_wdtmr_enable(sdiodev, true);
--	atomic_set(&brcmf_mmc_suspend, false);
-+	atomic_set(&gInstance->suspend, false);
- 	return 0;
- }
- #endif		/* CONFIG_PM_SLEEP */
-diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-index aecc8e3..f4e2329 100644
---- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-@@ -152,6 +152,7 @@ struct brcmf_sdmmc_instance {
- 	struct sdioh_info *sd;
- 	struct sdio_func *func[SDIOD_MAX_IOFUNCS];
- 	u32 host_claimed;
-+	atomic_t suspend;	/* suspend flag */
- };
- 
- struct brcmf_sdio_dev {
--- 
-1.7.4.1
+Wey
 
 
