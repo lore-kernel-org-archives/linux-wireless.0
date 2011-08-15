@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:50381 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751884Ab1HJSUq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 14:20:46 -0400
-Received: by wyg24 with SMTP id 24so907806wyg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 11:20:45 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:39374 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751303Ab1HOILS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2011 04:11:18 -0400
+Date: Mon, 15 Aug 2011 10:10:11 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: Re: [PATCH 05/60] iwlagn: introduce struct iwl-shared - known by all
+ layers
+Message-ID: <20110815081010.GA3317@redhat.com> (sfid-20110815_101122_462553_18076B11)
+References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1313257116-2697-6-git-send-email-wey-yi.w.guy@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1312983424.4325.0.camel@jlt3.sipsolutions.net>
-References: <1312919418-32196-1-git-send-email-thomas@cozybit.com>
-	<1312919418-32196-2-git-send-email-thomas@cozybit.com>
-	<1312983424.4325.0.camel@jlt3.sipsolutions.net>
-Date: Wed, 10 Aug 2011 11:20:45 -0700
-Message-ID: <CAG6hwVNgk5EOqXxvFdFGzQUrKhmg0k84xmUjhqsUUZjOJ5L5xQ@mail.gmail.com> (sfid-20110810_202049_470183_2DA0AEE0)
-Subject: Re: [PATCH 1/6] mac80211: fix mesh beacon format
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1313257116-2697-6-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 10, 2011 at 6:37 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2011-08-09 at 12:50 -0700, Thomas Pedersen wrote:
->
->> -             mgmt->u.beacon.capab_info = 0x0; /* 0x0 for MPs */
->> +             mgmt->u.beacon.capab_info |= sdata->u.mesh.security
->> +                                          ? WLAN_CAPABILITY_PRIVACY : 0;
->
-> This should, I believe, warn if you run with sparse (make C=1
-> M=net/mac80211 or your favourite invocation) -- there's an endian error
-> here.
+On Sat, Aug 13, 2011 at 10:37:41AM -0700, Wey-Yi Guy wrote:
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> 
+> This struct will hold pointers to all the layers, so that every layer will find
+> the pointers it needs when calling another layer.
+> 
+> Note that the drv_data set to struct device is now a pointer to
+> struct iwl_shared.
 
-OK that's useful, Thanks!
->
-> johannes
->
->
+What for are you doing this? These changes through patch 60 seems
+have no sense. You can easy use iwl_priv as structure shared between
+all layers without any rewrite and making code more complex.
+
+> This solves of bug that I introduced in
+> 
+> 	iwlagn: simplify the bus architecture
+
+You should post bug fixes sparely.
+
+Stanislaw
