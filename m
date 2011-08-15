@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:30435 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754538Ab1HWIRC (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:34298 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751303Ab1HOIOc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 04:17:02 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Subject: [PATCH 2/7] ath6kl: Minor cleanup in min_hdr_len computation
-Date: Tue, 23 Aug 2011 11:16:41 +0300
-Message-ID: <1314087406-29188-3-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110823_101710_132532_72BC6665)
-In-Reply-To: <1314087406-29188-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1314087406-29188-1-git-send-email-kvalo@qca.qualcomm.com>
+	Mon, 15 Aug 2011 04:14:32 -0400
+Received: by pzk37 with SMTP id 37so2551799pzk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2011 01:14:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CA+XFjio4gg5zO-gx+6v2rLGidziNY-rUachmdt02VwE9tX_SWQ@mail.gmail.com>
+References: <1313357250-8292-1-git-send-email-zajec5@gmail.com>
+	<1313357250-8292-2-git-send-email-zajec5@gmail.com>
+	<CA+XFjio4gg5zO-gx+6v2rLGidziNY-rUachmdt02VwE9tX_SWQ@mail.gmail.com>
+Date: Mon, 15 Aug 2011 10:14:31 +0200
+Message-ID: <CACna6ry7g3WCf=tuiOm8C7k81jo-NMOrkyBLsa++hTCJR9RtuA@mail.gmail.com> (sfid-20110815_101437_427412_696F6E91)
+Subject: Re: [PATCH 2/3] b43: LCN-PHY: implement disabling radio
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+W dniu 15 sierpnia 2011 01:24 użytkownik Gábor Stefanik
+<netrolller.3d@gmail.com> napisał:
+> 2011/8/14 Rafał Miłecki <zajec5@gmail.com>:
+>> wl reads radio version, then disables it. That's how we found it in MMIO
+>> dump:
+>>  radio_read(0x0000) -> 0x0031 <-- RADIO READ WITHOUT 0x200 SET!
+>>  radio_read(0x0001) -> 0x0064 <-- RADIO READ WITHOUT 0x200 SET!
+>>  radio_read(0x0002) -> 0x0020 <-- RADIO READ WITHOUT 0x200 SET!
+>>  read32 0xfaafc120 -> 0x04000400
+>>  phy_read(0x044d) -> 0x0000
+>> phy_write(0x044d) <- 0x0000
+>>  phy_read(0x044c) -> 0x1fff
+>> phy_write(0x044c) <- 0x1fff
+>>  phy_read(0x04b7) -> 0x0000
+>> phy_write(0x04b7) <- 0x0000
+>>  phy_read(0x04b1) -> 0x0000
+>> phy_write(0x04b1) <- 0x0000
+>>  phy_read(0x04b0) -> 0x7dff
+>> phy_write(0x04b0) <- 0x7dff
+>>  phy_read(0x04fa) -> 0x0000
+>> phy_write(0x04fa) <- 0x0000
+>>  phy_read(0x04f9) -> 0x007f
+>> phy_write(0x04f9) <- 0x007f
+>
+> Doesn't brcm80211 support this PHY?
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/txrx.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+They do, but I still have some stuff RE-ed anyway. That stuff comes
+from my tests of MMIO hacks I've done before using them on BCM4331.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index d546051..fb67c24 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1065,9 +1065,8 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 		return;
- 	}
- 
--	min_hdr_len = sizeof(struct ethhdr);
--	min_hdr_len += sizeof(struct wmi_data_hdr) +
--		       sizeof(struct ath6kl_llc_snap_hdr);
-+	min_hdr_len = sizeof(struct ethhdr) + sizeof(struct wmi_data_hdr) +
-+		      sizeof(struct ath6kl_llc_snap_hdr);
- 
- 	dhdr = (struct wmi_data_hdr *) skb->data;
- 
+
+> (Because then, reverse-engineering wl is pointless.)
+
+(Unless that's fun for you ;) )
+
 -- 
-1.7.1
-
+Rafał
