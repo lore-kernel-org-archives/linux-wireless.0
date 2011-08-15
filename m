@@ -1,104 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:45255 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752295Ab1HMVen (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 17:34:43 -0400
-Message-ID: <4E46EDF0.6030904@fastmail.fm> (sfid-20110813_233446_515555_A39DBD2F)
-Date: Sat, 13 Aug 2011 23:34:40 +0200
-From: Bernd Schubert <bernd.schubert@fastmail.fm>
+Received: from mms2.broadcom.com ([216.31.210.18]:2733 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753465Ab1HONem (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2011 09:34:42 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 11/15] staging: brcm80211: Fix handling of firmware and
+ inits on big-endian platforms
+Date: Mon, 15 Aug 2011 15:34:23 +0200
+Message-ID: <1313415267-5264-12-git-send-email-arend@broadcom.com> (sfid-20110815_153502_607069_12EA2D13)
+In-Reply-To: <1313415267-5264-1-git-send-email-arend@broadcom.com>
+References: <1313415267-5264-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: carl9170 does not like all frequencies
-References: <j26l8a$ea9$1@dough.gmane.org> <201108132234.16886.chunkeey@googlemail.com> <4E46E3C5.5060403@fastmail.fm> <201108132311.46792.chunkeey@googlemail.com>
-In-Reply-To: <201108132311.46792.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/13/2011 11:11 PM, Christian Lamparter wrote:
-> On Saturday 13 August 2011 22:51:17 Bernd Schubert wrote:
->> On 08/13/2011 10:34 PM, Christian Lamparter wrote:
->>> On Saturday 13 August 2011 22:02:18 Bernd Schubert wrote:
->>>> I bought a new usb wifi device with 2 antennas to get a better
->>>> connection to my router.
->>> So, you are saying that there was something wrong with the old
->>> stick as well, right!?
->>
->> There is nothing wrong with the previous zd1211rw device, its antenna is
->> just a bit weak and so I only can use it, when my system is rather close
->> to the router...
-> Then just stick with that :-D.
+From: Henry Ptasinski <henryp@broadcom.com>
 
-The problem is that my system is usually not close to the router and
-have to connect via a wr54g, which has good antennas. But for some
-reasons I would like to get rid of that...
+The firmware files are encoded as little-endian.  Do the appropriate swapping
+for big-endian platforms.
 
-> 
->>>> From point of few of connection strength that worked out very well, from
->>>> point of view of connection stability that is total disaster so far.
->>> Sure, you are affected by constant "loud" noise on the frequency/band.
->>> The hardware is unable to finish the noise floor calibration and therefore
->>> gives up.
->>>
->>>> With Ubuntus 2.6.38-something it connects and then entirely fails after
->>>> sending a few bytes. So I checked git log and noticed carl9170 is being
->>>> used in recent kernels and connection issues have been fixed in 3.1-git.
->>> what commits are you talking about?
->>
->>
->> For example:
->>
->> 582965672831180b2e1f5e15ea1f7dc6f5b93018
->> "carl9170: set beacon xmit power to the max"
-> This change is not relevant for station mode. 
+Tested on Mac G5 PPC and BCM63281.
 
-Ok
+Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Tested-by: Jonas Gorski <jonas.gorski@gmail.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.c |   24 ++++++++++++---------
+ drivers/staging/brcm80211/brcmsmac/main.c        |   21 ++++++++++++------
+ 2 files changed, 28 insertions(+), 17 deletions(-)
 
->  
->>>>> [ 1058.936551] cfg80211: Calling CRDA to update world regulatory domain
->>>>> [ 1058.945510] cfg80211: World regulatory domain updated:
->>>>> [ 1058.945519] cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
->>>>> [ 1058.945529] cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->>>>> [ 1058.945538] cfg80211:     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
->>>>> [ 1058.945547] cfg80211:     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
->>>>> [ 1058.945555] cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->>>>> [ 1058.945563] cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->>>>> [ 1058.945604] cfg80211: Calling CRDA for country: 97
->>>>> [ 1061.373997] ieee80211 phy1: channel change: 2417 -> 2422 failed (2).
->>>>> [ 1061.682115] ieee80211 phy1: channel change: -1 -> 2422 failed (2).
->>>>> [ 1061.682132] usb 10-1.2: restart device (7)
->>>>> [ 1062.096523] cfg80211: Calling CRDA to update world regulatory domain
->>>>> [ 1062.105469] cfg80211: World regulatory domain updated:
->>>>
->>>> Any idea what is going on here? Do I need a crda tool? Or is something
->>>> else failing?
->>> Yes, you need crda, if you haven't installed it already.
->>
->> Sorry, I forgot "update" there. So I asked if I would need to update
->> crda. I just did that, but I just don't want to disconnect right now to
->> see if it connects any faster. Those messages still appear every 16
->> seconds and spam my logs :(
-> Luis, do you know what causes these CRDA spamming?
-> (Also, the country code should be "DE" in his case, or?)
-> 
->>>> Update: While writing this up and after I plugged in my zd1211rw device,
->>>> eventually also my tp-link carl9170 device connected a few minutes
->>>> later. Do I always have to wait for 20 minutes to get a connection now?
->>> That's odd. TP-Link does not sell any AR9170 anymore, in fact they dropped it
->>> more than a year ago and replaced the line-up with AR7010+AR9287? so where
->>> did you get this obsolete device?
->>
->> The device is a TL-WN822N available widely here, I think.
-> Well, there's a WN822N v1 and there's a WN822N v2. You got the
-> old v1, probably because someone else returned it. AR9170 is long
-> gone, in fact Qualcomm Atheros has does not even list the product on
-> their website anymore.
+diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
+index e465749..7179edd 100644
+--- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
+@@ -1722,15 +1722,17 @@ int brcms_ucode_init_buf(struct brcms_info *wl, void **pbuf, u32 idx)
+ 		hdr = (struct firmware_hdr *)wl->fw.fw_hdr[i]->data;
+ 		for (entry = 0; entry < wl->fw.hdr_num_entries[i];
+ 		     entry++, hdr++) {
+-			if (hdr->idx == idx) {
+-				pdata = wl->fw.fw_bin[i]->data + hdr->offset;
+-				*pbuf = kmalloc(hdr->len, GFP_ATOMIC);
++			u32 len = le32_to_cpu(hdr->len);
++			if (le32_to_cpu(hdr->idx) == idx) {
++				pdata = wl->fw.fw_bin[i]->data +
++					le32_to_cpu(hdr->offset);
++				*pbuf = kmalloc(len, GFP_ATOMIC);
+ 				if (*pbuf == NULL) {
+ 					wiphy_err(wl->wiphy, "fail to alloc %d"
+-						  " bytes\n", hdr->len);
++						  " bytes\n", len);
+ 					goto fail;
+ 				}
+-				memcpy(*pbuf, pdata, hdr->len);
++				memcpy(*pbuf, pdata, len);
+ 				return 0;
+ 			}
+ 		}
+@@ -1755,14 +1757,15 @@ int brcms_ucode_init_uint(struct brcms_info *wl, u32 *data, u32 idx)
+ 		hdr = (struct firmware_hdr *)wl->fw.fw_hdr[i]->data;
+ 		for (entry = 0; entry < wl->fw.hdr_num_entries[i];
+ 		     entry++, hdr++) {
+-			if (hdr->idx == idx) {
+-				pdata = wl->fw.fw_bin[i]->data + hdr->offset;
+-				if (hdr->len != 4) {
++			if (le32_to_cpu(hdr->idx) == idx) {
++				pdata = wl->fw.fw_bin[i]->data +
++					le32_to_cpu(hdr->offset);
++				if (le32_to_cpu(hdr->len) != 4) {
+ 					wiphy_err(wl->wiphy,
+ 						  "ERROR: fw hdr len\n");
+ 					return -ENOMSG;
+ 				}
+-				*data = *((u32 *) pdata);
++				*data = le32_to_cpu(*((u32 *) pdata));
+ 				return 0;
+ 			}
+ 		}
+@@ -1868,7 +1871,8 @@ int brcms_check_firmwares(struct brcms_info *wl)
+ 			ucode_hdr = (struct firmware_hdr *)fw_hdr->data;
+ 			for (entry = 0; entry < wl->fw.hdr_num_entries[i] &&
+ 			     !rc; entry++, ucode_hdr++) {
+-				if (ucode_hdr->offset + ucode_hdr->len >
++				if (le32_to_cpu(ucode_hdr->offset) +
++				    le32_to_cpu(ucode_hdr->len) >
+ 				    fw->size) {
+ 					wiphy_err(wl->wiphy,
+ 						  "%s: conflicting bin/hdr\n",
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index d6837d3..c625c25 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -2033,7 +2033,8 @@ static void brcms_ucode_write(struct brcms_hardware *wlc_hw, const u32 ucode[],
+ 	W_REG(&regs->objaddr, (OBJADDR_AUTO_INC | OBJADDR_UCM_SEL));
+ 	(void)R_REG(&regs->objaddr);
+ 	for (i = 0; i < count; i++)
+-		W_REG(&regs->objdata, ucode[i]);
++		W_REG(&regs->objdata, le32_to_cpu(ucode[i]));
++
+ }
+ 
+ static void brcms_c_write_inits(struct brcms_hardware *wlc_hw,
+@@ -2041,18 +2042,24 @@ static void brcms_c_write_inits(struct brcms_hardware *wlc_hw,
+ {
+ 	int i;
+ 	u8 *base;
++	u8 *addr;
++	u16 size;
++	u32 value;
+ 
+ 	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
+ 
+ 	base = (u8 *)wlc_hw->regs;
+ 
+ 	for (i = 0; inits[i].addr != 0xffff; i++) {
+-		if (inits[i].size == 2)
+-			W_REG((u16 *)(base + inits[i].addr),
+-			      inits[i].value);
+-		else if (inits[i].size == 4)
+-			W_REG((u32 *)(base + inits[i].addr),
+-			      inits[i].value);
++		size = le16_to_cpu(inits[i].size);
++		addr = base + le16_to_cpu(inits[i].addr);
++		value = le32_to_cpu(inits[i].value);
++		if (size == 2)
++			W_REG((u16 *)addr, value);
++		else if (size == 4)
++			W_REG((u32 *)addr, value);
++		else
++			break;
+ 	}
+ }
+ 
+-- 
+1.7.4.1
 
 
-Yeah thanks, I just figured out myself. Lets see if I can exchange it,
-even without the original box.
-
-Thanks a lot for your help,
-Bernd
