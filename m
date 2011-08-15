@@ -1,99 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:38327 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753228Ab1HLKej (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:38772 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751736Ab1HOLCF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 06:34:39 -0400
-Received: by fxh19 with SMTP id 19so2219714fxh.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 03:34:38 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/4] b43: HT-PHY: init: zero EXTG registers
-Date: Fri, 12 Aug 2011 13:13:44 +0200
-Message-Id: <1313147627-8713-1-git-send-email-zajec5@gmail.com> (sfid-20110812_123454_792795_A7165455)
+	Mon, 15 Aug 2011 07:02:05 -0400
+Received: by iye16 with SMTP id 16so7274139iye.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2011 04:02:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1313150524-13290-1-git-send-email-sgruszka@redhat.com>
+References: <1313150524-13290-1-git-send-email-sgruszka@redhat.com>
+Date: Mon, 15 Aug 2011 13:02:04 +0200
+Message-ID: <CAOZOX0X7fhKt02x8qBsjZEQtu2x0g4JxuyOB7i_4U6S+1HzTfw@mail.gmail.com> (sfid-20110815_130210_597170_DD846D96)
+Subject: Re: [PATCH] rt2x00: do not drop usb dev reference counter on suspend
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>, stable@kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Aug 12, 2011 at 2:02 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> When hibernating ->resume may not be called by usb core, but disconnect
+> and probe instead, so we do not increase the counter after decreasing
+> it in ->supend. As a result we free memory early, and get crash when
+> unplugging usb dongle.
+>
+> BUG: unable to handle kernel paging request at 6b6b6b9f
+> IP: [<c06909b0>] driver_sysfs_remove+0x10/0x30
+> *pdpt = 0000000034f21001 *pde = 0000000000000000
+> Pid: 20, comm: khubd Not tainted 3.1.0-rc1-wl+ #20 LENOVO 6369CTO/6369CTO
+> EIP: 0060:[<c06909b0>] EFLAGS: 00010202 CPU: 1
+> EIP is at driver_sysfs_remove+0x10/0x30
+> EAX: 6b6b6b6b EBX: f52bba34 ECX: 00000000 EDX: 6b6b6b6b
+> ESI: 6b6b6b6b EDI: c0a0ea20 EBP: f61c9e68 ESP: f61c9e64
+> †DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+> Process khubd (pid: 20, ti=f61c8000 task=f6138270 task.ti=f61c8000)
+> Call Trace:
+> †[<c06909ef>] __device_release_driver+0x1f/0xa0
+> †[<c0690b20>] device_release_driver+0x20/0x40
+> †[<c068fd64>] bus_remove_device+0x84/0xe0
+> †[<c068e12a>] ? device_remove_attrs+0x2a/0x80
+> †[<c068e267>] device_del+0xe7/0x170
+> †[<c06d93d4>] usb_disconnect+0xd4/0x180
+> †[<c06d9d61>] hub_thread+0x691/0x1600
+> †[<c0473260>] ? wake_up_bit+0x30/0x30
+> †[<c0442a39>] ? complete+0x49/0x60
+> †[<c06d96d0>] ? hub_disconnect+0xd0/0xd0
+> †[<c06d96d0>] ? hub_disconnect+0xd0/0xd0
+> †[<c0472eb4>] kthread+0x74/0x80
+> †[<c0472e40>] ? kthread_worker_fn+0x150/0x150
+> †[<c0809b3e>] kernel_thread_helper+0x6/0x10
+>
+> Cc: stable@kernel.org
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
----
-I've simply chcked what ndis does after uploading PHY tables:
- phy_read(0x00be) -> 0x0002
-phy_write(0x00be) <- 0x0000
- phy_read(0x023f) -> 0x0000
-phy_write(0x023f) <- 0x07ff
- phy_read(0x0240) -> 0x0000
-phy_write(0x0240) <- 0x07ff
- phy_read(0x0241) -> 0x0000
-phy_write(0x0241) <- 0x07ff
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-phy_write(0x0840) <- 0x0000
-phy_write(0x0841) <- 0x0000
-phy_write(0x0842) <- 0x0000
-phy_write(0x0843) <- 0x0000
-
-phy_write(0x0860) <- 0x0000
-phy_write(0x0861) <- 0x0000
-phy_write(0x0862) <- 0x0000
-phy_write(0x0863) <- 0x0000
-
-phy_write(0x0880) <- 0x0000
-phy_write(0x0881) <- 0x0000
-phy_write(0x0882) <- 0x0000
-phy_write(0x0883) <- 0x0000
-
-phy_write(0x084c) <- 0x0000
-phy_write(0x086c) <- 0x0000
-phy_write(0x088c) <- 0x0000
----
- drivers/net/wireless/b43/phy_ht.c |   22 ++++++++++++++++++++++
- 1 files changed, 22 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
-index 7c40919..99b3035 100644
---- a/drivers/net/wireless/b43/phy_ht.c
-+++ b/drivers/net/wireless/b43/phy_ht.c
-@@ -152,6 +152,24 @@ static void b43_radio_2059_init(struct b43_wldev *dev)
- }
- 
- /**************************************************
-+ * Various PHY ops
-+ **************************************************/
-+
-+static void b43_phy_ht_zero_extg(struct b43_wldev *dev)
-+{
-+	u8 i, j;
-+	u16 base[] = { 0x40, 0x60, 0x80 };
-+
-+	for (i = 0; i < ARRAY_SIZE(base); i++) {
-+		for (j = 0; j < 4; j++)
-+			b43_phy_write(dev, B43_PHY_EXTG(base[i] + j), 0);
-+	}
-+
-+	for (i = 0; i < ARRAY_SIZE(base); i++)
-+		b43_phy_write(dev, B43_PHY_EXTG(base[i] + 0xc), 0);
-+}
-+
-+/**************************************************
-  * Channel switching ops.
-  **************************************************/
- 
-@@ -257,6 +275,10 @@ static int b43_phy_ht_op_init(struct b43_wldev *dev)
- {
- 	b43_phy_ht_tables_init(dev);
- 
-+	/* TODO: PHY ops on regs 0x0be, 0x23f 0x240 0x241 */
-+
-+	b43_phy_ht_zero_extg(dev);
-+
- 	return 0;
- }
- 
--- 
-1.7.3.4
-
+> ---
+> †drivers/net/wireless/rt2x00/rt2x00usb.c | † 14 +-------------
+> †1 files changed, 1 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+> index 7fbb55c..1e31050 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+> @@ -871,18 +871,8 @@ int rt2x00usb_suspend(struct usb_interface *usb_intf, pm_message_t state)
+> †{
+> † † † †struct ieee80211_hw *hw = usb_get_intfdata(usb_intf);
+> † † † †struct rt2x00_dev *rt2x00dev = hw->priv;
+> - † † † int retval;
+> -
+> - † † † retval = rt2x00lib_suspend(rt2x00dev, state);
+> - † † † if (retval)
+> - † † † † † † † return retval;
+>
+> - † † † /*
+> - † † † †* Decrease usbdev refcount.
+> - † † † †*/
+> - † † † usb_put_dev(interface_to_usbdev(usb_intf));
+> -
+> - † † † return 0;
+> + † † † return rt2x00lib_suspend(rt2x00dev, state);
+> †}
+> †EXPORT_SYMBOL_GPL(rt2x00usb_suspend);
+>
+> @@ -891,8 +881,6 @@ int rt2x00usb_resume(struct usb_interface *usb_intf)
+> † † † †struct ieee80211_hw *hw = usb_get_intfdata(usb_intf);
+> † † † †struct rt2x00_dev *rt2x00dev = hw->priv;
+>
+> - † † † usb_get_dev(interface_to_usbdev(usb_intf));
+> -
+> † † † †return rt2x00lib_resume(rt2x00dev);
+> †}
+> †EXPORT_SYMBOL_GPL(rt2x00usb_resume);
+> --
+> 1.7.1
+>
+>
