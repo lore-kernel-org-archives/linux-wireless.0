@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44083 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752618Ab1H2MYL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 08:24:11 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH 00/20] ath6kl: AP mode and P2P
-Date: Mon, 29 Aug 2011 15:23:41 +0300
-Message-ID: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20110829_142419_545263_B568B4A5)
+Received: from mx1.redhat.com ([209.132.183.28]:61501 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753747Ab1HOOpU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2011 10:45:20 -0400
+Date: Mon, 15 Aug 2011 16:44:00 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Subject: Re: [PATCH 05/60] iwlagn: introduce struct iwl-shared - known by all
+ layers
+Message-ID: <20110815144359.GA15719@redhat.com> (sfid-20110815_164526_828955_8ADAC7FF)
+References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1313257116-2697-6-git-send-email-wey-yi.w.guy@intel.com>
+ <20110815081010.GA3317@redhat.com>
+ <20110815084355.GB3317@redhat.com>
+ <1313414020.15170.32.camel@wwguy-huron>
+ <20110815142144.GA15718@redhat.com>
+ <1313416005.15170.35.camel@wwguy-huron>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1313416005.15170.35.camel@wwguy-huron>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of patches adds preliminary support for AP mode and P2P
-operations into ath6kl. Since these require a new firmware build
-and more testing, the patches to actually enable either AP or P2P
-modes are not included in the series. These will be submitted
-after some more testing.
+On Mon, Aug 15, 2011 at 06:46:45AM -0700, Guy, Wey-Yi wrote:
+> On Mon, 2011-08-15 at 07:21 -0700, Stanislaw Gruszka wrote:
+> > On Mon, Aug 15, 2011 at 06:13:39AM -0700, Guy, Wey-Yi wrote:
+> > > now we are working on separate iwlagn driver into two layers (upper and
+> > > lower), the lower layer contains both bus and transport sub-layer which
+> > > is hw dependent, and the upper layer should be bus/hw independent. by
+> > > doing so, the single driver can handle different bus and different core
+> > > architecture. Having the share data structure (priv->shrd->foo) between
+> > > two layers is for that reason (loosely couple).
+> > 
+> > You did not explained reason for introducing iwl_shared structure,
+> > actually you confirmed it is useless. You should simply share iwl_priv
+> > on any layer you have.
+> > 
+> > Stanislaw
+> 
+> It is not true, I mean "boring" but not "useless", it does not make
+> sense share all the priv with lower layer.
 
-Edward Lu (4):
-  ath6kl: Support channel set request for startscan command
-  ath6kl: Fix a typo in ath6k context
-  ath6kl: Fix default key installation in AP mode
-  ath6kl: Do not clear CONNECT bit setting in AP mode for STA
-    disconnect
+Why? Even if there are some fields that you will use only on
+upper layer, it does not mean that pointer to priv structure
+could not be passed to lower layer.
 
-Jouni Malinen (16):
-  ath6kl: Add functionality for starting AP mode
-  ath6kl: Fix AP mode (Re)AssocReq IE processing
-  ath6kl: Delay initial group key setup in AP mode
-  ath6kl: Use change_station() to authorize/unauthorize STAs
-  ath6kl: Add new WMI commands and events for P2P
-  ath6kl: Implement remain_on_channel and cancel_remain_on_channel
-  ath6kl: Implement mgmt_tx
-  ath6kl: Request P2P capabilities during target init
-  ath6kl: Add cfg80211 calls for remain-on-channel events
-  ath6kl: Use set_appie command to add Probe Request IEs
-  ath6kl: Report received Probe Request frames to cfg80211
-  ath6kl: Notify cfg80211 of TX status of mgmt_tx frames
-  ath6kl: Report received Action frames to cfg80211
-  ath6kl: Advertise supported mgmt_stypes
-  ath6kl: Add support for new P2P iftypes in mode changes
-  ath6kl: Include P2P IE(s) in GO Probe Response depending on request
+> think about I also mention
+> different core architecture, that mean we can have different upper layer
+> which has different priv; but shrd is always common to all different
+> upper layer to share with lower layer.
 
- drivers/net/wireless/ath/ath6kl/cfg80211.c |  482 +++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath6kl/core.h     |   31 +--
- drivers/net/wireless/ath/ath6kl/init.c     |   18 +-
- drivers/net/wireless/ath/ath6kl/main.c     |   96 ++++--
- drivers/net/wireless/ath/ath6kl/wmi.c      |  435 +++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath6kl/wmi.h      |  227 +++++++++++++-
- 6 files changed, 1222 insertions(+), 67 deletions(-)
+What different upper layer? Non mac80211, if so you should write
+separate driver for it.
 
--- 
-1.7.4.1
-
+Stanislaw
