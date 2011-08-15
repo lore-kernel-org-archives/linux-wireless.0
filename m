@@ -1,154 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3107 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752458Ab1HHN7Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:25 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 08/82] staging: brcm80211: removed function
- declaration typedefs from dma.h part 2
-Date: Mon, 8 Aug 2011 15:57:52 +0200
-Message-ID: <1312811946-16713-9-git-send-email-arend@broadcom.com> (sfid-20110808_160222_860733_EE8AAB7E)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from shards.monkeyblade.net ([198.137.202.13]:39163 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751676Ab1HOFpk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2011 01:45:40 -0400
+Date: Sun, 14 Aug 2011 22:45:36 -0700 (PDT)
+Message-Id: <20110814.224536.1330937123770047026.davem@davemloft.net> (sfid-20110815_074604_007334_93AB42A3)
+To: justinmattock@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: ip_rt_bug: 10.0.0.52 -> 255.255.255.255, ?
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <4E4898F5.8050605@gmail.com>
+References: <4E4898F5.8050605@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
 
-Softmac related code cleanup. Typedefs are undesirable according to the
-CodingStyle document.
+First, please contact netdev@vger.kernel.org for networking issues.
 
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/dma.c |   22 ++++++++++----------
- drivers/staging/brcm80211/brcmsmac/dma.h |   33 ++++++++++--------------------
- 2 files changed, 22 insertions(+), 33 deletions(-)
+Second, this is fixed already:
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
-index 5fd5e8c..3e732c8d 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.c
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.c
-@@ -389,16 +389,16 @@ static inline u32 parity32(u32 data);
- const struct di_fcn_s dma64proc = {
- 	(void (*)(struct dma_pub *)) _dma_detach,
- 	(void (*)(struct dma_pub *)) dma64_txinit,
--	(di_txreset_t) dma64_txreset,
--	(di_txenabled_t) dma64_txenabled,
-+	(bool(*)(struct dma_pub *)) dma64_txreset,
-+	(bool(*)(struct dma_pub *)) dma64_txenabled,
- 	(void (*)(struct dma_pub *)) dma64_txsuspend,
- 	(void (*)(struct dma_pub *)) dma64_txresume,
--	(di_txsuspended_t) dma64_txsuspended,
--	(di_txsuspendedidle_t) dma64_txsuspendedidle,
-+	(bool(*)(struct dma_pub *)) dma64_txsuspended,
-+	(bool(*)(struct dma_pub *)) dma64_txsuspendedidle,
- 	(di_txfast_t) dma64_txfast,
- 	(di_txunframed_t) dma64_txunframed,
- 	(di_getpos_t) dma64_getpos,
--	(di_txstopped_t) dma64_txstopped,
-+	(bool(*)(struct dma_pub *)) dma64_txstopped,
- 	(di_txreclaim_t) dma64_txreclaim,
- 	(di_getnexttxp_t) dma64_getnexttxp,
- 	(di_peeknexttxp_t) _dma_peeknexttxp,
-@@ -408,13 +408,13 @@ const struct di_fcn_s dma64proc = {
- 	(void (*)(struct dma_pub *)) dma64_txrotate,
- 
- 	(void (*)(struct dma_pub *)) _dma_rxinit,
--	(di_rxreset_t) dma64_rxreset,
--	(di_rxidle_t) dma64_rxidle,
--	(di_rxstopped_t) dma64_rxstopped,
--	(di_rxenable_t) _dma_rxenable,
--	(di_rxenabled_t) dma64_rxenabled,
-+	(bool(*)(struct dma_pub *)) dma64_rxreset,
-+	(bool(*)(struct dma_pub *)) dma64_rxidle,
-+	(bool(*)(struct dma_pub *)) dma64_rxstopped,
-+	(bool(*)(struct dma_pub *)) _dma_rxenable,
-+	(bool(*)(struct dma_pub *)) dma64_rxenabled,
- 	(di_rx_t) _dma_rx,
--	(di_rxfill_t) _dma_rxfill,
-+	(bool(*)(struct dma_pub *)) _dma_rxfill,
- 	(void (*)(struct dma_pub *)) _dma_rxreclaim,
- 	(di_getnextrxp_t) _dma_getnextrxp,
- 	(di_peeknextrxp_t) _dma_peeknextrxp,
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.h b/drivers/staging/brcm80211/brcmsmac/dma.h
-index 69f2e94..6d6dbd8 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.h
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.h
-@@ -59,23 +59,12 @@ enum txd_range {
- };
- 
- /* dma function type */
--typedef bool(*di_txreset_t) (struct dma_pub *dmah);
--typedef bool(*di_rxreset_t) (struct dma_pub *dmah);
--typedef bool(*di_rxidle_t) (struct dma_pub *dmah);
--typedef bool(*di_txenabled_t) (struct dma_pub *dmah);
--typedef bool(*di_txsuspended_t) (struct dma_pub *dmah);
--typedef bool(*di_txsuspendedidle_t) (struct dma_pub *dmah);
- typedef int (*di_txfast_t) (struct dma_pub *dmah, struct sk_buff *p,
- 			    bool commit);
- typedef int (*di_txunframed_t) (struct dma_pub *dmah, void *p, uint len,
- 				bool commit);
- typedef void *(*di_getpos_t) (struct dma_pub *di, bool direction);
--typedef bool(*di_txstopped_t) (struct dma_pub *dmah);
--typedef bool(*di_rxstopped_t) (struct dma_pub *dmah);
--typedef bool(*di_rxenable_t) (struct dma_pub *dmah);
--typedef bool(*di_rxenabled_t) (struct dma_pub *dmah);
- typedef void *(*di_rx_t) (struct dma_pub *dmah);
--typedef bool(*di_rxfill_t) (struct dma_pub *dmah);
- typedef void (*di_txreclaim_t) (struct dma_pub *dmah, enum txd_range range);
- typedef unsigned long (*di_getvar_t) (struct dma_pub *dmah,
- 				      const char *name);
-@@ -101,16 +90,16 @@ typedef uint(*di_txcommitted_t) (struct dma_pub *dmah);
- struct di_fcn_s {
- 	void (*detach)(struct dma_pub *dmah);
- 	void (*txinit)(struct dma_pub *dmah);
--	di_txreset_t txreset;
--	di_txenabled_t txenabled;
-+	bool (*txreset)(struct dma_pub *dmah);
-+	bool (*txenabled)(struct dma_pub *dmah);
- 	void (*txsuspend)(struct dma_pub *dmah);
- 	void (*txresume)(struct dma_pub *dmah);
--	di_txsuspended_t txsuspended;
--	di_txsuspendedidle_t txsuspendedidle;
-+	bool (*txsuspended)(struct dma_pub *dmah);
-+	bool (*txsuspendedidle)(struct dma_pub *dmah);
- 	di_txfast_t txfast;
- 	di_txunframed_t txunframed;
- 	di_getpos_t getpos;
--	di_txstopped_t txstopped;
-+	bool (*txstopped)(struct dma_pub *dmah);
- 	di_txreclaim_t txreclaim;
- 	di_getnexttxp_t getnexttxp;
- 	di_peeknexttxp_t peeknexttxp;
-@@ -120,13 +109,13 @@ struct di_fcn_s {
- 	void (*txrotate) (struct dma_pub *dmah);
- 
- 	void (*rxinit)(struct dma_pub *dmah);
--	di_rxreset_t rxreset;
--	di_rxidle_t rxidle;
--	di_rxstopped_t rxstopped;
--	di_rxenable_t rxenable;
--	di_rxenabled_t rxenabled;
-+	bool (*rxreset)(struct dma_pub *dmah);
-+	bool (*rxidle)(struct dma_pub *dmah);
-+	bool (*rxstopped)(struct dma_pub *dmah);
-+	bool (*rxenable)(struct dma_pub *dmah);
-+	bool (*rxenabled)(struct dma_pub *dmah);
- 	di_rx_t rx;
--	di_rxfill_t rxfill;
-+	bool (*rxfill)(struct dma_pub *dmah);
- 	void (*rxreclaim)(struct dma_pub *dmah);
- 	di_getnextrxp_t getnextrxp;
- 	di_peeknextrxp_t peeknextrxp;
--- 
-1.7.4.1
+commit d547f727df86059104af2234804fdd538e112015
+Author: Julian Anastasov <ja@ssi.bg>
+Date:   Sun Aug 7 22:20:20 2011 -0700
+
+    ipv4: fix the reusing of routing cache entries
+    
+    	compare_keys and ip_route_input_common rely on
+    rt_oif for distinguishing of input and output routes
+    with same keys values. But sometimes the input route has
+    also same hash chain (keyed by iif != 0) with the output
+    routes (keyed by orig_oif=0). Problem visible if running
+    with small number of rhash_entries.
+    
+    	Fix them to use rt_route_iif instead. By this way
+    input route can not be returned to users that request
+    output route.
+    
+    	The patch fixes the ip_rt_bug errors that were
+    reported in ip_local_out context, mostly for 255.255.255.255
+    destinations.
+    
+    Signed-off-by: Julian Anastasov <ja@ssi.bg>
+    Signed-off-by: David S. Miller <davem@davemloft.net>
+
+diff --git a/net/ipv4/route.c b/net/ipv4/route.c
+index e3dec1c..cb7efe0 100644
+--- a/net/ipv4/route.c
++++ b/net/ipv4/route.c
+@@ -731,6 +731,7 @@ static inline int compare_keys(struct rtable *rt1, struct rtable *rt2)
+ 		((__force u32)rt1->rt_key_src ^ (__force u32)rt2->rt_key_src) |
+ 		(rt1->rt_mark ^ rt2->rt_mark) |
+ 		(rt1->rt_key_tos ^ rt2->rt_key_tos) |
++		(rt1->rt_route_iif ^ rt2->rt_route_iif) |
+ 		(rt1->rt_oif ^ rt2->rt_oif) |
+ 		(rt1->rt_iif ^ rt2->rt_iif)) == 0;
+ }
+@@ -2321,8 +2322,8 @@ int ip_route_input_common(struct sk_buff *skb, __be32 daddr, __be32 saddr,
+ 		if ((((__force u32)rth->rt_key_dst ^ (__force u32)daddr) |
+ 		     ((__force u32)rth->rt_key_src ^ (__force u32)saddr) |
+ 		     (rth->rt_iif ^ iif) |
+-		     rth->rt_oif |
+ 		     (rth->rt_key_tos ^ tos)) == 0 &&
++		    rt_is_input_route(rth) &&
+ 		    rth->rt_mark == skb->mark &&
+ 		    net_eq(dev_net(rth->dst.dev), net) &&
+ 		    !rt_is_expired(rth)) {
 
 
