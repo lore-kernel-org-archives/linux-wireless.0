@@ -1,49 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta-1.ms.rz.RWTH-Aachen.DE ([134.130.7.72]:52867 "EHLO
-	mta-1.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754022Ab1HQWFv (ORCPT
+Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:54065 "EHLO
+	TX2EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752332Ab1HOFI3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2011 18:05:51 -0400
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Received: from ironport-out-1.rz.rwth-aachen.de ([134.130.5.40])
- by mta-1.ms.rz.RWTH-Aachen.de
- (Sun Java(tm) System Messaging Server 6.3-7.04 (built Sep 26 2008))
- with ESMTP id <0LQ300ILZDBO5TB0@mta-1.ms.rz.RWTH-Aachen.de> for
- linux-wireless@vger.kernel.org; Wed, 17 Aug 2011 23:35:48 +0200 (CEST)
-Received: from hbook.dsl ([unknown] [77.180.174.198])
- by relay-auth-2.ms.rz.rwth-aachen.de
- (Sun Java(tm) System Messaging Server 7.0-3.01 64bit (built Dec  9 2008))
- with ESMTPA id <0LQ3004MDDBNDR30@relay-auth-2.ms.rz.rwth-aachen.de> for
- linux-wireless@vger.kernel.org; Wed, 17 Aug 2011 23:35:48 +0200 (CEST)
-From: Hanno Wirtz <hanno.wirtz@comsys.rwth-aachen.de>
-Subject: Multiple virtual interfaces, ath9k
-Date: Wed, 17 Aug 2011 23:35:47 +0200
-Message-id: <6FA32078-B95C-47B6-98C8-17DE81CE5FE5@comsys.rwth-aachen.de> (sfid-20110818_000600_535801_B5F3930F)
-To: linux-wireless@vger.kernel.org
+	Mon, 15 Aug 2011 01:08:29 -0400
+From: Lin Tony-B19295 <B19295@freescale.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>,
+	"mcgrof@gmail.com" <mcgrof@gmail.com>,
+	"lrodriguez@atheros.com" <lrodriguez@atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
+Date: Mon, 15 Aug 2011 05:06:32 +0000
+Message-ID: <97D3A72708D04647A5AC84A04996E5B5193114@039-SN1MPN1-002.039d.mgd.msft.net> (sfid-20110815_070850_054303_C966850A)
+References: <1313060347-665-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1313060347-665-1-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, 
+Where can I get corresponding firmware?
 
-I am having problems with the operation of multiple virtual interfaces. 
-A short scenario description : 
+tony
 
-I would like to provide two independent wifi networks at my device, both using a virtual AP interface. 
-Furthermore, I would like to dynamically associate to (multiple) other networks using dynamically created STA interfaces. 
-This results in two AP interfaces that are permanently active and at least one (up to 5) STA interface(s) that run(s) concurrently. 
-I use Ubuntu kernel 3.1-rc2 with compat-wireless-3.1, the machine has an Atheros AR9285 wireless chip.
+> -----Original Message-----
+> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+> owner@vger.kernel.org] On Behalf Of Hauke Mehrtens
+> Sent: Thursday, August 11, 2011 6:59 PM
+> To: mcgrof@gmail.com; lrodriguez@atheros.com
+> Cc: linux-wireless@vger.kernel.org; Hauke Mehrtens
+> Subject: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
+> 
+> ath6kl is now in the kernel main area and not in staging any more.
+> 
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  Makefile                                |    1 -
+>  config.mk                               |   15 +++------
+>  patches/01-netdev.patch                 |   17 +++++++++--
+>  patches/34-backport-bin_attribute.patch |   47 -------------------------
+> ------
+>  scripts/admin-update.sh                 |    4 +-
+>  5 files changed, 21 insertions(+), 63 deletions(-)  delete mode 100644
+> patches/34-backport-bin_attribute.patch
+> 
+> diff --git a/Makefile b/Makefile
+> index 9c95292..463a56c 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -33,7 +33,6 @@ obj-$(CONFIG_COMPAT_NETWORK_MODULES) += drivers/net/
+>  obj-$(CONFIG_COMPAT_VAR_MODULES) +=  drivers/ssb/ drivers/bcma/
+> drivers/misc/eeprom/
+> 
+>  ifeq ($(CONFIG_STAGING_EXCLUDE_BUILD),)
+> -obj-$(CONFIG_COMPAT_STAGING) += drivers/staging/ath6kl/
+>  obj-$(CONFIG_COMPAT_STAGING) += drivers/staging/brcm80211/  endif
+> 
+> diff --git a/config.mk b/config.mk
+> index 786891d..27d4daf 100644
+> --- a/config.mk
+> +++ b/config.mk
+> @@ -570,24 +570,19 @@ CONFIG_IWM=m
+>  CONFIG_BT_HCIBTSDIO=m
+>  CONFIG_BT_MRVL_SDIO=m
+> 
+> +ifndef CONFIG_COMPAT_KERNEL_2_6_27
+> +CONFIG_ATH6KL=m
+> +# CONFIG_ATH6KL_DEBUG=y
+> +endif #CONFIG_COMPAT_KERNEL_2_6_27
+> +
+>  ifdef CONFIG_COMPAT_STAGING
+>  ifdef CONFIG_WIRELESS_EXT
+> -# CONFIG_ATH6KL_DISABLE_TARGET_DBGLOGS is not set -#
+> CONFIG_ATH6KL_ENABLE_COEXISTENCE is not set -#
+> CONFIG_ATH6KL_ENABLE_HOST_DEBUG is not set -
+> CONFIG_ATH6KL_ENABLE_TARGET_DEBUG_PRINTS=y
+> -# CONFIG_ATH6KL_HCI_BRIDGE is not set
+> -# CONFIG_ATH6KL_HTC_RAW_INTERFACE is not set -#
+> CONFIG_ATH6KL_SKIP_ABI_VERSION_CHECK is not set -
+> CONFIG_ATH6KL_VIRTUAL_SCATTER_GATHER=y
+> -CONFIG_ATH6K_LEGACY=m
+> 
+>  CONFIG_BRCMFMAC=m
+> 
+>  endif #CONFIG_WIRELESS_EXT
+>  endif #CONFIG_COMPAT_STAGING
+> 
+> -
+>  endif #CONFIG_MMC
+> 
+>  CONFIG_RTLWIFI=m
+> diff --git a/patches/01-netdev.patch b/patches/01-netdev.patch index
+> f8395c8..d500584 100644
+> --- a/patches/01-netdev.patch
+> +++ b/patches/01-netdev.patch
+> @@ -32,6 +32,17 @@ without creating a headache on maintenance of the
+> pathes.
+>   	net->watchdog_timeo = TX_TIMEOUT_JIFFIES;
+>   	net->ethtool_ops = &usbnet_ethtool_ops;
+> 
+> +--- a/drivers/net/wireless/ath/ath6kl/main.c
+> ++++ b/drivers/net/wireless/ath/ath6kl/main.c
+> +@@ -1325,7 +1325,7 @@ static struct net_device_ops ath6kl_netd
+> +
+> + void init_netdev(struct net_device *dev)  {
+> +-	dev->netdev_ops = &ath6kl_netdev_ops;
+> ++	netdev_attach_ops(dev, &ath6kl_netdev_ops);
+> + 	dev->watchdog_timeo = ATH6KL_TX_TIMEOUT;
+> +
+> + 	dev->needed_headroom = ETH_HLEN;
+>  --- a/drivers/net/wireless/rndis_wlan.c
+>  +++ b/drivers/net/wireless/rndis_wlan.c
+>  @@ -3439,7 +3439,7 @@ static int rndis_wlan_bind(struct usbnet @@ -217,7
+> +228,7 @@ without creating a headache on maintenance of the pathes.
+>   	wdev->netdev = ndev;
+>  --- a/drivers/net/wireless/libertas/main.c
+>  +++ b/drivers/net/wireless/libertas/main.c
+> -@@ -836,7 +836,7 @@ struct lbs_private *lbs_add_card(void *c
+> +@@ -916,7 +916,7 @@ struct lbs_private *lbs_add_card(void *c
+>   	wdev->netdev = dev;
+>   	priv->dev = dev;
+> 
+> @@ -228,7 +239,7 @@ without creating a headache on maintenance of the
+> pathes.
+>   	dev->flags |= IFF_BROADCAST | IFF_MULTICAST;
+>  --- a/drivers/net/wireless/libertas/mesh.c
+>  +++ b/drivers/net/wireless/libertas/mesh.c
+> -@@ -1011,7 +1011,7 @@ static int lbs_add_mesh(struct lbs_priva
+> +@@ -1018,7 +1018,7 @@ static int lbs_add_mesh(struct lbs_priva
+>   	mesh_dev->ieee80211_ptr = mesh_wdev;
+>   	priv->mesh_dev = mesh_dev;
+> 
+> @@ -256,7 +267,7 @@ without creating a headache on maintenance of the
+> pathes.
+>   #define LBS_DEB_LEAVE	0x00000002
+>  --- a/drivers/net/wireless/mac80211_hwsim.c
+>  +++ b/drivers/net/wireless/mac80211_hwsim.c
+> -@@ -1230,7 +1230,7 @@ static const struct net_device_ops hwsim
+> +@@ -1236,7 +1236,7 @@ static const struct net_device_ops hwsim
+> 
+>   static void hwsim_mon_setup(struct net_device *dev)
+>   {
+> diff --git a/patches/34-backport-bin_attribute.patch b/patches/34-
+> backport-bin_attribute.patch
+> deleted file mode 100644
+> index 1ca0b4d..0000000
+> --- a/patches/34-backport-bin_attribute.patch
+> +++ /dev/null
+> @@ -1,47 +0,0 @@
+> ---- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+> -+++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
+> -@@ -317,12 +317,20 @@ static void ar6000_refill_amsdu_rxbufs(s
+> - static void ar6000_cleanup_amsdu_rxbufs(struct ar6_softc *ar);
+> -
+> - static ssize_t
+> -+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,34))
+> - ar6000_sysfs_bmi_read(struct file *fp, struct kobject *kobj,
+> -+#else
+> -+ar6000_sysfs_bmi_read(struct kobject *kobj, #endif
+> -                       struct bin_attribute *bin_attr,
+> -                       char *buf, loff_t pos, size_t count);
+> -
+> - static ssize_t
+> -+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,34))
+> - ar6000_sysfs_bmi_write(struct file *fp, struct kobject *kobj,
+> -+#else
+> -+ar6000_sysfs_bmi_write(struct kobject *kobj, #endif
+> -                        struct bin_attribute *bin_attr,
+> -                        char *buf, loff_t pos, size_t count);
+> -
+> -@@ -755,7 +763,11 @@ static struct bin_attribute bmi_attr = {
+> - };
+> -
+> - static ssize_t
+> -+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,34))
+> - ar6000_sysfs_bmi_read(struct file *fp, struct kobject *kobj,
+> -+#else
+> -+ar6000_sysfs_bmi_read(struct kobject *kobj, #endif
+> -                       struct bin_attribute *bin_attr,
+> -                       char *buf, loff_t pos, size_t count)
+> - {
+> -@@ -782,7 +794,11 @@ ar6000_sysfs_bmi_read(struct file *fp, s
+> - }
+> -
+> - static ssize_t
+> -+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,34))
+> - ar6000_sysfs_bmi_write(struct file *fp, struct kobject *kobj,
+> -+#else
+> -+ar6000_sysfs_bmi_write(struct kobject *kobj, #endif
+> -                        struct bin_attribute *bin_attr,
+> -                        char *buf, loff_t pos, size_t count)
+> - {
+> diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh index
+> 3040275..87b7e5f 100755
+> --- a/scripts/admin-update.sh
+> +++ b/scripts/admin-update.sh
+> @@ -218,6 +218,7 @@ fi
+>  DRIVERS="drivers/net/wireless/ath"
+>  DRIVERS="$DRIVERS drivers/net/wireless/ath/carl9170"
+>  DRIVERS="$DRIVERS drivers/net/wireless/ath/ath5k"
+> +DRIVERS="$DRIVERS drivers/net/wireless/ath/ath6kl"
+>  DRIVERS="$DRIVERS drivers/net/wireless/ath/ath9k"
+>  DRIVERS="$DRIVERS drivers/ssb"
+>  DRIVERS="$DRIVERS drivers/bcma"
+> @@ -247,8 +248,7 @@ DRIVERS="$DRIVERS drivers/net/wireless/orinoco"
+>  DRIVERS="$DRIVERS drivers/net/wireless/mwifiex"
+> 
+>  # Staging drivers
+> -STAGING_DRIVERS="drivers/staging/ath6kl"
+> -STAGING_DRIVERS="$STAGING_DRIVERS drivers/staging/brcm80211"
+> +STAGING_DRIVERS="drivers/staging/brcm80211"
+> 
+>  # Ethernet drivers
+>  DRIVERS="$DRIVERS drivers/net/atl1c"
+> --
+> 1.7.4.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in the body of a message to majordomo@vger.kernel.org More majordomo info
+> at  http://vger.kernel.org/majordomo-info.html
 
->From what I read, this should be possible, and in fact *some* combinations work, i.e. 2 AP interfaces, 1 AP + 1 STA and 2 STA interfaces. 
-However, adding a STA interface or an AP interface respectively, causes the connections to all associated stations to be terminated in the case of AP interfaces.
-In the case of STA interfaces, no working association to a network is possible. 
-The debug output in /var/log/syslog and in /sys/kernel/debug/ieee80211/phy*/ath9k is rather inconclusive to me, as I only seem to find notifications and 
-statistics. The only thing I found so far that could be the cause for such behavior is the "ieee80211_iface_combination" structure in compat-wireless, 
-in which the number, types and allowed combination of virtual interfaces is set. 
 
-I would be happy to work on the driver code itself, however I am a bit clueless where to start and what actual *errors* to search and fix.
-If anyone could point me to something, that would help me a lot. If that helps, I can post complete syslog and debug traces tomorrow. 
-
-Thanks a lot in advance, 
-
-Hanno
