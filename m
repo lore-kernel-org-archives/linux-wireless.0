@@ -1,55 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:35896 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750859Ab1HSE2S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Aug 2011 00:28:18 -0400
+Received: from ogre.sisk.pl ([217.79.144.158]:42818 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751302Ab1HORmR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2011 13:42:17 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: paulmck@linux.vnet.ibm.com
+Subject: Re: 3.1-rc1-git9: Reported regressions 2.6.39 -> 3.0
+Date: Mon, 15 Aug 2011 19:43:57 +0200
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+References: <xuTC4jRtHbB.A.l4H.gMCSOB@chimera> <20110815153759.GF2389@linux.vnet.ibm.com>
+In-Reply-To: <20110815153759.GF2389@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAG1a4ruH=ctPfAT0-axtckHds=SbjUWRV0Zb=ZTSM+QxV7PZ-w@mail.gmail.com>
-References: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com>
- <CA+XFjipM1Qup3bcJos_ikwzoaWoa3GdYqK0WBUqEHBNR6V6LfQ@mail.gmail.com>
- <CAG1a4rsyfPrrrf-mzt3HAM6YHHjaHTcd2rbtYiwqLkUCP=j8pQ@mail.gmail.com>
- <CA+XFjipsVukKYchfmDv48PAKsD2PUxT+7E8epRuKFynGwk=Bag@mail.gmail.com>
- <CAG1a4rvQTA7UgxLOxu_cC88grjHttyjPD_4kyDhb7Y9FcBBkLQ@mail.gmail.com>
- <1313695217.23920.4.camel@dcbw.foobar.com> <CAG1a4rvqdB8y9ARQ=FckArm3UVG7=LFqF25kqYUYL0Uw7QNV8g@mail.gmail.com>
- <1313699724.23920.18.camel@dcbw.foobar.com> <CAG1a4ruH=ctPfAT0-axtckHds=SbjUWRV0Zb=ZTSM+QxV7PZ-w@mail.gmail.com>
-From: Pavel Ivanov <paivanof@gmail.com>
-Date: Fri, 19 Aug 2011 00:27:46 -0400
-Message-ID: <CAG1a4rttmkFW2UrmGvAvop3==ZqjATDj09DLtdCKedGdy-cRgg@mail.gmail.com> (sfid-20110819_062841_607952_7C45308D)
-Subject: Re: [PATCH] ath9k: make driver usable standalone
-To: Dan Williams <dcbw@redhat.com>
-Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201108151943.58179.rjw@sisk.pl> (sfid-20110815_194238_964366_BDC00FCD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 18, 2011 at 6:56 PM, Pavel Ivanov <paivanof@gmail.com> wrote:
->> Or, since I'm a NetworkManager developer, is there something that you're
->> not sure how to make NM do, or are you just looking to experiment?
->
-> I want to make the wireless work when kernel is compiled without
-> WIRELESS_EXT. Last time I tried it Ubuntu (I guess I should say
-> NetworkManager) wasn't able to discover any wireless networks in our
-> area and wasn't able to connect to my default network. Was it supposed
-> to do that?
+On Monday, August 15, 2011, Paul E. McKenney wrote:
+> On Sun, Aug 14, 2011 at 09:02:27PM +0200, Rafael J. Wysocki wrote:
+> > [NOTE:
+> >  We already have a bug entry for tracking regressions from 3.0:
+> > 
+> >  http://bugzilla.kernel.org/show_bug.cgi?id=40982
+> > 
+> >  but there are no reports linked to it, mostly because Maciej is on vacation,
+> >  but also because the frequency of reporting regressions has been low
+> >  recently.  So, if you're seeing a regression from 3.0, please let us know.]
+> > 
+> > This message contains a list of some post-2.6.39 regressions introduced before
+> > 3.0, for which there are no fixes in the mainline known to the tracking team.
+> > If any of them have been fixed already, please let us know.
+> > 
+> > If you know of any other unresolved post-2.6.39 regressions, please let us know
+> > either and we'll add them to the list.  Also, please let us know if any
+> > of the entries below are invalid.
+> > 
+> > Each entry from the list will be sent additionally in an automatic reply to
+> > this message with CCs to the people involved in reporting and handling the
+> > issue.
+> > 
+> > 
+> > Listed regressions statistics:
+> > 
+> >   Date          Total  Pending  Unresolved
+> >   ----------------------------------------
+> >   2011-08-14       63       22          19
+> > 
+> > 
+> > Unresolved regressions
+> > ----------------------
+> > 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40282
+> > Subject		: IP forwarding regression since 3.0-rc6
+> > Submitter	: Stephan Seitz <stse+lkml@fsing.rootsland.net>
+> > Date		: 2011-07-25 12:51 (21 days old)
+> > Message-ID	: <20110725T141145.GA.2ae38.stse@fsing.rootsland.net>
+> > References	: http://marc.info/?l=linux-kernel&m=131159880004908&w=2
+> > 
+> > 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40172
+> > Subject		: lockdep trace from post 3.0.
+> > Submitter	: Dave Jones <davej@redhat.com>
+> > Date		: 2011-07-24 1:32 (22 days old)
+> > Message-ID	: <20110724013257.GA6777@redhat.com>
+> > References	: http://marc.info/?l=linux-kernel&m=131147120206819&w=2
+> > 
+> > 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40092
+> > Subject		: RCU stall in linux-3.0.0
+> > Submitter	: Philip Armstrong <phil@kantaka.co.uk>
+> > Date		: 2011-07-25 21:44 (21 days old)
+> 
+> This one was due the the CPU's idea of the current time getting way
+> out of sync (as in more than a minute's worth of disagreement, which is
+> pretty impressive when you think about it).  So what happened is that
+> one CPU decided that the current grace period was a full minute old
+> immediately, and thus started screaming piteously.  John Stultz provided
+> a configuration workaround, and he and Thomas Gleixner would be working
+> out the long-term fix.
 
-Well, I guess I should say sorry. After all this discussion I've tried
-to compile and boot kernel without WIRELESS_EXT once more. And now it
-worked.
-Last time I tried it was 3.0. Driver from vanilla sources didn't work,
-so I compiled compat-wireless-3.0-2 and it did warn me during
-compilation, something like "WIRELESS_EXT is not set, something won't
-work". Then after boot syslog had somewhat the same message and
-wireless didn't work. That's why I started this thread. Now with
-3.1-rc2 everything works as is, no warnings in syslog and
-NetworkManager connects to my network without any problems. I don't
-know what has changed but I feel very sorry for all this mess.
+Thanks for the update!
 
-
-Pavel
+Rafael
