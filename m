@@ -1,52 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([72.73.18.11]:34272 "EHLO lucidpixels.com"
+Received: from mga09.intel.com ([134.134.136.24]:25099 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755569Ab1HCTxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2011 15:53:52 -0400
-Date: Wed, 3 Aug 2011 15:53:51 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-cc: Alan Piszcz <ap@solarrain.com>
-Subject: Linux Wireless USB-Stick Question
-Message-ID: <alpine.DEB.2.02.1108031550100.4278@p34.internal.lan> (sfid-20110803_215357_351476_08F6A2CE)
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+	id S1751817Ab1HOQJW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2011 12:09:22 -0400
+Subject: Re: [PATCH 05/60] iwlagn: introduce struct iwl-shared - known by
+ all layers
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+In-Reply-To: <20110815151231.GB15718@redhat.com>
+References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1313257116-2697-6-git-send-email-wey-yi.w.guy@intel.com>
+	 <20110815081010.GA3317@redhat.com> <20110815084355.GB3317@redhat.com>
+	 <1313414020.15170.32.camel@wwguy-huron> <20110815142144.GA15718@redhat.com>
+	 <1313416005.15170.35.camel@wwguy-huron> <20110815144359.GA15719@redhat.com>
+	 <1313417422.15170.39.camel@wwguy-huron> <20110815151231.GB15718@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 15 Aug 2011 08:29:12 -0700
+Message-ID: <1313422152.15170.43.camel@wwguy-huron> (sfid-20110815_180926_296175_CF244594)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, 2011-08-15 at 08:12 -0700, Stanislaw Gruszka wrote:
+> On Mon, Aug 15, 2011 at 07:10:22AM -0700, Guy, Wey-Yi wrote:
+> > On Mon, 2011-08-15 at 07:44 -0700, Stanislaw Gruszka wrote:
+> > > On Mon, Aug 15, 2011 at 06:46:45AM -0700, Guy, Wey-Yi wrote:
+> > > > On Mon, 2011-08-15 at 07:21 -0700, Stanislaw Gruszka wrote:
+> > > > > On Mon, Aug 15, 2011 at 06:13:39AM -0700, Guy, Wey-Yi wrote:
+> > > > > > now we are working on separate iwlagn driver into two layers (upper and
+> > > > > > lower), the lower layer contains both bus and transport sub-layer which
+> > > > > > is hw dependent, and the upper layer should be bus/hw independent. by
+> > > > > > doing so, the single driver can handle different bus and different core
+> > > > > > architecture. Having the share data structure (priv->shrd->foo) between
+> > > > > > two layers is for that reason (loosely couple).
+> > > > > 
+> > > > > You did not explained reason for introducing iwl_shared structure,
+> > > > > actually you confirmed it is useless. You should simply share iwl_priv
+> > > > > on any layer you have.
+> > > > > 
+> > > > > Stanislaw
+> > > > 
+> > > > It is not true, I mean "boring" but not "useless", it does not make
+> > > > sense share all the priv with lower layer.
+> > > 
+> > > Why? Even if there are some fields that you will use only on
+> > > upper layer, it does not mean that pointer to priv structure
+> > > could not be passed to lower layer.
+> > > 
+> > why, if we doing that, lower layer need to know how to reference the
+> > priv which I don't believe it is a good design. I want to make the upper
+> > and lower layer as loose as possible and it is flexible for new
+> > architecture.
+> 
+> Providing more abstraction layers than needed is worse.
 
-Under Windows, you can achieve 10-15MiB/s..
+I don't really see any issues with it and I don't believe it will cause
+problem if we do it right. by doing so, we will improve the flexibility.
 
-Under Linux, even with 150mbps USB wireless adapters, the max never 
-appears to go above > 3-4MiB/s, to work around this, order more 
-USB-wifi ticks and run them in parallel far away from each other with USB
-extenders:
+> 
+> > > > think about I also mention
+> > > > different core architecture, that mean we can have different upper layer
+> > > > which has different priv; but shrd is always common to all different
+> > > > upper layer to share with lower layer.
+> > > 
+> > > What different upper layer? Non mac80211, if so you should write
+> > > separate driver for it.
+> > 
+> > not mac80211, it is still part of driver, but different upper layer
+> > might/can contain different system flow. that is why I mention different
+> > core architecture. now we are doing preparation work so you did not see
+> > the new stuff yet.
+> 
+> Can we get opinion from Johannes about that, and eventually ACKs/NACKs
+> for patches?
+> 
 
-box1:
--------------
-wlan0     IEEE 802.11bg  ESSID:"hidden"
-           Bit Rate=54 Mb/s   Tx-Power=20 dBm
-wlan1     IEEE 802.11bgn  ESSID:"hidden"
-           Bit Rate=58.5 Mb/s   Tx-Power=20 dBm
-wlan2     IEEE 802.11bgn  ESSID:"hidden"
-           Bit Rate=39 Mb/s   Tx-Power=20 dBm
+it is pure iwlagn driver changes and not impact mac80211 at all.
+Johannes already in the loop and he understand the changes.
 
-box2:
--------------
-wlan0     IEEE 802.11bgn  ESSID:"hidden"
-           Bit Rate=58.5 Mb/s   Tx-Power=20 dBm
-wlan1     IEEE 802.11bgn  ESSID:"hidden"
-           Bit Rate=52 Mb/s   Tx-Power=20 dBm
-wlan2     IEEE 802.11bgn  ESSID:"hidden"
-           Bit Rate=52 Mb/s   Tx-Power=20 dBm
+Wey
 
-But I was curious if anyone had achieved > 10 MiB/s with any wireless 
-adapter with Linux?
+> 
 
-Also, those native Linux USB adapters (carl) work good, so far.
-With the patch provided earlier for the rt2800usb driver, it is no longer 
-crashing under 3.0 so I put two of them on a single box plus a carl based 
-one, now I get better I/O, e.g. 4MiB/s x 6 = 24MiB/s.
 
-Justin.
