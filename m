@@ -1,52 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18654 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752806Ab1H2GTZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 02:19:25 -0400
-Date: Mon, 29 Aug 2011 11:49:49 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH v2 3/4] ath9k: only fill antenna diversity hw ops on
- chips that support it
-Message-ID: <20110829061948.GA29433@vmraj-lnx.users.atheros.com> (sfid-20110829_081937_263103_1E5FE68C)
-References: <1314597262-49427-1-git-send-email-nbd@openwrt.org>
- <1314597262-49427-2-git-send-email-nbd@openwrt.org>
- <1314597262-49427-3-git-send-email-nbd@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1314597262-49427-3-git-send-email-nbd@openwrt.org>
+Received: from mga01.intel.com ([192.55.52.88]:47899 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753600Ab1HOOu3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2011 10:50:29 -0400
+Subject: Re: [PATCH 05/60] iwlagn: introduce struct iwl-shared - known by
+ all layers
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+In-Reply-To: <20110815144359.GA15719@redhat.com>
+References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1313257116-2697-6-git-send-email-wey-yi.w.guy@intel.com>
+	 <20110815081010.GA3317@redhat.com> <20110815084355.GB3317@redhat.com>
+	 <1313414020.15170.32.camel@wwguy-huron> <20110815142144.GA15718@redhat.com>
+	 <1313416005.15170.35.camel@wwguy-huron> <20110815144359.GA15719@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 15 Aug 2011 07:10:22 -0700
+Message-ID: <1313417422.15170.39.camel@wwguy-huron> (sfid-20110815_165032_428040_9F182A2D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 29, 2011 at 07:54:21AM +0200, Felix Fietkau wrote:
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9002_phy.c |    6 ++++--
->  drivers/net/wireless/ath/ath9k/ar9003_phy.c |    6 ++++--
->  drivers/net/wireless/ath/ath9k/hw-ops.h     |    6 ++++--
->  3 files changed, 12 insertions(+), 6 deletions(-)
+On Mon, 2011-08-15 at 07:44 -0700, Stanislaw Gruszka wrote:
+> On Mon, Aug 15, 2011 at 06:46:45AM -0700, Guy, Wey-Yi wrote:
+> > On Mon, 2011-08-15 at 07:21 -0700, Stanislaw Gruszka wrote:
+> > > On Mon, Aug 15, 2011 at 06:13:39AM -0700, Guy, Wey-Yi wrote:
+> > > > now we are working on separate iwlagn driver into two layers (upper and
+> > > > lower), the lower layer contains both bus and transport sub-layer which
+> > > > is hw dependent, and the upper layer should be bus/hw independent. by
+> > > > doing so, the single driver can handle different bus and different core
+> > > > architecture. Having the share data structure (priv->shrd->foo) between
+> > > > two layers is for that reason (loosely couple).
+> > > 
+> > > You did not explained reason for introducing iwl_shared structure,
+> > > actually you confirmed it is useless. You should simply share iwl_priv
+> > > on any layer you have.
+> > > 
+> > > Stanislaw
+> > 
+> > It is not true, I mean "boring" but not "useless", it does not make
+> > sense share all the priv with lower layer.
 > 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-> index 3cbbb03..38e91f8 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-> @@ -570,8 +570,10 @@ void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
->  	priv_ops->compute_pll_control = ar9002_hw_compute_pll_control;
->  	priv_ops->do_getnf = ar9002_hw_do_getnf;
->  
-> -	ops->antdiv_comb_conf_get = ar9002_hw_antdiv_comb_conf_get;
-> -	ops->antdiv_comb_conf_set = ar9002_hw_antdiv_comb_conf_set;
-> +	if (AR_SREV_9285(ah)) {
-> +		ops->antdiv_comb_conf_get = ar9002_hw_antdiv_comb_conf_get;
-> +		ops->antdiv_comb_conf_set = ar9002_hw_antdiv_comb_conf_set;
-> +	}
->
-Better to return from ar900*_hw_antdiv_comb_conf_set/get based on
-hw capability (ATH9K_HW_CAP_ANT_DIV_COMB) rathar than adding chip specific
-checks. That looks to be more generic.
+> Why? Even if there are some fields that you will use only on
+> upper layer, it does not mean that pointer to priv structure
+> could not be passed to lower layer.
+> 
+why, if we doing that, lower layer need to know how to reference the
+priv which I don't believe it is a good design. I want to make the upper
+and lower layer as loose as possible and it is flexible for new
+architecture.
 
---
-Rajkumar
+> > think about I also mention
+> > different core architecture, that mean we can have different upper layer
+> > which has different priv; but shrd is always common to all different
+> > upper layer to share with lower layer.
+> 
+> What different upper layer? Non mac80211, if so you should write
+> separate driver for it.
+
+not mac80211, it is still part of driver, but different upper layer
+might/can contain different system flow. that is why I mention different
+core architecture. now we are doing preparation work so you did not see
+the new stuff yet.
+
+Wey
+ 
+> 
+> Stanislaw
+
+
