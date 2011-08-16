@@ -1,33 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.23]:59546 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754290Ab1HWISe (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:36809 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752739Ab1HPVbD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 04:18:34 -0400
-Content-Type: text/plain; charset="utf-8"
-Date: Tue, 23 Aug 2011 10:18:29 +0200
-From: "Louis" <louis.m@gmx.net>
-Message-ID: <20110823081829.203150@gmx.net> (sfid-20110823_101839_006481_F5CC1C50)
+	Tue, 16 Aug 2011 17:31:03 -0400
+Received: by qwk3 with SMTP id 3so248149qwk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2011 14:31:02 -0700 (PDT)
 MIME-Version: 1.0
-Subject: carl9170-driver usable as AccessPoint
-To: linux-wireless@vger.kernel.org
+Date: Tue, 16 Aug 2011 17:31:02 -0400
+Message-ID: <CAFKp-_frLkDEeF3t=-_hXAig-vQebwnouYHqRCv9YCTXDa_LgQ@mail.gmail.com> (sfid-20110816_233108_163121_B10FE90A)
+Subject: [BUG] ath9k truncated management packets from TKIP connected stations
+From: Bill Jordan <bjordan@rajant.com>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, 
+I'm not quite sure what the correct fix is for this.
 
-I am trying to set up an Accesspoint using the Fritz!WLAN USB Stick N with the carl9170-1.9.4 driver. The system runs on a 3.0-rc2 kernel. 
+Ath9k in AP mode with a TKIP security: If a connected station sends a
+management packet, the packet is truncated by 8 bytes before being
+delivered to hostapd. This prevents the station from reauthenticating
+or connecting to a different SSID on the same radio.
 
-When trying to use hostapd-0.8, I get following error message: 
-"nl80211: Failed to set interface wlan1 into AP mode"
+In ath9k_rx_accept, for management packets, strip_mic will be true,
+and RX_FLAG_MMIC_STRIPPED will be set in rxs->flag. In
+ath9k_rx_skb_postprocess, if ah->sw_mgmt_crypto is set,
+RX_FLAG_DECRYPTED will be cleared. However, RX_FLAG_MMIC_STRIPPED will
+still be set, so, in ath_rx_tasklet, 8 bytes will be trimmed off the
+end of the skb.
 
-Can you you give me a hint if there is something wrong in my setup ?
-Or is AP- usage not supported in the carl9170 driver? 
+I'm thinking that in ath9k_rx_accept, is_valid_tkip †should also
+consider ieee80211_is_mgmt(fc). But this wouldn't take into
+consideration ah->sw_mgmt_crypto.
 
-Is there another way (or maybe driver) which can set the wifi-stick into master mode ? 
+Alternatively, RX_FLAG_MMIC_STRIPPED could be cleared in
+ath9k_rx_skb_postprocess when RX_FLAG_DECRYPTED is cleared.
 
+I'm looking for input from someone who understands this code better.
 
-Louis
--- 
-NEU: FreePhone - 0ct/min Handyspartarif mit Geld-zur√ºck-Garantie!		
-Jetzt informieren: http://www.gmx.net/de/go/freephone
+Thanks,
+Bill Jordan
