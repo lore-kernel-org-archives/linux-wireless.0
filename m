@@ -1,39 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:60576 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751653Ab1HYTkX (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:55094 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751500Ab1HPWIl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 15:40:23 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Joe Perches <joe@perches.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Walter Harms <wharms@bfs.de>
-Date: Thu, 25 Aug 2011 12:39:58 -0700
-Subject: RE: [PATCH] mwifiex: replace kmalloc & memcpy sequences with kmemdup
-Message-ID: <477F20668A386D41ADCC57781B1F70430802EEF288@SC-VEXCH1.marvell.com> (sfid-20110825_214026_199547_8DD3FF5B)
-References: <1314244350-13347-1-git-send-email-bzhao@marvell.com>
- <1314245956.15882.30.camel@Joe-Laptop>
-In-Reply-To: <1314245956.15882.30.camel@Joe-Laptop>
-Content-Type: text/plain; charset="utf-8"
+	Tue, 16 Aug 2011 18:08:41 -0400
+Received: by yxj19 with SMTP id 19so305129yxj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2011 15:08:41 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <4E4ACD10.7000807@01019freenet.de>
+References: <4E4AB695.5070300@01019freenet.de>
+	<CAOZOX0UsRxT9ECdUC7OL2toJUb+PitGhxCifTyD8hWYwt6R_zg@mail.gmail.com>
+	<4E4ACD10.7000807@01019freenet.de>
+Date: Wed, 17 Aug 2011 00:08:40 +0200
+Message-ID: <CAGXE3d-hb2MnLW+NhxCBhUSGTNSs5ki9-6wo5uQGSJbFdEB5KA@mail.gmail.com> (sfid-20110817_000849_490408_36397E87)
+Subject: Re: 7 more packets after each beacon frame
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9lLA0KDQpUaGFua3MgZm9yIHlvdXIgY29tbWVudC4NCg0KPiBTdWJqZWN0OiBSZTogW1BB
-VENIXSBtd2lmaWV4OiByZXBsYWNlIGttYWxsb2MgJiBtZW1jcHkgc2VxdWVuY2VzIHdpdGgga21l
-bWR1cA0KPiANCj4gT24gV2VkLCAyMDExLTA4LTI0IGF0IDIwOjUyIC0wNzAwLCBCaW5nIFpoYW8g
-d3JvdGU6DQo+ID4gU2VxdWVuY2VzIG9mIGttYWxsb2Mva3phbGxvYyBhbmQgbWVtY3B5IGFyZSBy
-ZXBsYWNlZCB3aXRoDQo+ID4ga21lbWR1cHMuDQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL213aWZpZXgvam9pbi5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9q
-b2luLmMNCj4gW10NCj4gPiAtCXRtcCA9IGttYWxsb2MocmF0ZTFfc2l6ZSwgR0ZQX0tFUk5FTCk7
-DQo+ID4gKwl0bXAgPSBrbWVtZHVwKHJhdGUxLCByYXRlMV9zaXplLCBHRlBfS0VSTkVMKTsNCj4g
-PiAgCWlmICghdG1wKSB7DQo+ID4gLQkJZGV2X2Vycihwcml2LT5hZGFwdGVyLT5kZXYsICJmYWls
-ZWQgdG8gYWxsb2MgdG1wIGJ1ZlxuIik7DQo+ID4gKwkJZGV2X2Vycihwcml2LT5hZGFwdGVyLT5k
-ZXYsICJmYWlsZWQgdG8gZHVwbGljYXRlIHJhdGUgYnVmXG4iKTsNCj4gDQo+IEkgd291bGRuJ3Qg
-bW9kaWZ5IGFueSBPT00gbWVzc2FnZS4NCj4gVGhlc2UgX2FyZV8gYWxsb2NzIGZhaWx1cmVzLg0K
-DQpWMiBwYXRjaCBoYXMgYmVlbiBzZW50Lg0KDQpUaGFua3MsDQpCaW5nDQoNCj4gDQo+IFthbGwg
-dGhlIG90aGVycyByZW1vdmVkXQ0KDQo=
+On Tue, Aug 16, 2011 at 10:03 PM, Andreas Hartmann
+<andihartmann@01019freenet.de> wrote:
+>> When examining my own AP (rt2860 based) with another STA in monitor
+>> mode, I can see always 7 packets after each beacon frame:
+
+That looks quite odd. Maybe some garbage ended up in the beacon slots
+after the first beacon.
+Do you use multiple virtual interfaces?
+
+Helmut
