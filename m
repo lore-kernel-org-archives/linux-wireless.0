@@ -1,62 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:37569 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750813Ab1HQF6F convert rfc822-to-8bit (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:40620 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751989Ab1HPRgQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2011 01:58:05 -0400
+	Tue, 16 Aug 2011 13:36:16 -0400
+From: "Elias, Ilan" <ilane@ti.com>
+To: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
+	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
+	"samuel@sortiz.org" <samuel@sortiz.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 16 Aug 2011 19:36:01 +0200
+Subject: [PATCH 2/4] NFC: Move nfc.h from include/net to include/net/nfc
+Message-ID: <AC090B9732AB2B4DB7FF476E907FE6600131E1C33A@dnce02.ent.ti.com> (sfid-20110816_193618_581565_BD38E1B6)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com>
-References: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Wed, 17 Aug 2011 07:57:44 +0200
-Message-ID: <CA+XFjipM1Qup3bcJos_ikwzoaWoa3GdYqK0WBUqEHBNR6V6LfQ@mail.gmail.com> (sfid-20110817_075810_516542_068F9378)
-Subject: Re: [PATCH] ath9k: make driver usable standalone
-To: Pavel Ivanov <paivanof@gmail.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 17, 2011 at 5:28 AM, Pavel Ivanov <paivanof@gmail.com> wrote:
-> When ath9k is the only wireless driver included in the build
-> WIRELESS_EXT configuration option becomes undefined. Because of that
-> driver becomes essentially unusable as you can't actually connect to
-> any WiFi network. By including WIRELESS_EXT into Kconfig we ensure
-> that build with ath9k and without other drivers (having WIRELESS_EXT
-> selected in their Kconfig) is actually usable.
+The nfc.h file was moved from include/net to include/net/nfc, since 2 new header files were added to the new include/net/nfc folder.
 
-WIRELESS_EXT is not required for configuring wireless on recent
-kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
+Signed-off-by: Ilan Elias <ilane@ti.com>
+---
+ drivers/nfc/pn533.c         |    2 +-
+ include/net/{ => nfc}/nfc.h |    0
+ net/nfc/nfc.h               |    2 +-
+ 3 files changed, 2 insertions(+), 2 deletions(-)
+ rename include/net/{ => nfc}/nfc.h (100%)
 
->
-> Signed-off-by: Pavel Ivanov <paivanof@gmail.com>
-> ---
->
-> diff --git a/drivers/net/wireless/ath/ath9k/Kconfig
-> b/drivers/net/wireless/ath/ath9k/Kconfig
-> index d9c08c6..2573f77 100644
-> --- a/drivers/net/wireless/ath/ath9k/Kconfig
-> +++ b/drivers/net/wireless/ath/ath9k/Kconfig
-> @@ -11,6 +11,7 @@ config ATH9K
->        select LEDS_CLASS
->        select NEW_LEDS
->        select ATH9K_COMMON
-> +       select WIRELESS_EXT
->        ---help---
->          This module adds support for wireless adapters based on
->          Atheros IEEE 802.11n AR5008, AR9001 and AR9002 family
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
+diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
+index d931e9c..dfea75f 100644
+--- a/drivers/nfc/pn533.c
++++ b/drivers/nfc/pn533.c
+@@ -28,7 +28,7 @@
+ #include <linux/usb.h>
+ #include <linux/nfc.h>
+ #include <linux/netdevice.h>
+-#include <net/nfc.h>
++#include <net/nfc/nfc.h>
+ 
+ #define VERSION "0.1"
+ 
+diff --git a/include/net/nfc.h b/include/net/nfc/nfc.h
+similarity index 100%
+rename from include/net/nfc.h
+rename to include/net/nfc/nfc.h
+diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
+index 1a877de..b6753f4 100644
+--- a/net/nfc/nfc.h
++++ b/net/nfc/nfc.h
+@@ -24,7 +24,7 @@
+ #ifndef __LOCAL_NFC_H
+ #define __LOCAL_NFC_H
+ 
+-#include <net/nfc.h>
++#include <net/nfc/nfc.h>
+ #include <net/sock.h>
+ 
+ __attribute__((format (printf, 2, 3)))
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.7.0.4
