@@ -1,59 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:48868 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752838Ab1HWLgj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 07:36:39 -0400
-Received: by fxh19 with SMTP id 19so173580fxh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 04:36:38 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] mac80211: add uapsd_queues and max_sp params fields
-Date: Tue, 23 Aug 2011 14:37:47 +0300
-Message-Id: <1314099467-20464-2-git-send-email-eliad@wizery.com> (sfid-20110823_133641_594658_703FA76F)
-In-Reply-To: <1314099467-20464-1-git-send-email-eliad@wizery.com>
-References: <1314099467-20464-1-git-send-email-eliad@wizery.com>
+Received: from nbd.name ([46.4.11.11]:41855 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751431Ab1HPWwd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Aug 2011 18:52:33 -0400
+Message-ID: <4E4AF4A4.9090404@openwrt.org> (sfid-20110817_005237_164977_CB2BE8B2)
+Date: Tue, 16 Aug 2011 15:52:20 -0700
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Bill Jordan <bjordan@rajant.com>
+CC: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Subject: Re: [BUG] ath9k truncated management packets from TKIP connected
+ stations
+References: <CAFKp-_frLkDEeF3t=-_hXAig-vQebwnouYHqRCv9YCTXDa_LgQ@mail.gmail.com>
+In-Reply-To: <CAFKp-_frLkDEeF3t=-_hXAig-vQebwnouYHqRCv9YCTXDa_LgQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add uapsd_queues and max_sp fields to ieee80211_sta.
-These fields might be needed by low-level drivers in
-order to configure the AP.
+On 2011-08-16 2:31 PM, Bill Jordan wrote:
+> I'm not quite sure what the correct fix is for this.
+>
+> Ath9k in AP mode with a TKIP security: If a connected station sends a
+> management packet, the packet is truncated by 8 bytes before being
+> delivered to hostapd. This prevents the station from reauthenticating
+> or connecting to a different SSID on the same radio.
+>
+> In ath9k_rx_accept, for management packets, strip_mic will be true,
+> and RX_FLAG_MMIC_STRIPPED will be set in rxs->flag. In
+> ath9k_rx_skb_postprocess, if ah->sw_mgmt_crypto is set,
+> RX_FLAG_DECRYPTED will be cleared. However, RX_FLAG_MMIC_STRIPPED will
+> still be set, so, in ath_rx_tasklet, 8 bytes will be trimmed off the
+> end of the skb.
+>
+> I'm thinking that in ath9k_rx_accept, is_valid_tkip  should also
+> consider ieee80211_is_mgmt(fc). But this wouldn't take into
+> consideration ah->sw_mgmt_crypto.
+>
+> Alternatively, RX_FLAG_MMIC_STRIPPED could be cleared in
+> ath9k_rx_skb_postprocess when RX_FLAG_DECRYPTED is cleared.
+>
+> I'm looking for input from someone who understands this code better.
+We should probably just keep strip_mic set to false for mgmt frames.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- include/net/mac80211.h |    2 ++
- net/mac80211/cfg.c     |    3 +++
- 2 files changed, 5 insertions(+), 0 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 2f01d84..2e752df 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -954,6 +954,8 @@ struct ieee80211_sta {
- 	u16 aid;
- 	struct ieee80211_sta_ht_cap ht_cap;
- 	bool wme;
-+	u8 uapsd_queues;
-+	u8 max_sp;
- 
- 	/* must be last */
- 	u8 drv_priv[0] __attribute__((__aligned__(sizeof(void *))));
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index c1fa577..4bb6a92 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -697,6 +697,9 @@ static void sta_apply_parameters(struct ieee80211_local *local,
- 	}
- 	spin_unlock_irqrestore(&sta->flaglock, flags);
- 
-+	sta->sta.uapsd_queues = params->uapsd_queues;
-+	sta->sta.max_sp = params->max_sp;
-+
- 	/*
- 	 * cfg80211 validates this (1-2007) and allows setting the AID
- 	 * only when creating a new station entry
--- 
-1.7.6.401.g6a319
-
+- Felix
