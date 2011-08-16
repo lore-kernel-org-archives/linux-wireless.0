@@ -1,56 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:37604 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751661Ab1HMQ56 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 12:57:58 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 03/13] iwlagn: Remove ht40 support from 5.2GHz for _bgn devices
-Date: Sat, 13 Aug 2011 09:17:58 -0700
-Message-Id: <1313252287-22858-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_185813_161948_3D6DF263)
-In-Reply-To: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:39609 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751233Ab1HPRYX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Aug 2011 13:24:23 -0400
+Message-ID: <4E4AA7D6.8060208@sipsolutions.net> (sfid-20110816_192426_652251_7A891649)
+Date: Tue, 16 Aug 2011 10:24:38 -0700
+From: Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+To: Guy Eilam <guy@wizery.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] mac80211: refactor sta_info_insert_rcu to 3 main
+ stages
+References: <1311715772-8855-1-git-send-email-guy@wizery.com> <1312892417.4109.32.camel@jlt3.sipsolutions.net> <CAA0384753T9EJf_0-kvD7LPzrg1FC_aAKT2ZS8YwUvPtQ8HYxw@mail.gmail.com> (sfid-20110816_191203_119602_5985D45A)
+In-Reply-To: <CAA0384753T9EJf_0-kvD7LPzrg1FC_aAKT2ZS8YwUvPtQ8HYxw@mail.gmail.com> (sfid-20110816_191203_119602_5985D45A)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For _bgn device, remove ht40 support for 5.2GHz, it is probably ok since
-the "band" is not support but just feel strange.
+On 8/16/2011 10:11 AM, Guy Eilam wrote:
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-1000.c |    3 +--
- drivers/net/wireless/iwlwifi/iwl-2000.c |    3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
+> I'll make sure that the _ibss and _non_ibss code paths will have
+> similar freeing (the freeinng in both cases will be handled outside
+> the function like it is in the _non_ibss now).
+> The reason I have the might_sleep/locking outside the _non_ibss
+> function is because the additions in the next patch. The whole point
+> of this refactoring from my point of view was the option to have a
+> similar insert function that won't have the locking inside of it.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index d502004..97b9c74 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -135,8 +135,7 @@ static int iwl1000_hw_set_hw_params(struct iwl_priv *priv)
- 	priv->hw_params.max_data_size = IWLAGN_RTC_DATA_SIZE;
- 	priv->hw_params.max_inst_size = IWLAGN_RTC_INST_SIZE;
- 
--	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
--					BIT(IEEE80211_BAND_5GHZ);
-+	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ);
- 
- 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
- 	if (priv->cfg->rx_with_siso_diversity)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index 0e13f0b..d557ef3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -130,8 +130,7 @@ static int iwl2000_hw_set_hw_params(struct iwl_priv *priv)
- 	priv->hw_params.max_data_size = IWL60_RTC_DATA_SIZE;
- 	priv->hw_params.max_inst_size = IWL60_RTC_INST_SIZE;
- 
--	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
--					BIT(IEEE80211_BAND_5GHZ);
-+	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ);
- 
- 	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
- 	if (priv->cfg->rx_with_siso_diversity)
--- 
-1.7.0.4
+Ok, fair enough, so it's not possible to move the locking :)
 
+johannes
