@@ -1,128 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:58541 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754732Ab1HaLsh (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:43659 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751500Ab1HPTFP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 07:48:37 -0400
-Received: by wyh22 with SMTP id 22so61839wyh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 04:48:35 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: use kstrtoul_from_user
-Date: Wed, 31 Aug 2011 14:50:13 +0300
-Message-Id: <1314791413-32358-1-git-send-email-eliad@wizery.com> (sfid-20110831_134840_290178_F57420B4)
+	Tue, 16 Aug 2011 15:05:15 -0400
+Received: by fxh19 with SMTP id 19so177483fxh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2011 12:05:13 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Gregory Bellier <gregory.bellier@gmail.com>
+Subject: [PATCH V2] b43: warn when forcing PIO mode
+Date: Tue, 16 Aug 2011 21:44:21 +0200
+Message-Id: <1313523861-2526-1-git-send-email-zajec5@gmail.com> (sfid-20110816_210519_395592_D4BA11CB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-simplify code by calling kstrtoul_from_user() (instead of
-copy_from_user() + kstrtoul())
+We have resolved all the known issues with DMA mode, however some users
+(or distros) are still forcing PIO mode by config files. Without
+debugging enabled it's not noticable at all. Add the warning for them.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Cc: Gregory Bellier <gregory.bellier@gmail.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/wl12xx/debugfs.c |   46 +++-----------------------------
- 1 files changed, 5 insertions(+), 41 deletions(-)
+V2: typo in "parameter". I have to install spell checker for vim ;)
+Thx Gregory.
+---
+ drivers/net/wireless/b43/main.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index d59354f..a9af5af 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -265,18 +265,10 @@ static ssize_t gpio_power_write(struct file *file,
- 			   size_t count, loff_t *ppos)
- {
- 	struct wl1271 *wl = file->private_data;
--	char buf[10];
--	size_t len;
- 	unsigned long value;
- 	int ret;
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 1adadc8..e0b1156 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4636,8 +4636,13 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
+ 	b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_MAXCONT, 0x3FF);
  
--	len = min(count, sizeof(buf) - 1);
--	if (copy_from_user(buf, user_buf, len)) {
--		return -EFAULT;
--	}
--	buf[len] = '\0';
--
--	ret = kstrtoul(buf, 0, &value);
-+	ret = kstrtoul_from_user(user_buf, count, 10, &value);
- 	if (ret < 0) {
- 		wl1271_warning("illegal value in gpio_power");
- 		return -EINVAL;
-@@ -427,17 +419,10 @@ static ssize_t dtim_interval_write(struct file *file,
- 				   size_t count, loff_t *ppos)
- {
- 	struct wl1271 *wl = file->private_data;
--	char buf[10];
--	size_t len;
- 	unsigned long value;
- 	int ret;
- 
--	len = min(count, sizeof(buf) - 1);
--	if (copy_from_user(buf, user_buf, len))
--		return -EFAULT;
--	buf[len] = '\0';
--
--	ret = kstrtoul(buf, 0, &value);
-+	ret = kstrtoul_from_user(user_buf, count, 10, &value);
- 	if (ret < 0) {
- 		wl1271_warning("illegal value for dtim_interval");
- 		return -EINVAL;
-@@ -492,17 +477,10 @@ static ssize_t beacon_interval_write(struct file *file,
- 				     size_t count, loff_t *ppos)
- {
- 	struct wl1271 *wl = file->private_data;
--	char buf[10];
--	size_t len;
- 	unsigned long value;
- 	int ret;
- 
--	len = min(count, sizeof(buf) - 1);
--	if (copy_from_user(buf, user_buf, len))
--		return -EFAULT;
--	buf[len] = '\0';
--
--	ret = kstrtoul(buf, 0, &value);
-+	ret = kstrtoul_from_user(user_buf, count, 10, &value);
- 	if (ret < 0) {
- 		wl1271_warning("illegal value for beacon_interval");
- 		return -EINVAL;
-@@ -542,17 +520,10 @@ static ssize_t rx_streaming_interval_write(struct file *file,
- 			   size_t count, loff_t *ppos)
- {
- 	struct wl1271 *wl = file->private_data;
--	char buf[10];
--	size_t len;
- 	unsigned long value;
- 	int ret;
- 
--	len = min(count, sizeof(buf) - 1);
--	if (copy_from_user(buf, user_buf, len))
--		return -EFAULT;
--	buf[len] = '\0';
--
--	ret = kstrtoul(buf, 0, &value);
-+	ret = kstrtoul_from_user(user_buf, count, 10, &value);
- 	if (ret < 0) {
- 		wl1271_warning("illegal value in rx_streaming_interval!");
- 		return -EINVAL;
-@@ -601,17 +572,10 @@ static ssize_t rx_streaming_always_write(struct file *file,
- 			   size_t count, loff_t *ppos)
- {
- 	struct wl1271 *wl = file->private_data;
--	char buf[10];
--	size_t len;
- 	unsigned long value;
- 	int ret;
- 
--	len = min(count, sizeof(buf) - 1);
--	if (copy_from_user(buf, user_buf, len))
--		return -EFAULT;
--	buf[len] = '\0';
--
--	ret = kstrtoul(buf, 0, &value);
-+	ret = kstrtoul_from_user(user_buf, count, 10, &value);
- 	if (ret < 0) {
- 		wl1271_warning("illegal value in rx_streaming_write!");
- 		return -EINVAL;
+ 	if (b43_bus_host_is_pcmcia(dev->dev) ||
+-	    b43_bus_host_is_sdio(dev->dev) ||
+-	    dev->use_pio) {
++	    b43_bus_host_is_sdio(dev->dev)) {
++		dev->__using_pio_transfers = 1;
++		err = b43_pio_init(dev);
++	} else if (dev->use_pio) {
++		b43warn(dev->wl, "Forced PIO by use_pio module parameter. "
++			"This should not be needed and will result in lower "
++			"performance.\n");
+ 		dev->__using_pio_transfers = 1;
+ 		err = b43_pio_init(dev);
+ 	} else {
 -- 
-1.7.6.401.g6a319
+1.7.3.4
 
