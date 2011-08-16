@@ -1,96 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:43403 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751034Ab1H1TEk convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:59622 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751754Ab1HPJcB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Aug 2011 15:04:40 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 3.1-rc3-git6: Reported regressions from 3.0
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
+	Tue, 16 Aug 2011 05:32:01 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 19so4082656fxh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2011 02:32:00 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Larry Finger <larry.finger@lwfinger.net>
+Subject: [RFC][PATCH] b43: drop Kconfig option of forcing PIO mode
+Date: Tue, 16 Aug 2011 12:11:12 +0200
+Message-Id: <1313489472-8876-1-git-send-email-zajec5@gmail.com> (sfid-20110816_113206_003740_84E70CC6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <lx6sezwGldO.A.IhF.UBpWOB@chimera> (sfid-20110828_210506_385617_5517983E)
-Date: Sun, 28 Aug 2011 20:22:05 +0200 (CEST)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some regressions from 3.0,
-for which there are no fixes in the mainline known to the tracking team.
-If any of them have been fixed already, please let us know.
+We have module param called use_pio which is much easier to use.
 
-If you know of any other unresolved regressions from 3.0, please let us
-know either and we'll add them to the list.  Also, please let us know
-if any of the entries below are invalid.
+Cc: Larry Finger <larry.finger@lwfinger.net>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+Larry introduced use_pio with:
+    b43: Allow PIO mode to be selected at module load
+I believe we can leave this simple module param and drop
+CONFIG_B43_FORCE_PIO instead.
+---
+ drivers/net/wireless/b43/Kconfig |   10 ----------
+ drivers/net/wireless/b43/main.c  |    2 +-
+ 2 files changed, 1 insertions(+), 11 deletions(-)
 
-Each entry from the list will be sent additionally in an automatic reply
-to this message with CCs to the people involved in reporting and handling
-the issue.
-
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2011-08-28        8        4           4
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=41742
-Subject		: duplicate filename  for intel_backlight with the i915 driver
-Submitter	: François Valenduc <francois.valenduc@tvcablenet.be>
-Date		: 2011-08-25 18:51 (4 days old)
-First-Bad-Commit: http://git.kernel.org/linus/aaa6fd2a004147bf32fce05720938236de3361d9
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=41512
-Subject		: 3.1-rc2 failed s2ram: Freezing of tasks failed after 20.00 seconds
-Submitter	: Carlos R. Mafra <crmafra2@gmail.com>
-Date		: 2011-08-16 9:42 (13 days old)
-Message-ID	: <20110816094245.GA2042@Pilar.site>
-References	: http://marc.info/?l=linux-kernel&m=131348782017435&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=41502
-Subject		: cfq-iosched: a regression
-Submitter	: Shaohua Li <shaohua.li@intel.com>
-Date		: 2011-08-16 2:47 (13 days old)
-Message-ID	: <1313462826.27321.22.camel@sli10-conroe>
-References	: http://marc.info/?l=linux-kernel&m=131346279329911&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=41442
-Subject		: rcu_sched_state detected stall on CPU 0, when booting on Xen
-Submitter	: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
-Date		: 2011-08-21 04:06 (8 days old)
-
-
-Regressions with patches
-------------------------
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions from 3.0,
-unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=40982
-
-Please let the tracking team know if there are any Bugzilla entries that
-should be added to the list in there.
-
-Thanks!
+diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+index 3c5e571..bfc1cb4 100644
+--- a/drivers/net/wireless/b43/Kconfig
++++ b/drivers/net/wireless/b43/Kconfig
+@@ -169,13 +169,3 @@ config B43_DEBUG
+ 	  Say N, if you are a distributor or user building a release kernel
+ 	  for production use.
+ 	  Only say Y, if you are debugging a problem in the b43 driver sourcecode.
+-
+-config B43_FORCE_PIO
+-	bool "Force usage of PIO instead of DMA"
+-	depends on B43 && B43_DEBUG
+-	---help---
+-	  This will disable DMA and always enable PIO instead.
+-
+-	  Say N!
+-	  This is only for debugging the PIO engine code. You do
+-	  _NOT_ want to enable this.
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index e0b1156..7c4cab0 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -108,7 +108,7 @@ int b43_modparam_verbose = B43_VERBOSITY_DEFAULT;
+ module_param_named(verbose, b43_modparam_verbose, int, 0644);
+ MODULE_PARM_DESC(verbose, "Log message verbosity: 0=error, 1=warn, 2=info(default), 3=debug");
+ 
+-static int b43_modparam_pio = B43_PIO_DEFAULT;
++static int b43_modparam_pio = 0;
+ module_param_named(pio, b43_modparam_pio, int, 0644);
+ MODULE_PARM_DESC(pio, "Use PIO accesses by default: 0=DMA, 1=PIO");
+ 
+-- 
+1.7.3.4
 
