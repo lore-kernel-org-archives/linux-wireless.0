@@ -1,107 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:22154 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752071Ab1HVPK0 (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:35864 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752684Ab1HPQtz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 11:10:26 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <kvalo@adurom.com>
-Subject: [PATCH 3/3] ath6kl: Avoid rolling back of entire scatter setup in case of failure
-Date: Mon, 22 Aug 2011 20:40:22 +0530
-Message-ID: <1314025822-8004-3-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110822_171029_861014_EDCA5EF7)
-In-Reply-To: <1314025822-8004-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1314025822-8004-1-git-send-email-vthiagar@qca.qualcomm.com>
+	Tue, 16 Aug 2011 12:49:55 -0400
+Received: by qwk3 with SMTP id 3so57952qwk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2011 09:49:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CA+XVXfeXFZ-oLRWxROuQQji5+m2xeDnQWfc8kJ+m=hPPeq7wRw@mail.gmail.com>
+References: <1312895383-3624-1-git-send-email-guy@wizery.com>
+	<CA+XVXfeXFZ-oLRWxROuQQji5+m2xeDnQWfc8kJ+m=hPPeq7wRw@mail.gmail.com>
+Date: Tue, 16 Aug 2011 19:49:54 +0300
+Message-ID: <CAA03846szz-sBT1EFaHAAYxsvb3ng7Z6OsHVPE3aDKSUSj2uBg@mail.gmail.com> (sfid-20110816_184959_075381_79A884D7)
+Subject: Re: [PATCH v2] wl12xx: use 2 spare TX blocks for GEM cipher
+From: Guy Eilam <guy@wizery.com>
+To: Arik Nemtsov <anamtsov@gmail.com>
+Cc: coelho@ti.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Current tx scatter gather implementation rolls back the entire
-scatter setup in case of a failure in setting up just one packet
-into the bundle. Instead of dopping the whole scatter setup,
-send the packets available just before the failure one using
-scatter gather I/O.
+On Tue, Aug 9, 2011 at 8:59 PM, Arik Nemtsov <anamtsov@gmail.com> wrote:
+> On Tue, Aug 9, 2011 at 16:09, Guy Eilam <guy@wizery.com> wrote:
+>> Add tx_spare_blocks member to the wl1271 struct
+>> for more generic configuration of the amount
+>> of spare TX blocks that should be used.
+>> The default value is 1.
+>> In case GEM cipher is used by the STA, we need
+>> 2 spare TX blocks instead of just 1.
+>>
+>> Signed-off-by: Guy Eilam <guy@wizery.com>
+>> ---
+>>  drivers/net/wireless/wl12xx/main.c   |   12 ++++++++++++
+>>  drivers/net/wireless/wl12xx/tx.c     |    4 +---
+>>  drivers/net/wireless/wl12xx/tx.h     |    1 +
+>>  drivers/net/wireless/wl12xx/wl12xx.h |    3 +++
+>>  4 files changed, 17 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+>> index 1c56137..1d2b3e9 100644
+>> --- a/drivers/net/wireless/wl12xx/main.c
+>> +++ b/drivers/net/wireless/wl12xx/main.c
+>> @@ -2736,6 +2736,17 @@ static int wl1271_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
+>>                        0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+>>                };
+>>
+>> +               /*
+>> +                * A STA set to GEM cipher requires 2 tx spare blocks.
+>> +                * Return to default value when GEM cipher key is removed
+>> +                */
+>> +               if (key_type == KEY_GEM) {
+>> +                       if (action == KEY_ADD_OR_REPLACE)
+>> +                               wl->tx_spare_blocks = 2;
+>> +                       else if (action == KEY_REMOVE)
+>> +                               wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
+>> +               }
+>> +
+>
+> What about recovery? Note this code won't be reached in case
+> wl1271_op_set_key() is called when wl->state == OFF.
+> We should probably always revert to 1 blocks on unjoin or remove_interface.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/htc.c |   24 ++++++++++++------------
- 1 files changed, 12 insertions(+), 12 deletions(-)
+You are correct - this is fixed in a newer version of the patch.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-index dc575a8..77e548c 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc.c
-@@ -381,13 +381,7 @@ static int htc_setup_send_scat_list(struct htc_target *target,
- 
- 		cred_pad = htc_get_credit_padding(target->tgt_cred_sz,
- 						  &len, endpoint);
--		if (cred_pad < 0) {
--			status = -EINVAL;
--			break;
--		}
--
--		if (rem_scat < len) {
--			/* exceeds what we can transfer */
-+		if (cred_pad < 0 || rem_scat < len) {
- 			status = -ENOSPC;
- 			break;
- 		}
-@@ -416,7 +410,7 @@ static int htc_setup_send_scat_list(struct htc_target *target,
- 	}
- 
- 	/* Roll back scatter setup in case of any failure */
--	if (status || (scat_req->scat_entries < HTC_MIN_HTC_MSGS_TO_BUNDLE)) {
-+	if (scat_req->scat_entries < HTC_MIN_HTC_MSGS_TO_BUNDLE) {
- 		for (i = scat_req->scat_entries - 1; i >= 0; i--) {
- 			packet = scat_req->scat_list[i].packet;
- 			if (packet) {
-@@ -424,10 +418,10 @@ static int htc_setup_send_scat_list(struct htc_target *target,
- 				list_add(&packet->list, queue);
- 			}
- 		}
--		return -EINVAL;
-+		return -EAGAIN;
- 	}
- 
--	return 0;
-+	return status;
- }
- 
- /*
-@@ -447,8 +441,10 @@ static void htc_issue_send_bundle(struct htc_endpoint *endpoint,
- 	struct htc_target *target = endpoint->target;
- 	struct hif_scatter_req *scat_req = NULL;
- 	int n_scat, n_sent_bundle = 0, tot_pkts_bundle = 0;
-+	int status;
- 
- 	while (true) {
-+		status = 0;
- 		n_scat = get_queue_depth(queue);
- 		n_scat = min(n_scat, target->msg_per_bndl_max);
- 
-@@ -471,8 +467,9 @@ static void htc_issue_send_bundle(struct htc_endpoint *endpoint,
- 		scat_req->len = 0;
- 		scat_req->scat_entries = 0;
- 
--		if (htc_setup_send_scat_list(target, endpoint, scat_req,
--					     n_scat, queue)) {
-+		status = htc_setup_send_scat_list(target, endpoint,
-+						  scat_req, n_scat, queue);
-+		if (status == -EAGAIN) {
- 			hif_scatter_req_add(target->dev->ar, scat_req);
- 			break;
- 		}
-@@ -486,6 +483,9 @@ static void htc_issue_send_bundle(struct htc_endpoint *endpoint,
- 			   "send scatter total bytes: %d , entries: %d\n",
- 			   scat_req->len, scat_req->scat_entries);
- 		ath6kldev_submit_scat_req(target->dev, scat_req, false);
-+
-+		if (status)
-+			break;
- 	}
- 
- 	*sent_bundle = n_sent_bundle;
--- 
-1.7.0.4
+>
+>> --- a/drivers/net/wireless/wl12xx/tx.c
+>> +++ b/drivers/net/wireless/wl12xx/tx.c
+>> @@ -200,9 +200,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+>>        u32 len;
+>>        u32 total_blocks;
+>>        int id, ret = -EBUSY, ac;
+>> -
+>> -       /* we use 1 spare block */
+>> -       u32 spare_blocks = 1;
+>> +       u32 spare_blocks = wl->tx_spare_blocks;
+>
+> What about dummy packets? Perhaps we should still use 1 block for them?
 
+Again, fixed in a newer version of the patch.
+
+>
+> Arik
+>
+
+Guy.
