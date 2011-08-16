@@ -1,190 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:30543 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:11579 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751722Ab1HMQ57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 12:57:59 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 09/13] mac80211: remove offchannel_tx API
-Date: Sat, 13 Aug 2011 09:18:03 -0700
-Message-Id: <1313252287-22858-9-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_185813_689743_D35187DA)
-In-Reply-To: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1752980Ab1HPOIs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Aug 2011 10:08:48 -0400
+Subject: Re: [PATCH 05/60] iwlagn: introduce struct iwl-shared - known by
+ all layers
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+In-Reply-To: <20110816092610.GB6085@redhat.com>
+References: <1313257116-2697-6-git-send-email-wey-yi.w.guy@intel.com>
+	 <20110815081010.GA3317@redhat.com> <20110815084355.GB3317@redhat.com>
+	 <1313414020.15170.32.camel@wwguy-huron> <20110815142144.GA15718@redhat.com>
+	 <1313416005.15170.35.camel@wwguy-huron> <20110815144359.GA15719@redhat.com>
+	 <1313417422.15170.39.camel@wwguy-huron> <20110815151231.GB15718@redhat.com>
+	 <1313422152.15170.43.camel@wwguy-huron>  <20110816092610.GB6085@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 16 Aug 2011 07:04:03 -0700
+Message-ID: <1313503443.6823.9.camel@wwguy-ubuntu> (sfid-20110816_160852_372389_D56CC3DB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2011-08-16 at 02:26 -0700, Stanislaw Gruszka wrote:
+> On Mon, Aug 15, 2011 at 08:29:12AM -0700, Guy, Wey-Yi wrote:
+> > On Mon, 2011-08-15 at 08:12 -0700, Stanislaw Gruszka wrote:
+> > > On Mon, Aug 15, 2011 at 07:10:22AM -0700, Guy, Wey-Yi wrote:
+> > > > On Mon, 2011-08-15 at 07:44 -0700, Stanislaw Gruszka wrote:
+> > > > > On Mon, Aug 15, 2011 at 06:46:45AM -0700, Guy, Wey-Yi wrote:
+> > > > > > On Mon, 2011-08-15 at 07:21 -0700, Stanislaw Gruszka wrote:
+> > > > > > > On Mon, Aug 15, 2011 at 06:13:39AM -0700, Guy, Wey-Yi wrote:
+> > > > > > > > now we are working on separate iwlagn driver into two layers (upper and
+> > > > > > > > lower), the lower layer contains both bus and transport sub-layer which
+> > > > > > > > is hw dependent, and the upper layer should be bus/hw independent. by
+> > > > > > > > doing so, the single driver can handle different bus and different core
+> > > > > > > > architecture. Having the share data structure (priv->shrd->foo) between
+> > > > > > > > two layers is for that reason (loosely couple).
+> > > > > > > 
+> > > > > > > You did not explained reason for introducing iwl_shared structure,
+> > > > > > > actually you confirmed it is useless. You should simply share iwl_priv
+> > > > > > > on any layer you have.
+> > > > > > > 
+> > > > > > > Stanislaw
+> > > > > > 
+> > > > > > It is not true, I mean "boring" but not "useless", it does not make
+> > > > > > sense share all the priv with lower layer.
+> > > > > 
+> > > > > Why? Even if there are some fields that you will use only on
+> > > > > upper layer, it does not mean that pointer to priv structure
+> > > > > could not be passed to lower layer.
+> > > > > 
+> > > > why, if we doing that, lower layer need to know how to reference the
+> > > > priv which I don't believe it is a good design. I want to make the upper
+> > > > and lower layer as loose as possible and it is flexible for new
+> > > > architecture.
+> > > 
+> > > Providing more abstraction layers than needed is worse.
+> > 
+> > I don't really see any issues with it
+> 
+> It make driver more complex than it could be.
+> 
+> >  and I don't believe it will cause
+> > problem if we do it right. by doing so, we will improve the flexibility.
+> 
+> It does not offer any more flexibility than sharing iwl_priv, it
+> is actually less flexible.
+> 
+how so, different upper layer can have differ private structure, just
+has to include shrd which is shared with lower layer
 
-For iwlwifi, I decided not to use this API since
-it just increased the complexity for little gain.
-Since nobody else intends to use it, let's kill
-it again. If anybody later needs to have it, we
-can always revive it then.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h     |   10 ----------
- net/mac80211/cfg.c         |   39 ---------------------------------------
- net/mac80211/driver-ops.h  |   31 -------------------------------
- net/mac80211/ieee80211_i.h |    1 -
- net/mac80211/status.c      |    3 ---
- 5 files changed, 0 insertions(+), 84 deletions(-)
+> > > > > > think about I also mention
+> > > > > > different core architecture, that mean we can have different upper layer
+> > > > > > which has different priv; but shrd is always common to all different
+> > > > > > upper layer to share with lower layer.
+> > > > > 
+> > > > > What different upper layer? Non mac80211, if so you should write
+> > > > > separate driver for it.
+> > > > 
+> > > > not mac80211, it is still part of driver, but different upper layer
+> > > > might/can contain different system flow. that is why I mention different
+> > > > core architecture. now we are doing preparation work so you did not see
+> > > > the new stuff yet.
+> > > 
+> > > Can we get opinion from Johannes about that, and eventually ACKs/NACKs
+> > > for patches?
+> > > 
+> > 
+> > it is pure iwlagn driver changes and not impact mac80211 at all.
+> > Johannes already in the loop and he understand the changes.
+> 
+> I'm asking about Johannes opinion, not your opinion about his opinion :-)
+> 
+but I am not seeing any relation those patches related to mac80211
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9259e97..6c846df 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1896,11 +1896,6 @@ enum ieee80211_tx_sync_type {
-  *	ieee80211_remain_on_channel_expired(). This callback may sleep.
-  * @cancel_remain_on_channel: Requests that an ongoing off-channel period is
-  *	aborted before it expires. This callback may sleep.
-- * @offchannel_tx: Transmit frame on another channel, wait for a response
-- *	and return. Reliable TX status must be reported for the frame. If the
-- *	return value is 1, then the @remain_on_channel will be used with a
-- *	regular transmission (if supported.)
-- * @offchannel_tx_cancel_wait: cancel wait associated with offchannel TX
-  *
-  * @set_ringparam: Set tx and rx ring sizes.
-  *
-@@ -2019,11 +2014,6 @@ struct ieee80211_ops {
- 				 enum nl80211_channel_type channel_type,
- 				 int duration);
- 	int (*cancel_remain_on_channel)(struct ieee80211_hw *hw);
--	int (*offchannel_tx)(struct ieee80211_hw *hw, struct sk_buff *skb,
--			     struct ieee80211_channel *chan,
--			     enum nl80211_channel_type channel_type,
--			     unsigned int wait);
--	int (*offchannel_tx_cancel_wait)(struct ieee80211_hw *hw);
- 	int (*set_ringparam)(struct ieee80211_hw *hw, u32 tx, u32 rx);
- 	void (*get_ringparam)(struct ieee80211_hw *hw,
- 			      u32 *tx, u32 *tx_max, u32 *rx, u32 *rx_max);
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 3d1b091..c1fa577 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1898,33 +1898,6 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
- 
- 	*cookie = (unsigned long) skb;
- 
--	if (is_offchan && local->ops->offchannel_tx) {
--		int ret;
--
--		IEEE80211_SKB_CB(skb)->band = chan->band;
--
--		mutex_lock(&local->mtx);
--
--		if (local->hw_offchan_tx_cookie) {
--			mutex_unlock(&local->mtx);
--			return -EBUSY;
--		}
--
--		/* TODO: bitrate control, TX processing? */
--		ret = drv_offchannel_tx(local, skb, chan, channel_type, wait);
--
--		if (ret == 0)
--			local->hw_offchan_tx_cookie = *cookie;
--		mutex_unlock(&local->mtx);
--
--		/*
--		 * Allow driver to return 1 to indicate it wants to have the
--		 * frame transmitted with a remain_on_channel + regular TX.
--		 */
--		if (ret != 1)
--			return ret;
--	}
--
- 	if (is_offchan && local->ops->remain_on_channel) {
- 		unsigned int duration;
- 		int ret;
-@@ -2011,18 +1984,6 @@ static int ieee80211_mgmt_tx_cancel_wait(struct wiphy *wiphy,
- 
- 	mutex_lock(&local->mtx);
- 
--	if (local->ops->offchannel_tx_cancel_wait &&
--	    local->hw_offchan_tx_cookie == cookie) {
--		ret = drv_offchannel_tx_cancel_wait(local);
--
--		if (!ret)
--			local->hw_offchan_tx_cookie = 0;
--
--		mutex_unlock(&local->mtx);
--
--		return ret;
--	}
--
- 	if (local->ops->cancel_remain_on_channel) {
- 		cookie ^= 2;
- 		ret = ieee80211_cancel_remain_on_channel_hw(local, cookie);
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 1425380..9001ff3 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -590,37 +590,6 @@ static inline int drv_cancel_remain_on_channel(struct ieee80211_local *local)
- 	return ret;
- }
- 
--static inline int drv_offchannel_tx(struct ieee80211_local *local,
--				    struct sk_buff *skb,
--				    struct ieee80211_channel *chan,
--				    enum nl80211_channel_type channel_type,
--				    unsigned int wait)
--{
--	int ret;
--
--	might_sleep();
--
--	trace_drv_offchannel_tx(local, skb, chan, channel_type, wait);
--	ret = local->ops->offchannel_tx(&local->hw, skb, chan,
--					channel_type, wait);
--	trace_drv_return_int(local, ret);
--
--	return ret;
--}
--
--static inline int drv_offchannel_tx_cancel_wait(struct ieee80211_local *local)
--{
--	int ret;
--
--	might_sleep();
--
--	trace_drv_offchannel_tx_cancel_wait(local);
--	ret = local->ops->offchannel_tx_cancel_wait(&local->hw);
--	trace_drv_return_int(local, ret);
--
--	return ret;
--}
--
- static inline int drv_set_ringparam(struct ieee80211_local *local,
- 				    u32 tx, u32 rx)
- {
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 400c09b..286ac5d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1002,7 +1002,6 @@ struct ieee80211_local {
- 	unsigned int hw_roc_duration;
- 	u32 hw_roc_cookie;
- 	bool hw_roc_for_tx;
--	unsigned long hw_offchan_tx_cookie;
- 
- 	/* dummy netdev for use w/ NAPI */
- 	struct net_device napi_dev;
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 1658efa..a89cca3 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -345,9 +345,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 			local->hw_roc_skb_for_status = NULL;
- 		}
- 
--		if (cookie == local->hw_offchan_tx_cookie)
--			local->hw_offchan_tx_cookie = 0;
--
- 		cfg80211_mgmt_tx_status(
- 			skb->dev, cookie, skb->data, skb->len,
- 			!!(info->flags & IEEE80211_TX_STAT_ACK), GFP_ATOMIC);
--- 
-1.7.0.4
+Wey
 
