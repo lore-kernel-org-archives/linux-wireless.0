@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webbox1416.server-home.net ([77.236.96.61]:47791 "EHLO
-	webbox1416.server-home.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751706Ab1HWLcO (ORCPT
+Received: from AShevkov.infinet.ru ([91.191.225.92]:37169 "EHLO
+	AShevkov.infinet.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751208Ab1HPLkB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 07:32:14 -0400
-Message-ID: <4E538FBC.5070801@systec-electronic.com> (sfid-20110823_133217_102326_3615A61D)
-Date: Tue, 23 Aug 2011 13:32:12 +0200
-From: =?ISO-8859-15?Q?Daniel_Kr=FCger?=
-	<daniel.krueger@systec-electronic.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, geryk@ti.com
-Cc: Alexander.Stein@systec-electronic.com
-Subject: Multiple instances of WL1271
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+	Tue, 16 Aug 2011 07:40:01 -0400
+From: Alex Hacker <hacker@epn.ru>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	Alex Hacker <hacker@epn.ru>
+Subject: [PATCH] ath9k_hw: fix EIFS value to microseconds
+Date: Tue, 16 Aug 2011 16:41:40 +0600
+Message-Id: <1313491300-11386-1-git-send-email-hacker@epn.ru> (sfid-20110816_134006_492845_E919FB0D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Gery,
+The EIFS value read from AR_D_GBL_IFS_EIFS register in core clocks and then
+written back as microsecond value.
 
-we plan to solder up to 4 WL1271 chips on our board (It will be the 
-ready-to-use chip from LSR).
 
-After a short look into the driver source code from the vanilla Linux 
-kernel, we saw that the driver is not fully capable to handle multiple 
-instances.
+Signed-off-by: Alex Hacker <hacker@epn.ru>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-One critical issue we found are the wl12xx_set_platform_data and 
-wl12xx_get_platform_data function calls. They configure the IRQ for the 
-WLAN chip.
-
-I think every WL1271 should get a separate IRQ (i.e. interrupt capable 
-GPIO line). Does anyone has an idea how to configure the IRQ 
-independently for each WL1271 chip? Especially on a X86 platform where 
-there is no board specific configuration like on an embedded ARM target.
-
-Another issue: every chip needs a specific NVS file (which holds the MAC 
-address plus some other chip-specific settings). Currently, there is 
-only one NVS file in the whole system. But it should be very easy to add 
-some kind of instance number to the NVS file name to have a separate 
-file for each chip.
-
-Are there any other known issues when there are multiple WL1271 chips in 
-one system?
-
-Any help is appreciated.
-
-cu,
-   Daniel
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index db44e5b..2343431 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -996,7 +996,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 		slottime = 21;
+ 		sifstime = 64;
+ 	} else {
+-		eifs = REG_READ(ah, AR_D_GBL_IFS_EIFS);
++		eifs = REG_READ(ah, AR_D_GBL_IFS_EIFS)/common->clockrate;
+ 		reg = REG_READ(ah, AR_USEC);
+ 		rx_lat = MS(reg, AR_USEC_RX_LAT);
+ 		tx_lat = MS(reg, AR_USEC_TX_LAT);
 -- 
-SYS TEC electronic GmbH
-August-Bebel-Str. 29
-D-07973 Greiz
+1.7.4
 
-Telefon  : +49 (0) 3661 6279 0
-Fax      : +49 (0) 3661 6279 99
-Email    : daniel.krueger@systec-electronic.com
-Internet : http://www.systec-electronic.com
-
-Managing Director   : Dipl.-Phys. Siegmar Schmidt
-Commercial registry : Amtsgericht Jena, HRB 205563
