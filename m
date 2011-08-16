@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:56598 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752386Ab1HYR3x (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:59622 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751535Ab1HPJbt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 13:29:53 -0400
-Received: by vxi9 with SMTP id 9so1878262vxi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 10:29:53 -0700 (PDT)
-Message-ID: <4E56868E.7010404@lwfinger.net> (sfid-20110825_192956_840703_81788327)
-Date: Thu, 25 Aug 2011 12:29:50 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 16 Aug 2011 05:31:49 -0400
+Received: by fxh19 with SMTP id 19so4082656fxh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2011 02:31:48 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: warn when forcing PIO mode
+Date: Tue, 16 Aug 2011 12:10:58 +0200
+Message-Id: <1313489458-8843-1-git-send-email-zajec5@gmail.com> (sfid-20110816_113152_598053_7F903CC4)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT] b43: Relax requirement for descriptors to be in the
- DMA zone
-References: <4e55750c.GPPIrbNLynUMWY/U%Larry.Finger@lwfinger.net> <CACna6ryVB3yTj7rQbSdCqrw-9WtaPZedM7Ug6JV0iTDQQOv=Sw@mail.gmail.com>
-In-Reply-To: <CACna6ryVB3yTj7rQbSdCqrw-9WtaPZedM7Ug6JV0iTDQQOv=Sw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/25/2011 12:24 PM, Rafał Miłecki wrote:
-> 2011/8/25 Larry Finger<Larry.Finger@lwfinger.net>:
->> When 64-bit DMA was first used, there were problems with the
->> BCM4311 (14e4:4311). The problem was "fixed" by using the GFP_DMA
->> flag in the allocation of coherent ring descriptor memory.
->>
->> The original problem is now believed to have been due to bugs in
->> the 64-bit DMA implementation in the rest of the kernel, and that
->> those bugs have been fixed. Accordingly, the requirement for the
->> descriptors to be in the DMA zone is relaxed.
->
-> Larry, it is not clear to me from the commit message: did you test
-> that patch with your 14e4:4311?
+We have resolved all the known issues with DMA mode, however some users
+(or distros) are still forcing PIO mode by config files. Without
+debugging enabled it's not noticable at all. Add the warning for them.
 
-Yes.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/main.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 1adadc8..e0b1156 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4636,8 +4636,13 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
+ 	b43_shm_write16(dev, B43_SHM_SCRATCH, B43_SHM_SC_MAXCONT, 0x3FF);
+ 
+ 	if (b43_bus_host_is_pcmcia(dev->dev) ||
+-	    b43_bus_host_is_sdio(dev->dev) ||
+-	    dev->use_pio) {
++	    b43_bus_host_is_sdio(dev->dev)) {
++		dev->__using_pio_transfers = 1;
++		err = b43_pio_init(dev);
++	} else if (dev->use_pio) {
++		b43warn(dev->wl, "Forced PIO by use_pio module paramater. "
++			"This should not be needed and will result in lower "
++			"performance.\n");
+ 		dev->__using_pio_transfers = 1;
+ 		err = b43_pio_init(dev);
+ 	} else {
+-- 
+1.7.3.4
+
