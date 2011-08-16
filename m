@@ -1,149 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:63622 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755242Ab1H2XSQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 19:18:16 -0400
-Subject: Re: BQL crap and wireless
-Mime-Version: 1.0 (Apple Message framework v1244.3)
+Received: from mx1.redhat.com ([209.132.183.28]:13330 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751277Ab1HPJ1m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Aug 2011 05:27:42 -0400
+Date: Tue, 16 Aug 2011 11:26:11 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Subject: Re: [PATCH 05/60] iwlagn: introduce struct iwl-shared - known by all
+ layers
+Message-ID: <20110816092610.GB6085@redhat.com> (sfid-20110816_112748_894808_6BBC57D7)
+References: <1313257116-2697-6-git-send-email-wey-yi.w.guy@intel.com>
+ <20110815081010.GA3317@redhat.com>
+ <20110815084355.GB3317@redhat.com>
+ <1313414020.15170.32.camel@wwguy-huron>
+ <20110815142144.GA15718@redhat.com>
+ <1313416005.15170.35.camel@wwguy-huron>
+ <20110815144359.GA15719@redhat.com>
+ <1313417422.15170.39.camel@wwguy-huron>
+ <20110815151231.GB15718@redhat.com>
+ <1313422152.15170.43.camel@wwguy-huron>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-From: Andrew McGregor <andrewmcgr@gmail.com>
-In-Reply-To: <CAB=NE6VwWu5+Hk7=3ghkgiXss9kCqGyS-RWPYtyHRhDsx5r2rA@mail.gmail.com>
-Date: Tue, 30 Aug 2011 11:18:08 +1200
-Cc: Tom Herbert <therbert@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Matt Smith <smithm@qca.qualcomm.com>,
-	Kevin Hayes <hayes@qca.qualcomm.com>,
-	Dave Taht <dave.taht@gmail.com>,
-	Derek Smithies <derek@indranet.co.nz>, netdev@vger.kernel.org
-Message-Id: <D14BF0EF-D8AE-49AA-91A2-3BEDFD757759@gmail.com> (sfid-20110830_011831_808532_57780587)
-References: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com> <CAB=NE6VwWu5+Hk7=3ghkgiXss9kCqGyS-RWPYtyHRhDsx5r2rA@mail.gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1313422152.15170.43.camel@wwguy-huron>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On 30/08/2011, at 9:02 AM, Luis R. Rodriguez wrote:
-
-> On Fri, Aug 26, 2011 at 4:27 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> I've just read this thread:
->> 
->> http://marc.info/?t=131277868500001&r=1&w=2
->> 
->> Since its not linux-wireless I'll chime in here. It seems that you are
->> trying to write an algorithm that will work for all networking and
->> 802.11 devices. For networking is seems tough given driver
->> architecture and structure and the hope that all drivers will report
->> things in a fairly similar way. For 802.11 it was pointed out how we
->> have varying bandwidths and depending on the technology used for
->> connection (AP, 802.11s, IBSS) a different number of possible peers
->> need to be considered. 802.11 faced similar algorithmic complexities
->> with rate control and the way Andrew and Derek resolved this was to
->> not assume you could solve this problem and simply test out the water
->> by trial and error, that gave birth to the minstrel rate control
->> algorithm which Felix later rewrote for mac80211 with 802.11n support
->> [1]. Can the BQL algorithm make use of the same trial and error
->> mechanism and simply try different values and and use EWMA [2] to pick
->> the best size for the queue ?
->> 
->> [1] http://wireless.kernel.org/en/developers/Documentation/mac80211/RateControl/minstrel
->> [2] http://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average
+On Mon, Aug 15, 2011 at 08:29:12AM -0700, Guy, Wey-Yi wrote:
+> On Mon, 2011-08-15 at 08:12 -0700, Stanislaw Gruszka wrote:
+> > On Mon, Aug 15, 2011 at 07:10:22AM -0700, Guy, Wey-Yi wrote:
+> > > On Mon, 2011-08-15 at 07:44 -0700, Stanislaw Gruszka wrote:
+> > > > On Mon, Aug 15, 2011 at 06:46:45AM -0700, Guy, Wey-Yi wrote:
+> > > > > On Mon, 2011-08-15 at 07:21 -0700, Stanislaw Gruszka wrote:
+> > > > > > On Mon, Aug 15, 2011 at 06:13:39AM -0700, Guy, Wey-Yi wrote:
+> > > > > > > now we are working on separate iwlagn driver into two layers (upper and
+> > > > > > > lower), the lower layer contains both bus and transport sub-layer which
+> > > > > > > is hw dependent, and the upper layer should be bus/hw independent. by
+> > > > > > > doing so, the single driver can handle different bus and different core
+> > > > > > > architecture. Having the share data structure (priv->shrd->foo) between
+> > > > > > > two layers is for that reason (loosely couple).
+> > > > > > 
+> > > > > > You did not explained reason for introducing iwl_shared structure,
+> > > > > > actually you confirmed it is useless. You should simply share iwl_priv
+> > > > > > on any layer you have.
+> > > > > > 
+> > > > > > Stanislaw
+> > > > > 
+> > > > > It is not true, I mean "boring" but not "useless", it does not make
+> > > > > sense share all the priv with lower layer.
+> > > > 
+> > > > Why? Even if there are some fields that you will use only on
+> > > > upper layer, it does not mean that pointer to priv structure
+> > > > could not be passed to lower layer.
+> > > > 
+> > > why, if we doing that, lower layer need to know how to reference the
+> > > priv which I don't believe it is a good design. I want to make the upper
+> > > and lower layer as loose as possible and it is flexible for new
+> > > architecture.
+> > 
+> > Providing more abstraction layers than needed is worse.
 > 
-> Let me elaborate on 802.11 and bufferbloat as so far I see only crap
-> documentation on this and also random crap adhoc patches. Given that I
-> see effort on netdev to try to help with latency issues its important
-> for netdev developers to be aware of what issues we do face today and
-> what stuff is being mucked with.
+> I don't really see any issues with it
+
+It make driver more complex than it could be.
+
+>  and I don't believe it will cause
+> problem if we do it right. by doing so, we will improve the flexibility.
+
+It does not offer any more flexibility than sharing iwl_priv, it
+is actually less flexible.
+
+> > > > > think about I also mention
+> > > > > different core architecture, that mean we can have different upper layer
+> > > > > which has different priv; but shrd is always common to all different
+> > > > > upper layer to share with lower layer.
+> > > > 
+> > > > What different upper layer? Non mac80211, if so you should write
+> > > > separate driver for it.
+> > > 
+> > > not mac80211, it is still part of driver, but different upper layer
+> > > might/can contain different system flow. that is why I mention different
+> > > core architecture. now we are doing preparation work so you did not see
+> > > the new stuff yet.
+> > 
+> > Can we get opinion from Johannes about that, and eventually ACKs/NACKs
+> > for patches?
+> > 
 > 
-> As far as I see it I break down the issues into two categories:
-> 
-> * 1. High latencies on ping
-> * 2. Constant small drops in throughput
-> 
-> 1. High latencies on ping
-> ===================
-> 
-> It seems the bufferbloat folks are blaming the high latencies on our
-> obsession on modern hardware to create huge queues and also with
-> software retries. They assert that reducing the queue length
-> (ATH_MAX_QDEPTH on ath9k) and software retries (ATH_MAX_SW_RETRIES on
-> ath9k) helps with latencies. They have at least empirically tested
-> this with ath9k with
-> a simple patch:
-> 
-> https://www.bufferbloat.net/attachments/43/580-ath9k_lowlatency.patch
-> 
-> The obvious issue with this approach is it assumes STA mode of
-> operation, with an AP you do not want to reduce the queue size like
-> that. In fact because of the dynamic nature of 802.11 and the
-> different modes of operation it is a hard question to solve on what
-> queue size you should have. The BQL effort seems to try to unify a
-> solution but obviously did not consider 802.11's complexities. 802.11
-> makes this very complicated given the PtP and PtMP support we have and
-> random number of possible peers.
-> 
-> Then -- we have Aggregation. At least AMPDU Aggregation seems to
-> empirically deteriorate latency and bufferbloat guys seem to hate it.
-> Of course their statements are baseless and they are ignoring a lot of
-> effort that went into this. Their current efforts have been to reduce
-> segment size of a aggregates and this seems to help but the same
-> problem looms over this resolution -- the optimal aggregation segment
-> size should be dynamic and my instincts tell me we likely need to also
-> rely on a minstrel-like based algorithm for finding the optimal length.
+> it is pure iwlagn driver changes and not impact mac80211 at all.
+> Johannes already in the loop and he understand the changes.
 
-Luis, as the author of that patch... I agree entirely that we want something dynamic.  I was actually writing that assuming AP operation... and it works pretty well, but I wouldn't expect it to be anything like optimal in all situations.
+I'm asking about Johannes opinion, not your opinion about his opinion :-)
 
-It looks like the time limits (called segment_size in the code) in Minstrel-HT were just copied from Minstrel-classic, which was tuned for 11g timings.  The patch reduces the time limits and retry counts (the SW retry limit number goes up because of another patch that changes the accounting for SW retries from passes through the queue to transmitter shots, but 50 shots is way less than 20 passes through the queue).  Now, this is just a matter of having sensible defaults that are not crazily trying to use hundreds of transmit opportunities on one packet.
-
-That patch also reduces the aggregation opportunities a bit; the driver has something approximating a target queue depth, ATH_MAX_QDEPTH, that by default was 123 packets, and I reduced it to 34.  Now, why 34?  Because at any smaller number, it's going to impact aggregation and therefore performance really badly, while at a much larger number it's going to affect latency.  I do understand why aggregation is important; the MAC has a lot of dead air in it, the scarce resource is transmit opportunities rather than bandwidth per se, and we need to get as much as reasonably possible done with each transmit opportunity.
-
-What this patch does assume is that most of the clients have fairly decent coverage; it's going to be really unfair to .11b clients and those right out on the fringes of the APs coverage.  But, with a fairly busy AP and decent coverage, it does actually work well in practice on the AP (I run it at home, and there's a fair bit of stuff on my network...).  The demonstration is, I can have a few TCP streams running flat out from my laptop to something on the wired LAN, and still make a voip call from any device on the wireless... including the laptop (which runs OS X Lion and has a Broadcom radio, by the way, so Linux is not the only stack that does pretty well for latency).  The TCP throughput is barely affected by that patch, but the latency is dramatically improved; what was over 100 ms and wildly varying (under load from TCP traffic) is now very stable and a little under 20 ms on the wireless hop.
-
-So, yes, I do think some kind of dynamic queue sizing is called for.  Also, I think we need a queue bundle per active peer (just to cover all the operation modes... that would be just the AP in STA mode), that is dynamically sized per traffic class per peer.  Also, a decent qdisc that will do a reasonable job of getting latency-sensitive stuff into queues that are trying for latency rather than throughput.
-
-And to the buffer bloat guys: yes, I do see how many buffers I'm proposing using here... it might be a couple or four thousand on a really busy AP.  But the point is not to eliminate buffering, it is to use it sensibly to help performance rather than hurt as it so often does at present.  The number of buffers in total doesn't matter, it's the depth of the queues seen by any particular packet passing through the network that is really critical... and too few is just as bad as too many, especially when it leads to wasting a scarce link resource, as too few buffers will do on an 802.11n AP.
-
-> 
-> 2. Constant small drops in throughput
-> =============================
-> 
-> How to explain this? I have no clue. Two current theories:
-> 
-> a. Dynamic Power save
-> b. Offchannel operations on bgscans
-> c. Bufferbloat: large hw queue size and sw retries
-
-d. Someone has a broken rate control algorithm, and that is causing slowdowns and packet loss.
-
-The study that Dave was referring to earlier was done on Windows XP clients, using APs running who knows what (we know the best of them was ath9k and Minstrel-classic, because it was running code based on OpenWRT 8.something, but the others I have no idea).  There's all kinds of variables there, and I wouldn't rule out any kind of weirdness.
-
-I think Linux in general is in pretty good shape with respect to most of these issues, what with your work on power save and scanning, and with minstrel for rate control.  Part of the bufferbloat effort is to get the awareness of queue size issues... and what we're doing here is, basically, documenting the tradeoffs and considerations in 802.11 land.
-
-I think a distilled version of these conversations needs to be written up as an informational RFC so the IETC has something to refer to.
-
-> 
-> One can rule out (a) and (b) by disabling Dynamic Power Save (iw dev
-> wlan0 power_save off) and also bg scans. If its (c) then we can work
-> our way up to proving a solution with the same fixes for the first
-> latency issue. But there are more subtle issues here. Bufferbloat
-> folks talk about "ants" and "elephants". They call "Elephants" as
-> frames that are just data, but "ants" are small frames that build make
-> the networks work -- so consider 802.11 management frames, and TCP
-> ACKs, and so forth. They argue we should prioritize these more and
-> ensure we use whatever techniques we can to ensure we reduce latency
-> for them. At least on ath9k we only aggregate data frames, but that
-> doesn't mean we are not aggregating other "ant" frames. We at least
-> now have in place code to not aggregate Voice Traffic -- that's good
-> but we can do more. For example we can use AMSDU TX support for small
-> frame. This means we'd need to prioritize AMSDU TX support, which we
-> do not have support for in mac80211. I think this will help here, but
-> consider queue size too -- we can likely get even better results here
-> by ensuring we reduce latency further for them.
-> 
-> Hope this helps sum up the issue for 802.11 and what we are faced with.
-> 
->  Luis
-
-It sure does help, thanks Luis.
-
-Andrew
+Stanislaw
