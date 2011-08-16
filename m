@@ -1,73 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:54999 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:45471 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753020Ab1HOOQ5 (ORCPT
+	with ESMTP id S1752390Ab1HPAdE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 10:16:57 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [RFC] mac80211: stop tx before doing hw config and rate update
-Date: Mon, 15 Aug 2011 19:47:19 +0530
-Message-ID: <1313417839-3617-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110815_161701_297594_699A044D)
+	Mon, 15 Aug 2011 20:33:04 -0400
+Message-ID: <4E49BAB1.7060303@qca.qualcomm.com> (sfid-20110816_023311_437025_270E193E)
+Date: Mon, 15 Aug 2011 17:32:49 -0700
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: Lin Tony-B19295 <B19295@freescale.com>,
+	"mcgrof@gmail.com" <mcgrof@gmail.com>,
+	"rodrigue@qca.qualcomm.com" <rodrigue@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	<rmani@qca.qualcomm.com>
+Subject: Re: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
+References: <1313060347-665-1-git-send-email-hauke@hauke-m.de> <97D3A72708D04647A5AC84A04996E5B5193114@039-SN1MPN1-002.039d.mgd.msft.net> <4E496CA7.7000604@hauke-m.de>
+In-Reply-To: <4E496CA7.7000604@hauke-m.de>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The assumption is that during the hw config, transmission was
-already stopped by mac80211. But during channel type change,
-the mac80211 continue to transmit frames. The driver like ath9k
-does chip reset while doing channel set. This could leads to
-buffer overflow at driver side. And also after setting the channel
-at driver side and before calling rate updation, the frames are
-continued to xmit with older rates. This patch ensures that
-the frames are always xmitted with updated rates and avoid buffer
-overflow.
+On 08/15/2011 11:59 AM, Hauke Mehrtens wrote:
+> On 08/15/2011 07:06 AM, Lin Tony-B19295 wrote:
+>> Where can I get corresponding firmware?
+>>
+>> tony
+> 
+> Hi tony,
+> 
+> there is a firmware for these devices in the linux-firmware git [0], but
+> I do not know if it still works with this driver.
+> 
+> Probably some of the ath6kl developer could help you more than me.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |    6 ++++++
- 2 files changed, 7 insertions(+), 0 deletions(-)
+Yes, the firmware in linux-firmware should work. If not, please report
+it to linux-wireless mailing list.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ea74190..5500f40 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -669,6 +669,7 @@ enum queue_stop_reason {
- 	IEEE80211_QUEUE_STOP_REASON_AGGREGATION,
- 	IEEE80211_QUEUE_STOP_REASON_SUSPEND,
- 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
-+	IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE,
- };
- 
- #ifdef CONFIG_MAC80211_LEDS
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index d6470c7..c283ed2 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -232,6 +232,9 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 		WARN_ON(!ieee80211_set_channel_type(local, sdata, channel_type));
- 	}
- 
-+	ieee80211_stop_queues_by_reason(&sdata->local->hw,
-+				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
-+	drv_flush(local, false);
- 	/* channel_type change automatically detected */
- 	ieee80211_hw_config(local, 0);
- 
-@@ -245,6 +248,9 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 		rcu_read_unlock();
- 	}
- 
-+	ieee80211_wake_queues_by_reason(&sdata->local->hw,
-+				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
-+
- 	ht_opmode = le16_to_cpu(hti->operation_mode);
- 
- 	/* if bss configuration changed store the new one */
--- 
-1.7.6
-
+Kalle
