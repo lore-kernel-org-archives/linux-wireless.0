@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:43498 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751409Ab1H1Thj convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:47179 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751456Ab1HPFVq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Aug 2011 15:37:39 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Dave Jones <davej@redhat.com>
-Subject: Re: 3.1-rc3-git6: Reported regressions from 3.0
-Date: Sun, 28 Aug 2011 21:39:00 +0200
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-References: <lx6sezwGldO.A.IhF.UBpWOB@chimera> <20110828193519.GA14132@redhat.com>
-In-Reply-To: <20110828193519.GA14132@redhat.com>
+	Tue, 16 Aug 2011 01:21:46 -0400
+Received: by iye16 with SMTP id 16so8885140iye.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2011 22:21:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201108282139.01189.rjw@sisk.pl> (sfid-20110828_213803_666831_6C0A43FD)
+In-Reply-To: <97D3A72708D04647A5AC84A04996E5B5195381@039-SN1MPN1-002.039d.mgd.msft.net>
+References: <1313060347-665-1-git-send-email-hauke@hauke-m.de>
+ <97D3A72708D04647A5AC84A04996E5B5193114@039-SN1MPN1-002.039d.mgd.msft.net>
+ <4E496CA7.7000604@hauke-m.de> <4E49BAB1.7060303@qca.qualcomm.com> <97D3A72708D04647A5AC84A04996E5B5195381@039-SN1MPN1-002.039d.mgd.msft.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 16 Aug 2011 15:21:25 +1000
+Message-ID: <CAGRGNgWrFbXNyhxhzsr48rLPSN-HwbSD0dr5amCQquCcs5zDcQ@mail.gmail.com> (sfid-20110816_072149_694830_0B1838E2)
+Subject: Re: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
+To: Lin Tony-B19295 <B19295@freescale.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	"mcgrof@gmail.com" <mcgrof@gmail.com>,
+	"rodrigue@qca.qualcomm.com" <rodrigue@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rmani@qca.qualcomm.com" <rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, August 28, 2011, Dave Jones wrote:
-> On Sun, Aug 28, 2011 at 08:22:05PM +0200, Rafael J. Wysocki wrote:
->  
->  > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=41742
->  > Subject		: duplicate filename  for intel_backlight with the i915 driver
->  > Submitter	: François Valenduc <francois.valenduc@tvcablenet.be>
->  > Date		: 2011-08-25 18:51 (4 days old)
->  > First-Bad-Commit: http://git.kernel.org/linus/aaa6fd2a004147bf32fce05720938236de3361d9
->  
-> this should be fixed by b727d20269e8ef1de002bfea8099f5e9db9e9f23
+Hi Tony,
 
-Thanks, closing.
+One small point
 
-Rafael
+On Tue, Aug 16, 2011 at 14:59, Lin Tony-B19295 <B19295@freescale.com> wrote:
+>        Does it support master mode? I tried the driver, seems it doesn't. need your confirmation.
+>                root@freescale ~$ iwconfig wlan0 mode master
+>                Error for wireless request "Set Mode" (8B06) :
+>                SET failed on device wlan0 ; Invalid argument.
+
+This is _not_ how you enable master mode.
+
+You need to use the hostapd utility.
+
+See:
+
+http://wireless.kernel.org/en/users/Documentation/FAQ#Q:_iwconfig_wlan0_mode_master_does_not_work
+
+http://wireless.kernel.org/en/users/Documentation/hostapd
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
