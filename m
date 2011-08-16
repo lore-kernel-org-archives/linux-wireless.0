@@ -1,65 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48633 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752763Ab1H2MaJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 08:30:09 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH 16/20] ath6kl: Add support for new P2P iftypes in mode changes
-Date: Mon, 29 Aug 2011 15:23:57 +0300
-Message-ID: <1314620641-24257-17-git-send-email-jouni@qca.qualcomm.com> (sfid-20110829_143014_175044_D6B3D934)
-In-Reply-To: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
+Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:37939
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751092Ab1HPE7b convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Aug 2011 00:59:31 -0400
+From: Lin Tony-B19295 <B19295@freescale.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: "mcgrof@gmail.com" <mcgrof@gmail.com>,
+	"rodrigue@qca.qualcomm.com" <rodrigue@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rmani@qca.qualcomm.com" <rmani@qca.qualcomm.com>
+Subject: RE: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
+Date: Tue, 16 Aug 2011 04:59:29 +0000
+Message-ID: <97D3A72708D04647A5AC84A04996E5B5195381@039-SN1MPN1-002.039d.mgd.msft.net> (sfid-20110816_065937_408462_6CCD649A)
+References: <1313060347-665-1-git-send-email-hauke@hauke-m.de>
+ <97D3A72708D04647A5AC84A04996E5B5193114@039-SN1MPN1-002.039d.mgd.msft.net>
+ <4E496CA7.7000604@hauke-m.de> <4E49BAB1.7060303@qca.qualcomm.com>
+In-Reply-To: <4E49BAB1.7060303@qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   12 ++++++++++--
- 1 files changed, 10 insertions(+), 2 deletions(-)
+Hi, Kalle:
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 2c35fd2..19b6da8 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -451,7 +451,8 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
- 	}
- 
- 	if (nw_type & INFRA_NETWORK) {
--		if (ar->wdev->iftype != NL80211_IFTYPE_STATION) {
-+		if (ar->wdev->iftype != NL80211_IFTYPE_STATION &&
-+		    ar->wdev->iftype != NL80211_IFTYPE_P2P_CLIENT) {
- 			ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
- 				   "%s: ath6k not in station mode\n", __func__);
- 			return;
-@@ -612,7 +613,8 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
- 	}
- 
- 	if (ar->nw_type & INFRA_NETWORK) {
--		if (ar->wdev->iftype != NL80211_IFTYPE_STATION) {
-+		if (ar->wdev->iftype != NL80211_IFTYPE_STATION &&
-+		    ar->wdev->iftype != NL80211_IFTYPE_P2P_CLIENT) {
- 			ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
- 				   "%s: ath6k not in station mode\n", __func__);
- 			return;
-@@ -1206,6 +1208,12 @@ static int ath6kl_cfg80211_change_iface(struct wiphy *wiphy,
- 	case NL80211_IFTYPE_ADHOC:
- 		ar->next_mode = ADHOC_NETWORK;
- 		break;
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+		ar->next_mode = INFRA_NETWORK;
-+		break;
-+	case NL80211_IFTYPE_P2P_GO:
-+		ar->next_mode = AP_NETWORK;
-+		break;
- 	default:
- 		ath6kl_err("invalid interface type %u\n", type);
- 		return -EOPNOTSUPP;
--- 
-1.7.4.1
+	Some questions regarding this ath6kl driver.
+	Does it support all AR6003 card family? As I know there're several types of AR6003 cards
+	Does it support master mode? I tried the driver, seems it doesn't. need your confirmation.
+		root@freescale ~$ iwconfig wlan0 mode master
+		Error for wireless request "Set Mode" (8B06) :
+    		SET failed on device wlan0 ; Invalid argument.
+
+	Does it support suspend/resume well? From my experiments, seems not. After resuming, connection is lost.
+
+	Thanks
+Tony
+
+> -----Original Message-----
+> From: Kalle Valo [mailto:kvalo@qca.qualcomm.com]
+> Sent: Tuesday, August 16, 2011 8:33 AM
+> To: Hauke Mehrtens
+> Cc: Lin Tony-B19295; mcgrof@gmail.com; rodrigue@qca.qualcomm.com; linux-
+> wireless@vger.kernel.org; rmani@qca.qualcomm.com
+> Subject: Re: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
+> 
+> On 08/15/2011 11:59 AM, Hauke Mehrtens wrote:
+> > On 08/15/2011 07:06 AM, Lin Tony-B19295 wrote:
+> >> Where can I get corresponding firmware?
+> >>
+> >> tony
+> >
+> > Hi tony,
+> >
+> > there is a firmware for these devices in the linux-firmware git [0],
+> > but I do not know if it still works with this driver.
+> >
+> > Probably some of the ath6kl developer could help you more than me.
+> 
+> Yes, the firmware in linux-firmware should work. If not, please report it
+> to linux-wireless mailing list.
+> 
+> Kalle
+
 
