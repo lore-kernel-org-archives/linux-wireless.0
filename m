@@ -1,73 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:10292 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755042Ab1HDRpC (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:54984 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101Ab1HPAOC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Aug 2011 13:45:02 -0400
-Date: Thu, 4 Aug 2011 23:15:20 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 11/13] ath9k_hw: Disable Walsh spatial spreading for 2
- chains
-Message-ID: <20110804174519.GB26255@vmraj-lnx.users.atheros.com> (sfid-20110804_194512_304605_014001BF)
-References: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com>
- <1311941300-2590-11-git-send-email-rmanohar@qca.qualcomm.com>
- <4E32AA85.1030204@openwrt.org>
- <20110802094610.GA1235@vmraj-lnx.users.atheros.com>
- <4E3834CC.8010001@openwrt.org>
+	Mon, 15 Aug 2011 20:14:02 -0400
+Received: by iye16 with SMTP id 16so8449335iye.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2011 17:14:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4E3834CC.8010001@openwrt.org>
+Date: Mon, 15 Aug 2011 17:14:01 -0700
+Message-ID: <CAFHVRfdha1e-+E+hTKPv2JAu5ywOkNo+we2k5FUGtdtRDTV4Aw@mail.gmail.com> (sfid-20110816_021406_439461_B0A76827)
+Subject: Problem Building carl9170
+From: Panu Avakul <avakulpa@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 02, 2011 at 07:33:00PM +0200, Felix Fietkau wrote:
-> On 2011-08-02 11:46 AM, Rajkumar Manoharan wrote:
-> >On Fri, Jul 29, 2011 at 02:41:41PM +0200, Felix Fietkau wrote:
-> >> On 2011-07-29 2:08 PM, Rajkumar Manoharan wrote:
-> >> >Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
-> >> >---
-> >> >   .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
-> >> >   1 files changed, 1 insertions(+), 1 deletions(-)
-> >> >
-> >> >diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-> >> >index 2339728..28b44b0 100644
-> >> >--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-> >> >+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-> >> >@@ -636,7 +636,7 @@ static const u32 ar9300_2p2_baseband_postamble[][5] = {
-> >> >   	{0x00009e44, 0x02321e27, 0x02321e27, 0x02291e27, 0x02291e27},
-> >> >   	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
-> >> >   	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
-> >> >-	{0x0000a204, 0x000037c0, 0x000037c4, 0x000037c4, 0x000037c0},
-> >> >+	{0x0000a204, 0x000036c0, 0x000036c4, 0x000036c4, 0x000036c0},
-> >> >   	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
-> >> >   	{0x0000a22c, 0x01026a2f, 0x01026a2f, 0x01026a2f, 0x01026a2f},
-> >> >   	{0x0000a230, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b},
-> >> That patch makes no sense, it disables Walsh spatial spreading in
-> >> the initvals, but the driver still enables it in
-> >> ar9003_hw_set_channel_regs.
-> >> By the way, why should we disable Walsh spatial spreading?
-> >>
-> >The initval table is filled with default values recommended in register spec.
-> >This patch does that. And these default value can be altered during chip bringup
-> >based on chip family.
-> OK, then the patch description should probably mention that this
-> change has no effect and does not actually disable this feature in
-> general, since the driver unconditionally enables it elsewhere.
->
-Felix,
-
-The Walsh bit is disabled for regulatory consideration. 
-
-In the FCC rulings, only transmissions that are completely non-coherent, are
-allowed to waive the array gain contribution to EIRP for multi-transmit configurations.
-The use of 2-stream with 2 transmit and use of 3-steam with 3 transmit qualifies
-for this spatial multiplexing MIMO classification as long as the streams are
-directly mapped to each radio (not Walsh spread prior to splitting to multiple radios)
-
-And also Walsh has to be disabled in ar9003_hw_set_channel_regs.
-Thanks for finding out. Will send followup patch.
-
---
-Rajkumar
+Hello, I was trying to build carl9170 firmware from the source on the
+git repository.
+The toolchain build with no problem.
+However, when I run autogen.sh
+it give me a cmake error message
+CMake Error: Parse error in cache file
+/home/radius0014/carl9170fw/config/CMakeCache.txt.
+I tried deleting it and re run autogen.sh but still no different.
+I was wondering if any one had similar problem and any advice on how I
+should resolve it.
+I am running this on ubuntu 11.04
+Thank you very much
+Best Regard,
+Panu
