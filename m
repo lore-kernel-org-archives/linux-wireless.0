@@ -1,31 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17010 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752571Ab1H2MU4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 08:20:56 -0400
-Date: Mon, 29 Aug 2011 14:20:15 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Greg Dietsche <Gregory.Dietsche@cuw.edu>, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] iwlegacy: change IWL_WARN to IWL_DEBUG_HT in
- iwl4965_tx_agg_start
-Message-ID: <20110829122013.GA3597@redhat.com> (sfid-20110829_142104_383663_4B86401A)
-References: <1314537977-20097-1-git-send-email-Gregory.Dietsche@cuw.edu>
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:50162 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751890Ab1HPU1s (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Aug 2011 16:27:48 -0400
+Received: by yie30 with SMTP id 30so239590yie.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2011 13:27:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1314537977-20097-1-git-send-email-Gregory.Dietsche@cuw.edu>
+In-Reply-To: <4E45781E.8070508@broadcom.com>
+References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
+	<1313156101-16817-2-git-send-email-arend@broadcom.com>
+	<CACna6rzmaxzezN-OPTLvXyFOZOsoq6XCds4P-FOEz27FzJz+Jg@mail.gmail.com>
+	<4E455877.6090901@broadcom.com>
+	<4E45781E.8070508@broadcom.com>
+Date: Tue, 16 Aug 2011 22:27:46 +0200
+Message-ID: <CACna6ry93-i-VhjZcynupG7Xo7txYxxQxCyRidrALya+f0zLEQ@mail.gmail.com> (sfid-20110816_222752_622290_A94F7E60)
+Subject: Re: [PATCH 01/14] staging: brcm80211: use wait queues instead of
+ semaphores in wl_cfg80211.c
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Franky Lin <frankyl@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 28, 2011 at 08:26:16AM -0500, Greg Dietsche wrote:
-> This message should be a debug message and not a warning. So
-> change it from IWL_WARN to IWL_DEBUG_HT.
-
-I'm currently doing massive iwlegacy driver cleanup. Would be easier
-for me to apply these patches on top of my changes instead of rebase
-my patches. I will queue these two patches and post them together with
-my pending patches.
-
-Thanks
-Stanislaw  
+MjAxMS84LzEyIEZyYW5reSBMaW4gPGZyYW5reWxAYnJvYWRjb20uY29tPjoKPiBPbiAwOC8xMi8y
+MDExIDA5OjQ0IEFNLCBBcmVuZCB2YW4gU3ByaWVsIHdyb3RlOgo+Pgo+PiBPbiAwOC8xMi8yMDEx
+IDA0OjA3IFBNLCBSYWZhxYIgTWnFgmVja2kgd3JvdGU6Cj4+Pgo+Pj4gMjAxMS84LzEyIEFyZW5k
+IHZhbiBTcHJpZWw8YXJlbmRAYnJvYWRjb20uY29tPjoKPj4+Pgo+Pj4+IEBAIC0zNTM3LDI3ICsz
+NTQ0LDM5IEBAIHN0YXRpYyBzMzIgYnJjbWZfZXZlbnRfaGFuZGxlcih2b2lkICpkYXRhKQo+Pj4+
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIChzdHJ1Y3QgYnJjbWZfY2ZnODAy
+MTFfcHJpdiAqKWRhdGE7Cj4+Pj4gwqAgwqAgwqAgwqAgc3RydWN0IHNjaGVkX3BhcmFtIHBhcmFt
+ID0gey5zY2hlZF9wcmlvcml0eSA9IE1BWF9SVF9QUklPIC0gMSB9Owo+Pj4+IMKgIMKgIMKgIMKg
+IHN0cnVjdCBicmNtZl9jZmc4MDIxMV9ldmVudF9xICplOwo+Pj4+ICsgwqAgwqAgwqAgREVDTEFS
+RV9XQUlUUVVFVUUod2FpdCwgY3VycmVudCk7Cj4+Pj4KPj4+PiDCoCDCoCDCoCDCoCBzY2hlZF9z
+ZXRzY2hlZHVsZXIoY3VycmVudCwgU0NIRURfRklGTywmcGFyYW0pOwo+Pj4+IMKgIMKgIMKgIMKg
+IGFsbG93X3NpZ25hbChTSUdURVJNKTsKPj4+PiAtIMKgIMKgIMKgIHdoaWxlIChsaWtlbHkoIWRv
+d25faW50ZXJydXB0aWJsZSgmY2ZnX3ByaXYtPmV2ZW50X3N5bmMpKSkgewo+Pj4+ICsgwqAgwqAg
+wqAgYWRkX3dhaXRfcXVldWUoJmNmZ19wcml2LT5ldmVudF93YWl0cSwmd2FpdCk7Cj4+Pj4gKyDC
+oCDCoCDCoCB3aGlsZSAoMSkgewo+Pj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgcHJlcGFyZV90
+b193YWl0KCZjZmdfcHJpdi0+ZXZlbnRfd2FpdHEsJndhaXQsCj4+Pj4gKyDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBUQVNLX0lOVEVSUlVQVElCTEUpOwo+Pj4+
+ICsKPj4+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNjaGVkdWxlKCk7Cj4+Pj4gKwo+Pj4+IMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIGlmIChrdGhyZWFkX3Nob3VsZF9zdG9wKCkpCj4+Pj4gwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgYnJlYWs7Cj4+Pj4gKwo+Pj4+IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIGUgPSBicmNtZl9kZXFfZXZlbnQoY2ZnX3ByaXYpOwo+Pj4+IMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIGlmICh1bmxpa2VseSghZSkpIHsKPj4+PiDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBXTF9FUlIoImV2ZW50IHF1ZXVlIGVtcHR5Li4uXG4i
+KTsKPj4+PiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIEJVRygpOwo+Pj4+ICsg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY29udGludWU7Cj4+Pj4gwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgfQo+Pj4+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgV0xfSU5GTygiZXZl
+bnQgdHlwZSAoJWQpXG4iLCBlLT5ldHlwZSk7Cj4+Pj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCBp
+ZiAoY2ZnX3ByaXYtPmVsLmhhbmRsZXJbZS0+ZXR5cGVdKQo+Pj4+IC0gwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgY2ZnX3ByaXYtPmVsLmhhbmRsZXJbZS0+ZXR5cGVdKGNmZ19wcml2
+LAo+Pj4+IC0KPj4+PiDCoGNmZ190b19uZGV2KGNmZ19wcml2KSwKPj4+PiAtJmUtPmVtc2csIGUt
+PmVkYXRhKTsKPj4+PiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGVsc2UKPj4+PiAtIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIFdMX0lORk8oIlVua25vd24gRXZlbnQgKCVkKTogaWdu
+b3JpbmdcbiIsCj4+Pj4gZS0+ZXR5cGUpOwo+Pj4+Cj4+Pj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCBicmNtZl9wdXRfZXZlbnQoZSk7Cj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBkbyB7Cj4+
+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBXTF9JTkZPKCJldmVudCB0eXBl
+ICglZClcbiIsIGUtPmV0eXBlKTsKPj4+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIGlmIChjZmdfcHJpdi0+ZWwuaGFuZGxlcltlLT5ldHlwZV0pCj4+Pj4gKyDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBjZmdfcHJpdi0+ZWwuaGFuZGxlcltl
+LT5ldHlwZV0oY2ZnX3ByaXYsCj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBjZmdfdG9fbmRldihjZmdfcHJpdiksCj4+Pj4gKyZl
+LT5lbXNnLCBlLT5lZGF0YSk7Cj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCBlbHNlCj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCBXTF9JTkZPKCJVbmtub3duIEV2ZW50ICglZCk6Cj4+Pj4gaWdub3JpbmdcbiIsCj4+Pj4gKyDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBl
+LT5ldHlwZSk7Cj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBicmNtZl9w
+dXRfZXZlbnQoZSk7Cj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCB9IHdoaWxlICgoZSA9IGJy
+Y21mX2RlcV9ldmVudChjZmdfcHJpdikpKTsKPj4+Cj4+PiBpZiAoKCgoKGNhcmVfY29kaW5nX3N0
+eWxlKSkpKSkKPj4+IGZpeCgpOwo+Pj4KPj4+IDotKQo+Pj4KPj4KPj4gSSBhc3N1bWUgeW91IHJl
+ZmVyIHRvIHRoZSBpbmRlbnRzIGFib3ZlLiBOb3Qgc3VyZSB3aGF0IGV4YWN0bHkgaGFwcGVuZWQK
+Pj4gdGhlcmUsIGJ1dCB0aGUgcGF0Y2ggZW1haWwgYXMgSSByZWNlaXZlZCBpdCBsb29rcy4gQ291
+bGQgaXQgYmUgYSBtYWlsCj4+IHJlYWRlciBpc3N1ZT8KPgo+IEhpIFJhZmHFgiwKPgo+IElmIHlv
+dSBhcmUgcmVmZXJpbmcgdG8gdGhpcyBsaW5lCj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCB9
+IHdoaWxlICgoZSA9IGJyY21mX2RlcV9ldmVudChjZmdfcHJpdikpKTsKPgo+IFRoZSBleHRyYSBw
+YXJlbnRoZXNlcyBhcmUgYWRkZWQgdG8gZml4IGEgY29tcGlsZXIgd2FybmluZzoKPiDCoCDCoCDC
+oCDCoGRyaXZlcnMvc3RhZ2luZy9icmNtODAyMTEvYnJjbWZtYWMvd2xfY2ZnODAyMTEuYzogSW4g
+ZnVuY3Rpb24KPiDigJhicmNtZl9ldmVudF9oYW5kbGVy4oCZOgo+IMKgIMKgIMKgIMKgZHJpdmVy
+cy9zdGFnaW5nL2JyY204MDIxMS9icmNtZm1hYy93bF9jZmc4MDIxMS5jOjM1NzY6IHdhcm5pbmc6
+Cj4gc3VnZ2VzdCBwYXJlbnRoZXNlcyBhcm91bmQgYXNzaWdubWVudCB1c2VkIGFzIHRydXRoIHZh
+bHVlCgpTb3JyeSBmb3IgY29uZnVzaW5nIHlvdSwgSSB0aG91Z2ggaXQncyBPSyB0byB1c2UKd2hp
+bGUgKGUgPSBzdGgoKSkKSSBjYXVzZWQgYSBsaXR0bGUgb2YgbWVzcyBhbmQgZGlzY3Vzc2lvbiwg
+dXBzIDp8CgotLSAKUmFmYcWCCg==
