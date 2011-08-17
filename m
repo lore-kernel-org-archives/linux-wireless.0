@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:29923 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:16251 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750773Ab1HBFu3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 01:50:29 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Daniel Halperin <dhalperi@cs.washington.edu>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 2 Aug 2011 08:50:23 +0300
-Subject: RE: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv
- pointer
-Message-ID: <4825B8A2C4E264489E57869F0DCFB22344563F4ABE@hasmsx502.ger.corp.intel.com> (sfid-20110802_075036_147753_D1402A1C)
-References: <1312228017-12061-1-git-send-email-wey-yi.w.guy@intel.com>
- <CALSq=BYkKhJN=GU0RUJ2viibsy5yG78x-D-td0zP+rqWCy=AiQ@mail.gmail.com>
-In-Reply-To: <CALSq=BYkKhJN=GU0RUJ2viibsy5yG78x-D-td0zP+rqWCy=AiQ@mail.gmail.com>
-Content-Type: text/plain; charset="windows-1255"
+	id S1753698Ab1HQPnW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Aug 2011 11:43:22 -0400
+Date: Wed, 17 Aug 2011 17:41:16 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Allan, Bruce W" <bruce.w.allan@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	"camilo@mesias.co.uk" <camilo@mesias.co.uk>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	Tony Houghton <h@realh.co.uk>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	Adrian Chadd <adrian@freebsd.org>,
+	"lrodriguez@atheros.com" <lrodriguez@atheros.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Subject: Re: [PATCH -next 0/8] ath9k: ASPM fixes
+Message-ID: <20110817154114.GA1883@redhat.com> (sfid-20110817_174326_111481_6ADA4484)
+References: <1312542639-4274-1-git-send-email-sgruszka@redhat.com>
+ <20110811160847.GD2566@tuxdriver.com>
+ <20110812123509.GA13328@redhat.com>
+ <1313174941.2115.8.camel@jtkirshe-mobl>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1313174941.2115.8.camel@jtkirshe-mobl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiAKPiBPbiBNb24sIEF1ZyAxLCAyMDExIGF0IDEyOjQ2IFBNLCBXZXktWWkgR3V5IDx3ZXkteWku
-dy5ndXlAaW50ZWwuY29tPiB3cm90ZToKPiA+IEZyb206IEVtbWFudWVsIEdydW1iYWNoIDxlbW1h
-bnVlbC5ncnVtYmFjaEBpbnRlbC5jb20+Cj4gPgo+ID4gVGhpcyBidWcgaGFzIGJlZW4gaW50cm9k
-dWNlZCBieToKPiA+IGQ1OTM0MTEwODRhNTYxMjRhYTlkODBhYWZhMTVkYjg0NjNiMmQ4ZjcKPiA+
-IEF1dGhvcjogRW1tYW51ZWwgR3J1bWJhY2ggPGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4K
-PiA+IERhdGU6IKAgTW9uIEp1bCAxMSAxMDo0ODo1MSAyMDExICswMzAwCj4gPgo+ID4goCCgaXds
-YWduOiBzaW1wbGlmeSB0aGUgYnVzIGFyY2hpdGVjdHVyZQo+ID4KPiAKPiBCZWxpZXZlIHRoaXMg
-Zml4IG5lZWRzIHRvIGdvIHRvIDMuMC1zdGFibGUgdG9vLgo+IAoKVGhlIGJ1Z2d5IHBhdGNoIGhh
-c24ndCBtYWRlIGl0IHRvIDMuMC4gVGhlIGJ1ZyB3YXMgaW50cm9kdWNlZCBpbiAzLjEKLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tCkludGVsIElzcmFlbCAoNzQpIExpbWl0ZWQKClRoaXMgZS1tYWlsIGFuZCBhbnkgYXR0
-YWNobWVudHMgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG1hdGVyaWFsIGZvcgp0aGUgc29sZSB1
-c2Ugb2YgdGhlIGludGVuZGVkIHJlY2lwaWVudChzKS4gQW55IHJldmlldyBvciBkaXN0cmlidXRp
-b24KYnkgb3RoZXJzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBhcmUgbm90IHRoZSBp
-bnRlbmRlZApyZWNpcGllbnQsIHBsZWFzZSBjb250YWN0IHRoZSBzZW5kZXIgYW5kIGRlbGV0ZSBh
-bGwgY29waWVzLgo=
+> > > I'm happy to take patches 1-3 through my tree.  But maybe patches 4-8
+> > > should go through a PCI tree?  Or at least get some ACKS from the
+> > > appropriate maintainers to take these changes through the wireless
+> > > trees?
+
+Ok, John please apply first 3 patches if you still have them, if
+not I'll repost.
+
+Remaining 5 and possibly other ASPM patches for other drivers
+I'll repost against pci tree, when the first 3 lend upstream.
+
+Thanks
+Stanislaw
 
