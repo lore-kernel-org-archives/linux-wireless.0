@@ -1,73 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:39163 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751676Ab1HOFpk (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:37581 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750816Ab1HQE2o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 01:45:40 -0400
-Date: Sun, 14 Aug 2011 22:45:36 -0700 (PDT)
-Message-Id: <20110814.224536.1330937123770047026.davem@davemloft.net> (sfid-20110815_074604_007334_93AB42A3)
-To: justinmattock@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: ip_rt_bug: 10.0.0.52 -> 255.255.255.255, ?
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <4E4898F5.8050605@gmail.com>
-References: <4E4898F5.8050605@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 17 Aug 2011 00:28:44 -0400
+Message-ID: <4E4B437A.1070200@qca.qualcomm.com> (sfid-20110817_062852_110799_81761FFE)
+Date: Tue, 16 Aug 2011 21:28:42 -0700
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Lin Tony-B19295 <B19295@freescale.com>
+CC: Hauke Mehrtens <hauke@hauke-m.de>,
+	"mcgrof@gmail.com" <mcgrof@gmail.com>,
+	"rodrigue@qca.qualcomm.com" <rodrigue@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rmani@qca.qualcomm.com" <rmani@qca.qualcomm.com>
+Subject: Re: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
+References: <1313060347-665-1-git-send-email-hauke@hauke-m.de> <97D3A72708D04647A5AC84A04996E5B5193114@039-SN1MPN1-002.039d.mgd.msft.net> <4E496CA7.7000604@hauke-m.de> <4E49BAB1.7060303@qca.qualcomm.com> <97D3A72708D04647A5AC84A04996E5B5195381@039-SN1MPN1-002.039d.mgd.msft.net> <4E4A7159.3090004@qca.qualcomm.com> <97D3A72708D04647A5AC84A04996E5B5195ADD@039-SN1MPN1-002.039d.mgd.msft.net>
+In-Reply-To: <97D3A72708D04647A5AC84A04996E5B5195ADD@039-SN1MPN1-002.039d.mgd.msft.net>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 08/16/2011 07:19 PM, Lin Tony-B19295 wrote:
+>> I have a patch pending to add suspend support and will send it as
+>> soon as I find some free time. But the wifi connection will be lost
+>> in resume anyway. If you want to maintain the connection to AP
+>> during suspend then you are looking for wowlan support which ath6kl
+>> doesn't currently support.
+> 
+> Do you have any plan supporting it?
 
-First, please contact netdev@vger.kernel.org for networking issues.
+It would be nice to have support for wowlan but I don't know when it
+will be implemented. Hopefully sooner than later.
 
-Second, this is fixed already:
+> Besides, the performance seems not good. I got only 5Mb/s
+> station->station performance. While another driver released from your
+> AE could reach at least 10Mb/s, do you have any idea?
 
-commit d547f727df86059104af2234804fdd538e112015
-Author: Julian Anastasov <ja@ssi.bg>
-Date:   Sun Aug 7 22:20:20 2011 -0700
+That sounds quite low. Can you describe your test setup in detail,
+please? That would help to understand the issue.
 
-    ipv4: fix the reusing of routing cache entries
-    
-    	compare_keys and ip_route_input_common rely on
-    rt_oif for distinguishing of input and output routes
-    with same keys values. But sometimes the input route has
-    also same hash chain (keyed by iif != 0) with the output
-    routes (keyed by orig_oif=0). Problem visible if running
-    with small number of rhash_entries.
-    
-    	Fix them to use rt_route_iif instead. By this way
-    input route can not be returned to users that request
-    output route.
-    
-    	The patch fixes the ip_rt_bug errors that were
-    reported in ip_local_out context, mostly for 255.255.255.255
-    destinations.
-    
-    Signed-off-by: Julian Anastasov <ja@ssi.bg>
-    Signed-off-by: David S. Miller <davem@davemloft.net>
-
-diff --git a/net/ipv4/route.c b/net/ipv4/route.c
-index e3dec1c..cb7efe0 100644
---- a/net/ipv4/route.c
-+++ b/net/ipv4/route.c
-@@ -731,6 +731,7 @@ static inline int compare_keys(struct rtable *rt1, struct rtable *rt2)
- 		((__force u32)rt1->rt_key_src ^ (__force u32)rt2->rt_key_src) |
- 		(rt1->rt_mark ^ rt2->rt_mark) |
- 		(rt1->rt_key_tos ^ rt2->rt_key_tos) |
-+		(rt1->rt_route_iif ^ rt2->rt_route_iif) |
- 		(rt1->rt_oif ^ rt2->rt_oif) |
- 		(rt1->rt_iif ^ rt2->rt_iif)) == 0;
- }
-@@ -2321,8 +2322,8 @@ int ip_route_input_common(struct sk_buff *skb, __be32 daddr, __be32 saddr,
- 		if ((((__force u32)rth->rt_key_dst ^ (__force u32)daddr) |
- 		     ((__force u32)rth->rt_key_src ^ (__force u32)saddr) |
- 		     (rth->rt_iif ^ iif) |
--		     rth->rt_oif |
- 		     (rth->rt_key_tos ^ tos)) == 0 &&
-+		    rt_is_input_route(rth) &&
- 		    rth->rt_mark == skb->mark &&
- 		    net_eq(dev_net(rth->dst.dev), net) &&
- 		    !rt_is_expired(rth)) {
-
-
+Kalle
