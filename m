@@ -1,68 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49663 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752361Ab1HJKja (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 06:39:30 -0400
-Date: Wed, 10 Aug 2011 12:39:05 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Justin Piszcz <jpiszcz@lucidpixels.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] rt2x00: rt2800usb: fix races in tx queue
-Message-ID: <20110810103904.GA8079@redhat.com> (sfid-20110810_123934_128193_EF8278F3)
-References: <20110804124653.GB5739@redhat.com>
- <CAOZOX0Xpv9OPqx2Y3GnajhmDvx3GyL1xTAjEOYjOToWcQxB6bA@mail.gmail.com>
- <20110808092914.GA2168@redhat.com>
- <20110808093512.GB2168@redhat.com>
- <4E404D5C.30401@gmail.com>
- <20110809095050.GD2152@redhat.com>
- <20110809112624.GA2281@redhat.com>
- <20110809154540.GB2302@redhat.com>
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:43923 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751647Ab1HQIMc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Aug 2011 04:12:32 -0400
+Received: by pzk37 with SMTP id 37so666900pzk.1
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2011 01:12:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110809154540.GB2302@redhat.com>
+In-Reply-To: <loom.20110817T044544-76@post.gmane.org>
+References: <1313345797-5441-2-git-send-email-zajec5@gmail.com>
+	<loom.20110817T044544-76@post.gmane.org>
+Date: Wed, 17 Aug 2011 10:12:31 +0200
+Message-ID: <CACna6ryO9=rwwOMya7RdDohk0p-TOR6O0FU2p6UYnOCzBsHhWg@mail.gmail.com> (sfid-20110817_101238_030724_4939C756)
+Subject: Re: [PATCH V3 3.2 2/2] b43: fix DMA on some bugged hardware
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?V=C3=ADtor_Ferreira?= <vitor.dominor@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 09, 2011 at 05:45:40PM +0200, Stanislaw Gruszka wrote:
-> On Tue, Aug 09, 2011 at 01:26:24PM +0200, Stanislaw Gruszka wrote:
-> > > > Second, I think it would be appropriate to split the patch in 2, or maybe 3, parts:
-> > > > 	1. The hunk to rt2x00usb to reverse the entry flag handling and the tx dma done handling.
-> > > > 	2. The hunk that checks that the entry on which the TX status is being reported has
-> > > >            already been properly completed its TX done handling.
-> > > > 	3. The remainder, i.e. the retrying of handling a TX status report if the entry hasn't been
-> > > >            fully completed its TX done handling yet. 
-> > > > 
-> > > > The code in this area has been proven to be very fragile, so I prefer to make mini changes to it in
-> > > > small steps, so that we can properly bisect which change exactly has caused a problem.
-> > > > 
-> > > > See further down for more thoughts.
-> > > 
-> > > Thanks for comments. I'll repost small patch that should fix the bug
-> > > and don't do things you dislike.
-> > 
-> > Hmm, I planed to post the below patch, but unfortunately it does not fix
-> > the crash on my system (rare reproducible after an hour of working). Seems
-> > there are more problems here. Looks like there is possibility to mishmash
-> > indexes i.e. make indexes like {Q_INDEX, Q_INDEX_DMA_DONE, Q_INDEX_DONE}
-> > = {44, 54, 44}, whereas they should be {44, 44, 44} or {45, 43, 41}. 
-> > Original patch seems to preventing this (fix or mask the problem), but 
-> > honestly I do not understand way. I have to look more closely at it.
-> 
-> Ok, I think I found these other problems, seems we have also check 
-> ENTRY_DATA_PENDING flags and add similar checks in rt2800usb_work_txdone
-> when checking against failed I/O.
-> 
-> Justin, if you have opportunity test below patch (for 3.0 kernel). It does
-> not crash here so far, but on my system bug is very rarely reproducible,
-> so I have to test whole night or more to be sure.
-> 
-> Comments welcome. If patch is ok, I will split it into 2 parts and post
-> officially.
+/me rearranged order of quoted fragments
 
-This patch crashes as well. I have to debug this issue a bit more ...
+2011/8/17 Vítor Ferreira <vitor.dominor@gmail.com>:
+> Greetings! I'm a grateful Linux end-user, following up on the success of this
+> patch.
+> I can confirm that after applying the following patches:
+> - RESEND-3.2-1-2-ssb-fix-DMA-translation-for-some-specific-boards.patch
+> - RFC-RFT-V2-2-2-b43-fix-DMA-on-some-bugged-hardware.patch
+> - v2-08-46-net-wireless-b43-fix-DMA-direction-for-RX-buffers.patch
+> to a 3.0.1 fedora patched kernel, the problem reporting to these patches has
+> been solved (as far as I am concerned).
 
-Stanislaw 
+I didn't expect that patches to affect your card.
+
+
+> Just a side note... Curiously with Intel VT, the b43 driver would start and work
+> for some short time before it crashed, while the wl proprietary driver (from
+> Broadcom) would not even fully load.
+
+I hope you mean DMA errors, not really crashing.
+What you describe here sounds like standard LP-PHY DMA issue resolved
+in 3.0 kernel. We got some timeouts-related bug, which didn't hit
+right after loading b43, usually some time (seconds-minutes) later.
+The last patches are supposed to fix situation where DMA does not work
+at all. Not even for a second, not for a single packet. I'm really
+sure of that, unless you have some *really* bugged hardware accepting
+multiple "translation bits" (something my patches fix).
+Moreover LP-PHY DMA problems (timeouts issue) was known to be somehow
+CPU/BIOS-related. Which makes it even more probably that that's
+exactly what you were experiencing.
+
+
+> Recently, while searching again for a possible solution for this issue, I
+> stumbled on your submitted patches in May to address the DMA issue. Then, in the
+> b43 supported devices table, I found that my Broadcom wireless card (14e4:4315 -
+> LP-r1) is now fully supported since kernel version 3.0. However, incidently I
+> had received the kernel 3.0 as a Fedora kernel update and upon enabling again
+> Intel VT, the DMA error presented itself still, not better not worse.
+
+That's the tricky part. Kernel 3.0 should really work for you. Unless
+Fedora got some problem (mistake?) in compiling/numbering...
+
+
+> Again, I
+> found your recent patches to address the DMA error and followed its developpment
+> on the mailing list throughout the last few days.
+> Seeing the initial successful tests on 64-bit affected systems, I decided to
+> give them a shot on my own system.
+> To do so, I updated my 3.0 kernel to the latest in its series (3.0.3rc1?,
+> 2.6.40.3 in fedora versioning) and downloaded the latest bleeding edge
+> compat-wireless (yesterday) and I applied the above patches to it without
+> problems.
+
+I think the important part was updating to the recent compat-wireless,
+not applying my patches. If you wish, you can still use that
+compat-wireless, revert my 2 patches and test again. I suspect card
+will be still working for you.
+
+
+> Right now, I am writing this with Intel VT enabled and a stable wireless
+> connection to my home AP, using the b43 driver. So, I am showing here my
+> appreciation and thanking for your great work in crushing a pesky bug that was
+> perhaps the only one stopping my computer from being fully Linux compatible (HP
+> Pavilion dv5t). Continue your great work!
+
+I'm really glad it's working for you now :) We're recently getting
+more hardware support and (as you can see) we can slowly focus on bug
+fixes now. There still a lot to do, but I hope to have the most of the
+hardware supported and bugs resolved still this yeah. Then we can
+finally slow down our extremly-fast-recent development a little ;)
+
+-- 
+Rafał
