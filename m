@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:33509 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753059Ab1HRHwB (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:55637 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751792Ab1HQLeR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Aug 2011 03:52:01 -0400
-Subject: Re: [PATCH] Add uevent to bcma bus, to autoload drivers.
-From: David Woodhouse <dwmw2@infradead.org>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Date: Thu, 18 Aug 2011 08:51:36 +0100
-In-Reply-To: <CACna6rzQmEE-EF+7tvQ8vkwp9bYwWMkna3UHw8ym7PmjKWWQTQ@mail.gmail.com>
-References: <4E3420E9.6080603@lwfinger.net>
-	 <CACna6ryErHY+OyAnvc9+MYArb5mXpSdadOPADsQOBz796UqSUw@mail.gmail.com>
-	 <1313617419.3990.134.camel@shinybook.infradead.org>
-	 <CACna6rzQmEE-EF+7tvQ8vkwp9bYwWMkna3UHw8ym7PmjKWWQTQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1313653897.13224.4.camel@shinybook.infradead.org> (sfid-20110818_095206_353158_0A3AA1D1)
-Mime-Version: 1.0
+	Wed, 17 Aug 2011 07:34:17 -0400
+Received: by pzk37 with SMTP id 37so944149pzk.1
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2011 04:34:16 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 17 Aug 2011 13:34:16 +0200
+Message-ID: <CACna6rzdgENO-fCmm8tTVpuk_M7A88C7HgSGmTsjF3U8ZxDbYQ@mail.gmail.com> (sfid-20110817_133420_518029_C5D38BD7)
+Subject: Question about versions: wl vs. brcmsmac
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: brudley@broadcom.com, henryp@broadcom.com, rvossen@broadcom.com,
+	arend@broadcom.com, frankyl@broadcom.com, kanyan@broadcom.com
+Cc: linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-08-18 at 08:46 +0200, Rafał Miłecki wrote:
-> 
-> Tested on my BCM43224, thanks a lot! :)
-> 
-> Acked-by: Rafał Miłecki <zajec5@gmail.com>
-> 
-> You didn't send this directly to John, not sure if he will pick it up.
-> 
-> Do you think this should go for 3.1? With this patch ppl will directly
-> see interface is present and will just use it or see error about
-> firmware in dmesg. Without the patch, person just have to know b43 is
-> supposed to support his card. 
+Hey Broadcom,
 
-Yes, it should go in for 3.1.
+I've compare dump from wl with dump from brcmsmac and noticed some differences.
 
-I wasn't really expecting John to pick it up. You are the maintainer of
-drivers/bcma, so I'd expect to send it to *you*. Many maintainers would
-be unhappy at patches being sent upstream and bypassing them. Normally
-I'd expect you to pick up the patch and add it to your tree/queue with
-your own signed-off-by, and for it to go upstream that way.
+Some random ones for LCN PHY:
+1) brcmsmac doesn't touch 0x663 register in PHY init
+2) wl uses 0xfedb, brcmsmac uses 0xfe4b as some value for 0xb table
+3) brcmsmac uses 0x3 instead 0x0 for radio reg 0x38
+and so on...
 
-Of course, I'm happy to send it on directly if that's what you prefer.
+My question is, which driver includes newer (more correct I hope) code?
+
+I'm comparing brcmsmac from git with wl 5.100.82.38.
 
 -- 
-dwmw2
-
+Rafał
