@@ -1,125 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:49986 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752227Ab1HKPFc convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:41419 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751668Ab1HQHpD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 11:05:32 -0400
-Received: by pzk37 with SMTP id 37so3814714pzk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 08:05:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20110811165522.254311b0@milhouse>
-References: <1313072423-15512-4-git-send-email-zajec5@gmail.com>
-	<20110811165522.254311b0@milhouse>
-Date: Thu, 11 Aug 2011 17:05:31 +0200
-Message-ID: <CACna6ry3k-zE7JuPw0LWoWBc9NuTbhGL_Q_4X1Q_GQ1pWB0DqQ@mail.gmail.com> (sfid-20110811_170535_375259_D1747FD4)
-Subject: Re: [PATCH 4/3] b43: support new RX header, noticed to be used in
- 598.314+ fw
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 17 Aug 2011 03:45:03 -0400
+Received: by wyg24 with SMTP id 24so481206wyg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2011 00:45:01 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 02/40] wl12xx: Use a single fw for both STA and AP roles
+Date: Wed, 17 Aug 2011 10:45:48 +0300
+Message-Id: <1313567149-26475-1-git-send-email-eliad@wizery.com> (sfid-20110817_094508_178792_D6A0947B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 11 sierpnia 2011 16:55 użytkownik Michael Büsch <m@bues.ch> napisał:
-> On Thu, 11 Aug 2011 16:20:23 +0200
-> Rafał Miłecki <zajec5@gmail.com> wrote:
->
->>
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->>  drivers/net/wireless/b43/pio.c  |   10 +++++++++-
->>  drivers/net/wireless/b43/xmit.c |   21 ++++++++++++++++-----
->>  drivers/net/wireless/b43/xmit.h |   19 ++++++++++++++++---
->>  3 files changed, 41 insertions(+), 9 deletions(-)
->>
->> diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
->> index 6e4228c..ce8a4bd 100644
->> --- a/drivers/net/wireless/b43/pio.c
->> +++ b/drivers/net/wireless/b43/pio.c
->> @@ -676,7 +676,15 @@ data_ready:
->>               goto rx_error;
->>       }
->>
->> -     macstat = le32_to_cpu(rxhdr->mac_status);
->> +     switch (dev->fw.hdr_format) {
->> +     case B43_FW_HDR_598:
->> +             macstat = le32_to_cpu(rxhdr->format_598.mac_status);
->> +             break;
->> +     case B43_FW_HDR_410:
->> +     case B43_FW_HDR_351:
->> +             macstat = le32_to_cpu(rxhdr->format_351.mac_status);
->> +             break;
->> +     }
->>       if (macstat & B43_RX_MAC_FCSERR) {
->>               if (!(q->dev->wl->filter_flags & FIF_FCSFAIL)) {
->>                       /* Drop frames with failed FCS. */
->> diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
->> index b02170d..5b82409 100644
->> --- a/drivers/net/wireless/b43/xmit.c
->> +++ b/drivers/net/wireless/b43/xmit.c
->> @@ -653,8 +653,9 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
->>       struct ieee80211_hdr *wlhdr;
->>       const struct b43_rxhdr_fw4 *rxhdr = _rxhdr;
->>       __le16 fctl;
->> -     u16 phystat0, phystat3, chanstat, mactime;
->> -     u32 macstat;
->> +     u16 phystat0, phystat3;
->> +     u16 uninitialized_var(chanstat), uninitialized_var(mactime);
->> +     u32 uninitialized_var(macstat);
->>       u16 chanid;
->>       u16 phytype;
->>       int padding;
->> @@ -664,9 +665,19 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
->>       /* Get metadata about the frame from the header. */
->>       phystat0 = le16_to_cpu(rxhdr->phy_status0);
->>       phystat3 = le16_to_cpu(rxhdr->phy_status3);
->> -     macstat = le32_to_cpu(rxhdr->mac_status);
->> -     mactime = le16_to_cpu(rxhdr->mac_time);
->> -     chanstat = le16_to_cpu(rxhdr->channel);
->> +     switch (dev->fw.hdr_format) {
->> +     case B43_FW_HDR_598:
->> +             macstat = le32_to_cpu(rxhdr->format_598.mac_status);
->> +             mactime = le16_to_cpu(rxhdr->format_598.mac_time);
->> +             chanstat = le16_to_cpu(rxhdr->format_598.channel);
->> +             break;
->> +     case B43_FW_HDR_410:
->> +     case B43_FW_HDR_351:
->> +             macstat = le32_to_cpu(rxhdr->format_351.mac_status);
->> +             mactime = le16_to_cpu(rxhdr->format_351.mac_time);
->> +             chanstat = le16_to_cpu(rxhdr->format_351.channel);
->> +             break;
->> +     }
->>       phytype = chanstat & B43_RX_CHAN_PHYTYPE;
->>
->>       if (unlikely(macstat & B43_RX_MAC_FCSERR)) {
->> diff --git a/drivers/net/wireless/b43/xmit.h b/drivers/net/wireless/b43/xmit.h
->> index dccf7c1..dc37297 100644
->> --- a/drivers/net/wireless/b43/xmit.h
->> +++ b/drivers/net/wireless/b43/xmit.h
->> @@ -250,9 +250,22 @@ struct b43_rxhdr_fw4 {
->>       } __packed;
->>       __le16 phy_status2;     /* PHY RX Status 2 */
->>       __le16 phy_status3;     /* PHY RX Status 3 */
->> -     __le32 mac_status;      /* MAC RX status */
->> -     __le16 mac_time;
->> -     __le16 channel;
->> +     union {
->> +             /* Tested with 598.314, 644.1001 and 666.2 */
->> +             struct {
->> +                     PAD_BYTES(1);
->> +                     __le32 mac_status;      /* MAC RX status */
->> +                     __le16 mac_time;
->> +                     __le16 channel;
->> +             } format_598 __packed;
->
-> Is this really a 1 byte padding here? This misalignes all fields from mac_status on.
-> Doesn't matter much, as the struct is packed, but it looks weird and worth
-> to re-check this.
+From: Arik Nemtsov <arik@wizery.com>
 
-Please, review V2 of this patch :)
+Firmware >= 6/7.3.0.0.75 (wl127x/wl128x) supports both
+STA and AP roles.
 
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+v3: s/WL1271/WL127X in spi.c
+
+ drivers/net/wireless/wl12xx/main.c   |   31 +++++--------------------------
+ drivers/net/wireless/wl12xx/sdio.c   |    4 +---
+ drivers/net/wireless/wl12xx/spi.c    |    4 +---
+ drivers/net/wireless/wl12xx/wl12xx.h |    7 ++-----
+ 4 files changed, 9 insertions(+), 37 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index f91875e..7b29573 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1040,31 +1040,16 @@ EXPORT_SYMBOL_GPL(wl1271_irq);
+ static int wl1271_fetch_firmware(struct wl1271 *wl)
+ {
+ 	const struct firmware *fw;
+ 	const char *fw_name;
+ 	int ret;
+ 
+-	switch (wl->bss_type) {
+-	case BSS_TYPE_AP_BSS:
+-		if (wl->chip.id == CHIP_ID_1283_PG20)
+-			fw_name = WL128X_AP_FW_NAME;
+-		else
+-			fw_name = WL127X_AP_FW_NAME;
+-		break;
+-	case BSS_TYPE_IBSS:
+-	case BSS_TYPE_STA_BSS:
+-		if (wl->chip.id == CHIP_ID_1283_PG20)
+-			fw_name = WL128X_FW_NAME;
+-		else
+-			fw_name	= WL1271_FW_NAME;
+-		break;
+-	default:
+-		wl1271_error("no compatible firmware for bss_type %d",
+-			     wl->bss_type);
+-		return -EINVAL;
+-	}
++	if (wl->chip.id == CHIP_ID_1283_PG20)
++		fw_name = WL128X_FW_NAME;
++	else
++		fw_name	= WL127X_FW_NAME;
+ 
+ 	wl1271_debug(DEBUG_BOOT, "booting firmware %s", fw_name);
+ 
+ 	ret = request_firmware(&fw, fw_name, wl1271_wl_to_dev(wl));
+ 
+ 	if (ret < 0) {
+@@ -1087,13 +1072,12 @@ static int wl1271_fetch_firmware(struct wl1271 *wl)
+ 		wl1271_error("could not allocate memory for the firmware");
+ 		ret = -ENOMEM;
+ 		goto out;
+ 	}
+ 
+ 	memcpy(wl->fw, fw->data, wl->fw_len);
+-	wl->fw_bss_type = wl->bss_type;
+ 	ret = 0;
+ 
+ out:
+ 	release_firmware(fw);
+ 
+ 	return ret;
+@@ -1358,14 +1342,13 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
+ 	default:
+ 		wl1271_warning("unsupported chip id: 0x%x", wl->chip.id);
+ 		ret = -ENODEV;
+ 		goto out;
+ 	}
+ 
+-	/* Make sure the firmware type matches the BSS type */
+-	if (wl->fw == NULL || wl->fw_bss_type != wl->bss_type) {
++	if (wl->fw == NULL) {
+ 		ret = wl1271_fetch_firmware(wl);
+ 		if (ret < 0)
+ 			goto out;
+ 	}
+ 
+ 	/* No NVS from netlink, try to get it from the filesystem */
+@@ -1793,15 +1776,12 @@ static int wl1271_op_start(struct ieee80211_hw *hw)
+ 	 * initializing the firmware. The MAC address cannot be changed
+ 	 * after boot, and without the proper MAC address, the firmware
+ 	 * will not function properly.
+ 	 *
+ 	 * The MAC address is first known when the corresponding interface
+ 	 * is added. That is where we will initialize the hardware.
+-	 *
+-	 * In addition, we currently have different firmwares for AP and managed
+-	 * operation. We will know which to boot according to interface type.
+ 	 */
+ 
+ 	return 0;
+ }
+ 
+ static void wl1271_op_stop(struct ieee80211_hw *hw)
+@@ -4390,13 +4370,12 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	wl->vif = NULL;
+ 	wl->flags = 0;
+ 	wl->sg_enabled = true;
+ 	wl->hw_pg_ver = -1;
+ 	wl->bss_type = MAX_BSS_TYPE;
+ 	wl->set_bss_type = MAX_BSS_TYPE;
+-	wl->fw_bss_type = MAX_BSS_TYPE;
+ 	wl->last_tx_hlid = 0;
+ 	wl->ap_ps_map = 0;
+ 	wl->ap_fw_ps_map = 0;
+ 	wl->quirks = 0;
+ 	wl->platform_quirks = 0;
+ 	wl->sched_scanning = false;
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index 5cf18c2..ac2e566 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -409,10 +409,8 @@ static void __exit wl1271_exit(void)
+ module_init(wl1271_init);
+ module_exit(wl1271_exit);
+ 
+ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
+ MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
+-MODULE_FIRMWARE(WL1271_FW_NAME);
++MODULE_FIRMWARE(WL127X_FW_NAME);
+ MODULE_FIRMWARE(WL128X_FW_NAME);
+-MODULE_FIRMWARE(WL127X_AP_FW_NAME);
+-MODULE_FIRMWARE(WL128X_AP_FW_NAME);
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index e0b3736..0f97186 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -483,11 +483,9 @@ static void __exit wl1271_exit(void)
+ module_init(wl1271_init);
+ module_exit(wl1271_exit);
+ 
+ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
+ MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
+-MODULE_FIRMWARE(WL1271_FW_NAME);
++MODULE_FIRMWARE(WL127X_FW_NAME);
+ MODULE_FIRMWARE(WL128X_FW_NAME);
+-MODULE_FIRMWARE(WL127X_AP_FW_NAME);
+-MODULE_FIRMWARE(WL128X_AP_FW_NAME);
+ MODULE_ALIAS("spi:wl1271");
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 5b00a84..dc0013e 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -127,16 +127,14 @@ extern u32 wl12xx_debug_level;
+ 				  CFG_RX_MGMT_EN | CFG_RX_DATA_EN | \
+ 				  CFG_RX_CTL_EN | CFG_RX_AUTH_EN | \
+ 				  CFG_RX_ASSOC_EN)
+ 
+ 
+ 
+-#define WL1271_FW_NAME "ti-connectivity/wl1271-fw-2.bin"
+-#define WL128X_FW_NAME "ti-connectivity/wl128x-fw.bin"
+-#define WL127X_AP_FW_NAME "ti-connectivity/wl1271-fw-ap.bin"
+-#define WL128X_AP_FW_NAME "ti-connectivity/wl128x-fw-ap.bin"
++#define WL127X_FW_NAME "ti-connectivity/wl127x-fw-3.bin"
++#define WL128X_FW_NAME "ti-connectivity/wl128x-fw-3.bin"
+ 
+ /*
+  * wl127x and wl128x are using the same NVS file name. However, the
+  * ini parameters between them are different.  The driver validates
+  * the correct NVS size in wl1271_boot_upload_nvs().
+  */
+@@ -402,13 +400,12 @@ struct wl1271 {
+ 
+ 	int cmd_box_addr;
+ 	int event_box_addr;
+ 
+ 	u8 *fw;
+ 	size_t fw_len;
+-	u8 fw_bss_type;
+ 	void *nvs;
+ 	size_t nvs_len;
+ 
+ 	s8 hw_pg_ver;
+ 
+ 	u8 bssid[ETH_ALEN];
 -- 
-Rafał
+1.7.6.401.g6a319
+
