@@ -1,67 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:55309 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753553Ab1HZJUo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 05:20:44 -0400
-Received: by pzk37 with SMTP id 37so3955402pzk.1
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 02:20:44 -0700 (PDT)
+Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:5418 "EHLO
+	VA3EHSOBE009.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750935Ab1HQEyd convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Aug 2011 00:54:33 -0400
+From: Lin Tony-B19295 <B19295@freescale.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Hauke Mehrtens <hauke@hauke-m.de>,
+	"mcgrof@gmail.com" <mcgrof@gmail.com>,
+	"rodrigue@qca.qualcomm.com" <rodrigue@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rmani@qca.qualcomm.com" <rmani@qca.qualcomm.com>
+Subject: RE: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
+Date: Wed, 17 Aug 2011 04:53:32 +0000
+Message-ID: <97D3A72708D04647A5AC84A04996E5B5195C30@039-SN1MPN1-002.039d.mgd.msft.net> (sfid-20110817_065440_172262_4D6547CD)
+References: <1313060347-665-1-git-send-email-hauke@hauke-m.de>
+ <97D3A72708D04647A5AC84A04996E5B5193114@039-SN1MPN1-002.039d.mgd.msft.net>
+ <4E496CA7.7000604@hauke-m.de> <4E49BAB1.7060303@qca.qualcomm.com>
+ <97D3A72708D04647A5AC84A04996E5B5195381@039-SN1MPN1-002.039d.mgd.msft.net>
+ <4E4A7159.3090004@qca.qualcomm.com>
+ <97D3A72708D04647A5AC84A04996E5B5195ADD@039-SN1MPN1-002.039d.mgd.msft.net>
+ <4E4B437A.1070200@qca.qualcomm.com>
+ <97D3A72708D04647A5AC84A04996E5B5195BE5@039-SN1MPN1-002.039d.mgd.msft.net>
+ <4E4B48E4.7060809@qca.qualcomm.com>
+In-Reply-To: <4E4B48E4.7060809@qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <CACna6rx_d4btykdK7AMwFxeFMs_MxjHEHvR6coxaZkfqkQVafA@mail.gmail.com>
-References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
-	<CACna6rztueomzzas=hQjfj6htD=SHFhrtFPSqbviqVDwaihJ9w@mail.gmail.com>
-	<4E4555AD.7040809@broadcom.com>
-	<CACna6rx_d4btykdK7AMwFxeFMs_MxjHEHvR6coxaZkfqkQVafA@mail.gmail.com>
-Date: Fri, 26 Aug 2011 11:20:43 +0200
-Message-ID: <CACna6rzJWHP+EPy6bwQkLZnjxsL6TKfYnQ71Nq8myOjmeBPODg@mail.gmail.com> (sfid-20110826_112047_345296_089DA3E8)
-Subject: Re: [PATCH 00/14] staging: brcm80211: brcmfmac driver cleanup
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 12 sierpnia 2011 22:04 użytkownik Rafał Miłecki
-<zajec5@gmail.com> napisał:
-> W dniu 12 sierpnia 2011 18:32 użytkownik Arend van Spriel
-> <arend@broadcom.com> napisał:
->> On 08/12/2011 04:02 PM, Rafał Miłecki wrote:
->>>
->>> 2011/8/12 Arend van Spriel<arend@broadcom.com>:
->>>>
->>>> Several cleanup patches to reduce code for the brcmfmac driver and
->>>> get rid of a remaining checkpatch warning. The driver sources should
->>>> be clear from checkpatch issue now.
->>>>
->>>> This series applies to staging-next and depends on the following patch
->>>> set:
->>>
->>> Are you testing patches on some hardware? Or just compile-testing?
->>>
->>> I believe this driver is meant to support BCM4329, which is not PCI(e)
->>> board. What adapter do you use?
->>>
->>> I've heard about Arasan adapter. Have you tried it? Is that something
->>> reachable from arasan.com?
->>
->> Our brcm80211 source tree under drivers/staging contain two drivers. The
->> brcmsmac driver currently supporting the PCI(e) cards with bcm43224,
->> bcm43225, and bcm4313 chips and the brcmfmac driver currently supporting the
->> SDIO card with bcm4329 chip. brcmsmac is a mac80211 driver and brcmfmac is a
->> cfg80211 driver.
->>
->> We indeed use the Arasan adapter and both drivers are running in nightly
->> test cycle testing our common internal repository. So the drivers are
->> functionally tested on the x86 platforms (32 and 64 bit). Also looking at
->> sparc64 and powerpc64 but not in a nightly cycle.
->
-> Is there a chance you can donate me with such a adapter and card?
+> -----Original Message-----
+> From: Kalle Valo [mailto:kvalo@qca.qualcomm.com]
+> Sent: Wednesday, August 17, 2011 12:52 PM
+> To: Lin Tony-B19295
+> Cc: Hauke Mehrtens; mcgrof@gmail.com; rodrigue@qca.qualcomm.com; linux-
+> wireless@vger.kernel.org; rmani@qca.qualcomm.com
+> Subject: Re: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
+> 
+> On 08/16/2011 09:44 PM, Lin Tony-B19295 wrote:
+> >>> Besides, the performance seems not good. I got only 5Mb/s
+> >>> station->station performance. While another driver released from your
+> >>> AE could reach at least 10Mb/s, do you have any idea?
+> >>
+> >> That sounds quite low. Can you describe your test setup in detail,
+> please?
+> >> That would help to understand the issue.
+> >>
+> > Both PC and board are connected to an AP. And set PC as host, 'iperf -
+> s'
+> > Set board as client, 'iperf -c pc ipaddr -t 100000 -w 1M -i 3'
+> > If using another package, I get 23Mb/s
+> 
+> What wifi settings do you use? (11n, encryption, frequency, etc)
+> 
+11n, no encryption, 50Mhz.
 
-Ping?
+> Does dmesg show anything suspicious?
+> 
+Does not see any suspicious...
 
--- 
-Rafał
+> Kalle
+
+
