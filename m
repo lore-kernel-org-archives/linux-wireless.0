@@ -1,221 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60431 "EHLO nbd.name"
+Received: from mx1.redhat.com ([209.132.183.28]:29351 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752694Ab1H2Fyd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 01:54:33 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v2 4/4] ath9k: implement .get_antenna and .set_antenna
-Date: Mon, 29 Aug 2011 07:54:22 +0200
-Message-Id: <1314597262-49427-4-git-send-email-nbd@openwrt.org> (sfid-20110829_075452_674625_B8A6A0BD)
-In-Reply-To: <1314597262-49427-3-git-send-email-nbd@openwrt.org>
-References: <1314597262-49427-1-git-send-email-nbd@openwrt.org>
- <1314597262-49427-2-git-send-email-nbd@openwrt.org>
- <1314597262-49427-3-git-send-email-nbd@openwrt.org>
+	id S1752684Ab1HQPS3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Aug 2011 11:18:29 -0400
+Date: Wed, 17 Aug 2011 17:16:28 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 05/60] iwlagn: introduce struct iwl-shared - known by all
+ layers
+Message-ID: <20110817151626.GA1552@redhat.com> (sfid-20110817_171833_423634_1DE4F827)
+References: <20110815142144.GA15718@redhat.com>
+ <1313416005.15170.35.camel@wwguy-huron>
+ <20110815144359.GA15719@redhat.com>
+ <1313417422.15170.39.camel@wwguy-huron>
+ <20110815151231.GB15718@redhat.com>
+ <1313422152.15170.43.camel@wwguy-huron>
+ <20110816092610.GB6085@redhat.com>
+ <1313503443.6823.9.camel@wwguy-ubuntu>
+ <20110816151256.GA4932@redhat.com>
+ <4825B8A2C4E264489E57869F0DCFB22344565DF754@hasmsx502.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4825B8A2C4E264489E57869F0DCFB22344565DF754@hasmsx502.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On MIMO chips this can be used to enable/disable hardware chains, ensuring
-that the MCS information is updated accordingly.
-On non-MIMO chips with rx diversity (e.g. 9285), this configures the rx
-input antenna.
+On Tue, Aug 16, 2011 at 07:23:52PM +0300, Grumbach, Emmanuel wrote:
+> > Simply by adding to iwl_priv different struct ops/data for each upper
+> > layer you will have. You need to have the same thing to clue with
+> > mac80211, whatever upper layer will be. Otherwise, if mac80211 clue
+> > have to be different, new hardware probably needs different driver.
+> > 
+> 
+> I would be reluctant to have all the data / ops needed by all the possible HW
+> all the time in priv. I don't think it is a good idea to have unallocated pointers
+> for a bus that don't need the rings...
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +
- drivers/net/wireless/ath/ath9k/init.c  |   33 ++++++++++++---
- drivers/net/wireless/ath/ath9k/main.c  |   71 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
- 4 files changed, 100 insertions(+), 8 deletions(-)
+Not sure why there would be any unallocated pointers.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 5d9a9aa..6c7b27c 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -647,6 +647,7 @@ struct ath_softc {
- 	struct ath_descdma txsdma;
- 
- 	struct ath_ant_comb ant_comb;
-+	u32 ant_tx, ant_rx;
- };
- 
- void ath9k_tasklet(unsigned long data);
-@@ -668,6 +669,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
- 		    const struct ath_bus_ops *bus_ops);
- void ath9k_deinit_device(struct ath_softc *sc);
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw);
-+void ath9k_reload_chainmask_settings(struct ath_softc *sc);
- 
- void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw);
- bool ath9k_uses_beacons(int type);
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 31ef501..263bbe2 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -652,9 +652,22 @@ static void ath9k_init_txpower_limits(struct ath_softc *sc)
- 	ah->curchan = curchan;
- }
- 
-+void ath9k_reload_chainmask_settings(struct ath_softc *sc)
-+{
-+	if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT))
-+		return;
-+
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
-+		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
-+		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
-+}
-+
-+
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- {
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
- 		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
-@@ -692,6 +705,17 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->sta_data_size = sizeof(struct ath_node);
- 	hw->vif_data_size = sizeof(struct ath_vif);
- 
-+	hw->wiphy->available_antennas_rx = BIT(ah->caps.max_rxchains) - 1;
-+	hw->wiphy->available_antennas_tx = BIT(ah->caps.max_txchains) - 1;
-+
-+	/* single chain devices with rx diversity */
-+	if (ah->caps.max_rxchains == 1 &&
-+	    ath9k_hw_ops(ah)->antdiv_comb_conf_get)
-+		hw->wiphy->available_antennas_rx = 3;
-+
-+	sc->ant_rx = hw->wiphy->available_antennas_rx;
-+	sc->ant_tx = hw->wiphy->available_antennas_tx;
-+
- #ifdef CONFIG_ATH9K_RATE_CONTROL
- 	hw->rate_control_algorithm = "ath9k_rate_control";
- #endif
-@@ -703,12 +727,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
- 			&sc->sbands[IEEE80211_BAND_5GHZ];
- 
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
--		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
--			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
--		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
--			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
--	}
-+	ath9k_reload_chainmask_settings(sc);
- 
- 	SET_IEEE80211_PERM_ADDR(hw, common->macaddr);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 4b1fe7c..1cbbaea 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -262,6 +262,22 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 			ath_start_ani(common);
- 	}
- 
-+	if (ath9k_hw_ops(ah)->antdiv_comb_conf_get && sc->ant_rx != 3) {
-+		struct ath_hw_antcomb_conf div_ant_conf;
-+		u8 lna_conf;
-+
-+		ath9k_hw_antdiv_comb_conf_get(ah, &div_ant_conf);
-+
-+		if (sc->ant_rx == 1)
-+			lna_conf = ATH_ANT_DIV_COMB_LNA1;
-+		else
-+			lna_conf = ATH_ANT_DIV_COMB_LNA2;
-+		div_ant_conf.main_lna_conf = lna_conf;
-+		div_ant_conf.alt_lna_conf = lna_conf;
-+
-+		ath9k_hw_antdiv_comb_conf_set(ah, &div_ant_conf);
-+	}
-+
- 	ieee80211_wake_queues(sc->hw);
- 
- 	return true;
-@@ -2358,6 +2374,59 @@ static int ath9k_get_stats(struct ieee80211_hw *hw,
- 	return 0;
- }
- 
-+static u32 fill_chainmask(u32 cap, u32 new)
-+{
-+	u32 filled = 0;
-+	int i;
-+
-+	for (i = 0; cap && new; i++, cap >>= 1) {
-+		if (!(cap & BIT(0)))
-+			continue;
-+
-+		if (new & BIT(0))
-+			filled |= BIT(i);
-+
-+		new >>= 1;
-+	}
-+
-+	return filled;
-+}
-+
-+static int ath9k_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	if (!rx_ant || !tx_ant)
-+		return -EINVAL;
-+
-+	sc->ant_rx = rx_ant;
-+	sc->ant_tx = tx_ant;
-+
-+	if (ah->caps.rx_chainmask == 1)
-+		return 0;
-+
-+	/* AR9100 runs into calibration issues if not all rx chains are enabled */
-+	if (AR_SREV_9100(ah))
-+		ah->rxchainmask = 0x7;
-+	else
-+		ah->rxchainmask = fill_chainmask(ah->caps.rx_chainmask, rx_ant);
-+
-+	ah->txchainmask = fill_chainmask(ah->caps.tx_chainmask, tx_ant);
-+	ath9k_reload_chainmask_settings(sc);
-+
-+	return 0;
-+}
-+
-+static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
-+{
-+	struct ath_softc *sc = hw->priv;
-+
-+	*tx_ant = sc->ant_tx;
-+	*rx_ant = sc->ant_rx;
-+	return 0;
-+}
-+
- struct ieee80211_ops ath9k_ops = {
- 	.tx 		    = ath9k_tx,
- 	.start 		    = ath9k_start,
-@@ -2384,4 +2453,6 @@ struct ieee80211_ops ath9k_ops = {
- 	.tx_frames_pending  = ath9k_tx_frames_pending,
- 	.tx_last_beacon     = ath9k_tx_last_beacon,
- 	.get_stats	    = ath9k_get_stats,
-+	.set_antenna	    = ath9k_set_antenna,
-+	.get_antenna	    = ath9k_get_antenna,
- };
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index ad5f9bd..7e1265c 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1956,7 +1956,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 			ath_rx_ps(sc, skb);
- 		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 
--		if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
-+		if ((ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) && sc->ant_rx == 3)
- 			ath_ant_comb_scan(sc, &rs);
- 
- 		ieee80211_rx(hw, skb);
--- 
-1.7.3.2
+> Instead, I think that having a HW specific area that is allocated for each HW is much
+> nicer and reliable. This is what this patch series is all about.
+> Furthermore, I don't want the HW layer to dereference iwl_priv,
+
+We discussed with Wey upper and lower layer, term HW layer confuse me
+even more here. 
+
+>  the same way the low level
+> driver doesn't dereference mac80211's local pointer. This is what the iwl_shared is all about.
+
+Yes ieee80211_local is hidden from drivers, but IMHO this is because
+it is very big structure and we needed separate it logically into
+smaller structures. Most structures like net_device or Scsi_Host don't
+do any hiding from lower layers and are just fine.
+
+> Are things clearer now ?
+
+Unfortunately no. Perhaps you could describe all these layers in same
+schematic. Explain what for they are, show how they will be clued
+together and list they particular implementations.
+
+Particularly is interesting how do you want to clue driver with mac80211
+having different iwl_priv structures. Also, what for are separate
+iwl_trans_pcie and iwl_bus_pcie instead of one thing that talk
+to pcie bus.
+
+I would not care what you do with iwlwifi driver, but what I learnt
+from the past you are develop driver in the way that is very hard to
+debug and support it. On the same time, what is the most disappointing,
+you are ignoring majority of users bug reports, not leaving other choice
+that fix bugs by themselves. Hence is important to have driver as clean
+designed as possible, without any needles layers, abstractions and
+structures.
+
+Stanislaw
 
