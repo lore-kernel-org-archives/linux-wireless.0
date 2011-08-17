@@ -1,57 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:60872 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754495Ab1H2Sbl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 14:31:41 -0400
-Subject: Re: [PATCH 2/2] ath: Make ath_printk void not int and remove
- unused struct ath_common *
-From: Joe Perches <joe@perches.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <20110829181237.GB1406@tuxdriver.com>
-References: <cover.1314347556.git.joe@perches.com>
-	 <78869fcd8172cd02266b66a71aadbd0c0efbdebc.1314347556.git.joe@perches.com>
-	 <20110829181237.GB1406@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 29 Aug 2011 11:31:39 -0700
-Message-ID: <1314642699.6852.23.camel@Joe-Laptop> (sfid-20110829_203204_579399_4576D031)
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43941 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750848Ab1HQE5a (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Aug 2011 00:57:30 -0400
+Message-ID: <4E4B4A37.3020300@qca.qualcomm.com> (sfid-20110817_065733_426658_EF53C6E4)
+Date: Tue, 16 Aug 2011 21:57:27 -0700
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Lin Tony-B19295 <B19295@freescale.com>
+CC: Hauke Mehrtens <hauke@hauke-m.de>,
+	"mcgrof@gmail.com" <mcgrof@gmail.com>,
+	"rodrigue@qca.qualcomm.com" <rodrigue@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rmani@qca.qualcomm.com" <rmani@qca.qualcomm.com>
+Subject: Re: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
+References: <1313060347-665-1-git-send-email-hauke@hauke-m.de> <97D3A72708D04647A5AC84A04996E5B5193114@039-SN1MPN1-002.039d.mgd.msft.net> <4E496CA7.7000604@hauke-m.de> <4E49BAB1.7060303@qca.qualcomm.com> <97D3A72708D04647A5AC84A04996E5B5195381@039-SN1MPN1-002.039d.mgd.msft.net> <4E4A7159.3090004@qca.qualcomm.com> <97D3A72708D04647A5AC84A04996E5B5195ADD@039-SN1MPN1-002.039d.mgd.msft.net> <4E4B437A.1070200@qca.qualcomm.com> <97D3A72708D04647A5AC84A04996E5B5195BE5@039-SN1MPN1-002.039d.mgd.msft.net> <4E4B48E4.7060809@qca.qualcomm.com> <97D3A72708D04647A5AC84A04996E5B5195C30@039-SN1MPN1-002.039d.mgd.msft.net>
+In-Reply-To: <97D3A72708D04647A5AC84A04996E5B5195C30@039-SN1MPN1-002.039d.mgd.msft.net>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-08-29 at 14:12 -0400, John W. Linville wrote:
-> On Fri, Aug 26, 2011 at 01:56:39AM -0700, Joe Perches wrote:
-> > Changing the return type and removing the unused argument from
-> > ath_printk reduces code size.
-> > Add an __always_unused struct ath_common * to the macros
-> > that call ath_printk to avoid unused variable warnings.
-> > $ size drivers/net/wireless/ath/built-in.o*
-> >    text	   data	    bss	    dec	    hex	filename
-> > 1159859	  16235	 212000	1388094	 152e3e	drivers/net/wireless/ath/built-in.o.new
-> > 1164175	  16235	 212032	1392442	 153f3a	drivers/net/wireless/ath/built-in.o.old
-[]
-> > +#define _ath_printk(level, common, fmt, ...)			\
-> > +do {								\
-> > +	__always_unused struct ath_common *unused = common;	\
-> > +	ath_printk(level, fmt, ##__VA_ARGS__);			\
-> > +} while (0)
-[]
-> >  #define ath_emerg(common, fmt, ...)				\
-> > -	ath_printk(KERN_EMERG, common, fmt, ##__VA_ARGS__)
-> > +	_ath_printk(KERN_EMERG, common, fmt, ##__VA_ARGS__)
-[]
-> Any reason to preserve all these "common" args?
+On 08/16/2011 09:53 PM, Lin Tony-B19295 wrote:
+>>> Set board as client, 'iperf -c pc ipaddr -t 100000 -w 1M -i 3'
+>>> If using another package, I get 23Mb/s
+>>
+>> What wifi settings do you use? (11n, encryption, frequency, etc)
+>>
+> 11n, no encryption, 50Mhz.
 
-ath_dbg uses common, the other ath_<level>s do not.
+50 MHz can't be right. Please send me output from 'iw wlan0 link' (or
+whatever interface you use with ath6kl.
 
-So, other than to avoid modifying all the current uses?
-Maybe just consistency or a future use case.
-
-Or not.
-
-I think using the macro to avoid larger line changes is
-an acceptable minimal change.
-
-
+Kalle
