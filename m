@@ -1,151 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:61573 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754390Ab1H0ASl (ORCPT
+Received: from mta-1.ms.rz.RWTH-Aachen.DE ([134.130.7.72]:52867 "EHLO
+	mta-1.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754022Ab1HQWFv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 20:18:41 -0400
-Received: by yie30 with SMTP id 30so2047705yie.19
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 17:18:40 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Subject: [PATCH v2 6/8] mac80211: Consolidate {mesh,mpp}_path_flush into one function
-Date: Fri, 26 Aug 2011 17:18:12 -0700
-Message-Id: <1314404294-4233-7-git-send-email-javier@cozybit.com> (sfid-20110827_021844_832620_27517CEE)
-In-Reply-To: <1314404294-4233-1-git-send-email-javier@cozybit.com>
-References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
- <1314404294-4233-1-git-send-email-javier@cozybit.com>
+	Wed, 17 Aug 2011 18:05:51 -0400
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Received: from ironport-out-1.rz.rwth-aachen.de ([134.130.5.40])
+ by mta-1.ms.rz.RWTH-Aachen.de
+ (Sun Java(tm) System Messaging Server 6.3-7.04 (built Sep 26 2008))
+ with ESMTP id <0LQ300ILZDBO5TB0@mta-1.ms.rz.RWTH-Aachen.de> for
+ linux-wireless@vger.kernel.org; Wed, 17 Aug 2011 23:35:48 +0200 (CEST)
+Received: from hbook.dsl ([unknown] [77.180.174.198])
+ by relay-auth-2.ms.rz.rwth-aachen.de
+ (Sun Java(tm) System Messaging Server 7.0-3.01 64bit (built Dec  9 2008))
+ with ESMTPA id <0LQ3004MDDBNDR30@relay-auth-2.ms.rz.rwth-aachen.de> for
+ linux-wireless@vger.kernel.org; Wed, 17 Aug 2011 23:35:48 +0200 (CEST)
+From: Hanno Wirtz <hanno.wirtz@comsys.rwth-aachen.de>
+Subject: Multiple virtual interfaces, ath9k
+Date: Wed, 17 Aug 2011 23:35:47 +0200
+Message-id: <6FA32078-B95C-47B6-98C8-17DE81CE5FE5@comsys.rwth-aachen.de> (sfid-20110818_000600_535801_B5F3930F)
+To: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Hi, 
 
----
-v2: - Fix extra space (checkpatch)
-    - Add lockdep check for RCU
- net/mac80211/mesh_pathtbl.c |   65 +++++++++++++++++-------------------------
- 1 files changed, 26 insertions(+), 39 deletions(-)
+I am having problems with the operation of multiple virtual interfaces. 
+A short scenario description : 
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index ea9e34a..3c03be9 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -790,35 +790,6 @@ void mesh_plink_broken(struct sta_info *sta)
- 	rcu_read_unlock();
- }
- 
--/**
-- * mesh_path_flush_by_nexthop - Deletes mesh paths if their next hop matches
-- *
-- * @sta - mesh peer to match
-- *
-- * RCU notes: this function is called when a mesh plink transitions from
-- * PLINK_ESTAB to any other state, since PLINK_ESTAB state is the only one that
-- * allows path creation. This will happen before the sta can be freed (because
-- * sta_info_destroy() calls this) so any reader in a rcu read block will be
-- * protected against the plink disappearing.
-- */
--void mesh_path_flush_by_nexthop(struct sta_info *sta)
--{
--	struct mesh_table *tbl;
--	struct mesh_path *mpath;
--	struct mpath_node *node;
--	struct hlist_node *p;
--	int i;
--
--	rcu_read_lock();
--	tbl = rcu_dereference(mesh_paths);
--	for_each_mesh_entry(tbl, p, node, i) {
--		mpath = node->mpath;
--		if (rcu_dereference(mpath->next_hop) == sta)
--			mesh_path_del(mpath->dst, mpath->sdata);
--	}
--	rcu_read_unlock();
--}
--
- static void mesh_path_node_reclaim(struct rcu_head *rp)
- {
- 	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
-@@ -845,7 +816,18 @@ static void __mesh_path_del(struct mesh_table *tbl, struct mpath_node *node)
- 	atomic_dec(&tbl->entries);
- }
- 
--static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
-+/**
-+ * mesh_path_flush_by_nexthop - Deletes mesh paths if their next hop matches
-+ *
-+ * @sta - mesh peer to match
-+ *
-+ * RCU notes: this function is called when a mesh plink transitions from
-+ * PLINK_ESTAB to any other state, since PLINK_ESTAB state is the only one that
-+ * allows path creation. This will happen before the sta can be freed (because
-+ * sta_info_destroy() calls this) so any reader in a rcu read block will be
-+ * protected against the plink disappearing.
-+ */
-+void mesh_path_flush_by_nexthop(struct sta_info *sta)
- {
- 	struct mesh_table *tbl;
- 	struct mesh_path *mpath;
-@@ -857,7 +839,7 @@ static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
- 	tbl = rcu_dereference(mesh_paths);
- 	for_each_mesh_entry(tbl, p, node, i) {
- 		mpath = node->mpath;
--		if (mpath->sdata == sdata) {
-+		if (rcu_dereference(mpath->next_hop) == sta) {
- 			spin_lock_bh(&tbl->hashwlock[i]);
- 			__mesh_path_del(tbl, node);
- 			spin_unlock_bh(&tbl->hashwlock[i]);
-@@ -866,24 +848,23 @@ static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
- 	rcu_read_unlock();
- }
- 
--static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
-+static void table_flush_by_iface(struct mesh_table *tbl,
-+				 struct ieee80211_sub_if_data *sdata)
- {
--	struct mesh_table *tbl;
- 	struct mesh_path *mpath;
- 	struct mpath_node *node;
- 	struct hlist_node *p;
- 	int i;
- 
--	read_lock_bh(&pathtbl_resize_lock);
--	tbl = rcu_dereference_protected(mpp_paths,
--					lockdep_is_held(pathtbl_resize_lock));
-+	WARN_ON(!rcu_read_lock_held());
- 	for_each_mesh_entry(tbl, p, node, i) {
- 		mpath = node->mpath;
-+		if (mpath->sdata != sdata)
-+			continue;
- 		spin_lock_bh(&tbl->hashwlock[i]);
- 		__mesh_path_del(tbl, node);
- 		spin_unlock_bh(&tbl->hashwlock[i]);
- 	}
--	read_unlock_bh(&pathtbl_resize_lock);
- }
- 
- /**
-@@ -896,8 +877,14 @@ static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
-  */
- void mesh_path_flush_by_iface(struct ieee80211_sub_if_data *sdata)
- {
--	mesh_path_flush(sdata);
--	mpp_path_flush(sdata);
-+	struct mesh_table *tbl;
-+
-+	rcu_read_lock();
-+	tbl = rcu_dereference(mesh_paths);
-+	table_flush_by_iface(tbl, sdata);
-+	tbl = rcu_dereference(mpp_paths);
-+	table_flush_by_iface(tbl, sdata);
-+	rcu_read_unlock();
- }
- 
- /**
--- 
-1.7.6
+I would like to provide two independent wifi networks at my device, both using a virtual AP interface. 
+Furthermore, I would like to dynamically associate to (multiple) other networks using dynamically created STA interfaces. 
+This results in two AP interfaces that are permanently active and at least one (up to 5) STA interface(s) that run(s) concurrently. 
+I use Ubuntu kernel 3.1-rc2 with compat-wireless-3.1, the machine has an Atheros AR9285 wireless chip.
 
+>From what I read, this should be possible, and in fact *some* combinations work, i.e. 2 AP interfaces, 1 AP + 1 STA and 2 STA interfaces. 
+However, adding a STA interface or an AP interface respectively, causes the connections to all associated stations to be terminated in the case of AP interfaces.
+In the case of STA interfaces, no working association to a network is possible. 
+The debug output in /var/log/syslog and in /sys/kernel/debug/ieee80211/phy*/ath9k is rather inconclusive to me, as I only seem to find notifications and 
+statistics. The only thing I found so far that could be the cause for such behavior is the "ieee80211_iface_combination" structure in compat-wireless, 
+in which the number, types and allowed combination of virtual interfaces is set. 
+
+I would be happy to work on the driver code itself, however I am a bit clueless where to start and what actual *errors* to search and fix.
+If anyone could point me to something, that would help me a lot. If that helps, I can post complete syslog and debug traces tomorrow. 
+
+Thanks a lot in advance, 
+
+Hanno
