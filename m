@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58300 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754944Ab1HBUc3 (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:34463 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753039Ab1HQD2x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 16:32:29 -0400
-Received: by fxh19 with SMTP id 19so164160fxh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 13:32:28 -0700 (PDT)
+	Tue, 16 Aug 2011 23:28:53 -0400
 MIME-Version: 1.0
-In-Reply-To: <201108022309.07783.anarsoul@gmail.com>
-References: <201108021312.23153.anarsoul@gmail.com>
-	<1312280832-27675-1-git-send-email-anarsoul@gmail.com>
-	<CAGq3pz4bQ_2eQbVye==3Xqq3gK4PV6+JJXoHX0TXz=Y7kWC0wQ@mail.gmail.com>
-	<201108022309.07783.anarsoul@gmail.com>
-Date: Tue, 2 Aug 2011 21:32:27 +0100
-Message-ID: <CAGq3pz6R=8eRNRME-X9e-S12cWvRq_-xvcjCa7KXyRfE0sJ8gw@mail.gmail.com> (sfid-20110802_223232_949269_F6761BE0)
-Subject: Re: [PATCH 1/2] libertas: add ability to power off card on suspend
-From: Daniel Drake <dsd@laptop.org>
-To: Vasily Khoruzhick <anarsoul@gmail.com>
-Cc: libertas-dev@lists.infradead.org, linville@tuxdriver.com,
-	dcbw@redhat.com, linux-wireless@vger.kernel.org
+From: Pavel Ivanov <paivanof@gmail.com>
+Date: Tue, 16 Aug 2011 23:28:22 -0400
+Message-ID: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com> (sfid-20110817_052912_694212_46D2CB99)
+Subject: [PATCH] ath9k: make driver usable standalone
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 August 2011 21:09, Vasily Khoruzhick <anarsoul@gmail.com> wrote:
-> Because no one puts interface down before suspend?
-> I just re-tested - if interface is up - kernel does not put it down before
-> suspend, so I got a lot of timeouts and errors on dmesg after resume.
+When ath9k is the only wireless driver included in the build
+WIRELESS_EXT configuration option becomes undefined. Because of that
+driver becomes essentially unusable as you can't actually connect to
+any WiFi network. By including WIRELESS_EXT into Kconfig we ensure
+that build with ath9k and without other drivers (having WIRELESS_EXT
+selected in their Kconfig) is actually usable.
 
-I can't see how this would have been influenced by my work.
+Signed-off-by: Pavel Ivanov <paivanof@gmail.com>
+---
 
-Your resume handler should already be fixing up the hardware state so
-that it can be operated (regardless of any power saving that might
-come into effect), or otherwise your suspend handler should cause the
-device to be removed so that it can be reprobed completely during
-resume.
-
-Daniel
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig
+b/drivers/net/wireless/ath/ath9k/Kconfig
+index d9c08c6..2573f77 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -11,6 +11,7 @@ config ATH9K
+ 	select LEDS_CLASS
+ 	select NEW_LEDS
+ 	select ATH9K_COMMON
++	select WIRELESS_EXT
+ 	---help---
+ 	  This module adds support for wireless adapters based on
+ 	  Atheros IEEE 802.11n AR5008, AR9001 and AR9002 family
