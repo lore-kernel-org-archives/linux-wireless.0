@@ -1,149 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:64521 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753781Ab1HXTCj (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:48886 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751798Ab1HQS1Y convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 15:02:39 -0400
-Received: by mail-yw0-f46.google.com with SMTP id 7so1101813ywf.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 12:02:38 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [RFC 2/3] mac80211: add HT IEs to mesh frames
-Date: Wed, 24 Aug 2011 12:02:18 -0700
-Message-Id: <1314212539-23669-3-git-send-email-thomas@cozybit.com> (sfid-20110824_210242_086509_0ACA550E)
-In-Reply-To: <1314212539-23669-1-git-send-email-thomas@cozybit.com>
-References: <1314212539-23669-1-git-send-email-thomas@cozybit.com>
+	Wed, 17 Aug 2011 14:27:24 -0400
+Received: by pzk37 with SMTP id 37so1500744pzk.1
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2011 11:27:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4E3420E9.6080603@lwfinger.net>
+References: <4E3420E9.6080603@lwfinger.net>
+Date: Wed, 17 Aug 2011 20:27:23 +0200
+Message-ID: <CACna6ryErHY+OyAnvc9+MYArb5mXpSdadOPADsQOBz796UqSUw@mail.gmail.com> (sfid-20110817_202727_916753_5149B98C)
+Subject: Re: Report on bcma with 14e4:4353 (BCM43224)
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh.c       |   43 +++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/mesh.h       |    4 ++++
- net/mac80211/mesh_plink.c |    9 +++++++++
- net/mac80211/tx.c         |    4 ++++
- 4 files changed, 60 insertions(+), 0 deletions(-)
+W dniu 30 lipca 2011 17:19 użytkownik Larry Finger
+<Larry.Finger@lwfinger.net> napisał:
+> I'm using a recent pull from wireless-testing - 'git describe' results in
+> master-2011-07-26-150-g4ea94a9.
+>
+> The driver is working well with reasonable performance. Using tcpperf, I get
+> 8-10 Mb/s upload on an 802.11g connection. The connection has been up for 17
+> hours with no disconnects.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 28ab510..6ed233d 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -400,6 +400,49 @@ int mesh_add_ds_params_ie(struct sk_buff *skb,
- 	return 0;
- }
- 
-+int mesh_add_ht_cap_ie(struct sk_buff *skb,
-+		       struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband;
-+	u8 *pos;
-+
-+	sband = local->hw.wiphy->bands[local->oper_channel->band];
-+	if (!sband->ht_cap.ht_supported ||
-+	    local->_oper_channel_type == NL80211_CHAN_NO_HT)
-+		return 0;
-+
-+	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_cap))
-+		return -ENOMEM;
-+
-+	pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_cap));
-+	ieee80211_ie_build_ht_cap(pos, sband, sband->ht_cap.cap);
-+
-+	return 0;
-+}
-+
-+int mesh_add_ht_info_ie(struct sk_buff *skb,
-+			struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_channel *channel = local->oper_channel;
-+	enum nl80211_channel_type channel_type = local->_oper_channel_type;
-+	struct ieee80211_supported_band *sband =
-+				local->hw.wiphy->bands[channel->band];
-+	struct ieee80211_sta_ht_cap *ht_cap = &sband->ht_cap;
-+	u8 *pos;
-+
-+	if (!ht_cap->ht_supported || channel_type == NL80211_CHAN_NO_HT)
-+		return 0;
-+
-+	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_info))
-+		return -ENOMEM;
-+
-+	pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_info));
-+	ieee80211_ie_build_ht_info(pos, ht_cap, channel, channel_type);
-+
-+	return 0;
-+}
- static void ieee80211_mesh_path_timer(unsigned long data)
- {
- 	struct ieee80211_sub_if_data *sdata =
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 42536a4..334c392 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -221,6 +221,10 @@ int mesh_add_ext_srates_ie(struct sk_buff *skb,
- 			   struct ieee80211_sub_if_data *sdata);
- int mesh_add_ds_params_ie(struct sk_buff *skb,
- 			  struct ieee80211_sub_if_data *sdata);
-+int mesh_add_ht_cap_ie(struct sk_buff *skb,
-+		       struct ieee80211_sub_if_data *sdata);
-+int mesh_add_ht_info_ie(struct sk_buff *skb,
-+			struct ieee80211_sub_if_data *sdata);
- void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
- int mesh_rmc_init(struct ieee80211_sub_if_data *sdata);
- void ieee80211s_init(void);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index f8c9666..8f068b1 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -158,6 +158,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 			    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
- 			    2 + sdata->u.mesh.mesh_id_len +
- 			    2 + sizeof(struct ieee80211_meshconf_ie) +
-+			    2 + sizeof(struct ieee80211_ht_cap) +
-+			    2 + sizeof(struct ieee80211_ht_info) +
- 			    2 + 8 + /* peering IE */
- 			    sdata->u.mesh.ie_len);
- 	if (!skb)
-@@ -234,6 +236,13 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		memcpy(pos, &reason, 2);
- 		pos += 2;
- 	}
-+
-+	if (action != WLAN_SP_MESH_PEERING_CLOSE) {
-+		if (mesh_add_ht_cap_ie(skb, sdata) ||
-+		    mesh_add_ht_info_ie(skb, sdata))
-+			return -1;
-+	}
-+
- 	if (mesh_add_vendor_ies(skb, sdata))
- 		return -1;
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index ba1956a..173b40b 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2284,6 +2284,8 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 				    2 + 8 + /* supported rates */
- 				    2 + 3 + /* DS params */
- 				    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
-+				    2 + sizeof(struct ieee80211_ht_cap) +
-+				    2 + sizeof(struct ieee80211_ht_info) +
- 				    2 + sdata->u.mesh.mesh_id_len +
- 				    2 + sizeof(struct ieee80211_meshconf_ie) +
- 				    sdata->u.mesh.ie_len);
-@@ -2312,6 +2314,8 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 		    mesh_add_ds_params_ie(skb, sdata) ||
- 		    mesh_add_ext_srates_ie(skb, sdata) ||
- 		    mesh_add_rsn_ie(skb, sdata) ||
-+		    mesh_add_ht_cap_ie(skb, sdata) ||
-+		    mesh_add_ht_info_ie(skb, sdata) ||
- 		    mesh_add_meshid_ie(skb, sdata) ||
- 		    mesh_add_meshconf_ie(skb, sdata) ||
- 		    mesh_add_vendor_ies(skb, sdata)) {
+Thanks for your testing, I appreciate it! I was busy recently with
+other stuff, so didn't have much time to reply and test everything
+myself.
+
+
+> A minor annoyance is that the driver does not autoload on boot and had to be
+> manually modprobed. AFAIK, I don't have any blacklisting or other
+> configuration parameters that would cause this. Furthermore, I don't see
+> anything in the driver code that would cause this. Does autoload work on
+> your system?
+
+I've everything blacklisted (ssb, bcma, b43, wl, brcmsmac), so I
+didn't even notice that. However I got some reports (2 of them) that
+b43 doesn't auto load. I've to take a look at it, however I've no idea
+yet on what may be causing it.
+
+
+> A more serious problem is that the driver does not work on my 802.11n AP
+> that is set for "up to 270 Mbps at 2.4 GHz". It will authenticate and
+> associate, but the throughput is minimal. It also gets the "PHY transmission
+> error" messages. None occur with 802.11g. I would guess some kind of error
+> in the HT40 settings.
+
+My network (AP) is set up to work in 802.11g mode and I've performed
+first tests today. Not good:
+[ ID] Interval       Transfer     Bandwidth
+[  4]  0.0-124.5 sec  10.8 MBytes    724 Kbits/sec
+I've noticed that connection dies when I force network rate to 54M.
+Same for 48M and 9M. Connection works fine for 1M, 2M, 11M.
+So this is again OFDM vs. CCK problem.
+
+I didn't see any "PHY transmission error" messages however (maybe it's
+matter of firmware? 666.2 here).
+
+
+Could you take a look if anything has changed in phy_ctl1 in recent
+drivers? Do you have any other suspicions?
+
 -- 
-1.7.4.1
-
+Rafał
