@@ -1,30 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41086 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752985Ab1HYQYq (ORCPT
+Received: from relay3-d.mail.gandi.net ([217.70.183.195]:60582 "EHLO
+	relay3-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753129Ab1HQCvu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 12:24:46 -0400
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: Re: [PATCH] cfg80211: document wiphy->registered
+	Tue, 16 Aug 2011 22:51:50 -0400
+Date: Tue, 16 Aug 2011 19:51:43 -0700
+From: Josh Triplett <josh@joshtriplett.org>
+To: linux-wireless@vger.kernel.org
+Cc: Jamey Sharp <jamey@minilop.net>
+Subject: EINVAL when setting 802.11a channel in Ad-Hoc mode
+Message-ID: <20110817025141.GA4529@leaf> (sfid-20110817_045153_283507_FC25B957)
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- format=flowed
-Date: Thu, 25 Aug 2011 09:24:39 -0700
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-In-Reply-To: <20110825150723.GA32259@redhat.com>
-References: <1313150459-13234-1-git-send-email-sgruszka@redhat.com>
- <1314248784.5054.44.camel@jlt3.sipsolutions.net>
- <20110825150723.GA32259@redhat.com>
-Message-ID: <59c11a96bb31232f30dce486f6e5d0ee@secure.sipsolutions.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 25 Aug 2011 17:07:24 +0200, Stanislaw Gruszka wrote:
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+We're trying to run 802.11a in Ad-Hoc mode.  However, when we get to the
+point of setting the channel, we almost always get EINVAL back from the
+kernel.  We ran the following series of commands:
 
-Thanks!
+wlan=wlan3
+iwconfig $wlan mode Ad-Hoc
+ifconfig $wlan up
+iwconfig $wlan essid PSAS-flight-computer
+iwconfig $wlan channel 36
 
-johannes
+The channel command almost always got back an EINVAL.  This occurred on
+three different wifi chipsets: a USB ar9170 (with either carl9170 or the
+older ar9170usb driver), a USB rt2800usb, and iwlwifi with a Lenovo
+X220.  In the former two cases, it occurs on both x86 (the
+aforementioned X220) and powerpc (an MPC5200).
+
+More strangely, the channel command would *sometimes* successfully set
+the channel without error.
+
+Have we done something wrong with the sequence of commands above?  Why
+might we get EINVAL when setting a valid channel?  What next steps
+should we take to debug this?
+
+Currently about to compile in function_graph tracing and start walking
+through the execution of SIOCSIWFREQ looking for what generates the
+EINVAL.
+
+- Josh Triplett
