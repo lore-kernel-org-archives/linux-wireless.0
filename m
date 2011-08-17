@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:23966 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754787Ab1HaLFh (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:42729 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751324Ab1HQWmw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 07:05:37 -0400
-Message-ID: <4E5E157A.3070704@qca.qualcomm.com> (sfid-20110831_130554_714329_D8A36BF9)
-Date: Wed, 31 Aug 2011 14:05:30 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Wed, 17 Aug 2011 18:42:52 -0400
+Received: by iye16 with SMTP id 16so2727521iye.1
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2011 15:42:52 -0700 (PDT)
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/4] ath6kl: cleanup diagnose window read and write	functions
-References: <20110830134432.21543.89808.stgit@localhost6.localdomain6> <20110830134450.21543.40524.stgit@localhost6.localdomain6> <20110830150006.GA32378@vasanth-laptop>
-In-Reply-To: <20110830150006.GA32378@vasanth-laptop>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE6600131E1C412@dnce02.ent.ti.com>
+References: <AC090B9732AB2B4DB7FF476E907FE6600131E1C339@dnce02.ent.ti.com> <AC090B9732AB2B4DB7FF476E907FE6600131E1C412@dnce02.ent.ti.com>
+From: Aloisio Almeida <aloisio.almeida@openbossa.org>
+Date: Wed, 17 Aug 2011 19:42:32 -0300
+Message-ID: <CAEsZsEgvr_GPZvmqx_xrA2ACBKOLvEhvTaZ_FijQb_dh9K7FCw@mail.gmail.com> (sfid-20110818_004255_557580_FB8FBD44)
+Subject: Re: [PATCH 1/4] NFC: Add NFC dev_up and dev_down control operations
+To: "Elias, Ilan" <ilane@ti.com>
+Cc: "lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
+	"samuel@sortiz.org" <samuel@sortiz.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/30/2011 06:00 PM, Vasanthakumar Thiagarajan wrote:
-> On Tue, Aug 30, 2011 at 04:44:50PM +0300, Kalle Valo wrote:
+Hi Ilan,
+
+On Wed, Aug 17, 2011 at 3:33 AM, Elias, Ilan <ilane@ti.com> wrote:
+> Hi Aloisio, Lauro, Samuel,
 >
->> +int ath6kl_diag_write(struct ath6kl *ar, u32 address, void *data, u32 length)
->> +{
->> +	u32 count, *buf = data;
->> +	int ret;
->> +
->> +	if (WARN_ON(length % 4))
->> +		return -EINVAL;
->> +
->> +	for (count = 0; count < length / 4; count++, address += 4) {
->> +		ret = ath6kl_diag_write32(ar, address, buf[count]);
->> +		if (ret)
->> +			return ret;
->>  	}
->>  
->> -	return status;
->> +	return ret;
-> 
-> drivers/net/wireless/ath/ath6kl/main.c: In function â€˜ath6kl_diag_writeâ€™:
-> drivers/net/wireless/ath/ath6kl/main.c:297: warning: â€˜retâ€™ may be
-> used uninitialized in this function
+>>
+>> The following 2 NFC control operations (via generic netlink) were added:
+>>       - Dev_up, which turn on the NFC controller (this operation may take
+>> a     few seconds, as it can download new FW to the NFC controller)
+>>       - Dev_down, which turn off the NFC controller
+>>
+> Please note that in the file core.c, the new flag 'dev_up' is not checked in the nfc core API (e.g. in the function nfc_start_poll).
+> We should discuss whether the dev_up/dev_down operations will be used in all devices (i.e. also PN533) - this is my preference.
 
-Strange, my compiler didn't warn about this. Fixed in v2.
+I agree. In order to abstract the NFC device type that is being used,
+dev_up must be called before start_poll to all devices. The driver
+must be in charge of deciding if something must be done at dev_up
+time.
 
-Thanks,
-Kalle
+Regards,
+Aloisio
