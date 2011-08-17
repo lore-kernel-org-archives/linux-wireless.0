@@ -1,73 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:64063 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752347Ab1HHQTf convert rfc822-to-8bit (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:45305 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753939Ab1HQP4t convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 12:19:35 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Pavel Roskin <proski@gnu.org>,
-	Daniel Halperin <dhalperi@cs.washington.edu>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 8 Aug 2011 19:19:29 +0300
-Subject: RE: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv
- pointer
-Message-ID: <4825B8A2C4E264489E57869F0DCFB22344564F5D8D@hasmsx502.ger.corp.intel.com> (sfid-20110808_181938_879970_9535BAAB)
-References: <CALSq=BYkKhJN=GU0RUJ2viibsy5yG78x-D-td0zP+rqWCy=AiQ@mail.gmail.com>
- <4825B8A2C4E264489E57869F0DCFB22344563F4ABE@hasmsx502.ger.corp.intel.com>
- <CALSq=BZ2CoF=+Zw-si5oc8No9MLTP1YoZCzfoT9TX1XEaLnq1A@mail.gmail.com>
- <CALSq=BYY8-fAqATwJaFNvzwpSo4WWXbH=pRXn0oknqKXH=4X2A@mail.gmail.com>
- <1312499702.15170.17.camel@wwguy-huron> <20110805225051.435fe1b0@mj>
- <E9954878DD1FB34FAE5187FB88C58A350199604D92@orsmsx506.amr.corp.intel.com>
- <CANUX_P3p3mqUjJrynivna5Fu4iv8DDdH-rY53Y36tHRVewSSuQ@mail.gmail.com>
- <4825B8A2C4E264489E57869F0DCFB22344564A2C19@hasmsx502.ger.corp.intel.com>
- <E9954878DD1FB34FAE5187FB88C58A350199604E03@orsmsx506.amr.corp.intel.com>
- <20110808142744.GA21103@tuxdriver.com>
-In-Reply-To: <20110808142744.GA21103@tuxdriver.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 17 Aug 2011 11:56:49 -0400
 MIME-Version: 1.0
+In-Reply-To: <CA+XFjipM1Qup3bcJos_ikwzoaWoa3GdYqK0WBUqEHBNR6V6LfQ@mail.gmail.com>
+References: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com>
+ <CA+XFjipM1Qup3bcJos_ikwzoaWoa3GdYqK0WBUqEHBNR6V6LfQ@mail.gmail.com>
+From: Pavel Ivanov <paivanof@gmail.com>
+Date: Wed, 17 Aug 2011 11:56:18 -0400
+Message-ID: <CAG1a4rsyfPrrrf-mzt3HAM6YHHjaHTcd2rbtYiwqLkUCP=j8pQ@mail.gmail.com> (sfid-20110817_175706_771963_E636E6FE)
+Subject: Re: [PATCH] ath9k: make driver usable standalone
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> Sure, that sounds great.
+> WIRELESS_EXT is not required for configuring wireless on recent
+> kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
 
-Ok, I am OOO tomorrow, so it will wait until Wednesday.
+Since what version it's deprecated? Do user-space tools know about this new API?
+
+Neither iwconfig nor iwlist worked for me without WIRELESS_EXT.
 
 
-> 
-> On Sat, Aug 06, 2011 at 11:21:42PM -0700, Guy, Wey-Yi W wrote:
-> > I will like to combine the patches if it's ok for John.
-> >
-> > Wey
-> >
-> > -----Original Message-----
-> > From: Grumbach, Emmanuel
-> > Sent: Sunday, August 07, 2011 8:09 AM
-> > To: Grumbach, Emmanuel; Emmanuel Grumbach; Guy, Wey-Yi W
-> > Cc: Pavel Roskin; Daniel Halperin; linville@tuxdriver.com; linux-
-> wireless@vger.kernel.org
-> > Subject: RE: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv
-> pointer
-> >
-> > FWIW, the patch below solved the problem on my system.
-> > Dan, please confirm you are happy with it.
-> >
-> > The bug was introduced by the patch that fixed the sysfs issue.
-> >
-> > Wey, John, do you think it would be better to revert my previous fix and
-> send a combined patch that solves the sysfs issue and doesn't add the bug ?
-> Or another patch on top of the buggy sysfs fix ?
-> >
-> > Thanks,
-> >        Emmanuel
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Pavel
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
 
+2011/8/17 Gábor Stefanik <netrolller.3d@gmail.com>:
+> On Wed, Aug 17, 2011 at 5:28 AM, Pavel Ivanov <paivanof@gmail.com> wrote:
+>> When ath9k is the only wireless driver included in the build
+>> WIRELESS_EXT configuration option becomes undefined. Because of that
+>> driver becomes essentially unusable as you can't actually connect to
+>> any WiFi network. By including WIRELESS_EXT into Kconfig we ensure
+>> that build with ath9k and without other drivers (having WIRELESS_EXT
+>> selected in their Kconfig) is actually usable.
+>
+> WIRELESS_EXT is not required for configuring wireless on recent
+> kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
+>
+>>
+>> Signed-off-by: Pavel Ivanov <paivanof@gmail.com>
+>> ---
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/Kconfig
+>> b/drivers/net/wireless/ath/ath9k/Kconfig
+>> index d9c08c6..2573f77 100644
+>> --- a/drivers/net/wireless/ath/ath9k/Kconfig
+>> +++ b/drivers/net/wireless/ath/ath9k/Kconfig
+>> @@ -11,6 +11,7 @@ config ATH9K
+>>        select LEDS_CLASS
+>>        select NEW_LEDS
+>>        select ATH9K_COMMON
+>> +       select WIRELESS_EXT
+>>        ---help---
+>>          This module adds support for wireless adapters based on
+>>          Atheros IEEE 802.11n AR5008, AR9001 and AR9002 family
