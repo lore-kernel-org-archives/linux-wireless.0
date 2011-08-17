@@ -1,77 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2796 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753080Ab1HHN7b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:31 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Sukesh Srikakula" <sukeshs@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 30/82] staging: brcm80211: brcmfmac: Roamed channel
- info passed to cfg80211
-Date: Mon, 8 Aug 2011 15:58:14 +0200
-Message-ID: <1312811946-16713-31-git-send-email-arend@broadcom.com> (sfid-20110808_160117_580959_ED5DD302)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:21108 "EHLO
+	TX2EHSOBE006.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750923Ab1HQEoQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Aug 2011 00:44:16 -0400
+From: Lin Tony-B19295 <B19295@freescale.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Hauke Mehrtens <hauke@hauke-m.de>,
+	"mcgrof@gmail.com" <mcgrof@gmail.com>,
+	"rodrigue@qca.qualcomm.com" <rodrigue@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rmani@qca.qualcomm.com" <rmani@qca.qualcomm.com>
+Subject: RE: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
+Date: Wed, 17 Aug 2011 04:44:09 +0000
+Message-ID: <97D3A72708D04647A5AC84A04996E5B5195BE5@039-SN1MPN1-002.039d.mgd.msft.net> (sfid-20110817_064425_170024_7FB85957)
+References: <1313060347-665-1-git-send-email-hauke@hauke-m.de>
+ <97D3A72708D04647A5AC84A04996E5B5193114@039-SN1MPN1-002.039d.mgd.msft.net>
+ <4E496CA7.7000604@hauke-m.de> <4E49BAB1.7060303@qca.qualcomm.com>
+ <97D3A72708D04647A5AC84A04996E5B5195381@039-SN1MPN1-002.039d.mgd.msft.net>
+ <4E4A7159.3090004@qca.qualcomm.com>
+ <97D3A72708D04647A5AC84A04996E5B5195ADD@039-SN1MPN1-002.039d.mgd.msft.net>
+ <4E4B437A.1070200@qca.qualcomm.com>
+In-Reply-To: <4E4B437A.1070200@qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sukesh Srikakula <sukeshs@broadcom.com>
+> -----Original Message-----
+> From: Kalle Valo [mailto:kvalo@qca.qualcomm.com]
+> Sent: Wednesday, August 17, 2011 12:29 PM
+> To: Lin Tony-B19295
+> Cc: Hauke Mehrtens; mcgrof@gmail.com; rodrigue@qca.qualcomm.com; linux-
+> wireless@vger.kernel.org; rmani@qca.qualcomm.com
+> Subject: Re: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
+> 
+> On 08/16/2011 07:19 PM, Lin Tony-B19295 wrote:
+> >> I have a patch pending to add suspend support and will send it as
+> >> soon as I find some free time. But the wifi connection will be lost
+> >> in resume anyway. If you want to maintain the connection to AP during
+> >> suspend then you are looking for wowlan support which ath6kl doesn't
+> >> currently support.
+> >
+> > Do you have any plan supporting it?
+> 
+> It would be nice to have support for wowlan but I don't know when it will
+> be implemented. Hopefully sooner than later.
+> 
+> > Besides, the performance seems not good. I got only 5Mb/s
+> > station->station performance. While another driver released from your
+> > AE could reach at least 10Mb/s, do you have any idea?
+> 
+> That sounds quite low. Can you describe your test setup in detail, please?
+> That would help to understand the issue.
+> 
+Both PC and board are connected to an AP. And set PC as host, 'iperf -s'
+Set board as client, 'iperf -c pc ipaddr -t 100000 -w 1M -i 3'
+If using another package, I get 23Mb/s
 
-With this patch, brcmfmac driver will pass roamed channel information to
-cfg80211 via cfg80211_roamed() API.
-
-Signed-off-by: Sukesh Srikakula <sukeshs@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   21 ++++++++++++++++++++-
- 1 files changed, 20 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index cf57087..440ae6d 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -2890,6 +2890,11 @@ brcmf_bss_roaming_done(struct brcmf_cfg80211_priv *cfg_priv,
- 		       const struct brcmf_event_msg *e, void *data)
- {
- 	struct brcmf_cfg80211_connect_info *conn_info = cfg_to_conn(cfg_priv);
-+	struct wiphy *wiphy = cfg_to_wiphy(cfg_priv);
-+	struct brcmf_channel_info channel;
-+	struct ieee80211_channel *notify_channel;
-+	struct ieee80211_supported_band *band;
-+	u32 freq;
- 	s32 err = 0;
- 
- 	WL_TRACE("Enter\n");
-@@ -2898,7 +2903,21 @@ brcmf_bss_roaming_done(struct brcmf_cfg80211_priv *cfg_priv,
- 	brcmf_update_prof(cfg_priv, NULL, &e->addr, WL_PROF_BSSID);
- 	brcmf_update_bss_info(cfg_priv);
- 
--	cfg80211_roamed(ndev, NULL,
-+	brcmf_dev_ioctl(ndev, BRCMF_C_GET_CHANNEL, &channel, sizeof(channel));
-+
-+	channel.target_channel = le32_to_cpu(channel.target_channel);
-+	WL_CONN("Roamed to channel %d\n", channel.target_channel);
-+
-+	if (channel.target_channel <= CH_MAX_2G_CHANNEL)
-+		band = wiphy->bands[IEEE80211_BAND_2GHZ];
-+	else
-+		band = wiphy->bands[IEEE80211_BAND_5GHZ];
-+
-+	freq = ieee80211_channel_to_frequency(channel.target_channel,
-+						band->band);
-+	notify_channel = ieee80211_get_channel(wiphy, freq);
-+
-+	cfg80211_roamed(ndev, notify_channel,
- 			(u8 *)brcmf_read_prof(cfg_priv, WL_PROF_BSSID),
- 			conn_info->req_ie, conn_info->req_ie_len,
- 			conn_info->resp_ie, conn_info->resp_ie_len, GFP_KERNEL);
--- 
-1.7.4.1
+> Kalle
 
 
