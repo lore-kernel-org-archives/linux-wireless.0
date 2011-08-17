@@ -1,56 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([72.73.18.11]:51646 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754520Ab1HCSt3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2011 14:49:29 -0400
-Date: Wed, 3 Aug 2011 14:49:29 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-cc: Andreas Hartmann <andihartmann@01019freenet.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Alan Piszcz <ap@solarrain.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
-In-Reply-To: <alpine.DEB.2.02.1108031441140.9421@p34.internal.lan>
-Message-ID: <alpine.DEB.2.02.1108031448050.9421@p34.internal.lan> (sfid-20110803_204934_467117_AB544182)
-References: <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan> <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan> <alpine.DEB.2.02.1107301031560.4925@p34.internal.lan>
- <4E341DC4.9010107@01019freenet.de> <alpine.DEB.2.02.1107301305590.4925@p34.internal.lan> <20110803160050.GA18882@redhat.com> <alpine.DEB.2.02.1108031328030.9421@p34.internal.lan> <alpine.DEB.2.02.1108031339280.9421@p34.internal.lan> <20110803183349.GA5956@redhat.com>
- <alpine.DEB.2.02.1108031433570.9421@p34.internal.lan> <alpine.DEB.2.02.1108031441140.9421@p34.internal.lan>
+Received: from he.sipsolutions.net ([78.46.109.217]:41772 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754173Ab1HQQgn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Aug 2011 12:36:43 -0400
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: Re: ~3.1-rc1 mac80211 =?UTF-8?Q?regression=3F=20NULL=20pointer=20?=  =?UTF-8?Q?dereference=2C=20memcpy=2C=20nla=5Fput?=
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+ charset=UTF-8;
+ format=flowed
+Date: Wed, 17 Aug 2011 18:36:40 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+In-Reply-To: <CACna6rzdoAgoW8B11bpdqNAi1Gz2T6AV4g-m5WGz9X0izhCDOQ@mail.gmail.com>
+ (sfid-20110817_181438_086831_98729AB8)
+References: <CACna6rzdoAgoW8B11bpdqNAi1Gz2T6AV4g-m5WGz9X0izhCDOQ@mail.gmail.com>
+ (sfid-20110817_181438_086831_98729AB8)
+Message-ID: <599203fe1d78132e3855f9626db7817b@secure.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 17 Aug 2011 18:14:32 +0200, Rafał Miłecki wrote:
+> I've problem with my BCM43224 and BCM43225 cards. They stopped to 
+> work
+> around 3.1-rc1 and I suspect it's mac80211 regression.
 
+Already fixed in wireless-testing, but I don't remember the patch 
+title.
 
-On Wed, 3 Aug 2011, Justin Piszcz wrote:
-
->
->
-> On Wed, 3 Aug 2011, Justin Piszcz wrote:
->
->> 
->> 
->> On Wed, 3 Aug 2011, Stanislaw Gruszka wrote:
->> 
->>> On Wed, Aug 03, 2011 at 01:44:10PM -0400, Justin Piszcz wrote:
->>>> Tested that patch:
->>>>
-
-Ok,
-
-Now with two machines ( and using multiple wi-fi usb sticks ) rebooting clean
-and everything is working, no errors except for the -> phy0 ones noted earlier.
-
-No further crashes, I'll update if I see anymore.
-
-[   26.114025] wlan1: no IPv6 routers present
-[   34.682724] phy0 -> rt2800_txdone: Error - Data pending
-[   34.699746] phy0 -> rt2800_txdone: Error - Data pending
-[   34.716553] phy0 -> rt2800_txdone: Error - Data pending
-
-
-Justin.
-
+johannes
