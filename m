@@ -1,62 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:40183 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753856Ab1HYPJs (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:42396 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751661Ab1HQBDR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 11:09:48 -0400
-Received: by wyg24 with SMTP id 24so1744420wyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 08:09:47 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/4] wl12xx: add module_param to trigger BUG() on recovery
-Date: Thu, 25 Aug 2011 18:10:59 +0300
-Message-Id: <1314285060-5088-3-git-send-email-eliad@wizery.com> (sfid-20110825_172047_458585_E6EC8EE7)
-In-Reply-To: <1314285060-5088-1-git-send-email-eliad@wizery.com>
-References: <1314285060-5088-1-git-send-email-eliad@wizery.com>
+	Tue, 16 Aug 2011 21:03:17 -0400
+Received: by ywf7 with SMTP id 7so396644ywf.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2011 18:03:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAFHVRfcUANEJpG6y+XYw_6SYFdxGG8S+Zf3YU+6257KQP9P3Pw@mail.gmail.com>
+References: <CAFHVRfdha1e-+E+hTKPv2JAu5ywOkNo+we2k5FUGtdtRDTV4Aw@mail.gmail.com>
+	<CAAd0S9D_NKtSM8NjmYEp4EyXeQpEv5Esu68-qQx1EimeMfHz2Q@mail.gmail.com>
+	<CAFHVRfcUANEJpG6y+XYw_6SYFdxGG8S+Zf3YU+6257KQP9P3Pw@mail.gmail.com>
+Date: Tue, 16 Aug 2011 18:03:16 -0700
+Message-ID: <CAFHVRfdetBxqp4DzHPpT--oJAiWX6LgBaz=nhLa8YBB=V_yXxA@mail.gmail.com> (sfid-20110817_030321_267226_A1C1F50E)
+Subject: Re: Problem Building carl9170
+From: Panu Avakul <avakulpa@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: multipart/mixed; boundary=90e6ba1efd42b6d9bb04aaa90f36
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Crashing on recovery is useful for debugging, as a JTAG
-can be connected in order to investigate the current fw state.
-(otherwise, a reconfiguration will occur)
+--90e6ba1efd42b6d9bb04aaa90f36
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Hello, some one in the cmake mailing list point out to me that
+In line 296 of the CMakeCache.txt
+FIND_PACKAGE_MESSAGE_DETAILS_BISON:INTERNAL=3D[/usr/bin/bison][vbison++
+Version 1.21.9-1, adapted from GNU bison by coetmeur@icdc.fr
+Maintained by Magnus Ekdahl <magnus@debian.org>()]
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index bde8402..8324d90 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -362,6 +362,7 @@ static struct conf_drv_settings default_conf = {
- };
- 
- static char *fwlog_param;
-+static bool bug_on_recovery;
- 
- static void __wl1271_op_remove_interface(struct wl1271 *wl,
- 					 bool reset_tx_queues);
-@@ -1213,6 +1214,8 @@ static void wl1271_recovery_work(struct work_struct *work)
- 	wl1271_info("Hardware recovery in progress. FW ver: %s pc: 0x%x",
- 		    wl->chip.fw_ver_str, wl1271_read32(wl, SCR_PAD4));
- 
-+	BUG_ON(bug_on_recovery);
-+
- 	/*
- 	 * Advance security sequence number to overcome potential progress
- 	 * in the firmware during recovery. This doens't hurt if the network is
-@@ -4776,6 +4779,9 @@ module_param_named(fwlog, fwlog_param, charp, 0);
- MODULE_PARM_DESC(keymap,
- 		 "FW logger options: continuous, ondemand, dbgpins or disable");
- 
-+module_param(bug_on_recovery, bool, S_IRUSR | S_IWUSR);
-+MODULE_PARM_DESC(bug_on_recovery, "BUG() on fw recovery");
-+
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
- MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
--- 
-1.7.6.401.g6a319
+There is a \n character in it.
+I went to tried use command bison --version and it print out the same
+lines in two separate line and that might be where the parsing problem
+came from.
 
+I cannot figure out a way to feed cmake the pre made CMakeCache.txt
+with out having cmake overwrite it so I change something in the
+autogen.sh so that it delete CMakeCache.txt after the cmake . line.
+With this, I was able to move to the first make line in the autogen.sh.
+and it give me another error which I have no idea about.
+I have included what the terminal give me after running autogen.sh.
+Any one happen to see this kind of error before?
+Have any one successfully build carl9170 in ubuntu 11.04 before?
+Thank you very much
+Best Regard,
+Panu Avakul
+
+
+On Mon, Aug 15, 2011 at 8:53 PM, Panu Avakul <avakulpa@gmail.com> wrote:
+> Hello, thank you for your reply,
+> I'm not sure if this is the correct method to reply to a mailing list,
+> but I have not used a lot of mailing list before.
+> There was the offending entry line, however it shown some person name
+> and his email address so I didn't think it was appropriate to include
+> in the mail.
+> I'll keep trying to see what went wrong. =A0If anyone happen to have any
+> ideas what went wrong please let me know.
+> Best Regard
+> Panu
+>
+> On Mon, Aug 15, 2011 at 5:58 PM, Christian Lamparter
+> <chunkeey@googlemail.com> wrote:
+>> On Tuesday, August 16, 2011 02:14:01 AM Panu Avakul wrote:
+>>> I was trying to build carl9170 firmware from the source on the
+>>> git repository. The toolchain build with no problem. However,
+>>> when I run autogen.sh it give me a cmake error message
+>>> CMake Error: Parse error in cache file ...config/CMakeCache.txt.
+>>> I tried deleting it and re run autogen.sh but still no different.
+>>> I was wondering if any one had similar problem and any advice on
+>>> how I should resolve it. I am running this on ubuntu 11.04
+>> No? You are the first to report an issue. However, I wonder what
+>> happened to the "offending entry" line.
+>>
+>> Regards,
+>> =A0 =A0 =A0 =A0Chr
+>>
+>
+
+--90e6ba1efd42b6d9bb04aaa90f36
+Content-Type: application/octet-stream; name=log_file
+Content-Disposition: attachment; filename=log_file
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_grflil6v0
+
+cmFkaXVzMDAxNEByYWRpdXMwMDE0LUluc3Bpcm9uLTU4MDp+L2Nhcmw5MTcwZnckIHN1ZG8gLi9h
+dXRvZ2VuLnNoIApDb25maWd1cmluZy4uLgp+L2Nhcmw5MTcwZncvY29uZmlnIH4vY2FybDkxNzBm
+dwpjaGVjayBwb2ludCAwLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8v
+Ly8vLy8vLy8KLS0gVGhlIEMgY29tcGlsZXIgaWRlbnRpZmljYXRpb24gaXMgR05VCi0tIFRoZSBD
+WFggY29tcGlsZXIgaWRlbnRpZmljYXRpb24gaXMgR05VCi0tIENoZWNrIGZvciB3b3JraW5nIEMg
+Y29tcGlsZXI6IC91c3IvYmluL2djYwotLSBDaGVjayBmb3Igd29ya2luZyBDIGNvbXBpbGVyOiAv
+dXNyL2Jpbi9nY2MgLS0gd29ya3MKLS0gRGV0ZWN0aW5nIEMgY29tcGlsZXIgQUJJIGluZm8KLS0g
+RGV0ZWN0aW5nIEMgY29tcGlsZXIgQUJJIGluZm8gLSBkb25lCi0tIENoZWNrIGZvciB3b3JraW5n
+IENYWCBjb21waWxlcjogL3Vzci9iaW4vYysrCi0tIENoZWNrIGZvciB3b3JraW5nIENYWCBjb21w
+aWxlcjogL3Vzci9iaW4vYysrIC0tIHdvcmtzCi0tIERldGVjdGluZyBDWFggY29tcGlsZXIgQUJJ
+IGluZm8KLS0gRGV0ZWN0aW5nIENYWCBjb21waWxlciBBQkkgaW5mbyAtIGRvbmUKLS0gRm91bmQg
+QklTT046IC91c3IvYmluL2Jpc29uIChmb3VuZCB2ZXJzaW9uICJiaXNvbisrIFZlcnNpb24gMS4y
+MS45LTEsIGFkYXB0ZWQgZnJvbSBHTlUgYmlzb24gYnkgY29ldG1ldXJAaWNkYy5mcgpNYWludGFp
+bmVkIGJ5IE1hZ251cyBFa2RhaGwgPG1hZ251c0BkZWJpYW4ub3JnPiIpCi0tIEZvdW5kIEZMRVg6
+IC91c3IvYmluL2ZsZXggKGZvdW5kIHZlcnNpb24gIi91c3IvYmluL2ZsZXggdmVyc2lvbiAyLjUu
+NCIpCi0tIEZvdW5kIEdQRVJGOiAvdXNyL2Jpbi9ncGVyZiAoZm91bmQgdmVyc2lvbiAiMy4wLjMi
+KQotLSBDb25maWd1cmluZyBkb25lCi0tIEdlbmVyYXRpbmcgZG9uZQotLSBCdWlsZCBmaWxlcyBo
+YXZlIGJlZW4gd3JpdHRlbiB0bzogL2hvbWUvcmFkaXVzMDAxNC9jYXJsOTE3MGZ3L2NvbmZpZwpj
+aGVjayBwb2ludCAxLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8v
+Ly8vLy8KLS0gVGhlIEMgY29tcGlsZXIgaWRlbnRpZmljYXRpb24gaXMgR05VCi0tIFRoZSBDWFgg
+Y29tcGlsZXIgaWRlbnRpZmljYXRpb24gaXMgR05VCi0tIENoZWNrIGZvciB3b3JraW5nIEMgY29t
+cGlsZXI6IC91c3IvYmluL2djYwotLSBDaGVjayBmb3Igd29ya2luZyBDIGNvbXBpbGVyOiAvdXNy
+L2Jpbi9nY2MgLS0gd29ya3MKLS0gRGV0ZWN0aW5nIEMgY29tcGlsZXIgQUJJIGluZm8KLS0gRGV0
+ZWN0aW5nIEMgY29tcGlsZXIgQUJJIGluZm8gLSBkb25lCi0tIENoZWNrIGZvciB3b3JraW5nIENY
+WCBjb21waWxlcjogL3Vzci9iaW4vYysrCi0tIENoZWNrIGZvciB3b3JraW5nIENYWCBjb21waWxl
+cjogL3Vzci9iaW4vYysrIC0tIHdvcmtzCi0tIERldGVjdGluZyBDWFggY29tcGlsZXIgQUJJIGlu
+Zm8KLS0gRGV0ZWN0aW5nIENYWCBjb21waWxlciBBQkkgaW5mbyAtIGRvbmUKLS0gRm91bmQgQklT
+T046IC91c3IvYmluL2Jpc29uIChmb3VuZCB2ZXJzaW9uICJiaXNvbisrIFZlcnNpb24gMS4yMS45
+LTEsIGFkYXB0ZWQgZnJvbSBHTlUgYmlzb24gYnkgY29ldG1ldXJAaWNkYy5mcgpNYWludGFpbmVk
+IGJ5IE1hZ251cyBFa2RhaGwgPG1hZ251c0BkZWJpYW4ub3JnPiIpCi0tIEZvdW5kIEZMRVg6IC91
+c3IvYmluL2ZsZXggKGZvdW5kIHZlcnNpb24gIi91c3IvYmluL2ZsZXggdmVyc2lvbiAyLjUuNCIp
+Ci0tIEZvdW5kIEdQRVJGOiAvdXNyL2Jpbi9ncGVyZiAoZm91bmQgdmVyc2lvbiAiMy4wLjMiKQot
+LSBDb25maWd1cmluZyBkb25lCi0tIEdlbmVyYXRpbmcgZG9uZQotLSBCdWlsZCBmaWxlcyBoYXZl
+IGJlZW4gd3JpdHRlbiB0bzogL2hvbWUvcmFkaXVzMDAxNC9jYXJsOTE3MGZ3L2NvbmZpZwpbIDIw
+JV0gW0JJU09OXVt6Y29uZl0gQnVpbGRpbmcgcGFyc2VyIHdpdGggYmlzb24gYmlzb24rKyBWZXJz
+aW9uIDEuMjEuOS0xLCBhZGFwdGVkIGZyb20gR05VIGJpc29uIGJ5IGNvZXRtZXVyQGljZGMuZnIK
+TWFpbnRhaW5lZCBieSBNYWdudXMgRWtkYWhsIDxtYWdudXNAZGViaWFuLm9yZz4KemNvbmYueTo0
+OSBwYXJzZXIgbmFtZSBkZWZpbmVkIHRvIGRlZmF1bHQgOiJwYXJzZSIKInpjb25mLnkiLCBsaW5l
+IDk0OiBqdW5rIGFmdGVyIGAlJScgaW4gZGVmaW5pdGlvbiBzZWN0aW9uCiJ6Y29uZi55IiwgbGlu
+ZSA5NDogbm8gaW5wdXQgZ3JhbW1hcgoqKiogZ2xpYmMgZGV0ZWN0ZWQgKioqIC91c3IvYmluL2Jp
+c29uOiBkb3VibGUgZnJlZSBvciBjb3JydXB0aW9uICghcHJldik6IDB4MDg1Y2E0OTggKioqCj09
+PT09PT0gQmFja3RyYWNlOiA9PT09PT09PT0KL2xpYi9pMzg2LWxpbnV4LWdudS9saWJjLnNvLjYo
+KzB4NmI5NjEpWzB4NDAxZDM5NjFdCi9saWIvaTM4Ni1saW51eC1nbnUvbGliYy5zby42KCsweDZk
+MjhiKVsweDQwMWQ1MjhiXQovbGliL2kzODYtbGludXgtZ251L2xpYmMuc28uNihjZnJlZSsweDZk
+KVsweDQwMWQ4NDFkXQovbGliL2kzODYtbGludXgtZ251L2xpYmMuc28uNihmY2xvc2UrMHgxNGEp
+WzB4NDAxYzM5Y2FdCi91c3IvYmluL2Jpc29uWzB4ODA0ZWIxZl0KL3Vzci9iaW4vYmlzb25bMHg4
+MDU1ODZiXQovdXNyL2Jpbi9iaXNvblsweDgwNTU5NmJdCi91c3IvYmluL2Jpc29uWzB4ODA1MDA0
+N10KL2xpYi9pMzg2LWxpbnV4LWdudS9saWJjLnNvLjYoX19saWJjX3N0YXJ0X21haW4rMHhlNylb
+MHg0MDE3ZWUzN10KL3Vzci9iaW4vYmlzb24oX19neHhfcGVyc29uYWxpdHlfdjArMHg1OSlbMHg4
+MDQ4ZGIxXQo9PT09PT09IE1lbW9yeSBtYXA6ID09PT09PT09CjA4MDQ4MDAwLTA4MDVhMDAwIHIt
+eHAgMDAwMDAwMDAgMDg6MDUgODQwNzE0MiAgICAvdXNyL2Jpbi9iaXNvbgowODA1YTAwMC0wODA1
+YjAwMCBydy1wIDAwMDExMDAwIDA4OjA1IDg0MDcxNDIgICAgL3Vzci9iaW4vYmlzb24KMDg1Y2Ew
+MDAtMDg1ZWIwMDAgcnctcCAwMDAwMDAwMCAwMDowMCAwICAgICAgICAgIFtoZWFwXQo0MDAwMDAw
+MC00MDAxYzAwMCByLXhwIDAwMDAwMDAwIDA4OjA1IDg5MTM3MTYgICAgL2xpYi9pMzg2LWxpbnV4
+LWdudS9sZC0yLjEzLnNvCjQwMDFjMDAwLTQwMDFkMDAwIHItLXAgMDAwMWIwMDAgMDg6MDUgODkx
+MzcxNiAgICAvbGliL2kzODYtbGludXgtZ251L2xkLTIuMTMuc28KNDAwMWQwMDAtNDAwMWUwMDAg
+cnctcCAwMDAxYzAwMCAwODowNSA4OTEzNzE2ICAgIC9saWIvaTM4Ni1saW51eC1nbnUvbGQtMi4x
+My5zbwo0MDAxZTAwMC00MDAxZjAwMCByLXhwIDAwMDAwMDAwIDAwOjAwIDAgICAgICAgICAgW3Zk
+c29dCjQwMDFmMDAwLTQwMDI2MDAwIHJ3LXAgMDAwMDAwMDAgMDA6MDAgMCAKNDAwMjcwMDAtNDAw
+MjgwMDAgcnctcCAwMDAwMDAwMCAwMDowMCAwIAo0MDAzYTAwMC00MDExOTAwMCByLXhwIDAwMDAw
+MDAwIDA4OjA1IDgzOTUxMTIgICAgL3Vzci9saWIvaTM4Ni1saW51eC1nbnUvbGlic3RkYysrLnNv
+LjYuMC4xNAo0MDExOTAwMC00MDExZDAwMCByLS1wIDAwMGRlMDAwIDA4OjA1IDgzOTUxMTIgICAg
+L3Vzci9saWIvaTM4Ni1saW51eC1nbnUvbGlic3RkYysrLnNvLjYuMC4xNAo0MDExZDAwMC00MDEx
+ZTAwMCBydy1wIDAwMGUyMDAwIDA4OjA1IDgzOTUxMTIgICAgL3Vzci9saWIvaTM4Ni1saW51eC1n
+bnUvbGlic3RkYysrLnNvLjYuMC4xNAo0MDExZTAwMC00MDEyNTAwMCBydy1wIDAwMDAwMDAwIDAw
+OjAwIDAgCjQwMTI1MDAwLTQwMTQ5MDAwIHIteHAgMDAwMDAwMDAgMDg6MDUgODkxMzc2NiAgICAv
+bGliL2kzODYtbGludXgtZ251L2xpYm0tMi4xMy5zbwo0MDE0OTAwMC00MDE0YTAwMCByLS1wIDAw
+MDIzMDAwIDA4OjA1IDg5MTM3NjYgICAgL2xpYi9pMzg2LWxpbnV4LWdudS9saWJtLTIuMTMuc28K
+NDAxNGEwMDAtNDAxNGIwMDAgcnctcCAwMDAyNDAwMCAwODowNSA4OTEzNzY2ICAgIC9saWIvaTM4
+Ni1saW51eC1nbnUvbGlibS0yLjEzLnNvCjQwMTRiMDAwLTQwMTRjMDAwIHJ3LXAgMDAwMDAwMDAg
+MDA6MDAgMCAKNDAxNGMwMDAtNDAxNjYwMDAgci14cCAwMDAwMDAwMCAwODowNSA4OTEzNzU3ICAg
+IC9saWIvaTM4Ni1saW51eC1nbnUvbGliZ2NjX3Muc28uMQo0MDE2NjAwMC00MDE2NzAwMCByLS1w
+IDAwMDE5MDAwIDA4OjA1IDg5MTM3NTcgICAgL2xpYi9pMzg2LWxpbnV4LWdudS9saWJnY2Nfcy5z
+by4xCjQwMTY3MDAwLTQwMTY4MDAwIHJ3LXAgMDAwMWEwMDAgMDg6MDUgODkxMzc1NyAgICAvbGli
+L2kzODYtbGludXgtZ251L2xpYmdjY19zLnNvLjEKNDAxNjgwMDAtNDAyYzIwMDAgci14cCAwMDAw
+MDAwMCAwODowNSA4OTEzNzI5ICAgIC9saWIvaTM4Ni1saW51eC1nbnUvbGliYy0yLjEzLnNvCjQw
+MmMyMDAwLTQwMmMzMDAwIC0tLXAgMDAxNWEwMDAgMDg6MDUgODkxMzcyOSAgICAvbGliL2kzODYt
+bGludXgtZ251L2xpYmMtMi4xMy5zbwo0MDJjMzAwMC00MDJjNTAwMCByLS1wIDAwMTVhMDAwIDA4
+OjA1IDg5MTM3MjkgICAgL2xpYi9pMzg2LWxpbnV4LWdudS9saWJjLTIuMTMuc28KNDAyYzUwMDAt
+NDAyYzYwMDAgcnctcCAwMDE1YzAwMCAwODowNSA4OTEzNzI5ICAgIC9saWIvaTM4Ni1saW51eC1n
+bnUvbGliYy0yLjEzLnNvCjQwMmM2MDAwLTQwMmNiMDAwIHJ3LXAgMDAwMDAwMDAgMDA6MDAgMCAK
+NDAzMDAwMDAtNDAzMjEwMDAgcnctcCAwMDAwMDAwMCAwMDowMCAwIAo0MDMyMTAwMC00MDQwMDAw
+MCAtLS1wIDAwMDAwMDAwIDAwOjAwIDAgCmJmZTA4MDAwLWJmZTI5MDAwIHJ3LXAgMDAwMDAwMDAg
+MDA6MDAgMCAgICAgICAgICBbc3RhY2tdCm1ha2VbMl06ICoqKiBbemNvbmYudGFiLmNdIEFib3J0
+ZWQKbWFrZVsxXTogKioqIFtDTWFrZUZpbGVzL2NvbmYuZGlyL2FsbF0gRXJyb3IgMgptYWtlOiAq
+KiogW2FsbF0gRXJyb3IgMgoK
+--90e6ba1efd42b6d9bb04aaa90f36--
