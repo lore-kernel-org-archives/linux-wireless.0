@@ -1,79 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:38914 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752092Ab1HAJdF (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:37935 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751914Ab1HQTHo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2011 05:33:05 -0400
-Received: by fxh19 with SMTP id 19so4380927fxh.19
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Aug 2011 02:33:04 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: John Linville <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCHv2 1/2] mac80211: Fill in skb->protocol information for injected frames
-Date: Mon,  1 Aug 2011 11:32:52 +0200
-Message-Id: <1312191173-23963-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20110801_113311_126452_B3EA1A87)
+	Wed, 17 Aug 2011 15:07:44 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 46C4654034A
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2011 15:16:38 -0400 (EDT)
+Subject: Compat-wireless release for 2011-08-17 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110817190742.833AB40ED0@repository3.orbit-lab.org> (sfid-20110817_210747_145591_7B3F1917)
+Date: Wed, 17 Aug 2011 15:07:42 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers (ath9k for example) are using skb->protocol to treat EAPOL
-frames somehow special (disallow aggregation for example).
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + ba4d362...3d59edd akpm-end   -> origin/akpm-end  (forced update)
+   93ee7a9..4bc9b07  akpm-start -> origin/akpm-start
+ + fe3c525...712d473 master     -> origin/master  (forced update)
+   93ee7a9..4bc9b07  stable     -> origin/stable
+ * [new tag]         next-20110817 -> next-20110817
 
-When running in AP mode hostapd injects the EAPOL frames through a
-monitor interface and thus skb->protocol isn't set at all. Hence, if the
-injected frame is a data frame and carries a rfc1042 headaer update the
-skb->protocol field accordingly.
+compat-wireless code metrics
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
-
-Changes since v1:
-Use cpu_to_be16 instead of ntohs as done everywhere in mac80211.
-
- net/mac80211/tx.c |   20 ++++++++++++++++++++
- 1 files changed, 20 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index b83de4e..0499707 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1631,7 +1631,9 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	struct ieee80211_radiotap_header *prthdr =
- 		(struct ieee80211_radiotap_header *)skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *hdr;
- 	u16 len_rthdr;
-+	u8 *payload;
- 
- 	/*
- 	 * Frame injection is not allowed if beaconing is not allowed
-@@ -1682,6 +1684,24 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	skb_set_network_header(skb, len_rthdr);
- 	skb_set_transport_header(skb, len_rthdr);
- 
-+	/*
-+	 * Initialize skb->protocol if the injected frame is a data frame
-+	 * carrying a rfc1042 header
-+	 */
-+	if (skb->len > len_rthdr + 2) {
-+		hdr = (struct ieee80211_hdr *)(skb->data + len_rthdr);
-+		if (ieee80211_is_data(hdr->frame_control) &&
-+		    skb->len >= len_rthdr +
-+				ieee80211_hdrlen(hdr->frame_control) +
-+				sizeof(rfc1042_header) + 2) {
-+			payload = (u8 *)hdr +
-+				  ieee80211_hdrlen(hdr->frame_control);
-+			if (compare_ether_addr(payload, rfc1042_header) == 0)
-+				skb->protocol = cpu_to_be16((payload[6] << 8) |
-+							    payload[7]);
-+		}
-+	}
-+
- 	memset(info, 0, sizeof(*info));
- 
- 	info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
--- 
-1.7.3.4
-
+    781603 - Total upstream lines of code being pulled
+ssh: connect to host wireless.kernel.org port 22: Connection timed out
+rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+rsync error: unexplained error (code 255) at io.c(600) [sender=3.0.6]
