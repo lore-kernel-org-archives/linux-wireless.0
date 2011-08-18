@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:45128 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752320Ab1HYJ7y (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:59585 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592Ab1HRNkV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 05:59:54 -0400
-Received: by mail-bw0-f47.google.com with SMTP id zu17so1691832bkb.6
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 02:59:53 -0700 (PDT)
-Subject: Re: [PATCH 2/2] wl12xx: set mac80211 flags for aggregation support
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1314265865-20208-2-git-send-email-arik@wizery.com>
-References: <1314265865-20208-1-git-send-email-arik@wizery.com>
-	 <1314265865-20208-2-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 25 Aug 2011 12:59:38 +0300
-Message-ID: <1314266378.2296.255.camel@cumari> (sfid-20110825_115959_380888_322DBAB2)
-Mime-Version: 1.0
+	Thu, 18 Aug 2011 09:40:21 -0400
+Date: Thu, 18 Aug 2011 16:38:09 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "open list:BROADCOM SPECIFIC..." <linux-wireless@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org
+Subject: [patch -next] bcma: signedness bug in bcma_get_next_core()
+Message-ID: <20110818133809.GG4786@shale.localdomain> (sfid-20110818_154026_133766_0812FB0B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-08-25 at 12:51 +0300, Arik Nemtsov wrote: 
-> We set the flag for A-MPDU support and also indicate that Tx aggregation
-> is performed in HW. This will prevent mac80211 from aggregating Tx
-> packets in software.
-> 
-> This patch depends on
-> "mac80211: add flag to indicate HW only Tx-agg support"
+The u32 would never be less than zero so the error handling would
+break.  I changed it to int.
 
-Please send patches with this kind of dependency separately.  One for
-mac80211 (which John will apply) and one for wl12xx, which I will apply
-once the dependency is solved.
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-This avoids confusion as to who should apply what.
-
--- 
-Cheers,
-Luca.
-
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index 0ea390f..1361d8d 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -281,7 +281,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 
+ 	/* get & parse master ports */
+ 	for (i = 0; i < ports[0]; i++) {
+-		u32 mst_port_d = bcma_erom_get_mst_port(bus, eromptr);
++		int mst_port_d = bcma_erom_get_mst_port(bus, eromptr);
+ 		if (mst_port_d < 0)
+ 			return -EILSEQ;
+ 	}
