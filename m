@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:36108 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753078Ab1HNKSP (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:43322 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751814Ab1HRGqJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 06:18:15 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 5so4060970wwf.1
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:18:14 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 38/40] wl12xx: set the AP-started flag only after setting keys
-Date: Sun, 14 Aug 2011 13:17:37 +0300
-Message-Id: <1313317059-16567-39-git-send-email-eliad@wizery.com> (sfid-20110814_121821_881941_F1E7E3EA)
-In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
-References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+	Thu, 18 Aug 2011 02:46:09 -0400
+Received: by gwaa12 with SMTP id a12so710199gwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Aug 2011 23:46:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1313617419.3990.134.camel@shinybook.infradead.org>
+References: <4E3420E9.6080603@lwfinger.net>
+	<CACna6ryErHY+OyAnvc9+MYArb5mXpSdadOPADsQOBz796UqSUw@mail.gmail.com>
+	<1313617419.3990.134.camel@shinybook.infradead.org>
+Date: Thu, 18 Aug 2011 08:46:08 +0200
+Message-ID: <CACna6rzQmEE-EF+7tvQ8vkwp9bYwWMkna3UHw8ym7PmjKWWQTQ@mail.gmail.com> (sfid-20110818_084613_194083_E1F59C05)
+Subject: Re: [PATCH] Add uevent to bcma bus, to autoload drivers.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+W dniu 17 sierpnia 2011 23:43 użytkownik David Woodhouse
+<dwmw2@infradead.org> napisał:
+> Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
+> --
+> On Wed, 2011-08-17 at 20:27 +0200, Rafał Miłecki wrote:
+>> > A minor annoyance is that the driver does not autoload on boot and had to be
+>> > manually modprobed. AFAIK, I don't have any blacklisting or other
+>> > configuration parameters that would cause this. Furthermore, I don't see
+>> > anything in the driver code that would cause this. Does autoload work on
+>> > your system?
+>>
+>> I've everything blacklisted (ssb, bcma, b43, wl, brcmsmac), so I
+>> didn't even notice that. However I got some reports (2 of them) that
+>> b43 doesn't auto load. I've to take a look at it, however I've no idea
+>> yet on what may be causing it.
+>
+> The lack of uevent causes it. While looking, I note that suspend/resume
+> methods are also lacking from bcma.
 
-This fix eliminates a potential race between starting the AP role
-and setting encryption keys.
+Tested on my BCM43224, thanks a lot! :)
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Acked-by: Rafał Miłecki <zajec5@gmail.com>
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 3d323b8..cf5835b 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3137,18 +3137,18 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
- 		if (bss_conf->enable_beacon) {
- 			if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags)) {
- 				ret = wl12xx_cmd_role_start_ap(wl);
- 				if (ret < 0)
- 					goto out;
- 
--				set_bit(WL1271_FLAG_AP_STARTED, &wl->flags);
--				wl1271_debug(DEBUG_AP, "started AP");
--
- 				ret = wl1271_ap_init_hwenc(wl);
- 				if (ret < 0)
- 					goto out;
-+
-+				set_bit(WL1271_FLAG_AP_STARTED, &wl->flags);
-+				wl1271_debug(DEBUG_AP, "started AP");
- 			}
- 		} else {
- 			if (test_bit(WL1271_FLAG_AP_STARTED, &wl->flags)) {
- 				ret = wl12xx_cmd_role_stop_ap(wl);
- 				if (ret < 0)
- 					goto out;
+You didn't send this directly to John, not sure if he will pick it up.
+
+Do you think this should go for 3.1? With this patch ppl will directly
+see interface is present and will just use it or see error about
+firmware in dmesg. Without the patch, person just have to know b43 is
+supposed to support his card.
+
+
+Maybe you just could use "bcma: " prefix :)
+
 -- 
-1.7.6.401.g6a319
-
+Rafał
