@@ -1,91 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:54095 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753083Ab1HNKSS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 06:18:18 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 24so2967072wyg.19
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:18:17 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 40/40] wl12xx: fix tx_queue_count spurious increment
-Date: Sun, 14 Aug 2011 13:17:39 +0300
-Message-Id: <1313317059-16567-41-git-send-email-eliad@wizery.com> (sfid-20110814_121822_818328_5FDE153A)
-In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
-References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+Received: from mx1.redhat.com ([209.132.183.28]:52192 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754967Ab1HRTPm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Aug 2011 15:15:42 -0400
+Subject: Re: [PATCH] ath9k: make driver usable standalone
+From: Dan Williams <dcbw@redhat.com>
+To: Valdis.Kletnieks@vt.edu
+Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	Pavel Ivanov <paivanof@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	linux-kernel@vger.kernel.org
+Date: Thu, 18 Aug 2011 14:18:09 -0500
+In-Reply-To: <24649.1313621503@turing-police.cc.vt.edu>
+References: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com>
+	 <CA+XFjipM1Qup3bcJos_ikwzoaWoa3GdYqK0WBUqEHBNR6V6LfQ@mail.gmail.com>
+	 <CAG1a4rsyfPrrrf-mzt3HAM6YHHjaHTcd2rbtYiwqLkUCP=j8pQ@mail.gmail.com>
+	 <CA+XFjipsVukKYchfmDv48PAKsD2PUxT+7E8epRuKFynGwk=Bag@mail.gmail.com>
+	 <24649.1313621503@turing-police.cc.vt.edu>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1313695090.23920.2.camel@dcbw.foobar.com> (sfid-20110818_211604_167393_CC500A52)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On Wed, 2011-08-17 at 18:51 -0400, Valdis.Kletnieks@vt.edu wrote:
+> On Wed, 17 Aug 2011 18:25:49 +0200, Gábor Stefanik said:
+> 
+> > Iwconfig and iwlist are themselves deprecated. Iw is the new wireless
+> > configuration tool.
+> 
+> Somebody better tell Fedora Rawhide - as of the version released on July 27,
+> their 'initscripts' RPM was still using iwconfig in /etc/sysconfig/network-scripts/ifup-wireless
+> 
+> So don't be quite so fast to be declaring WIRELESS_EXT dead just yet.
 
-Only increment the queue count after actually queuing the skb. This
-avoids a spurious increment is case of dropped packets.
+Given that nobody has stepped up to write patches to convert them to use
+iw (or wpa_supplicant in the *correct* manner), and that for the most
+part wifi on Fedora goes through NetworkManager and/or wpa_supplicant,
+it's not surprising.  I don't have any particular interest in keeping
+the existing ifup-wireless iwconfig hackery around, instead if it's
+converted at all, it should be converted to use wpa_supplicant instead,
+in the manner in which I've described in the various bug reports that
+keep coming up.  That means not just pointing wpa_supplicant at a config
+file, but instead keeping the options in the ifcfg file and writing out
+a temporary wpa_supplicant config on-the-fly so that it integrates with
+existing administrator expectations and workflow.
 
-Also move the Tx-watermark checking code after the packet is enqueued.
-This makes the count more accurate - it includes the just-queued
-packet.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   24 ++++++++++++------------
- 1 files changed, 12 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 6c56bef..5001766 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1482,24 +1482,12 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- 	if (wl->bss_type == BSS_TYPE_AP_BSS)
- 		hlid = wl12xx_tx_get_hlid_ap(wl, skb);
- 
- 	spin_lock_irqsave(&wl->wl_lock, flags);
- 
--	wl->tx_queue_count[q]++;
--
--	/*
--	 * The workqueue is slow to process the tx_queue and we need stop
--	 * the queue here, otherwise the queue will get too long.
--	 */
--	if (wl->tx_queue_count[q] >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
--		wl1271_debug(DEBUG_TX, "op_tx: stopping queues for q %d", q);
--		ieee80211_stop_queue(wl->hw, mapping);
--		set_bit(q, &wl->stopped_queues_map);
--	}
--
- 	/* queue the packet */
- 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
- 		if (!wl1271_is_active_sta(wl, hlid)) {
- 			wl1271_debug(DEBUG_TX, "DROP skb hlid %d q %d",
- 				     hlid, q);
- 			dev_kfree_skb(skb);
-@@ -1509,12 +1497,24 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 		wl1271_debug(DEBUG_TX, "queue skb hlid %d q %d", hlid, q);
- 		skb_queue_tail(&wl->links[hlid].tx_queue[q], skb);
- 	} else {
- 		skb_queue_tail(&wl->tx_queue[q], skb);
- 	}
- 
-+	wl->tx_queue_count[q]++;
-+
-+	/*
-+	 * The workqueue is slow to process the tx_queue and we need stop
-+	 * the queue here, otherwise the queue will get too long.
-+	 */
-+	if (wl->tx_queue_count[q] >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
-+		wl1271_debug(DEBUG_TX, "op_tx: stopping queues for q %d", q);
-+		ieee80211_stop_queue(wl->hw, mapping);
-+		set_bit(q, &wl->stopped_queues_map);
-+	}
-+
- 	/*
- 	 * The chip specific setup must run before the first TX packet -
- 	 * before that, the tx_work will not be initialized!
- 	 */
- 
- 	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags) &&
--- 
-1.7.6.401.g6a319
+Dan
 
