@@ -1,102 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:51898 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751041Ab1HKSGs (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:42779 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751004Ab1HRTbE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 14:06:48 -0400
-Subject: Re: [RFC] NFC: NCI protocol proposal
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: "Elias, Ilan" <ilane@ti.com>
-Cc: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE6600131D0E347@dnce02.ent.ti.com>
-References: <AC090B9732AB2B4DB7FF476E907FE6600131D0E347@dnce02.ent.ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 11 Aug 2011 20:08:16 +0200
-Message-ID: <1313086096.8413.11.camel@sortiz-mobl> (sfid-20110811_200651_687750_C64CAFA2)
-Mime-Version: 1.0
+	Thu, 18 Aug 2011 15:31:04 -0400
+MIME-Version: 1.0
+In-Reply-To: <1313695217.23920.4.camel@dcbw.foobar.com>
+References: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com>
+ <CA+XFjipM1Qup3bcJos_ikwzoaWoa3GdYqK0WBUqEHBNR6V6LfQ@mail.gmail.com>
+ <CAG1a4rsyfPrrrf-mzt3HAM6YHHjaHTcd2rbtYiwqLkUCP=j8pQ@mail.gmail.com>
+ <CA+XFjipsVukKYchfmDv48PAKsD2PUxT+7E8epRuKFynGwk=Bag@mail.gmail.com>
+ <CAG1a4rvQTA7UgxLOxu_cC88grjHttyjPD_4kyDhb7Y9FcBBkLQ@mail.gmail.com> <1313695217.23920.4.camel@dcbw.foobar.com>
+From: Pavel Ivanov <paivanof@gmail.com>
+Date: Thu, 18 Aug 2011 15:30:33 -0400
+Message-ID: <CAG1a4rvqdB8y9ARQ=FckArm3UVG7=LFqF25kqYUYL0Uw7QNV8g@mail.gmail.com> (sfid-20110818_213134_828876_5D1E0122)
+Subject: Re: [PATCH] ath9k: make driver usable standalone
+To: Dan Williams <dcbw@redhat.com>
+Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ilan,
+> In the end, you probably want to be using wpa_supplicant instead of
+> trying to configure stuff with iw directly.
 
-On Tue, 2011-08-09 at 17:04 +0200, Elias, Ilan wrote:
-> Hi Lauro, Aloisio, Samuel, all,
-> 
-> We would like to implement the NFC Controller Interface (NCI) protocol for the NFC subsystem.
-> The NCI is a standard communication protocol between an NFC Controller (NFCC) and a Device Host (DH), defined by the NFC Forum.
-Just as a side note to our previous thread: As far as I know, NCI is still a draft
-(very close to the final version though) and as a consequence only available to
-NFC Forum members.
-
-
-> The NCI protocol implementation will be chip independent and responsible for:
-> 	- Reset, initialization and configuration of the NFC controller
-> 	- Sending commands/data to the NFC controller
-> 	- Receiving responses/notifications/data from the NFC controller
-> 	- Flow control for Control and Data Messages
-> 	- Segmentation and reassembly for Control and Data Messages
-> 	- An addressing scheme for NFC Execution Environments (NFCEE), e.g. 	secure element
-> 	- An addressing scheme for Remote NFC Endpoints (NFCEE or RF targets) 	(via logical connections)
-Could you give us some more details about those last 2 points ?
+I see Ubuntu already have wpa_supplicant installed and running.
+Although its command line is not what suggested in documentation and I
+don't see configuration file /etc/wpa_supplicant.conf. Does that mean
+it works somehow differently than stated in documentation? And also
+does all this mean that even if I'll be able to make wpa_supplicant
+work as I need I won't be able to control wireless connection using
+the standard Ubuntu's icon and it won't show me its state correctly?
 
 
-> 
-> The NCI protocol will be added to the NFC subsystem below the NFC core:
->  
-> +--------------------------------------+
-> |              USER SPACE              |
-> +--------------------------------------+
->      ^                        ^
->      | low-level              | control
->      | data exchange          | operations
->      |                        |
->      |                        v
->      |                  +-----------+
->      | AF_NFC           |  netlink  |
->      | socket           +-----------+
->      | raw                    ^
->      |                        |
->      v                        v
-> +---------+             +-----------+
-> | rawsock | <---------> | NFC core  |
-> +---------+             +-----------+
->                 	            ^
->                               |
->                               v
->               	      +-----------+
->                         | NCI core  |
->                         +-----------+
-> 				      ^
-> 				      |
-> 				      V
-> 			      +-----------+
-> 			      |  driver   |
-> 			      +-----------+
-> 
-> The driver will register itself to the NCI core, and in turn the NCI core will register itself to the NFC core.
-It really looks like the HCI layer I'm currently (slowly) working on. So it does look good to me.
- 
+Pavel
 
 
-> We need to add the following 2 control operations (via generic netlink):
-> 	- Dev_up, which turn on the NFC controller (this operation may take a 	few seconds, as it can download new FW to the NFC controller)
-> 	- Dev_down, which turn off the NFC controller
-> The dev_up/down approach was also used with HCI protocol in the BlueZ project.
-So after talking with Lauro and Aloisio about it, and listening to
-Johannes argument, I think it does make sense to add those 2 hooks.
-
-
-> 
-> We suggest placing the NCI code in the net\nfc folder (beside the NFC code), as it's a generic and chip independent protocol, and not a driver.
-Yep, you probably want to have an nci directory there.
-
-Out of curiosity, is this NCI HW of yours based on the TRF7970A
-chipset ?
-
-Cheers,
-Samuel.
-
-
+On Thu, Aug 18, 2011 at 3:20 PM, Dan Williams <dcbw@redhat.com> wrote:
+> On Thu, 2011-08-18 at 00:01 -0400, Pavel Ivanov wrote:
+>> > Iwconfig and iwlist are themselves deprecated. Iw is the new wireless
+>> > configuration tool.
+>>
+>> I've just tried to use iw and it didn't quite work for me. Maybe it's
+>> interfering with something installed in Ubuntu by default but
+>
+> Ubuntu installs NetworkManager by default, so if you want to manually
+> control the wifi card you'll have to tell NM to ignore the wifi device,
+> or turn NM off temporarily.
+>
+>> connect/disconnect commands didn't seem to do anything. And why these
+>> commands can be executed only as root?
+>
+> Because poking and configuring hardware is a privileged operation; tools
+> like NetworkManager selectively poke holes through that wall and often
+> require administrator passwords to do it, but at the end of the day its
+> an operation that can affect security and stability, and that means it
+> needs to be privileged.
+>
+> In the end, you probably want to be using wpa_supplicant instead of
+> trying to configure stuff with iw directly.
+>
+> Dan
+>
+>> Well, maybe in Ubuntu 11.10 it will work better.
+>>
+>>
+>> Pavel
+>>
+>>
+>> 2011/8/17 Gábor Stefanik <netrolller.3d@gmail.com>:
+>> > 2011/8/17 Pavel Ivanov <paivanof@gmail.com>:
+>> >>> WIRELESS_EXT is not required for configuring wireless on recent
+>> >>> kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
+>> >>
+>> >> Since what version it's deprecated? Do user-space tools know about this new API?
+>> >>
+>> >> Neither iwconfig nor iwlist worked for me without WIRELESS_EXT.
+>> >>
+>> >>
+>> >> Pavel
+>> >>
+>> >
+>> > Iwconfig and iwlist are themselves deprecated. Iw is the new wireless
+>> > configuration tool.
+>> >
+>> >>
+>> >> 2011/8/17 Gábor Stefanik <netrolller.3d@gmail.com>:
+>> >>> On Wed, Aug 17, 2011 at 5:28 AM, Pavel Ivanov <paivanof@gmail.com> wrote:
+>> >>>> When ath9k is the only wireless driver included in the build
+>> >>>> WIRELESS_EXT configuration option becomes undefined. Because of that
+>> >>>> driver becomes essentially unusable as you can't actually connect to
+>> >>>> any WiFi network. By including WIRELESS_EXT into Kconfig we ensure
+>> >>>> that build with ath9k and without other drivers (having WIRELESS_EXT
+>> >>>> selected in their Kconfig) is actually usable.
+>> >>>
+>> >>> WIRELESS_EXT is not required for configuring wireless on recent
+>> >>> kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
+>> >>>
+>> >>>>
+>> >>>> Signed-off-by: Pavel Ivanov <paivanof@gmail.com>
+>> >>>> ---
+>> >>>>
+>> >>>> diff --git a/drivers/net/wireless/ath/ath9k/Kconfig
+>> >>>> b/drivers/net/wireless/ath/ath9k/Kconfig
+>> >>>> index d9c08c6..2573f77 100644
+>> >>>> --- a/drivers/net/wireless/ath/ath9k/Kconfig
+>> >>>> +++ b/drivers/net/wireless/ath/ath9k/Kconfig
+>> >>>> @@ -11,6 +11,7 @@ config ATH9K
+>> >>>>        select LEDS_CLASS
+>> >>>>        select NEW_LEDS
+>> >>>>        select ATH9K_COMMON
+>> >>>> +       select WIRELESS_EXT
+>> >>>>        ---help---
+>> >>>>          This module adds support for wireless adapters based on
+>> >>>>          Atheros IEEE 802.11n AR5008, AR9001 and AR9002 family
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
