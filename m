@@ -1,56 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:61639 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750766Ab1H1MKk (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:39407 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755060Ab1HRGnc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Aug 2011 08:10:40 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 24so3448441wyg.19
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Aug 2011 05:10:39 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 5/5] wl12xx: don't queue a new dummy packet if one is already pending
-Date: Sun, 28 Aug 2011 15:11:57 +0300
-Message-Id: <1314533517-24639-5-git-send-email-eliad@wizery.com> (sfid-20110828_141045_404163_38996B65)
-In-Reply-To: <1314533517-24639-1-git-send-email-eliad@wizery.com>
-References: <1314533517-24639-1-git-send-email-eliad@wizery.com>
+	Thu, 18 Aug 2011 02:43:32 -0400
+From: "Elias, Ilan" <ilane@ti.com>
+To: Aloisio Almeida <aloisio.almeida@openbossa.org>
+CC: "lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
+	"samuel@sortiz.org" <samuel@sortiz.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 18 Aug 2011 08:43:21 +0200
+Subject: RE: [PATCH 1/4] NFC: Add NFC dev_up and dev_down control operations
+Message-ID: <AC090B9732AB2B4DB7FF476E907FE6600131E1CA9A@dnce02.ent.ti.com> (sfid-20110818_084335_721300_4F291AFA)
+References: <AC090B9732AB2B4DB7FF476E907FE6600131E1C339@dnce02.ent.ti.com>
+ <CAEsZsEjRwJs-YTfWgunzPmh56t4KaQ2sPG_n0W5KitfWL-AcKQ@mail.gmail.com>
+In-Reply-To: <CAEsZsEjRwJs-YTfWgunzPmh56t4KaQ2sPG_n0W5KitfWL-AcKQ@mail.gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Hi Aloisio,
 
-The firmware only asks for one dummy packet at a time, but sometimes we
-are unable to provide it before a FW timer expires. When this happens,
-the FW will re-request the dummy packet. If a packet is still queued in
-the driver queues, do nothing in this case.
+Thanks for your comments.
 
-This prevents spurious dummy packets from clogging up the VO AC.
+> > +int nfc_dev_down(struct nfc_dev *dev)
+> > +{
+> > +       int rc = 0;
+> > +
+> > +       nfc_dbg("dev_name=%s", dev_name(&dev->dev));
+> > +
+> > +       device_lock(&dev->dev);
+> > +
+> > +       if (!device_is_registered(&dev->dev)) {
+> > +               rc = -ENODEV;
+> > +               goto error;
+> > +       }
+> > +
+> > +       if (!dev->dev_up) {
+> > +               rc = -EINVAL;
+> > +               goto error;
+> > +       }
+> 
+> I think -EALREADY would fit better.
+Agreed.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
+> > +
+> > +       if (dev->ops->dev_down)
+> > +               dev->ops->dev_down(dev);
+> > +
+> > +       dev->dev_up = false;
+> 
+> What happens if the driver is polling for targets or even with a
+> remote target activated? The nfc_dev structure has some control to
+> track the driver state (e.g. dev->polling) that must have their values
+> updated. Otherwise, the next start_poll() call would fail with EBUSY.
+You're correct, of course.
+When dev_down is called and we have some active operation (e.g. polling, 
+active target), there are 2 approaches:
+1) stop internally any active operations and update internal states 
+(e.g. dev->polling). Please note that if we have an active data exchange, 
+the callback might not be called at all.
+2) simply return EBUSY and let the upper layers handle it.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index f1fd991..aeb4cc5 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1540,7 +1540,13 @@ out:
- int wl1271_tx_dummy_packet(struct wl1271 *wl)
- {
- 	unsigned long flags;
--	int q = wl1271_tx_get_queue(skb_get_queue_mapping(wl->dummy_packet));
-+	int q;
-+
-+	/* no need to queue a new dummy packet if one is already pending */
-+	if (test_bit(WL1271_FLAG_DUMMY_PACKET_PENDING, &wl->flags))
-+		return 0;
-+
-+	q = wl1271_tx_get_queue(skb_get_queue_mapping(wl->dummy_packet));
- 
- 	spin_lock_irqsave(&wl->wl_lock, flags);
- 	set_bit(WL1271_FLAG_DUMMY_PACKET_PENDING, &wl->flags);
--- 
-1.7.6.401.g6a319
+With both approaches, we'll have to keep track of active target state 
+(in addition to dev->polling). Which option do you prefer?
 
+> > +static int nfc_genl_dev_up(struct sk_buff *skb, struct 
+> genl_info *info)
+> > +{
+> > +       struct nfc_dev *dev;
+> > +       int rc;
+> > +       u32 idx;
+> > +
+> > +       nfc_dbg("entry");
+> > +
+> > +       if (!info->attrs[NFC_ATTR_DEVICE_INDEX])
+> > +               return -EINVAL;
+> > +
+> > +       idx = nla_get_u32(info->attrs[NFC_ATTR_DEVICE_INDEX]);
+> > +
+> > +       dev = nfc_get_device(idx);
+> > +       if (!dev)
+> > +               return -ENODEV;
+> > +
+> > +       mutex_lock(&dev->genl_data.genl_data_mutex);
+> > +
+> > +       rc = nfc_dev_up(dev);
+> > +
+> > +       mutex_unlock(&dev->genl_data.genl_data_mutex);
+> 
+> This mutex is used to protect the variable dev->genl_data.poll_req_pid
+> in cases when the netlink socket is closed in parallel with start_poll
+> or stop_poll calls. As you are not accessing poll_req_pid, you don't
+> need to care about this mutex.
+Agreed.
+
+> 
+> > +static int nfc_genl_dev_down(struct sk_buff *skb, struct 
+> genl_info *info)
+> > +{
+> > +       struct nfc_dev *dev;
+> > +       int rc;
+> > +       u32 idx;
+> > +
+> > +       nfc_dbg("entry");
+> > +
+> > +       if (!info->attrs[NFC_ATTR_DEVICE_INDEX])
+> > +               return -EINVAL;
+> > +
+> > +       idx = nla_get_u32(info->attrs[NFC_ATTR_DEVICE_INDEX]);
+> > +
+> > +       dev = nfc_get_device(idx);
+> > +       if (!dev)
+> > +               return -ENODEV;
+> > +
+> > +       mutex_lock(&dev->genl_data.genl_data_mutex);
+> > +
+> > +       rc = nfc_dev_down(dev);
+> > +
+> > +       mutex_unlock(&dev->genl_data.genl_data_mutex);
+> 
+> The same as above.
+Agreed.
+
+Thanks & BR,
+Ilan
