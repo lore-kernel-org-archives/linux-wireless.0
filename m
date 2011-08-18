@@ -1,169 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3095 "EHLO MMS3.broadcom.com"
+Received: from mga02.intel.com ([134.134.136.20]:13740 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752346Ab1HHN7Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:25 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 12/82] staging: brcm80211: removed function
- declaration typedefs from main.h,pub.h
-Date: Mon, 8 Aug 2011 15:57:56 +0200
-Message-ID: <1312811946-16713-13-git-send-email-arend@broadcom.com> (sfid-20110808_155931_456807_5A20DC7C)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+	id S1750950Ab1HREtM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Aug 2011 00:49:12 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 18 Aug 2011 07:49:04 +0300
+Subject: RE: [PATCH 05/60] iwlagn: introduce struct iwl-shared - known by
+ all layers
+Message-ID: <4825B8A2C4E264489E57869F0DCFB22344565DFFDE@hasmsx502.ger.corp.intel.com> (sfid-20110818_064915_581834_FEA54822)
+References: <20110815142144.GA15718@redhat.com>
+	 <1313416005.15170.35.camel@wwguy-huron> <20110815144359.GA15719@redhat.com>
+	 <1313417422.15170.39.camel@wwguy-huron> <20110815151231.GB15718@redhat.com>
+	 <1313422152.15170.43.camel@wwguy-huron> <20110816092610.GB6085@redhat.com>
+	 <1313503443.6823.9.camel@wwguy-ubuntu> <20110816151256.GA4932@redhat.com>
+	 <4825B8A2C4E264489E57869F0DCFB22344565DF754@hasmsx502.ger.corp.intel.com>
+	 <20110817151626.GA1552@redhat.com> <1313613400.6823.23.camel@wwguy-ubuntu>
+In-Reply-To: <1313613400.6823.23.camel@wwguy-ubuntu>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
-
-Softmac related code cleanup. Typedefs are undesirable according to the
-CodingStyle document.
-
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/main.c |    4 +-
- drivers/staging/brcm80211/brcmsmac/main.h |   46 +++++++++++++++++++++-------
- drivers/staging/brcm80211/brcmsmac/pub.h  |   27 ++---------------
- 3 files changed, 39 insertions(+), 38 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index bd3d5f0..66de7ef 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -6265,8 +6265,8 @@ _brcms_c_ioctl(struct brcms_c_info *wlc, int cmd, void *arg, int len,
-  * register watchdog and down handlers.
-  */
- int brcms_c_module_register(struct brcms_pub *pub,
--			const char *name, void *hdl,
--			watchdog_fn_t w_fn, down_fn_t d_fn)
-+		const char *name, void *hdl,
-+		int (*w_fn)(void *handle), int (*d_fn)(void *handle))
- {
- 	struct brcms_c_info *wlc = (struct brcms_c_info *) pub->wlc;
- 	int i;
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
-index bf36f10..e61f047 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.h
-+++ b/drivers/staging/brcm80211/brcmsmac/main.h
-@@ -408,11 +408,11 @@ struct brcms_band {
- 	u16 bcntsfoff;	/* beacon tsf offset */
- };
- 
--/* tx completion callback takes 3 args */
--typedef void (*pkcb_fn_t) (struct brcms_c_info *wlc, uint txstatus, void *arg);
--
- struct pkt_cb {
--	pkcb_fn_t fn;		/* function to call when tx frame completes */
-+	/* function to call when tx frame completes */
-+	/* tx completion callback takes 3 args */
-+	void (*fn)(struct brcms_c_info *wlc, uint txstatus, void *arg);
-+
- 	void *arg;		/* void arg for fn */
- 	u8 nextidx;		/* index of next call back if threading */
- 	bool entered;		/* recursion check */
-@@ -423,19 +423,41 @@ struct modulecb {
- 	char name[32];		/* module name : NULL indicates empty array member */
- 	const struct brcmu_iovar *iovars;	/* iovar table */
- 	void *hdl;		/* handle passed when handler 'doiovar' is called */
--	watchdog_fn_t watchdog_fn;	/* watchdog handler */
--	iovar_fn_t iovar_fn;	/* iovar handler */
--	down_fn_t down_fn;	/* down handler. Note: the int returned
--				 * by the down function is a count of the
--				 * number of timers that could not be
--				 * freed.
--				 */
-+	int (*watchdog_fn)(void *handle);	/* watchdog handler */
-+
-+	/* IOVar handler
-+	 *
-+	 * handle - a pointer value registered with the function
-+	 * vi - iovar_info that was looked up
-+	 * actionid - action ID, calculated by IOV_GVAL() and IOV_SVAL()
-+	 *    based on varid.
-+	 * name - the actual iovar name
-+	 * params/plen - parameters and length for a get, input only.
-+	 * arg/len - buffer and length for value to be set or retrieved,
-+	 *      input or output.
-+	 * vsize - value size, valid for integer type only.
-+	 * wlcif - interface context (brcms_c_if pointer)
-+	 *
-+	 * All pointers may point into the same buffer.
-+	 */
-+	int (*iovar_fn)(void *handle, const struct brcmu_iovar *vi,
-+			u32 actionid, const char *name, void *params,
-+			uint plen, void *arg, int alen, int vsize,
-+			struct brcms_c_if *wlcif);
-+
-+	int (*down_fn)(void *handle); /* down handler. Note: the int returned
-+				       * by the down function is a count of the
-+				       * number of timers that could not be
-+				       * freed.
-+				       */
-+
- };
- 
- /* dump control blocks */
- struct dumpcb_s {
- 	const char *name;	/* dump name */
--	dump_fn_t dump_fn;	/* 'wl dump' handler */
-+	/* 'wl dump' handler */
-+	int (*dump_fn)(void *handle, struct brcmu_strbuf *b);
- 	void *dump_fn_arg;
- 	struct dumpcb_s *next;
- };
-diff --git a/drivers/staging/brcm80211/brcmsmac/pub.h b/drivers/staging/brcm80211/brcmsmac/pub.h
-index 01d7460..8ec398a 100644
---- a/drivers/staging/brcm80211/brcmsmac/pub.h
-+++ b/drivers/staging/brcm80211/brcmsmac/pub.h
-@@ -203,29 +203,6 @@ struct brcms_bss_info {
- #define IOVF_GET_BAND	(1<<13)	/* get requires fixed band */
- #define IOVF_OPEN_ALLOW	(1<<14)	/* set allowed iovar for opensrc */
- 
--/* watchdog down and dump callback function proto's */
--typedef int (*watchdog_fn_t) (void *handle);
--typedef int (*down_fn_t) (void *handle);
--typedef int (*dump_fn_t) (void *handle, struct brcmu_strbuf *b);
--
--/* IOVar handler
-- *
-- * handle - a pointer value registered with the function
-- * vi - iovar_info that was looked up
-- * actionid - action ID, calculated by IOV_GVAL() and IOV_SVAL() based on varid.
-- * name - the actual iovar name
-- * params/plen - parameters and length for a get, input only.
-- * arg/len - buffer and length for value to be set or retrieved, input or output.
-- * vsize - value size, valid for integer type only.
-- * wlcif - interface context (brcms_c_if pointer)
-- *
-- * All pointers may point into the same buffer.
-- */
--typedef int (*iovar_fn_t) (void *handle, const struct brcmu_iovar *vi,
--			   u32 actionid, const char *name, void *params,
--			   uint plen, void *arg, int alen, int vsize,
--			   struct brcms_c_if *wlcif);
--
- #define MAC80211_PROMISC_BCNS	(1 << 0)
- #define MAC80211_SCAN		(1 << 1)
- 
-@@ -635,7 +612,9 @@ extern void brcms_c_mctrl(struct brcms_c_info *wlc, u32 mask, u32 val);
- 
- extern int brcms_c_module_register(struct brcms_pub *pub,
- 			       const char *name, void *hdl,
--			       watchdog_fn_t watchdog_fn, down_fn_t down_fn);
-+			       int (*watchdog_fn)(void *handle),
-+			       int (*down_fn)(void *handle));
-+
- extern int brcms_c_module_unregister(struct brcms_pub *pub, const char *name,
- 				 void *hdl);
- extern void brcms_c_suspend_mac_and_wait(struct brcms_c_info *wlc);
--- 
-1.7.4.1
-
+PiANCj4gT24gV2VkLCAyMDExLTA4LTE3IGF0IDA4OjE2IC0wNzAwLCBTdGFuaXNsYXcgR3J1c3pr
+YSB3cm90ZToNCj4gPiBPbiBUdWUsIEF1ZyAxNiwgMjAxMSBhdCAwNzoyMzo1MlBNICswMzAwLCBH
+cnVtYmFjaCwgRW1tYW51ZWwgd3JvdGU6DQo+ID4gPiA+IFNpbXBseSBieSBhZGRpbmcgdG8gaXds
+X3ByaXYgZGlmZmVyZW50IHN0cnVjdCBvcHMvZGF0YSBmb3IgZWFjaA0KPiB1cHBlcg0KPiA+ID4g
+PiBsYXllciB5b3Ugd2lsbCBoYXZlLiBZb3UgbmVlZCB0byBoYXZlIHRoZSBzYW1lIHRoaW5nIHRv
+IGNsdWUgd2l0aA0KPiA+ID4gPiBtYWM4MDIxMSwgd2hhdGV2ZXIgdXBwZXIgbGF5ZXIgd2lsbCBi
+ZS4gT3RoZXJ3aXNlLCBpZiBtYWM4MDIxMQ0KPiBjbHVlDQo+ID4gPiA+IGhhdmUgdG8gYmUgZGlm
+ZmVyZW50LCBuZXcgaGFyZHdhcmUgcHJvYmFibHkgbmVlZHMgZGlmZmVyZW50DQo+IGRyaXZlci4N
+Cj4gPiA+ID4NCj4gPiA+DQo+ID4gPiBJIHdvdWxkIGJlIHJlbHVjdGFudCB0byBoYXZlIGFsbCB0
+aGUgZGF0YSAvIG9wcyBuZWVkZWQgYnkgYWxsIHRoZQ0KPiBwb3NzaWJsZSBIVw0KPiA+ID4gYWxs
+IHRoZSB0aW1lIGluIHByaXYuIEkgZG9uJ3QgdGhpbmsgaXQgaXMgYSBnb29kIGlkZWEgdG8gaGF2
+ZQ0KPiB1bmFsbG9jYXRlZCBwb2ludGVycw0KPiA+ID4gZm9yIGEgYnVzIHRoYXQgZG9uJ3QgbmVl
+ZCB0aGUgcmluZ3MuLi4NCj4gPg0KPiA+IE5vdCBzdXJlIHdoeSB0aGVyZSB3b3VsZCBiZSBhbnkg
+dW5hbGxvY2F0ZWQgcG9pbnRlcnMuDQo+ID4NCj4gPiA+IEluc3RlYWQsIEkgdGhpbmsgdGhhdCBo
+YXZpbmcgYSBIVyBzcGVjaWZpYyBhcmVhIHRoYXQgaXMgYWxsb2NhdGVkDQo+IGZvciBlYWNoIEhX
+IGlzIG11Y2gNCj4gPiA+IG5pY2VyIGFuZCByZWxpYWJsZS4gVGhpcyBpcyB3aGF0IHRoaXMgcGF0
+Y2ggc2VyaWVzIGlzIGFsbCBhYm91dC4NCj4gPiA+IEZ1cnRoZXJtb3JlLCBJIGRvbid0IHdhbnQg
+dGhlIEhXIGxheWVyIHRvIGRlcmVmZXJlbmNlIGl3bF9wcml2LA0KPiA+DQo+ID4gV2UgZGlzY3Vz
+c2VkIHdpdGggV2V5IHVwcGVyIGFuZCBsb3dlciBsYXllciwgdGVybSBIVyBsYXllciBjb25mdXNl
+IG1lDQo+ID4gZXZlbiBtb3JlIGhlcmUuDQoNCkJ5IEhXIGxheWVycyBJIG1lYW50IGxvd2VyIGxh
+eWVycywgc2luY2UgdGhlc2UgYXJlIEhXIHNwZWNpZmljDQoNCj4gPg0KPiA+IFBhcnRpY3VsYXJs
+eSBpcyBpbnRlcmVzdGluZyBob3cgZG8geW91IHdhbnQgdG8gY2x1ZSBkcml2ZXIgd2l0aA0KPiBt
+YWM4MDIxMQ0KPiA+IGhhdmluZyBkaWZmZXJlbnQgaXdsX3ByaXYgc3RydWN0dXJlcy4gQWxzbywg
+d2hhdCBmb3IgYXJlIHNlcGFyYXRlDQo+ID4gaXdsX3RyYW5zX3BjaWUgYW5kIGl3bF9idXNfcGNp
+ZSBpbnN0ZWFkIG9mIG9uZSB0aGluZyB0aGF0IHRhbGsNCj4gPiB0byBwY2llIGJ1cy4NCj4gPg0K
+DQpZb3UgbWF5IGJlIHJpZ2h0IG9uIHRoYXQgb25lLiBUaGUgZnVuY3Rpb25hbCBkaXN0aW5jdGlv
+biBiZXR3ZWVuIGl3bF90cmFuc19wY2llIGFuZCBpd2xfYnVzX3BjaWUgaXNuJ3QgdmVyeSBvYnZp
+b3VzLiBXZSBtYXkgZXZlbiBjb25zaWRlciB0byBtZXJnZSB0aGVtIGludG8gb25lIFBDSWUgbGF5
+ZXIuIEJ1dCB0aGF0IHdvdWxkIGJlIG9uIHRoZSB0b3Agb2YgdGhlIGN1cnJlbnQgcGF0Y2hlcy4g
+SSB3b3VsZCBsaWtlIHRvIGxpdmUgb2YgYml0IHdpdGggdGhlIGN1cnJlbnQgZGVzaWduLCBzZWUg
+aG93IHdlIGNvbm5lY3QgdGhlIGRpZmZlcmVudCBsYXllcnMgZm9yIHRoZSBuZXcgQXJjaCAvIEhX
+IHdlIGFyZSBoYXZpbmcgaW4gdGhlIHBpcGUgdG8gdGhlIGN1cnJlbnQgY29kZSBhbmQgc2VlIHdo
+YXQgdG8gZG8gdGhlbi4NCg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkludGVsIElzcmFlbCAoNzQpIExpbWl0ZWQK
+ClRoaXMgZS1tYWlsIGFuZCBhbnkgYXR0YWNobWVudHMgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFs
+IG1hdGVyaWFsIGZvcgp0aGUgc29sZSB1c2Ugb2YgdGhlIGludGVuZGVkIHJlY2lwaWVudChzKS4g
+QW55IHJldmlldyBvciBkaXN0cmlidXRpb24KYnkgb3RoZXJzIGlzIHN0cmljdGx5IHByb2hpYml0
+ZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZApyZWNpcGllbnQsIHBsZWFzZSBjb250YWN0
+IHRoZSBzZW5kZXIgYW5kIGRlbGV0ZSBhbGwgY29waWVzLgo=
 
