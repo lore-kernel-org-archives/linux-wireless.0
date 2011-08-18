@@ -1,39 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:38463 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750827Ab1HYJ24 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 05:28:56 -0400
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, chunkeey@googlemail.com
-Subject: car9170: undefined reference to `__udivdi3'
-From: Kalle Valo <kvalo@adurom.com>
-Date: Thu, 25 Aug 2011 12:28:51 +0300
-Message-ID: <87aaaxon58.fsf@purkki.adurom.net> (sfid-20110825_112904_469947_F18AC5BA)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52000 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755595Ab1HRLpO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Aug 2011 07:45:14 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, lists@wildgooses.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat-wireless: fix building with CONFIG_CFG80211_INTERNAL_REGDB
+Date: Thu, 18 Aug 2011 13:45:04 +0200
+Message-Id: <1313667904-15188-1-git-send-email-hauke@hauke-m.de> (sfid-20110818_134518_552157_E1038699)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+When building with CONFIG_CFG80211_INTERNAL_REGDB set there is a db.txt
+and genregdb.awk needed. $(srctree) contains the position of the kernel
+source and not the position of the compat-wireless root directory.
 
-carl9170 fails to compile on wireless-testing when I compile a 32 bit
-kernel:
+Reported-by: Ed W <lists@wildgooses.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ config.mk                              |    1 +
+ patches/35-fix-makefile-includes.patch |   10 ++++++++++
+ scripts/admin-update.sh                |    4 ++++
+ 3 files changed, 15 insertions(+), 0 deletions(-)
 
-drivers/built-in.o: In function `carl9170_collect_tally':
-/home/kvalo/ath6kl/ath6kl/drivers/net/wireless/ath/carl9170/cmd.c:191:
-undefined reference to `__udivdi3'
-/home/kvalo/ath6kl/ath6kl/drivers/net/wireless/ath/carl9170/cmd.c:192:
-undefined reference to `__udivdi3'
-/home/kvalo/ath6kl/ath6kl/drivers/net/wireless/ath/carl9170/cmd.c:193:
-undefined reference to `__udivdi3'
-
-Reverting this patch fixes the issue:
-
-commit acf1771221f2877ab5d36487930cd6a2ecaa73e6
-Author: Christian Lamparter <chunkeey@googlemail.com>
-Date:   Mon Aug 15 19:50:48 2011 +0200
-
-    carl9170: improve site survey
-
+diff --git a/config.mk b/config.mk
+index e2bffeb..7c6bc3b 100644
+--- a/config.mk
++++ b/config.mk
+@@ -158,6 +158,7 @@ CONFIG_CFG80211_DEFAULT_PS=y
+ # CONFIG_NL80211_TESTMODE=y
+ # CONFIG_CFG80211_DEVELOPER_WARNINGS=y
+ # CONFIG_CFG80211_REG_DEBUG=y
++# CONFIG_CFG80211_INTERNAL_REGDB=y
+ # See below for wext stuff
+ 
+ CONFIG_LIB80211=m
+diff --git a/patches/35-fix-makefile-includes.patch b/patches/35-fix-makefile-includes.patch
+index 3211c71..aa3dd92 100644
+--- a/patches/35-fix-makefile-includes.patch
++++ b/patches/35-fix-makefile-includes.patch
+@@ -59,3 +59,13 @@ path the make process will search in the kernel tree for the headers.
+  
+  BRCMUTIL_OFILES := \
+  	utils.o \
++--- a/net/wireless/Makefile
+++++ b/net/wireless/Makefile
++@@ -18,6 +18,6 @@ cfg80211-$(CONFIG_CFG80211_INTERNAL_REGD
++ ccflags-y += -D__CHECK_ENDIAN__
++ 
++ $(obj)/regdb.c: $(src)/db.txt $(src)/genregdb.awk
++-	@$(AWK) -f $(srctree)/$(src)/genregdb.awk < $< > $@
+++	@$(AWK) -f $(src)/genregdb.awk < $< > $@
++ 
++ clean-files := regdb.c
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index edd45d4..061748c 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -328,6 +328,10 @@ for i in $NET_DIRS; do
+ 	rm -f net/$i/*.mod.c
+ done
+ 
++# Copy files needed for statically compiled regulatory rules database
++cp $GIT_TREE/net/wireless/db.txt net/wireless/
++cp $GIT_TREE/net/wireless/genregdb.awk net/wireless/
++
+ # net/bluetooth
+ for i in $NET_BT_DIRS; do
+ 	mkdir -p net/$i
 -- 
-Kalle Valo
+1.7.4.1
+
