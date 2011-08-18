@@ -1,105 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:64366 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751430Ab1HYNur (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:43752 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1749667Ab1HRECG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 09:50:47 -0400
-Message-ID: <4E565333.3080007@gmail.com> (sfid-20110825_155052_323461_46408EBE)
-Date: Thu, 25 Aug 2011 15:50:43 +0200
-From: =?UTF-8?B?Tmljb2xhcyBkZSBQZXNsb8O8YW4=?=
-	<nicolas.2p.debian@gmail.com>
+	Thu, 18 Aug 2011 00:02:06 -0400
 MIME-Version: 1.0
-To: wwguy <wey-yi.w.guy@intel.com>
-CC: "dhalperi@cs.washington.edu" <dhalperi@cs.washington.edu>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn: Random "Time out reading EEPROM".
-References: <4DEA2FC1.2030104@gmail.com>	 <1307284276.6918.17.camel@wwguy-ubuntu>  <4E1FF8B8.9020005@gmail.com> <1310740111.13897.13.camel@wwguy-ubuntu>
-In-Reply-To: <1310740111.13897.13.camel@wwguy-ubuntu>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CA+XFjipsVukKYchfmDv48PAKsD2PUxT+7E8epRuKFynGwk=Bag@mail.gmail.com>
+References: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com>
+ <CA+XFjipM1Qup3bcJos_ikwzoaWoa3GdYqK0WBUqEHBNR6V6LfQ@mail.gmail.com>
+ <CAG1a4rsyfPrrrf-mzt3HAM6YHHjaHTcd2rbtYiwqLkUCP=j8pQ@mail.gmail.com> <CA+XFjipsVukKYchfmDv48PAKsD2PUxT+7E8epRuKFynGwk=Bag@mail.gmail.com>
+From: Pavel Ivanov <paivanof@gmail.com>
+Date: Thu, 18 Aug 2011 00:01:34 -0400
+Message-ID: <CAG1a4rvQTA7UgxLOxu_cC88grjHttyjPD_4kyDhb7Y9FcBBkLQ@mail.gmail.com> (sfid-20110818_060225_676943_C8A3BD0D)
+Subject: Re: [PATCH] ath9k: make driver usable standalone
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le 15/07/2011 16:28, wwguy a Ã©crit :
+> Iwconfig and iwlist are themselves deprecated. Iw is the new wireless
+> configuration tool.
 
-> the error indicate fail to read data from EEPROM, your 2nd report is
-> even more strange, the number at the end the error message indicate the
-> index of DWORD driver trying to read from EEPROM.
+I've just tried to use iw and it didn't quite work for me. Maybe it's
+interfering with something installed in Ubuntu by default but
+connect/disconnect commands didn't seem to do anything. And why these
+commands can be executed only as root?
+Well, maybe in Ubuntu 11.10 it will work better.
+
+
+Pavel
+
+
+2011/8/17 Gábor Stefanik <netrolller.3d@gmail.com>:
+> 2011/8/17 Pavel Ivanov <paivanof@gmail.com>:
+>>> WIRELESS_EXT is not required for configuring wireless on recent
+>>> kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
+>>
+>> Since what version it's deprecated? Do user-space tools know about this new API?
+>>
+>> Neither iwconfig nor iwlist worked for me without WIRELESS_EXT.
+>>
+>>
+>> Pavel
+>>
 >
-> "Time out reading EEPROM[2]" telling me the first 2 DWORD is reading ok
-> but not the 3rd read.
+> Iwconfig and iwlist are themselves deprecated. Iw is the new wireless
+> configuration tool.
 >
-> How many PCI-E slots you have in your system, could it possible for you
-> to switch to another PCI-E slot, or pull out and re-insert the NIC.
-
-Unfortunately, not. On this laptop, the NIC is not reachable without disassembling the laptop, and I 
-don't want to... I will double check again, but...
-
-> Also, it is possible to put the NIC into different system and see if you
-> are seeing the similar problem?
-
-No, for the exact same reason.
-
-Not that it still happens with 3.0.0-1 from Debian.
-
-[   15.086244] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:
-[   15.086247] iwlagn: Copyright(c) 2003-2011 Intel Corporation
-[   15.086404] iwlagn 0000:05:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-[   15.086412] iwlagn 0000:05:00.0: setting latency timer to 64
-[   15.086438] iwlagn 0000:05:00.0: Detected Intel(R) WiFi Link 5100 AGN, REV=0x54
-[   15.095859] iwlagn 0000:05:00.0: Time out reading EEPROM[6]
-[   15.095945] iwlagn 0000:05:00.0: Unable to init EEPROM
-[   15.096030] iwlagn 0000:05:00.0: PCI INT A disabled
-[   15.096039] iwlagn: probe of 0000:05:00.0 failed with error -110
-
-modprobe -r iwlagn ; modprobe iwlagn
-
-[  231.822492] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:
-[  231.822495] iwlagn: Copyright(c) 2003-2011 Intel Corporation
-[  231.822581] iwlagn 0000:05:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-[  231.822591] iwlagn 0000:05:00.0: setting latency timer to 64
-[  231.822621] iwlagn 0000:05:00.0: Detected Intel(R) WiFi Link 5100 AGN, REV=0x54
-[  231.843544] iwlagn 0000:05:00.0: device EEPROM VER=0x11f, CALIB=0x4
-[  231.843546] iwlagn 0000:05:00.0: Device SKU: 0Xb
-[  231.844889] iwlagn 0000:05:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
-[  231.844961] iwlagn 0000:05:00.0: irq 50 for MSI/MSI-X
-[  231.989424] iwlagn 0000:05:00.0: loaded firmware version 8.83.5.1 build 33692
-[  232.037456] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
-
-The error is not easy to reproduce, but the fix is perfectly stable. A single unload/reload of 
-iwlagn is always enough to solve the problem, when it happens. For this reason, it sounds difficult 
-to consider this a hardware slot problem. Can't this be related to some other PCI components?
-
-00:00.0 Host bridge: Intel Corporation Mobile 4 Series Chipset Memory Controller Hub (rev 07)
-00:01.0 PCI bridge: Intel Corporation Mobile 4 Series Chipset PCI Express Graphics Port (rev 07)
-00:1a.0 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #4 (rev 03)
-00:1a.1 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #5 (rev 03)
-00:1a.2 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #6 (rev 03)
-00:1a.7 USB Controller: Intel Corporation 82801I (ICH9 Family) USB2 EHCI Controller #2 (rev 03)
-00:1b.0 Audio device: Intel Corporation 82801I (ICH9 Family) HD Audio Controller (rev 03)
-00:1c.0 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express Port 1 (rev 03)
-00:1c.1 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express Port 2 (rev 03)
-00:1c.2 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express Port 3 (rev 03)
-00:1c.3 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express Port 4 (rev 03)
-00:1c.4 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express Port 5 (rev 03)
-00:1c.5 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express Port 6 (rev 03)
-00:1d.0 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #1 (rev 03)
-00:1d.1 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #2 (rev 03)
-00:1d.2 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #3 (rev 03)
-00:1d.7 USB Controller: Intel Corporation 82801I (ICH9 Family) USB2 EHCI Controller #1 (rev 03)
-00:1e.0 PCI bridge: Intel Corporation 82801 Mobile PCI Bridge (rev 93)
-00:1f.0 ISA bridge: Intel Corporation ICH9M LPC Interface Controller (rev 03)
-00:1f.2 SATA controller: Intel Corporation ICH9M/M-E SATA AHCI Controller (rev 03)
-00:1f.3 SMBus: Intel Corporation 82801I (ICH9 Family) SMBus Controller (rev 03)
-01:00.0 VGA compatible controller: nVidia Corporation G98 [GeForce 9300M GS] (rev a1)
-02:00.0 Ethernet controller: Marvell Technology Group Ltd. 88E8055 PCI-E Gigabit Ethernet Controller 
-(rev 14)
-05:00.0 Network controller: Intel Corporation WiFi Link 5100
-09:03.0 FireWire (IEEE 1394): Ricoh Co Ltd R5C832 IEEE 1394 Controller (rev 05)
-09:03.1 SD Host controller: Ricoh Co Ltd R5C822 SD/SDIO/MMC/MS/MSPro Host Adapter (rev 22)
-09:03.2 System peripheral: Ricoh Co Ltd R5C592 Memory Stick Bus Host Adapter (rev 12)
-
-I'm quite sure I can fix this problem by loading, unloading and reloading iwlagn on every startup... 
-but I don't really consider this a fix :-/
-
-	Nicolas.
+>>
+>> 2011/8/17 Gábor Stefanik <netrolller.3d@gmail.com>:
+>>> On Wed, Aug 17, 2011 at 5:28 AM, Pavel Ivanov <paivanof@gmail.com> wrote:
+>>>> When ath9k is the only wireless driver included in the build
+>>>> WIRELESS_EXT configuration option becomes undefined. Because of that
+>>>> driver becomes essentially unusable as you can't actually connect to
+>>>> any WiFi network. By including WIRELESS_EXT into Kconfig we ensure
+>>>> that build with ath9k and without other drivers (having WIRELESS_EXT
+>>>> selected in their Kconfig) is actually usable.
+>>>
+>>> WIRELESS_EXT is not required for configuring wireless on recent
+>>> kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
+>>>
+>>>>
+>>>> Signed-off-by: Pavel Ivanov <paivanof@gmail.com>
+>>>> ---
+>>>>
+>>>> diff --git a/drivers/net/wireless/ath/ath9k/Kconfig
+>>>> b/drivers/net/wireless/ath/ath9k/Kconfig
+>>>> index d9c08c6..2573f77 100644
+>>>> --- a/drivers/net/wireless/ath/ath9k/Kconfig
+>>>> +++ b/drivers/net/wireless/ath/ath9k/Kconfig
+>>>> @@ -11,6 +11,7 @@ config ATH9K
+>>>>        select LEDS_CLASS
+>>>>        select NEW_LEDS
+>>>>        select ATH9K_COMMON
+>>>> +       select WIRELESS_EXT
+>>>>        ---help---
+>>>>          This module adds support for wireless adapters based on
+>>>>          Atheros IEEE 802.11n AR5008, AR9001 and AR9002 family
