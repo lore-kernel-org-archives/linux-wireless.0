@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:61829 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755104Ab1HYSIg convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:58601 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753343Ab1HSVSf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 14:08:36 -0400
-Received: by mail-qy0-f181.google.com with SMTP id 34so1693335qyk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 11:08:36 -0700 (PDT)
+	Fri, 19 Aug 2011 17:18:35 -0400
+Received: by pzk37 with SMTP id 37so5459213pzk.1
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Aug 2011 14:18:34 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4E56868E.7010404@lwfinger.net>
-References: <4e55750c.GPPIrbNLynUMWY/U%Larry.Finger@lwfinger.net>
-	<CACna6ryVB3yTj7rQbSdCqrw-9WtaPZedM7Ug6JV0iTDQQOv=Sw@mail.gmail.com>
-	<4E56868E.7010404@lwfinger.net>
-Date: Thu, 25 Aug 2011 20:08:35 +0200
-Message-ID: <CACna6rwm9fwo3uF4xk6=Sc85_33bsTG0m19U4syrWqMQDXs1-w@mail.gmail.com> (sfid-20110825_200839_690266_FA6A5A4D)
-Subject: Re: [RFC/RFT] b43: Relax requirement for descriptors to be in the DMA zone
+In-Reply-To: <1313787142.6210.9.camel@shinybook.infradead.org>
+References: <4E3420E9.6080603@lwfinger.net>
+	<CACna6ryErHY+OyAnvc9+MYArb5mXpSdadOPADsQOBz796UqSUw@mail.gmail.com>
+	<1313617419.3990.134.camel@shinybook.infradead.org>
+	<CACna6rzQmEE-EF+7tvQ8vkwp9bYwWMkna3UHw8ym7PmjKWWQTQ@mail.gmail.com>
+	<1313653897.13224.4.camel@shinybook.infradead.org>
+	<CACna6rzsKaHYL4aH9=0X+_6Q7j-_5AnHc7KfiQ9_FxSLhqEPBA@mail.gmail.com>
+	<1313787142.6210.9.camel@shinybook.infradead.org>
+Date: Fri, 19 Aug 2011 23:17:48 +0200
+Message-ID: <CACna6ryuTmzo2COBZ9+o-=7AOhLm3ZPebHL+rbGiXN+w94WQYQ@mail.gmail.com> (sfid-20110819_231838_745313_3B42B3B1)
+Subject: Re: [PATCH] Add uevent to bcma bus, to autoload drivers.
 From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 25 sierpnia 2011 19:29 użytkownik Larry Finger
-<Larry.Finger@lwfinger.net> napisał:
-> On 08/25/2011 12:24 PM, Rafał Miłecki wrote:
->>
->> 2011/8/25 Larry Finger<Larry.Finger@lwfinger.net>:
->>>
->>> When 64-bit DMA was first used, there were problems with the
->>> BCM4311 (14e4:4311). The problem was "fixed" by using the GFP_DMA
->>> flag in the allocation of coherent ring descriptor memory.
->>>
->>> The original problem is now believed to have been due to bugs in
->>> the 64-bit DMA implementation in the rest of the kernel, and that
->>> those bugs have been fixed. Accordingly, the requirement for the
->>> descriptors to be in the DMA zone is relaxed.
->>
->> Larry, it is not clear to me from the commit message: did you test
->> that patch with your 14e4:4311?
+W dniu 19 sierpnia 2011 22:52 użytkownik David Woodhouse
+<dwmw2@infradead.org> napisał:
+> On Fri, 2011-08-19 at 22:13 +0200, Rafał Miłecki wrote:
+>> I can accept sending patch directly to John, if I'm included in CC and
+>> linux-wireless is included as well.
 >
-> Yes.
+> But if b43 isn't ready for *some* bcma card, so you don't want it
+> autoloading, then perhaps we might have wanted to remove a MODULE_ALIAS
+> from b43 to prevent it being autoloaded for just *that* device. Or
+> something like that. So even for this "obviously correct" patch I'd
+> rather run it by you first.
 
-Great, thanks for taking a look at this :)
+There is nothing wrong in auto-loading b43 for unsupported card. b43
+will detect the PHY type is not supported and will return false from
+probing function.
 
 -- 
 Rafał
