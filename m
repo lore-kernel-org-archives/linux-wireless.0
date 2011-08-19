@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:52776 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753747Ab1HDUIC (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:32896 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752173Ab1HSPKm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Aug 2011 16:08:02 -0400
-Received: by yia27 with SMTP id 27so1305694yia.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Aug 2011 13:08:02 -0700 (PDT)
-Message-ID: <4E3AFC1F.6040708@lwfinger.net> (sfid-20110804_220807_470114_57C0665D)
-Date: Thu, 04 Aug 2011 15:07:59 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Anthony Bourguignon <contact+kernel@toniob.net>
-CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: rt2x00: Add rt2870 device id
-References: <1312487142.4832.8.camel@moss>
-In-Reply-To: <1312487142.4832.8.camel@moss>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 19 Aug 2011 11:10:42 -0400
+Received: by qwk3 with SMTP id 3so2072801qwk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Aug 2011 08:10:41 -0700 (PDT)
+From: Bill Jordan <bjordan@rajant.com>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, nbd@openwrt.org
+Cc: Bill Jordan <bjordan@rajant.com>
+Subject: [PATCH] ath9k: fix MGMT packets when using TKIP
+Date: Fri, 19 Aug 2011 11:10:22 -0400
+Message-Id: <1313766622-15092-1-git-send-email-bjordan@rajant.com> (sfid-20110819_171046_110895_B5614692)
+In-Reply-To: <4E4C6258.1030409@openwrt.org>
+References: <4E4C6258.1030409@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/04/2011 02:45 PM, Anthony Bourguignon wrote:
-> Hello,
->
-> Dvico ships WiFi usb keys with some of their tvix hardware. The vendor
-> id is related to dvico and not known from the rt2800usb driver. The
-> chipset is found to be a rt2870. You'll find enclosed a patch to handle
-> theses usb keys. I've tested it on a vanilla 3.0 kernel and the key is
-> recognize and working perfectly.
+Prevent 8 bytes from being truncated from MGMT packets
+when using TKIP.
 
-Please read and follow the instructions in Documentation/SubmittingPatches. 
-There are several things wrong here including no "Signed-off-by" line and the 
-patch should be in-line, not as an attachment.
+Signed-off-by: Bill Jordan <bjordan@rajant.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-For wireless devices, the patch should be sent to John Linville 
-<linville@tuxdriver.com> with the mailing lists as Cc.
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 7409402..9adddd9 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -824,7 +824,8 @@ static bool ath9k_rx_accept(struct ath_common *common,
+ 	is_mc = !!is_multicast_ether_addr(hdr->addr1);
+ 	is_valid_tkip = rx_stats->rs_keyix != ATH9K_RXKEYIX_INVALID &&
+ 		test_bit(rx_stats->rs_keyix, common->tkip_keymap);
+-	strip_mic = is_valid_tkip && !(rx_stats->rs_status &
++	strip_mic = is_valid_tkip && ieee80211_is_data(fc) &&
++		!(rx_stats->rs_status &
+ 		(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_CRC | ATH9K_RXERR_MIC));
+ 
+ 	if (!rx_stats->rs_datalen)
+-- 
+1.7.6
 
-Thanks for posting this info and good luck with the patch preparation.
-
-Larry
