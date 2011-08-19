@@ -1,101 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:46738 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751959Ab1HWRHT (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:41873 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751297Ab1HSUw0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 13:07:19 -0400
-Received: by wyg24 with SMTP id 24so246308wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 10:07:18 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: HT-PHY: allow writing longer tables with a single call
-Date: Tue, 23 Aug 2011 19:09:30 +0200
-Message-Id: <1314119370-22869-1-git-send-email-zajec5@gmail.com> (sfid-20110823_190723_950115_08087618)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 19 Aug 2011 16:52:26 -0400
+Subject: Re: [PATCH] Add uevent to bcma bus, to autoload drivers.
+From: David Woodhouse <dwmw2@infradead.org>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Date: Fri, 19 Aug 2011 21:52:20 +0100
+In-Reply-To: <CACna6rzsKaHYL4aH9=0X+_6Q7j-_5AnHc7KfiQ9_FxSLhqEPBA@mail.gmail.com>
+References: <4E3420E9.6080603@lwfinger.net>
+	 <CACna6ryErHY+OyAnvc9+MYArb5mXpSdadOPADsQOBz796UqSUw@mail.gmail.com>
+	 <1313617419.3990.134.camel@shinybook.infradead.org>
+	 <CACna6rzQmEE-EF+7tvQ8vkwp9bYwWMkna3UHw8ym7PmjKWWQTQ@mail.gmail.com>
+	 <1313653897.13224.4.camel@shinybook.infradead.org>
+	 <CACna6rzsKaHYL4aH9=0X+_6Q7j-_5AnHc7KfiQ9_FxSLhqEPBA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1313787142.6210.9.camel@shinybook.infradead.org> (sfid-20110819_225229_246707_E0D2430A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes we need to write table which is 2-10 elements long. It's
-easier to create such a function instead of defining array every time.
+On Fri, 2011-08-19 at 22:13 +0200, Rafał Miłecki wrote:
+> I can accept sending patch directly to John, if I'm included in CC and
+> linux-wireless is included as well.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/tables_phy_ht.c |   45 ++++++++++++++++++++++++++++++
- drivers/net/wireless/b43/tables_phy_ht.h |    1 +
- 2 files changed, 46 insertions(+), 0 deletions(-)
+But if b43 isn't ready for *some* bcma card, so you don't want it
+autoloading, then perhaps we might have wanted to remove a MODULE_ALIAS
+from b43 to prevent it being autoloaded for just *that* device. Or
+something like that. So even for this "obviously correct" patch I'd
+rather run it by you first.
 
-diff --git a/drivers/net/wireless/b43/tables_phy_ht.c b/drivers/net/wireless/b43/tables_phy_ht.c
-index 2127bd2..677d217 100644
---- a/drivers/net/wireless/b43/tables_phy_ht.c
-+++ b/drivers/net/wireless/b43/tables_phy_ht.c
-@@ -710,6 +710,51 @@ void b43_httab_write(struct b43_wldev *dev, u32 offset, u32 value)
- 	return;
- }
- 
-+void b43_httab_write_few(struct b43_wldev *dev, u32 offset, size_t num, ...)
-+{
-+	va_list args;
-+	u32 type, value;
-+	unsigned int i;
-+
-+	type = offset & B43_HTTAB_TYPEMASK;
-+	offset &= 0xFFFF;
-+
-+	va_start(args, num);
-+	switch (type) {
-+	case B43_HTTAB_8BIT:
-+		b43_phy_write(dev, B43_PHY_HT_TABLE_ADDR, offset);
-+		for (i = 0; i < num; i++) {
-+			value = va_arg(args, int);
-+			B43_WARN_ON(value & ~0xFF);
-+			b43_phy_write(dev, B43_PHY_HT_TABLE_DATALO, value);
-+		}
-+		break;
-+	case B43_HTTAB_16BIT:
-+		b43_phy_write(dev, B43_PHY_HT_TABLE_ADDR, offset);
-+		for (i = 0; i < num; i++) {
-+			value = va_arg(args, int);
-+			B43_WARN_ON(value & ~0xFFFF);
-+			b43_phy_write(dev, B43_PHY_HT_TABLE_DATALO, value);
-+		}
-+		break;
-+	case B43_HTTAB_32BIT:
-+		b43_phy_write(dev, B43_PHY_HT_TABLE_ADDR, offset);
-+		for (i = 0; i < num; i++) {
-+			value = va_arg(args, int);
-+			b43_phy_write(dev, B43_PHY_HT_TABLE_DATAHI,
-+				      value >> 16);
-+			b43_phy_write(dev, B43_PHY_HT_TABLE_DATALO,
-+				      value & 0xFFFF);
-+		}
-+		break;
-+	default:
-+		B43_WARN_ON(1);
-+	}
-+	va_end(args);
-+
-+	return;
-+}
-+
- void b43_httab_write_bulk(struct b43_wldev *dev, u32 offset,
- 			  unsigned int nr_elements, const void *_data)
- {
-diff --git a/drivers/net/wireless/b43/tables_phy_ht.h b/drivers/net/wireless/b43/tables_phy_ht.h
-index bd20e9a..1b5ef2b 100644
---- a/drivers/net/wireless/b43/tables_phy_ht.h
-+++ b/drivers/net/wireless/b43/tables_phy_ht.h
-@@ -14,6 +14,7 @@ u32 b43_httab_read(struct b43_wldev *dev, u32 offset);
- void b43_httab_read_bulk(struct b43_wldev *dev, u32 offset,
- 			 unsigned int nr_elements, void *_data);
- void b43_httab_write(struct b43_wldev *dev, u32 offset, u32 value);
-+void b43_httab_write_few(struct b43_wldev *dev, u32 offset, size_t num, ...);
- void b43_httab_write_bulk(struct b43_wldev *dev, u32 offset,
- 			  unsigned int nr_elements, const void *_data);
- 
 -- 
-1.7.3.4
+dwmw2
 
