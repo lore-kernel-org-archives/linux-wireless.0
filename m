@@ -1,132 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:47939 "EHLO nbd.name"
+Received: from mms3.broadcom.com ([216.31.210.19]:3542 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751058Ab1HJTus (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 15:50:48 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, zajec5@gmail.com,
-	Larry.Finger@lwfinger.net, b43-dev@lists.infradead.org
-Subject: [PATCH] b43: reload phy and bss settings after core restarts
-Date: Wed, 10 Aug 2011 13:50:30 -0600
-Message-Id: <1313005830-83362-1-git-send-email-nbd@openwrt.org> (sfid-20110810_215050_224291_00DB1265)
+	id S1755485Ab1HSO3m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Aug 2011 10:29:42 -0400
+Message-ID: <4E4E7345.5020701@broadcom.com> (sfid-20110819_163000_009995_2EB2D45D)
+Date: Fri, 19 Aug 2011 16:29:25 +0200
+From: "Roland Vossen" <rvossen@broadcom.com>
+MIME-Version: 1.0
+To: "Pedram Navid" <pedram.navid@gmail.com>
+cc: "Henry Ptasinski" <henryp@broadcom.com>,
+	"ali@internetdog.org" <ali@internetdog.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: brcmsmac: fifo 0: descriptor error
+References: <6264DDFA6754194CAB6452BFF5202C330F5F2115@SXGM-401.fg.rbc.com>
+ <CAPoLzpe0OYq677NooOY5F7PyvbNobOXXCuSnoaF7ZVc0cJkjAw@mail.gmail.com>
+ <20110811021554.GA24567@internetdog.org>
+ <CAPoLzpeQF_xO_4eT2CKfp9cXKWUopssHjCkXd3_b0e8EAn8e_w@mail.gmail.com>
+ <20110811222624.GJ8119@broadcom.com>
+ <CAPoLzpeuPy9T7Q471pBz7A-RLuZykjo-apadm-nGjVdQhM9-7Q@mail.gmail.com>
+In-Reply-To: <CAPoLzpeuPy9T7Q471pBz7A-RLuZykjo-apadm-nGjVdQhM9-7Q@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-b43_op_config and b43_op_bss_info_changed apply many settings by directly
-writing to hardware registers. These settings are lost as soon as the core
-is restarted and the initvals are reloaded. This was discovered because
-restarting hostapd led to the beacon interval getting set to ~33s (see
-https://dev.openwrt.org/ticket/8033 for more information).
+Hello Pedram,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/b43/main.c |   42 ++++++++++++++++++++++++++++++++++----
- 1 files changed, 37 insertions(+), 5 deletions(-)
+Bugzilla seems to be AWOL today so lets continue the discussion by email.
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index d2661aa..4a5cac6 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -320,6 +320,10 @@ static void b43_wireless_core_exit(struct b43_wldev *dev);
- static int b43_wireless_core_init(struct b43_wldev *dev);
- static struct b43_wldev * b43_wireless_core_stop(struct b43_wldev *dev);
- static int b43_wireless_core_start(struct b43_wldev *dev);
-+static void b43_op_bss_info_changed(struct ieee80211_hw *hw,
-+				    struct ieee80211_vif *vif,
-+				    struct ieee80211_bss_conf *conf,
-+				    u32 changed);
- 
- static int b43_ratelimit(struct b43_wl *wl)
- {
-@@ -3778,14 +3782,24 @@ static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
- 	struct ieee80211_conf *conf = &hw->conf;
- 	int antenna;
- 	int err = 0;
-+	bool reload_bss = false;
- 
- 	mutex_lock(&wl->mutex);
- 
-+	dev = wl->current_dev;
-+
- 	/* Switch the band (if necessary). This might change the active core. */
- 	err = b43_switch_band(wl, conf->channel);
- 	if (err)
- 		goto out_unlock_mutex;
--	dev = wl->current_dev;
-+
-+	/* Need to reload all settings if the core changed */
-+	if (dev != wl->current_dev) {
-+		dev = wl->current_dev;
-+		changed = ~0;
-+		reload_bss = true;
-+	}
-+
- 	phy = &dev->phy;
- 
- 	if (conf_is_ht(conf))
-@@ -3846,6 +3860,9 @@ out_mac_enable:
- out_unlock_mutex:
- 	mutex_unlock(&wl->mutex);
- 
-+	if (wl->vif && reload_bss)
-+		b43_op_bss_info_changed(hw, wl->vif, &wl->vif->bss_conf, ~0);
-+
- 	return err;
- }
- 
-@@ -3934,7 +3951,8 @@ static void b43_op_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_BEACON_INT &&
- 	    (b43_is_mode(wl, NL80211_IFTYPE_AP) ||
- 	     b43_is_mode(wl, NL80211_IFTYPE_MESH_POINT) ||
--	     b43_is_mode(wl, NL80211_IFTYPE_ADHOC)))
-+	     b43_is_mode(wl, NL80211_IFTYPE_ADHOC)) &&
-+	    conf->beacon_int)
- 		b43_set_beacon_int(dev, conf->beacon_int);
- 
- 	if (changed & BSS_CHANGED_BASIC_RATES)
-@@ -4702,6 +4720,9 @@ static int b43_op_add_interface(struct ieee80211_hw *hw,
-  out_mutex_unlock:
- 	mutex_unlock(&wl->mutex);
- 
-+	if (err == 0)
-+		b43_op_bss_info_changed(hw, vif, &vif->bss_conf, ~0);
-+
- 	return err;
- }
- 
-@@ -4772,6 +4793,9 @@ static int b43_op_start(struct ieee80211_hw *hw)
-  out_mutex_unlock:
- 	mutex_unlock(&wl->mutex);
- 
-+	/* reload configuration */
-+	b43_op_config(hw, ~0);
-+
- 	return err;
- }
- 
-@@ -4928,10 +4952,18 @@ out:
- 	if (err)
- 		wl->current_dev = NULL; /* Failed to init the dev. */
- 	mutex_unlock(&wl->mutex);
--	if (err)
-+
-+	if (err) {
- 		b43err(wl, "Controller restart FAILED\n");
--	else
--		b43info(wl, "Controller restarted\n");
-+		return;
-+	}
-+
-+	/* reload configuration */
-+	b43_op_config(wl->hw, ~0);
-+	if (wl->vif)
-+		b43_op_bss_info_changed(wl->hw, wl->vif, &wl->vif->bss_conf, ~0);
-+
-+	b43info(wl, "Controller restarted\n");
- }
- 
- static int b43_setup_bands(struct b43_wldev *dev,
--- 
-1.7.3.2
+I noticed this issue is still pending. It is weird that the problem 
+persists between cold reboots (which points to a hardware error) but is 
+also dependent on the kernel version in use (which points to a software 
+error).
+
+Would you happen to have additional cards to try ?
+
+Can you email a log file containing the 'fifo 0: descriptor error' bug ?
+
+Do you think that temperature has an effect on the bug occurring, does 
+it make a difference if you let your machine cool down between reboots ?
+
+I identified an issue today that gives the same error message, but that 
+issue only occurs on 64 bit platforms, and you report that you also see 
+it on 32 bit platforms.
+
+Can you run a memory test on your system, e.g. one that tests the memory 
+during an overnight test ? Reason is that the error message occurs 
+because the DMA engine read invalid data from memory.
+
+Thanks, Roland.
+
+On 08/12/2011 02:33 AM, Pedram Navid wrote:
+> Hi Henry,
+>
+> I have filed this as bug 40972 along with the answers to your
+> questions: https://bugzilla.kernel.org/show_bug.cgi?id=40972
+>
+> In short, yes, the error does appear immediately after a full
+> power-off shutdown as soon as I bring the interface up after loading
+> the module. Not always, but more often than not.
+>
+> I am running 32-bit but have used 64bit prior. I reinstalled my system
+> thinking that it was a problem with 64-bit libraries. The full lsmod
+> is on the bug report.
+>
+> I am currently running fine again. I will keep my laptop on throughout
+> the day in the hopes that it goes down. Let me know if you need
+> anything else.
+>
+> Thanks so much
+> Pedram
 
