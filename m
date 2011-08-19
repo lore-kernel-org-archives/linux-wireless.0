@@ -1,180 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:10769 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754580Ab1HSNpR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Aug 2011 09:45:17 -0400
-Date: Fri, 19 Aug 2011 15:47:11 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida <aloisio.almeida@openbossa.org>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] NFC: Reserve tx head and tail room
-Message-ID: <20110819134711.GB3319@sortiz-mobl> (sfid-20110819_154526_826067_EE9DFD88)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from external1.orbit-lab.org ([128.6.192.131]:58704 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755262Ab1HSTE7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Aug 2011 15:04:59 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 6CF6854009C
+	for <linux-wireless@vger.kernel.org>; Fri, 19 Aug 2011 15:13:47 -0400 (EDT)
+Subject: Compat-wireless release for 2011-08-19 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110819190457.8FC2340ED0@repository3.orbit-lab.org> (sfid-20110819_210501_991857_C5339024)
+Date: Fri, 19 Aug 2011 15:04:57 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 7fc3319...1b2cd61 akpm-end   -> origin/akpm-end  (forced update)
+   338d0f0..5c80c71  akpm-start -> origin/akpm-start
+ + b1dc615...8c2b1fd master     -> origin/master  (forced update)
+   338d0f0..5c80c71  stable     -> origin/stable
+ * [new tag]         next-20110819 -> next-20110819
 
-We can have the NFC core layer allocating the tx head and tail
-room for the drivers and avoid 1 or more SKBs copy on write on
-the Tx path.
+compat-wireless code metrics
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- drivers/nfc/pn533.c |   17 +++--------------
- include/linux/nfc.h |    2 ++
- include/net/nfc.h   |    7 ++++++-
- net/nfc/core.c      |    6 +++++-
- net/nfc/rawsock.c   |   13 ++++++-------
- 5 files changed, 22 insertions(+), 23 deletions(-)
-
-diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-index c77e054..f81a93e 100644
---- a/drivers/nfc/pn533.c
-+++ b/drivers/nfc/pn533.c
-@@ -1246,7 +1246,6 @@ static int pn533_data_exchange_tx_frame(struct pn533 *dev, struct sk_buff *skb)
- {
- 	int payload_len = skb->len;
- 	struct pn533_frame *out_frame;
--	struct sk_buff *discarded;
- 	u8 tg;
- 
- 	nfc_dev_dbg(&dev->interface->dev, "%s - Sending %d bytes", __func__,
-@@ -1260,18 +1259,6 @@ static int pn533_data_exchange_tx_frame(struct pn533 *dev, struct sk_buff *skb)
- 		return -ENOSYS;
- 	}
- 
--	/* Reserving header space */
--	if (skb_cow_head(skb, PN533_CMD_DATAEXCH_HEAD_LEN)) {
--		nfc_dev_err(&dev->interface->dev, "Error to add header data");
--		return -ENOMEM;
--	}
--
--	/* Reserving tail space, see pn533_tx_frame_finish */
--	if (skb_cow_data(skb, PN533_FRAME_TAIL_SIZE, &discarded) < 0) {
--		nfc_dev_err(&dev->interface->dev, "Error to add tail data");
--		return -ENOMEM;
--	}
--
- 	skb_push(skb, PN533_CMD_DATAEXCH_HEAD_LEN);
- 	out_frame = (struct pn533_frame *) skb->data;
- 
-@@ -1536,7 +1523,9 @@ static int pn533_probe(struct usb_interface *interface,
- 			| NFC_PROTO_ISO14443_MASK
- 			| NFC_PROTO_NFC_DEP_MASK;
- 
--	dev->nfc_dev = nfc_allocate_device(&pn533_nfc_ops, protocols);
-+	dev->nfc_dev = nfc_allocate_device(&pn533_nfc_ops, protocols,
-+					   PN533_CMD_DATAEXCH_HEAD_LEN,
-+					   PN533_FRAME_TAIL_SIZE);
- 	if (!dev->nfc_dev)
- 		goto kill_tasklet;
- 
-diff --git a/include/linux/nfc.h b/include/linux/nfc.h
-index 330a4c5..c525e0b 100644
---- a/include/linux/nfc.h
-+++ b/include/linux/nfc.h
-@@ -123,4 +123,6 @@ struct sockaddr_nfc {
- #define NFC_SOCKPROTO_RAW	0
- #define NFC_SOCKPROTO_MAX	1
- 
-+#define NFC_HEADER_SIZE 1
-+
- #endif /*__LINUX_NFC_H */
-diff --git a/include/net/nfc.h b/include/net/nfc.h
-index cc01303..87b51fe 100644
---- a/include/net/nfc.h
-+++ b/include/net/nfc.h
-@@ -82,6 +82,9 @@ struct nfc_dev {
- 	struct nfc_genl_data genl_data;
- 	u32 supported_protocols;
- 
-+	int tx_headroom;
-+	int tx_tailroom;
-+
- 	struct nfc_ops *ops;
- };
- #define to_nfc_dev(_dev) container_of(_dev, struct nfc_dev, dev)
-@@ -89,7 +92,9 @@ struct nfc_dev {
- extern struct class nfc_class;
- 
- struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
--					u32 supported_protocols);
-+					u32 supported_protocols,
-+					int tx_headroom,
-+					int tx_tailroom);
- 
- /**
-  * nfc_free_device - free nfc device
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index b6fd4e1..284e2f6 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -322,7 +322,9 @@ struct nfc_dev *nfc_get_device(unsigned idx)
-  * @supported_protocols: NFC protocols supported by the device
-  */
- struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
--					u32 supported_protocols)
-+					u32 supported_protocols,
-+					int tx_headroom,
-+					int tx_tailroom)
- {
- 	static atomic_t dev_no = ATOMIC_INIT(0);
- 	struct nfc_dev *dev;
-@@ -345,6 +347,8 @@ struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
- 
- 	dev->ops = ops;
- 	dev->supported_protocols = supported_protocols;
-+	dev->tx_headroom = tx_headroom;
-+	dev->tx_tailroom = tx_tailroom;
- 
- 	spin_lock_init(&dev->targets_lock);
- 	nfc_genl_data_init(&dev->genl_data);
-diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
-index 52de84a..9fd652a 100644
---- a/net/nfc/rawsock.c
-+++ b/net/nfc/rawsock.c
-@@ -123,11 +123,7 @@ error:
- 
- static int rawsock_add_header(struct sk_buff *skb)
- {
--
--	if (skb_cow_head(skb, 1))
--		return -ENOMEM;
--
--	*skb_push(skb, 1) = 0;
-+	*skb_push(skb, NFC_HEADER_SIZE) = 0;
- 
- 	return 0;
- }
-@@ -197,6 +193,7 @@ static int rawsock_sendmsg(struct kiocb *iocb, struct socket *sock,
- 					struct msghdr *msg, size_t len)
- {
- 	struct sock *sk = sock->sk;
-+	struct nfc_dev *dev = nfc_rawsock(sk)->dev;
- 	struct sk_buff *skb;
- 	int rc;
- 
-@@ -208,11 +205,13 @@ static int rawsock_sendmsg(struct kiocb *iocb, struct socket *sock,
- 	if (sock->state != SS_CONNECTED)
- 		return -ENOTCONN;
- 
--	skb = sock_alloc_send_skb(sk, len, msg->msg_flags & MSG_DONTWAIT,
--									&rc);
-+	skb = sock_alloc_send_skb(sk, len + dev->tx_headroom + dev->tx_tailroom + NFC_HEADER_SIZE,
-+					msg->msg_flags & MSG_DONTWAIT, &rc);
- 	if (!skb)
- 		return rc;
- 
-+	skb_reserve(skb, dev->tx_headroom + NFC_HEADER_SIZE);
-+
- 	rc = memcpy_fromiovec(skb_put(skb, len), msg->msg_iov, len);
- 	if (rc < 0) {
- 		kfree_skb(skb);
--- 
-1.7.5.3
-
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+    781603 - Total upstream lines of code being pulled
