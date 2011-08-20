@@ -1,228 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:55887 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752853Ab1HYBWU (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:11882 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753553Ab1HTLvu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 21:22:20 -0400
-Received: by mail-yw0-f46.google.com with SMTP id 7so1324861ywf.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 18:22:20 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH 7/8] {nl,cfg,mac}80211: let userspace set RANN interval
-Date: Wed, 24 Aug 2011 18:21:52 -0700
-Message-Id: <1314235313-4564-8-git-send-email-thomas@cozybit.com> (sfid-20110825_032226_393512_F8774EC7)
-In-Reply-To: <1314235313-4564-1-git-send-email-thomas@cozybit.com>
-References: <1314235313-4564-1-git-send-email-thomas@cozybit.com>
+	Sat, 20 Aug 2011 07:51:50 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
+	<senthilb@qca.qualcomm.com>, <rmanohar@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] ath9k: Add support for get_stats callback
+Date: Sat, 20 Aug 2011 17:21:42 +0530
+Message-ID: <1313841102-8334-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110820_135200_602377_833B7C94)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Allow userspace to set Root Announcement Interval for our mesh
-interface. Also, RANN interval is now in proper units of TUs.
+this useful for debugging and to keep track of success/failure of
+frames such as ACK, RTS and FCS error count in a noisy environment
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
-v2: - use TU_TO_EXP_TIME macro (Johannes)
+ drivers/net/wireless/ath/ath9k/main.c |   17 ++++++++++++++++-
+ 1 files changed, 16 insertions(+), 1 deletions(-)
 
- include/linux/nl80211.h       |    4 ++++
- include/net/cfg80211.h        |    1 +
- net/mac80211/cfg.c            |    4 ++++
- net/mac80211/debugfs_netdev.c |    3 +++
- net/mac80211/mesh.c           |    3 ++-
- net/mac80211/mesh.h           |    1 -
- net/mac80211/mesh_hwmp.c      |    8 ++++----
- net/wireless/mesh.c           |    2 ++
- net/wireless/nl80211.c        |    7 +++++++
- 9 files changed, 27 insertions(+), 6 deletions(-)
-
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 89dec16..20353bb 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1861,6 +1861,9 @@ enum nl80211_mntr_flags {
-  * @NL80211_MESHCONF_ELEMENT_TTL: specifies the value of TTL field set at a
-  * source mesh point for path selection elements.
-  *
-+ * @NL80211_MESHCONF_HWMP_RANN_INTERVAL:  The interval of time (in TUs) between
-+ * root announcements are transmitted.
-+ *
-  * @NL80211_MESHCONF_ATTR_MAX: highest possible mesh configuration attribute
-  *
-  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
-@@ -1882,6 +1885,7 @@ enum nl80211_meshconf_params {
- 	NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME,
- 	NL80211_MESHCONF_HWMP_ROOTMODE,
- 	NL80211_MESHCONF_ELEMENT_TTL,
-+	NL80211_MESHCONF_HWMP_RANN_INTERVAL,
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 1e7fe8c..250e3b8 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2400,6 +2400,20 @@ skip:
+ 	return sc->beacon.tx_last;
+ }
  
- 	/* keep last */
- 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 497e583..2d88f06 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -755,6 +755,7 @@ struct mesh_config {
- 	u16 dot11MeshHWMPpreqMinInterval;
- 	u16 dot11MeshHWMPnetDiameterTraversalTime;
- 	u8  dot11MeshHWMPRootMode;
-+	u16 dot11MeshHWMPRannInterval;
++static int ath9k_get_stats(struct ieee80211_hw *hw,
++			   struct ieee80211_low_level_stats *stats)
++{
++	struct ath_softc *sc = hw->priv;
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath9k_mib_stats *mib_stats = &ah->ah_mibStats;
++
++	stats->dot11ACKFailureCount = mib_stats->ackrcv_bad;
++	stats->dot11RTSFailureCount = mib_stats->rts_bad;
++	stats->dot11FCSErrorCount = mib_stats->fcs_bad;
++	stats->dot11RTSSuccessCount = mib_stats->rts_good;
++	return 0;
++}
++
+ struct ieee80211_ops ath9k_ops = {
+ 	.tx 		    = ath9k_tx,
+ 	.start 		    = ath9k_start,
+@@ -2424,5 +2438,6 @@ struct ieee80211_ops ath9k_ops = {
+ 	.set_coverage_class = ath9k_set_coverage_class,
+ 	.flush		    = ath9k_flush,
+ 	.tx_frames_pending  = ath9k_tx_frames_pending,
+-	.tx_last_beacon = ath9k_tx_last_beacon,
++	.tx_last_beacon     = ath9k_tx_last_beacon,
++	.get_stats	    = ath9k_get_stats,
  };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index c1fa577..9995c83 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1137,6 +1137,10 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
- 		conf->dot11MeshHWMPRootMode = nconf->dot11MeshHWMPRootMode;
- 		ieee80211_mesh_root_setup(ifmsh);
- 	}
-+	if (_chg_mesh_attr(NL80211_MESHCONF_HWMP_RANN_INTERVAL, mask)) {
-+		conf->dot11MeshHWMPRannInterval =
-+			nconf->dot11MeshHWMPRannInterval;
-+	}
- 	return 0;
- }
- 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 75ece3d..bac9443 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -372,6 +372,8 @@ IEEE80211_IF_FILE(min_discovery_timeout,
- 		u.mesh.mshcfg.min_discovery_timeout, DEC);
- IEEE80211_IF_FILE(dot11MeshHWMPRootMode,
- 		u.mesh.mshcfg.dot11MeshHWMPRootMode, DEC);
-+IEEE80211_IF_FILE(dot11MeshHWMPRannInterval,
-+		u.mesh.mshcfg.dot11MeshHWMPRannInterval, DEC);
- #endif
- 
- 
-@@ -486,6 +488,7 @@ static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
- 	MESHPARAMS_ADD(path_refresh_time);
- 	MESHPARAMS_ADD(min_discovery_timeout);
- 	MESHPARAMS_ADD(dot11MeshHWMPRootMode);
-+	MESHPARAMS_ADD(dot11MeshHWMPRannInterval);
- #undef MESHPARAMS_ADD
- }
- #endif
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index e120fef..28ab510 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -537,7 +537,8 @@ static void ieee80211_mesh_rootpath(struct ieee80211_sub_if_data *sdata)
- 
- 	mesh_path_tx_root_frame(sdata);
- 	mod_timer(&ifmsh->mesh_path_root_timer,
--		  round_jiffies(jiffies + IEEE80211_MESH_RANN_INTERVAL));
-+		  round_jiffies(TU_TO_EXP_TIME(
-+				  ifmsh->mshcfg.dot11MeshHWMPRannInterval)));
- }
- 
- #ifdef CONFIG_PM
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 9d9116e..2027207 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -175,7 +175,6 @@ struct mesh_rmc {
- 
- #define IEEE80211_MESH_PEER_INACTIVITY_LIMIT (1800 * HZ)
- #define IEEE80211_MESH_HOUSEKEEPING_INTERVAL (60 * HZ)
--#define IEEE80211_MESH_RANN_INTERVAL	     (1 * HZ)
- 
- #define MESH_DEFAULT_BEACON_INTERVAL		1000 	/* in 1024 us units */
- 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 7b517c4..ae3de75 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -695,7 +695,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 	u8 ttl, flags, hopcount;
- 	u8 *orig_addr;
- 	u32 orig_sn, metric;
--	u32 interval = cpu_to_le32(IEEE80211_MESH_RANN_INTERVAL);
-+	u32 interval = ifmsh->mshcfg.dot11MeshHWMPRannInterval;
- 	bool root_is_gate;
- 
- 	ttl = rann->rann_ttl;
-@@ -743,7 +743,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 		mesh_path_sel_frame_tx(MPATH_RANN, flags, orig_addr,
- 				       cpu_to_le32(orig_sn),
- 				       0, NULL, 0, broadcast_addr,
--				       hopcount, ttl, interval,
-+				       hopcount, ttl, cpu_to_le32(interval),
- 				       cpu_to_le32(metric + mpath->metric),
- 				       0, sdata);
- 		mpath->sn = orig_sn;
-@@ -1044,11 +1044,11 @@ void
- mesh_path_tx_root_frame(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
--	u32 interval = cpu_to_le32(IEEE80211_MESH_RANN_INTERVAL);
-+	u32 interval = ifmsh->mshcfg.dot11MeshHWMPRannInterval;
- 
- 	mesh_path_sel_frame_tx(MPATH_RANN, 0, sdata->vif.addr,
- 			       cpu_to_le32(++ifmsh->sn),
- 			       0, NULL, 0, broadcast_addr,
- 			       0, sdata->u.mesh.mshcfg.element_ttl,
--			       interval, 0, 0, sdata);
-+			       cpu_to_le32(interval), 0, 0, sdata);
- }
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index 5c11608..b5a39d4 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -12,6 +12,7 @@
- #define MESH_HOLD_T 		100
- 
- #define MESH_PATH_TIMEOUT	5000
-+#define MESH_RANN_INTERVAL      5000
- 
- /*
-  * Minimum interval between two consecutive PREQs originated by the same
-@@ -49,6 +50,7 @@ const struct mesh_config default_mesh_config = {
- 	.dot11MeshHWMPmaxPREQretries = MESH_MAX_PREQ_RETRIES,
- 	.path_refresh_time = MESH_PATH_REFRESH_TIME,
- 	.min_discovery_timeout = MESH_MIN_DISCOVERY_TIMEOUT,
-+	.dot11MeshHWMPRannInterval = MESH_RANN_INTERVAL,
- };
- 
- const struct mesh_setup default_mesh_setup = {
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 93ee888..bbf3d73 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3035,6 +3035,8 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
- 			cur_params.dot11MeshHWMPnetDiameterTraversalTime);
- 	NLA_PUT_U8(msg, NL80211_MESHCONF_HWMP_ROOTMODE,
- 			cur_params.dot11MeshHWMPRootMode);
-+	NLA_PUT_U16(msg, NL80211_MESHCONF_HWMP_RANN_INTERVAL,
-+			cur_params.dot11MeshHWMPRannInterval);
- 	nla_nest_end(msg, pinfoattr);
- 	genlmsg_end(msg, hdr);
- 	return genlmsg_reply(msg, info);
-@@ -3063,6 +3065,7 @@ static const struct nla_policy nl80211_meshconf_params_policy[NL80211_MESHCONF_A
- 	[NL80211_MESHCONF_HWMP_PREQ_MIN_INTERVAL] = { .type = NLA_U16 },
- 	[NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME] = { .type = NLA_U16 },
- 	[NL80211_MESHCONF_HWMP_ROOTMODE] = { .type = NLA_U8 },
-+	[NL80211_MESHCONF_HWMP_RANN_INTERVAL] = { .type = NLA_U16 },
- };
- 
- static const struct nla_policy
-@@ -3141,6 +3144,10 @@ do {\
- 			dot11MeshHWMPRootMode, mask,
- 			NL80211_MESHCONF_HWMP_ROOTMODE,
- 			nla_get_u8);
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg,
-+			dot11MeshHWMPRannInterval, mask,
-+			NL80211_MESHCONF_HWMP_RANN_INTERVAL,
-+			nla_get_u16);
- 	if (mask_out)
- 		*mask_out = mask;
- 
 -- 
-1.7.4.1
+1.7.0.4
 
