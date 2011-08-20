@@ -1,79 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:60037 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754004Ab1HBLqf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 07:46:35 -0400
-Received: by iyb12 with SMTP id 12so7985560iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 04:46:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20110802112314.GA2688@redhat.com>
-References: <20110802112314.GA2688@redhat.com>
-Date: Tue, 2 Aug 2011 13:46:35 +0200
-Message-ID: <CAL1gcdPtN2nnFgwC2u2keMgUOo+kkzDuwfL95e6q3PSPJ2TSmQ@mail.gmail.com> (sfid-20110802_134639_160403_37EDC845)
-Subject: Re: [PATCH] rt2x00: fix usage of NULL queue
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:45483 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751761Ab1HTNyN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Aug 2011 09:54:13 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH] mac80211: make ieee80211_send_bar available for drivers
+Date: Sat, 20 Aug 2011 15:53:55 +0200
+Message-Id: <1313848435-45702-1-git-send-email-nbd@openwrt.org> (sfid-20110820_155421_259362_3EC1A722)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 2, 2011 at 1:29 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> We may call rt2x00queue_pause_queue(queue) with queue == NULL. Bug
-> was introduced by commit 62fe778412b36791b7897cfa139342906fbbf07b
-> "rt2x00: Fix stuck queue in tx failure case" .
->
-> Cc: stable@kernel.org # 3.0+
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+To properly maintain the peer's block ack window, the driver needs to be
+able to control the new starting sequence number that is sent along with
+the BlockAckReq frame.
 
-Good catch.
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
->  drivers/net/wireless/rt2x00/rt2x00mac.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> index 8efab39..4ccf238 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> @@ -113,7 +113,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
->         * due to possible race conditions in mac80211.
->         */
->        if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
-> -               goto exit_fail;
-> +               goto exit_free_skb;
->
->        /*
->         * Use the ATIM queue if appropriate and present.
-> @@ -127,7 +127,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
->                ERROR(rt2x00dev,
->                      "Attempt to send packet over invalid queue %d.\n"
->                      "Please file bug report to %s.\n", qid, DRV_PROJECT);
-> -               goto exit_fail;
-> +               goto exit_free_skb;
->        }
->
->        /*
-> @@ -159,6 +159,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
->
->  exit_fail:
->        rt2x00queue_pause_queue(queue);
-> + exit_free_skb:
->        dev_kfree_skb_any(skb);
->  }
->  EXPORT_SYMBOL_GPL(rt2x00mac_tx);
-> --
-> 1.7.1
->
-
-
-
--- 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-Gertjan
+turns out that I will need this change in mac80211 anyway to properly
+handle a few corner cases wrt. aggregation and off-channel activity.
+
+When ath9k goes off-channel it may need to drop some packets that are
+still part of the BAW, but at that point in time it would be a very
+bad idea to try to send BAR frames. Instead I want to send the BAR
+after switching back to the primary channel as a kind of barrier before
+sending more packets.
+
+ include/net/mac80211.h     |   13 +++++++++++++
+ net/mac80211/agg-tx.c      |    4 +++-
+ net/mac80211/ieee80211_i.h |    1 -
+ net/mac80211/status.c      |    2 +-
+ 4 files changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2f01d84..03e5ad8 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3218,6 +3218,19 @@ void ieee80211_remain_on_channel_expired(struct ieee80211_hw *hw);
+ void ieee80211_stop_rx_ba_session(struct ieee80211_vif *vif, u16 ba_rx_bitmap,
+ 				  const u8 *addr);
+ 
++/**
++ * ieee80211_send_bar - send a BlockAckReq frame
++ *
++ * can be used to flush pending frames from the peer's aggregation reorder
++ * buffer.
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ * @ra: the peer's destination address
++ * @tid: the TID of the aggregation session
++ * @ssn: the new starting sequence number for the receiver
++ */
++void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn);
++
+ /* Rate control API */
+ 
+ /**
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index b7075f3..62d61fb 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -106,8 +106,9 @@ static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_tx_skb(sdata, skb);
+ }
+ 
+-void ieee80211_send_bar(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid, u16 ssn)
++void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn)
+ {
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_bar *bar;
+@@ -135,6 +136,7 @@ void ieee80211_send_bar(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid, u1
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+ 	ieee80211_tx_skb(sdata, skb);
+ }
++EXPORT_SYMBOL(ieee80211_send_bar);
+ 
+ void ieee80211_assign_tid_tx(struct sta_info *sta, int tid,
+ 			     struct tid_ampdu_tx *tid_tx)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ea74190..f384013 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1185,7 +1185,6 @@ struct ieee80211_tx_status_rtap_hdr {
+ void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
+ 				       struct ieee80211_ht_cap *ht_cap_ie,
+ 				       struct ieee80211_sta_ht_cap *ht_cap);
+-void ieee80211_send_bar(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid, u16 ssn);
+ void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
+ 			  const u8 *da, u16 tid,
+ 			  u16 initiator, u16 reason_code);
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index a89cca3..95e0a8b 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -239,7 +239,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			tid = qc[0] & 0xf;
+ 			ssn = ((le16_to_cpu(hdr->seq_ctrl) + 0x10)
+ 						& IEEE80211_SCTL_SEQ);
+-			ieee80211_send_bar(sta->sdata, hdr->addr1,
++			ieee80211_send_bar(&sta->sdata->vif, hdr->addr1,
+ 					   tid, ssn);
+ 		}
+ 
+-- 
+1.7.3.2
+
