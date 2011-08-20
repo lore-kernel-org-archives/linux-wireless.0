@@ -1,37 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:52734 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752129Ab1H3Jlm convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:47125 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141Ab1HTAon (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 05:41:42 -0400
-Received: by wwe5 with SMTP id 5so3212829wwe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 02:41:41 -0700 (PDT)
+	Fri, 19 Aug 2011 20:44:43 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAD2nsn2Reu+T=g6HwdQT5cdkD0C-06y7GJ_B2q-UzpRnshxAWw@mail.gmail.com>
-References: <CAD2nsn2Bbxxy9ZYpBe_QEqCkGYYROHE+j7qASRq3OkKmWD5PMg@mail.gmail.com>
-	<CAD2nsn1+5QWtzeG-3RHEJi8+oDthAfXYunHnDTLie84oJPOQuw@mail.gmail.com>
-	<CAD2nsn1roVNB5+H1CYHVnerLN3pjGB5KmEX1mJZ4yJhHqFGOVA@mail.gmail.com>
-	<20110830064137.GA4719@ecki>
-	<CAD2nsn2Reu+T=g6HwdQT5cdkD0C-06y7GJ_B2q-UzpRnshxAWw@mail.gmail.com>
-Date: Tue, 30 Aug 2011 15:11:40 +0530
-Message-ID: <CAD2nsn3nzEOY6Mxbd7CPLGR96x1KmVCdnizN-3ypCJ3G5suxcA@mail.gmail.com> (sfid-20110830_114145_426972_99387A07)
-Subject: Re: ath9k: irq storm after suspend/resume
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Clemens Buchacher <drizzd@aon.at>
-Cc: linux-wireless@vger.kernel.org, beta992@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 19 Aug 2011 17:44:22 -0700
+Message-ID: <CAB=NE6XmMJk8mKAM-LB5Jh3ZV1k57RMsCzQ19Z+Ly-BFmk8cVQ@mail.gmail.com> (sfid-20110820_024507_914368_6D5A66EB)
+Subject: Linux wireless summit videoes from LinuxCon 2011
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> yes it is, though not a good idea, just thinking of we could get some
-> thing by not setting SC_OP_INVALID flag in ath_pci_probe(it was added
-> to fix a panic, but it did not cause panic for me now).
+For those that could not make it to the 2011 Linux wireless summit at
+LinuxCon Vancouver we have up 3 videoes on YouTube:
 
-sorry please don't try it, not setting the SC_OP_INVALID flag in
-ath_pci_probe, the system did panic.
+1) [RFC] 802.11 DFS design on mac80211 / ath9k
 
->
->>
->>        if (sc->sc_flags & SC_OP_INVALID)
->>                return IRQ_NONE;
->>
+http://www.youtube.com/watch?v=_yyFiLFx4Mg
+
+Saxnet present their latest effort on design for a DFS architecture
+for mac80211 and for ath9k. This is from LinuxCon 2011 this week.
+Saxnet did an awesome job. If this design works for certification it
+could mean lowering the entry price for AP vendors looking to pass DFS
+testing. This work is under review now.
+
+2) 802.11s on LInux mac80211
+
+802.11s Mesh Networking was ratified by IEEE for integration into
+802.11. Javier Cardona has been leading its implementation and support
+on mac80211. In this session he reviews 802.11s with open and
+encrypted environments. 802.11s uses a different encryption algorithm
+called "simultaneous authentication of equals", Javier reviews work
+needed to integrate the userspace application required supporting this
+encryption mechanism on hostapd / wpa_supplicant.
+
+3) wmediumd for mac80211_hwsim
+
+Javier Cardona explains what Cozybit used to test the 802.11s code
+implemented in mac80211. He used extensions to mac80211_hwsim that
+allow links to be lossy. Cozybit also wrote a daemon to communicate to
+mac80211_hwsim to statically or dynamically alter the characteristics
+of the links. Right now mac80211_hwsim only accounts for packet loss
+between links but extensions can be made to also add latency later. He
+also demos a Java application used to create your topology for
+mac80211_hwsim. Researchers should get a chubby with this framework --
+you can extend this to do really cool shit, all in software with no
+hardware.
+
+--
+
+Kudos to Saxnet and Cozybit for their presentations and *awesome* work
+on coding up stuff and doing a great job at explaining all this to us.
+
+Nothing else was recorded, sorry :) If you loose the links you'll be
+able to find them here:
+
+http://wireless.kernel.org/en/users/Documentation#YouTube_Documentation
+
+  Luis
