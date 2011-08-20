@@ -1,79 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:38629 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754779Ab1HDSxR (ORCPT
+Received: from w1.fi ([128.177.27.249]:54482 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752208Ab1HTPGY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Aug 2011 14:53:17 -0400
-Date: Thu, 04 Aug 2011 13:53:15 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC] rtlwifi: Fix build failures due to raw port access
-Message-ID: <4e3aea9b.T53ak5bZ1r+a9cJM%Larry.Finger@lwfinger.net> (sfid-20110804_205320_848803_16EAD2E6)
+	Sat, 20 Aug 2011 11:06:24 -0400
+Date: Sat, 20 Aug 2011 08:06:11 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: Mark mandatory rates as basic
+Message-ID: <20110820150611.GA11915@jm.kir.nu> (sfid-20110820_170629_240055_3F56ED39)
+References: <1313841275-7868-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1313841275-7868-1-git-send-email-rmanohar@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When rtlwifi is built for the sh4 architecture, build errors of the following
-type occur. As these raw port accesses are specific to the X86 architecture,
-their usage is restricted and dummy routines are substituted for all other
-platforms.
+On Sat, Aug 20, 2011 at 05:24:35PM +0530, Rajkumar Manoharan wrote:
+> Currently mac80211 announces a supported rate set with
+> no basic rates. This patch marks the mandatory rates as
+> basic while constructing supported rate element.
 
-    v3.0/sh4/sh-allmodconfig v3.0/sh4/sh-allyesconfig
-src/drivers/net/wireless/rtlwifi/rtl8192c/../pci.h:290: error: implicit declaration of function 'outl': 4 errors in 2 logs
-    v3.0/sh4/sh-allmodconfig v3.0/sh4/sh-allyesconfig
-src/drivers/net/wireless/rtlwifi/rtl8192c/../pci.h:295: error: implicit declaration of function 'outb': 4 errors in 2 logs
-    v3.0/sh4/sh-allmodconfig v3.0/sh4/sh-allyesconfig
-src/drivers/net/wireless/rtlwifi/rtl8192c/../pci.h:300: error: implicit declaration of function 'inb': 4 errors in 2 logs
-    v3.0/sh4/sh-allmodconfig v3.0/sh4/sh-allyesconfig
-src/drivers/net/wireless/rtlwifi/rtl8192c/../pci.h:305: error: implicit declaration of function 'inw': 4 errors in 2 logs
+Why would you want to do that? I did not check the mesh use case but
+neither Probe Request nor (Re)Association Request frames use the 0x80
+flag in the rates - the basic rate set comes from the AP, not the non-AP
+STA.. For mesh, I think that only Mesh Peering Open and Mesh Peering
+Confirm frames indicate basic rate set, so the first patch of the patch
+may or may not be correct depending on whether it applies only to those
+frames.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.h
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.h
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.h
-@@ -273,6 +273,7 @@ static inline void pci_write32_async(str
- 	writel(val, (u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
- }
- 
-+#ifdef CONFIG_X86
- static inline void rtl_pci_raw_write_port_ulong(u32 port, u32 val)
- {
- 	outl(val, port);
-@@ -288,14 +289,29 @@ static inline void rtl_pci_raw_read_port
- 	*pval = inb(port);
- }
- 
--static inline void rtl_pci_raw_read_port_ushort(u32 port, u16 *pval)
-+static inline void rtl_pci_raw_read_port_ulong(u32 port, u32 *pval)
-+{
-+	*pval = inl(port);
-+}
-+#else
-+/* define dummy routines if not X86 architecture */
-+static inline void rtl_pci_raw_write_port_ulong(u32 port, u32 val)
-+{
-+}
-+
-+static inline void rtl_pci_raw_write_port_uchar(u32 port, u8 val)
- {
--	*pval = inw(port);
-+}
-+
-+static inline void rtl_pci_raw_read_port_uchar(u32 port, u8 *pval)
-+{
-+	*pval = 0;
- }
- 
- static inline void rtl_pci_raw_read_port_ulong(u32 port, u32 *pval)
- {
--	*pval = inl(port);
-+	*pval = 0;
- }
-+#endif /* ifdef CONFIG_X86 */
- 
- #endif
+-- 
+Jouni Malinen                                            PGP id EFC895FA
