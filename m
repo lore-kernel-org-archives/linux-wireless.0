@@ -1,81 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58940 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750738Ab1H3ORD (ORCPT
+Received: from mail.neratec.ch ([80.75.119.105]:53100 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752034Ab1HTOqp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 10:17:03 -0400
-Subject: Re: [PATCH] nl80211/cfg80211: add ssid filtering for sched_scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1314707979-26484-1-git-send-email-coelho@ti.com>
-References: <1314707979-26484-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 30 Aug 2011 16:16:52 +0200
-Message-ID: <1314713812.4011.33.camel@jlt3.sipsolutions.net> (sfid-20110830_161707_675949_24A611C7)
-Mime-Version: 1.0
+	Sat, 20 Aug 2011 10:46:45 -0400
+Date: Sat, 20 Aug 2011 16:38:16 +0200 (CEST)
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Message-ID: <1324190381.8502.1313851096075.JavaMail.root@idefix> (sfid-20110820_164649_811054_6ECBA099)
+In-Reply-To: <CAFtRNNwMBnd6CVJn9UYSu58E-EpAS7p0Qh=ZtfJHfdtS-wKxjg@mail.gmail.com>
+Subject: Re: Linux wireless summit videoes from LinuxCon 2011
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-30 at 15:39 +0300, Luciano Coelho wrote:
+The slides for the DFS presentation are available at
+http://linuxwireless.org/en/developers/DFS#Related_Information
 
-> + * @NL80211_ATTR_MAX_FILTER_SSIDS: number of SSIDs you can use as
-> + *	filters in a scheduled scan request, a wiphy attribute.
 
-When we add more filters, hopefully the number of filters will stay be
-this? IOW, shouldn't this be "MAX_FILTERS"? Basically, each filter can
-be thought of as a profile, and a profile can contain various attributes
-that must match, I think?
-
-> + * @NL80211_ATTR_SCHED_SCAN_FILTER: Nested attribute with various
-> + *	types of filtering to be used with scheduled scans.
-> + *	If @NL80211_ATTR_SCAN_SSIDS is passed with values that are not
-> + *	included in the filter, the driver may return -EINVAL, since
-> + *	it doesn't make sense to send probe requests with SSIDs that
-> + *	will be filtered out.  This doesn't apply to the wildcard SSID.
-> + *	If ommited, no filtering is done.
-
-Maybe cfg80211 should just apply that rule anyway? But is that really
-true anyway? Say "DIRECT-" as the P2P wildcard ...
-
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index a37f264..a3e58ff 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -882,6 +882,9 @@ struct cfg80211_scan_request {
->   * @interval: interval between each scheduled scan cycle
->   * @ie: optional information element(s) to add into Probe Request or %NULL
->   * @ie_len: length of ie in octets
-> + * @filter_ssids: SSIDs to pass to the host (others are filtered out).
-> + * 	If ommited, no filtering is done.
-> + * @n_filter_ssids: number of filter SSIDs
-
-Maybe we should create a filter struct right away and use that with
-filters/n_filters?
-
-> +++ b/net/wireless/nl80211.c
-> @@ -189,6 +189,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
->  					 .len = IEEE80211_MAX_DATA_LEN },
->  	[NL80211_ATTR_IE_ASSOC_RESP] = { .type = NLA_BINARY,
->  					 .len = IEEE80211_MAX_DATA_LEN },
-> +	[NL80211_ATTR_SCHED_SCAN_FILTER] = { .type = NLA_NESTED },
->  };
-
-Don't we need a policy for the filter attributes?
-
-> +	if (info->attrs[NL80211_ATTR_SCHED_SCAN_FILTER]) {
-> +		attr = nla_find_nested(info->attrs[NL80211_ATTR_SCHED_SCAN_FILTER],
-> +				       NL80211_ATTR_SCHED_SCAN_FILTER_SSID);
-> +		if (attr)
-> +			nla_for_each_nested(attr2, attr, tmp)
-> +				n_filter_ssids++;
-> +	}
-> +
-> +	if (n_filter_ssids > wiphy->max_filter_ssids)
-> +		return -EINVAL;
-
-That looks a little odd. What does that even do? I don't understand the
-find_nested at all.
-
-johannes
-
+Zefir
+----- Ursprüngliche Mail -----
+> Von: "Nick Kossifidis" <mickflemm@gmail.com>
+> An: "Luis R. Rodriguez" <mcgrof@gmail.com>
+> CC: "linux-wireless" <linux-wireless@vger.kernel.org>, linux-kernel@vger.kernel.org
+> Gesendet: Samstag, 20. August 2011 10:36:03
+> Betreff: Re: Linux wireless summit videoes from LinuxCon 2011
+> 2011/8/20 Luis R. Rodriguez <mcgrof@gmail.com>:
+> > For those that could not make it to the 2011 Linux wireless summit
+> > at
+> > LinuxCon Vancouver we have up 3 videoes on YouTube:
+> >
+> > 1) [RFC] 802.11 DFS design on mac80211 / ath9k
+> >
+> > http://www.youtube.com/watch?v=_yyFiLFx4Mg
+> >
+> > Saxnet present their latest effort on design for a DFS architecture
+> > for mac80211 and for ath9k. This is from LinuxCon 2011 this week.
+> > Saxnet did an awesome job. If this design works for certification it
+> > could mean lowering the entry price for AP vendors looking to pass
+> > DFS
+> > testing. This work is under review now.
+> >
+> > 2) 802.11s on LInux mac80211
+> >
+> > 802.11s Mesh Networking was ratified by IEEE for integration into
+> > 802.11. Javier Cardona has been leading its implementation and
+> > support
+> > on mac80211. In this session he reviews 802.11s with open and
+> > encrypted environments. 802.11s uses a different encryption
+> > algorithm
+> > called "simultaneous authentication of equals", Javier reviews work
+> > needed to integrate the userspace application required supporting
+> > this
+> > encryption mechanism on hostapd / wpa_supplicant.
+> >
+> > 3) wmediumd for mac80211_hwsim
+> >
+> > Javier Cardona explains what Cozybit used to test the 802.11s code
+> > implemented in mac80211. He used extensions to mac80211_hwsim that
+> > allow links to be lossy. Cozybit also wrote a daemon to communicate
+> > to
+> > mac80211_hwsim to statically or dynamically alter the
+> > characteristics
+> > of the links. Right now mac80211_hwsim only accounts for packet loss
+> > between links but extensions can be made to also add latency later.
+> > He
+> > also demos a Java application used to create your topology for
+> > mac80211_hwsim. Researchers should get a chubby with this framework
+> > --
+> > you can extend this to do really cool shit, all in software with no
+> > hardware.
+> >
+> > --
+> >
+> > Kudos to Saxnet and Cozybit for their presentations and *awesome*
+> > work
+> > on coding up stuff and doing a great job at explaining all this to
+> > us.
+> >
+> > Nothing else was recorded, sorry :) If you loose the links you'll be
+> > able to find them here:
+> >
+> > http://wireless.kernel.org/en/users/Documentation#YouTube_Documentation
+> >
+> >  Luis
+> 
+> Thanks a lot !
+> 
+> Is it possible to have the presentations uploaded on the wiki also ?
+> 
+> 
+> 
+> --
+> GPG ID: 0xD21DB2DB
+> As you read this post global entropy rises. Have Fun ;-)
+> Nick
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
