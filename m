@@ -1,91 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:47616 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752855Ab1HIJOr (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:51941 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751430Ab1HTNby convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 05:14:47 -0400
-Received: by wwe5 with SMTP id 5so2048819wwe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:46 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 40/40] wl12xx: fix tx_queue_count spurious increment
-Date: Tue,  9 Aug 2011 12:13:53 +0300
-Message-Id: <1312881233-9366-41-git-send-email-eliad@wizery.com> (sfid-20110809_111451_038264_5C7EBB5F)
-In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	Sat, 20 Aug 2011 09:31:54 -0400
+MIME-Version: 1.0
+In-Reply-To: <4E4FAFB7.4050207@bfs.de>
+References: <20110818133809.GG4786@shale.localdomain>
+	<CACna6rzwxA=OzQQ_VknsSq8BXXoH8U=GpdfkRTBWjFSNSjwsAA@mail.gmail.com>
+	<4E4FAFB7.4050207@bfs.de>
+Date: Sat, 20 Aug 2011 15:31:53 +0200
+Message-ID: <CACna6rwwHSHuNWL8ykmJttoRi_4wGzS9-iRceNP+=OSyf8JZ5Q@mail.gmail.com> (sfid-20110820_153203_907743_89E69032)
+Subject: Re: [patch -next] bcma: signedness bug in bcma_get_next_core()
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: wharms@bfs.de
+Cc: Dan Carpenter <error27@gmail.com>,
+	"open list:BROADCOM SPECIFIC..." <linux-wireless@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+W dniu 20 sierpnia 2011 14:59 użytkownik walter harms <wharms@bfs.de> napisał:
+>
+>
+> Am 20.08.2011 14:23, schrieb Rafał Miłecki:
+>> W dniu 18 sierpnia 2011 15:38 użytkownik Dan Carpenter
+>> <error27@gmail.com> napisał:
+>>> The u32 would never be less than zero so the error handling would
+>>> break.  I changed it to int.
+>>
+>> In declaration we use s32:
+>> static s32 bcma_erom_get_mst_port(struct bcma_bus *bus, u32 **eromptr);
+>>
+>> Doesn't it sound better to use s32 instead of int?
+>>
+>
+> aktualy int sounds better that s32 for me.
 
-Only increment the queue count after actually queuing the skb. This
-avoids a spurious increment is case of dropped packets.
+Will you care to replace function return type as well?
 
-Also move the Tx-watermark checking code after the packet is enqueued.
-This makes the count more accurate - it includes the just-queued
-packet.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   24 ++++++++++++------------
- 1 files changed, 12 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 7d0bcd2..e63a516 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1475,24 +1475,12 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- 	if (wl->bss_type == BSS_TYPE_AP_BSS)
- 		hlid = wl1271_tx_get_hlid(wl, skb);
- 
- 	spin_lock_irqsave(&wl->wl_lock, flags);
- 
--	wl->tx_queue_count[q]++;
--
--	/*
--	 * The workqueue is slow to process the tx_queue and we need stop
--	 * the queue here, otherwise the queue will get too long.
--	 */
--	if (wl->tx_queue_count[q] >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
--		wl1271_debug(DEBUG_TX, "op_tx: stopping queues for q %d", q);
--		ieee80211_stop_queue(wl->hw, mapping);
--		set_bit(q, &wl->stopped_queues_map);
--	}
--
- 	/* queue the packet */
- 	if (wl->bss_type == BSS_TYPE_AP_BSS) {
- 		if (!wl1271_is_active_sta(wl, hlid)) {
- 			wl1271_debug(DEBUG_TX, "DROP skb hlid %d q %d",
- 				     hlid, q);
- 			dev_kfree_skb(skb);
-@@ -1502,12 +1490,24 @@ static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 		wl1271_debug(DEBUG_TX, "queue skb hlid %d q %d", hlid, q);
- 		skb_queue_tail(&wl->links[hlid].tx_queue[q], skb);
- 	} else {
- 		skb_queue_tail(&wl->tx_queue[q], skb);
- 	}
- 
-+	wl->tx_queue_count[q]++;
-+
-+	/*
-+	 * The workqueue is slow to process the tx_queue and we need stop
-+	 * the queue here, otherwise the queue will get too long.
-+	 */
-+	if (wl->tx_queue_count[q] >= WL1271_TX_QUEUE_HIGH_WATERMARK) {
-+		wl1271_debug(DEBUG_TX, "op_tx: stopping queues for q %d", q);
-+		ieee80211_stop_queue(wl->hw, mapping);
-+		set_bit(q, &wl->stopped_queues_map);
-+	}
-+
- 	/*
- 	 * The chip specific setup must run before the first TX packet -
- 	 * before that, the tx_work will not be initialized!
- 	 */
- 
- 	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags) &&
 -- 
-1.7.6.401.g6a319
-
+Rafał
