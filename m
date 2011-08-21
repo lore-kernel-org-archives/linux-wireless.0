@@ -1,83 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1778 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753163Ab1HHN7d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:33 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 38/82] staging: brcm80211: fixed build issue for big
- endian platforms
-Date: Mon, 8 Aug 2011 15:58:22 +0200
-Message-ID: <1312811946-16713-39-git-send-email-arend@broadcom.com> (sfid-20110808_160102_229782_5941D4F4)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64672 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752092Ab1HUPns (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Aug 2011 11:43:48 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<rodrigue@qca.qualcomm.com>, <senthilb@qca.qualcomm.com>,
+	<rmanohar@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC] mac80211: Add a debug entry to track last beacon
+Date: Sun, 21 Aug 2011 21:13:37 +0530
+Message-ID: <1313941417-5446-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110821_174353_998425_DA97DDC4)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Driver now builds for big endian mips platform, possibly also for other
-big endian platforms. A change was made to the R_REG and W_REG macro's.
-These macro's perform an xor (^) operation for endianess swap purposes.
-Gcc complained because an xor operation is not allowed on a pointer type.
-Fixed this by casting the pointer to an unsigned long.
+when we obtain time_since_last_beacon_ms parameter from the mac80211
+debugfs it should be always less than 100, otherwise we are missing
+beacons.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- drivers/staging/brcm80211/brcmsmac/dma.h   |    1 +
- drivers/staging/brcm80211/brcmsmac/types.h |    8 ++++----
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ net/mac80211/debugfs_netdev.c |   14 ++++++++++++++
+ net/mac80211/ieee80211_i.h    |    3 +++
+ net/mac80211/mlme.c           |    2 ++
+ 3 files changed, 19 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.h b/drivers/staging/brcm80211/brcmsmac/dma.h
-index 3ff109f..334f2eb 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.h
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.h
-@@ -17,6 +17,7 @@
- #ifndef	_BRCM_DMA_H_
- #define	_BRCM_DMA_H_
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 9ea7c0d..18e1bfc 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -157,6 +157,19 @@ IEEE80211_IF_FILE(aid, u.mgd.aid, DEC);
+ IEEE80211_IF_FILE(last_beacon, u.mgd.last_beacon_signal, DEC);
+ IEEE80211_IF_FILE(ave_beacon, u.mgd.ave_beacon_signal, DEC_DIV_16);
  
-+#include <linux/delay.h>
- #include "types.h"		/* forward structure declarations */
++static ssize_t ieee80211_if_fmt_time_since_last_beacon_ms(
++	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
++{
++	const struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	unsigned long time_since_last_beacon;
++
++	time_since_last_beacon = jiffies_to_msecs(jiffies -
++						  ifmgd->last_beacon_timestamp);
++	return scnprintf(buf, buflen, "%lu\n",
++			 time_since_last_beacon);
++}
++__IEEE80211_IF_FILE(time_since_last_beacon_ms, NULL);
++
+ static int ieee80211_set_smps(struct ieee80211_sub_if_data *sdata,
+ 			      enum ieee80211_smps_mode smps_mode)
+ {
+@@ -394,6 +407,7 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
  
- /* DMA structure:
-diff --git a/drivers/staging/brcm80211/brcmsmac/types.h b/drivers/staging/brcm80211/brcmsmac/types.h
-index e0880a0..ab97718 100644
---- a/drivers/staging/brcm80211/brcmsmac/types.h
-+++ b/drivers/staging/brcm80211/brcmsmac/types.h
-@@ -305,11 +305,11 @@ do {						\
- 		switch (sizeof(*(r))) { \
- 		case sizeof(u8): \
- 			__osl_v = \
--			readb((u8 *)((r)^3)); \
-+			readb((u8 *)((unsigned long)(r)^3)); \
- 			break; \
- 		case sizeof(u16): \
- 			__osl_v = \
--			readw((u16 *)((r)^2)); \
-+			readw((u16 *)((unsigned long)(r)^2)); \
- 			break; \
- 		case sizeof(u32): \
- 			__osl_v = readl((u32 *)(r)); \
-@@ -322,10 +322,10 @@ do {						\
- 		switch (sizeof(*(r))) { \
- 		case sizeof(u8):	\
- 			writeb((u8)(v), \
--			(u8 *)((r)^3)); break; \
-+			(u8 *)((unsigned long)(r)^3)); break; \
- 		case sizeof(u16):	\
- 			writew((u16)(v), \
--			(u16 *)((r)^2)); break; \
-+			(u16 *)((unsigned long)(r)^2)); break; \
- 		case sizeof(u32):	\
- 			writel((u32)(v), \
- 			(u32 *)(r)); break; \
+ 	DEBUGFS_ADD(bssid);
+ 	DEBUGFS_ADD(aid);
++	DEBUGFS_ADD(time_since_last_beacon_ms);
+ 	DEBUGFS_ADD(last_beacon);
+ 	DEBUGFS_ADD(ave_beacon);
+ 	DEBUGFS_ADD_MODE(smps, 0600);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ea74190..ec532a5 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -410,6 +410,9 @@ struct ieee80211_if_managed {
+ 
+ 	u8 use_4addr;
+ 
++	/* timestamp of the last Beacon frame in the current BSS. */
++	unsigned long last_beacon_timestamp;
++
+ 	/* Signal strength from the last Beacon frame in the current BSS. */
+ 	int last_beacon_signal;
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d6470c7..13ee1b6 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1758,6 +1758,8 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	if (memcmp(bssid, mgmt->bssid, ETH_ALEN) != 0)
+ 		return;
+ 
++	ifmgd->last_beacon_timestamp = jiffies;
++
+ 	/* Track average RSSI from the Beacon frames of the current AP */
+ 	ifmgd->last_beacon_signal = rx_status->signal;
+ 	if (ifmgd->flags & IEEE80211_STA_RESET_SIGNAL_AVE) {
 -- 
-1.7.4.1
-
+1.7.0.4
 
