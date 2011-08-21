@@ -1,38 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:37556 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751134Ab1HIDHG (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44370 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752209Ab1HUPyy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 23:07:06 -0400
-Received: by pzk37 with SMTP id 37so9335550pzk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 20:07:05 -0700 (PDT)
+	Sun, 21 Aug 2011 11:54:54 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
+	<senthilb@qca.qualcomm.com>, <rmanohar@qca.qualcomm.com>,
+	<Larry.Finger@lwfinger.net>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] ath9k_htc: Fix few possible memory leaks
+Date: Sun, 21 Aug 2011 21:24:45 +0530
+Message-ID: <1313942085-6238-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110821_175504_348750_90400EAF)
 MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmo=SED0RLmQot2yAeAmv53Yitn+RV31tf2zWOmBHXzq_0w@mail.gmail.com>
-References: <CAH-LUqry4TKAvnojAo39QfT-Wy_BN94SYJEiCCRX4hrb=RcfwQ@mail.gmail.com>
-	<CAJ-Vmo=SED0RLmQot2yAeAmv53Yitn+RV31tf2zWOmBHXzq_0w@mail.gmail.com>
-Date: Tue, 9 Aug 2011 11:07:05 +0800
-Message-ID: <CAH-LUqrHifnWY=V-p6zs0RPoLtqQadVysQ6ZLj0tEXXbuF_e+w@mail.gmail.com> (sfid-20110809_050723_183618_9EDE555B)
-Subject: Re: AR9285 Wireless 80211n mode get only 25Mbit with Linux 2.6.38.8
- and compat-wireless-2.6.38.2-2
-From: Dane Shih <daneshih1981@gmail.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/8/9 Adrian Chadd <adrian@freebsd.org>:
-> On 9 August 2011 11:00, Dane Shih <daneshih1981@gmail.com> wrote:
->
->> /etc/modprobe.d/ath9.conf
->> options ath9k nohwcrypt=1
->> modprobe -v ath9k
->
-> Out of curiousity, why are you using nohwcrypt=1 ?
->
->
-> adrian
->
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-http://ubuntuforums.org/showthread.php?t=1746326
-http://www.fedoraforum.org/forum/showthread.php?t=252404
+still there are few other memory leaks which will be fixed
+very soon
+
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/ath/ath9k/htc_hst.c |   13 ++++++++-----
+ drivers/net/wireless/ath/ath9k/wmi.c     |    3 ++-
+ 2 files changed, 10 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
+index 1b90ed8..e435c9b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_hst.c
++++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
+@@ -169,13 +169,14 @@ static int htc_config_pipe_credits(struct htc_target *target)
+ 	time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
+ 	if (!time_left) {
+ 		dev_err(target->dev, "HTC credit config timeout\n");
+-		return -ETIMEDOUT;
++		ret = -ETIMEDOUT;
++		goto err;
+ 	}
+ 
+ 	return 0;
+ err:
+ 	kfree_skb(skb);
+-	return -EINVAL;
++	return ret;
+ }
+ 
+ static int htc_setup_complete(struct htc_target *target)
+@@ -204,14 +205,15 @@ static int htc_setup_complete(struct htc_target *target)
+ 	time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
+ 	if (!time_left) {
+ 		dev_err(target->dev, "HTC start timeout\n");
+-		return -ETIMEDOUT;
++		ret = -ETIMEDOUT;
++		goto err;
+ 	}
+ 
+ 	return 0;
+ 
+ err:
+ 	kfree_skb(skb);
+-	return -EINVAL;
++	return ret;
+ }
+ 
+ /* HTC APIs */
+@@ -276,7 +278,8 @@ int htc_connect_service(struct htc_target *target,
+ 	if (!time_left) {
+ 		dev_err(target->dev, "Service connection timeout for: %d\n",
+ 			service_connreq->service_id);
+-		return -ETIMEDOUT;
++		ret = -ETIMEDOUT;
++		goto err;
+ 	}
+ 
+ 	*conn_rsp_epid = target->conn_rsp_epid;
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index 35422fc..50d901d 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -334,7 +334,8 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
+ 			"Timeout waiting for WMI command: %s\n",
+ 			wmi_cmd_to_name(cmd_id));
+ 		mutex_unlock(&wmi->op_mutex);
+-		return -ETIMEDOUT;
++		ret = -ETIMEDOUT;
++		goto out;
+ 	}
+ 
+ 	mutex_unlock(&wmi->op_mutex);
+-- 
+1.7.0.4
+
