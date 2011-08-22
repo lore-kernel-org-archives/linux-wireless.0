@@ -1,47 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:48771 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750830Ab1HLHUI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 03:20:08 -0400
-From: Nishant Sarmukadam <nishants@marvell.com>
-To: linux-wireless@vger.kernel.org, buytenh@wantstofly.org
-Cc: nishants@marvell.com
-Subject: [PATCH] mwl8k: Traffic to clients gets affected when one client leaves a cyrpto bss
-Date: Fri, 12 Aug 2011 12:20:21 +0530
-Message-Id: <1313131821-31322-1-git-send-email-nishants@marvell.com> (sfid-20110812_092012_437265_685D6004)
+Received: from mms3.broadcom.com ([216.31.210.19]:3252 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753919Ab1HVWOJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Aug 2011 18:14:09 -0400
+Date: Mon, 22 Aug 2011 15:13:52 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: "Tomasz Figa" <tomasz.figa@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>, hharte@broadcom.com
+Subject: Re: BCM4325 support in brcm80211 or newer versions of bcm4329
+ driver
+Message-ID: <20110822221352.GJ2250@broadcom.com> (sfid-20110823_001412_808525_5B6C6AD6)
+References: <1514181.3grperja2F@flatron>
+MIME-Version: 1.0
+In-Reply-To: <1514181.3grperja2F@flatron>
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a client disassociates from a crypto enabled bss, data traffic to
-other clients connected to the bss is stalled. This was due to a boolean
-variable used to keep track if HW crypto is enabled i.e. if set key has
-been called to add a key.  This flag was being reset every time delete
-key was called e.g when a station leaves the bss. Once the flag is
-reset, rx status flags were not being set for connected clients which
-disrupts traffic to these clients. Fix this issue by not resetting the
-flag since we do not need to reset this flag during the life time of the
-bss.
+On Sun, Aug 14, 2011 at 11:31:09AM -0700, Tomasz Figa wrote:
+> Hi,
+> 
+> I'm looking into running current Linux kernel on a platform equipped with the
+> BCM4325 full mac combo chip, but unfortunately the shipped DHD driver (v.
+> 4.217.*) is outdated and designed for stock 2.6.29 kernel with much hardcoding
+> done to glue everything together.
+> 
+> I did some reasearch and it led me to a newer version of the DHD driver,
+> designed for BCM4329 (v. 4.218), which after some modifications (BCD protocol
+> version 2, some event IDs, etc.) started to work on my hardware, with one
+> exception: waiting for RxCtrl after sending an "iscanresults" request times
+> out. I'm attaching driver debug output at the bottom of this message.
+> 
+> A bit more details about my hardware: a Samsung S3C6410-based board connected
+> to a BCM4325 chip using 4-bit SDIO interface, without dedicated IRQ pin (using
+> SDIO IRQ feature), so undefining of OOB_INTR_ONLY and HW_OOB and defining of
+> SDIO_ISR_THREAD was needed.
+> 
+> Do you have any suggestions?
 
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+Tom,
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index da36dbf..771280a 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -4097,9 +4097,6 @@ static int mwl8k_set_key(struct ieee80211_hw *hw,
- 
- 		if (rc)
- 			goto out;
--
--		mwl8k_vif->is_hw_crypto_enabled = false;
--
- 	}
- out:
- 	return rc;
--- 
-1.6.0.3
+The brcmfmac driver (in staging) doesn't yet support the BCM4325.  As you
+found, there are a variety of older driver sources available in other repos.
+You can contact Howard Harte <hharte@broadcom.com> to see about a combination
+of those sources and firmware that will support your platform in the near term.
+
+- Henry
+
 
