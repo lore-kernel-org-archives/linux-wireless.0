@@ -1,37 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:48188 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752272Ab1HNCjw (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50484 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751497Ab1HVMmV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 22:39:52 -0400
-Received: by gya6 with SMTP id 6so2698584gya.19
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Aug 2011 19:39:51 -0700 (PDT)
+	Mon, 22 Aug 2011 08:42:21 -0400
+Date: Mon, 22 Aug 2011 18:12:29 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Adrian Chadd <adrian@freebsd.org>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath9k: Change rate control to use legacy rate as
+ last MRR
+Message-ID: <20110822124228.GA1781@vmraj-lnx.users.atheros.com> (sfid-20110822_144224_761334_0884E30E)
+References: <1313841130-7787-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <1313841130-7787-2-git-send-email-rmanohar@qca.qualcomm.com>
+ <CAJ-VmokGvnb3NA1bRYQjQuA12ojbVKUHPHWrvvnQ_SU987O0xQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmo=O5fWb6P=WdVQF64vk+j--pmsnQzV158Bfi2i2rPDJ6w@mail.gmail.com>
-References: <1313211498-14442-1-git-send-email-rmanohar@qca.qualcomm.com>
-	<CAJ-Vmo=yP7q33FBwDCCnu3f+=E6ONuLK+xj6ye-26bSW_kgtdQ@mail.gmail.com>
-	<20110813184140.GC16149@vmraj-lnx.users.atheros.com>
-	<CAJ-Vmo=O5fWb6P=WdVQF64vk+j--pmsnQzV158Bfi2i2rPDJ6w@mail.gmail.com>
-Date: Sun, 14 Aug 2011 10:39:51 +0800
-Message-ID: <CAJ-VmomsHZGy3oU65oXk1kAhrbXKuVNvLJdPjGn8UyEdYF6_iA@mail.gmail.com> (sfid-20110814_043956_630008_E62DE4CD)
-Subject: Re: [PATCH 01/11] ath9k_hw: Fix exceed transmission burst-time of 5GHz
-From: Adrian Chadd <adrian@freebsd.org>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <CAJ-VmokGvnb3NA1bRYQjQuA12ojbVKUHPHWrvvnQ_SU987O0xQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 August 2011 10:39, Adrian Chadd <adrian@freebsd.org> wrote:
+On Sat, Aug 20, 2011 at 10:30:56PM +0800, Adrian Chadd wrote:
+> Is this going to interfere with aggregation, which assumes (iirc) all
+> rates in the aggregate rate choice are HT?
+>
+The aggregation is only formed if the first frame from tid is not legacy rated.
+And I send another patch "ath9k: Send legacy rated frames as unaggregated" that
+does not include legacy frames in aggr.
 
-> Ah, makes sense now. Well, we (collectively) should likely figure out
-> how to teach the rate control and TX code how to not exceed TXOP in
-> general.
-> Do packets that exceed TXOP get marked as filtered?
-
-.. when the relevant bit in AR_PCU_MISCMODE is enabled, that is?
-(Obviously they're not being filtered now..)
-
-
-
-Adrian
+--
+Rajkumar
+> 
+> On 20 August 2011 19:52, Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
+> > In congested network, having all rate reties at MCS rates
+> > is failing to transmit the frame offenly. By the time reaching
+> > the success rate set, the application gets timed out. One such
+> > scenario is that authentication time out during 4-Way handshake.
+> > This patch uses a legacy rate as last retry sequnce for
+> > unaggregated frames or if the first selected rate's PER is ~80%
+> > of max limit. And also observed from the tx status that the frame
+> > was trasmitted successfully by using legacy rates.
+> >
+> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> > ---
+> >  drivers/net/wireless/ath/ath9k/rc.c |   34 +++++++++++++++++++++++++++-------
+> >  1 files changed, 27 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+> > index 9e3649a..4f13018 100644
+> > --- a/drivers/net/wireless/ath/ath9k/rc.c
+> > +++ b/drivers/net/wireless/ath/ath9k/rc.c
+> > @@ -603,7 +603,8 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv,
+> >  static u8 ath_rc_get_highest_rix(struct ath_softc *sc,
+> >                                 struct ath_rate_priv *ath_rc_priv,
+> >                                 const struct ath_rate_table *rate_table,
+> > -                                int *is_probing)
+> > +                                int *is_probing,
+> > +                                bool legacy)
+> >  {
+> >        u32 best_thruput, this_thruput, now_msec;
+> >        u8 rate, next_rate, best_rate, maxindex, minindex;
+> > @@ -624,6 +625,8 @@ static u8 ath_rc_get_highest_rix(struct ath_softc *sc,
+> >                u8 per_thres;
+> >
+> >                rate = ath_rc_priv->valid_rate_index[index];
+> > +               if (legacy && !(rate_table->info[rate].rate_flags & RC_LEGACY))
+> > +                       continue;
+> >                if (rate > ath_rc_priv->rate_max_phy)
+> >                        continue;
+> >
+> > @@ -767,7 +770,7 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+> >        struct ieee80211_tx_rate *rates = tx_info->control.rates;
+> >        struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+> >        __le16 fc = hdr->frame_control;
+> > -       u8 try_per_rate, i = 0, rix;
+> > +       u8 try_per_rate, i = 0, rix, high_rix;
+> >        int is_probe = 0;
+> >
+> >        if (rate_control_send_low(sta, priv_sta, txrc))
+> > @@ -786,7 +789,9 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+> >        try_per_rate = 4;
+> >
+> >        rate_table = ath_rc_priv->rate_table;
+> > -       rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table, &is_probe);
+> > +       rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table,
+> > +                                    &is_probe, false);
+> > +       high_rix = rix;
+> >
+> >        /*
+> >         * If we're in HT mode and both us and our peer supports LDPC.
+> > @@ -822,10 +827,7 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+> >        }
+> >
+> >        /* Fill in the other rates for multirate retry */
+> > -       for ( ; i < 4; i++) {
+> > -               /* Use twice the number of tries for the last MRR segment. */
+> > -               if (i + 1 == 4)
+> > -                       try_per_rate = 8;
+> > +       for ( ; i < 3; i++) {
+> >
+> >                ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
+> >                /* All other rates in the series have RTS enabled */
+> > @@ -833,6 +835,24 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+> >                                       try_per_rate, rix, 1);
+> >        }
+> >
+> > +       /* Use twice the number of tries for the last MRR segment. */
+> > +       try_per_rate = 8;
+> > +
+> > +       /*
+> > +        * Use a legacy rate as last retry to ensure that the frame
+> > +        * is tried in both MCS and legacy rates.
+> > +        */
+> > +       if ((rates[2].flags & IEEE80211_TX_RC_MCS) &&
+> > +           (!(tx_info->flags & IEEE80211_TX_CTL_AMPDU) ||
+> > +           (ath_rc_priv->per[high_rix] > 45)))
+> > +               rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table,
+> > +                               &is_probe, true);
+> > +       else
+> > +               ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
+> > +
+> > +       /* All other rates in the series have RTS enabled */
+> > +       ath_rc_rate_set_series(rate_table, &rates[i], txrc,
+> > +                              try_per_rate, rix, 1);
+> >        /*
+> >         * NB:Change rate series to enable aggregation when operating
+> >         * at lower MCS rates. When first rate in series is MCS2
+> > --
+> > 1.7.6
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
