@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:58826 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026Ab1HKEjq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 00:39:46 -0400
-Received: by mail-iy0-f170.google.com with SMTP id 16so530042iye.1
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 21:39:46 -0700 (PDT)
-Message-ID: <4E435D0E.80702@lwfinger.net> (sfid-20110811_063949_705987_B5A0A18B)
-Date: Wed, 10 Aug 2011 23:39:42 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:4947 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750806Ab1HVGwb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Aug 2011 02:52:31 -0400
+Message-ID: <4E51FCA3.9020405@broadcom.com> (sfid-20110822_085234_565800_F1A08204)
+Date: Mon, 22 Aug 2011 08:52:19 +0200
+From: "Roland Vossen" <rvossen@broadcom.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [RFC][RFT][PATCH V2 2/2] b43: fix DMA on some bugged hardware
-References: <1313001339-11211-1-git-send-email-zajec5@gmail.com>	<1313001339-11211-2-git-send-email-zajec5@gmail.com> <CACna6rynj+OXL1R6jwgnCzReuO+=piOX3LTC9UujDTg4DNBVUw@mail.gmail.com>
-In-Reply-To: <CACna6rynj+OXL1R6jwgnCzReuO+=piOX3LTC9UujDTg4DNBVUw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: "Dan Williams" <dcbw@redhat.com>
+cc: =?UTF-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"networkmanager-list@gnome.org" <networkmanager-list@gnome.org>
+Subject: Re: brcmsmac driver only works when sitting next to the AP
+References: <20110814121646.GA5188@stt008.linux.site>
+ <4E4A5641.4020604@broadcom.com>
+ <1313509211.2065.36.camel@dcbw.foobar.com>
+ <4E4B9A45.5090507@broadcom.com> <4E4CC85A.7010504@broadcom.com>
+ <4E4E73F4.4040105@broadcom.com>
+ <1313786823.4810.13.camel@dcbw.foobar.com>
+In-Reply-To: <1313786823.4810.13.camel@dcbw.foobar.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/10/2011 07:14 PM, Rafał Miłecki wrote:
-> W dniu 10 sierpnia 2011 20:35 użytkownik Rafał Miłecki
-> <zajec5@gmail.com>  napisał:
->> Some hardware with 64-bit DMA uses lower address word for setting
->> routing (translation) bit. Add workaround for such boards.
->>
->> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
->> ---
->> This requires testing on at least 1 normal 64-bit DMA card and 1 32-bit
->> DMA card. So far it was tested only on my 14e4:4329 where it fixed DMA.
->
-> 14e4:4353 (BCM43224), 64-bit DMA, still works :)
->
-> The rest will follow tomorrow.
+> I do not channel work email to a Blackberry.  Chill out.
 
-Tested with 14e4:4311 (64-bit) and 14e4:4318 (32-bit). The ssb changes were also 
-tested with b43legacy.
+You are right, I was too impatient. I am sorry for that.
 
-Larry
+> The error about supplicant manager state is not important, as the
+> supplicant later transitions to idle/ready state and NM proceeds.  What
+> *is* important is the inability of the driver to perform scans, which
+> means that no scan list is available for the supplicant to work with,
+> and thus it cannot associate with any known AP.  What we want now is
+> driver debugging information about *why* the driver refuses to perform
+> scans.
+
+Ok, now it is clear to me why the assert is not relevant. I'll dive into 
+this deeper.
+
+Thanks, Roland.
+
