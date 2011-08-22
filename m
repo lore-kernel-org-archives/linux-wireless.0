@@ -1,63 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:63836 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752721Ab1HAJn6 convert rfc822-to-8bit (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:40068 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751275Ab1HVTEz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2011 05:43:58 -0400
-Received: by yxi11 with SMTP id 11so3023109yxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Aug 2011 02:43:58 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4E367432.60601@openwrt.org>
-References: <1312191173-23963-1-git-send-email-helmut.schaa@googlemail.com>
-	<1312191173-23963-2-git-send-email-helmut.schaa@googlemail.com>
-	<4E367432.60601@openwrt.org>
-Date: Mon, 1 Aug 2011 11:43:58 +0200
-Message-ID: <CAGXE3d_HFFSF6Aspyyq6uCdLPrQ7uCOQNKpFzoOu3cUfEDA-XQ@mail.gmail.com> (sfid-20110801_114402_601358_E95F576A)
-Subject: Re: [PATCHv2 2/2] mac80211: Don't use EAPOL frames for rate sampling
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 22 Aug 2011 15:04:55 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id C699E54022F
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Aug 2011 15:13:55 -0400 (EDT)
+Subject: Compat-wireless release for 2011-08-22 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110822190454.4172D40ED5@repository3.orbit-lab.org> (sfid-20110822_210458_648362_40F31061)
+Date: Mon, 22 Aug 2011 15:04:54 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 1, 2011 at 11:38 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2011-08-01 11:32 AM, Helmut Schaa wrote:
->>
->> Signed-off-by: Helmut Schaa<helmut.schaa@googlemail.com>
->> ---
->>
->> Haven't done much testing yet but this looks safe to me.
->> Helmut
->>
->>  net/mac80211/rc80211_minstrel_ht.c |    8 +++++++-
->>  1 files changed, 7 insertions(+), 1 deletions(-)
->>
->> diff --git a/net/mac80211/rc80211_minstrel_ht.c
->> b/net/mac80211/rc80211_minstrel_ht.c
->> index 66a1eeb..2158838 100644
->> --- a/net/mac80211/rc80211_minstrel_ht.c
->> +++ b/net/mac80211/rc80211_minstrel_ht.c
->> @@ -608,7 +608,13 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta
->> *sta, void *priv_sta,
->>                return mac80211_minstrel.get_rate(priv, sta,&msp->legacy,
->> txrc);
->>
->>        info->flags |= mi->tx_flags;
->> -       sample_idx = minstrel_get_sample_rate(mp, mi);
->> +
->> +       /* Don't use EAPOL frames for sampling on non-mrr hw */
->> +       if (mp->hw->max_rates == 1&&
->> +           txrc->skb->protocol == cpu_to_be16(ETH_P_PAE))
->
-> I think checking for mp->hw->max_rates < 3 would be better here, because
-> then it also covers the primary rate + fallback rate case (as being used by
-> b43), which also doesn't include the max_prob_rate in the mrr series.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   15df614..3e4dd06  master     -> origin/master
+ * [new tag]         compat-wireless-2011-08-22 -> compat-wireless-2011-08-22
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   c2544bb..55a12f9  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 1b2cd61...9fbf096 akpm-end   -> origin/akpm-end  (forced update)
+   5c80c71..6719db6  akpm-start -> origin/akpm-start
+ + 8c2b1fd...5320ea6 master     -> origin/master  (forced update)
+   5c80c71..6719db6  stable     -> origin/stable
+ * [new tag]         next-20110822 -> next-20110822
+Checking out files:  17% (63/351)   
+Checking out files:  18% (64/351)   
+Checking out files:  19% (67/351)   
+Checking out files:  20% (71/351)   
+Checking out files:  21% (74/351)   
+Checking out files:  22% (78/351)   
+Checking out files:  23% (81/351)   
+Checking out files:  24% (85/351)   
+Checking out files:  25% (88/351)   
+Checking out files:  26% (92/351)   
+Checking out files:  27% (95/351)   
+Checking out files:  28% (99/351)   
+Checking out files:  29% (102/351)   
+Checking out files:  30% (106/351)   
+Checking out files:  31% (109/351)   
+Checking out files:  32% (113/351)   
+Checking out files:  33% (116/351)   
+Checking out files:  34% (120/351)   
+Checking out files:  35% (123/351)   
+Checking out files:  36% (127/351)   
+Checking out files:  37% (130/351)   
+Checking out files:  38% (134/351)   
+Checking out files:  39% (137/351)   
+Checking out files:  40% (141/351)   
+Checking out files:  41% (144/351)   
+Checking out files:  42% (148/351)   
+Checking out f
+ iles:  43% (151/351)   
+Checking out files:  44% (155/351)   
+Checking out files:  45% (158/351)   
+Checking out files:  46% (162/351)   
+Checking out files:  47% (165/351)   
+Checking out files:  48% (169/351)   
+Checking out files:  49% (172/351)   
+Checking out files:  50% (176/351)   
+Checking out files:  51% (180/351)   
+Checking out files:  52% (183/351)   
+Checking out files:  53% (187/351)   
+Checking out files:  54% (190/351)   
+Checking out files:  55% (194/351)   
+Checking out files:  56% (197/351)   
+Checking out files:  57% (201/351)   
+Checking out files:  58% (204/351)   
+Checking out files:  59% (208/351)   
+Checking out files:  60% (211/351)   
+Checking out files:  61% (215/351)   
+Checking out files:  62% (218/351)   
+Checking out files:  63% (222/351)   
+Checking out files:  64% (225/351)   
+Checking out files:  65% (229/351)   
+Checking out files:  66% (232/351)   
+Checking out files:  67% (236/351)   
+Checking out files:  68% (239/351)   
+Checking out fi
+ les:  69% (243/351)   
+Checking out files:  70% (246/351)   
+Checking out files:  71% (250/351)   
+Checking out files:  72% (253/351)   
+Checking out files:  73% (257/351)   
+Checking out files:  74% (260/351)   
+Checking out files:  75% (264/351)   
+Checking out files:  76% (267/351)   
+Checking out files:  77% (271/351)   
+Checking out files:  78% (274/351)   
+Checking out files:  79% (278/351)   
+Checking out files:  80% (281/351)   
+Checking out files:  81% (285/351)   
+Checking out files:  82% (288/351)   
+Checking out files:  83% (292/351)   
+Checking out files:  84% (295/351)   
+Checking out files:  85% (299/351)   
+Checking out files:  86% (302/351)   
+Checking out files:  87% (306/351)   
+Checking out files:  88% (309/351)   
+Checking out files:  89% (313/351)   
+Checking out files:  90% (316/351)   
+Checking out files:  91% (320/351)   
+Checking out files:  92% (323/351)   
+Checking out files:  93% (327/351)   
+Checking out files:  94% (330/351)   
+Checking out fil
+ es:  95% (334/351)   
+Checking out files:  95% (336/351)   
+Checking out files:  96% (337/351)   
+Checking out files:  97% (341/351)   
+Checking out files:  98% (344/351)   
+Checking out files:  99% (348/351)   
+Checking out files: 100% (351/351)   
+Checking out files: 100% (351/351), done.
 
-The mp->hw->max_rates == 2 case is sample_rate -> max_prob_rate and
-max_tp_rate -> max_prob_rate at the moment. So, these devices should be fine
-already.
+compat-wireless code metrics
 
-Helmut
+    803736 - Total upstream lines of code being pulled
+      2391 - backport code changes
+      2081 - backport code additions
+       310 - backport code deletions
+      8203 - backport from compat module
+     10594 - total backport code
+    1.3181 - % of code consists of backport work
