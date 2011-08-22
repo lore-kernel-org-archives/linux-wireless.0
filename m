@@ -1,97 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23946 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751506Ab1HZGxZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 02:53:25 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 03/60] iwlagn: use iwl_get_debug_level instead of iwl_debug_level
-Date: Thu, 25 Aug 2011 23:10:35 -0700
-Message-Id: <1314339092-20797-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085332_727739_12A7B486)
-In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:56400 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752261Ab1HVO2C convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Aug 2011 10:28:02 -0400
+Received: by ewy4 with SMTP id 4so1862223ewy.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Aug 2011 07:28:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4E526487.1030609@broadcom.com>
+References: <20110814121646.GA5188@stt008.linux.site>
+	<4E4A5641.4020604@broadcom.com>
+	<1313509211.2065.36.camel@dcbw.foobar.com>
+	<4E4B9A45.5090507@broadcom.com>
+	<4E4CC85A.7010504@broadcom.com>
+	<4E4E73F4.4040105@broadcom.com>
+	<20110819152140.GA7506@stt008.linux.site>
+	<CAKprTDEUVa6ouH92G_8UMo20wYNnrhu76c_XAPYDtbCbRjqdLw@mail.gmail.com>
+	<4E52297D.9090301@broadcom.com>
+	<20110822112737.GA5936@stt008.linux.site>
+	<4E525235.7060501@broadcom.com>
+	<CAKprTDHO+Hh4g3WjGijDhPtzY5PiqR0GQ_zg8Uw46-qOVXpCRQ@mail.gmail.com>
+	<4E526487.1030609@broadcom.com>
+Date: Mon, 22 Aug 2011 16:28:01 +0200
+Message-ID: <CAKprTDFGHW0+=eiH3Uy2XhgZAMYfXUEP_JpLwrPR-m9in0x8xQ@mail.gmail.com> (sfid-20110822_162807_244539_F3A20B3F)
+Subject: Re: brcmsmac driver only works when sitting next to the AP
+From: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
+To: Roland Vossen <rvossen@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	"networkmanager-list@gnome.org" <networkmanager-list@gnome.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+2011/8/22 Roland Vossen <rvossen@broadcom.com>:
+> Hi,
+>
+>>> Would you happen to know if with kernel 2.6.39, the brcmsmac driver was
+>>> active as well (and not a different driver) ?
+>>
+>> I expressely used the brcmsmac because it was newer, easier to setup
+>> than the others... and it's open source :-)
+>
+> just to make sure: so you were already using brcmsmac in 2.6.39 ?
 
-The latter may return incomplete information.
-For example, if one switched IWL_DL_TX on through sysfs, IWL_DL_TX bit would
-have been set in priv->debug_level, but since iwl_alloc_traffic_mem looked at
-iwl_debug_level only, it wouldn't have allocated the tx_traffic buffer.
+Yes, I used brcmsmac in 2.6.39.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c    |    8 ++++----
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |    4 ++--
- 2 files changed, 6 insertions(+), 6 deletions(-)
+Greetings,
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index e1c5f59..0d8fd5b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1398,7 +1398,7 @@ int iwl_alloc_traffic_mem(struct iwl_priv *priv)
- {
- 	u32 traffic_size = IWL_TRAFFIC_DUMP_SIZE;
- 
--	if (iwl_debug_level & IWL_DL_TX) {
-+	if (iwl_get_debug_level(priv) & IWL_DL_TX) {
- 		if (!priv->tx_traffic) {
- 			priv->tx_traffic =
- 				kzalloc(traffic_size, GFP_KERNEL);
-@@ -1406,7 +1406,7 @@ int iwl_alloc_traffic_mem(struct iwl_priv *priv)
- 				return -ENOMEM;
- 		}
- 	}
--	if (iwl_debug_level & IWL_DL_RX) {
-+	if (iwl_get_debug_level(priv) & IWL_DL_RX) {
- 		if (!priv->rx_traffic) {
- 			priv->rx_traffic =
- 				kzalloc(traffic_size, GFP_KERNEL);
-@@ -1433,7 +1433,7 @@ void iwl_dbg_log_tx_data_frame(struct iwl_priv *priv,
- 	__le16 fc;
- 	u16 len;
- 
--	if (likely(!(iwl_debug_level & IWL_DL_TX)))
-+	if (likely(!(iwl_get_debug_level(priv) & IWL_DL_TX)))
- 		return;
- 
- 	if (!priv->tx_traffic)
-@@ -1457,7 +1457,7 @@ void iwl_dbg_log_rx_data_frame(struct iwl_priv *priv,
- 	__le16 fc;
- 	u16 len;
- 
--	if (likely(!(iwl_debug_level & IWL_DL_RX)))
-+	if (likely(!(iwl_get_debug_level(priv) & IWL_DL_RX)))
- 		return;
- 
- 	if (!priv->rx_traffic)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index ec1485b..08fc2b2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -915,7 +915,7 @@ static ssize_t iwl_dbgfs_traffic_log_read(struct file *file,
- 				"q[%d]: read_ptr: %u, write_ptr: %u\n",
- 				cnt, q->read_ptr, q->write_ptr);
- 	}
--	if (priv->tx_traffic && (iwl_debug_level & IWL_DL_TX)) {
-+	if (priv->tx_traffic && (iwl_get_debug_level(priv) & IWL_DL_TX)) {
- 		ptr = priv->tx_traffic;
- 		pos += scnprintf(buf + pos, bufsz - pos,
- 				"Tx Traffic idx: %u\n",	priv->tx_traffic_idx);
-@@ -938,7 +938,7 @@ static ssize_t iwl_dbgfs_traffic_log_read(struct file *file,
- 			"read: %u, write: %u\n",
- 			 rxq->read, rxq->write);
- 
--	if (priv->rx_traffic && (iwl_debug_level & IWL_DL_RX)) {
-+	if (priv->rx_traffic && (iwl_get_debug_level(priv) & IWL_DL_RX)) {
- 		ptr = priv->rx_traffic;
- 		pos += scnprintf(buf + pos, bufsz - pos,
- 				"Rx Traffic idx: %u\n",	priv->rx_traffic_idx);
 -- 
-1.7.0.4
-
+Camaleón
