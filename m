@@ -1,229 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:40749 "EHLO ogre.sisk.pl"
+Received: from mout8.freenet.de ([195.4.92.98]:52018 "EHLO mout8.freenet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751177Ab1HNTka convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 15:40:30 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 3.1-rc1-git9: Reported regressions 2.6.39 -> 3.0
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <xuTC4jRtHbB.A.l4H.gMCSOB@chimera> (sfid-20110814_214051_018684_1D683D95)
-Date: Sun, 14 Aug 2011 21:02:27 +0200 (CEST)
+	id S1752461Ab1HVKYD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Aug 2011 06:24:03 -0400
+Received: from [195.4.92.18] (helo=8.mx.freenet.de)
+	by mout8.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #5)
+	id 1QvRfk-0004v3-HM
+	for linux-wireless@vger.kernel.org; Mon, 22 Aug 2011 12:24:00 +0200
+Received: from p4fde108b.dip0.t-ipconnect.de ([79.222.16.139]:59866 helo=mail.maya.org)
+	by 8.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #5)
+	id 1QvRfk-0007jI-92
+	for linux-wireless@vger.kernel.org; Mon, 22 Aug 2011 12:24:00 +0200
+Message-Id: <201108221023.p7MANt13003500@mail.maya.org> (sfid-20110822_122408_764753_2EDE03C8)
+Date: Mon, 22 Aug 2011 12:23:58 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+To: linux-wireless@vger.kernel.org
+Cc: Jouni Malinen <j@w1.fi>
+Subject: Broken 4 way handshake in hostapd during load
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[NOTE:
- We already have a bug entry for tracking regressions from 3.0:
-
- http://bugzilla.kernel.org/show_bug.cgi?id=40982
-
- but there are no reports linked to it, mostly because Maciej is on vacation,
- but also because the frequency of reporting regressions has been low
- recently.  So, if you're seeing a regression from 3.0, please let us know.]
-
-This message contains a list of some post-2.6.39 regressions introduced before
-3.0, for which there are no fixes in the mainline known to the tracking team.
-If any of them have been fixed already, please let us know.
-
-If you know of any other unresolved post-2.6.39 regressions, please let us know
-either and we'll add them to the list.  Also, please let us know if any
-of the entries below are invalid.
-
-Each entry from the list will be sent additionally in an automatic reply to
-this message with CCs to the people involved in reporting and handling the
-issue.
+Hello,
 
 
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2011-08-14       63       22          19
+please read the following as it is really a problem for me (and may
+be others, too). I tried very hard to examine it (may be not hard
+enough :-)) to get a hopefully good description of what's going on.
 
 
-Unresolved regressions
-----------------------
+Always on rekeying PTK with load (throughput is about 4 MByte/s or more)
+on the AP device, I'm getting the following timeout in the hostapd
+(versions 0.6.10, 0.7.3. 0.8.x) log (it's working fine if the
+connection is idle during the rekeying or the throughput is lower than
+4 MByte/s):
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40282
-Subject		: IP forwarding regression since 3.0-rc6
-Submitter	: Stephan Seitz <stse+lkml@fsing.rootsland.net>
-Date		: 2011-07-25 12:51 (21 days old)
-Message-ID	: <20110725T141145.GA.2ae38.stse@fsing.rootsland.net>
-References	: http://marc.info/?l=linux-kernel&m=131159880004908&w=2
+Aug 22 09:24:19 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: rekeying PTK
+Aug 22 09:24:19 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: sending 1/4 msg of 4-Way Handshake
+Aug 22 09:24:19 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: received EAPOL-Key frame (2/4 Pairwise)
+Aug 22 09:24:19 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: sending 3/4 msg of 4-Way Handshake
+Aug 22 09:24:19 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: EAPOL-Key timeout
+Aug 22 09:24:19 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: sending 3/4 msg of 4-Way Handshake
+Aug 22 09:24:20 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: EAPOL-Key timeout
+Aug 22 09:24:20 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: sending 3/4 msg of 4-Way Handshake
+Aug 22 09:24:21 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: EAPOL-Key timeout
+Aug 22 09:24:21 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: sending 3/4 msg of 4-Way Handshake
+Aug 22 09:24:23 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: EAPOL-Key timeout
+Aug 22 09:24:23 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: PTKINITNEGOTIATING: Retry limit 4 reached
+Aug 22 09:24:23 pc hostapd: wlan1: STA 11:11:11:11:11:11 IEEE 802.11: deauthenticated due to local deauth request
 
+I can see this behavior with a rt2800pci and an ath9k based AP.
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40172
-Subject		: lockdep trace from post 3.0.
-Submitter	: Dave Jones <davej@redhat.com>
-Date		: 2011-07-24 1:32 (22 days old)
-Message-ID	: <20110724013257.GA6777@redhat.com>
-References	: http://marc.info/?l=linux-kernel&m=131147120206819&w=2
+I sniffed the "air" using 802.11g mode (I was alone on the channel I
+used) and saw, that the supplicant sent the 4/4 packet, but it seems
+not to be seen on the AP device (neither in mon.wlan nor in wlan). To
+confirm this, I added this debug entry to net/mac80211/rx.c and tested
+again:
 
+--- rx.c        2011-08-22 11:50:13.000000000 +0200
++++ rx.c.debug  2011-08-22 11:49:39.000000000 +0200
+@@ -1646,8 +1646,10 @@
+         */
+        if (ehdr->h_proto == rx->sdata->control_port_protocol &&
+            (compare_ether_addr(ehdr->h_dest, rx->sdata->vif.addr) == 0 ||
+-            compare_ether_addr(ehdr->h_dest, pae_group_addr) == 0))
++            compare_ether_addr(ehdr->h_dest, pae_group_addr) == 0)) {
++               printk(KERN_DEBUG "received EAPOL");
+                return true;
++               }
+ 
+        if (ieee80211_802_1x_port_control(rx) ||
+            ieee80211_drop_unencrypted(rx, fc)) {
+---
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40092
-Subject		: RCU stall in linux-3.0.0
-Submitter	: Philip Armstrong <phil@kantaka.co.uk>
-Date		: 2011-07-25 21:44 (21 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40072
-Subject		: suspend/resume problems w/ kernel 3.0 and a *docked* ThinkPad T400, unless iwlagn unloaded
-Submitter	: Toralf Förster <toralf.foerster@gmx.de>
-Date		: 2011-07-23 19:27 (23 days old)
-Message-ID	: <201107232127.34255.toralf.foerster@gmx.de>
-References	: http://marc.info/?l=linux-kernel&m=131144928023465&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39972
-Subject		: [regression] Radeon multi-screen
-Submitter	: Robert Piasek <dagger@gentoo.org>
-Date		: 2011-07-25 14:04 (21 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39922
-Subject		: WIFI becomes EXTREMELY slow ( ath9k ) making the connection unusable
-Submitter	: Lukasz Olszewski <lcpak@epoczta.pl>
-Date		: 2011-07-24 09:20 (22 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39912
-Subject		: WARNING: at drivers/tty/tty_ldisc.c:766 tty_ldisc_reinit+0x7d/0x90()
-Submitter	: Vegard Nossum <vegard.nossum@gmail.com>
-Date		: 2011-07-19 11:33 (27 days old)
-Message-ID	: <CAOMGZ=HS2EPkYD=5HfkSPpwPqHB5V3q0vaFmoZ8Hh+pMM9phrQ@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=131107522914558&w=2
+This debug entry confirmed what I saw on the wlan or the mon.wlan -
+device.
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39902
-Subject		: ath: Unable to reset channel (2412 MHz), reset status -5
-Submitter	: Justin P. Mattock <justinmattock@gmail.com>
-Date		: 2011-07-19 6:13 (27 days old)
-Message-ID	: <4E252076.1050309@gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=131105603428323&w=2
+Which behavior of wpa_supplicant and hostapd could I see in detail now?
+
+1. The 2/2 part of the 4/4 handshake has been done successfully
+
+2. hostapd sends the 3/4 packet
+
+3. wpa_supplicant sends the answer and is ready:
+WPA: Key negotiation completed with 68:7f:74:fb:39:ee [PTK=CCMP GTK=CCMP]
+
+4. hostapd doesn't see this frame -> hostapd times out
+
+5. hostapd sends the 3/4 packet again and again (until the retry
+limit is reached)
+
+6. wpa_supplicant doesn't react any more - it's already ready!
+
+7. Deauthentication and reauthentication
+
+8. The throughput of the wireless connection is broken until now - I
+have to restart the hostapd device and the client device to get my old
+throughput again.
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39832
-Subject		: HDA ATI HDMI: no sound with 3.0 - 2.6.39.3 works
-Submitter	: Andreas Steinmetz <ast@domdv.de>
-Date		: 2011-07-23 01:36 (23 days old)
+Is there any possibility to avoid this situation? Or did
+I get something wrong (what?)?
 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39732
-Subject		: JBD: Spotted dirty metadata buffer (dev = dm-2, blocknr = 2512725). There's a risk of filesystem corruption in case of system crash.
-Submitter	: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
-Date		: 2011-07-22 04:22 (24 days old)
 
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39412
-Subject		: Win Vista and Win2K8 guests' network breaks down
-Submitter	: Jay Ren <yongjie.ren@intel.com>
-Date		: 2011-07-15 15:31 (31 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39342
-Subject		: [3.0.0-rc6-git7] possible recursive locking at cache_alloc_refill
-Submitter	: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Date		: 2011-07-11 12:37 (35 days old)
-Message-ID	: <201107112137.FAD00545.SHtLOFOJOMFQFV@I-love.SAKURA.ne.jp>
-References	: http://marc.info/?l=linux-kernel&m=131038788902151&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39192
-Subject		: firmware_install fails with parallel make
-Submitter	: Ambroz Bizjak <ambrop7@gmail.com>
-Date		: 2011-07-12 09:35 (34 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39132
-Subject		: Starting with 3.0.0-rc6, masquerading seems to be broken.
-Submitter	: David Hill <hilld@binarystorm.net>
-Date		: 2011-07-10 19:45 (36 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38922
-Subject		: Lenovo T420 (Sandy Bridge) Crashes on SD Card gpt partition writing and io errors on insert
-Submitter	: Peter Vollmer <vollmerpeter@googlemail.com>
-Date		: 2011-07-07 17:33 (39 days old)
-First-Bad-Commit: http://git.kernel.org/linus/a3c7778f8153b9e4eceea6738973280b9e63c618
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38622
-Subject		: [radeon cayman regresion] artefacts on screen
-Submitter	: Marek Hobler, &apos;neutrinus&apos; <kernellist@neutrinus.com>
-Date		: 2011-07-01 09:35 (45 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38612
-Subject		: Boot time warnings in APIC
-Submitter	: Bill Huey <bill.huey@gmail.com>
-Date		: 2011-07-01 06:44 (45 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38582
-Subject		: T510 43495KG won't resume with 32bit installation
-Submitter	: Marc Koschewski <marc@osknowledge.org>
-Date		: 2011-06-30 22:39 (46 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37432
-Subject		: sdhci-pci fails on 3.0.0-rc1 on Dell E6510
-Submitter	: Oliver Hartkopp <socketcan@hartkopp.net>
-Date		: 2011-06-07 20:06 (69 days old)
-First-Bad-Commit: http://git.kernel.org/linus/da7822e5ad71ec9b745b412639f1e5e0ba795a20
-References	: http://article.gmane.org/gmane.linux.kernel.mmc/8442
-		  https://lkml.org/lkml/2011/6/23/660
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40062
-Subject		: USB related "unable to handle kernel paging request" in 3.0.0-rc7
-Submitter	: Tino Keitel <tino.keitel@tikei.de>
-Date		: 2011-07-22 19:27 (24 days old)
-Message-ID	: <20110722192722.GA9369@x61.home>
-References	: http://marc.info/?l=linux-kernel&m=131136334621623&w=2
-Patch		: https://lkml.org/lkml/2011/8/2/174
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39882
-Subject		: Kernel oops when turning bluetooth mouse on
-Submitter	: Lamarque V. Souza <lamarque@gmail.com>
-Date		: 2011-07-24 02:09 (22 days old)
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=66632
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37872
-Subject		: CPU lockup during boot
-Submitter	: Bruno Wolff III <bruno@wolff.to>
-Date		: 2011-06-19 15:00 (57 days old)
-Patch		: https://bugzilla.kernel.org/show_bug.cgi?id=37872#c16
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions introduced
-between 2.6.39 and 3.0, unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=36912
-
-Please let the tracking team know if there are any Bugzilla entries that
-should be added to the list in there.
-
-Thanks!
-
+Thank you very much for your time, work and support!
+Kind regards,
+Andreas
