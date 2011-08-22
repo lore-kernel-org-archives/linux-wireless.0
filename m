@@ -1,68 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:13740 "EHLO mga02.intel.com"
+Received: from mgw2.diku.dk ([130.225.96.92]:37756 "EHLO mgw2.diku.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750950Ab1HREtM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Aug 2011 00:49:12 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 18 Aug 2011 07:49:04 +0300
-Subject: RE: [PATCH 05/60] iwlagn: introduce struct iwl-shared - known by
- all layers
-Message-ID: <4825B8A2C4E264489E57869F0DCFB22344565DFFDE@hasmsx502.ger.corp.intel.com> (sfid-20110818_064915_581834_FEA54822)
-References: <20110815142144.GA15718@redhat.com>
-	 <1313416005.15170.35.camel@wwguy-huron> <20110815144359.GA15719@redhat.com>
-	 <1313417422.15170.39.camel@wwguy-huron> <20110815151231.GB15718@redhat.com>
-	 <1313422152.15170.43.camel@wwguy-huron> <20110816092610.GB6085@redhat.com>
-	 <1313503443.6823.9.camel@wwguy-ubuntu> <20110816151256.GA4932@redhat.com>
-	 <4825B8A2C4E264489E57869F0DCFB22344565DF754@hasmsx502.ger.corp.intel.com>
-	 <20110817151626.GA1552@redhat.com> <1313613400.6823.23.camel@wwguy-ubuntu>
-In-Reply-To: <1313613400.6823.23.camel@wwguy-ubuntu>
-Content-Type: text/plain; charset="utf-8"
+	id S1752598Ab1HVP20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Aug 2011 11:28:26 -0400
+Date: Mon, 22 Aug 2011 17:28:12 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Bing Zhao <bzhao@marvell.com>, kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/4] drivers/net/wireless/mwifiex/scan.c: test the
+ just-initialized value
+In-Reply-To: <4E527394.4080900@lwfinger.net>
+Message-ID: <Pine.LNX.4.64.1108221727470.10948@ask.diku.dk> (sfid-20110822_172851_522879_062BDD1A)
+References: <1314021636-11528-4-git-send-email-julia@diku.dk>
+ <4E527394.4080900@lwfinger.net>
 MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gT24gV2VkLCAyMDExLTA4LTE3IGF0IDA4OjE2IC0wNzAwLCBTdGFuaXNsYXcgR3J1c3pr
-YSB3cm90ZToNCj4gPiBPbiBUdWUsIEF1ZyAxNiwgMjAxMSBhdCAwNzoyMzo1MlBNICswMzAwLCBH
-cnVtYmFjaCwgRW1tYW51ZWwgd3JvdGU6DQo+ID4gPiA+IFNpbXBseSBieSBhZGRpbmcgdG8gaXds
-X3ByaXYgZGlmZmVyZW50IHN0cnVjdCBvcHMvZGF0YSBmb3IgZWFjaA0KPiB1cHBlcg0KPiA+ID4g
-PiBsYXllciB5b3Ugd2lsbCBoYXZlLiBZb3UgbmVlZCB0byBoYXZlIHRoZSBzYW1lIHRoaW5nIHRv
-IGNsdWUgd2l0aA0KPiA+ID4gPiBtYWM4MDIxMSwgd2hhdGV2ZXIgdXBwZXIgbGF5ZXIgd2lsbCBi
-ZS4gT3RoZXJ3aXNlLCBpZiBtYWM4MDIxMQ0KPiBjbHVlDQo+ID4gPiA+IGhhdmUgdG8gYmUgZGlm
-ZmVyZW50LCBuZXcgaGFyZHdhcmUgcHJvYmFibHkgbmVlZHMgZGlmZmVyZW50DQo+IGRyaXZlci4N
-Cj4gPiA+ID4NCj4gPiA+DQo+ID4gPiBJIHdvdWxkIGJlIHJlbHVjdGFudCB0byBoYXZlIGFsbCB0
-aGUgZGF0YSAvIG9wcyBuZWVkZWQgYnkgYWxsIHRoZQ0KPiBwb3NzaWJsZSBIVw0KPiA+ID4gYWxs
-IHRoZSB0aW1lIGluIHByaXYuIEkgZG9uJ3QgdGhpbmsgaXQgaXMgYSBnb29kIGlkZWEgdG8gaGF2
-ZQ0KPiB1bmFsbG9jYXRlZCBwb2ludGVycw0KPiA+ID4gZm9yIGEgYnVzIHRoYXQgZG9uJ3QgbmVl
-ZCB0aGUgcmluZ3MuLi4NCj4gPg0KPiA+IE5vdCBzdXJlIHdoeSB0aGVyZSB3b3VsZCBiZSBhbnkg
-dW5hbGxvY2F0ZWQgcG9pbnRlcnMuDQo+ID4NCj4gPiA+IEluc3RlYWQsIEkgdGhpbmsgdGhhdCBo
-YXZpbmcgYSBIVyBzcGVjaWZpYyBhcmVhIHRoYXQgaXMgYWxsb2NhdGVkDQo+IGZvciBlYWNoIEhX
-IGlzIG11Y2gNCj4gPiA+IG5pY2VyIGFuZCByZWxpYWJsZS4gVGhpcyBpcyB3aGF0IHRoaXMgcGF0
-Y2ggc2VyaWVzIGlzIGFsbCBhYm91dC4NCj4gPiA+IEZ1cnRoZXJtb3JlLCBJIGRvbid0IHdhbnQg
-dGhlIEhXIGxheWVyIHRvIGRlcmVmZXJlbmNlIGl3bF9wcml2LA0KPiA+DQo+ID4gV2UgZGlzY3Vz
-c2VkIHdpdGggV2V5IHVwcGVyIGFuZCBsb3dlciBsYXllciwgdGVybSBIVyBsYXllciBjb25mdXNl
-IG1lDQo+ID4gZXZlbiBtb3JlIGhlcmUuDQoNCkJ5IEhXIGxheWVycyBJIG1lYW50IGxvd2VyIGxh
-eWVycywgc2luY2UgdGhlc2UgYXJlIEhXIHNwZWNpZmljDQoNCj4gPg0KPiA+IFBhcnRpY3VsYXJs
-eSBpcyBpbnRlcmVzdGluZyBob3cgZG8geW91IHdhbnQgdG8gY2x1ZSBkcml2ZXIgd2l0aA0KPiBt
-YWM4MDIxMQ0KPiA+IGhhdmluZyBkaWZmZXJlbnQgaXdsX3ByaXYgc3RydWN0dXJlcy4gQWxzbywg
-d2hhdCBmb3IgYXJlIHNlcGFyYXRlDQo+ID4gaXdsX3RyYW5zX3BjaWUgYW5kIGl3bF9idXNfcGNp
-ZSBpbnN0ZWFkIG9mIG9uZSB0aGluZyB0aGF0IHRhbGsNCj4gPiB0byBwY2llIGJ1cy4NCj4gPg0K
-DQpZb3UgbWF5IGJlIHJpZ2h0IG9uIHRoYXQgb25lLiBUaGUgZnVuY3Rpb25hbCBkaXN0aW5jdGlv
-biBiZXR3ZWVuIGl3bF90cmFuc19wY2llIGFuZCBpd2xfYnVzX3BjaWUgaXNuJ3QgdmVyeSBvYnZp
-b3VzLiBXZSBtYXkgZXZlbiBjb25zaWRlciB0byBtZXJnZSB0aGVtIGludG8gb25lIFBDSWUgbGF5
-ZXIuIEJ1dCB0aGF0IHdvdWxkIGJlIG9uIHRoZSB0b3Agb2YgdGhlIGN1cnJlbnQgcGF0Y2hlcy4g
-SSB3b3VsZCBsaWtlIHRvIGxpdmUgb2YgYml0IHdpdGggdGhlIGN1cnJlbnQgZGVzaWduLCBzZWUg
-aG93IHdlIGNvbm5lY3QgdGhlIGRpZmZlcmVudCBsYXllcnMgZm9yIHRoZSBuZXcgQXJjaCAvIEhX
-IHdlIGFyZSBoYXZpbmcgaW4gdGhlIHBpcGUgdG8gdGhlIGN1cnJlbnQgY29kZSBhbmQgc2VlIHdo
-YXQgdG8gZG8gdGhlbi4NCg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkludGVsIElzcmFlbCAoNzQpIExpbWl0ZWQK
-ClRoaXMgZS1tYWlsIGFuZCBhbnkgYXR0YWNobWVudHMgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFs
-IG1hdGVyaWFsIGZvcgp0aGUgc29sZSB1c2Ugb2YgdGhlIGludGVuZGVkIHJlY2lwaWVudChzKS4g
-QW55IHJldmlldyBvciBkaXN0cmlidXRpb24KYnkgb3RoZXJzIGlzIHN0cmljdGx5IHByb2hpYml0
-ZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZApyZWNpcGllbnQsIHBsZWFzZSBjb250YWN0
-IHRoZSBzZW5kZXIgYW5kIGRlbGV0ZSBhbGwgY29waWVzLgo=
+On Mon, 22 Aug 2011, Larry Finger wrote:
 
+> On 08/22/2011 09:00 AM, Julia Lawall wrote:
+> > From: Julia Lawall<julia@diku.dk>
+> >
+> > Test the just-initialized value rather than some other one.
+> >
+> > The semantic match that finds this problem is as follows:
+> > (http://coccinelle.lip6.fr/)
+> >
+> > //<smpl>
+> > @r@
+> > identifier x,y,f!={PTR_ERR,ERR_PTR,ERR_CAST};
+> > statement S;
+> > @@
+> >
+> > x = f(...);
+> > (
+> > if (\(x == NULL\|IS_ERR(x)\)) S
+> > |
+> > *if (\(y == NULL\|IS_ERR(y)\))
+> >   { ... when != x
+> >     return ...; }
+> > )
+> > //</smpl>
+> >
+> > Signed-off-by: Julia Lawall<julia@diku.dk>
+> >
+> > ---
+> >   drivers/net/wireless/mwifiex/scan.c |    2 +-
+> >   1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/net/wireless/mwifiex/scan.c
+> > b/drivers/net/wireless/mwifiex/scan.c
+> > index b28241c..d3111c9 100644
+> > --- a/drivers/net/wireless/mwifiex/scan.c
+> > +++ b/drivers/net/wireless/mwifiex/scan.c
+> > @@ -1480,7 +1480,7 @@ mwifiex_update_curr_bss_params(struct mwifiex_private
+> > *priv,
+> >    	return -ENOMEM;
+> >    }
+> >    beacon_ie = kzalloc(ie_len, GFP_KERNEL);
+> > -	if (!bss_desc) {
+> > +	if (!beacon_ie) {
+> >     dev_err(priv->adapter->dev, " failed to alloc bss_desc\n");
+> >     return -ENOMEM;
+> >    }
+> 
+> The error message should also get the bss_desc => beacon_ie chang.
+
+Thanks.  Pierre Louis Aublin made the same observation and I resumitted 
+the patch.
+
+julia
