@@ -1,132 +1,264 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59422 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752485Ab1HHHVH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 03:21:07 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: zajec5@gmail.com, Larry.Finger@lwfinger.net,
-	b43-dev@lists.infradead.org
-Subject: [RFC] b43: reload phy and bss settings after core restarts
-Date: Mon,  8 Aug 2011 09:20:51 +0200
-Message-Id: <1312788051-76406-1-git-send-email-nbd@openwrt.org> (sfid-20110808_092113_415573_D8A295CD)
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:43968 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753860Ab1HVVuq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Aug 2011 17:50:46 -0400
+Received: by mail-gy0-f174.google.com with SMTP id 6so3903756gya.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Aug 2011 14:50:46 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Subject: [PATCH 1/5] rtlwifi: Install updated rate-mapping routine
+Date: Mon, 22 Aug 2011 16:50:14 -0500
+Message-Id: <1314049818-21839-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20110822_235057_700730_E5B311B6)
+In-Reply-To: <1314049818-21839-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1314049818-21839-1-git-send-email-Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-b43_op_config and b43_op_bss_info_changed apply many settings by directly
-writing to hardware registers. These settings are lost as soon as the core
-is restarted and the initvals are reloaded. This was discovered because
-restarting hostapd led to the beacon interval getting set to ~33s (see
-https://dev.openwrt.org/ticket/8033 for more information).
+In preparation for fixing the rate-mapping situation, place a driver-agnostic
+version in rtlwifi. This one contains the updated rate incormation.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>
 ---
- drivers/net/wireless/b43/main.c |   42 ++++++++++++++++++++++++++++++++++----
- 1 files changed, 37 insertions(+), 5 deletions(-)
+ drivers/net/wireless/rtlwifi/base.c |  161 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/base.h |    2 +
+ drivers/net/wireless/rtlwifi/wifi.h |   35 ++++++++
+ 3 files changed, 198 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 85d6a1f..3c00c44 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -320,6 +320,10 @@ static void b43_wireless_core_exit(struct b43_wldev *dev);
- static int b43_wireless_core_init(struct b43_wldev *dev);
- static struct b43_wldev * b43_wireless_core_stop(struct b43_wldev *dev);
- static int b43_wireless_core_start(struct b43_wldev *dev);
-+static void b43_op_bss_info_changed(struct ieee80211_hw *hw,
-+				    struct ieee80211_vif *vif,
-+				    struct ieee80211_bss_conf *conf,
-+				    u32 changed);
+diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
+index 0b598db..098fc55 100644
+--- a/drivers/net/wireless/rtlwifi/base.c
++++ b/drivers/net/wireless/rtlwifi/base.c
+@@ -664,6 +664,167 @@ static u8 _rtl_get_highest_n_rate(struct ieee80211_hw *hw)
+ 	return hw_rate;
+ }
  
- static int b43_ratelimit(struct b43_wl *wl)
- {
-@@ -3778,14 +3782,24 @@ static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
- 	struct ieee80211_conf *conf = &hw->conf;
- 	int antenna;
- 	int err = 0;
-+	bool reload_bss = false;
- 
- 	mutex_lock(&wl->mutex);
- 
-+	dev = wl->current_dev;
++/* mac80211's rate_idx is like this:
++ *
++ * 2.4G band:rx_status->band == IEEE80211_BAND_2GHZ
++ *
++ * B/G rate:
++ * (rx_status->flag & RX_FLAG_HT) = 0,
++ * DESC92_RATE1M-->DESC92_RATE54M ==> idx is 0-->11,
++ *
++ * N rate:
++ * (rx_status->flag & RX_FLAG_HT) = 1,
++ * DESC92_RATEMCS0-->DESC92_RATEMCS15 ==> idx is 0-->15
++ *
++ * 5G band:rx_status->band == IEEE80211_BAND_5GHZ
++ * A rate:
++ * (rx_status->flag & RX_FLAG_HT) = 0,
++ * DESC92_RATE6M-->DESC92_RATE54M ==> idx is 0-->7,
++ *
++ * N rate:
++ * (rx_status->flag & RX_FLAG_HT) = 1,
++ * DESC92_RATEMCS0-->DESC92_RATEMCS15 ==> idx is 0-->15
++ */
++int rtlwifi_rate_mapping(struct ieee80211_hw *hw,
++			 bool isht, u8 desc_rate, bool first_ampdu)
++{
++	int rate_idx;
 +
- 	/* Switch the band (if necessary). This might change the active core. */
- 	err = b43_switch_band(wl, conf->channel);
- 	if (err)
- 		goto out_unlock_mutex;
--	dev = wl->current_dev;
++	if (false == isht) {
++		if (IEEE80211_BAND_2GHZ == hw->conf.channel->band) {
++			switch (desc_rate) {
++			case DESC92_RATE1M:
++				rate_idx = 0;
++				break;
++			case DESC92_RATE2M:
++				rate_idx = 1;
++				break;
++			case DESC92_RATE5_5M:
++				rate_idx = 2;
++				break;
++			case DESC92_RATE11M:
++				rate_idx = 3;
++				break;
++			case DESC92_RATE6M:
++				rate_idx = 4;
++				break;
++			case DESC92_RATE9M:
++				rate_idx = 5;
++				break;
++			case DESC92_RATE12M:
++				rate_idx = 6;
++				break;
++			case DESC92_RATE18M:
++				rate_idx = 7;
++				break;
++			case DESC92_RATE24M:
++				rate_idx = 8;
++				break;
++			case DESC92_RATE36M:
++				rate_idx = 9;
++				break;
++			case DESC92_RATE48M:
++				rate_idx = 10;
++				break;
++			case DESC92_RATE54M:
++				rate_idx = 11;
++				break;
++			default:
++				rate_idx = 0;
++				break;
++			}
++		} else {
++			switch (desc_rate) {
++			case DESC92_RATE6M:
++				rate_idx = 0;
++				break;
++			case DESC92_RATE9M:
++				rate_idx = 1;
++				break;
++			case DESC92_RATE12M:
++				rate_idx = 2;
++				break;
++			case DESC92_RATE18M:
++				rate_idx = 3;
++				break;
++			case DESC92_RATE24M:
++				rate_idx = 4;
++				break;
++			case DESC92_RATE36M:
++				rate_idx = 5;
++				break;
++			case DESC92_RATE48M:
++				rate_idx = 6;
++				break;
++			case DESC92_RATE54M:
++				rate_idx = 7;
++				break;
++			default:
++				rate_idx = 0;
++				break;
++			}
++		}
 +
-+	/* Need to reload all settings if the core changed */
-+	if (dev != wl->current_dev) {
-+		dev = wl->current_dev;
-+		changed = ~0;
-+		reload_bss = true;
++	} else {
++
++		switch (desc_rate) {
++		case DESC92_RATEMCS0:
++			rate_idx = 0;
++			break;
++		case DESC92_RATEMCS1:
++			rate_idx = 1;
++			break;
++		case DESC92_RATEMCS2:
++			rate_idx = 2;
++			break;
++		case DESC92_RATEMCS3:
++			rate_idx = 3;
++			break;
++		case DESC92_RATEMCS4:
++			rate_idx = 4;
++			break;
++		case DESC92_RATEMCS5:
++			rate_idx = 5;
++			break;
++		case DESC92_RATEMCS6:
++			rate_idx = 6;
++			break;
++		case DESC92_RATEMCS7:
++			rate_idx = 7;
++			break;
++		case DESC92_RATEMCS8:
++			rate_idx = 8;
++			break;
++		case DESC92_RATEMCS9:
++			rate_idx = 9;
++			break;
++		case DESC92_RATEMCS10:
++			rate_idx = 10;
++			break;
++		case DESC92_RATEMCS11:
++			rate_idx = 11;
++			break;
++		case DESC92_RATEMCS12:
++			rate_idx = 12;
++			break;
++		case DESC92_RATEMCS13:
++			rate_idx = 13;
++			break;
++		case DESC92_RATEMCS14:
++			rate_idx = 14;
++			break;
++		case DESC92_RATEMCS15:
++			rate_idx = 15;
++			break;
++		default:
++			rate_idx = 0;
++			break;
++		}
 +	}
++	return rate_idx;
++}
++EXPORT_SYMBOL(rtlwifi_rate_mapping);
 +
- 	phy = &dev->phy;
+ void rtl_get_tcb_desc(struct ieee80211_hw *hw,
+ 		      struct ieee80211_tx_info *info,
+ 		      struct ieee80211_sta *sta,
+diff --git a/drivers/net/wireless/rtlwifi/base.h b/drivers/net/wireless/rtlwifi/base.h
+index a91f3ee..4ae9059 100644
+--- a/drivers/net/wireless/rtlwifi/base.h
++++ b/drivers/net/wireless/rtlwifi/base.h
+@@ -140,4 +140,6 @@ u8 *rtl_find_ie(u8 *data, unsigned int len, u8 ie);
+ void rtl_recognize_peer(struct ieee80211_hw *hw, u8 *data, unsigned int len);
+ u8 rtl_tid_to_ac(struct ieee80211_hw *hw, u8 tid);
+ extern struct attribute_group rtl_attribute_group;
++int rtlwifi_rate_mapping(struct ieee80211_hw *hw,
++			 bool isht, u8 desc_rate, bool first_ampdu);
+ #endif
+diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+index d3c3ffd..8a90919 100644
+--- a/drivers/net/wireless/rtlwifi/wifi.h
++++ b/drivers/net/wireless/rtlwifi/wifi.h
+@@ -386,6 +386,41 @@ enum rtl_hal_state {
+ 	_HAL_STATE_START = 1,
+ };
  
- 	if (conf_is_ht(conf))
-@@ -3846,6 +3860,9 @@ out_mac_enable:
- out_unlock_mutex:
- 	mutex_unlock(&wl->mutex);
- 
-+	if (wl->vif && reload_bss)
-+		b43_op_bss_info_changed(hw, wl->vif, &wl->vif->bss_conf, ~0);
++enum rtl_desc92_rate {
++	DESC92_RATE1M = 0x00,
++	DESC92_RATE2M = 0x01,
++	DESC92_RATE5_5M = 0x02,
++	DESC92_RATE11M = 0x03,
 +
- 	return err;
- }
- 
-@@ -3934,7 +3951,8 @@ static void b43_op_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_BEACON_INT &&
- 	    (b43_is_mode(wl, NL80211_IFTYPE_AP) ||
- 	     b43_is_mode(wl, NL80211_IFTYPE_MESH_POINT) ||
--	     b43_is_mode(wl, NL80211_IFTYPE_ADHOC)))
-+	     b43_is_mode(wl, NL80211_IFTYPE_ADHOC)) &&
-+	    conf->beacon_int)
- 		b43_set_beacon_int(dev, conf->beacon_int);
- 
- 	if (changed & BSS_CHANGED_BASIC_RATES)
-@@ -4702,6 +4720,9 @@ static int b43_op_add_interface(struct ieee80211_hw *hw,
-  out_mutex_unlock:
- 	mutex_unlock(&wl->mutex);
- 
-+	if (err == 0)
-+		b43_op_bss_info_changed(hw, vif, &vif->bss_conf, ~0);
++	DESC92_RATE6M = 0x04,
++	DESC92_RATE9M = 0x05,
++	DESC92_RATE12M = 0x06,
++	DESC92_RATE18M = 0x07,
++	DESC92_RATE24M = 0x08,
++	DESC92_RATE36M = 0x09,
++	DESC92_RATE48M = 0x0a,
++	DESC92_RATE54M = 0x0b,
 +
- 	return err;
- }
- 
-@@ -4772,6 +4793,9 @@ static int b43_op_start(struct ieee80211_hw *hw)
-  out_mutex_unlock:
- 	mutex_unlock(&wl->mutex);
- 
-+	/* reload configuration */
-+	b43_op_config(hw, ~0);
++	DESC92_RATEMCS0 = 0x0c,
++	DESC92_RATEMCS1 = 0x0d,
++	DESC92_RATEMCS2 = 0x0e,
++	DESC92_RATEMCS3 = 0x0f,
++	DESC92_RATEMCS4 = 0x10,
++	DESC92_RATEMCS5 = 0x11,
++	DESC92_RATEMCS6 = 0x12,
++	DESC92_RATEMCS7 = 0x13,
++	DESC92_RATEMCS8 = 0x14,
++	DESC92_RATEMCS9 = 0x15,
++	DESC92_RATEMCS10 = 0x16,
++	DESC92_RATEMCS11 = 0x17,
++	DESC92_RATEMCS12 = 0x18,
++	DESC92_RATEMCS13 = 0x19,
++	DESC92_RATEMCS14 = 0x1a,
++	DESC92_RATEMCS15 = 0x1b,
++	DESC92_RATEMCS15_SG = 0x1c,
++	DESC92_RATEMCS32 = 0x20,
++};
 +
- 	return err;
- }
- 
-@@ -4928,10 +4952,18 @@ out:
- 	if (err)
- 		wl->current_dev = NULL; /* Failed to init the dev. */
- 	mutex_unlock(&wl->mutex);
--	if (err)
-+
-+	if (err) {
- 		b43err(wl, "Controller restart FAILED\n");
--	else
--		b43info(wl, "Controller restarted\n");
-+		return;
-+	}
-+
-+	/* reload configuration */
-+	b43_op_config(wl->hw, ~0);
-+	if (wl->vif)
-+		b43_op_bss_info_changed(wl->hw, wl->vif, &wl->vif->bss_conf, ~0);
-+
-+	b43info(wl, "Controller restarted\n");
- }
- 
- static int b43_setup_bands(struct b43_wldev *dev,
+ enum rtl_var_map {
+ 	/*reg map */
+ 	SYS_ISO_CTRL = 0,
 -- 
-1.7.3.2
+1.7.3.4
 
