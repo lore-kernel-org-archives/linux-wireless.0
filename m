@@ -1,44 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52476 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751080Ab1HHIhY (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:26288 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751742Ab1HVMgr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 04:37:24 -0400
-Subject: Re: Making sense of cfg80211_scan_request.n_ssids
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Daniel Drake <dsd@laptop.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4E3875BE.9070504@gnu.org> (sfid-20110803_001012_532868_0AAF0D7E)
-References: <CAGq3pz40rsMudofq6Njr0_h1G=EqEigGL-NkODj8Rb6h2bMGMQ@mail.gmail.com>
-	 <4E3875BE.9070504@gnu.org> (sfid-20110803_001012_532868_0AAF0D7E)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 08 Aug 2011 10:37:19 +0200
-Message-ID: <1312792639.4372.7.camel@jlt3.sipsolutions.net> (sfid-20110808_103727_853756_44BFE4CB)
-Mime-Version: 1.0
+	Mon, 22 Aug 2011 08:36:47 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k: Send legacy rated frames as unaggregated
+Date: Mon, 22 Aug 2011 18:07:12 +0530
+Message-ID: <1314016632-1742-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110822_143651_101159_C0E307D6)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-02 at 18:10 -0400, Pavel Roskin wrote:
+Currently the aggregation is formed till the aggregation limit
+is reached and the rate lookup is done for the first frame alone.
+But there can be a legacy rated frames in tid queue. This patch
+limits the subframe addition based on last MRR's rate and sends
+the legacy rated frames as unaggregated one.
 
-> > Both of those commands result in libertas being called with
-> > cfg80211_scan_request with n_ssids=1 and the "test" SSID present in
-> > cfg80211_scan_request.ssids[0], as expected.
-> >
-> >
-> >    iwlist eth0 scan
-> >    iw dev eth0 scan
-> >
-> > Both of those commands result in libertas being called with
-> > cfg80211_scan_request with n_ssids=1 and a zero-length SSID present in
-> > cfg80211_scan_request.ssids[0].
-> > Is this a bug? I would expect it to be passed n_ssids=0 in this case.
-> 
-> I believe n_ssids is the number of probe requests to be sent per 
-> channel.  It scanning for all SSIDs, one probe request is sent.  It is 
-> only for passive scanning that we don't need any probes.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |   23 ++++++++++++++++++++++-
+ 1 files changed, 22 insertions(+), 1 deletions(-)
 
-Yeah. "iw dev eth0 scan passive" will cause n_ssids to be 0.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 2062672..41d9184 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -571,6 +571,26 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		ath_reset(sc, false);
+ }
+ 
++static bool ath_lookup_lecacy(struct ath_buf *bf)
++{
++	struct sk_buff *skb;
++	struct ieee80211_tx_info *tx_info;
++	struct ieee80211_tx_rate *rates;
++
++	skb = bf->bf_mpdu;
++	tx_info = IEEE80211_SKB_CB(skb);
++	rates = tx_info->control.rates;
++
++	/*
++	 * Checking the last MRR's flag is sufficient to
++	 * determine legacy or not
++	 */
++	if (!(rates[3].flags & IEEE80211_TX_RC_MCS))
++		return true;
++
++	return false;
++}
++
+ static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
+ 			   struct ath_atx_tid *tid)
+ {
+@@ -750,7 +770,8 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 		al_delta = ATH_AGGR_DELIM_SZ + fi->framelen;
+ 
+ 		if (nframes &&
+-		    (aggr_limit < (al + bpad + al_delta + prev_al))) {
++		    ((aggr_limit < (al + bpad + al_delta + prev_al)) ||
++		     ath_lookup_lecacy(bf))) {
+ 			status = ATH_AGGR_LIMITED;
+ 			break;
+ 		}
+-- 
+1.7.6
 
