@@ -1,316 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2705 "EHLO mms2.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:16725 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753297Ab1HONei (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 09:34:38 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 01/15] staging: brcm80211: got rid of several void
- pointers for softmac PCI
-Date: Mon, 15 Aug 2011 15:34:13 +0200
-Message-ID: <1313415267-5264-2-git-send-email-arend@broadcom.com> (sfid-20110815_153445_979548_69A0399C)
-In-Reply-To: <1313415267-5264-1-git-send-email-arend@broadcom.com>
-References: <1313415267-5264-1-git-send-email-arend@broadcom.com>
+	id S1755363Ab1HVI1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Aug 2011 04:27:16 -0400
+Date: Mon, 22 Aug 2011 10:25:09 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Marc Kleine-Budde <mkl@pengutronix.de>
+Cc: linux-wireless@vger.kernel.org, Netdev@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: BUG: rt2x00usb: Vendor Request 0x07 failed
+Message-ID: <20110822082507.GB2422@redhat.com> (sfid-20110822_102733_447166_AC774B9C)
+References: <4E4F7364.2060609@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E4F7364.2060609@pengutronix.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Hi
 
-Code cleanup. Replace void * related to PCI functionality by less generic
-pointer types.
+On Sat, Aug 20, 2011 at 10:42:12AM +0200, Marc Kleine-Budde wrote:
+> I'm a running a sheeva plug (ARM/kirkwood) with a rt2800 USB stick in AP mode.
+> Bus 001 Device 002: ID 1737:0071 Linksys WUSB600N v1 Dual-Band Wireless-N Network Adapter [Ralink RT2870]
 
-Reported-by: Julian Calaby <julian.calaby@gmail.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/aiutils.c |   10 +++--
- drivers/staging/brcm80211/brcmsmac/aiutils.h |    2 +-
- drivers/staging/brcm80211/brcmsmac/dma.c     |    2 +-
- drivers/staging/brcm80211/brcmsmac/nicpci.c  |   61 +++++++++++---------------
- drivers/staging/brcm80211/brcmsmac/nicpci.h  |   30 ++++++++-----
- 5 files changed, 53 insertions(+), 52 deletions(-)
+First of all, the best way to get rt2x00 support is write to
+(moderated for non-subscribers) list users@rt2x00.serialmonkey.com 
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
-index 3d392a3..c9c41a5 100644
---- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
-@@ -1850,7 +1850,7 @@ int ai_devpath(struct si_pub *sih, char *path, int size)
- 		return -1;
- 
- 	slen = snprintf(path, (size_t) size, "pci/%u/%u/",
--		((struct pci_dev *)((SI_INFO(sih))->pbus))->bus->number,
-+		(((SI_INFO(sih))->pbus))->bus->number,
- 		PCI_SLOT(((struct pci_dev *)((SI_INFO(sih))->pbus))->devfn));
- 
- 	if (slen < 0 || slen >= size) {
-@@ -2025,8 +2025,7 @@ void ai_pci_setup(struct si_pub *sih, uint coremask)
- int ai_pci_fixcfg(struct si_pub *sih)
- {
- 	uint origidx;
--	struct sbpciregs *regs = NULL;
--
-+	void *regs = NULL;
- 	struct si_info *sii = SI_INFO(sih);
- 
- 	/* Fixup PI in SROM shadow area to enable the correct PCI core access */
-@@ -2035,7 +2034,10 @@ int ai_pci_fixcfg(struct si_pub *sih)
- 
- 	/* check 'pi' is correct and fix it if not */
- 	regs = ai_setcore(&sii->pub, sii->pub.buscoretype, 0);
--	pcicore_fixcfg(sii->pch, regs);
-+	if (sii->pub.buscoretype == PCIE_CORE_ID)
-+		pcicore_fixcfg_pcie(sii->pch, (struct sbpcieregs *)regs);
-+	else if (sii->pub.buscoretype == PCI_CORE_ID)
-+		pcicore_fixcfg_pci(sii->pch, (struct sbpciregs *)regs);
- 
- 	/* restore the original index */
- 	ai_setcoreidx(&sii->pub, origidx);
-diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
-index 84c6901..7ea42af 100644
---- a/drivers/staging/brcm80211/brcmsmac/aiutils.h
-+++ b/drivers/staging/brcm80211/brcmsmac/aiutils.h
-@@ -459,7 +459,7 @@ struct gpioh_item {
- /* misc si info needed by some of the routines */
- struct si_info {
- 	struct si_pub pub;	/* back plane public state (must be first) */
--	void *pbus;		/* handle to bus (pci/sdio/..) */
-+	struct pci_dev *pbus;	/* handle to pci bus */
- 	uint dev_coreid;	/* the core provides driver functions */
- 	void *intr_arg;		/* interrupt callback function arg */
- 	u32 (*intrsoff_fn) (void *intr_arg); /* turns chip interrupts off */
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
-index 64d7639..10a25d2 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.c
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.c
-@@ -252,7 +252,7 @@ struct dma_info {
- 	uint *msg_level;	/* message level pointer */
- 	char name[MAXNAMEL];	/* callers name for diag msgs */
- 
--	void *pbus;		/* bus handle */
-+	struct pci_dev *pbus;		/* bus handle */
- 
- 	bool dma64;	/* this dma engine is operating in 64-bit mode */
- 	bool addrext;	/* this dma engine supports DmaExtendedAddrChanges */
-diff --git a/drivers/staging/brcm80211/brcmsmac/nicpci.c b/drivers/staging/brcm80211/brcmsmac/nicpci.c
-index 8249ea9..2d46e70 100644
---- a/drivers/staging/brcm80211/brcmsmac/nicpci.c
-+++ b/drivers/staging/brcm80211/brcmsmac/nicpci.c
-@@ -245,7 +245,8 @@ static void pcie_war_pci_setup(struct pcicore_info *pi);
- /* Initialize the PCI core.
-  * It's caller's responsibility to make sure that this is done only once
-  */
--void *pcicore_init(struct si_pub *sih, void *pdev, void *regs)
-+struct pcicore_info *pcicore_init(struct si_pub *sih, struct pci_dev *pdev,
-+				  void *regs)
- {
- 	struct pcicore_info *pi;
- 
-@@ -271,7 +272,7 @@ void *pcicore_init(struct si_pub *sih, void *pdev, void *regs)
- 	return pi;
- }
- 
--void pcicore_deinit(void *pch)
-+void pcicore_deinit(struct pcicore_info *pch)
- {
- 	kfree(pch);
- }
-@@ -279,7 +280,7 @@ void pcicore_deinit(void *pch)
- /* return cap_offset if requested capability exists in the PCI config space */
- /* Note that it's caller's responsibility to make sure it's a pci bus */
- u8
--pcicore_find_pci_capability(void *dev, u8 req_cap_id,
-+pcicore_find_pci_capability(struct pci_dev *dev, u8 req_cap_id,
- 			    unsigned char *buf, u32 *buflen)
- {
- 	u8 cap_id;
-@@ -484,9 +485,8 @@ pcie_mdiowrite(struct pcicore_info *pi, uint physmedia, uint regaddr, uint val)
- }
- 
- /* ***** Support functions ***** */
--static u8 pcie_clkreq(void *pch, u32 mask, u32 val)
-+static u8 pcie_clkreq(struct pcicore_info *pi, u32 mask, u32 val)
- {
--	struct pcicore_info *pi = pch;
- 	u32 reg_val;
- 	u8 offset;
- 
-@@ -536,7 +536,7 @@ static void pcie_clkreq_upd(struct pcicore_info *pi, uint state)
- 	switch (state) {
- 	case SI_DOATTACH:
- 		if (PCIE_ASPM(sih))
--			pcie_clkreq((void *)pi, 1, 0);
-+			pcie_clkreq(pi, 1, 0);
- 		break;
- 	case SI_PCIDOWN:
- 		if (sih->buscorerev == 6) {	/* turn on serdes PLL down */
-@@ -547,7 +547,7 @@ static void pcie_clkreq_upd(struct pcicore_info *pi, uint state)
- 				   offsetof(struct chipcregs, chipcontrol_data),
- 				   ~0x40, 0);
- 		} else if (pi->pcie_pr42767) {
--			pcie_clkreq((void *)pi, 1, 1);
-+			pcie_clkreq(pi, 1, 1);
- 		}
- 		break;
- 	case SI_PCIUP:
-@@ -559,7 +559,7 @@ static void pcie_clkreq_upd(struct pcicore_info *pi, uint state)
- 				   offsetof(struct chipcregs, chipcontrol_data),
- 				   ~0x40, 0x40);
- 		} else if (PCIE_ASPM(sih)) {	/* disable clkreq */
--			pcie_clkreq((void *)pi, 1, 0);
-+			pcie_clkreq(pi, 1, 0);
- 		}
- 		break;
- 	}
-@@ -729,9 +729,8 @@ static void pcie_war_pci_setup(struct pcicore_info *pi)
- }
- 
- /* ***** Functions called during driver state changes ***** */
--void pcicore_attach(void *pch, char *pvars, int state)
-+void pcicore_attach(struct pcicore_info *pi, char *pvars, int state)
- {
--	struct pcicore_info *pi = pch;
- 	struct si_pub *sih = pi->sih;
- 
- 	/* Determine if this board needs override */
-@@ -753,20 +752,16 @@ void pcicore_attach(void *pch, char *pvars, int state)
- 
- }
- 
--void pcicore_hwup(void *pch)
-+void pcicore_hwup(struct pcicore_info *pi)
- {
--	struct pcicore_info *pi = pch;
--
- 	if (!pi || !PCIE_PUB(pi->sih))
- 		return;
- 
- 	pcie_war_pci_setup(pi);
- }
- 
--void pcicore_up(void *pch, int state)
-+void pcicore_up(struct pcicore_info *pi, int state)
- {
--	struct pcicore_info *pi = pch;
--
- 	if (!pi || !PCIE_PUB(pi->sih))
- 		return;
- 
-@@ -779,9 +774,8 @@ void pcicore_up(void *pch, int state)
- /* When the device is going to enter D3 state
-  * (or the system is going to enter S3/S4 states)
-  */
--void pcicore_sleep(void *pch)
-+void pcicore_sleep(struct pcicore_info *pi)
- {
--	struct pcicore_info *pi = pch;
- 	u32 w;
- 
- 	if (!pi || !PCIE_ASPM(pi->sih))
-@@ -794,10 +788,8 @@ void pcicore_sleep(void *pch)
- 	pi->pcie_pr42767 = false;
- }
- 
--void pcicore_down(void *pch, int state)
-+void pcicore_down(struct pcicore_info *pi, int state)
- {
--	struct pcicore_info *pi = pch;
--
- 	if (!pi || !PCIE_PUB(pi->sih))
- 		return;
- 
-@@ -808,21 +800,12 @@ void pcicore_down(void *pch, int state)
- }
- 
- /* precondition: current core is sii->buscoretype */
--void pcicore_fixcfg(void *pch, void *regs)
-+static void pcicore_fixcfg(struct pcicore_info *pi, u16 *reg16)
- {
--	struct pcicore_info *pi = pch;
- 	struct si_info *sii = SI_INFO(pi->sih);
--	struct sbpciregs *pciregs = regs;
--	struct sbpcieregs *pcieregs = regs;
--	u16 val16, *reg16 = NULL;
-+	u16 val16;
- 	uint pciidx;
- 
--	/* check 'pi' is correct and fix it if not */
--	if (sii->pub.buscoretype == PCIE_CORE_ID)
--		reg16 = &pcieregs->sprom[SRSH_PI_OFFSET];
--	else if (sii->pub.buscoretype == PCI_CORE_ID)
--		reg16 = &pciregs->sprom[SRSH_PI_OFFSET];
--
- 	pciidx = ai_coreidx(&sii->pub);
- 	val16 = R_REG(reg16);
- 	if (((val16 & SRSH_PI_MASK) >> SRSH_PI_SHIFT) != (u16)pciidx) {
-@@ -832,11 +815,19 @@ void pcicore_fixcfg(void *pch, void *regs)
- 	}
- }
- 
-+void pcicore_fixcfg_pci(struct pcicore_info *pi, struct sbpciregs *pciregs)
-+{
-+	pcicore_fixcfg(pi, &pciregs->sprom[SRSH_PI_OFFSET]);
-+}
-+
-+void pcicore_fixcfg_pcie(struct pcicore_info *pi, struct sbpcieregs *pcieregs)
-+{
-+	pcicore_fixcfg(pi, &pcieregs->sprom[SRSH_PI_OFFSET]);
-+}
-+
- /* precondition: current core is pci core */
--void pcicore_pci_setup(void *pch, void *regs)
-+void pcicore_pci_setup(struct pcicore_info *pi, struct sbpciregs *pciregs)
- {
--	struct pcicore_info *pi = pch;
--	struct sbpciregs *pciregs = regs;
- 	u32 w;
- 
- 	OR_REG(&pciregs->sbtopci2, SBTOPCI_PREF | SBTOPCI_BURST);
-diff --git a/drivers/staging/brcm80211/brcmsmac/nicpci.h b/drivers/staging/brcm80211/brcmsmac/nicpci.h
-index f71f842..3082db0 100644
---- a/drivers/staging/brcm80211/brcmsmac/nicpci.h
-+++ b/drivers/staging/brcm80211/brcmsmac/nicpci.h
-@@ -70,16 +70,24 @@
- #define SRSH_PI_MASK	0xf000	/* bit 15:12 */
- #define SRSH_PI_SHIFT	12	/* bit 15:12 */
- 
--extern void *pcicore_init(struct si_pub *sih, void *pdev, void *regs);
--extern void pcicore_deinit(void *pch);
--extern void pcicore_attach(void *pch, char *pvars, int state);
--extern void pcicore_hwup(void *pch);
--extern void pcicore_up(void *pch, int state);
--extern void pcicore_sleep(void *pch);
--extern void pcicore_down(void *pch, int state);
--extern u8 pcicore_find_pci_capability(void *dev, u8 req_cap_id,
--					 unsigned char *buf, u32 *buflen);
--extern void pcicore_fixcfg(void *pch, void *regs);
--extern void pcicore_pci_setup(void *pch, void *regs);
-+struct sbpciregs;
-+struct sbpcieregs;
-+
-+extern struct pcicore_info *pcicore_init(struct si_pub *sih,
-+					 struct pci_dev *pdev, void *regs);
-+extern void pcicore_deinit(struct pcicore_info *pch);
-+extern void pcicore_attach(struct pcicore_info *pch, char *pvars, int state);
-+extern void pcicore_hwup(struct pcicore_info *pch);
-+extern void pcicore_up(struct pcicore_info *pch, int state);
-+extern void pcicore_sleep(struct pcicore_info *pch);
-+extern void pcicore_down(struct pcicore_info *pch, int state);
-+extern u8 pcicore_find_pci_capability(struct pci_dev *dev, u8 req_cap_id,
-+				      unsigned char *buf, u32 *buflen);
-+extern void pcicore_fixcfg_pci(struct pcicore_info *pch,
-+			       struct sbpciregs *pciregs);
-+extern void pcicore_fixcfg_pcie(struct pcicore_info *pch,
-+				struct sbpcieregs *pciregs);
-+extern void pcicore_pci_setup(struct pcicore_info *pch,
-+			      struct sbpciregs *pciregs);
- 
- #endif /* _BRCM_NICPCI_H_ */
--- 
-1.7.4.1
+> kernel is v3.0.3 +
+> http://www.spinics.net/lists/linux-wireless/msg74377.html
+> (see http://git.pengutronix.de/?p=mkl/linux-2.6.git;a=shortlog;h=refs/heads/wireless/rt2x00/v3.0.3)
 
+We have now wireless-testing applied version of that fix (3 -patches):
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=674db1344443204b6ce3293f2df8fd1b7665deea
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=df71c9cfceea801e7e26e2c74241758ef9c042e5
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=4b1bfb7d2d125af6653d6c2305356b2677f79dc6
 
+> With the patch the oops is gone, but after a few hours it fails with:
+> 
+> [30971.764840] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x0438 with error -71.
+
+Looks there is something wrong at USB bus. Perhaps this could be debugged
+using CONFIG_USB_DEBUG and friends. Eventually look at vendor driver to
+check if it does not do some quirks regarding usb bus could help.
+
+> [32048.962920] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [32048.970801] hostapd         D c02d85e0     0  1499      1 0x00000000
+> [32048.977234] [<c02d85e0>] (schedule+0x478/0x4e8) from [<c02d9370>] (__mutex_lock_slowpath+0x64/0x88)
+> [32048.986352] [<c02d9370>] (__mutex_lock_slowpath+0x64/0x88) from [<bf378f5c>] (rt2x00usb_vendor_request_buff+0x24/0xb8 [rt2x00usb])
+> [32048.998185] [<bf378f5c>] (rt2x00usb_vendor_request_buff+0x24/0xb8 [rt2x00usb]) from [<bf38d034>] (rt2x00usb_register_read+0x34/0x44 [rt2800usb])
+> [32049.011243] [<bf38d034>] (rt2x00usb_register_read+0x34/0x44 [rt2800usb]) from [<bf381d74>] (rt2800_config_shared_key+0xc4/0x11c [rt2800lib])
+> [32049.023958] [<bf381d74>] (rt2800_config_shared_key+0xc4/0x11c [rt2800lib]) from [<bf36aac0>] (rt2x00mac_set_key+0x138/0x14c [rt2x00lib])
+> [32049.036410] [<bf36aac0>] (rt2x00mac_set_key+0x138/0x14c [rt2x00lib]) from [<bf34379c>] (ieee80211_key_disable_hw_accel+0x80/0xd0 [mac80211])
+> [32049.049221] [<bf34379c>] (ieee80211_key_disable_hw_accel+0x80/0xd0 [mac80211]) from [<bf343810>] (__ieee80211_key_destroy+0x24/0x6c [mac80211])
+> [32049.062285] [<bf343810>] (__ieee80211_key_destroy+0x24/0x6c [mac80211]) from [<bf343bf4>] (ieee80211_key_link+0x10c/0x134 [mac80211])
+> [32049.074471] [<bf343bf4>] (ieee80211_key_link+0x10c/0x134 [mac80211]) from [<bf33c3f8>] (ieee80211_add_key+0x104/0x130 [mac80211])
+> [32049.086392] [<bf33c3f8>] (ieee80211_add_key+0x104/0x130 [mac80211]) from [<bf306cc8>] (nl80211_new_key+0xec/0x110 [cfg80211])
+> [32049.097834] [<bf306cc8>] (nl80211_new_key+0xec/0x110 [cfg80211]) from [<c027542c>] (genl_rcv_msg+0x1bc/0x204)
+
+As workaround I would try nohwcrypt module option.
+
+Stanislaw
