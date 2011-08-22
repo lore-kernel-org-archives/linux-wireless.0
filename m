@@ -1,93 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:39281 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755631Ab1HaVeM (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22154 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752071Ab1HVPK0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 17:34:12 -0400
-Received: by ewy4 with SMTP id 4so788832ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 14:34:11 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/6] b43: LCN-PHY: put tables functions in correct file
-Date: Wed, 31 Aug 2011 23:36:17 +0200
-Message-Id: <1314826581-27852-2-git-send-email-zajec5@gmail.com> (sfid-20110831_233416_959060_531FDAFB)
-In-Reply-To: <1314826581-27852-1-git-send-email-zajec5@gmail.com>
-References: <1314826581-27852-1-git-send-email-zajec5@gmail.com>
+	Mon, 22 Aug 2011 11:10:26 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <kvalo@adurom.com>
+Subject: [PATCH 3/3] ath6kl: Avoid rolling back of entire scatter setup in case of failure
+Date: Mon, 22 Aug 2011 20:40:22 +0530
+Message-ID: <1314025822-8004-3-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110822_171029_861014_EDCA5EF7)
+In-Reply-To: <1314025822-8004-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1314025822-8004-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Current tx scatter gather implementation rolls back the entire
+scatter setup in case of a failure in setting up just one packet
+into the bundle. Instead of dopping the whole scatter setup,
+send the packets available just before the failure one using
+scatter gather I/O.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- drivers/net/wireless/b43/phy_lcn.c        |   10 ----------
- drivers/net/wireless/b43/tables_phy_lcn.c |   17 ++++++++++++++++-
- 2 files changed, 16 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath6kl/htc.c |   24 ++++++++++++------------
+ 1 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_lcn.c b/drivers/net/wireless/b43/phy_lcn.c
-index b617e1f..9e57577 100644
---- a/drivers/net/wireless/b43/phy_lcn.c
-+++ b/drivers/net/wireless/b43/phy_lcn.c
-@@ -137,14 +137,6 @@ static void b43_phy_lcn_afe_set_unset(struct b43_wldev *dev)
- 	b43_phy_write(dev, B43_PHY_LCN_AFE_CTL1, afe_ctl1);
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index dc575a8..77e548c 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -381,13 +381,7 @@ static int htc_setup_send_scat_list(struct htc_target *target,
+ 
+ 		cred_pad = htc_get_credit_padding(target->tgt_cred_sz,
+ 						  &len, endpoint);
+-		if (cred_pad < 0) {
+-			status = -EINVAL;
+-			break;
+-		}
+-
+-		if (rem_scat < len) {
+-			/* exceeds what we can transfer */
++		if (cred_pad < 0 || rem_scat < len) {
+ 			status = -ENOSPC;
+ 			break;
+ 		}
+@@ -416,7 +410,7 @@ static int htc_setup_send_scat_list(struct htc_target *target,
+ 	}
+ 
+ 	/* Roll back scatter setup in case of any failure */
+-	if (status || (scat_req->scat_entries < HTC_MIN_HTC_MSGS_TO_BUNDLE)) {
++	if (scat_req->scat_entries < HTC_MIN_HTC_MSGS_TO_BUNDLE) {
+ 		for (i = scat_req->scat_entries - 1; i >= 0; i--) {
+ 			packet = scat_req->scat_list[i].packet;
+ 			if (packet) {
+@@ -424,10 +418,10 @@ static int htc_setup_send_scat_list(struct htc_target *target,
+ 				list_add(&packet->list, queue);
+ 			}
+ 		}
+-		return -EINVAL;
++		return -EAGAIN;
+ 	}
+ 
+-	return 0;
++	return status;
  }
  
--static void b43_phy_lcn_clean_0x18_table(struct b43_wldev *dev)
--{
--	u8 i;
--
--	for (i = 0; i < 0x80; i++)
--		b43_lcntab_write(dev, B43_LCNTAB32(0x18, i), 0x80000);
--}
--
- static void b43_phy_lcn_clear_0x07_table(struct b43_wldev *dev)
- {
- 	u8 i;
-@@ -319,8 +311,6 @@ static int b43_phy_lcn_op_init(struct b43_wldev *dev)
- 	b43_phy_maskset(dev, 0x663, 0xFF00, 0x64);
+ /*
+@@ -447,8 +441,10 @@ static void htc_issue_send_bundle(struct htc_endpoint *endpoint,
+ 	struct htc_target *target = endpoint->target;
+ 	struct hif_scatter_req *scat_req = NULL;
+ 	int n_scat, n_sent_bundle = 0, tot_pkts_bundle = 0;
++	int status;
  
- 	b43_phy_lcn_tables_init(dev);
--	/* TODO: various tables ops here */
--	b43_phy_lcn_clean_0x18_table(dev);
+ 	while (true) {
++		status = 0;
+ 		n_scat = get_queue_depth(queue);
+ 		n_scat = min(n_scat, target->msg_per_bndl_max);
  
- 	b43_phy_lcn_pre_radio_init(dev);
- 	b43_phy_lcn_clear_0x07_table(dev);
-diff --git a/drivers/net/wireless/b43/tables_phy_lcn.c b/drivers/net/wireless/b43/tables_phy_lcn.c
-index 916d3f1..f74c00a 100644
---- a/drivers/net/wireless/b43/tables_phy_lcn.c
-+++ b/drivers/net/wireless/b43/tables_phy_lcn.c
-@@ -445,7 +445,7 @@ void b43_lcntab_write_bulk(struct b43_wldev *dev, u32 offset,
- #define lcntab_upload(dev, offset, data) do { \
- 		b43_lcntab_write_bulk(dev, offset, ARRAY_SIZE(data), data); \
- 	} while (0)
--void b43_phy_lcn_tables_init(struct b43_wldev *dev)
-+static void b43_phy_lcn_upload_static_tables(struct b43_wldev *dev)
- {
- 	lcntab_upload(dev, B43_LCNTAB16(0x02, 0), b43_lcntab_0x02);
- 	lcntab_upload(dev, B43_LCNTAB16(0x01, 0), b43_lcntab_0x01);
-@@ -462,3 +462,18 @@ void b43_phy_lcn_tables_init(struct b43_wldev *dev)
- 	lcntab_upload(dev, B43_LCNTAB16(0x00, 0), b43_lcntab_0x00);
- 	lcntab_upload(dev, B43_LCNTAB32(0x18, 0), b43_lcntab_0x18);
- }
+@@ -471,8 +467,9 @@ static void htc_issue_send_bundle(struct htc_endpoint *endpoint,
+ 		scat_req->len = 0;
+ 		scat_req->scat_entries = 0;
+ 
+-		if (htc_setup_send_scat_list(target, endpoint, scat_req,
+-					     n_scat, queue)) {
++		status = htc_setup_send_scat_list(target, endpoint,
++						  scat_req, n_scat, queue);
++		if (status == -EAGAIN) {
+ 			hif_scatter_req_add(target->dev->ar, scat_req);
+ 			break;
+ 		}
+@@ -486,6 +483,9 @@ static void htc_issue_send_bundle(struct htc_endpoint *endpoint,
+ 			   "send scatter total bytes: %d , entries: %d\n",
+ 			   scat_req->len, scat_req->scat_entries);
+ 		ath6kldev_submit_scat_req(target->dev, scat_req, false);
 +
-+static void b43_phy_lcn_clean_0x18_table(struct b43_wldev *dev)
-+{
-+	u8 i;
-+
-+	for (i = 0; i < 0x80; i++)
-+		b43_lcntab_write(dev, B43_LCNTAB32(0x18, i), 0x80000);
-+}
-+
-+void b43_phy_lcn_tables_init(struct b43_wldev *dev)
-+{
-+	b43_phy_lcn_upload_static_tables(dev);
-+	/* TODO: various tables ops here */
-+	b43_phy_lcn_clean_0x18_table(dev);
-+}
++		if (status)
++			break;
+ 	}
+ 
+ 	*sent_bundle = n_sent_bundle;
 -- 
-1.7.3.4
+1.7.0.4
 
