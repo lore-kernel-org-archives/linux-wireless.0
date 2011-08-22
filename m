@@ -1,117 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:10034 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753632Ab1HTLvx (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:46887 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753339Ab1HVTec (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Aug 2011 07:51:53 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 2/2] ath9k: Change rate control to use legacy rate as last MRR
-Date: Sat, 20 Aug 2011 17:22:10 +0530
-Message-ID: <1313841130-7787-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110820_135201_124614_480B0A27)
-In-Reply-To: <1313841130-7787-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1313841130-7787-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 22 Aug 2011 15:34:32 -0400
+Date: Mon, 22 Aug 2011 12:33:26 -0700 (PDT)
+Message-Id: <20110822.123326.1795268471389412471.davem@davemloft.net> (sfid-20110822_213436_750167_E7D1CC19)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2011-08-22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110822190136.GJ2534@tuxdriver.com>
+References: <20110822190136.GJ2534@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In congested network, having all rate reties at MCS rates
-is failing to transmit the frame offenly. By the time reaching
-the success rate set, the application gets timed out. One such
-scenario is that authentication time out during 4-Way handshake.
-This patch uses a legacy rate as last retry sequnce for
-unaggregated frames or if the first selected rate's PER is ~80%
-of max limit. And also observed from the tx status that the frame
-was trasmitted successfully by using legacy rates.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 22 Aug 2011 15:01:37 -0400
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |   34 +++++++++++++++++++++++++++-------
- 1 files changed, 27 insertions(+), 7 deletions(-)
+> This is a batch of fixes intended for 3.1.  Included is rewrite of an
+> earlier iwlagn fix that was revealed to be flawed (bad pointer access
+> during module unload), a fix for a memory leak, and a trio of rt2x00
+> fixes with detailed changelogs.  These have all been in linux-next
+> for the last week with no reported complaints.
+> 
+> Please let me know if there are problems!
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 9e3649a..4f13018 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -603,7 +603,8 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv,
- static u8 ath_rc_get_highest_rix(struct ath_softc *sc,
- 			         struct ath_rate_priv *ath_rc_priv,
- 				 const struct ath_rate_table *rate_table,
--				 int *is_probing)
-+				 int *is_probing,
-+				 bool legacy)
- {
- 	u32 best_thruput, this_thruput, now_msec;
- 	u8 rate, next_rate, best_rate, maxindex, minindex;
-@@ -624,6 +625,8 @@ static u8 ath_rc_get_highest_rix(struct ath_softc *sc,
- 		u8 per_thres;
- 
- 		rate = ath_rc_priv->valid_rate_index[index];
-+		if (legacy && !(rate_table->info[rate].rate_flags & RC_LEGACY))
-+			continue;
- 		if (rate > ath_rc_priv->rate_max_phy)
- 			continue;
- 
-@@ -767,7 +770,7 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	struct ieee80211_tx_rate *rates = tx_info->control.rates;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	__le16 fc = hdr->frame_control;
--	u8 try_per_rate, i = 0, rix;
-+	u8 try_per_rate, i = 0, rix, high_rix;
- 	int is_probe = 0;
- 
- 	if (rate_control_send_low(sta, priv_sta, txrc))
-@@ -786,7 +789,9 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	try_per_rate = 4;
- 
- 	rate_table = ath_rc_priv->rate_table;
--	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table, &is_probe);
-+	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table,
-+				     &is_probe, false);
-+	high_rix = rix;
- 
- 	/*
- 	 * If we're in HT mode and both us and our peer supports LDPC.
-@@ -822,10 +827,7 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	}
- 
- 	/* Fill in the other rates for multirate retry */
--	for ( ; i < 4; i++) {
--		/* Use twice the number of tries for the last MRR segment. */
--		if (i + 1 == 4)
--			try_per_rate = 8;
-+	for ( ; i < 3; i++) {
- 
- 		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
- 		/* All other rates in the series have RTS enabled */
-@@ -833,6 +835,24 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 				       try_per_rate, rix, 1);
- 	}
- 
-+	/* Use twice the number of tries for the last MRR segment. */
-+	try_per_rate = 8;
-+
-+	/*
-+	 * Use a legacy rate as last retry to ensure that the frame
-+	 * is tried in both MCS and legacy rates.
-+	 */
-+	if ((rates[2].flags & IEEE80211_TX_RC_MCS) &&
-+	    (!(tx_info->flags & IEEE80211_TX_CTL_AMPDU) ||
-+	    (ath_rc_priv->per[high_rix] > 45)))
-+		rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table,
-+				&is_probe, true);
-+	else
-+		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &rix);
-+
-+	/* All other rates in the series have RTS enabled */
-+	ath_rc_rate_set_series(rate_table, &rates[i], txrc,
-+			       try_per_rate, rix, 1);
- 	/*
- 	 * NB:Change rate series to enable aggregation when operating
- 	 * at lower MCS rates. When first rate in series is MCS2
--- 
-1.7.6
-
+Pulled, thanks John.
