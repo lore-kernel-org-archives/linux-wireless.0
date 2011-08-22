@@ -1,39 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:40176 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751718Ab1HJKYB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 06:24:01 -0400
-Received: by iye16 with SMTP id 16so927516iye.1
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 03:24:01 -0700 (PDT)
+Received: from nbd.name ([46.4.11.11]:54302 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750759Ab1HVPC0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Aug 2011 11:02:26 -0400
+Message-ID: <4E526F78.1030302@openwrt.org> (sfid-20110822_170229_921545_66CAB83E)
+Date: Mon, 22 Aug 2011 17:02:16 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1312967955.2407.452.camel@cumari>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-	<1312881233-9366-9-git-send-email-eliad@wizery.com>
-	<1312967955.2407.452.camel@cumari>
-Date: Wed, 10 Aug 2011 13:24:00 +0300
-Message-ID: <CAB3XZEf-TyTfuF_p6WcZVn2T7_3A+K75GeYLAOOzHcx12qX7mA@mail.gmail.com> (sfid-20110810_122406_469599_9D35199D)
-Subject: Re: [PATCH 08/40] wl12xx: wl12xx-fw-3 - update commands & events
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: Send legacy rated frames as unaggregated
+References: <1314016632-1742-1-git-send-email-rmanohar@qca.qualcomm.com>
+In-Reply-To: <1314016632-1742-1-git-send-email-rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 10, 2011 at 12:19 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote:
->> +enum wl1271_cmd_lid_key_type {
->> +     UNICAST_LID_TYPE     = 0,
->> +     BROADCAST_LID_TYPE   = 1,
->> +     WEP_DEFAULT_LID_TYPE = 2
->> +};
+On 2011-08-22 2:37 PM, Rajkumar Manoharan wrote:
+> Currently the aggregation is formed till the aggregation limit
+> is reached and the rate lookup is done for the first frame alone.
+> But there can be a legacy rated frames in tid queue. This patch
+> limits the subframe addition based on last MRR's rate and sends
+> the legacy rated frames as unaggregated one.
 >
-> Doesn't LID_TYPE_UNICAST, LID_TYPE_BROADCAST and so on look better?
+> Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath9k/xmit.c |   23 ++++++++++++++++++++++-
+>   1 files changed, 22 insertions(+), 1 deletions(-)
 >
-it does, but i didn't touch this struct (it wasn't in the context diff
-expected, so it looks like it was deleted and re-added), and i should
-avoid adding more stuff (changing all the existing uses of this enum)
-to this already-too-big patch.
+> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+> index 2062672..41d9184 100644
+> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+> @@ -571,6 +571,26 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+>   		ath_reset(sc, false);
+>   }
+>
+> +static bool ath_lookup_lecacy(struct ath_buf *bf)
+> +{
+> +	struct sk_buff *skb;
+> +	struct ieee80211_tx_info *tx_info;
+> +	struct ieee80211_tx_rate *rates;
+> +
+> +	skb = bf->bf_mpdu;
+> +	tx_info = IEEE80211_SKB_CB(skb);
+> +	rates = tx_info->control.rates;
+> +
+> +	/*
+> +	 * Checking the last MRR's flag is sufficient to
+> +	 * determine legacy or not
+> +	 */
+No it isn't. Maybe with ath9k_rate_control, but things may change with 
+other rate control modules.
 
-Eliad.
+- Felix
