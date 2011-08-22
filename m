@@ -1,40 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:32852 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751181Ab1H3Bs1 (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:63203 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752550Ab1HVPGO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 21:48:27 -0400
+	Mon, 22 Aug 2011 11:06:14 -0400
+Received: by gya6 with SMTP id 6so3625255gya.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Aug 2011 08:06:14 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmom_EwR31Z6r4VpSiKTwE+YXwmRwtwurzr5VUX6nnC67fg@mail.gmail.com>
-References: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com>
-	<CAB=NE6VwWu5+Hk7=3ghkgiXss9kCqGyS-RWPYtyHRhDsx5r2rA@mail.gmail.com>
-	<CAA93jw7c+Nxc6ZbWZWsQ+F78AoPWU=quSRaOUpT0yRcwJOXsGQ@mail.gmail.com>
-	<4E5C3B47.1050809@freedesktop.org>
-	<CAJ-Vmom_EwR31Z6r4VpSiKTwE+YXwmRwtwurzr5VUX6nnC67fg@mail.gmail.com>
-Date: Tue, 30 Aug 2011 09:48:27 +0800
-Message-ID: <CAJ-VmokkkZ8Bj3TetjePVc6fZK1NtAOq7+6Qri6N-8+nppBZGg@mail.gmail.com> (sfid-20110830_034832_105237_1FE17211)
-Subject: Re: BQL crap and wireless
-From: Adrian Chadd <adrian@freebsd.org>
-To: Jim Gettys <jg@freedesktop.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Dave Taht <dave.taht@gmail.com>,
-	Tom Herbert <therbert@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Andrew McGregor <andrewmcgr@gmail.com>,
-	Matt Smith <smithm@qca.qualcomm.com>,
-	Kevin Hayes <hayes@qca.qualcomm.com>,
-	Derek Smithies <derek@indranet.co.nz>, netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1313667904-15188-1-git-send-email-hauke@hauke-m.de>
+References: <1313667904-15188-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 22 Aug 2011 08:05:54 -0700
+Message-ID: <CAB=NE6XPt9=5Mah7mPRWS7pmV1NcqO1U6FB2hf57AfQ8xbdT7Q@mail.gmail.com> (sfid-20110822_170618_700710_5680B595)
+Subject: Re: [PATCH] compat-wireless: fix building with CONFIG_CFG80211_INTERNAL_REGDB
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, lists@wildgooses.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-.. Whilst knee-deep in it all, I should also mention things like
-"transmission opportunity/beacon transmit time being enforced by
-hardware" - ie, where the hardware stops a packet TX from occuring
-because it would exceed the programmed TXOP window, or because it
-would interfere with an upcoming beacon TX from the hostap.
+On Thu, Aug 18, 2011 at 4:45 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> When building with CONFIG_CFG80211_INTERNAL_REGDB set there is a db.txt
+> and genregdb.awk needed. $(srctree) contains the position of the kernel
+> source and not the position of the compat-wireless root directory.
+>
+> Reported-by: Ed W <lists@wildgooses.com>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Another 2c,
+Applied and pushed, thanks!
 
-
-Adrian
+ Luis
