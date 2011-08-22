@@ -1,92 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:40183 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753873Ab1HYPJu (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:62881 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751589Ab1HVXbl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 11:09:50 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 24so1744420wyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 08:09:49 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/4] wl12xx: add beacon_filtering debugfs file
-Date: Thu, 25 Aug 2011 18:11:00 +0300
-Message-Id: <1314285060-5088-4-git-send-email-eliad@wizery.com> (sfid-20110825_172000_365775_9ED58F75)
-In-Reply-To: <1314285060-5088-1-git-send-email-eliad@wizery.com>
-References: <1314285060-5088-1-git-send-email-eliad@wizery.com>
+	Mon, 22 Aug 2011 19:31:41 -0400
+Received: by gya6 with SMTP id 6so3951715gya.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Aug 2011 16:31:41 -0700 (PDT)
+From: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
+To: florian@openwrt.org
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH 0/2] RFT: AR580 support
+Date: Mon, 22 Aug 2011 16:31:25 -0700
+Message-Id: <1314055887-12806-1-git-send-email-lrodriguez@qca.qualcomm.com> (sfid-20110823_013145_230471_F347FF95)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow enabling/disabling beacon_filtering by debugfs,
-in order to reduce the log size while debugging (beacon
-filtering is disabled by default in AP mode, as beacons
-are needed for ERP configuration).
+From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/debugfs.c |   42 +++++++++++++++++++++++++++++++++
- 1 files changed, 42 insertions(+), 0 deletions(-)
+Please test as I don't have the AR9580 hardware with me. If it works then
+we can push it in.
 
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index d59354f..d227385 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -655,6 +655,47 @@ static const struct file_operations rx_streaming_always_ops = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t beacon_filtering_write(struct file *file,
-+				      const char __user *user_buf,
-+				      size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	char buf[10];
-+	size_t len;
-+	unsigned long value;
-+	int ret;
-+
-+	len = min(count, sizeof(buf) - 1);
-+	if (copy_from_user(buf, user_buf, len))
-+		return -EFAULT;
-+	buf[len] = '\0';
-+
-+	ret = kstrtoul(buf, 0, &value);
-+	if (ret < 0) {
-+		wl1271_warning("illegal value for beacon_filtering!");
-+		return -EINVAL;
-+	}
-+
-+	mutex_lock(&wl->mutex);
-+
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = wl1271_acx_beacon_filter_opt(wl, !!value);
-+
-+	wl1271_ps_elp_sleep(wl);
-+out:
-+	mutex_unlock(&wl->mutex);
-+	return count;
-+}
-+
-+static const struct file_operations beacon_filtering_ops = {
-+	.write = beacon_filtering_write,
-+	.open = wl1271_open_file_generic,
-+	.llseek = default_llseek,
-+};
-+
- static int wl1271_debugfs_add_files(struct wl1271 *wl,
- 				     struct dentry *rootdir)
- {
-@@ -767,6 +808,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
- 	DEBUGFS_ADD(driver_state, rootdir);
- 	DEBUGFS_ADD(dtim_interval, rootdir);
- 	DEBUGFS_ADD(beacon_interval, rootdir);
-+	DEBUGFS_ADD(beacon_filtering, rootdir);
- 
- 	streaming = debugfs_create_dir("rx_streaming", rootdir);
- 	if (!streaming || IS_ERR(streaming))
+Luis R. Rodriguez (2):
+  ath9k_hw: add AR9580 support
+  ath9k: add AR9580 support
+
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c         |   83 +
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c        |    3 +-
+ .../net/wireless/ath/ath9k/ar9580_1p0_initvals.h   | 1651 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/pci.c               |    1 +
+ drivers/net/wireless/ath/ath9k/reg.h               |   14 +
+ 5 files changed, 1751 insertions(+), 1 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
+
 -- 
-1.7.6.401.g6a319
+1.7.4.15.g7811d
 
