@@ -1,56 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:41492 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753836Ab1HYPJq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 11:09:46 -0400
-Received: by wwf5 with SMTP id 5so2488371wwf.1
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 08:09:45 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/4] wl12xx: print the seq_num of rx packet
-Date: Thu, 25 Aug 2011 18:10:58 +0300
-Message-Id: <1314285060-5088-2-git-send-email-eliad@wizery.com> (sfid-20110825_172050_289242_AF44F4DA)
-In-Reply-To: <1314285060-5088-1-git-send-email-eliad@wizery.com>
-References: <1314285060-5088-1-git-send-email-eliad@wizery.com>
+Received: from purkki.adurom.net ([80.68.90.206]:42991 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752057Ab1HVILW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Aug 2011 04:11:22 -0400
+To: Bill Jordan <bjordan@rajant.com>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, nbd@openwrt.org
+Subject: Re: [PATCH] ath9k: fix MGMT packets when using TKIP
+References: <4E4C6258.1030409@openwrt.org>
+	<1313766622-15092-1-git-send-email-bjordan@rajant.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Mon, 22 Aug 2011 11:11:15 +0300
+In-Reply-To: <1313766622-15092-1-git-send-email-bjordan@rajant.com> (Bill Jordan's message of "Fri\, 19 Aug 2011 11\:10\:22 -0400")
+Message-ID: <87wre5oogs.fsf@purkki.adurom.net> (sfid-20110822_101127_747223_CAABE1AE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make it easier to match the driver log against
-a sniffer log.
+Bill Jordan <bjordan@rajant.com> writes:
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/rx.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+> Prevent 8 bytes from being truncated from MGMT packets
+> when using TKIP.
 
-diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
-index 78d8410..9074625 100644
---- a/drivers/net/wireless/wl12xx/rx.c
-+++ b/drivers/net/wireless/wl12xx/rx.c
-@@ -107,6 +107,7 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
- 	u8 beacon = 0;
- 	u8 is_data = 0;
- 	u8 reserved = unaligned ? NET_IP_ALIGN : 0;
-+	u16 seq_num;
- 
- 	/*
- 	 * In PLT mode we seem to get frames and mac80211 warns about them,
-@@ -169,9 +170,11 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
- 
- 	wl1271_rx_status(wl, desc, IEEE80211_SKB_RXCB(skb), beacon);
- 
--	wl1271_debug(DEBUG_RX, "rx skb 0x%p: %d B %s", skb,
-+	seq_num = (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ) >> 4;
-+	wl1271_debug(DEBUG_RX, "rx skb 0x%p: %d B %s seq %d", skb,
- 		     skb->len - desc->pad_len,
--		     beacon ? "beacon" : "");
-+		     beacon ? "beacon" : "",
-+		     seq_num);
- 
- 	skb_trim(skb, skb->len - desc->pad_len);
- 
+A bit more information in the commit log would be nice. Is this is a
+regression or an old bug? Maybe a stable candidate?
+
 -- 
-1.7.6.401.g6a319
-
+Kalle Valo
