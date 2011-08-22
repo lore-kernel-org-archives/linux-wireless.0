@@ -1,75 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:64918 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750881Ab1H3Bo5 (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:35304 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751589Ab1HVXcY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 21:44:57 -0400
-MIME-Version: 1.0
-In-Reply-To: <4E5C3B47.1050809@freedesktop.org>
-References: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com>
-	<CAB=NE6VwWu5+Hk7=3ghkgiXss9kCqGyS-RWPYtyHRhDsx5r2rA@mail.gmail.com>
-	<CAA93jw7c+Nxc6ZbWZWsQ+F78AoPWU=quSRaOUpT0yRcwJOXsGQ@mail.gmail.com>
-	<4E5C3B47.1050809@freedesktop.org>
-Date: Tue, 30 Aug 2011 09:44:56 +0800
-Message-ID: <CAJ-Vmom_EwR31Z6r4VpSiKTwE+YXwmRwtwurzr5VUX6nnC67fg@mail.gmail.com> (sfid-20110830_034513_217297_C660DF7E)
-Subject: Re: BQL crap and wireless
-From: Adrian Chadd <adrian@freebsd.org>
-To: Jim Gettys <jg@freedesktop.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Dave Taht <dave.taht@gmail.com>,
-	Tom Herbert <therbert@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Andrew McGregor <andrewmcgr@gmail.com>,
-	Matt Smith <smithm@qca.qualcomm.com>,
-	Kevin Hayes <hayes@qca.qualcomm.com>,
-	Derek Smithies <derek@indranet.co.nz>, netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 22 Aug 2011 19:32:24 -0400
+Received: by yxj19 with SMTP id 19so3891612yxj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Aug 2011 16:32:24 -0700 (PDT)
+From: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
+To: florian@openwrt.org
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH 2/2] ath9k: add AR9580 support
+Date: Mon, 22 Aug 2011 16:31:27 -0700
+Message-Id: <1314055887-12806-3-git-send-email-lrodriguez@qca.qualcomm.com> (sfid-20110823_013226_859767_8FA136FA)
+In-Reply-To: <1314055887-12806-1-git-send-email-lrodriguez@qca.qualcomm.com>
+References: <1314055887-12806-1-git-send-email-lrodriguez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30 August 2011 09:22, Jim Gettys <jg@freedesktop.org> wrote:
+From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 
-Note: I'm knee deep in the aggregation TX/RX path at the present time
-- I'm porting the atheros 802.11n TX aggregation code to FreeBSD.
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/pci.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> Computing the buffering in bytes is better than in packets; but since on
-> wireless multicast/broadcast is transmitted at a radically different
-> rate than other packets, I expect something based on time is really the
-> long term solution; and only the driver has any idea how long a packet
-> of a given flavour will likely take to transmit.
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index daa26b5..6cb90ee 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -32,6 +32,7 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0032) }, /* PCI-E  AR9485 */
++	{ PCI_VDEVICE(ATHEROS, 0x0033) }, /* PCI-E  AR9580 */
+ 	{ 0 }
+ };
+ 
+-- 
+1.7.4.15.g7811d
 
-And the driver (hopefully!) can find out how long the packet -did-
-take to transmit.
-
-There are a bunch of different reasons for why the packet isn't
-transmitting or why it can take so long. If (say) an aggregate has 10
-hardware (long, short) retries at a high MCS rate, and then 10
-software retries, that's up to 100 attempts at transmitting the
-sub-frames in some way. It may also involve 10 attempts at an RTS
-exchange. But it may also be 10 attempts at transmitting the -whole-
-frame. In the case of a long aggregate (say the upper bounds of 4ms,
-easily achievable when lower MCS rates are selected), this can take a
-long time.
-
-I'm occasionally seeing this in my testing, where the block-ack isn't
-seen by the sender. The whole aggregate frame is thus retransmitted in
-its entirety. This causes occasional bumps in the testing latency. The
-obvious solution is to not form such large aggregates at lower MCS
-rates but even single events have an impact on latency.
-
-I'm not at the point yet where I can start tinkering with rate control
-and queue management in this way but the idea of asking the rate
-control code to manage per-node and overall airtime has crossed my
-mind. Ie, the rate control code can see how successful transmissions
-are to a given node (at given streams, rates, antenna configurations,
-etc) and then enforce aggregate size and retransmission limits there.
-Since a decision for any given node will affect the latency on all
-subsequent nodes, it makes sense for the rate control code to keep a
-global idea of the airtime involved as well as the (current) per-node
-logic.
-
-2c, which'll be more when I work the 11n TX A-MPDU kinks out in the
-FreeBSD driver,
-
-
-Adrian
