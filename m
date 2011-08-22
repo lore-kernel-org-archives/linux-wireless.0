@@ -1,127 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from svenfoo.org ([82.94.215.22]:46119 "EHLO mail.zonque.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751275Ab1H3VtL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 17:49:11 -0400
-From: Sven Neumann <s.neumann@raumfeld.com>
-To: linux-wireless@vger.kernel.org
-Cc: Sven Neumann <s.neumann@raumfeld.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Daniel Mack <daniel@zonque.org>
-Subject: [PATCH 1/2] cfg80211: hold reg_mutex when updating regulatory
-Date: Tue, 30 Aug 2011 23:38:53 +0200
-Message-Id: <1314740334-10341-1-git-send-email-s.neumann@raumfeld.com> (sfid-20110830_234916_502902_0ADB0C7F)
-In-Reply-To: <20110830191437.GC2660@tuxdriver.com>
-References: <20110830191437.GC2660@tuxdriver.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:54833 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752063Ab1HVN4S (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Aug 2011 09:56:18 -0400
+Message-ID: <4E525FF7.6070904@qca.qualcomm.com> (sfid-20110822_155625_902340_F0E7399E)
+Date: Mon, 22 Aug 2011 19:26:07 +0530
+From: mohammed <mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<rodrigue@qca.qualcomm.com>, <senthilb@qca.qualcomm.com>,
+	<rmanohar@qca.qualcomm.com>, <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] ath9k_htc: Fix few possible memory leaks
+References: <1313942085-6238-1-git-send-email-mohammed@qca.qualcomm.com> <20110822052918.GA30951@vasanth-laptop>
+In-Reply-To: <20110822052918.GA30951@vasanth-laptop>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function wiphy_update_regulatory() uses the static variable
-last_request and thus needs to be called with reg_mutex held.
-This is the case for all users in reg.c, but the function was
-exported for use by wiphy_register(), from where it is called
-without the lock being held.
+On Monday 22 August 2011 10:59 AM, Vasanthakumar Thiagarajan wrote:
+> On Sun, Aug 21, 2011 at 09:24:45PM +0530, Mohammed Shafi Shajakhan wrote:
+>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>
+>> still there are few other memory leaks which will be fixed
+>> very soon
+>>
+>> Cc: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+>> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>> ---
+>>   drivers/net/wireless/ath/ath9k/htc_hst.c |   13 ++++++++-----
+>>   drivers/net/wireless/ath/ath9k/wmi.c     |    3 ++-
+>>   2 files changed, 10 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
+>> index 1b90ed8..e435c9b 100644
+>> --- a/drivers/net/wireless/ath/ath9k/htc_hst.c
+>> +++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
+>> @@ -169,13 +169,14 @@ static int htc_config_pipe_credits(struct htc_target *target)
+>>   	time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
+>>   	if (!time_left) {
+>>   		dev_err(target->dev, "HTC credit config timeout\n");
+>> -		return -ETIMEDOUT;
+>> +		ret = -ETIMEDOUT;
+>> +		goto err;
+>
+> Are you sure we have to free the skb upon timeout?. It looks like
+> it is already taken care in ath9k_htc_txcompletion_cb(). The same
+> may apply to your other changes as well.
 
-Fix this by making wiphy_update_regulatory() private and introducing
-regulatory_update() as a wrapper that acquires and holds the lock.
 
-Signed-off-by: Sven Neumann <s.neumann@raumfeld.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Luis R. Rodriguez <mcgrof@gmail.com>
-Cc: Daniel Mack <daniel@zonque.org>
-Cc: linux-wireless@vger.kernel.org
----
- net/wireless/core.c |    2 +-
- net/wireless/core.h |    2 --
- net/wireless/reg.c  |   17 +++++++++++++++--
- net/wireless/reg.h  |    2 ++
- 4 files changed, 18 insertions(+), 5 deletions(-)
+Vasanth thanks for your review, I haven't and not aware of that code 
+flow/callback. I will check into that.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index c148651..220f3bd 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -582,7 +582,7 @@ int wiphy_register(struct wiphy *wiphy)
- 	}
- 
- 	/* set up regulatory info */
--	wiphy_update_regulatory(wiphy, NL80211_REGDOM_SET_BY_CORE);
-+	regulatory_update(wiphy, NL80211_REGDOM_SET_BY_CORE);
- 
- 	list_add_rcu(&rdev->list, &cfg80211_rdev_list);
- 	cfg80211_rdev_list_generation++;
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 8672e02..796a4bd 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -279,8 +279,6 @@ extern int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
- 			       char *newname);
- 
- void ieee80211_set_bitrate_flags(struct wiphy *wiphy);
--void wiphy_update_regulatory(struct wiphy *wiphy,
--			     enum nl80211_reg_initiator setby);
- 
- void cfg80211_bss_expire(struct cfg80211_registered_device *dev);
- void cfg80211_bss_age(struct cfg80211_registered_device *dev,
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 02751db..c50016e 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -103,6 +103,9 @@ struct reg_beacon {
- 	struct ieee80211_channel chan;
- };
- 
-+static void wiphy_update_regulatory(struct wiphy *wiphy,
-+				    enum nl80211_reg_initiator initiator);
-+
- static void reg_todo(struct work_struct *work);
- static DECLARE_WORK(reg_work, reg_todo);
- 
-@@ -1119,11 +1122,13 @@ static void reg_process_ht_flags(struct wiphy *wiphy)
- 
- }
- 
--void wiphy_update_regulatory(struct wiphy *wiphy,
--			     enum nl80211_reg_initiator initiator)
-+static void wiphy_update_regulatory(struct wiphy *wiphy,
-+				    enum nl80211_reg_initiator initiator)
- {
- 	enum ieee80211_band band;
- 
-+	assert_reg_lock();
-+
- 	if (ignore_reg_update(wiphy, initiator))
- 		return;
- 
-@@ -1138,6 +1143,14 @@ void wiphy_update_regulatory(struct wiphy *wiphy,
- 		wiphy->reg_notifier(wiphy, last_request);
- }
- 
-+void regulatory_update(struct wiphy *wiphy,
-+		       enum nl80211_reg_initiator setby)
-+{
-+	mutex_lock(&reg_mutex);
-+	wiphy_update_regulatory(wiphy, setby);
-+	mutex_unlock(&reg_mutex);
-+}
-+
- static void handle_channel_custom(struct wiphy *wiphy,
- 				  enum ieee80211_band band,
- 				  unsigned int chan_idx,
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index b67d1c3..4a56799 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -16,6 +16,8 @@ void regulatory_exit(void);
- 
- int set_regdom(const struct ieee80211_regdomain *rd);
- 
-+void regulatory_update(struct wiphy *wiphy, enum nl80211_reg_initiator setby);
-+
- /**
-  * regulatory_hint_found_beacon - hints a beacon was found on a channel
-  * @wiphy: the wireless device where the beacon was found on
--- 
-1.7.4.1
+thanks,
+shafi
+
+>
+> Vasanth
 
