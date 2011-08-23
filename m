@@ -1,94 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:36758 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755456Ab1HBVke convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 17:40:34 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Tue, 2 Aug 2011 14:38:36 -0700
-Subject: RE: [PATCH] mwifiex: remove redundant variable scan_table_idx
-Message-ID: <477F20668A386D41ADCC57781B1F704307FFCC682F@SC-VEXCH1.marvell.com> (sfid-20110802_234039_079342_363E3DDF)
-References: <1311305158-15534-1-git-send-email-bzhao@marvell.com>
- <1311305158-15534-2-git-send-email-bzhao@marvell.com>
-In-Reply-To: <1311305158-15534-2-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48868 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752838Ab1HWLgj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 07:36:39 -0400
+Received: by fxh19 with SMTP id 19so173580fxh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 04:36:38 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] mac80211: add uapsd_queues and max_sp params fields
+Date: Tue, 23 Aug 2011 14:37:47 +0300
+Message-Id: <1314099467-20464-2-git-send-email-eliad@wizery.com> (sfid-20110823_133641_594658_703FA76F)
+In-Reply-To: <1314099467-20464-1-git-send-email-eliad@wizery.com>
+References: <1314099467-20464-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Add uapsd_queues and max_sp fields to ieee80211_sta.
+These fields might be needed by low-level drivers in
+order to configure the AP.
 
-> -----Original Message-----
-> From: Bing Zhao [mailto:bzhao@marvell.com]
-> Sent: Thursday, July 21, 2011 8:26 PM
-> To: linux-wireless@vger.kernel.org
-> Cc: John W. Linville; Amitkumar Karwar; Kiran Divekar; Yogesh Powar; Frank Huang; Bing Zhao
-> Subject: [PATCH] mwifiex: remove redundant variable scan_table_idx
-> 
-> mwifiex_get_bss_info() routine updates variable 'info->scan_table_idx'
-> but it is never used.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ include/net/mac80211.h |    2 ++
+ net/mac80211/cfg.c     |    3 +++
+ 2 files changed, 5 insertions(+), 0 deletions(-)
 
-Could you please take this patch if it looks OK?
-
-Thanks,
-Bing
-
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> ---
->  drivers/net/wireless/mwifiex/ioctl.h     |    1 -
->  drivers/net/wireless/mwifiex/sta_ioctl.c |   12 ------------
->  2 files changed, 0 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
-> index bd9e074..e0b68e7 100644
-> --- a/drivers/net/wireless/mwifiex/ioctl.h
-> +++ b/drivers/net/wireless/mwifiex/ioctl.h
-> @@ -134,7 +134,6 @@ struct mwifiex_ver_ext {
->  struct mwifiex_bss_info {
->  	u32 bss_mode;
->  	struct mwifiex_802_11_ssid ssid;
-> -	u32 scan_table_idx;
->  	u32 bss_chan;
->  	u32 region_code;
->  	u32 media_connected;
-> diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-> index 10ef9e9..fd764b3 100644
-> --- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-> +++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-> @@ -376,7 +376,6 @@ int mwifiex_get_bss_info(struct mwifiex_private *priv,
->  {
->  	struct mwifiex_adapter *adapter = priv->adapter;
->  	struct mwifiex_bssdescriptor *bss_desc;
-> -	s32 tbl_idx;
-> 
->  	if (!info)
->  		return -1;
-> @@ -394,17 +393,6 @@ int mwifiex_get_bss_info(struct mwifiex_private *priv,
-> 
->  	info->region_code = adapter->region_code;
-> 
-> -	/* Scan table index if connected */
-> -	info->scan_table_idx = 0;
-> -	if (priv->media_connected) {
-> -		tbl_idx =
-> -			mwifiex_find_ssid_in_list(priv, &bss_desc->ssid,
-> -						  bss_desc->mac_address,
-> -						  priv->bss_mode);
-> -		if (tbl_idx >= 0)
-> -			info->scan_table_idx = tbl_idx;
-> -	}
-> -
->  	info->media_connected = priv->media_connected;
-> 
->  	info->max_power_level = priv->max_tx_power_level;
-> --
-> 1.7.0.2
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2f01d84..2e752df 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -954,6 +954,8 @@ struct ieee80211_sta {
+ 	u16 aid;
+ 	struct ieee80211_sta_ht_cap ht_cap;
+ 	bool wme;
++	u8 uapsd_queues;
++	u8 max_sp;
+ 
+ 	/* must be last */
+ 	u8 drv_priv[0] __attribute__((__aligned__(sizeof(void *))));
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c1fa577..4bb6a92 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -697,6 +697,9 @@ static void sta_apply_parameters(struct ieee80211_local *local,
+ 	}
+ 	spin_unlock_irqrestore(&sta->flaglock, flags);
+ 
++	sta->sta.uapsd_queues = params->uapsd_queues;
++	sta->sta.max_sp = params->max_sp;
++
+ 	/*
+ 	 * cfg80211 validates this (1-2007) and allows setting the AID
+ 	 * only when creating a new station entry
+-- 
+1.7.6.401.g6a319
 
