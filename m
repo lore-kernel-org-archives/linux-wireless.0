@@ -1,54 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52192 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754967Ab1HRTPm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Aug 2011 15:15:42 -0400
-Subject: Re: [PATCH] ath9k: make driver usable standalone
-From: Dan Williams <dcbw@redhat.com>
-To: Valdis.Kletnieks@vt.edu
-Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	Pavel Ivanov <paivanof@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	linux-kernel@vger.kernel.org
-Date: Thu, 18 Aug 2011 14:18:09 -0500
-In-Reply-To: <24649.1313621503@turing-police.cc.vt.edu>
-References: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com>
-	 <CA+XFjipM1Qup3bcJos_ikwzoaWoa3GdYqK0WBUqEHBNR6V6LfQ@mail.gmail.com>
-	 <CAG1a4rsyfPrrrf-mzt3HAM6YHHjaHTcd2rbtYiwqLkUCP=j8pQ@mail.gmail.com>
-	 <CA+XFjipsVukKYchfmDv48PAKsD2PUxT+7E8epRuKFynGwk=Bag@mail.gmail.com>
-	 <24649.1313621503@turing-police.cc.vt.edu>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1313695090.23920.2.camel@dcbw.foobar.com> (sfid-20110818_211604_167393_CC500A52)
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40111 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755304Ab1HWTpO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 15:45:14 -0400
+Date: Tue, 23 Aug 2011 15:39:39 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Alexander Simon <alexander.simon@saxnet.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/4] nl80211: Parse channel type attribute in an IBSS
+ join request
+Message-ID: <20110823193939.GE9770@tuxdriver.com> (sfid-20110823_214519_850135_4E5AA09D)
+References: <1888623.Vt5VZUN2cU@alex-1>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1888623.Vt5VZUN2cU@alex-1>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-08-17 at 18:51 -0400, Valdis.Kletnieks@vt.edu wrote:
-> On Wed, 17 Aug 2011 18:25:49 +0200, Gábor Stefanik said:
+On Mon, Aug 08, 2011 at 02:02:58PM +0200, Alexander Simon wrote:
+> Check if the requested HT mode can be used.
+> Extend cfg80211 IBSS struct for HT mode.
 > 
-> > Iwconfig and iwlist are themselves deprecated. Iw is the new wireless
-> > configuration tool.
+> Signed-off-by: Alexander Simon <alexander.simon@saxnet.de>
+> ---
 > 
-> Somebody better tell Fedora Rawhide - as of the version released on July 27,
-> their 'initscripts' RPM was still using iwconfig in /etc/sysconfig/network-scripts/ifup-wireless
-> 
-> So don't be quite so fast to be declaring WIRELESS_EXT dead just yet.
+> As there were no replies for my RFC post, i am resending this as PATCH.
 
-Given that nobody has stepped up to write patches to convert them to use
-iw (or wpa_supplicant in the *correct* manner), and that for the most
-part wifi on Fedora goes through NetworkManager and/or wpa_supplicant,
-it's not surprising.  I don't have any particular interest in keeping
-the existing ifup-wireless iwconfig hackery around, instead if it's
-converted at all, it should be converted to use wpa_supplicant instead,
-in the manner in which I've described in the various bug reports that
-keep coming up.  That means not just pointing wpa_supplicant at a config
-file, but instead keeping the options in the ifcfg file and writing out
-a temporary wpa_supplicant config on-the-fly so that it integrates with
-existing administrator expectations and workflow.
+This series got a lot of comments.  Are you planning to post a
+revised series?
 
-Dan
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
