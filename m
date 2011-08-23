@@ -1,111 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout8.freenet.de ([195.4.92.98]:52018 "EHLO mout8.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752461Ab1HVKYD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 06:24:03 -0400
-Received: from [195.4.92.18] (helo=8.mx.freenet.de)
-	by mout8.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #5)
-	id 1QvRfk-0004v3-HM
-	for linux-wireless@vger.kernel.org; Mon, 22 Aug 2011 12:24:00 +0200
-Received: from p4fde108b.dip0.t-ipconnect.de ([79.222.16.139]:59866 helo=mail.maya.org)
-	by 8.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #5)
-	id 1QvRfk-0007jI-92
-	for linux-wireless@vger.kernel.org; Mon, 22 Aug 2011 12:24:00 +0200
-Message-Id: <201108221023.p7MANt13003500@mail.maya.org> (sfid-20110822_122408_764753_2EDE03C8)
-Date: Mon, 22 Aug 2011 12:23:58 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-To: linux-wireless@vger.kernel.org
-Cc: Jouni Malinen <j@w1.fi>
-Subject: Broken 4 way handshake in hostapd during load
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:50684 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751706Ab1HWLuc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 07:50:32 -0400
+Received: by ewy4 with SMTP id 4so6893ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 04:50:31 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: set psd_type and sp_len on wl12xx_cmd_add_peer()
+Date: Tue, 23 Aug 2011 14:51:42 +0300
+Message-Id: <1314100302-25913-1-git-send-email-eliad@wizery.com> (sfid-20110823_135035_590885_A468524E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Use the values given by mac80211 in order to configure
+WME correctly (AP mode)
 
-
-please read the following as it is really a problem for me (and may
-be others, too). I tried very hard to examine it (may be not hard
-enough :-)) to get a hopefully good description of what's going on.
-
-
-Always on rekeying PTK with load (throughput is about 4 MByte/s or more)
-on the AP device, I'm getting the following timeout in the hostapd
-(versions 0.6.10, 0.7.3. 0.8.x) log (it's working fine if the
-connection is idle during the rekeying or the throughput is lower than
-4 MByte/s):
-
-Aug 22 09:24:19 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: rekeying PTK
-Aug 22 09:24:19 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: sending 1/4 msg of 4-Way Handshake
-Aug 22 09:24:19 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: received EAPOL-Key frame (2/4 Pairwise)
-Aug 22 09:24:19 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: sending 3/4 msg of 4-Way Handshake
-Aug 22 09:24:19 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: EAPOL-Key timeout
-Aug 22 09:24:19 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: sending 3/4 msg of 4-Way Handshake
-Aug 22 09:24:20 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: EAPOL-Key timeout
-Aug 22 09:24:20 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: sending 3/4 msg of 4-Way Handshake
-Aug 22 09:24:21 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: EAPOL-Key timeout
-Aug 22 09:24:21 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: sending 3/4 msg of 4-Way Handshake
-Aug 22 09:24:23 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: EAPOL-Key timeout
-Aug 22 09:24:23 pc hostapd: wlan1: STA 11:11:11:11:11:11 WPA: PTKINITNEGOTIATING: Retry limit 4 reached
-Aug 22 09:24:23 pc hostapd: wlan1: STA 11:11:11:11:11:11 IEEE 802.11: deauthenticated due to local deauth request
-
-I can see this behavior with a rt2800pci and an ath9k based AP.
-
-I sniffed the "air" using 802.11g mode (I was alone on the channel I
-used) and saw, that the supplicant sent the 4/4 packet, but it seems
-not to be seen on the AP device (neither in mon.wlan nor in wlan). To
-confirm this, I added this debug entry to net/mac80211/rx.c and tested
-again:
-
---- rx.c        2011-08-22 11:50:13.000000000 +0200
-+++ rx.c.debug  2011-08-22 11:49:39.000000000 +0200
-@@ -1646,8 +1646,10 @@
-         */
-        if (ehdr->h_proto == rx->sdata->control_port_protocol &&
-            (compare_ether_addr(ehdr->h_dest, rx->sdata->vif.addr) == 0 ||
--            compare_ether_addr(ehdr->h_dest, pae_group_addr) == 0))
-+            compare_ether_addr(ehdr->h_dest, pae_group_addr) == 0)) {
-+               printk(KERN_DEBUG "received EAPOL");
-                return true;
-+               }
- 
-        if (ieee80211_802_1x_port_control(rx) ||
-            ieee80211_drop_unencrypted(rx, fc)) {
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
+this patch depends on 
+"mac80211: add uapsd_queues and max_sp params fields"
 
-This debug entry confirmed what I saw on the wlan or the mon.wlan -
-device.
+ drivers/net/wireless/wl12xx/cmd.c |   15 ++++++++++-----
+ drivers/net/wireless/wl12xx/cmd.h |    7 +++++++
+ 2 files changed, 17 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index 817bc18..d5a0ebe 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -1413,7 +1413,7 @@ out:
+ int wl12xx_cmd_add_peer(struct wl1271 *wl, struct ieee80211_sta *sta, u8 hlid)
+ {
+ 	struct wl12xx_cmd_add_peer *cmd;
+-	int ret;
++	int i, ret;
+ 	u32 sta_rates;
+ 
+ 	wl1271_debug(DEBUG_CMD, "cmd add peer %d", (int)hlid);
+@@ -1424,15 +1424,19 @@ int wl12xx_cmd_add_peer(struct wl1271 *wl, struct ieee80211_sta *sta, u8 hlid)
+ 		goto out;
+ 	}
+ 
+-	/* currently we don't support UAPSD */
+-	cmd->sp_len = 0;
+-
+ 	memcpy(cmd->addr, sta->addr, ETH_ALEN);
+ 	cmd->bss_index = WL1271_AP_BSS_INDEX;
+ 	cmd->aid = sta->aid;
+ 	cmd->hlid = hlid;
++	cmd->sp_len = sta->max_sp;
+ 	cmd->wmm = sta->wme ? 1 : 0;
+ 
++	for (i = 0; i < NUM_ACCESS_CATEGORIES_COPY; i++)
++		if (sta->wme && (sta->uapsd_queues & BIT(i)))
++			cmd->psd_type[i] = WL1271_PSD_UPSD_TRIGGER;
++		else
++			cmd->psd_type[i] = WL1271_PSD_LEGACY;
++
+ 	sta_rates = sta->supp_rates[wl->band];
+ 	if (sta->ht_cap.ht_supported)
+ 		sta_rates |= sta->ht_cap.mcs.rx_mask[0] << HW_HT_RATES_OFFSET;
+@@ -1440,7 +1444,8 @@ int wl12xx_cmd_add_peer(struct wl1271 *wl, struct ieee80211_sta *sta, u8 hlid)
+ 	cmd->supported_rates =
+ 		cpu_to_le32(wl1271_tx_enabled_rates_get(wl, sta_rates));
+ 
+-	wl1271_debug(DEBUG_CMD, "new peer rates: 0x%x", cmd->supported_rates);
++	wl1271_debug(DEBUG_CMD, "new peer rates=0x%x queues=0x%x",
++		     cmd->supported_rates, sta->uapsd_queues);
+ 
+ 	ret = wl1271_cmd_send(wl, CMD_ADD_PEER, cmd, sizeof(*cmd), 0);
+ 	if (ret < 0) {
+diff --git a/drivers/net/wireless/wl12xx/cmd.h b/drivers/net/wireless/wl12xx/cmd.h
+index 22c2f37..8e4d11e 100644
+--- a/drivers/net/wireless/wl12xx/cmd.h
++++ b/drivers/net/wireless/wl12xx/cmd.h
+@@ -591,6 +591,13 @@ enum wl12xx_ssid_type {
+ 	WL12XX_SSID_TYPE_ANY = 2,
+ };
+ 
++enum wl1271_psd_type {
++	WL1271_PSD_LEGACY = 0,
++	WL1271_PSD_UPSD_TRIGGER = 1,
++	WL1271_PSD_LEGACY_PSPOLL = 2,
++	WL1271_PSD_SAPSD = 3
++};
++
+ struct wl12xx_cmd_add_peer {
+ 	struct wl1271_cmd_header header;
+ 
+-- 
+1.7.6.401.g6a319
 
-Which behavior of wpa_supplicant and hostapd could I see in detail now?
-
-1. The 2/2 part of the 4/4 handshake has been done successfully
-
-2. hostapd sends the 3/4 packet
-
-3. wpa_supplicant sends the answer and is ready:
-WPA: Key negotiation completed with 68:7f:74:fb:39:ee [PTK=CCMP GTK=CCMP]
-
-4. hostapd doesn't see this frame -> hostapd times out
-
-5. hostapd sends the 3/4 packet again and again (until the retry
-limit is reached)
-
-6. wpa_supplicant doesn't react any more - it's already ready!
-
-7. Deauthentication and reauthentication
-
-8. The throughput of the wireless connection is broken until now - I
-have to restart the hostapd device and the client device to get my old
-throughput again.
-
-
-Is there any possibility to avoid this situation? Or did
-I get something wrong (what?)?
-
-
-
-Thank you very much for your time, work and support!
-Kind regards,
-Andreas
