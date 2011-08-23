@@ -1,71 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:61897 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750773Ab1HBFao convert rfc822-to-8bit (ORCPT
+Received: from oproxy9.bluehost.com ([69.89.24.6]:37568 "HELO
+	oproxy9.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754103Ab1HWV5B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 01:30:44 -0400
-Received: by wwe5 with SMTP id 5so6347272wwe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Aug 2011 22:30:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20110802001821.GA29352@monsterjam.org>
-References: <20110802001821.GA29352@monsterjam.org>
-Date: Tue, 2 Aug 2011 11:00:43 +0530
-Message-ID: <CAD2nsn0WqpHsJAODziyO1SFUT4Pm-fkp=zvcdyckJgfDeAMdcQ@mail.gmail.com> (sfid-20110802_073050_067502_46939E8F)
-Subject: Re: drops with compat-wireless-3.0-2 and ath9k_htc
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: jason@monsterjam.org
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 23 Aug 2011 17:57:01 -0400
+Date: Tue, 23 Aug 2011 14:56:59 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: driverdevel <devel@driverdev.osuosl.org>,
+	linux-wireless@vger.kernel.org
+Cc: gregkh@suse.de, Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH] staging: brcmsmac, fix build for SMP disabled
+Message-Id: <20110823145659.a22e1860.rdunlap@xenotime.net> (sfid-20110823_235704_960097_919DB354)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 2, 2011 at 5:48 AM,  <jason@monsterjam.org> wrote:
-> hey folks, running  2.6.38.8-32.fc15.i686  with a
-> Bus 001 Device 003: ID 0cf3:7015 Atheros Communications, Inc.
-> adapter, and I keep seeing hangs on my workstation.
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-we will try to recreate it here.
-when are you getting this issue(AP mode or station mode). any other
-information will be helpful.
-also does it happens with wireless-testing ?
+Fix build when CONFIG_SMP is not enabled.
+Fixes many build errors (subset listed here):
 
->
-> here is the output from the latest time it happened..
->
-> [32322.166396] ath: Chip reset failed
-> [32322.166404] ath: Unable to reset channel (2452 Mhz) reset status -22
-> [32322.167608] ath: Unable to set channel
-> [32322.167631] wlan2: deauthenticating from 00:24:01:43:24:b4 by local choice (reason=3)
-> [32322.276851] ath: Chip reset failed
-> [32322.276856] ath: Unable to reset hardware; reset status -22 (freq 2452 MHz)
-> [32322.379231] cfg80211: Calling CRDA to update world regulatory domain
-> [32322.394452] ath: Failed to wakeup in 500us
-> [32322.408122] ath: Failed to wakeup in 500us
-> [32322.418226] ath: Failed to wakeup in 500us
-> [32322.648187] usb 1-3: ath9k_htc: USB layer deinitialized
-> [32322.651879] cfg80211: World regulatory domain updated:
-> [32322.651896] cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> [32322.651900] cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> [32322.651904] cfg80211:     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-> [32322.651907] cfg80211:     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-> [32322.651910] cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> [32322.651913] cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->
-> the wireless router is a  netgear wireless N router thats running dd-wrt.
->
-> it seems if I unplug the usb adapter and reinsert it, the computer will recover just fine.
->
->
-> thanks/regards,
-> Jason
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+drivers/staging/brcm80211/brcmsmac/ampdu.c: In function 'brcms_c_ampdu_dotxstatus':
+drivers/staging/brcm80211/brcmsmac/ampdu.c:833: error: implicit declaration of function 'readb'
+drivers/staging/brcm80211/brcmsmac/ampdu.c:833: error: implicit declaration of function 'readw'
+drivers/staging/brcm80211/brcmsmac/ampdu.c:833: error: implicit declaration of function 'readl'
+drivers/staging/brcm80211/brcmsmac/main.c: In function 'brcms_c_init':
+drivers/staging/brcm80211/brcmsmac/main.c:494: error: implicit declaration of function 'writeb'
+drivers/staging/brcm80211/brcmsmac/main.c:494: error: implicit declaration of function 'writew'
+drivers/staging/brcm80211/brcmsmac/main.c:494: error: implicit declaration of function 'writel'
+drivers/staging/brcm80211/brcmsmac/main.c:529: error: implicit declaration of function 'readb'
+drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c: In function 'wlc_radioreg_exit':
+drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c:208: error: implicit declaration of function 'readb'
+drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c:208: error: implicit declaration of function 'readw'
+drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c: In function 'wlc_lcnphy_idle_tssi_est':
+drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c:2080: error: implicit declaration of function 'readb'
+drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c: In function 'wlc_lcnphy_samp_cap':
+drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c:3837: error: implicit declaration of function 'writeb'
+vers/staging/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_init_nphy':
+drivers/staging/brcm80211/brcmsmac/phy/phy_n.c:14561: error: implicit declaration of function 'readb'
 
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+---
+ drivers/staging/brcm80211/brcmsmac/types.h |    1 +
+ 1 file changed, 1 insertion(+)
 
-
--- 
-shafi
+--- lnx-31-rc3.orig/drivers/staging/brcm80211/brcmsmac/types.h
++++ lnx-31-rc3/drivers/staging/brcm80211/brcmsmac/types.h
+@@ -18,6 +18,7 @@
+ #define _BRCM_TYPES_H_
+ 
+ #include <linux/types.h>
++#include <asm/io.h>
+ 
+ /* Bus types */
+ #define	SI_BUS			0	/* SOC Interconnect */
