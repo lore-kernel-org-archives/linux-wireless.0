@@ -1,121 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wondertoys-mx.wondertoys.net ([206.117.179.246]:49072 "EHLO
-	labridge.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753693Ab1HZI5E (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:38180 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754879Ab1HWOEl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 04:57:04 -0400
-From: Joe Perches <joe@perches.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] ath: Make ath_printk void not int and remove unused struct ath_common *
-Date: Fri, 26 Aug 2011 01:56:39 -0700
-Message-Id: <78869fcd8172cd02266b66a71aadbd0c0efbdebc.1314347556.git.joe@perches.com> (sfid-20110826_105734_396910_E2955D0A)
-In-Reply-To: <cover.1314347556.git.joe@perches.com>
-References: <cover.1314347556.git.joe@perches.com>
+	Tue, 23 Aug 2011 10:04:41 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
+	<senthilb@qca.qualcomm.com>, <rmanohar@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] ath9k: Fix PS wrappers in ath9k_set_coverage_class
+Date: Tue, 23 Aug 2011 19:34:33 +0530
+Message-ID: <1314108273-3787-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110823_160445_665429_0E3C4409)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changing the return type and removing the unused argument from
-ath_printk reduces code size.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Add an __always_unused struct ath_common * to the macros
-that call ath_printk to avoid unused variable warnings.
+this callback is called during suspend/resume and also via iw command.
+it configures parameters like sifs, slottime, acktimeout in
+ath9k_hw_init_global_settings where few REG_READ, REG_RMW are also done
+and hence the need for PS wrappers
 
-$ size drivers/net/wireless/ath/built-in.o*
-   text	   data	    bss	    dec	    hex	filename
-1159859	  16235	 212000	1388094	 152e3e	drivers/net/wireless/ath/built-in.o.new
-1164175	  16235	 212032	1392442	 153f3a	drivers/net/wireless/ath/built-in.o.old
-
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath.h  |   27 ++++++++++++++++-----------
- drivers/net/wireless/ath/main.c |    8 ++------
- 2 files changed, 18 insertions(+), 17 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index a3f8505..9891fb6 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -178,24 +178,29 @@ bool ath_hw_keyreset(struct ath_common *common, u16 entry);
- void ath_hw_cycle_counters_update(struct ath_common *common);
- int32_t ath_hw_get_listen_time(struct ath_common *common);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 781af25..2486f5c 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2285,7 +2285,11 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
  
--extern __attribute__((format (printf, 3, 4)))
--int ath_printk(const char *level, struct ath_common *common,
--	       const char *fmt, ...);
-+extern __attribute__((format (printf, 2, 3)))
-+void ath_printk(const char *level, const char *fmt, ...);
+ 	mutex_lock(&sc->mutex);
+ 	ah->coverage_class = coverage_class;
 +
-+#define _ath_printk(level, common, fmt, ...)			\
-+do {								\
-+	__always_unused struct ath_common *unused = common;	\
-+	ath_printk(level, fmt, ##__VA_ARGS__);			\
-+} while (0)
- 
- #define ath_emerg(common, fmt, ...)				\
--	ath_printk(KERN_EMERG, common, fmt, ##__VA_ARGS__)
-+	_ath_printk(KERN_EMERG, common, fmt, ##__VA_ARGS__)
- #define ath_alert(common, fmt, ...)				\
--	ath_printk(KERN_ALERT, common, fmt, ##__VA_ARGS__)
-+	_ath_printk(KERN_ALERT, common, fmt, ##__VA_ARGS__)
- #define ath_crit(common, fmt, ...)				\
--	ath_printk(KERN_CRIT, common, fmt, ##__VA_ARGS__)
-+	_ath_printk(KERN_CRIT, common, fmt, ##__VA_ARGS__)
- #define ath_err(common, fmt, ...)				\
--	ath_printk(KERN_ERR, common, fmt, ##__VA_ARGS__)
-+	_ath_printk(KERN_ERR, common, fmt, ##__VA_ARGS__)
- #define ath_warn(common, fmt, ...)				\
--	ath_printk(KERN_WARNING, common, fmt, ##__VA_ARGS__)
-+	_ath_printk(KERN_WARNING, common, fmt, ##__VA_ARGS__)
- #define ath_notice(common, fmt, ...)				\
--	ath_printk(KERN_NOTICE, common, fmt, ##__VA_ARGS__)
-+	_ath_printk(KERN_NOTICE, common, fmt, ##__VA_ARGS__)
- #define ath_info(common, fmt, ...)				\
--	ath_printk(KERN_INFO, common, fmt, ##__VA_ARGS__)
-+	_ath_printk(KERN_INFO, common, fmt, ##__VA_ARGS__)
- 
- /**
-  * enum ath_debug_level - atheros wireless debug level
-@@ -250,7 +255,7 @@ enum ATH_DEBUG {
- #define ath_dbg(common, dbg_mask, fmt, ...)				\
- do {									\
- 	if ((common)->debug_mask & dbg_mask)				\
--		ath_printk(KERN_DEBUG, common, fmt, ##__VA_ARGS__);	\
-+		_ath_printk(KERN_DEBUG, common, fmt, ##__VA_ARGS__);	\
- } while (0)
- 
- #define ATH_DBG_WARN(foo, arg...) WARN(foo, arg)
-diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
-index c325202..d9218fe 100644
---- a/drivers/net/wireless/ath/main.c
-+++ b/drivers/net/wireless/ath/main.c
-@@ -57,22 +57,18 @@ struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
++	ath9k_ps_wakeup(sc);
+ 	ath9k_hw_init_global_settings(ah);
++	ath9k_ps_restore(sc);
++
+ 	mutex_unlock(&sc->mutex);
  }
- EXPORT_SYMBOL(ath_rxbuf_alloc);
  
--int ath_printk(const char *level, struct ath_common *common,
--	       const char *fmt, ...)
-+void ath_printk(const char *level, const char *fmt, ...)
- {
- 	struct va_format vaf;
- 	va_list args;
--	int rtn;
- 
- 	va_start(args, fmt);
- 
- 	vaf.fmt = fmt;
- 	vaf.va = &args;
- 
--	rtn = printk("%sath: %pV", level, &vaf);
-+	printk("%sath: %pV", level, &vaf);
- 
- 	va_end(args);
--
--	return rtn;
- }
- EXPORT_SYMBOL(ath_printk);
 -- 
-1.7.6.405.gc1be0
+1.7.0.4
 
