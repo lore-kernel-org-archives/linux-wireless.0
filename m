@@ -1,115 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3133 "EHLO MMS3.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:1282 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752562Ab1HHN7Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:25 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 45/82] staging: brcm80211: remove global wait queue
- head sdioh_spinwait_sleep
-Date: Mon, 8 Aug 2011 15:58:29 +0200
-Message-ID: <1312811946-16713-46-git-send-email-arend@broadcom.com> (sfid-20110808_160218_191309_CAA6C49F)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+	id S1751823Ab1HWIl0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 04:41:26 -0400
+Message-ID: <4E5367AA.8040406@broadcom.com> (sfid-20110823_104129_380739_6C9BC832)
+Date: Tue, 23 Aug 2011 10:41:14 +0200
+From: "Roland Vossen" <rvossen@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"networkmanager-list@gnome.org" <networkmanager-list@gnome.org>
+Subject: Re: brcmsmac driver only works when sitting next to the AP
+References: <20110814121646.GA5188@stt008.linux.site>
+ <4E4A5641.4020604@broadcom.com>
+ <1313509211.2065.36.camel@dcbw.foobar.com>
+ <4E4B9A45.5090507@broadcom.com> <4E4CC85A.7010504@broadcom.com>
+ <4E4E73F4.4040105@broadcom.com>
+ <20110819152140.GA7506@stt008.linux.site>
+ <CAKprTDEUVa6ouH92G_8UMo20wYNnrhu76c_XAPYDtbCbRjqdLw@mail.gmail.com>
+ <4E52297D.9090301@broadcom.com>
+ <20110822112737.GA5936@stt008.linux.site>
+ <4E525235.7060501@broadcom.com>
+ <CAKprTDHO+Hh4g3WjGijDhPtzY5PiqR0GQ_zg8Uw46-qOVXpCRQ@mail.gmail.com>
+ <4E525FC7.4070802@broadcom.com>
+ <CAKprTDF0iFSAkYZiLQFLX+KumyLbzNUvHocKJyzK37Kv_79EFA@mail.gmail.com>
+In-Reply-To: <CAKprTDF0iFSAkYZiLQFLX+KumyLbzNUvHocKJyzK37Kv_79EFA@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+Hello Camaleón,
 
-Remove global wait queue head sdioh_spinwait_sleep in fullmac.
+ >> $ iw wlan0 scan
+ >
+ > root@stt300:~# iw wlan0 scan
+ > command failed: Device or resource busy (-16)
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/dhd.h      |   22 ----------------------
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   21 +++++++++++----------
- 2 files changed, 11 insertions(+), 32 deletions(-)
+couple more requests:
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index 9afd9ff..3c950cc 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -619,28 +619,6 @@ struct bcmevent_name {
- 	const char *name;
- };
- 
--#if defined(CONFIG_PM_SLEEP)
--#define BRCMF_SPINWAIT_SLEEP_INIT(a) DECLARE_WAIT_QUEUE_HEAD(a);
--#define BRCMF_SPINWAIT_SLEEP(a, exp, us) do { \
--		uint countdown = (us) + 9999; \
--		while ((exp) && (countdown >= 10000)) { \
--			wait_event_timeout(a, false, HZ/100); \
--			countdown -= 10000; \
--		} \
--	} while (0)
--
--#else
--#define BRCMF_SPINWAIT_SLEEP_INIT(a)
--#define BRCMF_SPINWAIT_SLEEP(a, exp, us)  do { \
--		uint countdown = (us) + 9; \
--		while ((exp) && (countdown >= 10)) { \
--			udelay(10);  \
--			countdown -= 10;  \
--		} \
--	} while (0)
--
--#endif	/* defined(CONFIG_PM_SLEEP) */
--
- /*
-  * Insmod parameters for debug/test
-  */
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index b38525c..83bb0ea 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -444,8 +444,6 @@ struct rte_console {
- 	(((prio) == PRIO_8021D_NONE || (prio) == PRIO_8021D_BE) ? \
- 	((prio^2)) : (prio))
- 
--BRCMF_SPINWAIT_SLEEP_INIT(sdioh_spinwait_sleep);
--
- /*
-  * Core reg address translation.
-  * Both macro's returns a 32 bits byte address on the backplane bus.
-@@ -1033,6 +1031,7 @@ static int brcmf_sdbrcm_htclk(struct brcmf_bus *bus, bool on, bool pendok)
- 	int err;
- 	u8 clkctl, clkreq, devctl;
- 	struct brcmf_sdio_card *card;
-+	unsigned long timeout;
- 
- 	BRCMF_TRACE(("%s: Enter\n", __func__));
- 
-@@ -1102,14 +1101,16 @@ static int brcmf_sdbrcm_htclk(struct brcmf_bus *bus, bool on, bool pendok)
- 		}
- 
- 		/* Otherwise, wait here (polling) for HT Avail */
--		if (!SBSDIO_CLKAV(clkctl, bus->alp_only)) {
--			BRCMF_SPINWAIT_SLEEP(sdioh_spinwait_sleep,
--			       ((clkctl =
--				 brcmf_sdcard_cfg_read(card, SDIO_FUNC_1,
--					 SBSDIO_FUNC1_CHIPCLKCSR,
--						 &err)),
--				!SBSDIO_CLKAV(clkctl, bus->alp_only)),
--			       PMU_MAX_TRANSITION_DLY);
-+		timeout = jiffies +
-+			  msecs_to_jiffies(PMU_MAX_TRANSITION_DLY/1000);
-+		while (!SBSDIO_CLKAV(clkctl, bus->alp_only)) {
-+			clkctl = brcmf_sdcard_cfg_read(card, SDIO_FUNC_1,
-+						       SBSDIO_FUNC1_CHIPCLKCSR,
-+						       &err);
-+			if (time_after(jiffies, timeout))
-+				break;
-+			else
-+				usleep_range(5000, 10000);
- 		}
- 		if (err) {
- 			BRCMF_ERROR(("%s: HT Avail request error: %d\n",
--- 
-1.7.4.1
+can you send me the output of 'sudo ps -A' ?
 
+can you issue a '$ iwlist channel' and a '$ iwlist scanning' ?
+
+Thanks, Roland.
 
