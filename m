@@ -1,64 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:40273 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753367Ab1H2OJs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 10:09:48 -0400
-Received: by qyk34 with SMTP id 34so3772006qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 07:09:47 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:4700 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751706Ab1HWMOR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 08:14:17 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 0/8] brcmsmac fixes and driver cleanup
+Date: Tue, 23 Aug 2011 14:13:52 +0200
+Message-ID: <1314101640-4229-1-git-send-email-arend@broadcom.com> (sfid-20110823_141428_484340_FFD54844)
 MIME-Version: 1.0
-In-Reply-To: <CAG6hwVM8t=v0_xZuKf-nodZR77R0S8nSUgea9QM5S-vB4h_8jg@mail.gmail.com>
-References: <1314236064-6339-1-git-send-email-thomas@cozybit.com>
-	<20110826142210.GE2579@tuxdriver.com>
-	<CAG6hwVM8t=v0_xZuKf-nodZR77R0S8nSUgea9QM5S-vB4h_8jg@mail.gmail.com>
-Date: Mon, 29 Aug 2011 10:09:47 -0400
-Message-ID: <CAEKwDSAXDgUY_Mc2A75x=-1VEMLF3Kd+=dgJOaBs+XOFn58dYw@mail.gmail.com> (sfid-20110829_160954_940058_F66C44BD)
-Subject: Re: [PATCH] ath5k: Invoke irqsafe version of ieee80211_tx_status() to
- avoid deadlock
-From: Bob Copeland <me@bobcopeland.com>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, lrodriguez@atheros.com,
-	Javier Cardona <javier@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 28, 2011 at 10:07 PM, Thomas Pedersen <thomas@cozybit.com> wrote:
-> On Fri, Aug 26, 2011 at 7:22 AM, John W. Linville
-> <linville@tuxdriver.com> wrote:
->> On Wed, Aug 24, 2011 at 06:34:24PM -0700, Thomas Pedersen wrote:
->>> From: Javier Cardona <javier@cozybit.com>
->>>
->>> This driver reports transmission status to the upper layer
->>> (ath5k_tx_frame_completed()) while holding the lock on the transmission
->>> queue (txq->lock).  Under failure conditions, the mesh stack will
->>> attempt to send PERR messages to the previous sender of the failed
->>> frame.  When that happens the driver will attempt to re-acquire the
->>> txq->lock lock causing a deadlock.  There are two possible fixes for
->>> this, (1) we could defer the transmission of the PERR frame until the
->>> lock is released or (2) release the lock before invoking
->>> ieee80211_tx_status().  The ath9k driver implements the second approach
->>> (see ath_tx_complete() in ath9k/xmit.c) as well as the rt2x00 and b43
->>> drivers.  The iwl driver, on the other hand, avoids this problem by
->>> invoking  ieee80211_tx_status_irqsafe() which effectively defers
->>> processing of transmission feedback status.  This last approach is the
->>> least intrusive is implemented here.
->>>
->>> Reported by Pedro Larbig (ASPj)
->>> ---
->>>  drivers/net/wireless/ath/ath5k/base.c |    2 +-
->>>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> Missing Signed-off-by...
->>
-> Yikes. Also, it looks like ieee80211_tx_status() should not be called
-> from irq context. Will resubmit a v2 with signoff and comment shortly.
+With 3.1 kernel the crc8 and cordic library modules are available in the
+staging tree. The brcmsmac driver now uses them. Some small fixes have
+been made and the driver is made to work on the Sparc platform.
 
-I don't get the last statement -- ieee80211_tx_status() -> irqsafe was
-the very change the patch added.  It's running in a bottom half
-though, not a hard irq.
+This series applies to staging-next and depends on the following patch set:
+
+Message-ID: <1313415267-5264-1-git-send-email-arend@broadcom.com>
+
+Arend van Spriel (4):
+  staging: brcm80211: make use of crc8 library function
+  staging: brcm80211: make use of cordic library function
+  staging: brcm80211: fix rtnl_lock issue when bringing down brcmfmac
+  staging: brcm80211: fill in proper rx rate in mac80211 rx status
+
+Franky Lin (1):
+  staging: brcm80211: fix checkpatch warning in fullmac
+
+Henry Ptasinski (1):
+  staging: brcm80211: only enable brcmsmac if bcma is not set
+
+Roland Vossen (2):
+  staging: brcm80211: bugfix for exception on Sparc platforms
+  staging: brcm80211: bugfix for fifo problem on 64 bits platforms.
+
+ drivers/staging/brcm80211/Kconfig                |    3 +
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    7 ++
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h |    2 +-
+ drivers/staging/brcm80211/brcmsmac/dma.c         |    7 ++-
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.c |    9 ++-
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.h |    6 ++
+ drivers/staging/brcm80211/brcmsmac/main.c        |   15 ++++-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |   62 -------------------
+ drivers/staging/brcm80211/brcmsmac/phy/phy_int.h |    1 -
+ drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c |    7 +-
+ drivers/staging/brcm80211/brcmsmac/phy/phy_n.c   |   14 +++--
+ drivers/staging/brcm80211/brcmsmac/srom.c        |   20 +++++-
+ drivers/staging/brcm80211/brcmutil/utils.c       |   69 ----------------------
+ drivers/staging/brcm80211/include/brcmu_utils.h  |    5 --
+ 14 files changed, 71 insertions(+), 156 deletions(-)
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.7.4.1
+
+
