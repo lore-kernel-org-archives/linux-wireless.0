@@ -1,60 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from slow3-v.mail.gandi.net ([217.70.178.89]:37589 "EHLO
-	slow3-v.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751306Ab1HWRqQ (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:45776 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755102Ab1HWUFa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 13:46:16 -0400
-Received: from relay4-d.mail.gandi.net (relay4-d.mail.gandi.net [217.70.183.196])
-	by slow3-v.mail.gandi.net (Postfix) with ESMTP id F1AB138CA1
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 19:41:22 +0200 (CEST)
-Date: Tue, 23 Aug 2011 10:41:13 -0700
-From: Josh Triplett <josh@joshtriplett.org>
-To: linux-wireless@vger.kernel.org
-Cc: Jamey Sharp <jamey@minilop.net>
-Subject: Re: EINVAL when setting 802.11a channel in Ad-Hoc mode
-Message-ID: <20110823174113.GA3155@leaf> (sfid-20110823_194619_975882_2F24748F)
-References: <20110817025141.GA4529@leaf>
+	Tue, 23 Aug 2011 16:05:30 -0400
+Date: Tue, 23 Aug 2011 13:01:41 -0700
+From: Greg KH <greg@kroah.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Greg KH <gregkh@suse.de>, Dan Carpenter <error27@gmail.com>,
+	"sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCHv2 00/82] staging: brcm80211: resubmit previously posted
+ patches
+Message-ID: <20110823200141.GA602@kroah.com> (sfid-20110823_220533_583207_4B47BD78)
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+ <CA+icZUUBokLgtn3K3uG7qcNLzy4pfdT4fGYWPtoOy_MQVy8VuA@mail.gmail.com>
+ <20110808145334.GA7659@shale.localdomain>
+ <4E400A92.7060905@broadcom.com>
+ <20110808163232.GA26352@suse.de>
+ <4E4010EB.2020606@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110817025141.GA4529@leaf>
+In-Reply-To: <4E4010EB.2020606@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 16, 2011 at 07:51:42PM -0700, Josh Triplett wrote:
-> We're trying to run 802.11a in Ad-Hoc mode.  However, when we get to the
-> point of setting the channel, we almost always get EINVAL back from the
-> kernel.  We ran the following series of commands:
+On Mon, Aug 08, 2011 at 06:38:03PM +0200, Arend van Spriel wrote:
+> On 08/08/2011 06:32 PM, Greg KH wrote:
+> >No, as you sent it is fine with me.
+> >
+> >I'll start going through the huge backlog of staging patches this week,
+> >as the merge window just opened up a few hours ago.
 > 
-> wlan=wlan3
-> iwconfig $wlan mode Ad-Hoc
-> ifconfig $wlan up
-> iwconfig $wlan essid PSAS-flight-computer
-> iwconfig $wlan channel 36
-> 
-> The channel command almost always got back an EINVAL.  This occurred on
-> three different wifi chipsets: a USB ar9170 (with either carl9170 or the
-> older ar9170usb driver), a USB rt2800usb, and iwlwifi with a Lenovo
-> X220.  In the former two cases, it occurs on both x86 (the
-> aforementioned X220) and powerpc (an MPC5200).
-> 
-> More strangely, the channel command would *sometimes* successfully set
-> the channel without error.
-> 
-> Have we done something wrong with the sequence of commands above?  Why
-> might we get EINVAL when setting a valid channel?  What next steps
-> should we take to debug this?
-> 
-> Currently about to compile in function_graph tracing and start walking
-> through the execution of SIOCSIWFREQ looking for what generates the
-> EINVAL.
+> Will keep my fingers crossed tonight ;-)
 
-Having done that, I managed to track down the source of the problem.
-Note that in the script above, I used channel 36 as an example; however,
-we tried a couple of other channels that should theoretically work in
-the US, such as 136, but those apparently have additional requirements
-to use, and it looks like Linux just gives a blanket "no".
+All 82 applied just fine, you can uncross your fingers now :)
 
-As it turns out, we want to use channel 36 anyway, so it doesn't matter
-that 136 doesn't work.
-
-- Josh Triplett
+greg k-h
