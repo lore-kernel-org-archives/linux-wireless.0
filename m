@@ -1,101 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:61218 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754251Ab1HKVbU (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:30435 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754742Ab1HWIRE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 17:31:20 -0400
-Received: by fxh19 with SMTP id 19so1950791fxh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 14:31:19 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [RFC][PATCH] b43: HT-PHY: allow writing longer tables with a single call
-Date: Fri, 12 Aug 2011 00:10:27 +0200
-Message-Id: <1313100627-26186-1-git-send-email-zajec5@gmail.com> (sfid-20110811_233123_565075_61608F63)
+	Tue, 23 Aug 2011 04:17:04 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Subject: [PATCH 3/7] ath6kl: Cleanup ath6kl_wmi_data_hdr_remove()
+Date: Tue, 23 Aug 2011 11:16:42 +0300
+Message-ID: <1314087406-29188-4-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110823_101715_820468_AB0DD9B4)
+In-Reply-To: <1314087406-29188-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1314087406-29188-1-git-send-email-kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometime we need to write table which is 2-10 elements long. It's easier
-to create such a function instead of defining array every time.
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/b43/tables_phy_ht.c |   45 ++++++++++++++++++++++++++++++
- drivers/net/wireless/b43/tables_phy_ht.h |    1 +
- 2 files changed, 46 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath6kl/txrx.c |    3 +--
+ drivers/net/wireless/ath/ath6kl/wmi.c  |   10 ----------
+ drivers/net/wireless/ath/ath6kl/wmi.h  |    1 -
+ 3 files changed, 1 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/tables_phy_ht.c b/drivers/net/wireless/b43/tables_phy_ht.c
-index 6039386..9681af5 100644
---- a/drivers/net/wireless/b43/tables_phy_ht.c
-+++ b/drivers/net/wireless/b43/tables_phy_ht.c
-@@ -674,6 +674,51 @@ void b43_httab_write(struct b43_wldev *dev, u32 offset, u32 value)
- 	return;
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index fb67c24..5d3d4b6 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -1162,8 +1162,7 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ 	seq_no = wmi_data_hdr_get_seqno(dhdr);
+ 	meta_type = wmi_data_hdr_get_meta(dhdr);
+ 	dot11_hdr = wmi_data_hdr_get_dot11(dhdr);
+-
+-	ath6kl_wmi_data_hdr_remove(ar->wmi, skb);
++	skb_pull(skb, sizeof(struct wmi_data_hdr));
+ 
+ 	switch (meta_type) {
+ 	case WMI_META_VERSION_1:
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index f5aa33d..13b1a20 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -376,16 +376,6 @@ int ath6kl_wmi_dot3_2_dix(struct sk_buff *skb)
+ 	return 0;
  }
  
-+void b43_httab_write_few(struct b43_wldev *dev, u32 offset, size_t num, ...)
-+{
-+	va_list args;
-+	u32 type, value;
-+	unsigned int i;
-+
-+	type = offset & B43_HTTAB_TYPEMASK;
-+	offset &= 0xFFFF;
-+
-+	va_start(args, num);
-+	switch (type) {
-+	case B43_HTTAB_8BIT:
-+		b43_phy_write(dev, B43_PHY_HT_TABLE_ADDR, offset);
-+		for (i = 0; i < num; i++) {
-+			value = va_arg(args, int);
-+			B43_WARN_ON(value & ~0xFF);
-+			b43_phy_write(dev, B43_PHY_HT_TABLE_DATALO, value);
-+		}
-+		break;
-+	case B43_HTTAB_16BIT:
-+		b43_phy_write(dev, B43_PHY_HT_TABLE_ADDR, offset);
-+		for (i = 0; i < num; i++) {
-+			value = va_arg(args, int);
-+			B43_WARN_ON(value & ~0xFFFF);
-+			b43_phy_write(dev, B43_PHY_HT_TABLE_DATALO, value);
-+		}
-+		break;
-+	case B43_HTTAB_32BIT:
-+		b43_phy_write(dev, B43_PHY_HT_TABLE_ADDR, offset);
-+		for (i = 0; i < num; i++) {
-+			value = va_arg(args, int);
-+			b43_phy_write(dev, B43_PHY_HT_TABLE_DATAHI,
-+				      value >> 16);
-+			b43_phy_write(dev, B43_PHY_HT_TABLE_DATALO,
-+				      value & 0xFFFF);
-+		}
-+		break;
-+	default:
-+		B43_WARN_ON(1);
-+	}
-+	va_end(args);
-+
-+	return;
-+}
-+
- void b43_httab_write_bulk(struct b43_wldev *dev, u32 offset,
- 			  unsigned int nr_elements, const void *_data)
+-int ath6kl_wmi_data_hdr_remove(struct wmi *wmi, struct sk_buff *skb)
+-{
+-	if (WARN_ON(skb == NULL))
+-		return -EINVAL;
+-
+-	skb_pull(skb, sizeof(struct wmi_data_hdr));
+-
+-	return 0;
+-}
+-
+ static void ath6kl_wmi_convert_bssinfo_hdr2_to_hdr(struct sk_buff *skb,
+ 						   u8 *datap)
  {
-diff --git a/drivers/net/wireless/b43/tables_phy_ht.h b/drivers/net/wireless/b43/tables_phy_ht.h
-index ea3be38..c68b0fa 100644
---- a/drivers/net/wireless/b43/tables_phy_ht.h
-+++ b/drivers/net/wireless/b43/tables_phy_ht.h
-@@ -14,6 +14,7 @@ u32 b43_httab_read(struct b43_wldev *dev, u32 offset);
- void b43_httab_read_bulk(struct b43_wldev *dev, u32 offset,
- 			 unsigned int nr_elements, void *_data);
- void b43_httab_write(struct b43_wldev *dev, u32 offset, u32 value);
-+void b43_httab_write_few(struct b43_wldev *dev, u32 offset, size_t num, ...);
- void b43_httab_write_bulk(struct b43_wldev *dev, u32 offset,
- 			  unsigned int nr_elements, const void *_data);
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index fe3ddce..8fa5d6e 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -1925,7 +1925,6 @@ int ath6kl_wmi_data_hdr_add(struct wmi *wmi, struct sk_buff *skb,
  
+ int ath6kl_wmi_dot11_hdr_remove(struct wmi *wmi, struct sk_buff *skb);
+ int ath6kl_wmi_dot3_2_dix(struct sk_buff *skb);
+-int ath6kl_wmi_data_hdr_remove(struct wmi *wmi, struct sk_buff *skb);
+ int ath6kl_wmi_implicit_create_pstream(struct wmi *wmi, struct sk_buff *skb,
+ 				       u32 layer2_priority, bool wmm_enabled,
+ 				       u8 *ac);
 -- 
-1.7.3.4
+1.7.1
 
