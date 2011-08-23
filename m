@@ -1,102 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:38772 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751736Ab1HOLCF convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:34361 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751934Ab1HWOuD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 07:02:05 -0400
-Received: by iye16 with SMTP id 16so7274139iye.1
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2011 04:02:05 -0700 (PDT)
+	Tue, 23 Aug 2011 10:50:03 -0400
+Received: by vws1 with SMTP id 1so150662vws.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 07:50:01 -0700 (PDT)
+Message-ID: <4E53BE15.3080207@lwfinger.net> (sfid-20110823_165006_307901_A47B6EB8)
+Date: Tue, 23 Aug 2011 09:49:57 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1313150524-13290-1-git-send-email-sgruszka@redhat.com>
-References: <1313150524-13290-1-git-send-email-sgruszka@redhat.com>
-Date: Mon, 15 Aug 2011 13:02:04 +0200
-Message-ID: <CAOZOX0X7fhKt02x8qBsjZEQtu2x0g4JxuyOB7i_4U6S+1HzTfw@mail.gmail.com> (sfid-20110815_130210_597170_DD846D96)
-Subject: Re: [PATCH] rt2x00: do not drop usb dev reference counter on suspend
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>, stable@kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Jonas Gorski <jonas.gorski@gmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Subject: Re: [PATCH 1/5] rtlwifi: Install updated rate-mapping routine
+References: <1314049818-21839-1-git-send-email-Larry.Finger@lwfinger.net> <1314049818-21839-2-git-send-email-Larry.Finger@lwfinger.net> <CAOiHx==qGMcTm_2nW4ktO=HzGGLrdjX2cqkb2Aj=0qANfuMGBg@mail.gmail.com>
+In-Reply-To: <CAOiHx==qGMcTm_2nW4ktO=HzGGLrdjX2cqkb2Aj=0qANfuMGBg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 12, 2011 at 2:02 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> When hibernating ->resume may not be called by usb core, but disconnect
-> and probe instead, so we do not increase the counter after decreasing
-> it in ->supend. As a result we free memory early, and get crash when
-> unplugging usb dongle.
+On 08/23/2011 06:12 AM, Jonas Gorski wrote:
+> Hi,
 >
-> BUG: unable to handle kernel paging request at 6b6b6b9f
-> IP: [<c06909b0>] driver_sysfs_remove+0x10/0x30
-> *pdpt = 0000000034f21001 *pde = 0000000000000000
-> Pid: 20, comm: khubd Not tainted 3.1.0-rc1-wl+ #20 LENOVO 6369CTO/6369CTO
-> EIP: 0060:[<c06909b0>] EFLAGS: 00010202 CPU: 1
-> EIP is at driver_sysfs_remove+0x10/0x30
-> EAX: 6b6b6b6b EBX: f52bba34 ECX: 00000000 EDX: 6b6b6b6b
-> ESI: 6b6b6b6b EDI: c0a0ea20 EBP: f61c9e68 ESP: f61c9e64
->  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-> Process khubd (pid: 20, ti=f61c8000 task=f6138270 task.ti=f61c8000)
-> Call Trace:
->  [<c06909ef>] __device_release_driver+0x1f/0xa0
->  [<c0690b20>] device_release_driver+0x20/0x40
->  [<c068fd64>] bus_remove_device+0x84/0xe0
->  [<c068e12a>] ? device_remove_attrs+0x2a/0x80
->  [<c068e267>] device_del+0xe7/0x170
->  [<c06d93d4>] usb_disconnect+0xd4/0x180
->  [<c06d9d61>] hub_thread+0x691/0x1600
->  [<c0473260>] ? wake_up_bit+0x30/0x30
->  [<c0442a39>] ? complete+0x49/0x60
->  [<c06d96d0>] ? hub_disconnect+0xd0/0xd0
->  [<c06d96d0>] ? hub_disconnect+0xd0/0xd0
->  [<c0472eb4>] kthread+0x74/0x80
->  [<c0472e40>] ? kthread_worker_fn+0x150/0x150
->  [<c0809b3e>] kernel_thread_helper+0x6/0x10
+> On 22 August 2011 23:50, Larry Finger<Larry.Finger@lwfinger.net>  wrote:
+>> +int rtlwifi_rate_mapping(struct ieee80211_hw *hw,
+>> +                        bool isht, u8 desc_rate, bool first_ampdu)
 >
-> Cc: stable@kernel.org
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> first_ampdu is never used in this function, is this intentional? I see
+> the (later) removed functions change the default based on this, but
+> without much knowledge of 802.11 I can't tell whether this actually
+> makes sense, etc. ;-).
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Good catch. When the routine was rewritten, that need for that boolean was 
+eliminated, but neither Realtek nor I realized that we now have an unused 
+argument. That is essentially a forest/trees problem. I will fix it.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00usb.c |   14 +-------------
->  1 files changed, 1 insertions(+), 13 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-> index 7fbb55c..1e31050 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-> @@ -871,18 +871,8 @@ int rt2x00usb_suspend(struct usb_interface *usb_intf, pm_message_t state)
->  {
->        struct ieee80211_hw *hw = usb_get_intfdata(usb_intf);
->        struct rt2x00_dev *rt2x00dev = hw->priv;
-> -       int retval;
-> -
-> -       retval = rt2x00lib_suspend(rt2x00dev, state);
-> -       if (retval)
-> -               return retval;
->
-> -       /*
-> -        * Decrease usbdev refcount.
-> -        */
-> -       usb_put_dev(interface_to_usbdev(usb_intf));
-> -
-> -       return 0;
-> +       return rt2x00lib_suspend(rt2x00dev, state);
->  }
->  EXPORT_SYMBOL_GPL(rt2x00usb_suspend);
->
-> @@ -891,8 +881,6 @@ int rt2x00usb_resume(struct usb_interface *usb_intf)
->        struct ieee80211_hw *hw = usb_get_intfdata(usb_intf);
->        struct rt2x00_dev *rt2x00dev = hw->priv;
->
-> -       usb_get_dev(interface_to_usbdev(usb_intf));
-> -
->        return rt2x00lib_resume(rt2x00dev);
->  }
->  EXPORT_SYMBOL_GPL(rt2x00usb_resume);
-> --
-> 1.7.1
->
->
+Larry
