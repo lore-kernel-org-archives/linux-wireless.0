@@ -1,95 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:49108 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750766Ab1H1LtX (ORCPT
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:60973 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751823Ab1HWIme (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Aug 2011 07:49:23 -0400
-Received: by fxh19 with SMTP id 19so3667747fxh.19
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Aug 2011 04:49:22 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/3] b43: LCN-PHY: add R/W ops for PHY and radio
-Date: Sun, 28 Aug 2011 14:28:43 +0200
-Message-Id: <1314534525-4475-1-git-send-email-zajec5@gmail.com> (sfid-20110828_134942_451500_A90888BA)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 23 Aug 2011 04:42:34 -0400
+Received: by mail-bw0-f49.google.com with SMTP id 17so6861133bke.22
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 01:42:33 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3.1] wl12xx: add max_sched_scan_ssids value to the hw description
+Date: Tue, 23 Aug 2011 11:42:25 +0300
+Message-Id: <1314088945-19848-1-git-send-email-coelho@ti.com> (sfid-20110823_104237_748216_D5C091FB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+After commit 5a865ba, we require a separate value to indicate the
+number of supported SSIDs in scheduled scans.  This patch adds a
+proper value to the wl12xx driver.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+This fixes a regression in 3.1-rc3 where scheduled scans were not
+working properly with the wl12xx driver.
+
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/b43/phy_lcn.c |   42 ++++++++++++++++++++++++++++++++++-
- 1 files changed, 40 insertions(+), 2 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_lcn.c b/drivers/net/wireless/b43/phy_lcn.c
-index 4b2cd6d..cf75d3d 100644
---- a/drivers/net/wireless/b43/phy_lcn.c
-+++ b/drivers/net/wireless/b43/phy_lcn.c
-@@ -233,6 +233,46 @@ static void b43_phy_lcn_op_adjust_txpower(struct b43_wldev *dev)
- }
- 
- /**************************************************
-+ * R/W ops.
-+ **************************************************/
-+
-+static u16 b43_phy_lcn_op_read(struct b43_wldev *dev, u16 reg)
-+{
-+	b43_write16(dev, B43_MMIO_PHY_CONTROL, reg);
-+	return b43_read16(dev, B43_MMIO_PHY_DATA);
-+}
-+
-+static void b43_phy_lcn_op_write(struct b43_wldev *dev, u16 reg, u16 value)
-+{
-+	b43_write16(dev, B43_MMIO_PHY_CONTROL, reg);
-+	b43_write16(dev, B43_MMIO_PHY_DATA, value);
-+}
-+
-+static void b43_phy_lcn_op_maskset(struct b43_wldev *dev, u16 reg, u16 mask,
-+				   u16 set)
-+{
-+	b43_write16(dev, B43_MMIO_PHY_CONTROL, reg);
-+	b43_write16(dev, B43_MMIO_PHY_DATA,
-+		    (b43_read16(dev, B43_MMIO_PHY_DATA) & mask) | set);
-+}
-+
-+static u16 b43_phy_lcn_op_radio_read(struct b43_wldev *dev, u16 reg)
-+{
-+	/* LCN-PHY needs 0x200 for read access */
-+	reg |= 0x200;
-+
-+	b43_write16(dev, B43_MMIO_RADIO24_CONTROL, reg);
-+	return b43_read16(dev, B43_MMIO_RADIO24_DATA);
-+}
-+
-+static void b43_phy_lcn_op_radio_write(struct b43_wldev *dev, u16 reg,
-+				       u16 value)
-+{
-+	b43_write16(dev, B43_MMIO_RADIO24_CONTROL, reg);
-+	b43_write16(dev, B43_MMIO_RADIO24_DATA, value);
-+}
-+
-+/**************************************************
-  * PHY ops struct.
-  **************************************************/
- 
-@@ -241,13 +281,11 @@ const struct b43_phy_operations b43_phyops_lcn = {
- 	.free			= b43_phy_lcn_op_free,
- 	.prepare_structs	= b43_phy_lcn_op_prepare_structs,
- 	.init			= b43_phy_lcn_op_init,
--	/*
- 	.phy_read		= b43_phy_lcn_op_read,
- 	.phy_write		= b43_phy_lcn_op_write,
- 	.phy_maskset		= b43_phy_lcn_op_maskset,
- 	.radio_read		= b43_phy_lcn_op_radio_read,
- 	.radio_write		= b43_phy_lcn_op_radio_write,
--	*/
- 	.software_rfkill	= b43_phy_lcn_op_software_rfkill,
- 	.switch_analog		= b43_phy_lcn_op_switch_analog,
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index e58c22d..b70ae40 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -4283,6 +4283,7 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+ 		BIT(NL80211_IFTYPE_ADHOC) | BIT(NL80211_IFTYPE_AP);
+ 	wl->hw->wiphy->max_scan_ssids = 1;
++	wl->hw->wiphy->max_sched_scan_ssids = 1;
  	/*
+ 	 * Maximum length of elements in scanning probe request templates
+ 	 * should be the maximum length possible for a template, without
 -- 
-1.7.3.4
+1.7.1
 
