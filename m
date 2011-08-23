@@ -1,56 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:60288 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752641Ab1HIL7b (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:58136 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754890Ab1HWMzM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 07:59:31 -0400
-Received: by eyg24 with SMTP id 24so3485551eyg.16
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 04:59:28 -0700 (PDT)
-Subject: Re: [PATCH 02/40] wl12xx: Use a single fw for both STA and AP roles
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1312881233-9366-3-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-	 <1312881233-9366-3-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 09 Aug 2011 14:59:25 +0300
-Message-ID: <1312891165.2407.163.camel@cumari> (sfid-20110809_135934_548130_589A20EF)
-Mime-Version: 1.0
+	Tue, 23 Aug 2011 08:55:12 -0400
+Received: by fxh19 with SMTP id 19so213173fxh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 05:55:11 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] wl12xx: allow 11a AP-mode for wl127x devices
+Date: Tue, 23 Aug 2011 15:56:22 +0300
+Message-Id: <1314104183-31612-1-git-send-email-eliad@wizery.com> (sfid-20110823_145516_715134_54277076)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
-> From: Arik Nemtsov <arik@wizery.com>
-> 
-> The new wl12xx fw supports both STA and AP roles.
+From: Arik Nemtsov <arik@wizery.com>
 
-Again, let's be more explicit here about the firmware versions.
+There was a check preventing 127x devices from using the 11a band when
+operating as AP. Since we now support this functionality, remove the
+check.
 
+With this patch, a 11a AP starts ok on 127x cards.
 
-> diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-> index 6c080e9..21c5f95 100644
-> --- a/drivers/net/wireless/wl12xx/wl12xx.h
-> +++ b/drivers/net/wireless/wl12xx/wl12xx.h
-> @@ -127,16 +127,14 @@ extern u32 wl12xx_debug_level;
->  				  CFG_RX_MGMT_EN | CFG_RX_DATA_EN | \
->  				  CFG_RX_CTL_EN | CFG_RX_AUTH_EN | \
->  				  CFG_RX_ASSOC_EN)
->  
-> 
-> 
-> -#define WL1271_FW_NAME "ti-connectivity/wl1271-fw-2.bin"
-> -#define WL128X_FW_NAME "ti-connectivity/wl128x-fw.bin"
-> -#define WL127X_AP_FW_NAME "ti-connectivity/wl1271-fw-ap.bin"
-> -#define WL128X_AP_FW_NAME "ti-connectivity/wl128x-fw-ap.bin"
-> +#define WL1271_FW_NAME "ti-connectivity/wl1271-fw-3.bin"
-> +#define WL128X_FW_NAME "ti-connectivity/wl128x-fw-3.bin"
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/boot.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-Should we use this opportunity to change the macro to WL127X_FW_NAME and
-the file name to wl127x-fw.bin?
-
-
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index cc70422..6d5664b 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -294,9 +294,7 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
+ 		 */
+ 		if (wl->nvs_len == sizeof(struct wl1271_nvs_file) ||
+ 		    wl->nvs_len == WL1271_INI_LEGACY_NVS_FILE_SIZE) {
+-			/* for now 11a is unsupported in AP mode */
+-			if (wl->bss_type != BSS_TYPE_AP_BSS &&
+-			    nvs->general_params.dual_mode_select)
++			if (nvs->general_params.dual_mode_select)
+ 				wl->enable_11a = true;
+ 		}
+ 
 -- 
-Cheers,
-Luca.
+1.7.6.401.g6a319
 
