@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:43220 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753119Ab1HWA0h (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:56093 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754605Ab1HWMzN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 20:26:37 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] libertas: update readme file
-Date: Mon, 22 Aug 2011 17:26:37 -0700
-Message-Id: <1314059197-8377-1-git-send-email-bzhao@marvell.com> (sfid-20110823_022640_877552_ADB855B4)
+	Tue, 23 Aug 2011 08:55:13 -0400
+Received: by fxh19 with SMTP id 19so213188fxh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 05:55:12 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] wl12xx: initialize rate_set on band rates initialization
+Date: Tue, 23 Aug 2011 15:56:23 +0300
+Message-Id: <1314104183-31612-2-git-send-email-eliad@wizery.com> (sfid-20110823_145518_568495_07FCB3D2)
+In-Reply-To: <1314104183-31612-1-git-send-email-eliad@wizery.com>
+References: <1314104183-31612-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+In some corner cases, (invalid) 11g rates were used while
+working on 11a band.
 
-Since all wext specific code is removed, currently there is no
-way to configure deep sleep mode. This patch removes deep sleep
-configuration information in readme file.
+Take care of it by initializing rate_set according to the
+configured band.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/libertas/README |   25 -------------------------
- 1 files changed, 0 insertions(+), 25 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/README b/drivers/net/wireless/libertas/README
-index 1453eec..91f2ca9 100644
---- a/drivers/net/wireless/libertas/README
-+++ b/drivers/net/wireless/libertas/README
-@@ -238,28 +238,3 @@ hostsleep
- 		echo "1" > hostsleep : enable host sleep.
- 		echo "0" > hostsleep : disable host sleep
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 82f4408..9094fa5 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2199,10 +2199,14 @@ out:
  
--========================
--IWCONFIG COMMANDS
--========================
--power period
--
--	This command is used to configure the station in deep sleep mode /
--	auto deep sleep mode.
--
--	The timer is implemented to monitor the activities (command, event,
--	etc.). When an activity is detected station will exit from deep
--	sleep mode automatically and restart the timer. At timer expiry
--	(no activity for defined time period) the deep sleep mode is entered
--	automatically.
--
--	Note: this command is for SDIO interface only.
--
--	Usage:
--	To enable deep sleep mode do:
--		iwconfig wlan0 power period 0
--	To enable auto deep sleep mode with idle time period 5 seconds do:
--		iwconfig wlan0 power period 5
--	To disable deep sleep/auto deep sleep mode do:
--		iwconfig wlan0 power period -1
--
--==============================================================================
+ static void wl1271_set_band_rate(struct wl1271 *wl)
+ {
+-	if (wl->band == IEEE80211_BAND_2GHZ)
++	if (wl->band == IEEE80211_BAND_2GHZ) {
+ 		wl->basic_rate_set = wl->conf.tx.basic_rate;
+-	else
++		wl->rate_set = wl->conf.tx.basic_rate;
++	} else {
+ 		wl->basic_rate_set = wl->conf.tx.basic_rate_5;
++		wl->rate_set = wl->conf.tx.basic_rate_5;
++	}
++
+ }
+ 
+ static bool wl12xx_is_roc(struct wl1271 *wl)
 -- 
-1.5.3.4
+1.7.6.401.g6a319
 
