@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:46068 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751302Ab1HOUC1 convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:30435 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754547Ab1HWIQ6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 16:02:27 -0400
-Received: by gya6 with SMTP id 6so3375728gya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2011 13:02:27 -0700 (PDT)
+	Tue, 23 Aug 2011 04:16:58 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/7] ath6kl: patches upto 2011-08-23
+Date: Tue, 23 Aug 2011 11:16:39 +0300
+Message-ID: <1314087406-29188-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110823_101709_604566_43667AD3)
 MIME-Version: 1.0
-In-Reply-To: <CACna6rwvjRm+yLyz-sbQjmot8ErhfLN5E0NgtW3kbgjPy+JwLA@mail.gmail.com>
-References: <CACna6rwvjRm+yLyz-sbQjmot8ErhfLN5E0NgtW3kbgjPy+JwLA@mail.gmail.com>
-Date: Mon, 15 Aug 2011 23:02:26 +0300
-Message-ID: <CAFtRNNzb9c_PskJ+9SJKpM2VryzHthii2SsiMc4Pp8ifn6u19A@mail.gmail.com> (sfid-20110815_220233_205863_F4AA24F2)
-Subject: Re: Hosting wl driver, part of GPL package
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-011/8/13 Rafał Miłecki <zajec5@gmail.com>:
-> I need some hosting for broadcom-wl-5.100.138.tar.bz2 extracted from
-> GPL sources.
->
-> Currently all the interesting drivers I've found are placed on:
-> http://broadcom.zajec.net/
-> but I can not guarantee 100% uptime or high bandwidth limit.
->
-> Can someone offer b43 a place to host that drivers? We need them to
-> extract firmware required for various Broadcom cards.
->
-> Up to now we were using openwrt's ftp but they don't host the newest
-> drivers. We need 5.100 or newer to have firmware for the newest cards
-> included (like HT-PHY).
->
-> --
-> Rafał
+Hi,
 
-You could apply for space at www.kernel.org...
+here are few patches I have applied to ath6kl tree. I will send
+a merge request later, maybe next week or so.
 
-https://accounts.kernel.org/
+>From now on we will send patches first to the mailing list for review
+and only then I will apply them to the tree.
 
-If you don't want to go through the process I can upload them for you
-in my space...
-http://www.kernel.org/pub/linux/kernel/people/mickflemm/
+Kalle
 
-I also think you can attach files on http://wireless.kernel.org but
-I'm not sure.
+Kalle Valo (1):
+  ath6kl: implement suspend support
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Vasanthakumar Thiagarajan (6):
+  ath6kl: Release ar->lock right afer updating net_stats in ath6kl_rx()
+  ath6kl: Minor cleanup in min_hdr_len computation
+  ath6kl: Cleanup ath6kl_wmi_data_hdr_remove()
+  ath6kl: Fix bug in computing AMSU subframe padding
+  ath6kl: Fix buffer alignment for scatter-gather I/O
+  ath6kl: Fix system freeze under heavy data load
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   14 ++++++++++
+ drivers/net/wireless/ath/ath6kl/core.h     |    4 +++
+ drivers/net/wireless/ath/ath6kl/hif-ops.h  |    5 ++++
+ drivers/net/wireless/ath/ath6kl/hif.h      |    1 +
+ drivers/net/wireless/ath/ath6kl/htc.c      |   14 ++++++++++
+ drivers/net/wireless/ath/ath6kl/init.c     |    2 +-
+ drivers/net/wireless/ath/ath6kl/main.c     |   37 +++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath6kl/sdio.c     |   36 +++++++++++++++++++-------
+ drivers/net/wireless/ath/ath6kl/txrx.c     |   18 +++++++------
+ drivers/net/wireless/ath/ath6kl/wmi.c      |   10 -------
+ drivers/net/wireless/ath/ath6kl/wmi.h      |    1 -
+ 11 files changed, 111 insertions(+), 31 deletions(-)
+
