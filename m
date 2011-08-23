@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:58369 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754847Ab1HTTUH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Aug 2011 15:20:07 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Qur5S-0004G1-5a
-	for linux-wireless@vger.kernel.org; Sat, 20 Aug 2011 21:20:06 +0200
-Received: from 69-196-174-66.dsl.teksavvy.com ([69.196.174.66])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Aug 2011 21:20:06 +0200
-Received: from dennisn by 69-196-174-66.dsl.teksavvy.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Aug 2011 21:20:06 +0200
-To: linux-wireless@vger.kernel.org
-From: Dennis Nezic <dennisn@dennisn.dyndns.org>
-Subject: Vague wifi fail with ipw2200
-Date: Sat, 20 Aug 2011 15:14:02 -0400
-Message-ID: <20110820151402.605226e7.dennisn@dennisn.dyndns.org> (sfid-20110820_212011_387524_03EBDFB2)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:50067 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755329Ab1HWPLU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 11:11:20 -0400
+Received: by fxh19 with SMTP id 19so304559fxh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 08:11:19 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "Louis" <louis.m@gmx.net>
+Subject: Re: carl9170-driver usable as AccessPoint
+Date: Tue, 23 Aug 2011 17:11:16 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <20110823081829.203150@gmx.net>
+In-Reply-To: <20110823081829.203150@gmx.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201108231711.16397.chunkeey@googlemail.com> (sfid-20110823_171133_032310_F0CE42C6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For that last long while, I have been having strange vague wifi fails
-every few days -- my ipw2200 ad-hoc server would suddenly become very
-unresponsive -- instead of the usual stable 0.6ms pings, they would
-fluctuate wildly from a minimum of about 2ms to 10ms, even though the
-connection wasn't being used. More seriously/substantially, iwconfig
-would show the "Tx excessive retries" to be steadily increasing -- and
-drastically increasing with more usage -- 10-100 retries per second
-under heavy usage. I have tried playing with the "Retry limit" "RTS thr"
-and "Fragrment thr" values a bit, and with a fixed bitrate, but they
-didn't seem to have any significant effect -- the connection would still
-inevitably reach this turbulence and ultimately fail, forcing me to
-restart it.
+On Tuesday, August 23, 2011 10:18:29 AM Louis wrote:
+> I am trying to set up an Accesspoint using the Fritz!WLAN USB Stick N with
+> the carl9170-1.9.4 driver. The system runs on a 3.0-rc2 kernel. 
+That's a misprint, right?! Because 3.0.3 still ships with 1.9.2.
+ 
+> When trying to use hostapd-0.8, I get following error message: 
+> "nl80211: Failed to set interface wlan1 into AP mode"
+That's a generic error message. You'll to be more precise in fact
+hostapd has a -d and -dd switch which makes the output more
+verbose. 
 
-I don't think it's simply a noisy environment, although there are about
-10 other access points around here, none of which shares my channel 1
-at the moment. (There's one on 2, one on 3.) Because that wouldn't
-explain why the connection becomes stable and fast after I restart the
-wifi interface.
+> Can you you give me a hint if there is something wrong in my setup?
+No, 'cause you haven't shown us any of your setup :D.
 
-I'm guessing it's something to do with the driver?
-
+> Or is AP- usage not supported in the carl9170 driver?
+It is. As long as noone disables it.
+ 
+> Is there another way (or maybe driver) which can set the wifi-stick
+> into master mode ? 
+Well, now that you mention it: a different stick. For example the
+Fritz!WLAN USB Stick N. Even though this stick has the same
+name, it's quite different, they now stick AR7010+AR9280 chips
+into the device and ath9k_htc is the driver.
