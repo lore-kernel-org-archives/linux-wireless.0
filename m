@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3290 "EHLO MMS3.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4954 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752485Ab1HHQ2t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 12:28:49 -0400
-Message-ID: <4E400EB6.5000508@broadcom.com> (sfid-20110808_182852_360017_48158171)
-Date: Mon, 8 Aug 2011 18:28:38 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1753515Ab1HWW3V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 18:29:21 -0400
+Date: Tue, 23 Aug 2011 15:29:08 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: "Randy Dunlap" <rdunlap@xenotime.net>
+cc: driverdevel <devel@driverdev.osuosl.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Subject: Re: [PATCH] staging: brcmsmac, fix build for SMP disabled
+Message-ID: <20110823222908.GC4802@broadcom.com> (sfid-20110824_002924_411829_A19BA5BE)
+References: <20110823145659.a22e1860.rdunlap@xenotime.net>
 MIME-Version: 1.0
-To: "gregkh@suse.de" <gregkh@suse.de>
-cc: "Arend van Spriel" <arend@broadcom.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCHv2 01/82] staging: brcm80211: fix compile error on
- non-x86 archs since 3.0 kernel
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
- <1312811946-16713-2-git-send-email-arend@broadcom.com>
-In-Reply-To: <1312811946-16713-2-git-send-email-arend@broadcom.com>
+In-Reply-To: <20110823145659.a22e1860.rdunlap@xenotime.net>
 Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/08/2011 03:57 PM, Arend van Spriel wrote:
-> From: Arend Van Spriel<arend@broadcom.com>
->
-> Since the arrival of kernel version 3.0 in the staging tree it
-> turns out compile error occurs for sparc64, powerpc, and arm
-> platforms. This patch fixes that issue.
->
+On Tue, Aug 23, 2011 at 02:56:59PM -0700, Randy Dunlap wrote:
+> ---
+>  drivers/staging/brcm80211/brcmsmac/types.h |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> --- lnx-31-rc3.orig/drivers/staging/brcm80211/brcmsmac/types.h
+> +++ lnx-31-rc3/drivers/staging/brcm80211/brcmsmac/types.h
+> @@ -18,6 +18,7 @@
+>  #define _BRCM_TYPES_H_
+>  
+>  #include <linux/types.h>
+> +#include <asm/io.h>
+>  
+>  /* Bus types */
+>  #define	SI_BUS			0	/* SOC Interconnect */
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Hi Greg,
 
-Actually, the error was also on MIPS which is enabled in Kconfig. Can 
-this one also go to 3.1 ie. Linus' tree?
+I believe this is covered by a patch that Greg merged earlier today (which adds
+'#include <linux/io.h>' to types.h).
 
-Gr. AvS
-
--- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
+- Henry
 
 
