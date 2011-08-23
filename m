@@ -1,87 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm9-vm0.access.bullet.mail.mud.yahoo.com ([66.94.237.249]:35794
-	"HELO nm9-vm0.access.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754948Ab1HCMir (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:2654 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754646Ab1HWJ2A convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2011 08:38:47 -0400
-Date: Wed, 3 Aug 2011 08:33:31 -0400
-From: jason@monsterjam.org
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: drops with compat-wireless-3.0-2 and ath9k_htc
-Message-ID: <20110803123331.GA9168@monsterjam.org> (sfid-20110803_143853_391012_221DF399)
-References: <20110802001821.GA29352@monsterjam.org>
- <CAD2nsn0WqpHsJAODziyO1SFUT4Pm-fkp=zvcdyckJgfDeAMdcQ@mail.gmail.com>
+	Tue, 23 Aug 2011 05:28:00 -0400
+Message-ID: <4E53728B.3030803@broadcom.com> (sfid-20110823_112803_640973_06D9E83F)
+Date: Tue, 23 Aug 2011 11:27:39 +0200
+From: "Roland Vossen" <rvossen@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAD2nsn0WqpHsJAODziyO1SFUT4Pm-fkp=zvcdyckJgfDeAMdcQ@mail.gmail.com>
+To: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"networkmanager-list@gnome.org" <networkmanager-list@gnome.org>
+Subject: Re: brcmsmac driver only works when sitting next to the AP
+References: <20110814121646.GA5188@stt008.linux.site>
+ <4E4A5641.4020604@broadcom.com>
+ <1313509211.2065.36.camel@dcbw.foobar.com>
+ <4E4B9A45.5090507@broadcom.com> <4E4CC85A.7010504@broadcom.com>
+ <4E4E73F4.4040105@broadcom.com>
+ <20110819152140.GA7506@stt008.linux.site>
+ <CAKprTDEUVa6ouH92G_8UMo20wYNnrhu76c_XAPYDtbCbRjqdLw@mail.gmail.com>
+ <4E52297D.9090301@broadcom.com>
+ <20110822112737.GA5936@stt008.linux.site>
+ <4E525235.7060501@broadcom.com>
+ <CAKprTDHO+Hh4g3WjGijDhPtzY5PiqR0GQ_zg8Uw46-qOVXpCRQ@mail.gmail.com>
+ <4E525FC7.4070802@broadcom.com>
+ <CAKprTDF0iFSAkYZiLQFLX+KumyLbzNUvHocKJyzK37Kv_79EFA@mail.gmail.com>
+ <4E5367AA.8040406@broadcom.com>
+ <CAKprTDFret5n-AH_B_Hu6E0+B4FEGJQ=jjYbGNy8ZD5R8ReFCg@mail.gmail.com>
+In-Reply-To: <CAKprTDFret5n-AH_B_Hu6E0+B4FEGJQ=jjYbGNy8ZD5R8ReFCg@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 02, 2011 at 11:00:43AM +0530, Mohammed Shafi wrote:
-> On Tue, Aug 2, 2011 at 5:48 AM,  <jason@monsterjam.org> wrote:
-> > hey folks, running ?2.6.38.8-32.fc15.i686 ?with a
-> > Bus 001 Device 003: ID 0cf3:7015 Atheros Communications, Inc.
-> > adapter, and I keep seeing hangs on my workstation.
-> 
-> we will try to recreate it here.
-> when are you getting this issue(AP mode or station mode). any other
-> information will be helpful.
-not sure what you mean by AP or station.. my dlink wireless is acting as a router (not a wireless bridge if thats what you 
-mean)
-> also does it happens with wireless-testing ?
-> 
+Hello Camaleón,
 
-actually i think the problem may be gone.. I uninstalled network manager and did some fedora updates.. now im running 
- 2.6.38.8-35.fc15.i686 with the stock kernel ath9k drivers (not the 3.0 vers)..
-ill let yall know if the problem happens again.
+I did not see anything unusual in the provided 'ps -A' output.
 
-regards,
-Jason
+I want to find out what the result of a scan is, specifically the RSSI. 
+In that way I can judge if this is a signal reception problem.
 
-> >
-> > here is the output from the latest time it happened..
-> >
-> > [32322.166396] ath: Chip reset failed
-> > [32322.166404] ath: Unable to reset channel (2452 Mhz) reset status -22
-> > [32322.167608] ath: Unable to set channel
-> > [32322.167631] wlan2: deauthenticating from 00:24:01:43:24:b4 by local choice (reason=3)
-> > [32322.276851] ath: Chip reset failed
-> > [32322.276856] ath: Unable to reset hardware; reset status -22 (freq 2452 MHz)
-> > [32322.379231] cfg80211: Calling CRDA to update world regulatory domain
-> > [32322.394452] ath: Failed to wakeup in 500us
-> > [32322.408122] ath: Failed to wakeup in 500us
-> > [32322.418226] ath: Failed to wakeup in 500us
-> > [32322.648187] usb 1-3: ath9k_htc: USB layer deinitialized
-> > [32322.651879] cfg80211: World regulatory domain updated:
-> > [32322.651896] cfg80211: ? ? (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> > [32322.651900] cfg80211: ? ? (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> > [32322.651904] cfg80211: ? ? (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-> > [32322.651907] cfg80211: ? ? (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-> > [32322.651910] cfg80211: ? ? (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> > [32322.651913] cfg80211: ? ? (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> >
-> > the wireless router is a ?netgear wireless N router thats running dd-wrt.
-> >
-> > it seems if I unplug the usb adapter and reinsert it, the computer will recover just fine.
-> >
-> >
-> > thanks/regards,
-> > Jason
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at ?http://vger.kernel.org/majordomo-info.html
-> >
-> 
-> 
-> 
-> -- 
-> shafi
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Can you do the following:
+
+- unload brcmsmac driver (or simply don't load it)
+- 'sudo service network-manager stop'
+	.. this gets network-manager out of the way, perhaps it is related to 
+the 'resource/device busy' message
+- load driver
+- 'sudo ifconfig wlan0 up'
+- 'sudo iw wlan0 scan'
+
+Thanks, Roland.
+
 
