@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:33741 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754434Ab1HWPez (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:32853 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754917Ab1HWOAO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 11:34:55 -0400
-Received: by mail-bw0-f41.google.com with SMTP id zt4so199211bkb.28
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 08:34:54 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: coelho@ti.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] wl12xx: use SCAN_SSID_TYPE_PUBLIC when using the wildcard in sched_scan
-Date: Tue, 23 Aug 2011 18:34:45 +0300
-Message-Id: <1314113685-27437-3-git-send-email-coelho@ti.com> (sfid-20110823_173501_964738_73E03285)
-In-Reply-To: <1314113685-27437-1-git-send-email-coelho@ti.com>
-References: <1314113685-27437-1-git-send-email-coelho@ti.com>
+	Tue, 23 Aug 2011 10:00:14 -0400
+Date: Tue, 23 Aug 2011 09:53:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: [RFC][PATCH] b43: HT-PHY: allow writing longer tables with a
+ single call
+Message-ID: <20110823135311.GC9770@tuxdriver.com> (sfid-20110823_160019_996775_741E21A2)
+References: <1313100627-26186-1-git-send-email-zajec5@gmail.com>
+ <CACna6rwbzX241MVCwPd1qRbU1uWRcwjyVguBhcLs8xPcDzV0GQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rwbzX241MVCwPd1qRbU1uWRcwjyVguBhcLs8xPcDzV0GQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we are scanning for the wildcard SSID in a scheduled scan, we
-should use SCAN_SSID_TYPE_PUBLIC so that we don't filter out the scan
-results.
+On Tue, Aug 23, 2011 at 03:44:51PM +0200, Rafał Miłecki wrote:
+> W dniu 12 sierpnia 2011 00:10 użytkownik Rafał Miłecki
+> <zajec5@gmail.com> napisał:
+> > Sometime we need to write table which is 2-10 elements long. It's easier
+> > to create such a function instead of defining array every time.
+> 
+> John, take this one please.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/scan.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+Repost it, without "RFC" in the title.
 
-diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
-index af9d53c..af4ad23 100644
---- a/drivers/net/wireless/wl12xx/scan.c
-+++ b/drivers/net/wireless/wl12xx/scan.c
-@@ -490,9 +490,12 @@ wl12xx_scan_sched_scan_ssid_list(struct wl1271 *wl,
- 		return -ENOMEM;
- 
- 	while ((cmd->n_ssids < req->n_ssids) && ssid) {
--		if (ssid->ssid_len == 0)
-+		if (ssid->ssid_len == 0) {
- 			wildcard = 1;
--		cmd->ssids[cmd->n_ssids].type = SCAN_SSID_TYPE_HIDDEN;
-+			cmd->ssids[cmd->n_ssids].type = SCAN_SSID_TYPE_PUBLIC;
-+		} else {
-+			cmd->ssids[cmd->n_ssids].type = SCAN_SSID_TYPE_HIDDEN;
-+		}
- 		cmd->ssids[cmd->n_ssids].len = ssid->ssid_len;
- 		memcpy(cmd->ssids[cmd->n_ssids].ssid, ssid->ssid,
- 		       ssid->ssid_len);
 -- 
-1.7.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
