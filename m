@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:34229 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755943Ab1HWTR5 (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:50858 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753515Ab1HWW2N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 15:17:57 -0400
-Date: Tue, 23 Aug 2011 22:15:35 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: "open list:BROADCOM SPECIFIC..." <linux-wireless@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org
-Subject: [patch -next v2] bcma: signedness bug in bcma_get_next_core()
-Message-ID: <20110823191535.GL12248@shale.localdomain> (sfid-20110823_211802_426822_10E133EA)
-References: <20110818133809.GG4786@shale.localdomain>
- <CACna6rzwxA=OzQQ_VknsSq8BXXoH8U=GpdfkRTBWjFSNSjwsAA@mail.gmail.com>
+	Tue, 23 Aug 2011 18:28:13 -0400
+Date: Tue, 23 Aug 2011 15:26:14 -0700
+From: Greg KH <greg@kroah.com>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: driverdevel <devel@driverdev.osuosl.org>,
+	linux-wireless@vger.kernel.org, gregkh@suse.de
+Subject: Re: [PATCH] staging: brcmsmac, fix build for SMP disabled
+Message-ID: <20110823222614.GA20158@kroah.com> (sfid-20110824_002829_727270_2CC7215C)
+References: <20110823145659.a22e1860.rdunlap@xenotime.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACna6rzwxA=OzQQ_VknsSq8BXXoH8U=GpdfkRTBWjFSNSjwsAA@mail.gmail.com>
+In-Reply-To: <20110823145659.a22e1860.rdunlap@xenotime.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The u32 would never be less than zero so the error handling would
-break.  I changed it to s32 to match how bcma_erom_get_mst_port() is
-declared.
+On Tue, Aug 23, 2011 at 02:56:59PM -0700, Randy Dunlap wrote:
+> From: Randy Dunlap <rdunlap@xenotime.net>
+> 
+> Fix build when CONFIG_SMP is not enabled.
+> Fixes many build errors (subset listed here):
+> 
+> drivers/staging/brcm80211/brcmsmac/ampdu.c: In function 'brcms_c_ampdu_dotxstatus':
+> drivers/staging/brcm80211/brcmsmac/ampdu.c:833: error: implicit declaration of function 'readb'
+> drivers/staging/brcm80211/brcmsmac/ampdu.c:833: error: implicit declaration of function 'readw'
+> drivers/staging/brcm80211/brcmsmac/ampdu.c:833: error: implicit declaration of function 'readl'
+> drivers/staging/brcm80211/brcmsmac/main.c: In function 'brcms_c_init':
+> drivers/staging/brcm80211/brcmsmac/main.c:494: error: implicit declaration of function 'writeb'
+> drivers/staging/brcm80211/brcmsmac/main.c:494: error: implicit declaration of function 'writew'
+> drivers/staging/brcm80211/brcmsmac/main.c:494: error: implicit declaration of function 'writel'
+> drivers/staging/brcm80211/brcmsmac/main.c:529: error: implicit declaration of function 'readb'
+> drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c: In function 'wlc_radioreg_exit':
+> drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c:208: error: implicit declaration of function 'readb'
+> drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c:208: error: implicit declaration of function 'readw'
+> drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c: In function 'wlc_lcnphy_idle_tssi_est':
+> drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c:2080: error: implicit declaration of function 'readb'
+> drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c: In function 'wlc_lcnphy_samp_cap':
+> drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c:3837: error: implicit declaration of function 'writeb'
+> vers/staging/brcm80211/brcmsmac/phy/phy_n.c: In function 'wlc_phy_init_nphy':
+> drivers/staging/brcm80211/brcmsmac/phy/phy_n.c:14561: error: implicit declaration of function 'readb'
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
----
-v2:  the first version used "int" instead of "s32".
+No longer applies as I took a different patch that resolves this a few
+hours ago :(
 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 0ea390f..cad9948 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -281,7 +281,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 
- 	/* get & parse master ports */
- 	for (i = 0; i < ports[0]; i++) {
--		u32 mst_port_d = bcma_erom_get_mst_port(bus, eromptr);
-+		s32 mst_port_d = bcma_erom_get_mst_port(bus, eromptr);
- 		if (mst_port_d < 0)
- 			return -EILSEQ;
- 	}
+greg k-h
