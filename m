@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:46524 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751248Ab1HYQDW (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:48623 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753486Ab1HWTzE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 12:03:22 -0400
-Received: by wyg24 with SMTP id 24so1794291wyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 09:03:21 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/5] wl12xx: check for ROC on scan_complete
-Date: Thu, 25 Aug 2011 19:04:28 +0300
-Message-Id: <1314288270-22380-3-git-send-email-eliad@wizery.com> (sfid-20110825_180324_520589_5CC0E8C1)
-In-Reply-To: <1314288270-22380-1-git-send-email-eliad@wizery.com>
-References: <1314288270-22380-1-git-send-email-eliad@wizery.com>
+	Tue, 23 Aug 2011 15:55:04 -0400
+Date: Tue, 23 Aug 2011 12:52:39 -0700
+From: Greg KH <greg@kroah.com>
+To: Ali Bahar <ali@internetdog.org>
+Cc: Greg Kroah-Hartman <gregkh@suse.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] staging: r8712u: Most return-values changed from -1
+ to proper errno macros.
+Message-ID: <20110823195239.GA17945@kroah.com> (sfid-20110823_215508_941565_7F8455BF)
+References: <1310799573-4407-1-git-send-email-ali@internetDog.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1310799573-4407-1-git-send-email-ali@internetDog.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When scan completes, and we are not associated, we should start
-the dev role and ROC. however, we might already be in this situation
-(e.g. if we got disconnected during scan). check for it.
+On Sat, Jul 16, 2011 at 02:59:33PM +0800, Ali Bahar wrote:
+> The ioctl handlers were frequently returning -1 upon failure. Most of
+> these have now been changed to proper errno macros.
+> The few remaining ones have been left untouched because either the
+> handler is not called (and so cannot be tested), or the function never
+> fails (and so cannot be system-tested), or requires new code to
+> distinguish its failures.
+> 
+> Signed-off-by: Ali Bahar <ali@internetDog.org>
+> Cc: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/scan.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+This fails to apply cleanly anymore, can you refresh it, and your other
+outstanding patches and resend?
 
-diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
-index b2e2abd..4a4d0d0 100644
---- a/drivers/net/wireless/wl12xx/scan.c
-+++ b/drivers/net/wireless/wl12xx/scan.c
-@@ -65,8 +65,9 @@ void wl1271_scan_complete_work(struct work_struct *work)
- 	/* return to ROC if needed */
- 	is_sta = (wl->bss_type == BSS_TYPE_STA_BSS);
- 	is_ibss = (wl->bss_type == BSS_TYPE_IBSS);
--	if ((is_sta && !test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags)) ||
--	    (is_ibss && !test_bit(WL1271_FLAG_IBSS_JOINED, &wl->flags))) {
-+	if (((is_sta && !test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags)) ||
-+	     (is_ibss && !test_bit(WL1271_FLAG_IBSS_JOINED, &wl->flags))) &&
-+	    !test_bit(wl->dev_role_id, wl->roc_map)) {
- 		/* restore remain on channel */
- 		wl12xx_cmd_role_start_dev(wl);
- 		wl12xx_roc(wl, wl->dev_role_id);
--- 
-1.7.6.401.g6a319
+thanks,
 
+greg k-h
