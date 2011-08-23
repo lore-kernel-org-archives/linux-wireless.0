@@ -1,30 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26542 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580Ab1HaIHs (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:50575 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751254Ab1HWHVc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 04:07:48 -0400
-Date: Wed, 31 Aug 2011 13:37:27 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <kvalo@adurom.com>
-Subject: Re: [PATCH] ath6kl: Add debugfs interface to dump diagnostic
-	registers
-Message-ID: <20110831080726.GB1234@vasanth-laptop> (sfid-20110831_100753_753016_359680FB)
-References: <1314717419-16512-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1314717419-16512-1-git-send-email-vthiagar@qca.qualcomm.com>
+	Tue, 23 Aug 2011 03:21:32 -0400
+Received: by wwf5 with SMTP id 5so5947161wwf.1
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 00:21:31 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] mac80211: allow action frames with unknown BSSID in GO mode
+Date: Tue, 23 Aug 2011 10:21:27 +0300
+Message-Id: <1314084087-16170-1-git-send-email-arik@wizery.com> (sfid-20110823_092135_223371_71542486)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 30, 2011 at 08:46:59PM +0530, Vasanthakumar Thiagarajan wrote:
-> To dump a particular register, echo reg_addr > <debugfs_root>/ieee80211/phyX/ath6kl/reg_addr,
-> to dump the entire register set, echo 0 > <debugfs_root>/ieee80211/phyX/ath6kl/reg_addr, and
-> register values will be available at <debugfs_root>/ieee80211/phyX/ath6kl/reg_dump.
-> 
+When operating as a P2P GO, we receive some P2P action frames where the
+BSSID is set to the peer MAC address. Specifically, this occurs for
+invitation responses. These are valid action frames and they should be
+passed up.
 
-I'm fixing endian issues with chip register read/write. Please drop
-this patch. I'll rebase it with my endian patches.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ net/mac80211/rx.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-Vasanth 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 6540cd1..43ad4ef 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2689,7 +2689,9 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
+ 		} else if (!ieee80211_bssid_match(bssid,
+ 					sdata->vif.addr)) {
+ 			if (!(status->rx_flags & IEEE80211_RX_IN_SCAN) &&
+-			    !ieee80211_is_beacon(hdr->frame_control))
++			    !ieee80211_is_beacon(hdr->frame_control) &&
++			    !(ieee80211_is_action(hdr->frame_control) &&
++			      sdata->vif.p2p))
+ 				return 0;
+ 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
+ 		}
+-- 
+1.7.4.1
+
