@@ -1,62 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:44841 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755254Ab1HBUtq (ORCPT
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:35902 "EHLO
+	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756021Ab1HWUhL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 16:49:46 -0400
-Message-ID: <4E3862E6.508@lwfinger.net> (sfid-20110802_224951_150497_B0832228)
-Date: Tue, 02 Aug 2011 15:49:42 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>,
-	John W Linville <linville@tuxdriver.com>
-CC: geert@linux-m68k.org, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: Fix build errors on sh4 architecture
-References: <4e3855e4.8qPfeuR18XtAq7Vs%Larry.Finger@lwfinger.net> <4E385BFA.90406@openwrt.org>
-In-Reply-To: <4E385BFA.90406@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 23 Aug 2011 16:37:11 -0400
+Received: by iye16 with SMTP id 16so726166iye.1
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 13:37:10 -0700 (PDT)
+From: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	florian@openwrt.org, "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH 0/2] ath9k: AR9580 support
+Date: Tue, 23 Aug 2011 13:37:05 -0700
+Message-Id: <1314131827-29565-1-git-send-email-lrodriguez@qca.qualcomm.com> (sfid-20110823_223715_448923_F3B89FA7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/02/2011 03:20 PM, Felix Fietkau wrote:
-> On 2011-08-02 9:54 PM, Larry Finger wrote:
->> When rtlwifi is built for the sh4 architecture, build errors of the following
->> type occur. An explicit reference to<linux/io.h> should fix these. I have not
->> setup the cross-build environment, thus this patch is untested on that platform.
->> It does not cause any problems on i386 or x86_64.
->>
->> v3.0/sh4/sh-allmodconfig v3.0/sh4/sh-allyesconfig
->> src/drivers/net/wireless/rtlwifi/rtl8192c/../pci.h:290: error: implicit
->> declaration of function 'outl': 4 errors in 2 logs
->> v3.0/sh4/sh-allmodconfig v3.0/sh4/sh-allyesconfig
->> src/drivers/net/wireless/rtlwifi/rtl8192c/../pci.h:295: error: implicit
->> declaration of function 'outb': 4 errors in 2 logs
->> v3.0/sh4/sh-allmodconfig v3.0/sh4/sh-allyesconfig
->> src/drivers/net/wireless/rtlwifi/rtl8192c/../pci.h:300: error: implicit
->> declaration of function 'inb': 4 errors in 2 logs
->> v3.0/sh4/sh-allmodconfig v3.0/sh4/sh-allyesconfig
->> src/drivers/net/wireless/rtlwifi/rtl8192c/../pci.h:305: error: implicit
->> declaration of function 'inw': 4 errors in 2 logs
->>
->> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
->> Cc: Geert Uytterhoeven<geert@linux-m68k.org>
->> ---
->>
->> John,
->>
->> I'm not sure where this goes. I guess that 3.2 would be OK, unless someone
->> actually tries to build it on sh4. The only time I have seen the errors is
->> in Geert's listing of errors and warnings.
-> I looked at the code that uses raw port access, and it looks to me like this is
-> just a bunch of x86 specific hacks to mess with the ASPM settings of the PCI
-> bridge. This code should probably be either #ifdef'd, removed or rewritten. I
-> doubt it'll work properly on other architectures.
+From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 
-Thanks Felix.
+This adds AR9580 support to ath9k. Thanks to Florian for the
+help with testing.
 
-John,
+Luis R. Rodriguez (2):
+  ath9k_hw: add AR9580 support
+  ath9k: add AR9580 support
 
-I'll take another look at this. Please drop the patch.
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c         |   81 +
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c        |    3 +-
+ .../net/wireless/ath/ath9k/ar9580_1p0_initvals.h   | 1673 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c                |    1 +
+ drivers/net/wireless/ath/ath9k/hw.h                |    1 +
+ drivers/net/wireless/ath/ath9k/pci.c               |    1 +
+ drivers/net/wireless/ath/ath9k/reg.h               |   14 +
+ 7 files changed, 1773 insertions(+), 1 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
 
-Larry
+-- 
+1.7.4.15.g7811d
+
