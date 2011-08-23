@@ -1,330 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:53205 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752434Ab1H3Noj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 09:44:39 -0400
-Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
-	by emh06-2.mail.saunalahti.fi (Postfix) with SMTP id C1886C7EF8
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 16:44:37 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-188-95.elisa-laajakaista.fi [88.115.188.95])
-	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 9801127D85
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 16:44:33 +0300 (EEST)
-Subject: [PATCH 1/4] ath6kl: add firmware log support
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Date: Tue, 30 Aug 2011 16:44:32 +0300
-Message-ID: <20110830134432.21543.89808.stgit@localhost6.localdomain6> (sfid-20110830_154443_447192_F5D0CECD)
+Received: from mms3.broadcom.com ([216.31.210.19]:3241 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751869Ab1HWOSi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 10:18:38 -0400
+Message-ID: <4E53B6B0.8010605@broadcom.com> (sfid-20110823_161841_706068_CE59FAA3)
+Date: Tue, 23 Aug 2011 16:18:24 +0200
+From: "Roland Vossen" <rvossen@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"networkmanager-list@gnome.org" <networkmanager-list@gnome.org>
+Subject: Re: brcmsmac driver only works when sitting next to the AP
+References: <20110822112737.GA5936@stt008.linux.site>
+ <4E525235.7060501@broadcom.com>
+ <CAKprTDHO+Hh4g3WjGijDhPtzY5PiqR0GQ_zg8Uw46-qOVXpCRQ@mail.gmail.com>
+ <4E525FC7.4070802@broadcom.com>
+ <CAKprTDF0iFSAkYZiLQFLX+KumyLbzNUvHocKJyzK37Kv_79EFA@mail.gmail.com>
+ <4E5367AA.8040406@broadcom.com>
+ <CAKprTDFret5n-AH_B_Hu6E0+B4FEGJQ=jjYbGNy8ZD5R8ReFCg@mail.gmail.com>
+ <4E53728B.3030803@broadcom.com>
+ <20110823095348.GA5383@stt008.linux.site>
+ <4E538309.1040203@broadcom.com>
+ <20110823105341.GA5604@stt008.linux.site>
+ <4E538DC3.7060906@broadcom.com>
+ <CAKprTDHVcEgZvNE6Ububoaf1WH+LAcHD35YriNaj47JnsVL=Xg@mail.gmail.com>
+In-Reply-To: <CAKprTDHVcEgZvNE6Ububoaf1WH+LAcHD35YriNaj47JnsVL=Xg@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware sends binary logs with WMIX_DBGLOG_EVENTID event. Create
-a buffer which stores the latest logs and which can be copied from
-fwlog debugfs file with cp command.
+>> that is great. Ok, do you have the kernel sources on your system ? If so, cd
+>> to the root of the source tree and issue these commands to build the driver:
+>>
+>> make SUBDIRS=drivers/staging/brcm80211 clean
+>> make SUBDIRS=drivers/staging/brcm80211 modules
+>
+> Done!
 
-To save memory firmware log support is enabled only when CONFIG_ATH6KL_DEBUG
-is enabled.
+perfect !
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/core.h   |   10 ++
- drivers/net/wireless/ath/ath6kl/debug.c  |  154 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/debug.h  |   13 +++
- drivers/net/wireless/ath/ath6kl/init.c   |    2 
- drivers/net/wireless/ath/ath6kl/target.h |    3 +
- drivers/net/wireless/ath/ath6kl/wmi.c    |    1 
- 6 files changed, 182 insertions(+), 1 deletions(-)
+>> if that works, do a 'modprobe mac80211' followed by a 'insmod
+>> drivers/staging/brcm80211/brcmutil/brcmutil.ko'
+>
+> root@stt300:/usr/src/linux-source-3.0.0# insmod
+> drivers/staging/brcm80211/brcmutil/brcmutil.ko
+> insmod: can't read 'drivers/staging/brcm80211/brcmutil/brcmutil.ko':
+> No such file or directory
+>
+> Ah, okay...
+> root@stt300:/usr/src/linux-source-3.0.0# insmod
+> drivers/staging/brcm80211/util/brcmutil.ko
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index c5537b3..89ca343 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -21,6 +21,7 @@
- #include <linux/rtnetlink.h>
- #include <linux/firmware.h>
- #include <linux/sched.h>
-+#include <linux/circ_buf.h>
- #include <net/cfg80211.h>
- #include "htc.h"
- #include "wmi.h"
-@@ -468,6 +469,15 @@ struct ath6kl {
- 
- 	struct ath6kl_node_table scan_table;
- 	struct dentry *debugfs_phy;
-+
-+#ifdef CONFIG_ATH6KL_DEBUG
-+	struct {
-+		struct circ_buf fwlog_buf;
-+		spinlock_t fwlog_lock;
-+		void *fwlog_tmp;
-+	} debug;
-+#endif /* CONFIG_ATH6KL_DEBUG */
-+
- };
- 
- static inline void *ath6kl_priv(struct net_device *dev)
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index 2b46287..b2706da 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -15,7 +15,23 @@
-  */
- 
- #include "core.h"
-+
-+#include <linux/circ_buf.h>
-+
- #include "debug.h"
-+#include "target.h"
-+
-+struct ath6kl_fwlog_slot {
-+	__le32 timestamp;
-+	__le32 length;
-+
-+	/* max ATH6KL_FWLOG_PAYLOAD_SIZE bytes */
-+	u8 payload[0];
-+};
-+
-+#define ATH6KL_FWLOG_SIZE 32768
-+#define ATH6KL_FWLOG_SLOT_SIZE (sizeof(struct ath6kl_fwlog_slot) + \
-+				ATH6KL_FWLOG_PAYLOAD_SIZE)
- 
- int ath6kl_printk(const char *level, const char *fmt, ...)
- {
-@@ -153,6 +169,117 @@ static int ath6kl_debugfs_open(struct inode *inode, struct file *file)
- 	return 0;
- }
- 
-+static void ath6kl_debug_fwlog_add(struct ath6kl *ar, const void *buf,
-+				   size_t buf_len)
-+{
-+	struct circ_buf *fwlog = &ar->debug.fwlog_buf;
-+	size_t space;
-+	int i;
-+
-+	/* entries must all be equal size */
-+	if (WARN_ON(buf_len != ATH6KL_FWLOG_SLOT_SIZE))
-+		return;
-+
-+	space = CIRC_SPACE(fwlog->head, fwlog->tail, ATH6KL_FWLOG_SIZE);
-+	if (space < buf_len)
-+		/* discard oldest slot */
-+		fwlog->tail = (fwlog->tail + ATH6KL_FWLOG_SLOT_SIZE) &
-+			(ATH6KL_FWLOG_SIZE - 1);
-+
-+	for (i = 0; i < buf_len; i += space) {
-+		space = CIRC_SPACE_TO_END(fwlog->head, fwlog->tail,
-+					  ATH6KL_FWLOG_SIZE);
-+
-+		if ((size_t) space > buf_len - i)
-+			space = buf_len - i;
-+
-+		memcpy(&fwlog->buf[fwlog->head], buf, space);
-+		fwlog->head = (fwlog->head + space) & (ATH6KL_FWLOG_SIZE - 1);
-+	}
-+
-+}
-+
-+void ath6kl_debug_fwlog_event(struct ath6kl *ar, const void *buf, size_t len)
-+{
-+	struct ath6kl_fwlog_slot *slot = ar->debug.fwlog_tmp;
-+	size_t slot_len;
-+
-+	if (WARN_ON(len > ATH6KL_FWLOG_PAYLOAD_SIZE))
-+		return;
-+
-+	spin_lock_bh(&ar->debug.fwlog_lock);
-+
-+	slot->timestamp = cpu_to_le32(jiffies);
-+	slot->length = cpu_to_le32(len);
-+	memcpy(slot->payload, buf, len);
-+
-+	slot_len = sizeof(*slot) + len;
-+
-+	if (slot_len < ATH6KL_FWLOG_SLOT_SIZE)
-+		memset(slot->payload + len, 0,
-+		       ATH6KL_FWLOG_SLOT_SIZE - slot_len);
-+
-+	ath6kl_debug_fwlog_add(ar, slot, ATH6KL_FWLOG_SLOT_SIZE);
-+
-+	spin_unlock_bh(&ar->debug.fwlog_lock);
-+}
-+
-+static bool ath6kl_debug_fwlog_empty(struct ath6kl *ar)
-+{
-+	return CIRC_CNT(ar->debug.fwlog_buf.head,
-+			ar->debug.fwlog_buf.tail,
-+			ATH6KL_FWLOG_SLOT_SIZE) == 0;
-+}
-+
-+static ssize_t ath6kl_fwlog_read(struct file *file, char __user *user_buf,
-+				 size_t count, loff_t *ppos)
-+{
-+	struct ath6kl *ar = file->private_data;
-+	struct circ_buf *fwlog = &ar->debug.fwlog_buf;
-+	size_t len = 0, buf_len = count;
-+	ssize_t ret_cnt;
-+	char *buf;
-+	int ccnt;
-+
-+	buf = vmalloc(buf_len);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	spin_lock_bh(&ar->debug.fwlog_lock);
-+
-+	while (len < buf_len && !ath6kl_debug_fwlog_empty(ar)) {
-+		ccnt = CIRC_CNT_TO_END(fwlog->head, fwlog->tail,
-+				       ATH6KL_FWLOG_SIZE);
-+
-+		if ((size_t) ccnt > buf_len - len)
-+			ccnt = buf_len - len;
-+
-+		memcpy(buf + len, &fwlog->buf[fwlog->tail], ccnt);
-+		len += ccnt;
-+
-+		fwlog->tail = (fwlog->tail + ccnt) &
-+			(ATH6KL_FWLOG_SIZE - 1);
-+	}
-+
-+	spin_unlock_bh(&ar->debug.fwlog_lock);
-+
-+	if (WARN_ON(len > buf_len))
-+		len = buf_len;
-+
-+	ret_cnt = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+
-+	vfree(buf);
-+
-+	return ret_cnt;
-+}
-+
-+static const struct file_operations fops_fwlog = {
-+	.open = ath6kl_debugfs_open,
-+	.read = ath6kl_fwlog_read,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- static ssize_t read_file_tgt_stats(struct file *file, char __user *user_buf,
- 				   size_t count, loff_t *ppos)
- {
-@@ -358,10 +485,25 @@ static const struct file_operations fops_credit_dist_stats = {
- 
- int ath6kl_debug_init(struct ath6kl *ar)
- {
-+	ar->debug.fwlog_buf.buf = vmalloc(ATH6KL_FWLOG_SIZE);
-+	if (ar->debug.fwlog_buf.buf == NULL)
-+		return -ENOMEM;
-+
-+	ar->debug.fwlog_tmp = kmalloc(ATH6KL_FWLOG_SLOT_SIZE, GFP_KERNEL);
-+	if (ar->debug.fwlog_tmp == NULL) {
-+		vfree(ar->debug.fwlog_buf.buf);
-+		return -ENOMEM;
-+	}
-+
-+	spin_lock_init(&ar->debug.fwlog_lock);
-+
- 	ar->debugfs_phy = debugfs_create_dir("ath6kl",
- 					     ar->wdev->wiphy->debugfsdir);
--	if (!ar->debugfs_phy)
-+	if (!ar->debugfs_phy) {
-+		vfree(ar->debug.fwlog_buf.buf);
-+		kfree(ar->debug.fwlog_tmp);
- 		return -ENOMEM;
-+	}
- 
- 	debugfs_create_file("tgt_stats", S_IRUSR, ar->debugfs_phy, ar,
- 			    &fops_tgt_stats);
-@@ -369,6 +511,16 @@ int ath6kl_debug_init(struct ath6kl *ar)
- 	debugfs_create_file("credit_dist_stats", S_IRUSR, ar->debugfs_phy, ar,
- 			    &fops_credit_dist_stats);
- 
-+	debugfs_create_file("fwlog", S_IRUSR, ar->debugfs_phy, ar,
-+			    &fops_fwlog);
-+
- 	return 0;
- }
-+
-+void ath6kl_debug_cleanup(struct ath6kl *ar)
-+{
-+	vfree(ar->debug.fwlog_buf.buf);
-+	kfree(ar->debug.fwlog_tmp);
-+}
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
-index e8c9ea9..f0d6471 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.h
-+++ b/drivers/net/wireless/ath/ath6kl/debug.h
-@@ -78,7 +78,10 @@ void ath6kl_dump_registers(struct ath6kl_device *dev,
- 			   struct ath6kl_irq_proc_registers *irq_proc_reg,
- 			   struct ath6kl_irq_enable_reg *irq_en_reg);
- void dump_cred_dist_stats(struct htc_target *target);
-+void ath6kl_debug_fwlog_event(struct ath6kl *ar, const void *buf, size_t len);
- int ath6kl_debug_init(struct ath6kl *ar);
-+void ath6kl_debug_cleanup(struct ath6kl *ar);
-+
- #else
- static inline int ath6kl_dbg(enum ATH6K_DEBUG_MASK dbg_mask,
- 			     const char *fmt, ...)
-@@ -101,9 +104,19 @@ static inline void ath6kl_dump_registers(struct ath6kl_device *dev,
- static inline void dump_cred_dist_stats(struct htc_target *target)
- {
- }
-+
-+void ath6kl_debug_fwlog_event(struct ath6kl *ar, const void *buf, size_t len)
-+{
-+}
-+
- static inline int ath6kl_debug_init(struct ath6kl *ar)
- {
- 	return 0;
- }
-+
-+void ath6kl_debug_cleanup(struct ath6kl *ar)
-+{
-+}
-+
- #endif
- #endif
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index ad9716c..bcb94ab 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1353,6 +1353,8 @@ void ath6kl_destroy(struct net_device *dev, unsigned int unregister)
- 
- 	ath6kl_bmi_cleanup(ar);
- 
-+	ath6kl_debug_cleanup(ar);
-+
- 	if (unregister && test_bit(NETDEV_REGISTERED, &ar->flag)) {
- 		unregister_netdev(dev);
- 		clear_bit(NETDEV_REGISTERED, &ar->flag);
-diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
-index 53e2c78..6c66a08 100644
---- a/drivers/net/wireless/ath/ath6kl/target.h
-+++ b/drivers/net/wireless/ath/ath6kl/target.h
-@@ -340,4 +340,7 @@ struct host_interest {
- #define AR6004_REV1_BOARD_DATA_ADDRESS          0x435400
- #define AR6004_REV1_BOARD_EXT_DATA_ADDRESS      0x437000
- #define AR6004_REV1_RAM_RESERVE_SIZE            11264
-+
-+#define ATH6KL_FWLOG_PAYLOAD_SIZE		1500
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index d116d0e..b96a734 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -2482,6 +2482,7 @@ static int ath6kl_wmi_control_rx_xtnd(struct wmi *wmi, struct sk_buff *skb)
- 	case WMIX_HB_CHALLENGE_RESP_EVENTID:
- 		break;
- 	case WMIX_DBGLOG_EVENTID:
-+		ath6kl_debug_fwlog_event(wmi->parent_dev, datap, len);
- 		break;
- 	default:
- 		ath6kl_err("unknown cmd id 0x%x\n", id);
+Ah, the source tree had some renaming. It is named 'brcmutil' in my 
+source but in the source you are using it is still named 'util'.
+
+> root@stt300:/usr/src/linux-source-3.0.0#
+>
+>> followed by a 'insmod drivers/staging/brcm80211/brcmsmac/brcmsmac.ko'.
+>
+> Mmm... this one returned an error:
+>
+> root@stt300:/usr/src/linux-source-3.0.0# insmod
+> drivers/staging/brcm80211/brcmsmac/brcmsmac.ko
+> insmod: error inserting
+> 'drivers/staging/brcm80211/brcmsmac/brcmsmac.ko': -1 Unknown symbol in
+> module
+>
+> And dmesg shows:
+>
+> [16235.934894] brcmsmac: Unknown symbol bcm_chspec_malformed (err 0)
+> [16235.934985] brcmsmac: Unknown symbol bcm_pktq_init (err 0)
+> [16235.935035] brcmsmac: Unknown symbol bcm_bitcount (err 0)
+> [16235.935092] brcmsmac: Unknown symbol bcm_pktq_peek_tail (err 0)
+> [16235.935130] brcmsmac: Unknown symbol bcm_pktq_mdeq (err 0)
+> [16235.935283] brcmsmac: Unknown symbol bcm_pktq_pdeq (err 0)
+> [16235.935329] brcmsmac: Unknown symbol bcm_chspec_ctlchan (err 0)
+> [16235.935375] brcmsmac: Unknown symbol bcm_pkt_buf_free_skb (err 0)
+> [16235.935414] brcmsmac: Unknown symbol bcm_iovar_lencheck (err 0)
+> [16235.935457] brcmsmac: Unknown symbol bcm_pkttotlen (err 0)
+> [16235.935519] brcmsmac: Unknown symbol bcm_ether_atoe (err 0)
+> [16235.935581] brcmsmac: Unknown symbol bcm_crc8 (err 0)
+> [16235.935636] brcmsmac: Unknown symbol bcm_pkt_buf_get_skb (err 0)
+> [16235.935677] brcmsmac: Unknown symbol bcm_pktq_penq_head (err 0)
+> [16235.935735] brcmsmac: Unknown symbol bcm_pktq_pdeq_tail (err 0)
+> [16235.935774] brcmsmac: Unknown symbol bcm_pktq_pflush (err 0)
+> [16235.935827] brcmsmac: Unknown symbol bcm_pktq_penq (err 0)
+> [16235.935882] brcmsmac: Unknown symbol bcm_pktq_flush (err 0)
+
+These symbols are contained in the 'brcmutil.ko' module. Can you check 
+with lsmod that brcmutil is indeed loaded ?
+
+Thanks, Roland.
 
