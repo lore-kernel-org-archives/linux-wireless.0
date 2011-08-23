@@ -1,88 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:64307 "EHLO
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:43516 "EHLO
 	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750799Ab1H3A7E (ORCPT
+	with ESMTP id S1754267Ab1HWWHf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 20:59:04 -0400
-Received: by gxk21 with SMTP id 21so5274293gxk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 17:59:02 -0700 (PDT)
-Message-ID: <4E5C35D1.80600@lwfinger.net> (sfid-20110830_025908_142033_D2B57198)
-Date: Mon, 29 Aug 2011 19:58:57 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Rob Browning <rlb@defaultvalue.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Slow receive with rtl8192cu (usb ew-7811Un)
-References: <87pqnl5i81.fsf@raven.defaultvalue.org>	<4DD074E3.3090502@lwfinger.net>	<87vcxbe5xz.fsf@trouble.defaultvalue.org>	<4DD09C78.2010304@lwfinger.net>	<8762pbkytq.fsf@trouble.defaultvalue.org>	<4DD13EF0.2070803@lwfinger.net>	<87iptaj8nf.fsf@trouble.defaultvalue.org>	<87fwoehtd7.fsf@trouble.defaultvalue.org>	<874o45z6b8.fsf@raven.defaultvalue.org> <874o41rqrg.fsf@trouble.defaultvalue.org>
-In-Reply-To: <874o41rqrg.fsf@trouble.defaultvalue.org>
-Content-Type: multipart/mixed;
- boundary="------------010604020700020703000906"
+	Tue, 23 Aug 2011 18:07:35 -0400
+From: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	yangjie@qca.qualcomm.com,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>, stable@kernel.org,
+	netdev@vger.kernel.org, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com
+Subject: [PATCH] MAINTANERS: update Qualcomm Atheros addresses
+Date: Tue, 23 Aug 2011 15:07:31 -0700
+Message-Id: <1314137251-32096-1-git-send-email-lrodriguez@qca.qualcomm.com> (sfid-20110824_000740_331705_60B1CE82)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------010604020700020703000906
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 
-On 06/07/2011 09:38 PM, Rob Browning wrote:
-> Rob Browning<rlb@defaultvalue.org>  writes:
->
->> As another data point, I just tested the same device on a second machine
->> (a desktop), and saw the same behavior -- initially high transfer rates
->> trailing off to about 60K/s.
->
-> ...and another data point.  Just to be sure it wasn't that particular
-> usb device, I got another that I think is the same hardware (this time
-> the Airlink 101), and I see exactly the same behavior.
->
-> Next I'll try a different access point -- I'll let you know what I find.
-> And if there's anything else I can do to help test, please let me know.
+Qualcomm ate up Atheros, all of the old e-mail addresses
+no longer work and e-mails sent to it will bounce. Update
+the addresses to the new shiny Qualcomm Atheros (QCA) ones.
 
-It has been some time since you wrote this. Any changes?
+Cc: stable@kernel.org
+Cc: netdev@vger.kernel.org
+Cc: jouni@qca.qualcomm.com
+Cc: yangjie@qca.qualcomm.com
+Cc: vthiagar@qca.qualcomm.com
+Cc: senthilb@qca.qualcomm.com
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
 
-I recently noticed a slow-down on my rtl8192cu doing TX TCP MAERTS tests with 
-netperf. The attached patch seemed to help. If you still have the problem, does 
-it help? Note: The patch is badly named - I started trying to fix a problem 
-connecting with a 270 Mpbs 2.4 GHz channel. It works with 150 Mbps. On the 
-higher speed network, it authenticates and associates, but no data gets through.
+John, I've left out ath6kl as you removed that so I take it
+the respective MAINTAINERS entry was deleted as well (although
+I do not see this on wireless-testing.git)
 
-Larry
+I've thrown in one Ethernet driver maintainers update as well
+for QCA, so hope its OK this goes through you. Given that the
+e-mail addresses no longer work Cc'ing stable as well.
 
+ MAINTAINERS |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-
---------------010604020700020703000906
-Content-Type: text/plain;
- name="rtlwifi_fix_wpa"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="rtlwifi_fix_wpa"
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/core.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/core.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/core.c
-@@ -610,6 +610,11 @@ static void rtl_op_bss_info_changed(stru
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 069ee3b..a286bc8 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -1230,7 +1230,7 @@ F:	Documentation/aoe/
+ F:	drivers/block/aoe/
  
- 			mac->link_state = MAC80211_NOLINK;
- 			memset(mac->bssid, 0, 6);
-+
-+			/* reset sec info */
-+			rtl_cam_reset_sec_info(hw);
-+
-+			rtl_cam_reset_all_entry(hw);
- 			mac->vendor = PEER_UNKNOWN;
+ ATHEROS ATH GENERIC UTILITIES
+-M:	"Luis R. Rodriguez" <lrodriguez@atheros.com>
++M:	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+ L:	linux-wireless@vger.kernel.org
+ S:	Supported
+ F:	drivers/net/wireless/ath/*
+@@ -1238,7 +1238,7 @@ F:	drivers/net/wireless/ath/*
+ ATHEROS ATH5K WIRELESS DRIVER
+ M:	Jiri Slaby <jirislaby@gmail.com>
+ M:	Nick Kossifidis <mickflemm@gmail.com>
+-M:	"Luis R. Rodriguez" <lrodriguez@atheros.com>
++M:	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+ M:	Bob Copeland <me@bobcopeland.com>
+ L:	linux-wireless@vger.kernel.org
+ L:	ath5k-devel@lists.ath5k.org
+@@ -1247,10 +1247,10 @@ S:	Maintained
+ F:	drivers/net/wireless/ath/ath5k/
  
- 			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
-@@ -1063,6 +1068,9 @@ static int rtl_op_set_key(struct ieee802
- 		 *or clear all entry here.
- 		 */
- 		rtl_cam_delete_one_entry(hw, mac_addr, key_idx);
-+
-+		rtl_cam_reset_sec_info(hw);
-+
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ ATHEROS ATH9K WIRELESS DRIVER
+-M:	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+-M:	Jouni Malinen <jmalinen@atheros.com>
+-M:	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+-M:	Senthil Balasubramanian <senthilkumar@atheros.com>
++M:	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
++M:	Jouni Malinen <jouni@qca.qualcomm.com>
++M:	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
++M:	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+ L:	linux-wireless@vger.kernel.org
+ L:	ath9k-devel@lists.ath9k.org
+ W:	http://wireless.kernel.org/en/users/Drivers/ath9k
+@@ -1278,7 +1278,7 @@ F:	drivers/input/misc/ati_remote2.c
+ ATLX ETHERNET DRIVERS
+ M:	Jay Cliburn <jcliburn@gmail.com>
+ M:	Chris Snook <chris.snook@gmail.com>
+-M:	Jie Yang <jie.yang@atheros.com>
++M:	Jie Yang <yangjie@qca.qualcomm.com>
+ L:	netdev@vger.kernel.org
+ W:	http://sourceforge.net/projects/atl1
+ W:	http://atl1.sourceforge.net
+-- 
+1.7.4.15.g7811d
 
---------------010604020700020703000906--
