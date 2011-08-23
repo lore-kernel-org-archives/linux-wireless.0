@@ -1,441 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:44772 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752983Ab1HZGxg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 02:53:36 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 37/60] iwlagn: remove references to priv from the transport layer
-Date: Thu, 25 Aug 2011 23:11:09 -0700
-Message-Id: <1314339092-20797-38-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085445_523521_59C5FBBA)
-In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:61057 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754890Ab1HWNQx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 09:16:53 -0400
+Received: by ywf7 with SMTP id 7so66812ywf.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 06:16:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201108231009.35292.florian@openwrt.org>
+References: <1314058119-3441-1-git-send-email-lrodriguez@qca.qualcomm.com>
+ <1314058119-3441-3-git-send-email-lrodriguez@qca.qualcomm.com>
+ <201108231007.44737.florian@openwrt.org> <201108231009.35292.florian@openwrt.org>
+From: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
+Date: Tue, 23 Aug 2011 06:16:32 -0700
+Message-ID: <CAB=NE6X4GyqubQB84T==apyUVYP1JYn3g36Qa4_=CsmjJXsLZw@mail.gmail.com> (sfid-20110823_151656_752249_0C11BC39)
+Subject: Re: [RFT v2 2/2] ath9k: add AR9580 support
+To: Florian Fainelli <florian@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Tue, Aug 23, 2011 at 1:09 AM, Florian Fainelli <florian@openwrt.org> wrote:
+> On Tuesday 23 August 2011 10:07:44 Florian Fainelli wrote:
+>> Hello Luis,
+>>
+>> On Tuesday 23 August 2011 02:08:39 Luis R. Rodriguez wrote:
+>> > From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+>> >
+>> > Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+>> > ---
+>> >
+>> >  drivers/net/wireless/ath/ath9k/pci.c |    1 +
+>> >  1 files changed, 1 insertions(+), 0 deletions(-)
+>> >
+>> > diff --git a/drivers/net/wireless/ath/ath9k/pci.c
+>> > b/drivers/net/wireless/ath/ath9k/pci.c index daa26b5..6cb90ee 100644
+>> > --- a/drivers/net/wireless/ath/ath9k/pci.c
+>> > +++ b/drivers/net/wireless/ath/ath9k/pci.c
+>> > @@ -32,6 +32,7 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+>> >
+>> >     { PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
+>> >     { PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
+>> >     { PCI_VDEVICE(ATHEROS, 0x0032) }, /* PCI-E  AR9485 */
+>> >
+>> > +   { PCI_VDEVICE(ATHEROS, 0x0033) }, /* PCI-E  AR9580 */
+>> >
+>> >     { 0 }
+>> >
+>> >  };
+>>
+>> You also need this change in hw.{c,h} for ath9k not to bail out with "ath:
+>> Hardware device ID 0x0033 not supported":
+>>
+>> Index: compat-wireless-2011-08-10/drivers/net/wireless/ath/ath9k/hw.c
+>> ===================================================================
+>> --- compat-wireless-2011-08-10.orig/drivers/net/wireless/ath/ath9k/hw.c
+>> 2011-08-23 10:01:30.804054398 +0200
+>> +++ compat-wireless-2011-08-10/drivers/net/wireless/ath/ath9k/hw.c
+>> 2011-08-23 10:01:46.314054408 +0200
+>> @@ -672,6 +672,7 @@
+>>         case AR9300_DEVID_AR9485_PCIE:
+>>         case AR9300_DEVID_AR9330:
+>>         case AR9300_DEVID_AR9340:
+>> +       case AR9300_DEVID_AR9580:
+>>                 break;
+>>         default:
+>>                 if (common->bus_ops->ath_bus_type == ATH_USB)
+>> Index: compat-wireless-2011-08-10/drivers/net/wireless/ath/ath9k/hw.h
+>> ===================================================================
+>> --- compat-wireless-2011-08-10.orig/drivers/net/wireless/ath/ath9k/hw.h
+>> 2011-08-23 10:01:32.504054400 +0200
+>> +++ compat-wireless-2011-08-10/drivers/net/wireless/ath/ath9k/hw.h
+>> 2011-08-23 10:01:59.124054416 +0200
+>> @@ -45,6 +45,7 @@
+>>  #define AR9300_DEVID_PCIE      0x0030
+>>  #define AR9300_DEVID_AR9340    0x0031
+>>  #define AR9300_DEVID_AR9485_PCIE 0x0032
+>> +#define AR9300_DEVID_AR9580    0x0033
+>>  #define AR9300_DEVID_AR9330    0x0035
+>>
+>>  #define AR5416_AR9100_DEVID    0x000b
+>>
+>> With the above two patches applied, I get the following:
+>>
+>> iw dev wlan0 scan
+>> command failed: Device or resource busy (-16)
+>
+> I had wpa_supplicant running in background, scan does no longer report Device
+> or resource busy now.
 
-Continue to the clean up of the priv dereferencing from the transport layer.
+You do get scan results now?
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.h            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |    7 +-
- drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c  |  124 +++++++++++----------
- drivers/net/wireless/iwlwifi/iwl-trans.c          |    4 +-
- 5 files changed, 70 insertions(+), 69 deletions(-)
+>> iw phy0 info shows the 5GHz band has being listed
+>>
+>> iw dev wlan0 survey dump seems to correctly list the activity on the 5Ghz
+>> channels (it's updated from one call to another)
+>>
+>> if I start the interface in AP mode, my laptop does not see it's beacon, I
+>> have not had a chance yet to use a monitor interface.
+>
+> I will test later the opposite, where my laptop is in AP mode, and try to get
+> this AR9580 device in STA mode.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 9c5f08a..bbdc475 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1402,7 +1402,7 @@ int iwl_alive_start(struct iwl_priv *priv)
- 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
- 
- 	/*TODO: this should go to the transport layer */
--	iwl_reset_ict(priv);
-+	iwl_reset_ict(trans(priv));
- 
- 	IWL_DEBUG_INFO(priv, "Runtime Alive received.\n");
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index c30299d..3508c12 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -111,7 +111,7 @@ extern struct iwl_cfg iwl135_bgn_cfg;
- 
- extern struct ieee80211_ops iwlagn_hw_ops;
- 
--int iwl_reset_ict(struct iwl_priv *priv);
-+int iwl_reset_ict(struct iwl_trans *trans);
- 
- static inline void iwl_set_calib_hdr(struct iwl_calib_hdr *hdr, u8 cmd)
- {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
-index 0e4efb0..59c6b3c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
-@@ -130,7 +130,7 @@ void iwl_rx_queue_update_write_ptr(struct iwl_trans *trans,
- /*****************************************************
- * ICT
- ******************************************************/
--int iwl_reset_ict(struct iwl_priv *priv);
-+int iwl_reset_ict(struct iwl_trans *trans);
- void iwl_disable_ict(struct iwl_trans *trans);
- int iwl_alloc_isr_ict(struct iwl_trans *trans);
- void iwl_free_isr_ict(struct iwl_trans *trans);
-@@ -167,12 +167,11 @@ void iwl_tx_queue_reclaim(struct iwl_trans *trans, int txq_id, int index,
- /*****************************************************
- * Error handling
- ******************************************************/
--int iwl_dump_nic_event_log(struct iwl_priv *priv,
--			   bool full_log, char **buf, bool display);
-+int iwl_dump_nic_event_log(struct iwl_trans *trans, bool full_log,
-+			    char **buf, bool display);
- int iwl_dump_fh(struct iwl_trans *trans, char **buf, bool display);
- void iwl_dump_csr(struct iwl_trans *trans);
- 
--
- static inline void iwl_disable_interrupts(struct iwl_trans *trans)
- {
- 	clear_bit(STATUS_INT_ENABLED, &trans->shrd->status);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
-index 0b6c527..7f8ac2e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
-@@ -565,11 +565,11 @@ static const char *desc_lookup(u32 num)
- #define ERROR_START_OFFSET  (1 * sizeof(u32))
- #define ERROR_ELEM_SIZE     (7 * sizeof(u32))
- 
--static void iwl_dump_nic_error_log(struct iwl_priv *priv)
-+static void iwl_dump_nic_error_log(struct iwl_trans *trans)
- {
- 	u32 base;
- 	struct iwl_error_event_table table;
--	struct iwl_trans *trans = trans(priv);
-+	struct iwl_priv *priv = priv(trans);
- 	struct iwl_trans_pcie *trans_pcie =
- 		IWL_TRANS_GET_PCIE_TRANS(trans);
- 
-@@ -583,7 +583,7 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
- 	}
- 
- 	if (!iwlagn_hw_valid_rtc_data_addr(base)) {
--		IWL_ERR(priv,
-+		IWL_ERR(trans,
- 			"Not valid error log pointer 0x%08X for %s uCode\n",
- 			base,
- 			(priv->ucode_type == IWL_UCODE_INIT)
-@@ -594,9 +594,9 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
- 	iwl_read_targ_mem_words(priv, base, &table, sizeof(table));
- 
- 	if (ERROR_START_OFFSET <= table.valid * ERROR_ELEM_SIZE) {
--		IWL_ERR(priv, "Start IWL Error Log Dump:\n");
--		IWL_ERR(priv, "Status: 0x%08lX, count: %d\n",
--			priv->shrd->status, table.valid);
-+		IWL_ERR(trans, "Start IWL Error Log Dump:\n");
-+		IWL_ERR(trans, "Status: 0x%08lX, count: %d\n",
-+			trans->shrd->status, table.valid);
- 	}
- 
- 	trans_pcie->isr_stats.err_code = table.error_id;
-@@ -607,33 +607,34 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
- 				      table.ilink2, table.bcon_time, table.gp1,
- 				      table.gp2, table.gp3, table.ucode_ver,
- 				      table.hw_ver, table.brd_ver);
--	IWL_ERR(priv, "0x%08X | %-28s\n", table.error_id,
-+	IWL_ERR(trans, "0x%08X | %-28s\n", table.error_id,
- 		desc_lookup(table.error_id));
--	IWL_ERR(priv, "0x%08X | uPc\n", table.pc);
--	IWL_ERR(priv, "0x%08X | branchlink1\n", table.blink1);
--	IWL_ERR(priv, "0x%08X | branchlink2\n", table.blink2);
--	IWL_ERR(priv, "0x%08X | interruptlink1\n", table.ilink1);
--	IWL_ERR(priv, "0x%08X | interruptlink2\n", table.ilink2);
--	IWL_ERR(priv, "0x%08X | data1\n", table.data1);
--	IWL_ERR(priv, "0x%08X | data2\n", table.data2);
--	IWL_ERR(priv, "0x%08X | line\n", table.line);
--	IWL_ERR(priv, "0x%08X | beacon time\n", table.bcon_time);
--	IWL_ERR(priv, "0x%08X | tsf low\n", table.tsf_low);
--	IWL_ERR(priv, "0x%08X | tsf hi\n", table.tsf_hi);
--	IWL_ERR(priv, "0x%08X | time gp1\n", table.gp1);
--	IWL_ERR(priv, "0x%08X | time gp2\n", table.gp2);
--	IWL_ERR(priv, "0x%08X | time gp3\n", table.gp3);
--	IWL_ERR(priv, "0x%08X | uCode version\n", table.ucode_ver);
--	IWL_ERR(priv, "0x%08X | hw version\n", table.hw_ver);
--	IWL_ERR(priv, "0x%08X | board version\n", table.brd_ver);
--	IWL_ERR(priv, "0x%08X | hcmd\n", table.hcmd);
-+	IWL_ERR(trans, "0x%08X | uPc\n", table.pc);
-+	IWL_ERR(trans, "0x%08X | branchlink1\n", table.blink1);
-+	IWL_ERR(trans, "0x%08X | branchlink2\n", table.blink2);
-+	IWL_ERR(trans, "0x%08X | interruptlink1\n", table.ilink1);
-+	IWL_ERR(trans, "0x%08X | interruptlink2\n", table.ilink2);
-+	IWL_ERR(trans, "0x%08X | data1\n", table.data1);
-+	IWL_ERR(trans, "0x%08X | data2\n", table.data2);
-+	IWL_ERR(trans, "0x%08X | line\n", table.line);
-+	IWL_ERR(trans, "0x%08X | beacon time\n", table.bcon_time);
-+	IWL_ERR(trans, "0x%08X | tsf low\n", table.tsf_low);
-+	IWL_ERR(trans, "0x%08X | tsf hi\n", table.tsf_hi);
-+	IWL_ERR(trans, "0x%08X | time gp1\n", table.gp1);
-+	IWL_ERR(trans, "0x%08X | time gp2\n", table.gp2);
-+	IWL_ERR(trans, "0x%08X | time gp3\n", table.gp3);
-+	IWL_ERR(trans, "0x%08X | uCode version\n", table.ucode_ver);
-+	IWL_ERR(trans, "0x%08X | hw version\n", table.hw_ver);
-+	IWL_ERR(trans, "0x%08X | board version\n", table.brd_ver);
-+	IWL_ERR(trans, "0x%08X | hcmd\n", table.hcmd);
- }
- 
- /**
-  * iwl_irq_handle_error - called for HW or SW error interrupt from card
-  */
--static void iwl_irq_handle_error(struct iwl_priv *priv)
-+static void iwl_irq_handle_error(struct iwl_trans *trans)
- {
-+	struct iwl_priv *priv = priv(trans);
- 	/* W/A for WiFi/WiMAX coex and WiMAX own the RF */
- 	if (priv->cfg->internal_wimax_coex &&
- 	    (!(iwl_read_prph(priv, APMG_CLK_CTRL_REG) &
-@@ -644,22 +645,22 @@ static void iwl_irq_handle_error(struct iwl_priv *priv)
- 		 * Keep the restart process from trying to send host
- 		 * commands by clearing the ready bit.
- 		 */
--		clear_bit(STATUS_READY, &priv->shrd->status);
--		clear_bit(STATUS_HCMD_ACTIVE, &priv->shrd->status);
-+		clear_bit(STATUS_READY, &trans->shrd->status);
-+		clear_bit(STATUS_HCMD_ACTIVE, &trans->shrd->status);
- 		wake_up_interruptible(&priv->wait_command_queue);
--		IWL_ERR(priv, "RF is used by WiMAX\n");
-+		IWL_ERR(trans, "RF is used by WiMAX\n");
- 		return;
- 	}
- 
--	IWL_ERR(priv, "Loaded firmware version: %s\n",
-+	IWL_ERR(trans, "Loaded firmware version: %s\n",
- 		priv->hw->wiphy->fw_version);
- 
--	iwl_dump_nic_error_log(priv);
--	iwl_dump_csr(trans(priv));
--	iwl_dump_fh(trans(priv), NULL, false);
--	iwl_dump_nic_event_log(priv, false, NULL, false);
-+	iwl_dump_nic_error_log(trans);
-+	iwl_dump_csr(trans);
-+	iwl_dump_fh(trans, NULL, false);
-+	iwl_dump_nic_event_log(trans, false, NULL, false);
- #ifdef CONFIG_IWLWIFI_DEBUG
--	if (iwl_get_debug_level(priv->shrd) & IWL_DL_FW_ERRORS)
-+	if (iwl_get_debug_level(trans->shrd) & IWL_DL_FW_ERRORS)
- 		iwl_print_rx_config_cmd(priv,
- 					&priv->contexts[IWL_RXON_CTX_BSS]);
- #endif
-@@ -673,7 +674,7 @@ static void iwl_irq_handle_error(struct iwl_priv *priv)
-  * iwl_print_event_log - Dump error event log to syslog
-  *
-  */
--static int iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
-+static int iwl_print_event_log(struct iwl_trans *trans, u32 start_idx,
- 			       u32 num_events, u32 mode,
- 			       int pos, char **buf, size_t bufsz)
- {
-@@ -683,6 +684,7 @@ static int iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
- 	u32 ptr;        /* SRAM byte address of log data */
- 	u32 ev, time, data; /* event log data */
- 	unsigned long reg_flags;
-+	struct iwl_priv *priv = priv(trans);
- 
- 	if (num_events == 0)
- 		return pos;
-@@ -725,7 +727,7 @@ static int iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
- 			} else {
- 				trace_iwlwifi_dev_ucode_event(priv, 0,
- 					time, ev);
--				IWL_ERR(priv, "EVT_LOG:0x%08x:%04u\n",
-+				IWL_ERR(trans, "EVT_LOG:0x%08x:%04u\n",
- 					time, ev);
- 			}
- 		} else {
-@@ -735,7 +737,7 @@ static int iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
- 						"EVT_LOGT:%010u:0x%08x:%04u\n",
- 						 time, data, ev);
- 			} else {
--				IWL_ERR(priv, "EVT_LOGT:%010u:0x%08x:%04u\n",
-+				IWL_ERR(trans, "EVT_LOGT:%010u:0x%08x:%04u\n",
- 					time, data, ev);
- 				trace_iwlwifi_dev_ucode_event(priv, time,
- 					data, ev);
-@@ -752,7 +754,7 @@ static int iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
- /**
-  * iwl_print_last_event_logs - Dump the newest # of event log to syslog
-  */
--static int iwl_print_last_event_logs(struct iwl_priv *priv, u32 capacity,
-+static int iwl_print_last_event_logs(struct iwl_trans *trans, u32 capacity,
- 				    u32 num_wraps, u32 next_entry,
- 				    u32 size, u32 mode,
- 				    int pos, char **buf, size_t bufsz)
-@@ -763,22 +765,22 @@ static int iwl_print_last_event_logs(struct iwl_priv *priv, u32 capacity,
- 	 */
- 	if (num_wraps) {
- 		if (next_entry < size) {
--			pos = iwl_print_event_log(priv,
-+			pos = iwl_print_event_log(trans,
- 						capacity - (size - next_entry),
- 						size - next_entry, mode,
- 						pos, buf, bufsz);
--			pos = iwl_print_event_log(priv, 0,
-+			pos = iwl_print_event_log(trans, 0,
- 						  next_entry, mode,
- 						  pos, buf, bufsz);
- 		} else
--			pos = iwl_print_event_log(priv, next_entry - size,
-+			pos = iwl_print_event_log(trans, next_entry - size,
- 						  size, mode, pos, buf, bufsz);
- 	} else {
- 		if (next_entry < size) {
--			pos = iwl_print_event_log(priv, 0, next_entry,
-+			pos = iwl_print_event_log(trans, 0, next_entry,
- 						  mode, pos, buf, bufsz);
- 		} else {
--			pos = iwl_print_event_log(priv, next_entry - size,
-+			pos = iwl_print_event_log(trans, next_entry - size,
- 						  size, mode, pos, buf, bufsz);
- 		}
- 	}
-@@ -787,7 +789,7 @@ static int iwl_print_last_event_logs(struct iwl_priv *priv, u32 capacity,
- 
- #define DEFAULT_DUMP_EVENT_LOG_ENTRIES (20)
- 
--int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
-+int iwl_dump_nic_event_log(struct iwl_trans *trans, bool full_log,
- 			    char **buf, bool display)
- {
- 	u32 base;       /* SRAM byte address of event log header */
-@@ -799,6 +801,7 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
- 	u32 logsize;
- 	int pos = 0;
- 	size_t bufsz = 0;
-+	struct iwl_priv *priv = priv(trans);
- 
- 	base = priv->device_pointers.log_event_table;
- 	if (priv->ucode_type == IWL_UCODE_INIT) {
-@@ -812,7 +815,7 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
- 	}
- 
- 	if (!iwlagn_hw_valid_rtc_data_addr(base)) {
--		IWL_ERR(priv,
-+		IWL_ERR(trans,
- 			"Invalid event log pointer 0x%08X for %s uCode\n",
- 			base,
- 			(priv->ucode_type == IWL_UCODE_INIT)
-@@ -827,13 +830,13 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
- 	next_entry = iwl_read_targ_mem(priv, base + (3 * sizeof(u32)));
- 
- 	if (capacity > logsize) {
--		IWL_ERR(priv, "Log capacity %d is bogus, limit to %d entries\n",
--			capacity, logsize);
-+		IWL_ERR(trans, "Log capacity %d is bogus, limit to %d "
-+			"entries\n", capacity, logsize);
- 		capacity = logsize;
- 	}
- 
- 	if (next_entry > logsize) {
--		IWL_ERR(priv, "Log write index %d is bogus, limit to %d\n",
-+		IWL_ERR(trans, "Log write index %d is bogus, limit to %d\n",
- 			next_entry, logsize);
- 		next_entry = logsize;
- 	}
-@@ -842,7 +845,7 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
- 
- 	/* bail out if nothing in log */
- 	if (size == 0) {
--		IWL_ERR(priv, "Start IWL Event Log Dump: nothing in log\n");
-+		IWL_ERR(trans, "Start IWL Event Log Dump: nothing in log\n");
- 		return pos;
- 	}
- 
-@@ -850,14 +853,14 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
- 	priv->bt_ch_announce = iwlagn_mod_params.bt_ch_announce;
- 
- #ifdef CONFIG_IWLWIFI_DEBUG
--	if (!(iwl_get_debug_level(priv->shrd) & IWL_DL_FW_ERRORS) && !full_log)
-+	if (!(iwl_get_debug_level(trans->shrd) & IWL_DL_FW_ERRORS) && !full_log)
- 		size = (size > DEFAULT_DUMP_EVENT_LOG_ENTRIES)
- 			? DEFAULT_DUMP_EVENT_LOG_ENTRIES : size;
- #else
- 	size = (size > DEFAULT_DUMP_EVENT_LOG_ENTRIES)
- 		? DEFAULT_DUMP_EVENT_LOG_ENTRIES : size;
- #endif
--	IWL_ERR(priv, "Start IWL Event Log Dump: display last %u entries\n",
-+	IWL_ERR(trans, "Start IWL Event Log Dump: display last %u entries\n",
- 		size);
- 
- #ifdef CONFIG_IWLWIFI_DEBUG
-@@ -870,25 +873,25 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
- 		if (!*buf)
- 			return -ENOMEM;
- 	}
--	if ((iwl_get_debug_level(priv->shrd) & IWL_DL_FW_ERRORS) || full_log) {
-+	if ((iwl_get_debug_level(trans->shrd) & IWL_DL_FW_ERRORS) || full_log) {
- 		/*
- 		 * if uCode has wrapped back to top of log,
- 		 * start at the oldest entry,
- 		 * i.e the next one that uCode would fill.
- 		 */
- 		if (num_wraps)
--			pos = iwl_print_event_log(priv, next_entry,
-+			pos = iwl_print_event_log(trans, next_entry,
- 						capacity - next_entry, mode,
- 						pos, buf, bufsz);
- 		/* (then/else) start at top of log */
--		pos = iwl_print_event_log(priv, 0,
-+		pos = iwl_print_event_log(trans, 0,
- 					  next_entry, mode, pos, buf, bufsz);
- 	} else
--		pos = iwl_print_last_event_logs(priv, capacity, num_wraps,
-+		pos = iwl_print_last_event_logs(trans, capacity, num_wraps,
- 						next_entry, size, mode,
- 						pos, buf, bufsz);
- #else
--	pos = iwl_print_last_event_logs(priv, capacity, num_wraps,
-+	pos = iwl_print_last_event_logs(trans, capacity, num_wraps,
- 					next_entry, size, mode,
- 					pos, buf, bufsz);
- #endif
-@@ -951,7 +954,7 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
- 		iwl_disable_interrupts(trans);
- 
- 		isr_stats->hw++;
--		iwl_irq_handle_error(priv(trans));
-+		iwl_irq_handle_error(trans);
- 
- 		handled |= CSR_INT_BIT_HW_ERR;
- 
-@@ -1020,7 +1023,7 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
- 		IWL_ERR(trans, "Microcode SW error detected. "
- 			" Restarting 0x%X.\n", inta);
- 		isr_stats->sw++;
--		iwl_irq_handle_error(priv(trans));
-+		iwl_irq_handle_error(trans);
- 		handled |= CSR_INT_BIT_SW_ERR;
- 	}
- 
-@@ -1188,11 +1191,10 @@ int iwl_alloc_isr_ict(struct iwl_trans *trans)
- /* Device is going up inform it about using ICT interrupt table,
-  * also we need to tell the driver to start using ICT interrupt.
-  */
--int iwl_reset_ict(struct iwl_priv *priv)
-+int iwl_reset_ict(struct iwl_trans *trans)
- {
- 	u32 val;
- 	unsigned long flags;
--	struct iwl_trans *trans = trans(priv);
- 	struct iwl_trans_pcie *trans_pcie =
- 		IWL_TRANS_GET_PCIE_TRANS(trans);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index e55636e..2ffacb2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -1528,7 +1528,7 @@ static ssize_t iwl_dbgfs_log_event_read(struct file *file,
- 	int pos = 0;
- 	ssize_t ret = -ENOMEM;
- 
--	ret = pos = iwl_dump_nic_event_log(priv(trans), true, &buf, true);
-+	ret = pos = iwl_dump_nic_event_log(trans, true, &buf, true);
- 	if (buf) {
- 		ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
- 		kfree(buf);
-@@ -1552,7 +1552,7 @@ static ssize_t iwl_dbgfs_log_event_write(struct file *file,
- 	if (sscanf(buf, "%d", &event_log_flag) != 1)
- 		return -EFAULT;
- 	if (event_log_flag == 1)
--		iwl_dump_nic_event_log(priv(trans), true, NULL, false);
-+		iwl_dump_nic_event_log(trans, true, NULL, false);
- 
- 	return count;
- }
--- 
-1.7.0.4
+OK thanks.
 
+  Luis
