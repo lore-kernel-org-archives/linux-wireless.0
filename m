@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:41202 "HELO
-	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752243Ab1HAV72 (ORCPT
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:33741 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754434Ab1HWPez (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2011 17:59:28 -0400
-Date: Mon, 1 Aug 2011 14:52:46 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-To: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-wireless@vger.kernel.org
-Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: Re: linux-next: Tree for Aug 1 (wireless/rt2x00)
-Message-Id: <20110801145246.da67280d.rdunlap@xenotime.net> (sfid-20110801_235946_322663_48C324F1)
-In-Reply-To: <20110801144732.7f5204b219f628f2a2a63b0c@canb.auug.org.au>
-References: <20110801144732.7f5204b219f628f2a2a63b0c@canb.auug.org.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 23 Aug 2011 11:34:55 -0400
+Received: by mail-bw0-f41.google.com with SMTP id zt4so199211bkb.28
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 08:34:54 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: coelho@ti.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] wl12xx: use SCAN_SSID_TYPE_PUBLIC when using the wildcard in sched_scan
+Date: Tue, 23 Aug 2011 18:34:45 +0300
+Message-Id: <1314113685-27437-3-git-send-email-coelho@ti.com> (sfid-20110823_173501_964738_73E03285)
+In-Reply-To: <1314113685-27437-1-git-send-email-coelho@ti.com>
+References: <1314113685-27437-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 1 Aug 2011 14:47:32 +1000 Stephen Rothwell wrote:
+When we are scanning for the wildcard SSID in a scheduled scan, we
+should use SCAN_SSID_TYPE_PUBLIC so that we don't filter out the scan
+results.
 
-> Hi all,
-
-When CONFIG_RT2X00_LIB_CRYPTO is not enabled:
-
-drivers/net/wireless/rt2x00/rt2x00queue.c:476: error: too many arguments to function 'rt2x00crypto_create_tx_descriptor'
-
-
-CONFIG_RT2X00=m
-# CONFIG_RT2400PCI is not set
-CONFIG_RT2500PCI=m
-# CONFIG_RT61PCI is not set
-# CONFIG_RT2800PCI is not set
-CONFIG_RT2X00_LIB_PCI=m
-CONFIG_RT2X00_LIB=m
-CONFIG_RT2X00_LIB_LEDS=y
-# CONFIG_RT2X00_DEBUG is not set
-
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+ drivers/net/wireless/wl12xx/scan.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+index af9d53c..af4ad23 100644
+--- a/drivers/net/wireless/wl12xx/scan.c
++++ b/drivers/net/wireless/wl12xx/scan.c
+@@ -490,9 +490,12 @@ wl12xx_scan_sched_scan_ssid_list(struct wl1271 *wl,
+ 		return -ENOMEM;
+ 
+ 	while ((cmd->n_ssids < req->n_ssids) && ssid) {
+-		if (ssid->ssid_len == 0)
++		if (ssid->ssid_len == 0) {
+ 			wildcard = 1;
+-		cmd->ssids[cmd->n_ssids].type = SCAN_SSID_TYPE_HIDDEN;
++			cmd->ssids[cmd->n_ssids].type = SCAN_SSID_TYPE_PUBLIC;
++		} else {
++			cmd->ssids[cmd->n_ssids].type = SCAN_SSID_TYPE_HIDDEN;
++		}
+ 		cmd->ssids[cmd->n_ssids].len = ssid->ssid_len;
+ 		memcpy(cmd->ssids[cmd->n_ssids].ssid, ssid->ssid,
+ 		       ssid->ssid_len);
+-- 
+1.7.1
+
