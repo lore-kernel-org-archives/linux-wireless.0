@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1865 "EHLO mms2.broadcom.com"
+Received: from smtp.ispras.ru ([83.149.198.202]:49354 "EHLO smtp.ispras.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753422Ab1HHN7j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:39 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 77/82] staging: brcm80211: removed
- brcms_c_module_unregister() call in ampdu.c
-Date: Mon, 8 Aug 2011 15:59:01 +0200
-Message-ID: <1312811946-16713-78-git-send-email-arend@broadcom.com> (sfid-20110808_160000_894263_308078EF)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1755279Ab1HWVPI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 17:15:08 -0400
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@ispras.ru
+Subject: [PATCH] carl9170: Fix mismatch in carl9170_op_set_key mutex lock-unlock
+Date: Wed, 24 Aug 2011 00:44:32 +0400
+Message-Id: <1314132272-7357-1-git-send-email-khoroshilov@ispras.ru> (sfid-20110823_231512_532034_AF895B3F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+If is_main_vif(ar, vif) reports that we have to fall back
+to software encryption, we goto err_softw; before locking ar->mutex.
+As a result, we have unprotected call to carl9170_set_operating_mode
+and unmatched mutex_unlock.
 
-The AMPDU module was never registered, so it does not have to be unregistered.
+The patch fix the issue by adding mutex_lock before goto.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Found by Linux Driver Verification project (linuxtesting.org).
+
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
 ---
- drivers/staging/brcm80211/brcmsmac/ampdu.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/carl9170/main.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/ampdu.c b/drivers/staging/brcm80211/brcmsmac/ampdu.c
-index 64bbc24..3c0fa13 100644
---- a/drivers/staging/brcm80211/brcmsmac/ampdu.c
-+++ b/drivers/staging/brcm80211/brcmsmac/ampdu.c
-@@ -243,7 +243,6 @@ void brcms_c_ampdu_detach(struct ampdu_info *ampdu)
- 	for (i = 0; i < AMPDU_INI_FREE; i++)
- 		kfree(ampdu->ini_free[i]);
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index 0122930..0474e663 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1066,8 +1066,10 @@ static int carl9170_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	 * the high througput speed in 802.11n networks.
+ 	 */
  
--	brcms_c_module_unregister(ampdu->wlc->pub, "ampdu", ampdu);
- 	kfree(ampdu);
- }
+-	if (!is_main_vif(ar, vif))
++	if (!is_main_vif(ar, vif)) {
++		mutex_lock(&ar->mutex);
+ 		goto err_softw;
++	}
  
+ 	/*
+ 	 * While the hardware supports *catch-all* key, for offloading
 -- 
 1.7.4.1
-
 
