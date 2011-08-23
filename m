@@ -1,67 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3649 "EHLO mms1.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4699 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753084Ab1HVKGN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 06:06:13 -0400
-Message-ID: <4E52297D.9090301@broadcom.com> (sfid-20110822_120616_253338_D66235AA)
-Date: Mon, 22 Aug 2011 12:03:41 +0200
-From: "Roland Vossen" <rvossen@broadcom.com>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
-cc: "Dan Williams" <dcbw@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
+	id S1752273Ab1HWMOR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 08:14:17 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
 	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"networkmanager-list@gnome.org" <networkmanager-list@gnome.org>
-Subject: Re: brcmsmac driver only works when sitting next to the AP
-References: <20110814121646.GA5188@stt008.linux.site>
- <4E4A5641.4020604@broadcom.com>
- <1313509211.2065.36.camel@dcbw.foobar.com>
- <4E4B9A45.5090507@broadcom.com> <4E4CC85A.7010504@broadcom.com>
- <4E4E73F4.4040105@broadcom.com>
- <20110819152140.GA7506@stt008.linux.site>
- <CAKprTDEUVa6ouH92G_8UMo20wYNnrhu76c_XAPYDtbCbRjqdLw@mail.gmail.com>
-In-Reply-To: <CAKprTDEUVa6ouH92G_8UMo20wYNnrhu76c_XAPYDtbCbRjqdLw@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 1/8] staging: brcm80211: only enable brcmsmac if bcma is
+ not set
+Date: Tue, 23 Aug 2011 14:13:53 +0200
+Message-ID: <1314101640-4229-2-git-send-email-arend@broadcom.com> (sfid-20110823_141427_602202_9A066D66)
+In-Reply-To: <1314101640-4229-1-git-send-email-arend@broadcom.com>
+References: <1314101640-4229-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Camaleón,
+From: Henry Ptasinski <henryp@broadcom.com>
 
-> Okay, I finally managed to compile a kernel with the required flag
-> enabled and booted with it. I am attaching the resulting trace file,
-> should you need additional information, kindly ask.
+brcmsmac doesn't yet use bcma, but both drivers attempt to claim the same
+device.  For now, turn of brcmsmac if bcma is enabled.
 
-thanks! I did the same thing on my setup and diff'ed the resulting trace 
-file with yours. I spotted a difference but it should not be relevant:
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/Kconfig |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-(your trace): drv_prepare_multicast: phy0 prepare mc (5)
-(my trace): drv_prepare_multicast: phy0 prepare mc (1)
-
-I am wondering if the problem could be explained by a RF kill switch 
-being active. Can you send me the output of 'rfkill list' and 'lsmod' ?
-
-Are there wireless-related LEDs on your machine and do they act 
-differently between kernel 3.0.1 and 2.6.39-2 ?
-
-Can you do a 'rfkill unblock all' to see if that makes a difference ?
-
-Can you read this thread for more ideas: 
-http://ubuntuforums.org/archive/index.php/t-1604665.html ?
-
-Let me know how this works out, if unsuccessful we'll have to dig a bit 
-deeper.
-
-Thanks, Roland.
-
-
-
-
-
+diff --git a/drivers/staging/brcm80211/Kconfig b/drivers/staging/brcm80211/Kconfig
+index 621570a..ef77b44 100644
+--- a/drivers/staging/brcm80211/Kconfig
++++ b/drivers/staging/brcm80211/Kconfig
+@@ -7,6 +7,7 @@ config BRCMSMAC
+ 	default n
+ 	depends on PCI
+ 	depends on WLAN && MAC80211
++	depends on BCMA=n
+ 	select BRCMUTIL
+ 	select FW_LOADER
+ 	select CRC_CCITT
+-- 
+1.7.4.1
 
 
