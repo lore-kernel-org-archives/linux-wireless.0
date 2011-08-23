@@ -1,71 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2956 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751456Ab1HVM5j convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 08:57:39 -0400
-Message-ID: <4E525235.7060501@broadcom.com> (sfid-20110822_145743_039392_51AA4846)
-Date: Mon, 22 Aug 2011 14:57:25 +0200
-From: "Roland Vossen" <rvossen@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"networkmanager-list@gnome.org" <networkmanager-list@gnome.org>
-Subject: Re: brcmsmac driver only works when sitting next to the AP
-References: <20110814121646.GA5188@stt008.linux.site>
- <4E4A5641.4020604@broadcom.com>
- <1313509211.2065.36.camel@dcbw.foobar.com>
- <4E4B9A45.5090507@broadcom.com> <4E4CC85A.7010504@broadcom.com>
- <4E4E73F4.4040105@broadcom.com>
- <20110819152140.GA7506@stt008.linux.site>
- <CAKprTDEUVa6ouH92G_8UMo20wYNnrhu76c_XAPYDtbCbRjqdLw@mail.gmail.com>
- <4E52297D.9090301@broadcom.com>
- <20110822112737.GA5936@stt008.linux.site>
-In-Reply-To: <20110822112737.GA5936@stt008.linux.site>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Received: from server19320154104.serverpool.info ([193.201.54.104]:57117 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752636Ab1HWLii (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 07:38:38 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat: add PMSG_IS_AUTO
+Date: Tue, 23 Aug 2011 13:38:29 +0200
+Message-Id: <1314099509-6123-2-git-send-email-hauke@hauke-m.de> (sfid-20110823_133841_619124_775D2D8C)
+In-Reply-To: <1314099509-6123-1-git-send-email-hauke@hauke-m.de>
+References: <1314099509-6123-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Camaleón,
 
-thanks for the additional information you provided.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-3.2.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-> One difference, though, is that now (with kernel 3.0.0) when I shutdown
-> the system it hangs at NetworkManager if wifi LED is on. As soon as I
-> turn off the wifi led, the system can continue the shutdown.
-
- > Moreover, "service network-manager stop" returns "failed" unless I
- > first turn off the wifi led (and so phy0 hard blocked is set as "yes").
-
-Interesting observations. Ok, lets keep this in the back of our minds 
-but first focus on the bad scan results.
-
- >> Can you do a 'rfkill unblock all' to see if that makes a difference ?
- >> It makes no difference. No wifi networks are detected automatically 
-nor connecting manually to a hidden network is possible (unless I sit 
-next to the AP).
-
-Hmmm, so it seems that rfkill switch functionality is not causing the 
-bad scan result.
-
-Can you try to disable Bluetooth (e.g. by temporary blacklisting the 
-bluetooth modules) ? Bluetooth operates in the same frequency band as WiFi.
-
-Would you happen to know if with kernel 2.6.39, the brcmsmac driver was 
-active as well (and not a different driver) ?
-
- > Just in case this helps, I have tried another wifi adapater (USB, based
- > on rt2xx chipset) and works like a charm, I mean, it detects the
- > avialbale wifi networks and automatically stablishes a connection with
- > mine.
-
-Lets shoot for that as well :-)
-
-Thanks, Roland.
+diff --git a/include/linux/compat-3.2.h b/include/linux/compat-3.2.h
+index 9cba461..d10495c 100644
+--- a/include/linux/compat-3.2.h
++++ b/include/linux/compat-3.2.h
+@@ -22,6 +22,8 @@
+ #define br_port_exists(dev)	(dev->br_port)
+ #endif
+ 
++#define PMSG_IS_AUTO(msg)	(((msg).event & PM_EVENT_AUTO) != 0)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,2,0)) */
+ 
+ #endif /* LINUX_3_2_COMPAT_H */
+-- 
+1.7.4.1
 
