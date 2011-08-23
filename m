@@ -1,69 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18110 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753658Ab1H3Oob (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 10:44:31 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	Edward Lu <shaol@qca.qualcomm.com>
-Date: Tue, 30 Aug 2011 17:44:13 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: Re: [PATCH 11/20] ath6kl: Support channel set request for startscan
- command
-Message-ID: <20110830144413.GF8163@jouni.qca.qualcomm.com> (sfid-20110830_164443_914948_77D4AC60)
-References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
- <1314620641-24257-12-git-send-email-jouni@qca.qualcomm.com>
- <4E5CAE7A.8000809@qca.qualcomm.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:4698 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751609Ab1HWMOR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 08:14:17 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 4/8] staging: brcm80211: fix checkpatch warning in
+ fullmac
+Date: Tue, 23 Aug 2011 14:13:56 +0200
+Message-ID: <1314101640-4229-5-git-send-email-arend@broadcom.com> (sfid-20110823_141426_875521_98DA3BA4)
+In-Reply-To: <1314101640-4229-1-git-send-email-arend@broadcom.com>
+References: <1314101640-4229-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4E5CAE7A.8000809@qca.qualcomm.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 30, 2011 at 12:33:46PM +0300, Kalle Valo wrote:
-> On 08/29/2011 03:23 PM, Jouni Malinen wrote:
-> > @@ -785,14 +787,33 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
-> > +		n_channels = (request->n_channels > 127) ?
-> > +				127 : request->n_channels;
-> 
-> min()
+From: Franky Lin <frankyl@broadcom.com>
 
-It looks kind of silly to have 127U here, but I can do that if it is the
-preferred way, i.e., min(127U, request->n_channels). min(127,
-request->n_channels) complains because of the strict type-checking in
-the macro (request->n_channels is u32).
+Fix the __aligned checkpatch warning in wl_cfg80211.h
 
-> > +		channels = kzalloc(n_channels * sizeof(u16), GFP_KERNEL);
-> > +		if (channels == NULL) {
-> > +			ath6kl_err("failed to set scan channels, "
-> > +				   "scan all channels");
-> 
-> ath6kl_warn() would be more approriate here as the driver can still
-> continue.
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-OK.
-
-> >  	if (ath6kl_wmi_startscan_cmd(ar->wmi, WMI_LONG_SCAN, 0,
-> > -				     false, 0, 0, 0, NULL) != 0) {
-> > +				     false, 0, 0, n_channels, channels) != 0) {
-> >  		ath6kl_err("wmi_startscan_cmd failed\n");
-> >  		ret = -EIO;
-> 
-> Again I would prefer to return the error code from the wmi call.
-
-OK.
-
-> > -	if (num_chan)
-> > -		memcpy(sc->ch_list, ch_list, num_chan * sizeof(u16));
-> > +	if (num_chan) {
-> > +		for (i = 0; i < num_chan; i++)
-> > +			sc->ch_list[i] = cpu_to_le16(ch_list[i]);
-> > +	}
-> 
-> if (num_chan) is not needed, the for loop is enough.
-
-OK.
-
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
+index 049138b..0542bac 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
+@@ -317,7 +317,7 @@ struct brcmf_cfg80211_priv {
+ 	u8 *ioctl_buf;	/* ioctl buffer */
+ 	u8 *extra_buf;	/* maily to grab assoc information */
+ 	struct dentry *debugfsdir;
+-	u8 ci[0] __attribute__ ((__aligned__(NETDEV_ALIGN)));
++	u8 ci[0] __aligned(NETDEV_ALIGN);
+ };
+ 
+ #define cfg_to_wiphy(w) (w->wdev->wiphy)
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.4.1
+
+
