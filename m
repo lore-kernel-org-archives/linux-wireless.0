@@ -1,225 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:53948 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753875Ab1H3NpC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 09:45:02 -0400
-Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
-	by emh04-2.mail.saunalahti.fi (Postfix) with SMTP id 9C46313C058
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 16:45:00 +0300 (EEST)
-Received: from localhost6.localdomain6 (a88-115-188-95.elisa-laajakaista.fi [88.115.188.95])
-	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 7495E27D83
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 16:44:59 +0300 (EEST)
-Subject: [PATCH 4/4] ath6kl: read fwlog from firmware ring buffer
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Date: Tue, 30 Aug 2011 16:44:58 +0300
-Message-ID: <20110830134458.21543.74829.stgit@localhost6.localdomain6> (sfid-20110830_154505_339198_F42A2B13)
-In-Reply-To: <20110830134432.21543.89808.stgit@localhost6.localdomain6>
-References: <20110830134432.21543.89808.stgit@localhost6.localdomain6>
+Received: from mms2.broadcom.com ([216.31.210.18]:2101 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753685Ab1HWMOU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 08:14:20 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 8/8] staging: brcm80211: fill in proper rx rate in
+ mac80211 rx status
+Date: Tue, 23 Aug 2011 14:14:00 +0200
+Message-ID: <1314101640-4229-9-git-send-email-arend@broadcom.com> (sfid-20110823_141431_878264_14583AC6)
+In-Reply-To: <1314101640-4229-1-git-send-email-arend@broadcom.com>
+References: <1314101640-4229-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmare sends the logs only when it's internal ring buffer is full. But
-if firmware crashes we need to retrieve the latest logs through diagnose
-window. This is now done everytime the debugfs file is read.
+The brcmsmac driver supports different rates on 5GHz but this is not
+taken into account when providing the rate index in the receive
+status information passed to mac80211.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath6kl/core.h   |   15 ++++++
- drivers/net/wireless/ath/ath6kl/debug.c  |    3 +
- drivers/net/wireless/ath/ath6kl/init.c   |   13 -----
- drivers/net/wireless/ath/ath6kl/main.c   |   75 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/target.h |   14 ++++++
- 5 files changed, 107 insertions(+), 13 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.c |    9 +++++++--
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.h |    6 ++++++
+ drivers/staging/brcm80211/brcmsmac/main.c        |    8 ++++++++
+ 3 files changed, 21 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 33c84c0..61d3142 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -26,6 +26,7 @@
- #include "htc.h"
- #include "wmi.h"
- #include "bmi.h"
-+#include "target.h"
- 
- #define MAX_ATH6KL                        1
- #define ATH6KL_MAX_RX_BUFFERS             16
-@@ -496,6 +497,19 @@ static inline void ath6kl_deposit_credit_to_ep(struct htc_credit_state_info
- 	cred_info->cur_free_credits -= credits;
+diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
+index 7179edd..2370171 100644
+--- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
+@@ -971,6 +971,10 @@ static struct ieee80211_channel brcms_5ghz_nphy_chantable[] = {
+ 	.hw_value = (rate100m / 5), \
  }
  
-+static inline u32 ath6kl_get_hi_item_addr(struct ath6kl *ar,
-+					  u32 item_offset)
-+{
-+	u32 addr = 0;
-+
-+	if (ar->target_type == TARGET_TYPE_AR6003)
-+		addr = ATH6KL_AR6003_HI_START_ADDR + item_offset;
-+	else if (ar->target_type == TARGET_TYPE_AR6004)
-+		addr = ATH6KL_AR6004_HI_START_ADDR + item_offset;
-+
-+	return addr;
-+}
-+
- void ath6kl_destroy(struct net_device *dev, unsigned int unregister);
- int ath6kl_configure_target(struct ath6kl *ar);
- void ath6kl_detect_error(unsigned long ptr);
-@@ -512,6 +526,7 @@ void ath6kl_cleanup_amsdu_rxbufs(struct ath6kl *ar);
- int ath6kl_diag_write(struct ath6kl *ar, u32 address, void *data, u32 length);
- int ath6kl_diag_read32(struct ath6kl *ar, u32 address, u32 *value);
- int ath6kl_diag_read(struct ath6kl *ar, u32 address, void *data, u32 length);
-+int ath6kl_read_fwlogs(struct ath6kl *ar);
- void ath6kl_init_profile_info(struct ath6kl *ar);
- void ath6kl_tx_data_cleanup(struct ath6kl *ar);
- void ath6kl_stop_endpoint(struct net_device *dev, bool keep_profile,
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index 80c05f2..9608692 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -247,6 +247,9 @@ static ssize_t ath6kl_fwlog_read(struct file *file, char __user *user_buf,
- 	if (!buf)
- 		return -ENOMEM;
++/*
++ * The rate table is used for both 2.4G and 5G rates. The
++ * latter being a subset as it does not support CCK rates.
++ */
+ static struct ieee80211_rate legacy_ratetable[] = {
+ 	RATE(10, 0),
+ 	RATE(20, IEEE80211_RATE_SHORT_PREAMBLE),
+@@ -1012,8 +1016,9 @@ static struct ieee80211_supported_band brcms_band_5GHz_nphy = {
+ 	.band = IEEE80211_BAND_5GHZ,
+ 	.channels = brcms_5ghz_nphy_chantable,
+ 	.n_channels = ARRAY_SIZE(brcms_5ghz_nphy_chantable),
+-	.bitrates = legacy_ratetable + 4,
+-	.n_bitrates = ARRAY_SIZE(legacy_ratetable) - 4,
++	.bitrates = legacy_ratetable + BRCMS_LEGACY_5G_RATE_OFFSET,
++	.n_bitrates = ARRAY_SIZE(legacy_ratetable) -
++			BRCMS_LEGACY_5G_RATE_OFFSET,
+ 	.ht_cap = {
+ 		   .cap = IEEE80211_HT_CAP_GRN_FLD | IEEE80211_HT_CAP_SGI_20 |
+ 			  IEEE80211_HT_CAP_SGI_40 |
+diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.h b/drivers/staging/brcm80211/brcmsmac/mac80211_if.h
+index fcd711a..7f290d7 100644
+--- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.h
++++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.h
+@@ -20,6 +20,12 @@
+ #include <linux/timer.h>
+ #include <linux/interrupt.h>
  
-+	/* read undelivered logs from firmware */
-+	ath6kl_read_fwlogs(ar);
++/*
++ * Starting index for 5G rates in the
++ * legacy rate table.
++ */
++#define BRCMS_LEGACY_5G_RATE_OFFSET	4
 +
- 	spin_lock_bh(&ar->debug.fwlog_lock);
+ /* softmac ioctl definitions */
+ #define BRCMS_SET_SHORTSLOT_OVERRIDE		146
  
- 	while (len < buf_len && !ath6kl_debug_fwlog_empty(ar)) {
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index b6a1e69..428b9c0 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -108,19 +108,6 @@ static u8 ath6kl_get_fw_iftype(struct ath6kl *ar)
- 	}
- }
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 7e729d29..339ab28 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -8252,6 +8252,14 @@ prep_mac80211_status(struct brcms_c_info *wlc, struct d11rxhdr *rxh,
+ 			wiphy_err(wlc->wiphy, "%s: Unknown rate\n", __func__);
+ 		}
  
--static inline u32 ath6kl_get_hi_item_addr(struct ath6kl *ar,
--					  u32 item_offset)
--{
--	u32 addr = 0;
--
--	if (ar->target_type == TARGET_TYPE_AR6003)
--		addr = ATH6KL_AR6003_HI_START_ADDR + item_offset;
--	else if (ar->target_type == TARGET_TYPE_AR6004)
--		addr = ATH6KL_AR6004_HI_START_ADDR + item_offset;
--
--	return addr;
--}
--
- static int ath6kl_set_host_app_area(struct ath6kl *ar)
- {
- 	u32 address, data;
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 8d29d4e..5e807a9 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -308,6 +308,81 @@ int ath6kl_diag_write(struct ath6kl *ar, u32 address, void *data, u32 length)
- 	return ret;
- }
- 
-+int ath6kl_read_fwlogs(struct ath6kl *ar)
-+{
-+	struct ath6kl_dbglog_hdr debug_hdr;
-+	struct ath6kl_dbglog_buf debug_buf;
-+	u32 address, length, dropped, firstbuf, debug_hdr_addr;
-+	int ret = 0, loop;
-+	u8 *buf;
++		/*
++		 * For 5GHz, we should decrease the index as it is
++		 * a subset of the 2.4G rates. See bitrates field
++		 * of brcms_band_5GHz_nphy (in mac80211_if.c).
++		 */
++		if (rx_status->band == IEEE80211_BAND_5GHZ)
++			rx_status->rate_idx -= BRCMS_LEGACY_5G_RATE_OFFSET;
 +
-+	buf = kmalloc(ATH6KL_FWLOG_PAYLOAD_SIZE, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	address = TARG_VTOP(ar->target_type,
-+			    ath6kl_get_hi_item_addr(ar,
-+						    HI_ITEM(hi_dbglog_hdr)));
-+
-+	ret = ath6kl_diag_read32(ar, address, &debug_hdr_addr);
-+	if (ret)
-+		goto out;
-+
-+	/* Get the contents of the ring buffer */
-+	if (debug_hdr_addr == 0) {
-+		ath6kl_warn("Invalid address for debug_hdr_addr\n");
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	address = TARG_VTOP(ar->target_type, debug_hdr_addr);
-+	ath6kl_diag_read(ar, address, &debug_hdr, sizeof(debug_hdr));
-+
-+	address = TARG_VTOP(ar->target_type,
-+			    le32_to_cpu(debug_hdr.dbuf_addr));
-+	firstbuf = address;
-+	dropped = le32_to_cpu(debug_hdr.dropped);
-+	ath6kl_diag_read(ar, address, &debug_buf, sizeof(debug_buf));
-+
-+	loop = 100;
-+
-+	do {
-+		address = TARG_VTOP(ar->target_type,
-+				    le32_to_cpu(debug_buf.buffer_addr));
-+		length = le32_to_cpu(debug_buf.length);
-+
-+		if (length != 0 && (le32_to_cpu(debug_buf.length) <=
-+				    le32_to_cpu(debug_buf.bufsize))) {
-+			length = ALIGN(length, 4);
-+
-+			ret = ath6kl_diag_read(ar, address,
-+					       buf, length);
-+			if (ret)
-+				goto out;
-+
-+			ath6kl_debug_fwlog_event(ar, buf, length);
-+		}
-+
-+		address = TARG_VTOP(ar->target_type,
-+				    le32_to_cpu(debug_buf.next));
-+		ath6kl_diag_read(ar, address, &debug_buf, sizeof(debug_buf));
-+		if (ret)
-+			goto out;
-+
-+		loop--;
-+
-+		if (WARN_ON(loop == 0)) {
-+			ret = -ETIMEDOUT;
-+			goto out;
-+		}
-+	} while (address != firstbuf);
-+
-+out:
-+	kfree(buf);
-+
-+	return ret;
-+}
-+
- /* FIXME: move to a better place, target.h? */
- #define AR6003_RESET_CONTROL_ADDRESS 0x00004000
- #define AR6004_RESET_CONTROL_ADDRESS 0x00004000
-diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
-index 6c66a08..dd8b953 100644
---- a/drivers/net/wireless/ath/ath6kl/target.h
-+++ b/drivers/net/wireless/ath/ath6kl/target.h
-@@ -343,4 +343,18 @@ struct host_interest {
- 
- #define ATH6KL_FWLOG_PAYLOAD_SIZE		1500
- 
-+struct ath6kl_dbglog_buf {
-+	__le32 next;
-+	__le32 buffer_addr;
-+	__le32 bufsize;
-+	__le32 length;
-+	__le32 count;
-+	__le32 free;
-+} __packed;
-+
-+struct ath6kl_dbglog_hdr {
-+	__le32 dbuf_addr;
-+	__le32 dropped;
-+} __packed;
-+
- #endif
+ 		/* Determine short preamble and rate_idx */
+ 		preamble = 0;
+ 		if (IS_CCK(rspec)) {
+-- 
+1.7.4.1
+
 
