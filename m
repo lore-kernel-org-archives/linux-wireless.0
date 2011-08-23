@@ -1,144 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2733 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753465Ab1HONem (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 09:34:42 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 11/15] staging: brcm80211: Fix handling of firmware and
- inits on big-endian platforms
-Date: Mon, 15 Aug 2011 15:34:23 +0200
-Message-ID: <1313415267-5264-12-git-send-email-arend@broadcom.com> (sfid-20110815_153502_607069_12EA2D13)
-In-Reply-To: <1313415267-5264-1-git-send-email-arend@broadcom.com>
-References: <1313415267-5264-1-git-send-email-arend@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50312 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753486Ab1HWUAO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 16:00:14 -0400
+Date: Tue, 23 Aug 2011 15:45:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, lrodriguez@atheros.com,
+	vasanth@atheros.com, senthilkumar@atheros.com,
+	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	rmanohar@qca.qualcomm.com
+Subject: Re: [RFC/RFT] ath9k_htc: Fix memory leak
+Message-ID: <20110823194545.GF9770@tuxdriver.com> (sfid-20110823_220018_146115_E0EA21AC)
+References: <4e472623.xXZaXUueNVRpfmG+%Larry.Finger@lwfinger.net>
+ <CAD2nsn2sO+Lj+DntbFVa8QMYq8eTtFqdX06aQGHtNEbnbVTJzQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAD2nsn2sO+Lj+DntbFVa8QMYq8eTtFqdX06aQGHtNEbnbVTJzQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Henry Ptasinski <henryp@broadcom.com>
+On Mon, Aug 15, 2011 at 05:56:33PM +0530, Mohammed Shafi wrote:
+> On Sun, Aug 14, 2011 at 7:04 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> > Kmemleak shows the following kind of memory leak for ath9k_htc:
+> >
+> > unreferenced object 0xffff88004542f200 (size 512):
+> >  comm "khubd", pid 977, jiffies 4317632516 (age 16855.868s)
+> >  hex dump (first 32 bytes):
+> >    00 00 00 0a 00 00 00 00 00 02 01 05 00 00 02 01  ................
+> >    00 00 00 00 00 00 81 38 02 00 00 00 33 33 30 30  .......8....3300
+> >  backtrace:
+> >    [<ffffffff81122d77>] create_object+0x127/0x2b0
+> >    [<ffffffff813580b1>] kmemleak_alloc+0x21/0x50
+> >    [<ffffffff8111f383>] __kmalloc_node_track_caller+0x153/0x220
+> >    [<ffffffff812b703e>] __alloc_skb+0x7e/0x170
+> >    [<ffffffffa0833331>] htc_connect_service+0x111/0x200 [ath9k_htc]
+> >    [<ffffffffa083bb90>] ath9k_init_htc_services+0x240/0x2b0 [ath9k_htc]
+> >    [<ffffffffa083c1ca>] ath9k_htc_probe_device+0xea/0xa50 [ath9k_htc]
+> >    [<ffffffffa08338dc>] ath9k_htc_hw_init+0xc/0x30 [ath9k_htc]
+> >    [<ffffffffa08356ba>] ath9k_hif_usb_probe+0x1ca/0x420 [ath9k_htc]
+> >    [<ffffffffa00a2279>] usb_probe_interface+0xb9/0x160 [usbcore]
+> >    [<ffffffff81279379>] driver_probe_device+0x89/0x1a0
+> >    [<ffffffff8127958b>] __device_attach+0x4b/0x60
+> >    [<ffffffff81278024>] bus_for_each_drv+0x64/0x90
+> >    [<ffffffff81279231>] device_attach+0xa1/0xb0
+> >    [<ffffffff81278a25>] bus_probe_device+0x25/0x40
+> >    [<ffffffff81276d2a>] device_add+0x55a/0x630
+> >
+> > The device is a TP-Link TL-WN722N. The output from lsusb is "ID 0cf3:9271
+> > Atheros Communications, Inc. AR9271 802.11n".
+> >
+> > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> > Cc: Stable <stable@kernel.org>
+> > ---
+> >
+> > This patch certainly fixes a leak. I'm testing to see if there are
+> > others.
+> 
+> Hi Larry,
+> 
+> thanks for finding this.
+> I remember seeing this memleaks sometime back and thought this patch
+> might help(i think same as yours with some more corner cases)
+> https://patchwork.kernel.org/patch/1016752/
+> but I found there were still some memory leaks, I was unsure where I
+> am missing. if you are sure that this addresses the issue, we can send
+> a patch.
 
-The firmware files are encoded as little-endian.  Do the appropriate swapping
-for big-endian platforms.
+Ping?  Is this the patch we want?  Or something else?
 
-Tested on Mac G5 PPC and BCM63281.
-
-Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Tested-by: Jonas Gorski <jonas.gorski@gmail.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c |   24 ++++++++++++---------
- drivers/staging/brcm80211/brcmsmac/main.c        |   21 ++++++++++++------
- 2 files changed, 28 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-index e465749..7179edd 100644
---- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-@@ -1722,15 +1722,17 @@ int brcms_ucode_init_buf(struct brcms_info *wl, void **pbuf, u32 idx)
- 		hdr = (struct firmware_hdr *)wl->fw.fw_hdr[i]->data;
- 		for (entry = 0; entry < wl->fw.hdr_num_entries[i];
- 		     entry++, hdr++) {
--			if (hdr->idx == idx) {
--				pdata = wl->fw.fw_bin[i]->data + hdr->offset;
--				*pbuf = kmalloc(hdr->len, GFP_ATOMIC);
-+			u32 len = le32_to_cpu(hdr->len);
-+			if (le32_to_cpu(hdr->idx) == idx) {
-+				pdata = wl->fw.fw_bin[i]->data +
-+					le32_to_cpu(hdr->offset);
-+				*pbuf = kmalloc(len, GFP_ATOMIC);
- 				if (*pbuf == NULL) {
- 					wiphy_err(wl->wiphy, "fail to alloc %d"
--						  " bytes\n", hdr->len);
-+						  " bytes\n", len);
- 					goto fail;
- 				}
--				memcpy(*pbuf, pdata, hdr->len);
-+				memcpy(*pbuf, pdata, len);
- 				return 0;
- 			}
- 		}
-@@ -1755,14 +1757,15 @@ int brcms_ucode_init_uint(struct brcms_info *wl, u32 *data, u32 idx)
- 		hdr = (struct firmware_hdr *)wl->fw.fw_hdr[i]->data;
- 		for (entry = 0; entry < wl->fw.hdr_num_entries[i];
- 		     entry++, hdr++) {
--			if (hdr->idx == idx) {
--				pdata = wl->fw.fw_bin[i]->data + hdr->offset;
--				if (hdr->len != 4) {
-+			if (le32_to_cpu(hdr->idx) == idx) {
-+				pdata = wl->fw.fw_bin[i]->data +
-+					le32_to_cpu(hdr->offset);
-+				if (le32_to_cpu(hdr->len) != 4) {
- 					wiphy_err(wl->wiphy,
- 						  "ERROR: fw hdr len\n");
- 					return -ENOMSG;
- 				}
--				*data = *((u32 *) pdata);
-+				*data = le32_to_cpu(*((u32 *) pdata));
- 				return 0;
- 			}
- 		}
-@@ -1868,7 +1871,8 @@ int brcms_check_firmwares(struct brcms_info *wl)
- 			ucode_hdr = (struct firmware_hdr *)fw_hdr->data;
- 			for (entry = 0; entry < wl->fw.hdr_num_entries[i] &&
- 			     !rc; entry++, ucode_hdr++) {
--				if (ucode_hdr->offset + ucode_hdr->len >
-+				if (le32_to_cpu(ucode_hdr->offset) +
-+				    le32_to_cpu(ucode_hdr->len) >
- 				    fw->size) {
- 					wiphy_err(wl->wiphy,
- 						  "%s: conflicting bin/hdr\n",
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index d6837d3..c625c25 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -2033,7 +2033,8 @@ static void brcms_ucode_write(struct brcms_hardware *wlc_hw, const u32 ucode[],
- 	W_REG(&regs->objaddr, (OBJADDR_AUTO_INC | OBJADDR_UCM_SEL));
- 	(void)R_REG(&regs->objaddr);
- 	for (i = 0; i < count; i++)
--		W_REG(&regs->objdata, ucode[i]);
-+		W_REG(&regs->objdata, le32_to_cpu(ucode[i]));
-+
- }
- 
- static void brcms_c_write_inits(struct brcms_hardware *wlc_hw,
-@@ -2041,18 +2042,24 @@ static void brcms_c_write_inits(struct brcms_hardware *wlc_hw,
- {
- 	int i;
- 	u8 *base;
-+	u8 *addr;
-+	u16 size;
-+	u32 value;
- 
- 	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
- 
- 	base = (u8 *)wlc_hw->regs;
- 
- 	for (i = 0; inits[i].addr != 0xffff; i++) {
--		if (inits[i].size == 2)
--			W_REG((u16 *)(base + inits[i].addr),
--			      inits[i].value);
--		else if (inits[i].size == 4)
--			W_REG((u32 *)(base + inits[i].addr),
--			      inits[i].value);
-+		size = le16_to_cpu(inits[i].size);
-+		addr = base + le16_to_cpu(inits[i].addr);
-+		value = le32_to_cpu(inits[i].value);
-+		if (size == 2)
-+			W_REG((u16 *)addr, value);
-+		else if (size == 4)
-+			W_REG((u32 *)addr, value);
-+		else
-+			break;
- 	}
- }
- 
+John
 -- 
-1.7.4.1
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
