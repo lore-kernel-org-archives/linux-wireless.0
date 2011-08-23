@@ -1,91 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:34857 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755323Ab1H2XKs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 19:10:48 -0400
+Received: from mms1.broadcom.com ([216.31.210.17]:3054 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755609Ab1HWRiG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 13:38:06 -0400
+Message-ID: <4E53E56A.1070801@broadcom.com> (sfid-20110823_193810_518334_8295C67A)
+Date: Tue, 23 Aug 2011 19:37:46 +0200
+From: "Roland Vossen" <rvossen@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6V7jFgtK4HmkUnfY5MuWCJoTyo83p9KMVTvmXTsrGoTew@mail.gmail.com>
-References: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com>
-	<CAB=NE6VwWu5+Hk7=3ghkgiXss9kCqGyS-RWPYtyHRhDsx5r2rA@mail.gmail.com>
-	<CAB=NE6XrkdiZcGEDGuYe=SwLBhTm=Mt4NaPzjV9j_W-8sVosOA@mail.gmail.com>
-	<CAA93jw5pTHpUOX=iUnck8Eun2iNqkuKwG-Jd0X1oNxD_s9_prA@mail.gmail.com>
-	<CAB=NE6V7jFgtK4HmkUnfY5MuWCJoTyo83p9KMVTvmXTsrGoTew@mail.gmail.com>
-Date: Mon, 29 Aug 2011 16:10:47 -0700
-Message-ID: <CAA93jw6Ude=x=5v2cq86UjnORXDhAQASp51zLvDDBYHB28T_Jw@mail.gmail.com> (sfid-20110830_011054_209035_93624E25)
-Subject: Re: BQL crap and wireless
-From: Dave Taht <dave.taht@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Tom Herbert <therbert@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Andrew McGregor <andrewmcgr@gmail.com>,
-	Matt Smith <smithm@qca.qualcomm.com>,
-	Kevin Hayes <hayes@qca.qualcomm.com>,
-	Derek Smithies <derek@indranet.co.nz>, netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"networkmanager-list@gnome.org" <networkmanager-list@gnome.org>
+Subject: Re: brcmsmac driver only works when sitting next to the AP
+References: <20110822112737.GA5936@stt008.linux.site>
+ <4E525235.7060501@broadcom.com>
+ <CAKprTDHO+Hh4g3WjGijDhPtzY5PiqR0GQ_zg8Uw46-qOVXpCRQ@mail.gmail.com>
+ <4E525FC7.4070802@broadcom.com>
+ <CAKprTDF0iFSAkYZiLQFLX+KumyLbzNUvHocKJyzK37Kv_79EFA@mail.gmail.com>
+ <4E5367AA.8040406@broadcom.com>
+ <CAKprTDFret5n-AH_B_Hu6E0+B4FEGJQ=jjYbGNy8ZD5R8ReFCg@mail.gmail.com>
+ <4E53728B.3030803@broadcom.com>
+ <20110823095348.GA5383@stt008.linux.site>
+ <4E538309.1040203@broadcom.com>
+ <20110823105341.GA5604@stt008.linux.site>
+ <4E538DC3.7060906@broadcom.com>
+ <CAKprTDHVcEgZvNE6Ububoaf1WH+LAcHD35YriNaj47JnsVL=Xg@mail.gmail.com>
+ <4E53B6B0.8010605@broadcom.com>
+ <CAKprTDGKfiGGZ7uEhT+U-DJ13+NexqPZKGQez7yShC40Heph_A@mail.gmail.com>
+In-Reply-To: <CAKprTDGKfiGGZ7uEhT+U-DJ13+NexqPZKGQez7yShC40Heph_A@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My goal in collecting these recordings is to get TRANSCRIPTS of what
-is important and what is not, so that ultimately better documentation
-can be written from those than exist today.
+Hi,
 
-Since the byte queuing issue is hot this week, I decided to make more
-people aware that these recordings existed in the hope that more
-available background information on how wireless works could be
-internalized by more people.
+I can try to build the same source tree as you. If you got your source 
+tree from Git, can you give me a SHA1 (git log) ? If you downloaded a 
+package or tar ball, can you point to its location ?
 
-I did note that the talk with felix was an attempt at capturing and
-summarizing some bufferbloat history and only towards the end did we
-start moving forward to things we planned to try, while the talk with
-andrew was an attempt at doing a more technical overview of quite a
-few issues.
+I assume that the version of your source tree matches your current 
+kernel version ? (compare 'uname -r' to 'make kernelversion').
 
-Multiple people have found these conversations useful. Certainly I
-find them useful, often reviewing them a few weeks after the fact to
-find subtleties that I missed originally, or needed further reading to
-really understand or write code for. The earliest conversation I had
-with felix (march?) still has some useful nuggets in it about how
-aggregation actually works that I hope to mine one day for better
-documentation. It also had some glaring errors in it...
-(mostly MINE!)
+Thanks, Roland.
 
-http://mirrors.bufferbloat.net/podcasts/
-
-I would certainly like to have a (recorded!) conversation with you to
-have a constructive
-discussion of the issues you find important, correct, and essential,
-towards making wireless networking better.
-
-Many people are capable of doing otherwise useful work while having a
-podcast running in the background that might have a few percentage
-points of useful information.
-
-By all means, don't listen if you can't split the brain cells, as I
-wrote I will have transcript of that latest available and will try to
-summarize and extract the best of what was discussed, after we get
-some code written and some tests performed.
-
- There are many other folk I would like to interview in this way, as well.
-
-On Mon, Aug 29, 2011 at 3:54 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Mon, Aug 29, 2011 at 3:45 PM, Dave Taht <dave.taht@gmail.com> wrote:
->> http://huchra.bufferbloat.net/~d/talks/felix/
->> http://huchra.bufferbloat.net/~d/talks/andrew/
->
-> I had already listened to Andrew's audio, and got up to 1 hour with
-> your session with Felix but seriously considered that entire 1 hour a
-> waste of my life. I think you digressed completely and rambled on
-> about random crap instead of focusing on the core of the matter, I
-> gave up after 1 hour.
->
->  Luis
->
-
-
-
--- 
-Dave Täht
-SKYPE: davetaht
-US Tel: 1-239-829-5608
-http://the-edge.blogspot.com
