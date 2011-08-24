@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53202 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752987Ab1H2LLl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 07:11:41 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2] ath9k: fix checks for first subframe delimiter padding
-Date: Mon, 29 Aug 2011 13:11:32 +0200
-Message-Id: <1314616292-11364-1-git-send-email-nbd@openwrt.org> (sfid-20110829_131144_598018_F1891A72)
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:37088 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750751Ab1HXXHt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 19:07:49 -0400
+Received: by wyg24 with SMTP id 24so1231399wyg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 16:07:48 -0700 (PDT)
+Date: Thu, 25 Aug 2011 02:05:31 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] Move brcm80211 to mainline
+Message-ID: <20110824230531.GJ5975@shale.localdomain> (sfid-20110825_010753_438540_1B0E43B9)
+References: <20110707002034.GA17885@broadcom.com>
+ <20110824222801.GA5280@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110824222801.GA5280@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit "ath9k_hw: Fix exceed transmission burst-time of 5GHz" added
-a padding of 60 delimiters on the first subframe to work around an issue
-on AR9380, but it lacked the checks to prevent it from being applied to
-pre-AR9380, enterprise AR9380 or AR9580+
+On Wed, Aug 24, 2011 at 03:28:01PM -0700, Henry Ptasinski wrote:
+> diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm8021
+> index 05dad9f..73e5841 100644
+> --- a/drivers/staging/brcm80211/brcmsmac/dma.c
+> +++ b/drivers/staging/brcm80211/brcmsmac/dma.c
+> @@ -815,7 +815,7 @@ struct sk_buff *dma_rx(struct dma_pub *pub)
+>                 tail = head;
+>                 while ((resid > 0) && (p = _dma_getnextrxp(di, false))) {
+>                         tail->next = p;
+> -                       pkt_len = min(resid, (int)di->rxbufsize);
+> +                       pkt_len = min_t(int, resid, (int)di->rxbufsize);
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/reg.h  |    2 +-
- drivers/net/wireless/ath/ath9k/xmit.c |    4 +++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+This isn't right.  It should be:
+			pkt_len = min_t(uint, resid, di->rxbufsize);
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index a3b8bbc..02363c1 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1131,7 +1131,7 @@ enum {
- #define AR_INTR_PRIO_ASYNC_ENABLE (AR_SREV_9340(ah) ? 0x4094 : 0x40d4)
- #define AR_ENT_OTP		  0x40d8
- #define AR_ENT_OTP_CHAIN2_DISABLE               0x00020000
--#define AR_ENT_OTP_MPSD		0x00800000
-+#define AR_ENT_OTP_MIN_PKT_SIZE_DISABLE		0x00800000
- 
- #define AR_CH0_BB_DPLL1		 0x16180
- #define AR_CH0_BB_DPLL1_REFDIV	 0xF8000000
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 5e29829..ad3fcd2 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -692,7 +692,9 @@ static int ath_compute_num_delims(struct ath_softc *sc, struct ath_atx_tid *tid,
- 	 * Add delimiter when using RTS/CTS with aggregation
- 	 * and non enterprise AR9003 card
- 	 */
--	if (first_subfrm)
-+	if (first_subfrm && (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) &&
-+	    !AR_SREV_9580_10_OR_LATER(sc->sc_ah) &&
-+	    (sc->sc_ah->ent_mode & AR_ENT_OTP_MIN_PKT_SIZE_DISABLE))
- 		ndelim = max(ndelim, FIRST_DESC_NDELIMS);
- 
- 	/*
--- 
-1.7.3.2
+Casting it to int would mean that high values of ->rxbufsize would be
+treated as lower than "resid".
+
+>                         __skb_trim(p, pkt_len);
+>  
+>                         tail = p;
+
+regards,
+dan carpenter
+
 
