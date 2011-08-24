@@ -1,220 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:37061 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753077Ab1H2H61 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 03:58:27 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	rmanohar@qca.qualcomm.com
-Subject: [PATCH v3 3/3] ath9k: implement .get_antenna and .set_antenna
-Date: Mon, 29 Aug 2011 09:58:21 +0200
-Message-Id: <1314604701-65802-3-git-send-email-nbd@openwrt.org> (sfid-20110829_095832_971937_045127EE)
-In-Reply-To: <1314604701-65802-2-git-send-email-nbd@openwrt.org>
-References: <1314604701-65802-1-git-send-email-nbd@openwrt.org>
- <1314604701-65802-2-git-send-email-nbd@openwrt.org>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39707 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750855Ab1HXLUr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 07:20:47 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/3] compat: add mac_pton()
+Date: Wed, 24 Aug 2011 13:20:37 +0200
+Message-Id: <1314184839-13279-1-git-send-email-hauke@hauke-m.de> (sfid-20110824_132050_935211_8E891124)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On MIMO chips this can be used to enable/disable hardware chains, ensuring
-that the MCS information is updated accordingly.
-On non-MIMO chips with rx diversity (e.g. 9285), this configures the rx
-input antenna.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +
- drivers/net/wireless/ath/ath9k/init.c  |   32 +++++++++++---
- drivers/net/wireless/ath/ath9k/main.c  |   71 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
- 4 files changed, 99 insertions(+), 8 deletions(-)
+ compat/Makefile            |    1 +
+ compat/compat-3.0.c        |   37 +++++++++++++++++++++++++++++++++++++
+ include/linux/compat-3.0.h |    2 ++
+ 3 files changed, 40 insertions(+), 0 deletions(-)
+ create mode 100644 compat/compat-3.0.c
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 5d9a9aa..56f0907 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -647,6 +647,7 @@ struct ath_softc {
- 	struct ath_descdma txsdma;
+diff --git a/compat/Makefile b/compat/Makefile
+index e2a6add..8e3739c 100644
+--- a/compat/Makefile
++++ b/compat/Makefile
+@@ -33,4 +33,5 @@ compat-$(CONFIG_COMPAT_KERNEL_2_6_38) += compat-2.6.38.o
+ compat-$(CONFIG_COMPAT_KERNEL_2_6_39) += \
+ 	compat-2.6.39.o \
+ 	kstrtox.o
++compat-$(CONFIG_COMPAT_KERNEL_3_0) += compat-3.0.o
  
- 	struct ath_ant_comb ant_comb;
-+	u8 ant_tx, ant_rx;
- };
- 
- void ath9k_tasklet(unsigned long data);
-@@ -668,6 +669,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
- 		    const struct ath_bus_ops *bus_ops);
- void ath9k_deinit_device(struct ath_softc *sc);
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw);
-+void ath9k_reload_chainmask_settings(struct ath_softc *sc);
- 
- void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw);
- bool ath9k_uses_beacons(int type);
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 31ef501..55cd59b 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -652,9 +652,22 @@ static void ath9k_init_txpower_limits(struct ath_softc *sc)
- 	ah->curchan = curchan;
- }
- 
-+void ath9k_reload_chainmask_settings(struct ath_softc *sc)
+diff --git a/compat/compat-3.0.c b/compat/compat-3.0.c
+new file mode 100644
+index 0000000..312eea0
+--- /dev/null
++++ b/compat/compat-3.0.c
+@@ -0,0 +1,37 @@
++/*
++ * Copyright 2011    Hauke Mehrtens <hauke@hauke-m.de>
++ * Copyright 2011    Alexey Dobriyan <adobriyan@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * Compatibility file for Linux wireless for kernels 3.0.
++ */
++
++#include <linux/compat.h>
++#include <linux/if_ether.h>
++
++int mac_pton(const char *s, u8 *mac)
 +{
-+	if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT))
-+		return;
-+
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
-+		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
-+		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
-+}
-+
-+
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- {
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
- 		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
-@@ -692,6 +705,16 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->sta_data_size = sizeof(struct ath_node);
- 	hw->vif_data_size = sizeof(struct ath_vif);
- 
-+	hw->wiphy->available_antennas_rx = BIT(ah->caps.max_rxchains) - 1;
-+	hw->wiphy->available_antennas_tx = BIT(ah->caps.max_txchains) - 1;
-+
-+	/* single chain devices with rx diversity */
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
-+		hw->wiphy->available_antennas_rx = BIT(0) | BIT(1);
-+
-+	sc->ant_rx = hw->wiphy->available_antennas_rx;
-+	sc->ant_tx = hw->wiphy->available_antennas_tx;
-+
- #ifdef CONFIG_ATH9K_RATE_CONTROL
- 	hw->rate_control_algorithm = "ath9k_rate_control";
- #endif
-@@ -703,12 +726,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
- 			&sc->sbands[IEEE80211_BAND_5GHZ];
- 
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
--		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
--			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
--		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
--			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
--	}
-+	ath9k_reload_chainmask_settings(sc);
- 
- 	SET_IEEE80211_PERM_ADDR(hw, common->macaddr);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 4b1fe7c..1cbbaea 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -262,6 +262,22 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 			ath_start_ani(common);
- 	}
- 
-+	if (ath9k_hw_ops(ah)->antdiv_comb_conf_get && sc->ant_rx != 3) {
-+		struct ath_hw_antcomb_conf div_ant_conf;
-+		u8 lna_conf;
-+
-+		ath9k_hw_antdiv_comb_conf_get(ah, &div_ant_conf);
-+
-+		if (sc->ant_rx == 1)
-+			lna_conf = ATH_ANT_DIV_COMB_LNA1;
-+		else
-+			lna_conf = ATH_ANT_DIV_COMB_LNA2;
-+		div_ant_conf.main_lna_conf = lna_conf;
-+		div_ant_conf.alt_lna_conf = lna_conf;
-+
-+		ath9k_hw_antdiv_comb_conf_set(ah, &div_ant_conf);
-+	}
-+
- 	ieee80211_wake_queues(sc->hw);
- 
- 	return true;
-@@ -2358,6 +2374,59 @@ static int ath9k_get_stats(struct ieee80211_hw *hw,
- 	return 0;
- }
- 
-+static u32 fill_chainmask(u32 cap, u32 new)
-+{
-+	u32 filled = 0;
 +	int i;
 +
-+	for (i = 0; cap && new; i++, cap >>= 1) {
-+		if (!(cap & BIT(0)))
-+			continue;
-+
-+		if (new & BIT(0))
-+			filled |= BIT(i);
-+
-+		new >>= 1;
-+	}
-+
-+	return filled;
-+}
-+
-+static int ath9k_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	if (!rx_ant || !tx_ant)
-+		return -EINVAL;
-+
-+	sc->ant_rx = rx_ant;
-+	sc->ant_tx = tx_ant;
-+
-+	if (ah->caps.rx_chainmask == 1)
++	/* XX:XX:XX:XX:XX:XX */
++	if (strlen(s) < 3 * ETH_ALEN - 1)
 +		return 0;
 +
-+	/* AR9100 runs into calibration issues if not all rx chains are enabled */
-+	if (AR_SREV_9100(ah))
-+		ah->rxchainmask = 0x7;
-+	else
-+		ah->rxchainmask = fill_chainmask(ah->caps.rx_chainmask, rx_ant);
-+
-+	ah->txchainmask = fill_chainmask(ah->caps.tx_chainmask, tx_ant);
-+	ath9k_reload_chainmask_settings(sc);
-+
-+	return 0;
++	/* Don't dirty result unless string is valid MAC. */
++	for (i = 0; i < ETH_ALEN; i++) {
++		if (!strchr("0123456789abcdefABCDEF", s[i * 3]))
++			return 0;
++		if (!strchr("0123456789abcdefABCDEF", s[i * 3 + 1]))
++			return 0;
++		if (i != ETH_ALEN - 1 && s[i * 3 + 2] != ':')
++			return 0;
++	}
++	for (i = 0; i < ETH_ALEN; i++) {
++		mac[i] = (hex_to_bin(s[i * 3]) << 4) | hex_to_bin(s[i * 3 + 1]);
++	}
++	return 1;
 +}
-+
-+static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
-+{
-+	struct ath_softc *sc = hw->priv;
-+
-+	*tx_ant = sc->ant_tx;
-+	*rx_ant = sc->ant_rx;
-+	return 0;
-+}
-+
- struct ieee80211_ops ath9k_ops = {
- 	.tx 		    = ath9k_tx,
- 	.start 		    = ath9k_start,
-@@ -2384,4 +2453,6 @@ struct ieee80211_ops ath9k_ops = {
- 	.tx_frames_pending  = ath9k_tx_frames_pending,
- 	.tx_last_beacon     = ath9k_tx_last_beacon,
- 	.get_stats	    = ath9k_get_stats,
-+	.set_antenna	    = ath9k_set_antenna,
-+	.get_antenna	    = ath9k_get_antenna,
- };
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index ad5f9bd..7e1265c 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1956,7 +1956,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 			ath_rx_ps(sc, skb);
- 		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
++EXPORT_SYMBOL(mac_pton);
+diff --git a/include/linux/compat-3.0.h b/include/linux/compat-3.0.h
+index 667ea38..7954ddb 100644
+--- a/include/linux/compat-3.0.h
++++ b/include/linux/compat-3.0.h
+@@ -46,6 +46,8 @@ struct bcma_device_id {
+ #define BCMA_ANY_CLASS		0xFF
+ #endif /* BCMA_CORE */
  
--		if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
-+		if ((ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) && sc->ant_rx == 3)
- 			ath_ant_comb_scan(sc, &rs);
++int mac_pton(const char *s, u8 *mac);
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)) */
  
- 		ieee80211_rx(hw, skb);
+ #endif /* LINUX_3_0_COMPAT_H */
 -- 
-1.7.3.2
+1.7.4.1
 
