@@ -1,220 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55286 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751263Ab1H2Kmk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 06:42:40 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	rmanohar@qca.qualcomm.com
-Subject: [PATCH v5 3/3] ath9k: implement .get_antenna and .set_antenna
-Date: Mon, 29 Aug 2011 12:42:34 +0200
-Message-Id: <1314614554-3701-3-git-send-email-nbd@openwrt.org> (sfid-20110829_124244_286405_F1228FE7)
-In-Reply-To: <1314614554-3701-2-git-send-email-nbd@openwrt.org>
-References: <1314614554-3701-1-git-send-email-nbd@openwrt.org>
- <1314614554-3701-2-git-send-email-nbd@openwrt.org>
+Received: from casper.infradead.org ([85.118.1.10]:43935 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751617Ab1HXT5J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 15:57:09 -0400
+Subject: Re: [PATCH] b43: HT-PHY: init: add missing small-tables writes
+From: David Woodhouse <dwmw2@infradead.org>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	=?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Date: Wed, 24 Aug 2011 20:57:01 +0100
+In-Reply-To: <87pqjuofq3.fsf@purkki.adurom.net>
+References: <1313250844-4526-1-git-send-email-zajec5@gmail.com>
+	 <CACna6rwoyPuwnzcw4BR5dmOiX9ogsTbquaG6qwRMZtLZytNnoA@mail.gmail.com>
+	 <20110823134932.GB9770@tuxdriver.com>
+	 <1314118360.21805.126.camel@shinybook.infradead.org>
+	 <87pqjuofq3.fsf@purkki.adurom.net>
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature";
+	boundary="=-Amp5fvOTLF4H9IY5j49N"
+Message-ID: <1314215822.21805.141.camel@shinybook.infradead.org> (sfid-20110824_215716_702961_2505B83A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On MIMO chips this can be used to enable/disable hardware chains, ensuring
-that the MCS information is updated accordingly.
-On non-MIMO chips with rx diversity (e.g. 9285), this configures the rx
-input antenna.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +
- drivers/net/wireless/ath/ath9k/init.c  |   32 +++++++++++---
- drivers/net/wireless/ath/ath9k/main.c  |   71 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
- 4 files changed, 99 insertions(+), 8 deletions(-)
+--=-Amp5fvOTLF4H9IY5j49N
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 5d9a9aa..56f0907 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -647,6 +647,7 @@ struct ath_softc {
- 	struct ath_descdma txsdma;
- 
- 	struct ath_ant_comb ant_comb;
-+	u8 ant_tx, ant_rx;
- };
- 
- void ath9k_tasklet(unsigned long data);
-@@ -668,6 +669,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
- 		    const struct ath_bus_ops *bus_ops);
- void ath9k_deinit_device(struct ath_softc *sc);
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw);
-+void ath9k_reload_chainmask_settings(struct ath_softc *sc);
- 
- void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw);
- bool ath9k_uses_beacons(int type);
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 31ef501..55cd59b 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -652,9 +652,22 @@ static void ath9k_init_txpower_limits(struct ath_softc *sc)
- 	ah->curchan = curchan;
- }
- 
-+void ath9k_reload_chainmask_settings(struct ath_softc *sc)
-+{
-+	if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT))
-+		return;
-+
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
-+		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
-+		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
-+}
-+
-+
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- {
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
- 		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
-@@ -692,6 +705,16 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->sta_data_size = sizeof(struct ath_node);
- 	hw->vif_data_size = sizeof(struct ath_vif);
- 
-+	hw->wiphy->available_antennas_rx = BIT(ah->caps.max_rxchains) - 1;
-+	hw->wiphy->available_antennas_tx = BIT(ah->caps.max_txchains) - 1;
-+
-+	/* single chain devices with rx diversity */
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
-+		hw->wiphy->available_antennas_rx = BIT(0) | BIT(1);
-+
-+	sc->ant_rx = hw->wiphy->available_antennas_rx;
-+	sc->ant_tx = hw->wiphy->available_antennas_tx;
-+
- #ifdef CONFIG_ATH9K_RATE_CONTROL
- 	hw->rate_control_algorithm = "ath9k_rate_control";
- #endif
-@@ -703,12 +726,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
- 			&sc->sbands[IEEE80211_BAND_5GHZ];
- 
--	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
--		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
--			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
--		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
--			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
--	}
-+	ath9k_reload_chainmask_settings(sc);
- 
- 	SET_IEEE80211_PERM_ADDR(hw, common->macaddr);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index f11b2c0..f1d4247 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -269,6 +269,22 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 			ath_start_ani(common);
- 	}
- 
-+	if (ath9k_hw_ops(ah)->antdiv_comb_conf_get && sc->ant_rx != 3) {
-+		struct ath_hw_antcomb_conf div_ant_conf;
-+		u8 lna_conf;
-+
-+		ath9k_hw_antdiv_comb_conf_get(ah, &div_ant_conf);
-+
-+		if (sc->ant_rx == 1)
-+			lna_conf = ATH_ANT_DIV_COMB_LNA1;
-+		else
-+			lna_conf = ATH_ANT_DIV_COMB_LNA2;
-+		div_ant_conf.main_lna_conf = lna_conf;
-+		div_ant_conf.alt_lna_conf = lna_conf;
-+
-+		ath9k_hw_antdiv_comb_conf_set(ah, &div_ant_conf);
-+	}
-+
- 	ieee80211_wake_queues(sc->hw);
- 
- 	return true;
-@@ -2363,6 +2379,59 @@ static int ath9k_get_stats(struct ieee80211_hw *hw,
- 	return 0;
- }
- 
-+static u32 fill_chainmask(u32 cap, u32 new)
-+{
-+	u32 filled = 0;
-+	int i;
-+
-+	for (i = 0; cap && new; i++, cap >>= 1) {
-+		if (!(cap & BIT(0)))
-+			continue;
-+
-+		if (new & BIT(0))
-+			filled |= BIT(i);
-+
-+		new >>= 1;
-+	}
-+
-+	return filled;
-+}
-+
-+static int ath9k_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	if (!rx_ant || !tx_ant)
-+		return -EINVAL;
-+
-+	sc->ant_rx = rx_ant;
-+	sc->ant_tx = tx_ant;
-+
-+	if (ah->caps.rx_chainmask == 1)
-+		return 0;
-+
-+	/* AR9100 runs into calibration issues if not all rx chains are enabled */
-+	if (AR_SREV_9100(ah))
-+		ah->rxchainmask = 0x7;
-+	else
-+		ah->rxchainmask = fill_chainmask(ah->caps.rx_chainmask, rx_ant);
-+
-+	ah->txchainmask = fill_chainmask(ah->caps.tx_chainmask, tx_ant);
-+	ath9k_reload_chainmask_settings(sc);
-+
-+	return 0;
-+}
-+
-+static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
-+{
-+	struct ath_softc *sc = hw->priv;
-+
-+	*tx_ant = sc->ant_tx;
-+	*rx_ant = sc->ant_rx;
-+	return 0;
-+}
-+
- struct ieee80211_ops ath9k_ops = {
- 	.tx 		    = ath9k_tx,
- 	.start 		    = ath9k_start,
-@@ -2389,4 +2458,6 @@ struct ieee80211_ops ath9k_ops = {
- 	.tx_frames_pending  = ath9k_tx_frames_pending,
- 	.tx_last_beacon     = ath9k_tx_last_beacon,
- 	.get_stats	    = ath9k_get_stats,
-+	.set_antenna	    = ath9k_set_antenna,
-+	.get_antenna	    = ath9k_get_antenna,
- };
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index ad5f9bd..7e1265c 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1956,7 +1956,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 			ath_rx_ps(sc, skb);
- 		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 
--		if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
-+		if ((ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) && sc->ant_rx == 3)
- 			ath_ant_comb_scan(sc, &rs);
- 
- 		ieee80211_rx(hw, skb);
--- 
-1.7.3.2
+On Wed, 2011-08-24 at 20:56 +0300, Kalle Valo wrote:
+> That's true, but setting up git tree for wireless is not trivial and
+> not for the faint of heart. Especially due to differences between
+> wireless-next and wireless-testing. Sending a patch series is a lot
+> easier and causes less tears.=20
+
+Most of the time it wouldn't need to be based on wireless-testing. It
+could just be based on Linus's last release. If wireless-next is
+actually a real stable git tree, it could perhaps be based on that too.
+
+--=20
+dwmw2
+
+--=-Amp5fvOTLF4H9IY5j49N
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIITvzCCBi0w
+ggQVoAMCAQICAwCtOTANBgkqhkiG9w0BAQUFADBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwG
+A1UECxMVaHR0cDovL3d3dy5DQWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290
+MB4XDTEwMDYxMjEwMDMwMFoXDTEyMDYxMTEwMDMwMFowgegxGDAWBgNVBAMTD0RhdmlkIFdvb2Ro
+b3VzZTEiMCAGCSqGSIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzEfMB0GCSqGSIb3DQEJARYQ
+ZGF2aWRAd29vZGhvdS5zZTEoMCYGCSqGSIb3DQEJARYZZGF2aWQud29vZGhvdXNlQGludGVsLmNv
+bTEkMCIGCSqGSIb3DQEJARYVZHdtdzJAbGludXguaW50ZWwuY29tMTcwNQYJKoZIhvcNAQkBFigx
+MDg3MmEwN2Y2ZDdlMWUwN2Y1NWZmMTcyYTAzYjMwMGVlYWFkMjAzMIIBIjANBgkqhkiG9w0BAQEF
+AAOCAQ8AMIIBCgKCAQEA29OPhNvMxBMW83psWdVhZDtmJvgN+tBEp1r6MZamONsR0k81a6fDFwJz
+M0fEzEbV/bDG102QyX/xXC/0IpKV4acnqESC+sTHUmRwxfRKGNmR6t2iwEs2Y5kQDF31JxbCt49w
+AlhLMAa+e1MBZ7vO0uDmRuJpS7+ZdHboq7cdk6dyoeumGv5sl6U/SPK9rL4KzULtqQaw6Wucd6MJ
+irIggEHfCNqeT5a+TyuH4zKCwv9nblIGXq9wt+yqu5t/RicGaKPnXSqo/WpJAGggaO8g92mnYlVl
+Wu/b9bYVISwQ8LI0sEtjN1WnP5AQO2f59bdPAVk4Rn25HceOO4NvlG47LwIDAQABo4IBcTCCAW0w
+DAYDVR0TAQH/BAIwADBWBglghkgBhvhCAQ0ESRZHVG8gZ2V0IHlvdXIgb3duIGNlcnRpZmljYXRl
+IGZvciBGUkVFIGhlYWQgb3ZlciB0byBodHRwOi8vd3d3LkNBY2VydC5vcmcwQAYDVR0lBDkwNwYI
+KwYBBQUHAwQGCCsGAQUFBwMCBgorBgEEAYI3CgMEBgorBgEEAYI3CgMDBglghkgBhvhCBAEwMgYI
+KwYBBQUHAQEEJjAkMCIGCCsGAQUFBzABhhZodHRwOi8vb2NzcC5jYWNlcnQub3JnMIGOBgNVHREE
+gYYwgYOBE2R3bXcyQGluZnJhZGVhZC5vcmeBEGRhdmlkQHdvb2Rob3Uuc2WBGWRhdmlkLndvb2Ro
+b3VzZUBpbnRlbC5jb22BFWR3bXcyQGxpbnV4LmludGVsLmNvbYEoMTA4NzJhMDdmNmQ3ZTFlMDdm
+NTVmZjE3MmEwM2IzMDBlZWFhZDIwMzANBgkqhkiG9w0BAQUFAAOCAgEAXm+SUO1/TSeGJK0D9pAm
+E9LTFkdlgbaD6HXGbS0TNUDyfLFkacc2F1JLoWcoFwcL6Rup5o/Rt4QYDBPWgF9EXFvqsc9SLrSe
+X6VwRj7vI40x19ThE2A1Y8DzBJ9+2MzIR6hd5n9axATCOIRhmZVjX1cRkwshEGvAn8mTYGhWttkx
+WhBcaAuCd9OOQqUwfxTUXiSfVumPUNrrbuvaH6MjrNjDrXdvicL26Y+AzFSJn3o8DShjjMhkUx9l
+qV46BpjSGIuvkHhcLkGJ3Y1YmtOX1hwT+Z+d/10WJh8ZG2FqIlJtPtqvHK5ol/KvdzMwmMBd4qFj
+YAO32vf7zde+jdTHNp2Mb15bJHhNdGOsZicpGue42fg3deZQFe1E2KBl9VO09fjncjt9YdhCUtxO
+buDnoOixY6YSJgSmGJB2Xs+TE5gps4UiiOYen+NeJkuwg5x9vmyraU061Uc0csfc/E5IoxhTX/Pc
+H+zXiER8aSjA/9MXQfrJM2xkY6UNKlDbCYSLKnH/O02eu7Hma6lB4wtcY8ECu7LJuFY2448Quolv
+SQfQLRvKauGFGUAhbPClOxObuv/fNzA+lfg8DX2y5jXDutnpvBGgsplKxoah01SZfR9zNqxodPx2
+srKhujBNB+WiAZntMf0xp4e0JPMlTFxm3tbY9wuBSyTJyueO9hUkbN4wggYtMIIEFaADAgECAgMA
+rTkwDQYJKoZIhvcNAQEFBQAwVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6
+Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdDAeFw0xMDA2MTIx
+MDAzMDBaFw0xMjA2MTExMDAzMDBaMIHoMRgwFgYDVQQDEw9EYXZpZCBXb29kaG91c2UxIjAgBgkq
+hkiG9w0BCQEWE2R3bXcyQGluZnJhZGVhZC5vcmcxHzAdBgkqhkiG9w0BCQEWEGRhdmlkQHdvb2Ro
+b3Uuc2UxKDAmBgkqhkiG9w0BCQEWGWRhdmlkLndvb2Rob3VzZUBpbnRlbC5jb20xJDAiBgkqhkiG
+9w0BCQEWFWR3bXcyQGxpbnV4LmludGVsLmNvbTE3MDUGCSqGSIb3DQEJARYoMTA4NzJhMDdmNmQ3
+ZTFlMDdmNTVmZjE3MmEwM2IzMDBlZWFhZDIwMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+ggEBANvTj4TbzMQTFvN6bFnVYWQ7Zib4DfrQRKda+jGWpjjbEdJPNWunwxcCczNHxMxG1f2wxtdN
+kMl/8Vwv9CKSleGnJ6hEgvrEx1JkcMX0ShjZkerdosBLNmOZEAxd9ScWwrePcAJYSzAGvntTAWe7
+ztLg5kbiaUu/mXR26Ku3HZOncqHrphr+bJelP0jyvay+Cs1C7akGsOlrnHejCYqyIIBB3wjank+W
+vk8rh+MygsL/Z25SBl6vcLfsqrubf0YnBmij510qqP1qSQBoIGjvIPdpp2JVZVrv2/W2FSEsEPCy
+NLBLYzdVpz+QEDtn+fW3TwFZOEZ9uR3HjjuDb5RuOy8CAwEAAaOCAXEwggFtMAwGA1UdEwEB/wQC
+MAAwVgYJYIZIAYb4QgENBEkWR1RvIGdldCB5b3VyIG93biBjZXJ0aWZpY2F0ZSBmb3IgRlJFRSBo
+ZWFkIG92ZXIgdG8gaHR0cDovL3d3dy5DQWNlcnQub3JnMEAGA1UdJQQ5MDcGCCsGAQUFBwMEBggr
+BgEFBQcDAgYKKwYBBAGCNwoDBAYKKwYBBAGCNwoDAwYJYIZIAYb4QgQBMDIGCCsGAQUFBwEBBCYw
+JDAiBggrBgEFBQcwAYYWaHR0cDovL29jc3AuY2FjZXJ0Lm9yZzCBjgYDVR0RBIGGMIGDgRNkd213
+MkBpbmZyYWRlYWQub3JngRBkYXZpZEB3b29kaG91LnNlgRlkYXZpZC53b29kaG91c2VAaW50ZWwu
+Y29tgRVkd213MkBsaW51eC5pbnRlbC5jb22BKDEwODcyYTA3ZjZkN2UxZTA3ZjU1ZmYxNzJhMDNi
+MzAwZWVhYWQyMDMwDQYJKoZIhvcNAQEFBQADggIBAF5vklDtf00nhiStA/aQJhPS0xZHZYG2g+h1
+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
+AAAAAA==
+
+
+--=-Amp5fvOTLF4H9IY5j49N--
 
