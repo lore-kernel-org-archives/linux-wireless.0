@@ -1,34 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:37792 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752684Ab1HPA6s (ORCPT
+Received: from filtteri1.pp.htv.fi ([213.243.153.184]:48492 "EHLO
+	filtteri1.pp.htv.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750751Ab1HXXJe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 20:58:48 -0400
-Received: by iye16 with SMTP id 16so8513558iye.1
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2011 17:58:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAFHVRfdha1e-+E+hTKPv2JAu5ywOkNo+we2k5FUGtdtRDTV4Aw@mail.gmail.com>
-References: <CAFHVRfdha1e-+E+hTKPv2JAu5ywOkNo+we2k5FUGtdtRDTV4Aw@mail.gmail.com>
-Date: Tue, 16 Aug 2011 02:58:47 +0200
-Message-ID: <CAAd0S9D_NKtSM8NjmYEp4EyXeQpEv5Esu68-qQx1EimeMfHz2Q@mail.gmail.com> (sfid-20110816_025851_997626_9A2B7BAA)
-Subject: Re: Problem Building carl9170
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Panu Avakul <avakulpa@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 24 Aug 2011 19:09:34 -0400
+In-Reply-To: <20110824222801.GA5280@broadcom.com>
+References: <20110707002034.GA17885@broadcom.com> <20110824222801.GA5280@broadcom.com>
+Mime-Version: 1.0 (Apple Message framework v753.1)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Message-Id: <C7234C0A-9839-4150-8B25-F6A6771377A1@iki.fi> (sfid-20110825_010937_265889_8324462C)
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Aaro Koskinen <aaro.koskinen@iki.fi>
+Subject: Re: [PATCH v2] Move brcm80211 to mainline
+Date: Thu, 25 Aug 2011 02:10:31 +0300
+To: Henry Ptasinski <henryp@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, August 16, 2011 02:14:01 AM Panu Avakul wrote:
-> I was trying to build carl9170 firmware from the source on the
-> git repository. The toolchain build with no problem. However,
-> when I run autogen.sh it give me a cmake error message
-> CMake Error: Parse error in cache file ...config/CMakeCache.txt.
-> I tried deleting it and re run autogen.sh but still no different.
-> I was wondering if any one had similar problem and any advice on
-> how I should resolve it. I am running this on ubuntu 11.04
-No? You are the first to report an issue. However, I wonder what
-happened to the "offending entry" line.
+Hi,
 
-Regards,
-	Chr
+On 25.8.2011, at 1.28, Henry Ptasinski wrote:
+> The brcmsmac driver has been verified to work on x86 (both 32- and  
+> 64-bit), PPC
+> (64-bit), SPARC, MIPS BE, and ARM.  The brcmfmac driver has been  
+> verified to
+> work on x86 32-bit and ARM (additional testing is in progress, but  
+> getting a
+> working sdio controller on some of the other platforms has been  
+> challenging).
+>
+> The drivers compile cleanly for x86 (32- and 64-bit), PPC (32- and  
+> 64-bit),
+> SPAR, MIPS BE, MIPS LE, and ARM.
+
+Are you sure the compilation is even enabled on all of those platforms?
+
+E.g.:
+
+ > +config BRCMSMAC
+ > +       tristate "Broadcom IEEE802.11n PCIe SoftMAC WLAN driver"
+ > +       default n
+ > +       depends on PCI
+ > +       depends on WLAN && MAC80211
+ > +       depends on X86 || MIPS
+           ^^^^^^^^^^^^^^^^^^^^^^
+
+Why this?
+
+A.
+
