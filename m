@@ -1,44 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:57363 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752700Ab1HXRbf (ORCPT
+Received: from filtteri1.pp.htv.fi ([213.243.153.184]:44405 "EHLO
+	filtteri1.pp.htv.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750803Ab1HXXxZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 13:31:35 -0400
-Message-ID: <4E553572.2040507@qca.qualcomm.com> (sfid-20110824_193141_095037_B886A6FF)
-Date: Wed, 24 Aug 2011 20:31:30 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/3] ath6kl: Add initial debugfs changes
-References: <1314195936-25227-1-git-send-email-vthiagar@qca.qualcomm.com> <4E550D34.7020008@qca.qualcomm.com> <20110824144644.GD25267@vasanth-laptop>
-In-Reply-To: <20110824144644.GD25267@vasanth-laptop>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Wed, 24 Aug 2011 19:53:25 -0400
+In-Reply-To: <20110824231851.GG5280@broadcom.com>
+References: <20110707002034.GA17885@broadcom.com> <20110824222801.GA5280@broadcom.com> <C7234C0A-9839-4150-8B25-F6A6771377A1@iki.fi> <20110824231851.GG5280@broadcom.com>
+Mime-Version: 1.0 (Apple Message framework v753.1)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Message-Id: <AACF29F3-C672-4DE4-8064-496662A40CB7@iki.fi> (sfid-20110825_015328_239808_783D7F2D)
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Aaro Koskinen <aaro.koskinen@iki.fi>
+Subject: Re: [PATCH v2] Move brcm80211 to mainline
+Date: Thu, 25 Aug 2011 02:54:22 +0300
+To: Henry Ptasinski <henryp@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/24/2011 05:46 PM, Vasanthakumar Thiagarajan wrote:
-> On Wed, Aug 24, 2011 at 05:39:48PM +0300, Kalle Valo wrote:
->> On 08/24/2011 05:25 PM, Vasanthakumar Thiagarajan wrote:
->>> +#ifdef CONFIG_ATH6KL_DEBUGFS
->>> +int ath6kl_init_debugfs(struct ath6kl *ar);
->>> +#else
->>> +static inline int ath6kl_init_debugfs(struct ath6kl *ar)
->>> +{
->>> +	return 0;
->>> +}
->>> +#endif
+Hi,
+
+On 25.8.2011, at 2.18, Henry Ptasinski wrote:
+> On Wed, Aug 24, 2011 at 04:10:31PM -0700, Aaro Koskinen wrote:
+>> On 25.8.2011, at 1.28, Henry Ptasinski wrote:
+>>> The drivers compile cleanly for x86 (32- and 64-bit), PPC (32- and
+>>> 64-bit),
+>>> SPAR, MIPS BE, MIPS LE, and ARM.
 >>
->> I would prefer to call this ath6kl_debug_init(). That way we can put all
->> debug initialisation into that, not just debugfs code. And then the
->> ifdef should check for CONFIG_ATH6KL_DEBUG.
-> 
-> May be, but I think we can't always enable debugfs based on only
-> CONFIG_ATH6KL_DEBUG as the general debug does not depend on
-> CONFIG_DEBUG_FS.
+>> Are you sure the compilation is even enabled on all of those  
+>> platforms?
+>>
+>> E.g.:
+>>
+>>> +config BRCMSMAC
+>>> +       tristate "Broadcom IEEE802.11n PCIe SoftMAC WLAN driver"
+>>> +       default n
+>>> +       depends on PCI
+>>> +       depends on WLAN && MAC80211
+>>> +       depends on X86 || MIPS
+>>            ^^^^^^^^^^^^^^^^^^^^^^
+>>
+>> Why this?
+>
+> See my other message.  Wrong link to the patch.  Correct link:
+>
+> http://linuxwireless.org/en/users/Drivers/brcm80211? 
+> action=AttachFile&do=get&target=0001-wireless-testing-add-brcm80211- 
+> v2.patch
 
-I don't see why we need to check for CONFIG_DEBUG_FS.
-debugfs_create_file() should handle the case then CONFIG_DEBUG_FS is
-disabled as it will just return ERR_PTR(-ENODEV).
+Thanks. The second version builds for ARM, but there's quite a few  
+sparse warnings....
 
-Kalle
+A.
+
