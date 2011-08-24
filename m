@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:53492 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752475Ab1HYMSz (ORCPT
+Received: from wondertoys-mx.wondertoys.net ([206.117.179.246]:34115 "EHLO
+	labridge.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750803Ab1HXXya (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 08:18:55 -0400
-Received: by gya6 with SMTP id 6so1685271gya.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 05:18:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1314265865-20208-1-git-send-email-arik@wizery.com>
-References: <1314265865-20208-1-git-send-email-arik@wizery.com>
-Date: Thu, 25 Aug 2011 14:18:54 +0200
-Message-ID: <CAGXE3d9mB_jjg38Mmf+B-1RYXjFp0h2hJDkRa+c2wO_OG+BDSw@mail.gmail.com> (sfid-20110825_141858_790676_3C446C3D)
-Subject: Re: [PATCH 1/2] mac80211: add flag to indicate HW only Tx-agg support
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 24 Aug 2011 19:54:30 -0400
+Subject: Re: [PATCH v2] Move brcm80211 to mainline
+From: Joe Perches <joe@perches.com>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: Greg KH <gregkh@suse.de>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+In-Reply-To: <20110824231746.GF5280@broadcom.com>
+References: <20110707002034.GA17885@broadcom.com>
+	 <20110824222801.GA5280@broadcom.com> <20110824225357.GA2224@suse.de>
+	 <20110824231746.GF5280@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 24 Aug 2011 16:54:28 -0700
+Message-ID: <1314230068.15882.15.camel@Joe-Laptop> (sfid-20110825_015433_830226_C49A7664)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, 2011-08-24 at 16:17 -0700, Henry Ptasinski wrote:
+> Augh.  I included the wrong link.  Correct link:
+> http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=get&target=0001-wireless-testing-add-brcm80211-v2.patch
 
-On Thu, Aug 25, 2011 at 11:51 AM, Arik Nemtsov <arik@wizery.com> wrote:
-> When this flag is set, Tx aggregations will not be initiated even
-> if the hardware supports A-MPDU aggregation in general. This flag
-> is required for devices supporting (partial) software Rx-aggregation.
+Can't you post the patch with git format-patch -M instead?
 
-Is the hardware unable to do TX aggregation?
-Or is it just not implemented?
-Or is it entirely done in hw?
-
-Instead of cluttering mac80211 with hw flags you could also just disallow tx
-aggregation sessions in the ampdu_action callback in the driver.
-
-Helmut
