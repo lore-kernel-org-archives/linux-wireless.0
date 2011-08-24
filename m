@@ -1,45 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:45585 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752970Ab1HMD1r (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:40254 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753215Ab1HXSER convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 23:27:47 -0400
-Received: by yie30 with SMTP id 30so2381164yie.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 20:27:47 -0700 (PDT)
-Message-ID: <4E45EF30.3070103@lwfinger.net> (sfid-20110813_052756_320279_E806F1F7)
-Date: Fri, 12 Aug 2011 22:27:44 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 24 Aug 2011 14:04:17 -0400
+Received: by wwf5 with SMTP id 5so1498299wwf.1
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 11:04:16 -0700 (PDT)
 MIME-Version: 1.0
-To: Roman Krylov <volyrkr@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rtl8192* wifi driver
-References: <4E45A973.6060305@gmail.com> <4E45AF82.5040407@lwfinger.net> <4E45D65F.6000306@gmail.com> <4E45DCB2.5020905@lwfinger.net> <4E45EA54.5010500@gmail.com>
-In-Reply-To: <4E45EA54.5010500@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20110824174835.GH9770@tuxdriver.com>
+References: <1313942085-6238-1-git-send-email-mohammed@qca.qualcomm.com>
+	<20110824174835.GH9770@tuxdriver.com>
+Date: Wed, 24 Aug 2011 23:34:15 +0530
+Message-ID: <CAD2nsn1JmdrTHRgv51t1oFuOUe3MdyhT+uN_+GWX3LycuiJNtw@mail.gmail.com> (sfid-20110824_200424_558785_DF771CA6)
+Subject: Re: [PATCH] ath9k_htc: Fix few possible memory leaks
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, rodrigue@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com, rmanohar@qca.qualcomm.com,
+	Larry.Finger@lwfinger.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/12/2011 10:07 PM, Roman Krylov wrote:
+On Wed, Aug 24, 2011 at 11:18 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> Is this intended for 3.1?  Should it be Cc: stable@kernel.org as well?
+
+Hi John,
+
+sorry for the inconvenience, please drop this patch
+as discussed in the thread
+http://comments.gmane.org/gmane.linux.kernel.wireless.general/75206
+thanks!
+
 >
->> What do you see in the NM log file? It should be at /var/log/NetworkManager?
+> On Sun, Aug 21, 2011 at 09:24:45PM +0530, Mohammed Shafi Shajakhan wrote:
+>> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 >>
->> I would also like to see the output of the 'iwlist scan' command when run as
->> root.
+>> still there are few other memory leaks which will be fixed
+>> very soon
 >>
->> Larry
-> Aug 12 21:26:11 volyrkr NetworkManager: <info> Activation (wlan3/wireless):
-> connection 'Auto bhn 310' has security, and secrets exist. No new secrets needed.
-> Aug 12 21:26:11 volyrkr NetworkManager: <info> Config: added 'ssid' value 'bhn 310'
+>> Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+>> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/htc_hst.c |   13 ++++++++-----
+>>  drivers/net/wireless/ath/ath9k/wmi.c     |    3 ++-
+>>  2 files changed, 10 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
+>> index 1b90ed8..e435c9b 100644
+>> --- a/drivers/net/wireless/ath/ath9k/htc_hst.c
+>> +++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
+>> @@ -169,13 +169,14 @@ static int htc_config_pipe_credits(struct htc_target *target)
+>>       time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
+>>       if (!time_left) {
+>>               dev_err(target->dev, "HTC credit config timeout\n");
+>> -             return -ETIMEDOUT;
+>> +             ret = -ETIMEDOUT;
+>> +             goto err;
+>>       }
+>>
+>>       return 0;
+>>  err:
+>>       kfree_skb(skb);
+>> -     return -EINVAL;
+>> +     return ret;
+>>  }
+>>
+>>  static int htc_setup_complete(struct htc_target *target)
+>> @@ -204,14 +205,15 @@ static int htc_setup_complete(struct htc_target *target)
+>>       time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
+>>       if (!time_left) {
+>>               dev_err(target->dev, "HTC start timeout\n");
+>> -             return -ETIMEDOUT;
+>> +             ret = -ETIMEDOUT;
+>> +             goto err;
+>>       }
+>>
+>>       return 0;
+>>
+>>  err:
+>>       kfree_skb(skb);
+>> -     return -EINVAL;
+>> +     return ret;
+>>  }
+>>
+>>  /* HTC APIs */
+>> @@ -276,7 +278,8 @@ int htc_connect_service(struct htc_target *target,
+>>       if (!time_left) {
+>>               dev_err(target->dev, "Service connection timeout for: %d\n",
+>>                       service_connreq->service_id);
+>> -             return -ETIMEDOUT;
+>> +             ret = -ETIMEDOUT;
+>> +             goto err;
+>>       }
+>>
+>>       *conn_rsp_epid = target->conn_rsp_epid;
+>> diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+>> index 35422fc..50d901d 100644
+>> --- a/drivers/net/wireless/ath/ath9k/wmi.c
+>> +++ b/drivers/net/wireless/ath/ath9k/wmi.c
+>> @@ -334,7 +334,8 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
+>>                       "Timeout waiting for WMI command: %s\n",
+>>                       wmi_cmd_to_name(cmd_id));
+>>               mutex_unlock(&wmi->op_mutex);
+>> -             return -ETIMEDOUT;
+>> +             ret = -ETIMEDOUT;
+>> +             goto out;
+>>       }
+>>
+>>       mutex_unlock(&wmi->op_mutex);
+>> --
+>> 1.7.0.4
+>>
+>>
+>
+> --
+> John W. Linville                Someday the world will need a hero, and you
+> linville@tuxdriver.com                  might be all we have.  Be ready.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-What is your ESSID? Two lines up, I see 'Auto bhn 310' and one line up I see 
-'bhn 310'. Based on my logs, those two should be the same. I'll set one of my 
-APs to the first ESSID and see if I can connect.
 
-I found the problem in the driver you sent. One needs to add
 
-#include <linux/interrupt.h>
-
-to file include/osdep_service.h. Once I did that, it built and works.
-
-Larry
-
+-- 
+shafi
