@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:52111 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750884Ab1HKNZE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 09:25:04 -0400
-Received: by yxj19 with SMTP id 19so1286525yxj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 06:25:02 -0700 (PDT)
+Received: from cantor2.suse.de ([195.135.220.15]:45178 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750751Ab1HXW4s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 18:56:48 -0400
+Date: Wed, 24 Aug 2011 15:53:57 -0700
+From: Greg KH <gregkh@suse.de>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Subject: Re: [PATCH v2] Move brcm80211 to mainline
+Message-ID: <20110824225357.GA2224@suse.de> (sfid-20110825_005653_911485_94F02B79)
+References: <20110707002034.GA17885@broadcom.com>
+ <20110824222801.GA5280@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1313067519.3992.4.camel@jlt3.sipsolutions.net>
-References: <1313053697-19544-1-git-send-email-helmut.schaa@googlemail.com>
-	<1313067519.3992.4.camel@jlt3.sipsolutions.net>
-Date: Thu, 11 Aug 2011 15:25:02 +0200
-Message-ID: <CAGXE3d8PWyUnkM+RA0=HHyc=Zw193w51R-KkAYGQz1qwCKT7YQ@mail.gmail.com> (sfid-20110811_152507_290059_97C9DE15)
-Subject: Re: [PATCH] mac80211: Tear down BA session on BAR tx failure
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110824222801.GA5280@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 11, 2011 at 2:58 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->> +             if (!acked && ieee80211_is_back_req(fc)) {
->> +                     /*
->> +                      * BAR failed, let's tear down the BA session as a
->> +                      * last resort as some STAs (Intel 5100 on Windows)
->> +                      * can get stuck when the BA window isn't flushed
->> +                      * correctly.
->> +                      */
->> +                     bar = (struct ieee80211_bar *) skb->data;
->> +                     ieee80211_stop_tx_ba_session(&sta->sta,
->> +                                                  bar->control >> 12 & 0xf);
->> +             }
->
-> Hmm, that shift & mask makes me think twice, are there constants, and
-> maybe there should be some parentheses?
+On Wed, Aug 24, 2011 at 03:28:01PM -0700, Henry Ptasinski wrote:
+> With the latest series of cleanup patches merged in by Greg KH, I'd like to
+> once again propose moving brcm80211 out of staging and into mainline.
+> 
+> I've put together a patch to add a copy of the current sources from
+> staging-next into wireless-testing:drivers/net/wireless/brcm80211.
+> 
+> The patch is somewhat large, so I've posted the patch at:
+> 
+> http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=get&target=0001-wireless-testing-add-brcm80211.patch
+> 
+> Changes from the previous version:
+> 
+> V2:
+> - Resolve checkpatch issues
 
-This just masks out the TID associated to this BA agreement and the shift
-has a higher precedence then the bitwise &.
+Really?  All of them?  What's with all of the use of 'volatile' in the
+driver still?  Those should all be resolved as they are all wrong from
+what I can see.
 
-We don't have a suitable constant yet, a hardcoded 12 is also used in
-ieee80211_send_bar. Hence, I guess a define would be suitable here.
+Wait, those usages are in your above mentioned patch, but are not in the
+current driver in the staging-next tree.  Did you mess up when creating
+that patch and take an older version of the driver?
 
-I'll resend with the fixed typos and replace the 12 with a define.
+confused,
 
-Thanks,
-Helmut
+greg k-h
