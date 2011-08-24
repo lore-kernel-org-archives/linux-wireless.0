@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:65195 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753525Ab1HZTpO convert rfc822-to-8bit (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:16480 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751005Ab1HXOIn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 15:45:14 -0400
-Received: by gxk21 with SMTP id 21so3127604gxk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 12:45:14 -0700 (PDT)
+	Wed, 24 Aug 2011 10:08:43 -0400
+From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+To: Alexander Diewald <alex@diewald.cc>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+Date: Wed, 24 Aug 2011 07:08:36 -0700
+Subject: RE: [iwlagn] System crash on dell e6420 using iwlagn from
+ kernel-git
+Message-ID: <E9954878DD1FB34FAE5187FB88C58A3501998B9CD3@orsmsx506.amr.corp.intel.com> (sfid-20110824_160846_216922_0DD89C45)
+References: <2EBB96D0C3577D479C54D1243926388D07AE5FFE@mail.ecs-exchange.de>
+In-Reply-To: <2EBB96D0C3577D479C54D1243926388D07AE5FFE@mail.ecs-exchange.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20110826175510.GG4888@broadcom.com>
-References: <20110707002034.GA17885@broadcom.com>
-	<20110824222801.GA5280@broadcom.com>
-	<CACna6rwG6qNpaOu4QeOvs0L3LVETRt9w5=Ec-L2NJ5gXOAM=nw@mail.gmail.com>
-	<20110826175510.GG4888@broadcom.com>
-Date: Fri, 26 Aug 2011 21:45:13 +0200
-Message-ID: <CACna6ryPoeFm4zZ_xGtkA5wHtbG1Z4bSk6t2tGt0nQg28aaLDQ@mail.gmail.com> (sfid-20110826_214518_604793_9C68EAFC)
-Subject: Re: [PATCH v2] Move brcm80211 to mainline
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 26 sierpnia 2011 19:55 użytkownik Henry Ptasinski
-<henryp@broadcom.com> napisał:
-> On Thu, Aug 25, 2011 at 01:55:26PM -0700, Rafał Miłecki wrote:
->> 2011/8/25 Henry Ptasinski <henryp@broadcom.com>:
->> > With the latest series of cleanup patches merged in by Greg KH, I'd like to
->> > once again propose moving brcm80211 out of staging and into mainline.
->>
->> Henry: a simple question, please explain it to me, what brcmsmac does
->> provide that b43 doesn't?
->
-> The brcmsmac driver supports the BCM4313, BCM43224, and BCM43225 chipsets with
-> full performance i.e. rate vs. range comparable to what's achived with these
-> chips running under other operating systems.
+Hi Alex,
 
-Out of curiosity, do you *really* already support 40 MHz channels in brcmsmac?
+I am on vacation now and I will asking the right people in the team to look into this problem and get back to you.
 
-According to http://wireless.kernel.org/en/users/Drivers/brcm80211 you don't...
+Thanks
+Wey
 
--- 
-Rafał
+-----Original Message-----
+From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Alexander Diewald
+Sent: Wednesday, August 24, 2011 5:42 AM
+To: linux-wireless@vger.kernel.org
+Subject: [iwlagn] System crash on dell e6420 using iwlagn from kernel-git
+
+Hi everyone,
+
+I'm currently testing out the git repository of the linux kernel.
+Unfortunately my system (Gentoo) always crashes shortly after the Networkmanager service is started. Not starting the service or using the radio killswitch is the only possibility to get the system up. I already tested versions 0.8.4 and 0.9rc3 of Networkmanager resulting in the same error. This behavior came up with using the git-Version of the kernel whereas it was working in the 3.0.x releases.
+The really bad news is that I cannot send a detailed trace with this message as the relevant parts of the log message are gone due the following hardreset. But luckily once a trace remained, which is from the older rc1 but still describing the same problem. Unfortunately no debugging symbols were active when this trace was generated.
+I've also attached some information about my system.
+I hope you can help me out. Thanks.
+
+Best regards,
+Alexander Diewald
