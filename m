@@ -1,58 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1588 "EHLO mms2.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:4954 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751281Ab1HLQdD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 12:33:03 -0400
-Message-ID: <4E4555AD.7040809@broadcom.com> (sfid-20110812_183308_461089_C59BCA66)
-Date: Fri, 12 Aug 2011 18:32:45 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	id S1751199Ab1HXWag (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 18:30:36 -0400
+Date: Wed, 24 Aug 2011 15:28:01 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>,
 	"gregkh@suse.de" <gregkh@suse.de>,
 	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/14] staging: brcm80211: brcmfmac driver cleanup
-References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
- <CACna6rztueomzzas=hQjfj6htD=SHFhrtFPSqbviqVDwaihJ9w@mail.gmail.com>
-In-Reply-To: <CACna6rztueomzzas=hQjfj6htD=SHFhrtFPSqbviqVDwaihJ9w@mail.gmail.com>
+cc: "Brett Rudley" <brudley@broadcom.com>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Subject: [PATCH v2] Move brcm80211 to mainline
+Message-ID: <20110824222801.GA5280@broadcom.com> (sfid-20110825_003039_378819_FA5E4138)
+References: <20110707002034.GA17885@broadcom.com>
+MIME-Version: 1.0
+In-Reply-To: <20110707002034.GA17885@broadcom.com>
 Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/12/2011 04:02 PM, Rafał Miłecki wrote:
-> 2011/8/12 Arend van Spriel<arend@broadcom.com>:
->> Several cleanup patches to reduce code for the brcmfmac driver and
->> get rid of a remaining checkpatch warning. The driver sources should
->> be clear from checkpatch issue now.
->>
->> This series applies to staging-next and depends on the following patch set:
-> Are you testing patches on some hardware? Or just compile-testing?
->
-> I believe this driver is meant to support BCM4329, which is not PCI(e)
-> board. What adapter do you use?
->
-> I've heard about Arasan adapter. Have you tried it? Is that something
-> reachable from arasan.com?
+With the latest series of cleanup patches merged in by Greg KH, I'd like to
+once again propose moving brcm80211 out of staging and into mainline.
 
-Our brcm80211 source tree under drivers/staging contain two drivers. The 
-brcmsmac driver currently supporting the PCI(e) cards with bcm43224, 
-bcm43225, and bcm4313 chips and the brcmfmac driver currently supporting 
-the SDIO card with bcm4329 chip. brcmsmac is a mac80211 driver and 
-brcmfmac is a cfg80211 driver.
+I've put together a patch to add a copy of the current sources from
+staging-next into wireless-testing:drivers/net/wireless/brcm80211.
 
-We indeed use the Arasan adapter and both drivers are running in nightly 
-test cycle testing our common internal repository. So the drivers are 
-functionally tested on the x86 platforms (32 and 64 bit). Also looking 
-at sparc64 and powerpc64 but not in a nightly cycle.
+The patch is somewhat large, so I've posted the patch at:
 
-Gr. AvS
+http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=get&target=0001-wireless-testing-add-brcm80211.patch
 
--- 
-Almost nobody dances sober, unless they happen to be insane.
--- H.P. Lovecraft --
+Changes from the previous version:
+
+V2:
+- Resolve checkpatch issues
+- Fix issues on big-endian platforms (MIPS BE, PPC, and SPARC)
+- Cleanup architecture-specific code
+- Fix power save, locking, and scan issues in brcmfmac
+- Elimimnate 'void *' casts in brcmsmac
+- Fix entry for brcm80211 drivers in drivers/net/wireless/Kconfig
+- Use cordic and crc8 kernel library functions
+- General code cleanup, restructuring, and dead code removal
+
+The only difference between these sources and the ones in staging-next are:
+	- necessary Kconfig and Makefile adjustments for the new driver location
+	- one cleanup of a checkpatch warning (as indicated below)
+
+The brcmsmac driver has been verified to work on x86 (both 32- and 64-bit), PPC
+(64-bit), SPARC, MIPS BE, and ARM.  The brcmfmac driver has been verified to
+work on x86 32-bit and ARM (additional testing is in progress, but getting a
+working sdio controller on some of the other platforms has been challenging).
+
+The drivers compile cleanly for x86 (32- and 64-bit), PPC (32- and 64-bit),
+SPAR, MIPS BE, MIPS LE, and ARM.
+
+Thanks,
+---
+Henry Ptasinski
+henryp@broadcom.com
+
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm8021
+index 05dad9f..73e5841 100644
+--- a/drivers/staging/brcm80211/brcmsmac/dma.c
++++ b/drivers/staging/brcm80211/brcmsmac/dma.c
+@@ -815,7 +815,7 @@ struct sk_buff *dma_rx(struct dma_pub *pub)
+                tail = head;
+                while ((resid > 0) && (p = _dma_getnextrxp(di, false))) {
+                        tail->next = p;
+-                       pkt_len = min(resid, (int)di->rxbufsize);
++                       pkt_len = min_t(int, resid, (int)di->rxbufsize);
+                        __skb_trim(p, pkt_len);
+ 
+                        tail = p;
 
 
