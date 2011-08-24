@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:48328 "EHLO mgw2.diku.dk"
+Received: from mms2.broadcom.com ([216.31.210.18]:1469 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752238Ab1HVOAp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 10:00:45 -0400
-From: Julia Lawall <julia@diku.dk>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 4/4] drivers/net/wireless/mwifiex/scan.c: test the just-initialized value
-Date: Mon, 22 Aug 2011 16:00:36 +0200
-Message-Id: <1314021636-11528-4-git-send-email-julia@diku.dk> (sfid-20110822_160127_017600_551EB92D)
+	id S1752147Ab1HXKqK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 06:46:10 -0400
+Message-ID: <4E54D660.4090407@broadcom.com> (sfid-20110824_124614_060586_1A7F7A50)
+Date: Wed, 24 Aug 2011 12:45:52 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Greg KH" <greg@kroah.com>
+cc: "Greg KH" <gregkh@suse.de>, "Dan Carpenter" <error27@gmail.com>,
+	"sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCHv2 00/82] staging: brcm80211: resubmit previously
+ posted patches
+References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+ <CA+icZUUBokLgtn3K3uG7qcNLzy4pfdT4fGYWPtoOy_MQVy8VuA@mail.gmail.com>
+ <20110808145334.GA7659@shale.localdomain>
+ <4E400A92.7060905@broadcom.com> <20110808163232.GA26352@suse.de>
+ <4E4010EB.2020606@broadcom.com> <20110823200141.GA602@kroah.com>
+In-Reply-To: <20110823200141.GA602@kroah.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+On 08/23/2011 10:01 PM, Greg KH wrote:
+> On Mon, Aug 08, 2011 at 06:38:03PM +0200, Arend van Spriel wrote:
+>> On 08/08/2011 06:32 PM, Greg KH wrote:
+>>> No, as you sent it is fine with me.
+>>>
+>>> I'll start going through the huge backlog of staging patches this week,
+>>> as the merge window just opened up a few hours ago.
+>> Will keep my fingers crossed tonight ;-)
+> All 82 applied just fine, you can uncross your fingers now :)
+>
+> greg k-h
 
-Test the just-initialized value rather than some other one.
+Yeah. It was starting to hurt after a week or so :-)
 
-The semantic match that finds this problem is as follows:
-(http://coccinelle.lip6.fr/)
+Gr. AvS
 
-// <smpl>
-@r@
-identifier x,y,f!={PTR_ERR,ERR_PTR,ERR_CAST};
-statement S;
-@@
+-- 
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
 
-x = f(...);
-(
-if (\(x == NULL\|IS_ERR(x)\)) S
-|
-*if (\(y == NULL\|IS_ERR(y)\))
- { ... when != x
-   return ...; }
-)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/net/wireless/mwifiex/scan.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index b28241c..d3111c9 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1480,7 +1480,7 @@ mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
- 		return -ENOMEM;
- 	}
- 	beacon_ie = kzalloc(ie_len, GFP_KERNEL);
--	if (!bss_desc) {
-+	if (!beacon_ie) {
- 		dev_err(priv->adapter->dev, " failed to alloc bss_desc\n");
- 		return -ENOMEM;
- 	}
 
