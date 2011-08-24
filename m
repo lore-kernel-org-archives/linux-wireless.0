@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54302 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750759Ab1HVPC0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 11:02:26 -0400
-Message-ID: <4E526F78.1030302@openwrt.org> (sfid-20110822_170229_921545_66CAB83E)
-Date: Mon, 22 Aug 2011 17:02:16 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:52071 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751826Ab1HXUkA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 16:40:00 -0400
+Received: by pzk37 with SMTP id 37so1277374pzk.1
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 13:40:00 -0700 (PDT)
 MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: Send legacy rated frames as unaggregated
-References: <1314016632-1742-1-git-send-email-rmanohar@qca.qualcomm.com>
-In-Reply-To: <1314016632-1742-1-git-send-email-rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20110824184453.GK9770@tuxdriver.com>
+References: <1313785375-32709-1-git-send-email-javier@cozybit.com> <20110824184453.GK9770@tuxdriver.com>
+From: Javier Cardona <javier@cozybit.com>
+Date: Wed, 24 Aug 2011 13:39:40 -0700
+Message-ID: <CAPjQAd9q-nurAmHdE=mB0OOJrPeObRAxtSJfNDDQg+3MzP+kvg@mail.gmail.com> (sfid-20110824_224004_432382_12DD56CE)
+Subject: Re: [PATCH] mac80211: remove mesh paths when an interface is removed
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Thomas Pedersen <thomas@cozybit.com>, devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-08-22 2:37 PM, Rajkumar Manoharan wrote:
-> Currently the aggregation is formed till the aggregation limit
-> is reached and the rate lookup is done for the first frame alone.
-> But there can be a legacy rated frames in tid queue. This patch
-> limits the subframe addition based on last MRR's rate and sends
-> the legacy rated frames as unaggregated one.
+On Wed, Aug 24, 2011 at 11:44 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Fri, Aug 19, 2011 at 01:22:55PM -0700, Javier Cardona wrote:
+>> When an interface is removed, the mesh paths associated with it should
+>> also be removed.
+>>
+>> This fixes a bug we observed when reloading a device driver module
+>> without reloading mac80211s.
+>>
+>> Signed-off-by: Javier Cardona <javier@cozybit.com>
 >
-> Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
-> ---
->   drivers/net/wireless/ath/ath9k/xmit.c |   23 ++++++++++++++++++++++-
->   1 files changed, 22 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-> index 2062672..41d9184 100644
-> --- a/drivers/net/wireless/ath/ath9k/xmit.c
-> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-> @@ -571,6 +571,26 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
->   		ath_reset(sc, false);
->   }
->
-> +static bool ath_lookup_lecacy(struct ath_buf *bf)
-> +{
-> +	struct sk_buff *skb;
-> +	struct ieee80211_tx_info *tx_info;
-> +	struct ieee80211_tx_rate *rates;
-> +
-> +	skb = bf->bf_mpdu;
-> +	tx_info = IEEE80211_SKB_CB(skb);
-> +	rates = tx_info->control.rates;
-> +
-> +	/*
-> +	 * Checking the last MRR's flag is sufficient to
-> +	 * determine legacy or not
-> +	 */
-No it isn't. Maybe with ath9k_rate_control, but things may change with 
-other rate control modules.
+>  CC [M]  net/mac80211/mesh_pathtbl.o
+> net/mac80211/mesh_pathtbl.c: In function ‘mpp_path_flush’:
+> net/mac80211/mesh_pathtbl.c:862:8: error: invalid type argument of ‘->’ (have ‘rwlock_t’)
+> make[1]: *** [net/mac80211/mesh_pathtbl.o] Error 1
+> make: *** [net/mac80211/] Error 2
 
-- Felix
+Sorry! I'll include the revised patch in a larger pathset to be
+submitted later today.
+
+Cheers,
+
+Javier
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
