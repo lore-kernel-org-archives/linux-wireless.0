@@ -1,32 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:46887 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753339Ab1HVTec (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21069 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752553Ab1HXRYS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 15:34:32 -0400
-Date: Mon, 22 Aug 2011 12:33:26 -0700 (PDT)
-Message-Id: <20110822.123326.1795268471389412471.davem@davemloft.net> (sfid-20110822_213436_750167_E7D1CC19)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2011-08-22
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110822190136.GJ2534@tuxdriver.com>
-References: <20110822190136.GJ2534@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 24 Aug 2011 13:24:18 -0400
+Message-ID: <4E5533AF.4080905@qca.qualcomm.com> (sfid-20110824_192427_017970_E2C74489)
+Date: Wed, 24 Aug 2011 20:23:59 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/3] ath6kl: Add initial debugfs changes
+References: <1314195936-25227-1-git-send-email-vthiagar@qca.qualcomm.com> <20110824143039.GA25267@vasanth-laptop> <4E550BBA.1020800@qca.qualcomm.com> <20110824144433.GC25267@vasanth-laptop>
+In-Reply-To: <20110824144433.GC25267@vasanth-laptop>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 22 Aug 2011 15:01:37 -0400
-
-> This is a batch of fixes intended for 3.1.  Included is rewrite of an
-> earlier iwlagn fix that was revealed to be flawed (bad pointer access
-> during module unload), a fix for a memory leak, and a trio of rt2x00
-> fixes with detailed changelogs.  These have all been in linux-next
-> for the last week with no reported complaints.
+On 08/24/2011 05:44 PM, Vasanthakumar Thiagarajan wrote:
+> On Wed, Aug 24, 2011 at 05:33:30PM +0300, Kalle Valo wrote:
+>>
+>> Actually do we really need ATH6KL_DEBUGFS? I would think that if both
+>> ATH6KL_DEBUG and DEBUG_FS are enabled we should just enable debugfs code
+>> in ath6kl. I don't see the need to have separate kconfig option control
+>> that.
 > 
-> Please let me know if there are problems!
+> You are right. We can directly use CONFIG_DEBUG_FS to enable ath6kl
+> debugfs functionalities, also as I said, this does not need to
+> depend on ATH6KL_DEBUG. One purpose that I can think of introducing
+> a config option for debugfs is to reduce the size of the binary,
+> may be it is very insignificant.
 
-Pulled, thanks John.
+Yeah, I think we don't need to worry that. The user can always disable
+CONFIG_DEBUG_FS if he doesn't want to use debugfs, just disabling
+debugfs for ath6kl doesn't make sense.
+
+Kalle
