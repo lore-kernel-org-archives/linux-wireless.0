@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29220 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:57474 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752898Ab1H3Kng (ORCPT
+	with ESMTP id S1752466Ab1HXOkR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 06:43:36 -0400
-Date: Tue, 30 Aug 2011 16:14:04 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: "Jorge Boncompte [DTI2]" <jorge@dti2.net>
-CC: <adrian@freebsd.org>, Felix Fietkau <nbd@openwrt.org>,
-	<linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH 3.1] ath9k_hw: fix calibration on 5 ghz
-Message-ID: <20110830104403.GA5446@vmraj-lnx.users.atheros.com> (sfid-20110830_124340_299807_BB60C2C8)
-References: <1314605174-66206-1-git-send-email-nbd@openwrt.org>
- <CAJ-Vmonvcrd49rQbgeyO3HCLxkTbww3mTypR87CuPBiu9uwhHA@mail.gmail.com>
- <4E5B669F.8060605@dti2.net>
+	Wed, 24 Aug 2011 10:40:17 -0400
+Message-ID: <4E550D34.7020008@qca.qualcomm.com> (sfid-20110824_164021_275875_DB9BE01C)
+Date: Wed, 24 Aug 2011 17:39:48 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <4E5B669F.8060605@dti2.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/3] ath6kl: Add initial debugfs changes
+References: <1314195936-25227-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1314195936-25227-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 29, 2011 at 12:14:55PM +0200, Jorge Boncompte [DTI2] wrote:
-> El 29/08/2011 11:01, Adrian Chadd escribió:
-> > Can we please hold off of this until we know if this is indeed the correct fix?
-> > 
-> > Ie, I'm not sure yet whether 5ghz fast clock (which clocks the mac/bb
-> > like it was doing 2.4ghz) needs the dual ADCs enabled or not.
-> > It may be that something is being incorrectly disabled when the
-> > fastclock initvals are being written over the normal 5ghz values.
-> >uary
-> > Thanks,
-> 
-> 	Hi, I reported this same problem on february, I was using Ubiquiti SR71-15
-> cards. I've been running them with the same "fix" that Felix has proposed. If
-> you need a tester for another solution just let me know.
-> 
-Hi Jorge,
+On 08/24/2011 05:25 PM, Vasanthakumar Thiagarajan wrote:
+> +#ifdef CONFIG_ATH6KL_DEBUGFS
+> +int ath6kl_init_debugfs(struct ath6kl *ar);
+> +#else
+> +static inline int ath6kl_init_debugfs(struct ath6kl *ar)
+> +{
+> +	return 0;
+> +}
+> +#endif
 
-Could you please test whether the below patch helps?
+I would prefer to call this ath6kl_debug_init(). That way we can put all
+debug initialisation into that, not just debugfs code. And then the
+ifdef should check for CONFIG_ATH6KL_DEBUG.
 
-https://patchwork.kernel.org/patch/1112672/
-
-Thanks,
-Rajkumar
+Kalle
