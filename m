@@ -1,149 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58979 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751582Ab1HJQSK (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:53285 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751276Ab1HXXmO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 12:18:10 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 19so1024245fxh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 09:18:10 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/2] b43: fix DMA on some bugged hardware
-Date: Wed, 10 Aug 2011 18:11:28 +0200
-Message-Id: <1312992688-6976-2-git-send-email-zajec5@gmail.com> (sfid-20110810_181814_979713_F19C6863)
-In-Reply-To: <1312992688-6976-1-git-send-email-zajec5@gmail.com>
-References: <1312992688-6976-1-git-send-email-zajec5@gmail.com>
+	Wed, 24 Aug 2011 19:42:14 -0400
+Received: by yxj19 with SMTP id 19so1271715yxj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 16:42:14 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20110824222801.GA5280@broadcom.com>
+References: <20110707002034.GA17885@broadcom.com> <20110824222801.GA5280@broadcom.com>
+From: Jonas Gorski <jonas.gorski@gmail.com>
+Date: Thu, 25 Aug 2011 01:41:54 +0200
+Message-ID: <CAOiHx=mfqv9CPNRsZ0pbXMfkDstyNcioqww77EDvU35q0CGMWw@mail.gmail.com> (sfid-20110825_014217_821670_E699B2A8)
+Subject: Re: [PATCH v2] Move brcm80211 to mainline
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some hardware with 64-bit DMA uses lower address word for setting
-routing (translation) bit. Add workaround for such boards.
+Hi Henry,
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/b43.h |    1 +
- drivers/net/wireless/b43/dma.c |   52 ++++++++++++++++++++++++++++++----------
- 2 files changed, 40 insertions(+), 13 deletions(-)
+On 25 August 2011 00:28, Henry Ptasinski <henryp@broadcom.com> wrote:
+> With the latest series of cleanup patches merged in by Greg KH, I'd like to
+> once again propose moving brcm80211 out of staging and into mainline.
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index c818b0b..3aee322 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -594,6 +594,7 @@ struct b43_dma {
- 	struct b43_dmaring *rx_ring;
- 
- 	u32 translation; /* Routing bits */
-+	bool translation_in_low; /* Should translation bit go into low addr? */
- 	bool parity; /* Check for parity */
- };
- 
-diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
-index 0953ce1..9a2b678 100644
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -174,7 +174,10 @@ static void op64_fill_descriptor(struct b43_dmaring *ring,
- 	addrhi = (((u64) dmaaddr >> 32) & ~SSB_DMA_TRANSLATION_MASK);
- 	addrext = (((u64) dmaaddr >> 32) & SSB_DMA_TRANSLATION_MASK)
- 	    >> SSB_DMA_TRANSLATION_SHIFT;
--	addrhi |= ring->dev->dma.translation;
-+	if (ring->dev->dma.translation_in_low)
-+		addrlo |= ring->dev->dma.translation;
-+	else
-+		addrhi |= ring->dev->dma.translation;
- 	if (slot == ring->nr_slots - 1)
- 		ctl0 |= B43_DMA64_DCTL0_DTABLEEND;
- 	if (start)
-@@ -656,10 +659,12 @@ static int alloc_initial_descbuffers(struct b43_dmaring *ring)
- static int dmacontroller_setup(struct b43_dmaring *ring)
- {
- 	int err = 0;
-+	int tmp;
- 	u32 value;
- 	u32 addrext;
- 	u32 trans = ring->dev->dma.translation;
- 	bool parity = ring->dev->dma.parity;
-+	u32 addrs[2];
- 
- 	if (ring->tx) {
- 		if (ring->type == B43_DMA_64BIT) {
-@@ -673,12 +678,14 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
- 			if (!parity)
- 				value |= B43_DMA64_TXPARITYDISABLE;
- 			b43_dma_write(ring, B43_DMA64_TXCTL, value);
--			b43_dma_write(ring, B43_DMA64_TXRINGLO,
--				      (ringbase & 0xFFFFFFFF));
--			b43_dma_write(ring, B43_DMA64_TXRINGHI,
--				      ((ringbase >> 32) &
--				       ~SSB_DMA_TRANSLATION_MASK)
--				      | trans);
-+
-+			addrs[0] = ringbase & 0xFFFFFFFF;
-+			addrs[1] = ringbase >> 32;
-+			tmp = ring->dev->dma.translation_in_low ? 0 : 1;
-+			addrs[tmp] &= ~SSB_DMA_TRANSLATION_MASK;
-+			addrs[tmp] |= trans;
-+			b43_dma_write(ring, B43_DMA64_TXRINGLO, addrs[0]);
-+			b43_dma_write(ring, B43_DMA64_TXRINGHI, addrs[1]);
- 		} else {
- 			u32 ringbase = (u32) (ring->dmabase);
- 
-@@ -710,12 +717,15 @@ static int dmacontroller_setup(struct b43_dmaring *ring)
- 			if (!parity)
- 				value |= B43_DMA64_RXPARITYDISABLE;
- 			b43_dma_write(ring, B43_DMA64_RXCTL, value);
--			b43_dma_write(ring, B43_DMA64_RXRINGLO,
--				      (ringbase & 0xFFFFFFFF));
--			b43_dma_write(ring, B43_DMA64_RXRINGHI,
--				      ((ringbase >> 32) &
--				       ~SSB_DMA_TRANSLATION_MASK)
--				      | trans);
-+
-+			addrs[0] = ringbase & 0xFFFFFFFF;
-+			addrs[1] = ringbase >> 32;
-+			tmp = ring->dev->dma.translation_in_low ? 0 : 1;
-+			addrs[tmp] &= ~SSB_DMA_TRANSLATION_MASK;
-+			addrs[tmp] |= trans;
-+			b43_dma_write(ring, B43_DMA64_RXRINGLO, addrs[0]);
-+			b43_dma_write(ring, B43_DMA64_RXRINGHI, addrs[1]);
-+
- 			b43_dma_write(ring, B43_DMA64_RXINDEX, ring->nr_slots *
- 				      sizeof(struct b43_dmadesc64));
- 		} else {
-@@ -1052,6 +1062,21 @@ static int b43_dma_set_mask(struct b43_wldev *dev, u64 mask)
- 	return 0;
- }
- 
-+/* Some hardware with 64-bit DMA seems to be bugged and looks for translation
-+ * bit in low address word instead of high one.
-+ */
-+static bool b43_dma_translation_in_low_word(struct b43_wldev *dev)
-+{
-+#ifdef CONFIG_B43_SSB
-+	if (dev->dev->bus_type == B43_BUS_SSB &&
-+	    dev->dev->sdev->bus->bustype == SSB_BUSTYPE_PCI &&
-+	    !(dev->dev->sdev->bus->host_pci->is_pcie &&
-+	      ssb_read32(dev->dev->sdev, SSB_TMSHIGH) & SSB_TMSHIGH_DMA64))
-+			return 1;
-+#endif
-+	return 0;
-+}
-+
- int b43_dma_init(struct b43_wldev *dev)
- {
- 	struct b43_dma *dma = &dev->dma;
-@@ -1077,6 +1102,7 @@ int b43_dma_init(struct b43_wldev *dev)
- 		break;
- #endif
- 	}
-+	dma->translation_in_low = b43_dma_translation_in_low_word(dev);
- 
- 	dma->parity = true;
- #ifdef CONFIG_B43_BCMA
--- 
-1.7.1
+While I like the Idea of brcm80211 going mainline, I'd like to throw
+in the suggestion that brcm80211 should be made a bcma/ssb driver
+first (AFACT brcmfmac would use ssb, not bcma, therefore both).
 
+My reasoning is that it needs to be done eventually anyway, and the
+earlier this is done the less work it will be in the long term, also
+it would reduce the duplicate code in bcma, ssb, and brcm80211.
+
+Of course this is just a suggestion, and it's yours and Greg's call
+whether you agree with me or not (since it's quite late in the game to
+add a new TODO, and I suspect a rather big one).
+
+
+Regards,
+Jonas
