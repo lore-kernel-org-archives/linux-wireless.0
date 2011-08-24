@@ -1,112 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:39774 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754834Ab1HBUnO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 16:43:14 -0400
-From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] rtl8192cu: add USB ID for Belkin n300 Micro USB wireless adapter
-Date: Tue, 2 Aug 2011 22:43:01 +0200
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <201108022229.58532.s.L-H@gmx.de>
-In-Reply-To: <201108022229.58532.s.L-H@gmx.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201108022243.04377.s.L-H@gmx.de> (sfid-20110802_224320_136050_88A1463D)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39724 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755110Ab1HXLUx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 07:20:53 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/3] compat: add crc8 lib
+Date: Wed, 24 Aug 2011 13:20:39 +0200
+Message-Id: <1314184839-13279-3-git-send-email-hauke@hauke-m.de> (sfid-20110824_132112_847646_BB72B0AD)
+In-Reply-To: <1314184839-13279-1-git-send-email-hauke@hauke-m.de>
+References: <1314184839-13279-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+compat/crc8.c was copied from lib/crc8.c and include/linux/crc8.h was
+copied from include/linux/crc8.h
 
-On Tuesday 02 August 2011, Stefan Lippers-Hollmann wrote:
-> Signed-off-by: Stefan Lippers-Hollmann <s.l-h@gmx.de>
-> Cc: stable <stable@kernel.org> [2.6.39+]
-> ---
->  drivers/net/wireless/rtlwifi/rtl8192cu/sw.c |    3 +++
->  1 files changed, 5 insertions(+), 0 deletions(-)
-> 
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> @@ -322,6 +322,9 @@ static struct usb_device_id rtl8192c_usb
->  	{RTL_USB_DEVICE(0x2001, 0x330a, rtl92cu_hal_cfg)}, /*D-Link-Alpha*/
->  	{RTL_USB_DEVICE(0x2019, 0xab2b, rtl92cu_hal_cfg)}, /*Planex -Abocom*/
->  	{RTL_USB_DEVICE(0x7392, 0x7822, rtl92cu_hal_cfg)}, /*Edimax -Edimax*/
-> +
-> +	/****** 8192CUS Dongle ********/
-> +	{RTL_USB_DEVICE(0x050D, 0x2103, rtl92cu_hal_cfg)}, //Belkin - Edimax
->  	{}
->  };
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ compat/Makefile      |    3 +-
+ compat/crc8.c        |   86 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/crc8.h |  101 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 189 insertions(+), 1 deletions(-)
+ create mode 100644 compat/crc8.c
+ create mode 100644 include/linux/crc8.h
 
-Looking at the current(?) vendor driver
-4309c61f45497de0241781a507df53e4 *RTL8192CU_linux_v3.0.2164.20110715.zip
-there appear to be several more USB IDs which might be worth adding; so
-far I only submitted a patch for a tested USB ID.
+diff --git a/compat/Makefile b/compat/Makefile
+index 31e4459..2fb1893 100644
+--- a/compat/Makefile
++++ b/compat/Makefile
+@@ -35,5 +35,6 @@ compat-$(CONFIG_COMPAT_KERNEL_2_6_39) += \
+ 	kstrtox.o
+ compat-$(CONFIG_COMPAT_KERNEL_3_0) += compat-3.0.o
+ compat-$(CONFIG_COMPAT_KERNEL_3_1) += \
+-	cordic.o
++	cordic.o \
++	crc8.o
+ 
+diff --git a/compat/crc8.c b/compat/crc8.c
+new file mode 100644
+index 0000000..87b59ca
+--- /dev/null
++++ b/compat/crc8.c
+@@ -0,0 +1,86 @@
++/*
++ * Copyright (c) 2011 Broadcom Corporation
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
++
++#include <linux/module.h>
++#include <linux/crc8.h>
++#include <linux/printk.h>
++
++/*
++ * crc8_populate_msb - fill crc table for given polynomial in reverse bit order.
++ *
++ * table:	table to be filled.
++ * polynomial:	polynomial for which table is to be filled.
++ */
++void crc8_populate_msb(u8 table[CRC8_TABLE_SIZE], u8 polynomial)
++{
++	int i, j;
++	const u8 msbit = 0x80;
++	u8 t = msbit;
++
++	table[0] = 0;
++
++	for (i = 1; i < CRC8_TABLE_SIZE; i *= 2) {
++		t = (t << 1) ^ (t & msbit ? polynomial : 0);
++		for (j = 0; j < i; j++)
++			table[i+j] = table[j] ^ t;
++	}
++}
++EXPORT_SYMBOL(crc8_populate_msb);
++
++/*
++ * crc8_populate_lsb - fill crc table for given polynomial in regular bit order.
++ *
++ * table:	table to be filled.
++ * polynomial:	polynomial for which table is to be filled.
++ */
++void crc8_populate_lsb(u8 table[CRC8_TABLE_SIZE], u8 polynomial)
++{
++	int i, j;
++	u8 t = 1;
++
++	table[0] = 0;
++
++	for (i = (CRC8_TABLE_SIZE >> 1); i; i >>= 1) {
++		t = (t >> 1) ^ (t & 1 ? polynomial : 0);
++		for (j = 0; j < CRC8_TABLE_SIZE; j += 2*i)
++			table[i+j] = table[j] ^ t;
++	}
++}
++EXPORT_SYMBOL(crc8_populate_lsb);
++
++/*
++ * crc8 - calculate a crc8 over the given input data.
++ *
++ * table: crc table used for calculation.
++ * pdata: pointer to data buffer.
++ * nbytes: number of bytes in data buffer.
++ * crc:	previous returned crc8 value.
++ */
++u8 crc8(const u8 table[CRC8_TABLE_SIZE], u8 *pdata, size_t nbytes, u8 crc)
++{
++	/* loop over the buffer data */
++	while (nbytes-- > 0)
++		crc = table[(crc ^ *pdata++) & 0xff];
++
++	return crc;
++}
++EXPORT_SYMBOL(crc8);
++
++MODULE_DESCRIPTION("CRC8 (by Williams, Ross N.) function");
++MODULE_AUTHOR("Broadcom Corporation");
++MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/include/linux/crc8.h b/include/linux/crc8.h
+new file mode 100644
+index 0000000..13c8dab
+--- /dev/null
++++ b/include/linux/crc8.h
+@@ -0,0 +1,101 @@
++/*
++ * Copyright (c) 2011 Broadcom Corporation
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#ifndef __CRC8_H_
++#define __CRC8_H_
++
++#include <linux/types.h>
++
++/* see usage of this value in crc8() description */
++#define CRC8_INIT_VALUE		0xFF
++
++/*
++ * Return value of crc8() indicating valid message+crc. This is true
++ * if a CRC is inverted before transmission. The CRC computed over the
++ * whole received bitstream is _table[x], where x is the bit pattern
++ * of the modification (almost always 0xff).
++ */
++#define CRC8_GOOD_VALUE(_table)	(_table[0xFF])
++
++/* required table size for crc8 algorithm */
++#define CRC8_TABLE_SIZE			256
++
++/* helper macro assuring right table size is used */
++#define DECLARE_CRC8_TABLE(_table) \
++	static u8 _table[CRC8_TABLE_SIZE]
++
++/**
++ * crc8_populate_lsb - fill crc table for given polynomial in regular bit order.
++ *
++ * @table:	table to be filled.
++ * @polynomial:	polynomial for which table is to be filled.
++ *
++ * This function fills the provided table according the polynomial provided for
++ * regular bit order (lsb first). Polynomials in CRC algorithms are typically
++ * represented as shown below.
++ *
++ *	poly = x^8 + x^7 + x^6 + x^4 + x^2 + 1
++ *
++ * For lsb first direction x^7 maps to the lsb. So the polynomial is as below.
++ *
++ * - lsb first: poly = 10101011(1) = 0xAB
++ */
++void crc8_populate_lsb(u8 table[CRC8_TABLE_SIZE], u8 polynomial);
++
++/**
++ * crc8_populate_msb - fill crc table for given polynomial in reverse bit order.
++ *
++ * @table:	table to be filled.
++ * @polynomial:	polynomial for which table is to be filled.
++ *
++ * This function fills the provided table according the polynomial provided for
++ * reverse bit order (msb first). Polynomials in CRC algorithms are typically
++ * represented as shown below.
++ *
++ *	poly = x^8 + x^7 + x^6 + x^4 + x^2 + 1
++ *
++ * For msb first direction x^7 maps to the msb. So the polynomial is as below.
++ *
++ * - msb first: poly = (1)11010101 = 0xD5
++ */
++void crc8_populate_msb(u8 table[CRC8_TABLE_SIZE], u8 polynomial);
++
++/**
++ * crc8() - calculate a crc8 over the given input data.
++ *
++ * @table:	crc table used for calculation.
++ * @pdata:	pointer to data buffer.
++ * @nbytes:	number of bytes in data buffer.
++ * @crc:	previous returned crc8 value.
++ *
++ * The CRC8 is calculated using the polynomial given in crc8_populate_msb()
++ * or crc8_populate_lsb().
++ *
++ * The caller provides the initial value (either %CRC8_INIT_VALUE
++ * or the previous returned value) to allow for processing of
++ * discontiguous blocks of data.  When generating the CRC the
++ * caller is responsible for complementing the final return value
++ * and inserting it into the byte stream.  When validating a byte
++ * stream (including CRC8), a final return value of %CRC8_GOOD_VALUE
++ * indicates the byte stream data can be considered valid.
++ *
++ * Reference:
++ * "A Painless Guide to CRC Error Detection Algorithms", ver 3, Aug 1993
++ * Williams, Ross N., ross<at>ross.net
++ * (see URL http://www.ross.net/crc/download/crc_v3.txt).
++ */
++u8 crc8(const u8 table[CRC8_TABLE_SIZE], u8 *pdata, size_t nbytes, u8 crc);
++
++#endif /* __CRC8_H_ */
+-- 
+1.7.4.1
 
-I've dropped IDs already present in rtl8192cu, the two lines starting 
-with '!' appear to be typos in either of the drivers:
-
-#ifdef CONFIG_RTL8192C
-        /*=== Realtek demoboard ===*/
-
-        /****** 8188CUS ********/
-        {USB_DEVICE(USB_VENDER_ID_REALTEK, 0x817F)},//8188RU
-
-        /****** 8192CUS ********/
-        {USB_DEVICE(USB_VENDER_ID_REALTEK, 0x8178)},//8192cu 2*2
-        {USB_DEVICE(USB_VENDER_ID_REALTEK, 0x8186)},//8192CE-VAU USB minCard
-
-        /*=== Customer ID ===*/
-        /****** 8188CUS Dongle ********/
-        {USB_DEVICE(0x4855, 0x0090)},// - Feixun
-        {USB_DEVICE(0x13D3, 0x3357)},// - AzureWave
-        {USB_DEVICE(0x0DF6, 0x005C)},//Sitecom - Edimax
-        {USB_DEVICE(0x0BDA, 0x5088)},//Thinkware - CC&C
-        {USB_DEVICE(0x4856, 0x0091)},//NetweeN - Feixun
-        {USB_DEVICE(0x9846, 0x9041)},//Netgear - Cameo
-        {USB_DEVICE(0x2019, 0x4902)},//Planex - Etop
-        {USB_DEVICE(0x2019, 0xAB2E)},//SW-WF02-AD15 -Abocom
-
-        /****** 8188CE-VAU ********/
-!       {USB_DEVICE(0x13D3, 0x3359)},// - Azwave
-!       {USB_DEVICE(0x13D3, 0x3358)},// - Azwave
-
-        /****** 8188CUS Slim Solo********/
-        {USB_DEVICE(0x04F2, 0xAFF7)},//XAVI - XAVI
-        {USB_DEVICE(0x04F2, 0xAFF9)},//XAVI - XAVI
-        {USB_DEVICE(0x04F2, 0xAFFA)},//XAVI - XAVI
-
-        /****** 8188CUS Slim Combo ********/
-        {USB_DEVICE(0x04F2, 0xAFF8)},//XAVI - XAVI
-        {USB_DEVICE(0x04F2, 0xAFFB)},//XAVI - XAVI
-        {USB_DEVICE(0x04F2, 0xAFFC)},//XAVI - XAVI
-        {USB_DEVICE(0x2019, 0x1201)},//Planex - Vencer
-
-        /****** 8192CUS Dongle ********/
-        {USB_DEVICE(0x4855, 0x0091)},// - Feixun
-        {USB_DEVICE(0x050D, 0x2102)},//Belkin - Sercomm
-        {USB_DEVICE(0x050D, 0x2103)},//Belkin - Edimax
-        {USB_DEVICE(0x20F4, 0x624D)},//TRENDnet
-        {USB_DEVICE(0x0DF6, 0x0061)},//Sitecom - Edimax
-        {USB_DEVICE(0x0B05, 0x17AB)},//ASUS - Edimax
-#endif
-        {}      /* Terminating entry */
-};
-
-While I can't confirm it myself, as I don't have any rtl8192cu hardware
-locally, I've gotten feedback[1] that temporarily adding new IDs via
-
-# modprobe rtl8192cu 
-# echo -n "050d 2103" > /sys/bus/usb/drivers/rtl8192cu/new_id
-
-appears not be successful and might Oops the kernel[2]. Given that I
-can't test it myself and considering that the reporter's kernel is
-tainted, I can't claim this for sure - but I could ask the original 
-reporter to test it again.
-
-Regards
-	Stefan Lippers-Hollmann
-
-[1]	http://aptosid.com/index.php?name=PNphpBB2&file=viewtopic&t=1550&start=0
-[2]	http://pastebin.com/ppZJ0GmU
