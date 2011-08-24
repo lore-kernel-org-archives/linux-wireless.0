@@ -1,68 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:31394 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751752Ab1HMSS3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 14:18:29 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 45/60] iwlagn: adding special "D" SKU for 2000 series
-Date: Sat, 13 Aug 2011 10:38:21 -0700
-Message-Id: <1313257116-2697-46-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_201927_179743_38297DEA)
-In-Reply-To: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:64211 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750819Ab1HXOZl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 10:25:41 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <kvalo@adurom.com>
+Subject: [PATCH 3/3] ath6kl: Add debugfs file entry to dump credit distribution stats
+Date: Wed, 24 Aug 2011 19:55:36 +0530
+Message-ID: <1314195936-25227-3-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110824_162544_533985_073BA4FA)
+In-Reply-To: <1314195936-25227-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1314195936-25227-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One more sku for 2000 series with different Subsystem ID
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-2000.c |    5 +++++
- drivers/net/wireless/iwlwifi/iwl-pci.c  |    1 +
- drivers/net/wireless/iwlwifi/iwl-pci.h  |    1 +
- 3 files changed, 7 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath6kl/debug.c |   65 +++++++++++++++++++++++++++++++
+ 1 files changed, 65 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index 799f9c8..a3cb2bd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -283,6 +283,11 @@ struct iwl_cfg iwl2000_2bg_cfg = {
- 	IWL_DEVICE_2000,
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 014cc18..a729793 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -293,6 +293,68 @@ static const struct file_operations fops_tgt_stats = {
+ 	.llseek = default_llseek,
  };
  
-+struct iwl_cfg iwl2000_2bgn_d_cfg = {
-+	.name = "2000D Series 2x2 BGN",
-+	IWL_DEVICE_2000,
++static ssize_t read_file_credit_dist_stats(struct file *file,
++					   char __user *user_buf,
++					   size_t count, loff_t *ppos)
++{
++	struct ath6kl *ar = file->private_data;
++	struct htc_target *target = ar->htc_target;
++	struct htc_endpoint_credit_dist *ep_list;
++	char *buf;
++	unsigned int buf_len = 128, len = 0;
++	ssize_t ret_cnt;
++
++	buf_len += get_queue_depth(&target->cred_dist_list) * 128;
++	buf = kzalloc(buf_len, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	len += scnprintf(buf + len, buf_len - len,
++			 " Epid  Flags    Cred_norm  Cred_min  Credits  Cred_assngd"
++			 "  Seek_cred  Cred_sz  Cred_per_msg  Cred_to_dist"
++			 "  qdepth\n");
++
++	list_for_each_entry(ep_list, &target->cred_dist_list, list) {
++		len += scnprintf(buf + len, buf_len - len, "  %2d",
++				 ep_list->endpoint);
++		len += scnprintf(buf + len, buf_len - len, "%10x",
++				 ep_list->dist_flags);
++		len += scnprintf(buf + len, buf_len - len, "%8d",
++				 ep_list->cred_norm);
++		len += scnprintf(buf + len, buf_len - len, "%9d",
++				 ep_list->cred_min);
++		len += scnprintf(buf + len, buf_len - len, "%9d",
++				 ep_list->credits);
++		len += scnprintf(buf + len, buf_len - len, "%10d",
++				 ep_list->cred_assngd);
++		len += scnprintf(buf + len, buf_len - len, "%13d",
++				 ep_list->seek_cred);
++		len += scnprintf(buf + len, buf_len - len, "%12d",
++				 ep_list->cred_sz);
++		len += scnprintf(buf + len, buf_len - len, "%9d",
++				 ep_list->cred_per_msg);
++		len += scnprintf(buf + len, buf_len - len, "%14d",
++				 ep_list->cred_to_dist);
++		len += scnprintf(buf + len, buf_len - len, "%12d\n",
++				 get_queue_depth(&((struct htc_endpoint *)
++						 ep_list->htc_rsvd)->txq));
++	}
++
++	if (len > buf_len)
++		len = buf_len;
++
++	ret_cnt = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	kfree(buf);
++	return ret_cnt;
++}
++
++static const struct file_operations fops_credit_dist_stats = {
++	.read = read_file_credit_dist_stats,
++	.open = ath6kl_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
 +};
 +
- #define IWL_DEVICE_2030						\
- 	.fw_name_pre = IWL2030_FW_PRE,				\
- 	.ucode_api_max = IWL2030_UCODE_API_MAX,			\
-diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
-index 7210ff6..e41f53e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-pci.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
-@@ -332,6 +332,7 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x0890, 0x4026, iwl2000_2bg_cfg)},
- 	{IWL_PCI_DEVICE(0x0891, 0x4226, iwl2000_2bg_cfg)},
- 	{IWL_PCI_DEVICE(0x0890, 0x4426, iwl2000_2bg_cfg)},
-+	{IWL_PCI_DEVICE(0x0890, 0x4822, iwl2000_2bgn_d_cfg)},
+ int ath6kl_init_debugfs(struct ath6kl *ar)
+ {
+ 	ar->debugfs_phy = debugfs_create_dir("ath6kl",
+@@ -303,6 +365,9 @@ int ath6kl_init_debugfs(struct ath6kl *ar)
+ 	debugfs_create_file("tgt_stats", S_IRUSR, ar->debugfs_phy, ar,
+ 			    &fops_tgt_stats);
  
- /* 2x30 Series */
- 	{IWL_PCI_DEVICE(0x0887, 0x4062, iwl2030_2bgn_cfg)},
-diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.h b/drivers/net/wireless/iwlwifi/iwl-pci.h
-index be69276..c0aea9e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-pci.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-pci.h
-@@ -102,6 +102,7 @@ extern struct iwl_cfg iwl130_bgn_cfg;
- extern struct iwl_cfg iwl130_bg_cfg;
- extern struct iwl_cfg iwl2000_2bgn_cfg;
- extern struct iwl_cfg iwl2000_2bg_cfg;
-+extern struct iwl_cfg iwl2000_2bgn_d_cfg;
- extern struct iwl_cfg iwl2030_2bgn_cfg;
- extern struct iwl_cfg iwl2030_2bg_cfg;
- extern struct iwl_cfg iwl6035_2agn_cfg;
++	debugfs_create_file("credit_dist_stats", S_IRUSR, ar->debugfs_phy, ar,
++			    &fops_credit_dist_stats);
++
+ 	return 0;
+ }
+ #endif
 -- 
 1.7.0.4
 
