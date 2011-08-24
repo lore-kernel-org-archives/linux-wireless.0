@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:21204 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752296Ab1HaKRH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 06:17:07 -0400
-Subject: Re: [patch -next 1/2] iwlwifi: fix double assign in
- iwl_start_tx_ba_trans_ready()
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dan Carpenter <error27@gmail.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"open list:INTEL WIRELESS WI..." <linux-wireless@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-In-Reply-To: <1314772887.4161.17.camel@jlt3.sipsolutions.net>
-References: <20110831063742.GC3705@shale.localdomain>
-	 (sfid-20110831_084010_132544_82772E48)  <1314772887.4161.17.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 31 Aug 2011 02:34:29 -0700
-Message-ID: <1314783269.26890.3.camel@wwguy-huron> (sfid-20110831_121713_422229_33E7FCD9)
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27818 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751137Ab1HXQIR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 12:08:17 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
+	<senthilb@qca.qualcomm.com>, <rmanohar@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	<stable@kernel.org>
+Subject: [PATCH v2] ath9k: Fix PS wrappers in ath9k_set_coverage_class
+Date: Wed, 24 Aug 2011 21:38:07 +0530
+Message-ID: <1314202087-18296-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110824_180820_557917_A83BE7C1)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-30 at 23:41 -0700, Johannes Berg wrote:
-> On Wed, 2011-08-31 at 09:37 +0300, Dan Carpenter wrote:
-> > "vif" is assigned twice.  We can remove the first one.
-> > 
-> > This silences a Smatch warning that "ctx" could be one step past the
-> > end of the priv->contexts[] array.
-> 
-> Good catch.
-> 
-> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-> 
-> > Signed-off-by: Dan Carpenter <error27@gmail.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > 
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Thanks
-Wey
+this callback is called during suspend/resume and also via iw command.
+it configures parameters like sifs, slottime, acktimeout in
+ath9k_hw_init_global_settings where few REG_READ, REG_RMW are also done
+and hence the need for PS wrappers
+
+Cc: stable@kernel.org
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 781af25..2486f5c 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2285,7 +2285,11 @@ static void ath9k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+ 
+ 	mutex_lock(&sc->mutex);
+ 	ah->coverage_class = coverage_class;
++
++	ath9k_ps_wakeup(sc);
+ 	ath9k_hw_init_global_settings(ah);
++	ath9k_ps_restore(sc);
++
+ 	mutex_unlock(&sc->mutex);
+ }
+ 
+-- 
+1.7.0.4
 
