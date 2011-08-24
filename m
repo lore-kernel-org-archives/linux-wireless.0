@@ -1,99 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58575 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751537Ab1HKORy (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:53415 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751948Ab1HXXMN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 10:17:54 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 19so1694353fxh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 07:17:54 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCHv2 2/2] mac80211: Tear down BA session on BAR tx failure
-Date: Thu, 11 Aug 2011 16:17:42 +0200
-Message-Id: <1313072262-25413-2-git-send-email-helmut.schaa@googlemail.com> (sfid-20110811_161758_327900_A241E512)
-In-Reply-To: <1313053697-19544-1-git-send-email-helmut.schaa@googlemail.com>
-References: <1313053697-19544-1-git-send-email-helmut.schaa@googlemail.com>
+	Wed, 24 Aug 2011 19:12:13 -0400
+Received: by ywf7 with SMTP id 7so1253179ywf.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 16:12:13 -0700 (PDT)
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 24 Aug 2011 16:11:53 -0700
+Message-ID: <CAB=NE6UcT8gzVWW+stLEy2SKBCdt-wVnv6aWOZBKTurXk1W0YA@mail.gmail.com> (sfid-20110825_011225_586181_E35D9BBB)
+Subject: Regulatory simulator - regulatory revamp work
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Kevin Hayes <hayes@qca.qualcomm.com>,
+	Arun Venkataraman <arunvenk@qca.qualcomm.com>,
+	Prem Kumar <prem@qca.qualcomm.com>,
+	Matt Smith <smithm@qca.qualcomm.com>,
+	David Quan <dquan@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As described at [1] some STAs (i.e. Intel 5100 Windows) can end up
-correctly BlockAcking incoming frames without delivering them to user
-space if a AMPDU subframe got lost and we don't flush the receipients
-reorder buffer with a BlockAckReq. This in turn results in stuck
-connections.
+Note: this is a public e-mail
 
-According to 802.11n-2009 it is not necessary to send a BAR to flush
-the recepients RX reorder buffer but we still do that to be polite.
+As I mentioned at the Linux wireless summit we want to revamp the
+regulatory code on Linux to take into consideration some new features
+and to make the code a bit easier to follow and manage, and most
+importantly do unit tests outside of the kernel through a userspace
+testbed which can prove validity of the data and all possible states
+we can run into. This can also help other OSes which may want to
+cherry pick the code into their own solutions and hopefully create
+more traction on embracing and working together towards a more unified
+regulatory database.
 
-However, assume the following frame exchange:
+I've dumped some initial code here:
 
-AP -> STA, AMPDU (failed)
-AP -> STA, BAR (failed)
+git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/regsim.git
 
-The client in question then ends up in the same situation and won't
-deliver frames to userspace anymore since we weren't able to flush
-its reorder buffer.
+The first goal is to start embracing the formal definition of a
+regulatory domain and rules that a frequency should match to by
+Johannes a while ago:
 
-This is not a hypothetical situation but I was able to observe this
-exact behavior during a stress test between a rt2800pci AP and a Intel
-5100 Windows client.
+     0) for all 1 <= k < n : MAX_k <= MIN_{k+1}
 
-In order to work around this issue just tear down the BA session as
-soon as a BAR failed to be TX'ed.
+     1) each rule in the regdomain covers the frequency range (MIN_1, MAX_1]
 
-[1] http://comments.gmane.org/gmane.linux.kernel.wireless.general/66867
+     2) given C = union (over all k = 1 .. n) of (MIN_k, MAX_k] it must be
+       true that (CENTER - BW/2, CENTER + BW/2) is a subset of C
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
+     3) it must be true for all 1 <= k <= n:
+           if CENTER in (MIN_k, MAX_k] : BW <= BW_k
 
-Changes since v1:
-- Fix commit message typos
-- Make use of IEEE80211_BAR_CTRL_* defines
-- Exclude Multi TID BARs (we don't send Multi TID bars yet and they need
-  multiple TIDs being processed)
+     4) This is easier to formulate algorithmically:
+       USE_FLAGS = 0
+       for k = 1 .. n
+           if (CENTER - BW/2, CENTER + BW/2) intersects (MIN_k, MAX_k]:
+               USE_FLAGS |= FLAGS_k
 
- net/mac80211/status.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+This intends on addressing regulatory domains which may have
+overlapping rules or TPC rules for different bandwidths -- all of
+which do not exist today as far as I'm concerned but certainly do
+limit our architecture as it is today. I intend on testing this by
+creating a test regulator domain under main.c which has some
+overlapping frequency rules and ensuring that the target rule picked
+matches the above definition.
 
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 1658efa..02a8c13 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -187,6 +187,8 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	int rates_idx = -1;
- 	bool send_to_cooked;
- 	bool acked;
-+	struct ieee80211_bar *bar;
-+	u16 tid;
- 
- 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
- 		if (info->status.rates[i].idx < 0) {
-@@ -243,6 +245,22 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 					   tid, ssn);
- 		}
- 
-+		if (!acked && ieee80211_is_back_req(fc)) {
-+			/*
-+			 * BAR failed, let's tear down the BA session as a
-+			 * last resort as some STAs (Intel 5100 on Windows)
-+			 * can get stuck when the BA window isn't flushed
-+			 * correctly.
-+			 */
-+			bar = (struct ieee80211_bar *) skb->data;
-+			if (!(bar->control & IEEE80211_BAR_CTRL_MULTI_TID)) {
-+				tid = (bar->control &
-+				       IEEE80211_BAR_CTRL_TID_INFO_MASK) >>
-+				      IEEE80211_BAR_CTRL_TID_INFO_SHIFT;
-+				ieee80211_stop_tx_ba_session(&sta->sta, tid);
-+			}
-+		}
-+
- 		if (info->flags & IEEE80211_TX_STAT_TX_FILTERED) {
- 			ieee80211_handle_filtered_frame(local, sta, skb);
- 			rcu_read_unlock();
--- 
-1.7.3.4
+Next we should review 802.11mb stuff and the "operating class"
+extensions, and see if we can throw some of that to the framework to
+intersect the existing rules. This will take care of the operating
+class requirements for 802.11ad. For this I will need some help on the
+language used on 11mb operating classes. For 802.11ac I didn't get any
+new concerns or architecture change requirements. For TV space.. its a
+bit different and we will have the external regulatory database we
+will need to talk to but -- not sure how that fits into this stuff. If
+someone is working on that I'd appreciate review or feedback.
 
+After that will be adding some form of state machine for each possible
+regulatory state we can get into and then adding all possible events
+and changes to the state machine. Then we start simulating devices and
+them moving around all possible states, exposing allowed channels,
+output power, etc, and comparing this against expected results.
+
+If you'd like to help feel free to coordinate on #linux-wireless on
+irc.freenode.net or on this list. Patches always welcomed.
+
+  Luis
