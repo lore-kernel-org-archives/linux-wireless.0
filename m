@@ -1,57 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:52194 "EHLO
+Received: from mail-iy0-f170.google.com ([209.85.210.170]:57866 "EHLO
 	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751662Ab1HIXq0 (ORCPT
+	with ESMTP id S1750784Ab1HXOHK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 19:46:26 -0400
-Received: by mail-iy0-f170.google.com with SMTP id 16so23646iye.1
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 16:46:26 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH 2/8] mac80211: fix mpath timer NULL function
-Date: Tue,  9 Aug 2011 16:45:05 -0700
-Message-Id: <1312933511-9486-3-git-send-email-thomas@cozybit.com> (sfid-20110810_014630_742743_C66E2414)
-In-Reply-To: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
-References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
+	Wed, 24 Aug 2011 10:07:10 -0400
+Received: by iye16 with SMTP id 16so2159855iye.1
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 07:07:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1314184839-13279-2-git-send-email-hauke@hauke-m.de>
+References: <1314184839-13279-1-git-send-email-hauke@hauke-m.de> <1314184839-13279-2-git-send-email-hauke@hauke-m.de>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 25 Aug 2011 00:06:50 +1000
+Message-ID: <CAGRGNgX7=A=kRqSoxDNhW2hZSMip=oZd-gy5pWCZekN2jUpG2Q@mail.gmail.com> (sfid-20110824_160714_318027_BDA566AA)
+Subject: Re: [PATCH 2/3] compat: add cordic lib
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: mcgrof@gmail.com, lrodriguez@atheros.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+Hauke,
 
-If we have an mpath whose timer has not been initialized, don't try to
-delete it.
+On Wed, Aug 24, 2011 at 21:20, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> compat/cordic.c was copied from lib/cordic.c and include/linux/cordic.h was
+> copied from include/linux/cordic.h
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_pathtbl.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+Stupid question: If we have a full kernel tree available to update
+compat, can't we just copy these files from there?
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 819d8e4..89f469b 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -619,7 +619,8 @@ static void mesh_path_node_reclaim(struct rcu_head *rp)
- 	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
- 	struct ieee80211_sub_if_data *sdata = node->mpath->sdata;
- 
--	del_timer_sync(&node->mpath->timer);
-+	if (node->mpath->timer.function)
-+		del_timer_sync(&node->mpath->timer);
- 	atomic_dec(&sdata->u.mesh.mpaths);
- 	kfree(node->mpath);
- 	kfree(node);
-@@ -768,7 +769,8 @@ static void mesh_path_node_free(struct hlist_node *p, bool free_leafs)
- 	mpath = node->mpath;
- 	hlist_del_rcu(p);
- 	if (free_leafs) {
--		del_timer_sync(&mpath->timer);
-+		if (mpath->timer.function)
-+			del_timer_sync(&mpath->timer);
- 		kfree(mpath);
- 	}
- 	kfree(node);
+Thanks,
+
 -- 
-1.7.6
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
