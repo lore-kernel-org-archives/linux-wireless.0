@@ -1,86 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:52504 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754824Ab1HKKfe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 06:35:34 -0400
-Received: by wwf5 with SMTP id 5so1904068wwf.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 03:35:33 -0700 (PDT)
+Received: from mms1.broadcom.com ([216.31.210.17]:4309 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751054Ab1HXXUB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 19:20:01 -0400
+Date: Wed, 24 Aug 2011 16:18:51 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: "Aaro Koskinen" <aaro.koskinen@iki.fi>
+cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Subject: Re: [PATCH v2] Move brcm80211 to mainline
+Message-ID: <20110824231851.GG5280@broadcom.com> (sfid-20110825_012006_277647_ED4F93CB)
+References: <20110707002034.GA17885@broadcom.com>
+ <20110824222801.GA5280@broadcom.com>
+ <C7234C0A-9839-4150-8B25-F6A6771377A1@iki.fi>
 MIME-Version: 1.0
-In-Reply-To: <20110811021554.GA24567@internetdog.org>
-References: <6264DDFA6754194CAB6452BFF5202C330F5F2115@SXGM-401.fg.rbc.com>
-	<CAPoLzpe0OYq677NooOY5F7PyvbNobOXXCuSnoaF7ZVc0cJkjAw@mail.gmail.com>
-	<20110811021554.GA24567@internetdog.org>
-Date: Thu, 11 Aug 2011 06:35:32 -0400
-Message-ID: <CAPoLzpeQF_xO_4eT2CKfp9cXKWUopssHjCkXd3_b0e8EAn8e_w@mail.gmail.com> (sfid-20110811_123538_365675_131CF586)
-Subject: Re: brcmsmac: fifo 0: descriptor error
-From: Pedram Navid <pedram.navid@gmail.com>
-To: ali@internetdog.org
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <C7234C0A-9839-4150-8B25-F6A6771377A1@iki.fi>
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you Ali, I apologize, this is my first time reporting a bug
-through a mailing list.
+On Wed, Aug 24, 2011 at 04:10:31PM -0700, Aaro Koskinen wrote:
+> Hi,
+> 
+> On 25.8.2011, at 1.28, Henry Ptasinski wrote:
+> > The brcmsmac driver has been verified to work on x86 (both 32- and  
+> > 64-bit), PPC
+> > (64-bit), SPARC, MIPS BE, and ARM.  The brcmfmac driver has been  
+> > verified to
+> > work on x86 32-bit and ARM (additional testing is in progress, but  
+> > getting a
+> > working sdio controller on some of the other platforms has been  
+> > challenging).
+> >
+> > The drivers compile cleanly for x86 (32- and 64-bit), PPC (32- and  
+> > 64-bit),
+> > SPAR, MIPS BE, MIPS LE, and ARM.
+> 
+> Are you sure the compilation is even enabled on all of those platforms?
+> 
+> E.g.:
+> 
+>  > +config BRCMSMAC
+>  > +       tristate "Broadcom IEEE802.11n PCIe SoftMAC WLAN driver"
+>  > +       default n
+>  > +       depends on PCI
+>  > +       depends on WLAN && MAC80211
+>  > +       depends on X86 || MIPS
+>            ^^^^^^^^^^^^^^^^^^^^^^
+> 
+> Why this?
+> 
+> A.
+> 
+> 
 
-Both lines repeat almost every second until I either run ifconfig
-wlan0 down or remove the module completely. I have since downgraded to
-2.6.39 and am using the wl module and don't seem to have any problems.
-I still have the 3.0 Kernel available if anyone would like me to test
-further.
+See my other message.  Wrong link to the patch.  Correct link:
 
-On Wed, Aug 10, 2011 at 10:15 PM, Ali Bahar <ali@internetdog.org> wrote:
-> Hi Pedram,
->
-> you must use a meaningful Subject-line for your email.
-> Hopefully, this'll attract the attention of the couple of Broadcom guys
-> who are on this list.
->
-> Also,
->
->
-> On Wed, Aug 10, 2011 at 06:48:45PM -0400, Pedram Navid wrote:
->> Hello,
->>
->> I'd like to report a bug I have not been able to find elsewhere. I am on
->> a fresh Arch install with linux 3.0.1-1, using the brcmsmac module.
->> Initially, the wireless works for a few days. At some point, it will
->> stop, outputing the following error repeatedly:
->>
->> Aug  7 09:55:27 localhost kernel: [  825.796697] ieee80211 phy0: wl0:
->> fifo 0: descriptor error
->> Aug  7 09:55:27 localhost kernel: [  825.796713] ieee80211 phy0: wl0:
->> fatal error, re-initializing
->
-> You may wish to note which of these lines repeat. Do both repeat, or
-> only the "re-initializing" line? (It may be easier to just paste a few
-> lines into your mail.)
->
-> later,
-> ali
->
->
->> I can rmmod brcmsmac, reboot, shutdown, give it a few days, and start
->> over and it will sometimes work. Other times, it will persist with the
->> fifo errors. Please let me know you need additional log files. I had
->> this problem since 2.6.38 and reinstalled Arch twice, thinking it was
->> something with my setup that was done incorrectly but haven't been
->> able to figure it out. I can't find another case of this error on the
->> internet.
->>
->> #    lspci -vnn | grep 14e4
->> 05:00.0 Network controller [0280]: Broadcom Corporation
->> 802.11b/g/n Wireless LAN Controller [14e4:4727] (rev 01)
->>        Subsystem: Broadcom Corporation Device [14e4:0510]
->>
->>  #  lsmod  | grep brc
->> brcmsmac              594624  0
->> brcmutil                6563  1 brcmsmac
->> mac80211              215605  1 brcmsmac
->> cfg80211              160516  2 brcmsmac,mac80211
->> crc_ccitt               1331  1 brcmsmac
->>
->> Thank you
->> Pedram
->
+http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=get&target=0001-wireless-testing-add-brcm80211-v2.patch
+
+Kicking myself very much right now ...
+
+- Henry
+
+
