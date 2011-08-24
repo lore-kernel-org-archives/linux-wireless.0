@@ -1,30 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:42991 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752057Ab1HVILW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 04:11:22 -0400
-To: Bill Jordan <bjordan@rajant.com>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, nbd@openwrt.org
-Subject: Re: [PATCH] ath9k: fix MGMT packets when using TKIP
-References: <4E4C6258.1030409@openwrt.org>
-	<1313766622-15092-1-git-send-email-bjordan@rajant.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Mon, 22 Aug 2011 11:11:15 +0300
-In-Reply-To: <1313766622-15092-1-git-send-email-bjordan@rajant.com> (Bill Jordan's message of "Fri\, 19 Aug 2011 11\:10\:22 -0400")
-Message-ID: <87wre5oogs.fsf@purkki.adurom.net> (sfid-20110822_101127_747223_CAABE1AE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:49979 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754434Ab1HXCaQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Aug 2011 22:30:16 -0400
+Subject: Re: [RFC] mac80211: Adhoc WPA-NONE packets lost by mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?=E6=9D=8E=E6=9C=9D=E6=98=8E?=
+	<chaoming_li@realsil.com.cn>
+Cc: linville@tuxdriver.com, 'Larry Finger' <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <F5749057C8FE46CD88E05545135626BB@realsil.com.cn> (sfid-20110823_115916_036908_E0E26086)
+References: <1314049818-21839-1-git-send-email-Larry.Finger@lwfinger.net>
+	 <1314049818-21839-6-git-send-email-Larry.Finger@lwfinger.net>
+	 <F5749057C8FE46CD88E05545135626BB@realsil.com.cn>
+	 (sfid-20110823_115916_036908_E0E26086)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 23 Aug 2011 19:30:17 -0700
+Message-ID: <1314153017.4573.1.camel@jlt3.sipsolutions.net> (sfid-20110824_043019_986716_034AC2B8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bill Jordan <bjordan@rajant.com> writes:
+On Tue, 2011-08-23 at 17:58 +0800, 李朝明 wrote:
+> 	
+> 	==============================================================
+> 	/*
+> 	 * RSNA-protected unicast frames should always be
+> 	 * sent with pairwise or station-to-station keys,
+> 	 * but for WEP we allow using a key index as well.
+> 	 */
+> 	if (rx->key &&
+> 	    rx->key->conf.cipher != WLAN_CIPHER_SUITE_WEP40 &&
+> 	    rx->key->conf.cipher != WLAN_CIPHER_SUITE_WEP104 &&
+> 	    !is_multicast_ether_addr(hdr->addr1))
+> 		rx->key = NULL;	
+> 	==============================================================
+> 
+> 	because not only WEP, but IBSS WPA-NONE will also use Group for both
+> receiving
+> 	and sending unicast and multicast packets.
+> 
+> 	So I want to ask, why we can't receive WPA-NONE packets here ? Will
+> WPA-NONE 
+> 	packets cause other issues ?
 
-> Prevent 8 bytes from being truncated from MGMT packets
-> when using TKIP.
+Well, we'd have to make this depend on WPA-NONE somehow I think.
 
-A bit more information in the commit log would be nice. Is this is a
-regression or an old bug? Maybe a stable candidate?
+Do you have to support WPA-NONE or would you be happy with proper RSN
+IBSS, which you can implement now?
 
--- 
-Kalle Valo
+johannes
+
