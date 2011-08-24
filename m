@@ -1,62 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53254 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750977Ab1H3FkT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 01:40:19 -0400
-Message-ID: <4E5C77BC.3080103@openwrt.org> (sfid-20110830_074023_344977_F062C335)
-Date: Tue, 30 Aug 2011 07:40:12 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:56726 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752210Ab1HXTbc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 15:31:32 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
+	<senthilb@qca.qualcomm.com>, <rmanohar@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] ath9k_htc: Add get_stats call back
+Date: Thu, 25 Aug 2011 01:01:22 +0530
+Message-ID: <1314214282-31750-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110824_213138_217322_3EFF3AAC)
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	rodrigue@qca.qualcomm.com, rmanohar@qca.qualcomm.com
-Subject: Re: [PATCH v7 2/4] ath9k: always call ath_reset from workqueue context
-References: <1314643245-59142-1-git-send-email-nbd@openwrt.org> <1314643245-59142-2-git-send-email-nbd@openwrt.org> <20110830052559.GB31187@vasanth-laptop>
-In-Reply-To: <20110830052559.GB31187@vasanth-laptop>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-08-30 7:26 AM, Vasanthakumar Thiagarajan wrote:
-> On Mon, Aug 29, 2011 at 08:40:43PM +0200, Felix Fietkau wrote:
->>  This makes it much easier to add further rework to avoid race conditions
->>  between reset and other work items.
->>  Move other functions to make ath_reset static.
->
-> Can you please explain where you'll run into race during
-> ath_reset()?. It's always called with pcu_lock held.
-I didn't actually observe any race, but I'm not sure if all work items 
-can properly deal with being interrupted by a full reset, so I'm trying 
-to make it more safe here.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
->>  @@ -386,9 +386,7 @@ void ath_beacon_tasklet(unsigned long data)
->>   			ath_dbg(common, ATH_DBG_BSTUCK,
->>   				"beacon is officially stuck\n");
->>   			sc->sc_flags |= SC_OP_TSF_RESET;
->>  -			spin_lock(&sc->sc_pcu_lock);
->>  -			ath_reset(sc, true);
->>  -			spin_unlock(&sc->sc_pcu_lock);
->>  +			ieee80211_queue_work(sc->hw,&sc->hw_reset_work);
->
-> We'll expect a reset happening as soon possible here. Handling this
-> in a work item may not be appropriate.
-We've already waited for multiples of 100ms. 1-2ms extra won't hurt now.
+currently this call back is used only in debugfs of mac80211
 
->>   void ath9k_tasklet(unsigned long data)
->>   {
->>  @@ -675,9 +607,7 @@ void ath9k_tasklet(unsigned long data)
->>
->>   	if ((status&  ATH9K_INT_FATAL) ||
->>   	(status&  ATH9K_INT_BB_WATCHDOG)) {
->>  -		spin_lock(&sc->sc_pcu_lock);
->>  -		ath_reset(sc, true);
->>  -		spin_unlock(&sc->sc_pcu_lock);
->>  +		ieee80211_queue_work(sc->hw,&sc->hw_reset_work);
->
-> Above comment applies here as well.
-I don't think the additional delay will be significant enough to matter 
-here. What matters to me more is to be able to reliably kill all the 
-currently running work, which can only be done if ath_reset gets called 
-from process context.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
 
-- Felix
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 7212acb..0248024 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1736,6 +1736,22 @@ out:
+ 	return ret;
+ }
+ 
++
++static int ath9k_htc_get_stats(struct ieee80211_hw *hw,
++			       struct ieee80211_low_level_stats *stats)
++{
++	struct ath9k_htc_priv *priv = hw->priv;
++	struct ath_hw *ah = priv->ah;
++	struct ath9k_mib_stats *mib_stats = &ah->ah_mibStats;
++
++	stats->dot11ACKFailureCount = mib_stats->ackrcv_bad;
++	stats->dot11RTSFailureCount = mib_stats->rts_bad;
++	stats->dot11FCSErrorCount = mib_stats->fcs_bad;
++	stats->dot11RTSSuccessCount = mib_stats->rts_good;
++
++	return 0;
++}
++
+ struct ieee80211_ops ath9k_htc_ops = {
+ 	.tx                 = ath9k_htc_tx,
+ 	.start              = ath9k_htc_start,
+@@ -1759,4 +1775,5 @@ struct ieee80211_ops ath9k_htc_ops = {
+ 	.rfkill_poll        = ath9k_htc_rfkill_poll_state,
+ 	.set_coverage_class = ath9k_htc_set_coverage_class,
+ 	.set_bitrate_mask   = ath9k_htc_set_bitrate_mask,
++	.get_stats	    = ath9k_htc_get_stats,
+ };
+-- 
+1.7.0.4
+
