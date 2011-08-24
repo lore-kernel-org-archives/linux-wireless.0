@@ -1,343 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7191 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753178Ab1HZGxi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 02:53:38 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 44/60] iwlagn: iwl-pci doesn't include iwl-dev any more
-Date: Thu, 25 Aug 2011 23:11:16 -0700
-Message-Id: <1314339092-20797-45-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085343_761591_6B2E5984)
-In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:64521 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753781Ab1HXTCj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 15:02:39 -0400
+Received: by mail-yw0-f46.google.com with SMTP id 7so1101813ywf.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 12:02:38 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [RFC 2/3] mac80211: add HT IEs to mesh frames
+Date: Wed, 24 Aug 2011 12:02:18 -0700
+Message-Id: <1314212539-23669-3-git-send-email-thomas@cozybit.com> (sfid-20110824_210242_086509_0ACA550E)
+In-Reply-To: <1314212539-23669-1-git-send-email-thomas@cozybit.com>
+References: <1314212539-23669-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-Move all the iwlXXX_abgn_cfg forward declaration to a separate file
-so that iwl-pci.c doesn't need to include iwl-agn.h that includes
-all iwl-dev.h
-This allows to provide real encapsulation. Dereferencing iwl_priv
-in the bus layer will now lead to a compilation error.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-1000.c   |    1 +
- drivers/net/wireless/iwlwifi/iwl-2000.c   |    1 +
- drivers/net/wireless/iwlwifi/iwl-5000.c   |    1 +
- drivers/net/wireless/iwlwifi/iwl-6000.c   |    1 +
- drivers/net/wireless/iwlwifi/iwl-agn.h    |   44 -----------
- drivers/net/wireless/iwlwifi/iwl-core.h   |    5 -
- drivers/net/wireless/iwlwifi/iwl-dev.h    |    2 -
- drivers/net/wireless/iwlwifi/iwl-pci.c    |    9 +-
- drivers/net/wireless/iwlwifi/iwl-pci.h    |  115 +++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-shared.h |    5 +
- 10 files changed, 128 insertions(+), 56 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-pci.h
+ net/mac80211/mesh.c       |   43 +++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/mesh.h       |    4 ++++
+ net/mac80211/mesh_plink.c |    9 +++++++++
+ net/mac80211/tx.c         |    4 ++++
+ 4 files changed, 60 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 3368b8d..4766c3a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -44,6 +44,7 @@
- #include "iwl-helpers.h"
- #include "iwl-agn-hw.h"
- #include "iwl-shared.h"
-+#include "iwl-pci.h"
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 28ab510..6ed233d 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -400,6 +400,49 @@ int mesh_add_ds_params_ie(struct sk_buff *skb,
+ 	return 0;
+ }
  
- /* Highest firmware API version supported */
- #define IWL1000_UCODE_API_MAX 6
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index 047c22b..75ded34 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -45,6 +45,7 @@
- #include "iwl-agn-hw.h"
- #include "iwl-6000-hw.h"
- #include "iwl-shared.h"
-+#include "iwl-pci.h"
- 
- /* Highest firmware API version supported */
- #define IWL2030_UCODE_API_MAX 6
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index d2ef4be..7cb4d69 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -47,6 +47,7 @@
- #include "iwl-5000-hw.h"
- #include "iwl-trans.h"
- #include "iwl-shared.h"
-+#include "iwl-pci.h"
- 
- /* Highest firmware API version supported */
- #define IWL5000_UCODE_API_MAX 5
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 955a99c..2a98e65 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -46,6 +46,7 @@
- #include "iwl-6000-hw.h"
- #include "iwl-trans.h"
- #include "iwl-shared.h"
-+#include "iwl-pci.h"
- 
- /* Highest firmware API version supported */
- #define IWL6000_UCODE_API_MAX 4
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 3508c12..2b94a10 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -65,50 +65,6 @@
- 
- #include "iwl-dev.h"
- 
--/* configuration for the _agn devices */
--extern struct iwl_cfg iwl5300_agn_cfg;
--extern struct iwl_cfg iwl5100_agn_cfg;
--extern struct iwl_cfg iwl5350_agn_cfg;
--extern struct iwl_cfg iwl5100_bgn_cfg;
--extern struct iwl_cfg iwl5100_abg_cfg;
--extern struct iwl_cfg iwl5150_agn_cfg;
--extern struct iwl_cfg iwl5150_abg_cfg;
--extern struct iwl_cfg iwl6005_2agn_cfg;
--extern struct iwl_cfg iwl6005_2abg_cfg;
--extern struct iwl_cfg iwl6005_2bg_cfg;
--extern struct iwl_cfg iwl6005_2agn_sff_cfg;
--extern struct iwl_cfg iwl1030_bgn_cfg;
--extern struct iwl_cfg iwl1030_bg_cfg;
--extern struct iwl_cfg iwl6030_2agn_cfg;
--extern struct iwl_cfg iwl6030_2abg_cfg;
--extern struct iwl_cfg iwl6030_2bgn_cfg;
--extern struct iwl_cfg iwl6030_2bg_cfg;
--extern struct iwl_cfg iwl6000i_2agn_cfg;
--extern struct iwl_cfg iwl6000i_2abg_cfg;
--extern struct iwl_cfg iwl6000i_2bg_cfg;
--extern struct iwl_cfg iwl6000_3agn_cfg;
--extern struct iwl_cfg iwl6050_2agn_cfg;
--extern struct iwl_cfg iwl6050_2abg_cfg;
--extern struct iwl_cfg iwl6150_bgn_cfg;
--extern struct iwl_cfg iwl6150_bg_cfg;
--extern struct iwl_cfg iwl1000_bgn_cfg;
--extern struct iwl_cfg iwl1000_bg_cfg;
--extern struct iwl_cfg iwl100_bgn_cfg;
--extern struct iwl_cfg iwl100_bg_cfg;
--extern struct iwl_cfg iwl130_bgn_cfg;
--extern struct iwl_cfg iwl130_bg_cfg;
--extern struct iwl_cfg iwl2000_2bgn_cfg;
--extern struct iwl_cfg iwl2000_2bg_cfg;
--extern struct iwl_cfg iwl2030_2bgn_cfg;
--extern struct iwl_cfg iwl2030_2bg_cfg;
--extern struct iwl_cfg iwl6035_2agn_cfg;
--extern struct iwl_cfg iwl6035_2abg_cfg;
--extern struct iwl_cfg iwl6035_2bg_cfg;
--extern struct iwl_cfg iwl105_bg_cfg;
--extern struct iwl_cfg iwl105_bgn_cfg;
--extern struct iwl_cfg iwl135_bg_cfg;
--extern struct iwl_cfg iwl135_bgn_cfg;
--
- extern struct ieee80211_ops iwlagn_hw_ops;
- 
- int iwl_reset_ict(struct iwl_trans *trans);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index c3bdba5..2ea8a2e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -71,11 +71,6 @@
- struct iwl_host_cmd;
- struct iwl_cmd;
- 
--
--#define IWLWIFI_VERSION "in-tree:"
--#define DRV_COPYRIGHT	"Copyright(c) 2003-2011 Intel Corporation"
--#define DRV_AUTHOR     "<ilw@linux.intel.com>"
--
- #define TIME_UNIT		1024
- 
- #define IWL_CMD(x) case x: return #x
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 711f2af..eb98df6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -51,8 +51,6 @@
- #include "iwl-trans.h"
- #include "iwl-shared.h"
- 
--#define DRV_NAME        "iwlagn"
--
- struct iwl_tx_queue;
- 
- /* CT-KILL constants */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
-index 62c35a5..7210ff6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-pci.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
-@@ -64,13 +64,11 @@
- #include <linux/pci-aspm.h>
- 
- #include "iwl-bus.h"
-+#include "iwl-io.h"
- #include "iwl-shared.h"
--#include "iwl-agn.h"
- #include "iwl-trans.h"
--
--/* TODO: iwl_set_bit and friends should be implemented in bus layer
-- * this would allow us not to include iwl-io.h here */
--#include "iwl-io.h"
-+#include "iwl-csr.h"
-+#include "iwl-pci.h"
- 
- /* PCI registers */
- #define PCI_CFG_RETRY_TIMEOUT	0x041
-@@ -95,6 +93,7 @@ static u16 iwl_pciexp_link_ctrl(struct iwl_bus *bus)
++int mesh_add_ht_cap_ie(struct sk_buff *skb,
++		       struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_supported_band *sband;
++	u8 *pos;
++
++	sband = local->hw.wiphy->bands[local->oper_channel->band];
++	if (!sband->ht_cap.ht_supported ||
++	    local->_oper_channel_type == NL80211_CHAN_NO_HT)
++		return 0;
++
++	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_cap))
++		return -ENOMEM;
++
++	pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_cap));
++	ieee80211_ie_build_ht_cap(pos, sband, sband->ht_cap.cap);
++
++	return 0;
++}
++
++int mesh_add_ht_info_ie(struct sk_buff *skb,
++			struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_channel *channel = local->oper_channel;
++	enum nl80211_channel_type channel_type = local->_oper_channel_type;
++	struct ieee80211_supported_band *sband =
++				local->hw.wiphy->bands[channel->band];
++	struct ieee80211_sta_ht_cap *ht_cap = &sband->ht_cap;
++	u8 *pos;
++
++	if (!ht_cap->ht_supported || channel_type == NL80211_CHAN_NO_HT)
++		return 0;
++
++	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_info))
++		return -ENOMEM;
++
++	pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_info));
++	ieee80211_ie_build_ht_info(pos, ht_cap, channel, channel_type);
++
++	return 0;
++}
+ static void ieee80211_mesh_path_timer(unsigned long data)
  {
- 	int pos;
- 	u16 pci_lnk_ctl;
+ 	struct ieee80211_sub_if_data *sdata =
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 42536a4..334c392 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -221,6 +221,10 @@ int mesh_add_ext_srates_ie(struct sk_buff *skb,
+ 			   struct ieee80211_sub_if_data *sdata);
+ int mesh_add_ds_params_ie(struct sk_buff *skb,
+ 			  struct ieee80211_sub_if_data *sdata);
++int mesh_add_ht_cap_ie(struct sk_buff *skb,
++		       struct ieee80211_sub_if_data *sdata);
++int mesh_add_ht_info_ie(struct sk_buff *skb,
++			struct ieee80211_sub_if_data *sdata);
+ void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
+ int mesh_rmc_init(struct ieee80211_sub_if_data *sdata);
+ void ieee80211s_init(void);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index f8c9666..8f068b1 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -158,6 +158,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 			    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
+ 			    2 + sdata->u.mesh.mesh_id_len +
+ 			    2 + sizeof(struct ieee80211_meshconf_ie) +
++			    2 + sizeof(struct ieee80211_ht_cap) +
++			    2 + sizeof(struct ieee80211_ht_info) +
+ 			    2 + 8 + /* peering IE */
+ 			    sdata->u.mesh.ie_len);
+ 	if (!skb)
+@@ -234,6 +236,13 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 		memcpy(pos, &reason, 2);
+ 		pos += 2;
+ 	}
 +
- 	struct pci_dev *pci_dev = IWL_BUS_GET_PCI_DEV(bus);
++	if (action != WLAN_SP_MESH_PEERING_CLOSE) {
++		if (mesh_add_ht_cap_ie(skb, sdata) ||
++		    mesh_add_ht_info_ie(skb, sdata))
++			return -1;
++	}
++
+ 	if (mesh_add_vendor_ies(skb, sdata))
+ 		return -1;
  
- 	pos = pci_pcie_cap(pci_dev);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.h b/drivers/net/wireless/iwlwifi/iwl-pci.h
-new file mode 100644
-index 0000000..be69276
---- /dev/null
-+++ b/drivers/net/wireless/iwlwifi/iwl-pci.h
-@@ -0,0 +1,115 @@
-+/******************************************************************************
-+ *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2007 - 2011 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-+ * USA
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called LICENSE.GPL.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2005 - 2011 Intel Corporation. All rights reserved.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ *****************************************************************************/
-+#ifndef __iwl_pci_h__
-+#define __iwl_pci_h__
-+
-+
-+/* This file includes the declaration that are internal to the PCI
-+ * implementation of the bus layer
-+ */
-+
-+/* configuration for the _agn devices */
-+extern struct iwl_cfg iwl5300_agn_cfg;
-+extern struct iwl_cfg iwl5100_agn_cfg;
-+extern struct iwl_cfg iwl5350_agn_cfg;
-+extern struct iwl_cfg iwl5100_bgn_cfg;
-+extern struct iwl_cfg iwl5100_abg_cfg;
-+extern struct iwl_cfg iwl5150_agn_cfg;
-+extern struct iwl_cfg iwl5150_abg_cfg;
-+extern struct iwl_cfg iwl6005_2agn_cfg;
-+extern struct iwl_cfg iwl6005_2abg_cfg;
-+extern struct iwl_cfg iwl6005_2bg_cfg;
-+extern struct iwl_cfg iwl6005_2agn_sff_cfg;
-+extern struct iwl_cfg iwl1030_bgn_cfg;
-+extern struct iwl_cfg iwl1030_bg_cfg;
-+extern struct iwl_cfg iwl6030_2agn_cfg;
-+extern struct iwl_cfg iwl6030_2abg_cfg;
-+extern struct iwl_cfg iwl6030_2bgn_cfg;
-+extern struct iwl_cfg iwl6030_2bg_cfg;
-+extern struct iwl_cfg iwl6000i_2agn_cfg;
-+extern struct iwl_cfg iwl6000i_2abg_cfg;
-+extern struct iwl_cfg iwl6000i_2bg_cfg;
-+extern struct iwl_cfg iwl6000_3agn_cfg;
-+extern struct iwl_cfg iwl6050_2agn_cfg;
-+extern struct iwl_cfg iwl6050_2abg_cfg;
-+extern struct iwl_cfg iwl6150_bgn_cfg;
-+extern struct iwl_cfg iwl6150_bg_cfg;
-+extern struct iwl_cfg iwl1000_bgn_cfg;
-+extern struct iwl_cfg iwl1000_bg_cfg;
-+extern struct iwl_cfg iwl100_bgn_cfg;
-+extern struct iwl_cfg iwl100_bg_cfg;
-+extern struct iwl_cfg iwl130_bgn_cfg;
-+extern struct iwl_cfg iwl130_bg_cfg;
-+extern struct iwl_cfg iwl2000_2bgn_cfg;
-+extern struct iwl_cfg iwl2000_2bg_cfg;
-+extern struct iwl_cfg iwl2030_2bgn_cfg;
-+extern struct iwl_cfg iwl2030_2bg_cfg;
-+extern struct iwl_cfg iwl6035_2agn_cfg;
-+extern struct iwl_cfg iwl6035_2abg_cfg;
-+extern struct iwl_cfg iwl6035_2bg_cfg;
-+extern struct iwl_cfg iwl105_bg_cfg;
-+extern struct iwl_cfg iwl105_bgn_cfg;
-+extern struct iwl_cfg iwl135_bg_cfg;
-+extern struct iwl_cfg iwl135_bgn_cfg;
-+
-+#endif /* __iwl_pci_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 45f8a33..27aee52 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -77,6 +77,11 @@ struct iwl_priv;
- struct iwl_sensitivity_ranges;
- struct iwl_trans_ops;
- 
-+#define DRV_NAME        "iwlagn"
-+#define IWLWIFI_VERSION "in-tree:"
-+#define DRV_COPYRIGHT	"Copyright(c) 2003-2011 Intel Corporation"
-+#define DRV_AUTHOR     "<ilw@linux.intel.com>"
-+
- extern struct iwl_mod_params iwlagn_mod_params;
- 
- /**
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index ba1956a..173b40b 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2284,6 +2284,8 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 				    2 + 8 + /* supported rates */
+ 				    2 + 3 + /* DS params */
+ 				    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
++				    2 + sizeof(struct ieee80211_ht_cap) +
++				    2 + sizeof(struct ieee80211_ht_info) +
+ 				    2 + sdata->u.mesh.mesh_id_len +
+ 				    2 + sizeof(struct ieee80211_meshconf_ie) +
+ 				    sdata->u.mesh.ie_len);
+@@ -2312,6 +2314,8 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 		    mesh_add_ds_params_ie(skb, sdata) ||
+ 		    mesh_add_ext_srates_ie(skb, sdata) ||
+ 		    mesh_add_rsn_ie(skb, sdata) ||
++		    mesh_add_ht_cap_ie(skb, sdata) ||
++		    mesh_add_ht_info_ie(skb, sdata) ||
+ 		    mesh_add_meshid_ie(skb, sdata) ||
+ 		    mesh_add_meshconf_ie(skb, sdata) ||
+ 		    mesh_add_vendor_ies(skb, sdata)) {
 -- 
-1.7.0.4
+1.7.4.1
 
