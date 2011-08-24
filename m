@@ -1,89 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wondertoys-mx.wondertoys.net ([206.117.179.246]:59546 "EHLO
-	labridge.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750941Ab1HZI4y (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:54056 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751073Ab1HXJu1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 04:56:54 -0400
-From: Joe Perches <joe@perches.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] ath: Make ath_dbg void not int
-Date: Fri, 26 Aug 2011 01:56:38 -0700
-Message-Id: <3f6f6f785962c600b12bc6362d0932f13a5cbff9.1314347556.git.joe@perches.com> (sfid-20110826_105751_807648_DF4E9F22)
-In-Reply-To: <cover.1314347556.git.joe@perches.com>
-References: <cover.1314347556.git.joe@perches.com>
+	Wed, 24 Aug 2011 05:50:27 -0400
+Received: by bke11 with SMTP id 11so751897bke.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 02:50:26 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/2] b43: HT-PHY: use separated function for forcing RF sequence
+Date: Wed, 24 Aug 2011 11:52:34 +0200
+Message-Id: <1314179555-8188-1-git-send-email-zajec5@gmail.com> (sfid-20110824_115030_776554_9F1C9C8F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The return value is never used so make it void.
+Comparison of the HT and N code has shown similarities in the ops
+performed after b43_mac_phy_clock_set. That way we understood what is
+happening in the HT-PHY code.
 
-Reduces object size a tiny bit.
-
-$ size drivers/net/wireless/ath/built-in.o*
-   text	   data	    bss	    dec	    hex	filename
-1164175	  16235	 212032	1392442	 153f3a	drivers/net/wireless/ath/built-in.o.new
-1164819	  16235	 212032	1393086	 1541be	drivers/net/wireless/ath/built-in.o.old
-
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath.h |   29 ++++++++++++-----------------
- 1 files changed, 12 insertions(+), 17 deletions(-)
+ drivers/net/wireless/b43/phy_ht.c |   32 +++++++++++++++++++++++---------
+ drivers/net/wireless/b43/phy_ht.h |   11 +++++++++++
+ 2 files changed, 34 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 17c4b56..a3f8505 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -178,8 +178,9 @@ bool ath_hw_keyreset(struct ath_common *common, u16 entry);
- void ath_hw_cycle_counters_update(struct ath_common *common);
- int32_t ath_hw_get_listen_time(struct ath_common *common);
- 
--extern __attribute__ ((format (printf, 3, 4))) int
--ath_printk(const char *level, struct ath_common *common, const char *fmt, ...);
-+extern __attribute__((format (printf, 3, 4)))
-+int ath_printk(const char *level, struct ath_common *common,
-+	       const char *fmt, ...);
- 
- #define ath_emerg(common, fmt, ...)				\
- 	ath_printk(KERN_EMERG, common, fmt, ##__VA_ARGS__)
-@@ -246,27 +247,21 @@ enum ATH_DEBUG {
- 
- #ifdef CONFIG_ATH_DEBUG
- 
--#define ath_dbg(common, dbg_mask, fmt, ...)			\
--({								\
--	int rtn;						\
--	if ((common)->debug_mask & dbg_mask)			\
--		rtn = ath_printk(KERN_DEBUG, common, fmt,	\
--				 ##__VA_ARGS__);		\
--	else							\
--		rtn = 0;					\
--								\
--	rtn;							\
--})
-+#define ath_dbg(common, dbg_mask, fmt, ...)				\
-+do {									\
-+	if ((common)->debug_mask & dbg_mask)				\
-+		ath_printk(KERN_DEBUG, common, fmt, ##__VA_ARGS__);	\
-+} while (0)
-+
- #define ATH_DBG_WARN(foo, arg...) WARN(foo, arg)
- #define ATH_DBG_WARN_ON_ONCE(foo) WARN_ON_ONCE(foo)
- 
- #else
- 
--static inline  __attribute__ ((format (printf, 3, 4))) int
--ath_dbg(struct ath_common *common, enum ATH_DEBUG dbg_mask,
--	const char *fmt, ...)
-+static inline  __attribute__((format (printf, 3, 4)))
-+void ath_dbg(struct ath_common *common, enum ATH_DEBUG dbg_mask,
-+	     const char *fmt, ...)
- {
--	return 0;
+diff --git a/drivers/net/wireless/b43/phy_ht.c b/drivers/net/wireless/b43/phy_ht.c
+index 62a9084..c0e436c 100644
+--- a/drivers/net/wireless/b43/phy_ht.c
++++ b/drivers/net/wireless/b43/phy_ht.c
+@@ -191,6 +191,27 @@ static void b43_phy_ht_afe_unk1(struct b43_wldev *dev)
+ 	}
  }
- #define ATH_DBG_WARN(foo, arg...) do {} while (0)
- #define ATH_DBG_WARN_ON_ONCE(foo) ({				\
+ 
++static void b43_phy_ht_force_rf_sequence(struct b43_wldev *dev, u16 rf_seq)
++{
++	u8 i;
++
++	u16 save_seq_mode = b43_phy_read(dev, B43_PHY_HT_RF_SEQ_MODE);
++	b43_phy_set(dev, B43_PHY_HT_RF_SEQ_MODE, 0x3);
++
++	b43_phy_set(dev, B43_PHY_HT_RF_SEQ_TRIG, rf_seq);
++	for (i = 0; i < 200; i++) {
++		if (!(b43_phy_read(dev, B43_PHY_HT_RF_SEQ_STATUS) & rf_seq)) {
++			i = 0;
++			break;
++		}
++		msleep(1);
++	}
++	if (i)
++		b43err(dev->wl, "Forcing RF sequence timeout\n");
++
++	b43_phy_write(dev, B43_PHY_HT_RF_SEQ_MODE, save_seq_mode);
++}
++
+ static void b43_phy_ht_bphy_init(struct b43_wldev *dev)
+ {
+ 	unsigned int i;
+@@ -313,7 +334,6 @@ static void b43_phy_ht_op_prepare_structs(struct b43_wldev *dev)
+ 
+ static int b43_phy_ht_op_init(struct b43_wldev *dev)
+ {
+-	u8 i;
+ 	u16 tmp;
+ 
+ 	b43_phy_ht_tables_init(dev);
+@@ -418,14 +438,8 @@ static int b43_phy_ht_op_init(struct b43_wldev *dev)
+ 
+ 	b43_mac_phy_clock_set(dev, true);
+ 
+-	for (i = 0; i < 2; i++) {
+-		tmp = b43_phy_read(dev, B43_PHY_EXTG(0));
+-		b43_phy_set(dev, B43_PHY_EXTG(0), 0x3);
+-		b43_phy_set(dev, B43_PHY_EXTG(3), i ? 0x20 : 0x1);
+-		/* FIXME: wait for some bit to be cleared (find out which) */
+-		b43_phy_read(dev, B43_PHY_EXTG(4));
+-		b43_phy_write(dev, B43_PHY_EXTG(0), tmp);
+-	}
++	b43_phy_ht_force_rf_sequence(dev, B43_PHY_HT_RF_SEQ_TRIG_RX2TX);
++	b43_phy_ht_force_rf_sequence(dev, B43_PHY_HT_RF_SEQ_TRIG_RST2RX);
+ 
+ 	/* TODO: PHY op on reg 0xb0 */
+ 
+diff --git a/drivers/net/wireless/b43/phy_ht.h b/drivers/net/wireless/b43/phy_ht.h
+index f70af0c..0661ae2 100644
+--- a/drivers/net/wireless/b43/phy_ht.h
++++ b/drivers/net/wireless/b43/phy_ht.h
+@@ -19,6 +19,17 @@
+ #define B43_PHY_HT_BW5				0x1D2
+ #define B43_PHY_HT_BW6				0x1D3
+ 
++#define B43_PHY_HT_RF_SEQ_MODE			B43_PHY_EXTG(0x000)
++#define B43_PHY_HT_RF_SEQ_TRIG			B43_PHY_EXTG(0x003)
++#define  B43_PHY_HT_RF_SEQ_TRIG_RX2TX		0x0001 /* RX2TX */
++#define  B43_PHY_HT_RF_SEQ_TRIG_TX2RX		0x0002 /* TX2RX */
++#define  B43_PHY_HT_RF_SEQ_TRIG_UPGH		0x0004 /* Update gain H */
++#define  B43_PHY_HT_RF_SEQ_TRIG_UPGL		0x0008 /* Update gain L */
++#define  B43_PHY_HT_RF_SEQ_TRIG_UPGU		0x0010 /* Update gain U */
++#define  B43_PHY_HT_RF_SEQ_TRIG_RST2RX		0x0020 /* Reset to RX */
++#define B43_PHY_HT_RF_SEQ_STATUS		B43_PHY_EXTG(0x004)
++/* Values for the status are the same as for the trigger */
++
+ #define B43_PHY_HT_RF_CTL1			B43_PHY_EXTG(0x010)
+ 
+ #define B43_PHY_HT_AFE_CTL1			B43_PHY_EXTG(0x110)
 -- 
-1.7.6.405.gc1be0
+1.7.3.4
 
