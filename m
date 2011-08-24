@@ -1,65 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:52134 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755044Ab1H2UXY (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:44715 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751412Ab1HXKUu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 16:23:24 -0400
-Received: by gya6 with SMTP id 6so5097515gya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 13:23:23 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Subject: [PATCH v3 4/7] mac80211: Remove redundant mesh path expiration checks
-Date: Mon, 29 Aug 2011 13:23:06 -0700
-Message-Id: <1314649389-7115-5-git-send-email-javier@cozybit.com> (sfid-20110829_222329_097747_F053B050)
-In-Reply-To: <1314649389-7115-1-git-send-email-javier@cozybit.com>
-References: <1314649389-7115-1-git-send-email-javier@cozybit.com>
+	Wed, 24 Aug 2011 06:20:50 -0400
+Date: Wed, 24 Aug 2011 13:17:07 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "open list:BROADCOM SPECIFIC..." <linux-wireless@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch -next] bcma: signedness bug in bcma_get_next_core()
+Message-ID: <20110824101707.GA5975@shale.localdomain> (sfid-20110824_122054_476873_1A04E1F6)
+References: <20110818133809.GG4786@shale.localdomain>
+ <CACna6rzwxA=OzQQ_VknsSq8BXXoH8U=GpdfkRTBWjFSNSjwsAA@mail.gmail.com>
+ <20110823191306.GK12248@shale.localdomain>
+ <CACna6rwLrGa4LU2GOQ03w+t5FfrD+c1rdHki_Nu-3oPVninCJg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rwLrGa4LU2GOQ03w+t5FfrD+c1rdHki_Nu-3oPVninCJg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_pathtbl.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
+On Wed, Aug 24, 2011 at 12:01:11PM +0200, Rafał Miłecki wrote:
+> Dan, I asked you to use int in both: call and function declaration.
+> I'm the author of that code, and I don't have anything against
+> modifying that :)
+> 
+> I think int is used much more often that s32 for errors.
+> 
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index b895a7c..598249e 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -359,8 +359,7 @@ struct mesh_path *mesh_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
- 				memcmp(dst, mpath->dst, ETH_ALEN) == 0) {
- 			if (MPATH_EXPIRED(mpath)) {
- 				spin_lock_bh(&mpath->state_lock);
--				if (MPATH_EXPIRED(mpath))
--					mpath->flags &= ~MESH_PATH_ACTIVE;
-+				mpath->flags &= ~MESH_PATH_ACTIVE;
- 				spin_unlock_bh(&mpath->state_lock);
- 			}
- 			return mpath;
-@@ -386,8 +385,7 @@ struct mesh_path *mpp_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
- 		    memcmp(dst, mpath->dst, ETH_ALEN) == 0) {
- 			if (MPATH_EXPIRED(mpath)) {
- 				spin_lock_bh(&mpath->state_lock);
--				if (MPATH_EXPIRED(mpath))
--					mpath->flags &= ~MESH_PATH_ACTIVE;
-+				mpath->flags &= ~MESH_PATH_ACTIVE;
- 				spin_unlock_bh(&mpath->state_lock);
- 			}
- 			return mpath;
-@@ -420,8 +418,7 @@ struct mesh_path *mesh_path_lookup_by_idx(int idx, struct ieee80211_sub_if_data
- 		if (j++ == idx) {
- 			if (MPATH_EXPIRED(node->mpath)) {
- 				spin_lock_bh(&node->mpath->state_lock);
--				if (MPATH_EXPIRED(node->mpath))
--					node->mpath->flags &= ~MESH_PATH_ACTIVE;
-+				node->mpath->flags &= ~MESH_PATH_ACTIVE;
- 				spin_unlock_bh(&node->mpath->state_lock);
- 			}
- 			return node->mpath;
--- 
-1.7.6
+No problem.  Should I make bcma_erom_get_mst_port() return 0 on
+success while I'm at it?
+
+regards,
+dan carpenter
 
