@@ -1,163 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:55381 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753025Ab1HNKSG (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:64126 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750819Ab1HXOZe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 06:18:06 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 5so4061056wwf.1
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:18:05 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 33/40] wl12xx: track freed packets in FW by AC
-Date: Sun, 14 Aug 2011 13:17:32 +0300
-Message-Id: <1313317059-16567-34-git-send-email-eliad@wizery.com> (sfid-20110814_121810_153369_C1FB14A6)
-In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
-References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+	Wed, 24 Aug 2011 10:25:34 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <kvalo@adurom.com>
+Subject: [PATCH 2/3] ath6kl: Add debugfs entry to dump target stats
+Date: Wed, 24 Aug 2011 19:55:35 +0530
+Message-ID: <1314195936-25227-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110824_162538_137580_DD4155FC)
+In-Reply-To: <1314195936-25227-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1314195936-25227-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
-
-Track the number of freed packets in each AC when receiving an interrupt
-from the FW. This paves the way for tracking allocated packets per AC.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
-v2: use bitwise-and instead of modulus
+ drivers/net/wireless/ath/ath6kl/debug.c |  147 ++++++++++++++++++++++++++++++-
+ 1 files changed, 146 insertions(+), 1 deletions(-)
 
- drivers/net/wireless/wl12xx/main.c   |   16 +++++++++++++++-
- drivers/net/wireless/wl12xx/tx.c     |    2 ++
- drivers/net/wireless/wl12xx/wl12xx.h |    8 ++++++--
- 3 files changed, 23 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 0ef63b5..479977d 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -811,22 +811,32 @@ static void wl1271_irq_update_links_status(struct wl1271 *wl,
- static void wl12xx_fw_status(struct wl1271 *wl,
- 			     struct wl12xx_fw_status *status)
- {
- 	struct timespec ts;
- 	u32 old_tx_blk_count = wl->tx_blocks_available;
- 	int avail, freed_blocks;
-+	int i;
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 30888d1..014cc18 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -150,6 +150,149 @@ void dump_cred_dist_stats(struct htc_target *target)
+ #endif
  
- 	wl1271_raw_read(wl, FW_STATUS_ADDR, status, sizeof(*status), false);
- 
- 	wl1271_debug(DEBUG_IRQ, "intr: 0x%x (fw_rx_counter = %d, "
- 		     "drv_rx_counter = %d, tx_results_counter = %d)",
- 		     status->intr,
- 		     status->fw_rx_counter,
- 		     status->drv_rx_counter,
- 		     status->tx_results_counter);
- 
-+	for (i = 0; i < NUM_TX_QUEUES; i++) {
-+		/* prevent wrap-around in freed-packets counter */
-+		wl->tx_allocated_pkts -=
-+				(status->tx_released_pkts[i] -
-+				wl->tx_pkts_freed[i]) & 0xff;
+ #ifdef CONFIG_ATH6KL_DEBUGFS
++static int ath6kl_debugfs_open(struct inode *inode, struct file *file)
++{
++	file->private_data = inode->i_private;
++	return 0;
++}
 +
-+		wl->tx_pkts_freed[i] = status->tx_released_pkts[i];
++static ssize_t read_file_tgt_stats(struct file *file, char __user *user_buf,
++				   size_t count, loff_t *ppos)
++{
++	struct ath6kl *ar = file->private_data;
++	struct target_stats *tgt_stats = &ar->target_stats;
++	char *buf;
++	unsigned int len = 0, buf_len = 1500;
++	int i;
++	long left;
++	ssize_t ret_cnt;
++
++	buf = kzalloc(buf_len, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	if (down_interruptible(&ar->sem)) {
++		kfree(buf);
++		return -EBUSY;
 +	}
 +
- 	freed_blocks = le32_to_cpu(status->total_released_blks) -
- 		       wl->tx_blocks_freed;
- 	wl->tx_blocks_freed = le32_to_cpu(status->total_released_blks);
- 
- 	wl->tx_allocated_blocks -= freed_blocks;
- 
-@@ -1931,13 +1941,13 @@ out:
- 	return ret;
- }
- 
- static void __wl1271_op_remove_interface(struct wl1271 *wl,
- 					 bool reset_tx_queues)
++	set_bit(STATS_UPDATE_PEND, &ar->flag);
++
++	if (ath6kl_wmi_get_stats_cmd(ar->wmi)) {
++		up(&ar->sem);
++		kfree(buf);
++		return -EIO;
++	}
++
++	left = wait_event_interruptible_timeout(ar->event_wq,
++						!test_bit(STATS_UPDATE_PEND,
++						&ar->flag), WMI_TIMEOUT);
++
++	up(&ar->sem);
++
++	if (left <= 0) {
++		kfree(buf);
++		return -ETIMEDOUT;
++	}
++
++	len += scnprintf(buf + len, buf_len - len, "\n");
++	len += scnprintf(buf + len, buf_len - len, "%25s\n",
++			 "Target Tx stats");
++	len += scnprintf(buf + len, buf_len - len, "%25s\n\n",
++			 "=================");
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Ucast packets", tgt_stats->tx_ucast_pkt);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Bcast packets", tgt_stats->tx_bcast_pkt);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Ucast byte", tgt_stats->tx_ucast_byte);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Bcast byte", tgt_stats->tx_bcast_byte);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Rts success cnt", tgt_stats->tx_rts_success_cnt);
++	for (i = 0; i < 4; i++)
++		len += scnprintf(buf + len, buf_len - len,
++				 "%18s %d %10llu\n", "PER on ac",
++				 i, tgt_stats->tx_pkt_per_ac[i]);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Error", tgt_stats->tx_err);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Fail count", tgt_stats->tx_fail_cnt);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Retry count", tgt_stats->tx_retry_cnt);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Multi retry cnt", tgt_stats->tx_mult_retry_cnt);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Rts fail cnt", tgt_stats->tx_rts_fail_cnt);
++	len += scnprintf(buf + len, buf_len - len, "%25s %10llu\n\n",
++			 "TKIP counter measure used",
++			 tgt_stats->tkip_cnter_measures_invoked);
++
++	len += scnprintf(buf + len, buf_len - len, "%25s\n",
++			 "Target Rx stats");
++	len += scnprintf(buf + len, buf_len - len, "%25s\n",
++			 "=================");
++
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Ucast packets", tgt_stats->rx_ucast_pkt);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10d\n",
++			 "Ucast Rate", tgt_stats->rx_ucast_rate);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Bcast packets", tgt_stats->rx_bcast_pkt);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Ucast byte", tgt_stats->rx_ucast_byte);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Bcast byte", tgt_stats->rx_bcast_byte);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Fragmented pkt", tgt_stats->rx_frgment_pkt);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Error", tgt_stats->rx_err);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "CRC Err", tgt_stats->rx_crc_err);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Key chache miss", tgt_stats->rx_key_cache_miss);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Decrypt Err", tgt_stats->rx_decrypt_err);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Duplicate frame", tgt_stats->rx_dupl_frame);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Tkip Mic failure", tgt_stats->tkip_local_mic_fail);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "TKIP format err", tgt_stats->tkip_fmt_err);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "CCMP format Err", tgt_stats->ccmp_fmt_err);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n\n",
++			 "CCMP Replay Err", tgt_stats->ccmp_replays);
++
++	len += scnprintf(buf + len, buf_len - len, "%25s\n",
++			 "Misc Target stats");
++	len += scnprintf(buf + len, buf_len - len, "%25s\n",
++			 "=================");
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Beacon Miss count", tgt_stats->cs_bmiss_cnt);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Num Connects", tgt_stats->cs_connect_cnt);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10llu\n",
++			 "Num disconnects", tgt_stats->cs_discon_cnt);
++	len += scnprintf(buf + len, buf_len - len, "%20s %10d\n",
++			 "Beacon avg rssi", tgt_stats->cs_ave_beacon_rssi);
++
++	if (len > buf_len)
++		len = buf_len;
++
++	ret_cnt = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++
++	kfree(buf);
++	return ret_cnt;
++}
++
++static const struct file_operations fops_tgt_stats = {
++	.read = read_file_tgt_stats,
++	.open = ath6kl_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ int ath6kl_init_debugfs(struct ath6kl *ar)
  {
--	int ret;
-+	int ret, i;
+ 	ar->debugfs_phy = debugfs_create_dir("ath6kl",
+@@ -157,7 +300,9 @@ int ath6kl_init_debugfs(struct ath6kl *ar)
+ 	if (!ar->debugfs_phy)
+ 		return -ENOMEM;
  
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 remove interface");
- 
- 	/* because of hardware recovery, we may get here twice */
- 	if (wl->state != WL1271_STATE_ON)
- 		return;
-@@ -2047,12 +2057,16 @@ deinit:
- 	 * get executed before all these vars have been reset.
- 	 */
- 	wl->flags = 0;
- 
- 	wl->tx_blocks_freed = 0;
- 
-+	wl->tx_allocated_pkts = 0;
-+	for (i = 0; i < NUM_TX_QUEUES; i++)
-+		wl->tx_pkts_freed[i] = 0;
+-	/* TODO: Create debugfs file entries for various target/host stats */
++	debugfs_create_file("tgt_stats", S_IRUSR, ar->debugfs_phy, ar,
++			    &fops_tgt_stats);
 +
- 	wl1271_debugfs_reset(wl);
- 
- 	kfree(wl->fw_status);
- 	wl->fw_status = NULL;
- 	kfree(wl->tx_res_if);
- 	wl->tx_res_if = NULL;
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 8fdffd0..7dd6d8b 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -239,12 +239,14 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
- 
- 		desc->id = id;
- 
- 		wl->tx_blocks_available -= total_blocks;
- 		wl->tx_allocated_blocks += total_blocks;
- 
-+		wl->tx_allocated_pkts++;
-+
- 		if (wl->bss_type == BSS_TYPE_AP_BSS)
- 			wl->links[hlid].allocated_blks += total_blocks;
- 
- 		ret = 0;
- 
- 		wl1271_debug(DEBUG_TX,
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 416d68e..24b4025 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -265,14 +265,14 @@ struct wl12xx_fw_status {
- 	/* Cumulative counter of total released mem blocks since FW-reset */
- 	__le32 total_released_blks;
- 
- 	/* Size (in Memory Blocks) of TX pool */
- 	__le32 tx_total;
- 
--	/* Cumulative counter of released mem-blocks per AC */
--	u8 tx_released_blks[NUM_TX_QUEUES];
-+	/* Cumulative counter of released packets per AC */
-+	u8 tx_released_pkts[NUM_TX_QUEUES];
- 
- 	/* Cumulative counter of freed MBs per HLID */
- 	u8 tx_lnk_free_blks[WL12XX_MAX_LINKS];
- 
- 	/* Cumulative counter of released Voice memory blocks */
- 	u8 tx_voice_released_blks;
-@@ -419,12 +419,16 @@ struct wl1271 {
- 	/* Accounting for allocated / available TX blocks on HW */
- 	u32 tx_blocks_freed;
- 	u32 tx_blocks_available;
- 	u32 tx_allocated_blocks;
- 	u32 tx_results_count;
- 
-+	/* Accounting for allocated / available Tx packets in HW */
-+	u32 tx_pkts_freed[NUM_TX_QUEUES];
-+	u32 tx_allocated_pkts;
-+
- 	/* Transmitted TX packets counter for chipset interface */
- 	u32 tx_packets_count;
- 
- 	/* Time-offset between host and chipset clocks */
- 	s64 time_offset;
- 
+ 	return 0;
+ }
+ #endif
 -- 
-1.7.6.401.g6a319
+1.7.0.4
 
