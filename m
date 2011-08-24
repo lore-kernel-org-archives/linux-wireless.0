@@ -1,69 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:49436 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751664Ab1H0PMg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Aug 2011 11:12:36 -0400
-Received: by pzk37 with SMTP id 37so5876611pzk.1
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Aug 2011 08:12:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACna6ryfZoahr1FPbZ_syBFhWnfRprEs=95y=piCGXXm_Cu+LQ@mail.gmail.com>
-References: <20110707002034.GA17885@broadcom.com>
-	<20110824222801.GA5280@broadcom.com>
-	<CACna6rwG6qNpaOu4QeOvs0L3LVETRt9w5=Ec-L2NJ5gXOAM=nw@mail.gmail.com>
-	<20110827143513.GN3775@shale.localdomain>
-	<20110827145003.GA9405@suse.de>
-	<CACna6ryfZoahr1FPbZ_syBFhWnfRprEs=95y=piCGXXm_Cu+LQ@mail.gmail.com>
-Date: Sat, 27 Aug 2011 17:12:36 +0200
-Message-ID: <CACna6ryjaSb1aTtBAq7cXvvQeBtqbFgoV-0AjG2gvhNhBCVcUA@mail.gmail.com> (sfid-20110827_171239_963712_6F7D73B6)
-Subject: Re: [PATCH v2] Move brcm80211 to mainline
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Greg KH <gregkh@suse.de>, Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Dan Carpenter <error27@gmail.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from bues.ch ([80.190.117.144]:52590 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750770Ab1HXWRd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 18:17:33 -0400
+Date: Thu, 25 Aug 2011 00:17:15 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: John W Linville <linville@tuxdriver.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, zajec5@gmail.com,
+	Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC/RFT] b43: Relax requirement for descriptors to be in the
+ DMA zone
+Message-ID: <20110825001715.4806077c@milhouse> (sfid-20110825_001740_420753_78A3137A)
+In-Reply-To: <4e55750c.GPPIrbNLynUMWY/U%Larry.Finger@lwfinger.net>
+References: <4e55750c.GPPIrbNLynUMWY/U%Larry.Finger@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 27 sierpnia 2011 17:08 użytkownik Rafał Miłecki
-<zajec5@gmail.com> napisał:
-> 2011/8/27 Greg KH <gregkh@suse.de>:
->> On Sat, Aug 27, 2011 at 05:35:13PM +0300, Dan Carpenter wrote:
->>> On Thu, Aug 25, 2011 at 10:55:26PM +0200, Rafał Miłecki wrote:
->>> > 2011/8/25 Henry Ptasinski <henryp@broadcom.com>:
->>> > > With the latest series of cleanup patches merged in by Greg KH, I'd like to
->>> > > once again propose moving brcm80211 out of staging and into mainline.
->>> >
->>> > Henry: a simple question, please explain it to me, what brcmsmac does
->>> > provide that b43 doesn't?
->>> >
->>>
->>> Wow.  Why are we only having this discussion now?  Somewhere along
->>> the line, there has been a massive communications failure.  What
->>> happened here?  Henry, did you know about the b43 driver?  Can
->>> someone explain what's going on?
->>
->> I always thought that b43 and the staging driver supported different
->> devices and had no overlap, which is why I had no problem with it.
->>
->> Was I totally mistaken and got this wrong?
->
-> Please see my last e-mail in this thread for history overview.
->
-> Right now the only card that is supported by brcmsmac and is not
-> supported by b43 is 14e4:4727. That card is based on PHY type LCN, and
-> I'm working on adding support for it in b43.
->
-> Other cards supported by brcmsmac (14e4:4353, 14e4:4357) are supported
-> by b43.
+On Wed, 24 Aug 2011 17:02:52 -0500
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-b43 also works on SoCs (routers) using BCMA and having BCMA core based
-on N-PHY. This support was added by Hauke and I think he reported AP
-mode was somehow working for him. AFAIR it wasn't stable yet, but some
-packets were transferred :)
+> When 64-bit DMA was first used, there were problems with the
+> BCM4311 (14e4:4311). The problem was "fixed" by using the GFP_DMA
+> flag in the allocation of coherent ring descriptor memory.
+> 
+> The original problem is now believed to have been due to bugs in
+> the 64-bit DMA implementation in the rest of the kernel, and that
+> those bugs have been fixed. Accordingly, the requirement for the
+> descriptors to be in the DMA zone is relaxed.
+> 
+> Bounce buffers are left in the DMA zone.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> 
+> John,
+> 
+> This material is for next.
+
+John, please apply this even though it's marked RFC, unless somebody
+objects in reasonable time, which I don't expect.
+
+You can also add
+
+Signed-off-by: Michael Buesch <m@bues.ch>
+
+if you desire.
+
+> Index: wireless-testing-new/drivers/net/wireless/b43/dma.c
+> ===================================================================
+> --- wireless-testing-new.orig/drivers/net/wireless/b43/dma.c
+> +++ wireless-testing-new/drivers/net/wireless/b43/dma.c
+> @@ -393,14 +393,7 @@ static int alloc_ringmemory(struct b43_d
+>  	 * has shown that 4K is sufficient for the latter as long as the buffer
+>  	 * does not cross an 8K boundary.
+>  	 *
+> -	 * For unknown reasons - possibly a hardware error - the BCM4311 rev
+> -	 * 02, which uses 64-bit DMA, needs the ring buffer in very low memory,
+> -	 * which accounts for the GFP_DMA flag below.
+> -	 *
+> -	 * The flags here must match the flags in free_ringmemory below!
+>  	 */
+> -	if (ring->type == B43_DMA_64BIT)
+> -		flags |= GFP_DMA;
+>  	ring->descbase = dma_alloc_coherent(ring->dev->dev->dma_dev,
+>  					    B43_DMA_RINGMEMSIZE,
+>  					    &(ring->dmabase), flags);
+> 
+
+
 
 -- 
-Rafał
+Greetings, Michael.
