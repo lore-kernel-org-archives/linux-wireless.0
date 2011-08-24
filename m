@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7040 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51182 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751680Ab1H2LEv (ORCPT
+	with ESMTP id S1751160Ab1HXOqb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 07:04:51 -0400
-Date: Mon, 29 Aug 2011 16:34:28 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<rodrigue@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: Re: [PATCH] ath9k: fix checks for first subframe delimiter padding
-Message-ID: <20110829110427.GA29376@vasanth-laptop> (sfid-20110829_130455_061243_F4131A6B)
-References: <1314615061-6354-1-git-send-email-nbd@openwrt.org>
+	Wed, 24 Aug 2011 10:46:31 -0400
+Message-ID: <4E550EBD.4040600@qca.qualcomm.com> (sfid-20110824_164634_020960_66A19C97)
+Date: Wed, 24 Aug 2011 17:46:21 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1314615061-6354-1-git-send-email-nbd@openwrt.org>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/3] ath6kl: Add initial debugfs changes
+References: <1314195936-25227-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1314195936-25227-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 29, 2011 at 12:51:01PM +0200, Felix Fietkau wrote:
-> The commit "ath9k_hw: Fix exceed transmission burst-time of 5GHz" added
-> a padding of 60 delimiters on the first subframe to work around an issue
-> on AR9380, but it lacked the checks to prevent it from being applied to
-> pre-AR9380, enterprise AR9380 or AR9580+
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/reg.h  |    1 +
->  drivers/net/wireless/ath/ath9k/xmit.c |    4 +++-
->  2 files changed, 4 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-> index a3b8bbc..989514a 100644
-> --- a/drivers/net/wireless/ath/ath9k/reg.h
-> +++ b/drivers/net/wireless/ath/ath9k/reg.h
-> @@ -1131,6 +1131,7 @@ enum {
->  #define AR_INTR_PRIO_ASYNC_ENABLE (AR_SREV_9340(ah) ? 0x4094 : 0x40d4)
->  #define AR_ENT_OTP		  0x40d8
->  #define AR_ENT_OTP_CHAIN2_DISABLE               0x00020000
-> +#define AR_ENT_OTP_MIN_PKT_SIZE_DISABLE		0x00800000
->  #define AR_ENT_OTP_MPSD		0x00800000
+On 08/24/2011 05:25 PM, Vasanthakumar Thiagarajan wrote:
+> +#ifdef CONFIG_ATH6KL_DEBUGFS
+> +int ath6kl_init_debugfs(struct ath6kl *ar)
+> +{
+> +	ar->debugfs_phy = debugfs_create_dir("ath6kl",
+> +					     ar->wdev->wiphy->debugfsdir);
 
-Looks like AR_ENT_OTP_MPSD was defined for this purpose,
-unfortunately it so difficult to understand anything from this
-macro. Can you also this redundant definition?
+What if we have multiple devices on same host? Then this won't work,
+right? Maybe we should have some kind of subdirectory under ath6kl or
+something like that.
 
-Vasanth
+Would interface name ("wlan0") be a good choise? Ah, but that can
+change. Any better options?
+
+Kalle
