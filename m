@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:52194 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751441Ab1HIXqX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 19:46:23 -0400
-Received: by iye16 with SMTP id 16so23646iye.1
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 16:46:22 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH 0/8] mac80211: add mesh gate forwarding
-Date: Tue,  9 Aug 2011 16:45:03 -0700
-Message-Id: <1312933511-9486-1-git-send-email-thomas@cozybit.com> (sfid-20110810_014627_179580_420ABEA3)
+Received: from mout4.freenet.de ([195.4.92.94]:39154 "EHLO mout4.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752005Ab1HXMVw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 08:21:52 -0400
+Message-ID: <4E54ECDF.9030804@01019freenet.de> (sfid-20110824_142155_744452_9226528D)
+Date: Wed, 24 Aug 2011 14:21:51 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+MIME-Version: 1.0
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [compat-wireless-3.1-rc1-1] rt2800usb crashes the machine
+References: <4E536DD8.6030308@01019freenet.de> <20110824090340.GA2277@redhat.com>
+In-Reply-To: <20110824090340.GA2277@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Javier Cardona (8):
-  mac80211: improve mpath debugging
-  mac80211: fix mpath timer NULL function
-  mac80211: mesh locking fixes
-  mac80211: fix mesh path flushing
-  mac80211: mesh gate implementation
-  {nl,mac}80211: add missing root mode meshconf entries
-  {nl,cfg,mac}80211: let userspace set RANN interval
-  {nl,cfg,mac}80211: let userspace make meshif mesh gate
+Stanislaw Gruszka schrieb:
+> On Tue, Aug 23, 2011 at 11:07:36AM +0200, Andreas Hartmann wrote:
+>> using rt2800usb with a Linksys WUSB600N v2 (rt3572) crashes the complete
+>> machine (SMP, Core i5, linux 3.0) on unloading the module after using it
+>> for a short period of time:
+>> - 2 times netperf -t TCP_MAERTS -H host
+>> - 2 times netperf -t TCP_STREAM -H host
+>>
+>> The error message in /var/log/messages is:
+>>
+>> phy0 -> rt2800_wait_wpdma_ready: Error - WPDMA TX/RX busy, aborting
+>>
+>> After the crash, you have to hard reset the machine.
 
- include/linux/ieee80211.h     |    4 +
- include/linux/nl80211.h       |    9 ++
- include/net/cfg80211.h        |    6 +
- net/mac80211/Kconfig          |   13 ++
- net/mac80211/cfg.c            |    8 +
- net/mac80211/debugfs_netdev.c |    8 +-
- net/mac80211/ieee80211_i.h    |    1 +
- net/mac80211/mesh.c           |    6 +-
- net/mac80211/mesh.h           |   12 ++-
- net/mac80211/mesh_hwmp.c      |   77 +++++++----
- net/mac80211/mesh_pathtbl.c   |  303 ++++++++++++++++++++++++++++++++++++++++-
- net/wireless/mesh.c           |    3 +
- net/wireless/nl80211.c        |   15 ++
- 13 files changed, 431 insertions(+), 34 deletions(-)
+[...]
 
--- 
-1.7.6
+> Otherwise perhaps you could photo crash logs on virtual terminal
+> (switched by Alt+Ctrl+F2 from X-window) or by using netconsole or kdump.
 
+There is no crash dump - the machine just hangs up itself and the fan is
+getting loader and loader (until max), because the machine is getting
+hot more and more.
+
+
+Kind regards,
+Andreas
