@@ -1,31 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:52904 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753347Ab1HKUPb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 16:15:31 -0400
-Received: by qwk3 with SMTP id 3so1247598qwk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 13:15:30 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 11 Aug 2011 22:15:30 +0200
-Message-ID: <CAPH1DO2bWghrK5zPquB52bLbLLSDQZ44kuaFjubbVFWEjNteNg@mail.gmail.com> (sfid-20110811_221535_059617_A043C0E5)
-Subject: ipw2200
-From: Bo Nilsson <mr.bonilsson@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from bues.ch ([80.190.117.144]:40308 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751553Ab1HXTxQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 15:53:16 -0400
+Date: Wed, 24 Aug 2011 21:53:09 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: zajec5@gmail.com, Michael Buesch <mb@bu3sch.de>,
+	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFC/RFT] b43: Relax requirement for descriptors to be in the
+ DMA zone
+Message-ID: <20110824215309.2f2cbb73@milhouse> (sfid-20110824_215321_432841_F3D7C946)
+In-Reply-To: <4e5553a8.vSmpTZc2Cr8jeze3%Larry.Finger@lwfinger.net>
+References: <4e5553a8.vSmpTZc2Cr8jeze3%Larry.Finger@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is linux braking down? I never had a problem like this before. I will
-have to go back to debian 5 and see if that is stable still.
+On Wed, 24 Aug 2011 14:40:24 -0500
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-root@debian:/home/bo# dmesg | grep ipw2200
-[    3.664058] ipw2200: Intel(R) PRO/Wireless 2200/2915 Network
-Driver, 1.2.2kmprq
-[    3.664062] ipw2200: Copyright(c) 2003-2006 Intel Corporation
-[    3.954370] ipw2200 0000:02:06.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-[    3.956831] ipw2200: Detected Intel PRO/Wireless 2200BG Network Connection
-[    3.956881] ipw2200 0000:02:06.0: firmware: requesting ipw2200-bss.fw
-[    4.590967] ipw2200: Detected geography ZZR (14 802.11bg channels,
-0 802.11a channels)
-[  251.494725] ipw2200: Firmware error detected.  Restarting.
+> @Rafal - Incorporate this in your other patch.
+
+I would rather like to have this as a separate patch and have
+Rafal's other patch apply on _top_ of this.
+
+> @@ -903,7 +896,7 @@ struct b43_dmaring *b43_setup_dmaring(st
+>  			kfree(ring->txhdr_cache);
+>  			ring->txhdr_cache = kcalloc(ring->nr_slots / TX_SLOTS_PER_FRAME,
+>  						    b43_txhdr_size(dev),
+> -						    GFP_KERNEL | GFP_DMA);
+> +						    GFP_KERNEL);
+>  			if (!ring->txhdr_cache)
+>  				goto err_kfree_meta;
+>  
+> 
+
+Why are you removing this? Seems wrong to me.
+This seems to be part of the bounce-buffer mechanism, that we _do_ still need
+for legacy 30bit devices.
+
+
+-- 
+Greetings, Michael.
