@@ -1,70 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49469 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755627Ab1HKM6o (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:64521 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753781Ab1HXTCf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 08:58:44 -0400
-Subject: Re: [PATCH] mac80211: Tear down BA session on BAR tx failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1313053697-19544-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20110811_110858_764910_1F18A73A)
-References: <1313053697-19544-1-git-send-email-helmut.schaa@googlemail.com>
-	 (sfid-20110811_110858_764910_1F18A73A)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 11 Aug 2011 14:58:39 +0200
-Message-ID: <1313067519.3992.4.camel@jlt3.sipsolutions.net> (sfid-20110811_145847_911636_EBFAA1C0)
-Mime-Version: 1.0
+	Wed, 24 Aug 2011 15:02:35 -0400
+Received: by ywf7 with SMTP id 7so1101813ywf.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 12:02:35 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [RFC 1/3] mac80211: comment allocation of mesh frames
+Date: Wed, 24 Aug 2011 12:02:17 -0700
+Message-Id: <1314212539-23669-2-git-send-email-thomas@cozybit.com> (sfid-20110824_210238_590005_8D4109D8)
+In-Reply-To: <1314212539-23669-1-git-send-email-thomas@cozybit.com>
+References: <1314212539-23669-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-08-11 at 11:08 +0200, Helmut Schaa wrote:
-> As described at [1] some STAs (i.e. Intel 5100 on Windows) can end up
-> correctly BlockAcking incoming frames without delivering them to user
-> space if a AMPDU subframe got lost and its reorder buffer isn't flushed
-> by a BlockAckReq. This in turn results in up to 64 frames being stuck
-> in the reorder buffer.
-> 
-> Accroding
+save a few bytes and hopefully improve readability.
 
-typo
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/mesh_hwmp.c  |   10 ++++++++--
+ net/mac80211/mesh_plink.c |   13 +++++++++++--
+ net/mac80211/tx.c         |   12 +++++++++---
+ 3 files changed, 28 insertions(+), 7 deletions(-)
 
->  to 802.11n-2009 it is not necessary to send a BAR to flush
-> the receipients RX reorder buffer but we still do that to be polite.
-
-typo
-
-
-> IMHO the Windows driver is just buggy and should be fixed to use a
-> reasonable timeout for flushing its reorder buffer but the described
-> behavior doesn't appear with the Ralink Legacy drivers for example since
-> they trigger a tear down of the BA session in several other situations
-> as well (a single failed AMPDU :) for example) and thus don't end up in
-> this situation.
-> 
-> Johannes, feel free to NACK this patch as it really is just a
-> workaround for buggy clients but I'd say it still makes sense to fall
-> back to non-aggregated frames in such a situation. Furthermore, this
-> situation is unlikely to happen very often but as written before I was
-> able to reproduce it a couple of times.
-
-Seems ok to me, hopefully won't happen often :)
-
-> +		if (!acked && ieee80211_is_back_req(fc)) {
-> +			/*
-> +			 * BAR failed, let's tear down the BA session as a
-> +			 * last resort as some STAs (Intel 5100 on Windows)
-> +			 * can get stuck when the BA window isn't flushed
-> +			 * correctly.
-> +			 */
-> +			bar = (struct ieee80211_bar *) skb->data;
-> +			ieee80211_stop_tx_ba_session(&sta->sta,
-> +						     bar->control >> 12 & 0xf);
-> +		}
-
-Hmm, that shift & mask makes me think twice, are there constants, and
-maybe there should be some parentheses?
-
-johannes
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index f09e5e8..d5f4a41 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -129,11 +129,14 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+ 		struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+-	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400);
++	struct sk_buff *skb = NULL;
+ 	struct ieee80211_mgmt *mgmt;
+ 	u8 *pos;
+ 	int ie_len;
+ 
++	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
++			    25 + sizeof(mgmt->u.action.u.mesh_action) +
++			    2 + 37); /* HWMP IEs */
+ 	if (!skb)
+ 		return -1;
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+@@ -232,11 +235,14 @@ int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn,
+ 		       struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+-	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400);
++	struct sk_buff *skb = NULL;
+ 	struct ieee80211_mgmt *mgmt;
+ 	u8 *pos;
+ 	int ie_len;
+ 
++	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
++			    25 + sizeof(mgmt->u.action.u.mesh_action) +
++			    2 + 15 /* PERR IE */);
+ 	if (!skb)
+ 		return -1;
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 1a00d0f..f8c9666 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -143,14 +143,23 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 		enum ieee80211_self_protected_actioncode action,
+ 		u8 *da, __le16 llid, __le16 plid, __le16 reason) {
+ 	struct ieee80211_local *local = sdata->local;
+-	struct sk_buff *skb = dev_alloc_skb(local->hw.extra_tx_headroom + 400 +
+-			sdata->u.mesh.ie_len);
++	struct sk_buff *skb = NULL;
+ 	struct ieee80211_mgmt *mgmt;
+ 	bool include_plid = false;
+ 	int ie_len = 4;
+ 	u16 peering_proto = 0;
+ 	u8 *pos;
+ 
++	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
++			    25 + sizeof(mgmt->u.action.u.self_prot) +
++			    2 + /* capability info */
++			    2 + /* AID */
++			    2 + 8 + /* supported rates */
++			    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
++			    2 + sdata->u.mesh.mesh_id_len +
++			    2 + sizeof(struct ieee80211_meshconf_ie) +
++			    2 + 8 + /* peering IE */
++			    sdata->u.mesh.ie_len);
+ 	if (!skb)
+ 		return -1;
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 0107263..ba1956a 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2278,9 +2278,15 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 			goto out;
+ #endif
+ 
+-		/* headroom, head length, tail length and maximum TIM length */
+-		skb = dev_alloc_skb(local->tx_headroom + 400 +
+-				sdata->u.mesh.ie_len);
++		skb = dev_alloc_skb(local->tx_headroom +
++				    24 + sizeof(mgmt->u.beacon) +
++				    2 + /* NULL SSID */
++				    2 + 8 + /* supported rates */
++				    2 + 3 + /* DS params */
++				    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
++				    2 + sdata->u.mesh.mesh_id_len +
++				    2 + sizeof(struct ieee80211_meshconf_ie) +
++				    sdata->u.mesh.ie_len);
+ 		if (!skb)
+ 			goto out;
+ 
+-- 
+1.7.4.1
 
