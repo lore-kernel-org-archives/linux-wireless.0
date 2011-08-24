@@ -1,32 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53043 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751314Ab1HJNyw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 09:54:52 -0400
-Subject: Re: [PATCH 3/4] mac80211: Add HT helper functions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Simon <an.alexsimon@googlemail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:33216 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756569Ab1HXJFH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 05:05:07 -0400
+Date: Wed, 24 Aug 2011 11:03:41 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <2346835.BL4CqEnUDP@alex-1> (sfid-20110808_140943_617659_52176005)
-References: <1888623.Vt5VZUN2cU@alex-1>  <2346835.BL4CqEnUDP@alex-1>
-	 (sfid-20110808_140943_617659_52176005)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 10 Aug 2011 15:54:49 +0200
-Message-ID: <1312984489.4325.11.camel@jlt3.sipsolutions.net> (sfid-20110810_155454_939077_494AD1DB)
-Mime-Version: 1.0
+Subject: Re: [compat-wireless-3.1-rc1-1] rt2800usb crashes the machine
+Message-ID: <20110824090340.GA2277@redhat.com> (sfid-20110824_110511_086213_6CE16508)
+References: <4E536DD8.6030308@01019freenet.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E536DD8.6030308@01019freenet.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-08-08 at 14:09 +0200, Alexander Simon wrote:
-> these can also be used from existing code.
+On Tue, Aug 23, 2011 at 11:07:36AM +0200, Andreas Hartmann wrote:
+> using rt2800usb with a Linksys WUSB600N v2 (rt3572) crashes the complete
+> machine (SMP, Core i5, linux 3.0) on unloading the module after using it
+> for a short period of time:
+> - 2 times netperf -t TCP_MAERTS -H host
+> - 2 times netperf -t TCP_STREAM -H host
+> 
+> The error message in /var/log/messages is:
+> 
+> phy0 -> rt2800_wait_wpdma_ready: Error - WPDMA TX/RX busy, aborting
+> 
+> After the crash, you have to hard reset the machine.
+Did you hibernate machine anytime before the rmmod ?
 
-So you should say that it's a refactoring. Generally, your commit logs
-could really be a tad more verbose :-)
+If so, we have fix on wireless-testing tree:
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commitdiff;h=543cc38c8fe86deba4169977c61eb88491036837
 
-I'm not going to really review the code you move here -- hopefully you
-did only move it?
+Otherwise perhaps you could photo crash logs on virtual terminal
+(switched by Alt+Ctrl+F2 from X-window) or by using netconsole or kdump.
 
-johannes
-
-
+Stanislaw
