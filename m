@@ -1,121 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:34933 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752702Ab1HHMDD (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:39326 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752805Ab1HXUGM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 08:03:03 -0400
-Received: by fxh19 with SMTP id 19so5303498fxh.19
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 05:03:02 -0700 (PDT)
-From: Alexander Simon <alexander.simon@saxnet.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] nl80211: Parse channel type attribute in an IBSS join request
-Date: Mon, 08 Aug 2011 14:02:58 +0200
-Message-ID: <1888623.Vt5VZUN2cU@alex-1> (sfid-20110808_140308_710112_10A3AC18)
+	Wed, 24 Aug 2011 16:06:12 -0400
+Received: by wyg24 with SMTP id 24so1127789wyg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 13:06:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20110824193224.GL9770@tuxdriver.com>
+References: <1314213161-8871-1-git-send-email-linville@tuxdriver.com>
+	<CAG6hwVNvLREnnZQ0t8UaKZ7Q1nn-4kx=z_1nPzVG89a5NMWFpg@mail.gmail.com>
+	<20110824193224.GL9770@tuxdriver.com>
+Date: Wed, 24 Aug 2011 13:06:11 -0700
+Message-ID: <CAG6hwVMWMGXZMfnQSLQD6BCSG0kuP_0C6rKs_XYwmK4v7esRsQ@mail.gmail.com> (sfid-20110824_220626_289476_20FFAD39)
+Subject: Re: [PATCH] mac80211: refactor skb copy to failq in mesh_path_move_to_queue
+From: Thomas Pedersen <thomas@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check if the requested HT mode can be used.
-Extend cfg80211 IBSS struct for HT mode.
+On Wed, Aug 24, 2011 at 12:32 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Wed, Aug 24, 2011 at 12:27:29PM -0700, Thomas Pedersen wrote:
+>> On Wed, Aug 24, 2011 at 12:12 PM, John W. Linville
+>> <linville@tuxdriver.com> wrote:
+>> > This seems a bit less awkward, and avoids the following warning:
+>> >
+>> >  CC [M]  net/mac80211/mesh_pathtbl.o
+>> > net/mac80211/mesh_pathtbl.c: In function ‘mesh_path_move_to_queue’:
+>> > net/mac80211/mesh_pathtbl.c:291:24: warning: ‘cp_skb’ may be used uninitialized in this function
+>>
+>> cp_skb was initialized to NULL in v2 of "mac80211:  mesh gate implementation'
+>>
+>> >
+>> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>> > ---
+>> > Does it matter if the copy ends-up on the failq before the original goes
+>> > to the gateq?
+>> >
+>> >  net/mac80211/mesh_pathtbl.c |    8 ++++----
+>> >  1 files changed, 4 insertions(+), 4 deletions(-)
+>> >
+>> > diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+>> > index 75e4b60..b5caf5b 100644
+>> > --- a/net/mac80211/mesh_pathtbl.c
+>> > +++ b/net/mac80211/mesh_pathtbl.c
+>> > @@ -307,14 +307,14 @@ static void mesh_path_move_to_queue(struct mesh_path *gate_mpath,
+>> >
+>> >        while (num_skbs--) {
+>> >                skb = __skb_dequeue(&failq);
+>> > -               if (copy)
+>> > +               if (copy) {
+>> >                        cp_skb = skb_copy(skb, GFP_ATOMIC);
+>> > +                       if (cp_skb)
+>> > +                               __skb_queue_tail(&failq, cp_skb);
+>> > +               }
+>> >
+>> >                prepare_for_gate(skb, gate_mpath->dst, gate_mpath);
+>> >                __skb_queue_tail(&gateq, skb);
+>> > -
+>> > -               if (copy && cp_skb)
+>> > -                       __skb_queue_tail(&failq, cp_skb);
+>> >        }
+>>
+>> However, this does look nicer. Please be sure to apply the version
+>> submitted on 11 August.
+>
+> You just told me yesterday to apply the 9 August version???
+>
 
-Signed-off-by: Alexander Simon <alexander.simon@saxnet.de>
----
+OK that is confusing. I meant 9 August version of patch 1/8 only, the
+rest should be 11 August.
 
-As there were no replies for my RFC post, i am resending this as PATCH.
-
- include/net/cfg80211.h |    1 +
- net/wireless/chan.c    |    2 +-
- net/wireless/core.h    |    3 +++
- net/wireless/nl80211.c |   34 +++++++++++++++++++++++++++++++---
- 4 files changed, 36 insertions(+), 4 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d17f47f..738db17 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1040,6 +1040,7 @@ struct cfg80211_ibss_params {
- 	u8 *ssid;
- 	u8 *bssid;
- 	struct ieee80211_channel *channel;
-+	enum nl80211_channel_type channel_type;
- 	u8 *ie;
- 	u8 ssid_len, ie_len;
- 	u16 beacon_interval;
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 17cd0c0..cd630e1 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -44,7 +44,7 @@ rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
- 	return chan;
- }
- 
--static bool can_beacon_sec_chan(struct wiphy *wiphy,
-+bool can_beacon_sec_chan(struct wiphy *wiphy,
- 				struct ieee80211_channel *chan,
- 				enum nl80211_channel_type channel_type)
- {
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 8672e02..a7d8e59 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -441,6 +441,9 @@ cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
- struct ieee80211_channel *
- rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
- 		  int freq, enum nl80211_channel_type channel_type);
-+bool can_beacon_sec_chan(struct wiphy *wiphy,
-+				struct ieee80211_channel *chan,
-+				enum nl80211_channel_type channel_type);
- int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
- 		      struct wireless_dev *wdev, int freq,
- 		      enum nl80211_channel_type channel_type);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 28d2aa1..7f3f46c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4346,12 +4346,40 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 		ibss.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
- 	}
- 
--	ibss.channel = ieee80211_get_channel(wiphy,
--		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]));
-+	if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]) {
-+		enum nl80211_channel_type channel_type;
-+
-+		channel_type = nla_get_u32(
-+			info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]);
-+		if (channel_type != NL80211_CHAN_NO_HT &&
-+		    channel_type != NL80211_CHAN_HT20 &&
-+		    channel_type != NL80211_CHAN_HT40PLUS &&
-+		    channel_type != NL80211_CHAN_HT40MINUS)
-+			return -EINVAL;
-+		ibss.channel_type = channel_type;
-+	} else {
-+		ibss.channel_type = NL80211_CHAN_NO_HT;
-+	}
-+
-+	ibss.channel = rdev_freq_to_chan(rdev,
-+		nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]),
-+		ibss.channel_type);
- 	if (!ibss.channel ||
-+	    ibss.channel->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
- 	    ibss.channel->flags & IEEE80211_CHAN_NO_IBSS ||
--	    ibss.channel->flags & IEEE80211_CHAN_DISABLED)
-+	    ibss.channel->flags & IEEE80211_CHAN_RADAR)
-+		return -EINVAL;
-+
-+	/* Both channels should be able to initiate communication */
-+	if ((ibss.channel_type == NL80211_CHAN_HT40PLUS ||
-+	     ibss.channel_type == NL80211_CHAN_HT40MINUS) &&
-+	    !can_beacon_sec_chan(&rdev->wiphy, ibss.channel,
-+				 ibss.channel_type)) {
-+		printk(KERN_DEBUG
-+		       "cfg80211: Secondary channel not "
-+		       "allowed to initiate communication\n");
- 		return -EINVAL;
-+	}
- 
- 	ibss.channel_fixed = !!info->attrs[NL80211_ATTR_FREQ_FIXED];
- 	ibss.privacy = !!info->attrs[NL80211_ATTR_PRIVACY];
--- 
-1.7.3.4
+> John
+> --
+> John W. Linville                Someday the world will need a hero, and you
+> linville@tuxdriver.com                  might be all we have.  Be ready.
+>
