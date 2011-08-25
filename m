@@ -1,83 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:35435 "EHLO smtps.tip.net.au"
+Received: from purkki.adurom.net ([80.68.90.206]:38463 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752636Ab1HLCMZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 22:12:25 -0400
-Date: Fri, 12 Aug 2011 12:12:16 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Greg KH <gregkh@suse.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-next@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: linux-next: build failure after merge of the final tree
- (wireless & staging trees related)
-Message-Id: <20110812121216.28e6979b44bacb651849640b@canb.auug.org.au> (sfid-20110812_041241_545296_D15BDA78)
-In-Reply-To: <4E43FA61.1010301@qca.qualcomm.com>
-References: <20110811155529.e5f47afa0504c4ddef58ab37@canb.auug.org.au>
-	<4E438D56.5020801@qca.qualcomm.com>
-	<20110811141604.GA14763@suse.de>
-	<4E43FA61.1010301@qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Fri__12_Aug_2011_12_12_16_+1000_.tf0OjeicfexTwCo"
+	id S1750827Ab1HYJ24 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Aug 2011 05:28:56 -0400
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, chunkeey@googlemail.com
+Subject: car9170: undefined reference to `__udivdi3'
+From: Kalle Valo <kvalo@adurom.com>
+Date: Thu, 25 Aug 2011 12:28:51 +0300
+Message-ID: <87aaaxon58.fsf@purkki.adurom.net> (sfid-20110825_112904_469947_F18AC5BA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Fri__12_Aug_2011_12_12_16_+1000_.tf0OjeicfexTwCo
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-Hi Kalle, Greg,
+carl9170 fails to compile on wireless-testing when I compile a 32 bit
+kernel:
 
-On Thu, 11 Aug 2011 18:50:57 +0300 Kalle Valo <kvalo@qca.qualcomm.com> wrot=
-e:
->
-> On 08/11/2011 05:16 PM, Greg KH wrote:
-> > On Thu, Aug 11, 2011 at 11:05:42AM +0300, Kalle Valo wrote:
-> >
-> >> Yes, the cleaned up version of ath6kl is now in wireless-next and the
-> >> staging version can be removed in 3.2. Greg, how do you want to handle
-> >> removal of the staging version? Should I send a patch to you removing
-> >> it? Or should I send the patch to John?
-> >=20
-> > Just tell me.  Should I really delete drivers/staging/ath6kl/ for the
-> > 3.2 kernel release?  If so, I'll gladly do so in my tree so linux-next
-> > will be fine for issues like this in the future.
->=20
-> Yes, please delete ath6kl from staging for the 3.2 release as the
-> cleanup version is now in wireless-next.
->=20
-> Thank you everyone and sorry for the mess.
+drivers/built-in.o: In function `carl9170_collect_tally':
+/home/kvalo/ath6kl/ath6kl/drivers/net/wireless/ath/carl9170/cmd.c:191:
+undefined reference to `__udivdi3'
+/home/kvalo/ath6kl/ath6kl/drivers/net/wireless/ath/carl9170/cmd.c:192:
+undefined reference to `__udivdi3'
+/home/kvalo/ath6kl/ath6kl/drivers/net/wireless/ath/carl9170/cmd.c:193:
+undefined reference to `__udivdi3'
 
-I think that the removal should be done in the wirelesss tree so that
-Linus' tree is not broken during the next merge window.
+Reverting this patch fixes the issue:
 
-I have added the removal patch as a merge fixup one the merge of the
-wireless tree for today.
+commit acf1771221f2877ab5d36487930cd6a2ecaa73e6
+Author: Christian Lamparter <chunkeey@googlemail.com>
+Date:   Mon Aug 15 19:50:48 2011 +0200
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+    carl9170: improve site survey
 
---Signature=_Fri__12_Aug_2011_12_12_16_+1000_.tf0OjeicfexTwCo
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQEcBAEBAgAGBQJORIwAAAoJEDMEi1NhKgbs2zkIAIVADG9NBi1VOHru1G4RIo0/
-Zt0AN9yRK8DAygx1IV1A7/rFJNEyK5KFvgf0azMcgE8Agksh+BUx+aTEIQmGLNR0
-opa41ZSytP91SsqGmaKhxckSbPujqXbDpYNF69o+g93I54iCIw1QLXyR4fY9bKH/
-1tHAYSJnQB2067gk505llDeD2fR7k0JcoQ64F87/yvAMGyy8bu9mSDUqagMf2gpM
-+UhB4L5ZQn2hTLR75dEgxM5M14QKgOJaOONKl69kDUMdVkzBQIwVco7wWnpwtbl2
-8nsg/VJ/TAm46uapjnn5okF4DotAoyYoPDnPY7zNQf+b6OXB5pt6GZvZicYpqMg=
-=Qoe5
------END PGP SIGNATURE-----
-
---Signature=_Fri__12_Aug_2011_12_12_16_+1000_.tf0OjeicfexTwCo--
+-- 
+Kalle Valo
