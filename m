@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:51773 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752970Ab1HMDIV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 23:08:21 -0400
-Received: by gwaa12 with SMTP id a12so2374315gwa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 20:08:20 -0700 (PDT)
-Message-ID: <4E45EA54.5010500@gmail.com> (sfid-20110813_050828_131511_C7D54CFE)
-Date: Fri, 12 Aug 2011 23:07:00 -0400
-From: Roman Krylov <volyrkr@gmail.com>
+Received: from cantor2.suse.de ([195.135.220.15]:51780 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753070Ab1HYCZw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 22:25:52 -0400
+Date: Wed, 24 Aug 2011 19:23:52 -0700
+From: Greg KH <gregkh@suse.de>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: Joe Perches <joe@perches.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Subject: Re: [PATCH v2] Move brcm80211 to mainline
+Message-ID: <20110825022352.GA4876@suse.de> (sfid-20110825_042558_877049_993DBD01)
+References: <20110707002034.GA17885@broadcom.com>
+ <20110824222801.GA5280@broadcom.com>
+ <20110824225357.GA2224@suse.de>
+ <20110824231746.GF5280@broadcom.com>
+ <1314230068.15882.15.camel@Joe-Laptop>
+ <20110825004211.GC7577@broadcom.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: rtl8192* wifi driver
-References: <4E45A973.6060305@gmail.com> <4E45AF82.5040407@lwfinger.net> <4E45D65F.6000306@gmail.com> <4E45DCB2.5020905@lwfinger.net>
-In-Reply-To: <4E45DCB2.5020905@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110825004211.GC7577@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Aug 24, 2011 at 05:42:11PM -0700, Henry Ptasinski wrote:
+> On Wed, Aug 24, 2011 at 04:54:28PM -0700, Joe Perches wrote:
+> > On Wed, 2011-08-24 at 16:17 -0700, Henry Ptasinski wrote:
+> > > Augh.  I included the wrong link.  Correct link:
+> > > http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=get&target=0001-wireless-testing-add-brcm80211-v2.patch
+> > 
+> > Can't you post the patch with git format-patch -M instead?
+> 
+> This patch drops in a new copy of all the files, as there's been significant
+> change since the last time staging-next and wireless-testing were in sync.
+> (Deleting the existing files from staging will be a separate step.)
+> 
+> I can generate a two-patch series instead: one to catch up wireless-testing
+> with all the changes that have been applied to the brcm80211 drivers in
+> staging, and then a second patch with a 'git mv' plus necessary
+> Kconfig/Makefile changes. The first patch would still be quite large, but I'm
+> ok with either approach.
 
-> What do you see in the NM log file? It should be at /var/log/NetworkManager?
->
-> I would also like to see the output of the 'iwlist scan' command when run as 
-> root.
->
-> Larry
-Aug 12 21:26:11 volyrkr NetworkManager: <info>  Activation (wlan3/wireless): 
-connection 'Auto bhn 310' has security, and secrets exist.  No new secrets needed.
-Aug 12 21:26:11 volyrkr NetworkManager: <info>  Config: added 'ssid' value 'bhn 310'
-Aug 12 21:26:11 volyrkr NetworkManager: <info>  Config: added 'scan_ssid' value '1'
-Aug 12 21:26:11 volyrkr NetworkManager: <info>  Config: added 'key_mgmt' value 
-'NONE'
-Aug 12 21:26:11 volyrkr NetworkManager: <info>  Config: added 'auth_alg' value 
-'OPEN'
-Aug 12 21:26:11 volyrkr NetworkManager: <info>  Config: added 'wep_key0' value 
-'<omitted>'
-Aug 12 21:26:11 volyrkr NetworkManager: <info>  Config: added 'wep_key1' value 
-'<omitted>'
-Aug 12 21:26:11 volyrkr NetworkManager: <info>  Config: added 'wep_tx_keyidx' 
-value '0'
-Aug 12 21:26:11 volyrkr NetworkManager: <info>  Activation (wlan3) Stage 2 of 5 
-(Device Configure) complete.
-Aug 12 21:26:11 volyrkr NetworkManager: <info>  Config: set interface ap_scan to 1
-Aug 12 21:26:11 volyrkr NetworkManager: <info>  (wlan3): supplicant connection 
-state:  inactive -> scanning
-Aug 12 21:26:36 volyrkr NetworkManager: <info>  Activation (wlan3/wireless): 
-association took too long.
-Aug 12 21:26:36 volyrkr NetworkManager: <info>  (wlan3): device state change: 5 
--> 9 (reason 7)
-Aug 12 21:26:36 volyrkr NetworkManager: <info>  Activation (wlan3) failed for 
-access point (bhn 310)
+Don't worry about that now, the real thing is a review of the code.
 
-Roman.
-
+greg k-h
