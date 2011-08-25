@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:54016 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753109Ab1HNLKk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 07:10:40 -0400
-Received: by iye16 with SMTP id 16so5330948iye.1
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 04:10:39 -0700 (PDT)
+Received: from nbd.name ([46.4.11.11]:56936 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753528Ab1HYPcU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Aug 2011 11:32:20 -0400
+Message-ID: <4E566AFA.8050203@openwrt.org> (sfid-20110825_173227_059432_55F333D4)
+Date: Thu, 25 Aug 2011 17:32:10 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <20110601184931.499557c6@boulder.homenet>
-References: <4CEAB969.20702@lwfinger.net>
-	<1290451982.20888.2.camel@maggie>
-	<4CEAC095.7020706@lwfinger.net>
-	<BANLkTimjRA5CsSDp_+LrGq8PNgaR4JFD=w@mail.gmail.com>
-	<4DC9853A.1090508@lwfinger.net>
-	<BANLkTimBpGRxfidpE4hYCVscmX-Hy5q5jw@mail.gmail.com>
-	<BANLkTi=TohOdjurvgqZT8=GXKbWfNe4v+w@mail.gmail.com>
-	<20110601114839.433ae42d@boulder.homenet>
-	<BANLkTin_RnMV3KnGS4qYPtMVxCuW=Vj7mg@mail.gmail.com>
-	<20110601130842.077da1c3@boulder.homenet>
-	<BANLkTi=2xYrrjEdHuYCKFKy4H2EXoUGQuQ@mail.gmail.com>
-	<20110601160101.75e30b3d@boulder.homenet>
-	<BANLkTim9pQc+yxdQLSL1-6VNiyM6_tvJ6g@mail.gmail.com>
-	<20110601184931.499557c6@boulder.homenet>
-Date: Sun, 14 Aug 2011 13:10:39 +0200
-Message-ID: <CACna6rxH8_9pc+vZizLyAkNCLK7-CmK6GZP-E2FKUfwR9uD8Xg@mail.gmail.com> (sfid-20110814_131050_811114_C87C75D8)
-Subject: Re: b43 error under heavy load
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Chris Vine <chris@cvine.freeserve.co.uk>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] ath9k_hw: Fix rx latency of 11a mode
+References: <1314283522-6143-1-git-send-email-rmanohar@qca.qualcomm.com>
+In-Reply-To: <1314283522-6143-1-git-send-email-rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Chris,
+On 2011-08-25 4:45 PM, Rajkumar Manoharan wrote:
+> Rx latecy to start signal(usec) of 11a is 41 not 37 and
+> also corrected the rx delay in quarter rate.
+>
+> Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath9k/hw.c |    7 +++++--
+>   1 files changed, 5 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> index 88100cc..d4dce6b 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> @@ -974,7 +974,10 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+>   	if (ah->misc_mode != 0)
+>   		REG_SET_BIT(ah, AR_PCU_MISC, ah->misc_mode);
+>
+> -	rx_lat = 37;
+> +	if (IS_CHAN_A_FAST_CLOCK(ah, chan))
+> +		rx_lat = 41;
+> +	else
+> +		rx_lat = 37;
+>   	tx_lat = 54;
+>
+>   	if (IS_CHAN_HALF_RATE(chan)) {
+> @@ -988,7 +991,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+>   		sifstime = 32;
+>   	} else if (IS_CHAN_QUARTER_RATE(chan)) {
+>   		eifs = 340;
+> -		rx_lat *= 4;
+> +		rx_lat *= 4 - 1;
+That looks a bit weird. Did you mean to change it to *= 3 or was this 
+just mistyped because you wanted to subtract one after the multiplication?
 
-2011/6/1 Chris Vine <chris@cvine.freeserve.co.uk>:
-> Summary: Traffic sent up from the broadcom wireless device generates
-> copious reports of "Stopped TX ring 1" but always carries on with its
-> job and stays up, although its traffic is slower than on received
-> packets.  Received traffic on the other hand reports no errors until
-> the spate of "Out of order TX status report on DMA ring 1" errors
-> occurs, which seems to happen at random (albeit accompanied on my
-> failed transfer by a single "Stopped TX ring 1" log entry), and when it
-> does happen brings the wireless link to a halt. Wireless traffic can be
-> restarted simply by reassociating with the AP.
-
-So it seems heavy load of RX can cause problems with TX. I just though
-of one another reason, could you test one more thing for me?
-
-Edit drivers/net/wireless/b43/dma.h and change define from value 64 to
-in the line:
-#define B43_RXRING_SLOTS		64
-
-Can you get "Out of order TX" much more easily after such a change?
-
--- 
-Rafał
+- Felix
