@@ -1,146 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:50605 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755028Ab1H2UXZ (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:61707 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753627Ab1HYVJs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 16:23:25 -0400
-Received: by yie30 with SMTP id 30so3854760yie.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 13:23:25 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Subject: [PATCH v3 5/7] mac80211: Don't iterate twice over all mpaths when once in sufficient
-Date: Mon, 29 Aug 2011 13:23:07 -0700
-Message-Id: <1314649389-7115-6-git-send-email-javier@cozybit.com> (sfid-20110829_222331_134761_75651067)
-In-Reply-To: <1314649389-7115-1-git-send-email-javier@cozybit.com>
-References: <1314649389-7115-1-git-send-email-javier@cozybit.com>
+	Thu, 25 Aug 2011 17:09:48 -0400
+Received: by qwk3 with SMTP id 3so1636455qwk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 14:09:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACna6rxRG_yPsCMG3tNTiHp5GratUn8qYiDYKxa85vuaBLjCtw@mail.gmail.com>
+References: <20110707002034.GA17885@broadcom.com>
+	<20110824222801.GA5280@broadcom.com>
+	<CAOiHx=mfqv9CPNRsZ0pbXMfkDstyNcioqww77EDvU35q0CGMWw@mail.gmail.com>
+	<20110825002032.GA7577@broadcom.com>
+	<CAOiHx=narxG2WG1+8jDTah=u=XQ337K7UZZgd8Fv9xksufkEKw@mail.gmail.com>
+	<CACna6rxRG_yPsCMG3tNTiHp5GratUn8qYiDYKxa85vuaBLjCtw@mail.gmail.com>
+Date: Thu, 25 Aug 2011 23:09:47 +0200
+Message-ID: <CACna6rzhr_OryaAEHwW+NcjrMq+xAZVOxPOJLto5w9rXWeosvw@mail.gmail.com> (sfid-20110825_230951_895531_F716CF96)
+Subject: Re: [PATCH v2] Move brcm80211 to mainline
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Jonas Gorski <jonas.gorski@gmail.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_pathtbl.c |   64 +++++++++++++++++++++++++------------------
- 1 files changed, 37 insertions(+), 27 deletions(-)
+W dniu 25 sierpnia 2011 23:07 użytkownik Rafał Miłecki
+<zajec5@gmail.com> napisał:
+> 2011/8/25 Jonas Gorski <jonas.gorski@gmail.com>:
+>> Hi,
+>>
+>> On 25 August 2011 02:20, Henry Ptasinski <henryp@broadcom.com> wrote:
+>>> On Wed, Aug 24, 2011 at 04:41:54PM -0700, Jonas Gorski wrote:
+>>>> Hi Henry,
+>>>>
+>>>> On 25 August 2011 00:28, Henry Ptasinski <henryp@broadcom.com> wrote:
+>>>> > With the latest series of cleanup patches merged in by Greg KH, I'd like to
+>>>> > once again propose moving brcm80211 out of staging and into mainline.
+>>>>
+>>>> While I like the Idea of brcm80211 going mainline, I'd like to throw
+>>>> in the suggestion that brcm80211 should be made a bcma/ssb driver
+>>>> first (AFACT brcmfmac would use ssb, not bcma, therefore both).
+>>>>
+>>>> My reasoning is that it needs to be done eventually anyway, and the
+>>>> earlier this is done the less work it will be in the long term, also
+>>>> it would reduce the duplicate code in bcma, ssb, and brcm80211.
+>>>>
+>>>> Of course this is just a suggestion, and it's yours and Greg's call
+>>>> whether you agree with me or not (since it's quite late in the game to
+>>>> add a new TODO, and I suspect a rather big one).
+>>>
+>>> We started converting brcmsmac to bcma, but bcma is evolving rapidly in the
+>>> wireless-testing tree.  Since wireless-testing and staging-next only get in
+>>> sync during a kernel merge, the version of bcma we have to work with in staging
+>>> is usually quit outdated.  Unless Greg and John want to come up with a process
+>>> for keeping bcma consistent between their two repos, I don't really see how we
+>>> can productively use bcma until we cross over.  We do intend to switch to using
+>>> bcma as soon as possible.
+>>
+>> Okay, then no objections from me. The keeping in sync is a valid
+>> reason. I'm looking forward to seeing your bcma patches :-)
+>>
+>>> I believe the only SB bus functions that brcmfmac uses are the core reset and
+>>> disable functions, and only when initializing the chip to download firmware
+>>> (all other management of the bus is handled by the on-chip CPU).  Is it
+>>> possible to use those funtions from ssb, without the ssb module trying to
+>>> manage the bus?
+>>
+>> I haven't really looked at how much the brcmfmac driver uses ssb; I
+>> just saw s(s)b_* stuff in there and remembered that ssb supports SDIO
+>> host, so I assumed that there's part of the stack hidden in brcmfmac.
+>> But if it's only core reset and disable, then what Michael said
+>> applies ;-)
+>
+> Still, is there any good reason for duplicating that code?
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 598249e..ea9e34a 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -49,7 +49,9 @@ int mesh_paths_generation;
- 
- /* This lock will have the grow table function as writer and add / delete nodes
-  * as readers. When reading the table (i.e. doing lookups) we are well protected
-- * by RCU
-+ * by RCU.  We need to take this lock when modying the number of buckets
-+ * on one of the path tables but we don't need to if adding or removing mpaths
-+ * from hash buckets.
-  */
- static DEFINE_RWLOCK(pathtbl_resize_lock);
- 
-@@ -817,6 +819,32 @@ void mesh_path_flush_by_nexthop(struct sta_info *sta)
- 	rcu_read_unlock();
- }
- 
-+static void mesh_path_node_reclaim(struct rcu_head *rp)
-+{
-+	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
-+	struct ieee80211_sub_if_data *sdata = node->mpath->sdata;
-+
-+	del_timer_sync(&node->mpath->timer);
-+	atomic_dec(&sdata->u.mesh.mpaths);
-+	kfree(node->mpath);
-+	kfree(node);
-+}
-+
-+/* needs to be called with the corresponding hashwlock taken */
-+static void __mesh_path_del(struct mesh_table *tbl, struct mpath_node *node)
-+{
-+	struct mesh_path *mpath;
-+	mpath = node->mpath;
-+	spin_lock(&mpath->state_lock);
-+	mpath->flags |= MESH_PATH_RESOLVING;
-+	if (mpath->is_gate)
-+		mesh_gate_del(tbl, mpath);
-+	hlist_del_rcu(&node->list);
-+	call_rcu(&node->rcu, mesh_path_node_reclaim);
-+	spin_unlock(&mpath->state_lock);
-+	atomic_dec(&tbl->entries);
-+}
-+
- static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
- {
- 	struct mesh_table *tbl;
-@@ -829,23 +857,15 @@ static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
- 	tbl = rcu_dereference(mesh_paths);
- 	for_each_mesh_entry(tbl, p, node, i) {
- 		mpath = node->mpath;
--		if (mpath->sdata == sdata)
--			mesh_path_del(mpath->dst, mpath->sdata);
-+		if (mpath->sdata == sdata) {
-+			spin_lock_bh(&tbl->hashwlock[i]);
-+			__mesh_path_del(tbl, node);
-+			spin_unlock_bh(&tbl->hashwlock[i]);
-+		}
- 	}
- 	rcu_read_unlock();
- }
- 
--static void mesh_path_node_reclaim(struct rcu_head *rp)
--{
--	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
--	struct ieee80211_sub_if_data *sdata = node->mpath->sdata;
--
--	del_timer_sync(&node->mpath->timer);
--	atomic_dec(&sdata->u.mesh.mpaths);
--	kfree(node->mpath);
--	kfree(node);
--}
--
- static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
- {
- 	struct mesh_table *tbl;
-@@ -859,12 +879,8 @@ static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
- 					lockdep_is_held(pathtbl_resize_lock));
- 	for_each_mesh_entry(tbl, p, node, i) {
- 		mpath = node->mpath;
--		if (mpath->sdata != sdata)
--			continue;
- 		spin_lock_bh(&tbl->hashwlock[i]);
--		hlist_del_rcu(&node->list);
--		call_rcu(&node->rcu, mesh_path_node_reclaim);
--		atomic_dec(&tbl->entries);
-+		__mesh_path_del(tbl, node);
- 		spin_unlock_bh(&tbl->hashwlock[i]);
- 	}
- 	read_unlock_bh(&pathtbl_resize_lock);
-@@ -912,14 +928,7 @@ int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata)
- 		mpath = node->mpath;
- 		if (mpath->sdata == sdata &&
- 		    memcmp(addr, mpath->dst, ETH_ALEN) == 0) {
--			spin_lock_bh(&mpath->state_lock);
--			if (mpath->is_gate)
--				mesh_gate_del(tbl, mpath);
--			mpath->flags |= MESH_PATH_RESOLVING;
--			hlist_del_rcu(&node->list);
--			call_rcu(&node->rcu, mesh_path_node_reclaim);
--			atomic_dec(&tbl->entries);
--			spin_unlock_bh(&mpath->state_lock);
-+			__mesh_path_del(tbl, node);
- 			goto enddel;
- 		}
- 	}
-@@ -1160,6 +1169,7 @@ void mesh_path_expire(struct ieee80211_sub_if_data *sdata)
- 		    (!(mpath->flags & MESH_PATH_FIXED)) &&
- 		     time_after(jiffies, mpath->exp_time + MESH_PATH_EXPIRE))
- 			mesh_path_del(mpath->dst, mpath->sdata);
-+	}
- 	rcu_read_unlock();
- }
- 
+Also what about embedded devices? Shouldn't we have core drivers for
+them? I mean, to be able to easily choose driver for a given core?
+
+Let's say I want to use some ssb-core-based driver for Ethernet port
+(like gige) but I also want to use brcmsmac fo 80211. Is that possible
+without brcmsmac using bcma?
+
 -- 
-1.7.6
-
+Rafał
