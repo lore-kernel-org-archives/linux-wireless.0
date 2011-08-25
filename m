@@ -1,50 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:47139 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752720Ab1HLPgk (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32906 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751951Ab1HYHbE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 11:36:40 -0400
-Received: by iye16 with SMTP id 16so1750823iye.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 08:36:40 -0700 (PDT)
-Message-ID: <4E454885.1060107@lwfinger.net> (sfid-20110812_173645_063641_EA20863F)
-Date: Fri, 12 Aug 2011 10:36:37 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 25 Aug 2011 03:31:04 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <kvalo@adurom.com>
+Subject: [PATCH V2 3/3] ath6kl: Add debugfs file entry to dump credit distribution stats
+Date: Thu, 25 Aug 2011 13:00:41 +0530
+Message-ID: <1314257441-8092-3-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110825_093107_877829_0531BEC9)
+In-Reply-To: <1314257441-8092-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1314257441-8092-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH V2 4/4] b43: HT-PHY: init: init BPHY and upload 0x1a table
-References: <1313155654-8988-4-git-send-email-zajec5@gmail.com>	<4E4543D5.9070006@lwfinger.net> <CACna6ryX=N+vZ4-+CRkcZatB81U-5Acm_NfH9eNMrWZwpAvfVw@mail.gmail.com>
-In-Reply-To: <CACna6ryX=N+vZ4-+CRkcZatB81U-5Acm_NfH9eNMrWZwpAvfVw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/12/2011 10:22 AM, Rafał Miłecki wrote:
-> W dniu 12 sierpnia 2011 17:16 użytkownik Larry Finger
-> <Larry.Finger@lwfinger.net>  napisał:
->> On 08/12/2011 08:27 AM, Rafał Miłecki wrote:
->>>
->>> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
->>> ---
->>> BPHY is something partially known from N-PHY.
->>>
->>> This 0x1a table with 0xc0 offset is a little tricky. We already upload
->>> something like that earlier, but this is needed to stop radio going crazy
->>> and transmissint crap.
->>
->> I don't care that the commit message contains "crap", but others might. I
->> do, however, want you to change from the nonexistent "transmissint" to
->> "transmission" or "transmitting", whichever you mean.
->>
->> Other than that, ACK. Note, I have no HT device, thus I have done no
->> testing.
->
-> Err, that's comment, not commit message. Won't be visible in "git log".
->
-> Should I still change it?
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/debug.c |   65 +++++++++++++++++++++++++++++++
+ 1 files changed, 65 insertions(+), 0 deletions(-)
 
-Sorry I missed the ---. In the comment, it is OK.
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 5a082c0..02fdd43 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -290,6 +290,68 @@ static const struct file_operations fops_tgt_stats = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t read_file_credit_dist_stats(struct file *file,
++					   char __user *user_buf,
++					   size_t count, loff_t *ppos)
++{
++	struct ath6kl *ar = file->private_data;
++	struct htc_target *target = ar->htc_target;
++	struct htc_endpoint_credit_dist *ep_list;
++	char *buf;
++	unsigned int buf_len = 128, len = 0;
++	ssize_t ret_cnt;
++
++	buf_len += get_queue_depth(&target->cred_dist_list) * 128;
++	buf = kzalloc(buf_len, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	len += scnprintf(buf + len, buf_len - len,
++			 " Epid  Flags    Cred_norm  Cred_min  Credits  Cred_assngd"
++			 "  Seek_cred  Cred_sz  Cred_per_msg  Cred_to_dist"
++			 "  qdepth\n");
++
++	list_for_each_entry(ep_list, &target->cred_dist_list, list) {
++		len += scnprintf(buf + len, buf_len - len, "  %2d",
++				 ep_list->endpoint);
++		len += scnprintf(buf + len, buf_len - len, "%10x",
++				 ep_list->dist_flags);
++		len += scnprintf(buf + len, buf_len - len, "%8d",
++				 ep_list->cred_norm);
++		len += scnprintf(buf + len, buf_len - len, "%9d",
++				 ep_list->cred_min);
++		len += scnprintf(buf + len, buf_len - len, "%9d",
++				 ep_list->credits);
++		len += scnprintf(buf + len, buf_len - len, "%10d",
++				 ep_list->cred_assngd);
++		len += scnprintf(buf + len, buf_len - len, "%13d",
++				 ep_list->seek_cred);
++		len += scnprintf(buf + len, buf_len - len, "%12d",
++				 ep_list->cred_sz);
++		len += scnprintf(buf + len, buf_len - len, "%9d",
++				 ep_list->cred_per_msg);
++		len += scnprintf(buf + len, buf_len - len, "%14d",
++				 ep_list->cred_to_dist);
++		len += scnprintf(buf + len, buf_len - len, "%12d\n",
++				 get_queue_depth(&((struct htc_endpoint *)
++						 ep_list->htc_rsvd)->txq));
++	}
++
++	if (len > buf_len)
++		len = buf_len;
++
++	ret_cnt = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	kfree(buf);
++	return ret_cnt;
++}
++
++static const struct file_operations fops_credit_dist_stats = {
++	.read = read_file_credit_dist_stats,
++	.open = ath6kl_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ int ath6kl_debug_init(struct ath6kl *ar)
+ {
+ 	ar->debugfs_phy = debugfs_create_dir("ath6kl",
+@@ -300,6 +362,9 @@ int ath6kl_debug_init(struct ath6kl *ar)
+ 	debugfs_create_file("tgt_stats", S_IRUSR, ar->debugfs_phy, ar,
+ 			    &fops_tgt_stats);
+ 
++	debugfs_create_file("credit_dist_stats", S_IRUSR, ar->debugfs_phy, ar,
++			    &fops_credit_dist_stats);
++
+ 	return 0;
+ }
+ #endif
+-- 
+1.7.0.4
 
-Larry
