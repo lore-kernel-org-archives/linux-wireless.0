@@ -1,63 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tango.tkos.co.il ([62.219.50.35]:47799 "EHLO tango.tkos.co.il"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751652Ab1HHIRL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 04:17:11 -0400
-Date: Mon, 8 Aug 2011 11:16:35 +0300
-From: Baruch Siach <baruch@tkos.co.il>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>
-Subject: Re: [PATCH] mac80211/mesh: make the preq queue lock consistent
-Message-ID: <20110808081635.GA2938@sapphire.tkos.co.il> (sfid-20110808_101716_725201_4D692256)
-References: <52f0e75d7b2308f8ede85362ed96e6af71e39dd3.1311832184.git.baruch@tkos.co.il>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52f0e75d7b2308f8ede85362ed96e6af71e39dd3.1311832184.git.baruch@tkos.co.il>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:49393 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753214Ab1HYLXl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Aug 2011 07:23:41 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 5so2258797wwf.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 04:23:40 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 3/3] mac80211: add uapsd_queues and max_sp params fields
+Date: Thu, 25 Aug 2011 14:24:54 +0300
+Message-Id: <1314271494-8756-3-git-send-email-eliad@wizery.com> (sfid-20110825_132350_121559_8E01BB73)
+In-Reply-To: <1314271494-8756-1-git-send-email-eliad@wizery.com>
+References: <1314271494-8756-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi linux-wireless list,
+Add uapsd_queues and max_sp fields to ieee80211_sta.
+These fields might be needed by low-level drivers in
+order to configure the AP.
 
-On Thu, Jul 28, 2011 at 08:51:05AM +0300, Baruch Siach wrote:
-> Make mesh_preq_queue_lock locking consistent with mesh_queue_preq() using
-> spin_lock_bh().
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ include/net/mac80211.h |    2 ++
+ net/mac80211/cfg.c     |    3 +++
+ 2 files changed, 5 insertions(+), 0 deletions(-)
 
-Ping?
-
-baruch
-
-> Signed-off-by: Baruch Siach <baruch@tkos.co.il>
-> ---
->  net/mac80211/mesh_hwmp.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-> index 2b18053..fc8cb1a 100644
-> --- a/net/mac80211/mesh_hwmp.c
-> +++ b/net/mac80211/mesh_hwmp.c
-> @@ -792,9 +792,9 @@ static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
->  		return;
->  	}
->  
-> -	spin_lock(&ifmsh->mesh_preq_queue_lock);
-> +	spin_lock_bh(&ifmsh->mesh_preq_queue_lock);
->  	if (ifmsh->preq_queue_len == MAX_PREQ_QUEUE_LEN) {
-> -		spin_unlock(&ifmsh->mesh_preq_queue_lock);
-> +		spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
->  		kfree(preq_node);
->  		if (printk_ratelimit())
->  			mhwmp_dbg("PREQ node queue full\n");
-> @@ -806,7 +806,7 @@ static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
->  
->  	list_add_tail(&preq_node->list, &ifmsh->preq_queue.list);
->  	++ifmsh->preq_queue_len;
-> -	spin_unlock(&ifmsh->mesh_preq_queue_lock);
-> +	spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
->  
->  	if (time_after(jiffies, ifmsh->last_preq + min_preq_int_jiff(sdata)))
->  		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2f01d84..2e752df 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -954,6 +954,8 @@ struct ieee80211_sta {
+ 	u16 aid;
+ 	struct ieee80211_sta_ht_cap ht_cap;
+ 	bool wme;
++	u8 uapsd_queues;
++	u8 max_sp;
+ 
+ 	/* must be last */
+ 	u8 drv_priv[0] __attribute__((__aligned__(sizeof(void *))));
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7d17a91..c764268 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -697,6 +697,9 @@ static void sta_apply_parameters(struct ieee80211_local *local,
+ 	}
+ 	spin_unlock_irqrestore(&sta->flaglock, flags);
+ 
++	sta->sta.uapsd_queues = params->uapsd_queues;
++	sta->sta.max_sp = params->max_sp;
++
+ 	/*
+ 	 * cfg80211 validates this (1-2007) and allows setting the AID
+ 	 * only when creating a new station entry
 -- 
-                                                     ~. .~   Tk Open Systems
-=}------------------------------------------------ooO--U--Ooo------------{=
-   - baruch@tkos.co.il - tel: +972.2.679.5364, http://www.tkos.co.il -
+1.7.6.401.g6a319
+
