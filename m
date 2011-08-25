@@ -1,74 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32991 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751799Ab1H3Jdx (ORCPT
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:52258 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750898Ab1HYHxU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 05:33:53 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	Edward Lu <shaol@qca.qualcomm.com>
-Message-ID: <4E5CAE7A.8000809@qca.qualcomm.com> (sfid-20110830_113356_380483_01D64B67)
-Date: Tue, 30 Aug 2011 12:33:46 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: Re: [PATCH 11/20] ath6kl: Support channel set request for startscan
- command
-References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com> <1314620641-24257-12-git-send-email-jouni@qca.qualcomm.com>
-In-Reply-To: <1314620641-24257-12-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Thu, 25 Aug 2011 03:53:20 -0400
+Received: by mail-bw0-f50.google.com with SMTP id zu5so1894349bkb.23
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 00:53:18 -0700 (PDT)
+Subject: Re: [PATCH V2 1/3] ath6kl: Add initial debugfs changes
+From: Luciano Coelho <coelho@ti.com>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	kvalo@adurom.com
+In-Reply-To: <1314257441-8092-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1314257441-8092-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 25 Aug 2011 10:53:15 +0300
+Message-ID: <1314258795.2296.252.camel@cumari> (sfid-20110825_095326_441641_20E69CBF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/29/2011 03:23 PM, Jouni Malinen wrote:
-> From: Edward Lu <elu@qca.qualcomm.com>
->
-> @@ -785,14 +787,33 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
->  		}
->  	}
->  
-> +	if (request->n_channels > 0) {
-> +		u8 i;
-> +
-> +		n_channels = (request->n_channels > 127) ?
-> +				127 : request->n_channels;
+On Thu, 2011-08-25 at 13:00 +0530, Vasanthakumar Thiagarajan wrote: 
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+> ---
 
-min()
+You should always add some text to the explanation body of your patches.
 
-> +
-> +		channels = kzalloc(n_channels * sizeof(u16), GFP_KERNEL);
-> +		if (channels == NULL) {
-> +			ath6kl_err("failed to set scan channels, "
-> +				   "scan all channels");
+-- 
+Cheers,
+Luca.
 
-ath6kl_warn() would be more approriate here as the driver can still
-continue.
-
-> +			n_channels = 0;
-> +		}
-> +
-> +		for (i = 0; i < n_channels; i++)
-> +			channels[i] = request->channels[i]->center_freq;
-> +	}
-> +
->  	if (ath6kl_wmi_startscan_cmd(ar->wmi, WMI_LONG_SCAN, 0,
-> -				     false, 0, 0, 0, NULL) != 0) {
-> +				     false, 0, 0, n_channels, channels) != 0) {
->  		ath6kl_err("wmi_startscan_cmd failed\n");
->  		ret = -EIO;
-
-Again I would prefer to return the error code from the wmi call.
-
-> @@ -1734,8 +1734,10 @@ int ath6kl_wmi_startscan_cmd(struct wmi *wmi, enum wmi_scan_type scan_type,
->  	sc->force_scan_intvl = cpu_to_le32(force_scan_interval);
->  	sc->num_ch = num_chan;
->  
-> -	if (num_chan)
-> -		memcpy(sc->ch_list, ch_list, num_chan * sizeof(u16));
-> +	if (num_chan) {
-> +		for (i = 0; i < num_chan; i++)
-> +			sc->ch_list[i] = cpu_to_le16(ch_list[i]);
-> +	}
-
-if (num_chan) is not needed, the for loop is enough.
-
-Kalle
