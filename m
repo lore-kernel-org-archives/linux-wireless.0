@@ -1,74 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:9055 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752957Ab1HWHCb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 03:02:31 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v3] ath9k: Send legacy rated frames as unaggregated
-Date: Tue, 23 Aug 2011 12:32:57 +0530
-Message-ID: <1314082977-1692-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110823_090235_372657_620CF745)
+Received: from purkki.adurom.net ([80.68.90.206]:53827 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753185Ab1HYKDv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Aug 2011 06:03:51 -0400
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: Joe Perches <joe@perches.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V2 3/3] ath6kl: Add debugfs file entry to dump credit distribution stats
+References: <1314257441-8092-1-git-send-email-vthiagar@qca.qualcomm.com>
+	<1314257441-8092-3-git-send-email-vthiagar@qca.qualcomm.com>
+	<1314260797.15882.63.camel@Joe-Laptop>
+	<20110825093339.GA17131@vasanth-laptop>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Thu, 25 Aug 2011 13:03:46 +0300
+In-Reply-To: <20110825093339.GA17131@vasanth-laptop> (Vasanthakumar Thiagarajan's message of "Thu\, 25 Aug 2011 15\:03\:40 +0530")
+Message-ID: <8762llolj1.fsf@purkki.adurom.net> (sfid-20110825_120358_533809_14575BEC)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the aggregation is formed till the aggregation limit
-is reached and the rate lookup is done for the first frame alone.
-But there can be a legacy rated frames in tid queue. This patch
-limits the subframe addition based on presence of legacy rate and
-sends the legacy rated frames as unaggregated one.
+Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com> writes:
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
-v2: check against all rates
-v3: updated commit log
- drivers/net/wireless/ath/ath9k/xmit.c |   22 +++++++++++++++++++++-
- 1 files changed, 21 insertions(+), 1 deletions(-)
+> On Thu, Aug 25, 2011 at 01:26:37AM -0700, Joe Perches wrote:
+>> On Thu, 2011-08-25 at 13:00 +0530, Vasanthakumar Thiagarajan wrote:
+>> > +	struct ath6kl *ar = file->private_data;
+>> > +	struct htc_target *target = ar->htc_target;
+>> > +	struct htc_endpoint_credit_dist *ep_list;
+>> > +	char *buf;
+>> > +	unsigned int buf_len = 128, len = 0;
+>> > +	ssize_t ret_cnt;
+>> > +
+>> > +	buf_len += get_queue_depth(&target->cred_dist_list) * 128;
+>> 
+>> Doesn't look like 128 is the right size.
+>
+> It is well enough, needed is only around 110 bytes.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 2062672..5e29829 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -571,6 +571,25 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		ath_reset(sc, false);
- }
- 
-+static bool ath_lookup_legacy(struct ath_buf *bf)
-+{
-+	struct sk_buff *skb;
-+	struct ieee80211_tx_info *tx_info;
-+	struct ieee80211_tx_rate *rates;
-+	int i;
-+
-+	skb = bf->bf_mpdu;
-+	tx_info = IEEE80211_SKB_CB(skb);
-+	rates = tx_info->control.rates;
-+
-+	for (i = 3; i >= 0; i--) {
-+		if (!(rates[i].flags & IEEE80211_TX_RC_MCS))
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
- static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
- 			   struct ath_atx_tid *tid)
- {
-@@ -750,7 +769,8 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
- 		al_delta = ATH_AGGR_DELIM_SZ + fi->framelen;
- 
- 		if (nframes &&
--		    (aggr_limit < (al + bpad + al_delta + prev_al))) {
-+		    ((aggr_limit < (al + bpad + al_delta + prev_al)) ||
-+		     ath_lookup_legacy(bf))) {
- 			status = ATH_AGGR_LIMITED;
- 			break;
- 		}
+Proper defines for the values would be nice. Magic numbers are always
+tricky.
+
 -- 
-1.7.6
-
+Kalle Valo
