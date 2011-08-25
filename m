@@ -1,64 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:47125 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751141Ab1HTAon (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:58014 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751248Ab1HYQDS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Aug 2011 20:44:43 -0400
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 19 Aug 2011 17:44:22 -0700
-Message-ID: <CAB=NE6XmMJk8mKAM-LB5Jh3ZV1k57RMsCzQ19Z+Ly-BFmk8cVQ@mail.gmail.com> (sfid-20110820_024507_914368_6D5A66EB)
-Subject: Linux wireless summit videoes from LinuxCon 2011
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 25 Aug 2011 12:03:18 -0400
+Received: by wwf5 with SMTP id 5so2547982wwf.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 09:03:17 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/5] wl12xx: don't disconnect on recovery
+Date: Thu, 25 Aug 2011 19:04:26 +0300
+Message-Id: <1314288270-22380-1-git-send-email-eliad@wizery.com> (sfid-20110825_180321_677079_0873B462)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For those that could not make it to the 2011 Linux wireless summit at
-LinuxCon Vancouver we have up 3 videoes on YouTube:
+allow full connection recovery by dropping the
+beacon_loss notification.
 
-1) [RFC] 802.11 DFS design on mac80211 / ath9k
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-http://www.youtube.com/watch?v=_yyFiLFx4Mg
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 8324d90..8aff8d4 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1225,9 +1225,6 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 	    test_bit(WL1271_FLAG_AP_STARTED, &wl->flags))
+ 		wl->tx_security_seq += WL1271_TX_SQN_POST_RECOVERY_PADDING;
+ 
+-	if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
+-		ieee80211_connection_loss(wl->vif);
+-
+ 	/* Prevent spurious TX during FW restart */
+ 	ieee80211_stop_queues(wl->hw);
+ 
+-- 
+1.7.6.401.g6a319
 
-Saxnet present their latest effort on design for a DFS architecture
-for mac80211 and for ath9k. This is from LinuxCon 2011 this week.
-Saxnet did an awesome job. If this design works for certification it
-could mean lowering the entry price for AP vendors looking to pass DFS
-testing. This work is under review now.
-
-2) 802.11s on LInux mac80211
-
-802.11s Mesh Networking was ratified by IEEE for integration into
-802.11. Javier Cardona has been leading its implementation and support
-on mac80211. In this session he reviews 802.11s with open and
-encrypted environments. 802.11s uses a different encryption algorithm
-called "simultaneous authentication of equals", Javier reviews work
-needed to integrate the userspace application required supporting this
-encryption mechanism on hostapd / wpa_supplicant.
-
-3) wmediumd for mac80211_hwsim
-
-Javier Cardona explains what Cozybit used to test the 802.11s code
-implemented in mac80211. He used extensions to mac80211_hwsim that
-allow links to be lossy. Cozybit also wrote a daemon to communicate to
-mac80211_hwsim to statically or dynamically alter the characteristics
-of the links. Right now mac80211_hwsim only accounts for packet loss
-between links but extensions can be made to also add latency later. He
-also demos a Java application used to create your topology for
-mac80211_hwsim. Researchers should get a chubby with this framework --
-you can extend this to do really cool shit, all in software with no
-hardware.
-
---
-
-Kudos to Saxnet and Cozybit for their presentations and *awesome* work
-on coding up stuff and doing a great job at explaining all this to us.
-
-Nothing else was recorded, sorry :) If you loose the links you'll be
-able to find them here:
-
-http://wireless.kernel.org/en/users/Documentation#YouTube_Documentation
-
-  Luis
