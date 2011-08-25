@@ -1,69 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7217 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752238Ab1HZGxd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 02:53:33 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 24/60] iwlagn: support small form factor SKU of 6205
-Date: Thu, 25 Aug 2011 23:10:56 -0700
-Message-Id: <1314339092-20797-25-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085459_355454_9E85A364)
-In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:48375 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753085Ab1HYBld (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 21:41:33 -0400
+Received: by mail-yw0-f46.google.com with SMTP id 7so1335324ywf.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 18:41:33 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH 8/9] mac80211: Don't take the mesh path resize lock when deleting an mpath
+Date: Wed, 24 Aug 2011 18:40:51 -0700
+Message-Id: <1314236452-7226-9-git-send-email-thomas@cozybit.com> (sfid-20110825_034135_559740_5A0AB59C)
+In-Reply-To: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
+References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Different subsystem ID
+From: Javier Cardona <javier@cozybit.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+The mesh path resize lock is only needed to protect addition or removal
+of buckets on the hash table, not nodes on those buckets.
+
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-6000.c |    6 ++++++
- drivers/net/wireless/iwlwifi/iwl-agn.h  |    1 +
- drivers/net/wireless/iwlwifi/iwl-pci.c  |    1 +
- 3 files changed, 8 insertions(+), 0 deletions(-)
+ net/mac80211/mesh_pathtbl.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 9487d9b..c2cba80 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -396,6 +396,12 @@ struct iwl_cfg iwl6005_2bg_cfg = {
- 	IWL_DEVICE_6005,
- };
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 9d9e1ac..4bfbe31 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -905,8 +905,8 @@ int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata)
+ 	int hash_idx;
+ 	int err = 0;
  
-+struct iwl_cfg iwl6005_2agn_sff_cfg = {
-+	.name = "Intel(R) Centrino(R) Advanced-N 6205S AGN",
-+	IWL_DEVICE_6005,
-+	.ht_params = &iwl6000_ht_params,
-+};
-+
- #define IWL_DEVICE_6030						\
- 	.fw_name_pre = IWL6030_FW_PRE,				\
- 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,		\
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index ea2a5fe..d2fa77a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -76,6 +76,7 @@ extern struct iwl_cfg iwl5150_abg_cfg;
- extern struct iwl_cfg iwl6005_2agn_cfg;
- extern struct iwl_cfg iwl6005_2abg_cfg;
- extern struct iwl_cfg iwl6005_2bg_cfg;
-+extern struct iwl_cfg iwl6005_2agn_sff_cfg;
- extern struct iwl_cfg iwl1030_bgn_cfg;
- extern struct iwl_cfg iwl1030_bg_cfg;
- extern struct iwl_cfg iwl6030_2agn_cfg;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
-index 4b99090..191c16a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-pci.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
-@@ -260,6 +260,7 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x0082, 0x1326, iwl6005_2abg_cfg)},
- 	{IWL_PCI_DEVICE(0x0085, 0x1311, iwl6005_2agn_cfg)},
- 	{IWL_PCI_DEVICE(0x0085, 0x1316, iwl6005_2abg_cfg)},
-+	{IWL_PCI_DEVICE(0x0082, 0xC020, iwl6005_2agn_sff_cfg)},
+-	read_lock_bh(&pathtbl_resize_lock);
+-	tbl = resize_dereference_mesh_paths();
++	rcu_read_lock();
++	tbl = rcu_dereference(mesh_paths);
+ 	hash_idx = mesh_table_hash(addr, sdata, tbl);
+ 	bucket = &tbl->hash_buckets[hash_idx];
  
- /* 6x30 Series */
- 	{IWL_PCI_DEVICE(0x008A, 0x5305, iwl1030_bgn_cfg)},
+@@ -924,7 +924,7 @@ int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata)
+ enddel:
+ 	mesh_paths_generation++;
+ 	spin_unlock_bh(&tbl->hashwlock[hash_idx]);
+-	read_unlock_bh(&pathtbl_resize_lock);
++	rcu_read_unlock();
+ 	return err;
+ }
+ 
 -- 
-1.7.0.4
+1.7.4.1
 
