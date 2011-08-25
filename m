@@ -1,108 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:35458 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753512Ab1HJLc6 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:58641 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753139Ab1HYJn2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 07:32:58 -0400
-Received: by fxd18 with SMTP id 18so817741fxd.25
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 04:32:56 -0700 (PDT)
-Subject: Re: [PATCH 09/40] wl12xx: enable/disable role on interface
- add/remove
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1312881233-9366-10-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-	 <1312881233-9366-10-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 10 Aug 2011 14:32:53 +0300
-Message-ID: <1312975973.2407.545.camel@cumari> (sfid-20110810_133302_142207_2CE44FB4)
-Mime-Version: 1.0
+	Thu, 25 Aug 2011 05:43:28 -0400
+Received: by wwf5 with SMTP id 5so2171854wwf.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 02:43:27 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 4/6] wl12xx: don't regulate links when a single STA is connected
+Date: Thu, 25 Aug 2011 12:43:15 +0300
+Message-Id: <1314265397-19873-4-git-send-email-arik@wizery.com> (sfid-20110825_114332_070610_7158612F)
+In-Reply-To: <1314265397-19873-1-git-send-email-arik@wizery.com>
+References: <1314265397-19873-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
-> +static u8 wl1271_get_role_type(struct wl1271 *wl)
-> +{
-> +	switch (wl->bss_type) {
-> +	case BSS_TYPE_AP_BSS:
-> +		return WL1271_ROLE_AP;
-> +
-> +	case BSS_TYPE_STA_BSS:
-> +		return WL1271_ROLE_STA;
-> +
-> +	default:
-> +		wl1271_info("invalid bss_type: %d", wl->bss_type);
-> +	}
-> +	return 0xff;
-> +}
-> +
->  static int wl1271_op_add_interface(struct ieee80211_hw *hw,
->  				   struct ieee80211_vif *vif)
->  {
->  	struct wl1271 *wl = hw->priv;
->  	struct wiphy *wiphy = hw->wiphy;
->  	int retries = WL1271_BOOT_RETRIES;
-> @@ -1836,12 +1851,17 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
->  			goto power_off;
->  
->  		ret = wl1271_boot(wl);
->  		if (ret < 0)
->  			goto power_off;
->  
-> +		ret = wl1271_cmd_role_enable(wl, wl1271_get_role_type(wl),
-> +					     &wl->role_id);
-> +		if (ret < 0)
-> +			goto irq_disable;
-> +
+When operating as AP track the number of connected stations. When a
+single STA is connected don't regulate the PS status of the link.
+Since this is the only STA connected, there's no point holding space in
+FW for other links. This will speed up communications with a single
+connected STA in PSM.
 
-This doesn't look right, because if the type is invalid, you will return
-0xff and it will still be sent anyway to the firmware via
-CMD_ROLE_ENABLE.  It will _probably_ still work as expected, because the
-firmware will hopefully return an error to that command and we will fail
-the op_add_interface.  But this will be ugly, because we'll print
-"firmware boot failed", which is not true and so on.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c   |   15 ++++++++++++---
+ drivers/net/wireless/wl12xx/tx.c     |    7 +++++--
+ drivers/net/wireless/wl12xx/wl12xx.h |    3 +++
+ 3 files changed, 20 insertions(+), 5 deletions(-)
 
-Maybe you should add a role_type to wl (we will most likely need it in
-the vif struct later anyway) or somehow merge this with the existing
-bss_type.  At least you could check the role type in the same "switch
-(vif->type)".
-
-
-> static void __wl1271_op_remove_interface(struct wl1271 *wl,
->  					 bool reset_tx_queues)
->  {
-> +	int ret;
->  
->  	wl1271_debug(DEBUG_MAC80211, "mac80211 remove interface");
->  
->  	/* because of hardware recovery, we may get here twice */
->  	if (wl->state != WL1271_STATE_ON)
->  		return;
-> @@ -1924,12 +1945,29 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
->  		wl->scan.state = WL1271_SCAN_STATE_IDLE;
->  		memset(wl->scan.scanned_ch, 0, sizeof(wl->scan.scanned_ch));
->  		wl->scan.req = NULL;
->  		ieee80211_scan_completed(wl->hw, true);
->  	}
->  
-> +	if (!test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags)) {
-> +		/* disable active roles */
-> +		ret = wl1271_ps_elp_wakeup(wl);
-> +		if (ret < 0) {
-> +			/*
-> +			 * do nothing. we are going to power off the chip
-> +			 * anyway. handle this case when we'll really
-> +			 * support multi-role...
-> +			 */
-> +		}
-> +		wl1271_cmd_role_disable(wl, &wl->role_id);
-
-Okay, we can do nothing for now, but should we then at least skip the
-wl1271_cmd_role_disable() call? I guess that will also fail if we could
-not wake up...
-
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 82f4408..0778567 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -757,13 +757,14 @@ static int wl1271_plt_init(struct wl1271 *wl)
+ 
+ static void wl12xx_irq_ps_regulate_link(struct wl1271 *wl, u8 hlid, u8 tx_pkts)
+ {
+-	bool fw_ps;
++	bool fw_ps, single_sta;
+ 
+ 	/* only regulate station links */
+ 	if (hlid < WL1271_AP_STA_HLID_START)
+ 		return;
+ 
+ 	fw_ps = test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
++	single_sta = (wl->active_sta_count == 1);
+ 
+ 	/*
+ 	 * Wake up from high level PS if the STA is asleep with too little
+@@ -772,8 +773,12 @@ static void wl12xx_irq_ps_regulate_link(struct wl1271 *wl, u8 hlid, u8 tx_pkts)
+ 	if (!fw_ps || tx_pkts < WL1271_PS_STA_MAX_PACKETS)
+ 		wl1271_ps_link_end(wl, hlid);
+ 
+-	/* Start high-level PS if the STA is asleep with enough blocks in FW */
+-	else if (fw_ps && tx_pkts >= WL1271_PS_STA_MAX_PACKETS)
++	/*
++	 * Start high-level PS if the STA is asleep with enough blocks in FW.
++	 * Make an exception if this is the only connected station. In this
++	 * case FW-memory congestion is not a problem.
++	 */
++	else if (!single_sta && fw_ps && tx_pkts >= WL1271_PS_STA_MAX_PACKETS)
+ 		wl1271_ps_link_start(wl, hlid, true);
+ }
+ 
+@@ -2074,6 +2079,7 @@ deinit:
+ 	memset(wl->roles_map, 0, sizeof(wl->roles_map));
+ 	memset(wl->links_map, 0, sizeof(wl->links_map));
+ 	memset(wl->roc_map, 0, sizeof(wl->roc_map));
++	wl->active_sta_count = 0;
+ 
+ 	/* The system link is always allocated */
+ 	__set_bit(WL12XX_SYSTEM_HLID, wl->links_map);
+@@ -3713,6 +3719,7 @@ static int wl1271_allocate_sta(struct wl1271 *wl,
+ 	wl_sta->hlid = WL1271_AP_STA_HLID_START + id;
+ 	*hlid = wl_sta->hlid;
+ 	memcpy(wl->links[wl_sta->hlid].addr, sta->addr, ETH_ALEN);
++	wl->active_sta_count++;
+ 	return 0;
+ }
+ 
+@@ -3729,6 +3736,7 @@ static void wl1271_free_sta(struct wl1271 *wl, u8 hlid)
+ 	wl1271_tx_reset_link_queues(wl, hlid);
+ 	__clear_bit(hlid, &wl->ap_ps_map);
+ 	__clear_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
++	wl->active_sta_count--;
+ }
+ 
+ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
+@@ -4607,6 +4615,7 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	wl->session_counter = 0;
+ 	wl->ap_bcast_hlid = WL12XX_INVALID_LINK_ID;
+ 	wl->ap_global_hlid = WL12XX_INVALID_LINK_ID;
++	wl->active_sta_count = 0;
+ 	setup_timer(&wl->rx_streaming_timer, wl1271_rx_streaming_timer,
+ 		    (unsigned long) wl);
+ 	wl->fwlog_size = 0;
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 572c6e6..09c1083 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -126,7 +126,7 @@ static void wl1271_tx_ap_update_inconnection_sta(struct wl1271 *wl,
+ 
+ static void wl1271_tx_regulate_link(struct wl1271 *wl, u8 hlid)
+ {
+-	bool fw_ps;
++	bool fw_ps, single_sta;
+ 	u8 tx_pkts;
+ 
+ 	/* only regulate station links */
+@@ -140,12 +140,15 @@ static void wl1271_tx_regulate_link(struct wl1271 *wl, u8 hlid)
+ 
+ 	fw_ps = test_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
+ 	tx_pkts = wl->links[hlid].allocated_pkts;
++	single_sta = (wl->active_sta_count == 1);
+ 
+ 	/*
+ 	 * if in FW PS and there is enough data in FW we can put the link
+ 	 * into high-level PS and clean out its TX queues.
++	 * Make an exception if this is the only connected station. In this
++	 * case FW-memory congestion is not a problem.
+ 	 */
+-	if (fw_ps && tx_pkts >= WL1271_PS_STA_MAX_PACKETS)
++	if (!single_sta && fw_ps && tx_pkts >= WL1271_PS_STA_MAX_PACKETS)
+ 		wl1271_ps_link_start(wl, hlid, true);
+ }
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 27961e2..b454b81 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -623,6 +623,9 @@ struct wl1271 {
+ 
+ 	/* number of currently active RX BA sessions */
+ 	int ba_rx_session_count;
++
++	/* AP-mode - number of currently connected stations */
++	int active_sta_count;
+ };
+ 
+ struct wl1271_station {
 -- 
-Cheers,
-Luca.
+1.7.4.1
 
