@@ -1,65 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:30925 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756519Ab1HFSRN convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:37276 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752365Ab1HYLXh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Aug 2011 14:17:13 -0400
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: Pavel Roskin <proski@gnu.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-CC: Daniel Halperin <dhalperi@cs.washington.edu>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Sat, 6 Aug 2011 11:17:05 -0700
-Subject: RE: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv
- pointer
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A350199604D92@orsmsx506.amr.corp.intel.com> (sfid-20110806_201716_588650_7B9A3C46)
-References: <1312228017-12061-1-git-send-email-wey-yi.w.guy@intel.com>
-	<CALSq=BYkKhJN=GU0RUJ2viibsy5yG78x-D-td0zP+rqWCy=AiQ@mail.gmail.com>
-	<4825B8A2C4E264489E57869F0DCFB22344563F4ABE@hasmsx502.ger.corp.intel.com>
-	<CALSq=BZ2CoF=+Zw-si5oc8No9MLTP1YoZCzfoT9TX1XEaLnq1A@mail.gmail.com>
-	<CALSq=BYY8-fAqATwJaFNvzwpSo4WWXbH=pRXn0oknqKXH=4X2A@mail.gmail.com>
-	<1312499702.15170.17.camel@wwguy-huron> <20110805225051.435fe1b0@mj>
-In-Reply-To: <20110805225051.435fe1b0@mj>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 25 Aug 2011 07:23:37 -0400
+Received: by wyg24 with SMTP id 24so1570280wyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 04:23:36 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 1/3] nl80211/cfg80211: add WIPHY_FLAG_AP_UAPSD flag
+Date: Thu, 25 Aug 2011 14:24:52 +0300
+Message-Id: <1314271494-8756-1-git-send-email-eliad@wizery.com> (sfid-20110825_132349_072275_B99352FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel,
+add WIPHY_FLAG_AP_UAPSD flag to indicate uapsd support on
+AP mode.
 
-Could you help since I don't have the system for next few weeks.
+Advertise it to userspace by including a new
+NL80211_ATTR_SUPPORT_AP_UAPSD attribute.
 
-Thanks
-Wey
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ include/linux/nl80211.h |    5 +++++
+ include/net/cfg80211.h  |    2 ++
+ net/wireless/nl80211.c  |    2 ++
+ 3 files changed, 9 insertions(+), 0 deletions(-)
 
------Original Message-----
-From: Pavel Roskin [mailto:proski@gnu.org]
-Sent: Saturday, August 06, 2011 5:51 AM
-To: Guy, Wey-Yi W
-Cc: Daniel Halperin; Grumbach, Emmanuel; linville@tuxdriver.com; linux-wireless@vger.kernel.org
-Subject: Re: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv pointer
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 3769303..075497e 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1042,6 +1042,9 @@ enum nl80211_commands {
+  *	(Re)Association Response frames when the driver (or firmware) replies to
+  *	(Re)Association Request frames.
+  *
++ * @NL80211_ATTR_SUPPORT_AP_UAPSD: the device supports uapsd when working
++ *	as AP.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1252,6 +1255,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_IE_PROBE_RESP,
+ 	NL80211_ATTR_IE_ASSOC_RESP,
+ 
++	NL80211_ATTR_SUPPORT_AP_UAPSD,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index a37f264..707f95d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1617,6 +1617,7 @@ struct cfg80211_ops {
+  * @WIPHY_FLAG_MESH_AUTH: The device supports mesh authentication by routing
+  *	auth frames to userspace. See @NL80211_MESH_SETUP_USERSPACE_AUTH.
+  * @WIPHY_FLAG_SUPPORTS_SCHED_SCAN: The device supports scheduled scans.
++ * @WIPHY_FLAG_AP_UAPSD: The device supports uapsd on AP.
+  */
+ enum wiphy_flags {
+ 	WIPHY_FLAG_CUSTOM_REGULATORY		= BIT(0),
+@@ -1631,6 +1632,7 @@ enum wiphy_flags {
+ 	WIPHY_FLAG_MESH_AUTH			= BIT(10),
+ 	WIPHY_FLAG_SUPPORTS_SCHED_SCAN		= BIT(11),
+ 	WIPHY_FLAG_ENFORCE_COMBINATIONS		= BIT(12),
++	WIPHY_FLAG_AP_UAPSD			= BIT(13),
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 57ecfa4..a1854ec 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -719,6 +719,8 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 		NLA_PUT_FLAG(msg, NL80211_ATTR_SUPPORT_IBSS_RSN);
+ 	if (dev->wiphy.flags & WIPHY_FLAG_MESH_AUTH)
+ 		NLA_PUT_FLAG(msg, NL80211_ATTR_SUPPORT_MESH_AUTH);
++	if (dev->wiphy.flags & WIPHY_FLAG_AP_UAPSD)
++		NLA_PUT_FLAG(msg, NL80211_ATTR_SUPPORT_AP_UAPSD);
+ 
+ 	NLA_PUT(msg, NL80211_ATTR_CIPHER_SUITES,
+ 		sizeof(u32) * dev->wiphy.n_cipher_suites,
+-- 
+1.7.6.401.g6a319
 
-On Thu, 04 Aug 2011 16:15:02 -0700
-"Guy, Wey-Yi" <wey-yi.w.guy@intel.com> wrote:
-
-> Could you look into this, we need to fix it for 3.1
-
-The backtrace looked interesting to me, so I checked the code.
-
-It looks like iwl_pci_down() badly needs to be merged with
-iwl_pci_remove().  iwl_pci_down() is only called from iwl_pci_remove(),
-and is struggles badly to get the data that iwl_pci_remove() already
-has.  That may fix everything.  Unfortunately, I have no hardware to
-test it.
-
-pci_bus->pci_dev that iwl_pci_down() passes to pci_disable_msi() should
-be the same as pdev in iwl_pci_remove().  And pdev should be valid
-throughout the function.
-
-Also, the use of the void pointer in iwl_pci_remove() seems
-unjustified.  Specific pointers are always better.
-
---
-Regards,
-Pavel Roskin
