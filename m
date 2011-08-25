@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:3753 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752857Ab1H3OTn (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:45991 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753282Ab1HYRYJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 10:19:43 -0400
-Date: Tue, 30 Aug 2011 19:50:09 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<rodrigue@qca.qualcomm.com>, <shafi.wireless@gmail.com>,
-	<vthiagar@qca.qualcomm.com>
-Subject: Re: [PATCH v9 2/4] ath9k: always call ath_reset from workqueue
- context
-Message-ID: <20110830142008.GA9158@vmraj-lnx.users.atheros.com> (sfid-20110830_161946_990096_AFD2364D)
-References: <1314693047-77839-1-git-send-email-nbd@openwrt.org>
- <1314693047-77839-2-git-send-email-nbd@openwrt.org>
+	Thu, 25 Aug 2011 13:24:09 -0400
+Received: by ewy4 with SMTP id 4so1118248ewy.19
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 10:24:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1314693047-77839-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <4e55750c.GPPIrbNLynUMWY/U%Larry.Finger@lwfinger.net>
+References: <4e55750c.GPPIrbNLynUMWY/U%Larry.Finger@lwfinger.net>
+Date: Thu, 25 Aug 2011 19:24:08 +0200
+Message-ID: <CACna6ryVB3yTj7rQbSdCqrw-9WtaPZedM7Ug6JV0iTDQQOv=Sw@mail.gmail.com> (sfid-20110825_192414_510367_16DB2F77)
+Subject: Re: [RFC/RFT] b43: Relax requirement for descriptors to be in the DMA zone
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 30, 2011 at 10:30:45AM +0200, Felix Fietkau wrote:
-> This makes it much easier to add further rework to avoid race conditions
-> between reset and other work items.
-> Move other functions to make ath_reset static.
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
-> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-> index 49b93c2..2b2a975 100644
-> --- a/drivers/net/wireless/ath/ath9k/xmit.c
-> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-> @@ -581,8 +581,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
->  
->  	rcu_read_unlock();
->  
-> -	if (needreset)
-> -		ath_reset(sc, false);
-> +	if (needreset) {
-> +		sc->sc_flags |= SC_OP_HW_RESET;
-> +		ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
-> +	}
->  }
+2011/8/25 Larry Finger <Larry.Finger@lwfinger.net>:
+> When 64-bit DMA was first used, there were problems with the
+> BCM4311 (14e4:4311). The problem was "fixed" by using the GFP_DMA
+> flag in the allocation of coherent ring descriptor memory.
 >
-Still ath_txq_schedule can be scheduled. Return a error code from
-ath_tx_complete_aggr to abort tx process intead of SC_OP_HW_RESET.
-That looks much more generic and simple.
+> The original problem is now believed to have been due to bugs in
+> the 64-bit DMA implementation in the rest of the kernel, and that
+> those bugs have been fixed. Accordingly, the requirement for the
+> descriptors to be in the DMA zone is relaxed.
 
---
-Rajkumar
+Larry, it is not clear to me from the commit message: did you test
+that patch with your 14e4:4311?
+
+-- 
+Rafał
