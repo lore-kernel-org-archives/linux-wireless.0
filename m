@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:39904 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754390Ab1H0AS1 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:47177 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751226Ab1HYJvT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 20:18:27 -0400
-Received: by gxk21 with SMTP id 21so3308768gxk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 17:18:27 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
+	Thu, 25 Aug 2011 05:51:19 -0400
+Received: by wyg24 with SMTP id 24so1514411wyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 02:51:18 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Subject: [PATCH v2 1/8] mac80211: Fix RCU pointer dereference in mesh_path_discard_frame()
-Date: Fri, 26 Aug 2011 17:18:07 -0700
-Message-Id: <1314404294-4233-2-git-send-email-javier@cozybit.com> (sfid-20110827_021830_741207_B46A99B1)
-In-Reply-To: <1314404294-4233-1-git-send-email-javier@cozybit.com>
-References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
- <1314404294-4233-1-git-send-email-javier@cozybit.com>
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 2/2] wl12xx: set mac80211 flags for aggregation support
+Date: Thu, 25 Aug 2011 12:51:05 +0300
+Message-Id: <1314265865-20208-2-git-send-email-arik@wizery.com> (sfid-20110825_115122_669706_1E3FE0C3)
+In-Reply-To: <1314265865-20208-1-git-send-email-arik@wizery.com>
+References: <1314265865-20208-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reported by Pedro Larbig (ASPj)
+We set the flag for A-MPDU support and also indicate that Tx aggregation
+is performed in HW. This will prevent mac80211 from aggregating Tx
+packets in software.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+This patch depends on
+"mac80211: add flag to indicate HW only Tx-agg support"
 
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
-v2: - Extend the rcu_read_lock section to protect mpath (Johannes)
-    - Take state lock when increasing mpath serial number (Johannes)
- net/mac80211/mesh_pathtbl.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 3c2bcb2..c92fd70 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -991,9 +991,14 @@ void mesh_path_discard_frame(struct sk_buff *skb,
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 7027a7e..fdeea4d 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -4478,7 +4478,9 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 		IEEE80211_HW_SUPPORTS_CQM_RSSI |
+ 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+ 		IEEE80211_HW_SPECTRUM_MGMT |
+-		IEEE80211_HW_AP_LINK_PS;
++		IEEE80211_HW_AP_LINK_PS |
++		IEEE80211_HW_AMPDU_AGGREGATION |
++		IEEE80211_HW_TX_AMPDU_IN_HW_ONLY;
  
- 		da = hdr->addr3;
- 		ra = hdr->addr1;
-+		rcu_read_lock();
- 		mpath = mesh_path_lookup(da, sdata);
--		if (mpath)
-+		if (mpath) {
-+			spin_lock_bh(&mpath->state_lock);
- 			sn = ++mpath->sn;
-+			spin_unlock_bh(&mpath->state_lock);
-+		}
-+		rcu_read_unlock();
- 		mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl, skb->data,
- 				   cpu_to_le32(sn), reason, ra, sdata);
- 	}
+ 	wl->hw->wiphy->cipher_suites = cipher_suites;
+ 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
 -- 
-1.7.6
+1.7.4.1
 
