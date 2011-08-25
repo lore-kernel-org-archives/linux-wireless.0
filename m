@@ -1,35 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43941 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848Ab1HQE5a (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:58014 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751628Ab1HYQD1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2011 00:57:30 -0400
-Message-ID: <4E4B4A37.3020300@qca.qualcomm.com> (sfid-20110817_065733_426658_EF53C6E4)
-Date: Tue, 16 Aug 2011 21:57:27 -0700
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Lin Tony-B19295 <B19295@freescale.com>
-CC: Hauke Mehrtens <hauke@hauke-m.de>,
-	"mcgrof@gmail.com" <mcgrof@gmail.com>,
-	"rodrigue@qca.qualcomm.com" <rodrigue@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rmani@qca.qualcomm.com" <rmani@qca.qualcomm.com>
-Subject: Re: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
-References: <1313060347-665-1-git-send-email-hauke@hauke-m.de> <97D3A72708D04647A5AC84A04996E5B5193114@039-SN1MPN1-002.039d.mgd.msft.net> <4E496CA7.7000604@hauke-m.de> <4E49BAB1.7060303@qca.qualcomm.com> <97D3A72708D04647A5AC84A04996E5B5195381@039-SN1MPN1-002.039d.mgd.msft.net> <4E4A7159.3090004@qca.qualcomm.com> <97D3A72708D04647A5AC84A04996E5B5195ADD@039-SN1MPN1-002.039d.mgd.msft.net> <4E4B437A.1070200@qca.qualcomm.com> <97D3A72708D04647A5AC84A04996E5B5195BE5@039-SN1MPN1-002.039d.mgd.msft.net> <4E4B48E4.7060809@qca.qualcomm.com> <97D3A72708D04647A5AC84A04996E5B5195C30@039-SN1MPN1-002.039d.mgd.msft.net>
-In-Reply-To: <97D3A72708D04647A5AC84A04996E5B5195C30@039-SN1MPN1-002.039d.mgd.msft.net>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Thu, 25 Aug 2011 12:03:27 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 5so2547982wwf.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 09:03:27 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 5/5] wl12xx: don't queue a new dummy packet if one is already pending
+Date: Thu, 25 Aug 2011 19:04:30 +0300
+Message-Id: <1314288270-22380-5-git-send-email-eliad@wizery.com> (sfid-20110825_180329_956132_01F7E304)
+In-Reply-To: <1314288270-22380-1-git-send-email-eliad@wizery.com>
+References: <1314288270-22380-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/16/2011 09:53 PM, Lin Tony-B19295 wrote:
->>> Set board as client, 'iperf -c pc ipaddr -t 100000 -w 1M -i 3'
->>> If using another package, I get 23Mb/s
->>
->> What wifi settings do you use? (11n, encryption, frequency, etc)
->>
-> 11n, no encryption, 50Mhz.
+From: Arik Nemtsov <arik@wizery.com>
 
-50 MHz can't be right. Please send me output from 'iw wlan0 link' (or
-whatever interface you use with ath6kl.
+The firmware only asks for one dummy packet at a time, but sometimes we
+are unable to provide it before a FW timer expires. When this happens,
+the FW will re-request the dummy packet. If a packet is still queued in
+the driver queues, do nothing in this case.
 
-Kalle
+This prevents spurious dummy packets from clogging up the VO AC.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index f1fd991..aeb4cc5 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1540,7 +1540,13 @@ out:
+ int wl1271_tx_dummy_packet(struct wl1271 *wl)
+ {
+ 	unsigned long flags;
+-	int q = wl1271_tx_get_queue(skb_get_queue_mapping(wl->dummy_packet));
++	int q;
++
++	/* no need to queue a new dummy packet if one is already pending */
++	if (test_bit(WL1271_FLAG_DUMMY_PACKET_PENDING, &wl->flags))
++		return 0;
++
++	q = wl1271_tx_get_queue(skb_get_queue_mapping(wl->dummy_packet));
+ 
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
+ 	set_bit(WL1271_FLAG_DUMMY_PACKET_PENDING, &wl->flags);
+-- 
+1.7.6.401.g6a319
+
