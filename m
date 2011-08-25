@@ -1,65 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:35807 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754734Ab1HDRxu (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:39195 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751243Ab1HYThb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Aug 2011 13:53:50 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v3 11/13] ath9k_hw: Disable Walsh spatial spreading for 2 chains
-Date: Thu, 4 Aug 2011 23:24:07 +0530
-Message-ID: <1312480447-27483-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110804_195358_326113_372C4A42)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 25 Aug 2011 15:37:31 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>, Walter Harms <wharms@bfs.de>
+Subject: [PATCH v2] mwifiex: replace kmalloc & memcpy sequence with kmemdup
+Date: Thu, 25 Aug 2011 12:37:22 -0700
+Message-Id: <1314301042-15021-1-git-send-email-bzhao@marvell.com> (sfid-20110825_213734_550764_AF3EF788)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Walsh bit is disabled for regulatory consideration.
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-As per the FCC rulings, only transmissions that are completely
-non-coherent, are allowed to waive the array gain contribution
-to EIRP for multi-transmit configurations. The use of 2-stream
-with 2 transmit and use of 3-steam with 3 transmit qualifies
-for this spatial multiplexing MIMO classification as long as
-the streams are directly mapped to each radio (not Walsh spread
-prior to splitting to multiple radios)
+Sequence of kmalloc/kzalloc and memcpy is replaced with
+kmemdup.
 
-Cc: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: Walter Harms <wharms@bfs.de>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c        |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+v2: Fixing OOMs as alloc failures instead of dup failures
+    as suggested by Joe Perches <joe@perches.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index 2339728..28b44b0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -636,7 +636,7 @@ static const u32 ar9300_2p2_baseband_postamble[][5] = {
- 	{0x00009e44, 0x02321e27, 0x02321e27, 0x02291e27, 0x02291e27},
- 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
- 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
--	{0x0000a204, 0x000037c0, 0x000037c4, 0x000037c4, 0x000037c0},
-+	{0x0000a204, 0x000036c0, 0x000036c4, 0x000036c4, 0x000036c0},
- 	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
- 	{0x0000a22c, 0x01026a2f, 0x01026a2f, 0x01026a2f, 0x01026a2f},
- 	{0x0000a230, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b},
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 1baca8e..c906e9e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -482,7 +482,7 @@ static void ar9003_hw_set_channel_regs(struct ath_hw *ah,
- 		(REG_READ(ah, AR_PHY_GEN_CTRL) & AR_PHY_GC_ENABLE_DAC_FIFO);
+ drivers/net/wireless/mwifiex/join.c      |    3 +--
+ drivers/net/wireless/mwifiex/scan.c      |   13 ++++++++-----
+ drivers/net/wireless/mwifiex/sta_ioctl.c |    9 +++++----
+ 3 files changed, 14 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 5cdad92..62b4c29 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -147,13 +147,12 @@ static int mwifiex_get_common_rates(struct mwifiex_private *priv, u8 *rate1,
+ 	u8 *ptr = rate1, *tmp;
+ 	u32 i, j;
  
- 	/* Enable 11n HT, 20 MHz */
--	phymode = AR_PHY_GC_HT_EN | AR_PHY_GC_SINGLE_HT_LTF1 | AR_PHY_GC_WALSH |
-+	phymode = AR_PHY_GC_HT_EN | AR_PHY_GC_SINGLE_HT_LTF1 |
- 		  AR_PHY_GC_SHORT_GI_40 | enableDacFifo;
+-	tmp = kmalloc(rate1_size, GFP_KERNEL);
++	tmp = kmemdup(rate1, rate1_size, GFP_KERNEL);
+ 	if (!tmp) {
+ 		dev_err(priv->adapter->dev, "failed to alloc tmp buf\n");
+ 		return -ENOMEM;
+ 	}
  
- 	/* Configure baseband for dynamic 20/40 operation */
+-	memcpy(tmp, rate1, rate1_size);
+ 	memset(rate1, 0, rate1_size);
+ 
+ 	for (i = 0; rate2[i] && i < rate2_size; i++) {
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index 37ca2f9..f3b4a61 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1479,12 +1479,12 @@ mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
+ 		dev_err(priv->adapter->dev, " failed to alloc bss_desc\n");
+ 		return -ENOMEM;
+ 	}
+-	beacon_ie = kzalloc(ie_len, GFP_KERNEL);
++
++	beacon_ie = kmemdup(ie_buf, ie_len, GFP_KERNEL);
+ 	if (!beacon_ie) {
+ 		dev_err(priv->adapter->dev, " failed to alloc beacon_ie\n");
+ 		return -ENOMEM;
+ 	}
+-	memcpy(beacon_ie, ie_buf, ie_len);
+ 
+ 	ret = mwifiex_fill_new_bss_desc(priv, bssid, rssi, beacon_ie,
+ 					ie_len, beacon_period,
+@@ -1986,17 +1986,20 @@ mwifiex_save_curr_bcn(struct mwifiex_private *priv)
+ 		priv->curr_bcn_size = curr_bss->beacon_buf_size;
+ 
+ 		kfree(priv->curr_bcn_buf);
+-		priv->curr_bcn_buf = kzalloc(curr_bss->beacon_buf_size,
++
++		priv->curr_bcn_buf = kmemdup(curr_bss->beacon_buf,
++						curr_bss->beacon_buf_size,
+ 						GFP_KERNEL);
+ 		if (!priv->curr_bcn_buf) {
+ 			dev_err(priv->adapter->dev,
+ 					"failed to alloc curr_bcn_buf\n");
+ 			return;
+ 		}
++	} else {
++		memcpy(priv->curr_bcn_buf, curr_bss->beacon_buf,
++			curr_bss->beacon_buf_size);
+ 	}
+ 
+-	memcpy(priv->curr_bcn_buf, curr_bss->beacon_buf,
+-		curr_bss->beacon_buf_size);
+ 	dev_dbg(priv->adapter->dev, "info: current beacon saved %d\n",
+ 		priv->curr_bcn_size);
+ 
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 3fca219..eb569fa 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -199,13 +199,14 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
+ 			dev_err(priv->adapter->dev, " failed to alloc bss_desc\n");
+ 			return -ENOMEM;
+ 		}
+-		beacon_ie = kzalloc(bss->len_beacon_ies, GFP_KERNEL);
++
++		beacon_ie = kmemdup(bss->information_elements,
++					bss->len_beacon_ies, GFP_KERNEL);
+ 		if (!beacon_ie) {
+-			dev_err(priv->adapter->dev, " failed to alloc bss_desc\n");
++			dev_err(priv->adapter->dev, " failed to alloc beacon_ie\n");
+ 			return -ENOMEM;
+ 		}
+-		memcpy(beacon_ie, bss->information_elements,
+-		       bss->len_beacon_ies);
++
+ 		ret = mwifiex_fill_new_bss_desc(priv, bss->bssid, bss->signal,
+ 						beacon_ie, bss->len_beacon_ies,
+ 						bss->beacon_interval,
 -- 
-1.7.6
+1.7.0.2
 
