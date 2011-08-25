@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36162 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:34976 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753947Ab1HLSXL (ORCPT
+	with ESMTP id S1751789Ab1HYFGI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 14:23:11 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1QrwNx-0004FS-N6
-	for linux-wireless@vger.kernel.org; Fri, 12 Aug 2011 20:23:09 +0200
-Subject: [PATCH] compat: fix LED lock
+	Thu, 25 Aug 2011 01:06:08 -0400
+Subject: Re: [PATCH] mac80211: fix suspend/resume races with unregister hw
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org
+In-Reply-To: <1313150459-13234-1-git-send-email-sgruszka@redhat.com>
+References: <1313150459-13234-1-git-send-email-sgruszka@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 12 Aug 2011 20:23:08 +0200
-Message-ID: <1313173388.4022.21.camel@jlt3.sipsolutions.net> (sfid-20110812_202319_944462_07DA75B4)
+Date: Wed, 24 Aug 2011 22:06:24 -0700
+Message-ID: <1314248784.5054.44.camel@jlt3.sipsolutions.net> (sfid-20110825_070612_654641_2C08A56E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The led_lock is never initialised, so there
-are warnings/errors. It can also be made
-static.
+On Fri, 2011-08-12 at 14:00 +0200, Stanislaw Gruszka wrote:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- compat/compat-2.6.37.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index ab12440..97db267 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -1875,6 +1875,9 @@ struct wiphy {
+>  	 * you need use set_wiphy_dev() (see below) */
+>  	struct device dev;
+>  
+> +	/* protects ->resume, ->suspend sysfs callbacks against unregister hw */
+> +	bool registered;
 
-diff --git a/compat/compat-2.6.37.c b/compat/compat-2.6.37.c
-index a62b13f..257880e 100644
---- a/compat/compat-2.6.37.c
-+++ b/compat/compat-2.6.37.c
-@@ -158,7 +158,7 @@ EXPORT_SYMBOL(compat_genl_unregister_family);
- #undef led_brightness_set
- #undef led_classdev_unregister
- 
--spinlock_t led_lock;
-+static DEFINE_SPINLOCK(led_lock);
- static LIST_HEAD(led_timers);
- 
- struct led_timer {
+Warning(/home/wireless/wireless-testing//include/net/cfg80211.h:1927):
+No description found for parameter 'registered'
 
+please fix.
+
+johannes
 
