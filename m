@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58686 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752703Ab1HHND3 (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:48375 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752179Ab1HYBlC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:03:29 -0400
-Subject: Re: mac80211: ibss.c, missing regdom check?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Simon <alexander.simon@saxnet.de>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1311695709.2974.15.camel@alex-2> (sfid-20110726_175519_489971_026C9E8B)
-References: <1311695709.2974.15.camel@alex-2>
-	 (sfid-20110726_175519_489971_026C9E8B)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 08 Aug 2011 15:03:26 +0200
-Message-ID: <1312808606.4372.16.camel@jlt3.sipsolutions.net> (sfid-20110808_150332_717974_E0FBA75C)
-Mime-Version: 1.0
+	Wed, 24 Aug 2011 21:41:02 -0400
+Received: by ywf7 with SMTP id 7so1335324ywf.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 18:41:01 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH 0/9] mesh fixes
+Date: Wed, 24 Aug 2011 18:40:43 -0700
+Message-Id: <1314236452-7226-1-git-send-email-thomas@cozybit.com> (sfid-20110825_034106_545982_7EFE17A7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-07-26 at 17:55 +0200, Alexander Simon wrote:
+A series of fixes and cleanups to the mesh stack.
 
-> When we want to join an IBSS, we first fire a scan. When a network is
-> found, then we join it.
-> This happens in ieee80211_sta_find_ibss when we call
-> ieee80211_sta_join_ibss.
-> 
-> But in both functions there is no check if we are allowed to do IBSS on
-> that channel.
-> Is this intended?
-> I could join an existing network on channel 8 with a modified crda
-> having the NO-IBSS flag on all 2.4GHz channels.
+Javier Cardona (8):
+  mac80211: Fix RCU pointer dereference in mesh_path_discard_frame()
+  mac80211: Remove mesh paths when an interface is removed
+  mac80211: Improve mpath state locking
+  mac80211: Remove redundant mesh path expiration checks
+  mac80211: Don't iterate twice over all mpaths when once in sufficient
+  mac80211: Consolidate {mesh,mpp}_path_flush into one function
+  mac80211: Don't take the mesh path resize lock when deleting an mpath
+  mac80211: Consolidate mesh path duplicated functions
 
-Sounds like there ought to be a check -- but what do we do in that case?
-Just create the network elsewhere and hope the other one merges? Luis?
+Pedro Larbig (1):
+  mac80211: Limit amount of HWMP frames and forwarded data packets in
+    queues on mesh interfaces
 
-johannes
+ net/mac80211/cfg.c          |    2 +-
+ net/mac80211/debugfs.c      |    4 +
+ net/mac80211/ieee80211_i.h  |    2 +
+ net/mac80211/iface.c        |    6 ++
+ net/mac80211/mesh.h         |   11 +++-
+ net/mac80211/mesh_hwmp.c    |   21 +++++-
+ net/mac80211/mesh_pathtbl.c |  162 +++++++++++++++++++++++--------------------
+ net/mac80211/rx.c           |   13 +++-
+ 8 files changed, 139 insertions(+), 82 deletions(-)
+
+-- 
+1.7.4.1
 
