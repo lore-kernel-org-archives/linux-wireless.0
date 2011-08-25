@@ -1,45 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:53285 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751276Ab1HXXmO (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:35455 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752446Ab1HYSpb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 19:42:14 -0400
-Received: by yxj19 with SMTP id 19so1271715yxj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 16:42:14 -0700 (PDT)
+	Thu, 25 Aug 2011 14:45:31 -0400
+Received: by pzk37 with SMTP id 37so2890921pzk.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 11:45:31 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20110824222801.GA5280@broadcom.com>
-References: <20110707002034.GA17885@broadcom.com> <20110824222801.GA5280@broadcom.com>
-From: Jonas Gorski <jonas.gorski@gmail.com>
-Date: Thu, 25 Aug 2011 01:41:54 +0200
-Message-ID: <CAOiHx=mfqv9CPNRsZ0pbXMfkDstyNcioqww77EDvU35q0CGMWw@mail.gmail.com> (sfid-20110825_014217_821670_E699B2A8)
-Subject: Re: [PATCH v2] Move brcm80211 to mainline
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <5d9c06a899229693c241d11aeb88dc90@secure.sipsolutions.net>
+References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
+ <1314236452-7226-2-git-send-email-thomas@cozybit.com> <f72a42677c7419161cc9b7f79d93e812@secure.sipsolutions.net>
+ <CAPjQAd_Wxpu=Kt6+PKcffNiqredMpPZ2-xWrq_jSsSCzNLBvZQ@mail.gmail.com> <5d9c06a899229693c241d11aeb88dc90@secure.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Thu, 25 Aug 2011 11:45:11 -0700
+Message-ID: <CAPjQAd9gdreTe-wYFV+fg7X9opZ-m4EeBiqM5r_nBQ_jNrV_zA@mail.gmail.com> (sfid-20110825_204534_624382_9A2D0847)
+Subject: Re: [PATCH 1/9] mac80211: Fix RCU pointer dereference in mesh_path_discard_frame()
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Thomas Pedersen <thomas@cozybit.com>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Henry,
+On Thu, Aug 25, 2011 at 11:21 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 25 Aug 2011 11:16:50 -0700, Javier Cardona wrote:
+>>
+>> On Wed, Aug 24, 2011 at 7:08 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>>>
+>>> On Wed, 24 Aug 2011 18:40:44 -0700, Thomas Pedersen wrote:
+>>>
+>>>>                da = hdr->addr3;
+>>>>                ra = hdr->addr1;
+>>>> +               rcu_read_lock();
+>>>>                mpath = mesh_path_lookup(da, sdata);
+>>>> +               rcu_read_unlock();
+>>>>                if (mpath)
+>>>>                        sn = ++mpath->sn;
+>>>>                mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl,
+>>>> skb->data,
+>>>
+>>> You've got to be kidding. Didn't I just explain RCU :)
+>>
+>> The patch was prepared before your RCU session :(
+>> Just to confirm I got it right before we resubmit: given that not only
+>> the path table accessed inside mesh_path_lookup() but also the mpaths
+>> themselves are RCU protected, the right fix should have been
+>>
+>>               da = hdr->addr3;
+>>               ra = hdr->addr1;
+>> +             rcu_read_lock();
+>>               mpath = mesh_path_lookup(da, sdata);
+>>               if (mpath)
+>>                       sn = ++mpath->sn;
+>> +             rcu_read_unlock();
+>>               mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl,
+>> skb->data,
+>>
+>> Correct?
+>
+> Frankly, I'm not sure, since you modify the mpath->sn you probably need to
+> hold a real lock, otherwise ++mpath->sn can race against itself in this very
+> function.
 
-On 25 August 2011 00:28, Henry Ptasinski <henryp@broadcom.com> wrote:
-> With the latest series of cleanup patches merged in by Greg KH, I'd like to
-> once again propose moving brcm80211 out of staging and into mainline.
+Oh, I see.  That's a different issue from what I was originally trying
+to fix (unprotected access to the path table inside the lookup
+function).  But you are completely right.  Changing the math sequence
+number requires taking the mpath state lock:
 
-While I like the Idea of brcm80211 going mainline, I'd like to throw
-in the suggestion that brcm80211 should be made a bcma/ssb driver
-first (AFACT brcmfmac would use ssb, not bcma, therefore both).
+             da = hdr->addr3;
+             ra = hdr->addr1;
++           rcu_read_lock();
+             mpath = mesh_path_lookup(da, sdata);
+-             if (mpath)
++             if (mpath) {
++                    spin_lock_bh(&mpath->state_lock);
+                      sn = ++mpath->sn;
++                    spin_unlock_bh(&mpath->state_lock);
++           }
++           rcu_read_unlock();
+             mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl, skb->data,
 
-My reasoning is that it needs to be done eventually anyway, and the
-earlier this is done the less work it will be in the long term, also
-it would reduce the duplicate code in bcma, ssb, and brcm80211.
+Thanks,
 
-Of course this is just a suggestion, and it's yours and Greg's call
-whether you agree with me or not (since it's quite late in the game to
-add a new TODO, and I suspect a rather big one).
-
-
-Regards,
-Jonas
+Javier
