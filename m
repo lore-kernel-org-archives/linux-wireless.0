@@ -1,76 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:51287 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750768Ab1HKQW1 convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:64366 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751430Ab1HYNur (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 12:22:27 -0400
-Received: by yxj19 with SMTP id 19so1414996yxj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 09:22:27 -0700 (PDT)
+	Thu, 25 Aug 2011 09:50:47 -0400
+Message-ID: <4E565333.3080007@gmail.com> (sfid-20110825_155052_323461_46408EBE)
+Date: Thu, 25 Aug 2011 15:50:43 +0200
+From: =?UTF-8?B?Tmljb2xhcyBkZSBQZXNsb8O8YW4=?=
+	<nicolas.2p.debian@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CACna6rzwyEZU2GiwgOPBPxZ_B+tfOX-4to214EDiOxe8Hmo-iw@mail.gmail.com>
-References: <1313001339-11211-1-git-send-email-zajec5@gmail.com>
-	<1313001339-11211-2-git-send-email-zajec5@gmail.com>
-	<CACna6rynj+OXL1R6jwgnCzReuO+=piOX3LTC9UujDTg4DNBVUw@mail.gmail.com>
-	<4E435D0E.80702@lwfinger.net>
-	<CACna6rxtkq7QGm52aunVZnqY48uO4+FL18S4kpuvYax55TePZQ@mail.gmail.com>
-	<20110811160424.GC2566@tuxdriver.com>
-	<CACna6rzwyEZU2GiwgOPBPxZ_B+tfOX-4to214EDiOxe8Hmo-iw@mail.gmail.com>
-Date: Thu, 11 Aug 2011 18:22:26 +0200
-Message-ID: <CACna6rzw0RLZQfFDWqGvPR=x1-WX2_u1-Hvapnu+R0175Fgtzg@mail.gmail.com> (sfid-20110811_182230_963751_FC48D74D)
-Subject: Re: [RFC][RFT][PATCH V2 2/2] b43: fix DMA on some bugged hardware
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+To: wwguy <wey-yi.w.guy@intel.com>
+CC: "dhalperi@cs.washington.edu" <dhalperi@cs.washington.edu>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: iwlagn: Random "Time out reading EEPROM".
+References: <4DEA2FC1.2030104@gmail.com>	 <1307284276.6918.17.camel@wwguy-ubuntu>  <4E1FF8B8.9020005@gmail.com> <1310740111.13897.13.camel@wwguy-ubuntu>
+In-Reply-To: <1310740111.13897.13.camel@wwguy-ubuntu>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 11 sierpnia 2011 18:21 użytkownik Rafał Miłecki
-<zajec5@gmail.com> napisał:
-> W dniu 11 sierpnia 2011 18:04 użytkownik John W. Linville
-> <linville@tuxdriver.com> napisał:
->> On Thu, Aug 11, 2011 at 10:05:19AM +0200, Rafał Miłecki wrote:
->>> W dniu 11 sierpnia 2011 06:39 użytkownik Larry Finger
->>> <Larry.Finger@lwfinger.net> napisał:
->>> > On 08/10/2011 07:14 PM, Rafał Miłecki wrote:
->>> >>
->>> >> W dniu 10 sierpnia 2011 20:35 użytkownik Rafał Miłecki
->>> >> <zajec5@gmail.com>  napisał:
->>> >>>
->>> >>> Some hardware with 64-bit DMA uses lower address word for setting
->>> >>> routing (translation) bit. Add workaround for such boards.
->>> >>>
->>> >>> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
->>> >>> ---
->>> >>> This requires testing on at least 1 normal 64-bit DMA card and 1 32-bit
->>> >>> DMA card. So far it was tested only on my 14e4:4329 where it fixed DMA.
->>> >>
->>> >> 14e4:4353 (BCM43224), 64-bit DMA, still works :)
->>> >>
->>> >> The rest will follow tomorrow.
->>> >
->>> > Tested with 14e4:4311 (64-bit) and 14e4:4318 (32-bit). The ssb changes were
->>> > also tested with b43legacy.
->>>
->>> Thanks Larry.
->>>
->>> I've additionally tested this on 14e4:4312 (BCM4311), 32-bit DMA. Works OK.
->>>
->>> John: please take this patchset.
->>
->> Are these fixes intended for 3.1?
->
-> The bug in DMA support is in the driver since the first moment we
-> enabled support for N-PHY. It's not any kind of regression. However,
-> it's still a bug fix.
->
-> If it's OK to take that for 3.1, then go on. I believe it received
-> required testing. On the other hand, if it's going to make Dave or
-> Linus angry, leave it for 3.2. We have this bug since  2.6.39, we can
-> have it for one more release.
+Le 15/07/2011 16:28, wwguy a écrit :
 
-s/Dave/David/, sorry
+> the error indicate fail to read data from EEPROM, your 2nd report is
+> even more strange, the number at the end the error message indicate the
+> index of DWORD driver trying to read from EEPROM.
+>
+> "Time out reading EEPROM[2]" telling me the first 2 DWORD is reading ok
+> but not the 3rd read.
+>
+> How many PCI-E slots you have in your system, could it possible for you
+> to switch to another PCI-E slot, or pull out and re-insert the NIC.
 
--- 
-Rafał
+Unfortunately, not. On this laptop, the NIC is not reachable without disassembling the laptop, and I 
+don't want to... I will double check again, but...
+
+> Also, it is possible to put the NIC into different system and see if you
+> are seeing the similar problem?
+
+No, for the exact same reason.
+
+Not that it still happens with 3.0.0-1 from Debian.
+
+[   15.086244] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:
+[   15.086247] iwlagn: Copyright(c) 2003-2011 Intel Corporation
+[   15.086404] iwlagn 0000:05:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+[   15.086412] iwlagn 0000:05:00.0: setting latency timer to 64
+[   15.086438] iwlagn 0000:05:00.0: Detected Intel(R) WiFi Link 5100 AGN, REV=0x54
+[   15.095859] iwlagn 0000:05:00.0: Time out reading EEPROM[6]
+[   15.095945] iwlagn 0000:05:00.0: Unable to init EEPROM
+[   15.096030] iwlagn 0000:05:00.0: PCI INT A disabled
+[   15.096039] iwlagn: probe of 0000:05:00.0 failed with error -110
+
+modprobe -r iwlagn ; modprobe iwlagn
+
+[  231.822492] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:
+[  231.822495] iwlagn: Copyright(c) 2003-2011 Intel Corporation
+[  231.822581] iwlagn 0000:05:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+[  231.822591] iwlagn 0000:05:00.0: setting latency timer to 64
+[  231.822621] iwlagn 0000:05:00.0: Detected Intel(R) WiFi Link 5100 AGN, REV=0x54
+[  231.843544] iwlagn 0000:05:00.0: device EEPROM VER=0x11f, CALIB=0x4
+[  231.843546] iwlagn 0000:05:00.0: Device SKU: 0Xb
+[  231.844889] iwlagn 0000:05:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
+[  231.844961] iwlagn 0000:05:00.0: irq 50 for MSI/MSI-X
+[  231.989424] iwlagn 0000:05:00.0: loaded firmware version 8.83.5.1 build 33692
+[  232.037456] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
+
+The error is not easy to reproduce, but the fix is perfectly stable. A single unload/reload of 
+iwlagn is always enough to solve the problem, when it happens. For this reason, it sounds difficult 
+to consider this a hardware slot problem. Can't this be related to some other PCI components?
+
+00:00.0 Host bridge: Intel Corporation Mobile 4 Series Chipset Memory Controller Hub (rev 07)
+00:01.0 PCI bridge: Intel Corporation Mobile 4 Series Chipset PCI Express Graphics Port (rev 07)
+00:1a.0 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #4 (rev 03)
+00:1a.1 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #5 (rev 03)
+00:1a.2 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #6 (rev 03)
+00:1a.7 USB Controller: Intel Corporation 82801I (ICH9 Family) USB2 EHCI Controller #2 (rev 03)
+00:1b.0 Audio device: Intel Corporation 82801I (ICH9 Family) HD Audio Controller (rev 03)
+00:1c.0 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express Port 1 (rev 03)
+00:1c.1 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express Port 2 (rev 03)
+00:1c.2 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express Port 3 (rev 03)
+00:1c.3 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express Port 4 (rev 03)
+00:1c.4 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express Port 5 (rev 03)
+00:1c.5 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express Port 6 (rev 03)
+00:1d.0 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #1 (rev 03)
+00:1d.1 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #2 (rev 03)
+00:1d.2 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #3 (rev 03)
+00:1d.7 USB Controller: Intel Corporation 82801I (ICH9 Family) USB2 EHCI Controller #1 (rev 03)
+00:1e.0 PCI bridge: Intel Corporation 82801 Mobile PCI Bridge (rev 93)
+00:1f.0 ISA bridge: Intel Corporation ICH9M LPC Interface Controller (rev 03)
+00:1f.2 SATA controller: Intel Corporation ICH9M/M-E SATA AHCI Controller (rev 03)
+00:1f.3 SMBus: Intel Corporation 82801I (ICH9 Family) SMBus Controller (rev 03)
+01:00.0 VGA compatible controller: nVidia Corporation G98 [GeForce 9300M GS] (rev a1)
+02:00.0 Ethernet controller: Marvell Technology Group Ltd. 88E8055 PCI-E Gigabit Ethernet Controller 
+(rev 14)
+05:00.0 Network controller: Intel Corporation WiFi Link 5100
+09:03.0 FireWire (IEEE 1394): Ricoh Co Ltd R5C832 IEEE 1394 Controller (rev 05)
+09:03.1 SD Host controller: Ricoh Co Ltd R5C822 SD/SDIO/MMC/MS/MSPro Host Adapter (rev 22)
+09:03.2 System peripheral: Ricoh Co Ltd R5C592 Memory Stick Bus Host Adapter (rev 12)
+
+I'm quite sure I can fix this problem by loading, unloading and reloading iwlagn on every startup... 
+but I don't really consider this a fix :-/
+
+	Nicolas.
