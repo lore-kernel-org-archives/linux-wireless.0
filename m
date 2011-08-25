@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:47697 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754857Ab1HEQNm convert rfc822-to-8bit (ORCPT
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:48358 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752318Ab1HYPrP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2011 12:13:42 -0400
+	Thu, 25 Aug 2011 11:47:15 -0400
+Date: Thu, 25 Aug 2011 08:47:05 -0700
+From: Greg KH <greg@kroah.com>
+To: Joe Perches <joe@perches.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>,
+	linux-kernel@vger.kernel.org, Brett Rudley <brudley@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	devel@linuxdriverproject.org, Greg KH <gregkh@suse.de>,
+	Kan Yan <kanyan@broadcom.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org
+Subject: Re: [PATCH] staging: brcmfmac: Consolidate debugging macros
+Message-ID: <20110825154705.GA6567@kroah.com> (sfid-20110825_174730_854678_12984E4E)
+References: <927eab8b5c950c13991911cd4c16457a5d618bc7.1314252671.git.joe@perches.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1108040400570.4278@p34.internal.lan>
-References: <20110730113009.GA2847@redhat.com>
-	<20110730113255.GB2847@redhat.com>
-	<alpine.DEB.2.02.1107300736010.4925@p34.internal.lan>
-	<alpine.DEB.2.02.1107301015340.4925@p34.internal.lan>
-	<alpine.DEB.2.02.1107301031560.4925@p34.internal.lan>
-	<4E341DC4.9010107@01019freenet.de>
-	<alpine.DEB.2.02.1107301305590.4925@p34.internal.lan>
-	<20110803160050.GA18882@redhat.com>
-	<alpine.DEB.2.02.1108031328030.9421@p34.internal.lan>
-	<alpine.DEB.2.02.1108031339280.9421@p34.internal.lan>
-	<20110803183349.GA5956@redhat.com>
-	<alpine.DEB.2.02.1108040400570.4278@p34.internal.lan>
-Date: Fri, 5 Aug 2011 09:13:41 -0700
-Message-ID: <CAJu5p2cP7T3_kcCOM9+h3Xf_V4S0qg0tUztD_7JzkGz0ek2STQ@mail.gmail.com> (sfid-20110805_181401_988961_4867268B)
-Subject: Re: [rt2x00-users] [PATCH] rt2x00: rt2800: fix zeroing skb structure
-From: Aleksandar Milivojevic <alex@milivojevic.org>
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Andreas Hartmann <andihartmann@01019freenet.de>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	Alan Piszcz <ap@solarrain.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <927eab8b5c950c13991911cd4c16457a5d618bc7.1314252671.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 4, 2011 at 1:03 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> Aug  3 22:47:12 atom kernel: [26120.279774] wlan0: deauthenticated from
-> hidden (Reason: 2)
+On Wed, Aug 24, 2011 at 11:16:48PM -0700, Joe Perches wrote:
+> Convert multiple BRCMF_<debug_level> macros to a single
+> brcmf_dbg(level, fmt, ...) macro.
+> 
+> Remove the now unnecessary double parentheses in the uses
+> of the old macros when converting to brcmf_dbg.
+> 
+> Delete all uses of "%s: [fmt]", __func__, args... and move
+> the "%s: ", __func__ to the macro for consistency.
+> 
+> Coalesce long formats.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-Thinking about it, I'm also seeing similar "deauthenticated" message
-in kernel logs on my system infrequently (with Linksys WUSB600N, hw
-rev 1, rt2870 chip).  About few times a day, if I leave my system on
-24/7.  In my case, the reason code listed is "3".  Most times it
-re-authenticates with AP automatically, though sometimes it gives up
-and I need to tell it manually to try to re-connect to AP (using
-NetworkManager).
+Applied, thanks.
 
-Haven't gave it much thought before, as I usually have this system
-powered on for only few hours at a time, not long enough for problem
-to occur.  Unless I forget to power it off and it stays on overnight
-(and then by the morning, it's bound to have at least few
-"deauthenticated" messages logged).
+greg k-h
