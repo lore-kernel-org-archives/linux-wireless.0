@@ -1,83 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:50832 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753115Ab1HIPEl convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:28950 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751919Ab1HYOpD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 11:04:41 -0400
-From: "Elias, Ilan" <ilane@ti.com>
-To: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
-	"samuel@sortiz.org" <samuel@sortiz.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 9 Aug 2011 17:04:29 +0200
-Subject: [RFC] NFC: NCI protocol proposal
-Message-ID: <AC090B9732AB2B4DB7FF476E907FE6600131D0E347@dnce02.ent.ti.com> (sfid-20110809_170444_843589_B6792DE6)
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 25 Aug 2011 10:45:03 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 2/2] ath9k_hw: Fix slottime with coverage class
+Date: Thu, 25 Aug 2011 20:15:22 +0530
+Message-ID: <1314283522-6143-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110825_164507_935881_6D61E29B)
+In-Reply-To: <1314283522-6143-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1314283522-6143-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Lauro, Aloisio, Samuel, all,
+The commit b6ba41bb27eb9810d54e2301355ce56fd0e94a1a updates
+acktimeout wihout updating slottime when coverage class is defined
+as per IEEE 802.11-2007 17.3.8.6.
 
-We would like to implement the NFC Controller Interface (NCI) protocol for the NFC subsystem.
-The NCI is a standard communication protocol between an NFC Controller (NFCC) and a Device Host (DH), defined by the NFC Forum.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-The NCI protocol implementation will be chip independent and responsible for:
-	- Reset, initialization and configuration of the NFC controller
-	- Sending commands/data to the NFC controller
-	- Receiving responses/notifications/data from the NFC controller
-	- Flow control for Control and Data Messages
-	- Segmentation and reassembly for Control and Data Messages
-	- An addressing scheme for NFC Execution Environments (NFCEE), e.g. 	secure element
-	- An addressing scheme for Remote NFC Endpoints (NFCEE or RF targets) 	(via logical connections)
-
-The NCI protocol will be added to the NFC subsystem below the NFC core:
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index d4dce6b..9936b68 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1012,7 +1012,8 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 	}
  
-+--------------------------------------+
-|              USER SPACE              |
-+--------------------------------------+
-     ^                        ^
-     | low-level              | control
-     | data exchange          | operations
-     |                        |
-     |                        v
-     |                  +-----------+
-     | AF_NFC           |  netlink  |
-     | socket           +-----------+
-     | raw                    ^
-     |                        |
-     v                        v
-+---------+             +-----------+
-| rawsock | <---------> | NFC core  |
-+---------+             +-----------+
-                	            ^
-                              |
-                              v
-              	      +-----------+
-                        | NCI core  |
-                        +-----------+
-				      ^
-				      |
-				      V
-			      +-----------+
-			      |  driver   |
-			      +-----------+
+ 	/* As defined by IEEE 802.11-2007 17.3.8.6 */
+-	acktimeout = slottime + sifstime + 3 * ah->coverage_class;
++	slottime = ah->slottime + 3 * ah->coverage_class;
++	acktimeout = slottime + sifstime;
+ 
+ 	/*
+ 	 * Workaround for early ACK timeouts, add an offset to match the
+-- 
+1.7.6.1
 
-The driver will register itself to the NCI core, and in turn the NCI core will register itself to the NFC core.
-
-We need to add the following 2 control operations (via generic netlink):
-	- Dev_up, which turn on the NFC controller (this operation may take a 	few seconds, as it can download new FW to the NFC controller)
-	- Dev_down, which turn off the NFC controller
-The dev_up/down approach was also used with HCI protocol in the BlueZ project.
-
-We suggest placing the NCI code in the net\nfc folder (beside the NFC code), as it's a generic and chip independent protocol, and not a driver.
-This approach was also used with HCI protocol in the BlueZ project.
-The driver itself will be located at drivers\nfc folder.
-
-The NCI code will be divided in a few files, e.g. nci_core, nci_rsp, nci_ntf etc.
-
-We'll appreciate your comments.
-
-Thanks & BR
-Ilan Elias
-Texas Instruments
