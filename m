@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39186 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751074Ab1HLJb0 (ORCPT
+Received: from wondertoys-mx.wondertoys.net ([206.117.179.246]:38576 "EHLO
+	labridge.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750846Ab1HYETT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 05:31:26 -0400
-Subject: Re: [PATCH 8/8] {nl,cfg,mac}80211: let userspace make meshif mesh
- gate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
+	Thu, 25 Aug 2011 00:19:19 -0400
+Subject: Re: [PATCH] mwifiex: replace kmalloc & memcpy sequences with
+ kmemdup
+From: Joe Perches <joe@perches.com>
+To: Bing Zhao <bzhao@marvell.com>
 Cc: linux-wireless@vger.kernel.org,
-	Javier Cardona <javier@cozybit.com>, linville@tuxdriver.com
-In-Reply-To: <CAG6hwVNFUyt7VBEiaNpCoGFmt4eMbvexKA0pUtGi3sj3mwHgZQ@mail.gmail.com> (sfid-20110810_233148_216249_1066196B)
-References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
-	 <1312933511-9486-9-git-send-email-thomas@cozybit.com>
-	 <1312984078.4325.5.camel@jlt3.sipsolutions.net>
-	 <CAG6hwVNFUyt7VBEiaNpCoGFmt4eMbvexKA0pUtGi3sj3mwHgZQ@mail.gmail.com>
-	 (sfid-20110810_233148_216249_1066196B)
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Walter Harms <wharms@bfs.de>
+In-Reply-To: <1314244350-13347-1-git-send-email-bzhao@marvell.com>
+References: <1314244350-13347-1-git-send-email-bzhao@marvell.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 12 Aug 2011 11:31:21 +0200
-Message-ID: <1313141481.4022.1.camel@jlt3.sipsolutions.net> (sfid-20110812_113130_515225_0BD5ACDA)
+Date: Wed, 24 Aug 2011 21:19:16 -0700
+Message-ID: <1314245956.15882.30.camel@Joe-Laptop> (sfid-20110825_061927_508398_AC8D4D4B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-08-10 at 14:31 -0700, Thomas Pedersen wrote:
-> On Wed, Aug 10, 2011 at 6:47 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Tue, 2011-08-09 at 16:45 -0700, Thomas Pedersen wrote:
-> >> From: Javier Cardona <javier@cozybit.com>
-> >>
-> >> Allow userspace to set NL80211_MESHCONF_GATE_ANNOUNCEMENTS attribute,
-> >> which will advertise this mesh node as being a mesh gate.
-> >> NL80211_HWMP_ROOTMODE must be set or this will do nothing.
-> >
-> > IMHO it should be rejected instead of doing nothing.
-> >
-> Maybe the "right thing" to do is not require the user to know anything
-> about the limitations of our implementation, and instead just enable
-> root mode as needed?
+On Wed, 2011-08-24 at 20:52 -0700, Bing Zhao wrote:
+> Sequences of kmalloc/kzalloc and memcpy are replaced with
+> kmemdups.
+> diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+[]
+> -	tmp = kmalloc(rate1_size, GFP_KERNEL);
+> +	tmp = kmemdup(rate1, rate1_size, GFP_KERNEL);
+>  	if (!tmp) {
+> -		dev_err(priv->adapter->dev, "failed to alloc tmp buf\n");
+> +		dev_err(priv->adapter->dev, "failed to duplicate rate buf\n");
 
-I don't know? Is it a limitation of the implementation? I know
-practically nothing about mesh :-) It just didn't seem right to silently
-ignore something.
+I wouldn't modify any OOM message.
+These _are_ allocs failures.
 
-johannes
+[all the others removed]
 
