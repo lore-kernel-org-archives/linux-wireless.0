@@ -1,42 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:52019 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753019Ab1HJLyL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 07:54:11 -0400
-Received: by mail-bw0-f42.google.com with SMTP id 19so312623bkd.29
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 04:54:09 -0700 (PDT)
-Subject: Re: [PATCH 10/40] wl12xx: add device role commands
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1312881233-9366-11-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-	 <1312881233-9366-11-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 10 Aug 2011 14:54:06 +0300
-Message-ID: <1312977246.2407.561.camel@cumari> (sfid-20110810_135414_376035_27362C88)
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:2812 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751197Ab1HYAVD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 20:21:03 -0400
+Date: Wed, 24 Aug 2011 17:20:33 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: "Jonas Gorski" <jonas.gorski@gmail.com>
+cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Subject: Re: [PATCH v2] Move brcm80211 to mainline
+Message-ID: <20110825002032.GA7577@broadcom.com> (sfid-20110825_022110_647900_EFCA12EA)
+References: <20110707002034.GA17885@broadcom.com>
+ <20110824222801.GA5280@broadcom.com>
+ <CAOiHx=mfqv9CPNRsZ0pbXMfkDstyNcioqww77EDvU35q0CGMWw@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CAOiHx=mfqv9CPNRsZ0pbXMfkDstyNcioqww77EDvU35q0CGMWw@mail.gmail.com>
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
-> The device role is a special role used for rx and tx frames
-> prior to association (as the STA role can get packets only
-> from its associated bssid)
+On Wed, Aug 24, 2011 at 04:41:54PM -0700, Jonas Gorski wrote:
+> Hi Henry,
 > 
-> Since this role is required for the sta association process,
-> we enable it when a new sta interface is created.
+> On 25 August 2011 00:28, Henry Ptasinski <henryp@broadcom.com> wrote:
+> > With the latest series of cleanup patches merged in by Greg KH, I'd like to
+> > once again propose moving brcm80211 out of staging and into mainline.
 > 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+> While I like the Idea of brcm80211 going mainline, I'd like to throw
+> in the suggestion that brcm80211 should be made a bcma/ssb driver
+> first (AFACT brcmfmac would use ssb, not bcma, therefore both).
+> 
+> My reasoning is that it needs to be done eventually anyway, and the
+> earlier this is done the less work it will be in the long term, also
+> it would reduce the duplicate code in bcma, ssb, and brcm80211.
+> 
+> Of course this is just a suggestion, and it's yours and Greg's call
+> whether you agree with me or not (since it's quite late in the game to
+> add a new TODO, and I suspect a rather big one).
 
-This patch looks fine, except for the relevant s/wl1271/wl12xx/.  And it
-would also be good if you could add some comments in the code about what
-this device role is about.  Something similar to the commit description
-here would be good.
+We started converting brcmsmac to bcma, but bcma is evolving rapidly in the
+wireless-testing tree.  Since wireless-testing and staging-next only get in
+sync during a kernel merge, the version of bcma we have to work with in staging
+is usually quit outdated.  Unless Greg and John want to come up with a process
+for keeping bcma consistent between their two repos, I don't really see how we
+can productively use bcma until we cross over.  We do intend to switch to using
+bcma as soon as possible.
 
--- 
-Cheers,
-Luca.
+I believe the only SB bus functions that brcmfmac uses are the core reset and
+disable functions, and only when initializing the chip to download firmware
+(all other management of the bus is handled by the on-chip CPU).  Is it
+possible to use those funtions from ssb, without the ssb module trying to
+manage the bus?
+
+- Henry
 
