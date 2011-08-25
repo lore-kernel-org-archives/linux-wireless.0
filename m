@@ -1,50 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:41529 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752293Ab1HFCu4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2011 22:50:56 -0400
-Date: Fri, 5 Aug 2011 22:50:51 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Daniel Halperin <dhalperi@cs.washington.edu>,
-	emmanuel.grumbach@intel.com,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv
- pointer
-Message-ID: <20110805225051.435fe1b0@mj> (sfid-20110806_045105_452024_548F5F50)
-In-Reply-To: <1312499702.15170.17.camel@wwguy-huron>
-References: <1312228017-12061-1-git-send-email-wey-yi.w.guy@intel.com>
-	<CALSq=BYkKhJN=GU0RUJ2viibsy5yG78x-D-td0zP+rqWCy=AiQ@mail.gmail.com>
-	<4825B8A2C4E264489E57869F0DCFB22344563F4ABE@hasmsx502.ger.corp.intel.com>
-	<CALSq=BZ2CoF=+Zw-si5oc8No9MLTP1YoZCzfoT9TX1XEaLnq1A@mail.gmail.com>
-	<CALSq=BYY8-fAqATwJaFNvzwpSo4WWXbH=pRXn0oknqKXH=4X2A@mail.gmail.com>
-	<1312499702.15170.17.camel@wwguy-huron>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:34821 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751108Ab1HYCy6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 22:54:58 -0400
+Received: by vws1 with SMTP id 1so1605913vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 19:54:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAGwCZhrYA2e_dVf6uHDaTfC35m2wopdLCOit8UFDa8D9v_v3Tw@mail.gmail.com>
+References: <CAGwCZhqDBZ4QGC_+3Bdbk=vRCnr0=sVdyR3J7WWqExf_hZQpLA@mail.gmail.com>
+	<4E54C87A.4080407@broadcom.com>
+	<CAGwCZhrYA2e_dVf6uHDaTfC35m2wopdLCOit8UFDa8D9v_v3Tw@mail.gmail.com>
+Date: Thu, 25 Aug 2011 10:54:58 +0800
+Message-ID: <CAGwCZhpjN5E4Spp4Qo1wfiMzx2Wxm5_pfzHxY8w+89yjqbckAA@mail.gmail.com> (sfid-20110825_045503_159368_2B685330)
+Subject: Re: force wifi radio to sleep immediately
+From: Hao Han <hhanwm@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 04 Aug 2011 16:15:02 -0700
-"Guy, Wey-Yi" <wey-yi.w.guy@intel.com> wrote:
+Is any way to force wifi to maintain at low power (sleep mode)
+immediately? Turing on/off radio is too long for my project. Thanks!
 
-> Could you look into this, we need to fix it for 3.1
+Best,
+Hao
 
-The backtrace looked interesting to me, so I checked the code.
-
-It looks like iwl_pci_down() badly needs to be merged with
-iwl_pci_remove().  iwl_pci_down() is only called from iwl_pci_remove(),
-and is struggles badly to get the data that iwl_pci_remove() already
-has.  That may fix everything.  Unfortunately, I have no hardware to
-test it.
-
-pci_bus->pci_dev that iwl_pci_down() passes to pci_disable_msi() should
-be the same as pdev in iwl_pci_remove().  And pdev should be valid
-throughout the function.
-
-Also, the use of the void pointer in iwl_pci_remove() seems
-unjustified.  Specific pointers are always better.
-
--- 
-Regards,
-Pavel Roskin
+On Wed, Aug 24, 2011 at 6:12 PM, Hao Han <hhanwm@gmail.com> wrote:
+> Thank you for your quick reply, Gr. AvS.
+>
+> According to my understanding, in power save mode (PSM), the station
+> will go to sleep immediately (i.e. maintaining a very low power) after
+> sending packet with pwr mgt bit in 802.11 mac header setting to 1.
+>
+> My question is if we can force the station to go to such a low power
+> level by calling some function.
+>
+> It seems to me that it costs extra time to disable/enable the radio,
+> right? I hope to do it very quickly.
+>
+> I appreicate your help!
+>
+> Best,
+> Hao
+>
+>
+> On Wed, Aug 24, 2011 at 5:46 PM, Arend van Spriel <arend@broadcom.com> wrote:
+>> On 08/24/2011 10:43 AM, Hao Han wrote:
+>>>
+>>> Dear All,
+>>>
+>>> I am currently working on a research project based on BCM4329 driver
+>>> on Nexus One. In the project, I am trying to control wifi radio to sleep
+>>> and wake up manually (i.e without setting PM_OFF, PM_FAST, or PM_MAX
+>>> mode). I
+>>> have digged into the source code for a while, but till now I have no
+>>> idea how to do that. If possible, could anyone please tell me if there is
+>>> any function I can call to force wifi radio to sleep or wake up
+>>> immediately.
+>>>
+>>> Any hint is appreciated. Thank you!
+>>>
+>>> Best,
+>>> Hao
+>>> --
+>>
+>> Hi Hao,
+>>
+>> Could please elaborate on what 'wifi radio' means in your description. It
+>> makes me think about RFKILL, but that may not be the thing you are looking
+>> for. With it you can disable/enable the radio within the wireless chipset.
+>> The terms sleep and wakeup feel a little odd when talking about radios.
+>>
+>> Gr. AvS
+>>
+>> --
+>> Almost nobody dances sober, unless they happen to be insane.
+>> -- H.P. Lovecraft --
+>>
+>>
+>>
+>
