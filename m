@@ -1,54 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:28938 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750910Ab1HYOoz (ORCPT
+Received: from wondertoys-mx.wondertoys.net ([206.117.179.246]:36902 "EHLO
+	labridge.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750898Ab1HYI0k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 10:44:55 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 1/2] ath9k_hw: Fix rx latency of 11a mode
-Date: Thu, 25 Aug 2011 20:15:21 +0530
-Message-ID: <1314283522-6143-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110825_164459_056010_97346788)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 25 Aug 2011 04:26:40 -0400
+Subject: Re: [PATCH V2 3/3] ath6kl: Add debugfs file entry to dump credit
+ distribution stats
+From: Joe Perches <joe@perches.com>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	kvalo@adurom.com
+In-Reply-To: <1314257441-8092-3-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1314257441-8092-1-git-send-email-vthiagar@qca.qualcomm.com>
+	 <1314257441-8092-3-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 25 Aug 2011 01:26:37 -0700
+Message-ID: <1314260797.15882.63.camel@Joe-Laptop> (sfid-20110825_102645_161043_426755B0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rx latecy to start signal(usec) of 11a is 41 not 37 and
-also corrected the rx delay in quarter rate.
+On Thu, 2011-08-25 at 13:00 +0530, Vasanthakumar Thiagarajan wrote:
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+[]
+> diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+[]
+> +static ssize_t read_file_credit_dist_stats(struct file *file,
+> +					   char __user *user_buf,
+> +					   size_t count, loff_t *ppos)
+> +{
+> +	struct ath6kl *ar = file->private_data;
+> +	struct htc_target *target = ar->htc_target;
+> +	struct htc_endpoint_credit_dist *ep_list;
+> +	char *buf;
+> +	unsigned int buf_len = 128, len = 0;
+> +	ssize_t ret_cnt;
+> +
+> +	buf_len += get_queue_depth(&target->cred_dist_list) * 128;
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+Doesn't look like 128 is the right size.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 88100cc..d4dce6b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -974,7 +974,10 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 	if (ah->misc_mode != 0)
- 		REG_SET_BIT(ah, AR_PCU_MISC, ah->misc_mode);
- 
--	rx_lat = 37;
-+	if (IS_CHAN_A_FAST_CLOCK(ah, chan))
-+		rx_lat = 41;
-+	else
-+		rx_lat = 37;
- 	tx_lat = 54;
- 
- 	if (IS_CHAN_HALF_RATE(chan)) {
-@@ -988,7 +991,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		sifstime = 32;
- 	} else if (IS_CHAN_QUARTER_RATE(chan)) {
- 		eifs = 340;
--		rx_lat *= 4;
-+		rx_lat *= 4 - 1;
- 		tx_lat *= 4;
- 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		    tx_lat += 22;
--- 
-1.7.6.1
+> +	buf = kzalloc(buf_len, GFP_KERNEL);
+> +	if (!buf)
+> +		return -ENOMEM;
+
+kmalloc can run out of space pretty quickly if cred_dist_list
+is large.  Maybe vmalloc?
+
+> +
+> +	len += scnprintf(buf + len, buf_len - len,
+> +			 " Epid  Flags    Cred_norm  Cred_min  Credits  Cred_assngd"
+> +			 "  Seek_cred  Cred_sz  Cred_per_msg  Cred_to_dist"
+> +			 "  qdepth\n");
+> +
+> +	list_for_each_entry(ep_list, &target->cred_dist_list, list) {
+> +		len += scnprintf(buf + len, buf_len - len, "  %2d",
+> +				 ep_list->endpoint);
+> +		len += scnprintf(buf + len, buf_len - len, "%10x",
+> +				 ep_list->dist_flags);
+
+I think this is nearly unreadable.
+It doesn't line up well with your header.
+
+Why not align them correctly or otherwise make no
+attempt to align them at all?
+
+Your current header and field widths:
+
+          1         2         3         4         5         6         7         8         9        10        11        12 
+ 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+	len += scnprintf(buf + len, buf_len - len,
+" Epid  Flags    Cred_norm  Cred_min  Credits  Cred_assngd  Seek_cred  Cred_sz  Cred_per_msg  Cred_to_dist  qdepth\n");
+   12          12345678         123456789          1234567890123            123456789              123456789012
+     1234567890        123456789         1234567890             123456789012         12345678901234
+
+> +	list_for_each_entry(ep_list, &target->cred_dist_list, list) {
+> +		len += scnprintf(buf + len, buf_len - len, "  %2d",
+> +				 ep_list->endpoint);
+> +		len += scnprintf(buf + len, buf_len - len, "%10x",
+> +				 ep_list->dist_flags);
+
+maybe use a macro:
+#define ep_list_field(fmt, field)	\ 
+	len += scnprint(buf + len, buf_len - len, fmt, ep_list->field)
+
+		ep_list_field("  %2d", endpoint);
+		ep_list_field("%9d", cred_min);
+		ep_list_field("%9d", credits);
+etc
+
+> +		len += scnprintf(buf + len, buf_len - len, "%12d\n",
+> +				 get_queue_depth(&((struct htc_endpoint *)
+> +						 ep_list->htc_rsvd)->txq));
+> +	}
+
 
