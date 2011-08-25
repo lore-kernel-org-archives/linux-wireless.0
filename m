@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53670 "EHLO nbd.name"
+Received: from mms3.broadcom.com ([216.31.210.19]:2116 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755742Ab1HaOrJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 10:47:09 -0400
-Message-ID: <4E5E4967.8070401@openwrt.org> (sfid-20110831_164717_105640_BCBD1066)
-Date: Wed, 31 Aug 2011 16:47:03 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1752365Ab1HYKiS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Aug 2011 06:38:18 -0400
+Message-ID: <4E562608.9060700@broadcom.com> (sfid-20110825_123821_965563_140A2BBE)
+Date: Thu, 25 Aug 2011 12:38:00 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: [PATCH] mac80211: retry sending failed BAR frames later instead
- of tearing down aggr
-References: <1314558661-28454-1-git-send-email-nbd@openwrt.org> <1314792948.4161.23.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1314792948.4161.23.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: "Hao Han" <hhanwm@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: force wifi radio to sleep immediately
+References: <CAGwCZhqDBZ4QGC_+3Bdbk=vRCnr0=sVdyR3J7WWqExf_hZQpLA@mail.gmail.com>
+ <4E54C87A.4080407@broadcom.com>
+ <CAGwCZhrYA2e_dVf6uHDaTfC35m2wopdLCOit8UFDa8D9v_v3Tw@mail.gmail.com>
+In-Reply-To: <CAGwCZhrYA2e_dVf6uHDaTfC35m2wopdLCOit8UFDa8D9v_v3Tw@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-08-31 2:15 PM, Johannes Berg wrote:
-> On Sun, 2011-08-28 at 21:11 +0200, Felix Fietkau wrote:
->>  Unfortunately failed BAR tx attempts happen more frequently than I
->>  expected, and the resulting aggregation teardowns cause performance
->>  issues, as the aggregation session does not always get re-established
->>  properly.
+On 08/24/2011 12:12 PM, Hao Han wrote:
+> Thank you for your quick reply, Gr. AvS.
 >
-> I find this curious. How can tons of traffic go through, but BAR frames
-> fail? These are unicast and should be retried a bunch...
-I think it mostly happens when the client goes to powersave (triggered 
-by background scans, etc).
-
->>  Instead of tearing down the entire aggr session, we can simply store the
->>  SSN of the last failed BAR tx attempt, wait for the first successful
->>  tx status event, and then send another BAR with the same SSN.
+> According to my understanding, in power save mode (PSM), the station
+> will go to sleep immediately (i.e. maintaining a very low power) after
+> sending packet with pwr mgt bit in 802.11 mac header setting to 1.
 >
-> So what if it keeps failing? I think eventually we'd want to kill the
-> session?
-If it keeps failing, then the connection is probably so bad that it 
-doesn't matter if we kill the session or not.
+> My question is if we can force the station to go to such a low power
+> level by calling some function.
+>
+> It seems to me that it costs extra time to disable/enable the radio,
+> right? I hope to do it very quickly.
+>
+> I appreicate your help!
+>
+> Best,
+> Hao
 
-- Felix
+I see. Your question is really about power save, which involves more 
+that the radio. Power save is a process better left to the device so 
+there is no interface in place to force that upon a driver/device.
+
+Gr. AvS
+
+-- 
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
+
+
