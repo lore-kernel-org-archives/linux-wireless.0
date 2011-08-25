@@ -1,59 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21815 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:19727 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753196Ab1HELLM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2011 07:11:12 -0400
+	id S1751540Ab1HYQMF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Aug 2011 12:12:05 -0400
+Date: Thu, 25 Aug 2011 18:11:04 +0200
 From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	Tony Houghton <h@realh.co.uk>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
-	<lrodriguez@atheros.com>
-Subject: [PATCH -next 0/8] ath9k: ASPM fixes
-Date: Fri,  5 Aug 2011 13:10:31 +0200
-Message-Id: <1312542639-4274-1-git-send-email-sgruszka@redhat.com> (sfid-20110805_131116_709072_A52CACA3)
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [compat-wireless-3.1-rc1-1] rt2800usb crashes the machine
+Message-ID: <20110825161103.GA8586@redhat.com> (sfid-20110825_181209_723549_E941C411)
+References: <4E536DD8.6030308@01019freenet.de>
+ <20110824090340.GA2277@redhat.com>
+ <4E54ECDF.9030804@01019freenet.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4E54ECDF.9030804@01019freenet.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series try to fix ath9k ASPM. Some of patches are cleanup
-only or do merging common code (with e1000e driver).
+On Wed, Aug 24, 2011 at 02:21:51PM +0200, Andreas Hartmann wrote:
+> Stanislaw Gruszka schrieb:
+> > On Tue, Aug 23, 2011 at 11:07:36AM +0200, Andreas Hartmann wrote:
+> >> using rt2800usb with a Linksys WUSB600N v2 (rt3572) crashes the complete
+> >> machine (SMP, Core i5, linux 3.0) on unloading the module after using it
+> >> for a short period of time:
+> >> - 2 times netperf -t TCP_MAERTS -H host
+> >> - 2 times netperf -t TCP_STREAM -H host
+> >>
+> >> The error message in /var/log/messages is:
+> >>
+> >> phy0 -> rt2800_wait_wpdma_ready: Error - WPDMA TX/RX busy, aborting
+> >>
+> >> After the crash, you have to hard reset the machine.
+> 
+> [...]
+> 
+> > Otherwise perhaps you could photo crash logs on virtual terminal
+> > (switched by Alt+Ctrl+F2 from X-window) or by using netconsole or kdump.
+> 
+> There is no crash dump - the machine just hangs up itself and the fan is
+> getting loader and loader (until max), because the machine is getting
+> hot more and more.
 
-With CONFIG_PCIEASPM it's possible to change ASPM settings on runtime
-via /sys/module/pcie_aspm/parameters/policy . However most drivers
-I looked at assume this setting is constant. I add a callback to pci
-driver to inform about the change, and allow driver to do needed hw
-related changes. Currently only ath9k implement the callback, but
-I think it will be useful for other drivers i.e. iwlwifi, rtlwifi
-that do some own ASPM handling.
+Kernel should generate some information when it hangs, at least when 
+debug options are enabled like CONFIG_DEBUG_SPINLOCK,
+CONFIG_DEBUG_OBJECTS, CONFIG_LOCKUP_DETECTOR, ... 
 
-Would be nice to get some testing on patches on different
-platforms with ath9k devices on kernel compiled with CONFIG_PCIEASPM
-(default) and mixing up commands:
+I just realized that compat-wireless-3.1-rc1-1, does not contain some
+rt2x00 fixes:
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=4b1bfb7d2d125af6653d6c2305356b2677f79dc6
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=df71c9cfceea801e7e26e2c74241758ef9c042e5
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=674db1344443204b6ce3293f2df8fd1b7665deea
 
-echo powersave > /sys/module/pcie_aspm/parameters/policy  
-echo performance > /sys/module/pcie_aspm/parameters/policy  
-ifconfig wlan0 down
-ifconfig wlan0 up
-pm-suspend
+Try to apply them first, or use compat-wireless-next. If they not help
+just try to reconfigure kernel to print messages on lockup.
 
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: e1000-devel@lists.sourceforge.net
----
- drivers/net/e1000e/netdev.c                |   31 ----------
- drivers/net/wireless/ath/ath9k/ar9002_hw.c |   12 ---
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |   12 ---
- drivers/net/wireless/ath/ath9k/hw-ops.h    |    9 +-
- drivers/net/wireless/ath/ath9k/hw.c        |   17 +++--
- drivers/net/wireless/ath/ath9k/hw.h        |   12 +--
- drivers/net/wireless/ath/ath9k/main.c      |    8 --
- drivers/net/wireless/ath/ath9k/pci.c       |   88 ++++++++++++++++++++++-------
- drivers/pci/pcie/Makefile                  |    3 
- drivers/pci/pcie/aspm.c                    |   46 ++++++++++++++-
- include/linux/pci-aspm.h                   |    2 
- include/linux/pci.h                        |    3 
- 12 files changed, 148 insertions(+), 95 deletions(-)
+Note, I'm not able to reproduce hangup using steps you provide. However
+I have bad performance, between 6 and 16 Mbits/s measured by netperf
+on connection between two rt2800usb stations through WRT160NL AP.
+I'm going to look at this problem when I'll have a chance.
+ 
+Stanislaw
+
