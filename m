@@ -1,66 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:12115 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750801Ab1HIIEH (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:33944 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753805Ab1HYTFJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 04:04:07 -0400
-Date: Tue, 9 Aug 2011 11:04:00 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Bill Jordan <bjordan@rajant.com>, <ath9k-devel@lists.ath9k.org>,
-	<linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>
-Subject: Re: [ath9k-devel] [PATCH] ath: Fix hardware decryption of WEP
-Message-ID: <20110809080400.GB2961@jouni.qca.qualcomm.com> (sfid-20110809_100419_202804_3B0A914C)
-References: <1312831193-8691-1-git-send-email-bjordan@rajant.com>
- <4E4095C2.3010607@openwrt.org>
+	Thu, 25 Aug 2011 15:05:09 -0400
+Received: by pzk37 with SMTP id 37so2920492pzk.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 12:05:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4E4095C2.3010607@openwrt.org>
+In-Reply-To: <98bfce172924dfc22c4e69fbfb5e117a@secure.sipsolutions.net>
+References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
+ <1314236452-7226-2-git-send-email-thomas@cozybit.com> <f72a42677c7419161cc9b7f79d93e812@secure.sipsolutions.net>
+ <CAPjQAd_Wxpu=Kt6+PKcffNiqredMpPZ2-xWrq_jSsSCzNLBvZQ@mail.gmail.com>
+ <5d9c06a899229693c241d11aeb88dc90@secure.sipsolutions.net>
+ <CAPjQAd9gdreTe-wYFV+fg7X9opZ-m4EeBiqM5r_nBQ_jNrV_zA@mail.gmail.com> <98bfce172924dfc22c4e69fbfb5e117a@secure.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Thu, 25 Aug 2011 12:04:49 -0700
+Message-ID: <CAPjQAd_MLEsPH9mrLeW01=_SehhXvajSGPJnx9wxguS+gS+Lxw@mail.gmail.com> (sfid-20110825_210514_029535_8555BB5F)
+Subject: Re: [PATCH 1/9] mac80211: Fix RCU pointer dereference in mesh_path_discard_frame()
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Thomas Pedersen <thomas@cozybit.com>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 08, 2011 at 08:04:50PM -0600, Felix Fietkau wrote:
-> On 2011-08-08 1:19 PM, Bill Jordan wrote:
-> > The first 4 hardware key indexes are reserved for WEP, but
-> > never programmed. The result was that WEP always used
-> > software decryption.
+On Thu, Aug 25, 2011 at 11:48 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 25 Aug 2011 11:45:11 -0700, Javier Cardona wrote:
+>>
+>> On Thu, Aug 25, 2011 at 11:21 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>>>
+>>> On Thu, 25 Aug 2011 11:16:50 -0700, Javier Cardona wrote:
+>>>>
+>>>> On Wed, Aug 24, 2011 at 7:08 PM, Johannes Berg
+>>>> <johannes@sipsolutions.net> wrote:
+>>>>>
+>>>>> On Wed, 24 Aug 2011 18:40:44 -0700, Thomas Pedersen wrote:
+>>>>>
+>>>>>>                da = hdr->addr3;
+>>>>>>                ra = hdr->addr1;
+>>>>>> +               rcu_read_lock();
+>>>>>>                mpath = mesh_path_lookup(da, sdata);
+>>>>>> +               rcu_read_unlock();
+>>>>>>                if (mpath)
+>>>>>>                        sn = ++mpath->sn;
+>>>>>>                mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl,
+>>>>>> skb->data,
+>>>>>
+>>>>> You've got to be kidding. Didn't I just explain RCU :)
+>>>>
+>>>> The patch was prepared before your RCU session :(
+>>>> Just to confirm I got it right before we resubmit: given that not only
+>>>> the path table accessed inside mesh_path_lookup() but also the mpaths
+>>>> themselves are RCU protected, the right fix should have been
+>>>>
+>>>>               da = hdr->addr3;
+>>>>               ra = hdr->addr1;
+>>>> +             rcu_read_lock();
+>>>>               mpath = mesh_path_lookup(da, sdata);
+>>>>               if (mpath)
+>>>>                       sn = ++mpath->sn;
+>>>> +             rcu_read_unlock();
+>>>>               mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl,
+>>>> skb->data,
+>>>>
+>>>> Correct?
+>>>
+>>> Frankly, I'm not sure, since you modify the mpath->sn you probably need
+>>> to
+>>> hold a real lock, otherwise ++mpath->sn can race against itself in this
+>>> very
+>>> function.
+>>
+>> Oh, I see.  That's a different issue from what I was originally trying
+>> to fix (unprotected access to the path table inside the lookup
+>> function).  But you are completely right.  Changing the math sequence
+>> number requires taking the mpath state lock:
+>>
+>>             da = hdr->addr3;
+>>             ra = hdr->addr1;
+>> +           rcu_read_lock();
+>>             mpath = mesh_path_lookup(da, sdata);
+>> -             if (mpath)
+>> +             if (mpath) {
+>> +                    spin_lock_bh(&mpath->state_lock);
+>>                      sn = ++mpath->sn;
+>> +                    spin_unlock_bh(&mpath->state_lock);
+>> +           }
+>> +           rcu_read_unlock();
+>>             mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl,
+>> skb->data,
+>
+> Seems about right to me, but I don't know about all the locking :)
 
-Not really.. They have a special role receiving group addressed frames
-and may be used with static WEP configuration, but there is no strict
-reservation of them being for WEP or other key indexes not being
-available for WEP.
+After your RCU session I went back to the path table module and
+reviewed the locking.  That's what triggered some the patches on the
+set:
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/75812/focus=75816
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/75812/focus=75818
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/75812/focus=75820
 
-> > diff --git a/drivers/net/wireless/ath/key.c b/drivers/net/wireless/ath/key.c
-> > @@ -501,7 +501,11 @@ int ath_key_config(struct ath_common *common,
-> >   	if (key->keylen)
-> >   		memcpy(hk.kv_val, key->key, key->keylen);
-> >
-> > -	if (!(key->flags&  IEEE80211_KEY_FLAG_PAIRWISE)) {
-> > +	if (hk.kv_type == ATH_CIPHER_WEP) {
-> > +		if (key->keyidx>= IEEE80211_WEP_NKID)
-> > +			return -EOPNOTSUPP;
-> > +		idx = key->keyidx;
-> > +	} else if (!(key->flags&  IEEE80211_KEY_FLAG_PAIRWISE)) {
-> I'm not sure this is a good idea, this would break adding pairwise WEP 
-> keys. Also, maybe WEP keys could use the BSSID in the lookup to avoid 
-> the first 4 keycache slots, that way it'd work properly in multi-BSSID 
-> AP setups.
+Mesh path tables and mpaths are protected by RCU.
+The internal state of each mpath is protected by mpath->state_lock.
+And there's a lock for each bucket on the mesh path tables.
 
-Agreed, this should not be applied.
+Thanks!
 
-As far as AP mode is concerned, there is no need to actually receive
-group addressed frames, so other key slots can be used regardless of the
-key index. Multi-BSSID AP setup with multiple BSSes that use static WEP
-keys is not going to work well, but then again, no one really should be
-using WEP anymore and I have no problems forcing that special use case
-to use software encryption/decryption. While dynamic WEP key setup with
-IEEE 802.1X is not really that much better, doing changes to improve
-some static WEP cases at the cost of reduced dynamic WEP functionality
-does not sound like a good direction.
-
-If the goal here was to improve station mode functionality in the case
-where a single WEP network is being used, it should be done more
-carefully to avoid causing problems to other cases.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Javier
