@@ -1,102 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1921 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751968Ab1HLNfM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 09:35:12 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 08/14] staging: brcm80211: absorb
- brcmf_sdioh_interrupt_deregister into brcmf_sdcard_intr_dereg
-Date: Fri, 12 Aug 2011 15:34:55 +0200
-Message-ID: <1313156101-16817-9-git-send-email-arend@broadcom.com> (sfid-20110812_153522_812933_C03953AF)
-In-Reply-To: <1313156101-16817-1-git-send-email-arend@broadcom.com>
-References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:40183 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753873Ab1HYPJu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Aug 2011 11:09:50 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 24so1744420wyg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 08:09:49 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/4] wl12xx: add beacon_filtering debugfs file
+Date: Thu, 25 Aug 2011 18:11:00 +0300
+Message-Id: <1314285060-5088-4-git-send-email-eliad@wizery.com> (sfid-20110825_172000_365775_9ED58F75)
+In-Reply-To: <1314285060-5088-1-git-send-email-eliad@wizery.com>
+References: <1314285060-5088-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+Allow enabling/disabling beacon_filtering by debugfs,
+in order to reduce the log size while debugging (beacon
+filtering is disabled by default in AP mode, as beacons
+are needed for ERP configuration).
 
-brcmfmac wrapper function cleanup
-
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |    8 ++++++-
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   22 ---------------------
- drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    2 -
- 3 files changed, 7 insertions(+), 25 deletions(-)
+ drivers/net/wireless/wl12xx/debugfs.c |   42 +++++++++++++++++++++++++++++++++
+ 1 files changed, 42 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-index e5cf138..6c1b57d 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-@@ -189,7 +189,13 @@ int brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev)
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index d59354f..d227385 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -655,6 +655,47 @@ static const struct file_operations rx_streaming_always_ops = {
+ 	.llseek = default_llseek,
+ };
  
- int brcmf_sdcard_intr_dereg(struct brcmf_sdio_dev *sdiodev)
++static ssize_t beacon_filtering_write(struct file *file,
++				      const char __user *user_buf,
++				      size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++	char buf[10];
++	size_t len;
++	unsigned long value;
++	int ret;
++
++	len = min(count, sizeof(buf) - 1);
++	if (copy_from_user(buf, user_buf, len))
++		return -EFAULT;
++	buf[len] = '\0';
++
++	ret = kstrtoul(buf, 0, &value);
++	if (ret < 0) {
++		wl1271_warning("illegal value for beacon_filtering!");
++		return -EINVAL;
++	}
++
++	mutex_lock(&wl->mutex);
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out;
++
++	ret = wl1271_acx_beacon_filter_opt(wl, !!value);
++
++	wl1271_ps_elp_sleep(wl);
++out:
++	mutex_unlock(&wl->mutex);
++	return count;
++}
++
++static const struct file_operations beacon_filtering_ops = {
++	.write = beacon_filtering_write,
++	.open = wl1271_open_file_generic,
++	.llseek = default_llseek,
++};
++
+ static int wl1271_debugfs_add_files(struct wl1271 *wl,
+ 				     struct dentry *rootdir)
  {
--	return brcmf_sdioh_interrupt_deregister(sdiodev);
-+	BRCMF_TRACE(("%s: Entering\n", __func__));
-+
-+	sdio_claim_host(sdiodev->func[1]);
-+	sdio_release_irq(sdiodev->func[1]);
-+	sdio_release_host(sdiodev->func[1]);
-+
-+	return 0;
- }
+@@ -767,6 +808,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_ADD(driver_state, rootdir);
+ 	DEBUGFS_ADD(dtim_interval, rootdir);
+ 	DEBUGFS_ADD(beacon_interval, rootdir);
++	DEBUGFS_ADD(beacon_filtering, rootdir);
  
- u8 brcmf_sdcard_cfg_read(struct brcmf_sdio_dev *sdiodev, uint fnc_num, u32 addr,
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 2e7d3ce..1dfad3e 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -190,28 +190,6 @@ void brcmf_sdioh_detach(struct brcmf_sdio_dev *sdiodev)
- 
- }
- 
--int brcmf_sdioh_interrupt_deregister(struct brcmf_sdio_dev *sdiodev)
--{
--	BRCMF_TRACE(("%s: Entering\n", __func__));
--
--	if (sdiodev->func[1]) {
--		/* register and unmask irq */
--		sdio_claim_host(sdiodev->func[1]);
--		sdio_release_irq(sdiodev->func[1]);
--		sdio_release_host(sdiodev->func[1]);
--	}
--
--	if (sdiodev->func[2]) {
--		/* Claim host controller F2 */
--		sdio_claim_host(sdiodev->func[2]);
--		sdio_release_irq(sdiodev->func[2]);
--		/* Release host controller F2 */
--		sdio_release_host(sdiodev->func[2]);
--	}
--
--	return 0;
--}
--
- extern int
- brcmf_sdioh_cfg_read(struct brcmf_sdio_dev *sdiodev, uint fnc_num, u32 addr,
- 		     u8 *data)
-diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-index bdbf411..d980307 100644
---- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-@@ -247,8 +247,6 @@ extern u32 brcmf_sdcard_cur_sbwad(struct brcmf_sdio_dev *sdiodev);
- extern int brcmf_sdioh_attach(struct brcmf_sdio_dev *sdiodev);
- extern void brcmf_sdioh_detach(struct brcmf_sdio_dev *sdiodev);
- 
--extern int brcmf_sdioh_interrupt_deregister(struct brcmf_sdio_dev *sdiodev);
--
- /* read or write one byte using cmd52 */
- extern int brcmf_sdioh_request_byte(struct brcmf_sdio_dev *sdiodev, uint rw,
- 				    uint fnc, uint addr, u8 *byte);
+ 	streaming = debugfs_create_dir("rx_streaming", rootdir);
+ 	if (!streaming || IS_ERR(streaming))
 -- 
-1.7.4.1
-
+1.7.6.401.g6a319
 
