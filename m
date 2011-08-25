@@ -1,80 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:65029 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752957Ab1HNKSB (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:49393 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752365Ab1HYLXk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 06:18:01 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 24so2967085wyg.19
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:18:01 -0700 (PDT)
+	Thu, 25 Aug 2011 07:23:40 -0400
+Received: by wwf5 with SMTP id 5so2258797wwf.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 04:23:39 -0700 (PDT)
 From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 30/40] wl12xx: AP-mode - configure HT rate support to the FW
-Date: Sun, 14 Aug 2011 13:17:29 +0300
-Message-Id: <1313317059-16567-31-git-send-email-eliad@wizery.com> (sfid-20110814_121805_968976_D5D76D86)
-In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
-References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+Subject: [PATCH v2 2/3] nl80211/cfg80211: add STA WME parameters
+Date: Thu, 25 Aug 2011 14:24:53 +0300
+Message-Id: <1314271494-8756-2-git-send-email-eliad@wizery.com> (sfid-20110825_132349_576682_0FD51052)
+In-Reply-To: <1314271494-8756-1-git-send-email-eliad@wizery.com>
+References: <1314271494-8756-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Add new NL80211_ATTR_STA_WME nested attribute that contains
+wme params needed by the low-level driver (uapsd_queues and
+max_sp).
 
-Unconditionally configure HT rate support to the FW on all ACs
-when starting the AP.
+Add these params to the station_parameters struct as well.
 
-When 11n support is disabled by usermode (hostapd), each STA joining
-the AP will appear as a non-HT STA. This will stop us from accidentally
-transmitting using MCS rates.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
 Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/wl12xx/conf.h |    5 +++++
- drivers/net/wireless/wl12xx/init.c |    3 +++
- 2 files changed, 8 insertions(+), 0 deletions(-)
+v2: consider WIPHY_FLAG_AP_UAPSD before parsing wme params.
 
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index 76b5c62..82f205c 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -438,12 +438,17 @@ struct conf_rx_settings {
+ include/linux/nl80211.h |   21 +++++++++++++++++++++
+ include/net/cfg80211.h  |    2 ++
+ net/wireless/nl80211.c  |   28 ++++++++++++++++++++++++++++
+ 3 files changed, 51 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 075497e..6e2ff33 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1044,6 +1044,8 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_SUPPORT_AP_UAPSD: the device supports uapsd when working
+  *	as AP.
++ * @NL80211_ATTR_STA_WME: Nested attribute containing the wme configuration
++ *	of the station, see &enum nl80211_sta_wme_attr.
+  *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -1256,6 +1258,7 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_IE_ASSOC_RESP,
  
- #define CONF_TX_OFDM_RATES (CONF_HW_BIT_RATE_6MBPS |             \
- 	CONF_HW_BIT_RATE_12MBPS | CONF_HW_BIT_RATE_24MBPS |      \
- 	CONF_HW_BIT_RATE_36MBPS | CONF_HW_BIT_RATE_48MBPS |      \
- 	CONF_HW_BIT_RATE_54MBPS)
+ 	NL80211_ATTR_SUPPORT_AP_UAPSD,
++	NL80211_ATTR_STA_WME,
  
-+#define CONF_TX_MCS_RATES (CONF_HW_BIT_RATE_MCS_0 |              \
-+	CONF_HW_BIT_RATE_MCS_1 | CONF_HW_BIT_RATE_MCS_2 |        \
-+	CONF_HW_BIT_RATE_MCS_3 | CONF_HW_BIT_RATE_MCS_4 |        \
-+	CONF_HW_BIT_RATE_MCS_5 | CONF_HW_BIT_RATE_MCS_6 |        \
-+	CONF_HW_BIT_RATE_MCS_7)
+ 	/* add attributes here, update the policy in nl80211.c */
  
- /*
-  * Default rates for management traffic when operating in AP mode. This
-  * should be configured according to the basic rate set of the AP
-  */
- #define CONF_TX_AP_DEFAULT_MGMT_RATES  (CONF_HW_BIT_RATE_1MBPS | \
-diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
-index a374c21..b13bebe 100644
---- a/drivers/net/wireless/wl12xx/init.c
-+++ b/drivers/net/wireless/wl12xx/init.c
-@@ -512,12 +512,15 @@ int wl1271_init_ap_rates(struct wl1271 *wl)
- 	 */
- 	if ((wl->basic_rate_set & CONF_TX_OFDM_RATES))
- 		supported_rates = CONF_TX_OFDM_RATES;
- 	else
- 		supported_rates = CONF_TX_AP_ENABLED_RATES;
+@@ -2487,4 +2490,22 @@ enum nl80211_hidden_ssid {
+ 	NL80211_HIDDEN_SSID_ZERO_CONTENTS
+ };
  
-+	/* unconditionally enable HT rates */
-+	supported_rates |= CONF_TX_MCS_RATES;
++/**
++ * enum nl80211_sta_wme_attr - station WME attributes
++ * @__NL80211_STA_WME_INVALID: invalid number for nested attribute
++ * @NL80211_STA_WME_QUEUES: bitmap of uapsd queues.
++ * @NL80211_STA_WME_MAX_SP: max service period.
++ * @__NL80211_STA_WME_AFTER_LAST: internal
++ * @NL80211_STA_WME_MAX: highest station WME attribute
++ */
++enum nl80211_sta_wme_attr {
++	__NL80211_STA_WME_INVALID,
++	NL80211_STA_WME_UAPSD_QUEUES,
++	NL80211_STA_WME_MAX_SP,
 +
- 	/* configure unicast TX rate classes */
- 	for (i = 0; i < wl->conf.tx.ac_conf_count; i++) {
- 		rc.enabled_rates = supported_rates;
- 		rc.short_retry_limit = 10;
- 		rc.long_retry_limit = 10;
- 		rc.aflags = 0;
++	/* keep last */
++	__NL80211_STA_WME_AFTER_LAST,
++	NL80211_STA_WME_MAX = __NL80211_STA_WME_AFTER_LAST - 1
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 707f95d..9818a84 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -452,6 +452,8 @@ struct station_parameters {
+ 	u8 plink_action;
+ 	u8 plink_state;
+ 	struct ieee80211_ht_cap *ht_capa;
++	u8 uapsd_queues;
++	u8 max_sp;
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a1854ec..6ea9ffe 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2547,6 +2547,12 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ 	return err;
+ }
+ 
++static struct nla_policy
++nl80211_sta_wme_policy[NL80211_STA_WME_MAX + 1] __read_mostly = {
++	[NL80211_STA_WME_UAPSD_QUEUES] = { .type = NLA_U8 },
++	[NL80211_STA_WME_MAX_SP] = { .type = NLA_U8 },
++};
++
+ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+@@ -2592,6 +2598,28 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 	if (parse_station_flags(info, &params))
+ 		return -EINVAL;
+ 
++	/* parse WME attributes if sta is WME capable */
++	if ((rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) &&
++	    (params.sta_flags_set & NL80211_STA_FLAG_WME) &&
++	    info->attrs[NL80211_ATTR_STA_WME]) {
++		struct nlattr *tb[NL80211_STA_WME_MAX + 1];
++		struct nlattr *nla;
++
++		nla = info->attrs[NL80211_ATTR_STA_WME];
++		err = nla_parse_nested(tb, NL80211_STA_WME_MAX, nla,
++				       nl80211_sta_wme_policy);
++		if (err)
++			return err;
++
++		if (tb[NL80211_STA_WME_UAPSD_QUEUES])
++			params.uapsd_queues =
++			     nla_get_u8(tb[NL80211_STA_WME_UAPSD_QUEUES]);
++
++		if (tb[NL80211_STA_WME_MAX_SP])
++			params.max_sp =
++			     nla_get_u8(tb[NL80211_STA_WME_MAX_SP]);
++	}
++
+ 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+ 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN &&
+ 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT &&
 -- 
 1.7.6.401.g6a319
 
