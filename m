@@ -1,67 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:35811 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752670Ab1HVOQU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 10:16:20 -0400
-Date: Mon, 22 Aug 2011 16:16:14 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: Pierre Louis Aublin <pierre-louis.aublin@inria.fr>
-Cc: Bing Zhao <bzhao@marvell.com>, kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 4/4] drivers/net/wireless/mwifiex/scan.c: test the just-initialized
- value
-In-Reply-To: <4E52638C.8080407@inria.fr>
-Message-ID: <Pine.LNX.4.64.1108221615450.10948@ask.diku.dk> (sfid-20110822_161641_047071_219ADE3D)
-References: <1314021636-11528-4-git-send-email-julia@diku.dk>
- <4E52638C.8080407@inria.fr>
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:38243 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750795Ab1HYDdF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Aug 2011 23:33:05 -0400
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <20110822.123326.1795268471389412471.davem@davemloft.net>
+References: <20110822190136.GJ2534@tuxdriver.com>
+	<20110822.123326.1795268471389412471.davem@davemloft.net>
+Date: Thu, 25 Aug 2011 11:33:05 +0800
+Message-ID: <CAAJw_ZtFw5FxPy+boe_99mKQi7yt3yfGE6FqWrzmUD3T-y1v8w@mail.gmail.com> (sfid-20110825_053326_440962_5E2B51B0)
+Subject: Re: pull request: wireless 2011-08-22
+From: Jeff Chua <jeff.chua.linux@gmail.com>
+To: David Miller <davem@davemloft.net>, IvDoorn@gmail.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+On Tue, Aug 23, 2011 at 3:33 AM, David Miller <davem@davemloft.net> wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Mon, 22 Aug 2011 15:01:37 -0400
+>
+>> This is a batch of fixes intended for 3.1.  Included is rewrite of an
+>> earlier iwlagn fix that was revealed to be flawed (bad pointer access
+>> during module unload), a fix for a memory leak, and a trio of rt2x00
+>> fixes with detailed changelogs.  These have all been in linux-next
+>> for the last week with no reported complaints.
+>>
+>> Please let me know if there are problems!
+>
+> Pulled, thanks John.
 
-Test the just-initialized value rather than some other one.
+I'm using the rt2800usb module for the Buffalo WLI-UC-GNM using ad-hoc mode.
 
-The semantic match that finds this problem is as follows:
-(http://coccinelle.lip6.fr/)
+T:  Bus=01 Lev=02 Prnt=02 Port=01 Cnt=01 Dev#=  3 Spd=480  MxCh= 0
+D:  Ver= 2.00 Cls=00(>ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1
+P:  Vendor=0411 ProdID=01a2 Rev= 1.01
+S:  Manufacturer=Ralink
+S:  Product=802.11 n WLAN
 
-// <smpl>
-@r@
-identifier x,y,f!={PTR_ERR,ERR_PTR,ERR_CAST};
-statement S;
-@@
+It works ok, but after idling for a while, it does not response, and
+module needs to unloaded and modprobe again to make it work.
 
-x = f(...);
-(
-if (\(x == NULL\|IS_ERR(x)\)) S
-|
-*if (\(y == NULL\|IS_ERR(y)\))
- { ... when != x
-   return ...; }
-)
-// </smpl>
+The same mac80211 and cfg80211 works for iwlagn and no problem with
+idling timeout.
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
+Is there any parameter to control the rt2800usb to make turn off power saving?
 
----
- drivers/net/wireless/mwifiex/scan.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I've tried "iwconfig lwan0 power timeout 0 power off" but no effect.
 
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index b28241c..37ca2f9 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1480,8 +1480,8 @@ mwifiex_update_curr_bss_params(struct mwifiex_private *priv,
- 		return -ENOMEM;
- 	}
- 	beacon_ie = kzalloc(ie_len, GFP_KERNEL);
--	if (!bss_desc) {
--		dev_err(priv->adapter->dev, " failed to alloc bss_desc\n");
-+	if (!beacon_ie) {
-+		dev_err(priv->adapter->dev, " failed to alloc beacon_ie\n");
- 		return -ENOMEM;
- 	}
- 	memcpy(beacon_ie, ie_buf, ie_len);
+Linux 3.1.0-rc3 with commit caca9510ff4e5d842c0589110243d60927836222.
+
+Thanks,
+Jeff.
