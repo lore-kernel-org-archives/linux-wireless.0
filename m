@@ -1,59 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56434 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753804Ab1HHNLa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:11:30 -0400
-Subject: Re: [PATCHv2] nl80211: add support to abort a scan request on tx
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@chromium.org>
-Cc: linux-wireless@vger.kernel.org, sleffler@chromium.org
-In-Reply-To: <ee96368a4bef8d9cca786406089c5f3806b33f5c.1311872448.git.pstew@chromium.org> (sfid-20110728_190209_373633_0A17FEC0)
-References: <5ec1fd1a0868f7a07741c25fa43fff0969667f9e.1311870004.git.pstew@chromium.org>
-	 <ee96368a4bef8d9cca786406089c5f3806b33f5c.1311872448.git.pstew@chromium.org>
-	 (sfid-20110728_190209_373633_0A17FEC0)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 08 Aug 2011 15:11:29 +0200
-Message-ID: <1312809089.4372.24.camel@jlt3.sipsolutions.net> (sfid-20110808_151134_032089_2EB657A6)
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:4713 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753171Ab1HYPJB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Aug 2011 11:09:01 -0400
+Date: Thu, 25 Aug 2011 17:07:24 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] cfg80211: document wiphy->registered
+Message-ID: <20110825150723.GA32259@redhat.com> (sfid-20110825_173712_245474_EAEB9290)
+References: <1313150459-13234-1-git-send-email-sgruszka@redhat.com>
+ <1314248784.5054.44.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1314248784.5054.44.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-05-23 at 14:34 -0700, Paul Stewart wrote:
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ include/net/cfg80211.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> @@ -1014,6 +1014,8 @@ enum nl80211_commands {
->   * @%NL80211_ATTR_REKEY_DATA: nested attribute containing the information
->   *	necessary for GTK rekeying in the device, see &enum nl80211_rekey_data.
->   *
-> + * @NL80211_ATTR_SCAN_FLAGS: scan request control flags (u8)
-
-I think it should either be a u32 or a flag attribute. u8 is kinda
-pointless for a flags attribute since it needs 4 bytes of space anyway.
-
-> +++ b/include/net/cfg80211.h
-> @@ -769,6 +769,15 @@ struct cfg80211_ssid {
->  };
->  
->  /**
-> + * enum cfg80211_scan_flag -  scan request control flags
-> + *
-> + * @CFG80211_SCAN__FLAG_TX_ABORT: abort scan on pending transmit
-> + */
-> +enum cfg80211_scan_flags {
-> +	CFG80211_SCAN_FLAG_TX_ABORT	= BIT(0),
-> +};
-
-Err, this needs to be in nl80211.h as well, no? How else would userspace
-know what flags it can use?
-
-Additionally, it would seem that there's a need to advertise what flags
-are supported by a given driver.
-
-Would you mind splitting into nl80211/mac80211 pieces?
-
-Also -- maybe you should explain a bit more verbosely in the commit log
-why this is a good idea? I'm not even sure how it really reduces TX
-latency?
-
-johannes
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 791dd10..f226552 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1784,6 +1784,7 @@ struct wiphy_wowlan_support {
+  * @debugfsdir: debugfs directory used for this wiphy, will be renamed
+  *	automatically on wiphy renames
+  * @dev: (virtual) struct device for this wiphy
++ * @registered: helps synchronize suspend/resume with wiphy unregister
+  * @wext: wireless extension handlers
+  * @priv: driver private data (sized according to wiphy_new() parameter)
+  * @interface_modes: bitmask of interfaces types valid for this wiphy,
+-- 
+1.7.1
 
