@@ -1,32 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:56913 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753141Ab1HPSo4 (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:60822 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753707Ab1HYSRK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2011 14:44:56 -0400
-Received: by ywf7 with SMTP id 7so163818ywf.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2011 11:44:56 -0700 (PDT)
+	Thu, 25 Aug 2011 14:17:10 -0400
+Received: by pzk37 with SMTP id 37so2854080pzk.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 11:17:10 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4E4AB695.5070300@01019freenet.de>
-References: <4E4AB695.5070300@01019freenet.de>
-Date: Tue, 16 Aug 2011 20:44:55 +0200
-Message-ID: <CAOZOX0UsRxT9ECdUC7OL2toJUb+PitGhxCifTyD8hWYwt6R_zg@mail.gmail.com> (sfid-20110816_204459_639519_F3A58EC1)
-Subject: Re: 7 more packets after each beacon frame
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <f72a42677c7419161cc9b7f79d93e812@secure.sipsolutions.net>
+References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
+ <1314236452-7226-2-git-send-email-thomas@cozybit.com> <f72a42677c7419161cc9b7f79d93e812@secure.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Thu, 25 Aug 2011 11:16:50 -0700
+Message-ID: <CAPjQAd_Wxpu=Kt6+PKcffNiqredMpPZ2-xWrq_jSsSCzNLBvZQ@mail.gmail.com> (sfid-20110825_201714_809425_5CCE4666)
+Subject: Re: [PATCH 1/9] mac80211: Fix RCU pointer dereference in mesh_path_discard_frame()
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Thomas Pedersen <thomas@cozybit.com>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Aug 24, 2011 at 7:08 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 24 Aug 2011 18:40:44 -0700, Thomas Pedersen wrote:
+>
+>>                da = hdr->addr3;
+>>                ra = hdr->addr1;
+>> +               rcu_read_lock();
+>>                mpath = mesh_path_lookup(da, sdata);
+>> +               rcu_read_unlock();
+>>                if (mpath)
+>>                        sn = ++mpath->sn;
+>>                mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl,
+>> skb->data,
+>
+> You've got to be kidding. Didn't I just explain RCU :)
 
-> When examining my own AP (rt2860 based) with another STA in monitor
-> mode, I can see always 7 packets after each beacon frame:
+The patch was prepared before your RCU session :(
+Just to confirm I got it right before we resubmit: given that not only
+the path table accessed inside mesh_path_lookup() but also the mpaths
+themselves are RCU protected, the right fix should have been
 
-Well if it is an AP with a rt2860 chipset, then it probably isn't
-using the rt2x00 drivers,
-so no idea what those extra frames would be.
-Can't they come from another client somewhere which is responding to the AP?
+               da = hdr->addr3;
+               ra = hdr->addr1;
++             rcu_read_lock();
+               mpath = mesh_path_lookup(da, sdata);
+               if (mpath)
+                       sn = ++mpath->sn;
++             rcu_read_unlock();
+               mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl, skb->data,
 
-Ivo
+Correct?
+
+Thanks!
+
+Javier
