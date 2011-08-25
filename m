@@ -1,44 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:40970 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750927Ab1H1QIA (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:28992 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750898Ab1HYHat (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Aug 2011 12:08:00 -0400
-Received: by fxh19 with SMTP id 19so3772058fxh.19
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Aug 2011 09:07:59 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] ssb: use u16 for storing board rev
-Date: Sun, 28 Aug 2011 18:47:22 +0200
-Message-Id: <1314550043-6220-1-git-send-email-zajec5@gmail.com> (sfid-20110828_180804_372077_E28A7FBF)
+	Thu, 25 Aug 2011 03:30:49 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <kvalo@adurom.com>
+Subject: [PATCH V2 1/3] ath6kl: Add initial debugfs changes
+Date: Thu, 25 Aug 2011 13:00:39 +0530
+Message-ID: <1314257441-8092-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110825_093052_854776_18860595)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Specs say about size 2 (u16) and my 14e4:4727 has board rev 0x1211.
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- include/linux/ssb/ssb.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath6kl/core.h  |    1 +
+ drivers/net/wireless/ath/ath6kl/debug.c |   10 ++++++++++
+ drivers/net/wireless/ath/ath6kl/debug.h |    6 +++++-
+ drivers/net/wireless/ath/ath6kl/init.c  |    6 ++++++
+ 4 files changed, 22 insertions(+), 1 deletions(-)
 
-diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
-index 8623217..f10ed7b 100644
---- a/include/linux/ssb/ssb.h
-+++ b/include/linux/ssb/ssb.h
-@@ -25,7 +25,7 @@ struct ssb_sprom {
- 	u8 et1phyaddr;		/* MII address for enet1 */
- 	u8 et0mdcport;		/* MDIO for enet0 */
- 	u8 et1mdcport;		/* MDIO for enet1 */
--	u8 board_rev;		/* Board revision number from SPROM. */
-+	u16 board_rev;		/* Board revision number from SPROM. */
- 	u8 country_code;	/* Country Code */
- 	u16 leddc_on_time;	/* LED Powersave Duty Cycle On Count */
- 	u16 leddc_off_time;	/* LED Powersave Duty Cycle Off Count */
+V2 - Remove a separate config option for debugfs. Use CONFIG_ATH6KL_DEBUG
+     to enable it.
+
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 4405ab5..c5537b3 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -467,6 +467,7 @@ struct ath6kl {
+ 	struct workqueue_struct *ath6kl_wq;
+ 
+ 	struct ath6kl_node_table scan_table;
++	struct dentry *debugfs_phy;
+ };
+ 
+ static inline void *ath6kl_priv(struct net_device *dev)
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 316136c..12775e8 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -147,4 +147,14 @@ void dump_cred_dist_stats(struct htc_target *target)
+ 		   target->cred_dist_cntxt->cur_free_credits);
+ }
+ 
++int ath6kl_debug_init(struct ath6kl *ar)
++{
++	ar->debugfs_phy = debugfs_create_dir("ath6kl",
++					     ar->wdev->wiphy->debugfsdir);
++	if (!ar->debugfs_phy)
++		return -ENOMEM;
++
++	/* TODO: Create debugfs file entries for various target/host stats */
++	return 0;
++}
+ #endif
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
+index 66b3999..e8c9ea9 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.h
++++ b/drivers/net/wireless/ath/ath6kl/debug.h
+@@ -78,6 +78,7 @@ void ath6kl_dump_registers(struct ath6kl_device *dev,
+ 			   struct ath6kl_irq_proc_registers *irq_proc_reg,
+ 			   struct ath6kl_irq_enable_reg *irq_en_reg);
+ void dump_cred_dist_stats(struct htc_target *target);
++int ath6kl_debug_init(struct ath6kl *ar);
+ #else
+ static inline int ath6kl_dbg(enum ATH6K_DEBUG_MASK dbg_mask,
+ 			     const char *fmt, ...)
+@@ -100,6 +101,9 @@ static inline void ath6kl_dump_registers(struct ath6kl_device *dev,
+ static inline void dump_cred_dist_stats(struct htc_target *target)
+ {
+ }
++static inline int ath6kl_debug_init(struct ath6kl *ar)
++{
++	return 0;
++}
+ #endif
+-
+ #endif
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 75230ac..ad9716c 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -573,6 +573,12 @@ struct ath6kl *ath6kl_core_alloc(struct device *sdev)
+ 	ar->wdev = wdev;
+ 	wdev->iftype = NL80211_IFTYPE_STATION;
+ 
++	if (ath6kl_debug_init(ar)) {
++		ath6kl_err("Failed to initialize debugfs\n");
++		ath6kl_cfg80211_deinit(ar);
++		return NULL;
++	}
++
+ 	dev = alloc_netdev(0, "wlan%d", ether_setup);
+ 	if (!dev) {
+ 		ath6kl_err("no memory for network device instance\n");
 -- 
-1.7.3.4
+1.7.0.4
 
