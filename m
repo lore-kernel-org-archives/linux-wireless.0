@@ -1,65 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:25290 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756017Ab1H3TDp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 15:03:45 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH v2 16/22] ath6kl: Add support for new P2P iftypes in mode changes
-Date: Tue, 30 Aug 2011 21:58:05 +0300
-Message-ID: <1314730691-12089-17-git-send-email-jouni@qca.qualcomm.com> (sfid-20110830_210348_591267_106CFA64)
-In-Reply-To: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:52815 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753085Ab1HZGxh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 02:53:37 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 41/60] iwlagn: add missing includes
+Date: Thu, 25 Aug 2011 23:11:13 -0700
+Message-Id: <1314339092-20797-42-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085435_634433_DA593FFB)
+In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   12 ++++++++++--
- 1 files changed, 10 insertions(+), 2 deletions(-)
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 2d44397..72735ee 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -451,7 +451,8 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
- 	}
+a few h files weren't self contained. Fix that.
+Move iwl_dma_ptr to transport layer since it is not used by the upper layer
+any more.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-bus.h            |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-debug.h          |    1 +
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |    7 -------
+ drivers/net/wireless/iwlwifi/iwl-fh.h             |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-shared.h         |    5 +++++
+ drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |   19 +++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-trans.c          |    1 -
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |    4 ++++
+ 8 files changed, 33 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-bus.h b/drivers/net/wireless/iwlwifi/iwl-bus.h
+index edec2f2..e1cb65c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-bus.h
++++ b/drivers/net/wireless/iwlwifi/iwl-bus.h
+@@ -65,6 +65,8 @@
  
- 	if (nw_type & INFRA_NETWORK) {
--		if (ar->wdev->iftype != NL80211_IFTYPE_STATION) {
-+		if (ar->wdev->iftype != NL80211_IFTYPE_STATION &&
-+		    ar->wdev->iftype != NL80211_IFTYPE_P2P_CLIENT) {
- 			ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
- 				   "%s: ath6k not in station mode\n", __func__);
- 			return;
-@@ -612,7 +613,8 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
- 	}
+ /*This file includes the declaration that are exported from the bus layer */
  
- 	if (ar->nw_type & INFRA_NETWORK) {
--		if (ar->wdev->iftype != NL80211_IFTYPE_STATION) {
-+		if (ar->wdev->iftype != NL80211_IFTYPE_STATION &&
-+		    ar->wdev->iftype != NL80211_IFTYPE_P2P_CLIENT) {
- 			ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
- 				   "%s: ath6k not in station mode\n", __func__);
- 			return;
-@@ -1206,6 +1208,12 @@ static int ath6kl_cfg80211_change_iface(struct wiphy *wiphy,
- 	case NL80211_IFTYPE_ADHOC:
- 		ar->next_mode = ADHOC_NETWORK;
- 		break;
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+		ar->next_mode = INFRA_NETWORK;
-+		break;
-+	case NL80211_IFTYPE_P2P_GO:
-+		ar->next_mode = AP_NETWORK;
-+		break;
- 	default:
- 		ath6kl_err("invalid interface type %u\n", type);
- 		return -EOPNOTSUPP;
++#include <linux/types.h>
++
+ struct iwl_shared;
+ struct iwl_bus;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 4b042e9..7014f41 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -29,6 +29,7 @@
+ #ifndef __iwl_debug_h__
+ #define __iwl_debug_h__
+ 
++#include "iwl-bus.h"
+ #include "iwl-shared.h"
+ 
+ struct iwl_priv;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 30963bb..12cca9d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -641,13 +641,6 @@ static inline u8 get_cmd_index(struct iwl_queue *q, u32 index)
+ 	return index & (q->n_window - 1);
+ }
+ 
+-
+-struct iwl_dma_ptr {
+-	dma_addr_t dma;
+-	void *addr;
+-	size_t size;
+-};
+-
+ #define IWL_OPERATION_MODE_AUTO     0
+ #define IWL_OPERATION_MODE_HT_ONLY  1
+ #define IWL_OPERATION_MODE_MIXED    2
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
+index c1b8837..5bede9d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
+@@ -63,6 +63,8 @@
+ #ifndef __iwl_fh_h__
+ #define __iwl_fh_h__
+ 
++#include <linux/types.h>
++
+ /****************************/
+ /* Flow Handler Definitions */
+ /****************************/
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 7145e48..45f8a33 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -63,6 +63,11 @@
+ #ifndef __iwl_shared_h__
+ #define __iwl_shared_h__
+ 
++#include <linux/types.h>
++#include <linux/spinlock.h>
++#include <linux/mutex.h>
++#include <linux/gfp.h>
++
+ /*This files includes all the types / functions that are exported by the
+  * upper layer to the bus and transport layer */
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
+index c258b3f..b77b0f7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
+@@ -29,7 +29,20 @@
+ #ifndef __iwl_trans_int_pcie_h__
+ #define __iwl_trans_int_pcie_h__
+ 
++#include <linux/spinlock.h>
++#include <linux/interrupt.h>
++#include <linux/skbuff.h>
++
+ #include "iwl-fh.h"
++#include "iwl-csr.h"
++#include "iwl-shared.h"
++#include "iwl-trans.h"
++#include "iwl-debug.h"
++#include "iwl-io.h"
++
++struct iwl_tx_queue;
++struct iwl_queue;
++struct iwl_host_cmd;
+ 
+ /*This file includes the declaration that are internal to the
+  * trans_pcie layer */
+@@ -88,6 +101,12 @@ struct iwl_rx_queue {
+ 	spinlock_t lock;
+ };
+ 
++struct iwl_dma_ptr {
++	dma_addr_t dma;
++	void *addr;
++	size_t size;
++};
++
+ /**
+  * struct iwl_trans_pcie - PCIe transport specific data
+  * @rxq: all the RX queue data
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+index 14c22b7..95c9e87 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -72,7 +72,6 @@
+ #include "iwl-trans-int-pcie.h"
+ /*TODO remove uneeded includes when the transport layer tx_free will be here */
+ #include "iwl-agn.h"
+-#include "iwl-core.h"
+ #include "iwl-shared.h"
+ 
+ static int iwl_trans_rx_alloc(struct iwl_trans *trans)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 78bd2f6..0da6ad5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -64,6 +64,10 @@
+ #define __iwl_trans_h__
+ 
+ #include <linux/debugfs.h>
++#include <linux/skbuff.h>
++
++#include "iwl-shared.h"
++#include "iwl-commands.h"
+ 
+  /*This file includes the declaration that are exported from the transport
+  * layer */
 -- 
-1.7.4.1
+1.7.0.4
 
