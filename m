@@ -1,71 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:42477 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752207Ab1HZJAE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41815 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751306Ab1HZHgz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 05:00:04 -0400
-Received: by vws1 with SMTP id 1so2727440vws.19
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 02:00:03 -0700 (PDT)
+	Fri, 26 Aug 2011 03:36:55 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <kvalo@adurom.com>
+Subject: [PATCH V3 3/3] ath6kl: Add debugfs file entry to dump credit distribution stats
+Date: Fri, 26 Aug 2011 13:06:33 +0530
+Message-ID: <1314344193-8468-3-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110826_093657_984453_1E7A3AD7)
+In-Reply-To: <1314344193-8468-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1314344193-8468-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <4E562608.9060700@broadcom.com>
-References: <CAGwCZhqDBZ4QGC_+3Bdbk=vRCnr0=sVdyR3J7WWqExf_hZQpLA@mail.gmail.com>
-	<4E54C87A.4080407@broadcom.com>
-	<CAGwCZhrYA2e_dVf6uHDaTfC35m2wopdLCOit8UFDa8D9v_v3Tw@mail.gmail.com>
-	<4E562608.9060700@broadcom.com>
-Date: Fri, 26 Aug 2011 17:00:03 +0800
-Message-ID: <CAGwCZhrkiu_yS1kSeEZqkznJeG3=+xdjgPAyhSLKjyXNwq9StA@mail.gmail.com> (sfid-20110826_110008_920134_0C8FE1E9)
-Subject: Re: force wifi radio to sleep immediately
-From: Hao Han <hhanwm@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you very much. Another related question is:
+It would be at <dbgfs_root>/ieee80211/phyX/ath6kl/credit_dist_stats.
 
-When a wireless interface works in master mode with new firmware
-"fw_bcm4329_apsta.bin" launched, is there any way to set power mode to
-PM_OFF, PM_FAST, PM_MAX?
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/debug.c |   69 +++++++++++++++++++++++++++++++
+ 1 files changed, 69 insertions(+), 0 deletions(-)
 
-My ultimate goal is to let the interface to sleep even in master mode.
-Right now, I try to use "dev_wlc_ioctl(dev, WLC_SET_PM, &pm,
-sizeof(pm))", but it doesn't work.
+V3 - Define macros for magic numbers which are used as length
+   - Add total available and free credits stats
+   - Define and use a macro to print credit stats
 
-BTW, my test device is Nexus One and the broadcom driver is BCM4329.
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 5a082c0..1cc23c1 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -290,6 +290,72 @@ static const struct file_operations fops_tgt_stats = {
+ 	.llseek = default_llseek,
+ };
+ 
++#define print_credit_info(fmt_str, ep_list_field)		\
++	(len += scnprintf(buf + len, buf_len - len, fmt_str,	\
++			 ep_list->ep_list_field))
++#define CREDIT_INFO_DISPLAY_STRING_LEN	200
++#define CREDIT_INFO_LEN	128
++
++static ssize_t read_file_credit_dist_stats(struct file *file,
++					   char __user *user_buf,
++					   size_t count, loff_t *ppos)
++{
++	struct ath6kl *ar = file->private_data;
++	struct htc_target *target = ar->htc_target;
++	struct htc_endpoint_credit_dist *ep_list;
++	char *buf;
++	unsigned int buf_len, len = 0;
++	ssize_t ret_cnt;
++
++	buf_len = CREDIT_INFO_DISPLAY_STRING_LEN +
++		  get_queue_depth(&target->cred_dist_list) * CREDIT_INFO_LEN;
++	buf = kzalloc(buf_len, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	len += scnprintf(buf + len, buf_len - len, "%25s%5d\n",
++			 "Total Avail Credits: ",
++			 target->cred_dist_cntxt->total_avail_credits);
++	len += scnprintf(buf + len, buf_len - len, "%25s%5d\n",
++			 "Free credits :",
++			 target->cred_dist_cntxt->cur_free_credits);
++
++	len += scnprintf(buf + len, buf_len - len,
++			 " Epid  Flags    Cred_norm  Cred_min  Credits  Cred_assngd"
++			 "  Seek_cred  Cred_sz  Cred_per_msg  Cred_to_dist"
++			 "  qdepth\n");
++
++	list_for_each_entry(ep_list, &target->cred_dist_list, list) {
++		print_credit_info("  %2d", endpoint);
++		print_credit_info("%10x", dist_flags);
++		print_credit_info("%8d", cred_norm);
++		print_credit_info("%9d", cred_min);
++		print_credit_info("%9d", credits);
++		print_credit_info("%10d", cred_assngd);
++		print_credit_info("%13d", seek_cred);
++		print_credit_info("%12d", cred_sz);
++		print_credit_info("%9d", cred_per_msg);
++		print_credit_info("%14d", cred_to_dist);
++		len += scnprintf(buf + len, buf_len - len, "%12d\n",
++				 get_queue_depth(&((struct htc_endpoint *)
++						 ep_list->htc_rsvd)->txq));
++	}
++
++	if (len > buf_len)
++		len = buf_len;
++
++	ret_cnt = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	kfree(buf);
++	return ret_cnt;
++}
++
++static const struct file_operations fops_credit_dist_stats = {
++	.read = read_file_credit_dist_stats,
++	.open = ath6kl_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ int ath6kl_debug_init(struct ath6kl *ar)
+ {
+ 	ar->debugfs_phy = debugfs_create_dir("ath6kl",
+@@ -300,6 +366,9 @@ int ath6kl_debug_init(struct ath6kl *ar)
+ 	debugfs_create_file("tgt_stats", S_IRUSR, ar->debugfs_phy, ar,
+ 			    &fops_tgt_stats);
+ 
++	debugfs_create_file("credit_dist_stats", S_IRUSR, ar->debugfs_phy, ar,
++			    &fops_credit_dist_stats);
++
+ 	return 0;
+ }
+ #endif
+-- 
+1.7.0.4
 
-Best,
-Hao
-
-On Thu, Aug 25, 2011 at 6:38 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 08/24/2011 12:12 PM, Hao Han wrote:
->>
->> Thank you for your quick reply, Gr. AvS.
->>
->> According to my understanding, in power save mode (PSM), the station
->> will go to sleep immediately (i.e. maintaining a very low power) after
->> sending packet with pwr mgt bit in 802.11 mac header setting to 1.
->>
->> My question is if we can force the station to go to such a low power
->> level by calling some function.
->>
->> It seems to me that it costs extra time to disable/enable the radio,
->> right? I hope to do it very quickly.
->>
->> I appreicate your help!
->>
->> Best,
->> Hao
->
-> I see. Your question is really about power save, which involves more that
-> the radio. Power save is a process better left to the device so there is no
-> interface in place to force that upon a driver/device.
->
-> Gr. AvS
->
-> --
-> Almost nobody dances sober, unless they happen to be insane.
-> -- H.P. Lovecraft --
->
->
->
