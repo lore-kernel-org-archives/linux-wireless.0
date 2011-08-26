@@ -1,27 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56153 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751471Ab1H3MSU (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:37591 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752883Ab1HZNnB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 08:18:20 -0400
-Subject: Re: [PATCH] ath5k: Invoke irqsafe version of ieee80211_tx_status()
- to avoid deadlock
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, lrodriguez@atheros.com, me@bobcopeland.com,
-	Javier Cardona <javier@cozybit.com>
-In-Reply-To: <1314236064-6339-1-git-send-email-thomas@cozybit.com> (sfid-20110825_033444_439163_B9A65422)
-References: <1314236064-6339-1-git-send-email-thomas@cozybit.com>
-	 (sfid-20110825_033444_439163_B9A65422)
-Content-Type: text/plain
-Date: Tue, 30 Aug 2011 14:18:17 +0200
-Message-ID: <1314706697.4011.24.camel@jlt3.sipsolutions.net> (sfid-20110830_141824_282505_A0065757)
+	Fri, 26 Aug 2011 09:43:01 -0400
+Received: by ewy4 with SMTP id 4so1488432ewy.19
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 06:42:59 -0700 (PDT)
+Subject: How to write a period CF-Poll sending program in mac80211
+From: pangyunong <029012@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 26 Aug 2011 21:41:06 +0800
+Message-ID: <1314366066.3030.18.camel@Yunong> (sfid-20110826_154310_854804_339B270B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Well, NACK. You shouldn't mix rx() with tx_status_irqsafe().
+Hi All,
 
-johannes
+I want to write implement PCF in mac80211 below Atheros ath9k Driver
+which has no PCF support now. So I must periodic send CF-Poll + [DATA]
+after sending a Beacon and set up the response for PCF in STA.
+
+I think I should know, 
+
+    1. How to setup a timer to count for this PCF period and CF-Poll
+period. How to deal with that timer interrupt. 
+
+    2. How to create a poll table to poll those associated STAs.
+
+Can you give me some examples or point out which part I should learn so
+that I can implement those PCF mechanism in mac80211?
+
+
+
+Yunong Pang
+Regards,
 
