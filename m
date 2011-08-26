@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54297 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753014Ab1HHP61 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:23320 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750747Ab1HZHLy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 11:58:27 -0400
-Subject: Re: [RFC] mac80211: fix resuming when device is gone
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20110808141900.GA25857@redhat.com>
-References: <20110808141900.GA25857@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 08 Aug 2011 17:58:26 +0200
-Message-ID: <1312819106.4372.37.camel@jlt3.sipsolutions.net> (sfid-20110808_175830_275504_AE86417D)
-Mime-Version: 1.0
+	Fri, 26 Aug 2011 03:11:54 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	<stable@kernel.org>
+Subject: [PATCH] ath9k_hw: Fix init mode register regression
+Date: Fri, 26 Aug 2011 12:42:11 +0530
+Message-ID: <1314342731-13207-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110826_091158_503646_B285E21B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-08-08 at 16:19 +0200, Stanislaw Gruszka wrote:
-> Is possible that usb hardware can be unplugged during or before resume.
-> If so do not call ieee80211_reconfig(), which among other things arm
-> sta_cleanup timer. Timer callback then operate on freed memory.
+The commit 172805ad46b78717a738ca5c7908c68f0326d3a9
+overwirtes additional clock settings of AR9330 to
+all AR9300 chips.
 
-> I have this warning with possible fallow up crash without physically
-> unplugging device, but usb core rebind rt73usb with message:
-> 
-> "rt73usb 1-2:1.0: no reset_resume for driver rt73usb?"
-> 
-> What probably also need to be fixed in rt2x00. But I think fix in
-> mac80211 is needed for possibility of physical remove. Not sure if this
-> is best possible fix, through. Maybe just preventing arming sta_cleanup
-> would be better, other things in ieee80211_reconfig() seems to work.
+Cc: stable@kernel.org
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-But ... if sta_cleanup timer operates on freed memory, why doesn't
-"local->registered"?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 33edb56..2f35aee 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -671,7 +671,7 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
+ 		REG_WRITE_ARRAY(&ah->iniModesAdditional,
+ 				modesIndex, regWrites);
+ 
+-	if (AR_SREV_9300(ah))
++	if (AR_SREV_9330(ah))
+ 		REG_WRITE_ARRAY(&ah->iniModesAdditional, 1, regWrites);
+ 
+ 	if (AR_SREV_9340(ah) && !ah->is_clk_25mhz)
+-- 
+1.7.6.1
 
