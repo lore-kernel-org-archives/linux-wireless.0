@@ -1,39 +1,287 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33216 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:23946 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756569Ab1HXJFH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 05:05:07 -0400
-Date: Wed, 24 Aug 2011 11:03:41 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [compat-wireless-3.1-rc1-1] rt2800usb crashes the machine
-Message-ID: <20110824090340.GA2277@redhat.com> (sfid-20110824_110511_086213_6CE16508)
-References: <4E536DD8.6030308@01019freenet.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E536DD8.6030308@01019freenet.de>
+	id S1751540Ab1HZGx0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 02:53:26 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/60] iwlagn: introduce struct iwl-shared - known by all layers
+Date: Thu, 25 Aug 2011 23:10:37 -0700
+Message-Id: <1314339092-20797-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085333_449523_707B9ED0)
+In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 23, 2011 at 11:07:36AM +0200, Andreas Hartmann wrote:
-> using rt2800usb with a Linksys WUSB600N v2 (rt3572) crashes the complete
-> machine (SMP, Core i5, linux 3.0) on unloading the module after using it
-> for a short period of time:
-> - 2 times netperf -t TCP_MAERTS -H host
-> - 2 times netperf -t TCP_STREAM -H host
-> 
-> The error message in /var/log/messages is:
-> 
-> phy0 -> rt2800_wait_wpdma_ready: Error - WPDMA TX/RX busy, aborting
-> 
-> After the crash, you have to hard reset the machine.
-Did you hibernate machine anytime before the rmmod ?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-If so, we have fix on wireless-testing tree:
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commitdiff;h=543cc38c8fe86deba4169977c61eb88491036837
+This struct will hold pointers to all the layers, so that every layer will find
+the pointers it needs when calling another layer.
 
-Otherwise perhaps you could photo crash logs on virtual terminal
-(switched by Alt+Ctrl+F2 from X-window) or by using netconsole or kdump.
+Note that the drv_data set to struct device is now a pointer to
+struct iwl_shared.
+This solves of bug that I introduced in
 
-Stanislaw
+	iwlagn: simplify the bus architecture
+
+Bug description:
+
+sysfs gets the the driver data from struct device. Till the aforementioned
+patch, dev_get_drvdata would return iwl_priv. After the patch, dev_get_drvdata
+return iwl_bus which is buggy since the sysfs handlers rely on this value, and
+sysfs handlers need iwl_priv.
+
+Now, dev_get_drvdata return iwl-shared. Since we have pointers to all the
+layers in iwl_shared, every layer will be able to get the pointer it needs:
+bus layer will gets iwl_bus from the PCI suspend callbacks, and the sysfs
+handlers will get the iwl_priv they need.
+
+In order to keep good encapsulation, we need to avoid to dereference iwl_priv
+from a different layer. This is why instead of including iwl-dev.h from
+iwl-shared.h, I added a forward declaration to iwl_priv. Moreover we keep type
+safety while providing encapsulation.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |   15 ++++++++++-----
+ drivers/net/wireless/iwlwifi/iwl-bus.h    |   12 +++++++-----
+ drivers/net/wireless/iwlwifi/iwl-dev.h    |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl-pci.c    |   26 +++++++++++++-------------
+ drivers/net/wireless/iwlwifi/iwl-shared.h |   16 ++++++++++++++++
+ 5 files changed, 50 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index cb8a9f9..39e7bdb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -473,14 +473,15 @@ static void iwl_bg_tx_flush(struct work_struct *work)
+ static ssize_t show_debug_level(struct device *d,
+ 				struct device_attribute *attr, char *buf)
+ {
+-	struct iwl_priv *priv = dev_get_drvdata(d);
+-	return sprintf(buf, "0x%08X\n", iwl_get_debug_level(priv));
++	struct iwl_shared *shrd = dev_get_drvdata(d);
++	return sprintf(buf, "0x%08X\n", iwl_get_debug_level(shrd->priv));
+ }
+ static ssize_t store_debug_level(struct device *d,
+ 				struct device_attribute *attr,
+ 				 const char *buf, size_t count)
+ {
+-	struct iwl_priv *priv = dev_get_drvdata(d);
++	struct iwl_shared *shrd = dev_get_drvdata(d);
++	struct iwl_priv *priv = shrd->priv;
+ 	unsigned long val;
+ 	int ret;
+ 
+@@ -506,7 +507,8 @@ static DEVICE_ATTR(debug_level, S_IWUSR | S_IRUGO,
+ static ssize_t show_temperature(struct device *d,
+ 				struct device_attribute *attr, char *buf)
+ {
+-	struct iwl_priv *priv = dev_get_drvdata(d);
++	struct iwl_shared *shrd = dev_get_drvdata(d);
++	struct iwl_priv *priv = shrd->priv;
+ 
+ 	if (!iwl_is_alive(priv))
+ 		return -EAGAIN;
+@@ -3603,7 +3605,10 @@ int iwl_probe(struct iwl_bus *bus, struct iwl_cfg *cfg)
+ 
+ 	priv = hw->priv;
+ 	priv->bus = bus;
+-	bus_set_drv_data(priv->bus, priv);
++	priv->shrd = &priv->_shrd;
++	priv->shrd->bus = bus;
++	priv->shrd->priv = priv;
++	bus_set_drv_data(priv->bus, priv->shrd);
+ 
+ 	/* At this point both hw and priv are allocated. */
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-bus.h b/drivers/net/wireless/iwlwifi/iwl-bus.h
+index f3ee1c0..a698004 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-bus.h
++++ b/drivers/net/wireless/iwlwifi/iwl-bus.h
+@@ -63,13 +63,14 @@
+ #ifndef __iwl_pci_h__
+ #define __iwl_pci_h__
+ 
++struct iwl_shared;
+ struct iwl_bus;
+ 
+ /**
+  * struct iwl_bus_ops - bus specific operations
+  * @get_pm_support: must returns true if the bus can go to sleep
+  * @apm_config: will be called during the config of the APM configuration
+- * @set_drv_data: set the drv_data pointer to the bus layer
++ * @set_drv_data: set the shared data pointer to the bus layer
+  * @get_hw_id: prints the hw_id in the provided buffer
+  * @write8: write a byte to register at offset ofs
+  * @write32: write a dword to register at offset ofs
+@@ -78,7 +79,7 @@ struct iwl_bus;
+ struct iwl_bus_ops {
+ 	bool (*get_pm_support)(struct iwl_bus *bus);
+ 	void (*apm_config)(struct iwl_bus *bus);
+-	void (*set_drv_data)(struct iwl_bus *bus, void *drv_data);
++	void (*set_drv_data)(struct iwl_bus *bus, struct iwl_shared *shrd);
+ 	void (*get_hw_id)(struct iwl_bus *bus, char buf[], int buf_len);
+ 	void (*write8)(struct iwl_bus *bus, u32 ofs, u8 val);
+ 	void (*write32)(struct iwl_bus *bus, u32 ofs, u32 val);
+@@ -87,9 +88,9 @@ struct iwl_bus_ops {
+ 
+ struct iwl_bus {
+ 	/* Common data to all buses */
+-	void *drv_data; /* driver's context */
+ 	struct device *dev;
+ 	struct iwl_bus_ops *ops;
++	struct iwl_shared *shrd;
+ 
+ 	unsigned int irq;
+ 
+@@ -108,9 +109,10 @@ static inline void bus_apm_config(struct iwl_bus *bus)
+ 	bus->ops->apm_config(bus);
+ }
+ 
+-static inline void bus_set_drv_data(struct iwl_bus *bus, void *drv_data)
++static inline void bus_set_drv_data(struct iwl_bus *bus,
++				struct iwl_shared *shrd)
+ {
+-	bus->ops->set_drv_data(bus, drv_data);
++	bus->ops->set_drv_data(bus, shrd);
+ }
+ 
+ static inline void bus_get_hw_id(struct iwl_bus *bus, char buf[], int buf_len)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index d0e65c8..85295b0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1210,6 +1210,10 @@ struct iwl_testmode_trace {
+ 
+ struct iwl_priv {
+ 
++	/*data shared among all the driver's layers */
++	struct iwl_shared _shrd;
++	struct iwl_shared *shrd;
++
+ 	/* ieee device used by generic ieee processing code */
+ 	struct ieee80211_hw *hw;
+ 	struct ieee80211_channel *ieee_channels;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index a2441dd..3b7efd7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -123,21 +123,21 @@ static void iwl_pci_apm_config(struct iwl_bus *bus)
+ 	if ((lctl & PCI_CFG_LINK_CTRL_VAL_L1_EN) ==
+ 				PCI_CFG_LINK_CTRL_VAL_L1_EN) {
+ 		/* L1-ASPM enabled; disable(!) L0S */
+-		iwl_set_bit(bus->drv_data, CSR_GIO_REG,
++		iwl_set_bit(priv(bus), CSR_GIO_REG,
+ 				CSR_GIO_REG_VAL_L0S_ENABLED);
+ 		dev_printk(KERN_INFO, bus->dev, "L1 Enabled; Disabling L0S\n");
+ 	} else {
+ 		/* L1-ASPM disabled; enable(!) L0S */
+-		iwl_clear_bit(bus->drv_data, CSR_GIO_REG,
++		iwl_clear_bit(priv(bus), CSR_GIO_REG,
+ 				CSR_GIO_REG_VAL_L0S_ENABLED);
+ 		dev_printk(KERN_INFO, bus->dev, "L1 Disabled; Enabling L0S\n");
+ 	}
+ }
+ 
+-static void iwl_pci_set_drv_data(struct iwl_bus *bus, void *drv_data)
++static void iwl_pci_set_drv_data(struct iwl_bus *bus, struct iwl_shared *shrd)
+ {
+-	bus->drv_data = drv_data;
+-	pci_set_drvdata(IWL_BUS_GET_PCI_DEV(bus), drv_data);
++	bus->shrd = shrd;
++	pci_set_drvdata(IWL_BUS_GET_PCI_DEV(bus), shrd);
+ }
+ 
+ static void iwl_pci_get_hw_id(struct iwl_bus *bus, char buf[],
+@@ -496,12 +496,12 @@ static void iwl_pci_down(struct iwl_bus *bus)
+ 
+ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
+ {
+-	struct iwl_priv *priv = pci_get_drvdata(pdev);
+-	void *bus_specific = priv->bus->bus_specific;
++	struct iwl_shared *shrd = pci_get_drvdata(pdev);
++	struct iwl_bus *bus = shrd->bus;
+ 
+-	iwl_remove(priv);
++	iwl_remove(shrd->priv);
+ 
+-	iwl_pci_down(bus_specific);
++	iwl_pci_down(bus);
+ }
+ 
+ #ifdef CONFIG_PM
+@@ -509,20 +509,20 @@ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
+ static int iwl_pci_suspend(struct device *device)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(device);
+-	struct iwl_priv *priv = pci_get_drvdata(pdev);
++	struct iwl_shared *shrd = pci_get_drvdata(pdev);
+ 
+ 	/* Before you put code here, think about WoWLAN. You cannot check here
+ 	 * whether WoWLAN is enabled or not, and your code will run even if
+ 	 * WoWLAN is enabled - don't kill the NIC, someone may need it in Sx.
+ 	 */
+ 
+-	return iwl_suspend(priv);
++	return iwl_suspend(shrd->priv);
+ }
+ 
+ static int iwl_pci_resume(struct device *device)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(device);
+-	struct iwl_priv *priv = pci_get_drvdata(pdev);
++	struct iwl_shared *shrd = pci_get_drvdata(pdev);
+ 
+ 	/* Before you put code here, think about WoWLAN. You cannot check here
+ 	 * whether WoWLAN is enabled or not, and your code will run even if
+@@ -535,7 +535,7 @@ static int iwl_pci_resume(struct device *device)
+ 	 */
+ 	pci_write_config_byte(pdev, PCI_CFG_RETRY_TIMEOUT, 0x00);
+ 
+-	return iwl_resume(priv);
++	return iwl_resume(shrd->priv);
+ }
+ 
+ static SIMPLE_DEV_PM_OPS(iwl_dev_pm_ops, iwl_pci_suspend, iwl_pci_resume);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 5d48d05..32744a7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -64,6 +64,7 @@
+ #define __iwl_shared_h__
+ 
+ struct iwl_cfg;
++struct iwl_bus;
+ struct iwl_priv;
+ 
+ extern struct iwl_mod_params iwlagn_mod_params;
+@@ -89,6 +90,21 @@ struct iwl_mod_params {
+ 	int wanted_ucode_alternative;
+ };
+ 
++/**
++ * struct iwl_shared - shared fields for all the layers of the driver
++ *
++ * @bus: pointer to the bus layer data
++ * @priv: pointer to the upper layer data
++ */
++struct iwl_shared {
++	struct iwl_bus *bus;
++	struct iwl_priv *priv;
++};
++
++/*Whatever _m is (iwl_trans, iwl_priv, iwl_bus, these macros will work */
++#define priv(_m)	((_m)->shrd->priv)
++#define bus(_m)		((_m)->shrd->bus)
++
+ #ifdef CONFIG_PM
+ int iwl_suspend(struct iwl_priv *priv);
+ int iwl_resume(struct iwl_priv *priv);
+-- 
+1.7.0.4
+
