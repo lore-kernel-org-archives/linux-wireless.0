@@ -1,110 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:36121 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751407Ab1HWIJj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 04:09:39 -0400
-Received: by fxh19 with SMTP id 19so79580fxh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 01:09:38 -0700 (PDT)
-From: Florian Fainelli <florian@openwrt.org>
-To: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
-Subject: Re: [RFT v2 2/2] ath9k: add AR9580 support
-Date: Tue, 23 Aug 2011 10:09:35 +0200
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-References: <1314058119-3441-1-git-send-email-lrodriguez@qca.qualcomm.com> <1314058119-3441-3-git-send-email-lrodriguez@qca.qualcomm.com> <201108231007.44737.florian@openwrt.org>
-In-Reply-To: <201108231007.44737.florian@openwrt.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201108231009.35292.florian@openwrt.org> (sfid-20110823_100942_543626_CE3F2E0B)
+Received: from mga01.intel.com ([192.55.52.88]:7217 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753233Ab1HZGxj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 02:53:39 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 48/60] iwlagn: stop the device before freeing it
+Date: Thu, 25 Aug 2011 23:11:20 -0700
+Message-Id: <1314339092-20797-49-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085410_650736_BCD36603)
+In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 23 August 2011 10:07:44 Florian Fainelli wrote:
-> Hello Luis,
-> 
-> On Tuesday 23 August 2011 02:08:39 Luis R. Rodriguez wrote:
-> > From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-> > 
-> > Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-> > ---
-> > 
-> >  drivers/net/wireless/ath/ath9k/pci.c |    1 +
-> >  1 files changed, 1 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/ath9k/pci.c
-> > b/drivers/net/wireless/ath/ath9k/pci.c index daa26b5..6cb90ee 100644
-> > --- a/drivers/net/wireless/ath/ath9k/pci.c
-> > +++ b/drivers/net/wireless/ath/ath9k/pci.c
-> > @@ -32,6 +32,7 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
-> > 
-> >  	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
-> >  	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
-> >  	{ PCI_VDEVICE(ATHEROS, 0x0032) }, /* PCI-E  AR9485 */
-> > 
-> > +	{ PCI_VDEVICE(ATHEROS, 0x0033) }, /* PCI-E  AR9580 */
-> > 
-> >  	{ 0 }
-> >  
-> >  };
-> 
-> You also need this change in hw.{c,h} for ath9k not to bail out with "ath:
-> Hardware device ID 0x0033 not supported":
-> 
-> Index: compat-wireless-2011-08-10/drivers/net/wireless/ath/ath9k/hw.c
-> ===================================================================
-> --- compat-wireless-2011-08-10.orig/drivers/net/wireless/ath/ath9k/hw.c
-> 2011-08-23 10:01:30.804054398 +0200
-> +++ compat-wireless-2011-08-10/drivers/net/wireless/ath/ath9k/hw.c
-> 2011-08-23 10:01:46.314054408 +0200
-> @@ -672,6 +672,7 @@
->         case AR9300_DEVID_AR9485_PCIE:
->         case AR9300_DEVID_AR9330:
->         case AR9300_DEVID_AR9340:
-> +       case AR9300_DEVID_AR9580:
->                 break;
->         default:
->                 if (common->bus_ops->ath_bus_type == ATH_USB)
-> Index: compat-wireless-2011-08-10/drivers/net/wireless/ath/ath9k/hw.h
-> ===================================================================
-> --- compat-wireless-2011-08-10.orig/drivers/net/wireless/ath/ath9k/hw.h
-> 2011-08-23 10:01:32.504054400 +0200
-> +++ compat-wireless-2011-08-10/drivers/net/wireless/ath/ath9k/hw.h
-> 2011-08-23 10:01:59.124054416 +0200
-> @@ -45,6 +45,7 @@
->  #define AR9300_DEVID_PCIE      0x0030
->  #define AR9300_DEVID_AR9340    0x0031
->  #define AR9300_DEVID_AR9485_PCIE 0x0032
-> +#define AR9300_DEVID_AR9580    0x0033
->  #define AR9300_DEVID_AR9330    0x0035
-> 
->  #define AR5416_AR9100_DEVID    0x000b
-> 
-> With the above two patches applied, I get the following:
-> 
-> iw dev wlan0 scan
-> command failed: Device or resource busy (-16)
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I had wpa_supplicant running in background, scan does no longer report Device 
-or resource busy now.
+When we remove the module, we free all the tx and rx resources.
+Before doing that, we'd better stop the tx / rx activity. Calling
+iwl_trans_stop_device in iwl_remove helps also to remove a few API
+functions:
+ * rx_free:		happens in iwl_trans_free
+ * tx_free:		happens in iwl_trans_free
+ * disable_sync_irq:	happens in iwl_trans_stop_device
 
-> 
-> iw phy0 info shows the 5GHz band has being listed
-> 
-> iw dev wlan0 survey dump seems to correctly list the activity on the 5Ghz
-> channels (it's updated from one call to another)
-> 
-> if I start the interface in AP mode, my laptop does not see it's beacon, I
-> have not had a chance yet to use a monitor interface.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c   |   11 +------
+ drivers/net/wireless/iwlwifi/iwl-trans.c |   42 ++++++++++++++---------------
+ drivers/net/wireless/iwlwifi/iwl-trans.h |   23 ----------------
+ 3 files changed, 22 insertions(+), 54 deletions(-)
 
-I will test later the opposite, where my laptop is in AP mode, and try to get 
-this AR9580 device in STA mode.
-
-> 
-> Let me know if you want me to give you more debug.
-> 
-> Thank you very much!
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 65a6db5..e19ff11 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3443,20 +3443,13 @@ void __devexit iwl_remove(struct iwl_priv * priv)
+ 		priv->mac80211_registered = 0;
+ 	}
+ 
+-	/* Reset to low power before unloading driver. */
+-	iwl_apm_stop(priv);
+-
+ 	iwl_tt_exit(priv);
+ 
+-	/* make sure we flush any pending irq or
+-	 * tasklet for the driver */
+-	iwl_trans_disable_sync_irq(trans(priv));
++	/*This will stop the queues, move the device to low power state */
++	iwl_trans_stop_device(trans(priv));
+ 
+ 	iwl_dealloc_ucode(priv);
+ 
+-	iwl_trans_rx_free(trans(priv));
+-	iwl_trans_tx_free(trans(priv));
+-
+ 	iwl_eeprom_free(priv);
+ 
+ 	/*netif_stop_queue(dev); */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+index ac401b8..0a3dd6b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -555,7 +555,7 @@ static int iwl_trans_tx_alloc(struct iwl_trans *trans)
+ 	return 0;
+ 
+ error:
+-	iwl_trans_tx_free(trans);
++	iwl_trans_pcie_tx_free(trans);
+ 
+ 	return ret;
+ }
+@@ -603,7 +603,7 @@ static int iwl_tx_init(struct iwl_trans *trans)
+ error:
+ 	/*Upon error, free only if we allocated something */
+ 	if (alloc)
+-		iwl_trans_tx_free(trans);
++		iwl_trans_pcie_tx_free(trans);
+ 	return ret;
+ }
+ 
+@@ -958,13 +958,28 @@ static int iwl_trans_tx_stop(struct iwl_trans *trans)
+ 	return 0;
+ }
+ 
++static void iwl_trans_pcie_disable_sync_irq(struct iwl_trans *trans)
++{
++	unsigned long flags;
++	struct iwl_trans_pcie *trans_pcie =
++		IWL_TRANS_GET_PCIE_TRANS(trans);
++
++	spin_lock_irqsave(&trans->shrd->lock, flags);
++	iwl_disable_interrupts(trans);
++	spin_unlock_irqrestore(&trans->shrd->lock, flags);
++
++	/* wait to make sure we flush pending tasklet*/
++	synchronize_irq(bus(trans)->irq);
++	tasklet_kill(&trans_pcie->irq_tasklet);
++}
++
+ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
+ {
+ 	/* stop and reset the on-board processor */
+ 	iwl_write32(bus(trans), CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
+ 
+ 	/* tell the device to stop sending interrupts */
+-	iwl_trans_disable_sync_irq(trans);
++	iwl_trans_pcie_disable_sync_irq(trans);
+ 
+ 	/* device going down, Stop using ICT table */
+ 	iwl_disable_ict(trans);
+@@ -1208,23 +1223,10 @@ static void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id,
+ 	}
+ }
+ 
+-static void iwl_trans_pcie_disable_sync_irq(struct iwl_trans *trans)
+-{
+-	unsigned long flags;
+-	struct iwl_trans_pcie *trans_pcie =
+-		IWL_TRANS_GET_PCIE_TRANS(trans);
+-
+-	spin_lock_irqsave(&trans->shrd->lock, flags);
+-	iwl_disable_interrupts(trans);
+-	spin_unlock_irqrestore(&trans->shrd->lock, flags);
+-
+-	/* wait to make sure we flush pending tasklet*/
+-	synchronize_irq(bus(trans)->irq);
+-	tasklet_kill(&trans_pcie->irq_tasklet);
+-}
+-
+ static void iwl_trans_pcie_free(struct iwl_trans *trans)
+ {
++	iwl_trans_pcie_tx_free(trans);
++	iwl_trans_pcie_rx_free(trans);
+ 	free_irq(bus(trans)->irq, trans);
+ 	iwl_free_isr_ict(trans);
+ 	trans->shrd->trans = NULL;
+@@ -1860,9 +1862,6 @@ const struct iwl_trans_ops trans_ops_pcie = {
+ 
+ 	.tx_start = iwl_trans_pcie_tx_start,
+ 
+-	.rx_free = iwl_trans_pcie_rx_free,
+-	.tx_free = iwl_trans_pcie_tx_free,
+-
+ 	.send_cmd = iwl_trans_pcie_send_cmd,
+ 	.send_cmd_pdu = iwl_trans_pcie_send_cmd_pdu,
+ 
+@@ -1875,7 +1874,6 @@ const struct iwl_trans_ops trans_ops_pcie = {
+ 
+ 	.kick_nic = iwl_trans_pcie_kick_nic,
+ 
+-	.disable_sync_irq = iwl_trans_pcie_disable_sync_irq,
+ 	.free = iwl_trans_pcie_free,
+ 
+ 	.dbgfs_register = iwl_trans_pcie_dbgfs_register,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 0da6ad5..e72e480 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -88,8 +88,6 @@ struct iwl_shared;
+  * @tx_start: starts and configures all the Tx fifo - usually done once the fw
+  *           is alive.
+  * @stop_device:stops the whole device (embedded CPU put to reset)
+- * @rx_free: frees the rx memory
+- * @tx_free: frees the tx memory
+  * @send_cmd:send a host command
+  * @send_cmd_pdu:send a host command: flags can be CMD_*
+  * @get_tx_cmd: returns a pointer to a new Tx cmd for the upper layer use
+@@ -99,9 +97,6 @@ struct iwl_shared;
+  *                 ready and a successful ADDBA response has been received.
+  * @txq_agg_disable: de-configure a Tx queue to send AMPDUs
+  * @kick_nic: remove the RESET from the embedded CPU and let it run
+- * @disable_sync_irq: Disable and sync: after this handler returns, it is
+- *	guaranteed that all the ISR / tasklet etc... have finished running
+- *	and the transport layer shall not pass any Rx.
+  * @free: release all the ressource for the transport layer itself such as
+  *        irq, tasklet etc...
+  * @dbgfs_register: add the dbgfs files under this directory. Files will be
+@@ -117,8 +112,6 @@ struct iwl_trans_ops {
+ 	int (*prepare_card_hw)(struct iwl_trans *trans);
+ 	void (*stop_device)(struct iwl_trans *trans);
+ 	void (*tx_start)(struct iwl_trans *trans);
+-	void (*tx_free)(struct iwl_trans *trans);
+-	void (*rx_free)(struct iwl_trans *trans);
+ 
+ 	int (*send_cmd)(struct iwl_trans *trans, struct iwl_host_cmd *cmd);
+ 
+@@ -138,7 +131,6 @@ struct iwl_trans_ops {
+ 
+ 	void (*kick_nic)(struct iwl_trans *trans);
+ 
+-	void (*disable_sync_irq)(struct iwl_trans *trans);
+ 	void (*free)(struct iwl_trans *trans);
+ 
+ 	int (*dbgfs_register)(struct iwl_trans *trans, struct dentry* dir);
+@@ -187,16 +179,6 @@ static inline void iwl_trans_tx_start(struct iwl_trans *trans)
+ 	trans->ops->tx_start(trans);
+ }
+ 
+-static inline void iwl_trans_rx_free(struct iwl_trans *trans)
+-{
+-	trans->ops->rx_free(trans);
+-}
+-
+-static inline void iwl_trans_tx_free(struct iwl_trans *trans)
+-{
+-	trans->ops->tx_free(trans);
+-}
+-
+ static inline int iwl_trans_send_cmd(struct iwl_trans *trans,
+ 				struct iwl_host_cmd *cmd)
+ {
+@@ -247,11 +229,6 @@ static inline void iwl_trans_kick_nic(struct iwl_trans *trans)
+ 	trans->ops->kick_nic(trans);
+ }
+ 
+-static inline void iwl_trans_disable_sync_irq(struct iwl_trans *trans)
+-{
+-	trans->ops->disable_sync_irq(trans);
+-}
+-
+ static inline void iwl_trans_free(struct iwl_trans *trans)
+ {
+ 	trans->ops->free(trans);
 -- 
-Florian
+1.7.0.4
+
