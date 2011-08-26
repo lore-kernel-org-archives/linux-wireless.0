@@ -1,202 +1,319 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:55790 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752510Ab1HRQLc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Aug 2011 12:11:32 -0400
-Subject: Re: [PATCH 3/4] NFC: Basic NFC NCI protocol implementation
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: "Elias, Ilan" <ilane@ti.com>
-Cc: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE6600131E1C33B@dnce02.ent.ti.com>
-References: <AC090B9732AB2B4DB7FF476E907FE6600131E1C33B@dnce02.ent.ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 18 Aug 2011 18:13:20 +0200
-Message-ID: <1313684000.3345.21.camel@sortiz-mobl> (sfid-20110818_181135_622196_7C09DDC5)
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:44772 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753310Ab1HZGxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 02:53:40 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 51/60] iwlagn: upper layer uses slabs to allocate tx cmds
+Date: Thu, 25 Aug 2011 23:11:23 -0700
+Message-Id: <1314339092-20797-52-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085359_741269_7BB36E6F)
+In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ilan,
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-On Tue, 2011-08-16 at 19:36 +0200, Elias, Ilan wrote:
-> The NFC Controller Interface (NCI) is a standard communication protocol between an NFC Controller (NFCC) and a Device Host (DH), defined by the NFC Forum.
-> 
-> Signed-off-by: Ilan Elias <ilane@ti.com>
-> ---
->  include/net/nfc/nci.h      |  313 ++++++++++++++++++
->  include/net/nfc/nci_core.h |  177 +++++++++++
->  net/nfc/Kconfig            |    2 +
->  net/nfc/Makefile           |    1 +
->  net/nfc/nci/Kconfig        |   10 +
->  net/nfc/nci/Makefile       |    7 +
->  net/nfc/nci/nci_core.c     |  750 ++++++++++++++++++++++++++++++++++++++++++++
->  net/nfc/nci/nci_data.c     |  252 +++++++++++++++
->  net/nfc/nci/nci_lib.c      |   94 ++++++
->  net/nfc/nci/nci_ntf.c      |  264 ++++++++++++++++
->  net/nfc/nci/nci_rsp.c      |  226 +++++++++++++
->  11 files changed, 2096 insertions(+), 0 deletions(-)
->  create mode 100644 include/net/nfc/nci.h
->  create mode 100644 include/net/nfc/nci_core.h
->  create mode 100644 net/nfc/nci/Kconfig
->  create mode 100644 net/nfc/nci/Makefile
->  create mode 100644 net/nfc/nci/nci_core.c
->  create mode 100644 net/nfc/nci/nci_data.c
->  create mode 100644 net/nfc/nci/nci_lib.c
->  create mode 100644 net/nfc/nci/nci_ntf.c
->  create mode 100644 net/nfc/nci/nci_rsp.c
-In general, I prefer the nci/core.c, nci/data.c, etc naming scheme as opposed to the more redundant one you're using here.
+In a near future, the upper layer won't be aware of the tx queues.
+This allows to remove one place where the upper layer needed to
+provide the tx queue index to the transport layer.
+This also saves around 1.5MB.
 
-> +/* NCI Discovery Types */
-> +#define NCI_DISCOVERY_TYPE_POLL_A_PASSIVE              0x00
-Identation fix.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c    |   19 +++++++-
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |    9 ++++
+ drivers/net/wireless/iwlwifi/iwl-agn.c       |    2 +
+ drivers/net/wireless/iwlwifi/iwl-dev.h       |    2 +
+ drivers/net/wireless/iwlwifi/iwl-trans.c     |   57 +++++++++-----------------
+ drivers/net/wireless/iwlwifi/iwl-trans.h     |   17 +++-----
+ 6 files changed, 55 insertions(+), 51 deletions(-)
 
-
-> +#define        NCI_DISCOVERY_TYPE_POLL_B_PASSIVE               0x01
-> +#define        NCI_DISCOVERY_TYPE_POLL_F_PASSIVE               0x02
-> +#define        NCI_DISCOVERY_TYPE_POLL_A_ACTIVE                0x03
-> +#define        NCI_DISCOVERY_TYPE_POLL_F_ACTIVE                0x05
-> +#define        NCI_DISCOVERY_TYPE_WAKEUP_A_PASSIVE             0x06
-> +#define        NCI_DISCOVERY_TYPE_WAKEUP_B_PASSIVE             0x07
-> +#define        NCI_DISCOVERY_TYPE_WAKEUP_A_ACTIVE              0x09
-> +#define        NCI_DISCOVERY_TYPE_LISTEN_A_PASSIVE             0x80
-> +#define        NCI_DISCOVERY_TYPE_LISTEN_B_PASSIVE             0x81
-> +#define        NCI_DISCOVERY_TYPE_LISTEN_F_PASSIVE             0x82
-> +#define        NCI_DISCOVERY_TYPE_LISTEN_A_ACTIVE              0x83
-> +#define        NCI_DISCOVERY_TYPE_LISTEN_F_ACTIVE              0x85
-
-> +#define NCI_MT_DATA_PKT                        0x00
-Ditto.
-
-> +#define NCI_MT_CMD_PKT                  0x01
-> +#define NCI_MT_RSP_PKT                 0x02
-> +#define NCI_MT_NTF_PKT                 0x03
-
-> +/* Reserved for drivers usage */
-> +#define NCI_SKB_RESERVE        4
-Do we expect all drivers to need at most 4 bytes ?
-
-> +#define nci_req_lock(ndev)             mutex_lock(&ndev->req_lock)
-> +#define nci_req_unlock(ndev)           mutex_unlock(&ndev->req_lock)
-This kind of abstraction doesn't bring much to the table. I'd prefer to
-use the mutex API directly.
-
-
-
-> +/* Execute request and wait for completion. */
-> +static int __nci_request(struct nci_dev *ndev,
-> +       void (*req)(struct nci_dev *ndev, unsigned long opt),
-> +       unsigned long opt,
-> +       __u32 timeout)
-> +{
-> +       DECLARE_WAITQUEUE(wait, current);
-> +       int rc = 0;
-> +
-> +       ndev->req_status = NCI_REQ_PEND;
-> +
-> +       add_wait_queue(&ndev->req_wait_q, &wait);
-> +       set_current_state(TASK_INTERRUPTIBLE);
-> +
-> +       req(ndev, opt);
-> +       schedule_timeout(timeout);
-> +
-> +       remove_wait_queue(&ndev->req_wait_q, &wait);
-> +
-> +       if (signal_pending(current))
-> +               return -EINTR;
-> +
-> +       switch (ndev->req_status) {
-> +       case NCI_REQ_DONE:
-> +               rc = nci_to_errno(ndev->req_result);
-> +               break;
-> +
-> +       case NCI_REQ_CANCELED:
-> +               rc = -ndev->req_result;
-> +               break;
-> +
-> +       default:
-> +               rc = -ETIMEDOUT;
-> +               break;
-> +       }
-> +
-> +       ndev->req_status = ndev->req_result = 0;
-> +
-> +       return rc;
-> +}
-So here, I wonder: Can't we just use simple completion and the
-wait_for_completion_* APIs ? One completion structure per ndev and you
-should be fine. Especially since you seem to be serializing (as
-expected) the requests below.
-
-
-> +/* Send NCI command */
-> +int nci_send_cmd(struct nci_dev *ndev, __u16 opcode, __u8 plen, void *payload)
-> +{
-> +       struct nci_ctrl_hdr *hdr;
-> +       struct sk_buff *skb;
-> +
-> +       nfc_dbg("entry, opcode 0x%x, plen %d", opcode, plen);
-> +
-> +       skb = nci_skb_alloc((NCI_CTRL_HDR_SIZE + plen), GFP_KERNEL);
-> +       if (!skb) {
-> +               nfc_err("no memory for command");
-> +               return -ENOMEM;
-> +       }
-> +
-> +       hdr = (struct nci_ctrl_hdr *) skb_put(skb, NCI_CTRL_HDR_SIZE);
-> +       hdr->gid = nci_opcode_gid(opcode);
-> +       hdr->oid = nci_opcode_oid(opcode);
-> +       hdr->plen = plen;
-> +
-> +       nci_mt_set((__u8 *)hdr, NCI_MT_CMD_PKT);
-> +       nci_pbf_set((__u8 *)hdr, NCI_PBF_LAST);
-> +
-> +       if (plen)
-> +               memcpy(skb_put(skb, plen), payload, plen);
-> +
-> +       skb->dev = (void *) ndev;
-> +
-> +       skb_queue_tail(&ndev->cmd_q, skb);
-> +       tasklet_schedule(&ndev->cmd_task);
-> +
-> +       return 0;
-> +}
-So I have 2 comments on this one:
-
-1) Do we have a compelling reason for deferring the command queue
-handling ? In which case can you queue a command while the previous one
-is not completed yet ?
-2) If we do, we certainly don't want a tasklet for that. Using a tasklet
-puts some additional constraints on what we can call for it, the
-tradeoff being a supposedly lower latency. I don't think we need it,
-workqueues (for cmd, tx and rx) would be just fine.
-
-
-
-
-> +/* Send NCI data */
-> +int nci_send_data(struct nci_dev *ndev, __u8 conn_id, struct sk_buff *skb)
-> +{
-> +       int rc = 0;
-> +
-> +       nfc_dbg("entry, conn_id 0x%x, plen %d", conn_id, skb->len);
-> +
-> +       /* check if the packet need to be fragmented */
-> +       if (skb->len <= ndev->max_pkt_payload_size) {
-> +               /* no need to fragment packet */
-> +
-> +               /* reserve header space for nci and driver */
-> +               if (skb_cow_head(skb, (NCI_DATA_HDR_SIZE + NCI_SKB_RESERVE))) {
-I think this kind of reallocations could be avoided with a couple
-patches that I will post soon. We could basically tell the NFC core in
-advance which head room we need.
-See
-http://git.kernel.org/?p=linux/kernel/git/sameo/nfc-2.6.git;a=commit;h=ba108daaec65f5d02daaf9084fa5f8f2375d0d92
-
-Cheers,
-Samuel.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 2b8fb53..bf66575 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -276,6 +276,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct iwl_station_priv *sta_priv = NULL;
+ 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
++	struct iwl_device_cmd *dev_cmd = NULL;
+ 	struct iwl_tx_cmd *tx_cmd;
+ 	int txq_id;
+ 
+@@ -386,10 +387,14 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 		}
+ 	}
+ 
+-	tx_cmd = iwl_trans_get_tx_cmd(trans(priv), txq_id);
+-	if (unlikely(!tx_cmd))
++	dev_cmd = kmem_cache_alloc(priv->tx_cmd_pool, GFP_ATOMIC);
++
++	if (unlikely(!dev_cmd))
+ 		goto drop_unlock_sta;
+ 
++	memset(dev_cmd, 0, sizeof(*dev_cmd));
++	tx_cmd = &dev_cmd->cmd.tx;
++
+ 	/* Copy MAC header from skb into command buffer */
+ 	memcpy(tx_cmd->hdr, hdr, hdr_len);
+ 
+@@ -409,8 +414,9 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	iwl_update_stats(priv, true, fc, len);
+ 
+ 	info->driver_data[0] = ctx;
++	info->driver_data[1] = dev_cmd;
+ 
+-	if (iwl_trans_tx(trans(priv), skb, tx_cmd, txq_id, fc, is_agg))
++	if (iwl_trans_tx(trans(priv), skb, dev_cmd, txq_id, fc, is_agg))
+ 		goto drop_unlock_sta;
+ 
+ 	if (ieee80211_is_data_qos(fc)) {
+@@ -436,6 +442,8 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	return 0;
+ 
+ drop_unlock_sta:
++	if (dev_cmd)
++		kmem_cache_free(priv->tx_cmd_pool, dev_cmd);
+ 	spin_unlock(&priv->shrd->sta_lock);
+ drop_unlock_priv:
+ 	spin_unlock_irqrestore(&priv->shrd->lock, flags);
+@@ -1010,6 +1018,8 @@ void iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+ 
+ 			info = IEEE80211_SKB_CB(skb);
+ 			ctx = info->driver_data[0];
++			kmem_cache_free(priv->tx_cmd_pool,
++					(info->driver_data[1]));
+ 
+ 			memset(&info->status, 0, sizeof(info->status));
+ 
+@@ -1184,6 +1194,9 @@ void iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
+ 						    info);
+ 		}
+ 
++		info = IEEE80211_SKB_CB(skb);
++		kmem_cache_free(priv->tx_cmd_pool, (info->driver_data[1]));
++
+ 		ieee80211_tx_status_irqsafe(priv->hw, skb);
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+index 02b00d1..ddb255a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+@@ -351,6 +351,15 @@ static int iwlagn_alive_notify(struct iwl_priv *priv)
+ {
+ 	int ret;
+ 
++	if (!priv->tx_cmd_pool)
++		priv->tx_cmd_pool =
++			kmem_cache_create("iwlagn_dev_cmd",
++					  sizeof(struct iwl_device_cmd),
++					  sizeof(void *), 0, NULL);
++
++	if (!priv->tx_cmd_pool)
++		return -ENOMEM;
++
+ 	iwl_trans_tx_start(trans(priv));
+ 
+ 	ret = iwlagn_send_wimax_coex(priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index d3e103c..cfb4a4a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3124,6 +3124,8 @@ static void iwl_uninit_drv(struct iwl_priv *priv)
+ 	iwl_calib_free_results(priv);
+ 	iwl_free_geos(priv);
+ 	iwl_free_channel_map(priv);
++	if (priv->tx_cmd_pool)
++		kmem_cache_destroy(priv->tx_cmd_pool);
+ 	kfree(priv->scan_cmd);
+ 	kfree(priv->beacon_cmd);
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 5e79c14..977015b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -36,6 +36,7 @@
+ #include <linux/kernel.h>
+ #include <linux/wait.h>
+ #include <linux/leds.h>
++#include <linux/slab.h>
+ #include <net/ieee80211_radiotap.h>
+ 
+ #include "iwl-eeprom.h"
+@@ -1053,6 +1054,7 @@ struct iwl_priv {
+ 	struct ieee80211_hw *hw;
+ 	struct ieee80211_channel *ieee_channels;
+ 	struct ieee80211_rate *ieee_rates;
++	struct kmem_cache *tx_cmd_pool;
+ 	struct iwl_cfg *cfg;
+ 
+ 	enum ieee80211_band band;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+index e545898..7de042c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -317,12 +317,13 @@ static int iwl_trans_txq_alloc(struct iwl_trans *trans,
+ 	if (!txq->meta || !txq->cmd)
+ 		goto error;
+ 
+-	for (i = 0; i < slots_num; i++) {
+-		txq->cmd[i] = kmalloc(sizeof(struct iwl_device_cmd),
+-					GFP_KERNEL);
+-		if (!txq->cmd[i])
+-			goto error;
+-	}
++	if (txq_id == trans->shrd->cmd_queue)
++		for (i = 0; i < slots_num; i++) {
++			txq->cmd[i] = kmalloc(sizeof(struct iwl_device_cmd),
++						GFP_KERNEL);
++			if (!txq->cmd[i])
++				goto error;
++		}
+ 
+ 	/* Alloc driver data array and TFD circular buffer */
+ 	/* Driver private data, only for Tx (not command) queues,
+@@ -355,7 +356,7 @@ error:
+ 	txq->skbs = NULL;
+ 	/* since txq->cmd has been zeroed,
+ 	 * all non allocated cmd[i] will be NULL */
+-	if (txq->cmd)
++	if (txq->cmd && txq_id == trans->shrd->cmd_queue)
+ 		for (i = 0; i < slots_num; i++)
+ 			kfree(txq->cmd[i]);
+ 	kfree(txq->meta);
+@@ -442,8 +443,10 @@ static void iwl_tx_queue_free(struct iwl_trans *trans, int txq_id)
+ 	iwl_tx_queue_unmap(trans, txq_id);
+ 
+ 	/* De-alloc array of command/tx buffers */
+-	for (i = 0; i < txq->q.n_window; i++)
+-		kfree(txq->cmd[i]);
++
++	if (txq_id == trans->shrd->cmd_queue)
++		for (i = 0; i < txq->q.n_window; i++)
++			kfree(txq->cmd[i]);
+ 
+ 	/* De-alloc circular buffer of TFDs */
+ 	if (txq->q.n_bd) {
+@@ -1009,37 +1012,13 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
+ 	iwl_apm_stop(priv(trans));
+ }
+ 
+-static struct iwl_tx_cmd *iwl_trans_pcie_get_tx_cmd(struct iwl_trans *trans,
+-						int txq_id)
+-{
+-	struct iwl_priv *priv = priv(trans);
+-	struct iwl_tx_queue *txq = &priv->txq[txq_id];
+-	struct iwl_queue *q = &txq->q;
+-	struct iwl_device_cmd *dev_cmd;
+-
+-	if (unlikely(iwl_queue_space(q) < q->high_mark))
+-		return NULL;
+-
+-	/*
+-	 * Set up the Tx-command (not MAC!) header.
+-	 * Store the chosen Tx queue and TFD index within the sequence field;
+-	 * after Tx, uCode's Tx response will return this value so driver can
+-	 * locate the frame within the tx queue and do post-tx processing.
+-	 */
+-	dev_cmd = txq->cmd[q->write_ptr];
+-	memset(dev_cmd, 0, sizeof(*dev_cmd));
+-	dev_cmd->hdr.cmd = REPLY_TX;
+-	dev_cmd->hdr.sequence = cpu_to_le16((u16)(QUEUE_TO_SEQ(txq_id) |
+-				INDEX_TO_SEQ(q->write_ptr)));
+-	return &dev_cmd->cmd.tx;
+-}
+-
+ static int iwl_trans_pcie_tx(struct iwl_priv *priv, struct sk_buff *skb,
+-		struct iwl_tx_cmd *tx_cmd, int txq_id, __le16 fc, bool ampdu)
++		struct iwl_device_cmd *dev_cmd, int txq_id,
++		__le16 fc, bool ampdu)
+ {
+ 	struct iwl_tx_queue *txq = &priv->txq[txq_id];
+ 	struct iwl_queue *q = &txq->q;
+-	struct iwl_device_cmd *dev_cmd = txq->cmd[q->write_ptr];
++	struct iwl_tx_cmd *tx_cmd = &dev_cmd->cmd.tx;
+ 	struct iwl_cmd_meta *out_meta;
+ 
+ 	dma_addr_t phys_addr = 0;
+@@ -1051,6 +1030,11 @@ static int iwl_trans_pcie_tx(struct iwl_priv *priv, struct sk_buff *skb,
+ 
+ 	/* Set up driver data for this TFD */
+ 	txq->skbs[q->write_ptr] = skb;
++	txq->cmd[q->write_ptr] = dev_cmd;
++
++	dev_cmd->hdr.cmd = REPLY_TX;
++	dev_cmd->hdr.sequence = cpu_to_le16((u16)(QUEUE_TO_SEQ(txq_id) |
++				INDEX_TO_SEQ(q->write_ptr)));
+ 
+ 	/* Set up first empty entry in queue's array of Tx/cmd buffers */
+ 	out_meta = &txq->meta[q->write_ptr];
+@@ -1862,7 +1846,6 @@ const struct iwl_trans_ops trans_ops_pcie = {
+ 	.send_cmd = iwl_trans_pcie_send_cmd,
+ 	.send_cmd_pdu = iwl_trans_pcie_send_cmd_pdu,
+ 
+-	.get_tx_cmd = iwl_trans_pcie_get_tx_cmd,
+ 	.tx = iwl_trans_pcie_tx,
+ 	.reclaim = iwl_trans_pcie_reclaim,
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 011c824..0691d39 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -76,6 +76,7 @@ struct iwl_priv;
+ struct iwl_rxon_context;
+ struct iwl_host_cmd;
+ struct iwl_shared;
++struct iwl_device_cmd;
+ 
+ /**
+  * struct iwl_trans_ops - transport specific operations
+@@ -90,7 +91,6 @@ struct iwl_shared;
+  * @stop_device:stops the whole device (embedded CPU put to reset)
+  * @send_cmd:send a host command
+  * @send_cmd_pdu:send a host command: flags can be CMD_*
+- * @get_tx_cmd: returns a pointer to a new Tx cmd for the upper layer use
+  * @tx: send an skb
+  * @reclaim: free packet until ssn. Returns a list of freed packets.
+  * @txq_agg_setup: setup a tx queue for AMPDU - will be called once the HW is
+@@ -117,9 +117,9 @@ struct iwl_trans_ops {
+ 
+ 	int (*send_cmd_pdu)(struct iwl_trans *trans, u8 id, u32 flags, u16 len,
+ 		     const void *data);
+-	struct iwl_tx_cmd * (*get_tx_cmd)(struct iwl_trans *trans, int txq_id);
+ 	int (*tx)(struct iwl_priv *priv, struct sk_buff *skb,
+-		struct iwl_tx_cmd *tx_cmd, int txq_id, __le16 fc, bool ampdu);
++		struct iwl_device_cmd *dev_cmd,
++		int txq_id, __le16 fc, bool ampdu);
+ 	void (*reclaim)(struct iwl_trans *trans, int txq_id, int ssn,
+ 			u32 status, struct sk_buff_head *skbs);
+ 
+@@ -190,16 +190,11 @@ static inline int iwl_trans_send_cmd_pdu(struct iwl_trans *trans, u8 id,
+ 	return trans->ops->send_cmd_pdu(trans, id, flags, len, data);
+ }
+ 
+-static inline struct iwl_tx_cmd *iwl_trans_get_tx_cmd(struct iwl_trans *trans,
+-					int txq_id)
+-{
+-	return trans->ops->get_tx_cmd(trans, txq_id);
+-}
+-
+ static inline int iwl_trans_tx(struct iwl_trans *trans, struct sk_buff *skb,
+-		struct iwl_tx_cmd *tx_cmd, int txq_id, __le16 fc, bool ampdu)
++		struct iwl_device_cmd *dev_cmd,
++		int txq_id, __le16 fc, bool ampdu)
+ {
+-	return trans->ops->tx(priv(trans), skb, tx_cmd, txq_id, fc, ampdu);
++	return trans->ops->tx(priv(trans), skb, dev_cmd, txq_id, fc, ampdu);
+ }
+ 
+ static inline void iwl_trans_reclaim(struct iwl_trans *trans, int txq_id,
+-- 
+1.7.0.4
 
