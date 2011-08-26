@@ -1,68 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54548 "EHLO mx2.suse.de"
+Received: from mga01.intel.com ([192.55.52.88]:44772 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751379Ab1HKOSm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 10:18:42 -0400
-Date: Thu, 11 Aug 2011 07:16:04 -0700
-From: Greg KH <gregkh@suse.de>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: linux-next: build failure after merge of the final tree
- (wireless & staging trees related)
-Message-ID: <20110811141604.GA14763@suse.de> (sfid-20110811_161857_682957_AAF187C2)
-References: <20110811155529.e5f47afa0504c4ddef58ab37@canb.auug.org.au>
- <4E438D56.5020801@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E438D56.5020801@qca.qualcomm.com>
+	id S1752278Ab1HZGxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 02:53:30 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 14/60] iwlagn: add IWL_DEBUG_FW_ERRORS
+Date: Thu, 25 Aug 2011 23:10:46 -0700
+Message-Id: <1314339092-20797-15-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085455_275751_5E8173D5)
+In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 11, 2011 at 11:05:42AM +0300, Kalle Valo wrote:
-> Hi Stephen,
-> 
-> On 08/11/2011 08:55 AM, Stephen Rothwell wrote:
-> > After merging the final tree, today's linux-next build (powerpc
-> > allyesconfig) failed like this:
-> > 
-> > drivers/staging/built-in.o: In function `aggr_recv_delba_req_evt':
-> > (.opd+0x23a60): multiple definition of `aggr_recv_delba_req_evt'
-> > drivers/net/built-in.o:(.opd+0x79980): first defined here
-> > drivers/staging/built-in.o: In function `.wlan_node_reclaim':
-> > (.text+0x303360): multiple definition of `.wlan_node_reclaim'
-> > drivers/net/built-in.o:(.text+0xdd0618): first defined here
-> > drivers/staging/built-in.o: In function `aggr_init':
-> > (.opd+0x23a00): multiple definition of `aggr_init'
-> > drivers/net/built-in.o:(.opd+0x79968): first defined here
-> > drivers/staging/built-in.o: In function `.aggr_recv_delba_req_evt':
-> > (.text+0x302614): multiple definition of `.aggr_recv_delba_req_evt'
-> > drivers/net/built-in.o:(.text+0xdc8b60): first defined here
-> > drivers/staging/built-in.o: In function `.wlan_node_table_cleanup':
-> > (.text+0x303888): multiple definition of `.wlan_node_table_cleanup'
-> > drivers/net/built-in.o:(.text+0xdd0a6c): first defined here
-> > 
-> > You get the idea. :-(  So, the ath6kl driver now exists in the wireless
-> > tree and the staging tree.
-> > 
-> > I applied this patch for today (I have elided the part from "rm -rf
-> > drivers/staging/ath6kl"):
-> 
-> Oh man, sorry about this (again). I did compile both drivers at the same
-> time, but only as modules and didn't realise the conflicts also with the
-> staging driver.
-> 
-> Yes, the cleaned up version of ath6kl is now in wireless-next and the
-> staging version can be removed in 3.2. Greg, how do you want to handle
-> removal of the staging version? Should I send a patch to you removing
-> it? Or should I send the patch to John?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Just tell me.  Should I really delete drivers/staging/ath6kl/ for the
-3.2 kernel release?  If so, I'll gladly do so in my tree so linux-next
-will be fine for issues like this in the future.
+instead of IWL_DEBUG(priv, IWL_DL_FW_ERRORS
 
-greg k-h
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c  |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-debug.h |    1 +
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index bf173b6..9857136 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -893,11 +893,11 @@ void iwlagn_fw_error(struct iwl_priv *priv, bool ondemand)
+ 
+ 	if (!test_bit(STATUS_EXIT_PENDING, &priv->shrd->status)) {
+ 		if (iwlagn_mod_params.restart_fw) {
+-			IWL_DEBUG(priv, IWL_DL_FW_ERRORS,
++			IWL_DEBUG_FW_ERRORS(priv,
+ 				  "Restarting adapter due to uCode error.\n");
+ 			queue_work(priv->shrd->workqueue, &priv->restart);
+ 		} else
+-			IWL_DEBUG(priv, IWL_DL_FW_ERRORS,
++			IWL_DEBUG_FW_ERRORS(priv,
+ 				  "Detected FW error, but not restarting\n");
+ 	}
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 7c9e9af..4b042e9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -166,6 +166,7 @@ static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
+ #define IWL_DEBUG_CALIB(p, f, a...)	IWL_DEBUG(p, IWL_DL_CALIB, f, ## a)
+ #define IWL_DEBUG_FW(p, f, a...)	IWL_DEBUG(p, IWL_DL_FW, f, ## a)
+ #define IWL_DEBUG_RF_KILL(p, f, a...)	IWL_DEBUG(p, IWL_DL_RF_KILL, f, ## a)
++#define IWL_DEBUG_FW_ERRORS(p, f, a...)	IWL_DEBUG(p, IWL_DL_FW_ERRORS, f, ## a)
+ #define IWL_DEBUG_DROP(p, f, a...)	IWL_DEBUG(p, IWL_DL_DROP, f, ## a)
+ #define IWL_DEBUG_DROP_LIMIT(p, f, a...)	\
+ 		IWL_DEBUG_LIMIT(p, IWL_DL_DROP, f, ## a)
+-- 
+1.7.0.4
+
