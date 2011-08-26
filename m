@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out1.tiscali.nl ([195.241.79.176]:34086 "EHLO
-	smtp-out1.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751736Ab1HOLJ1 (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:47152 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752753Ab1HZSsT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 07:09:27 -0400
-Subject: Re: [iwl4965] Microcode SW error detected
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Bernhard Schmidt <bschmidt@freebsd.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20110608134721.GA2283@redhat.com>
-References: <1306151106.2066.60.camel@x61.thuisdomein>
-	 <201106070832.49048.bschmidt@freebsd.org>
-	 <20110607145435.GA5179@redhat.com>
-	 <1307474580.2342.7.camel@x61.thuisdomein>
-	 <20110608134721.GA2283@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 15 Aug 2011 12:51:56 +0200
-Message-ID: <1313405516.24749.17.camel@x61.thuisdomein> (sfid-20110815_130932_269945_EF859CA9)
-Mime-Version: 1.0
+	Fri, 26 Aug 2011 14:48:19 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 19so2779206fxh.19
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 11:48:18 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org, David Woodhouse <dwmw2@infradead.org>,
+	Maxime Vincent <maxime.vince@gmail.com>,
+	Darren <dmbtech@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael Buesch <m@bues.ch>
+Subject: [wireless-next][PATCH 1/3] b43: Relax requirement for descriptors to be in the DMA zone
+Date: Fri, 26 Aug 2011 20:41:38 +0200
+Message-Id: <1314384100-3492-2-git-send-email-zajec5@gmail.com> (sfid-20110826_204823_898537_D7EA0E85)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-06-08 at 15:47 +0200, Stanislaw Gruszka wrote:
-> It could be possible fix. Why you can not simply patch and see if errors
-> are still there? If after a week or so there will be no errors, we could
-> consider bug fixed, otherwise well ... still will need looking around
-> for fix.
-> 
-> I just posted patch that remove these "plcp health check" and related
-> code on -next anyway, because I don't think this is something that we
-> need.
+From: Larry Finger <Larry.Finger@lwfinger.net>
 
-0) This is just to note that I haven't yet tried to see if you're small
-patch helps. I still hope to do that as I have not given up on this
-issue. Feel free to prod me if I again disappear for too long and you
-loose your patience.
+When 64-bit DMA was first used, there were problems with the
+BCM4311 (14e4:4311). The problem was "fixed" by using the GFP_DMA
+flag in the allocation of coherent ring descriptor memory.
 
-1) By the way, I still see this error (every now and then) in my logs.
-Most recently while running v3.0.1, so it appears not to be fixed by
-recent updates for iwl4965 (if any).
+The original problem is now believed to have been due to bugs in
+the 64-bit DMA implementation in the rest of the kernel, and that
+those bugs have been fixed. Accordingly, the requirement for the
+descriptors to be in the DMA zone is relaxed.
 
+Bounce buffers are left in the DMA zone.
 
-Paul Bolle
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Michael Buesch <m@bues.ch>
+---
+ drivers/net/wireless/b43/dma.c |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
+index c5d890e..e36e8b5 100644
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -423,14 +423,7 @@ static int alloc_ringmemory(struct b43_dmaring *ring)
+ 	 * has shown that 4K is sufficient for the latter as long as the buffer
+ 	 * does not cross an 8K boundary.
+ 	 *
+-	 * For unknown reasons - possibly a hardware error - the BCM4311 rev
+-	 * 02, which uses 64-bit DMA, needs the ring buffer in very low memory,
+-	 * which accounts for the GFP_DMA flag below.
+-	 *
+-	 * The flags here must match the flags in free_ringmemory below!
+ 	 */
+-	if (ring->type == B43_DMA_64BIT)
+-		flags |= GFP_DMA;
+ 	ring->descbase = dma_alloc_coherent(ring->dev->dev->dma_dev,
+ 					    B43_DMA_RINGMEMSIZE,
+ 					    &(ring->dmabase), flags);
+-- 
+1.7.1
 
