@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39609 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751233Ab1HPRYX (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:38322 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755037Ab1HZNbe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2011 13:24:23 -0400
-Message-ID: <4E4AA7D6.8060208@sipsolutions.net> (sfid-20110816_192426_652251_7A891649)
-Date: Tue, 16 Aug 2011 10:24:38 -0700
-From: Johannes Berg <johannes@sipsolutions.net>
+	Fri, 26 Aug 2011 09:31:34 -0400
+Date: Fri, 26 Aug 2011 19:02:01 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath9k_hw: Fix slottime with coverage class
+Message-ID: <20110826133200.GA17491@vmraj-lnx.users.atheros.com> (sfid-20110826_153138_408833_5455C7DA)
+References: <1314283522-6143-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <1314283522-6143-2-git-send-email-rmanohar@qca.qualcomm.com>
+ <4E566BE3.3080907@openwrt.org>
 MIME-Version: 1.0
-To: Guy Eilam <guy@wizery.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] mac80211: refactor sta_info_insert_rcu to 3 main
- stages
-References: <1311715772-8855-1-git-send-email-guy@wizery.com> <1312892417.4109.32.camel@jlt3.sipsolutions.net> <CAA0384753T9EJf_0-kvD7LPzrg1FC_aAKT2ZS8YwUvPtQ8HYxw@mail.gmail.com> (sfid-20110816_191203_119602_5985D45A)
-In-Reply-To: <CAA0384753T9EJf_0-kvD7LPzrg1FC_aAKT2ZS8YwUvPtQ8HYxw@mail.gmail.com> (sfid-20110816_191203_119602_5985D45A)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4E566BE3.3080907@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/16/2011 10:11 AM, Guy Eilam wrote:
+On Thu, Aug 25, 2011 at 05:36:03PM +0200, Felix Fietkau wrote:
+> On 2011-08-25 4:45 PM, Rajkumar Manoharan wrote:
+> >The commit b6ba41bb27eb9810d54e2301355ce56fd0e94a1a updates
+> >acktimeout wihout updating slottime when coverage class is defined
+> >as per IEEE 802.11-2007 17.3.8.6.
+> >
+> >Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+> I intentionally left the coverage class out of the hw slot time
+> setting, because increasing slot time too much causes severe
+> throughput issues. I've observed this even with relatively minor
+> coverage class settings (e.g. for 2 km) on AR9160 and AR9280. I
+> haven't tested AR9380 though.
+>
+Which band have you tested on AR9280?
 
-> I'll make sure that the _ibss and _non_ibss code paths will have
-> similar freeing (the freeinng in both cases will be handled outside
-> the function like it is in the _non_ibss now).
-> The reason I have the might_sleep/locking outside the _non_ibss
-> function is because the additions in the next patch. The whole point
-> of this refactoring from my point of view was the option to have a
-> similar insert function that won't have the locking inside of it.
-
-Ok, fair enough, so it's not possible to move the locking :)
-
-johannes
+--
+Rajkumar
