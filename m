@@ -1,102 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17106 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915Ab1HDN4u (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:47152 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751626Ab1HZSsc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Aug 2011 09:56:50 -0400
-From: <rmani@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH 1/2] ath6kl: Fix crash during the connection process
-Date: Thu, 4 Aug 2011 19:26:29 +0530
-Message-ID: <1312466190-2394-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20110804_155654_701274_D6E17704)
+	Fri, 26 Aug 2011 14:48:32 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 19so2779206fxh.19
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 11:48:31 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org, David Woodhouse <dwmw2@infradead.org>,
+	Maxime Vincent <maxime.vince@gmail.com>,
+	Darren <dmbtech@gmail.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [wireless-next][PATCH 3/3] b43: make HT-PHY support experimental
+Date: Fri, 26 Aug 2011 20:41:40 +0200
+Message-Id: <1314384100-3492-4-git-send-email-zajec5@gmail.com> (sfid-20110826_204835_927926_16779BFB)
+In-Reply-To: <1314384100-3492-2-git-send-email-zajec5@gmail.com>
+References: <1314384100-3492-2-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+It was tested on three BCM4331 devices, code has been written from MMIO
+dumps only, but seems to be quite stable.
 
-Sometimes, the network manager is failing to connect to the AP due
-to the below kernel crash message. The reason behind this,
-after issuing the connect command to the chip, the chip is sending
-disconnect event and then immediately one connect event to the host
-in some random cases.
-
-The host driver resets all states (including cfg80211 state machine)
-when it receives disconnect event from the chip. But, still the host
-driver reports the next received connect event to cfg80211, at that time
-cfg80211 SME state would have been in IDLE state, which was causing
-the below kernel crash.
-
-Now, host driver's sme state machine is checked every time before
-delivering connect event to cfg80211
-
-  WARNING: at net/wireless/sme.c:517 cfg80211_connect_result+0x10d/0x120()
-  [..]
-  Call Trace:
-  [<c0145732>] warn_slowpath_common+0x72/0xa0
-  [<c05d676d>] ? cfg80211_connect_result+0x10d/0x120
-  [<c05d676d>] ? cfg80211_connect_result+0x10d/0x120
-  [<c0145782>] warn_slowpath_null+0x22/0x30
-  [<c05d676d>] cfg80211_connect_result+0x10d/0x120
-  [<f83ff497>] ath6kl_cfg80211_connect_event+0x427/0x4f0 [ath6kl]
-  [<c035d26a>] ? put_dec+0x2a/0xa0
-  [<c035d645>] ? number+0x365/0x380
-  [<c0154675>] ? mod_timer+0x135/0x260
-  [<c035e00e>] ? format_decode+0x2fe/0x370
-  [<c01263c8>] ? default_spin_lock_flags+0x8/0x10
-  [<c05fd91f>] ? _raw_spin_lock_irqsave+0x2f/0x50
-  [<c0146032>] ? console_unlock+0x172/0x1c0
-  [<f8402659>] ath6kl_connect_event+0x89/0x400 [ath6kl]
-  [<f840826e>] ath6kl_wmi_control_rx+0x98e/0x1d60 [ath6kl]
-  [<c01335b5>] ? __wake_up+0x45/0x60
-  [<f84053aa>] ath6kl_rx+0x56a/0x770 [ath6kl]
-  [<c04d0242>] ? mmc_release_host+0x22/0x40
-  [<c04d9329>] ? sdio_release_host+0x19/0x30
-  [<f840a27a>] ? ath6kl_sdio_read_write_sync+0x7a/0xc0 [ath6kl]
-  [<f83f82b1>] do_rx_completion+0x41/0x50 [ath6kl]
-  [<f83faa6a>] htc_rxmsg_pending_handler+0x6ba/0xbd0 [ath6kl]
-  [<f8404bb0>] ? ath6kl_tx_data_cleanup+0x30/0x30 [ath6kl]
-  [<f840a1c0>] ? ath6kl_sdio_irq_handler+0x30/0x70 [ath6kl]
-  [<f83f7cd5>] ath6kldev_intr_bh_handler+0x2a5/0x630 [ath6kl]
-  [<f840a1c0>] ath6kl_sdio_irq_handler+0x30/0x70 [ath6kl]
-  [<c04d97c7>] sdio_irq_thread+0xc7/0x2d0
-  [<c013aeb0>] ? default_wake_function+0x10/0x20
-  [<c012fc98>] ? __wake_up_common+0x48/0x70
-  [<c04d9700>] ? sdio_claim_irq+0x200/0x200
-  [<c0163854>] kthread+0x74/0x80
-  [<c01637e0>] ? kthread_worker_fn+0x160/0x160
-  [<c0604c06>] kernel_thread_helper+0x6/0x10
-
- Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 +++---
+ drivers/net/wireless/b43/Kconfig |    6 +++---
  1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index dc299a6..14559ff 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -559,14 +559,14 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
- 		return;
- 	}
+diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+index b81a2a1..0ddf0aa 100644
+--- a/drivers/net/wireless/b43/Kconfig
++++ b/drivers/net/wireless/b43/Kconfig
+@@ -124,12 +124,12 @@ config B43_PHY_LP
+ 	  (802.11a support is optional, and currently disabled).
  
--	if (!test_bit(CONNECTED, &ar->flag)) {
-+	if (ar->sme_state == SME_CONNECTING) {
- 		/* inform connect result to cfg80211 */
--		ar->sme_state = SME_DISCONNECTED;
-+		ar->sme_state = SME_CONNECTED;
- 		cfg80211_connect_result(ar->net_dev, bssid,
- 					assoc_req_ie, assoc_req_len,
- 					assoc_resp_ie, assoc_resp_len,
- 					WLAN_STATUS_SUCCESS, GFP_KERNEL);
--	} else {
-+	} else if (ar->sme_state == SME_CONNECTED) {
- 		/* inform roam event to cfg80211 */
- 		cfg80211_roamed(ar->net_dev, ibss_ch, bssid,
- 				assoc_req_ie, assoc_req_len,
+ config B43_PHY_HT
+-	bool "Support for HT-PHY devices (BROKEN)"
+-	depends on B43 && BROKEN
++	bool "Support for HT-PHY (high throughput) devices (EXPERIMENTAL)"
++	depends on B43 && EXPERIMENTAL
+ 	---help---
+ 	  Support for the HT-PHY.
+ 
+-	  Say N, this is BROKEN and crashes driver.
++	  Enables support for BCM4331 and possibly other chipsets with that PHY.
+ 
+ config B43_PHY_LCN
+ 	bool "Support for LCN-PHY devices (BROKEN)"
 -- 
-1.7.4.1
+1.7.1
 
