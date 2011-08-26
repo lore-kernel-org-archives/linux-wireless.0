@@ -1,102 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([72.73.18.11]:59220 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754149Ab1HCRoM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2011 13:44:12 -0400
-Date: Wed, 3 Aug 2011 13:44:10 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-cc: Andreas Hartmann <andihartmann@01019freenet.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Alan Piszcz <ap@solarrain.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
-In-Reply-To: <alpine.DEB.2.02.1108031328030.9421@p34.internal.lan>
-Message-ID: <alpine.DEB.2.02.1108031339280.9421@p34.internal.lan> (sfid-20110803_194434_661770_8490F000)
-References: <alpine.DEB.2.02.1107271851410.25432@p34.internal.lan> <4E318BD0.40202@lwfinger.net> <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan> <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan>
- <alpine.DEB.2.02.1107301031560.4925@p34.internal.lan> <4E341DC4.9010107@01019freenet.de> <alpine.DEB.2.02.1107301305590.4925@p34.internal.lan> <20110803160050.GA18882@redhat.com> <alpine.DEB.2.02.1108031328030.9421@p34.internal.lan>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:56900 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751584Ab1HZGfK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 02:35:10 -0400
+Subject: [PATCH] p54spi: add "spi:" prefix for stlc45xx modalias
+From: Axel Lin <axel.lin@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 26 Aug 2011 14:34:59 +0800
+Message-ID: <1314340499.25655.1.camel@phoenix> (sfid-20110826_083536_710695_48837DEE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Since commit e0626e38 (spi: prefix modalias with "spi:"),
+the spi modalias is prefixed with "spi:".
+
+This patch adds "spi:" prefix for modalias of stlc45xx.
+Also move it to be group with other modalias.
+
+Signed-off-by: Axel Lin <axel.lin@gmail.com>
+---
+ drivers/net/wireless/p54/p54spi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+index 6d9204fe..f18df82 100644
+--- a/drivers/net/wireless/p54/p54spi.c
++++ b/drivers/net/wireless/p54/p54spi.c
+@@ -41,7 +41,6 @@
+ #endif /* CONFIG_P54_SPI_DEFAULT_EEPROM */
+ 
+ MODULE_FIRMWARE("3826.arm");
+-MODULE_ALIAS("stlc45xx");
+ 
+ /*
+  * gpios should be handled in board files and provided via platform data,
+@@ -738,3 +737,4 @@ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Christian Lamparter <chunkeey@web.de>");
+ MODULE_ALIAS("spi:cx3110x");
+ MODULE_ALIAS("spi:p54spi");
++MODULE_ALIAS("spi:stlc45xx");
+-- 
+1.7.4.1
 
 
-On Wed, 3 Aug 2011, Justin Piszcz wrote:
-
->
->
-> On Wed, 3 Aug 2011, Stanislaw Gruszka wrote:
->
->> On Sat, Jul 30, 2011 at 01:07:11PM -0400, Justin Piszcz wrote:
->>> Here you go, crash 2:
->>> http://home.comcast.net/~jpiszcz/20110730/2630-rt2800usb-crash2p1.jpg
->>> http://home.comcast.net/~jpiszcz/20110730/2630-rt2800usb-crash2p2.jpg
->> 
->> Here is next (draw) patch to test:
->
-> Thanks,
->
-> # patch -p1 < ../patch4
-> patching file drivers/net/wireless/rt2x00/rt2800lib.c
-> patching file drivers/net/wireless/rt2x00/rt2800lib.h
-> patching file drivers/net/wireless/rt2x00/rt2800usb.c
-> patching file drivers/net/wireless/rt2x00/rt2x00queue.c
-> patching file drivers/net/wireless/rt2x00/rt2x00usb.c
-> #
->
-> I'll give this driver one more chance (quickly) and let you know if it 
-> crashes
-> afterwards (usually crashes in 5-10 minutes), but most likely I am going to
-> move over to some other wireless usb sticks, got a couple think penguin usb
-> wifi sticks that use the carl driver, 'open source' wireless usb sticks, 
-> going to give them a try next.
->
-> Also got some other ones as well, hopefully one of them will work without
-> 900ms of lag.  The rt2870sta was the best driver in 2.6.38.x series that I
-> have ever used for wireless USB sticks.
->
-> Justin.
->
->
-
-Hi,
-
-Tested that patch:
-
-1. The driver no longer automatically loads, I had to manually modprobe it.
-2. After loading, I get this (keep getting these)
-
-[  384.054538] phy0 -> rt2800_txdone: Error - Data pending
-[  384.072773] phy0 -> rt2800_txdone: Error - Data pending
-[  384.096545] phy0 -> rt2800_txdone: Error - Data pending
-[  384.117301] phy0 -> rt2800_txdone: Error - Data pending
-[  384.537586] phy0 -> rt2800_txdone: Error - Data pending
-[  384.555716] phy0 -> rt2800_txdone: Error - Data pending
-[  384.573903] phy0 -> rt2800_txdone: Error - Data pending
-[  384.599465] phy0 -> rt2800_txdone: Error - Data pending
-[  384.618523] phy0 -> rt2800_txdone: Error - Data pending
-
-No crash yet, but bad ping again too (always with the rt2800usb) driver:
-
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=1 ttl=64 time=53.1 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=2 ttl=64 time=285 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=3 ttl=64 time=89.6 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=4 ttl=64 time=120 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=5 ttl=64 time=42.2 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=6 ttl=64 time=156 ms
-64 bytes from atomw.internal.lan (192.168.0.2): icmp_req=7 ttl=64 time=77.2 ms
-
-(Have another machine, testing the carl driver kernel 3.0 on it)
-
-Not having too much luck there either.
-
-[586342.990975] carl9170: Unknown symbol __ieee80211_get_tx_led_name (err 0)
-[586342.991059] carl9170: Unknown symbol __ieee80211_get_assoc_led_name (err 0)
-[586459.214057] carl9170: Unknown symbol __ieee80211_get_tx_led_name (err 0)
-[586459.214131] carl9170: Unknown symbol __ieee80211_get_assoc_led_name (err 0)
-
-Justin.
 
