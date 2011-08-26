@@ -1,108 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39410 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752671Ab1HXSAX (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:47152 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751442Ab1HZSsF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 14:00:23 -0400
-Date: Wed, 24 Aug 2011 13:48:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, rodrigue@qca.qualcomm.com,
-	senthilb@qca.qualcomm.com, rmanohar@qca.qualcomm.com,
-	Larry.Finger@lwfinger.net
-Subject: Re: [PATCH] ath9k_htc: Fix few possible memory leaks
-Message-ID: <20110824174835.GH9770@tuxdriver.com> (sfid-20110824_200026_467789_6BAD34D4)
-References: <1313942085-6238-1-git-send-email-mohammed@qca.qualcomm.com>
+	Fri, 26 Aug 2011 14:48:05 -0400
+Received: by fxh19 with SMTP id 19so2779206fxh.19
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 11:48:04 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org, David Woodhouse <dwmw2@infradead.org>,
+	Maxime Vincent <maxime.vince@gmail.com>,
+	Darren <dmbtech@gmail.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [wireless-next][PATCH 0/3][ANNOUNCE] b43 the first Linux driver supporting HT-PHY (BCM4331)!
+Date: Fri, 26 Aug 2011 20:41:18 +0200
+Message-Id: <1314384081-3460-1-git-send-email-zajec5@gmail.com> (sfid-20110826_204813_853867_FDECA240)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1313942085-6238-1-git-send-email-mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is this intended for 3.1?  Should it be Cc: stable@kernel.org as well?
+After improving DMA (the important patch for BCM4331 is my one) we can finally
+enable support for HT-PHY. The whole code has been written from MMIO dumps
+grabbed from ndiswrapper+windows driver, but seems to be stable and was tested
+by 3 people. Unfortunately there are still some missing conditions that can't
+be fixed without RE the closed driver or having Broadcom co-operating. However
+it seems we live with that well enough for basic usage :)
 
-On Sun, Aug 21, 2011 at 09:24:45PM +0530, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-> 
-> still there are few other memory leaks which will be fixed
-> very soon
-> 
-> Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->  drivers/net/wireless/ath/ath9k/htc_hst.c |   13 ++++++++-----
->  drivers/net/wireless/ath/ath9k/wmi.c     |    3 ++-
->  2 files changed, 10 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-> index 1b90ed8..e435c9b 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-> @@ -169,13 +169,14 @@ static int htc_config_pipe_credits(struct htc_target *target)
->  	time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
->  	if (!time_left) {
->  		dev_err(target->dev, "HTC credit config timeout\n");
-> -		return -ETIMEDOUT;
-> +		ret = -ETIMEDOUT;
-> +		goto err;
->  	}
->  
->  	return 0;
->  err:
->  	kfree_skb(skb);
-> -	return -EINVAL;
-> +	return ret;
->  }
->  
->  static int htc_setup_complete(struct htc_target *target)
-> @@ -204,14 +205,15 @@ static int htc_setup_complete(struct htc_target *target)
->  	time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
->  	if (!time_left) {
->  		dev_err(target->dev, "HTC start timeout\n");
-> -		return -ETIMEDOUT;
-> +		ret = -ETIMEDOUT;
-> +		goto err;
->  	}
->  
->  	return 0;
->  
->  err:
->  	kfree_skb(skb);
-> -	return -EINVAL;
-> +	return ret;
->  }
->  
->  /* HTC APIs */
-> @@ -276,7 +278,8 @@ int htc_connect_service(struct htc_target *target,
->  	if (!time_left) {
->  		dev_err(target->dev, "Service connection timeout for: %d\n",
->  			service_connreq->service_id);
-> -		return -ETIMEDOUT;
-> +		ret = -ETIMEDOUT;
-> +		goto err;
->  	}
->  
->  	*conn_rsp_epid = target->conn_rsp_epid;
-> diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-> index 35422fc..50d901d 100644
-> --- a/drivers/net/wireless/ath/ath9k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath9k/wmi.c
-> @@ -334,7 +334,8 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
->  			"Timeout waiting for WMI command: %s\n",
->  			wmi_cmd_to_name(cmd_id));
->  		mutex_unlock(&wmi->op_mutex);
-> -		return -ETIMEDOUT;
-> +		ret = -ETIMEDOUT;
-> +		goto out;
->  	}
->  
->  	mutex_unlock(&wmi->op_mutex);
-> -- 
-> 1.7.0.4
-> 
-> 
+BCM4331 doesn't have any Linux driver yet, both: wl and brcm80211 don't support
+it. So we can be really proud of it ;) Ah, and I should mention that ndiswrapper
+was frequently reported to lock up machines when working with this card (see
+Ubuntu's forum about MacBook 8.1).
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+To use b43 with BCM4331 you will need to grab the newest b43-fwcutter and
+extract firmware from some recent closed source driver. See our wiki page in
+few hours for nice howto.
+
+Big thanks go to David Woodhouse for providing me access to his MacBook, letting
+grab the dumps, test patches and debugging a lot of hard cases with me (and
+sometime without ;) ).
+
+Larry Finger (1):
+  b43: Relax requirement for descriptors to be in the DMA zone
+
+Rafał Miłecki (2):
+  b43: use 8K buffers for 64-bit DMA to workaround hardware bug
+  b43: make HT-PHY support experimental
+
+ drivers/net/wireless/b43/Kconfig |    6 +++---
+ drivers/net/wireless/b43/dma.c   |   31 ++++++++++++++++---------------
+ drivers/net/wireless/b43/dma.h   |    3 ++-
+ 3 files changed, 21 insertions(+), 19 deletions(-)
+
