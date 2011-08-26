@@ -1,43 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout3.freenet.de ([195.4.92.93]:37917 "EHLO mout3.freenet.de"
+Received: from mms1.broadcom.com ([216.31.210.17]:3693 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752978Ab1H2Hwx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 03:52:53 -0400
-Received: from [195.4.92.25] (helo=15.mx.freenet.de)
-	by mout3.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #5)
-	id 1QxweI-0004ws-8p
-	for linux-wireless@vger.kernel.org; Mon, 29 Aug 2011 09:52:50 +0200
-Received: from p4fde011f.dip0.t-ipconnect.de ([79.222.1.31]:59643 helo=mail.maya.org)
-	by 15.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #5)
-	id 1QxweI-0006bQ-1X
-	for linux-wireless@vger.kernel.org; Mon, 29 Aug 2011 09:52:50 +0200
-Received: from [192.168.1.6] (dualc.maya.org [192.168.1.6])
-	by mail.maya.org (8.14.4/8.13.8) with ESMTP id p7T7qkjX003178
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 09:52:47 +0200
-Message-ID: <4E5B455D.5030301@01019freenet.de> (sfid-20110829_095256_621862_FCA0C0CC)
-Date: Mon, 29 Aug 2011 09:53:01 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+	id S1755078Ab1HZNTv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 09:19:51 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 03/13] staging: brcm80211: remove usage of macro
+ WL11N_20MHZONLY
+Date: Fri, 26 Aug 2011 15:19:30 +0200
+Message-ID: <1314364780-9462-4-git-send-email-rvossen@broadcom.com> (sfid-20110826_152045_400456_4B8EE9C1)
+In-Reply-To: <1314364780-9462-1-git-send-email-rvossen@broadcom.com>
+References: <1314364780-9462-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Additional, unrecognized frames containing undefined data in AP mode
- with rt2800usb
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Arend van Spriel <arend@broadcom.com>
 
-I just air traced rt2800usb (compat-wireless-3.1-rc1-1, rt3572 based
-device (Linksys WUSB600N v2)) running in AP mode. I could see casual
-(1-3 per second) additional frames ("Unrecognized (Reserved frame)")
-during beaconing (nothing else has been done), which don't have a MAC
-address but contain undefined (?) data.
+The macro WL11N_20MHZONLY is never defined so code #ifdef'ed by
+it has been removed.
 
-The size of these complete frames was either 124 bytes or 1148 bytes.
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/include/brcmu_wifi.h |   14 --------------
+ 1 files changed, 0 insertions(+), 14 deletions(-)
 
-Could you please fix this issue?
+diff --git a/drivers/staging/brcm80211/include/brcmu_wifi.h b/drivers/staging/brcm80211/include/brcmu_wifi.h
+index 717d885..0ab432d 100644
+--- a/drivers/staging/brcm80211/include/brcmu_wifi.h
++++ b/drivers/staging/brcm80211/include/brcmu_wifi.h
+@@ -96,18 +96,6 @@
+ #define CHSPEC_CHANNEL(chspec)	((u8)((chspec) & WL_CHANSPEC_CHAN_MASK))
+ #define CHSPEC_BAND(chspec)	((chspec) & WL_CHANSPEC_BAND_MASK)
+ 
+-#ifdef WL11N_20MHZONLY
+-
+-#define CHSPEC_CTL_SB(chspec)	WL_CHANSPEC_CTL_SB_NONE
+-#define CHSPEC_BW(chspec)	WL_CHANSPEC_BW_20
+-#define CHSPEC_IS10(chspec)	0
+-#define CHSPEC_IS20(chspec)	1
+-#ifndef CHSPEC_IS40
+-#define CHSPEC_IS40(chspec)	0
+-#endif
+-
+-#else				/* !WL11N_20MHZONLY */
+-
+ #define CHSPEC_CTL_SB(chspec)	((chspec) & WL_CHANSPEC_CTL_SB_MASK)
+ #define CHSPEC_BW(chspec)	((chspec) & WL_CHANSPEC_BW_MASK)
+ 
+@@ -122,8 +110,6 @@
+ 	(((chspec) & WL_CHANSPEC_BW_MASK) == WL_CHANSPEC_BW_40)
+ #endif
+ 
+-#endif				/* !WL11N_20MHZONLY */
+-
+ #define CHSPEC_IS5G(chspec) \
+ 	(((chspec) & WL_CHANSPEC_BAND_MASK) == WL_CHANSPEC_BAND_5G)
+ 
+-- 
+1.7.4.1
 
 
-
-Kind regards,
-Andreas
