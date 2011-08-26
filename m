@@ -1,75 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:33499 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751056Ab1HBWf7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 18:35:59 -0400
-From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] rtl8192cu: add USB ID for Belkin n300 Micro USB wireless adapter
-Date: Wed, 3 Aug 2011 00:35:48 +0200
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <201108022229.58532.s.L-H@gmx.de> <201108022243.04377.s.L-H@gmx.de> <4E386FB9.2040507@lwfinger.net>
-In-Reply-To: <4E386FB9.2040507@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201108030035.50214.s.L-H@gmx.de> (sfid-20110803_003609_437295_CE4A799F)
+Received: from mga01.intel.com ([192.55.52.88]:44772 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752824Ab1HZGxe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 02:53:34 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 25/60] iwlagn: more comments for bt channel inhibition
+Date: Thu, 25 Aug 2011 23:10:57 -0700
+Message-Id: <1314339092-20797-26-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085449_755617_334859E9)
+In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Add comments for better description
 
-On Wednesday 03 August 2011, Larry Finger wrote:
-> On 08/02/2011 03:43 PM, Stefan Lippers-Hollmann wrote:
-> > On Tuesday 02 August 2011, Stefan Lippers-Hollmann wrote:
-[...]
-> >> +	{RTL_USB_DEVICE(0x050D, 0x2103, rtl92cu_hal_cfg)}, //Belkin - Edimax
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-shared.h  |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-Sorry about the C++ style comments, I meant to fix it, but forgot about
-it in the end.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 6cfd236..57839ca 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -610,7 +610,7 @@ struct iwl_mod_params iwlagn_mod_params = {
+ 	.bt_coex_active = true,
+ 	.no_sleep_autoadjust = true,
+ 	.power_level = IWL_POWER_INDEX_1,
+-	.bt_ch_announce = 1,
++	.bt_ch_announce = true,
+ 	.wanted_ucode_alternative = 1,
+ 	.auto_agg = true,
+ 	/* the rest are 0 by default */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index be2ba4d..a79ee7a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3542,7 +3542,7 @@ MODULE_PARM_DESC(antenna_coupling,
+ module_param_named(bt_ch_inhibition, iwlagn_mod_params.bt_ch_announce,
+ 		   bool, S_IRUGO);
+ MODULE_PARM_DESC(bt_ch_inhibition,
+-		 "Disable BT channel inhibition (default: enable)");
++		 "Enable BT channel inhibition (default: enable)");
+ 
+ module_param_named(plcp_check, iwlagn_mod_params.plcp_check, bool, S_IRUGO);
+ MODULE_PARM_DESC(plcp_check, "Check plcp health (default: 1 [enabled])");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index ec71ec7..6c20d03 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -91,7 +91,7 @@ struct iwl_mod_params {
+ 	int power_level;	/* def: 1 = power level */
+ 	u32 debug_level;	/* levels are IWL_DL_* */
+ 	int ant_coupling;
+-	bool bt_ch_announce;
++	bool bt_ch_announce;	/* def: enable = BT channel inhibition */
+ 	int wanted_ucode_alternative;
+ 	bool auto_agg;		/* def: true = enable agg. without check */
+ };
+-- 
+1.7.0.4
 
-[...]
-> > [1]	http://aptosid.com/index.php?name=PNphpBB2&file=viewtopic&t=1550&start=0
-> > [2]	http://pastebin.com/ppZJ0GmU
-> 
-> I have been holding a few new ID's that are in the vendor driver awaiting a 
-> test. These include the following:
-> 
-> +       {RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x817f, rtl92cu_hal_cfg)},
-> +       {RTL_USB_DEVICE(0x13d3, 0x3357, rtl92cu_hal_cfg)}, /* AzureWave */
-> +       {RTL_USB_DEVICE(0x13d3, 0x3358, rtl92cu_hal_cfg)}, /*Azwave 8188CE-VAU*/
-> -       {RTL_USB_DEVICE(0x3359, 0x13d3, rtl92cu_hal_cfg)},
-> +       {RTL_USB_DEVICE(0x13d3, 0x3359, rtl92cu_hal_cfg)},
-> +       {RTL_USB_DEVICE(0x4855, 0x0090, rtl92cu_hal_cfg)}, /* Feixun */
-> +       {RTL_USB_DEVICE(0x4855, 0x0091, rtl92cu_hal_cfg)}, /* NetweeN-Feixun */
-> +       {RTL_USB_DEVICE(0x9846, 0x9041, rtl92cu_hal_cfg)}, /* Netgear Cameo */
-> +       {RTL_USB_DEVICE(0x050d, 0x2102, rtl92cu_hal_cfg)}, /*Belkin-Sercomm*/
-> +       {RTL_USB_DEVICE(0x050d, 0x2103, rtl92cu_hal_cfg)}, /*Belkin-Edimax*/
-> 
-> The deleted entry has the vendor and product reversed. The first one in the list 
-> has been tested and works.
-> 
-> Based on your report, I will drop the 050d entries. If you get a confirmation 
-> that 050d,2103 works, then submit that patch.
-
-I have now asked the reporter to check the state of rtl8192cu again, 
-current state is (with a kernel including my original patch):
-- functionality confirmed on an unencrypted network
-- WPA2-psk not conclusively tested, it may be out of range for his device.
-("EDIT: With my netbook I can get an IP address and use the neighbor's
-  unsecured network. Also, the Belkin device reports it at -47 dBm 
-  signal strength, but my Toshiba netbook gives it -80 to -83 (which 
-  may explain why the Belkin couldn't get an IP address), so there are 
-  still some issues to sort.")
-- no Oops if his USB ID is compiled into the module, that only happens
-  if he tries to inject it into an unpatched kernel with:
-  echo -n "050d 2103">  /sys/bus/usb/drivers/rtl8192cu/new_id
-  (and I'm reluctant to raise this as potential issue completely, due
-  to the tainted kernel condition on his system).
-
-Hopefully he'll answer my further inquiries about the stability of his 
-Belkin n300 Micro USB soon.
-
-Regards
-	Stefan Lippers-Hollmann
