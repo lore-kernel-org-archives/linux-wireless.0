@@ -1,105 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1919 "EHLO mms2.broadcom.com"
+Received: from mga01.intel.com ([192.55.52.88]:23946 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751298Ab1HLNfM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 09:35:12 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 09/14] staging: brcm80211: absorb brcmf_sdioh_abort into
- brcmf_sdcard_abort
-Date: Fri, 12 Aug 2011 15:34:56 +0200
-Message-ID: <1313156101-16817-10-git-send-email-arend@broadcom.com> (sfid-20110812_153517_042549_B7E7A550)
-In-Reply-To: <1313156101-16817-1-git-send-email-arend@broadcom.com>
-References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1753079Ab1HZGxh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 02:53:37 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 40/60] iwlagn: move Keep Warm to transport layer
+Date: Thu, 25 Aug 2011 23:11:12 -0700
+Message-Id: <1314339092-20797-41-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085434_000200_06619058)
+In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-brcmfmac wrapper function cleanup
+It is relevant for PCIe only.
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |   11 ++++++++++-
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   14 --------------
- drivers/staging/brcm80211/brcmfmac/sdio_host.h    |    3 ---
- 3 files changed, 10 insertions(+), 18 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |    1 -
+ drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-trans.c          |    8 +++++---
+ 3 files changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-index 6c1b57d..8bb84a9 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-@@ -21,6 +21,7 @@
- #include <linux/pci_ids.h>
- #include <linux/sched.h>
- #include <linux/completion.h>
-+#include <linux/mmc/sdio.h>
- #include <linux/mmc/sdio_func.h>
- #include <linux/mmc/card.h>
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index abc0118..30963bb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1239,7 +1239,6 @@ struct iwl_priv {
+ 	/* Tx DMA processing queues */
+ 	struct iwl_tx_queue *txq;
+ 	unsigned long txq_ctx_active_msk;
+-	struct iwl_dma_ptr  kw;	/* keep warm address */
  
-@@ -476,7 +477,15 @@ int brcmf_sdcard_rwdata(struct brcmf_sdio_dev *sdiodev, uint rw, u32 addr,
+ 	/* counts mgmt, ctl, and data packets */
+ 	struct traffic_stats tx_stats;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
+index af2d478..c258b3f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
+@@ -95,6 +95,7 @@ struct iwl_rx_queue {
+  * @trans: pointer to the generic transport area
+  * @scd_base_addr: scheduler sram base address in SRAM
+  * @scd_bc_tbls: pointer to the byte count table of the scheduler
++ * @kw: keep warm address
+  */
+ struct iwl_trans_pcie {
+ 	struct iwl_rx_queue rxq;
+@@ -115,6 +116,7 @@ struct iwl_trans_pcie {
+ 	u32 inta_mask;
+ 	u32 scd_base_addr;
+ 	struct iwl_dma_ptr scd_bc_tbls;
++	struct iwl_dma_ptr kw;
+ };
  
- int brcmf_sdcard_abort(struct brcmf_sdio_dev *sdiodev, uint fn)
- {
--	return brcmf_sdioh_abort(sdiodev, fn);
-+	char t_func = (char)fn;
-+	BRCMF_TRACE(("%s: Enter\n", __func__));
-+
-+	/* issue abort cmd52 command through F0 */
-+	brcmf_sdioh_request_byte(sdiodev, SDIOH_WRITE, SDIO_FUNC_0,
-+				 SDIO_CCCR_ABORT, &t_func);
-+
-+	BRCMF_TRACE(("%s: Exit\n", __func__));
-+	return 0;
+ #define IWL_TRANS_GET_PCIE_TRANS(_iwl_trans) \
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+index 4f3fdca..14c22b7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -489,7 +489,7 @@ static void iwl_trans_pcie_tx_free(struct iwl_trans *trans)
+ 	kfree(priv->txq);
+ 	priv->txq = NULL;
+ 
+-	iwlagn_free_dma_ptr(trans, &priv->kw);
++	iwlagn_free_dma_ptr(trans, &trans_pcie->kw);
+ 
+ 	iwlagn_free_dma_ptr(trans, &trans_pcie->scd_bc_tbls);
  }
+@@ -527,7 +527,7 @@ static int iwl_trans_tx_alloc(struct iwl_trans *trans)
+ 	}
  
- u32 brcmf_sdcard_cur_sbwad(struct brcmf_sdio_dev *sdiodev)
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 1dfad3e..d7648f8 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -576,20 +576,6 @@ brcmf_sdioh_request_buffer(struct brcmf_sdio_dev *sdiodev, uint pio_dma,
- 	return Status;
- }
+ 	/* Alloc keep-warm buffer */
+-	ret = iwlagn_alloc_dma_ptr(trans, &priv->kw, IWL_KW_SIZE);
++	ret = iwlagn_alloc_dma_ptr(trans, &trans_pcie->kw, IWL_KW_SIZE);
+ 	if (ret) {
+ 		IWL_ERR(trans, "Keep Warm allocation failed\n");
+ 		goto error;
+@@ -567,6 +567,8 @@ static int iwl_tx_init(struct iwl_trans *trans)
+ 	unsigned long flags;
+ 	bool alloc = false;
+ 	struct iwl_priv *priv = priv(trans);
++	struct iwl_trans_pcie *trans_pcie =
++		IWL_TRANS_GET_PCIE_TRANS(trans);
  
--/* this function performs "abort" for both of host & device */
--extern int brcmf_sdioh_abort(struct brcmf_sdio_dev *sdiodev, uint func)
--{
--	char t_func = (char)func;
--	BRCMF_TRACE(("%s: Enter\n", __func__));
--
--	/* issue abort cmd52 command through F0 */
--	brcmf_sdioh_request_byte(sdiodev, SDIOH_WRITE, SDIO_FUNC_0,
--				 SDIO_CCCR_ABORT, &t_func);
--
--	BRCMF_TRACE(("%s: Exit\n", __func__));
--	return 0;
--}
--
- /* Read client card reg */
- int
- brcmf_sdioh_card_regread(struct brcmf_sdio_dev *sdiodev, int func, u32 regaddr,
-diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-index d980307..555f17b 100644
---- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-@@ -273,9 +273,6 @@ extern int brcmf_sdioh_cfg_read(struct brcmf_sdio_dev *sdiodev, uint fuc,
- extern int brcmf_sdioh_cfg_write(struct brcmf_sdio_dev *sdiodev, uint fuc,
- 				 u32 addr, u8 *data);
+ 	if (!priv->txq) {
+ 		ret = iwl_trans_tx_alloc(trans);
+@@ -581,7 +583,7 @@ static int iwl_tx_init(struct iwl_trans *trans)
+ 	iwl_write_prph(priv, SCD_TXFACT, 0);
  
--/* Issue abort to the specified function and clear controller as needed */
--extern int brcmf_sdioh_abort(struct brcmf_sdio_dev *sdiodev, uint fnc);
--
- /* Watchdog timer interface for pm ops */
- extern void brcmf_sdio_wdtmr_enable(struct brcmf_sdio_dev *sdiodev,
- 				    bool enable);
+ 	/* Tell NIC where to find the "keep warm" buffer */
+-	iwl_write_direct32(priv, FH_KW_MEM_ADDR_REG, priv->kw.dma >> 4);
++	iwl_write_direct32(priv, FH_KW_MEM_ADDR_REG, trans_pcie->kw.dma >> 4);
+ 
+ 	spin_unlock_irqrestore(&trans->shrd->lock, flags);
+ 
 -- 
-1.7.4.1
-
+1.7.0.4
 
