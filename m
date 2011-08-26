@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.srv.pl ([217.17.32.250]:51987 "EHLO mail.srv.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752104Ab1HXKCL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 06:02:11 -0400
-Subject: Does brcmsmac supports monitor mode ?
-From: jarek <jarek@poczta.srv.pl>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 24 Aug 2011 11:19:24 +0200
-Message-ID: <1314177564.6061.13.camel@jlap2.macro.local> (sfid-20110824_120214_555816_EA84A73D)
-Mime-Version: 1.0
+Received: from external1.orbit-lab.org ([128.6.192.131]:46994 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753634Ab1HZTFT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 15:05:19 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 52643540237
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 15:14:38 -0400 (EDT)
+Subject: Compat-wireless release for 2011-08-26 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110826190518.004D240631@repository3.orbit-lab.org> (sfid-20110826_210523_194484_CE11D042)
+Date: Fri, 26 Aug 2011 15:05:17 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   3e4dd06..d32228d  master     -> origin/master
+ * [new tag]         compat-wireless-2011-08-25 -> compat-wireless-2011-08-25
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   55a12f9..40f7615  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 27a730b...da24751 akpm-end   -> origin/akpm-end  (forced update)
+   caca951..b4ca46e  akpm-start -> origin/akpm-start
+ + 0060a16...fa16964 master     -> origin/master  (forced update)
+   caca951..b4ca46e  stable     -> origin/stable
+ * [new tag]         next-20110826 -> next-20110826
 
-The following sequence stucks computer:
+compat-wireless code metrics
 
-iwconfig wlan0 mode monitor
-ifconfig wlan0 up
-
-Tested on HP Mini 5103 with Debian, kernel 2.6.32-5-686 and
-compat-wireless-2011-08-23.
-
-There is also some issue with building driver. The file 
-net/mac80211/main.c and some others wants to include pm_qos.h which does
-not exists. 
-I've symlinked pm_qos_params.h to pm_qos.h to fix the problem.
-
-best regards
-Jarek
-
+    803468 - Total upstream lines of code being pulled
+      2397 - backport code changes
+      2086 - backport code additions
+       311 - backport code deletions
+      8431 - backport from compat module
+     10828 - total backport code
+    1.3477 - % of code consists of backport work
