@@ -1,35 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:51943 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752730Ab1HWV4h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 17:56:37 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Subject: Re: [PATCH] carl9170: Fix mismatch in carl9170_op_set_key mutex lock-unlock
-Date: Tue, 23 Aug 2011 23:56:22 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@ispras.ru
-References: <1314132272-7357-1-git-send-email-khoroshilov@ispras.ru>
-In-Reply-To: <1314132272-7357-1-git-send-email-khoroshilov@ispras.ru>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201108232356.22472.chunkeey@googlemail.com> (sfid-20110823_235659_571599_6C5E8655)
+Received: from mx1.redhat.com ([209.132.183.28]:20225 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753693Ab1HZPZ5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 11:25:57 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>, stable@kernel.org
+Subject: [PATCH] iwlegacy: fix BUG_ON(info->control.rates[0].idx < 0)
+Date: Fri, 26 Aug 2011 17:24:59 +0200
+Message-Id: <1314372299-13319-1-git-send-email-sgruszka@redhat.com> (sfid-20110826_172600_932771_31E54834)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, August 23, 2011 10:44:32 PM Alexey Khoroshilov wrote:
-> If is_main_vif(ar, vif) reports that we have to fall back
-> to software encryption, we goto err_softw; before locking ar->mutex.
-> As a result, we have unprotected call to carl9170_set_operating_mode
-> and unmatched mutex_unlock.
-> 
-> The patch fix the issue by adding mutex_lock before goto.
-> 
-> Found by Linux Driver Verification project (linuxtesting.org).
-> 
-> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Cc: <stable@kernel.org>
-Acked-By: Christian Lamparter <chunkeey@googlemail.com>
+When trying to connect to 5GHz we can provide negative index to
+mac80211 what trigger BUG_ON. Reason of iwl-3945-rs malfunction
+on 5GHz is unknown and needs further investigation. For now, to
+do not trigger a bug, correct value and just print WARNING.
+
+Address bug:
+https://bugzilla.redhat.com/show_bug.cgi?id=730653
+
+Reported-and-tested-by: Jan Teichmann <jan.teichmann@gmail.com>
+Cc: stable@kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/iwl-3945-rs.c |   13 ++++++++-----
+ 1 files changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
+index 977bd24..164bcae 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
++++ b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
+@@ -822,12 +822,15 @@ static void iwl3945_rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+ 
+  out:
+ 
+-	rs_sta->last_txrate_idx = index;
+-	if (sband->band == IEEE80211_BAND_5GHZ)
+-		info->control.rates[0].idx = rs_sta->last_txrate_idx -
+-				IWL_FIRST_OFDM_RATE;
+-	else
++	if (sband->band == IEEE80211_BAND_5GHZ) {
++		if (WARN_ON_ONCE(index < IWL_FIRST_OFDM_RATE))
++			index = IWL_FIRST_OFDM_RATE;
++		rs_sta->last_txrate_idx = index;
++		info->control.rates[0].idx = index - IWL_FIRST_OFDM_RATE;
++	} else {
++		rs_sta->last_txrate_idx = index;
+ 		info->control.rates[0].idx = rs_sta->last_txrate_idx;
++	}
+ 
+ 	IWL_DEBUG_RATE(priv, "leave: %d\n", index);
+ }
+-- 
+1.7.1
+
