@@ -1,214 +1,421 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:43515 "EHLO ogre.sisk.pl"
+Received: from mga01.intel.com ([192.55.52.88]:7191 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751637Ab1H1Tkz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Aug 2011 15:40:55 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 3.1-rc3-git6: Reported regressions 2.6.39 -> 3.0
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <Sm7qbRR0zn.A.yAG.LepWOB@chimera> (sfid-20110828_214123_295294_17BFC140)
-Date: Sun, 28 Aug 2011 20:58:19 +0200 (CEST)
+	id S1753269Ab1HZGxj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 02:53:39 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 50/60] iwlagn: set tx_fifo for ampdu in transport layer
+Date: Thu, 25 Aug 2011 23:11:22 -0700
+Message-Id: <1314339092-20797-51-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085413_420224_A66EDD94)
+In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some post-2.6.39 regressions introduced before
-3.0, for which there are no fixes in the mainline known to the tracking team.
-If any of them have been fixed already, please let us know.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-If you know of any other unresolved post-2.6.39 regressions, please let us know
-either and we'll add them to the list.  Also, please let us know if any
-of the entries below are invalid.
+the mapping tx_queue -> fifo is really transport related. The upper
+layer should be involved in such things.
 
-Each entry from the list will be sent additionally in an automatic reply to
-this message with CCs to the people involved in reporting and handling the
-issue.
+Note that upon agg_disable, the queue is always mapped to fifo 0, but
+this doesn't matter since when the queue will be setup again for a
+new BA session, it will be configured to the good fifo anyway.
 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |   65 +--------------------
+ drivers/net/wireless/iwlwifi/iwl-agn.c            |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |    7 --
+ drivers/net/wireless/iwlwifi/iwl-shared.h         |   46 ++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c  |   32 +++++++---
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |   22 ++++----
+ 7 files changed, 89 insertions(+), 96 deletions(-)
 
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2011-08-28       71       21          17
-  2011-08-14       63       22          19
-  2011-07-10       38       16          13
-  2011-06-26       22       14          12
-  2011-06-12        8        7           7
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=41562
-Subject		: acer-wmi: acer aspire 721 bluetooth control doesn't work with kernel 3.0.0
-Submitter	: sbraz <hi.sbraz@gmail.com>
-Date		: 2011-08-22 18:32 (7 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=41102
-Subject		: BUG dentry: Poison overwritten / BUG buffer_head: Poison overwritten
-Submitter	: Paul Bolle <pebolle@tiscali.nl>
-Date		: 2011-08-13 22:29 (16 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=41092
-Subject		: INFO: trying to register non-static key (sync_inodes_sb)
-Submitter	: Paul Bolle <pebolle@tiscali.nl>
-Date		: 2011-08-13 22:07 (16 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40442
-Subject		: cpuinfo_max_freq lost 500MHz
-Submitter	: Harald Dunkel <harri@afaics.de>
-Date		: 2011-08-02 20:31 (27 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40282
-Subject		: IP forwarding regression since 3.0-rc6
-Submitter	: Stephan Seitz <stse+lkml@fsing.rootsland.net>
-Date		: 2011-07-25 12:51 (35 days old)
-Message-ID	: <20110725T141145.GA.2ae38.stse@fsing.rootsland.net>
-References	: http://marc.info/?l=linux-kernel&m=131159880004908&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40262
-Subject		: PROBLEM: I/O storm from hell on kernel 3.0.0 when touch swap (swapfile or partition)
-Submitter	: g0re <g0re@null.net>
-Date		: 2011-07-28 12:40 (32 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40092
-Subject		: RCU stall in linux-3.0.0
-Submitter	: Philip Armstrong <phil@kantaka.co.uk>
-Date		: 2011-07-25 21:44 (35 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40072
-Subject		: suspend/resume problems w/ kernel 3.0 and a *docked* ThinkPad T400, unless iwlagn unloaded
-Submitter	: Toralf Förster <toralf.foerster@gmx.de>
-Date		: 2011-07-23 19:27 (37 days old)
-Message-ID	: <201107232127.34255.toralf.foerster@gmx.de>
-References	: http://marc.info/?l=linux-kernel&m=131144928023465&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39922
-Subject		: WIFI becomes EXTREMELY slow ( ath9k ) making the connection unusable
-Submitter	: Lukasz Olszewski <lcpak@epoczta.pl>
-Date		: 2011-07-24 09:20 (36 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39912
-Subject		: WARNING: at drivers/tty/tty_ldisc.c:766 tty_ldisc_reinit+0x7d/0x90()
-Submitter	: Vegard Nossum <vegard.nossum@gmail.com>
-Date		: 2011-07-19 11:33 (41 days old)
-Message-ID	: <CAOMGZ=HS2EPkYD=5HfkSPpwPqHB5V3q0vaFmoZ8Hh+pMM9phrQ@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=131107522914558&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39832
-Subject		: HDA ATI HDMI: no sound with 3.0 - 2.6.39.3 works
-Submitter	: Andreas Steinmetz <ast@domdv.de>
-Date		: 2011-07-23 01:36 (37 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39732
-Subject		: JBD: Spotted dirty metadata buffer (dev = dm-2, blocknr = 2512725). There's a risk of filesystem corruption in case of system crash.
-Submitter	: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
-Date		: 2011-07-22 04:22 (38 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39412
-Subject		: Win Vista and Win2K8 guests' network breaks down
-Submitter	: Jay Ren <yongjie.ren@intel.com>
-Date		: 2011-07-15 15:31 (45 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39192
-Subject		: firmware_install fails with parallel make
-Submitter	: Ambroz Bizjak <ambrop7@gmail.com>
-Date		: 2011-07-12 09:35 (48 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38922
-Subject		: Lenovo T420 (Sandy Bridge) Crashes on SD Card gpt partition writing and io errors on insert
-Submitter	: Peter Vollmer <vollmerpeter@googlemail.com>
-Date		: 2011-07-07 17:33 (53 days old)
-First-Bad-Commit: http://git.kernel.org/linus/a3c7778f8153b9e4eceea6738973280b9e63c618
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38622
-Subject		: [radeon cayman regresion] artefacts on screen
-Submitter	: Marek Hobler, &apos;neutrinus&apos; <kernellist@neutrinus.com>
-Date		: 2011-07-01 09:35 (59 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38582
-Subject		: T510 43495KG won't resume with 32bit installation
-Submitter	: Marc Koschewski <marc@osknowledge.org>
-Date		: 2011-06-30 22:39 (60 days old)
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=41262
-Subject		: Terracted T5 does no more work
-Submitter	: Eric Valette <eric.valette@free.fr>
-Date		: 2011-08-16 20:45 (13 days old)
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=69382
-		  https://bugzilla.kernel.org/attachment.cgi?id=69392
-		  https://bugzilla.kernel.org/attachment.cgi?id=69402
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=41232
-Subject		: Channel switching on Hauppauge Nova-T stick fails randomly
-Submitter	:  <q222@gmx.com>
-Date		: 2011-08-16 11:33 (13 days old)
-Patch		: http://git.linuxtv.org/pb/media_tree.git/commitdiff/aeb2d456b746164a4bd19e53de0a6678ca63fcad
-		  http://git.linuxtv.org/pb/media_tree.git/commitdiff/45cbff13693d645fa5dcbba964e802e1746b2e57
-		  http://git.linuxtv.org/pb/media_tree.git/commitdiff/45cbff13693d645fa5dcbba964e802e1746b2e57
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=40062
-Subject		: USB related "unable to handle kernel paging request" in 3.0.0-rc7
-Submitter	: Tino Keitel <tino.keitel@tikei.de>
-Date		: 2011-07-22 19:27 (38 days old)
-Message-ID	: <20110722192722.GA9369@x61.home>
-References	: http://marc.info/?l=linux-kernel&m=131136334621623&w=2
-Patch		: https://lkml.org/lkml/2011/8/2/174
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=39882
-Subject		: Kernel oops when turning bluetooth mouse on
-Submitter	: Lamarque V. Souza <lamarque@gmail.com>
-Date		: 2011-07-24 02:09 (36 days old)
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=70342
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions introduced
-between 2.6.39 and 3.0, unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=36912
-
-Please let the tracking team know if there are any Bugzilla entries that
-should be added to the list in there.
-
-Thanks!
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index fa359f4..2b8fb53 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -42,43 +42,6 @@
+ #include "iwl-agn.h"
+ #include "iwl-trans.h"
+ 
+-/*
+- * mac80211 queues, ACs, hardware queues, FIFOs.
+- *
+- * Cf. http://wireless.kernel.org/en/developers/Documentation/mac80211/queues
+- *
+- * Mac80211 uses the following numbers, which we get as from it
+- * by way of skb_get_queue_mapping(skb):
+- *
+- *	VO	0
+- *	VI	1
+- *	BE	2
+- *	BK	3
+- *
+- *
+- * Regular (not A-MPDU) frames are put into hardware queues corresponding
+- * to the FIFOs, see comments in iwl-prph.h. Aggregated frames get their
+- * own queue per aggregation session (RA/TID combination), such queues are
+- * set up to map into FIFOs too, for which we need an AC->FIFO mapping. In
+- * order to map frames to the right queue, we also need an AC->hw queue
+- * mapping. This is implemented here.
+- *
+- * Due to the way hw queues are set up (by the hw specific modules like
+- * iwl-4965.c, iwl-5000.c etc.), the AC->hw queue mapping is the identity
+- * mapping.
+- */
+-
+-static const u8 tid_to_ac[] = {
+-	IEEE80211_AC_BE,
+-	IEEE80211_AC_BK,
+-	IEEE80211_AC_BK,
+-	IEEE80211_AC_BE,
+-	IEEE80211_AC_VI,
+-	IEEE80211_AC_VI,
+-	IEEE80211_AC_VO,
+-	IEEE80211_AC_VO
+-};
+-
+ static inline int get_ac_from_tid(u16 tid)
+ {
+ 	if (likely(tid < ARRAY_SIZE(tid_to_ac)))
+@@ -88,15 +51,6 @@ static inline int get_ac_from_tid(u16 tid)
+ 	return -EINVAL;
+ }
+ 
+-static inline int get_fifo_from_tid(struct iwl_rxon_context *ctx, u16 tid)
+-{
+-	if (likely(tid < ARRAY_SIZE(tid_to_ac)))
+-		return ctx->ac_to_fifo[tid_to_ac[tid]];
+-
+-	/* no support for TIDs 8-15 yet */
+-	return -EINVAL;
+-}
+-
+ static int iwlagn_txq_agg_enable(struct iwl_priv *priv, int txq_id, int sta_id,
+ 				int tid)
+ {
+@@ -508,16 +462,11 @@ int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 			struct ieee80211_sta *sta, u16 tid, u16 *ssn)
+ {
+ 	int sta_id;
+-	int tx_fifo;
+ 	int txq_id;
+ 	int ret;
+ 	unsigned long flags;
+ 	struct iwl_tid_data *tid_data;
+ 
+-	tx_fifo = get_fifo_from_tid(iwl_rxon_ctx_from_vif(vif), tid);
+-	if (unlikely(tx_fifo < 0))
+-		return tx_fifo;
+-
+ 	IWL_DEBUG_HT(priv, "TX AGG request on ra = %pM tid = %d\n",
+ 		     sta->addr, tid);
+ 
+@@ -544,7 +493,6 @@ int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 	tid_data = &priv->shrd->tid_data[sta_id][tid];
+ 	*ssn = SEQ_TO_SN(tid_data->seq_number);
+ 	tid_data->agg.txq_id = txq_id;
+-	tid_data->agg.tx_fifo = tx_fifo;
+ 	iwl_set_swq_id(&priv->txq[txq_id], get_ac_from_tid(tid), txq_id);
+ 	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
+ 
+@@ -570,15 +518,11 @@ int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ int iwlagn_tx_agg_stop(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 		       struct ieee80211_sta *sta, u16 tid)
+ {
+-	int tx_fifo_id, txq_id, sta_id, ssn;
++	int txq_id, sta_id, ssn;
+ 	struct iwl_tid_data *tid_data;
+ 	int write_ptr, read_ptr;
+ 	unsigned long flags;
+ 
+-	tx_fifo_id = get_fifo_from_tid(iwl_rxon_ctx_from_vif(vif), tid);
+-	if (unlikely(tx_fifo_id < 0))
+-		return tx_fifo_id;
+-
+ 	sta_id = iwl_sta_id(sta);
+ 
+ 	if (sta_id == IWL_INVALID_STATION) {
+@@ -635,7 +579,7 @@ int iwlagn_tx_agg_stop(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 	 * to deactivate the uCode queue, just return "success" to allow
+ 	 *  mac80211 to clean up it own data.
+ 	 */
+-	iwl_trans_txq_agg_disable(trans(priv), txq_id, ssn, tx_fifo_id);
++	iwl_trans_txq_agg_disable(trans(priv), txq_id);
+ 	spin_unlock_irqrestore(&priv->shrd->lock, flags);
+ 
+ 	ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+@@ -661,11 +605,8 @@ static int iwlagn_txq_check_empty(struct iwl_priv *priv,
+ 		/* aggregated HW queue */
+ 		if ((txq_id  == tid_data->agg.txq_id) &&
+ 		    (q->read_ptr == q->write_ptr)) {
+-			u16 ssn = SEQ_TO_SN(tid_data->seq_number);
+-			int tx_fifo = get_fifo_from_tid(ctx, tid);
+ 			IWL_DEBUG_HT(priv, "HW queue empty: continue DELBA flow\n");
+-			iwl_trans_txq_agg_disable(trans(priv), txq_id,
+-				ssn, tx_fifo);
++			iwl_trans_txq_agg_disable(trans(priv), txq_id);
+ 			tid_data->agg.state = IWL_AGG_OFF;
+ 			ieee80211_stop_tx_ba_cb_irqsafe(ctx->vif, addr, tid);
+ 		}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index e19ff11..d3e103c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2534,6 +2534,7 @@ static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
+ 	struct iwl_priv *priv = hw->priv;
+ 	int ret = -EINVAL;
+ 	struct iwl_station_priv *sta_priv = (void *) sta->drv_priv;
++	struct iwl_rxon_context *ctx =  iwl_rxon_ctx_from_vif(vif);
+ 
+ 	IWL_DEBUG_HT(priv, "A-MPDU action on addr %pM tid %d\n",
+ 		     sta->addr, tid);
+@@ -2587,8 +2588,8 @@ static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
+ 	case IEEE80211_AMPDU_TX_OPERATIONAL:
+ 		buf_size = min_t(int, buf_size, LINK_QUAL_AGG_FRAME_LIMIT_DEF);
+ 
+-		iwl_trans_txq_agg_setup(trans(priv), iwl_sta_id(sta), tid,
+-				buf_size);
++		iwl_trans_txq_agg_setup(trans(priv), ctx->ctxid, iwl_sta_id(sta),
++				tid, buf_size);
+ 
+ 		/*
+ 		 * If the limit is 0, then it wasn't initialised yet,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index aa56736..5e79c14 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -961,13 +961,6 @@ struct iwl_notification_wait {
+ 	bool triggered, aborted;
+ };
+ 
+-enum iwl_rxon_context_id {
+-	IWL_RXON_CTX_BSS,
+-	IWL_RXON_CTX_PAN,
+-
+-	NUM_IWL_RXON_CTX
+-};
+-
+ struct iwl_rxon_context {
+ 	struct ieee80211_vif *vif;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index db606a6..4cfa31e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -67,6 +67,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/mutex.h>
+ #include <linux/gfp.h>
++#include <net/mac80211.h>
+ 
+ #include "iwl-commands.h"
+ 
+@@ -192,7 +193,6 @@ struct iwl_ht_agg {
+ #define IWL_EMPTYING_HW_QUEUE_ADDBA 2
+ #define IWL_EMPTYING_HW_QUEUE_DELBA 3
+ 	u8 state;
+-	u8 tx_fifo;
+ };
+ 
+ struct iwl_tid_data {
+@@ -284,6 +284,50 @@ struct iwl_rx_mem_buffer {
+ 
+ #define rxb_addr(r) page_address(r->page)
+ 
++/*
++ * mac80211 queues, ACs, hardware queues, FIFOs.
++ *
++ * Cf. http://wireless.kernel.org/en/developers/Documentation/mac80211/queues
++ *
++ * Mac80211 uses the following numbers, which we get as from it
++ * by way of skb_get_queue_mapping(skb):
++ *
++ *	VO	0
++ *	VI	1
++ *	BE	2
++ *	BK	3
++ *
++ *
++ * Regular (not A-MPDU) frames are put into hardware queues corresponding
++ * to the FIFOs, see comments in iwl-prph.h. Aggregated frames get their
++ * own queue per aggregation session (RA/TID combination), such queues are
++ * set up to map into FIFOs too, for which we need an AC->FIFO mapping. In
++ * order to map frames to the right queue, we also need an AC->hw queue
++ * mapping. This is implemented here.
++ *
++ * Due to the way hw queues are set up (by the hw specific modules like
++ * iwl-4965.c, iwl-5000.c etc.), the AC->hw queue mapping is the identity
++ * mapping.
++ */
++
++static const u8 tid_to_ac[] = {
++	IEEE80211_AC_BE,
++	IEEE80211_AC_BK,
++	IEEE80211_AC_BK,
++	IEEE80211_AC_BE,
++	IEEE80211_AC_VI,
++	IEEE80211_AC_VI,
++	IEEE80211_AC_VO,
++	IEEE80211_AC_VO
++};
++
++enum iwl_rxon_context_id {
++	IWL_RXON_CTX_BSS,
++	IWL_RXON_CTX_PAN,
++
++	NUM_IWL_RXON_CTX
++};
++
+ #ifdef CONFIG_PM
+ int iwl_suspend(struct iwl_priv *priv);
+ int iwl_resume(struct iwl_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
+index 269d9e3..f443c10 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
+@@ -175,14 +175,14 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb);
+ void iwl_trans_txq_update_byte_cnt_tbl(struct iwl_trans *trans,
+ 					   struct iwl_tx_queue *txq,
+ 					   u16 byte_cnt);
+-int iwl_trans_pcie_txq_agg_disable(struct iwl_priv *priv, u16 txq_id,
+-				  u16 ssn_idx, u8 tx_fifo);
++int iwl_trans_pcie_txq_agg_disable(struct iwl_priv *priv, u16 txq_id);
+ void iwl_trans_set_wr_ptrs(struct iwl_trans *trans, int txq_id, u32 index);
+ void iwl_trans_tx_queue_set_status(struct iwl_priv *priv,
+ 			     struct iwl_tx_queue *txq,
+ 			     int tx_fifo_id, int scd_retry);
+-void iwl_trans_pcie_txq_agg_setup(struct iwl_priv *priv, int sta_id, int tid,
+-						int frame_limit);
++void iwl_trans_pcie_txq_agg_setup(struct iwl_priv *priv,
++					enum iwl_rxon_context_id ctx,
++					int sta_id, int tid, int frame_limit);
+ void iwlagn_txq_free_tfd(struct iwl_trans *trans, struct iwl_tx_queue *txq,
+ 	int index);
+ void iwl_tx_queue_reclaim(struct iwl_trans *trans, int txq_id, int index,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
+index cc5ec2d..31adf99 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
+@@ -424,8 +424,18 @@ void iwl_trans_tx_queue_set_status(struct iwl_priv *priv,
+ 		       scd_retry ? "BA" : "AC/CMD", txq_id, tx_fifo_id);
+ }
+ 
+-void iwl_trans_pcie_txq_agg_setup(struct iwl_priv *priv, int sta_id, int tid,
+-						int frame_limit)
++static inline int get_fifo_from_tid(struct iwl_rxon_context *ctx, u16 tid)
++{
++	if (likely(tid < ARRAY_SIZE(tid_to_ac)))
++		return ctx->ac_to_fifo[tid_to_ac[tid]];
++
++	/* no support for TIDs 8-15 yet */
++	return -EINVAL;
++}
++
++void iwl_trans_pcie_txq_agg_setup(struct iwl_priv *priv,
++				  enum iwl_rxon_context_id ctx, int sta_id,
++				  int tid, int frame_limit)
+ {
+ 	int tx_fifo, txq_id, ssn_idx;
+ 	u16 ra_tid;
+@@ -441,11 +451,16 @@ void iwl_trans_pcie_txq_agg_setup(struct iwl_priv *priv, int sta_id, int tid,
+ 	if (WARN_ON(tid >= IWL_MAX_TID_COUNT))
+ 		return;
+ 
++	tx_fifo = get_fifo_from_tid(&priv->contexts[ctx], tid);
++	if (WARN_ON(tx_fifo < 0)) {
++		IWL_ERR(trans, "txq_agg_setup, bad fifo: %d\n", tx_fifo);
++		return;
++	}
++
+ 	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
+ 	tid_data = &priv->shrd->tid_data[sta_id][tid];
+ 	ssn_idx = SEQ_TO_SN(tid_data->seq_number);
+ 	txq_id = tid_data->agg.txq_id;
+-	tx_fifo = tid_data->agg.tx_fifo;
+ 	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
+ 
+ 	ra_tid = BUILD_RAxTID(sta_id, tid);
+@@ -492,8 +507,7 @@ void iwl_trans_pcie_txq_agg_setup(struct iwl_priv *priv, int sta_id, int tid,
+ 	spin_unlock_irqrestore(&priv->shrd->lock, flags);
+ }
+ 
+-int iwl_trans_pcie_txq_agg_disable(struct iwl_priv *priv, u16 txq_id,
+-				  u16 ssn_idx, u8 tx_fifo)
++int iwl_trans_pcie_txq_agg_disable(struct iwl_priv *priv, u16 txq_id)
+ {
+ 	struct iwl_trans *trans = trans(priv);
+ 	if ((IWLAGN_FIRST_AMPDU_QUEUE > txq_id) ||
+@@ -511,14 +525,14 @@ int iwl_trans_pcie_txq_agg_disable(struct iwl_priv *priv, u16 txq_id,
+ 
+ 	iwl_clear_bits_prph(bus(priv), SCD_AGGR_SEL, (1 << txq_id));
+ 
+-	priv->txq[txq_id].q.read_ptr = (ssn_idx & 0xff);
+-	priv->txq[txq_id].q.write_ptr = (ssn_idx & 0xff);
++	priv->txq[txq_id].q.read_ptr = 0;
++	priv->txq[txq_id].q.write_ptr = 0;
+ 	/* supposes that ssn_idx is valid (!= 0xFFF) */
+-	iwl_trans_set_wr_ptrs(trans, txq_id, ssn_idx);
++	iwl_trans_set_wr_ptrs(trans, txq_id, 0);
+ 
+ 	iwl_clear_bits_prph(bus(priv), SCD_INTERRUPT_MASK, (1 << txq_id));
+ 	iwl_txq_ctx_deactivate(priv, txq_id);
+-	iwl_trans_tx_queue_set_status(priv, &priv->txq[txq_id], tx_fifo, 0);
++	iwl_trans_tx_queue_set_status(priv, &priv->txq[txq_id], 0, 0);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 2385de2..011c824 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -123,10 +123,10 @@ struct iwl_trans_ops {
+ 	void (*reclaim)(struct iwl_trans *trans, int txq_id, int ssn,
+ 			u32 status, struct sk_buff_head *skbs);
+ 
+-	int (*txq_agg_disable)(struct iwl_priv *priv, u16 txq_id,
+-				  u16 ssn_idx, u8 tx_fifo);
+-	void (*txq_agg_setup)(struct iwl_priv *priv, int sta_id, int tid,
+-						int frame_limit);
++	int (*txq_agg_disable)(struct iwl_priv *priv, u16 txq_id);
++	void (*txq_agg_setup)(struct iwl_priv *priv,
++			      enum iwl_rxon_context_id ctx, int sta_id,
++			      int tid, int frame_limit);
+ 
+ 	void (*kick_nic)(struct iwl_trans *trans);
+ 
+@@ -209,17 +209,17 @@ static inline void iwl_trans_reclaim(struct iwl_trans *trans, int txq_id,
+ 	trans->ops->reclaim(trans, txq_id, ssn, status, skbs);
+ }
+ 
+-static inline int iwl_trans_txq_agg_disable(struct iwl_trans *trans, u16 txq_id,
+-			  u16 ssn_idx, u8 tx_fifo)
++static inline int iwl_trans_txq_agg_disable(struct iwl_trans *trans, u16 txq_id)
+ {
+-	return trans->ops->txq_agg_disable(priv(trans), txq_id,
+-					   ssn_idx, tx_fifo);
++	return trans->ops->txq_agg_disable(priv(trans), txq_id);
+ }
+ 
+-static inline void iwl_trans_txq_agg_setup(struct iwl_trans *trans, int sta_id,
+-						int tid, int frame_limit)
++static inline void iwl_trans_txq_agg_setup(struct iwl_trans *trans,
++					   enum iwl_rxon_context_id ctx,
++					   int sta_id, int tid,
++					   int frame_limit)
+ {
+-	trans->ops->txq_agg_setup(priv(trans), sta_id, tid, frame_limit);
++	trans->ops->txq_agg_setup(priv(trans), ctx, sta_id, tid, frame_limit);
+ }
+ 
+ static inline void iwl_trans_kick_nic(struct iwl_trans *trans)
+-- 
+1.7.0.4
 
