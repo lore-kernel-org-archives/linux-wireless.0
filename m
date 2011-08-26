@@ -1,194 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:38610 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753286Ab1HSOMQ convert rfc822-to-8bit (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:34816 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752789Ab1HZN2k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Aug 2011 10:12:16 -0400
-Received: by yxj19 with SMTP id 19so2207869yxj.19
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Aug 2011 07:12:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20110819134711.GB3319@sortiz-mobl>
-References: <20110819134711.GB3319@sortiz-mobl>
-From: Aloisio Almeida <aloisio.almeida@openbossa.org>
-Date: Fri, 19 Aug 2011 11:11:56 -0300
-Message-ID: <CAEsZsEj+04734PN2731iZi_G8PomjD35C4oWBuJB0E8Le7PtkQ@mail.gmail.com> (sfid-20110819_161221_895598_C92588F1)
-Subject: Re: [PATCH] NFC: Reserve tx head and tail room
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 26 Aug 2011 09:28:40 -0400
+Subject: Re: [RFT][PATCH] b43: use 8K buffers for 64-bit DMA to workaround
+ hardware bug
+From: David Woodhouse <dwmw2@infradead.org>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Date: Fri, 26 Aug 2011 14:28:36 +0100
+In-Reply-To: <1314201438-12125-1-git-send-email-zajec5@gmail.com>
+References: <1314201438-12125-1-git-send-email-zajec5@gmail.com>
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature";
+	boundary="=-13SejmrTfq+Qmibn0GxQ"
+Message-ID: <1314365317.14057.70.camel@shinybook.infradead.org> (sfid-20110826_152843_589179_225D433C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Samuel,
 
-That's ok, nice work.
+--=-13SejmrTfq+Qmibn0GxQ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Regards,
-Aloisio
+On Wed, 2011-08-24 at 17:57 +0200, Rafa=C5=82 Mi=C5=82ecki wrote:
+>=20
+> David: can you give it a try?=20
 
-On Fri, Aug 19, 2011 at 10:47 AM, Samuel Ortiz <sameo@linux.intel.com> wrote:
->
-> We can have the NFC core layer allocating the tx head and tail
-> room for the drivers and avoid 1 or more SKBs copy on write on
-> the Tx path.
->
-> Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
-> ---
->  drivers/nfc/pn533.c |   17 +++--------------
->  include/linux/nfc.h |    2 ++
->  include/net/nfc.h   |    7 ++++++-
->  net/nfc/core.c      |    6 +++++-
->  net/nfc/rawsock.c   |   13 ++++++-------
->  5 files changed, 22 insertions(+), 23 deletions(-)
->
-> diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-> index c77e054..f81a93e 100644
-> --- a/drivers/nfc/pn533.c
-> +++ b/drivers/nfc/pn533.c
-> @@ -1246,7 +1246,6 @@ static int pn533_data_exchange_tx_frame(struct pn533 *dev, struct sk_buff *skb)
->  {
->        int payload_len = skb->len;
->        struct pn533_frame *out_frame;
-> -       struct sk_buff *discarded;
->        u8 tg;
->
->        nfc_dev_dbg(&dev->interface->dev, "%s - Sending %d bytes", __func__,
-> @@ -1260,18 +1259,6 @@ static int pn533_data_exchange_tx_frame(struct pn533 *dev, struct sk_buff *skb)
->                return -ENOSYS;
->        }
->
-> -       /* Reserving header space */
-> -       if (skb_cow_head(skb, PN533_CMD_DATAEXCH_HEAD_LEN)) {
-> -               nfc_dev_err(&dev->interface->dev, "Error to add header data");
-> -               return -ENOMEM;
-> -       }
-> -
-> -       /* Reserving tail space, see pn533_tx_frame_finish */
-> -       if (skb_cow_data(skb, PN533_FRAME_TAIL_SIZE, &discarded) < 0) {
-> -               nfc_dev_err(&dev->interface->dev, "Error to add tail data");
-> -               return -ENOMEM;
-> -       }
-> -
->        skb_push(skb, PN533_CMD_DATAEXCH_HEAD_LEN);
->        out_frame = (struct pn533_frame *) skb->data;
->
-> @@ -1536,7 +1523,9 @@ static int pn533_probe(struct usb_interface *interface,
->                        | NFC_PROTO_ISO14443_MASK
->                        | NFC_PROTO_NFC_DEP_MASK;
->
-> -       dev->nfc_dev = nfc_allocate_device(&pn533_nfc_ops, protocols);
-> +       dev->nfc_dev = nfc_allocate_device(&pn533_nfc_ops, protocols,
-> +                                          PN533_CMD_DATAEXCH_HEAD_LEN,
-> +                                          PN533_FRAME_TAIL_SIZE);
->        if (!dev->nfc_dev)
->                goto kill_tasklet;
->
-> diff --git a/include/linux/nfc.h b/include/linux/nfc.h
-> index 330a4c5..c525e0b 100644
-> --- a/include/linux/nfc.h
-> +++ b/include/linux/nfc.h
-> @@ -123,4 +123,6 @@ struct sockaddr_nfc {
->  #define NFC_SOCKPROTO_RAW      0
->  #define NFC_SOCKPROTO_MAX      1
->
-> +#define NFC_HEADER_SIZE 1
-> +
->  #endif /*__LINUX_NFC_H */
-> diff --git a/include/net/nfc.h b/include/net/nfc.h
-> index cc01303..87b51fe 100644
-> --- a/include/net/nfc.h
-> +++ b/include/net/nfc.h
-> @@ -82,6 +82,9 @@ struct nfc_dev {
->        struct nfc_genl_data genl_data;
->        u32 supported_protocols;
->
-> +       int tx_headroom;
-> +       int tx_tailroom;
-> +
->        struct nfc_ops *ops;
->  };
->  #define to_nfc_dev(_dev) container_of(_dev, struct nfc_dev, dev)
-> @@ -89,7 +92,9 @@ struct nfc_dev {
->  extern struct class nfc_class;
->
->  struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
-> -                                       u32 supported_protocols);
-> +                                       u32 supported_protocols,
-> +                                       int tx_headroom,
-> +                                       int tx_tailroom);
->
->  /**
->  * nfc_free_device - free nfc device
-> diff --git a/net/nfc/core.c b/net/nfc/core.c
-> index b6fd4e1..284e2f6 100644
-> --- a/net/nfc/core.c
-> +++ b/net/nfc/core.c
-> @@ -322,7 +322,9 @@ struct nfc_dev *nfc_get_device(unsigned idx)
->  * @supported_protocols: NFC protocols supported by the device
->  */
->  struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
-> -                                       u32 supported_protocols)
-> +                                       u32 supported_protocols,
-> +                                       int tx_headroom,
-> +                                       int tx_tailroom)
->  {
->        static atomic_t dev_no = ATOMIC_INIT(0);
->        struct nfc_dev *dev;
-> @@ -345,6 +347,8 @@ struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
->
->        dev->ops = ops;
->        dev->supported_protocols = supported_protocols;
-> +       dev->tx_headroom = tx_headroom;
-> +       dev->tx_tailroom = tx_tailroom;
->
->        spin_lock_init(&dev->targets_lock);
->        nfc_genl_data_init(&dev->genl_data);
-> diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
-> index 52de84a..9fd652a 100644
-> --- a/net/nfc/rawsock.c
-> +++ b/net/nfc/rawsock.c
-> @@ -123,11 +123,7 @@ error:
->
->  static int rawsock_add_header(struct sk_buff *skb)
->  {
-> -
-> -       if (skb_cow_head(skb, 1))
-> -               return -ENOMEM;
-> -
-> -       *skb_push(skb, 1) = 0;
-> +       *skb_push(skb, NFC_HEADER_SIZE) = 0;
->
->        return 0;
->  }
-> @@ -197,6 +193,7 @@ static int rawsock_sendmsg(struct kiocb *iocb, struct socket *sock,
->                                        struct msghdr *msg, size_t len)
->  {
->        struct sock *sk = sock->sk;
-> +       struct nfc_dev *dev = nfc_rawsock(sk)->dev;
->        struct sk_buff *skb;
->        int rc;
->
-> @@ -208,11 +205,13 @@ static int rawsock_sendmsg(struct kiocb *iocb, struct socket *sock,
->        if (sock->state != SS_CONNECTED)
->                return -ENOTCONN;
->
-> -       skb = sock_alloc_send_skb(sk, len, msg->msg_flags & MSG_DONTWAIT,
-> -                                                                       &rc);
-> +       skb = sock_alloc_send_skb(sk, len + dev->tx_headroom + dev->tx_tailroom + NFC_HEADER_SIZE,
-> +                                       msg->msg_flags & MSG_DONTWAIT, &rc);
->        if (!skb)
->                return rc;
->
-> +       skb_reserve(skb, dev->tx_headroom + NFC_HEADER_SIZE);
-> +
->        rc = memcpy_fromiovec(skb_put(skb, len), msg->msg_iov, len);
->        if (rc < 0) {
->                kfree_skb(skb);
-> --
-> 1.7.5.3
->
-> --
-> Intel Open Source Technology Centre
-> http://oss.intel.com/
->
+On top of the tree I already have; nothing else?
+
+This would be easier if you had a (preferably 3.0-based) git tree that
+people could just build the b43 and bcma drivers from.
+
+--=20
+dwmw2
+
+--=-13SejmrTfq+Qmibn0GxQ
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIITvzCCBi0w
+ggQVoAMCAQICAwCtOTANBgkqhkiG9w0BAQUFADBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwG
+A1UECxMVaHR0cDovL3d3dy5DQWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290
+MB4XDTEwMDYxMjEwMDMwMFoXDTEyMDYxMTEwMDMwMFowgegxGDAWBgNVBAMTD0RhdmlkIFdvb2Ro
+b3VzZTEiMCAGCSqGSIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzEfMB0GCSqGSIb3DQEJARYQ
+ZGF2aWRAd29vZGhvdS5zZTEoMCYGCSqGSIb3DQEJARYZZGF2aWQud29vZGhvdXNlQGludGVsLmNv
+bTEkMCIGCSqGSIb3DQEJARYVZHdtdzJAbGludXguaW50ZWwuY29tMTcwNQYJKoZIhvcNAQkBFigx
+MDg3MmEwN2Y2ZDdlMWUwN2Y1NWZmMTcyYTAzYjMwMGVlYWFkMjAzMIIBIjANBgkqhkiG9w0BAQEF
+AAOCAQ8AMIIBCgKCAQEA29OPhNvMxBMW83psWdVhZDtmJvgN+tBEp1r6MZamONsR0k81a6fDFwJz
+M0fEzEbV/bDG102QyX/xXC/0IpKV4acnqESC+sTHUmRwxfRKGNmR6t2iwEs2Y5kQDF31JxbCt49w
+AlhLMAa+e1MBZ7vO0uDmRuJpS7+ZdHboq7cdk6dyoeumGv5sl6U/SPK9rL4KzULtqQaw6Wucd6MJ
+irIggEHfCNqeT5a+TyuH4zKCwv9nblIGXq9wt+yqu5t/RicGaKPnXSqo/WpJAGggaO8g92mnYlVl
+Wu/b9bYVISwQ8LI0sEtjN1WnP5AQO2f59bdPAVk4Rn25HceOO4NvlG47LwIDAQABo4IBcTCCAW0w
+DAYDVR0TAQH/BAIwADBWBglghkgBhvhCAQ0ESRZHVG8gZ2V0IHlvdXIgb3duIGNlcnRpZmljYXRl
+IGZvciBGUkVFIGhlYWQgb3ZlciB0byBodHRwOi8vd3d3LkNBY2VydC5vcmcwQAYDVR0lBDkwNwYI
+KwYBBQUHAwQGCCsGAQUFBwMCBgorBgEEAYI3CgMEBgorBgEEAYI3CgMDBglghkgBhvhCBAEwMgYI
+KwYBBQUHAQEEJjAkMCIGCCsGAQUFBzABhhZodHRwOi8vb2NzcC5jYWNlcnQub3JnMIGOBgNVHREE
+gYYwgYOBE2R3bXcyQGluZnJhZGVhZC5vcmeBEGRhdmlkQHdvb2Rob3Uuc2WBGWRhdmlkLndvb2Ro
+b3VzZUBpbnRlbC5jb22BFWR3bXcyQGxpbnV4LmludGVsLmNvbYEoMTA4NzJhMDdmNmQ3ZTFlMDdm
+NTVmZjE3MmEwM2IzMDBlZWFhZDIwMzANBgkqhkiG9w0BAQUFAAOCAgEAXm+SUO1/TSeGJK0D9pAm
+E9LTFkdlgbaD6HXGbS0TNUDyfLFkacc2F1JLoWcoFwcL6Rup5o/Rt4QYDBPWgF9EXFvqsc9SLrSe
+X6VwRj7vI40x19ThE2A1Y8DzBJ9+2MzIR6hd5n9axATCOIRhmZVjX1cRkwshEGvAn8mTYGhWttkx
+WhBcaAuCd9OOQqUwfxTUXiSfVumPUNrrbuvaH6MjrNjDrXdvicL26Y+AzFSJn3o8DShjjMhkUx9l
+qV46BpjSGIuvkHhcLkGJ3Y1YmtOX1hwT+Z+d/10WJh8ZG2FqIlJtPtqvHK5ol/KvdzMwmMBd4qFj
+YAO32vf7zde+jdTHNp2Mb15bJHhNdGOsZicpGue42fg3deZQFe1E2KBl9VO09fjncjt9YdhCUtxO
+buDnoOixY6YSJgSmGJB2Xs+TE5gps4UiiOYen+NeJkuwg5x9vmyraU061Uc0csfc/E5IoxhTX/Pc
+H+zXiER8aSjA/9MXQfrJM2xkY6UNKlDbCYSLKnH/O02eu7Hma6lB4wtcY8ECu7LJuFY2448Quolv
+SQfQLRvKauGFGUAhbPClOxObuv/fNzA+lfg8DX2y5jXDutnpvBGgsplKxoah01SZfR9zNqxodPx2
+srKhujBNB+WiAZntMf0xp4e0JPMlTFxm3tbY9wuBSyTJyueO9hUkbN4wggYtMIIEFaADAgECAgMA
+rTkwDQYJKoZIhvcNAQEFBQAwVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6
+Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdDAeFw0xMDA2MTIx
+MDAzMDBaFw0xMjA2MTExMDAzMDBaMIHoMRgwFgYDVQQDEw9EYXZpZCBXb29kaG91c2UxIjAgBgkq
+hkiG9w0BCQEWE2R3bXcyQGluZnJhZGVhZC5vcmcxHzAdBgkqhkiG9w0BCQEWEGRhdmlkQHdvb2Ro
+b3Uuc2UxKDAmBgkqhkiG9w0BCQEWGWRhdmlkLndvb2Rob3VzZUBpbnRlbC5jb20xJDAiBgkqhkiG
+9w0BCQEWFWR3bXcyQGxpbnV4LmludGVsLmNvbTE3MDUGCSqGSIb3DQEJARYoMTA4NzJhMDdmNmQ3
+ZTFlMDdmNTVmZjE3MmEwM2IzMDBlZWFhZDIwMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+ggEBANvTj4TbzMQTFvN6bFnVYWQ7Zib4DfrQRKda+jGWpjjbEdJPNWunwxcCczNHxMxG1f2wxtdN
+kMl/8Vwv9CKSleGnJ6hEgvrEx1JkcMX0ShjZkerdosBLNmOZEAxd9ScWwrePcAJYSzAGvntTAWe7
+ztLg5kbiaUu/mXR26Ku3HZOncqHrphr+bJelP0jyvay+Cs1C7akGsOlrnHejCYqyIIBB3wjank+W
+vk8rh+MygsL/Z25SBl6vcLfsqrubf0YnBmij510qqP1qSQBoIGjvIPdpp2JVZVrv2/W2FSEsEPCy
+NLBLYzdVpz+QEDtn+fW3TwFZOEZ9uR3HjjuDb5RuOy8CAwEAAaOCAXEwggFtMAwGA1UdEwEB/wQC
+MAAwVgYJYIZIAYb4QgENBEkWR1RvIGdldCB5b3VyIG93biBjZXJ0aWZpY2F0ZSBmb3IgRlJFRSBo
+ZWFkIG92ZXIgdG8gaHR0cDovL3d3dy5DQWNlcnQub3JnMEAGA1UdJQQ5MDcGCCsGAQUFBwMEBggr
+BgEFBQcDAgYKKwYBBAGCNwoDBAYKKwYBBAGCNwoDAwYJYIZIAYb4QgQBMDIGCCsGAQUFBwEBBCYw
+JDAiBggrBgEFBQcwAYYWaHR0cDovL29jc3AuY2FjZXJ0Lm9yZzCBjgYDVR0RBIGGMIGDgRNkd213
+MkBpbmZyYWRlYWQub3JngRBkYXZpZEB3b29kaG91LnNlgRlkYXZpZC53b29kaG91c2VAaW50ZWwu
+Y29tgRVkd213MkBsaW51eC5pbnRlbC5jb22BKDEwODcyYTA3ZjZkN2UxZTA3ZjU1ZmYxNzJhMDNi
+MzAwZWVhYWQyMDMwDQYJKoZIhvcNAQEFBQADggIBAF5vklDtf00nhiStA/aQJhPS0xZHZYG2g+h1
+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
+AAAAAA==
+
+
+--=-13SejmrTfq+Qmibn0GxQ--
+
