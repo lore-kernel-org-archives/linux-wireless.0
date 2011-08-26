@@ -1,36 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:50018 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753690Ab1HBDxe convert rfc822-to-8bit (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:40497 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754880Ab1HZR64 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2011 23:53:34 -0400
-Received: by fxh19 with SMTP id 19so5196323fxh.19
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Aug 2011 20:53:32 -0700 (PDT)
+	Fri, 26 Aug 2011 13:58:56 -0400
+Date: Fri, 26 Aug 2011 10:54:04 -0700
+From: Greg KH <greg@kroah.com>
+To: Roland Vossen <rvossen@broadcom.com>
+Cc: gregkh@suse.de, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/13] staging: brcm80211: first reaction to mainline
+ patch #2
+Message-ID: <20110826175404.GB23574@kroah.com> (sfid-20110826_195901_660365_73A34CB3)
+References: <1314364780-9462-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1312228017-12061-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1312228017-12061-1-git-send-email-wey-yi.w.guy@intel.com>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Mon, 1 Aug 2011 20:53:12 -0700
-Message-ID: <CALSq=BYkKhJN=GU0RUJ2viibsy5yG78x-D-td0zP+rqWCy=AiQ@mail.gmail.com> (sfid-20110802_055342_992036_8E9AC6BE)
-Subject: Re: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv pointer
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1314364780-9462-1-git-send-email-rvossen@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 1, 2011 at 12:46 PM, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
-> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->
-> This bug has been introduced by:
-> d593411084a56124aa9d80aafa15db8463b2d8f7
-> Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Date:   Mon Jul 11 10:48:51 2011 +0300
->
->    iwlagn: simplify the bus architecture
->
+On Fri, Aug 26, 2011 at 03:19:27PM +0200, Roland Vossen wrote:
+> Comments were given by various people. This patch covers part of those
+> comments. Apart from that, there is also a bugfix.
+> 
+> This series applies to staging-next and depends on the following patch set:
+> 
+> Message-ID: <927eab8b5c950c13991911cd4c16457a5d618bc7.1314252671.git.joe@perches.com>
 
-Believe this fix needs to go to 3.0-stable too.
-
-Dan
+All applied.
