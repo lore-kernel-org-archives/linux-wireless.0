@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:49355 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754829Ab1H2TZd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 15:25:33 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Joe Perches <joe@perches.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Walter Harms <wharms@bfs.de>
-Date: Mon, 29 Aug 2011 12:25:23 -0700
-Subject: RE: [PATCH v2] mwifiex: replace kmalloc & memcpy sequence with
- kmemdup
-Message-ID: <477F20668A386D41ADCC57781B1F70430815013582@SC-VEXCH1.marvell.com> (sfid-20110829_212542_956609_0DFED8CD)
-References: <1314301042-15021-1-git-send-email-bzhao@marvell.com>
- <1314315908.4637.23.camel@Joe-Laptop>
-In-Reply-To: <1314315908.4637.23.camel@Joe-Laptop>
-Content-Type: text/plain; charset="utf-8"
+Received: from mga01.intel.com ([192.55.52.88]:7217 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752894Ab1HZGxi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 02:53:38 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Daniel Halperin <dhalperi@cs.washington.edu>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 43/60] iwlagn: fix compile warnings when CONFIG_PM_SLEEP is not set
+Date: Thu, 25 Aug 2011 23:11:15 -0700
+Message-Id: <1314339092-20797-44-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085420_559241_9C9A91C0)
+In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9lLA0KDQpUaGFua3MgZm9yIHlvdXIgY29tbWVudC4NCg0KPiA+IFNlcXVlbmNlIG9mIGtt
-YWxsb2Mva3phbGxvYyBhbmQgbWVtY3B5IGlzIHJlcGxhY2VkIHdpdGgNCj4gPiBrbWVtZHVwLg0K
-PiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3NjYW4uYyBiL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Nhbi5jDQo+IFtdDQo+ID4gQEAgLTE5ODYsMTcg
-KzE5ODYsMjAgQEAgbXdpZmlleF9zYXZlX2N1cnJfYmNuKHN0cnVjdCBtd2lmaWV4X3ByaXZhdGUg
-KnByaXYpDQo+ID4gIAkJcHJpdi0+Y3Vycl9iY25fc2l6ZSA9IGN1cnJfYnNzLT5iZWFjb25fYnVm
-X3NpemU7DQo+ID4NCj4gPiAgCQlrZnJlZShwcml2LT5jdXJyX2Jjbl9idWYpOw0KPiA+IC0JCXBy
-aXYtPmN1cnJfYmNuX2J1ZiA9IGt6YWxsb2MoY3Vycl9ic3MtPmJlYWNvbl9idWZfc2l6ZSwNCj4g
-PiArDQo+ID4gKwkJcHJpdi0+Y3Vycl9iY25fYnVmID0ga21lbWR1cChjdXJyX2Jzcy0+YmVhY29u
-X2J1ZiwNCj4gPiArCQkJCQkJY3Vycl9ic3MtPmJlYWNvbl9idWZfc2l6ZSwNCj4gPiAgCQkJCQkJ
-R0ZQX0tFUk5FTCk7DQo+IA0KPiBJIHRoaW5rIHRoaXMgYmxvY2ssIGJlY2F1c2Ugb2YgdGhlIG5l
-dyBlbHNlIGJlbG93IGl0LA0KPiBpc24ndCBhbiBpbXByb3ZlbWVudC4NCg0KT0suIFRoZW4gd2Ug
-Y2FuIGp1c3QgdXNlIGttYWxsb2MgaW5zdGVhZCBvZiBremFsbG9jIHRvIHNhdmUgYSBidWZmZXIg
-emVyb2luZyBvdXQgaW4gdjMuDQoNCj4gDQo+IFRoaXMga2ZyZWUva3phbGxvYyBzaG91bGQgcHJv
-YmFibHkganVzdCBiZSBrcmVhbGxvYyB3aXRoDQo+IHRoZSBtZW1zZXQgdW5jaGFuZ2VkLg0KDQpU
-aGUga3JlYWxsb2MgZG9lc24ndCBzZWVtIHN1aXRhYmxlIGhlcmUgYmVjYXVzZSBrcmVhbGxvYyBk
-b2VzIGEgdXNlbGVzcyBtZW1jcHkuDQoNClRoYW5rcywNCkJpbmcNCg0KPiANCj4gPiAgCQlpZiAo
-IXByaXYtPmN1cnJfYmNuX2J1Zikgew0KPiA+ICAJCQlkZXZfZXJyKHByaXYtPmFkYXB0ZXItPmRl
-diwNCj4gPiAgCQkJCQkiZmFpbGVkIHRvIGFsbG9jIGN1cnJfYmNuX2J1ZlxuIik7DQo+ID4gIAkJ
-CXJldHVybjsNCj4gPiAgCQl9DQo+ID4gKwl9IGVsc2Ugew0KPiA+ICsJCW1lbWNweShwcml2LT5j
-dXJyX2Jjbl9idWYsIGN1cnJfYnNzLT5iZWFjb25fYnVmLA0KPiA+ICsJCQljdXJyX2Jzcy0+YmVh
-Y29uX2J1Zl9zaXplKTsNCj4gPiAgCX0NCj4gPg0KPiA+IC0JbWVtY3B5KHByaXYtPmN1cnJfYmNu
-X2J1ZiwgY3Vycl9ic3MtPmJlYWNvbl9idWYsDQo+ID4gLQkJY3Vycl9ic3MtPmJlYWNvbl9idWZf
-c2l6ZSk7DQo+ID4gIAlkZXZfZGJnKHByaXYtPmFkYXB0ZXItPmRldiwgImluZm86IGN1cnJlbnQg
-YmVhY29uIHNhdmVkICVkXG4iLA0KPiA+ICAJCXByaXYtPmN1cnJfYmNuX3NpemUpOw0KPiANCg0K
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-pci.o
+  drivers/net/wireless/iwlwifi/iwl-pci.c:506: warning: iwl_pci_suspend defined but not used
+  drivers/net/wireless/iwlwifi/iwl-pci.c:519: warning: iwl_pci_resume defined but not used
+
+These are only used if CONFIG_PM_SLEEP is enabled. CONFIG_PM depends
+(CONFIG_PM_SLEEP || CONFIG_PM_RUNTIME), so it can be set without
+CONFIG_PM_SLEEP selected.
+
+Signed-off-by: Daniel Halperin <dhalperi@cs.washington.edu>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-pci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index 17f3fb2..62c35a5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -506,7 +506,7 @@ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
+ 	iwl_pci_down(bus);
+ }
+ 
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ 
+ static int iwl_pci_suspend(struct device *device)
+ {
+-- 
+1.7.0.4
+
