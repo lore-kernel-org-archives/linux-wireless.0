@@ -1,370 +1,441 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:45065 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752954Ab1HKGtI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 02:49:08 -0400
-From: Kevin Fang <chienf@qca.qualcomm.com>
-Cc: <linux-wireless@vger.kernel.org>, <kvalo@qca.qualcomm.com>,
-	Kevin Fang <chienf@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH 2/7] ath6kl: add call back function for read/write through diagnostic window
-Date: Thu, 11 Aug 2011 14:48:10 +0800
-Message-ID: <1313045295-16202-2-git-send-email-kevin.fang@qca.qualcomm.com> (sfid-20110811_084912_976214_2E7C68FA)
-In-Reply-To: <1313045295-16202-1-git-send-email-kevin.fang@qca.qualcomm.com>
-References: <1313045295-16202-1-git-send-email-kevin.fang@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:44772 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752983Ab1HZGxg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 02:53:36 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 37/60] iwlagn: remove references to priv from the transport layer
+Date: Thu, 25 Aug 2011 23:11:09 -0700
+Message-Id: <1314339092-20797-38-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085445_523521_59C5FBBA)
+In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is conflict method of read/write diag between sdio and usb.
-Therefore, add callback function for these read/write diag method.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Kevin Fang <kevin.fang@qca.qualcomm.com>
+Continue to the clean up of the priv dereferencing from the transport layer.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath6kl/core.h    |    1 -
- drivers/net/wireless/ath/ath6kl/hif-ops.h |   20 +++++
- drivers/net/wireless/ath/ath6kl/hif.h     |    5 ++
- drivers/net/wireless/ath/ath6kl/init.c    |    4 +-
- drivers/net/wireless/ath/ath6kl/main.c    |  108 +----------------------------
- drivers/net/wireless/ath/ath6kl/sdio.c    |  100 ++++++++++++++++++++++++++
- 6 files changed, 130 insertions(+), 108 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c            |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.h            |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c  |  124 +++++++++++----------
+ drivers/net/wireless/iwlwifi/iwl-trans.c          |    4 +-
+ 5 files changed, 70 insertions(+), 69 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 214d114..0f7b0c0 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -496,7 +496,6 @@ void ath6kl_stop_txrx(struct ath6kl *ar);
- void ath6kl_cleanup_amsdu_rxbufs(struct ath6kl *ar);
- int ath6kl_access_datadiag(struct ath6kl *ar, u32 address,
- 			   u8 *data, u32 length, bool read);
--int ath6kl_read_reg_diag(struct ath6kl *ar, u32 *address, u32 *data);
- void ath6kl_init_profile_info(struct ath6kl *ar);
- void ath6kl_tx_data_cleanup(struct ath6kl *ar);
- void ath6kl_stop_endpoint(struct net_device *dev, bool keep_profile,
-diff --git a/drivers/net/wireless/ath/ath6kl/hif-ops.h b/drivers/net/wireless/ath/ath6kl/hif-ops.h
-index c923979..a42acba 100644
---- a/drivers/net/wireless/ath/ath6kl/hif-ops.h
-+++ b/drivers/net/wireless/ath/ath6kl/hif-ops.h
-@@ -69,4 +69,24 @@ static inline void ath6kl_hif_cleanup_scatter(struct ath6kl *ar)
- 	return ar->hif_ops->cleanup_scatter(ar);
- }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 9c5f08a..bbdc475 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1402,7 +1402,7 @@ int iwl_alive_start(struct iwl_priv *priv)
+ 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
  
-+/*
-+ * Read from the ATH6KL through its diagnostic window. No cooperation from
-+ * the Target is required for this.
-+ */
-+static inline int ath6kl_hif_read_diag(struct ath6kl *ar, u32 address,
-+					u32 *data)
-+{
-+	return ar->hif_ops->read_reg_diag(ar, address, data);
-+}
-+
-+/*
-+ * Write to the ATH6KL through its diagnostic window. No cooperation from
-+ * the Target is required for this.
-+ */
-+static inline int ath6kl_hif_write_diag(struct ath6kl *ar, u32 address,
-+					u32 *data)
-+{
-+	return ar->hif_ops->write_reg_diag(ar, address, data);
-+}
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath6kl/hif.h b/drivers/net/wireless/ath/ath6kl/hif.h
-index 5ceff54..2fff554 100644
---- a/drivers/net/wireless/ath/ath6kl/hif.h
-+++ b/drivers/net/wireless/ath/ath6kl/hif.h
-@@ -202,6 +202,11 @@ struct ath6kl_hif_ops {
- 	int (*scat_req_rw) (struct ath6kl *ar,
- 			    struct hif_scatter_req *scat_req);
- 	void (*cleanup_scatter)(struct ath6kl *ar);
-+
-+	int (*read_reg_diag)(struct ath6kl *ar, u32 address,
-+			u32 *data);
-+	int (*write_reg_diag)(struct ath6kl *ar, u32 address,
-+			u32 *data);
- };
+ 	/*TODO: this should go to the transport layer */
+-	iwl_reset_ict(priv);
++	iwl_reset_ict(trans(priv));
  
- #endif
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index df15bfa..5cc2697 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -131,7 +131,7 @@ static int ath6kl_set_host_app_area(struct ath6kl *ar)
- 	address = ath6kl_get_hi_item_addr(ar, HI_ITEM(hi_app_host_interest));
- 	address = TARG_VTOP(ar->target_type, address);
+ 	IWL_DEBUG_INFO(priv, "Runtime Alive received.\n");
  
--	if (ath6kl_read_reg_diag(ar, &address, &data))
-+	if (ath6kl_hif_read_diag(ar, address, &data))
- 		return -EIO;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index c30299d..3508c12 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -111,7 +111,7 @@ extern struct iwl_cfg iwl135_bgn_cfg;
  
- 	address = TARG_VTOP(ar->target_type, data);
-@@ -375,7 +375,7 @@ static void ath6kl_dump_target_assert_info(struct ath6kl *ar)
- 	address = TARG_VTOP(ar->target_type, address);
+ extern struct ieee80211_ops iwlagn_hw_ops;
  
- 	/* read RAM location through diagnostic window */
--	status = ath6kl_read_reg_diag(ar, &address, &regdump_loc);
-+	status = ath6kl_hif_read_diag(ar, address, &regdump_loc);
+-int iwl_reset_ict(struct iwl_priv *priv);
++int iwl_reset_ict(struct iwl_trans *trans);
  
- 	if (status || !regdump_loc) {
- 		ath6kl_err("failed to get ptr to register dump area\n");
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 3cee0e3..052db4b 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -173,108 +173,6 @@ void ath6kl_free_cookie(struct ath6kl *ar, struct ath6kl_cookie *cookie)
- 	ar->cookie_count++;
- }
- 
--/* set the window address register (using 4-byte register access ). */
--static int ath6kl_set_addrwin_reg(struct ath6kl *ar, u32 reg_addr, u32 addr)
--{
--	int status;
--	u8 addr_val[4];
--	s32 i;
--
--	/*
--	 * Write bytes 1,2,3 of the register to set the upper address bytes,
--	 * the LSB is written last to initiate the access cycle
--	 */
--
--	for (i = 1; i <= 3; i++) {
--		/*
--		 * Fill the buffer with the address byte value we want to
--		 * hit 4 times.
--		 */
--		memset(addr_val, ((u8 *)&addr)[i], 4);
--
--		/*
--		 * Hit each byte of the register address with a 4-byte
--		 * write operation to the same address, this is a harmless
--		 * operation.
--		 */
--		status = hif_read_write_sync(ar, reg_addr + i, addr_val,
--					     4, HIF_WR_SYNC_BYTE_FIX);
--		if (status)
--			break;
--	}
--
--	if (status) {
--		ath6kl_err("failed to write initial bytes of 0x%x to window reg: 0x%X\n",
--			   addr, reg_addr);
--		return status;
--	}
--
--	/*
--	 * Write the address register again, this time write the whole
--	 * 4-byte value. The effect here is that the LSB write causes the
--	 * cycle to start, the extra 3 byte write to bytes 1,2,3 has no
--	 * effect since we are writing the same values again
--	 */
--	status = hif_read_write_sync(ar, reg_addr, (u8 *)(&addr),
--				     4, HIF_WR_SYNC_BYTE_INC);
--
--	if (status) {
--		ath6kl_err("failed to write 0x%x to window reg: 0x%X\n",
--			   addr, reg_addr);
--		return status;
--	}
--
--	return 0;
--}
--
--/*
-- * Read from the ATH6KL through its diagnostic window. No cooperation from
-- * the Target is required for this.
-- */
--int ath6kl_read_reg_diag(struct ath6kl *ar, u32 *address, u32 *data)
--{
--	int status;
--
--	/* set window register to start read cycle */
--	status = ath6kl_set_addrwin_reg(ar, WINDOW_READ_ADDR_ADDRESS,
--					*address);
--
--	if (status)
--		return status;
--
--	/* read the data */
--	status = hif_read_write_sync(ar, WINDOW_DATA_ADDRESS, (u8 *)data,
--				     sizeof(u32), HIF_RD_SYNC_BYTE_INC);
--	if (status) {
--		ath6kl_err("failed to read from window data addr\n");
--		return status;
--	}
--
--	return status;
--}
--
--
--/*
-- * Write to the ATH6KL through its diagnostic window. No cooperation from
-- * the Target is required for this.
-- */
--static int ath6kl_write_reg_diag(struct ath6kl *ar, u32 *address, u32 *data)
--{
--	int status;
--
--	/* set write data */
--	status = hif_read_write_sync(ar, WINDOW_DATA_ADDRESS, (u8 *)data,
--				     sizeof(u32), HIF_WR_SYNC_BYTE_INC);
--	if (status) {
--		ath6kl_err("failed to write 0x%x to window data addr\n", *data);
--		return status;
--	}
--
--	/* set window register, which starts the write cycle */
--	return ath6kl_set_addrwin_reg(ar, WINDOW_WRITE_ADDR_ADDRESS,
--				      *address);
--}
--
- int ath6kl_access_datadiag(struct ath6kl *ar, u32 address,
- 			   u8 *data, u32 length, bool read)
+ static inline void iwl_set_calib_hdr(struct iwl_calib_hdr *hdr, u8 cmd)
  {
-@@ -283,12 +181,12 @@ int ath6kl_access_datadiag(struct ath6kl *ar, u32 address,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
+index 0e4efb0..59c6b3c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
+@@ -130,7 +130,7 @@ void iwl_rx_queue_update_write_ptr(struct iwl_trans *trans,
+ /*****************************************************
+ * ICT
+ ******************************************************/
+-int iwl_reset_ict(struct iwl_priv *priv);
++int iwl_reset_ict(struct iwl_trans *trans);
+ void iwl_disable_ict(struct iwl_trans *trans);
+ int iwl_alloc_isr_ict(struct iwl_trans *trans);
+ void iwl_free_isr_ict(struct iwl_trans *trans);
+@@ -167,12 +167,11 @@ void iwl_tx_queue_reclaim(struct iwl_trans *trans, int txq_id, int index,
+ /*****************************************************
+ * Error handling
+ ******************************************************/
+-int iwl_dump_nic_event_log(struct iwl_priv *priv,
+-			   bool full_log, char **buf, bool display);
++int iwl_dump_nic_event_log(struct iwl_trans *trans, bool full_log,
++			    char **buf, bool display);
+ int iwl_dump_fh(struct iwl_trans *trans, char **buf, bool display);
+ void iwl_dump_csr(struct iwl_trans *trans);
  
- 	for (count = 0; count < length; count += 4, address += 4) {
- 		if (read) {
--			status = ath6kl_read_reg_diag(ar, &address,
-+			status = ath6kl_hif_read_diag(ar, address,
- 						      (u32 *) &data[count]);
- 			if (status)
- 				break;
- 		} else {
--			status = ath6kl_write_reg_diag(ar, &address,
-+			status = ath6kl_hif_write_diag(ar, address,
- 						       (u32 *) &data[count]);
- 			if (status)
- 				break;
-@@ -312,7 +210,7 @@ static void ath6kl_reset_device(struct ath6kl *ar, u32 target_type,
- 	data = cold_reset ? RESET_CONTROL_COLD_RST : RESET_CONTROL_MBOX_RST;
+-
+ static inline void iwl_disable_interrupts(struct iwl_trans *trans)
+ {
+ 	clear_bit(STATUS_INT_ENABLED, &trans->shrd->status);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
+index 0b6c527..7f8ac2e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
+@@ -565,11 +565,11 @@ static const char *desc_lookup(u32 num)
+ #define ERROR_START_OFFSET  (1 * sizeof(u32))
+ #define ERROR_ELEM_SIZE     (7 * sizeof(u32))
  
- 	address = RTC_BASE_ADDRESS;
--	status = ath6kl_write_reg_diag(ar, &address, &data);
-+	status = ath6kl_hif_write_diag(ar, address, &data);
+-static void iwl_dump_nic_error_log(struct iwl_priv *priv)
++static void iwl_dump_nic_error_log(struct iwl_trans *trans)
+ {
+ 	u32 base;
+ 	struct iwl_error_event_table table;
+-	struct iwl_trans *trans = trans(priv);
++	struct iwl_priv *priv = priv(trans);
+ 	struct iwl_trans_pcie *trans_pcie =
+ 		IWL_TRANS_GET_PCIE_TRANS(trans);
  
- 	if (status)
- 		ath6kl_err("failed to reset target\n");
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 3417160..0fb06fc 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -721,6 +721,104 @@ static int ath6kl_sdio_enable_scatter(struct ath6kl *ar)
- 	return 0;
+@@ -583,7 +583,7 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
+ 	}
+ 
+ 	if (!iwlagn_hw_valid_rtc_data_addr(base)) {
+-		IWL_ERR(priv,
++		IWL_ERR(trans,
+ 			"Not valid error log pointer 0x%08X for %s uCode\n",
+ 			base,
+ 			(priv->ucode_type == IWL_UCODE_INIT)
+@@ -594,9 +594,9 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
+ 	iwl_read_targ_mem_words(priv, base, &table, sizeof(table));
+ 
+ 	if (ERROR_START_OFFSET <= table.valid * ERROR_ELEM_SIZE) {
+-		IWL_ERR(priv, "Start IWL Error Log Dump:\n");
+-		IWL_ERR(priv, "Status: 0x%08lX, count: %d\n",
+-			priv->shrd->status, table.valid);
++		IWL_ERR(trans, "Start IWL Error Log Dump:\n");
++		IWL_ERR(trans, "Status: 0x%08lX, count: %d\n",
++			trans->shrd->status, table.valid);
+ 	}
+ 
+ 	trans_pcie->isr_stats.err_code = table.error_id;
+@@ -607,33 +607,34 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
+ 				      table.ilink2, table.bcon_time, table.gp1,
+ 				      table.gp2, table.gp3, table.ucode_ver,
+ 				      table.hw_ver, table.brd_ver);
+-	IWL_ERR(priv, "0x%08X | %-28s\n", table.error_id,
++	IWL_ERR(trans, "0x%08X | %-28s\n", table.error_id,
+ 		desc_lookup(table.error_id));
+-	IWL_ERR(priv, "0x%08X | uPc\n", table.pc);
+-	IWL_ERR(priv, "0x%08X | branchlink1\n", table.blink1);
+-	IWL_ERR(priv, "0x%08X | branchlink2\n", table.blink2);
+-	IWL_ERR(priv, "0x%08X | interruptlink1\n", table.ilink1);
+-	IWL_ERR(priv, "0x%08X | interruptlink2\n", table.ilink2);
+-	IWL_ERR(priv, "0x%08X | data1\n", table.data1);
+-	IWL_ERR(priv, "0x%08X | data2\n", table.data2);
+-	IWL_ERR(priv, "0x%08X | line\n", table.line);
+-	IWL_ERR(priv, "0x%08X | beacon time\n", table.bcon_time);
+-	IWL_ERR(priv, "0x%08X | tsf low\n", table.tsf_low);
+-	IWL_ERR(priv, "0x%08X | tsf hi\n", table.tsf_hi);
+-	IWL_ERR(priv, "0x%08X | time gp1\n", table.gp1);
+-	IWL_ERR(priv, "0x%08X | time gp2\n", table.gp2);
+-	IWL_ERR(priv, "0x%08X | time gp3\n", table.gp3);
+-	IWL_ERR(priv, "0x%08X | uCode version\n", table.ucode_ver);
+-	IWL_ERR(priv, "0x%08X | hw version\n", table.hw_ver);
+-	IWL_ERR(priv, "0x%08X | board version\n", table.brd_ver);
+-	IWL_ERR(priv, "0x%08X | hcmd\n", table.hcmd);
++	IWL_ERR(trans, "0x%08X | uPc\n", table.pc);
++	IWL_ERR(trans, "0x%08X | branchlink1\n", table.blink1);
++	IWL_ERR(trans, "0x%08X | branchlink2\n", table.blink2);
++	IWL_ERR(trans, "0x%08X | interruptlink1\n", table.ilink1);
++	IWL_ERR(trans, "0x%08X | interruptlink2\n", table.ilink2);
++	IWL_ERR(trans, "0x%08X | data1\n", table.data1);
++	IWL_ERR(trans, "0x%08X | data2\n", table.data2);
++	IWL_ERR(trans, "0x%08X | line\n", table.line);
++	IWL_ERR(trans, "0x%08X | beacon time\n", table.bcon_time);
++	IWL_ERR(trans, "0x%08X | tsf low\n", table.tsf_low);
++	IWL_ERR(trans, "0x%08X | tsf hi\n", table.tsf_hi);
++	IWL_ERR(trans, "0x%08X | time gp1\n", table.gp1);
++	IWL_ERR(trans, "0x%08X | time gp2\n", table.gp2);
++	IWL_ERR(trans, "0x%08X | time gp3\n", table.gp3);
++	IWL_ERR(trans, "0x%08X | uCode version\n", table.ucode_ver);
++	IWL_ERR(trans, "0x%08X | hw version\n", table.hw_ver);
++	IWL_ERR(trans, "0x%08X | board version\n", table.brd_ver);
++	IWL_ERR(trans, "0x%08X | hcmd\n", table.hcmd);
  }
  
-+/* set the window address register (using 4-byte register access ). */
-+static int ath6kl_set_addrwin_reg(struct ath6kl *ar, u32 reg_addr, u32 addr)
-+{
-+	int status;
-+	u8 addr_val[4];
-+	s32 i;
-+
-+	/*
-+	 * Write bytes 1,2,3 of the register to set the upper address bytes,
-+	 * the LSB is written last to initiate the access cycle
-+	 */
-+
-+	for (i = 1; i <= 3; i++) {
-+		/*
-+		 * Fill the buffer with the address byte value we want to
-+		 * hit 4 times.
-+		 */
-+		memset(addr_val, ((u8 *)&addr)[i], 4);
-+
-+		/*
-+		 * Hit each byte of the register address with a 4-byte
-+		 * write operation to the same address, this is a harmless
-+		 * operation.
-+		 */
-+		status = ath6kl_sdio_read_write_sync(ar, reg_addr + i, addr_val,
-+					     4, HIF_WR_SYNC_BYTE_FIX);
-+		if (status)
-+			break;
-+	}
-+
-+	if (status) {
-+		ath6kl_err("%s: failed to write initial bytes of 0x%x "
-+			   "to window reg: 0x%X\n", __func__,
-+			   addr, reg_addr);
-+		return status;
-+	}
-+
-+	/*
-+	 * Write the address register again, this time write the whole
-+	 * 4-byte value. The effect here is that the LSB write causes the
-+	 * cycle to start, the extra 3 byte write to bytes 1,2,3 has no
-+	 * effect since we are writing the same values again
-+	 */
-+	status = ath6kl_sdio_read_write_sync(ar, reg_addr, (u8 *)(&addr),
-+				     4, HIF_WR_SYNC_BYTE_INC);
-+
-+	if (status) {
-+		ath6kl_err("%s: failed to write 0x%x to window reg: 0x%X\n",
-+			   __func__, addr, reg_addr);
-+		return status;
-+	}
-+
-+	return 0;
-+}
-+
-+static int ath6kl_sdio_read_reg_diag(struct ath6kl *ar, u32 address,
-+			u32 *data)
-+{
-+	int status;
-+
-+	/* set window register to start read cycle */
-+	status = ath6kl_set_addrwin_reg(ar, WINDOW_READ_ADDR_ADDRESS,
-+					address);
-+
-+	if (status)
-+		return status;
-+
-+	/* read the data */
-+	status = ath6kl_sdio_read_write_sync(ar, WINDOW_DATA_ADDRESS,
-+				(u8 *)data, sizeof(u32), HIF_RD_SYNC_BYTE_INC);
-+	if (status) {
-+		ath6kl_err("%s: failed to read from window data addr\n",
-+			__func__);
-+		return status;
-+	}
-+
-+	return status;
-+}
-+
-+static int ath6kl_sdio_write_reg_diag(struct ath6kl *ar, u32 address,
-+			u32 *data)
-+{
-+	int status;
-+
-+	/* set write data */
-+	status = ath6kl_sdio_read_write_sync(ar, WINDOW_DATA_ADDRESS,
-+				(u8 *)data, sizeof(u32), HIF_WR_SYNC_BYTE_INC);
-+	if (status) {
-+		ath6kl_err("%s: failed to write 0x%x to window data addr\n",
-+			   __func__, *data);
-+		return status;
-+	}
-+
-+	/* set window register, which starts the write cycle */
-+	return ath6kl_set_addrwin_reg(ar, WINDOW_WRITE_ADDR_ADDRESS,
-+				      address);
-+}
-+
- static const struct ath6kl_hif_ops ath6kl_sdio_ops = {
- 	.read_write_sync = ath6kl_sdio_read_write_sync,
- 	.write_async = ath6kl_sdio_write_async,
-@@ -731,6 +829,8 @@ static const struct ath6kl_hif_ops ath6kl_sdio_ops = {
- 	.enable_scatter = ath6kl_sdio_enable_scatter,
- 	.scat_req_rw = ath6kl_sdio_async_rw_scatter,
- 	.cleanup_scatter = ath6kl_sdio_cleanup_scatter,
-+	.read_reg_diag = ath6kl_sdio_read_reg_diag,
-+	.write_reg_diag = ath6kl_sdio_write_reg_diag,
- };
+ /**
+  * iwl_irq_handle_error - called for HW or SW error interrupt from card
+  */
+-static void iwl_irq_handle_error(struct iwl_priv *priv)
++static void iwl_irq_handle_error(struct iwl_trans *trans)
+ {
++	struct iwl_priv *priv = priv(trans);
+ 	/* W/A for WiFi/WiMAX coex and WiMAX own the RF */
+ 	if (priv->cfg->internal_wimax_coex &&
+ 	    (!(iwl_read_prph(priv, APMG_CLK_CTRL_REG) &
+@@ -644,22 +645,22 @@ static void iwl_irq_handle_error(struct iwl_priv *priv)
+ 		 * Keep the restart process from trying to send host
+ 		 * commands by clearing the ready bit.
+ 		 */
+-		clear_bit(STATUS_READY, &priv->shrd->status);
+-		clear_bit(STATUS_HCMD_ACTIVE, &priv->shrd->status);
++		clear_bit(STATUS_READY, &trans->shrd->status);
++		clear_bit(STATUS_HCMD_ACTIVE, &trans->shrd->status);
+ 		wake_up_interruptible(&priv->wait_command_queue);
+-		IWL_ERR(priv, "RF is used by WiMAX\n");
++		IWL_ERR(trans, "RF is used by WiMAX\n");
+ 		return;
+ 	}
  
- static int ath6kl_sdio_probe(struct sdio_func *func,
+-	IWL_ERR(priv, "Loaded firmware version: %s\n",
++	IWL_ERR(trans, "Loaded firmware version: %s\n",
+ 		priv->hw->wiphy->fw_version);
+ 
+-	iwl_dump_nic_error_log(priv);
+-	iwl_dump_csr(trans(priv));
+-	iwl_dump_fh(trans(priv), NULL, false);
+-	iwl_dump_nic_event_log(priv, false, NULL, false);
++	iwl_dump_nic_error_log(trans);
++	iwl_dump_csr(trans);
++	iwl_dump_fh(trans, NULL, false);
++	iwl_dump_nic_event_log(trans, false, NULL, false);
+ #ifdef CONFIG_IWLWIFI_DEBUG
+-	if (iwl_get_debug_level(priv->shrd) & IWL_DL_FW_ERRORS)
++	if (iwl_get_debug_level(trans->shrd) & IWL_DL_FW_ERRORS)
+ 		iwl_print_rx_config_cmd(priv,
+ 					&priv->contexts[IWL_RXON_CTX_BSS]);
+ #endif
+@@ -673,7 +674,7 @@ static void iwl_irq_handle_error(struct iwl_priv *priv)
+  * iwl_print_event_log - Dump error event log to syslog
+  *
+  */
+-static int iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
++static int iwl_print_event_log(struct iwl_trans *trans, u32 start_idx,
+ 			       u32 num_events, u32 mode,
+ 			       int pos, char **buf, size_t bufsz)
+ {
+@@ -683,6 +684,7 @@ static int iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
+ 	u32 ptr;        /* SRAM byte address of log data */
+ 	u32 ev, time, data; /* event log data */
+ 	unsigned long reg_flags;
++	struct iwl_priv *priv = priv(trans);
+ 
+ 	if (num_events == 0)
+ 		return pos;
+@@ -725,7 +727,7 @@ static int iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
+ 			} else {
+ 				trace_iwlwifi_dev_ucode_event(priv, 0,
+ 					time, ev);
+-				IWL_ERR(priv, "EVT_LOG:0x%08x:%04u\n",
++				IWL_ERR(trans, "EVT_LOG:0x%08x:%04u\n",
+ 					time, ev);
+ 			}
+ 		} else {
+@@ -735,7 +737,7 @@ static int iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
+ 						"EVT_LOGT:%010u:0x%08x:%04u\n",
+ 						 time, data, ev);
+ 			} else {
+-				IWL_ERR(priv, "EVT_LOGT:%010u:0x%08x:%04u\n",
++				IWL_ERR(trans, "EVT_LOGT:%010u:0x%08x:%04u\n",
+ 					time, data, ev);
+ 				trace_iwlwifi_dev_ucode_event(priv, time,
+ 					data, ev);
+@@ -752,7 +754,7 @@ static int iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
+ /**
+  * iwl_print_last_event_logs - Dump the newest # of event log to syslog
+  */
+-static int iwl_print_last_event_logs(struct iwl_priv *priv, u32 capacity,
++static int iwl_print_last_event_logs(struct iwl_trans *trans, u32 capacity,
+ 				    u32 num_wraps, u32 next_entry,
+ 				    u32 size, u32 mode,
+ 				    int pos, char **buf, size_t bufsz)
+@@ -763,22 +765,22 @@ static int iwl_print_last_event_logs(struct iwl_priv *priv, u32 capacity,
+ 	 */
+ 	if (num_wraps) {
+ 		if (next_entry < size) {
+-			pos = iwl_print_event_log(priv,
++			pos = iwl_print_event_log(trans,
+ 						capacity - (size - next_entry),
+ 						size - next_entry, mode,
+ 						pos, buf, bufsz);
+-			pos = iwl_print_event_log(priv, 0,
++			pos = iwl_print_event_log(trans, 0,
+ 						  next_entry, mode,
+ 						  pos, buf, bufsz);
+ 		} else
+-			pos = iwl_print_event_log(priv, next_entry - size,
++			pos = iwl_print_event_log(trans, next_entry - size,
+ 						  size, mode, pos, buf, bufsz);
+ 	} else {
+ 		if (next_entry < size) {
+-			pos = iwl_print_event_log(priv, 0, next_entry,
++			pos = iwl_print_event_log(trans, 0, next_entry,
+ 						  mode, pos, buf, bufsz);
+ 		} else {
+-			pos = iwl_print_event_log(priv, next_entry - size,
++			pos = iwl_print_event_log(trans, next_entry - size,
+ 						  size, mode, pos, buf, bufsz);
+ 		}
+ 	}
+@@ -787,7 +789,7 @@ static int iwl_print_last_event_logs(struct iwl_priv *priv, u32 capacity,
+ 
+ #define DEFAULT_DUMP_EVENT_LOG_ENTRIES (20)
+ 
+-int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
++int iwl_dump_nic_event_log(struct iwl_trans *trans, bool full_log,
+ 			    char **buf, bool display)
+ {
+ 	u32 base;       /* SRAM byte address of event log header */
+@@ -799,6 +801,7 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
+ 	u32 logsize;
+ 	int pos = 0;
+ 	size_t bufsz = 0;
++	struct iwl_priv *priv = priv(trans);
+ 
+ 	base = priv->device_pointers.log_event_table;
+ 	if (priv->ucode_type == IWL_UCODE_INIT) {
+@@ -812,7 +815,7 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
+ 	}
+ 
+ 	if (!iwlagn_hw_valid_rtc_data_addr(base)) {
+-		IWL_ERR(priv,
++		IWL_ERR(trans,
+ 			"Invalid event log pointer 0x%08X for %s uCode\n",
+ 			base,
+ 			(priv->ucode_type == IWL_UCODE_INIT)
+@@ -827,13 +830,13 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
+ 	next_entry = iwl_read_targ_mem(priv, base + (3 * sizeof(u32)));
+ 
+ 	if (capacity > logsize) {
+-		IWL_ERR(priv, "Log capacity %d is bogus, limit to %d entries\n",
+-			capacity, logsize);
++		IWL_ERR(trans, "Log capacity %d is bogus, limit to %d "
++			"entries\n", capacity, logsize);
+ 		capacity = logsize;
+ 	}
+ 
+ 	if (next_entry > logsize) {
+-		IWL_ERR(priv, "Log write index %d is bogus, limit to %d\n",
++		IWL_ERR(trans, "Log write index %d is bogus, limit to %d\n",
+ 			next_entry, logsize);
+ 		next_entry = logsize;
+ 	}
+@@ -842,7 +845,7 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
+ 
+ 	/* bail out if nothing in log */
+ 	if (size == 0) {
+-		IWL_ERR(priv, "Start IWL Event Log Dump: nothing in log\n");
++		IWL_ERR(trans, "Start IWL Event Log Dump: nothing in log\n");
+ 		return pos;
+ 	}
+ 
+@@ -850,14 +853,14 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
+ 	priv->bt_ch_announce = iwlagn_mod_params.bt_ch_announce;
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUG
+-	if (!(iwl_get_debug_level(priv->shrd) & IWL_DL_FW_ERRORS) && !full_log)
++	if (!(iwl_get_debug_level(trans->shrd) & IWL_DL_FW_ERRORS) && !full_log)
+ 		size = (size > DEFAULT_DUMP_EVENT_LOG_ENTRIES)
+ 			? DEFAULT_DUMP_EVENT_LOG_ENTRIES : size;
+ #else
+ 	size = (size > DEFAULT_DUMP_EVENT_LOG_ENTRIES)
+ 		? DEFAULT_DUMP_EVENT_LOG_ENTRIES : size;
+ #endif
+-	IWL_ERR(priv, "Start IWL Event Log Dump: display last %u entries\n",
++	IWL_ERR(trans, "Start IWL Event Log Dump: display last %u entries\n",
+ 		size);
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUG
+@@ -870,25 +873,25 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
+ 		if (!*buf)
+ 			return -ENOMEM;
+ 	}
+-	if ((iwl_get_debug_level(priv->shrd) & IWL_DL_FW_ERRORS) || full_log) {
++	if ((iwl_get_debug_level(trans->shrd) & IWL_DL_FW_ERRORS) || full_log) {
+ 		/*
+ 		 * if uCode has wrapped back to top of log,
+ 		 * start at the oldest entry,
+ 		 * i.e the next one that uCode would fill.
+ 		 */
+ 		if (num_wraps)
+-			pos = iwl_print_event_log(priv, next_entry,
++			pos = iwl_print_event_log(trans, next_entry,
+ 						capacity - next_entry, mode,
+ 						pos, buf, bufsz);
+ 		/* (then/else) start at top of log */
+-		pos = iwl_print_event_log(priv, 0,
++		pos = iwl_print_event_log(trans, 0,
+ 					  next_entry, mode, pos, buf, bufsz);
+ 	} else
+-		pos = iwl_print_last_event_logs(priv, capacity, num_wraps,
++		pos = iwl_print_last_event_logs(trans, capacity, num_wraps,
+ 						next_entry, size, mode,
+ 						pos, buf, bufsz);
+ #else
+-	pos = iwl_print_last_event_logs(priv, capacity, num_wraps,
++	pos = iwl_print_last_event_logs(trans, capacity, num_wraps,
+ 					next_entry, size, mode,
+ 					pos, buf, bufsz);
+ #endif
+@@ -951,7 +954,7 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
+ 		iwl_disable_interrupts(trans);
+ 
+ 		isr_stats->hw++;
+-		iwl_irq_handle_error(priv(trans));
++		iwl_irq_handle_error(trans);
+ 
+ 		handled |= CSR_INT_BIT_HW_ERR;
+ 
+@@ -1020,7 +1023,7 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
+ 		IWL_ERR(trans, "Microcode SW error detected. "
+ 			" Restarting 0x%X.\n", inta);
+ 		isr_stats->sw++;
+-		iwl_irq_handle_error(priv(trans));
++		iwl_irq_handle_error(trans);
+ 		handled |= CSR_INT_BIT_SW_ERR;
+ 	}
+ 
+@@ -1188,11 +1191,10 @@ int iwl_alloc_isr_ict(struct iwl_trans *trans)
+ /* Device is going up inform it about using ICT interrupt table,
+  * also we need to tell the driver to start using ICT interrupt.
+  */
+-int iwl_reset_ict(struct iwl_priv *priv)
++int iwl_reset_ict(struct iwl_trans *trans)
+ {
+ 	u32 val;
+ 	unsigned long flags;
+-	struct iwl_trans *trans = trans(priv);
+ 	struct iwl_trans_pcie *trans_pcie =
+ 		IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+index e55636e..2ffacb2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -1528,7 +1528,7 @@ static ssize_t iwl_dbgfs_log_event_read(struct file *file,
+ 	int pos = 0;
+ 	ssize_t ret = -ENOMEM;
+ 
+-	ret = pos = iwl_dump_nic_event_log(priv(trans), true, &buf, true);
++	ret = pos = iwl_dump_nic_event_log(trans, true, &buf, true);
+ 	if (buf) {
+ 		ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ 		kfree(buf);
+@@ -1552,7 +1552,7 @@ static ssize_t iwl_dbgfs_log_event_write(struct file *file,
+ 	if (sscanf(buf, "%d", &event_log_flag) != 1)
+ 		return -EFAULT;
+ 	if (event_log_flag == 1)
+-		iwl_dump_nic_event_log(priv(trans), true, NULL, false);
++		iwl_dump_nic_event_log(trans, true, NULL, false);
+ 
+ 	return count;
+ }
 -- 
 1.7.0.4
 
