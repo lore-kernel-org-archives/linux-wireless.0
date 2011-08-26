@@ -1,37 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50388 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751080Ab1HIUAO (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:48191 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753948Ab1HZJns convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 16:00:14 -0400
-Date: Tue, 9 Aug 2011 15:51:16 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, stable@kernel.org
-Subject: Re: [PATCH v2 10/13] ath9k_hw: update PMU to improve ripple issue
- for AR9485
-Message-ID: <20110809195116.GF10077@tuxdriver.com> (sfid-20110809_220021_360995_5A1AE466)
-References: <1311941300-2590-1-git-send-email-rmanohar@qca.qualcomm.com>
- <1311941300-2590-10-git-send-email-rmanohar@qca.qualcomm.com>
+	Fri, 26 Aug 2011 05:43:48 -0400
+Received: by pzk37 with SMTP id 37so3985752pzk.1
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 02:43:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1311941300-2590-10-git-send-email-rmanohar@qca.qualcomm.com>
+Date: Fri, 26 Aug 2011 11:43:48 +0200
+Message-ID: <CACna6rwzzV=YSkATvLwKk4fcEgtiOjQ9+VihSet_og+y4KkqpA@mail.gmail.com> (sfid-20110826_114351_605449_6C803150)
+Subject: 1 more question about sending patches with dependencies
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 29, 2011 at 05:38:17PM +0530, Rajkumar Manoharan wrote:
-> The commit ebefce3d13f8b5a871337ff7c3821ee140c1ea8a failed
-> to set proper PMU value to address ripple issue for AR9485.
-> 
-> Cc: stable@kernel.org
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+I want to send patch that depends on
+[RFC/RFT] b43: Relax requirement for descriptors to be in the DMA zone
 
-Please post fixes (particular those that are Cc: stable@kernel.org) 
-as separate patch series.
+I guess this is already in the John's queue, as Michael asked to apply
+it even despite the fact it's RFC/RFT.
 
-Thanks,
+Do I have to wait until pushing that patch into wireless-next /
+wireless-testing? Or can I just submit my patch? Or should I re-submit
+the mentioned patch as part of my patchset?
 
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Rafał
