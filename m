@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3054 "EHLO mms1.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4781 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755609Ab1HWRiG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 13:38:06 -0400
-Message-ID: <4E53E56A.1070801@broadcom.com> (sfid-20110823_193810_518334_8295C67A)
-Date: Tue, 23 Aug 2011 19:37:46 +0200
+	id S1755153Ab1HZNT5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 09:19:57 -0400
 From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 01/13] staging: brcm80211: remove unused definition flag
+ from top Makefile
+Date: Fri, 26 Aug 2011 15:19:28 +0200
+Message-ID: <1314364780-9462-2-git-send-email-rvossen@broadcom.com> (sfid-20110826_152017_046942_B38C64F4)
+In-Reply-To: <1314364780-9462-1-git-send-email-rvossen@broadcom.com>
+References: <1314364780-9462-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"networkmanager-list@gnome.org" <networkmanager-list@gnome.org>
-Subject: Re: brcmsmac driver only works when sitting next to the AP
-References: <20110822112737.GA5936@stt008.linux.site>
- <4E525235.7060501@broadcom.com>
- <CAKprTDHO+Hh4g3WjGijDhPtzY5PiqR0GQ_zg8Uw46-qOVXpCRQ@mail.gmail.com>
- <4E525FC7.4070802@broadcom.com>
- <CAKprTDF0iFSAkYZiLQFLX+KumyLbzNUvHocKJyzK37Kv_79EFA@mail.gmail.com>
- <4E5367AA.8040406@broadcom.com>
- <CAKprTDFret5n-AH_B_Hu6E0+B4FEGJQ=jjYbGNy8ZD5R8ReFCg@mail.gmail.com>
- <4E53728B.3030803@broadcom.com>
- <20110823095348.GA5383@stt008.linux.site>
- <4E538309.1040203@broadcom.com>
- <20110823105341.GA5604@stt008.linux.site>
- <4E538DC3.7060906@broadcom.com>
- <CAKprTDHVcEgZvNE6Ububoaf1WH+LAcHD35YriNaj47JnsVL=Xg@mail.gmail.com>
- <4E53B6B0.8010605@broadcom.com>
- <CAKprTDGKfiGGZ7uEhT+U-DJ13+NexqPZKGQez7yShC40Heph_A@mail.gmail.com>
-In-Reply-To: <CAKprTDGKfiGGZ7uEhT+U-DJ13+NexqPZKGQez7yShC40Heph_A@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Arend van Spriel <arend@broadcom.com>
 
-I can try to build the same source tree as you. If you got your source 
-tree from Git, can you give me a SHA1 (git log) ? If you downloaded a 
-package or tar ball, can you point to its location ?
+The use of the definition BCMDMA32 was already removed from the
+source code, but it was still defined in the top-level Makefile.
+This patch removes it.
 
-I assume that the version of your source tree matches your current 
-kernel version ? (compare 'uname -r' to 'make kernelversion').
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/Makefile |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Thanks, Roland.
+diff --git a/drivers/staging/brcm80211/Makefile b/drivers/staging/brcm80211/Makefile
+index 8b01f5e..f41c047 100644
+--- a/drivers/staging/brcm80211/Makefile
++++ b/drivers/staging/brcm80211/Makefile
+@@ -16,7 +16,6 @@
+ # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ 
+ # common flags
+-subdir-ccflags-y					:= -DBCMDMA32
+ subdir-ccflags-$(CONFIG_BRCMDBG)	+= -DBCMDBG
+ 
+ obj-$(CONFIG_BRCMUTIL)	+= brcmutil/
+-- 
+1.7.4.1
+
 
