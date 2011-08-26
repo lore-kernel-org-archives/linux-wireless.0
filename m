@@ -1,97 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3078 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752975Ab1HHN7a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:30 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 42/82] staging: brcm80211: replace simple_strtoul
- usage in brcmsmac
-Date: Mon, 8 Aug 2011 15:58:26 +0200
-Message-ID: <1312811946-16713-43-git-send-email-arend@broadcom.com> (sfid-20110808_155940_617726_1C72C1C2)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:30994 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751195Ab1HZFEH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 01:04:07 -0400
+Date: Fri, 26 Aug 2011 10:34:34 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath9k_hw: Fix rx latency of 11a mode
+Message-ID: <20110826050415.GA7416@vmraj-lnx.users.atheros.com> (sfid-20110826_070412_927378_84E6736E)
+References: <1314283522-6143-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <4E566AFA.8050203@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4E566AFA.8050203@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The usage of simple_strtoul is not preferred. Instead kstrtoul
-should be used. This patch fixes this for the brcmsmac driver.
+On Thu, Aug 25, 2011 at 05:32:10PM +0200, Felix Fietkau wrote:
+> On 2011-08-25 4:45 PM, Rajkumar Manoharan wrote:
+> >Rx latecy to start signal(usec) of 11a is 41 not 37 and
+> >also corrected the rx delay in quarter rate.
+> >
+> >Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+> >---
+> >  drivers/net/wireless/ath/ath9k/hw.c |    7 +++++--
+> >  1 files changed, 5 insertions(+), 2 deletions(-)
+> >
+> >diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> >index 88100cc..d4dce6b 100644
+> >--- a/drivers/net/wireless/ath/ath9k/hw.c
+> >+++ b/drivers/net/wireless/ath/ath9k/hw.c
+> >@@ -974,7 +974,10 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+> >  	if (ah->misc_mode != 0)
+> >  		REG_SET_BIT(ah, AR_PCU_MISC, ah->misc_mode);
+> >
+> >-	rx_lat = 37;
+> >+	if (IS_CHAN_A_FAST_CLOCK(ah, chan))
+> >+		rx_lat = 41;
+> >+	else
+> >+		rx_lat = 37;
+> >  	tx_lat = 54;
+> >
+> >  	if (IS_CHAN_HALF_RATE(chan)) {
+> >@@ -988,7 +991,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+> >  		sifstime = 32;
+> >  	} else if (IS_CHAN_QUARTER_RATE(chan)) {
+> >  		eifs = 340;
+> >-		rx_lat *= 4;
+> >+		rx_lat *= 4 - 1;
+> That looks a bit weird. Did you mean to change it to *= 3 or was
+> this just mistyped because you wanted to subtract one after the
+> multiplication?
+>
+Oops.. it is rx_lat = (rx_lat * 4) - 1.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/main.c        |   16 +++++++++-------
- drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |    7 ++++---
- 2 files changed, 13 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index 5c97778..001a1f7 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -4287,16 +4287,17 @@ int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device, uint unit,
- #endif
- 	if (bustype != SI_BUS) {
- 		char *var;
-+		unsigned long res;
- 
- 		var = getvar(vars, "vendid");
--		if (var) {
--			vendor = (u16) simple_strtoul(var, NULL, 0);
-+		if (var && !kstrtoul(var, 0, &res)) {
-+			vendor = (u16)res;
- 			wiphy_err(wiphy, "Overriding vendor id = 0x%x\n",
- 				  vendor);
- 		}
- 		var = getvar(vars, "devid");
--		if (var) {
--			u16 devid = (u16) simple_strtoul(var, NULL, 0);
-+		if (var && !kstrtoul(var, 0, &res)) {
-+			u16 devid = (u16)res;
- 			if (devid != 0xffff) {
- 				device = devid;
- 				wiphy_err(wiphy, "Overriding device id = 0x%x"
-@@ -9596,10 +9597,11 @@ char *getvar(char *vars, const char *name)
- int getintvar(char *vars, const char *name)
- {
- 	char *val;
-+	unsigned long res;
- 
- 	val = getvar(vars, name);
--	if (val == NULL)
--		return 0;
-+	if (val && !kstrtoul(val, 0, &res))
-+		return res;
- 
--	return simple_strtoul(val, NULL, 0);
-+	return 0;
- }
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-index 582df4a..22f7bfc 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -174,12 +174,13 @@ char *phy_getvar(struct brcms_phy *pi, const char *name)
- int phy_getintvar(struct brcms_phy *pi, const char *name)
- {
- 	char *val;
-+	unsigned long res;
- 
- 	val = PHY_GETVAR(pi, name);
--	if (val == NULL)
--		return 0;
-+	if (val && !kstrtoul(val, 0, &res))
-+		return res;
- 
--	return simple_strtoul(val, NULL, 0);
-+	return 0;
- }
- 
- void wlc_phyreg_enter(struct brcms_phy_pub *pih)
--- 
-1.7.4.1
-
-
+--
+Rajkumar
