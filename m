@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:54302 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753328Ab1HJUkz convert rfc822-to-8bit (ORCPT
+Received: from mms1.broadcom.com ([216.31.210.17]:3532 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753251Ab1HZRzZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 16:40:55 -0400
-Received: by wyg24 with SMTP id 24so987074wyg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 13:40:54 -0700 (PDT)
+	Fri, 26 Aug 2011 13:55:25 -0400
+Date: Fri, 26 Aug 2011 10:55:10 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Arend Van Spriel" <arend@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Subject: Re: [PATCH v2] Move brcm80211 to mainline
+Message-ID: <20110826175510.GG4888@broadcom.com> (sfid-20110826_195529_033786_96BC6FED)
+References: <20110707002034.GA17885@broadcom.com>
+ <20110824222801.GA5280@broadcom.com>
+ <CACna6rwG6qNpaOu4QeOvs0L3LVETRt9w5=Ec-L2NJ5gXOAM=nw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1313007274.4016.2.camel@jlt3.sipsolutions.net>
-References: <1312933511-9486-1-git-send-email-thomas@cozybit.com>
-	<1312933511-9486-2-git-send-email-thomas@cozybit.com>
-	<1312983507.4325.1.camel@jlt3.sipsolutions.net>
-	<CAG6hwVN27E=bt_-Ocv2JagUPmtZAWux17Lm3cV24be9TfM1BDQ@mail.gmail.com>
-	<1313007274.4016.2.camel@jlt3.sipsolutions.net>
-Date: Wed, 10 Aug 2011 13:40:54 -0700
-Message-ID: <CAG6hwVOw8RZDZfEKoxTSK50taq2o7hLE_wUVNWW_k7kH3gfkVA@mail.gmail.com> (sfid-20110810_224102_899609_BD2CC0E2)
-Subject: Re: [PATCH 1/8] mac80211: improve mpath debugging
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Javier Cardona <javier@cozybit.com>, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CACna6rwG6qNpaOu4QeOvs0L3LVETRt9w5=Ec-L2NJ5gXOAM=nw@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 10, 2011 at 1:14 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2011-08-10 at 13:11 -0700, Thomas Pedersen wrote:
->> On Wed, Aug 10, 2011 at 6:38 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Tue, 2011-08-09 at 16:45 -0700, Thomas Pedersen wrote:
->> >
->> >> +#ifdef CONFIG_MAC80211_VERBOSE_MPATH_DEBUG
->> >> +#define mpath_dbg(fmt, args...)      printk(KERN_DEBUG fmt, ##args)
->> >> +#else
->> >> +#define mpath_dbg(fmt, args...)      do { (void)(0); } while (0)
->> >> +#endif
->> >
->> > Maybe this should be a static inline for checking the fmt args even when
->> > it's compiled out?
->> >
->> I don't really see the point, since all this would give us is the
->> compiler checking whether a const char * was passed as an argument to
->> fmt, right?
->
-> No, if you annotate it correctly gcc will also check that the arguments
-> match, and warn if you do
->
-> mpath_dbg("foo: %s", 7)
->
-> for example :-)
+On Thu, Aug 25, 2011 at 01:55:26PM -0700, RafaÅ‚ MiÅ‚ecki wrote:
+> 2011/8/25 Henry Ptasinski <henryp@broadcom.com>:
+> > With the latest series of cleanup patches merged in by Greg KH, I'd like to
+> > once again propose moving brcm80211 out of staging and into mainline.
+> 
+> Henry: a simple question, please explain it to me, what brcmsmac does
+> provide that b43 doesn't?
 
-Ah, well OK. The next version will include this change.
+The brcmsmac driver supports the BCM4313, BCM43224, and BCM43225 chipsets with
+full performance i.e. rate vs. range comparable to what's achived with these
+chips running under other operating systems.
 
-Thomas
+The underlying phy algorithms, especially the dynamic calibrations, have been
+designed and tested, over the full range of chip operating temperatures, and
+across fabrication process corners, to maximize the performance acheived in all
+cases.
+
+The driver is fully supported by Broadcom, and provides an API for addition of
+phy support for newer chipsets that will help speed up the process of getting
+support for those chipsets into the kernel.
+
+- Henry
+
+
