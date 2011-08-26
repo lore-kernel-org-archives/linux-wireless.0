@@ -1,36 +1,235 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:40559 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755813Ab1HWUOQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 16:14:16 -0400
-Date: Tue, 23 Aug 2011 13:12:28 -0700
-From: Greg KH <greg@kroah.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/8] brcmsmac fixes and driver cleanup
-Message-ID: <20110823201228.GC25977@kroah.com> (sfid-20110823_221420_276723_638E5DF3)
-References: <1314101640-4229-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1314101640-4229-1-git-send-email-arend@broadcom.com>
+Received: from mga01.intel.com ([192.55.52.88]:7191 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752897Ab1HZGxh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 02:53:37 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 38/60] iwlagn: remove unused parameters from hw_params
+Date: Thu, 25 Aug 2011 23:11:10 -0700
+Message-Id: <1314339092-20797-39-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085431_516898_B6DE8B7B)
+In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 23, 2011 at 02:13:52PM +0200, Arend van Spriel wrote:
-> With 3.1 kernel the crc8 and cordic library modules are available in the
-> staging tree. The brcmsmac driver now uses them. Some small fixes have
-> been made and the driver is made to work on the Sparc platform.
-> 
-> This series applies to staging-next and depends on the following patch set:
-> 
-> Message-ID: <1313415267-5264-1-git-send-email-arend@broadcom.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-All applied.
+Some of them weren't used at all, the others always had the same value since
+the driver split.
 
-That's everything that you have pending, right?  Anything I miss?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c     |    4 ----
+ drivers/net/wireless/iwlwifi/iwl-2000.c     |    4 ----
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    8 --------
+ drivers/net/wireless/iwlwifi/iwl-6000.c     |    4 ----
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    4 ----
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    1 -
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-shared.h   |    9 ---------
+ drivers/net/wireless/iwlwifi/iwl-trans.c    |    9 ++++++---
+ 9 files changed, 7 insertions(+), 38 deletions(-)
 
-thanks,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index bd0ce39..7d60cd2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -129,10 +129,6 @@ static int iwl1000_hw_set_hw_params(struct iwl_priv *priv)
+ 			iwlagn_mod_params.num_of_queues;
+ 
+ 	hw_params(priv).max_txq_num = priv->cfg->base_params->num_of_queues;
+-	hw_params(priv).scd_bc_tbls_size =
+-			priv->cfg->base_params->num_of_queues *
+-			sizeof(struct iwlagn_scd_bc_tbl);
+-	hw_params(priv).tfd_size = sizeof(struct iwl_tfd);
+ 	hw_params(priv).max_stations = IWLAGN_STATION_COUNT;
+ 	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWLAGN_BROADCAST_ID;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index 1a36edf..8d71eec 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -126,10 +126,6 @@ static int iwl2000_hw_set_hw_params(struct iwl_priv *priv)
+ 			iwlagn_mod_params.num_of_queues;
+ 
+ 	hw_params(priv).max_txq_num = priv->cfg->base_params->num_of_queues;
+-	hw_params(priv).scd_bc_tbls_size =
+-		priv->cfg->base_params->num_of_queues *
+-		sizeof(struct iwlagn_scd_bc_tbl);
+-	hw_params(priv).tfd_size = sizeof(struct iwl_tfd);
+ 	hw_params(priv).max_stations = IWLAGN_STATION_COUNT;
+ 	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWLAGN_BROADCAST_ID;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 6048b3b..55fdbf5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -157,10 +157,6 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+ 			iwlagn_mod_params.num_of_queues;
+ 
+ 	hw_params(priv).max_txq_num = priv->cfg->base_params->num_of_queues;
+-	hw_params(priv).scd_bc_tbls_size =
+-			priv->cfg->base_params->num_of_queues *
+-			sizeof(struct iwlagn_scd_bc_tbl);
+-	hw_params(priv).tfd_size = sizeof(struct iwl_tfd);
+ 	hw_params(priv).max_stations = IWLAGN_STATION_COUNT;
+ 	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWLAGN_BROADCAST_ID;
+ 
+@@ -200,10 +196,6 @@ static int iwl5150_hw_set_hw_params(struct iwl_priv *priv)
+ 			iwlagn_mod_params.num_of_queues;
+ 
+ 	hw_params(priv).max_txq_num = priv->cfg->base_params->num_of_queues;
+-	hw_params(priv).scd_bc_tbls_size =
+-			priv->cfg->base_params->num_of_queues *
+-			sizeof(struct iwlagn_scd_bc_tbl);
+-	hw_params(priv).tfd_size = sizeof(struct iwl_tfd);
+ 	hw_params(priv).max_stations = IWLAGN_STATION_COUNT;
+ 	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWLAGN_BROADCAST_ID;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index c2cba80..63089bc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -146,10 +146,6 @@ static int iwl6000_hw_set_hw_params(struct iwl_priv *priv)
+ 			iwlagn_mod_params.num_of_queues;
+ 
+ 	hw_params(priv).max_txq_num = priv->cfg->base_params->num_of_queues;
+-	hw_params(priv).scd_bc_tbls_size =
+-			priv->cfg->base_params->num_of_queues *
+-			sizeof(struct iwlagn_scd_bc_tbl);
+-	hw_params(priv).tfd_size = sizeof(struct iwl_tfd);
+ 	hw_params(priv).max_stations = IWLAGN_STATION_COUNT;
+ 	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWLAGN_BROADCAST_ID;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index bbdc475..6143743 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3191,8 +3191,6 @@ static u32 iwl_hw_detect(struct iwl_priv *priv)
+ 
+ static int iwl_set_hw_params(struct iwl_priv *priv)
+ {
+-	hw_params(priv).max_rxq_size = RX_QUEUE_SIZE;
+-	hw_params(priv).max_rxq_log = RX_QUEUE_SIZE_LOG;
+ 	if (iwlagn_mod_params.amsdu_size_8K)
+ 		hw_params(priv).rx_page_order =
+ 			get_order(IWL_RX_BUF_SIZE_8K);
+@@ -3200,8 +3198,6 @@ static int iwl_set_hw_params(struct iwl_priv *priv)
+ 		hw_params(priv).rx_page_order =
+ 			get_order(IWL_RX_BUF_SIZE_4K);
+ 
+-	hw_params(priv).max_beacon_itrvl = IWL_MAX_UCODE_BEACON_INTERVAL;
+-
+ 	if (iwlagn_mod_params.disable_11n)
+ 		priv->cfg->sku &= ~EEPROM_SKU_CAP_11N_ENABLE;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 86b9748..1426b2f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -673,7 +673,6 @@ struct iwl_rxon_assoc_cmd {
+ 
+ #define IWL_CONN_MAX_LISTEN_INTERVAL	10
+ #define IWL_MAX_UCODE_BEACON_INTERVAL	4 /* 4096 */
+-#define IWL39_MAX_UCODE_BEACON_INTERVAL	1 /* 1024 */
+ 
+ /*
+  * REPLY_RXON_TIMING = 0x14 (command, has simple generic response)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index cfc23c2..048c8e2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -359,7 +359,7 @@ int iwl_send_rxon_timing(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 		beacon_int = le16_to_cpu(ctx->timing.beacon_interval);
+ 	} else {
+ 		beacon_int = iwl_adjust_beacon_interval(beacon_int,
+-			hw_params(priv).max_beacon_itrvl * TIME_UNIT);
++			IWL_MAX_UCODE_BEACON_INTERVAL * TIME_UNIT);
+ 		ctx->timing.beacon_interval = cpu_to_le16(beacon_int);
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 1229eb3..7145e48 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -121,12 +121,8 @@ struct iwl_mod_params {
+ /**
+  * struct iwl_hw_params
+  * @max_txq_num: Max # Tx queues supported
+- * @scd_bc_tbls_size: size of scheduler byte count tables
+- * @tfd_size: TFD size
+  * @tx/rx_chains_num: Number of TX/RX chains
+  * @valid_tx/rx_ant: usable antennas
+- * @max_rxq_size: Max # Rx frames in Rx queue (must be power-of-2)
+- * @max_rxq_log: Log-base-2 of max_rxq_size
+  * @rx_page_order: Rx buffer page order
+  * @rx_wrt_ptr_reg: FH{39}_RSCSR_CHNL0_WPTR
+  * @max_stations:
+@@ -142,18 +138,13 @@ struct iwl_mod_params {
+  */
+ struct iwl_hw_params {
+ 	u8 max_txq_num;
+-	u16 scd_bc_tbls_size;
+-	u32 tfd_size;
+ 	u8  tx_chains_num;
+ 	u8  rx_chains_num;
+ 	u8  valid_tx_ant;
+ 	u8  valid_rx_ant;
+-	u16 max_rxq_size;
+-	u16 max_rxq_log;
+ 	u32 rx_page_order;
+ 	u8  max_stations;
+ 	u8  ht40_channel;
+-	u8  max_beacon_itrvl;	/* in 1024 ms */
+ 	u32 max_inst_size;
+ 	u32 max_data_size;
+ 	u32 ct_kill_threshold; /* value in hw-dependent units */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+index 2ffacb2..4f3fdca 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -302,7 +302,7 @@ static int iwl_trans_txq_alloc(struct iwl_trans *trans,
+ 				struct iwl_tx_queue *txq, int slots_num,
+ 				u32 txq_id)
+ {
+-	size_t tfd_sz = hw_params(trans).tfd_size * TFD_QUEUE_SIZE_MAX;
++	size_t tfd_sz = sizeof(struct iwl_tfd) * TFD_QUEUE_SIZE_MAX;
+ 	int i;
+ 
+ 	if (WARN_ON(txq->meta || txq->cmd || txq->txb || txq->tfds))
+@@ -448,7 +448,7 @@ static void iwl_tx_queue_free(struct iwl_trans *trans, int txq_id)
+ 
+ 	/* De-alloc circular buffer of TFDs */
+ 	if (txq->q.n_bd) {
+-		dma_free_coherent(dev, hw_params(trans).tfd_size *
++		dma_free_coherent(dev, sizeof(struct iwl_tfd) *
+ 				  txq->q.n_bd, txq->tfds, txq->q.dma_addr);
+ 		memset(&txq->q.dma_addr, 0, sizeof(txq->q.dma_addr));
+ 	}
+@@ -509,6 +509,9 @@ static int iwl_trans_tx_alloc(struct iwl_trans *trans)
+ 	struct iwl_trans_pcie *trans_pcie =
+ 		IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
++	u16 scd_bc_tbls_size = priv->cfg->base_params->num_of_queues *
++			sizeof(struct iwlagn_scd_bc_tbl);
++
+ 	/*It is not allowed to alloc twice, so warn when this happens.
+ 	 * We cannot rely on the previous allocation, so free and fail */
+ 	if (WARN_ON(priv->txq)) {
+@@ -517,7 +520,7 @@ static int iwl_trans_tx_alloc(struct iwl_trans *trans)
+ 	}
+ 
+ 	ret = iwlagn_alloc_dma_ptr(trans, &trans_pcie->scd_bc_tbls,
+-				hw_params(trans).scd_bc_tbls_size);
++				   scd_bc_tbls_size);
+ 	if (ret) {
+ 		IWL_ERR(trans, "Scheduler BC Table allocation failed\n");
+ 		goto error;
+-- 
+1.7.0.4
 
-greg k-h
