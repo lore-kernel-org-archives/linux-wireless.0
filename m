@@ -1,145 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:64569 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754679Ab1H2Sgi convert rfc822-to-8bit (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:48472 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754952Ab1HZQh2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 14:36:38 -0400
-Received: by pzk37 with SMTP id 37so8875612pzk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 11:36:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1314625745.8959.9.camel@jlt3.sipsolutions.net>
-References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
- <1314404294-4233-1-git-send-email-javier@cozybit.com> <1314404294-4233-7-git-send-email-javier@cozybit.com>
- <1314625745.8959.9.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Mon, 29 Aug 2011 11:36:18 -0700
-Message-ID: <CAPjQAd8esVjckBCwya+a5dFiLmu14KpCW5acjNeLHk32XZYs2g@mail.gmail.com> (sfid-20110829_203642_201926_64504E8C)
-Subject: Re: [PATCH v2 6/8] mac80211: Consolidate {mesh,mpp}_path_flush into
- one function
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
-	jlopex@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 26 Aug 2011 12:37:28 -0400
+Date: Fri, 26 Aug 2011 12:36:20 -0400 (EDT)
+Message-Id: <20110826.123620.2128524809929669115.davem@davemloft.net> (sfid-20110826_183732_967858_6F2B17AE)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2011-08-26
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110826151758.GH2579@tuxdriver.com>
+References: <20110826151758.GH2579@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 29, 2011 at 6:49 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2011-08-26 at 17:18 -0700, Javier Cardona wrote:
->> Signed-off-by: Javier Cardona <javier@cozybit.com>
->>
->> ---
->> v2: - Fix extra space (checkpatch)
->>     - Add lockdep check for RCU
->>  net/mac80211/mesh_pathtbl.c |   65 +++++++++++++++++-------------------------
->>  1 files changed, 26 insertions(+), 39 deletions(-)
->>
->> diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
->> index ea9e34a..3c03be9 100644
->> --- a/net/mac80211/mesh_pathtbl.c
->> +++ b/net/mac80211/mesh_pathtbl.c
->> @@ -790,35 +790,6 @@ void mesh_plink_broken(struct sta_info *sta)
->>       rcu_read_unlock();
->>  }
->>
->> -/**
->> - * mesh_path_flush_by_nexthop - Deletes mesh paths if their next hop matches
->> - *
->> - * @sta - mesh peer to match
->> - *
->> - * RCU notes: this function is called when a mesh plink transitions from
->> - * PLINK_ESTAB to any other state, since PLINK_ESTAB state is the only one that
->> - * allows path creation. This will happen before the sta can be freed (because
->> - * sta_info_destroy() calls this) so any reader in a rcu read block will be
->> - * protected against the plink disappearing.
->> - */
->> -void mesh_path_flush_by_nexthop(struct sta_info *sta)
->> -{
->> -     struct mesh_table *tbl;
->> -     struct mesh_path *mpath;
->> -     struct mpath_node *node;
->> -     struct hlist_node *p;
->> -     int i;
->> -
->> -     rcu_read_lock();
->> -     tbl = rcu_dereference(mesh_paths);
->> -     for_each_mesh_entry(tbl, p, node, i) {
->> -             mpath = node->mpath;
->> -             if (rcu_dereference(mpath->next_hop) == sta)
->> -                     mesh_path_del(mpath->dst, mpath->sdata);
->> -     }
->> -     rcu_read_unlock();
->> -}
->> -
->>  static void mesh_path_node_reclaim(struct rcu_head *rp)
->>  {
->>       struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
->> @@ -845,7 +816,18 @@ static void __mesh_path_del(struct mesh_table *tbl, struct mpath_node *node)
->>       atomic_dec(&tbl->entries);
->>  }
->>
->> -static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
->> +/**
->> + * mesh_path_flush_by_nexthop - Deletes mesh paths if their next hop matches
->> + *
->> + * @sta - mesh peer to match
->> + *
->> + * RCU notes: this function is called when a mesh plink transitions from
->> + * PLINK_ESTAB to any other state, since PLINK_ESTAB state is the only one that
->> + * allows path creation. This will happen before the sta can be freed (because
->> + * sta_info_destroy() calls this) so any reader in a rcu read block will be
->> + * protected against the plink disappearing.
->> + */
->> +void mesh_path_flush_by_nexthop(struct sta_info *sta)
->>  {
->>       struct mesh_table *tbl;
->>       struct mesh_path *mpath;
->> @@ -857,7 +839,7 @@ static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
->>       tbl = rcu_dereference(mesh_paths);
->>       for_each_mesh_entry(tbl, p, node, i) {
->>               mpath = node->mpath;
->> -             if (mpath->sdata == sdata) {
->> +             if (rcu_dereference(mpath->next_hop) == sta) {
->>                       spin_lock_bh(&tbl->hashwlock[i]);
->>                       __mesh_path_del(tbl, node);
->>                       spin_unlock_bh(&tbl->hashwlock[i]);
->> @@ -866,24 +848,23 @@ static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
->>       rcu_read_unlock();
->>  }
->>
->> -static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
->> +static void table_flush_by_iface(struct mesh_table *tbl,
->> +                              struct ieee80211_sub_if_data *sdata)
->>  {
->> -     struct mesh_table *tbl;
->>       struct mesh_path *mpath;
->>       struct mpath_node *node;
->>       struct hlist_node *p;
->>       int i;
->>
->> -     read_lock_bh(&pathtbl_resize_lock);
->> -     tbl = rcu_dereference_protected(mpp_paths,
->> -                                     lockdep_is_held(pathtbl_resize_lock));
->> +     WARN_ON(!rcu_read_lock_held());
->>       for_each_mesh_entry(tbl, p, node, i) {
->>               mpath = node->mpath;
->> +             if (mpath->sdata != sdata)
->> +                     continue;
->>               spin_lock_bh(&tbl->hashwlock[i]);
->>               __mesh_path_del(tbl, node);
->>               spin_unlock_bh(&tbl->hashwlock[i]);
->>       }
->> -     read_unlock_bh(&pathtbl_resize_lock);
->>  }
->
-> So what protects against the table being grown at the same time? A copy
-> will be made, but here you'll be iterating the old table -- which won't
-> crash or anything but is semantically incorrect.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 26 Aug 2011 11:17:58 -0400
 
-You are right.  And I believe it actually may crash, given that the
-nodes we wanted to delete will still exist in the new table.  I'll
-re-spin right away.
+> Here is a round of fixes intended for 3.1...
+> 
+> The biggest portion are Bluetooth fixes.  Gustavo describes them
+> thusly:
+> 
+> 	Some fixes for 3.1! It looks a lot of fixes but some of them
+> 	are the same fix applied to different files. Here we have a
+> 	fix for a wrong timer value from Chen Ganir, a lock balance
+> 	fix from Dan Carpenter, regression fix with the HCI Reset
+> 	command from Szymon Janc, a fix to not show error messages on
+> 	btusb device disconnect from Paul Bolle. Support for Toshiba
+> 	AR30XX from Ricardo Mendoza. And finally a bunch of fixes
+> 	from Peter Hurley, there are some lost wake up, deadlocks and
+> 	memort leaks fixes. Most of them fixes regressions introduced
+> 	by the move to the kthread API.
+> 
+> In addition, we have a locking fix for carl9170, a bcma fix to enable
+> driver loading via udev, a wl12xx fix to properly advertise the
+> maximum number of SSIDs for scanning, another wl12xx fix to properly
+> check a return code in order to avoid a possible oops, and a third
+> wl12xx fix to remove a broken testmode function with locking problems
+> (among others).  Also included is a suspend/resume fix for ath9k,
+> a fix for reading improper MAC addresses on ath9k, a suspend/resume
+> fix for mac80211, and a suspend/resume fix for rt2x00 as well.
 
-Thanks!
+Pulled, thanks John!
