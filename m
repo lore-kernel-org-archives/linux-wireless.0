@@ -1,168 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42349 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752388Ab1HOQLu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 12:11:50 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 19so3673111fxh.19
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2011 09:11:49 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/2] b43: LCN-PHY: init 0x2064 radio
-Date: Mon, 15 Aug 2011 18:50:56 +0200
-Message-Id: <1313427056-3755-2-git-send-email-zajec5@gmail.com> (sfid-20110815_181154_303032_20C644D4)
-In-Reply-To: <1313427056-3755-1-git-send-email-zajec5@gmail.com>
-References: <1313427056-3755-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:2067 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753054Ab1HZGxh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 02:53:37 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 39/60] iwlagn: iwl-dev.h doesn't include iwl-fh.h any more
+Date: Thu, 25 Aug 2011 23:11:11 -0700
+Message-Id: <1314339092-20797-40-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085433_471999_DA0D713F)
+In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Since iwl-fh.h contains transport related data, it shouldn't be included by the
+upper layer.
+Only the transport layer and iwl-agn-ucode.c includes it.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
-I'm slowly going to the end of translating my RE dumps into code.
+ drivers/net/wireless/iwlwifi/iwl-agn-hw.h         |   13 -------------
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c      |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn.c            |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl-commands.h       |    1 +
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |    1 -
+ drivers/net/wireless/iwlwifi/iwl-fh.h             |   18 ++++++++++++------
+ drivers/net/wireless/iwlwifi/iwl-sv-open.c        |    1 -
+ drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h |    2 ++
+ 8 files changed, 20 insertions(+), 21 deletions(-)
 
-Sets come from:
- phy_read(0x04eb) -> 0x0000
-phy_write(0x04eb) <- 0x0002
- phy_read(0x04eb) -> 0x0000
-phy_write(0x04eb) <- 0x0000
- phy_read(0x046a) -> 0x0000
-phy_write(0x046a) <- 0x0019
-
- radio_read(0x005b) -> 0x0000
-radio_write(0x005b) <- 0x0000
- radio_read(0x0004) -> 0x0000
-radio_write(0x0004) <- 0x0040
- radio_read(0x0120) -> 0x0000
-radio_write(0x0120) <- 0x0010
- radio_read(0x0078) -> 0x0000
-radio_write(0x0078) <- 0x0080
- radio_read(0x0129) -> 0x0000
-radio_write(0x0129) <- 0x0002
- radio_read(0x0057) -> 0x0000
-radio_write(0x0057) <- 0x0001
- radio_read(0x005b) -> 0x0000
-radio_write(0x005b) <- 0x0002
-
- radio_read(0x005b) -> 0x0000
-radio_write(0x005b) <- 0x0000
- radio_read(0x0057) -> 0x0000
-radio_write(0x0057) <- 0x0000
-
- radio_read(0x0057) -> 0x0000
-radio_write(0x0057) <- 0x0000
-
-Masks from:
- phy_read(0x04eb) -> 0xffff
-phy_write(0x04eb) <- 0xfffa
- phy_read(0x04eb) -> 0xffff
-phy_write(0x04eb) <- 0xfe3f
- phy_read(0x046a) -> 0xffff
-phy_write(0x046a) <- 0x0019
-
- radio_read(0x005b) -> 0xffff
-radio_write(0x005b) <- 0x00fd
- radio_read(0x0004) -> 0xffff
-radio_write(0x0004) <- 0xffff
- radio_read(0x0120) -> 0xffff
-radio_write(0x0120) <- 0xffff
- radio_read(0x0078) -> 0xffff
-radio_write(0x0078) <- 0xffff
- radio_read(0x0129) -> 0xffff
-radio_write(0x0129) <- 0xffff
- radio_read(0x0057) -> 0xffff
-radio_write(0x0057) <- 0xffff
- radio_read(0x005b) -> 0xffff
-radio_write(0x005b) <- 0xffff
-
- radio_read(0x005b) -> 0xffff
-radio_write(0x005b) <- 0x00fd
- radio_read(0x0057) -> 0xffff
-radio_write(0x0057) <- 0x00fe
-
- radio_read(0x0057) -> 0xffff
-radio_write(0x0057) <- 0x00fd
----
- drivers/net/wireless/b43/phy_lcn.c |   54 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 54 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_lcn.c b/drivers/net/wireless/b43/phy_lcn.c
-index 604a3a6..4b2cd6d 100644
---- a/drivers/net/wireless/b43/phy_lcn.c
-+++ b/drivers/net/wireless/b43/phy_lcn.c
-@@ -28,6 +28,55 @@
- #include "main.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hw.h b/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
+index 47c4304..33951a1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
+@@ -95,17 +95,4 @@
+ #define IWLAGN_NUM_AMPDU_QUEUES		9
+ #define IWLAGN_FIRST_AMPDU_QUEUE	11
  
- /**************************************************
-+ * Radio 2064.
-+ **************************************************/
-+
-+static void b43_radio_2064_init(struct b43_wldev *dev)
-+{
-+	b43_radio_write(dev, 0x09c, 0x0020);
-+	b43_radio_write(dev, 0x105, 0x0008);
-+	b43_radio_write(dev, 0x032, 0x0062);
-+	b43_radio_write(dev, 0x033, 0x0019);
-+	b43_radio_write(dev, 0x090, 0x0010);
-+	b43_radio_write(dev, 0x010, 0x0000);
-+	b43_radio_write(dev, 0x060, 0x007f);
-+	b43_radio_write(dev, 0x061, 0x0072);
-+	b43_radio_write(dev, 0x062, 0x007f);
-+	b43_radio_write(dev, 0x01d, 0x0002);
-+	b43_radio_write(dev, 0x01e, 0x0006);
-+
-+	b43_phy_write(dev, 0x4ea, 0x4688);
-+	b43_phy_maskset(dev, 0x4eb, ~0x7, 0x2);
-+	b43_phy_mask(dev, 0x4eb, ~0x01c0);
-+	b43_phy_maskset(dev, 0x4eb, 0xff00, 0x19);
-+
-+	b43_lcntab_write(dev, B43_LCNTAB16(0x00, 0x55), 0);
-+
-+	b43_radio_mask(dev, 0x05b, (u16) ~0xff02);
-+	b43_radio_set(dev, 0x004, 0x40);
-+	b43_radio_set(dev, 0x120, 0x10);
-+	b43_radio_set(dev, 0x078, 0x80);
-+	b43_radio_set(dev, 0x129, 0x2);
-+	b43_radio_set(dev, 0x057, 0x1);
-+	b43_radio_set(dev, 0x05b, 0x2);
-+
-+	/* TODO: wait for some bit to be set */
-+	b43_radio_read(dev, 0x05c);
-+
-+	b43_radio_mask(dev, 0x05b, (u16) ~0xff02);
-+	b43_radio_mask(dev, 0x057, (u16) ~0xff01);
-+
-+	b43_phy_write(dev, 0x933, 0x2d6b);
-+	b43_phy_write(dev, 0x934, 0x2d6b);
-+	b43_phy_write(dev, 0x935, 0x2d6b);
-+	b43_phy_write(dev, 0x936, 0x2d6b);
-+	b43_phy_write(dev, 0x937, 0x016b);
-+
-+	b43_radio_mask(dev, 0x057, (u16) ~0xff02);
-+	b43_radio_write(dev, 0x0c2, 0x006f);
-+}
-+
-+/**************************************************
-  * Various PHY ops
-  **************************************************/
+-/* Fixed (non-configurable) rx data from phy */
+-
+-/**
+- * struct iwlagn_schedq_bc_tbl scheduler byte count table
+- *	base physical address provided by SCD_DRAM_BASE_ADDR
+- * @tfd_offset  0-12 - tx command byte count
+- *	       12-16 - station index
+- */
+-struct iwlagn_scd_bc_tbl {
+-	__le16 tfd_offset[TFD_QUEUE_BC_SIZE];
+-} __packed;
+-
+-
+ #endif /* __iwl_agn_hw_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+index a094b66..033f595 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+@@ -40,6 +40,7 @@
+ #include "iwl-agn.h"
+ #include "iwl-agn-calib.h"
+ #include "iwl-trans.h"
++#include "iwl-fh.h"
  
-@@ -125,6 +174,11 @@ static int b43_phy_lcn_op_init(struct b43_wldev *dev)
- 
- 	b43_phy_lcn_clear_0x07_table(dev);
- 
-+	if (dev->phy.radio_ver == 0x2064)
-+		b43_radio_2064_init(dev);
-+	else
-+		B43_WARN_ON(1);
-+
- 	return 0;
+ static struct iwl_wimax_coex_event_entry cu_priorities[COEX_NUM_OF_EVENTS] = {
+ 	{COEX_CU_UNASSOC_IDLE_RP, COEX_CU_UNASSOC_IDLE_WP,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 6143743..5d26962 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3189,6 +3189,10 @@ static u32 iwl_hw_detect(struct iwl_priv *priv)
+ 	return iwl_read32(priv, CSR_HW_REV);
  }
  
++/* Size of one Rx buffer in host DRAM */
++#define IWL_RX_BUF_SIZE_4K (4 * 1024)
++#define IWL_RX_BUF_SIZE_8K (8 * 1024)
++
+ static int iwl_set_hw_params(struct iwl_priv *priv)
+ {
+ 	if (iwlagn_mod_params.amsdu_size_8K)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 1426b2f..5625289 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -3911,6 +3911,7 @@ struct iwlagn_wowlan_kek_kck_material_cmd {
+  * Union of all expected notifications/responses:
+  *
+  *****************************************************************************/
++#define FH_RSCSR_FRAME_SIZE_MSK	(0x00003FFF)	/* bits 0-13 */
+ 
+ struct iwl_rx_packet {
+ 	/*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index de293cf..abc0118 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -41,7 +41,6 @@
+ #include "iwl-eeprom.h"
+ #include "iwl-csr.h"
+ #include "iwl-prph.h"
+-#include "iwl-fh.h"
+ #include "iwl-debug.h"
+ #include "iwl-agn-hw.h"
+ #include "iwl-led.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
+index 0ad60b3..c1b8837 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
+@@ -266,8 +266,6 @@
+ #define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_NO_INT_VAL    (0x00000000)
+ #define FH_RCSR_CHNL0_RX_CONFIG_IRQ_DEST_INT_HOST_VAL  (0x00001000)
+ 
+-#define FH_RSCSR_FRAME_SIZE_MSK	(0x00003FFF)	/* bits 0-13 */
+-
+ /**
+  * Rx Shared Status Registers (RSSR)
+  *
+@@ -422,10 +420,6 @@
+ #define RX_FREE_BUFFERS 64
+ #define RX_LOW_WATERMARK 8
+ 
+-/* Size of one Rx buffer in host DRAM */
+-#define IWL_RX_BUF_SIZE_4K (4 * 1024)
+-#define IWL_RX_BUF_SIZE_8K (8 * 1024)
+-
+ /**
+  * struct iwl_rb_status - reseve buffer status
+  * 	host memory mapped FH registers
+@@ -508,4 +502,16 @@ struct iwl_tfd {
+ /* Keep Warm Size */
+ #define IWL_KW_SIZE 0x1000	/* 4k */
+ 
++/* Fixed (non-configurable) rx data from phy */
++
++/**
++ * struct iwlagn_schedq_bc_tbl scheduler byte count table
++ *	base physical address provided by SCD_DRAM_BASE_ADDR
++ * @tfd_offset  0-12 - tx command byte count
++ *	       12-16 - station index
++ */
++struct iwlagn_scd_bc_tbl {
++	__le16 tfd_offset[TFD_QUEUE_BC_SIZE];
++} __packed;
++
+ #endif /* !__iwl_fh_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sv-open.c b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+index 4d4358a..15c9be8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sv-open.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+@@ -72,7 +72,6 @@
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
+ #include "iwl-debug.h"
+-#include "iwl-fh.h"
+ #include "iwl-io.h"
+ #include "iwl-agn.h"
+ #include "iwl-testmode.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
+index 59c6b3c..af2d478 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-int-pcie.h
+@@ -29,6 +29,8 @@
+ #ifndef __iwl_trans_int_pcie_h__
+ #define __iwl_trans_int_pcie_h__
+ 
++#include "iwl-fh.h"
++
+ /*This file includes the declaration that are internal to the
+  * trans_pcie layer */
+ 
 -- 
-1.7.3.4
+1.7.0.4
 
