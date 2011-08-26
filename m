@@ -1,67 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:43582 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750900Ab1HME6F (ORCPT
+Received: from bues.ch ([80.190.117.144]:41144 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755494Ab1HZV1o convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 00:58:05 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 02/11] ath9k: Fix rx overrun interrupt storm
-Date: Sat, 13 Aug 2011 10:28:09 +0530
-Message-ID: <1313211498-14442-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110813_065810_538320_015BCD0E)
-In-Reply-To: <1313211498-14442-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1313211498-14442-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 26 Aug 2011 17:27:44 -0400
+Date: Fri, 26 Aug 2011 23:27:31 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, David Woodhouse <dwmw2@infradead.org>,
+	Maxime Vincent <maxime.vince@gmail.com>,
+	Darren <dmbtech@gmail.com>
+Subject: Re: [wireless-next][PATCH 0/3][ANNOUNCE] b43 the first Linux driver
+ supporting HT-PHY (BCM4331)!
+Message-ID: <20110826232731.3ade9956@milhouse> (sfid-20110826_232748_172680_A2494E0D)
+In-Reply-To: <1314384081-3460-1-git-send-email-zajec5@gmail.com>
+References: <1314384081-3460-1-git-send-email-zajec5@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whenever RXEOL is received, both RXORN and RXEOL got cleared
-to avoid rx overrun interrupt storm. This was handled only for
-edma chips. The same scenario was also observered with AR9280,
-doing frequent channel type switch b/w HT20/40 with bidi traffic
-that is causing failure to stop rx dma. This patch clears
-the RXEOL & RXORN interrupts for all chips.
+On Fri, 26 Aug 2011 20:41:18 +0200
+Rafał Miłecki <zajec5@gmail.com> wrote:
 
-ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020
-DMADBG_7=0x000062c0
-ath: Could not stop RX, we could be confusing the DMA engine when we
-start RX up
-------------[ cut here ]------------
-WARNING: at drivers/net/wireless/ath/ath9k/recv.c:532
-ath_stoprecv+0x110/0x120 [ath9k]()
-Call Trace:
- [<ffffffff8104a55a>] warn_slowpath_common+0x7a/0xb0
- [<ffffffff8104a5a5>] warn_slowpath_null+0x15/0x20
- [<ffffffffa0560380>] ath_stoprecv+0x110/0x120 [ath9k]
- [<ffffffffa055e6fa>] ath_reset+0x6a/0x200 [ath9k]
+> After improving DMA (the important patch for BCM4331 is my one) we can finally
+> enable support for HT-PHY.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    8 +++-----
- 1 files changed, 3 insertions(+), 5 deletions(-)
+I'd really like to thank you guys for your great work on the driver.
+You made some really significant improvements to the driver in the last few
+months and thus ported b43 over to the latest and greatest broadcom
+wireless devices. Things looked messy with only legacy G-PHY support,
+but then you guys appeared. ;) Thanks.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 1e7fe8c..097c1eb 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -826,11 +826,9 @@ irqreturn_t ath_isr(int irq, void *dev)
- 	if (status & ATH9K_INT_TXURN)
- 		ath9k_hw_updatetxtriglevel(ah, true);
- 
--	if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
--		if (status & ATH9K_INT_RXEOL) {
--			ah->imask &= ~(ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
--			ath9k_hw_set_interrupts(ah, ah->imask);
--		}
-+	if (status & ATH9K_INT_RXEOL) {
-+		ah->imask &= ~(ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
-+		ath9k_hw_set_interrupts(ah, ah->imask);
- 	}
- 
- 	if (status & ATH9K_INT_MIB) {
 -- 
-1.7.6
-
+Greetings, Michael.
