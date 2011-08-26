@@ -1,113 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:45453 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751470Ab1HBHY3 (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:40007 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753790Ab1HZIzR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 03:24:29 -0400
-Received: by wwe5 with SMTP id 5so6423351wwe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 00:24:27 -0700 (PDT)
-From: Ido Yariv <ido@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org, Ido Yariv <ido@wizery.com>
-Subject: [PATCH 1/2] wl12xx: Remove obsolete testmode NVS push command
-Date: Tue,  2 Aug 2011 10:24:17 +0300
-Message-Id: <1312269858-30434-1-git-send-email-ido@wizery.com> (sfid-20110802_092433_385625_A94F3D61)
+	Fri, 26 Aug 2011 04:55:17 -0400
+MIME-Version: 1.0
+In-Reply-To: <927eab8b5c950c13991911cd4c16457a5d618bc7.1314252671.git.joe@perches.com>
+References: <927eab8b5c950c13991911cd4c16457a5d618bc7.1314252671.git.joe@perches.com>
+Date: Fri, 26 Aug 2011 10:55:17 +0200
+Message-ID: <CACna6ryWtZG9obyj0w=d5jrF-y1pYNmanhkze2F429kHCLCi=A@mail.gmail.com> (sfid-20110826_105540_219048_2647801F)
+Subject: Re: [PATCH] staging: brcmfmac: Consolidate debugging macros
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>,
+	linux-kernel@vger.kernel.org, Brett Rudley <brudley@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	devel@linuxdriverproject.org, Greg KH <gregkh@suse.de>,
+	Kan Yan <kanyan@broadcom.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The testmode NVS push command is no longer in use. In addition, it has
-several implementation issues that prevent it from working correctly:
+2011/8/25 Joe Perches <joe@perches.com>:
+> Convert multiple BRCMF_<debug_level> macros to a single
+> brcmf_dbg(level, fmt, ...) macro.
 
-1. wl1271_tm_cmd_configure relies on wl->chip.id being set. However,
-   since the device was not necessarily booted by the time the function
-   is called, wl->chip.id will be initialized to 0.
-2. The NVS file is fetched by calling request_firmware() before it is
-   possible to push an NVS file.
-3. The maximum allowed size of nl binary payloads is not sufficient for
-   pushing NVS files.
-4. Pushing 128x NVS files will always fail due to a bug in the
-   validation code.
-5. In case the pushed NVS file is found invalid, the mutex will be kept
-   locked and the nvs member will become a dangling pointer.
+I'm not sure if that "_dbg" suffix is a really good choice. You use
+"_dbg" for all the kinds of messages, while "DEBUG" is already one
+kind of messages. We have also other types like EMERG, ALERT, CRIT,
+ERR, WARNING, NOTICE, INFO and DEBUG.
 
-Since this feature is not being used, remove it completely instead of
-fixing it.
+You choice makes it messy according to me.
 
-Signed-off-by: Ido Yariv <ido@wizery.com>
----
- drivers/net/wireless/wl12xx/testmode.c |   45 --------------------------------
- 1 files changed, 0 insertions(+), 45 deletions(-)
+Wouldn't something like brcmf_print be much better choice?
 
-diff --git a/drivers/net/wireless/wl12xx/testmode.c b/drivers/net/wireless/wl12xx/testmode.c
-index 5d5e1ef..6e6fd56 100644
---- a/drivers/net/wireless/wl12xx/testmode.c
-+++ b/drivers/net/wireless/wl12xx/testmode.c
-@@ -36,7 +36,6 @@ enum wl1271_tm_commands {
- 	WL1271_TM_CMD_TEST,
- 	WL1271_TM_CMD_INTERROGATE,
- 	WL1271_TM_CMD_CONFIGURE,
--	WL1271_TM_CMD_NVS_PUSH,
- 	WL1271_TM_CMD_SET_PLT_MODE,
- 	WL1271_TM_CMD_RECOVER,
- 
-@@ -187,48 +186,6 @@ static int wl1271_tm_cmd_configure(struct wl1271 *wl, struct nlattr *tb[])
- 	return 0;
- }
- 
--static int wl1271_tm_cmd_nvs_push(struct wl1271 *wl, struct nlattr *tb[])
--{
--	int ret = 0;
--	size_t len;
--	void *buf;
--
--	wl1271_debug(DEBUG_TESTMODE, "testmode cmd nvs push");
--
--	if (!tb[WL1271_TM_ATTR_DATA])
--		return -EINVAL;
--
--	buf = nla_data(tb[WL1271_TM_ATTR_DATA]);
--	len = nla_len(tb[WL1271_TM_ATTR_DATA]);
--
--	mutex_lock(&wl->mutex);
--
--	kfree(wl->nvs);
--
--	if ((wl->chip.id == CHIP_ID_1283_PG20) &&
--	    (len != sizeof(struct wl128x_nvs_file)))
--		return -EINVAL;
--	else if (len != sizeof(struct wl1271_nvs_file))
--		return -EINVAL;
--
--	wl->nvs = kzalloc(len, GFP_KERNEL);
--	if (!wl->nvs) {
--		wl1271_error("could not allocate memory for the nvs file");
--		ret = -ENOMEM;
--		goto out;
--	}
--
--	memcpy(wl->nvs, buf, len);
--	wl->nvs_len = len;
--
--	wl1271_debug(DEBUG_TESTMODE, "testmode pushed nvs");
--
--out:
--	mutex_unlock(&wl->mutex);
--
--	return ret;
--}
--
- static int wl1271_tm_cmd_set_plt_mode(struct wl1271 *wl, struct nlattr *tb[])
- {
- 	u32 val;
-@@ -285,8 +242,6 @@ int wl1271_tm_cmd(struct ieee80211_hw *hw, void *data, int len)
- 		return wl1271_tm_cmd_interrogate(wl, tb);
- 	case WL1271_TM_CMD_CONFIGURE:
- 		return wl1271_tm_cmd_configure(wl, tb);
--	case WL1271_TM_CMD_NVS_PUSH:
--		return wl1271_tm_cmd_nvs_push(wl, tb);
- 	case WL1271_TM_CMD_SET_PLT_MODE:
- 		return wl1271_tm_cmd_set_plt_mode(wl, tb);
- 	case WL1271_TM_CMD_RECOVER:
+I really don't like such a mixing dbg&DEBUG, dbd&ERR, etc.
+
 -- 
-1.7.4.1
-
+Rafał
