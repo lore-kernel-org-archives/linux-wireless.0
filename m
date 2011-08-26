@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:52135 "EHLO
-	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751680Ab1HaIDe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 04:03:34 -0400
-Received: by mail-ew0-f41.google.com with SMTP id 9so253963ewy.0
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 01:03:32 -0700 (PDT)
-Subject: Re: [PATCH] nl80211/cfg80211: add ssid filtering for sched_scan
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1314777264.4161.21.camel@jlt3.sipsolutions.net>
-References: <1314707979-26484-1-git-send-email-coelho@ti.com>
-	 <1314713812.4011.33.camel@jlt3.sipsolutions.net>
-	 <1314718038.2296.460.camel@cumari>
-	 <1314720557.4011.41.camel@jlt3.sipsolutions.net>
-	 <1314770941.2296.507.camel@cumari>
-	 <1314771627.4161.9.camel@jlt3.sipsolutions.net>
-	 <1314775816.2296.531.camel@cumari>
-	 <1314776396.4161.19.camel@jlt3.sipsolutions.net>
-	 <1314776962.2296.540.camel@cumari>
-	 <1314777198.4161.20.camel@jlt3.sipsolutions.net>
-	 (sfid-20110831_095327_725277_2680941D)  <1314777264.4161.21.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 31 Aug 2011 11:03:29 +0300
-Message-ID: <1314777809.2296.548.camel@cumari> (sfid-20110831_100346_396983_3693EBA2)
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:44772 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752895Ab1HZGxf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 02:53:35 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 31/60] iwlagn: fix the check of IWLAGN_FIRST_AMPDU_QUEUE
+Date: Thu, 25 Aug 2011 23:11:03 -0700
+Message-Id: <1314339092-20797-32-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085418_044102_870B3C6E)
+In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-08-31 at 09:54 +0200, Johannes Berg wrote: 
-> On Wed, 2011-08-31 at 09:53 +0200, Johannes Berg wrote:
-> 
-> > > MATCH={BSSID=00:01:02:03:04:05} and
-> > > NOT_MATCH={MIN_RSSI=-70}
-> 
-> Actually does that really make sense?
-> 
-> I suspect you'd want something like
-> 
-> MATCH SSID="foo" && RSSI >= -70
-> 
-> where the && part isn't really expressed now?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Ahmmm... yes, the actual parameters don't make much sense. :D
+BUILD_BUG_ON(ARRAY_SIZE(iwlagn_ipan_queue_to_tx_fifo) !=
+						IWLAGN_FIRST_AMPDU_QUEUE);
 
-But about &&, I guess it's should be like this:
+This check can be buggy. IWLAGN_FIRST_AMPDU_QUEUE has to be greater than the
+ARRAY_SIZE of iwlagn_ipan_queue_to_tx_fifo.
 
-MATCH={1=... OR 2=... OR 3=...} AND NOT_MATCH={1=... NOR 2=...}
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-So the netfiltery way of doing it would be much more complicated,
-because we would have to specify ANDs and ORs explicitly in the list
-somehow.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
+index 0e04b51..a2950a4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
+@@ -875,9 +875,9 @@ static void iwl_trans_pcie_tx_start(struct iwl_priv *priv)
+ 	/* reset to 0 to enable all the queue first */
+ 	priv->txq_ctx_active_msk = 0;
+ 
+-	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_default_queue_to_tx_fifo) !=
++	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_default_queue_to_tx_fifo) <
+ 						IWLAGN_FIRST_AMPDU_QUEUE);
+-	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_ipan_queue_to_tx_fifo) !=
++	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_ipan_queue_to_tx_fifo) <
+ 						IWLAGN_FIRST_AMPDU_QUEUE);
+ 
+ 	for (i = 0; i < IWLAGN_FIRST_AMPDU_QUEUE; i++) {
 -- 
-Cheers,
-Luca.
+1.7.0.4
 
