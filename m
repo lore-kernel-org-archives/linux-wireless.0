@@ -1,56 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46593 "EHLO nbd.name"
+Received: from mga01.intel.com ([192.55.52.88]:23946 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751429Ab1H2HF4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 03:05:56 -0400
-Message-ID: <4E5B3A4D.2040306@openwrt.org> (sfid-20110829_090559_656385_35A2C177)
-Date: Mon, 29 Aug 2011 09:05:49 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
-Subject: Re: [PATCH] mac80211: retry sending failed BAR frames later instead
- of tearing down aggr
-References: <1314558661-28454-1-git-send-email-nbd@openwrt.org> <CAGXE3d_=BtQ+TEHG+y+ReftHB5Y9XhojsLyo9qkKSm4EpOGB8g@mail.gmail.com>
-In-Reply-To: <CAGXE3d_=BtQ+TEHG+y+ReftHB5Y9XhojsLyo9qkKSm4EpOGB8g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1752320Ab1HZGxb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 02:53:31 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 17/60] iwlagn: add comments to iwl_bus / iwl_trans
+Date: Thu, 25 Aug 2011 23:10:49 -0700
+Message-Id: <1314339092-20797-18-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085523_954782_D510056D)
+In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-08-29 8:58 AM, Helmut Schaa wrote:
-> On Sun, Aug 28, 2011 at 9:11 PM, Felix Fietkau<nbd@openwrt.org>  wrote:
->>  Unfortunately failed BAR tx attempts happen more frequently than I
->>  expected, and the resulting aggregation teardowns cause performance
->>  issues, as the aggregation session does not always get re-established
->>  properly.
->>  Instead of tearing down the entire aggr session, we can simply store the
->>  SSN of the last failed BAR tx attempt, wait for the first successful
->>  tx status event, and then send another BAR with the same SSN.
->>
->>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
->>  Cc: Helmut Schaa<helmut.schaa@googlemail.com>
->
-> [...]
->
->>    static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
->>    {
->>          struct ieee80211_mgmt *mgmt = (void *) skb->data;
->>          struct ieee80211_local *local = sta->local;
->>          struct ieee80211_sub_if_data *sdata = sta->sdata;
->>
->>  +       if (ieee80211_is_data_qos(mgmt->frame_control)) {
->>  +               struct ieee80211_hdr *hdr = (void *) skb->data;
->>  +               u8 *qc = ieee80211_get_qos_ctl(hdr);
->>  +               u16 tid = qc[0]&  0xf;
->>  +
->>  +               ieee80211_check_pending_bar(sta, hdr->addr1, tid);
->>  +       }
->>  +
->
-> This code will not be run for injected QoS frames. Is this intended?
-> Otherwise looks good to me.
-I didn't consider it, but I think it's fine. I don't expect any 
-aggregated injected traffic under normal circumstances anyway.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-- Felix
+Rename the recursive inclusion protection in iwl-bus.h while we are at it.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-bus.h   |   15 ++++++++++++---
+ drivers/net/wireless/iwlwifi/iwl-trans.h |    5 +++++
+ 2 files changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-bus.h b/drivers/net/wireless/iwlwifi/iwl-bus.h
+index 5d0e155..edec2f2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-bus.h
++++ b/drivers/net/wireless/iwlwifi/iwl-bus.h
+@@ -60,8 +60,10 @@
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *
+  *****************************************************************************/
+-#ifndef __iwl_pci_h__
+-#define __iwl_pci_h__
++#ifndef __iwl_bus_h__
++#define __iwl_bus_h__
++
++/*This file includes the declaration that are exported from the bus layer */
+ 
+ struct iwl_shared;
+ struct iwl_bus;
+@@ -86,6 +88,13 @@ struct iwl_bus_ops {
+ 	u32 (*read32)(struct iwl_bus *bus, u32 ofs);
+ };
+ 
++/**
++ * struct iwl_bus - bus common data
++ * @dev - pointer to struct device * that represent the device
++ * @ops - pointer to iwl_bus_ops
++ * @shrd - pointer to iwl_shared which holds shared data from the upper layer
++ * @irq - the irq number for the device
++ */
+ struct iwl_bus {
+ 	/* Common data to all buses */
+ 	struct device *dev;
+@@ -138,4 +147,4 @@ static inline u32 bus_read32(struct iwl_bus *bus, u32 ofs)
+ int __must_check iwl_pci_register_driver(void);
+ void iwl_pci_unregister_driver(void);
+ 
+-#endif
++#endif /* __iwl_bus_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index eec25b4..4a0c786 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -130,6 +130,11 @@ struct iwl_trans_ops {
+ 	void (*free)(struct iwl_priv *priv);
+ };
+ 
++/**
++ * struct iwl_trans - transport common data
++ * @ops - pointer to iwl_trans_ops
++ * @shrd - pointer to iwl_shared which holds shared data from the upper layer
++ */
+ struct iwl_trans {
+ 	const struct iwl_trans_ops *ops;
+ 	struct iwl_shared *shrd;
+-- 
+1.7.0.4
+
