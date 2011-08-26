@@ -1,51 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:16165 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752025Ab1HMSSw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 14:18:52 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 31/60] iwlagn: fix the check of IWLAGN_FIRST_AMPDU_QUEUE
-Date: Sat, 13 Aug 2011 10:38:07 -0700
-Message-Id: <1313257116-2697-32-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_201924_344970_7EF542B0)
-In-Reply-To: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:55309 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753553Ab1HZJUo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 05:20:44 -0400
+Received: by pzk37 with SMTP id 37so3955402pzk.1
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 02:20:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACna6rx_d4btykdK7AMwFxeFMs_MxjHEHvR6coxaZkfqkQVafA@mail.gmail.com>
+References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
+	<CACna6rztueomzzas=hQjfj6htD=SHFhrtFPSqbviqVDwaihJ9w@mail.gmail.com>
+	<4E4555AD.7040809@broadcom.com>
+	<CACna6rx_d4btykdK7AMwFxeFMs_MxjHEHvR6coxaZkfqkQVafA@mail.gmail.com>
+Date: Fri, 26 Aug 2011 11:20:43 +0200
+Message-ID: <CACna6rzJWHP+EPy6bwQkLZnjxsL6TKfYnQ71Nq8myOjmeBPODg@mail.gmail.com> (sfid-20110826_112047_345296_089DA3E8)
+Subject: Re: [PATCH 00/14] staging: brcm80211: brcmfmac driver cleanup
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+W dniu 12 sierpnia 2011 22:04 użytkownik Rafał Miłecki
+<zajec5@gmail.com> napisał:
+> W dniu 12 sierpnia 2011 18:32 użytkownik Arend van Spriel
+> <arend@broadcom.com> napisał:
+>> On 08/12/2011 04:02 PM, Rafał Miłecki wrote:
+>>>
+>>> 2011/8/12 Arend van Spriel<arend@broadcom.com>:
+>>>>
+>>>> Several cleanup patches to reduce code for the brcmfmac driver and
+>>>> get rid of a remaining checkpatch warning. The driver sources should
+>>>> be clear from checkpatch issue now.
+>>>>
+>>>> This series applies to staging-next and depends on the following patch
+>>>> set:
+>>>
+>>> Are you testing patches on some hardware? Or just compile-testing?
+>>>
+>>> I believe this driver is meant to support BCM4329, which is not PCI(e)
+>>> board. What adapter do you use?
+>>>
+>>> I've heard about Arasan adapter. Have you tried it? Is that something
+>>> reachable from arasan.com?
+>>
+>> Our brcm80211 source tree under drivers/staging contain two drivers. The
+>> brcmsmac driver currently supporting the PCI(e) cards with bcm43224,
+>> bcm43225, and bcm4313 chips and the brcmfmac driver currently supporting the
+>> SDIO card with bcm4329 chip. brcmsmac is a mac80211 driver and brcmfmac is a
+>> cfg80211 driver.
+>>
+>> We indeed use the Arasan adapter and both drivers are running in nightly
+>> test cycle testing our common internal repository. So the drivers are
+>> functionally tested on the x86 platforms (32 and 64 bit). Also looking at
+>> sparc64 and powerpc64 but not in a nightly cycle.
+>
+> Is there a chance you can donate me with such a adapter and card?
 
-BUILD_BUG_ON(ARRAY_SIZE(iwlagn_ipan_queue_to_tx_fifo) !=
-						IWLAGN_FIRST_AMPDU_QUEUE);
+Ping?
 
-This check can be buggy. IWLAGN_FIRST_AMPDU_QUEUE has to be greater than the
-ARRAY_SIZE of iwlagn_ipan_queue_to_tx_fifo.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index 0e04b51..a2950a4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -875,9 +875,9 @@ static void iwl_trans_pcie_tx_start(struct iwl_priv *priv)
- 	/* reset to 0 to enable all the queue first */
- 	priv->txq_ctx_active_msk = 0;
- 
--	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_default_queue_to_tx_fifo) !=
-+	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_default_queue_to_tx_fifo) <
- 						IWLAGN_FIRST_AMPDU_QUEUE);
--	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_ipan_queue_to_tx_fifo) !=
-+	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_ipan_queue_to_tx_fifo) <
- 						IWLAGN_FIRST_AMPDU_QUEUE);
- 
- 	for (i = 0; i < IWLAGN_FIRST_AMPDU_QUEUE; i++) {
 -- 
-1.7.0.4
-
+Rafał
