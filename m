@@ -1,211 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58683 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753512Ab1H2ObT (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:3714 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753892Ab1HZJY0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 10:31:19 -0400
-Received: by fxh19 with SMTP id 19so4466691fxh.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 07:31:18 -0700 (PDT)
-From: Alexander Simon <an.alexsimon@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 3/4] mac80211: Add HT helper functions
-Date: Mon, 29 Aug 2011 16:31:15 +0200
-Message-ID: <8895351.7r3DmOHRZj@alex-1> (sfid-20110829_163123_144378_4CFEDC30)
-In-Reply-To: <2053881.ENil2Dy3QM@alex-1>
-References: <2053881.ENil2Dy3QM@alex-1>
+	Fri, 26 Aug 2011 05:24:26 -0400
+Message-ID: <4E576637.4020209@broadcom.com> (sfid-20110826_112431_073577_53DB76EA)
+Date: Fri, 26 Aug 2011 11:24:07 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "Joe Perches" <joe@perches.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"Greg KH" <gregkh@suse.de>, "Kan Yan" <kanyan@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Subject: Re: [PATCH] staging: brcmfmac: Consolidate debugging macros
+References: <927eab8b5c950c13991911cd4c16457a5d618bc7.1314252671.git.joe@perches.com>
+ <CACna6ryWtZG9obyj0w=d5jrF-y1pYNmanhkze2F429kHCLCi=A@mail.gmail.com>
+ <1314349357.9624.3.camel@Joe-Laptop>
+ <CACna6rwvaxd4i0Gh0hFRsXhHKBBLgn+SeMEdM62qf=mT7aCzpA@mail.gmail.com>
+In-Reply-To: <CACna6rwvaxd4i0Gh0hFRsXhHKBBLgn+SeMEdM62qf=mT7aCzpA@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some refactoring for IBSS HT.
+On 08/26/2011 11:19 AM, Rafał Miłecki wrote:
+> W dniu 26 sierpnia 2011 11:02 użytkownik Joe Perches<joe@perches.com>  napisał:
+>> On Fri, 2011-08-26 at 10:55 +0200, Rafał Miłecki wrote:
+>>> 2011/8/25 Joe Perches<joe@perches.com>:
+>>>> Convert multiple BRCMF_<debug_level>  macros to a single
+>>>> brcmf_dbg(level, fmt, ...) macro.
+>>> I'm not sure if that "_dbg" suffix is a really good choice. You use
+>>> "_dbg" for all the kinds of messages, while "DEBUG" is already one
+>>> kind of messages.
+>> No, not really.  These _are_ debugging uses.
+>>
+>> The #include is called dhd_dbg.h and
+>> the whole block is guarded by
+>>
+>> #if defined(BCMDBG)
+>>
+>>> We have also other types like EMERG, ALERT, CRIT,
+>>> ERR, WARNING, NOTICE, INFO and DEBUG.
+>> Except for the last, those aren't debugging uses,
+>> these are.
+> It makes sense, maybe some messages should be just always printed. It
+> seems some of they may be important for common-user having problem
+> with his card. Just few random ones:
+> brcmf_dbg(ERROR, "device attach failed\n");
+> brcmf_dbg(ERROR, "Failed to enable F1 Err: 0x%08x\n", err_ret);
+> brcmf_dbg(ERROR, "MACEVENT: %s [unsupported version -->  brcmf
+> version:%d dongle version:%d]\n",
+> brcmf_dbg(ERROR, "mismatched OUI, bailing\n");
+> brcmf_dbg(ERROR, "brcmf_net_attach failed, err %d\n",
+> brcmf_dbg(ERROR, "failed to bring up cfg80211\n");
+> brcmf_dbg(ERROR, "HT Avail request error: %d\n", err);
 
-Move HT info and capability IEs building code into separate functions.
----
- net/mac80211/ieee80211_i.h |    6 +++
- net/mac80211/util.c        |   91 +++++++++++++++++++++++++++++++++++--------
- net/mac80211/work.c        |   29 +-------------
- 3 files changed, 81 insertions(+), 45 deletions(-)
+Hi Rafał,
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c204cee..ad94e59 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1338,6 +1338,12 @@ void ieee80211_recalc_smps(struct ieee80211_local 
-*local);
- size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
- 			  const u8 *ids, int n_ids, size_t offset);
- size_t ieee80211_ie_split_vendor(const u8 *ies, size_t ielen, size_t offset);
-+u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_supported_band 
-*sband,
-+			       u16 cap);
-+u8 *ieee80211_ie_build_ht_info(u8 *pos,
-+				struct ieee80211_sta_ht_cap *ht_cap,
-+				struct ieee80211_channel *channel,
-+				enum nl80211_channel_type channel_type);
- 
- /* internal work items */
- void ieee80211_work_init(struct ieee80211_local *local);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index ce916ff..a7697d8 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -816,23 +816,8 @@ int ieee80211_build_preq_ies(struct ieee80211_local 
-*local, u8 *buffer,
- 		offset = noffset;
- 	}
- 
--	if (sband->ht_cap.ht_supported) {
--		u16 cap = sband->ht_cap.cap;
--		__le16 tmp;
--
--		*pos++ = WLAN_EID_HT_CAPABILITY;
--		*pos++ = sizeof(struct ieee80211_ht_cap);
--		memset(pos, 0, sizeof(struct ieee80211_ht_cap));
--		tmp = cpu_to_le16(cap);
--		memcpy(pos, &tmp, sizeof(u16));
--		pos += sizeof(u16);
--		*pos++ = sband->ht_cap.ampdu_factor |
--			 (sband->ht_cap.ampdu_density <<
--				IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
--		memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
--		pos += sizeof(sband->ht_cap.mcs);
--		pos += 2 + 4 + 1; /* ext info, BF cap, antsel */
--	}
-+	if (sband->ht_cap.ht_supported)
-+		pos = ieee80211_ie_build_ht_cap(pos, sband, sband->ht_cap.cap);
- 
- 	/*
- 	 * If adding more here, adjust code in main.c
-@@ -1356,3 +1341,75 @@ void ieee80211_disable_rssi_reports(struct 
-ieee80211_vif *vif)
- 	_ieee80211_enable_rssi_reports(sdata, 0, 0);
- }
- EXPORT_SYMBOL(ieee80211_disable_rssi_reports);
-+
-+u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_supported_band 
-*sband,
-+			       u16 cap)
-+{
-+	__le16 tmp;
-+
-+	*pos++ = WLAN_EID_HT_CAPABILITY;
-+	*pos++ = sizeof(struct ieee80211_ht_cap);
-+	memset(pos, 0, sizeof(struct ieee80211_ht_cap));
-+
-+	/* capability flags */
-+	tmp = cpu_to_le16(cap);
-+	memcpy(pos, &tmp, sizeof(u16));
-+	pos += sizeof(u16);
-+
-+	/* AMPDU parameters */
-+	*pos++ = sband->ht_cap.ampdu_factor |
-+		 (sband->ht_cap.ampdu_density <<
-+			IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
-+
-+	/* MCS set */
-+	memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
-+	pos += sizeof(sband->ht_cap.mcs);
-+
-+	/* extended capabilities */
-+	pos += sizeof(__le16);
-+
-+	/* BF capabilities */
-+	pos += sizeof(__le32);
-+
-+	/* antenna selection */
-+	pos += sizeof(u8);
-+
-+	return pos;
-+}
-+
-+u8 *ieee80211_ie_build_ht_info(u8 *pos,
-+				struct ieee80211_sta_ht_cap *ht_cap,
-+				struct ieee80211_channel *channel,
-+				enum nl80211_channel_type channel_type)
-+{
-+	struct ieee80211_ht_info *ht_info;
-+	/* Build HT Information */
-+	*pos++ = WLAN_EID_HT_INFORMATION;
-+	*pos++ = sizeof(struct ieee80211_ht_info);
-+	ht_info = (struct ieee80211_ht_info *)pos;
-+	ht_info->control_chan =
-+			ieee80211_frequency_to_channel(channel->center_freq);
-+	switch (channel_type) {
-+	case NL80211_CHAN_HT40MINUS:
-+		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
-+		break;
-+	case NL80211_CHAN_HT40PLUS:
-+		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
-+		break;
-+	case NL80211_CHAN_HT20:
-+	default:
-+		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_NONE;
-+		break;
-+	}
-+	if (ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
-+		ht_info->ht_param |= IEEE80211_HT_PARAM_CHAN_WIDTH_ANY;
-+	ht_info->operation_mode = 0x0000;
-+	ht_info->stbc_param = 0x0000;
-+
-+	/* It seems that Basic MCS set and Supported MCS set
-+	   are identical for the first 10 bytes */
-+	memset(&ht_info->basic_set, 0, 16);
-+	memcpy(&ht_info->basic_set, &ht_cap->mcs, 10);
-+
-+	return pos + sizeof(struct ieee80211_ht_info);
-+}
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 380b9a7..8d9251c 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -103,7 +103,6 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const 
-u8 *ht_info_ie,
- 	u8 *pos;
- 	u32 flags = channel->flags;
- 	u16 cap = sband->ht_cap.cap;
--	__le16 tmp;
- 
- 	if (!sband->ht_cap.ht_supported)
- 		return;
-@@ -154,34 +153,8 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, 
-const u8 *ht_info_ie,
- 	}
- 
- 	/* reserve and fill IE */
--
- 	pos = skb_put(skb, sizeof(struct ieee80211_ht_cap) + 2);
--	*pos++ = WLAN_EID_HT_CAPABILITY;
--	*pos++ = sizeof(struct ieee80211_ht_cap);
--	memset(pos, 0, sizeof(struct ieee80211_ht_cap));
--
--	/* capability flags */
--	tmp = cpu_to_le16(cap);
--	memcpy(pos, &tmp, sizeof(u16));
--	pos += sizeof(u16);
--
--	/* AMPDU parameters */
--	*pos++ = sband->ht_cap.ampdu_factor |
--		 (sband->ht_cap.ampdu_density <<
--			IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
--
--	/* MCS set */
--	memcpy(pos, &sband->ht_cap.mcs, sizeof(sband->ht_cap.mcs));
--	pos += sizeof(sband->ht_cap.mcs);
--
--	/* extended capabilities */
--	pos += sizeof(__le16);
--
--	/* BF capabilities */
--	pos += sizeof(__le32);
--
--	/* antenna selection */
--	pos += sizeof(u8);
-+	ieee80211_ie_build_ht_cap(pos, sband, cap);
- }
- 
- static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
+The feedback from Greg was that no user would be interested in it so we 
+cleaned it up and put it under Kconfig option.
+
+Gr. AvS
+
 -- 
-1.7.3.4
+Almost nobody dances sober, unless they happen to be insane.
+-- H.P. Lovecraft --
 
 
