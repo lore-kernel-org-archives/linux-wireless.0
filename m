@@ -1,152 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10400 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:7217 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750932Ab1HLMCG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 08:02:06 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+	id S1752262Ab1HZGxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 02:53:30 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>, stable@kernel.org
-Subject: [PATCH] mac80211: fix suspend/resume races with unregister hw
-Date: Fri, 12 Aug 2011 14:00:59 +0200
-Message-Id: <1313150459-13234-1-git-send-email-sgruszka@redhat.com> (sfid-20110812_140214_188182_D41F97F0)
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 13/60] iwlagn: modify the debug macro to be usable by all the layers
+Date: Thu, 25 Aug 2011 23:10:45 -0700
+Message-Id: <1314339092-20797-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085503_124817_3CA5AD88)
+In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not call ->suspend, ->resume methods after we unregister wiphy. Also
-delete sta_clanup timer after we finish wiphy unregister to avoid this:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-WARNING: at lib/debugobjects.c:262 debug_print_object+0x85/0xa0()
-Hardware name: 6369CTO
-ODEBUG: free active (active state 0) object type: timer_list hint: sta_info_cleanup+0x0/0x180 [mac80211]
-Modules linked in: aes_i586 aes_generic fuse bridge stp llc autofs4 sunrpc cpufreq_ondemand acpi_cpufreq mperf ext2 dm_mod uinput thinkpad_acpi hwmon sg arc4 rt2800usb rt2800lib crc_ccitt rt2x00usb rt2x00lib mac80211 cfg80211 i2c_i801 iTCO_wdt iTCO_vendor_support e1000e ext4 mbcache jbd2 sd_mod crc_t10dif sr_mod cdrom yenta_socket ahci libahci pata_acpi ata_generic ata_piix i915 drm_kms_helper drm i2c_algo_bit video [last unloaded: microcode]
-Pid: 5663, comm: pm-hibernate Not tainted 3.1.0-rc1-wl+ #19
-Call Trace:
- [<c0454cfd>] warn_slowpath_common+0x6d/0xa0
- [<c05e05e5>] ? debug_print_object+0x85/0xa0
- [<c05e05e5>] ? debug_print_object+0x85/0xa0
- [<c0454dae>] warn_slowpath_fmt+0x2e/0x30
- [<c05e05e5>] debug_print_object+0x85/0xa0
- [<f8a808e0>] ? sta_info_alloc+0x1a0/0x1a0 [mac80211]
- [<c05e0bd2>] debug_check_no_obj_freed+0xe2/0x180
- [<c051175b>] kfree+0x8b/0x150
- [<f8a126ae>] cfg80211_dev_free+0x7e/0x90 [cfg80211]
- [<f8a13afd>] wiphy_dev_release+0xd/0x10 [cfg80211]
- [<c068d959>] device_release+0x19/0x80
- [<c05d06ba>] kobject_release+0x7a/0x1c0
- [<c07646a8>] ? rtnl_unlock+0x8/0x10
- [<f8a13adb>] ? wiphy_resume+0x6b/0x80 [cfg80211]
- [<c05d0640>] ? kobject_del+0x30/0x30
- [<c05d1a6d>] kref_put+0x2d/0x60
- [<c05d056d>] kobject_put+0x1d/0x50
- [<c08015f4>] ? mutex_lock+0x14/0x40
- [<c068d60f>] put_device+0xf/0x20
- [<c069716a>] dpm_resume+0xca/0x160
- [<c04912bd>] hibernation_snapshot+0xcd/0x260
- [<c04903df>] ? freeze_processes+0x3f/0x90
- [<c049151b>] hibernate+0xcb/0x1e0
- [<c048fdc0>] ? pm_async_store+0x40/0x40
- [<c048fe60>] state_store+0xa0/0xb0
- [<c048fdc0>] ? pm_async_store+0x40/0x40
- [<c05d0200>] kobj_attr_store+0x20/0x30
- [<c0575ea4>] sysfs_write_file+0x94/0xf0
- [<c051e26a>] vfs_write+0x9a/0x160
- [<c0575e10>] ? sysfs_open_file+0x200/0x200
- [<c051e3fd>] sys_write+0x3d/0x70
- [<c080959f>] sysenter_do_call+0x12/0x28
+Since all the layers need to print debug message, the debug macro cannot suppose
+that they will be given iwl_priv as a parameter and then dereference it.
+Use iwl_shared instead.
 
-Cc: stable@kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- include/net/cfg80211.h |    3 +++
- net/mac80211/main.c    |    2 +-
- net/wireless/core.c    |    7 +++++++
- net/wireless/sysfs.c   |    6 ++++--
- 4 files changed, 15 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-debug.h |   37 +++++++++++++++--------------
+ drivers/net/wireless/iwlwifi/iwl-rx.c    |    3 +-
+ 2 files changed, 21 insertions(+), 19 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ab12440..97db267 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1875,6 +1875,9 @@ struct wiphy {
- 	 * you need use set_wiphy_dev() (see below) */
- 	struct device dev;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 225ae72..7c9e9af 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -29,49 +29,50 @@
+ #ifndef __iwl_debug_h__
+ #define __iwl_debug_h__
  
-+	/* protects ->resume, ->suspend sysfs callbacks against unregister hw */
-+	bool registered;
++#include "iwl-shared.h"
 +
- 	/* dir in debugfs: ieee80211/<wiphyname> */
- 	struct dentry *debugfsdir;
+ struct iwl_priv;
  
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 104fdd9..a5809a1 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1013,7 +1013,6 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
- 	cancel_work_sync(&local->reconfig_filter);
+-#define IWL_ERR(p, f, a...) dev_err(p->bus->dev, f, ## a)
+-#define IWL_WARN(p, f, a...) dev_warn(p->bus->dev, f, ## a)
+-#define IWL_INFO(p, f, a...) dev_info(p->bus->dev, f, ## a)
+-#define IWL_CRIT(p, f, a...) dev_crit(p->bus->dev, f, ## a)
++/*No matter what is m (priv, bus, trans), this will work */
++#define IWL_ERR(m, f, a...) dev_err(bus(m)->dev, f, ## a)
++#define IWL_WARN(m, f, a...) dev_warn(bus(m)->dev, f, ## a)
++#define IWL_INFO(m, f, a...) dev_info(bus(m)->dev, f, ## a)
++#define IWL_CRIT(m, f, a...) dev_crit(bus(m)->dev, f, ## a)
  
- 	ieee80211_clear_tx_pending(local);
--	sta_info_stop(local);
- 	rate_control_deinitialize(local);
+-#define iwl_print_hex_error(priv, p, len) 				\
++#define iwl_print_hex_error(m, p, len)					\
+ do {									\
+ 	print_hex_dump(KERN_ERR, "iwl data: ",				\
+ 		       DUMP_PREFIX_OFFSET, 16, 1, p, len, 1);		\
+ } while (0)
  
- 	if (skb_queue_len(&local->skb_queue) ||
-@@ -1025,6 +1024,7 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ #ifdef CONFIG_IWLWIFI_DEBUG
+-#define IWL_DEBUG(__priv, level, fmt, args...)				\
++#define IWL_DEBUG(m, level, fmt, args...)				\
+ do {									\
+-	if (iwl_get_debug_level(__priv->shrd) & (level))		\
+-		dev_printk(KERN_ERR, &(__priv->hw->wiphy->dev),		\
++	if (iwl_get_debug_level((m)->shrd) & (level))			\
++		dev_printk(KERN_ERR, bus(m)->dev,			\
+ 			 "%c %s " fmt, in_interrupt() ? 'I' : 'U',	\
+ 			__func__ , ## args);				\
+ } while (0)
  
- 	destroy_workqueue(local->workqueue);
- 	wiphy_unregister(local->hw.wiphy);
-+	sta_info_stop(local);
- 	ieee80211_wep_free(local);
- 	ieee80211_led_exit(local);
- 	kfree(local->int_scan_req);
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 645437c..c148651 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -616,6 +616,9 @@ int wiphy_register(struct wiphy *wiphy)
- 	if (res)
- 		goto out_rm_dev;
+-#define IWL_DEBUG_LIMIT(__priv, level, fmt, args...)			\
++#define IWL_DEBUG_LIMIT(m, level, fmt, args...)				\
+ do {									\
+-	if ((iwl_get_debug_level(__priv->shrd) & (level)) && net_ratelimit())\
+-		dev_printk(KERN_ERR, &(__priv->hw->wiphy->dev),		\
++	if (iwl_get_debug_level((m)->shrd) & (level) && net_ratelimit())\
++		dev_printk(KERN_ERR, bus(m)->dev,			\
+ 			"%c %s " fmt, in_interrupt() ? 'I' : 'U',	\
+ 			 __func__ , ## args);				\
+ } while (0)
  
-+	rtnl_lock();
-+	rdev->wiphy.registered = true;
-+	rtnl_unlock();
- 	return 0;
+-#define iwl_print_hex_dump(priv, level, p, len) 			\
++#define iwl_print_hex_dump(m, level, p, len)				\
+ do {                                            			\
+-	if (iwl_get_debug_level(priv->shrd) & level)			\
++	if (iwl_get_debug_level((m)->shrd) & level)			\
+ 		print_hex_dump(KERN_DEBUG, "iwl data: ",		\
+ 			       DUMP_PREFIX_OFFSET, 16, 1, p, len, 1);	\
+ } while (0)
  
- out_rm_dev:
-@@ -647,6 +650,10 @@ void wiphy_unregister(struct wiphy *wiphy)
+ #else
+-#define IWL_DEBUG(__priv, level, fmt, args...)
+-#define IWL_DEBUG_LIMIT(__priv, level, fmt, args...)
+-static inline void iwl_print_hex_dump(struct iwl_priv *priv, int level,
+-				      const void *p, u32 len)
+-{}
++#define IWL_DEBUG(m, level, fmt, args...)
++#define IWL_DEBUG_LIMIT(m, level, fmt, args...)
++#define iwl_print_hex_dump(m, level, p, len)
+ #endif				/* CONFIG_IWLWIFI_DEBUG */
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 37bc017..a5e4dda 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -122,7 +122,8 @@ static void iwl_rx_pm_debug_statistics_notif(struct iwl_priv *priv,
+ 					     struct iwl_rx_mem_buffer *rxb)
  {
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
- 
-+	rtnl_lock();
-+	rdev->wiphy.registered = false;
-+	rtnl_unlock();
-+
- 	rfkill_unregister(rdev->rfkill);
- 
- 	/* protect the device list */
-diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
-index c6e4ca6..ff57459 100644
---- a/net/wireless/sysfs.c
-+++ b/net/wireless/sysfs.c
-@@ -93,7 +93,8 @@ static int wiphy_suspend(struct device *dev, pm_message_t state)
- 
- 	if (rdev->ops->suspend) {
- 		rtnl_lock();
--		ret = rdev->ops->suspend(&rdev->wiphy, rdev->wowlan);
-+		if (rdev->wiphy.registered)
-+			ret = rdev->ops->suspend(&rdev->wiphy, rdev->wowlan);
- 		rtnl_unlock();
- 	}
- 
-@@ -112,7 +113,8 @@ static int wiphy_resume(struct device *dev)
- 
- 	if (rdev->ops->resume) {
- 		rtnl_lock();
--		ret = rdev->ops->resume(&rdev->wiphy);
-+		if (rdev->wiphy.registered)
-+			ret = rdev->ops->resume(&rdev->wiphy);
- 		rtnl_unlock();
- 	}
- 
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+-	u32 len = le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK;
++	u32 __maybe_unused len =
++		le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK;
+ 	IWL_DEBUG_RADIO(priv, "Dumping %d bytes of unhandled "
+ 			"notification for %s:\n", len,
+ 			get_cmd_string(pkt->hdr.cmd));
 -- 
-1.7.1
+1.7.0.4
 
