@@ -1,35 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54303 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752376Ab1HHP7e (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:39904 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754390Ab1H0AS1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 11:59:34 -0400
-Subject: Re: [PATCH] mac80211: clear sta.drv_priv on reconfiguration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1312819145.4372.38.camel@jlt3.sipsolutions.net> (sfid-20110808_175911_115446_2B0D2475)
-References: <1312811422-24911-1-git-send-email-eliad@wizery.com>
-	 (sfid-20110808_155032_855733_6A9FD1E3)  <1312819145.4372.38.camel@jlt3.sipsolutions.net>
-	 (sfid-20110808_175911_115446_2B0D2475)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 08 Aug 2011 17:59:33 +0200
-Message-ID: <1312819173.4372.39.camel@jlt3.sipsolutions.net> (sfid-20110808_175942_683183_79C752B3)
-Mime-Version: 1.0
+	Fri, 26 Aug 2011 20:18:27 -0400
+Received: by gxk21 with SMTP id 21so3308768gxk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 17:18:27 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Subject: [PATCH v2 1/8] mac80211: Fix RCU pointer dereference in mesh_path_discard_frame()
+Date: Fri, 26 Aug 2011 17:18:07 -0700
+Message-Id: <1314404294-4233-2-git-send-email-javier@cozybit.com> (sfid-20110827_021830_741207_B46A99B1)
+In-Reply-To: <1314404294-4233-1-git-send-email-javier@cozybit.com>
+References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
+ <1314404294-4233-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-08-08 at 17:59 +0200, Johannes Berg wrote:
-> On Mon, 2011-08-08 at 16:50 +0300, Eliad Peller wrote:
-> > drivers might assume sta.drv_priv is clear while
-> > the sta is added, so clear it on reconfinguration.
-> 
-> 
-> Seems fine,
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Reported by Pedro Larbig (ASPj)
 
-Does this address a current bug? If so, Cc stable?
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 
-johannes
+---
+v2: - Extend the rcu_read_lock section to protect mpath (Johannes)
+    - Take state lock when increasing mpath serial number (Johannes)
+ net/mac80211/mesh_pathtbl.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 3c2bcb2..c92fd70 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -991,9 +991,14 @@ void mesh_path_discard_frame(struct sk_buff *skb,
+ 
+ 		da = hdr->addr3;
+ 		ra = hdr->addr1;
++		rcu_read_lock();
+ 		mpath = mesh_path_lookup(da, sdata);
+-		if (mpath)
++		if (mpath) {
++			spin_lock_bh(&mpath->state_lock);
+ 			sn = ++mpath->sn;
++			spin_unlock_bh(&mpath->state_lock);
++		}
++		rcu_read_unlock();
+ 		mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl, skb->data,
+ 				   cpu_to_le32(sn), reason, ra, sdata);
+ 	}
+-- 
+1.7.6
 
