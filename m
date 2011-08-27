@@ -1,167 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:35412 "EHLO mga01.intel.com"
+Received: from nbd.name ([46.4.11.11]:36901 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751832Ab1HMQ6B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 12:58:01 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 13/13] iwlagn: handle GO powersave
-Date: Sat, 13 Aug 2011 09:18:07 -0700
-Message-Id: <1313252287-22858-13-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_191257_220300_54C2B7C6)
-In-Reply-To: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1313252287-22858-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1751054Ab1H0XwU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Aug 2011 19:52:20 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, rmanohar@qca.qualcomm.com,
+	mcgrof@qca.qualcomm.com
+Subject: [PATCH] ath9k_hw: do not apply the 2.4 ghz ack timeout workaround to cts
+Date: Sun, 28 Aug 2011 01:52:10 +0200
+Message-Id: <1314489130-18003-1-git-send-email-nbd@openwrt.org> (sfid-20110828_015228_139523_A2670BE1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Berg, Johannes <johannes.berg@intel.com>
+It is only used to workaround interoperability issues related to longer
+delays in receiving the block ack, so it is not necessary to apply it
+to the CTS exchange.
+Should improve throughput slightly, especially when there are lots
+of retransmissions.
 
-In order to implement support for GO powersave on
-the P2P client side, the ucode needs to know what
-GO we're trying to authenticate/associate with,
-it needs to have a station entry and the BSSID in
-the RXON set.
-
-Implement the new mac80211 callbacks to give this
-data to the device.
-
-Since this is also useful for the device when a
-normal connection is established, also program it
-with the information in that case.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    5 ++
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   68 +++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    3 +
- 3 files changed, 76 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index d562e93..7b13ea2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -434,6 +434,10 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 	if (!ctx->is_active)
- 		return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index a0d1147..3ccadeb 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -960,7 +960,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ieee80211_conf *conf = &common->hw->conf;
+ 	const struct ath9k_channel *chan = ah->curchan;
+-	int acktimeout;
++	int acktimeout, ctstimeout;
+ 	int slottime;
+ 	int sifstime;
+ 	int rx_lat = 0, tx_lat = 0, eifs = 0;
+@@ -1011,6 +1011,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
  
-+	/* override BSSID if necessary due to preauth */
-+	if (ctx->preauth_bssid)
-+		memcpy(ctx->staging.bssid_addr, ctx->bssid, ETH_ALEN);
-+
- 	/* always get timestamp with Rx frame */
- 	ctx->staging.flags |= RXON_FLG_TSF2HOST_MSK;
+ 	/* As defined by IEEE 802.11-2007 17.3.8.6 */
+ 	acktimeout = slottime + sifstime + 3 * ah->coverage_class;
++	ctstimeout = acktimeout;
  
-@@ -895,6 +899,7 @@ void iwlagn_bss_info_changed(struct ieee80211_hw *hw,
- 		if (!priv->disable_chain_noise_cal)
- 			iwlagn_chain_noise_reset(priv);
- 		priv->start_calib = 1;
-+		WARN_ON(ctx->preauth_bssid);
- 	}
- 
- 	if (changes & BSS_CHANGED_IBSS) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c5a1612..6960b8c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3330,6 +3330,72 @@ static int iwl_mac_cancel_remain_on_channel(struct ieee80211_hw *hw)
- 	return 0;
- }
- 
-+static int iwl_mac_tx_sync(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			   const u8 *bssid, enum ieee80211_tx_sync_type type)
-+{
-+	struct iwl_priv *priv = hw->priv;
-+	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
-+	struct iwl_rxon_context *ctx = vif_priv->ctx;
-+	int ret;
-+	u8 sta_id;
-+
-+	mutex_lock(&priv->shrd->mutex);
-+
-+	if (iwl_is_associated_ctx(ctx)) {
-+		ret = 0;
-+		goto out;
-+	}
-+
-+	if (ctx->preauth_bssid || test_bit(STATUS_SCAN_HW, &priv->shrd->status)) {
-+		ret = -EBUSY;
-+		goto out;
-+	}
-+
-+	ret = iwl_add_station_common(priv, ctx, bssid, true, NULL, &sta_id);
-+	if (ret)
-+		goto out;
-+
-+	if (WARN_ON(sta_id != ctx->ap_sta_id)) {
-+		ret = -EIO;
-+		goto out_remove_sta;
-+	}
-+
-+	memcpy(ctx->bssid, bssid, ETH_ALEN);
-+	ctx->preauth_bssid = true;
-+
-+	ret = iwlagn_commit_rxon(priv, ctx);
-+
-+	if (ret == 0)
-+		goto out;
-+
-+ out_remove_sta:
-+	iwl_remove_station(priv, sta_id, bssid);
-+ out:
-+	mutex_unlock(&priv->shrd->mutex);
-+	return ret;
-+}
-+
-+static void iwl_mac_finish_tx_sync(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif,
-+				   const u8 *bssid,
-+				   enum ieee80211_tx_sync_type type)
-+{
-+	struct iwl_priv *priv = hw->priv;
-+	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
-+	struct iwl_rxon_context *ctx = vif_priv->ctx;
-+
-+	mutex_lock(&priv->shrd->mutex);
-+
-+	if (iwl_is_associated_ctx(ctx))
-+		goto out;
-+
-+	iwl_remove_station(priv, ctx->ap_sta_id, bssid);
-+	ctx->preauth_bssid = false;
-+	/* no need to commit */
-+ out:
-+	mutex_unlock(&priv->shrd->mutex);
-+}
-+
- /*****************************************************************************
-  *
-  * driver setup and teardown
-@@ -3535,6 +3601,8 @@ struct ieee80211_ops iwlagn_hw_ops = {
- 	.rssi_callback = iwl_mac_rssi_callback,
- 	CFG80211_TESTMODE_CMD(iwl_testmode_cmd)
- 	CFG80211_TESTMODE_DUMP(iwl_testmode_dump)
-+	.tx_sync = iwl_mac_tx_sync,
-+	.finish_tx_sync = iwl_mac_finish_tx_sync,
- };
- 
- static u32 iwl_hw_detect(struct iwl_priv *priv)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 42c360e..9d6d791 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1174,6 +1174,9 @@ struct iwl_rxon_context {
- 		u8 extension_chan_offset;
- 	} ht;
- 
-+	u8 bssid[ETH_ALEN];
-+	bool preauth_bssid;
-+
- 	bool last_tx_rejected;
- };
+ 	/*
+ 	 * Workaround for early ACK timeouts, add an offset to match the
+@@ -1025,7 +1026,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 	ath9k_hw_set_sifs_time(ah, sifstime);
+ 	ath9k_hw_setslottime(ah, slottime);
+ 	ath9k_hw_set_ack_timeout(ah, acktimeout);
+-	ath9k_hw_set_cts_timeout(ah, acktimeout);
++	ath9k_hw_set_cts_timeout(ah, ctstimeout);
+ 	if (ah->globaltxtimeout != (u32) -1)
+ 		ath9k_hw_set_global_txtimeout(ah, ah->globaltxtimeout);
  
 -- 
-1.7.0.4
+1.7.3.2
 
