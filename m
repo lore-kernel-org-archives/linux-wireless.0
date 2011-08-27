@@ -1,34 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:40984 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755880Ab1HWTFx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 15:05:53 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id D9EDC54009C
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 15:14:57 -0400 (EDT)
-Subject: Compat-wireless release for 2011-08-23 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110823190551.9D50240633@repository3.orbit-lab.org> (sfid-20110823_210556_654531_1AC23936)
-Date: Tue, 23 Aug 2011 15:05:46 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from nbd.name ([46.4.11.11]:57110 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751095Ab1H0Iuk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Aug 2011 04:50:40 -0400
+Message-ID: <4E58AFD9.6070108@openwrt.org> (sfid-20110827_105046_975784_87224006)
+Date: Sat, 27 Aug 2011 10:50:33 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH] ath9k: fix regression in sending aggregated packets
+References: <1314433527-71007-1-git-send-email-nbd@openwrt.org> <20110827083520.GA4063@vmraj-lnx.users.atheros.com>
+In-Reply-To: <20110827083520.GA4063@vmraj-lnx.users.atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 9fbf096...c2229ad akpm-end   -> origin/akpm-end  (forced update)
-   6719db6..fcb8ce5  akpm-start -> origin/akpm-start
- + 5320ea6...2739681 master     -> origin/master  (forced update)
-   6719db6..fcb8ce5  stable     -> origin/stable
- * [new tag]         next-20110823 -> next-20110823
- * [new tag]         v3.1-rc3   -> v3.1-rc3
+On 2011-08-27 10:35 AM, Rajkumar Manoharan wrote:
+> On Sat, Aug 27, 2011 at 10:25:27AM +0200, Felix Fietkau wrote:
+>>  The recent commit "ath9k: Send legacy rated frames as unaggregated"
+>>  introduced a check to ensure that packets with non-MCS rates set in
+>>  the rate series will not be aggregated. However, it failed to check
+>>  if the rate series is valid before testing the flags, thus breaking
+>>  aggregation for normal MCS-only packets if the last series is unset.
+>>
+>>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>>  ---
+>>   drivers/net/wireless/ath/ath9k/xmit.c |    5 ++++-
+>>   1 files changed, 4 insertions(+), 1 deletions(-)
+>>
+>>  diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+>>  index 5e29829..ac393a6 100644
+>>  --- a/drivers/net/wireless/ath/ath9k/xmit.c
+>>  +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+>>  @@ -582,7 +582,10 @@ static bool ath_lookup_legacy(struct ath_buf *bf)
+>>   	tx_info = IEEE80211_SKB_CB(skb);
+>>   	rates = tx_info->control.rates;
+>>
+>>  -	for (i = 3; i>= 0; i--) {
+>>  +	for (i = 0; i<  4; i++) {
+>>  +		if (!rates[i].count || rates[i].idx<  0)
+>>  +			break;
+>>  +
+> Good catch. Let it be descending order that helps to reduce number of iteration in case of
+> ath9k_rate_control.
+That would really just be a very minor micro-optimization and it would 
+make finding the first invalid rate harder and the code more convoluted. 
+I don't think it's worth changing the patch for that.
 
-compat-wireless code metrics
-
-    804370 - Total upstream lines of code being pulled
-      2391 - backport code changes
-      2081 - backport code additions
-       310 - backport code deletions
-      8203 - backport from compat module
-     10594 - total backport code
-    1.3171 - % of code consists of backport work
+- Felix
