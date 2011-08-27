@@ -1,84 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:54360 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752034Ab1HJPtC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 11:49:02 -0400
-Received: by eyx24 with SMTP id 24so898330eyx.19
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 08:49:00 -0700 (PDT)
-Subject: Re: [PATCH 2/4] cfg80211: Add cfg80211_get_bss_ht to also match HT
- configuration
-From: Alexander Simon <alexander.simon@saxnet.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1312984428.4325.10.camel@jlt3.sipsolutions.net>
-References: <1888623.Vt5VZUN2cU@alex-1>  <8106144.ZkUl7u1lz4@alex-1>
-	 (sfid-20110808_140459_252308_3B0F09A2)  <1312984428.4325.10.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 10 Aug 2011 17:48:41 +0200
-Message-ID: <1312991321.3128.34.camel@alex-2> (sfid-20110810_174910_272073_1D1E1ABD)
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:46054 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751718Ab1H0Wcg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Aug 2011 18:32:36 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 4/5] ath9k: move seqno allocation in the tx path to ath_tx_setup_buffer
+Date: Sun, 28 Aug 2011 00:32:24 +0200
+Message-Id: <1314484345-7018-4-git-send-email-nbd@openwrt.org> (sfid-20110828_003244_620445_06E01A25)
+In-Reply-To: <1314484345-7018-3-git-send-email-nbd@openwrt.org>
+References: <1314484345-7018-1-git-send-email-nbd@openwrt.org>
+ <1314484345-7018-2-git-send-email-nbd@openwrt.org>
+ <1314484345-7018-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch, den 10.08.2011, 15:53 +0200 schrieb Johannes Berg:
-> On Mon, 2011-08-08 at 14:04 +0200, Alexander Simon wrote:
-> 
-> > +struct cfg80211_bss *cfg80211_get_bss_ht(struct wiphy *wiphy,
-> > +					  struct ieee80211_channel *channel,
-> > +					  const u8 *bssid,
-> > +					  const u8 *ssid, size_t ssid_len,
-> > +					  u16 capa_mask, u16 capa_val,
-> > +				       enum nl80211_channel_type channel_type);
-> 
-> indentation? Also, you really need kernel-doc for this.
-Pardon me, but I don't know what you mean... I just browsed
-Documentation/networking. Could you point me the exact file, please?
-> 
-> > +++ b/net/wireless/chan.c
-> > @@ -75,6 +75,7 @@ bool can_beacon_sec_chan(struct wiphy *wiphy,
-> >  
-> >  	return true;
-> >  }
-> > +EXPORT_SYMBOL(can_beacon_sec_chan);
-> 
-> You've got to be kidding, if you export it you really need to give it a
-> decent name. Besides, you don't have to export it in this patch.
-I intended to export this instead of writing ieee80211_can_use_ext_chan
-first.
-Ok, to summarize this: I should use this instead of my own
-ieee80211_can_use_ext_chan in mac80211 (as in your reply in 4/4), but
-when I export this I need to rename it. Does cfg80211_can_use_ext_chan
-sound well?
-> 
-> >  int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
-> >  		      struct wireless_dev *wdev, int freq,
-> > diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-> > index 2936cb8..ff5b736 100644
-> > --- a/net/wireless/scan.c
-> > +++ b/net/wireless/scan.c
-> > @@ -364,6 +364,19 @@ struct cfg80211_bss *cfg80211_get_bss(struct wiphy
-> > *wiphy,
-> >  				      const u8 *ssid, size_t ssid_len,
-> >  				      u16 capa_mask, u16 capa_val)
-> >  {
-> > +	/* call HT version with no HT requirements */
-> > +	return cfg80211_get_bss_ht(wiphy, channel, bssid, ssid, ssid_len,
-> > +				   capa_mask, capa_val, NL80211_CHAN_NO_HT);
-> > +}
-> > +EXPORT_SYMBOL(cfg80211_get_bss);
-> 
-> I don't like the semantics of this. Why is NO_HT indicating "don't care
-> about HT"? How then do you really find a NO_HT BSS?
-> 
-> Also, this raises a more fundamental question -- didn't you earlier say
-> you wanted to be able to connect with any IBSS, even non-HT ones, but
-> now it must match?
-This is only used for fixed channel mode. As we would only join a
-matching HT mode, I have to pass it here.
-How about second parameter, "bool match_ht"?
-> 
-> johannes
-> 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |   42 ++++++++++++++++++---------------
+ 1 files changed, 23 insertions(+), 19 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index b7f7198..00e9191 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1714,17 +1714,19 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len)
+ 
+ }
+ 
+-static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
++static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
+ 					   struct ath_txq *txq,
++					   struct ath_atx_tid *tid,
+ 					   struct sk_buff *skb)
+ {
+-	struct ath_softc *sc = hw->priv;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_frame_info *fi = get_frame_info(skb);
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ath_buf *bf;
+ 	struct ath_desc *ds;
+ 	int frm_type;
++	u16 seqno;
+ 
+ 	bf = ath_tx_get_buffer(sc);
+ 	if (!bf) {
+@@ -1734,6 +1736,13 @@ static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
+ 
+ 	ATH_TXBUF_RESET(bf);
+ 
++	if (tid) {
++		seqno = tid->seq_next;
++		hdr->seq_ctrl = cpu_to_le16(tid->seq_next << IEEE80211_SEQ_SEQ_SHIFT);
++		INCR(tid->seq_next, IEEE80211_SEQ_MAX);
++		bf->bf_state.seqno = seqno;
++	}
++
+ 	bf->bf_flags = setup_tx_flags(skb);
+ 	bf->bf_mpdu = skb;
+ 
+@@ -1770,15 +1779,15 @@ static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
+ }
+ 
+ /* FIXME: tx power */
+-static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
++static int ath_tx_start_dma(struct ath_softc *sc, struct sk_buff *skb,
+ 			     struct ath_tx_control *txctl)
+ {
+-	struct sk_buff *skb = bf->bf_mpdu;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct list_head bf_head;
+ 	struct ath_atx_tid *tid = NULL;
+-	u16 seqno;
++	struct ath_buf *bf;
++	int ret = 0;
+ 	u8 tidno;
+ 
+ 	spin_lock_bh(&txctl->txq->axq_lock);
+@@ -1788,15 +1797,15 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+ 			IEEE80211_QOS_CTL_TID_MASK;
+ 		tid = ATH_AN_2_TID(txctl->an, tidno);
+ 
+-		seqno = tid->seq_next;
+-		hdr->seq_ctrl = cpu_to_le16(tid->seq_next << IEEE80211_SEQ_SEQ_SHIFT);
+-		INCR(tid->seq_next, IEEE80211_SEQ_MAX);
+-
+-		bf->bf_state.seqno = seqno;
+-
+ 		WARN_ON(tid->ac->txq != txctl->txq);
+ 	}
+ 
++	bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb);
++	if (unlikely(!bf)) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
+ 	if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) && tid) {
+ 		/*
+ 		 * Try aggregation if it's a unicast data frame
+@@ -1822,7 +1831,9 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+ 		ath_tx_send_normal(sc, txctl->txq, tid, &bf_head);
+ 	}
+ 
++out:
+ 	spin_unlock_bh(&txctl->txq->axq_lock);
++	return ret;
+ }
+ 
+ /* Upon failure caller should free skb */
+@@ -1835,7 +1846,6 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	struct ieee80211_vif *vif = info->control.vif;
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_txq *txq = txctl->txq;
+-	struct ath_buf *bf;
+ 	int padpos, padsize;
+ 	int frmlen = skb->len + FCS_LEN;
+ 	int q;
+@@ -1882,10 +1892,6 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	 * info are no longer valid (overwritten by the ath_frame_info data.
+ 	 */
+ 
+-	bf = ath_tx_setup_buffer(hw, txctl->txq, skb);
+-	if (unlikely(!bf))
+-		return -ENOMEM;
+-
+ 	q = skb_get_queue_mapping(skb);
+ 	spin_lock_bh(&txq->axq_lock);
+ 	if (txq == sc->tx.txq_map[q] &&
+@@ -1895,9 +1901,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	}
+ 	spin_unlock_bh(&txq->axq_lock);
+ 
+-	ath_tx_start_dma(sc, bf, txctl);
+-
+-	return 0;
++	return ath_tx_start_dma(sc, skb, txctl);
+ }
+ 
+ /*****************/
+-- 
+1.7.3.2
 
