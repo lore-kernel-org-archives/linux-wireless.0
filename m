@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4366 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752389Ab1HLNb7 (ORCPT
+Received: from bues.ch ([80.190.117.144]:56748 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751554Ab1H0VbU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 09:31:59 -0400
-Date: Fri, 12 Aug 2011 16:31:50 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/3] nl80211/cfg80211: Add extra IE configuration to AP
- mode setup
-Message-ID: <20110812133150.GA2408@jouni.qca.qualcomm.com> (sfid-20110812_153202_945657_CA2AE134)
-References: <20110810205556.GA3821@jouni.qca.qualcomm.com>
- <1313152228.4022.4.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1313152228.4022.4.camel@jlt3.sipsolutions.net>
+	Sat, 27 Aug 2011 17:31:20 -0400
+Date: Sat, 27 Aug 2011 23:31:11 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] b43: Fix smatch warning
+Message-ID: <20110827233111.6480df17@milhouse> (sfid-20110827_233126_188746_74F19B38)
+In-Reply-To: <4E59426F.1050401@lwfinger.net>
+References: <1314469560-28255-1-git-send-email-Larry.Finger@lwfinger.net>
+	<20110827205404.62de7b31@milhouse>
+	<4E59426F.1050401@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 12, 2011 at 02:30:28PM +0200, Johannes Berg wrote:
-> On Wed, 2011-08-10 at 23:55 +0300, Jouni Malinen wrote:
-> > The NL80211_CMD_NEW_BEACON command is, in practice, requesting AP mode
-> > operations to be started. Add new attributes to provide extra IEs
-> > (e.g., WPS IE, P2P IE) for drivers that build Beacon, Probe Response,
-> > and (Re)Association Response frames internally (likely in firmware).
-> 
-> Out of curiosity, how would such a driver implement WPS to start with?
+On Sat, 27 Aug 2011 14:15:59 -0500
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-These new attributes are provided to allow that to be done easily, i.e.,
-the driver will request the firmware to add the extra IEs (WPS/P2P IE)
-to the frames that need them. Whenever the IEs change, a _SET_BEACON
-command is used to update the IE contents (just like we do with the full
-Beacon template). I'm assuming here that the driver (or well, firmware)
-is building rest of the IEs both based on internal knowledge of the
-channel and security policy (the newly added attributes). This is
-similar to how WPS is normally run with many drivers that use private
-WEXT ioctls and the new attributes allow them to move to nl80211 more
-easily.
+> On 08/27/2011 01:54 PM, Michael Büsch wrote:
+> > On Sat, 27 Aug 2011 13:26:00 -0500
+> > Larry Finger<Larry.Finger@lwfinger.net>  wrote:
+> >
+> >>    CHECK   drivers/net/wireless/b43/main.c
+> >> drivers/net/wireless/b43/main.c +4115 b43_wireless_core_stop(7) warn: variable dereferenced before check 'dev'
+> >
+> >> This is next material.
+> >
+> > -next, just because the bug is not in the current kernel?
+> > Or because you think this is harmless?
+> >
+> > I'm not sure whether this is harmless. It effectively is that kind
+> > of bug that triggers dangerous compiler optimizations.
+> > I think the compiler has some freedom to assume dev can not be NULL when
+> > the function is entered and thus optimize out the !dev check.
+> 
+> No, the check has to be left in due to the changing of dev in the routine 
+> followed by a 'goto redo'.
+
+I think the compiler is still free to emit the !dev check twice.
+Or the other way around: Emit it correctly for the "goto" case and
+don't emit it for the function-enter case (and directly check dev->status).
+
+> In fact, a bug in the original code is unlikely, but my patch did add one. I 
+> think the code should be
+> 
+> 	if (!dev)
+> 		return NULL;
+> 	wl = dev->wl;
+> redo:
+
+yes
+
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Greetings, Michael.
