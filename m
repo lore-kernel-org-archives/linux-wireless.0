@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6956 "EHLO mx1.redhat.com"
+Received: from nbd.name ([46.4.11.11]:54931 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751679Ab1HIJnq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 05:43:46 -0400
-Date: Tue, 9 Aug 2011 11:43:48 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: fix resuming when device is gone
-Message-ID: <20110809094347.GC2152@redhat.com> (sfid-20110809_114350_017737_64419FF3)
-References: <20110808141900.GA25857@redhat.com>
- <1312819106.4372.37.camel@jlt3.sipsolutions.net>
- <20110809092314.GA2152@redhat.com>
- <1312882082.4109.2.camel@jlt3.sipsolutions.net>
- <1312882166.4109.3.camel@jlt3.sipsolutions.net>
+	id S1750773Ab1H0HEo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Aug 2011 03:04:44 -0400
+Message-ID: <4E589704.3090807@openwrt.org> (sfid-20110827_090455_656197_1A0C06C2)
+Date: Sat, 27 Aug 2011 09:04:36 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1312882166.4109.3.camel@jlt3.sipsolutions.net>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k_hw: Set default slottime as 9us
+References: <1314424379-1206-1-git-send-email-rmanohar@qca.qualcomm.com> <4E588E3B.9000007@openwrt.org> <20110827065256.GA3082@vmraj-lnx.users.atheros.com>
+In-Reply-To: <20110827065256.GA3082@vmraj-lnx.users.atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 09, 2011 at 11:29:26AM +0200, Johannes Berg wrote:
-> On Tue, 2011-08-09 at 11:28 +0200, Johannes Berg wrote:
-> 
-> > > I think I was unclear. The sta_cleanup timer callback, namely
-> > > sta_info_cleanup(), can operate on freed memory. On
-> > > ieee80211_unregister_hw() -> sta_info_stop() we delete this timer, but
-> > > rdev/wiphy/local/hw structure is not freed. It's keep by reference
-> > > counter. 
-> > 
-> > You mean by device_del(&rdev->wiphy.dev) right?
-> > 
-> > > Then if ieee80211_reconfig() is called, we schedule
-> > > sta_cleanup timer. After that, when sysfs drop reference counter we
-> > > free rdev. Then sta_info_cleanup() crash kernel.
-> > 
-> > Ok let me get this straight -- even after device_del() we get a resume
-> > callback from the core subsystem? That doesn't seem right.
-> 
-> Or .. what else called ieee80211_reconfig()?
+On 2011-08-27 8:52 AM, Rajkumar Manoharan wrote:
+> On Sat, Aug 27, 2011 at 08:27:07AM +0200, Felix Fietkau wrote:
+>>  On 2011-08-27 7:52 AM, Rajkumar Manoharan wrote:
+>>  >Initialize 9us slot time as that is what is used mostly
+>>  >(for non-ERP cases) and also to be in sync with initvals.
+>>  >
+>>  >Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+>>  Why does it matter, mac80211 tells the driver to reconfigure it
+>>  anyway. Also, why use the stupid ATH9K_SLOT_TIME_* enums? I think we
+>>  should simply remove those.
+>>
+> In most of the case, mac80211 set as 9us and also initval uses 9us.
+> The what is the problem of setting 9us as default. If you want to
+> remove ATH9K_SLOT_TIME_* enums, ath9k should not set slottime till
+> it got configured.
+I don't see a problem with the change aside from the fact that it should 
+not make any difference at all, so I don't really see any point to it.
 
-Only ieee80211_restart_work().
-
-Note, I assumed that ieee80211_reconfig() have no sense
-after ieee80211_unregister_hw()?
-
-Stanislaw
+- Felix
