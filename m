@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:18452 "EHLO mga09.intel.com"
+Received: from nbd.name ([46.4.11.11]:41506 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752681Ab1HITXN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 15:23:13 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-CC: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Pavel Roskin <proski@gnu.org>,
-	Daniel Halperin <dhalperi@cs.washington.edu>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 9 Aug 2011 22:23:04 +0300
-Subject: RE: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv
- pointer
-Message-ID: <4825B8A2C4E264489E57869F0DCFB22344564F65AF@hasmsx502.ger.corp.intel.com> (sfid-20110809_212317_088147_1A45CD21)
-References: <1312228017-12061-1-git-send-email-wey-yi.w.guy@intel.com>
-	<CALSq=BYkKhJN=GU0RUJ2viibsy5yG78x-D-td0zP+rqWCy=AiQ@mail.gmail.com>
-	<4825B8A2C4E264489E57869F0DCFB22344563F4ABE@hasmsx502.ger.corp.intel.com>
-	<CALSq=BZ2CoF=+Zw-si5oc8No9MLTP1YoZCzfoT9TX1XEaLnq1A@mail.gmail.com>
-	<CALSq=BYY8-fAqATwJaFNvzwpSo4WWXbH=pRXn0oknqKXH=4X2A@mail.gmail.com>
-	<1312499702.15170.17.camel@wwguy-huron>	<20110805225051.435fe1b0@mj>
-	<E9954878DD1FB34FAE5187FB88C58A350199604D92@orsmsx506.amr.corp.intel.com>
-	<CANUX_P3p3mqUjJrynivna5Fu4iv8DDdH-rY53Y36tHRVewSSuQ@mail.gmail.com>
- <CAD2nsn105hyUW0WjN-iggdorxk0wsm7r1EHzN1-MeaMjovQG5A@mail.gmail.com>
-In-Reply-To: <CAD2nsn105hyUW0WjN-iggdorxk0wsm7r1EHzN1-MeaMjovQG5A@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1750773Ab1H0HPB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Aug 2011 03:15:01 -0400
+Message-ID: <4E58996F.6010303@openwrt.org> (sfid-20110827_091519_347493_55BD5D57)
+Date: Sat, 27 Aug 2011 09:14:55 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k_hw: Set default slottime as 9us
+References: <1314424379-1206-1-git-send-email-rmanohar@qca.qualcomm.com> <4E588E3B.9000007@openwrt.org> <20110827065256.GA3082@vmraj-lnx.users.atheros.com> <4E589704.3090807@openwrt.org> <20110827070912.GA3140@vmraj-lnx.users.atheros.com>
+In-Reply-To: <20110827070912.GA3140@vmraj-lnx.users.atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> On Sun, Aug 7, 2011 at 1:13 AM, Emmanuel Grumbach <egrumbach@gmail.com>
-> wrote:
-> > Can you please try that one ?
-> > I don't have my machine near me, and don't want to crash it remotely,
-> > so I didn't test it. I will test in on Sunday.
-> 
-> Hi Emmanuel,
-> 
-> I also got the same kernel panic when unloading the iwlagn module for
-> my inbuilt laptop card and i tried the attached patch and it seems to
-> fix it.
-> 
-> 
-Hi Mohammed,
+On 2011-08-27 9:09 AM, Rajkumar Manoharan wrote:
+> On Sat, Aug 27, 2011 at 09:04:36AM +0200, Felix Fietkau wrote:
+>>  On 2011-08-27 8:52 AM, Rajkumar Manoharan wrote:
+>>  >On Sat, Aug 27, 2011 at 08:27:07AM +0200, Felix Fietkau wrote:
+>>  >>  On 2011-08-27 7:52 AM, Rajkumar Manoharan wrote:
+>>  >>  >Initialize 9us slot time as that is what is used mostly
+>>  >>  >(for non-ERP cases) and also to be in sync with initvals.
+>>  >>  >
+>>  >>  >Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+>>  >>  Why does it matter, mac80211 tells the driver to reconfigure it
+>>  >>  anyway. Also, why use the stupid ATH9K_SLOT_TIME_* enums? I think we
+>>  >>  should simply remove those.
+>>  >>
+>>  >In most of the case, mac80211 set as 9us and also initval uses 9us.
+>>  >The what is the problem of setting 9us as default. If you want to
+>>  >remove ATH9K_SLOT_TIME_* enums, ath9k should not set slottime till
+>>  >it got configured.
+>>  I don't see a problem with the change aside from the fact that it
+>>  should not make any difference at all, so I don't really see any
+>>  point to it.
+>>
+> I doubt that using long slottime might affect random backoff. so let it
+> to be in sync with initval till it is altered. am i right?
+If you want to get this change in, I don't care. I'm just saying it 
+doesn't get left at the default long enough for it to matter in any way.
 
-Thanks for your time testing it.
-The final fix will be sent through the regular channel very soon.
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+- Felix
