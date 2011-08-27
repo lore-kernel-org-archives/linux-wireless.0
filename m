@@ -1,40 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51182 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751474Ab1HXOqb (ORCPT
+Received: from bues.ch ([80.190.117.144]:36237 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751254Ab1H0NTC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 10:46:31 -0400
-Date: Wed, 24 Aug 2011 20:16:46 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/3] ath6kl: Add initial debugfs changes
-Message-ID: <20110824144644.GD25267@vasanth-laptop> (sfid-20110824_164635_782789_2AF1611A)
-References: <1314195936-25227-1-git-send-email-vthiagar@qca.qualcomm.com>
- <4E550D34.7020008@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4E550D34.7020008@qca.qualcomm.com>
+	Sat, 27 Aug 2011 09:19:02 -0400
+Date: Sat, 27 Aug 2011 15:18:47 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"gregkh@suse.de" <gregkh@suse.de>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Subject: Re: [PATCH v2] Move brcm80211 to mainline
+Message-ID: <20110827151847.02ca7c78@milhouse> (sfid-20110827_151906_917215_F56E668B)
+In-Reply-To: <CACna6rw8AYxH4e_9NOFux2DPgCvqM+Yg+fit1Q6x==MjFowgwA@mail.gmail.com>
+References: <20110707002034.GA17885@broadcom.com>
+	<20110824222801.GA5280@broadcom.com>
+	<CACna6rwG6qNpaOu4QeOvs0L3LVETRt9w5=Ec-L2NJ5gXOAM=nw@mail.gmail.com>
+	<20110826175510.GG4888@broadcom.com>
+	<CACna6rw8AYxH4e_9NOFux2DPgCvqM+Yg+fit1Q6x==MjFowgwA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 24, 2011 at 05:39:48PM +0300, Kalle Valo wrote:
-> On 08/24/2011 05:25 PM, Vasanthakumar Thiagarajan wrote:
-> > +#ifdef CONFIG_ATH6KL_DEBUGFS
-> > +int ath6kl_init_debugfs(struct ath6kl *ar);
-> > +#else
-> > +static inline int ath6kl_init_debugfs(struct ath6kl *ar)
-> > +{
-> > +	return 0;
-> > +}
-> > +#endif
+On Sat, 27 Aug 2011 14:05:19 +0200
+Rafał Miłecki <zajec5@gmail.com> wrote:
+> You can see attached files for raw results or view chart at my blog:
+> http://zajec.net/blog/view/2011-b43-dma-fixed-on-some-pci-cards
 > 
-> I would prefer to call this ath6kl_debug_init(). That way we can put all
-> debug initialisation into that, not just debugfs code. And then the
-> ifdef should check for CONFIG_ATH6KL_DEBUG.
+> As you can see, b43 is very comparable with wl/brcmsmac and sometimes
+> can achieve even higher speeds (for high rates in this case).
+> 
+> I believe this will make you calmer about quality of the b43.
 
-May be, but I think we can't always enable debugfs based on only
-CONFIG_ATH6KL_DEBUG as the general debug does not depend on
-CONFIG_DEBUG_FS.
+Impressive.
 
-Vasanth
+I think the slightly higher speeds come from the different rate control
+algorithms. However, other than that, I do understand if broadcom
+has certain concerns with supporting the b43 driver _officially_.
+I assume broadcom maintains a QA process internally and b43 simply
+isn't tested by that. And testing costs money. It probably is as simple as that.
+
+It may be hard to tell a sales person that QA has to throw money
+out of the window to test a "redundant" driver.
+
+So, at the end of the day, I do understand the concerns. However, I would
+also like to see broadcom's QA move towards b43 and start some testing
+on it. Nobody wants the QA to officially support the whole driver tomorrow
+afternoon, already. I'd rather see this as a step by step process. Probably
+leaving legacy G-PHY devices completely out. So QA would say we support
+this and that device on b43, but _not_ those and these..
+
+Also, don't be too hard on Henry. He's nice and very cooperative to
+the linux community within the constraints of the company. :)
+
+-- 
+Greetings, Michael.
