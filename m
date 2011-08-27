@@ -1,42 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2587 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751489Ab1HQSgx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2011 14:36:53 -0400
-From: "Brett Rudley" <brudley@broadcom.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Date: Wed, 17 Aug 2011 11:36:36 -0700
-Subject: RE: Question about versions: wl vs. brcmsmac
-Message-ID: <7A94256FD72B884D9E7C55586C3CBCEE19573F3F30@SJEXCHCCR01.corp.ad.broadcom.com> (sfid-20110817_203656_732012_F7605710)
-References: <CACna6rzdgENO-fCmm8tTVpuk_M7A88C7HgSGmTsjF3U8ZxDbYQ@mail.gmail.com>
-In-Reply-To: <CACna6rzdgENO-fCmm8tTVpuk_M7A88C7HgSGmTsjF3U8ZxDbYQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:49718 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754390Ab1H0ASj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Aug 2011 20:18:39 -0400
+Received: by mail-yw0-f46.google.com with SMTP id 7so3294733ywf.19
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 17:18:39 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Subject: [PATCH v2 5/8] mac80211: Don't iterate twice over all mpaths when once in sufficient
+Date: Fri, 26 Aug 2011 17:18:11 -0700
+Message-Id: <1314404294-4233-6-git-send-email-javier@cozybit.com> (sfid-20110827_021842_234619_DDDDE98A)
+In-Reply-To: <1314404294-4233-1-git-send-email-javier@cozybit.com>
+References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
+ <1314404294-4233-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NS4xMDAuODIuMzggaXMgdGhlIG1vcmUgcmVjZW50L25ld2VyLg0KDQpicmV0dA0KDQo+IC0tLS0t
-T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IFJhZmHFgiBNacWCZWNraSBbbWFpbHRvOnph
-amVjNUBnbWFpbC5jb21dDQo+IFNlbnQ6IFdlZG5lc2RheSwgQXVndXN0IDE3LCAyMDExIDQ6MzQg
-QU0NCj4gVG86IEJyZXR0IFJ1ZGxleTsgSGVucnkgUHRhc2luc2tpOyBSb2xhbmQgVm9zc2VuOyBB
-cmVuZCBWYW4gU3ByaWVsOw0KPiBGcmFua3kgKFpoZW5odWkpIExpbjsgS2FuIFlhbg0KPiBDYzog
-bGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBiNDMtZGV2DQo+IFN1YmplY3Q6IFF1ZXN0
-aW9uIGFib3V0IHZlcnNpb25zOiB3bCB2cy4gYnJjbXNtYWMNCj4gDQo+IEhleSBCcm9hZGNvbSwN
-Cj4gDQo+IEkndmUgY29tcGFyZSBkdW1wIGZyb20gd2wgd2l0aCBkdW1wIGZyb20gYnJjbXNtYWMg
-YW5kIG5vdGljZWQgc29tZQ0KPiBkaWZmZXJlbmNlcy4NCj4gDQo+IFNvbWUgcmFuZG9tIG9uZXMg
-Zm9yIExDTiBQSFk6DQo+IDEpIGJyY21zbWFjIGRvZXNuJ3QgdG91Y2ggMHg2NjMgcmVnaXN0ZXIg
-aW4gUEhZIGluaXQNCj4gMikgd2wgdXNlcyAweGZlZGIsIGJyY21zbWFjIHVzZXMgMHhmZTRiIGFz
-IHNvbWUgdmFsdWUgZm9yIDB4YiB0YWJsZQ0KPiAzKSBicmNtc21hYyB1c2VzIDB4MyBpbnN0ZWFk
-IDB4MCBmb3IgcmFkaW8gcmVnIDB4MzgNCj4gYW5kIHNvIG9uLi4uDQo+IA0KPiBNeSBxdWVzdGlv
-biBpcywgd2hpY2ggZHJpdmVyIGluY2x1ZGVzIG5ld2VyIChtb3JlIGNvcnJlY3QgSSBob3BlKSBj
-b2RlPw0KPiANCj4gSSdtIGNvbXBhcmluZyBicmNtc21hYyBmcm9tIGdpdCB3aXRoIHdsIDUuMTAw
-LjgyLjM4Lg0KPiANCj4gLS0NCj4gUmFmYcWCDQoNCg==
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ net/mac80211/mesh_pathtbl.c |   64 +++++++++++++++++++++++++------------------
+ 1 files changed, 37 insertions(+), 27 deletions(-)
+
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 598249e..ea9e34a 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -49,7 +49,9 @@ int mesh_paths_generation;
+ 
+ /* This lock will have the grow table function as writer and add / delete nodes
+  * as readers. When reading the table (i.e. doing lookups) we are well protected
+- * by RCU
++ * by RCU.  We need to take this lock when modying the number of buckets
++ * on one of the path tables but we don't need to if adding or removing mpaths
++ * from hash buckets.
+  */
+ static DEFINE_RWLOCK(pathtbl_resize_lock);
+ 
+@@ -817,6 +819,32 @@ void mesh_path_flush_by_nexthop(struct sta_info *sta)
+ 	rcu_read_unlock();
+ }
+ 
++static void mesh_path_node_reclaim(struct rcu_head *rp)
++{
++	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
++	struct ieee80211_sub_if_data *sdata = node->mpath->sdata;
++
++	del_timer_sync(&node->mpath->timer);
++	atomic_dec(&sdata->u.mesh.mpaths);
++	kfree(node->mpath);
++	kfree(node);
++}
++
++/* needs to be called with the corresponding hashwlock taken */
++static void __mesh_path_del(struct mesh_table *tbl, struct mpath_node *node)
++{
++	struct mesh_path *mpath;
++	mpath = node->mpath;
++	spin_lock(&mpath->state_lock);
++	mpath->flags |= MESH_PATH_RESOLVING;
++	if (mpath->is_gate)
++		mesh_gate_del(tbl, mpath);
++	hlist_del_rcu(&node->list);
++	call_rcu(&node->rcu, mesh_path_node_reclaim);
++	spin_unlock(&mpath->state_lock);
++	atomic_dec(&tbl->entries);
++}
++
+ static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct mesh_table *tbl;
+@@ -829,23 +857,15 @@ static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
+ 	tbl = rcu_dereference(mesh_paths);
+ 	for_each_mesh_entry(tbl, p, node, i) {
+ 		mpath = node->mpath;
+-		if (mpath->sdata == sdata)
+-			mesh_path_del(mpath->dst, mpath->sdata);
++		if (mpath->sdata == sdata) {
++			spin_lock_bh(&tbl->hashwlock[i]);
++			__mesh_path_del(tbl, node);
++			spin_unlock_bh(&tbl->hashwlock[i]);
++		}
+ 	}
+ 	rcu_read_unlock();
+ }
+ 
+-static void mesh_path_node_reclaim(struct rcu_head *rp)
+-{
+-	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
+-	struct ieee80211_sub_if_data *sdata = node->mpath->sdata;
+-
+-	del_timer_sync(&node->mpath->timer);
+-	atomic_dec(&sdata->u.mesh.mpaths);
+-	kfree(node->mpath);
+-	kfree(node);
+-}
+-
+ static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct mesh_table *tbl;
+@@ -859,12 +879,8 @@ static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
+ 					lockdep_is_held(pathtbl_resize_lock));
+ 	for_each_mesh_entry(tbl, p, node, i) {
+ 		mpath = node->mpath;
+-		if (mpath->sdata != sdata)
+-			continue;
+ 		spin_lock_bh(&tbl->hashwlock[i]);
+-		hlist_del_rcu(&node->list);
+-		call_rcu(&node->rcu, mesh_path_node_reclaim);
+-		atomic_dec(&tbl->entries);
++		__mesh_path_del(tbl, node);
+ 		spin_unlock_bh(&tbl->hashwlock[i]);
+ 	}
+ 	read_unlock_bh(&pathtbl_resize_lock);
+@@ -912,14 +928,7 @@ int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata)
+ 		mpath = node->mpath;
+ 		if (mpath->sdata == sdata &&
+ 		    memcmp(addr, mpath->dst, ETH_ALEN) == 0) {
+-			spin_lock_bh(&mpath->state_lock);
+-			if (mpath->is_gate)
+-				mesh_gate_del(tbl, mpath);
+-			mpath->flags |= MESH_PATH_RESOLVING;
+-			hlist_del_rcu(&node->list);
+-			call_rcu(&node->rcu, mesh_path_node_reclaim);
+-			atomic_dec(&tbl->entries);
+-			spin_unlock_bh(&mpath->state_lock);
++			__mesh_path_del(tbl, node);
+ 			goto enddel;
+ 		}
+ 	}
+@@ -1160,6 +1169,7 @@ void mesh_path_expire(struct ieee80211_sub_if_data *sdata)
+ 		    (!(mpath->flags & MESH_PATH_FIXED)) &&
+ 		     time_after(jiffies, mpath->exp_time + MESH_PATH_EXPIRE))
+ 			mesh_path_del(mpath->dst, mpath->sdata);
++	}
+ 	rcu_read_unlock();
+ }
+ 
+-- 
+1.7.6
 
