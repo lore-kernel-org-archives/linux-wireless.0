@@ -1,60 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucidpixels.com ([72.73.18.11]:37731 "EHLO lucidpixels.com"
+Received: from nbd.name ([46.4.11.11]:33493 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755142Ab1HCSmG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2011 14:42:06 -0400
-Date: Wed, 3 Aug 2011 14:42:04 -0400 (EDT)
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-cc: Andreas Hartmann <andihartmann@01019freenet.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Alan Piszcz <ap@solarrain.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH] rt2x00: rt2800: fix zeroing skb structure
-In-Reply-To: <alpine.DEB.2.02.1108031433570.9421@p34.internal.lan>
-Message-ID: <alpine.DEB.2.02.1108031441140.9421@p34.internal.lan> (sfid-20110803_204232_156891_59B45D08)
-References: <20110730113009.GA2847@redhat.com> <20110730113255.GB2847@redhat.com> <alpine.DEB.2.02.1107300736010.4925@p34.internal.lan> <alpine.DEB.2.02.1107301015340.4925@p34.internal.lan> <alpine.DEB.2.02.1107301031560.4925@p34.internal.lan>
- <4E341DC4.9010107@01019freenet.de> <alpine.DEB.2.02.1107301305590.4925@p34.internal.lan> <20110803160050.GA18882@redhat.com> <alpine.DEB.2.02.1108031328030.9421@p34.internal.lan> <alpine.DEB.2.02.1108031339280.9421@p34.internal.lan> <20110803183349.GA5956@redhat.com>
- <alpine.DEB.2.02.1108031433570.9421@p34.internal.lan>
+	id S1750838Ab1H0G1S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Aug 2011 02:27:18 -0400
+Message-ID: <4E588E3B.9000007@openwrt.org> (sfid-20110827_082727_554422_208ADAB4)
+Date: Sat, 27 Aug 2011 08:27:07 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k_hw: Set default slottime as 9us
+References: <1314424379-1206-1-git-send-email-rmanohar@qca.qualcomm.com>
+In-Reply-To: <1314424379-1206-1-git-send-email-rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Wed, 3 Aug 2011, Justin Piszcz wrote:
-
+On 2011-08-27 7:52 AM, Rajkumar Manoharan wrote:
+> Initialize 9us slot time as that is what is used mostly
+> (for non-ERP cases) and also to be in sync with initvals.
 >
->
-> On Wed, 3 Aug 2011, Stanislaw Gruszka wrote:
->
->> On Wed, Aug 03, 2011 at 01:44:10PM -0400, Justin Piszcz wrote:
->>> Tested that patch:
->>>
+> Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+Why does it matter, mac80211 tells the driver to reconfigure it anyway. 
+Also, why use the stupid ATH9K_SLOT_TIME_* enums? I think we should 
+simply remove those.
 
-Hi,
-
-[ 3552.765072] phy0 -> rt2800_txdone: Error - Data pending
-[ 3552.774580] phy0 -> rt2800_txdone: Error - Data pending
-[ 3985.215031] ieee80211 phy0: wlan0: No probe response from AP (hidden) after 500ms, disconnecting.
-[ 3985.262684] cfg80211: Calling CRDA for country: XX
-[ 4011.806042] wlan0: authenticate with (hidden) (try 1)
-[ 4011.807577] wlan0: authenticated
-[ 4011.824287] wlan0: associate with (hidden) (try 1)
-[ 4011.828180] wlan0: RX ReassocResp from (hidden) (capab=0x431 status=0 aid=2)
-[ 4011.828189] wlan0: associated
-[ 4035.209032] ieee80211 phy0: wlan0: No probe response from AP (hidden) after 500ms, disconnecting.
-[ 4035.248719] cfg80211: Calling CRDA to update world regulatory domain
-[ 4061.777466] wlan0: authenticate with (hidden) (try 1)
-[ 4061.786410] wlan0: authenticated
-[ 4061.818460] wlan0: associate with (hidden) (try 1)
-[ 4061.822059] wlan0: RX ReassocResp from (hidden) (capab=0x431 status=0 aid=2)
-[ 4061.822068] wlan0: associated
-
-Saw this on the rt2800usb driver (w/ your patch), is this normal?
-
-Justin.
-
+- Felix
