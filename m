@@ -1,74 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:59127 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751553Ab1HXTkh (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:61573 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754643Ab1H0ASn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 15:40:37 -0400
-Date: Wed, 24 Aug 2011 14:40:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: zajec5@gmail.com
-Cc: Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: [RFC/RFT] b43: Relax requirement for descriptors to be in the DMA zone
-Message-ID: <4e5553a8.vSmpTZc2Cr8jeze3%Larry.Finger@lwfinger.net> (sfid-20110824_214043_534418_23ABC321)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 26 Aug 2011 20:18:43 -0400
+Received: by mail-yi0-f46.google.com with SMTP id 30so2047705yie.19
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 17:18:43 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Subject: [PATCH v2 7/8] mac80211: Don't take the mesh path resize lock when deleting an mpath
+Date: Fri, 26 Aug 2011 17:18:13 -0700
+Message-Id: <1314404294-4233-8-git-send-email-javier@cozybit.com> (sfid-20110827_021846_756125_00AAD2D2)
+In-Reply-To: <1314404294-4233-1-git-send-email-javier@cozybit.com>
+References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
+ <1314404294-4233-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When 64-bit DMA was first used, there were problems with the
-BCM4311 (14e4:4311). The problem was "fixed" by using the GFP_DMA
-flag in the allocation of coherent ring descriptor memory.
+The mesh path resize lock is only needed to protect addition or removal
+of buckets on the hash table, not nodes on those buckets.
 
-The original problem is now believed to have been due to bugs in
-the 64-bit DMA implementation in the rest of the kernel, and that
-those bugs have been fixed. Accordingly, relaxation of the
-requirement for the descriptors to be in the DMA zone is relaxed.
-
-When a bounce buffer is needed, that is left in the DMA zone.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
+ net/mac80211/mesh_pathtbl.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-@Michael - Your idea seems to be correct.
-
-@Rafal - Incorporate this in your other patch.
-
-
-Index: wireless-testing-new/drivers/net/wireless/b43/dma.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/b43/dma.c
-+++ wireless-testing-new/drivers/net/wireless/b43/dma.c
-@@ -393,14 +393,7 @@ static int alloc_ringmemory(struct b43_d
- 	 * has shown that 4K is sufficient for the latter as long as the buffer
- 	 * does not cross an 8K boundary.
- 	 *
--	 * For unknown reasons - possibly a hardware error - the BCM4311 rev
--	 * 02, which uses 64-bit DMA, needs the ring buffer in very low memory,
--	 * which accounts for the GFP_DMA flag below.
--	 *
--	 * The flags here must match the flags in free_ringmemory below!
- 	 */
--	if (ring->type == B43_DMA_64BIT)
--		flags |= GFP_DMA;
- 	ring->descbase = dma_alloc_coherent(ring->dev->dev->dma_dev,
- 					    B43_DMA_RINGMEMSIZE,
- 					    &(ring->dmabase), flags);
-@@ -589,7 +582,7 @@ static int setup_rx_descbuffer(struct b4
- 	dmaaddr = map_descbuffer(ring, skb->data, ring->rx_buffersize, 0);
- 	if (b43_dma_mapping_error(ring, dmaaddr, ring->rx_buffersize, 0)) {
- 		/* ugh. try to realloc in zone_dma */
--		gfp_flags |= GFP_DMA;
-+		gfp_flags |= GFP_KERNEL;
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 3c03be9..216bd2f 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -905,8 +905,8 @@ int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata)
+ 	int hash_idx;
+ 	int err = 0;
  
- 		dev_kfree_skb_any(skb);
+-	read_lock_bh(&pathtbl_resize_lock);
+-	tbl = resize_dereference_mesh_paths();
++	rcu_read_lock();
++	tbl = rcu_dereference(mesh_paths);
+ 	hash_idx = mesh_table_hash(addr, sdata, tbl);
+ 	bucket = &tbl->hash_buckets[hash_idx];
  
-@@ -903,7 +896,7 @@ struct b43_dmaring *b43_setup_dmaring(st
- 			kfree(ring->txhdr_cache);
- 			ring->txhdr_cache = kcalloc(ring->nr_slots / TX_SLOTS_PER_FRAME,
- 						    b43_txhdr_size(dev),
--						    GFP_KERNEL | GFP_DMA);
-+						    GFP_KERNEL);
- 			if (!ring->txhdr_cache)
- 				goto err_kfree_meta;
+@@ -924,7 +924,7 @@ int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata)
+ enddel:
+ 	mesh_paths_generation++;
+ 	spin_unlock_bh(&tbl->hashwlock[hash_idx]);
+-	read_unlock_bh(&pathtbl_resize_lock);
++	rcu_read_unlock();
+ 	return err;
+ }
  
+-- 
+1.7.6
+
