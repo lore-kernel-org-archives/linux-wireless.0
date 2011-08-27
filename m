@@ -1,90 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:50162 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751890Ab1HPU1s (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:49436 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751664Ab1H0PMg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2011 16:27:48 -0400
-Received: by yie30 with SMTP id 30so239590yie.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2011 13:27:47 -0700 (PDT)
+	Sat, 27 Aug 2011 11:12:36 -0400
+Received: by pzk37 with SMTP id 37so5876611pzk.1
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Aug 2011 08:12:36 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4E45781E.8070508@broadcom.com>
-References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
-	<1313156101-16817-2-git-send-email-arend@broadcom.com>
-	<CACna6rzmaxzezN-OPTLvXyFOZOsoq6XCds4P-FOEz27FzJz+Jg@mail.gmail.com>
-	<4E455877.6090901@broadcom.com>
-	<4E45781E.8070508@broadcom.com>
-Date: Tue, 16 Aug 2011 22:27:46 +0200
-Message-ID: <CACna6ry93-i-VhjZcynupG7Xo7txYxxQxCyRidrALya+f0zLEQ@mail.gmail.com> (sfid-20110816_222752_622290_A94F7E60)
-Subject: Re: [PATCH 01/14] staging: brcm80211: use wait queues instead of
- semaphores in wl_cfg80211.c
+In-Reply-To: <CACna6ryfZoahr1FPbZ_syBFhWnfRprEs=95y=piCGXXm_Cu+LQ@mail.gmail.com>
+References: <20110707002034.GA17885@broadcom.com>
+	<20110824222801.GA5280@broadcom.com>
+	<CACna6rwG6qNpaOu4QeOvs0L3LVETRt9w5=Ec-L2NJ5gXOAM=nw@mail.gmail.com>
+	<20110827143513.GN3775@shale.localdomain>
+	<20110827145003.GA9405@suse.de>
+	<CACna6ryfZoahr1FPbZ_syBFhWnfRprEs=95y=piCGXXm_Cu+LQ@mail.gmail.com>
+Date: Sat, 27 Aug 2011 17:12:36 +0200
+Message-ID: <CACna6ryjaSb1aTtBAq7cXvvQeBtqbFgoV-0AjG2gvhNhBCVcUA@mail.gmail.com> (sfid-20110827_171239_963712_6F7D73B6)
+Subject: Re: [PATCH v2] Move brcm80211 to mainline
 From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Franky Lin <frankyl@broadcom.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+To: Greg KH <gregkh@suse.de>, Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Dan Carpenter <error27@gmail.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MjAxMS84LzEyIEZyYW5reSBMaW4gPGZyYW5reWxAYnJvYWRjb20uY29tPjoKPiBPbiAwOC8xMi8y
-MDExIDA5OjQ0IEFNLCBBcmVuZCB2YW4gU3ByaWVsIHdyb3RlOgo+Pgo+PiBPbiAwOC8xMi8yMDEx
-IDA0OjA3IFBNLCBSYWZhxYIgTWnFgmVja2kgd3JvdGU6Cj4+Pgo+Pj4gMjAxMS84LzEyIEFyZW5k
-IHZhbiBTcHJpZWw8YXJlbmRAYnJvYWRjb20uY29tPjoKPj4+Pgo+Pj4+IEBAIC0zNTM3LDI3ICsz
-NTQ0LDM5IEBAIHN0YXRpYyBzMzIgYnJjbWZfZXZlbnRfaGFuZGxlcih2b2lkICpkYXRhKQo+Pj4+
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIChzdHJ1Y3QgYnJjbWZfY2ZnODAy
-MTFfcHJpdiAqKWRhdGE7Cj4+Pj4gwqAgwqAgwqAgwqAgc3RydWN0IHNjaGVkX3BhcmFtIHBhcmFt
-ID0gey5zY2hlZF9wcmlvcml0eSA9IE1BWF9SVF9QUklPIC0gMSB9Owo+Pj4+IMKgIMKgIMKgIMKg
-IHN0cnVjdCBicmNtZl9jZmc4MDIxMV9ldmVudF9xICplOwo+Pj4+ICsgwqAgwqAgwqAgREVDTEFS
-RV9XQUlUUVVFVUUod2FpdCwgY3VycmVudCk7Cj4+Pj4KPj4+PiDCoCDCoCDCoCDCoCBzY2hlZF9z
-ZXRzY2hlZHVsZXIoY3VycmVudCwgU0NIRURfRklGTywmcGFyYW0pOwo+Pj4+IMKgIMKgIMKgIMKg
-IGFsbG93X3NpZ25hbChTSUdURVJNKTsKPj4+PiAtIMKgIMKgIMKgIHdoaWxlIChsaWtlbHkoIWRv
-d25faW50ZXJydXB0aWJsZSgmY2ZnX3ByaXYtPmV2ZW50X3N5bmMpKSkgewo+Pj4+ICsgwqAgwqAg
-wqAgYWRkX3dhaXRfcXVldWUoJmNmZ19wcml2LT5ldmVudF93YWl0cSwmd2FpdCk7Cj4+Pj4gKyDC
-oCDCoCDCoCB3aGlsZSAoMSkgewo+Pj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgcHJlcGFyZV90
-b193YWl0KCZjZmdfcHJpdi0+ZXZlbnRfd2FpdHEsJndhaXQsCj4+Pj4gKyDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBUQVNLX0lOVEVSUlVQVElCTEUpOwo+Pj4+
-ICsKPj4+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNjaGVkdWxlKCk7Cj4+Pj4gKwo+Pj4+IMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIGlmIChrdGhyZWFkX3Nob3VsZF9zdG9wKCkpCj4+Pj4gwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgYnJlYWs7Cj4+Pj4gKwo+Pj4+IMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIGUgPSBicmNtZl9kZXFfZXZlbnQoY2ZnX3ByaXYpOwo+Pj4+IMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIGlmICh1bmxpa2VseSghZSkpIHsKPj4+PiDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBXTF9FUlIoImV2ZW50IHF1ZXVlIGVtcHR5Li4uXG4i
-KTsKPj4+PiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIEJVRygpOwo+Pj4+ICsg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgY29udGludWU7Cj4+Pj4gwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgfQo+Pj4+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgV0xfSU5GTygiZXZl
-bnQgdHlwZSAoJWQpXG4iLCBlLT5ldHlwZSk7Cj4+Pj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCBp
-ZiAoY2ZnX3ByaXYtPmVsLmhhbmRsZXJbZS0+ZXR5cGVdKQo+Pj4+IC0gwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgY2ZnX3ByaXYtPmVsLmhhbmRsZXJbZS0+ZXR5cGVdKGNmZ19wcml2
-LAo+Pj4+IC0KPj4+PiDCoGNmZ190b19uZGV2KGNmZ19wcml2KSwKPj4+PiAtJmUtPmVtc2csIGUt
-PmVkYXRhKTsKPj4+PiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGVsc2UKPj4+PiAtIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIFdMX0lORk8oIlVua25vd24gRXZlbnQgKCVkKTogaWdu
-b3JpbmdcbiIsCj4+Pj4gZS0+ZXR5cGUpOwo+Pj4+Cj4+Pj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCBicmNtZl9wdXRfZXZlbnQoZSk7Cj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBkbyB7Cj4+
-Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBXTF9JTkZPKCJldmVudCB0eXBl
-ICglZClcbiIsIGUtPmV0eXBlKTsKPj4+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIGlmIChjZmdfcHJpdi0+ZWwuaGFuZGxlcltlLT5ldHlwZV0pCj4+Pj4gKyDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBjZmdfcHJpdi0+ZWwuaGFuZGxlcltl
-LT5ldHlwZV0oY2ZnX3ByaXYsCj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBjZmdfdG9fbmRldihjZmdfcHJpdiksCj4+Pj4gKyZl
-LT5lbXNnLCBlLT5lZGF0YSk7Cj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCBlbHNlCj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCBXTF9JTkZPKCJVbmtub3duIEV2ZW50ICglZCk6Cj4+Pj4gaWdub3JpbmdcbiIsCj4+Pj4gKyDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBl
-LT5ldHlwZSk7Cj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBicmNtZl9w
-dXRfZXZlbnQoZSk7Cj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCB9IHdoaWxlICgoZSA9IGJy
-Y21mX2RlcV9ldmVudChjZmdfcHJpdikpKTsKPj4+Cj4+PiBpZiAoKCgoKGNhcmVfY29kaW5nX3N0
-eWxlKSkpKSkKPj4+IGZpeCgpOwo+Pj4KPj4+IDotKQo+Pj4KPj4KPj4gSSBhc3N1bWUgeW91IHJl
-ZmVyIHRvIHRoZSBpbmRlbnRzIGFib3ZlLiBOb3Qgc3VyZSB3aGF0IGV4YWN0bHkgaGFwcGVuZWQK
-Pj4gdGhlcmUsIGJ1dCB0aGUgcGF0Y2ggZW1haWwgYXMgSSByZWNlaXZlZCBpdCBsb29rcy4gQ291
-bGQgaXQgYmUgYSBtYWlsCj4+IHJlYWRlciBpc3N1ZT8KPgo+IEhpIFJhZmHFgiwKPgo+IElmIHlv
-dSBhcmUgcmVmZXJpbmcgdG8gdGhpcyBsaW5lCj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCB9
-IHdoaWxlICgoZSA9IGJyY21mX2RlcV9ldmVudChjZmdfcHJpdikpKTsKPgo+IFRoZSBleHRyYSBw
-YXJlbnRoZXNlcyBhcmUgYWRkZWQgdG8gZml4IGEgY29tcGlsZXIgd2FybmluZzoKPiDCoCDCoCDC
-oCDCoGRyaXZlcnMvc3RhZ2luZy9icmNtODAyMTEvYnJjbWZtYWMvd2xfY2ZnODAyMTEuYzogSW4g
-ZnVuY3Rpb24KPiDigJhicmNtZl9ldmVudF9oYW5kbGVy4oCZOgo+IMKgIMKgIMKgIMKgZHJpdmVy
-cy9zdGFnaW5nL2JyY204MDIxMS9icmNtZm1hYy93bF9jZmc4MDIxMS5jOjM1NzY6IHdhcm5pbmc6
-Cj4gc3VnZ2VzdCBwYXJlbnRoZXNlcyBhcm91bmQgYXNzaWdubWVudCB1c2VkIGFzIHRydXRoIHZh
-bHVlCgpTb3JyeSBmb3IgY29uZnVzaW5nIHlvdSwgSSB0aG91Z2ggaXQncyBPSyB0byB1c2UKd2hp
-bGUgKGUgPSBzdGgoKSkKSSBjYXVzZWQgYSBsaXR0bGUgb2YgbWVzcyBhbmQgZGlzY3Vzc2lvbiwg
-dXBzIDp8CgotLSAKUmFmYcWCCg==
+W dniu 27 sierpnia 2011 17:08 użytkownik Rafał Miłecki
+<zajec5@gmail.com> napisał:
+> 2011/8/27 Greg KH <gregkh@suse.de>:
+>> On Sat, Aug 27, 2011 at 05:35:13PM +0300, Dan Carpenter wrote:
+>>> On Thu, Aug 25, 2011 at 10:55:26PM +0200, Rafał Miłecki wrote:
+>>> > 2011/8/25 Henry Ptasinski <henryp@broadcom.com>:
+>>> > > With the latest series of cleanup patches merged in by Greg KH, I'd like to
+>>> > > once again propose moving brcm80211 out of staging and into mainline.
+>>> >
+>>> > Henry: a simple question, please explain it to me, what brcmsmac does
+>>> > provide that b43 doesn't?
+>>> >
+>>>
+>>> Wow.  Why are we only having this discussion now?  Somewhere along
+>>> the line, there has been a massive communications failure.  What
+>>> happened here?  Henry, did you know about the b43 driver?  Can
+>>> someone explain what's going on?
+>>
+>> I always thought that b43 and the staging driver supported different
+>> devices and had no overlap, which is why I had no problem with it.
+>>
+>> Was I totally mistaken and got this wrong?
+>
+> Please see my last e-mail in this thread for history overview.
+>
+> Right now the only card that is supported by brcmsmac and is not
+> supported by b43 is 14e4:4727. That card is based on PHY type LCN, and
+> I'm working on adding support for it in b43.
+>
+> Other cards supported by brcmsmac (14e4:4353, 14e4:4357) are supported
+> by b43.
+
+b43 also works on SoCs (routers) using BCMA and having BCMA core based
+on N-PHY. This support was added by Hauke and I think he reported AP
+mode was somehow working for him. AFAIR it wasn't stable yet, but some
+packets were transferred :)
+
+-- 
+Rafał
