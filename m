@@ -1,67 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:12459 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751985Ab1HMSSo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 14:18:44 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 25/60] iwlagn: more comments for bt channel inhibition
-Date: Sat, 13 Aug 2011 10:38:01 -0700
-Message-Id: <1313257116-2697-26-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110813_201944_472279_1EDD9C5D)
-In-Reply-To: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1313257116-2697-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39076 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750871Ab1H0Fwa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Aug 2011 01:52:30 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k_hw: Set default slottime as 9us
+Date: Sat, 27 Aug 2011 11:22:59 +0530
+Message-ID: <1314424379-1206-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110827_075240_155609_571B0A16)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add comments for better description
+Initialize 9us slot time as that is what is used mostly
+(for non-ERP cases) and also to be in sync with initvals.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-shared.h  |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 6cfd236..57839ca 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -610,7 +610,7 @@ struct iwl_mod_params iwlagn_mod_params = {
- 	.bt_coex_active = true,
- 	.no_sleep_autoadjust = true,
- 	.power_level = IWL_POWER_INDEX_1,
--	.bt_ch_announce = 1,
-+	.bt_ch_announce = true,
- 	.wanted_ucode_alternative = 1,
- 	.auto_agg = true,
- 	/* the rest are 0 by default */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 2764c7a..cdb6bd6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3606,7 +3606,7 @@ MODULE_PARM_DESC(antenna_coupling,
- module_param_named(bt_ch_inhibition, iwlagn_mod_params.bt_ch_announce,
- 		   bool, S_IRUGO);
- MODULE_PARM_DESC(bt_ch_inhibition,
--		 "Disable BT channel inhibition (default: enable)");
-+		 "Enable BT channel inhibition (default: enable)");
- 
- module_param_named(plcp_check, iwlagn_mod_params.plcp_check, bool, S_IRUGO);
- MODULE_PARM_DESC(plcp_check, "Check plcp health (default: 1 [enabled])");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index ec71ec7..6c20d03 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -91,7 +91,7 @@ struct iwl_mod_params {
- 	int power_level;	/* def: 1 = power level */
- 	u32 debug_level;	/* levels are IWL_DL_* */
- 	int ant_coupling;
--	bool bt_ch_announce;
-+	bool bt_ch_announce;	/* def: enable = BT channel inhibition */
- 	int wanted_ucode_alternative;
- 	bool auto_agg;		/* def: true = enable agg. without check */
- };
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 0d7a5ee..05472c5 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -440,7 +440,7 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
+ 	if (AR_SREV_9100(ah))
+ 		ah->sta_id1_defaults |= AR_STA_ID1_AR9100_BA_FIX;
+ 	ah->enable_32kHz_clock = DONT_USE_32KHZ;
+-	ah->slottime = 20;
++	ah->slottime = ATH9K_SLOT_TIME_9;
+ 	ah->globaltxtimeout = (u32) -1;
+ 	ah->power_mode = ATH9K_PM_UNDEFINED;
+ }
 -- 
-1.7.0.4
+1.7.6.1
 
