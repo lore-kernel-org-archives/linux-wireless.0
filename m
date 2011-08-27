@@ -1,71 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:38932 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751953Ab1HBLdY convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:56345 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750834Ab1H0Gmx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 07:33:24 -0400
-Received: by iyb12 with SMTP id 12so7974559iyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 04:33:23 -0700 (PDT)
+	Sat, 27 Aug 2011 02:42:53 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k: Fix eifs/usec timeout for AR9287 v1.3+
+Date: Sat, 27 Aug 2011 12:13:21 +0530
+Message-ID: <1314427401-2983-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110827_084257_182352_8ABB808E)
 MIME-Version: 1.0
-In-Reply-To: <20110802112314.GA2688@redhat.com>
-References: <20110802112314.GA2688@redhat.com>
-Date: Tue, 2 Aug 2011 13:33:23 +0200
-Message-ID: <CAOZOX0VkM93sL6y0+z_7amQ7pmbkn6D5goW2NEuJpezD2V6tcg@mail.gmail.com> (sfid-20110802_133327_637325_C269C389)
-Subject: Re: [PATCH] rt2x00: fix usage of NULL queue
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 2, 2011 at 1:29 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> We may call rt2x00queue_pause_queue(queue) with queue == NULL. Bug
-> was introduced by commit 62fe778412b36791b7897cfa139342906fbbf07b
-> "rt2x00: Fix stuck queue in tx failure case" .
->
-> Cc: stable@kernel.org # 3.0+
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+For AR9287 v1.3+ chips, MAC runs at 117MHz. But the initvals
+IFS parameters are loaded based on 44/88MHz clockrate. So
+eifs/usec from ini should not be used for AR9287 v1.3+.
+The mentioned values are tested on 2 chain HT40 mode.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  |   10 ++++++++--
+ drivers/net/wireless/ath/ath9k/reg.h |    2 ++
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00mac.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> index 8efab39..4ccf238 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> @@ -113,7 +113,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
->         * due to possible race conditions in mac80211.
->         */
->        if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
-> -               goto exit_fail;
-> +               goto exit_free_skb;
->
->        /*
->         * Use the ATIM queue if appropriate and present.
-> @@ -127,7 +127,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
->                ERROR(rt2x00dev,
->                      "Attempt to send packet over invalid queue %d.\n"
->                      "Please file bug report to %s.\n", qid, DRV_PROJECT);
-> -               goto exit_fail;
-> +               goto exit_free_skb;
->        }
->
->        /*
-> @@ -159,6 +159,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
->
->  exit_fail:
->        rt2x00queue_pause_queue(queue);
-> + exit_free_skb:
->        dev_kfree_skb_any(skb);
->  }
->  EXPORT_SYMBOL_GPL(rt2x00mac_tx);
-> --
-> 1.7.1
->
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 05472c5..284d2a4 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1000,8 +1000,14 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 		slottime = 21;
+ 		sifstime = 64;
+ 	} else {
+-		eifs = REG_READ(ah, AR_D_GBL_IFS_EIFS)/common->clockrate;
+-		reg = REG_READ(ah, AR_USEC);
++		if (AR_SREV_9287(ah) && AR_SREV_9287_13_OR_LATER(ah)) {
++			eifs = AR_D_GBL_IFS_EIFS_ASYNC_FIFO;
++			reg = AR_USEC_ASYNC_FIFO;
++		} else {
++			eifs = REG_READ(ah, AR_D_GBL_IFS_EIFS)/
++				common->clockrate;
++			reg = REG_READ(ah, AR_USEC);
++		}
+ 		rx_lat = MS(reg, AR_USEC_RX_LAT);
+ 		tx_lat = MS(reg, AR_USEC_TX_LAT);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index a3b8bbc..17a272f 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -619,6 +619,7 @@
+ #define AR_D_GBL_IFS_EIFS         0x10b0
+ #define AR_D_GBL_IFS_EIFS_M       0x0000FFFF
+ #define AR_D_GBL_IFS_EIFS_RESV0   0xFFFF0000
++#define AR_D_GBL_IFS_EIFS_ASYNC_FIFO 363
+ 
+ #define AR_D_GBL_IFS_MISC        0x10f0
+ #define AR_D_GBL_IFS_MISC_LFSR_SLICE_SEL        0x00000007
+@@ -1503,6 +1504,7 @@ enum {
+ #define AR_USEC_TX_LAT_S     14
+ #define AR_USEC_RX_LAT       0x1F800000
+ #define AR_USEC_RX_LAT_S     23
++#define AR_USEC_ASYNC_FIFO   0x12E00074
+ 
+ #define AR_RESET_TSF        0x8020
+ #define AR_RESET_TSF_ONCE   0x01000000
+-- 
+1.7.6.1
+
