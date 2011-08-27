@@ -1,44 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:49290 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755492Ab1HZVfA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 17:35:00 -0400
-Received: by yie30 with SMTP id 30so1952748yie.19
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 14:34:59 -0700 (PDT)
-Message-ID: <4E581180.9020609@lwfinger.net> (sfid-20110826_233511_124734_0E1C857E)
-Date: Fri, 26 Aug 2011 16:34:56 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, David Woodhouse <dwmw2@infradead.org>,
-	Maxime Vincent <maxime.vince@gmail.com>,
-	Darren <dmbtech@gmail.com>
-Subject: Re: [wireless-next][PATCH 0/3][ANNOUNCE] b43 the first Linux driver
- supporting HT-PHY (BCM4331)!
-References: <1314384081-3460-1-git-send-email-zajec5@gmail.com> <20110826232731.3ade9956@milhouse>
-In-Reply-To: <20110826232731.3ade9956@milhouse>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from lo.gmane.org ([80.91.229.12]:53660 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751780Ab1H0WkJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Aug 2011 18:40:09 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1QxRXs-0006wo-NC
+	for linux-wireless@vger.kernel.org; Sun, 28 Aug 2011 00:40:08 +0200
+Received: from 69-196-174-66.dsl.teksavvy.com ([69.196.174.66])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Aug 2011 00:40:08 +0200
+Received: from dennisn by 69-196-174-66.dsl.teksavvy.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Aug 2011 00:40:08 +0200
+To: linux-wireless@vger.kernel.org
+From: Dennis Nezic <dennisn@dennisn.dyndns.org>
+Subject: Re: Vague wifi fail with ipw2200
+Date: Sat, 27 Aug 2011 18:39:56 -0400
+Message-ID: <20110827183956.55c8a750.dennisn@dennisn.dyndns.org> (sfid-20110828_004014_167165_B337EB6C)
+References: <20110820151402.605226e7.dennisn@dennisn.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/26/2011 04:27 PM, Michael Büsch wrote:
-> On Fri, 26 Aug 2011 20:41:18 +0200
-> Rafał Miłecki<zajec5@gmail.com>  wrote:
->
->> After improving DMA (the important patch for BCM4331 is my one) we can finally
->> enable support for HT-PHY.
->
-> I'd really like to thank you guys for your great work on the driver.
-> You made some really significant improvements to the driver in the last few
-> months and thus ported b43 over to the latest and greatest broadcom
-> wireless devices. Things looked messy with only legacy G-PHY support,
-> but then you guys appeared. ;) Thanks.
+On Sat, 20 Aug 2011 15:14:02 -0400, Dennis Nezic wrote:
+> For that last long while, I have been having strange vague wifi fails
+> every few days -- my ipw2200 ad-hoc server would suddenly become very
+> unresponsive -- instead of the usual stable 0.6ms pings, they would
+> fluctuate wildly from a minimum of about 2ms to 10ms, even though the
+> connection wasn't being used. More seriously/substantially, iwconfig
+> would show the "Tx excessive retries" to be steadily increasing -- and
+> drastically increasing with more usage -- 10-100 retries per second
+> under heavy usage. I have tried playing with the "Retry limit" "RTS
+> thr" and "Fragrment thr" values a bit, and with a fixed bitrate, but
+> they didn't seem to have any significant effect -- the connection
+> would still inevitably reach this turbulence and ultimately fail,
+> forcing me to restart it.
+> 
+> I don't think it's simply a noisy environment, although there are
+> about 10 other access points around here, none of which shares my
+> channel 1 at the moment. (There's one on 2, one on 3.) Because that
+> wouldn't explain why the connection becomes stable and fast after I
+> restart the wifi interface.
+> 
+> I'm guessing it's something to do with the driver?
 
-The "guys" are really only one guy, Rafał. His ability to convert ugly mmio 
-dumps into code is remarkable.
+So, my ipw2200 pcie wifi card has two wires/antennas, Main and Aux, and
+(don't ask) my Main one is connected to a good thick antenna (which
+can sustain rather high ~2MB/s bandwidth), but my Aux one is cut (but
+can still sustain low ~30KB/s bandwidth).
 
-Larry
+I first noticed something suspicious and coherent when I tried setting
+the module option antenna=1 (1=Main, 3=Aux, 0=both(default)) ... it
+seemed more stable -- BUT, it too (especially when being used heavily)
+would eventually slow down to a crawl/halt, and lead to the incessant
+increase of "Tx excessive retries".
+
+I then tried with the module option antenna=3(Aux), and it immediately
+was slow/crawling, BUT it would eventually speed up.
+
+So, I think either the firmware or the kernel module (which one?) is
+overriding my antenna option (ie. during high traffic). This shouldn't
+be allowed.
+
+I ended up disconnecting my Aux antenna physically, and my connection
+(FINALLY!!) seems to have stabilized ... to date, it hasn't slowed down
+to the crawling (Aux-antenna) speed. There are a few "retry" packets,
+but they are relatively few and not out of control. (Before, after the
+first hiccup/slowdown was encountered, they would constantly begin
+accumulating, unless I restarted the interface.)
+
