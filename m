@@ -1,80 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36058 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753374Ab1HELLq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2011 07:11:46 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	Tony Houghton <h@realh.co.uk>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
-	<lrodriguez@atheros.com>
-Subject: [PATCH -next 6/8] e1000e: use common function for disabling ASPM
-Date: Fri,  5 Aug 2011 13:10:37 +0200
-Message-Id: <1312542639-4274-7-git-send-email-sgruszka@redhat.com> (sfid-20110805_131148_808861_207879FE)
-In-Reply-To: <1312542639-4274-1-git-send-email-sgruszka@redhat.com>
-References: <1312542639-4274-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:56273 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750908Ab1H0S4S (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Aug 2011 14:56:18 -0400
+Received: by gxk21 with SMTP id 21so3753587gxk.19
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Aug 2011 11:56:18 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Fix a smatch warnings
+Date: Sat, 27 Aug 2011 13:56:00 -0500
+Message-Id: <1314471360-861-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20110827_205622_501080_D76CBFCA)
+To: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: e1000-devel@lists.sourceforge.net
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/e1000e/netdev.c |   31 +------------------------------
- 1 files changed, 1 insertions(+), 30 deletions(-)
+Smatch shows the following warnings:
 
-diff --git a/drivers/net/e1000e/netdev.c b/drivers/net/e1000e/netdev.c
-index 3310c3d..62ee7e4 100644
---- a/drivers/net/e1000e/netdev.c
-+++ b/drivers/net/e1000e/netdev.c
-@@ -5358,42 +5358,13 @@ static void e1000_complete_shutdown(struct pci_dev *pdev, bool sleep,
+  CHECK   drivers/net/wireless/ath/ath9k/htc_drv_main.c
+drivers/net/wireless/ath/ath9k/htc_drv_main.c +1315 ath9k_htc_configure_filter(27) warn: inconsistent returns mutex:&priv->mutex: locked (1303) unlocked (1315)
+
+  CHECK   drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+drivers/net/wireless/ath/ath9k/ar9003_eeprom.c +3321 ar9300_eeprom_restore_internal(20) warn: returning -1 instead of -ENOMEM is sloppy
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+John,
+
+This is next material.
+
+Larry
+---
+
+To ath9k developers:
+
+Smatch also show the following information, which I have not addressed:
+
+  CHECK   drivers/net/wireless/ath/key.c
+drivers/net/wireless/ath/key.c +546 ath_key_config(77) info: why not propagate 'idx' from ath_reserve_key_cache_slot() instead of -28?
+  CHECK   drivers/net/wireless/ath/ath9k/hif_usb.c
+drivers/net/wireless/ath/ath9k/hif_usb.c +760 ath9k_hif_usb_dealloc_tx_urbs(23) error: double free of 'tx_buf->buf'
+  CHECK   drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+drivers/net/wireless/ath/ath9k/htc_drv_beacon.c +339 ath9k_htc_send_buffered(44) error: double lock 'bottom_half:'
+drivers/net/wireless/ath/ath9k/htc_drv_beacon.c +347 ath9k_htc_send_buffered(52) error: double unlock 'bottom_half:'
+  CHECK   drivers/net/wireless/ath/ath9k/ar9003_phy.c
+drivers/net/wireless/ath/ath9k/ar9003_phy.c +209 ar9003_hw_spur_mitigate_mrc_cck(40) error: potential null derefence 'spur_fbin_ptr'.
+  CHECK   drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+drivers/net/wireless/ath/ath9k/ar9003_paprd.c +164 ar9003_paprd_setup_single_table(28) info: why not propagate 'training_power' from ar9003_get_training_power_5g() instead of -34?
+
+---
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c  |    1 +
+ 2 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 3b4ae07..fc2d607 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3318,7 +3318,7 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
+ 
+ 	word = kzalloc(2048, GFP_KERNEL);
+ 	if (!word)
+-		return -1;
++		return -ENOMEM;
+ 
+ 	memcpy(mptr, &ar9300_default, mdata_size);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 7212acb..2a3a2ce 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1300,6 +1300,7 @@ static void ath9k_htc_configure_filter(struct ieee80211_hw *hw,
+ 	if (priv->op_flags & OP_INVALID) {
+ 		ath_dbg(ath9k_hw_common(priv->ah), ATH_DBG_ANY,
+ 			"Unable to configure filter on invalid state\n");
++		mutex_unlock(&priv->mutex);
+ 		return;
  	}
- }
- 
--#ifdef CONFIG_PCIEASPM
--static void __e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
--{
--	pci_disable_link_state_locked(pdev, state);
--}
--#else
--static void __e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
--{
--	int pos;
--	u16 reg16;
--
--	/*
--	 * Both device and parent should have the same ASPM setting.
--	 * Disable ASPM in downstream component first and then upstream.
--	 */
--	pos = pci_pcie_cap(pdev);
--	pci_read_config_word(pdev, pos + PCI_EXP_LNKCTL, &reg16);
--	reg16 &= ~state;
--	pci_write_config_word(pdev, pos + PCI_EXP_LNKCTL, reg16);
--
--	if (!pdev->bus->self)
--		return;
--
--	pos = pci_pcie_cap(pdev->bus->self);
--	pci_read_config_word(pdev->bus->self, pos + PCI_EXP_LNKCTL, &reg16);
--	reg16 &= ~state;
--	pci_write_config_word(pdev->bus->self, pos + PCI_EXP_LNKCTL, reg16);
--}
--#endif
- static void e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
- {
- 	dev_info(&pdev->dev, "Disabling ASPM %s %s\n",
- 		 (state & PCIE_LINK_STATE_L0S) ? "L0s" : "",
- 		 (state & PCIE_LINK_STATE_L1) ? "L1" : "");
- 
--	__e1000e_disable_aspm(pdev, state);
-+	pcie_disable_aspm(pdev, state);
- }
- 
- #ifdef CONFIG_PM
+ 	ath9k_htc_ps_wakeup(priv);
 -- 
-1.7.1
+1.7.3.4
 
