@@ -1,57 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rtits2.realtek.com ([60.250.210.242]:40592 "EHLO
-	rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751022Ab1HWJ7M (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:56921 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751124Ab1H0Kwv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 05:59:12 -0400
-From: =?gb2312?B?wO6zr8P3?= <chaoming_li@realsil.com.cn>
-To: <linville@tuxdriver.com>,
-	'Larry Finger' <Larry.Finger@lwfinger.net>,
-	<linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-References: <1314049818-21839-1-git-send-email-Larry.Finger@lwfinger.net> <1314049818-21839-6-git-send-email-Larry.Finger@lwfinger.net>
-Subject: [RFC] mac80211: Adhoc WPA-NONE packets lost by mac80211 
-Date: Tue, 23 Aug 2011 17:58:58 +0800
-Message-ID: <F5749057C8FE46CD88E05545135626BB@realsil.com.cn> (sfid-20110823_115916_036908_E0E26086)
+	Sat, 27 Aug 2011 06:52:51 -0400
+Received: by gxk21 with SMTP id 21so3545980gxk.19
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Aug 2011 03:52:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="gb2312"
-In-Reply-To: <1314049818-21839-6-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1314442067-11799-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1314442067-11799-1-git-send-email-rmanohar@qca.qualcomm.com>
+Date: Sat, 27 Aug 2011 18:52:50 +0800
+Message-ID: <CAJ-Vmo=wLETTSy0i3uz3Zj5w+_o+AouzD=nJzFk9KnERK+g7Cg@mail.gmail.com> (sfid-20110827_125254_040059_243972DB)
+Subject: Re: [PATCH] ath9k: Add debugfs support for mac/baseband samples
+From: Adrian Chadd <adrian@freebsd.org>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 27 August 2011 18:47, Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
+> This patch keep track of number of samples that includes
+> DMA debugs registers, PCU observe, CR, channel noise,
+> cycle conters, noisefloor history buffer and last N number
+> of tx and rx descriptor status. These samples are grouped
 
-Dear John:
+Is this written in a way that makes it easy to conditionally compile
+them in/out?
 
-	Recently I test IBSS WPA-NONE use rtlwifi driver,  it can link
-successfully, but can not ping.
-	And I found that receive packet from other non-mac80211 peer have
-been decryped by rtlwifi hardware like RTL8188CE, but 
-	these packets will be discard by follwing code in
-ieee80211_rx_h_decrypt:
-	
-	==============================================================
-	/*
-	 * RSNA-protected unicast frames should always be
-	 * sent with pairwise or station-to-station keys,
-	 * but for WEP we allow using a key index as well.
-	 */
-	if (rx->key &&
-	    rx->key->conf.cipher != WLAN_CIPHER_SUITE_WEP40 &&
-	    rx->key->conf.cipher != WLAN_CIPHER_SUITE_WEP104 &&
-	    !is_multicast_ether_addr(hdr->addr1))
-		rx->key = NULL;	
-	==============================================================
 
-	because not only WEP, but IBSS WPA-NONE will also use Group for both
-receiving
-	and sending unicast and multicast packets.
 
-	So I want to ask, why we can't receive WPA-NONE packets here ? Will
-WPA-NONE 
-	packets cause other issues ?
-
-Thank you for your help.
-
-Best Regards!
-chaoming_li
-
+Adrian
