@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:23105 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750773Ab1H0HIp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Aug 2011 03:08:45 -0400
-Date: Sat, 27 Aug 2011 12:39:14 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k_hw: Set default slottime as 9us
-Message-ID: <20110827070912.GA3140@vmraj-lnx.users.atheros.com> (sfid-20110827_090850_960725_3526C7C6)
-References: <1314424379-1206-1-git-send-email-rmanohar@qca.qualcomm.com>
- <4E588E3B.9000007@openwrt.org>
- <20110827065256.GA3082@vmraj-lnx.users.atheros.com>
- <4E589704.3090807@openwrt.org>
+Received: from nbd.name ([46.4.11.11]:36914 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751054Ab1H0XxA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Aug 2011 19:53:00 -0400
+Message-ID: <4E598358.9090209@openwrt.org> (sfid-20110828_015306_498285_6AB0A219)
+Date: Sun, 28 Aug 2011 01:52:56 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4E589704.3090807@openwrt.org>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k_hw: Update IFS parameters properly
+References: <1314436569-6855-1-git-send-email-rmanohar@qca.qualcomm.com> <4E597D8F.4050506@openwrt.org>
+In-Reply-To: <4E597D8F.4050506@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 27, 2011 at 09:04:36AM +0200, Felix Fietkau wrote:
-> On 2011-08-27 8:52 AM, Rajkumar Manoharan wrote:
-> >On Sat, Aug 27, 2011 at 08:27:07AM +0200, Felix Fietkau wrote:
-> >> On 2011-08-27 7:52 AM, Rajkumar Manoharan wrote:
-> >> >Initialize 9us slot time as that is what is used mostly
-> >> >(for non-ERP cases) and also to be in sync with initvals.
-> >> >
-> >> >Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
-> >> Why does it matter, mac80211 tells the driver to reconfigure it
-> >> anyway. Also, why use the stupid ATH9K_SLOT_TIME_* enums? I think we
-> >> should simply remove those.
-> >>
-> >In most of the case, mac80211 set as 9us and also initval uses 9us.
-> >The what is the problem of setting 9us as default. If you want to
-> >remove ATH9K_SLOT_TIME_* enums, ath9k should not set slottime till
-> >it got configured.
-> I don't see a problem with the change aside from the fact that it
-> should not make any difference at all, so I don't really see any
-> point to it.
->
-I doubt that using long slottime might affect random backoff. so let it
-to be in sync with initval till it is altered. am i right?
+On 2011-08-28 1:28 AM, Felix Fietkau wrote:
+> On 2011-08-27 11:16 AM, Rajkumar Manoharan wrote:
+>>  Configure IFS parameters read from chip in case of
+>>  full rate channel and non-AR9287 v1.3+. And also
+>>  read the ack and cts timeouts from chip and increase the
+>>  timeout when coverage class is defined. For half/Quarter
+>>  rate channel, IFS values needs to be reconfigured.
+>>  This patch removes the 2GHz workaround done for
+>>  acktimeout(64 us) because of reading acktime from chip.
+>>  The mentioned IFS parameters for AR9287 v1.3+ was
+>>  verified in HT40 2-chanin mode.
+>>
+>>  @@ -1018,23 +1018,27 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+>>    			sifstime = 10;
+>>    	}
+>>
+>>  -	/* As defined by IEEE 802.11-2007 17.3.8.6 */
+>>  -	acktimeout = slottime + sifstime + 3 * ah->coverage_class;
+>>  +	if (AR_SREV_9287(ah)&&   AR_SREV_9287_13_OR_LATER(ah)) {
+>>  +		/* Verified values (us) in 2chanin HT40 mode */
+>>  +		acktimeout = 64;
+>>  +		ctstimeout = 48;
+>>  +	} else {
+>>  +		acktimeout = MS(REG_READ(ah, AR_TIME_OUT), AR_TIME_OUT_ACK)/
+>>  +				common->clockrate;
+>>  +		ctstimeout = MS(REG_READ(ah, AR_TIME_OUT), AR_TIME_OUT_CTS)/
+>>  +				common->clockrate;
+>>  +	}
+> Why this mess of partially reused values from initvals? I think it's
+> much better to just override these based on the standard 802.11 values,
+> and selectively add the 64-usec-minimum workaround for 2.4 ghz as needed.
+Just sent a smaller, less intrusive patch to replace this one.
 
---
-Rajkumar
+- Felix
