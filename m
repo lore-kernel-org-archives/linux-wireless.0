@@ -1,65 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58772 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753804Ab1HHQcn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 12:32:43 -0400
-Date: Mon, 8 Aug 2011 09:32:32 -0700
-From: Greg KH <gregkh@suse.de>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Dan Carpenter <error27@gmail.com>,
-	"sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCHv2 00/82] staging: brcm80211: resubmit previously posted
- patches
-Message-ID: <20110808163232.GA26352@suse.de> (sfid-20110808_183246_906626_71177680)
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
- <CA+icZUUBokLgtn3K3uG7qcNLzy4pfdT4fGYWPtoOy_MQVy8VuA@mail.gmail.com>
- <20110808145334.GA7659@shale.localdomain>
- <4E400A92.7060905@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42578 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750773Ab1H0Gw3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Aug 2011 02:52:29 -0400
+Date: Sat, 27 Aug 2011 12:22:57 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k_hw: Set default slottime as 9us
+Message-ID: <20110827065256.GA3082@vmraj-lnx.users.atheros.com> (sfid-20110827_085236_471113_85DA8CF5)
+References: <1314424379-1206-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <4E588E3B.9000007@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E400A92.7060905@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4E588E3B.9000007@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 08, 2011 at 06:10:58PM +0200, Arend van Spriel wrote:
-> On 08/08/2011 04:53 PM, Dan Carpenter wrote:
-> >On Mon, Aug 08, 2011 at 04:29:49PM +0200, Sedat Dilek wrote:
-> >>2. Using "staging/brcm80211" would also save some chars (and is more
-> >>common to me).
-> >No one would complain if the prefix were "staging/brcm80211" but
-> >actually the way Arend has it is prefered.
+On Sat, Aug 27, 2011 at 08:27:07AM +0200, Felix Fietkau wrote:
+> On 2011-08-27 7:52 AM, Rajkumar Manoharan wrote:
+> >Initialize 9us slot time as that is what is used mostly
+> >(for non-ERP cases) and also to be in sync with initvals.
 > >
-> >git log --pretty=oneline --author=gregkh drivers/staging/
-> 
-> Nice. Learning something today about --author filter.
-> >>3. "PATCH v2" should be with a space?
-> >git am doesn't care.  It strips everything out correctly.
-> >
-> >>4. Something like "for-3.1" would clearly indicate for which
-> >>kernel-release this mega-series is for (also "staging" could be
-> >>dropped as it is known where the driver is managed)
-> >>
-> >>$ git format-patch --signoff --cover-letter --subject-prefix="PATCH v2
-> >>for-3.1" -82 (or whatever $FIRST..$LAST)
-> 
-> I actually would think this all is for 3.2 as 3.1 has already been
-> merged hence 3.1-rc1 and only bug fixes are to be merged into 3.1.
-> 
-> >Everything was explained in the cover letter, so I think it's ok.
-> >
-> >regards,
-> >dan carpenter
-> 
-> Thanks. I leave it as it is unless Greg sees good reasons to change
-> any conventions here.
+> >Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+> Why does it matter, mac80211 tells the driver to reconfigure it
+> anyway. Also, why use the stupid ATH9K_SLOT_TIME_* enums? I think we
+> should simply remove those.
+>
+In most of the case, mac80211 set as 9us and also initval uses 9us.
+The what is the problem of setting 9us as default. If you want to
+remove ATH9K_SLOT_TIME_* enums, ath9k should not set slottime till
+it got configured.
 
-No, as you sent it is fine with me.
-
-I'll start going through the huge backlog of staging patches this week,
-as the merge window just opened up a few hours ago.
-
-thanks,
-
-greg k-h
+--
+Rajkumar
