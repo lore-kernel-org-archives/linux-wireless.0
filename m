@@ -1,49 +1,241 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:42027 "EHLO
-	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751131Ab1HKF5t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 01:57:49 -0400
-Received: by mail-bw0-f44.google.com with SMTP id r4so898156bka.31
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 22:57:47 -0700 (PDT)
-Subject: Re: [PATCH 2/2] wl12xx: Fix validation of pm_runtime_get_sync
- return value
-From: Luciano Coelho <coelho@ti.com>
-To: Ido Yariv <ido@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1312269858-30434-2-git-send-email-ido@wizery.com>
-References: <1312269858-30434-1-git-send-email-ido@wizery.com>
-	 <1312269858-30434-2-git-send-email-ido@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 11 Aug 2011 08:57:44 +0300
-Message-ID: <1313042264.2407.759.camel@cumari> (sfid-20110811_075751_314639_5754CC45)
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:46056 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751756Ab1H0Wcg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Aug 2011 18:32:36 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 3/5] ath9k: move the sequence number from ath_frame_info to ath_buf
+Date: Sun, 28 Aug 2011 00:32:23 +0200
+Message-Id: <1314484345-7018-3-git-send-email-nbd@openwrt.org> (sfid-20110828_003248_755598_EC172D6F)
+In-Reply-To: <1314484345-7018-2-git-send-email-nbd@openwrt.org>
+References: <1314484345-7018-1-git-send-email-nbd@openwrt.org>
+ <1314484345-7018-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-02 at 10:24 +0300, Ido Yariv wrote: 
-> wl1271_sdio_power_on checks if the return value of pm_runtime_get_sync
-> is non-zero, and if so bails out.
-> However, pm_runtime_get_sync can return a positive number which does not
-> suggest an error has occurred. This is problematic for two reasons:
-> 
-> 1. The function will needlessly bail out without decrementing back the
->    runtime PM reference counter.
-> 2. wl1271_power_on only checks if wl1271_power_on return value is
->    negative. This means that wl1271_power_on will continue even if
->    wl1271_sdio_power_on bailed out. As a result, sdio transactions will
->    be initiated without properly enabling the sdio function and claiming
->    the host. This could even lead to a kernel panic.
-> 
-> Fix this by only checking that the return value of pm_runtime_get_sync
-> is non-negative.
-> 
-> Signed-off-by: Ido Yariv <ido@wizery.com>
-> ---
+It is only necessary for BAW tracking and moving it to the ath_buf
+makes it easier to add further improvements, such as deferring
+seqno allocation in the aggregation path.
 
-Acked-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
+ drivers/net/wireless/ath/ath9k/xmit.c  |   55 +++++++++++++------------------
+ 2 files changed, 24 insertions(+), 33 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index eb4cdef..5d9a9aa 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -211,12 +211,12 @@ struct ath_frame_info {
+ 	enum ath9k_key_type keytype;
+ 	u8 keyix;
+ 	u8 retries;
+-	u16 seqno;
+ };
+ 
+ struct ath_buf_state {
+ 	u8 bf_type;
+ 	u8 bfs_paprd;
++	u16 seqno;
+ 	unsigned long bfs_paprd_timestamp;
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index ee5e93f..b7f7198 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -168,7 +168,7 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ 
+ 		spin_unlock_bh(&txq->axq_lock);
+ 		if (fi->retries) {
+-			ath_tx_update_baw(sc, tid, fi->seqno);
++			ath_tx_update_baw(sc, tid, bf->bf_state.seqno);
+ 			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0, 1);
+ 		} else {
+ 			ath_tx_send_normal(sc, txq, NULL, &bf_head);
+@@ -237,7 +237,7 @@ static void ath_tid_drain(struct ath_softc *sc, struct ath_txq *txq,
+ 		list_add_tail(&bf->list, &bf_head);
+ 
+ 		if (fi->retries)
+-			ath_tx_update_baw(sc, tid, fi->seqno);
++			ath_tx_update_baw(sc, tid, bf->bf_state.seqno);
+ 
+ 		spin_unlock(&txq->axq_lock);
+ 		ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0, 0);
+@@ -327,7 +327,7 @@ static void ath_tx_count_frames(struct ath_softc *sc, struct ath_buf *bf,
+ 
+ 	while (bf) {
+ 		fi = get_frame_info(bf->bf_mpdu);
+-		ba_index = ATH_BA_INDEX(seq_st, fi->seqno);
++		ba_index = ATH_BA_INDEX(seq_st, bf->bf_state.seqno);
+ 
+ 		(*nframes)++;
+ 		if (!txok || (isaggr && !ATH_BA_ISSET(ba, ba_index)))
+@@ -428,6 +428,8 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 	ath_tx_count_frames(sc, bf, ts, txok, &nframes, &nbad);
+ 	while (bf) {
++		u16 seqno = bf->bf_state.seqno;
++
+ 		txfail = txpending = sendbar = 0;
+ 		bf_next = bf->bf_next;
+ 
+@@ -435,7 +437,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		tx_info = IEEE80211_SKB_CB(skb);
+ 		fi = get_frame_info(skb);
+ 
+-		if (ATH_BA_ISSET(ba, ATH_BA_INDEX(seq_st, fi->seqno))) {
++		if (ATH_BA_ISSET(ba, ATH_BA_INDEX(seq_st, seqno))) {
+ 			/* transmit completion, subframe is
+ 			 * acked by block ack */
+ 			acked_cnt++;
+@@ -479,7 +481,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 			 * block-ack window
+ 			 */
+ 			spin_lock_bh(&txq->axq_lock);
+-			ath_tx_update_baw(sc, tid, fi->seqno);
++			ath_tx_update_baw(sc, tid, seqno);
+ 			spin_unlock_bh(&txq->axq_lock);
+ 
+ 			if (rc_update && (acked_cnt == 1 || txfail_cnt == 1)) {
+@@ -507,7 +509,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 					 */
+ 					if (!tbf) {
+ 						spin_lock_bh(&txq->axq_lock);
+-						ath_tx_update_baw(sc, tid, fi->seqno);
++						ath_tx_update_baw(sc, tid, seqno);
+ 						spin_unlock_bh(&txq->axq_lock);
+ 
+ 						bf->bf_state.bf_type |=
+@@ -749,17 +751,19 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 	struct ieee80211_tx_info *tx_info;
+ 	struct ath_frame_info *fi;
+ 	struct sk_buff *skb;
++	u16 seqno;
+ 
+ 	do {
+ 		skb = skb_peek(&tid->buf_q);
+ 		fi = get_frame_info(skb);
+ 		bf = fi->bf;
++		seqno = bf->bf_state.seqno;
+ 
+ 		if (!bf_first)
+ 			bf_first = bf;
+ 
+ 		/* do not step over block-ack window */
+-		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, fi->seqno)) {
++		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, seqno)) {
+ 			status = ATH_AGGR_BAW_CLOSED;
+ 			break;
+ 		}
+@@ -807,7 +811,7 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 
+ 		/* link buffers of this frame to the aggregate */
+ 		if (!fi->retries)
+-			ath_tx_addto_baw(sc, tid, fi->seqno);
++			ath_tx_addto_baw(sc, tid, seqno);
+ 		ath9k_hw_set11n_aggr_middle(sc->sc_ah, bf->bf_desc, ndelim);
+ 
+ 		__skb_unlink(skb, &tid->buf_q);
+@@ -1431,6 +1435,7 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
+ {
+ 	struct ath_frame_info *fi = get_frame_info(bf->bf_mpdu);
+ 	struct list_head bf_head;
++	u16 seqno = bf->bf_state.seqno;
+ 
+ 	bf->bf_state.bf_type |= BUF_AMPDU;
+ 
+@@ -1442,7 +1447,7 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 	 * - h/w queue depth exceeds low water mark
+ 	 */
+ 	if (!skb_queue_empty(&tid->buf_q) || tid->paused ||
+-	    !BAW_WITHIN(tid->seq_start, tid->baw_size, fi->seqno) ||
++	    !BAW_WITHIN(tid->seq_start, tid->baw_size, seqno) ||
+ 	    txctl->txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) {
+ 		/*
+ 		 * Add this frame to software queue for scheduling later
+@@ -1460,7 +1465,7 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 
+ 	/* Add sub-frame to BAW */
+ 	if (!fi->retries)
+-		ath_tx_addto_baw(sc, tid, fi->seqno);
++		ath_tx_addto_baw(sc, tid, seqno);
+ 
+ 	/* Queue to h/w without aggregation */
+ 	TX_STAT_INC(txctl->txq->axq_qnum, a_queued_hw);
+@@ -1516,39 +1521,19 @@ static enum ath9k_pkt_type get_hw_packet_type(struct sk_buff *skb)
+ static void setup_frame_info(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 			     int framelen)
+ {
+-	struct ath_softc *sc = hw->priv;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_sta *sta = tx_info->control.sta;
+ 	struct ieee80211_key_conf *hw_key = tx_info->control.hw_key;
+-	struct ieee80211_hdr *hdr;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ath_frame_info *fi = get_frame_info(skb);
+ 	struct ath_node *an = NULL;
+-	struct ath_atx_tid *tid;
+ 	enum ath9k_key_type keytype;
+-	u16 seqno = 0;
+-	u8 tidno;
+ 
+ 	keytype = ath9k_cmn_get_hw_crypto_keytype(skb);
+ 
+ 	if (sta)
+ 		an = (struct ath_node *) sta->drv_priv;
+ 
+-	hdr = (struct ieee80211_hdr *)skb->data;
+-	if (an && ieee80211_is_data_qos(hdr->frame_control) &&
+-		conf_is_ht(&hw->conf) && (sc->sc_flags & SC_OP_TXAGGR)) {
+-
+-		tidno = ieee80211_get_qos_ctl(hdr)[0] & IEEE80211_QOS_CTL_TID_MASK;
+-
+-		/*
+-		 * Override seqno set by upper layer with the one
+-		 * in tx aggregation state.
+-		 */
+-		tid = ATH_AN_2_TID(an, tidno);
+-		seqno = tid->seq_next;
+-		hdr->seq_ctrl = cpu_to_le16(seqno << IEEE80211_SEQ_SEQ_SHIFT);
+-		INCR(tid->seq_next, IEEE80211_SEQ_MAX);
+-	}
+-
+ 	memset(fi, 0, sizeof(*fi));
+ 	if (hw_key)
+ 		fi->keyix = hw_key->hw_key_idx;
+@@ -1558,7 +1543,6 @@ static void setup_frame_info(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		fi->keyix = ATH9K_TXKEYIX_INVALID;
+ 	fi->keytype = keytype;
+ 	fi->framelen = framelen;
+-	fi->seqno = seqno;
+ }
+ 
+ static int setup_tx_flags(struct sk_buff *skb)
+@@ -1794,6 +1778,7 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct list_head bf_head;
+ 	struct ath_atx_tid *tid = NULL;
++	u16 seqno;
+ 	u8 tidno;
+ 
+ 	spin_lock_bh(&txctl->txq->axq_lock);
+@@ -1803,6 +1788,12 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+ 			IEEE80211_QOS_CTL_TID_MASK;
+ 		tid = ATH_AN_2_TID(txctl->an, tidno);
+ 
++		seqno = tid->seq_next;
++		hdr->seq_ctrl = cpu_to_le16(tid->seq_next << IEEE80211_SEQ_SEQ_SHIFT);
++		INCR(tid->seq_next, IEEE80211_SEQ_MAX);
++
++		bf->bf_state.seqno = seqno;
++
+ 		WARN_ON(tid->ac->txq != txctl->txq);
+ 	}
+ 
 -- 
-Cheers,
-Luca.
+1.7.3.2
 
