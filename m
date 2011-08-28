@@ -1,34 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:55094 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751500Ab1HPWIl (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:40970 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750927Ab1H1QIA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2011 18:08:41 -0400
-Received: by yxj19 with SMTP id 19so305129yxj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2011 15:08:41 -0700 (PDT)
+	Sun, 28 Aug 2011 12:08:00 -0400
+Received: by fxh19 with SMTP id 19so3772058fxh.19
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Aug 2011 09:07:59 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/2] ssb: use u16 for storing board rev
+Date: Sun, 28 Aug 2011 18:47:22 +0200
+Message-Id: <1314550043-6220-1-git-send-email-zajec5@gmail.com> (sfid-20110828_180804_372077_E28A7FBF)
 MIME-Version: 1.0
-In-Reply-To: <4E4ACD10.7000807@01019freenet.de>
-References: <4E4AB695.5070300@01019freenet.de>
-	<CAOZOX0UsRxT9ECdUC7OL2toJUb+PitGhxCifTyD8hWYwt6R_zg@mail.gmail.com>
-	<4E4ACD10.7000807@01019freenet.de>
-Date: Wed, 17 Aug 2011 00:08:40 +0200
-Message-ID: <CAGXE3d-hb2MnLW+NhxCBhUSGTNSs5ki9-6wo5uQGSJbFdEB5KA@mail.gmail.com> (sfid-20110817_000849_490408_36397E87)
-Subject: Re: 7 more packets after each beacon frame
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 16, 2011 at 10:03 PM, Andreas Hartmann
-<andihartmann@01019freenet.de> wrote:
->> When examining my own AP (rt2860 based) with another STA in monitor
->> mode, I can see always 7 packets after each beacon frame:
+Specs say about size 2 (u16) and my 14e4:4727 has board rev 0x1211.
 
-That looks quite odd. Maybe some garbage ended up in the beacon slots
-after the first beacon.
-Do you use multiple virtual interfaces?
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ include/linux/ssb/ssb.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Helmut
+diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+index 8623217..f10ed7b 100644
+--- a/include/linux/ssb/ssb.h
++++ b/include/linux/ssb/ssb.h
+@@ -25,7 +25,7 @@ struct ssb_sprom {
+ 	u8 et1phyaddr;		/* MII address for enet1 */
+ 	u8 et0mdcport;		/* MDIO for enet0 */
+ 	u8 et1mdcport;		/* MDIO for enet1 */
+-	u8 board_rev;		/* Board revision number from SPROM. */
++	u16 board_rev;		/* Board revision number from SPROM. */
+ 	u8 country_code;	/* Country Code */
+ 	u16 leddc_on_time;	/* LED Powersave Duty Cycle On Count */
+ 	u16 leddc_off_time;	/* LED Powersave Duty Cycle Off Count */
+-- 
+1.7.3.4
+
