@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17116 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915Ab1HDN5A (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:63976 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750766Ab1H1MKd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Aug 2011 09:57:00 -0400
-From: <rmani@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH 2/2] ath6kl: Release the memory allocated for the firmware
-Date: Thu, 4 Aug 2011 19:26:30 +0530
-Message-ID: <1312466190-2394-2-git-send-email-rmani@qca.qualcomm.com> (sfid-20110804_155702_702209_395B0299)
-In-Reply-To: <1312466190-2394-1-git-send-email-rmani@qca.qualcomm.com>
-References: <1312466190-2394-1-git-send-email-rmani@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 28 Aug 2011 08:10:33 -0400
+Received: by wwf5 with SMTP id 5so4873496wwf.1
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Aug 2011 05:10:32 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 2/5] wl12xx: don't use WL1271_SCAN_OPT_PRIORITY_HIGH flag
+Date: Sun, 28 Aug 2011 15:11:54 +0300
+Message-Id: <1314533517-24639-2-git-send-email-eliad@wizery.com> (sfid-20110828_141043_802669_166D2F34)
+In-Reply-To: <1314533517-24639-1-git-send-email-eliad@wizery.com>
+References: <1314533517-24639-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+When setting the WL1271_SCAN_OPT_PRIORITY_HIGH flag, the
+driver requests a scan *now*, and the fw doesn't enter psm
+before scanning, which in turn might cause packets loss.
 
- Nowhere the firmware memory is freed, free it during
- the device destroy process.
-
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath6kl/init.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+ drivers/net/wireless/wl12xx/scan.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index e8ec617..99ff2f9 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1294,5 +1294,10 @@ void ath6kl_destroy(struct net_device *dev, unsigned int unregister)
+diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+index af4ad23..b2e2abd 100644
+--- a/drivers/net/wireless/wl12xx/scan.c
++++ b/drivers/net/wireless/wl12xx/scan.c
+@@ -164,9 +164,6 @@ static int wl1271_scan_send(struct wl1271 *wl, enum ieee80211_band band,
+ 		goto out;
+ 	}
  
- 	wlan_node_table_cleanup(&ar->scan_table);
- 
-+	kfree(ar->fw_board);
-+	kfree(ar->fw_otp);
-+	kfree(ar->fw);
-+	kfree(ar->fw_patch);
-+
- 	ath6kl_cfg80211_deinit(ar);
- }
+-	/* We always use high priority scans */
+-	scan_options = WL1271_SCAN_OPT_PRIORITY_HIGH;
+-
+ 	/* No SSIDs means that we have a forced passive scan */
+ 	if (passive || wl->scan.req->n_ssids == 0)
+ 		scan_options |= WL1271_SCAN_OPT_PASSIVE;
 -- 
-1.7.4.1
+1.7.6.401.g6a319
 
