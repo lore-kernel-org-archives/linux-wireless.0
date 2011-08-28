@@ -1,114 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1798 "EHLO mms2.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:45326 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753181Ab1HHN7d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:33 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 52/82] staging: brcm80211: absorb brcmf_sdcard_detach
- into brcmf_sdio_remove
-Date: Mon, 8 Aug 2011 15:58:36 +0200
-Message-ID: <1312811946-16713-53-git-send-email-arend@broadcom.com> (sfid-20110808_160056_507233_C9818F9B)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751360Ab1H1SyT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Aug 2011 14:54:19 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 3/4] ath9k: only fill antenna diversity hw ops on chips that support it
+Date: Sun, 28 Aug 2011 20:54:07 +0200
+Message-Id: <1314557648-28212-3-git-send-email-nbd@openwrt.org> (sfid-20110828_205423_857434_65C0FBB7)
+In-Reply-To: <1314557648-28212-2-git-send-email-nbd@openwrt.org>
+References: <1314557648-28212-1-git-send-email-nbd@openwrt.org>
+ <1314557648-28212-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
-
-To increase code readability of brcmfmac
-
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c    |   32 ++++++++++-------------
- drivers/staging/brcm80211/brcmfmac/sdio_host.h |    3 --
- 2 files changed, 14 insertions(+), 21 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9002_phy.c |    6 ++++--
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    6 ++++--
+ drivers/net/wireless/ath/ath9k/hw-ops.h     |    6 ++++--
+ 3 files changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-index 6f88bd2..0cd449d 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-@@ -57,19 +57,6 @@ static struct brcmf_sdioh_driver drvinfo = { NULL, NULL };
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+index 3cbbb03..38e91f8 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+@@ -570,8 +570,10 @@ void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
+ 	priv_ops->compute_pll_control = ar9002_hw_compute_pll_control;
+ 	priv_ops->do_getnf = ar9002_hw_do_getnf;
  
- module_param(sd_f2_blocksize, int, 0);
+-	ops->antdiv_comb_conf_get = ar9002_hw_antdiv_comb_conf_get;
+-	ops->antdiv_comb_conf_set = ar9002_hw_antdiv_comb_conf_set;
++	if (AR_SREV_9285(ah)) {
++		ops->antdiv_comb_conf_get = ar9002_hw_antdiv_comb_conf_get;
++		ops->antdiv_comb_conf_set = ar9002_hw_antdiv_comb_conf_set;
++	}
  
--int brcmf_sdcard_detach(struct brcmf_sdio_card *card)
--{
--	if (card != NULL) {
--		if (card->sdioh) {
--			brcmf_sdioh_detach(card->sdioh);
--			card->sdioh = NULL;
--		}
--		kfree(card);
--	}
--
--	return 0;
--}
--
- int
- brcmf_sdcard_iovar_op(struct brcmf_sdio_card *card, const char *name,
- 		void *params, int plen, void *arg, int len, bool set)
-@@ -441,7 +428,6 @@ int brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
- 
- 	sdiodev->card->sdioh = brcmf_sdioh_attach((void *)0);
- 	if (!sdiodev->card->sdioh) {
--		brcmf_sdcard_detach(sdiodev->card);
- 		ret = -ENODEV;
- 		goto out;
- 	}
-@@ -466,8 +452,8 @@ int brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
- 	}
- 
- out:
--	if ((ret) && (sdiodev->card))
--		brcmf_sdcard_detach(sdiodev->card);
-+	if (ret)
-+		brcmf_sdio_remove(sdiodev);
- 
- 	return ret;
+ 	ar9002_hw_set_nf_limits(ah);
  }
-@@ -475,8 +461,18 @@ EXPORT_SYMBOL(brcmf_sdio_probe);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 33edb56..e837792 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1283,8 +1283,10 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
+ 	priv_ops->ani_cache_ini_regs = ar9003_hw_ani_cache_ini_regs;
+ 	priv_ops->set_radar_params = ar9003_hw_set_radar_params;
  
- int brcmf_sdio_remove(struct brcmf_sdio_dev *sdiodev)
+-	ops->antdiv_comb_conf_get = ar9003_hw_antdiv_comb_conf_get;
+-	ops->antdiv_comb_conf_set = ar9003_hw_antdiv_comb_conf_set;
++	if (AR_SREV_9330(ah) || AR_SREV_9485(ah)) {
++		ops->antdiv_comb_conf_get = ar9003_hw_antdiv_comb_conf_get;
++		ops->antdiv_comb_conf_set = ar9003_hw_antdiv_comb_conf_set;
++	}
+ 
+ 	ar9003_hw_set_nf_limits(ah);
+ 	ar9003_hw_set_radar_conf(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index dd9003e..530ed33 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -121,13 +121,15 @@ static inline void ath9k_hw_set_clrdmask(struct ath_hw *ah, void *ds, bool val)
+ static inline void ath9k_hw_antdiv_comb_conf_get(struct ath_hw *ah,
+ 		struct ath_hw_antcomb_conf *antconf)
  {
--	drvinfo.detach(sdiodev->bus);
--	brcmf_sdcard_detach(sdiodev->card);
-+	if (sdiodev->bus) {
-+		drvinfo.detach(sdiodev->bus);
-+		sdiodev->bus = NULL;
-+	}
-+
-+	if (sdiodev->card) {
-+		if (sdiodev->card->sdioh)
-+			brcmf_sdioh_detach(sdiodev->card->sdioh);
-+		kfree(sdiodev->card);
-+		sdiodev->card = NULL;
-+	}
-+
- 	return 0;
+-	ath9k_hw_ops(ah)->antdiv_comb_conf_get(ah, antconf);
++	if (ath9k_hw_ops(ah)->antdiv_comb_conf_get)
++		ath9k_hw_ops(ah)->antdiv_comb_conf_get(ah, antconf);
  }
- EXPORT_SYMBOL(brcmf_sdio_remove);
-diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-index 68b6843..cf3b8fc 100644
---- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
-@@ -136,9 +136,6 @@ struct brcmf_sdio_dev {
- 	void *bus;
- };
  
--/* Detach - freeup resources allocated in attach */
--extern int brcmf_sdcard_detach(struct brcmf_sdio_card *card);
--
- /* Enable/disable SD interrupt */
- extern int brcmf_sdcard_intr_enable(struct brcmf_sdio_card *card);
- extern int brcmf_sdcard_intr_disable(struct brcmf_sdio_card *card);
+ static inline void ath9k_hw_antdiv_comb_conf_set(struct ath_hw *ah,
+ 		struct ath_hw_antcomb_conf *antconf)
+ {
+-	ath9k_hw_ops(ah)->antdiv_comb_conf_set(ah, antconf);
++	if (ath9k_hw_ops(ah)->antdiv_comb_conf_set)
++		ath9k_hw_ops(ah)->antdiv_comb_conf_set(ah, antconf);
+ }
+ 
+ /* Private hardware call ops */
 -- 
-1.7.4.1
-
+1.7.3.2
 
