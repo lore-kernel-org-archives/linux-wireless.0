@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45853 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752727Ab1HYCIR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 22:08:17 -0400
-To: Thomas Pedersen <thomas@cozybit.com>
-Subject: Re: [PATCH 1/9] mac80211: Fix RCU pointer dereference in  =?UTF-8?Q?mesh=5Fpath=5Fdiscard=5Fframe=28=29?=
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- format=flowed
-Date: Wed, 24 Aug 2011 19:08:15 -0700
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>,
-	Javier Cardona <javier@cozybit.com>, <linville@tuxdriver.com>
-In-Reply-To: <1314236452-7226-2-git-send-email-thomas@cozybit.com>
- (sfid-20110825_034138_436674_B35D5E17)
-References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
- <1314236452-7226-2-git-send-email-thomas@cozybit.com>
- (sfid-20110825_034138_436674_B35D5E17)
-Message-ID: <f72a42677c7419161cc9b7f79d93e812@secure.sipsolutions.net>
+Received: from que11.charter.net ([209.225.8.21]:53775 "EHLO que11.charter.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752003Ab1H1N3I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Aug 2011 09:29:08 -0400
+From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+To: wey-yi.w.guy@intel.com, linville@tuxdriver.com
+Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Greg Dietsche <Gregory.Dietsche@cuw.edu>
+Subject: [PATCH] iwlwifi: iwl-agn-rs.c: remove old comment
+Date: Sun, 28 Aug 2011 08:22:38 -0500
+Message-Id: <1314537758-19159-1-git-send-email-Gregory.Dietsche@cuw.edu> (sfid-20110828_152913_716149_5A81D6CF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 24 Aug 2011 18:40:44 -0700, Thomas Pedersen wrote:
+this comment refers to some code that was removed.
 
->  		da = hdr->addr3;
->  		ra = hdr->addr1;
-> +		rcu_read_lock();
->  		mpath = mesh_path_lookup(da, sdata);
-> +		rcu_read_unlock();
->  		if (mpath)
->  			sn = ++mpath->sn;
->  		mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl, skb->data,
+Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-You've got to be kidding. Didn't I just explain RCU :)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 3789ff4..733bd38 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2209,7 +2209,6 @@ static void rs_stay_in_table(struct iwl_lq_sta *lq_sta, bool force_search)
+ 
+ /*
+  * setup rate table in uCode
+- * return rate_n_flags as used in the table
+  */
+ static void rs_update_rate_tbl(struct iwl_priv *priv,
+ 			       struct iwl_rxon_context *ctx,
+-- 
+1.7.5.4
 
-johannes
