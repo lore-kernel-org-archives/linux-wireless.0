@@ -1,61 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:48090 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751402Ab1HEIyj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2011 04:54:39 -0400
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2] mac80211: Don't use a buf_size=0 in ADDBA requests
-References: <1311675508-29005-1-git-send-email-helmut.schaa@googlemail.com>
-	<1311675508-29005-2-git-send-email-helmut.schaa@googlemail.com>
-	<878vr8s29b.fsf@purkki.adurom.net>
-	<4365125.pkzJgJtRz2@helmutmobil.site>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Fri, 05 Aug 2011 11:54:34 +0300
-In-Reply-To: <4365125.pkzJgJtRz2@helmutmobil.site> (Helmut Schaa's message of "Fri\, 05 Aug 2011 10\:35\:39 +0200")
-Message-ID: <874o1ws0fp.fsf@purkki.adurom.net> (sfid-20110805_105442_945438_5E80DAD5)
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:45330 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750836Ab1H1RDJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Aug 2011 13:03:09 -0400
+Received: by yie30 with SMTP id 30so2947449yie.19
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Aug 2011 10:03:08 -0700 (PDT)
+Message-ID: <4E5A74C9.1050909@lwfinger.net> (sfid-20110828_190312_757205_05C47426)
+Date: Sun, 28 Aug 2011 12:03:05 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH 2/2] bcma: extract some basic info about board from SPROM
+References: <1314550043-6220-1-git-send-email-zajec5@gmail.com> <1314550043-6220-2-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1314550043-6220-2-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helmut Schaa <helmut.schaa@googlemail.com> writes:
-
->> Also " ? :" inside a function call is not readable IMHO,
->> maybe instead a separate variable with if() statements?
+On 08/28/2011 11:47 AM, Rafał Miłecki wrote:
 >
-> Hmm, in this particular case it looks like overkill to me to use a
-> separate variable.
+> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
+> ---
+>   drivers/bcma/sprom.c |    9 +++++++++
+>   1 files changed, 9 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
+> index 166ed13..d729239 100644
+> --- a/drivers/bcma/sprom.c
+> +++ b/drivers/bcma/sprom.c
+> @@ -133,6 +133,15 @@ static void bcma_sprom_extract_r8(struct bcma_bus *bus, const u16 *sprom)
+>   		v = sprom[SPOFF(SSB_SPROM8_IL0MAC) + i];
+>   		*(((__be16 *)bus->sprom.il0mac) + i) = cpu_to_be16(v);
+>   	}
+> +
+> +	bus->sprom.board_rev = sprom[SPOFF(SSB_SPROM8_BOARDREV)];
+> +
+> +	bus->sprom.boardflags_lo = sprom[SPOFF(SSB_SPROM8_BFLLO)];
+> +	bus->sprom.boardflags_hi = sprom[SPOFF(SSB_SPROM8_BFLHI)];
+> +	bus->sprom.boardflags2_lo = sprom[SPOFF(SSB_SPROM8_BFL2LO)];
+> +	bus->sprom.boardflags2_hi = sprom[SPOFF(SSB_SPROM8_BFL2HI)];
+> +
+> +	bus->sprom.country_code = sprom[SPOFF(SSB_SPROM8_CCODE)];
+>   }
+>
+>   int bcma_sprom_get(struct bcma_bus *bus)
 
-To me it's overkill to optimise few lines with the cost of
-readibility. Example:
+Does the card in question not need any other info from the SPROM, or is this 
+just a first step? Is the usual SPROM Rev 8 code part of ssb, and is that the 
+reason you don't use it here?
 
-ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
-                        tid_tx->dialog_token, start_seq_num,
-                        local->hw.max_tx_aggregation_subframes ?
-                        local->hw.max_tx_aggregation_subframes :
-                        IEEE80211_MAX_AMPDU_BUF,
-                        tid_tx->timeout);
+Larry
 
-vs.
-
-ampdu_len = local->hw.max_tx_aggregation_subframes
-
-if (ampdu_len == 0)
-        ampdu_len = IEEE80211_MAX_AMPDU_BUF;
-
-ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
-                        tid_tx->dialog_token, start_seq_num,
-                        ampdu_len,
-                        tid_tx->timeout);
-
-So only three lines more (plus the variable declaration) but the code
-is simpler to read because the if statement is not embedded to the
-function call parameters.
-
-But as always, people have different views about coding styles :)
-
--- 
-Kalle Valo
