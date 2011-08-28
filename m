@@ -1,33 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:37603 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753829Ab1HWAPg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 20:15:36 -0400
-Date: Mon, 22 Aug 2011 17:14:30 -0700 (PDT)
-Message-Id: <20110822.171430.2051431873025251257.davem@davemloft.net> (sfid-20110823_021549_708503_668FCF46)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2011-08-22
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110822195857.GL2534@tuxdriver.com>
-References: <20110822195857.GL2534@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from nbd.name ([46.4.11.11]:55517 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751360Ab1H1TLM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Aug 2011 15:11:12 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH] mac80211: retry sending failed BAR frames later instead of tearing down aggr
+Date: Sun, 28 Aug 2011 21:11:01 +0200
+Message-Id: <1314558661-28454-1-git-send-email-nbd@openwrt.org> (sfid-20110828_211119_168927_2DB18662)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 22 Aug 2011 15:58:57 -0400
+Unfortunately failed BAR tx attempts happen more frequently than I
+expected, and the resulting aggregation teardowns cause performance
+issues, as the aggregation session does not always get re-established
+properly.
+Instead of tearing down the entire aggr session, we can simply store the
+SSN of the last failed BAR tx attempt, wait for the first successful
+tx status event, and then send another BAR with the same SSN.
 
-> This is a batch of updates intended for 3.2.
-> 
-> Highlights include a wireless extensions dependency cleanup amongst
-> a number of drivers, and the inclusion of the ath6kl driver
-> in drivers/net/wireless (along with its removal from staging).
-> Also included are a number of updates to mac80211, bcma, mwifiex,
-> libertas, ath9k, iwlagn, and a number of other drivers.
-> 
-> Please let me know if there are problems!
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ net/mac80211/sta_info.h |    5 +++++
+ net/mac80211/status.c   |   37 ++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 41 insertions(+), 1 deletions(-)
 
-Pulled, thanks!
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index e9eb565..56a3d38 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -86,6 +86,8 @@ enum ieee80211_sta_info_flags {
+  * @stop_initiator: initiator of a session stop
+  * @tx_stop: TX DelBA frame when stopping
+  * @buf_size: reorder buffer size at receiver
++ * @failed_bar_ssn: ssn of the last failed BAR tx attempt
++ * @bar_pending: BAR needs to be re-sent
+  *
+  * This structure's lifetime is managed by RCU, assignments to
+  * the array holding it must hold the aggregation mutex.
+@@ -106,6 +108,9 @@ struct tid_ampdu_tx {
+ 	u8 stop_initiator;
+ 	bool tx_stop;
+ 	u8 buf_size;
++
++	u16 failed_bar_ssn;
++	bool bar_pending;
+ };
+ 
+ /**
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index e51bd2a..ba405bc 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -127,12 +127,32 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ 	dev_kfree_skb(skb);
+ }
+ 
++static void ieee80211_check_pending_bar(struct sta_info *sta, u8 *addr, u8 tid)
++{
++	struct tid_ampdu_tx *tid_tx;
++
++	tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
++	if (!tid_tx || !tid_tx->bar_pending)
++		return;
++
++	tid_tx->bar_pending = false;
++	ieee80211_send_bar(sta->sdata, addr, tid, tid_tx->failed_bar_ssn);
++}
++
+ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
+ {
+ 	struct ieee80211_mgmt *mgmt = (void *) skb->data;
+ 	struct ieee80211_local *local = sta->local;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 
++	if (ieee80211_is_data_qos(mgmt->frame_control)) {
++		struct ieee80211_hdr *hdr = (void *) skb->data;
++		u8 *qc = ieee80211_get_qos_ctl(hdr);
++		u16 tid = qc[0] & 0xf;
++
++		ieee80211_check_pending_bar(sta, hdr->addr1, tid);
++	}
++
+ 	if (ieee80211_is_action(mgmt->frame_control) &&
+ 	    sdata->vif.type == NL80211_IFTYPE_STATION &&
+ 	    mgmt->u.action.category == WLAN_CATEGORY_HT &&
+@@ -161,6 +181,18 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
+ 	}
+ }
+ 
++static void ieee80211_set_bar_pending(struct sta_info *sta, u8 tid, u16 ssn)
++{
++	struct tid_ampdu_tx *tid_tx;
++
++	tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
++	if (!tid_tx)
++		return;
++
++	tid_tx->failed_bar_ssn = ssn;
++	tid_tx->bar_pending = true;
++}
++
+ /*
+  * Use a static threshold for now, best value to be determined
+  * by testing ...
+@@ -254,10 +286,13 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			 */
+ 			bar = (struct ieee80211_bar *) skb->data;
+ 			if (!(bar->control & IEEE80211_BAR_CTRL_MULTI_TID)) {
++				u16 ssn = le16_to_cpu(bar->start_seq_num);
++
+ 				tid = (bar->control &
+ 				       IEEE80211_BAR_CTRL_TID_INFO_MASK) >>
+ 				      IEEE80211_BAR_CTRL_TID_INFO_SHIFT;
+-				ieee80211_stop_tx_ba_session(&sta->sta, tid);
++
++				ieee80211_set_bar_pending(sta, tid, ssn);
+ 			}
+ 		}
+ 
+-- 
+1.7.3.2
+
