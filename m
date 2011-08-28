@@ -1,141 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:30435 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754538Ab1HWIRI (ORCPT
+Received: from ogre.sisk.pl ([217.79.144.158]:43403 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751034Ab1H1TEk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 04:17:08 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Subject: [PATCH 5/7] ath6kl: Fix buffer alignment for scatter-gather I/O
-Date: Tue, 23 Aug 2011 11:16:44 +0300
-Message-ID: <1314087406-29188-6-git-send-email-kvalo@qca.qualcomm.com> (sfid-20110823_101713_756226_B2E62EA5)
-In-Reply-To: <1314087406-29188-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1314087406-29188-1-git-send-email-kvalo@qca.qualcomm.com>
+	Sun, 28 Aug 2011 15:04:40 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: 3.1-rc3-git6: Reported regressions from 3.0
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <lx6sezwGldO.A.IhF.UBpWOB@chimera> (sfid-20110828_210506_385617_5517983E)
+Date: Sun, 28 Aug 2011 20:22:05 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+This message contains a list of some regressions from 3.0,
+for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
 
-For non-scatter buffers, there is already a bounce buffer which
-takes care of alignment. This patch is influenced by a rough patch of
-Kalle.
+If you know of any other unresolved regressions from 3.0, please let us
+know either and we'll add them to the list.  Also, please let us know
+if any of the entries below are invalid.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/core.h |    3 +++
- drivers/net/wireless/ath/ath6kl/init.c |    2 +-
- drivers/net/wireless/ath/ath6kl/main.c |    2 +-
- drivers/net/wireless/ath/ath6kl/sdio.c |   25 +++++++++++++++----------
- drivers/net/wireless/ath/ath6kl/txrx.c |    2 ++
- 5 files changed, 22 insertions(+), 12 deletions(-)
+Each entry from the list will be sent additionally in an automatic reply
+to this message with CCs to the people involved in reporting and handling
+the issue.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 214d114..a1aa2ef 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -42,6 +42,9 @@
- #define ATH6KL_MAX_ENDPOINTS   4
- #define MAX_NODE_NUM           15
- 
-+/* Extra bytes for htc header alignment */
-+#define ATH6KL_HTC_ALIGN_BYTES 3
-+
- /* MAX_HI_COOKIE_NUM are reserved for high priority traffic */
- #define MAX_DEF_COOKIE_NUM                180
- #define MAX_HI_COOKIE_NUM                 18	/* 10% of MAX_COOKIE_NUM */
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index df15bfa..75230ac 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -67,7 +67,7 @@ struct sk_buff *ath6kl_buf_alloc(int size)
- 
- 	/* Add chacheline space at front and back of buffer */
- 	reserved = (2 * L1_CACHE_BYTES) + ATH6KL_DATA_OFFSET +
--		   sizeof(struct htc_packet);
-+		   sizeof(struct htc_packet) + ATH6KL_HTC_ALIGN_BYTES;
- 	skb = dev_alloc_skb(size + reserved);
- 
- 	if (skb)
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index f236aa8..868838b 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -1347,7 +1347,7 @@ void init_netdev(struct net_device *dev)
- 	dev->needed_headroom = ETH_HLEN;
- 	dev->needed_headroom += sizeof(struct ath6kl_llc_snap_hdr) +
- 				sizeof(struct wmi_data_hdr) + HTC_HDR_LENGTH
--				+ WMI_MAX_TX_META_SZ;
-+				+ WMI_MAX_TX_META_SZ + ATH6KL_HTC_ALIGN_BYTES;
- 
- 	return;
- }
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 3417160..f393090 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -128,6 +128,17 @@ static int ath6kl_sdio_func0_cmd52_wr_byte(struct mmc_card *card,
- 	return mmc_wait_for_cmd(card->host, &io_cmd, 0);
- }
- 
-+static void ath6kl_sdio_buf_align(u8 **buf, unsigned long len)
-+{
-+	u8 *align_addr;
-+
-+	if (!IS_ALIGNED((unsigned long) *buf, 4)) {
-+		align_addr = PTR_ALIGN(*buf - 4, 4);
-+		memmove(align_addr, *buf, len);
-+		*buf = align_addr;
-+	}
-+}
-+
- static int ath6kl_sdio_io(struct sdio_func *func, u32 request, u32 addr,
- 			  u8 *buf, u32 len)
- {
-@@ -213,16 +224,10 @@ static void ath6kl_sdio_setup_scat_data(struct hif_scatter_req *scat_req,
- 
- 	/* assemble SG list */
- 	for (i = 0; i < scat_req->scat_entries; i++, sg++) {
--		if ((unsigned long)scat_req->scat_list[i].buf & 0x3)
--			/*
--			 * Some scatter engines can handle unaligned
--			 * buffers, print this as informational only.
--			 */
--			ath6kl_dbg(ATH6KL_DBG_SCATTER,
--				   "(%s) scatter buffer is unaligned 0x%p\n",
--				   scat_req->req & HIF_WRITE ? "WR" : "RD",
--				   scat_req->scat_list[i].buf);
--
-+		/* No header is added to rx buf, so it shoule be aligned */
-+		if (data->flags == MMC_DATA_WRITE)
-+			ath6kl_sdio_buf_align(&scat_req->scat_list[i].buf,
-+					      scat_req->scat_list[i].len);
- 		ath6kl_dbg(ATH6KL_DBG_SCATTER, "%d: addr:0x%p, len:%d\n",
- 			   i, scat_req->scat_list[i].buf,
- 			   scat_req->scat_list[i].len);
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 44bf227..ba1350d 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -689,6 +689,7 @@ void ath6kl_rx_refill(struct htc_target *target, enum htc_endpoint_id endpoint)
- 			break;
- 
- 		packet = (struct htc_packet *) skb->head;
-+		skb->data = PTR_ALIGN(skb->data - 4, 4);
- 		set_htc_rxpkt_info(packet, skb, skb->data,
- 				ATH6KL_BUFFER_SIZE, endpoint);
- 		list_add_tail(&packet->list, &queue);
-@@ -709,6 +710,7 @@ void ath6kl_refill_amsdu_rxbufs(struct ath6kl *ar, int count)
- 			return;
- 
- 		packet = (struct htc_packet *) skb->head;
-+		skb->data = PTR_ALIGN(skb->data - 4, 4);
- 		set_htc_rxpkt_info(packet, skb, skb->data,
- 				   ATH6KL_AMSDU_BUFFER_SIZE, 0);
- 		spin_lock_bh(&ar->lock);
--- 
-1.7.1
+
+Listed regressions statistics:
+
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2011-08-28        8        4           4
+
+
+Unresolved regressions
+----------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=41742
+Subject		: duplicate filename  for intel_backlight with the i915 driver
+Submitter	: François Valenduc <francois.valenduc@tvcablenet.be>
+Date		: 2011-08-25 18:51 (4 days old)
+First-Bad-Commit: http://git.kernel.org/linus/aaa6fd2a004147bf32fce05720938236de3361d9
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=41512
+Subject		: 3.1-rc2 failed s2ram: Freezing of tasks failed after 20.00 seconds
+Submitter	: Carlos R. Mafra <crmafra2@gmail.com>
+Date		: 2011-08-16 9:42 (13 days old)
+Message-ID	: <20110816094245.GA2042@Pilar.site>
+References	: http://marc.info/?l=linux-kernel&m=131348782017435&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=41502
+Subject		: cfq-iosched: a regression
+Submitter	: Shaohua Li <shaohua.li@intel.com>
+Date		: 2011-08-16 2:47 (13 days old)
+Message-ID	: <1313462826.27321.22.camel@sli10-conroe>
+References	: http://marc.info/?l=linux-kernel&m=131346279329911&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=41442
+Subject		: rcu_sched_state detected stall on CPU 0, when booting on Xen
+Submitter	: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
+Date		: 2011-08-21 04:06 (8 days old)
+
+
+Regressions with patches
+------------------------
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions from 3.0,
+unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=40982
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
 
