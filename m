@@ -1,147 +1,221 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:34961 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754672Ab1HKM2N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 08:28:13 -0400
-Received: by fxh19 with SMTP id 19so1622730fxh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 05:28:12 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/3] b43: rename TX header formats
-Date: Thu, 11 Aug 2011 15:07:14 +0200
-Message-Id: <1313068036-13608-1-git-send-email-zajec5@gmail.com> (sfid-20110811_142817_581893_D951DB81)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:45327 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750836Ab1H1SyT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Aug 2011 14:54:19 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 4/4] ath9k: implement .get_antenna and .set_antenna
+Date: Sun, 28 Aug 2011 20:54:08 +0200
+Message-Id: <1314557648-28212-4-git-send-email-nbd@openwrt.org> (sfid-20110828_205428_848683_5BCFFD4A)
+In-Reply-To: <1314557648-28212-3-git-send-email-nbd@openwrt.org>
+References: <1314557648-28212-1-git-send-email-nbd@openwrt.org>
+ <1314557648-28212-2-git-send-email-nbd@openwrt.org>
+ <1314557648-28212-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace "old" and "new" with number of the first firmware known to use
-the given format.
+On MIMO chips this can be used to enable/disable hardware chains, ensuring
+that the MCS information is updated accordingly.
+On non-MIMO chips with rx diversity (e.g. 9285), this configures the rx
+input antenna.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/b43/xmit.c |   24 ++++++++++++------------
- drivers/net/wireless/b43/xmit.h |    8 ++++----
- 2 files changed, 16 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 +
+ drivers/net/wireless/ath/ath9k/init.c  |   33 ++++++++++++---
+ drivers/net/wireless/ath/ath9k/main.c  |   71 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
+ 4 files changed, 100 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-index b74f25e..36c7243 100644
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -338,10 +338,10 @@ int b43_generate_txhdr(struct b43_wldev *dev,
- 		}
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 5d9a9aa..6c7b27c 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -647,6 +647,7 @@ struct ath_softc {
+ 	struct ath_descdma txsdma;
+ 
+ 	struct ath_ant_comb ant_comb;
++	u32 ant_tx, ant_rx;
+ };
+ 
+ void ath9k_tasklet(unsigned long data);
+@@ -668,6 +669,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 		    const struct ath_bus_ops *bus_ops);
+ void ath9k_deinit_device(struct ath_softc *sc);
+ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw);
++void ath9k_reload_chainmask_settings(struct ath_softc *sc);
+ 
+ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw);
+ bool ath9k_uses_beacons(int type);
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 31ef501..263bbe2 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -652,9 +652,22 @@ static void ath9k_init_txpower_limits(struct ath_softc *sc)
+ 	ah->curchan = curchan;
+ }
+ 
++void ath9k_reload_chainmask_settings(struct ath_softc *sc)
++{
++	if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT))
++		return;
++
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
++		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
++		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
++}
++
++
+ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ {
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+ 		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+@@ -692,6 +705,17 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	hw->sta_data_size = sizeof(struct ath_node);
+ 	hw->vif_data_size = sizeof(struct ath_vif);
+ 
++	hw->wiphy->available_antennas_rx = BIT(ah->caps.max_rxchains) - 1;
++	hw->wiphy->available_antennas_tx = BIT(ah->caps.max_txchains) - 1;
++
++	/* single chain devices with rx diversity */
++	if (ah->caps.max_rxchains == 1 &&
++	    ath9k_hw_ops(ah)->antdiv_comb_conf_get)
++		hw->wiphy->available_antennas_rx = 3;
++
++	sc->ant_rx = hw->wiphy->available_antennas_rx;
++	sc->ant_tx = hw->wiphy->available_antennas_tx;
++
+ #ifdef CONFIG_ATH9K_RATE_CONTROL
+ 	hw->rate_control_algorithm = "ath9k_rate_control";
+ #endif
+@@ -703,12 +727,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+ 			&sc->sbands[IEEE80211_BAND_5GHZ];
+ 
+-	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+-		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
+-			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
+-		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
+-			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
+-	}
++	ath9k_reload_chainmask_settings(sc);
+ 
+ 	SET_IEEE80211_PERM_ADDR(hw, common->macaddr);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 7334c48..64cc595 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -262,6 +262,22 @@ static bool ath_complete_reset(struct ath_softc *sc)
+ 			ath_start_ani(common);
  	}
- 	if (b43_is_old_txhdr_format(dev)) {
--		b43_generate_plcp_hdr((struct b43_plcp_hdr4 *)(&txhdr->old_format.plcp),
-+		b43_generate_plcp_hdr((struct b43_plcp_hdr4 *)(&txhdr->format_351.plcp),
- 				      plcp_fragment_len, rate);
- 	} else {
--		b43_generate_plcp_hdr((struct b43_plcp_hdr4 *)(&txhdr->new_format.plcp),
-+		b43_generate_plcp_hdr((struct b43_plcp_hdr4 *)(&txhdr->format_410.plcp),
- 				      plcp_fragment_len, rate);
- 	}
- 	b43_generate_plcp_hdr((struct b43_plcp_hdr4 *)(&txhdr->plcp_fb),
-@@ -433,10 +433,10 @@ int b43_generate_txhdr(struct b43_wldev *dev,
  
- 			if (b43_is_old_txhdr_format(dev)) {
- 				cts = (struct ieee80211_cts *)
--					(txhdr->old_format.rts_frame);
-+					(txhdr->format_351.rts_frame);
- 			} else {
- 				cts = (struct ieee80211_cts *)
--					(txhdr->new_format.rts_frame);
-+					(txhdr->format_410.rts_frame);
- 			}
- 			ieee80211_ctstoself_get(dev->wl->hw, info->control.vif,
- 						fragment_data, fragment_len,
-@@ -448,10 +448,10 @@ int b43_generate_txhdr(struct b43_wldev *dev,
++	if (ath9k_hw_ops(ah)->antdiv_comb_conf_get && sc->ant_rx != 3) {
++		struct ath_hw_antcomb_conf div_ant_conf;
++		u8 lna_conf;
++
++		ath9k_hw_antdiv_comb_conf_get(ah, &div_ant_conf);
++
++		if (sc->ant_rx == 1)
++			lna_conf = ATH_ANT_DIV_COMB_LNA1;
++		else
++			lna_conf = ATH_ANT_DIV_COMB_LNA2;
++		div_ant_conf.main_lna_conf = lna_conf;
++		div_ant_conf.alt_lna_conf = lna_conf;
++
++		ath9k_hw_antdiv_comb_conf_set(ah, &div_ant_conf);
++	}
++
+ 	ieee80211_wake_queues(sc->hw);
  
- 			if (b43_is_old_txhdr_format(dev)) {
- 				rts = (struct ieee80211_rts *)
--					(txhdr->old_format.rts_frame);
-+					(txhdr->format_351.rts_frame);
- 			} else {
- 				rts = (struct ieee80211_rts *)
--					(txhdr->new_format.rts_frame);
-+					(txhdr->format_410.rts_frame);
- 			}
- 			ieee80211_rts_get(dev->wl->hw, info->control.vif,
- 					  fragment_data, fragment_len,
-@@ -463,9 +463,9 @@ int b43_generate_txhdr(struct b43_wldev *dev,
+ 	return true;
+@@ -2358,6 +2374,59 @@ static int ath9k_get_stats(struct ieee80211_hw *hw,
+ 	return 0;
+ }
  
- 		/* Generate the PLCP headers for the RTS/CTS frame */
- 		if (b43_is_old_txhdr_format(dev))
--			plcp = &txhdr->old_format.rts_plcp;
-+			plcp = &txhdr->format_351.rts_plcp;
- 		else
--			plcp = &txhdr->new_format.rts_plcp;
-+			plcp = &txhdr->format_410.rts_plcp;
- 		b43_generate_plcp_hdr((struct b43_plcp_hdr4 *)plcp,
- 				      len, rts_rate);
- 		plcp = &txhdr->rts_plcp_fb;
-@@ -474,10 +474,10 @@ int b43_generate_txhdr(struct b43_wldev *dev,
++static u32 fill_chainmask(u32 cap, u32 new)
++{
++	u32 filled = 0;
++	int i;
++
++	for (i = 0; cap && new; i++, cap >>= 1) {
++		if (!(cap & BIT(0)))
++			continue;
++
++		if (new & BIT(0))
++			filled |= BIT(i);
++
++		new >>= 1;
++	}
++
++	return filled;
++}
++
++static int ath9k_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
++{
++	struct ath_softc *sc = hw->priv;
++	struct ath_hw *ah = sc->sc_ah;
++
++	if (!rx_ant || !tx_ant)
++		return -EINVAL;
++
++	sc->ant_rx = rx_ant;
++	sc->ant_tx = tx_ant;
++
++	if (ah->caps.rx_chainmask == 1)
++		return 0;
++
++	/* AR9100 runs into calibration issues if not all rx chains are enabled */
++	if (AR_SREV_9100(ah))
++		ah->rxchainmask = 0x7;
++	else
++		ah->rxchainmask = fill_chainmask(ah->caps.rx_chainmask, rx_ant);
++
++	ah->txchainmask = fill_chainmask(ah->caps.tx_chainmask, tx_ant);
++	ath9k_reload_chainmask_settings(sc);
++
++	return 0;
++}
++
++static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
++{
++	struct ath_softc *sc = hw->priv;
++
++	*tx_ant = sc->ant_tx;
++	*rx_ant = sc->ant_rx;
++	return 0;
++}
++
+ struct ieee80211_ops ath9k_ops = {
+ 	.tx 		    = ath9k_tx,
+ 	.start 		    = ath9k_start,
+@@ -2384,4 +2453,6 @@ struct ieee80211_ops ath9k_ops = {
+ 	.tx_frames_pending  = ath9k_tx_frames_pending,
+ 	.tx_last_beacon     = ath9k_tx_last_beacon,
+ 	.get_stats	    = ath9k_get_stats,
++	.set_antenna	    = ath9k_set_antenna,
++	.get_antenna	    = ath9k_get_antenna,
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index ad5f9bd..7e1265c 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1956,7 +1956,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 			ath_rx_ps(sc, skb);
+ 		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
  
- 		if (b43_is_old_txhdr_format(dev)) {
- 			hdr = (struct ieee80211_hdr *)
--				(&txhdr->old_format.rts_frame);
-+				(&txhdr->format_351.rts_frame);
- 		} else {
- 			hdr = (struct ieee80211_hdr *)
--				(&txhdr->new_format.rts_frame);
-+				(&txhdr->format_410.rts_frame);
- 		}
- 		txhdr->rts_dur_fb = hdr->duration_id;
+-		if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
++		if ((ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) && sc->ant_rx == 3)
+ 			ath_ant_comb_scan(sc, &rs);
  
-@@ -506,9 +506,9 @@ int b43_generate_txhdr(struct b43_wldev *dev,
- 
- 	/* Magic cookie */
- 	if (b43_is_old_txhdr_format(dev))
--		txhdr->old_format.cookie = cpu_to_le16(cookie);
-+		txhdr->format_351.cookie = cpu_to_le16(cookie);
- 	else
--		txhdr->new_format.cookie = cpu_to_le16(cookie);
-+		txhdr->format_410.cookie = cpu_to_le16(cookie);
- 
- 	if (phy->type == B43_PHYTYPE_N) {
- 		txhdr->phy_ctl1 =
-diff --git a/drivers/net/wireless/b43/xmit.h b/drivers/net/wireless/b43/xmit.h
-index 42debb5..79fc162 100644
---- a/drivers/net/wireless/b43/xmit.h
-+++ b/drivers/net/wireless/b43/xmit.h
-@@ -46,7 +46,7 @@ struct b43_txhdr {
- 	__le32 timeout;			/* Timeout */
- 
- 	union {
--		/* The new r410 format. */
-+		/* Tested with 410.2160, 478.104 and 508.* */
- 		struct {
- 			__le16 mimo_antenna;		/* MIMO antenna select */
- 			__le16 preload_size;		/* Preload size */
-@@ -57,9 +57,9 @@ struct b43_txhdr {
- 			__u8 rts_frame[16];		/* The RTS frame (if used) */
- 			PAD_BYTES(2);
- 			struct b43_plcp_hdr6 plcp;	/* Main PLCP header */
--		} new_format __packed;
-+		} format_410 __packed;
- 
--		/* The old r351 format. */
-+		/* Tested with 351.126 */
- 		struct {
- 			PAD_BYTES(2);
- 			__le16 cookie;			/* TX frame cookie */
-@@ -68,7 +68,7 @@ struct b43_txhdr {
- 			__u8 rts_frame[16];		/* The RTS frame (if used) */
- 			PAD_BYTES(2);
- 			struct b43_plcp_hdr6 plcp;	/* Main PLCP header */
--		} old_format __packed;
-+		} format_351 __packed;
- 
- 	} __packed;
- } __packed;
+ 		ieee80211_rx(hw, skb);
 -- 
-1.7.3.4
+1.7.3.2
 
