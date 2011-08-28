@@ -1,62 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:65377 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751757Ab1HLUET convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:49108 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750766Ab1H1Lt2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 16:04:19 -0400
-Received: by ywf7 with SMTP id 7so2190460ywf.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2011 13:04:18 -0700 (PDT)
+	Sun, 28 Aug 2011 07:49:28 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 19so3667747fxh.19
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Aug 2011 04:49:28 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/3] b43: LCN-PHY: implement more PHY ops before radio init
+Date: Sun, 28 Aug 2011 14:28:44 +0200
+Message-Id: <1314534525-4475-2-git-send-email-zajec5@gmail.com> (sfid-20110828_134942_978075_6BE4836C)
+In-Reply-To: <1314534525-4475-1-git-send-email-zajec5@gmail.com>
+References: <1314534525-4475-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4E4555AD.7040809@broadcom.com>
-References: <1313156101-16817-1-git-send-email-arend@broadcom.com>
-	<CACna6rztueomzzas=hQjfj6htD=SHFhrtFPSqbviqVDwaihJ9w@mail.gmail.com>
-	<4E4555AD.7040809@broadcom.com>
-Date: Fri, 12 Aug 2011 22:04:18 +0200
-Message-ID: <CACna6rx_d4btykdK7AMwFxeFMs_MxjHEHvR6coxaZkfqkQVafA@mail.gmail.com> (sfid-20110812_220423_733515_9071C442)
-Subject: Re: [PATCH 00/14] staging: brcm80211: brcmfmac driver cleanup
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 12 sierpnia 2011 18:32 użytkownik Arend van Spriel
-<arend@broadcom.com> napisał:
-> On 08/12/2011 04:02 PM, Rafał Miłecki wrote:
->>
->> 2011/8/12 Arend van Spriel<arend@broadcom.com>:
->>>
->>> Several cleanup patches to reduce code for the brcmfmac driver and
->>> get rid of a remaining checkpatch warning. The driver sources should
->>> be clear from checkpatch issue now.
->>>
->>> This series applies to staging-next and depends on the following patch
->>> set:
->>
->> Are you testing patches on some hardware? Or just compile-testing?
->>
->> I believe this driver is meant to support BCM4329, which is not PCI(e)
->> board. What adapter do you use?
->>
->> I've heard about Arasan adapter. Have you tried it? Is that something
->> reachable from arasan.com?
->
-> Our brcm80211 source tree under drivers/staging contain two drivers. The
-> brcmsmac driver currently supporting the PCI(e) cards with bcm43224,
-> bcm43225, and bcm4313 chips and the brcmfmac driver currently supporting the
-> SDIO card with bcm4329 chip. brcmsmac is a mac80211 driver and brcmfmac is a
-> cfg80211 driver.
->
-> We indeed use the Arasan adapter and both drivers are running in nightly
-> test cycle testing our common internal repository. So the drivers are
-> functionally tested on the x86 platforms (32 and 64 bit). Also looking at
-> sparc64 and powerpc64 but not in a nightly cycle.
 
-Is there a chance you can donate me with such a adapter and card?
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_lcn.c |   56 ++++++++++++++++++++++++++++++++++--
+ 1 files changed, 53 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/b43/phy_lcn.c b/drivers/net/wireless/b43/phy_lcn.c
+index cf75d3d..9707a2b 100644
+--- a/drivers/net/wireless/b43/phy_lcn.c
++++ b/drivers/net/wireless/b43/phy_lcn.c
+@@ -48,7 +48,7 @@ static void b43_radio_2064_init(struct b43_wldev *dev)
+ 	b43_phy_write(dev, 0x4ea, 0x4688);
+ 	b43_phy_maskset(dev, 0x4eb, ~0x7, 0x2);
+ 	b43_phy_mask(dev, 0x4eb, ~0x01c0);
+-	b43_phy_maskset(dev, 0x4eb, 0xff00, 0x19);
++	b43_phy_maskset(dev, 0x46a, 0xff00, 0x19);
+ 
+ 	b43_lcntab_write(dev, B43_LCNTAB16(0x00, 0x55), 0);
+ 
+@@ -120,6 +120,57 @@ static void b43_phy_lcn_clear_0x07_table(struct b43_wldev *dev)
+ 	}
+ }
+ 
++static void b43_phy_lcn_pre_radio_init(struct b43_wldev *dev)
++{
++	b43_radio_write(dev, 0x11c, 0);
++
++	b43_phy_write(dev, 0x43b, 0);
++	b43_phy_write(dev, 0x43c, 0);
++	b43_phy_write(dev, 0x44c, 0);
++	b43_phy_write(dev, 0x4e6, 0);
++	b43_phy_write(dev, 0x4f9, 0);
++	b43_phy_write(dev, 0x4b0, 0);
++	b43_phy_write(dev, 0x938, 0);
++	b43_phy_write(dev, 0x4b0, 0);
++	b43_phy_write(dev, 0x44e, 0);
++
++	b43_phy_set(dev, 0x567, 0x03);
++
++	b43_phy_set(dev, 0x44a, 0x44);
++	b43_phy_write(dev, 0x44a, 0x80);
++
++	b43_phy_maskset(dev, 0x634, ~0xff, 0xc);
++	b43_phy_maskset(dev, 0x634, ~0xff, 0xa);
++
++	b43_phy_write(dev, 0x910, 0x1);
++
++	b43_phy_maskset(dev, 0x448, ~0x300, 0x100);
++	b43_phy_maskset(dev, 0x608, ~0xff, 0x17);
++	b43_phy_maskset(dev, 0x604, ~0x7ff, 0x3ea);
++
++	b43_phy_set(dev, 0x805, 0x1);
++
++	b43_phy_maskset(dev, 0x42f, ~0x7, 0x3);
++	b43_phy_maskset(dev, 0x030, ~0x7, 0x3);
++
++	b43_phy_write(dev, 0x414, 0x1e10);
++	b43_phy_write(dev, 0x415, 0x0640);
++
++	b43_phy_maskset(dev, 0x4df, (u16) ~0xff00, 0xf700);
++
++	b43_phy_set(dev, 0x44a, 0x44);
++	b43_phy_write(dev, 0x44a, 0x80);
++
++	b43_phy_maskset(dev, 0x434, ~0xff, 0xfd);
++	b43_phy_maskset(dev, 0x420, ~0xff, 0x10);
++
++	b43_radio_set(dev, 0x09b, 0xf0);
++
++	b43_phy_write(dev, 0x7d6, 0x0902);
++
++	/* TODO: more ops */
++}
++
+ /**************************************************
+  * Basic PHY ops.
+  **************************************************/
+@@ -170,8 +221,7 @@ static int b43_phy_lcn_op_init(struct b43_wldev *dev)
+ 	/* TODO: various tables ops here */
+ 	b43_phy_lcn_clean_0x18_table(dev);
+ 
+-	/* TODO: some ops here */
+-
++	b43_phy_lcn_pre_radio_init(dev);
+ 	b43_phy_lcn_clear_0x07_table(dev);
+ 
+ 	if (dev->phy.radio_ver == 0x2064)
 -- 
-Rafał
+1.7.3.4
+
