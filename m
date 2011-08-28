@@ -1,116 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:64771 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752763Ab1H2MaY (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:36688 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751025Ab1H1RUG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 08:30:24 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	Edward Lu <shaol@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-Subject: [PATCH 17/20] ath6kl: Fix a typo in ath6k context
-Date: Mon, 29 Aug 2011 15:23:58 +0300
-Message-ID: <1314620641-24257-18-git-send-email-jouni@qca.qualcomm.com> (sfid-20110829_143027_750807_D51E121A)
-In-Reply-To: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
+	Sun, 28 Aug 2011 13:20:06 -0400
+Received: by fxh19 with SMTP id 19so3802629fxh.19
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Aug 2011 10:20:04 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [ONE MORE][PATCH 4/3] b43: LCN-PHY: implement saving and restoring PHY & radio configuration
+Date: Sun, 28 Aug 2011 19:59:28 +0200
+Message-Id: <1314554368-7002-4-git-send-email-zajec5@gmail.com> (sfid-20110828_192022_459733_5BC90D97)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Edward Lu <elu@qca.qualcomm.com>
 
-Signed-off-by: Edward Lu <elu@qca.qualcomm.com>
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   13 +++++++------
- drivers/net/wireless/ath/ath6kl/core.h     |    2 +-
- drivers/net/wireless/ath/ath6kl/init.c     |    2 +-
- 3 files changed, 9 insertions(+), 8 deletions(-)
+ drivers/net/wireless/b43/phy_lcn.c |   35 +++++++++++++++++++++++++++++++++++
+ 1 files changed, 35 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 19b6da8..cfb54db 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -168,7 +168,8 @@ static int ath6kl_set_auth_type(struct ath6kl *ar,
- static int ath6kl_set_cipher(struct ath6kl *ar, u32 cipher, bool ucast)
- {
- 	u8 *ar_cipher = ucast ? &ar->prwise_crypto : &ar->grp_crypto;
--	u8 *ar_cipher_len = ucast ? &ar->prwise_crypto_len : &ar->grp_crpto_len;
-+	u8 *ar_cipher_len = ucast ? &ar->prwise_crypto_len :
-+		&ar->grp_crypto_len;
+diff --git a/drivers/net/wireless/b43/phy_lcn.c b/drivers/net/wireless/b43/phy_lcn.c
+index 4839536..b617e1f 100644
+--- a/drivers/net/wireless/b43/phy_lcn.c
++++ b/drivers/net/wireless/b43/phy_lcn.c
+@@ -213,6 +213,39 @@ static void b43_phy_lcn_pre_radio_init(struct b43_wldev *dev)
+ 	/* TODO: more ops */
+ }
  
- 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: cipher 0x%x, ucast %u\n",
- 		   __func__, cipher, ucast);
-@@ -371,14 +372,14 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 		   __func__,
- 		   ar->auth_mode, ar->dot11_auth_mode, ar->prwise_crypto,
- 		   ar->prwise_crypto_len, ar->grp_crypto,
--		   ar->grp_crpto_len, ar->ch_hint);
-+		   ar->grp_crypto_len, ar->ch_hint);
++static void b43_phy_lcn_save_configsth_restore(struct b43_wldev *dev)
++{
++	u8 i;
++
++	u16 save_radio_regs[6][2] = {
++		{ 0x007, 0 }, { 0x0ff, 0 }, { 0x11f, 0 }, { 0x005, 0 },
++		{ 0x025, 0 }, { 0x112, 0 },
++	};
++	u16 save_phy_regs[14][2] = {
++		{ 0x503, 0 }, { 0x4a4, 0 }, { 0x4d0, 0 }, { 0x4d9, 0 },
++		{ 0x4da, 0 }, { 0x4a6, 0 }, { 0x938, 0 }, { 0x939, 0 },
++		{ 0x4d8, 0 }, { 0x4d0, 0 }, { 0x4d7, 0 }, { 0x4a5, 0 },
++		{ 0x40d, 0 }, { 0x4a2, 0 },
++	};
++	u16 save_radio_4a4;
++
++	for (i = 0; i < 6; i++)
++		save_radio_regs[i][1] = b43_radio_read(dev,
++						       save_radio_regs[i][0]);
++	for (i = 0; i < 14; i++)
++		save_phy_regs[i][1] = b43_phy_read(dev, save_phy_regs[i][0]);
++	save_radio_4a4 = b43_radio_read(dev, 0x4a4);
++
++	/* TODO: config sth */
++
++	for (i = 0; i < 6; i++)
++		b43_radio_write(dev, save_radio_regs[i][0],
++				save_radio_regs[i][1]);
++	for (i = 0; i < 14; i++)
++		b43_phy_write(dev, save_phy_regs[i][0], save_phy_regs[i][1]);
++	b43_radio_write(dev, 0x4a4, save_radio_4a4);
++}
++
+ /**************************************************
+  * Channel switching ops.
+  **************************************************/
+@@ -297,6 +330,8 @@ static int b43_phy_lcn_op_init(struct b43_wldev *dev)
+ 	else
+ 		B43_WARN_ON(1);
  
- 	ar->reconnect_flag = 0;
- 	status = ath6kl_wmi_connect_cmd(ar->wmi, ar->nw_type,
- 					ar->dot11_auth_mode, ar->auth_mode,
- 					ar->prwise_crypto,
- 					ar->prwise_crypto_len,
--					ar->grp_crypto, ar->grp_crpto_len,
-+					ar->grp_crypto, ar->grp_crypto_len,
- 					ar->ssid_len, ar->ssid,
- 					ar->req_bssid, ar->ch_hint,
- 					ar->connect_ctrl_flags);
-@@ -688,7 +689,7 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
- 					ar->prwise_crypto,
- 					ar->prwise_crypto_len,
- 					ar->grp_crypto,
--					ar->grp_crpto_len,
-+					ar->grp_crypto_len,
- 					ar->ssid_len,
- 					ar->ssid,
- 					ar->req_bssid,
-@@ -1277,13 +1278,13 @@ static int ath6kl_cfg80211_join_ibss(struct wiphy *wiphy,
- 		   __func__,
- 		   ar->auth_mode, ar->dot11_auth_mode, ar->prwise_crypto,
- 		   ar->prwise_crypto_len, ar->grp_crypto,
--		   ar->grp_crpto_len, ar->ch_hint);
-+		   ar->grp_crypto_len, ar->ch_hint);
++	b43_phy_lcn_save_configsth_restore(dev);
++
+ 	return 0;
+ }
  
- 	status = ath6kl_wmi_connect_cmd(ar->wmi, ar->nw_type,
- 					ar->dot11_auth_mode, ar->auth_mode,
- 					ar->prwise_crypto,
- 					ar->prwise_crypto_len,
--					ar->grp_crypto, ar->grp_crpto_len,
-+					ar->grp_crypto, ar->grp_crypto_len,
- 					ar->ssid_len, ar->ssid,
- 					ar->req_bssid, ar->ch_hint,
- 					ar->connect_ctrl_flags);
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 99cabd2..60e2291 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -380,7 +380,7 @@ struct ath6kl {
- 	u8 prwise_crypto;
- 	u8 prwise_crypto_len;
- 	u8 grp_crypto;
--	u8 grp_crpto_len;
-+	u8 grp_crypto_len;
- 	u8 def_txkey_index;
- 	struct ath6kl_wep_key wep_key_list[WMI_MAX_KEY_INDEX + 1];
- 	u8 bssid[ETH_ALEN];
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 376e576..6f44017 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -85,7 +85,7 @@ void ath6kl_init_profile_info(struct ath6kl *ar)
- 	ar->prwise_crypto = NONE_CRYPT;
- 	ar->prwise_crypto_len = 0;
- 	ar->grp_crypto = NONE_CRYPT;
--	ar->grp_crpto_len = 0;
-+	ar->grp_crypto_len = 0;
- 	memset(ar->wep_key_list, 0, sizeof(ar->wep_key_list));
- 	memset(ar->req_bssid, 0, sizeof(ar->req_bssid));
- 	memset(ar->bssid, 0, sizeof(ar->bssid));
 -- 
-1.7.4.1
+1.7.3.4
 
