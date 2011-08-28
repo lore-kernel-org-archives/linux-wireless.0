@@ -1,34 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail4-relais-sop.national.inria.fr ([192.134.164.105]:1266 "EHLO
-	mail4-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751429Ab1HVOVV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 10:21:21 -0400
-Message-ID: <4E52638C.8080407@inria.fr> (sfid-20110822_162139_485505_0097D1D2)
-Date: Mon, 22 Aug 2011 16:11:24 +0200
-From: Pierre Louis Aublin <pierre-louis.aublin@inria.fr>
-MIME-Version: 1.0
-To: Julia Lawall <julia@diku.dk>
-CC: Bing Zhao <bzhao@marvell.com>, kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/4] drivers/net/wireless/mwifiex/scan.c: test the just-initialized
- value
-References: <1314021636-11528-4-git-send-email-julia@diku.dk>
-In-Reply-To: <1314021636-11528-4-git-send-email-julia@diku.dk>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:61315 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752275Ab1H1VuJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Aug 2011 17:50:09 -0400
+Subject: Re: [PATCH] iwlwifi: iwl-agn-rs.c: remove old comment
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1314537758-19159-1-git-send-email-Gregory.Dietsche@cuw.edu>
+References: <1314537758-19159-1-git-send-email-Gregory.Dietsche@cuw.edu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 28 Aug 2011 14:07:55 -0700
+Message-ID: <1314565675.26890.1.camel@wwguy-huron> (sfid-20110828_235032_254474_BF743FAA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all
+On Sun, 2011-08-28 at 06:22 -0700, Greg Dietsche wrote:
+> this comment refers to some code that was removed.
+> 
+> Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+> 
+Thank you
 
-On 08/22/2011 04:00 PM, Julia Lawall wrote:
-> -	if (!bss_desc) {
-> +	if (!beacon_ie) {
->   		dev_err(priv->adapter->dev, " failed to alloc bss_desc\n");
-Shouldn't we also modify the error message, from "failed to alloc 
-bss_desc" to "failed to alloc beacon_ie" ?
+Wey
 
-Sincerely
-Pierre Louis Aublin
