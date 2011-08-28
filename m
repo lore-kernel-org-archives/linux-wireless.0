@@ -1,74 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51197 "EHLO mx1.redhat.com"
+Received: from que21.charter.net ([209.225.8.22]:35698 "EHLO que21.charter.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751612Ab1HELLW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2011 07:11:22 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	Tony Houghton <h@realh.co.uk>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
-	<lrodriguez@atheros.com>
-Subject: [PATCH -next 5/8] ath9k: use common function for disabling ASPM
-Date: Fri,  5 Aug 2011 13:10:36 +0200
-Message-Id: <1312542639-4274-6-git-send-email-sgruszka@redhat.com> (sfid-20110805_131124_581364_40A2575E)
-In-Reply-To: <1312542639-4274-1-git-send-email-sgruszka@redhat.com>
-References: <1312542639-4274-1-git-send-email-sgruszka@redhat.com>
+	id S1752003Ab1H1Nbk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Aug 2011 09:31:40 -0400
+From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+To: sgruszka@redhat.com, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Dietsche <Gregory.Dietsche@cuw.edu>
+Subject: [PATCH 2/2] iwlegacy: change IWL_WARN to IWL_DEBUG_HT in iwl4965_rs_tl_turn_on_agg_for_tid
+Date: Sun, 28 Aug 2011 08:26:17 -0500
+Message-Id: <1314537977-20097-2-git-send-email-Gregory.Dietsche@cuw.edu> (sfid-20110828_153145_034311_632E7810)
+In-Reply-To: <1314537977-20097-1-git-send-email-Gregory.Dietsche@cuw.edu>
+References: <1314537977-20097-1-git-send-email-Gregory.Dietsche@cuw.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Disable ASPM using common function, this works also with
-CONFIG_PCIEASPM=y.
+This message should be a debug message and not a warning. So
+change it from IWL_WARN to IWL_DEBUG_HT.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
 ---
- drivers/net/wireless/ath/ath9k/pci.c |   23 +++--------------------
- 1 files changed, 3 insertions(+), 20 deletions(-)
+ drivers/net/wireless/iwlegacy/iwl-4965-rs.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 7d94b64..67a2c96 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -110,33 +110,16 @@ static void ath_pci_aspm_init(struct ath_common *common)
- 	int pos;
- 	u8 aspm;
- 
--	pos = pci_pcie_cap(pdev);
--	if (!pos)
-+	if (!pci_is_pcie(pdev))
- 		return;
- 
--	parent = pdev->bus->self;
--
- 	if (ah->btcoex_hw.scheme != ATH_BTCOEX_CFG_NONE) {
- 		/* Bluetooth coexistance requires disabling ASPM. */
--		pci_read_config_byte(pdev, pos + PCI_EXP_LNKCTL, &aspm);
--		aspm &= ~(PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
--		pci_write_config_byte(pdev, pos + PCI_EXP_LNKCTL, aspm);
--
--		/*
--		 * Both upstream and downstream PCIe components should
--		 * have the same ASPM settings.
--		 */
--		if (WARN_ON(!parent))
--			return;
--
--		pos = pci_pcie_cap(parent);
--		pci_read_config_byte(parent, pos + PCI_EXP_LNKCTL, &aspm);
--		aspm &= ~(PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
--		pci_write_config_byte(parent, pos + PCI_EXP_LNKCTL, aspm);
--
-+		pcie_disable_aspm(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
- 		return;
+diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
+index 9b65153..a0b60ee 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
++++ b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
+@@ -373,7 +373,7 @@ static int iwl4965_rs_tl_turn_on_agg_for_tid(struct iwl_priv *priv,
+ 			ieee80211_stop_tx_ba_session(sta, tid);
+ 		}
+ 	} else {
+-		IWL_ERR(priv, "Aggregation not enabled for tid %d "
++		IWL_DEBUG_HT(priv, "Aggregation not enabled for tid %d "
+ 			"because load = %u\n", tid, load);
  	}
- 
-+	parent = pdev->bus->self;
- 	if (WARN_ON(!parent))
- 		return;
- 
+ 	return ret;
 -- 
-1.7.1
+1.7.5.4
 
