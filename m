@@ -1,169 +1,397 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1858 "EHLO mms2.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:55287 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753397Ab1HHN7i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:38 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 75/82] staging: brcm80211: replaced void *btparam into
- struct pci_dev *btparam
-Date: Mon, 8 Aug 2011 15:58:59 +0200
-Message-ID: <1312811946-16713-76-git-send-email-arend@broadcom.com> (sfid-20110808_155958_438308_50A9A781)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752834Ab1H2Kmk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Aug 2011 06:42:40 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	rmanohar@qca.qualcomm.com
+Subject: [PATCH v5 2/3] ath9k: merge reset related functions
+Date: Mon, 29 Aug 2011 12:42:33 +0200
+Message-Id: <1314614554-3701-2-git-send-email-nbd@openwrt.org> (sfid-20110829_124245_772608_E6F37C11)
+In-Reply-To: <1314614554-3701-1-git-send-email-nbd@openwrt.org>
+References: <1314614554-3701-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+reduces unnecessary code duplication
 
-Code cleanup. Since the softmac driver only supports a PCI(e) bus, the void *
-could be replaced with a less generic type.
-
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/staging/brcm80211/brcmsmac/aiutils.c     |    8 +++++---
- drivers/staging/brcm80211/brcmsmac/aiutils.h     |    4 +++-
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c |    6 +++---
- drivers/staging/brcm80211/brcmsmac/main.c        |    9 +++++----
- drivers/staging/brcm80211/brcmsmac/pub.h         |    2 +-
- 5 files changed, 17 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |  257 +++++++++++++--------------------
+ 1 files changed, 100 insertions(+), 157 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
-index 37edd1c..9cfb492 100644
---- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
-@@ -861,7 +861,8 @@ u32 ai_core_sflags(struct si_pub *sih, u32 mask, u32 val)
- /* *************** from siutils.c ************** */
- /* local prototypes */
- static struct si_info *ai_doattach(struct si_info *sii, void *regs,
--				   void *sdh, char **vars, uint *varsz);
-+				   struct pci_dev *sdh,
-+				   char **vars, uint *varsz);
- static bool ai_buscore_prep(struct si_info *sii);
- static bool ai_buscore_setup(struct si_info *sii, struct chipcregs *cc,
- 			     u32 savewin, uint *origidx, void *regs);
-@@ -881,7 +882,8 @@ static bool ai_ispcie(struct si_info *sii);
-  * vars - pointer to a pointer area for "environment" variables
-  * varsz - pointer to int to return the size of the vars
-  */
--struct si_pub *ai_attach(void *regs, void *sdh, char **vars, uint *varsz)
-+struct si_pub *
-+ai_attach(void *regs, struct pci_dev *sdh, char **vars, uint *varsz)
- {
- 	struct si_info *sii;
- 
-@@ -1052,7 +1054,7 @@ static __used void ai_nvram_process(struct si_info *sii, char *pvars)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 085ec20..f11b2c0 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -212,83 +212,46 @@ static int ath_update_survey_stats(struct ath_softc *sc)
+ 	return ret;
  }
  
- static struct si_info *ai_doattach(struct si_info *sii,
--				   void *regs, void *pbus,
-+				   void *regs, struct pci_dev *pbus,
- 				   char **vars, uint *varsz)
+-/*
+- * Set/change channels.  If the channel is really being changed, it's done
+- * by reseting the chip.  To accomplish this we must first cleanup any pending
+- * DMA, then restart stuff.
+-*/
+-static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+-		    struct ath9k_channel *hchan)
++static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool flush)
  {
- 	struct si_pub *sih = &sii->pub;
-diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
-index 076b4c8..101ab92 100644
---- a/drivers/staging/brcm80211/brcmsmac/aiutils.h
-+++ b/drivers/staging/brcm80211/brcmsmac/aiutils.h
-@@ -446,6 +446,8 @@ struct si_pub {
- #define	IS_SIM(chippkg)	\
- 	((chippkg == HDLSIM_PKG_ID) || (chippkg == HWSIM_PKG_ID))
+ 	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ieee80211_conf *conf = &common->hw->conf;
+-	bool fastcc = true, stopped;
+-	struct ieee80211_channel *channel = hw->conf.channel;
+-	struct ath9k_hw_cal_data *caldata = NULL;
+-	int r;
++	bool ret;
  
-+struct pci_dev;
-+
- struct gpioh_item {
- 	void *arg;
- 	bool level;
-@@ -515,7 +517,7 @@ extern u32 ai_addrspacesize(struct si_pub *sih, uint asidx);
- extern void ai_write_wrap_reg(struct si_pub *sih, u32 offset, u32 val);
+-	if (sc->sc_flags & SC_OP_INVALID)
+-		return -EIO;
++	ieee80211_stop_queues(sc->hw);
  
- /* === exported functions === */
--extern struct si_pub *ai_attach(void *regs, void *sdh, char **vars,
-+extern struct si_pub *ai_attach(void *regs, struct pci_dev *sdh, char **vars,
- 				uint *varsz);
- extern void ai_detach(struct si_pub *sih);
- extern bool ai_pci_war16165(struct si_pub *sih);
-diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-index 6bcb7ea..7f6a490 100644
---- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
-@@ -755,7 +755,7 @@ static int brcms_set_hint(struct brcms_info *wl, char *abbrev)
-  */
- static struct brcms_info *brcms_attach(u16 vendor, u16 device,
- 				       unsigned long regs,
--				       void *btparam, uint irq)
-+				       struct pci_dev *btparam, uint irq)
- {
- 	struct brcms_info *wl = NULL;
- 	int unit, err;
-@@ -795,11 +795,11 @@ static struct brcms_info *brcms_attach(u16 vendor, u16 device,
- 	spin_lock_init(&wl->isr_lock);
+ 	sc->hw_busy_count = 0;
+-
+ 	del_timer_sync(&common->ani.timer);
+ 	cancel_work_sync(&sc->paprd_work);
+ 	cancel_work_sync(&sc->hw_check_work);
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
+ 	cancel_delayed_work_sync(&sc->hw_pll_work);
  
- 	/* prepare ucode */
--	if (brcms_request_fw(wl, (struct pci_dev *)btparam) < 0) {
-+	if (brcms_request_fw(wl, btparam) < 0) {
- 		wiphy_err(wl->wiphy, "%s: Failed to find firmware usually in "
- 			  "%s\n", KBUILD_MODNAME, "/lib/firmware/brcm");
- 		brcms_release_fw(wl);
--		brcms_remove((struct pci_dev *)btparam);
-+		brcms_remove(btparam);
- 		return NULL;
+-	ath9k_ps_wakeup(sc);
+-
+-	spin_lock_bh(&sc->sc_pcu_lock);
+-
+-	/*
+-	 * This is only performed if the channel settings have
+-	 * actually changed.
+-	 *
+-	 * To switch channels clear any pending DMA operations;
+-	 * wait long enough for the RX fifo to drain, reset the
+-	 * hardware at the new frequency, and then re-enable
+-	 * the relevant bits of the h/w.
+-	 */
+ 	ath9k_hw_disable_interrupts(ah);
+-	stopped = ath_drain_all_txq(sc, false);
+ 
+-	if (!ath_stoprecv(sc))
+-		stopped = false;
+-
+-	if (!ath9k_hw_check_alive(ah))
+-		stopped = false;
+-
+-	/* XXX: do not flush receive queue here. We don't want
+-	 * to flush data frames already in queue because of
+-	 * changing channel. */
++	ret = ath_drain_all_txq(sc, retry_tx);
+ 
+-	if (!stopped || !(sc->sc_flags & SC_OP_OFFCHANNEL))
+-		fastcc = false;
++	if (!ath_stoprecv(sc))
++		ret = false;
+ 
+-	if (!(sc->sc_flags & SC_OP_OFFCHANNEL))
+-		caldata = &sc->caldata;
++	if (!flush) {
++		if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
++			ath_rx_tasklet(sc, 0, true);
++		ath_rx_tasklet(sc, 0, false);
++	} else {
++		ath_flushrecv(sc);
++	}
+ 
+-	ath_dbg(common, ATH_DBG_CONFIG,
+-		"(%u MHz) -> (%u MHz), conf_is_ht40: %d fastcc: %d\n",
+-		sc->sc_ah->curchan->channel,
+-		channel->center_freq, conf_is_ht40(conf),
+-		fastcc);
++	return ret;
++}
+ 
+-	r = ath9k_hw_reset(ah, hchan, caldata, fastcc);
+-	if (r) {
+-		ath_err(common,
+-			"Unable to reset channel (%u MHz), reset status %d\n",
+-			channel->center_freq, r);
+-		goto ps_restore;
+-	}
++static bool ath_complete_reset(struct ath_softc *sc, bool start)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	if (ath_startrecv(sc) != 0) {
+ 		ath_err(common, "Unable to restart recv logic\n");
+-		r = -EIO;
+-		goto ps_restore;
++		return false;
  	}
  
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index fb9f13f..d011ed6 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -313,7 +313,7 @@ struct brcms_b_state;
+ 	ath9k_cmn_update_txpow(ah, sc->curtxpow,
+@@ -296,21 +259,89 @@ static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 	ath9k_hw_set_interrupts(ah, ah->imask);
+ 	ath9k_hw_enable_interrupts(ah);
  
- static int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device,
- 			  uint unit, bool piomode, void *regsva,
--			  void *btparam);
-+			  struct pci_dev *btparam);
+-	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL))) {
++	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)) && start) {
+ 		if (sc->sc_flags & SC_OP_BEACONS)
+ 			ath_set_beacon(sc);
++
+ 		ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
+ 		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/2);
+ 		if (!common->disable_ani)
+ 			ath_start_ani(common);
+ 	}
  
- /* up/down, reset, clk */
- static void brcms_b_reset(struct brcms_hardware *wlc_hw);
-@@ -4301,7 +4301,7 @@ struct brcms_pub *brcms_c_pub(void *wlc)
-  *    put the whole chip in reset(driver down state), no clock
-  */
- int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device, uint unit,
--		   bool piomode, void *regsva, void *btparam)
-+		   bool piomode, void *regsva, struct pci_dev *btparam)
+- ps_restore:
+-	ieee80211_wake_queues(hw);
++	ieee80211_wake_queues(sc->hw);
++
++	return true;
++}
++
++static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
++			      bool retry_tx)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_cal_data *caldata = NULL;
++	bool fastcc = true;
++	bool flush = false;
++	int r;
++
++	if (!(sc->sc_flags & SC_OP_OFFCHANNEL)) {
++		fastcc = false;
++		caldata = &sc->caldata;
++	}
++
++	if (!hchan) {
++		fastcc = false;
++		flush = true;
++		hchan = ah->curchan;
++	}
++
++	if (fastcc && !ath9k_hw_check_alive(ah))
++		fastcc = false;
++
++	if (!ath_prepare_reset(sc, retry_tx, flush))
++		fastcc = false;
++
++	ath_dbg(common, ATH_DBG_CONFIG,
++		"Reset to %u MHz, HT40: %d fastcc: %d\n",
++		hchan->channel, !!(hchan->channelFlags & (CHANNEL_HT40MINUS |
++							  CHANNEL_HT40PLUS)),
++		fastcc);
++
++	r = ath9k_hw_reset(ah, hchan, caldata, fastcc);
++	if (r) {
++		ath_err(common,
++			"Unable to reset channel, reset status %d\n", r);
++		return r;
++	}
++
++	if (!ath_complete_reset(sc, true))
++		return -EIO;
++
++	return 0;
++}
++
+ 
++/*
++ * Set/change channels.  If the channel is really being changed, it's done
++ * by reseting the chip.  To accomplish this we must first cleanup any pending
++ * DMA, then restart stuff.
++*/
++static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
++		    struct ath9k_channel *hchan)
++{
++	int r;
++
++	if (sc->sc_flags & SC_OP_INVALID)
++		return -EIO;
++
++	ath9k_ps_wakeup(sc);
++
++	spin_lock_bh(&sc->sc_pcu_lock);
++	r = ath_reset_internal(sc, hchan, false);
+ 	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 	ath9k_ps_restore(sc);
++
+ 	return r;
+ }
+ 
+@@ -893,28 +924,13 @@ static void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 			channel->center_freq, r);
+ 	}
+ 
+-	ath9k_cmn_update_txpow(ah, sc->curtxpow,
+-			       sc->config.txpowlimit, &sc->curtxpow);
+-	if (ath_startrecv(sc) != 0) {
+-		ath_err(common, "Unable to restart recv logic\n");
+-		goto out;
+-	}
+-	if (sc->sc_flags & SC_OP_BEACONS)
+-		ath_set_beacon(sc);	/* restart beacons */
+-
+-	/* Re-Enable  interrupts */
+-	ath9k_hw_set_interrupts(ah, ah->imask);
+-	ath9k_hw_enable_interrupts(ah);
++	ath_complete_reset(sc, true);
+ 
+ 	/* Enable LED */
+ 	ath9k_hw_cfg_output(ah, ah->led_pin,
+ 			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 	ath9k_hw_set_gpio(ah, ah->led_pin, 0);
+ 
+-	ieee80211_wake_queues(hw);
+-	ieee80211_queue_delayed_work(hw, &sc->hw_pll_work, HZ/2);
+-
+-out:
+ 	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 	ath9k_ps_restore(sc);
+@@ -927,12 +943,8 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	int r;
+ 
+ 	ath9k_ps_wakeup(sc);
+-	cancel_delayed_work_sync(&sc->hw_pll_work);
+-
+ 	spin_lock_bh(&sc->sc_pcu_lock);
+ 
+-	ieee80211_stop_queues(hw);
+-
+ 	/*
+ 	 * Keep the LED on when the radio is disabled
+ 	 * during idle unassociated state.
+@@ -942,13 +954,7 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		ath9k_hw_cfg_gpio_input(ah, ah->led_pin);
+ 	}
+ 
+-	/* Disable interrupts */
+-	ath9k_hw_disable_interrupts(ah);
+-
+-	ath_drain_all_txq(sc, false);	/* clear pending tx frames */
+-
+-	ath_stoprecv(sc);		/* turn off frame recv */
+-	ath_flushrecv(sc);		/* flush recv queue */
++	ath_prepare_reset(sc, false, true);
+ 
+ 	if (!ah->curchan)
+ 		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
+@@ -970,48 +976,11 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 
+ int ath_reset(struct ath_softc *sc, bool retry_tx)
  {
- 	struct brcms_hardware *wlc_hw;
- 	struct d11regs *regs;
-@@ -4644,8 +4644,9 @@ int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device, uint unit,
- /*
-  * The common driver entry routine. Error codes should be unique
-  */
--void *brcms_c_attach(struct brcms_info *wl, u16 vendor, u16 device, uint unit,
--		 bool piomode, void *regsva, void *btparam, uint *perr)
-+void *
-+brcms_c_attach(struct brcms_info *wl, u16 vendor, u16 device, uint unit,
-+	       bool piomode, void *regsva, struct pci_dev *btparam, uint *perr)
- {
- 	struct brcms_c_info *wlc;
- 	uint err = 0;
-diff --git a/drivers/staging/brcm80211/brcmsmac/pub.h b/drivers/staging/brcm80211/brcmsmac/pub.h
-index 5e15c67..bfbb261 100644
---- a/drivers/staging/brcm80211/brcmsmac/pub.h
-+++ b/drivers/staging/brcm80211/brcmsmac/pub.h
-@@ -551,7 +551,7 @@ struct brcms_antselcfg {
- /* common functions for every port */
- extern void *brcms_c_attach(struct brcms_info *wl, u16 vendor, u16 device,
- 			uint unit, bool piomode, void *regsva,
--			void *btparam, uint *perr);
-+			struct pci_dev *btparam, uint *perr);
- extern uint brcms_c_detach(struct brcms_c_info *wlc);
- extern int brcms_c_up(struct brcms_c_info *wlc);
- extern uint brcms_c_down(struct brcms_c_info *wlc);
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ieee80211_hw *hw = sc->hw;
+ 	int r;
+ 
+-	sc->hw_busy_count = 0;
+-
+-	/* Stop ANI */
+-
+-	del_timer_sync(&common->ani.timer);
+-
+ 	ath9k_ps_wakeup(sc);
+ 
+-	ieee80211_stop_queues(hw);
+-
+-	ath9k_hw_disable_interrupts(ah);
+-	ath_drain_all_txq(sc, retry_tx);
+-
+-	ath_stoprecv(sc);
+-	ath_flushrecv(sc);
+-
+-	r = ath9k_hw_reset(ah, sc->sc_ah->curchan, ah->caldata, false);
+-	if (r)
+-		ath_err(common,
+-			"Unable to reset hardware; reset status %d\n", r);
+-
+-	if (ath_startrecv(sc) != 0)
+-		ath_err(common, "Unable to start recv logic\n");
+-
+-	/*
+-	 * We may be doing a reset in response to a request
+-	 * that changes the channel so update any state that
+-	 * might change as a result.
+-	 */
+-	ath9k_cmn_update_txpow(ah, sc->curtxpow,
+-			       sc->config.txpowlimit, &sc->curtxpow);
+-
+-	if ((sc->sc_flags & SC_OP_BEACONS) || !(sc->sc_flags & (SC_OP_OFFCHANNEL)))
+-		ath_set_beacon(sc);	/* restart beacons */
+-
+-	ath9k_hw_set_interrupts(ah, ah->imask);
+-	ath9k_hw_enable_interrupts(ah);
++	r = ath_reset_internal(sc, NULL, retry_tx);
+ 
+ 	if (retry_tx) {
+ 		int i;
+@@ -1024,12 +993,6 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 		}
+ 	}
+ 
+-	ieee80211_wake_queues(hw);
+-
+-	/* Start ANI */
+-	if (!common->disable_ani)
+-		ath_start_ani(common);
+-
+ 	ath9k_ps_restore(sc);
+ 
+ 	return r;
+@@ -1081,28 +1044,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 		goto mutex_unlock;
+ 	}
+ 
+-	/*
+-	 * This is needed only to setup initial state
+-	 * but it's best done after a reset.
+-	 */
+-	ath9k_cmn_update_txpow(ah, sc->curtxpow,
+-			sc->config.txpowlimit, &sc->curtxpow);
+-
+-	/*
+-	 * Setup the hardware after reset:
+-	 * The receive engine is set going.
+-	 * Frame transmit is handled entirely
+-	 * in the frame output path; there's nothing to do
+-	 * here except setup the interrupt mask.
+-	 */
+-	if (ath_startrecv(sc) != 0) {
+-		ath_err(common, "Unable to start recv logic\n");
+-		r = -EIO;
+-		spin_unlock_bh(&sc->sc_pcu_lock);
+-		goto mutex_unlock;
+-	}
+-	spin_unlock_bh(&sc->sc_pcu_lock);
+-
+ 	/* Setup our intr mask. */
+ 	ah->imask = ATH9K_INT_TX | ATH9K_INT_RXEOL |
+ 		    ATH9K_INT_RXORN | ATH9K_INT_FATAL |
+@@ -1125,12 +1066,14 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 
+ 	/* Disable BMISS interrupt when we're not associated */
+ 	ah->imask &= ~(ATH9K_INT_SWBA | ATH9K_INT_BMISS);
+-	ath9k_hw_set_interrupts(ah, ah->imask);
+-	ath9k_hw_enable_interrupts(ah);
+ 
+-	ieee80211_wake_queues(hw);
++	if (!ath_complete_reset(sc, false)) {
++		r = -EIO;
++		spin_unlock_bh(&sc->sc_pcu_lock);
++		goto mutex_unlock;
++	}
+ 
+-	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
++	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 	if ((ah->btcoex_hw.scheme != ATH_BTCOEX_CFG_NONE) &&
+ 	    !ah->btcoex_hw.enabled) {
 -- 
-1.7.4.1
-
+1.7.3.2
 
