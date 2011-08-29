@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f170.google.com ([209.85.210.170]:44800 "EHLO
-	mail-iy0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751685Ab1HSRiJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Aug 2011 13:38:09 -0400
-Received: by iye16 with SMTP id 16so5917564iye.1
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Aug 2011 10:38:09 -0700 (PDT)
+Received: from mout3.freenet.de ([195.4.92.93]:37917 "EHLO mout3.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752978Ab1H2Hwx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Aug 2011 03:52:53 -0400
+Received: from [195.4.92.25] (helo=15.mx.freenet.de)
+	by mout3.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #5)
+	id 1QxweI-0004ws-8p
+	for linux-wireless@vger.kernel.org; Mon, 29 Aug 2011 09:52:50 +0200
+Received: from p4fde011f.dip0.t-ipconnect.de ([79.222.1.31]:59643 helo=mail.maya.org)
+	by 15.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #5)
+	id 1QxweI-0006bQ-1X
+	for linux-wireless@vger.kernel.org; Mon, 29 Aug 2011 09:52:50 +0200
+Received: from [192.168.1.6] (dualc.maya.org [192.168.1.6])
+	by mail.maya.org (8.14.4/8.13.8) with ESMTP id p7T7qkjX003178
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 09:52:47 +0200
+Message-ID: <4E5B455D.5030301@01019freenet.de> (sfid-20110829_095256_621862_FCA0C0CC)
+Date: Mon, 29 Aug 2011 09:53:01 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE6600131E1CA9A@dnce02.ent.ti.com>
-References: <AC090B9732AB2B4DB7FF476E907FE6600131E1C339@dnce02.ent.ti.com>
- <CAEsZsEjRwJs-YTfWgunzPmh56t4KaQ2sPG_n0W5KitfWL-AcKQ@mail.gmail.com> <AC090B9732AB2B4DB7FF476E907FE6600131E1CA9A@dnce02.ent.ti.com>
-From: Aloisio Almeida <aloisio.almeida@openbossa.org>
-Date: Fri, 19 Aug 2011 14:37:49 -0300
-Message-ID: <CAEsZsEg=-EWO566OFFmp=EY-FtD39+c2k1vxyUFbQX198hcykg@mail.gmail.com> (sfid-20110819_193814_899698_6475027F)
-Subject: Re: [PATCH 1/4] NFC: Add NFC dev_up and dev_down control operations
-To: "Elias, Ilan" <ilane@ti.com>
-Cc: "lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
-	"samuel@sortiz.org" <samuel@sortiz.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Additional, unrecognized frames containing undefined data in AP mode
+ with rt2800usb
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HI Ilan,
+Hello,
 
-On Thu, Aug 18, 2011 at 3:43 AM, Elias, Ilan <ilane@ti.com> wrote:
->> What happens if the driver is polling for targets or even with a
->> remote target activated? The nfc_dev structure has some control to
->> track the driver state (e.g. dev->polling) that must have their values
->> updated. Otherwise, the next start_poll() call would fail with EBUSY.
-> You're correct, of course.
-> When dev_down is called and we have some active operation (e.g. polling,
-> active target), there are 2 approaches:
-> 1) stop internally any active operations and update internal states
-> (e.g. dev->polling). Please note that if we have an active data exchange,
-> the callback might not be called at all.
-> 2) simply return EBUSY and let the upper layers handle it.
+I just air traced rt2800usb (compat-wireless-3.1-rc1-1, rt3572 based
+device (Linksys WUSB600N v2)) running in AP mode. I could see casual
+(1-3 per second) additional frames ("Unrecognized (Reserved frame)")
+during beaconing (nothing else has been done), which don't have a MAC
+address but contain undefined (?) data.
 
-We don't use to interrupt a running command when a new one arrives.
-However, if dev_down/dev_up commands are intending to be used also as
-a reset procedure, the first approach is more suitable.
+The size of these complete frames was either 124 bytes or 1148 bytes.
 
-Until now we didn't face any situation that required a reset
-procedure. So i would go with the second approach.
+Could you please fix this issue?
 
-> With both approaches, we'll have to keep track of active target state
-> (in addition to dev->polling). Which option do you prefer?
 
-Yes, that's true. Something like dev->remote_activated will be needed.
 
-Regards,
-Aloisio
+Kind regards,
+Andreas
