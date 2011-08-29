@@ -1,57 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:40173 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752643Ab1HJQoU convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64733 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752763Ab1H2M35 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 12:44:20 -0400
-Date: Wed, 10 Aug 2011 18:44:06 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH 1/2] ssb: fix DMA translation for some specific boards
-Message-ID: <20110810184406.6cad6d17@milhouse> (sfid-20110810_184423_775264_26C1F383)
-In-Reply-To: <CACna6rxBof9T+vaZ=wHZJcXY12XVrYvFbHEdXk1+=_LAwjmtig@mail.gmail.com>
-References: <1312992688-6976-1-git-send-email-zajec5@gmail.com>
-	<20110810184028.3cb9c532@milhouse>
-	<CACna6rxBof9T+vaZ=wHZJcXY12XVrYvFbHEdXk1+=_LAwjmtig@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 29 Aug 2011 08:29:57 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH 15/20] ath6kl: Advertise supported mgmt_stypes
+Date: Mon, 29 Aug 2011 15:23:56 +0300
+Message-ID: <1314620641-24257-16-git-send-email-jouni@qca.qualcomm.com> (sfid-20110829_143000_379073_F944D77F)
+In-Reply-To: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 10 Aug 2011 18:42:59 +0200
-Rafał Miłecki <zajec5@gmail.com> wrote:
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   24 ++++++++++++++++++++++++
+ 1 files changed, 24 insertions(+), 0 deletions(-)
 
-> W dniu 10 sierpnia 2011 18:40 użytkownik Michael Büsch <m@bues.ch> napisał:
-> > On Wed, 10 Aug 2011 18:11:27 +0200
-> >> +/* Some chipsets need routing known for PCIe and 64-bit DMA */
-> >> +static bool ssb_dma_translation_special_bit(struct ssb_device *dev)
-> >> +{
-> >> +     u16 chip_id = dev->bus->chip_id;
-> >> +
-> >> +     if (dev->id.coreid == SSB_DEV_80211)
-> >> +             return (chip_id == 0x4322 || chip_id == 43221 ||
-> >> +                     chip_id == 43231 || chip_id == 43222);
-> >> +     return 0;
-> >> +}
-> >
-> > ACK, apart from this coding style violation (missing curly braces).
-> 
-> From kernel CodingStyle:
-> > Do not unnecessarily use braces where a single statement will do.
-> >
-> > if (condition)
-> > 	action();
-> 
-> I guess simple "return" (even when using line break) is still like
-> single statement...
-> Am I wrong?
-> 
-
-Last time I checked this only applied to single-line-statements.
-Maybe it changed, though.
-
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index d5f487f..2c35fd2 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1751,6 +1751,28 @@ static void ath6kl_mgmt_frame_register(struct wiphy *wiphy,
+ 	}
+ }
+ 
++static const struct ieee80211_txrx_stypes
++ath6kl_mgmt_stypes[NUM_NL80211_IFTYPES] = {
++	[NL80211_IFTYPE_STATION] = {
++		.tx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		BIT(IEEE80211_STYPE_PROBE_RESP >> 4),
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
++	},
++	[NL80211_IFTYPE_P2P_CLIENT] = {
++		.tx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		BIT(IEEE80211_STYPE_PROBE_RESP >> 4),
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
++	},
++	[NL80211_IFTYPE_P2P_GO] = {
++		.tx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		BIT(IEEE80211_STYPE_PROBE_RESP >> 4),
++		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
++	},
++};
++
+ static struct cfg80211_ops ath6kl_cfg80211_ops = {
+ 	.change_virtual_intf = ath6kl_cfg80211_change_iface,
+ 	.scan = ath6kl_cfg80211_scan,
+@@ -1803,6 +1825,8 @@ struct wireless_dev *ath6kl_cfg80211_init(struct device *dev)
+ 		return NULL;
+ 	}
+ 
++	wdev->wiphy->mgmt_stypes = ath6kl_mgmt_stypes;
++
+ 	wdev->wiphy->max_remain_on_channel_duration = 5000;
+ 
+ 	/* set device pointer for wiphy */
 -- 
-Greetings, Michael.
+1.7.4.1
+
