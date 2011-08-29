@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:36010 "EHLO bear.ext.ti.com"
+Received: from nbd.name ([46.4.11.11]:34237 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751893Ab1HQGeH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2011 02:34:07 -0400
-From: "Elias, Ilan" <ilane@ti.com>
-To: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
-	"samuel@sortiz.org" <samuel@sortiz.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Wed, 17 Aug 2011 08:33:53 +0200
-Subject: RE: [PATCH 1/4] NFC: Add NFC dev_up and dev_down control operations
-Message-ID: <AC090B9732AB2B4DB7FF476E907FE6600131E1C412@dnce02.ent.ti.com> (sfid-20110817_083411_681242_70723ECA)
-References: <AC090B9732AB2B4DB7FF476E907FE6600131E1C339@dnce02.ent.ti.com>
-In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE6600131E1C339@dnce02.ent.ti.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S1752961Ab1H2KvG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Aug 2011 06:51:06 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath9k: fix checks for first subframe delimiter padding
+Date: Mon, 29 Aug 2011 12:51:01 +0200
+Message-Id: <1314615061-6354-1-git-send-email-nbd@openwrt.org> (sfid-20110829_125110_841589_17487B62)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Aloisio, Lauro, Samuel,
+The commit "ath9k_hw: Fix exceed transmission burst-time of 5GHz" added
+a padding of 60 delimiters on the first subframe to work around an issue
+on AR9380, but it lacked the checks to prevent it from being applied to
+pre-AR9380, enterprise AR9380 or AR9580+
 
-> 
-> The following 2 NFC control operations (via generic netlink) were added:
-> 	- Dev_up, which turn on the NFC controller (this operation may take
-> a 	few seconds, as it can download new FW to the NFC controller)
-> 	- Dev_down, which turn off the NFC controller
-> 
-Please note that in the file core.c, the new flag 'dev_up' is not checked in the nfc core API (e.g. in the function nfc_start_poll).
-We should discuss whether the dev_up/dev_down operations will be used in all devices (i.e. also PN533) - this is my preference.
-If so, I'll add a check for the 'dev_up' flag in the nfc core API.
-Otherwise, I'll check the state at a lower layer, i.e. the NCI layer.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/reg.h  |    1 +
+ drivers/net/wireless/ath/ath9k/xmit.c |    4 +++-
+ 2 files changed, 4 insertions(+), 1 deletions(-)
 
-Please advise.
-
-Thanks & BR,
-Ilan
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index a3b8bbc..989514a 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1131,6 +1131,7 @@ enum {
+ #define AR_INTR_PRIO_ASYNC_ENABLE (AR_SREV_9340(ah) ? 0x4094 : 0x40d4)
+ #define AR_ENT_OTP		  0x40d8
+ #define AR_ENT_OTP_CHAIN2_DISABLE               0x00020000
++#define AR_ENT_OTP_MIN_PKT_SIZE_DISABLE		0x00800000
+ #define AR_ENT_OTP_MPSD		0x00800000
+ 
+ #define AR_CH0_BB_DPLL1		 0x16180
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 5e29829..ad3fcd2 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -692,7 +692,9 @@ static int ath_compute_num_delims(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 	 * Add delimiter when using RTS/CTS with aggregation
+ 	 * and non enterprise AR9003 card
+ 	 */
+-	if (first_subfrm)
++	if (first_subfrm && (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) &&
++	    !AR_SREV_9580_10_OR_LATER(sc->sc_ah) &&
++	    (sc->sc_ah->ent_mode & AR_ENT_OTP_MIN_PKT_SIZE_DISABLE))
+ 		ndelim = max(ndelim, FIRST_DESC_NDELIMS);
+ 
+ 	/*
+-- 
+1.7.3.2
 
