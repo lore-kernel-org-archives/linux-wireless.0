@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:54440 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752472Ab1HIJOk (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47488 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753429Ab1H2NcJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 05:14:40 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 24so210739wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:40 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 37/40] wl12xx: don't wait for disconnection event
-Date: Tue,  9 Aug 2011 12:13:50 +0300
-Message-Id: <1312881233-9366-38-git-send-email-eliad@wizery.com> (sfid-20110809_111446_248662_AC27E6D7)
-In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	Mon, 29 Aug 2011 09:32:09 -0400
+Subject: Re: [PATCH v3 2/2] mac80211: fix race condition between assoc_done
+ and first EAP packet
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Guy Eilam <guy@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1313583495-9695-2-git-send-email-guy@wizery.com> (sfid-20110817_142226_610504_EC40B744)
+References: <1313583495-9695-1-git-send-email-guy@wizery.com>
+	 <1313583495-9695-2-git-send-email-guy@wizery.com>
+	 (sfid-20110817_142226_610504_EC40B744)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 29 Aug 2011 15:32:06 +0200
+Message-ID: <1314624726.8959.8.camel@jlt3.sipsolutions.net> (sfid-20110829_153213_804071_6C363C4F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes the fw doesn't send the DISCONNECT_EVENT_COMPLETE_ID
-on station role stop, so don't wait for it.
+On Wed, 2011-08-17 at 15:18 +0300, Guy Eilam wrote:
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/cmd.c |    6 ------
- 1 files changed, 0 insertions(+), 6 deletions(-)
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -850,8 +850,21 @@ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
+>  		      ieee80211_is_pspoll(hdr->frame_control)) &&
+>  		     rx->sdata->vif.type != NL80211_IFTYPE_ADHOC &&
+>  		     rx->sdata->vif.type != NL80211_IFTYPE_WDS &&
+> -		     (!rx->sta || !test_sta_flags(rx->sta, WLAN_STA_ASSOC))))
+> +		     (!rx->sta || !test_sta_flags(rx->sta, WLAN_STA_ASSOC)))) {
+> +		if (rx->sta && rx->sta->dummy &&
+> +		    ieee80211_is_data_present(hdr->frame_control)) {
+> +			u16 ethertype;
+> +			u8 *payload;
+> +
+> +			payload = rx->skb->data +
+> +				ieee80211_hdrlen(hdr->frame_control);
+> +			ethertype = (payload[6] << 8) | payload[7];
+> +			if (cpu_to_be16(ethertype) ==
+> +			    rx->sdata->control_port_protocol)
+> +				return RX_CONTINUE;
+> +		}
+>  		return RX_DROP_MONITOR;
+> +	}
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index 9ef8621..ad926d2 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -640,18 +640,12 @@ int wl1271_cmd_role_stop_sta(struct wl1271 *wl)
- 	ret = wl1271_cmd_send(wl, CMD_ROLE_STOP, cmd, sizeof(*cmd), 0);
- 	if (ret < 0) {
- 		wl1271_error("failed to initiate cmd role stop");
- 		goto out_free;
- 	}
+It might be easier to read to split the outer condition now into
+data/ps-poll?
+
+Anyway, didn't pay attention if this got applied -- seems fine.
  
--	ret = wl1271_cmd_wait_for_event(wl, DISCONNECT_EVENT_COMPLETE_ID);
--	if (ret < 0) {
--		wl1271_error("cmd role stop sta event completion error");
--		goto out_free;
--	}
--
- 	wl1271_free_link(wl, &wl->sta_hlid);
- 
- out_free:
- 	kfree(cmd);
- 
- out:
--- 
-1.7.6.401.g6a319
+johannes
 
