@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54190 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753327Ab1HAJjG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2011 05:39:06 -0400
-Message-ID: <4E367432.60601@openwrt.org> (sfid-20110801_113911_260178_4586D532)
-Date: Mon, 01 Aug 2011 11:38:58 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCHv2 2/2] mac80211: Don't use EAPOL frames for rate sampling
-References: <1312191173-23963-1-git-send-email-helmut.schaa@googlemail.com> <1312191173-23963-2-git-send-email-helmut.schaa@googlemail.com>
-In-Reply-To: <1312191173-23963-2-git-send-email-helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:47748 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753791Ab1H2PjD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Aug 2011 11:39:03 -0400
+Subject: Re: [RFC v2] mac80211: stop tx before doing hw config and rate
+ update
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1314617635-27936-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1314617635-27936-1-git-send-email-rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 29 Aug 2011 17:39:01 +0200
+Message-ID: <1314632341.8959.22.camel@jlt3.sipsolutions.net> (sfid-20110829_173908_572951_B0DF7AFC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-08-01 11:32 AM, Helmut Schaa wrote:
-> Signed-off-by: Helmut Schaa<helmut.schaa@googlemail.com>
+On Mon, 2011-08-29 at 17:03 +0530, Rajkumar Manoharan wrote:
+> The assumption is that during the hw config, transmission was
+> already stopped by mac80211. But during channel type change,
+> the mac80211 continue to transmit frames. The driver like ath9k
+> does chip reset while doing channel set. This could leads to
+> buffer overflow at driver side. And also after configuring the channel
+> and before doing rate updation, the frames are continued to xmit
+> with older rates. This patch ensures that the frames are always
+> xmitted with updated rates and avoid buffer overflow.
+> 
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 > ---
->
-> Haven't done much testing yet but this looks safe to me.
-> Helmut
->
->   net/mac80211/rc80211_minstrel_ht.c |    8 +++++++-
->   1 files changed, 7 insertions(+), 1 deletions(-)
->
-> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-> index 66a1eeb..2158838 100644
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -608,7 +608,13 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
->   		return mac80211_minstrel.get_rate(priv, sta,&msp->legacy, txrc);
->
->   	info->flags |= mi->tx_flags;
-> -	sample_idx = minstrel_get_sample_rate(mp, mi);
-> +
-> +	/* Don't use EAPOL frames for sampling on non-mrr hw */
-> +	if (mp->hw->max_rates == 1&&
-> +	    txrc->skb->protocol == cpu_to_be16(ETH_P_PAE))
-I think checking for mp->hw->max_rates < 3 would be better here, because 
-then it also covers the primary rate + fallback rate case (as being used 
-by b43), which also doesn't include the max_prob_rate in the mrr series.
+> v2: Removed new stop queue reason code by netif
 
-- Felix
+why did you do that?
+
+
+> +	netif_tx_stop_all_queues(sdata->dev);
+> +
+> +	drv_flush(local, false);
+>  	/* channel_type change automatically detected */
+>  	ieee80211_hw_config(local, 0);
+
+it seems to me that if the driver queues were full & stopped, this
+happens, then flush will clear the queues & start them, and you'll start
+queues during flush again...
+
+johannes
+
