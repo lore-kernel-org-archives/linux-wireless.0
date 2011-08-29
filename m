@@ -1,61 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:54344 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750849Ab1HBKPS (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:63219 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753808Ab1H2SMR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 06:15:18 -0400
-Received: by vxh35 with SMTP id 35so4832281vxh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 03:15:18 -0700 (PDT)
+	Mon, 29 Aug 2011 14:12:17 -0400
+Received: by pzk37 with SMTP id 37so8842820pzk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 11:12:17 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAN=pzdJdFCqvif2qgq-jwDJ2h7n-nS7S8=A63BL_qBZqM7W5Xw@mail.gmail.com>
-References: <CAN=pzdLRaRHkg4NquUpDhEwRzq-roKQXMtMcwnr031maDSLRfw@mail.gmail.com>
-	<CAN=pzd+EFcyRnexjiMMLNR86hT_UKiePr=yCkZZk5dD4sqYSew@mail.gmail.com>
-	<CAN=pzdL596WrhmaWWE6s_ouAmR-zSr1bUki2YVzLKgE1Y2VijQ@mail.gmail.com>
-	<201107220929.35836.helmut.schaa@googlemail.com>
-	<CAN=pzdJdFCqvif2qgq-jwDJ2h7n-nS7S8=A63BL_qBZqM7W5Xw@mail.gmail.com>
-Date: Tue, 2 Aug 2011 14:15:18 +0400
-Message-ID: <CAN=pzdLV3WBb_WxLLo2NefP7--TJ+4zByC8JfpVDJT_=2tQh0Q@mail.gmail.com> (sfid-20110802_121522_048530_8B27319A)
-Subject: Re: rt2x00, AP mode, 802.11n is not working properly
-From: Stanislav Demakov <s.demakov@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CACna6rwU4RuYuiAFjXFDH-c+EFsKtKFmB1Sh8kXdb9EoUt4abg@mail.gmail.com>
+References: <CACna6rwU4RuYuiAFjXFDH-c+EFsKtKFmB1Sh8kXdb9EoUt4abg@mail.gmail.com>
+Date: Mon, 29 Aug 2011 20:12:17 +0200
+Message-ID: <CACna6rzkSgbf8sV2S1mg2OhxKstXeiqnmNmYFSMuAc563acBpg@mail.gmail.com> (sfid-20110829_201221_298794_FEAF5ED3)
+Subject: Re: Looking for BCM43228
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: multipart/mixed; boundary=000e0cd32e1ad7946b04aba8d51d
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+--000e0cd32e1ad7946b04aba8d51d
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Any update on fixing poor tx speed in rt2x00 driver?
+W dniu 29 sierpnia 2011 19:28 u=C5=BCytkownik Rafa=C5=82 Mi=C5=82ecki
+<zajec5@gmail.com> napisa=C5=82:
+> I'm looking for 14e4:4359 card which is BCM43228 chipset based.
+>
+> According to Ubuntu [0] it can be found in Dell's notebooks:
+> 1) Dell Latitude E5420m
+> 2) Dell Latitude E5520m
+> 3) Dell Latitude E6220
+>
+> Ubuntu user Marc Legris provided a prove this card is really used by
+> Dell. See any of his launchpad reports for lspci [1] [2] [3].
+>
+> I've search on ebay and polish similar site, no results so far. Ofc
+> I'm not interested in buying the whole laptop just for WiFi card. I'll
+> be contacting Dell in next days to see if they can offer me a card.
 
-2011/7/22 Stanislav Demakov <s.demakov@gmail.com>:
-> Thank you for the assistance, ask If you'll need anyhitng else to test.
->
-> By the way I've tested transfer speed in both directions and the results are:
->
-> from Server to Client: ~2.5 MB/s (after applying your patch and
-> changing value 8 back to 64)
-> from Client to Server: ~5.3 MB/s
->
-> Both machines uses 1T1R modules and connection is 65mbps (20mhz, MCS7)
-> So I guess in ideal case Server to Client speed should be at least
-> twice faster than it is now.
-> Interesting that in G mode(54mbps) the same transmit speed is around 3.2 MB/s.
->
-> 2011/7/22 Helmut Schaa <helmut.schaa@googlemail.com>:
->> Am Donnerstag, 21. Juli 2011 schrieb Stanislav Demakov:
->>> Quick note: changed .entry_num value back to 64 and the speed raised
->>> even more! Now it's about 2.5 MB/s.
->>
->> 64 is not a safe value in this case and rt2800usb_txdone_entry_check tries
->> to protect against a special case where the tx status for single frames
->> gets "lost". But at least we now know a little more about this issue.
->>
->>> But still there is still room for improvement. :)
->>> Looks like rt2800usb_txdone_entry_check was the major cause for the delay.
->>
->> Ok, thanks for trying. I'll think about a proper solution without causing
->> regressions ...
->>
->> Helmut
->>
->
+I've chatted with Dell employee and have received list of parts they
+have for E5520m and E6220. Some of them are not wifi cards at all,
+some are Intel's one.
+
+Cards that may be interesting to look at: DW1530, DW1501.
+
+--=20
+Rafa=C5=82
+
+--000e0cd32e1ad7946b04aba8d51d
+Content-Type: text/plain; charset=US-ASCII; name="dell.parts.txt"
+Content-Disposition: attachment; filename="dell.parts.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_grxrmb050
+
+TGF0aXR1ZGUgRTU1MjBtIHBhcnRzOgoxSktHQyBXTEFOLCBXaUZpLCBIYWxmIE1pbmkgQ2FyZCwg
+RFcxNTMwLCBIaWdoYmFsbCBDUkQsV1JMRVMsSE1DUkQsRFcxNTMwLEhGIDAgMSAwIFllcyAxIAo0
+SjhQTSBXUEFOIFNWQyBLSVQgKENvbnRhaW5zIE1vZHVsZSBQL04gRzlNNVggYW5kIGNhYmxlIFAv
+TiA0N0g1MiAtIFdQQU4sIEJsdWV0b290aCBNb2R1bGUsIERXMzc1LCBGb3hjb25uLCBCbGFybmV5
+U3RvbmUpIFNWQyxBU1NZLENSRCtDQkwsQkxUSCxLUlVHIDAgMCAxIFllcyAxIAo5WVROUiBXV0FO
+LCBNb2JpbGUgQnJvYWRiYW5kLCBNaW5pIENhcmQsIERXNTU1MCwgSGVsbXNsZXkgMyAoQVRULVVT
+KSBNRE0sV1JMRVMsRFc1NTUwLE1DUkQsQVRULEhGIDAgMSAwIFllcyAxIApHOU01WCBXUEFOLCBC
+bHVldG9vdGggTW9kdWxlLCBEVzM3NSwgRm94Y29ubiwgQmxhcm5leVN0b25lIChEb2VzIG5vdCBp
+bmNsdWRlIGNhYmxlKSAoT3JkZXIgU3ZjIEtpdCA0SjhQTSkgQ1JELFdSTEVTLDM3NSxCTFRILEZY
+Q04sSEYgMCAwIDEgWWVzIDEgCks1WTZEIFdMQU4sIEhhbGYgTWluaSBDYXJkLCBEVzE1MDEsIExp
+dGVPbiwgVmVyZGkgQ1JELFdSTEVTLEhNQ1JELERXMTUwMSxIRiAwIDEgMCBZZXMgMSAKV0hEUEMg
+V0xBTiwgSGFsZiBNaW5pIENhcmQsIERXMTUwMSwgRm94Y29ubiwgVmVyZGkgQ1JELFdSTEVTLEhN
+Q1JELERXMTUwMSxIRiAwIDEgMCBZZXMgMSAKV0pDSkQgV1BBTiwgQmx1ZXRvb3RoIE1vZHVsZSwg
+RFczNzUsIExpdGVvbiwgQmxhcm5leVN0b25lIChEb2VzIG5vdCBpbmNsdWRlIGNhYmxlKSAoT3Jk
+ZXIgU3ZjIEtpdCA0SjhQTSkKCkxhdGl0dWRlIEU2MjIwIHBhcnRzOgpYOUpEWSAtIFdMQU4sIFdp
+RmksIEhhbGYgTWluaSBDYXJkLCBJbnRlbCBMaW5rIDYyMDUsIE1hcnRpbmkgKFJPVykKV0pDSkQg
+LSBXUEFOLCBCbHVldG9vdGggTW9kdWxlLCBEVzM3NSwgTGl0ZU9uLCBCbGFybmV5U3RvbmUgKERv
+ZXMgbm90IGluY2x1ZGUgY2FibGUpIChPcmRlciBTdmMgS2l0IDBSS0ZNKQpXSERQQyAtIFdMQU4s
+IEhhbGYgTWluaSBDYXJkLCBEVzE1MDEsIEZveGNvbm4sIFZlcmRpClBXUDVIIC0gV0xBTiwgV2lG
+aSwgSGFsZiBNaW5pIENhcmQsIEludGVsIExpbmsgNjIwNSwgTWFydGluaSAoUnVzc2lhKQpNVzA0
+QyAtIFdpTUFYL1dpRmksIEhhbGYgTWluaSBDYXJkLCBJbnRlbCBMaW5rIDYyNTAsIERpb255c3Vz
+LCBVUyBPbmx5Cks1WTZEIC0gV0xBTiwgSGFsZiBNaW5pIENhcmQsIERXMTUwMSwgTGl0ZU9uLCBW
+ZXJkaQpHOU01WCAtIFdQQU4sIEJsdWV0b290aCBNb2R1bGUsIERXMzc1LCBGb3hjb25uLCBCbGFy
+bmV5U3RvbmUgKERvZXMgbm90IGluY2x1ZGUgY2FibGUpIChPcmRlciBTdmMgS2l0IDBSS0ZNICkK
+OVlUTlIgLSBXV0FOLCBNb2JpbGUgQnJvYWRiYW5kLCBNaW5pIENhcmQsIERXNTU1MCwgSGVsbXNs
+ZXkgMyAoQVRULVVTKQo0VzAwTiAtIFdpRmksIEhhbGYgTWluaSBDYXJkLCBJbnRlbCBMaW5rIDYz
+MDAsIFpldXMKMlhHTkogLSBXV0FOLCBNb2JpbGUgQnJvYWRiYW5kLCBNaW5pIENhcmQsIERXNTU1
+MCwgSGVsbXNsZXkgMwoxSktHQyAtIFdMQU4sIFdpRmksIEhhbGYgTWluaSBDYXJkLCBEVzE1MzAs
+IEhpZ2hiYWxsCg==
+--000e0cd32e1ad7946b04aba8d51d--
