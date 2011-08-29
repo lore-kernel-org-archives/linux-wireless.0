@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:40308 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751553Ab1HXTxQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 15:53:16 -0400
-Date: Wed, 24 Aug 2011 21:53:09 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: zajec5@gmail.com, Michael Buesch <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT] b43: Relax requirement for descriptors to be in the
- DMA zone
-Message-ID: <20110824215309.2f2cbb73@milhouse> (sfid-20110824_215321_432841_F3D7C946)
-In-Reply-To: <4e5553a8.vSmpTZc2Cr8jeze3%Larry.Finger@lwfinger.net>
-References: <4e5553a8.vSmpTZc2Cr8jeze3%Larry.Finger@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:63400 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753583Ab1H2PMf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Aug 2011 11:12:35 -0400
+Received: by wyg24 with SMTP id 24so4147459wyg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 08:12:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAD2nsn1+5QWtzeG-3RHEJi8+oDthAfXYunHnDTLie84oJPOQuw@mail.gmail.com>
+References: <20110827113253.GA1444@ecki>
+	<CAD2nsn2Bbxxy9ZYpBe_QEqCkGYYROHE+j7qASRq3OkKmWD5PMg@mail.gmail.com>
+	<CAD2nsn1+5QWtzeG-3RHEJi8+oDthAfXYunHnDTLie84oJPOQuw@mail.gmail.com>
+Date: Mon, 29 Aug 2011 20:42:33 +0530
+Message-ID: <CAD2nsn1roVNB5+H1CYHVnerLN3pjGB5KmEX1mJZ4yJhHqFGOVA@mail.gmail.com> (sfid-20110829_171239_267644_F517D296)
+Subject: Re: ath9k: irq storm after suspend/resume
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Clemens Buchacher <drizzd@aon.at>
+Cc: linux-wireless@vger.kernel.org, beta992@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 24 Aug 2011 14:40:24 -0500
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>> But still, the interrupts come. Note that according to
+>>> /proc/interrupts, the IRQ line is not shared with any other device.
+>>> I did not manage to determine which interrupt it is exactly,
+>>> because the device is not in a ready state (SC_OP_INVALID is set)
+>>> when they happen (in either scenario that triggers the IRQ storm).
+>>> And SC_OP_INVALID is cleared only much later in ath9k_start.
+>>>
+>>> So, I am at a loss. Any ideas?
+>>
+>> please provide the lspci -vvvxx.
+>> also looking at
+>> /sys/kernel/debug/ieee80211/phy0/ath9k$ sudo cat interrupt.
+>
+> hi, i think this will help, please get the message sudo modprobe ath9k
+> debug=0xffffffff.
+> few fatal PCI interrupt messages are based on ATH_DEBUG_ANY.
+> thanks.
+>
+we can also try to disable MIB interrupts though its handled properly
+now in ath9k
 
-> @Rafal - Incorporate this in your other patch.
-
-I would rather like to have this as a separate patch and have
-Rafal's other patch apply on _top_ of this.
-
-> @@ -903,7 +896,7 @@ struct b43_dmaring *b43_setup_dmaring(st
->  			kfree(ring->txhdr_cache);
->  			ring->txhdr_cache = kcalloc(ring->nr_slots / TX_SLOTS_PER_FRAME,
->  						    b43_txhdr_size(dev),
-> -						    GFP_KERNEL | GFP_DMA);
-> +						    GFP_KERNEL);
->  			if (!ring->txhdr_cache)
->  				goto err_kfree_meta;
->  
-> 
-
-Why are you removing this? Seems wrong to me.
-This seems to be part of the bounce-buffer mechanism, that we _do_ still need
-for legacy 30bit devices.
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2008-09-25/0001-ath9k-disable-MIB-interrupts-to-fix-interrupt-storm.patch
 
 
 -- 
-Greetings, Michael.
+shafi
