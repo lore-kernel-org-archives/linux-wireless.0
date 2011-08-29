@@ -1,87 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([74.125.121.67]:55808 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752848Ab1HISLy convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46796 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753808Ab1H2Si5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 14:11:54 -0400
-Received: from wpaz17.hot.corp.google.com (wpaz17.hot.corp.google.com [172.24.198.81])
-	by smtp-out.google.com with ESMTP id p79IBm2p005562
-	for <linux-wireless@vger.kernel.org>; Tue, 9 Aug 2011 11:11:48 -0700
-Received: from yxl11 (yxl11.prod.google.com [10.190.3.203])
-	by wpaz17.hot.corp.google.com with ESMTP id p79IBltq009241
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 9 Aug 2011 11:11:47 -0700
-Received: by yxl11 with SMTP id 11so256456yxl.21
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 11:11:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4E39EB52.1090401@candelatech.com>
-References: <4E38DDB3.1030801@candelatech.com>
-	<CA+yqC4YvAMLaao4dy2aXM7H5zPXySk4eAUZ2KSM4QnP+kQqF-A@mail.gmail.com>
-	<4E39EB52.1090401@candelatech.com>
-Date: Tue, 9 Aug 2011 11:11:46 -0700
-Message-ID: <CA+yqC4a1xCPM4WN5U5Oth9PUqGSg+h6qZ4u2sV80h3zcEtzazg@mail.gmail.com> (sfid-20110809_201158_047651_D8DC247F)
-Subject: Re: Bridging wired to STA interfaces.
-From: Sam Leffler <sleffler@google.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 29 Aug 2011 14:38:57 -0400
+Subject: Re: [PATCH v2 6/8] mac80211: Consolidate {mesh,mpp}_path_flush
+ into one function
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
+	jlopex@gmail.com
+In-Reply-To: <CAPjQAd8esVjckBCwya+a5dFiLmu14KpCW5acjNeLHk32XZYs2g@mail.gmail.com> (sfid-20110829_203711_145180_7DDE26B6)
+References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
+	 <1314404294-4233-1-git-send-email-javier@cozybit.com>
+	 <1314404294-4233-7-git-send-email-javier@cozybit.com>
+	 <1314625745.8959.9.camel@jlt3.sipsolutions.net>
+	 <CAPjQAd8esVjckBCwya+a5dFiLmu14KpCW5acjNeLHk32XZYs2g@mail.gmail.com>
+	 (sfid-20110829_203711_145180_7DDE26B6)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 29 Aug 2011 20:38:51 +0200
+Message-ID: <1314643131.8959.26.camel@jlt3.sipsolutions.net> (sfid-20110829_203900_059337_23C7A471)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 3, 2011 at 5:44 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 08/03/2011 03:37 PM, Sam Leffler wrote:
->>
->> On Tue, Aug 2, 2011 at 10:33 PM, Ben Greear<greearb@candelatech.com>
->>  wrote:
->>>
->>> We have some interest in being able to bridge wired systems to
->>> (virtual) STA interfaces, primarily for using third-party
->>> traffic generation tools over virtual stations.
->>>
->>> I was thinking of writing a sta-bridge module that mapped
->>> incoming packets on a wired interface to a STA with MAC
->>> that matched the source MAC of the packet.  All packets
->>> received on the STA would be forwarded un-modified out
->>> the wired port.
->>>
->>> I think this would allow someone to create a STA interface
->>> with MAC matching a PC connected to the wired port and effectively
->>> have it be a transparent bridge between STA and PC.
->>>
->>> Has anyone attempted something like this before?
->>>
->>> Any interest in having this feature in the upstream kernel?
->>
->> You've just described what's done in several products and it is indeed
->> useful.  The main issue is supporting it can incur overhead so you may
->> want to make it a compile-time option.
->
-> I got some basic functionality working today with some
-> user-space bridging code I've already written for other purposes...
->
-> Can you think of any reason (beyond a bit of performance) that
-> this should be in the kernel?
+On Mon, 2011-08-29 at 11:36 -0700, Javier Cardona wrote:
 
-Doing it in user space seems fine to start.  All the examples I can
-think of are on minimal embedded platforms where taking the user-space
-hit is infeasible.  All the wireless devices that are interesting can
-do this in h/w w/ only minimal kernel support (except for the vif
-setup).
+> >> -     read_lock_bh(&pathtbl_resize_lock);
+> >> -     tbl = rcu_dereference_protected(mpp_paths,
+> >> -                                     lockdep_is_held(pathtbl_resize_lock));
+> >> +     WARN_ON(!rcu_read_lock_held());
+> >>       for_each_mesh_entry(tbl, p, node, i) {
+> >>               mpath = node->mpath;
+> >> +             if (mpath->sdata != sdata)
+> >> +                     continue;
+> >>               spin_lock_bh(&tbl->hashwlock[i]);
+> >>               __mesh_path_del(tbl, node);
+> >>               spin_unlock_bh(&tbl->hashwlock[i]);
+> >>       }
+> >> -     read_unlock_bh(&pathtbl_resize_lock);
+> >>  }
+> >
+> > So what protects against the table being grown at the same time? A copy
+> > will be made, but here you'll be iterating the old table -- which won't
+> > crash or anything but is semantically incorrect.
+> 
+> You are right.  And I believe it actually may crash, given that the
+> nodes we wanted to delete will still exist in the new table.  I'll
+> re-spin right away.
 
-FWIW the overhead I was referring to is in the kernel.  A many-to-1
-mapping of STA<->AP can be more expensive to support than 1-1.  But
-since you already support multi-sta you're already paying the price.
+Yes, it will crash just as before -- I was referring to this function
+only. Due to RCU, this function will always have a valid "node" pointer,
+but of course deleting that might not delete it from the right table...
 
->
-> My target hardware is fast enough that copying through user-space
-> at moderate (ie, fast as STA can go) speeds isn't too big of a deal, but
-> if someone wanted to run this on weak hardware, that might be reason
-> enough...  It might also make it easier to filter our management frames
-> (EAPOL, etc), but we should be able to do that easily enough in user-space
-> with a small bit of work.
+johannes
 
-Setting up and tearing down the sta's in response to wired traffic was
-always the fun part.  Everything else was straightforward from what I
-can recall.
-
--Sam
