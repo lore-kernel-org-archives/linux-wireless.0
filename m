@@ -1,100 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46379 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752209Ab1HUP6R (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:41104 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755259Ab1H2XPW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Aug 2011 11:58:17 -0400
-Message-ID: <4E512B0D.1040109@qca.qualcomm.com> (sfid-20110821_175821_833088_EB1217B2)
-Date: Sun, 21 Aug 2011 21:28:05 +0530
-From: mohammed <mohammed@qca.qualcomm.com>
+	Mon, 29 Aug 2011 19:15:22 -0400
 MIME-Version: 1.0
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-CC: <johannes@sipsolutions.net>, <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <rodrigue@qca.qualcomm.com>,
-	<senthilb@qca.qualcomm.com>, <rmanohar@qca.qualcomm.com>
-Subject: Re: [RFC] mac80211: Add a debug entry to track last beacon
-References: <1313941417-5446-1-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1313941417-5446-1-git-send-email-mohammed@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <CAA93jw6Ude=x=5v2cq86UjnORXDhAQASp51zLvDDBYHB28T_Jw@mail.gmail.com>
+References: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com>
+ <CAB=NE6VwWu5+Hk7=3ghkgiXss9kCqGyS-RWPYtyHRhDsx5r2rA@mail.gmail.com>
+ <CAB=NE6XrkdiZcGEDGuYe=SwLBhTm=Mt4NaPzjV9j_W-8sVosOA@mail.gmail.com>
+ <CAA93jw5pTHpUOX=iUnck8Eun2iNqkuKwG-Jd0X1oNxD_s9_prA@mail.gmail.com>
+ <CAB=NE6V7jFgtK4HmkUnfY5MuWCJoTyo83p9KMVTvmXTsrGoTew@mail.gmail.com> <CAA93jw6Ude=x=5v2cq86UjnORXDhAQASp51zLvDDBYHB28T_Jw@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 29 Aug 2011 16:15:01 -0700
+Message-ID: <CAB=NE6X-v+XqSr4AiyRp1og0AmYK1yFq7Oro8UZxWRdgWXDu2g@mail.gmail.com> (sfid-20110830_011534_757638_19540740)
+Subject: Re: BQL crap and wireless
+To: Dave Taht <dave.taht@gmail.com>
+Cc: Tom Herbert <therbert@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andrew McGregor <andrewmcgr@gmail.com>,
+	Matt Smith <smithm@qca.qualcomm.com>,
+	Kevin Hayes <hayes@qca.qualcomm.com>,
+	Derek Smithies <derek@indranet.co.nz>, netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 21 August 2011 09:13 PM, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+On Mon, Aug 29, 2011 at 4:10 PM, Dave Taht <dave.taht@gmail.com> wrote:
+> My goal in collecting these recordings is to get TRANSCRIPTS of what
+> is important and what is not, so that ultimately better documentation
+> can be written from those than exist today.
 >
-> when we obtain time_since_last_beacon_ms parameter from the mac80211
-> debugfs it should be always less than 100, otherwise we are missing
-> beacons.
+> Since the byte queuing issue is hot this week, I decided to make more
+> people aware that these recordings existed in the hope that more
+> available background information on how wireless works could be
+> internalized by more people.
+>
+> I did note that the talk with felix was an attempt at capturing and
+> summarizing some bufferbloat history and only towards the end did we
+> start moving forward to things we planned to try, while the talk with
+> andrew was an attempt at doing a more technical overview of quite a
+> few issues.
+>
+> Multiple people have found these conversations useful. Certainly I
+> find them useful, often reviewing them a few weeks after the fact to
+> find subtleties that I missed originally, or needed further reading to
+> really understand or write code for. The earliest conversation I had
+> with felix (march?) still has some useful nuggets in it about how
+> aggregation actually works that I hope to mine one day for better
+> documentation. It also had some glaring errors in it...
+> (mostly MINE!)
+>
+> http://mirrors.bufferbloat.net/podcasts/
+>
+> I would certainly like to have a (recorded!) conversation with you to
+> have a constructive
+> discussion of the issues you find important, correct, and essential,
+> towards making wireless networking better.
+>
+> Many people are capable of doing otherwise useful work while having a
+> podcast running in the background that might have a few percentage
+> points of useful information.
+>
+> By all means, don't listen if you can't split the brain cells, as I
+> wrote I will have transcript of that latest available and will try to
+> summarize and extract the best of what was discussed, after we get
+> some code written and some tests performed.
+>
+>  There are many other folk I would like to interview in this way, as well.
 
-made a mistake in the commit-log
-'time_since_last_beacon_ms' should be always less than the configured 
-beacon interval in the AP, otherwise we are missing beacons
+Honestly I do not have > 1 hour to review random audio on some topic
+when the only meat of what I want is in 5 minutes of the > 1 hour
+talk; the reason I stuck to hearing most of the talk though is I am
+quite tired of the FUD around bufferbloat and also tired of the random
+adhoc patches, e-mails and rants about it. My recommendation is edit
+crap out and make a more condensed clip with the stuff technical folks
+really care about. I'm not saying no one will find it useful, I'm
+saying technical folks will puke all over it and likely not want to
+even review more bufferbloat crap later. That's where I'm at least.
 
->
-> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
-> ---
->   net/mac80211/debugfs_netdev.c |   14 ++++++++++++++
->   net/mac80211/ieee80211_i.h    |    3 +++
->   net/mac80211/mlme.c           |    2 ++
->   3 files changed, 19 insertions(+), 0 deletions(-)
->
-> diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-> index 9ea7c0d..18e1bfc 100644
-> --- a/net/mac80211/debugfs_netdev.c
-> +++ b/net/mac80211/debugfs_netdev.c
-> @@ -157,6 +157,19 @@ IEEE80211_IF_FILE(aid, u.mgd.aid, DEC);
->   IEEE80211_IF_FILE(last_beacon, u.mgd.last_beacon_signal, DEC);
->   IEEE80211_IF_FILE(ave_beacon, u.mgd.ave_beacon_signal, DEC_DIV_16);
->
-> +static ssize_t ieee80211_if_fmt_time_since_last_beacon_ms(
-> +	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
-> +{
-> +	const struct ieee80211_if_managed *ifmgd =&sdata->u.mgd;
-> +	unsigned long time_since_last_beacon;
-> +
-> +	time_since_last_beacon = jiffies_to_msecs(jiffies -
-> +						  ifmgd->last_beacon_timestamp);
-> +	return scnprintf(buf, buflen, "%lu\n",
-> +			 time_since_last_beacon);
-> +}
-> +__IEEE80211_IF_FILE(time_since_last_beacon_ms, NULL);
-> +
->   static int ieee80211_set_smps(struct ieee80211_sub_if_data *sdata,
->   			      enum ieee80211_smps_mode smps_mode)
->   {
-> @@ -394,6 +407,7 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
->
->   	DEBUGFS_ADD(bssid);
->   	DEBUGFS_ADD(aid);
-> +	DEBUGFS_ADD(time_since_last_beacon_ms);
->   	DEBUGFS_ADD(last_beacon);
->   	DEBUGFS_ADD(ave_beacon);
->   	DEBUGFS_ADD_MODE(smps, 0600);
-> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index ea74190..ec532a5 100644
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -410,6 +410,9 @@ struct ieee80211_if_managed {
->
->   	u8 use_4addr;
->
-> +	/* timestamp of the last Beacon frame in the current BSS. */
-> +	unsigned long last_beacon_timestamp;
-> +
->   	/* Signal strength from the last Beacon frame in the current BSS. */
->   	int last_beacon_signal;
->
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index d6470c7..13ee1b6 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -1758,6 +1758,8 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
->   	if (memcmp(bssid, mgmt->bssid, ETH_ALEN) != 0)
->   		return;
->
-> +	ifmgd->last_beacon_timestamp = jiffies;
-> +
->   	/* Track average RSSI from the Beacon frames of the current AP */
->   	ifmgd->last_beacon_signal = rx_status->signal;
->   	if (ifmgd->flags&  IEEE80211_STA_RESET_SIGNAL_AVE) {
-
+  Luis
