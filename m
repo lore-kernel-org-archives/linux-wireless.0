@@ -1,33 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:56921 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751124Ab1H0Kwv (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48282 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752813Ab1H2M2c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Aug 2011 06:52:51 -0400
-Received: by gxk21 with SMTP id 21so3545980gxk.19
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Aug 2011 03:52:50 -0700 (PDT)
+	Mon, 29 Aug 2011 08:28:32 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH 08/20] ath6kl: Request P2P capabilities during target init
+Date: Mon, 29 Aug 2011 15:23:49 +0300
+Message-ID: <1314620641-24257-9-git-send-email-jouni@qca.qualcomm.com> (sfid-20110829_142834_623528_7287A562)
+In-Reply-To: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1314442067-11799-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1314442067-11799-1-git-send-email-rmanohar@qca.qualcomm.com>
-Date: Sat, 27 Aug 2011 18:52:50 +0800
-Message-ID: <CAJ-Vmo=wLETTSy0i3uz3Zj5w+_o+AouzD=nJzFk9KnERK+g7Cg@mail.gmail.com> (sfid-20110827_125254_040059_243972DB)
-Subject: Re: [PATCH] ath9k: Add debugfs support for mac/baseband samples
-From: Adrian Chadd <adrian@freebsd.org>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 August 2011 18:47, Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
-> This patch keep track of number of samples that includes
-> DMA debugs registers, PCU observe, CR, channel noise,
-> cycle conters, noisefloor history buffer and last N number
-> of tx and rx descriptor status. These samples are grouped
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-Is this written in a way that makes it easy to conditionally compile
-them in/out?
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index ad9716c..aa7440d 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -417,6 +417,7 @@ void ath6kl_target_failure(struct ath6kl *ar)
+ static int ath6kl_target_config_wlan_params(struct ath6kl *ar)
+ {
+ 	int status = 0;
++	int ret;
+ 
+ 	/*
+ 	 * Configure the device for rx dot11 header rules. "0,0" are the
+@@ -461,6 +462,14 @@ static int ath6kl_target_config_wlan_params(struct ath6kl *ar)
+ 			status = -EIO;
+ 		}
+ 
++	ret = ath6kl_wmi_info_req_cmd(ar->wmi, P2P_FLAG_CAPABILITIES_REQ |
++				      P2P_FLAG_MACADDR_REQ |
++				      P2P_FLAG_HMODEL_REQ);
++	if (ret) {
++		printk(KERN_DEBUG "ath6l: Failed to request P2P capabilities "
++		       "(%d) - assuming P2P not supported\n", ret);
++	}
++
+ 	return status;
+ }
+ 
+-- 
+1.7.4.1
 
-
-
-Adrian
