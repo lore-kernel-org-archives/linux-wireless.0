@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40636 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:37803 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755789Ab1H3Snh (ORCPT
+	with ESMTP id S1750738Ab1H2GDW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 14:43:37 -0400
-Subject: Re: [PATCH] mac80211: Defer tranmission of mesh path errors
+	Mon, 29 Aug 2011 02:03:22 -0400
+Subject: Re: =?UTF-8?Q?=E7=AD=94=E5=A4=8D=3A?= [RFC] mac80211: Adhoc
+ WPA-NONE packets lost by mac80211
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
-	jlopex@gmail.com
-In-Reply-To: <1314728954-22646-1-git-send-email-javier@cozybit.com> (sfid-20110830_203548_037760_20870237)
-References: <1314706867.4011.25.camel@jlt3.sipsolutions.net>
-	 <1314728954-22646-1-git-send-email-javier@cozybit.com>
-	 (sfid-20110830_203548_037760_20870237)
+To: =?UTF-8?Q?=E6=9D=8E=E6=9C=9D=E6=98=8E?=
+	<chaoming_li@realsil.com.cn>
+Cc: linville@tuxdriver.com, 'Larry Finger' <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	=?UTF-8?Q?=27=E7=86=8A=E5=85=89=E5=AE=89=27?=
+	<guangan_xiong@realsil.com.cn>
+In-Reply-To: <E3ED66158B154F2592986A66BBFF90F6@realsil.com.cn>
+References: <1314049818-21839-1-git-send-email-Larry.Finger@lwfinger.net>
+	 <1314049818-21839-6-git-send-email-Larry.Finger@lwfinger.net>
+	 <F5749057C8FE46CD88E05545135626BB@realsil.com.cn>
+	 (sfid-20110823_115916_036908_E0E26086) <1314153017.4573.1.camel@jlt3.sipsolutions.net>
+	 <E3ED66158B154F2592986A66BBFF90F6@realsil.com.cn>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 30 Aug 2011 20:43:33 +0200
-Message-ID: <1314729813.4011.43.camel@jlt3.sipsolutions.net> (sfid-20110830_204341_715187_D9296845)
+Date: Mon, 29 Aug 2011 08:03:14 +0200
+Message-ID: <1314597794.4562.0.camel@jlt3.sipsolutions.net> (sfid-20110829_080325_036133_D59E3E43)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-30 at 11:29 -0700, Javier Cardona wrote:
-> Under failure conditions, the mesh stack sends PERR messages to the
-> previous sender of the failed frame.  This happens in the tx feedback
-> path, in which the transmission queue lock may be taken.  Avoid a
-> deadlock by sending the path error via the pending queue.
-> 
-> Signed-off-by: Javier Cardona <javier@cozybit.com>
-> ---
->  net/mac80211/mesh_hwmp.c |    7 ++++++-
->  1 files changed, 6 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-> index fd4f76a..f760679 100644
-> --- a/net/mac80211/mesh_hwmp.c
-> +++ b/net/mac80211/mesh_hwmp.c
-> @@ -209,6 +209,10 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
->   * @target_sn: SN of the broken destination
->   * @target_rcode: reason code for this PERR
->   * @ra: node this frame is addressed to
-> + *
-> + * Note: This function may be called from the tx feedback path, possibly with
-> + * the transmission queue lock taken.  To avoid a deadlock we don't transmit
-> + * the frame directly but add it to the pending queue instead.
+On Mon, 2011-08-29 at 09:45 +0800, 李朝明 wrote:
 
-I'd change that to say "with driver locks taken that the driver also
-acquires in the TX path" or something like that maybe?
+> 1)  I found RSN IBSS in Mac80211 code, but I don't kown how to use it.
+>       Is there any document that give a explaination of how to use it.
 
-But that's not a big thing. Have you tested it? I'm wondering if because
-we take a lock here we might run into lock dependencies issues (lockdep
-would say) but I don't think so because stop_queue etc. all take the
-same lock from an arbitrary driver context already.
+Just use wpa_supplicant (need fairly new git version)
 
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+> 2) I can not find RSN IBSS in IEEE80211 spec. Does it only realize in
+> Mac80211 driver.
+>      How Can I link with other platform's IBSS like windows or linux which
+> is not based
+>      on Mac80211.
+
+Look again :)
 
 johannes
 
