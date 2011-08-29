@@ -1,104 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:56205 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751080Ab1H2GjA convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:57999 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755009Ab1H2UOb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 02:39:00 -0400
-Received: by wwf5 with SMTP id 5so5377988wwf.1
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Aug 2011 23:38:59 -0700 (PDT)
+	Mon, 29 Aug 2011 16:14:31 -0400
+Received: by qwk3 with SMTP id 3so3573713qwk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 13:14:31 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1314471360-861-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1314471360-861-1-git-send-email-Larry.Finger@lwfinger.net>
-Date: Mon, 29 Aug 2011 12:08:58 +0530
-Message-ID: <CAD2nsn2yFUQYwgBCsWpiDAxkZ23RwzFv5OzSVoiVvx=JmcuzVQ@mail.gmail.com> (sfid-20110829_083903_471362_CB3A28E9)
-Subject: Re: [PATCH] ath9k: Fix a smatch warnings
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1314624143.8959.1.camel@jlt3.sipsolutions.net>
+References: <1314297201-19007-1-git-send-email-lrodriguez@qca.qualcomm.com> <1314624143.8959.1.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
+Date: Mon, 29 Aug 2011 13:14:11 -0700
+Message-ID: <CAB=NE6U1WZ5=_RsuTKKj4K4-42Yamot_NJGjj43ikGUY6dSkEw@mail.gmail.com> (sfid-20110829_221435_669829_3631F69A)
+Subject: Re: [RFC] mac80211: add IBSS merge support
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Ivan Seskar <seskar@winlab.rutgers.edu>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 28, 2011 at 12:26 AM, Larry Finger
-<Larry.Finger@lwfinger.net> wrote:
-> Smatch shows the following warnings:
+On Mon, Aug 29, 2011 at 6:22 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2011-08-25 at 11:33 -0700, Luis R. Rodriguez wrote:
+>> From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+>>
+>> When you try to create an IBSS network with a lot of nodes
+>> you typically end up with split networks due to the fact that
+>> some nodes for one reason or another end up not listening to
+>> beacons from the node others do with a higher TSF. What ends
+>> up happening is you split the IBSS network and these do not
+>> converge. To address this you can force the BSSID as well as
+>> the SSID but if you just want to specify the SSID you can
+>> use the ibss_merge knob to force an IBSS merge by focing the
+>> BSSID to be based on the passed SSID.
+>>
+>> Cc: Jouni Malinen <jouni@qca.qualcomm.com>
+>> Cc: Ivan Seskar <seskar@winlab.rutgers.edu>
+>> Cc: Johannes Berg <johannes@sipsolutions.net>
+>> Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+>> ---
+>>
+>> Ivan, I think this is what you were looking for but an alternative to this
+>> problem is to specify the BSSID every time you want to create your own large
+>> IBSS network, this would mean that its a requirement and also means we
+>> acknowledge a limitation by IEEE's adhoc definition. Is there any reason
+>> forcing a BSSID on the experimenter is not an equally good solution?
 >
->  CHECK   drivers/net/wireless/ath/ath9k/htc_drv_main.c
-> drivers/net/wireless/ath/ath9k/htc_drv_main.c +1315 ath9k_htc_configure_filter(27) warn: inconsistent returns mutex:&priv->mutex: locked (1303) unlocked (1315)
->
->  CHECK   drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> drivers/net/wireless/ath/ath9k/ar9003_eeprom.c +3321 ar9300_eeprom_restore_internal(20) warn: returning -1 instead of -ENOMEM is sloppy
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Even setting "fixed-bssid" is acknowledging that already, but I really
+> see no reason for this to live in the kernel.
 
-Hi Larry, thanks for the patch.
+Agreed, I was just hoping Ivan can test that does indeed fix that
+issue and we can throw this out as one of those "bogus" features
+MadWifi had for researchers.
 
-> ---
->
-> John,
->
-> This is next material.
->
-> Larry
-> ---
->
-> To ath9k developers:
->
-> Smatch also show the following information, which I have not addressed:
->
->  CHECK   drivers/net/wireless/ath/key.c
-> drivers/net/wireless/ath/key.c +546 ath_key_config(77) info: why not propagate 'idx' from ath_reserve_key_cache_slot() instead of -28?
->  CHECK   drivers/net/wireless/ath/ath9k/hif_usb.c
-> drivers/net/wireless/ath/ath9k/hif_usb.c +760 ath9k_hif_usb_dealloc_tx_urbs(23) error: double free of 'tx_buf->buf'
->  CHECK   drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-> drivers/net/wireless/ath/ath9k/htc_drv_beacon.c +339 ath9k_htc_send_buffered(44) error: double lock 'bottom_half:'
-> drivers/net/wireless/ath/ath9k/htc_drv_beacon.c +347 ath9k_htc_send_buffered(52) error: double unlock 'bottom_half:'
->  CHECK   drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> drivers/net/wireless/ath/ath9k/ar9003_phy.c +209 ar9003_hw_spur_mitigate_mrc_cck(40) error: potential null derefence 'spur_fbin_ptr'.
->  CHECK   drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-> drivers/net/wireless/ath/ath9k/ar9003_paprd.c +164 ar9003_paprd_setup_single_table(28) info: why not propagate 'training_power' from ar9003_get_training_power_5g() instead of -34?
->
-> ---
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
->  drivers/net/wireless/ath/ath9k/htc_drv_main.c  |    1 +
->  2 files changed, 2 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> index 3b4ae07..fc2d607 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> @@ -3318,7 +3318,7 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
->
->        word = kzalloc(2048, GFP_KERNEL);
->        if (!word)
-> -               return -1;
-> +               return -ENOMEM;
->
->        memcpy(mptr, &ar9300_default, mdata_size);
->
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-> index 7212acb..2a3a2ce 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-> @@ -1300,6 +1300,7 @@ static void ath9k_htc_configure_filter(struct ieee80211_hw *hw,
->        if (priv->op_flags & OP_INVALID) {
->                ath_dbg(ath9k_hw_common(priv->ah), ATH_DBG_ANY,
->                        "Unable to configure filter on invalid state\n");
-> +               mutex_unlock(&priv->mutex);
->                return;
->        }
->        ath9k_htc_ps_wakeup(priv);
-> --
-> 1.7.3.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
--- 
-shafi
+  Luis
