@@ -1,172 +1,372 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:34619 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752964Ab1HYBlJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 21:41:09 -0400
-Received: by gya6 with SMTP id 6so1340575gya.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 18:41:09 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Pedro Larbig <pedro.larbig@carhs.de>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH 2/9] mac80211: Limit amount of HWMP frames and forwarded data packets in queues on mesh interfaces
-Date: Wed, 24 Aug 2011 18:40:45 -0700
-Message-Id: <1314236452-7226-3-git-send-email-thomas@cozybit.com> (sfid-20110825_034113_732474_E12CC516)
-In-Reply-To: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
-References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:46081 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754317Ab1H2VUc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Aug 2011 17:20:32 -0400
+From: Joe Perches <joe@perches.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 12/24] mac80211: Remove unnecessary OOM logging messages
+Date: Mon, 29 Aug 2011 14:17:31 -0700
+Message-Id: <af1425e68de37e461a310327f3bd2ad165d560be.1314650069.git.joe@perches.com> (sfid-20110829_232406_353826_34C91A44)
+In-Reply-To: <cover.1314650069.git.joe@perches.com>
+References: <cover.1314650069.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pedro Larbig <pedro.larbig@carhs.de>
+Removing unnecessary messages saves code and text.
 
-To avoid contention problems in a mesh network's high load areas, this patch
-adds a 2-stage packet dropping mechanism:
-* If the transmit queue for HWMP frames is filled with 256 or more packets,
-additional HWMP frames will be dropped
-* If the transmit queue for forwarded packets is at 384 or more, drop those,
-too
+Site specific OOM messages are duplications of a generic MM
+out of memory message and aren't really useful, so just
+delete them.
 
-This way, if a node runs into contention issues, it first reduces the amount
-of HWMP messages, and only if this is not enough, starts also dropping data
-packets from other nodes.
-
-So, instead of eating up memory and crashing, a node does only behave selfish
-in such situations.
-This patch has been tested several hours in a 20-node testbed under heavy
-iperf load.
-
-Signed-off-by: Pedro Larbig <pedro.larbig@carhs.de>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- net/mac80211/debugfs.c     |    4 ++++
- net/mac80211/ieee80211_i.h |    2 ++
- net/mac80211/mesh.h        |    5 +++++
- net/mac80211/mesh_hwmp.c   |   21 +++++++++++++++++++--
- net/mac80211/rx.c          |   13 ++++++++++++-
- 5 files changed, 42 insertions(+), 3 deletions(-)
+ net/mac80211/agg-rx.c    |   19 ++-----------------
+ net/mac80211/agg-tx.c    |   35 ++++++++---------------------------
+ net/mac80211/debugfs.c   |    3 +++
+ net/mac80211/ht.c        |    6 +-----
+ net/mac80211/mesh.c      |    5 ++---
+ net/mac80211/mlme.c      |   17 +++++------------
+ net/mac80211/spectmgmt.c |    6 +-----
+ net/mac80211/tx.c        |   17 +++++------------
+ net/mac80211/util.c      |   11 +++--------
+ net/mac80211/work.c      |    6 ++----
+ 10 files changed, 32 insertions(+), 93 deletions(-)
 
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 9b5bd8c..7c366df 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -167,12 +167,8 @@ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *d
+ 	u16 capab;
+ 
+ 	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
+-
+-	if (!skb) {
+-		printk(KERN_DEBUG "%s: failed to allocate buffer "
+-		       "for addba resp frame\n", sdata->name);
++	if (!skb)
+ 		return;
+-	}
+ 
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+ 	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
+@@ -279,14 +275,8 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+ 
+ 	/* prepare A-MPDU MLME for Rx aggregation */
+ 	tid_agg_rx = kmalloc(sizeof(struct tid_ampdu_rx), GFP_KERNEL);
+-	if (!tid_agg_rx) {
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-		if (net_ratelimit())
+-			printk(KERN_ERR "allocate rx mlme to tid %d failed\n",
+-					tid);
+-#endif
++	if (!tid_agg_rx)
+ 		goto end;
+-	}
+ 
+ 	spin_lock_init(&tid_agg_rx->reorder_lock);
+ 
+@@ -306,11 +296,6 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+ 	tid_agg_rx->reorder_time =
+ 		kcalloc(buf_size, sizeof(unsigned long), GFP_KERNEL);
+ 	if (!tid_agg_rx->reorder_buf || !tid_agg_rx->reorder_time) {
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-		if (net_ratelimit())
+-			printk(KERN_ERR "can not allocate reordering buffer "
+-			       "to tid %d\n", tid);
+-#endif
+ 		kfree(tid_agg_rx->reorder_buf);
+ 		kfree(tid_agg_rx->reorder_time);
+ 		kfree(tid_agg_rx);
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index b7075f3..7f568d6 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -68,11 +68,9 @@ static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
+ 
+ 	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
+ 
+-	if (!skb) {
+-		printk(KERN_ERR "%s: failed to allocate buffer "
+-				"for addba request frame\n", sdata->name);
++	if (!skb)
+ 		return;
+-	}
++
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+ 	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
+ 	memset(mgmt, 0, 24);
+@@ -114,11 +112,9 @@ void ieee80211_send_bar(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid, u1
+ 	u16 bar_control = 0;
+ 
+ 	skb = dev_alloc_skb(sizeof(*bar) + local->hw.extra_tx_headroom);
+-	if (!skb) {
+-		printk(KERN_ERR "%s: failed to allocate buffer for "
+-			"bar frame\n", sdata->name);
++	if (!skb)
+ 		return;
+-	}
++
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+ 	bar = (struct ieee80211_bar *)skb_put(skb, sizeof(*bar));
+ 	memset(bar, 0, sizeof(*bar));
+@@ -413,11 +409,6 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 	/* prepare A-MPDU MLME for Tx aggregation */
+ 	tid_tx = kzalloc(sizeof(struct tid_ampdu_tx), GFP_ATOMIC);
+ 	if (!tid_tx) {
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-		if (net_ratelimit())
+-			printk(KERN_ERR "allocate tx mlme to tid %d failed\n",
+-					tid);
+-#endif
+ 		ret = -ENOMEM;
+ 		goto err_unlock_sta;
+ 	}
+@@ -574,14 +565,9 @@ void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_vif *vif,
+ 	struct ieee80211_ra_tid *ra_tid;
+ 	struct sk_buff *skb = dev_alloc_skb(0);
+ 
+-	if (unlikely(!skb)) {
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-		if (net_ratelimit())
+-			printk(KERN_WARNING "%s: Not enough memory, "
+-			       "dropping start BA session", sdata->name);
+-#endif
++	if (unlikely(!skb))
+ 		return;
+-	}
++
+ 	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
+ 	memcpy(&ra_tid->ra, ra, ETH_ALEN);
+ 	ra_tid->tid = tid;
+@@ -727,14 +713,9 @@ void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_vif *vif,
+ 	struct ieee80211_ra_tid *ra_tid;
+ 	struct sk_buff *skb = dev_alloc_skb(0);
+ 
+-	if (unlikely(!skb)) {
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-		if (net_ratelimit())
+-			printk(KERN_WARNING "%s: Not enough memory, "
+-			       "dropping stop BA session", sdata->name);
+-#endif
++	if (unlikely(!skb))
+ 		return;
+-	}
++
+ 	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
+ 	memcpy(&ra_tid->ra, ra, ETH_ALEN);
+ 	ra_tid->tid = tid;
 diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 186e02f..8aefd2e 100644
+index 186e02f..583c9ed 100644
 --- a/net/mac80211/debugfs.c
 +++ b/net/mac80211/debugfs.c
-@@ -496,6 +496,10 @@ void debugfs_hw_add(struct ieee80211_local *local)
- 		local->tx_handlers_drop_not_assoc);
- 	DEBUGFS_STATS_ADD(tx_handlers_drop_unauth_port,
- 		local->tx_handlers_drop_unauth_port);
-+	DEBUGFS_STATS_ADD(tx_handlers_drop_mesh_mgmt,
-+		local->tx_handlers_drop_mesh_mgmt);
-+	DEBUGFS_STATS_ADD(tx_handlers_drop_mesh_fwd,
-+		local->tx_handlers_drop_mesh_fwd);
- 	DEBUGFS_STATS_ADD(rx_handlers_drop, local->rx_handlers_drop);
- 	DEBUGFS_STATS_ADD(rx_handlers_queued, local->rx_handlers_queued);
- 	DEBUGFS_STATS_ADD(rx_handlers_drop_nullfunc,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c204cee..12ad787 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -922,6 +922,8 @@ struct ieee80211_local {
- 	unsigned int tx_handlers_drop_wep;
- 	unsigned int tx_handlers_drop_not_assoc;
- 	unsigned int tx_handlers_drop_unauth_port;
-+	unsigned int tx_handlers_drop_mesh_mgmt;
-+	unsigned int tx_handlers_drop_mesh_fwd;
- 	unsigned int rx_handlers_drop;
- 	unsigned int rx_handlers_queued;
- 	unsigned int rx_handlers_drop_nullfunc;
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 2027207..6b57b11 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -186,6 +186,11 @@ struct mesh_rmc {
- /* Maximum number of paths per interface */
- #define MESH_MAX_MPATHS		1024
+@@ -305,6 +305,9 @@ static ssize_t hwflags_read(struct file *file, char __user *user_buf,
+ 	char *buf = kzalloc(mxln, GFP_KERNEL);
+ 	int sf = 0; /* how many written so far */
  
-+/* Maximum number of data frames to be forwarded in tx queue */
-+#define MESH_MAX_FWDING_QUEUE  384
-+/* Maximum number of HWMP management frames in tx queue */
-+#define MESH_MGMT_QUEUE_LEN    256
++	if (!buf)
++		return 0;
 +
- /* Public interfaces */
- /* Various */
- int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index fd4f76a..f09e5e8 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -105,6 +105,23 @@ enum mpath_frame_type {
+ 	sf += snprintf(buf, mxln - sf, "0x%x\n", local->hw.flags);
+ 	if (local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
+ 		sf += snprintf(buf + sf, mxln - sf, "HAS_RATE_CONTROL\n");
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index 7cfc286..2b9b52c 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -186,12 +186,8 @@ void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
+ 	u16 params;
  
- static const u8 broadcast_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+ 	skb = dev_alloc_skb(sizeof(*mgmt) + local->hw.extra_tx_headroom);
+-
+-	if (!skb) {
+-		printk(KERN_ERR "%s: failed to allocate buffer "
+-					"for delba frame\n", sdata->name);
++	if (!skb)
+ 		return;
+-	}
  
-+static void mesh_tx_skb(struct ieee80211_sub_if_data *sdata,
-+			struct sk_buff *skb)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+
-+	/* Frames going through ieee80211_tx_skb will be on the voice queue,
-+	 * Therefor we need to check only IEEE80211_AC_VO */
-+	if (unlikely(skb_queue_len(&local->pending[IEEE80211_AC_VO]) >=
-+	   MESH_MGMT_QUEUE_LEN)) {
-+		kfree_skb(skb);
-+		I802_DEBUG_INC(local->tx_handlers_drop_mesh_mgmt);
-+		return;
-+	}
-+
-+	ieee80211_tx_skb(sdata, skb);
-+}
-+
- static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
- 		u8 *orig_addr, __le32 orig_sn, u8 target_flags, u8 *target,
- 		__le32 target_sn, const u8 *da, u8 hop_count, u8 ttl,
-@@ -198,7 +215,7 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
- 		pos += 4;
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+ 	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 29e9980..d262f38 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -193,10 +193,9 @@ int mesh_rmc_check(u8 *sa, struct ieee80211s_hdr *mesh_hdr,
  	}
  
--	ieee80211_tx_skb(sdata, skb);
-+	mesh_tx_skb(sdata, skb);
- 	return 0;
- }
- 
-@@ -263,7 +280,7 @@ int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn,
- 	pos += 4;
- 	memcpy(pos, &target_rcode, 2);
- 
--	ieee80211_tx_skb(sdata, skb);
-+	mesh_tx_skb(sdata, skb);
- 	return 0;
- }
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index c4453fd..9b5daa1 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1817,7 +1817,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211s_hdr *mesh_hdr;
--	unsigned int hdrlen;
-+	unsigned int hdrlen, q;
- 	struct sk_buff *skb = rx->skb, *fwd_skb;
- 	struct ieee80211_local *local = rx->local;
- 	struct ieee80211_sub_if_data *sdata = rx->sdata;
-@@ -1915,6 +1915,17 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 			}
- 			IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
- 						     fwded_frames);
+ 	p = kmem_cache_alloc(rm_cache, GFP_ATOMIC);
+-	if (!p) {
+-		printk(KERN_DEBUG "o11s: could not allocate RMC entry\n");
++	if (!p)
+ 		return 0;
+-	}
 +
-+			/* Check selected queue's size and drop if full */
-+			q = skb_get_queue_mapping(fwd_skb);
-+			if (unlikely(skb_queue_len(&local->pending[q]) >=
-+			    MESH_MAX_FWDING_QUEUE)) {
-+				kfree_skb(fwd_skb);
-+				I802_DEBUG_INC(local->
-+					       tx_handlers_drop_mesh_fwd);
-+				return RX_DROP_MONITOR;
-+			}
+ 	p->seqnum = seqnum;
+ 	p->exp_time = jiffies + RMC_TIMEOUT;
+ 	memcpy(p->sa, sa, ETH_ALEN);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d6470c7..f193a91 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -271,11 +271,9 @@ static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_mgmt *mgmt;
+ 
+ 	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*mgmt));
+-	if (!skb) {
+-		printk(KERN_DEBUG "%s: failed to allocate buffer for "
+-		       "deauth/disassoc frame\n", sdata->name);
++	if (!skb)
+ 		return;
+-	}
 +
- 			ieee80211_add_pending_skb(local, fwd_skb);
- 		}
- 	}
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+ 
+ 	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
+@@ -354,11 +352,9 @@ static void ieee80211_send_4addr_nullfunc(struct ieee80211_local *local,
+ 		return;
+ 
+ 	skb = dev_alloc_skb(local->hw.extra_tx_headroom + 30);
+-	if (!skb) {
+-		printk(KERN_DEBUG "%s: failed to allocate buffer for 4addr "
+-		       "nullfunc frame\n", sdata->name);
++	if (!skb)
+ 		return;
+-	}
++
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+ 
+ 	nullfunc = (struct ieee80211_hdr *) skb_put(skb, 30);
+@@ -1483,11 +1479,8 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+ 	ifmgd->aid = aid;
+ 
+ 	sta = sta_info_alloc(sdata, cbss->bssid, GFP_KERNEL);
+-	if (!sta) {
+-		printk(KERN_DEBUG "%s: failed to alloc STA entry for"
+-		       " the AP\n", sdata->name);
++	if (!sta)
+ 		return false;
+-	}
+ 
+ 	set_sta_flags(sta, WLAN_STA_AUTH | WLAN_STA_ASSOC |
+ 			   WLAN_STA_ASSOC_AP);
+diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
+index 7733f66..578eea3 100644
+--- a/net/mac80211/spectmgmt.c
++++ b/net/mac80211/spectmgmt.c
+@@ -32,12 +32,8 @@ static void ieee80211_send_refuse_measurement_request(struct ieee80211_sub_if_da
+ 
+ 	skb = dev_alloc_skb(sizeof(*msr_report) + local->hw.extra_tx_headroom +
+ 				sizeof(struct ieee80211_msrment_ie));
+-
+-	if (!skb) {
+-		printk(KERN_ERR "%s: failed to allocate buffer for "
+-				"measurement report frame\n", sdata->name);
++	if (!skb)
+ 		return;
+-	}
+ 
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+ 	msr_report = (struct ieee80211_mgmt *)skb_put(skb, 24);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 69fd494..55bc1f6 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2355,11 +2355,9 @@ struct sk_buff *ieee80211_pspoll_get(struct ieee80211_hw *hw,
+ 	local = sdata->local;
+ 
+ 	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*pspoll));
+-	if (!skb) {
+-		printk(KERN_DEBUG "%s: failed to allocate buffer for "
+-		       "pspoll template\n", sdata->name);
++	if (!skb)
+ 		return NULL;
+-	}
++
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+ 
+ 	pspoll = (struct ieee80211_pspoll *) skb_put(skb, sizeof(*pspoll));
+@@ -2395,11 +2393,9 @@ struct sk_buff *ieee80211_nullfunc_get(struct ieee80211_hw *hw,
+ 	local = sdata->local;
+ 
+ 	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*nullfunc));
+-	if (!skb) {
+-		printk(KERN_DEBUG "%s: failed to allocate buffer for nullfunc "
+-		       "template\n", sdata->name);
++	if (!skb)
+ 		return NULL;
+-	}
++
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+ 
+ 	nullfunc = (struct ieee80211_hdr_3addr *) skb_put(skb,
+@@ -2434,11 +2430,8 @@ struct sk_buff *ieee80211_probereq_get(struct ieee80211_hw *hw,
+ 
+ 	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*hdr) +
+ 			    ie_ssid_len + ie_len);
+-	if (!skb) {
+-		printk(KERN_DEBUG "%s: failed to allocate buffer for probe "
+-		       "request template\n", sdata->name);
++	if (!skb)
+ 		return NULL;
+-	}
+ 
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+ 
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index ce916ff..1c10802 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -707,11 +707,9 @@ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 
+ 	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
+ 			    sizeof(*mgmt) + 6 + extra_len);
+-	if (!skb) {
+-		printk(KERN_DEBUG "%s: failed to allocate buffer for auth "
+-		       "frame\n", sdata->name);
++	if (!skb)
+ 		return;
+-	}
++
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+ 
+ 	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24 + 6);
+@@ -864,11 +862,8 @@ struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* FIXME: come up with a proper value */
+ 	buf = kmalloc(200 + ie_len, GFP_KERNEL);
+-	if (!buf) {
+-		printk(KERN_DEBUG "%s: failed to allocate temporary IE "
+-		       "buffer\n", sdata->name);
++	if (!buf)
+ 		return NULL;
+-	}
+ 
+ 	/*
+ 	 * Do not send DS Channel parameter for directed probe requests
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index 380b9a7..bac3439 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -229,11 +229,9 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
+ 			wk->ie_len + /* extra IEs */
+ 			9, /* WMM */
+ 			GFP_KERNEL);
+-	if (!skb) {
+-		printk(KERN_DEBUG "%s: failed to allocate buffer for assoc "
+-		       "frame\n", sdata->name);
++	if (!skb)
+ 		return;
+-	}
++
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+ 
+ 	capab = WLAN_CAPABILITY_ESS;
 -- 
-1.7.4.1
+1.7.6.405.gc1be0
 
