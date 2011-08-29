@@ -1,167 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42349 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751634Ab1HOQLq (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:40941 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751429Ab1H2G6E convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 12:11:46 -0400
-Received: by fxh19 with SMTP id 19so3673111fxh.19
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2011 09:11:45 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] b43: LCN-PHY: basic PHY init
-Date: Mon, 15 Aug 2011 18:50:55 +0200
-Message-Id: <1313427056-3755-1-git-send-email-zajec5@gmail.com> (sfid-20110815_181153_749956_B1E503C1)
+	Mon, 29 Aug 2011 02:58:04 -0400
+Received: by gya6 with SMTP id 6so4545155gya.19
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Aug 2011 23:58:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1314558661-28454-1-git-send-email-nbd@openwrt.org>
+References: <1314558661-28454-1-git-send-email-nbd@openwrt.org>
+Date: Mon, 29 Aug 2011 08:58:03 +0200
+Message-ID: <CAGXE3d_=BtQ+TEHG+y+ReftHB5Y9XhojsLyo9qkKSm4EpOGB8g@mail.gmail.com> (sfid-20110829_085812_987918_9D18CB82)
+Subject: Re: [PATCH] mac80211: retry sending failed BAR frames later instead
+ of tearing down aggr
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Aug 28, 2011 at 9:11 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> Unfortunately failed BAR tx attempts happen more frequently than I
+> expected, and the resulting aggregation teardowns cause performance
+> issues, as the aggregation session does not always get re-established
+> properly.
+> Instead of tearing down the entire aggr session, we can simply store the
+> SSN of the last failed BAR tx attempt, wait for the first successful
+> tx status event, and then send another BAR with the same SSN.
+>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> Cc: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
----
-Sets were taken from:
- phy_read(0x044c) -> 0x0000
-phy_write(0x044c) <- 0x0000
- phy_read(0x04b0) -> 0x0000
-phy_write(0x04b0) <- 0x0000
- phy_read(0x04f9) -> 0x0000
-phy_write(0x04f9) <- 0x0000
+[...]
 
- phy_read(0x044a) -> 0x0000
-phy_write(0x044a) <- 0x0080
- phy_read(0x044a) -> 0x0000
-phy_write(0x044a) <- 0x0000
- phy_read(0x06d1) -> 0x0000
-phy_write(0x06d1) <- 0x0080
+> †static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
+> †{
+> † † † †struct ieee80211_mgmt *mgmt = (void *) skb->data;
+> † † † †struct ieee80211_local *local = sta->local;
+> † † † †struct ieee80211_sub_if_data *sdata = sta->sdata;
+>
+> + † † † if (ieee80211_is_data_qos(mgmt->frame_control)) {
+> + † † † † † † † struct ieee80211_hdr *hdr = (void *) skb->data;
+> + † † † † † † † u8 *qc = ieee80211_get_qos_ctl(hdr);
+> + † † † † † † † u16 tid = qc[0] & 0xf;
+> +
+> + † † † † † † † ieee80211_check_pending_bar(sta, hdr->addr1, tid);
+> + † † † }
+> +
 
-Masks were taken from:
- phy_read(0x044c) -> 0xffff
-phy_write(0x044c) <- 0xe0ff
- phy_read(0x04b0) -> 0xffff
-phy_write(0x04b0) <- 0xf7f7
- phy_read(0x04f9) -> 0xffff
-phy_write(0x04f9) <- 0xfff7
+This code will not be run for injected QoS frames. Is this intended?
+Otherwise looks good to me.
 
- phy_read(0x044a) -> 0xffff
-phy_write(0x044a) <- 0xffff
- phy_read(0x044a) -> 0xffff
-phy_write(0x044a) <- 0x007f
- phy_read(0x06d1) -> 0xffff
-phy_write(0x06d1) <- 0xffff
----
- drivers/net/wireless/b43/phy_lcn.c |   74 +++++++++++++++++++++++++++++++++++-
- 1 files changed, 72 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_lcn.c b/drivers/net/wireless/b43/phy_lcn.c
-index 0fd72c1..604a3a6 100644
---- a/drivers/net/wireless/b43/phy_lcn.c
-+++ b/drivers/net/wireless/b43/phy_lcn.c
-@@ -28,6 +28,50 @@
- #include "main.h"
- 
- /**************************************************
-+ * Various PHY ops
-+ **************************************************/
-+
-+static void b43_phy_lcn_afe_set_unset(struct b43_wldev *dev)
-+{
-+	u16 afe_ctl2 = b43_phy_read(dev, B43_PHY_LCN_AFE_CTL2);
-+	u16 afe_ctl1 = b43_phy_read(dev, B43_PHY_LCN_AFE_CTL1);
-+
-+	b43_phy_write(dev, B43_PHY_LCN_AFE_CTL2, afe_ctl2 | 0x1);
-+	b43_phy_write(dev, B43_PHY_LCN_AFE_CTL1, afe_ctl1 | 0x1);
-+
-+	b43_phy_write(dev, B43_PHY_LCN_AFE_CTL2, afe_ctl2 & ~0x1);
-+	b43_phy_write(dev, B43_PHY_LCN_AFE_CTL1, afe_ctl1 & ~0x1);
-+
-+	b43_phy_write(dev, B43_PHY_LCN_AFE_CTL2, afe_ctl2);
-+	b43_phy_write(dev, B43_PHY_LCN_AFE_CTL1, afe_ctl1);
-+}
-+
-+static void b43_phy_lcn_clean_0x18_table(struct b43_wldev *dev)
-+{
-+	u8 i;
-+
-+	for (i = 0; i < 0x80; i++)
-+		b43_lcntab_write(dev, B43_LCNTAB32(0x18, i), 0x80000);
-+}
-+
-+static void b43_phy_lcn_clear_0x07_table(struct b43_wldev *dev)
-+{
-+	u8 i;
-+
-+	b43_phy_write(dev, B43_PHY_LCN_TABLE_ADDR, (0x7 << 10) | 0x340);
-+	for (i = 0; i < 30; i++) {
-+		b43_phy_write(dev, B43_PHY_LCN_TABLE_DATAHI, 0);
-+		b43_phy_write(dev, B43_PHY_LCN_TABLE_DATALO, 0);
-+	}
-+
-+	b43_phy_write(dev, B43_PHY_LCN_TABLE_ADDR, (0x7 << 10) | 0x80);
-+	for (i = 0; i < 64; i++) {
-+		b43_phy_write(dev, B43_PHY_LCN_TABLE_DATAHI, 0);
-+		b43_phy_write(dev, B43_PHY_LCN_TABLE_DATALO, 0);
-+	}
-+}
-+
-+/**************************************************
-  * Basic PHY ops.
-  **************************************************/
- 
-@@ -60,6 +104,30 @@ static void b43_phy_lcn_op_prepare_structs(struct b43_wldev *dev)
- 	memset(phy_lcn, 0, sizeof(*phy_lcn));
- }
- 
-+static int b43_phy_lcn_op_init(struct b43_wldev *dev)
-+{
-+	b43_phy_set(dev, 0x44a, 0x80);
-+	b43_phy_mask(dev, 0x44a, 0x7f);
-+	b43_phy_set(dev, 0x6d1, 0x80);
-+	b43_phy_write(dev, 0x6d0, 0x7);
-+
-+	b43_phy_lcn_afe_set_unset(dev);
-+
-+	b43_phy_write(dev, 0x60a, 0xa0);
-+	b43_phy_write(dev, 0x46a, 0x19);
-+	b43_phy_maskset(dev, 0x663, 0xFF00, 0x64);
-+
-+	b43_phy_lcn_tables_init(dev);
-+	/* TODO: various tables ops here */
-+	b43_phy_lcn_clean_0x18_table(dev);
-+
-+	/* TODO: some ops here */
-+
-+	b43_phy_lcn_clear_0x07_table(dev);
-+
-+	return 0;
-+}
-+
- static void b43_phy_lcn_op_software_rfkill(struct b43_wldev *dev,
- 					bool blocked)
- {
-@@ -77,7 +145,9 @@ static void b43_phy_lcn_op_software_rfkill(struct b43_wldev *dev,
- 		b43_phy_mask(dev, B43_PHY_LCN_RF_CTL7, ~0x8);
- 		b43_phy_set(dev, B43_PHY_LCN_RF_CTL6, 0x8);
- 	} else {
--		/* TODO */
-+		b43_phy_mask(dev, B43_PHY_LCN_RF_CTL1, ~0x1f00);
-+		b43_phy_mask(dev, B43_PHY_LCN_RF_CTL3, ~0x808);
-+		b43_phy_mask(dev, B43_PHY_LCN_RF_CTL6, ~0x8);
- 	}
- }
- 
-@@ -116,8 +186,8 @@ const struct b43_phy_operations b43_phyops_lcn = {
- 	.allocate		= b43_phy_lcn_op_allocate,
- 	.free			= b43_phy_lcn_op_free,
- 	.prepare_structs	= b43_phy_lcn_op_prepare_structs,
--	/*
- 	.init			= b43_phy_lcn_op_init,
-+	/*
- 	.phy_read		= b43_phy_lcn_op_read,
- 	.phy_write		= b43_phy_lcn_op_write,
- 	.phy_maskset		= b43_phy_lcn_op_maskset,
--- 
-1.7.3.4
-
+Helmut
