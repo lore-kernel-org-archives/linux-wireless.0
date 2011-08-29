@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:42416 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753088Ab1HKPip convert rfc822-to-8bit (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:49731 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754361Ab1H2R5E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 11:38:45 -0400
-From: "Elias, Ilan" <ilane@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-CC: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-	"samuel@sortiz.org" <samuel@sortiz.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 11 Aug 2011 17:38:30 +0200
-Subject: RE: [RFC] NFC: NCI protocol proposal
-Message-ID: <AC090B9732AB2B4DB7FF476E907FE6600131D0F1D9@dnce02.ent.ti.com> (sfid-20110811_173848_576483_51E64811)
-References: <AC090B9732AB2B4DB7FF476E907FE6600131D0E347@dnce02.ent.ti.com>
-	 <CAK3JMAa=1kuP7CRRMBLxZtMromYbDMz18W6ZT=1KoSCD=tfFkQ@mail.gmail.com>
-	 (sfid-20110809_194411_068851_56DC16DA)
- <1312912950.3966.5.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1312912950.3966.5.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 29 Aug 2011 13:57:04 -0400
+Received: by vxi9 with SMTP id 9so4431301vxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 10:57:03 -0700 (PDT)
+Message-ID: <4E5BD2EC.5090702@lwfinger.net> (sfid-20110829_195713_255946_18450CCB)
+Date: Mon, 29 Aug 2011 12:57:00 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: Looking for BCM43228
+References: <CACna6rwU4RuYuiAFjXFDH-c+EFsKtKFmB1Sh8kXdb9EoUt4abg@mail.gmail.com> <CACna6ryacjVaC=WUv1Ni2mhJMgCb4uU0tMWALsWoSvCVS+EM7Q@mail.gmail.com>
+In-Reply-To: <CACna6ryacjVaC=WUv1Ni2mhJMgCb4uU0tMWALsWoSvCVS+EM7Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Lauro, Johannes,
+On 08/29/2011 12:37 PM, Rafał Miłecki wrote:
+> W dniu 29 sierpnia 2011 19:28 użytkownik Rafał Miłecki
+> <zajec5@gmail.com>  napisał:
+>> I'm looking for 14e4:4359 card which is BCM43228 chipset based.
+>>
+>> According to Ubuntu [0] it can be found in Dell's notebooks:
+>> 1) Dell Latitude E5420m
+>> 2) Dell Latitude E5520m
+>> 3) Dell Latitude E6220
+>>
+>> Ubuntu user Marc Legris provided a prove this card is really used by
+>> Dell. See any of his launchpad reports for lspci [1] [2] [3].
+>>
+>> I've search on ebay and polish similar site, no results so far. Ofc
+>> I'm not interested in buying the whole laptop just for WiFi card. I'll
+>> be contacting Dell in next days to see if they can offer me a card.
+>
+> P.S.
+> Ofc I've checked this site, but they are offering only modems for
+> E6220 and nothing at all for E5420/E5520. I've been searching in
+> Shop for Home&  Home Office › Accessories › Parts&  Upgrades › Parts&  Upgrades
 
-> 
-> On Tue, 2011-08-09 at 14:43 -0300, Lauro Ramos Venancio wrote:
-> 
-> > > We need to add the following 2 control operations (via generic
-> > > netlink):
-> > >        - Dev_up, which turn on the NFC controller (this operation may
-> > > take a   few seconds, as it can download new FW to the NFC controller)
-> > >        - Dev_down, which turn off the NFC controller
-> > > The dev_up/down approach was also used with HCI protocol in the BlueZ
-> > > project.
-> >
-> > I am not completely convinced that we need the dev up/down. Why is it
-> > not possible to load the FW in the probe?
-> 
-> The usual problem, if the driver is built-in then the probe will run
-> before userspace is available to load firmware.
-> 
-> johannes
+I just sent a query to the vendor offering refurbished BCM943224 cards telling 
+them that I already have that card, but that I want 2 BCM43228 cards for Linux 
+driver development. I'll let you know what happens. BTW, one of them would be 
+for you.
 
-Thanks for your comments.
-
-BR,
-Ilan
+Larry
