@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:34754 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754390Ab1H0ASW (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48633 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752763Ab1H2MaJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 20:18:22 -0400
-Received: by gya6 with SMTP id 6so3293985gya.19
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2011 17:18:21 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Subject: [PATCH v2 0/8] mesh fixes
-Date: Fri, 26 Aug 2011 17:18:06 -0700
-Message-Id: <1314404294-4233-1-git-send-email-javier@cozybit.com> (sfid-20110827_021825_888831_3154C066)
-In-Reply-To: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
-References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
+	Mon, 29 Aug 2011 08:30:09 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH 16/20] ath6kl: Add support for new P2P iftypes in mode changes
+Date: Mon, 29 Aug 2011 15:23:57 +0300
+Message-ID: <1314620641-24257-17-git-send-email-jouni@qca.qualcomm.com> (sfid-20110829_143014_175044_D6B3D934)
+In-Reply-To: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A series of fixes and cleanups to the mesh stack.
-There were two contentious patches in the first version:  
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
 
-1. mac80211: Fix RCU pointer dereference in mesh_path_discard_frame()
-
-  This has been fixed (see version patch description).
-
-2.  mac80211: Limit amount of HWMP frames and forwarded data packets in
-   queues on mesh interfaces
-
-This has been removed from the set until we figure out a more elegant way to
-solve the problem it tried to fix.
-
-Cheers,
-
-Javier Cardona (8):
-  mac80211: Fix RCU pointer dereference in mesh_path_discard_frame()
-  mac80211: Remove mesh paths when an interface is removed
-  mac80211: Improve mpath state locking
-  mac80211: Remove redundant mesh path expiration checks
-  mac80211: Don't iterate twice over all mpaths when once in sufficient
-  mac80211: Consolidate {mesh,mpp}_path_flush into one function
-  mac80211: Don't take the mesh path resize lock when deleting an mpath
-  mac80211: Consolidate mesh path duplicated functions
-
- net/mac80211/cfg.c          |    2 +-
- net/mac80211/iface.c        |    6 ++
- net/mac80211/mesh.h         |    6 +-
- net/mac80211/mesh_pathtbl.c |  167 +++++++++++++++++++++++--------------------
- 4 files changed, 101 insertions(+), 80 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 2c35fd2..19b6da8 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -451,7 +451,8 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
+ 	}
+ 
+ 	if (nw_type & INFRA_NETWORK) {
+-		if (ar->wdev->iftype != NL80211_IFTYPE_STATION) {
++		if (ar->wdev->iftype != NL80211_IFTYPE_STATION &&
++		    ar->wdev->iftype != NL80211_IFTYPE_P2P_CLIENT) {
+ 			ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+ 				   "%s: ath6k not in station mode\n", __func__);
+ 			return;
+@@ -612,7 +613,8 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
+ 	}
+ 
+ 	if (ar->nw_type & INFRA_NETWORK) {
+-		if (ar->wdev->iftype != NL80211_IFTYPE_STATION) {
++		if (ar->wdev->iftype != NL80211_IFTYPE_STATION &&
++		    ar->wdev->iftype != NL80211_IFTYPE_P2P_CLIENT) {
+ 			ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+ 				   "%s: ath6k not in station mode\n", __func__);
+ 			return;
+@@ -1206,6 +1208,12 @@ static int ath6kl_cfg80211_change_iface(struct wiphy *wiphy,
+ 	case NL80211_IFTYPE_ADHOC:
+ 		ar->next_mode = ADHOC_NETWORK;
+ 		break;
++	case NL80211_IFTYPE_P2P_CLIENT:
++		ar->next_mode = INFRA_NETWORK;
++		break;
++	case NL80211_IFTYPE_P2P_GO:
++		ar->next_mode = AP_NETWORK;
++		break;
+ 	default:
+ 		ath6kl_err("invalid interface type %u\n", type);
+ 		return -EOPNOTSUPP;
 -- 
-1.7.6
+1.7.4.1
 
