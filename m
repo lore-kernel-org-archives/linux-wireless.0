@@ -1,153 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2830 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753330Ab1HHN7g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:36 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 65/82] staging: brcm80211: simplified register access
- macro's in softmac
-Date: Mon, 8 Aug 2011 15:58:49 +0200
-Message-ID: <1312811946-16713-66-git-send-email-arend@broadcom.com> (sfid-20110808_160017_782322_ED7F1CBE)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from shards.monkeyblade.net ([198.137.202.13]:37232 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754684Ab1H2Uvn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Aug 2011 16:51:43 -0400
+Date: Mon, 29 Aug 2011 13:50:36 -0700 (PDT)
+Message-Id: <20110829.135036.1635525499217100772.davem@davemloft.net> (sfid-20110829_225153_307994_688BFA2A)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2011-08-29
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20110829202506.GD1406@tuxdriver.com>
+References: <20110829202506.GD1406@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=iso-8859-7
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
-
-Code cleanup. Removed MIPS specific 'sync' instruction since this is not
-required for the chips that this driver supports. MIPS specific macro's
-were now the same as non-MIPS register access macro's and thus have been
-deleted. Also added comment that makes clearer what the benefit of these
-macro's is. Unified big and little end register access macro's.
-
-Reported-by: Dan Carpenter <error27@gmail.com>
-Reported-by: Julian Calaby <julian.calaby@gmail.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/types.h |   81 ++++++++++------------------
- 1 files changed, 29 insertions(+), 52 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/types.h b/drivers/staging/brcm80211/brcmsmac/types.h
-index 360795f..16a1c6a 100644
---- a/drivers/staging/brcm80211/brcmsmac/types.h
-+++ b/drivers/staging/brcm80211/brcmsmac/types.h
-@@ -320,60 +320,38 @@ do {						\
- 
- #define WL_ERROR_ON()		(brcm_msg_level & LOG_ERROR_VAL)
- 
--/* register access macros */
-+/*
-+ * Register access macros.
-+ *
-+ * These macro's take a pointer to the address to read as one of their
-+ * arguments. The macro itself deduces the size of the IO transaction (u8, u16
-+ * or u32). Advantage of this approach in combination with using a struct to
-+ * define the registers in a register block, is that access size and access
-+ * location are defined in only one spot. This reduces the risk of the
-+ * programmer trying to use an unsupported transaction size on a register.
-+ *
-+ * For big endian operation, a byte swap has to be done. Eg, when attempting
-+ * to read byte address 0, byte 3 should be read. This is accomplished
-+ * using an xor ('^') operator.
-+ */
-+
- #ifndef __BIG_ENDIAN
--#ifndef __mips__
--#define R_REG(r) \
--	({\
--		sizeof(*(r)) == sizeof(u8) ? \
--		readb((u8 *)(r)) : \
--		sizeof(*(r)) == sizeof(u16) ? readw((u16 *)(r)) : \
--		readl((u32 *)(r)); \
--	})
--#else				/* __mips__ */
--#define R_REG(r) \
--	({ \
--		__typeof(*(r)) __osl_v; \
--		__asm__ __volatile__("sync"); \
--		switch (sizeof(*(r))) { \
--		case sizeof(u8): \
--			__osl_v = readb((u8 *)(r)); \
--			break; \
--		case sizeof(u16): \
--			__osl_v = readw((u16 *)(r)); \
--			break; \
--		case sizeof(u32): \
--			__osl_v = \
--			readl((u32 *)(r)); \
--			break; \
--		} \
--		__asm__ __volatile__("sync"); \
--		__osl_v; \
--	})
--#endif				/* __mips__ */
-+#define SWP2(r)	(r)
-+#define SWP3(r) (r)
-+#else
-+#define SWP2(r)	((unsigned long)(r)^2)
-+#define SWP3(r)	((unsigned long)(r)^3)
-+#endif /* __BIG_ENDIAN */
- 
--#define W_REG(r, v) do { \
--		switch (sizeof(*(r))) { \
--		case sizeof(u8): \
--			writeb((u8)(v), (u8 *)(r)); break; \
--		case sizeof(u16): \
--			writew((u16)(v), (u16 *)(r)); break; \
--		case sizeof(u32): \
--			writel((u32)(v), (u32 *)(r)); break; \
--		}; \
--	} while (0)
--#else				/* __BIG_ENDIAN */
- #define R_REG(r) \
- 	({ \
- 		__typeof(*(r)) __osl_v; \
- 		switch (sizeof(*(r))) { \
- 		case sizeof(u8): \
--			__osl_v = \
--			readb((u8 *)((unsigned long)(r)^3)); \
-+			__osl_v = readb((u8 *)(SWP3(r))); \
- 			break; \
- 		case sizeof(u16): \
--			__osl_v = \
--			readw((u16 *)((unsigned long)(r)^2)); \
-+			__osl_v = readw((u16 *)(SWP2(r))); \
- 			break; \
- 		case sizeof(u32): \
- 			__osl_v = readl((u32 *)(r)); \
-@@ -385,17 +363,16 @@ do {						\
- #define W_REG(r, v) do { \
- 		switch (sizeof(*(r))) { \
- 		case sizeof(u8):	\
--			writeb((u8)(v), \
--			(u8 *)((unsigned long)(r)^3)); break; \
-+			writeb((u8)(v), (u8 *)(SWP3(r))); \
-+			break; \
- 		case sizeof(u16):	\
--			writew((u16)(v), \
--			(u16 *)((unsigned long)(r)^2)); break; \
-+			writew((u16)(v), (u16 *)(SWP2(r))); \
-+			break; \
- 		case sizeof(u32):	\
--			writel((u32)(v), \
--			(u32 *)(r)); break; \
-+			writel((u32)(v), (u32 *)(r)); \
-+			break; \
- 		} \
- 	} while (0)
--#endif				/* __BIG_ENDIAN */
- 
- #ifdef __mips__
- /*
--- 
-1.7.4.1
-
-
+RnJvbTogIkpvaG4gVy4gTGludmlsbGUiIDxsaW52aWxsZUB0dXhkcml2ZXIuY29tPg0KRGF0ZTog
+TW9uLCAyOSBBdWcgMjAxMSAxNjoyNTowNiAtMDQwMA0KDQo+IEhlcmUgaXMgYW5vdGhlciBiYXRj
+aCBvZiB1cGRhdGVzIGludGVuZGVkIGZvciAzLjIuICBIaWdobGlnaHRzIGluY2x1ZGUNCj4gYW4g
+TkZDIGZpeCwgYSBiYXRjaCBvZiBjYXJsOTE3MCB1cGRhdGVzLCBzb21lIG1lc2ggdXBkYXRlcywg
+YSBiaWcgYmF0Y2gNCj4gb2YgYjQzIHVwZGF0ZXMsIGF0aDlrIHVwZGF0ZXMsIGFuZCBhIHZhcmll
+dHkgb2Ygb3RoZXIgYml0cy4NCj4gDQo+IFBsZWFzZSBsZXQgbWUga25vdyBpZiB0aGVyZSBhcmUg
+cHJvYmxlbXMhDQoNClB1bGxlZCwgdGhhbmtzIEpvaG4uDQoNCkNhbiB3ZSBnZXQgdGhlIGZvbGxv
+d2luZyB3YXJuaW5ncyBsb29rZWQgYXQgYW5kIGZpeGVkPyAgVGhhbmtzLg0KDQotLS0tLS0tLS0t
+LS0tLS0tLS0tLQ0KZHJpdmVycy9uZXQvd2lyZWxlc3MvYWlyby5jOiBJbiBmdW5jdGlvbiChZW5j
+YXBzdWxhdGWiOg0KZHJpdmVycy9uZXQvd2lyZWxlc3MvYWlyby5jOjE0MjE6MTU6IHdhcm5pbmc6
+IGFycmF5IHN1YnNjcmlwdCBpcyBhYm92ZSBhcnJheSBib3VuZHMgWy1XYXJyYXktYm91bmRzXQ0K
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvYWlyby5jOiBJbiBmdW5jdGlvbiChZGVjYXBzdWxhdGWiOg0K
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvYWlyby5jOjE1MDk6MTY6IHdhcm5pbmc6IGFycmF5IHN1YnNj
+cmlwdCBpcyBhYm92ZSBhcnJheSBib3VuZHMgWy1XYXJyYXktYm91bmRzXQ0KZHJpdmVycy9uZXQv
+d2lyZWxlc3MvcmF5X2NzLmM6IEluIGZ1bmN0aW9uIKFyeF9hdXRoZW50aWNhdGWiOg0KZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvcmF5X2NzLmM6MjQzNjozOiB3YXJuaW5nOiBhcnJheSBzdWJzY3JpcHQg
+aXMgYWJvdmUgYXJyYXkgYm91bmRzIFstV2FycmF5LWJvdW5kc10NCmRyaXZlcnMvbmV0L3dpcmVs
+ZXNzL3JheV9jcy5jOjI0MzY6Mzogd2FybmluZzogYXJyYXkgc3Vic2NyaXB0IGlzIGFib3ZlIGFy
+cmF5IGJvdW5kcyBbLVdhcnJheS1ib3VuZHNdDQpkcml2ZXJzL25ldC93aXJlbGVzcy9yYXlfY3Mu
+YzoyNDM2OjM6IHdhcm5pbmc6IGFycmF5IHN1YnNjcmlwdCBpcyBhYm92ZSBhcnJheSBib3VuZHMg
+Wy1XYXJyYXktYm91bmRzXQ0KZHJpdmVycy9uZXQvd2lyZWxlc3MvcmF5X2NzLmM6MjQzNjozOiB3
+YXJuaW5nOiBhcnJheSBzdWJzY3JpcHQgaXMgYWJvdmUgYXJyYXkgYm91bmRzIFstV2FycmF5LWJv
+dW5kc10NCmRyaXZlcnMvbmV0L3dpcmVsZXNzL3JheV9jcy5jOjI0MzY6Mzogd2FybmluZzogYXJy
+YXkgc3Vic2NyaXB0IGlzIGFib3ZlIGFycmF5IGJvdW5kcyBbLVdhcnJheS1ib3VuZHNdDQpkcml2
+ZXJzL25ldC93aXJlbGVzcy9yYXlfY3MuYzoyNDM5OjE1OiB3YXJuaW5nOiBhcnJheSBzdWJzY3Jp
+cHQgaXMgYWJvdmUgYXJyYXkgYm91bmRzIFstV2FycmF5LWJvdW5kc10NCmRyaXZlcnMvbmV0L3dp
+cmVsZXNzL3JheV9jcy5jOjI0NTI6MTY6IHdhcm5pbmc6IGFycmF5IHN1YnNjcmlwdCBpcyBhYm92
+ZSBhcnJheSBib3VuZHMgWy1XYXJyYXktYm91bmRzXQ0KZHJpdmVycy9uZXQvd2lyZWxlc3MvcmF5
+X2NzLmM6MjQ1MzoxODogd2FybmluZzogYXJyYXkgc3Vic2NyaXB0IGlzIGFib3ZlIGFycmF5IGJv
+dW5kcyBbLVdhcnJheS1ib3VuZHNdDQpkcml2ZXJzL25ldC93aXJlbGVzcy9yYXlfY3MuYzoyNDUz
+OjMyOiB3YXJuaW5nOiBhcnJheSBzdWJzY3JpcHQgaXMgYWJvdmUgYXJyYXkgYm91bmRzIFstV2Fy
+cmF5LWJvdW5kc10NCg==
