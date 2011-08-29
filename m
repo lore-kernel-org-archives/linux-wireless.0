@@ -1,72 +1,235 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51342 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754041Ab1HaUAa (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:3170 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752877Ab1H2Hl2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 16:00:30 -0400
-Date: Wed, 31 Aug 2011 15:48:10 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Tom Herbert <therbert@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Andrew McGregor <andrewmcgr@gmail.com>,
-	Matt Smith <smithm@qca.qualcomm.com>,
-	Kevin Hayes <hayes@qca.qualcomm.com>,
-	Dave Taht <dave.taht@gmail.com>,
-	Derek Smithies <derek@indranet.co.nz>, netdev@vger.kernel.org,
-	bloat@bufferbloat.net
-Subject: Re: BQL crap and wireless
-Message-ID: <20110831194810.GD2474@tuxdriver.com> (sfid-20110831_220035_836134_8F5CEB57)
-References: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com>
+	Mon, 29 Aug 2011 03:41:28 -0400
+Date: Mon, 29 Aug 2011 13:11:55 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	<rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH v2 4/4] ath9k: implement .get_antenna and .set_antenna
+Message-ID: <20110829074154.GA29926@vmraj-lnx.users.atheros.com> (sfid-20110829_094132_374862_95590DBF)
+References: <1314597262-49427-1-git-send-email-nbd@openwrt.org>
+ <1314597262-49427-2-git-send-email-nbd@openwrt.org>
+ <1314597262-49427-3-git-send-email-nbd@openwrt.org>
+ <1314597262-49427-4-git-send-email-nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1314597262-49427-4-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 26, 2011 at 04:27:22PM -0700, Luis R. Rodriguez wrote:
-> I've just read this thread:
+On Mon, Aug 29, 2011 at 07:54:22AM +0200, Felix Fietkau wrote:
+> On MIMO chips this can be used to enable/disable hardware chains, ensuring
+> that the MCS information is updated accordingly.
+> On non-MIMO chips with rx diversity (e.g. 9285), this configures the rx
+> input antenna.
 > 
-> http://marc.info/?t=131277868500001&r=1&w=2
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  drivers/net/wireless/ath/ath9k/ath9k.h |    2 +
+>  drivers/net/wireless/ath/ath9k/init.c  |   33 ++++++++++++---
+>  drivers/net/wireless/ath/ath9k/main.c  |   71 ++++++++++++++++++++++++++++++++
+>  drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
+>  4 files changed, 100 insertions(+), 8 deletions(-)
 > 
-> Since its not linux-wireless I'll chime in here. It seems that you are
-> trying to write an algorithm that will work for all networking and
-> 802.11 devices. For networking is seems tough given driver
-> architecture and structure and the hope that all drivers will report
-> things in a fairly similar way. For 802.11 it was pointed out how we
-> have varying bandwidths and depending on the technology used for
-> connection (AP, 802.11s, IBSS) a different number of possible peers
-> need to be considered. 802.11 faced similar algorithmic complexities
-> with rate control and the way Andrew and Derek resolved this was to
-> not assume you could solve this problem and simply test out the water
-> by trial and error, that gave birth to the minstrel rate control
-> algorithm which Felix later rewrote for mac80211 with 802.11n support
-> [1]. Can the BQL algorithm make use of the same trial and error
-> mechanism and simply try different values and and use EWMA [2] to pick
-> the best size for the queue ?
-> 
-> [1] http://wireless.kernel.org/en/developers/Documentation/mac80211/RateControl/minstrel
-> [2] http://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average
-> 
->   Luis
+> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+> index 5d9a9aa..6c7b27c 100644
+> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
+> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+> @@ -647,6 +647,7 @@ struct ath_softc {
+>  	struct ath_descdma txsdma;
+>  
+>  	struct ath_ant_comb ant_comb;
+> +	u32 ant_tx, ant_rx;
+u8 is sufficient.
+>  };
+>  
+>  void ath9k_tasklet(unsigned long data);
+> @@ -668,6 +669,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+>  		    const struct ath_bus_ops *bus_ops);
+>  void ath9k_deinit_device(struct ath_softc *sc);
+>  void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw);
+> +void ath9k_reload_chainmask_settings(struct ath_softc *sc);
+>  
+>  void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw);
+>  bool ath9k_uses_beacons(int type);
+> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+> index 31ef501..263bbe2 100644
+> --- a/drivers/net/wireless/ath/ath9k/init.c
+> +++ b/drivers/net/wireless/ath/ath9k/init.c
+> @@ -652,9 +652,22 @@ static void ath9k_init_txpower_limits(struct ath_softc *sc)
+>  	ah->curchan = curchan;
+>  }
+>  
+> +void ath9k_reload_chainmask_settings(struct ath_softc *sc)
+> +{
+> +	if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT))
+> +		return;
+> +
+> +	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
+> +		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
+> +	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
+> +		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
+> +}
+> +
+> +
+>  void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+>  {
+> -	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+> +	struct ath_hw *ah = sc->sc_ah;
+> +	struct ath_common *common = ath9k_hw_common(ah);
+>  
+>  	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+>  		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+> @@ -692,6 +705,17 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+>  	hw->sta_data_size = sizeof(struct ath_node);
+>  	hw->vif_data_size = sizeof(struct ath_vif);
+>  
+> +	hw->wiphy->available_antennas_rx = BIT(ah->caps.max_rxchains) - 1;
+> +	hw->wiphy->available_antennas_tx = BIT(ah->caps.max_txchains) - 1;
+> +
+Why dont you use caps.tx/rx_chainmask instead?
+> +	/* single chain devices with rx diversity */
+> +	if (ah->caps.max_rxchains == 1 &&
+> +	    ath9k_hw_ops(ah)->antdiv_comb_conf_get)
+> +		hw->wiphy->available_antennas_rx = 3;
+> +
+Use hw caps to determine ant_divsersity.
+use hex instead of decimal for available_antennas, ant_rx/tx
+> +	sc->ant_rx = hw->wiphy->available_antennas_rx;
+> +	sc->ant_tx = hw->wiphy->available_antennas_tx;
+> +
+>  #ifdef CONFIG_ATH9K_RATE_CONTROL
+>  	hw->rate_control_algorithm = "ath9k_rate_control";
+>  #endif
+> @@ -703,12 +727,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+>  		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+>  			&sc->sbands[IEEE80211_BAND_5GHZ];
+>  
+> -	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+> -		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
+> -			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
+> -		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
+> -			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
+> -	}
+> +	ath9k_reload_chainmask_settings(sc);
+>  
+>  	SET_IEEE80211_PERM_ADDR(hw, common->macaddr);
+>  }
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 4b1fe7c..1cbbaea 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -262,6 +262,22 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+>  			ath_start_ani(common);
+>  	}
+>  
+> +	if (ath9k_hw_ops(ah)->antdiv_comb_conf_get && sc->ant_rx != 3) {
+> +		struct ath_hw_antcomb_conf div_ant_conf;
+> +		u8 lna_conf;
+> +
+> +		ath9k_hw_antdiv_comb_conf_get(ah, &div_ant_conf);
+> +
+> +		if (sc->ant_rx == 1)
+> +			lna_conf = ATH_ANT_DIV_COMB_LNA1;
+> +		else
+> +			lna_conf = ATH_ANT_DIV_COMB_LNA2;
+> +		div_ant_conf.main_lna_conf = lna_conf;
+> +		div_ant_conf.alt_lna_conf = lna_conf;
+> +
+> +		ath9k_hw_antdiv_comb_conf_set(ah, &div_ant_conf);
+Adjust the fast_div_bias based on main and alt lna conf.
+> +	}
+> +
+>  	ieee80211_wake_queues(sc->hw);
+>  
+>  	return true;
+> @@ -2358,6 +2374,59 @@ static int ath9k_get_stats(struct ieee80211_hw *hw,
+>  	return 0;
+>  }
+>  
+> +static u32 fill_chainmask(u32 cap, u32 new)
+> +{
+> +	u32 filled = 0;
+> +	int i;
+> +
+> +	for (i = 0; cap && new; i++, cap >>= 1) {
+> +		if (!(cap & BIT(0)))
+> +			continue;
+> +
+> +		if (new & BIT(0))
+> +			filled |= BIT(i);
+> +
+> +		new >>= 1;
+> +	}
+> +
+> +	return filled;
+> +}
+> +
+> +static int ath9k_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
+> +{
+> +	struct ath_softc *sc = hw->priv;
+> +	struct ath_hw *ah = sc->sc_ah;
+> +
+> +	if (!rx_ant || !tx_ant)
+> +		return -EINVAL;
+> +
+> +	sc->ant_rx = rx_ant;
+> +	sc->ant_tx = tx_ant;
+> +
+> +	if (ah->caps.rx_chainmask == 1)
+> +		return 0;
+> +
+> +	/* AR9100 runs into calibration issues if not all rx chains are enabled */
+> +	if (AR_SREV_9100(ah))
+> +		ah->rxchainmask = 0x7;
+> +	else
+> +		ah->rxchainmask = fill_chainmask(ah->caps.rx_chainmask, rx_ant);
+> +
+> +	ah->txchainmask = fill_chainmask(ah->caps.tx_chainmask, tx_ant);
+> +	ath9k_reload_chainmask_settings(sc);
+Setting chainmask alone is not sufficient. dont you have to complete rx and
+calibration before setting antenna?
+> +
+> +	return 0;
+> +}
+> +
+> +static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
+> +{
+> +	struct ath_softc *sc = hw->priv;
+> +
+> +	*tx_ant = sc->ant_tx;
+> +	*rx_ant = sc->ant_rx;
+> +	return 0;
+> +}
+> +
+>  struct ieee80211_ops ath9k_ops = {
+>  	.tx 		    = ath9k_tx,
+>  	.start 		    = ath9k_start,
+> @@ -2384,4 +2453,6 @@ struct ieee80211_ops ath9k_ops = {
+>  	.tx_frames_pending  = ath9k_tx_frames_pending,
+>  	.tx_last_beacon     = ath9k_tx_last_beacon,
+>  	.get_stats	    = ath9k_get_stats,
+> +	.set_antenna	    = ath9k_set_antenna,
+> +	.get_antenna	    = ath9k_get_antenna,
+>  };
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> index ad5f9bd..7e1265c 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -1956,7 +1956,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+>  			ath_rx_ps(sc, skb);
+>  		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+>  
+> -		if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
+> +		if ((ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) && sc->ant_rx == 3)
+>  			ath_ant_comb_scan(sc, &rs);
+What about already received packets using combined antennas?
+>  
+>  		ieee80211_rx(hw, skb);
 
-Since Luis has stirred things up, I took the liberty of adding Tom's
-BQL series to the debloat-testing tree:
-
-	git://git.infradead.org/debloat-testing.git
-
-I'm not sure how well BQL will interact with my eBDP-inspired hack,
-debloat-testing commit d2566a176589775cb3a1de4fade972aa62d551ff
-("mac80211: implement eBDP algorithm to fight bufferbloat").  So if
-anyone wants to try enabling a wireless driver for BQL, you might
-consider reverting that patch or at least testing without it.
-
-<shameless plug>
-And, of course, don't forget to come to the Bufferbloat and Networking
-track at Linux Plumbers Conference next week in Santa Rosa, CA! :-)
-</shameless plug>
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+--
+Rajkumar
