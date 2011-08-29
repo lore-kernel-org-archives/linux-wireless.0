@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:39076 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750871Ab1H0Fwa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Aug 2011 01:52:30 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH] ath9k_hw: Set default slottime as 9us
-Date: Sat, 27 Aug 2011 11:22:59 +0530
-Message-ID: <1314424379-1206-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110827_075240_155609_571B0A16)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from perches-mx.perches.com ([206.117.179.246]:60872 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754495Ab1H2Sbl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Aug 2011 14:31:41 -0400
+Subject: Re: [PATCH 2/2] ath: Make ath_printk void not int and remove
+ unused struct ath_common *
+From: Joe Perches <joe@perches.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <20110829181237.GB1406@tuxdriver.com>
+References: <cover.1314347556.git.joe@perches.com>
+	 <78869fcd8172cd02266b66a71aadbd0c0efbdebc.1314347556.git.joe@perches.com>
+	 <20110829181237.GB1406@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 29 Aug 2011 11:31:39 -0700
+Message-ID: <1314642699.6852.23.camel@Joe-Laptop> (sfid-20110829_203204_579399_4576D031)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialize 9us slot time as that is what is used mostly
-(for non-ERP cases) and also to be in sync with initvals.
+On Mon, 2011-08-29 at 14:12 -0400, John W. Linville wrote:
+> On Fri, Aug 26, 2011 at 01:56:39AM -0700, Joe Perches wrote:
+> > Changing the return type and removing the unused argument from
+> > ath_printk reduces code size.
+> > Add an __always_unused struct ath_common * to the macros
+> > that call ath_printk to avoid unused variable warnings.
+> > $ size drivers/net/wireless/ath/built-in.o*
+> >    text	   data	    bss	    dec	    hex	filename
+> > 1159859	  16235	 212000	1388094	 152e3e	drivers/net/wireless/ath/built-in.o.new
+> > 1164175	  16235	 212032	1392442	 153f3a	drivers/net/wireless/ath/built-in.o.old
+[]
+> > +#define _ath_printk(level, common, fmt, ...)			\
+> > +do {								\
+> > +	__always_unused struct ath_common *unused = common;	\
+> > +	ath_printk(level, fmt, ##__VA_ARGS__);			\
+> > +} while (0)
+[]
+> >  #define ath_emerg(common, fmt, ...)				\
+> > -	ath_printk(KERN_EMERG, common, fmt, ##__VA_ARGS__)
+> > +	_ath_printk(KERN_EMERG, common, fmt, ##__VA_ARGS__)
+[]
+> Any reason to preserve all these "common" args?
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ath_dbg uses common, the other ath_<level>s do not.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 0d7a5ee..05472c5 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -440,7 +440,7 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
- 	if (AR_SREV_9100(ah))
- 		ah->sta_id1_defaults |= AR_STA_ID1_AR9100_BA_FIX;
- 	ah->enable_32kHz_clock = DONT_USE_32KHZ;
--	ah->slottime = 20;
-+	ah->slottime = ATH9K_SLOT_TIME_9;
- 	ah->globaltxtimeout = (u32) -1;
- 	ah->power_mode = ATH9K_PM_UNDEFINED;
- }
--- 
-1.7.6.1
+So, other than to avoid modifying all the current uses?
+Maybe just consistency or a future use case.
+
+Or not.
+
+I think using the macro to avoid larger line changes is
+an acceptable minimal change.
+
 
