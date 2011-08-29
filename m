@@ -1,86 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:35864 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752684Ab1HPQtz convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:39206 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751901Ab1H2CHn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2011 12:49:55 -0400
-Received: by qwk3 with SMTP id 3so57952qwk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2011 09:49:55 -0700 (PDT)
+	Sun, 28 Aug 2011 22:07:43 -0400
+Received: by wwe5 with SMTP id 5so1988123wwe.1
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Aug 2011 19:07:42 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CA+XVXfeXFZ-oLRWxROuQQji5+m2xeDnQWfc8kJ+m=hPPeq7wRw@mail.gmail.com>
-References: <1312895383-3624-1-git-send-email-guy@wizery.com>
-	<CA+XVXfeXFZ-oLRWxROuQQji5+m2xeDnQWfc8kJ+m=hPPeq7wRw@mail.gmail.com>
-Date: Tue, 16 Aug 2011 19:49:54 +0300
-Message-ID: <CAA03846szz-sBT1EFaHAAYxsvb3ng7Z6OsHVPE3aDKSUSj2uBg@mail.gmail.com> (sfid-20110816_184959_075381_79A884D7)
-Subject: Re: [PATCH v2] wl12xx: use 2 spare TX blocks for GEM cipher
-From: Guy Eilam <guy@wizery.com>
-To: Arik Nemtsov <anamtsov@gmail.com>
-Cc: coelho@ti.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20110826142210.GE2579@tuxdriver.com>
+References: <1314236064-6339-1-git-send-email-thomas@cozybit.com>
+	<20110826142210.GE2579@tuxdriver.com>
+Date: Sun, 28 Aug 2011 19:07:42 -0700
+Message-ID: <CAG6hwVM8t=v0_xZuKf-nodZR77R0S8nSUgea9QM5S-vB4h_8jg@mail.gmail.com> (sfid-20110829_040750_236224_2A878CBE)
+Subject: Re: [PATCH] ath5k: Invoke irqsafe version of ieee80211_tx_status() to
+ avoid deadlock
+From: Thomas Pedersen <thomas@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, lrodriguez@atheros.com, me@bobcopeland.com,
+	Javier Cardona <javier@cozybit.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 9, 2011 at 8:59 PM, Arik Nemtsov <anamtsov@gmail.com> wrote:
-> On Tue, Aug 9, 2011 at 16:09, Guy Eilam <guy@wizery.com> wrote:
->> Add tx_spare_blocks member to the wl1271 struct
->> for more generic configuration of the amount
->> of spare TX blocks that should be used.
->> The default value is 1.
->> In case GEM cipher is used by the STA, we need
->> 2 spare TX blocks instead of just 1.
+On Fri, Aug 26, 2011 at 7:22 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Wed, Aug 24, 2011 at 06:34:24PM -0700, Thomas Pedersen wrote:
+>> From: Javier Cardona <javier@cozybit.com>
 >>
->> Signed-off-by: Guy Eilam <guy@wizery.com>
+>> This driver reports transmission status to the upper layer
+>> (ath5k_tx_frame_completed()) while holding the lock on the transmission
+>> queue (txq->lock).  Under failure conditions, the mesh stack will
+>> attempt to send PERR messages to the previous sender of the failed
+>> frame.  When that happens the driver will attempt to re-acquire the
+>> txq->lock lock causing a deadlock.  There are two possible fixes for
+>> this, (1) we could defer the transmission of the PERR frame until the
+>> lock is released or (2) release the lock before invoking
+>> ieee80211_tx_status().  The ath9k driver implements the second approach
+>> (see ath_tx_complete() in ath9k/xmit.c) as well as the rt2x00 and b43
+>> drivers.  The iwl driver, on the other hand, avoids this problem by
+>> invoking  ieee80211_tx_status_irqsafe() which effectively defers
+>> processing of transmission feedback status.  This last approach is the
+>> least intrusive is implemented here.
+>>
+>> Reported by Pedro Larbig (ASPj)
 >> ---
->>  drivers/net/wireless/wl12xx/main.c   |   12 ++++++++++++
->>  drivers/net/wireless/wl12xx/tx.c     |    4 +---
->>  drivers/net/wireless/wl12xx/tx.h     |    1 +
->>  drivers/net/wireless/wl12xx/wl12xx.h |    3 +++
->>  4 files changed, 17 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
->> index 1c56137..1d2b3e9 100644
->> --- a/drivers/net/wireless/wl12xx/main.c
->> +++ b/drivers/net/wireless/wl12xx/main.c
->> @@ -2736,6 +2736,17 @@ static int wl1271_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
->>                        0xff, 0xff, 0xff, 0xff, 0xff, 0xff
->>                };
->>
->> +               /*
->> +                * A STA set to GEM cipher requires 2 tx spare blocks.
->> +                * Return to default value when GEM cipher key is removed
->> +                */
->> +               if (key_type == KEY_GEM) {
->> +                       if (action == KEY_ADD_OR_REPLACE)
->> +                               wl->tx_spare_blocks = 2;
->> +                       else if (action == KEY_REMOVE)
->> +                               wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
->> +               }
->> +
+>>  drivers/net/wireless/ath/ath5k/base.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
 >
-> What about recovery? Note this code won't be reached in case
-> wl1271_op_set_key() is called when wl->state == OFF.
-> We should probably always revert to 1 blocks on unjoin or remove_interface.
-
-You are correct - this is fixed in a newer version of the patch.
-
+> Missing Signed-off-by...
 >
->> --- a/drivers/net/wireless/wl12xx/tx.c
->> +++ b/drivers/net/wireless/wl12xx/tx.c
->> @@ -200,9 +200,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
->>        u32 len;
->>        u32 total_blocks;
->>        int id, ret = -EBUSY, ac;
->> -
->> -       /* we use 1 spare block */
->> -       u32 spare_blocks = 1;
->> +       u32 spare_blocks = wl->tx_spare_blocks;
->
-> What about dummy packets? Perhaps we should still use 1 block for them?
+Yikes. Also, it looks like ieee80211_tx_status() should not be called
+from irq context. Will resubmit a v2 with signoff and comment shortly.
 
-Again, fixed in a newer version of the patch.
-
->
-> Arik
->
-
-Guy.
+Thomas
