@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:62220 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752892Ab1HAVKb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2011 17:10:31 -0400
-Message-ID: <4E371645.9080407@gnu.org> (sfid-20110801_231036_840655_7CDAABDD)
-Date: Mon, 01 Aug 2011 17:10:29 -0400
-From: Pavel Roskin <proski@gnu.org>
+Received: from dakia2.marvell.com ([65.219.4.35]:33550 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752615Ab1H2LwS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Aug 2011 07:52:18 -0400
+Date: Mon, 29 Aug 2011 17:12:44 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+Subject: [PATCH] mwl8k: Set hardware flag IEEE80211_HW_AP_LINK_PS
+Message-ID: <20110829114237.GA2648@hertz.marvell.com> (sfid-20110829_135221_548838_FC05943B)
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Martin Partridge <martin_partridge@btconnect.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: help with wg511v2
-References: <op.vzcrpnuuhgplxr@melanie> <201107290147.26919.chunkeey@googlemail.com> <op.vzexmjbnhgplxr@melanie> <201107301312.17758.chunkeey@googlemail.com>
-In-Reply-To: <201107301312.17758.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/30/2011 07:12 AM, Christian Lamparter wrote:
-> On Saturday 30 July 2011 05:36:09 Martin Partridge wrote:
->> 02:00.0 Ethernet controller: Marvell Technology Group Ltd. 88w8335 [Libertas] 802.11b/g Wireless (rev 03)
->      ^^^^^^^
->
-> Ah, this explains it everything. You are unfortunately a victim of Netgear's stupid
-> naming scam. The situation is explained at http://daemonizer.de/prism54/wg511/
-> The upshot is: there are two WG511 v2 versions, but only the first v2 works with
-> p54. The second one needs a driver from marvell.
+This will avoid mac80211 to trigger PS mode for connected station
+based on the PM bit of incoming frames. AP firmware is capable of
+handling such frames and buffering TX frames destined to the
+stations that are in PS mode.
 
-The driver is called mrv8k, but it's not in the Linux tree, not even in 
-staging.  I don't know why.  Perhaps it's not functional.
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-Several pages recommend disabling mrv8k and using ndiswrapper with 
-Windows drivers.  Until ndiswrapper 1.57 is released, you'll need the 
-current snapshot from subversion, as ndiswrapper 1.56 doesn't compile 
-for Linux 2.6.35 and newer.
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 771280a..ea1395a 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -5501,6 +5501,14 @@ static int mwl8k_firmware_load_success(struct mwl8k_priv *priv)
+ 
+ 	/* Set rssi values to dBm */
+ 	hw->flags |= IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_HAS_RATE_CONTROL;
++
++	/*
++	 * Ask mac80211 to not to trigger PS mode
++	 * based on PM bit of incoming frames.
++	 */
++	if (priv->ap_fw)
++		hw->flags |= IEEE80211_HW_AP_LINK_PS;
++
+ 	hw->vif_data_size = sizeof(struct mwl8k_vif);
+ 	hw->sta_data_size = sizeof(struct mwl8k_sta);
+ 
 -- 
-Regards,
-Pavel Roskin
+1.5.4.1
+
