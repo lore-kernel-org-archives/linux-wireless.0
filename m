@@ -1,80 +1,477 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2779 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754745Ab1HWO7B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 10:59:01 -0400
-Message-ID: <4E53C027.7060704@broadcom.com> (sfid-20110823_165910_770071_2A7453B2)
-Date: Tue, 23 Aug 2011 16:58:47 +0200
-From: "Roland Vossen" <rvossen@broadcom.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:64714 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753512Ab1H2OcQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Aug 2011 10:32:16 -0400
+Received: by fxh19 with SMTP id 19so4467407fxh.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 07:32:15 -0700 (PDT)
+From: Alexander Simon <an.alexsimon@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 4/4] mac80211: Add HT operation modes for IBSS
+Date: Mon, 29 Aug 2011 16:32:12 +0200
+Message-ID: <2070049.m7Ejz2Cj4P@alex-1> (sfid-20110829_163220_142692_B09082EF)
+In-Reply-To: <2053881.ENil2Dy3QM@alex-1>
+References: <2053881.ENil2Dy3QM@alex-1>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"networkmanager-list@gnome.org" <networkmanager-list@gnome.org>
-Subject: Re: brcmsmac driver only works when sitting next to the AP
-References: <20110822112737.GA5936@stt008.linux.site>
- <4E525235.7060501@broadcom.com>
- <CAKprTDHO+Hh4g3WjGijDhPtzY5PiqR0GQ_zg8Uw46-qOVXpCRQ@mail.gmail.com>
- <4E525FC7.4070802@broadcom.com>
- <CAKprTDF0iFSAkYZiLQFLX+KumyLbzNUvHocKJyzK37Kv_79EFA@mail.gmail.com>
- <4E5367AA.8040406@broadcom.com>
- <CAKprTDFret5n-AH_B_Hu6E0+B4FEGJQ=jjYbGNy8ZD5R8ReFCg@mail.gmail.com>
- <4E53728B.3030803@broadcom.com>
- <20110823095348.GA5383@stt008.linux.site>
- <4E538309.1040203@broadcom.com>
- <20110823105341.GA5604@stt008.linux.site>
- <4E538DC3.7060906@broadcom.com>
- <CAKprTDHVcEgZvNE6Ububoaf1WH+LAcHD35YriNaj47JnsVL=Xg@mail.gmail.com>
- <4E53B6B0.8010605@broadcom.com>
- <CAKprTDGKfiGGZ7uEhT+U-DJ13+NexqPZKGQez7yShC40Heph_A@mail.gmail.com>
-In-Reply-To: <CAKprTDGKfiGGZ7uEhT+U-DJ13+NexqPZKGQez7yShC40Heph_A@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> These symbols are contained in the 'brcmutil.ko' module. Can you check with
->> lsmod that brcmutil is indeed loaded ?
->
-> Let me check it...
->
-> root@stt300:/usr/src/linux-source-3.0.0# lsmod|grep -e mac -e br
-> brcmutil               13187  0
-> mac80211              165768  0
-> cfg80211              112970  1 mac80211
->
-> Seems loaded :-?
+This means setting channel into HT mode and adding HT IEs in beacons.
+Check if regdom allows this first.
 
-Agree.
+If joining another HT network, use its HT mode.
+If joining a non-HT network, use HT mode given by iw.
+Join as legacy if neither iw nor remote beacon set an HT mode.
+The same applies when merging with an older BSSID
+(as it is basically leaving the current and joining the older BSSID).
 
-> root@stt300:/usr/src/linux-source-3.0.0# insmod
-> drivers/staging/brcm80211/brcmsmac/brcmsmac.ko
-> insmod: error inserting
-> 'drivers/staging/brcm80211/brcmsmac/brcmsmac.ko': -1 Unknown symbol in
-> module
->
-> And dmesg:
->
-> [18412.454900] brcmutil: module is from the staging directory, the
-> quality is unknown, you have been warned.
-> [18462.257358] brcmsmac: module is from the staging directory, the
-> quality is unknown, you have been warned.
-> [18462.260105] brcmsmac: Unknown symbol crc_ccitt (err 0)
+If we receive a beacon from another station within our BSSID with a different 
+HT
+mode than us, we switch to its HT mode. If there are several stations with
+different HT modes, it may take some time until all will have the same mode.
+There is no way we can distinguish the "older" station.
 
-The crc_ccitt warning can be resolved with a: 'sudo modprobe crc-ccitt' 
-before loading the two brcm drivers.
+Except for fixed channel mode, HT mode is also fixed. Join or merge ONLY if
+channel AND HT mode matches.
 
-Can you see the missing symbols with a 'cat /proc/kallsyms | grep bcm' ?
+And finally, allow frame aggregation in IBSS mode.
 
-Thanks, Roland.
+Signed-off-by: Alexander Simon <alexander.simon@saxnet.de>
+---
+ net/mac80211/agg-rx.c      |    2 +
+ net/mac80211/agg-tx.c      |    5 +-
+ net/mac80211/ht.c          |    2 +
+ net/mac80211/ibss.c        |  154 ++++++++++++++++++++++++++++++++++++++-----
+ net/mac80211/ieee80211_i.h |    4 +
+ net/mac80211/rx.c          |    6 +-
+ net/mac80211/util.c        |   25 +++++++
+ 7 files changed, 177 insertions(+), 21 deletions(-)
 
-
-
-
-
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index fd1aaf2..057c2a1 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -184,6 +184,8 @@ static void ieee80211_send_addba_resp(struct 
+ieee80211_sub_if_data *sdata, u8 *d
+ 		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
+ 	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
+ 		memcpy(mgmt->bssid, sdata->u.mgd.bssid, ETH_ALEN);
++	else if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
++		memcpy(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN);
+ 
+ 	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+ 					  IEEE80211_STYPE_ACTION);
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 018108d..da91773 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -83,6 +83,8 @@ static void ieee80211_send_addba_request(struct 
+ieee80211_sub_if_data *sdata,
+ 		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
+ 	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
+ 		memcpy(mgmt->bssid, sdata->u.mgd.bssid, ETH_ALEN);
++	else if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
++		memcpy(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN);
+ 
+ 	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+ 					  IEEE80211_STYPE_ACTION);
+@@ -380,7 +382,8 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta 
+*pubsta, u16 tid,
+ 	 */
+ 	if (sdata->vif.type != NL80211_IFTYPE_STATION &&
+ 	    sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+-	    sdata->vif.type != NL80211_IFTYPE_AP)
++	    sdata->vif.type != NL80211_IFTYPE_AP &&
++	    sdata->vif.type != NL80211_IFTYPE_ADHOC)
+ 		return -EINVAL;
+ 
+ 	if (test_sta_flags(sta, WLAN_STA_BLOCK_BA)) {
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index 7cfc286..211ebaf 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -203,6 +203,8 @@ void ieee80211_send_delba(struct ieee80211_sub_if_data 
+*sdata,
+ 		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
+ 	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
+ 		memcpy(mgmt->bssid, sdata->u.mgd.bssid, ETH_ALEN);
++	else if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
++		memcpy(mgmt->bssid, sdata->u.ibss.bssid, ETH_ALEN);
+ 
+ 	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+ 					  IEEE80211_STYPE_ACTION);
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 56c24ca..a9667c5 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -35,6 +35,56 @@
+ 
+ #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
+ 
++static void ieee80211_update_ht_elems(struct ieee80211_sub_if_data *sdata,
++				      struct ieee80211_mgmt *mgmt,
++				      struct ieee80211_ht_info *ht_info)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_supported_band *sband =
++			local->hw.wiphy->bands[local->oper_channel->band];
++	enum nl80211_channel_type channel_type =
++			ieee80211_ht_info_to_channel_type(ht_info);
++
++	if (!cfg80211_can_use_ext_chan(sdata->wdev.wiphy, local->oper_channel,
++				       channel_type))
++		channel_type = NL80211_CHAN_HT20;
++
++	if (channel_type != local->_oper_channel_type) {
++		struct sk_buff *skb = rcu_dereference_protected(
++				sdata->u.ibss.presp,
++				lockdep_is_held(&ifibss->mtx));
++		struct sk_buff *nskb;
++		u8 *ht_ie;
++
++		/* update HT IE. If not yet existing, create one */
++		nskb = skb_copy(skb, GFP_ATOMIC);
++		ht_ie = (u8 *)cfg80211_find_ie(WLAN_EID_HT_CAPABILITY,
++					       (const u8 *)(nskb->data + 24 +
++							sizeof(mgmt->u.beacon)),
++					       nskb->len - 24 -
++							sizeof(mgmt->u.beacon));
++		if (!ht_ie)
++			ht_ie = skb_put(nskb, 4 +
++					      sizeof(struct ieee80211_ht_cap) +
++					      sizeof(struct ieee80211_ht_info));
++
++		ht_ie = ieee80211_ie_build_ht_cap(ht_ie, sband,
++						  sband->ht_cap.cap);
++		ht_ie = ieee80211_ie_build_ht_info(ht_ie, &sband->ht_cap,
++					     local->oper_channel, channel_type);
++		rcu_assign_pointer(sdata->u.ibss.presp, nskb);
++		kfree_skb(skb);
++
++		if(!ieee80211_set_channel_type(local, sdata, channel_type)) {
++			channel_type = NL80211_CHAN_HT20;
++			WARN_ON(!ieee80211_set_channel_type(local, sdata,
++							    channel_type));
++		}
++
++		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
++	}
++
++}
+ 
+ static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
+ 					struct ieee80211_mgmt *mgmt,
+@@ -64,6 +114,7 @@ static void ieee80211_rx_mgmt_auth_ibss(struct 
+ieee80211_sub_if_data *sdata,
+ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 				      const u8 *bssid, const int beacon_int,
+ 				      struct ieee80211_channel *chan,
++				      enum nl80211_channel_type channel_type,
+ 				      const u32 basic_rates,
+ 				      const u16 capability, u64 tsf)
+ {
+@@ -104,8 +155,17 @@ static void __ieee80211_sta_join_ibss(struct 
+ieee80211_sub_if_data *sdata,
+ 
+ 	sdata->drop_unencrypted = capability & WLAN_CAPABILITY_PRIVACY ? 1 : 0;
+ 
++	/* entering a legacy IBSS. Use given HT configuration. */
++	if (channel_type == NL80211_CHAN_NO_HT)
++		channel_type = ifibss->channel_type;
+ 	local->oper_channel = chan;
+-	WARN_ON(!ieee80211_set_channel_type(local, sdata, NL80211_CHAN_NO_HT));
++
++	/* if phy is on a different extension channel, setting ht40 will fail */
++	if (!ieee80211_set_channel_type(local, sdata, channel_type)) {
++		channel_type = NL80211_CHAN_HT20;
++		WARN_ON(!ieee80211_set_channel_type(local, sdata,
++						    channel_type));
++	}
+ 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+ 
+ 	sband = local->hw.wiphy->bands[chan->band];
+@@ -171,6 +231,18 @@ static void __ieee80211_sta_join_ibss(struct 
+ieee80211_sub_if_data *sdata,
+ 		memcpy(skb_put(skb, ifibss->ie_len),
+ 		       ifibss->ie, ifibss->ie_len);
+ 
++	/* add HT capability and information IEs */
++	if (channel_type != NL80211_CHAN_NO_HT && sband->ht_cap.ht_supported) {
++		pos = skb_put(skb, 4 +
++				   sizeof(struct ieee80211_ht_cap) +
++				   sizeof(struct ieee80211_ht_info));
++		pos = ieee80211_ie_build_ht_cap(pos, sband, sband->ht_cap.cap);
++		pos = ieee80211_ie_build_ht_info(pos,
++						 &sband->ht_cap,
++						 chan,
++						 channel_type);
++	}
++
+ 	if (local->hw.queues >= 4) {
+ 		pos = skb_put(skb, 9);
+ 		*pos++ = WLAN_EID_VENDOR_SPECIFIC;
+@@ -219,6 +291,8 @@ static void ieee80211_sta_join_ibss(struct 
+ieee80211_sub_if_data *sdata,
+ 	u32 basic_rates;
+ 	int i, j;
+ 	u16 beacon_int = cbss->beacon_interval;
++	const u8 *ht_info_ie;
++	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
+ 
+ 	lockdep_assert_held(&sdata->u.ibss.mtx);
+ 
+@@ -242,9 +316,24 @@ static void ieee80211_sta_join_ibss(struct 
+ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 
++	ht_info_ie = ieee80211_bss_get_ie(cbss, WLAN_EID_HT_INFORMATION);
++	if (ht_info_ie)
++		channel_type = ieee80211_ht_info_to_channel_type(
++			(struct ieee80211_ht_info *) (ht_info_ie + 2));
++
++	if (!cfg80211_can_use_ext_chan(sdata->wdev.wiphy, cbss->channel,
++				       channel_type)) {
++		channel_type = NL80211_CHAN_HT20;
++#ifdef CONFIG_MAC80211_IBSS_DEBUG
++		printk(KERN_DEBUG "%s: IBSS not allowed on secondary channel\n",
++		       sdata->name);
++#endif
++	}
++
+ 	__ieee80211_sta_join_ibss(sdata, cbss->bssid,
+ 				  beacon_int,
+ 				  cbss->channel,
++				  channel_type,
+ 				  basic_rates,
+ 				  cbss->capability,
+ 				  cbss->tsf);
+@@ -310,11 +399,24 @@ static void ieee80211_rx_bss_info(struct 
+ieee80211_sub_if_data *sdata,
+ 			} else
+ 				sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid,
+ 						mgmt->sa, supp_rates,
+-						GFP_ATOMIC);
++						elems->ht_cap_elem, GFP_ATOMIC);
+ 		}
+ 
+-		if (sta && elems->wmm_info)
+-			set_sta_flags(sta, WLAN_STA_WME);
++		if (sta) {
++			if (elems->wmm_info)
++				set_sta_flags(sta, WLAN_STA_WME);
++
++			/* remote station uses ht */
++			if (elems->ht_info_elem) {
++				ieee80211_update_ht_elems(sdata, mgmt,
++							  elems->ht_info_elem);
++				ieee80211_ht_cap_ie_to_sta_ht_cap(
++						local->hw.wiphy->bands[
++						     local->oper_channel->band],
++						elems->ht_cap_elem,
++						&sta->sta.ht_cap);
++			}
++		}
+ 
+ 		rcu_read_unlock();
+ 	}
+@@ -404,7 +506,8 @@ static void ieee80211_rx_bss_info(struct 
+ieee80211_sub_if_data *sdata,
+ 		ieee80211_sta_join_ibss(sdata, bss);
+ 		supp_rates = ieee80211_sta_get_rates(local, elems, band);
+ 		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
+-				       supp_rates, GFP_KERNEL);
++				       supp_rates, elems->ht_cap_elem,
++				       GFP_KERNEL);
+ 	}
+ 
+  put_bss:
+@@ -417,7 +520,8 @@ static void ieee80211_rx_bss_info(struct 
+ieee80211_sub_if_data *sdata,
+  * must be callable in atomic context.
+  */
+ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+-					u8 *bssid,u8 *addr, u32 supp_rates,
++					u8 *bssid, u8 *addr, u32 supp_rates,
++					struct ieee80211_ht_cap *ht_cap,
+ 					gfp_t gfp)
+ {
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+@@ -458,6 +562,11 @@ struct sta_info *ieee80211_ibss_add_sta(struct 
+ieee80211_sub_if_data *sdata,
+ 	sta->sta.supp_rates[band] = supp_rates |
+ 			ieee80211_mandatory_rates(local, band);
+ 
++	/* fill in ht rates */
++	if (ht_cap)
++		ieee80211_ht_cap_ie_to_sta_ht_cap(local->hw.wiphy->bands[band],
++				ht_cap, &sta->sta.ht_cap);
++
+ 	rate_control_rate_init(sta);
+ 
+ 	/* If it fails, maybe we raced another insertion? */
+@@ -556,8 +665,8 @@ static void ieee80211_sta_create_ibss(struct 
+ieee80211_sub_if_data *sdata)
+ 		sdata->drop_unencrypted = 0;
+ 
+ 	__ieee80211_sta_join_ibss(sdata, bssid, sdata->vif.bss_conf.beacon_int,
+-				  ifibss->channel, ifibss->basic_rates,
+-				  capability, 0);
++				  ifibss->channel, ifibss->channel_type,
++				  ifibss->basic_rates, capability, 0);
+ }
+ 
+ /*
+@@ -594,10 +703,12 @@ static void ieee80211_sta_find_ibss(struct 
+ieee80211_sub_if_data *sdata)
+ 		chan = ifibss->channel;
+ 	if (!is_zero_ether_addr(ifibss->bssid))
+ 		bssid = ifibss->bssid;
+-	cbss = cfg80211_get_bss(local->hw.wiphy, chan, bssid,
+-				ifibss->ssid, ifibss->ssid_len,
+-				WLAN_CAPABILITY_IBSS | WLAN_CAPABILITY_PRIVACY,
+-				capability);
++	cbss = cfg80211_get_bss_ht(local->hw.wiphy, chan, bssid,
++				   ifibss->ssid, ifibss->ssid_len,
++				   WLAN_CAPABILITY_IBSS |
++						WLAN_CAPABILITY_PRIVACY,
++				   capability, ifibss->fixed_channel,
++				   ifibss->channel_type);
+ 
+ 	if (cbss) {
+ 		struct ieee80211_bss *bss;
+@@ -896,10 +1007,15 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data 
+*sdata,
+ 	struct sk_buff *skb;
+ 
+ 	skb = dev_alloc_skb(sdata->local->hw.extra_tx_headroom +
+-			    36 /* bitrates */ +
+-			    34 /* SSID */ +
+-			    3  /* DS params */ +
+-			    4  /* IBSS params */ +
++			    sizeof(struct ieee80211_hdr_3addr) +
++			    12 /* struct ieee80211_mgmt.u.beacon */ +
++			    2 + IEEE80211_MAX_SSID_LEN /* max SSID */ +
++			    2 + 8 /* max Supported Rates */ +
++			    3 /* max DS params */ +
++			    4 /* IBSS params */ +
++			    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
++			    2 + sizeof(struct ieee80211_ht_cap) +
++			    2 + sizeof(struct ieee80211_ht_info) +
+ 			    params->ie_len);
+ 	if (!skb)
+ 		return -ENOMEM;
+@@ -920,13 +1036,15 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data 
+*sdata,
+ 	sdata->vif.bss_conf.beacon_int = params->beacon_interval;
+ 
+ 	sdata->u.ibss.channel = params->channel;
++	sdata->u.ibss.channel_type = params->channel_type;
+ 	sdata->u.ibss.fixed_channel = params->channel_fixed;
+ 
+ 	/* fix ourselves to that channel now already */
+ 	if (params->channel_fixed) {
+ 		sdata->local->oper_channel = params->channel;
+-		WARN_ON(!ieee80211_set_channel_type(sdata->local, sdata,
+-						    NL80211_CHAN_NO_HT));
++		if(!ieee80211_set_channel_type(sdata->local, sdata,
++					       params->channel_type))
++			return -EINVAL;
+ 	}
+ 
+ 	if (params->ie) {
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index ad94e59..f74368b 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -464,6 +464,7 @@ struct ieee80211_if_ibss {
+ 	u8 ssid_len, ie_len;
+ 	u8 *ie;
+ 	struct ieee80211_channel *channel;
++	enum nl80211_channel_type channel_type;
+ 
+ 	unsigned long ibss_join_req;
+ 	/* probe response/beacon for IBSS */
+@@ -1084,6 +1085,7 @@ void ieee80211_ibss_notify_scan_completed(struct 
+ieee80211_local *local);
+ void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata);
+ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 					u8 *bssid, u8 *addr, u32 supp_rates,
++					struct ieee80211_ht_cap *ht_cap,
+ 					gfp_t gfp);
+ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+ 			struct cfg80211_ibss_params *params);
+@@ -1372,6 +1374,8 @@ ieee80211_get_channel_mode(struct ieee80211_local 
+*local,
+ bool ieee80211_set_channel_type(struct ieee80211_local *local,
+ 				struct ieee80211_sub_if_data *sdata,
+ 				enum nl80211_channel_type chantype);
++enum nl80211_channel_type ieee80211_ht_info_to_channel_type(
++					struct ieee80211_ht_info *ht_info);
+ 
+ #ifdef CONFIG_MAC80211_NOINLINE
+ #define debug_noinline noinline
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index f45fd2f..f10700c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2160,7 +2160,8 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 		 */
+ 		if (sdata->vif.type != NL80211_IFTYPE_STATION &&
+ 		    sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+-		    sdata->vif.type != NL80211_IFTYPE_AP)
++		    sdata->vif.type != NL80211_IFTYPE_AP &&
++		    sdata->vif.type != NL80211_IFTYPE_ADHOC)
+ 			break;
+ 
+ 		/* verify action_code is present */
+@@ -2694,7 +2695,8 @@ static int prepare_for_handlers(struct ieee80211_rx_data 
+*rx,
+ 			else
+ 				rate_idx = status->rate_idx;
+ 			rx->sta = ieee80211_ibss_add_sta(sdata, bssid,
+-					hdr->addr2, BIT(rate_idx), GFP_ATOMIC);
++					hdr->addr2, BIT(rate_idx), NULL,
++								GFP_ATOMIC);
+ 		}
+ 		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index a7697d8..06d0a31 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1413,3 +1413,28 @@ u8 *ieee80211_ie_build_ht_info(u8 *pos,
+ 
+ 	return pos + sizeof(struct ieee80211_ht_info);
+ }
++
++enum nl80211_channel_type ieee80211_ht_info_to_channel_type(
++					struct ieee80211_ht_info *ht_info)
++{
++	enum nl80211_channel_type channel_type;
++
++	if (!ht_info)
++		return NL80211_CHAN_NO_HT;
++
++	switch (ht_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
++	case IEEE80211_HT_PARAM_CHA_SEC_NONE:
++		channel_type = NL80211_CHAN_HT20;
++		break;
++	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
++		channel_type = NL80211_CHAN_HT40PLUS;
++		break;
++	case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
++		channel_type = NL80211_CHAN_HT40MINUS;
++		break;
++	default:
++		channel_type = NL80211_CHAN_NO_HT;
++	}
++
++	return channel_type;
++}
+-- 
+1.7.3.4
 
 
