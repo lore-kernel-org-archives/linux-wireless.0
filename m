@@ -1,64 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58575 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725Ab1HKORx (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44446 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751423Ab1H2NtK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 10:17:53 -0400
-Received: by fxh19 with SMTP id 19so1694353fxh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 07:17:52 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH 1/2] wireless: Introduce defines for BAR TID_INFO & MULTI_TID fields
-Date: Thu, 11 Aug 2011 16:17:41 +0200
-Message-Id: <1313072262-25413-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20110811_161756_600538_086E2A27)
-In-Reply-To: <1313053697-19544-1-git-send-email-helmut.schaa@googlemail.com>
-References: <1313053697-19544-1-git-send-email-helmut.schaa@googlemail.com>
+	Mon, 29 Aug 2011 09:49:10 -0400
+Subject: Re: [PATCH v2 6/8] mac80211: Consolidate {mesh,mpp}_path_flush
+ into one function
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
+	jlopex@gmail.com
+In-Reply-To: <1314404294-4233-7-git-send-email-javier@cozybit.com> (sfid-20110827_021912_257192_62310EC9)
+References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
+	 <1314404294-4233-1-git-send-email-javier@cozybit.com>
+	 <1314404294-4233-7-git-send-email-javier@cozybit.com>
+	 (sfid-20110827_021912_257192_62310EC9)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 29 Aug 2011 15:49:05 +0200
+Message-ID: <1314625745.8959.9.camel@jlt3.sipsolutions.net> (sfid-20110829_154914_919635_5B6C3A1F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While at it also fix the indention of the other IEEE80211_BAR_CTRL_ defines.
+On Fri, 2011-08-26 at 17:18 -0700, Javier Cardona wrote:
+> Signed-off-by: Javier Cardona <javier@cozybit.com>
+> 
+> ---
+> v2: - Fix extra space (checkpatch)
+>     - Add lockdep check for RCU
+>  net/mac80211/mesh_pathtbl.c |   65 +++++++++++++++++-------------------------
+>  1 files changed, 26 insertions(+), 39 deletions(-)
+> 
+> diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+> index ea9e34a..3c03be9 100644
+> --- a/net/mac80211/mesh_pathtbl.c
+> +++ b/net/mac80211/mesh_pathtbl.c
+> @@ -790,35 +790,6 @@ void mesh_plink_broken(struct sta_info *sta)
+>  	rcu_read_unlock();
+>  }
+>  
+> -/**
+> - * mesh_path_flush_by_nexthop - Deletes mesh paths if their next hop matches
+> - *
+> - * @sta - mesh peer to match
+> - *
+> - * RCU notes: this function is called when a mesh plink transitions from
+> - * PLINK_ESTAB to any other state, since PLINK_ESTAB state is the only one that
+> - * allows path creation. This will happen before the sta can be freed (because
+> - * sta_info_destroy() calls this) so any reader in a rcu read block will be
+> - * protected against the plink disappearing.
+> - */
+> -void mesh_path_flush_by_nexthop(struct sta_info *sta)
+> -{
+> -	struct mesh_table *tbl;
+> -	struct mesh_path *mpath;
+> -	struct mpath_node *node;
+> -	struct hlist_node *p;
+> -	int i;
+> -
+> -	rcu_read_lock();
+> -	tbl = rcu_dereference(mesh_paths);
+> -	for_each_mesh_entry(tbl, p, node, i) {
+> -		mpath = node->mpath;
+> -		if (rcu_dereference(mpath->next_hop) == sta)
+> -			mesh_path_del(mpath->dst, mpath->sdata);
+> -	}
+> -	rcu_read_unlock();
+> -}
+> -
+>  static void mesh_path_node_reclaim(struct rcu_head *rp)
+>  {
+>  	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
+> @@ -845,7 +816,18 @@ static void __mesh_path_del(struct mesh_table *tbl, struct mpath_node *node)
+>  	atomic_dec(&tbl->entries);
+>  }
+>  
+> -static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
+> +/**
+> + * mesh_path_flush_by_nexthop - Deletes mesh paths if their next hop matches
+> + *
+> + * @sta - mesh peer to match
+> + *
+> + * RCU notes: this function is called when a mesh plink transitions from
+> + * PLINK_ESTAB to any other state, since PLINK_ESTAB state is the only one that
+> + * allows path creation. This will happen before the sta can be freed (because
+> + * sta_info_destroy() calls this) so any reader in a rcu read block will be
+> + * protected against the plink disappearing.
+> + */
+> +void mesh_path_flush_by_nexthop(struct sta_info *sta)
+>  {
+>  	struct mesh_table *tbl;
+>  	struct mesh_path *mpath;
+> @@ -857,7 +839,7 @@ static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
+>  	tbl = rcu_dereference(mesh_paths);
+>  	for_each_mesh_entry(tbl, p, node, i) {
+>  		mpath = node->mpath;
+> -		if (mpath->sdata == sdata) {
+> +		if (rcu_dereference(mpath->next_hop) == sta) {
+>  			spin_lock_bh(&tbl->hashwlock[i]);
+>  			__mesh_path_del(tbl, node);
+>  			spin_unlock_bh(&tbl->hashwlock[i]);
+> @@ -866,24 +848,23 @@ static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
+>  	rcu_read_unlock();
+>  }
+>  
+> -static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
+> +static void table_flush_by_iface(struct mesh_table *tbl,
+> +				 struct ieee80211_sub_if_data *sdata)
+>  {
+> -	struct mesh_table *tbl;
+>  	struct mesh_path *mpath;
+>  	struct mpath_node *node;
+>  	struct hlist_node *p;
+>  	int i;
+>  
+> -	read_lock_bh(&pathtbl_resize_lock);
+> -	tbl = rcu_dereference_protected(mpp_paths,
+> -					lockdep_is_held(pathtbl_resize_lock));
+> +	WARN_ON(!rcu_read_lock_held());
+>  	for_each_mesh_entry(tbl, p, node, i) {
+>  		mpath = node->mpath;
+> +		if (mpath->sdata != sdata)
+> +			continue;
+>  		spin_lock_bh(&tbl->hashwlock[i]);
+>  		__mesh_path_del(tbl, node);
+>  		spin_unlock_bh(&tbl->hashwlock[i]);
+>  	}
+> -	read_unlock_bh(&pathtbl_resize_lock);
+>  }
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- include/linux/ieee80211.h |    8 +++++---
- net/mac80211/agg-tx.c     |    2 +-
- 2 files changed, 6 insertions(+), 4 deletions(-)
+So what protects against the table being grown at the same time? A copy
+will be made, but here you'll be iterating the old table -- which won't
+crash or anything but is semantically incorrect.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 54c8789..5286de5 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -816,9 +816,11 @@ struct ieee80211_bar {
- } __attribute__((packed));
- 
- /* 802.11 BAR control masks */
--#define IEEE80211_BAR_CTRL_ACK_POLICY_NORMAL     0x0000
--#define IEEE80211_BAR_CTRL_CBMTID_COMPRESSED_BA  0x0004
--
-+#define IEEE80211_BAR_CTRL_ACK_POLICY_NORMAL	0x0000
-+#define IEEE80211_BAR_CTRL_MULTI_TID		0x0002
-+#define IEEE80211_BAR_CTRL_CBMTID_COMPRESSED_BA	0x0004
-+#define IEEE80211_BAR_CTRL_TID_INFO_MASK	0xf000
-+#define IEEE80211_BAR_CTRL_TID_INFO_SHIFT	12
- 
- #define IEEE80211_HT_MCS_MASK_LEN		10
- 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index b7075f3..018108d 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -128,7 +128,7 @@ void ieee80211_send_bar(struct ieee80211_sub_if_data *sdata, u8 *ra, u16 tid, u1
- 	memcpy(bar->ta, sdata->vif.addr, ETH_ALEN);
- 	bar_control |= (u16)IEEE80211_BAR_CTRL_ACK_POLICY_NORMAL;
- 	bar_control |= (u16)IEEE80211_BAR_CTRL_CBMTID_COMPRESSED_BA;
--	bar_control |= (u16)(tid << 12);
-+	bar_control |= (u16)(tid << IEEE80211_BAR_CTRL_TID_INFO_SHIFT);
- 	bar->control = cpu_to_le16(bar_control);
- 	bar->start_seq_num = cpu_to_le16(ssn);
- 
--- 
-1.7.3.4
+johannes
 
