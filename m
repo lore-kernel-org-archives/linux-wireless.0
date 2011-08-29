@@ -1,71 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:53334 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754556Ab1H2SNL convert rfc822-to-8bit (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:63506 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753129Ab1H2JBJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 14:13:11 -0400
-Received: by wwf5 with SMTP id 5so6002082wwf.1
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 11:13:10 -0700 (PDT)
+	Mon, 29 Aug 2011 05:01:09 -0400
+Received: by vxi9 with SMTP id 9so4072967vxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 02:01:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAEKwDSAXDgUY_Mc2A75x=-1VEMLF3Kd+=dgJOaBs+XOFn58dYw@mail.gmail.com>
-References: <1314236064-6339-1-git-send-email-thomas@cozybit.com>
-	<20110826142210.GE2579@tuxdriver.com>
-	<CAG6hwVM8t=v0_xZuKf-nodZR77R0S8nSUgea9QM5S-vB4h_8jg@mail.gmail.com>
-	<CAEKwDSAXDgUY_Mc2A75x=-1VEMLF3Kd+=dgJOaBs+XOFn58dYw@mail.gmail.com>
-Date: Mon, 29 Aug 2011 11:13:10 -0700
-Message-ID: <CAG6hwVMYaxsY6XcwbU9_nNMCEO0pC_RiQU-QJBPbpdxO9g4rnA@mail.gmail.com> (sfid-20110829_201315_261883_7D185BFA)
-Subject: Re: [PATCH] ath5k: Invoke irqsafe version of ieee80211_tx_status() to
- avoid deadlock
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, lrodriguez@atheros.com,
-	Javier Cardona <javier@cozybit.com>
+In-Reply-To: <1314605174-66206-1-git-send-email-nbd@openwrt.org>
+References: <1314605174-66206-1-git-send-email-nbd@openwrt.org>
+Date: Mon, 29 Aug 2011 17:01:09 +0800
+Message-ID: <CAJ-Vmonvcrd49rQbgeyO3HCLxkTbww3mTypR87CuPBiu9uwhHA@mail.gmail.com> (sfid-20110829_110113_853870_EE4FBAD9)
+Subject: Re: [PATCH 3.1] ath9k_hw: fix calibration on 5 ghz
+From: Adrian Chadd <adrian@freebsd.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 29, 2011 at 7:09 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Sun, Aug 28, 2011 at 10:07 PM, Thomas Pedersen <thomas@cozybit.com> wrote:
->> On Fri, Aug 26, 2011 at 7:22 AM, John W. Linville
->> <linville@tuxdriver.com> wrote:
->>> On Wed, Aug 24, 2011 at 06:34:24PM -0700, Thomas Pedersen wrote:
->>>> From: Javier Cardona <javier@cozybit.com>
->>>>
->>>> This driver reports transmission status to the upper layer
->>>> (ath5k_tx_frame_completed()) while holding the lock on the transmission
->>>> queue (txq->lock).  Under failure conditions, the mesh stack will
->>>> attempt to send PERR messages to the previous sender of the failed
->>>> frame.  When that happens the driver will attempt to re-acquire the
->>>> txq->lock lock causing a deadlock.  There are two possible fixes for
->>>> this, (1) we could defer the transmission of the PERR frame until the
->>>> lock is released or (2) release the lock before invoking
->>>> ieee80211_tx_status().  The ath9k driver implements the second approach
->>>> (see ath_tx_complete() in ath9k/xmit.c) as well as the rt2x00 and b43
->>>> drivers.  The iwl driver, on the other hand, avoids this problem by
->>>> invoking  ieee80211_tx_status_irqsafe() which effectively defers
->>>> processing of transmission feedback status.  This last approach is the
->>>> least intrusive is implemented here.
->>>>
->>>> Reported by Pedro Larbig (ASPj)
->>>> ---
->>>>  drivers/net/wireless/ath/ath5k/base.c |    2 +-
->>>>  1 files changed, 1 insertions(+), 1 deletions(-)
->>>
->>> Missing Signed-off-by...
->>>
->> Yikes. Also, it looks like ieee80211_tx_status() should not be called
->> from irq context. Will resubmit a v2 with signoff and comment shortly.
+Can we please hold off of this until we know if this is indeed the correct fix?
+
+Ie, I'm not sure yet whether 5ghz fast clock (which clocks the mac/bb
+like it was doing 2.4ghz) needs the dual ADCs enabled or not.
+It may be that something is being incorrectly disabled when the
+fastclock initvals are being written over the normal 5ghz values.
+
+Thanks,
+
+
+Adrian
+
+On 29 August 2011 16:06, Felix Fietkau <nbd@openwrt.org> wrote:
+> ADC calibrations cannot run on 5 GHz with fast clock enabled. They
+> need to be disabled, otherwise they'll hang and IQ mismatch calibration
+> will not be run either.
 >
-> I don't get the last statement -- ieee80211_tx_status() -> irqsafe was
-
-I meant to say "In addition to the above discussion,
-ieee80211_tx_status() should not be called from interrupt context
-anyway".
-
-> the very change the patch added.  It's running in a bottom half
-> though, not a hard irq.
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> Reported-by: Adrian Chadd <adrian@freebsd.org>
+> Cc: stable@kernel.org
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9002_calib.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
 >
-
-Even in a bottom half we're still in "interrupt" context, right?
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+> index 2d4c091..2d394af 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+> @@ -41,7 +41,8 @@ static bool ar9002_hw_is_cal_supported(struct ath_hw *ah,
+>        case ADC_DC_CAL:
+>                /* Run ADC Gain Cal for non-CCK & non 2GHz-HT20 only */
+>                if (!IS_CHAN_B(chan) &&
+> -                   !(IS_CHAN_2GHZ(chan) && IS_CHAN_HT20(chan)))
+> +                   !((IS_CHAN_2GHZ(chan) || IS_CHAN_A_FAST_CLOCK(ah, chan)) &&
+> +                     IS_CHAN_HT20(chan)))
+>                        supported = true;
+>                break;
+>        }
+> --
+> 1.7.3.2
+>
+>
