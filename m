@@ -1,66 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:40606 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753429Ab1HHVCv convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54948 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750922Ab1H2NZE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 17:02:51 -0400
-MIME-Version: 1.0
-In-Reply-To: <CA+XFjioJPCvp+=-3Eg06bzHuXGbFCUoyGguhTL5DqqcpqN0ZXQ@mail.gmail.com>
-References: <201107230012.p6N0CZSM002466@hera.kernel.org>
-	<CAMuHMdU0Cba9xFjfD6Fq1MqE5xZeDnsdN8qipmR6jQH9J6X4vQ@mail.gmail.com>
-	<CACna6ryx4k5fFmqbDPZ3pdDA_SbjZQQVaJNQyALkx0i8+S-7hA@mail.gmail.com>
-	<CA+XFjioJPCvp+=-3Eg06bzHuXGbFCUoyGguhTL5DqqcpqN0ZXQ@mail.gmail.com>
-Date: Mon, 8 Aug 2011 23:02:50 +0200
-Message-ID: <CACna6rwFbDTxBf2ykVbSHbTp53S1uMKCnm_46wccycDbRmWz8A@mail.gmail.com> (sfid-20110808_230309_712042_9BFD1654)
-Subject: Re: b43: LCN-PHY add place for new PHY support
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 29 Aug 2011 09:25:04 -0400
+Subject: Re: [PATCH v2 1/3] nl80211/cfg80211: add WIPHY_FLAG_AP_UAPSD flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1314271494-8756-1-git-send-email-eliad@wizery.com> (sfid-20110825_132407_483820_102372B1)
+References: <1314271494-8756-1-git-send-email-eliad@wizery.com>
+	 (sfid-20110825_132407_483820_102372B1)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 29 Aug 2011 15:25:02 +0200
+Message-ID: <1314624302.8959.3.camel@jlt3.sipsolutions.net> (sfid-20110829_152508_840497_1D297CB5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 8 sierpnia 2011 18:07 użytkownik Gábor Stefanik
-<netrolller.3d@gmail.com> napisał:
-> 2011/8/8 Rafał Miłecki <zajec5@gmail.com>:
->> W dniu 8 sierpnia 2011 13:57 użytkownik Geert Uytterhoeven
->> <geert@linux-m68k.org> napisał:
->>> On Sat, Jul 23, 2011 at 02:12, Linux Kernel Mailing List
->>> <linux-kernel@vger.kernel.org> wrote:
->>>> Gitweb:     http://git.kernel.org/linus/1d738e64f3d957d56c1b51e64ebdef986a8760e3
->>>> Commit:     1d738e64f3d957d56c1b51e64ebdef986a8760e3
->>>> Parent:     0cd20a278e1ef9da9f6a987942794c9d65af8c4d
->>>> Author:     Rafał Miłecki <zajec5@gmail.com>
->>>> AuthorDate: Thu Jul 7 15:25:27 2011 +0200
->>>> Committer:  John W. Linville <linville@tuxdriver.com>
->>>> CommitDate: Fri Jul 8 11:11:25 2011 -0400
->>>
->>>> diff --git a/drivers/net/wireless/b43/phy_lcn.h b/drivers/net/wireless/b43/phy_lcn.h
->>>> new file mode 100644
->>>> index 0000000..c046c2a
->>>> --- /dev/null
->>>> +++ b/drivers/net/wireless/b43/phy_lcn.h
->>>
->>>> \ No newline at end of file
->>>
->>> Woops...
->>>
->>> gcc/cpp also complains:
->>>
->>> drivers/net/wireless/b43/phy_lcn.h:14:28: warning: no newline at end of file
->>
->> Sorry, I didn't know we want empty lines at the end. I also don't
->> think it's mentioned in kernel's CodingStyle.
->
-> I'm pretty sure it is basic Unix knowledge that all text files SHOULD
-> (RFC 2119) end with a newline character, unless otherwise noted
-> explicitly. In fact, many Unix text editors automatically insert a
-> newline at the end, and forbid you from deleting it.
+On Thu, 2011-08-25 at 14:24 +0300, Eliad Peller wrote:
+> add WIPHY_FLAG_AP_UAPSD flag to indicate uapsd support on
+> AP mode.
+> 
+> Advertise it to userspace by including a new
+> NL80211_ATTR_SUPPORT_AP_UAPSD attribute.
 
-OK, thanks, will avoid that in the future.
+I guess it'll help me support this for mac80211 (drivers that don't do
+it all in firmware) -- I had a patch that was equivalent to the first
+two :)
 
--- 
-Rafał
+johannes
+
