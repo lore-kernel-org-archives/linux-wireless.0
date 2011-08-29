@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:53832 "EHLO purkki.adurom.net"
+Received: from nbd.name ([46.4.11.11]:56965 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750867Ab1HYKFa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 06:05:30 -0400
-To: Arik Nemtsov <arik@wizery.com>
-Cc: <linux-wireless@vger.kernel.org>, Luciano Coelho <coelho@ti.com>
-Subject: Re: [PATCH 2/6] wl12xx: AP mode - don't regulate FW blocks for non-active STAs
-References: <1314265397-19873-1-git-send-email-arik@wizery.com>
-	<1314265397-19873-2-git-send-email-arik@wizery.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Thu, 25 Aug 2011 13:05:28 +0300
-In-Reply-To: <1314265397-19873-2-git-send-email-arik@wizery.com> (Arik Nemtsov's message of "Thu\, 25 Aug 2011 12\:43\:13 +0300")
-Message-ID: <871uw9olg7.fsf@purkki.adurom.net> (sfid-20110825_120532_561945_306FE085)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1752807Ab1H2Lj6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Aug 2011 07:39:58 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 2/2] ath9k_hw: fix the last register write for ar5416 addac
+Date: Mon, 29 Aug 2011 13:39:47 +0200
+Message-Id: <1314617987-23278-2-git-send-email-nbd@openwrt.org> (sfid-20110829_134001_719906_9CC952CB)
+In-Reply-To: <1314617987-23278-1-git-send-email-nbd@openwrt.org>
+References: <1314617987-23278-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arik Nemtsov <arik@wizery.com> writes:
+The previous register used in these initvals was probably accidentally
+copied over from the AR9100 values.
 
-> +	if (!wl1271_is_active_sta(wl, hlid)) {
-> +		WARN_ON(1);
-> +		return;
-> +	}
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar5008_initvals.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I think this is neater:
-
-if (WARN_ON(!wl1271_is_active_sta(wl, hlid))
-        return;
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_initvals.h b/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
+index 68b0561..f81e7fc 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar5008_initvals.h
+@@ -669,6 +669,6 @@ static const u32 ar5416Addac[][2] = {
+ 	{0x0000989c, 0x00000000},
+ 	{0x0000989c, 0x00000000},
+ 	{0x0000989c, 0x00000000},
+-	{0x000098cc, 0x00000000},
++	{0x000098c4, 0x00000000},
+ };
+ 
 -- 
-Kalle Valo
+1.7.3.2
+
