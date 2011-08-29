@@ -1,60 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:35198 "EHLO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753636Ab1HJM5t (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47038 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753654Ab1H2PSb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 08:57:49 -0400
-Received: by mail-bw0-f50.google.com with SMTP id zu5so437106bkb.37
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 05:57:47 -0700 (PDT)
-Subject: Re: [PATCH 17/40] wl12xx: add ROC/CROC commands
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
+	Mon, 29 Aug 2011 11:18:31 -0400
+Subject: Re: [RFC v2] mac80211: stop tx before doing hw config and rate
+ update
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1312881233-9366-18-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-	 <1312881233-9366-18-git-send-email-eliad@wizery.com>
+In-Reply-To: <1314617635-27936-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1314617635-27936-1-git-send-email-rmanohar@qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 10 Aug 2011 15:57:43 +0300
-Message-ID: <1312981063.2407.591.camel@cumari> (sfid-20110810_145753_044450_57A2BD0A)
+Date: Mon, 29 Aug 2011 17:18:29 +0200
+Message-ID: <1314631109.8959.20.camel@jlt3.sipsolutions.net> (sfid-20110829_171834_350554_5697A3E6)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote: 
-> +static int wl1271_cmd_roc(struct wl1271 *wl, u8 role_id)
-> +{
-> +	struct wl1271_cmd_roc *cmd;
-> +	int ret = 0;
+On Mon, 2011-08-29 at 17:03 +0530, Rajkumar Manoharan wrote:
+> The assumption is that during the hw config, transmission was
+> already stopped by mac80211. But during channel type change,
+> the mac80211 continue to transmit frames. The driver like ath9k
+> does chip reset while doing channel set. This could leads to
+> buffer overflow at driver side. And also after configuring the channel
+> and before doing rate updation, the frames are continued to xmit
+> with older rates. This patch ensures that the frames are always
+> xmitted with updated rates and avoid buffer overflow.
+> 
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> ---
+> v2: Removed new stop queue reason code by netif
+>  net/mac80211/mlme.c |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 60a6f27..a1deb33 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -232,6 +232,9 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+>  		WARN_ON(!ieee80211_set_channel_type(local, sdata, channel_type));
+>  	}
+>  
+> +	netif_tx_stop_all_queues(sdata->dev);
 > +
-> +	wl1271_debug(DEBUG_CMD, "cmd roc %d (%d)", wl->channel, wl->band);
-> +
-> +	if (WARN_ON(role_id == WL1271_INVALID_ROLE_ID))
-> +		return -EINVAL;
-> +
-> +	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-> +	if (!cmd) {
-> +		ret = -ENOMEM;
-> +		goto out;
-> +	}
-> +
-> +	cmd->role_id = role_id;
-> +	cmd->channel = wl->channel;
-> +	switch (wl->band) {
-> +	case IEEE80211_BAND_2GHZ:
-> +		cmd->band = RADIO_BAND_2_4GHZ;
-> +		break;
-> +	case IEEE80211_BAND_5GHZ:
-> +		cmd->band = RADIO_BAND_5GHZ;
-> +		break;
-> +	default:
-> +		wl1271_warning("roc - unknown band: %d", (int)wl->band);
-> +		cmd->band = RADIO_BAND_2_4GHZ;
-> +		break;
+> +	drv_flush(local, false);
 
-Are you sure it's better to choose 2.4GHz here instead of bailing out?
+doesn't that also need synchronize_net()?
 
-
--- 
-Cheers,
-Luca.
+johannes
 
