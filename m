@@ -1,37 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55508 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751694Ab1HLMcd (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48154 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753057Ab1H2M2N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 08:32:33 -0400
-Subject: Re: [PATCH 2/4] cfg80211: Add cfg80211_get_bss_ht to also match HT
- configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Simon <alexander.simon@saxnet.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1312998657.3128.45.camel@alex-2> (sfid-20110810_195131_446985_B9D37FE4)
-References: <1888623.Vt5VZUN2cU@alex-1>  <8106144.ZkUl7u1lz4@alex-1>
-	 (sfid-20110808_140459_252308_3B0F09A2)  <1312984428.4325.10.camel@jlt3.sipsolutions.net>
-	 <1312991321.3128.34.camel@alex-2>
-	 (sfid-20110810_174931_439213_A3C417AC)  <1312992332.4325.22.camel@jlt3.sipsolutions.net>
-	 <1312998657.3128.45.camel@alex-2> (sfid-20110810_195131_446985_B9D37FE4)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 12 Aug 2011 14:32:31 +0200
-Message-ID: <1313152351.4022.6.camel@jlt3.sipsolutions.net> (sfid-20110812_143236_411418_884F27A3)
-Mime-Version: 1.0
+	Mon, 29 Aug 2011 08:28:13 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH 06/20] ath6kl: Implement remain_on_channel and cancel_remain_on_channel
+Date: Mon, 29 Aug 2011 15:23:47 +0300
+Message-ID: <1314620641-24257-7-git-send-email-jouni@qca.qualcomm.com> (sfid-20110829_142815_951773_C757EAD5)
+In-Reply-To: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-08-10 at 19:50 +0200, Alexander Simon wrote:
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   33 ++++++++++++++++++++++++++++
+ 1 files changed, 33 insertions(+), 0 deletions(-)
 
-> The problem I'm facing here is that I really *need* to check the HT mode
-> _inside_ the loop. Hence i need a _ht version.
-> OR I could change cfg80211_get_bss only, causing to add the new
-> parameters in *all* calls of cfg80211_get_bss... Whatever you prefer.
-
-Well, I would keep the wrapper but make it an inline, not a separate
-exported function, like cfg80211_get_ibss() (which really is quite
-pointless, does anything still use it?)
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 898f394..a05036c 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1656,6 +1656,35 @@ static int ath6kl_change_station(struct wiphy *wiphy, struct net_device *dev,
+ 				      0);
+ }
+ 
++static int ath6kl_remain_on_channel(struct wiphy *wiphy,
++				    struct net_device *dev,
++				    struct ieee80211_channel *chan,
++				    enum nl80211_channel_type channel_type,
++				    unsigned int duration,
++				    u64 *cookie)
++{
++	struct ath6kl *ar = ath6kl_priv(dev);
++
++	/* TODO: if already pending or ongoing remain-on-channel,
++	 * return -EBUSY */
++	*cookie = 1; /* only a single pending request is supported */
++
++	return ath6kl_wmi_remain_on_chnl_cmd(ar->wmi, chan->center_freq,
++					     duration);
++}
++
++static int ath6kl_cancel_remain_on_channel(struct wiphy *wiphy,
++					   struct net_device *dev,
++					   u64 cookie)
++{
++	struct ath6kl *ar = ath6kl_priv(dev);
++
++	if (cookie != 1)
++		return -ENOENT;
++
++	return ath6kl_wmi_cancel_remain_on_chnl_cmd(ar->wmi);
++}
++
+ static struct cfg80211_ops ath6kl_cfg80211_ops = {
+ 	.change_virtual_intf = ath6kl_cfg80211_change_iface,
+ 	.scan = ath6kl_cfg80211_scan,
+@@ -1683,6 +1712,8 @@ static struct cfg80211_ops ath6kl_cfg80211_ops = {
+ 	.set_beacon = ath6kl_set_beacon,
+ 	.del_beacon = ath6kl_del_beacon,
+ 	.change_station = ath6kl_change_station,
++	.remain_on_channel = ath6kl_remain_on_channel,
++	.cancel_remain_on_channel = ath6kl_cancel_remain_on_channel,
+ };
+ 
+ struct wireless_dev *ath6kl_cfg80211_init(struct device *dev)
+@@ -1704,6 +1735,8 @@ struct wireless_dev *ath6kl_cfg80211_init(struct device *dev)
+ 		return NULL;
+ 	}
+ 
++	wdev->wiphy->max_remain_on_channel_duration = 5000;
++
+ 	/* set device pointer for wiphy */
+ 	set_wiphy_dev(wdev->wiphy, dev);
+ 
+-- 
+1.7.4.1
 
