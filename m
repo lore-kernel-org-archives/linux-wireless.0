@@ -1,30 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:48334 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751805Ab1HMTEX (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64771 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752763Ab1H2MaY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 15:04:23 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id C5C1854029E
-	for <linux-wireless@vger.kernel.org>; Sat, 13 Aug 2011 15:13:19 -0400 (EDT)
-Subject: Compat-wireless release for 2011-08-13 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20110813190422.43E3840ED4@repository3.orbit-lab.org> (sfid-20110813_210437_549746_6201245F)
-Date: Sat, 13 Aug 2011 15:04:22 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 29 Aug 2011 08:30:24 -0400
+Cc: <linux-wireless@vger.kernel.org>,
+	Edward Lu <shaol@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+Subject: [PATCH 17/20] ath6kl: Fix a typo in ath6k context
+Date: Mon, 29 Aug 2011 15:23:58 +0300
+Message-ID: <1314620641-24257-18-git-send-email-jouni@qca.qualcomm.com> (sfid-20110829_143027_750807_D51E121A)
+In-Reply-To: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
- * [new branch]      linux-3.1.y -> origin/linux-3.1.y
-   29f7643..c2544bb  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 32d22cf...c0a1f24 akpm-end   -> origin/akpm-end  (forced update)
-   068ef73..72fa599  akpm-start -> origin/akpm-start
- + 5e07273...cab7d82 master     -> origin/master  (forced update)
-   068ef73..72fa599  stable     -> origin/stable
- * [new tag]         next-20110812 -> next-20110812
+From: Edward Lu <elu@qca.qualcomm.com>
 
-compat-wireless code metrics
+Signed-off-by: Edward Lu <elu@qca.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   13 +++++++------
+ drivers/net/wireless/ath/ath6kl/core.h     |    2 +-
+ drivers/net/wireless/ath/ath6kl/init.c     |    2 +-
+ 3 files changed, 9 insertions(+), 8 deletions(-)
 
-    804761 - Total upstream lines of code being pulled
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 19b6da8..cfb54db 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -168,7 +168,8 @@ static int ath6kl_set_auth_type(struct ath6kl *ar,
+ static int ath6kl_set_cipher(struct ath6kl *ar, u32 cipher, bool ucast)
+ {
+ 	u8 *ar_cipher = ucast ? &ar->prwise_crypto : &ar->grp_crypto;
+-	u8 *ar_cipher_len = ucast ? &ar->prwise_crypto_len : &ar->grp_crpto_len;
++	u8 *ar_cipher_len = ucast ? &ar->prwise_crypto_len :
++		&ar->grp_crypto_len;
+ 
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: cipher 0x%x, ucast %u\n",
+ 		   __func__, cipher, ucast);
+@@ -371,14 +372,14 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 		   __func__,
+ 		   ar->auth_mode, ar->dot11_auth_mode, ar->prwise_crypto,
+ 		   ar->prwise_crypto_len, ar->grp_crypto,
+-		   ar->grp_crpto_len, ar->ch_hint);
++		   ar->grp_crypto_len, ar->ch_hint);
+ 
+ 	ar->reconnect_flag = 0;
+ 	status = ath6kl_wmi_connect_cmd(ar->wmi, ar->nw_type,
+ 					ar->dot11_auth_mode, ar->auth_mode,
+ 					ar->prwise_crypto,
+ 					ar->prwise_crypto_len,
+-					ar->grp_crypto, ar->grp_crpto_len,
++					ar->grp_crypto, ar->grp_crypto_len,
+ 					ar->ssid_len, ar->ssid,
+ 					ar->req_bssid, ar->ch_hint,
+ 					ar->connect_ctrl_flags);
+@@ -688,7 +689,7 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
+ 					ar->prwise_crypto,
+ 					ar->prwise_crypto_len,
+ 					ar->grp_crypto,
+-					ar->grp_crpto_len,
++					ar->grp_crypto_len,
+ 					ar->ssid_len,
+ 					ar->ssid,
+ 					ar->req_bssid,
+@@ -1277,13 +1278,13 @@ static int ath6kl_cfg80211_join_ibss(struct wiphy *wiphy,
+ 		   __func__,
+ 		   ar->auth_mode, ar->dot11_auth_mode, ar->prwise_crypto,
+ 		   ar->prwise_crypto_len, ar->grp_crypto,
+-		   ar->grp_crpto_len, ar->ch_hint);
++		   ar->grp_crypto_len, ar->ch_hint);
+ 
+ 	status = ath6kl_wmi_connect_cmd(ar->wmi, ar->nw_type,
+ 					ar->dot11_auth_mode, ar->auth_mode,
+ 					ar->prwise_crypto,
+ 					ar->prwise_crypto_len,
+-					ar->grp_crypto, ar->grp_crpto_len,
++					ar->grp_crypto, ar->grp_crypto_len,
+ 					ar->ssid_len, ar->ssid,
+ 					ar->req_bssid, ar->ch_hint,
+ 					ar->connect_ctrl_flags);
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 99cabd2..60e2291 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -380,7 +380,7 @@ struct ath6kl {
+ 	u8 prwise_crypto;
+ 	u8 prwise_crypto_len;
+ 	u8 grp_crypto;
+-	u8 grp_crpto_len;
++	u8 grp_crypto_len;
+ 	u8 def_txkey_index;
+ 	struct ath6kl_wep_key wep_key_list[WMI_MAX_KEY_INDEX + 1];
+ 	u8 bssid[ETH_ALEN];
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 376e576..6f44017 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -85,7 +85,7 @@ void ath6kl_init_profile_info(struct ath6kl *ar)
+ 	ar->prwise_crypto = NONE_CRYPT;
+ 	ar->prwise_crypto_len = 0;
+ 	ar->grp_crypto = NONE_CRYPT;
+-	ar->grp_crpto_len = 0;
++	ar->grp_crypto_len = 0;
+ 	memset(ar->wep_key_list, 0, sizeof(ar->wep_key_list));
+ 	memset(ar->req_bssid, 0, sizeof(ar->req_bssid));
+ 	memset(ar->bssid, 0, sizeof(ar->bssid));
+-- 
+1.7.4.1
+
