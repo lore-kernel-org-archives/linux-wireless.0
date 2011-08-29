@@ -1,46 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:50575 "EHLO
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:56205 "EHLO
 	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751254Ab1HWHVc (ORCPT
+	with ESMTP id S1751080Ab1H2GjA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 03:21:32 -0400
-Received: by wwf5 with SMTP id 5so5947161wwf.1
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2011 00:21:31 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] mac80211: allow action frames with unknown BSSID in GO mode
-Date: Tue, 23 Aug 2011 10:21:27 +0300
-Message-Id: <1314084087-16170-1-git-send-email-arik@wizery.com> (sfid-20110823_092135_223371_71542486)
+	Mon, 29 Aug 2011 02:39:00 -0400
+Received: by wwf5 with SMTP id 5so5377988wwf.1
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Aug 2011 23:38:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1314471360-861-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1314471360-861-1-git-send-email-Larry.Finger@lwfinger.net>
+Date: Mon, 29 Aug 2011 12:08:58 +0530
+Message-ID: <CAD2nsn2yFUQYwgBCsWpiDAxkZ23RwzFv5OzSVoiVvx=JmcuzVQ@mail.gmail.com> (sfid-20110829_083903_471362_CB3A28E9)
+Subject: Re: [PATCH] ath9k: Fix a smatch warnings
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When operating as a P2P GO, we receive some P2P action frames where the
-BSSID is set to the peer MAC address. Specifically, this occurs for
-invitation responses. These are valid action frames and they should be
-passed up.
+On Sun, Aug 28, 2011 at 12:26 AM, Larry Finger
+<Larry.Finger@lwfinger.net> wrote:
+> Smatch shows the following warnings:
+>
+>  CHECK   drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> drivers/net/wireless/ath/ath9k/htc_drv_main.c +1315 ath9k_htc_configure_filter(27) warn: inconsistent returns mutex:&priv->mutex: locked (1303) unlocked (1315)
+>
+>  CHECK   drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+> drivers/net/wireless/ath/ath9k/ar9003_eeprom.c +3321 ar9300_eeprom_restore_internal(20) warn: returning -1 instead of -ENOMEM is sloppy
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- net/mac80211/rx.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+Hi Larry, thanks for the patch.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 6540cd1..43ad4ef 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2689,7 +2689,9 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
- 		} else if (!ieee80211_bssid_match(bssid,
- 					sdata->vif.addr)) {
- 			if (!(status->rx_flags & IEEE80211_RX_IN_SCAN) &&
--			    !ieee80211_is_beacon(hdr->frame_control))
-+			    !ieee80211_is_beacon(hdr->frame_control) &&
-+			    !(ieee80211_is_action(hdr->frame_control) &&
-+			      sdata->vif.p2p))
- 				return 0;
- 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
- 		}
+> ---
+>
+> John,
+>
+> This is next material.
+>
+> Larry
+> ---
+>
+> To ath9k developers:
+>
+> Smatch also show the following information, which I have not addressed:
+>
+>  CHECK   drivers/net/wireless/ath/key.c
+> drivers/net/wireless/ath/key.c +546 ath_key_config(77) info: why not propagate 'idx' from ath_reserve_key_cache_slot() instead of -28?
+>  CHECK   drivers/net/wireless/ath/ath9k/hif_usb.c
+> drivers/net/wireless/ath/ath9k/hif_usb.c +760 ath9k_hif_usb_dealloc_tx_urbs(23) error: double free of 'tx_buf->buf'
+>  CHECK   drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+> drivers/net/wireless/ath/ath9k/htc_drv_beacon.c +339 ath9k_htc_send_buffered(44) error: double lock 'bottom_half:'
+> drivers/net/wireless/ath/ath9k/htc_drv_beacon.c +347 ath9k_htc_send_buffered(52) error: double unlock 'bottom_half:'
+>  CHECK   drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> drivers/net/wireless/ath/ath9k/ar9003_phy.c +209 ar9003_hw_spur_mitigate_mrc_cck(40) error: potential null derefence 'spur_fbin_ptr'.
+>  CHECK   drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+> drivers/net/wireless/ath/ath9k/ar9003_paprd.c +164 ar9003_paprd_setup_single_table(28) info: why not propagate 'training_power' from ar9003_get_training_power_5g() instead of -34?
+>
+> ---
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
+>  drivers/net/wireless/ath/ath9k/htc_drv_main.c  |    1 +
+>  2 files changed, 2 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+> index 3b4ae07..fc2d607 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+> @@ -3318,7 +3318,7 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
+>
+>        word = kzalloc(2048, GFP_KERNEL);
+>        if (!word)
+> -               return -1;
+> +               return -ENOMEM;
+>
+>        memcpy(mptr, &ar9300_default, mdata_size);
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> index 7212acb..2a3a2ce 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> @@ -1300,6 +1300,7 @@ static void ath9k_htc_configure_filter(struct ieee80211_hw *hw,
+>        if (priv->op_flags & OP_INVALID) {
+>                ath_dbg(ath9k_hw_common(priv->ah), ATH_DBG_ANY,
+>                        "Unable to configure filter on invalid state\n");
+> +               mutex_unlock(&priv->mutex);
+>                return;
+>        }
+>        ath9k_htc_ps_wakeup(priv);
+> --
+> 1.7.3.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
 -- 
-1.7.4.1
-
+shafi
