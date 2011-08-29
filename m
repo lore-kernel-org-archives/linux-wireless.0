@@ -1,74 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34241 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756349Ab1HCXbM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2011 19:31:12 -0400
-Message-Id: <20110803221252.604974758@clark.kroah.org> (sfid-20110804_013304_937199_48B2E245)
-Date: Wed, 03 Aug 2011 15:01:45 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	Sven Neumann <s.neumann@raumfeld.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Daniel Mack <daniel@zonque.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [085/102] cfg80211: really ignore the regulatory request
-In-Reply-To: <20110803221345.GA10346@kroah.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:33288 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751423Ab1H2Ny5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Aug 2011 09:54:57 -0400
+Subject: Re: [RFC 0/3] enable HT in a mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <1314212539-23669-1-git-send-email-thomas@cozybit.com> (sfid-20110824_210302_952778_D17D74DB)
+References: <1314212539-23669-1-git-send-email-thomas@cozybit.com>
+	 (sfid-20110824_210302_952778_D17D74DB)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 29 Aug 2011 15:54:57 +0200
+Message-ID: <1314626097.8959.16.camel@jlt3.sipsolutions.net> (sfid-20110829_155500_493939_92C5B194)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-3.0-stable review patch.  If anyone has any objections, please let us know.
+On Wed, 2011-08-24 at 12:02 -0700, Thomas Pedersen wrote:
+> Hi I'm adding HT support for mesh.
+> 
+> This patchset is pretty basic, and relies on Alexander Simon's HT IE helper
+> funtions.
 
-------------------
+Ok. I'm pretty happy with those, but haven't seen the latest version of
+the IBSS parts.
 
-From: Sven Neumann <s.neumann@raumfeld.com>
+> No channel type negotiation takes place, and the HT info IE from the
+> peer is not even read.
 
-commit a203c2aa4cefccb879c879b8e1cad1a09a679e55 upstream.
+That seems odd.
 
-At the beginning of wiphy_update_regulatory() a check is performed
-whether the request is to be ignored. Then the request is sent to
-the driver nevertheless. This happens even if last_request points
-to NULL, leading to a crash in the driver:
+> In practice, nodes with mismatched channel types seem to communicate fine,
+> although throughput is affected (TX from HT40 -> HT20 is the worst case).
 
- [<bf01d864>] (lbs_set_11d_domain_info+0x28/0x1e4 [libertas]) from [<c03b714c>] (wiphy_update_regulatory+0x4d0/0x4f4)
- [<c03b714c>] (wiphy_update_regulatory+0x4d0/0x4f4) from [<c03b4008>] (wiphy_register+0x354/0x420)
- [<c03b4008>] (wiphy_register+0x354/0x420) from [<bf01b17c>] (lbs_cfg_register+0x80/0x164 [libertas])
- [<bf01b17c>] (lbs_cfg_register+0x80/0x164 [libertas]) from [<bf020e64>] (lbs_start_card+0x20/0x88 [libertas])
- [<bf020e64>] (lbs_start_card+0x20/0x88 [libertas]) from [<bf02cbd8>] (if_sdio_probe+0x898/0x9c0 [libertas_sdio])
+That would highly depend on rate control? Or do we do some HT
+capability/operation IE stuff and figure this out? Still seems a little
+strange.
 
-Fix this by returning early. Also remove the out: label as it is
-not any longer needed.
+> We measured these data rates in our (widely uncontrolled) office environment
+> using the ath9k_htc driver:
+> 
+>         A\B           NO HT             HT20                  HT40+           
+>        NO HT        r: 54Mb/s         r: MCS 13             r: MCS 13         
+>                     D: 20Mb/s         D: 16Mb/s             D: 16Mb/s         
+>        HT20         r: 54Mb/s         r: MCS 13             r: MCS 13         
+>                    D: 22.5Mb/s       D: 18.5Mb/s            D: 15Mb/s         
+>        HT40+        r: 54Mb/s         r: MCS 0          r: MCS 12 @ 40Mhz     
+>                     D: 22Mb/s        D: 5.1Mb/s             D: 20Mb/s  
+> 
+> 	r: rate reported by minstrel.
+> 	D: TX throughput (A -> B using 'iperf -c <B> -u -b400M')
+> 
+> Is it odd that even HT40+ -> HT40+ is not any better than the non-HT case? Are
+> we doing something wrong? Are you surprised that mismatched channel types work
+> at all?
 
-Signed-off-by: Sven Neumann <s.neumann@raumfeld.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Daniel Mack <daniel@zonque.org>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Not surprised, but won't be efficient, especially when some device uses
+a dumber rate control than minstrel :)
 
----
- net/wireless/reg.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+> So currently, our channel type is always just whatever the user configured
+> through iw. The path selection algorithm should be able to compensate by
+> detecting faster links and adjusting the respective mpaths accordingly.
+> 
+> If this is completely wrong, I would appreciate any suggestions on the right
+> way to handle mesh peers with different channel types.
 
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1125,12 +1125,13 @@ void wiphy_update_regulatory(struct wiph
- 	enum ieee80211_band band;
- 
- 	if (ignore_reg_update(wiphy, initiator))
--		goto out;
-+		return;
-+
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 		if (wiphy->bands[band])
- 			handle_band(wiphy, band, initiator);
- 	}
--out:
-+
- 	reg_process_beacons(wiphy);
- 	reg_process_ht_flags(wiphy);
- 	if (wiphy->reg_notifier)
+I have no idea. The channel type stuff seems a little fishy though.
 
+johannes
 
