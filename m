@@ -1,121 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7217 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752262Ab1HZGxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 02:53:30 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 13/60] iwlagn: modify the debug macro to be usable by all the layers
-Date: Thu, 25 Aug 2011 23:10:45 -0700
-Message-Id: <1314339092-20797-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085503_124817_3CA5AD88)
-In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from alcalazamora.dti2.net ([81.24.162.8]:55720 "EHLO
+	alcalazamora.dti2.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753459Ab1H2KVt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Aug 2011 06:21:49 -0400
+Received: from [172.16.16.6] ([81.24.161.20])
+	(authenticated user jorge@dti2.net)
+	by alcalazamora.dti2.net (alcalazamora.dti2.net [81.24.162.8])
+	(MDaemon PRO v12.0.3)
+	with ESMTP id md50018366685.msg
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 12:15:01 +0200
+Message-ID: <4E5B669F.8060605@dti2.net> (sfid-20110829_122152_781604_4A622F10)
+Date: Mon, 29 Aug 2011 12:14:55 +0200
+From: "Jorge Boncompte [DTI2]" <jorge@dti2.net>
+MIME-Version: 1.0
+To: adrian@freebsd.org
+CC: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: Re: [PATCH 3.1] ath9k_hw: fix calibration on 5 ghz
+References: <1314605174-66206-1-git-send-email-nbd@openwrt.org> <CAJ-Vmonvcrd49rQbgeyO3HCLxkTbww3mTypR87CuPBiu9uwhHA@mail.gmail.com>
+In-Reply-To: <CAJ-Vmonvcrd49rQbgeyO3HCLxkTbww3mTypR87CuPBiu9uwhHA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Reply-To: jorge@dti2.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+El 29/08/2011 11:01, Adrian Chadd escribió:
+> Can we please hold off of this until we know if this is indeed the correct fix?
+> 
+> Ie, I'm not sure yet whether 5ghz fast clock (which clocks the mac/bb
+> like it was doing 2.4ghz) needs the dual ADCs enabled or not.
+> It may be that something is being incorrectly disabled when the
+> fastclock initvals are being written over the normal 5ghz values.
+>uary
+> Thanks,
 
-Since all the layers need to print debug message, the debug macro cannot suppose
-that they will be given iwl_priv as a parameter and then dereference it.
-Use iwl_shared instead.
+	Hi, I reported this same problem on february, I was using Ubiquiti SR71-15
+cards. I've been running them with the same "fix" that Felix has proposed. If
+you need a tester for another solution just let me know.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-debug.h |   37 +++++++++++++++--------------
- drivers/net/wireless/iwlwifi/iwl-rx.c    |    3 +-
- 2 files changed, 21 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index 225ae72..7c9e9af 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -29,49 +29,50 @@
- #ifndef __iwl_debug_h__
- #define __iwl_debug_h__
- 
-+#include "iwl-shared.h"
-+
- struct iwl_priv;
- 
--#define IWL_ERR(p, f, a...) dev_err(p->bus->dev, f, ## a)
--#define IWL_WARN(p, f, a...) dev_warn(p->bus->dev, f, ## a)
--#define IWL_INFO(p, f, a...) dev_info(p->bus->dev, f, ## a)
--#define IWL_CRIT(p, f, a...) dev_crit(p->bus->dev, f, ## a)
-+/*No matter what is m (priv, bus, trans), this will work */
-+#define IWL_ERR(m, f, a...) dev_err(bus(m)->dev, f, ## a)
-+#define IWL_WARN(m, f, a...) dev_warn(bus(m)->dev, f, ## a)
-+#define IWL_INFO(m, f, a...) dev_info(bus(m)->dev, f, ## a)
-+#define IWL_CRIT(m, f, a...) dev_crit(bus(m)->dev, f, ## a)
- 
--#define iwl_print_hex_error(priv, p, len) 				\
-+#define iwl_print_hex_error(m, p, len)					\
- do {									\
- 	print_hex_dump(KERN_ERR, "iwl data: ",				\
- 		       DUMP_PREFIX_OFFSET, 16, 1, p, len, 1);		\
- } while (0)
- 
- #ifdef CONFIG_IWLWIFI_DEBUG
--#define IWL_DEBUG(__priv, level, fmt, args...)				\
-+#define IWL_DEBUG(m, level, fmt, args...)				\
- do {									\
--	if (iwl_get_debug_level(__priv->shrd) & (level))		\
--		dev_printk(KERN_ERR, &(__priv->hw->wiphy->dev),		\
-+	if (iwl_get_debug_level((m)->shrd) & (level))			\
-+		dev_printk(KERN_ERR, bus(m)->dev,			\
- 			 "%c %s " fmt, in_interrupt() ? 'I' : 'U',	\
- 			__func__ , ## args);				\
- } while (0)
- 
--#define IWL_DEBUG_LIMIT(__priv, level, fmt, args...)			\
-+#define IWL_DEBUG_LIMIT(m, level, fmt, args...)				\
- do {									\
--	if ((iwl_get_debug_level(__priv->shrd) & (level)) && net_ratelimit())\
--		dev_printk(KERN_ERR, &(__priv->hw->wiphy->dev),		\
-+	if (iwl_get_debug_level((m)->shrd) & (level) && net_ratelimit())\
-+		dev_printk(KERN_ERR, bus(m)->dev,			\
- 			"%c %s " fmt, in_interrupt() ? 'I' : 'U',	\
- 			 __func__ , ## args);				\
- } while (0)
- 
--#define iwl_print_hex_dump(priv, level, p, len) 			\
-+#define iwl_print_hex_dump(m, level, p, len)				\
- do {                                            			\
--	if (iwl_get_debug_level(priv->shrd) & level)			\
-+	if (iwl_get_debug_level((m)->shrd) & level)			\
- 		print_hex_dump(KERN_DEBUG, "iwl data: ",		\
- 			       DUMP_PREFIX_OFFSET, 16, 1, p, len, 1);	\
- } while (0)
- 
- #else
--#define IWL_DEBUG(__priv, level, fmt, args...)
--#define IWL_DEBUG_LIMIT(__priv, level, fmt, args...)
--static inline void iwl_print_hex_dump(struct iwl_priv *priv, int level,
--				      const void *p, u32 len)
--{}
-+#define IWL_DEBUG(m, level, fmt, args...)
-+#define IWL_DEBUG_LIMIT(m, level, fmt, args...)
-+#define iwl_print_hex_dump(m, level, p, len)
- #endif				/* CONFIG_IWLWIFI_DEBUG */
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 37bc017..a5e4dda 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -122,7 +122,8 @@ static void iwl_rx_pm_debug_statistics_notif(struct iwl_priv *priv,
- 					     struct iwl_rx_mem_buffer *rxb)
- {
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
--	u32 len = le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK;
-+	u32 __maybe_unused len =
-+		le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK;
- 	IWL_DEBUG_RADIO(priv, "Dumping %d bytes of unhandled "
- 			"notification for %s:\n", len,
- 			get_cmd_string(pkt->hdr.cmd));
+	Regards,
+		Jorge
 -- 
-1.7.0.4
+==============================================================
+Jorge Boncompte - Ingenieria y Gestion de RED
+DTI2 - Desarrollo de la Tecnologia de las Comunicaciones
+--------------------------------------------------------------
+C/ Abogado Enriquez Barrios, 5   14004 CORDOBA (SPAIN)
+Tlf: +34 957 761395 / FAX: +34 957 450380
+==============================================================
+- There is only so much duct tape you can put on something
+  before it just becomes a giant ball of duct tape.
+==============================================================
 
