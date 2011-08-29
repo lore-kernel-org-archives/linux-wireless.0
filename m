@@ -1,150 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45298 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753450Ab1HRUdH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Aug 2011 16:33:07 -0400
-Subject: Re: [PATCH] ath9k: make driver usable standalone
-From: Dan Williams <dcbw@redhat.com>
-To: Pavel Ivanov <paivanof@gmail.com>
-Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	linux-kernel@vger.kernel.org
-Date: Thu, 18 Aug 2011 15:35:22 -0500
-In-Reply-To: <CAG1a4rvqdB8y9ARQ=FckArm3UVG7=LFqF25kqYUYL0Uw7QNV8g@mail.gmail.com>
-References: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com>
-	 <CA+XFjipM1Qup3bcJos_ikwzoaWoa3GdYqK0WBUqEHBNR6V6LfQ@mail.gmail.com>
-	 <CAG1a4rsyfPrrrf-mzt3HAM6YHHjaHTcd2rbtYiwqLkUCP=j8pQ@mail.gmail.com>
-	 <CA+XFjipsVukKYchfmDv48PAKsD2PUxT+7E8epRuKFynGwk=Bag@mail.gmail.com>
-	 <CAG1a4rvQTA7UgxLOxu_cC88grjHttyjPD_4kyDhb7Y9FcBBkLQ@mail.gmail.com>
-	 <1313695217.23920.4.camel@dcbw.foobar.com>
-	 <CAG1a4rvqdB8y9ARQ=FckArm3UVG7=LFqF25kqYUYL0Uw7QNV8g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1313699724.23920.18.camel@dcbw.foobar.com> (sfid-20110818_223326_497482_7F86345C)
-Mime-Version: 1.0
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:54157 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755044Ab1H2UX0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Aug 2011 16:23:26 -0400
+Received: by mail-pz0-f42.google.com with SMTP id 37so9020873pzk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 13:23:26 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Subject: [PATCH v3 7/7] mac80211: Consolidate mesh path duplicated functions
+Date: Mon, 29 Aug 2011 13:23:09 -0700
+Message-Id: <1314649389-7115-8-git-send-email-javier@cozybit.com> (sfid-20110829_222333_396540_C93A9345)
+In-Reply-To: <1314649389-7115-1-git-send-email-javier@cozybit.com>
+References: <1314649389-7115-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-08-18 at 15:30 -0400, Pavel Ivanov wrote:
-> > In the end, you probably want to be using wpa_supplicant instead of
-> > trying to configure stuff with iw directly.
-> 
-> I see Ubuntu already have wpa_supplicant installed and running.
-> Although its command line is not what suggested in documentation and I
-> don't see configuration file /etc/wpa_supplicant.conf. Does that mean
-> it works somehow differently than stated in documentation? And also
-> does all this mean that even if I'll be able to make wpa_supplicant
-> work as I need I won't be able to control wireless connection using
-> the standard Ubuntu's icon and it won't show me its state correctly?
+---
+v3: - Do take the path resize read lock to prevent clash with table
+      growth (Johannes)
 
-NetworkManager is installed by default, and NM sends configuration to
-wpa_supplicant using a different control interface, not the config file.
-If you want to take the wifi interface out from NM's control, I think
-you can add the interface to /etc/network/interfaces and NM will then
-ignore it, and you can run wpa_supplicant manually with the '-i wlan0'
-option to point it to the right interface, and when you've got a config
-file, use '-c /path/to/config/file' to give it your configuration.
+ net/mac80211/mesh_pathtbl.c |   70 +++++++++++++++++-------------------------
+ 1 files changed, 28 insertions(+), 42 deletions(-)
 
-Or, since I'm a NetworkManager developer, is there something that you're
-not sure how to make NM do, or are you just looking to experiment?
-
-Dan
-
-> 
-> Pavel
-> 
-> 
-> On Thu, Aug 18, 2011 at 3:20 PM, Dan Williams <dcbw@redhat.com> wrote:
-> > On Thu, 2011-08-18 at 00:01 -0400, Pavel Ivanov wrote:
-> >> > Iwconfig and iwlist are themselves deprecated. Iw is the new wireless
-> >> > configuration tool.
-> >>
-> >> I've just tried to use iw and it didn't quite work for me. Maybe it's
-> >> interfering with something installed in Ubuntu by default but
-> >
-> > Ubuntu installs NetworkManager by default, so if you want to manually
-> > control the wifi card you'll have to tell NM to ignore the wifi device,
-> > or turn NM off temporarily.
-> >
-> >> connect/disconnect commands didn't seem to do anything. And why these
-> >> commands can be executed only as root?
-> >
-> > Because poking and configuring hardware is a privileged operation; tools
-> > like NetworkManager selectively poke holes through that wall and often
-> > require administrator passwords to do it, but at the end of the day its
-> > an operation that can affect security and stability, and that means it
-> > needs to be privileged.
-> >
-> > In the end, you probably want to be using wpa_supplicant instead of
-> > trying to configure stuff with iw directly.
-> >
-> > Dan
-> >
-> >> Well, maybe in Ubuntu 11.10 it will work better.
-> >>
-> >>
-> >> Pavel
-> >>
-> >>
-> >> 2011/8/17 Gábor Stefanik <netrolller.3d@gmail.com>:
-> >> > 2011/8/17 Pavel Ivanov <paivanof@gmail.com>:
-> >> >>> WIRELESS_EXT is not required for configuring wireless on recent
-> >> >>> kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
-> >> >>
-> >> >> Since what version it's deprecated? Do user-space tools know about this new API?
-> >> >>
-> >> >> Neither iwconfig nor iwlist worked for me without WIRELESS_EXT.
-> >> >>
-> >> >>
-> >> >> Pavel
-> >> >>
-> >> >
-> >> > Iwconfig and iwlist are themselves deprecated. Iw is the new wireless
-> >> > configuration tool.
-> >> >
-> >> >>
-> >> >> 2011/8/17 Gábor Stefanik <netrolller.3d@gmail.com>:
-> >> >>> On Wed, Aug 17, 2011 at 5:28 AM, Pavel Ivanov <paivanof@gmail.com> wrote:
-> >> >>>> When ath9k is the only wireless driver included in the build
-> >> >>>> WIRELESS_EXT configuration option becomes undefined. Because of that
-> >> >>>> driver becomes essentially unusable as you can't actually connect to
-> >> >>>> any WiFi network. By including WIRELESS_EXT into Kconfig we ensure
-> >> >>>> that build with ath9k and without other drivers (having WIRELESS_EXT
-> >> >>>> selected in their Kconfig) is actually usable.
-> >> >>>
-> >> >>> WIRELESS_EXT is not required for configuring wireless on recent
-> >> >>> kernels - in fact, the WEXT API is deprecated in favor of nl80211 now.
-> >> >>>
-> >> >>>>
-> >> >>>> Signed-off-by: Pavel Ivanov <paivanof@gmail.com>
-> >> >>>> ---
-> >> >>>>
-> >> >>>> diff --git a/drivers/net/wireless/ath/ath9k/Kconfig
-> >> >>>> b/drivers/net/wireless/ath/ath9k/Kconfig
-> >> >>>> index d9c08c6..2573f77 100644
-> >> >>>> --- a/drivers/net/wireless/ath/ath9k/Kconfig
-> >> >>>> +++ b/drivers/net/wireless/ath/ath9k/Kconfig
-> >> >>>> @@ -11,6 +11,7 @@ config ATH9K
-> >> >>>>        select LEDS_CLASS
-> >> >>>>        select NEW_LEDS
-> >> >>>>        select ATH9K_COMMON
-> >> >>>> +       select WIRELESS_EXT
-> >> >>>>        ---help---
-> >> >>>>          This module adds support for wireless adapters based on
-> >> >>>>          Atheros IEEE 802.11n AR5008, AR9001 and AR9002 family
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> >
-> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 3c03be9..9b81bb5 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -48,10 +48,10 @@ static struct mesh_table __rcu *mpp_paths; /* Store paths for MPP&MAP */
+ int mesh_paths_generation;
+ 
+ /* This lock will have the grow table function as writer and add / delete nodes
+- * as readers. When reading the table (i.e. doing lookups) we are well protected
+- * by RCU.  We need to take this lock when modying the number of buckets
+- * on one of the path tables but we don't need to if adding or removing mpaths
+- * from hash buckets.
++ * as readers. RCU provides sufficient protection only when reading the table
++ * (i.e. doing lookups).  Adding or adding or removing nodes requires we take
++ * the read lock or we risk operating on an old table.  The write lock is only
++ * needed when modifying the number of buckets a table.
+  */
+ static DEFINE_RWLOCK(pathtbl_resize_lock);
+ 
+@@ -335,25 +335,14 @@ static void mesh_path_move_to_queue(struct mesh_path *gate_mpath,
+ }
+ 
+ 
+-/**
+- * mesh_path_lookup - look up a path in the mesh path table
+- * @dst: hardware address (ETH_ALEN length) of destination
+- * @sdata: local subif
+- *
+- * Returns: pointer to the mesh path structure, or NULL if not found
+- *
+- * Locking: must be called within a read rcu section.
+- */
+-struct mesh_path *mesh_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
++static struct mesh_path *path_lookup(struct mesh_table *tbl, u8 *dst,
++					  struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct mesh_path *mpath;
+ 	struct hlist_node *n;
+ 	struct hlist_head *bucket;
+-	struct mesh_table *tbl;
+ 	struct mpath_node *node;
+ 
+-	tbl = rcu_dereference(mesh_paths);
+-
+ 	bucket = &tbl->hash_buckets[mesh_table_hash(dst, sdata, tbl)];
+ 	hlist_for_each_entry_rcu(node, n, bucket, list) {
+ 		mpath = node->mpath;
+@@ -370,30 +359,23 @@ struct mesh_path *mesh_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
+ 	return NULL;
+ }
+ 
+-struct mesh_path *mpp_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
++/**
++ * mesh_path_lookup - look up a path in the mesh path table
++ * @dst: hardware address (ETH_ALEN length) of destination
++ * @sdata: local subif
++ *
++ * Returns: pointer to the mesh path structure, or NULL if not found
++ *
++ * Locking: must be called within a read rcu section.
++ */
++struct mesh_path *mesh_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
+ {
+-	struct mesh_path *mpath;
+-	struct hlist_node *n;
+-	struct hlist_head *bucket;
+-	struct mesh_table *tbl;
+-	struct mpath_node *node;
+-
+-	tbl = rcu_dereference(mpp_paths);
++	return path_lookup(rcu_dereference(mesh_paths), dst, sdata);
++}
+ 
+-	bucket = &tbl->hash_buckets[mesh_table_hash(dst, sdata, tbl)];
+-	hlist_for_each_entry_rcu(node, n, bucket, list) {
+-		mpath = node->mpath;
+-		if (mpath->sdata == sdata &&
+-		    memcmp(dst, mpath->dst, ETH_ALEN) == 0) {
+-			if (MPATH_EXPIRED(mpath)) {
+-				spin_lock_bh(&mpath->state_lock);
+-				mpath->flags &= ~MESH_PATH_ACTIVE;
+-				spin_unlock_bh(&mpath->state_lock);
+-			}
+-			return mpath;
+-		}
+-	}
+-	return NULL;
++struct mesh_path *mpp_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
++{
++	return path_lookup(rcu_dereference(mpp_paths), dst, sdata);
+ }
+ 
+ 
+@@ -836,7 +818,8 @@ void mesh_path_flush_by_nexthop(struct sta_info *sta)
+ 	int i;
+ 
+ 	rcu_read_lock();
+-	tbl = rcu_dereference(mesh_paths);
++	read_lock_bh(&pathtbl_resize_lock);
++	tbl = resize_dereference_mesh_paths();
+ 	for_each_mesh_entry(tbl, p, node, i) {
+ 		mpath = node->mpath;
+ 		if (rcu_dereference(mpath->next_hop) == sta) {
+@@ -845,6 +828,7 @@ void mesh_path_flush_by_nexthop(struct sta_info *sta)
+ 			spin_unlock_bh(&tbl->hashwlock[i]);
+ 		}
+ 	}
++	read_unlock_bh(&pathtbl_resize_lock);
+ 	rcu_read_unlock();
+ }
+ 
+@@ -880,10 +864,12 @@ void mesh_path_flush_by_iface(struct ieee80211_sub_if_data *sdata)
+ 	struct mesh_table *tbl;
+ 
+ 	rcu_read_lock();
++	read_lock_bh(&pathtbl_resize_lock);
+-	tbl = rcu_dereference(mesh_paths);
++	tbl = resize_dereference_mesh_paths();
+ 	table_flush_by_iface(tbl, sdata);
+-	tbl = rcu_dereference(mpp_paths);
++	tbl = resize_dereference_mpp_paths();
+ 	table_flush_by_iface(tbl, sdata);
++	read_unlock_bh(&pathtbl_resize_lock);
+ 	rcu_read_unlock();
+ }
+ 
+-- 
+1.7.6
 
