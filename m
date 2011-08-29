@@ -1,202 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:35863 "EHLO
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:53334 "EHLO
 	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752144Ab1HIJOY (ORCPT
+	with ESMTP id S1754556Ab1H2SNL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 05:14:24 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 5so2430702wwf.1
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:14:23 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 28/40] wl12xx: AP-mode - set STA HT capabilities when adding a STA
-Date: Tue,  9 Aug 2011 12:13:41 +0300
-Message-Id: <1312881233-9366-29-git-send-email-eliad@wizery.com> (sfid-20110809_111454_794986_227AFE70)
-In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	Mon, 29 Aug 2011 14:13:11 -0400
+Received: by wwf5 with SMTP id 5so6002082wwf.1
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 11:13:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAEKwDSAXDgUY_Mc2A75x=-1VEMLF3Kd+=dgJOaBs+XOFn58dYw@mail.gmail.com>
+References: <1314236064-6339-1-git-send-email-thomas@cozybit.com>
+	<20110826142210.GE2579@tuxdriver.com>
+	<CAG6hwVM8t=v0_xZuKf-nodZR77R0S8nSUgea9QM5S-vB4h_8jg@mail.gmail.com>
+	<CAEKwDSAXDgUY_Mc2A75x=-1VEMLF3Kd+=dgJOaBs+XOFn58dYw@mail.gmail.com>
+Date: Mon, 29 Aug 2011 11:13:10 -0700
+Message-ID: <CAG6hwVMYaxsY6XcwbU9_nNMCEO0pC_RiQU-QJBPbpdxO9g4rnA@mail.gmail.com> (sfid-20110829_201315_261883_7D185BFA)
+Subject: Re: [PATCH] ath5k: Invoke irqsafe version of ieee80211_tx_status() to
+ avoid deadlock
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, jirislaby@gmail.com,
+	mickflemm@gmail.com, lrodriguez@atheros.com,
+	Javier Cardona <javier@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On Mon, Aug 29, 2011 at 7:09 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Sun, Aug 28, 2011 at 10:07 PM, Thomas Pedersen <thomas@cozybit.com> wrote:
+>> On Fri, Aug 26, 2011 at 7:22 AM, John W. Linville
+>> <linville@tuxdriver.com> wrote:
+>>> On Wed, Aug 24, 2011 at 06:34:24PM -0700, Thomas Pedersen wrote:
+>>>> From: Javier Cardona <javier@cozybit.com>
+>>>>
+>>>> This driver reports transmission status to the upper layer
+>>>> (ath5k_tx_frame_completed()) while holding the lock on the transmission
+>>>> queue (txq->lock).  Under failure conditions, the mesh stack will
+>>>> attempt to send PERR messages to the previous sender of the failed
+>>>> frame.  When that happens the driver will attempt to re-acquire the
+>>>> txq->lock lock causing a deadlock.  There are two possible fixes for
+>>>> this, (1) we could defer the transmission of the PERR frame until the
+>>>> lock is released or (2) release the lock before invoking
+>>>> ieee80211_tx_status().  The ath9k driver implements the second approach
+>>>> (see ath_tx_complete() in ath9k/xmit.c) as well as the rt2x00 and b43
+>>>> drivers.  The iwl driver, on the other hand, avoids this problem by
+>>>> invoking  ieee80211_tx_status_irqsafe() which effectively defers
+>>>> processing of transmission feedback status.  This last approach is the
+>>>> least intrusive is implemented here.
+>>>>
+>>>> Reported by Pedro Larbig (ASPj)
+>>>> ---
+>>>>  drivers/net/wireless/ath/ath5k/base.c |    2 +-
+>>>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>>
+>>> Missing Signed-off-by...
+>>>
+>> Yikes. Also, it looks like ieee80211_tx_status() should not be called
+>> from irq context. Will resubmit a v2 with signoff and comment shortly.
+>
+> I don't get the last statement -- ieee80211_tx_status() -> irqsafe was
 
-In addition, set global HT operation mode via ACX_HT_BSS_OPERATION when
-a change is detected by usermode
+I meant to say "In addition to the above discussion,
+ieee80211_tx_status() should not be called from interrupt context
+anyway".
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/acx.c  |   10 ++++++----
- drivers/net/wireless/wl12xx/acx.h  |    2 +-
- drivers/net/wireless/wl12xx/main.c |   34 +++++++++++++++++++++++++++-------
- 3 files changed, 34 insertions(+), 12 deletions(-)
+> the very change the patch added.  It's running in a bottom half
+> though, not a hard irq.
+>
 
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index 02b9c7e..6a52400 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -1306,27 +1306,29 @@ out:
- 	kfree(acx);
- 	return ret;
- }
- 
- int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
- 				    struct ieee80211_sta_ht_cap *ht_cap,
--				    bool allow_ht_operation)
-+				    bool allow_ht_operation, u8 hlid)
- {
- 	struct wl1271_acx_ht_capabilities *acx;
- 	int ret = 0;
- 	u32 ht_capabilites = 0;
- 
--	wl1271_debug(DEBUG_ACX, "acx ht capabilities setting");
-+	wl1271_debug(DEBUG_ACX, "acx ht capabilities setting "
-+		     "sta supp: %d sta cap: %d", ht_cap->ht_supported,
-+		     ht_cap->cap);
- 
- 	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
- 	if (!acx) {
- 		ret = -ENOMEM;
- 		goto out;
- 	}
- 
--	if (allow_ht_operation) {
-+	if (allow_ht_operation && ht_cap->ht_supported) {
- 		/* no need to translate capabilities - use the spec values */
- 		ht_capabilites = ht_cap->cap;
- 
- 		/*
- 		 * this bit is not employed by the spec but only by FW to
- 		 * indicate peer HT support
-@@ -1335,13 +1337,13 @@ int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
- 
- 		/* get data from A-MPDU parameters field */
- 		acx->ampdu_max_length = ht_cap->ampdu_factor;
- 		acx->ampdu_min_spacing = ht_cap->ampdu_density;
- 	}
- 
--	acx->hlid = wl->sta_hlid;
-+	acx->hlid = hlid;
- 	acx->ht_capabilites = cpu_to_le32(ht_capabilites);
- 
- 	ret = wl1271_cmd_configure(wl, ACX_PEER_HT_CAP, acx, sizeof(*acx));
- 	if (ret < 0) {
- 		wl1271_warning("acx ht capabilities setting failed: %d", ret);
- 		goto out;
-diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
-index ba70f38..943b4d8 100644
---- a/drivers/net/wireless/wl12xx/acx.h
-+++ b/drivers/net/wireless/wl12xx/acx.h
-@@ -1268,13 +1268,13 @@ int wl1271_acx_keep_alive_mode(struct wl1271 *wl, bool enable);
- int wl1271_acx_keep_alive_config(struct wl1271 *wl, u8 index, u8 tpl_valid);
- int wl1271_acx_rssi_snr_trigger(struct wl1271 *wl, bool enable,
- 				s16 thold, u8 hyst);
- int wl1271_acx_rssi_snr_avg_weights(struct wl1271 *wl);
- int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
- 				    struct ieee80211_sta_ht_cap *ht_cap,
--				    bool allow_ht_operation);
-+				    bool allow_ht_operation, u8 hlid);
- int wl1271_acx_set_ht_information(struct wl1271 *wl,
- 				   u16 ht_operation_mode);
- int wl1271_acx_set_ba_initiator_policy(struct wl1271 *wl);
- int wl1271_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
- 					 u16 ssn, bool enable, u8 peer_hlid);
- int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime);
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index d81a735..5d5ace8 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3089,12 +3089,24 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
- 		}
- 	}
- 
- 	ret = wl1271_bss_erp_info_changed(wl, bss_conf, changed);
- 	if (ret < 0)
- 		goto out;
-+
-+	/* Handle HT information change */
-+	if ((changed & BSS_CHANGED_HT) &&
-+	    (bss_conf->channel_type != NL80211_CHAN_NO_HT)) {
-+		ret = wl1271_acx_set_ht_information(wl,
-+					bss_conf->ht_operation_mode);
-+		if (ret < 0) {
-+			wl1271_warning("Set ht information failed %d", ret);
-+			goto out;
-+		}
-+	}
-+
- out:
- 	return;
- }
- 
- /* STA/IBSS mode changes */
- static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
-@@ -3404,38 +3416,42 @@ sta_not_found:
- 			ret = wl1271_cmd_role_stop_dev(wl);
- 			if (ret < 0)
- 				goto out;
- 		}
- 	}
- 
--	/* Handle new association with HT. Do this only after join. */
-+	/* Handle new association with HT. Do this after join. */
- 	if (sta_exists) {
- 		if ((changed & BSS_CHANGED_HT) &&
- 		    (bss_conf->channel_type != NL80211_CHAN_NO_HT)) {
--			ret = wl1271_acx_set_ht_capabilities(wl, &sta_ht_cap,
--							     true);
-+			ret = wl1271_acx_set_ht_capabilities(wl,
-+							     &sta_ht_cap,
-+							     true,
-+							     wl->sta_hlid);
- 			if (ret < 0) {
- 				wl1271_warning("Set ht cap true failed %d",
- 					       ret);
- 				goto out;
- 			}
- 		}
- 		/* handle new association without HT and disassociation */
- 		else if (changed & BSS_CHANGED_ASSOC) {
--			ret = wl1271_acx_set_ht_capabilities(wl, &sta_ht_cap,
--							     false);
-+			ret = wl1271_acx_set_ht_capabilities(wl,
-+							     &sta_ht_cap,
-+							     false,
-+							     wl->sta_hlid);
- 			if (ret < 0) {
- 				wl1271_warning("Set ht cap false failed %d",
- 					       ret);
- 				goto out;
- 			}
- 		}
- 	}
- 
--	/* Handle HT information change. Only after join. */
--	if (sta_exists && (changed & BSS_CHANGED_HT) &&
-+	/* Handle HT information change. Done after join. */
-+	if ((changed & BSS_CHANGED_HT) &&
- 	    (bss_conf->channel_type != NL80211_CHAN_NO_HT)) {
- 		ret = wl1271_acx_set_ht_information(wl,
- 					bss_conf->ht_operation_mode);
- 		if (ret < 0) {
- 			wl1271_warning("Set ht information failed %d", ret);
- 			goto out;
-@@ -3668,12 +3684,16 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
- 		goto out_sleep;
- 
- 	ret = wl1271_cmd_set_peer_state(wl, hlid);
- 	if (ret < 0)
- 		goto out_sleep;
- 
-+	ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, true, hlid);
-+	if (ret < 0)
-+		goto out_sleep;
-+
- out_sleep:
- 	wl1271_ps_elp_sleep(wl);
- 
- out_free_sta:
- 	if (ret < 0)
- 		wl1271_free_sta(wl, hlid);
--- 
-1.7.6.401.g6a319
-
+Even in a bottom half we're still in "interrupt" context, right?
