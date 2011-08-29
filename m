@@ -1,42 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:52792 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751864Ab1HKMbH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 08:31:07 -0400
-Received: by ywf7 with SMTP id 7so1255516ywf.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 05:31:07 -0700 (PDT)
+Received: from nbd.name ([46.4.11.11]:50456 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751436Ab1H2KbN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Aug 2011 06:31:13 -0400
+Message-ID: <4E5B6A6B.7070801@openwrt.org> (sfid-20110829_123117_395322_1A634A04)
+Date: Mon, 29 Aug 2011 12:31:07 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1313063838.2407.852.camel@cumari>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-	<1313063838.2407.852.camel@cumari>
-Date: Thu, 11 Aug 2011 15:31:06 +0300
-Message-ID: <CAB3XZEcpWrXxm9TfHjLO260LH8bAr2_FMsiBfhwRyb8BKcuxpw@mail.gmail.com> (sfid-20110811_143110_772347_2DABC4C3)
-Subject: Re: [PATCH 00/40] wl12xx: move to wl12xx-fw-3
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	rodrigue@qca.qualcomm.com
+Subject: Re: [PATCH v4 2/3] ath9k: merge reset related functions
+References: <1314611896-97031-1-git-send-email-nbd@openwrt.org> <1314611896-97031-2-git-send-email-nbd@openwrt.org> <20110829102809.GA331@vmraj-lnx.users.atheros.com>
+In-Reply-To: <20110829102809.GA331@vmraj-lnx.users.atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 11, 2011 at 2:57 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote:
->> The new wl12xx fw (ver 7.3.0.0.75) had some major api changes.
->> The main change was the addition of multi-role concept, which
->> will later allow using multiple vifs concurrently.
+On 2011-08-29 12:28 PM, Rajkumar Manoharan wrote:
+> On Mon, Aug 29, 2011 at 11:58:15AM +0200, Felix Fietkau wrote:
+>>  reduces unnecessary code duplication
 >>
->> Consequently, this design change caused api changes for most
->> of the api commands, as a new role_id had to be added.
+>>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>>  ---
+>>   drivers/net/wireless/ath/ath9k/main.c |  258 +++++++++++++--------------------
+>>   1 files changed, 100 insertions(+), 158 deletions(-)
 >>
->> This patchset migrates the fw to use the new fw api (a new
->> fw filename is used, as there is no backward compatability
->> with older firmwares).
+>>  diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>>  index 085ec20..4c3671a 100644
+>>  --- a/drivers/net/wireless/ath/ath9k/main.c
+>>  +++ b/drivers/net/wireless/ath/ath9k/main.c
+>>  @@ -212,83 +212,45 @@ static int ath_update_survey_stats(struct ath_softc *sc)
+>>   	return ret;
+>>   }
+>>
+>>  -/*
+>>  - * Set/change channels.  If the channel is really being changed, it's done
+>>  - * by reseting the chip.  To accomplish this we must first cleanup any pending
+>>  - * DMA, then restart stuff.
+>>  -*/
+>>  -static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+>>  -		    struct ath9k_channel *hchan)
+>>  +static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool flush)
+>>   {
+>>   	struct ath_hw *ah = sc->sc_ah;
+>>  -	struct ath_common *common = ath9k_hw_common(ah);
+>>  -	struct ieee80211_conf *conf =&common->hw->conf;
+>>  -	bool fastcc = true, stopped;
+>>  -	struct ieee80211_channel *channel = hw->conf.channel;
+>>  -	struct ath9k_hw_cal_data *caldata = NULL;
+>>  -	int r;
+>>  +	bool ret;
+>>
+>>  -	if (sc->sc_flags&  SC_OP_INVALID)
+>>  -		return -EIO;
+>>  +	ieee80211_stop_queues(sc->hw);
+>>
+>>   	sc->hw_busy_count = 0;
+>>  -
+>>  -	del_timer_sync(&common->ani.timer);
 >
-> Okay, I'm done with my review! Lots of small nitpicking, but this in
-> general looks very good! Thanks a lot for the good work, guys!
->
-thanks a lot for your review.
-i'm working on fixing all the issues, and i'll resubmit.
-
-Eliad.
+> ani timer never be stopped. why did you remove from ath_prepare_reset?
+Must have overlooked it, will send a v5.
