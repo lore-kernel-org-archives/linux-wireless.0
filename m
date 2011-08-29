@@ -1,133 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:63329 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753875Ab1HKIzR (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:50605 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755028Ab1H2UXZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 04:55:17 -0400
-Received: by fxh19 with SMTP id 19so1520964fxh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 01:55:15 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: implement BCM4331 workaround for external PA lines
-Date: Thu, 11 Aug 2011 11:34:15 +0200
-Message-Id: <1313055255-3088-1-git-send-email-zajec5@gmail.com> (sfid-20110811_105526_679436_007DB684)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 29 Aug 2011 16:23:25 -0400
+Received: by yie30 with SMTP id 30so3854760yie.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 13:23:25 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Subject: [PATCH v3 5/7] mac80211: Don't iterate twice over all mpaths when once in sufficient
+Date: Mon, 29 Aug 2011 13:23:07 -0700
+Message-Id: <1314649389-7115-6-git-send-email-javier@cozybit.com> (sfid-20110829_222331_134761_75651067)
+In-Reply-To: <1314649389-7115-1-git-send-email-javier@cozybit.com>
+References: <1314649389-7115-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We need to disable ext. PA lines for reading SPROM. It's disabled by
-default, but this patch allows using bcma after loading wl, which leaves
-workaround enabled.
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/bcma/driver_chipcommon_pmu.c        |   20 +++++++++++++++++++-
- drivers/bcma/sprom.c                        |    6 ++++++
- include/linux/bcma/bcma_driver_chipcommon.h |   18 ++++++++++++++++++
- 3 files changed, 43 insertions(+), 1 deletions(-)
+ net/mac80211/mesh_pathtbl.c |   64 +++++++++++++++++++++++++------------------
+ 1 files changed, 37 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index 5940c81..a3854ff 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -90,6 +90,24 @@ void bcma_pmu_swreg_init(struct bcma_drv_cc *cc)
- 	}
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 598249e..ea9e34a 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -49,7 +49,9 @@ int mesh_paths_generation;
+ 
+ /* This lock will have the grow table function as writer and add / delete nodes
+  * as readers. When reading the table (i.e. doing lookups) we are well protected
+- * by RCU
++ * by RCU.  We need to take this lock when modying the number of buckets
++ * on one of the path tables but we don't need to if adding or removing mpaths
++ * from hash buckets.
+  */
+ static DEFINE_RWLOCK(pathtbl_resize_lock);
+ 
+@@ -817,6 +819,32 @@ void mesh_path_flush_by_nexthop(struct sta_info *sta)
+ 	rcu_read_unlock();
  }
  
-+/* Disable to allow reading SPROM. Don't know the adventages of enabling it. */
-+void bcma_chipco_bcm4331_exp_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable)
++static void mesh_path_node_reclaim(struct rcu_head *rp)
 +{
-+	struct bcma_bus *bus = cc->core->bus;
-+	u32 val;
++	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
++	struct ieee80211_sub_if_data *sdata = node->mpath->sdata;
 +
-+	val = bcma_cc_read32(cc, BCMA_CC_CHIPCTL);
-+	if (enable) {
-+		val |= BCMA_CHIPCTL_4331_EXTPA_EN;
-+		if (bus->chipinfo.pkg == 9 || bus->chipinfo.pkg == 11)
-+			val |= BCMA_CHIPCTL_4331_EXTPA_ON_GPIO2_5;
-+	} else {
-+		val &= ~BCMA_CHIPCTL_4331_EXTPA_EN;
-+		val &= ~BCMA_CHIPCTL_4331_EXTPA_ON_GPIO2_5;
-+	}
-+	bcma_cc_write32(cc, BCMA_CC_CHIPCTL, val);
++	del_timer_sync(&node->mpath->timer);
++	atomic_dec(&sdata->u.mesh.mpaths);
++	kfree(node->mpath);
++	kfree(node);
 +}
 +
- void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
++/* needs to be called with the corresponding hashwlock taken */
++static void __mesh_path_del(struct mesh_table *tbl, struct mpath_node *node)
++{
++	struct mesh_path *mpath;
++	mpath = node->mpath;
++	spin_lock(&mpath->state_lock);
++	mpath->flags |= MESH_PATH_RESOLVING;
++	if (mpath->is_gate)
++		mesh_gate_del(tbl, mpath);
++	hlist_del_rcu(&node->list);
++	call_rcu(&node->rcu, mesh_path_node_reclaim);
++	spin_unlock(&mpath->state_lock);
++	atomic_dec(&tbl->entries);
++}
++
+ static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
  {
- 	struct bcma_bus *bus = cc->core->bus;
-@@ -99,7 +117,7 @@ void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
- 		bcma_chipco_chipctl_maskset(cc, 0, ~0, 0x7);
- 		break;
- 	case 0x4331:
--		pr_err("Enabling Ext PA lines not implemented\n");
-+		/* BCM4331 workaround is SPROM-related, we put it in sprom.c */
- 		break;
- 	case 43224:
- 		if (bus->chipinfo.rev == 0) {
-diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
-index 8b5b785..94c6b3f 100644
---- a/drivers/bcma/sprom.c
-+++ b/drivers/bcma/sprom.c
-@@ -152,6 +152,9 @@ int bcma_sprom_get(struct bcma_bus *bus)
- 	if (!sprom)
- 		return -ENOMEM;
+ 	struct mesh_table *tbl;
+@@ -829,23 +857,15 @@ static void mesh_path_flush(struct ieee80211_sub_if_data *sdata)
+ 	tbl = rcu_dereference(mesh_paths);
+ 	for_each_mesh_entry(tbl, p, node, i) {
+ 		mpath = node->mpath;
+-		if (mpath->sdata == sdata)
+-			mesh_path_del(mpath->dst, mpath->sdata);
++		if (mpath->sdata == sdata) {
++			spin_lock_bh(&tbl->hashwlock[i]);
++			__mesh_path_del(tbl, node);
++			spin_unlock_bh(&tbl->hashwlock[i]);
++		}
+ 	}
+ 	rcu_read_unlock();
+ }
  
-+	if (bus->chipinfo.id == 0x4331)
-+		bcma_chipco_bcm4331_exp_pa_lines_ctl(&bus->drv_cc, false);
-+
- 	/* Most cards have SPROM moved by additional offset 0x30 (48 dwords).
- 	 * According to brcm80211 this applies to cards with PCIe rev >= 6
- 	 * TODO: understand this condition and use it */
-@@ -159,6 +162,9 @@ int bcma_sprom_get(struct bcma_bus *bus)
- 		BCMA_CC_SPROM_PCIE6;
- 	bcma_sprom_read(bus, offset, sprom);
- 
-+	if (bus->chipinfo.id == 0x4331)
-+		bcma_chipco_bcm4331_exp_pa_lines_ctl(&bus->drv_cc, true);
-+
- 	err = bcma_sprom_valid(sprom);
- 	if (err)
- 		goto out;
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 6083725..18efb6c 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -283,6 +283,22 @@
- #define BCMA_CC_PPL_PCHI_OFF		5
- #define BCMA_CC_PPL_PCHI_MASK		0x0000003f
- 
-+/* BCM4331 ChipControl numbers. */
-+#define BCMA_CHIPCTL_4331_BT_COEXIST		BIT(0)	/* 0 disable */
-+#define BCMA_CHIPCTL_4331_SECI			BIT(1)	/* 0 SECI is disabled (JATG functional) */
-+#define BCMA_CHIPCTL_4331_EXT_LNA		BIT(2)	/* 0 disable */
-+#define BCMA_CHIPCTL_4331_SPROM_GPIO13_15	BIT(3)	/* sprom/gpio13-15 mux */
-+#define BCMA_CHIPCTL_4331_EXTPA_EN		BIT(4)	/* 0 ext pa disable, 1 ext pa enabled */
-+#define BCMA_CHIPCTL_4331_GPIOCLK_ON_SPROMCS	BIT(5)	/* set drive out GPIO_CLK on sprom_cs pin */
-+#define BCMA_CHIPCTL_4331_PCIE_MDIO_ON_SPROMCS	BIT(6)	/* use sprom_cs pin as PCIE mdio interface */
-+#define BCMA_CHIPCTL_4331_EXTPA_ON_GPIO2_5	BIT(7)	/* aband extpa will be at gpio2/5 and sprom_dout */
-+#define BCMA_CHIPCTL_4331_OVR_PIPEAUXCLKEN	BIT(8)	/* override core control on pipe_AuxClkEnable */
-+#define BCMA_CHIPCTL_4331_OVR_PIPEAUXPWRDOWN	BIT(9)	/* override core control on pipe_AuxPowerDown */
-+#define BCMA_CHIPCTL_4331_PCIE_AUXCLKEN		BIT(10)	/* pcie_auxclkenable */
-+#define BCMA_CHIPCTL_4331_PCIE_PIPE_PLLDOWN	BIT(11)	/* pcie_pipe_pllpowerdown */
-+#define BCMA_CHIPCTL_4331_BT_SHD0_ON_GPIO4	BIT(16)	/* enable bt_shd0 at gpio4 */
-+#define BCMA_CHIPCTL_4331_BT_SHD1_ON_GPIO5	BIT(17)	/* enable bt_shd1 at gpio5 */
-+
- /* Data for the PMU, if available.
-  * Check availability with ((struct bcma_chipcommon)->capabilities & BCMA_CC_CAP_PMU)
-  */
-@@ -342,6 +358,8 @@ extern void bcma_core_chipcommon_init(struct bcma_drv_cc *cc);
- extern void bcma_chipco_suspend(struct bcma_drv_cc *cc);
- extern void bcma_chipco_resume(struct bcma_drv_cc *cc);
- 
-+void bcma_chipco_bcm4331_exp_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable);
-+
- extern void bcma_chipco_watchdog_timer_set(struct bcma_drv_cc *cc,
- 					  u32 ticks);
+-static void mesh_path_node_reclaim(struct rcu_head *rp)
+-{
+-	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
+-	struct ieee80211_sub_if_data *sdata = node->mpath->sdata;
+-
+-	del_timer_sync(&node->mpath->timer);
+-	atomic_dec(&sdata->u.mesh.mpaths);
+-	kfree(node->mpath);
+-	kfree(node);
+-}
+-
+ static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct mesh_table *tbl;
+@@ -859,12 +879,8 @@ static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
+ 					lockdep_is_held(pathtbl_resize_lock));
+ 	for_each_mesh_entry(tbl, p, node, i) {
+ 		mpath = node->mpath;
+-		if (mpath->sdata != sdata)
+-			continue;
+ 		spin_lock_bh(&tbl->hashwlock[i]);
+-		hlist_del_rcu(&node->list);
+-		call_rcu(&node->rcu, mesh_path_node_reclaim);
+-		atomic_dec(&tbl->entries);
++		__mesh_path_del(tbl, node);
+ 		spin_unlock_bh(&tbl->hashwlock[i]);
+ 	}
+ 	read_unlock_bh(&pathtbl_resize_lock);
+@@ -912,14 +928,7 @@ int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata)
+ 		mpath = node->mpath;
+ 		if (mpath->sdata == sdata &&
+ 		    memcmp(addr, mpath->dst, ETH_ALEN) == 0) {
+-			spin_lock_bh(&mpath->state_lock);
+-			if (mpath->is_gate)
+-				mesh_gate_del(tbl, mpath);
+-			mpath->flags |= MESH_PATH_RESOLVING;
+-			hlist_del_rcu(&node->list);
+-			call_rcu(&node->rcu, mesh_path_node_reclaim);
+-			atomic_dec(&tbl->entries);
+-			spin_unlock_bh(&mpath->state_lock);
++			__mesh_path_del(tbl, node);
+ 			goto enddel;
+ 		}
+ 	}
+@@ -1160,6 +1169,7 @@ void mesh_path_expire(struct ieee80211_sub_if_data *sdata)
+ 		    (!(mpath->flags & MESH_PATH_FIXED)) &&
+ 		     time_after(jiffies, mpath->exp_time + MESH_PATH_EXPIRE))
+ 			mesh_path_del(mpath->dst, mpath->sdata);
++	}
+ 	rcu_read_unlock();
+ }
  
 -- 
-1.7.3.4
+1.7.6
 
