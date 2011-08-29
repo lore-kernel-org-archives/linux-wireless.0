@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:38552 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751455Ab1HHM0b convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:49355 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754829Ab1H2TZd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 08:26:31 -0400
+	Mon, 29 Aug 2011 15:25:33 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Joe Perches <joe@perches.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Walter Harms <wharms@bfs.de>
+Date: Mon, 29 Aug 2011 12:25:23 -0700
+Subject: RE: [PATCH v2] mwifiex: replace kmalloc & memcpy sequence with
+ kmemdup
+Message-ID: <477F20668A386D41ADCC57781B1F70430815013582@SC-VEXCH1.marvell.com> (sfid-20110829_212542_956609_0DFED8CD)
+References: <1314301042-15021-1-git-send-email-bzhao@marvell.com>
+ <1314315908.4637.23.camel@Joe-Laptop>
+In-Reply-To: <1314315908.4637.23.camel@Joe-Laptop>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdU0Cba9xFjfD6Fq1MqE5xZeDnsdN8qipmR6jQH9J6X4vQ@mail.gmail.com>
-References: <201107230012.p6N0CZSM002466@hera.kernel.org>
-	<CAMuHMdU0Cba9xFjfD6Fq1MqE5xZeDnsdN8qipmR6jQH9J6X4vQ@mail.gmail.com>
-Date: Mon, 8 Aug 2011 14:26:30 +0200
-Message-ID: <CACna6ryx4k5fFmqbDPZ3pdDA_SbjZQQVaJNQyALkx0i8+S-7hA@mail.gmail.com> (sfid-20110808_142636_657060_B6036F5A)
-Subject: Re: b43: LCN-PHY add place for new PHY support
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 8 sierpnia 2011 13:57 użytkownik Geert Uytterhoeven
-<geert@linux-m68k.org> napisał:
-> On Sat, Jul 23, 2011 at 02:12, Linux Kernel Mailing List
-> <linux-kernel@vger.kernel.org> wrote:
->> Gitweb:     http://git.kernel.org/linus/1d738e64f3d957d56c1b51e64ebdef986a8760e3
->> Commit:     1d738e64f3d957d56c1b51e64ebdef986a8760e3
->> Parent:     0cd20a278e1ef9da9f6a987942794c9d65af8c4d
->> Author:     Rafał Miłecki <zajec5@gmail.com>
->> AuthorDate: Thu Jul 7 15:25:27 2011 +0200
->> Committer:  John W. Linville <linville@tuxdriver.com>
->> CommitDate: Fri Jul 8 11:11:25 2011 -0400
->
->> diff --git a/drivers/net/wireless/b43/phy_lcn.h b/drivers/net/wireless/b43/phy_lcn.h
->> new file mode 100644
->> index 0000000..c046c2a
->> --- /dev/null
->> +++ b/drivers/net/wireless/b43/phy_lcn.h
->
->> \ No newline at end of file
->
-> Woops...
->
-> gcc/cpp also complains:
->
-> drivers/net/wireless/b43/phy_lcn.h:14:28: warning: no newline at end of file
-
-Sorry, I didn't know we want empty lines at the end. I also don't
-think it's mentioned in kernel's CodingStyle.
-
-I'll fix that when doing LCN stuff, if you agree separated patch is not needed.
-
-My gcc didn't complain :|
-
--- 
-Rafał
+SGkgSm9lLA0KDQpUaGFua3MgZm9yIHlvdXIgY29tbWVudC4NCg0KPiA+IFNlcXVlbmNlIG9mIGtt
+YWxsb2Mva3phbGxvYyBhbmQgbWVtY3B5IGlzIHJlcGxhY2VkIHdpdGgNCj4gPiBrbWVtZHVwLg0K
+PiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L3NjYW4uYyBiL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Nhbi5jDQo+IFtdDQo+ID4gQEAgLTE5ODYsMTcg
+KzE5ODYsMjAgQEAgbXdpZmlleF9zYXZlX2N1cnJfYmNuKHN0cnVjdCBtd2lmaWV4X3ByaXZhdGUg
+KnByaXYpDQo+ID4gIAkJcHJpdi0+Y3Vycl9iY25fc2l6ZSA9IGN1cnJfYnNzLT5iZWFjb25fYnVm
+X3NpemU7DQo+ID4NCj4gPiAgCQlrZnJlZShwcml2LT5jdXJyX2Jjbl9idWYpOw0KPiA+IC0JCXBy
+aXYtPmN1cnJfYmNuX2J1ZiA9IGt6YWxsb2MoY3Vycl9ic3MtPmJlYWNvbl9idWZfc2l6ZSwNCj4g
+PiArDQo+ID4gKwkJcHJpdi0+Y3Vycl9iY25fYnVmID0ga21lbWR1cChjdXJyX2Jzcy0+YmVhY29u
+X2J1ZiwNCj4gPiArCQkJCQkJY3Vycl9ic3MtPmJlYWNvbl9idWZfc2l6ZSwNCj4gPiAgCQkJCQkJ
+R0ZQX0tFUk5FTCk7DQo+IA0KPiBJIHRoaW5rIHRoaXMgYmxvY2ssIGJlY2F1c2Ugb2YgdGhlIG5l
+dyBlbHNlIGJlbG93IGl0LA0KPiBpc24ndCBhbiBpbXByb3ZlbWVudC4NCg0KT0suIFRoZW4gd2Ug
+Y2FuIGp1c3QgdXNlIGttYWxsb2MgaW5zdGVhZCBvZiBremFsbG9jIHRvIHNhdmUgYSBidWZmZXIg
+emVyb2luZyBvdXQgaW4gdjMuDQoNCj4gDQo+IFRoaXMga2ZyZWUva3phbGxvYyBzaG91bGQgcHJv
+YmFibHkganVzdCBiZSBrcmVhbGxvYyB3aXRoDQo+IHRoZSBtZW1zZXQgdW5jaGFuZ2VkLg0KDQpU
+aGUga3JlYWxsb2MgZG9lc24ndCBzZWVtIHN1aXRhYmxlIGhlcmUgYmVjYXVzZSBrcmVhbGxvYyBk
+b2VzIGEgdXNlbGVzcyBtZW1jcHkuDQoNClRoYW5rcywNCkJpbmcNCg0KPiANCj4gPiAgCQlpZiAo
+IXByaXYtPmN1cnJfYmNuX2J1Zikgew0KPiA+ICAJCQlkZXZfZXJyKHByaXYtPmFkYXB0ZXItPmRl
+diwNCj4gPiAgCQkJCQkiZmFpbGVkIHRvIGFsbG9jIGN1cnJfYmNuX2J1ZlxuIik7DQo+ID4gIAkJ
+CXJldHVybjsNCj4gPiAgCQl9DQo+ID4gKwl9IGVsc2Ugew0KPiA+ICsJCW1lbWNweShwcml2LT5j
+dXJyX2Jjbl9idWYsIGN1cnJfYnNzLT5iZWFjb25fYnVmLA0KPiA+ICsJCQljdXJyX2Jzcy0+YmVh
+Y29uX2J1Zl9zaXplKTsNCj4gPiAgCX0NCj4gPg0KPiA+IC0JbWVtY3B5KHByaXYtPmN1cnJfYmNu
+X2J1ZiwgY3Vycl9ic3MtPmJlYWNvbl9idWYsDQo+ID4gLQkJY3Vycl9ic3MtPmJlYWNvbl9idWZf
+c2l6ZSk7DQo+ID4gIAlkZXZfZGJnKHByaXYtPmFkYXB0ZXItPmRldiwgImluZm86IGN1cnJlbnQg
+YmVhY29uIHNhdmVkICVkXG4iLA0KPiA+ICAJCXByaXYtPmN1cnJfYmNuX3NpemUpOw0KPiANCg0K
