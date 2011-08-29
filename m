@@ -1,63 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3103 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752534Ab1HLNfO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2011 09:35:14 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 00/14] staging: brcm80211: brcmfmac driver cleanup
-Date: Fri, 12 Aug 2011 15:34:47 +0200
-Message-ID: <1313156101-16817-1-git-send-email-arend@broadcom.com> (sfid-20110812_154257_195763_87FE65E2)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from perches-mx.perches.com ([206.117.179.246]:55923 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754500Ab1H2VWM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Aug 2011 17:22:12 -0400
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 22/24] wireless: Remove unnecessary OOM logging messages
+Date: Mon, 29 Aug 2011 14:17:41 -0700
+Message-Id: <c451f15431dc866c1345e6d5ec199c373af76166.1314650069.git.joe@perches.com> (sfid-20110829_232308_349961_7A3631F6)
+In-Reply-To: <cover.1314650069.git.joe@perches.com>
+References: <cover.1314650069.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several cleanup patches to reduce code for the brcmfmac driver and
-get rid of a remaining checkpatch warning. The driver sources should
-be clear from checkpatch issue now.
+Removing unnecessary messages saves code and text.
 
-This series applies to staging-next and depends on the following patch set:
+Site specific OOM messages are duplications of a generic MM
+out of memory message and aren't really useful, so just
+delete them.
 
-Message-ID: <1312811946-16713-1-git-send-email-arend@broadcom.com>
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ net/wireless/lib80211_crypt_ccmp.c |    2 --
+ net/wireless/lib80211_crypt_tkip.c |    4 ----
+ net/wireless/lib80211_crypt_wep.c  |    4 ----
+ net/wireless/util.c                |    5 ++---
+ 4 files changed, 2 insertions(+), 13 deletions(-)
 
-Arend van Spriel (1):
-  staging: brcm80211: use wait queues instead of semaphores in
-    wl_cfg80211.c
-
-Franky Lin (13):
-  staging: brcm80211: remove iovar IOV_BLOCKSIZE in brcmfmac
-  staging: brcm80211: remove struct sdioh_info from brcmfmac
-  staging: brcm80211: remove global var gInstance from brcmfmac
-  staging: brcm80211: remove wext traces in fullmac
-  staging: brcm80211: absorb brcmf_sdioh_iovar_op into
-    brcmf_sdcard_iovar_op
-  staging: brcm80211: absorb brcmf_sdioh_interrupt_register into
-    brcmf_sdcard_intr_reg
-  staging: brcm80211: absorb brcmf_sdioh_interrupt_deregister into
-    brcmf_sdcard_intr_dereg
-  staging: brcm80211: absorb brcmf_sdioh_abort into brcmf_sdcard_abort
-  staging: brcm80211: remove dead code from dhd_sdio.c
-  staging: brcm80211: remove wrapper functions in bcmsdh_sdmmc.c
-  staging: brcm80211: remove unused parameter from data interface in
-    fullmac
-  staging: brcm80211: remove dead SDTEST code from fullmac
-  staging: brcm80211: remove unused func parameter in wl_cfg80211 of
-    fullmac
-
- drivers/staging/brcm80211/Kconfig                 |    2 -
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c       |  197 +++++-
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |  555 ++++------------
- drivers/staging/brcm80211/brcmfmac/dhd.h          |   37 -
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |  744 ++-------------------
- drivers/staging/brcm80211/brcmfmac/sdio_host.h    |   80 +--
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c  |   74 ++-
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h  |    5 +-
- 8 files changed, 409 insertions(+), 1285 deletions(-)
-
+diff --git a/net/wireless/lib80211_crypt_ccmp.c b/net/wireless/lib80211_crypt_ccmp.c
+index dacb3b4..755738d 100644
+--- a/net/wireless/lib80211_crypt_ccmp.c
++++ b/net/wireless/lib80211_crypt_ccmp.c
+@@ -77,8 +77,6 @@ static void *lib80211_ccmp_init(int key_idx)
+ 
+ 	priv->tfm = crypto_alloc_cipher("aes", 0, CRYPTO_ALG_ASYNC);
+ 	if (IS_ERR(priv->tfm)) {
+-		printk(KERN_DEBUG "lib80211_crypt_ccmp: could not allocate "
+-		       "crypto API aes\n");
+ 		priv->tfm = NULL;
+ 		goto fail;
+ 	}
+diff --git a/net/wireless/lib80211_crypt_tkip.c b/net/wireless/lib80211_crypt_tkip.c
+index 7ea4f2b..3873484 100644
+--- a/net/wireless/lib80211_crypt_tkip.c
++++ b/net/wireless/lib80211_crypt_tkip.c
+@@ -101,7 +101,6 @@ static void *lib80211_tkip_init(int key_idx)
+ 	priv->tx_tfm_arc4 = crypto_alloc_blkcipher("ecb(arc4)", 0,
+ 						CRYPTO_ALG_ASYNC);
+ 	if (IS_ERR(priv->tx_tfm_arc4)) {
+-		printk(KERN_DEBUG pr_fmt("could not allocate crypto API arc4\n"));
+ 		priv->tx_tfm_arc4 = NULL;
+ 		goto fail;
+ 	}
+@@ -109,7 +108,6 @@ static void *lib80211_tkip_init(int key_idx)
+ 	priv->tx_tfm_michael = crypto_alloc_hash("michael_mic", 0,
+ 						 CRYPTO_ALG_ASYNC);
+ 	if (IS_ERR(priv->tx_tfm_michael)) {
+-		printk(KERN_DEBUG pr_fmt("could not allocate crypto API michael_mic\n"));
+ 		priv->tx_tfm_michael = NULL;
+ 		goto fail;
+ 	}
+@@ -117,7 +115,6 @@ static void *lib80211_tkip_init(int key_idx)
+ 	priv->rx_tfm_arc4 = crypto_alloc_blkcipher("ecb(arc4)", 0,
+ 						CRYPTO_ALG_ASYNC);
+ 	if (IS_ERR(priv->rx_tfm_arc4)) {
+-		printk(KERN_DEBUG pr_fmt("could not allocate crypto API arc4\n"));
+ 		priv->rx_tfm_arc4 = NULL;
+ 		goto fail;
+ 	}
+@@ -125,7 +122,6 @@ static void *lib80211_tkip_init(int key_idx)
+ 	priv->rx_tfm_michael = crypto_alloc_hash("michael_mic", 0,
+ 						 CRYPTO_ALG_ASYNC);
+ 	if (IS_ERR(priv->rx_tfm_michael)) {
+-		printk(KERN_DEBUG pr_fmt("could not allocate crypto API michael_mic\n"));
+ 		priv->rx_tfm_michael = NULL;
+ 		goto fail;
+ 	}
+diff --git a/net/wireless/lib80211_crypt_wep.c b/net/wireless/lib80211_crypt_wep.c
+index 2f265e0..c130401 100644
+--- a/net/wireless/lib80211_crypt_wep.c
++++ b/net/wireless/lib80211_crypt_wep.c
+@@ -50,16 +50,12 @@ static void *lib80211_wep_init(int keyidx)
+ 
+ 	priv->tx_tfm = crypto_alloc_blkcipher("ecb(arc4)", 0, CRYPTO_ALG_ASYNC);
+ 	if (IS_ERR(priv->tx_tfm)) {
+-		printk(KERN_DEBUG "lib80211_crypt_wep: could not allocate "
+-		       "crypto API arc4\n");
+ 		priv->tx_tfm = NULL;
+ 		goto fail;
+ 	}
+ 
+ 	priv->rx_tfm = crypto_alloc_blkcipher("ecb(arc4)", 0, CRYPTO_ALG_ASYNC);
+ 	if (IS_ERR(priv->rx_tfm)) {
+-		printk(KERN_DEBUG "lib80211_crypt_wep: could not allocate "
+-		       "crypto API arc4\n");
+ 		priv->rx_tfm = NULL;
+ 		goto fail;
+ 	}
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 844ddb0..4252765 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -513,10 +513,9 @@ int ieee80211_data_from_8023(struct sk_buff *skb, const u8 *addr,
+ 		if (head_need)
+ 			skb_orphan(skb);
+ 
+-		if (pskb_expand_head(skb, head_need, 0, GFP_ATOMIC)) {
+-			pr_err("failed to reallocate Tx buffer\n");
++		if (pskb_expand_head(skb, head_need, 0, GFP_ATOMIC))
+ 			return -ENOMEM;
+-		}
++
+ 		skb->truesize += head_need;
+ 	}
+ 
 -- 
-1.7.4.1
-
+1.7.6.405.gc1be0
 
