@@ -1,52 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18530 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25290 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751384Ab1HVF3h (ORCPT
+	with ESMTP id S1756017Ab1H3TDp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 01:29:37 -0400
-Date: Mon, 22 Aug 2011 10:59:19 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<rodrigue@qca.qualcomm.com>, <senthilb@qca.qualcomm.com>,
-	<rmanohar@qca.qualcomm.com>, <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] ath9k_htc: Fix few possible memory leaks
-Message-ID: <20110822052918.GA30951@vasanth-laptop> (sfid-20110822_072947_080775_C0EB859F)
-References: <1313942085-6238-1-git-send-email-mohammed@qca.qualcomm.com>
+	Tue, 30 Aug 2011 15:03:45 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v2 16/22] ath6kl: Add support for new P2P iftypes in mode changes
+Date: Tue, 30 Aug 2011 21:58:05 +0300
+Message-ID: <1314730691-12089-17-git-send-email-jouni@qca.qualcomm.com> (sfid-20110830_210348_591267_106CFA64)
+In-Reply-To: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1313942085-6238-1-git-send-email-mohammed@qca.qualcomm.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 21, 2011 at 09:24:45PM +0530, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-> 
-> still there are few other memory leaks which will be fixed
-> very soon
-> 
-> Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->  drivers/net/wireless/ath/ath9k/htc_hst.c |   13 ++++++++-----
->  drivers/net/wireless/ath/ath9k/wmi.c     |    3 ++-
->  2 files changed, 10 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-> index 1b90ed8..e435c9b 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-> @@ -169,13 +169,14 @@ static int htc_config_pipe_credits(struct htc_target *target)
->  	time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
->  	if (!time_left) {
->  		dev_err(target->dev, "HTC credit config timeout\n");
-> -		return -ETIMEDOUT;
-> +		ret = -ETIMEDOUT;
-> +		goto err;
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
 
-Are you sure we have to free the skb upon timeout?. It looks like
-it is already taken care in ath9k_htc_txcompletion_cb(). The same
-may apply to your other changes as well.
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 2d44397..72735ee 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -451,7 +451,8 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
+ 	}
+ 
+ 	if (nw_type & INFRA_NETWORK) {
+-		if (ar->wdev->iftype != NL80211_IFTYPE_STATION) {
++		if (ar->wdev->iftype != NL80211_IFTYPE_STATION &&
++		    ar->wdev->iftype != NL80211_IFTYPE_P2P_CLIENT) {
+ 			ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+ 				   "%s: ath6k not in station mode\n", __func__);
+ 			return;
+@@ -612,7 +613,8 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
+ 	}
+ 
+ 	if (ar->nw_type & INFRA_NETWORK) {
+-		if (ar->wdev->iftype != NL80211_IFTYPE_STATION) {
++		if (ar->wdev->iftype != NL80211_IFTYPE_STATION &&
++		    ar->wdev->iftype != NL80211_IFTYPE_P2P_CLIENT) {
+ 			ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+ 				   "%s: ath6k not in station mode\n", __func__);
+ 			return;
+@@ -1206,6 +1208,12 @@ static int ath6kl_cfg80211_change_iface(struct wiphy *wiphy,
+ 	case NL80211_IFTYPE_ADHOC:
+ 		ar->next_mode = ADHOC_NETWORK;
+ 		break;
++	case NL80211_IFTYPE_P2P_CLIENT:
++		ar->next_mode = INFRA_NETWORK;
++		break;
++	case NL80211_IFTYPE_P2P_GO:
++		ar->next_mode = AP_NETWORK;
++		break;
+ 	default:
+ 		ath6kl_err("invalid interface type %u\n", type);
+ 		return -EOPNOTSUPP;
+-- 
+1.7.4.1
 
-Vasanth
