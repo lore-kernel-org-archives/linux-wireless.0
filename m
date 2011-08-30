@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:65315 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751528Ab1HOUKD (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:9351 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738Ab1H3KZd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 16:10:03 -0400
-Received: by vxi9 with SMTP id 9so4133155vxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2011 13:10:03 -0700 (PDT)
-Message-ID: <4E497D17.3040305@lwfinger.net> (sfid-20110815_221007_324881_F5475AA7)
-Date: Mon, 15 Aug 2011 15:09:59 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 30 Aug 2011 06:25:33 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	<stable@kernel.org>, Adrian Chadd <adrian@freebsd.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH] ath9k_hw: Fix fast clock support for AR9280 v2.0+
+Date: Tue, 30 Aug 2011 15:55:58 +0530
+Message-ID: <1314699958-4951-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20110830_122537_169391_773D312D)
 MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: Hosting wl driver, part of GPL package
-References: <CACna6rwvjRm+yLyz-sbQjmot8ErhfLN5E0NgtW3kbgjPy+JwLA@mail.gmail.com> <CAFtRNNzb9c_PskJ+9SJKpM2VryzHthii2SsiMc4Pp8ifn6u19A@mail.gmail.com>
-In-Reply-To: <CAFtRNNzb9c_PskJ+9SJKpM2VryzHthii2SsiMc4Pp8ifn6u19A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/15/2011 03:02 PM, Nick Kossifidis wrote:
->
-> You could apply for space at www.kernel.org...
->
-> https://accounts.kernel.org/
->
-> If you don't want to go through the process I can upload them for you
-> in my space...
-> http://www.kernel.org/pub/linux/kernel/people/mickflemm/
->
-> I also think you can attach files on http://wireless.kernel.org but
-> I'm not sure.
+To enable fast clock support on 5GHz for AR9280 v2.0+ chips,
+mac version alone is not sufficient. It also depends on eeprom
+values.
 
-I have an account at kernel.org. The problem there is that these are not open 
-source, thus we would need special permission to upload them.
+Cc: stable@kernel.org
+Cc: Adrian Chadd <adrian@freebsd.org>
+Cc: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 284d2a4..d8d776f9 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2184,7 +2184,10 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 			pCap->hw_caps |= ATH9K_HW_CAP_PAPRD;
+ 	} else {
+ 		pCap->tx_desc_len = sizeof(struct ath_desc);
+-		if (AR_SREV_9280_20(ah))
++		if (AR_SREV_9280_20(ah) &&
++		    ((ah->eep_ops->get_eeprom(ah, EEP_MINOR_REV) <=
++					      AR5416_EEP_MINOR_VER_16) ||
++		     ah->eep_ops->get_eeprom(ah, EEP_FSTCLK_5G)))
+ 			pCap->hw_caps |= ATH9K_HW_CAP_FASTCLOCK;
+ 	}
+ 
+-- 
+1.7.6.1
+
