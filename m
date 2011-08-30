@@ -1,64 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:46204 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755479Ab1HBVwg (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:58545 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751446Ab1H3JBg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 17:52:36 -0400
-Date: Tue, 02 Aug 2011 16:52:33 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: gentoo.lubomir@googlemail.com, s.L-H@gmx.de,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl892cu: New USB IDs
-Message-ID: <4e3871a1.eNDdeH4ZkLsNMODL%Larry.Finger@lwfinger.net> (sfid-20110802_235239_845962_6E8D50F7)
+	Tue, 30 Aug 2011 05:01:36 -0400
+Received: by wwf5 with SMTP id 5so6575479wwf.1
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 02:01:35 -0700 (PDT)
+From: Florian Fainelli <florian@openwrt.org>
+To: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
+Subject: Re: [PATCH] ath9k: add missing AR9340 in ath_mac_bb_names
+Date: Tue, 30 Aug 2011 11:01:27 +0200
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	nbd@openwrt.org
+References: <201108252133.48605.florian@openwrt.org>
+In-Reply-To: <201108252133.48605.florian@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201108301101.27843.florian@openwrt.org> (sfid-20110830_110146_413653_AF21BEAB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes several problems in the USB_DEVICE table, including missing IDs,
-reversed vendor/product codes, and a duplicate ID.
+Luis, John,
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+On Thursday 25 August 2011 21:33:48 Florian Fainelli wrote:
+> AR9340 is not listed in ath_mac_bb_names, which leads to such a message:
+> ieee80211 phy0: Atheros AR???? Rev:0 mem=0xb8100000, irq=2
+> 
+> Signed-off-by: Florian Fainelli <florian@openwrt.org>
 
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -281,6 +281,8 @@ static struct usb_device_id rtl8192c_usb
- 	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x817d, rtl92cu_hal_cfg)},
- 	/* 8188CE-VAU USB minCard (b/g mode only) */
- 	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x817e, rtl92cu_hal_cfg)},
-+	/* 8188RU in Alfa AWUS036NHR */
-+	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x817f, rtl92cu_hal_cfg)},
- 	/* 8188 Combo for BC4 */
- 	{RTL_USB_DEVICE(USB_VENDER_ID_REALTEK, 0x8754, rtl92cu_hal_cfg)},
- 
-@@ -303,20 +305,23 @@ static struct usb_device_id rtl8192c_usb
- 	{RTL_USB_DEVICE(0x0eb0, 0x9071, rtl92cu_hal_cfg)}, /*NO Brand - Etop*/
- 	/* HP - Lite-On ,8188CUS Slim Combo */
- 	{RTL_USB_DEVICE(0x103c, 0x1629, rtl92cu_hal_cfg)},
-+	{RTL_USB_DEVICE(0x13d3, 0x3357, rtl92cu_hal_cfg)}, /* AzureWave */
- 	{RTL_USB_DEVICE(0x2001, 0x3308, rtl92cu_hal_cfg)}, /*D-Link - Alpha*/
- 	{RTL_USB_DEVICE(0x2019, 0xab2a, rtl92cu_hal_cfg)}, /*Planex - Abocom*/
- 	{RTL_USB_DEVICE(0x2019, 0xed17, rtl92cu_hal_cfg)}, /*PCI - Edimax*/
- 	{RTL_USB_DEVICE(0x20f4, 0x648b, rtl92cu_hal_cfg)}, /*TRENDnet - Cameo*/
- 	{RTL_USB_DEVICE(0x7392, 0x7811, rtl92cu_hal_cfg)}, /*Edimax - Edimax*/
--	{RTL_USB_DEVICE(0x3358, 0x13d3, rtl92cu_hal_cfg)}, /*Azwave 8188CE-VAU*/
-+	{RTL_USB_DEVICE(0x13d3, 0x3358, rtl92cu_hal_cfg)}, /*Azwave 8188CE-VAU*/
- 	/* Russian customer -Azwave (8188CE-VAU  b/g mode only) */
--	{RTL_USB_DEVICE(0x3359, 0x13d3, rtl92cu_hal_cfg)},
-+	{RTL_USB_DEVICE(0x13d3, 0x3359, rtl92cu_hal_cfg)},
-+	{RTL_USB_DEVICE(0x4855, 0x0090, rtl92cu_hal_cfg)}, /* Feixun */
-+	{RTL_USB_DEVICE(0x4855, 0x0091, rtl92cu_hal_cfg)}, /* NetweeN-Feixun */
-+	{RTL_USB_DEVICE(0x9846, 0x9041, rtl92cu_hal_cfg)}, /* Netgear Cameo */
- 
- 	/****** 8192CU ********/
- 	{RTL_USB_DEVICE(0x0586, 0x341f, rtl92cu_hal_cfg)}, /*Zyxel -Abocom*/
- 	{RTL_USB_DEVICE(0x07aa, 0x0056, rtl92cu_hal_cfg)}, /*ATKK-Gemtek*/
- 	{RTL_USB_DEVICE(0x07b8, 0x8178, rtl92cu_hal_cfg)}, /*Funai -Abocom*/
--	{RTL_USB_DEVICE(0x07b8, 0x8178, rtl92cu_hal_cfg)}, /*Abocom -Abocom*/
- 	{RTL_USB_DEVICE(0x2001, 0x3307, rtl92cu_hal_cfg)}, /*D-Link-Cameo*/
- 	{RTL_USB_DEVICE(0x2001, 0x3309, rtl92cu_hal_cfg)}, /*D-Link-Alpha*/
- 	{RTL_USB_DEVICE(0x2001, 0x330a, rtl92cu_hal_cfg)}, /*D-Link-Alpha*/
+Can you pick this up? Thanks.
+
+> ---
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.c
+> b/drivers/net/wireless/ath/ath9k/hw.c index 88100cc..18394d1 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> @@ -2753,6 +2753,7 @@ static struct {
+>  	{ AR_SREV_VERSION_9271,         "9271" },
+>  	{ AR_SREV_VERSION_9300,         "9300" },
+>  	{ AR_SREV_VERSION_9330,         "9330" },
+> +	{ AR_SREV_VERSION_9340,		"9340" },
+>  	{ AR_SREV_VERSION_9485,         "9485" },
+>  };
+
+-- 
+Florian
