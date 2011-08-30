@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44641 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751065Ab1H0IZi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Aug 2011 04:25:38 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, rmanohar@qca.qualcomm.com
-Subject: [PATCH] ath9k: fix regression in sending aggregated packets
-Date: Sat, 27 Aug 2011 10:25:27 +0200
-Message-Id: <1314433527-71007-1-git-send-email-nbd@openwrt.org> (sfid-20110827_102547_970791_56B4120B)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47946 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755473Ab1H3SAY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Aug 2011 14:00:24 -0400
+Date: Tue, 30 Aug 2011 13:48:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Florian Fainelli <florian@openwrt.org>
+Cc: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, nbd@openwrt.org
+Subject: Re: [PATCH] ath9k: add missing AR9340 in ath_mac_bb_names
+Message-ID: <20110830174810.GA2660@tuxdriver.com> (sfid-20110830_200109_338654_1145BACB)
+References: <201108252133.48605.florian@openwrt.org>
+ <201108301101.27843.florian@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201108301101.27843.florian@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The recent commit "ath9k: Send legacy rated frames as unaggregated"
-introduced a check to ensure that packets with non-MCS rates set in
-the rate series will not be aggregated. However, it failed to check
-if the rate series is valid before testing the flags, thus breaking
-aggregation for normal MCS-only packets if the last series is unset.
+On Tue, Aug 30, 2011 at 11:01:27AM +0200, Florian Fainelli wrote:
+> Luis, John,
+> 
+> On Thursday 25 August 2011 21:33:48 Florian Fainelli wrote:
+> > AR9340 is not listed in ath_mac_bb_names, which leads to such a message:
+> > ieee80211 phy0: Atheros AR???? Rev:0 mem=0xb8100000, irq=2
+> > 
+> > Signed-off-by: Florian Fainelli <florian@openwrt.org>
+> 
+> Can you pick this up? Thanks.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+Did you actually check to see if it had been merged into wireless-next?
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 5e29829..ac393a6 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -582,7 +582,10 @@ static bool ath_lookup_legacy(struct ath_buf *bf)
- 	tx_info = IEEE80211_SKB_CB(skb);
- 	rates = tx_info->control.rates;
- 
--	for (i = 3; i >= 0; i--) {
-+	for (i = 0; i < 4; i++) {
-+		if (!rates[i].count || rates[i].idx < 0)
-+			break;
-+
- 		if (!(rates[i].flags & IEEE80211_TX_RC_MCS))
- 			return true;
- 	}
+commit 397e5d5b93ba99ad3dc56f1e294f487e77d2daa8
+Author: Florian Fainelli <florian@openwrt.org>
+Date:   Thu Aug 25 21:33:48 2011 +0200
+
+    ath9k: add missing AR9340 in ath_mac_bb_names
+    
+    AR9340 is not listed in ath_mac_bb_names, which leads to such a message:
+    ieee80211 phy0: Atheros AR???? Rev:0 mem=0xb8100000, irq=2
+    
+    Signed-off-by: Florian Fainelli <florian@openwrt.org>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
 -- 
-1.7.3.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
