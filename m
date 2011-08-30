@@ -1,100 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50929 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753617Ab1HYSsK (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:61678 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751180Ab1H3EXV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 14:48:10 -0400
-To: Javier Cardona <javier@cozybit.com>
-Subject: Re: [PATCH 1/9] mac80211: Fix RCU pointer dereference in  =?UTF-8?Q?mesh=5Fpath=5Fdiscard=5Fframe=28=29?=
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- format=flowed
-Date: Thu, 25 Aug 2011 11:48:07 -0700
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: Thomas Pedersen <thomas@cozybit.com>,
-	<linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>
-In-Reply-To: <CAPjQAd9gdreTe-wYFV+fg7X9opZ-m4EeBiqM5r_nBQ_jNrV_zA@mail.gmail.com>
- (sfid-20110825_204603_660695_70C76B42)
-References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
- <1314236452-7226-2-git-send-email-thomas@cozybit.com>
- <f72a42677c7419161cc9b7f79d93e812@secure.sipsolutions.net>
- <CAPjQAd_Wxpu=Kt6+PKcffNiqredMpPZ2-xWrq_jSsSCzNLBvZQ@mail.gmail.com>
- <5d9c06a899229693c241d11aeb88dc90@secure.sipsolutions.net>
- <CAPjQAd9gdreTe-wYFV+fg7X9opZ-m4EeBiqM5r_nBQ_jNrV_zA@mail.gmail.com>
- (sfid-20110825_204603_660695_70C76B42)
-Message-ID: <98bfce172924dfc22c4e69fbfb5e117a@secure.sipsolutions.net>
+	Tue, 30 Aug 2011 00:23:21 -0400
+Subject: Re: BQL crap and wireless
+Mime-Version: 1.0 (Apple Message framework v1244.3)
+Content-Type: text/plain; charset=US-ASCII
+From: Andrew McGregor <andrewmcgr@gmail.com>
+In-Reply-To: <CAJ-Vmonwur-SXddNwjPEidCMqes+PwbRWFBddfdwTp2jOMu64g@mail.gmail.com>
+Date: Tue, 30 Aug 2011 16:23:14 +1200
+Cc: Tom Herbert <therbert@google.com>, Jim Gettys <jg@freedesktop.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Dave Taht <dave.taht@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Matt Smith <smithm@qca.qualcomm.com>,
+	Kevin Hayes <hayes@qca.qualcomm.com>,
+	Derek Smithies <derek@indranet.co.nz>, netdev@vger.kernel.org
+Message-Id: <5DE4D38D-82A8-413B-98A4-A544C40D3827@gmail.com> (sfid-20110830_062326_392226_7751E8D8)
+References: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com> <CAB=NE6VwWu5+Hk7=3ghkgiXss9kCqGyS-RWPYtyHRhDsx5r2rA@mail.gmail.com> <CAA93jw7c+Nxc6ZbWZWsQ+F78AoPWU=quSRaOUpT0yRcwJOXsGQ@mail.gmail.com> <4E5C3B47.1050809@freedesktop.org> <CA+mtBx-j_+mrNpntR7CfYOromDnM-ZGzvebpUCjC8Qf14X6u9g@mail.gmail.com> <CAJ-Vmonwur-SXddNwjPEidCMqes+PwbRWFBddfdwTp2jOMu64g@mail.gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 25 Aug 2011 11:45:11 -0700, Javier Cardona wrote:
-> On Thu, Aug 25, 2011 at 11:21 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Thu, 25 Aug 2011 11:16:50 -0700, Javier Cardona wrote:
->>>
->>> On Wed, Aug 24, 2011 at 7:08 PM, Johannes Berg
->>> <johannes@sipsolutions.net> wrote:
->>>>
->>>> On Wed, 24 Aug 2011 18:40:44 -0700, Thomas Pedersen wrote:
->>>>
->>>>>                da = hdr->addr3;
->>>>>                ra = hdr->addr1;
->>>>> +               rcu_read_lock();
->>>>>                mpath = mesh_path_lookup(da, sdata);
->>>>> +               rcu_read_unlock();
->>>>>                if (mpath)
->>>>>                        sn = ++mpath->sn;
->>>>>               
->>>>>  mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl,
->>>>> skb->data,
->>>>
->>>> You've got to be kidding. Didn't I just explain RCU :)
->>>
->>> The patch was prepared before your RCU session :(
->>> Just to confirm I got it right before we resubmit: given that not 
->>> only
->>> the path table accessed inside mesh_path_lookup() but also the 
->>> mpaths
->>> themselves are RCU protected, the right fix should have been
->>>
->>>               da = hdr->addr3;
->>>               ra = hdr->addr1;
->>> +             rcu_read_lock();
->>>               mpath = mesh_path_lookup(da, sdata);
->>>               if (mpath)
->>>                       sn = ++mpath->sn;
->>> +             rcu_read_unlock();
->>>               mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl,
->>> skb->data,
->>>
->>> Correct?
->>
->> Frankly, I'm not sure, since you modify the mpath->sn you probably 
->> need to
->> hold a real lock, otherwise ++mpath->sn can race against itself in 
->> this very
->> function.
->
-> Oh, I see.  That's a different issue from what I was originally 
-> trying
-> to fix (unprotected access to the path table inside the lookup
-> function).  But you are completely right.  Changing the math sequence
-> number requires taking the mpath state lock:
->
->              da = hdr->addr3;
->              ra = hdr->addr1;
-> +           rcu_read_lock();
->              mpath = mesh_path_lookup(da, sdata);
-> -             if (mpath)
-> +             if (mpath) {
-> +                    spin_lock_bh(&mpath->state_lock);
->                       sn = ++mpath->sn;
-> +                    spin_unlock_bh(&mpath->state_lock);
-> +           }
-> +           rcu_read_unlock();
->              mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl, 
-> skb->data,
 
-Seems about right to me, but I don't know about all the locking :)
+On 30/08/2011, at 3:42 PM, Adrian Chadd wrote:
 
-johannes
+> On 30 August 2011 11:34, Tom Herbert <therbert@google.com> wrote:
+> 
+>> The generalization of BQL would be to set the queue limit in terms of
+>> a cost function implemented by the driver.  The cost function would
+>> most likely be an estimate of time to transmit a packet.  
+
+That's a great idea.  Best that it be in nanoseconds, we may well have some seriously fast network interfaces to deal with.
+
+>> So C(P)
+>> could represent cost of a packet, sum(C(P) for P queued) is aggregate
+>> cost of queue packets, and queue limit is the maximum cost sum.  For
+>> wired Ethernet, number of bytes in packet might be a reasonable
+>> function (although framing cost could be included, but I'm not sure
+>> that would make a material difference).  For wireless, maybe the
+>> function could be more complex possibly taking multicast, previous
+>> history of transmission times, or other arbitrary characteristics of
+>> the packet into account...
+>> 
+>> I can post a new patch with this generalization if this is interesting.
+> 
+> As I said before, I think this is the kind of thing the rate control
+> code needs to get its dirty hands into.
+> 
+> With 802.11 you have to care about the PHY side of things too, so your
+> cost suddenly would include the PER for combinations of {remote node,
+> antenna setup, TX rate, sub-frame length, aggregate length}, etc. Do
+> you choose that up front and then match a cost to it, or do you
+> involve the rate control code in deciding a "good enough" way of
+> handling what's on the queue by making rate decisions, then implement
+> random/weighted/etc drop of what's left? Do you do some weighted/etc
+> drop beforehand in the face of congestion, then pass what's left to
+> the rate control code, then discard the rest?
+
+Since Minstrel already knows an estimate of the PER to each remote node (expressed in terms of success probability per shot, so there's a bit of math to do), and the stack knows about transmit times, implementing a way to ask the question isn't particularly hard.  Other rate controls could make up their own guesstimates based on whatever factors they want to use.
+
+However, that's going to change rapidly, so I suggest that we want some backlog grooming on a regular basis (like, after each rate control iteration) that might well reevaluate and drop or mark packets that are already in the queues.
+
+> 
+> C(P) is going to be quite variable - a full frame retransmit of a 4ms
+> long aggregate frame is SUM(exponential backoff, grab the air,
+> preamble, header, 4ms, etc. for each pass.)
+> 
+> 
+> Adrian
+
+Indeed.
+
+Andrew
+
