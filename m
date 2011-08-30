@@ -1,71 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26050 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754934Ab1HELL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2011 07:11:27 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Cc: ath9k-devel@venema.h4ckr.net, camilo@mesias.co.uk,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	Tony Houghton <h@realh.co.uk>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	ath9k-devel@venema.h4ckr.net, Adrian Chadd <adrian@freebsd.org>,
-	<lrodriguez@atheros.com>
-Subject: [PATCH -next 7/8] pci: aspm: add settings changed callback
-Date: Fri,  5 Aug 2011 13:10:38 +0200
-Message-Id: <1312542639-4274-8-git-send-email-sgruszka@redhat.com> (sfid-20110805_131130_550820_34B98470)
-In-Reply-To: <1312542639-4274-1-git-send-email-sgruszka@redhat.com>
-References: <1312542639-4274-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:51785 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752096Ab1H3HHK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Aug 2011 03:07:10 -0400
+Received: by mail-vx0-f174.google.com with SMTP id 9so4841150vxi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 00:07:10 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 30 Aug 2011 15:07:10 +0800
+Message-ID: <CAGwCZhrVBr-Kit7h01z_1ME7xdz_yQ+BpV33+deGYA86QSS58g@mail.gmail.com> (sfid-20110830_090714_824720_D273AA05)
+Subject: [DEV] modify 802.11 header on BCM4329
+From: Hao Han <hhanwm@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Inform drivers that register pci_drviver->aspm_changed(), about new ASPM
-settings. Callback is only called for child (endpoint) devices.
+Hi all,
 
-Currently this will be used in ath9k driver. In the future we most
-likely will use it in iwlwifi and rtlwifi drivers and possibly some
-others that needs to do own ASPM related quirks.
+I try to modify 802.11 header of tramsitted packets, especially
+management frames such as beacons. When the wireless interface works
+in master mode (enabled by new firmware named fw_bcm4329_apsta.bin), I
+do monitor beacons on air. However, I cannot find the place through
+the driver where these beacons are generated and transmitted. Is that
+in firmware?
 
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/pci/pcie/aspm.c |    5 ++++-
- include/linux/pci.h     |    3 +++
- 2 files changed, 7 insertions(+), 1 deletions(-)
+My goal is to modify the value of some exsiting field and add new
+fields in beacon. If anyone has such experience, please let me know.
+Any feedback would be extremely appreciated :)
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 2883fc3..d7acec8 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -474,8 +474,11 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
- 	 */
- 	if (state & ASPM_STATE_L1)
- 		pcie_config_aspm_dev(parent, upstream);
--	list_for_each_entry(child, &linkbus->devices, bus_list)
-+	list_for_each_entry(child, &linkbus->devices, bus_list) {
- 		pcie_config_aspm_dev(child, dwstream);
-+		if (child->driver && child->driver->aspm_changed)
-+			child->driver->aspm_changed(child, dwstream);
-+	}
- 	if (!(state & ASPM_STATE_L1))
- 		pcie_config_aspm_dev(parent, upstream);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c446b5c..2110d63 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -555,6 +555,9 @@ struct pci_driver {
- 	int  (*resume_early) (struct pci_dev *dev);
- 	int  (*resume) (struct pci_dev *dev);	                /* Device woken up */
- 	void (*shutdown) (struct pci_dev *dev);
-+#ifdef CONFIG_PCIEASPM
-+	void (*aspm_changed) (struct pci_dev *dev, u32 state);
-+#endif
- 	struct pci_error_handlers *err_handler;
- 	struct device_driver	driver;
- 	struct pci_dynids dynids;
--- 
-1.7.1
-
+Best,
+Hao
