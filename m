@@ -1,205 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:54095 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752720Ab1HNKRH (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:49194 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768Ab1H3HV2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 06:17:07 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 24so2967072wyg.19
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:17:06 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 02/40] wl12xx: Use a single fw for both STA and AP roles
-Date: Sun, 14 Aug 2011 13:17:01 +0300
-Message-Id: <1313317059-16567-3-git-send-email-eliad@wizery.com> (sfid-20110814_121713_780784_F32266F9)
-In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
-References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+	Tue, 30 Aug 2011 03:21:28 -0400
+Date: Tue, 30 Aug 2011 12:51:57 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	<rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH v7 3/4] ath9k: merge reset related functions
+Message-ID: <20110830072155.GA2456@vmraj-lnx.users.atheros.com> (sfid-20110830_092132_383261_D260A6FB)
+References: <1314643245-59142-1-git-send-email-nbd@openwrt.org>
+ <1314643245-59142-2-git-send-email-nbd@openwrt.org>
+ <1314643245-59142-3-git-send-email-nbd@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1314643245-59142-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On Mon, Aug 29, 2011 at 08:40:44PM +0200, Felix Fietkau wrote:
+> +
+> +	if (!hchan) {
+> +		fastcc = false;
+> +		flush = true;
+> +		hchan = ah->curchan;
+> +	}
+> +
+> +	if (fastcc && !ath9k_hw_check_alive(ah))
+> +		fastcc = false;
+> +
+> +	if (!ath_prepare_reset(sc, retry_tx, flush))
+> +		fastcc = false;
+> +
+> +	ath_dbg(common, ATH_DBG_CONFIG,
+> +		"Reset to %u MHz, HT40: %d fastcc: %d\n",
+> +		hchan->channel, !!(hchan->channelFlags & (CHANNEL_HT40MINUS |
+> +							  CHANNEL_HT40PLUS)),
+> +		fastcc);
+> +
+> +	r = ath9k_hw_reset(ah, hchan, caldata, fastcc);
+> +	if (r) {
+> +		ath_err(common,
+> +			"Unable to reset channel, reset status %d\n", r);
+> +		goto out;
+> +	}
+> +
+> +	if (!ath_complete_reset(sc, true))
+> +		r = -EIO;
+> +
+> +out:
+>  	spin_unlock_bh(&sc->sc_pcu_lock);
+> +	return 0;
+> +}
+Return proper error code.
 
-Firmware >= 6/7.3.0.0.75 (wl127x/wl128x) supports both
-STA and AP roles.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-v2: s/WL1271/WL127X
-
- drivers/net/wireless/wl12xx/main.c   |   31 +++++--------------------------
- drivers/net/wireless/wl12xx/sdio.c   |    4 +---
- drivers/net/wireless/wl12xx/spi.c    |    2 --
- drivers/net/wireless/wl12xx/wl12xx.h |    7 ++-----
- 4 files changed, 8 insertions(+), 36 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index f91875e..7b29573 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1040,31 +1040,16 @@ EXPORT_SYMBOL_GPL(wl1271_irq);
- static int wl1271_fetch_firmware(struct wl1271 *wl)
- {
- 	const struct firmware *fw;
- 	const char *fw_name;
- 	int ret;
- 
--	switch (wl->bss_type) {
--	case BSS_TYPE_AP_BSS:
--		if (wl->chip.id == CHIP_ID_1283_PG20)
--			fw_name = WL128X_AP_FW_NAME;
--		else
--			fw_name = WL127X_AP_FW_NAME;
--		break;
--	case BSS_TYPE_IBSS:
--	case BSS_TYPE_STA_BSS:
--		if (wl->chip.id == CHIP_ID_1283_PG20)
--			fw_name = WL128X_FW_NAME;
--		else
--			fw_name	= WL1271_FW_NAME;
--		break;
--	default:
--		wl1271_error("no compatible firmware for bss_type %d",
--			     wl->bss_type);
--		return -EINVAL;
--	}
-+	if (wl->chip.id == CHIP_ID_1283_PG20)
-+		fw_name = WL128X_FW_NAME;
-+	else
-+		fw_name	= WL127X_FW_NAME;
- 
- 	wl1271_debug(DEBUG_BOOT, "booting firmware %s", fw_name);
- 
- 	ret = request_firmware(&fw, fw_name, wl1271_wl_to_dev(wl));
- 
- 	if (ret < 0) {
-@@ -1087,13 +1072,12 @@ static int wl1271_fetch_firmware(struct wl1271 *wl)
- 		wl1271_error("could not allocate memory for the firmware");
- 		ret = -ENOMEM;
- 		goto out;
- 	}
- 
- 	memcpy(wl->fw, fw->data, wl->fw_len);
--	wl->fw_bss_type = wl->bss_type;
- 	ret = 0;
- 
- out:
- 	release_firmware(fw);
- 
- 	return ret;
-@@ -1358,14 +1342,13 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 	default:
- 		wl1271_warning("unsupported chip id: 0x%x", wl->chip.id);
- 		ret = -ENODEV;
- 		goto out;
- 	}
- 
--	/* Make sure the firmware type matches the BSS type */
--	if (wl->fw == NULL || wl->fw_bss_type != wl->bss_type) {
-+	if (wl->fw == NULL) {
- 		ret = wl1271_fetch_firmware(wl);
- 		if (ret < 0)
- 			goto out;
- 	}
- 
- 	/* No NVS from netlink, try to get it from the filesystem */
-@@ -1793,15 +1776,12 @@ static int wl1271_op_start(struct ieee80211_hw *hw)
- 	 * initializing the firmware. The MAC address cannot be changed
- 	 * after boot, and without the proper MAC address, the firmware
- 	 * will not function properly.
- 	 *
- 	 * The MAC address is first known when the corresponding interface
- 	 * is added. That is where we will initialize the hardware.
--	 *
--	 * In addition, we currently have different firmwares for AP and managed
--	 * operation. We will know which to boot according to interface type.
- 	 */
- 
- 	return 0;
- }
- 
- static void wl1271_op_stop(struct ieee80211_hw *hw)
-@@ -4390,13 +4370,12 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
- 	wl->vif = NULL;
- 	wl->flags = 0;
- 	wl->sg_enabled = true;
- 	wl->hw_pg_ver = -1;
- 	wl->bss_type = MAX_BSS_TYPE;
- 	wl->set_bss_type = MAX_BSS_TYPE;
--	wl->fw_bss_type = MAX_BSS_TYPE;
- 	wl->last_tx_hlid = 0;
- 	wl->ap_ps_map = 0;
- 	wl->ap_fw_ps_map = 0;
- 	wl->quirks = 0;
- 	wl->platform_quirks = 0;
- 	wl->sched_scanning = false;
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-index 5cf18c2..ac2e566 100644
---- a/drivers/net/wireless/wl12xx/sdio.c
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -409,10 +409,8 @@ static void __exit wl1271_exit(void)
- module_init(wl1271_init);
- module_exit(wl1271_exit);
- 
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
- MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
--MODULE_FIRMWARE(WL1271_FW_NAME);
-+MODULE_FIRMWARE(WL127X_FW_NAME);
- MODULE_FIRMWARE(WL128X_FW_NAME);
--MODULE_FIRMWARE(WL127X_AP_FW_NAME);
--MODULE_FIRMWARE(WL128X_AP_FW_NAME);
-diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
-index e0b3736..7314795 100644
---- a/drivers/net/wireless/wl12xx/spi.c
-+++ b/drivers/net/wireless/wl12xx/spi.c
-@@ -485,9 +485,7 @@ module_exit(wl1271_exit);
- 
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
- MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
- MODULE_FIRMWARE(WL1271_FW_NAME);
- MODULE_FIRMWARE(WL128X_FW_NAME);
--MODULE_FIRMWARE(WL127X_AP_FW_NAME);
--MODULE_FIRMWARE(WL128X_AP_FW_NAME);
- MODULE_ALIAS("spi:wl1271");
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 5b00a84..dc0013e 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -127,16 +127,14 @@ extern u32 wl12xx_debug_level;
- 				  CFG_RX_MGMT_EN | CFG_RX_DATA_EN | \
- 				  CFG_RX_CTL_EN | CFG_RX_AUTH_EN | \
- 				  CFG_RX_ASSOC_EN)
- 
- 
- 
--#define WL1271_FW_NAME "ti-connectivity/wl1271-fw-2.bin"
--#define WL128X_FW_NAME "ti-connectivity/wl128x-fw.bin"
--#define WL127X_AP_FW_NAME "ti-connectivity/wl1271-fw-ap.bin"
--#define WL128X_AP_FW_NAME "ti-connectivity/wl128x-fw-ap.bin"
-+#define WL127X_FW_NAME "ti-connectivity/wl127x-fw-3.bin"
-+#define WL128X_FW_NAME "ti-connectivity/wl128x-fw-3.bin"
- 
- /*
-  * wl127x and wl128x are using the same NVS file name. However, the
-  * ini parameters between them are different.  The driver validates
-  * the correct NVS size in wl1271_boot_upload_nvs().
-  */
-@@ -402,13 +400,12 @@ struct wl1271 {
- 
- 	int cmd_box_addr;
- 	int event_box_addr;
- 
- 	u8 *fw;
- 	size_t fw_len;
--	u8 fw_bss_type;
- 	void *nvs;
- 	size_t nvs_len;
- 
- 	s8 hw_pg_ver;
- 
- 	u8 bssid[ETH_ALEN];
--- 
-1.7.6.401.g6a319
-
+--
+Rajkumar
