@@ -1,83 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:36688 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751025Ab1H1RUG (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:52647 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750894Ab1H3Vr0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Aug 2011 13:20:06 -0400
-Received: by fxh19 with SMTP id 19so3802629fxh.19
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Aug 2011 10:20:04 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [ONE MORE][PATCH 4/3] b43: LCN-PHY: implement saving and restoring PHY & radio configuration
-Date: Sun, 28 Aug 2011 19:59:28 +0200
-Message-Id: <1314554368-7002-4-git-send-email-zajec5@gmail.com> (sfid-20110828_192022_459733_5BC90D97)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 30 Aug 2011 17:47:26 -0400
+Subject: Re: BQL crap and wireless
+Mime-Version: 1.0 (Apple Message framework v1244.3)
+Content-Type: text/plain; charset=US-ASCII
+From: Andrew McGregor <andrewmcgr@gmail.com>
+In-Reply-To: <4E5CEC79.3090802@freedesktop.org>
+Date: Wed, 31 Aug 2011 09:47:19 +1200
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Tom Herbert <therbert@google.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Dave Taht <dave.taht@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Matt Smith <smithm@qca.qualcomm.com>,
+	Kevin Hayes <hayes@qca.qualcomm.com>,
+	Derek Smithies <derek@indranet.co.nz>, netdev@vger.kernel.org
+Message-Id: <9BB251C1-A211-486D-A717-59149AC3A709@gmail.com> (sfid-20110830_234734_995444_6CAFAB2F)
+References: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com> <CAB=NE6VwWu5+Hk7=3ghkgiXss9kCqGyS-RWPYtyHRhDsx5r2rA@mail.gmail.com> <CAA93jw7c+Nxc6ZbWZWsQ+F78AoPWU=quSRaOUpT0yRcwJOXsGQ@mail.gmail.com> <4E5C3B47.1050809@freedesktop.org> <CA+mtBx-j_+mrNpntR7CfYOromDnM-ZGzvebpUCjC8Qf14X6u9g@mail.gmail.com> <CAJ-Vmonwur-SXddNwjPEidCMqes+PwbRWFBddfdwTp2jOMu64g@mail.gmail.com> <4E5CEC79.3090802@freedesktop.org>
+To: Jim Gettys <jg@freedesktop.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_lcn.c |   35 +++++++++++++++++++++++++++++++++++
- 1 files changed, 35 insertions(+), 0 deletions(-)
+On 31/08/2011, at 1:58 AM, Jim Gettys wrote:
 
-diff --git a/drivers/net/wireless/b43/phy_lcn.c b/drivers/net/wireless/b43/phy_lcn.c
-index 4839536..b617e1f 100644
---- a/drivers/net/wireless/b43/phy_lcn.c
-+++ b/drivers/net/wireless/b43/phy_lcn.c
-@@ -213,6 +213,39 @@ static void b43_phy_lcn_pre_radio_init(struct b43_wldev *dev)
- 	/* TODO: more ops */
- }
- 
-+static void b43_phy_lcn_save_configsth_restore(struct b43_wldev *dev)
-+{
-+	u8 i;
-+
-+	u16 save_radio_regs[6][2] = {
-+		{ 0x007, 0 }, { 0x0ff, 0 }, { 0x11f, 0 }, { 0x005, 0 },
-+		{ 0x025, 0 }, { 0x112, 0 },
-+	};
-+	u16 save_phy_regs[14][2] = {
-+		{ 0x503, 0 }, { 0x4a4, 0 }, { 0x4d0, 0 }, { 0x4d9, 0 },
-+		{ 0x4da, 0 }, { 0x4a6, 0 }, { 0x938, 0 }, { 0x939, 0 },
-+		{ 0x4d8, 0 }, { 0x4d0, 0 }, { 0x4d7, 0 }, { 0x4a5, 0 },
-+		{ 0x40d, 0 }, { 0x4a2, 0 },
-+	};
-+	u16 save_radio_4a4;
-+
-+	for (i = 0; i < 6; i++)
-+		save_radio_regs[i][1] = b43_radio_read(dev,
-+						       save_radio_regs[i][0]);
-+	for (i = 0; i < 14; i++)
-+		save_phy_regs[i][1] = b43_phy_read(dev, save_phy_regs[i][0]);
-+	save_radio_4a4 = b43_radio_read(dev, 0x4a4);
-+
-+	/* TODO: config sth */
-+
-+	for (i = 0; i < 6; i++)
-+		b43_radio_write(dev, save_radio_regs[i][0],
-+				save_radio_regs[i][1]);
-+	for (i = 0; i < 14; i++)
-+		b43_phy_write(dev, save_phy_regs[i][0], save_phy_regs[i][1]);
-+	b43_radio_write(dev, 0x4a4, save_radio_4a4);
-+}
-+
- /**************************************************
-  * Channel switching ops.
-  **************************************************/
-@@ -297,6 +330,8 @@ static int b43_phy_lcn_op_init(struct b43_wldev *dev)
- 	else
- 		B43_WARN_ON(1);
- 
-+	b43_phy_lcn_save_configsth_restore(dev);
-+
- 	return 0;
- }
- 
--- 
-1.7.3.4
+> On 08/29/2011 11:42 PM, Adrian Chadd wrote:
+>> On 30 August 2011 11:34, Tom Herbert <therbert@google.com> wrote:
+>> 
+>> C(P) is going to be quite variable - a full frame retransmit of a 4ms
+>> long aggregate frame is SUM(exponential backoff, grab the air,
+>> preamble, header, 4ms, etc. for each pass.)
+>> 
+> It's not clear to me that doing heroic measures to compute the cost is
+> going to be worthwhile due to the rate at which the costs can change on
+> wireless; just getting into the rough ballpark may be enough. But
+> buffering algorithms and AQM algorithms are going to need an estimate of
+> the *time* it will take to transmit data, more than # of bytes or packets.
 
+That's not heroic measures; mac80211 needs all the code to calculate these times anyway, it's just a matter of collecting together some things we already know and calling the right function.
+
+Andrew
