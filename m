@@ -1,35 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:36636 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753598Ab1HARuE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:1083 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755864Ab1H3S63 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2011 13:50:04 -0400
-Received: by fxh19 with SMTP id 19so4773528fxh.19
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Aug 2011 10:50:03 -0700 (PDT)
+	Tue, 30 Aug 2011 14:58:29 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v2 00/22] ath6kl: AP mode and P2P
+Date: Tue, 30 Aug 2011 21:57:49 +0300
+Message-ID: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20110830_205832_355895_E38EE5B6)
 MIME-Version: 1.0
-In-Reply-To: <201108012038.40155.anarsoul@gmail.com>
-References: <20110801154313.8C9389D401F@zog.reactivated.net>
-	<201108012038.40155.anarsoul@gmail.com>
-Date: Mon, 1 Aug 2011 18:50:03 +0100
-Message-ID: <CAGq3pz50EamvOmsshmZaPp5-ToW8eVi78r-BdDG-rX2154sH2A@mail.gmail.com> (sfid-20110801_195008_452233_794545CC)
-Subject: Re: [PATCH 1/2] libertas: disable functionality when interface is down
-From: Daniel Drake <dsd@laptop.org>
-To: Vasily Khoruzhick <anarsoul@gmail.com>
-Cc: libertas-dev@lists.infradead.org, linville@tuxdriver.com,
-	dcbw@redhat.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 August 2011 18:38, Vasily Khoruzhick <anarsoul@gmail.com> wrote:
->> power_save and power_restore hooks are added meaning that card drivers
->> can take steps to turn the device off when the interface is down.
->
-> You mean completely off? And firmware needs to be reloaded after power up?
+This set of patches adds preliminary support for AP mode and P2P
+operations into ath6kl. Since these require a new firmware build
+and more testing, the patches to actually enable either AP or P2P
+modes are not included in the series. These will be submitted
+after some more testing.
 
-Yep, exactly like that. Same as various mac80211-based drivers.
+v2:
+- address review comments
+- add couple of additional cleanup/sparse patches for things that came
+  up during the review
 
-The 2nd patch in this series implements it for libertas_sdio, the
-other libertas interfaces have their behaviour as before.
 
-Daniel
+Edward Lu (4):
+  ath6kl: Support channel set request for startscan command
+  ath6kl: Fix a typo in ath6k context
+  ath6kl: Fix default key installation in AP mode
+  ath6kl: Do not clear CONNECT bit setting in AP mode for STA
+    disconnect
+
+Jouni Malinen (18):
+  ath6kl: Add functionality for starting AP mode
+  ath6kl: Fix AP mode (Re)AssocReq IE processing
+  ath6kl: Delay initial group key setup in AP mode
+  ath6kl: Use change_station() to authorize/unauthorize STAs
+  ath6kl: Add new WMI commands and events for P2P
+  ath6kl: Implement remain_on_channel and cancel_remain_on_channel
+  ath6kl: Implement mgmt_tx
+  ath6kl: Request P2P capabilities during target init
+  ath6kl: Add cfg80211 calls for remain-on-channel events
+  ath6kl: Use set_appie command to add Probe Request IEs
+  ath6kl: Report received Probe Request frames to cfg80211
+  ath6kl: Notify cfg80211 of TX status of mgmt_tx frames
+  ath6kl: Report received Action frames to cfg80211
+  ath6kl: Advertise supported mgmt_stypes
+  ath6kl: Add support for new P2P iftypes in mode changes
+  ath6kl: Include P2P IE(s) in GO Probe Response depending on request
+  ath6kl: Return error from wmi.c instead of -EIO in
+    ath6kl_cfg80211_scan
+  ath6kl: Define __CHECK_ENDIAN__ for sparse
+
+ drivers/net/wireless/ath/ath6kl/Makefile   |    2 +
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |  503 +++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath6kl/core.h     |   31 +--
+ drivers/net/wireless/ath/ath6kl/init.c     |   19 +-
+ drivers/net/wireless/ath/ath6kl/main.c     |   96 ++++--
+ drivers/net/wireless/ath/ath6kl/wmi.c      |  433 ++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath6kl/wmi.h      |  229 ++++++++++++-
+ 7 files changed, 1238 insertions(+), 75 deletions(-)
+
+-- 
+1.7.4.1
+
