@@ -1,70 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59380 "EHLO nbd.name"
+Received: from svenfoo.org ([82.94.215.22]:46119 "EHLO mail.zonque.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750999Ab1H3GoF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 02:44:05 -0400
-Message-ID: <4E5C86B3.7040609@openwrt.org> (sfid-20110830_084410_855564_D50A68AB)
-Date: Tue, 30 Aug 2011 08:44:03 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com, rmanohar@qca.qualcomm.com
-Subject: Re: [PATCH v7 2/4] ath9k: always call ath_reset from workqueue context
-References: <1314643245-59142-1-git-send-email-nbd@openwrt.org> <1314643245-59142-2-git-send-email-nbd@openwrt.org> <CAD2nsn1rRBR=5aFp1wqHkfzW+h---gGR-eATF3r5Z+8ELvv8vg@mail.gmail.com> <4E5C7E91.8090106@openwrt.org> <CAD2nsn2R1L=5imxR_rF+68rmjJ-wadnssXNmv6mr5MtBdnQA8A@mail.gmail.com>
-In-Reply-To: <CAD2nsn2R1L=5imxR_rF+68rmjJ-wadnssXNmv6mr5MtBdnQA8A@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1751275Ab1H3VtL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Aug 2011 17:49:11 -0400
+From: Sven Neumann <s.neumann@raumfeld.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sven Neumann <s.neumann@raumfeld.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Daniel Mack <daniel@zonque.org>
+Subject: [PATCH 1/2] cfg80211: hold reg_mutex when updating regulatory
+Date: Tue, 30 Aug 2011 23:38:53 +0200
+Message-Id: <1314740334-10341-1-git-send-email-s.neumann@raumfeld.com> (sfid-20110830_234916_502902_0ADB0C7F)
+In-Reply-To: <20110830191437.GC2660@tuxdriver.com>
+References: <20110830191437.GC2660@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-08-30 8:20 AM, Mohammed Shafi wrote:
-> On Tue, Aug 30, 2011 at 11:39 AM, Felix Fietkau<nbd@openwrt.org>  wrote:
->>  On 2011-08-30 7:57 AM, Mohammed Shafi wrote:
->>>
->>>  On Tue, Aug 30, 2011 at 12:10 AM, Felix Fietkau<nbd@openwrt.org>    wrote:
->>>>
->>>>    This makes it much easier to add further rework to avoid race conditions
->>>>    between reset and other work items.
->>>>    Move other functions to make ath_reset static.
->>>>
->>>>    Signed-off-by: Felix Fietkau<nbd@openwrt.org>
->>>>    ---
->>>>     drivers/net/wireless/ath/ath9k/ath9k.h  |    3 +-
->>>>     drivers/net/wireless/ath/ath9k/beacon.c |    4 +-
->>>>     drivers/net/wireless/ath/ath9k/init.c   |    1 +
->>>>     drivers/net/wireless/ath/ath9k/main.c   |  152
->>>>  ++++++++++++++++---------------
->>>>     drivers/net/wireless/ath/ath9k/xmit.c   |    6 +-
->>>>     5 files changed, 86 insertions(+), 80 deletions(-)
->>>>
->>>>    diff --git a/drivers/net/wireless/ath/ath9k/xmit.c
->>>>  b/drivers/net/wireless/ath/ath9k/xmit.c
->>>>    index 49b93c2..f60706b 100644
->>>>    --- a/drivers/net/wireless/ath/ath9k/xmit.c
->>>>    +++ b/drivers/net/wireless/ath/ath9k/xmit.c
->>>>    @@ -582,7 +582,7 @@ static void ath_tx_complete_aggr(struct ath_softc
->>>>  *sc, struct ath_txq *txq,
->>>>           rcu_read_unlock();
->>>>
->>>>           if (needreset)
->>>>    -               ath_reset(sc, false);
->>>>    +               ieee80211_queue_work(sc->hw,&sc->hw_reset_work);
->>>
->>>  Hi Felix,
->>>
->>>  retry_tx is set to 'false' in ath_reset here, but ath_reset_work
->>>  always has it true. had i missed some thing?
->>
->>  Since the reset work is deferred now, it can be allowed to retry tx now
->>  instead of dropping all packets in the queue.
->
-> oh ok, in this path we need reset when the chip becomes deaf/mute(as
-> mentioned  in the comment),
-> so i am not sure retrying tx will help rather than doing immediate
-> reset of the chip.
-> thanks.
-Well, tx will be retried only after the full reset, so it should be 
-fine. I'll make sure the next version will bail out of the tx completion 
-tasklet when a reset is necessary, so that the reset can run right away.
+The function wiphy_update_regulatory() uses the static variable
+last_request and thus needs to be called with reg_mutex held.
+This is the case for all users in reg.c, but the function was
+exported for use by wiphy_register(), from where it is called
+without the lock being held.
 
-- Felix
+Fix this by making wiphy_update_regulatory() private and introducing
+regulatory_update() as a wrapper that acquires and holds the lock.
+
+Signed-off-by: Sven Neumann <s.neumann@raumfeld.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+Cc: Daniel Mack <daniel@zonque.org>
+Cc: linux-wireless@vger.kernel.org
+---
+ net/wireless/core.c |    2 +-
+ net/wireless/core.h |    2 --
+ net/wireless/reg.c  |   17 +++++++++++++++--
+ net/wireless/reg.h  |    2 ++
+ 4 files changed, 18 insertions(+), 5 deletions(-)
+
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index c148651..220f3bd 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -582,7 +582,7 @@ int wiphy_register(struct wiphy *wiphy)
+ 	}
+ 
+ 	/* set up regulatory info */
+-	wiphy_update_regulatory(wiphy, NL80211_REGDOM_SET_BY_CORE);
++	regulatory_update(wiphy, NL80211_REGDOM_SET_BY_CORE);
+ 
+ 	list_add_rcu(&rdev->list, &cfg80211_rdev_list);
+ 	cfg80211_rdev_list_generation++;
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 8672e02..796a4bd 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -279,8 +279,6 @@ extern int cfg80211_dev_rename(struct cfg80211_registered_device *rdev,
+ 			       char *newname);
+ 
+ void ieee80211_set_bitrate_flags(struct wiphy *wiphy);
+-void wiphy_update_regulatory(struct wiphy *wiphy,
+-			     enum nl80211_reg_initiator setby);
+ 
+ void cfg80211_bss_expire(struct cfg80211_registered_device *dev);
+ void cfg80211_bss_age(struct cfg80211_registered_device *dev,
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 02751db..c50016e 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -103,6 +103,9 @@ struct reg_beacon {
+ 	struct ieee80211_channel chan;
+ };
+ 
++static void wiphy_update_regulatory(struct wiphy *wiphy,
++				    enum nl80211_reg_initiator initiator);
++
+ static void reg_todo(struct work_struct *work);
+ static DECLARE_WORK(reg_work, reg_todo);
+ 
+@@ -1119,11 +1122,13 @@ static void reg_process_ht_flags(struct wiphy *wiphy)
+ 
+ }
+ 
+-void wiphy_update_regulatory(struct wiphy *wiphy,
+-			     enum nl80211_reg_initiator initiator)
++static void wiphy_update_regulatory(struct wiphy *wiphy,
++				    enum nl80211_reg_initiator initiator)
+ {
+ 	enum ieee80211_band band;
+ 
++	assert_reg_lock();
++
+ 	if (ignore_reg_update(wiphy, initiator))
+ 		return;
+ 
+@@ -1138,6 +1143,14 @@ void wiphy_update_regulatory(struct wiphy *wiphy,
+ 		wiphy->reg_notifier(wiphy, last_request);
+ }
+ 
++void regulatory_update(struct wiphy *wiphy,
++		       enum nl80211_reg_initiator setby)
++{
++	mutex_lock(&reg_mutex);
++	wiphy_update_regulatory(wiphy, setby);
++	mutex_unlock(&reg_mutex);
++}
++
+ static void handle_channel_custom(struct wiphy *wiphy,
+ 				  enum ieee80211_band band,
+ 				  unsigned int chan_idx,
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index b67d1c3..4a56799 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -16,6 +16,8 @@ void regulatory_exit(void);
+ 
+ int set_regdom(const struct ieee80211_regdomain *rd);
+ 
++void regulatory_update(struct wiphy *wiphy, enum nl80211_reg_initiator setby);
++
+ /**
+  * regulatory_hint_found_beacon - hints a beacon was found on a channel
+  * @wiphy: the wireless device where the beacon was found on
+-- 
+1.7.4.1
+
