@@ -1,101 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:54157 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755028Ab1H2UXW (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:29671 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752857Ab1H3OOa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 16:23:22 -0400
-Received: by mail-pz0-f42.google.com with SMTP id 37so9020873pzk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 13:23:22 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, jlopex@gmail.com
-Subject: [PATCH v3 3/7] mac80211: Improve mpath state locking
-Date: Mon, 29 Aug 2011 13:23:05 -0700
-Message-Id: <1314649389-7115-4-git-send-email-javier@cozybit.com> (sfid-20110829_222328_554522_DCD645E9)
-In-Reply-To: <1314649389-7115-1-git-send-email-javier@cozybit.com>
-References: <1314649389-7115-1-git-send-email-javier@cozybit.com>
+	Tue, 30 Aug 2011 10:14:30 -0400
+Date: Tue, 30 Aug 2011 17:13:19 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 07/20] ath6kl: Implement mgmt_tx
+Message-ID: <20110830141319.GC8163@jouni.qca.qualcomm.com> (sfid-20110830_161433_237046_CDAB3589)
+References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
+ <1314620641-24257-8-git-send-email-jouni@qca.qualcomm.com>
+ <4E5CABF8.901@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4E5CABF8.901@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No need to take the mpath state lock when an mpath is removed.
-Also, no need checking the lock when reading mpath flags.
+On Tue, Aug 30, 2011 at 12:23:04PM +0300, Kalle Valo wrote:
+> On 08/29/2011 03:23 PM, Jouni Malinen wrote:
+> > +static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh.h         |    4 +++-
- net/mac80211/mesh_pathtbl.c |   14 ++++----------
- 2 files changed, 7 insertions(+), 11 deletions(-)
+> > +	id = ar->send_action_id++;
+> > +	if (id == 0)
+> > +		id = ar->send_action_id++;
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 57a2ad0..7118e8e 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -80,7 +80,9 @@ enum mesh_deferred_task_flags {
-  * 	retry
-  * @discovery_retries: number of discovery retries
-  * @flags: mesh path flags, as specified on &enum mesh_path_flags
-- * @state_lock: mesh path state lock
-+ * @state_lock: mesh path state lock used to protect changes to the
-+ * mpath itself.  No need to take this lock when adding or removing
-+ * an mpath to a hash bucket on a path table.
-  * @is_gate: the destination station of this path is a mesh gate
-  *
-  *
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 1c8c420..b895a7c 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -776,18 +776,17 @@ void mesh_plink_broken(struct sta_info *sta)
- 	tbl = rcu_dereference(mesh_paths);
- 	for_each_mesh_entry(tbl, p, node, i) {
- 		mpath = node->mpath;
--		spin_lock_bh(&mpath->state_lock);
- 		if (rcu_dereference(mpath->next_hop) == sta &&
- 		    mpath->flags & MESH_PATH_ACTIVE &&
- 		    !(mpath->flags & MESH_PATH_FIXED)) {
-+			spin_lock_bh(&mpath->state_lock);
- 			mpath->flags &= ~MESH_PATH_ACTIVE;
- 			++mpath->sn;
- 			spin_unlock_bh(&mpath->state_lock);
- 			mesh_path_error_tx(sdata->u.mesh.mshcfg.element_ttl,
- 					mpath->dst, cpu_to_le32(mpath->sn),
- 					reason, bcast, sdata);
--		} else
--		spin_unlock_bh(&mpath->state_lock);
-+		}
- 	}
- 	rcu_read_unlock();
- }
-@@ -866,7 +865,7 @@ static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
- 		if (mpath->sdata != sdata)
- 			continue;
- 		spin_lock_bh(&tbl->hashwlock[i]);
--		spin_lock_bh(&mpath->state_lock);
-+		hlist_del_rcu(&node->list);
- 		call_rcu(&node->rcu, mesh_path_node_reclaim);
- 		atomic_dec(&tbl->entries);
- 		spin_unlock_bh(&tbl->hashwlock[i]);
-@@ -1160,15 +1159,10 @@ void mesh_path_expire(struct ieee80211_sub_if_data *sdata)
- 		if (node->mpath->sdata != sdata)
- 			continue;
- 		mpath = node->mpath;
--		spin_lock_bh(&mpath->state_lock);
- 		if ((!(mpath->flags & MESH_PATH_RESOLVING)) &&
- 		    (!(mpath->flags & MESH_PATH_FIXED)) &&
--		     time_after(jiffies, mpath->exp_time + MESH_PATH_EXPIRE)) {
--			spin_unlock_bh(&mpath->state_lock);
-+		     time_after(jiffies, mpath->exp_time + MESH_PATH_EXPIRE))
- 			mesh_path_del(mpath->dst, mpath->sdata);
--		} else
--			spin_unlock_bh(&mpath->state_lock);
--	}
- 	rcu_read_unlock();
- }
- 
+> > +	*cookie = id;
+> > +	return ath6kl_wmi_send_action_cmd(ar->wmi, id, chan->center_freq, wait,
+> > +					  buf, len);
+
+> I don't understand the "if (id == 0)" check. It would be nice to get a
+> comment giving some background info about the situation.
+
+0 is a reserved value in the target implementation and shall not be used
+in the WMI command. I'll add a comment on this.
+
 -- 
-1.7.6
-
+Jouni Malinen                                            PGP id EFC895FA
