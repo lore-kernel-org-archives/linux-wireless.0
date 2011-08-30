@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:54440 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751812Ab1HIJNh (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41900 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738Ab1H3JGV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 05:13:37 -0400
-Received: by wyg24 with SMTP id 24so210739wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:13:36 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 03/40] wl12xx: use 1 spare block in all cases
-Date: Tue,  9 Aug 2011 12:13:16 +0300
-Message-Id: <1312881233-9366-4-git-send-email-eliad@wizery.com> (sfid-20110809_111341_004042_36601371)
-In-Reply-To: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
+	Tue, 30 Aug 2011 05:06:21 -0400
+Message-ID: <4E5CA807.4090105@qca.qualcomm.com> (sfid-20110830_110629_561150_36340236)
+Date: Tue, 30 Aug 2011 12:06:15 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 04/20] ath6kl: Use change_station() to authorize/unauthorize
+ STAs
+References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com> <1314620641-24257-5-git-send-email-jouni@qca.qualcomm.com>
+In-Reply-To: <1314620641-24257-5-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On 08/29/2011 03:23 PM, Jouni Malinen wrote:
+> --- a/drivers/net/wireless/ath/ath6kl/wmi.h
+> +++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+> @@ -1804,6 +1804,21 @@ struct wmi_tx_complete_event {
+>  
+>  /* Used with WMI_AP_SET_NUM_STA_CMDID */
+>  
+> +/*
+> + * Used with WMI_AP_SET_MLME_CMDID
+> + */
+> +struct wmi_ap_set_mlme_cmd {
+> +	u8 mac[ETH_ALEN];
+> +	u16 reason;		/* 802.11 reason code */
+> +	u8 cmd;			/* operation to perform */
+> +/* MLME Commands */
+> +#define WMI_AP_MLME_ASSOC       1   /* associate station */
+> +#define WMI_AP_DISASSOC         2   /* disassociate station */
+> +#define WMI_AP_DEAUTH           3   /* deauthenticate station */
+> +#define WMI_AP_MLME_AUTHORIZE   4   /* authorize station */
+> +#define WMI_AP_MLME_UNAUTHORIZE 5   /* unauthorize station */
+> +} __packed;
 
-Remove support for firmwares that require 2 spare blocks for packet TX.
+Needs an endian annotation for u16. Also defines inside a struct are
+IMHO a bit awkward.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/tx.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 0696aed..c67340f 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -166,18 +166,15 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
- {
- 	struct wl1271_tx_hw_descr *desc;
- 	u32 total_len = skb->len + sizeof(struct wl1271_tx_hw_descr) + extra;
- 	u32 len;
- 	u32 total_blocks;
- 	int id, ret = -EBUSY;
--	u32 spare_blocks;
- 
--	if (unlikely(wl->quirks & WL12XX_QUIRK_USE_2_SPARE_BLOCKS))
--		spare_blocks = 2;
--	else
--		spare_blocks = 1;
-+	/* we use 1 spare block */
-+	u32 spare_blocks = 1;
- 
- 	if (buf_offset + total_len > WL1271_AGGR_BUFFER_SIZE)
- 		return -EAGAIN;
- 
- 	/* allocate free identifier for the packet */
- 	id = wl1271_alloc_tx_id(wl, skb);
--- 
-1.7.6.401.g6a319
-
+Kalle
