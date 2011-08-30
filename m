@@ -1,81 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:55381 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752758Ab1HNKRk (ORCPT
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:35908 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753041Ab1H3KrQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 06:17:40 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 5so4061056wwf.1
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:17:39 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 19/40] wl12xx: handle dummy packet event also in ap mode
-Date: Sun, 14 Aug 2011 13:17:18 +0300
-Message-Id: <1313317059-16567-20-git-send-email-eliad@wizery.com> (sfid-20110814_121745_172726_73A7A25A)
-In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
-References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+	Tue, 30 Aug 2011 06:47:16 -0400
+Received: by yie30 with SMTP id 30so4257940yie.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 03:47:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20110830104403.GA5446@vmraj-lnx.users.atheros.com>
+References: <1314605174-66206-1-git-send-email-nbd@openwrt.org>
+	<CAJ-Vmonvcrd49rQbgeyO3HCLxkTbww3mTypR87CuPBiu9uwhHA@mail.gmail.com>
+	<4E5B669F.8060605@dti2.net>
+	<20110830104403.GA5446@vmraj-lnx.users.atheros.com>
+Date: Tue, 30 Aug 2011 18:47:15 +0800
+Message-ID: <CAJ-VmomDSZ+PL=-Vc+Gbz7FoST=_MJ7_F0O5avNv-sefJTzP2g@mail.gmail.com> (sfid-20110830_124719_755739_397E92BF)
+Subject: Re: [PATCH 3.1] ath9k_hw: fix calibration on 5 ghz
+From: Adrian Chadd <adrian@freebsd.org>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: "Jorge Boncompte [DTI2]" <jorge@dti2.net>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	rodrigue@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On 30 August 2011 18:44, Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
 
-Allow handling of DUMMY_PACKET_EVENT_ID also in ap mode.
+> Could you please test whether the below patch helps?
+>
+> https://patchwork.kernel.org/patch/1112672/
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/event.c |    2 +-
- drivers/net/wireless/wl12xx/tx.c    |   12 ++++++++----
- 2 files changed, 9 insertions(+), 5 deletions(-)
+FreeBSD does this. nbd disabled the EEPROM check a while ago in ath9k.
+So it isn't this.
 
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index 431ceae..0bd7b02 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -288,13 +288,13 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
- 			     "ba_allowed = 0x%x", mbox->rx_ba_allowed);
- 
- 		if (wl->vif)
- 			wl1271_stop_ba_event(wl, mbox->rx_ba_allowed);
- 	}
- 
--	if ((vector & DUMMY_PACKET_EVENT_ID) && !is_ap) {
-+	if ((vector & DUMMY_PACKET_EVENT_ID)) {
- 		wl1271_debug(DEBUG_EVENT, "DUMMY_PACKET_ID_EVENT_ID");
- 		if (wl->vif)
- 			wl1271_tx_dummy_packet(wl);
- 	}
- 
- 	/*
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 1ea5482..057db6f 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -831,16 +831,20 @@ void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid)
- 	int total[NUM_TX_QUEUES];
- 
- 	for (i = 0; i < NUM_TX_QUEUES; i++) {
- 		total[i] = 0;
- 		while ((skb = skb_dequeue(&wl->links[hlid].tx_queue[i]))) {
- 			wl1271_debug(DEBUG_TX, "link freeing skb 0x%p", skb);
--			info = IEEE80211_SKB_CB(skb);
--			info->status.rates[0].idx = -1;
--			info->status.rates[0].count = 0;
--			ieee80211_tx_status_ni(wl->hw, skb);
-+
-+			if (!wl12xx_is_dummy_packet(wl, skb)) {
-+				info = IEEE80211_SKB_CB(skb);
-+				info->status.rates[0].idx = -1;
-+				info->status.rates[0].count = 0;
-+				ieee80211_tx_status_ni(wl->hw, skb);
-+			}
-+
- 			total[i]++;
- 		}
- 	}
- 
- 	spin_lock_irqsave(&wl->wl_lock, flags);
- 	for (i = 0; i < NUM_TX_QUEUES; i++)
--- 
-1.7.6.401.g6a319
 
+
+Adrian
