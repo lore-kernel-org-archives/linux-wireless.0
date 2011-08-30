@@ -1,62 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:40620 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751989Ab1HPRgQ convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5464 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756115Ab1H3TD1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2011 13:36:16 -0400
-From: "Elias, Ilan" <ilane@ti.com>
-To: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
-	"samuel@sortiz.org" <samuel@sortiz.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 16 Aug 2011 19:36:01 +0200
-Subject: [PATCH 2/4] NFC: Move nfc.h from include/net to include/net/nfc
-Message-ID: <AC090B9732AB2B4DB7FF476E907FE6600131E1C33A@dnce02.ent.ti.com> (sfid-20110816_193618_581565_BD38E1B6)
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 30 Aug 2011 15:03:27 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v2 14/22] ath6kl: Report received Action frames to cfg80211
+Date: Tue, 30 Aug 2011 21:58:03 +0300
+Message-ID: <1314730691-12089-15-git-send-email-jouni@qca.qualcomm.com> (sfid-20110830_210330_466557_05A329C9)
+In-Reply-To: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The nfc.h file was moved from include/net to include/net/nfc, since 2 new header files were added to the new include/net/nfc folder.
-
-Signed-off-by: Ilan Elias <ilane@ti.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/nfc/pn533.c         |    2 +-
- include/net/{ => nfc}/nfc.h |    0
- net/nfc/nfc.h               |    2 +-
- 3 files changed, 2 insertions(+), 2 deletions(-)
- rename include/net/{ => nfc}/nfc.h (100%)
+ drivers/net/wireless/ath/ath6kl/wmi.c |   15 ++++++++++++---
+ 1 files changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-index d931e9c..dfea75f 100644
---- a/drivers/nfc/pn533.c
-+++ b/drivers/nfc/pn533.c
-@@ -28,7 +28,7 @@
- #include <linux/usb.h>
- #include <linux/nfc.h>
- #include <linux/netdevice.h>
--#include <net/nfc.h>
-+#include <net/nfc/nfc.h>
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index d098cbd..dec8697 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -552,17 +552,26 @@ static int ath6kl_wmi_p2p_capabilities_event_rx(u8 *datap, int len)
+ 	return 0;
+ }
  
- #define VERSION "0.1"
+-static int ath6kl_wmi_rx_action_event_rx(u8 *datap, int len)
++static int ath6kl_wmi_rx_action_event_rx(struct wmi *wmi, u8 *datap, int len)
+ {
+ 	struct wmi_rx_action_event *ev;
++	u32 freq;
+ 	u16 dlen;
++	struct ath6kl *ar = wmi->parent_dev;
  
-diff --git a/include/net/nfc.h b/include/net/nfc/nfc.h
-similarity index 100%
-rename from include/net/nfc.h
-rename to include/net/nfc/nfc.h
-diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
-index 1a877de..b6753f4 100644
---- a/net/nfc/nfc.h
-+++ b/net/nfc/nfc.h
-@@ -24,7 +24,7 @@
- #ifndef __LOCAL_NFC_H
- #define __LOCAL_NFC_H
+ 	if (len < sizeof(*ev))
+ 		return -EINVAL;
  
--#include <net/nfc.h>
-+#include <net/nfc/nfc.h>
- #include <net/sock.h>
+ 	ev = (struct wmi_rx_action_event *) datap;
++	freq = le32_to_cpu(ev->freq);
+ 	dlen = le16_to_cpu(ev->len);
+-	ath6kl_dbg(ATH6KL_DBG_WMI, "rx_action: len=%u\n", dlen);
++	if (datap + len < ev->data + dlen) {
++		ath6kl_err("invalid wmi_rx_action_event: "
++			   "len=%d dlen=%u\n", len, dlen);
++		return -EINVAL;
++	}
++	ath6kl_dbg(ATH6KL_DBG_WMI, "rx_action: len=%u freq=%u\n", dlen, freq);
++	cfg80211_rx_mgmt(ar->net_dev, freq, ev->data, dlen, GFP_ATOMIC);
  
- __attribute__((format (printf, 2, 3)))
+ 	return 0;
+ }
+@@ -3086,7 +3095,7 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
+ 		break;
+ 	case WMI_RX_ACTION_EVENTID:
+ 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_RX_ACTION_EVENTID\n");
+-		ret = ath6kl_wmi_rx_action_event_rx(datap, len);
++		ret = ath6kl_wmi_rx_action_event_rx(wmi, datap, len);
+ 		break;
+ 	case WMI_P2P_INFO_EVENTID:
+ 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_P2P_INFO_EVENTID\n");
 -- 
-1.7.0.4
+1.7.4.1
+
