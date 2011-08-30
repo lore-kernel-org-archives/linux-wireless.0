@@ -1,72 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:44611 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752872Ab1HBJqK convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:44874 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750994Ab1H3Ger convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 05:46:10 -0400
+	Tue, 30 Aug 2011 02:34:47 -0400
+Received: by pzk37 with SMTP id 37so9776553pzk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 23:34:47 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAGXE3d9ynyJX2eAr2bfwOc_PdDNEwVHDVsA_Jx1ReBht=eVuYw@mail.gmail.com>
-References: <CAGXE3d9ynyJX2eAr2bfwOc_PdDNEwVHDVsA_Jx1ReBht=eVuYw@mail.gmail.com>
-Date: Tue, 2 Aug 2011 11:46:09 +0200
-Message-ID: <CAL1gcdNpRfznieegeSCLxeUP_0LRZmnzh91A8d3=+2VM1+S+8Q@mail.gmail.com> (sfid-20110802_114632_943200_EA558E15)
-Subject: Re: [PATCH] rt2x00: Fix compilation without CONFIG_RT2X00_LIB_CRYPTO
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Randy Dunlap <rdunlap@xenotime.net>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CACna6rzJzzhdBig48TGV=cfBYuvmjxowSw2Ai_GA-W0n_Y3Qkw@mail.gmail.com>
+References: <CACna6rwU4RuYuiAFjXFDH-c+EFsKtKFmB1Sh8kXdb9EoUt4abg@mail.gmail.com>
+	<CACna6rzkSgbf8sV2S1mg2OhxKstXeiqnmNmYFSMuAc563acBpg@mail.gmail.com>
+	<CACna6ryTA+nbz9cJtFEWypb1atY2s+eKseANM-u=-EjW6FWE7Q@mail.gmail.com>
+	<CACna6rzJzzhdBig48TGV=cfBYuvmjxowSw2Ai_GA-W0n_Y3Qkw@mail.gmail.com>
+Date: Tue, 30 Aug 2011 08:34:47 +0200
+Message-ID: <CACna6rxNturBBxqtcE4rKLwK7-5gjzjRPRBLsTWO2t1Uit3C-g@mail.gmail.com> (sfid-20110830_083449_692404_0A719B86)
+Subject: Re: Looking for BCM43228
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 2, 2011 at 11:43 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> This was introduced by commit
-> 77b5621bac4a56b83b9081f48d4e7d1accdde400 (rt2x00: Don't use queue entry
-> as parameter when creating TX descriptor.)
+W dniu 29 sierpnia 2011 23:27 u≈ºytkownik Rafa≈Ç Mi≈Çecki
+<zajec5@gmail.com> napisa≈Ç:
+> W dniu 29 sierpnia 2011 21:02 u≈ºytkownik Rafa≈Ç Mi≈Çecki
+> <zajec5@gmail.com> napisa≈Ç:
+>> I'll mail Marc, Ubuntu's launchpad reported to ask if he still has
+>> access to this notebook.
 >
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-
-OK. You beat me to it.
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
-> Sending directly to John as I assume this should go through the wireless tree?
+> I've just received photo of the card (inside notebook) from Marc. It's
+> labeled as DW1530, bingo! :)
 >
-> †drivers/net/wireless/rt2x00/rt2x00lib.h | † †3 ++-
-> †1 files changed, 2 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h
-> b/drivers/net/wireless/rt2x00/rt2x00lib.h
-> index 15cdc7e..4cdf247 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-> @@ -355,7 +355,8 @@ static inline enum cipher
-> rt2x00crypto_key_to_cipher(struct ieee80211_key_conf *
-> † † † †return CIPHER_NONE;
-> †}
->
-> -static inline void rt2x00crypto_create_tx_descriptor(struct queue_entry *entry,
-> +static inline void rt2x00crypto_create_tx_descriptor(struct
-> rt2x00_dev *rt2x00dev,
-> + † † † † † † † † † † † † † † † † † † † † † † † † † †struct sk_buff *skb,
-> † † † † † † † † † † † † † † † † † † † † † † † † † † struct txentry_desc *txdesc)
-> †{
-> †}
-> --
-> 1.7.3.4
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at †http://vger.kernel.org/majordomo-info.html
->
+> I'll ask Dell about prices. Larry: I'm also waiting for you getting
+> response, maybe your prices will be lower?
 
-
+225 z≈Ç at Polish Dell. It's 54,109136 euro according to Google. Not
+cheap :| At least price includes shipping (to the Poland).
 
 -- 
----
-Gertjan
+Rafa≈Ç
