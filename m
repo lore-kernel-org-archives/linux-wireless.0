@@ -1,150 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:55381 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752750Ab1HNKRX (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42130 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750741Ab1H3AY5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 06:17:23 -0400
-Received: by wwf5 with SMTP id 5so4061056wwf.1
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Aug 2011 03:17:22 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 09/40] wl12xx: enable/disable role on interface add/remove
-Date: Sun, 14 Aug 2011 13:17:08 +0300
-Message-Id: <1313317059-16567-10-git-send-email-eliad@wizery.com> (sfid-20110814_121727_401725_D370F2A2)
-In-Reply-To: <1313317059-16567-1-git-send-email-eliad@wizery.com>
-References: <1313317059-16567-1-git-send-email-eliad@wizery.com>
+	Mon, 29 Aug 2011 20:24:57 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6VwWu5+Hk7=3ghkgiXss9kCqGyS-RWPYtyHRhDsx5r2rA@mail.gmail.com>
+References: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com>
+	<CAB=NE6VwWu5+Hk7=3ghkgiXss9kCqGyS-RWPYtyHRhDsx5r2rA@mail.gmail.com>
+Date: Mon, 29 Aug 2011 17:24:56 -0700
+Message-ID: <CAA93jw7c+Nxc6ZbWZWsQ+F78AoPWU=quSRaOUpT0yRcwJOXsGQ@mail.gmail.com> (sfid-20110830_022507_780081_A23E89DD)
+Subject: Re: BQL crap and wireless
+From: Dave Taht <dave.taht@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Tom Herbert <therbert@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andrew McGregor <andrewmcgr@gmail.com>,
+	Matt Smith <smithm@qca.qualcomm.com>,
+	Kevin Hayes <hayes@qca.qualcomm.com>,
+	Derek Smithies <derek@indranet.co.nz>, netdev@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to the new multi-role flow, we have to enable the
-role before using (starting) it, and disable it on cleanup
-(after it's no longer needed).
+On Mon, Aug 29, 2011 at 2:02 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Fri, Aug 26, 2011 at 4:27 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-v2: consider WL12XX_INVALID_ROLE_TYPE, skip cmd on wake-up error.
+> Let me elaborate on 802.11 and bufferbloat as so far I see only crap
+> documentation on this and also random crap adhoc patches.
 
- drivers/net/wireless/wl12xx/main.c |   41 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 41 insertions(+), 0 deletions(-)
+I agree that the research into bufferbloat has been an evolving topic, and
+the existing documentation and solutions throughout the web is inaccurate
+ or just plan wrong in many respects. While I've been accumulating better
+and more interesting results as research continues, we're not there yet...
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 4689d0b..3e77f59 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1776,19 +1776,35 @@ static int wl1271_op_start(struct ieee80211_hw *hw)
- 
- static void wl1271_op_stop(struct ieee80211_hw *hw)
- {
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 stop");
- }
- 
-+static u8 wl12xx_get_role_type(struct wl1271 *wl)
-+{
-+	switch (wl->bss_type) {
-+	case BSS_TYPE_AP_BSS:
-+		return WL1271_ROLE_AP;
-+
-+	case BSS_TYPE_STA_BSS:
-+		return WL1271_ROLE_STA;
-+
-+	default:
-+		wl1271_error("invalid bss_type: %d", wl->bss_type);
-+	}
-+	return WL12XX_INVALID_ROLE_TYPE;
-+}
-+
- static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 				   struct ieee80211_vif *vif)
- {
- 	struct wl1271 *wl = hw->priv;
- 	struct wiphy *wiphy = hw->wiphy;
- 	int retries = WL1271_BOOT_RETRIES;
- 	int ret = 0;
-+	u8 role_type;
- 	bool booted = false;
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 add interface type %d mac %pM",
- 		     vif->type, vif->addr);
- 
- 	mutex_lock(&wl->mutex);
-@@ -1823,12 +1839,17 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 		break;
- 	default:
- 		ret = -EOPNOTSUPP;
- 		goto out;
- 	}
- 
-+	role_type = wl12xx_get_role_type(wl);
-+	if (role_type == WL12XX_INVALID_ROLE_TYPE) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
- 	memcpy(wl->mac_addr, vif->addr, ETH_ALEN);
- 
- 	if (wl->state != WL1271_STATE_OFF) {
- 		wl1271_error("cannot start because not in off state: %d",
- 			     wl->state);
- 		ret = -EBUSY;
-@@ -1842,12 +1863,16 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 			goto power_off;
- 
- 		ret = wl1271_boot(wl);
- 		if (ret < 0)
- 			goto power_off;
- 
-+		ret = wl12xx_cmd_role_enable(wl, role_type, &wl->role_id);
-+		if (ret < 0)
-+			goto irq_disable;
-+
- 		ret = wl1271_hw_init(wl);
- 		if (ret < 0)
- 			goto irq_disable;
- 
- 		booted = true;
- 		break;
-@@ -1906,12 +1931,13 @@ out:
- 	return ret;
- }
- 
- static void __wl1271_op_remove_interface(struct wl1271 *wl,
- 					 bool reset_tx_queues)
- {
-+	int ret;
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 remove interface");
- 
- 	/* because of hardware recovery, we may get here twice */
- 	if (wl->state != WL1271_STATE_ON)
- 		return;
-@@ -1930,12 +1956,27 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
- 		wl->scan.state = WL1271_SCAN_STATE_IDLE;
- 		memset(wl->scan.scanned_ch, 0, sizeof(wl->scan.scanned_ch));
- 		wl->scan.req = NULL;
- 		ieee80211_scan_completed(wl->hw, true);
- 	}
- 
-+	if (!test_bit(WL1271_FLAG_RECOVERY_IN_PROGRESS, &wl->flags)) {
-+		/* disable active roles */
-+		ret = wl1271_ps_elp_wakeup(wl);
-+		if (ret < 0)
-+			goto deinit;
-+
-+		ret = wl12xx_cmd_role_disable(wl, &wl->role_id);
-+		if (ret < 0)
-+			goto deinit;
-+
-+		wl1271_ps_elp_sleep(wl);
-+	}
-+deinit:
-+	wl->sta_hlid = WL12XX_INVALID_LINK_ID;
-+
- 	/*
- 	 * this must be before the cancel_work calls below, so that the work
- 	 * functions don't perform further work.
- 	 */
- 	wl->state = WL1271_STATE_OFF;
- 
+> Given that I
+> see effort on netdev to try to help with latency issues its important
+> for netdev developers to be aware of what issues we do face today and
+> what stuff is being mucked with.
+
+Hear, Hear!
+
+> As far as I see it I break down the issues into two categories:
+>
+>  * 1. High latencies on ping
+>  * 2. Constant small drops in throughput
+
+I'll take on 2, in a separate email.
+
+>
+>  1. High latencies on ping
+> ===================
+
+For starters, no, "high - and wildly varying - latencies on all sorts
+of packets".
+
+Ping is merely a diagnostic tool in this case.
+
+If you would like several gb of packet captures of all sorts of streams
+from various places and circumstances, ask. JG published a long
+series about 7 months back, more are coming.
+
+Regrettably most of the most recent traces come from irreproducible
+circumstances, a flaw we are trying to fix after 'CeroWrt' is finished.
+
+> It seems the bufferbloat folks are blaming the high latencies on our
+> obsession on modern hardware to create huge queues and also with
+> software retries. They assert that reducing the queue length
+> (ATH_MAX_QDEPTH on ath9k) and software retries (ATH_MAX_SW_RETRIES on
+> ath9k) helps with latencies. They have at least empirically tested
+> this with ath9k with
+> a simple patch:
+>
+> https://www.bufferbloat.net/attachments/43/580-ath9k_lowlatency.patch
+>
+> The obvious issue with this approach is it assumes STA mode of
+> operation, with an AP you do not want to reduce the queue size like
+> that. In fact because of the dynamic nature of 802.11 and the
+
+If there is any one assumption about the bufferbloat issue that people
+keep assuming we have, it's this one.
+
+In article after article, in blog post after blog post, people keep
+'fixing' bufferbloat by setting their queues to very low values,
+and almost miraculously start seeing their  QoS start working
+(which it does), and then they gleefully publish their results
+ as recommendations, and then someone from the bufferbloat
+effort has to go and comment on that piece, whenever we
+notice, to straighten them out.
+
+In no presentation, no documentation, anywhere I know of,
+have we expressed  that queuing as it works today
+is the right thing.
+
+More recently, JG got fed up and wrote these...
+
+http://gettys.wordpress.com/2011/07/06/rant-warning-there-is-no-single-right-answer-for-buffering-ever/
+
+http://gettys.wordpress.com/2011/07/09/rant-warning-there-is-no-single-right-answer-for-buffering-ever-part-2/
+
+There has been no time, since the inception of the bufferbloat
+concept, have we had a fixed buffer size in any layer of the
+stack as even a potential solution.
+
+And you just did applied that preconception to us again.
+
+My take on matters is that *unmanaged* buffer sizes > 1 is a
+problem. Others set the number higher.
+
+Of late, given what tools we have, we HAVE been trying to establish
+what *good baseline* queue sizes (txqueues, driver queues, etc)
+actually are for wireless under ANY circumstance that was
+duplicate-able.
+
+For the drivers JG was using last year, that answer was: 0.
+
+Actually, less than 0  would have been good, but that
+would have involved having tachyon emitters in the
+architecture.
+
+For the work that felix and andrew recently performed on the ath9k,
+it looks to be about 37 for STA mode, but further testing is required
+and is taking place... as well as instrumentation of the tcp stack, changes
+to the system clock interrupt,  and a horde of other things.
+
+As for AP performance... don't know. Am testing, capturing streams,
+testing contention, building up labs, and creating a distro to deploy
+to the field to test everything with.
+
+
+> different modes of operation it is a hard question to solve on what
+> queue size you should have. The BQL effort seems to try to unify a
+> solution but obviously did not consider 802.11's complexities.
+
+I only noticed the presentation and thread a few days ago. I do happen
+to like byte, rather than packet limits, as a start towards sanity, but
+framing overhead is still a problem, and an effective API and
+set of servos more so.
+
+> 802.11
+> makes this very complicated given the PtP and PtMP support we have and
+> random number of possible peers.
+>
+> Then -- we have Aggregation. At least AMPDU Aggregation seems to
+> empirically deteriorate latency and bufferbloat guys seem to hate it.
+
+I think aggregation is awesome, actually. I've said so on multiple occasions.
+
+After reading the early work done on it, back in the early 2000s, I thought it
+could not be made to work, at all. I was wrong.
+
+The problems I have with aggregation as seemingly commenly
+implemented today are:
+
+0) Attempts to make the media look 100% perfect
+1) Head of line blocking
+2) Assumption that all packets are equal.
+3) Co-existence with previous forms of 802.11 is difficult
+4) Horrible behavior with every AQM algorithm, particularly with fair queuing
+
+> Of course their statements are baseless and they are ignoring a lot of
+> effort that went into this. Their current efforts have been to reduce
+> segment size of a aggregates and this seems to help but the same
+
+I note that some of the ongoing suggestions actually will make it statistically
+more likely that stuff emerging from higher levels of the stack will be even
+more aggregate-able than it is currently.
+
+Also, it would be good to have some statistics as to how good aggregation
+is currently, actually working under normal multiuser workloads.
+A suggestion of felix's was to make that available via netlink broadcast.
+
+> problem looms over this resolution -- the optimal aggregation segment
+> size should be dynamic and my instincts tell me we likely need to also
+> rely on a minstrel-like based algorithm for finding the optimal length.
+
+We agree very much it should be dynamic.
+
+
+
 -- 
-1.7.6.401.g6a319
-
+Dave Täht
+SKYPE: davetaht
+US Tel: 1-239-829-5608
+http://the-edge.blogspot.com
