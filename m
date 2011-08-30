@@ -1,149 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:39281 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755790Ab1HaVee (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25390 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756017Ab1H3TD7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 17:34:34 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 4so788832ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 14:34:33 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 6/6] b43: LCN-PHY: add conditions for few operations
-Date: Wed, 31 Aug 2011 23:36:21 +0200
-Message-Id: <1314826581-27852-6-git-send-email-zajec5@gmail.com> (sfid-20110831_233441_895873_AE674D3F)
-In-Reply-To: <1314826581-27852-1-git-send-email-zajec5@gmail.com>
-References: <1314826581-27852-1-git-send-email-zajec5@gmail.com>
+	Tue, 30 Aug 2011 15:03:59 -0400
+Cc: <linux-wireless@vger.kernel.org>,
+	Edward Lu <shaol@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+Subject: [PATCH v2 18/22] ath6kl: Fix default key installation in AP mode
+Date: Tue, 30 Aug 2011 21:58:07 +0300
+Message-ID: <1314730691-12089-19-git-send-email-jouni@qca.qualcomm.com> (sfid-20110830_210402_632560_F3126509)
+In-Reply-To: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was not possible to guess the conditions from MMIO dumps. Take them
-from brcmsmac code.
+From: Edward Lu <elu@qca.qualcomm.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Edward Lu <elu@qca.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/net/wireless/b43/phy_lcn.c        |   44 ++++++++++++++++++++--------
- drivers/net/wireless/b43/tables_phy_lcn.c |    8 ++++-
- 2 files changed, 38 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_lcn.c b/drivers/net/wireless/b43/phy_lcn.c
-index b461278..d0f106e 100644
---- a/drivers/net/wireless/b43/phy_lcn.c
-+++ b/drivers/net/wireless/b43/phy_lcn.c
-@@ -39,6 +39,7 @@ static void b43_radio_2064_channel_setup(struct b43_wldev *dev)
- 	b43_radio_set(dev, 0x09d, 0x4);
- 	b43_radio_write(dev, 0x09e, 0xf);
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index af8e9cc..a3aa150 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1025,6 +1025,7 @@ static int ath6kl_cfg80211_set_default_key(struct wiphy *wiphy,
+ 	struct ath6kl_key *key = NULL;
+ 	int status = 0;
+ 	u8 key_usage;
++	enum crypto_type key_type = NONE_CRYPT;
  
-+	/* Channel specific values in theory, in practice always the same */
- 	b43_radio_write(dev, 0x02a, 0xb);
- 	b43_radio_maskset(dev, 0x030, ~0x3, 0xa);
- 	b43_radio_maskset(dev, 0x091, ~0x3, 0);
-@@ -70,22 +71,31 @@ static void b43_radio_2064_channel_setup(struct b43_wldev *dev)
- 	b43_radio_write(dev, 0x044, save[0]);
- 	b43_radio_write(dev, 0x12b, save[1]);
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: index %d\n", __func__, key_index);
  
--	b43_radio_write(dev, 0x038, 0x0);
--	b43_radio_write(dev, 0x091, 0x7);
-+	if (dev->phy.rev == 1) {
-+		/* brcmsmac uses outdated 0x3 for 0x038 */
-+		b43_radio_write(dev, 0x038, 0x0);
-+		b43_radio_write(dev, 0x091, 0x7);
-+	}
- }
+@@ -1049,12 +1050,16 @@ static int ath6kl_cfg80211_set_default_key(struct wiphy *wiphy,
+ 	key_usage = GROUP_USAGE;
+ 	if (ar->prwise_crypto == WEP_CRYPT)
+ 		key_usage |= TX_USAGE;
++	if (unicast)
++		key_type = ar->prwise_crypto;
++	if (multicast)
++		key_type = ar->grp_crypto;
  
- /* wlc_radio_2064_init */
- static void b43_radio_2064_init(struct b43_wldev *dev)
- {
--	b43_radio_write(dev, 0x09c, 0x0020);
--	b43_radio_write(dev, 0x105, 0x0008);
-+	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
-+		b43_radio_write(dev, 0x09c, 0x0020);
-+		b43_radio_write(dev, 0x105, 0x0008);
-+	} else {
-+		/* TODO */
-+	}
- 	b43_radio_write(dev, 0x032, 0x0062);
- 	b43_radio_write(dev, 0x033, 0x0019);
- 	b43_radio_write(dev, 0x090, 0x0010);
- 	b43_radio_write(dev, 0x010, 0x0000);
--	b43_radio_write(dev, 0x060, 0x007f);
--	b43_radio_write(dev, 0x061, 0x0072);
--	b43_radio_write(dev, 0x062, 0x007f);
-+	if (dev->phy.rev == 1) {
-+		b43_radio_write(dev, 0x060, 0x007f);
-+		b43_radio_write(dev, 0x061, 0x0072);
-+		b43_radio_write(dev, 0x062, 0x007f);
-+	}
- 	b43_radio_write(dev, 0x01d, 0x0002);
- 	b43_radio_write(dev, 0x01e, 0x0006);
+ 	if (ar->nw_type == AP_NETWORK && !test_bit(CONNECTED, &ar->flag))
+ 		return 0; /* Delay until AP mode has been started */
  
-@@ -145,10 +155,12 @@ static void b43_phy_lcn_clear_tx_power_offsets(struct b43_wldev *dev)
- {
- 	u8 i;
- 
--	b43_phy_write(dev, B43_PHY_LCN_TABLE_ADDR, (0x7 << 10) | 0x340);
--	for (i = 0; i < 30; i++) {
--		b43_phy_write(dev, B43_PHY_LCN_TABLE_DATAHI, 0);
--		b43_phy_write(dev, B43_PHY_LCN_TABLE_DATALO, 0);
-+	if (1) { /* FIXME */
-+		b43_phy_write(dev, B43_PHY_LCN_TABLE_ADDR, (0x7 << 10) | 0x340);
-+		for (i = 0; i < 30; i++) {
-+			b43_phy_write(dev, B43_PHY_LCN_TABLE_DATAHI, 0);
-+			b43_phy_write(dev, B43_PHY_LCN_TABLE_DATALO, 0);
-+		}
+ 	status = ath6kl_wmi_addkey_cmd(ar->wmi, ar->def_txkey_index,
+-				       ar->prwise_crypto, key_usage,
++				       key_type, key_usage,
+ 				       key->key_len, key->seq, key->key,
+ 				       KEY_OP_INIT_VAL, NULL,
+ 				       SYNC_BOTH_WMIFLAG);
+@@ -1617,8 +1622,11 @@ static int ath6kl_ap_beacon(struct wiphy *wiphy, struct net_device *dev,
+ 			break;
+ 		}
  	}
+-	if (p.prwise_crypto_type == 0)
++	if (p.prwise_crypto_type == 0) {
+ 		p.prwise_crypto_type = NONE_CRYPT;
++		ath6kl_set_cipher(ar, 0, true);
++	} else if (info->crypto.n_ciphers_pairwise == 1)
++		ath6kl_set_cipher(ar, info->crypto.ciphers_pairwise[0], true);
  
- 	b43_phy_write(dev, B43_PHY_LCN_TABLE_ADDR, (0x7 << 10) | 0x80);
-@@ -178,8 +190,13 @@ static void b43_phy_lcn_rev0_baseband_init(struct b43_wldev *dev)
- 	b43_phy_set(dev, 0x44a, 0x44);
- 	b43_phy_write(dev, 0x44a, 0x80);
+ 	switch (info->crypto.cipher_group) {
+ 	case WLAN_CIPHER_SUITE_WEP40:
+@@ -1635,6 +1643,7 @@ static int ath6kl_ap_beacon(struct wiphy *wiphy, struct net_device *dev,
+ 		p.grp_crypto_type = NONE_CRYPT;
+ 		break;
+ 	}
++	ath6kl_set_cipher(ar, info->crypto.cipher_group, false);
  
-+	if (!(dev->dev->bus_sprom->boardflags_lo & B43_BFL_FEM))
-+		; /* TODO */
- 	b43_phy_maskset(dev, 0x634, ~0xff, 0xc);
--	b43_phy_maskset(dev, 0x634, ~0xff, 0xa);
-+	if (dev->dev->bus_sprom->boardflags_lo & B43_BFL_FEM) {
-+		b43_phy_maskset(dev, 0x634, ~0xff, 0xa);
-+		b43_phy_write(dev, 0x910, 0x1);
-+	}
- 
- 	b43_phy_write(dev, 0x910, 0x1);
- 
-@@ -207,7 +224,8 @@ static void b43_phy_lcn_bu_tweaks(struct b43_wldev *dev)
- 	b43_phy_maskset(dev, 0x434, ~0xff, 0xfd);
- 	b43_phy_maskset(dev, 0x420, ~0xff, 0x10);
- 
--	b43_radio_set(dev, 0x09b, 0xf0);
-+	if (dev->dev->bus_sprom->board_rev >= 0x1204)
-+		b43_radio_set(dev, 0x09b, 0xf0);
- 
- 	b43_phy_write(dev, 0x7d6, 0x0902);
- 
-diff --git a/drivers/net/wireless/b43/tables_phy_lcn.c b/drivers/net/wireless/b43/tables_phy_lcn.c
-index c62a940..7bf7057 100644
---- a/drivers/net/wireless/b43/tables_phy_lcn.c
-+++ b/drivers/net/wireless/b43/tables_phy_lcn.c
-@@ -501,9 +501,15 @@ void b43_phy_lcn_tables_init(struct b43_wldev *dev)
- {
- 	b43_phy_lcn_upload_static_tables(dev);
- 	/* TODO: various tables ops here */
--	b43_lcntab_write_bulk(dev, B43_LCNTAB16(0xf, 0),
-+
-+	if (dev->dev->bus_sprom->boardflags_lo & B43_BFL_FEM &&
-+	    !(dev->dev->bus_sprom->boardflags_hi & B43_BFH_FEM_BT))
-+		b43_lcntab_write_bulk(dev, B43_LCNTAB16(0xf, 0),
- 			ARRAY_SIZE(b43_lcntab_sw_ctl_4313_epa_rev0),
- 			b43_lcntab_sw_ctl_4313_epa_rev0);
-+	else
-+		b43err(dev->wl, "SW ctl table is unknown for this card\n");
-+
- 	/* TODO: various tables ops here */
- 	b43_phy_lcn_rewrite_tables(dev);
- 	b43_phy_lcn_clean_papd_comp_table(dev);
+ 	p.nw_type = AP_NETWORK;
+ 	ar->nw_type = ar->next_mode;
 -- 
-1.7.3.4
+1.7.4.1
 
