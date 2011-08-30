@@ -1,151 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21001 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752568Ab1HDMqr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Aug 2011 08:46:47 -0400
-Date: Thu, 4 Aug 2011 14:46:54 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Justin Piszcz <jpiszcz@lucidpixels.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] rt2x00: rt2800usb: fix races in tx queue
-Message-ID: <20110804124653.GB5739@redhat.com> (sfid-20110804_144650_786822_8F06B158)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32991 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751799Ab1H3Jdx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Aug 2011 05:33:53 -0400
+Cc: <linux-wireless@vger.kernel.org>,
+	Edward Lu <shaol@qca.qualcomm.com>
+Message-ID: <4E5CAE7A.8000809@qca.qualcomm.com> (sfid-20110830_113356_380483_01D64B67)
+Date: Tue, 30 Aug 2011 12:33:46 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: Re: [PATCH 11/20] ath6kl: Support channel set request for startscan
+ command
+References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com> <1314620641-24257-12-git-send-email-jouni@qca.qualcomm.com>
+In-Reply-To: <1314620641-24257-12-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can perform parallel putting new entries in a queue
-(rt2x00queue_write_tx_frame()) and removing entries after finishing
-transmitting (rt2800usb_work_txdone()). There are cases when txdone
-may process an entry that was not fully send and nullify entry->skb.
-What in a result crash the kernel in rt2800usb_write_tx_desc() or
-rt2800usb_get_txwi() or other place where entry->skb is used.
+On 08/29/2011 03:23 PM, Jouni Malinen wrote:
+> From: Edward Lu <elu@qca.qualcomm.com>
+>
+> @@ -785,14 +787,33 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+>  		}
+>  	}
+>  
+> +	if (request->n_channels > 0) {
+> +		u8 i;
+> +
+> +		n_channels = (request->n_channels > 127) ?
+> +				127 : request->n_channels;
 
-To fix stop processing entries in txdone, which flags do not indicate
-transition was finished.
+min()
 
-Also change flags as soon as we get confirmation transmision is done.
+> +
+> +		channels = kzalloc(n_channels * sizeof(u16), GFP_KERNEL);
+> +		if (channels == NULL) {
+> +			ath6kl_err("failed to set scan channels, "
+> +				   "scan all channels");
 
-Reported-and-tested-by: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: stable@kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |   36 ++++++++++++++++++++++--------
- drivers/net/wireless/rt2x00/rt2x00usb.c |    6 ++--
- 2 files changed, 29 insertions(+), 13 deletions(-)
+ath6kl_warn() would be more approriate here as the driver can still
+continue.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 5075593..edd0518 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -500,14 +500,14 @@ static bool rt2800usb_txdone_entry_check(struct queue_entry *entry, u32 reg)
- 	return true;
- }
- 
--static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
-+static int rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
- {
- 	struct data_queue *queue;
- 	struct queue_entry *entry;
- 	u32 reg;
- 	u8 qid;
- 
--	while (kfifo_get(&rt2x00dev->txstatus_fifo, &reg)) {
-+	while (kfifo_peek(&rt2x00dev->txstatus_fifo, &reg)) {
- 
- 		/* TX_STA_FIFO_PID_QUEUE is a 2-bit field, thus
- 		 * qid is guaranteed to be one of the TX QIDs
-@@ -517,25 +517,39 @@ static void rt2800usb_txdone(struct rt2x00_dev *rt2x00dev)
- 		if (unlikely(!queue)) {
- 			WARNING(rt2x00dev, "Got TX status for an unavailable "
- 					   "queue %u, dropping\n", qid);
--			continue;
-+			goto next_reg;
- 		}
- 
- 		/*
- 		 * Inside each queue, we process each entry in a chronological
- 		 * order. We first check that the queue is not empty.
- 		 */
--		entry = NULL;
--		while (!rt2x00queue_empty(queue)) {
-+		while (1) {
-+			entry = NULL;
-+
-+			if (rt2x00queue_empty(queue))
-+				break;
-+
- 			entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
-+
-+			if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags) ||
-+			    !test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags)) {
-+				WARNING(rt2x00dev, "Data pending for entry %u"
-+					"in queue %u\n", entry->entry_idx, qid);
-+				return 1;
-+			}
-+
- 			if (rt2800usb_txdone_entry_check(entry, reg))
- 				break;
- 		}
- 
--		if (!entry || rt2x00queue_empty(queue))
--			break;
--
--		rt2800_txdone_entry(entry, reg);
-+		if (entry)
-+			rt2800_txdone_entry(entry, reg);
-+next_reg:
-+		kfifo_skip(&rt2x00dev->txstatus_fifo);
- 	}
-+
-+	return 0;
- }
- 
- static void rt2800usb_work_txdone(struct work_struct *work)
-@@ -545,7 +559,8 @@ static void rt2800usb_work_txdone(struct work_struct *work)
- 	struct data_queue *queue;
- 	struct queue_entry *entry;
- 
--	rt2800usb_txdone(rt2x00dev);
-+	if (rt2800usb_txdone(rt2x00dev))
-+		goto out;
- 
- 	/*
- 	 * Process any trailing TX status reports for IO failures,
-@@ -569,6 +584,7 @@ static void rt2800usb_work_txdone(struct work_struct *work)
- 		}
- 	}
- 
-+out:
- 	/*
- 	 * The hw may delay sending the packet after DMA complete
- 	 * if the medium is busy, thus the TX_STA_FIFO entry is
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index b6b4542..46c6d36 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -265,14 +265,14 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
- 	if (!test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
- 		return;
- 
--	if (rt2x00dev->ops->lib->tx_dma_done)
--		rt2x00dev->ops->lib->tx_dma_done(entry);
--
- 	/*
- 	 * Report the frame as DMA done
- 	 */
- 	rt2x00lib_dmadone(entry);
- 
-+	if (rt2x00dev->ops->lib->tx_dma_done)
-+		rt2x00dev->ops->lib->tx_dma_done(entry);
-+
- 	/*
- 	 * Check if the frame was correctly uploaded
- 	 */
--- 
-1.7.1
+> +			n_channels = 0;
+> +		}
+> +
+> +		for (i = 0; i < n_channels; i++)
+> +			channels[i] = request->channels[i]->center_freq;
+> +	}
+> +
+>  	if (ath6kl_wmi_startscan_cmd(ar->wmi, WMI_LONG_SCAN, 0,
+> -				     false, 0, 0, 0, NULL) != 0) {
+> +				     false, 0, 0, n_channels, channels) != 0) {
+>  		ath6kl_err("wmi_startscan_cmd failed\n");
+>  		ret = -EIO;
 
+Again I would prefer to return the error code from the wmi call.
+
+> @@ -1734,8 +1734,10 @@ int ath6kl_wmi_startscan_cmd(struct wmi *wmi, enum wmi_scan_type scan_type,
+>  	sc->force_scan_intvl = cpu_to_le32(force_scan_interval);
+>  	sc->num_ch = num_chan;
+>  
+> -	if (num_chan)
+> -		memcpy(sc->ch_list, ch_list, num_chan * sizeof(u16));
+> +	if (num_chan) {
+> +		for (i = 0; i < num_chan; i++)
+> +			sc->ch_list[i] = cpu_to_le16(ch_list[i]);
+> +	}
+
+if (num_chan) is not needed, the for loop is enough.
+
+Kalle
