@@ -1,69 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29867 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752085Ab1HYTm0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 15:42:26 -0400
-Subject: Re: [PATCH] libertas: update readme file
-From: Dan Williams <dcbw@redhat.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Thu, 25 Aug 2011 14:44:57 -0500
-In-Reply-To: <1314059197-8377-1-git-send-email-bzhao@marvell.com>
-References: <1314059197-8377-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1314301498.3922.10.camel@dcbw.foobar.com> (sfid-20110825_214228_972436_31C2AAC3)
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5324 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756112Ab1H3TCp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Aug 2011 15:02:45 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v2 10/22] ath6kl: Use set_appie command to add Probe Request IEs
+Date: Tue, 30 Aug 2011 21:57:59 +0300
+Message-ID: <1314730691-12089-11-git-send-email-jouni@qca.qualcomm.com> (sfid-20110830_210248_423253_F8B35255)
+In-Reply-To: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-08-22 at 17:26 -0700, Bing Zhao wrote:
-> From: Amitkumar Karwar <akarwar@marvell.com>
-> 
-> Since all wext specific code is removed, currently there is no
-> way to configure deep sleep mode. This patch removes deep sleep
-> configuration information in readme file.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   11 +++++++++++
+ drivers/net/wireless/ath/ath6kl/wmi.h      |    3 +++
+ 2 files changed, 14 insertions(+), 0 deletions(-)
 
-Acked-by: Dan Williams <dcbw@redhat.com>
-
-> ---
->  drivers/net/wireless/libertas/README |   25 -------------------------
->  1 files changed, 0 insertions(+), 25 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/README b/drivers/net/wireless/libertas/README
-> index 1453eec..91f2ca9 100644
-> --- a/drivers/net/wireless/libertas/README
-> +++ b/drivers/net/wireless/libertas/README
-> @@ -238,28 +238,3 @@ hostsleep
->  		echo "1" > hostsleep : enable host sleep.
->  		echo "0" > hostsleep : disable host sleep
->  
-> -========================
-> -IWCONFIG COMMANDS
-> -========================
-> -power period
-> -
-> -	This command is used to configure the station in deep sleep mode /
-> -	auto deep sleep mode.
-> -
-> -	The timer is implemented to monitor the activities (command, event,
-> -	etc.). When an activity is detected station will exit from deep
-> -	sleep mode automatically and restart the timer. At timer expiry
-> -	(no activity for defined time period) the deep sleep mode is entered
-> -	automatically.
-> -
-> -	Note: this command is for SDIO interface only.
-> -
-> -	Usage:
-> -	To enable deep sleep mode do:
-> -		iwconfig wlan0 power period 0
-> -	To enable auto deep sleep mode with idle time period 5 seconds do:
-> -		iwconfig wlan0 power period 5
-> -	To disable deep sleep/auto deep sleep mode do:
-> -		iwconfig wlan0 power period -1
-> -
-> -==============================================================================
-
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 5c98de3..56a60c7 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -776,6 +776,16 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ 						  request->ssids[i].ssid);
+ 	}
+ 
++	if (request->ie) {
++		ret = ath6kl_wmi_set_appie_cmd(ar->wmi, WMI_FRAME_PROBE_REQ,
++					       request->ie, request->ie_len);
++		if (ret) {
++			ath6kl_err("failed to set Probe Request appie for "
++				   "scan");
++			return ret;
++		}
++	}
++
+ 	if (ath6kl_wmi_startscan_cmd(ar->wmi, WMI_LONG_SCAN, 0,
+ 				     false, 0, 0, 0, NULL) != 0) {
+ 		ath6kl_err("wmi_startscan_cmd failed\n");
+@@ -1770,6 +1780,7 @@ struct wireless_dev *ath6kl_cfg80211_init(struct device *dev)
+ 	    BIT(NL80211_IFTYPE_ADHOC);
+ 	/* max num of ssids that can be probed during scanning */
+ 	wdev->wiphy->max_scan_ssids = MAX_PROBED_SSID_INDEX;
++	wdev->wiphy->max_scan_ie_len = 1000; /* FIX: what is correct limit? */
+ 	wdev->wiphy->bands[IEEE80211_BAND_2GHZ] = &ath6kl_band_2ghz;
+ 	wdev->wiphy->bands[IEEE80211_BAND_5GHZ] = &ath6kl_band_5ghz;
+ 	wdev->wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 5e2f6ce..83af518 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -2218,6 +2218,9 @@ int ath6kl_wmi_info_req_cmd(struct wmi *wmi, u32 info_req_flags);
+ 
+ int ath6kl_wmi_cancel_remain_on_chnl_cmd(struct wmi *wmi);
+ 
++int ath6kl_wmi_set_appie_cmd(struct wmi *wmi, u8 mgmt_frm_type, const u8 *ie,
++			     u8 ie_len);
++
+ void *ath6kl_wmi_init(struct ath6kl *devt);
+ void ath6kl_wmi_shutdown(struct wmi *wmi);
+ 
+-- 
+1.7.4.1
 
