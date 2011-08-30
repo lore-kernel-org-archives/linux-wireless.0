@@ -1,229 +1,483 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3122 "EHLO MMS3.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:44718 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753014Ab1HHN7a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 09:59:30 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCHv2 44/82] staging: brcm80211: move brcmf_mmc_suspend to
- sdio layer in fullmac
-Date: Mon, 8 Aug 2011 15:58:28 +0200
-Message-ID: <1312811946-16713-45-git-send-email-arend@broadcom.com> (sfid-20110808_160146_642593_7CA3A40E)
-In-Reply-To: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-References: <1312811946-16713-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752594Ab1H3HoS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Aug 2011 03:44:18 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	rmanohar@qca.qualcomm.com, shafi.wireless@gmail.com,
+	vthiagar@qca.qualcomm.com
+Subject: [PATCH v8 3/4] ath9k: merge reset related functions
+Date: Tue, 30 Aug 2011 09:44:05 +0200
+Message-Id: <1314690246-76945-3-git-send-email-nbd@openwrt.org> (sfid-20110830_094425_014968_5A2042B3)
+In-Reply-To: <1314690246-76945-2-git-send-email-nbd@openwrt.org>
+References: <1314690246-76945-1-git-send-email-nbd@openwrt.org>
+ <1314690246-76945-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+reduces unnecessary code duplication. Also takes the sc_pcu_lock within
+ath_reset instead of callsites, which makes it possible to always cancel
+all queued work items before the reset, possibly fixing a few race
+conditions (work items vs reset) along with it.
 
-brcmf_mmc_suspend is used for sdio suspend/resume function. Hence it
-should be placed in sdio interface layer.
-
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   38 +++++++++++++++-----
- drivers/staging/brcm80211/brcmfmac/dhd.h          |   17 ---------
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c    |    8 ----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c  |    8 ----
- 4 files changed, 28 insertions(+), 43 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |  302 ++++++++++++++-------------------
+ 1 files changed, 128 insertions(+), 174 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index bfe73ee..d6f0f92 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -143,6 +143,7 @@ module_param(clockoverride, int, 0644);
- MODULE_PARM_DESC(clockoverride, "SDIO card clock override");
- 
- struct brcmf_sdmmc_instance *gInstance;
-+static atomic_t brcmf_mmc_suspend;
- 
- struct device sdmmc_dev;
- 
-@@ -157,31 +158,44 @@ static const struct sdio_device_id brcmf_sdmmc_ids[] = {
- 	{ /* end: all zeroes */ },
- };
- 
--#ifdef CONFIG_PM
-+#ifdef CONFIG_PM_SLEEP
- static const struct dev_pm_ops brcmf_sdio_pm_ops = {
- 	.suspend	= brcmf_sdio_suspend,
- 	.resume		= brcmf_sdio_resume,
- };
--#endif	/* CONFIG_PM */
-+#endif	/* CONFIG_PM_SLEEP */
- 
- static struct sdio_driver brcmf_sdmmc_driver = {
- 	.probe = brcmf_ops_sdio_probe,
- 	.remove = brcmf_ops_sdio_remove,
- 	.name = "brcmfmac",
- 	.id_table = brcmf_sdmmc_ids,
--#ifdef CONFIG_PM
-+#ifdef CONFIG_PM_SLEEP
- 	.drv = {
- 		.pm = &brcmf_sdio_pm_ops,
- 	},
--#endif	/* CONFIG_PM */
-+#endif	/* CONFIG_PM_SLEEP */
- };
- 
- MODULE_DEVICE_TABLE(sdio, brcmf_sdmmc_ids);
- 
--BRCMF_PM_RESUME_WAIT_INIT(sdioh_request_byte_wait);
--BRCMF_PM_RESUME_WAIT_INIT(sdioh_request_word_wait);
--BRCMF_PM_RESUME_WAIT_INIT(sdioh_request_packet_wait);
--BRCMF_PM_RESUME_WAIT_INIT(sdioh_request_buffer_wait);
-+#ifdef CONFIG_PM_SLEEP
-+DECLARE_WAIT_QUEUE_HEAD(sdioh_request_byte_wait);
-+DECLARE_WAIT_QUEUE_HEAD(sdioh_request_word_wait);
-+DECLARE_WAIT_QUEUE_HEAD(sdioh_request_packet_wait);
-+DECLARE_WAIT_QUEUE_HEAD(sdioh_request_buffer_wait);
-+#define BRCMF_PM_RESUME_WAIT(a) do { \
-+		int retry = 0; \
-+		while (atomic_read(&brcmf_mmc_suspend) && retry++ != 30) { \
-+			wait_event_timeout(a, false, HZ/100); \
-+		} \
-+	}	while (0)
-+#define BRCMF_PM_RESUME_RETURN_ERROR(a)	\
-+	do { if (atomic_read(&brcmf_mmc_suspend)) return a; } while (0)
-+#else
-+#define BRCMF_PM_RESUME_WAIT(a)
-+#define BRCMF_PM_RESUME_RETURN_ERROR(a)
-+#endif		/* CONFIG_PM_SLEEP */
- 
- static int
- brcmf_sdioh_card_regread(struct sdioh_info *sd, int func, u32 regaddr,
-@@ -1049,6 +1063,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 			sd_trace(("NIC found, calling brcmf_sdio_probe...\n"));
- 			ret = brcmf_sdio_probe(&sdmmc_dev);
- 		}
-+		atomic_set(&brcmf_mmc_suspend, false);
- 	}
- 
- 	gInstance->func[func->num] = func;
-@@ -1077,7 +1092,7 @@ static void brcmf_ops_sdio_remove(struct sdio_func *func)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 49af341..944c50a 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -212,83 +212,57 @@ static int ath_update_survey_stats(struct ath_softc *sc)
+ 	return ret;
  }
  
- 
--#ifdef CONFIG_PM
-+#ifdef CONFIG_PM_SLEEP
- static int brcmf_sdio_suspend(struct device *dev)
+-/*
+- * Set/change channels.  If the channel is really being changed, it's done
+- * by reseting the chip.  To accomplish this we must first cleanup any pending
+- * DMA, then restart stuff.
+-*/
+-static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+-		    struct ath9k_channel *hchan)
++static void __ath_cancel_work(struct ath_softc *sc)
  {
- 	mmc_pm_flag_t sdio_flags;
-@@ -1085,6 +1100,8 @@ static int brcmf_sdio_suspend(struct device *dev)
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ieee80211_conf *conf = &common->hw->conf;
+-	bool fastcc = true, stopped;
+-	struct ieee80211_channel *channel = hw->conf.channel;
+-	struct ath9k_hw_cal_data *caldata = NULL;
+-	int r;
+-
+-	if (sc->sc_flags & SC_OP_INVALID)
+-		return -EIO;
+-
+-	sc->hw_busy_count = 0;
+-
+-	del_timer_sync(&common->ani.timer);
+ 	cancel_work_sync(&sc->paprd_work);
+ 	cancel_work_sync(&sc->hw_check_work);
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
+ 	cancel_delayed_work_sync(&sc->hw_pll_work);
++}
  
- 	sd_trace(("%s\n", __func__));
+-	ath9k_ps_wakeup(sc);
++static void ath_cancel_work(struct ath_softc *sc)
++{
++	__ath_cancel_work(sc);
++	cancel_work_sync(&sc->hw_reset_work);
++}
  
-+	atomic_set(&brcmf_mmc_suspend, true);
+-	spin_lock_bh(&sc->sc_pcu_lock);
++static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool flush)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	bool ret;
+ 
+-	/*
+-	 * This is only performed if the channel settings have
+-	 * actually changed.
+-	 *
+-	 * To switch channels clear any pending DMA operations;
+-	 * wait long enough for the RX fifo to drain, reset the
+-	 * hardware at the new frequency, and then re-enable
+-	 * the relevant bits of the h/w.
+-	 */
+-	ath9k_hw_disable_interrupts(ah);
+-	stopped = ath_drain_all_txq(sc, false);
++	ieee80211_stop_queues(sc->hw);
+ 
+-	if (!ath_stoprecv(sc))
+-		stopped = false;
++	sc->hw_busy_count = 0;
++	del_timer_sync(&common->ani.timer);
+ 
+-	if (!ath9k_hw_check_alive(ah))
+-		stopped = false;
++	ath9k_hw_disable_interrupts(ah);
+ 
+-	/* XXX: do not flush receive queue here. We don't want
+-	 * to flush data frames already in queue because of
+-	 * changing channel. */
++	ret = ath_drain_all_txq(sc, retry_tx);
+ 
+-	if (!stopped || !(sc->sc_flags & SC_OP_OFFCHANNEL))
+-		fastcc = false;
++	if (!ath_stoprecv(sc))
++		ret = false;
+ 
+-	if (!(sc->sc_flags & SC_OP_OFFCHANNEL))
+-		caldata = &sc->caldata;
++	if (!flush) {
++		if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
++			ath_rx_tasklet(sc, 0, true);
++		ath_rx_tasklet(sc, 0, false);
++	} else {
++		ath_flushrecv(sc);
++	}
+ 
+-	ath_dbg(common, ATH_DBG_CONFIG,
+-		"(%u MHz) -> (%u MHz), conf_is_ht40: %d fastcc: %d\n",
+-		sc->sc_ah->curchan->channel,
+-		channel->center_freq, conf_is_ht40(conf),
+-		fastcc);
++	return ret;
++}
+ 
+-	r = ath9k_hw_reset(ah, hchan, caldata, fastcc);
+-	if (r) {
+-		ath_err(common,
+-			"Unable to reset channel (%u MHz), reset status %d\n",
+-			channel->center_freq, r);
+-		goto ps_restore;
+-	}
++static bool ath_complete_reset(struct ath_softc *sc, bool start)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	if (ath_startrecv(sc) != 0) {
+ 		ath_err(common, "Unable to restart recv logic\n");
+-		r = -EIO;
+-		goto ps_restore;
++		return false;
+ 	}
+ 
+ 	ath9k_cmn_update_txpow(ah, sc->curtxpow,
+@@ -296,21 +270,95 @@ static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 	ath9k_hw_set_interrupts(ah, ah->imask);
+ 	ath9k_hw_enable_interrupts(ah);
+ 
+-	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL))) {
++	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)) && start) {
+ 		if (sc->sc_flags & SC_OP_BEACONS)
+ 			ath_set_beacon(sc);
 +
- 	sdio_flags = sdio_get_host_pm_caps(gInstance->func[1]);
- 	if (!(sdio_flags & MMC_PM_KEEP_POWER)) {
- 		sd_err(("Host can't keep power while suspended\n"));
-@@ -1105,9 +1122,10 @@ static int brcmf_sdio_suspend(struct device *dev)
- static int brcmf_sdio_resume(struct device *dev)
- {
- 	brcmf_sdio_wdtmr_enable(true);
-+	atomic_set(&brcmf_mmc_suspend, false);
- 	return 0;
- }
--#endif		/* CONFIG_PM */
-+#endif		/* CONFIG_PM_SLEEP */
- 
- int brcmf_sdioh_osinit(struct sdioh_info *sd)
- {
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index 1fe9d69..9afd9ff 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -620,18 +620,6 @@ struct bcmevent_name {
- };
- 
- #if defined(CONFIG_PM_SLEEP)
--extern atomic_t brcmf_mmc_suspend;
--#define BRCMF_PM_RESUME_WAIT_INIT(a) DECLARE_WAIT_QUEUE_HEAD(a);
--#define _BRCMF_PM_RESUME_WAIT(a, b) do { \
--		int retry = 0; \
--		while (atomic_read(&brcmf_mmc_suspend) && retry++ != b) { \
--			wait_event_timeout(a, false, HZ/100); \
--		} \
--	}	while (0)
--#define BRCMF_PM_RESUME_WAIT(a)	_BRCMF_PM_RESUME_WAIT(a, 30)
--#define BRCMF_PM_RESUME_RETURN_ERROR(a)	\
--	do { if (atomic_read(&brcmf_mmc_suspend)) return a; } while (0)
--
- #define BRCMF_SPINWAIT_SLEEP_INIT(a) DECLARE_WAIT_QUEUE_HEAD(a);
- #define BRCMF_SPINWAIT_SLEEP(a, exp, us) do { \
- 		uint countdown = (us) + 9999; \
-@@ -642,11 +630,6 @@ extern atomic_t brcmf_mmc_suspend;
- 	} while (0)
- 
- #else
--
--#define BRCMF_PM_RESUME_WAIT_INIT(a)
--#define BRCMF_PM_RESUME_WAIT(a)
--#define BRCMF_PM_RESUME_RETURN_ERROR(a)
--
- #define BRCMF_SPINWAIT_SLEEP_INIT(a)
- #define BRCMF_SPINWAIT_SLEEP(a, exp, us)  do { \
- 		uint countdown = (us) + 9; \
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index 07ceaf9..9dc327b 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -43,11 +43,6 @@
- #include "wl_cfg80211.h"
- #include "bcmchip.h"
- 
--#if defined(CONFIG_PM_SLEEP)
--#include <linux/suspend.h>
--atomic_t brcmf_mmc_suspend;
--#endif	/*  defined(CONFIG_PM_SLEEP) */
--
- MODULE_AUTHOR("Broadcom Corporation");
- MODULE_DESCRIPTION("Broadcom 802.11n wireless LAN fullmac driver.");
- MODULE_SUPPORTED_DEVICE("Broadcom 802.11n WLAN fullmac cards");
-@@ -1274,9 +1269,6 @@ struct brcmf_pub *brcmf_attach(struct brcmf_bus *bus, uint bus_hdrlen)
- 	 */
- 	memcpy(netdev_priv(net), &drvr_priv, sizeof(drvr_priv));
- 
--#if defined(CONFIG_PM_SLEEP)
--	atomic_set(&brcmf_mmc_suspend, false);
--#endif	/* defined(CONFIG_PM_SLEEP) */
- 	return &drvr_priv->pub;
- 
- fail:
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 440ae6d..02137ac 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -2102,10 +2102,6 @@ static s32 brcmf_cfg80211_resume(struct wiphy *wiphy)
- 	 */
- 	WL_TRACE("Enter\n");
- 
--#if defined(CONFIG_PM_SLEEP)
--	atomic_set(&brcmf_mmc_suspend, false);
--#endif	/*  defined(CONFIG_PM_SLEEP) */
--
- 	if (test_bit(WL_STATUS_READY, &cfg_priv->status))
- 		brcmf_invoke_iscan(wiphy_to_cfg(wiphy));
- 
-@@ -2167,10 +2163,6 @@ static s32 brcmf_cfg80211_suspend(struct wiphy *wiphy,
- 		brcmf_set_mpc(ndev, 1);
+ 		ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
+ 		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/2);
+ 		if (!common->disable_ani)
+ 			ath_start_ani(common);
  	}
  
--#if defined(CONFIG_PM_SLEEP)
--	atomic_set(&brcmf_mmc_suspend, true);
--#endif	/*  defined(CONFIG_PM_SLEEP) */
--
- 	WL_TRACE("Exit\n");
+- ps_restore:
+-	ieee80211_wake_queues(hw);
++	ieee80211_wake_queues(sc->hw);
++
++	return true;
++}
++
++static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
++			      bool retry_tx)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_cal_data *caldata = NULL;
++	bool fastcc = true;
++	bool flush = false;
++	int r;
++
++	__ath_cancel_work(sc);
++
++	spin_lock_bh(&sc->sc_pcu_lock);
++
++	sc->sc_flags &= ~SC_OP_HW_RESET;
  
- 	return 0;
++	if (!(sc->sc_flags & SC_OP_OFFCHANNEL)) {
++		fastcc = false;
++		caldata = &sc->caldata;
++	}
++
++	if (!hchan) {
++		fastcc = false;
++		flush = true;
++		hchan = ah->curchan;
++	}
++
++	if (fastcc && !ath9k_hw_check_alive(ah))
++		fastcc = false;
++
++	if (!ath_prepare_reset(sc, retry_tx, flush))
++		fastcc = false;
++
++	ath_dbg(common, ATH_DBG_CONFIG,
++		"Reset to %u MHz, HT40: %d fastcc: %d\n",
++		hchan->channel, !!(hchan->channelFlags & (CHANNEL_HT40MINUS |
++							  CHANNEL_HT40PLUS)),
++		fastcc);
++
++	r = ath9k_hw_reset(ah, hchan, caldata, fastcc);
++	if (r) {
++		ath_err(common,
++			"Unable to reset channel, reset status %d\n", r);
++		goto out;
++	}
++
++	if (!ath_complete_reset(sc, true))
++		r = -EIO;
++
++out:
+ 	spin_unlock_bh(&sc->sc_pcu_lock);
++	return r;
++}
++
++
++/*
++ * Set/change channels.  If the channel is really being changed, it's done
++ * by reseting the chip.  To accomplish this we must first cleanup any pending
++ * DMA, then restart stuff.
++*/
++static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
++		    struct ath9k_channel *hchan)
++{
++	int r;
++
++	if (sc->sc_flags & SC_OP_INVALID)
++		return -EIO;
++
++	ath9k_ps_wakeup(sc);
++
++	r = ath_reset_internal(sc, hchan, false);
+ 
+ 	ath9k_ps_restore(sc);
++
+ 	return r;
+ }
+ 
+@@ -823,28 +871,13 @@ static void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 			channel->center_freq, r);
+ 	}
+ 
+-	ath9k_cmn_update_txpow(ah, sc->curtxpow,
+-			       sc->config.txpowlimit, &sc->curtxpow);
+-	if (ath_startrecv(sc) != 0) {
+-		ath_err(common, "Unable to restart recv logic\n");
+-		goto out;
+-	}
+-	if (sc->sc_flags & SC_OP_BEACONS)
+-		ath_set_beacon(sc);	/* restart beacons */
+-
+-	/* Re-Enable  interrupts */
+-	ath9k_hw_set_interrupts(ah, ah->imask);
+-	ath9k_hw_enable_interrupts(ah);
++	ath_complete_reset(sc, true);
+ 
+ 	/* Enable LED */
+ 	ath9k_hw_cfg_output(ah, ah->led_pin,
+ 			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 	ath9k_hw_set_gpio(ah, ah->led_pin, 0);
+ 
+-	ieee80211_wake_queues(hw);
+-	ieee80211_queue_delayed_work(hw, &sc->hw_pll_work, HZ/2);
+-
+-out:
+ 	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 	ath9k_ps_restore(sc);
+@@ -857,11 +890,10 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	int r;
+ 
+ 	ath9k_ps_wakeup(sc);
+-	cancel_delayed_work_sync(&sc->hw_pll_work);
+ 
+-	spin_lock_bh(&sc->sc_pcu_lock);
++	ath_cancel_work(sc);
+ 
+-	ieee80211_stop_queues(hw);
++	spin_lock_bh(&sc->sc_pcu_lock);
+ 
+ 	/*
+ 	 * Keep the LED on when the radio is disabled
+@@ -872,13 +904,7 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		ath9k_hw_cfg_gpio_input(ah, ah->led_pin);
+ 	}
+ 
+-	/* Disable interrupts */
+-	ath9k_hw_disable_interrupts(ah);
+-
+-	ath_drain_all_txq(sc, false);	/* clear pending tx frames */
+-
+-	ath_stoprecv(sc);		/* turn off frame recv */
+-	ath_flushrecv(sc);		/* flush recv queue */
++	ath_prepare_reset(sc, false, true);
+ 
+ 	if (!ah->curchan)
+ 		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
+@@ -900,49 +926,11 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 
+ static int ath_reset(struct ath_softc *sc, bool retry_tx)
+ {
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ieee80211_hw *hw = sc->hw;
+ 	int r;
+ 
+-	sc->sc_flags &= ~SC_OP_HW_RESET;
+-	sc->hw_busy_count = 0;
+-
+-	/* Stop ANI */
+-
+-	del_timer_sync(&common->ani.timer);
+-
+ 	ath9k_ps_wakeup(sc);
+ 
+-	ieee80211_stop_queues(hw);
+-
+-	ath9k_hw_disable_interrupts(ah);
+-	ath_drain_all_txq(sc, retry_tx);
+-
+-	ath_stoprecv(sc);
+-	ath_flushrecv(sc);
+-
+-	r = ath9k_hw_reset(ah, sc->sc_ah->curchan, ah->caldata, false);
+-	if (r)
+-		ath_err(common,
+-			"Unable to reset hardware; reset status %d\n", r);
+-
+-	if (ath_startrecv(sc) != 0)
+-		ath_err(common, "Unable to start recv logic\n");
+-
+-	/*
+-	 * We may be doing a reset in response to a request
+-	 * that changes the channel so update any state that
+-	 * might change as a result.
+-	 */
+-	ath9k_cmn_update_txpow(ah, sc->curtxpow,
+-			       sc->config.txpowlimit, &sc->curtxpow);
+-
+-	if ((sc->sc_flags & SC_OP_BEACONS) || !(sc->sc_flags & (SC_OP_OFFCHANNEL)))
+-		ath_set_beacon(sc);	/* restart beacons */
+-
+-	ath9k_hw_set_interrupts(ah, ah->imask);
+-	ath9k_hw_enable_interrupts(ah);
++	r = ath_reset_internal(sc, NULL, retry_tx);
+ 
+ 	if (retry_tx) {
+ 		int i;
+@@ -955,12 +943,6 @@ static int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 		}
+ 	}
+ 
+-	ieee80211_wake_queues(hw);
+-
+-	/* Start ANI */
+-	if (!common->disable_ani)
+-		ath_start_ani(common);
+-
+ 	ath9k_ps_restore(sc);
+ 
+ 	return r;
+@@ -970,9 +952,7 @@ void ath_reset_work(struct work_struct *work)
+ {
+ 	struct ath_softc *sc = container_of(work, struct ath_softc, hw_check_work);
+ 
+-	spin_lock_bh(&sc->sc_pcu_lock);
+ 	ath_reset(sc, true);
+-	spin_unlock_bh(&sc->sc_pcu_lock);
+ }
+ 
+ void ath_hw_check(struct work_struct *work)
+@@ -993,11 +973,8 @@ void ath_hw_check(struct work_struct *work)
+ 	ath_dbg(common, ATH_DBG_RESET, "Possible baseband hang, "
+ 		"busy=%d (try %d)\n", busy, sc->hw_busy_count + 1);
+ 	if (busy >= 99) {
+-		if (++sc->hw_busy_count >= 3) {
+-			spin_lock_bh(&sc->sc_pcu_lock);
+-			ath_reset(sc, true);
+-			spin_unlock_bh(&sc->sc_pcu_lock);
+-		}
++		if (++sc->hw_busy_count >= 3)
++			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
+ 
+ 	} else if (busy >= 0)
+ 		sc->hw_busy_count = 0;
+@@ -1017,9 +994,7 @@ static void ath_hw_pll_rx_hang_check(struct ath_softc *sc, u32 pll_sqsum)
+ 			/* Rx is hung for more than 500ms. Reset it */
+ 			ath_dbg(common, ATH_DBG_RESET,
+ 				"Possible RX hang, resetting");
+-			spin_lock_bh(&sc->sc_pcu_lock);
+-			ath_reset(sc, true);
+-			spin_unlock_bh(&sc->sc_pcu_lock);
++			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
+ 			count = 0;
+ 		}
+ 	} else
+@@ -1090,28 +1065,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 		goto mutex_unlock;
+ 	}
+ 
+-	/*
+-	 * This is needed only to setup initial state
+-	 * but it's best done after a reset.
+-	 */
+-	ath9k_cmn_update_txpow(ah, sc->curtxpow,
+-			sc->config.txpowlimit, &sc->curtxpow);
+-
+-	/*
+-	 * Setup the hardware after reset:
+-	 * The receive engine is set going.
+-	 * Frame transmit is handled entirely
+-	 * in the frame output path; there's nothing to do
+-	 * here except setup the interrupt mask.
+-	 */
+-	if (ath_startrecv(sc) != 0) {
+-		ath_err(common, "Unable to start recv logic\n");
+-		r = -EIO;
+-		spin_unlock_bh(&sc->sc_pcu_lock);
+-		goto mutex_unlock;
+-	}
+-	spin_unlock_bh(&sc->sc_pcu_lock);
+-
+ 	/* Setup our intr mask. */
+ 	ah->imask = ATH9K_INT_TX | ATH9K_INT_RXEOL |
+ 		    ATH9K_INT_RXORN | ATH9K_INT_FATAL |
+@@ -1134,12 +1087,14 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 
+ 	/* Disable BMISS interrupt when we're not associated */
+ 	ah->imask &= ~(ATH9K_INT_SWBA | ATH9K_INT_BMISS);
+-	ath9k_hw_set_interrupts(ah, ah->imask);
+-	ath9k_hw_enable_interrupts(ah);
+ 
+-	ieee80211_wake_queues(hw);
++	if (!ath_complete_reset(sc, false)) {
++		r = -EIO;
++		spin_unlock_bh(&sc->sc_pcu_lock);
++		goto mutex_unlock;
++	}
+ 
+-	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
++	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 	if ((ah->btcoex_hw.scheme != ATH_BTCOEX_CFG_NONE) &&
+ 	    !ah->btcoex_hw.enabled) {
+@@ -1232,10 +1187,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	mutex_lock(&sc->mutex);
+ 
+-	cancel_delayed_work_sync(&sc->tx_complete_work);
+-	cancel_delayed_work_sync(&sc->hw_pll_work);
+-	cancel_work_sync(&sc->paprd_work);
+-	cancel_work_sync(&sc->hw_check_work);
++	ath_cancel_work(sc);
+ 
+ 	if (sc->sc_flags & SC_OP_INVALID) {
+ 		ath_dbg(common, ATH_DBG_ANY, "Device not present\n");
+@@ -2350,9 +2302,11 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
+ 	ath9k_ps_wakeup(sc);
+ 	spin_lock_bh(&sc->sc_pcu_lock);
+ 	drain_txq = ath_drain_all_txq(sc, false);
++	spin_unlock_bh(&sc->sc_pcu_lock);
++
+ 	if (!drain_txq)
+ 		ath_reset(sc, false);
+-	spin_unlock_bh(&sc->sc_pcu_lock);
++
+ 	ath9k_ps_restore(sc);
+ 	ieee80211_wake_queues(hw);
+ 
 -- 
-1.7.4.1
-
+1.7.3.2
 
