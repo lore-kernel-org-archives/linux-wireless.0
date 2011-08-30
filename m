@@ -1,38 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:57117 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752636Ab1HWLii (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Aug 2011 07:38:38 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat: add PMSG_IS_AUTO
-Date: Tue, 23 Aug 2011 13:38:29 +0200
-Message-Id: <1314099509-6123-2-git-send-email-hauke@hauke-m.de> (sfid-20110823_133841_619124_775D2D8C)
-In-Reply-To: <1314099509-6123-1-git-send-email-hauke@hauke-m.de>
-References: <1314099509-6123-1-git-send-email-hauke@hauke-m.de>
+Received: from external1.orbit-lab.org ([128.6.192.131]:42565 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756017Ab1H3TEk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Aug 2011 15:04:40 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 9E17554029F
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 15:14:02 -0400 (EDT)
+Subject: Compat-wireless release for 2011-08-30 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20110830190437.6167840643@repository3.orbit-lab.org> (sfid-20110830_210443_529499_6FC78E5D)
+Date: Tue, 30 Aug 2011 15:04:37 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 9cb9083...722ebe1 akpm-end   -> origin/akpm-end  (forced update)
+   c11a7e2..0f43dd5  akpm-start -> origin/akpm-start
+ + fa1de6f...b4b9191 master     -> origin/master  (forced update)
+   c11a7e2..0f43dd5  stable     -> origin/stable
+ * [new tag]         next-20110830 -> next-20110830
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ * [new tag]         v3.1-rc4   -> v3.1-rc4
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-3.2.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+compat-wireless code metrics
 
-diff --git a/include/linux/compat-3.2.h b/include/linux/compat-3.2.h
-index 9cba461..d10495c 100644
---- a/include/linux/compat-3.2.h
-+++ b/include/linux/compat-3.2.h
-@@ -22,6 +22,8 @@
- #define br_port_exists(dev)	(dev->br_port)
- #endif
- 
-+#define PMSG_IS_AUTO(msg)	(((msg).event & PM_EVENT_AUTO) != 0)
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,2,0)) */
- 
- #endif /* LINUX_3_2_COMPAT_H */
--- 
-1.7.4.1
-
+    806187 - Total upstream lines of code being pulled
