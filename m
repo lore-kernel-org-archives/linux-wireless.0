@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25514 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751109Ab1HJN2Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 09:28:16 -0400
-Date: Wed, 10 Aug 2011 15:28:01 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Justin Piszcz <jpiszcz@lucidpixels.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] rt2x00: rt2800usb: fix races in tx queue
-Message-ID: <20110810132759.GA5652@redhat.com> (sfid-20110810_152820_244687_6F8D233D)
-References: <20110804124653.GB5739@redhat.com>
- <CAOZOX0Xpv9OPqx2Y3GnajhmDvx3GyL1xTAjEOYjOToWcQxB6bA@mail.gmail.com>
- <20110808092914.GA2168@redhat.com>
- <20110808093512.GB2168@redhat.com>
- <4E404D5C.30401@gmail.com>
- <20110809095050.GD2152@redhat.com>
- <20110809112624.GA2281@redhat.com>
- <20110809154540.GB2302@redhat.com>
- <20110810103904.GA8079@redhat.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47943 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755842Ab1H3SAY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Aug 2011 14:00:24 -0400
+Date: Tue, 30 Aug 2011 13:50:55 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Peter =?iso-8859-1?Q?H=FCwe?= <PeterHuewe@gmx.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] net/mac80211/debugfs: Convert to kstrou8_from_user
+Message-ID: <20110830175054.GB2660@tuxdriver.com> (sfid-20110830_200049_838624_5BE8F1F9)
+References: <1307478974-32727-1-git-send-email-peterhuewe@gmx.de>
+ <201108282152.32180.PeterHuewe@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110810103904.GA8079@redhat.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <201108282152.32180.PeterHuewe@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 10, 2011 at 12:39:04PM +0200, Stanislaw Gruszka wrote:
-> This patch crashes as well. I have to debug this issue a bit more ...
+On Sun, Aug 28, 2011 at 09:52:31PM +0200, Peter Hüwe wrote:
+> Am Dienstag 07 Juni 2011, 22:36:14 schrieb Peter Huewe:
+> > This patch replaces the code for getting an number from a
+> > userspace buffer by a simple call to kstrou8_from_user.
+> > This makes it easier to read and less error prone.
+> > 
+> > Since the old buffer was only 10 bytes long and the value is masked by a
+> > nibble-mask anyway, we don't need to use kstrtoul but rather kstrtou8.
+> > 
+> > Kernel Version: v3.0-rc2
+> > 
+> > Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
+> 
+> Any updates on this one?
+> Still applies to the latest linus' tree
 
-Figured this out, while(1) change helped in my original patch, without
-that we can have ops in rt2800usb_get_txwi. I'm going to post reworked
-patches now.
+I merged it to wireless-next yesterday.
 
-Stanislaw 
+Thanks for the reminder!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
