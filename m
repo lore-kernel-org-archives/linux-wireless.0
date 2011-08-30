@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:65183 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750896Ab1HRV0l (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38500 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751036Ab1H3DTk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Aug 2011 17:26:41 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com>
-References: <CAG1a4rt_NML2Q_Mkd+RuvLvft4D6inG7c9=s6kpAXqtAvatOBg@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 18 Aug 2011 14:26:20 -0700
-Message-ID: <CAB=NE6UN4DEPNwt+TpOk6evr8_oz=ESqKWWGFh9KfROG1LJmiQ@mail.gmail.com> (sfid-20110818_232656_222196_8EFE25B9)
-Subject: Re: [PATCH] ath9k: make driver usable standalone
-To: Pavel Ivanov <paivanof@gmail.com>
-Cc: Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 29 Aug 2011 23:19:40 -0400
+Subject: Re: [PATCH v3 2/7] mac80211: Remove mesh paths when an interface
+ is removed
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
+	jlopex@gmail.com
+In-Reply-To: <1314649389-7115-3-git-send-email-javier@cozybit.com> (sfid-20110829_222353_670430_99789D22)
+References: <1314649389-7115-1-git-send-email-javier@cozybit.com>
+	 <1314649389-7115-3-git-send-email-javier@cozybit.com>
+	 (sfid-20110829_222353_670430_99789D22)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 30 Aug 2011 05:19:33 +0200
+Message-ID: <1314674373.4011.0.camel@jlt3.sipsolutions.net> (sfid-20110830_051943_508795_3FC735FF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 16, 2011 at 8:28 PM, Pavel Ivanov <paivanof@gmail.com> wrote:
-> When ath9k is the only wireless driver included in the build
-> WIRELESS_EXT configuration option becomes undefined. Because of that
-> driver becomes essentially unusable as you can't actually connect to
-> any WiFi network. By including WIRELESS_EXT into Kconfig we ensure
-> that build with ath9k and without other drivers (having WIRELESS_EXT
-> selected in their Kconfig) is actually usable.
->
-> Signed-off-by: Pavel Ivanov <paivanof@gmail.com>
+On Mon, 2011-08-29 at 13:23 -0700, Javier Cardona wrote:
 
-Fuck no, NACK.
+> +static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
+> +{
+> +	struct mesh_table *tbl;
+> +	struct mesh_path *mpath;
+> +	struct mpath_node *node;
+> +	struct hlist_node *p;
+> +	int i;
+> +
+> +	read_lock_bh(&pathtbl_resize_lock);
+> +	tbl = rcu_dereference_protected(mpp_paths,
+> +					lockdep_is_held(pathtbl_resize_lock));
+> +	for_each_mesh_entry(tbl, p, node, i) {
+> +		mpath = node->mpath;
+> +		if (mpath->sdata != sdata)
+> +			continue;
+> +		spin_lock_bh(&tbl->hashwlock[i]);
+> +		spin_lock_bh(&mpath->state_lock);
+> +		call_rcu(&node->rcu, mesh_path_node_reclaim);
 
-  Luis
+Why is read_lock sufficient? Why is this even a r/w lock?
+
+johannes
+
