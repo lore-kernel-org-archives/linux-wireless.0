@@ -1,50 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:51666 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751393Ab1HJABn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 20:01:43 -0400
-Received: by qwk3 with SMTP id 3so276292qwk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 17:01:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1312808606.4372.16.camel@jlt3.sipsolutions.net>
-References: <1311695709.2974.15.camel@alex-2> <1312808606.4372.16.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 9 Aug 2011 17:01:21 -0700
-Message-ID: <CAB=NE6XWzWieSZ1ktqAM7_gMqNYrF4xuX8BNQM2aH1KQ2TSESQ@mail.gmail.com> (sfid-20110810_020147_741101_1D13D916)
-Subject: Re: mac80211: ibss.c, missing regdom check?
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Alexander Simon <alexander.simon@saxnet.de>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from svenfoo.org ([82.94.215.22]:46118 "EHLO mail.zonque.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751058Ab1H3VtK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Aug 2011 17:49:10 -0400
+From: Sven Neumann <s.neumann@raumfeld.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sven Neumann <s.neumann@raumfeld.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Daniel Mack <daniel@zonque.org>
+Subject: [PATCH 2/2] cfg80211: reorder code to obsolete forward declaration
+Date: Tue, 30 Aug 2011 23:38:54 +0200
+Message-Id: <1314740334-10341-2-git-send-email-s.neumann@raumfeld.com> (sfid-20110830_234914_505935_2E25B747)
+In-Reply-To: <1314740334-10341-1-git-send-email-s.neumann@raumfeld.com>
+References: <20110830191437.GC2660@tuxdriver.com>
+ <1314740334-10341-1-git-send-email-s.neumann@raumfeld.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 8, 2011 at 6:03 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2011-07-26 at 17:55 +0200, Alexander Simon wrote:
->
->> When we want to join an IBSS, we first fire a scan. When a network is
->> found, then we join it.
->> This happens in ieee80211_sta_find_ibss when we call
->> ieee80211_sta_join_ibss.
->>
->> But in both functions there is no check if we are allowed to do IBSS on
->> that channel.
->> Is this intended?
->> I could join an existing network on channel 8 with a modified crda
->> having the NO-IBSS flag on all 2.4GHz channels.
->
-> Sounds like there ought to be a check -- but what do we do in that case?
-> Just create the network elsewhere and hope the other one merges? Luis?
+Reorder functions to remove the need for a forward declaration
+introduced by the last commit.
 
-Indeed, additionally based on the htcaps we must also ensure that we
-follow the exisitng regulatory rules. A base example is provided
-through ieee80211_enable_ht(). A similar check will be implemented to
-start Mesh for example. This must also ensure that when you set the
-channel type with iw, say, iw dev wlan0 set freq 2412 HT20 that you
-switch to using only HT20 and not HT40. If you do not set HT20 or HT40
-then you should not use HT on an IBSS.
+Signed-off-by: Sven Neumann <s.neumann@raumfeld.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+Cc: Daniel Mack <daniel@zonque.org>
+Cc: linux-wireless@vger.kernel.org
+---
+ net/wireless/reg.c |   19 ++++++++-----------
+ 1 files changed, 8 insertions(+), 11 deletions(-)
 
-Let me know if you are up to try the changes otherwise I can work on them.
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index c50016e..c77928b 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -103,9 +103,6 @@ struct reg_beacon {
+ 	struct ieee80211_channel chan;
+ };
+ 
+-static void wiphy_update_regulatory(struct wiphy *wiphy,
+-				    enum nl80211_reg_initiator initiator);
+-
+ static void reg_todo(struct work_struct *work);
+ static DECLARE_WORK(reg_work, reg_todo);
+ 
+@@ -915,14 +912,6 @@ static bool ignore_reg_update(struct wiphy *wiphy,
+ 	return false;
+ }
+ 
+-static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
+-{
+-	struct cfg80211_registered_device *rdev;
+-
+-	list_for_each_entry(rdev, &cfg80211_rdev_list, list)
+-		wiphy_update_regulatory(&rdev->wiphy, initiator);
+-}
+-
+ static void handle_reg_beacon(struct wiphy *wiphy,
+ 			      unsigned int chan_idx,
+ 			      struct reg_beacon *reg_beacon)
+@@ -1151,6 +1140,14 @@ void regulatory_update(struct wiphy *wiphy,
+ 	mutex_unlock(&reg_mutex);
+ }
+ 
++static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
++{
++	struct cfg80211_registered_device *rdev;
++
++	list_for_each_entry(rdev, &cfg80211_rdev_list, list)
++		wiphy_update_regulatory(&rdev->wiphy, initiator);
++}
++
+ static void handle_channel_custom(struct wiphy *wiphy,
+ 				  enum ieee80211_band band,
+ 				  unsigned int chan_idx,
+-- 
+1.7.4.1
 
-  Luis
