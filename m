@@ -1,50 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:48627 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751357Ab1HHIkg (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:29220 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752898Ab1H3Kng (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 04:40:36 -0400
-Received: by gwaa12 with SMTP id a12so454584gwa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Aug 2011 01:40:35 -0700 (PDT)
+	Tue, 30 Aug 2011 06:43:36 -0400
+Date: Tue, 30 Aug 2011 16:14:04 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: "Jorge Boncompte [DTI2]" <jorge@dti2.net>
+CC: <adrian@freebsd.org>, Felix Fietkau <nbd@openwrt.org>,
+	<linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	<rodrigue@qca.qualcomm.com>
+Subject: Re: [PATCH 3.1] ath9k_hw: fix calibration on 5 ghz
+Message-ID: <20110830104403.GA5446@vmraj-lnx.users.atheros.com> (sfid-20110830_124340_299807_BB60C2C8)
+References: <1314605174-66206-1-git-send-email-nbd@openwrt.org>
+ <CAJ-Vmonvcrd49rQbgeyO3HCLxkTbww3mTypR87CuPBiu9uwhHA@mail.gmail.com>
+ <4E5B669F.8060605@dti2.net>
 MIME-Version: 1.0
-In-Reply-To: <1312792163.4372.5.camel@jlt3.sipsolutions.net>
-References: <1311675508-29005-2-git-send-email-helmut.schaa@googlemail.com>
-	<1312537579-18950-1-git-send-email-helmut.schaa@googlemail.com>
-	<1312792163.4372.5.camel@jlt3.sipsolutions.net>
-Date: Mon, 8 Aug 2011 10:40:35 +0200
-Message-ID: <CAGXE3d9EwS8wMZRYUxAz5FqiTzRZiAATmOcWaG17vbcqryH7ZQ@mail.gmail.com> (sfid-20110808_104039_865571_BE3915F3)
-Subject: Re: [PATCHv2 2/2] mac80211: Don't use a buf_size=0 in ADDBA requests
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <4E5B669F.8060605@dti2.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 8, 2011 at 10:29 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> So, are you saying the problem with getting 0 in replies is solved by
-> not sending 0 in requests?
+On Mon, Aug 29, 2011 at 12:14:55PM +0200, Jorge Boncompte [DTI2] wrote:
+> El 29/08/2011 11:01, Adrian Chadd escribió:
+> > Can we please hold off of this until we know if this is indeed the correct fix?
+> > 
+> > Ie, I'm not sure yet whether 5ghz fast clock (which clocks the mac/bb
+> > like it was doing 2.4ghz) needs the dual ADCs enabled or not.
+> > It may be that something is being incorrectly disabled when the
+> > fastclock initvals are being written over the normal 5ghz values.
+> >uary
+> > Thanks,
+> 
+> 	Hi, I reported this same problem on february, I was using Ubiquiti SR71-15
+> cards. I've been running them with the same "fix" that Felix has proposed. If
+> you need a tester for another solution just let me know.
+> 
+Hi Jorge,
 
-This specific device always replies with a buf_size=0 _if_ we send an
-ADDBA request
-with a buf_size=0.
+Could you please test whether the below patch helps?
 
-The first patch in this series solves a problem were mac80211 would
-buffer frames to
-this STA forever when the ADDBA response contains a buf_size=0 since the BA
-session is stuck in an intermediate state.
+https://patchwork.kernel.org/patch/1112672/
 
-However, the AVM Fritz Stick N client behaves correctly if we're using
-a buf_size != 0
-in the ADDBA request. This is a bug in the Fritz Stick Windows driver
-(it should use
-the default size of its rx reorder buffer if the ADDBA request
-contains 0). However, this
-bug can be worked around by using a buf_size != 0 in ADDBA requests. And that's
-what the second patch does.
-
-Hope this clarifies my intention :)
-
-Helmut
+Thanks,
+Rajkumar
