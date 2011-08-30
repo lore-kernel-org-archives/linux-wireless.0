@@ -1,33 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:51779 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751593Ab1HIJBu (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:61352 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752946Ab1H3WY7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 05:01:50 -0400
-Received: by gya6 with SMTP id 6so1752264gya.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2011 02:01:49 -0700 (PDT)
+	Tue, 30 Aug 2011 18:24:59 -0400
+Received: by qyk34 with SMTP id 34so103646qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 15:24:58 -0700 (PDT)
 MIME-Version: 1.0
-Date: Tue, 9 Aug 2011 11:01:49 +0200
-Message-ID: <CAGXE3d_PAFX3p7UAeq1CvCnCTCsFgCuGFRLWj-=xgcAJbgKc3g@mail.gmail.com> (sfid-20110809_110153_368245_63C01FE2)
-Subject: minstrel_ht and legacy rates?
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1314740334-10341-1-git-send-email-s.neumann@raumfeld.com>
+References: <20110830191437.GC2660@tuxdriver.com> <1314740334-10341-1-git-send-email-s.neumann@raumfeld.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 30 Aug 2011 15:24:38 -0700
+Message-ID: <CAB=NE6VpPeTKxQrWsVKfAjJgDADSxqfEQyLRcSQ3dYMpt7jS5w@mail.gmail.com> (sfid-20110831_002503_546467_68BA20DC)
+Subject: Re: [PATCH 1/2] cfg80211: hold reg_mutex when updating regulatory
+To: Sven Neumann <s.neumann@raumfeld.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Daniel Mack <daniel@zonque.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Felix,
+On Tue, Aug 30, 2011 at 2:38 PM, Sven Neumann <s.neumann@raumfeld.com> wrote:
+> The function wiphy_update_regulatory() uses the static variable
+> last_request and thus needs to be called with reg_mutex held.
+> This is the case for all users in reg.c, but the function was
+> exported for use by wiphy_register(), from where it is called
+> without the lock being held.
+>
+> Fix this by making wiphy_update_regulatory() private and introducing
+> regulatory_update() as a wrapper that acquires and holds the lock.
+>
+> Signed-off-by: Sven Neumann <s.neumann@raumfeld.com>
+> Cc: John W. Linville <linville@tuxdriver.com>
+> Cc: Luis R. Rodriguez <mcgrof@gmail.com>
+> Cc: Daniel Mack <daniel@zonque.org>
+> Cc: linux-wireless@vger.kernel.org
 
-minstrel_ht only ever uses MCS rates, however it seems (at least with
-rt2x00 devices) that
-sometimes legacy rates (1Mbps) can still be used while MCS 0 is
-already unusable. For
-example when a client is very far away from the AP.
+Acked-by:  Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 
-Hence, I'd like to extend minstrel_ht to also sample legacy rates. Any
-objections/ideas/hints
-from your side?
-
-Thanks,
-Helmut
+  Luis
