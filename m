@@ -1,59 +1,336 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46796 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753808Ab1H2Si5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 14:38:57 -0400
-Subject: Re: [PATCH v2 6/8] mac80211: Consolidate {mesh,mpp}_path_flush
- into one function
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
-	jlopex@gmail.com
-In-Reply-To: <CAPjQAd8esVjckBCwya+a5dFiLmu14KpCW5acjNeLHk32XZYs2g@mail.gmail.com> (sfid-20110829_203711_145180_7DDE26B6)
-References: <1314236452-7226-1-git-send-email-thomas@cozybit.com>
-	 <1314404294-4233-1-git-send-email-javier@cozybit.com>
-	 <1314404294-4233-7-git-send-email-javier@cozybit.com>
-	 <1314625745.8959.9.camel@jlt3.sipsolutions.net>
-	 <CAPjQAd8esVjckBCwya+a5dFiLmu14KpCW5acjNeLHk32XZYs2g@mail.gmail.com>
-	 (sfid-20110829_203711_145180_7DDE26B6)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 29 Aug 2011 20:38:51 +0200
-Message-ID: <1314643131.8959.26.camel@jlt3.sipsolutions.net> (sfid-20110829_203900_059337_23C7A471)
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:44719 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752676Ab1H3HoS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Aug 2011 03:44:18 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	rmanohar@qca.qualcomm.com, shafi.wireless@gmail.com,
+	vthiagar@qca.qualcomm.com
+Subject: [PATCH v8 2/4] ath9k: always call ath_reset from workqueue context
+Date: Tue, 30 Aug 2011 09:44:04 +0200
+Message-Id: <1314690246-76945-2-git-send-email-nbd@openwrt.org> (sfid-20110830_094425_541766_C04B6B2B)
+In-Reply-To: <1314690246-76945-1-git-send-email-nbd@openwrt.org>
+References: <1314690246-76945-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-08-29 at 11:36 -0700, Javier Cardona wrote:
+This makes it much easier to add further rework to avoid race conditions
+between reset and other work items.
+Move other functions to make ath_reset static.
 
-> >> -     read_lock_bh(&pathtbl_resize_lock);
-> >> -     tbl = rcu_dereference_protected(mpp_paths,
-> >> -                                     lockdep_is_held(pathtbl_resize_lock));
-> >> +     WARN_ON(!rcu_read_lock_held());
-> >>       for_each_mesh_entry(tbl, p, node, i) {
-> >>               mpath = node->mpath;
-> >> +             if (mpath->sdata != sdata)
-> >> +                     continue;
-> >>               spin_lock_bh(&tbl->hashwlock[i]);
-> >>               __mesh_path_del(tbl, node);
-> >>               spin_unlock_bh(&tbl->hashwlock[i]);
-> >>       }
-> >> -     read_unlock_bh(&pathtbl_resize_lock);
-> >>  }
-> >
-> > So what protects against the table being grown at the same time? A copy
-> > will be made, but here you'll be iterating the old table -- which won't
-> > crash or anything but is semantically incorrect.
-> 
-> You are right.  And I believe it actually may crash, given that the
-> nodes we wanted to delete will still exist in the new table.  I'll
-> re-spin right away.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    4 +-
+ drivers/net/wireless/ath/ath9k/beacon.c |    4 +-
+ drivers/net/wireless/ath/ath9k/init.c   |    1 +
+ drivers/net/wireless/ath/ath9k/main.c   |  153 ++++++++++++++++---------------
+ drivers/net/wireless/ath/ath9k/xmit.c   |   16 ++-
+ 5 files changed, 97 insertions(+), 81 deletions(-)
 
-Yes, it will crash just as before -- I was referring to this function
-only. Due to RCU, this function will always have a valid "node" pointer,
-but of course deleting that might not delete it from the right table...
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 5d9a9aa..bfc90e4 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -425,6 +425,7 @@ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status);
+ 
+ #define ATH_PAPRD_TIMEOUT	100 /* msecs */
+ 
++void ath_reset_work(struct work_struct *work);
+ void ath_hw_check(struct work_struct *work);
+ void ath_hw_pll_work(struct work_struct *work);
+ void ath_paprd_calibrate(struct work_struct *work);
+@@ -555,6 +556,7 @@ struct ath_ant_comb {
+ #define SC_OP_RXFLUSH                BIT(7)
+ #define SC_OP_LED_ASSOCIATED         BIT(8)
+ #define SC_OP_LED_ON                 BIT(9)
++#define SC_OP_HW_RESET               BIT(10)
+ #define SC_OP_TSF_RESET              BIT(11)
+ #define SC_OP_BT_PRIORITY_DETECTED   BIT(12)
+ #define SC_OP_BT_SCAN		     BIT(13)
+@@ -604,6 +606,7 @@ struct ath_softc {
+ 	struct mutex mutex;
+ 	struct work_struct paprd_work;
+ 	struct work_struct hw_check_work;
++	struct work_struct hw_reset_work;
+ 	struct completion paprd_complete;
+ 
+ 	unsigned int hw_busy_count;
+@@ -650,7 +653,6 @@ struct ath_softc {
+ };
+ 
+ void ath9k_tasklet(unsigned long data);
+-int ath_reset(struct ath_softc *sc, bool retry_tx);
+ int ath_cabq_update(struct ath_softc *);
+ 
+ static inline void ath_read_cachesize(struct ath_common *common, int *csz)
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 0c757c9..22e8e25 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -386,9 +386,7 @@ void ath_beacon_tasklet(unsigned long data)
+ 			ath_dbg(common, ATH_DBG_BSTUCK,
+ 				"beacon is officially stuck\n");
+ 			sc->sc_flags |= SC_OP_TSF_RESET;
+-			spin_lock(&sc->sc_pcu_lock);
+-			ath_reset(sc, true);
+-			spin_unlock(&sc->sc_pcu_lock);
++			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
+ 		}
+ 
+ 		return;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 31ef501..6ee3be9 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -776,6 +776,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 			goto error_world;
+ 	}
+ 
++	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
+ 	INIT_WORK(&sc->hw_check_work, ath_hw_check);
+ 	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
+ 	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 085ec20..49af341 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -595,74 +595,6 @@ static void ath_node_detach(struct ath_softc *sc, struct ieee80211_sta *sta)
+ 		ath_tx_node_cleanup(sc, an);
+ }
+ 
+-void ath_hw_check(struct work_struct *work)
+-{
+-	struct ath_softc *sc = container_of(work, struct ath_softc, hw_check_work);
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-	unsigned long flags;
+-	int busy;
+-
+-	ath9k_ps_wakeup(sc);
+-	if (ath9k_hw_check_alive(sc->sc_ah))
+-		goto out;
+-
+-	spin_lock_irqsave(&common->cc_lock, flags);
+-	busy = ath_update_survey_stats(sc);
+-	spin_unlock_irqrestore(&common->cc_lock, flags);
+-
+-	ath_dbg(common, ATH_DBG_RESET, "Possible baseband hang, "
+-		"busy=%d (try %d)\n", busy, sc->hw_busy_count + 1);
+-	if (busy >= 99) {
+-		if (++sc->hw_busy_count >= 3) {
+-			spin_lock_bh(&sc->sc_pcu_lock);
+-			ath_reset(sc, true);
+-			spin_unlock_bh(&sc->sc_pcu_lock);
+-		}
+-	} else if (busy >= 0)
+-		sc->hw_busy_count = 0;
+-
+-out:
+-	ath9k_ps_restore(sc);
+-}
+-
+-static void ath_hw_pll_rx_hang_check(struct ath_softc *sc, u32 pll_sqsum)
+-{
+-	static int count;
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-
+-	if (pll_sqsum >= 0x40000) {
+-		count++;
+-		if (count == 3) {
+-			/* Rx is hung for more than 500ms. Reset it */
+-			ath_dbg(common, ATH_DBG_RESET,
+-				"Possible RX hang, resetting");
+-			spin_lock_bh(&sc->sc_pcu_lock);
+-			ath_reset(sc, true);
+-			spin_unlock_bh(&sc->sc_pcu_lock);
+-			count = 0;
+-		}
+-	} else
+-		count = 0;
+-}
+-
+-void ath_hw_pll_work(struct work_struct *work)
+-{
+-	struct ath_softc *sc = container_of(work, struct ath_softc,
+-					    hw_pll_work.work);
+-	u32 pll_sqsum;
+-
+-	if (AR_SREV_9485(sc->sc_ah)) {
+-
+-		ath9k_ps_wakeup(sc);
+-		pll_sqsum = ar9003_get_pll_sqsum_dvc(sc->sc_ah);
+-		ath9k_ps_restore(sc);
+-
+-		ath_hw_pll_rx_hang_check(sc, pll_sqsum);
+-
+-		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/5);
+-	}
+-}
+-
+ 
+ void ath9k_tasklet(unsigned long data)
+ {
+@@ -675,9 +607,7 @@ void ath9k_tasklet(unsigned long data)
+ 
+ 	if ((status & ATH9K_INT_FATAL) ||
+ 	    (status & ATH9K_INT_BB_WATCHDOG)) {
+-		spin_lock(&sc->sc_pcu_lock);
+-		ath_reset(sc, true);
+-		spin_unlock(&sc->sc_pcu_lock);
++		ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
+ 		return;
+ 	}
+ 
+@@ -968,13 +898,14 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	ath9k_ps_restore(sc);
+ }
+ 
+-int ath_reset(struct ath_softc *sc, bool retry_tx)
++static int ath_reset(struct ath_softc *sc, bool retry_tx)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ieee80211_hw *hw = sc->hw;
+ 	int r;
+ 
++	sc->sc_flags &= ~SC_OP_HW_RESET;
+ 	sc->hw_busy_count = 0;
+ 
+ 	/* Stop ANI */
+@@ -1035,6 +966,84 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	return r;
+ }
+ 
++void ath_reset_work(struct work_struct *work)
++{
++	struct ath_softc *sc = container_of(work, struct ath_softc, hw_check_work);
++
++	spin_lock_bh(&sc->sc_pcu_lock);
++	ath_reset(sc, true);
++	spin_unlock_bh(&sc->sc_pcu_lock);
++}
++
++void ath_hw_check(struct work_struct *work)
++{
++	struct ath_softc *sc = container_of(work, struct ath_softc, hw_check_work);
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	unsigned long flags;
++	int busy;
++
++	ath9k_ps_wakeup(sc);
++	if (ath9k_hw_check_alive(sc->sc_ah))
++		goto out;
++
++	spin_lock_irqsave(&common->cc_lock, flags);
++	busy = ath_update_survey_stats(sc);
++	spin_unlock_irqrestore(&common->cc_lock, flags);
++
++	ath_dbg(common, ATH_DBG_RESET, "Possible baseband hang, "
++		"busy=%d (try %d)\n", busy, sc->hw_busy_count + 1);
++	if (busy >= 99) {
++		if (++sc->hw_busy_count >= 3) {
++			spin_lock_bh(&sc->sc_pcu_lock);
++			ath_reset(sc, true);
++			spin_unlock_bh(&sc->sc_pcu_lock);
++		}
++
++	} else if (busy >= 0)
++		sc->hw_busy_count = 0;
++
++out:
++	ath9k_ps_restore(sc);
++}
++
++static void ath_hw_pll_rx_hang_check(struct ath_softc *sc, u32 pll_sqsum)
++{
++	static int count;
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++
++	if (pll_sqsum >= 0x40000) {
++		count++;
++		if (count == 3) {
++			/* Rx is hung for more than 500ms. Reset it */
++			ath_dbg(common, ATH_DBG_RESET,
++				"Possible RX hang, resetting");
++			spin_lock_bh(&sc->sc_pcu_lock);
++			ath_reset(sc, true);
++			spin_unlock_bh(&sc->sc_pcu_lock);
++			count = 0;
++		}
++	} else
++		count = 0;
++}
++
++void ath_hw_pll_work(struct work_struct *work)
++{
++	struct ath_softc *sc = container_of(work, struct ath_softc,
++					    hw_pll_work.work);
++	u32 pll_sqsum;
++
++	if (AR_SREV_9485(sc->sc_ah)) {
++
++		ath9k_ps_wakeup(sc);
++		pll_sqsum = ar9003_get_pll_sqsum_dvc(sc->sc_ah);
++		ath9k_ps_restore(sc);
++
++		ath_hw_pll_rx_hang_check(sc, pll_sqsum);
++
++		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/5);
++	}
++}
++
+ /**********************/
+ /* mac80211 callbacks */
+ /**********************/
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 49b93c2..2b2a975 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -581,8 +581,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 	rcu_read_unlock();
+ 
+-	if (needreset)
+-		ath_reset(sc, false);
++	if (needreset) {
++		sc->sc_flags |= SC_OP_HW_RESET;
++		ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
++	}
+ }
+ 
+ static bool ath_lookup_legacy(struct ath_buf *bf)
+@@ -2147,6 +2149,9 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 
+ 	spin_lock_bh(&txq->axq_lock);
+ 	for (;;) {
++		if (sc->sc_flags & SC_OP_HW_RESET)
++			break;
++
+ 		if (list_empty(&txq->axq_q)) {
+ 			txq->axq_link = NULL;
+ 			if (sc->sc_flags & SC_OP_TXAGGR)
+@@ -2234,9 +2239,7 @@ static void ath_tx_complete_poll_work(struct work_struct *work)
+ 	if (needreset) {
+ 		ath_dbg(ath9k_hw_common(sc->sc_ah), ATH_DBG_RESET,
+ 			"tx hung, resetting the chip\n");
+-		spin_lock_bh(&sc->sc_pcu_lock);
+-		ath_reset(sc, true);
+-		spin_unlock_bh(&sc->sc_pcu_lock);
++		ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
+ 	}
+ 
+ 	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work,
+@@ -2269,6 +2272,9 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 	int status;
+ 
+ 	for (;;) {
++		if (sc->sc_flags & SC_OP_HW_RESET)
++			break;
++
+ 		status = ath9k_hw_txprocdesc(ah, NULL, (void *)&ts);
+ 		if (status == -EINPROGRESS)
+ 			break;
+-- 
+1.7.3.2
 
