@@ -1,600 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:52815 "EHLO mga01.intel.com"
+Received: from nbd.name ([46.4.11.11]:44716 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752188Ab1HZGx3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 02:53:29 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 11/60] iwlagn: priv->lock moves to iwl_shared
-Date: Thu, 25 Aug 2011 23:10:43 -0700
-Message-Id: <1314339092-20797-12-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110826_085453_288666_A3ECF7E0)
-In-Reply-To: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1314339092-20797-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1752647Ab1H3HoS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Aug 2011 03:44:18 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	rmanohar@qca.qualcomm.com, shafi.wireless@gmail.com,
+	vthiagar@qca.qualcomm.com
+Subject: [PATCH v8 4/4] ath9k: implement .get_antenna and .set_antenna
+Date: Tue, 30 Aug 2011 09:44:06 +0200
+Message-Id: <1314690246-76945-4-git-send-email-nbd@openwrt.org> (sfid-20110830_094426_106884_A6905239)
+In-Reply-To: <1314690246-76945-3-git-send-email-nbd@openwrt.org>
+References: <1314690246-76945-1-git-send-email-nbd@openwrt.org>
+ <1314690246-76945-2-git-send-email-nbd@openwrt.org>
+ <1314690246-76945-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On MIMO chips this can be used to enable/disable hardware chains, ensuring
+that the MCS information is updated accordingly.
+On non-MIMO chips with rx diversity (e.g. 9285), this configures the rx
+input antenna.
 
-Since it is used by all the layers, it needs to move to iwl_shared.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-5000.c          |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c     |   14 +++++-----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c       |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c        |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c      |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c        |   12 ++++----
- drivers/net/wireless/iwlwifi/iwl-agn.c           |   14 +++++-----
- drivers/net/wireless/iwlwifi/iwl-core.c          |    4 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h           |    1 -
- drivers/net/wireless/iwlwifi/iwl-shared.h        |    2 +
- drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c |   28 +++++++++++-----------
- drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c |    4 +-
- drivers/net/wireless/iwlwifi/iwl-trans.c         |   26 ++++++++++----------
- 13 files changed, 61 insertions(+), 60 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 +
+ drivers/net/wireless/ath/ath9k/init.c  |   32 +++++++++++---
+ drivers/net/wireless/ath/ath9k/main.c  |   71 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
+ 4 files changed, 99 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index e073422..feefb5b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -69,7 +69,7 @@ static void iwl5000_nic_config(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index bfc90e4..5330803 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -650,6 +650,7 @@ struct ath_softc {
+ 	struct ath_descdma txsdma;
  
- 	iwl_rf_config(priv);
- 
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 
- 	/* W/A : NIC is stuck in a reset state after Early PCIe power off
- 	 * (PCIe power is lost before PERST# is asserted),
-@@ -80,7 +80,7 @@ static void iwl5000_nic_config(struct iwl_priv *priv)
- 				~APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS);
- 
- 
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- }
- 
- static struct iwl_sensitivity_ranges iwl5000_sensitivity = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-calib.c b/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-index f0e38a1..fb6da14 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-@@ -658,13 +658,13 @@ void iwl_sensitivity_calibration(struct iwl_priv *priv)
- 		return;
- 	}
- 
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 	rx_info = &priv->statistics.rx_non_phy;
- 	ofdm = &priv->statistics.rx_ofdm;
- 	cck = &priv->statistics.rx_cck;
- 	if (rx_info->interference_data_flag != INTERFERENCE_DATA_AVAILABLE) {
- 		IWL_DEBUG_CALIB(priv, "<< invalid data.\n");
--		spin_unlock_irqrestore(&priv->lock, flags);
-+		spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 		return;
- 	}
- 
-@@ -688,7 +688,7 @@ void iwl_sensitivity_calibration(struct iwl_priv *priv)
- 	statis.beacon_energy_c =
- 			le32_to_cpu(rx_info->beacon_energy_c);
- 
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 
- 	IWL_DEBUG_CALIB(priv, "rx_enable_time = %u usecs\n", rx_enable_time);
- 
-@@ -976,13 +976,13 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv)
- 		return;
- 	}
- 
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 
- 	rx_info = &priv->statistics.rx_non_phy;
- 
- 	if (rx_info->interference_data_flag != INTERFERENCE_DATA_AVAILABLE) {
- 		IWL_DEBUG_CALIB(priv, " << Interference data unavailable\n");
--		spin_unlock_irqrestore(&priv->lock, flags);
-+		spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 		return;
- 	}
- 
-@@ -997,7 +997,7 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv)
- 	if ((rxon_chnum != stat_chnum) || (rxon_band24 != stat_band24)) {
- 		IWL_DEBUG_CALIB(priv, "Stats not from chan=%d, band24=%d\n",
- 				rxon_chnum, rxon_band24);
--		spin_unlock_irqrestore(&priv->lock, flags);
-+		spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 		return;
- 	}
- 
-@@ -1016,7 +1016,7 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv)
- 	chain_sig_b = le32_to_cpu(rx_info->beacon_rssi_b) & IN_BAND_FILTER;
- 	chain_sig_c = le32_to_cpu(rx_info->beacon_rssi_c) & IN_BAND_FILTER;
- 
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 
- 	data->beacon_count++;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 7c3e3ea..7ace507 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1673,9 +1673,9 @@ void iwlagn_bt_coex_profile_notif(struct iwl_priv *priv,
- 
- 	/* FIXME: based on notification, adjust the prio_boost */
- 
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 	priv->bt_ci_compliance = coex->bt_ci_compliance;
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- }
- 
- void iwlagn_bt_rx_handler_setup(struct iwl_priv *priv)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 6812409..cff6442 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -877,12 +877,12 @@ static void rs_bt_update_lq(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
- 		 * Is there a need to switch between
- 		 * full concurrency and 3-wire?
- 		 */
--		spin_lock_irqsave(&priv->lock, flags);
-+		spin_lock_irqsave(&priv->shrd->lock, flags);
- 		if (priv->bt_ci_compliance && priv->bt_ant_couple_ok)
- 			full_concurrent = true;
- 		else
- 			full_concurrent = false;
--		spin_unlock_irqrestore(&priv->lock, flags);
-+		spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 	}
- 	if ((priv->bt_traffic_load != priv->last_bt_traffic_load) ||
- 	    (priv->bt_full_concurrent != full_concurrent)) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index e74c242..fadfc38 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -576,7 +576,7 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
- 			goto out;
- 		}
- 
--		spin_lock_irqsave(&priv->lock, flags);
-+		spin_lock_irqsave(&priv->shrd->lock, flags);
- 
- 		for_each_context(priv, ctx) {
- 			/* Configure HT40 channels */
-@@ -620,7 +620,7 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
- 					       ctx->vif);
- 		}
- 
--		spin_unlock_irqrestore(&priv->lock, flags);
-+		spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 
- 		iwl_update_bcast_stations(priv);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 3e2a904..89d7b30 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -336,7 +336,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	if (info->control.vif)
- 		ctx = iwl_rxon_ctx_from_vif(info->control.vif);
- 
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 	if (iwl_is_rfkill(priv)) {
- 		IWL_DEBUG_DROP(priv, "Dropping - RF KILL\n");
- 		goto drop_unlock_priv;
-@@ -404,7 +404,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	else
- 		txq_id = ctx->ac_to_queue[skb_get_queue_mapping(skb)];
- 
--	/* irqs already disabled/saved above when locking priv->lock */
-+	/* irqs already disabled/saved above when locking priv->shrd->lock */
- 	spin_lock(&priv->sta_lock);
- 
- 	if (ieee80211_is_data_qos(fc)) {
-@@ -461,7 +461,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	}
- 
- 	spin_unlock(&priv->sta_lock);
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 
- 	/*
- 	 * Avoid atomic ops if it isn't an associated client.
-@@ -478,7 +478,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- drop_unlock_sta:
- 	spin_unlock(&priv->sta_lock);
- drop_unlock_priv:
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 	return -1;
- }
- 
-@@ -620,7 +620,7 @@ int iwlagn_tx_agg_stop(struct iwl_priv *priv, struct ieee80211_vif *vif,
- 
- 	/* do not restore/save irqs */
- 	spin_unlock(&priv->sta_lock);
--	spin_lock(&priv->lock);
-+	spin_lock(&priv->shrd->lock);
- 
- 	/*
- 	 * the only reason this call can fail is queue number out of range,
-@@ -630,7 +630,7 @@ int iwlagn_tx_agg_stop(struct iwl_priv *priv, struct ieee80211_vif *vif,
- 	 *  mac80211 to clean up it own data.
- 	 */
- 	trans_txq_agg_disable(&priv->trans, txq_id, ssn, tx_fifo_id);
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 
- 	ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index e77c4c4..6d2c13e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1673,10 +1673,10 @@ static void iwl_rf_kill_ct_config(struct iwl_priv *priv)
- 	unsigned long flags;
- 	int ret = 0;
- 
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR,
- 		    CSR_UCODE_DRV_GP1_REG_BIT_CT_KILL_EXIT);
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 	priv->thermal_throttle.ct_kill_toggle = false;
- 
- 	if (priv->cfg->base_params->support_ct_kill_exit) {
-@@ -3083,7 +3083,7 @@ static void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
- 		goto out;
- 	}
- 
--	spin_lock_irq(&priv->lock);
-+	spin_lock_irq(&priv->shrd->lock);
- 
- 	priv->current_ht_config.smps = conf->smps_mode;
- 
-@@ -3113,7 +3113,7 @@ static void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
- 	iwl_set_rxon_ht(priv, ht_conf);
- 	iwl_set_flags_for_band(priv, ctx, channel->band, ctx->vif);
- 
--	spin_unlock_irq(&priv->lock);
-+	spin_unlock_irq(&priv->shrd->lock);
- 
- 	iwl_set_rate(priv);
- 	/*
-@@ -3640,7 +3640,7 @@ int iwl_probe(struct iwl_bus *bus, struct iwl_cfg *cfg)
- 	 * we should init now
- 	 */
- 	spin_lock_init(&priv->reg_lock);
--	spin_lock_init(&priv->lock);
-+	spin_lock_init(&priv->shrd->lock);
- 
- 	/*
- 	 * stop and reset the on-board processor just in case it is in a
-@@ -3796,9 +3796,9 @@ void __devexit iwl_remove(struct iwl_priv * priv)
- 	/* make sure we flush any pending irq or
- 	 * tasklet for the driver
- 	 */
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 	iwl_disable_interrupts(priv);
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 
- 	trans_sync_irq(&priv->trans);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index a5a694d..40ad889 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1186,7 +1186,7 @@ int iwl_mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 
- 	q = AC_NUM - 1 - queue;
- 
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 
- 	/*
- 	 * MULTI-FIXME
-@@ -1204,7 +1204,7 @@ int iwl_mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 		ctx->qos_data.def_qos_parm.ac[q].reserved1 = 0;
- 	}
- 
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- 	return 0;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index bf166bc..c60a242 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1226,7 +1226,6 @@ struct iwl_priv {
- 	u8 mgmt_tx_ant;
- 
- 	/* spinlock */
--	spinlock_t lock;	/* protect general shared data */
- 	spinlock_t hcmd_lock;	/* protect hcmd */
- 	spinlock_t reg_lock;	/* protect hw register access */
- 	struct mutex mutex;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 74ff711..1c2c31c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -149,6 +149,7 @@ struct iwl_hw_params {
-  * @priv: pointer to the upper layer data
-  * @hw_params: see struct iwl_hw_params
-  * @workqueue: the workqueue used by all the layers of the driver
-+ * @lock: protect general shared data
-  */
- struct iwl_shared {
- #ifdef CONFIG_IWLWIFI_DEBUG
-@@ -163,6 +164,7 @@ struct iwl_shared {
- 	struct iwl_hw_params hw_params;
- 
- 	struct workqueue_struct *workqueue;
-+	spinlock_t lock;
+ 	struct ath_ant_comb ant_comb;
++	u8 ant_tx, ant_rx;
  };
  
- /*Whatever _m is (iwl_trans, iwl_priv, iwl_bus, these macros will work */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
-index 0b79815..26497dd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-rx-pcie.c
-@@ -329,9 +329,9 @@ void iwlagn_rx_replenish(struct iwl_priv *priv)
+ void ath9k_tasklet(unsigned long data);
+@@ -670,6 +671,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 		    const struct ath_bus_ops *bus_ops);
+ void ath9k_deinit_device(struct ath_softc *sc);
+ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw);
++void ath9k_reload_chainmask_settings(struct ath_softc *sc);
  
- 	iwlagn_rx_allocate(priv, GFP_KERNEL);
- 
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 	iwlagn_rx_queue_restock(priv);
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
+ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw);
+ bool ath9k_uses_beacons(int type);
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 6ee3be9..0eeffd1 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -652,9 +652,22 @@ static void ath9k_init_txpower_limits(struct ath_softc *sc)
+ 	ah->curchan = curchan;
  }
  
- static void iwlagn_rx_replenish_now(struct iwl_priv *priv)
-@@ -499,7 +499,7 @@ void iwl_irq_tasklet(struct iwl_priv *priv)
- 	u32 inta_mask;
++void ath9k_reload_chainmask_settings(struct ath_softc *sc)
++{
++	if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT))
++		return;
++
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
++		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
++		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
++}
++
++
+ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ {
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+ 		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+@@ -692,6 +705,16 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	hw->sta_data_size = sizeof(struct ath_node);
+ 	hw->vif_data_size = sizeof(struct ath_vif);
+ 
++	hw->wiphy->available_antennas_rx = BIT(ah->caps.max_rxchains) - 1;
++	hw->wiphy->available_antennas_tx = BIT(ah->caps.max_txchains) - 1;
++
++	/* single chain devices with rx diversity */
++	if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
++		hw->wiphy->available_antennas_rx = BIT(0) | BIT(1);
++
++	sc->ant_rx = hw->wiphy->available_antennas_rx;
++	sc->ant_tx = hw->wiphy->available_antennas_tx;
++
+ #ifdef CONFIG_ATH9K_RATE_CONTROL
+ 	hw->rate_control_algorithm = "ath9k_rate_control";
  #endif
+@@ -703,12 +726,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+ 			&sc->sbands[IEEE80211_BAND_5GHZ];
  
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
+-	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+-		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
+-			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
+-		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
+-			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
+-	}
++	ath9k_reload_chainmask_settings(sc);
  
- 	/* Ack/clear/reset pending uCode interrupts.
- 	 * Note:  Some bits in CSR_INT are "OR" of bits in CSR_FH_INT_STATUS,
-@@ -525,7 +525,7 @@ void iwl_irq_tasklet(struct iwl_priv *priv)
+ 	SET_IEEE80211_PERM_ADDR(hw, common->macaddr);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 944c50a..8a01720 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -280,6 +280,22 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 			ath_start_ani(common);
  	}
- #endif
  
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
++	if (ath9k_hw_ops(ah)->antdiv_comb_conf_get && sc->ant_rx != 3) {
++		struct ath_hw_antcomb_conf div_ant_conf;
++		u8 lna_conf;
++
++		ath9k_hw_antdiv_comb_conf_get(ah, &div_ant_conf);
++
++		if (sc->ant_rx == 1)
++			lna_conf = ATH_ANT_DIV_COMB_LNA1;
++		else
++			lna_conf = ATH_ANT_DIV_COMB_LNA2;
++		div_ant_conf.main_lna_conf = lna_conf;
++		div_ant_conf.alt_lna_conf = lna_conf;
++
++		ath9k_hw_antdiv_comb_conf_set(ah, &div_ant_conf);
++	}
++
+ 	ieee80211_wake_queues(sc->hw);
  
- 	/* saved interrupt in inta variable now we can reset priv->inta */
- 	priv->inta = 0;
-@@ -774,7 +774,7 @@ int iwl_reset_ict(struct iwl_priv *priv)
- 	if (!priv->ict_tbl_vir)
- 		return 0;
- 
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 	iwl_disable_interrupts(priv);
- 
- 	memset(&priv->ict_tbl[0], 0, sizeof(u32) * ICT_COUNT);
-@@ -794,7 +794,7 @@ int iwl_reset_ict(struct iwl_priv *priv)
- 	priv->ict_index = 0;
- 	iwl_write32(priv, CSR_INT, priv->inta_mask);
- 	iwl_enable_interrupts(priv);
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 
+ 	return true;
+@@ -2383,6 +2399,59 @@ static int ath9k_get_stats(struct ieee80211_hw *hw,
  	return 0;
  }
-@@ -804,9 +804,9 @@ void iwl_disable_ict(struct iwl_priv *priv)
- {
- 	unsigned long flags;
  
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 	priv->use_ict = false;
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- }
++static u32 fill_chainmask(u32 cap, u32 new)
++{
++	u32 filled = 0;
++	int i;
++
++	for (i = 0; cap && new; i++, cap >>= 1) {
++		if (!(cap & BIT(0)))
++			continue;
++
++		if (new & BIT(0))
++			filled |= BIT(i);
++
++		new >>= 1;
++	}
++
++	return filled;
++}
++
++static int ath9k_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
++{
++	struct ath_softc *sc = hw->priv;
++	struct ath_hw *ah = sc->sc_ah;
++
++	if (!rx_ant || !tx_ant)
++		return -EINVAL;
++
++	sc->ant_rx = rx_ant;
++	sc->ant_tx = tx_ant;
++
++	if (ah->caps.rx_chainmask == 1)
++		return 0;
++
++	/* AR9100 runs into calibration issues if not all rx chains are enabled */
++	if (AR_SREV_9100(ah))
++		ah->rxchainmask = 0x7;
++	else
++		ah->rxchainmask = fill_chainmask(ah->caps.rx_chainmask, rx_ant);
++
++	ah->txchainmask = fill_chainmask(ah->caps.tx_chainmask, tx_ant);
++	ath9k_reload_chainmask_settings(sc);
++
++	return 0;
++}
++
++static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
++{
++	struct ath_softc *sc = hw->priv;
++
++	*tx_ant = sc->ant_tx;
++	*rx_ant = sc->ant_rx;
++	return 0;
++}
++
+ struct ieee80211_ops ath9k_ops = {
+ 	.tx 		    = ath9k_tx,
+ 	.start 		    = ath9k_start,
+@@ -2409,4 +2478,6 @@ struct ieee80211_ops ath9k_ops = {
+ 	.tx_frames_pending  = ath9k_tx_frames_pending,
+ 	.tx_last_beacon     = ath9k_tx_last_beacon,
+ 	.get_stats	    = ath9k_get_stats,
++	.set_antenna	    = ath9k_set_antenna,
++	.get_antenna	    = ath9k_get_antenna,
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index ad5f9bd..7e1265c 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1956,7 +1956,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 			ath_rx_ps(sc, skb);
+ 		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
  
- static irqreturn_t iwl_isr(int irq, void *data)
-@@ -820,7 +820,7 @@ static irqreturn_t iwl_isr(int irq, void *data)
- 	if (!priv)
- 		return IRQ_NONE;
+-		if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
++		if ((ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) && sc->ant_rx == 3)
+ 			ath_ant_comb_scan(sc, &rs);
  
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 
- 	/* Disable (but don't clear!) interrupts here to avoid
- 	 *    back-to-back ISRs and sporadic interrupts from our NIC.
-@@ -864,7 +864,7 @@ static irqreturn_t iwl_isr(int irq, void *data)
- 		iwl_enable_interrupts(priv);
- 
-  unplugged:
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 	return IRQ_HANDLED;
- 
-  none:
-@@ -873,7 +873,7 @@ static irqreturn_t iwl_isr(int irq, void *data)
- 	if (test_bit(STATUS_INT_ENABLED, &priv->shrd->status) && !priv->inta)
- 		iwl_enable_interrupts(priv);
- 
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 	return IRQ_NONE;
- }
- 
-@@ -901,7 +901,7 @@ irqreturn_t iwl_isr_ict(int irq, void *data)
- 	if (!priv->use_ict)
- 		return iwl_isr(irq, data);
- 
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 
- 	/* Disable (but don't clear!) interrupts here to avoid
- 	 * back-to-back ISRs and sporadic interrupts from our NIC.
-@@ -967,7 +967,7 @@ irqreturn_t iwl_isr_ict(int irq, void *data)
- 		iwl_enable_interrupts(priv);
- 	}
- 
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 	return IRQ_HANDLED;
- 
-  none:
-@@ -977,6 +977,6 @@ irqreturn_t iwl_isr_ict(int irq, void *data)
- 	if (test_bit(STATUS_INT_ENABLED, &priv->shrd->status) && !priv->inta)
- 		iwl_enable_interrupts(priv);
- 
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 	return IRQ_NONE;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-index ab42152..61e17dd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
-@@ -444,7 +444,7 @@ void iwl_trans_txq_agg_setup(struct iwl_priv *priv, int sta_id, int tid,
- 
- 	ra_tid = BUILD_RAxTID(sta_id, tid);
- 
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 
- 	/* Stop this Tx queue before configuring it */
- 	iwlagn_tx_queue_stop_scheduler(priv, txq_id);
-@@ -480,7 +480,7 @@ void iwl_trans_txq_agg_setup(struct iwl_priv *priv, int sta_id, int tid,
- 	/* Set up Status area in SRAM, map to Tx DMA/FIFO, activate the queue */
- 	iwl_trans_tx_queue_set_status(priv, &priv->txq[txq_id], tx_fifo, 1);
- 
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- }
- 
- int iwl_trans_txq_agg_disable(struct iwl_priv *priv, u16 txq_id,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index a3e1bd0..cc3fc23 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -210,10 +210,10 @@ static int iwl_rx_init(struct iwl_priv *priv)
- 
- 	iwl_trans_rx_hw_init(priv, rxq);
- 
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 	rxq->need_update = 1;
- 	iwl_rx_queue_update_write_ptr(priv, rxq);
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 
- 	return 0;
- }
-@@ -546,7 +546,7 @@ static int iwl_tx_init(struct iwl_priv *priv)
- 		alloc = true;
- 	}
- 
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 
- 	/* Turn off all Tx DMA fifos */
- 	iwl_write_prph(priv, SCD_TXFACT, 0);
-@@ -554,7 +554,7 @@ static int iwl_tx_init(struct iwl_priv *priv)
- 	/* Tell NIC where to find the "keep warm" buffer */
- 	iwl_write_direct32(priv, FH_KW_MEM_ADDR_REG, priv->kw.dma >> 4);
- 
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 
- 	/* Alloc and init all Tx queues, including the command queue (#4/#9) */
- 	for (txq_id = 0; txq_id < hw_params(priv).max_txq_num; txq_id++) {
-@@ -598,13 +598,13 @@ static int iwl_nic_init(struct iwl_priv *priv)
- 	unsigned long flags;
- 
- 	/* nic_init */
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 	iwl_apm_init(priv);
- 
- 	/* Set interrupt coalescing calibration timer to default (512 usecs) */
- 	iwl_write8(priv, CSR_INT_COALESCING, IWL_HOST_INT_CALIB_TIMEOUT_DEF);
- 
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 
- 	iwl_set_pwr_vmain(priv);
- 
-@@ -728,7 +728,7 @@ static int iwl_trans_start_device(struct iwl_priv *priv)
- 
- /*
-  * Activate/Deactivate Tx DMA/FIFO channels according tx fifos mask
-- * must be called under priv->lock and mac access
-+ * must be called under priv->shrd->lock and mac access
-  */
- static void iwl_trans_txq_set_sched(struct iwl_priv *priv, u32 mask)
- {
-@@ -777,7 +777,7 @@ static void iwl_trans_tx_start(struct iwl_priv *priv)
- 	int i, chan;
- 	u32 reg_val;
- 
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 
- 	priv->scd_base_addr = iwl_read_prph(priv, SCD_SRAM_BASE_ADDR);
- 	a = priv->scd_base_addr + SCD_CONTEXT_MEM_LOWER_BOUND;
-@@ -872,7 +872,7 @@ static void iwl_trans_tx_start(struct iwl_priv *priv)
- 		iwl_trans_tx_queue_set_status(priv, &priv->txq[i], fifo, 0);
- 	}
- 
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 
- 	/* Enable L1-Active */
- 	iwl_clear_bits_prph(priv, APMG_PCIDEV_STT_REG,
-@@ -888,7 +888,7 @@ static int iwl_trans_tx_stop(struct iwl_priv *priv)
- 	unsigned long flags;
- 
- 	/* Turn off all Tx DMA fifos */
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 
- 	iwl_trans_txq_set_sched(priv, 0);
- 
-@@ -902,7 +902,7 @@ static int iwl_trans_tx_stop(struct iwl_priv *priv)
- 			    " DMA channel %d [0x%08x]", ch,
- 			    iwl_read_direct32(priv, FH_TSSR_TX_STATUS_REG));
- 	}
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 
- 	if (!priv->txq) {
- 		IWL_WARN(priv, "Stopping tx queues that aren't allocated...");
-@@ -924,9 +924,9 @@ static void iwl_trans_stop_device(struct iwl_priv *priv)
- 	iwl_write32(priv, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
- 
- 	/* tell the device to stop sending interrupts */
--	spin_lock_irqsave(&priv->lock, flags);
-+	spin_lock_irqsave(&priv->shrd->lock, flags);
- 	iwl_disable_interrupts(priv);
--	spin_unlock_irqrestore(&priv->lock, flags);
-+	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 	trans_sync_irq(&priv->trans);
- 
- 	/* device going down, Stop using ICT table */
+ 		ieee80211_rx(hw, skb);
 -- 
-1.7.0.4
+1.7.3.2
 
