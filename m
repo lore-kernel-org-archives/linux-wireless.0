@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:45445 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752494Ab1HYBWQ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5601 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756017Ab1H3TEH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 21:22:16 -0400
-Received: by mail-gx0-f174.google.com with SMTP id 21so1333929gxk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2011 18:22:16 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH 5/8] mac80211: fix mpath timer removal
-Date: Wed, 24 Aug 2011 18:21:50 -0700
-Message-Id: <1314235313-4564-6-git-send-email-thomas@cozybit.com> (sfid-20110825_032224_722462_6775779A)
-In-Reply-To: <1314235313-4564-1-git-send-email-thomas@cozybit.com>
-References: <1314235313-4564-1-git-send-email-thomas@cozybit.com>
+	Tue, 30 Aug 2011 15:04:07 -0400
+Cc: <linux-wireless@vger.kernel.org>,
+	Edward Lu <shaol@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+Subject: [PATCH v2 19/22] ath6kl: Do not clear CONNECT bit setting in AP mode for STA disconnect
+Date: Tue, 30 Aug 2011 21:58:08 +0300
+Message-ID: <1314730691-12089-20-git-send-email-jouni@qca.qualcomm.com> (sfid-20110830_210411_764946_D154BD99)
+In-Reply-To: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+From: Edward Lu <elu@qca.qualcomm.com>
 
-Initialize mpath timers added to mpp_table.
-
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Edward Lu <elu@qca.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath6kl/main.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-v2: - initialize timer instead of checking for NULL (Johannes)
-
- net/mac80211/mesh_pathtbl.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 41036a2..55ccd62 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -487,6 +487,7 @@ int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata)
- 	new_mpath->flags = 0;
- 	skb_queue_head_init(&new_mpath->frame_queue);
- 	new_node->mpath = new_mpath;
-+	init_timer(&new_mpath->timer);
- 	new_mpath->exp_time = jiffies;
- 	spin_lock_init(&new_mpath->state_lock);
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index a19caec..69a1b451 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -1284,7 +1284,8 @@ void ath6kl_disconnect_event(struct ath6kl *ar, u8 reason, u8 *bssid,
+ 			cfg80211_del_sta(ar->net_dev, bssid, GFP_KERNEL);
+ 		}
+ 
+-		clear_bit(CONNECTED, &ar->flag);
++		if (memcmp(ar->net_dev->dev_addr, bssid, ETH_ALEN) == 0)
++			clear_bit(CONNECTED, &ar->flag);
+ 		return;
+ 	}
  
 -- 
 1.7.4.1
