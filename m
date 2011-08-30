@@ -1,34 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53700 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755816Ab1HaOr7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 10:47:59 -0400
-Message-ID: <4E5E499D.1050600@openwrt.org> (sfid-20110831_164812_234726_3274EA28)
-Date: Wed, 31 Aug 2011 16:47:57 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:53948 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753875Ab1H3NpC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Aug 2011 09:45:02 -0400
+Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
+	by emh04-2.mail.saunalahti.fi (Postfix) with SMTP id 9C46313C058
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 16:45:00 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-188-95.elisa-laajakaista.fi [88.115.188.95])
+	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 7495E27D83
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 16:44:59 +0300 (EEST)
+Subject: [PATCH 4/4] ath6kl: read fwlog from firmware ring buffer
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Date: Tue, 30 Aug 2011 16:44:58 +0300
+Message-ID: <20110830134458.21543.74829.stgit@localhost6.localdomain6> (sfid-20110830_154505_339198_F42A2B13)
+In-Reply-To: <20110830134432.21543.89808.stgit@localhost6.localdomain6>
+References: <20110830134432.21543.89808.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH] mac80211: retry sending failed BAR frames later instead
- of tearing down aggr
-References: <1314558661-28454-1-git-send-email-nbd@openwrt.org> <1314792948.4161.23.camel@jlt3.sipsolutions.net> <CAGXE3d-_hSmii3GsZF3jqOfP1amrMeL+GtJ605z406nRjA_z7g@mail.gmail.com>
-In-Reply-To: <CAGXE3d-_hSmii3GsZF3jqOfP1amrMeL+GtJ605z406nRjA_z7g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-08-31 2:31 PM, Helmut Schaa wrote:
-> On Wed, Aug 31, 2011 at 2:15 PM, Johannes Berg
-> <johannes@sipsolutions.net>  wrote:
->>  On Sun, 2011-08-28 at 21:11 +0200, Felix Fietkau wrote:
->>>  Unfortunately failed BAR tx attempts happen more frequently than I
->>>  expected, and the resulting aggregation teardowns cause performance
->>>  issues, as the aggregation session does not always get re-established
->>>  properly.
->
-> Felix, so this also happens with ath9k (not only rt2800pci)?
-Right. I think it can happen with any driver if the client goes into 
-powersave during heavy traffic.
+Firmare sends the logs only when it's internal ring buffer is full. But
+if firmware crashes we need to retrieve the latest logs through diagnose
+window. This is now done everytime the debugfs file is read.
 
-- Felix
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/core.h   |   15 ++++++
+ drivers/net/wireless/ath/ath6kl/debug.c  |    3 +
+ drivers/net/wireless/ath/ath6kl/init.c   |   13 -----
+ drivers/net/wireless/ath/ath6kl/main.c   |   75 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/target.h |   14 ++++++
+ 5 files changed, 107 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 33c84c0..61d3142 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -26,6 +26,7 @@
+ #include "htc.h"
+ #include "wmi.h"
+ #include "bmi.h"
++#include "target.h"
+ 
+ #define MAX_ATH6KL                        1
+ #define ATH6KL_MAX_RX_BUFFERS             16
+@@ -496,6 +497,19 @@ static inline void ath6kl_deposit_credit_to_ep(struct htc_credit_state_info
+ 	cred_info->cur_free_credits -= credits;
+ }
+ 
++static inline u32 ath6kl_get_hi_item_addr(struct ath6kl *ar,
++					  u32 item_offset)
++{
++	u32 addr = 0;
++
++	if (ar->target_type == TARGET_TYPE_AR6003)
++		addr = ATH6KL_AR6003_HI_START_ADDR + item_offset;
++	else if (ar->target_type == TARGET_TYPE_AR6004)
++		addr = ATH6KL_AR6004_HI_START_ADDR + item_offset;
++
++	return addr;
++}
++
+ void ath6kl_destroy(struct net_device *dev, unsigned int unregister);
+ int ath6kl_configure_target(struct ath6kl *ar);
+ void ath6kl_detect_error(unsigned long ptr);
+@@ -512,6 +526,7 @@ void ath6kl_cleanup_amsdu_rxbufs(struct ath6kl *ar);
+ int ath6kl_diag_write(struct ath6kl *ar, u32 address, void *data, u32 length);
+ int ath6kl_diag_read32(struct ath6kl *ar, u32 address, u32 *value);
+ int ath6kl_diag_read(struct ath6kl *ar, u32 address, void *data, u32 length);
++int ath6kl_read_fwlogs(struct ath6kl *ar);
+ void ath6kl_init_profile_info(struct ath6kl *ar);
+ void ath6kl_tx_data_cleanup(struct ath6kl *ar);
+ void ath6kl_stop_endpoint(struct net_device *dev, bool keep_profile,
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 80c05f2..9608692 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -247,6 +247,9 @@ static ssize_t ath6kl_fwlog_read(struct file *file, char __user *user_buf,
+ 	if (!buf)
+ 		return -ENOMEM;
+ 
++	/* read undelivered logs from firmware */
++	ath6kl_read_fwlogs(ar);
++
+ 	spin_lock_bh(&ar->debug.fwlog_lock);
+ 
+ 	while (len < buf_len && !ath6kl_debug_fwlog_empty(ar)) {
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index b6a1e69..428b9c0 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -108,19 +108,6 @@ static u8 ath6kl_get_fw_iftype(struct ath6kl *ar)
+ 	}
+ }
+ 
+-static inline u32 ath6kl_get_hi_item_addr(struct ath6kl *ar,
+-					  u32 item_offset)
+-{
+-	u32 addr = 0;
+-
+-	if (ar->target_type == TARGET_TYPE_AR6003)
+-		addr = ATH6KL_AR6003_HI_START_ADDR + item_offset;
+-	else if (ar->target_type == TARGET_TYPE_AR6004)
+-		addr = ATH6KL_AR6004_HI_START_ADDR + item_offset;
+-
+-	return addr;
+-}
+-
+ static int ath6kl_set_host_app_area(struct ath6kl *ar)
+ {
+ 	u32 address, data;
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index 8d29d4e..5e807a9 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -308,6 +308,81 @@ int ath6kl_diag_write(struct ath6kl *ar, u32 address, void *data, u32 length)
+ 	return ret;
+ }
+ 
++int ath6kl_read_fwlogs(struct ath6kl *ar)
++{
++	struct ath6kl_dbglog_hdr debug_hdr;
++	struct ath6kl_dbglog_buf debug_buf;
++	u32 address, length, dropped, firstbuf, debug_hdr_addr;
++	int ret = 0, loop;
++	u8 *buf;
++
++	buf = kmalloc(ATH6KL_FWLOG_PAYLOAD_SIZE, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	address = TARG_VTOP(ar->target_type,
++			    ath6kl_get_hi_item_addr(ar,
++						    HI_ITEM(hi_dbglog_hdr)));
++
++	ret = ath6kl_diag_read32(ar, address, &debug_hdr_addr);
++	if (ret)
++		goto out;
++
++	/* Get the contents of the ring buffer */
++	if (debug_hdr_addr == 0) {
++		ath6kl_warn("Invalid address for debug_hdr_addr\n");
++		ret = -EINVAL;
++		goto out;
++	}
++
++	address = TARG_VTOP(ar->target_type, debug_hdr_addr);
++	ath6kl_diag_read(ar, address, &debug_hdr, sizeof(debug_hdr));
++
++	address = TARG_VTOP(ar->target_type,
++			    le32_to_cpu(debug_hdr.dbuf_addr));
++	firstbuf = address;
++	dropped = le32_to_cpu(debug_hdr.dropped);
++	ath6kl_diag_read(ar, address, &debug_buf, sizeof(debug_buf));
++
++	loop = 100;
++
++	do {
++		address = TARG_VTOP(ar->target_type,
++				    le32_to_cpu(debug_buf.buffer_addr));
++		length = le32_to_cpu(debug_buf.length);
++
++		if (length != 0 && (le32_to_cpu(debug_buf.length) <=
++				    le32_to_cpu(debug_buf.bufsize))) {
++			length = ALIGN(length, 4);
++
++			ret = ath6kl_diag_read(ar, address,
++					       buf, length);
++			if (ret)
++				goto out;
++
++			ath6kl_debug_fwlog_event(ar, buf, length);
++		}
++
++		address = TARG_VTOP(ar->target_type,
++				    le32_to_cpu(debug_buf.next));
++		ath6kl_diag_read(ar, address, &debug_buf, sizeof(debug_buf));
++		if (ret)
++			goto out;
++
++		loop--;
++
++		if (WARN_ON(loop == 0)) {
++			ret = -ETIMEDOUT;
++			goto out;
++		}
++	} while (address != firstbuf);
++
++out:
++	kfree(buf);
++
++	return ret;
++}
++
+ /* FIXME: move to a better place, target.h? */
+ #define AR6003_RESET_CONTROL_ADDRESS 0x00004000
+ #define AR6004_RESET_CONTROL_ADDRESS 0x00004000
+diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
+index 6c66a08..dd8b953 100644
+--- a/drivers/net/wireless/ath/ath6kl/target.h
++++ b/drivers/net/wireless/ath/ath6kl/target.h
+@@ -343,4 +343,18 @@ struct host_interest {
+ 
+ #define ATH6KL_FWLOG_PAYLOAD_SIZE		1500
+ 
++struct ath6kl_dbglog_buf {
++	__le32 next;
++	__le32 buffer_addr;
++	__le32 bufsize;
++	__le32 length;
++	__le32 count;
++	__le32 free;
++} __packed;
++
++struct ath6kl_dbglog_hdr {
++	__le32 dbuf_addr;
++	__le32 dropped;
++} __packed;
++
+ #endif
+
