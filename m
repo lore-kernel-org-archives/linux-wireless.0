@@ -1,76 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:35555 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754551Ab1HaBur convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42983 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738Ab1H3Ka1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 21:50:47 -0400
-Received: by gya6 with SMTP id 6so185317gya.19
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 18:50:46 -0700 (PDT)
+	Tue, 30 Aug 2011 06:30:27 -0400
+Message-ID: <4E5CBBBA.7080204@qca.qualcomm.com> (sfid-20110830_123031_156524_80A2E044)
+Date: Tue, 30 Aug 2011 13:30:18 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPjQAd9Fyu-MQSvi+aa4VwwWBTo_Brf=jCvAEnLdQZaJvjvu=Q@mail.gmail.com>
-References: <1314706867.4011.25.camel@jlt3.sipsolutions.net>
- <1314728954-22646-1-git-send-email-javier@cozybit.com> <1314729813.4011.43.camel@jlt3.sipsolutions.net>
- <CAPjQAd9Fyu-MQSvi+aa4VwwWBTo_Brf=jCvAEnLdQZaJvjvu=Q@mail.gmail.com>
-From: Javier Cardona <javier@cozybit.com>
-Date: Tue, 30 Aug 2011 18:50:25 -0700
-Message-ID: <CAPjQAd-CLvvn_1efsC_FjgoPSkyxiXC3c9yDGFzgPC4ts9Ay3w@mail.gmail.com> (sfid-20110831_035050_523745_83C7CEC1)
-Subject: Re: [PATCH] mac80211: Defer tranmission of mesh path errors
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Thomas Pedersen <thomas@cozybit.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
-	jlopex@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Raja Mani <rmani@qca.qualcomm.com>
+CC: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Edward Lu <shaol@qca.qualcomm.com>
+Subject: Re: [PATCH 11/20] ath6kl: Support channel set request for startscan
+ command
+References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com> <1314620641-24257-12-git-send-email-jouni@qca.qualcomm.com> <4E5CB5A3.6070507@qca.qualcomm.com>
+In-Reply-To: <4E5CB5A3.6070507@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 30, 2011 at 2:38 PM, Javier Cardona <javier@cozybit.com> wrote:
-> On Tue, Aug 30, 2011 at 11:43 AM, Johannes Berg
->> But that's not a big thing. Have you tested it? I'm wondering if because
->> we take a lock here we might run into lock dependencies issues (lockdep
->> would say) but I don't think so because stop_queue etc. all take the
->> same lock from an arbitrary driver context already.
+On 08/30/2011 01:04 PM, Raja Mani wrote:
+> On Monday 29 August 2011 05:53 PM, Jouni Malinen wrote:
 >
-> We don't have a test specific for that particular perr.  Other tests
-> run fine and lockdep does not complain.
-> I can resubmit the patch with the clearer comment once we've run our
-> whole test suite if that gives you peace of mind.
+>>   	if (ath6kl_wmi_startscan_cmd(ar->wmi, WMI_LONG_SCAN, 0,
+>> -				     false, 0, 0, 0, NULL) != 0) {
+>> +				     false, 0, 0, n_channels, channels) != 0) {
+>>   		ath6kl_err("wmi_startscan_cmd failed\n");
+> 
+> kfree(channels) for failure cases ??
 
-The stress tests do trigger perrs and, with this change, we see a
-warning due to missing info->control.vif
+It's freed below as there's no return call for the error case:
 
-[14202.988077] ------------[ cut here ]------------
-[14202.988351] WARNING: at net/mac80211/util.c:358
-ieee80211_add_pending_skb+0x97/0xa0()
-[14202.988353] Hardware name: Bochs
-[14202.988355] Modules linked in: mac80211_hwsim [last unloaded: mac80211_hwsim]
-[14202.988359] Pid: 15051, comm: iperf Tainted: G        W   3.1.0-rc4-wl+ #47
-[14202.988361] Call Trace:
-[14202.988364]  [<c103ad2d>] warn_slowpath_common+0x6d/0xa0
-[14202.988367]  [<c15fbca7>] ? ieee80211_add_pending_skb+0x97/0xa0
-[14202.988370]  [<c15fbca7>] ? ieee80211_add_pending_skb+0x97/0xa0
-[14202.988373]  [<c103ad7d>] warn_slowpath_null+0x1d/0x20
-[14202.988376]  [<c15fbca7>] ieee80211_add_pending_skb+0x97/0xa0
-[14202.988379]  [<c1605ab1>] mesh_path_error_tx+0x151/0x190
-[14202.988382]  [<c160362b>] mesh_path_discard_frame+0xfb/0x100
-[14202.988385]  [<c1603580>] ? mesh_path_discard_frame+0x50/0x100
-[14202.988387]  [<c1605dd7>] mesh_nexthop_lookup+0x157/0x1d0
-[14202.988390]  [<c1605c80>] ? mesh_queue_preq+0x190/0x190
-[14202.988393]  [<c15f826a>] ieee80211_xmit+0x10a/0x240
-[14202.988395]  [<c15f8160>] ? ieee80211_tx+0xe0/0xe0
-[14202.988398]  [<c15f5c3a>] ? ieee80211_skb_resize+0x7a/0x100
-[14202.988401]  [<c15f8ba7>] ieee80211_subif_start_xmit+0x307/0x810
-[14202.988404]  [<c15f8cf8>] ? ieee80211_subif_start_xmit+0x458/0x810
+>>   		ret = -EIO;
+>>   	}
+>>
+>>   	ar->scan_req = request;
+>>
+>> +	kfree(channels);          <-----
+>> +
+>>   	return ret;
+>>   }
 
-I'll look into it tomorrow.
+I also got fooled by this :)
 
-Cheers,
-
-j
-
-
-
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+Kalle
