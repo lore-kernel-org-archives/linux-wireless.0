@@ -1,113 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3563 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753472Ab1HONen (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2011 09:34:43 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 08/15] staging: brcm80211: replace BUS_SWAP32 macro with
- cpu_to_le32()
-Date: Mon, 15 Aug 2011 15:34:20 +0200
-Message-ID: <1313415267-5264-9-git-send-email-arend@broadcom.com> (sfid-20110815_153455_495165_97B57EA6)
-In-Reply-To: <1313415267-5264-1-git-send-email-arend@broadcom.com>
-References: <1313415267-5264-1-git-send-email-arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:61074 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756112Ab1H3TCc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Aug 2011 15:02:32 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v2 09/22] ath6kl: Add cfg80211 calls for remain-on-channel events
+Date: Tue, 30 Aug 2011 21:57:58 +0300
+Message-ID: <1314730691-12089-10-git-send-email-jouni@qca.qualcomm.com> (sfid-20110830_210235_786672_53D9DD82)
+In-Reply-To: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1314730691-12089-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The macro BUS_SWAP32(a) expanded to (a) which was fine for a little
-endian system. For big endian platform this should do as the name
-implies. As the driver is intended for PCI which is little-endian
-the macro cpu_to_le32() can be used instead.
-
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Henry Ptasinski <henryp@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/staging/brcm80211/brcmsmac/dma.c |   26 +++++++++++++-------------
- 1 files changed, 13 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath6kl/wmi.c |   31 +++++++++++++++++++++++++++----
+ 1 files changed, 27 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
-index 64d311f..aa4d9cf 100644
---- a/drivers/staging/brcm80211/brcmsmac/dma.c
-+++ b/drivers/staging/brcm80211/brcmsmac/dma.c
-@@ -580,10 +580,10 @@ dma64_dd_upd(struct dma_info *di, struct dma64desc *ddring,
- #else
- 	if ((di->dataoffsetlow == 0) || !(pa & PCI32ADDR_HIGH)) {
- #endif				/* defined(__mips__) && defined(IL_BIGENDIAN) */
--		ddring[outidx].addrlow = BUS_SWAP32(pa + di->dataoffsetlow);
--		ddring[outidx].addrhigh = BUS_SWAP32(di->dataoffsethigh);
--		ddring[outidx].ctrl1 = BUS_SWAP32(*flags);
--		ddring[outidx].ctrl2 = BUS_SWAP32(ctrl2);
-+		ddring[outidx].addrlow = cpu_to_le32(pa + di->dataoffsetlow);
-+		ddring[outidx].addrhigh = cpu_to_le32(di->dataoffsethigh);
-+		ddring[outidx].ctrl1 = cpu_to_le32(*flags);
-+		ddring[outidx].ctrl2 = cpu_to_le32(ctrl2);
- 	} else {
- 		/* address extension for 32-bit PCI */
- 		u32 ae;
-@@ -592,15 +592,15 @@ dma64_dd_upd(struct dma_info *di, struct dma64desc *ddring,
- 		pa &= ~PCI32ADDR_HIGH;
- 
- 		ctrl2 |= (ae << D64_CTRL2_AE_SHIFT) & D64_CTRL2_AE;
--		ddring[outidx].addrlow = BUS_SWAP32(pa + di->dataoffsetlow);
--		ddring[outidx].addrhigh = BUS_SWAP32(di->dataoffsethigh);
--		ddring[outidx].ctrl1 = BUS_SWAP32(*flags);
--		ddring[outidx].ctrl2 = BUS_SWAP32(ctrl2);
-+		ddring[outidx].addrlow = cpu_to_le32(pa + di->dataoffsetlow);
-+		ddring[outidx].addrhigh = cpu_to_le32(di->dataoffsethigh);
-+		ddring[outidx].ctrl1 = cpu_to_le32(*flags);
-+		ddring[outidx].ctrl2 = cpu_to_le32(ctrl2);
- 	}
- 	if (di->dma.dmactrlflags & DMA_CTRL_PEN) {
- 		if (DMA64_DD_PARITY(&ddring[outidx]))
- 			ddring[outidx].ctrl2 =
--			     BUS_SWAP32(ctrl2 | D64_CTRL2_PARITY);
-+			     cpu_to_le32(ctrl2 | D64_CTRL2_PARITY);
- 	}
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 261ccff..2d80bdb 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -425,11 +425,14 @@ static int ath6kl_wmi_tx_complete_event_rx(u8 *datap, int len)
+ 	return 0;
  }
  
-@@ -1339,7 +1339,7 @@ int dma_txfast(struct dma_pub *pub, struct sk_buff *p0, bool commit)
- 	/* if last txd eof not set, fix it */
- 	if (!(flags & D64_CTRL1_EOF))
- 		di->txd64[PREVTXD(txout)].ctrl1 =
--		     BUS_SWAP32(flags | D64_CTRL1_IOC | D64_CTRL1_EOF);
-+		     cpu_to_le32(flags | D64_CTRL1_IOC | D64_CTRL1_EOF);
+-static int ath6kl_wmi_remain_on_chnl_event_rx(u8 *datap, int len)
++static int ath6kl_wmi_remain_on_chnl_event_rx(struct wmi *wmi, u8 *datap,
++					      int len)
+ {
+ 	struct wmi_remain_on_chnl_event *ev;
+ 	u32 freq;
+ 	u32 dur;
++	struct ieee80211_channel *chan;
++	struct ath6kl *ar = wmi->parent_dev;
  
- 	/* save the packet */
- 	di->txp[PREVTXD(txout)] = p0;
-@@ -1424,7 +1424,7 @@ struct sk_buff *dma_getnexttxp(struct dma_pub *pub, enum txd_range range)
- 		struct dma_seg_map *map = NULL;
- 		uint size, j, nsegs;
+ 	if (len < sizeof(*ev))
+ 		return -EINVAL;
+@@ -439,15 +442,26 @@ static int ath6kl_wmi_remain_on_chnl_event_rx(u8 *datap, int len)
+ 	dur = le32_to_cpu(ev->duration);
+ 	ath6kl_dbg(ATH6KL_DBG_WMI, "remain_on_chnl: freq=%u dur=%u\n",
+ 		   freq, dur);
++	chan = ieee80211_get_channel(ar->wdev->wiphy, freq);
++	if (!chan) {
++		ath6kl_dbg(ATH6KL_DBG_WMI, "remain_on_chnl: Unknown channel "
++			   "(freq=%u)\n", freq);
++		return -EINVAL;
++	}
++	cfg80211_ready_on_channel(ar->net_dev, 1, chan, NL80211_CHAN_NO_HT,
++				  dur, GFP_ATOMIC);
  
--		pa = BUS_SWAP32(di->txd64[i].addrlow) - di->dataoffsetlow;
-+		pa = cpu_to_le32(di->txd64[i].addrlow) - di->dataoffsetlow;
+ 	return 0;
+ }
  
- 		if (DMASGLIST_ENAB) {
- 			map = &di->txp_dmah[i];
-@@ -1432,7 +1432,7 @@ struct sk_buff *dma_getnexttxp(struct dma_pub *pub, enum txd_range range)
- 			nsegs = map->nsegs;
- 		} else {
- 			size =
--			    (BUS_SWAP32(di->txd64[i].ctrl2) &
-+			    (cpu_to_le32(di->txd64[i].ctrl2) &
- 			     D64_CTRL2_BC_MASK);
- 			nsegs = 1;
- 		}
-@@ -1487,7 +1487,7 @@ static struct sk_buff *dma64_getnextrxp(struct dma_info *di, bool forceall)
- 	rxp = di->rxp[i];
- 	di->rxp[i] = NULL;
+-static int ath6kl_wmi_cancel_remain_on_chnl_event_rx(u8 *datap, int len)
++static int ath6kl_wmi_cancel_remain_on_chnl_event_rx(struct wmi *wmi,
++						     u8 *datap, int len)
+ {
+ 	struct wmi_cancel_remain_on_chnl_event *ev;
+ 	u32 freq;
+ 	u32 dur;
++	struct ieee80211_channel *chan;
++	struct ath6kl *ar = wmi->parent_dev;
  
--	pa = BUS_SWAP32(di->rxd64[i].addrlow) - di->dataoffsetlow;
-+	pa = cpu_to_le32(di->rxd64[i].addrlow) - di->dataoffsetlow;
+ 	if (len < sizeof(*ev))
+ 		return -EINVAL;
+@@ -457,6 +471,14 @@ static int ath6kl_wmi_cancel_remain_on_chnl_event_rx(u8 *datap, int len)
+ 	dur = le32_to_cpu(ev->duration);
+ 	ath6kl_dbg(ATH6KL_DBG_WMI, "cancel_remain_on_chnl: freq=%u dur=%u "
+ 		   "status=%u\n", freq, dur, ev->status);
++	chan = ieee80211_get_channel(ar->wdev->wiphy, freq);
++	if (!chan) {
++		ath6kl_dbg(ATH6KL_DBG_WMI, "cancel_remain_on_chnl: Unknown "
++			   "channel (freq=%u)\n", freq);
++		return -EINVAL;
++	}
++	cfg80211_remain_on_channel_expired(ar->net_dev, 1, chan,
++					   NL80211_CHAN_NO_HT, GFP_ATOMIC);
  
- 	/* clear this packet from the descriptor ring */
- 	pci_unmap_single(di->pbus, pa, di->rxbufsize, PCI_DMA_FROMDEVICE);
+ 	return 0;
+ }
+@@ -3009,12 +3031,13 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
+ 		break;
+ 	case WMI_REMAIN_ON_CHNL_EVENTID:
+ 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_REMAIN_ON_CHNL_EVENTID\n");
+-		ret = ath6kl_wmi_remain_on_chnl_event_rx(datap, len);
++		ret = ath6kl_wmi_remain_on_chnl_event_rx(wmi, datap, len);
+ 		break;
+ 	case WMI_CANCEL_REMAIN_ON_CHNL_EVENTID:
+ 		ath6kl_dbg(ATH6KL_DBG_WMI,
+ 			   "WMI_CANCEL_REMAIN_ON_CHNL_EVENTID\n");
+-		ret = ath6kl_wmi_cancel_remain_on_chnl_event_rx(datap, len);
++		ret = ath6kl_wmi_cancel_remain_on_chnl_event_rx(wmi, datap,
++								len);
+ 		break;
+ 	case WMI_TX_STATUS_EVENTID:
+ 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_TX_STATUS_EVENTID\n");
 -- 
 1.7.4.1
-
 
