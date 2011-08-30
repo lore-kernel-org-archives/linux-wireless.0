@@ -1,59 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:44311 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752208Ab1HBJsm convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58940 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738Ab1H3ORD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 05:48:42 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAGXE3d9ynyJX2eAr2bfwOc_PdDNEwVHDVsA_Jx1ReBht=eVuYw@mail.gmail.com>
-References: <CAGXE3d9ynyJX2eAr2bfwOc_PdDNEwVHDVsA_Jx1ReBht=eVuYw@mail.gmail.com>
-Date: Tue, 2 Aug 2011 11:48:41 +0200
-Message-ID: <CAOZOX0UhkkCj-n=WG7c7qxqfG4=Y1QScs0FQXS0ZNwBBS=N98A@mail.gmail.com> (sfid-20110802_114847_479390_5EBBB704)
-Subject: Re: [PATCH] rt2x00: Fix compilation without CONFIG_RT2X00_LIB_CRYPTO
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Randy Dunlap <rdunlap@xenotime.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 30 Aug 2011 10:17:03 -0400
+Subject: Re: [PATCH] nl80211/cfg80211: add ssid filtering for sched_scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1314707979-26484-1-git-send-email-coelho@ti.com>
+References: <1314707979-26484-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 30 Aug 2011 16:16:52 +0200
+Message-ID: <1314713812.4011.33.camel@jlt3.sipsolutions.net> (sfid-20110830_161707_675949_24A611C7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 2, 2011 at 11:43 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> This was introduced by commit
-> 77b5621bac4a56b83b9081f48d4e7d1accdde400 (rt2x00: Don't use queue entry
-> as parameter when creating TX descriptor.)
->
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+On Tue, 2011-08-30 at 15:39 +0300, Luciano Coelho wrote:
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+> + * @NL80211_ATTR_MAX_FILTER_SSIDS: number of SSIDs you can use as
+> + *	filters in a scheduled scan request, a wiphy attribute.
 
-> ---
-> Sending directly to John as I assume this should go through the wireless tree?
->
->  drivers/net/wireless/rt2x00/rt2x00lib.h |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h
-> b/drivers/net/wireless/rt2x00/rt2x00lib.h
-> index 15cdc7e..4cdf247 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-> @@ -355,7 +355,8 @@ static inline enum cipher
-> rt2x00crypto_key_to_cipher(struct ieee80211_key_conf *
->        return CIPHER_NONE;
->  }
->
-> -static inline void rt2x00crypto_create_tx_descriptor(struct queue_entry *entry,
-> +static inline void rt2x00crypto_create_tx_descriptor(struct
-> rt2x00_dev *rt2x00dev,
-> +                                                    struct sk_buff *skb,
->                                                     struct txentry_desc *txdesc)
->  {
->  }
-> --
-> 1.7.3.4
->
+When we add more filters, hopefully the number of filters will stay be
+this? IOW, shouldn't this be "MAX_FILTERS"? Basically, each filter can
+be thought of as a profile, and a profile can contain various attributes
+that must match, I think?
+
+> + * @NL80211_ATTR_SCHED_SCAN_FILTER: Nested attribute with various
+> + *	types of filtering to be used with scheduled scans.
+> + *	If @NL80211_ATTR_SCAN_SSIDS is passed with values that are not
+> + *	included in the filter, the driver may return -EINVAL, since
+> + *	it doesn't make sense to send probe requests with SSIDs that
+> + *	will be filtered out.  This doesn't apply to the wildcard SSID.
+> + *	If ommited, no filtering is done.
+
+Maybe cfg80211 should just apply that rule anyway? But is that really
+true anyway? Say "DIRECT-" as the P2P wildcard ...
+
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index a37f264..a3e58ff 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -882,6 +882,9 @@ struct cfg80211_scan_request {
+>   * @interval: interval between each scheduled scan cycle
+>   * @ie: optional information element(s) to add into Probe Request or %NULL
+>   * @ie_len: length of ie in octets
+> + * @filter_ssids: SSIDs to pass to the host (others are filtered out).
+> + * 	If ommited, no filtering is done.
+> + * @n_filter_ssids: number of filter SSIDs
+
+Maybe we should create a filter struct right away and use that with
+filters/n_filters?
+
+> +++ b/net/wireless/nl80211.c
+> @@ -189,6 +189,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+>  					 .len = IEEE80211_MAX_DATA_LEN },
+>  	[NL80211_ATTR_IE_ASSOC_RESP] = { .type = NLA_BINARY,
+>  					 .len = IEEE80211_MAX_DATA_LEN },
+> +	[NL80211_ATTR_SCHED_SCAN_FILTER] = { .type = NLA_NESTED },
+>  };
+
+Don't we need a policy for the filter attributes?
+
+> +	if (info->attrs[NL80211_ATTR_SCHED_SCAN_FILTER]) {
+> +		attr = nla_find_nested(info->attrs[NL80211_ATTR_SCHED_SCAN_FILTER],
+> +				       NL80211_ATTR_SCHED_SCAN_FILTER_SSID);
+> +		if (attr)
+> +			nla_for_each_nested(attr2, attr, tmp)
+> +				n_filter_ssids++;
+> +	}
+> +
+> +	if (n_filter_ssids > wiphy->max_filter_ssids)
+> +		return -EINVAL;
+
+That looks a little odd. What does that even do? I don't understand the
+find_nested at all.
+
+johannes
+
