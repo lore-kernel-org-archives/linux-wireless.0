@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:54480 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751922Ab1HJO5b (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:50877 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751333Ab1H3GeG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2011 10:57:31 -0400
-Received: by gwaa12 with SMTP id a12so707344gwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2011 07:57:30 -0700 (PDT)
-Message-ID: <4E429C57.1040101@lwfinger.net> (sfid-20110810_165734_392543_434A4F62)
-Date: Wed, 10 Aug 2011 09:57:27 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: kc@cobradevil.org
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8192cu sometimes it can authenticate to ap
-References: <b3059ba2eac66b7ef0ec17c8fe81a1e6@cobradevil.org> <34676454425401d650be733a43191a53@cobradevil.org> <532595cb4d5ef910de54a4736ba76185@cobradevil.org> <4E41624E.3010904@lwfinger.net> <d3faeaf2e881a324b0ad3102c10e6131@cobradevil.org>
-In-Reply-To: <d3faeaf2e881a324b0ad3102c10e6131@cobradevil.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 30 Aug 2011 02:34:06 -0400
+Received: by wwf5 with SMTP id 5so6473521wwf.1
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 23:34:05 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2] wl12xx: set mac80211 flags for A-MPDU aggregation support
+Date: Tue, 30 Aug 2011 09:34:01 +0300
+Message-Id: <1314686041-25489-1-git-send-email-arik@wizery.com> (sfid-20110830_083409_752380_0E1BEB9F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/10/2011 08:32 AM, kc@cobradevil.org wrote:
-> Hello Larry,
->
-> did you receive my last email with the log files?
-> i'm not sure if that the right information so if you need more the please let me
-> know.
+We set the mac80211 flag for A-MPDU support and also indicate that
+Tx-agg session setup is performed in HW.
 
-Yes, I got them.
+This patch depends on
+"mac80211: add flag to indicate HW only Tx-agg setup support"
 
-So far, the only conclusion from them is that you should install the CRDA 
-package. That is not the cause of your problem, but it needs to be done.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+drivers/net/wireless/wl12xx/main.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-I can duplicate the problem here and find that it occurs between 3.0 and 
-3.1-rc1. I first tried to bisect testing only drivers/net/wireless/rtlwifi, 
-net/mac80211 and net/wireless directories. That led to an impossible "bad" 
-commit, thus I'm having to bisect the whole tree.
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index bde8402..3553777 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -4483,7 +4483,9 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 		IEEE80211_HW_SUPPORTS_CQM_RSSI |
+ 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+ 		IEEE80211_HW_SPECTRUM_MGMT |
+-		IEEE80211_HW_AP_LINK_PS;
++		IEEE80211_HW_AP_LINK_PS |
++		IEEE80211_HW_AMPDU_AGGREGATION |
++		IEEE80211_HW_TX_AMPDU_SETUP_IN_HW;
+ 
+ 	wl->hw->wiphy->cipher_suites = cipher_suites;
+ 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
+-- 
+1.7.4.1
 
-I'll let you know what I find.
-
-Larry
