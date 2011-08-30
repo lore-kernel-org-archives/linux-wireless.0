@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:1468 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752951Ab1HIL13 (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:55388 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751161Ab1H3CMV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2011 07:27:29 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH] ath6kl: Include scatterlist.h in hif.h to fix compilation error
-Date: Tue, 9 Aug 2011 16:57:34 +0530
-Message-ID: <1312889254-30996-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110809_132732_652578_25F0368B)
+	Mon, 29 Aug 2011 22:12:21 -0400
+Message-ID: <4E5C4701.4060509@freedesktop.org> (sfid-20110830_041226_191744_249010AD)
+Date: Mon, 29 Aug 2011 22:12:17 -0400
+From: Jim Gettys <jg@freedesktop.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Andrew McGregor <andrewmcgr@gmail.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Dave Taht <dave.taht@gmail.com>,
+	Tom Herbert <therbert@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Matt Smith <smithm@qca.qualcomm.com>,
+	Kevin Hayes <hayes@qca.qualcomm.com>,
+	Derek Smithies <derek@indranet.co.nz>, netdev@vger.kernel.org
+Subject: Re: BQL crap and wireless
+References: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com> <CAB=NE6VwWu5+Hk7=3ghkgiXss9kCqGyS-RWPYtyHRhDsx5r2rA@mail.gmail.com> <CAA93jw7c+Nxc6ZbWZWsQ+F78AoPWU=quSRaOUpT0yRcwJOXsGQ@mail.gmail.com> <4E5C3B47.1050809@freedesktop.org> <903AA8A8-9ACD-44FB-9BA8-50137359EC2B@gmail.com>
+In-Reply-To: <903AA8A8-9ACD-44FB-9BA8-50137359EC2B@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/ath/ath6kl/hif.h:194: error: array type has incomplete element type
-commit b7f080cfe223b3b7424872639d153695615a9255 exposes this issue. scatterlist.h used to
-get included from dma-mapping.h<-dmaengine.h<-skbuff.h.
+On 08/29/2011 09:59 PM, Andrew McGregor wrote:
+> On 30/08/2011, at 1:22 PM, Jim Gettys wrote:
+>
+>> The gotcha is we don't have a AQM algorithm known to work in
+>> the face of the highly dynamic bandwidth variation that is wireless
+> It's worse than highly dynamic... the bandwidth may be completely undefined moment to moment, as it is dependent on both the wireless environment, which varies on timescales that can be about equal to a packet transmit time, and on the traffic mix.  There's about 30 ms of correlation time at best.
+Yup.  It makes ethernet look trivial. If we can handle buffers there,
+everywhere else is easy by comparison.
+>>  This was/is
+>> the great surprise to me as I had always thought of AQM as a property of
+>> internet routers, not hosts.
+> There's no distinction in the forwarding plane, every router is a host, every host is a router.
+Exactly; but I hadn't thought this through to hosts, nor, I think had
+many other people.  Naive me, having been scarred by '90's congestion,
+was aware of RED, and roughly how it worked, but always thought of AQM
+as something you did in routers.  Realising that in principle I needed
+it turned on in my laptop was not something I expected.
+                        - Jim
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/hif.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/hif.h b/drivers/net/wireless/ath/ath6kl/hif.h
-index 465876f..abd8798 100644
---- a/drivers/net/wireless/ath/ath6kl/hif.h
-+++ b/drivers/net/wireless/ath/ath6kl/hif.h
-@@ -19,6 +19,7 @@
- 
- #include "common.h"
- #include "core.h"
-+#include <linux/scatterlist.h>
- 
- #define BUS_REQUEST_MAX_NUM                64
- #define HIF_MBOX_BLOCK_SIZE                128
--- 
-1.7.0.4
 
