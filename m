@@ -1,51 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51780 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753070Ab1HYCZw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Aug 2011 22:25:52 -0400
-Date: Wed, 24 Aug 2011 19:23:52 -0700
-From: Greg KH <gregkh@suse.de>
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: Joe Perches <joe@perches.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-Subject: Re: [PATCH v2] Move brcm80211 to mainline
-Message-ID: <20110825022352.GA4876@suse.de> (sfid-20110825_042558_877049_993DBD01)
-References: <20110707002034.GA17885@broadcom.com>
- <20110824222801.GA5280@broadcom.com>
- <20110824225357.GA2224@suse.de>
- <20110824231746.GF5280@broadcom.com>
- <1314230068.15882.15.camel@Joe-Laptop>
- <20110825004211.GC7577@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:54534 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738Ab1H3Jvm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Aug 2011 05:51:42 -0400
+Date: Tue, 30 Aug 2011 15:21:24 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Edward Lu <shaol@qca.qualcomm.com>
+Subject: Re: [PATCH 11/20] ath6kl: Support channel set request for
+	startscan command
+Message-ID: <20110830095123.GA31713@vasanth-laptop> (sfid-20110830_115147_404015_40C366D8)
+References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com> <1314620641-24257-12-git-send-email-jouni@qca.qualcomm.com> <4E5CAE7A.8000809@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110825004211.GC7577@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4E5CAE7A.8000809@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 24, 2011 at 05:42:11PM -0700, Henry Ptasinski wrote:
-> On Wed, Aug 24, 2011 at 04:54:28PM -0700, Joe Perches wrote:
-> > On Wed, 2011-08-24 at 16:17 -0700, Henry Ptasinski wrote:
-> > > Augh.  I included the wrong link.  Correct link:
-> > > http://linuxwireless.org/en/users/Drivers/brcm80211?action=AttachFile&do=get&target=0001-wireless-testing-add-brcm80211-v2.patch
-> > 
-> > Can't you post the patch with git format-patch -M instead?
+On Tue, Aug 30, 2011 at 12:33:46PM +0300, Kalle Valo wrote:
+> On 08/29/2011 03:23 PM, Jouni Malinen wrote:
+> > From: Edward Lu <elu@qca.qualcomm.com>
+> > -	if (num_chan)
+> > -		memcpy(sc->ch_list, ch_list, num_chan * sizeof(u16));
+> > +	if (num_chan) {
+> > +		for (i = 0; i < num_chan; i++)
+> > +			sc->ch_list[i] = cpu_to_le16(ch_list[i]);
+> > +	}
 > 
-> This patch drops in a new copy of all the files, as there's been significant
-> change since the last time staging-next and wireless-testing were in sync.
-> (Deleting the existing files from staging will be a separate step.)
-> 
-> I can generate a two-patch series instead: one to catch up wireless-testing
-> with all the changes that have been applied to the brcm80211 drivers in
-> staging, and then a second patch with a 'git mv' plus necessary
-> Kconfig/Makefile changes. The first patch would still be quite large, but I'm
-> ok with either approach.
+> if (num_chan) is not needed, the for loop is enough.
 
-Don't worry about that now, the real thing is a review of the code.
+It is not that for loop would run once when num_chan is 0,
+may be it needs to  go from 0 to num_chan -1?.
 
-greg k-h
+Vasanth
