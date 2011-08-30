@@ -1,179 +1,330 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout4.freenet.de ([195.4.92.94]:34359 "EHLO mout4.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751631Ab1HDRLg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Aug 2011 13:11:36 -0400
-Message-ID: <4E3AD2B9.6010905@01019freenet.de> (sfid-20110804_191142_423609_B9DF1A54)
-Date: Thu, 04 Aug 2011 19:11:21 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:53205 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752434Ab1H3Noj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Aug 2011 09:44:39 -0400
+Received: from saunalahti-vams (vs3-10.mail.saunalahti.fi [62.142.5.94])
+	by emh06-2.mail.saunalahti.fi (Postfix) with SMTP id C1886C7EF8
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 16:44:37 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-188-95.elisa-laajakaista.fi [88.115.188.95])
+	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 9801127D85
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2011 16:44:33 +0300 (EEST)
+Subject: [PATCH 1/4] ath6kl: add firmware log support
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Date: Tue, 30 Aug 2011 16:44:32 +0300
+Message-ID: <20110830134432.21543.89808.stgit@localhost6.localdomain6> (sfid-20110830_154443_447192_F5D0CECD)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Justin Piszcz <jpiszcz@lucidpixels.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Alan Piszcz <ap@solarrain.com>
-Subject: Re: Linux Wireless USB-Stick Question
-References: <alpine.DEB.2.02.1108031550100.4278@p34.internal.lan> <4E39B82C.2010108@lwfinger.net>
-In-Reply-To: <4E39B82C.2010108@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger schrieb:
-> On 08/03/2011 02:53 PM, Justin Piszcz wrote:
->> Hi,
->>
->> Under Windows, you can achieve 10-15MiB/s..
->>
->> Under Linux, even with 150mbps USB wireless adapters, the max never
->> appears to
->> go above > 3-4MiB/s, to work around this, order more USB-wifi ticks
->> and run them
->> in parallel far away from each other with USB
->> extenders:
->>
->> box1:
->> -------------
->> wlan0 IEEE 802.11bg ESSID:"hidden"
->> Bit Rate=54 Mb/s Tx-Power=20 dBm
->> wlan1 IEEE 802.11bgn ESSID:"hidden"
->> Bit Rate=58.5 Mb/s Tx-Power=20 dBm
->> wlan2 IEEE 802.11bgn ESSID:"hidden"
->> Bit Rate=39 Mb/s Tx-Power=20 dBm
->>
->> box2:
->> -------------
->> wlan0 IEEE 802.11bgn ESSID:"hidden"
->> Bit Rate=58.5 Mb/s Tx-Power=20 dBm
->> wlan1 IEEE 802.11bgn ESSID:"hidden"
->> Bit Rate=52 Mb/s Tx-Power=20 dBm
->> wlan2 IEEE 802.11bgn ESSID:"hidden"
->> Bit Rate=52 Mb/s Tx-Power=20 dBm
->>
->> But I was curious if anyone had achieved > 10 MiB/s with any wireless
->> adapter
->> with Linux?
->>
->> Also, those native Linux USB adapters (carl) work good, so far.
->> With the patch provided earlier for the rt2800usb driver, it is no longer
->> crashing under 3.0 so I put two of them on a single box plus a carl
->> based one,
->> now I get better I/O, e.g. 4MiB/s x 6 = 24MiB/s.
-> 
-> On a 150 Mbps connection running the following script
-> 
-> #!/bin/sh
-> 
-> dest="sonylap" # set the servername
-> 
-> while true ; do
-> netperf -t TCP_MAERTS -H $dest
-> netperf -t TCP_STREAM -H $dest
-> netperf -t TCP_SENDFILE -H $dest
-> done
-> 
-> I get the following for a D-Link DWA-130 containing a Realtek RTL8192SU
-> with driver r8712u:
-> 
-> finger@larrylap:~/bcm_git/vendor-driver/5.10.56.46> ~/netperf.sh
-> TCP MAERTS TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to sonylap
-> (192.168.1.50) port 0 AF_INET
-> Recv   Send    Send
-> Socket Socket  Message  Elapsed
-> Size   Size    Size     Time     Throughput
-> bytes  bytes   bytes    secs.    10^6bits/sec
-> 
->  87380  16384  16384    10.04      53.52
-> TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to sonylap
-> (192.168.1.50) port 0 AF_INET
-> Recv   Send    Send
-> Socket Socket  Message  Elapsed
-> Size   Size    Size     Time     Throughput
-> bytes  bytes   bytes    secs.    10^6bits/sec
-> 
->  87380  16384  16384    10.03      55.58
-> TCP SENDFILE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to sonylap
-> (192.168.1.50) port 0 AF_INET
-> Recv   Send    Send
-> Socket Socket  Message  Elapsed
-> Size   Size    Size     Time     Throughput
-> bytes  bytes   bytes    secs.    10^6bits/sec
-> 
->  87380  16384  16384    10.06      65.26
-> 
-> I claim that 50-65 Mbps is pretty good.
+Firmware sends binary logs with WMIX_DBGLOG_EVENTID event. Create
+a buffer which stores the latest logs and which can be copied from
+fwlog debugfs file with cp command.
 
+To save memory firmware log support is enabled only when CONFIG_ATH6KL_DEBUG
+is enabled.
 
-This means about half of fast ethernet (5-6,5 MB/s). It's too
-insufficient for 802.11n / 40 MHz.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/core.h   |   10 ++
+ drivers/net/wireless/ath/ath6kl/debug.c  |  154 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/debug.h  |   13 +++
+ drivers/net/wireless/ath/ath6kl/init.c   |    2 
+ drivers/net/wireless/ath/ath6kl/target.h |    3 +
+ drivers/net/wireless/ath/ath6kl/wmi.c    |    1 
+ 6 files changed, 182 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index c5537b3..89ca343 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -21,6 +21,7 @@
+ #include <linux/rtnetlink.h>
+ #include <linux/firmware.h>
+ #include <linux/sched.h>
++#include <linux/circ_buf.h>
+ #include <net/cfg80211.h>
+ #include "htc.h"
+ #include "wmi.h"
+@@ -468,6 +469,15 @@ struct ath6kl {
+ 
+ 	struct ath6kl_node_table scan_table;
+ 	struct dentry *debugfs_phy;
++
++#ifdef CONFIG_ATH6KL_DEBUG
++	struct {
++		struct circ_buf fwlog_buf;
++		spinlock_t fwlog_lock;
++		void *fwlog_tmp;
++	} debug;
++#endif /* CONFIG_ATH6KL_DEBUG */
++
+ };
+ 
+ static inline void *ath6kl_priv(struct net_device *dev)
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 2b46287..b2706da 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -15,7 +15,23 @@
+  */
+ 
+ #include "core.h"
++
++#include <linux/circ_buf.h>
++
+ #include "debug.h"
++#include "target.h"
++
++struct ath6kl_fwlog_slot {
++	__le32 timestamp;
++	__le32 length;
++
++	/* max ATH6KL_FWLOG_PAYLOAD_SIZE bytes */
++	u8 payload[0];
++};
++
++#define ATH6KL_FWLOG_SIZE 32768
++#define ATH6KL_FWLOG_SLOT_SIZE (sizeof(struct ath6kl_fwlog_slot) + \
++				ATH6KL_FWLOG_PAYLOAD_SIZE)
+ 
+ int ath6kl_printk(const char *level, const char *fmt, ...)
+ {
+@@ -153,6 +169,117 @@ static int ath6kl_debugfs_open(struct inode *inode, struct file *file)
+ 	return 0;
+ }
+ 
++static void ath6kl_debug_fwlog_add(struct ath6kl *ar, const void *buf,
++				   size_t buf_len)
++{
++	struct circ_buf *fwlog = &ar->debug.fwlog_buf;
++	size_t space;
++	int i;
++
++	/* entries must all be equal size */
++	if (WARN_ON(buf_len != ATH6KL_FWLOG_SLOT_SIZE))
++		return;
++
++	space = CIRC_SPACE(fwlog->head, fwlog->tail, ATH6KL_FWLOG_SIZE);
++	if (space < buf_len)
++		/* discard oldest slot */
++		fwlog->tail = (fwlog->tail + ATH6KL_FWLOG_SLOT_SIZE) &
++			(ATH6KL_FWLOG_SIZE - 1);
++
++	for (i = 0; i < buf_len; i += space) {
++		space = CIRC_SPACE_TO_END(fwlog->head, fwlog->tail,
++					  ATH6KL_FWLOG_SIZE);
++
++		if ((size_t) space > buf_len - i)
++			space = buf_len - i;
++
++		memcpy(&fwlog->buf[fwlog->head], buf, space);
++		fwlog->head = (fwlog->head + space) & (ATH6KL_FWLOG_SIZE - 1);
++	}
++
++}
++
++void ath6kl_debug_fwlog_event(struct ath6kl *ar, const void *buf, size_t len)
++{
++	struct ath6kl_fwlog_slot *slot = ar->debug.fwlog_tmp;
++	size_t slot_len;
++
++	if (WARN_ON(len > ATH6KL_FWLOG_PAYLOAD_SIZE))
++		return;
++
++	spin_lock_bh(&ar->debug.fwlog_lock);
++
++	slot->timestamp = cpu_to_le32(jiffies);
++	slot->length = cpu_to_le32(len);
++	memcpy(slot->payload, buf, len);
++
++	slot_len = sizeof(*slot) + len;
++
++	if (slot_len < ATH6KL_FWLOG_SLOT_SIZE)
++		memset(slot->payload + len, 0,
++		       ATH6KL_FWLOG_SLOT_SIZE - slot_len);
++
++	ath6kl_debug_fwlog_add(ar, slot, ATH6KL_FWLOG_SLOT_SIZE);
++
++	spin_unlock_bh(&ar->debug.fwlog_lock);
++}
++
++static bool ath6kl_debug_fwlog_empty(struct ath6kl *ar)
++{
++	return CIRC_CNT(ar->debug.fwlog_buf.head,
++			ar->debug.fwlog_buf.tail,
++			ATH6KL_FWLOG_SLOT_SIZE) == 0;
++}
++
++static ssize_t ath6kl_fwlog_read(struct file *file, char __user *user_buf,
++				 size_t count, loff_t *ppos)
++{
++	struct ath6kl *ar = file->private_data;
++	struct circ_buf *fwlog = &ar->debug.fwlog_buf;
++	size_t len = 0, buf_len = count;
++	ssize_t ret_cnt;
++	char *buf;
++	int ccnt;
++
++	buf = vmalloc(buf_len);
++	if (!buf)
++		return -ENOMEM;
++
++	spin_lock_bh(&ar->debug.fwlog_lock);
++
++	while (len < buf_len && !ath6kl_debug_fwlog_empty(ar)) {
++		ccnt = CIRC_CNT_TO_END(fwlog->head, fwlog->tail,
++				       ATH6KL_FWLOG_SIZE);
++
++		if ((size_t) ccnt > buf_len - len)
++			ccnt = buf_len - len;
++
++		memcpy(buf + len, &fwlog->buf[fwlog->tail], ccnt);
++		len += ccnt;
++
++		fwlog->tail = (fwlog->tail + ccnt) &
++			(ATH6KL_FWLOG_SIZE - 1);
++	}
++
++	spin_unlock_bh(&ar->debug.fwlog_lock);
++
++	if (WARN_ON(len > buf_len))
++		len = buf_len;
++
++	ret_cnt = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++
++	vfree(buf);
++
++	return ret_cnt;
++}
++
++static const struct file_operations fops_fwlog = {
++	.open = ath6kl_debugfs_open,
++	.read = ath6kl_fwlog_read,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ static ssize_t read_file_tgt_stats(struct file *file, char __user *user_buf,
+ 				   size_t count, loff_t *ppos)
+ {
+@@ -358,10 +485,25 @@ static const struct file_operations fops_credit_dist_stats = {
+ 
+ int ath6kl_debug_init(struct ath6kl *ar)
+ {
++	ar->debug.fwlog_buf.buf = vmalloc(ATH6KL_FWLOG_SIZE);
++	if (ar->debug.fwlog_buf.buf == NULL)
++		return -ENOMEM;
++
++	ar->debug.fwlog_tmp = kmalloc(ATH6KL_FWLOG_SLOT_SIZE, GFP_KERNEL);
++	if (ar->debug.fwlog_tmp == NULL) {
++		vfree(ar->debug.fwlog_buf.buf);
++		return -ENOMEM;
++	}
++
++	spin_lock_init(&ar->debug.fwlog_lock);
++
+ 	ar->debugfs_phy = debugfs_create_dir("ath6kl",
+ 					     ar->wdev->wiphy->debugfsdir);
+-	if (!ar->debugfs_phy)
++	if (!ar->debugfs_phy) {
++		vfree(ar->debug.fwlog_buf.buf);
++		kfree(ar->debug.fwlog_tmp);
+ 		return -ENOMEM;
++	}
+ 
+ 	debugfs_create_file("tgt_stats", S_IRUSR, ar->debugfs_phy, ar,
+ 			    &fops_tgt_stats);
+@@ -369,6 +511,16 @@ int ath6kl_debug_init(struct ath6kl *ar)
+ 	debugfs_create_file("credit_dist_stats", S_IRUSR, ar->debugfs_phy, ar,
+ 			    &fops_credit_dist_stats);
+ 
++	debugfs_create_file("fwlog", S_IRUSR, ar->debugfs_phy, ar,
++			    &fops_fwlog);
++
+ 	return 0;
+ }
++
++void ath6kl_debug_cleanup(struct ath6kl *ar)
++{
++	vfree(ar->debug.fwlog_buf.buf);
++	kfree(ar->debug.fwlog_tmp);
++}
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
+index e8c9ea9..f0d6471 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.h
++++ b/drivers/net/wireless/ath/ath6kl/debug.h
+@@ -78,7 +78,10 @@ void ath6kl_dump_registers(struct ath6kl_device *dev,
+ 			   struct ath6kl_irq_proc_registers *irq_proc_reg,
+ 			   struct ath6kl_irq_enable_reg *irq_en_reg);
+ void dump_cred_dist_stats(struct htc_target *target);
++void ath6kl_debug_fwlog_event(struct ath6kl *ar, const void *buf, size_t len);
+ int ath6kl_debug_init(struct ath6kl *ar);
++void ath6kl_debug_cleanup(struct ath6kl *ar);
++
+ #else
+ static inline int ath6kl_dbg(enum ATH6K_DEBUG_MASK dbg_mask,
+ 			     const char *fmt, ...)
+@@ -101,9 +104,19 @@ static inline void ath6kl_dump_registers(struct ath6kl_device *dev,
+ static inline void dump_cred_dist_stats(struct htc_target *target)
+ {
+ }
++
++void ath6kl_debug_fwlog_event(struct ath6kl *ar, const void *buf, size_t len)
++{
++}
++
+ static inline int ath6kl_debug_init(struct ath6kl *ar)
+ {
+ 	return 0;
+ }
++
++void ath6kl_debug_cleanup(struct ath6kl *ar)
++{
++}
++
+ #endif
+ #endif
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index ad9716c..bcb94ab 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1353,6 +1353,8 @@ void ath6kl_destroy(struct net_device *dev, unsigned int unregister)
+ 
+ 	ath6kl_bmi_cleanup(ar);
+ 
++	ath6kl_debug_cleanup(ar);
++
+ 	if (unregister && test_bit(NETDEV_REGISTERED, &ar->flag)) {
+ 		unregister_netdev(dev);
+ 		clear_bit(NETDEV_REGISTERED, &ar->flag);
+diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
+index 53e2c78..6c66a08 100644
+--- a/drivers/net/wireless/ath/ath6kl/target.h
++++ b/drivers/net/wireless/ath/ath6kl/target.h
+@@ -340,4 +340,7 @@ struct host_interest {
+ #define AR6004_REV1_BOARD_DATA_ADDRESS          0x435400
+ #define AR6004_REV1_BOARD_EXT_DATA_ADDRESS      0x437000
+ #define AR6004_REV1_RAM_RESERVE_SIZE            11264
++
++#define ATH6KL_FWLOG_PAYLOAD_SIZE		1500
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index d116d0e..b96a734 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -2482,6 +2482,7 @@ static int ath6kl_wmi_control_rx_xtnd(struct wmi *wmi, struct sk_buff *skb)
+ 	case WMIX_HB_CHALLENGE_RESP_EVENTID:
+ 		break;
+ 	case WMIX_DBGLOG_EVENTID:
++		ath6kl_debug_fwlog_event(wmi->parent_dev, datap, len);
+ 		break;
+ 	default:
+ 		ath6kl_err("unknown cmd id 0x%x\n", id);
 
-rt3572sta (Linksys WUSB600N v2) against rt2860 based AP (rt2800pci) -
-from one room to another:
-
-Do 4. Aug 18:48:27 CEST 2011
-TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to srv (1.1.1.1)
-port 0 AF_INET
-Recv   Send    Send
-Socket Socket  Message  Elapsed
-Size   Size    Size     Time     Throughput
-bytes  bytes   bytes    secs.    10^6bits/sec
-
- 87380  16384  16384    10.07      82.51
-TCP MAERTS TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to srv (1.1.1.1)
-port 0 AF_INET
-Recv   Send    Send
-Socket Socket  Message  Elapsed
-Size   Size    Size     Time     Throughput
-bytes  bytes   bytes    secs.    10^6bits/sec
-
- 87380  16384  16384    10.02     128.94
-TCP SENDFILE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to srv (1.1.1.1)
-port 0 AF_INET
-Recv   Send    Send
-Socket Socket  Message  Elapsed
-Size   Size    Size     Time     Throughput
-bytes  bytes   bytes    secs.    10^6bits/sec
-
- 87380  16384  16384    10.09      77.47
-
-rt2800usb doesn't work at all with WUSB600N v2.
-
-
-
-ar9285 (ath9k) against rt2860 based AP (rt2800pci) - through reinforced
-concrete floor:
-
-Do 4. Aug 19:03:04 CEST 2011
-TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to srv (1.1.1.1)
-port 0 AF_INET
-Recv   Send    Send
-Socket Socket  Message  Elapsed
-Size   Size    Size     Time     Throughput
-bytes  bytes   bytes    secs.    10^6bits/sec
-
- 87380  16384  16384    10.10      80.23
-TCP MAERTS TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to srv (1.1.1.1)
-port 0 AF_INET
-Recv   Send    Send
-Socket Socket  Message  Elapsed
-Size   Size    Size     Time     Throughput
-bytes  bytes   bytes    secs.    10^6bits/sec
-
- 87380  16384  16384    10.06      80.82
-TCP SENDFILE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to srv (1.1.1.1)
-port 0 AF_INET
-Recv   Send    Send
-Socket Socket  Message  Elapsed
-Size   Size    Size     Time     Throughput
-bytes  bytes   bytes    secs.    10^6bits/sec
-
- 87380  16384  16384    10.10      78.51
-
-
--> there is room for optimization! I don't think, that the rt3572sta is
-the best solution absolutely seen :-). Unfortunately, I don't have a
-windows machine to compare ... . Maybe, I could get one to test ... .
-
-
-
-Andreas
