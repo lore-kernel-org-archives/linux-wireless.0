@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:6860 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752800Ab1H3LsZ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49311 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751036Ab1H3DZl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 07:48:25 -0400
-Date: Tue, 30 Aug 2011 17:18:53 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: "Jorge Boncompte [DTI2]" <jorge@dti2.net>
-CC: <adrian@freebsd.org>, Felix Fietkau <nbd@openwrt.org>,
-	<linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<rodrigue@qca.qualcomm.com>
-Subject: Re: [PATCH 3.1] ath9k_hw: fix calibration on 5 ghz
-Message-ID: <20110830114852.GA6524@vmraj-lnx.users.atheros.com> (sfid-20110830_134829_406705_38F3E35C)
-References: <1314605174-66206-1-git-send-email-nbd@openwrt.org>
- <CAJ-Vmonvcrd49rQbgeyO3HCLxkTbww3mTypR87CuPBiu9uwhHA@mail.gmail.com>
- <4E5B669F.8060605@dti2.net>
- <20110830104403.GA5446@vmraj-lnx.users.atheros.com>
- <CAJ-VmomDSZ+PL=-Vc+Gbz7FoST=_MJ7_F0O5avNv-sefJTzP2g@mail.gmail.com>
- <4E5CC904.8000003@dti2.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <4E5CC904.8000003@dti2.net>
+	Mon, 29 Aug 2011 23:25:41 -0400
+Subject: Re: [PATCH v3 2/7] mac80211: Remove mesh paths when an interface
+ is removed
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
+	jlopex@gmail.com
+In-Reply-To: <1314674373.4011.0.camel@jlt3.sipsolutions.net> (sfid-20110830_051943_508795_3FC735FF)
+References: <1314649389-7115-1-git-send-email-javier@cozybit.com>
+	 <1314649389-7115-3-git-send-email-javier@cozybit.com>
+	 (sfid-20110829_222353_670430_99789D22)  <1314674373.4011.0.camel@jlt3.sipsolutions.net>
+	 (sfid-20110830_051943_508795_3FC735FF)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 30 Aug 2011 05:25:36 +0200
+Message-ID: <1314674736.4011.2.camel@jlt3.sipsolutions.net> (sfid-20110830_052546_792572_B0C5E12B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 30, 2011 at 01:27:00PM +0200, Jorge Boncompte [DTI2] wrote:
-> El 30/08/2011 12:47, Adrian Chadd escribió:
-> > On 30 August 2011 18:44, Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
-> > 
-> >> Could you please test whether the below patch helps?
-> >>
-> >> https://patchwork.kernel.org/patch/1112672/
-> > 
-> > FreeBSD does this. nbd disabled the EEPROM check a while ago in ath9k.
-> > So it isn't this.
-> > 
+On Tue, 2011-08-30 at 05:19 +0200, Johannes Berg wrote:
+> On Mon, 2011-08-29 at 13:23 -0700, Javier Cardona wrote:
 > 
-> 	Yes, it is not.
+> > +static void mpp_path_flush(struct ieee80211_sub_if_data *sdata)
+> > +{
+> > +	struct mesh_table *tbl;
+> > +	struct mesh_path *mpath;
+> > +	struct mpath_node *node;
+> > +	struct hlist_node *p;
+> > +	int i;
+> > +
+> > +	read_lock_bh(&pathtbl_resize_lock);
+> > +	tbl = rcu_dereference_protected(mpp_paths,
+> > +					lockdep_is_held(pathtbl_resize_lock));
+> > +	for_each_mesh_entry(tbl, p, node, i) {
+> > +		mpath = node->mpath;
+> > +		if (mpath->sdata != sdata)
+> > +			continue;
+> > +		spin_lock_bh(&tbl->hashwlock[i]);
+> > +		spin_lock_bh(&mpath->state_lock);
+> > +		call_rcu(&node->rcu, mesh_path_node_reclaim);
 > 
+> Why is read_lock sufficient? Why is this even a r/w lock?
 
-Thanks Jorge.
+n/m, I thought about this again and also saw the explanation in patch 9,
+definitely seems fine. It's just a little unusual to me to have
+per-bucket locks as well :)
 
---
-Rajkumar
+johannes
+
