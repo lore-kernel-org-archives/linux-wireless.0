@@ -1,107 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3692 "EHLO mms1.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:45564 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755141Ab1HZNTv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 09:19:51 -0400
-From: "Roland Vossen" <rvossen@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 04/13] staging: brcm80211: remove macro definitions from
- brcmfmac Makefile
-Date: Fri, 26 Aug 2011 15:19:31 +0200
-Message-ID: <1314364780-9462-5-git-send-email-rvossen@broadcom.com> (sfid-20110826_151957_161812_07A0AEC5)
-In-Reply-To: <1314364780-9462-1-git-send-email-rvossen@broadcom.com>
-References: <1314364780-9462-1-git-send-email-rvossen@broadcom.com>
+	id S1755083Ab1H3PwM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Aug 2011 11:52:12 -0400
+Message-ID: <4E5D0722.7010606@openwrt.org> (sfid-20110830_175215_848577_43971CCC)
+Date: Tue, 30 Aug 2011 17:52:02 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	rodrigue@qca.qualcomm.com, shafi.wireless@gmail.com,
+	vthiagar@qca.qualcomm.com
+Subject: Re: [PATCH v9 2/4] ath9k: always call ath_reset from workqueue context
+References: <1314693047-77839-1-git-send-email-nbd@openwrt.org> <1314693047-77839-2-git-send-email-nbd@openwrt.org> <20110830142008.GA9158@vmraj-lnx.users.atheros.com>
+In-Reply-To: <20110830142008.GA9158@vmraj-lnx.users.atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+On 2011-08-30 4:20 PM, Rajkumar Manoharan wrote:
+> On Tue, Aug 30, 2011 at 10:30:45AM +0200, Felix Fietkau wrote:
+>>  This makes it much easier to add further rework to avoid race conditions
+>>  between reset and other work items.
+>>  Move other functions to make ath_reset static.
+>>
+>>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>>  ---
+>>  diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+>>  index 49b93c2..2b2a975 100644
+>>  --- a/drivers/net/wireless/ath/ath9k/xmit.c
+>>  +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+>>  @@ -581,8 +581,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+>>
+>>   	rcu_read_unlock();
+>>
+>>  -	if (needreset)
+>>  -		ath_reset(sc, false);
+>>  +	if (needreset) {
+>>  +		sc->sc_flags |= SC_OP_HW_RESET;
+>>  +		ieee80211_queue_work(sc->hw,&sc->hw_reset_work);
+>>  +	}
+>>   }
+>>
+> Still ath_txq_schedule can be scheduled. Return a error code from
+> ath_tx_complete_aggr to abort tx process intead of SC_OP_HW_RESET.
+> That looks much more generic and simple.
+I added this to make sure that there won't be any subsequent attempts at 
+processing the tx queue until the reset (e.g. if there was a tx status 
+IRQ in the mean time).
 
-The Makefile for the brcmfmac driver contains macro definitions that
-are always set. This patch removes those definitions from the Makefile
-and source code.
-
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Signed-off-by: Roland Vossen <rvossen@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/Makefile   |    5 -----
- drivers/staging/brcm80211/brcmfmac/dhd_bus.h  |    7 +------
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   15 ++-------------
- 3 files changed, 3 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/Makefile b/drivers/staging/brcm80211/brcmfmac/Makefile
-index da3c805..826a2ba 100644
---- a/drivers/staging/brcm80211/brcmfmac/Makefile
-+++ b/drivers/staging/brcm80211/brcmfmac/Makefile
-@@ -15,11 +15,6 @@
- # OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
- # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- 
--ccflags-y :=			\
--	-DBRCMF_FIRSTREAD=64	\
--	-DBRCMF_SDALIGN=64	\
--	-DMAX_HDR_READ=64
--
- ccflags-$(CONFIG_BRCMDBG)	+= -DSHOW_EVENTS
- 
- ccflags-y += \
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_bus.h b/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
-index 653cf0d..24f578a 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
-@@ -18,12 +18,7 @@
- #define _BRCMF_BUS_H_
- 
- /* Packet alignment for most efficient SDIO (can change based on platform) */
--#ifndef BRCMF_SDALIGN
--#define BRCMF_SDALIGN	32
--#endif
--#if !ISPOWEROF2(BRCMF_SDALIGN)
--#error BRCMF_SDALIGN is not a power of 2!
--#endif
-+#define BRCMF_SDALIGN	(1 << 6)
- 
- /*
-  * Exported from brcmf bus module (brcmf_usb, brcmf_sdio)
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 8e59086..9b41891 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -130,13 +130,8 @@ struct rte_console {
- #define MAX_DATA_BUF	(32 * 1024)	/* Must be large enough to hold
- 				 biggest possible glom */
- 
--#ifndef BRCMF_FIRSTREAD
--#define BRCMF_FIRSTREAD	32
--#endif
-+#define BRCMF_FIRSTREAD	(1 << 6)
- 
--#if !ISPOWEROF2(BRCMF_FIRSTREAD)
--#error BRCMF_FIRSTREAD is not a power of 2!
--#endif
- 
- /* SBSDIO_DEVICE_CTL */
- 
-@@ -362,13 +357,7 @@ struct rte_console {
- 
- 
- /* Space for header read, limit for data packets */
--#ifndef MAX_HDR_READ
--#define MAX_HDR_READ	32
--#endif
--#if !ISPOWEROF2(MAX_HDR_READ)
--#error MAX_HDR_READ is not a power of 2!
--#endif
--
-+#define MAX_HDR_READ	(1 << 6)
- #define MAX_RX_DATASZ	2048
- 
- /* Maximum milliseconds to wait for F2 to come up */
--- 
-1.7.4.1
-
-
+- Felix
