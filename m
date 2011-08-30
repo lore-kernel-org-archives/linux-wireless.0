@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3532 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753251Ab1HZRzZ convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:47160 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753257Ab1H3OSC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 13:55:25 -0400
-Date: Fri, 26 Aug 2011 10:55:10 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: Re: [PATCH v2] Move brcm80211 to mainline
-Message-ID: <20110826175510.GG4888@broadcom.com> (sfid-20110826_195529_033786_96BC6FED)
-References: <20110707002034.GA17885@broadcom.com>
- <20110824222801.GA5280@broadcom.com>
- <CACna6rwG6qNpaOu4QeOvs0L3LVETRt9w5=Ec-L2NJ5gXOAM=nw@mail.gmail.com>
+	Tue, 30 Aug 2011 10:18:02 -0400
+Date: Tue, 30 Aug 2011 17:16:39 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 10/20] ath6kl: Use set_appie command to add Probe Request
+ IEs
+Message-ID: <20110830141639.GD8163@jouni.qca.qualcomm.com> (sfid-20110830_161810_065489_EB39AA23)
+References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
+ <1314620641-24257-11-git-send-email-jouni@qca.qualcomm.com>
+ <4E5CACB2.1060304@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CACna6rwG6qNpaOu4QeOvs0L3LVETRt9w5=Ec-L2NJ5gXOAM=nw@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4E5CACB2.1060304@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 25, 2011 at 01:55:26PM -0700, Rafał Miłecki wrote:
-> 2011/8/25 Henry Ptasinski <henryp@broadcom.com>:
-> > With the latest series of cleanup patches merged in by Greg KH, I'd like to
-> > once again propose moving brcm80211 out of staging and into mainline.
+On Tue, Aug 30, 2011 at 12:26:10PM +0300, Kalle Valo wrote:
+> On 08/29/2011 03:23 PM, Jouni Malinen wrote:
+> > --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> > +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> > @@ -776,6 +776,15 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+
+> > +	if (request->ie) {
+> > +		if (ath6kl_wmi_set_appie_cmd(ar->wmi, WMI_FRAME_PROBE_REQ,
+> > +					     request->ie, request->ie_len)) {
+> > +			ath6kl_err("failed to set Probe Request appie for "
+> > +				   "scan");
+> > +			return -EIO;
+> > +		}
+> > +	}
 > 
-> Henry: a simple question, please explain it to me, what brcmsmac does
-> provide that b43 doesn't?
+> I would prefer to return the original error code from the wmi call.
 
-The brcmsmac driver supports the BCM4313, BCM43224, and BCM43225 chipsets with
-full performance i.e. rate vs. range comparable to what's achived with these
-chips running under other operating systems.
+I followed the style used in this function with
+ath6kl_wmi_startscan_cmd(), but sure, returning the error code from
+wmi.c sounds reasonable.
 
-The underlying phy algorithms, especially the dynamic calibrations, have been
-designed and tested, over the full range of chip operating temperatures, and
-across fabrication process corners, to maximize the performance acheived in all
-cases.
-
-The driver is fully supported by Broadcom, and provides an API for addition of
-phy support for newer chipsets that will help speed up the process of getting
-support for those chipsets into the kernel.
-
-- Henry
-
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
