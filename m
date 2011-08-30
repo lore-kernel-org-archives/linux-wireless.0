@@ -1,43 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37581 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750816Ab1HQE2o (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:63265 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751100Ab1H3GUy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2011 00:28:44 -0400
-Message-ID: <4E4B437A.1070200@qca.qualcomm.com> (sfid-20110817_062852_110799_81761FFE)
-Date: Tue, 16 Aug 2011 21:28:42 -0700
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Tue, 30 Aug 2011 02:20:54 -0400
+Received: by wyg24 with SMTP id 24so4644482wyg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 23:20:53 -0700 (PDT)
 MIME-Version: 1.0
-To: Lin Tony-B19295 <B19295@freescale.com>
-CC: Hauke Mehrtens <hauke@hauke-m.de>,
-	"mcgrof@gmail.com" <mcgrof@gmail.com>,
-	"rodrigue@qca.qualcomm.com" <rodrigue@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rmani@qca.qualcomm.com" <rmani@qca.qualcomm.com>
-Subject: Re: [PATCH 1/2] compat-wireless: ath6kl moved to main area.
-References: <1313060347-665-1-git-send-email-hauke@hauke-m.de> <97D3A72708D04647A5AC84A04996E5B5193114@039-SN1MPN1-002.039d.mgd.msft.net> <4E496CA7.7000604@hauke-m.de> <4E49BAB1.7060303@qca.qualcomm.com> <97D3A72708D04647A5AC84A04996E5B5195381@039-SN1MPN1-002.039d.mgd.msft.net> <4E4A7159.3090004@qca.qualcomm.com> <97D3A72708D04647A5AC84A04996E5B5195ADD@039-SN1MPN1-002.039d.mgd.msft.net>
-In-Reply-To: <97D3A72708D04647A5AC84A04996E5B5195ADD@039-SN1MPN1-002.039d.mgd.msft.net>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <4E5C7E91.8090106@openwrt.org>
+References: <1314643245-59142-1-git-send-email-nbd@openwrt.org>
+	<1314643245-59142-2-git-send-email-nbd@openwrt.org>
+	<CAD2nsn1rRBR=5aFp1wqHkfzW+h---gGR-eATF3r5Z+8ELvv8vg@mail.gmail.com>
+	<4E5C7E91.8090106@openwrt.org>
+Date: Tue, 30 Aug 2011 11:50:53 +0530
+Message-ID: <CAD2nsn2R1L=5imxR_rF+68rmjJ-wadnssXNmv6mr5MtBdnQA8A@mail.gmail.com> (sfid-20110830_082057_977651_27D23962)
+Subject: Re: [PATCH v7 2/4] ath9k: always call ath_reset from workqueue context
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com, rmanohar@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/16/2011 07:19 PM, Lin Tony-B19295 wrote:
->> I have a patch pending to add suspend support and will send it as
->> soon as I find some free time. But the wifi connection will be lost
->> in resume anyway. If you want to maintain the connection to AP
->> during suspend then you are looking for wowlan support which ath6kl
->> doesn't currently support.
-> 
-> Do you have any plan supporting it?
+On Tue, Aug 30, 2011 at 11:39 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2011-08-30 7:57 AM, Mohammed Shafi wrote:
+>>
+>> On Tue, Aug 30, 2011 at 12:10 AM, Felix Fietkau<nbd@openwrt.org>  wrote:
+>>>
+>>>  This makes it much easier to add further rework to avoid race conditions
+>>>  between reset and other work items.
+>>>  Move other functions to make ath_reset static.
+>>>
+>>>  Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>>>  ---
+>>>   drivers/net/wireless/ath/ath9k/ath9k.h  |    3 +-
+>>>   drivers/net/wireless/ath/ath9k/beacon.c |    4 +-
+>>>   drivers/net/wireless/ath/ath9k/init.c   |    1 +
+>>>   drivers/net/wireless/ath/ath9k/main.c   |  152
+>>> ++++++++++++++++---------------
+>>>   drivers/net/wireless/ath/ath9k/xmit.c   |    6 +-
+>>>   5 files changed, 86 insertions(+), 80 deletions(-)
+>>>
+>>>  diff --git a/drivers/net/wireless/ath/ath9k/xmit.c
+>>> b/drivers/net/wireless/ath/ath9k/xmit.c
+>>>  index 49b93c2..f60706b 100644
+>>>  --- a/drivers/net/wireless/ath/ath9k/xmit.c
+>>>  +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+>>>  @@ -582,7 +582,7 @@ static void ath_tx_complete_aggr(struct ath_softc
+>>> *sc, struct ath_txq *txq,
+>>>         rcu_read_unlock();
+>>>
+>>>         if (needreset)
+>>>  -               ath_reset(sc, false);
+>>>  +               ieee80211_queue_work(sc->hw,&sc->hw_reset_work);
+>>
+>> Hi Felix,
+>>
+>> retry_tx is set to 'false' in ath_reset here, but ath_reset_work
+>> always has it true. had i missed some thing?
+>
+> Since the reset work is deferred now, it can be allowed to retry tx now
+> instead of dropping all packets in the queue.
 
-It would be nice to have support for wowlan but I don't know when it
-will be implemented. Hopefully sooner than later.
+oh ok, in this path we need reset when the chip becomes deaf/mute(as
+mentioned  in the comment),
+so i am not sure retrying tx will help rather than doing immediate
+reset of the chip.
+thanks.
 
-> Besides, the performance seems not good. I got only 5Mb/s
-> station->station performance. While another driver released from your
-> AE could reach at least 10Mb/s, do you have any idea?
+>
+> - Felix
+>
 
-That sounds quite low. Can you describe your test setup in detail,
-please? That would help to understand the issue.
 
-Kalle
+
+-- 
+shafi
