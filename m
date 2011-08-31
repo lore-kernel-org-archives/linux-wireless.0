@@ -1,41 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:39180 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243Ab1HYTdw (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:56900 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755790Ab1HaVeW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 15:33:52 -0400
-Received: by wyg24 with SMTP id 24so1938203wyg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 12:33:51 -0700 (PDT)
-From: Florian Fainelli <florian@openwrt.org>
-To: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	nbd@openwrt.org
-Subject: [PATCH] ath9k: add missing AR9340 in ath_mac_bb_names
-Date: Thu, 25 Aug 2011 21:33:48 +0200
+	Wed, 31 Aug 2011 17:34:22 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 24so1223358eyx.19
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 14:34:21 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 4/6] b43: LCN-PHY: upload additional 0x7 table
+Date: Wed, 31 Aug 2011 23:36:19 +0200
+Message-Id: <1314826581-27852-4-git-send-email-zajec5@gmail.com> (sfid-20110831_233428_723853_0D369C17)
+In-Reply-To: <1314826581-27852-1-git-send-email-zajec5@gmail.com>
+References: <1314826581-27852-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201108252133.48605.florian@openwrt.org> (sfid-20110825_213355_748324_74720355)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR9340 is not listed in ath_mac_bb_names, which leads to such a message:
-ieee80211 phy0: Atheros AR???? Rev:0 mem=0xb8100000, irq=2
 
-Signed-off-by: Florian Fainelli <florian@openwrt.org>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 88100cc..18394d1 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2753,6 +2753,7 @@ static struct {
- 	{ AR_SREV_VERSION_9271,         "9271" },
- 	{ AR_SREV_VERSION_9300,         "9300" },
- 	{ AR_SREV_VERSION_9330,         "9330" },
-+	{ AR_SREV_VERSION_9340,		"9340" },
- 	{ AR_SREV_VERSION_9485,         "9485" },
+ drivers/net/wireless/b43/tables_phy_lcn.c |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/tables_phy_lcn.c b/drivers/net/wireless/b43/tables_phy_lcn.c
+index 95efea6..fd2b16d 100644
+--- a/drivers/net/wireless/b43/tables_phy_lcn.c
++++ b/drivers/net/wireless/b43/tables_phy_lcn.c
+@@ -295,6 +295,20 @@ static const u32 b43_lcntab_0x18[] = {
+ 	0x00080000, 0x00080000, 0x00080000, 0x00080000,
  };
  
++const u16 b43_lcntab_0x0f_late[] = {
++	0x0002, 0x0008, 0x0004, 0x0001, 0x0002, 0x0008,
++	0x0004, 0x0001, 0x0002, 0x0008, 0x0004, 0x0001,
++	0x0002, 0x0008, 0x0004, 0x0001, 0x0002, 0x0008,
++	0x0004, 0x0001, 0x0002, 0x0008, 0x0004, 0x0001,
++	0x0002, 0x0008, 0x0004, 0x0001, 0x0002, 0x0008,
++	0x0004, 0x0001, 0x0002, 0x0008, 0x0004, 0x0001,
++	0x0002, 0x0008, 0x0004, 0x0001, 0x0002, 0x0008,
++	0x0004, 0x0001, 0x0002, 0x0008, 0x0004, 0x0001,
++	0x0002, 0x0008, 0x0004, 0x0001, 0x0002, 0x0008,
++	0x0004, 0x0001, 0x0002, 0x0008, 0x0004, 0x0001,
++	0x0002, 0x0008, 0x0004, 0x0001,
++};
++
+ /**************************************************
+  * R/W ops.
+  **************************************************/
+@@ -486,6 +500,9 @@ void b43_phy_lcn_tables_init(struct b43_wldev *dev)
+ {
+ 	b43_phy_lcn_upload_static_tables(dev);
+ 	/* TODO: various tables ops here */
++	b43_lcntab_write_bulk(dev, B43_LCNTAB16(0xf, 0),
++			ARRAY_SIZE(b43_lcntab_0x0f_late), b43_lcntab_0x0f_late);
++	/* TODO: various tables ops here */
+ 	b43_phy_lcn_rewrite_tables(dev);
+ 	b43_phy_lcn_clean_0x18_table(dev);
+ }
 -- 
-1.7.4.1
+1.7.3.4
 
