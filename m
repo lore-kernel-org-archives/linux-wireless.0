@@ -1,58 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:57999 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755009Ab1H2UOb (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45454 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754877Ab1HaHya (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 16:14:31 -0400
-Received: by qwk3 with SMTP id 3so3573713qwk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 13:14:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1314624143.8959.1.camel@jlt3.sipsolutions.net>
-References: <1314297201-19007-1-git-send-email-lrodriguez@qca.qualcomm.com> <1314624143.8959.1.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>
-Date: Mon, 29 Aug 2011 13:14:11 -0700
-Message-ID: <CAB=NE6U1WZ5=_RsuTKKj4K4-42Yamot_NJGjj43ikGUY6dSkEw@mail.gmail.com> (sfid-20110829_221435_669829_3631F69A)
-Subject: Re: [RFC] mac80211: add IBSS merge support
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Ivan Seskar <seskar@winlab.rutgers.edu>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 31 Aug 2011 03:54:30 -0400
+Subject: Re: [PATCH] nl80211/cfg80211: add ssid filtering for sched_scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1314777198.4161.20.camel@jlt3.sipsolutions.net> (sfid-20110831_095327_725277_2680941D)
+References: <1314707979-26484-1-git-send-email-coelho@ti.com>
+	 <1314713812.4011.33.camel@jlt3.sipsolutions.net>
+	 <1314718038.2296.460.camel@cumari>
+	 <1314720557.4011.41.camel@jlt3.sipsolutions.net>
+	 <1314770941.2296.507.camel@cumari>
+	 <1314771627.4161.9.camel@jlt3.sipsolutions.net>
+	 <1314775816.2296.531.camel@cumari>
+	 <1314776396.4161.19.camel@jlt3.sipsolutions.net>
+	 <1314776962.2296.540.camel@cumari>
+	 <1314777198.4161.20.camel@jlt3.sipsolutions.net>
+	 (sfid-20110831_095327_725277_2680941D)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 31 Aug 2011 09:54:24 +0200
+Message-ID: <1314777264.4161.21.camel@jlt3.sipsolutions.net> (sfid-20110831_095433_229424_4DBE5F11)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 29, 2011 at 6:22 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2011-08-25 at 11:33 -0700, Luis R. Rodriguez wrote:
->> From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
->>
->> When you try to create an IBSS network with a lot of nodes
->> you typically end up with split networks due to the fact that
->> some nodes for one reason or another end up not listening to
->> beacons from the node others do with a higher TSF. What ends
->> up happening is you split the IBSS network and these do not
->> converge. To address this you can force the BSSID as well as
->> the SSID but if you just want to specify the SSID you can
->> use the ibss_merge knob to force an IBSS merge by focing the
->> BSSID to be based on the passed SSID.
->>
->> Cc: Jouni Malinen <jouni@qca.qualcomm.com>
->> Cc: Ivan Seskar <seskar@winlab.rutgers.edu>
->> Cc: Johannes Berg <johannes@sipsolutions.net>
->> Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
->> ---
->>
->> Ivan, I think this is what you were looking for but an alternative to this
->> problem is to specify the BSSID every time you want to create your own large
->> IBSS network, this would mean that its a requirement and also means we
->> acknowledge a limitation by IEEE's adhoc definition. Is there any reason
->> forcing a BSSID on the experimenter is not an equally good solution?
->
-> Even setting "fixed-bssid" is acknowledging that already, but I really
-> see no reason for this to live in the kernel.
+On Wed, 2011-08-31 at 09:53 +0200, Johannes Berg wrote:
 
-Agreed, I was just hoping Ivan can test that does indeed fix that
-issue and we can throw this out as one of those "bogus" features
-MadWifi had for researchers.
+> > MATCH={BSSID=00:01:02:03:04:05} and
+> > NOT_MATCH={MIN_RSSI=-70}
 
-  Luis
+Actually does that really make sense?
+
+I suspect you'd want something like
+
+MATCH SSID="foo" && RSSI >= -70
+
+where the && part isn't really expressed now?
+
+johannes
+
