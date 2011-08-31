@@ -1,71 +1,328 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:38572 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932621Ab1IHMjb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 08:39:31 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 4so268175ewy.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2011 05:39:31 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 4/7] rt2x00: Add WCID to HT TX descriptor
-Date: Thu, 8 Sep 2011 14:37:19 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201109081434.23635.IvDoorn@gmail.com> <201109081436.05113.IvDoorn@gmail.com> <201109081436.46401.IvDoorn@gmail.com>
-In-Reply-To: <201109081436.46401.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201109081437.20667.IvDoorn@gmail.com> (sfid-20110908_143936_908758_86D04C74)
+Received: from nbd.name ([46.4.11.11]:33025 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754660Ab1HaXcr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Aug 2011 19:32:47 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	rmanohar@qca.qualcomm.com, shafi.wireless@gmail.com,
+	vthiagar@qca.qualcomm.com
+Subject: [PATCH v11 1/4] ath9k: eliminate common->{rx,tx}_chainmask
+Date: Thu,  1 Sep 2011 01:32:31 +0200
+Message-Id: <1314833554-40721-1-git-send-email-nbd@openwrt.org> (sfid-20110901_013256_794064_03493BE8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+we already have ah->{rx,tx}chainmask for the same purpose
 
-When sending an unencrypted frame to a STA the driver might want to pass
-a suitable WCID since we don't have a key index to allow tx status
-reports to get properly assigned to the correct STA.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/rt2x00/rt2x00queue.c |    7 ++++++-
- drivers/net/wireless/rt2x00/rt2x00queue.h |    1 +
- 2 files changed, 7 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath.h                |    3 ---
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c |    4 ++--
+ drivers/net/wireless/ath/ath9k/beacon.c       |    2 +-
+ drivers/net/wireless/ath/ath9k/debug.c        |   20 ++++++++++----------
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    7 ++-----
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    3 +--
+ drivers/net/wireless/ath/ath9k/hw.c           |    5 ++---
+ drivers/net/wireless/ath/ath9k/init.c         |    9 ++-------
+ drivers/net/wireless/ath/ath9k/main.c         |    7 +++----
+ drivers/net/wireless/ath/ath9k/xmit.c         |    8 ++++----
+ 10 files changed, 27 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index c44adb1..ba0d7e6 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -288,11 +288,16 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_tx_rate *txrate = &tx_info->control.rates[0];
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct rt2x00_sta *sta_priv = NULL;
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index 9891fb6..4ed7f24 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -140,9 +140,6 @@ struct ath_common {
+ 	u8 curbssid[ETH_ALEN];
+ 	u8 bssidmask[ETH_ALEN];
  
--	if (tx_info->control.sta)
-+	if (tx_info->control.sta) {
- 		txdesc->u.ht.mpdu_density =
- 		    tx_info->control.sta->ht_cap.ampdu_density;
+-	u8 tx_chainmask;
+-	u8 rx_chainmask;
+-
+ 	u32 rx_bufsize;
  
-+		sta_priv = sta_to_rt2x00_sta(tx_info->control.sta);
-+		txdesc->u.ht.wcid = sta_priv->wcid;
-+	}
-+
- 	txdesc->u.ht.ba_size = 7;	/* FIXME: What value is needed? */
+ 	u32 keymax;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index f80d1d6..bb2214f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -113,7 +113,7 @@ static int ar9003_get_training_power_5g(struct ath_hw *ah)
+ 	if (delta > scale)
+ 		return -1;
  
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-index f22aa86..349008d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-@@ -321,6 +321,7 @@ struct txentry_desc {
- 			u8 ba_size;
- 			u8 mpdu_density;
- 			enum txop txop;
-+			int wcid;
- 		} ht;
- 	} u;
+-	switch (get_streams(common->tx_chainmask)) {
++	switch (get_streams(ah->txchainmask)) {
+ 	case 1:
+ 		delta = 6;
+ 		break;
+@@ -126,7 +126,7 @@ static int ar9003_get_training_power_5g(struct ath_hw *ah)
+ 	default:
+ 		delta = 0;
+ 		ath_dbg(common, ATH_DBG_CALIBRATE,
+-		"Invalid tx-chainmask: %u\n", common->tx_chainmask);
++		"Invalid tx-chainmask: %u\n", ah->txchainmask);
+ 	}
  
+ 	power += delta;
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 086c9c8..0c757c9 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -107,7 +107,7 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+ 	series[0].Tries = 1;
+ 	series[0].Rate = rate;
+ 	series[0].ChSel = ath_txchainmask_reduction(sc,
+-			common->tx_chainmask, series[0].Rate);
++			ah->txchainmask, series[0].Rate);
+ 	series[0].RateFlags = (ctsrate) ? ATH9K_RATESERIES_RTS_CTS : 0;
+ 	ath9k_hw_set11n_ratescenario(ah, ds, ds, 0, ctsrate, ctsduration,
+ 				     series, 4, 0);
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 727e8de..19ef559 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -95,11 +95,11 @@ static ssize_t read_file_tx_chainmask(struct file *file, char __user *user_buf,
+ 			     size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_hw *ah = sc->sc_ah;
+ 	char buf[32];
+ 	unsigned int len;
+ 
+-	len = sprintf(buf, "0x%08x\n", common->tx_chainmask);
++	len = sprintf(buf, "0x%08x\n", ah->txchainmask);
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+ 
+@@ -107,7 +107,7 @@ static ssize_t write_file_tx_chainmask(struct file *file, const char __user *use
+ 			     size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_hw *ah = sc->sc_ah;
+ 	unsigned long mask;
+ 	char buf[32];
+ 	ssize_t len;
+@@ -120,8 +120,8 @@ static ssize_t write_file_tx_chainmask(struct file *file, const char __user *use
+ 	if (strict_strtoul(buf, 0, &mask))
+ 		return -EINVAL;
+ 
+-	common->tx_chainmask = mask;
+-	sc->sc_ah->caps.tx_chainmask = mask;
++	ah->txchainmask = mask;
++	ah->caps.tx_chainmask = mask;
+ 	return count;
+ }
+ 
+@@ -138,11 +138,11 @@ static ssize_t read_file_rx_chainmask(struct file *file, char __user *user_buf,
+ 			     size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_hw *ah = sc->sc_ah;
+ 	char buf[32];
+ 	unsigned int len;
+ 
+-	len = sprintf(buf, "0x%08x\n", common->rx_chainmask);
++	len = sprintf(buf, "0x%08x\n", ah->rxchainmask);
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+ 
+@@ -150,7 +150,7 @@ static ssize_t write_file_rx_chainmask(struct file *file, const char __user *use
+ 			     size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_hw *ah = sc->sc_ah;
+ 	unsigned long mask;
+ 	char buf[32];
+ 	ssize_t len;
+@@ -163,8 +163,8 @@ static ssize_t write_file_rx_chainmask(struct file *file, const char __user *use
+ 	if (strict_strtoul(buf, 0, &mask))
+ 		return -EINVAL;
+ 
+-	common->rx_chainmask = mask;
+-	sc->sc_ah->caps.rx_chainmask = mask;
++	ah->rxchainmask = mask;
++	ah->caps.rx_chainmask = mask;
+ 	return count;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 9cf42f6..966661c 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -509,8 +509,8 @@ static void setup_ht_cap(struct ath9k_htc_priv *priv,
+ 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
+ 
+ 	/* ath9k_htc supports only 1 or 2 stream devices */
+-	tx_streams = ath9k_cmn_count_streams(common->tx_chainmask, 2);
+-	rx_streams = ath9k_cmn_count_streams(common->rx_chainmask, 2);
++	tx_streams = ath9k_cmn_count_streams(priv->ah->txchainmask, 2);
++	rx_streams = ath9k_cmn_count_streams(priv->ah->rxchainmask, 2);
+ 
+ 	ath_dbg(common, ATH_DBG_CONFIG,
+ 		"TX streams %d, RX streams: %d\n",
+@@ -601,9 +601,6 @@ static void ath9k_init_misc(struct ath9k_htc_priv *priv)
+ {
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 
+-	common->tx_chainmask = priv->ah->caps.tx_chainmask;
+-	common->rx_chainmask = priv->ah->caps.rx_chainmask;
+-
+ 	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
+ 
+ 	priv->ah->opmode = NL80211_IFTYPE_STATION;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index b9de151..495fdf6 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -826,8 +826,7 @@ void ath9k_htc_ani_work(struct work_struct *work)
+ 		if (longcal || shortcal)
+ 			common->ani.caldone =
+ 				ath9k_hw_calibrate(ah, ah->curchan,
+-						   common->rx_chainmask,
+-						   longcal);
++						   ah->rxchainmask, longcal);
+ 
+ 		ath9k_htc_ps_restore(priv);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 468ac4b..f39444d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1476,9 +1476,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	u64 tsf = 0;
+ 	int i, r;
+ 
+-	ah->txchainmask = common->tx_chainmask;
+-	ah->rxchainmask = common->rx_chainmask;
+-
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
+ 		return -EIO;
+ 
+@@ -2092,6 +2089,8 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 
+ 	pCap->tx_chainmask = fixup_chainmask(chip_chainmask, pCap->tx_chainmask);
+ 	pCap->rx_chainmask = fixup_chainmask(chip_chainmask, pCap->rx_chainmask);
++	ah->txchainmask = pCap->tx_chainmask;
++	ah->rxchainmask = pCap->rx_chainmask;
+ 
+ 	ah->misc_mode |= AR_PCU_MIC_NEW_LOC_ENA;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index dd71a5f..50da642 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -270,8 +270,8 @@ static void setup_ht_cap(struct ath_softc *sc,
+ 
+ 	/* set up supported mcs set */
+ 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
+-	tx_streams = ath9k_cmn_count_streams(common->tx_chainmask, max_streams);
+-	rx_streams = ath9k_cmn_count_streams(common->rx_chainmask, max_streams);
++	tx_streams = ath9k_cmn_count_streams(ah->txchainmask, max_streams);
++	rx_streams = ath9k_cmn_count_streams(ah->rxchainmask, max_streams);
+ 
+ 	ath_dbg(common, ATH_DBG_CONFIG,
+ 		"TX streams %d, RX streams: %d\n",
+@@ -506,9 +506,6 @@ static void ath9k_init_misc(struct ath_softc *sc)
+ 		sc->sc_flags |= SC_OP_RXAGGR;
+ 	}
+ 
+-	common->tx_chainmask = sc->sc_ah->caps.tx_chainmask;
+-	common->rx_chainmask = sc->sc_ah->caps.rx_chainmask;
+-
+ 	ath9k_hw_set_diversity(sc->sc_ah, true);
+ 	sc->rx.defant = ath9k_hw_getdefantenna(sc->sc_ah);
+ 
+@@ -646,10 +643,8 @@ static void ath9k_init_band_txpower(struct ath_softc *sc, int band)
+ static void ath9k_init_txpower_limits(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath9k_channel *curchan = ah->curchan;
+ 
+-	ah->txchainmask = common->tx_chainmask;
+ 	if (ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
+ 		ath9k_init_band_txpower(sc, IEEE80211_BAND_2GHZ);
+ 	if (ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index df4108f..da57b2c 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -318,7 +318,6 @@ static void ath_paprd_activate(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath9k_hw_cal_data *caldata = ah->caldata;
+-	struct ath_common *common = ath9k_hw_common(ah);
+ 	int chain;
+ 
+ 	if (!caldata || !caldata->paprd_done)
+@@ -327,7 +326,7 @@ static void ath_paprd_activate(struct ath_softc *sc)
+ 	ath9k_ps_wakeup(sc);
+ 	ar9003_paprd_enable(ah, false);
+ 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
+-		if (!(common->tx_chainmask & BIT(chain)))
++		if (!(ah->txchainmask & BIT(chain)))
+ 			continue;
+ 
+ 		ar9003_paprd_populate_single_table(ah, caldata, chain);
+@@ -414,7 +413,7 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
+ 
+ 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
+-		if (!(common->tx_chainmask & BIT(chain)))
++		if (!(ah->txchainmask & BIT(chain)))
+ 			continue;
+ 
+ 		chain_ok = 0;
+@@ -535,7 +534,7 @@ void ath_ani_calibrate(unsigned long data)
+ 	if (longcal || shortcal) {
+ 		common->ani.caldone =
+ 			ath9k_hw_calibrate(ah, ah->curchan,
+-						common->rx_chainmask, longcal);
++						ah->rxchainmask, longcal);
+ 	}
+ 
+ 	ath9k_ps_restore(sc);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 68066c5..49b93c2 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1633,7 +1633,7 @@ u8 ath_txchainmask_reduction(struct ath_softc *sc, u8 chainmask, u32 rate)
+ 
+ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len)
+ {
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath9k_11n_rate_series series[4];
+ 	struct sk_buff *skb;
+ 	struct ieee80211_tx_info *tx_info;
+@@ -1693,7 +1693,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len)
+ 			/* MCS rates */
+ 			series[i].Rate = rix | 0x80;
+ 			series[i].ChSel = ath_txchainmask_reduction(sc,
+-					common->tx_chainmask, series[i].Rate);
++					ah->txchainmask, series[i].Rate);
+ 			series[i].PktDuration = ath_pkt_duration(sc, rix, len,
+ 				 is_40, is_sgi, is_sp);
+ 			if (rix < 8 && (tx_info->flags & IEEE80211_TX_CTL_STBC))
+@@ -1718,10 +1718,10 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len)
+ 		}
+ 
+ 		if (bf->bf_state.bfs_paprd)
+-			series[i].ChSel = common->tx_chainmask;
++			series[i].ChSel = ah->txchainmask;
+ 		else
+ 			series[i].ChSel = ath_txchainmask_reduction(sc,
+-					common->tx_chainmask, series[i].Rate);
++					ah->txchainmask, series[i].Rate);
+ 
+ 		series[i].PktDuration = ath9k_hw_computetxtime(sc->sc_ah,
+ 			phy, rate->bitrate * 100, len, rix, is_sp);
 -- 
-1.7.3.4
+1.7.3.2
+
