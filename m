@@ -1,42 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from que21.charter.net ([209.225.8.22]:35698 "EHLO que21.charter.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752003Ab1H1Nbk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Aug 2011 09:31:40 -0400
-From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
-To: sgruszka@redhat.com, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Greg Dietsche <Gregory.Dietsche@cuw.edu>
-Subject: [PATCH 2/2] iwlegacy: change IWL_WARN to IWL_DEBUG_HT in iwl4965_rs_tl_turn_on_agg_for_tid
-Date: Sun, 28 Aug 2011 08:26:17 -0500
-Message-Id: <1314537977-20097-2-git-send-email-Gregory.Dietsche@cuw.edu> (sfid-20110828_153145_034311_632E7810)
-In-Reply-To: <1314537977-20097-1-git-send-email-Gregory.Dietsche@cuw.edu>
-References: <1314537977-20097-1-git-send-email-Gregory.Dietsche@cuw.edu>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:59160 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755786Ab1HaNta (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Aug 2011 09:49:30 -0400
+Received: by ewy4 with SMTP id 4so413968ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 06:49:28 -0700 (PDT)
+From: Alexander Simon <an.alexsimon@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 1/4] nl80211: Parse channel type attribute in an IBSS join request
+Date: Wed, 31 Aug 2011 15:49:25 +0200
+Message-ID: <2366540.2f8oa1FYLX@alex-1> (sfid-20110831_154933_329735_06219035)
+In-Reply-To: <1314772577.4161.12.camel@jlt3.sipsolutions.net>
+References: <2053881.ENil2Dy3QM@alex-1> <1314772577.4161.12.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message should be a debug message and not a warning. So
-change it from IWL_WARN to IWL_DEBUG_HT.
+> Use for what? That's confusing. You're asking if it can be used for
+> beaconing, as the old function name *clearly* said. Now you're making it
+> confusing.
+I'm not only asking for beaconing. In 4/4, i am using this function to see if 
+regdom allows me to use HT40 on the extension channel (beacons and data 
+traffic). Hence can_use_ext_chan.
 
-Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
----
- drivers/net/wireless/iwlegacy/iwl-4965-rs.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Even cfg80211_set_freq in net/wireless/chan.c uses this to see if we can 
+communicate (see printk) on that channel.
 
-diff --git a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-index 9b65153..a0b60ee 100644
---- a/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-4965-rs.c
-@@ -373,7 +373,7 @@ static int iwl4965_rs_tl_turn_on_agg_for_tid(struct iwl_priv *priv,
- 			ieee80211_stop_tx_ba_session(sta, tid);
- 		}
- 	} else {
--		IWL_ERR(priv, "Aggregation not enabled for tid %d "
-+		IWL_DEBUG_HT(priv, "Aggregation not enabled for tid %d "
- 			"because load = %u\n", tid, load);
- 	}
- 	return ret;
--- 
-1.7.5.4
+So my suggestion would be to use that name. But I'd also use the old if 
+preferred.
 
+Alex
