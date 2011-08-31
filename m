@@ -1,77 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:64873 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754944Ab1HBUWQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45450 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754615Ab1HaHxY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 16:22:16 -0400
-Received: by wyg8 with SMTP id 8so95544wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 13:22:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAHFBKjcwfGT2JUXE68PHarzP6azF+yaZYtVjoxHUao35RJAAGg@mail.gmail.com>
-References: <CAHFBKjfHfAvpxGhhvRFwni9EVXdSC3HA1WxMJRzVm9SxvowmWQ@mail.gmail.com>
-	<4E36F805.7050108@lwfinger.net>
-	<CAHFBKjcwfGT2JUXE68PHarzP6azF+yaZYtVjoxHUao35RJAAGg@mail.gmail.com>
-Date: Tue, 2 Aug 2011 22:22:13 +0200
-Message-ID: <CAHFBKjf6hZKsB_5bWoSECvtXNEB5rPx_v_EAOGrx5abdSPGPjg@mail.gmail.com> (sfid-20110802_222219_387525_2AF7256D)
-Subject: Re: Support for Realtek 8188RU Chipset in rtl8192cu driver?
-From: Lubomir Schmidt <gentoo.lubomir@googlemail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, george0505@realtek.com
-Content-Type: text/plain; charset=UTF-8
+	Wed, 31 Aug 2011 03:53:24 -0400
+Subject: Re: [PATCH] nl80211/cfg80211: add ssid filtering for sched_scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1314776962.2296.540.camel@cumari>
+References: <1314707979-26484-1-git-send-email-coelho@ti.com>
+	 <1314713812.4011.33.camel@jlt3.sipsolutions.net>
+	 <1314718038.2296.460.camel@cumari>
+	 <1314720557.4011.41.camel@jlt3.sipsolutions.net>
+	 <1314770941.2296.507.camel@cumari>
+	 <1314771627.4161.9.camel@jlt3.sipsolutions.net>
+	 <1314775816.2296.531.camel@cumari>
+	 <1314776396.4161.19.camel@jlt3.sipsolutions.net>
+	 <1314776962.2296.540.camel@cumari>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 31 Aug 2011 09:53:18 +0200
+Message-ID: <1314777198.4161.20.camel@jlt3.sipsolutions.net> (sfid-20110831_095327_725277_2680941D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yesterday my HDD i took to test everything with dies and i have to get
-an other one...
+On Wed, 2011-08-31 at 10:49 +0300, Luciano Coelho wrote:
 
-I added the two lines with the usb id's and the driver load fine and
-see networks. Also monitor mode and injection is working fine.
-The build in networkmanager from ubuntu 11.10 Alpha 2(with an "apt-get
-update && apt-get upgrade") does not connect to the wpa2 network i use
-at home. I think the problem would be the networkmanager. I just
-wonder why the adapter is named now "Obda ALFA AWUS036NHR" - why obda
-and what is obda?
+> Whitelisting and blacklisting the same SSID would be one of the
+> "illegal" cases that we may want to reject with -EINVAL.
+> 
+> But my idea was that you could do this:
+> 
+> MATCH={SSID=foo} and
+> NOT_MATCH={BSSID=00:01:02:03:04:05}
+> 
+> or
+> 
+> MATCH={BSSID=00:01:02:03:04:05} and
+> NOT_MATCH={SSID=foo}
+> 
+> or, making more sense:
+> 
+> MATCH={BSSID=00:01:02:03:04:05} and
+> NOT_MATCH={MIN_RSSI=-70}
+> 
+> My point is that many of these combinations might not make sense, but
+> generalizing the API allows for cases that *do* make sense but we have
+> not thought of yet.
 
-Thanks for adding the usb-id's and the name into the driver :)
+Good point :)
 
-2011/8/1 Lubomir Schmidt <gentoo.lubomir@googlemail.com>:
-> I was not in Germany for some days and had no time. I will test that
-> next hours. Sorry for waiting.
->
-> 2011/8/1 Larry Finger <Larry.Finger@lwfinger.net>:
->> On 07/25/2011 06:47 AM, Lubomir Schmidt wrote:
->>>
->>> What distribution did you mean?
->>>
->>> The old AWUS036H had the Realtek 8187L, yes. Then there came out before
->>> nearly
->>> an year the AWUS036NH and the AWUS036NEH. Both base on the Ralink 3070L
->>> Chipset
->>> and have till today the best range of all devices on the market.
->>> Now Alfa release the AWUS036NHR with the Realtek 8188RU and the AWUS036NHA
->>> with
->>> an Atheros AR9271.
->>>
->>> Last year i helped to get support for the Ralink Chipsets in the 2800usb
->>> driver.
->>> I got white papers and so on from the chipsets and the driver developer
->>> could
->>> connect to an laptop running 24/7 and make tests with the device.
->>>
->>> How can i help to get support? What distribution did you prefere on the
->>> notebook
->>> to connect to?
->>
->> When I looked at the driver, it turned out to be the driver for the
->> RTL8192CU with new additional device IDs. Please try the attached patch for
->> any 2.6.39 or later kernel. Meanwhile, I will see what other changes have
->> been made to the driver.
->>
->> ===========================================================================
->>
->> I hate to nag, but I cannot push this patch upstream and make it available
->> to others until you tell me that it works.
->>
->> Larry
->>
->
+> > > I also prefer using match/not_match (couldn't find a better antonym),
+> > > because "filter" is ambiguous (let-through or leave-out?).
+> > 
+> > agree.
+> 
+> We could also use a single list like this:
+> 
+> FILTER={1={MATCH=true, SSID=foo}, 2={MATCH=false, BSSID=...}
+> 
+> But then we're becoming a bit too "netfiltery". :P What do you think?
+
+Heh. Don't really care :)
+
+I guess the thing to keep in mind is that it's all an optimisation and
+if a device can't support certain combinations it doesn't really
+matter :)
+
+johannes
+
+
