@@ -1,83 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4078 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751921Ab1I0Rpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 13:45:52 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v2 00/26] staging: brcm80211: 8th reaction for mainline
- patch #2
-Date: Tue, 27 Sep 2011 10:45:04 -0700
-Message-ID: <1317145530-18839-1-git-send-email-frankyl@broadcom.com> (sfid-20110927_194607_108831_94BCB1CD)
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:35831 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756570Ab1HaWUG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Aug 2011 18:20:06 -0400
+Received: by qyk15 with SMTP id 15so2773035qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 15:20:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1314828630-26768-2-git-send-email-hauke@hauke-m.de>
+References: <1314828630-26768-1-git-send-email-hauke@hauke-m.de> <1314828630-26768-2-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 31 Aug 2011 15:19:45 -0700
+Message-ID: <CAB=NE6XsD4oAwnzrCMQNTuGnnA4N6we70ANBPvYUb4RkUWogMA@mail.gmail.com> (sfid-20110901_002009_963025_192B18B4)
+Subject: Re: [PATCH 2/2] compat-wireless: activate CONFIG_B43_PHY_HT
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code clean up for softmac.
+On Wed, Aug 31, 2011 at 3:10 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> b43 HT-PHY is working now.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-V2:
-* Rework some patches based on the comments from community
+Thanks! Applied but not pushed out yet given that "master.kernel.org
+is down since late yesterday with some filesystem problems".
 
-Arend van Spriel (13):
-  staging: brcm80211: remove uncoditional code blocks from brcmsmac
-  staging: brcm80211: remove ht_cap field from brcms_c_info structure
-  staging: brcm80211: use fragment number provided in transmit frame
-  staging: brcm80211: remove unused function si_pmu_ilp_clock()
-  staging: brcm80211: make device initializer table for wme constant
-  staging: brcm80211: remove dongle firmware related debug code
-  staging: brcm80211: remove unnecessary mac80211 callbacks
-  staging: brcm80211: changing interface to n-phy rssi compute function
-  staging: brcm80211: change interface for common rssi compute function
-  staging: brcm80211: convert endianess before handling the frame
-  staging: brcm80211: use endian annotated structures in brcmsmac
-  staging: brcm80211: move rssi computation to place we need it
-  staging: brcm80211: use d11rxhdr structure in brcms_c_recover_tsf64()
-
-Roland Vossen (13):
-  staging: brcm80211: removed unused argument from softmac functions
-  staging: brcm80211: deleted unused array of bss configurations in
-    softmac
-  staging: brcm80211: removed redundant wlc->cfg struct member
-  staging: brcm80211: removed global var from aiutils.c
-  staging: brcm80211: removed global vars in softmac ucode handling
-  staging: brcm80211: removed unused softmac workaround
-  staging: brcm80211: removed band related global vars from softmac
-  staging: brcm80211: removed global var global_scb from softmac
-  staging: brcm80211: various global var related changes in softmac
-  staging: brcm80211: removed global variable in softmac otp
-  staging: brcm80211: declared global vars in softmac phy as const
-  staging: brcm80211: simple changes to softmac phy variables
-  staging: brcm80211: declared global vars in softmac phy as const
-
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |  259 +-------
- drivers/staging/brcm80211/brcmsmac/Makefile       |    3 +-
- drivers/staging/brcm80211/brcmsmac/aiutils.c      |   15 +-
- drivers/staging/brcm80211/brcmsmac/aiutils.h      |    2 -
- drivers/staging/brcm80211/brcmsmac/ampdu.c        |    6 +-
- drivers/staging/brcm80211/brcmsmac/d11.h          |   91 ++--
- drivers/staging/brcm80211/brcmsmac/dma.c          |   41 +-
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c  |  125 +---
- drivers/staging/brcm80211/brcmsmac/mac80211_if.h  |    3 +-
- drivers/staging/brcm80211/brcmsmac/main.c         |  747 +++++++++------------
- drivers/staging/brcm80211/brcmsmac/main.h         |   19 +-
- drivers/staging/brcm80211/brcmsmac/otp.c          |  147 +----
- drivers/staging/brcm80211/brcmsmac/otp.h          |    8 -
- drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c  |   62 +--
- drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h  |    4 +-
- drivers/staging/brcm80211/brcmsmac/phy/phy_int.h  |   25 +-
- drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c  |  112 ++--
- drivers/staging/brcm80211/brcmsmac/phy/phy_n.c    |   75 +--
- drivers/staging/brcm80211/brcmsmac/pmu.c          |   22 -
- drivers/staging/brcm80211/brcmsmac/pmu.h          |    1 -
- drivers/staging/brcm80211/brcmsmac/pub.h          |    1 -
- drivers/staging/brcm80211/brcmsmac/rate.h         |    1 -
- drivers/staging/brcm80211/brcmsmac/srom.c         |   19 +-
- drivers/staging/brcm80211/brcmsmac/stf.c          |    9 -
- drivers/staging/brcm80211/brcmsmac/types.h        |    6 -
- drivers/staging/brcm80211/brcmsmac/ucode_loader.c |  121 ++--
- drivers/staging/brcm80211/brcmsmac/ucode_loader.h |   46 +-
- 27 files changed, 648 insertions(+), 1322 deletions(-)
-
-
+  Luis
