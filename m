@@ -1,58 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:39912 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752272Ab1HNCrQ (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:61312 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756921Ab1HaRwO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2011 22:47:16 -0400
-Received: by gwaa12 with SMTP id a12so2710166gwa.19
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Aug 2011 19:47:15 -0700 (PDT)
+	Wed, 31 Aug 2011 13:52:14 -0400
+Received: by qyk34 with SMTP id 34so674989qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 10:52:14 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20110813180910.GB16149@vmraj-lnx.users.atheros.com>
-References: <1313211498-14442-1-git-send-email-rmanohar@qca.qualcomm.com>
-	<1313211498-14442-3-git-send-email-rmanohar@qca.qualcomm.com>
-	<CAJ-Vmo=dzs4ZsmXq2C6gCsy+vAgdKAAQ1ZjC2VSPTtfw-aexuA@mail.gmail.com>
-	<20110813180910.GB16149@vmraj-lnx.users.atheros.com>
-Date: Sun, 14 Aug 2011 10:47:15 +0800
-Message-ID: <CAJ-Vmo=oNUd+eKgLGgCWvahKJoPR1QdpohNcZG8s_MK9G4vM2Q@mail.gmail.com> (sfid-20110814_044719_931257_4570E40C)
-Subject: Re: [PATCH 03/11] ath9k: Re-enable RXOEL interrupt after processing
- rx buffers
-From: Adrian Chadd <adrian@freebsd.org>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20110831141800.GB2474@tuxdriver.com>
+References: <20110707002034.GA17885@broadcom.com> <20110824222801.GA5280@broadcom.com>
+ <CACna6rwG6qNpaOu4QeOvs0L3LVETRt9w5=Ec-L2NJ5gXOAM=nw@mail.gmail.com>
+ <20110827143513.GN3775@shale.localdomain> <20110827145003.GA9405@suse.de>
+ <CACna6ryfZoahr1FPbZ_syBFhWnfRprEs=95y=piCGXXm_Cu+LQ@mail.gmail.com>
+ <20110827152144.GA10126@suse.de> <20110830014257.GI15771@broadcom.com>
+ <4E5E214E.2060109@hauke-m.de> <20110831141800.GB2474@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 31 Aug 2011 10:46:04 -0700
+Message-ID: <CAB=NE6VGyKZQugpZngPqoQSQLSSJ_Vcieme3nauy3Xt6ZCF+4g@mail.gmail.com> (sfid-20110831_195219_781098_9BD4CDF7)
+Subject: Re: [PATCH v2] Move brcm80211 to mainline
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Greg KH <gregkh@suse.de>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Dan Carpenter <error27@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 August 2011 02:09, Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
-> On Sat, Aug 13, 2011 at 06:53:12PM +0800, Adrian Chadd wrote:
->> .. again, I'll just point out that because I was seeing this when the
->> PCU honestly had hit the end of the RX descriptor list (lots of radar
->> phyerr frames), I needed to kick the PCU to start again.
->>
-> so without PCU restart you are still getting rxeol. am i right?
+On Wed, Aug 31, 2011 at 7:18 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Wed, Aug 31, 2011 at 01:55:58PM +0200, Hauke Mehrtens wrote:
+>
+>> If brcmsmac gets merged it should support all braodcom softmac wireless
+>> devices with ieee80211n support, this includes also the N-PHY devices
+>> with SB-bus, otherwise ieee80211n support has to be added to b43 and
+>> then I do not see any advantage over just using b43 and removing
+>> brcmsmac. Will Broadcom support these older chip in brcmsmac and also
+>> all new devices still missing now or has the community to add support
+>> for these devices without any help by broadcom?
+>
+> This requirement seems rather artificial.  Vendors choose which devices
+> they want to support.  Intel has abandoned devices (e.g. ipw2100,
+> ipw2200, and iwlegacy), and arguably so has Atheros (e.g. ath5k).
+> Why should Broadcom be compelled to support older devices simply
+> because there is some overlap between brcmsmac and b43?  If they went
+> down that path, would you then demand that they support the b43legacy
+> devices as well?  Why not?
+>
+> The strategy of cramming all vaguely similar devices under "one"
+> driver doesn't have a great track record IMHO.
 
-Yup. That's because I've actually hit the end of the RX descriptor
-list and since the 11n NIC code (so ath9k, and FreeBSD's ath when
-using an 11n NIC) doesn't enable the self-link descriptor trick, the
-PCU is now "stopped". I hit this when doing radar phyerr frame
-reception and (artificially) generated lots of radar phyerr frames
-whilst keeping the CPU busy. The RX thread would be CPU starved and it
-wouldn't be able to service the RX descriptor list in time.
+Agreed.
 
-I've never hit it in normal operation, because (a) I wasn't doing RX
-phyerr reception, and (b) I wasn't _trying_ to break RX under load.
-:-)
+> We have had to split
+> iwlwifi, and may have to do so again. e1000 got split similarly,
+> as did b43/b43legacy.
 
-The next problem (which I hinted at in another email) is that I'm
-seeing an AR9280 NIC (Ubiquiti SR71-E) get itself into a situation
-where its unable to do any kind of DMA, and constantly fires off RXEOL
-interrupts, even if I then reset the PCU RX on RXEOL. The only fix is
-a cold reset - a warm reset doesn't trigger it. So, I wonder what is
-causing your underlying issues on Merlin, as it doesn't sound like
-you've hit the end of the RX descriptor list (or you'd have to restart
-the PCU w/ a new RX descriptor list to fix it.) Your problem may be
-tangentally related to what I'm seeing :-)
+And I would hope someone would even split i915 driver too, having a
+regression on every rc1 of the kernel seems rather ridiculous to me.
 
+> I see no reason to compel a driver to support
+> an extended range of hardware when there are reasonable dissimilarities
+> between the devices.
 
+Agreed here -- but one thing is to dedicate resources to supporting
+old devices, which of course no silicon company wants to do, another
+is to enable the community to help support older device. The later is
+what I argue is reasonable and every silicon provider needs to work
+harder at. At Atheros not only have we provided documentation to help
+support ath5k but we even released firmware for our legacy Otus driver
+-- and documentation. Do not tell me this is not possible, I simply do
+not buy it -- you are simply not trying hard enough. Orphaning drivers
+can be done better.
 
-Adrian
+  Luis
