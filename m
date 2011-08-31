@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:40007 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751056Ab1HBWcX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37739 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750931Ab1HaGgU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 18:32:23 -0400
-Received: by fxh19 with SMTP id 19so12050fxh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2011 15:32:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201108030012.20241.anarsoul@gmail.com>
-References: <201108021312.23153.anarsoul@gmail.com>
-	<201108022309.07783.anarsoul@gmail.com>
-	<CAGq3pz6R=8eRNRME-X9e-S12cWvRq_-xvcjCa7KXyRfE0sJ8gw@mail.gmail.com>
-	<201108030012.20241.anarsoul@gmail.com>
-Date: Tue, 2 Aug 2011 23:32:21 +0100
-Message-ID: <CAGq3pz7gzgaZU2TfVHy5Q6AdKuob2zavPosgXTJtkovtmWpuow@mail.gmail.com> (sfid-20110803_003226_417361_373BB4FB)
-Subject: Re: [PATCH 1/2] libertas: add ability to power off card on suspend
-From: Daniel Drake <dsd@laptop.org>
-To: Vasily Khoruzhick <anarsoul@gmail.com>
-Cc: libertas-dev@lists.infradead.org, linville@tuxdriver.com,
-	dcbw@redhat.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 31 Aug 2011 02:36:20 -0400
+Subject: Re: [PATCH v2 1/4] nl80211: Parse channel type attribute in an
+ IBSS join request
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alexander Simon <an.alexsimon@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <2053881.ENil2Dy3QM@alex-1> (sfid-20110829_161556_944174_8A64BBCC)
+References: <2053881.ENil2Dy3QM@alex-1>
+	 (sfid-20110829_161556_944174_8A64BBCC)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 31 Aug 2011 08:36:17 +0200
+Message-ID: <1314772577.4161.12.camel@jlt3.sipsolutions.net> (sfid-20110831_083623_187858_F780CF99)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 August 2011 22:12, Vasily Khoruzhick <anarsoul@gmail.com> wrote:
-> Now generic libertas driver controls power, not if_spi. So it should be able
-> to turn off card before going suspend. Messing with power in if_* and generic
-> part does not look like a good idea to me.
+On Mon, 2011-08-29 at 16:15 +0200, Alexander Simon wrote:
 
-But there's no way your approach will bring good results. Userspace
-won't see any interface state change, but the entire hardware and
-firmware will be fully reset. Things will get very confused.
+> +/**
+> + * cfg80211_can_use_ext_chan - test if ht40 on extension channel can be used
+> + * @wiphy: the wiphy
+> + * @chan: main channel
+> + * @channel_type: HT mode
+> + */
+> +bool cfg80211_can_use_ext_chan(struct wiphy *wiphy,
+> +			       struct ieee80211_channel *chan,
+> +			       enum nl80211_channel_type channel_type);
 
-A lot of the stuff done in stop_iface is not relevant for the suspend
-case. e.g. If commands were queued before suspend, they should execute
-after resume. stop_iface is designed to run when the userspace-visible
-interfaces are brought down - by running it while they are still up,
-you will confuse things.
+Use for what? That's confusing. You're asking if it can be used for
+beaconing, as the old function name *clearly* said. Now you're making it
+confusing.
 
-You are battling with a general suspend/resume problem which should be
-handled by suspend/resume handlers alone. libertas already has plenty
-of experience in this area which you can build upon.
+johannes
 
-Daniel
