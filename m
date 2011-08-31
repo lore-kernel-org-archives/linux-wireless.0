@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:63400 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753583Ab1H2PMf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39478 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753849Ab1HaGkl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Aug 2011 11:12:35 -0400
-Received: by wyg24 with SMTP id 24so4147459wyg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2011 08:12:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAD2nsn1+5QWtzeG-3RHEJi8+oDthAfXYunHnDTLie84oJPOQuw@mail.gmail.com>
-References: <20110827113253.GA1444@ecki>
-	<CAD2nsn2Bbxxy9ZYpBe_QEqCkGYYROHE+j7qASRq3OkKmWD5PMg@mail.gmail.com>
-	<CAD2nsn1+5QWtzeG-3RHEJi8+oDthAfXYunHnDTLie84oJPOQuw@mail.gmail.com>
-Date: Mon, 29 Aug 2011 20:42:33 +0530
-Message-ID: <CAD2nsn1roVNB5+H1CYHVnerLN3pjGB5KmEX1mJZ4yJhHqFGOVA@mail.gmail.com> (sfid-20110829_171239_267644_F517D296)
-Subject: Re: ath9k: irq storm after suspend/resume
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Clemens Buchacher <drizzd@aon.at>
-Cc: linux-wireless@vger.kernel.org, beta992@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 31 Aug 2011 02:40:41 -0400
+Subject: RE: [RFC] nl80211: Added NL80211 commands for Bluetooth-WiFi coex
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Sumangala, Suraj" <surajs@qca.qualcomm.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>,
+	"Balasubramanian, senthilkumar" <senthilb@qca.qualcomm.com>,
+	"Mehta, Vipin" <vipimeht@qca.qualcomm.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <480687D4EEFE7447A2E09AADFF6673621AF7CDCF@nasanexd02a.na.qualcomm.com>
+References: <1314771915-8848-1-git-send-email-surajs@qca.qualcomm.com>
+	 (sfid-20110831_082525_612687_34CC3735),<1314772217.4161.10.camel@jlt3.sipsolutions.net>
+	 <480687D4EEFE7447A2E09AADFF6673621AF7CDCF@nasanexd02a.na.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 31 Aug 2011 08:40:32 +0200
+Message-ID: <1314772832.4161.16.camel@jlt3.sipsolutions.net> (sfid-20110831_084044_946742_6706EC6B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>> But still, the interrupts come. Note that according to
->>> /proc/interrupts, the IRQ line is not shared with any other device.
->>> I did not manage to determine which interrupt it is exactly,
->>> because the device is not in a ready state (SC_OP_INVALID is set)
->>> when they happen (in either scenario that triggers the IRQ storm).
->>> And SC_OP_INVALID is cleared only much later in ath9k_start.
->>>
->>> So, I am at a loss. Any ideas?
->>
->> please provide the lspci -vvvxx.
->> also looking at
->> /sys/kernel/debug/ieee80211/phy0/ath9k$ sudo cat interrupt.
->
-> hi, i think this will help, please get the message sudo modprobe ath9k
-> debug=0xffffffff.
-> few fatal PCI interrupt messages are based on ATH_DEBUG_ANY.
-> thanks.
->
-we can also try to disable MIB interrupts though its handled properly
-now in ath9k
+On Wed, 2011-08-31 at 06:36 +0000, Sumangala, Suraj wrote:
+> Hi johannes,
 
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2008-09-25/0001-ath9k-disable-MIB-interrupts-to-fix-interrupt-storm.patch
+> ???
+> Why would this need a userspace utility? Are you cloning some sort of
+> windows architecture here?
 
+Ugh, please trim your quotes and use a useful mailer that will indent things.
 
--- 
-shafi
+> It will be the userpace bluez dbus events that can provide information
+> regarding the status of variout Bluetooth events.
+> On receiving that information, it can send corresponding NL80211
+> command.
+
+Doesn't the kernel's bluetooth subsystem already know anyway?
+
+johannes
+
