@@ -1,71 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:34870 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753875Ab1HKJl0 convert rfc822-to-8bit (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:55494 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755436Ab1HaN2S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2011 05:41:26 -0400
-Received: by yxj19 with SMTP id 19so1186877yxj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2011 02:41:25 -0700 (PDT)
+	Wed, 31 Aug 2011 09:28:18 -0400
+Message-ID: <4E5E36EE.8080501@freedesktop.org> (sfid-20110831_152823_393295_08865D65)
+Date: Wed, 31 Aug 2011 09:28:14 -0400
+From: Jim Gettys <jg@freedesktop.org>
 MIME-Version: 1.0
-In-Reply-To: <1313054258.2407.820.camel@cumari>
-References: <1312881233-9366-1-git-send-email-eliad@wizery.com>
-	<1312881233-9366-34-git-send-email-eliad@wizery.com>
-	<1313054258.2407.820.camel@cumari>
-Date: Thu, 11 Aug 2011 12:41:25 +0300
-Message-ID: <CAB3XZEemkaz-dsyhq6x6rPLNvFj9+t=jPr9JtvcuzmRNG-8Y1g@mail.gmail.com> (sfid-20110811_114129_331630_8661E6C6)
-Subject: Re: [PATCH 33/40] wl12xx: track freed packets in FW by AC
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
+To: Andrew McGregor <andrewmcgr@gmail.com>
+CC: Adrian Chadd <adrian@freebsd.org>,
+	Tom Herbert <therbert@google.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Dave Taht <dave.taht@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Matt Smith <smithm@qca.qualcomm.com>,
+	Kevin Hayes <hayes@qca.qualcomm.com>,
+	Derek Smithies <derek@indranet.co.nz>, netdev@vger.kernel.org
+Subject: Re: BQL crap and wireless
+References: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com> <CAB=NE6VwWu5+Hk7=3ghkgiXss9kCqGyS-RWPYtyHRhDsx5r2rA@mail.gmail.com> <CAA93jw7c+Nxc6ZbWZWsQ+F78AoPWU=quSRaOUpT0yRcwJOXsGQ@mail.gmail.com> <4E5C3B47.1050809@freedesktop.org> <CA+mtBx-j_+mrNpntR7CfYOromDnM-ZGzvebpUCjC8Qf14X6u9g@mail.gmail.com> <CAJ-Vmonwur-SXddNwjPEidCMqes+PwbRWFBddfdwTp2jOMu64g@mail.gmail.com> <4E5CEC79.3090802@freedesktop.org> <9BB251C1-A211-486D-A717-59149AC3A709@gmail.com>
+In-Reply-To: <9BB251C1-A211-486D-A717-59149AC3A709@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 11, 2011 at 12:17 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Tue, 2011-08-09 at 12:13 +0300, Eliad Peller wrote:
->> From: Arik Nemtsov <arik@wizery.com>
->>
->> Track the number of freed packets in each AC when receiving an interrupt
->> from the FW. This paves the way for tracking allocated packets per AC.
->>
->> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> ---
->>  drivers/net/wireless/wl12xx/main.c   |   16 +++++++++++++++-
->>  drivers/net/wireless/wl12xx/tx.c     |    2 ++
->>  drivers/net/wireless/wl12xx/wl12xx.h |    8 ++++++--
->>  3 files changed, 23 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
->> index b223c27..3bfd772 100644
->> --- a/drivers/net/wireless/wl12xx/main.c
->> +++ b/drivers/net/wireless/wl12xx/main.c
->> @@ -810,22 +810,32 @@ static void wl1271_irq_update_links_status(struct wl1271 *wl,
->>  static void wl1271_fw_status(struct wl1271 *wl,
->>                            struct wl1271_fw_status *status)
->>  {
->>       struct timespec ts;
->>       u32 old_tx_blk_count = wl->tx_blocks_available;
->>       int avail, freed_blocks;
->> +     int i;
->>
->>       wl1271_raw_read(wl, FW_STATUS_ADDR, status, sizeof(*status), false);
->>
->>       wl1271_debug(DEBUG_IRQ, "intr: 0x%x (fw_rx_counter = %d, "
->>                    "drv_rx_counter = %d, tx_results_counter = %d)",
->>                    status->intr,
->>                    status->fw_rx_counter,
->>                    status->drv_rx_counter,
->>                    status->tx_results_counter);
->>
->> +     for (i = 0; i < NUM_TX_QUEUES; i++) {
->> +             /* prevent wrap-around in freed-packets counter */
->> +             wl->tx_allocated_pkts -=
->> +                             (status->tx_released_pkts[i] -
->> +                             wl->tx_pkts_freed[i] + 256) % 256;
+On 08/30/2011 05:47 PM, Andrew McGregor wrote:
+> On 31/08/2011, at 1:58 AM, Jim Gettys wrote:
 >
-> Isn't the "+ 256" useless here, since you'll mod the result anyway?
+>> On 08/29/2011 11:42 PM, Adrian Chadd wrote:
+>>> On 30 August 2011 11:34, Tom Herbert <therbert@google.com> wrote:
+>>>
+>>> C(P) is going to be quite variable - a full frame retransmit of a 4ms
+>>> long aggregate frame is SUM(exponential backoff, grab the air,
+>>> preamble, header, 4ms, etc. for each pass.)
+>>>
+>> It's not clear to me that doing heroic measures to compute the cost is
+>> going to be worthwhile due to the rate at which the costs can change on
+>> wireless; just getting into the rough ballpark may be enough. But
+>> buffering algorithms and AQM algorithms are going to need an estimate of
+>> the *time* it will take to transmit data, more than # of bytes or packets.
+> That's not heroic measures; mac80211 needs all the code to calculate these times anyway, it's just a matter of collecting together some things we already know and calling the right function.
 >
-modulus of negative numbers is not well defined.
+>
 
-Eliad.
+Fine; if it's easy, accurate is better (presuming the costs get
+recalculated when circumstances change). We also will need the amount of
+data being transmitted; it is the rate of transmission (the rate at
+which the buffers are draining) that we'll likely need.
+
+Here's what I've gleaned from reading "RED in a different light",  Van
+Jacobson's Mitre talk and several conversations with Kathleen Nichols
+and Van: AQM algorithms that can handle variable bandwidth environments
+will need to be able to know the rate at which buffers empty.  It's the
+direction they are going with their experiments on a "RED light" algorithm.
+
+The fundamental insight as to why classic RED can't work in the wireless
+environment is that the instantaneous queue length has little actual
+information in it. Classic RED is tuned using the queue length as its
+basic parameter.  Their belief as to algorithms that will work is that
+the need to keep track of the running queue length *minimum over time*;
+you want to keep the buffers small on a longer term basis (so they both
+can absorb transients, which is their reason for existence, while
+keeping the latency typically low).  The additional major challenge we
+face that core routers do not is the highly variable traffic of mixed
+mice and elephants.  What actually works only time will tell.
+
+So in an environment in which the rate of transmission is highly
+variable, such as wireless, or even possibly modern broadband with
+PowerBoost, classic RED or similar algorithms that do not take the
+buffer drain rate cannot possibly hack it properly.
+                        - Jim
+
+
