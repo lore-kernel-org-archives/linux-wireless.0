@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:43286 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755367Ab1HBVmX (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:23966 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754787Ab1HaLFh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2011 17:42:23 -0400
-Message-ID: <4E386F3B.9050901@lwfinger.net> (sfid-20110802_234227_713895_20D4DB03)
-Date: Tue, 02 Aug 2011 16:42:19 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 31 Aug 2011 07:05:37 -0400
+Message-ID: <4E5E157A.3070704@qca.qualcomm.com> (sfid-20110831_130554_714329_D8A36BF9)
+Date: Wed, 31 Aug 2011 14:05:30 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
-CC: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtl8192cu: add USB ID for Belkin n300 Micro USB wireless
- adapter
-References: <201108022229.58532.s.L-H@gmx.de>
-In-Reply-To: <201108022229.58532.s.L-H@gmx.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/4] ath6kl: cleanup diagnose window read and write	functions
+References: <20110830134432.21543.89808.stgit@localhost6.localdomain6> <20110830134450.21543.40524.stgit@localhost6.localdomain6> <20110830150006.GA32378@vasanth-laptop>
+In-Reply-To: <20110830150006.GA32378@vasanth-laptop>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/02/2011 03:29 PM, Stefan Lippers-Hollmann wrote:
-> Signed-off-by: Stefan Lippers-Hollmann<s.l-h@gmx.de>
-> Cc: stable<stable@kernel.org>  [2.6.39+]
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192cu/sw.c |    3 +++
->   1 files changed, 5 insertions(+), 0 deletions(-)
+On 08/30/2011 06:00 PM, Vasanthakumar Thiagarajan wrote:
+> On Tue, Aug 30, 2011 at 04:44:50PM +0300, Kalle Valo wrote:
 >
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> @@ -322,6 +322,9 @@ static struct usb_device_id rtl8192c_usb
->   	{RTL_USB_DEVICE(0x2001, 0x330a, rtl92cu_hal_cfg)}, /*D-Link-Alpha*/
->   	{RTL_USB_DEVICE(0x2019, 0xab2b, rtl92cu_hal_cfg)}, /*Planex -Abocom*/
->   	{RTL_USB_DEVICE(0x7392, 0x7822, rtl92cu_hal_cfg)}, /*Edimax -Edimax*/
-> +
-> +	/****** 8192CUS Dongle ********/
-> +	{RTL_USB_DEVICE(0x050D, 0x2103, rtl92cu_hal_cfg)}, //Belkin - Edimax
->   	{}
->   };
+>> +int ath6kl_diag_write(struct ath6kl *ar, u32 address, void *data, u32 length)
+>> +{
+>> +	u32 count, *buf = data;
+>> +	int ret;
+>> +
+>> +	if (WARN_ON(length % 4))
+>> +		return -EINVAL;
+>> +
+>> +	for (count = 0; count < length / 4; count++, address += 4) {
+>> +		ret = ath6kl_diag_write32(ar, address, buf[count]);
+>> +		if (ret)
+>> +			return ret;
+>>  	}
+>>  
+>> -	return status;
+>> +	return ret;
+> 
+> drivers/net/wireless/ath/ath6kl/main.c: In function ‘ath6kl_diag_write’:
+> drivers/net/wireless/ath/ath6kl/main.c:297: warning: ‘ret’ may be
+> used uninitialized in this function
 
-NACK. That C++ comment should be fixed.
+Strange, my compiler didn't warn about this. Fixed in v2.
 
-See my response to the second Email for more discussion.
-
-Larry
+Thanks,
+Kalle
