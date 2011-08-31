@@ -1,579 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout03-winn.ispmail.ntl.com ([81.103.221.49]:7508 "EHLO
-	mtaout03-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751783Ab1HAPyJ (ORCPT
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:60284 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754615Ab1HaHt2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2011 11:54:09 -0400
-From: Daniel Drake <dsd@laptop.org>
-To: linville@tuxdriver.com
-To: dcbw@redhat.com
-Cc: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org
-Subject: [PATCH 1/2] libertas: disable functionality when interface is down
-Message-Id: <20110801154313.8C9389D401F@zog.reactivated.net> (sfid-20110801_175416_503590_23B82997)
-Date: Mon,  1 Aug 2011 16:43:13 +0100 (BST)
+	Wed, 31 Aug 2011 03:49:28 -0400
+Received: by mail-ew0-f42.google.com with SMTP id 2so301957ewy.15
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 00:49:25 -0700 (PDT)
+Subject: Re: [PATCH] nl80211/cfg80211: add ssid filtering for sched_scan
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1314776396.4161.19.camel@jlt3.sipsolutions.net>
+References: <1314707979-26484-1-git-send-email-coelho@ti.com>
+	 <1314713812.4011.33.camel@jlt3.sipsolutions.net>
+	 <1314718038.2296.460.camel@cumari>
+	 <1314720557.4011.41.camel@jlt3.sipsolutions.net>
+	 <1314770941.2296.507.camel@cumari>
+	 <1314771627.4161.9.camel@jlt3.sipsolutions.net>
+	 <1314775816.2296.531.camel@cumari>
+	 <1314776396.4161.19.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 31 Aug 2011 10:49:22 +0300
+Message-ID: <1314776962.2296.540.camel@cumari> (sfid-20110831_094931_318084_461A0F86)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Modify the driver so that it does not function when the interface is
-down, in preparation for runtime power management.
+On Wed, 2011-08-31 at 09:39 +0200, Johannes Berg wrote: 
+> On Wed, 2011-08-31 at 10:30 +0300, Luciano Coelho wrote:
+> 
+> > > Ok. I think the BSSID blacklist would just be a separate attribute, I
+> > > see no reason to have a nesting for that.
+> > 
+> > Actually, we could make the filter and blacklisting very generic.  We
+> > can use the same attributes for both.  The only difference would be that
+> > the former would include anything that matches and the latter would
+> > exclude anything that matches.
+> 
+> Hm, true, but does it really make sense to blacklist SSIDs when we have
+> a whitelist for them? Or would you want to whitelist a wildcard and then
+> blacklist a specific one?
 
-No commands can be run while the interface is down, so the ndo_dev_stop
-routine now directly does all necessary work (including asking the device
-to disconnect from the network and disabling multicast functionality)
-directly.
+Whitelisting and blacklisting the same SSID would be one of the
+"illegal" cases that we may want to reject with -EINVAL.
 
-power_save and power_restore hooks are added meaning that card drivers
-can take steps to turn the device off when the interface is down.
+But my idea was that you could do this:
 
-The MAC address can now only be changed when all interfaces are down;
-the new address will be programmed when an interface gets brought up.
-This matches mac80211 behaviour.
+MATCH={SSID=foo} and
+NOT_MATCH={BSSID=00:01:02:03:04:05}
 
-Also, some small cleanups/simplifications were made in the surrounding
-device handling logic.
+or
 
-Signed-off-by: Daniel Drake <dsd@laptop.org>
----
- drivers/net/wireless/libertas/cfg.c    |   39 +++++---
- drivers/net/wireless/libertas/cfg.h    |    1 +
- drivers/net/wireless/libertas/cmd.c    |    6 +-
- drivers/net/wireless/libertas/decl.h   |    4 +
- drivers/net/wireless/libertas/dev.h    |   16 +++-
- drivers/net/wireless/libertas/if_usb.c |    2 +-
- drivers/net/wireless/libertas/main.c   |  168 ++++++++++++++++++++-----------
- drivers/net/wireless/libertas/mesh.c   |    9 ++-
- 8 files changed, 163 insertions(+), 82 deletions(-)
+MATCH={BSSID=00:01:02:03:04:05} and
+NOT_MATCH={SSID=foo}
 
-diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
-index 63009c7..85b3169 100644
---- a/drivers/net/wireless/libertas/cfg.c
-+++ b/drivers/net/wireless/libertas/cfg.c
-@@ -712,7 +712,7 @@ static void lbs_scan_worker(struct work_struct *work)
- 
- 	if (priv->scan_channel < priv->scan_req->n_channels) {
- 		cancel_delayed_work(&priv->scan_work);
--		if (!priv->stopping)
-+		if (netif_running(priv->dev))
- 			queue_delayed_work(priv->work_thread, &priv->scan_work,
- 				msecs_to_jiffies(300));
- 	}
-@@ -1409,31 +1409,23 @@ static int lbs_cfg_connect(struct wiphy *wiphy, struct net_device *dev,
- 	return ret;
- }
- 
--static int lbs_cfg_disconnect(struct wiphy *wiphy, struct net_device *dev,
--	u16 reason_code)
-+int lbs_disconnect(struct lbs_private *priv, u16 reason)
- {
--	struct lbs_private *priv = wiphy_priv(wiphy);
- 	struct cmd_ds_802_11_deauthenticate cmd;
--
--	if (dev == priv->mesh_dev)
--		return -EOPNOTSUPP;
--
--	lbs_deb_enter_args(LBS_DEB_CFG80211, "reason_code %d", reason_code);
--
--	/* store for lbs_cfg_ret_disconnect() */
--	priv->disassoc_reason = reason_code;
-+	int ret;
- 
- 	memset(&cmd, 0, sizeof(cmd));
- 	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
- 	/* Mildly ugly to use a locally store my own BSSID ... */
- 	memcpy(cmd.macaddr, &priv->assoc_bss, ETH_ALEN);
--	cmd.reasoncode = cpu_to_le16(reason_code);
-+	cmd.reasoncode = cpu_to_le16(reason);
- 
--	if (lbs_cmd_with_response(priv, CMD_802_11_DEAUTHENTICATE, &cmd))
--		return -EFAULT;
-+	ret = lbs_cmd_with_response(priv, CMD_802_11_DEAUTHENTICATE, &cmd);
-+	if (ret)
-+		return ret;
- 
- 	cfg80211_disconnected(priv->dev,
--			priv->disassoc_reason,
-+			reason,
- 			NULL, 0,
- 			GFP_KERNEL);
- 	priv->connect_status = LBS_DISCONNECTED;
-@@ -1441,6 +1433,21 @@ static int lbs_cfg_disconnect(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
- }
- 
-+static int lbs_cfg_disconnect(struct wiphy *wiphy, struct net_device *dev,
-+	u16 reason_code)
-+{
-+	struct lbs_private *priv = wiphy_priv(wiphy);
-+
-+	if (dev == priv->mesh_dev)
-+		return -EOPNOTSUPP;
-+
-+	lbs_deb_enter_args(LBS_DEB_CFG80211, "reason_code %d", reason_code);
-+
-+	/* store for lbs_cfg_ret_disconnect() */
-+	priv->disassoc_reason = reason_code;
-+
-+	return lbs_disconnect(priv, reason_code);
-+}
- 
- static int lbs_cfg_set_default_key(struct wiphy *wiphy,
- 				   struct net_device *netdev,
-diff --git a/drivers/net/wireless/libertas/cfg.h b/drivers/net/wireless/libertas/cfg.h
-index 4f46bb7..a02ee15 100644
---- a/drivers/net/wireless/libertas/cfg.h
-+++ b/drivers/net/wireless/libertas/cfg.h
-@@ -17,5 +17,6 @@ void lbs_send_disconnect_notification(struct lbs_private *priv);
- void lbs_send_mic_failureevent(struct lbs_private *priv, u32 event);
- 
- void lbs_scan_deinit(struct lbs_private *priv);
-+int lbs_disconnect(struct lbs_private *priv, u16 reason);
- 
- #endif
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index dbd24a4..e08ab1d 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1088,7 +1088,7 @@ void __lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
- 	if (!cmd->callback || cmd->callback == lbs_cmd_async_callback)
- 		__lbs_cleanup_and_insert_cmd(priv, cmd);
- 	priv->cur_cmd = NULL;
--	wake_up_interruptible(&priv->waitq);
-+	wake_up(&priv->waitq);
- }
- 
- void lbs_complete_command(struct lbs_private *priv, struct cmd_ctrl_node *cmd,
-@@ -1627,7 +1627,7 @@ struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
- 		lbs_deb_host("PREP_CMD: cmdnode is NULL\n");
- 
- 		/* Wake up main thread to execute next command */
--		wake_up_interruptible(&priv->waitq);
-+		wake_up(&priv->waitq);
- 		cmdnode = ERR_PTR(-ENOBUFS);
- 		goto done;
- 	}
-@@ -1647,7 +1647,7 @@ struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
- 
- 	cmdnode->cmdwaitqwoken = 0;
- 	lbs_queue_cmd(priv, cmdnode);
--	wake_up_interruptible(&priv->waitq);
-+	wake_up(&priv->waitq);
- 
-  done:
- 	lbs_deb_leave_args(LBS_DEB_HOST, "ret %p", cmdnode);
-diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
-index da0b05b..9304e6f 100644
---- a/drivers/net/wireless/libertas/decl.h
-+++ b/drivers/net/wireless/libertas/decl.h
-@@ -43,10 +43,14 @@ int lbs_start_card(struct lbs_private *priv);
- void lbs_stop_card(struct lbs_private *priv);
- void lbs_host_to_card_done(struct lbs_private *priv);
- 
-+int lbs_start_iface(struct lbs_private *priv);
-+int lbs_stop_iface(struct lbs_private *priv);
-+
- int lbs_rtap_supported(struct lbs_private *priv);
- 
- int lbs_set_mac_address(struct net_device *dev, void *addr);
- void lbs_set_multicast_list(struct net_device *dev);
-+void lbs_update_mcast(struct lbs_private *priv);
- 
- int lbs_suspend(struct lbs_private *priv);
- int lbs_resume(struct lbs_private *priv);
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 133ff1c..8148389 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -46,7 +46,6 @@ struct lbs_private {
- 	/* CFG80211 */
- 	struct wireless_dev *wdev;
- 	bool wiphy_registered;
--	bool stopping;
- 	struct cfg80211_scan_request *scan_req;
- 	u8 assoc_bss[ETH_ALEN];
- 	u8 disassoc_reason;
-@@ -96,11 +95,14 @@ struct lbs_private {
- 
- 	/* Hardware access */
- 	void *card;
-+	bool iface_running;
- 	u8 fw_ready;
- 	u8 surpriseremoved;
- 	u8 setup_fw_on_resume;
- 	int (*hw_host_to_card) (struct lbs_private *priv, u8 type, u8 *payload, u16 nb);
- 	void (*reset_card) (struct lbs_private *priv);
-+	int (*power_save) (struct lbs_private *priv);
-+	int (*power_restore) (struct lbs_private *priv);
- 	int (*enter_deep_sleep) (struct lbs_private *priv);
- 	int (*exit_deep_sleep) (struct lbs_private *priv);
- 	int (*reset_deep_sleep_wakeup) (struct lbs_private *priv);
-@@ -182,4 +184,16 @@ struct lbs_private {
- 
- extern struct cmd_confirm_sleep confirm_sleep;
- 
-+/* Check if there is an interface active. */
-+static inline int lbs_iface_active(struct lbs_private *priv)
-+{
-+	int r;
-+
-+	r = netif_running(priv->dev);
-+	if (priv->mesh_dev);
-+		r |= netif_running(priv->dev);
-+
-+	return r;
-+}
-+
- #endif
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index e368b29..0775f45 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -956,7 +956,7 @@ static int if_usb_prog_firmware(struct if_usb_card *cardp,
- 	priv->dnld_sent = DNLD_RES_RECEIVED;
- 	spin_unlock_irqrestore(&priv->driver_lock, flags);
- 
--	wake_up_interruptible(&priv->waitq);
-+	wake_up(&priv->waitq);
- 
- 	return ret;
- }
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index ee28ae5..d62d1fb 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -99,6 +99,37 @@ u8 lbs_data_rate_to_fw_index(u32 rate)
- 	return 0;
- }
- 
-+int lbs_start_iface(struct lbs_private *priv)
-+{
-+	struct cmd_ds_802_11_mac_address cmd;
-+	int ret;
-+
-+	if (priv->power_restore) {
-+		ret = priv->power_restore(priv);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-+	cmd.action = cpu_to_le16(CMD_ACT_SET);
-+	memcpy(cmd.macadd, priv->current_addr, ETH_ALEN);
-+
-+	ret = lbs_cmd_with_response(priv, CMD_802_11_MAC_ADDRESS, &cmd);
-+	if (ret) {
-+		lbs_deb_net("set MAC address failed\n");
-+		goto err;
-+	}
-+
-+	lbs_update_channel(priv);
-+
-+	priv->iface_running = true;
-+	return 0;
-+
-+err:
-+	if (priv->power_save)
-+		priv->power_save(priv);
-+	return ret;
-+}
- 
- /**
-  *  lbs_dev_open - open the ethX interface
-@@ -112,23 +143,64 @@ static int lbs_dev_open(struct net_device *dev)
- 	int ret = 0;
- 
- 	lbs_deb_enter(LBS_DEB_NET);
-+	if (!priv->iface_running) {
-+		ret = lbs_start_iface(priv);
-+		if (ret)
-+			goto out;
-+	}
- 
- 	spin_lock_irq(&priv->driver_lock);
--	priv->stopping = false;
- 
--	if (priv->connect_status == LBS_CONNECTED)
--		netif_carrier_on(dev);
--	else
--		netif_carrier_off(dev);
-+	netif_carrier_off(dev);
- 
- 	if (!priv->tx_pending_len)
- 		netif_wake_queue(dev);
- 
- 	spin_unlock_irq(&priv->driver_lock);
-+
-+out:
- 	lbs_deb_leave_args(LBS_DEB_NET, "ret %d", ret);
- 	return ret;
- }
- 
-+static bool lbs_command_queue_empty(struct lbs_private *priv)
-+{
-+	unsigned long flags;
-+	bool ret;
-+	spin_lock_irqsave(&priv->driver_lock, flags);
-+	ret = priv->cur_cmd == NULL && list_empty(&priv->cmdpendingq);
-+	spin_unlock_irqrestore(&priv->driver_lock, flags);
-+	return ret;
-+}
-+
-+int lbs_stop_iface(struct lbs_private *priv)
-+{
-+	unsigned long flags;
-+	int ret = 0;
-+
-+	lbs_deb_enter(LBS_DEB_MAIN);
-+
-+	spin_lock_irqsave(&priv->driver_lock, flags);
-+	priv->iface_running = false;
-+	kfree_skb(priv->currenttxskb);
-+	priv->currenttxskb = NULL;
-+	priv->tx_pending_len = 0;
-+	spin_unlock_irqrestore(&priv->driver_lock, flags);
-+
-+	cancel_work_sync(&priv->mcast_work);
-+
-+	/* Disable command processing, and wait for all commands to complete */
-+	lbs_deb_main("waiting for commands to complete\n");
-+	wait_event(priv->waitq, lbs_command_queue_empty(priv));
-+	lbs_deb_main("all commands completed\n");
-+
-+	if (priv->power_save)
-+		ret = priv->power_save(priv);
-+
-+	lbs_deb_leave(LBS_DEB_MAIN);
-+	return ret;
-+}
-+
- /**
-  *  lbs_eth_stop - close the ethX interface
-  *
-@@ -141,18 +213,25 @@ static int lbs_eth_stop(struct net_device *dev)
- 
- 	lbs_deb_enter(LBS_DEB_NET);
- 
-+	if (priv->connect_status == LBS_CONNECTED)
-+		lbs_disconnect(priv, WLAN_REASON_DEAUTH_LEAVING);
-+
- 	spin_lock_irq(&priv->driver_lock);
--	priv->stopping = true;
- 	netif_stop_queue(dev);
- 	spin_unlock_irq(&priv->driver_lock);
- 
--	schedule_work(&priv->mcast_work);
-+	lbs_update_mcast(priv);
- 	cancel_delayed_work_sync(&priv->scan_work);
- 	if (priv->scan_req) {
- 		cfg80211_scan_done(priv->scan_req, false);
- 		priv->scan_req = NULL;
- 	}
- 
-+	netif_carrier_off(priv->dev);
-+
-+	if (!lbs_iface_active(priv))
-+		lbs_stop_iface(priv);
-+
- 	lbs_deb_leave(LBS_DEB_NET);
- 	return 0;
- }
-@@ -170,7 +249,7 @@ void lbs_host_to_card_done(struct lbs_private *priv)
- 	/* Wake main thread if commands are pending */
- 	if (!priv->cur_cmd || priv->tx_pending_len > 0) {
- 		if (!priv->wakeup_dev_required)
--			wake_up_interruptible(&priv->waitq);
-+			wake_up(&priv->waitq);
- 	}
- 
- 	spin_unlock_irqrestore(&priv->driver_lock, flags);
-@@ -183,29 +262,24 @@ int lbs_set_mac_address(struct net_device *dev, void *addr)
- 	int ret = 0;
- 	struct lbs_private *priv = dev->ml_priv;
- 	struct sockaddr *phwaddr = addr;
--	struct cmd_ds_802_11_mac_address cmd;
- 
- 	lbs_deb_enter(LBS_DEB_NET);
- 
-+	/*
-+	 * Can only set MAC address when all interfaces are down, to be written
-+	 * to the hardware when one of them is brought up.
-+	 */
-+	if (lbs_iface_active(priv))
-+		return -EBUSY;
-+
- 	/* In case it was called from the mesh device */
- 	dev = priv->dev;
- 
--	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
--	cmd.action = cpu_to_le16(CMD_ACT_SET);
--	memcpy(cmd.macadd, phwaddr->sa_data, ETH_ALEN);
--
--	ret = lbs_cmd_with_response(priv, CMD_802_11_MAC_ADDRESS, &cmd);
--	if (ret) {
--		lbs_deb_net("set MAC address failed\n");
--		goto done;
--	}
--
- 	memcpy(priv->current_addr, phwaddr->sa_data, ETH_ALEN);
- 	memcpy(dev->dev_addr, phwaddr->sa_data, ETH_ALEN);
- 	if (priv->mesh_dev)
- 		memcpy(priv->mesh_dev->dev_addr, phwaddr->sa_data, ETH_ALEN);
- 
--done:
- 	lbs_deb_leave_args(LBS_DEB_NET, "ret %d", ret);
- 	return ret;
- }
-@@ -259,18 +333,18 @@ static int lbs_add_mcast_addrs(struct cmd_ds_mac_multicast_adr *cmd,
- 	return i;
- }
- 
--static void lbs_set_mcast_worker(struct work_struct *work)
-+void lbs_update_mcast(struct lbs_private *priv)
- {
--	struct lbs_private *priv = container_of(work, struct lbs_private, mcast_work);
- 	struct cmd_ds_mac_multicast_adr mcast_cmd;
--	int dev_flags;
-+	int dev_flags = 0;
- 	int nr_addrs;
- 	int old_mac_control = priv->mac_control;
- 
- 	lbs_deb_enter(LBS_DEB_NET);
- 
--	dev_flags = priv->dev->flags;
--	if (priv->mesh_dev)
-+	if (netif_running(priv->dev))
-+		dev_flags |= priv->dev->flags;
-+	if (priv->mesh_dev && netif_running(priv->mesh_dev))
- 		dev_flags |= priv->mesh_dev->flags;
- 
- 	if (dev_flags & IFF_PROMISC) {
-@@ -316,6 +390,12 @@ static void lbs_set_mcast_worker(struct work_struct *work)
- 	lbs_deb_leave(LBS_DEB_NET);
- }
- 
-+static void lbs_set_mcast_worker(struct work_struct *work)
-+{
-+	struct lbs_private *priv = container_of(work, struct lbs_private, mcast_work);
-+	lbs_update_mcast(priv);
-+}
-+
- void lbs_set_multicast_list(struct net_device *dev)
- {
- 	struct lbs_private *priv = dev->ml_priv;
-@@ -648,7 +728,7 @@ static void lbs_cmd_timeout_handler(unsigned long data)
- 	if (priv->dnld_sent == DNLD_CMD_SENT)
- 		priv->dnld_sent = DNLD_RES_RECEIVED;
- 
--	wake_up_interruptible(&priv->waitq);
-+	wake_up(&priv->waitq);
- out:
- 	spin_unlock_irqrestore(&priv->driver_lock, flags);
- 	lbs_deb_leave(LBS_DEB_CMD);
-@@ -890,10 +970,6 @@ void lbs_remove_card(struct lbs_private *priv)
- 	lbs_remove_mesh(priv);
- 	lbs_scan_deinit(priv);
- 
--	dev = priv->dev;
--
--	cancel_work_sync(&priv->mcast_work);
--
- 	/* worker thread destruction blocks on the in-flight command which
- 	 * should have been cleared already in lbs_stop_card().
- 	 */
-@@ -964,8 +1040,6 @@ int lbs_start_card(struct lbs_private *priv)
- 	if (lbs_mesh_activated(priv))
- 		lbs_start_mesh(priv);
- 
--	lbs_update_channel(priv);
--
- 	lbs_debugfs_init_one(priv, dev);
- 
- 	netdev_info(dev, "Marvell WLAN 802.11 adapter\n");
-@@ -982,8 +1056,6 @@ EXPORT_SYMBOL_GPL(lbs_start_card);
- void lbs_stop_card(struct lbs_private *priv)
- {
- 	struct net_device *dev;
--	struct cmd_ctrl_node *cmdnode;
--	unsigned long flags;
- 
- 	lbs_deb_enter(LBS_DEB_MAIN);
- 
-@@ -996,30 +1068,6 @@ void lbs_stop_card(struct lbs_private *priv)
- 
- 	lbs_debugfs_remove_one(priv);
- 	lbs_deinit_mesh(priv);
--
--	/* Delete the timeout of the currently processing command */
--	del_timer_sync(&priv->command_timer);
--	del_timer_sync(&priv->auto_deepsleep_timer);
--
--	/* Flush pending command nodes */
--	spin_lock_irqsave(&priv->driver_lock, flags);
--	lbs_deb_main("clearing pending commands\n");
--	list_for_each_entry(cmdnode, &priv->cmdpendingq, list) {
--		cmdnode->result = -ENOENT;
--		cmdnode->cmdwaitqwoken = 1;
--		wake_up(&cmdnode->cmdwait_q);
--	}
--
--	/* Flush the command the card is currently processing */
--	if (priv->cur_cmd) {
--		lbs_deb_main("clearing current command\n");
--		priv->cur_cmd->result = -ENOENT;
--		priv->cur_cmd->cmdwaitqwoken = 1;
--		wake_up(&priv->cur_cmd->cmdwait_q);
--	}
--	lbs_deb_main("done clearing commands\n");
--	spin_unlock_irqrestore(&priv->driver_lock, flags);
--
- 	unregister_netdev(dev);
- 
- out:
-@@ -1040,7 +1088,7 @@ void lbs_queue_event(struct lbs_private *priv, u32 event)
- 
- 	kfifo_in(&priv->event_fifo, (unsigned char *) &event, sizeof(u32));
- 
--	wake_up_interruptible(&priv->waitq);
-+	wake_up(&priv->waitq);
- 
- 	spin_unlock_irqrestore(&priv->driver_lock, flags);
- 	lbs_deb_leave(LBS_DEB_THREAD);
-@@ -1058,7 +1106,7 @@ void lbs_notify_command_response(struct lbs_private *priv, u8 resp_idx)
- 	BUG_ON(resp_idx > 1);
- 	priv->resp_idx = resp_idx;
- 
--	wake_up_interruptible(&priv->waitq);
-+	wake_up(&priv->waitq);
- 
- 	lbs_deb_leave(LBS_DEB_THREAD);
- }
-diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
-index 2a635d2..138699b 100644
---- a/drivers/net/wireless/libertas/mesh.c
-+++ b/drivers/net/wireless/libertas/mesh.c
-@@ -924,7 +924,9 @@ static int lbs_mesh_stop(struct net_device *dev)
- 
- 	spin_unlock_irq(&priv->driver_lock);
- 
--	schedule_work(&priv->mcast_work);
-+	lbs_update_mcast(priv);
-+	if (!lbs_iface_active(priv))
-+		lbs_stop_iface(priv);
- 
- 	lbs_deb_leave(LBS_DEB_MESH);
- 	return 0;
-@@ -942,6 +944,11 @@ static int lbs_mesh_dev_open(struct net_device *dev)
- 	int ret = 0;
- 
- 	lbs_deb_enter(LBS_DEB_NET);
-+	if (!priv->iface_running) {
-+		ret = lbs_start_iface(priv);
-+		if (ret)
-+			goto out;
-+	}
- 
- 	spin_lock_irq(&priv->driver_lock);
- 
+or, making more sense:
+
+MATCH={BSSID=00:01:02:03:04:05} and
+NOT_MATCH={MIN_RSSI=-70}
+
+My point is that many of these combinations might not make sense, but
+generalizing the API allows for cases that *do* make sense but we have
+not thought of yet.
+
+
+> > I also prefer using match/not_match (couldn't find a better antonym),
+> > because "filter" is ambiguous (let-through or leave-out?).
+> 
+> agree.
+
+We could also use a single list like this:
+
+FILTER={1={MATCH=true, SSID=foo}, 2={MATCH=false, BSSID=...}
+
+But then we're becoming a bit too "netfiltery". :P What do you think?
+
 -- 
-1.7.6
+Cheers,
+Luca.
 
