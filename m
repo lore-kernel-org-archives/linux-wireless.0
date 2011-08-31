@@ -1,217 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4566 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932508Ab1ISV0d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 17:26:33 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 10/20] staging: brcm80211: remove fullmac module_param
- for watchdog
-Date: Mon, 19 Sep 2011 14:25:58 -0700
-Message-ID: <1316467568-27683-11-git-send-email-frankyl@broadcom.com> (sfid-20110919_232646_175519_A280B087)
-In-Reply-To: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:35328 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755994Ab1HaWKi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Aug 2011 18:10:38 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat-wireless: make patches apply again
+Date: Thu,  1 Sep 2011 00:10:29 +0200
+Message-Id: <1314828630-26768-1-git-send-email-hauke@hauke-m.de> (sfid-20110901_001041_363230_92D9FF4A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use constant to replace global variable used for watchdog polling
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c   |    2 +-
- drivers/staging/brcm80211/brcmfmac/dhd_bus.h  |    6 ++--
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c |   45 +++++++++---------------
- 3 files changed, 21 insertions(+), 32 deletions(-)
+ patches/09-threaded-irq.patch          |   12 ++++++------
+ patches/35-fix-makefile-includes.patch |   10 +++++-----
+ patches/37-vsnprintk.patch             |   13 ++++++-------
+ 3 files changed, 17 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-index d9d1592..5906337 100644
---- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
-@@ -375,7 +375,7 @@ void brcmf_sdio_unregister(void)
- void brcmf_sdio_wdtmr_enable(struct brcmf_sdio_dev *sdiodev, bool enable)
- {
- 	if (enable)
--		brcmf_sdbrcm_wd_timer(sdiodev->bus, brcmf_watchdog_ms);
-+		brcmf_sdbrcm_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
- 	else
- 		brcmf_sdbrcm_wd_timer(sdiodev->bus, 0);
- }
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_bus.h b/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
-index d02cb10..104c0e7 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_bus.h
-@@ -20,6 +20,9 @@
- /* Packet alignment for most efficient SDIO (can change based on platform) */
- #define BRCMF_SDALIGN	(1 << 6)
+diff --git a/patches/09-threaded-irq.patch b/patches/09-threaded-irq.patch
+index de84972..bea44d2 100644
+--- a/patches/09-threaded-irq.patch
++++ b/patches/09-threaded-irq.patch
+@@ -6,7 +6,7 @@ thread in process context as well.
  
-+/* watchdog polling interval in ms */
-+#define BRCMF_WD_POLL_MS	10
-+
- /*
-  * Exported from brcmf bus module (brcmf_usb, brcmf_sdio)
-  */
-@@ -28,9 +31,6 @@
- extern uint brcmf_txbound;
- extern uint brcmf_rxbound;
- 
--/* Watchdog timer interval */
--extern uint brcmf_watchdog_ms;
--
- /* Indicate (dis)interest in finding dongles. */
- extern int brcmf_bus_register(void);
- extern void brcmf_bus_unregister(void);
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-index 53de5a7..4033e73 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
-@@ -612,6 +612,7 @@ struct brcmf_bus {
- 	uint pollcnt;		/* Count of active polls */
- 
- #ifdef BCMDBG
-+	uint console_interval;
- 	struct brcmf_console console;	/* Console output polling support */
- 	uint console_addr;	/* Console address from shared struct */
- #endif				/* BCMDBG */
-@@ -735,20 +736,10 @@ static int tx_packets[NUMPRIO];
- int brcmf_watchdog_prio = 97;
- module_param(brcmf_watchdog_prio, int, 0);
- 
--/* Watchdog interval */
--uint brcmf_watchdog_ms = 10;
--module_param(brcmf_watchdog_ms, uint, 0);
--
- /* DPC thread priority, -1 to use tasklet */
- int brcmf_dpc_prio = 98;
- module_param(brcmf_dpc_prio, int, 0);
- 
--#ifdef BCMDBG
--/* Console poll interval */
--uint brcmf_console_ms;
--module_param(brcmf_console_ms, uint, 0);
--#endif		/* BCMDBG */
--
- /* Tx/Rx bounds */
- uint brcmf_txbound;
- uint brcmf_rxbound;
-@@ -1023,7 +1014,7 @@ static int brcmf_sdbrcm_clkctl(struct brcmf_bus *bus, uint target, bool pendok)
- 	/* Early exit if we're already there */
- 	if (bus->clkstate == target) {
- 		if (target == CLK_AVAIL) {
--			brcmf_sdbrcm_wd_timer(bus, brcmf_watchdog_ms);
-+			brcmf_sdbrcm_wd_timer(bus, BRCMF_WD_POLL_MS);
- 			bus->activity = true;
- 		}
- 		return 0;
-@@ -1036,7 +1027,7 @@ static int brcmf_sdbrcm_clkctl(struct brcmf_bus *bus, uint target, bool pendok)
- 			brcmf_sdbrcm_sdclk(bus, true);
- 		/* Now request HT Avail on the backplane */
- 		brcmf_sdbrcm_htclk(bus, true, pendok);
--		brcmf_sdbrcm_wd_timer(bus, brcmf_watchdog_ms);
-+		brcmf_sdbrcm_wd_timer(bus, BRCMF_WD_POLL_MS);
- 		bus->activity = true;
- 		break;
- 
-@@ -1049,7 +1040,7 @@ static int brcmf_sdbrcm_clkctl(struct brcmf_bus *bus, uint target, bool pendok)
- 		else
- 			brcmf_dbg(ERROR, "request for %d -> %d\n",
- 				  bus->clkstate, target);
--		brcmf_sdbrcm_wd_timer(bus, brcmf_watchdog_ms);
-+		brcmf_sdbrcm_wd_timer(bus, BRCMF_WD_POLL_MS);
- 		break;
- 
- 	case CLK_NONE:
-@@ -4038,7 +4029,7 @@ int brcmf_sdbrcm_bus_init(struct brcmf_pub *drvr, bool enforce_mutex)
- 
- 	/* Start the watchdog timer */
- 	bus->drvr->tickcnt = 0;
--	brcmf_sdbrcm_wd_timer(bus, brcmf_watchdog_ms);
-+	brcmf_sdbrcm_wd_timer(bus, BRCMF_WD_POLL_MS);
- 
- 	if (enforce_mutex)
- 		brcmf_sdbrcm_sdlock(bus);
-@@ -4207,15 +4198,15 @@ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_pub *drvr)
- 	}
- #ifdef BCMDBG
- 	/* Poll for console output periodically */
--	if (drvr->busstate == BRCMF_BUS_DATA && brcmf_console_ms != 0) {
--		bus->console.count += brcmf_watchdog_ms;
--		if (bus->console.count >= brcmf_console_ms) {
--			bus->console.count -= brcmf_console_ms;
-+	if (drvr->busstate == BRCMF_BUS_DATA && bus->console_interval != 0) {
-+		bus->console.count += BRCMF_WD_POLL_MS;
-+		if (bus->console.count >= bus->console_interval) {
-+			bus->console.count -= bus->console_interval;
- 			/* Make sure backplane clock is on */
- 			brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
- 			if (brcmf_sdbrcm_readconsole(bus) < 0)
--				brcmf_console_ms = 0;	/* On error,
--							 stop trying */
-+				/* stop on error */
-+				bus->console_interval = 0;
- 		}
- 	}
- #endif				/* BCMDBG */
-@@ -4226,7 +4217,7 @@ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_pub *drvr)
- 			bus->idlecount = 0;
- 			if (bus->activity) {
- 				bus->activity = false;
--				brcmf_sdbrcm_wd_timer(bus, brcmf_watchdog_ms);
-+				brcmf_sdbrcm_wd_timer(bus, BRCMF_WD_POLL_MS);
- 			} else {
- 				brcmf_sdbrcm_clkctl(bus, CLK_NONE, false);
- 			}
-@@ -4723,7 +4714,7 @@ brcmf_sdbrcm_watchdog(unsigned long data)
- 
- 	/* Reschedule the watchdog */
- 	if (bus->wd_timer_valid)
--		mod_timer(&bus->timer, jiffies + brcmf_watchdog_ms * HZ / 1000);
-+		mod_timer(&bus->timer, jiffies + BRCMF_WD_POLL_MS * HZ / 1000);
- }
- 
- static void
-@@ -5017,7 +5008,7 @@ int brcmf_bus_devreset(struct brcmf_pub *drvr, u8 flag)
- 			brcmf_dbg(ERROR, "Set DEVRESET=false invoked when device is on\n");
- 			bcmerror = -EIO;
- 		}
--		brcmf_sdbrcm_wd_timer(bus, brcmf_watchdog_ms);
-+		brcmf_sdbrcm_wd_timer(bus, BRCMF_WD_POLL_MS);
- 	}
- 	return bcmerror;
- }
-@@ -5038,9 +5029,7 @@ brcmf_sdbrcm_wd_timer(struct brcmf_bus *bus, uint wdtick)
- 	}
- 
- 	if (wdtick) {
--		brcmf_watchdog_ms = (uint) wdtick;
--
--		if (bus->save_ms != brcmf_watchdog_ms) {
-+		if (bus->save_ms != BRCMF_WD_POLL_MS) {
- 			if (bus->wd_timer_valid == true)
- 				/* Stop timer and restart at new value */
- 				del_timer_sync(&bus->timer);
-@@ -5049,13 +5038,13 @@ brcmf_sdbrcm_wd_timer(struct brcmf_bus *bus, uint wdtick)
- 			   dynamically changed or in the first instance
- 			 */
- 			bus->timer.expires =
--				jiffies + brcmf_watchdog_ms * HZ / 1000;
-+				jiffies + BRCMF_WD_POLL_MS * HZ / 1000;
- 			add_timer(&bus->timer);
- 
- 		} else {
- 			/* Re arm the timer, at last watchdog period */
- 			mod_timer(&bus->timer,
--				jiffies + brcmf_watchdog_ms * HZ / 1000);
-+				jiffies + BRCMF_WD_POLL_MS * HZ / 1000);
- 		}
- 
- 		bus->wd_timer_valid = true;
+ --- a/drivers/net/wireless/b43/main.c
+ +++ b/drivers/net/wireless/b43/main.c
+-@@ -4168,8 +4168,13 @@ redo:
++@@ -4171,8 +4171,13 @@ redo:
+  	if (b43_bus_host_is_sdio(dev->dev)) {
+  		b43_sdio_free_irq(dev);
+  	} else {
+@@ -20,7 +20,7 @@ thread in process context as well.
+  	}
+  	mutex_lock(&wl->mutex);
+  	dev = wl->current_dev;
+-@@ -4209,9 +4214,17 @@ static int b43_wireless_core_start(struc
++@@ -4212,9 +4217,17 @@ static int b43_wireless_core_start(struc
+  			goto out;
+  		}
+  	} else {
+@@ -38,7 +38,7 @@ thread in process context as well.
+  		if (err) {
+  			b43err(dev->wl, "Cannot request IRQ-%d\n",
+  			       dev->dev->irq);
+-@@ -5000,6 +5013,10 @@ static int b43_setup_bands(struct b43_wl
++@@ -5003,6 +5016,10 @@ static int b43_setup_bands(struct b43_wl
+  
+  static void b43_wireless_core_detach(struct b43_wldev *dev)
+  {
+@@ -122,10 +122,10 @@ thread in process context as well.
+  	return 0;
+ --- a/drivers/net/wireless/wl12xx/wl12xx.h
+ +++ b/drivers/net/wireless/wl12xx/wl12xx.h
+-@@ -622,6 +622,10 @@ struct wl1271 {
++@@ -623,6 +623,10 @@ struct wl1271 {
+  
+- 	/* Platform limitations */
+- 	unsigned int platform_quirks;
++ 	/* number of currently active RX BA sessions */
++ 	int ba_rx_session_count;
+ +
+ +#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+ +	struct compat_threaded_irq irq_compat;
+diff --git a/patches/35-fix-makefile-includes.patch b/patches/35-fix-makefile-includes.patch
+index aa3dd92..17994b7 100644
+--- a/patches/35-fix-makefile-includes.patch
++++ b/patches/35-fix-makefile-includes.patch
+@@ -20,7 +20,7 @@ path the make process will search in the kernel tree for the headers.
+ +ccflags-y += -I$(obj)/..
+ --- a/drivers/staging/brcm80211/brcmfmac/Makefile
+ +++ b/drivers/staging/brcm80211/brcmfmac/Makefile
+-@@ -23,8 +23,8 @@ ccflags-y :=			\
++@@ -18,8 +18,8 @@
+  ccflags-$(CONFIG_BRCMDBG)	+= -DSHOW_EVENTS
+  
+  ccflags-y += \
+@@ -33,10 +33,10 @@ path the make process will search in the kernel tree for the headers.
+  	wl_cfg80211.o \
+ --- a/drivers/staging/brcm80211/brcmsmac/Makefile
+ +++ b/drivers/staging/brcm80211/brcmsmac/Makefile
+-@@ -23,9 +23,9 @@ ccflags-y :=				\
+- 	-DWL11N					\
+- 	-DDBAND					\
+- 	-DBCMNVRAMR				\
++@@ -16,9 +16,9 @@
++ # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ 
++ ccflags-y :=				\
+ -	-Idrivers/staging/brcm80211/brcmsmac \
+ -	-Idrivers/staging/brcm80211/brcmsmac/phy \
+ -	-Idrivers/staging/brcm80211/include
+diff --git a/patches/37-vsnprintk.patch b/patches/37-vsnprintk.patch
+index b192713..8217de9 100644
+--- a/patches/37-vsnprintk.patch
++++ b/patches/37-vsnprintk.patch
+@@ -1,14 +1,13 @@
+ --- a/drivers/net/wireless/ath/main.c
+ +++ b/drivers/net/wireless/ath/main.c
+-@@ -60,16 +60,23 @@ EXPORT_SYMBOL(ath_rxbuf_alloc);
+- int ath_printk(const char *level, struct ath_common *common,
+- 	       const char *fmt, ...)
++@@ -59,15 +59,22 @@ EXPORT_SYMBOL(ath_rxbuf_alloc);
++ 
++ void ath_printk(const char *level, const char *fmt, ...)
+  {
+ +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
+  	struct va_format vaf;
+ +#endif
+  	va_list args;
+- 	int rtn;
+  
+  	va_start(args, fmt);
+  
+@@ -16,11 +15,11 @@
+  	vaf.fmt = fmt;
+  	vaf.va = &args;
+  
+- 	rtn = printk("%sath: %pV", level, &vaf);
++ 	printk("%sath: %pV", level, &vaf);
+ +#else
+ +	printk("%sath: ", level);
+-+	rtn = vprintk(fmt, args);
+++	vprintk(fmt, args);
+ +#endif
+  
+  	va_end(args);
+- 
++ }
 -- 
-1.7.1
-
+1.7.4.1
 
