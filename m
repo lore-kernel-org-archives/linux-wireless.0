@@ -1,485 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54724 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755847Ab1H3Rnp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 13:43:45 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	rmanohar@qca.qualcomm.com, shafi.wireless@gmail.com,
-	vthiagar@qca.qualcomm.com
-Subject: [PATCH v10 3/4] ath9k: merge reset related functions
-Date: Tue, 30 Aug 2011 19:43:34 +0200
-Message-Id: <1314726215-89390-3-git-send-email-nbd@openwrt.org> (sfid-20110830_194441_239584_5F75D6D4)
-In-Reply-To: <1314726215-89390-2-git-send-email-nbd@openwrt.org>
-References: <1314726215-89390-1-git-send-email-nbd@openwrt.org>
- <1314726215-89390-2-git-send-email-nbd@openwrt.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:37404 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753928Ab1HaK0c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Aug 2011 06:26:32 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V2] ath6kl: Add debugfs interface to dump diagnostic registers
+Date: Wed, 31 Aug 2011 15:56:27 +0530
+Message-ID: <1314786387-18969-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110831_122643_393930_0E5929A5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-reduces unnecessary code duplication. Also takes the sc_pcu_lock within
-ath_reset instead of callsites, which makes it possible to always cancel
-all queued work items before the reset, possibly fixing a few race
-conditions (work items vs reset) along with it.
+To dump a particular register, echo reg_addr > <debugfs_root>/ieee80211/phyX/ath6kl/reg_addr,
+to dump the entire register set, echo 0 > <debugfs_root>/ieee80211/phyX/ath6kl/reg_addr, and
+register values will be available at <debugfs_root>/ieee80211/phyX/ath6kl/reg_dump.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |  304 ++++++++++++++-------------------
- 1 files changed, 128 insertions(+), 176 deletions(-)
+ drivers/net/wireless/ath/ath6kl/core.h  |    1 +
+ drivers/net/wireless/ath/ath6kl/debug.c |  189 +++++++++++++++++++++++++++++++
+ 2 files changed, 190 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 4f74ba5..944c50a 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -212,84 +212,57 @@ static int ath_update_survey_stats(struct ath_softc *sc)
- 	return ret;
+V2 -- Fix endian related sparse warnings
+   -- Address Kalle's comments
+
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 61d3142..15d9dc5 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -477,6 +477,7 @@ struct ath6kl {
+ 		spinlock_t fwlog_lock;
+ 		void *fwlog_tmp;
+ 		u32 fwlog_mask;
++		unsigned int dbgfs_diag_reg;
+ 	} debug;
+ #endif /* CONFIG_ATH6KL_DEBUG */
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 9608692..576eda8 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -54,6 +54,27 @@ int ath6kl_printk(const char *level, const char *fmt, ...)
  }
  
--/*
-- * Set/change channels.  If the channel is really being changed, it's done
-- * by reseting the chip.  To accomplish this we must first cleanup any pending
-- * DMA, then restart stuff.
--*/
--static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
--		    struct ath9k_channel *hchan)
-+static void __ath_cancel_work(struct ath_softc *sc)
+ #ifdef CONFIG_ATH6KL_DEBUG
++
++#define REG_OUTPUT_LEN_PER_LINE	25
++#define REGTYPE_STR_LEN		100
++
++struct ath6kl_diag_reg_info {
++	u32 reg_start;
++	u32 reg_end;
++	const char *reg_info;
++};
++
++static const struct ath6kl_diag_reg_info diag_reg[] = {
++	{ 0x20000, 0x200fc, "General DMA and Rx registers" },
++	{ 0x28000, 0x28900, "MAC PCU register & keycache" },
++	{ 0x20800, 0x20a40, "QCU" },
++	{ 0x21000, 0x212f0, "DCU" },
++	{ 0x4000,  0x42e4, "RTC" },
++	{ 0x540000, 0x540000 + (256 * 1024), "RAM" },
++	{ 0x29800, 0x2B210, "Base Band" },
++	{ 0x1C000, 0x1C748, "Analog" },
++};
++
+ void ath6kl_dump_registers(struct ath6kl_device *dev,
+ 			   struct ath6kl_irq_proc_registers *irq_proc_reg,
+ 			   struct ath6kl_irq_enable_reg *irq_enable_reg)
+@@ -533,6 +554,170 @@ static const struct file_operations fops_credit_dist_stats = {
+ 	.llseek = default_llseek,
+ };
+ 
++static unsigned long ath6kl_get_num_reg(void)
++{
++	int i;
++	unsigned long n_reg = 0;
++
++	for (i = 0; i < ARRAY_SIZE(diag_reg); i++)
++		n_reg = n_reg +
++		     (diag_reg[i].reg_end - diag_reg[i].reg_start) / 4 + 1;
++
++	return n_reg;
++}
++
++static bool ath6kl_dbg_is_diag_reg_valid(u32 reg_addr)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(diag_reg); i++) {
++		if (reg_addr >= diag_reg[i].reg_start &&
++		    reg_addr <= diag_reg[i].reg_end)
++			return true;
++	}
++
++	ath6kl_warn("Given address is not in the valid chip address range\n");
++	return false;
++}
++
++static ssize_t read_file_reg_read(struct file *file, char __user *user_buf,
++				  size_t count, loff_t *ppos)
++{
++	struct ath6kl *ar = file->private_data;
++	u8 buf[50];
++	unsigned int len = 0;
++
++	if (ar->debug.dbgfs_diag_reg)
++		len += scnprintf(buf + len, sizeof(buf) - len, "0x%u\n",
++				ar->debug.dbgfs_diag_reg);
++	else
++		len += scnprintf(buf + len, sizeof(buf) - len,
++				 "All diag registers\n");
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static ssize_t write_file_reg_read(struct file *file,
++				   const char __user *user_buf,
++				   size_t count, loff_t *ppos)
++{
++	struct ath6kl *ar = file->private_data;
++	u8 buf[50];
++	unsigned int len;
++	unsigned long reg_addr;
++
++	len = min(count, sizeof(buf) - 1);
++	if (copy_from_user(buf, user_buf, len))
++		return -EFAULT;
++
++	buf[len] = '\0';
++
++	if (strict_strtoul(buf, 0, &reg_addr))
++		return -EINVAL;
++
++	if ((reg_addr % 4) != 0)
++		return -EINVAL;
++
++	if (reg_addr && !ath6kl_dbg_is_diag_reg_valid(reg_addr))
++		return -EINVAL;
++
++	ar->debug.dbgfs_diag_reg = reg_addr;
++
++	return count;
++}
++
++static const struct file_operations fops_diag_reg_read = {
++	.read = read_file_reg_read,
++	.write = write_file_reg_read,
++	.open = ath6kl_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
++static int ath6kl_regdump_open(struct inode *inode, struct file *file)
++{
++	struct ath6kl *ar = inode->i_private;
++	u8 *buf;
++	unsigned long int reg_len;
++	unsigned int len = 0, n_reg;
++	u32 addr, reg_val;
++	int i, status;
++
++	/* Dump all the registers if no register is specified */
++	if (!ar->debug.dbgfs_diag_reg)
++		n_reg = ath6kl_get_num_reg();
++	else
++		n_reg = 1;
++
++	reg_len = n_reg * REG_OUTPUT_LEN_PER_LINE;
++	if (n_reg > 1)
++		reg_len += REGTYPE_STR_LEN;
++
++	buf = vmalloc(reg_len);
++	if (!buf)
++		return -ENOMEM;
++
++	if (n_reg == 1) {
++		addr = ar->debug.dbgfs_diag_reg;
++
++		status = ath6kl_diag_read32(ar,
++				TARG_VTOP(ar->target_type, addr),
++				&reg_val);
++		if (status)
++			goto fail_reg_read;
++
++		len += scnprintf(buf + len, reg_len - len,
++				 "0x%06x 0x%08x\n", addr, reg_val);
++		goto done;
++	}
++
++	for (i = 0; i < ARRAY_SIZE(diag_reg); i++) {
++		len += scnprintf(buf + len, reg_len - len,
++				"%s\n", diag_reg[i].reg_info);
++		for (addr = diag_reg[i].reg_start;
++		     addr <= diag_reg[i].reg_end; addr += 4) {
++			status = ath6kl_diag_read32(ar,
++					TARG_VTOP(ar->target_type, addr),
++					&reg_val);
++			if (status)
++				goto fail_reg_read;
++
++			len += scnprintf(buf + len, reg_len - len,
++					"0x%06x 0x%08x\n", addr, reg_val);
++		}
++	}
++
++done:
++	file->private_data = buf;
++	return 0;
++
++fail_reg_read:
++	ath6kl_warn("Unable to read memory:%u\n", addr);
++	vfree(buf);
++	return -EIO;
++}
++
++static ssize_t ath6kl_regdump_read(struct file *file, char __user *user_buf,
++				  size_t count, loff_t *ppos)
++{
++	u8 *buf = file->private_data;
++	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));
++}
++
++static int ath6kl_regdump_release(struct inode *inode, struct file *file)
++{
++	vfree(file->private_data);
++	return 0;
++}
++
++static const struct file_operations fops_reg_dump = {
++	.open = ath6kl_regdump_open,
++	.read = ath6kl_regdump_read,
++	.release = ath6kl_regdump_release,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ int ath6kl_debug_init(struct ath6kl *ar)
  {
--	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(ah);
--	struct ieee80211_conf *conf = &common->hw->conf;
--	bool fastcc = true, stopped;
--	struct ieee80211_channel *channel = hw->conf.channel;
--	struct ath9k_hw_cal_data *caldata = NULL;
--	int r;
--
--	if (sc->sc_flags & SC_OP_INVALID)
--		return -EIO;
--
--	sc->hw_busy_count = 0;
--
--	del_timer_sync(&common->ani.timer);
- 	cancel_work_sync(&sc->paprd_work);
- 	cancel_work_sync(&sc->hw_check_work);
--	cancel_work_sync(&sc->hw_reset_work);
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
- 	cancel_delayed_work_sync(&sc->hw_pll_work);
-+}
+ 	ar->debug.fwlog_buf.buf = vmalloc(ATH6KL_FWLOG_SIZE);
+@@ -566,6 +751,10 @@ int ath6kl_debug_init(struct ath6kl *ar)
  
--	ath9k_ps_wakeup(sc);
-+static void ath_cancel_work(struct ath_softc *sc)
-+{
-+	__ath_cancel_work(sc);
-+	cancel_work_sync(&sc->hw_reset_work);
-+}
+ 	debugfs_create_file("credit_dist_stats", S_IRUSR, ar->debugfs_phy, ar,
+ 			    &fops_credit_dist_stats);
++	debugfs_create_file("reg_addr", S_IRUSR, ar->debugfs_phy, ar,
++			    &fops_diag_reg_read);
++	debugfs_create_file("reg_dump", S_IRUSR, ar->debugfs_phy, ar,
++			    &fops_reg_dump);
  
--	spin_lock_bh(&sc->sc_pcu_lock);
-+static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool flush)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	bool ret;
- 
--	/*
--	 * This is only performed if the channel settings have
--	 * actually changed.
--	 *
--	 * To switch channels clear any pending DMA operations;
--	 * wait long enough for the RX fifo to drain, reset the
--	 * hardware at the new frequency, and then re-enable
--	 * the relevant bits of the h/w.
--	 */
--	ath9k_hw_disable_interrupts(ah);
--	stopped = ath_drain_all_txq(sc, false);
-+	ieee80211_stop_queues(sc->hw);
- 
--	if (!ath_stoprecv(sc))
--		stopped = false;
-+	sc->hw_busy_count = 0;
-+	del_timer_sync(&common->ani.timer);
- 
--	if (!ath9k_hw_check_alive(ah))
--		stopped = false;
-+	ath9k_hw_disable_interrupts(ah);
- 
--	/* XXX: do not flush receive queue here. We don't want
--	 * to flush data frames already in queue because of
--	 * changing channel. */
-+	ret = ath_drain_all_txq(sc, retry_tx);
- 
--	if (!stopped || !(sc->sc_flags & SC_OP_OFFCHANNEL))
--		fastcc = false;
-+	if (!ath_stoprecv(sc))
-+		ret = false;
- 
--	if (!(sc->sc_flags & SC_OP_OFFCHANNEL))
--		caldata = &sc->caldata;
-+	if (!flush) {
-+		if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
-+			ath_rx_tasklet(sc, 0, true);
-+		ath_rx_tasklet(sc, 0, false);
-+	} else {
-+		ath_flushrecv(sc);
-+	}
- 
--	ath_dbg(common, ATH_DBG_CONFIG,
--		"(%u MHz) -> (%u MHz), conf_is_ht40: %d fastcc: %d\n",
--		sc->sc_ah->curchan->channel,
--		channel->center_freq, conf_is_ht40(conf),
--		fastcc);
-+	return ret;
-+}
- 
--	r = ath9k_hw_reset(ah, hchan, caldata, fastcc);
--	if (r) {
--		ath_err(common,
--			"Unable to reset channel (%u MHz), reset status %d\n",
--			channel->center_freq, r);
--		goto ps_restore;
--	}
-+static bool ath_complete_reset(struct ath_softc *sc, bool start)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	if (ath_startrecv(sc) != 0) {
- 		ath_err(common, "Unable to restart recv logic\n");
--		r = -EIO;
--		goto ps_restore;
-+		return false;
- 	}
- 
- 	ath9k_cmn_update_txpow(ah, sc->curtxpow,
-@@ -297,21 +270,95 @@ static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	ath9k_hw_set_interrupts(ah, ah->imask);
- 	ath9k_hw_enable_interrupts(ah);
- 
--	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL))) {
-+	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)) && start) {
- 		if (sc->sc_flags & SC_OP_BEACONS)
- 			ath_set_beacon(sc);
-+
- 		ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
- 		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/2);
- 		if (!common->disable_ani)
- 			ath_start_ani(common);
- 	}
- 
-- ps_restore:
--	ieee80211_wake_queues(hw);
-+	ieee80211_wake_queues(sc->hw);
- 
-+	return true;
-+}
-+
-+static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
-+			      bool retry_tx)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_hw_cal_data *caldata = NULL;
-+	bool fastcc = true;
-+	bool flush = false;
-+	int r;
-+
-+	__ath_cancel_work(sc);
-+
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+
-+	sc->sc_flags &= ~SC_OP_HW_RESET;
-+
-+	if (!(sc->sc_flags & SC_OP_OFFCHANNEL)) {
-+		fastcc = false;
-+		caldata = &sc->caldata;
-+	}
-+
-+	if (!hchan) {
-+		fastcc = false;
-+		flush = true;
-+		hchan = ah->curchan;
-+	}
-+
-+	if (fastcc && !ath9k_hw_check_alive(ah))
-+		fastcc = false;
-+
-+	if (!ath_prepare_reset(sc, retry_tx, flush))
-+		fastcc = false;
-+
-+	ath_dbg(common, ATH_DBG_CONFIG,
-+		"Reset to %u MHz, HT40: %d fastcc: %d\n",
-+		hchan->channel, !!(hchan->channelFlags & (CHANNEL_HT40MINUS |
-+							  CHANNEL_HT40PLUS)),
-+		fastcc);
-+
-+	r = ath9k_hw_reset(ah, hchan, caldata, fastcc);
-+	if (r) {
-+		ath_err(common,
-+			"Unable to reset channel, reset status %d\n", r);
-+		goto out;
-+	}
-+
-+	if (!ath_complete_reset(sc, true))
-+		r = -EIO;
-+
-+out:
- 	spin_unlock_bh(&sc->sc_pcu_lock);
-+	return r;
-+}
-+
-+
-+/*
-+ * Set/change channels.  If the channel is really being changed, it's done
-+ * by reseting the chip.  To accomplish this we must first cleanup any pending
-+ * DMA, then restart stuff.
-+*/
-+static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
-+		    struct ath9k_channel *hchan)
-+{
-+	int r;
-+
-+	if (sc->sc_flags & SC_OP_INVALID)
-+		return -EIO;
-+
-+	ath9k_ps_wakeup(sc);
-+
-+	r = ath_reset_internal(sc, hchan, false);
- 
- 	ath9k_ps_restore(sc);
-+
- 	return r;
- }
- 
-@@ -824,28 +871,13 @@ static void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 			channel->center_freq, r);
- 	}
- 
--	ath9k_cmn_update_txpow(ah, sc->curtxpow,
--			       sc->config.txpowlimit, &sc->curtxpow);
--	if (ath_startrecv(sc) != 0) {
--		ath_err(common, "Unable to restart recv logic\n");
--		goto out;
--	}
--	if (sc->sc_flags & SC_OP_BEACONS)
--		ath_set_beacon(sc);	/* restart beacons */
--
--	/* Re-Enable  interrupts */
--	ath9k_hw_set_interrupts(ah, ah->imask);
--	ath9k_hw_enable_interrupts(ah);
-+	ath_complete_reset(sc, true);
- 
- 	/* Enable LED */
- 	ath9k_hw_cfg_output(ah, ah->led_pin,
- 			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
- 	ath9k_hw_set_gpio(ah, ah->led_pin, 0);
- 
--	ieee80211_wake_queues(hw);
--	ieee80211_queue_delayed_work(hw, &sc->hw_pll_work, HZ/2);
--
--out:
- 	spin_unlock_bh(&sc->sc_pcu_lock);
- 
- 	ath9k_ps_restore(sc);
-@@ -858,11 +890,10 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	int r;
- 
- 	ath9k_ps_wakeup(sc);
--	cancel_delayed_work_sync(&sc->hw_pll_work);
- 
--	spin_lock_bh(&sc->sc_pcu_lock);
-+	ath_cancel_work(sc);
- 
--	ieee80211_stop_queues(hw);
-+	spin_lock_bh(&sc->sc_pcu_lock);
- 
- 	/*
- 	 * Keep the LED on when the radio is disabled
-@@ -873,13 +904,7 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		ath9k_hw_cfg_gpio_input(ah, ah->led_pin);
- 	}
- 
--	/* Disable interrupts */
--	ath9k_hw_disable_interrupts(ah);
--
--	ath_drain_all_txq(sc, false);	/* clear pending tx frames */
--
--	ath_stoprecv(sc);		/* turn off frame recv */
--	ath_flushrecv(sc);		/* flush recv queue */
-+	ath_prepare_reset(sc, false, true);
- 
- 	if (!ah->curchan)
- 		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
-@@ -901,49 +926,11 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 
- static int ath_reset(struct ath_softc *sc, bool retry_tx)
- {
--	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(ah);
--	struct ieee80211_hw *hw = sc->hw;
- 	int r;
- 
--	sc->sc_flags &= ~SC_OP_HW_RESET;
--	sc->hw_busy_count = 0;
--
--	/* Stop ANI */
--
--	del_timer_sync(&common->ani.timer);
--
- 	ath9k_ps_wakeup(sc);
- 
--	ieee80211_stop_queues(hw);
--
--	ath9k_hw_disable_interrupts(ah);
--	ath_drain_all_txq(sc, retry_tx);
--
--	ath_stoprecv(sc);
--	ath_flushrecv(sc);
--
--	r = ath9k_hw_reset(ah, sc->sc_ah->curchan, ah->caldata, false);
--	if (r)
--		ath_err(common,
--			"Unable to reset hardware; reset status %d\n", r);
--
--	if (ath_startrecv(sc) != 0)
--		ath_err(common, "Unable to start recv logic\n");
--
--	/*
--	 * We may be doing a reset in response to a request
--	 * that changes the channel so update any state that
--	 * might change as a result.
--	 */
--	ath9k_cmn_update_txpow(ah, sc->curtxpow,
--			       sc->config.txpowlimit, &sc->curtxpow);
--
--	if ((sc->sc_flags & SC_OP_BEACONS) || !(sc->sc_flags & (SC_OP_OFFCHANNEL)))
--		ath_set_beacon(sc);	/* restart beacons */
--
--	ath9k_hw_set_interrupts(ah, ah->imask);
--	ath9k_hw_enable_interrupts(ah);
-+	r = ath_reset_internal(sc, NULL, retry_tx);
- 
- 	if (retry_tx) {
- 		int i;
-@@ -956,12 +943,6 @@ static int ath_reset(struct ath_softc *sc, bool retry_tx)
- 		}
- 	}
- 
--	ieee80211_wake_queues(hw);
--
--	/* Start ANI */
--	if (!common->disable_ani)
--		ath_start_ani(common);
--
- 	ath9k_ps_restore(sc);
- 
- 	return r;
-@@ -971,9 +952,7 @@ void ath_reset_work(struct work_struct *work)
- {
- 	struct ath_softc *sc = container_of(work, struct ath_softc, hw_check_work);
- 
--	spin_lock_bh(&sc->sc_pcu_lock);
- 	ath_reset(sc, true);
--	spin_unlock_bh(&sc->sc_pcu_lock);
- }
- 
- void ath_hw_check(struct work_struct *work)
-@@ -994,11 +973,8 @@ void ath_hw_check(struct work_struct *work)
- 	ath_dbg(common, ATH_DBG_RESET, "Possible baseband hang, "
- 		"busy=%d (try %d)\n", busy, sc->hw_busy_count + 1);
- 	if (busy >= 99) {
--		if (++sc->hw_busy_count >= 3) {
--			spin_lock_bh(&sc->sc_pcu_lock);
--			ath_reset(sc, true);
--			spin_unlock_bh(&sc->sc_pcu_lock);
--		}
-+		if (++sc->hw_busy_count >= 3)
-+			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
- 
- 	} else if (busy >= 0)
- 		sc->hw_busy_count = 0;
-@@ -1018,9 +994,7 @@ static void ath_hw_pll_rx_hang_check(struct ath_softc *sc, u32 pll_sqsum)
- 			/* Rx is hung for more than 500ms. Reset it */
- 			ath_dbg(common, ATH_DBG_RESET,
- 				"Possible RX hang, resetting");
--			spin_lock_bh(&sc->sc_pcu_lock);
--			ath_reset(sc, true);
--			spin_unlock_bh(&sc->sc_pcu_lock);
-+			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
- 			count = 0;
- 		}
- 	} else
-@@ -1091,28 +1065,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 		goto mutex_unlock;
- 	}
- 
--	/*
--	 * This is needed only to setup initial state
--	 * but it's best done after a reset.
--	 */
--	ath9k_cmn_update_txpow(ah, sc->curtxpow,
--			sc->config.txpowlimit, &sc->curtxpow);
--
--	/*
--	 * Setup the hardware after reset:
--	 * The receive engine is set going.
--	 * Frame transmit is handled entirely
--	 * in the frame output path; there's nothing to do
--	 * here except setup the interrupt mask.
--	 */
--	if (ath_startrecv(sc) != 0) {
--		ath_err(common, "Unable to start recv logic\n");
--		r = -EIO;
--		spin_unlock_bh(&sc->sc_pcu_lock);
--		goto mutex_unlock;
--	}
--	spin_unlock_bh(&sc->sc_pcu_lock);
--
- 	/* Setup our intr mask. */
- 	ah->imask = ATH9K_INT_TX | ATH9K_INT_RXEOL |
- 		    ATH9K_INT_RXORN | ATH9K_INT_FATAL |
-@@ -1135,12 +1087,14 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 
- 	/* Disable BMISS interrupt when we're not associated */
- 	ah->imask &= ~(ATH9K_INT_SWBA | ATH9K_INT_BMISS);
--	ath9k_hw_set_interrupts(ah, ah->imask);
--	ath9k_hw_enable_interrupts(ah);
- 
--	ieee80211_wake_queues(hw);
-+	if (!ath_complete_reset(sc, false)) {
-+		r = -EIO;
-+		spin_unlock_bh(&sc->sc_pcu_lock);
-+		goto mutex_unlock;
-+	}
- 
--	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
-+	spin_unlock_bh(&sc->sc_pcu_lock);
- 
- 	if ((ah->btcoex_hw.scheme != ATH_BTCOEX_CFG_NONE) &&
- 	    !ah->btcoex_hw.enabled) {
-@@ -1233,11 +1187,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	mutex_lock(&sc->mutex);
- 
--	cancel_delayed_work_sync(&sc->tx_complete_work);
--	cancel_delayed_work_sync(&sc->hw_pll_work);
--	cancel_work_sync(&sc->paprd_work);
--	cancel_work_sync(&sc->hw_check_work);
--	cancel_work_sync(&sc->hw_reset_work);
-+	ath_cancel_work(sc);
- 
- 	if (sc->sc_flags & SC_OP_INVALID) {
- 		ath_dbg(common, ATH_DBG_ANY, "Device not present\n");
-@@ -2352,9 +2302,11 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
- 	ath9k_ps_wakeup(sc);
- 	spin_lock_bh(&sc->sc_pcu_lock);
- 	drain_txq = ath_drain_all_txq(sc, false);
-+	spin_unlock_bh(&sc->sc_pcu_lock);
-+
- 	if (!drain_txq)
- 		ath_reset(sc, false);
--	spin_unlock_bh(&sc->sc_pcu_lock);
-+
- 	ath9k_ps_restore(sc);
- 	ieee80211_wake_queues(hw);
- 
+ 	debugfs_create_file("fwlog", S_IRUSR, ar->debugfs_phy, ar,
+ 			    &fops_fwlog);
 -- 
-1.7.3.2
+1.7.0.4
 
