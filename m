@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:39911 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754474Ab1HYSbN (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54753 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756474Ab1HaNpX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 14:31:13 -0400
-Received: by pzk37 with SMTP id 37so2871799pzk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2011 11:31:13 -0700 (PDT)
+	Wed, 31 Aug 2011 09:45:23 -0400
+Date: Wed, 31 Aug 2011 09:38:39 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dennis Nezic <dennisn@dennisn.dyndns.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ipw2200 antenna selection
+Message-ID: <20110831133838.GA2474@tuxdriver.com> (sfid-20110831_154555_342260_C2B1AB72)
+References: <20110830215135.db381ecf.dennisn@dennisn.dyndns.org>
 MIME-Version: 1.0
-In-Reply-To: <20110825114536.GA11153@tuxdriver.com>
-References: <1314235313-4564-1-git-send-email-thomas@cozybit.com>
- <87ei09onhi.fsf@purkki.adurom.net> <20110825114536.GA11153@tuxdriver.com>
-From: Javier Cardona <javier@cozybit.com>
-Date: Thu, 25 Aug 2011 11:30:53 -0700
-Message-ID: <CAPjQAd991sJkgNmpnKvANGAVx3KN6K4dpdt8WdZ2H=8MGYz-yg@mail.gmail.com> (sfid-20110825_203116_910780_A4D25504)
-Subject: Re: [PATCH 0/8] FIXUP: mesh gates
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Thomas Pedersen <thomas@cozybit.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20110830215135.db381ecf.dennisn@dennisn.dyndns.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 25, 2011 at 4:45 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Thu, Aug 25, 2011 at 12:21:29PM +0300, Kalle Valo wrote:
->> Thomas Pedersen <thomas@cozybit.com> writes:
->>
->> > Since v1 of the mesh gate series was accidentally applied, revert
->> > the relevant v1s and apply the v2s.
->>
->> This looks ugly in the git history. IMHO it would be cleaner that you
->> would do a diff between series v1 and v2 and submit that as a proper
->> patch.
->>
->> But John might think otherwise, better to wait for his comment.
->
-> That is how I would prefer it as well.
+On Tue, Aug 30, 2011 at 09:51:35PM -0400, Dennis Nezic wrote:
+> My ipw2200 pcie wifi card has 2 antennas... "Main" and "Aux". I think
+> either the firmware or the kernel/module is overriding my explicit
+> antenna module setting, after a while.
+> 
+> I mentioned about it a few days ago,
+> http://marc.info/?l=linux-wireless&m=131448481319374&w=2
+> although I'm still seeing the problem (even after physically
+> disconnecting the Aux antenna/wire. (Even after disconnecting it, I
+> think it is still able to receive the 30KB/s signal, and I think the
+> card still switches to it eventually, against my wishes.))
 
-As a general rule, should we treat patchsets sent to the list
-atomically?  I.e. if there are objections to a few patches in the set,
-should we resubmit a v2 of the whole patchset?
-(Before asking I tried to find that info here:
-http://linuxwireless.org/en/developers/Documentation/SubmittingPatches
-. I'll be happy to update the wiki with your response if you think
-it's relevant)
+Dennis,
 
-Cheers,
+I'm sorry you haven't received any replies until now.  The truth
+is that the ipw2200 hardware is a bit old, and has more-or-less
+been abandoned by the manufacturer and the original driver authors.
+Worse, no hardware specification is available and even if it were
+then likely no firmware changes would be possible.
 
-Javier
+You mentioned that one of your antenna lines is cut.  Is it possible
+that you might repair that antenna?
 
+Would it be possible for you to try using a much older kernel?
+If you can find a point where the problem you are seeing does not
+exist, then we may be able to pinpoint a change that is contributing
+to the issue you are seeing.  Beyond that, I'm not sure what else we
+might do to help.
 
+Thanks,
+
+John
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
