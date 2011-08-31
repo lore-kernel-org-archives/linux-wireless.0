@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:55782 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753243Ab1HNLvy convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56585 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754561Ab1HaHkD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2011 07:51:54 -0400
-From: "Elias, Ilan" <ilane@ti.com>
-To: Samuel Ortiz <samuel@sortiz.org>
-CC: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Sun, 14 Aug 2011 13:51:43 +0200
-Subject: RE: [RFC] NFC: NCI protocol proposal
-Message-ID: <AC090B9732AB2B4DB7FF476E907FE6600131D89563@dnce02.ent.ti.com> (sfid-20110814_135202_871534_C1507698)
-References: <AC090B9732AB2B4DB7FF476E907FE6600131D0E347@dnce02.ent.ti.com>
- <1313086096.8413.11.camel@sortiz-mobl>
-In-Reply-To: <1313086096.8413.11.camel@sortiz-mobl>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Wed, 31 Aug 2011 03:40:03 -0400
+Subject: Re: [PATCH] nl80211/cfg80211: add ssid filtering for sched_scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1314775816.2296.531.camel@cumari>
+References: <1314707979-26484-1-git-send-email-coelho@ti.com>
+	 <1314713812.4011.33.camel@jlt3.sipsolutions.net>
+	 <1314718038.2296.460.camel@cumari>
+	 <1314720557.4011.41.camel@jlt3.sipsolutions.net>
+	 <1314770941.2296.507.camel@cumari>
+	 <1314771627.4161.9.camel@jlt3.sipsolutions.net>
+	 <1314775816.2296.531.camel@cumari>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 31 Aug 2011 09:39:56 +0200
+Message-ID: <1314776396.4161.19.camel@jlt3.sipsolutions.net> (sfid-20110831_094007_170723_62899827)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Samuel,
+On Wed, 2011-08-31 at 10:30 +0300, Luciano Coelho wrote:
 
-> > We would like to implement the NFC Controller Interface (NCI) protocol
-> > for the NFC subsystem.
-> > The NCI is a standard communication protocol between an NFC Controller
-> > (NFCC) and a Device Host (DH), defined by the NFC Forum.
-> Just as a side note to our previous thread: As far as I know, NCI is still
-> a draft (very close to the final version though) and as a consequence only
-> available to NFC Forum members.
-You're correct. We estimate it will be official by e/o this year.
+> > Ok. I think the BSSID blacklist would just be a separate attribute, I
+> > see no reason to have a nesting for that.
+> 
+> Actually, we could make the filter and blacklisting very generic.  We
+> can use the same attributes for both.  The only difference would be that
+> the former would include anything that matches and the latter would
+> exclude anything that matches.
 
-> > The NCI protocol implementation will be chip independent and responsible
-> > for:
-> > 	- Reset, initialization and configuration of the NFC controller
-> > 	- Sending commands/data to the NFC controller
-> > 	- Receiving responses/notifications/data from the NFC controller
-> > 	- Flow control for Control and Data Messages
-> > 	- Segmentation and reassembly for Control and Data Messages
-> > 	- An addressing scheme for NFC Execution Environments (NFCEE), e.g.
-> >	secure element
-> > 	- An addressing scheme for Remote NFC Endpoints (NFCEE or RF
-> > targets) 	(via logical connections)
-> Could you give us some more details about those last 2 points ?
-As specified in the NCI spec, NFC Execution Environment (NFCEE) is an environment where NFC applications are executed (e.g. secure element).
-NCI provides features to allow DH to NFCEE communication. NCI therefore includes methods to discover and enumerate connected NFCEEs and the Interfaces they support, and to establish connections between DH and NFCEE Interfaces.
-A logical connection is a connection between the Device Host (DH) and the NFC Controller (NFCC) that is used for communication towards a target, either NFCEE or Remote NFC Endpoint. More than one Logical Connection MAY exist to the same target.
+Hm, true, but does it really make sense to blacklist SSIDs when we have
+a whitelist for them? Or would you want to whitelist a wildcard and then
+blacklist a specific one?
 
-> Out of curiosity, is this NCI HW of yours based on the TRF7970A
-> chipset ? 
-No, it's a new TI combo device, not in the market yet.
 
-Thanks & BR
-Ilan
+> I also prefer using match/not_match (couldn't find a better antonym),
+> because "filter" is ambiguous (let-through or leave-out?).
+
+agree.
+
+johannes
 
