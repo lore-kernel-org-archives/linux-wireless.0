@@ -1,30 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:62159 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750979Ab1HYIoZ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51342 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754041Ab1HaUAa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Aug 2011 04:44:25 -0400
-Date: Thu, 25 Aug 2011 14:14:15 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Luciano Coelho <coelho@ti.com>
-CC: <kvalo@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	<kvalo@adurom.com>
-Subject: Re: [PATCH V2 1/3] ath6kl: Add initial debugfs changes
-Message-ID: <20110825084414.GA17009@vasanth-laptop> (sfid-20110825_104429_774876_C5EA3182)
-References: <1314257441-8092-1-git-send-email-vthiagar@qca.qualcomm.com> <1314258795.2296.252.camel@cumari>
+	Wed, 31 Aug 2011 16:00:30 -0400
+Date: Wed, 31 Aug 2011 15:48:10 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Tom Herbert <therbert@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Andrew McGregor <andrewmcgr@gmail.com>,
+	Matt Smith <smithm@qca.qualcomm.com>,
+	Kevin Hayes <hayes@qca.qualcomm.com>,
+	Dave Taht <dave.taht@gmail.com>,
+	Derek Smithies <derek@indranet.co.nz>, netdev@vger.kernel.org,
+	bloat@bufferbloat.net
+Subject: Re: BQL crap and wireless
+Message-ID: <20110831194810.GD2474@tuxdriver.com> (sfid-20110831_220035_836134_8F5CEB57)
+References: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1314258795.2296.252.camel@cumari>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 25, 2011 at 10:53:15AM +0300, Luciano Coelho wrote:
-> On Thu, 2011-08-25 at 13:00 +0530, Vasanthakumar Thiagarajan wrote: 
-> > Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-> > ---
+On Fri, Aug 26, 2011 at 04:27:22PM -0700, Luis R. Rodriguez wrote:
+> I've just read this thread:
 > 
-> You should always add some text to the explanation body of your patches.
+> http://marc.info/?t=131277868500001&r=1&w=2
+> 
+> Since its not linux-wireless I'll chime in here. It seems that you are
+> trying to write an algorithm that will work for all networking and
+> 802.11 devices. For networking is seems tough given driver
+> architecture and structure and the hope that all drivers will report
+> things in a fairly similar way. For 802.11 it was pointed out how we
+> have varying bandwidths and depending on the technology used for
+> connection (AP, 802.11s, IBSS) a different number of possible peers
+> need to be considered. 802.11 faced similar algorithmic complexities
+> with rate control and the way Andrew and Derek resolved this was to
+> not assume you could solve this problem and simply test out the water
+> by trial and error, that gave birth to the minstrel rate control
+> algorithm which Felix later rewrote for mac80211 with 802.11n support
+> [1]. Can the BQL algorithm make use of the same trial and error
+> mechanism and simply try different values and and use EWMA [2] to pick
+> the best size for the queue ?
+> 
+> [1] http://wireless.kernel.org/en/developers/Documentation/mac80211/RateControl/minstrel
+> [2] http://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average
+> 
+>   Luis
 
-Sure, thanks.
+Since Luis has stirred things up, I took the liberty of adding Tom's
+BQL series to the debloat-testing tree:
 
-vasanth
+	git://git.infradead.org/debloat-testing.git
+
+I'm not sure how well BQL will interact with my eBDP-inspired hack,
+debloat-testing commit d2566a176589775cb3a1de4fade972aa62d551ff
+("mac80211: implement eBDP algorithm to fight bufferbloat").  So if
+anyone wants to try enabling a wireless driver for BQL, you might
+consider reverting that patch or at least testing without it.
+
+<shameless plug>
+And, of course, don't forget to come to the Bufferbloat and Networking
+track at Linux Plumbers Conference next week in Santa Rosa, CA! :-)
+</shameless plug>
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
