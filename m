@@ -1,101 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1175 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752356Ab1HHARG (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:39281 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755646Ab1HaVeR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Aug 2011 20:17:06 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, jirislaby@gmail.com,
-	mickflemm@gmail.com, lrodriguez@atheros.com,
-	Bob Copeland <me@bobcopeland.com>, stable@kernel.org
-Subject: [PATCH] ath5k: fix error handling in ath5k_beacon_send
-Date: Sun,  7 Aug 2011 19:36:07 -0400
-Message-Id: <1312760167-3338-1-git-send-email-me@bobcopeland.com> (sfid-20110808_021849_898725_B1A29635)
+	Wed, 31 Aug 2011 17:34:17 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 4so788832ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 14:34:16 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/6] b43: LCN-PHY: rewrite 0x7 table at the end of init
+Date: Wed, 31 Aug 2011 23:36:18 +0200
+Message-Id: <1314826581-27852-3-git-send-email-zajec5@gmail.com> (sfid-20110831_233428_195701_AD749D6E)
+In-Reply-To: <1314826581-27852-1-git-send-email-zajec5@gmail.com>
+References: <1314826581-27852-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This cleans up error handling for the beacon in case of dma mapping
-failure.  We need to free the skb when dma mapping fails instead of
-nulling and leaking the pointer, and we should bail out to avoid
-giving the hardware the bad descriptor.
+This is not implemented in brcmsmac, but was noticed in (newer) wl. Can
+be workaround for some hardware bug.
 
-Finally, we need to perform the null check after trying to update
-the beacon, or else beacons will never be sent after a single
-mapping failure.
-
-Cc: stable@kernel.org
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
-
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
-Tested this by artificially failing 10% of the dma mappings.
+ drivers/net/wireless/b43/tables_phy_lcn.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
- drivers/net/wireless/ath/ath5k/base.c |   23 ++++++++++++++---------
- 1 files changed, 14 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index a74d286..e9a6e34 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1734,6 +1734,8 @@ ath5k_beacon_setup(struct ath5k_hw *ah, struct ath5k_buf *bf)
- 
- 	if (dma_mapping_error(ah->dev, bf->skbaddr)) {
- 		ATH5K_ERR(ah, "beacon DMA mapping failed\n");
-+		dev_kfree_skb_any(skb);
-+		bf->skb = NULL;
- 		return -EIO;
- 	}
- 
-@@ -1818,8 +1820,6 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	ath5k_txbuf_free_skb(ah, avf->bbuf);
- 	avf->bbuf->skb = skb;
- 	ret = ath5k_beacon_setup(ah, avf->bbuf);
--	if (ret)
--		avf->bbuf->skb = NULL;
- out:
- 	return ret;
+diff --git a/drivers/net/wireless/b43/tables_phy_lcn.c b/drivers/net/wireless/b43/tables_phy_lcn.c
+index f74c00a..95efea6 100644
+--- a/drivers/net/wireless/b43/tables_phy_lcn.c
++++ b/drivers/net/wireless/b43/tables_phy_lcn.c
+@@ -463,6 +463,17 @@ static void b43_phy_lcn_upload_static_tables(struct b43_wldev *dev)
+ 	lcntab_upload(dev, B43_LCNTAB32(0x18, 0), b43_lcntab_0x18);
  }
-@@ -1839,6 +1839,7 @@ ath5k_beacon_send(struct ath5k_hw *ah)
- 	struct ath5k_vif *avf;
- 	struct ath5k_buf *bf;
- 	struct sk_buff *skb;
-+	int err;
  
- 	ATH5K_DBG_UNLIMIT(ah, ATH5K_DEBUG_BEACON, "in beacon_send\n");
- 
-@@ -1887,11 +1888,6 @@ ath5k_beacon_send(struct ath5k_hw *ah)
- 
- 	avf = (void *)vif->drv_priv;
- 	bf = avf->bbuf;
--	if (unlikely(bf->skb == NULL || ah->opmode == NL80211_IFTYPE_STATION ||
--		     ah->opmode == NL80211_IFTYPE_MONITOR)) {
--		ATH5K_WARN(ah, "bf=%p bf_skb=%p\n", bf, bf ? bf->skb : NULL);
--		return;
--	}
- 
- 	/*
- 	 * Stop any current dma and put the new frame on the queue.
-@@ -1905,8 +1901,17 @@ ath5k_beacon_send(struct ath5k_hw *ah)
- 
- 	/* refresh the beacon for AP or MESH mode */
- 	if (ah->opmode == NL80211_IFTYPE_AP ||
--	    ah->opmode == NL80211_IFTYPE_MESH_POINT)
--		ath5k_beacon_update(ah->hw, vif);
-+	    ah->opmode == NL80211_IFTYPE_MESH_POINT) {
-+		err = ath5k_beacon_update(ah->hw, vif);
-+		if (err)
-+			return;
++/* Not implemented in brcmsmac, noticed in wl in MMIO dump */
++static void b43_phy_lcn_rewrite_tables(struct b43_wldev *dev)
++{
++	int i;
++	u32 tmp;
++	for (i = 0; i < 128; i++) {
++		tmp = b43_lcntab_read(dev, B43_LCNTAB32(0x7, 0x240 + i));
++		b43_lcntab_write(dev, B43_LCNTAB32(0x7, 0x240 + i), tmp);
 +	}
++}
 +
-+	if (unlikely(bf->skb == NULL || ah->opmode == NL80211_IFTYPE_STATION ||
-+		     ah->opmode == NL80211_IFTYPE_MONITOR)) {
-+		ATH5K_WARN(ah, "bf=%p bf_skb=%p\n", bf, bf->skb);
-+		return;
-+	}
- 
- 	trace_ath5k_tx(ah, bf->skb, &ah->txqs[ah->bhalq]);
- 
+ static void b43_phy_lcn_clean_0x18_table(struct b43_wldev *dev)
+ {
+ 	u8 i;
+@@ -475,5 +486,6 @@ void b43_phy_lcn_tables_init(struct b43_wldev *dev)
+ {
+ 	b43_phy_lcn_upload_static_tables(dev);
+ 	/* TODO: various tables ops here */
++	b43_phy_lcn_rewrite_tables(dev);
+ 	b43_phy_lcn_clean_0x18_table(dev);
+ }
 -- 
-1.7.2.5
-
+1.7.3.4
 
