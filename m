@@ -1,79 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from svenfoo.org ([82.94.215.22]:46118 "EHLO mail.zonque.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751058Ab1H3VtK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 17:49:10 -0400
-From: Sven Neumann <s.neumann@raumfeld.com>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:37681 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754048Ab1HaLJh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Aug 2011 07:09:37 -0400
+Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
+	by emh03-2.mail.saunalahti.fi (Postfix) with SMTP id 4C709EBD7F
+	for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 14:09:36 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-188-95.elisa-laajakaista.fi [88.115.188.95])
+	by emh06.mail.saunalahti.fi (Postfix) with ESMTP id 1A47BE51A8
+	for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 14:09:35 +0300 (EEST)
+Subject: [PATCH v2 3/4] ath6kl: cleanup diagnose window read and write
+	functions
 To: linux-wireless@vger.kernel.org
-Cc: Sven Neumann <s.neumann@raumfeld.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Daniel Mack <daniel@zonque.org>
-Subject: [PATCH 2/2] cfg80211: reorder code to obsolete forward declaration
-Date: Tue, 30 Aug 2011 23:38:54 +0200
-Message-Id: <1314740334-10341-2-git-send-email-s.neumann@raumfeld.com> (sfid-20110830_234914_505935_2E25B747)
-In-Reply-To: <1314740334-10341-1-git-send-email-s.neumann@raumfeld.com>
-References: <20110830191437.GC2660@tuxdriver.com>
- <1314740334-10341-1-git-send-email-s.neumann@raumfeld.com>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Date: Wed, 31 Aug 2011 14:09:34 +0300
+Message-ID: <20110831110934.19680.2257.stgit@localhost6.localdomain6> (sfid-20110831_130940_855219_874E1859)
+In-Reply-To: <20110831110650.19680.35966.stgit@localhost6.localdomain6>
+References: <20110831110650.19680.35966.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reorder functions to remove the need for a forward declaration
-introduced by the last commit.
+Just to make them a bit easier to read and unify naming. 32 suffix
+in the function name means that it will be a 32 bit transfer. If there's
+no number a buffer is transfered instead.
 
-Signed-off-by: Sven Neumann <s.neumann@raumfeld.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Luis R. Rodriguez <mcgrof@gmail.com>
-Cc: Daniel Mack <daniel@zonque.org>
-Cc: linux-wireless@vger.kernel.org
+Use void pointers to get rid of ugly casts.
+
+Don't provide target address as a pointer, pass it by value. Same for
+the value used in write32().
+
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- net/wireless/reg.c |   19 ++++++++-----------
- 1 files changed, 8 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath6kl/core.h |    6 +-
+ drivers/net/wireless/ath/ath6kl/init.c |   16 ++---
+ drivers/net/wireless/ath/ath6kl/main.c |   94 ++++++++++++++++++--------------
+ 3 files changed, 61 insertions(+), 55 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index c50016e..c77928b 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -103,9 +103,6 @@ struct reg_beacon {
- 	struct ieee80211_channel chan;
- };
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index d5c21bf..33c84c0 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -509,9 +509,9 @@ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
+ 					       struct htc_packet *packet);
+ void ath6kl_stop_txrx(struct ath6kl *ar);
+ void ath6kl_cleanup_amsdu_rxbufs(struct ath6kl *ar);
+-int ath6kl_access_datadiag(struct ath6kl *ar, u32 address,
+-			   u8 *data, u32 length, bool read);
+-int ath6kl_read_reg_diag(struct ath6kl *ar, u32 *address, u32 *data);
++int ath6kl_diag_write(struct ath6kl *ar, u32 address, void *data, u32 length);
++int ath6kl_diag_read32(struct ath6kl *ar, u32 address, u32 *value);
++int ath6kl_diag_read(struct ath6kl *ar, u32 address, void *data, u32 length);
+ void ath6kl_init_profile_info(struct ath6kl *ar);
+ void ath6kl_tx_data_cleanup(struct ath6kl *ar);
+ void ath6kl_stop_endpoint(struct net_device *dev, bool keep_profile,
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index bcb94ab..b6a1e69 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -131,14 +131,13 @@ static int ath6kl_set_host_app_area(struct ath6kl *ar)
+ 	address = ath6kl_get_hi_item_addr(ar, HI_ITEM(hi_app_host_interest));
+ 	address = TARG_VTOP(ar->target_type, address);
  
--static void wiphy_update_regulatory(struct wiphy *wiphy,
--				    enum nl80211_reg_initiator initiator);
--
- static void reg_todo(struct work_struct *work);
- static DECLARE_WORK(reg_work, reg_todo);
+-	if (ath6kl_read_reg_diag(ar, &address, &data))
++	if (ath6kl_diag_read32(ar, address, &data))
+ 		return -EIO;
  
-@@ -915,14 +912,6 @@ static bool ignore_reg_update(struct wiphy *wiphy,
- 	return false;
+ 	address = TARG_VTOP(ar->target_type, data);
+ 	host_app_area.wmi_protocol_ver = WMI_PROTOCOL_VERSION;
+-	if (ath6kl_access_datadiag(ar, address,
+-				(u8 *)&host_app_area,
+-				sizeof(struct host_app_area), false))
++	if (ath6kl_diag_write(ar, address, (u8 *) &host_app_area,
++			      sizeof(struct host_app_area)))
+ 		return -EIO;
+ 
+ 	return 0;
+@@ -375,7 +374,7 @@ static void ath6kl_dump_target_assert_info(struct ath6kl *ar)
+ 	address = TARG_VTOP(ar->target_type, address);
+ 
+ 	/* read RAM location through diagnostic window */
+-	status = ath6kl_read_reg_diag(ar, &address, &regdump_loc);
++	status = ath6kl_diag_read32(ar, address, &regdump_loc);
+ 
+ 	if (status || !regdump_loc) {
+ 		ath6kl_err("failed to get ptr to register dump area\n");
+@@ -387,11 +386,8 @@ static void ath6kl_dump_target_assert_info(struct ath6kl *ar)
+ 	regdump_loc = TARG_VTOP(ar->target_type, regdump_loc);
+ 
+ 	/* fetch register dump data */
+-	status = ath6kl_access_datadiag(ar,
+-					regdump_loc,
+-					(u8 *)&regdump_val[0],
+-					REG_DUMP_COUNT_AR6003 * (sizeof(u32)),
+-					true);
++	status = ath6kl_diag_read(ar, regdump_loc, (u8 *)&regdump_val[0],
++				  REG_DUMP_COUNT_AR6003 * (sizeof(u32)));
+ 
+ 	if (status) {
+ 		ath6kl_err("failed to get register dump\n");
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index b64b2a3..f881530 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -228,74 +228,84 @@ static int ath6kl_set_addrwin_reg(struct ath6kl *ar, u32 reg_addr, u32 addr)
  }
  
--static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
--{
--	struct cfg80211_registered_device *rdev;
+ /*
+- * Read from the ATH6KL through its diagnostic window. No cooperation from
+- * the Target is required for this.
++ * Read from the hardware through its diagnostic window. No cooperation
++ * from the firmware is required for this.
+  */
+-int ath6kl_read_reg_diag(struct ath6kl *ar, u32 *address, u32 *data)
++int ath6kl_diag_read32(struct ath6kl *ar, u32 address, u32 *value)
+ {
+-	int status;
++	int ret;
+ 
+ 	/* set window register to start read cycle */
+-	status = ath6kl_set_addrwin_reg(ar, WINDOW_READ_ADDR_ADDRESS,
+-					*address);
 -
--	list_for_each_entry(rdev, &cfg80211_rdev_list, list)
--		wiphy_update_regulatory(&rdev->wiphy, initiator);
--}
--
- static void handle_reg_beacon(struct wiphy *wiphy,
- 			      unsigned int chan_idx,
- 			      struct reg_beacon *reg_beacon)
-@@ -1151,6 +1140,14 @@ void regulatory_update(struct wiphy *wiphy,
- 	mutex_unlock(&reg_mutex);
+-	if (status)
+-		return status;
++	ret = ath6kl_set_addrwin_reg(ar, WINDOW_READ_ADDR_ADDRESS, address);
++	if (ret)
++		return ret;
+ 
+ 	/* read the data */
+-	status = hif_read_write_sync(ar, WINDOW_DATA_ADDRESS, (u8 *)data,
+-				     sizeof(u32), HIF_RD_SYNC_BYTE_INC);
+-	if (status) {
+-		ath6kl_err("failed to read from window data addr\n");
+-		return status;
++	ret = hif_read_write_sync(ar, WINDOW_DATA_ADDRESS, (u8 *) value,
++				  sizeof(*value), HIF_RD_SYNC_BYTE_INC);
++	if (ret) {
++		ath6kl_warn("failed to read32 through diagnose window: %d\n",
++			    ret);
++		return ret;
+ 	}
+ 
+-	return status;
++	return 0;
  }
  
-+static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
-+{
-+	struct cfg80211_registered_device *rdev;
+-
+ /*
+  * Write to the ATH6KL through its diagnostic window. No cooperation from
+  * the Target is required for this.
+  */
+-static int ath6kl_write_reg_diag(struct ath6kl *ar, u32 *address, u32 *data)
++static int ath6kl_diag_write32(struct ath6kl *ar, u32 address, u32 value)
+ {
+-	int status;
++	int ret;
+ 
+ 	/* set write data */
+-	status = hif_read_write_sync(ar, WINDOW_DATA_ADDRESS, (u8 *)data,
+-				     sizeof(u32), HIF_WR_SYNC_BYTE_INC);
+-	if (status) {
+-		ath6kl_err("failed to write 0x%x to window data addr\n", *data);
+-		return status;
++	ret = hif_read_write_sync(ar, WINDOW_DATA_ADDRESS, (u8 *) &value,
++				  sizeof(value), HIF_WR_SYNC_BYTE_INC);
++	if (ret) {
++		ath6kl_err("failed to write 0x%x during diagnose window to 0x%d\n",
++			   address, value);
++		return ret;
+ 	}
+ 
+ 	/* set window register, which starts the write cycle */
+ 	return ath6kl_set_addrwin_reg(ar, WINDOW_WRITE_ADDR_ADDRESS,
+-				      *address);
++				      address);
+ }
+ 
+-int ath6kl_access_datadiag(struct ath6kl *ar, u32 address,
+-			   u8 *data, u32 length, bool read)
++int ath6kl_diag_read(struct ath6kl *ar, u32 address, void *data, u32 length)
+ {
+-	u32 count;
+-	int status = 0;
++	u32 count, *buf = data;
++	int ret;
+ 
+-	for (count = 0; count < length; count += 4, address += 4) {
+-		if (read) {
+-			status = ath6kl_read_reg_diag(ar, &address,
+-						      (u32 *) &data[count]);
+-			if (status)
+-				break;
+-		} else {
+-			status = ath6kl_write_reg_diag(ar, &address,
+-						       (u32 *) &data[count]);
+-			if (status)
+-				break;
+-		}
++	if (WARN_ON(length % 4))
++		return -EINVAL;
 +
-+	list_for_each_entry(rdev, &cfg80211_rdev_list, list)
-+		wiphy_update_regulatory(&rdev->wiphy, initiator);
++	for (count = 0; count < length / 4; count++, address += 4) {
++		ret = ath6kl_diag_read32(ar, address, &buf[count]);
++		if (ret)
++			return ret;
+ 	}
+ 
+-	return status;
++	return 0;
 +}
 +
- static void handle_channel_custom(struct wiphy *wiphy,
- 				  enum ieee80211_band band,
- 				  unsigned int chan_idx,
--- 
-1.7.4.1
++int ath6kl_diag_write(struct ath6kl *ar, u32 address, void *data, u32 length)
++{
++	u32 count, *buf = data;
++	int ret;
++
++	if (WARN_ON(length % 4))
++		return -EINVAL;
++
++	for (count = 0; count < length / 4; count++, address += 4) {
++		ret = ath6kl_diag_write32(ar, address, buf[count]);
++		if (ret)
++			return ret;
++	}
++
++	return 0;
+ }
+ 
+ /* FIXME: move to a better place, target.h? */
+@@ -327,7 +337,7 @@ static void ath6kl_reset_device(struct ath6kl *ar, u32 target_type,
+ 		break;
+ 	}
+ 
+-	status = ath6kl_write_reg_diag(ar, &address, &data);
++	status = ath6kl_diag_write32(ar, address, data);
+ 
+ 	if (status)
+ 		ath6kl_err("failed to reset target\n");
 
