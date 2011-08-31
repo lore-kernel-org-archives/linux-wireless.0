@@ -1,51 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:63360 "EHLO
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:63560 "EHLO
 	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754020Ab1HZI5Z convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1754046Ab1HaGkv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Aug 2011 04:57:25 -0400
+	Wed, 31 Aug 2011 02:40:51 -0400
+Date: Wed, 31 Aug 2011 09:38:30 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: emmanuel.grumbach@intel.com
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"open list:INTEL WIRELESS WI..." <linux-wireless@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org
+Subject: [patch -next 2/2] iwlwifi: signedness bug in
+ iwl_trans_pcie_tx_agg_alloc()
+Message-ID: <20110831063830.GD3705@shale.localdomain> (sfid-20110831_084055_359954_A06E38F2)
 MIME-Version: 1.0
-In-Reply-To: <20110825154705.GA6567@kroah.com>
-References: <927eab8b5c950c13991911cd4c16457a5d618bc7.1314252671.git.joe@perches.com>
-	<20110825154705.GA6567@kroah.com>
-Date: Fri, 26 Aug 2011 10:57:25 +0200
-Message-ID: <CACna6ryfHpSkTtnyMUXShyZvN2quD3w8higymGGXfXsu3f1GEA@mail.gmail.com> (sfid-20110826_105745_222714_35980731)
-Subject: Re: [PATCH] staging: brcmfmac: Consolidate debugging macros
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Greg KH <greg@kroah.com>
-Cc: Joe Perches <joe@perches.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	linux-kernel@vger.kernel.org, Brett Rudley <brudley@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	devel@linuxdriverproject.org, Greg KH <gregkh@suse.de>,
-	Kan Yan <kanyan@broadcom.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/8/25 Greg KH <greg@kroah.com>:
-> On Wed, Aug 24, 2011 at 11:16:48PM -0700, Joe Perches wrote:
->> Convert multiple BRCMF_<debug_level> macros to a single
->> brcmf_dbg(level, fmt, ...) macro.
->>
->> Remove the now unnecessary double parentheses in the uses
->> of the old macros when converting to brcmf_dbg.
->>
->> Delete all uses of "%s: [fmt]", __func__, args... and move
->> the "%s: ", __func__ to the macro for consistency.
->>
->> Coalesce long formats.
->>
->> Signed-off-by: Joe Perches <joe@perches.com>
->
-> Applied, thanks.
+unsigned shorts and unsigned chars are never == -1.
 
-You didn't give even 24h before applying :|
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-(Unless this patch was already posted somewhere else with RFC?)
-
--- 
-Rafał
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
+index 5dd6a6d..ea6a0bc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c
+@@ -535,7 +535,7 @@ int iwl_trans_pcie_tx_agg_alloc(struct iwl_trans *trans,
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_tid_data *tid_data;
+ 	unsigned long flags;
+-	u16 txq_id;
++	int txq_id;
+ 	struct iwl_priv *priv = priv(trans);
+ 
+ 	txq_id = iwlagn_txq_ctx_activate_free(trans);
