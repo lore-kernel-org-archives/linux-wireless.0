@@ -1,32 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59688 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751403Ab1HHIdM (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48140 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752880Ab1HaGhB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2011 04:33:12 -0400
-Subject: Re: [PATCH] mac80211_hwsim: Fix RX status reporting for HT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20110806200700.GA13221@jm.kir.nu> (sfid-20110806_220724_927097_CF02E140)
-References: <20110806200700.GA13221@jm.kir.nu>
-	 (sfid-20110806_220724_927097_CF02E140)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 08 Aug 2011 10:33:08 +0200
-Message-ID: <1312792388.4372.6.camel@jlt3.sipsolutions.net> (sfid-20110808_103315_870077_BA6014BA)
-Mime-Version: 1.0
+	Wed, 31 Aug 2011 02:37:01 -0400
+From: "Sumangala, Suraj" <surajs@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>,
+	"Balasubramanian, senthilkumar" <senthilb@qca.qualcomm.com>,
+	"Mehta, Vipin" <vipimeht@qca.qualcomm.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [RFC] nl80211: Added NL80211 commands for Bluetooth-WiFi coex
+Date: Wed, 31 Aug 2011 06:36:03 +0000
+Message-ID: <480687D4EEFE7447A2E09AADFF6673621AF7CDCF@nasanexd02a.na.qualcomm.com> (sfid-20110831_083706_748448_63F2E99F)
+References: <1314771915-8848-1-git-send-email-surajs@qca.qualcomm.com>
+	 (sfid-20110831_082525_612687_34CC3735),<1314772217.4161.10.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1314772217.4161.10.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-08-06 at 23:07 +0300, Jouni Malinen wrote:
-> RX_FLAG_HT must be included when reporting MCS rates. Without
-> this, mac80211 ended up dropping any frame sent at MCS index 12
-> or higher and that resulted in oddly random looking errors in
-> mac80211_hwsim tests.
+Hi johannes,
+________________________________________
+From: Johannes Berg [johannes@sipsolutions.net]
+Sent: Wednesday, August 31, 2011 12:00 PM
+To: Sumangala, Suraj
+Cc: linville@tuxdriver.com; ath6kl-devel; Balasubramanian, senthilkumar; Mehta, Vipin; Valo, Kalle; linux-wireless@vger.kernel.org
+Subject: Re: [RFC] nl80211: Added NL80211 commands for Bluetooth-WiFi coex
 
-This "solved" the timing thing you ran into with the unrelated
-suspend/resume patch then I guess?
+On Wed, 2011-08-31 at 11:55 +0530, Suraj Sumangala wrote:
+> This patch propose a new set of NL80211 commands and attributes
+> to communicate information about ongoing Bluetooth operations to the
+> wifi chip in case of a Bluetooth-WiFi coex solution.
+>
+> It can then be used by the WiFi hardware to understand the requirements
+> of a Bluetooth radio and manage shared resources between
+> Bluetooth and Wifi modules better.
+>
+> The proposed Bluetooth information sent are mainly regarding Bluetooth
+> SCO, A2DP connection, inquiry and master/slave role of Bluetooth chip.
+>
+> This information can be sent by a userspace Bluetooth filter utility
+> application to the WiFi driver.
+
+???
+Why would this need a userspace utility? Are you cloning some sort of
+windows architecture here?
 
 johannes
 
+It will be the userpace bluez dbus events that can provide information regarding the status of variout Bluetooth events.
+On receiving that information, it can send corresponding NL80211 command.
+
+Regards
+Suraj
