@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:57002 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751074Ab1H3Jvw (ORCPT
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:44061 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751742Ab1HaIIR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Aug 2011 05:51:52 -0400
-Message-ID: <4E5CB2B3.2040700@qca.qualcomm.com> (sfid-20110830_115155_749891_1E66D0E3)
-Date: Tue, 30 Aug 2011 12:51:47 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/20] ath6kl: AP mode and P2P
-References: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
-In-Reply-To: <1314620641-24257-1-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Wed, 31 Aug 2011 04:08:17 -0400
+Received: by mail-ew0-f43.google.com with SMTP id 20so279360ewy.2
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 01:08:12 -0700 (PDT)
+Subject: Re: [PATCH] nl80211/cfg80211: add ssid filtering for sched_scan
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1314777198.4161.20.camel@jlt3.sipsolutions.net>
+References: <1314707979-26484-1-git-send-email-coelho@ti.com>
+	 <1314713812.4011.33.camel@jlt3.sipsolutions.net>
+	 <1314718038.2296.460.camel@cumari>
+	 <1314720557.4011.41.camel@jlt3.sipsolutions.net>
+	 <1314770941.2296.507.camel@cumari>
+	 <1314771627.4161.9.camel@jlt3.sipsolutions.net>
+	 <1314775816.2296.531.camel@cumari>
+	 <1314776396.4161.19.camel@jlt3.sipsolutions.net>
+	 <1314776962.2296.540.camel@cumari>
+	 <1314777198.4161.20.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 31 Aug 2011 11:08:08 +0300
+Message-ID: <1314778088.2296.553.camel@cumari> (sfid-20110831_100822_661247_C70A14FC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, 2011-08-31 at 09:53 +0200, Johannes Berg wrote: 
+> I guess the thing to keep in mind is that it's all an optimisation and
+> if a device can't support certain combinations it doesn't really
+> matter :)
 
-On 08/29/2011 03:23 PM, Jouni Malinen wrote:
-> This set of patches adds preliminary support for AP mode and P2P
-> operations into ath6kl. Since these require a new firmware build
-> and more testing, the patches to actually enable either AP or P2P
-> modes are not included in the series. These will be submitted
-> after some more testing.
+Yeah, it must be clear in the implementation that the device may send
+things that are not really following the filtering rules.  We can't
+avoid that anyway, because some other entity may start a scan and mangle
+with our BSS cache.
 
-I reviewed the patches. Looks good, I only found some minor issues.
-There are also some sparse warnings:
+-- 
+Cheers,
+Luca.
 
-drivers/net/wireless/ath/ath6kl/cfg80211.c:1695:14: warning: incorrect
-type in assignment (different base types)
-drivers/net/wireless/ath/ath6kl/cfg80211.c:1695:14:    expected
-restricted __le16 [addressable] [assigned] [usertype] ch
-drivers/net/wireless/ath/ath6kl/cfg80211.c:1695:14:    got unsigned
-short [unsigned] [usertype] next_chan
-drivers/net/wireless/ath/ath6kl/wmi.c:2632:20: warning: incorrect type
-in assignment (different base types)
-drivers/net/wireless/ath/ath6kl/wmi.c:2632:20:    expected unsigned
-short [unsigned] [usertype] reason
-drivers/net/wireless/ath/ath6kl/wmi.c:2632:20:    got restricted __le16
-[usertype] <noident>
-
-If you want, I can fix the issues I found before I merge the patches.
-
-Kalle
