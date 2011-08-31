@@ -1,371 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:45329 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751034Ab1H1SyT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Aug 2011 14:54:19 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 2/4] ath9k: merge reset related functions
-Date: Sun, 28 Aug 2011 20:54:06 +0200
-Message-Id: <1314557648-28212-2-git-send-email-nbd@openwrt.org> (sfid-20110828_205424_566541_67E5AB36)
-In-Reply-To: <1314557648-28212-1-git-send-email-nbd@openwrt.org>
-References: <1314557648-28212-1-git-send-email-nbd@openwrt.org>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:64695 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752660Ab1HaI2I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Aug 2011 04:28:08 -0400
+Received: by wwf5 with SMTP id 5so492320wwf.1
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 01:28:07 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] nl80211/cfg80211: add WIPHY_FLAG_AP_UAPSD flag
+Date: Wed, 31 Aug 2011 11:29:43 +0300
+Message-Id: <1314779383-3557-1-git-send-email-eliad@wizery.com> (sfid-20110831_102813_012272_70236BE6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-reduces unnecessary code duplication
+add WIPHY_FLAG_AP_UAPSD flag to indicate uapsd support on
+AP mode.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Advertise it to userspace by including a new
+NL80211_ATTR_SUPPORT_AP_UAPSD attribute.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |  244 ++++++++++++---------------------
- 1 files changed, 91 insertions(+), 153 deletions(-)
+this patch was rebased on top of wireless-testing, and contains the
+all the changes that were in my v2 of the patchset, that weren't
+in v1 (that was applied))
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 085ec20..7334c48 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -212,83 +212,39 @@ static int ath_update_survey_stats(struct ath_softc *sc)
- 	return ret;
- }
+ include/linux/nl80211.h |    3 +++
+ include/net/cfg80211.h  |    2 ++
+ net/wireless/nl80211.c  |    5 ++++-
+ 3 files changed, 9 insertions(+), 1 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 0343504..a3f352f 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1044,6 +1044,8 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_STA_WME: Nested attribute containing the wme configuration
+  *	of the station, see &enum nl80211_sta_wme_attr.
++ * @NL80211_ATTR_SUPPORT_AP_UAPSD: the device supports uapsd when working
++ *	as AP.
+  *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -1256,6 +1258,7 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_IE_ASSOC_RESP,
  
--/*
-- * Set/change channels.  If the channel is really being changed, it's done
-- * by reseting the chip.  To accomplish this we must first cleanup any pending
-- * DMA, then restart stuff.
--*/
--static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
--		    struct ath9k_channel *hchan)
-+static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx)
- {
- 	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(ah);
--	struct ieee80211_conf *conf = &common->hw->conf;
--	bool fastcc = true, stopped;
--	struct ieee80211_channel *channel = hw->conf.channel;
--	struct ath9k_hw_cal_data *caldata = NULL;
--	int r;
-+	bool ret;
+ 	NL80211_ATTR_STA_WME,
++	NL80211_ATTR_SUPPORT_AP_UAPSD,
  
--	if (sc->sc_flags & SC_OP_INVALID)
--		return -EIO;
-+	ieee80211_stop_queues(sc->hw);
+ 	/* add attributes here, update the policy in nl80211.c */
  
- 	sc->hw_busy_count = 0;
--
--	del_timer_sync(&common->ani.timer);
- 	cancel_work_sync(&sc->paprd_work);
- 	cancel_work_sync(&sc->hw_check_work);
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
- 	cancel_delayed_work_sync(&sc->hw_pll_work);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ce9b7e6..5390a89 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1619,6 +1619,7 @@ struct cfg80211_ops {
+  * @WIPHY_FLAG_MESH_AUTH: The device supports mesh authentication by routing
+  *	auth frames to userspace. See @NL80211_MESH_SETUP_USERSPACE_AUTH.
+  * @WIPHY_FLAG_SUPPORTS_SCHED_SCAN: The device supports scheduled scans.
++ * @WIPHY_FLAG_AP_UAPSD: The device supports uapsd on AP.
+  */
+ enum wiphy_flags {
+ 	WIPHY_FLAG_CUSTOM_REGULATORY		= BIT(0),
+@@ -1633,6 +1634,7 @@ enum wiphy_flags {
+ 	WIPHY_FLAG_MESH_AUTH			= BIT(10),
+ 	WIPHY_FLAG_SUPPORTS_SCHED_SCAN		= BIT(11),
+ 	WIPHY_FLAG_ENFORCE_COMBINATIONS		= BIT(12),
++	WIPHY_FLAG_AP_UAPSD			= BIT(13),
+ };
  
--	ath9k_ps_wakeup(sc);
--
--	spin_lock_bh(&sc->sc_pcu_lock);
--
--	/*
--	 * This is only performed if the channel settings have
--	 * actually changed.
--	 *
--	 * To switch channels clear any pending DMA operations;
--	 * wait long enough for the RX fifo to drain, reset the
--	 * hardware at the new frequency, and then re-enable
--	 * the relevant bits of the h/w.
--	 */
- 	ath9k_hw_disable_interrupts(ah);
--	stopped = ath_drain_all_txq(sc, false);
--
--	if (!ath_stoprecv(sc))
--		stopped = false;
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index bddb559..6ea9ffe 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -719,6 +719,8 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 		NLA_PUT_FLAG(msg, NL80211_ATTR_SUPPORT_IBSS_RSN);
+ 	if (dev->wiphy.flags & WIPHY_FLAG_MESH_AUTH)
+ 		NLA_PUT_FLAG(msg, NL80211_ATTR_SUPPORT_MESH_AUTH);
++	if (dev->wiphy.flags & WIPHY_FLAG_AP_UAPSD)
++		NLA_PUT_FLAG(msg, NL80211_ATTR_SUPPORT_AP_UAPSD);
  
--	if (!ath9k_hw_check_alive(ah))
--		stopped = false;
-+	ret = ath_drain_all_txq(sc, retry_tx);
+ 	NLA_PUT(msg, NL80211_ATTR_CIPHER_SUITES,
+ 		sizeof(u32) * dev->wiphy.n_cipher_suites,
+@@ -2597,7 +2599,8 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 		return -EINVAL;
  
--	/* XXX: do not flush receive queue here. We don't want
--	 * to flush data frames already in queue because of
--	 * changing channel. */
--
--	if (!stopped || !(sc->sc_flags & SC_OP_OFFCHANNEL))
--		fastcc = false;
-+	if (!ath_stoprecv(sc))
-+		ret = false;
- 
--	if (!(sc->sc_flags & SC_OP_OFFCHANNEL))
--		caldata = &sc->caldata;
-+	ath_flushrecv(sc);
- 
--	ath_dbg(common, ATH_DBG_CONFIG,
--		"(%u MHz) -> (%u MHz), conf_is_ht40: %d fastcc: %d\n",
--		sc->sc_ah->curchan->channel,
--		channel->center_freq, conf_is_ht40(conf),
--		fastcc);
-+	return ret;
-+}
- 
--	r = ath9k_hw_reset(ah, hchan, caldata, fastcc);
--	if (r) {
--		ath_err(common,
--			"Unable to reset channel (%u MHz), reset status %d\n",
--			channel->center_freq, r);
--		goto ps_restore;
--	}
-+static bool ath_complete_reset(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	if (ath_startrecv(sc) != 0) {
- 		ath_err(common, "Unable to restart recv logic\n");
--		r = -EIO;
--		goto ps_restore;
-+		return false;
- 	}
- 
- 	ath9k_cmn_update_txpow(ah, sc->curtxpow,
-@@ -299,18 +255,84 @@ static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL))) {
- 		if (sc->sc_flags & SC_OP_BEACONS)
- 			ath_set_beacon(sc);
-+
- 		ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
- 		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/2);
- 		if (!common->disable_ani)
- 			ath_start_ani(common);
- 	}
- 
-- ps_restore:
--	ieee80211_wake_queues(hw);
-+	ieee80211_wake_queues(sc->hw);
-+
-+	return true;
-+}
-+
-+static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
-+			      bool retry_tx)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_hw_cal_data *caldata = NULL;
-+	bool fastcc = true;
-+	int r;
-+
-+	if (!(sc->sc_flags & SC_OP_OFFCHANNEL)) {
-+		fastcc = false;
-+		caldata = &sc->caldata;
-+	}
-+
-+	if (!hchan) {
-+		fastcc = false;
-+		hchan = ah->curchan;
-+	}
-+
-+	if (fastcc && !ath9k_hw_check_alive(ah))
-+		fastcc = false;
-+
-+	if (!ath_prepare_reset(sc, retry_tx))
-+		fastcc = false;
-+
-+	ath_dbg(common, ATH_DBG_CONFIG,
-+		"Reset to %u MHz, HT40: %d fastcc: %d\n",
-+		hchan->channel, !!(hchan->channelFlags & (CHANNEL_HT40MINUS |
-+							  CHANNEL_HT40PLUS)),
-+		fastcc);
-+
-+	r = ath9k_hw_reset(ah, hchan, caldata, fastcc);
-+	if (r) {
-+		ath_err(common,
-+			"Unable to reset channel, reset status %d\n", r);
-+		return r;
-+	}
-+
-+	if (!ath_complete_reset(sc))
-+		return -EIO;
-+
-+	return 0;
-+}
-+
-+
-+/*
-+ * Set/change channels.  If the channel is really being changed, it's done
-+ * by reseting the chip.  To accomplish this we must first cleanup any pending
-+ * DMA, then restart stuff.
-+*/
-+static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
-+		    struct ath9k_channel *hchan)
-+{
-+	int r;
-+
-+	if (sc->sc_flags & SC_OP_INVALID)
-+		return -EIO;
- 
-+	ath9k_ps_wakeup(sc);
-+
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+	r = ath_reset_internal(sc, hchan, false);
- 	spin_unlock_bh(&sc->sc_pcu_lock);
- 
- 	ath9k_ps_restore(sc);
-+
- 	return r;
- }
- 
-@@ -893,28 +915,13 @@ static void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 			channel->center_freq, r);
- 	}
- 
--	ath9k_cmn_update_txpow(ah, sc->curtxpow,
--			       sc->config.txpowlimit, &sc->curtxpow);
--	if (ath_startrecv(sc) != 0) {
--		ath_err(common, "Unable to restart recv logic\n");
--		goto out;
--	}
--	if (sc->sc_flags & SC_OP_BEACONS)
--		ath_set_beacon(sc);	/* restart beacons */
--
--	/* Re-Enable  interrupts */
--	ath9k_hw_set_interrupts(ah, ah->imask);
--	ath9k_hw_enable_interrupts(ah);
-+	ath_complete_reset(sc);
- 
- 	/* Enable LED */
- 	ath9k_hw_cfg_output(ah, ah->led_pin,
- 			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
- 	ath9k_hw_set_gpio(ah, ah->led_pin, 0);
- 
--	ieee80211_wake_queues(hw);
--	ieee80211_queue_delayed_work(hw, &sc->hw_pll_work, HZ/2);
--
--out:
- 	spin_unlock_bh(&sc->sc_pcu_lock);
- 
- 	ath9k_ps_restore(sc);
-@@ -942,13 +949,7 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		ath9k_hw_cfg_gpio_input(ah, ah->led_pin);
- 	}
- 
--	/* Disable interrupts */
--	ath9k_hw_disable_interrupts(ah);
--
--	ath_drain_all_txq(sc, false);	/* clear pending tx frames */
--
--	ath_stoprecv(sc);		/* turn off frame recv */
--	ath_flushrecv(sc);		/* flush recv queue */
-+	ath_prepare_reset(sc, false);
- 
- 	if (!ah->curchan)
- 		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
-@@ -970,48 +971,11 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 
- int ath_reset(struct ath_softc *sc, bool retry_tx)
- {
--	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(ah);
--	struct ieee80211_hw *hw = sc->hw;
- 	int r;
- 
--	sc->hw_busy_count = 0;
--
--	/* Stop ANI */
--
--	del_timer_sync(&common->ani.timer);
--
- 	ath9k_ps_wakeup(sc);
- 
--	ieee80211_stop_queues(hw);
--
--	ath9k_hw_disable_interrupts(ah);
--	ath_drain_all_txq(sc, retry_tx);
--
--	ath_stoprecv(sc);
--	ath_flushrecv(sc);
--
--	r = ath9k_hw_reset(ah, sc->sc_ah->curchan, ah->caldata, false);
--	if (r)
--		ath_err(common,
--			"Unable to reset hardware; reset status %d\n", r);
--
--	if (ath_startrecv(sc) != 0)
--		ath_err(common, "Unable to start recv logic\n");
--
--	/*
--	 * We may be doing a reset in response to a request
--	 * that changes the channel so update any state that
--	 * might change as a result.
--	 */
--	ath9k_cmn_update_txpow(ah, sc->curtxpow,
--			       sc->config.txpowlimit, &sc->curtxpow);
--
--	if ((sc->sc_flags & SC_OP_BEACONS) || !(sc->sc_flags & (SC_OP_OFFCHANNEL)))
--		ath_set_beacon(sc);	/* restart beacons */
--
--	ath9k_hw_set_interrupts(ah, ah->imask);
--	ath9k_hw_enable_interrupts(ah);
-+	r = ath_reset_internal(sc, NULL, retry_tx);
- 
- 	if (retry_tx) {
- 		int i;
-@@ -1024,12 +988,6 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 		}
- 	}
- 
--	ieee80211_wake_queues(hw);
--
--	/* Start ANI */
--	if (!common->disable_ani)
--		ath_start_ani(common);
--
- 	ath9k_ps_restore(sc);
- 
- 	return r;
-@@ -1081,28 +1039,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 		goto mutex_unlock;
- 	}
- 
--	/*
--	 * This is needed only to setup initial state
--	 * but it's best done after a reset.
--	 */
--	ath9k_cmn_update_txpow(ah, sc->curtxpow,
--			sc->config.txpowlimit, &sc->curtxpow);
--
--	/*
--	 * Setup the hardware after reset:
--	 * The receive engine is set going.
--	 * Frame transmit is handled entirely
--	 * in the frame output path; there's nothing to do
--	 * here except setup the interrupt mask.
--	 */
--	if (ath_startrecv(sc) != 0) {
--		ath_err(common, "Unable to start recv logic\n");
--		r = -EIO;
--		spin_unlock_bh(&sc->sc_pcu_lock);
--		goto mutex_unlock;
--	}
--	spin_unlock_bh(&sc->sc_pcu_lock);
--
- 	/* Setup our intr mask. */
- 	ah->imask = ATH9K_INT_TX | ATH9K_INT_RXEOL |
- 		    ATH9K_INT_RXORN | ATH9K_INT_FATAL |
-@@ -1125,12 +1061,14 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 
- 	/* Disable BMISS interrupt when we're not associated */
- 	ah->imask &= ~(ATH9K_INT_SWBA | ATH9K_INT_BMISS);
--	ath9k_hw_set_interrupts(ah, ah->imask);
--	ath9k_hw_enable_interrupts(ah);
- 
--	ieee80211_wake_queues(hw);
-+	if (!ath_complete_reset(sc)) {
-+		r = -EIO;
-+		spin_unlock_bh(&sc->sc_pcu_lock);
-+		goto mutex_unlock;
-+	}
- 
--	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
-+	spin_unlock_bh(&sc->sc_pcu_lock);
- 
- 	if ((ah->btcoex_hw.scheme != ATH_BTCOEX_CFG_NONE) &&
- 	    !ah->btcoex_hw.enabled) {
+ 	/* parse WME attributes if sta is WME capable */
+-	if ((params.sta_flags_set & NL80211_STA_FLAG_WME) &&
++	if ((rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) &&
++	    (params.sta_flags_set & NL80211_STA_FLAG_WME) &&
+ 	    info->attrs[NL80211_ATTR_STA_WME]) {
+ 		struct nlattr *tb[NL80211_STA_WME_MAX + 1];
+ 		struct nlattr *nla;
 -- 
-1.7.3.2
+1.7.6.401.g6a319
 
