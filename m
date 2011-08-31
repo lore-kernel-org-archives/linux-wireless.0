@@ -1,30 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:42756 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751003Ab1IZOHS (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:40915 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756714Ab1HaWZL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Sep 2011 10:07:18 -0400
-Received: by eya28 with SMTP id 28so3618033eya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2011 07:07:17 -0700 (PDT)
+	Wed, 31 Aug 2011 18:25:11 -0400
+Received: by qyk15 with SMTP id 15so2774975qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 15:25:11 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
-References: <CAJTrwG5M5QtS_jw-WmbSb5_NT+m6JcBD0uHCyUzEYhn94G3rkA@mail.gmail.com>
-Date: Mon, 26 Sep 2011 16:07:17 +0200
-Message-ID: <CAJTrwG47wxJMjxo9_gtwut0w17FS2Qz7BOBPc2XCLo39M7WvSQ@mail.gmail.com> (sfid-20110926_160722_409164_E6DB8C9E)
-Subject: Re: iwlagn: "Intel Centrino Advanced-N 6205 AGN" and "AVM Fritz!Box
- (7390)" incompatible
-From: Henrik Friedrichsen <hrkfdn@gmail.com>
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <1314829212-27365-3-git-send-email-hauke@hauke-m.de>
+References: <1314829212-27365-1-git-send-email-hauke@hauke-m.de> <1314829212-27365-3-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 31 Aug 2011 15:24:51 -0700
+Message-ID: <CAB=NE6Xfot+mprT2O7ydkUc-E0BYmHnj+BHkgBP66AhM8J449Q@mail.gmail.com> (sfid-20110901_002516_549585_4432F635)
+Subject: Re: [PATCH 3/3] compat: add kstrtou8_from_user
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One more thing I have noticed:
+On Wed, Aug 31, 2011 at 3:20 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-This message is only being printed when I connect to the AP, that I
-have problems with:
+Thanks! Applied, I'll push when master.kernel.org recovers from the hangover.
 
-Sep 26 07:05:03 dharma kernel: [ 2213.379252] iwlagn 0000:03:00.0: Tx
-aggregation enabled on ra = xx:xx:xx:xx:xx:xx tid = 0
-
-On the APs that work fine, it DOES NOT get printed.
+  Luis
