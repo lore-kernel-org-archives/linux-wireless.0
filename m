@@ -1,183 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41460 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752073Ab1IASBR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Sep 2011 14:01:17 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	rmanohar@qca.qualcomm.com, shafi.wireless@gmail.com,
-	vthiagar@qca.qualcomm.com
-Subject: [PATCH v12 2/5] ath9k: move a few functions around
-Date: Thu,  1 Sep 2011 20:01:04 +0200
-Message-Id: <1314900067-85242-2-git-send-email-nbd@openwrt.org> (sfid-20110901_200121_390608_A1CAA4DE)
-In-Reply-To: <1314900067-85242-1-git-send-email-nbd@openwrt.org>
-References: <1314900067-85242-1-git-send-email-nbd@openwrt.org>
+Received: from senator.holtmann.net ([87.106.208.187]:60649 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757087Ab1HaWwg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Aug 2011 18:52:36 -0400
+Subject: RE: [RFC] nl80211: Added NL80211 commands for Bluetooth-WiFi coex
+From: Marcel Holtmann <marcel@holtmann.org>
+To: "Sumangala, Suraj" <surajs@qca.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>,
+	"Balasubramanian, senthilkumar" <senthilb@qca.qualcomm.com>,
+	"Mehta, Vipin" <vipimeht@qca.qualcomm.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 31 Aug 2011 15:51:54 -0700
+In-Reply-To: <480687D4EEFE7447A2E09AADFF6673621AF7DF82@nasanexd02a.na.qualcomm.com>
+References: <1314771915-8848-1-git-send-email-surajs@qca.qualcomm.com>
+	 (sfid-20110831_082525_612687_34CC3735),<1314772217.4161.10.camel@jlt3.sipsolutions.net>
+	 <480687D4EEFE7447A2E09AADFF6673621AF7CDCF@nasanexd02a.na.qualcomm.com>
+	 ,<1314772832.4161.16.camel@jlt3.sipsolutions.net>
+	 <480687D4EEFE7447A2E09AADFF6673621AF7CE0B@nasanexd02a.na.qualcomm.com>
+	 <1314801657.3373.260.camel@aeonflux>
+	 <480687D4EEFE7447A2E09AADFF6673621AF7DF82@nasanexd02a.na.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1314831118.3373.266.camel@aeonflux> (sfid-20110901_005240_959564_E93CBE92)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helps with making ath_reset static in the next commit
+Hi Suraj,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/main.c |  137 +++++++++++++++++----------------
- 1 files changed, 69 insertions(+), 68 deletions(-)
+> > this looks like the total wrong approach to me. This needs to be done between mac80211 and Bluetooth subsystems in the kernel directly. Going through userspace for this is a pretty bad idea.
+> 
+> > Especially if you wanna listen on D-Bus events from bluetoothd and then run another process to then execute nl80211 commands looks like total overhead at no gain. Not to talk about potential latency > effects that might be counterproductive.
+> 
+> > What you really want is a way to mark A2DP channels for streaming from userspace as streaming/realtime/priority so the Bluetooth subsystem knows on what to do with it and that way can also tell > > mac80211 correctly about coex settings.
+> 
+> > We are already settings flushable flags for A2DP streaming channels and there is work ongoing for SO_PRIORITY support with L2CAP sockets.
+> 
+> More than the A2DP connection, it would be more useful to find out when A2DP start/stop streaming so that we can know when to reallocate resource to Bluetooth. Is it possible to tap this information out of the Bluetooth core?
+> Also, can you suggest a way to get A2DP streaming status, inquiry status, and SCO and ACL role without a hack in the Bluetooth subsystem?
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index da57b2c..9bb222c 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -596,74 +596,6 @@ static void ath_node_detach(struct ath_softc *sc, struct ieee80211_sta *sta)
- 		ath_tx_node_cleanup(sc, an);
- }
- 
--void ath_hw_check(struct work_struct *work)
--{
--	struct ath_softc *sc = container_of(work, struct ath_softc, hw_check_work);
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	unsigned long flags;
--	int busy;
--
--	ath9k_ps_wakeup(sc);
--	if (ath9k_hw_check_alive(sc->sc_ah))
--		goto out;
--
--	spin_lock_irqsave(&common->cc_lock, flags);
--	busy = ath_update_survey_stats(sc);
--	spin_unlock_irqrestore(&common->cc_lock, flags);
--
--	ath_dbg(common, ATH_DBG_RESET, "Possible baseband hang, "
--		"busy=%d (try %d)\n", busy, sc->hw_busy_count + 1);
--	if (busy >= 99) {
--		if (++sc->hw_busy_count >= 3) {
--			spin_lock_bh(&sc->sc_pcu_lock);
--			ath_reset(sc, true);
--			spin_unlock_bh(&sc->sc_pcu_lock);
--		}
--	} else if (busy >= 0)
--		sc->hw_busy_count = 0;
--
--out:
--	ath9k_ps_restore(sc);
--}
--
--static void ath_hw_pll_rx_hang_check(struct ath_softc *sc, u32 pll_sqsum)
--{
--	static int count;
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--
--	if (pll_sqsum >= 0x40000) {
--		count++;
--		if (count == 3) {
--			/* Rx is hung for more than 500ms. Reset it */
--			ath_dbg(common, ATH_DBG_RESET,
--				"Possible RX hang, resetting");
--			spin_lock_bh(&sc->sc_pcu_lock);
--			ath_reset(sc, true);
--			spin_unlock_bh(&sc->sc_pcu_lock);
--			count = 0;
--		}
--	} else
--		count = 0;
--}
--
--void ath_hw_pll_work(struct work_struct *work)
--{
--	struct ath_softc *sc = container_of(work, struct ath_softc,
--					    hw_pll_work.work);
--	u32 pll_sqsum;
--
--	if (AR_SREV_9485(sc->sc_ah)) {
--
--		ath9k_ps_wakeup(sc);
--		pll_sqsum = ar9003_get_pll_sqsum_dvc(sc->sc_ah);
--		ath9k_ps_restore(sc);
--
--		ath_hw_pll_rx_hang_check(sc, pll_sqsum);
--
--		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/5);
--	}
--}
--
- 
- void ath9k_tasklet(unsigned long data)
- {
-@@ -1037,6 +969,75 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	return r;
- }
- 
-+void ath_hw_check(struct work_struct *work)
-+{
-+	struct ath_softc *sc = container_of(work, struct ath_softc, hw_check_work);
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	unsigned long flags;
-+	int busy;
-+
-+	ath9k_ps_wakeup(sc);
-+	if (ath9k_hw_check_alive(sc->sc_ah))
-+		goto out;
-+
-+	spin_lock_irqsave(&common->cc_lock, flags);
-+	busy = ath_update_survey_stats(sc);
-+	spin_unlock_irqrestore(&common->cc_lock, flags);
-+
-+	ath_dbg(common, ATH_DBG_RESET, "Possible baseband hang, "
-+		"busy=%d (try %d)\n", busy, sc->hw_busy_count + 1);
-+	if (busy >= 99) {
-+		if (++sc->hw_busy_count >= 3) {
-+			spin_lock_bh(&sc->sc_pcu_lock);
-+			ath_reset(sc, true);
-+			spin_unlock_bh(&sc->sc_pcu_lock);
-+		}
-+
-+	} else if (busy >= 0)
-+		sc->hw_busy_count = 0;
-+
-+out:
-+	ath9k_ps_restore(sc);
-+}
-+
-+static void ath_hw_pll_rx_hang_check(struct ath_softc *sc, u32 pll_sqsum)
-+{
-+	static int count;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+
-+	if (pll_sqsum >= 0x40000) {
-+		count++;
-+		if (count == 3) {
-+			/* Rx is hung for more than 500ms. Reset it */
-+			ath_dbg(common, ATH_DBG_RESET,
-+				"Possible RX hang, resetting");
-+			spin_lock_bh(&sc->sc_pcu_lock);
-+			ath_reset(sc, true);
-+			spin_unlock_bh(&sc->sc_pcu_lock);
-+			count = 0;
-+		}
-+	} else
-+		count = 0;
-+}
-+
-+void ath_hw_pll_work(struct work_struct *work)
-+{
-+	struct ath_softc *sc = container_of(work, struct ath_softc,
-+					    hw_pll_work.work);
-+	u32 pll_sqsum;
-+
-+	if (AR_SREV_9485(sc->sc_ah)) {
-+
-+		ath9k_ps_wakeup(sc);
-+		pll_sqsum = ar9003_get_pll_sqsum_dvc(sc->sc_ah);
-+		ath9k_ps_restore(sc);
-+
-+		ath_hw_pll_rx_hang_check(sc, pll_sqsum);
-+
-+		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/5);
-+	}
-+}
-+
- /**********************/
- /* mac80211 callbacks */
- /**********************/
--- 
-1.7.3.2
+the inquiry status is tracked by the Linux kernel since ever. Same goes
+for ACL and SCO status. The kernel keeps track over almost everything on
+the HCI level and will do proper cleanup afterwards. Doing this in
+userspace will not work out. And it is also racy.
+
+Especially in the future bluetoothd will be tracking less and less
+information. The new management interface will hide almost every single
+state from bluetoothd where the kernel is doing the job anyway and can
+do a way better job in the first place. This is also leads to power
+consumption advantages since bluetoothd does not need to be woken up
+that often anyway. And in addition the kernel has not deal with the
+extra HCI filter handling.
+
+The only thing that you mentioned here is A2DP streaming. And by the
+nature of the A2DP protocol, you do establish a second L2CAP channel
+that is just used for streaming. That channel is also only present if
+you are streaming right now. If not streaming is going on, it will be
+disconnected. So it is pretty easy to have bluetoothd tag such a channel
+with proper SO_PRIORITY (once we have that code merged upstream) and
+then the Bluetooth subsystem knows when A2DP streaming or any high
+priority/realtime data is transferred over Bluetooth.
+
+Regards
+
+Marcel
+
 
