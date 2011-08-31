@@ -1,447 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:43065 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752883Ab1HFLNz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Aug 2011 07:13:55 -0400
-Received: by eyx24 with SMTP id 24so1750605eyx.19
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Aug 2011 04:13:54 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Fix PCI interrupt processing race on SMP systems
-Date: Sat, 6 Aug 2011 13:13:48 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Received: from cantor2.suse.de ([195.135.220.15]:36840 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750922Ab1HaSmW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Aug 2011 14:42:22 -0400
+Date: Wed, 31 Aug 2011 11:33:05 -0700
+From: Greg KH <gregkh@suse.de>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [PATCH v2] Move brcm80211 to mainline
+Message-ID: <20110831183305.GA11296@suse.de> (sfid-20110831_204226_033563_F32606BB)
+References: <20110707002034.GA17885@broadcom.com>
+ <20110824222801.GA5280@broadcom.com>
+ <CACna6rwG6qNpaOu4QeOvs0L3LVETRt9w5=Ec-L2NJ5gXOAM=nw@mail.gmail.com>
+ <20110827143513.GN3775@shale.localdomain>
+ <20110827145003.GA9405@suse.de>
+ <CACna6ryfZoahr1FPbZ_syBFhWnfRprEs=95y=piCGXXm_Cu+LQ@mail.gmail.com>
+ <20110827152144.GA10126@suse.de>
+ <20110830014257.GI15771@broadcom.com>
+ <20110830181452.GA24769@suse.de>
+ <CAB=NE6WpuHdW000qdx4M1w21U8LjKYOX4nhc4kjjiZWwZpop6Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201108061313.49265.IvDoorn@gmail.com> (sfid-20110806_131403_400785_C7EEFE8A)
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAB=NE6WpuHdW000qdx4M1w21U8LjKYOX4nhc4kjjiZWwZpop6Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On Wed, Aug 31, 2011 at 10:55:45AM -0700, Luis R. Rodriguez wrote:
+> On Tue, Aug 30, 2011 at 11:14 AM, Greg KH <gregkh@suse.de> wrote:
+> > On Mon, Aug 29, 2011 at 06:42:57PM -0700, Henry Ptasinski wrote:
+> >> The brcmsmac driver has architectural alignment with our drivers for other
+> >> operating systems, and we intend to to enhance and maintain this driver in
+> >> parallel with drivers for other operating systems.  Maintaining alignment
+> >> between our Linux driver and drivers for other operating systems allows us to
+> >> leverage feature and chip support across all platforms.
+> >
+> > Just curious, if you really are going to try to do this, how are you
+> > going to handle the issue when others change the in-kernel driver in
+> > ways that you are not going to be allowed to make to your "internal"
+> > copy of the driver?
+> 
+> What do you mean by this?
 
-When toggle_irq is called for PCI devices to disable device interrupts
-it used tasklet_disable to wait for a possibly running tasklet to finish.
-However, on SMP systems the tasklet might still be scheduled on another CPU.
-Instead, use tasklet_kill to ensure that all scheduled tasklets are finished
-before returning from toggle_irq.
+ - Infrastructure changes that do not match up with how other operating
+   systems handle things.
+ - support for new features
+ - support for older devices
+ - license incompatibilities (i.e. new files under GPL-only license
+ - etc.
 
-Furthermore, it was possible that a tasklet reenabled its interrupt even
-though interrupts have been disabled already. Fix this by checking the
-DEVICE_STATE_ENABLED_RADIO flag before reenabling single interrupts
-during tasklet processing.
+> > Also, how are you going to handle any GPL-only changes that happen to
+> > the code as well?
+> 
+> For the broadcom drivers this may be hard if people want to move GPLv2
+> b43 code to a permissively licensed driver... but ...
+> 
+> > Do you have some process in place to ensure that all
+> > contributions will have the proper copyright releases on it to allow you
+> > to make the same changes to your internal versions?
+> 
+> To be clear *new* code going in to a permissively licensed driver
+> follows the Developer's Certificate of Origin which does state the
+> contributor follows the file's license.
 
-While at it also enable/kill the TBTT and PRETBTT tasklets in the
-toggle_irq callback and only use tasklet_kill in stop_queue to wait
-for a currently scheduled beacon update before returning.
+For an existing file, yes.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c |   39 +++++++++++---------------
- drivers/net/wireless/rt2x00/rt2500pci.c |   39 +++++++++++---------------
- drivers/net/wireless/rt2x00/rt2800pci.c |   46 +++++++++++++------------------
- drivers/net/wireless/rt2x00/rt2x00dev.c |    1 -
- drivers/net/wireless/rt2x00/rt61pci.c   |   34 +++++++++--------------
- 5 files changed, 64 insertions(+), 95 deletions(-)
+But for new files, or for copying code from another driver (GPL only)
+into this one (dual licensed), that's different, right?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index 76bcc354..daa32fc 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -645,11 +645,6 @@ static void rt2400pci_start_queue(struct data_queue *queue)
- 		rt2x00pci_register_write(rt2x00dev, RXCSR0, reg);
- 		break;
- 	case QID_BEACON:
--		/*
--		 * Allow the tbtt tasklet to be scheduled.
--		 */
--		tasklet_enable(&rt2x00dev->tbtt_tasklet);
--
- 		rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
- 		rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 1);
- 		rt2x00_set_field32(&reg, CSR14_TBCN, 1);
-@@ -715,7 +710,7 @@ static void rt2400pci_stop_queue(struct data_queue *queue)
- 		/*
- 		 * Wait for possibly running tbtt tasklets.
- 		 */
--		tasklet_disable(&rt2x00dev->tbtt_tasklet);
-+		tasklet_kill(&rt2x00dev->tbtt_tasklet);
- 		break;
- 	default:
- 		break;
-@@ -982,12 +977,6 @@ static void rt2400pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 	if (state == STATE_RADIO_IRQ_ON) {
- 		rt2x00pci_register_read(rt2x00dev, CSR7, &reg);
- 		rt2x00pci_register_write(rt2x00dev, CSR7, reg);
--
--		/*
--		 * Enable tasklets.
--		 */
--		tasklet_enable(&rt2x00dev->txstatus_tasklet);
--		tasklet_enable(&rt2x00dev->rxdone_tasklet);
- 	}
- 
- 	/*
-@@ -1011,8 +1000,9 @@ static void rt2400pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 		 * Ensure that all tasklets are finished before
- 		 * disabling the interrupts.
- 		 */
--		tasklet_disable(&rt2x00dev->txstatus_tasklet);
--		tasklet_disable(&rt2x00dev->rxdone_tasklet);
-+		tasklet_kill(&rt2x00dev->txstatus_tasklet);
-+		tasklet_kill(&rt2x00dev->rxdone_tasklet);
-+		tasklet_kill(&rt2x00dev->tbtt_tasklet);
- 	}
- }
- 
-@@ -1347,22 +1337,25 @@ static void rt2400pci_txstatus_tasklet(unsigned long data)
- 	/*
- 	 * Enable all TXDONE interrupts again.
- 	 */
--	spin_lock_irq(&rt2x00dev->irqmask_lock);
-+	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags)) {
-+		spin_lock_irq(&rt2x00dev->irqmask_lock);
- 
--	rt2x00pci_register_read(rt2x00dev, CSR8, &reg);
--	rt2x00_set_field32(&reg, CSR8_TXDONE_TXRING, 0);
--	rt2x00_set_field32(&reg, CSR8_TXDONE_ATIMRING, 0);
--	rt2x00_set_field32(&reg, CSR8_TXDONE_PRIORING, 0);
--	rt2x00pci_register_write(rt2x00dev, CSR8, reg);
-+		rt2x00pci_register_read(rt2x00dev, CSR8, &reg);
-+		rt2x00_set_field32(&reg, CSR8_TXDONE_TXRING, 0);
-+		rt2x00_set_field32(&reg, CSR8_TXDONE_ATIMRING, 0);
-+		rt2x00_set_field32(&reg, CSR8_TXDONE_PRIORING, 0);
-+		rt2x00pci_register_write(rt2x00dev, CSR8, reg);
- 
--	spin_unlock_irq(&rt2x00dev->irqmask_lock);
-+		spin_unlock_irq(&rt2x00dev->irqmask_lock);
-+	}
- }
- 
- static void rt2400pci_tbtt_tasklet(unsigned long data)
- {
- 	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
- 	rt2x00lib_beacondone(rt2x00dev);
--	rt2400pci_enable_interrupt(rt2x00dev, CSR8_TBCN_EXPIRE);
-+	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
-+		rt2400pci_enable_interrupt(rt2x00dev, CSR8_TBCN_EXPIRE);
- }
- 
- static void rt2400pci_rxdone_tasklet(unsigned long data)
-@@ -1370,7 +1363,7 @@ static void rt2400pci_rxdone_tasklet(unsigned long data)
- 	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
- 	if (rt2x00pci_rxdone(rt2x00dev))
- 		tasklet_schedule(&rt2x00dev->rxdone_tasklet);
--	else
-+	else if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
- 		rt2400pci_enable_interrupt(rt2x00dev, CSR8_RXDONE);
- }
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index c288d95..b46c3b8 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -735,11 +735,6 @@ static void rt2500pci_start_queue(struct data_queue *queue)
- 		rt2x00pci_register_write(rt2x00dev, RXCSR0, reg);
- 		break;
- 	case QID_BEACON:
--		/*
--		 * Allow the tbtt tasklet to be scheduled.
--		 */
--		tasklet_enable(&rt2x00dev->tbtt_tasklet);
--
- 		rt2x00pci_register_read(rt2x00dev, CSR14, &reg);
- 		rt2x00_set_field32(&reg, CSR14_TSF_COUNT, 1);
- 		rt2x00_set_field32(&reg, CSR14_TBCN, 1);
-@@ -805,7 +800,7 @@ static void rt2500pci_stop_queue(struct data_queue *queue)
- 		/*
- 		 * Wait for possibly running tbtt tasklets.
- 		 */
--		tasklet_disable(&rt2x00dev->tbtt_tasklet);
-+		tasklet_kill(&rt2x00dev->tbtt_tasklet);
- 		break;
- 	default:
- 		break;
-@@ -1137,12 +1132,6 @@ static void rt2500pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 	if (state == STATE_RADIO_IRQ_ON) {
- 		rt2x00pci_register_read(rt2x00dev, CSR7, &reg);
- 		rt2x00pci_register_write(rt2x00dev, CSR7, reg);
--
--		/*
--		 * Enable tasklets.
--		 */
--		tasklet_enable(&rt2x00dev->txstatus_tasklet);
--		tasklet_enable(&rt2x00dev->rxdone_tasklet);
- 	}
- 
- 	/*
-@@ -1165,8 +1154,9 @@ static void rt2500pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 		/*
- 		 * Ensure that all tasklets are finished.
- 		 */
--		tasklet_disable(&rt2x00dev->txstatus_tasklet);
--		tasklet_disable(&rt2x00dev->rxdone_tasklet);
-+		tasklet_kill(&rt2x00dev->txstatus_tasklet);
-+		tasklet_kill(&rt2x00dev->rxdone_tasklet);
-+		tasklet_kill(&rt2x00dev->tbtt_tasklet);
- 	}
- }
- 
-@@ -1479,22 +1469,25 @@ static void rt2500pci_txstatus_tasklet(unsigned long data)
- 	/*
- 	 * Enable all TXDONE interrupts again.
- 	 */
--	spin_lock_irq(&rt2x00dev->irqmask_lock);
-+	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags)) {
-+		spin_lock_irq(&rt2x00dev->irqmask_lock);
- 
--	rt2x00pci_register_read(rt2x00dev, CSR8, &reg);
--	rt2x00_set_field32(&reg, CSR8_TXDONE_TXRING, 0);
--	rt2x00_set_field32(&reg, CSR8_TXDONE_ATIMRING, 0);
--	rt2x00_set_field32(&reg, CSR8_TXDONE_PRIORING, 0);
--	rt2x00pci_register_write(rt2x00dev, CSR8, reg);
-+		rt2x00pci_register_read(rt2x00dev, CSR8, &reg);
-+		rt2x00_set_field32(&reg, CSR8_TXDONE_TXRING, 0);
-+		rt2x00_set_field32(&reg, CSR8_TXDONE_ATIMRING, 0);
-+		rt2x00_set_field32(&reg, CSR8_TXDONE_PRIORING, 0);
-+		rt2x00pci_register_write(rt2x00dev, CSR8, reg);
- 
--	spin_unlock_irq(&rt2x00dev->irqmask_lock);
-+		spin_unlock_irq(&rt2x00dev->irqmask_lock);
-+	}
- }
- 
- static void rt2500pci_tbtt_tasklet(unsigned long data)
- {
- 	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
- 	rt2x00lib_beacondone(rt2x00dev);
--	rt2500pci_enable_interrupt(rt2x00dev, CSR8_TBCN_EXPIRE);
-+	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
-+		rt2500pci_enable_interrupt(rt2x00dev, CSR8_TBCN_EXPIRE);
- }
- 
- static void rt2500pci_rxdone_tasklet(unsigned long data)
-@@ -1502,7 +1495,7 @@ static void rt2500pci_rxdone_tasklet(unsigned long data)
- 	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
- 	if (rt2x00pci_rxdone(rt2x00dev))
- 		tasklet_schedule(&rt2x00dev->rxdone_tasklet);
--	else
-+	else if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
- 		rt2500pci_enable_interrupt(rt2x00dev, CSR8_RXDONE);
- }
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 5319ed9..7a0fd0e 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -200,13 +200,6 @@ static void rt2800pci_start_queue(struct data_queue *queue)
- 		rt2x00pci_register_write(rt2x00dev, MAC_SYS_CTRL, reg);
- 		break;
- 	case QID_BEACON:
--		/*
--		 * Allow beacon tasklets to be scheduled for periodic
--		 * beacon updates.
--		 */
--		tasklet_enable(&rt2x00dev->tbtt_tasklet);
--		tasklet_enable(&rt2x00dev->pretbtt_tasklet);
--
- 		rt2x00pci_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_TICKING, 1);
- 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE, 1);
-@@ -269,10 +262,13 @@ static void rt2800pci_stop_queue(struct data_queue *queue)
- 		rt2x00pci_register_write(rt2x00dev, INT_TIMER_EN, reg);
- 
- 		/*
--		 * Wait for tbtt tasklets to finish.
-+		 * Wait for current invocation to finish. The tasklet
-+		 * won't be scheduled anymore afterwards since we disabled
-+		 * the TBTT and PRE TBTT timer.
- 		 */
--		tasklet_disable(&rt2x00dev->tbtt_tasklet);
--		tasklet_disable(&rt2x00dev->pretbtt_tasklet);
-+		tasklet_kill(&rt2x00dev->tbtt_tasklet);
-+		tasklet_kill(&rt2x00dev->pretbtt_tasklet);
-+
- 		break;
- 	default:
- 		break;
-@@ -437,14 +433,6 @@ static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 	if (state == STATE_RADIO_IRQ_ON) {
- 		rt2x00pci_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
- 		rt2x00pci_register_write(rt2x00dev, INT_SOURCE_CSR, reg);
--
--		/*
--		 * Enable tasklets. The beacon related tasklets are
--		 * enabled when the beacon queue is started.
--		 */
--		tasklet_enable(&rt2x00dev->txstatus_tasklet);
--		tasklet_enable(&rt2x00dev->rxdone_tasklet);
--		tasklet_enable(&rt2x00dev->autowake_tasklet);
- 	}
- 
- 	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
-@@ -472,12 +460,13 @@ static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 
- 	if (state == STATE_RADIO_IRQ_OFF) {
- 		/*
--		 * Ensure that all tasklets are finished before
--		 * disabling the interrupts.
-+		 * Wait for possibly running tasklets to finish.
- 		 */
--		tasklet_disable(&rt2x00dev->txstatus_tasklet);
--		tasklet_disable(&rt2x00dev->rxdone_tasklet);
--		tasklet_disable(&rt2x00dev->autowake_tasklet);
-+		tasklet_kill(&rt2x00dev->txstatus_tasklet);
-+		tasklet_kill(&rt2x00dev->rxdone_tasklet);
-+		tasklet_kill(&rt2x00dev->autowake_tasklet);
-+		tasklet_kill(&rt2x00dev->tbtt_tasklet);
-+		tasklet_kill(&rt2x00dev->pretbtt_tasklet);
- 	}
- }
- 
-@@ -813,14 +802,16 @@ static void rt2800pci_pretbtt_tasklet(unsigned long data)
- {
- 	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
- 	rt2x00lib_pretbtt(rt2x00dev);
--	rt2800pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_PRE_TBTT);
-+	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
-+		rt2800pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_PRE_TBTT);
- }
- 
- static void rt2800pci_tbtt_tasklet(unsigned long data)
- {
- 	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
- 	rt2x00lib_beacondone(rt2x00dev);
--	rt2800pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_TBTT);
-+	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
-+		rt2800pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_TBTT);
- }
- 
- static void rt2800pci_rxdone_tasklet(unsigned long data)
-@@ -828,7 +819,7 @@ static void rt2800pci_rxdone_tasklet(unsigned long data)
- 	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
- 	if (rt2x00pci_rxdone(rt2x00dev))
- 		tasklet_schedule(&rt2x00dev->rxdone_tasklet);
--	else
-+	else if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
- 		rt2800pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_RX_DONE);
- }
- 
-@@ -836,7 +827,8 @@ static void rt2800pci_autowake_tasklet(unsigned long data)
- {
- 	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
- 	rt2800pci_wakeup(rt2x00dev);
--	rt2800pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_AUTO_WAKEUP);
-+	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
-+		rt2800pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_AUTO_WAKEUP);
- }
- 
- static void rt2800pci_txstatus_interrupt(struct rt2x00_dev *rt2x00dev)
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 0955c94..92ff6a7 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -946,7 +946,6 @@ static int rt2x00lib_probe_hw(struct rt2x00_dev *rt2x00dev)
- 		tasklet_init(&rt2x00dev->taskletname, \
- 			     rt2x00dev->ops->lib->taskletname, \
- 			     (unsigned long)rt2x00dev); \
--		tasklet_disable(&rt2x00dev->taskletname); \
- 	}
- 
- 	RT2X00_TASKLET_INIT(txstatus_tasklet);
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 53110b8..058ef4b 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1142,11 +1142,6 @@ static void rt61pci_start_queue(struct data_queue *queue)
- 		rt2x00pci_register_write(rt2x00dev, TXRX_CSR0, reg);
- 		break;
- 	case QID_BEACON:
--		/*
--		 * Allow the tbtt tasklet to be scheduled.
--		 */
--		tasklet_enable(&rt2x00dev->tbtt_tasklet);
--
- 		rt2x00pci_register_read(rt2x00dev, TXRX_CSR9, &reg);
- 		rt2x00_set_field32(&reg, TXRX_CSR9_TSF_TICKING, 1);
- 		rt2x00_set_field32(&reg, TXRX_CSR9_TBTT_ENABLE, 1);
-@@ -1230,7 +1225,7 @@ static void rt61pci_stop_queue(struct data_queue *queue)
- 		/*
- 		 * Wait for possibly running tbtt tasklets.
- 		 */
--		tasklet_disable(&rt2x00dev->tbtt_tasklet);
-+		tasklet_kill(&rt2x00dev->tbtt_tasklet);
- 		break;
- 	default:
- 		break;
-@@ -1731,13 +1726,6 @@ static void rt61pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 
- 		rt2x00pci_register_read(rt2x00dev, MCU_INT_SOURCE_CSR, &reg);
- 		rt2x00pci_register_write(rt2x00dev, MCU_INT_SOURCE_CSR, reg);
--
--		/*
--		 * Enable tasklets.
--		 */
--		tasklet_enable(&rt2x00dev->txstatus_tasklet);
--		tasklet_enable(&rt2x00dev->rxdone_tasklet);
--		tasklet_enable(&rt2x00dev->autowake_tasklet);
- 	}
- 
- 	/*
-@@ -1772,9 +1760,10 @@ static void rt61pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 		/*
- 		 * Ensure that all tasklets are finished.
- 		 */
--		tasklet_disable(&rt2x00dev->txstatus_tasklet);
--		tasklet_disable(&rt2x00dev->rxdone_tasklet);
--		tasklet_disable(&rt2x00dev->autowake_tasklet);
-+		tasklet_kill(&rt2x00dev->txstatus_tasklet);
-+		tasklet_kill(&rt2x00dev->rxdone_tasklet);
-+		tasklet_kill(&rt2x00dev->autowake_tasklet);
-+		tasklet_kill(&rt2x00dev->tbtt_tasklet);
- 	}
- }
- 
-@@ -2300,22 +2289,24 @@ static void rt61pci_txstatus_tasklet(unsigned long data)
- {
- 	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
- 	rt61pci_txdone(rt2x00dev);
--	rt61pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_TXDONE);
-+	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
-+		rt61pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_TXDONE);
- }
- 
- static void rt61pci_tbtt_tasklet(unsigned long data)
- {
- 	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
- 	rt2x00lib_beacondone(rt2x00dev);
--	rt61pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_BEACON_DONE);
-+	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
-+		rt61pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_BEACON_DONE);
- }
- 
- static void rt61pci_rxdone_tasklet(unsigned long data)
- {
- 	struct rt2x00_dev *rt2x00dev = (struct rt2x00_dev *)data;
- 	if (rt2x00pci_rxdone(rt2x00dev))
--		rt2x00pci_rxdone(rt2x00dev);
--	else
-+		tasklet_schedule(&rt2x00dev->rxdone_tasklet);
-+	else if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
- 		rt61pci_enable_interrupt(rt2x00dev, INT_MASK_CSR_RXDONE);
- }
- 
-@@ -2325,7 +2316,8 @@ static void rt61pci_autowake_tasklet(unsigned long data)
- 	rt61pci_wakeup(rt2x00dev);
- 	rt2x00pci_register_write(rt2x00dev,
- 				 M2H_CMD_DONE_CSR, 0xffffffff);
--	rt61pci_enable_mcu_interrupt(rt2x00dev, MCU_INT_MASK_CSR_TWAKEUP);
-+	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
-+		rt61pci_enable_mcu_interrupt(rt2x00dev, MCU_INT_MASK_CSR_TWAKEUP);
- }
- 
- static irqreturn_t rt61pci_interrupt(int irq, void *dev_instance)
--- 
-1.7.2.3
+You need to be very careful about this, that's all.
 
+> The issues with a large GPLv2 code from b43 and the fact that the
+> other driver is permissively licensed makes this a bit more
+> complicated though, but that is only a reflection of not addressing
+> supporting old hardware. Ouch.
+
+Yes, this is going to be tricky :)
+
+That is what I am worried about, but I know the lawyers and developers
+at Broadcom have already considered this, but they haven't told us how
+they are going to handle it, which is what I'm curious about.
+
+Then there the issue that some companies want to keep their internal
+copies in a non-dual licensed codebase, to handle the license of the
+other operating systems they are working with.  Hopefully Broadcom isn't
+going to do this, but others have in the past (SGI with xfs, Intel with
+the ACPI core, etc.)
+
+thanks,
+
+greg k-h
