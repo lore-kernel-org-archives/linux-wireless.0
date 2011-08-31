@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:37655 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754691Ab1HCO3o (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:41949 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756322Ab1HaQov (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2011 10:29:44 -0400
-Received: by qyk38 with SMTP id 38so189466qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2011 07:29:43 -0700 (PDT)
+	Wed, 31 Aug 2011 12:44:51 -0400
+Received: by ewy4 with SMTP id 4so573545ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 09:44:50 -0700 (PDT)
+From: Alexander Simon <an.alexsimon@googlemail.com>
+To: Marek Lindner <lindner_marek@yahoo.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 1/4] nl80211: Parse channel type attribute in an IBSS join request
+Date: Wed, 31 Aug 2011 18:44:47 +0200
+Message-ID: <2853752.GZVY6pETLZ@alex-1> (sfid-20110831_184454_725548_22509D91)
+In-Reply-To: <201108311751.20806.lindner_marek@yahoo.de>
+References: <2053881.ENil2Dy3QM@alex-1> <201108311751.20806.lindner_marek@yahoo.de>
 MIME-Version: 1.0
-Date: Wed, 3 Aug 2011 16:29:43 +0200
-Message-ID: <CANXYrmDKMracGuUKY4HWmAdoc_sa19fGXO8J+EqcNkMs5+k2Fg@mail.gmail.com> (sfid-20110803_162957_497084_B9F5D01E)
-Subject: trying to implement the HCF
-From: =?ISO-8859-1?Q?Manuel_S=E1ez?= <manuelsaezr@gmail.com>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Am Mittwoch, 31. August 2011, 17:51:20 schrieben Sie:
+> On Monday, August 29, 2011 16:15:47 Alexander Simon wrote:
+> >         if (!ibss.channel ||
+> > 
+> > +           ibss.channel->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
+> > 
+> >             ibss.channel->flags & IEEE80211_CHAN_NO_IBSS ||
+> > 
+> > -           ibss.channel->flags & IEEE80211_CHAN_DISABLED)
+> > +           ibss.channel->flags & IEEE80211_CHAN_RADAR)
+> > +               return -EINVAL;
+> 
+> Do you mind elaborating why this patch removes the IEEE80211_CHAN_DISABLED
+> check and adds the IEEE80211_CHAN_RADAR check instead ? Copy and paste error
+> ?
+You're right.
 
-I am trying to implement the HCF with a AR9280 chip. I already changed
-the beacons in order to include the 'CF parameter set' every n DTIM. I
-was glad to discover that after this message the AR_NAV register was
-automatically updated  with the information of the "CFP duration
-remaining" and the driver started to buffer the new outgoing frames. I
-was not able to find where this is done in the driver so I guess it is
-a hardware thing. Please correct me if I am wrong. The bad news are
-that the driver/hardware updates the register in the next beacon (that
-is not that bad for me for the moment, I will try to change the
-register manually later).
+I've adopted this from the check in cfg80211_can_use_ext_chan in 
+net/wireless/chan.c and probably missed the DISABLED check.
 
-I got to send the first CF-poll just after the DTIM that indicates the
-start of a CFP. I just saw the procedure for the CAB traffic and used
-the flag IEEE80211_TX_CTL_SEND_AFTER_DTIM. The next step I would like
-to try is to prepare the next CF-poll frame in order to send it SIFS
-after the answer or PIFS if no answer arrived. I configured the fourth
-queue to use it with this kind of traffic. Is is possible to schedule
-the transmission of one frame? I tried to have a look at the tx
-descriptors in the code and in the web, but I don't understand them
-(there is no much information and unfortunately I am far from being a
-linux expert). Any advice?
+Thanks.
+Will be fixed in v3.
 
-Sorry for my english, the more german I learn, the less english I can :-p.
-
-Thank you in advance
+Alex
