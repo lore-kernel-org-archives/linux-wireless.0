@@ -1,66 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:53863 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750980Ab1H1RH1 convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:39281 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755631Ab1HaVeM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Aug 2011 13:07:27 -0400
-Received: by pzk37 with SMTP id 37so7123008pzk.1
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Aug 2011 10:07:26 -0700 (PDT)
+	Wed, 31 Aug 2011 17:34:12 -0400
+Received: by ewy4 with SMTP id 4so788832ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 14:34:11 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/6] b43: LCN-PHY: put tables functions in correct file
+Date: Wed, 31 Aug 2011 23:36:17 +0200
+Message-Id: <1314826581-27852-2-git-send-email-zajec5@gmail.com> (sfid-20110831_233416_959060_531FDAFB)
+In-Reply-To: <1314826581-27852-1-git-send-email-zajec5@gmail.com>
+References: <1314826581-27852-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4E5A74C9.1050909@lwfinger.net>
-References: <1314550043-6220-1-git-send-email-zajec5@gmail.com>
-	<1314550043-6220-2-git-send-email-zajec5@gmail.com>
-	<4E5A74C9.1050909@lwfinger.net>
-Date: Sun, 28 Aug 2011 19:07:26 +0200
-Message-ID: <CACna6rxVhv2Rf2NM9U-cc4cf5XQhSMpbGYmrVSW_KH-e2ETc0Q@mail.gmail.com> (sfid-20110828_190730_624467_BFB6E660)
-Subject: Re: [PATCH 2/2] bcma: extract some basic info about board from SPROM
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 28 sierpnia 2011 19:03 użytkownik Larry Finger
-<Larry.Finger@lwfinger.net> napisał:
-> On 08/28/2011 11:47 AM, Rafał Miłecki wrote:
->>
->> Signed-off-by: Rafał Miłecki<zajec5@gmail.com>
->> ---
->>  drivers/bcma/sprom.c |    9 +++++++++
->>  1 files changed, 9 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
->> index 166ed13..d729239 100644
->> --- a/drivers/bcma/sprom.c
->> +++ b/drivers/bcma/sprom.c
->> @@ -133,6 +133,15 @@ static void bcma_sprom_extract_r8(struct bcma_bus
->> *bus, const u16 *sprom)
->>                v = sprom[SPOFF(SSB_SPROM8_IL0MAC) + i];
->>                *(((__be16 *)bus->sprom.il0mac) + i) = cpu_to_be16(v);
->>        }
->> +
->> +       bus->sprom.board_rev = sprom[SPOFF(SSB_SPROM8_BOARDREV)];
->> +
->> +       bus->sprom.boardflags_lo = sprom[SPOFF(SSB_SPROM8_BFLLO)];
->> +       bus->sprom.boardflags_hi = sprom[SPOFF(SSB_SPROM8_BFLHI)];
->> +       bus->sprom.boardflags2_lo = sprom[SPOFF(SSB_SPROM8_BFL2LO)];
->> +       bus->sprom.boardflags2_hi = sprom[SPOFF(SSB_SPROM8_BFL2HI)];
->> +
->> +       bus->sprom.country_code = sprom[SPOFF(SSB_SPROM8_CCODE)];
->>  }
->>
->>  int bcma_sprom_get(struct bcma_bus *bus)
->
-> Does the card in question not need any other info from the SPROM, or is this
-> just a first step? Is the usual SPROM Rev 8 code part of ssb, and is that
-> the reason you don't use it here?
 
-It will need more info, I just didn't add everything yet. I think we
-should review ssb's code anyway, so I didn't copy&paste it. For
-example ssb doesn't read board_rev at the moment for SPROM rev 8.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_lcn.c        |   10 ----------
+ drivers/net/wireless/b43/tables_phy_lcn.c |   17 ++++++++++++++++-
+ 2 files changed, 16 insertions(+), 11 deletions(-)
 
+diff --git a/drivers/net/wireless/b43/phy_lcn.c b/drivers/net/wireless/b43/phy_lcn.c
+index b617e1f..9e57577 100644
+--- a/drivers/net/wireless/b43/phy_lcn.c
++++ b/drivers/net/wireless/b43/phy_lcn.c
+@@ -137,14 +137,6 @@ static void b43_phy_lcn_afe_set_unset(struct b43_wldev *dev)
+ 	b43_phy_write(dev, B43_PHY_LCN_AFE_CTL1, afe_ctl1);
+ }
+ 
+-static void b43_phy_lcn_clean_0x18_table(struct b43_wldev *dev)
+-{
+-	u8 i;
+-
+-	for (i = 0; i < 0x80; i++)
+-		b43_lcntab_write(dev, B43_LCNTAB32(0x18, i), 0x80000);
+-}
+-
+ static void b43_phy_lcn_clear_0x07_table(struct b43_wldev *dev)
+ {
+ 	u8 i;
+@@ -319,8 +311,6 @@ static int b43_phy_lcn_op_init(struct b43_wldev *dev)
+ 	b43_phy_maskset(dev, 0x663, 0xFF00, 0x64);
+ 
+ 	b43_phy_lcn_tables_init(dev);
+-	/* TODO: various tables ops here */
+-	b43_phy_lcn_clean_0x18_table(dev);
+ 
+ 	b43_phy_lcn_pre_radio_init(dev);
+ 	b43_phy_lcn_clear_0x07_table(dev);
+diff --git a/drivers/net/wireless/b43/tables_phy_lcn.c b/drivers/net/wireless/b43/tables_phy_lcn.c
+index 916d3f1..f74c00a 100644
+--- a/drivers/net/wireless/b43/tables_phy_lcn.c
++++ b/drivers/net/wireless/b43/tables_phy_lcn.c
+@@ -445,7 +445,7 @@ void b43_lcntab_write_bulk(struct b43_wldev *dev, u32 offset,
+ #define lcntab_upload(dev, offset, data) do { \
+ 		b43_lcntab_write_bulk(dev, offset, ARRAY_SIZE(data), data); \
+ 	} while (0)
+-void b43_phy_lcn_tables_init(struct b43_wldev *dev)
++static void b43_phy_lcn_upload_static_tables(struct b43_wldev *dev)
+ {
+ 	lcntab_upload(dev, B43_LCNTAB16(0x02, 0), b43_lcntab_0x02);
+ 	lcntab_upload(dev, B43_LCNTAB16(0x01, 0), b43_lcntab_0x01);
+@@ -462,3 +462,18 @@ void b43_phy_lcn_tables_init(struct b43_wldev *dev)
+ 	lcntab_upload(dev, B43_LCNTAB16(0x00, 0), b43_lcntab_0x00);
+ 	lcntab_upload(dev, B43_LCNTAB32(0x18, 0), b43_lcntab_0x18);
+ }
++
++static void b43_phy_lcn_clean_0x18_table(struct b43_wldev *dev)
++{
++	u8 i;
++
++	for (i = 0; i < 0x80; i++)
++		b43_lcntab_write(dev, B43_LCNTAB32(0x18, i), 0x80000);
++}
++
++void b43_phy_lcn_tables_init(struct b43_wldev *dev)
++{
++	b43_phy_lcn_upload_static_tables(dev);
++	/* TODO: various tables ops here */
++	b43_phy_lcn_clean_0x18_table(dev);
++}
 -- 
-Rafał
+1.7.3.4
+
