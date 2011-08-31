@@ -1,127 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:1816 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751063Ab1HGGVp convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:45027 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752296Ab1HaKS0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Aug 2011 02:21:45 -0400
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-CC: Pavel Roskin <proski@gnu.org>,
-	Daniel Halperin <dhalperi@cs.washington.edu>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Sat, 6 Aug 2011 23:21:42 -0700
-Subject: RE: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv
- pointer
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A350199604E03@orsmsx506.amr.corp.intel.com> (sfid-20110807_082149_410124_A6E63340)
-References: <1312228017-12061-1-git-send-email-wey-yi.w.guy@intel.com>
-	<CALSq=BYkKhJN=GU0RUJ2viibsy5yG78x-D-td0zP+rqWCy=AiQ@mail.gmail.com>
-	<4825B8A2C4E264489E57869F0DCFB22344563F4ABE@hasmsx502.ger.corp.intel.com>
-	<CALSq=BZ2CoF=+Zw-si5oc8No9MLTP1YoZCzfoT9TX1XEaLnq1A@mail.gmail.com>
-	<CALSq=BYY8-fAqATwJaFNvzwpSo4WWXbH=pRXn0oknqKXH=4X2A@mail.gmail.com>
-	<1312499702.15170.17.camel@wwguy-huron>	<20110805225051.435fe1b0@mj>
-	<E9954878DD1FB34FAE5187FB88C58A350199604D92@orsmsx506.amr.corp.intel.com>
- <CANUX_P3p3mqUjJrynivna5Fu4iv8DDdH-rY53Y36tHRVewSSuQ@mail.gmail.com>
-  <4825B8A2C4E264489E57869F0DCFB22344564A2C19@hasmsx502.ger.corp.intel.com>
-In-Reply-To: <4825B8A2C4E264489E57869F0DCFB22344564A2C19@hasmsx502.ger.corp.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 31 Aug 2011 06:18:26 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <kvalo@adurom.com>
+Subject: [PATCH 2/2] ath6kl: Fix endianness in requesting chip register read
+Date: Wed, 31 Aug 2011 15:48:15 +0530
+Message-ID: <1314785895-18808-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110831_121830_028475_98057E94)
+In-Reply-To: <1314785895-18808-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1314785895-18808-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I will like to combine the patches if it's ok for John.
+Need to make sure the chip address for which we need the value
+si endian safe.
 
-Wey
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/main.c |   14 +++++++++-----
+ 1 files changed, 9 insertions(+), 5 deletions(-)
 
------Original Message-----
-From: Grumbach, Emmanuel
-Sent: Sunday, August 07, 2011 8:09 AM
-To: Grumbach, Emmanuel; Emmanuel Grumbach; Guy, Wey-Yi W
-Cc: Pavel Roskin; Daniel Halperin; linville@tuxdriver.com; linux-wireless@vger.kernel.org
-Subject: RE: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv pointer
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index 0bcfd46..528a347 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -177,8 +177,8 @@ void ath6kl_free_cookie(struct ath6kl *ar, struct ath6kl_cookie *cookie)
+ static int ath6kl_set_addrwin_reg(struct ath6kl *ar, u32 reg_addr, u32 addr)
+ {
+ 	int status;
+-	u8 addr_val[4];
+ 	s32 i;
++	__le32 addr_val;
+ 
+ 	/*
+ 	 * Write bytes 1,2,3 of the register to set the upper address bytes,
+@@ -188,16 +188,18 @@ static int ath6kl_set_addrwin_reg(struct ath6kl *ar, u32 reg_addr, u32 addr)
+ 	for (i = 1; i <= 3; i++) {
+ 		/*
+ 		 * Fill the buffer with the address byte value we want to
+-		 * hit 4 times.
++		 * hit 4 times. No need to worry about endianness as the
++		 * same byte is copied to all four bytes of addr_val at
++		 * any time.
+ 		 */
+-		memset(addr_val, ((u8 *)&addr)[i], 4);
++		memset((u8 *)&addr_val, ((u8 *)&addr)[i], 4);
+ 
+ 		/*
+ 		 * Hit each byte of the register address with a 4-byte
+ 		 * write operation to the same address, this is a harmless
+ 		 * operation.
+ 		 */
+-		status = hif_read_write_sync(ar, reg_addr + i, addr_val,
++		status = hif_read_write_sync(ar, reg_addr + i, (u8 *)&addr_val,
+ 					     4, HIF_WR_SYNC_BYTE_FIX);
+ 		if (status)
+ 			break;
+@@ -215,7 +217,9 @@ static int ath6kl_set_addrwin_reg(struct ath6kl *ar, u32 reg_addr, u32 addr)
+ 	 * cycle to start, the extra 3 byte write to bytes 1,2,3 has no
+ 	 * effect since we are writing the same values again
+ 	 */
+-	status = hif_read_write_sync(ar, reg_addr, (u8 *)(&addr),
++	addr_val = cpu_to_le32(addr);
++	status = hif_read_write_sync(ar, reg_addr,
++				     (u8 *)&(addr_val),
+ 				     4, HIF_WR_SYNC_BYTE_INC);
+ 
+ 	if (status) {
+-- 
+1.7.0.4
 
-FWIW, the patch below solved the problem on my system.
-Dan, please confirm you are happy with it.
-
-The bug was introduced by the patch that fixed the sysfs issue.
-
-Wey, John, do you think it would be better to revert my previous fix and send a combined patch that solves the sysfs issue and doesn't add the bug ? Or another patch on top of the buggy sysfs fix ?
-
-Thanks,
-       Emmanuel
-
-
-> -----Original Message-----
-> From: Grumbach, Emmanuel
-> Sent: Saturday, August 06, 2011 10:46 PM
-> To: Emmanuel Grumbach; Guy, Wey-Yi W
-> Cc: Pavel Roskin; Daniel Halperin; linville@tuxdriver.com; linux-
-> wireless@vger.kernel.org
-> Subject: RE: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv
-> pointer
->
-> On top of my previous patch of course (which actually fixed the previous
-> bug, but added the one you are facing now...).
->
-> Thanks,
->        Emmanuel
->
->
-> > -----Original Message-----
-> > From: Emmanuel Grumbach [mailto:egrumbach@gmail.com]
-> > Sent: Saturday, August 06, 2011 10:44 PM
-> > To: Guy, Wey-Yi W
-> > Cc: Pavel Roskin; Grumbach, Emmanuel; Daniel Halperin;
-> > linville@tuxdriver.com; linux-wireless@vger.kernel.org
-> > Subject: Re: [PATCH wireless-3.1] iwlagn: sysfs couldn't find the priv
-> > pointer
-> >
-> > Can you please try that one ?
-> > I don't have my machine near me, and don't want to crash it remotely, so
-> I
-> > didn't test it. I will test in on Sunday.
-> >
-> >
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c
-> > b/drivers/net/wireless/iwlwifi/iwl-pci.c
-> > index 69d4ec4..2fdbffa 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-pci.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
-> > @@ -478,27 +478,22 @@ out_no_pci:
-> >     return err;
-> >  }
-> >
-> > -static void iwl_pci_down(struct iwl_bus *bus) -{
-> > -   struct iwl_pci_bus *pci_bus = (struct iwl_pci_bus *) bus-
-> > >bus_specific;
-> > -
-> > -   pci_disable_msi(pci_bus->pci_dev);
-> > -   pci_iounmap(pci_bus->pci_dev, pci_bus->hw_base);
-> > -   pci_release_regions(pci_bus->pci_dev);
-> > -   pci_disable_device(pci_bus->pci_dev);
-> > -   pci_set_drvdata(pci_bus->pci_dev, NULL);
-> > -
-> > -   kfree(bus);
-> > -}
-> > -
-> >  static void __devexit iwl_pci_remove(struct pci_dev *pdev)  {
-> >     struct iwl_priv *priv = pci_get_drvdata(pdev);
-> > -   void *bus_specific = priv->bus->bus_specific;
-> > +   struct iwl_bus *bus = priv->bus;
-> > +   struct iwl_pci_bus *pci_bus = IWL_BUS_GET_PCI_BUS(bus);
-> > +   struct pci_dev *pci_dev = IWL_BUS_GET_PCI_DEV(bus);
-> >
-> >     iwl_remove(priv);
-> >
-> > -   iwl_pci_down(bus_specific);
-> > +   pci_disable_msi(pci_dev);
-> > +   pci_iounmap(pci_dev, pci_bus->hw_base);
-> > +   pci_release_regions(pci_dev);
-> > +   pci_disable_device(pci_dev);
-> > +   pci_set_drvdata(pci_dev, NULL);
-> > +
-> > +   kfree(bus);
-> >  }
-> >
-> >  #ifdef CONFIG_PM
