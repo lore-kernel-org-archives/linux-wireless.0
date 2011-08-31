@@ -1,69 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:43968 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753860Ab1HVVuj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Aug 2011 17:50:39 -0400
-Received: by gya6 with SMTP id 6so3903756gya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Aug 2011 14:50:39 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, chaoming_li@realsil.com.cn
-Subject: [PATCH 0/5] rtlwifi: Simplify and update rate-mapping code
-Date: Mon, 22 Aug 2011 16:50:13 -0500
-Message-Id: <1314049818-21839-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20110822_235057_112147_9BDF14C7)
-To: linville@tuxdriver.com
+Received: from nbd.name ([46.4.11.11]:53670 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755742Ab1HaOrJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Aug 2011 10:47:09 -0400
+Message-ID: <4E5E4967.8070401@openwrt.org> (sfid-20110831_164717_105640_BCBD1066)
+Date: Wed, 31 Aug 2011 16:47:03 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: Re: [PATCH] mac80211: retry sending failed BAR frames later instead
+ of tearing down aggr
+References: <1314558661-28454-1-git-send-email-nbd@openwrt.org> <1314792948.4161.23.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1314792948.4161.23.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While updating the rtlwifi family of drivers based on the latest vendor
-driver, I became aware that each of them has its own routine for getting
-a rate index from the descriptor rate. As the code is identical, these
-patches move a copy of the updated routine to rtlwifi, and convert each
-of the drivers to use that routine.
+On 2011-08-31 2:15 PM, Johannes Berg wrote:
+> On Sun, 2011-08-28 at 21:11 +0200, Felix Fietkau wrote:
+>>  Unfortunately failed BAR tx attempts happen more frequently than I
+>>  expected, and the resulting aggregation teardowns cause performance
+>>  issues, as the aggregation session does not always get re-established
+>>  properly.
+>
+> I find this curious. How can tons of traffic go through, but BAR frames
+> fail? These are unicast and should be retried a bunch...
+I think it mostly happens when the client goes to powersave (triggered 
+by background scans, etc).
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+>>  Instead of tearing down the entire aggr session, we can simply store the
+>>  SSN of the last failed BAR tx attempt, wait for the first successful
+>>  tx status event, and then send another BAR with the same SSN.
+>
+> So what if it keeps failing? I think eventually we'd want to kill the
+> session?
+If it keeps failing, then the connection is probably so bad that it 
+doesn't matter if we kill the session or not.
 
-John,
-
-This is -next material.
-
-Larry
----
-
-Larry Finger (5):
-  rtlwifi: Install updated rate-mapping routine
-  rtlwifi: rtl8192ce: Convert to use the new rate-mapping routine in
-    rtlwifi
-  rtlwifi: rtl8192cu: Convert to use the new rate-mapping routine in
-    rtlwifi
-  rtlwifi: rtl8192se: Convert to use the new rate-mapping routine in
-    rtlwifi
-  rtlwifi: rtl8192de: Convert to use the new rate-mapping routine in
-    rtlwifi
-
- drivers/net/wireless/rtlwifi/base.c          |  161 ++++++++++++++++++++++++++
- drivers/net/wireless/rtlwifi/base.h          |    2 +
- drivers/net/wireless/rtlwifi/rtl8192ce/def.h |  139 ----------------------
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.c  |   30 +++---
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c |  116 ++-----------------
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.h |    8 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/mac.c |    4 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/mac.h |    8 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/rf.c  |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/sw.c  |   28 +++---
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c |   23 ++--
- drivers/net/wireless/rtlwifi/rtl8192de/def.h |   35 ------
- drivers/net/wireless/rtlwifi/rtl8192de/sw.c  |   30 +++---
- drivers/net/wireless/rtlwifi/rtl8192de/trx.c |  121 +++-----------------
- drivers/net/wireless/rtlwifi/rtl8192de/trx.h |    8 +-
- drivers/net/wireless/rtlwifi/rtl8192se/def.h |   39 +------
- drivers/net/wireless/rtlwifi/rtl8192se/sw.c  |   30 +++---
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c |  124 ++------------------
- drivers/net/wireless/rtlwifi/wifi.h          |   35 ++++++
- 19 files changed, 322 insertions(+), 621 deletions(-)
-
--- 
-1.7.3.4
-
+- Felix
