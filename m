@@ -1,102 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:64695 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752660Ab1HaI2I (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:46583 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751218Ab1HaLJP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Aug 2011 04:28:08 -0400
-Received: by wwf5 with SMTP id 5so492320wwf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 01:28:07 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] nl80211/cfg80211: add WIPHY_FLAG_AP_UAPSD flag
-Date: Wed, 31 Aug 2011 11:29:43 +0300
-Message-Id: <1314779383-3557-1-git-send-email-eliad@wizery.com> (sfid-20110831_102813_012272_70236BE6)
+	Wed, 31 Aug 2011 07:09:15 -0400
+Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
+	by emh02-2.mail.saunalahti.fi (Postfix) with SMTP id 83B16EF70B
+	for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 14:09:14 +0300 (EEST)
+Received: from localhost6.localdomain6 (a88-115-188-95.elisa-laajakaista.fi [88.115.188.95])
+	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 6A82527D87
+	for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2011 14:09:09 +0300 (EEST)
+Subject: [PATCH v2 0/4] ath6kl: firmware log support
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Date: Wed, 31 Aug 2011 14:09:09 +0300
+Message-ID: <20110831110650.19680.35966.stgit@localhost6.localdomain6> (sfid-20110831_130919_354639_DA4FCEC7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-add WIPHY_FLAG_AP_UAPSD flag to indicate uapsd support on
-AP mode.
+These patches make possible to get firmware logs from hardware.
 
-Advertise it to userspace by including a new
-NL80211_ATTR_SUPPORT_AP_UAPSD attribute.
+v2:
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+o fix ath6kl_fwlog_mask_write(), use kstrtou32_from_user()
+o don't use ret uninitialised in ath6kl_diag_write()
+
 ---
-this patch was rebased on top of wireless-testing, and contains the
-all the changes that were in my v2 of the patchset, that weren't
-in v1 (that was applied))
 
- include/linux/nl80211.h |    3 +++
- include/net/cfg80211.h  |    2 ++
- net/wireless/nl80211.c  |    5 ++++-
- 3 files changed, 9 insertions(+), 1 deletions(-)
+Kalle Valo (4):
+      ath6kl: add firmware log support
+      ath6kl: implement support to set firmware log parameters
+      ath6kl: cleanup diagnose window read and write functions
+      ath6kl: read fwlog from firmware ring buffer
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 0343504..a3f352f 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1044,6 +1044,8 @@ enum nl80211_commands {
-  *
-  * @NL80211_ATTR_STA_WME: Nested attribute containing the wme configuration
-  *	of the station, see &enum nl80211_sta_wme_attr.
-+ * @NL80211_ATTR_SUPPORT_AP_UAPSD: the device supports uapsd when working
-+ *	as AP.
-  *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -1256,6 +1258,7 @@ enum nl80211_attrs {
- 	NL80211_ATTR_IE_ASSOC_RESP,
- 
- 	NL80211_ATTR_STA_WME,
-+	NL80211_ATTR_SUPPORT_AP_UAPSD,
- 
- 	/* add attributes here, update the policy in nl80211.c */
- 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ce9b7e6..5390a89 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1619,6 +1619,7 @@ struct cfg80211_ops {
-  * @WIPHY_FLAG_MESH_AUTH: The device supports mesh authentication by routing
-  *	auth frames to userspace. See @NL80211_MESH_SETUP_USERSPACE_AUTH.
-  * @WIPHY_FLAG_SUPPORTS_SCHED_SCAN: The device supports scheduled scans.
-+ * @WIPHY_FLAG_AP_UAPSD: The device supports uapsd on AP.
-  */
- enum wiphy_flags {
- 	WIPHY_FLAG_CUSTOM_REGULATORY		= BIT(0),
-@@ -1633,6 +1634,7 @@ enum wiphy_flags {
- 	WIPHY_FLAG_MESH_AUTH			= BIT(10),
- 	WIPHY_FLAG_SUPPORTS_SCHED_SCAN		= BIT(11),
- 	WIPHY_FLAG_ENFORCE_COMBINATIONS		= BIT(12),
-+	WIPHY_FLAG_AP_UAPSD			= BIT(13),
- };
- 
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index bddb559..6ea9ffe 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -719,6 +719,8 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 		NLA_PUT_FLAG(msg, NL80211_ATTR_SUPPORT_IBSS_RSN);
- 	if (dev->wiphy.flags & WIPHY_FLAG_MESH_AUTH)
- 		NLA_PUT_FLAG(msg, NL80211_ATTR_SUPPORT_MESH_AUTH);
-+	if (dev->wiphy.flags & WIPHY_FLAG_AP_UAPSD)
-+		NLA_PUT_FLAG(msg, NL80211_ATTR_SUPPORT_AP_UAPSD);
- 
- 	NLA_PUT(msg, NL80211_ATTR_CIPHER_SUITES,
- 		sizeof(u32) * dev->wiphy.n_cipher_suites,
-@@ -2597,7 +2599,8 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 		return -EINVAL;
- 
- 	/* parse WME attributes if sta is WME capable */
--	if ((params.sta_flags_set & NL80211_STA_FLAG_WME) &&
-+	if ((rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) &&
-+	    (params.sta_flags_set & NL80211_STA_FLAG_WME) &&
- 	    info->attrs[NL80211_ATTR_STA_WME]) {
- 		struct nlattr *tb[NL80211_STA_WME_MAX + 1];
- 		struct nlattr *nla;
--- 
-1.7.6.401.g6a319
+
+ drivers/net/wireless/ath/ath6kl/core.h   |   32 ++++-
+ drivers/net/wireless/ath/ath6kl/debug.c  |  208 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/debug.h  |   13 ++
+ drivers/net/wireless/ath/ath6kl/init.c   |   31 +---
+ drivers/net/wireless/ath/ath6kl/main.c   |  169 ++++++++++++++++++------
+ drivers/net/wireless/ath/ath6kl/target.h |   17 ++
+ drivers/net/wireless/ath/ath6kl/wmi.c    |   20 +++
+ drivers/net/wireless/ath/ath6kl/wmi.h    |    6 +
+ 8 files changed, 427 insertions(+), 69 deletions(-)
 
