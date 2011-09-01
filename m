@@ -1,100 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4647 "EHLO mms2.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1178 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932226Ab1IPT2a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 15:28:30 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
+	id S1750900Ab1IAJRg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Sep 2011 05:17:36 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
 To: gregkh@suse.de
 cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 14/19] staging: brcm80211: remove fullmac module_param
- for ARP offload feature
-Date: Fri, 16 Sep 2011 12:28:03 -0700
-Message-ID: <1316201288-29635-15-git-send-email-frankyl@broadcom.com> (sfid-20110916_212835_294093_FEE0693D)
-In-Reply-To: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
-References: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
+Subject: [PATCH 12/30] staging: brcm80211: replaced fullmac
+ BRCMF_PM_RESUME_WAIT macro with function
+Date: Thu, 1 Sep 2011 11:17:02 +0200
+Message-ID: <1314868640-9425-13-git-send-email-rvossen@broadcom.com> (sfid-20110901_111750_212933_F47CC8B9)
+In-Reply-To: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
+References: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use macro to replace global variable for ARP offload configuration
+Code cleanup. Advantage is more readable code and better type checking.
 
 Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
 Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd.h        |   10 ----------
- drivers/staging/brcm80211/brcmfmac/dhd_common.c |    6 +++---
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c  |    9 ---------
- 3 files changed, 3 insertions(+), 22 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   26 +++++++++++---------
+ 1 files changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index e543640..de3f914 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -665,16 +665,6 @@ struct bcmevent_name {
- 	const char *name;
- };
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index d3d3890..be022d2 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -84,14 +84,6 @@ DECLARE_WAIT_QUEUE_HEAD(sdioh_request_byte_wait);
+ DECLARE_WAIT_QUEUE_HEAD(sdioh_request_word_wait);
+ DECLARE_WAIT_QUEUE_HEAD(sdioh_request_packet_wait);
+ DECLARE_WAIT_QUEUE_HEAD(sdioh_request_buffer_wait);
+-#define BRCMF_PM_RESUME_WAIT(a, b) do { \
+-		int retry = 0; \
+-		while (atomic_read(&b->suspend) && retry++ != 30) { \
+-			wait_event_timeout(a, false, HZ/100); \
+-		} \
+-	}	while (0)
+-#else
+-#define BRCMF_PM_RESUME_WAIT(a, b)
+ #endif		/* CONFIG_PM_SLEEP */
  
--/*
-- * Insmod parameters for debug/test
-- */
--
--/* ARP offload agent mode */
--extern uint brcmf_arp_mode;
--
--/* ARP offload enable */
--extern uint brcmf_arp_enable;
--
- /* Override to force tx queueing all the time */
- extern uint brcmf_force_tx_queueing;
+ static int
+@@ -108,6 +100,16 @@ brcmf_pm_resume_error(struct brcmf_sdio_dev *sdiodev)
+ 	return is_err;
+ }
  
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-index 2e8db62..02c022a 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-@@ -30,6 +30,7 @@
- #define DOT11_OUI_LEN			3
- #define BCMILCP_BCM_SUBTYPE_EVENT	1
- #define PKTFILTER_BUF_SIZE		2048
-+#define BRCMF_ARPOL_MODE		0xb	/* agent|snoop|peer_autoreply */
++static void
++brcmf_pm_resume_wait(struct brcmf_sdio_dev *sdiodev, wait_queue_head_t wq)
++{
++#ifdef CONFIG_PM_SLEEP
++	int retry = 0;
++	while (atomic_read(&sdiodev->suspend) && retry++ != 30)
++		wait_event_timeout(wq, false, HZ/100);
++#endif
++}
++
+ static int brcmf_sdioh_enablefuncs(struct brcmf_sdio_dev *sdiodev)
+ {
+ 	int err_ret;
+@@ -255,7 +257,7 @@ brcmf_sdioh_request_byte(struct brcmf_sdio_dev *sdiodev, uint rw, uint func,
  
- int brcmf_msg_level;
+ 	brcmf_dbg(INFO, "rw=%d, func=%d, addr=0x%05x\n", rw, func, regaddr);
  
-@@ -859,9 +860,8 @@ int brcmf_c_preinit_ioctls(struct brcmf_pub *drvr)
- 			 (char *)&scan_unassoc_time, sizeof(scan_unassoc_time));
+-	BRCMF_PM_RESUME_WAIT(sdioh_request_byte_wait, sdiodev);
++	brcmf_pm_resume_wait(sdiodev, sdioh_request_byte_wait);
+ 	if (brcmf_pm_resume_error(sdiodev))
+ 		return -EIO;
+ 	if (rw) {		/* CMD52 Write */
+@@ -358,7 +360,7 @@ brcmf_sdioh_request_word(struct brcmf_sdio_dev *sdiodev, uint cmd_type, uint rw,
+ 	brcmf_dbg(INFO, "cmd_type=%d, rw=%d, func=%d, addr=0x%05x, nbytes=%d\n",
+ 		  cmd_type, rw, func, addr, nbytes);
  
- 	/* Set and enable ARP offload feature */
--	if (brcmf_arp_enable)
--		brcmf_c_arp_offload_set(drvr, brcmf_arp_mode);
--	brcmf_c_arp_offload_enable(drvr, brcmf_arp_enable);
-+	brcmf_c_arp_offload_set(drvr, BRCMF_ARPOL_MODE);
-+	brcmf_c_arp_offload_enable(drvr, true);
+-	BRCMF_PM_RESUME_WAIT(sdioh_request_word_wait, sdiodev);
++	brcmf_pm_resume_wait(sdiodev, sdioh_request_word_wait);
+ 	if (brcmf_pm_resume_error(sdiodev))
+ 		return -EIO;
+ 	/* Claim host controller */
+@@ -408,7 +410,7 @@ brcmf_sdioh_request_packet(struct brcmf_sdio_dev *sdiodev, uint fix_inc,
  
- 	/* Set up pkt filter */
- 	for (i = 0; i < drvr->pktfilter_count; i++) {
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-index 3b2d500..643c9c2 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-@@ -82,15 +82,6 @@ struct brcmf_info {
- /* Error bits */
- module_param(brcmf_msg_level, int, 0);
+ 	brcmf_dbg(TRACE, "Enter\n");
  
--/* ARP offload agent mode : Enable ARP Host Auto-Reply
--and ARP Peer Auto-Reply */
--uint brcmf_arp_mode = 0xb;
--module_param(brcmf_arp_mode, uint, 0);
--
--/* ARP offload enable */
--uint brcmf_arp_enable = true;
--module_param(brcmf_arp_enable, uint, 0);
--
- /* Network inteface name */
- char iface_name[IFNAMSIZ] = "wlan";
- module_param_string(iface_name, iface_name, IFNAMSIZ, 0);
+-	BRCMF_PM_RESUME_WAIT(sdioh_request_packet_wait, sdiodev);
++	brcmf_pm_resume_wait(sdiodev, sdioh_request_packet_wait);
+ 	if (brcmf_pm_resume_error(sdiodev))
+ 		return -EIO;
+ 
+@@ -486,7 +488,7 @@ brcmf_sdioh_request_buffer(struct brcmf_sdio_dev *sdiodev, uint pio_dma,
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	BRCMF_PM_RESUME_WAIT(sdioh_request_buffer_wait, sdiodev);
++	brcmf_pm_resume_wait(sdiodev, sdioh_request_buffer_wait);
+ 	if (brcmf_pm_resume_error(sdiodev))
+ 		return -EIO;
+ 	/* Case 1: we don't have a packet. */
 -- 
-1.7.1
+1.7.4.1
 
 
