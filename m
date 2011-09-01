@@ -1,466 +1,385 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47436 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751609Ab1ITRPg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 13:15:36 -0400
-Date: Tue, 20 Sep 2011 13:05:01 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless 2011-09-20
-Message-ID: <20110920170501.GE7800@tuxdriver.com> (sfid-20110920_191548_121781_EC161683)
+Received: from mms1.broadcom.com ([216.31.210.17]:2951 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753577Ab1IAJRn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Sep 2011 05:17:43 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 24/30] staging: brcm80211: removed redundant macro's in
+ softmac
+Date: Thu, 1 Sep 2011 11:17:14 +0200
+Message-ID: <1314868640-9425-25-git-send-email-rvossen@broadcom.com> (sfid-20110901_111828_362023_8116DD14)
+In-Reply-To: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
+References: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
-
-This is a batch of fixes intended for 3.1.
-
-Included is a set of Bluetooth fixes from Gustavo:
-
-	This is probably my unique pull request for 3.1, it fixes
-	an regression with the HCI_INQUIRY flag, it was not getting
-	cleaned after scan. Fix by Oliver Neukum. Also support for
-	two new apple devices and a simple fix the to btwilink driver.
-
-Also included is an iwlagn patch revert to avoid some AP crashes, an
-rt2800 patch to refactor some code that triggers a compiler bug, another
-rt2800 patch to correct an endian bug, a b43 fix to restore beaconing in
-ad-hoc mode, a regulatory enforcement fix for a problem that prevented
-multiple regulatory domain changes from beacons, a fix to use the proper
-rates in a probe request, and a fix for a deadlock that had crept into
-ipw2200 after an earlier patch.
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
 ---
+ drivers/staging/brcm80211/brcmsmac/aiutils.c     |   29 +-----------------
+ drivers/staging/brcm80211/brcmsmac/aiutils.h     |   36 ----------------------
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |   21 ++++++++++--
+ drivers/staging/brcm80211/brcmsmac/phy/phy_int.h |   34 --------------------
+ drivers/staging/brcm80211/brcmsmac/phy/phy_n.c   |   31 +++++++++++-------
+ 5 files changed, 37 insertions(+), 114 deletions(-)
 
-The following changes since commit 9d037a777695993ec7437e5f451647dea7919d4c:
-
-  Merge branch 'irq-fixes-for-linus' of git://tesla.tglx.de/git/linux-2.6-tip (2011-09-19 17:23:41 -0700)
-
-are available in the git repository at:
-
-  git://git.infradead.org/users/linville/wireless.git for-davem
-
-Chen Ganir (1):
-      Bluetooth: Fixed BT ST Channel reg order
-
-Don Fry (1):
-      iwlagn: workaround bug crashing some APs
-
-John W. Linville (2):
-      Merge branch 'for-3.1' of git://github.com/padovan/bluetooth-next
-      Merge branch 'master' of ssh://infradead/~/public_git/wireless into for-davem
-
-Jurgen Kramer (1):
-      Bluetooth: add support for 2011 mac mini
-
-Larry Finger (2):
-      rt2800pci: Fix compiler error on PowerPC
-      rtl2800usb: Fix incorrect storage of MAC address on big-endian platforms
-
-Manual Munz (1):
-      b43: Fix beacon problem in ad-hoc mode
-
-Oliver Neukum (1):
-      Bluetooth: Fix timeout on scanning for the second time
-
-Pieter-Augustijn Van Malleghem (1):
-      Bluetooth: Add MacBookAir4,1 support
-
-Rajkumar Manoharan (2):
-      wireless: Reset beacon_found while updating regulatory
-      wireless: Fix rate mask for scan request
-
-Stanislaw Gruszka (1):
-      ipw2x00: fix rtnl mutex deadlock
-
- drivers/bluetooth/btusb.c               |    6 ++++
- drivers/bluetooth/btwilink.c            |   16 +++++-----
- drivers/net/wireless/b43/main.c         |    3 +-
- drivers/net/wireless/ipw2x00/ipw2100.c  |   21 +++++++++----
- drivers/net/wireless/ipw2x00/ipw2200.c  |   39 +++++++++++++++++--------
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    5 +++
- drivers/net/wireless/rt2x00/rt2800lib.c |   47 +++++++++++++++++--------------
- net/bluetooth/hci_event.c               |   17 +++++------
- net/wireless/reg.c                      |    1 +
- net/wireless/sme.c                      |    2 +
- 10 files changed, 98 insertions(+), 59 deletions(-)
-
-diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
-index 3ef4760..9cbac6b 100644
---- a/drivers/bluetooth/btusb.c
-+++ b/drivers/bluetooth/btusb.c
-@@ -72,9 +72,15 @@ static struct usb_device_id btusb_table[] = {
- 	/* Apple MacBookAir3,1, MacBookAir3,2 */
- 	{ USB_DEVICE(0x05ac, 0x821b) },
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.c b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+index f78cc50..e98eb27 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.c
+@@ -202,10 +202,6 @@
+  /* 12 mA drive strengh for later 4313 */
+ #define CCTRL_4313_12MA_LED_DRIVE    0x00000007
  
-+	/* Apple MacBookAir4,1 */
-+	{ USB_DEVICE(0x05ac, 0x821f) },
+-#define BCM47162_DMP() ((sih->chip == BCM47162_CHIP_ID) && \
+-		(sih->chiprev == 0) && \
+-		(sii->coreid[sii->curidx] == MIPS74K_CORE_ID))
+-
+ /* Manufacturer Ids */
+ #define	MFGID_ARM		0x43b
+ #define	MFGID_BRCM		0x4bf
+@@ -750,11 +746,6 @@ uint ai_flag(struct si_pub *sih)
+ 	struct aidmp *ai;
+ 
+ 	sii = SI_INFO(sih);
+-	if (BCM47162_DMP()) {
+-		SI_ERROR(("%s: Attempting to read MIPS DMP registers "
+-			  "on 47162a0", __func__));
+-		return sii->curidx;
+-	}
+ 	ai = sii->curwrap;
+ 
+ 	return R_REG(&ai->oobselouta30) & 0x1f;
+@@ -805,12 +796,6 @@ void ai_core_cflags_wo(struct si_pub *sih, u32 mask, u32 val)
+ 
+ 	sii = SI_INFO(sih);
+ 
+-	if (BCM47162_DMP()) {
+-		SI_ERROR(("%s: Accessing MIPS DMP register (ioctrl) on 47162a0",
+-			  __func__));
+-		return;
+-	}
+-
+ 	ai = sii->curwrap;
+ 
+ 	if (mask || val) {
+@@ -826,12 +811,6 @@ u32 ai_core_cflags(struct si_pub *sih, u32 mask, u32 val)
+ 	u32 w;
+ 
+ 	sii = SI_INFO(sih);
+-	if (BCM47162_DMP()) {
+-		SI_ERROR(("%s: Accessing MIPS DMP register (ioctrl) on 47162a0",
+-			  __func__));
+-		return 0;
+-	}
+-
+ 	ai = sii->curwrap;
+ 
+ 	if (mask || val) {
+@@ -871,12 +850,6 @@ u32 ai_core_sflags(struct si_pub *sih, u32 mask, u32 val)
+ 	u32 w;
+ 
+ 	sii = SI_INFO(sih);
+-	if (BCM47162_DMP()) {
+-		SI_ERROR(("%s: Accessing MIPS DMP register (iostatus) "
+-			  "on 47162a0", __func__));
+-		return 0;
+-	}
+-
+ 	ai = sii->curwrap;
+ 
+ 	if (mask || val) {
+@@ -1073,7 +1046,7 @@ static struct si_info *ai_doattach(struct si_info *sii,
+ 	sih->chiprev = (w & CID_REV_MASK) >> CID_REV_SHIFT;
+ 	sih->chippkg = (w & CID_PKG_MASK) >> CID_PKG_SHIFT;
+ 
+-	sih->issim = IS_SIM(sih->chippkg);
++	sih->issim = false;
+ 
+ 	/* scan for cores */
+ 	if (socitype == SOCI_AI) {
+diff --git a/drivers/staging/brcm80211/brcmsmac/aiutils.h b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+index 5dee80f..b1f2c38 100644
+--- a/drivers/staging/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/staging/brcm80211/brcmsmac/aiutils.h
+@@ -233,48 +233,15 @@
+ #define	SRC_SIZE_SHIFT		1
+ #define	SRC_PRESENT		0x00000001
+ 
+-/* 4330 chip-specific ChipStatus register bits */
+- /* SDIO || gSPI */
+-#define CST4330_CHIPMODE_SDIOD(cs)	(((cs) & 0x7) < 6)
+- /* USB || USBDA */
+-#define CST4330_CHIPMODE_USB20D(cs)	(((cs) & 0x7) >= 6)
+- /* SDIO */
+-#define CST4330_CHIPMODE_SDIO(cs)	(((cs) & 0x4) == 0)
+- /* gSPI */
+-#define CST4330_CHIPMODE_GSPI(cs)	(((cs) & 0x6) == 4)
+- /* USB packet-oriented */
+-#define CST4330_CHIPMODE_USB(cs)	(((cs) & 0x7) == 6)
+- /* USB Direct Access */
+-#define CST4330_CHIPMODE_USBDA(cs)	(((cs) & 0x7) == 7)
+-#define	CST4330_OTP_PRESENT		0x00000010
+-#define	CST4330_LPO_AUTODET_EN		0x00000020
+-#define	CST4330_ARMREMAP_0		0x00000040
+- /* takes priority over OTP if both set */
+-#define	CST4330_SPROM_PRESENT		0x00000080
+-#define	CST4330_ILPDIV_EN		0x00000100
+-#define	CST4330_LPO_SEL			0x00000200
+-#define	CST4330_RES_INIT_MODE_SHIFT	10
+-#define	CST4330_RES_INIT_MODE_MASK	0x00000c00
+-#define CST4330_CBUCK_MODE_SHIFT	12
+-#define CST4330_CBUCK_MODE_MASK		0x00003000
+-#define	CST4330_CBUCK_POWER_OK		0x00004000
+-#define	CST4330_BB_PLL_LOCKED		0x00008000
+-
+ /* Package IDs */
+-#define BCM4329_289PIN_PKG_ID	0	/* 4329 289-pin package id */
+-#define BCM4329_182PIN_PKG_ID	1	/* 4329N 182-pin package id */
+ #define	BCM4717_PKG_ID		9	/* 4717 package id */
+ #define	BCM4718_PKG_ID		10	/* 4718 package id */
+-#define HDLSIM_PKG_ID		14	/* HDL simulator package id */
+-#define HWSIM_PKG_ID		15	/* Hardware simulator package id */
+ #define BCM43224_FAB_SMIC	0xa	/* the chip is manufactured by SMIC */
+ 
+ /* these are router chips */
+ #define	BCM4716_CHIP_ID		0x4716	/* 4716 chipcommon chipid */
+ #define	BCM47162_CHIP_ID	47162	/* 47162 chipcommon chipid */
+ #define	BCM4748_CHIP_ID		0x4748	/* 4716 chipcommon chipid (OTP, RBBU) */
+-#define	BCM5356_CHIP_ID		0x5356	/* 5356 chipcommon chipid */
+-#define	BCM5357_CHIP_ID		0x5357	/* 5357 chipcommon chipid */
+ 
+ 
+ #define	SI_INFO(sih)	((struct si_info *)sih)
+@@ -424,9 +391,6 @@ struct si_pub {
+ /* Define SI_VMSG to printf for verbose debugging, but don't check it in */
+ #define	SI_VMSG(args)
+ 
+-#define	IS_SIM(chippkg)	\
+-	((chippkg == HDLSIM_PKG_ID) || (chippkg == HWSIM_PKG_ID))
+-
+ struct pci_dev;
+ 
+ struct gpioh_item {
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+index eec83ab..b52b305 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
+@@ -27,6 +27,16 @@
+ #include "phy_lcn.h"
+ #include "phyreg_n.h"
+ 
++#define VALID_N_RADIO(radioid) ((radioid == BCM2055_ID) || \
++				 (radioid == BCM2056_ID) || \
++				 (radioid == BCM2057_ID))
 +
- 	/* Apple MacBookPro8,2 */
- 	{ USB_DEVICE(0x05ac, 0x821a) },
- 
-+	/* Apple MacMini5,1 */
-+	{ USB_DEVICE(0x05ac, 0x8281) },
++#define VALID_LCN_RADIO(radioid)	(radioid == BCM2064_ID)
 +
- 	/* AVM BlueFRITZ! USB v2.0 */
- 	{ USB_DEVICE(0x057c, 0x3800) },
++#define VALID_RADIO(pi, radioid)        ( \
++		(ISNPHY(pi) ? VALID_N_RADIO(radioid) : false) || \
++		(ISLCNPHY(pi) ? VALID_LCN_RADIO(radioid) : false))
++
+ struct chan_info_basic {
+ 	u16 chan;
+ 	u16 freq;
+@@ -545,7 +555,8 @@ wlc_phy_attach(struct shared_phy *sh, struct d11regs *regs, int bandtype,
+ 	pi->pubpi.phy_corenum = PHY_CORE_NUM_2;
+ 	pi->pubpi.ana_rev = (phyversion & PV_AV_MASK) >> PV_AV_SHIFT;
  
-diff --git a/drivers/bluetooth/btwilink.c b/drivers/bluetooth/btwilink.c
-index 65d27af..04d353f 100644
---- a/drivers/bluetooth/btwilink.c
-+++ b/drivers/bluetooth/btwilink.c
-@@ -125,6 +125,13 @@ static long st_receive(void *priv_data, struct sk_buff *skb)
- /* protocol structure registered with shared transport */
- static struct st_proto_s ti_st_proto[MAX_BT_CHNL_IDS] = {
- 	{
-+		.chnl_id = HCI_EVENT_PKT, /* HCI Events */
-+		.hdr_len = sizeof(struct hci_event_hdr),
-+		.offset_len_in_hdr = offsetof(struct hci_event_hdr, plen),
-+		.len_size = 1, /* sizeof(plen) in struct hci_event_hdr */
-+		.reserve = 8,
-+	},
-+	{
- 		.chnl_id = HCI_ACLDATA_PKT, /* ACL */
- 		.hdr_len = sizeof(struct hci_acl_hdr),
- 		.offset_len_in_hdr = offsetof(struct hci_acl_hdr, dlen),
-@@ -138,13 +145,6 @@ static struct st_proto_s ti_st_proto[MAX_BT_CHNL_IDS] = {
- 		.len_size = 1, /* sizeof(dlen) in struct hci_sco_hdr */
- 		.reserve = 8,
- 	},
--	{
--		.chnl_id = HCI_EVENT_PKT, /* HCI Events */
--		.hdr_len = sizeof(struct hci_event_hdr),
--		.offset_len_in_hdr = offsetof(struct hci_event_hdr, plen),
--		.len_size = 1, /* sizeof(plen) in struct hci_event_hdr */
--		.reserve = 8,
--	},
+-	if (!VALID_PHYTYPE(pi->pubpi.phy_type))
++	if (!pi->pubpi.phy_type == PHY_TYPE_N &&
++	    !pi->pubpi.phy_type == PHY_TYPE_LCN)
+ 		goto err;
+ 
+ 	if (BAND_5G(bandtype)) {
+@@ -1340,7 +1351,7 @@ u16 wlc_phy_chanspec_band_firstch(struct brcms_phy_pub *ppi, uint band)
+ 	for (i = 0; i < ARRAY_SIZE(chan_info_all); i++) {
+ 		channel = chan_info_all[i].chan;
+ 
+-		if (ISNPHY(pi) && IS40MHZ(pi)) {
++		if (ISNPHY(pi) && pi->bw == WL_CHANSPEC_BW_40) {
+ 			uint j;
+ 
+ 			for (j = 0; j < ARRAY_SIZE(chan_info_all); j++) {
+@@ -2881,7 +2892,8 @@ void wlc_phy_stf_chain_init(struct brcms_phy_pub *pih, u8 txchain, u8 rxchain)
+ 	pi->sh->hw_phyrxchain = rxchain;
+ 	pi->sh->phytxchain = txchain;
+ 	pi->sh->phyrxchain = rxchain;
+-	pi->pubpi.phy_corenum = (u8) PHY_BITSCNT(pi->sh->phyrxchain);
++	pi->pubpi.phy_corenum = (u8) brcmu_bitcount((u8 *)&pi->sh->phyrxchain,
++						    sizeof(u8));
+ }
+ 
+ void wlc_phy_stf_chain_set(struct brcms_phy_pub *pih, u8 txchain, u8 rxchain)
+@@ -2893,7 +2905,8 @@ void wlc_phy_stf_chain_set(struct brcms_phy_pub *pih, u8 txchain, u8 rxchain)
+ 	if (ISNPHY(pi))
+ 		wlc_phy_rxcore_setstate_nphy(pih, rxchain);
+ 
+-	pi->pubpi.phy_corenum = (u8) PHY_BITSCNT(pi->sh->phyrxchain);
++	pi->pubpi.phy_corenum = (u8) brcmu_bitcount((u8 *)&pi->sh->phyrxchain,
++						    sizeof(u8));
+ }
+ 
+ void wlc_phy_stf_chain_get(struct brcms_phy_pub *pih, u8 *txchain, u8 *rxchain)
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h b/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h
+index e09752d..b94117b 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_int.h
+@@ -40,16 +40,9 @@ struct brcms_phy_srom_fem {
+ 	u8 antswctrllut;
  };
  
- /* Called from HCI core to initialize the device */
-@@ -240,7 +240,7 @@ static int ti_st_close(struct hci_dev *hdev)
- 	if (!test_and_clear_bit(HCI_RUNNING, &hdev->flags))
- 		return 0;
+-#undef ISNPHY
+-#undef ISLCNPHY
+ #define ISNPHY(pi)	PHYTYPE_IS((pi)->pubpi.phy_type, PHY_TYPE_N)
+ #define ISLCNPHY(pi)	PHYTYPE_IS((pi)->pubpi.phy_type, PHY_TYPE_LCN)
  
--	for (i = 0; i < MAX_BT_CHNL_IDS; i++) {
-+	for (i = MAX_BT_CHNL_IDS-1; i >= 0; i--) {
- 		err = st_unregister(&ti_st_proto[i]);
- 		if (err)
- 			BT_ERR("st_unregister(%d) failed with error %d",
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 26f1ab8..e293a79 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -1632,7 +1632,8 @@ static void handle_irq_beacon(struct b43_wldev *dev)
- 	u32 cmd, beacon0_valid, beacon1_valid;
+-#define ISPHY_11N_CAP(pi)	(ISNPHY(pi) || ISLCNPHY(pi))
+-
+-#define IS20MHZ(pi)	((pi)->bw == WL_CHANSPEC_BW_20)
+-#define IS40MHZ(pi)	((pi)->bw == WL_CHANSPEC_BW_40)
+-
+ #define PHY_GET_RFATTN(rfgain)	((rfgain) & 0x0f)
+ #define PHY_GET_PADMIX(rfgain)	(((rfgain) & 0x10) >> 4)
+ #define PHY_GET_RFGAINID(rfattn, padmix, width)	((rfattn) + ((padmix)*(width)))
+@@ -237,36 +230,9 @@ enum phy_cal_mode {
+ #define PHY_CHAIN_TX_DISABLE_TEMP	115
+ #define PHY_HYSTERESIS_DELTATEMP	5
  
- 	if (!b43_is_mode(wl, NL80211_IFTYPE_AP) &&
--	    !b43_is_mode(wl, NL80211_IFTYPE_MESH_POINT))
-+	    !b43_is_mode(wl, NL80211_IFTYPE_MESH_POINT) &&
-+	    !b43_is_mode(wl, NL80211_IFTYPE_ADHOC))
- 		return;
+-#define PHY_BITSCNT(x)	brcmu_bitcount((u8 *)&(x), sizeof(u8))
+-
+-#define MOD_PHY_REG(pi, phy_type, reg_name, field, value) \
+-	mod_phy_reg(pi, phy_type##_##reg_name, \
+-		    phy_type##_##reg_name##_##field##_MASK, \
+-		    (value) << phy_type##_##reg_name##_##field##_##SHIFT)
+-
+-#define READ_PHY_REG(pi, phy_type, reg_name, field) \
+-	((read_phy_reg(pi, phy_type##_##reg_name) & \
+-	  phy_type##_##reg_name##_##field##_##MASK) \
+-	 >> phy_type##_##reg_name##_##field##_##SHIFT)
+-
+-#define	VALID_PHYTYPE(phytype)	(((uint)phytype == PHY_TYPE_N) || \
+-				((uint)phytype == PHY_TYPE_LCN))
+-
+-#define VALID_N_RADIO(radioid) ((radioid == BCM2055_ID) || \
+-				 (radioid == BCM2056_ID) || \
+-				 (radioid == BCM2057_ID))
+-
+-#define VALID_LCN_RADIO(radioid)	(radioid == BCM2064_ID)
+-
+-#define VALID_RADIO(pi, radioid)        ( \
+-		(ISNPHY(pi) ? VALID_N_RADIO(radioid) : false) || \
+-		(ISLCNPHY(pi) ? VALID_LCN_RADIO(radioid) : false))
+-
+ #define SCAN_INPROG_PHY(pi) \
+ 	(mboolisset(pi->measure_hold, PHY_HOLD_FOR_SCAN))
  
- 	/* This is the bottom half of the asynchronous beacon update. */
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 3774dd0..ef9ad79 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -1903,15 +1903,17 @@ static void ipw2100_down(struct ipw2100_priv *priv)
- static int ipw2100_net_init(struct net_device *dev)
+-#define RM_INPROG_PHY(pi)       (mboolisset(pi->measure_hold, PHY_HOLD_FOR_RM))
+-
+ #define PLT_INPROG_PHY(pi)      (mboolisset(pi->measure_hold, PHY_HOLD_FOR_PLT))
+ 
+ #define ASSOC_INPROG_PHY(pi) \
+diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
+index f4c89ae..7a50a23 100644
+--- a/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_n.c
+@@ -14756,7 +14756,7 @@ static void wlc_phy_ipa_set_tx_digi_filts_nphy(struct brcms_phy *pi)
+ 				      NPHY_IPA_REV4_txdigi_filtcoeffs[type][j]);
+ 	}
+ 
+-	if (IS40MHZ(pi)) {
++	if (pi->bw == WL_CHANSPEC_BW_40) {
+ 		for (j = 0; j < NPHY_NUM_DIG_FILT_COEFFS; j++)
+ 			write_phy_reg(pi, 0x186 + j,
+ 				      NPHY_IPA_REV4_txdigi_filtcoeffs[3][j]);
+@@ -14779,7 +14779,7 @@ static void wlc_phy_ipa_restore_tx_digi_filts_nphy(struct brcms_phy *pi)
  {
- 	struct ipw2100_priv *priv = libipw_priv(dev);
-+
-+	return ipw2100_up(priv, 1);
-+}
-+
-+static int ipw2100_wdev_init(struct net_device *dev)
-+{
-+	struct ipw2100_priv *priv = libipw_priv(dev);
- 	const struct libipw_geo *geo = libipw_get_geo(priv->ieee);
- 	struct wireless_dev *wdev = &priv->ieee->wdev;
--	int ret;
- 	int i;
+ 	int j;
  
--	ret = ipw2100_up(priv, 1);
--	if (ret)
--		return ret;
--
- 	memcpy(wdev->wiphy->perm_addr, priv->mac_addr, ETH_ALEN);
+-	if (IS40MHZ(pi)) {
++	if (pi->bw == WL_CHANSPEC_BW_40) {
+ 		for (j = 0; j < NPHY_NUM_DIG_FILT_COEFFS; j++)
+ 			write_phy_reg(pi, 0x195 + j,
+ 				      NPHY_IPA_REV4_txdigi_filtcoeffs[4][j]);
+@@ -20851,7 +20851,8 @@ wlc_phy_chanspec_radio2056_setup(struct brcms_phy *pi,
+ 						 mixg_boost_tune);
+ 			} else {
  
- 	/* fill-out priv->ieee->bg_band */
-@@ -6350,9 +6352,13 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
- 		       "Error calling register_netdev.\n");
- 		goto fail;
- 	}
-+	registered = 1;
-+
-+	err = ipw2100_wdev_init(dev);
-+	if (err)
-+		goto fail;
+-				bias = IS40MHZ(pi) ? 0x40 : 0x20;
++				bias = (pi->bw == WL_CHANSPEC_BW_40) ?
++				       0x40 : 0x20;
  
- 	mutex_lock(&priv->action_mutex);
--	registered = 1;
- 
- 	IPW_DEBUG_INFO("%s: Bound to %s\n", dev->name, pci_name(pci_dev));
- 
-@@ -6389,7 +6395,8 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
- 
-       fail_unlock:
- 	mutex_unlock(&priv->action_mutex);
--
-+	wiphy_unregister(priv->ieee->wdev.wiphy);
-+	kfree(priv->ieee->bg_band.channels);
-       fail:
- 	if (dev) {
- 		if (registered)
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 87813c3..4ffebed 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -11425,16 +11425,23 @@ static void ipw_bg_down(struct work_struct *work)
- /* Called by register_netdev() */
- static int ipw_net_init(struct net_device *dev)
- {
-+	int rc = 0;
-+	struct ipw_priv *priv = libipw_priv(dev);
-+
-+	mutex_lock(&priv->mutex);
-+	if (ipw_up(priv))
-+		rc = -EIO;
-+	mutex_unlock(&priv->mutex);
-+
-+	return rc;
-+}
-+
-+static int ipw_wdev_init(struct net_device *dev)
-+{
- 	int i, rc = 0;
- 	struct ipw_priv *priv = libipw_priv(dev);
- 	const struct libipw_geo *geo = libipw_get_geo(priv->ieee);
- 	struct wireless_dev *wdev = &priv->ieee->wdev;
--	mutex_lock(&priv->mutex);
--
--	if (ipw_up(priv)) {
--		rc = -EIO;
--		goto out;
--	}
- 
- 	memcpy(wdev->wiphy->perm_addr, priv->mac_addr, ETH_ALEN);
- 
-@@ -11519,13 +11526,9 @@ static int ipw_net_init(struct net_device *dev)
- 	set_wiphy_dev(wdev->wiphy, &priv->pci_dev->dev);
- 
- 	/* With that information in place, we can now register the wiphy... */
--	if (wiphy_register(wdev->wiphy)) {
-+	if (wiphy_register(wdev->wiphy))
- 		rc = -EIO;
--		goto out;
--	}
--
- out:
--	mutex_unlock(&priv->mutex);
- 	return rc;
- }
- 
-@@ -11832,14 +11835,22 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
- 		goto out_remove_sysfs;
- 	}
- 
-+	err = ipw_wdev_init(net_dev);
-+	if (err) {
-+		IPW_ERROR("failed to register wireless device\n");
-+		goto out_unregister_netdev;
-+	}
-+
- #ifdef CONFIG_IPW2200_PROMISCUOUS
- 	if (rtap_iface) {
- 	        err = ipw_prom_alloc(priv);
- 		if (err) {
- 			IPW_ERROR("Failed to register promiscuous network "
- 				  "device (error %d).\n", err);
--			unregister_netdev(priv->net_dev);
--			goto out_remove_sysfs;
-+			wiphy_unregister(priv->ieee->wdev.wiphy);
-+			kfree(priv->ieee->a_band.channels);
-+			kfree(priv->ieee->bg_band.channels);
-+			goto out_unregister_netdev;
+ 				WRITE_RADIO_REG2(pi, RADIO_2056, TX, core,
+ 						 INTPAG_IMAIN_STAT, bias);
+@@ -24872,11 +24873,13 @@ wlc_phy_a2_nphy(struct brcms_phy *pi, struct nphy_ipa_txcalgains *txgains,
+ 		if (CHSPEC_IS2G(pi->radio_chanspec)) {
+ 			if ((pi->pubpi.radiorev <= 4)
+ 			    || (pi->pubpi.radiorev == 6))
+-				m[core] = IS40MHZ(pi) ? 60 : 79;
++				m[core] = (pi->bw == WL_CHANSPEC_BW_40) ?
++					  60 : 79;
+ 			else
+-				m[core] = IS40MHZ(pi) ? 45 : 64;
++				m[core] = (pi->bw == WL_CHANSPEC_BW_40) ?
++					  45 : 64;
+ 		} else {
+-			m[core] = IS40MHZ(pi) ? 75 : 107;
++			m[core] = (pi->bw == WL_CHANSPEC_BW_40) ? 75 : 107;
  		}
- 	}
- #endif
-@@ -11851,6 +11862,8 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
  
- 	return 0;
- 
-+      out_unregister_netdev:
-+	unregister_netdev(priv->net_dev);
-       out_remove_sysfs:
- 	sysfs_remove_group(&pdev->dev.kobj, &ipw_attribute_group);
-       out_release_irq:
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index b0ae4de..f9c3cd9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2140,7 +2140,12 @@ static int iwl_mac_setup_register(struct iwl_priv *priv,
- 		    IEEE80211_HW_SPECTRUM_MGMT |
- 		    IEEE80211_HW_REPORTS_TX_ACK_STATUS;
- 
-+	/*
-+	 * Including the following line will crash some AP's.  This
-+	 * workaround removes the stimulus which causes the crash until
-+	 * the AP software can be fixed.
- 	hw->max_tx_aggregation_subframes = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
-+	 */
- 
- 	hw->flags |= IEEE80211_HW_SUPPORTS_PS |
- 		     IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index ef67f67..0019dfd 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -3697,14 +3697,15 @@ static void rt2800_efuse_read(struct rt2x00_dev *rt2x00dev, unsigned int i)
- 	rt2800_regbusy_read(rt2x00dev, EFUSE_CTRL, EFUSE_CTRL_KICK, &reg);
- 
- 	/* Apparently the data is read from end to start */
--	rt2800_register_read_lock(rt2x00dev, EFUSE_DATA3,
--					(u32 *)&rt2x00dev->eeprom[i]);
--	rt2800_register_read_lock(rt2x00dev, EFUSE_DATA2,
--					(u32 *)&rt2x00dev->eeprom[i + 2]);
--	rt2800_register_read_lock(rt2x00dev, EFUSE_DATA1,
--					(u32 *)&rt2x00dev->eeprom[i + 4]);
--	rt2800_register_read_lock(rt2x00dev, EFUSE_DATA0,
--					(u32 *)&rt2x00dev->eeprom[i + 6]);
-+	rt2800_register_read_lock(rt2x00dev, EFUSE_DATA3, &reg);
-+	/* The returned value is in CPU order, but eeprom is le */
-+	rt2x00dev->eeprom[i] = cpu_to_le32(reg);
-+	rt2800_register_read_lock(rt2x00dev, EFUSE_DATA2, &reg);
-+	*(u32 *)&rt2x00dev->eeprom[i + 2] = cpu_to_le32(reg);
-+	rt2800_register_read_lock(rt2x00dev, EFUSE_DATA1, &reg);
-+	*(u32 *)&rt2x00dev->eeprom[i + 4] = cpu_to_le32(reg);
-+	rt2800_register_read_lock(rt2x00dev, EFUSE_DATA0, &reg);
-+	*(u32 *)&rt2x00dev->eeprom[i + 6] = cpu_to_le32(reg);
- 
- 	mutex_unlock(&rt2x00dev->csr_mutex);
- }
-@@ -3870,19 +3871,23 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 		return -ENODEV;
- 	}
- 
--	if (!rt2x00_rf(rt2x00dev, RF2820) &&
--	    !rt2x00_rf(rt2x00dev, RF2850) &&
--	    !rt2x00_rf(rt2x00dev, RF2720) &&
--	    !rt2x00_rf(rt2x00dev, RF2750) &&
--	    !rt2x00_rf(rt2x00dev, RF3020) &&
--	    !rt2x00_rf(rt2x00dev, RF2020) &&
--	    !rt2x00_rf(rt2x00dev, RF3021) &&
--	    !rt2x00_rf(rt2x00dev, RF3022) &&
--	    !rt2x00_rf(rt2x00dev, RF3052) &&
--	    !rt2x00_rf(rt2x00dev, RF3320) &&
--	    !rt2x00_rf(rt2x00dev, RF5370) &&
--	    !rt2x00_rf(rt2x00dev, RF5390)) {
--		ERROR(rt2x00dev, "Invalid RF chipset detected.\n");
-+	switch (rt2x00dev->chip.rf) {
-+	case RF2820:
-+	case RF2850:
-+	case RF2720:
-+	case RF2750:
-+	case RF3020:
-+	case RF2020:
-+	case RF3021:
-+	case RF3022:
-+	case RF3052:
-+	case RF3320:
-+	case RF5370:
-+	case RF5390:
-+		break;
-+	default:
-+		ERROR(rt2x00dev, "Invalid RF chipset 0x%x detected.\n",
-+		      rt2x00dev->chip.rf);
- 		return -ENODEV;
- 	}
- 
-diff --git a/net/bluetooth/hci_event.c b/net/bluetooth/hci_event.c
-index a40170e..7ef4eb4 100644
---- a/net/bluetooth/hci_event.c
-+++ b/net/bluetooth/hci_event.c
-@@ -58,8 +58,8 @@ static void hci_cc_inquiry_cancel(struct hci_dev *hdev, struct sk_buff *skb)
- 	if (status)
- 		return;
- 
--	if (test_bit(HCI_MGMT, &hdev->flags) &&
--				test_and_clear_bit(HCI_INQUIRY, &hdev->flags))
-+	if (test_and_clear_bit(HCI_INQUIRY, &hdev->flags) &&
-+			test_bit(HCI_MGMT, &hdev->flags))
- 		mgmt_discovering(hdev->id, 0);
- 
- 	hci_req_complete(hdev, HCI_OP_INQUIRY_CANCEL, status);
-@@ -76,8 +76,8 @@ static void hci_cc_exit_periodic_inq(struct hci_dev *hdev, struct sk_buff *skb)
- 	if (status)
- 		return;
- 
--	if (test_bit(HCI_MGMT, &hdev->flags) &&
--				test_and_clear_bit(HCI_INQUIRY, &hdev->flags))
-+	if (test_and_clear_bit(HCI_INQUIRY, &hdev->flags) &&
-+				test_bit(HCI_MGMT, &hdev->flags))
- 		mgmt_discovering(hdev->id, 0);
- 
- 	hci_conn_check_pending(hdev);
-@@ -959,9 +959,8 @@ static inline void hci_cs_inquiry(struct hci_dev *hdev, __u8 status)
- 		return;
- 	}
- 
--	if (test_bit(HCI_MGMT, &hdev->flags) &&
--					!test_and_set_bit(HCI_INQUIRY,
--							&hdev->flags))
-+	if (!test_and_set_bit(HCI_INQUIRY, &hdev->flags) &&
-+				test_bit(HCI_MGMT, &hdev->flags))
- 		mgmt_discovering(hdev->id, 1);
- }
- 
-@@ -1340,8 +1339,8 @@ static inline void hci_inquiry_complete_evt(struct hci_dev *hdev, struct sk_buff
- 
- 	BT_DBG("%s status %d", hdev->name, status);
- 
--	if (test_bit(HCI_MGMT, &hdev->flags) &&
--				test_and_clear_bit(HCI_INQUIRY, &hdev->flags))
-+	if (test_and_clear_bit(HCI_INQUIRY, &hdev->flags) &&
-+				test_bit(HCI_MGMT, &hdev->flags))
- 		mgmt_discovering(hdev->id, 0);
- 
- 	hci_req_complete(hdev, HCI_OP_INQUIRY, status);
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 02751db..68a471b 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -852,6 +852,7 @@ static void handle_channel(struct wiphy *wiphy,
- 		return;
- 	}
- 
-+	chan->beacon_found = false;
- 	chan->flags = flags | bw_flags | map_regdom_flags(reg_rule->flags);
- 	chan->max_antenna_gain = min(chan->orig_mag,
- 		(int) MBI_TO_DBI(power_rule->max_antenna_gain));
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index b7b6ff8..dec0fa2 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -118,6 +118,8 @@ static int cfg80211_conn_scan(struct wireless_dev *wdev)
- 			     i++, j++)
- 				request->channels[i] =
- 					&wdev->wiphy->bands[band]->channels[j];
-+			request->rates[band] =
-+				(1 << wdev->wiphy->bands[band]->n_bitrates) - 1;
+ 		m[phy_a7] = 0;
+@@ -25015,9 +25018,9 @@ wlc_phy_a2_nphy(struct brcms_phy *pi, struct nphy_ipa_txcalgains *txgains,
  		}
- 	}
- 	request->n_channels = n_channels;
+ 
+ 		if (CHSPEC_IS2G(pi->radio_chanspec))
+-			m[core] = IS40MHZ(pi) ? 45 : 64;
++			m[core] = (pi->bw == WL_CHANSPEC_BW_40) ? 45 : 64;
+ 		else
+-			m[core] = IS40MHZ(pi) ? 75 : 107;
++			m[core] = (pi->bw == WL_CHANSPEC_BW_40) ? 75 : 107;
+ 
+ 		m[phy_a7] = 0;
+ 		wlc_phy_ipa_set_bbmult_nphy(pi, m[0], m[1]);
+@@ -27583,8 +27586,10 @@ static int wlc_phy_cal_rxiq_nphy_rev3(struct brcms_phy *pi,
+ 			txlpf_rccal_lpc = ((int)best_rccal[rx_core] - 12) + 10;
+ 
+ 			if (PHY_IPA(pi)) {
+-				txlpf_rccal_lpc += IS40MHZ(pi) ? 24 : 12;
+-				txlpf_idac = IS40MHZ(pi) ? 0x0e : 0x13;
++				txlpf_rccal_lpc +=
++					(pi->bw == WL_CHANSPEC_BW_40) ? 24 : 12;
++				txlpf_idac = (pi->bw == WL_CHANSPEC_BW_40) ?
++					     0x0e : 0x13;
+ 				WRITE_RADIO_REG2(pi, RADIO_2056, TX, rx_core,
+ 						 TXLPF_IDAC_4, txlpf_idac);
+ 			}
+@@ -28391,7 +28396,8 @@ void wlc_phy_txpwrctrl_enable_nphy(struct brcms_phy *pi, u8 ctrl_type)
+ 		else if (NREV_LT(pi->pubpi.phy_rev, 2))
+ 			mod_phy_reg(pi, 0xdc, 0x00ff, 0x5a);
+ 
+-		if (NREV_LT(pi->pubpi.phy_rev, 2) && IS40MHZ(pi))
++		if (NREV_LT(pi->pubpi.phy_rev, 2) &&
++		    pi->bw == WL_CHANSPEC_BW_40)
+ 			wlapi_bmac_mhf(pi->sh->physhim, MHF1, MHF1_IQSWAP_WAR,
+ 				       MHF1_IQSWAP_WAR, BRCM_BAND_ALL);
+ 
+@@ -28449,7 +28455,8 @@ void wlc_phy_txpwrctrl_enable_nphy(struct brcms_phy *pi, u8 ctrl_type)
+ 		else if (NREV_LT(pi->pubpi.phy_rev, 2))
+ 			mod_phy_reg(pi, 0xdc, 0x00ff, 0x40);
+ 
+-		if (NREV_LT(pi->pubpi.phy_rev, 2) && IS40MHZ(pi))
++		if (NREV_LT(pi->pubpi.phy_rev, 2) &&
++		    pi->bw == WL_CHANSPEC_BW_40)
+ 			wlapi_bmac_mhf(pi->sh->physhim, MHF1, MHF1_IQSWAP_WAR,
+ 				       0x0, BRCM_BAND_ALL);
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.1
+
+
