@@ -1,54 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:5898 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751712Ab1ILTxs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Sep 2011 15:53:48 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH_3.1] iwlagn: fix command queue timeout
-Date: Mon, 12 Sep 2011 12:09:10 -0700
-Message-Id: <1315854550-30478-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20110912_215355_065666_764B637F)
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:41283 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758039Ab1IAVlR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Sep 2011 17:41:17 -0400
+Received: by wyh22 with SMTP id 22so1371085wyh.19
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Sep 2011 14:41:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAE+U-fEjMBMG53yhEExAcsBbVjAwLE4jxGUi4jsz9vLaa=hQdw@mail.gmail.com>
+References: <CAE+U-fEjMBMG53yhEExAcsBbVjAwLE4jxGUi4jsz9vLaa=hQdw@mail.gmail.com>
+Date: Thu, 1 Sep 2011 23:41:14 +0200
+Message-ID: <CAE+U-fHTBNFkQq+-9p9uyc+Z3gEDh6a=Wubdvda7pdTXcykW6g@mail.gmail.com> (sfid-20110901_234124_722381_72C32E09)
+Subject: [iwlagn] Major Bug, regression found in the 3.1 kernel series
+From: alanwww1 <alanwww1@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+I found a serious bug in the 3.1 kernel series. It is a major regression.
+I also tested the situation with today's snapshot with the same result.
+I already reported at two places, but i am not sure if it was the right place:
 
-If the command queue is constantly busy,
-which can happen in P2P, the hangcheck
-timer will frequently find a command in
-it and will eventually reset the device
-because nothing sets the timestamp for
-this queue when commands are processed.
+https://bugzilla.kernel.org/show_bug.cgi?id=41972
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/837995
 
-Fix this by setting the timestamp when
-a command completes.
-
-Cc: stable@kernel.org #2.6.39, #3.0.0 #3.1.0
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-SIgned-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
-these patches are also available from wireless-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-index c0def8e..49431ed 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-@@ -928,6 +928,8 @@ void iwl_tx_cmd_complete(struct iwl_trans *trans, struct iwl_rx_mem_buffer *rxb)
- 	cmd = txq->cmd[cmd_index];
- 	meta = &txq->meta[cmd_index];
- 
-+	txq->time_stamp = jiffies;
-+
- 	iwlagn_unmap_tfd(trans, meta, &txq->tfds[index],
- 			 DMA_BIDIRECTIONAL);
- 
--- 
-1.7.0.4
-
+Also it behaves the same if I compile the kernel myself and not use
+the Ubuntu packages.
+Thanks, Alan
