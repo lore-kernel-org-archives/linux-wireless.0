@@ -1,63 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:57824 "EHLO mgw2.diku.dk"
+Received: from nbd.name ([46.4.11.11]:41460 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753775Ab1ILTZB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Sep 2011 15:25:01 -0400
-Date: Mon, 12 Sep 2011 21:24:55 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	Wey-Yi W Guy <wey-yi.w.guy@intel.com>,
-	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
-	Alexander Diewald <alex@diewald.cc>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3.1] iwlagn: fix stack corruption
-In-Reply-To: <CALSq=BYqNg_xukL5oJuu3pPqU=FcgR+Lov=PdGjMxtL3UNu8HA@mail.gmail.com>
-Message-ID: <Pine.LNX.4.64.1109122123560.13009@ask.diku.dk> (sfid-20110912_212508_243445_127DC3B2)
-References: <1315854505.11834.3.camel@jlt3.sipsolutions.net>
- <CALSq=BYqNg_xukL5oJuu3pPqU=FcgR+Lov=PdGjMxtL3UNu8HA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-511516320-251054898-1315855495=:13009"
+	id S1752073Ab1IASBR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Sep 2011 14:01:17 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	rmanohar@qca.qualcomm.com, shafi.wireless@gmail.com,
+	vthiagar@qca.qualcomm.com
+Subject: [PATCH v12 2/5] ath9k: move a few functions around
+Date: Thu,  1 Sep 2011 20:01:04 +0200
+Message-Id: <1314900067-85242-2-git-send-email-nbd@openwrt.org> (sfid-20110901_200121_390608_A1CAA4DE)
+In-Reply-To: <1314900067-85242-1-git-send-email-nbd@openwrt.org>
+References: <1314900067-85242-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Helps with making ath_reset static in the next commit
 
----511516320-251054898-1315855495=:13009
-Content-Type: TEXT/PLAIN; charset=iso-8859-1
-Content-Transfer-Encoding: 8BIT
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/main.c |  137 +++++++++++++++++----------------
+ 1 files changed, 69 insertions(+), 68 deletions(-)
 
-On Mon, 12 Sep 2011, Daniel Halperin wrote:
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index da57b2c..9bb222c 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -596,74 +596,6 @@ static void ath_node_detach(struct ath_softc *sc, struct ieee80211_sta *sta)
+ 		ath_tx_node_cleanup(sc, an);
+ }
+ 
+-void ath_hw_check(struct work_struct *work)
+-{
+-	struct ath_softc *sc = container_of(work, struct ath_softc, hw_check_work);
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-	unsigned long flags;
+-	int busy;
+-
+-	ath9k_ps_wakeup(sc);
+-	if (ath9k_hw_check_alive(sc->sc_ah))
+-		goto out;
+-
+-	spin_lock_irqsave(&common->cc_lock, flags);
+-	busy = ath_update_survey_stats(sc);
+-	spin_unlock_irqrestore(&common->cc_lock, flags);
+-
+-	ath_dbg(common, ATH_DBG_RESET, "Possible baseband hang, "
+-		"busy=%d (try %d)\n", busy, sc->hw_busy_count + 1);
+-	if (busy >= 99) {
+-		if (++sc->hw_busy_count >= 3) {
+-			spin_lock_bh(&sc->sc_pcu_lock);
+-			ath_reset(sc, true);
+-			spin_unlock_bh(&sc->sc_pcu_lock);
+-		}
+-	} else if (busy >= 0)
+-		sc->hw_busy_count = 0;
+-
+-out:
+-	ath9k_ps_restore(sc);
+-}
+-
+-static void ath_hw_pll_rx_hang_check(struct ath_softc *sc, u32 pll_sqsum)
+-{
+-	static int count;
+-	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-
+-	if (pll_sqsum >= 0x40000) {
+-		count++;
+-		if (count == 3) {
+-			/* Rx is hung for more than 500ms. Reset it */
+-			ath_dbg(common, ATH_DBG_RESET,
+-				"Possible RX hang, resetting");
+-			spin_lock_bh(&sc->sc_pcu_lock);
+-			ath_reset(sc, true);
+-			spin_unlock_bh(&sc->sc_pcu_lock);
+-			count = 0;
+-		}
+-	} else
+-		count = 0;
+-}
+-
+-void ath_hw_pll_work(struct work_struct *work)
+-{
+-	struct ath_softc *sc = container_of(work, struct ath_softc,
+-					    hw_pll_work.work);
+-	u32 pll_sqsum;
+-
+-	if (AR_SREV_9485(sc->sc_ah)) {
+-
+-		ath9k_ps_wakeup(sc);
+-		pll_sqsum = ar9003_get_pll_sqsum_dvc(sc->sc_ah);
+-		ath9k_ps_restore(sc);
+-
+-		ath_hw_pll_rx_hang_check(sc, pll_sqsum);
+-
+-		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/5);
+-	}
+-}
+-
+ 
+ void ath9k_tasklet(unsigned long data)
+ {
+@@ -1037,6 +969,75 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	return r;
+ }
+ 
++void ath_hw_check(struct work_struct *work)
++{
++	struct ath_softc *sc = container_of(work, struct ath_softc, hw_check_work);
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	unsigned long flags;
++	int busy;
++
++	ath9k_ps_wakeup(sc);
++	if (ath9k_hw_check_alive(sc->sc_ah))
++		goto out;
++
++	spin_lock_irqsave(&common->cc_lock, flags);
++	busy = ath_update_survey_stats(sc);
++	spin_unlock_irqrestore(&common->cc_lock, flags);
++
++	ath_dbg(common, ATH_DBG_RESET, "Possible baseband hang, "
++		"busy=%d (try %d)\n", busy, sc->hw_busy_count + 1);
++	if (busy >= 99) {
++		if (++sc->hw_busy_count >= 3) {
++			spin_lock_bh(&sc->sc_pcu_lock);
++			ath_reset(sc, true);
++			spin_unlock_bh(&sc->sc_pcu_lock);
++		}
++
++	} else if (busy >= 0)
++		sc->hw_busy_count = 0;
++
++out:
++	ath9k_ps_restore(sc);
++}
++
++static void ath_hw_pll_rx_hang_check(struct ath_softc *sc, u32 pll_sqsum)
++{
++	static int count;
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++
++	if (pll_sqsum >= 0x40000) {
++		count++;
++		if (count == 3) {
++			/* Rx is hung for more than 500ms. Reset it */
++			ath_dbg(common, ATH_DBG_RESET,
++				"Possible RX hang, resetting");
++			spin_lock_bh(&sc->sc_pcu_lock);
++			ath_reset(sc, true);
++			spin_unlock_bh(&sc->sc_pcu_lock);
++			count = 0;
++		}
++	} else
++		count = 0;
++}
++
++void ath_hw_pll_work(struct work_struct *work)
++{
++	struct ath_softc *sc = container_of(work, struct ath_softc,
++					    hw_pll_work.work);
++	u32 pll_sqsum;
++
++	if (AR_SREV_9485(sc->sc_ah)) {
++
++		ath9k_ps_wakeup(sc);
++		pll_sqsum = ar9003_get_pll_sqsum_dvc(sc->sc_ah);
++		ath9k_ps_restore(sc);
++
++		ath_hw_pll_rx_hang_check(sc, pll_sqsum);
++
++		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/5);
++	}
++}
++
+ /**********************/
+ /* mac80211 callbacks */
+ /**********************/
+-- 
+1.7.3.2
 
-> On Mon, Sep 12, 2011 at 12:08 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> >
-> > --- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c      2011-09-12 21:01:34.000000000 +0200
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c      2011-09-12 21:01:43.000000000 +0200
-> > @@ -167,7 +167,7 @@ static int iwlagn_set_temperature_offset
-> >
-> >        memset(&cmd, 0, sizeof(cmd));
-> >        iwl_set_calib_hdr(&cmd.hdr, IWL_PHY_CALIBRATE_TEMP_OFFSET_CMD);
-> > -       memcpy(&cmd.radio_sensor_offset, offset_calib, sizeof(offset_calib));
-> > +       memcpy(&cmd.radio_sensor_offset, offset_calib, sizeof(*offset_calib));
-> >        if (!(cmd.radio_sensor_offset))
-> >                cmd.radio_sensor_offset = DEFAULT_RADIO_SENSOR_OFFSET;
-> 
-> Nice catch!
-> 
-> This kinda bug seems ideal for Julia Lawall's stuff to catch, doesn't it?
-> 
-> Right: memcpy(addr, obj, sizeof(*obj))
-> Wrong: memcpy(addr, obj, sizeof(obj))
-
-Yes...  I have tried in the past the following:
-
-x = <+... sizeof(x) ...+>
-
-But that doesn't catch the above because there is no return value.  I will 
-try it.
-
-julia
----511516320-251054898-1315855495=:13009--
