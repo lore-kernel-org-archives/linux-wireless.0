@@ -1,65 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46023 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756276Ab1IHXwU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 19:52:20 -0400
-Message-ID: <4E68ECE2.7060504@qca.qualcomm.com> (sfid-20110909_015232_825562_1578CDAB)
-Date: Thu, 8 Sep 2011 19:27:14 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:1176 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750889Ab1IAJRg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Sep 2011 05:17:36 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 19/30] staging: brcm80211: remove static function
+ declaration in dhd_linux
+Date: Thu, 1 Sep 2011 11:17:09 +0200
+Message-ID: <1314868640-9425-20-git-send-email-rvossen@broadcom.com> (sfid-20110901_111745_769801_E98EE3F1)
+In-Reply-To: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
+References: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-To: Sangwook Lee <sangwook.lee@linaro.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: Question: ath6kl (driver/net/wireless/ath/ath6kl) with debug_mask
- value
-References: <CADPsn1bsUJqcuwZrW+e92aGms+t+TKRasnGb=ujzzgvz+S1Maw@mail.gmail.com>
-In-Reply-To: <CADPsn1bsUJqcuwZrW+e92aGms+t+TKRasnGb=ujzzgvz+S1Maw@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sangwook,
+From: Franky Lin <frankyl@broadcom.com>
 
-On 09/07/2011 04:32 PM, Sangwook Lee wrote:
-> I am running ath6kl-cleanup git.
+Reshuffle function order in dhd_linux of fullmac to get rid of
+static function declaration
 
-BTW, ath6kl-cleanup.git is not updated anymore. Instead there's now
-ath6kl.git which follows wireless-testing. You can find it from
-git.kernel.org (when it's up again) or from github.
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |   40 ++++++++++-------------
+ 1 files changed, 17 insertions(+), 23 deletions(-)
 
-> If I add debug_mask values with ath6kl.ko as like followings, I get
-> the success full results,
-> but without this, "iwlist wlan0 scan" fails.
-> 
-> ath6kl: hw 2.0 fw 3.1.1.149
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 46f75b7..7121b16 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -120,12 +120,6 @@ uint brcmf_radio_up = 1;
+ char iface_name[IFNAMSIZ] = "wlan";
+ module_param_string(iface_name, iface_name, IFNAMSIZ, 0);
+ 
+-static int brcmf_toe_get(struct brcmf_info *drvr_priv, int idx, u32 *toe_ol);
+-static int brcmf_toe_set(struct brcmf_info *drvr_priv, int idx, u32 toe_ol);
+-static int brcmf_host_event(struct brcmf_info *drvr_priv, int *ifidx,
+-			    void *pktdata, struct brcmf_event_msg *event_ptr,
+-			    void **data_ptr);
+-
+ static int brcmf_net2idx(struct brcmf_info *drvr_priv, struct net_device *net)
+ {
+ 	int i = 0;
+@@ -600,6 +594,23 @@ void brcmf_txflowcontrol(struct brcmf_pub *drvr, int ifidx, bool state)
+ 		netif_wake_queue(net);
+ }
+ 
++static int brcmf_host_event(struct brcmf_info *drvr_priv, int *ifidx,
++			    void *pktdata, struct brcmf_event_msg *event,
++			    void **data)
++{
++	int bcmerror = 0;
++
++	bcmerror = brcmf_c_host_event(drvr_priv, ifidx, pktdata, event, data);
++	if (bcmerror != 0)
++		return bcmerror;
++
++	if (drvr_priv->iflist[*ifidx]->net)
++		brcmf_cfg80211_event(drvr_priv->iflist[*ifidx]->net,
++				     event, *data);
++
++	return bcmerror;
++}
++
+ void brcmf_rx_frame(struct brcmf_pub *drvr, int ifidx, struct sk_buff *skb,
+ 		  int numpkt)
+ {
+@@ -1483,23 +1494,6 @@ int brcmf_os_proto_unblock(struct brcmf_pub *drvr)
+ 	return 0;
+ }
+ 
+-static int brcmf_host_event(struct brcmf_info *drvr_priv, int *ifidx,
+-			    void *pktdata, struct brcmf_event_msg *event,
+-			    void **data)
+-{
+-	int bcmerror = 0;
+-
+-	bcmerror = brcmf_c_host_event(drvr_priv, ifidx, pktdata, event, data);
+-	if (bcmerror != 0)
+-		return bcmerror;
+-
+-	if (drvr_priv->iflist[*ifidx]->net)
+-		brcmf_cfg80211_event(drvr_priv->iflist[*ifidx]->net,
+-				     event, *data);
+-
+-	return bcmerror;
+-}
+-
+ int brcmf_netdev_reset(struct net_device *dev, u8 flag)
+ {
+ 	struct brcmf_info *drvr_priv = *(struct brcmf_info **)netdev_priv(dev);
+-- 
+1.7.4.1
 
-Hmm, I'm not sure if I have hw 2.0. I try to find one from my "stash" :)
 
-> 1) SCAN success with debug values: ( 0xc44,c40,40)
-> $ insmod ath.ko
-> $ insmod ath6kl.ko debug_mask=0x40
-> $ ifconfig wlan0 up
-> $ iwlist wlan0 scan
-> 
-> 2) SCAN failure
-> $ insmod ath.ko
-> $ insmod ath6kl.ko
-> $ ifconfig wlan0 up
-> $ iwlist wlan0 scan
-> With this case, there is no coming event "WMI_SCAN_COMPLETE_EVENTID".
-> After receiving  "ath6kl: WMI_EXTENSION_EVENTID"
-> iwlist shows error message:
->       wlan0     Failed to read scan data : Resource temporarily unavailable
-
-0x40 is ATH6KL_DBG_HTC_RECV. I guess the debug prints slow down the
-execution and papers over the bug. At least I can't think of any other
-explonation right now.
-
-Before I'm able to find a hw 2.0 device, can you try to debug this more?
-When scanning fails can check if ath6kldev_intr_bh_handler() is called
-or not? When scanning fails it usually happens because irqs are failing.
-
-Can you share any details about your setup? From linaro.org I assume you
-are using an arm board of some sort ;)
-
-Kalle
