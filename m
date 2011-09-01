@@ -1,87 +1,396 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:33976 "HELO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751026Ab1IVEnS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 00:43:18 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3/4] mwifiex: pass correct band parameter to ieee80211_channel_to_frequency()
-Date: Wed, 21 Sep 2011 21:43:24 -0700
-Message-Id: <1316666605-30954-3-git-send-email-bzhao@marvell.com> (sfid-20110922_064321_413297_A1DD2506)
-In-Reply-To: <1316666605-30954-1-git-send-email-bzhao@marvell.com>
-References: <1316666605-30954-1-git-send-email-bzhao@marvell.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:2953 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753266Ab1IAJRn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Sep 2011 05:17:43 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 03/30] staging: brcm80211: removed static function
+ declarations in ampdu.c
+Date: Thu, 1 Sep 2011 11:16:53 +0200
+Message-ID: <1314868640-9425-4-git-send-email-rvossen@broadcom.com> (sfid-20110901_111840_371456_6F201C20)
+In-Reply-To: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
+References: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
-
-ieee80211_channel_to_frequency() routine expects band parameter in
-the form of "enum ieee80211_band band". Currently driver specific
-band (BAND_A, BAND_AN etc.) is passed to the routine.
-
-This patch makes sure that correct parameter is passed.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c  |    4 +++-
- drivers/net/wireless/mwifiex/sta_ioctl.c |    5 +++--
- 2 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/ampdu.c |  299 +++++++++++++---------------
+ 1 files changed, 140 insertions(+), 159 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 62932c2..0ddcdca 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -768,6 +768,7 @@ static int mwifiex_cfg80211_inform_ibss_bss(struct mwifiex_private *priv)
- 	struct mwifiex_bss_info bss_info;
- 	int ie_len;
- 	u8 ie_buf[IEEE80211_MAX_SSID_LEN + sizeof(struct ieee_types_header)];
-+	enum ieee80211_band band;
+diff --git a/drivers/staging/brcm80211/brcmsmac/ampdu.c b/drivers/staging/brcm80211/brcmsmac/ampdu.c
+index 6fc1591..318235d 100644
+--- a/drivers/staging/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/staging/brcm80211/brcmsmac/ampdu.c
+@@ -60,6 +60,8 @@
+ 					 * accumulate between resets.
+ 					 */
  
- 	if (mwifiex_get_bss_info(priv, &bss_info))
- 		return -1;
-@@ -780,9 +781,10 @@ static int mwifiex_cfg80211_inform_ibss_bss(struct mwifiex_private *priv)
- 			bss_info.ssid.ssid_len);
- 	ie_len = ie_buf[1] + sizeof(struct ieee_types_header);
++#define SHORTNAME "AMPDU status"
++
+ #define TX_SEQ_TO_INDEX(seq) ((seq) % AMPDU_TX_BA_MAX_WSIZE)
  
-+	band = mwifiex_band_to_radio_type(priv->curr_bss_params.band);
- 	chan = __ieee80211_get_channel(priv->wdev->wiphy,
- 			ieee80211_channel_to_frequency(bss_info.bss_chan,
--						priv->curr_bss_params.band));
-+						       band));
+ /* max possible overhead per mpdu in the ampdu; 3 is for roundup if needed */
+@@ -148,26 +150,77 @@ struct cb_del_ampdu_pars {
+ #define SCB_AMPDU_CUBBY(ampdu, scb) (&(scb->scb_ampdu))
+ #define SCB_AMPDU_INI(scb_ampdu, tid) (&(scb_ampdu->ini[tid]))
  
- 	cfg80211_inform_bss(priv->wdev->wiphy, chan,
- 		bss_info.bssid, 0, WLAN_CAPABILITY_IBSS,
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 157d312..a9dfeb1 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -655,6 +655,7 @@ mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, int channel)
- 	u16 curr_chan = 0;
- 	struct cfg80211_bss *bss = NULL;
- 	struct ieee80211_channel *chan;
-+	enum ieee80211_band band;
+-static void brcms_c_ffpld_init(struct ampdu_info *ampdu);
+-static int brcms_c_ffpld_check_txfunfl(struct brcms_c_info *wlc, int f);
+-static void brcms_c_ffpld_calc_mcs2ampdu_table(struct ampdu_info *ampdu, int f);
++#define brcms_c_ampdu_txflowcontrol(a, b, c)	do {} while (0)
  
- 	memset(&bss_info, 0, sizeof(bss_info));
+-static void brcms_c_scb_ampdu_update_max_txlen(struct ampdu_info *ampdu,
+-					       u8 dur);
+-static void brcms_c_scb_ampdu_update_config(struct ampdu_info *ampdu,
+-					    struct scb *scb);
+-static void brcms_c_scb_ampdu_update_config_all(struct ampdu_info *ampdu);
++static void brcms_c_scb_ampdu_update_max_txlen(struct ampdu_info *ampdu, u8 dur)
++{
++	u32 rate, mcs;
  
-@@ -691,9 +692,9 @@ mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, int channel)
- 		goto done;
+-#define brcms_c_ampdu_txflowcontrol(a, b, c)	do {} while (0)
++	for (mcs = 0; mcs < MCS_TABLE_SIZE; mcs++) {
++		/* rate is in Kbps; dur is in msec ==> len = (rate * dur) / 8 */
++		/* 20MHz, No SGI */
++		rate = MCS_RATE(mcs, false, false);
++		ampdu->max_txlen[mcs][0][0] = (rate * dur) >> 3;
++		/* 40 MHz, No SGI */
++		rate = MCS_RATE(mcs, true, false);
++		ampdu->max_txlen[mcs][1][0] = (rate * dur) >> 3;
++		/* 20MHz, SGI */
++		rate = MCS_RATE(mcs, false, true);
++		ampdu->max_txlen[mcs][0][1] = (rate * dur) >> 3;
++		/* 40 MHz, SGI */
++		rate = MCS_RATE(mcs, true, true);
++		ampdu->max_txlen[mcs][1][1] = (rate * dur) >> 3;
++	}
++}
+ 
+-static void
+-brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu,
+-				  struct scb *scb,
+-				  struct sk_buff *p, struct tx_status *txs,
+-				  u32 frmtxstatus, u32 frmtxstatus2);
++static bool brcms_c_ampdu_cap(struct ampdu_info *ampdu)
++{
++	if (BRCMS_PHY_11N_CAP(ampdu->wlc->band))
++		return true;
++	else
++		return false;
++}
++
++static int brcms_c_ampdu_set(struct ampdu_info *ampdu, bool on)
++{
++	struct brcms_c_info *wlc = ampdu->wlc;
+ 
+-static bool brcms_c_ampdu_cap(struct ampdu_info *ampdu);
+-static int brcms_c_ampdu_set(struct ampdu_info *ampdu, bool on);
++	wlc->pub->_ampdu = false;
++
++	if (on) {
++		if (!N_ENAB(wlc->pub)) {
++			wiphy_err(ampdu->wlc->wiphy, "wl%d: driver not "
++				"nmode enabled\n", wlc->pub->unit);
++			return -ENOTSUPP;
++		}
++		if (!brcms_c_ampdu_cap(ampdu)) {
++			wiphy_err(ampdu->wlc->wiphy, "wl%d: device not "
++				"ampdu capable\n", wlc->pub->unit);
++			return -ENOTSUPP;
++		}
++		wlc->pub->_ampdu = on;
++	}
++
++	return 0;
++}
++
++static void brcms_c_ffpld_init(struct ampdu_info *ampdu)
++{
++	int i, j;
++	struct brcms_fifo_info *fifo;
++
++	for (j = 0; j < NUM_FFPLD_FIFO; j++) {
++		fifo = (ampdu->fifo_tb + j);
++		fifo->ampdu_pld_size = 0;
++		for (i = 0; i <= FFPLD_MAX_MCS; i++)
++			fifo->mcs2ampdu_table[i] = 255;
++		fifo->dmaxferrate = 0;
++		fifo->accum_txampdu = 0;
++		fifo->prev_txfunfl = 0;
++		fifo->accum_txfunfl = 0;
++
++	}
++}
+ 
+ struct ampdu_info *brcms_c_ampdu_attach(struct brcms_c_info *wlc)
+ {
+@@ -267,21 +320,35 @@ static void brcms_c_scb_ampdu_update_config_all(struct ampdu_info *ampdu)
+ 	brcms_c_scb_ampdu_update_config(ampdu, ampdu->wlc->pub->global_scb);
+ }
+ 
+-static void brcms_c_ffpld_init(struct ampdu_info *ampdu)
++static void brcms_c_ffpld_calc_mcs2ampdu_table(struct ampdu_info *ampdu, int f)
+ {
+-	int i, j;
+-	struct brcms_fifo_info *fifo;
++	int i;
++	u32 phy_rate, dma_rate, tmp;
++	u8 max_mpdu;
++	struct brcms_fifo_info *fifo = (ampdu->fifo_tb + f);
+ 
+-	for (j = 0; j < NUM_FFPLD_FIFO; j++) {
+-		fifo = (ampdu->fifo_tb + j);
+-		fifo->ampdu_pld_size = 0;
+-		for (i = 0; i <= FFPLD_MAX_MCS; i++)
+-			fifo->mcs2ampdu_table[i] = 255;
+-		fifo->dmaxferrate = 0;
+-		fifo->accum_txampdu = 0;
+-		fifo->prev_txfunfl = 0;
+-		fifo->accum_txfunfl = 0;
++	/* recompute the dma rate */
++	/* note : we divide/multiply by 100 to avoid integer overflows */
++	max_mpdu = min_t(u8, fifo->mcs2ampdu_table[FFPLD_MAX_MCS],
++			 AMPDU_NUM_MPDU_LEGACY);
++	phy_rate = MCS_RATE(FFPLD_MAX_MCS, true, false);
++	dma_rate =
++	    (((phy_rate / 100) *
++	      (max_mpdu * FFPLD_MPDU_SIZE - fifo->ampdu_pld_size))
++	     / (max_mpdu * FFPLD_MPDU_SIZE)) * 100;
++	fifo->dmaxferrate = dma_rate;
+ 
++	/* fill up the mcs2ampdu table; do not recalc the last mcs */
++	dma_rate = dma_rate >> 7;
++	for (i = 0; i < FFPLD_MAX_MCS; i++) {
++		/* shifting to keep it within integer range */
++		phy_rate = MCS_RATE(i, true, false) >> 7;
++		if (phy_rate > dma_rate) {
++			tmp = ((fifo->ampdu_pld_size * phy_rate) /
++			       ((phy_rate - dma_rate) * FFPLD_MPDU_SIZE)) + 1;
++			tmp = min_t(u32, tmp, 255);
++			fifo->mcs2ampdu_table[i] = (u8) tmp;
++		}
  	}
+ }
  
-+	band = mwifiex_band_to_radio_type(priv->curr_bss_params.band);
- 	chan = __ieee80211_get_channel(priv->wdev->wiphy,
--			ieee80211_channel_to_frequency(channel,
--						priv->curr_bss_params.band));
-+			ieee80211_channel_to_frequency(channel, band));
+@@ -410,38 +477,6 @@ static int brcms_c_ffpld_check_txfunfl(struct brcms_c_info *wlc, int fid)
+ 	return 0;
+ }
  
- 	/* Find the BSS we want using available scan results */
- 	bss = cfg80211_get_bss(priv->wdev->wiphy, chan, bss_info.bssid,
+-static void brcms_c_ffpld_calc_mcs2ampdu_table(struct ampdu_info *ampdu, int f)
+-{
+-	int i;
+-	u32 phy_rate, dma_rate, tmp;
+-	u8 max_mpdu;
+-	struct brcms_fifo_info *fifo = (ampdu->fifo_tb + f);
+-
+-	/* recompute the dma rate */
+-	/* note : we divide/multiply by 100 to avoid integer overflows */
+-	max_mpdu = min_t(u8, fifo->mcs2ampdu_table[FFPLD_MAX_MCS],
+-			 AMPDU_NUM_MPDU_LEGACY);
+-	phy_rate = MCS_RATE(FFPLD_MAX_MCS, true, false);
+-	dma_rate =
+-	    (((phy_rate / 100) *
+-	      (max_mpdu * FFPLD_MPDU_SIZE - fifo->ampdu_pld_size))
+-	     / (max_mpdu * FFPLD_MPDU_SIZE)) * 100;
+-	fifo->dmaxferrate = dma_rate;
+-
+-	/* fill up the mcs2ampdu table; do not recalc the last mcs */
+-	dma_rate = dma_rate >> 7;
+-	for (i = 0; i < FFPLD_MAX_MCS; i++) {
+-		/* shifting to keep it within integer range */
+-		phy_rate = MCS_RATE(i, true, false) >> 7;
+-		if (phy_rate > dma_rate) {
+-			tmp = ((fifo->ampdu_pld_size * phy_rate) /
+-			       ((phy_rate - dma_rate) * FFPLD_MPDU_SIZE)) + 1;
+-			tmp = min_t(u32, tmp, 255);
+-			fifo->mcs2ampdu_table[i] = (u8) tmp;
+-		}
+-	}
+-}
+-
+ void
+ brcms_c_ampdu_tx_operational(struct brcms_c_info *wlc, u8 tid,
+ 	u8 ba_wsize,		/* negotiated ba window size (in pdu) */
+@@ -846,61 +881,6 @@ brcms_c_sendampdu(struct ampdu_info *ampdu, struct brcms_txq_info *qi,
+ 	return err;
+ }
+ 
+-void
+-brcms_c_ampdu_dotxstatus(struct ampdu_info *ampdu, struct scb *scb,
+-		     struct sk_buff *p, struct tx_status *txs)
+-{
+-	struct scb_ampdu *scb_ampdu;
+-	struct brcms_c_info *wlc = ampdu->wlc;
+-	struct scb_ampdu_tid_ini *ini;
+-	u32 s1 = 0, s2 = 0;
+-	struct ieee80211_tx_info *tx_info;
+-
+-	tx_info = IEEE80211_SKB_CB(p);
+-
+-	/* BMAC_NOTE: For the split driver, second level txstatus comes later
+-	 * So if the ACK was received then wait for the second level else just
+-	 * call the first one
+-	 */
+-	if (txs->status & TX_STATUS_ACK_RCV) {
+-		u8 status_delay = 0;
+-
+-		/* wait till the next 8 bytes of txstatus is available */
+-		while (((s1 = R_REG(&wlc->regs->frmtxstatus)) & TXS_V) == 0) {
+-			udelay(1);
+-			status_delay++;
+-			if (status_delay > 10)
+-				return; /* error condition */
+-		}
+-
+-		s2 = R_REG(&wlc->regs->frmtxstatus2);
+-	}
+-
+-	if (likely(scb)) {
+-		scb_ampdu = SCB_AMPDU_CUBBY(ampdu, scb);
+-		ini = SCB_AMPDU_INI(scb_ampdu, p->priority);
+-		brcms_c_ampdu_dotxstatus_complete(ampdu, scb, p, txs, s1, s2);
+-	} else {
+-		/* loop through all pkts and free */
+-		u8 queue = txs->frameid & TXFID_QUEUE_MASK;
+-		struct d11txh *txh;
+-		u16 mcl;
+-		while (p) {
+-			tx_info = IEEE80211_SKB_CB(p);
+-			txh = (struct d11txh *) p->data;
+-			mcl = le16_to_cpu(txh->MacTxControlLow);
+-			brcmu_pkt_buf_free_skb(p);
+-			/* break out if last packet of ampdu */
+-			if (((mcl & TXC_AMPDU_MASK) >> TXC_AMPDU_SHIFT) ==
+-			    TXC_AMPDU_LAST)
+-				break;
+-			p = GETNEXTTXP(wlc, queue);
+-		}
+-		brcms_c_txfifo_complete(wlc, queue, ampdu->txpkt_weight);
+-	}
+-	brcms_c_ampdu_txflowcontrol(wlc, scb_ampdu, ini);
+-}
+-
+ static void
+ brcms_c_ampdu_rate_status(struct brcms_c_info *wlc,
+ 			  struct ieee80211_tx_info *tx_info,
+@@ -916,8 +896,6 @@ brcms_c_ampdu_rate_status(struct brcms_c_info *wlc,
+ 	}
+ }
+ 
+-#define SHORTNAME "AMPDU status"
+-
+ static void
+ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
+ 			      struct sk_buff *p, struct tx_status *txs,
+@@ -1125,56 +1103,59 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
+ 	brcms_c_txfifo_complete(wlc, queue, ampdu->txpkt_weight);
+ }
+ 
+-static int brcms_c_ampdu_set(struct ampdu_info *ampdu, bool on)
++void
++brcms_c_ampdu_dotxstatus(struct ampdu_info *ampdu, struct scb *scb,
++		     struct sk_buff *p, struct tx_status *txs)
+ {
++	struct scb_ampdu *scb_ampdu;
+ 	struct brcms_c_info *wlc = ampdu->wlc;
++	struct scb_ampdu_tid_ini *ini;
++	u32 s1 = 0, s2 = 0;
++	struct ieee80211_tx_info *tx_info;
+ 
+-	wlc->pub->_ampdu = false;
+-
+-	if (on) {
+-		if (!N_ENAB(wlc->pub)) {
+-			wiphy_err(ampdu->wlc->wiphy, "wl%d: driver not "
+-				"nmode enabled\n", wlc->pub->unit);
+-			return -ENOTSUPP;
+-		}
+-		if (!brcms_c_ampdu_cap(ampdu)) {
+-			wiphy_err(ampdu->wlc->wiphy, "wl%d: device not "
+-				"ampdu capable\n", wlc->pub->unit);
+-			return -ENOTSUPP;
+-		}
+-		wlc->pub->_ampdu = on;
+-	}
++	tx_info = IEEE80211_SKB_CB(p);
+ 
+-	return 0;
+-}
++	/* BMAC_NOTE: For the split driver, second level txstatus comes later
++	 * So if the ACK was received then wait for the second level else just
++	 * call the first one
++	 */
++	if (txs->status & TX_STATUS_ACK_RCV) {
++		u8 status_delay = 0;
+ 
+-static bool brcms_c_ampdu_cap(struct ampdu_info *ampdu)
+-{
+-	if (BRCMS_PHY_11N_CAP(ampdu->wlc->band))
+-		return true;
+-	else
+-		return false;
+-}
++		/* wait till the next 8 bytes of txstatus is available */
++		while (((s1 = R_REG(&wlc->regs->frmtxstatus)) & TXS_V) == 0) {
++			udelay(1);
++			status_delay++;
++			if (status_delay > 10)
++				return; /* error condition */
++		}
+ 
+-static void brcms_c_scb_ampdu_update_max_txlen(struct ampdu_info *ampdu, u8 dur)
+-{
+-	u32 rate, mcs;
++		s2 = R_REG(&wlc->regs->frmtxstatus2);
++	}
+ 
+-	for (mcs = 0; mcs < MCS_TABLE_SIZE; mcs++) {
+-		/* rate is in Kbps; dur is in msec ==> len = (rate * dur) / 8 */
+-		/* 20MHz, No SGI */
+-		rate = MCS_RATE(mcs, false, false);
+-		ampdu->max_txlen[mcs][0][0] = (rate * dur) >> 3;
+-		/* 40 MHz, No SGI */
+-		rate = MCS_RATE(mcs, true, false);
+-		ampdu->max_txlen[mcs][1][0] = (rate * dur) >> 3;
+-		/* 20MHz, SGI */
+-		rate = MCS_RATE(mcs, false, true);
+-		ampdu->max_txlen[mcs][0][1] = (rate * dur) >> 3;
+-		/* 40 MHz, SGI */
+-		rate = MCS_RATE(mcs, true, true);
+-		ampdu->max_txlen[mcs][1][1] = (rate * dur) >> 3;
++	if (likely(scb)) {
++		scb_ampdu = SCB_AMPDU_CUBBY(ampdu, scb);
++		ini = SCB_AMPDU_INI(scb_ampdu, p->priority);
++		brcms_c_ampdu_dotxstatus_complete(ampdu, scb, p, txs, s1, s2);
++	} else {
++		/* loop through all pkts and free */
++		u8 queue = txs->frameid & TXFID_QUEUE_MASK;
++		struct d11txh *txh;
++		u16 mcl;
++		while (p) {
++			tx_info = IEEE80211_SKB_CB(p);
++			txh = (struct d11txh *) p->data;
++			mcl = le16_to_cpu(txh->MacTxControlLow);
++			brcmu_pkt_buf_free_skb(p);
++			/* break out if last packet of ampdu */
++			if (((mcl & TXC_AMPDU_MASK) >> TXC_AMPDU_SHIFT) ==
++			    TXC_AMPDU_LAST)
++				break;
++			p = GETNEXTTXP(wlc, queue);
++		}
++		brcms_c_txfifo_complete(wlc, queue, ampdu->txpkt_weight);
+ 	}
++	brcms_c_ampdu_txflowcontrol(wlc, scb_ampdu, ini);
+ }
+ 
+ void brcms_c_ampdu_macaddr_upd(struct brcms_c_info *wlc)
 -- 
-1.7.0.2
+1.7.4.1
+
 
