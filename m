@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42142 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756451Ab1ISTDU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 15:03:20 -0400
-Message-ID: <4E7791F5.5050709@openwrt.org> (sfid-20110919_210323_871349_340A5FD9)
-Date: Mon, 19 Sep 2011 21:03:17 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:35149 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757191Ab1IAMWP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Sep 2011 08:22:15 -0400
+Message-ID: <4E5F78F1.8010900@qca.qualcomm.com> (sfid-20110901_142218_112942_B3C28C51)
+Date: Thu, 1 Sep 2011 15:22:09 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH v2 3/4] ath: remove ath_regulatory::current_rd_ext
-References: <1316453903-75710-1-git-send-email-nbd@openwrt.org> <1316453903-75710-2-git-send-email-nbd@openwrt.org> <1316453903-75710-3-git-send-email-nbd@openwrt.org> <CAB=NE6UhC=am2aVXwf+v4g7ME_49Nv47SZwSNetLgJpRV-=BkA@mail.gmail.com> <4E778A1C.5020206@openwrt.org> <CAB=NE6WLfhEb0X4u9g87oE3poNzPmKr-Z8H554tZ_erJ8-rRjg@mail.gmail.com> <4E779076.2030509@openwrt.org> <CAB=NE6UtJ=7X84iruquCSGhaj_SDKEWe_5iAnwGyRg94ggugWA@mail.gmail.com>
-In-Reply-To: <CAB=NE6UtJ=7X84iruquCSGhaj_SDKEWe_5iAnwGyRg94ggugWA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: "Sumangala, Suraj" <surajs@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>,
+	"Balasubramanian, senthilkumar" <senthilb@qca.qualcomm.com>,
+	"Mehta, Vipin" <vipimeht@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] nl80211: Added NL80211 commands for Bluetooth-WiFi coex
+References: <1314771915-8848-1-git-send-email-surajs@qca.qualcomm.com>	 (sfid-20110831_082525_612687_34CC3735),<1314772217.4161.10.camel@jlt3.sipsolutions.net>	 <480687D4EEFE7447A2E09AADFF6673621AF7CDCF@nasanexd02a.na.qualcomm.com>	 ,<1314772832.4161.16.camel@jlt3.sipsolutions.net>	 <480687D4EEFE7447A2E09AADFF6673621AF7CE0B@nasanexd02a.na.qualcomm.com>	 <1314801657.3373.260.camel@aeonflux>	 <480687D4EEFE7447A2E09AADFF6673621AF7DF82@nasanexd02a.na.qualcomm.com>	 <1314831118.3373.266.camel@aeonflux>	 <480687D4EEFE7447A2E09AADFF6673621AF827CC@nasanexd02a.na.qualcomm.com> <1314877381.3373.284.camel@aeonflux>
+In-Reply-To: <1314877381.3373.284.camel@aeonflux>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-09-19 8:58 PM, Luis R. Rodriguez wrote:
-> On Mon, Sep 19, 2011 at 11:56 AM, Felix Fietkau<nbd@openwrt.org>  wrote:
->>  On 2011-09-19 8:43 PM, Luis R. Rodriguez wrote:
->>>
->>>  On Mon, Sep 19, 2011 at 11:29 AM, Felix Fietkau<nbd@openwrt.org>    wrote:
->>>>
->>>>    On 2011-09-19 8:18 PM, Luis R. Rodriguez wrote:
->>>>>
->>>>>    On Mon, Sep 19, 2011 at 10:38 AM, Felix Fietkau<nbd@openwrt.org>
->>>>>    wrote:
->>>>>>
->>>>>>     Signed-off-by: Felix Fietkau<nbd@openwrt.org>
->>>>>
->>>>>    Can you document on the patch commit log why you do remove this.
->>>>
->>>>    Because it's unused
->>>
->>>  Why is it unused?
->>
->>  Because the code that used to use it was removed a while ago in other
->>  patches.
->
-> And what did that do :) ?
-It used to set some pointless flags that were never used for anything.
+Hi Marcel,
 
-- Felix
+a minor nitpick:
+
+On 09/01/2011 02:43 PM, Marcel Holtmann wrote:
+> However first we need to establish in which direction this should be
+> done anyway. Should the Bluetooth subsystem notify mac80211
+> unconditional or should mac80211 register notifiers of the Bluetooth
+> subsystem.
+
+Not all wireless drivers use mac80211 so this should use cfg80211 instead.
+
+Kalle
