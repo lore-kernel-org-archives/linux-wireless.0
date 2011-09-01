@@ -1,79 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smp.if.uj.edu.pl ([149.156.82.206]:49476 "EHLO smp.if.uj.edu.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753134Ab1IHXTi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Sep 2011 19:19:38 -0400
-Date: Thu, 8 Sep 2011 18:57:30 +0200
-From: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
-To: Michael Witten <mfwitten@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, stable@kernel.org
-Subject: Re: [PATCH] mac80211: fix suspend/resume races with unregister hw
-Message-ID: <20110908165730.GD9104@smp.if.uj.edu.pl> (sfid-20110909_011942_653072_F8D32331)
-References: <1313150459-13234-1-git-send-email-sgruszka@redhat.com>
- <d9f6472975e34cb294831e32c8ce2346-mfwitten@gmail.com>
- <20110908064410.GA2195@redhat.com>
- <CAMOZ1BvsPok-AZVCwKnv0hWWXyV+np+nARjGRqwqsvC-du_GAw@mail.gmail.com>
- <20110908162605.GD2195@redhat.com>
- <CAMOZ1Bs_DesZoyYw6yzC8CdqR3yLgXXpBzxvsEsQ0eX4L6Vw+A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=_smp.if.uj.edu.pl-6859-1315501052-0001-2"
-In-Reply-To: <CAMOZ1Bs_DesZoyYw6yzC8CdqR3yLgXXpBzxvsEsQ0eX4L6Vw+A@mail.gmail.com>
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:60079 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753311Ab1IAUKB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Sep 2011 16:10:01 -0400
+Received: by pzk37 with SMTP id 37so3467837pzk.1
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Sep 2011 13:10:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1314905534-24190-1-git-send-email-thomas@cozybit.com>
+References: <1314905534-24190-1-git-send-email-thomas@cozybit.com>
+From: Javier Cardona <javier@cozybit.com>
+Date: Thu, 1 Sep 2011 13:09:41 -0700
+Message-ID: <CAPjQAd-GWdJawo4wFQXD_Lpfzcq7_DxG0zS+bgTtZ433-m6cnA@mail.gmail.com> (sfid-20110901_221009_156990_69056AEC)
+Subject: Re: [PATCH] mac80211: check if mesh frame is in RMC after decrypt
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+On Thu, Sep 1, 2011 at 12:32 PM, Thomas Pedersen <thomas@cozybit.com> wrote:
+> To check whether a frame is in the RMC, we need access to the mesh
+> header.  This header is encrypted in encrypted data frames, so make this
+> check after the frame has been decrypted.
+>
+> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 
---=_smp.if.uj.edu.pl-6859-1315501052-0001-2
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> ---
+>  net/mac80211/rx.c |   15 ++++++---------
+>  1 files changed, 6 insertions(+), 9 deletions(-)
+>
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index 1fe26fa..9410b9f 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -476,7 +476,6 @@ static ieee80211_rx_result
+>  ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
+>  {
+>        struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
+> -       unsigned int hdrlen = ieee80211_hdrlen(hdr->frame_control);
+>        char *dev_addr = rx->sdata->vif.addr;
+>
+>        if (ieee80211_is_data(hdr->frame_control)) {
+> @@ -524,14 +523,6 @@ ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
+>
+>        }
+>
+> -#define msh_h_get(h, l) ((struct ieee80211s_hdr *) ((u8 *)h + l))
+> -
+> -       if (ieee80211_is_data(hdr->frame_control) &&
+> -           is_multicast_ether_addr(hdr->addr1) &&
+> -           mesh_rmc_check(hdr->addr3, msh_h_get(hdr, hdrlen), rx->sdata))
+> -               return RX_DROP_MONITOR;
+> -#undef msh_h_get
+> -
+>        return RX_CONTINUE;
+>  }
+>
+> @@ -1827,6 +1818,12 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+>        hdrlen = ieee80211_hdrlen(hdr->frame_control);
+>        mesh_hdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
+>
+> +       /* frame is in RMC, don't forward */
+> +       if (ieee80211_is_data(hdr->frame_control) &&
+> +           is_multicast_ether_addr(hdr->addr1) &&
+> +           mesh_rmc_check(hdr->addr3, mesh_hdr, rx->sdata))
+> +               return RX_DROP_MONITOR;
+> +
+>        if (!ieee80211_is_data(hdr->frame_control))
+>                return RX_CONTINUE;
+>
+> --
+> 1.7.4.1
+>
+>
 
-On 09-08 16:41, Michael Witten wrote:
->=20
-> Interestingly, though, `lsmod' shows the following:
->=20
->   Module                  Size  Used by
->   ...
->   ipw2200               109206  0
->   ...
->=20
-> even when the wireless network is up and running; I would have
-> expected the `Used by' column to show that `ipw2200' is being used by
-> at least something else; the consequence is that I am able to run
-> `rmmod' on `ipw2200' while the wireless network is up and running,
-> which seems odd (though it causes no discernible error).
 
-Hi.
 
-I think this was always so. I just checked other system
-with vanila 3.0.0 kernel, and it also says "Used by" =3D=3D 0
-I do not remember exactly, but I think it was always saying zero.
-You can actually always rmmod ipw220, regardles
-whetever network interface is used, opened, up, or whetever.
-I guess hot plug is important here.
-
-Regards,
-Witek
-
---=20
-Witold Baryluk
-
---=_smp.if.uj.edu.pl-6859-1315501052-0001-2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Transfer-Encoding: 7bit
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk5o8/oACgkQ7ZLFFOttZ4JGYgCeJSAGJrXhprl9AS7LhMGBeGwL
-Y6sAn3lcoXHfM/n1IfXRG0KACQUYinLd
-=VPwZ
------END PGP SIGNATURE-----
-
---=_smp.if.uj.edu.pl-6859-1315501052-0001-2--
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
