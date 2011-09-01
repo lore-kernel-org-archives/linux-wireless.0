@@ -1,64 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:3845 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753258Ab1IFHwB (ORCPT
+Received: from mail-qw0-f45.google.com ([209.85.216.45]:40279 "EHLO
+	mail-qw0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753298Ab1IARCC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Sep 2011 03:52:01 -0400
-Message-ID: <4E65D11B.3080904@qca.qualcomm.com> (sfid-20110906_095207_407049_0F7603C1)
-Date: Tue, 6 Sep 2011 10:51:55 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Thu, 1 Sep 2011 13:02:02 -0400
+Received: by qwj8 with SMTP id 8so1473333qwj.4
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Sep 2011 10:02:01 -0700 (PDT)
 MIME-Version: 1.0
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 4/4] ath6kl: Allow enabling of P2P support
-References: <1315233527-6234-1-git-send-email-jouni@qca.qualcomm.com> <1315233527-6234-5-git-send-email-jouni@qca.qualcomm.com> <4E65C49B.2000201@qca.qualcomm.com> <20110906072138.GA3125@jouni.qca.qualcomm.com>
-In-Reply-To: <20110906072138.GA3125@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <1314833554-40721-3-git-send-email-nbd@openwrt.org>
+References: <1314833554-40721-1-git-send-email-nbd@openwrt.org>
+ <1314833554-40721-2-git-send-email-nbd@openwrt.org> <1314833554-40721-3-git-send-email-nbd@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Thu, 1 Sep 2011 10:01:40 -0700
+Message-ID: <CAB=NE6WXTs_wnoW0cdSNp=BrL=QnR=D2KNOcT6n4MOYOtE8sJQ@mail.gmail.com> (sfid-20110901_190206_332119_A5D0C28E)
+Subject: Re: [PATCH v11 3/4] ath9k: merge reset related functions
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	rmanohar@qca.qualcomm.com, shafi.wireless@gmail.com,
+	vthiagar@qca.qualcomm.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/06/2011 10:21 AM, Jouni Malinen wrote:
-> On Tue, Sep 06, 2011 at 09:58:35AM +0300, Kalle Valo wrote:
->> On 09/05/2011 05:38 PM, Jouni Malinen wrote:
->>> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c +++
->>> b/drivers/net/wireless/ath/ath6kl/cfg80211.c +static unsigned int
->>> ath6kl_p2p; + +module_param(ath6kl_p2p, uint, 0644);
->> 
->> Currently all module parameters are in init.c. It's not the best
->> place and most likely will move to core.c soon, but I still would
->> prefer to have them all in one place. I think moving this to init.c
->> would make sense.
-> 
-> I started with this in init.c, but that causes checkpatch warnings
-> when the variable needs to be accessed as extern in cfg80211.c. Or
-> well, I guess I could hide that by defining the extern in a header
-> file, but this parameter should not really be used in any other file
-> than cfg80211.c to initialize the flag in struct ath6kl. As such, I
-> would prefer not to make its visibility any larger that necessary.
+On Wed, Aug 31, 2011 at 4:32 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> reduces unnecessary code duplication. Also takes the sc_pcu_lock within
+> ath_reset instead of callsites, which makes it possible to always cancel
+> all queued work items before the reset, possibly fixing a few race
+> conditions (work items vs reset) along with it.
+>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-I was more thinking that ath6kl_p2p would not be exposed outside init.c,
-instead you would set the appropriate conf_flag in ath6kl_core_init() or
-similar function. But leave the module_param as it is for now, I will
-cleanup the module parameters anyway soon.
+This was a bit hard to review, if helpers are being added can they be
+added without changing code around, and in some other patch make the
+changes you describe?
 
-> Why would all module parameters need to be defined in the same C
-> file?
-
-Just for consistency so that people don't need to grep different locations.
-
->> Can we combine this if block with the first one?
-> 
-> Sure, but that would add extra indentation level for the following
-> code, so this separate check-if-P2P-is-supported followed by 
-> if-P2P-is-supported looks cleaner to me.
-
-Yeah, you are right. My original comment was bogus.
-
->> If it's ok for you, I'll commit the first three patches and we can
->> talk more about this patch.
-> 
-> Yes, please do.
-
-Ok, I have applied the first three now.
-
-Kalle
+  Luis
