@@ -1,141 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4894 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753138Ab1IXCJT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Sep 2011 22:09:19 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 08/20] staging: brcm80211: cleanup structure fields used
- for scanning
-Date: Fri, 23 Sep 2011 19:08:56 -0700
-Message-ID: <1316830148-28661-9-git-send-email-frankyl@broadcom.com> (sfid-20110924_040939_071751_BEC5C165)
-In-Reply-To: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
-References: <1316830148-28661-1-git-send-email-frankyl@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5965 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754133Ab1IAGJk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Sep 2011 02:09:40 -0400
+From: "Sumangala, Suraj" <surajs@qca.qualcomm.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>,
+	"Balasubramanian, senthilkumar" <senthilb@qca.qualcomm.com>,
+	"Mehta, Vipin" <vipimeht@qca.qualcomm.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [RFC] nl80211: Added NL80211 commands for Bluetooth-WiFi coex
+Date: Thu, 1 Sep 2011 06:09:38 +0000
+Message-ID: <480687D4EEFE7447A2E09AADFF6673621AF827CC@nasanexd02a.na.qualcomm.com> (sfid-20110901_080944_621500_B4A60C66)
+References: <1314771915-8848-1-git-send-email-surajs@qca.qualcomm.com>
+	 (sfid-20110831_082525_612687_34CC3735),<1314772217.4161.10.camel@jlt3.sipsolutions.net>
+	 <480687D4EEFE7447A2E09AADFF6673621AF7CDCF@nasanexd02a.na.qualcomm.com>
+	 ,<1314772832.4161.16.camel@jlt3.sipsolutions.net>
+	 <480687D4EEFE7447A2E09AADFF6673621AF7CE0B@nasanexd02a.na.qualcomm.com>
+	 <1314801657.3373.260.camel@aeonflux>
+	 <480687D4EEFE7447A2E09AADFF6673621AF7DF82@nasanexd02a.na.qualcomm.com>
+ <1314831118.3373.266.camel@aeonflux>
+In-Reply-To: <1314831118.3373.266.camel@aeonflux>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
-
-In the structure brcmf_cfg80211_priv two fields were defined
-in which one was allocated and a second was referenced back to
-the first for no obvious reasons. Also the name was misleading
-giving the impression that the driver was maintaining a list of
-BSS entries like cfg80211 does.
-
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   32 ++++++++++++---------
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h |    5 +--
- 2 files changed, 20 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index b956c90..471f2d7 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -1972,7 +1972,7 @@ static s32 brcmf_inform_bss(struct brcmf_cfg80211_priv *cfg_priv)
- 	s32 err = 0;
- 	int i;
- 
--	bss_list = cfg_priv->bss_list;
-+	bss_list = cfg_priv->scan_list;
- 	if (bss_list->version != BRCMF_BSS_INFO_VERSION) {
- 		WL_ERR("Version %d != WL_BSS_INFO_VERSION\n",
- 		       bss_list->version);
-@@ -2288,12 +2288,18 @@ static void brcmf_cfg80211_iscan_handler(struct work_struct *work)
- 	}
- 
- 	rtnl_lock();
--	if (brcmf_get_iscan_results(iscan, &status, &cfg_priv->bss_list)) {
-+	/* obtain scan results in scan_list to be used by iscan handler below */
-+	if (brcmf_get_iscan_results(iscan, &status, &cfg_priv->scan_list)) {
- 		status = BRCMF_SCAN_RESULTS_ABORTED;
- 		WL_ERR("Abort iscan\n");
- 	}
- 	rtnl_unlock();
- 
-+	/*
-+	 * call handler based upon status provided by dongle.
-+	 * The scan_list retrieved from the dongle may be used
-+	 * or discarded depending on the status.
-+	 */
- 	el->handler[status](cfg_priv);
- }
- 
-@@ -3028,22 +3034,20 @@ brcmf_notify_scan_status(struct brcmf_cfg80211_priv *cfg_priv,
- 	scan_channel = le32_to_cpu(channel_inform_le.scan_channel);
- 	if (scan_channel)
- 		WL_CONN("channel_inform.scan_channel (%d)\n", scan_channel);
--	cfg_priv->bss_list = cfg_priv->scan_results;
--	bss_list_le = (struct brcmf_scan_results_le *) cfg_priv->bss_list;
-+	bss_list_le = (struct brcmf_scan_results_le *) cfg_priv->scan_list;
- 
--	memset(cfg_priv->scan_results, 0, len);
-+	memset(bss_list_le, 0, len);
- 	bss_list_le->buflen = cpu_to_le32(len);
--	err = brcmf_dev_ioctl(ndev, BRCMF_C_SCAN_RESULTS,
--			      cfg_priv->scan_results, len);
-+	err = brcmf_dev_ioctl(ndev, BRCMF_C_SCAN_RESULTS, bss_list_le, len);
- 	if (err) {
- 		WL_ERR("%s Scan_results error (%d)\n", ndev->name, err);
- 		err = -EINVAL;
- 		scan_abort = true;
- 		goto scan_done_out;
- 	}
--	cfg_priv->scan_results->buflen = le32_to_cpu(bss_list_le->buflen);
--	cfg_priv->scan_results->version = le32_to_cpu(bss_list_le->version);
--	cfg_priv->scan_results->count = le32_to_cpu(bss_list_le->count);
-+	cfg_priv->scan_list->buflen = le32_to_cpu(bss_list_le->buflen);
-+	cfg_priv->scan_list->version = le32_to_cpu(bss_list_le->version);
-+	cfg_priv->scan_list->count = le32_to_cpu(bss_list_le->count);
- 
- 	err = brcmf_inform_bss(cfg_priv);
- 	if (err) {
-@@ -3086,8 +3090,8 @@ static void brcmf_init_eloop_handler(struct brcmf_cfg80211_event_loop *el)
- 
- static void brcmf_deinit_priv_mem(struct brcmf_cfg80211_priv *cfg_priv)
- {
--	kfree(cfg_priv->scan_results);
--	cfg_priv->scan_results = NULL;
-+	kfree(cfg_priv->scan_list);
-+	cfg_priv->scan_list = NULL;
- 	kfree(cfg_priv->bss_info);
- 	cfg_priv->bss_info = NULL;
- 	kfree(cfg_priv->conf);
-@@ -3108,8 +3112,8 @@ static void brcmf_deinit_priv_mem(struct brcmf_cfg80211_priv *cfg_priv)
- 
- static s32 brcmf_init_priv_mem(struct brcmf_cfg80211_priv *cfg_priv)
- {
--	cfg_priv->scan_results = kzalloc(WL_SCAN_BUF_MAX, GFP_KERNEL);
--	if (!cfg_priv->scan_results)
-+	cfg_priv->scan_list = kzalloc(WL_SCAN_BUF_MAX, GFP_KERNEL);
-+	if (!cfg_priv->scan_list)
- 		goto init_priv_mem_out;
- 	cfg_priv->conf = kzalloc(sizeof(*cfg_priv->conf), GFP_KERNEL);
- 	if (!cfg_priv->conf)
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-index afc60d9..f40a878 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.h
-@@ -285,9 +285,8 @@ struct brcmf_cfg80211_priv {
- 	struct list_head evt_q_list;	/* used for event queue */
- 	spinlock_t	 evt_q_lock;	/* for event queue synchronization */
- 	struct mutex usr_sync;	/* maily for dongle up/down synchronization */
--	struct brcmf_scan_results *bss_list;	/* bss_list holding scanned
--						 ap information */
--	struct brcmf_scan_results *scan_results;
-+	struct brcmf_scan_results *scan_list; /* holding bss scan result from
-+						dongle */
- 	struct brcmf_cfg80211_scan_req *scan_req_int;	/* scan request object
- 						 for internal purpose */
- 	struct wl_cfg80211_bss_info *bss_info;	/* bss information for
--- 
-1.7.1
-
-
+SGkgTWFyY2VsLA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IE1hcmNl
+bCBIb2x0bWFubiBbbWFpbHRvOm1hcmNlbEBob2x0bWFubi5vcmddDQo+IFNlbnQ6IFRodXJzZGF5
+LCBTZXB0ZW1iZXIgMDEsIDIwMTEgNDoyMiBBTQ0KPiBUbzogU3VtYW5nYWxhLCBTdXJhag0KPiBD
+YzogSm9oYW5uZXMgQmVyZzsgbGludmlsbGVAdHV4ZHJpdmVyLmNvbTsgYXRoNmtsLWRldmVsOyBC
+YWxhc3VicmFtYW5pYW4sDQo+IHNlbnRoaWxrdW1hcjsgTWVodGEsIFZpcGluOyBWYWxvLCBLYWxs
+ZTsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJFOiBbUkZDXSBu
+bDgwMjExOiBBZGRlZCBOTDgwMjExIGNvbW1hbmRzIGZvciBCbHVldG9vdGgtV2lGaSBjb2V4DQo+
+IA0KPiBIaSBTdXJhaiwNCj4gDQo+ID4gPiB0aGlzIGxvb2tzIGxpa2UgdGhlIHRvdGFsIHdyb25n
+IGFwcHJvYWNoIHRvIG1lLiBUaGlzIG5lZWRzIHRvIGJlIGRvbmUNCj4gYmV0d2VlbiBtYWM4MDIx
+MSBhbmQgQmx1ZXRvb3RoIHN1YnN5c3RlbXMgaW4gdGhlIGtlcm5lbCBkaXJlY3RseS4gR29pbmcN
+Cj4gdGhyb3VnaCB1c2Vyc3BhY2UgZm9yIHRoaXMgaXMgYSBwcmV0dHkgYmFkIGlkZWEuDQo+ID4N
+Cj4gPiA+IEVzcGVjaWFsbHkgaWYgeW91IHdhbm5hIGxpc3RlbiBvbiBELUJ1cyBldmVudHMgZnJv
+bSBibHVldG9vdGhkIGFuZCB0aGVuIHJ1bg0KPiBhbm90aGVyIHByb2Nlc3MgdG8gdGhlbiBleGVj
+dXRlIG5sODAyMTEgY29tbWFuZHMgbG9va3MgbGlrZSB0b3RhbCBvdmVyaGVhZCBhdA0KPiBubyBn
+YWluLiBOb3QgdG8gdGFsayBhYm91dCBwb3RlbnRpYWwgbGF0ZW5jeSA+IGVmZmVjdHMgdGhhdCBt
+aWdodCBiZQ0KPiBjb3VudGVycHJvZHVjdGl2ZS4NCj4gPg0KPiA+ID4gV2hhdCB5b3UgcmVhbGx5
+IHdhbnQgaXMgYSB3YXkgdG8gbWFyayBBMkRQIGNoYW5uZWxzIGZvciBzdHJlYW1pbmcgZnJvbQ0K
+PiB1c2Vyc3BhY2UgYXMgc3RyZWFtaW5nL3JlYWx0aW1lL3ByaW9yaXR5IHNvIHRoZSBCbHVldG9v
+dGggc3Vic3lzdGVtIGtub3dzIG9uDQo+IHdoYXQgdG8gZG8gd2l0aCBpdCBhbmQgdGhhdCB3YXkg
+Y2FuIGFsc28gdGVsbCA+ID4gbWFjODAyMTEgY29ycmVjdGx5IGFib3V0IGNvZXgNCj4gc2V0dGlu
+Z3MuDQo+ID4NCj4gPiA+IFdlIGFyZSBhbHJlYWR5IHNldHRpbmdzIGZsdXNoYWJsZSBmbGFncyBm
+b3IgQTJEUCBzdHJlYW1pbmcgY2hhbm5lbHMgYW5kIHRoZXJlDQo+IGlzIHdvcmsgb25nb2luZyBm
+b3IgU09fUFJJT1JJVFkgc3VwcG9ydCB3aXRoIEwyQ0FQIHNvY2tldHMuDQo+ID4NCj4gPiBNb3Jl
+IHRoYW4gdGhlIEEyRFAgY29ubmVjdGlvbiwgaXQgd291bGQgYmUgbW9yZSB1c2VmdWwgdG8gZmlu
+ZCBvdXQgd2hlbg0KPiBBMkRQIHN0YXJ0L3N0b3Agc3RyZWFtaW5nIHNvIHRoYXQgd2UgY2FuIGtu
+b3cgd2hlbiB0byByZWFsbG9jYXRlIHJlc291cmNlIHRvDQo+IEJsdWV0b290aC4gSXMgaXQgcG9z
+c2libGUgdG8gdGFwIHRoaXMgaW5mb3JtYXRpb24gb3V0IG9mIHRoZSBCbHVldG9vdGggY29yZT8N
+Cj4gPiBBbHNvLCBjYW4geW91IHN1Z2dlc3QgYSB3YXkgdG8gZ2V0IEEyRFAgc3RyZWFtaW5nIHN0
+YXR1cywgaW5xdWlyeSBzdGF0dXMsIGFuZA0KPiBTQ08gYW5kIEFDTCByb2xlIHdpdGhvdXQgYSBo
+YWNrIGluIHRoZSBCbHVldG9vdGggc3Vic3lzdGVtPw0KPiANCj4gdGhlIGlucXVpcnkgc3RhdHVz
+IGlzIHRyYWNrZWQgYnkgdGhlIExpbnV4IGtlcm5lbCBzaW5jZSBldmVyLiBTYW1lIGdvZXMgZm9y
+IEFDTA0KPiBhbmQgU0NPIHN0YXR1cy4gVGhlIGtlcm5lbCBrZWVwcyB0cmFjayBvdmVyIGFsbW9z
+dCBldmVyeXRoaW5nIG9uIHRoZSBIQ0kgbGV2ZWwNCj4gYW5kIHdpbGwgZG8gcHJvcGVyIGNsZWFu
+dXAgYWZ0ZXJ3YXJkcy4gRG9pbmcgdGhpcyBpbiB1c2Vyc3BhY2Ugd2lsbCBub3Qgd29yayBvdXQu
+DQo+IEFuZCBpdCBpcyBhbHNvIHJhY3kuDQo+IA0KPiBFc3BlY2lhbGx5IGluIHRoZSBmdXR1cmUg
+Ymx1ZXRvb3RoZCB3aWxsIGJlIHRyYWNraW5nIGxlc3MgYW5kIGxlc3MgaW5mb3JtYXRpb24uIFRo
+ZQ0KPiBuZXcgbWFuYWdlbWVudCBpbnRlcmZhY2Ugd2lsbCBoaWRlIGFsbW9zdCBldmVyeSBzaW5n
+bGUgc3RhdGUgZnJvbSBibHVldG9vdGhkDQo+IHdoZXJlIHRoZSBrZXJuZWwgaXMgZG9pbmcgdGhl
+IGpvYiBhbnl3YXkgYW5kIGNhbiBkbyBhIHdheSBiZXR0ZXIgam9iIGluIHRoZSBmaXJzdA0KPiBw
+bGFjZS4gVGhpcyBpcyBhbHNvIGxlYWRzIHRvIHBvd2VyIGNvbnN1bXB0aW9uIGFkdmFudGFnZXMg
+c2luY2UgYmx1ZXRvb3RoZCBkb2VzDQo+IG5vdCBuZWVkIHRvIGJlIHdva2VuIHVwIHRoYXQgb2Z0
+ZW4gYW55d2F5LiBBbmQgaW4gYWRkaXRpb24gdGhlIGtlcm5lbCBoYXMgbm90DQo+IGRlYWwgd2l0
+aCB0aGUgZXh0cmEgSENJIGZpbHRlciBoYW5kbGluZy4NCj4gDQo+IFRoZSBvbmx5IHRoaW5nIHRo
+YXQgeW91IG1lbnRpb25lZCBoZXJlIGlzIEEyRFAgc3RyZWFtaW5nLiBBbmQgYnkgdGhlIG5hdHVy
+ZSBvZg0KPiB0aGUgQTJEUCBwcm90b2NvbCwgeW91IGRvIGVzdGFibGlzaCBhIHNlY29uZCBMMkNB
+UCBjaGFubmVsIHRoYXQgaXMganVzdCB1c2VkIGZvcg0KPiBzdHJlYW1pbmcuIFRoYXQgY2hhbm5l
+bCBpcyBhbHNvIG9ubHkgcHJlc2VudCBpZiB5b3UgYXJlIHN0cmVhbWluZyByaWdodCBub3cuIElm
+IG5vdA0KPiBzdHJlYW1pbmcgaXMgZ29pbmcgb24sIGl0IHdpbGwgYmUgZGlzY29ubmVjdGVkLiBT
+byBpdCBpcyBwcmV0dHkgZWFzeSB0byBoYXZlDQo+IGJsdWV0b290aGQgdGFnIHN1Y2ggYSBjaGFu
+bmVsIHdpdGggcHJvcGVyIFNPX1BSSU9SSVRZIChvbmNlIHdlIGhhdmUgdGhhdCBjb2RlDQo+IG1l
+cmdlZCB1cHN0cmVhbSkgYW5kIHRoZW4gdGhlIEJsdWV0b290aCBzdWJzeXN0ZW0ga25vd3Mgd2hl
+biBBMkRQDQo+IHN0cmVhbWluZyBvciBhbnkgaGlnaCBwcmlvcml0eS9yZWFsdGltZSBkYXRhIGlz
+IHRyYW5zZmVycmVkIG92ZXIgQmx1ZXRvb3RoLg0KPiANCj4gUmVnYXJkcw0KPiANCj4gTWFyY2Vs
+DQo+IA0KDQpUaGFua3MuDQpSZWdhcmRpbmcgU0NPIGFuZCBJbnF1aXJ5IHN0YXR1cywgZG8gd2Ug
+aGF2ZSBhbiBleGlzdGluZyBBUEkgaW4gQmx1ZXRvb3RoIGNvcmUgdGhhdCBJIGNhbiB1c2UgdG8g
+Z2V0IHRoYXQgaW5mb3JtYXRpb24/DQoNClJlZ2FyZHMNClN1cmFqDQoNCg0K
