@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:65035 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755368Ab1ISTef (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:45919 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753800Ab1IARFH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 15:34:35 -0400
-Received: by yxl31 with SMTP id 31so403118yxl.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 12:34:34 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] rtlwifi: rtl8192de: Change modinfo messages
-Date: Mon, 19 Sep 2011 14:34:09 -0500
-Message-Id: <1316460850-16443-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20110919_213439_951574_CCD22301)
-In-Reply-To: <1316460850-16443-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1316460850-16443-1-git-send-email-Larry.Finger@lwfinger.net>
+	Thu, 1 Sep 2011 13:05:07 -0400
+Received: by gwaa12 with SMTP id a12so1039345gwa.19
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Sep 2011 10:05:06 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, jlopex@gmail.com
+Subject: Re: [PATCH] mac80211: Defer tranmission of mesh path errors
+Date: Thu,  1 Sep 2011 10:04:44 -0700
+Message-Id: <1314896685-2932-1-git-send-email-javier@cozybit.com> (sfid-20110901_190510_650755_E9EE89E5)
+In-Reply-To: <1314767494.4161.2.camel@jlt3.sipsolutions.net>
+References: <1314767494.4161.2.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The various modparam messages are difficult to understand.
+On Tue, Aug 30, 2011 at 10:11 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2011-08-30 at 18:50 -0700, Javier Cardona wrote:
+>
+>> The stress tests do trigger perrs and, with this change, we see a
+>> warning due to missing info->control.vif
+>>
+>> [14202.988077] ------------[ cut here ]------------
+>> [14202.988351] WARNING: at net/mac80211/util.c:358
+>> ieee80211_add_pending_skb+0x97/0xa0()
+>
+> Interesting. Ok, that means we can't just use add_pending_skb(), we need
+> to do some setup before, all the setup that ieee80211_tx_skb() and
+> ieee80211_xmit() would do up to ieee80211_tx()...
+>
+> I guess we need a little bit of helper code to enable this.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192de/sw.c |   12 ++++++++----
- 1 files changed, 8 insertions(+), 4 deletions(-)
+The patch that follows seems to do it.  Passes our stress test without
+warnings.  I increased the headroom on allocation to avoid a resize.  Does it
+look correct to you?
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
-index f6419b7..c681597 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
-@@ -150,6 +150,10 @@ static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
- 	rtlpriv->psc.inactiveps = rtlpriv->cfg->mod_params->inactiveps;
- 	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
- 	rtlpriv->psc.fwctrl_lps = rtlpriv->cfg->mod_params->fwctrl_lps;
-+	if (!rtlpriv->psc.inactiveps)
-+		pr_info("rtl8192ce: Power Save off (module option)\n");
-+	if (!rtlpriv->psc.fwctrl_lps)
-+		pr_info("rtl8192ce: FW Power Save off (module option)\n");
- 	rtlpriv->psc.reg_fwctrl_lps = 3;
- 	rtlpriv->psc.reg_max_lps_awakeintvl = 5;
- 	/* for ASPM, you can close aspm through
-@@ -376,10 +380,10 @@ module_param_named(swenc, rtl92de_mod_params.sw_crypto, bool, 0444);
- module_param_named(ips, rtl92de_mod_params.inactiveps, bool, 0444);
- module_param_named(swlps, rtl92de_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl92de_mod_params.fwctrl_lps, bool, 0444);
--MODULE_PARM_DESC(swenc, "using hardware crypto (default 0 [hardware])\n");
--MODULE_PARM_DESC(ips, "using no link power save (default 1 is open)\n");
--MODULE_PARM_DESC(swlps, "using linked sw control power save (default 1"
--		 " is open)\n");
-+MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
-+MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
-+MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
-+MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
- 
- static struct pci_driver rtl92de_driver = {
- 	.name = KBUILD_MODNAME,
+Cheers,
+
+Javier
+
 -- 
-1.7.6.1
-
+1.7.6
