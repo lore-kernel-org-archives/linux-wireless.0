@@ -1,183 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:19108 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758728Ab1IJJ4n (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:35520 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757355Ab1IASih convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Sep 2011 05:56:43 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/4] ath6kl: Remove auth type fall back in auto authentication mode
-Date: Sat, 10 Sep 2011 15:26:34 +0530
-Message-ID: <1315648597-17999-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110910_115653_122452_FDDC2803)
+	Thu, 1 Sep 2011 14:38:37 -0400
+Received: by qyk15 with SMTP id 15so292965qyk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Sep 2011 11:38:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1314900067-85242-3-git-send-email-nbd@openwrt.org>
+References: <1314900067-85242-1-git-send-email-nbd@openwrt.org>
+ <1314900067-85242-2-git-send-email-nbd@openwrt.org> <1314900067-85242-3-git-send-email-nbd@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Thu, 1 Sep 2011 11:38:17 -0700
+Message-ID: <CAB=NE6XWknM-8OWNtQjtnXHeA_j12rMm2_6-5bb+t34ghMBOMg@mail.gmail.com> (sfid-20110901_203842_254523_F4698630)
+Subject: Re: [PATCH v12 3/5] ath9k: always call ath_reset from workqueue context
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	rmanohar@qca.qualcomm.com, shafi.wireless@gmail.com,
+	vthiagar@qca.qualcomm.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Target already tries with different authentication mechanism
-when authentication type is configured to NL80211_AUTHTYPE_AUTOMATIC.
-Remove this piece of code from driver. Having this code in driver
-even affects auto + WEP authentication in some cases.
+On Thu, Sep 1, 2011 at 11:01 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+> index 49b93c2..95bc459 100644
+> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+> @@ -581,8 +581,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+>
+>        rcu_read_unlock();
+>
+> -       if (needreset)
+> -               ath_reset(sc, false);
+> +       if (needreset) {
+> +               sc->sc_flags |= SC_OP_HW_RESET;
+> +               ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
+> +       }
+>  }
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   74 +++++-----------------------
- drivers/net/wireless/ath/ath6kl/core.h     |    2 -
- drivers/net/wireless/ath/ath6kl/init.c     |    1 -
- drivers/net/wireless/ath/ath6kl/wmi.h      |    5 --
- 4 files changed, 12 insertions(+), 70 deletions(-)
+I see SC_OP_HW_RESET is set only here but not other callers that set
+the reset work, why is that but not in other places?
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index a889bf4..fcef417 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -158,8 +158,7 @@ static int ath6kl_set_auth_type(struct ath6kl *ar,
- 		break;
- 
- 	case NL80211_AUTHTYPE_AUTOMATIC:
--		ar->dot11_auth_mode = OPEN_AUTH;
--		ar->auto_auth_stage = AUTH_OPEN_IN_PROGRESS;
-+		ar->dot11_auth_mode = OPEN_AUTH | SHARED_AUTH;
- 		break;
- 
- 	default:
-@@ -446,8 +445,6 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
- 	assoc_req_len -= assoc_req_ie_offset;
- 	assoc_resp_len -= assoc_resp_ie_offset;
- 
--	ar->auto_auth_stage = AUTH_IDLE;
--
- 	if (nw_type & ADHOC_NETWORK) {
- 		if (ar->wdev->iftype != NL80211_IFTYPE_ADHOC) {
- 			ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
-@@ -599,9 +596,6 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
- 				      u8 *bssid, u8 assoc_resp_len,
- 				      u8 *assoc_info, u16 proto_reason)
- {
--	struct ath6kl_key *key = NULL;
--	u16 status;
--
- 	if (ar->scan_req) {
- 		cfg80211_scan_done(ar->scan_req, true);
- 		ar->scan_req = NULL;
-@@ -643,64 +637,20 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl *ar, u8 reason,
- 	if (reason != DISCONNECT_CMD)
- 		return;
- 
--	if (!ar->auto_auth_stage) {
--		clear_bit(CONNECT_PEND, &ar->flag);
--
--		if (ar->sme_state == SME_CONNECTING) {
--			cfg80211_connect_result(ar->net_dev,
--						bssid, NULL, 0,
--						NULL, 0,
--						WLAN_STATUS_UNSPECIFIED_FAILURE,
--						GFP_KERNEL);
--		} else if (ar->sme_state == SME_CONNECTED) {
--			cfg80211_disconnected(ar->net_dev, reason,
--					      NULL, 0, GFP_KERNEL);
--		}
--
--		ar->sme_state = SME_DISCONNECTED;
--		return;
--	}
--
--	if (ar->dot11_auth_mode != OPEN_AUTH)
--		return;
-+	clear_bit(CONNECT_PEND, &ar->flag);
- 
--	/*
--	 * If the current auth algorithm is open, try shared and
--	 * make autoAuthStage idle. We do not make it leap for now
--	 * being.
--	 */
--	key = &ar->keys[ar->def_txkey_index];
--	if (down_interruptible(&ar->sem)) {
--		ath6kl_err("busy, couldn't get access\n");
--		return;
-+	if (ar->sme_state == SME_CONNECTING) {
-+		cfg80211_connect_result(ar->net_dev,
-+				bssid, NULL, 0,
-+				NULL, 0,
-+				WLAN_STATUS_UNSPECIFIED_FAILURE,
-+				GFP_KERNEL);
-+	} else if (ar->sme_state == SME_CONNECTED) {
-+		cfg80211_disconnected(ar->net_dev, reason,
-+				NULL, 0, GFP_KERNEL);
- 	}
- 
--	ar->dot11_auth_mode = SHARED_AUTH;
--	ar->auto_auth_stage = AUTH_IDLE;
--
--	ath6kl_wmi_addkey_cmd(ar->wmi,
--			      ar->def_txkey_index,
--			      ar->prwise_crypto,
--			      GROUP_USAGE | TX_USAGE,
--			      key->key_len, NULL,
--			      key->key,
--			      KEY_OP_INIT_VAL, NULL,
--			      NO_SYNC_WMIFLAG);
--
--	status = ath6kl_wmi_connect_cmd(ar->wmi,
--					ar->nw_type,
--					ar->dot11_auth_mode,
--					ar->auth_mode,
--					ar->prwise_crypto,
--					ar->prwise_crypto_len,
--					ar->grp_crypto,
--					ar->grp_crypto_len,
--					ar->ssid_len,
--					ar->ssid,
--					ar->req_bssid,
--					ar->ch_hint,
--					ar->connect_ctrl_flags);
--	up(&ar->sem);
-+	ar->sme_state = SME_DISCONNECTED;
- }
- 
- static inline bool is_ch_11a(u16 ch)
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index c6ed1fc..b49e869 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -435,8 +435,6 @@ struct ath6kl {
- 	enum wlan_low_pwr_state wlan_pwr_state;
- 	struct wmi_scan_params_cmd sc_params;
- #define AR_MCAST_FILTER_MAC_ADDR_SIZE  4
--	u8 auto_auth_stage;
--
- 	struct {
- 		void *rx_report;
- 		size_t rx_report_len;
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index eca34aa..23ab9c3 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -603,7 +603,6 @@ struct ath6kl *ath6kl_core_alloc(struct device *sdev)
- 	SET_NETDEV_DEV(dev, wiphy_dev(wdev->wiphy));
- 	wdev->netdev = dev;
- 	ar->sme_state = SME_DISCONNECTED;
--	ar->auto_auth_stage = AUTH_IDLE;
- 
- 	init_netdev(dev);
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index dc49ef8..f036e78 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -566,11 +566,6 @@ enum dot11_auth_mode {
- 	LEAP_AUTH = 0x04,
- };
- 
--enum {
--	AUTH_IDLE,
--	AUTH_OPEN_IN_PROGRESS,
--};
--
- enum auth_mode {
- 	NONE_AUTH = 0x01,
- 	WPA_AUTH = 0x02,
--- 
-1.7.0.4
+I should also note that ieee80211_queue_work() may just return and not
+queue the work in the suspend case where there is a bug in mac80211 or
+the driver; in that case  SC_OP_HW_RESET would not be cleared but I
+suspect upon resume we will clear it anyway.
 
+If the goal is to check if the work is pending how about adding
+ieee80211_work_pending() which uses work_pending() ?
+
+  Luis
