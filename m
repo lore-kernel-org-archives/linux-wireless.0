@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:25670 "EHLO c60.cesmail.net"
+Received: from mms2.broadcom.com ([216.31.210.18]:1175 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750825Ab1IUVz3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 17:55:29 -0400
-Date: Wed, 21 Sep 2011 17:55:19 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: Re: Compat-wireless release for 2011-09-21 is baked
-Message-ID: <20110921175519.4c095804@mj> (sfid-20110921_235532_699900_9318B342)
-In-Reply-To: <20110921190442.E2EB540629@repository3.orbit-lab.org>
-References: <20110921190442.E2EB540629@repository3.orbit-lab.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1750820Ab1IAJRg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Sep 2011 05:17:36 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 09/30] staging: brcm80211: use min_t() instead of min()
+Date: Thu, 1 Sep 2011 11:16:59 +0200
+Message-ID: <1314868640-9425-10-git-send-email-rvossen@broadcom.com> (sfid-20110901_111741_184814_157DBE7F)
+In-Reply-To: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
+References: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 21 Sep 2011 15:04:42 -0400 (EDT)
-compat@orbit-lab.org (Compat-wireless cronjob account) wrote:
+From: Henry Ptasinski <henryp@broadcom.com>
 
-> From git://github.com/sfrothwell/linux-next
->  + ec5d67e...39fc525 akpm-end   -> origin/akpm-end  (forced update)
->    9d037a7..38867a2  akpm-start -> origin/akpm-start
->  + 8c024a2...367fd59 master     -> origin/master  (forced update)
->    9d037a7..38867a2  stable     -> origin/stable
->  * [new tag]         next-20110921 -> next-20110921
-> 
-> compat-wireless code metrics
-> 
->     812354 - Total upstream lines of code being pulled
-> Host key verification failed.
-> rsync: connection unexpectedly closed (0 bytes received so far)
-> [sender] rsync error: unexplained error (code 255) at io.c(601)
+Also eliminate a cast to int that could cause issues with very large values
+of di->rxbufsize (as suggested by Dan Carpenter).
 
-OK, we are getting closer, but we are not there yet :(
+Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/dma.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-By the way, where is compat-user now?
-
+diff --git a/drivers/staging/brcm80211/brcmsmac/dma.c b/drivers/staging/brcm80211/brcmsmac/dma.c
+index 8859a77..6d9a0fe 100644
+--- a/drivers/staging/brcm80211/brcmsmac/dma.c
++++ b/drivers/staging/brcm80211/brcmsmac/dma.c
+@@ -917,7 +917,7 @@ struct sk_buff *dma_rx(struct dma_pub *pub)
+ 		tail = head;
+ 		while ((resid > 0) && (p = _dma_getnextrxp(di, false))) {
+ 			tail->next = p;
+-			pkt_len = min(resid, (int)di->rxbufsize);
++			pkt_len = min_t(uint, resid, di->rxbufsize);
+ 			__skb_trim(p, pkt_len);
+ 
+ 			tail = p;
 -- 
-Regards,
-Pavel Roskin
+1.7.4.1
+
+
