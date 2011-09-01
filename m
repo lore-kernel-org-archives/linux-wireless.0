@@ -1,67 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:32817 "EHLO nbd.name"
+Received: from mms3.broadcom.com ([216.31.210.19]:4208 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753682Ab1ISRim (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 13:38:42 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v2 3/4] ath: remove ath_regulatory::current_rd_ext
-Date: Mon, 19 Sep 2011 19:38:22 +0200
-Message-Id: <1316453903-75710-3-git-send-email-nbd@openwrt.org> (sfid-20110919_193845_633964_181523D0)
-In-Reply-To: <1316453903-75710-2-git-send-email-nbd@openwrt.org>
-References: <1316453903-75710-1-git-send-email-nbd@openwrt.org>
- <1316453903-75710-2-git-send-email-nbd@openwrt.org>
+	id S1753666Ab1IAJRo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Sep 2011 05:17:44 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 22/30] staging: brcm80211: remove sparse warnings from
+ mac80211_if.c
+Date: Thu, 1 Sep 2011 11:17:12 +0200
+Message-ID: <1314868640-9425-23-git-send-email-rvossen@broadcom.com> (sfid-20110901_111815_099278_1EF47169)
+In-Reply-To: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
+References: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath.h           |    1 -
- drivers/net/wireless/ath/ath9k/hw.c      |    5 -----
- drivers/net/wireless/ath/carl9170/main.c |    1 -
- 3 files changed, 0 insertions(+), 7 deletions(-)
+From: Arend van Spriel <arend@broadcom.com>
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index bb71b4f..908fdbc 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -72,7 +72,6 @@ struct ath_regulatory {
- 	u16 country_code;
- 	u16 max_power_level;
- 	u16 current_rd;
--	u16 current_rd_ext;
- 	int16_t power_limit;
- 	struct reg_dmn_pair_mapping *regpair;
+Some changes have been made to get rid of sparse warnings in the
+source file mac80211_if.c.
+
+Reported-by: Aaro Koskinen <aaro.koskinen@iki.fi>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.c |    6 +++---
+ drivers/staging/brcm80211/brcmsmac/mac80211_if.h |    2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
+index bd989737..6ed80b2 100644
+--- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.c
+@@ -96,7 +96,7 @@ struct firmware_hdr {
+ 	u32 idx;
  };
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 3255b5b..fbb69e4 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2067,11 +2067,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	eeval = ah->eep_ops->get_eeprom(ah, EEP_REG_0);
- 	regulatory->current_rd = eeval;
  
--	eeval = ah->eep_ops->get_eeprom(ah, EEP_REG_1);
--	if (AR_SREV_9285_12_OR_LATER(ah))
--		eeval |= AR9285_RDEXT_DEFAULT;
--	regulatory->current_rd_ext = eeval;
--
- 	if (ah->opmode != NL80211_IFTYPE_AP &&
- 	    ah->hw_version.subvendorid == AR_SUBVENDOR_ID_NEW_A) {
- 		if (regulatory->current_rd == 0x64 ||
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index af351ec..6786124 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -1894,7 +1894,6 @@ static int carl9170_parse_eeprom(struct ar9170 *ar)
- 		ar->hw->channel_change_time = 80 * 1000;
+-char *brcms_firmwares[MAX_FW_IMAGES] = {
++static const char * const brcms_firmwares[MAX_FW_IMAGES] = {
+ 	"brcm/bcm43xx",
+ 	NULL
+ };
+@@ -1012,7 +1012,7 @@ static void brcms_free(struct brcms_info *wl)
+ 	 * after calling unregister_netdev() .
+ 	 */
+ 	if (wl->regsva)
+-		iounmap((void *)wl->regsva);
++		iounmap(wl->regsva);
  
- 	regulatory->current_rd = le16_to_cpu(ar->eeprom.reg_domain[0]);
--	regulatory->current_rd_ext = le16_to_cpu(ar->eeprom.reg_domain[1]);
+ 	wl->regsva = NULL;
+ }
+@@ -1596,7 +1596,7 @@ struct brcms_timer *brcms_init_timer(struct brcms_info *wl,
+ 	if (!t) {
+ 		wiphy_err(wl->wiphy, "wl%d: brcms_init_timer: out of memory\n",
+ 			  wl->pub->unit);
+-		return 0;
++		return NULL;
+ 	}
  
- 	/* second part of wiphy init */
- 	SET_IEEE80211_PERM_ADDR(ar->hw, ar->eeprom.mac_address);
+ 	init_timer(&t->timer);
+diff --git a/drivers/staging/brcm80211/brcmsmac/mac80211_if.h b/drivers/staging/brcm80211/brcmsmac/mac80211_if.h
+index 1d52803..1eb36ed 100644
+--- a/drivers/staging/brcm80211/brcmsmac/mac80211_if.h
++++ b/drivers/staging/brcm80211/brcmsmac/mac80211_if.h
+@@ -67,7 +67,7 @@ struct brcms_info {
+ 	spinlock_t isr_lock;	/* per-device ISR synchronization lock */
+ 
+ 	/* regsva for unmap in brcms_free() */
+-	void *regsva;		/* opaque chip registers virtual address */
++	void __iomem *regsva;	/* opaque chip registers virtual address */
+ 
+ 	/* timer related fields */
+ 	atomic_t callbacks;	/* # outstanding callback functions */
 -- 
-1.7.3.2
+1.7.4.1
+
 
