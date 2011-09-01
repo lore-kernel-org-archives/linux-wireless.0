@@ -1,71 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:49371 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752815Ab1I0X3c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 19:29:32 -0400
-Received: by qyk30 with SMTP id 30so1645247qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 16:29:31 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:1175 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752643Ab1IAJRk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Sep 2011 05:17:40 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 14/30] staging: brcm80211: remove duplicate set sb
+ window address function
+Date: Thu, 1 Sep 2011 11:17:04 +0200
+Message-ID: <1314868640-9425-15-git-send-email-rvossen@broadcom.com> (sfid-20110901_111804_874543_EA850627)
+In-Reply-To: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
+References: <1314868640-9425-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6USxp0rGPP2NFkThCFzpSccZ7WUF7AfxJ=3js5Ph5D82g@mail.gmail.com>
-References: <CAMxespA2quGEuN3B0CE2SJGeRLr5vgtfqQYVQ5r5Oxtj-paj2w@mail.gmail.com>
- <CAPjQAd-=ihu5ULzuyUjGQD3DKe2Tpi749esOi9nb1c-dW=5nSQ@mail.gmail.com>
- <CAMxespDxUdm1Qx+GGYzzfJ+jdUVw_nmZDcyeRV2HqmB=0LhtDg@mail.gmail.com> <CAB=NE6USxp0rGPP2NFkThCFzpSccZ7WUF7AfxJ=3js5Ph5D82g@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 27 Sep 2011 16:29:11 -0700
-Message-ID: <CAB=NE6U-=6UZfMvtv5Z77PcRbZCmXrbveM4N0mzcqXAR0QtTAQ@mail.gmail.com> (sfid-20110928_012935_837503_289DA1F9)
-Subject: =?UTF-8?Q?Re=3A_Channel_type_negotiation_=E2=80=93_HT_support_for_mesh?=
-To: Ashok Nagarajan <anagar6@uic.edu>, thomas <thomas@cozybit.com>
-Cc: devel@lists.open80211s.org, Javier Cardona <javier@cozybit.com>,
-	Sidharth Thakur <sidthakur@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 27, 2011 at 3:39 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Tue, Sep 27, 2011 at 1:49 AM, Ashok Nagarajan <anagar6@uic.edu> wrote:
->> In our previous conversation, Thomas was mentioning about very low
->> 802.11n rate and we din't have a clear reason for such low 11n rate!
->
-> This may be WMM not being configured which is required for 802.11n, if
-> you disable WMM on the AP <--> STA setup you may see the same poor
-> performance.
+From: Franky Lin <frankyl@broadcom.com>
 
-So this is due to the fact that 802.11e which WMM requires is the
-component of the spec that adds BlockAck support and therefore
-Aggregation. You'll achieve higher throughput once you support
-aggregation. I just reviewed with Thomas how we'd go about setting WMM
-parameters and it seems we want to do this in cfg80211 at set channel.
-This also bring up the question for IBSS as well and what to do when
-your peer has different WMM parameters, this is not something you deal
-with with infrastructure mode.
+In fullmac, brcmf_sdbrcm_set_siaddr_window and brcmf_sdcard_set_sbaddr_window
+have identical fucntionality. Remove the one in dhd_sdio.c
 
-For now I would go with using default WMM parameters which the spec
-does specify for both IBSS and Mesh and not peering up unless your
-peer also beacons those same parameters. Later we can figure out how
-we want to handle differences, maybe go with the minimum? The
-difficulty with converging to values is although likely possible you
-can also end up with races with different nodes on your network trying
-to sych up with the same values.
+Reported-by: Rafal Milecki <zajec5@gmail.com>
+Reviewed-by: Roland Vossen <rvossen@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c    |    2 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c  |   27 ++++-------------------
+ drivers/staging/brcm80211/brcmfmac/sdio_host.h |    3 ++
+ 3 files changed, 9 insertions(+), 23 deletions(-)
 
-For example, for IBSS we've already learned that if you do not want an
-IBSS merge split you want to ensure to use the same SSID and BSSID. I
-cannot be sure right now that any sort of similar splits may happen
-with WMM / HT settings but just want to put that thought out there
-before we support it. If we only support peering up with peers with
-the same WMM capabilities at least we will not introduce issues, only
-limitations with peers which can later be addressed if it addresses
-properly all known mismatch issues.
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 8448b8b..3672776 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -275,7 +275,7 @@ int brcmf_sdcard_cis_read(struct brcmf_sdio_dev *sdiodev, uint func, u8 * cis,
+ 	return status;
+ }
+ 
+-static int
++int
+ brcmf_sdcard_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
+ {
+ 	int err = 0;
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index c1647eb..72e5629 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -948,24 +948,6 @@ static void brcmf_sdbrcm_setmemsize(struct brcmf_bus *bus, int mem_size)
+ 		bus->ramsize = brcmf_dongle_memsize;
+ }
+ 
+-static int brcmf_sdbrcm_set_siaddr_window(struct brcmf_bus *bus, u32 address)
+-{
+-	int err = 0;
+-	brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_1,
+-			       SBSDIO_FUNC1_SBADDRLOW,
+-			       (address >> 8) & SBSDIO_SBADDRLOW_MASK, &err);
+-	if (!err)
+-		brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_1,
+-				 SBSDIO_FUNC1_SBADDRMID,
+-				 (address >> 16) & SBSDIO_SBADDRMID_MASK, &err);
+-	if (!err)
+-		brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_1,
+-				       SBSDIO_FUNC1_SBADDRHIGH,
+-				       (address >> 24) & SBSDIO_SBADDRHIGH_MASK,
+-				       &err);
+-	return err;
+-}
+-
+ /* Turn backplane clock on or off */
+ static int brcmf_sdbrcm_htclk(struct brcmf_bus *bus, bool on, bool pendok)
+ {
+@@ -1958,7 +1940,7 @@ brcmf_sdbrcm_membytes(struct brcmf_bus *bus, bool write, u32 address, u8 *data,
+ 		dsize = size;
+ 
+ 	/* Set the backplane window to include the start address */
+-	bcmerror = brcmf_sdbrcm_set_siaddr_window(bus, address);
++	bcmerror = brcmf_sdcard_set_sbaddr_window(bus->sdiodev, address);
+ 	if (bcmerror) {
+ 		brcmf_dbg(ERROR, "window change failed\n");
+ 		goto xfer_done;
+@@ -1981,7 +1963,8 @@ brcmf_sdbrcm_membytes(struct brcmf_bus *bus, bool write, u32 address, u8 *data,
+ 		if (size) {
+ 			data += dsize;
+ 			address += dsize;
+-			bcmerror = brcmf_sdbrcm_set_siaddr_window(bus, address);
++			bcmerror = brcmf_sdcard_set_sbaddr_window(bus->sdiodev,
++								  address);
+ 			if (bcmerror) {
+ 				brcmf_dbg(ERROR, "window change failed\n");
+ 				break;
+@@ -1993,7 +1976,7 @@ brcmf_sdbrcm_membytes(struct brcmf_bus *bus, bool write, u32 address, u8 *data,
+ 
+ xfer_done:
+ 	/* Return the window to backplane enumeration space for core access */
+-	if (brcmf_sdbrcm_set_siaddr_window(bus,
++	if (brcmf_sdcard_set_sbaddr_window(bus->sdiodev,
+ 					   brcmf_sdcard_cur_sbwad(
+ 							bus->sdiodev)))
+ 		brcmf_dbg(ERROR, "FAILED to set window back to 0x%x\n",
+@@ -4838,7 +4821,7 @@ brcmf_sdbrcm_probe_attach(struct brcmf_bus *bus, u32 regsva)
+ 	bus->alp_only = true;
+ 
+ 	/* Return the window to backplane enumeration space for core access */
+-	if (brcmf_sdbrcm_set_siaddr_window(bus, SI_ENUM_BASE))
++	if (brcmf_sdcard_set_sbaddr_window(bus->sdiodev, SI_ENUM_BASE))
+ 		brcmf_dbg(ERROR, "FAILED to return to SI_ENUM_BASE\n");
+ 
+ #ifdef BCMDBG
+diff --git a/drivers/staging/brcm80211/brcmfmac/sdio_host.h b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+index 03ae16a..9c55c4a 100644
+--- a/drivers/staging/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/staging/brcm80211/brcmfmac/sdio_host.h
+@@ -234,6 +234,9 @@ extern int brcmf_sdio_remove(struct brcmf_sdio_dev *sdiodev);
+ /* Function to return current window addr */
+ extern u32 brcmf_sdcard_cur_sbwad(struct brcmf_sdio_dev *sdiodev);
+ 
++extern int brcmf_sdcard_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev,
++					  u32 address);
++
+ /* attach, return handler on success, NULL if failed.
+  *  The handler shall be provided by all subsequent calls. No local cache
+  *  cfghdl points to the starting address of pci device mapped memory
+-- 
+1.7.4.1
 
-Thomas is now looking at adding the WMM stuff for Mesh, the same will
-be required for IBSS HT support.
 
-A while back we had heard 802.11s support will *not* support
-aggregation, Javier, did the spec go out like that? Why was
-aggregation thought to not be possible with 802.11s? I can't see why
-right now. If we want to do comparable throughput tests for HT rates
-with Mesh we'd need to setup an AP with aggregation disabled, and the
-same WMM parameters.
-
-  Luis
