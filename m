@@ -1,54 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26053 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751836Ab1IBNqP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Sep 2011 09:46:15 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/3] ath6kl: Make ath6kl_diag_write32() non-static
-Date: Fri, 2 Sep 2011 19:16:11 +0530
-Message-ID: <1314971173-8966-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110902_154618_901892_E752AC09)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from c60.cesmail.net ([216.154.195.49]:22653 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754855Ab1IBTje (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Sep 2011 15:39:34 -0400
+Received: from mj (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
+	by smtprelay1.cesmail.net (Postfix) with ESMTPSA id 48C6234C8A
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Sep 2011 15:46:58 -0400 (EDT)
+Date: Fri, 2 Sep 2011 15:39:27 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: <linux-wireless@vger.kernel.org>
+Subject: Re: Compat-wireless release for 2011-09-02 is baked
+Message-ID: <20110902153927.54ae3e38@mj> (sfid-20110902_213938_096344_5BC7EBC1)
+In-Reply-To: <20110902190228.14F1C40629@repository3.orbit-lab.org>
+References: <20110902190228.14F1C40629@repository3.orbit-lab.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So that this can be called from debug.c when adding support
-to write chip register.
+On Fri,  2 Sep 2011 15:02:27 -0400 (EDT)
+compat@orbit-lab.org (Compat-wireless cronjob account) wrote:
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/core.h |    1 +
- drivers/net/wireless/ath/ath6kl/main.c |    2 +-
- 2 files changed, 2 insertions(+), 1 deletions(-)
+> /usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index faf8015..e69cd5b 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -523,6 +523,7 @@ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
- 					       struct htc_packet *packet);
- void ath6kl_stop_txrx(struct ath6kl *ar);
- void ath6kl_cleanup_amsdu_rxbufs(struct ath6kl *ar);
-+int ath6kl_diag_write32(struct ath6kl *ar, u32 address, u32 value);
- int ath6kl_diag_write(struct ath6kl *ar, u32 address, void *data, u32 length);
- int ath6kl_diag_read32(struct ath6kl *ar, u32 address, u32 *value);
- int ath6kl_diag_read(struct ath6kl *ar, u32 address, void *data, u32 length);
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index bda14d1..48e9c2e 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -261,7 +261,7 @@ int ath6kl_diag_read32(struct ath6kl *ar, u32 address, u32 *value)
-  * Write to the ATH6KL through its diagnostic window. No cooperation from
-  * the Target is required for this.
-  */
--static int ath6kl_diag_write32(struct ath6kl *ar, u32 address, u32 value)
-+int ath6kl_diag_write32(struct ath6kl *ar, u32 address, u32 value)
- {
- 	int ret;
- 
+How about adding "NOT" to the subject if there are any errors?
+
 -- 
-1.7.0.4
-
+Regards,
+Pavel Roskin
