@@ -1,349 +1,485 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44285 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751873Ab1I0VPk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 17:15:40 -0400
-Date: Tue, 27 Sep 2011 17:00:31 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless 2011-09-27
-Message-ID: <20110927210031.GA2471@tuxdriver.com> (sfid-20110927_231600_044726_7BAC914B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from nbd.name ([46.4.11.11]:53595 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751052Ab1IBXkj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Sep 2011 19:40:39 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	rmanohar@qca.qualcomm.com, shafi.wireless@gmail.com,
+	vthiagar@qca.qualcomm.com
+Subject: [PATCH v13 4/5] ath9k: merge reset related functions
+Date: Sat,  3 Sep 2011 01:40:26 +0200
+Message-Id: <1315006827-81443-4-git-send-email-nbd@openwrt.org> (sfid-20110903_014047_199370_7040A486)
+In-Reply-To: <1315006827-81443-3-git-send-email-nbd@openwrt.org>
+References: <1315006827-81443-1-git-send-email-nbd@openwrt.org>
+ <1315006827-81443-2-git-send-email-nbd@openwrt.org>
+ <1315006827-81443-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+reduces unnecessary code duplication. Also takes the sc_pcu_lock within
+ath_reset instead of callsites, which makes it possible to always cancel
+all queued work items before the reset, possibly fixing a few race
+conditions (work items vs reset) along with it.
 
-Here is another last (?) batch of fixes intended for 3.1.  Included is a
-scanning-related regression fix that avoids a potential crash, a buffer
-overflow fix in cfg80211, an fix for an uninitialized variable in
-rtlwifi, a fix for a DMA-related WARNING in ath9k, a fix for a DMA hang
-in ath9k, and two iwlegacy fixes backported from prior iwlagn fixes, one
-for avoiding interruptible waits and another for avoiding a command
-queue timeout.
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
+ drivers/net/wireless/ath/ath9k/main.c |  303 ++++++++++++++-------------------
+ 1 files changed, 127 insertions(+), 176 deletions(-)
 
-The following changes since commit d93dc5c4478c1fd5de85a3e8aece9aad7bbae044:
-
-  Linux 3.1-rc7 (2011-09-21 16:58:15 -0700)
-
-are available in the git repository at:
-  git://git.infradead.org/users/linville/wireless.git for-davem
-
-Johannes Berg (1):
-      iwlagn: fix dangling scan request
-
-John W. Linville (1):
-      Merge branch 'master' of git://git.infradead.org/users/linville/wireless into for-davem
-
-Jouni Malinen (1):
-      cfg80211: Fix validation of AKM suites
-
-Larry Finger (1):
-      rtlwifi: rtl8192cu: Fix unitialized struct
-
-Mohammed Shafi Shajakhan (1):
-      ath9k: Fix a dma warning/memory leak
-
-Rajkumar Manoharan (1):
-      ath9k_hw: Fix Rx DMA stuck for AR9003 chips
-
-Stanislaw Gruszka (2):
-      iwlegacy: fix command queue timeout
-      iwlegacy: do not use interruptible waits
-
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |    2 +-
- drivers/net/wireless/ath/ath9k/recv.c              |   10 ++++++-
- drivers/net/wireless/iwlegacy/iwl-core.c           |    4 +-
- drivers/net/wireless/iwlegacy/iwl-hcmd.c           |    2 +-
- drivers/net/wireless/iwlegacy/iwl-tx.c             |    4 ++-
- drivers/net/wireless/iwlegacy/iwl3945-base.c       |    8 ++--
- drivers/net/wireless/iwlegacy/iwl4965-base.c       |   10 +++---
- drivers/net/wireless/iwlwifi/iwl-scan.c            |   30 ++++++++++---------
- drivers/net/wireless/rtlwifi/usb.c                 |    1 +
- net/wireless/nl80211.c                             |    5 ++-
- 10 files changed, 46 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index 2339728..3e69c63 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -1514,7 +1514,7 @@ static const u32 ar9300_2p2_mac_core[][2] = {
- 	{0x00008258, 0x00000000},
- 	{0x0000825c, 0x40000000},
- 	{0x00008260, 0x00080922},
--	{0x00008264, 0x9bc00010},
-+	{0x00008264, 0x9d400010},
- 	{0x00008268, 0xffffffff},
- 	{0x0000826c, 0x0000ffff},
- 	{0x00008270, 0x00000000},
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 9a48501..4c21f8c 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -205,14 +205,22 @@ static void ath_rx_remove_buffer(struct ath_softc *sc,
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 9afcc66..1398204 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -212,84 +212,58 @@ static int ath_update_survey_stats(struct ath_softc *sc)
+ 	return ret;
+ }
  
- static void ath_rx_edma_cleanup(struct ath_softc *sc)
+-/*
+- * Set/change channels.  If the channel is really being changed, it's done
+- * by reseting the chip.  To accomplish this we must first cleanup any pending
+- * DMA, then restart stuff.
+-*/
+-static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+-		    struct ath9k_channel *hchan)
++static void __ath_cancel_work(struct ath_softc *sc)
  {
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ieee80211_conf *conf = &common->hw->conf;
+-	bool fastcc = true, stopped;
+-	struct ieee80211_channel *channel = hw->conf.channel;
+-	struct ath9k_hw_cal_data *caldata = NULL;
+-	int r;
+-
+-	if (sc->sc_flags & SC_OP_INVALID)
+-		return -EIO;
+-
+-	sc->hw_busy_count = 0;
+-
+-	del_timer_sync(&common->ani.timer);
+ 	cancel_work_sync(&sc->paprd_work);
+ 	cancel_work_sync(&sc->hw_check_work);
+-	cancel_work_sync(&sc->hw_reset_work);
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
+ 	cancel_delayed_work_sync(&sc->hw_pll_work);
++}
+ 
+-	ath9k_ps_wakeup(sc);
++static void ath_cancel_work(struct ath_softc *sc)
++{
++	__ath_cancel_work(sc);
++	cancel_work_sync(&sc->hw_reset_work);
++}
+ 
+-	spin_lock_bh(&sc->sc_pcu_lock);
++static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool flush)
++{
 +	struct ath_hw *ah = sc->sc_ah;
 +	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_buf *bf;
++	bool ret;
  
- 	ath_rx_remove_buffer(sc, ATH9K_RX_QUEUE_LP);
- 	ath_rx_remove_buffer(sc, ATH9K_RX_QUEUE_HP);
+-	/*
+-	 * This is only performed if the channel settings have
+-	 * actually changed.
+-	 *
+-	 * To switch channels clear any pending DMA operations;
+-	 * wait long enough for the RX fifo to drain, reset the
+-	 * hardware at the new frequency, and then re-enable
+-	 * the relevant bits of the h/w.
+-	 */
+-	ath9k_hw_disable_interrupts(ah);
+-	stopped = ath_drain_all_txq(sc, false);
++	ieee80211_stop_queues(sc->hw);
  
- 	list_for_each_entry(bf, &sc->rx.rxbuf, list) {
--		if (bf->bf_mpdu)
-+		if (bf->bf_mpdu) {
-+			dma_unmap_single(sc->dev, bf->bf_buf_addr,
-+					common->rx_bufsize,
-+					DMA_BIDIRECTIONAL);
- 			dev_kfree_skb_any(bf->bf_mpdu);
-+			bf->bf_buf_addr = 0;
-+			bf->bf_mpdu = NULL;
-+		}
- 	}
+-	if (!ath_stoprecv(sc))
+-		stopped = false;
++	sc->hw_busy_count = 0;
++	del_timer_sync(&common->ani.timer);
  
- 	INIT_LIST_HEAD(&sc->rx.rxbuf);
-diff --git a/drivers/net/wireless/iwlegacy/iwl-core.c b/drivers/net/wireless/iwlegacy/iwl-core.c
-index 35cd253..e5971fe 100644
---- a/drivers/net/wireless/iwlegacy/iwl-core.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-core.c
-@@ -937,7 +937,7 @@ void iwl_legacy_irq_handle_error(struct iwl_priv *priv)
- 					&priv->contexts[IWL_RXON_CTX_BSS]);
- #endif
+-	if (!ath9k_hw_check_alive(ah))
+-		stopped = false;
++	ath9k_debug_samp_bb_mac(sc);
++	ath9k_hw_disable_interrupts(ah);
  
--	wake_up_interruptible(&priv->wait_command_queue);
-+	wake_up(&priv->wait_command_queue);
+-	/* XXX: do not flush receive queue here. We don't want
+-	 * to flush data frames already in queue because of
+-	 * changing channel. */
++	ret = ath_drain_all_txq(sc, retry_tx);
  
- 	/* Keep the restart process from trying to send host
- 	 * commands by clearing the INIT status bit */
-@@ -1746,7 +1746,7 @@ int iwl_legacy_force_reset(struct iwl_priv *priv, bool external)
+-	if (!stopped || !(sc->sc_flags & SC_OP_OFFCHANNEL))
+-		fastcc = false;
++	if (!ath_stoprecv(sc))
++		ret = false;
  
- 	/* Set the FW error flag -- cleared on iwl_down */
- 	set_bit(STATUS_FW_ERROR, &priv->status);
--	wake_up_interruptible(&priv->wait_command_queue);
-+	wake_up(&priv->wait_command_queue);
- 	/*
- 	 * Keep the restart process from trying to send host
- 	 * commands by clearing the INIT status bit
-diff --git a/drivers/net/wireless/iwlegacy/iwl-hcmd.c b/drivers/net/wireless/iwlegacy/iwl-hcmd.c
-index 62b4b09..ce1fc9f 100644
---- a/drivers/net/wireless/iwlegacy/iwl-hcmd.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-hcmd.c
-@@ -167,7 +167,7 @@ int iwl_legacy_send_cmd_sync(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 		goto out;
- 	}
- 
--	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
-+	ret = wait_event_timeout(priv->wait_command_queue,
- 			!test_bit(STATUS_HCMD_ACTIVE, &priv->status),
- 			HOST_COMPLETE_TIMEOUT);
- 	if (!ret) {
-diff --git a/drivers/net/wireless/iwlegacy/iwl-tx.c b/drivers/net/wireless/iwlegacy/iwl-tx.c
-index 4fff995..ef9e268 100644
---- a/drivers/net/wireless/iwlegacy/iwl-tx.c
-+++ b/drivers/net/wireless/iwlegacy/iwl-tx.c
-@@ -625,6 +625,8 @@ iwl_legacy_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- 	cmd = txq->cmd[cmd_index];
- 	meta = &txq->meta[cmd_index];
- 
-+	txq->time_stamp = jiffies;
-+
- 	pci_unmap_single(priv->pci_dev,
- 			 dma_unmap_addr(meta, mapping),
- 			 dma_unmap_len(meta, len),
-@@ -645,7 +647,7 @@ iwl_legacy_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- 		clear_bit(STATUS_HCMD_ACTIVE, &priv->status);
- 		IWL_DEBUG_INFO(priv, "Clearing HCMD_ACTIVE for command %s\n",
- 			       iwl_legacy_get_cmd_string(cmd->hdr.cmd));
--		wake_up_interruptible(&priv->wait_command_queue);
-+		wake_up(&priv->wait_command_queue);
- 	}
- 
- 	/* Mark as unmapped */
-diff --git a/drivers/net/wireless/iwlegacy/iwl3945-base.c b/drivers/net/wireless/iwlegacy/iwl3945-base.c
-index 795826a..66ee1562 100644
---- a/drivers/net/wireless/iwlegacy/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlegacy/iwl3945-base.c
-@@ -841,7 +841,7 @@ static void iwl3945_rx_card_state_notif(struct iwl_priv *priv,
- 		wiphy_rfkill_set_hw_state(priv->hw->wiphy,
- 				test_bit(STATUS_RF_KILL_HW, &priv->status));
- 	else
--		wake_up_interruptible(&priv->wait_command_queue);
-+		wake_up(&priv->wait_command_queue);
- }
- 
- /**
-@@ -2269,7 +2269,7 @@ static void iwl3945_alive_start(struct iwl_priv *priv)
- 	iwl3945_reg_txpower_periodic(priv);
- 
- 	IWL_DEBUG_INFO(priv, "ALIVE processing complete.\n");
--	wake_up_interruptible(&priv->wait_command_queue);
-+	wake_up(&priv->wait_command_queue);
- 
- 	return;
- 
-@@ -2300,7 +2300,7 @@ static void __iwl3945_down(struct iwl_priv *priv)
- 	iwl_legacy_clear_driver_stations(priv);
- 
- 	/* Unblock any waiting calls */
--	wake_up_interruptible_all(&priv->wait_command_queue);
-+	wake_up_all(&priv->wait_command_queue);
- 
- 	/* Wipe out the EXIT_PENDING status bit if we are not actually
- 	 * exiting the module */
-@@ -2853,7 +2853,7 @@ static int iwl3945_mac_start(struct ieee80211_hw *hw)
- 
- 	/* Wait for START_ALIVE from ucode. Otherwise callbacks from
- 	 * mac80211 will not be run successfully. */
--	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
-+	ret = wait_event_timeout(priv->wait_command_queue,
- 			test_bit(STATUS_READY, &priv->status),
- 			UCODE_READY_TIMEOUT);
- 	if (!ret) {
-diff --git a/drivers/net/wireless/iwlegacy/iwl4965-base.c b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-index 1433466..aa0c253 100644
---- a/drivers/net/wireless/iwlegacy/iwl4965-base.c
-+++ b/drivers/net/wireless/iwlegacy/iwl4965-base.c
-@@ -576,7 +576,7 @@ static void iwl4965_rx_card_state_notif(struct iwl_priv *priv,
- 		wiphy_rfkill_set_hw_state(priv->hw->wiphy,
- 			test_bit(STATUS_RF_KILL_HW, &priv->status));
- 	else
--		wake_up_interruptible(&priv->wait_command_queue);
-+		wake_up(&priv->wait_command_queue);
- }
- 
- /**
-@@ -926,7 +926,7 @@ static void iwl4965_irq_tasklet(struct iwl_priv *priv)
- 		handled |= CSR_INT_BIT_FH_TX;
- 		/* Wake up uCode load routine, now that load is complete */
- 		priv->ucode_write_complete = 1;
--		wake_up_interruptible(&priv->wait_command_queue);
-+		wake_up(&priv->wait_command_queue);
- 	}
- 
- 	if (inta & ~handled) {
-@@ -1795,7 +1795,7 @@ static void iwl4965_alive_start(struct iwl_priv *priv)
- 	iwl4965_rf_kill_ct_config(priv);
- 
- 	IWL_DEBUG_INFO(priv, "ALIVE processing complete.\n");
--	wake_up_interruptible(&priv->wait_command_queue);
-+	wake_up(&priv->wait_command_queue);
- 
- 	iwl_legacy_power_update_mode(priv, true);
- 	IWL_DEBUG_INFO(priv, "Updated power mode\n");
-@@ -1828,7 +1828,7 @@ static void __iwl4965_down(struct iwl_priv *priv)
- 	iwl_legacy_clear_driver_stations(priv);
- 
- 	/* Unblock any waiting calls */
--	wake_up_interruptible_all(&priv->wait_command_queue);
-+	wake_up_all(&priv->wait_command_queue);
- 
- 	/* Wipe out the EXIT_PENDING status bit if we are not actually
- 	 * exiting the module */
-@@ -2266,7 +2266,7 @@ int iwl4965_mac_start(struct ieee80211_hw *hw)
- 
- 	/* Wait for START_ALIVE from Run Time ucode. Otherwise callbacks from
- 	 * mac80211 will not be run successfully. */
--	ret = wait_event_interruptible_timeout(priv->wait_command_queue,
-+	ret = wait_event_timeout(priv->wait_command_queue,
- 			test_bit(STATUS_READY, &priv->status),
- 			UCODE_READY_TIMEOUT);
- 	if (!ret) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index dd6937e..77e528f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -405,31 +405,33 @@ int iwl_mac_hw_scan(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&priv->mutex);
- 
--	if (test_bit(STATUS_SCANNING, &priv->status) &&
--	    priv->scan_type != IWL_SCAN_NORMAL) {
--		IWL_DEBUG_SCAN(priv, "Scan already in progress.\n");
--		ret = -EAGAIN;
--		goto out_unlock;
--	}
--
--	/* mac80211 will only ask for one band at a time */
--	priv->scan_request = req;
--	priv->scan_vif = vif;
--
- 	/*
- 	 * If an internal scan is in progress, just set
- 	 * up the scan_request as per above.
- 	 */
- 	if (priv->scan_type != IWL_SCAN_NORMAL) {
--		IWL_DEBUG_SCAN(priv, "SCAN request during internal scan\n");
-+		IWL_DEBUG_SCAN(priv,
-+			       "SCAN request during internal scan - defer\n");
-+		priv->scan_request = req;
-+		priv->scan_vif = vif;
- 		ret = 0;
--	} else
+-	if (!(sc->sc_flags & SC_OP_OFFCHANNEL))
+-		caldata = &sc->caldata;
++	if (!flush) {
++		if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
++			ath_rx_tasklet(sc, 0, true);
++		ath_rx_tasklet(sc, 0, false);
 +	} else {
-+		priv->scan_request = req;
-+		priv->scan_vif = vif;
-+		/*
-+		 * mac80211 will only ask for one band at a time
-+		 * so using channels[0] here is ok
-+		 */
- 		ret = iwl_scan_initiate(priv, vif, IWL_SCAN_NORMAL,
- 					req->channels[0]->band);
-+		if (ret) {
-+			priv->scan_request = NULL;
-+			priv->scan_vif = NULL;
-+		}
++		ath_flushrecv(sc);
 +	}
  
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
+-	ath_dbg(common, ATH_DBG_CONFIG,
+-		"(%u MHz) -> (%u MHz), conf_is_ht40: %d fastcc: %d\n",
+-		sc->sc_ah->curchan->channel,
+-		channel->center_freq, conf_is_ht40(conf),
+-		fastcc);
++	return ret;
++}
  
--out_unlock:
- 	mutex_unlock(&priv->mutex);
+-	r = ath9k_hw_reset(ah, hchan, caldata, fastcc);
+-	if (r) {
+-		ath_err(common,
+-			"Unable to reset channel (%u MHz), reset status %d\n",
+-			channel->center_freq, r);
+-		goto ps_restore;
+-	}
++static bool ath_complete_reset(struct ath_softc *sc, bool start)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
  
- 	return ret;
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index 8b1cef0..4bf3cf4 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -863,6 +863,7 @@ static void _rtl_usb_tx_preprocess(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	u8 tid = 0;
- 	u16 seq_number = 0;
- 
-+	memset(&tcb_desc, 0, sizeof(struct rtl_tcb_desc));
- 	if (ieee80211_is_auth(fc)) {
- 		RT_TRACE(rtlpriv, COMP_SEND, DBG_DMESG, ("MAC80211_LINKING\n"));
- 		rtl_ips_nic_on(hw);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e83e7fe..ea40d54 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4113,9 +4113,12 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
- 		if (len % sizeof(u32))
- 			return -EINVAL;
- 
-+		if (settings->n_akm_suites > NL80211_MAX_NR_AKM_SUITES)
-+			return -EINVAL;
-+
- 		memcpy(settings->akm_suites, data, len);
- 
--		for (i = 0; i < settings->n_ciphers_pairwise; i++)
-+		for (i = 0; i < settings->n_akm_suites; i++)
- 			if (!nl80211_valid_akm_suite(settings->akm_suites[i]))
- 				return -EINVAL;
+ 	if (ath_startrecv(sc) != 0) {
+ 		ath_err(common, "Unable to restart recv logic\n");
+-		r = -EIO;
+-		goto ps_restore;
++		return false;
  	}
+ 
+ 	ath9k_cmn_update_txpow(ah, sc->curtxpow,
+@@ -297,21 +271,93 @@ static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 	ath9k_hw_set_interrupts(ah, ah->imask);
+ 	ath9k_hw_enable_interrupts(ah);
+ 
+-	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL))) {
++	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)) && start) {
+ 		if (sc->sc_flags & SC_OP_BEACONS)
+ 			ath_set_beacon(sc);
++
+ 		ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
+ 		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/2);
+ 		if (!common->disable_ani)
+ 			ath_start_ani(common);
+ 	}
+ 
+- ps_restore:
+-	ieee80211_wake_queues(hw);
++	ieee80211_wake_queues(sc->hw);
++
++	return true;
++}
++
++static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
++			      bool retry_tx)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_cal_data *caldata = NULL;
++	bool fastcc = true;
++	bool flush = false;
++	int r;
++
++	__ath_cancel_work(sc);
++
++	spin_lock_bh(&sc->sc_pcu_lock);
+ 
++	if (!(sc->sc_flags & SC_OP_OFFCHANNEL)) {
++		fastcc = false;
++		caldata = &sc->caldata;
++	}
++
++	if (!hchan) {
++		fastcc = false;
++		flush = true;
++		hchan = ah->curchan;
++	}
++
++	if (fastcc && !ath9k_hw_check_alive(ah))
++		fastcc = false;
++
++	if (!ath_prepare_reset(sc, retry_tx, flush))
++		fastcc = false;
++
++	ath_dbg(common, ATH_DBG_CONFIG,
++		"Reset to %u MHz, HT40: %d fastcc: %d\n",
++		hchan->channel, !!(hchan->channelFlags & (CHANNEL_HT40MINUS |
++							  CHANNEL_HT40PLUS)),
++		fastcc);
++
++	r = ath9k_hw_reset(ah, hchan, caldata, fastcc);
++	if (r) {
++		ath_err(common,
++			"Unable to reset channel, reset status %d\n", r);
++		goto out;
++	}
++
++	if (!ath_complete_reset(sc, true))
++		r = -EIO;
++
++out:
+ 	spin_unlock_bh(&sc->sc_pcu_lock);
++	return r;
++}
++
++
++/*
++ * Set/change channels.  If the channel is really being changed, it's done
++ * by reseting the chip.  To accomplish this we must first cleanup any pending
++ * DMA, then restart stuff.
++*/
++static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
++		    struct ath9k_channel *hchan)
++{
++	int r;
++
++	if (sc->sc_flags & SC_OP_INVALID)
++		return -EIO;
++
++	ath9k_ps_wakeup(sc);
++
++	r = ath_reset_internal(sc, hchan, false);
+ 
+ 	ath9k_ps_restore(sc);
++
+ 	return r;
+ }
+ 
+@@ -825,28 +871,13 @@ static void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 			channel->center_freq, r);
+ 	}
+ 
+-	ath9k_cmn_update_txpow(ah, sc->curtxpow,
+-			       sc->config.txpowlimit, &sc->curtxpow);
+-	if (ath_startrecv(sc) != 0) {
+-		ath_err(common, "Unable to restart recv logic\n");
+-		goto out;
+-	}
+-	if (sc->sc_flags & SC_OP_BEACONS)
+-		ath_set_beacon(sc);	/* restart beacons */
+-
+-	/* Re-Enable  interrupts */
+-	ath9k_hw_set_interrupts(ah, ah->imask);
+-	ath9k_hw_enable_interrupts(ah);
++	ath_complete_reset(sc, true);
+ 
+ 	/* Enable LED */
+ 	ath9k_hw_cfg_output(ah, ah->led_pin,
+ 			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 	ath9k_hw_set_gpio(ah, ah->led_pin, 0);
+ 
+-	ieee80211_wake_queues(hw);
+-	ieee80211_queue_delayed_work(hw, &sc->hw_pll_work, HZ/2);
+-
+-out:
+ 	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 	ath9k_ps_restore(sc);
+@@ -859,11 +890,10 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	int r;
+ 
+ 	ath9k_ps_wakeup(sc);
+-	cancel_delayed_work_sync(&sc->hw_pll_work);
+ 
+-	spin_lock_bh(&sc->sc_pcu_lock);
++	ath_cancel_work(sc);
+ 
+-	ieee80211_stop_queues(hw);
++	spin_lock_bh(&sc->sc_pcu_lock);
+ 
+ 	/*
+ 	 * Keep the LED on when the radio is disabled
+@@ -874,13 +904,7 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		ath9k_hw_cfg_gpio_input(ah, ah->led_pin);
+ 	}
+ 
+-	/* Disable interrupts */
+-	ath9k_hw_disable_interrupts(ah);
+-
+-	ath_drain_all_txq(sc, false);	/* clear pending tx frames */
+-
+-	ath_stoprecv(sc);		/* turn off frame recv */
+-	ath_flushrecv(sc);		/* flush recv queue */
++	ath_prepare_reset(sc, false, true);
+ 
+ 	if (!ah->curchan)
+ 		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
+@@ -902,49 +926,11 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 
+ static int ath_reset(struct ath_softc *sc, bool retry_tx)
+ {
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ieee80211_hw *hw = sc->hw;
+ 	int r;
+ 
+-	sc->hw_busy_count = 0;
+-
+-	ath9k_debug_samp_bb_mac(sc);
+-	/* Stop ANI */
+-
+-	del_timer_sync(&common->ani.timer);
+-
+ 	ath9k_ps_wakeup(sc);
+ 
+-	ieee80211_stop_queues(hw);
+-
+-	ath9k_hw_disable_interrupts(ah);
+-	ath_drain_all_txq(sc, retry_tx);
+-
+-	ath_stoprecv(sc);
+-	ath_flushrecv(sc);
+-
+-	r = ath9k_hw_reset(ah, sc->sc_ah->curchan, ah->caldata, false);
+-	if (r)
+-		ath_err(common,
+-			"Unable to reset hardware; reset status %d\n", r);
+-
+-	if (ath_startrecv(sc) != 0)
+-		ath_err(common, "Unable to start recv logic\n");
+-
+-	/*
+-	 * We may be doing a reset in response to a request
+-	 * that changes the channel so update any state that
+-	 * might change as a result.
+-	 */
+-	ath9k_cmn_update_txpow(ah, sc->curtxpow,
+-			       sc->config.txpowlimit, &sc->curtxpow);
+-
+-	if ((sc->sc_flags & SC_OP_BEACONS) || !(sc->sc_flags & (SC_OP_OFFCHANNEL)))
+-		ath_set_beacon(sc);	/* restart beacons */
+-
+-	ath9k_hw_set_interrupts(ah, ah->imask);
+-	ath9k_hw_enable_interrupts(ah);
++	r = ath_reset_internal(sc, NULL, retry_tx);
+ 
+ 	if (retry_tx) {
+ 		int i;
+@@ -957,12 +943,6 @@ static int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 		}
+ 	}
+ 
+-	ieee80211_wake_queues(hw);
+-
+-	/* Start ANI */
+-	if (!common->disable_ani)
+-		ath_start_ani(common);
+-
+ 	ath9k_ps_restore(sc);
+ 
+ 	return r;
+@@ -972,9 +952,7 @@ void ath_reset_work(struct work_struct *work)
+ {
+ 	struct ath_softc *sc = container_of(work, struct ath_softc, hw_reset_work);
+ 
+-	spin_lock_bh(&sc->sc_pcu_lock);
+ 	ath_reset(sc, true);
+-	spin_unlock_bh(&sc->sc_pcu_lock);
+ }
+ 
+ void ath_hw_check(struct work_struct *work)
+@@ -995,11 +973,8 @@ void ath_hw_check(struct work_struct *work)
+ 	ath_dbg(common, ATH_DBG_RESET, "Possible baseband hang, "
+ 		"busy=%d (try %d)\n", busy, sc->hw_busy_count + 1);
+ 	if (busy >= 99) {
+-		if (++sc->hw_busy_count >= 3) {
+-			spin_lock_bh(&sc->sc_pcu_lock);
+-			ath_reset(sc, true);
+-			spin_unlock_bh(&sc->sc_pcu_lock);
+-		}
++		if (++sc->hw_busy_count >= 3)
++			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
+ 
+ 	} else if (busy >= 0)
+ 		sc->hw_busy_count = 0;
+@@ -1019,9 +994,7 @@ static void ath_hw_pll_rx_hang_check(struct ath_softc *sc, u32 pll_sqsum)
+ 			/* Rx is hung for more than 500ms. Reset it */
+ 			ath_dbg(common, ATH_DBG_RESET,
+ 				"Possible RX hang, resetting");
+-			spin_lock_bh(&sc->sc_pcu_lock);
+-			ath_reset(sc, true);
+-			spin_unlock_bh(&sc->sc_pcu_lock);
++			ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
+ 			count = 0;
+ 		}
+ 	} else
+@@ -1092,28 +1065,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 		goto mutex_unlock;
+ 	}
+ 
+-	/*
+-	 * This is needed only to setup initial state
+-	 * but it's best done after a reset.
+-	 */
+-	ath9k_cmn_update_txpow(ah, sc->curtxpow,
+-			sc->config.txpowlimit, &sc->curtxpow);
+-
+-	/*
+-	 * Setup the hardware after reset:
+-	 * The receive engine is set going.
+-	 * Frame transmit is handled entirely
+-	 * in the frame output path; there's nothing to do
+-	 * here except setup the interrupt mask.
+-	 */
+-	if (ath_startrecv(sc) != 0) {
+-		ath_err(common, "Unable to start recv logic\n");
+-		r = -EIO;
+-		spin_unlock_bh(&sc->sc_pcu_lock);
+-		goto mutex_unlock;
+-	}
+-	spin_unlock_bh(&sc->sc_pcu_lock);
+-
+ 	/* Setup our intr mask. */
+ 	ah->imask = ATH9K_INT_TX | ATH9K_INT_RXEOL |
+ 		    ATH9K_INT_RXORN | ATH9K_INT_FATAL |
+@@ -1136,12 +1087,14 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 
+ 	/* Disable BMISS interrupt when we're not associated */
+ 	ah->imask &= ~(ATH9K_INT_SWBA | ATH9K_INT_BMISS);
+-	ath9k_hw_set_interrupts(ah, ah->imask);
+-	ath9k_hw_enable_interrupts(ah);
+ 
+-	ieee80211_wake_queues(hw);
++	if (!ath_complete_reset(sc, false)) {
++		r = -EIO;
++		spin_unlock_bh(&sc->sc_pcu_lock);
++		goto mutex_unlock;
++	}
+ 
+-	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
++	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 	if ((ah->btcoex_hw.scheme != ATH_BTCOEX_CFG_NONE) &&
+ 	    !ah->btcoex_hw.enabled) {
+@@ -1234,11 +1187,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	mutex_lock(&sc->mutex);
+ 
+-	cancel_delayed_work_sync(&sc->tx_complete_work);
+-	cancel_delayed_work_sync(&sc->hw_pll_work);
+-	cancel_work_sync(&sc->paprd_work);
+-	cancel_work_sync(&sc->hw_check_work);
+-	cancel_work_sync(&sc->hw_reset_work);
++	ath_cancel_work(sc);
+ 
+ 	if (sc->sc_flags & SC_OP_INVALID) {
+ 		ath_dbg(common, ATH_DBG_ANY, "Device not present\n");
+@@ -2353,9 +2302,11 @@ static void ath9k_flush(struct ieee80211_hw *hw, bool drop)
+ 	ath9k_ps_wakeup(sc);
+ 	spin_lock_bh(&sc->sc_pcu_lock);
+ 	drain_txq = ath_drain_all_txq(sc, false);
++	spin_unlock_bh(&sc->sc_pcu_lock);
++
+ 	if (!drain_txq)
+ 		ath_reset(sc, false);
+-	spin_unlock_bh(&sc->sc_pcu_lock);
++
+ 	ath9k_ps_restore(sc);
+ 	ieee80211_wake_queues(hw);
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.3.2
+
