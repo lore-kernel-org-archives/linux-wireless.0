@@ -1,89 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1999 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755718Ab1I2Wes (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 18:34:48 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v3 00/25] staging: brcm80211: 8th reaction for mainline
- patch #2
-Date: Thu, 29 Sep 2011 15:34:11 -0700
-Message-ID: <1317335676-3424-1-git-send-email-frankyl@broadcom.com> (sfid-20110930_003541_379264_F0B80FBA)
-In-Reply-To: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
-References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:55542 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751362Ab1IBME3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Sep 2011 08:04:29 -0400
+Subject: RE: [RFC] nl80211: Added NL80211 commands for Bluetooth-WiFi coex
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Sumangala, Suraj" <surajs@qca.qualcomm.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"Balasubramanian, senthilkumar" <senthilb@qca.qualcomm.com>,
+	"Mehta, Vipin" <vipimeht@qca.qualcomm.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>
+In-Reply-To: <480687D4EEFE7447A2E09AADFF6673621AF82B5C@nasanexd02a.na.qualcomm.com>
+References: <1314771915-8848-1-git-send-email-surajs@qca.qualcomm.com>
+	 (sfid-20110831_082525_612687_34CC3735),<1314772217.4161.10.camel@jlt3.sipsolutions.net>
+	 <480687D4EEFE7447A2E09AADFF6673621AF7CDCF@nasanexd02a.na.qualcomm.com>
+	 ,<1314772832.4161.16.camel@jlt3.sipsolutions.net>
+	 <480687D4EEFE7447A2E09AADFF6673621AF7CE0B@nasanexd02a.na.qualcomm.com>
+	 <1314801657.3373.260.camel@aeonflux>
+	 <480687D4EEFE7447A2E09AADFF6673621AF7DF82@nasanexd02a.na.qualcomm.com>
+	 <1314831118.3373.266.camel@aeonflux>
+	 <480687D4EEFE7447A2E09AADFF6673621AF827CC@nasanexd02a.na.qualcomm.com>
+	 <1314877381.3373.284.camel@aeonflux>
+	 <480687D4EEFE7447A2E09AADFF6673621AF82B5C@nasanexd02a.na.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 02 Sep 2011 14:04:22 +0200
+Message-ID: <1314965062.3927.7.camel@jlt3.sipsolutions.net> (sfid-20110902_140434_526382_EC5DBE87)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code clean up for softmac.
+On Fri, 2011-09-02 at 07:54 +0000, Sumangala, Suraj wrote:
 
-This patch series is in order to replace the following one:
-Message-ID: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
+> If we can provide "hci_dev" as the handle to the Bluetooth core, does
+> it make sense to follow the below steps to send channel
+> classification?
+> 1. Implement an NL80211 command to provide the Bluetooth BDADDR.
+> 2. Send it down to the WiFi driver via a cfg80211 API.
+> 3. Let it call "hci_get_route" to get a hci_hdev handle.
+> 4. Export an API to set channel classification in Bluetooth HCI core.
+> 5. Let the WiFi driver form the channel classification and call the
+> Bluetooth core "write channel classification" API to set the channels.
 
-V2:
-* Rework some patches based on the comments from community
-V3:
-* Fix patch misorder of V2
+I don't see any reason to have a specific wifi device talk to a specific
+BT device. The channel exclusion makes more sense if all wifi devices
+and all BT devices are taken into account. As such, only simple API is
+needed to let cfg80211 tell bluez about the channels, and then bluez can
+multiplex it out to all its BT devices.
 
-Arend van Spriel (13):
-  staging: brcm80211: remove uncoditional code blocks from brcmsmac
-  staging: brcm80211: remove ht_cap field from brcms_c_info structure
-  staging: brcm80211: use fragment number provided in transmit frame
-  staging: brcm80211: remove unused function si_pmu_ilp_clock()
-  staging: brcm80211: make device initializer table for wme constant
-  staging: brcm80211: remove dongle firmware related debug code
-  staging: brcm80211: remove unnecessary mac80211 callbacks
-  staging: brcm80211: changing interface to n-phy rssi compute function
-  staging: brcm80211: change interface for common rssi compute function
-  staging: brcm80211: convert endianess before handling the frame
-  staging: brcm80211: use endian annotated structures in brcmsmac
-  staging: brcm80211: move rssi computation to place we need it
-  staging: brcm80211: use d11rxhdr structure in brcms_c_recover_tsf64()
-
-Roland Vossen (12):
-  staging: brcm80211: removed unused argument from softmac functions
-  staging: brcm80211: deleted unused array of bss configurations in
-    softmac
-  staging: brcm80211: removed redundant wlc->cfg struct member
-  staging: brcm80211: removed global var from aiutils.c
-  staging: brcm80211: removed global vars in softmac ucode handling
-  staging: brcm80211: removed unused softmac workaround
-  staging: brcm80211: removed band related global vars from softmac
-  staging: brcm80211: removed global var global_scb from softmac
-  staging: brcm80211: various global var related changes in softmac
-  staging: brcm80211: removed global variable in softmac otp
-  staging: brcm80211: simple changes to softmac phy variables
-  staging: brcm80211: declared global vars in softmac phy as const
-
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c     |  259 +-------
- drivers/staging/brcm80211/brcmsmac/Makefile       |    3 +-
- drivers/staging/brcm80211/brcmsmac/aiutils.c      |   15 +-
- drivers/staging/brcm80211/brcmsmac/aiutils.h      |    2 -
- drivers/staging/brcm80211/brcmsmac/ampdu.c        |    6 +-
- drivers/staging/brcm80211/brcmsmac/d11.h          |   91 ++--
- drivers/staging/brcm80211/brcmsmac/dma.c          |   41 +-
- drivers/staging/brcm80211/brcmsmac/mac80211_if.c  |  125 +---
- drivers/staging/brcm80211/brcmsmac/mac80211_if.h  |    3 +-
- drivers/staging/brcm80211/brcmsmac/main.c         |  747 +++++++++------------
- drivers/staging/brcm80211/brcmsmac/main.h         |   19 +-
- drivers/staging/brcm80211/brcmsmac/otp.c          |  147 +----
- drivers/staging/brcm80211/brcmsmac/otp.h          |    8 -
- drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c  |   62 +--
- drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h  |    4 +-
- drivers/staging/brcm80211/brcmsmac/phy/phy_int.h  |   25 +-
- drivers/staging/brcm80211/brcmsmac/phy/phy_lcn.c  |  112 ++--
- drivers/staging/brcm80211/brcmsmac/phy/phy_n.c    |   75 +--
- drivers/staging/brcm80211/brcmsmac/pmu.c          |   22 -
- drivers/staging/brcm80211/brcmsmac/pmu.h          |    1 -
- drivers/staging/brcm80211/brcmsmac/pub.h          |    1 -
- drivers/staging/brcm80211/brcmsmac/rate.h         |    1 -
- drivers/staging/brcm80211/brcmsmac/srom.c         |   19 +-
- drivers/staging/brcm80211/brcmsmac/stf.c          |    9 -
- drivers/staging/brcm80211/brcmsmac/types.h        |    6 -
- drivers/staging/brcm80211/brcmsmac/ucode_loader.c |  121 ++--
- drivers/staging/brcm80211/brcmsmac/ucode_loader.h |   46 +-
- 27 files changed, 648 insertions(+), 1322 deletions(-)
-
+johannes
 
