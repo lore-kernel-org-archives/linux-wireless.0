@@ -1,68 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:56889 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752379Ab1IUHZL (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:46201 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752109Ab1IBNq0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 03:25:11 -0400
-Received: by mail-bw0-f49.google.com with SMTP id t2so1860021bka.22
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2011 00:25:09 -0700 (PDT)
-Subject: re: wl12xx: support up to 8 stations in AP-mode
-From: Luciano Coelho <coelho@ti.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Arik Nemtsov <arik@wizery.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20110921070525.GD4999@elgon.mountain>
-References: <20110921070525.GD4999@elgon.mountain>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 21 Sep 2011 10:25:00 +0300
-Message-ID: <1316589900.2157.392.camel@cumari> (sfid-20110921_092515_088749_4AF3DECE)
-Mime-Version: 1.0
+	Fri, 2 Sep 2011 09:46:26 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/3] ath6kl: Fix endianness in register write
+Date: Fri, 2 Sep 2011 19:16:12 +0530
+Message-ID: <1314971173-8966-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110902_154630_564493_2B7F6B8B)
+In-Reply-To: <1314971173-8966-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1314971173-8966-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-09-21 at 00:05 -0700, Dan Carpenter wrote: 
-> Hi Arik,
-> 
-> Smatch complains about c47e8229fa56 "wl12xx: support up to 8 stations
-> in AP-mode"
-> 
-> drivers/net/wireless/wl12xx/main.c +832 wl12xx_irq_update_links_status(22)
-> 	error: buffer overflow 'status->tx_lnk_free_pkts' 8 <= 10
-> 
->    828          for (hlid = WL1271_AP_STA_HLID_START; hlid < AP_MAX_LINKS; hlid++) {
->                                                              ^^^^^^^^^^^^
-> We increased this to 11.
-> 
->    829                  if (!wl1271_is_active_sta(wl, hlid))
->    830                          continue;
->    831  
->    832                  cnt = status->tx_lnk_free_pkts[hlid] -
->                                       ^^^^^^^^^^^^^^^^^^^^^^
-> 
-> But the ->tx_lnk_free_pkts[] array still only has 8 elements so we're
-> reading past the end of the array.
-> 
->    833                        wl->links[hlid].prev_freed_pkts;
->    834  
->    835                  wl->links[hlid].prev_freed_pkts =
->    836                          status->tx_lnk_free_pkts[hlid];
->    837                  wl->links[hlid].allocated_pkts -= cnt;
->    838  
->    839                  wl12xx_irq_ps_regulate_link(wl, hlid,
->    840                                              wl->links[hlid].allocated_pkts);
->    841          }
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/core.h |    2 +-
+ drivers/net/wireless/ath/ath6kl/main.c |   10 ++++++----
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-Good catch, Dan! Thanks for checking this.
-
-I checked our new firmware API and it seems that the wl12xx_fw_status
-structure has changed.  Now, WL12XX_MAX_LINKS, should be 12 instead of
-8.
-
-Arik, can you verify this and send a fix patch?
-
-
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index e69cd5b..ae2f591 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -523,7 +523,7 @@ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
+ 					       struct htc_packet *packet);
+ void ath6kl_stop_txrx(struct ath6kl *ar);
+ void ath6kl_cleanup_amsdu_rxbufs(struct ath6kl *ar);
+-int ath6kl_diag_write32(struct ath6kl *ar, u32 address, u32 value);
++int ath6kl_diag_write32(struct ath6kl *ar, u32 address, __le32 value);
+ int ath6kl_diag_write(struct ath6kl *ar, u32 address, void *data, u32 length);
+ int ath6kl_diag_read32(struct ath6kl *ar, u32 address, u32 *value);
+ int ath6kl_diag_read(struct ath6kl *ar, u32 address, void *data, u32 length);
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index 48e9c2e..3cefca6 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -261,7 +261,7 @@ int ath6kl_diag_read32(struct ath6kl *ar, u32 address, u32 *value)
+  * Write to the ATH6KL through its diagnostic window. No cooperation from
+  * the Target is required for this.
+  */
+-int ath6kl_diag_write32(struct ath6kl *ar, u32 address, u32 value)
++int ath6kl_diag_write32(struct ath6kl *ar, u32 address, __le32 value)
+ {
+ 	int ret;
+ 
+@@ -298,7 +298,8 @@ int ath6kl_diag_read(struct ath6kl *ar, u32 address, void *data, u32 length)
+ 
+ int ath6kl_diag_write(struct ath6kl *ar, u32 address, void *data, u32 length)
+ {
+-	u32 count, *buf = data;
++	u32 count;
++	__le32 *buf = data;
+ 	int ret;
+ 
+ 	if (WARN_ON(length % 4))
+@@ -397,13 +398,14 @@ static void ath6kl_reset_device(struct ath6kl *ar, u32 target_type,
+ {
+ 	int status = 0;
+ 	u32 address;
+-	u32 data;
++	__le32 data;
+ 
+ 	if (target_type != TARGET_TYPE_AR6003 &&
+ 		target_type != TARGET_TYPE_AR6004)
+ 		return;
+ 
+-	data = cold_reset ? RESET_CONTROL_COLD_RST : RESET_CONTROL_MBOX_RST;
++	data = cold_reset ? cpu_to_le32(RESET_CONTROL_COLD_RST) :
++			    cpu_to_le32(RESET_CONTROL_MBOX_RST);
+ 
+ 	switch (target_type) {
+ 	case TARGET_TYPE_AR6003:
 -- 
-Cheers,
-Luca.
+1.7.0.4
 
