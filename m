@@ -1,43 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:39307 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754437Ab1ITIuQ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24344 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932254Ab1IBIVa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Sep 2011 04:50:16 -0400
-Received: by wyg34 with SMTP id 34so268477wyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2011 01:50:15 -0700 (PDT)
+	Fri, 2 Sep 2011 04:21:30 -0400
+Message-ID: <4E609204.5080300@qca.qualcomm.com> (sfid-20110902_102137_482409_48C19ABD)
+Date: Fri, 2 Sep 2011 11:21:24 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <87litjipda.fsf@purkki.adurom.net>
-References: <1316347394-21276-1-git-send-email-eliad@wizery.com>
- <1316408970.2157.9.camel@cumari> <87aaa0k0a1.fsf@purkki.adurom.net>
- <CAB3XZEdiTRDJGUHWJ5UorQq2w-ZLP+TP0b-qSSVUTzhPG4H2rg@mail.gmail.com> <87litjipda.fsf@purkki.adurom.net>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Tue, 20 Sep 2011 11:49:55 +0300
-Message-ID: <CAK=WgbZM5zdgOurFfGbQR3V_mqd85qjS_u1_tU35oaVPCh0Rkg@mail.gmail.com> (sfid-20110920_105020_574756_DA218D74)
-Subject: Re: [PATCH] mac80211: add ieee80211_set_dyn_ps_timeout()
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Eliad Peller <eliad@wizery.com>, Luciano Coelho <coelho@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V3] ath6kl: ath6kl: Add debugfs interface to dump	diagnostic
+ registers
+References: <1314871752-13740-1-git-send-email-vthiagar@qca.qualcomm.com> <4E608BD7.5060104@qca.qualcomm.com> <20110902080100.GA5883@vasanth-laptop>
+In-Reply-To: <20110902080100.GA5883@vasanth-laptop>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 20, 2011 at 11:34 AM, Kalle Valo <kvalo@adurom.com> wrote:
-> IIRC Juuso added ieee80211_enable/disable_dyn_ps() to make it possible
-> use BT COEX with wl12xx.
+On 09/02/2011 11:01 AM, Vasanthakumar Thiagarajan wrote:
+> On Fri, Sep 02, 2011 at 10:55:03AM +0300, Kalle Valo wrote:
+>> On 09/01/2011 01:09 PM, Vasanthakumar Thiagarajan wrote:
+>>
+>> Thanks, applied. But I did minor changes:
+>>
+>> commit 91d57de5adfc40184ef7cb8974104459c5211add
+>> Author: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+>> Date:   Fri Sep 2 10:40:06 2011 +0300
+>>
+>>     ath6kl: Add debugfs interface to dump diagnostic registers from firmware
+>>
+>>     To dump a particular register:
+>>
+>>         echo <reg_addr> > <debugfs_root>/ieee80211/phyX/ath6kl/reg_addr
+>>
+>>     To dump the entire register set:
+>>
+>>         echo 0 > <debugfs_root>/ieee80211/phyX/ath6kl/reg_addr
+>>
+>>     Register values will be available at:
+>>
+>>         cat <debugfs_root>/ieee80211/phyX/ath6kl/reg_dump
+>>
+>>     kvalo: commit log cleanup, renamed few functions, removed a warning
+>>     message
+> 
+> Thanks, what is the warning?
 
-A lot has happened since then :) The wl12xx firmware today is vastly
-different and much improved.
+I just removed the ath6kl_warn() about invalid register address in
+ath6kl_dbg_is_diag_reg_valid(). Kernel should not send any debug logs in
+that case.
 
-> Now you are saying that you actually want the opposite?
+> Did you apply my other patch which fixes endianess?.
 
-Yes. The firmware is now capable of doing coex without enforcing PSM.
-This leads to a much better WLAN TP while BT is on.
+No, not yet. I still have patches pending for review. Will finish them
+today.
 
-> But nevertheless I'm not still convinced that doing all this in
-> mac80211 is the right thing. Especially that this seems to be very
-> wl12xx specific, right?
-
-Not really, why do you consider this wl12xx specific more than any
-other hw offloading or mac80211 API that is used by a single driver ?
+Kalle
