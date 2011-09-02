@@ -1,188 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50585 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751756Ab1INOr7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Sep 2011 10:47:59 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Michael Witten <mfwitten@gmail.com>,
-	Witold Baryluk <baryluk@smp.if.uj.edu.pl>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH] ipw2x00: fix rtnl mutex deadlock
-Date: Wed, 14 Sep 2011 16:47:50 +0200
-Message-Id: <1316011670-6787-1-git-send-email-sgruszka@redhat.com> (sfid-20110914_164802_662023_85148C69)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26053 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751836Ab1IBNqP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Sep 2011 09:46:15 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/3] ath6kl: Make ath6kl_diag_write32() non-static
+Date: Fri, 2 Sep 2011 19:16:11 +0530
+Message-ID: <1314971173-8966-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110902_154618_901892_E752AC09)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fix regression introduced by:
+So that this can be called from debug.c when adding support
+to write chip register.
 
-commit: ecb4433550f0620f3d1471ae7099037ede30a91e
-Author: Stanislaw Gruszka <sgruszka@redhat.com>
-Date:   Fri Aug 12 14:00:59 2011 +0200
-
-    mac80211: fix suspend/resume races with unregister hw
-
-Above commit add rtnl_lock() into wiphy_register(), what cause deadlock
-when initializing ipw2x00 driver, which itself call wiphy_register()
-from register_netdev() internal callback with rtnl mutex taken.
-
-To fix move wiphy_register() outside register_netdev(). This solution
-have side effect of not creating /sys/class/net/wlanX/phy80211 link,
-but that's a minor issue we can live with.
-
-Bisected-by: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
-Bisected-by: Michael Witten <mfwitten@gmail.com>
-Tested-by: Witold Baryluk <baryluk@smp.if.uj.edu.pl>
-Tested-by: Michael Witten <mfwitten@gmail.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
-ecb4433550f0620f3d1471ae7099037ede30a91e was CCed to stable but we
-drop it there, when bug was reported. So this patch is only intended
-to 3.1
+ drivers/net/wireless/ath/ath6kl/core.h |    1 +
+ drivers/net/wireless/ath/ath6kl/main.c |    2 +-
+ 2 files changed, 2 insertions(+), 1 deletions(-)
 
- drivers/net/wireless/ipw2x00/ipw2100.c |   21 +++++++++++-----
- drivers/net/wireless/ipw2x00/ipw2200.c |   39 +++++++++++++++++++++----------
- 2 files changed, 40 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 3774dd0..ef9ad79 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -1903,15 +1903,17 @@ static void ipw2100_down(struct ipw2100_priv *priv)
- static int ipw2100_net_init(struct net_device *dev)
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index faf8015..e69cd5b 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -523,6 +523,7 @@ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
+ 					       struct htc_packet *packet);
+ void ath6kl_stop_txrx(struct ath6kl *ar);
+ void ath6kl_cleanup_amsdu_rxbufs(struct ath6kl *ar);
++int ath6kl_diag_write32(struct ath6kl *ar, u32 address, u32 value);
+ int ath6kl_diag_write(struct ath6kl *ar, u32 address, void *data, u32 length);
+ int ath6kl_diag_read32(struct ath6kl *ar, u32 address, u32 *value);
+ int ath6kl_diag_read(struct ath6kl *ar, u32 address, void *data, u32 length);
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index bda14d1..48e9c2e 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -261,7 +261,7 @@ int ath6kl_diag_read32(struct ath6kl *ar, u32 address, u32 *value)
+  * Write to the ATH6KL through its diagnostic window. No cooperation from
+  * the Target is required for this.
+  */
+-static int ath6kl_diag_write32(struct ath6kl *ar, u32 address, u32 value)
++int ath6kl_diag_write32(struct ath6kl *ar, u32 address, u32 value)
  {
- 	struct ipw2100_priv *priv = libipw_priv(dev);
-+
-+	return ipw2100_up(priv, 1);
-+}
-+
-+static int ipw2100_wdev_init(struct net_device *dev)
-+{
-+	struct ipw2100_priv *priv = libipw_priv(dev);
- 	const struct libipw_geo *geo = libipw_get_geo(priv->ieee);
- 	struct wireless_dev *wdev = &priv->ieee->wdev;
--	int ret;
- 	int i;
+ 	int ret;
  
--	ret = ipw2100_up(priv, 1);
--	if (ret)
--		return ret;
--
- 	memcpy(wdev->wiphy->perm_addr, priv->mac_addr, ETH_ALEN);
- 
- 	/* fill-out priv->ieee->bg_band */
-@@ -6350,9 +6352,13 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
- 		       "Error calling register_netdev.\n");
- 		goto fail;
- 	}
-+	registered = 1;
-+
-+	err = ipw2100_wdev_init(dev);
-+	if (err)
-+		goto fail;
- 
- 	mutex_lock(&priv->action_mutex);
--	registered = 1;
- 
- 	IPW_DEBUG_INFO("%s: Bound to %s\n", dev->name, pci_name(pci_dev));
- 
-@@ -6389,7 +6395,8 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
- 
-       fail_unlock:
- 	mutex_unlock(&priv->action_mutex);
--
-+	wiphy_unregister(priv->ieee->wdev.wiphy);
-+	kfree(priv->ieee->bg_band.channels);
-       fail:
- 	if (dev) {
- 		if (registered)
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 87813c3..4ffebed 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -11425,16 +11425,23 @@ static void ipw_bg_down(struct work_struct *work)
- /* Called by register_netdev() */
- static int ipw_net_init(struct net_device *dev)
- {
-+	int rc = 0;
-+	struct ipw_priv *priv = libipw_priv(dev);
-+
-+	mutex_lock(&priv->mutex);
-+	if (ipw_up(priv))
-+		rc = -EIO;
-+	mutex_unlock(&priv->mutex);
-+
-+	return rc;
-+}
-+
-+static int ipw_wdev_init(struct net_device *dev)
-+{
- 	int i, rc = 0;
- 	struct ipw_priv *priv = libipw_priv(dev);
- 	const struct libipw_geo *geo = libipw_get_geo(priv->ieee);
- 	struct wireless_dev *wdev = &priv->ieee->wdev;
--	mutex_lock(&priv->mutex);
--
--	if (ipw_up(priv)) {
--		rc = -EIO;
--		goto out;
--	}
- 
- 	memcpy(wdev->wiphy->perm_addr, priv->mac_addr, ETH_ALEN);
- 
-@@ -11519,13 +11526,9 @@ static int ipw_net_init(struct net_device *dev)
- 	set_wiphy_dev(wdev->wiphy, &priv->pci_dev->dev);
- 
- 	/* With that information in place, we can now register the wiphy... */
--	if (wiphy_register(wdev->wiphy)) {
-+	if (wiphy_register(wdev->wiphy))
- 		rc = -EIO;
--		goto out;
--	}
--
- out:
--	mutex_unlock(&priv->mutex);
- 	return rc;
- }
- 
-@@ -11832,14 +11835,22 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
- 		goto out_remove_sysfs;
- 	}
- 
-+	err = ipw_wdev_init(net_dev);
-+	if (err) {
-+		IPW_ERROR("failed to register wireless device\n");
-+		goto out_unregister_netdev;
-+	}
-+
- #ifdef CONFIG_IPW2200_PROMISCUOUS
- 	if (rtap_iface) {
- 	        err = ipw_prom_alloc(priv);
- 		if (err) {
- 			IPW_ERROR("Failed to register promiscuous network "
- 				  "device (error %d).\n", err);
--			unregister_netdev(priv->net_dev);
--			goto out_remove_sysfs;
-+			wiphy_unregister(priv->ieee->wdev.wiphy);
-+			kfree(priv->ieee->a_band.channels);
-+			kfree(priv->ieee->bg_band.channels);
-+			goto out_unregister_netdev;
- 		}
- 	}
- #endif
-@@ -11851,6 +11862,8 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
- 
- 	return 0;
- 
-+      out_unregister_netdev:
-+	unregister_netdev(priv->net_dev);
-       out_remove_sysfs:
- 	sysfs_remove_group(&pdev->dev.kobj, &ipw_attribute_group);
-       out_release_irq:
 -- 
-1.7.1
+1.7.0.4
 
