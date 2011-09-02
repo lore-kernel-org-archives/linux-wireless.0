@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:34755 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755812Ab1ISNCD (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:49008 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755365Ab1IBUAP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Sep 2011 09:02:03 -0400
-Received: by eya28 with SMTP id 28so1534873eya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2011 06:02:01 -0700 (PDT)
-From: Alexander Simon <an.alexsimon@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 2/3] mac80211: Add HT helper functions
-Date: Mon, 19 Sep 2011 15:01:57 +0200
-Message-ID: <4494789.uEd83VaQuB@alex-1> (sfid-20110919_150207_922929_31ED2283)
-In-Reply-To: <1316436947.5995.23.camel@jlt3.sipsolutions.net>
-References: <35635039ce7d4a79dc62b19d51ccf0d5d4838112.1316297595.git.an.alexsimon@googlemail.com> <1501100748f4096d10848f6eec03f22e96e35b8e.1316297595.git.an.alexsimon@googlemail.com> <1316436947.5995.23.camel@jlt3.sipsolutions.net>
+	Fri, 2 Sep 2011 16:00:15 -0400
+Received: by qyk34 with SMTP id 34so2002263qyk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Sep 2011 13:00:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20110902153927.54ae3e38@mj>
+References: <20110902190228.14F1C40629@repository3.orbit-lab.org> <20110902153927.54ae3e38@mj>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 2 Sep 2011 12:59:54 -0700
+Message-ID: <CAB=NE6WNX6nJ4QV97VnsmG_Smv4mMxkLkO73ag1Ab+zDS2Hofg@mail.gmail.com> (sfid-20110902_220029_503863_F2E8EBBE)
+Subject: Re: Compat-wireless release for 2011-09-02 is baked
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag, 19. September 2011, 14:55:47 schrieben Sie:
-> On Sun, 2011-09-18 at 00:14 +0200, Alexander Simon wrote:
-> > Some refactoring for IBSS HT.
-> > 
-> > Move HT info and capability IEs building code into separate functions.
-> > 
-> > Add function to get the channel type from an HT info IE.
-> > 
-> > +enum nl80211_channel_type
-> > +ieee80211_ht_info_to_channel_type(struct ieee80211_ht_info *ht_info);
-> 
-> Did I miss it, or do you not use that function any more?
-> 
-> johannes
-I use it in ieee80211_rx_bss_info, patch 3/3.
+On Fri, Sep 2, 2011 at 12:39 PM, Pavel Roskin <proski@gnu.org> wrote:
+> On Fri,  2 Sep 2011 15:02:27 -0400 (EDT)
+> compat@orbit-lab.org (Compat-wireless cronjob account) wrote:
+>
+>> /usr/bin/sha1sum: *.tar.bz2: No such file or directory
+>
+> How about adding "NOT" to the subject if there are any errors?
 
-Alex
+Sure, patches welcomed :D
+
+git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-user.git
+
+  Luis
