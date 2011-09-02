@@ -1,39 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45928 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752872Ab1IWKWH (ORCPT
+Received: from mail-qw0-f42.google.com ([209.85.216.42]:59088 "EHLO
+	mail-qw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756285Ab1IBWDY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Sep 2011 06:22:07 -0400
-Subject: Re: [RFC 2/2] mac80211: Send the management frame at requested rate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-In-Reply-To: <1316703516-24216-2-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1316703516-24216-1-git-send-email-rmanohar@qca.qualcomm.com>
-	 <1316703516-24216-2-git-send-email-rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 23 Sep 2011 12:22:04 +0200
-Message-ID: <1316773324.4058.2.camel@jlt3.sipsolutions.net> (sfid-20110923_122212_939998_57596E54)
-Mime-Version: 1.0
+	Fri, 2 Sep 2011 18:03:24 -0400
+MIME-Version: 1.0
+In-Reply-To: <20110901141304.GA2580@tuxdriver.com>
+References: <CAB=NE6VuP=AvYiJsYn_Noc1u0Q=jvQPutHRANdSiLP2v48ogfg@mail.gmail.com>
+ <CAB=NE6VwWu5+Hk7=3ghkgiXss9kCqGyS-RWPYtyHRhDsx5r2rA@mail.gmail.com>
+ <CAA93jw7c+Nxc6ZbWZWsQ+F78AoPWU=quSRaOUpT0yRcwJOXsGQ@mail.gmail.com>
+ <4E5C3B47.1050809@freedesktop.org> <CA+mtBx-j_+mrNpntR7CfYOromDnM-ZGzvebpUCjC8Qf14X6u9g@mail.gmail.com>
+ <CAJ-Vmonwur-SXddNwjPEidCMqes+PwbRWFBddfdwTp2jOMu64g@mail.gmail.com>
+ <4E5CEC79.3090802@freedesktop.org> <9BB251C1-A211-486D-A717-59149AC3A709@gmail.com>
+ <4E5E36EE.8080501@freedesktop.org> <CAB=NE6Wj4BxSjZmTOg9EFMcJ+H0RBZE4q8+6DB3x8qP=r42yNQ@mail.gmail.com>
+ <20110901141304.GA2580@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 2 Sep 2011 15:03:02 -0700
+Message-ID: <CAB=NE6VvEX87on9QL7=3OrZtopoASzyLBTweEmzO0ZxU8NNJCA@mail.gmail.com> (sfid-20110903_000327_503802_E77EE841)
+Subject: Re: BQL crap and wireless
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jim Gettys <jg@freedesktop.org>,
+	Andrew McGregor <andrewmcgr@gmail.com>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Tom Herbert <therbert@google.com>,
+	Dave Taht <dave.taht@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Matt Smith <smithm@qca.qualcomm.com>,
+	Kevin Hayes <hayes@qca.qualcomm.com>,
+	Derek Smithies <derek@indranet.co.nz>, netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-09-22 at 20:28 +0530, Rajkumar Manoharan wrote:
+On Thu, Sep 1, 2011 at 7:13 AM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Wed, Aug 31, 2011 at 01:50:48PM -0700, Luis R. Rodriguez wrote:
+>> On Wed, Aug 31, 2011 at 6:28 AM, Jim Gettys <jg@freedesktop.org> wrote:
+>
+>> > such as wireless, or even possibly modern broadband with
+>> > PowerBoost, classic RED or similar algorithms that do not take the
+>> > buffer drain rate cannot possibly hack it properly.
+>>
+>> Understood, just curious if anyone has tried a Minstrel approach.
+>
+> FWIW, eBDP and the related algorithms from Tianji Li's paper are
+> philosophically similar to minstrel.
 
-> +++ b/net/mac80211/tx.c
-> @@ -639,6 +639,11 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
->  		txrc.rts = rts = true;
->  	}
->  
-> +	if (ieee80211_is_probe_req(hdr->frame_control) &&
-> +	    tx->sdata->local->scan_req &&
-> +	    tx->sdata->local->scan_req->no_cck)
-> +		info->flags |= IEEE80211_TX_CTL_NO_CCK_RATE;
-> +
+Oh look at that, awesome!!!
 
-I think this would make more sense in ieee80211_send_probe_req() rather
-than here where it'll be executed for every frame.
+>  They depend on measuring recent
+> conditions and modifying the current queue length accordingly.
+>
+>        http://www.hamilton.ie/tianji_li/buffersizing.pdf
+>
+> The hack I added in debloat-testing is based on my understanding
+> of eBDP.  It timestamps the SKBs when they are handed to the driver
+> for Tx and then checks the timestamp when the SKB is orphaned.  It is
+> a bit crude and is an abuse of the skb_orphan API.
 
-johannes
+Neat!
 
+>  Also while it
+> accounts for the 802.11e queues separately, it doesn't account for
+> 802.11n aggregation.
+
+I see..
+
+>  Still, it seems to improve latency w/o hugely
+> impacting throughput in at least some environments -- YMMV!
+
+Sweet dude. For aggregation it seems the way to go is to get some
+helpers as Andrew has suggested. Andrew, can you elaborate a little on
+that? If feasible, then maybe then we can add it to the TODO list
+page:
+
+http://wireless.kernel.org/en/developers/todo-list
+
+and when one of us gets to it, we get cranking on it.
+
+  Luis
