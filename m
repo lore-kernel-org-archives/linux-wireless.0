@@ -1,66 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f42.google.com ([209.85.216.42]:55081 "EHLO
-	mail-qw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753931Ab1IVX0B (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56232 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933366Ab1IBKyu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 19:26:01 -0400
-Received: by qwm42 with SMTP id 42so5645117qwm.1
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2011 16:26:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1316706736.3899.54.camel@jlt3.sipsolutions.net>
-References: <20110922154726.521122680@sipsolutions.net> <1316706736.3899.54.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 22 Sep 2011 16:25:41 -0700
-Message-ID: <CAB=NE6UzHVMOY=v4EEVojED5PY=T-uriAMvpHqehkh4Bygrn3g@mail.gmail.com> (sfid-20110923_012606_700049_FF75338E)
-Subject: Re: [RFC 00/15] mac80211 uAPSD support
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 2 Sep 2011 06:54:50 -0400
+Subject: Re: [PATCH] mac80211: Stop forwarding mesh traffic when tx queues
+ are full
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Thomas Pedersen <thomas@cozybit.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org,
+	jlopex@gmail.com
+In-Reply-To: <1314907533-27486-1-git-send-email-javier@cozybit.com> (sfid-20110901_220614_208133_761E3776)
+References: <1314907533-27486-1-git-send-email-javier@cozybit.com>
+	 (sfid-20110901_220614_208133_761E3776)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 02 Sep 2011 12:54:43 +0200
+Message-ID: <1314960883.3927.3.camel@jlt3.sipsolutions.net> (sfid-20110902_125453_957757_96AC8284)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCBTZXAgMjIsIDIwMTEgYXQgODo1MiBBTSwgSm9oYW5uZXMgQmVyZwo8am9oYW5uZXNA
-c2lwc29sdXRpb25zLm5ldD4gd3JvdGU6Cj4gT29wcywgZm9yZ290IHRoZSB0b3RhbCBkaWZmc3Rh
-dDoKPgo+IMKgRG9jdW1lbnRhdGlvbi9Eb2NCb29rLzgwMjExLnRtcGwgwqAgwqAgwqAgwqAgwqAg
-wqB8IMKgIDExCj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvYXRoOWsuaCDCoCDC
-oCDCoHwgwqAgwqAzCj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvbWFpbi5jIMKg
-IMKgIMKgIHwgwqAgwqAzCj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsveG1pdC5j
-IMKgIMKgIMKgIHwgwqAgMTQKPiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bGVnYWN5L2l3bC00
-OTY1LXR4LmMgfCDCoCDCoDIKPiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFn
-bi10eC5jIMKgIHwgwqAgwqAyCj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9wNTQvdHhyeC5jIMKg
-IMKgIMKgIMKgIMKgIMKgIHwgwqAgwqAyCj4gwqBpbmNsdWRlL25ldC9tYWM4MDIxMS5oIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgfCDCoDIyNSArKysrKysrCj4gwqBuZXQvbWFjODAy
-MTEvYWdnLXJ4LmMgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfCDCoCDCoDIKPiDC
-oG5ldC9tYWM4MDIxMS9hZ2ctdHguYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8
-IMKgIMKgMgo+IMKgbmV0L21hYzgwMjExL2NmZy5jIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgfCDCoCAzMyAtCj4gwqBuZXQvbWFjODAyMTEvZGVidWdmc19zdGEuYyDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoHwgwqAgNTQgKwo+IMKgbmV0L21hYzgwMjExL2RyaXZlci1v
-cHMuaCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKgIDMwICsKPiDCoG5ldC9tYWM4MDIx
-MS9kcml2ZXItdHJhY2UuaCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKgIDU3ICsKPiDCoG5l
-dC9tYWM4MDIxMS9odC5jIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHwg
-wqAgwqAyCj4gwqBuZXQvbWFjODAyMTEvaWJzcy5jIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIHwgwqAgwqA0Cj4gwqBuZXQvbWFjODAyMTEvaWVlZTgwMjExX2kuaCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoHwgwqAgMTYKPiDCoG5ldC9tYWM4MDIxMS9pZmFjZS5jIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgfCDCoCDCoDQKPiDCoG5ldC9tYWM4MDIxMS9r
-ZXkuYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHwgwqAgwqA0Cj4gwqBu
-ZXQvbWFjODAyMTEvbWFpbi5jIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHwg
-wqAgMTQKPiDCoG5ldC9tYWM4MDIxMS9tZXNoX3BsaW5rLmMgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgfCDCoCDCoDgKPiDCoG5ldC9tYWM4MDIxMS9tbG1lLmMgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgfCDCoCAyMgo+IMKgbmV0L21hYzgwMjExL3BtLmMgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfCDCoCDCoDIKPiDCoG5ldC9tYWM4MDIxMS9y
-eC5jIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHwgwqAxMjcgKystLQo+
-IMKgbmV0L21hYzgwMjExL3N0YV9pbmZvLmMgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-fCDCoDgxNiArKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tCj4gwqBuZXQvbWFjODAyMTEvc3Rh
-X2luZm8uaCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKgMTM3ICstLS0KPiDCoG5l
-dC9tYWM4MDIxMS9zdGF0dXMuYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKg
-IDYwICstCj4gwqBuZXQvbWFjODAyMTEvdHguYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCB8IMKgMTExICstLQo+IMKgbmV0L21hYzgwMjExL3V0aWwuYyDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKgIDE5Cj4gwqBuZXQvbWFjODAyMTEvd21lLmMg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqB8IMKgIMKgNAo+IMKgMzAgZmls
-ZXMgY2hhbmdlZCwgMTI2OCBpbnNlcnRpb25zKCspLCA1MjIgZGVsZXRpb25zKC0pCgpBd2Vzb21l
-IDopIEkgc3RhcnRlZCB0byByZXZpZXcgdGhpcyBidXQgdHJpZWQgYXBwbHlpbmcgdGhlIGVudGly
-ZQpzZXJpZXMgWzFdIHRvIHNldmVyYWwgZGlmZmVyZW50IG1hc3RlciB0YWdzIG9uIHdpcmVsZXNz
-LXRlc3RpbmcgYnV0IGl0CmRvZXNuJ3QgYXBwbHksIGFueSBjaGFuY2UgeW91IGNvdWxkIHJlYmFz
-ZT8gSSdsbCB0cnkgdG8gZmluaXNoIG15CnJldmlldyB0aHJvdWdoIHRob3VnaC4KClsxXSBodHRw
-Oi8vYm9tYmFkaWwuaW5mcmFkZWFkLm9yZy9+bWNncm9mL3BhdGNoZXMvMjAxMS8wOS8yMi9yZmMt
-dWFwc2QucGF0Y2gKCiAgTHVpcwo=
+On Thu, 2011-09-01 at 13:05 -0700, Javier Cardona wrote:
+
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -1847,6 +1847,12 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+>  		/* illegal frame */
+>  		return RX_DROP_MONITOR;
+>  
+> +	if (local->queue_stop_reasons[skb_get_queue_mapping(skb)]) {
+> +		IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
+> +						dropped_frames_congestion);
+> +		return RX_DROP_MONITOR;
+> +	}
+
+It's probably not terribly important, but shouldn't the
+queue_stop_reasons access be locked?
+
+johannes
+
