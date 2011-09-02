@@ -1,100 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51401 "EHLO mx1.redhat.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:4336 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751738Ab1IEJTT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Sep 2011 05:19:19 -0400
-Date: Mon, 5 Sep 2011 11:19:18 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Jonathan Nieder <jrnieder@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Christoph Anton Mitterer <calestyo@scientia.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Dietsche <Gregory.Dietsche@cuw.edu>,
-	linux-kernel@vger.kernel.org
-Subject: Re: iwl4965: "MAC is in deep sleep!" freezes
-Message-ID: <20110905091918.GC2221@redhat.com> (sfid-20110905_111941_485981_A9487FC4)
-References: <bbdbd01d4965ae789384bc1f9d0a2426@imap.dd24.net>
- <20110902233806.GA22157@elie>
+	id S1752356Ab1IBOBC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Sep 2011 10:01:02 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 11/12] staging: brcm80211: cleaned up softmac scb.h
+ macro's
+Date: Fri, 2 Sep 2011 16:00:38 +0200
+Message-ID: <1314972039-27098-12-git-send-email-rvossen@broadcom.com> (sfid-20110902_160119_296907_47C470FC)
+In-Reply-To: <1314972039-27098-1-git-send-email-rvossen@broadcom.com>
+References: <1314972039-27098-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20110902233806.GA22157@elie>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello
+Substituted/removed macro's.
 
-On Fri, Sep 02, 2011 at 06:38:06PM -0500, Jonathan Nieder wrote:
-> Christoph Anton Mitterer wrote[1]:
-> 
-> > When I bring the WLAN interface up, after some time (usually just
-> > minutes) I get the following error (during which the system
-> > completely freezes for some 10-20s)
-> [...]
-> > kernel: [  951.087153] iwl4965 0000:14:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
-> > wpa_supplicant[13032]: Failed to initiate AP scan.
-> > kernel: [  952.089208] ------------[ cut here ]------------
-> > kernel: [  952.090089] WARNING: at drivers/net/wireless/iwlegacy/iwl-tx.c:483 iwl_legacy_enqueue_hcmd+0x3c7/0x3f0()
-> 
-> The warning is from v3.0-rc2~7^2~16^2~216 (iwlegacy: fix enqueue hcmd
-> race conditions, 2011-04-28):
-> 
-> | -	spin_lock_irqsave(&priv->hcmd_lock, flags);
-> | -
-> | -	/* If this is a huge cmd, mark the huge flag also on the meta.flags
-> | -	 * of the _original_ cmd. This is used for DMA mapping clean up.
-> | -	 */
-> | -	if (cmd->flags & CMD_SIZE_HUGE) {
-> | -		idx = iwl_legacy_get_cmd_index(q, q->write_ptr, 0);
-> | -		txq->meta[idx].flags = CMD_SIZE_HUGE;
-> | -	}
-> | -
-> | 	idx = iwl_legacy_get_cmd_index(q, q->write_ptr, cmd->flags & CMD_SIZE_HUGE);
-> | 	out_cmd = txq->cmd[idx];
-> | 	out_meta = &txq->meta[idx];
-> |  
-> | +	if (WARN_ON(out_meta->flags & CMD_MAPPED)) {
-> | +		spin_unlock_irqrestore(&priv->hcmd_lock, flags);
-> | +		return -ENOSPC;
-> | +	}
-> | +
-> 
-> More details are at [1].  Stanislav, thoughts?  Is this a bug, and if
-> so, any ideas for tracking it down?
-It's a bug. But this looks like some different problem than is showed in
-[1]
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
+---
+ drivers/staging/brcm80211/brcmsmac/main.c |    8 ++++----
+ drivers/staging/brcm80211/brcmsmac/main.h |    3 ++-
+ drivers/staging/brcm80211/brcmsmac/rate.h |   16 ----------------
+ drivers/staging/brcm80211/brcmsmac/scb.h  |   24 ++++++++++--------------
+ 4 files changed, 16 insertions(+), 35 deletions(-)
 
-> Thanks,
-> Jonathan
-> 
-> [1] http://bugs.debian.org/636355
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
+index 4436b4f..6d2fc103 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.c
++++ b/drivers/staging/brcm80211/brcmsmac/main.c
+@@ -7196,11 +7196,11 @@ brcms_c_d11hdrs_mac80211(struct brcms_c_info *wlc, struct ieee80211_hw *hw,
+ 		} else {
+ 			/* Increment the counter for first fragment */
+ 			if (tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT)
+-				SCB_SEQNUM(scb, p->priority)++;
++				scb->seqnum[p->priority]++;
+ 
+ 			/* extract fragment number from frame first */
+ 			seq = le16_to_cpu(seq) & FRAGNUM_MASK;
+-			seq |= (SCB_SEQNUM(scb, p->priority) << SEQNUM_SHIFT);
++			seq |= (scb->seqnum[p->priority] << SEQNUM_SHIFT);
+ 			h->seq_ctrl = cpu_to_le16(seq);
+ 
+ 			frameid = ((seq << TXFID_SEQ_SHIFT) & TXFID_SEQ_MASK) |
+@@ -7210,7 +7210,7 @@ brcms_c_d11hdrs_mac80211(struct brcms_c_info *wlc, struct ieee80211_hw *hw,
+ 	frameid |= queue & TXFID_QUEUE_MASK;
+ 
+ 	/* set the ignpmq bit for all pkts tx'd in PS mode and for beacons */
+-	if (SCB_PS(scb) || ieee80211_is_beacon(h->frame_control))
++	if (ieee80211_is_beacon(h->frame_control))
+ 		mcl |= TXC_IGNOREPMQ;
+ 
+ 	txrate[0] = tx_info->control.rates;
+@@ -7685,7 +7685,7 @@ brcms_c_d11hdrs_mac80211(struct brcms_c_info *wlc, struct ieee80211_hw *hw,
+ 	}
+ 
+ 	ac = skb_get_queue_mapping(p);
+-	if (SCB_WME(scb) && qos && wlc->edcf_txop[ac]) {
++	if ((scb->flags & SCB_WMECAP) && qos && wlc->edcf_txop[ac]) {
+ 		uint frag_dur, dur, dur_fallback;
+ 
+ 		/* WME: Update TXOP threshold */
+diff --git a/drivers/staging/brcm80211/brcmsmac/main.h b/drivers/staging/brcm80211/brcmsmac/main.h
+index 047c422..a0dcacc 100644
+--- a/drivers/staging/brcm80211/brcmsmac/main.h
++++ b/drivers/staging/brcm80211/brcmsmac/main.h
+@@ -221,7 +221,8 @@ struct brcms_stf {
+ 
+ #define BRCMS_STF_SS_STBC_TX(wlc, scb) \
+ 	(((wlc)->stf->txstreams > 1) && (((wlc)->band->band_stf_stbc_tx == ON) \
+-	 || (SCB_STBC_CAP((scb)) && (wlc)->band->band_stf_stbc_tx == AUTO && \
++	 || (((scb)->flags & SCB_STBCCAP) && \
++	     (wlc)->band->band_stf_stbc_tx == AUTO && \
+ 	     isset(&((wlc)->stf->ss_algo_channel), PHY_TXC1_MODE_STBC))))
+ 
+ #define BRCMS_STBC_CAP_PHY(wlc) (BRCMS_ISNPHY(wlc->band) && \
+diff --git a/drivers/staging/brcm80211/brcmsmac/rate.h b/drivers/staging/brcm80211/brcmsmac/rate.h
+index 39e1796..ae5479b 100644
+--- a/drivers/staging/brcm80211/brcmsmac/rate.h
++++ b/drivers/staging/brcm80211/brcmsmac/rate.h
+@@ -123,22 +123,6 @@ extern const struct brcms_mcs_info mcs_table[];
+ 		  RSPEC_ISSGI(rspec)) : \
+ 	(rspec & RSPEC_RATE_MASK))
+ 
+-/* return rate in unit of 500Kbps -- for internal use in wlc_rate_sel.c */
+-#define RSPEC2RATE500K(rspec) \
+-	((rspec & RSPEC_MIMORATE) ? \
+-	 MCS_RATE((rspec & RSPEC_RATE_MASK), state->is40bw, \
+-		   RSPEC_ISSGI(rspec))/500 : \
+-	(rspec & RSPEC_RATE_MASK))
+-
+-#define CRSPEC2RATE500K(rspec) \
+-	((rspec & RSPEC_MIMORATE) ? \
+-	 MCS_RATE((rspec & RSPEC_RATE_MASK), RSPEC_IS40MHZ(rspec), \
+-		   RSPEC_ISSGI(rspec))/500 :\
+-	(rspec & RSPEC_RATE_MASK))
+-
+-#define RSPEC2KBPS(rspec) \
+-	(IS_MCS(rspec) ? RSPEC2RATE(rspec) : RSPEC2RATE(rspec)*500)
+-
+ #define RSPEC_PHYTXBYTE2(rspec)	((rspec & 0xff00) >> 8)
+ 
+ #define RSPEC_GET_BW(rspec)	((rspec & RSPEC_BW_MASK) >> RSPEC_BW_SHIFT)
+diff --git a/drivers/staging/brcm80211/brcmsmac/scb.h b/drivers/staging/brcm80211/brcmsmac/scb.h
+index 3fe9cf2..b2aacf3 100644
+--- a/drivers/staging/brcm80211/brcmsmac/scb.h
++++ b/drivers/staging/brcm80211/brcmsmac/scb.h
+@@ -24,6 +24,16 @@
+ 
+ #define AMPDU_TX_BA_MAX_WSIZE	64	/* max Tx ba window size (in pdu) */
+ 
++#define AMPDU_MAX_SCB_TID	NUMPRIO
++
++/* scb flags */
++#define SCB_WMECAP		0x0040	/* may ONLY be set if pub->_wme!=OFF */
++#define SCB_HTCAP		0x10000	/* HT (MIMO) capable device */
++#define SCB_IS40		0x80000	/* 40MHz capable */
++#define SCB_STBCCAP		0x40000000	/* STBC Capable */
++
++#define SCB_MAGIC	0xbeefcafe
++
+ /* structure to store per-tid state for the ampdu initiator */
+ struct scb_ampdu_tid_ini {
+ 	u8 tx_in_transit; /* number of pending mpdus in transit in driver */
+@@ -34,8 +44,6 @@ struct scb_ampdu_tid_ini {
+ 	u8 ba_wsize;	  /* negotiated ba window size (in pdu) */
+ };
+ 
+-#define AMPDU_MAX_SCB_TID	NUMPRIO
+-
+ struct scb_ampdu {
+ 	struct scb *scb;	/* back pointer for easy reference */
+ 	u8 mpdu_density;	/* mpdu density */
+@@ -54,8 +62,6 @@ struct scb_ampdu {
+ 	struct scb_ampdu_tid_ini ini[AMPDU_MAX_SCB_TID];
+ };
+ 
+-#define SCB_MAGIC	0xbeefcafe
+-
+ /* station control block - one per remote MAC address */
+ struct scb {
+ 	u32 magic;
+@@ -74,14 +80,4 @@ struct scb {
+ 	struct scb_ampdu scb_ampdu;	/* AMPDU state including per tid info */
+ };
+ 
+-/* scb flags */
+-#define SCB_WMECAP		0x0040	/* may ONLY be set if pub->_wme!=OFF */
+-#define SCB_HTCAP		0x10000	/* HT (MIMO) capable device */
+-#define SCB_IS40		0x80000	/* 40MHz capable */
+-#define SCB_STBCCAP		0x40000000	/* STBC Capable */
+-#define SCB_WME(a)		((a)->flags & SCB_WMECAP)/* implies WME enab */
+-#define SCB_SEQNUM(scb, prio)	((scb)->seqnum[(prio)])
+-#define SCB_PS(a)		NULL
+-#define SCB_STBC_CAP(a)		((a)->flags & SCB_STBCCAP)
+-#define SCB_AMPDU(a)		true
+ #endif				/* _BRCM_SCB_H_ */
+-- 
+1.7.4.1
 
-Based on:
-Jul 25 01:14:59 heisenberg kernel: [  121.551098] iwl4965 0000:14:00.0:
-Queue 4 stuck for 2000 ms.
-Jul 25 01:14:59 heisenberg kernel: [  121.555226] iwl4965 0000:14:00.0:
-On demand firmware reload
-Jul 25 01:15:12 heisenberg kernel: [  121.560305] iwl4965 0000:14:00.0:
-MAC is in deep sleep!.  CSR_GP_CNTRL = 0x080033D8
-
-this look like firmware hang. This happen just after module load, that's
-good news, because it allow to log relative small amount debug messages
-to see what possibly driver do wrong to crash firmware.
-
-Please configure syslog to log kernel debug messages. Not sure how to do
-this in debian, see  "Configure syslog to log kernel debug messages" in
-https://fedoraproject.org/wiki/DebugWireless for corresponding fedora
-config. Then reload driver:
-
-modprobe -r iwl4965
-echo > /var/log/kernel
-modprobe iwl4965 debug=0x47ffffff
-
-and send me /var/log/kernel including messages from iwl4965 module
-load to first "MAC is in deep sleep" message.
-
-Note this require kernel compiled with 
-CONFIG_IWLWIFI_LEGACY_DEBUG=y
-
-Thanks
-Stanislaw
 
