@@ -1,66 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:35857 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752904Ab1IQBtS (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4661 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932165Ab1IBIXX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 21:49:18 -0400
-Received: by yxm8 with SMTP id 8so3292851yxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2011 18:49:17 -0700 (PDT)
-Message-ID: <4E73FC9A.8090901@lwfinger.net> (sfid-20110917_034923_164622_3CAFAACB)
-Date: Fri, 16 Sep 2011 20:49:14 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 2 Sep 2011 04:23:23 -0400
+Date: Fri, 2 Sep 2011 13:53:04 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V3] ath6kl: ath6kl: Add debugfs interface to dump
+	diagnostic registers
+Message-ID: <20110902082303.GD5883@vasanth-laptop> (sfid-20110902_102329_957762_F464D961)
+References: <1314871752-13740-1-git-send-email-vthiagar@qca.qualcomm.com> <4E608BD7.5060104@qca.qualcomm.com> <20110902080100.GA5883@vasanth-laptop> <4E609204.5080300@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Simeon Nifos <archwndas@googlemail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: deactivating one of the two wireless connections
-References: <CAL1uj0zX5gGHkQny7fE3xrVm9HgP3PvC+ff2g7sunzNvXzgu=g@mail.gmail.com>
-In-Reply-To: <CAL1uj0zX5gGHkQny7fE3xrVm9HgP3PvC+ff2g7sunzNvXzgu=g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4E609204.5080300@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/16/2011 08:33 PM, Simeon Nifos wrote:
-> Dear all,
->
-> I have a USB wireless card apart from the laptops one. The Gnome
-> NetworkManager sees both when I plugin the USB wireless adapter. The
-> problem is that for saving power I would like to turn off the wireless
-> adapter of my laptop. However, if I use the laptops switch that turns
-> off laptops wireless, the Network Manager, turns off both connections
-> saying: Deactivated by Hardware switch or something similar.
->
-> The problem is that I usually want to connect with my wireless USB
-> adapter which has a directional antenna and provides better signal and
-> higher download speeds. However, after some minutes automatically by
-> itself the laptops adapter connects to the same access point and then
-> I lose the connection. I can do something like:
->
-> # ifconfig wlan0 down
->
-> and deactivate the laptops adapter, but this is a simple ad-hoc solution.
->
-> My impression is that the hardware switch on the keyboard of the
-> laptop should not control all wireless connections. It is entirely
-> wrong. If I wnt my USB connection to be deactivated I just unplug it.
-> If I want to use it I just plug it in. This is how things should be.
-> Removable devices should be powered on when connected and powered off
-> when disconnected. For as long as it remains connected that means I
-> want it to function as it is supposed to do so. I do not see why
-> switching off my laptop's device switches off every other wireless
-> device.
->
-> Is there any easy fix for that?
+On Fri, Sep 02, 2011 at 11:21:24AM +0300, Kalle Valo wrote:
+> On 09/02/2011 11:01 AM, Vasanthakumar Thiagarajan wrote:
+> > On Fri, Sep 02, 2011 at 10:55:03AM +0300, Kalle Valo wrote:
+> >> On 09/01/2011 01:09 PM, Vasanthakumar Thiagarajan wrote:
+> >>
+> >> Thanks, applied. But I did minor changes:
+> >>
+> >> commit 91d57de5adfc40184ef7cb8974104459c5211add
+> >> Author: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+> >> Date:   Fri Sep 2 10:40:06 2011 +0300
+> >>
+> >>     ath6kl: Add debugfs interface to dump diagnostic registers from firmware
+> >>
+> >>     To dump a particular register:
+> >>
+> >>         echo <reg_addr> > <debugfs_root>/ieee80211/phyX/ath6kl/reg_addr
+> >>
+> >>     To dump the entire register set:
+> >>
+> >>         echo 0 > <debugfs_root>/ieee80211/phyX/ath6kl/reg_addr
+> >>
+> >>     Register values will be available at:
+> >>
+> >>         cat <debugfs_root>/ieee80211/phyX/ath6kl/reg_dump
+> >>
+> >>     kvalo: commit log cleanup, renamed few functions, removed a warning
+> >>     message
+> > 
+> > Thanks, what is the warning?
+> 
+> I just removed the ath6kl_warn() about invalid register address in
+> ath6kl_dbg_is_diag_reg_valid(). Kernel should not send any debug logs in
+> that case.
 
-I usually have several wireless devices plugged into my computer at one time. 
-When I use the NM applet to select one of them, it will stay selected unless it 
-goes offline. Does dmesg show any disconnects?
+Ok, thanks.
+> 
+> > Did you apply my other patch which fixes endianess?.
+> 
+> No, not yet. I still have patches pending for review. Will finish them
+> today.
 
-The switch is doing exactly what it should. Any RF blocking switch should 
-disable ALL radios to enforce radio safety.
+No problem, i thought it was a sparse warning.
 
-Downing the interface is a perfectly good solution. If you want to minimize the 
-power usage, you can unload the driver for the built-in wireless adapter using 
-"modprobe -r" to disable it. If you never want to use it, then blacklist that 
-driver.
-
-Larry
+Vasanth
