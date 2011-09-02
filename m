@@ -1,48 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dell.nexicom.net ([216.168.96.13]:38884 "EHLO smtp.nexicom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755334Ab1IQXUF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Sep 2011 19:20:05 -0400
-Received: from mail.lockie.ca (dyn-dsl-mb-216-168-118-207.nexicom.net [216.168.118.207])
-	by smtp.nexicom.net (8.13.6/8.13.4) with ESMTP id p8HNK3JM002474
-	for <linux-wireless@vger.kernel.org>; Sat, 17 Sep 2011 19:20:03 -0400
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by mail.lockie.ca (Postfix) with ESMTP id 3BDB31E007D
-	for <linux-wireless@vger.kernel.org>; Sat, 17 Sep 2011 19:20:02 -0400 (EDT)
-Message-ID: <4E752B9A.6000509@lockie.ca> (sfid-20110918_012009_595271_D23969C1)
-Date: Sat, 17 Sep 2011 19:22:02 -0400
-From: James <bjlockie@lockie.ca>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56220 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751052Ab1IBXiP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Sep 2011 19:38:15 -0400
+Date: Fri, 2 Sep 2011 18:38:06 -0500
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Christoph Anton Mitterer <calestyo@scientia.net>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Dietsche <Gregory.Dietsche@cuw.edu>,
+	linux-kernel@vger.kernel.org
+Subject: Re: iwl4965: "MAC is in deep sleep!" freezes
+Message-ID: <20110902233806.GA22157@elie> (sfid-20110903_013833_436787_F8FC2EA3)
+References: <bbdbd01d4965ae789384bc1f9d0a2426@imap.dd24.net>
 MIME-Version: 1.0
-To: linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: Re: did my hardware die?
-References: <4E7521C9.5060801@lockie.ca>
-In-Reply-To: <4E7521C9.5060801@lockie.ca>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <bbdbd01d4965ae789384bc1f9d0a2426@imap.dd24.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/17/11 18:40, James wrote:
-> Does it mean my hardware died since dmesg shows nothing related to ath?
->
-> # dmesg | grep ath
->
-> # lspci
-> 02:09.0 Network controller: Atheros Communications Inc. AR5008 
-> Wireless Network Adapter (rev 01)
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-Kernel 3.6.36.4 sees the hardware:
+Hi,
 
-ath9k 0000:02:08.0: PCI INT A -> Link[LNKA] -> GSI 18 (level, low) -> IRQ 18
-ath: EEPROM regdomain: 0x10
-ath: EEPROM indicates we should expect a direct regpair map
-ath: Country alpha2 being used: CO
-ath: Regpair used: 0x10
-ieee80211 phy0: Selected rate control algorithm 'ath9k_rate_control'
-Registered led device: ath9k-phy0
+Christoph Anton Mitterer wrote[1]:
 
-Kernel-3.0.4 does not.
+> When I bring the WLAN interface up, after some time (usually just
+> minutes) I get the following error (during which the system
+> completely freezes for some 10-20s)
+[...]
+> kernel: [  951.087153] iwl4965 0000:14:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
+> wpa_supplicant[13032]: Failed to initiate AP scan.
+> kernel: [  952.089208] ------------[ cut here ]------------
+> kernel: [  952.090089] WARNING: at drivers/net/wireless/iwlegacy/iwl-tx.c:483 iwl_legacy_enqueue_hcmd+0x3c7/0x3f0()
+
+The warning is from v3.0-rc2~7^2~16^2~216 (iwlegacy: fix enqueue hcmd
+race conditions, 2011-04-28):
+
+| -	spin_lock_irqsave(&priv->hcmd_lock, flags);
+| -
+| -	/* If this is a huge cmd, mark the huge flag also on the meta.flags
+| -	 * of the _original_ cmd. This is used for DMA mapping clean up.
+| -	 */
+| -	if (cmd->flags & CMD_SIZE_HUGE) {
+| -		idx = iwl_legacy_get_cmd_index(q, q->write_ptr, 0);
+| -		txq->meta[idx].flags = CMD_SIZE_HUGE;
+| -	}
+| -
+| 	idx = iwl_legacy_get_cmd_index(q, q->write_ptr, cmd->flags & CMD_SIZE_HUGE);
+| 	out_cmd = txq->cmd[idx];
+| 	out_meta = &txq->meta[idx];
+|  
+| +	if (WARN_ON(out_meta->flags & CMD_MAPPED)) {
+| +		spin_unlock_irqrestore(&priv->hcmd_lock, flags);
+| +		return -ENOSPC;
+| +	}
+| +
+
+More details are at [1].  Stanislav, thoughts?  Is this a bug, and if
+so, any ideas for tracking it down?
+
+Thanks,
+Jonathan
+
+[1] http://bugs.debian.org/636355
