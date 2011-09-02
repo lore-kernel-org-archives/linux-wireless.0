@@ -1,56 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:37692 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752359Ab1IEMDD (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4661 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932165Ab1IBIX2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Sep 2011 08:03:03 -0400
-Received: by mail-yi0-f47.google.com with SMTP id 28so2977467yia.6
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Sep 2011 05:03:02 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <johannes@sipsolutions.net>
-Subject: [RFC v2 2/5] mac80211: adding 'scan_cancel' command.
-Date: Mon,  5 Sep 2011 15:02:28 +0300
-Message-Id: <1315224151-16552-3-git-send-email-VictorG@ti.com> (sfid-20110905_140306_962185_4B89EA2F)
-In-Reply-To: <1315224151-16552-1-git-send-email-VictorG@ti.com>
-References: <1315224151-16552-1-git-send-email-VictorG@ti.com>
+	Fri, 2 Sep 2011 04:23:28 -0400
+Message-ID: <4E60927C.9040208@qca.qualcomm.com> (sfid-20110902_102333_329375_2CAE6432)
+Date: Fri, 2 Sep 2011 11:23:24 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V3] ath6kl: ath6kl: Add debugfs interface to dump	diagnostic
+ registers
+References: <1314871752-13740-1-git-send-email-vthiagar@qca.qualcomm.com> <4E608BD7.5060104@qca.qualcomm.com> <20110902080100.GA5883@vasanth-laptop> <20110902082127.GC5883@vasanth-laptop>
+In-Reply-To: <20110902082127.GC5883@vasanth-laptop>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implementing the scan_cancel operation in the mac80211,
-by calling existing ieee80211_scan_cancel() function.
+On 09/02/2011 11:21 AM, Vasanthakumar Thiagarajan wrote:
+> On Fri, Sep 02, 2011 at 01:31:01PM +0530, Vasanthakumar Thiagarajan
+> wrote:
+>> Did you apply my other patch which fixes endianess?.
+> 
+> I mean the following patch, I can resend it again, if you want. 
+> [PATCH 2/2] ath6kl: Fix endianness in requesting chip register read
 
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
----
- net/mac80211/cfg.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+Ok, I will review that next. So I can drop patch 1 from that series?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index c1fa577..7c3a473 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1389,6 +1389,13 @@ ieee80211_sched_scan_stop(struct wiphy *wiphy, struct net_device *dev)
- 	return ieee80211_request_sched_scan_stop(sdata);
- }
- 
-+static void ieee80211_scan_cancel_req(struct wiphy *wiphy,
-+					struct net_device *dev)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	ieee80211_scan_cancel(sdata->local);
-+}
-+
- static int ieee80211_auth(struct wiphy *wiphy, struct net_device *dev,
- 			  struct cfg80211_auth_request *req)
- {
-@@ -2119,6 +2126,7 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.suspend = ieee80211_suspend,
- 	.resume = ieee80211_resume,
- 	.scan = ieee80211_scan,
-+	.scan_cancel = ieee80211_scan_cancel_req,
- 	.sched_scan_start = ieee80211_sched_scan_start,
- 	.sched_scan_stop = ieee80211_sched_scan_stop,
- 	.auth = ieee80211_auth,
--- 
-1.7.0.4
-
+Kalle
