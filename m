@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:63997 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751617Ab1IGQdD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Sep 2011 12:33:03 -0400
-Received: by fxh19 with SMTP id 19so653368fxh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Sep 2011 09:33:00 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH IGNORE AT YOUR PERIL] cfg80211: force interface combinations to be advertised
-Date: Wed, 7 Sep 2011 18:32:48 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <1315412512.4002.10.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1315412512.4002.10.camel@jlt3.sipsolutions.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:1782 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752332Ab1IBOAz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Sep 2011 10:00:55 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 00/12] staging: brcm80211: 3rd reaction to mainline
+ patch #2
+Date: Fri, 2 Sep 2011 16:00:27 +0200
+Message-ID: <1314972039-27098-1-git-send-email-rvossen@broadcom.com> (sfid-20110902_160102_893845_1C7EC646)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201109071832.48120.chunkeey@googlemail.com> (sfid-20110907_183621_272527_8657B9A4)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, September 07, 2011 06:21:52 PM Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> So my "sunset" period idea didn't work, nobody
-> worked on getting interface combinations added.
-> Almost 4 months after introducing this flag, no
-> drivers have been changed to advertise their
-> interface combinations. Force them now if they
-> want to keep multiple virtual interfaces.
+Code cleanup and reduction of sparse warnings.
 
-no drivers? I thought I added the necessary bits
-in carl9170 shortly after the interface combinations
-patches were accepted?
+This series applies to staging-next and depends on the following patch set:
 
-commit df64962f7d74877624442c059e7878fdf7ec3c22
-Author: Christian Lamparter <chunkeey@googlemail.com>
-Date:   Sat May 14 02:42:38 2011 +0200
+Message-ID: <1314868640-9425-31-git-send-email-rvossen@broadcom.com>
 
-    carl9170: advertise interface combinations
+Arend van Spriel (5):
+  staging: brcm80211: remove extern keyword from function definition
+  staging: brcm80211: replace 0 integer with NULL pointer
+  staging: brcm80211: use address space qualifier in brcmfmac
+  staging: brcm80211: remove sparse warning from main.c
+  staging: brcm80211: remove 'default n' from Kconfig
 
-Did I miss something there?
+Roland Vossen (7):
+  staging: brcm80211: cleaned up softmac phy macro's affecting code
+    flow
+  staging: brcm80211: cleaned up softmac nicpci.c/nicpci.h macro's
+  staging: brcm80211: cleaned up more softmac macro's
+  staging: brcm80211: remove AP related code from softmac
+  staging: brcm80211: cleaned up softmac pub.h macro's
+  staging: brcm80211: cleaned up softmac scb.h macro's
+  staging: brcm80211: cleaned up softmac srom macro
 
-Regards,
-	Chr
+ drivers/staging/brcm80211/Kconfig                 |    4 -
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   25 ++--
+ drivers/staging/brcm80211/brcmfmac/dhd.h          |    2 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c   |    8 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c    |    4 +-
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c  |    2 +-
+ drivers/staging/brcm80211/brcmsmac/ampdu.c        |    2 +-
+ drivers/staging/brcm80211/brcmsmac/channel.c      |    6 +-
+ drivers/staging/brcm80211/brcmsmac/main.c         |  191 ++++++++++++---------
+ drivers/staging/brcm80211/brcmsmac/main.h         |    4 +-
+ drivers/staging/brcm80211/brcmsmac/nicpci.c       |   42 +++--
+ drivers/staging/brcm80211/brcmsmac/nicpci.h       |   12 --
+ drivers/staging/brcm80211/brcmsmac/otp.c          |    5 +-
+ drivers/staging/brcm80211/brcmsmac/otp.h          |    6 -
+ drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c  |    6 +-
+ drivers/staging/brcm80211/brcmsmac/pmu.h          |   13 --
+ drivers/staging/brcm80211/brcmsmac/pub.h          |  173 ++-----------------
+ drivers/staging/brcm80211/brcmsmac/rate.h         |   16 --
+ drivers/staging/brcm80211/brcmsmac/scb.h          |   24 +--
+ drivers/staging/brcm80211/brcmsmac/srom.c         |   22 +--
+ drivers/staging/brcm80211/brcmsmac/types.h        |    5 -
+ 21 files changed, 205 insertions(+), 367 deletions(-)
+
+-- 
+1.7.4.1
+
+
