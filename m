@@ -1,100 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:33142 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752226Ab1IWJD4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Sep 2011 05:03:56 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH] ath9k: Fix a dma warning/memory leak
-Date: Fri, 23 Sep 2011 14:33:14 +0530
-Message-ID: <1316768594-8539-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20110923_110401_795120_38E33BE4)
+Received: from mms1.broadcom.com ([216.31.210.17]:2126 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752345Ab1IBOA6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Sep 2011 10:00:58 -0400
+From: "Roland Vossen" <rvossen@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 07/12] staging: brcm80211: cleaned up softmac
+ nicpci.c/nicpci.h macro's
+Date: Fri, 2 Sep 2011 16:00:34 +0200
+Message-ID: <1314972039-27098-8-git-send-email-rvossen@broadcom.com> (sfid-20110902_160115_577860_F84EFA8B)
+In-Reply-To: <1314972039-27098-1-git-send-email-rvossen@broadcom.com>
+References: <1314972039-27098-1-git-send-email-rvossen@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Substituted macro's.
 
-proper dma_unmapping and freeing of skb's has to be done in the rx
-cleanup for EDMA chipsets when the device is unloaded and this also
-seems to address the following warning which shows up occasionally when
-the device is unloaded
-
-	Call Trace:
-	[<c0148cd2>] warn_slowpath_common+0x72/0xa0
-	[<c03b669c>] ? dma_debug_device_change+0x19c/0x200
-	[<c03b669c>] ? dma_debug_device_change+0x19c/0x200
-	[<c0148da3>] warn_slowpath_fmt+0x33/0x40
-	[<c03b669c>] dma_debug_device_change+0x19c/0x200
-	[<c0657f12>] notifier_call_chain+0x82/0xb0
-	[<c0171370>] __blocking_notifier_call_chain+0x60/0x90
-	[<c01713bf>] blocking_notifier_call_chain+0x1f/0x30
-	[<c044f594>] __device_release_driver+0xa4/0xc0
-	[<c044f647>] driver_detach+0x97/0xa0
-	[<c044e65c>] bus_remove_driver+0x6c/0xe0
-	[<c029af0b>] ? sysfs_addrm_finish+0x4b/0x60
-	[<c0450109>] driver_unregister+0x49/0x80
-	[<c0299f54>] ? sysfs_remove_file+0x14/0x20
-	[<c03c3ab2>] pci_unregister_driver+0x32/0x80
-	[<f92c2162>] ath_pci_exit+0x12/0x20 [ath9k]
-	[<f92c8467>] ath9k_exit+0x17/0x36 [ath9k]
-	[<c06523cd>] ? mutex_unlock+0xd/0x10
-	[<c018e27f>] sys_delete_module+0x13f/0x200
-	[<c02139bb>] ? sys_munmap+0x4b/0x60
-	[<c06547c5>] ? restore_all+0xf/0xf
-	[<c0657a20>] ? spurious_fault+0xe0/0xe0
-	[<c01832f4>] ? trace_hardirqs_on_caller+0xf4/0x180
-	[<c065b863>] sysenter_do_call+0x12/0x38
-	 ---[ end trace 16e1c1521c06bcf9 ]---
-	Mapped at:
-	[<c03b7938>] debug_dma_map_page+0x48/0x120
-	[<f92ba3e8>] ath_rx_init+0x3f8/0x4b0 [ath9k]
-	[<f92b5ae4>] ath9k_init_device+0x4c4/0x7b0 [ath9k]
-	[<f92c2813>] ath_pci_probe+0x263/0x330 [ath9k]
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Roland Vossen <rvossen@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/recv.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletions(-)
+ drivers/staging/brcm80211/brcmsmac/nicpci.c |   42 ++++++++++++++++-----------
+ drivers/staging/brcm80211/brcmsmac/nicpci.h |   12 -------
+ 2 files changed, 25 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index bcc0b22..4984350 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -205,14 +205,22 @@ static void ath_rx_remove_buffer(struct ath_softc *sc,
+diff --git a/drivers/staging/brcm80211/brcmsmac/nicpci.c b/drivers/staging/brcm80211/brcmsmac/nicpci.c
+index 6bffca0..a2cab5c 100644
+--- a/drivers/staging/brcm80211/brcmsmac/nicpci.c
++++ b/drivers/staging/brcm80211/brcmsmac/nicpci.c
+@@ -127,6 +127,18 @@
+ /* PCIE protocol TLP diagnostic registers */
+ #define PCIE_TLP_WORKAROUNDSREG		0x004	/* TLP Workarounds */
  
- static void ath_rx_edma_cleanup(struct ath_softc *sc)
- {
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_buf *bf;
++/* Sonics to PCI translation types */
++#define	SBTOPCI_PREF	0x4		/* prefetch enable */
++#define	SBTOPCI_BURST	0x8		/* burst enable */
++#define	SBTOPCI_RC_READMULTI	0x20	/* memory read multiple */
++
++#define PCI_CLKRUN_DSBL	0x8000	/* Bit 15 forceClkrun */
++
++/* PCI core index in SROM shadow area */
++#define SRSH_PI_OFFSET	0	/* first word */
++#define SRSH_PI_MASK	0xf000	/* bit 15:12 */
++#define SRSH_PI_SHIFT	12	/* bit 15:12 */
++
+ /* Sonics side: PCI core and host control registers */
+ struct sbpciregs {
+ 	u32 control;		/* PCI control */
+@@ -211,18 +223,17 @@ struct pcicore_info {
+ 	bool pmecap;		/* Capable of generating PME */
+ };
  
- 	ath_rx_remove_buffer(sc, ATH9K_RX_QUEUE_LP);
- 	ath_rx_remove_buffer(sc, ATH9K_RX_QUEUE_HP);
+-/* debug/trace */
+-#define	PCI_ERROR(args)
+-#define PCIE_PUB(sih) ((sih)->buscoretype == PCIE_CORE_ID)
+-
+ #define PCIE_ASPM(sih)							\
+-	((PCIE_PUB(sih)) &&						\
++	(((sih)->buscoretype == PCIE_CORE_ID) &&			\
+ 	 (((sih)->buscorerev >= 3) &&					\
+ 	  ((sih)->buscorerev <= 5)))
  
- 	list_for_each_entry(bf, &sc->rx.rxbuf, list) {
--		if (bf->bf_mpdu)
-+		if (bf->bf_mpdu) {
-+			dma_unmap_single(sc->dev, bf->bf_buf_addr,
-+					common->rx_bufsize,
-+					DMA_BIDIRECTIONAL);
- 			dev_kfree_skb_any(bf->bf_mpdu);
-+			bf->bf_buf_addr = 0;
-+			bf->bf_mpdu = NULL;
-+		}
+ 
+ /* delay needed between the mdio control/ mdiodata register data access */
+-#define PR28829_DELAY() udelay(10)
++static void pr28829_delay(void)
++{
++	udelay(10);
++}
+ 
+ /* Initialize the PCI core.
+  * It's caller's responsibility to make sure that this is done only once
+@@ -235,7 +246,6 @@ struct pcicore_info *pcicore_init(struct si_pub *sih, struct pci_dev *pdev,
+ 	/* alloc struct pcicore_info */
+ 	pi = kzalloc(sizeof(struct pcicore_info), GFP_ATOMIC);
+ 	if (pi == NULL) {
+-		PCI_ERROR(("pci_attach: malloc failed!\n"));
+ 		return NULL;
  	}
  
- 	INIT_LIST_HEAD(&sc->rx.rxbuf);
+@@ -375,7 +385,7 @@ static bool pcie_mdiosetblock(struct pcicore_info *pi, uint blk)
+ 		    (blk << 4));
+ 	W_REG(&pcieregs->mdiodata, mdiodata);
+ 
+-	PR28829_DELAY();
++	pr28829_delay();
+ 	/* retry till the transaction is complete */
+ 	while (i < pcie_serdes_spinwait) {
+ 		if (R_REG(&pcieregs->mdiocontrol) & MDIOCTL_ACCESS_DONE)
+@@ -386,7 +396,6 @@ static bool pcie_mdiosetblock(struct pcicore_info *pi, uint blk)
+ 	}
+ 
+ 	if (i >= pcie_serdes_spinwait) {
+-		PCI_ERROR(("pcie_mdiosetblock: timed out\n"));
+ 		return false;
+ 	}
+ 
+@@ -427,13 +436,13 @@ pcie_mdioop(struct pcicore_info *pi, uint physmedia, uint regaddr, bool write,
+ 
+ 	W_REG(&pcieregs->mdiodata, mdiodata);
+ 
+-	PR28829_DELAY();
++	pr28829_delay();
+ 
+ 	/* retry till the transaction is complete */
+ 	while (i < pcie_serdes_spinwait) {
+ 		if (R_REG(&pcieregs->mdiocontrol) & MDIOCTL_ACCESS_DONE) {
+ 			if (!write) {
+-				PR28829_DELAY();
++				pr28829_delay();
+ 				*val = (R_REG(&pcieregs->mdiodata) &
+ 					MDIODATA_MASK);
+ 			}
+@@ -445,8 +454,7 @@ pcie_mdioop(struct pcicore_info *pi, uint physmedia, uint regaddr, bool write,
+ 		i++;
+ 	}
+ 
+-	PCI_ERROR(("pcie_mdioop: timed out op: %d\n", write));
+-	/* Disable mdio access to SERDES */
++	/* Timed out. Disable mdio access to SERDES. */
+ 	W_REG(&pcieregs->mdiocontrol, 0);
+ 	return 1;
+ }
+@@ -498,7 +506,7 @@ static void pcie_extendL1timer(struct pcicore_info *pi, bool extend)
+ 	struct si_pub *sih = pi->sih;
+ 	struct sbpcieregs *pcieregs = pi->regs.pcieregs;
+ 
+-	if (!PCIE_PUB(sih) || sih->buscorerev < 7)
++	if (sih->buscoretype != PCIE_CORE_ID || sih->buscorerev < 7)
+ 		return;
+ 
+ 	w = pcie_readreg(pcieregs, PCIE_PCIEREGS, PCIE_DLLP_PMTHRESHREG);
+@@ -736,7 +744,7 @@ void pcicore_attach(struct pcicore_info *pi, char *pvars, int state)
+ 
+ void pcicore_hwup(struct pcicore_info *pi)
+ {
+-	if (!pi || !PCIE_PUB(pi->sih))
++	if (!pi || pi->sih->buscoretype != PCIE_CORE_ID)
+ 		return;
+ 
+ 	pcie_war_pci_setup(pi);
+@@ -744,7 +752,7 @@ void pcicore_hwup(struct pcicore_info *pi)
+ 
+ void pcicore_up(struct pcicore_info *pi, int state)
+ {
+-	if (!pi || !PCIE_PUB(pi->sih))
++	if (!pi || pi->sih->buscoretype != PCIE_CORE_ID)
+ 		return;
+ 
+ 	/* Restore L1 timer for better performance */
+@@ -772,7 +780,7 @@ void pcicore_sleep(struct pcicore_info *pi)
+ 
+ void pcicore_down(struct pcicore_info *pi, int state)
+ {
+-	if (!pi || !PCIE_PUB(pi->sih))
++	if (!pi || pi->sih->buscoretype != PCIE_CORE_ID)
+ 		return;
+ 
+ 	pcie_clkreq_upd(pi, state);
+diff --git a/drivers/staging/brcm80211/brcmsmac/nicpci.h b/drivers/staging/brcm80211/brcmsmac/nicpci.h
+index 3082db0..4995203 100644
+--- a/drivers/staging/brcm80211/brcmsmac/nicpci.h
++++ b/drivers/staging/brcm80211/brcmsmac/nicpci.h
+@@ -58,18 +58,6 @@
+ /* bar0 + 12K accesses chipc core registers */
+ #define PCI_16KB0_CCREGS_OFFSET	(12 * 1024)
+ 
+-#define PCI_CLKRUN_DSBL	0x8000	/* Bit 15 forceClkrun */
+-
+-/* Sonics to PCI translation types */
+-#define	SBTOPCI_PREF	0x4		/* prefetch enable */
+-#define	SBTOPCI_BURST	0x8		/* burst enable */
+-#define	SBTOPCI_RC_READMULTI	0x20	/* memory read multiple */
+-
+-/* PCI core index in SROM shadow area */
+-#define SRSH_PI_OFFSET	0	/* first word */
+-#define SRSH_PI_MASK	0xf000	/* bit 15:12 */
+-#define SRSH_PI_SHIFT	12	/* bit 15:12 */
+-
+ struct sbpciregs;
+ struct sbpcieregs;
+ 
 -- 
-1.7.0.4
+1.7.4.1
+
 
