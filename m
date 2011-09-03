@@ -1,102 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1999 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756182Ab1I2Wex (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Sep 2011 18:34:53 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v3 19/25] staging: brcm80211: change interface for
- common rssi compute function
-Date: Thu, 29 Sep 2011 15:34:30 -0700
-Message-ID: <1317335676-3424-20-git-send-email-frankyl@broadcom.com> (sfid-20110930_003537_323299_500878B4)
-In-Reply-To: <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
-References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
- <1317335676-3424-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:62245 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752843Ab1ICHGm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Sep 2011 03:06:42 -0400
+Received: by fxh19 with SMTP id 19so2284462fxh.19
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Sep 2011 00:06:41 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Subject: [RESEND][PATCH] minstrel_ht: fix Open BA session request floods
+Cc: John Linville <linville@tuxdriver.com>, nbd@openwrt.org
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 3 Sep 2011 09:06:20 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <201109030906.21009.chunkeey@googlemail.com> (sfid-20110903_090646_048305_0174529E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+Minstrel HT tries very hard to establish a BA session with
+each peer once there's some data on the way. However the
+stack does not inform minstrel if an aggregation session
+is already in place, so it keeps trying and wastes good
+cycles in the tx status path.
 
-The function wlc_phy_rssi_compute() now uses d11rxhdr struct as
-purely input parameter and returns the computed rssi value.
+[ 8149.946393] Open BA session requested for $AP tid 0
+[ 8150.048765] Open BA session requested for $AP tid 0
+[ 8150.174509] Open BA session requested for $AP tid 0
+[ 8150.274376] Open BA session requested for $AP tid 0
+...
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- drivers/staging/brcm80211/brcmsmac/main.c        |    4 +++-
- drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |    7 +++----
- drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h |    4 ++--
- 3 files changed, 8 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index e34b511..ef96358 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -806,15 +806,17 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
+Hm, this time without the HTML-part.
+---
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 2158838..e19249b 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -452,7 +452,8 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
  
- 	/* process each frame */
- 	while ((p = head) != NULL) {
-+		struct d11rxhdr *rxh;
- 		head = head->prev;
- 		p->prev = NULL;
- 
- 		wlc_rxhdr = (struct brcms_d11rxhdr *) p->data;
-+		rxh = (struct d11rxhdr *)p->data;
- 
- 		/*
- 		 * compute the RSSI from d11rxhdr and record it in wlc_rxd11hr
- 		 */
--		wlc_phy_rssi_compute(wlc_hw->band->pi, wlc_rxhdr);
-+		wlc_rxhdr->rssi = wlc_phy_rssi_compute(wlc_hw->band->pi, rxh);
- 
- 		brcms_c_recv(wlc_hw->wlc, p);
- 	}
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-index 8025247..c359a10 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -2610,10 +2610,9 @@ void wlc_phy_compute_dB(u32 *cmplx_pwr, s8 *p_cmplx_pwr_dB, u8 core)
+ 	if (time_after(jiffies, mi->stats_update + (mp->update_interval / 2 * HZ) / 1000)) {
+ 		minstrel_ht_update_stats(mp, mi);
+-		minstrel_aggr_check(mp, sta, skb);
++		if (!(info->flags & IEEE80211_TX_CTL_AMPDU))
++			minstrel_aggr_check(mp, sta, skb);
  	}
  }
  
--void wlc_phy_rssi_compute(struct brcms_phy_pub *pih,
--			  struct brcms_d11rxhdr *wlc_rxhdr)
-+int wlc_phy_rssi_compute(struct brcms_phy_pub *pih,
-+			 struct d11rxhdr *rxh)
- {
--	struct d11rxhdr *rxh = &wlc_rxhdr->rxhdr;
- 	int rssi = le16_to_cpu(rxh->PhyRxStatus_1) & PRXS1_JSSI_MASK;
- 	uint radioid = pih->radioid;
- 	struct brcms_phy *pi = (struct brcms_phy *) pih;
-@@ -2650,7 +2649,7 @@ void wlc_phy_rssi_compute(struct brcms_phy_pub *pih,
- 	}
- 
- end:
--	wlc_rxhdr->rssi = (s8) rssi;
-+	return rssi;
- }
- 
- void wlc_phy_freqtrack_start(struct brcms_phy_pub *pih)
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h b/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h
-index 1dbfaa3..39c3c22 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h
-@@ -212,8 +212,8 @@ extern void wlc_phy_chanspec_radio_set(struct brcms_phy_pub *ppi,
- extern u16 wlc_phy_bw_state_get(struct brcms_phy_pub *ppi);
- extern void wlc_phy_bw_state_set(struct brcms_phy_pub *ppi, u16 bw);
- 
--extern void wlc_phy_rssi_compute(struct brcms_phy_pub *pih,
--				 struct brcms_d11rxhdr *wlc_rxhdr);
-+extern int wlc_phy_rssi_compute(struct brcms_phy_pub *pih,
-+				struct d11rxhdr *rxh);
- extern void wlc_phy_por_inform(struct brcms_phy_pub *ppi);
- extern void wlc_phy_noise_sample_intr(struct brcms_phy_pub *ppi);
- extern bool wlc_phy_bist_check_phy(struct brcms_phy_pub *ppi);
--- 
-1.7.1
 
 
