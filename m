@@ -1,126 +1,265 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3472 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756084Ab1IPT20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 15:28:26 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 19/19] staging: brcm80211: sparse endianness warnings on
- fullmac bss info
-Date: Fri, 16 Sep 2011 12:28:08 -0700
-Message-ID: <1316201288-29635-20-git-send-email-frankyl@broadcom.com> (sfid-20110916_212858_972553_A1E26D39)
-In-Reply-To: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
-References: <1316201288-29635-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:51249 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751689Ab1ICS65 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Sep 2011 14:58:57 -0400
+Received: by yxj19 with SMTP id 19so1768483yxj.19
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Sep 2011 11:58:56 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/3] b43: LCN-PHY: load TX gain table on init
+Date: Sat,  3 Sep 2011 21:01:03 +0200
+Message-Id: <1315076463-11222-4-git-send-email-zajec5@gmail.com> (sfid-20110903_205859_635396_FF073F30)
+In-Reply-To: <1315076463-11222-1-git-send-email-zajec5@gmail.com>
+References: <1315076463-11222-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Roland Vossen <rvossen@broadcom.com>
+Values and ops were taken from MMIO dump of wl. struct was copied from
+brcmsmac.
 
-Structure that is received from dongle has been annotated.
-
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd.h         |   27 +++++++++++----------
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   10 ++++----
- 2 files changed, 19 insertions(+), 18 deletions(-)
+ drivers/net/wireless/b43/tables_phy_lcn.c |  195 ++++++++++++++++++++++++++++-
+ 1 files changed, 192 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
-index de3f914..da53dd0 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
-@@ -366,36 +366,37 @@ struct brcmf_pkt_filter_enable {
-  * next bss_info structure in a vector (in struct brcmf_scan_results)
-  */
- struct brcmf_bss_info {
--	u32 version;		/* version field */
--	u32 length;		/* byte length of data in this record,
-+	__le32 version;		/* version field */
-+	__le32 length;		/* byte length of data in this record,
- 				 * starting at version and including IEs
- 				 */
- 	u8 BSSID[ETH_ALEN];
--	u16 beacon_period;	/* units are Kusec */
--	u16 capability;	/* Capability information */
-+	__le16 beacon_period;	/* units are Kusec */
-+	__le16 capability;	/* Capability information */
- 	u8 SSID_len;
- 	u8 SSID[32];
- 	struct {
--		uint count;   /* # rates in this set */
-+		__le32 count;   /* # rates in this set */
- 		u8 rates[16]; /* rates in 500kbps units w/hi bit set if basic */
- 	} rateset;		/* supported rates */
--	u16 chanspec;	/* chanspec for bss */
--	u16 atim_window;	/* units are Kusec */
-+	__le16 chanspec;	/* chanspec for bss */
-+	__le16 atim_window;	/* units are Kusec */
- 	u8 dtim_period;	/* DTIM period */
--	s16 RSSI;		/* receive signal strength (in dBm) */
-+	__le16 RSSI;		/* receive signal strength (in dBm) */
- 	s8 phy_noise;		/* noise (in dBm) */
+diff --git a/drivers/net/wireless/b43/tables_phy_lcn.c b/drivers/net/wireless/b43/tables_phy_lcn.c
+index 1682ba0..a2dd72e 100644
+--- a/drivers/net/wireless/b43/tables_phy_lcn.c
++++ b/drivers/net/wireless/b43/tables_phy_lcn.c
+@@ -27,6 +27,18 @@
+ #include "phy_common.h"
+ #include "phy_lcn.h"
  
- 	u8 n_cap;		/* BSS is 802.11N Capable */
--	u32 nbss_cap;	/* 802.11N BSS Capabilities (based on HT_CAP_*) */
-+	/* 802.11N BSS Capabilities (based on HT_CAP_*): */
-+	__le32 nbss_cap;
- 	u8 ctl_ch;		/* 802.11N BSS control channel number */
--	u32 reserved32[1];	/* Reserved for expansion of BSS properties */
-+	__le32 reserved32[1];	/* Reserved for expansion of BSS properties */
- 	u8 flags;		/* flags */
- 	u8 reserved[3];	/* Reserved for expansion of BSS properties */
- 	u8 basic_mcs[MCSSET_LEN];	/* 802.11N BSS required MCS set */
- 
--	u16 ie_offset;	/* offset at which IEs start, from beginning */
--	u32 ie_length;	/* byte length of Information Elements */
--	s16 SNR;		/* average SNR of during frame reception */
-+	__le16 ie_offset;	/* offset at which IEs start, from beginning */
-+	__le32 ie_length;	/* byte length of Information Elements */
-+	__le16 SNR;		/* average SNR of during frame reception */
- 	/* Add new fields here */
- 	/* variable length Information Elements */
++struct b43_lcntab_tx_gain_tbl_entry {
++	u8 gm;
++	u8 pga;
++	u8 pad;
++	u8 dac;
++	u8 bb_mult;
++};
++
++/**************************************************
++ * Static tables.
++ **************************************************/
++
+ static const u16 b43_lcntab_0x02[] = {
+ 	0x014d, 0x014d, 0x014d, 0x014d, 0x014d, 0x014d,
+ 	0x014d, 0x014d, 0x014d, 0x014d, 0x014d, 0x014d,
+@@ -297,6 +309,146 @@ static const u32 b43_lcntab_0x18[] = {
+ 	0x00080000, 0x00080000, 0x00080000, 0x00080000,
  };
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 4f3e8b8..9e07f77 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -1955,7 +1955,7 @@ static s32 brcmf_inform_single_bss(struct brcmf_cfg80211_priv *cfg_priv,
- 	notify_capability = le16_to_cpu(bi->capability);
- 	notify_interval = le16_to_cpu(bi->beacon_period);
- 	notify_ie = (u8 *)bi + le16_to_cpu(bi->ie_offset);
--	notify_ielen = le16_to_cpu(bi->ie_length);
-+	notify_ielen = le32_to_cpu(bi->ie_length);
- 	notify_signal = (s16)le16_to_cpu(bi->RSSI) * 100;
  
- 	WL_CONN("bssid: %2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X\n",
-@@ -2054,7 +2054,7 @@ static s32 wl_inform_ibss(struct brcmf_cfg80211_priv *cfg_priv,
- 	notify_capability = le16_to_cpu(bi->capability);
- 	notify_interval = le16_to_cpu(bi->beacon_period);
- 	notify_ie = (u8 *)bi + le16_to_cpu(bi->ie_offset);
--	notify_ielen = le16_to_cpu(bi->ie_length);
-+	notify_ielen = le32_to_cpu(bi->ie_length);
- 	notify_signal = (s16)le16_to_cpu(bi->RSSI) * 100;
++/**************************************************
++ * TX gain.
++ **************************************************/
++
++const struct b43_lcntab_tx_gain_tbl_entry
++		b43_lcntab_tx_gain_tbl_2ghz_ext_pa_rev0[] = {
++	{ 0x03, 0x00, 0x1f, 0x0, 0x48 },
++	{ 0x03, 0x00, 0x1f, 0x0, 0x46 },
++	{ 0x03, 0x00, 0x1f, 0x0, 0x44 },
++	{ 0x03, 0x00, 0x1e, 0x0, 0x43 },
++	{ 0x03, 0x00, 0x1d, 0x0, 0x44 },
++	{ 0x03, 0x00, 0x1c, 0x0, 0x44 },
++	{ 0x03, 0x00, 0x1b, 0x0, 0x45 },
++	{ 0x03, 0x00, 0x1a, 0x0, 0x46 },
++	{ 0x03, 0x00, 0x19, 0x0, 0x46 },
++	{ 0x03, 0x00, 0x18, 0x0, 0x47 },
++	{ 0x03, 0x00, 0x17, 0x0, 0x48 },
++	{ 0x03, 0x00, 0x17, 0x0, 0x46 },
++	{ 0x03, 0x00, 0x16, 0x0, 0x47 },
++	{ 0x03, 0x00, 0x15, 0x0, 0x48 },
++	{ 0x03, 0x00, 0x15, 0x0, 0x46 },
++	{ 0x03, 0x00, 0x15, 0x0, 0x44 },
++	{ 0x03, 0x00, 0x15, 0x0, 0x42 },
++	{ 0x03, 0x00, 0x15, 0x0, 0x40 },
++	{ 0x03, 0x00, 0x15, 0x0, 0x3f },
++	{ 0x03, 0x00, 0x14, 0x0, 0x40 },
++	{ 0x03, 0x00, 0x13, 0x0, 0x41 },
++	{ 0x03, 0x00, 0x13, 0x0, 0x40 },
++	{ 0x03, 0x00, 0x12, 0x0, 0x41 },
++	{ 0x03, 0x00, 0x12, 0x0, 0x40 },
++	{ 0x03, 0x00, 0x11, 0x0, 0x41 },
++	{ 0x03, 0x00, 0x11, 0x0, 0x40 },
++	{ 0x03, 0x00, 0x10, 0x0, 0x41 },
++	{ 0x03, 0x00, 0x10, 0x0, 0x40 },
++	{ 0x03, 0x00, 0x10, 0x0, 0x3e },
++	{ 0x03, 0x00, 0x10, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x10, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x0f, 0x0, 0x3d },
++	{ 0x03, 0x00, 0x0f, 0x0, 0x3b },
++	{ 0x03, 0x00, 0x0e, 0x0, 0x3d },
++	{ 0x03, 0x00, 0x0e, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x0e, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x0d, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x0d, 0x0, 0x3b },
++	{ 0x03, 0x00, 0x0c, 0x0, 0x3e },
++	{ 0x03, 0x00, 0x0c, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x0c, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x0b, 0x0, 0x3e },
++	{ 0x03, 0x00, 0x0b, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x0b, 0x0, 0x3b },
++	{ 0x03, 0x00, 0x0b, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x0a, 0x0, 0x3d },
++	{ 0x03, 0x00, 0x0a, 0x0, 0x3b },
++	{ 0x03, 0x00, 0x0a, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x09, 0x0, 0x3e },
++	{ 0x03, 0x00, 0x09, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x09, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x09, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x08, 0x0, 0x3e },
++	{ 0x03, 0x00, 0x08, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x08, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x08, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x08, 0x0, 0x37 },
++	{ 0x03, 0x00, 0x07, 0x0, 0x3d },
++	{ 0x03, 0x00, 0x07, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x07, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x07, 0x0, 0x38 },
++	{ 0x03, 0x00, 0x07, 0x0, 0x37 },
++	{ 0x03, 0x00, 0x06, 0x0, 0x3e },
++	{ 0x03, 0x00, 0x06, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x06, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x06, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x06, 0x0, 0x37 },
++	{ 0x03, 0x00, 0x06, 0x0, 0x36 },
++	{ 0x03, 0x00, 0x06, 0x0, 0x34 },
++	{ 0x03, 0x00, 0x05, 0x0, 0x3d },
++	{ 0x03, 0x00, 0x05, 0x0, 0x3b },
++	{ 0x03, 0x00, 0x05, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x05, 0x0, 0x38 },
++	{ 0x03, 0x00, 0x05, 0x0, 0x36 },
++	{ 0x03, 0x00, 0x05, 0x0, 0x35 },
++	{ 0x03, 0x00, 0x05, 0x0, 0x33 },
++	{ 0x03, 0x00, 0x04, 0x0, 0x3e },
++	{ 0x03, 0x00, 0x04, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x04, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x04, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x04, 0x0, 0x37 },
++	{ 0x03, 0x00, 0x04, 0x0, 0x36 },
++	{ 0x03, 0x00, 0x04, 0x0, 0x34 },
++	{ 0x03, 0x00, 0x04, 0x0, 0x33 },
++	{ 0x03, 0x00, 0x04, 0x0, 0x31 },
++	{ 0x03, 0x00, 0x04, 0x0, 0x30 },
++	{ 0x03, 0x00, 0x04, 0x0, 0x2e },
++	{ 0x03, 0x00, 0x03, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x03, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x03, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x03, 0x0, 0x37 },
++	{ 0x03, 0x00, 0x03, 0x0, 0x36 },
++	{ 0x03, 0x00, 0x03, 0x0, 0x34 },
++	{ 0x03, 0x00, 0x03, 0x0, 0x33 },
++	{ 0x03, 0x00, 0x03, 0x0, 0x31 },
++	{ 0x03, 0x00, 0x03, 0x0, 0x30 },
++	{ 0x03, 0x00, 0x03, 0x0, 0x2e },
++	{ 0x03, 0x00, 0x03, 0x0, 0x2d },
++	{ 0x03, 0x00, 0x03, 0x0, 0x2c },
++	{ 0x03, 0x00, 0x03, 0x0, 0x2b },
++	{ 0x03, 0x00, 0x03, 0x0, 0x29 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x3d },
++	{ 0x03, 0x00, 0x02, 0x0, 0x3b },
++	{ 0x03, 0x00, 0x02, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x38 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x36 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x35 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x33 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x32 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x30 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x2f },
++	{ 0x03, 0x00, 0x02, 0x0, 0x2e },
++	{ 0x03, 0x00, 0x02, 0x0, 0x2c },
++	{ 0x03, 0x00, 0x02, 0x0, 0x2b },
++	{ 0x03, 0x00, 0x02, 0x0, 0x2a },
++	{ 0x03, 0x00, 0x02, 0x0, 0x29 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x27 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x26 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x25 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x24 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x23 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x22 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x21 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x20 },
++	{ 0x03, 0x00, 0x01, 0x0, 0x3f },
++	{ 0x03, 0x00, 0x01, 0x0, 0x3d },
++	{ 0x03, 0x00, 0x01, 0x0, 0x3b },
++	{ 0x03, 0x00, 0x01, 0x0, 0x39 },
++};
++
++/**************************************************
++ * SW control.
++ **************************************************/
++
+ const u16 b43_lcntab_sw_ctl_4313_epa_rev0[] = {
+ 	0x0002, 0x0008, 0x0004, 0x0001, 0x0002, 0x0008,
+ 	0x0004, 0x0001, 0x0002, 0x0008, 0x0004, 0x0001,
+@@ -479,6 +631,32 @@ static void b43_phy_lcn_upload_static_tables(struct b43_wldev *dev)
+ 	lcntab_upload(dev, B43_LCNTAB32(0x18, 0), b43_lcntab_0x18);
+ }
  
- 	WL_CONN("channel: %d(%d)\n", channel, freq);
-@@ -2111,9 +2111,9 @@ static s32 brcmf_update_bss_info(struct brcmf_cfg80211_priv *cfg_priv)
- 	if (unlikely(err))
- 		goto update_bss_info_out;
++void b43_phy_lcn_load_tx_gain_tab(struct b43_wldev *dev,
++			const struct b43_lcntab_tx_gain_tbl_entry *gain_table)
++{
++	u32 i;
++	u32 val;
++
++	u16 pa_gain = 0x70;
++	if (dev->dev->bus_sprom->boardflags_lo & B43_BFL_FEM)
++		pa_gain = 0x10;
++
++	for (i = 0; i < 128; i++) {
++		val = ((pa_gain << 24) |
++		       (gain_table[i].pad << 16) |
++		       (gain_table[i].pga << 8) |
++			gain_table[i].gm);
++		b43_lcntab_write(dev, B43_LCNTAB32(0x7, 0xc0 + i), val);
++
++		/* brcmsmac doesn't maskset, we follow newer wl here */
++		val = b43_lcntab_read(dev, B43_LCNTAB32(0x7, 0x140 + i));
++		val &= 0x000fffff;
++		val |= ((gain_table[i].dac << 28) |
++			(gain_table[i].bb_mult << 20));
++		b43_lcntab_write(dev, B43_LCNTAB32(0x7, 0x140 + i), val);
++	}
++}
++
+ /* Not implemented in brcmsmac, noticed in wl in MMIO dump */
+ static void b43_phy_lcn_rewrite_tables(struct b43_wldev *dev)
+ {
+@@ -499,13 +677,24 @@ static void b43_phy_lcn_clean_papd_comp_table(struct b43_wldev *dev)
+ 		b43_lcntab_write(dev, B43_LCNTAB32(0x18, i), 0x80000);
+ }
  
--	ie = ((u8 *)bi) + bi->ie_offset;
--	ie_len = bi->ie_length;
--	beacon_interval = cpu_to_le16(bi->beacon_period);
-+	ie = ((u8 *)bi) + le16_to_cpu(bi->ie_offset);
-+	ie_len = le32_to_cpu(bi->ie_length);
-+	beacon_interval = le16_to_cpu(bi->beacon_period);
++/* wlc_lcnphy_tbl_init */
+ void b43_phy_lcn_tables_init(struct b43_wldev *dev)
+ {
++	struct ssb_sprom *sprom = dev->dev->bus_sprom;
++
+ 	b43_phy_lcn_upload_static_tables(dev);
+-	/* TODO: various tables ops here */
  
- 	tim = brcmu_parse_tlvs(ie, ie_len, WLAN_EID_TIM);
- 	if (tim)
+-	if (dev->dev->bus_sprom->boardflags_lo & B43_BFL_FEM &&
+-	    !(dev->dev->bus_sprom->boardflags_hi & B43_BFH_FEM_BT))
++	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
++		if (sprom->boardflags_lo & B43_BFL_EXTLNA)
++			b43_phy_lcn_load_tx_gain_tab(dev,
++				b43_lcntab_tx_gain_tbl_2ghz_ext_pa_rev0);
++		else
++			b43err(dev->wl,
++			       "TX gain table unknown for this card\n");
++	}
++
++	if (sprom->boardflags_lo & B43_BFL_FEM &&
++	    !(sprom->boardflags_hi & B43_BFH_FEM_BT))
+ 		b43_lcntab_write_bulk(dev, B43_LCNTAB16(0xf, 0),
+ 			ARRAY_SIZE(b43_lcntab_sw_ctl_4313_epa_rev0),
+ 			b43_lcntab_sw_ctl_4313_epa_rev0);
 -- 
-1.7.1
-
+1.7.3.4
 
