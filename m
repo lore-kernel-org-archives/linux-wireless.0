@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18984 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758935Ab1IJJ5E (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:64452 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751321Ab1ICS6m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Sep 2011 05:57:04 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/4] ath6kl: Fix random reconnect failures
-Date: Sat, 10 Sep 2011 15:26:37 +0530
-Message-ID: <1315648597-17999-4-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110910_115707_442930_A94040C5)
-In-Reply-To: <1315648597-17999-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1315648597-17999-1-git-send-email-vthiagar@qca.qualcomm.com>
+	Sat, 3 Sep 2011 14:58:42 -0400
+Received: by gxk21 with SMTP id 21so2767595gxk.19
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Sep 2011 11:58:41 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/3] b43: drop Copyright for not really copyrightable info
+Date: Sat,  3 Sep 2011 21:01:01 +0200
+Message-Id: <1315076463-11222-2-git-send-email-zajec5@gmail.com> (sfid-20110903_205845_592592_58545D6B)
+In-Reply-To: <1315076463-11222-1-git-send-email-zajec5@gmail.com>
+References: <1315076463-11222-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes connect events are received after disconnect
-events from target, this puts host and target in different
-states. When receiving a connect event in a wrong state,
-make sure to send disconnect event to target to maintain
-state consistency.
+As discussed in "Licensing wlc_phy_radio.h and brcm80211" (Message-ID:
+<AANLkTinQMRGkOvi4e4JMsHGV_BF_4Rf5oHCtZgQjwQ1g@mail.gmail.com>) content
+of that file is not copyrightable, just names and numbers.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ drivers/net/wireless/b43/radio_2056.h |   26 --------------------------
+ 1 files changed, 0 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 0ad458b..2e4bea3 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -460,6 +460,14 @@ void ath6kl_cfg80211_connect_event(struct ath6kl *ar, u16 channel,
- 				   "%s: ath6k not in station mode\n", __func__);
- 			return;
- 		}
-+
-+		if ((ar->sme_state != SME_CONNECTING) &&
-+		    (ar->sme_state != SME_CONNECTED)) {
-+			ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
-+				   "Connect event at inappropriate state, sending disconnect cmd\n");
-+			ath6kl_wmi_disconnect_cmd(ar->wmi);
-+			return;
-+		}
- 	}
+diff --git a/drivers/net/wireless/b43/radio_2056.h b/drivers/net/wireless/b43/radio_2056.h
+index d52df6b..a7159d8 100644
+--- a/drivers/net/wireless/b43/radio_2056.h
++++ b/drivers/net/wireless/b43/radio_2056.h
+@@ -1,29 +1,3 @@
+-/*
+-
+-  Broadcom B43 wireless driver
+-
+-  Copyright (c) 2010 Rafał Miłecki <zajec5@gmail.com>
+-
+-  Some parts of the code in this file are derived from the brcm80211
+-  driver  Copyright (c) 2010 Broadcom Corporation
+-
+-  This program is free software; you can redistribute it and/or modify
+-  it under the terms of the GNU General Public License as published by
+-  the Free Software Foundation; either version 2 of the License, or
+-  (at your option) any later version.
+-
+-  This program is distributed in the hope that it will be useful,
+-  but WITHOUT ANY WARRANTY; without even the implied warranty of
+-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-  GNU General Public License for more details.
+-
+-  You should have received a copy of the GNU General Public License
+-  along with this program; see the file COPYING.  If not, write to
+-  the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
+-  Boston, MA 02110-1301, USA.
+-
+-*/
+-
+ #ifndef B43_RADIO_2056_H_
+ #define B43_RADIO_2056_H_
  
- 	/*
 -- 
-1.7.0.4
+1.7.3.4
 
