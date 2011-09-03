@@ -1,219 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:57234 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751430Ab1IPP43 (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:53647 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751692Ab1ICTjH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 11:56:29 -0400
-Date: Fri, 16 Sep 2011 18:56:23 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] cfg80211/nl80211: Add PMKSA caching candidate event
-Message-ID: <20110916155623.GA3290@jouni.qca.qualcomm.com> (sfid-20110916_175633_352547_B33F339B)
+	Sat, 3 Sep 2011 15:39:07 -0400
+Received: by yxj19 with SMTP id 19so1776733yxj.19
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Sep 2011 12:39:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4E6152FF.40101@lwfinger.net>
+References: <CACna6rwU4RuYuiAFjXFDH-c+EFsKtKFmB1Sh8kXdb9EoUt4abg@mail.gmail.com>
+	<CACna6rzkSgbf8sV2S1mg2OhxKstXeiqnmNmYFSMuAc563acBpg@mail.gmail.com>
+	<CACna6ryTA+nbz9cJtFEWypb1atY2s+eKseANM-u=-EjW6FWE7Q@mail.gmail.com>
+	<CACna6rzJzzhdBig48TGV=cfBYuvmjxowSw2Ai_GA-W0n_Y3Qkw@mail.gmail.com>
+	<4E6152FF.40101@lwfinger.net>
+Date: Sat, 3 Sep 2011 21:39:06 +0200
+Message-ID: <CACna6ryDDorBuh_JJRzm05W_zWaQs+4xJTpbhHPDcXaK0F-ORw@mail.gmail.com> (sfid-20110903_213918_664361_2A8AC90C)
+Subject: Re: Looking for BCM43228
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the driver (or most likely firmware) decides which AP to use
-for roaming based on internal scan result processing, user space
-needs to be notified of PMKSA caching candidates to allow RSN
-pre-authentication to be used.
+W dniu 3 września 2011 00:04 użytkownik Larry Finger
+<Larry.Finger@lwfinger.net> napisał:
+> On 08/29/2011 04:27 PM, Rafał Miłecki wrote:
+>>
+>> W dniu 29 sierpnia 2011 21:02 użytkownik Rafał Miłecki
+>> <zajec5@gmail.com>  napisał:
+>>>
+>>> I'll mail Marc, Ubuntu's launchpad reported to ask if he still has
+>>> access to this notebook.
+>>
+>> I've just received photo of the card (inside notebook) from Marc. It's
+>> labeled as DW1530, bingo! :)
+>>
+>> I'll ask Dell about prices. Larry: I'm also waiting for you getting
+>> response, maybe your prices will be lower?
+>
+> I got no answer from that first vendor. I just sent another message to a
+> different vendor. I found the device on a parts list for some government
+> organization in Ohio that listed the Dell Part Number (430-3960) and a price
+> of 12.15 USD. Too bad I couldn't purchase there.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- include/linux/nl80211.h |   33 +++++++++++++++++++++++++++++++++
- include/net/cfg80211.h  |   11 +++++++++++
- net/wireless/mlme.c     |   11 +++++++++++
- net/wireless/nl80211.c  |   46 ++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h  |    4 ++++
- 5 files changed, 105 insertions(+), 0 deletions(-)
+It seems Dell can be the only choice for us. I've asked Marc for
+checking details of that card. I asked him to try bcma&b43 or get MMIO
+dump with wl. That will make us sure what's PHY hidden inside of that
+card.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 8aa7bad..0473c7b 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -499,6 +499,9 @@
-  *	this command may also be sent by the driver as an MLME event to
-  *	inform userspace of the new replay counter.
-  *
-+ * @NL80211_CMD_PMKSA_CANDIDATE: This is used as an event to inform userspace
-+ *	of PMKSA caching dandidates.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -623,6 +626,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_SET_REKEY_OFFLOAD,
- 
-+	NL80211_CMD_PMKSA_CANDIDATE,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1070,6 +1075,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_ROAM_SUPPORT: Indicates whether the firmware is capable of
-  *	roaming to another AP in the same ESS if the signal lever is low.
-  *
-+ * @NL80211_ATTR_PMKSA_CANDIDATE: Nested attribute containing the PMKSA caching
-+ *	candidate information, see &enum nl80211_pmksa_candidate_attr.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1288,6 +1296,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_SCHED_SCAN_MATCH,
- 	NL80211_ATTR_MAX_MATCH_SETS,
- 
-+	NL80211_ATTR_PMKSA_CANDIDATE,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -2556,4 +2566,27 @@ enum nl80211_sta_wme_attr {
- 	NL80211_STA_WME_MAX = __NL80211_STA_WME_AFTER_LAST - 1
- };
- 
-+/**
-+ * enum nl80211_pmksa_candidate_attr - attributes for PMKSA caching candidates
-+ * @__NL80211_PMKSA_CANDIDATE_INVALID: invalid number for nested attributes
-+ * @NL80211_PMKSA_CANDIDATE_INDEX: candidate index (u32; the smaller, the higher
-+ *	priority)
-+ * @NL80211_PMKSA_CANDIDATE_BSSID: candidate BSSID (6 octets)
-+ * @NL80211_PMKSA_CANDIDATE_PREAUTH: RSN pre-authentication supported (flag)
-+ * @NUM_NL80211_PMKSA_CANDIDATE: number of PMKSA caching candidate attributes
-+ *	(internal)
-+ * @MAX_NL80211_PMKSA_CANDIDATE: highest PMKSA caching candidate attribute
-+ *	(internal)
-+ */
-+enum nl80211_pmksa_candidate_attr {
-+	__NL80211_PMKSA_CANDIDATE_INVALID,
-+	NL80211_PMKSA_CANDIDATE_INDEX,
-+	NL80211_PMKSA_CANDIDATE_BSSID,
-+	NL80211_PMKSA_CANDIDATE_PREAUTH,
-+
-+	/* keep last */
-+	NUM_NL80211_PMKSA_CANDIDATE,
-+	MAX_NL80211_PMKSA_CANDIDATE = NUM_NL80211_PMKSA_CANDIDATE - 1
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 992fe0f..3e345b2 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3117,6 +3117,17 @@ void cfg80211_cqm_pktloss_notify(struct net_device *dev,
- void cfg80211_gtk_rekey_notify(struct net_device *dev, const u8 *bssid,
- 			       const u8 *replay_ctr, gfp_t gfp);
- 
-+/**
-+ * cfg80211_pmksa_candidate_notify - notify about PMKSA caching candidate
-+ * @dev: network device
-+ * @index: candidate index (the smaller the index, the higher the priority)
-+ * @bssid: BSSID of AP
-+ * @preauth: Whether AP advertises support for RSN pre-authentication
-+ * @gfp: allocation flags
-+ */
-+void cfg80211_pmksa_candidate_notify(struct net_device *dev, int index,
-+				     const u8 *bssid, bool preauth, gfp_t gfp);
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 832f657..61adea5 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -1095,3 +1095,14 @@ void cfg80211_gtk_rekey_notify(struct net_device *dev, const u8 *bssid,
- 	nl80211_gtk_rekey_notify(rdev, dev, bssid, replay_ctr, gfp);
- }
- EXPORT_SYMBOL(cfg80211_gtk_rekey_notify);
-+
-+void cfg80211_pmksa_candidate_notify(struct net_device *dev, int index,
-+				     const u8 *bssid, bool preauth, gfp_t gfp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	nl80211_pmksa_candidate_notify(rdev, dev, index, bssid, preauth, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_pmksa_candidate_notify);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 1108954..9e38e2c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7266,6 +7266,52 @@ void nl80211_gtk_rekey_notify(struct cfg80211_registered_device *rdev,
- 	nlmsg_free(msg);
- }
- 
-+void nl80211_pmksa_candidate_notify(struct cfg80211_registered_device *rdev,
-+				    struct net_device *netdev, int index,
-+				    const u8 *bssid, bool preauth, gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+	struct nlattr *attr;
-+	void *hdr;
-+
-+	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_PMKSA_CANDIDATE);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
-+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
-+
-+	attr = nla_nest_start(msg, NL80211_ATTR_PMKSA_CANDIDATE);
-+	if (!attr)
-+		goto nla_put_failure;
-+
-+	NLA_PUT_U32(msg, NL80211_PMKSA_CANDIDATE_INDEX, index);
-+	NLA_PUT(msg, NL80211_PMKSA_CANDIDATE_BSSID, ETH_ALEN, bssid);
-+	if (preauth)
-+		NLA_PUT_FLAG(msg, NL80211_PMKSA_CANDIDATE_PREAUTH);
-+
-+	nla_nest_end(msg, attr);
-+
-+	if (genlmsg_end(msg, hdr) < 0) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
-+	return;
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
-+
- void
- nl80211_send_cqm_pktloss_notify(struct cfg80211_registered_device *rdev,
- 				struct net_device *netdev, const u8 *peer,
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index 5d69c56..f24a1fb 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -113,4 +113,8 @@ void nl80211_gtk_rekey_notify(struct cfg80211_registered_device *rdev,
- 			      struct net_device *netdev, const u8 *bssid,
- 			      const u8 *replay_ctr, gfp_t gfp);
- 
-+void nl80211_pmksa_candidate_notify(struct cfg80211_registered_device *rdev,
-+				    struct net_device *netdev, int index,
-+				    const u8 *bssid, bool preauth, gfp_t gfp);
-+
- #endif /* __NET_WIRELESS_NL80211_H */
--- 
-1.7.4.1
-
+I've already bought once a card (BCM43225) in hope it'll contain PHY
+different that card I already have (BCM43224). That cards seem to have
+exactly the same PHY.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Rafał
