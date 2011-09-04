@@ -1,392 +1,279 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:27670 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751314Ab1ILTnA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Sep 2011 15:43:00 -0400
-Subject: Re: Missing routines for iwlagn on PowerPC build
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4E6E5666.50901@lwfinger.net>
-References: <4E6E5666.50901@lwfinger.net>
-Content-Type: multipart/mixed; boundary="=-2LbQSo3yaucsqYfl0WU1"
-Date: Mon, 12 Sep 2011 11:58:22 -0700
-Message-ID: <1315853902.3547.206.camel@wwguy-huron> (sfid-20110912_214312_583955_D13E2495)
-Mime-Version: 1.0
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:38782 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751900Ab1IDHJT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Sep 2011 03:09:19 -0400
+Received: by fxh19 with SMTP id 19so2921278fxh.19
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Sep 2011 00:09:18 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org, joe@perches.com,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V2 3/3] b43: LCN-PHY: load TX gain table on init
+Date: Sun,  4 Sep 2011 09:11:46 +0200
+Message-Id: <1315120306-14037-4-git-send-email-zajec5@gmail.com> (sfid-20110904_090929_396863_B320DA14)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-2LbQSo3yaucsqYfl0WU1
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-
-Hi Larry,
-
-On Mon, 2011-09-12 at 11:58 -0700, Larry Finger wrote:
-> I am using a clone of wireless-testing (git describe 
-> master-2011-08-30-272-g811462b) to compile 3.1-rc4 for a Powerbook G4 Titanium. 
-> The default configuration was taken from the standard one that comes with 
-> MintPPC for kernel 2.6.32 as updated for 3.1.
-> 
-> When the build reaches the final stage of the module build, it errors with these 
-> messages:
-> 
-> ERROR: "iwl_dump_fh" [drivers/net/wireless/iwlwifi/iwlagn.ko] undefined!
-> ERROR: "iwl_dump_csr" [drivers/net/wireless/iwlwifi/iwlagn.ko] undefined!
-> 
-> I "fixed" it by disabling the build of iwlagn. It appears that the first one 
-> would be fixed by a patch submitted by Johannes and there is probably a second 
-> patch for error #2.
-> 
-
-Please try the following patch which it is already part of
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
-
-but since the kernel.org issue, no one can access it
-
-THanks
-Wey
-> 
-
-
---=-2LbQSo3yaucsqYfl0WU1
-Content-Disposition: attachment; filename="0010-iwlagn-fix-compilation-when-debug-flags-is-unset.patch"
-Content-Type: text/x-patch; name="0010-iwlagn-fix-compilation-when-debug-flags-is-unset.patch"; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-
->From 28305d9bd1f98f1e640b81f3ba28b701e65cd2e5 Mon Sep 17 00:00:00 2001
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Tue, 6 Sep 2011 09:10:38 -0700
-Subject: [PATCH 10/10] iwlagn: fix compilation when debug flags is unset
-
-Trivial fixes to allow compilation without warnings when debug
-compilation flag isn't set.
-Also fix the compilation when debugfs flag isn't set.
-Fix a warning: unused priv pointer on the way.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-shared.h |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans.c  |  260 ++++++++++++++--------------
- 3 files changed, 132 insertions(+), 132 deletions(-)
+V2: use define for table size
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index f8a4bcf..ba5c514 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -741,7 +741,7 @@ void iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	u16 sequence = le16_to_cpu(pkt->hdr.sequence);
- 	int txq_id = SEQ_TO_QUEUE(sequence);
--	int cmd_index = SEQ_TO_INDEX(sequence);
-+	int cmd_index __maybe_unused = SEQ_TO_INDEX(sequence);
- 	struct iwlagn_tx_resp *tx_resp = (void *)&pkt->u.raw[0];
- 	struct ieee80211_hdr *hdr;
- 	u32 status = le16_to_cpu(tx_resp->status.status);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 03f4c64..d987bee 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -403,7 +403,7 @@ void iwl_reset_traffic_log(struct iwl_priv *priv);
- #ifdef CONFIG_IWLWIFI_DEBUG
- void iwl_print_rx_config_cmd(struct iwl_priv *priv, u8 ctxid);
- #else
--static inline void iwl_print_rx_config_cmd(struct iwl_priv *priv, u8 ctxid);
-+static inline void iwl_print_rx_config_cmd(struct iwl_priv *priv, u8 ctxid)
+Joe: wolud you like to add yours Reviewed-by now?
+---
+ drivers/net/wireless/b43/tables_phy_lcn.c |  195 ++++++++++++++++++++++++++++-
+ drivers/net/wireless/b43/tables_phy_lcn.h |    2 +
+ 2 files changed, 194 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/tables_phy_lcn.c b/drivers/net/wireless/b43/tables_phy_lcn.c
+index 1682ba0..9d484e2 100644
+--- a/drivers/net/wireless/b43/tables_phy_lcn.c
++++ b/drivers/net/wireless/b43/tables_phy_lcn.c
+@@ -27,6 +27,18 @@
+ #include "phy_common.h"
+ #include "phy_lcn.h"
+ 
++struct b43_lcntab_tx_gain_tbl_entry {
++	u8 gm;
++	u8 pga;
++	u8 pad;
++	u8 dac;
++	u8 bb_mult;
++};
++
++/**************************************************
++ * Static tables.
++ **************************************************/
++
+ static const u16 b43_lcntab_0x02[] = {
+ 	0x014d, 0x014d, 0x014d, 0x014d, 0x014d, 0x014d,
+ 	0x014d, 0x014d, 0x014d, 0x014d, 0x014d, 0x014d,
+@@ -297,6 +309,146 @@ static const u32 b43_lcntab_0x18[] = {
+ 	0x00080000, 0x00080000, 0x00080000, 0x00080000,
+ };
+ 
++/**************************************************
++ * TX gain.
++ **************************************************/
++
++const struct b43_lcntab_tx_gain_tbl_entry
++	b43_lcntab_tx_gain_tbl_2ghz_ext_pa_rev0[B43_LCNTAB_TX_GAIN_SIZE] = {
++	{ 0x03, 0x00, 0x1f, 0x0, 0x48 },
++	{ 0x03, 0x00, 0x1f, 0x0, 0x46 },
++	{ 0x03, 0x00, 0x1f, 0x0, 0x44 },
++	{ 0x03, 0x00, 0x1e, 0x0, 0x43 },
++	{ 0x03, 0x00, 0x1d, 0x0, 0x44 },
++	{ 0x03, 0x00, 0x1c, 0x0, 0x44 },
++	{ 0x03, 0x00, 0x1b, 0x0, 0x45 },
++	{ 0x03, 0x00, 0x1a, 0x0, 0x46 },
++	{ 0x03, 0x00, 0x19, 0x0, 0x46 },
++	{ 0x03, 0x00, 0x18, 0x0, 0x47 },
++	{ 0x03, 0x00, 0x17, 0x0, 0x48 },
++	{ 0x03, 0x00, 0x17, 0x0, 0x46 },
++	{ 0x03, 0x00, 0x16, 0x0, 0x47 },
++	{ 0x03, 0x00, 0x15, 0x0, 0x48 },
++	{ 0x03, 0x00, 0x15, 0x0, 0x46 },
++	{ 0x03, 0x00, 0x15, 0x0, 0x44 },
++	{ 0x03, 0x00, 0x15, 0x0, 0x42 },
++	{ 0x03, 0x00, 0x15, 0x0, 0x40 },
++	{ 0x03, 0x00, 0x15, 0x0, 0x3f },
++	{ 0x03, 0x00, 0x14, 0x0, 0x40 },
++	{ 0x03, 0x00, 0x13, 0x0, 0x41 },
++	{ 0x03, 0x00, 0x13, 0x0, 0x40 },
++	{ 0x03, 0x00, 0x12, 0x0, 0x41 },
++	{ 0x03, 0x00, 0x12, 0x0, 0x40 },
++	{ 0x03, 0x00, 0x11, 0x0, 0x41 },
++	{ 0x03, 0x00, 0x11, 0x0, 0x40 },
++	{ 0x03, 0x00, 0x10, 0x0, 0x41 },
++	{ 0x03, 0x00, 0x10, 0x0, 0x40 },
++	{ 0x03, 0x00, 0x10, 0x0, 0x3e },
++	{ 0x03, 0x00, 0x10, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x10, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x0f, 0x0, 0x3d },
++	{ 0x03, 0x00, 0x0f, 0x0, 0x3b },
++	{ 0x03, 0x00, 0x0e, 0x0, 0x3d },
++	{ 0x03, 0x00, 0x0e, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x0e, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x0d, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x0d, 0x0, 0x3b },
++	{ 0x03, 0x00, 0x0c, 0x0, 0x3e },
++	{ 0x03, 0x00, 0x0c, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x0c, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x0b, 0x0, 0x3e },
++	{ 0x03, 0x00, 0x0b, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x0b, 0x0, 0x3b },
++	{ 0x03, 0x00, 0x0b, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x0a, 0x0, 0x3d },
++	{ 0x03, 0x00, 0x0a, 0x0, 0x3b },
++	{ 0x03, 0x00, 0x0a, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x09, 0x0, 0x3e },
++	{ 0x03, 0x00, 0x09, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x09, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x09, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x08, 0x0, 0x3e },
++	{ 0x03, 0x00, 0x08, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x08, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x08, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x08, 0x0, 0x37 },
++	{ 0x03, 0x00, 0x07, 0x0, 0x3d },
++	{ 0x03, 0x00, 0x07, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x07, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x07, 0x0, 0x38 },
++	{ 0x03, 0x00, 0x07, 0x0, 0x37 },
++	{ 0x03, 0x00, 0x06, 0x0, 0x3e },
++	{ 0x03, 0x00, 0x06, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x06, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x06, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x06, 0x0, 0x37 },
++	{ 0x03, 0x00, 0x06, 0x0, 0x36 },
++	{ 0x03, 0x00, 0x06, 0x0, 0x34 },
++	{ 0x03, 0x00, 0x05, 0x0, 0x3d },
++	{ 0x03, 0x00, 0x05, 0x0, 0x3b },
++	{ 0x03, 0x00, 0x05, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x05, 0x0, 0x38 },
++	{ 0x03, 0x00, 0x05, 0x0, 0x36 },
++	{ 0x03, 0x00, 0x05, 0x0, 0x35 },
++	{ 0x03, 0x00, 0x05, 0x0, 0x33 },
++	{ 0x03, 0x00, 0x04, 0x0, 0x3e },
++	{ 0x03, 0x00, 0x04, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x04, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x04, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x04, 0x0, 0x37 },
++	{ 0x03, 0x00, 0x04, 0x0, 0x36 },
++	{ 0x03, 0x00, 0x04, 0x0, 0x34 },
++	{ 0x03, 0x00, 0x04, 0x0, 0x33 },
++	{ 0x03, 0x00, 0x04, 0x0, 0x31 },
++	{ 0x03, 0x00, 0x04, 0x0, 0x30 },
++	{ 0x03, 0x00, 0x04, 0x0, 0x2e },
++	{ 0x03, 0x00, 0x03, 0x0, 0x3c },
++	{ 0x03, 0x00, 0x03, 0x0, 0x3a },
++	{ 0x03, 0x00, 0x03, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x03, 0x0, 0x37 },
++	{ 0x03, 0x00, 0x03, 0x0, 0x36 },
++	{ 0x03, 0x00, 0x03, 0x0, 0x34 },
++	{ 0x03, 0x00, 0x03, 0x0, 0x33 },
++	{ 0x03, 0x00, 0x03, 0x0, 0x31 },
++	{ 0x03, 0x00, 0x03, 0x0, 0x30 },
++	{ 0x03, 0x00, 0x03, 0x0, 0x2e },
++	{ 0x03, 0x00, 0x03, 0x0, 0x2d },
++	{ 0x03, 0x00, 0x03, 0x0, 0x2c },
++	{ 0x03, 0x00, 0x03, 0x0, 0x2b },
++	{ 0x03, 0x00, 0x03, 0x0, 0x29 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x3d },
++	{ 0x03, 0x00, 0x02, 0x0, 0x3b },
++	{ 0x03, 0x00, 0x02, 0x0, 0x39 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x38 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x36 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x35 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x33 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x32 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x30 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x2f },
++	{ 0x03, 0x00, 0x02, 0x0, 0x2e },
++	{ 0x03, 0x00, 0x02, 0x0, 0x2c },
++	{ 0x03, 0x00, 0x02, 0x0, 0x2b },
++	{ 0x03, 0x00, 0x02, 0x0, 0x2a },
++	{ 0x03, 0x00, 0x02, 0x0, 0x29 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x27 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x26 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x25 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x24 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x23 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x22 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x21 },
++	{ 0x03, 0x00, 0x02, 0x0, 0x20 },
++	{ 0x03, 0x00, 0x01, 0x0, 0x3f },
++	{ 0x03, 0x00, 0x01, 0x0, 0x3d },
++	{ 0x03, 0x00, 0x01, 0x0, 0x3b },
++	{ 0x03, 0x00, 0x01, 0x0, 0x39 },
++};
++
++/**************************************************
++ * SW control.
++ **************************************************/
++
+ const u16 b43_lcntab_sw_ctl_4313_epa_rev0[] = {
+ 	0x0002, 0x0008, 0x0004, 0x0001, 0x0002, 0x0008,
+ 	0x0004, 0x0001, 0x0002, 0x0008, 0x0004, 0x0001,
+@@ -479,6 +631,32 @@ static void b43_phy_lcn_upload_static_tables(struct b43_wldev *dev)
+ 	lcntab_upload(dev, B43_LCNTAB32(0x18, 0), b43_lcntab_0x18);
+ }
+ 
++void b43_phy_lcn_load_tx_gain_tab(struct b43_wldev *dev,
++			const struct b43_lcntab_tx_gain_tbl_entry *gain_table)
++{
++	u32 i;
++	u32 val;
++
++	u16 pa_gain = 0x70;
++	if (dev->dev->bus_sprom->boardflags_lo & B43_BFL_FEM)
++		pa_gain = 0x10;
++
++	for (i = 0; i < B43_LCNTAB_TX_GAIN_SIZE; i++) {
++		val = ((pa_gain << 24) |
++		       (gain_table[i].pad << 16) |
++		       (gain_table[i].pga << 8) |
++			gain_table[i].gm);
++		b43_lcntab_write(dev, B43_LCNTAB32(0x7, 0xc0 + i), val);
++
++		/* brcmsmac doesn't maskset, we follow newer wl here */
++		val = b43_lcntab_read(dev, B43_LCNTAB32(0x7, 0x140 + i));
++		val &= 0x000fffff;
++		val |= ((gain_table[i].dac << 28) |
++			(gain_table[i].bb_mult << 20));
++		b43_lcntab_write(dev, B43_LCNTAB32(0x7, 0x140 + i), val);
++	}
++}
++
+ /* Not implemented in brcmsmac, noticed in wl in MMIO dump */
+ static void b43_phy_lcn_rewrite_tables(struct b43_wldev *dev)
  {
- }
- #endif
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.c b/drivers/net/wireless/iwlwifi/iwl-trans.c
-index c495fc3..b2e8907 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.c
-@@ -1505,6 +1505,136 @@ static int iwl_trans_pcie_check_stuck_queue(struct iwl_trans *trans, int cnt)
- 	return 0;
+@@ -499,13 +677,24 @@ static void b43_phy_lcn_clean_papd_comp_table(struct b43_wldev *dev)
+ 		b43_lcntab_write(dev, B43_LCNTAB32(0x18, i), 0x80000);
  }
  
-+static const char *get_fh_string(int cmd)
-+{
-+	switch (cmd) {
-+	IWL_CMD(FH_RSCSR_CHNL0_STTS_WPTR_REG);
-+	IWL_CMD(FH_RSCSR_CHNL0_RBDCB_BASE_REG);
-+	IWL_CMD(FH_RSCSR_CHNL0_WPTR);
-+	IWL_CMD(FH_MEM_RCSR_CHNL0_CONFIG_REG);
-+	IWL_CMD(FH_MEM_RSSR_SHARED_CTRL_REG);
-+	IWL_CMD(FH_MEM_RSSR_RX_STATUS_REG);
-+	IWL_CMD(FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV);
-+	IWL_CMD(FH_TSSR_TX_STATUS_REG);
-+	IWL_CMD(FH_TSSR_TX_ERROR_REG);
-+	default:
-+		return "UNKNOWN";
-+	}
-+}
++/* wlc_lcnphy_tbl_init */
+ void b43_phy_lcn_tables_init(struct b43_wldev *dev)
+ {
++	struct ssb_sprom *sprom = dev->dev->bus_sprom;
 +
-+int iwl_dump_fh(struct iwl_trans *trans, char **buf, bool display)
-+{
-+	int i;
-+#ifdef CONFIG_IWLWIFI_DEBUG
-+	int pos = 0;
-+	size_t bufsz = 0;
-+#endif
-+	static const u32 fh_tbl[] = {
-+		FH_RSCSR_CHNL0_STTS_WPTR_REG,
-+		FH_RSCSR_CHNL0_RBDCB_BASE_REG,
-+		FH_RSCSR_CHNL0_WPTR,
-+		FH_MEM_RCSR_CHNL0_CONFIG_REG,
-+		FH_MEM_RSSR_SHARED_CTRL_REG,
-+		FH_MEM_RSSR_RX_STATUS_REG,
-+		FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV,
-+		FH_TSSR_TX_STATUS_REG,
-+		FH_TSSR_TX_ERROR_REG
-+	};
-+#ifdef CONFIG_IWLWIFI_DEBUG
-+	if (display) {
-+		bufsz = ARRAY_SIZE(fh_tbl) * 48 + 40;
-+		*buf = kmalloc(bufsz, GFP_KERNEL);
-+		if (!*buf)
-+			return -ENOMEM;
-+		pos += scnprintf(*buf + pos, bufsz - pos,
-+				"FH register values:\n");
-+		for (i = 0; i < ARRAY_SIZE(fh_tbl); i++) {
-+			pos += scnprintf(*buf + pos, bufsz - pos,
-+				"  %34s: 0X%08x\n",
-+				get_fh_string(fh_tbl[i]),
-+				iwl_read_direct32(bus(trans), fh_tbl[i]));
-+		}
-+		return pos;
-+	}
-+#endif
-+	IWL_ERR(trans, "FH register values:\n");
-+	for (i = 0; i <  ARRAY_SIZE(fh_tbl); i++) {
-+		IWL_ERR(trans, "  %34s: 0X%08x\n",
-+			get_fh_string(fh_tbl[i]),
-+			iwl_read_direct32(bus(trans), fh_tbl[i]));
-+	}
-+	return 0;
-+}
-+
-+static const char *get_csr_string(int cmd)
-+{
-+	switch (cmd) {
-+	IWL_CMD(CSR_HW_IF_CONFIG_REG);
-+	IWL_CMD(CSR_INT_COALESCING);
-+	IWL_CMD(CSR_INT);
-+	IWL_CMD(CSR_INT_MASK);
-+	IWL_CMD(CSR_FH_INT_STATUS);
-+	IWL_CMD(CSR_GPIO_IN);
-+	IWL_CMD(CSR_RESET);
-+	IWL_CMD(CSR_GP_CNTRL);
-+	IWL_CMD(CSR_HW_REV);
-+	IWL_CMD(CSR_EEPROM_REG);
-+	IWL_CMD(CSR_EEPROM_GP);
-+	IWL_CMD(CSR_OTP_GP_REG);
-+	IWL_CMD(CSR_GIO_REG);
-+	IWL_CMD(CSR_GP_UCODE_REG);
-+	IWL_CMD(CSR_GP_DRIVER_REG);
-+	IWL_CMD(CSR_UCODE_DRV_GP1);
-+	IWL_CMD(CSR_UCODE_DRV_GP2);
-+	IWL_CMD(CSR_LED_REG);
-+	IWL_CMD(CSR_DRAM_INT_TBL_REG);
-+	IWL_CMD(CSR_GIO_CHICKEN_BITS);
-+	IWL_CMD(CSR_ANA_PLL_CFG);
-+	IWL_CMD(CSR_HW_REV_WA_REG);
-+	IWL_CMD(CSR_DBG_HPET_MEM_REG);
-+	default:
-+		return "UNKNOWN";
-+	}
-+}
-+
-+void iwl_dump_csr(struct iwl_trans *trans)
-+{
-+	int i;
-+	static const u32 csr_tbl[] = {
-+		CSR_HW_IF_CONFIG_REG,
-+		CSR_INT_COALESCING,
-+		CSR_INT,
-+		CSR_INT_MASK,
-+		CSR_FH_INT_STATUS,
-+		CSR_GPIO_IN,
-+		CSR_RESET,
-+		CSR_GP_CNTRL,
-+		CSR_HW_REV,
-+		CSR_EEPROM_REG,
-+		CSR_EEPROM_GP,
-+		CSR_OTP_GP_REG,
-+		CSR_GIO_REG,
-+		CSR_GP_UCODE_REG,
-+		CSR_GP_DRIVER_REG,
-+		CSR_UCODE_DRV_GP1,
-+		CSR_UCODE_DRV_GP2,
-+		CSR_LED_REG,
-+		CSR_DRAM_INT_TBL_REG,
-+		CSR_GIO_CHICKEN_BITS,
-+		CSR_ANA_PLL_CFG,
-+		CSR_HW_REV_WA_REG,
-+		CSR_DBG_HPET_MEM_REG
-+	};
-+	IWL_ERR(trans, "CSR values:\n");
-+	IWL_ERR(trans, "(2nd byte of CSR_INT_COALESCING is "
-+		"CSR_INT_PERIODIC_REG)\n");
-+	for (i = 0; i <  ARRAY_SIZE(csr_tbl); i++) {
-+		IWL_ERR(trans, "  %25s: 0X%08x\n",
-+			get_csr_string(csr_tbl[i]),
-+			iwl_read32(bus(trans), csr_tbl[i]));
-+	}
-+}
-+
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- /* create and remove of files */
- #define DEBUGFS_ADD_FILE(name, parent, mode) do {			\
-@@ -1752,75 +1882,6 @@ static ssize_t iwl_dbgfs_interrupt_write(struct file *file,
- 	return count;
- }
+ 	b43_phy_lcn_upload_static_tables(dev);
+-	/* TODO: various tables ops here */
  
--static const char *get_csr_string(int cmd)
--{
--	switch (cmd) {
--	IWL_CMD(CSR_HW_IF_CONFIG_REG);
--	IWL_CMD(CSR_INT_COALESCING);
--	IWL_CMD(CSR_INT);
--	IWL_CMD(CSR_INT_MASK);
--	IWL_CMD(CSR_FH_INT_STATUS);
--	IWL_CMD(CSR_GPIO_IN);
--	IWL_CMD(CSR_RESET);
--	IWL_CMD(CSR_GP_CNTRL);
--	IWL_CMD(CSR_HW_REV);
--	IWL_CMD(CSR_EEPROM_REG);
--	IWL_CMD(CSR_EEPROM_GP);
--	IWL_CMD(CSR_OTP_GP_REG);
--	IWL_CMD(CSR_GIO_REG);
--	IWL_CMD(CSR_GP_UCODE_REG);
--	IWL_CMD(CSR_GP_DRIVER_REG);
--	IWL_CMD(CSR_UCODE_DRV_GP1);
--	IWL_CMD(CSR_UCODE_DRV_GP2);
--	IWL_CMD(CSR_LED_REG);
--	IWL_CMD(CSR_DRAM_INT_TBL_REG);
--	IWL_CMD(CSR_GIO_CHICKEN_BITS);
--	IWL_CMD(CSR_ANA_PLL_CFG);
--	IWL_CMD(CSR_HW_REV_WA_REG);
--	IWL_CMD(CSR_DBG_HPET_MEM_REG);
--	default:
--		return "UNKNOWN";
--	}
--}
--
--void iwl_dump_csr(struct iwl_trans *trans)
--{
--	int i;
--	static const u32 csr_tbl[] = {
--		CSR_HW_IF_CONFIG_REG,
--		CSR_INT_COALESCING,
--		CSR_INT,
--		CSR_INT_MASK,
--		CSR_FH_INT_STATUS,
--		CSR_GPIO_IN,
--		CSR_RESET,
--		CSR_GP_CNTRL,
--		CSR_HW_REV,
--		CSR_EEPROM_REG,
--		CSR_EEPROM_GP,
--		CSR_OTP_GP_REG,
--		CSR_GIO_REG,
--		CSR_GP_UCODE_REG,
--		CSR_GP_DRIVER_REG,
--		CSR_UCODE_DRV_GP1,
--		CSR_UCODE_DRV_GP2,
--		CSR_LED_REG,
--		CSR_DRAM_INT_TBL_REG,
--		CSR_GIO_CHICKEN_BITS,
--		CSR_ANA_PLL_CFG,
--		CSR_HW_REV_WA_REG,
--		CSR_DBG_HPET_MEM_REG
--	};
--	IWL_ERR(trans, "CSR values:\n");
--	IWL_ERR(trans, "(2nd byte of CSR_INT_COALESCING is "
--		"CSR_INT_PERIODIC_REG)\n");
--	for (i = 0; i <  ARRAY_SIZE(csr_tbl); i++) {
--		IWL_ERR(trans, "  %25s: 0X%08x\n",
--			get_csr_string(csr_tbl[i]),
--			iwl_read32(bus(trans), csr_tbl[i]));
--	}
--}
--
- static ssize_t iwl_dbgfs_csr_write(struct file *file,
- 					 const char __user *user_buf,
- 					 size_t count, loff_t *ppos)
-@@ -1842,67 +1903,6 @@ static ssize_t iwl_dbgfs_csr_write(struct file *file,
- 	return count;
- }
+-	if (dev->dev->bus_sprom->boardflags_lo & B43_BFL_FEM &&
+-	    !(dev->dev->bus_sprom->boardflags_hi & B43_BFH_FEM_BT))
++	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
++		if (sprom->boardflags_lo & B43_BFL_EXTLNA)
++			b43_phy_lcn_load_tx_gain_tab(dev,
++				b43_lcntab_tx_gain_tbl_2ghz_ext_pa_rev0);
++		else
++			b43err(dev->wl,
++			       "TX gain table unknown for this card\n");
++	}
++
++	if (sprom->boardflags_lo & B43_BFL_FEM &&
++	    !(sprom->boardflags_hi & B43_BFH_FEM_BT))
+ 		b43_lcntab_write_bulk(dev, B43_LCNTAB16(0xf, 0),
+ 			ARRAY_SIZE(b43_lcntab_sw_ctl_4313_epa_rev0),
+ 			b43_lcntab_sw_ctl_4313_epa_rev0);
+diff --git a/drivers/net/wireless/b43/tables_phy_lcn.h b/drivers/net/wireless/b43/tables_phy_lcn.h
+index b6471e8..caff9db 100644
+--- a/drivers/net/wireless/b43/tables_phy_lcn.h
++++ b/drivers/net/wireless/b43/tables_phy_lcn.h
+@@ -10,6 +10,8 @@
+ #define B43_LCNTAB16(table, offset)	(((table) << 10) | (offset) | B43_LCNTAB_16BIT)
+ #define B43_LCNTAB32(table, offset)	(((table) << 10) | (offset) | B43_LCNTAB_32BIT)
  
--static const char *get_fh_string(int cmd)
--{
--	switch (cmd) {
--	IWL_CMD(FH_RSCSR_CHNL0_STTS_WPTR_REG);
--	IWL_CMD(FH_RSCSR_CHNL0_RBDCB_BASE_REG);
--	IWL_CMD(FH_RSCSR_CHNL0_WPTR);
--	IWL_CMD(FH_MEM_RCSR_CHNL0_CONFIG_REG);
--	IWL_CMD(FH_MEM_RSSR_SHARED_CTRL_REG);
--	IWL_CMD(FH_MEM_RSSR_RX_STATUS_REG);
--	IWL_CMD(FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV);
--	IWL_CMD(FH_TSSR_TX_STATUS_REG);
--	IWL_CMD(FH_TSSR_TX_ERROR_REG);
--	default:
--		return "UNKNOWN";
--	}
--}
--
--int iwl_dump_fh(struct iwl_trans *trans, char **buf, bool display)
--{
--	int i;
--#ifdef CONFIG_IWLWIFI_DEBUG
--	int pos = 0;
--	size_t bufsz = 0;
--#endif
--	static const u32 fh_tbl[] = {
--		FH_RSCSR_CHNL0_STTS_WPTR_REG,
--		FH_RSCSR_CHNL0_RBDCB_BASE_REG,
--		FH_RSCSR_CHNL0_WPTR,
--		FH_MEM_RCSR_CHNL0_CONFIG_REG,
--		FH_MEM_RSSR_SHARED_CTRL_REG,
--		FH_MEM_RSSR_RX_STATUS_REG,
--		FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV,
--		FH_TSSR_TX_STATUS_REG,
--		FH_TSSR_TX_ERROR_REG
--	};
--#ifdef CONFIG_IWLWIFI_DEBUG
--	if (display) {
--		bufsz = ARRAY_SIZE(fh_tbl) * 48 + 40;
--		*buf = kmalloc(bufsz, GFP_KERNEL);
--		if (!*buf)
--			return -ENOMEM;
--		pos += scnprintf(*buf + pos, bufsz - pos,
--				"FH register values:\n");
--		for (i = 0; i < ARRAY_SIZE(fh_tbl); i++) {
--			pos += scnprintf(*buf + pos, bufsz - pos,
--				"  %34s: 0X%08x\n",
--				get_fh_string(fh_tbl[i]),
--				iwl_read_direct32(bus(trans), fh_tbl[i]));
--		}
--		return pos;
--	}
--#endif
--	IWL_ERR(trans, "FH register values:\n");
--	for (i = 0; i <  ARRAY_SIZE(fh_tbl); i++) {
--		IWL_ERR(trans, "  %34s: 0X%08x\n",
--			get_fh_string(fh_tbl[i]),
--			iwl_read_direct32(bus(trans), fh_tbl[i]));
--	}
--	return 0;
--}
--
- static ssize_t iwl_dbgfs_fh_reg_read(struct file *file,
- 					 char __user *user_buf,
- 					 size_t count, loff_t *ppos)
++#define B43_LCNTAB_TX_GAIN_SIZE		128
++
+ u32 b43_lcntab_read(struct b43_wldev *dev, u32 offset);
+ void b43_lcntab_read_bulk(struct b43_wldev *dev, u32 offset,
+ 			  unsigned int nr_elements, void *_data);
 -- 
-1.7.0.4
-
-
---=-2LbQSo3yaucsqYfl0WU1--
+1.7.3.4
 
