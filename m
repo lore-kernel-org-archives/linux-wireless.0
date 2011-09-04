@@ -1,101 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4747 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752243Ab1I0Rpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 13:45:52 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: gregkh@suse.de
-cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: [PATCH v2 19/26] staging: brcm80211: change interface for
- common rssi compute function
-Date: Tue, 27 Sep 2011 10:45:23 -0700
-Message-ID: <1317145530-18839-20-git-send-email-frankyl@broadcom.com> (sfid-20110927_194636_928341_3B7435A0)
-In-Reply-To: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
-References: <1317145530-18839-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtp-out1.tiscali.nl ([195.241.79.176]:37198 "EHLO
+	smtp-out1.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752459Ab1IDI2l (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Sep 2011 04:28:41 -0400
+Subject: Re: [iwl4965] Microcode SW error detected
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Bernhard Schmidt <bschmidt@freebsd.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20110607145435.GA5179@redhat.com>
+References: <1306151106.2066.60.camel@x61.thuisdomein>
+	 <201106070832.49048.bschmidt@freebsd.org>
+	 <20110607145435.GA5179@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 04 Sep 2011 10:28:35 +0200
+Message-ID: <1315124915.5239.21.camel@x61.thuisdomein> (sfid-20110904_102845_905822_2FEA4EC7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+On Tue, 2011-06-07 at 16:54 +0200, Stanislaw Gruszka wrote:
+> That could be useful hint, we do not scan chan by chan, but we
+> have thing called "plcp check health", which "restart radio"
+> by requesting one channel scan. So perhaps disabling that could
+> help.
+> 
+> [...]
+>
+> diff --git a/drivers/net/wireless/iwlegacy/iwl-rx.c b/drivers/net/wireless/iwlegacy/iwl-rx.c
+> index 654cf23..6062da0 100644
+> --- a/drivers/net/wireless/iwlegacy/iwl-rx.c
+> +++ b/drivers/net/wireless/iwlegacy/iwl-rx.c
+> @@ -230,6 +230,8 @@ EXPORT_SYMBOL(iwl_legacy_rx_spectrum_measure_notif);
+>  void iwl_legacy_recover_from_statistics(struct iwl_priv *priv,
+>  				struct iwl_rx_packet *pkt)
+>  {
+> +	return;
+> +
+>  	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+>  		return;
+>  	if (iwl_legacy_is_any_associated(priv)) {
 
-The function wlc_phy_rssi_compute() now uses d11rxhdr struct as
-purely input parameter and returns the computed rssi value.
+0) I finally got around to applying this patch (to v3.0.4).
 
-Reviewed-by: Roland Vossen <rvossen@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/staging/brcm80211/brcmsmac/main.c        |    4 +++-
- drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c |    7 +++----
- drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h |    4 ++--
- 3 files changed, 8 insertions(+), 7 deletions(-)
+1) After a few days of normal usage (with quite a bit of suspend and
+resume cycles) this error was again triggered. So avoiding
+check_plcp_health() doesn't seem to help.
 
-diff --git a/drivers/staging/brcm80211/brcmsmac/main.c b/drivers/staging/brcm80211/brcmsmac/main.c
-index e34b511..ef96358 100644
---- a/drivers/staging/brcm80211/brcmsmac/main.c
-+++ b/drivers/staging/brcm80211/brcmsmac/main.c
-@@ -806,15 +806,17 @@ brcms_b_recv(struct brcms_hardware *wlc_hw, uint fifo, bool bound)
- 
- 	/* process each frame */
- 	while ((p = head) != NULL) {
-+		struct d11rxhdr *rxh;
- 		head = head->prev;
- 		p->prev = NULL;
- 
- 		wlc_rxhdr = (struct brcms_d11rxhdr *) p->data;
-+		rxh = (struct d11rxhdr *)p->data;
- 
- 		/*
- 		 * compute the RSSI from d11rxhdr and record it in wlc_rxd11hr
- 		 */
--		wlc_phy_rssi_compute(wlc_hw->band->pi, wlc_rxhdr);
-+		wlc_rxhdr->rssi = wlc_phy_rssi_compute(wlc_hw->band->pi, rxh);
- 
- 		brcms_c_recv(wlc_hw->wlc, p);
- 	}
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-index 8025247..c359a10 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -2610,10 +2610,9 @@ void wlc_phy_compute_dB(u32 *cmplx_pwr, s8 *p_cmplx_pwr_dB, u8 core)
- 	}
- }
- 
--void wlc_phy_rssi_compute(struct brcms_phy_pub *pih,
--			  struct brcms_d11rxhdr *wlc_rxhdr)
-+int wlc_phy_rssi_compute(struct brcms_phy_pub *pih,
-+			 struct d11rxhdr *rxh)
- {
--	struct d11rxhdr *rxh = &wlc_rxhdr->rxhdr;
- 	int rssi = le16_to_cpu(rxh->PhyRxStatus_1) & PRXS1_JSSI_MASK;
- 	uint radioid = pih->radioid;
- 	struct brcms_phy *pi = (struct brcms_phy *) pih;
-@@ -2650,7 +2649,7 @@ void wlc_phy_rssi_compute(struct brcms_phy_pub *pih,
- 	}
- 
- end:
--	wlc_rxhdr->rssi = (s8) rssi;
-+	return rssi;
- }
- 
- void wlc_phy_freqtrack_start(struct brcms_phy_pub *pih)
-diff --git a/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h b/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h
-index 1dbfaa3..39c3c22 100644
---- a/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h
-+++ b/drivers/staging/brcm80211/brcmsmac/phy/phy_hal.h
-@@ -212,8 +212,8 @@ extern void wlc_phy_chanspec_radio_set(struct brcms_phy_pub *ppi,
- extern u16 wlc_phy_bw_state_get(struct brcms_phy_pub *ppi);
- extern void wlc_phy_bw_state_set(struct brcms_phy_pub *ppi, u16 bw);
- 
--extern void wlc_phy_rssi_compute(struct brcms_phy_pub *pih,
--				 struct brcms_d11rxhdr *wlc_rxhdr);
-+extern int wlc_phy_rssi_compute(struct brcms_phy_pub *pih,
-+				struct d11rxhdr *rxh);
- extern void wlc_phy_por_inform(struct brcms_phy_pub *ppi);
- extern void wlc_phy_noise_sample_intr(struct brcms_phy_pub *ppi);
- extern bool wlc_phy_bist_check_phy(struct brcms_phy_pub *ppi);
--- 
-1.7.1
+2) I never send you the debug output (ie, output after doing "modprobe
+iwl4965 debug=0x47ffffff"), did I?
 
+
+Paul Bolle
 
