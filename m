@@ -1,89 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:64777 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756646Ab1I3TGQ (ORCPT
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:42137 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752030Ab1IDGbr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Sep 2011 15:06:16 -0400
-Received: by fxe4 with SMTP id 4so3234749fxe.19
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Sep 2011 12:06:15 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Ian Jeffray <ian@emobix.co.uk>
-Subject: Re: r8712u driver - on ARM
-Date: Fri, 30 Sep 2011 21:06:11 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <4E81ED65.7060703@emobix.co.uk> <4E81F8C8.4010909@lwfinger.net> <4E860CDB.9040207@emobix.co.uk>
-In-Reply-To: <4E860CDB.9040207@emobix.co.uk>
+	Sun, 4 Sep 2011 02:31:47 -0400
+Received: by pzk37 with SMTP id 37so6928573pzk.1
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Sep 2011 23:31:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201109302106.12028.chunkeey@googlemail.com> (sfid-20110930_210620_271506_96988452)
+In-Reply-To: <1315081282.1773.19.camel@Joe-Laptop>
+References: <1315076463-11222-1-git-send-email-zajec5@gmail.com>
+	<1315076463-11222-4-git-send-email-zajec5@gmail.com>
+	<1315081282.1773.19.camel@Joe-Laptop>
+Date: Sun, 4 Sep 2011 08:31:47 +0200
+Message-ID: <CACna6ryuRQE9u7ihb2FnFkRLjLV-U7apqeU_N1SXJhB_ohR++g@mail.gmail.com> (sfid-20110904_083156_989074_F1B6165F)
+Subject: Re: [PATCH 3/3] b43: LCN-PHY: load TX gain table on init
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 30 September 2011 20:39:23 Ian Jeffray wrote:
-> On 27/09/2011 17:24, Larry Finger wrote:
-> > On 09/27/2011 10:36 AM, Ian Jeffray wrote:
-> >> Dear all,
-> >>
-> >> I'm attempting to get some sense from a Realtek 8191S device on
-> >> ARM linux.
-> <SNIP>
-> >> My host is a TI DaVinci DM8168 (OMAP3+toys). The USB host is not
-> >> fantastic, but has been thrashed heavily with other devices and seems
-> >> to be reliable in those cases.
-> <SNIP>
-> >
-> > I have not tried this chip on an ARM host as I have no hardware. My
-> > testing has been with X86 and PPC - thus I know the endianess is OK, but
-> > that is the extent of my platform testing.
-> >
-> > The first thing I would try is wireshark on another host to verify that
-> > packets are actually getting on the air.
-> 
-> Ok, so I've spent more more days working on this.  The driver appears
-> to be fine on an ARM9 S3X board.   I've contacted the TI support
-> team about the USB host and applied some patches from them which have
-> slightly improved the situation, but it's still horrible - I'm actually
-> getting "reliable" scans but only a pathetic 1Mbit or less of data
-> throughput.
-> 
-> I've also tried this driver (and the realtek upstream version) with
-> a Blackfin BF527 device, which has roughly the same 'musb' Inventra
-> USB host controller... and I see exactly the same problem there!
-> The firmware appears to load fine, but scans produce no results.
-> 
-> I'm not really sure about your comment about wireshark because,
-> as far as I understand, a 'iwlist wlan0 scan' command doesn't cause
-> any traffic which would be wireshark capturable on another host...
-> am I misunderstanding something?
-> 
-> So it appears as though there may be some general problem with this
-> driver and an 'musb' host controller.  Very strange.
-> 
-> My next course of attack is to try comparing outputs of 'usbmon'
-> dumps between hosts which work and hosts which don't... but I can't
-> make a great deal of sense looking at them really.
-> 
-> I'd greatly appreciate any more advice you may be able to give.
+W dniu 3 września 2011 22:21 użytkownik Joe Perches <joe@perches.com> napisał:
+> On Sat, 2011-09-03 at 21:01 +0200, Rafał Miłecki wrote:
+>> Values and ops were taken from MMIO dump of wl. struct was copied from
+>> brcmsmac.
+> []
+>> diff --git a/drivers/net/wireless/b43/tables_phy_lcn.c b/drivers/net/wireless/b43/tables_phy_lcn.c
+> []
+>> +const struct b43_lcntab_tx_gain_tbl_entry
+>> +             b43_lcntab_tx_gain_tbl_2ghz_ext_pa_rev0[] = {
+>
+> 128 entries follow...
 
-Well, I'm not really in r8712u but I can tell you a few things about
-carl9170 and musb.
+OK, I'll fix that.
 
-You see I had a similar discussion a while ago:
-http://www.spinics.net/lists/linux-wireless/msg68870.html
 
-Apparently, musb can't do DMA with non 4-bytes aligned buffers
-and falls back to PIO [which results in a much higher cpu utilization
-and really bad usb throughput... so if timing is critical this "fact"
-is pretty much a deal-breaker for the combination].
+>> +     { 0x03, 0x00, 0x1f, 0x0, 0x48 },
+> [etc]
+>> +     { 0x03, 0x00, 0x01, 0x0, 0x39 },
+>> +};
+>
+>> +void b43_phy_lcn_load_tx_gain_tab(struct b43_wldev *dev,
+>> +                     const struct b43_lcntab_tx_gain_tbl_entry *gain_table)
+>
+> Are there multiple gain tables?
 
-Now, you might ask, why this DMA vs. PIO is so importent... Well,
-it's because the network stack has its own alignment ideas and
-about the data/skbs. There's a comment in include/linux/skbuff.h
-around line 1400 which explains the situation. The upshot is you
-can choose between a penatly on the packet processing by the
-stack, or a penatly on the driver/hardware site if r8712u does
-not implement any additional techniques to counter the issues.
+Yes, please check for the condition where we call
+b43_phy_lcn_load_tx_gain_tab, and the table name. Different hardware
+will need different table.
 
-Regards,
-	Chr
+
+>> +{
+>> +     u32 i;
+>> +     u32 val;
+>> +
+>> +     u16 pa_gain = 0x70;
+>> +     if (dev->dev->bus_sprom->boardflags_lo & B43_BFL_FEM)
+>> +             pa_gain = 0x10;
+>> +
+>> +     for (i = 0; i < 128; i++) {
+>
+> Can this be a fixed table and ARRAY_SIZE?
+
+Not trivial, as we accept multiple tables here. I could do
+BUG_BUILD_ON(ARRAY_SIZE(tab1) != ARRAY_SIZE(tab2);
+and then use ARRAY_SIZE(tab1)
+Or maybe I'll just use a define... Probably a better idea.
+
+-- 
+Rafał
