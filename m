@@ -1,55 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:51823 "EHLO
-	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753771Ab1IUSFd convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 14:05:33 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Date: Wed, 21 Sep 2011 11:05:14 -0700
-Subject: RE: [patch 1/2] mwifiex: add a kfree() to an error path
-Message-ID: <477F20668A386D41ADCC57781B1F704308153E17A2@SC-VEXCH1.marvell.com> (sfid-20110921_200538_275245_58B2DA19)
-References: <20110921071329.GF4999@elgon.mountain>
-In-Reply-To: <20110921071329.GF4999@elgon.mountain>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:50059 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751658Ab1IDN3H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Sep 2011 09:29:07 -0400
+Received: by wyg19 with SMTP id 19so3779660wyg.37
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Sep 2011 06:29:03 -0700 (PDT)
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Shahar Levi <shahar_levi@ti.com>
+Subject: [PATCH] wl12xx: Set the correct min&max dwell time setting on passive scan
+Date: Sun,  4 Sep 2011 16:28:58 +0300
+Message-Id: <1315142938-26665-1-git-send-email-shahar_levi@ti.com> (sfid-20110904_152917_873036_9EE6C205)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+In case of forced passive scan (n_ssids = 0), active permission
+channels have been set with active min&max dwell time and
+selected for passive scan.
 
-Thanks for the patch.
+That patch includes the following fixes:
+1) Skip scan in case of active scan request and forced passive
+   scan (n_ssids = 0) indication
+2) all channels that not selected before in active scan should
+   be selected in passive scan (including active channels)
+3) Improve scan SM by calling only passive states in case of
+   forced passive scan (n_ssids = 0)
 
-> -----Original Message-----
-> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-> Sent: Wednesday, September 21, 2011 12:13 AM
-> To: Bing Zhao
-> Cc: John W. Linville; linux-wireless@vger.kernel.org; kernel-janitors@vger.kernel.org
-> Subject: [patch 1/2] mwifiex: add a kfree() to an error path
-> 
-> We're not likely to hit this small memory leak, but lets fix it
-> anyway to keep the static checkers happy.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+---
+ drivers/net/wireless/wl12xx/scan.c |   61 ++++++++++++++++++++++++++---------
+ drivers/net/wireless/wl12xx/scan.h |    2 +-
+ 2 files changed, 46 insertions(+), 17 deletions(-)
 
-Acked-by: Bing Zhao <bzhao@marvell.com>
+diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+index af4ad23..cb12409 100644
+--- a/drivers/net/wireless/wl12xx/scan.c
++++ b/drivers/net/wireless/wl12xx/scan.c
+@@ -94,17 +94,26 @@ static int wl1271_get_scan_channels(struct wl1271 *wl,
+ 	struct conf_scan_settings *c = &wl->conf.scan;
+ 	int i, j;
+ 	u32 flags;
++	bool passive_channel;
+ 
+ 	for (i = 0, j = 0;
+ 	     i < req->n_channels && j < WL1271_SCAN_MAX_CHANNELS;
+ 	     i++) {
+ 
+ 		flags = req->channels[i]->flags;
++		passive_channel = !!(flags & IEEE80211_CHAN_PASSIVE_SCAN);
+ 
+ 		if (!test_bit(i, wl->scan.scanned_ch) &&
+ 		    !(flags & IEEE80211_CHAN_DISABLED) &&
+-		    ((!!(flags & IEEE80211_CHAN_PASSIVE_SCAN)) == passive) &&
+-		    (req->channels[i]->band == band)) {
++		    (req->channels[i]->band == band) &&
++		    /*
++		     * In case of passive scan, all channels that not selected
++		     * before in active scan should be selected(including active
++		     * channels)
++		     * In case of active scan validate the channel scan
++		     * permission
++		     */
++		    (passive || (passive_channel == false))) {
+ 
+ 			wl1271_debug(DEBUG_SCAN, "band %d, center_freq %d ",
+ 				     req->channels[i]->band,
+@@ -157,6 +166,9 @@ static int wl1271_scan_send(struct wl1271 *wl, enum ieee80211_band band,
+ 	int ret;
+ 	u16 scan_options = 0;
+ 
++	wl1271_debug(DEBUG_SCAN, "scan send: band %d, passive %d",
++		     band, passive);
++
+ 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+ 	trigger = kzalloc(sizeof(*trigger), GFP_KERNEL);
+ 	if (!cmd || !trigger) {
+@@ -167,9 +179,16 @@ static int wl1271_scan_send(struct wl1271 *wl, enum ieee80211_band band,
+ 	/* We always use high priority scans */
+ 	scan_options = WL1271_SCAN_OPT_PRIORITY_HIGH;
+ 
+-	/* No SSIDs means that we have a forced passive scan */
+-	if (passive || wl->scan.req->n_ssids == 0)
++	if (passive) {
+ 		scan_options |= WL1271_SCAN_OPT_PASSIVE;
++	} else if (wl->scan.req->n_ssids == 0) {
++			/*
++			 * no SSIDs means that we have a forced passive scan.
++			 * in case active scan req skip scan
++			 */
++			ret = WL1271_NOTHING_TO_SCAN;
++			goto out;
++	}
+ 
+ 	if (WARN_ON(wl->role_id == WL12XX_INVALID_ROLE_ID)) {
+ 		ret = -EINVAL;
+@@ -247,6 +266,19 @@ void wl1271_scan_stm(struct wl1271 *wl)
+ 		ret = wl1271_scan_send(wl, IEEE80211_BAND_2GHZ, false,
+ 				       wl->conf.tx.basic_rate);
+ 		if (ret == WL1271_NOTHING_TO_SCAN) {
++			if (wl->enable_11a)
++				wl->scan.state = WL1271_SCAN_STATE_5GHZ_ACTIVE;
++			else
++				wl->scan.state = WL1271_SCAN_STATE_2GHZ_PASSIVE;
++			wl1271_scan_stm(wl);
++		}
++
++		break;
++
++	case WL1271_SCAN_STATE_5GHZ_ACTIVE:
++		ret = wl1271_scan_send(wl, IEEE80211_BAND_5GHZ, false,
++				       wl->conf.tx.basic_rate_5);
++		if (ret == WL1271_NOTHING_TO_SCAN) {
+ 			wl->scan.state = WL1271_SCAN_STATE_2GHZ_PASSIVE;
+ 			wl1271_scan_stm(wl);
+ 		}
+@@ -258,7 +290,7 @@ void wl1271_scan_stm(struct wl1271 *wl)
+ 				       wl->conf.tx.basic_rate);
+ 		if (ret == WL1271_NOTHING_TO_SCAN) {
+ 			if (wl->enable_11a)
+-				wl->scan.state = WL1271_SCAN_STATE_5GHZ_ACTIVE;
++				wl->scan.state = WL1271_SCAN_STATE_5GHZ_PASSIVE;
+ 			else
+ 				wl->scan.state = WL1271_SCAN_STATE_DONE;
+ 			wl1271_scan_stm(wl);
+@@ -266,16 +298,6 @@ void wl1271_scan_stm(struct wl1271 *wl)
+ 
+ 		break;
+ 
+-	case WL1271_SCAN_STATE_5GHZ_ACTIVE:
+-		ret = wl1271_scan_send(wl, IEEE80211_BAND_5GHZ, false,
+-				       wl->conf.tx.basic_rate_5);
+-		if (ret == WL1271_NOTHING_TO_SCAN) {
+-			wl->scan.state = WL1271_SCAN_STATE_5GHZ_PASSIVE;
+-			wl1271_scan_stm(wl);
+-		}
+-
+-		break;
+-
+ 	case WL1271_SCAN_STATE_5GHZ_PASSIVE:
+ 		ret = wl1271_scan_send(wl, IEEE80211_BAND_5GHZ, true,
+ 				       wl->conf.tx.basic_rate_5);
+@@ -317,7 +339,14 @@ int wl1271_scan(struct wl1271 *wl, const u8 *ssid, size_t ssid_len,
+ 	if (wl->scan.state != WL1271_SCAN_STATE_IDLE)
+ 		return -EBUSY;
+ 
+-	wl->scan.state = WL1271_SCAN_STATE_2GHZ_ACTIVE;
++	if (req->n_ssids == 0)
++		/*
++		 * no SSIDs means that we have a forced passive scan.
++		 * in that case skip active scan states
++		 */
++		wl->scan.state = WL1271_SCAN_STATE_2GHZ_PASSIVE;
++	else
++		wl->scan.state = WL1271_SCAN_STATE_2GHZ_ACTIVE;
+ 
+ 	if (ssid_len && ssid) {
+ 		wl->scan.ssid_len = ssid_len;
+diff --git a/drivers/net/wireless/wl12xx/scan.h b/drivers/net/wireless/wl12xx/scan.h
+index 9211515..69e31d5 100644
+--- a/drivers/net/wireless/wl12xx/scan.h
++++ b/drivers/net/wireless/wl12xx/scan.h
+@@ -58,8 +58,8 @@ void wl1271_scan_sched_scan_results(struct wl1271 *wl);
+ enum {
+ 	WL1271_SCAN_STATE_IDLE,
+ 	WL1271_SCAN_STATE_2GHZ_ACTIVE,
+-	WL1271_SCAN_STATE_2GHZ_PASSIVE,
+ 	WL1271_SCAN_STATE_5GHZ_ACTIVE,
++	WL1271_SCAN_STATE_2GHZ_PASSIVE,
+ 	WL1271_SCAN_STATE_5GHZ_PASSIVE,
+ 	WL1271_SCAN_STATE_DONE
+ };
+-- 
+1.7.1
 
-Thanks,
-Bing
-
-> 
-> diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-> index eb569fa..215c65a 100644
-> --- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-> +++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-> @@ -203,6 +203,7 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
->  		beacon_ie = kmemdup(bss->information_elements,
->  					bss->len_beacon_ies, GFP_KERNEL);
->  		if (!beacon_ie) {
-> +			kfree(bss_desc);
->  			dev_err(priv->adapter->dev, " failed to alloc beacon_ie\n");
->  			return -ENOMEM;
->  		}
