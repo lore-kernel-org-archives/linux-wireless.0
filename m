@@ -1,153 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59441 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755207Ab1IFU2Y (ORCPT
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:50642 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752359Ab1IEMDB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Sep 2011 16:28:24 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.76)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1R12Fq-0004J1-E9
-	for linux-wireless@vger.kernel.org; Tue, 06 Sep 2011 22:28:22 +0200
-Message-Id: <20110906202725.888244880@sipsolutions.net> (sfid-20110906_222826_991272_F7369CE2)
-Date: Tue, 06 Sep 2011 22:27:08 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 5/5] mac80211: allow out-of-band EOSP notification
-References: <20110906201703.703254041@sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 5 Sep 2011 08:03:01 -0400
+Received: by mail-yw0-f42.google.com with SMTP id 3so3080544ywb.15
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Sep 2011 05:02:59 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <johannes@sipsolutions.net>
+Subject: [RFC v2 1/5] nl80211/cfg80211: adding 'scan_cancel' command.
+Date: Mon,  5 Sep 2011 15:02:27 +0300
+Message-Id: <1315224151-16552-2-git-send-email-VictorG@ti.com> (sfid-20110905_140304_035208_85511FF0)
+In-Reply-To: <1315224151-16552-1-git-send-email-VictorG@ti.com>
+References: <1315224151-16552-1-git-send-email-VictorG@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Mostly from an energy consumption and cpu load perspective,
+it can be useful to stop a triggered scan earlier, when one
+finds the desired scan results.
+Adding the ability to stop a scan from user space by exposing
+new NL80211_CMD_SCAN_CANCEL API.
 
-iwlwifi has a separate EOSP notification from
-the device, and to make use of that properly
-it needs to be passed to mac80211. To be able
-to mix with tx_status_irqsafe and rx_irqsafe
-it also needs to be an "_irqsafe" version in
-the sense that it goes through the tasklet,
-the actual flag clearing would be IRQ-safe
-but doing it directly would cause reordering
-issues.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
 ---
- include/net/mac80211.h     |   19 ++++++++++++++++++-
- net/mac80211/ieee80211_i.h |    5 +++++
- net/mac80211/main.c        |   13 +++++++++++++
- net/mac80211/sta_info.c    |   23 +++++++++++++++++++++++
- 4 files changed, 59 insertions(+), 1 deletion(-)
+ include/linux/nl80211.h |    7 +++++++
+ include/net/cfg80211.h  |    2 ++
+ net/wireless/core.h     |    1 +
+ net/wireless/nl80211.c  |   13 +++++++++++++
+ net/wireless/scan.c     |   16 ++++++++++++++++
+ 5 files changed, 39 insertions(+), 0 deletions(-)
 
---- a/net/mac80211/sta_info.c	2011-09-06 22:25:59.000000000 +0200
-+++ b/net/mac80211/sta_info.c	2011-09-06 22:26:00.000000000 +0200
-@@ -1356,6 +1356,29 @@ void ieee80211_sta_block_awake(struct ie
- }
- EXPORT_SYMBOL(ieee80211_sta_block_awake);
- 
-+void ieee80211_sta_eosp_irqsafe(struct ieee80211_sta *pubsta)
-+{
-+	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
-+	struct ieee80211_local *local = sta->local;
-+	struct sk_buff *skb;
-+	struct skb_eosp_msg_data *data;
-+
-+	skb = alloc_skb(0, GFP_ATOMIC);
-+	if (!skb) {
-+		/* too bad ... but race is better than loss */
-+		clear_sta_flags(sta, WLAN_STA_SP);
-+		return;
-+	}
-+
-+	data = (void *)skb->cb;
-+	memcpy(data->sta, pubsta->addr, ETH_ALEN);
-+	memcpy(data->iface, sta->sdata->vif.addr, ETH_ALEN);
-+	skb->pkt_type = IEEE80211_EOSP_MSG;
-+	skb_queue_tail(&local->skb_queue, skb);
-+	tasklet_schedule(&local->tasklet);
-+}
-+EXPORT_SYMBOL(ieee80211_sta_eosp_irqsafe);
-+
- void ieee80211_sta_set_buffered(struct ieee80211_sta *pubsta,
- 				u8 tid, bool buffered)
- {
---- a/include/net/mac80211.h	2011-09-06 22:25:59.000000000 +0200
-+++ b/include/net/mac80211.h	2011-09-06 22:26:00.000000000 +0200
-@@ -1948,7 +1948,8 @@ enum ieee80211_frame_release_type {
-  *	at least one, however). In this case it is also responsible for
-  *	setting the EOSP flag in the QoS header of the frames. Also, when the
-  *	service period ends, the driver must set %IEEE80211_TX_STATUS_EOSP
-- *	on the last frame in the SP.
-+ *	on the last frame in the SP. Alternatively, it may call the function
-+ *	ieee80211_sta_eosp_irqsafe() to inform mac80211 of the end of the SP.
-  *	This callback must be atomic.
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 89dec16..2fee93a 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -499,6 +499,11 @@
+  *	this command may also be sent by the driver as an MLME event to
+  *	inform userspace of the new replay counter.
+  *
++ * @NL80211_CMD_SCAN_CANCEL: Stop currently running scan (both sw and hw).
++ *	This operation will eventually invoke %NL80211_CMD_SCAN_ABORTED
++ *	event, partial scan results will be available. Returns -ENOENT
++ *	if scan is not running.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
   */
- struct ieee80211_ops {
-@@ -3072,6 +3073,22 @@ void ieee80211_sta_block_awake(struct ie
- 			       struct ieee80211_sta *pubsta, bool block);
+@@ -623,6 +628,8 @@ enum nl80211_commands {
  
- /**
-+ * ieee80211_sta_eosp - notify mac80211 about end of SP
-+ * @pubsta: the station
-+ *
-+ * When a device transmits frames in a way that it can't
-+ * tell us in the TX status about the EOSP, it must call
-+ * this function instead.
-+ *
-+ * Note that there is no non-_irqsafe version right now as
-+ * it wasn't needed, but just like _tx_status() and _rx()
-+ * must not be mixed in irqsafe/non-irqsafe versions, this
-+ * function must not be mixed with those either. Use the
-+ * all irqsafe, or all non-irqsafe, don't mix!
-+ */
-+void ieee80211_sta_eosp_irqsafe(struct ieee80211_sta *pubsta);
+ 	NL80211_CMD_SET_REKEY_OFFLOAD,
+ 
++	NL80211_CMD_SCAN_CANCEL,
 +
-+/**
-  * ieee80211_iter_keys - iterate keys programmed into the device
-  * @hw: pointer obtained from ieee80211_alloc_hw()
-  * @vif: virtual interface to iterate, may be %NULL for all
---- a/net/mac80211/main.c	2011-09-06 22:25:32.000000000 +0200
-+++ b/net/mac80211/main.c	2011-09-06 22:26:00.000000000 +0200
-@@ -325,6 +325,8 @@ u32 ieee80211_reset_erp_info(struct ieee
- static void ieee80211_tasklet_handler(unsigned long data)
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index d86a15d..7b0c31e 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1298,6 +1298,7 @@ struct cfg80211_gtk_rekey_data {
+  *	the driver, and will be valid until passed to cfg80211_scan_done().
+  *	For scan results, call cfg80211_inform_bss(); you can call this outside
+  *	the scan/scan_done bracket too.
++ * @scan_cancel: Stop currently running scan (both sw and hw).
+  *
+  * @auth: Request to authenticate with the specified peer
+  * @assoc: Request to (re)associate with the specified peer
+@@ -1465,6 +1466,7 @@ struct cfg80211_ops {
+ 
+ 	int	(*scan)(struct wiphy *wiphy, struct net_device *dev,
+ 			struct cfg80211_scan_request *request);
++	void    (*scan_cancel)(struct wiphy *wiphy, struct net_device *dev);
+ 
+ 	int	(*auth)(struct wiphy *wiphy, struct net_device *dev,
+ 			struct cfg80211_auth_request *req);
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 8672e02..af22fe3 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -421,6 +421,7 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak);
+ void __cfg80211_sched_scan_results(struct work_struct *wk);
+ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
+ 			       bool driver_initiated);
++int cfg80211_scan_cancel(struct cfg80211_registered_device *rdev);
+ void cfg80211_upload_connect_keys(struct wireless_dev *wdev);
+ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 			  struct net_device *dev, enum nl80211_iftype ntype,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 2aa6a21..f9f239f 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3766,6 +3766,11 @@ static int nl80211_stop_sched_scan(struct sk_buff *skb,
+ 	return err;
+ }
+ 
++static int nl80211_scan_cancel(struct sk_buff *skb, struct genl_info *info)
++{
++	return cfg80211_scan_cancel(info->user_ptr[0]);
++}
++
+ static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
+ 			    u32 seq, int flags,
+ 			    struct cfg80211_registered_device *rdev,
+@@ -5906,6 +5911,14 @@ static struct genl_ops nl80211_ops[] = {
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
+ 	{
++		.cmd = NL80211_CMD_SCAN_CANCEL,
++		.doit = nl80211_scan_cancel,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
+ 		.cmd = NL80211_CMD_GET_SCAN,
+ 		.policy = nl80211_policy,
+ 		.dumpit = nl80211_dump_scan,
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index b0f0039..bb4a991 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -156,6 +156,22 @@ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
+ 	return 0;
+ }
+ 
++int cfg80211_scan_cancel(struct cfg80211_registered_device *rdev)
++{
++	struct net_device *dev;
++
++	ASSERT_RDEV_LOCK(rdev);
++
++	if (!rdev->ops->scan_cancel)
++		return -EOPNOTSUPP;
++	if (!rdev->scan_req)
++		return -ENOENT;
++
++	dev = rdev->scan_req->dev;
++	rdev->ops->scan_cancel(&rdev->wiphy, dev);
++	return 0;
++}
++
+ static void bss_release(struct kref *ref)
  {
- 	struct ieee80211_local *local = (struct ieee80211_local *) data;
-+	struct sta_info *sta, *tmp;
-+	struct skb_eosp_msg_data *eosp_data;
- 	struct sk_buff *skb;
- 
- 	while ((skb = skb_dequeue(&local->skb_queue)) ||
-@@ -340,6 +342,17 @@ static void ieee80211_tasklet_handler(un
- 			skb->pkt_type = 0;
- 			ieee80211_tx_status(local_to_hw(local), skb);
- 			break;
-+		case IEEE80211_EOSP_MSG:
-+			eosp_data = (void *)skb->cb;
-+			for_each_sta_info(local, eosp_data->sta, sta, tmp) {
-+				/* skip wrong virtual interface */
-+				if (memcmp(eosp_data->iface,
-+					   sta->sdata->vif.addr, ETH_ALEN))
-+					continue;
-+				clear_sta_flags(sta, WLAN_STA_SP);
-+				break;
-+			}
-+			break;
- 		default:
- 			WARN(1, "mac80211: Packet is of unknown type %d\n",
- 			     skb->pkt_type);
---- a/net/mac80211/ieee80211_i.h	2011-09-06 22:25:32.000000000 +0200
-+++ b/net/mac80211/ieee80211_i.h	2011-09-06 22:26:00.000000000 +0200
-@@ -661,6 +661,11 @@ enum sdata_queue_type {
- enum {
- 	IEEE80211_RX_MSG	= 1,
- 	IEEE80211_TX_STATUS_MSG	= 2,
-+	IEEE80211_EOSP_MSG	= 3,
-+};
-+
-+struct skb_eosp_msg_data {
-+	u8 sta[ETH_ALEN], iface[ETH_ALEN];
- };
- 
- enum queue_stop_reason {
-
+ 	struct cfg80211_internal_bss *bss;
+-- 
+1.7.0.4
 
