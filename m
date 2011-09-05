@@ -1,47 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:38980 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750740Ab1IUX3I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Sep 2011 19:29:08 -0400
-Date: Thu, 22 Sep 2011 01:28:51 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: "Brett Rudley" <brudley@broadcom.com>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"Greg KH" <greg@kroah.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline
- patch #2
-Message-ID: <20110922012851.2f3b7801@milhouse> (sfid-20110922_012915_071052_A250A4E9)
-In-Reply-To: <7A94256FD72B884D9E7C55586C3CBCEE195814DE92@SJEXCHCCR01.corp.ad.broadcom.com>
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
-	<20110920130338.GA9885@kroah.com>
-	<20110920132203.GB7800@tuxdriver.com>
-	<20110920140020.GA11386@kroah.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE195814DD85@SJEXCHCCR01.corp.ad.broadcom.com>
-	<CACna6rzSiH3g9y6F6t8JT4abCy0pO9v+ATCBeYmNdmNdo5BaDQ@mail.gmail.com>
-	<7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
-	<20110922003523.0bf6a460@milhouse>
-	<7A94256FD72B884D9E7C55586C3CBCEE195814DE92@SJEXCHCCR01.corp.ad.broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:36947 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754285Ab1IEOje (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Sep 2011 10:39:34 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH 4/4] ath6kl: Allow enabling of P2P support
+Date: Mon, 5 Sep 2011 17:38:47 +0300
+Message-ID: <1315233527-6234-5-git-send-email-jouni@qca.qualcomm.com> (sfid-20110905_163936_737871_F4307E46)
+In-Reply-To: <1315233527-6234-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1315233527-6234-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 21 Sep 2011 16:15:10 -0700
-"Brett Rudley" <brudley@broadcom.com> wrote:
+For now, use a module parameter (ath6kl_p2p) to allow P2P support
+to be enabled. This is needed since there is no mechanism for
+enabling the P2P mode more dynamically for a single netdev.
 
-> We did however initially propose (and implement) a dividing line of ssb chips for b43 and AXI based chips for brcmsmac but b43 team chose to ignore/reject that. 
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   12 ++++++++++
+ drivers/net/wireless/ath/ath6kl/core.h     |    2 +
+ drivers/net/wireless/ath/ath6kl/init.c     |   31 +++++++++++++++++++++------
+ drivers/net/wireless/ath/ath6kl/target.h   |    6 +++++
+ 4 files changed, 44 insertions(+), 7 deletions(-)
 
-Well, what about embedded, for instance?
-
-> I'm not totally opposed to that idea but it does not solve the primary issue of conflicting b43 and brcmsmac modules.
-
-I'm not convinced that this is an issue at all and I'm not convinced that it has to be resolved.
-At least not now.
-
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 6405696..a889bf4 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -20,6 +20,10 @@
+ #include "hif-ops.h"
+ #include "testmode.h"
+ 
++static unsigned int ath6kl_p2p;
++
++module_param(ath6kl_p2p, uint, 0644);
++
+ #define RATETAB_ENT(_rate, _rateid, _flags) {   \
+ 	.bitrate    = (_rate),                  \
+ 	.flags      = (_flags),                 \
+@@ -1936,6 +1940,7 @@ struct wireless_dev *ath6kl_cfg80211_init(struct device *dev)
+ {
+ 	int ret = 0;
+ 	struct wireless_dev *wdev;
++	struct ath6kl *ar;
+ 
+ 	wdev = kzalloc(sizeof(struct wireless_dev), GFP_KERNEL);
+ 	if (!wdev) {
+@@ -1951,6 +1956,9 @@ struct wireless_dev *ath6kl_cfg80211_init(struct device *dev)
+ 		return NULL;
+ 	}
+ 
++	ar = wiphy_priv(wdev->wiphy);
++	ar->p2p = !!ath6kl_p2p;
++
+ 	wdev->wiphy->mgmt_stypes = ath6kl_mgmt_stypes;
+ 
+ 	wdev->wiphy->max_remain_on_channel_duration = 5000;
+@@ -1960,6 +1968,10 @@ struct wireless_dev *ath6kl_cfg80211_init(struct device *dev)
+ 
+ 	wdev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+ 		BIT(NL80211_IFTYPE_ADHOC) | BIT(NL80211_IFTYPE_AP);
++	if (ar->p2p) {
++		wdev->wiphy->interface_modes |= BIT(NL80211_IFTYPE_P2P_GO) |
++			BIT(NL80211_IFTYPE_P2P_CLIENT);
++	}
+ 	/* max num of ssids that can be probed during scanning */
+ 	wdev->wiphy->max_scan_ssids = MAX_PROBED_SSID_INDEX;
+ 	wdev->wiphy->max_scan_ie_len = 1000; /* FIX: what is correct limit? */
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 054da13..c6ed1fc 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -471,6 +471,8 @@ struct ath6kl {
+ 	bool probe_req_report;
+ 	u16 next_chan;
+ 
++	bool p2p;
++
+ #ifdef CONFIG_ATH6KL_DEBUG
+ 	struct {
+ 		struct circ_buf fwlog_buf;
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 3d67025..eca34aa 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -448,13 +448,26 @@ static int ath6kl_target_config_wlan_params(struct ath6kl *ar)
+ 			status = -EIO;
+ 		}
+ 
+-	ret = ath6kl_wmi_info_req_cmd(ar->wmi, P2P_FLAG_CAPABILITIES_REQ |
+-				      P2P_FLAG_MACADDR_REQ |
+-				      P2P_FLAG_HMODEL_REQ);
+-	if (ret) {
+-		ath6kl_dbg(ATH6KL_DBG_TRC, "failed to request P2P "
+-			   "capabilities (%d) - assuming P2P not supported\n",
+-			   ret);
++	if (ar->p2p) {
++		ret = ath6kl_wmi_info_req_cmd(ar->wmi,
++					      P2P_FLAG_CAPABILITIES_REQ |
++					      P2P_FLAG_MACADDR_REQ |
++					      P2P_FLAG_HMODEL_REQ);
++		if (ret) {
++			ath6kl_dbg(ATH6KL_DBG_TRC, "failed to request P2P "
++				   "capabilities (%d) - assuming P2P not "
++				   "supported\n", ret);
++			ar->p2p = 0;
++		}
++	}
++
++	if (ar->p2p) {
++		/* Enable Probe Request reporting for P2P */
++		ret = ath6kl_wmi_probe_report_req_cmd(ar->wmi, true);
++		if (ret) {
++			ath6kl_dbg(ATH6KL_DBG_TRC, "failed to enable Probe "
++				   "Request reporting (%d)\n", ret);
++		}
+ 	}
+ 
+ 	return status;
+@@ -492,6 +505,10 @@ int ath6kl_configure_target(struct ath6kl *ar)
+ 
+ 	param |= (1 << HI_OPTION_NUM_DEV_SHIFT);
+ 	param |= (fw_iftype << HI_OPTION_FW_MODE_SHIFT);
++	if (ar->p2p && fw_iftype == HI_OPTION_FW_MODE_BSS_STA) {
++		param |= HI_OPTION_FW_SUBMODE_P2PDEV <<
++			HI_OPTION_FW_SUBMODE_SHIFT;
++	}
+ 	param |= (0 << HI_OPTION_MAC_ADDR_METHOD_SHIFT);
+ 	param |= (0 << HI_OPTION_FW_BRIDGE_SHIFT);
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
+index dd8b953..7db06a5 100644
+--- a/drivers/net/wireless/ath/ath6kl/target.h
++++ b/drivers/net/wireless/ath/ath6kl/target.h
+@@ -304,6 +304,11 @@ struct host_interest {
+ #define HI_OPTION_FW_MODE_BSS_STA 0x1
+ #define HI_OPTION_FW_MODE_AP      0x2
+ 
++#define HI_OPTION_FW_SUBMODE_NONE      0x0
++#define HI_OPTION_FW_SUBMODE_P2PDEV    0x1
++#define HI_OPTION_FW_SUBMODE_P2PCLIENT 0x2
++#define HI_OPTION_FW_SUBMODE_P2PGO     0x3
++
+ #define HI_OPTION_NUM_DEV_SHIFT   0x9
+ 
+ #define HI_OPTION_FW_BRIDGE_SHIFT 0x04
+@@ -316,6 +321,7 @@ struct host_interest {
+ |------------------------------------------------------------------------------|
+ */
+ #define HI_OPTION_FW_MODE_SHIFT        0xC
++#define HI_OPTION_FW_SUBMODE_SHIFT     0x14
+ 
+ /* Convert a Target virtual address into a Target physical address */
+ #define AR6003_VTOP(vaddr) ((vaddr) & 0x001fffff)
 -- 
-Greetings, Michael.
+1.7.4.1
+
