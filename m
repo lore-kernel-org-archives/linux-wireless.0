@@ -1,97 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4405 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752267Ab1IVSiG convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:44233 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754510Ab1IEPUL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Sep 2011 14:38:06 -0400
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: "Christoph Hellwig" <hch@infradead.org>,
-	"Brett Rudley" <brudley@broadcom.com>
-cc: "Rafa?? Mi??ecki" <zajec5@gmail.com>, "Greg KH" <greg@kroah.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"gregkh@suse.de" <gregkh@suse.de>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 22 Sep 2011 11:37:51 -0700
-Subject: RE: [PATCH 00/20] staging: brcm80211: 7th reaction for mainline
- patch #2
-Message-ID: <400C43189542CE41BC0A5B252FC90136BC0CC8B05A@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20110922_203823_083342_5D48992F)
-References: <1316467568-27683-1-git-send-email-frankyl@broadcom.com>
- <20110920130338.GA9885@kroah.com> <20110920132203.GB7800@tuxdriver.com>
- <20110920140020.GA11386@kroah.com>
- <7A94256FD72B884D9E7C55586C3CBCEE195814DD85@SJEXCHCCR01.corp.ad.broadcom.com>
- <CACna6rzSiH3g9y6F6t8JT4abCy0pO9v+ATCBeYmNdmNdo5BaDQ@mail.gmail.com>
- <7A94256FD72B884D9E7C55586C3CBCEE195814DE4F@SJEXCHCCR01.corp.ad.broadcom.com>
- <20110922143107.GA27153@infradead.org>
-In-Reply-To: <20110922143107.GA27153@infradead.org>
+	Mon, 5 Sep 2011 11:20:11 -0400
+Received: by wwf5 with SMTP id 5so5285389wwf.1
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Sep 2011 08:20:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
+In-Reply-To: <201109030906.21009.chunkeey@googlemail.com>
+References: <201109030906.21009.chunkeey@googlemail.com>
+Date: Mon, 5 Sep 2011 20:50:09 +0530
+Message-ID: <CAD2nsn16Otuzp9KbivA03Q5ySMBHLp36J+-HfU=wRcqkSD6QRg@mail.gmail.com> (sfid-20110905_172015_186014_ED2C418C)
+Subject: Re: [RESEND][PATCH] minstrel_ht: fix Open BA session request floods
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>, nbd@openwrt.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] On Behalf Of Christoph Hellwig
-> Sent: donderdag 22 september 2011 16:31
-> To: Brett Rudley
-> Cc: Rafa?? Mi??ecki; Greg KH; John W. Linville; Franky (Zhenhui) Lin;
-> gregkh@suse.de; devel@linuxdriverproject.org; linux-
-> wireless@vger.kernel.org
-> Subject: Re: [PATCH 00/20] staging: brcm80211: 7th reaction for
-> mainline patch #2
-> 
-> On Wed, Sep 21, 2011 at 03:12:02PM -0700, Brett Rudley wrote:
-> > > > Our original plan was to remain a separate driver from b43. We
-> were
-> > > aware of it and all the good work that had been done to create it
-> and we
-> > > had no intention of interfering with it. ??At that point there had
-> not
-> > > been very much recent movement in b43 and it did not support any of
-> our
-> > > AXI based chips. ??We figured that ssb vs AXI was a good dividing
-> line and
-> > > there would be no conflict, and there wasn't initially.
-> > >
-> > > The first obvious problem is that there are SSB and BCMA (aka AXI)
-> > > cards using N-PHY. That resulted in PHY code duplication between
-> b43
-> > > and brcmsmac. And since we already supported N-PHY in b43, adding
-> bcma
-> > > support automatically gave us BCM43224 and BCM43225 support. That
-> of
-> > > course means duplicated supported for the same hardware.
-> >
-> > Agree, when you created bcma, it did duplicate HW support already in
-> brcmsmac.  Why didn't you address that then?
-> 
-> Because doing inside a driver is wrong.  bcma is a separate bus layer
-> and really must stay outside the driver.  It can very reasonably argued
-> that the same is true for the PHY support.
+On Sat, Sep 3, 2011 at 12:36 PM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> Minstrel HT tries very hard to establish a BA session with
+> each peer once there's some data on the way. However the
+> stack does not inform minstrel if an aggregation session
+> is already in place, so it keeps trying and wastes good
+> cycles in the tx status path.
+>
+> [ 8149.946393] Open BA session requested for $AP tid 0
+> [ 8150.048765] Open BA session requested for $AP tid 0
+> [ 8150.174509] Open BA session requested for $AP tid 0
+> [ 8150.274376] Open BA session requested for $AP tid 0
+> ...
 
-I am not disputing that the bcma bus driver was a good move, but there are
-numerous chip devices out there with an internal bus of some sore and not
-having a separate bus driver.
 
-Regarding PHY support compared to a system bus on a chip is comparing
-apples with pears. However, as said earlier we are not opposed to the
-idea.
+Hi Christian,
 
-> Given the arguments from Johannes and other I think the only reasonable
-> outcome here is to make sure the broadcom drivers share
-> 
->  a) the bcma bus support (already done), and
->  b) the phy layer
-> 
-> and just make them the driver for the newer MAC revisions.
+I got this messages in ath9k after few cycles of suspend and resume.
+doing the same fix in ath9k rate control tx_status callback the
+messages did not re-appear. I will soon send a proper patch for ath9k
+too.
 
-A BCMA bus driver and PHY layer does not give a wireless driver. Am I
-missing something?
- 
-> (and stop those fight already, shh..)
-
-I thought this was just an open and lively discussion ;-)
-
-Gr. AvS
-
+thanks,
+shafi
