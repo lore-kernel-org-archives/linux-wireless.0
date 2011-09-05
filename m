@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:50333 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751485Ab1I0NWu (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26119 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754282Ab1IEOjM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Sep 2011 09:22:50 -0400
-Received: by mail-bw0-f54.google.com with SMTP id zs8so8423255bkb.13
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2011 06:22:48 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: coelho@ti.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl12xx: set max_sched_scan_ie_len correctly
-Date: Tue, 27 Sep 2011 16:22:35 +0300
-Message-Id: <1317129755-14825-1-git-send-email-coelho@ti.com> (sfid-20110927_152253_694293_997DCA21)
+	Mon, 5 Sep 2011 10:39:12 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH 0/4] ath6kl: Fix AP mode PS buffering and enable AP/P2P
+Date: Mon, 5 Sep 2011 17:38:43 +0300
+Message-ID: <1315233527-6234-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20110905_163916_354953_03CCD99D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wiphy max_sched_scan_ie_len attribute was not set correctly and
-remained as 0, so when IEs were being passed in a scheduled scan, we
-were returning -EINVAL.
+The first two patches in this set fix couple of issues in TIM updates
+for AP mode PS buffering. With those fixed, the AP mode support is ready
+to be enabled and since the initial P2P support was waiting for AP mode
+to work properly, that can also be enabled now. Please note that the P2P
+operations need a firmware update which has not yet been released.
 
-Fix this by setting the attribute properly.
+Jouni Malinen (4):
+  ath6kl: Fix WMI message structure for AP_SET_PVB
+  ath6kl: Fix AP mode connect event parsing and TIM updates
+  ath6kl: Allow AP mode to be configured
+  ath6kl: Allow enabling of P2P support
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/main.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   17 +++++-
+ drivers/net/wireless/ath/ath6kl/core.h     |    6 ++
+ drivers/net/wireless/ath/ath6kl/init.c     |   31 +++++++--
+ drivers/net/wireless/ath/ath6kl/main.c     |   92 ++++++++++++----------------
+ drivers/net/wireless/ath/ath6kl/target.h   |    6 ++
+ drivers/net/wireless/ath/ath6kl/wmi.c      |   45 ++++++++++++--
+ drivers/net/wireless/ath/ath6kl/wmi.h      |   30 ++++++++--
+ 7 files changed, 157 insertions(+), 70 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index a51dd0e..723d657 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -4677,6 +4677,9 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 	wl->hw->wiphy->max_scan_ie_len = WL1271_CMD_TEMPL_DFLT_SIZE -
- 			sizeof(struct ieee80211_header);
- 
-+	wl->hw->wiphy->max_sched_scan_ie_len = WL1271_CMD_TEMPL_DFLT_SIZE -
-+		sizeof(struct ieee80211_header);
-+
- 	wl->hw->wiphy->flags |= WIPHY_FLAG_AP_UAPSD;
- 
- 	/* make sure all our channels fit in the scanned_ch bitmask */
 -- 
-1.7.1
+1.7.4.1
 
