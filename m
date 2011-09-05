@@ -1,72 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44456 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754543Ab1IPNDu (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:9553 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751742Ab1IEIys (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Sep 2011 09:03:50 -0400
-Subject: Re: [RFC 5/5] mac80211: send data directly to TDLS peers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Kalyan C Gaddam <chakkal@iit.edu>
-In-Reply-To: <1316082334-7664-6-git-send-email-arik@wizery.com> (sfid-20110915_123146_593683_1FBA16D4)
-References: <1316082334-7664-1-git-send-email-arik@wizery.com>
-	 <1316082334-7664-6-git-send-email-arik@wizery.com>
-	 (sfid-20110915_123146_593683_1FBA16D4)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 16 Sep 2011 15:03:49 +0200
-Message-ID: <1316178229.4130.33.camel@jlt3.sipsolutions.net> (sfid-20110916_150353_573790_07F37C61)
-Mime-Version: 1.0
+	Mon, 5 Sep 2011 04:54:48 -0400
+Date: Mon, 5 Sep 2011 14:24:25 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/3] ath6kl: Make ath6kl_diag_write32() non-static
+Message-ID: <20110905085424.GA11758@vasanth-laptop> (sfid-20110905_105451_844666_9B10C9D6)
+References: <1314971173-8966-1-git-send-email-vthiagar@qca.qualcomm.com> <4E6486B5.9070105@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4E6486B5.9070105@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-09-15 at 13:25 +0300, Arik Nemtsov wrote:
+On Mon, Sep 05, 2011 at 11:22:13AM +0300, Kalle Valo wrote:
+> On 09/02/2011 04:46 PM, Vasanthakumar Thiagarajan wrote:
+> > So that this can be called from debug.c when adding support
+> > to write chip register.
+> 
+> Thanks, all three applied. But I did a minor to change to patch 3:
+> 
+> Author: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+> Date:   Mon Sep 5 11:19:46 2011 +0300
+> 
+>     ath6kl: Add debugfs support to write a chip register
+> 
+>     To write a value to register:
+>     echo <register_offset>=<register_value> >
+> <degfs_root>/ieee80211/phyX/ath6kl/reg_write
+> 
+>     kvalo: rename file to reg_write to follow the style of other debugfs
+> files
 
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1725,6 +1725,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
->  	struct sta_info *sta = NULL;
->  	u32 sta_flags = 0;
->  	struct sk_buff *tmp_skb;
-> +	bool tdls_link = false;
->  
->  	if (unlikely(skb->len < ETH_HLEN)) {
->  		ret = NETDEV_TX_OK;
-> @@ -1836,11 +1837,25 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
->  		break;
->  #endif
->  	case NL80211_IFTYPE_STATION:
-> -		memcpy(hdr.addr1, sdata->u.mgd.bssid, ETH_ALEN);
-> -		if (sdata->u.mgd.use_4addr &&
-> -		    cpu_to_be16(ethertype) != sdata->control_port_protocol) {
-> -			fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
-> +		if (local->hw.flags & IEEE80211_HW_SUPPORTS_TDLS) {
-> +			rcu_read_lock();
-> +			sta = sta_info_get(sdata, skb->data);
-> +			tdls_link = (sta && sta->tdls_link_enabled);
+Thanks.
 
-Why don't you test WLAN_STA_TDLS_PEER and add the station only when the
-session is set up?
-
-That would avoid the problem here when setting up the session.
-
-> --- a/net/wireless/util.c
-> +++ b/net/wireless/util.c
-> @@ -392,8 +392,9 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
->  		}
->  		break;
->  	case cpu_to_le16(0):
-> -		if (iftype != NL80211_IFTYPE_ADHOC)
-> -			return -1;
-> +		if (iftype != NL80211_IFTYPE_ADHOC &&
-> +		    iftype != NL80211_IFTYPE_STATION)
-> +				return -1;
->  		break;
->  	}
->  
-
-It seems there needs to be a check somewhere that this packet was
-received from a TDLS peer? OTOH, if somebody is spoofing it crypto will
-reject it or you're vulnerable anyway...
-
-johannes
-
+Vasanth
