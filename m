@@ -1,57 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39221 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752568Ab1I1MNO (ORCPT
+Received: from smtp-out3.tiscali.nl ([195.241.79.178]:34390 "EHLO
+	smtp-out3.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752362Ab1IEKdc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Sep 2011 08:13:14 -0400
-Message-Id: <20110928121130.177186599@sipsolutions.net> (sfid-20110928_141317_728814_913CBD88)
-Date: Wed, 28 Sep 2011 14:08:55 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 06/15] mac80211: clear more-data bit on filtered frames
-References: <20110928120849.882884360@sipsolutions.net>
+	Mon, 5 Sep 2011 06:33:32 -0400
+Subject: Re: [iwl4965] Microcode SW error detected
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Bernhard Schmidt <bschmidt@freebsd.org>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 05 Sep 2011 12:32:47 +0200
+In-Reply-To: <20110905093349.GE2221@redhat.com>
+References: <1306151106.2066.60.camel@x61.thuisdomein>
+	 <201106070832.49048.bschmidt@freebsd.org>
+	 <20110607145435.GA5179@redhat.com>
+	 <1315124915.5239.21.camel@x61.thuisdomein>
+	 <20110905093349.GE2221@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1315218811.4159.10.camel@t41.thuisdomein> (sfid-20110905_123335_959596_89839962)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2011-09-05 at 11:33 +0200, Stanislaw Gruszka wrote:
+> On Sun, Sep 04, 2011 at 10:28:35AM +0200, Paul Bolle wrote:
+> > 1) After a few days of normal usage (with quite a bit of suspend and
+> > resume cycles) this error was again triggered. So avoiding
+> > check_plcp_health() doesn't seem to help.
+> > 
+> > 2) I never send you the debug output (ie, output after doing "modprobe
+> > iwl4965 debug=0x47ffffff"), did I?
+> 
+> No, but if error show up after few days, gathering and analyzing few
+> days of debug logs in impractical.
 
-It doesn't seem likely, but maybe possible, that the
-more-data bit needs to be recomputed due to changes
-in the queued frames. Clear it for filtered frames
-to ensure that we never send it incorrectly. It'll
-be set again as necessary when we retransmit this
-frame.
+I see.
 
-The more likely case is maybe where the station woke
-up after the filtered frame in which case more-data
-should be clear when the frame is transmitted to the
-station since it is now awake.
+> Does wifi stop working after an
+> error, or there is some other negative impact? Or only that messages
+> are printed and driver recover itself?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/status.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+There doesn't seem to be any impact (ie, it might have some impact but
+I'm too insensitive to notice). The driver does recover itself and I do
+not have to mess with rfkill or "modprobe -r" or whatever. I actually
+discovered this because I tend to regularly do
+    dmesg -r |  grep "^<[123]>"
 
---- a/net/mac80211/status.c	2011-09-28 13:22:04.000000000 +0200
-+++ b/net/mac80211/status.c	2011-09-28 13:22:27.000000000 +0200
-@@ -65,6 +65,16 @@ static void ieee80211_handle_filtered_fr
- 
- 	sta->tx_filtered_count++;
- 
-+	/*
-+	 * Clear more-data bit on filtered frames, it might be set
-+	 * but later frames might time out so it might have to be
-+	 * clear again ... It's all rather unlikely (this frame
-+	 * should time out first, right?) but let's not confuse
-+	 * peers unnecessarily.
-+	 */
-+	if (hdr->frame_control & cpu_to_le16(IEEE80211_FCTL_MOREDATA))
-+		hdr->frame_control &= ~cpu_to_le16(IEEE80211_FCTL_MOREDATA);
-+
- 	if (ieee80211_is_data_qos(hdr->frame_control)) {
- 		int tid = *ieee80211_get_qos_ctl(hdr) &
- 					IEEE80211_QOS_CTL_TID_MASK;
+to keep myself informed of any kernel errors (or worse). And then these
+few dozen lines can't go unnoticed.
 
+
+Paul Bolle
 
