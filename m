@@ -1,37 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:65068 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756035Ab1I3Nsp (ORCPT
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:39970 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752694Ab1IEMDJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Sep 2011 09:48:45 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/5] ath6kl: Fix sparse warning "symbol 'conn' shadows an earlier one"
-Date: Fri, 30 Sep 2011 19:18:42 +0530
-Message-ID: <1317390526-3442-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110930_154849_260082_B84CA857)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 5 Sep 2011 08:03:09 -0400
+Received: by mail-gw0-f54.google.com with SMTP id 15so3830943gwb.27
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Sep 2011 05:03:08 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <johannes@sipsolutions.net>
+Subject: [RFC 4/5] mac80211: adding intermediate scan result event call.
+Date: Mon,  5 Sep 2011 15:02:30 +0300
+Message-Id: <1315224151-16552-5-git-send-email-VictorG@ti.com> (sfid-20110905_140312_734886_30920200)
+In-Reply-To: <1315224151-16552-1-git-send-email-VictorG@ti.com>
+References: <1315224151-16552-1-git-send-email-VictorG@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/txrx.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+Adding "cfg80211_send_intermediate_result" call on reception
+of new beacon/probe response.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index a711707..bcf7b01 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1235,7 +1235,6 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 			 * frame to it on the air else send the
- 			 * frame up the stack.
- 			 */
--			struct ath6kl_sta *conn = NULL;
- 			conn = ath6kl_find_sta(ar, datap->h_dest);
+Signed-off-by: Victor Goldenshtein <VictorG@ti.com>
+---
+ net/mac80211/scan.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 6f09eca..1204165 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -159,6 +159,7 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
+ 	__le16 fc;
+ 	bool presp, beacon = false;
+ 	struct ieee802_11_elems elems;
++	struct cfg80211_bss *cbss = NULL;
  
- 			if (conn && ar->intra_bss) {
+ 	if (skb->len < 2)
+ 		return RX_DROP_UNUSABLE;
+@@ -209,8 +210,11 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
+ 	bss = ieee80211_bss_info_update(sdata->local, rx_status,
+ 					mgmt, skb->len, &elems,
+ 					channel, beacon);
+-	if (bss)
++	if (bss) {
++		cbss = container_of((void *)bss, struct cfg80211_bss, priv);
++		cfg80211_send_intermediate_result(sdata->dev, cbss);
+ 		ieee80211_rx_bss_put(sdata->local, bss);
++	}
+ 
+ 	/* If we are on-operating-channel, and this packet is for the
+ 	 * current channel, pass the pkt on up the stack so that
 -- 
 1.7.0.4
 
