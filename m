@@ -1,111 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:65091 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757130Ab1I3NtD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Sep 2011 09:49:03 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/5] ath6kl: Claim sdio function only at appropriate places
-Date: Fri, 30 Sep 2011 19:18:44 +0530
-Message-ID: <1317390526-3442-3-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20110930_154913_722515_26B73F68)
-In-Reply-To: <1317390526-3442-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1317390526-3442-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from c60.cesmail.net ([216.154.195.49]:46143 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754780Ab1IFPE3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Sep 2011 11:04:29 -0400
+Date: Tue, 6 Sep 2011 11:04:22 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-wireless@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
+Subject: Re: 3.0.0: carl9170: drivers/net/wireless/ath/carl9170/tx.c:351
+ carl9170_tx_status+0x431/0x440 [carl9170]()
+Message-ID: <20110906110422.326f95c5@mj> (sfid-20110906_170449_112083_169D150C)
+In-Reply-To: <alpine.DEB.2.02.1109051750010.23828@p34.internal.lan>
+References: <alpine.DEB.2.02.1109051750010.23828@p34.internal.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are places where tx_complete callbacks are called with
-claiming the sdio function. This is wrong. Claim the sdio function
-only when doing actual sdio read/write.
+On Mon, 5 Sep 2011 17:53:06 -0400 (EDT)
+Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+> Hello,
+> 
+> Saw this on one of my Linux machines with a Linux (community
+> supported USB stick):
+> 
+> [88927.073741] ------------[ cut here ]------------
+> [88927.073762] WARNING: at drivers/net/wireless/ath/carl9170/tx.c:351
+
+I'm dropping LKML from cc, no need to write there if there is a specialized
+mailing list.
+
+It looks like the bitmap code in carl9170 needs reviewing.  I spotted
+one error immediately.  bitmap_zero() takes the number of bits, not the
+number of long integers.
+
+Chances are not very high that it would help in your case, but here's
+the patch.  I hope to give carl9170 some good testing before submitting
+that patch formally.
+
+carl9170: fix bitmap initialization
+
+From: Pavel Roskin <proski@gnu.org>
+
+bitmap_zero() takes the number of bits, not the long integers used to
+keep them.
+
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
- drivers/net/wireless/ath/ath6kl/sdio.c |   19 ++++++++++---------
- 1 files changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 2dd7a88..7695c29 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -134,6 +134,8 @@ static int ath6kl_sdio_io(struct sdio_func *func, u32 request, u32 addr,
- {
- 	int ret = 0;
+ drivers/net/wireless/ath/carl9170/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index af351ec..2f68747 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1411,7 +1411,7 @@ static int carl9170_op_ampdu_action(struct ieee80211_hw *hw,
+ 		sta_info->stats[tid].req = false;
  
-+	sdio_claim_host(func);
-+
- 	if (request & HIF_WRITE) {
- 		/* FIXME: looks like ugly workaround for something */
- 		if (addr >= HIF_MBOX_BASE_ADDR &&
-@@ -155,6 +157,8 @@ static int ath6kl_sdio_io(struct sdio_func *func, u32 request, u32 addr,
- 			ret = sdio_memcpy_fromio(func, buf, addr, len);
- 	}
- 
-+	sdio_release_host(func);
-+
- 	ath6kl_dbg(ATH6KL_DBG_SDIO, "%s addr 0x%x%s buf 0x%p len %d\n",
- 		   request & HIF_WRITE ? "wr" : "rd", addr,
- 		   request & HIF_FIXED_ADDRESS ? " (fixed)" : "", buf, len);
-@@ -287,10 +291,14 @@ static int ath6kl_sdio_scat_rw(struct ath6kl_sdio *ar_sdio,
- 	mmc_req.cmd = &cmd;
- 	mmc_req.data = &data;
- 
-+	sdio_claim_host(ar_sdio->func);
-+
- 	mmc_set_data_timeout(&data, ar_sdio->func->card);
- 	/* synchronous call to process request */
- 	mmc_wait_for_req(ar_sdio->func->card->host, &mmc_req);
- 
-+	sdio_release_host(ar_sdio->func);
-+
- 	status = cmd.error ? cmd.error : data.error;
- 
- scat_complete:
-@@ -391,11 +399,9 @@ static int ath6kl_sdio_read_write_sync(struct ath6kl *ar, u32 addr, u8 *buf,
- 	} else
- 		tbuf = buf;
- 
--	sdio_claim_host(ar_sdio->func);
- 	ret = ath6kl_sdio_io(ar_sdio->func, request, addr, tbuf, len);
- 	if ((request & HIF_READ) && bounced)
- 		memcpy(buf, tbuf, len);
--	sdio_release_host(ar_sdio->func);
- 
- 	return ret;
- }
-@@ -424,7 +430,6 @@ static void ath6kl_sdio_write_async_work(struct work_struct *work)
- 	struct bus_request *req, *tmp_req;
- 
- 	ar_sdio = container_of(work, struct ath6kl_sdio, wr_async_work);
--	sdio_claim_host(ar_sdio->func);
- 
- 	spin_lock_bh(&ar_sdio->wr_async_lock);
- 	list_for_each_entry_safe(req, tmp_req, &ar_sdio->wr_asyncq, list) {
-@@ -434,8 +439,6 @@ static void ath6kl_sdio_write_async_work(struct work_struct *work)
- 		spin_lock_bh(&ar_sdio->wr_async_lock);
- 	}
- 	spin_unlock_bh(&ar_sdio->wr_async_lock);
--
--	sdio_release_host(ar_sdio->func);
- }
- 
- static void ath6kl_sdio_irq_handler(struct sdio_func *func)
-@@ -618,11 +621,9 @@ static int ath6kl_sdio_async_rw_scatter(struct ath6kl *ar,
- 		"hif-scatter: total len: %d scatter entries: %d\n",
- 		scat_req->len, scat_req->scat_entries);
- 
--	if (request & HIF_SYNCHRONOUS) {
--		sdio_claim_host(ar_sdio->func);
-+	if (request & HIF_SYNCHRONOUS)
- 		status = ath6kl_sdio_scat_rw(ar_sdio, scat_req->busrequest);
--		sdio_release_host(ar_sdio->func);
--	} else {
-+	else {
- 		spin_lock_bh(&ar_sdio->wr_async_lock);
- 		list_add_tail(&scat_req->busrequest->list, &ar_sdio->wr_asyncq);
- 		spin_unlock_bh(&ar_sdio->wr_async_lock);
+ 		if (tid_info) {
+-			bitmap_zero(tid_info->bitmap, CARL9170_BAW_SIZE);
++			bitmap_zero(tid_info->bitmap, CARL9170_BAW_BITS);
+ 			tid_info->state = CARL9170_TID_STATE_IDLE;
+ 		}
+ 		rcu_read_unlock();
+
 -- 
-1.7.0.4
-
+Regards,
+Pavel Roskin
