@@ -1,31 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:33781 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932379Ab1I3T2l (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42642 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754296Ab1IFMQn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Sep 2011 15:28:41 -0400
-Date: Fri, 30 Sep 2011 15:27:32 -0400 (EDT)
-Message-Id: <20110930.152732.1662403204315863756.davem@davemloft.net> (sfid-20110930_212851_218867_A68BEDAC)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2011-09-30
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20110930191131.GC2526@tuxdriver.com>
-References: <20110930191131.GC2526@tuxdriver.com>
+	Tue, 6 Sep 2011 08:16:43 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.76)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1R0ua2-00066G-1r
+	for linux-wireless@vger.kernel.org; Tue, 06 Sep 2011 14:16:42 +0200
+Message-Id: <20110906121421.460641040@sipsolutions.net> (sfid-20110906_141646_631700_311EFADF)
+Date: Tue, 06 Sep 2011 14:14:21 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 0/3] some AP PS buffering rework
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 30 Sep 2011 15:11:31 -0400
+I was looking at AP side PS buffering for uAPSD
+and found a number of things that need to be
+improved first. This is what I've come up with
+so far, comments would be appreciated.
 
-> Here is yet another big package of wireless updates for 3.2.  Highlights
-> include a bluetooth pull, a wl12xx pull, and a pull of the wireless tree
-> to fix some merge issues.  Also included is the usual big sets of
-> updates to ath9k, iwlagn, b43, and others.  Plus, the NFC subsystem grew
-> NCI support.
-> 
-> Please let me know if there are problems!
+Thanks everyone who already looked at this when
+I asked them on IRC :-)
 
-Pulled, thanks John.
+So far, it's pretty much untested.
+
+johannes
